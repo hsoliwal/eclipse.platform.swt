@@ -363,6 +363,7 @@ public enum Selector {
 	, sel_deliverResult("deliverResult")
 	, sel_deltaX("deltaX")
 	, sel_deltaY("deltaY")
+	, sel_scrollingDeltaY("scrollingDeltaY")
 	, sel_deminiaturize_("deminiaturize:")
 	, sel_depth("depth")
 	, sel_descender("descender")

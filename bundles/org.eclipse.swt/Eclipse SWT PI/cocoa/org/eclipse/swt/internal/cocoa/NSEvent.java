@@ -57,6 +57,10 @@ public double deltaY() {
 	return OS.objc_msgSend_fpret(this.id, OS.sel_deltaY);
 }
 
+public double scrollingDeltaY() {
+	return OS.objc_msgSend_fpret(this.id, OS.sel_scrollingDeltaY);
+}
+
 public static double doubleClickInterval() {
 	return OS.objc_msgSend_fpret(OS.class_NSEvent, OS.sel_doubleClickInterval);
 }
