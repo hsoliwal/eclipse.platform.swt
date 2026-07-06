@@ -123,7 +123,7 @@ public class Event {
 	 * high resolution delta values from a scrollwheel, useful for input from
 	 * trackpads like Apple's Magic Trackpad.
 	 */
-	public double scrollingDeltaY;
+	public float scrollingDeltaY;
 
 	/**
 	 * the time that the event occurred.
