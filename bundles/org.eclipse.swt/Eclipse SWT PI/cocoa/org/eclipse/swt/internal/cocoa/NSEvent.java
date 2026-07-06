@@ -57,7 +57,7 @@ public double deltaY() {
 	return OS.objc_msgSend_fpret(this.id, OS.sel_deltaY);
 }
 
-public double scrollingDeltaY() {
+public float scrollingDeltaY() {
 	return OS.objc_msgSend_fpret(this.id, OS.sel_scrollingDeltaY);
 }
 
