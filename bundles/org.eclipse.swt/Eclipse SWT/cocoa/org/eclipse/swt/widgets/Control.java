@@ -2514,6 +2514,8 @@ void scrollWheel (long id, long sel, long theEvent) {
 				handled = true;
 			}
 		}
+		//TEST REMOVE LATER
+		System.out.println("RAW scrollingDeltaY = " + nsEvent.scrollingDeltaY());
 		if (!handled) {
 			if (hooks (SWT.MouseWheel) || filters (SWT.MouseWheel)) {
 				if (nsEvent.deltaY() != 0) {
@@ -5183,7 +5185,7 @@ boolean update (boolean all) {
 	}
 	if (isResizing()) return false;
 	Shell shell = getShell();
-	NSWindow window = shell.deferFlushing && shell.scrolling ? view.window() : null;
+	NSWindow window = shell.deferFlushing && shell.weing ? view.window() : null;
 	try {
 		if (window != null) {
 			window.retain();

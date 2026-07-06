@@ -111,7 +111,7 @@ public class GestureEvent extends TypedEvent {
 	 * their fingers.
 	 */
 	public double magnification;
-A
+
 	/**
 	 * High resolution scrolling delta
 	 */
