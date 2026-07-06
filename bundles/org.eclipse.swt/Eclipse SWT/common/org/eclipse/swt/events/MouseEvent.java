@@ -97,6 +97,7 @@ public MouseEvent(Event e) {
 	this.button = e.button;
 	this.stateMask = e.stateMask;
 	this.count = e.count;
+	this.scrollingDeltaY = e.scrollingDeltaY;
 }
 
 /**
