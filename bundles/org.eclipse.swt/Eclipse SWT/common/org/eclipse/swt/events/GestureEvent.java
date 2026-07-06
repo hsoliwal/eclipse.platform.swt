@@ -111,6 +111,11 @@ public class GestureEvent extends TypedEvent {
 	 * their fingers.
 	 */
 	public double magnification;
+A
+	/**
+	 * High resolution scrolling delta
+	 */
+	public float scrollingDeltaY;
 
 	/**
 	 * This flag indicates whether the operation should be allowed.
@@ -136,6 +141,7 @@ public GestureEvent(Event e) {
 	this.xDirection = e.xDirection;
 	this.yDirection = e.yDirection;
 	this.magnification = e.magnification;
+	this.scrollingDeltaY = e.scrollingDeltaY;
 	this.doit = e.doit;
 }
 
@@ -156,6 +162,7 @@ public String toString() {
 		+ " rotation=" + rotation
 		+ " xDirection=" + xDirection
 		+ " yDirection=" + yDirection
+		+ " scrollingDeltaY=" + scrollingDeltaY
 		+ " magnification=" + magnification
 		+ "}";
 }
