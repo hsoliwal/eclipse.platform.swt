@@ -61,6 +61,10 @@ public float scrollingDeltaY() {
 	return OS.objc_msgSend_floatret(this.id, OS.sel_scrollingDeltaY);
 }
 
+public boolean hasPreciseScrollingDeltas() {
+	return OS.objc_msgSend_bool(this.id, OS.sel_hasPreciseScrollingDeltas);
+}
+
 public static double doubleClickInterval() {
 	return OS.objc_msgSend_fpret(OS.class_NSEvent, OS.sel_doubleClickInterval);
 }
