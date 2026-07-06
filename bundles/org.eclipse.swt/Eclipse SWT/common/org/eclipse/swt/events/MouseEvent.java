@@ -76,6 +76,12 @@ public class MouseEvent extends TypedEvent {
 	 */
 	public int count;
 
+	/**
+	 * high resolution delta values from a scrollwheel, useful for input from
+	 * trackpads like Apple's Magic Trackpad.
+	 */
+	public float scrollingDeltaY;
+
 	static final long serialVersionUID = 3257288037011566898L;
 
 /**
