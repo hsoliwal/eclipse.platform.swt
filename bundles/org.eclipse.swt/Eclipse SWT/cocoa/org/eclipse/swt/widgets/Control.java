@@ -5185,7 +5185,7 @@ boolean update (boolean all) {
 	}
 	if (isResizing()) return false;
 	Shell shell = getShell();
-	NSWindow window = shell.deferFlushing && shell.weing ? view.window() : null;
+	NSWindow window = shell.deferFlushing && shell.scrolling ? view.window() : null;
 	try {
 		if (window != null) {
 			window.retain();
