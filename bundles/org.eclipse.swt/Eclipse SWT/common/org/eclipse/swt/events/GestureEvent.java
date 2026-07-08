@@ -140,8 +140,8 @@ public GestureEvent(Event e) {
 	this.rotation = e.rotation;
 	this.xDirection = e.xDirection;
 	this.yDirection = e.yDirection;
-	this.magnification = e.magnification;
 	this.scrollingDeltaY = e.scrollingDeltaY;
+	this.magnification = e.magnification;
 	this.doit = e.doit;
 }
 
