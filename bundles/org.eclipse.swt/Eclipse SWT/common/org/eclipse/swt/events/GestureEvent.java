@@ -115,7 +115,7 @@ public class GestureEvent extends TypedEvent {
 	/**
 	 * High resolution scrolling delta
 	 */
-	public float scrollingDeltaY;
+	public double scrollingDeltaY;
 
 	/**
 	 * This flag indicates whether the operation should be allowed.

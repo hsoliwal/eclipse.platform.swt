@@ -2509,6 +2509,9 @@ void scrollWheel (long id, long sel, long theEvent) {
 	boolean handled = false;
 	if (id == view.id) {
 		NSEvent nsEvent = new NSEvent(theEvent);
+		//TESTS REMOVE
+		System.out.println(nsEvent.scrollingDeltaY());
+
 		if ((hooks(SWT.Gesture) || filters(SWT.Gesture))) {
 			if (!gestureEvent(id, theEvent, SWT.GESTURE_PAN)) {
 				handled = true;
@@ -3440,7 +3443,9 @@ boolean sendMouseEvent (NSEvent nsEvent, int type, boolean send) {
 		case SWT.MouseWheel: {
 			event.detail = SWT.SCROLL_LINE;
 			double delta = nsEvent.deltaY();
-			float scrollingDelta = nsEvent.scrollingDeltaY();
+			double scrollingDelta = nsEvent.scrollingDeltaY();
+			//TEST REMOVE
+			System.out.println(scrollingDelta);
 			event.count = delta > 0 ? Math.max (1, (int)delta) : Math.min (-1, (int)delta);
 			event.scrollingDeltaY = scrollingDelta;
 			break;
