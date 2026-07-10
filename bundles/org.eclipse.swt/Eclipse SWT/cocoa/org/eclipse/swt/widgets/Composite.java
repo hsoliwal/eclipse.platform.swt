@@ -1031,7 +1031,7 @@ void resized () {
 	}
 }
 
-@Override
+/*@Override
 void scrollWheel (long id, long sel, long theEvent) {
 	if ((state & CANVAS) != 0) {
 		NSView view = scrollView != null ? scrollView : this.view;
@@ -1041,7 +1041,6 @@ void scrollWheel (long id, long sel, long theEvent) {
 			boolean handled = false;
 			double deltaY = nsEvent.deltaY();
 			double deltaX = nsEvent.deltaX ();
-
 			if ((hooks(SWT.Gesture) || filters (SWT.Gesture))) {
 				if (!gestureEvent(id, theEvent, SWT.GESTURE_PAN)) {
 					handled = true;
@@ -1092,7 +1091,7 @@ void scrollWheel (long id, long sel, long theEvent) {
 		return;
 	}
 	super.scrollWheel (id, sel, theEvent);
-}
+}*/
 
 /**
  * Sets the background drawing mode to the argument which should

@@ -2514,7 +2514,6 @@ void scrollWheel (long id, long sel, long theEvent) {
 				handled = true;
 			}
 		}
-
 		if (!handled) {
 			if (hooks (SWT.MouseWheel) || filters (SWT.MouseWheel)) {
 				if (nsEvent.deltaY() != 0 || nsEvent.scrollingDeltaY() != 0) {
