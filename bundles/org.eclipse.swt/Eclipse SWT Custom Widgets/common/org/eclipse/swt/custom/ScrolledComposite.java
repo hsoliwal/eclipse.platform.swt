@@ -595,6 +595,7 @@ public void setMinSize(Point size) {
 		setMinSize(0, 0);
 	} else {
 		setMinSize(size.x, size.y);
+		content.setScrolledHandleSize(width, height);   // new call
 	}
 }
 /**
@@ -615,6 +616,7 @@ public void setMinSize(int width, int height) {
 	if (width == minWidth && height == minHeight) return;
 	minWidth = Math.max(0, width);
 	minHeight = Math.max(0, height);
+	content.setScrolledHandleSize(width, height);   // new call
 	layout(false);
 }
 /**

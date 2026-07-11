@@ -294,6 +294,15 @@ void createHandle () {
 	}
 }
 
+// Composite.java, Eclipse SWT/cocoa/
+void setScrolledHandleSize(int width, int height) {
+	if (scrollView == null) return;
+	NSSize size = new NSSize();
+	size.width = width;
+	size.height = height;
+	view.setFrameSize(size);
+}
+
 /**
  * Fills the interior of the rectangle specified by the arguments,
  * with the receiver's background.
