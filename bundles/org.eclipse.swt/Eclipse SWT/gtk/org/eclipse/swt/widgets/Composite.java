@@ -858,6 +858,10 @@ Rectangle getClientAreaInPixels () {
 	return super.getClientAreaInPixels();
 }
 
+void setScrolledHandleSize(int width, int height) {
+	// no-op by default — Win32/GTK behavior is unchanged
+}
+
 /**
  * Returns layout which is associated with the receiver, or
  * null if one has not been set.

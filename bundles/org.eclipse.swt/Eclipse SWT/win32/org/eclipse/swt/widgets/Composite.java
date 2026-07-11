@@ -530,6 +530,10 @@ boolean hooksKeys () {
 	return hooks (SWT.KeyDown) || hooks (SWT.KeyUp);
 }
 
+void setScrolledHandleSize(int width, int height) {
+	// no-op by default — Win32/GTK behavior is unchanged
+}
+
 /**
  * Returns <code>true</code> if the receiver has deferred
  * the performing of layout, and <code>false</code> otherwise.
