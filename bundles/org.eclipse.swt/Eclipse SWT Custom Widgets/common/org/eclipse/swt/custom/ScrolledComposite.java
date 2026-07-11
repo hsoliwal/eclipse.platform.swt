@@ -595,7 +595,7 @@ public void setMinSize(Point size) {
 		setMinSize(0, 0);
 	} else {
 		setMinSize(size.x, size.y);
-		content.setScrolledHandleSize(width, height);   // new call
+		content.setScrolledHandleSize(size.x, size.y);   // new call
 	}
 }
 /**
