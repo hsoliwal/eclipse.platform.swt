@@ -295,7 +295,7 @@ void createHandle () {
 }
 
 // Composite.java, Eclipse SWT/cocoa/
-void setScrolledHandleSize(int width, int height) {
+protected void setScrolledHandleSize(int width, int height) {
 	if (scrollView == null) return;
 	NSSize size = new NSSize();
 	size.width = width;
