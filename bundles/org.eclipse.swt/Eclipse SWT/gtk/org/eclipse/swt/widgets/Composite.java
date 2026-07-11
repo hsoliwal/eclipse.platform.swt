@@ -858,7 +858,7 @@ Rectangle getClientAreaInPixels () {
 	return super.getClientAreaInPixels();
 }
 
-void setScrolledHandleSize(int width, int height) {
+protected void setScrolledHandleSize(int width, int height) {
 	// no-op by default — Win32/GTK behavior is unchanged
 }
 
