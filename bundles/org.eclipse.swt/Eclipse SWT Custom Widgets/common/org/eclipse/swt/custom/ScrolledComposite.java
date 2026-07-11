@@ -324,11 +324,13 @@ public boolean getShowFocusedControl() {
 }
 
 void hScroll() {
+/*
 	if (content == null) return;
 	Point location = content.getLocation ();
 	ScrollBar hBar = getHorizontalBar ();
 	int hSelection = hBar.getSelection ();
 	content.setLocation (-hSelection, location.y);
+*/
 }
 boolean needHScroll(Rectangle contentRect, boolean vVisible) {
 	ScrollBar hBar = getHorizontalBar();
@@ -704,10 +706,10 @@ public void showControl(Control control) {
 }
 
 void vScroll() {
-	if (content == null) return;
+	/*if (content == null) return;
 	Point location = content.getLocation ();
 	ScrollBar vBar = getVerticalBar ();
 	int vSelection = vBar.getSelection ();
-	content.setLocation (location.x, -vSelection);
+	content.setLocation (location.x, -vSelection);*/
 }
 }
