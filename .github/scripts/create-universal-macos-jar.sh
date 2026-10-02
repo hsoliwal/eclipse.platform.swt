@@ -121,10 +121,41 @@ if [ -d "$D3/META-INF" ]; then
     echo "✓ Removed signature files"
 fi
 
-# Create output JAR
+# The manifest was copied from the Intel JAR and claims x86_64. Library.isLoadable()
+# compares SWT-Arch to the runtime arch and C's static initializer calls
+# System.exit(1) on mismatch, so an arch-specific manifest kills SWT on Apple Silicon.
+# Unfold continuation lines, drop the arch claims, then refold to the 72-byte limit.
+universalize_manifest() {
+    local manifest="$1"
+    tr -d '\r' < "$manifest" \
+        | awk 'NR > 1 && /^ / { buf = buf substr($0, 2); next }
+               { if (NR > 1) print buf; buf = $0 }
+               END { print buf }' \
+        | sed -e '/^SWT-Arch:/d' \
+              -e '/^Eclipse-PlatformFilter:/s/ *(osgi\.arch=[^)]*)//' \
+              -e '/^Bundle-SymbolicName:/s/macosx\.x86_64/macosx.universal/' \
+              -e '/^Automatic-Module-Name:/s/macosx\.x86_64/macosx.universal/' \
+        | awk '{ line = $0
+                 if (length(line) <= 70) { printf "%s\r\n", line; next }
+                 printf "%s\r\n", substr(line, 1, 70); line = substr(line, 71)
+                 while (length(line) > 69) { printf " %s\r\n", substr(line, 1, 69); line = substr(line, 70) }
+                 printf " %s\r\n", line }' \
+        > "$manifest.tmp"
+    mv "$manifest.tmp" "$manifest"
+}
+
+echo "Rewriting manifest for universal binary..."
+universalize_manifest "$D3/META-INF/MANIFEST.MF"
+if grep -q -e '^SWT-Arch:' -e 'osgi\.arch=' "$D3/META-INF/MANIFEST.MF"; then
+    echo "ERROR: Manifest still declares an architecture"
+    exit 1
+fi
+echo "✓ Removed SWT-Arch and osgi.arch from manifest"
+
+# Create output JAR (META-INF first so JarInputStream finds the manifest)
 echo "Creating JAR: $OUTPUT_JAR"
 mkdir -p "$(dirname "$OUTPUT_JAR")"
-(cd "$D3" && zip -q -r "$OUTPUT_JAR" .)
+(cd "$D3" && zip -q -r "$OUTPUT_JAR" META-INF && zip -q -r "$OUTPUT_JAR" . -x 'META-INF/*')
 
 # Validate
 if [ -f "$OUTPUT_JAR" ]; then
