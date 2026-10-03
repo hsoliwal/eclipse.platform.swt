@@ -80,6 +80,7 @@ public class Table extends Composite {
 	int selectionCountOnPress,selectionCountOnRelease;
 	long ignoreCell;
 	TableItem [] items;
+	VirtualItemStorage<TableItem> virtualItems;
 	TableColumn [] columns;
 	TableItem currentItem;
 	TableColumn sortColumn;
@@ -170,8 +171,29 @@ void _addListener (int eventType, Listener listener) {
 
 TableItem _getItem (int index) {
 	if ((style & SWT.VIRTUAL) == 0) return items [index];
-	if (items [index] != null) return items [index];
-	return items [index] = new TableItem (this, SWT.NONE, index, false);
+	TableItem item = virtualItems.get (index);
+	if (item != null) return item;
+	item = new TableItem (this, SWT.NONE, index, false);
+	virtualItems.put (index, item);
+	return item;
+}
+
+TableItem _getItem (int index, boolean create) {
+	if ((style & SWT.VIRTUAL) == 0) return items [index];
+	TableItem item = virtualItems.get (index);
+	return item != null || !create ? item : _getItem (index);
+}
+
+int materializedItemCount () {
+	return (style & SWT.VIRTUAL) != 0 ? virtualItems.size () : itemCount;
+}
+
+TableItem materializedItem (int position) {
+	return (style & SWT.VIRTUAL) != 0 ? virtualItems.valueAt (position) : items [position];
+}
+
+int materializedIndex (int position) {
+	return (style & SWT.VIRTUAL) != 0 ? virtualItems.indexAt (position) : position;
 }
 
 static int checkStyle (int style) {
@@ -383,13 +405,10 @@ int calculateWidth (long column, long iter) {
  */
 public void clear (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < itemCount)) {
-		error(SWT.ERROR_INVALID_RANGE);
-	}
-	TableItem item = items [index];
+	if (!(0 <= index && index < itemCount)) error(SWT.ERROR_INVALID_RANGE);
+	TableItem item = _getItem (index, false);
 	if (item != null) item.clear ();
 }
-
 /**
  * Removes the items from the receiver which are between the given
  * zero-relative start and end indices (inclusive).  The text, icon
@@ -416,11 +435,13 @@ public void clear (int index) {
 public void clear (int start, int end) {
 	checkWidget ();
 	if (start > end) return;
-	if (!(0 <= start && start <= end && end < itemCount)) {
-		error (SWT.ERROR_INVALID_RANGE);
-	}
+	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
 	if (start == 0 && end == itemCount - 1) {
 		clearAll();
+	} else if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.forEachIndexed ((index, item) -> {
+			if (start <= index && index <= end) item.clear ();
+		});
 	} else {
 		for (int i=start; i<=end; i++) {
 			TableItem item = items [i];
@@ -428,7 +449,6 @@ public void clear (int start, int end) {
 		}
 	}
 }
-
 /**
  * Clears the items at the given zero-relative indices in the receiver.
  * The text, icon and other attributes of the items are set to their default
@@ -456,16 +476,13 @@ public void clear (int [] indices) {
 	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
 	if (indices.length == 0) return;
 	for (int i=0; i<indices.length; i++) {
-		if (!(0 <= indices [i] && indices [i] < itemCount)) {
-			error (SWT.ERROR_INVALID_RANGE);
-		}
+		if (!(0 <= indices [i] && indices [i] < itemCount)) error (SWT.ERROR_INVALID_RANGE);
 	}
 	for (int i=0; i<indices.length; i++) {
-		TableItem item = items [indices [i]];
+		TableItem item = _getItem (indices [i], false);
 		if (item != null) item.clear();
 	}
 }
-
 /**
  * Clears all the items in the receiver. The text, icon and other
  * attributes of the items are set to their default values. If the
@@ -484,8 +501,8 @@ public void clear (int [] indices) {
  */
 public void clearAll () {
 	checkWidget ();
-	for (int i=0; i<itemCount; i++) {
-		TableItem item = items [i];
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
 		if (item != null) item.clear();
 	}
 }
@@ -553,12 +570,12 @@ void copyModel(long oldModel, int oldStart, long newModel, int newStart, int mod
 		if (newIterator == 0) error (SWT.ERROR_NO_HANDLES);
 		GTK.gtk_list_store_append (newModel, newIterator);
 
-		TableItem item = items [i];
+		TableItem item = _getItem (i, false);
 		if (item == null) {
 			/*
-			 * In `SWT.VIRTUAL` mode, `items[]` is not populated, and
-			 * iterators are not remembered. Instead, SWT will use
-			 * `gtk_tree_model_iter_nth_child()`.
+			 * In `SWT.VIRTUAL` mode only materialized rows are retained, and
+			 * iterators are not remembered for untouched rows. SWT will use
+			 * `gtk_tree_model_iter_nth_child()` when a row is requested.
 			 */
 			OS.g_free (newIterator);
 			continue;
@@ -774,8 +791,8 @@ void createItem (TableColumn column, int index) {
 		OS.pango_font_description_free (fontDesc);
 	}
 	if (columnCount >= 1) {
-		for (int i=0; i<itemCount; i++) {
-			TableItem item = items [i];
+		for (int i=0; i<materializedItemCount (); i++) {
+			TableItem item = materializedItem (i);
 			if (item != null) {
 				// Bug 545139: For consistency, do not wipe out content of first TableColumn created after TableItem
 				boolean doNotModify;
@@ -815,7 +832,7 @@ void createItem (TableColumn column, int index) {
 
 void createItem (TableItem item, int index) {
 	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
-	if (itemCount == items.length) {
+	if ((style & SWT.VIRTUAL) == 0 && itemCount == items.length) {
 		int length = drawCount <= 0 ? items.length + 4 : Math.max (4, items.length * 3 / 2);
 		TableItem [] newItems = new TableItem [length];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -823,17 +840,18 @@ void createItem (TableItem item, int index) {
 	}
 	item.handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	if (item.handle == 0) error (SWT.ERROR_NO_HANDLES);
-	/*
-	* Feature in GTK.  It is much faster to append to a list store
-	* than to insert at the end using gtk_list_store_insert().
-	*/
 	if (index == itemCount) {
 		GTK.gtk_list_store_append (modelHandle, item.handle);
 	} else {
 		GTK.gtk_list_store_insert (modelHandle, item.handle, index);
 	}
-	System.arraycopy (items, index, items, index + 1, itemCount++ - index);
-	items [index] = item;
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.insert (index, item);
+		itemCount++;
+	} else {
+		System.arraycopy (items, index, items, index + 1, itemCount++ - index);
+		items [index] = item;
+	}
 }
 
 void createRenderers (long columnHandle, int modelIndex, boolean check, int columnStyle) {
@@ -930,6 +948,7 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
 void createWidget (int index) {
 	super.createWidget (index);
 	items = new TableItem [4];
+	if ((style & SWT.VIRTUAL) != 0) virtualItems = new VirtualItemStorage<> ();
 	columns = new TableColumn [4];
 	itemCount = columnCount = 0;
 	// In GTK 3 font description is inherited from parent widget which is not how SWT has always worked,
@@ -1089,8 +1108,8 @@ void destroyItem (TableColumn column) {
 		setModel (newModel);
 		createColumn (null, 0);
 	} else {
-		for (int i=0; i<itemCount; i++) {
-			TableItem item = items [i];
+		for (int i=0; i<materializedItemCount (); i++) {
+			TableItem item = materializedItem (i);
 			if (item != null) {
 				long iter = item.handle;
 				int modelIndex = column.modelIndex;
@@ -1128,18 +1147,25 @@ void destroyItem (TableColumn column) {
 }
 
 void destroyItem (TableItem item) {
-	int index = 0;
-	while (index < itemCount) {
-		if (items [index] == item) break;
-		index++;
+	int index;
+	if ((style & SWT.VIRTUAL) != 0) {
+		index = virtualItems.indexOfIdentity (item);
+	} else {
+		index = 0;
+		while (index < itemCount && items [index] != item) index++;
 	}
-	if (index == itemCount) return;
+	if (index == itemCount || index < 0) return;
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_list_store_remove (modelHandle, item.handle);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	System.arraycopy (items, index + 1, items, index, --itemCount - index);
-	items [itemCount] = null;
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.remove (index);
+		itemCount--;
+	} else {
+		System.arraycopy (items, index + 1, items, index, --itemCount - index);
+		items [itemCount] = null;
+	}
 	if (itemCount == 0) resetCustomDraw ();
 }
 
@@ -2455,19 +2481,16 @@ public int indexOf (TableColumn column) {
 public int indexOf (TableItem item) {
 	checkWidget();
 	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+	if ((style & SWT.VIRTUAL) != 0) return virtualItems.indexOfIdentity (item);
 	if (1 <= lastIndexOf && lastIndexOf < itemCount - 1) {
 		if (items [lastIndexOf] == item) return lastIndexOf;
 		if (items [lastIndexOf + 1] == item) return ++lastIndexOf;
 		if (items [lastIndexOf - 1] == item) return --lastIndexOf;
 	}
 	if (lastIndexOf < itemCount / 2) {
-		for (int i=0; i<itemCount; i++) {
-			if (items [i] == item) return lastIndexOf = i;
-		}
+		for (int i=0; i<itemCount; i++) if (items [i] == item) return lastIndexOf = i;
 	} else {
-		for (int i=itemCount - 1; i>=0; --i) {
-			if (items [i] == item) return lastIndexOf = i;
-		}
+		for (int i=itemCount - 1; i>=0; --i) if (items [i] == item) return lastIndexOf = i;
 	}
 	return -1;
 }
@@ -2579,21 +2602,16 @@ void register () {
 
 @Override
 void releaseChildren (boolean destroy) {
-	if (items != null) {
-		for (int i=0; i<itemCount; i++) {
-			TableItem item = items [i];
-			if (item != null && !item.isDisposed ()) {
-				item.release (false);
-			}
-		}
-		items = null;
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
+		if (item != null && !item.isDisposed ()) item.release (false);
 	}
+	if (virtualItems != null) virtualItems.clear (ignored -> { });
+	items = null;
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
 			TableColumn column = columns [i];
-			if (column != null && !column.isDisposed ()) {
-				column.release (false);
-			}
+			if (column != null && !column.isDisposed ()) column.release (false);
 		}
 		columns = null;
 	}
@@ -2631,7 +2649,7 @@ public void remove (int index) {
 	checkWidget();
 	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_ITEM_NOT_REMOVED);
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-	TableItem item = items [index];
+	TableItem item = _getItem (index, false);
 	boolean disposed = false;
 	if (item != null) {
 		disposed = item.isDisposed ();
@@ -2647,8 +2665,13 @@ public void remove (int index) {
 		OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 		GTK.gtk_list_store_remove (modelHandle, iter);
 		OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-		System.arraycopy (items, index + 1, items, index, --itemCount - index);
-		items [itemCount] = null;
+		if ((style & SWT.VIRTUAL) != 0) {
+			virtualItems.remove (index);
+			itemCount--;
+		} else {
+			System.arraycopy (items, index + 1, items, index, --itemCount - index);
+			items [itemCount] = null;
+		}
 	}
 	OS.g_free (iter);
 }
@@ -2672,9 +2695,7 @@ public void remove (int index) {
 public void remove (int start, int end) {
 	checkWidget();
 	if (start > end) return;
-	if (!(0 <= start && start <= end && end < itemCount)) {
-		error (SWT.ERROR_INVALID_RANGE);
-	}
+	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
 	if (start == 0 && end == itemCount - 1) {
 		removeAll();
 		return;
@@ -2683,20 +2704,23 @@ public void remove (int start, int end) {
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
-	int index = -1;
-	for (index = start; index <= end; index++) {
+	for (int index = start; index <= end; index++) {
 		if (index == start) GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
-		TableItem item = items [index];
+		TableItem item = _getItem (index, false);
 		if (item != null && !item.isDisposed ()) item.release (false);
 		OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 		GTK.gtk_list_store_remove (modelHandle, iter);
 		OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	}
 	OS.g_free (iter);
-	index = end + 1;
-	System.arraycopy (items, index, items, start, itemCount - index);
-	for (int i=itemCount-(index-start); i<itemCount; i++) items [i] = null;
-	itemCount = itemCount - (index - start);
+	int removed = end - start + 1;
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.removeRange (start, end + 1, ignored -> { });
+	} else {
+		System.arraycopy (items, end + 1, items, start, itemCount - end - 1);
+		for (int i=itemCount-removed; i<itemCount; i++) items [i] = null;
+	}
+	itemCount -= removed;
 }
 
 /**
@@ -2722,36 +2746,38 @@ public void remove (int [] indices) {
 	System.arraycopy (indices, 0, newIndices, 0, indices.length);
 	sort (newIndices);
 	int start = newIndices [newIndices.length - 1], end = newIndices [0];
-	if (!(0 <= start && start <= end && end < itemCount)) {
-		error (SWT.ERROR_INVALID_RANGE);
-	}
+	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	int last = -1;
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
 	for (int i=0; i<newIndices.length; i++) {
 		int index = newIndices [i];
-		if (index != last) {
-			TableItem item = items [index];
-			boolean disposed = false;
-			if (item != null) {
-				disposed = item.isDisposed ();
-				if (!disposed) {
-					C.memmove (iter, item.handle, GTK.GtkTreeIter_sizeof ());
-					item.release (false);
-				}
-			} else {
-				GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
-			}
+		if (index == last) continue;
+		TableItem item = _getItem (index, false);
+		boolean disposed = false;
+		if (item != null) {
+			disposed = item.isDisposed ();
 			if (!disposed) {
-				OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-				GTK.gtk_list_store_remove (modelHandle, iter);
-				OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+				C.memmove (iter, item.handle, GTK.GtkTreeIter_sizeof ());
+				item.release (false);
+			}
+		} else {
+			GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
+		}
+		if (!disposed) {
+			OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+			GTK.gtk_list_store_remove (modelHandle, iter);
+			OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+			if ((style & SWT.VIRTUAL) != 0) {
+				virtualItems.remove (index);
+				itemCount--;
+			} else {
 				System.arraycopy (items, index + 1, items, index, --itemCount - index);
 				items [itemCount] = null;
 			}
-			last = index;
 		}
+		last = index;
 	}
 	OS.g_free (iter);
 }
@@ -2766,38 +2792,24 @@ public void remove (int [] indices) {
  */
 public void removeAll () {
 	checkWidget();
-	checkSetDataInProcessBeforeRemoval(0, items.length);
-	int index = itemCount - 1;
-	while (index >= 0) {
-		TableItem item = items [index];
+	checkSetDataInProcessBeforeRemoval(0, itemCount);
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
 		if (item != null && !item.isDisposed ()) item.release (false);
-		--index;
 	}
 	items = new TableItem [4];
+	if (virtualItems != null) virtualItems = new VirtualItemStorage<> ();
 	itemCount = 0;
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	/*
-	 * Bug 499850: On GTK3, calling gtk_list_store_clear with GtkSelectionMode GTK_SELECTION_MULTIPLE
-	 * takes exponential time. Temporarily change the mode GTK_SELECTION_BROWSE before
-	 * making the call to avoid performance hang.
-	 */
 	long selectionHandle = GTK.gtk_tree_view_get_selection(handle);
 	boolean changeMode = (style & SWT.MULTI) != 0;
 	if (changeMode) GTK.gtk_tree_selection_set_mode(selectionHandle, GTK.GTK_SELECTION_BROWSE);
 	GTK.gtk_list_store_clear (modelHandle);
 	if (changeMode) GTK.gtk_tree_selection_set_mode(selectionHandle, GTK.GTK_SELECTION_MULTIPLE);
-
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-
 	resetCustomDraw ();
-	if (!searchEnabled ()) {
-		GTK.gtk_tree_view_set_search_column (handle, -1);
-	} else {
-		/* Set the search column whenever the model changes */
-		int firstColumn = columnCount == 0 ? FIRST_COLUMN : columns [0].modelIndex;
-		GTK.gtk_tree_view_set_search_column (handle, firstColumn + CELL_TEXT);
-	}
+	if (!searchEnabled ()) GTK.gtk_tree_view_set_search_column (handle, -1);
 }
 
 /**
@@ -3203,11 +3215,9 @@ void resetCustomDraw () {
 
 @Override
 void reskinChildren (int flags) {
-	if (items != null) {
-		for (int i=0; i<itemCount; i++) {
-			TableItem item = items [i];
-			if (item != null) item.reskin (flags);
-		}
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
+		if (item != null) item.reskin (flags);
 	}
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
@@ -3217,6 +3227,7 @@ void reskinChildren (int flags) {
 	}
 	super.reskinChildren (flags);
 }
+
 
 boolean searchEnabled () {
 	/* Disable searching when using VIRTUAL or NO_SEARCH */
@@ -3617,22 +3628,27 @@ public void setItemCount (int count) {
 	if (count == itemCount) return;
 	boolean isVirtual = (style & SWT.VIRTUAL) != 0;
 	if (!isVirtual) setRedraw (false);
-	remove (count, itemCount - 1);
-	int length = Math.max (4, (count + 3) / 4 * 4);
-	TableItem [] newItems = new TableItem [length];
-	System.arraycopy (items, 0, newItems, 0, itemCount);
-	items = newItems;
+	if (count < itemCount) remove (count, itemCount - 1);
 	if (isVirtual) {
-		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
-		for (int i=itemCount; i<count; i++) {
-			GTK.gtk_list_store_append (modelHandle, iter);
+		if (count > itemCount) {
+			long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+			if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+			for (int i=itemCount; i<count; i++) GTK.gtk_list_store_append (modelHandle, iter);
+			OS.g_free (iter);
+			itemCount = count;
 		}
-		OS.g_free (iter);
-		itemCount = count;
 	} else {
-		for (int i=itemCount; i<count; i++) {
-			new TableItem (this, SWT.NONE, i, true);
+		if (count > itemCount) {
+			int length = Math.max (4, (count + 3) / 4 * 4);
+			TableItem [] newItems = new TableItem [length];
+			System.arraycopy (items, 0, newItems, 0, itemCount);
+			items = newItems;
+			for (int i=itemCount; i<count; i++) new TableItem (this, SWT.NONE, i, true);
+		} else {
+			int length = Math.max (4, (count + 3) / 4 * 4);
+			TableItem [] newItems = new TableItem [length];
+			System.arraycopy (items, 0, newItems, 0, itemCount);
+			items = newItems;
 		}
 	}
 	if (!isVirtual) setRedraw (true);
@@ -3671,8 +3687,9 @@ void setModel (long newModel) {
 @Override
 void setOrientation (boolean create) {
 	super.setOrientation (create);
-	for (int i=0; i<itemCount; i++) {
-		if (items[i] != null) items[i].setOrientation (create);
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
+		if (item != null) item.setOrientation (create);
 	}
 	for (int i=0; i<columnCount; i++) {
 		if (columns[i] != null) columns[i].setOrientation (create);
@@ -4201,14 +4218,16 @@ Point resizeCalculationsGTK3 (long widget, int width, int height) {
  * @param end index after the last item to check
  */
 void checkSetDataInProcessBeforeRemoval(int start, int end) {
-	/*
-	 * Bug 182598 - assertion failed in gtktreestore.c
-	 *
-	 * To prevent a crash in GTK, we ensure we are not setting data on the tree items we are about to remove.
-	 * Removing an item while its data is being set will invalidate it, which will cause a crash.
-	 *
-	 * We therefore throw an exception to prevent the crash.
-	 */
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.forEachIndexed ((index, item) -> {
+			if (start <= index && index < end && item.settingData) {
+				String message = "Cannot remove a table item while its data is being set. "
+						+ "At item " + index + " in range [" + start + ", " + end + ").";
+				throw new SWTException(message);
+			}
+		});
+		return;
+	}
 	for (int i = start; i < end; i++) {
 		TableItem item = items[i];
 		if (item != null && item.settingData) {
