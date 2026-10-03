@@ -12,6 +12,8 @@ package org.eclipse.swt.widgets;
 
 import java.util.*;
 
+import org.eclipse.swt.*;
+
 /**
  * Shared bulk tree projection operations used by the platform Tree
  * implementations.
