@@ -31,6 +31,13 @@ final class VirtualItemStorage<T> {
 
 	private int [] indices = new int [4];
 	private Object [] values = new Object [4];
+	/*
+	 * Parallel packed state lane.  A virtual widget can keep semantic/native-cache
+	 * flags beside the logical coordinate without growing the public Item object
+	 * graph.  The lane shifts together with indices/values, so state follows the
+	 * same logical item across inserts/removes.
+	 */
+	private long [] stateMasks = new long [4];
 	private int size;
 
 	int size () {
@@ -60,8 +67,10 @@ final class VirtualItemStorage<T> {
 		ensureCapacity (size + 1);
 		System.arraycopy (indices, position, indices, position + 1, size - position);
 		System.arraycopy (values, position, values, position + 1, size - position);
+		System.arraycopy (stateMasks, position, stateMasks, position + 1, size - position);
 		indices [position] = index;
 		values [position] = value;
+		stateMasks [position] = 0;
 		size++;
 	}
 
@@ -72,9 +81,11 @@ final class VirtualItemStorage<T> {
 		ensureCapacity (size + 1);
 		System.arraycopy (indices, position, indices, position + 1, size - position);
 		System.arraycopy (values, position, values, position + 1, size - position);
+		System.arraycopy (stateMasks, position, stateMasks, position + 1, size - position);
 		for (int i = position + 1; i <= size; i++) indices [i]++;
 		indices [position] = index;
 		values [position] = value;
+		stateMasks [position] = 0;
 		size++;
 	}
 
@@ -89,9 +100,11 @@ final class VirtualItemStorage<T> {
 			if (tail > 0) {
 				System.arraycopy (indices, position + 1, indices, position, tail);
 				System.arraycopy (values, position + 1, values, position, tail);
+				System.arraycopy (stateMasks, position + 1, stateMasks, position, tail);
 			}
 			size--;
 			values [size] = null;
+			stateMasks [size] = 0;
 		} else {
 			position = -position - 1;
 		}
@@ -111,11 +124,13 @@ final class VirtualItemStorage<T> {
 		if (tail > 0) {
 			System.arraycopy (indices, right, indices, left, tail);
 			System.arraycopy (values, right, values, left, tail);
+			System.arraycopy (stateMasks, right, stateMasks, left, tail);
 		}
 		int logicalWidth = endExclusive - start;
 		size -= removedCount;
 		for (int i = left; i < size; i++) indices [i] -= logicalWidth;
 		Arrays.fill (values, size, size + removedCount, null);
+		Arrays.fill (stateMasks, size, size + removedCount, 0L);
 	}
 
 	void truncate (int logicalCount, Consumer<? super T> removed) {
@@ -124,6 +139,7 @@ final class VirtualItemStorage<T> {
 		int firstRemoved = lowerBound (logicalCount);
 		for (int i = firstRemoved; i < size; i++) removed.accept (valueAt (i));
 		Arrays.fill (values, firstRemoved, size, null);
+		Arrays.fill (stateMasks, firstRemoved, size, 0L);
 		size = firstRemoved;
 	}
 
@@ -131,6 +147,7 @@ final class VirtualItemStorage<T> {
 		Objects.requireNonNull (removed, "removed");
 		for (int i = 0; i < size; i++) removed.accept (valueAt (i));
 		Arrays.fill (values, 0, size, null);
+		Arrays.fill (stateMasks, 0, size, 0L);
 		size = 0;
 	}
 
@@ -145,10 +162,46 @@ final class VirtualItemStorage<T> {
 	}
 
 	int indexOfIdentity (T value) {
-		for (int i = 0; i < size; i++) {
-			if (values [i] == value) return indices [i];
-		}
-		return -1;
+		int position = positionOfIdentity (value);
+		return position < 0 ? -1 : indices [position];
+	}
+
+	long state (int index) {
+		int position = Arrays.binarySearch (indices, 0, size, index);
+		return position < 0 ? 0L : stateMasks [position];
+	}
+
+	void state (int index, long state) {
+		int position = Arrays.binarySearch (indices, 0, size, index);
+		if (position < 0) throw new IllegalStateException ("logical item is not materialized");
+		stateMasks [position] = state;
+	}
+
+	boolean flag (int index, long mask) {
+		return (state (index) & mask) != 0;
+	}
+
+	void flag (int index, long mask, boolean enabled) {
+		int position = Arrays.binarySearch (indices, 0, size, index);
+		if (position < 0) throw new IllegalStateException ("logical item is not materialized");
+		if (enabled) stateMasks [position] |= mask;
+		else stateMasks [position] &= ~mask;
+	}
+
+	long stateOfIdentity (T value) {
+		int position = positionOfIdentity (value);
+		return position < 0 ? 0L : stateMasks [position];
+	}
+
+	boolean flagOfIdentity (T value, long mask) {
+		return (stateOfIdentity (value) & mask) != 0;
+	}
+
+	void flagOfIdentity (T value, long mask, boolean enabled) {
+		int position = positionOfIdentity (value);
+		if (position < 0) throw new IllegalStateException ("materialized item is not in storage");
+		if (enabled) stateMasks [position] |= mask;
+		else stateMasks [position] &= ~mask;
 	}
 
 	int indexAt (int materializedIndex) {
@@ -158,6 +211,13 @@ final class VirtualItemStorage<T> {
 	@SuppressWarnings ("unchecked")
 	T valueAt (int materializedIndex) {
 		return (T) values [Objects.checkIndex (materializedIndex, size)];
+	}
+
+	private int positionOfIdentity (T value) {
+		for (int i = 0; i < size; i++) {
+			if (values [i] == value) return i;
+		}
+		return -1;
 	}
 
 	private int lowerBound (int index) {
@@ -170,5 +230,6 @@ final class VirtualItemStorage<T> {
 		int next = Math.max (required, Math.max (4, indices.length * 3 / 2));
 		indices = Arrays.copyOf (indices, next);
 		values = Arrays.copyOf (values, next);
+		stateMasks = Arrays.copyOf (stateMasks, next);
 	}
 }
