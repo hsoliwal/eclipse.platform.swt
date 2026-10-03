@@ -301,7 +301,11 @@ void clear () {
 	font = null;
 	cellBackground = cellForeground = null;
 	cellFont = null;
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (false);
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		setCheckedState (false);
+		setGrayedState (false);
+		setCachedState (false);
+	}
 }
 
 /**
@@ -1243,7 +1247,10 @@ public void setExpanded (boolean expanded) {
 	* to explicitly check for the TVIS_EXPANDED bit.
 	*/
 	int state = (int)OS.SendMessage (hwnd, OS.TVM_GETITEMSTATE, handle, OS.TVIS_EXPANDED);
-	if (((state & OS.TVIS_EXPANDED) != 0) == expanded) return;
+	if (((state & OS.TVIS_EXPANDED) != 0) == expanded) {
+		setExpandedState (expanded);
+		return;
+	}
 
 	/*
 	* Feature in Windows.  When TVM_EXPAND is used to expand
@@ -1320,6 +1327,7 @@ public void setExpanded (boolean expanded) {
 	parent.ignoreExpand = true;
 	OS.SendMessage (hwnd, OS.TVM_EXPAND, expanded ? OS.TVE_EXPAND : OS.TVE_COLLAPSE, handle);
 	parent.ignoreExpand = false;
+	setExpandedState (expanded);
 
 	/* Scroll back to the top item */
 	if (noScroll && hTopItem != 0) {
