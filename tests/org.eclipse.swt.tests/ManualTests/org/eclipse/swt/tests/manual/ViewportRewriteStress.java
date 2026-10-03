@@ -180,6 +180,26 @@ public final class ViewportRewriteStress {
 		Label status = new Label (root, SWT.NONE);
 		status.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 
+		AtomicLong headerPaints = new AtomicLong ();
+		AtomicLong horizontalScrolls = new AtomicLong ();
+		AtomicLong verticalScrolls = new AtomicLong ();
+		AtomicInteger headerOriginX = new AtomicInteger ();
+
+		Canvas header = new Canvas (root, SWT.DOUBLE_BUFFERED | SWT.BORDER);
+		GridData headerData = new GridData (SWT.FILL, SWT.CENTER, true, false);
+		headerData.heightHint = 28;
+		header.setLayoutData (headerData);
+		header.addListener (SWT.Paint, event -> {
+			headerPaints.incrementAndGet ();
+			int x = -headerOriginX.get ();
+			for (int column = 0; column < 8; column++) {
+				int width = 200;
+				event.gc.drawRectangle (x, 0, width, 27);
+				event.gc.drawText ("column " + column, x + 8, 5, true);
+				x += width;
+			}
+		});
+
 		ScrolledComposite scroller = new ScrolledComposite (
 				root, SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
 		scroller.setLayoutData (new GridData (SWT.FILL, SWT.FILL, true, true));
@@ -188,6 +208,18 @@ public final class ViewportRewriteStress {
 		int logicalHeight = Math.multiplyExact (CANVAS_ROWS, ROW_HEIGHT);
 		canvas.setSize (1600, logicalHeight);
 		scroller.setContent (canvas);
+		ScrollBar horizontal = scroller.getHorizontalBar ();
+		if (horizontal != null) {
+			horizontal.addListener (SWT.Selection, event -> {
+				horizontalScrolls.incrementAndGet ();
+				int next = horizontal.getSelection ();
+				if (headerOriginX.getAndSet (next) != next) header.redraw ();
+			});
+		}
+		ScrollBar vertical = scroller.getVerticalBar ();
+		if (vertical != null) {
+			vertical.addListener (SWT.Selection, event -> verticalScrolls.incrementAndGet ());
+		}
 
 		long [] selectionMasks = new long [(CANVAS_ROWS + Long.SIZE - 1) / Long.SIZE];
 		AtomicLong paintEvents = new AtomicLong ();
@@ -224,9 +256,11 @@ public final class ViewportRewriteStress {
 		Composite buttons = new Composite (root, SWT.NONE);
 		buttons.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 		buttons.setLayout (new RowLayout ());
-		jumpButton (buttons, "top", () -> jump (scroller, canvas, 0));
-		jumpButton (buttons, "middle", () -> jump (scroller, canvas, CANVAS_ROWS / 2));
-		jumpButton (buttons, "end", () -> jump (scroller, canvas, CANVAS_ROWS - 1));
+		jumpButton (buttons, "top", () -> jumpVertical (scroller, canvas, 0));
+		jumpButton (buttons, "middle", () -> jumpVertical (scroller, canvas, CANVAS_ROWS / 2));
+		jumpButton (buttons, "end", () -> jumpVertical (scroller, canvas, CANVAS_ROWS - 1));
+		jumpButton (buttons, "x=600", () -> jumpHorizontal (scroller, canvas, header, headerOriginX, 600));
+		jumpButton (buttons, "x=0", () -> jumpHorizontal (scroller, canvas, header, headerOriginX, 0));
 
 		refreshStatus (root.getDisplay (), status, () -> {
 			Point origin = scroller.getOrigin ();
@@ -237,7 +271,10 @@ public final class ViewportRewriteStress {
 			return "logical=" + CANVAS_ROWS
 					+ "  viewport rows=[" + first + "," + Math.min (CANVAS_ROWS, first + visible) + ")"
 					+ "  paint+overscan=[" + paintStart + "," + paintEnd + ")"
-					+ "  paintEvents=" + paintEvents.get ()
+					+ "  bodyPaints=" + paintEvents.get ()
+					+ "  headerPaints=" + headerPaints.get ()
+					+ "  hScrolls=" + horizontalScrolls.get ()
+					+ "  vScrolls=" + verticalScrolls.get ()
 					+ "  rowsAttempted=" + paintedRows.get ()
 					+ "  stateBytes~=" + (selectionMasks.length * Long.BYTES);
 		});
@@ -257,8 +294,19 @@ public final class ViewportRewriteStress {
 		button.addListener (SWT.Selection, event -> action.run ());
 	}
 
-	private static void jump (ScrolledComposite scroller, Canvas canvas, int row) {
-		redrawLocked (canvas, () -> scroller.setOrigin (0, row * ROW_HEIGHT));
+	private static void jumpVertical (ScrolledComposite scroller, Canvas canvas, int row) {
+		Point origin = scroller.getOrigin ();
+		redrawLocked (canvas, () -> scroller.setOrigin (origin.x, row * ROW_HEIGHT));
+		canvas.redraw ();
+	}
+
+	private static void jumpHorizontal (
+			ScrolledComposite scroller, Canvas canvas, Canvas header,
+			AtomicInteger headerOriginX, int x) {
+		Point origin = scroller.getOrigin ();
+		redrawLocked (canvas, () -> scroller.setOrigin (x, origin.y));
+		int actual = scroller.getOrigin ().x;
+		if (headerOriginX.getAndSet (actual) != actual) header.redraw ();
 		canvas.redraw ();
 	}
 
