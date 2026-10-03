@@ -734,10 +734,7 @@ public TreeItem getItem (int index) {
 public int getItemCount () {
 	checkWidget ();
 	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
-	long hwnd = parent.handle;
-	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
-	if (hItem == 0) return 0;
-	return parent.getItemCount (hItem);
+	return parent.virtualChildCount (this);
 }
 
 /**
