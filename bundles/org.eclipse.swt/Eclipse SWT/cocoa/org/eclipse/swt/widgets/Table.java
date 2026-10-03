@@ -2301,6 +2301,11 @@ public void remove (int index) {
 		items [itemCount] = null;
 	}
 	updateRowCount();
+	if (virtualViewport != null) {
+		virtualViewport.setLogicalCount (itemCount);
+		syncVirtualSelectionFromNative ();
+		updateVirtualViewport ();
+	}
 	if (itemCount == 0) setTableEmpty ();
 }
 
@@ -2361,6 +2366,11 @@ public void remove (int start, int end) {
 	}
 	itemCount -= numOfItemsRemoved;
 	updateRowCount();
+	if (virtualViewport != null) {
+		virtualViewport.setLogicalCount (itemCount);
+		syncVirtualSelectionFromNative ();
+		updateVirtualViewport ();
+	}
 	if (itemCount == 0) setTableEmpty ();
 }
 
@@ -2405,6 +2415,11 @@ public void remove (int [] indices) {
 		last = index;
 	}
 	updateRowCount();
+	if (virtualViewport != null) {
+		virtualViewport.setLogicalCount (itemCount);
+		syncVirtualSelectionFromNative ();
+		updateVirtualViewport ();
+	}
 	if (itemCount == 0) setTableEmpty ();
 }
 
