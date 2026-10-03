@@ -1332,4 +1332,61 @@ public void test_setItemCount_itemCount2() {
 	});
 }
 
+@Test
+public void test_bulkExpansionModelApi() {
+	testTreeRegularAndVirtual(() -> {
+		TreeItem root0 = new TreeItem(tree, SWT.NONE);
+		TreeItem child00 = new TreeItem(root0, SWT.NONE);
+		TreeItem grand000 = new TreeItem(child00, SWT.NONE);
+		TreeItem root1 = new TreeItem(tree, SWT.NONE);
+		TreeItem child10 = new TreeItem(root1, SWT.NONE);
+		new TreeItem(child10, SWT.NONE);
+
+		tree.expandAll();
+		assertTrue(root0.getExpanded());
+		assertTrue(child00.getExpanded());
+		assertTrue(root1.getExpanded());
+		assertTrue(child10.getExpanded());
+
+		tree.collapseAll();
+		assertFalse(root0.getExpanded());
+		assertFalse(child00.getExpanded());
+		assertFalse(root1.getExpanded());
+		assertFalse(child10.getExpanded());
+
+		tree.expandToLevel(1);
+		assertFalse(root0.getExpanded(), "level 1 is the implicit Tree root, matching JFace semantics");
+		assertFalse(root1.getExpanded());
+
+		tree.expandToLevel(2);
+		assertTrue(root0.getExpanded());
+		assertTrue(root1.getExpanded());
+		assertFalse(child00.getExpanded());
+		assertFalse(child10.getExpanded());
+
+		tree.collapseAll();
+		tree.expandToLevel(root0, 2);
+		assertTrue(root0.getExpanded());
+		assertTrue(child00.getExpanded());
+		assertFalse(root1.getExpanded());
+
+		tree.collapseToLevel(root0, 1);
+		assertFalse(root0.getExpanded());
+		assertTrue(child00.getExpanded(), "one level collapses only the subtree root");
+
+		tree.setSelection(new TreeItem[] {root0, root1});
+		tree.expandSelectionToLevel(1);
+		assertTrue(root0.getExpanded());
+		assertTrue(root1.getExpanded());
+		tree.collapseSelection();
+		assertFalse(root0.getExpanded());
+		assertFalse(root1.getExpanded());
+
+		assertSame(grand000, child00.getItem(0), "bulk expansion must not replace an exposed item facade");
+		assertThrows(IllegalArgumentException.class, () -> tree.expandToLevel(-2));
+		assertThrows(IllegalArgumentException.class, () -> tree.collapseToLevel(-2));
+	});
+}
+
+
 }
