@@ -701,7 +701,8 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	 * the number of items in the table.
 	 */
 	if (hHint == SWT.DEFAULT && (size.y == getHeaderHeight()) || size.y == 0) {
-		size.y = getItemCount() * getItemHeight() + getHeaderHeight();
+		long logicalHeight = (long) getItemCount () * getItemHeight () + getHeaderHeight ();
+		size.y = (int) Math.min (Integer.MAX_VALUE, logicalHeight);
 	}
 	/*
 	 * Bug 465056: single column Tables have a very small initial width.
@@ -3225,15 +3226,24 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 		if (GTK.GTK_IS_CELL_RENDERER_TOGGLE (cell) || (columnIndex != 0 || (style & SWT.CHECK) == 0)) {
 			drawFlags = (int)flags;
 			drawState = SWT.FOREGROUND;
-			long [] ptr = new long [1];
-			GTK.gtk_tree_model_get (modelHandle, item.handle, Table.BACKGROUND_COLUMN, ptr, -1);
-			if (ptr [0] == 0) {
-				int modelIndex = columnCount == 0 ? Table.FIRST_COLUMN : columns [columnIndex].modelIndex;
-				GTK.gtk_tree_model_get (modelHandle, item.handle, modelIndex + Table.CELL_BACKGROUND, ptr, -1);
-			}
-			if (ptr [0] != 0) {
-				drawState |= SWT.BACKGROUND;
-				GDK.gdk_rgba_free (ptr [0]);
+			if (usesVirtualNativeModel ()) {
+				Color cellBackground = item.virtualCellBackground != null
+						&& columnIndex < item.virtualCellBackground.length
+						? item.virtualCellBackground [columnIndex] : null;
+				if (cellBackground != null || item.virtualBackground != null) {
+					drawState |= SWT.BACKGROUND;
+				}
+			} else {
+				long [] ptr = new long [1];
+				GTK.gtk_tree_model_get (modelHandle, item.handle, Table.BACKGROUND_COLUMN, ptr, -1);
+				if (ptr [0] == 0) {
+					int modelIndex = columnCount == 0 ? Table.FIRST_COLUMN : columns [columnIndex].modelIndex;
+					GTK.gtk_tree_model_get (modelHandle, item.handle, modelIndex + Table.CELL_BACKGROUND, ptr, -1);
+				}
+				if (ptr [0] != 0) {
+					drawState |= SWT.BACKGROUND;
+					GDK.gdk_rgba_free (ptr [0]);
+				}
 			}
 			if ((flags & GTK.GTK_CELL_RENDERER_SELECTED) != 0) drawState |= SWT.SELECTED;
 			if ((flags & GTK.GTK_CELL_RENDERER_SELECTED) == 0) {
@@ -4407,11 +4417,22 @@ void showItem (long iter) {
  */
 public void showSelection () {
 	checkWidget();
+	if (usesVirtualNativeModel ()) {
+		int [] selection = getSelectionIndices ();
+		if (selection.length == 0) return;
+		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+		if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, selection [0])) {
+			showItem (iter);
+		}
+		OS.g_free (iter);
+		return;
+	}
 	TableItem [] selection = getSelection ();
 	if (selection.length == 0) return;
-	TableItem item = selection [0];
-	showItem (item.handle);
+	showItem (selection [0].handle);
 }
+
 
 @Override
 void updateScrollBarValue (ScrollBar bar) {
