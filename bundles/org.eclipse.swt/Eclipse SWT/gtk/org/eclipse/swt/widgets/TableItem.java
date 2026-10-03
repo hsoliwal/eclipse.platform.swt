@@ -261,6 +261,76 @@ String virtualDisplayText (int index) {
 }
 
 
+void insertVirtualColumn (int index, int newCount) {
+	if (!parent.usesVirtualNativeModel ()) return;
+	if (cellFont != null) {
+		Font [] next = new Font [newCount];
+		System.arraycopy (cellFont, 0, next, 0, index);
+		System.arraycopy (cellFont, index, next, index + 1, newCount - index - 1);
+		cellFont = next;
+	}
+	if (strings != null) {
+		String [] next = new String [newCount];
+		System.arraycopy (strings, 0, next, 0, index);
+		System.arraycopy (strings, index, next, index + 1, newCount - index - 1);
+		next [index] = "";
+		strings = next;
+	}
+	if (virtualImages != null) {
+		Image [] next = new Image [newCount];
+		System.arraycopy (virtualImages, 0, next, 0, index);
+		System.arraycopy (virtualImages, index, next, index + 1, newCount - index - 1);
+		virtualImages = next;
+	}
+	if (virtualCellBackground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellBackground, 0, next, 0, index);
+		System.arraycopy (virtualCellBackground, index, next, index + 1, newCount - index - 1);
+		virtualCellBackground = next;
+	}
+	if (virtualCellForeground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellForeground, 0, next, 0, index);
+		System.arraycopy (virtualCellForeground, index, next, index + 1, newCount - index - 1);
+		virtualCellForeground = next;
+	}
+}
+
+void removeVirtualColumn (int index, int newCount) {
+	if (!parent.usesVirtualNativeModel ()) return;
+	if (cellFont != null) {
+		Font [] next = new Font [newCount];
+		System.arraycopy (cellFont, 0, next, 0, index);
+		System.arraycopy (cellFont, index + 1, next, index, newCount - index);
+		cellFont = next;
+	}
+	if (strings != null) {
+		String [] next = new String [newCount];
+		System.arraycopy (strings, 0, next, 0, index);
+		System.arraycopy (strings, index + 1, next, index, newCount - index);
+		strings = next;
+	}
+	if (virtualImages != null) {
+		Image [] next = new Image [newCount];
+		System.arraycopy (virtualImages, 0, next, 0, index);
+		System.arraycopy (virtualImages, index + 1, next, index, newCount - index);
+		virtualImages = next;
+	}
+	if (virtualCellBackground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellBackground, 0, next, 0, index);
+		System.arraycopy (virtualCellBackground, index + 1, next, index, newCount - index);
+		virtualCellBackground = next;
+	}
+	if (virtualCellForeground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellForeground, 0, next, 0, index);
+		System.arraycopy (virtualCellForeground, index + 1, next, index, newCount - index);
+		virtualCellForeground = next;
+	}
+}
+
+
 @Override
 protected void checkSubclass () {
 	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
