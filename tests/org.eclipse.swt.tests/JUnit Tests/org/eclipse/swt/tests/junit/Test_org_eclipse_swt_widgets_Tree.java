@@ -108,6 +108,76 @@ public void test_virtualBranchResidencyDoesNotScaleWithLogicalChildCount() throw
 	assertSame(last, root.getItem(4095));
 }
 
+@Test
+public void test_virtualPackedStateFollowsLogicalInsertAndRemoveOnCocoa() throws Exception {
+	if (!"cocoa".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.CHECK);
+	virtualTree.setItemCount(32);
+	TreeItem marked = virtualTree.getItem(20);
+	marked.setChecked(true);
+	marked.setGrayed(true);
+
+	Field storageField = Tree.class.getDeclaredField("virtualItems");
+	storageField.setAccessible(true);
+	Object storage = storageField.get(virtualTree);
+	Field stateMasksField = storage.getClass().getDeclaredField("stateMasks");
+	stateMasksField.setAccessible(true);
+	Field indicesField = storage.getClass().getDeclaredField("indices");
+	indicesField.setAccessible(true);
+	Field sizeField = storage.getClass().getDeclaredField("size");
+	sizeField.setAccessible(true);
+
+	long[] before = (long[]) stateMasksField.get(storage);
+	int[] beforeIndices = (int[]) indicesField.get(storage);
+	int beforeSize = sizeField.getInt(storage);
+	int markedSlot = -1;
+	for (int i = 0; i < beforeSize; i++) {
+		if (beforeIndices[i] == 20) {
+			markedSlot = i;
+			break;
+		}
+	}
+	assertTrue(markedSlot >= 0, "materialized logical row must exist in sparse storage");
+	long markedState = before[markedSlot];
+	assertTrue(markedState != 0, "materialized virtual state must be represented by a packed mask");
+	assertTrue(before.length <= 16, "packed state capacity must follow materialized residency, not logical count");
+
+	TreeItem inserted = new TreeItem(virtualTree, SWT.NONE, 3);
+	long[] afterInsert = (long[]) stateMasksField.get(storage);
+	int[] afterInsertIndices = (int[]) indicesField.get(storage);
+	int afterInsertSize = sizeField.getInt(storage);
+	int shiftedSlot = -1;
+	for (int i = 0; i < afterInsertSize; i++) {
+		if (afterInsertIndices[i] == 21) {
+			shiftedSlot = i;
+			break;
+		}
+	}
+	assertTrue(shiftedSlot >= 0, "shifted logical row must remain materialized");
+	assertEquals(markedState, afterInsert[shiftedSlot], "packed state must move with the shifted logical item");
+	assertSame(marked, virtualTree.getItem(21));
+	assertTrue(marked.getChecked());
+	assertTrue(marked.getGrayed());
+
+	inserted.dispose();
+	long[] afterRemove = (long[]) stateMasksField.get(storage);
+	int[] afterRemoveIndices = (int[]) indicesField.get(storage);
+	int afterRemoveSize = sizeField.getInt(storage);
+	int restoredSlot = -1;
+	for (int i = 0; i < afterRemoveSize; i++) {
+		if (afterRemoveIndices[i] == 20) {
+			restoredSlot = i;
+			break;
+		}
+	}
+	assertTrue(restoredSlot >= 0, "restored logical row must remain materialized");
+	assertEquals(markedState, afterRemove[restoredSlot], "packed state must shift back with logical removal");
+	assertSame(marked, virtualTree.getItem(20));
+	assertTrue(marked.getChecked());
+	assertTrue(marked.getGrayed());
+}
+
 @Override
 @Test
 public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
@@ -1261,5 +1331,62 @@ public void test_setItemCount_itemCount2() {
 		assertEquals(10, item_0.getItemCount());
 	});
 }
+
+@Test
+public void test_bulkExpansionModelApi() {
+	testTreeRegularAndVirtual(() -> {
+		TreeItem root0 = new TreeItem(tree, SWT.NONE);
+		TreeItem child00 = new TreeItem(root0, SWT.NONE);
+		TreeItem grand000 = new TreeItem(child00, SWT.NONE);
+		TreeItem root1 = new TreeItem(tree, SWT.NONE);
+		TreeItem child10 = new TreeItem(root1, SWT.NONE);
+		new TreeItem(child10, SWT.NONE);
+
+		tree.expandAll();
+		assertTrue(root0.getExpanded());
+		assertTrue(child00.getExpanded());
+		assertTrue(root1.getExpanded());
+		assertTrue(child10.getExpanded());
+
+		tree.collapseAll();
+		assertFalse(root0.getExpanded());
+		assertFalse(child00.getExpanded());
+		assertFalse(root1.getExpanded());
+		assertFalse(child10.getExpanded());
+
+		tree.expandToLevel(1);
+		assertFalse(root0.getExpanded(), "level 1 is the implicit Tree root, matching JFace semantics");
+		assertFalse(root1.getExpanded());
+
+		tree.expandToLevel(2);
+		assertTrue(root0.getExpanded());
+		assertTrue(root1.getExpanded());
+		assertFalse(child00.getExpanded());
+		assertFalse(child10.getExpanded());
+
+		tree.collapseAll();
+		tree.expandToLevel(root0, 2);
+		assertTrue(root0.getExpanded());
+		assertTrue(child00.getExpanded());
+		assertFalse(root1.getExpanded());
+
+		tree.collapseToLevel(root0, 1);
+		assertFalse(root0.getExpanded());
+		assertTrue(child00.getExpanded(), "one level collapses only the subtree root");
+
+		tree.setSelection(new TreeItem[] {root0, root1});
+		tree.expandSelectionToLevel(1);
+		assertTrue(root0.getExpanded());
+		assertTrue(root1.getExpanded());
+		tree.collapseSelection();
+		assertFalse(root0.getExpanded());
+		assertFalse(root1.getExpanded());
+
+		assertSame(grand000, child00.getItem(0), "bulk expansion must not replace an exposed item facade");
+		assertThrows(IllegalArgumentException.class, () -> tree.expandToLevel(-2));
+		assertThrows(IllegalArgumentException.class, () -> tree.collapseToLevel(-2));
+	});
+}
+
 
 }

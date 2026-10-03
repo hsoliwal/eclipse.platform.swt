@@ -198,6 +198,29 @@ int indexOfChild (TreeItem parentItem, TreeItem child) {
 	return -1;
 }
 
+boolean isVirtualPaintCandidate (TreeItem item) {
+	if ((style & SWT.VIRTUAL) == 0) return true;
+	NSOutlineView outline = (NSOutlineView)view;
+	long row = outline.rowForItem (item.handle);
+	if (row < 0) return false;
+	NSRect visible = scrollView.documentVisibleRect ();
+	double overscan = Math.max (1, getItemHeight ()) * VirtualViewportPlanner.DEFAULT_OVERSCAN_ROWS;
+	NSRect rowRect = outline.rectOfRow (row);
+	double visibleTop = visible.y - overscan;
+	double visibleBottom = visible.y + visible.height + overscan;
+	return rowRect.y + rowRect.height >= visibleTop && rowRect.y <= visibleBottom;
+}
+
+void clearVirtualPaintResidency (TreeItem parentItem) {
+	if ((style & SWT.VIRTUAL) == 0) return;
+	for (int i = 0; i < materializedItemCount (parentItem); i++) {
+		TreeItem child = materializedItem (parentItem, i);
+		if (child == null || child.isDisposed ()) continue;
+		child.clearVirtualPaintResidency ();
+		clearVirtualPaintResidency (child);
+	}
+}
+
 @Override
 boolean acceptsFirstResponder (long id, long sel) {
 	return true;
@@ -284,6 +307,140 @@ public void addTreeListener(TreeListener listener) {
 	addTypedListener(listener, SWT.Expand, SWT.Collapse);
 }
 
+
+/**
+ * Constant indicating that a bulk expansion or collapse operation applies to
+ * every reachable level.
+ *
+ * @since 3.136
+ */
+public static final int ALL_LEVELS = TreeExpansionModel.ALL_LEVELS;
+
+/**
+ * Expands all reachable items in the receiver in one redraw-bounded operation.
+ *
+ * @since 3.136
+ */
+public void expandAll () {
+	checkWidget ();
+	TreeExpansionModel.expandAll (this);
+}
+
+/**
+ * Collapses all currently projected items in the receiver in one
+ * redraw-bounded operation.
+ *
+ * @since 3.136
+ */
+public void collapseAll () {
+	checkWidget ();
+	TreeExpansionModel.collapseAll (this);
+}
+
+/**
+ * Expands the receiver to the given level. Levels are relative to the
+ * receiver's implicit root, matching the long-standing JFace tree-viewer
+ * convention. Use {@link #ALL_LEVELS} to expand every reachable level.
+ *
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void expandToLevel (int level) {
+	checkWidget ();
+	TreeExpansionModel.expandToLevel (this, level);
+}
+
+/**
+ * Collapses the receiver to the given level. Levels are relative to the
+ * receiver's implicit root. Use {@link #ALL_LEVELS} to collapse all levels.
+ *
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void collapseToLevel (int level) {
+	checkWidget ();
+	TreeExpansionModel.collapseToLevel (this, level);
+}
+
+/**
+ * Expands the subtree rooted at {@code item} to the given level.
+ *
+ * @param item subtree root
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void expandToLevel (TreeItem item, int level) {
+	checkWidget ();
+	TreeExpansionModel.expandToLevel (this, item, level);
+}
+
+/**
+ * Collapses the subtree rooted at {@code item} to the given level.
+ *
+ * @param item subtree root
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void collapseToLevel (TreeItem item, int level) {
+	checkWidget ();
+	TreeExpansionModel.collapseToLevel (this, item, level);
+}
+
+/**
+ * Expands all selected subtrees.
+ *
+ * @since 3.136
+ */
+public void expandSelection () {
+	expandSelectionToLevel (ALL_LEVELS);
+}
+
+/**
+ * Expands selected subtrees to the given level.
+ *
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void expandSelectionToLevel (int level) {
+	checkWidget ();
+	TreeExpansionModel.expandSelection (this, level);
+}
+
+/**
+ * Collapses all selected subtrees.
+ *
+ * @since 3.136
+ */
+public void collapseSelection () {
+	collapseSelectionToLevel (ALL_LEVELS);
+}
+
+/**
+ * Collapses selected subtrees to the given level.
+ *
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void collapseSelectionToLevel (int level) {
+	checkWidget ();
+	TreeExpansionModel.collapseSelection (this, level);
+}
+
+
+TreeItem [] modelChildren (TreeItem parentItem, boolean materialize) {
+	if ((style & SWT.VIRTUAL) != 0 && !materialize) {
+		int count = materializedItemCount (parentItem);
+		TreeItem [] result = new TreeItem [count];
+		for (int i = 0; i < count; i++) result [i] = materializedItem (parentItem, i);
+		return result;
+	}
+	int count = getItemCount (parentItem);
+	TreeItem [] result = new TreeItem [count];
+	for (int i = 0; i < count; i++) result [i] = _getItem (parentItem, i, true);
+	return result;
+}
+
+
 int calculateWidth (TreeItem parentItem, int index, GC gc, boolean recurse) {
 	int width = 0;
 	for (int i=0; i<materializedItemCount (parentItem); i++) {
@@ -344,9 +501,10 @@ boolean canDragRowsWithIndexes_atPoint(long id, long sel, long rowIndexes, NSPoi
 }
 
 boolean checkData (TreeItem item) {
-	if (item.cached) return true;
+	if (item.isCachedState ()) return true;
 	if ((style & SWT.VIRTUAL) != 0) {
-		item.cached = true;
+		item.pinVirtualFacade ();
+		item.setCachedState (true);
 		Event event = new Event ();
 		TreeItem parentItem = item.getParentItem ();
 		event.item = item;
@@ -493,6 +651,7 @@ void collapseItem_collapseChildren (long id, long sel, long itemID, boolean chil
 	super.collapseItem_collapseChildren (id, sel, itemID, children);
 	ignoreExpand = false;
 	if (isDisposed() || item.isDisposed()) return;
+	clearVirtualPaintResidency (item);
 	setScrollWidth ();
 }
 
@@ -758,7 +917,7 @@ void createItem (TreeItem item, TreeItem parentItem, int index) {
 	} else {
 		reloadPending = true;
 	}
-	if (parentItem != null && parentItem.itemCount == 1 && parentItem.expanded) widget.expandItem (parentItem.handle);
+	if (parentItem != null && parentItem.itemCount == 1 && parentItem.isExpandedState ()) widget.expandItem (parentItem.handle);
 	ignoreExpand = false;
 	if (parentItem == null && itemCount == 1) {
 		Event event = new Event ();
@@ -1023,6 +1182,7 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect rect, long view) {
 	}
 	TreeItem item = (TreeItem) display.getWidget (outValue [0]);
 	if (item == null) return;
+	item.markVirtualPainted ();
 	OS.object_getInstanceVariable(id, Display.SWT_COLUMN, outValue);
 	long tableColumn = outValue[0];
 	long nsColumnIndex = widget.tableColumns().indexOfObjectIdenticalTo(new id(tableColumn));
@@ -1664,7 +1824,9 @@ public TreeItem getItem (int index) {
 	checkWidget ();
 	int count = getItemCount ();
 	if (index < 0 || index >= count) error (SWT.ERROR_INVALID_RANGE);
-	return _getItem (null, index, true);
+	TreeItem item = _getItem (null, index, true);
+	item.pinVirtualFacade ();
+	return item;
 }
 
 /**
@@ -1704,8 +1866,9 @@ public TreeItem getItem (Point point) {
 	if (OS.NSPointInRect(pt, rect)) return null;
 	id id = widget.itemAtRow(row);
 	Widget item = display.getWidget (id.id);
-	if (item != null && item instanceof TreeItem) {
-		return (TreeItem)item;
+	if (item != null && item instanceof TreeItem treeItem) {
+		treeItem.pinVirtualFacade ();
+		return treeItem;
 	}
 	return null;
 }
@@ -1770,6 +1933,7 @@ public TreeItem [] getItems () {
 	TreeItem [] result = new TreeItem [itemCount];
 	for (int i=0; i<itemCount; i++) {
 		result [i] = _getItem (null, i, true);
+		result [i].pinVirtualFacade ();
 	}
 	return result;
 }
@@ -1846,8 +2010,9 @@ public TreeItem [] getSelection () {
 	for (int i=0; i<count; i++) {
 		id id = widget.itemAtRow (indexBuffer [i]);
 		Widget item = display.getWidget (id.id);
-		if (item != null && item instanceof TreeItem) {
-			result[i] = (TreeItem) item;
+		if (item != null && item instanceof TreeItem treeItem) {
+			treeItem.pinVirtualFacade ();
+			result[i] = treeItem;
 		}
 	}
 	return result;
@@ -2178,10 +2343,10 @@ long nextState (long id, long sel) {
 	int index = (int)outlineView.clickedRow();
 	if (index == -1) index = (int)outlineView.selectedRow ();
 	TreeItem item = (TreeItem)display.getWidget (outlineView.itemAtRow (index).id);
-	if (item.grayed) {
-		return item.checked ? OS.NSControlStateValueOff : OS.NSControlStateValueMixed;
+	if (item.isGrayedState ()) {
+		return item.isCheckedState () ? OS.NSControlStateValueOff : OS.NSControlStateValueMixed;
 	}
-	return item.checked ? OS.NSControlStateValueOff : OS.NSControlStateValueOn;
+	return item.isCheckedState () ? OS.NSControlStateValueOff : OS.NSControlStateValueOn;
 }
 
 @Override
@@ -2207,10 +2372,10 @@ long outlineView_objectValueForTableColumn_byItem (long id, long sel, long outli
 	checkData (item);
 	if (checkColumn != null && tableColumn == checkColumn.id) {
 		NSNumber value;
-		if (item.checked && item.grayed) {
+		if (item.isCheckedState () && item.isGrayedState ()) {
 			value = NSNumber.numberWithInt (OS.NSControlStateValueMixed);
 		} else {
-			value = NSNumber.numberWithInt (item.checked ? OS.NSControlStateValueOn : OS.NSControlStateValueOff);
+			value = NSNumber.numberWithInt (item.isCheckedState () ? OS.NSControlStateValueOn : OS.NSControlStateValueOff);
 		}
 		return value.id;
 	}
@@ -2445,7 +2610,7 @@ void outlineViewSelectionIsChanging (long id, long sel, long notification) {
 void outlineView_setObjectValue_forTableColumn_byItem (long id, long sel, long outlineView, long object, long tableColumn, long itemID) {
 	if (checkColumn != null && tableColumn == checkColumn.id)  {
 		TreeItem item = (TreeItem) display.getWidget (itemID);
-		item.checked = !item.checked;
+		item.setCheckedState (!item.isCheckedState ());
 		Event event = new Event ();
 		event.detail = SWT.CHECK;
 		event.item = item;
@@ -3065,6 +3230,7 @@ void setItemCount (TreeItem parentItem, int count) {
 	boolean expanded = parentItem == null || parentItem.getExpanded();
 	if ((style & SWT.VIRTUAL) != 0) {
 		TreeItem[] selectedItems = getSelection ();
+		if (parentItem != null) parentItem.setVirtualChildTopologyKnown (count);
 		if (count < oldCount) {
 			if (parentItem == null) itemCount = count;
 			else parentItem.itemCount = count;
@@ -3078,7 +3244,7 @@ void setItemCount (TreeItem parentItem, int count) {
 			widget.reloadItem (parentItem != null ? parentItem.handle : null, expanded);
 		}
 		selectItems (selectedItems, true);
-		if (parentItem != null && oldCount == 0 && parentItem.expanded) {
+		if (parentItem != null && oldCount == 0 && parentItem.isExpandedState ()) {
 			ignoreExpand = true;
 			widget.expandItem (parentItem.handle);
 			ignoreExpand = false;

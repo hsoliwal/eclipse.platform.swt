@@ -376,6 +376,136 @@ public void addTreeListener(TreeListener listener) {
 	addTypedListener(listener, SWT.Expand, SWT.Collapse);
 }
 
+
+/**
+ * Constant indicating that a bulk expansion or collapse operation applies to
+ * every reachable level.
+ *
+ * @since 3.136
+ */
+public static final int ALL_LEVELS = TreeExpansionModel.ALL_LEVELS;
+
+/**
+ * Expands all reachable items in the receiver in one redraw-bounded operation.
+ *
+ * @since 3.136
+ */
+public void expandAll () {
+	checkWidget ();
+	TreeExpansionModel.expandAll (this);
+}
+
+/**
+ * Collapses all currently projected items in the receiver in one
+ * redraw-bounded operation.
+ *
+ * @since 3.136
+ */
+public void collapseAll () {
+	checkWidget ();
+	TreeExpansionModel.collapseAll (this);
+}
+
+/**
+ * Expands the receiver to the given level. Levels are relative to the
+ * receiver's implicit root, matching the long-standing JFace tree-viewer
+ * convention. Use {@link #ALL_LEVELS} to expand every reachable level.
+ *
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void expandToLevel (int level) {
+	checkWidget ();
+	TreeExpansionModel.expandToLevel (this, level);
+}
+
+/**
+ * Collapses the receiver to the given level. Levels are relative to the
+ * receiver's implicit root. Use {@link #ALL_LEVELS} to collapse all levels.
+ *
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void collapseToLevel (int level) {
+	checkWidget ();
+	TreeExpansionModel.collapseToLevel (this, level);
+}
+
+/**
+ * Expands the subtree rooted at {@code item} to the given level.
+ *
+ * @param item subtree root
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void expandToLevel (TreeItem item, int level) {
+	checkWidget ();
+	TreeExpansionModel.expandToLevel (this, item, level);
+}
+
+/**
+ * Collapses the subtree rooted at {@code item} to the given level.
+ *
+ * @param item subtree root
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void collapseToLevel (TreeItem item, int level) {
+	checkWidget ();
+	TreeExpansionModel.collapseToLevel (this, item, level);
+}
+
+/**
+ * Expands all selected subtrees.
+ *
+ * @since 3.136
+ */
+public void expandSelection () {
+	expandSelectionToLevel (ALL_LEVELS);
+}
+
+/**
+ * Expands selected subtrees to the given level.
+ *
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void expandSelectionToLevel (int level) {
+	checkWidget ();
+	TreeExpansionModel.expandSelection (this, level);
+}
+
+/**
+ * Collapses all selected subtrees.
+ *
+ * @since 3.136
+ */
+public void collapseSelection () {
+	collapseSelectionToLevel (ALL_LEVELS);
+}
+
+/**
+ * Collapses selected subtrees to the given level.
+ *
+ * @param level a non-negative level or {@link #ALL_LEVELS}
+ * @since 3.136
+ */
+public void collapseSelectionToLevel (int level) {
+	checkWidget ();
+	TreeExpansionModel.collapseSelection (this, level);
+}
+
+
+TreeItem [] modelChildren (TreeItem parentItem, boolean materialize) {
+	/*
+	 * GTK and Win32 currently retain their native structural projection.
+	 * Keep the SWT-level bulk API platform-neutral now; their sparse array
+	 * backends can replace this materializing fallback independently.
+	 */
+	return parentItem == null ? getItems () : parentItem.getItems ();
+}
+
+
 @Override
 long borderHandle () {
 	return hwndParent != 0 ? hwndParent : handle;
