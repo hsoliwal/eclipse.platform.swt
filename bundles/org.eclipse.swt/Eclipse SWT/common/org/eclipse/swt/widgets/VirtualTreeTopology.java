@@ -157,11 +157,26 @@ final class VirtualTreeTopology {
 
 	long visibleChildrenRowCount (int parentId) {
 		long rows = childCount (parentId);
+		if (materializedCount == 0) return rows;
+		int [] stack = new int [materializedCount];
+		int top = 0;
 		for (int id = 0; id < parentIds.length; id++) {
-			if (parentIds [id] != parentId) continue;
-			if ((stateMasks [id] & VirtualItemState.EXPANDED) == 0) continue;
-			if (!childCountKnown (id)) continue;
-			rows = Math.addExact (rows, visibleChildrenRowCount (id));
+			if (parentIds [id] == parentId
+					&& (stateMasks [id] & VirtualItemState.EXPANDED) != 0
+					&& childCountKnown (id)) {
+				stack [top++] = id;
+			}
+		}
+		while (top != 0) {
+			int expanded = stack [--top];
+			rows = Math.addExact (rows, childCount (expanded));
+			for (int id = 0; id < parentIds.length; id++) {
+				if (parentIds [id] == expanded
+						&& (stateMasks [id] & VirtualItemState.EXPANDED) != 0
+						&& childCountKnown (id)) {
+					stack [top++] = id;
+				}
+			}
 		}
 		return rows;
 	}
