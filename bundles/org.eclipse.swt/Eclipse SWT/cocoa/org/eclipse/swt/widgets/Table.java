@@ -2691,29 +2691,31 @@ public void setItemCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
 	if (count == itemCount) return;
-	TableItem [] children = items;
+	if ((style & SWT.VIRTUAL) != 0) {
+		if (count < itemCount) {
+			virtualItems.truncate (count, item -> {
+				if (!item.isDisposed ()) item.release (false);
+			});
+		}
+		itemCount = count;
+		updateRowCount ();
+		return;
+	}
 	if (count < itemCount) {
 		for (int index = count; index < itemCount; index ++) {
-			TableItem item = children [index];
+			TableItem item = items [index];
 			if (item != null && !item.isDisposed()) item.release (false);
 		}
 	}
 	if (count > itemCount) {
-		if ((getStyle() & SWT.VIRTUAL) == 0) {
-			for (int i=itemCount; i<count; i++) {
-				new TableItem (this, SWT.NONE, i, true);
-			}
-			return;
-		}
+		for (int i=itemCount; i<count; i++) new TableItem (this, SWT.NONE, i, true);
+		return;
 	}
 	int length = Math.max (4, (count + 3) / 4 * 4);
 	TableItem [] newItems = new TableItem [length];
-	if (children != null) {
-		System.arraycopy (items, 0, newItems, 0, Math.min (count, itemCount));
-	}
-	children = newItems;
-	this.items = newItems;
-	this.itemCount = count;
+	System.arraycopy (items, 0, newItems, 0, Math.min (count, itemCount));
+	items = newItems;
+	itemCount = count;
 	updateRowCount();
 }
 
@@ -2758,8 +2760,8 @@ public void setRedraw (boolean redraw) {
 	checkWidget ();
 	super.setRedraw (redraw);
 	if (redraw && drawCount == 0) {
-		/* Resize the item array to match the item count */
-		if (items.length > 4 && items.length - itemCount > 3) {
+		/* Resize the dense item array to match the item count. Virtual items are sparse. */
+		if ((style & SWT.VIRTUAL) == 0 && items.length > 4 && items.length - itemCount > 3) {
 			int length = Math.max (4, (itemCount + 3) / 4 * 4);
 			TableItem [] newItems = new TableItem [length];
 			System.arraycopy (items, 0, newItems, 0, itemCount);
@@ -3079,6 +3081,7 @@ void setSort (TableColumn column, int direction) {
 void setTableEmpty () {
 	itemCount = 0;
 	items = new TableItem [4];
+	if (virtualItems != null) virtualItems = new VirtualItemStorage<> ();
 	imageBounds = null;
 }
 
