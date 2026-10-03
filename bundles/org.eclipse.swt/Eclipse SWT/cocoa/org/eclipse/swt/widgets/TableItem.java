@@ -41,10 +41,6 @@ public class TableItem extends Item {
 	 * VirtualItemStorage rather than in the Java facade.  A facade that has been
 	 * handed to client code remains identity-pinned until normal SWT disposal.
 	 */
-	private static final long VIRTUAL_CACHED = 1L << 0;
-	private static final long VIRTUAL_CHECKED = 1L << 1;
-	private static final long VIRTUAL_GRAYED = 1L << 2;
-
 	Table parent;
 	String [] strings;
 	Image [] images;
@@ -138,7 +134,7 @@ static Table checkNull (Table control) {
 
 boolean isCachedState () {
 	if ((parent.style & SWT.VIRTUAL) == 0) return cached;
-	return parent.virtualItems.flagOfIdentity (this, VIRTUAL_CACHED);
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.CACHED);
 }
 
 void setCachedState (boolean value) {
@@ -146,12 +142,12 @@ void setCachedState (boolean value) {
 		cached = value;
 		return;
 	}
-	parent.virtualItems.flagOfIdentity (this, VIRTUAL_CACHED, value);
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.CACHED, value);
 }
 
 boolean isCheckedState () {
 	if ((parent.style & SWT.VIRTUAL) == 0) return checked;
-	return parent.virtualItems.flagOfIdentity (this, VIRTUAL_CHECKED);
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.CHECKED);
 }
 
 void setCheckedState (boolean value) {
@@ -159,12 +155,12 @@ void setCheckedState (boolean value) {
 		checked = value;
 		return;
 	}
-	parent.virtualItems.flagOfIdentity (this, VIRTUAL_CHECKED, value);
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.CHECKED, value);
 }
 
 boolean isGrayedState () {
 	if ((parent.style & SWT.VIRTUAL) == 0) return grayed;
-	return parent.virtualItems.flagOfIdentity (this, VIRTUAL_GRAYED);
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.GRAYED);
 }
 
 void setGrayedState (boolean value) {
@@ -172,7 +168,13 @@ void setGrayedState (boolean value) {
 		grayed = value;
 		return;
 	}
-	parent.virtualItems.flagOfIdentity (this, VIRTUAL_GRAYED, value);
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.GRAYED, value);
+}
+
+void pinVirtualFacade () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.PINNED, true);
+	}
 }
 
 int calculateWidth (int index, GC gc, boolean rowSelected) {
