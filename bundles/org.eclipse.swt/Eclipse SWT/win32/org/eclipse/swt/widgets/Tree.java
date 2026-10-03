@@ -876,6 +876,7 @@ LRESULT CDDS_ITEMPOSTPAINT (NMTVCUSTOMDRAW nmcd, long wParam, long lParam) {
 						data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
 						GC gc = createNewGC(hDC, data);
 						Event event = new Event ();
+						pinVirtualFacade (item);
 						event.item = item;
 						event.index = index;
 						event.gc = gc;
@@ -1091,6 +1092,7 @@ LRESULT CDDS_ITEMPOSTPAINT (NMTVCUSTOMDRAW nmcd, long wParam, long lParam) {
 				data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
 				GC gc = createNewGC(hDC, data);
 				Event event = new Event ();
+				pinVirtualFacade (item);
 				event.item = item;
 				event.index = index;
 				event.gc = gc;
@@ -1312,6 +1314,7 @@ LRESULT CDDS_ITEMPREPAINT (NMTVCUSTOMDRAW nmcd, long wParam, long lParam) {
 			GC gc = createNewGC(hDC, data);
 			Event event = new Event ();
 			event.index = index;
+			pinVirtualFacade (item);
 			event.item = item;
 			event.gc = gc;
 			event.detail |= SWT.FOREGROUND;
@@ -1904,6 +1907,7 @@ boolean checkData (TreeItem item, int index, boolean redraw) {
 		pinVirtualFacade (item);
 		item.setCachedState (true);
 		Event event = new Event ();
+		pinVirtualFacade (item);
 		event.item = item;
 		event.index = index;
 		TreeItem oldItem = currentItem;
@@ -3503,7 +3507,7 @@ TreeItem getItem (NMTVCUSTOMDRAW nmcd) {
 			id = (int)tvItem.lParam;
 		}
 	}
-	return exposeVirtualItem (_getItem (nmcd.dwItemSpec, id));
+	return _getItem (nmcd.dwItemSpec, id);
 }
 
 /**
@@ -4793,6 +4797,7 @@ Event sendEraseItemEvent (TreeItem item, NMTTCUSTOMDRAW nmcd, int column, RECT c
 	data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
 	GC gc = createNewGC(nmcd.hdc, data);
 	Event event = new Event ();
+	pinVirtualFacade (item);
 	event.item = item;
 	event.index = column;
 	event.gc = gc;
@@ -4815,6 +4820,7 @@ Event sendMeasureItemEvent (TreeItem item, int index, long hDC, int detail) {
 	data.font = item.getFont (index);
 	GC gc = createNewGC(hDC, data);
 	Event event = new Event ();
+	pinVirtualFacade (item);
 	event.item = item;
 	event.gc = gc;
 	event.index = index;
@@ -4849,6 +4855,7 @@ Event sendPaintItemEvent (TreeItem item, NMTTCUSTOMDRAW nmcd, int column, RECT i
 	data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
 	GC gc = createNewGC(nmcd.hdc, data);
 	Event event = new Event ();
+	pinVirtualFacade (item);
 	event.item = item;
 	event.index = column;
 	event.gc = gc;
@@ -6435,10 +6442,12 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 				OS.SendMessage (handle, OS.TVM_SETITEM, 0, tvItem);
 				TreeItem item = _getItem (hItem, (int)tvItem.lParam);
 				Event event = new Event ();
+				pinVirtualFacade (item);
 				event.item = item;
 				sendSelectionEvent (SWT.Selection, event, false);
 				if ((style & SWT.CHECK) != 0) {
 					event = new Event ();
+					pinVirtualFacade (item);
 					event.item = item;
 					event.detail = SWT.CHECK;
 					sendSelectionEvent (SWT.Selection, event, false);
@@ -7944,6 +7953,7 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				if (item == null) break;
 				pinVirtualFacade (item);
 				Event event = new Event ();
+				pinVirtualFacade (item);
 				event.item = item;
 				switch (treeView.action) {
 					case OS.TVE_EXPAND:
