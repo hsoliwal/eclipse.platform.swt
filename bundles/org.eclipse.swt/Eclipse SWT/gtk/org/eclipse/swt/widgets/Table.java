@@ -115,6 +115,8 @@ public class Table extends Composite {
 	static final int CELL_FONT = 4;
 	static final int CELL_SURFACE = 5;
 	static final int CELL_TYPES = CELL_SURFACE + 1;
+	static final byte [] VIRTUAL_MODEL_ITEM_COUNT =
+			Converter.wcsToMbcs ("swt-item-count", true);
 
 /**
  * Constructs a new instance of this class given its parent
@@ -194,6 +196,108 @@ TableItem materializedItem (int position) {
 
 int materializedIndex (int position) {
 	return (style & SWT.VIRTUAL) != 0 ? virtualItems.indexAt (position) : position;
+}
+
+boolean usesVirtualNativeModel () {
+	return (style & SWT.VIRTUAL) != 0 && !GTK.GTK4;
+}
+
+private int focusedIndex () {
+	long [] path = new long [1];
+	GTK.gtk_tree_view_get_cursor (handle, path, null);
+	if (path [0] == 0) return -1;
+	int index = -1;
+	long indices = GTK.gtk_tree_path_get_indices (path [0]);
+	if (indices != 0) {
+		int [] value = new int [1];
+		C.memmove (value, indices, 4);
+		index = value [0];
+	}
+	GTK.gtk_tree_path_free (path [0]);
+	return index;
+}
+
+private static int remapIndex (int index, int start, int removed, int inserted) {
+	if (index < 0 || index < start) return index;
+	if (index < start + removed) return -1;
+	return index - removed + inserted;
+}
+
+private void rebindVirtualItemHandles () {
+	if (!usesVirtualNativeModel ()) return;
+	virtualItems.forEachIndexed ((index, item) -> {
+		if (item.handle == 0) {
+			item.handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+			if (item.handle == 0) error (SWT.ERROR_NO_HANDLES);
+		}
+		if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, item.handle, 0, index)) {
+			throw new IllegalStateException ("virtual TableItem outside logical model: " + index);
+		}
+	});
+}
+
+private void restoreVirtualNativeState (int [] selected, int focus, int top) {
+	long selection = GTK.gtk_tree_view_get_selection (handle);
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+	try {
+		if (focus >= 0 && focus < itemCount
+				&& GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, focus)) {
+			long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
+			if (path != 0) {
+				GTK.gtk_tree_view_set_cursor (handle, path, 0, false);
+				GTK.gtk_tree_path_free (path);
+			}
+		}
+		GTK.gtk_tree_selection_unselect_all (selection);
+		for (int index : selected) {
+			if (index >= 0 && index < itemCount
+					&& GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index)) {
+				GTK.gtk_tree_selection_select_iter (selection, iter);
+			}
+		}
+		if (top >= 0 && top < itemCount
+				&& GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, top)) {
+			long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
+			if (path != 0) {
+				GTK.gtk_tree_view_scroll_to_cell (handle, path, 0, true, 0f, 0f);
+				GTK.gtk_tree_path_free (path);
+			}
+			topIndex = top;
+			long adjustment = GTK.gtk_scrollable_get_vadjustment (handle);
+			cachedAdjustment = GTK.gtk_adjustment_get_value (adjustment);
+		}
+	} finally {
+		OS.g_free (iter);
+	}
+}
+
+void resetVirtualNativeModel (int newCount, int start, int removed, int inserted) {
+	if (!usesVirtualNativeModel ()) {
+		itemCount = newCount;
+		return;
+	}
+	int [] selected = getSelectionIndices ();
+	for (int i = 0; i < selected.length; i++) {
+		selected [i] = remapIndex (selected [i], start, removed, inserted);
+	}
+	int focus = remapIndex (focusedIndex (), start, removed, inserted);
+	int top = remapIndex (itemCount == 0 ? -1 : getTopIndex (), start, removed, inserted);
+	if (focus < 0 && newCount > 0 && removed > 0) focus = Math.min (start, newCount - 1);
+	if (top < 0 && newCount > 0) top = Math.min (start, newCount - 1);
+
+	long selection = GTK.gtk_tree_view_get_selection (handle);
+	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+	try {
+		GTK.gtk_tree_view_set_model (handle, 0);
+		OS.g_object_set (modelHandle, VIRTUAL_MODEL_ITEM_COUNT, newCount, 0);
+		itemCount = newCount;
+		rebindVirtualItemHandles ();
+		GTK.gtk_tree_view_set_model (handle, modelHandle);
+		restoreVirtualNativeState (selected, focus, top);
+	} finally {
+		OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+	}
 }
 
 static int checkStyle (int style) {
@@ -686,8 +790,13 @@ void createHandle (int index) {
 		scrolledHandle = GTK3.gtk_scrolled_window_new (0, 0);
 	}
 	if (scrolledHandle == 0) error (SWT.ERROR_NO_HANDLES);
-	long [] types = getColumnTypes (1);
-	modelHandle = GTK.gtk_list_store_newv (types.length, types);
+	if (usesVirtualNativeModel ()) {
+		long modelType = OS.content_providers_create_gtype ("SwtVirtualTableModel");
+		modelHandle = modelType != 0 ? OS.g_object_new (modelType, 0) : 0;
+	} else {
+		long [] types = getColumnTypes (1);
+		modelHandle = GTK.gtk_list_store_newv (types.length, types);
+	}
 	if (modelHandle == 0) error (SWT.ERROR_NO_HANDLES);
 	handle = GTK.gtk_tree_view_new_with_model (modelHandle);
 	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
