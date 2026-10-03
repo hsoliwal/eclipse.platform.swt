@@ -180,6 +180,84 @@ public void test_virtualGtkTopologyStaysSparseAndTracksCoordinates() throws Exce
 	assertEquals(5, childCounts[rootId]);
 }
 
+
+@Test
+public void test_virtualGtkPackedStateLivesInTopologyAndSurvivesCoordinateShift() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.CHECK);
+	virtualTree.setItemCount(32);
+	TreeItem marked = virtualTree.getItem(20);
+	marked.setItemCount(1);
+	marked.setText("marked");
+	marked.setChecked(true);
+	marked.setGrayed(true);
+	marked.setExpanded(true);
+
+	Field treeItemsField = Tree.class.getDeclaredField("items");
+	treeItemsField.setAccessible(true);
+	TreeItem[] items = (TreeItem[]) treeItemsField.get(virtualTree);
+	int markedId = -1;
+	for (int id = 0; id < items.length; id++) {
+		if (items[id] == marked) {
+			markedId = id;
+			break;
+		}
+	}
+	assertTrue(markedId >= 0);
+
+	Field topologyField = Tree.class.getDeclaredField("virtualTopology");
+	topologyField.setAccessible(true);
+	Object topology = topologyField.get(virtualTree);
+	Field stateMasksField = topology.getClass().getDeclaredField("stateMasks");
+	Field childIndicesField = topology.getClass().getDeclaredField("childIndices");
+	stateMasksField.setAccessible(true);
+	childIndicesField.setAccessible(true);
+
+	Class<?> stateType = Class.forName("org.eclipse.swt.widgets.VirtualItemState");
+	long expected = 0;
+	for (String name : new String[] {"CACHED", "CHECKED", "GRAYED", "EXPANDED", "PINNED"}) {
+		Field field = stateType.getDeclaredField(name);
+		field.setAccessible(true);
+		expected |= field.getLong(null);
+	}
+
+	long[] masks = (long[]) stateMasksField.get(topology);
+	int[] childIndices = (int[]) childIndicesField.get(topology);
+	assertEquals(expected, masks[markedId] & expected,
+			"virtual semantic state must be authoritative in the packed topology lane");
+	assertEquals(20, childIndices[markedId]);
+	assertTrue(marked.getChecked());
+	assertTrue(marked.getGrayed());
+	assertTrue(marked.getExpanded());
+
+	TreeItem inserted = new TreeItem(virtualTree, SWT.NONE, 3);
+	masks = (long[]) stateMasksField.get(topology);
+	childIndices = (int[]) childIndicesField.get(topology);
+	assertEquals(21, childIndices[markedId]);
+	assertEquals(expected, masks[markedId] & expected,
+			"packed state must move with the same exposed TreeItem coordinate");
+	assertSame(marked, virtualTree.getItem(21));
+
+	inserted.dispose();
+	masks = (long[]) stateMasksField.get(topology);
+	childIndices = (int[]) childIndicesField.get(topology);
+	assertEquals(20, childIndices[markedId]);
+	assertEquals(expected, masks[markedId] & expected);
+	assertSame(marked, virtualTree.getItem(20));
+
+	marked.clear();
+	masks = (long[]) stateMasksField.get(topology);
+	Field expandedField = stateType.getDeclaredField("EXPANDED");
+	expandedField.setAccessible(true);
+	long expanded = expandedField.getLong(null);
+	assertEquals(expanded, masks[markedId] & expanded,
+			"clear must preserve expansion while clearing virtual item data state");
+	assertFalse(marked.getChecked());
+	assertFalse(marked.getGrayed());
+	assertTrue(marked.getExpanded());
+}
+
 @Test
 public void test_virtualPackedStateFollowsLogicalInsertAndRemoveOnCocoa() throws Exception {
 	if (!"cocoa".equals(SWT.getPlatform())) return;

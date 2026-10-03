@@ -315,6 +315,27 @@ int virtualChildCount (TreeItem parentItem) {
 	return virtualChildCount (parentItem == null ? 0 : parentItem.handle);
 }
 
+int virtualItemId (TreeItem item) {
+	if (virtualTopology == null) return -1;
+	int id = getId (item.handle, true);
+	ensureVirtualTopology (item.handle, id);
+	return id;
+}
+
+boolean virtualFlag (TreeItem item, long flag) {
+	if (virtualTopology == null) return false;
+	return virtualTopology.flag (virtualItemId (item), flag);
+}
+
+void virtualFlag (TreeItem item, long flag, boolean value) {
+	if (virtualTopology == null) return;
+	virtualTopology.flag (virtualItemId (item), flag, value);
+}
+
+void pinVirtualFacade (TreeItem item) {
+	virtualFlag (item, VirtualItemState.PINNED, true);
+}
+
 static int checkStyle (int style) {
 	/*
 	* Feature in Windows.  Even when WS_HSCROLL or
@@ -363,7 +384,7 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 	boolean setData = false;
 	boolean updated = false;
 	if ((style & SWT.VIRTUAL) != 0) {
-		if (!item.cached) {
+		if (!item.isCachedState ()) {
 			//lastIndexOf = index [0];
 			setData = checkData (item);
 		}
@@ -421,9 +442,11 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 }
 
 boolean checkData (TreeItem item) {
-	if (item.cached) return true;
+	if ((style & SWT.VIRTUAL) != 0 && virtualFlag (item, VirtualItemState.CACHED)) return true;
+	if ((style & SWT.VIRTUAL) == 0 && item.cached) return true;
 	if ((style & SWT.VIRTUAL) != 0) {
-		item.cached = true;
+		pinVirtualFacade (item);
+		virtualFlag (item, VirtualItemState.CACHED, true);
 		TreeItem parentItem = item.getParentItem ();
 		Event event = new Event ();
 		event.item = item;
@@ -2825,7 +2848,8 @@ long gtk_test_collapse_row (long tree, long iter, long path) {
 	boolean changed = modelChanged || !GTK.gtk_tree_view_row_expanded (handle, path);
 	modelChanged = oldModelChanged;
 	if (isDisposed () || item.isDisposed ()) return 1;
-	item.isExpanded = false;
+	if (virtualTopology != null) virtualFlag (item, VirtualItemState.EXPANDED, false);
+	item.setExpandedState (false);
 	/*
 	* Bug in GTK.  Expanding or collapsing a row which has no more
 	* children causes the model state to become invalid, causing
@@ -2865,7 +2889,8 @@ long gtk_test_expand_row (long tree, long iter, long path) {
 	boolean changed = modelChanged || GTK.gtk_tree_view_row_expanded (handle, path);
 	modelChanged = oldModelChanged;
 	if (isDisposed () || item.isDisposed ()) return 1;
-	item.isExpanded = true;
+	if (virtualTopology != null) virtualFlag (item, VirtualItemState.EXPANDED, true);
+	item.setExpandedState (true);
 	/*
 	* Bug in GTK.  Expanding or collapsing a row which has no more
 	* children causes the model state to become invalid, causing
