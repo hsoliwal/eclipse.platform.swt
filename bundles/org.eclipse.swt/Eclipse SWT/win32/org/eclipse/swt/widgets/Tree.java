@@ -358,6 +358,15 @@ TreeItem exposeVirtualItem (TreeItem item) {
 	return item;
 }
 
+TreeItem [] exposeVirtualItems (TreeItem [] result) {
+	if (virtualTopology != null) {
+		for (TreeItem item : result) {
+			if (item != null) pinVirtualFacade (item);
+		}
+	}
+	return result;
+}
+
 void syncVirtualCheckState (TreeItem item, int stateImage) {
 	if (virtualTopology == null || item == null || item.isDisposed ()) return;
 	pinVirtualFacade (item);
@@ -3641,7 +3650,7 @@ public TreeItem [] getItems () {
 	checkWidget ();
 	long hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_ROOT, 0);
 	if (hItem == 0) return new TreeItem [0];
-	return getItems (hItem);
+	return exposeVirtualItems (getItems (hItem));
 }
 
 TreeItem [] getItems (long hTreeItem) {
@@ -3810,7 +3819,7 @@ public TreeItem [] getSelection () {
 		if ((tvItem.state & OS.TVIS_SELECTED) == 0) return new TreeItem [0];
 		TreeItem item = _getItem (tvItem.hItem, (int)tvItem.lParam);
 		if (item == null) return new TreeItem [0];
-		return new TreeItem [] {item};
+		return exposeVirtualItems (new TreeItem [] {item});
 	}
 	int count = 0;
 	TreeItem [] guess = new TreeItem [(style & SWT.VIRTUAL) != 0 ? 8 : 1];
@@ -3835,11 +3844,11 @@ public TreeItem [] getSelection () {
 	}
 	OS.SetWindowLongPtr (handle, OS.GWLP_WNDPROC, oldProc);
 	if (count == 0) return new TreeItem [0];
-	if (count == guess.length) return guess;
+	if (count == guess.length) return exposeVirtualItems (guess);
 	TreeItem [] result = new TreeItem [count];
 	if (count < guess.length) {
 		System.arraycopy (guess, 0, result, 0, count);
-		return result;
+		return exposeVirtualItems (result);
 	}
 	OS.SetWindowLongPtr (handle, OS.GWLP_WNDPROC, TreeProc);
 	TVITEM tvItem = new TVITEM ();
@@ -3856,7 +3865,7 @@ public TreeItem [] getSelection () {
 		result = newResult;
 	}
 	OS.SetWindowLongPtr (handle, OS.GWLP_WNDPROC, oldProc);
-	return result;
+	return exposeVirtualItems (result);
 }
 
 /**
@@ -3960,7 +3969,7 @@ public int getSortDirection () {
 public TreeItem getTopItem () {
 	checkWidget ();
 	long hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_FIRSTVISIBLE, 0);
-	return hItem != 0 ? _getItem (hItem) : null;
+	return hItem != 0 ? exposeVirtualItem (_getItem (hItem)) : null;
 }
 
 boolean hitTestSelection (long hItem, int x, int y) {
