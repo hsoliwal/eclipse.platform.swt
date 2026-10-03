@@ -108,6 +108,78 @@ public void test_virtualBranchResidencyDoesNotScaleWithLogicalChildCount() throw
 	assertSame(last, root.getItem(4095));
 }
 
+
+@Test
+public void test_virtualGtkTopologyStaysSparseAndTracksCoordinates() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(64);
+	TreeItem root = virtualTree.getItem(20);
+	root.setItemCount(32);
+	TreeItem child = root.getItem(12);
+
+	Field topologyField = Tree.class.getDeclaredField("virtualTopology");
+	topologyField.setAccessible(true);
+	Object topology = topologyField.get(virtualTree);
+	assertNotNull(topology);
+
+	Field treeItemsField = Tree.class.getDeclaredField("items");
+	treeItemsField.setAccessible(true);
+	TreeItem[] materialized = (TreeItem[]) treeItemsField.get(virtualTree);
+	int rootId = -1, childId = -1;
+	for (int id = 0; id < materialized.length; id++) {
+		if (materialized[id] == root) rootId = id;
+		if (materialized[id] == child) childId = id;
+	}
+	assertTrue(rootId >= 0);
+	assertTrue(childId >= 0);
+
+	Field parentIdsField = topology.getClass().getDeclaredField("parentIds");
+	Field childIndicesField = topology.getClass().getDeclaredField("childIndices");
+	Field childCountsField = topology.getClass().getDeclaredField("childCounts");
+	Field rootChildCountField = topology.getClass().getDeclaredField("rootChildCount");
+	Field materializedCountField = topology.getClass().getDeclaredField("materializedCount");
+	for (Field field : new Field[] {
+			parentIdsField, childIndicesField, childCountsField,
+			rootChildCountField, materializedCountField}) {
+		field.setAccessible(true);
+	}
+
+	int[] parentIds = (int[]) parentIdsField.get(topology);
+	int[] childIndices = (int[]) childIndicesField.get(topology);
+	int[] childCounts = (int[]) childCountsField.get(topology);
+	assertEquals(64, rootChildCountField.getInt(topology));
+	assertEquals(32, childCounts[rootId]);
+	assertEquals(-1, parentIds[rootId]);
+	assertEquals(20, childIndices[rootId]);
+	assertEquals(rootId, parentIds[childId]);
+	assertEquals(12, childIndices[childId]);
+	assertTrue(materializedCountField.getInt(topology) <= 2,
+			"logical child counts must not allocate topology slots for cold rows");
+
+	TreeItem insertedRoot = new TreeItem(virtualTree, SWT.NONE, 3);
+	assertEquals(21, childIndices[rootId],
+			"root coordinate must shift with insertion before it");
+	assertEquals(65, rootChildCountField.getInt(topology));
+	insertedRoot.dispose();
+	assertEquals(20, childIndices[rootId]);
+	assertEquals(64, rootChildCountField.getInt(topology));
+
+	TreeItem insertedChild = new TreeItem(root, SWT.NONE, 3);
+	assertEquals(13, childIndices[childId],
+			"child coordinate must shift with sibling insertion");
+	assertEquals(33, childCounts[rootId]);
+	insertedChild.dispose();
+	assertEquals(12, childIndices[childId]);
+	assertEquals(32, childCounts[rootId]);
+
+	root.setItemCount(5);
+	assertEquals(5, root.getItemCount());
+	assertTrue(child.isDisposed(), "materialized child outside the shrunken logical range must be disposed");
+	assertEquals(5, childCounts[rootId]);
+}
+
 @Test
 public void test_virtualPackedStateFollowsLogicalInsertAndRemoveOnCocoa() throws Exception {
 	if (!"cocoa".equals(SWT.getPlatform())) return;
