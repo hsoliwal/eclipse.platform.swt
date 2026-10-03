@@ -145,6 +145,6 @@ final class TreeExpansionModel {
 	private static void checkItem(Tree tree, TreeItem item) {
 		if (item == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		if (item.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-		if (item.getParent() != tree) SWT.error(SWT.ERROR_INVALID_PARENT);
+		if (item.getParent() != tree) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
 }
