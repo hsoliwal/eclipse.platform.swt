@@ -125,6 +125,7 @@ TableItem (Table parent, int style, int index, boolean create) {
 	this.parent = parent;
 	if (create) {
 		parent.createItem (this, index);
+		pinVirtualFacade ();
 	} else {
 		handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 		GTK.gtk_tree_model_iter_nth_child (parent.modelHandle, handle, 0, index);

@@ -51,6 +51,15 @@ final class VirtualTreeTopology {
 		if (parentId < ROOT) throw new IllegalArgumentException ("invalid parent id");
 		if (childIndex < 0) throw new IllegalArgumentException ("negative child index");
 		if (parentId != ROOT) requirePresent (parentId);
+		int existing = materializedChildId (parentId, childIndex);
+		if (existing >= 0 && existing != id) {
+			throw new IllegalStateException ("duplicate materialized tree coordinate");
+		}
+		if (contains (id)) {
+			for (int ancestor = parentId; ancestor != ROOT; ancestor = parentIds [ancestor]) {
+				if (ancestor == id) throw new IllegalArgumentException ("cyclic tree parent");
+			}
+		}
 		ensureCapacity (id + 1);
 		boolean absent = parentIds [id] == ABSENT;
 		long visibleContribution = 0;
@@ -63,10 +72,6 @@ final class VirtualTreeTopology {
 			visibleContribution = visibleExtraRows [id];
 			if (visibleContribution != 0) propagateVisibleContribution (oldParent, -visibleContribution);
 			unlink (id);
-		}
-		int existing = materializedChildId (parentId, childIndex);
-		if (existing >= 0 && existing != id) {
-			throw new IllegalStateException ("duplicate materialized tree coordinate");
 		}
 		parentIds [id] = parentId;
 		childIndices [id] = childIndex;
@@ -302,17 +307,15 @@ final class VirtualTreeTopology {
 
 	private void propagateVisibleContribution (int parentId, long delta) {
 		if (delta == 0) return;
-		if (parentId == ROOT) {
-			rootVisibleExtraRows = Math.addExact (rootVisibleExtraRows, delta);
-			return;
-		}
-		requirePresent (parentId);
-		childVisibleExtraSums [parentId] = Math.addExact (childVisibleExtraSums [parentId], delta);
-		if ((stateMasks [parentId] & VirtualItemState.EXPANDED) != 0
-				&& childCounts [parentId] != UNKNOWN_CHILD_COUNT) {
+		while (parentId != ROOT) {
+			requirePresent (parentId);
+			childVisibleExtraSums [parentId] = Math.addExact (childVisibleExtraSums [parentId], delta);
+			if ((stateMasks [parentId] & VirtualItemState.EXPANDED) == 0
+					|| childCounts [parentId] == UNKNOWN_CHILD_COUNT) return;
 			visibleExtraRows [parentId] = Math.addExact (visibleExtraRows [parentId], delta);
-			propagateVisibleContribution (parentIds [parentId], delta);
+			parentId = parentIds [parentId];
 		}
+		rootVisibleExtraRows = Math.addExact (rootVisibleExtraRows, delta);
 	}
 
 	private void shiftSiblingIndices (int parentId, int fromInclusive, int delta) {

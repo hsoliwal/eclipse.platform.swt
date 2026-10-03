@@ -535,7 +535,7 @@ public void pack () {
 	/* compute item widths down column */
 	GC gc = new GC (parent);
 	int index = parent.indexOf (this);
-	width = Math.max (width, parent.calculateWidth (parent.items, index, gc));
+	width = Math.max (width, parent.calculateWidth (index, gc));
 	gc.dispose ();
 	setWidth (width);
 }

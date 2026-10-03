@@ -119,7 +119,10 @@ public TableItem (Table parent, int style, int index) {
 TableItem (Table parent, int style, int index, boolean create) {
 	super (parent, style);
 	this.parent = parent;
-	if (create) parent.createItem (this, index);
+	if (create) {
+		parent.createItem (this, index);
+		pinVirtualFacade ();
+	}
 }
 
 static Table checkNull (Table control) {
