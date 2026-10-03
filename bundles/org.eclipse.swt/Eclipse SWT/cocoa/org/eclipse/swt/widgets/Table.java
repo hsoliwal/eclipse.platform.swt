@@ -339,6 +339,7 @@ boolean checkData (TableItem item) {
 boolean checkData (TableItem item, int index) {
 	if (item.isCachedState ()) return true;
 	if ((style & SWT.VIRTUAL) != 0) {
+		item.pinVirtualFacade ();
 		item.setCachedState (true);
 		Event event = new Event ();
 		event.item = item;
@@ -1649,7 +1650,9 @@ public boolean getHeaderVisible () {
 public TableItem getItem (int index) {
 	checkWidget ();
 	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
-	return _getItem (index);
+	TableItem item = _getItem (index);
+	item.pinVirtualFacade ();
+	return item;
 }
 
 /**
@@ -1683,7 +1686,9 @@ public TableItem getItem (Point point) {
 	pt.y = point.y;
 	int row = (int)widget.rowAtPoint(pt);
 	if (row == -1) return null;
-	return _getItem (row);
+	TableItem item = _getItem (row);
+	item.pinVirtualFacade ();
+	return item;
 }
 
 /**
