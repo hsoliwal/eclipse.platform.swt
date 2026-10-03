@@ -838,7 +838,9 @@ public TreeItem getItem (int index) {
 	if (index < 0) error (SWT.ERROR_INVALID_RANGE);
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if (index >= itemCount) error (SWT.ERROR_INVALID_RANGE);
-	return parent._getItem (this, index, true);
+	TreeItem item = parent._getItem (this, index, true);
+	item.pinVirtualFacade ();
+	return item;
 }
 
 /**
@@ -880,6 +882,7 @@ public TreeItem [] getItems () {
 	TreeItem [] result = new TreeItem [itemCount];
 	for (int i=0; i<itemCount; i++) {
 		result [i] = parent._getItem (this, i, true);
+		result [i].pinVirtualFacade ();
 	}
 	return result;
 }
@@ -921,6 +924,7 @@ public Tree getParent () {
  */
 public TreeItem getParentItem () {
 	checkWidget ();
+	if (parentItem != null) parentItem.pinVirtualFacade ();
 	return parentItem;
 }
 
