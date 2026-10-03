@@ -151,6 +151,29 @@ final class VirtualTreeTopology {
 		return (stateMasks [id] & flag) != 0;
 	}
 
+	int highestChildIndexWithSubtreeFlag (int parentId, long flag) {
+		int highest = -1;
+		for (int id = 0; id < parentIds.length; id++) {
+			if (parentIds [id] == parentId && subtreeHasFlag (id, flag)) {
+				highest = Math.max (highest, childIndices [id]);
+			}
+		}
+		return highest;
+	}
+
+	void forgetSubtree (int id) {
+		discardSubtree (id);
+	}
+
+	private boolean subtreeHasFlag (int id, long flag) {
+		if (!contains (id)) return false;
+		if ((stateMasks [id] & flag) != 0) return true;
+		for (int child = 0; child < parentIds.length; child++) {
+			if (parentIds [child] == id && subtreeHasFlag (child, flag)) return true;
+		}
+		return false;
+	}
+
 	private void pruneCoordinatesPast (int parentId, int count) {
 		for (int id = 0; id < parentIds.length; id++) {
 			if (parentIds [id] == parentId && childIndices [id] >= count) {
