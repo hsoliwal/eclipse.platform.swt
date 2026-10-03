@@ -252,6 +252,15 @@ String _getText (int index) {
 	return new String (Converter.mbcsToWcs (buffer));
 }
 
+String virtualDisplayText (int index) {
+	String value = _getText (index);
+	if (value.length () > TEXT_LIMIT) {
+		return value.substring (0, TEXT_LIMIT - ELLIPSIS.length ()) + ELLIPSIS;
+	}
+	return value;
+}
+
+
 @Override
 protected void checkSubclass () {
 	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
