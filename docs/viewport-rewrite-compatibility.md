@@ -181,9 +181,9 @@ The diagnostic sidecar records:
 - horizontal/vertical scrollbar selection, minimum, maximum, thumb, increment, page increment and visibility;
 - Table/Tree logical counts, top coordinate, selection count, row height, columns and header state;
 - ScrolledComposite origin/minimum/expansion state;
-- live `TableItem` and `TreeItem` counts captured with SWT's existing `WidgetSpy.NonDisposedWidgetTracker`.
+- live `TableItem` and `TreeItem` counts captured with SWT's existing `WidgetSpy.NonDisposedWidgetTracker`, both globally and scoped to the captured widget subtree.
 
-The scripted sequence includes top/middle/end virtual Table states, expanded/collapsed large Tree states, vertical and horizontal ScrolledComposite states, fixed-surface logical viewport states, and narrow/wide resize cases that exercise interdependent scrollbar visibility.
+The scripted sequence includes top/middle/end virtual Table states, expanded/collapsed large Tree states, vertical and horizontal ScrolledComposite states, fixed-surface logical viewport states, and narrow/wide resize cases that exercise interdependent scrollbar visibility. Each PNG is hashed so a same-platform/theme/DPI lane can cheaply detect an unexpected visual change before a human inspects the image.
 
 The purpose is not pixel-identical output across operating systems or themes. Compare screenshots within the same platform/theme/DPI lane and combine visual evidence with the structural sidecar and SetData/paint counters.
 
