@@ -151,6 +151,21 @@ final class VirtualTreeTopology {
 		return (stateMasks [id] & flag) != 0;
 	}
 
+	long visibleRowCount () {
+		return visibleChildrenRowCount (ROOT);
+	}
+
+	long visibleChildrenRowCount (int parentId) {
+		long rows = childCount (parentId);
+		for (int id = 0; id < parentIds.length; id++) {
+			if (parentIds [id] != parentId) continue;
+			if ((stateMasks [id] & VirtualItemState.EXPANDED) == 0) continue;
+			if (!childCountKnown (id)) continue;
+			rows = Math.addExact (rows, visibleChildrenRowCount (id));
+		}
+		return rows;
+	}
+
 	int highestChildIndexWithSubtreeFlag (int parentId, long flag) {
 		int highest = -1;
 		for (int id = 0; id < parentIds.length; id++) {
