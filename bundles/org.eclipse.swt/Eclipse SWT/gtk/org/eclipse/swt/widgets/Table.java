@@ -2809,7 +2809,13 @@ public void removeAll () {
 	if (changeMode) GTK.gtk_tree_selection_set_mode(selectionHandle, GTK.GTK_SELECTION_MULTIPLE);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	resetCustomDraw ();
-	if (!searchEnabled ()) GTK.gtk_tree_view_set_search_column (handle, -1);
+	if (!searchEnabled ()) {
+		GTK.gtk_tree_view_set_search_column (handle, -1);
+	} else {
+		/* Set the search column whenever the model changes */
+		int firstColumn = columnCount == 0 ? FIRST_COLUMN : columns [0].modelIndex;
+		GTK.gtk_tree_view_set_search_column (handle, firstColumn + CELL_TEXT);
+	}
 }
 
 /**
