@@ -82,6 +82,7 @@ public class Tree extends Composite {
 	NSButtonCell buttonCell;
 	NSTableHeaderView headerView;
 	TreeItem [] items;
+	VirtualItemStorage<TreeItem> virtualItems;
 	int itemCount;
 	TreeColumn [] columns;
 	TreeColumn sortColumn;
@@ -154,25 +155,47 @@ public Tree (Composite parent, int style) {
 @Override
 void _addListener (int eventType, Listener listener) {
 	super._addListener (eventType, listener);
-	clearCachedWidth (items);
+	clearCachedWidth (null);
 }
 
 TreeItem _getItem (TreeItem parentItem, int index, boolean create) {
-	int count;
-	TreeItem[] items;
-	if (parentItem != null) {
-		count = parentItem.itemCount;
-		items = parentItem.items;
-	} else {
-		count = this.itemCount;
-		items = this.items;
-	}
+	int count = getItemCount (parentItem);
 	if (index < 0 || index >= count) return null;
-	TreeItem item = items [index];
+	TreeItem item = itemAt (parentItem, index);
 	if (item != null || (style & SWT.VIRTUAL) == 0 || !create) return item;
 	item = new TreeItem (this, parentItem, SWT.NONE, index, false);
-	items [index] = item;
+	virtualStorage (parentItem).put (index, item);
 	return item;
+}
+
+VirtualItemStorage<TreeItem> virtualStorage (TreeItem parentItem) {
+	return parentItem == null ? virtualItems : parentItem.virtualItems;
+}
+
+TreeItem itemAt (TreeItem parentItem, int index) {
+	if ((style & SWT.VIRTUAL) != 0) return virtualStorage (parentItem).get (index);
+	return parentItem == null ? items [index] : parentItem.items [index];
+}
+
+int materializedItemCount (TreeItem parentItem) {
+	return (style & SWT.VIRTUAL) != 0 ? virtualStorage (parentItem).size () : getItemCount (parentItem);
+}
+
+TreeItem materializedItem (TreeItem parentItem, int position) {
+	if ((style & SWT.VIRTUAL) != 0) return virtualStorage (parentItem).valueAt (position);
+	return parentItem == null ? items [position] : parentItem.items [position];
+}
+
+int materializedIndex (TreeItem parentItem, int position) {
+	return (style & SWT.VIRTUAL) != 0 ? virtualStorage (parentItem).indexAt (position) : position;
+}
+
+int indexOfChild (TreeItem parentItem, TreeItem child) {
+	if ((style & SWT.VIRTUAL) != 0) return virtualStorage (parentItem).indexOfIdentity (child);
+	TreeItem [] children = parentItem == null ? items : parentItem.items;
+	int count = getItemCount (parentItem);
+	for (int i = 0; i < count; i++) if (children [i] == child) return i;
+	return -1;
 }
 
 @Override
@@ -261,17 +284,13 @@ public void addTreeListener(TreeListener listener) {
 	addTypedListener(listener, SWT.Expand, SWT.Collapse);
 }
 
-int calculateWidth (TreeItem[] items, int index, GC gc, boolean recurse) {
-	if (items == null) return 0;
+int calculateWidth (TreeItem parentItem, int index, GC gc, boolean recurse) {
 	int width = 0;
-	for (int i=0; i<items.length; i++) {
-		TreeItem item = items [i];
+	for (int i=0; i<materializedItemCount (parentItem); i++) {
+		TreeItem item = materializedItem (parentItem, i);
 		if (item != null) {
-			int itemWidth = item.calculateWidth (index, gc);
-			width = Math.max (width, itemWidth);
-			if (recurse && item.getExpanded ()) {
-				width = Math.max (width, calculateWidth (item.items, index, gc, recurse));
-			}
+			width = Math.max (width, item.calculateWidth (index, gc));
+			if (recurse && item.getExpanded ()) width = Math.max (width, calculateWidth (item, index, gc, true));
 		}
 	}
 	return width;
@@ -372,8 +391,9 @@ void checkItems () {
 	((NSOutlineView)view).reloadData ();
 	selectItems (selectedItems, true);
 	ignoreExpand = true;
-	for (int i = 0; i < itemCount; i++) {
-		if (items[i] != null) items[i].updateExpanded ();
+	for (int i = 0; i < materializedItemCount (null); i++) {
+		TreeItem item = materializedItem (null, i);
+		if (item != null) item.updateExpanded ();
 	}
 	ignoreExpand = false;
 }
@@ -390,11 +410,9 @@ void clear (TreeItem parentItem, int index, boolean all) {
 }
 
 void clearAll (TreeItem parentItem, boolean all) {
-	int count = getItemCount (parentItem);
-	if (count == 0) return;
-	TreeItem [] children = parentItem == null ? items : parentItem.items;
-	for (int i=0; i<count; i++) {
-		TreeItem item = children [i];
+	if (getItemCount (parentItem) == 0) return;
+	for (int i=0; i<materializedItemCount (parentItem); i++) {
+		TreeItem item = materializedItem (parentItem, i);
 		if (item != null) {
 			item.clear ();
 			item.redraw (-1);
@@ -457,13 +475,12 @@ public void clearAll (boolean all) {
 	clearAll (null, all);
 }
 
-void clearCachedWidth (TreeItem[] items) {
-	if (items == null) return;
-	for (int i = 0; i < items.length; i++) {
-		TreeItem item = items [i];
-		if (item == null) break;
+void clearCachedWidth (TreeItem parentItem) {
+	for (int i = 0; i < materializedItemCount (parentItem); i++) {
+		TreeItem item = materializedItem (parentItem, i);
+		if (item == null) continue;
 		item.width = -1;
-		clearCachedWidth (item.items);
+		clearCachedWidth (item);
 	}
 }
 
@@ -499,7 +516,7 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 			}
 		} else {
 			GC gc = new GC (this);
-			width = calculateWidth (items, 0, gc, true) + CELL_GAP;
+			width = calculateWidth (null, 0, gc, true) + CELL_GAP;
 			gc.dispose ();
 		}
 		if ((style & SWT.CHECK) != 0) width += getCheckColumnWidth ();
@@ -518,10 +535,9 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 }
 
 void createColumn (TreeItem item, int index) {
-	if (item.items != null) {
-		for (int i = 0; i < item.items.length; i++) {
-			if (item.items[i] != null) createColumn (item.items[i], index);
-		}
+	for (int i = 0; i < materializedItemCount (item); i++) {
+		TreeItem child = materializedItem (item, i);
+		if (child != null) createColumn (child, index);
 	}
 	String [] strings = item.strings;
 	if (strings != null) {
@@ -694,13 +710,9 @@ void createItem (TreeColumn column, int index) {
 	nsColumn.setWidth (0);
 	System.arraycopy (columns, index, columns, index + 1, columnCount++ - index);
 	columns [index] = column;
-	for (int i = 0; i < itemCount; i++) {
-		TreeItem item = items [i];
-		if (item != null) {
-			if (columnCount > 1) {
-				createColumn (item, index);
-			}
-		}
+	for (int i = 0; i < materializedItemCount (null); i++) {
+		TreeItem item = materializedItem (null, i);
+		if (item != null && columnCount > 1) createColumn (item, index);
 	}
 }
 
@@ -709,57 +721,46 @@ void createItem (TreeColumn column, int index) {
  * and {@link TreeItem#setItemCount}
  */
 void createItem (TreeItem item, TreeItem parentItem, int index) {
-	int count;
-	TreeItem [] items;
-	if (parentItem != null) {
-		count = parentItem.itemCount;
-		items = parentItem.items;
-	} else {
-		count = this.itemCount;
-		items = this.items;
-	}
+	int count = getItemCount (parentItem);
 	if (index == -1) index = count;
 	if (!(0 <= index && index <= count)) error (SWT.ERROR_INVALID_RANGE);
-	if (count == items.length) {
-		TreeItem [] newItems = new TreeItem [items.length + 4];
-		System.arraycopy (items, 0, newItems, 0, items.length);
-		items = newItems;
-		if (parentItem != null) {
-			parentItem.items = items;
-		} else {
-			this.items = items;
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualStorage (parentItem).insert (index, item);
+		item.items = new TreeItem [4];
+		item.virtualItems = new VirtualItemStorage<> ();
+		count++;
+	} else {
+		TreeItem [] children = parentItem != null ? parentItem.items : items;
+		if (count == children.length) {
+			TreeItem [] newItems = new TreeItem [children.length + 4];
+			System.arraycopy (children, 0, newItems, 0, children.length);
+			children = newItems;
+			if (parentItem != null) parentItem.items = children;
+			else items = children;
 		}
+		System.arraycopy (children, index, children, index + 1, count++ - index);
+		children [index] = item;
+		item.items = new TreeItem [4];
 	}
-	System.arraycopy (items, index, items, index + 1, count++ - index);
-	items [index] = item;
-	item.items = new TreeItem [4];
 	SWTTreeItem handle = (SWTTreeItem) new SWTTreeItem ().alloc ().init ();
 	item.handle = handle;
 	item.createJNIRef ();
 	item.register ();
-	if (parentItem != null) {
-		parentItem.itemCount = count;
-	} else {
-		this.itemCount = count;
-	}
+	if (parentItem != null) parentItem.itemCount = count;
+	else itemCount = count;
 	ignoreExpand = true;
 	NSOutlineView widget = (NSOutlineView)view;
 	if (getDrawing()) {
 		TreeItem[] selectedItems = getSelection ();
-		if (parentItem != null) {
-			widget.reloadItem (parentItem.handle, true);
-		} else {
-			widget.reloadData ();
-		}
+		if (parentItem != null) widget.reloadItem (parentItem.handle, true);
+		else widget.reloadData ();
 		selectItems (selectedItems, true);
 	} else {
 		reloadPending = true;
 	}
-	if (parentItem != null && parentItem.itemCount == 1 && parentItem.expanded) {
-		widget.expandItem (parentItem.handle);
-	}
+	if (parentItem != null && parentItem.itemCount == 1 && parentItem.expanded) widget.expandItem (parentItem.handle);
 	ignoreExpand = false;
-	if (parentItem == null && this.itemCount == 1) {
+	if (parentItem == null && itemCount == 1) {
 		Event event = new Event ();
 		event.detail = 0;
 		sendEvent (SWT.EmptinessChanged, event);
@@ -770,6 +771,7 @@ void createItem (TreeItem item, TreeItem parentItem, int index) {
 void createWidget () {
 	super.createWidget ();
 	items = new TreeItem [4];
+	if ((style & SWT.VIRTUAL) != 0) virtualItems = new VirtualItemStorage<> ();
 	columns = new TreeColumn [4];
 }
 
