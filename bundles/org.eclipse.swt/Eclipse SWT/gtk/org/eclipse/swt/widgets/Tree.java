@@ -89,6 +89,7 @@ public class Tree extends Composite {
 	long ignoreCell;
 	TreeItem[] items;
 	VirtualTreeTopology virtualTopology;
+	VirtualTreeVisibleProjection virtualProjection;
 	int nextId;
 	TreeColumn [] columns;
 	TreeColumn sortColumn;
@@ -313,6 +314,16 @@ int virtualChildCount (long parentIter) {
 
 int virtualChildCount (TreeItem parentItem) {
 	return virtualChildCount (parentItem == null ? 0 : parentItem.handle);
+}
+
+long virtualVisibleRowCount () {
+	return virtualProjection != null ? virtualProjection.visibleRowCount () : 0;
+}
+
+VirtualTreeVisibleProjection.Row [] virtualVisibleWindow (long firstVisible, int rowCount) {
+	return virtualProjection != null
+			? virtualProjection.window (firstVisible, rowCount)
+			: new VirtualTreeVisibleProjection.Row [0];
 }
 
 int virtualItemId (TreeItem item) {
@@ -1497,7 +1508,10 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
 void createWidget (int index) {
 	super.createWidget (index);
 	items = new TreeItem [4];
-	if ((style & SWT.VIRTUAL) != 0) virtualTopology = new VirtualTreeTopology ();
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualTopology = new VirtualTreeTopology ();
+		virtualProjection = new VirtualTreeVisibleProjection (virtualTopology);
+	}
 	columns = new TreeColumn [4];
 	columnCount = 0;
 	initializeViewportLayers ();
