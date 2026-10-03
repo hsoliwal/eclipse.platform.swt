@@ -2732,6 +2732,7 @@ void sendTreeDefaultSelection() {
 	TreeItem treeItem = getFocusItem ();
 	if (treeItem == null)
 		return;
+	pinVirtualFacade (treeItem);
 
 	Event event = new Event ();
 	event.item = treeItem;
@@ -2791,6 +2792,7 @@ long gtk3_button_release_event (long widget, long event) {
 long gtk_changed (long widget) {
 	TreeItem item = getFocusItem ();
 	if (item != null) {
+		pinVirtualFacade (item);
 		Event event = new Event ();
 		event.item = item;
 		sendSelectionEvent (SWT.Selection, event, false);
