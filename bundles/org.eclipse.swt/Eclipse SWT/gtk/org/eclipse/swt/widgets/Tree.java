@@ -1360,6 +1360,7 @@ void createItem (TreeItem item, long parentIter, int index) {
 	int id = getId (item.handle, false);
 	items [id] = item;
 	if (virtualTopology != null) {
+		pinVirtualFacade (item);
 		int parentId = virtualParentId (parentIter);
 		int logicalIndex = index;
 		if (logicalIndex == -1) {
