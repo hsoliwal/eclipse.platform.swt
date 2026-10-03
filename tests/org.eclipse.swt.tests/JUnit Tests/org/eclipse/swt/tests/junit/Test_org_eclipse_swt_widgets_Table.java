@@ -64,6 +64,46 @@ public void test_computeSizeIIZ() {
 }
 
 
+
+@Test
+public void test_virtualScrollMetricsUseLogicalRowsAndSampleExtent() throws Exception {
+	Class<?> type = Class.forName("org.eclipse.swt.widgets.VirtualScrollMetrics");
+	Constructor<?> constructor = type.getDeclaredConstructor();
+	constructor.setAccessible(true);
+	Object metrics = constructor.newInstance();
+
+	Method configure = type.getDeclaredMethod("configure", int.class, int.class, int.class);
+	Method visibleRows = type.getDeclaredMethod("visibleRows");
+	Method maximum = type.getDeclaredMethod("maximum");
+	Method thumb = type.getDeclaredMethod("thumb");
+	Method pageIncrement = type.getDeclaredMethod("pageIncrement");
+	Method maxTopRow = type.getDeclaredMethod("maxTopRow");
+	Method clampTopRow = type.getDeclaredMethod("clampTopRow", int.class);
+	Method estimatedContentExtent = type.getDeclaredMethod("estimatedContentExtent");
+	for (Method method : new Method[] {
+			configure, visibleRows, maximum, thumb, pageIncrement,
+			maxTopRow, clampTopRow, estimatedContentExtent}) {
+		method.setAccessible(true);
+	}
+
+	configure.invoke(metrics, 1_000_000, 22, 440);
+	assertEquals(20, visibleRows.invoke(metrics));
+	assertEquals(1_000_000, maximum.invoke(metrics),
+			"scrollbar maximum must stay in logical row units");
+	assertEquals(20, thumb.invoke(metrics));
+	assertEquals(20, pageIncrement.invoke(metrics));
+	assertEquals(999_980, maxTopRow.invoke(metrics));
+	assertEquals(999_980, clampTopRow.invoke(metrics, Integer.MAX_VALUE));
+	assertEquals(22_000_000L, estimatedContentExtent.invoke(metrics));
+
+	configure.invoke(metrics, Integer.MAX_VALUE, 64, 640);
+	assertEquals(Integer.MAX_VALUE, maximum.invoke(metrics),
+			"huge logical models must not convert pixel extent into scrollbar maximum");
+	assertEquals(10, visibleRows.invoke(metrics));
+	assertTrue((Long) estimatedContentExtent.invoke(metrics) > Integer.MAX_VALUE,
+			"estimated pixel extent may exceed int while row-coordinate scrollbar remains valid");
+}
+
 @Test
 public void test_viewportLayerStateSeparatesHeaderFromVerticalScroll() throws Exception {
 	Class<?> type = Class.forName("org.eclipse.swt.widgets.ViewportLayerState");
