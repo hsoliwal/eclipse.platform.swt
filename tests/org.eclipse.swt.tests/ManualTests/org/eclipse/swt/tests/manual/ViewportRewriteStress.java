@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -596,7 +598,7 @@ public final class ViewportRewriteStress {
 				Path png = output.resolve (scenario.name () + ".png");
 				capturePng (scenario.target (), png);
 				writeSpySnapshot (
-						scenario.name (), scenario.target (), tracker,
+						scenario.name (), scenario.target (), tracker, png,
 						output.resolve (scenario.name () + ".txt"));
 			}
 			captureNext (display, shell, output, tracker, index + 1);
@@ -628,23 +630,53 @@ public final class ViewportRewriteStress {
 
 	private static void writeSpySnapshot (
 			String scenario, Control target,
-			WidgetSpy.NonDisposedWidgetTracker tracker, Path path) {
+			WidgetSpy.NonDisposedWidgetTracker tracker, Path png, Path path) {
 		StringBuilder out = new StringBuilder (4096);
 		out.append ("scenario=").append (scenario).append ('\n');
 		out.append ("platform=").append (SWT.getPlatform ()).append ('\n');
+		out.append ("screenshot=").append (png.getFileName ()).append ('\n');
+		out.append ("screenshot.sha256=").append (sha256 (png)).append ('\n');
 		appendControlSnapshot (out, target, "");
 		if (tracker != null) {
 			Map<Widget, Error> widgets = tracker.getNonDisposedWidgets ();
 			long tables = widgets.keySet ().stream ().filter (TableItem.class::isInstance).count ();
 			long trees = widgets.keySet ().stream ().filter (TreeItem.class::isInstance).count ();
+			long localTables = widgets.keySet ().stream ()
+					.filter (TableItem.class::isInstance)
+					.map (TableItem.class::cast)
+					.filter (item -> belongsTo (target, item.getParent ()))
+					.count ();
+			long localTrees = widgets.keySet ().stream ()
+					.filter (TreeItem.class::isInstance)
+					.map (TreeItem.class::cast)
+					.filter (item -> belongsTo (target, item.getParent ()))
+					.count ();
 			out.append ("spy.liveTableItems=").append (tables).append ('\n');
 			out.append ("spy.liveTreeItems=").append (trees).append ('\n');
 			out.append ("spy.liveTrackedItems=").append (widgets.size ()).append ('\n');
+			out.append ("spy.localTableItems=").append (localTables).append ('\n');
+			out.append ("spy.localTreeItems=").append (localTrees).append ('\n');
 		}
 		try {
 			Files.writeString (path, out, StandardCharsets.UTF_8);
 		} catch (IOException failure) {
 			throw new IllegalStateException ("Cannot write viewport spy snapshot " + path, failure);
+		}
+	}
+
+	private static boolean belongsTo (Control root, Control control) {
+		for (Control current = control; current != null; current = current.getParent ()) {
+			if (current == root) return true;
+		}
+		return false;
+	}
+
+	private static String sha256 (Path path) {
+		try {
+			byte[] digest = MessageDigest.getInstance ("SHA-256").digest (Files.readAllBytes (path));
+			return java.util.HexFormat.of ().formatHex (digest);
+		} catch (IOException | NoSuchAlgorithmException failure) {
+			throw new IllegalStateException ("Cannot hash screenshot " + path, failure);
 		}
 	}
 
