@@ -92,6 +92,24 @@ public void test_virtualChildResidencyDoesNotScaleWithLogicalCount() throws Exce
 	assertTrue(backing.length <= 16, "materializing one distant child must keep branch residency sparse");
 }
 
+@Test
+public void test_virtualBranchResidencyDoesNotScaleWithLogicalChildCount() throws Exception {
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(1);
+	TreeItem root = virtualTree.getItem(0);
+	root.setItemCount(4096);
+
+	if ("cocoa".equals(SWT.getPlatform())) {
+		Field itemsField = TreeItem.class.getDeclaredField("items");
+		itemsField.setAccessible(true);
+		TreeItem[] backing = (TreeItem[]) itemsField.get(root);
+		assertTrue(backing.length <= 16, "Cocoa virtual TreeItem must not allocate one Java slot per logical child");
+	}
+
+	TreeItem last = root.getItem(4095);
+	assertSame(last, root.getItem(4095));
+}
+
 @Override
 @Test
 public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
