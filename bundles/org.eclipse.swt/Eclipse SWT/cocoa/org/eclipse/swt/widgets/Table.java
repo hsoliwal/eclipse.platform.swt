@@ -71,6 +71,7 @@ import org.eclipse.swt.internal.cocoa.*;
 public class Table extends Composite {
 	TableItem [] items;
 	VirtualItemStorage<TableItem> virtualItems;
+	VirtualViewportPlanner virtualViewport;
 	TableColumn [] columns;
 	TableColumn sortColumn;
 	TableItem currentItem;
@@ -231,6 +232,45 @@ TableItem materializedItem (int position) {
 
 int materializedIndex (int position) {
 	return (style & SWT.VIRTUAL) != 0 ? virtualItems.indexAt (position) : position;
+}
+
+void syncVirtualSelectionFromNative () {
+	if (virtualViewport == null) return;
+	VirtualSelectionModel selectionModel = virtualViewport.selection ();
+	selectionModel.clear ();
+	NSTableView widget = (NSTableView)view;
+	long count = widget.numberOfSelectedRows ();
+	if (count == 0) return;
+	if (count == itemCount && (style & SWT.SINGLE) == 0) {
+		selectionModel.selectAll ();
+		return;
+	}
+	NSIndexSet selected = widget.selectedRowIndexes ();
+	long [] indices = new long [(int)count];
+	selected.getIndexes (indices, count, 0);
+	for (long index : indices) {
+		if (0 <= index && index < itemCount) selectionModel.setSelected ((int)index, true);
+	}
+}
+
+void updateVirtualViewport () {
+	if (virtualViewport == null) return;
+	if (itemCount == 0) {
+		virtualViewport.setViewport (0, 0);
+		return;
+	}
+	NSRect rect = scrollView.documentVisibleRect ();
+	NSPoint point = new NSPoint ();
+	point.x = rect.x;
+	point.y = rect.y;
+	NSTableHeaderView tableHeader = ((NSTableView)view).headerView ();
+	if (tableHeader != null) point.y += tableHeader.bounds ().height;
+	int first = (int)((NSTableView)view).rowAtPoint (point);
+	if (first < 0) first = 0;
+	int rowHeight = Math.max (1, getItemHeight ());
+	int visible = Math.min (itemCount - first,
+			Math.max (1, (int)Math.ceil (rect.height / rowHeight) + 1));
+	virtualViewport.setViewport (first, visible);
 }
 
 int calculateWidth (int index, GC gc) {
@@ -685,6 +725,9 @@ void createItem (TableItem item, int index) {
 		itemCount++;
 		updateRowCount ();
 		if (index != itemCount) fixSelection (index, true);
+		virtualViewport.setLogicalCount (itemCount);
+		syncVirtualSelectionFromNative ();
+		updateVirtualViewport ();
 		return;
 	}
 	if (itemCount == items.length) {
@@ -704,7 +747,10 @@ void createItem (TableItem item, int index) {
 void createWidget () {
 	super.createWidget ();
 	items = new TableItem [4];
-	if ((style & SWT.VIRTUAL) != 0) virtualItems = new VirtualItemStorage<> ();
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems = new VirtualItemStorage<> ();
+		virtualViewport = new VirtualViewportPlanner ();
+	}
 	columns = new TableColumn [4];
 }
 
@@ -940,6 +986,9 @@ void destroyItem (TableItem item) {
 		virtualItems.remove (index);
 		itemCount--;
 		updateRowCount ();
+		virtualViewport.setLogicalCount (itemCount);
+		syncVirtualSelectionFromNative ();
+		updateVirtualViewport ();
 		if (itemCount == 0) setTableEmpty ();
 		return;
 	}
@@ -1810,6 +1859,10 @@ public int getSelectionIndex () {
  */
 public int [] getSelectionIndices () {
 	checkWidget ();
+	if (virtualViewport != null) {
+		syncVirtualSelectionFromNative ();
+		return virtualViewport.selection ().toArray ();
+	}
 	NSTableView widget = (NSTableView)view;
 	if (widget.numberOfSelectedRows() == 0) {
 		return new int [0];
@@ -1897,7 +1950,15 @@ public int getTopIndex () {
 		point.y += height;
 	}
 	int rowAtPoint = (int)((NSTableView)view).rowAtPoint(point);
-	if (rowAtPoint == -1) return 0; /* Empty table */
+	if (rowAtPoint == -1) {
+		if (virtualViewport != null) virtualViewport.setViewport (0, 0);
+		return 0; /* Empty table */
+	}
+	if (virtualViewport != null) {
+		int visible = Math.min (itemCount - rowAtPoint,
+				Math.max (1, (int)Math.ceil (rect.height / Math.max (1, getItemHeight ())) + 1));
+		virtualViewport.setViewport (rowAtPoint, visible);
+	}
 	return rowAtPoint;
 }
 
@@ -2036,6 +2097,10 @@ public int indexOf (TableItem item) {
 public boolean isSelected (int index) {
 	checkWidget ();
 	if (!(0 <= index && index < itemCount)) return false;
+	if (virtualViewport != null) {
+		syncVirtualSelectionFromNative ();
+		return virtualViewport.selection ().isSelected (index);
+	}
 	return ((NSTableView)view).isRowSelected(index);
 }
 
@@ -2405,6 +2470,7 @@ void reskinChildren (int flags) {
 void scrollClipViewToPoint(long id, long sel, long clipView, NSPoint point) {
 	if (shouldScroll) {
 		super.scrollClipViewToPoint(id, sel, clipView, point);
+		updateVirtualViewport ();
 		if ((style & SWT.CHECK) != 0 && columnCount > 0 && ((NSTableView)view).headerView() != null) {
 			if (point.x <= getCheckColumnWidth()) {
 				/*
@@ -2783,6 +2849,9 @@ public void setItemCount (int count) {
 		}
 		itemCount = count;
 		updateRowCount ();
+		virtualViewport.setLogicalCount (count);
+		syncVirtualSelectionFromNative ();
+		updateVirtualViewport ();
 		return;
 	}
 	if (count < itemCount) {
@@ -3165,7 +3234,10 @@ void setSort (TableColumn column, int direction) {
 void setTableEmpty () {
 	itemCount = 0;
 	items = new TableItem [4];
-	if (virtualItems != null) virtualItems = new VirtualItemStorage<> ();
+	if (virtualItems != null) {
+		virtualItems = new VirtualItemStorage<> ();
+		virtualViewport = new VirtualViewportPlanner ();
+	}
 	imageBounds = null;
 }
 
@@ -3447,6 +3519,7 @@ void tableViewColumnDidResize (long id, long sel, long aNotification) {
 @Override
 void sendSelection () {
 	if (ignoreSelect) return;
+	syncVirtualSelectionFromNative ();
 	NSTableView widget = (NSTableView) view;
 	int row = (int)widget.selectedRow ();
 	if(row == -1)
