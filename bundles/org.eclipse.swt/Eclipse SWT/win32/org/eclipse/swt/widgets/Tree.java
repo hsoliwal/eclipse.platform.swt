@@ -337,6 +337,27 @@ int virtualChildCount (TreeItem parentItem) {
 	return virtualChildCount (parentItem == null ? OS.TVI_ROOT : parentItem.handle);
 }
 
+boolean virtualFlag (TreeItem item, long flag) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return false;
+	int id = virtualItemId (item);
+	return id >= 0 && virtualTopology.contains (id) && virtualTopology.flag (id, flag);
+}
+
+void virtualFlag (TreeItem item, long flag, boolean value) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	int id = virtualItemId (item);
+	if (id >= 0 && virtualTopology.contains (id)) virtualTopology.flag (id, flag, value);
+}
+
+void pinVirtualFacade (TreeItem item) {
+	virtualFlag (item, VirtualItemState.PINNED, true);
+}
+
+TreeItem exposeVirtualItem (TreeItem item) {
+	if (item != null && virtualTopology != null) pinVirtualFacade (item);
+	return item;
+}
+
 @Override
 void _removeListener (int eventType, Listener listener) {
 	super._removeListener (eventType, listener);
@@ -1862,7 +1883,7 @@ void checkBuffered () {
 
 boolean checkData (TreeItem item, boolean redraw) {
 	if ((style & SWT.VIRTUAL) == 0) return true;
-	if (!item.cached) {
+	if (!item.isCachedState ()) {
 		TreeItem parentItem = item.getParentItem ();
 		return checkData (item, parentItem == null ? indexOf (item) : parentItem.indexOf (item), redraw);
 	}
@@ -1871,8 +1892,9 @@ boolean checkData (TreeItem item, boolean redraw) {
 
 boolean checkData (TreeItem item, int index, boolean redraw) {
 	if ((style & SWT.VIRTUAL) == 0) return true;
-	if (!item.cached) {
-		item.cached = true;
+	if (!item.isCachedState ()) {
+		pinVirtualFacade (item);
+		item.setCachedState (true);
 		Event event = new Event ();
 		event.item = item;
 		event.index = index;
@@ -1968,7 +1990,7 @@ void clear (long hItem, TVITEM tvItem) {
 		item = tvItem.lParam != -1 ? items [(int)tvItem.lParam] : null;
 	}
 	if (item != null) {
-		if ((style & SWT.VIRTUAL) != 0 && !item.cached) return;
+		if ((style & SWT.VIRTUAL) != 0 && !item.isCachedState ()) return;
 		item.clear ();
 		item.redraw ();
 	}
@@ -3451,7 +3473,7 @@ public TreeItem getItem (int index) {
 	if (hFirstItem == 0) error (SWT.ERROR_INVALID_RANGE);
 	long hItem = findItem (hFirstItem, index);
 	if (hItem == 0) error (SWT.ERROR_INVALID_RANGE);
-	return _getItem (hItem);
+	return exposeVirtualItem (_getItem (hItem));
 }
 
 TreeItem getItem (NMTVCUSTOMDRAW nmcd) {
@@ -3522,7 +3544,7 @@ TreeItem getItemInPixels (Point point) {
 				}
 			}
 		}
-		if ((lpht.flags & flags) != 0) return _getItem (lpht.hItem);
+		if ((lpht.flags & flags) != 0) return exposeVirtualItem (_getItem (lpht.hItem));
 	}
 	return null;
 }
