@@ -1158,7 +1158,15 @@ public void deselect (int index) {
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	GTK.gtk_tree_selection_unselect_iter (selection, _getItem (index).handle);
+	if (usesVirtualNativeModel ()) {
+		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+		if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
+			GTK.gtk_tree_selection_unselect_iter (selection, iter);
+		OS.g_free (iter);
+	} else {
+		GTK.gtk_tree_selection_unselect_iter (selection, _getItem (index).handle);
+	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	if (fixColumn) hideFirstColumn ();
 }
@@ -1183,9 +1191,20 @@ public void deselect (int start, int end) {
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	for (int index=start; index<=end; index++) {
-		if (index < 0 || index >= itemCount) continue;
-		GTK.gtk_tree_selection_unselect_iter (selection, _getItem (index).handle);
+	long iter = usesVirtualNativeModel () ? OS.g_malloc (GTK.GtkTreeIter_sizeof ()) : 0;
+	if (usesVirtualNativeModel () && iter == 0) error (SWT.ERROR_NO_HANDLES);
+	try {
+		for (int index=start; index<=end; index++) {
+			if (index < 0 || index >= itemCount) continue;
+			if (usesVirtualNativeModel ()) {
+				if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
+					GTK.gtk_tree_selection_unselect_iter (selection, iter);
+			} else {
+				GTK.gtk_tree_selection_unselect_iter (selection, _getItem (index).handle);
+			}
+		}
+	} finally {
+		if (iter != 0) OS.g_free (iter);
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	if (fixColumn) hideFirstColumn ();
@@ -1214,10 +1233,20 @@ public void deselect (int [] indices) {
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	for (int i=0; i<indices.length; i++) {
-		int index = indices[i];
-		if (index < 0 || index >= itemCount) continue;
-		GTK.gtk_tree_selection_unselect_iter (selection, _getItem (index).handle);
+	long iter = usesVirtualNativeModel () ? OS.g_malloc (GTK.GtkTreeIter_sizeof ()) : 0;
+	if (usesVirtualNativeModel () && iter == 0) error (SWT.ERROR_NO_HANDLES);
+	try {
+		for (int index : indices) {
+			if (index < 0 || index >= itemCount) continue;
+			if (usesVirtualNativeModel ()) {
+				if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
+					GTK.gtk_tree_selection_unselect_iter (selection, iter);
+			} else {
+				GTK.gtk_tree_selection_unselect_iter (selection, _getItem (index).handle);
+			}
+		}
+	} finally {
+		if (iter != 0) OS.g_free (iter);
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	if (fixColumn) hideFirstColumn ();
@@ -3467,12 +3496,19 @@ boolean searchEnabled () {
  */
 public void select (int index) {
 	checkWidget();
-	if (!(0 <= index && index < itemCount))  return;
+	if (!(0 <= index && index < itemCount)) return;
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	TableItem item = _getItem (index);
-	GTK.gtk_tree_selection_select_iter (selection, item.handle);
+	if (usesVirtualNativeModel ()) {
+		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+		if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
+			GTK.gtk_tree_selection_select_iter (selection, iter);
+		OS.g_free (iter);
+	} else {
+		GTK.gtk_tree_selection_select_iter (selection, _getItem (index).handle);
+	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	if (fixColumn) hideFirstColumn ();
 }
@@ -3509,9 +3545,19 @@ public void select (int start, int end) {
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	for (int index=start; index<=end; index++) {
-		TableItem item = _getItem (index);
-		GTK.gtk_tree_selection_select_iter (selection, item.handle);
+	long iter = usesVirtualNativeModel () ? OS.g_malloc (GTK.GtkTreeIter_sizeof ()) : 0;
+	if (usesVirtualNativeModel () && iter == 0) error (SWT.ERROR_NO_HANDLES);
+	try {
+		for (int index=start; index<=end; index++) {
+			if (usesVirtualNativeModel ()) {
+				if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
+					GTK.gtk_tree_selection_select_iter (selection, iter);
+			} else {
+				GTK.gtk_tree_selection_select_iter (selection, _getItem (index).handle);
+			}
+		}
+	} finally {
+		if (iter != 0) OS.g_free (iter);
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	if (fixColumn) hideFirstColumn ();
@@ -3548,11 +3594,20 @@ public void select (int [] indices) {
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	for (int i=0; i<length; i++) {
-		int index = indices [i];
-		if (!(0 <= index && index < itemCount)) continue;
-		TableItem item = _getItem (index);
-		GTK.gtk_tree_selection_select_iter (selection, item.handle);
+	long iter = usesVirtualNativeModel () ? OS.g_malloc (GTK.GtkTreeIter_sizeof ()) : 0;
+	if (usesVirtualNativeModel () && iter == 0) error (SWT.ERROR_NO_HANDLES);
+	try {
+		for (int index : indices) {
+			if (!(0 <= index && index < itemCount)) continue;
+			if (usesVirtualNativeModel ()) {
+				if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
+					GTK.gtk_tree_selection_select_iter (selection, iter);
+			} else {
+				GTK.gtk_tree_selection_select_iter (selection, _getItem (index).handle);
+			}
+		}
+	} finally {
+		if (iter != 0) OS.g_free (iter);
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	if (fixColumn) hideFirstColumn ();
@@ -3582,18 +3637,30 @@ public void selectAll () {
 
 void selectFocusIndex (int index) {
 	/*
-	* Note that this method both selects and sets the focus to the
-	* specified index, so any previous selection in the list will be lost.
-	* gtk does not provide a way to just set focus to a specified list item.
-	*/
-	if (!(0 <= index && index < itemCount))  return;
-	TableItem item = _getItem (index);
-	long path = GTK.gtk_tree_model_get_path (modelHandle, item.handle);
+	 * Note that this method both selects and sets the focus to the specified
+	 * index, so any previous selection in the list will be lost.
+	 */
+	if (!(0 <= index && index < itemCount)) return;
+	long iter = 0;
+	long itemHandle;
+	if (usesVirtualNativeModel ()) {
+		iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+		if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index)) {
+			OS.g_free (iter);
+			return;
+		}
+		itemHandle = iter;
+	} else {
+		itemHandle = _getItem (index).handle;
+	}
+	long path = GTK.gtk_tree_model_get_path (modelHandle, itemHandle);
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_tree_view_set_cursor (handle, path, 0, false);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_tree_path_free (path);
+	if (iter != 0) OS.g_free (iter);
 }
 
 @Override
@@ -4229,17 +4296,26 @@ public void setSelection (TableItem [] items) {
 public void setTopIndex (int index) {
 	checkWidget();
 	if (!(0 <= index && index < itemCount)) return;
-	/*
-	 * Feature in GTK: cache the GtkAdjustment value for future use in
-	 * getTopIndex(). Set topIndex to index.
-	 */
-	long vAdjustment;
-	vAdjustment = GTK.gtk_scrollable_get_vadjustment(handle);
+	long vAdjustment = GTK.gtk_scrollable_get_vadjustment(handle);
 	cachedAdjustment = GTK.gtk_adjustment_get_value(vAdjustment);
 	topIndex = index;
-	long path = GTK.gtk_tree_model_get_path (modelHandle, _getItem (index).handle);
+	long iter = 0;
+	long itemHandle;
+	if (usesVirtualNativeModel ()) {
+		iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+		if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index)) {
+			OS.g_free (iter);
+			return;
+		}
+		itemHandle = iter;
+	} else {
+		itemHandle = _getItem (index).handle;
+	}
+	long path = GTK.gtk_tree_model_get_path (modelHandle, itemHandle);
 	GTK.gtk_tree_view_scroll_to_cell (handle, path, 0, true, 0f, 0f);
 	GTK.gtk_tree_path_free (path);
+	if (iter != 0) OS.g_free (iter);
 }
 
 /**
