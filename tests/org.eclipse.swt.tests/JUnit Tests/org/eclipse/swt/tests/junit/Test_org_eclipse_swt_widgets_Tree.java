@@ -110,6 +110,56 @@ public void test_virtualBranchResidencyDoesNotScaleWithLogicalChildCount() throw
 }
 
 
+
+@Test
+public void test_virtualTreeVisibleRowCountUsesLogicalCountsPlusSparseExpansion() throws Exception {
+	Class<?> topologyType = Class.forName("org.eclipse.swt.widgets.VirtualTreeTopology");
+	var constructor = topologyType.getDeclaredConstructor();
+	constructor.setAccessible(true);
+	Object topology = constructor.newInstance();
+
+	Method bind = topologyType.getDeclaredMethod("bind", int.class, int.class, int.class);
+	Method setChildCount = topologyType.getDeclaredMethod("setChildCount", int.class, int.class);
+	Method flag = topologyType.getDeclaredMethod("flag", int.class, long.class, boolean.class);
+	Method visibleRowCount = topologyType.getDeclaredMethod("visibleRowCount");
+	for (Method method : new Method[] {bind, setChildCount, flag, visibleRowCount}) {
+		method.setAccessible(true);
+	}
+
+	Class<?> stateType = Class.forName("org.eclipse.swt.widgets.VirtualItemState");
+	Field expandedField = stateType.getDeclaredField("EXPANDED");
+	expandedField.setAccessible(true);
+	long expanded = expandedField.getLong(null);
+
+	setChildCount.invoke(topology, -1, 1_000_000);
+	assertEquals(1_000_000L, visibleRowCount.invoke(topology),
+			"cold logical children contribute one visible row each without materialization");
+
+	bind.invoke(topology, 0, -1, 100);
+	setChildCount.invoke(topology, 0, 100);
+	assertEquals(1_000_000L, visibleRowCount.invoke(topology),
+			"a collapsed materialized root must not add descendant rows");
+
+	flag.invoke(topology, 0, expanded, true);
+	assertEquals(1_000_100L, visibleRowCount.invoke(topology),
+			"expanding one sparse root adds only its logical direct children");
+
+	bind.invoke(topology, 1, 0, 20);
+	setChildCount.invoke(topology, 1, 50);
+	flag.invoke(topology, 1, expanded, true);
+	assertEquals(1_000_150L, visibleRowCount.invoke(topology),
+			"nested sparse expansion adds descendant rows without materializing cold siblings");
+
+	bind.invoke(topology, 2, -1, 500);
+	setChildCount.invoke(topology, 2, 10);
+	flag.invoke(topology, 2, expanded, true);
+	assertEquals(1_000_160L, visibleRowCount.invoke(topology));
+
+	flag.invoke(topology, 0, expanded, false);
+	assertEquals(1_000_010L, visibleRowCount.invoke(topology),
+			"collapsing a branch removes all of its visible descendants from the logical range");
+}
+
 @Test
 public void test_virtualGtkTopologyStaysSparseAndTracksCoordinates() throws Exception {
 	if (!"gtk".equals(SWT.getPlatform())) return;
