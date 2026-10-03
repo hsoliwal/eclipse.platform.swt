@@ -1033,8 +1033,9 @@ boolean checkData (TableItem item, boolean redraw) {
 
 boolean checkData (TableItem item, int index, boolean redraw) {
 	if ((style & SWT.VIRTUAL) == 0) return true;
-	if (!item.cached) {
-		item.cached = true;
+	if (!item.isCachedState ()) {
+		item.pinVirtualFacade ();
+		item.setCachedState (true);
 		Event event = new Event ();
 		event.item = item;
 		event.index = index;
@@ -2335,7 +2336,9 @@ public TableItem getItem (int index) {
 	checkWidget ();
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 	if (!(0 <= index && index < count)) error (SWT.ERROR_INVALID_RANGE);
-	return _getItem (index);
+	TableItem item = _getItem (index);
+	item.pinVirtualFacade ();
+	return item;
 }
 
 /**
@@ -2401,7 +2404,9 @@ TableItem getItemInPixels (Point point) {
 			}
 			if (pinfo.iItem != -1 && pinfo.iSubItem == 0) {
 				if (hitTestSelection (pinfo.iItem, pinfo.x, pinfo.y)) {
-					return _getItem (pinfo.iItem);
+					TableItem item = _getItem (pinfo.iItem);
+					item.pinVirtualFacade ();
+					return item;
 				}
 			}
 			return null;
@@ -2431,7 +2436,9 @@ TableItem getItemInPixels (Point point) {
 				}
 			}
 		}
-		return _getItem (pinfo.iItem);
+		TableItem item = _getItem (pinfo.iItem);
+		item.pinVirtualFacade ();
+		return item;
 	}
 	return null;
 }
@@ -2497,6 +2504,7 @@ public TableItem [] getItems () {
 	if ((style & SWT.VIRTUAL) != 0) {
 		for (int i=0; i<count; i++) {
 			result [i] = _getItem (i);
+			result [i].pinVirtualFacade ();
 		}
 	} else {
 		_getItems (result, count);
@@ -2553,7 +2561,9 @@ public TableItem [] getSelection () {
 	int i = -1, j = 0, count = (int)OS.SendMessage (handle, OS.LVM_GETSELECTEDCOUNT, 0, 0);
 	TableItem [] result = new TableItem [count];
 	while ((i = (int)OS.SendMessage (handle, OS.LVM_GETNEXTITEM, i, OS.LVNI_SELECTED)) != -1) {
-		result [j++] = _getItem (i);
+		TableItem item = _getItem (i);
+		item.pinVirtualFacade ();
+		result [j++] = item;
 	}
 	return result;
 }
@@ -2695,7 +2705,36 @@ public int getTopIndex () {
 	* is displaying blank lines at the top of the controls.  The
 	* fix is to check for a negative number and return zero instead.
 	*/
-	return Math.max (0, (int)OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0));
+	int top = Math.max (0, (int)OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0));
+	if (virtualViewport != null) updateVirtualViewport (top);
+	return top;
+}
+
+void updateVirtualViewport () {
+	if (virtualViewport == null) return;
+	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
+	int top = count == 0 ? 0 : Math.max (0, (int)OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0));
+	updateVirtualViewport (top);
+}
+
+void updateVirtualViewport (int top) {
+	if (virtualViewport == null) return;
+	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
+	virtualViewport.setLogicalCount (count);
+	if (count == 0) {
+		virtualViewport.setViewport (0, 0);
+		return;
+	}
+	top = Math.min (Math.max (0, top), count - 1);
+	int perPage = Math.max (1, (int)OS.SendMessage (handle, OS.LVM_GETCOUNTPERPAGE, 0, 0));
+	int visible = Math.min (count - top, perPage + 1);
+	virtualViewport.setViewport (top, visible);
+}
+
+boolean isVirtualPaintCandidate (int index) {
+	if (virtualViewport == null) return true;
+	updateVirtualViewport ();
+	return virtualViewport.isPaintCandidate (index);
 }
 
 boolean hasChildren () {
@@ -5054,6 +5093,7 @@ public void setTopIndex (int index) {
 		if (index != OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0)) {
 			OS.SendMessage (handle, OS.LVM_ENSUREVISIBLE, index, 1);
 		}
+		updateVirtualViewport ();
 		return;
 	}
 
@@ -5065,6 +5105,7 @@ public void setTopIndex (int index) {
 	ignoreCustomDraw = false;
 	int dy = (index - topIndex) * (rect.bottom - rect.top);
 	OS.SendMessage (handle, OS.LVM_SCROLL, 0, dy);
+	updateVirtualViewport ();
 }
 
 /**
@@ -6435,7 +6476,7 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			* tables to indicate that Windows has asked at least once
 			* for a table item.
 			*/
-			if (!item.cached) {
+			if (!item.isCachedState ()) {
 				if ((style & SWT.VIRTUAL) != 0) {
 					lastIndexOf = plvfi.iItem;
 					if (!checkData (item, lastIndexOf, false)) break;
@@ -6444,8 +6485,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 						OS.InvalidateRect (handle, null, true);
 					}
 				}
-				item.cached = true;
+				item.setCachedState (true);
 			}
+			if ((style & SWT.VIRTUAL) != 0) item.markVirtualPainted ();
 			if ((plvfi.mask & OS.LVIF_TEXT) != 0) {
 				String string = null;
 				if (plvfi.iSubItem == 0) {
@@ -6533,8 +6575,8 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			if ((plvfi.mask & OS.LVIF_STATE) != 0) {
 				if (plvfi.iSubItem == 0) {
 					int state = 1;
-					if (item.checked) state++;
-					if (item.grayed) state +=2;
+					if (item.isCheckedState ()) state++;
+					if (item.isGrayedState ()) state +=2;
 					if (!OS.IsWindowEnabled (handle)) state += 4;
 					plvfi.state = state << 12;
 					plvfi.stateMask = OS.LVIS_STATEIMAGEMASK;
