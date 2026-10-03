@@ -75,3 +75,79 @@ It contains three deliberately large scenarios:
 The status line reports logical extent versus SetData/paint activity so viewport behavior is visible while scrolling.
 
 Existing SWT manual tests such as `Bug548982_TreeAddRemoveMany` remain important regression inputs, particularly its redraw-lock, reverse insertion, expand/collapse and large tree cases.
+
+
+## Synexia concepts distilled into SWT
+
+Recent `hsoliwal/com.synexia` viewer work was reviewed as design evidence. SWT should absorb the low-level data structures that belong below JFace, while rejecting higher-level model/session dependencies.
+
+### Inline into SWT core
+
+1. **Visible-tree preorder intervals**
+
+   The useful idea from `MIndexVisibleTreeIndex` is the representation, not the class: assign the known logical projection a DFS/preorder coordinate lane, retain depth and subtree-end lanes, and represent expansion independently from native items. A subtree collapse then becomes a range/state operation rather than recursive widget destruction. Visible-row rank/select can be computed from the logical projection and used to manufacture only the visible + overscan facade set.
+
+2. **Sparse row extent geometry**
+
+   The useful idea from `MIndexSwingExtentIndex` is a uniform row-height baseline with sparse changed blocks. A million- or billion-row logical surface should not allocate one height value per row merely because a few owner-drawn rows measure differently. Pixel offset -> logical row and logical row -> pixel offset belong in the viewport model.
+
+3. **Caller-owned viewport buffers**
+
+   `MIndexVisibleTreeIndex.windowInto(...)` demonstrates the right allocation shape: paint code supplies reusable coordinate/depth buffers and the model fills them. SWT paint passes should not allocate a new row object graph for every scroll frame.
+
+4. **Frame-atomic projection changes**
+
+   The XViewer reconciler's useful invariant is one long-lived control plus a bounded transaction:
+
+   ```java
+   control.setRedraw(false);
+   try {
+       // update logical state / projection / native residency
+   } finally {
+       if (!control.isDisposed()) control.setRedraw(true);
+   }
+   ```
+
+   State restoration and top-row publication belong inside the same transaction.
+
+5. **Coordinate remapping after structural edits**
+
+   Synexia's coordinate-remap work is useful as a rule: insertion/removal must move selection, checks, expansion, focus and viewport coordinates together. SWT's mutable implementation can do this directly in its parallel lanes instead of allocating an immutable remap object for every edit.
+
+### Keep above SWT
+
+Do **not** inline these Synexia owners into SWT:
+
+- `MIndexViewerSession`, contexts, generation ownership or source snapshots;
+- XViewer/Nebula/JFace content-provider abstractions;
+- workbench Jobs, model filtering/sorting, source refresh or persistence;
+- domain scene models such as `MIndexNativeSceneWindow`;
+- MIndex string/token dictionaries.
+
+Those are clients of SWT's viewport machinery, not toolkit primitives.
+
+### Deferred / measurement-gated
+
+Two Synexia ideas are deliberately not copied into the current heap implementation yet:
+
+- the fixed 128-byte direct-address row image used by `MappedIndexWordRows`;
+- the general JNI addressed-array execution engine.
+
+SWT's mutable widget state is currently better represented by flat Java primitive/reference lanes. A direct/mapped fixed-stride row image becomes attractive only after profiling shows a JNI/FFM/native batch boundary is worthwhile.
+
+The resulting ownership stack is:
+
+```text
+Workbench/JFace/Nebula model semantics
+        |
+        v
+SWT public widget/item facade API
+        |
+        v
+logical coordinate + topology arrays
+state masks + range selection + sparse extents
+visible/overscan viewport planner
+        |
+        v
+bounded native residency / paint
+```
