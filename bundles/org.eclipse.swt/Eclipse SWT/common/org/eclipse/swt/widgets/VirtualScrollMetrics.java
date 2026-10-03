@@ -79,7 +79,7 @@ final class VirtualScrollMetrics {
 		int visible = Math.max (1, visibleRows ());
 		int maximum = maximum ();
 		if (logicalRows <= Integer.MAX_VALUE) return Math.min (maximum, visible);
-		long scaled = ((long)visible * maximum + logicalRows - 1L) / logicalRows;
+		long scaled = (long)Math.ceil ((double)visible * maximum / logicalRows);
 		return (int)Math.max (1L, Math.min (maximum, scaled));
 	}
 
