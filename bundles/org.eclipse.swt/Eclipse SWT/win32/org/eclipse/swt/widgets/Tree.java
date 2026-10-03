@@ -298,6 +298,16 @@ int nativeChildCount (long hParent) {
 	return count;
 }
 
+int nativeChildIndex (long hParent, long hTarget) {
+	int index = 0;
+	long hItem = nativeFirstChild (hParent);
+	while (hItem != 0 && hItem != hTarget) {
+		index++;
+		hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_NEXT, hItem);
+	}
+	return hItem == hTarget ? index : -1;
+}
+
 void bindVirtualTopology (TreeItem item, boolean inserted) {
 	if (virtualTopology == null || item == null || item.isDisposed ()) return;
 	int id = virtualItemId (item);
@@ -306,8 +316,7 @@ void bindVirtualTopology (TreeItem item, boolean inserted) {
 
 	long hParent = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_PARENT, item.handle);
 	int parentId = virtualParentId (hParent);
-	long hFirstItem = nativeFirstChild (hParent);
-	int childIndex = findIndex (hFirstItem, item.handle);
+	int childIndex = nativeChildIndex (hParent, item.handle);
 	if (childIndex < 0) return;
 
 	if (inserted) virtualTopology.insertCoordinate (parentId, childIndex, id);
