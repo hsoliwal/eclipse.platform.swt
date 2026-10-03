@@ -273,6 +273,13 @@ void updateVirtualViewport () {
 	virtualViewport.setViewport (first, visible);
 }
 
+boolean isVirtualPaintCandidate (TableItem item) {
+	if (virtualViewport == null) return true;
+	updateVirtualViewport ();
+	int index = virtualItems.indexOfIdentity (item);
+	return index >= 0 && virtualViewport.isPaintCandidate (index);
+}
+
 int calculateWidth (int index, GC gc) {
 	int width = 0;
 	for (int i=0; i<materializedItemCount (); i++) {
@@ -1031,6 +1038,7 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect rect, long view) {
 	OS.object_getInstanceVariable(id, Display.SWT_ROW, outValue);
 	long rowIndex = outValue [0];
 	TableItem item = _getItem((int)rowIndex);
+	item.markVirtualPainted ();
 	OS.object_getInstanceVariable(id, Display.SWT_COLUMN, outValue);
 	long tableColumn = outValue[0];
 	long nsColumnIndex = widget.tableColumns().indexOfObjectIdenticalTo(new id(tableColumn));
@@ -3660,6 +3668,7 @@ private void toggleCheckedItem (TableItem item, long rowIndex) {
 void tableView_willDisplayCell_forTableColumn_row (long id, long sel, long aTableView, long cell, long tableColumn, long rowIndex) {
 	if (checkColumn != null && tableColumn == checkColumn.id) return;
 	TableItem item = _getItem ((int)rowIndex);
+	item.markVirtualPainted ();
 	int index = 0;
 	for (int i=0; i<columnCount; i++) {
 		if (columns [i].nsColumn.id == tableColumn) {
