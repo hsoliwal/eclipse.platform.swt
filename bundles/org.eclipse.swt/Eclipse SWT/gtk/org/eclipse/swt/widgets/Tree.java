@@ -184,6 +184,7 @@ void _addListener (int eventType, Listener listener) {
 
 TreeItem _getItem (long iter) {
 	int id = getId (iter, true);
+	ensureVirtualTopology (iter, id);
 	if (items [id] != null) return items [id];
 	long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
 	int depth = GTK.gtk_tree_path_get_depth (path);
@@ -204,8 +205,10 @@ TreeItem _getItem (long iter) {
 
 TreeItem _getItem (long parentIter, long iter, int index) {
 	int id = getId (iter, true);
+	if (virtualTopology != null && !virtualTopology.contains (id)) {
+		bindVirtualTopology (id, parentIter, index);
+	}
 	if (items [id] != null) return items [id];
-	bindVirtualTopology (id, parentIter, index);
 	return items [id] = new TreeItem (this, parentIter, SWT.NONE, index, iter);
 }
 
@@ -260,7 +263,38 @@ int getId (long iter, boolean queryModel) {
 
 int virtualParentId (long parentIter) {
 	if (virtualTopology == null || parentIter == 0) return VirtualTreeTopology.ROOT;
-	return getId (parentIter, true);
+	int id = getId (parentIter, true);
+	ensureVirtualTopology (parentIter, id);
+	return id;
+}
+
+void ensureVirtualTopology (long iter, int id) {
+	if (virtualTopology == null || virtualTopology.contains (id)) return;
+	long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
+	if (path == 0) return;
+	try {
+		int depth = GTK.gtk_tree_path_get_depth (path);
+		if (depth <= 0) return;
+		int [] indices = new int [depth];
+		C.memmove (indices, GTK.gtk_tree_path_get_indices (path), 4 * depth);
+		int parentId = VirtualTreeTopology.ROOT;
+		if (depth > 1) {
+			GTK.gtk_tree_path_up (path);
+			long parentIter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+			if (parentIter == 0) error (SWT.ERROR_NO_HANDLES);
+			try {
+				if (GTK.gtk_tree_model_get_iter (modelHandle, parentIter, path)) {
+					parentId = getId (parentIter, true);
+					ensureVirtualTopology (parentIter, parentId);
+				}
+			} finally {
+				OS.g_free (parentIter);
+			}
+		}
+		virtualTopology.bind (id, parentId, indices [depth - 1]);
+	} finally {
+		GTK.gtk_tree_path_free (path);
+	}
 }
 
 void bindVirtualTopology (int id, long parentIter, int childIndex) {
