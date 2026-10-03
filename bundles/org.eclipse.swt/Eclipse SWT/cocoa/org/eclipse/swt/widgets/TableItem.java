@@ -36,6 +36,15 @@ import org.eclipse.swt.internal.cocoa.*;
  * @noextend This class is not intended to be subclassed by clients.
  */
 public class TableItem extends Item {
+	/*
+	 * For virtual tables, semantic item flags live beside the logical coordinate in
+	 * VirtualItemStorage rather than in the Java facade.  A facade that has been
+	 * handed to client code remains identity-pinned until normal SWT disposal.
+	 */
+	private static final long VIRTUAL_CACHED = 1L << 0;
+	private static final long VIRTUAL_CHECKED = 1L << 1;
+	private static final long VIRTUAL_GRAYED = 1L << 2;
+
 	Table parent;
 	String [] strings;
 	Image [] images;
@@ -127,6 +136,45 @@ static Table checkNull (Table control) {
 	return control;
 }
 
+boolean isCachedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return cached;
+	return parent.virtualItems.flagOfIdentity (this, VIRTUAL_CACHED);
+}
+
+void setCachedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		cached = value;
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VIRTUAL_CACHED, value);
+}
+
+boolean isCheckedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return checked;
+	return parent.virtualItems.flagOfIdentity (this, VIRTUAL_CHECKED);
+}
+
+void setCheckedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		checked = value;
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VIRTUAL_CHECKED, value);
+}
+
+boolean isGrayedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return grayed;
+	return parent.virtualItems.flagOfIdentity (this, VIRTUAL_GRAYED);
+}
+
+void setGrayedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		grayed = value;
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VIRTUAL_GRAYED, value);
+}
+
 int calculateWidth (int index, GC gc, boolean rowSelected) {
 	if (index == 0 && width != -1) return width;
 	Font font = null;
@@ -165,7 +213,7 @@ int calculateWidth (int index, GC gc, boolean rowSelected) {
 	int width = (int)Math.ceil (size.width);
 	boolean sendMeasure = true;
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		sendMeasure = cached;
+		sendMeasure = isCachedState ();
 	}
 	if (sendMeasure && parent.hooks (SWT.MeasureItem)) {
 		gc.setFont (font);
@@ -199,7 +247,9 @@ void clear () {
 	image = null;
 	strings = null;
 	images = null;
-	checked = grayed = cached = false;
+	setCheckedState (false);
+	setGrayedState (false);
+	setCachedState (false);
 	foreground = background = null;
 	cellForeground = cellBackground = null;
 	font = null;
@@ -361,7 +411,7 @@ public boolean getChecked () {
 	checkWidget ();
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	return checked;
+	return isCheckedState ();
 }
 
 /**
@@ -462,7 +512,7 @@ public boolean getGrayed () {
 	checkWidget ();
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	return grayed;
+	return isGrayedState ();
 }
 
 @Override
@@ -550,7 +600,7 @@ public int getImageIndent () {
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (!cached) return "*virtual*"; //$NON-NLS-1$
+		if (!isCachedState ()) return "*virtual*"; //$NON-NLS-1$
 	}
 	return super.getNameText ();
 }
@@ -719,7 +769,7 @@ public void setBackground (Color color) {
 	if (oldColor == color) return;
 	background = color;
 	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -756,7 +806,7 @@ public void setBackground (int index, Color color) {
 	if (oldColor == color) return;
 	cellBackground [index] = color;
 	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+	setCachedState (true);
 	redraw (index);
 }
 
@@ -774,9 +824,9 @@ public void setBackground (int index, Color color) {
 public void setChecked (boolean checked) {
 	checkWidget ();
 	if ((parent.style & SWT.CHECK) == 0) return;
-	if (this.checked == checked) return;
-	this.checked = checked;
-	cached = true;
+	if (isCheckedState () == checked) return;
+	setCheckedState (checked);
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -807,7 +857,7 @@ public void setFont (Font font) {
 	this.font = font;
 	if (oldFont != null && oldFont.equals (font)) return;
 	width = -1;
-	cached = true;
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -846,7 +896,7 @@ public void setFont (int index, Font font) {
 	cellFont [index] = font;
 	if (oldFont != null && oldFont.equals (font)) return;
 	width = -1;
-	cached = true;
+	setCachedState (true);
 	redraw (index);
 }
 
@@ -876,7 +926,7 @@ public void setForeground (Color color) {
 	if (oldColor == color) return;
 	foreground = color;
 	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -913,7 +963,7 @@ public void setForeground (int index, Color color) {
 	if (oldColor == color) return;
 	cellForeground [index] = color;
 	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+	setCachedState (true);
 	redraw (index);
 }
 
@@ -931,9 +981,9 @@ public void setForeground (int index, Color color) {
 public void setGrayed (boolean grayed) {
 	checkWidget ();
 	if ((parent.style & SWT.CHECK) == 0) return;
-	if (this.grayed == grayed) return;
-	this.grayed = grayed;
-	cached = true;
+	if (isGrayedState () == grayed) return;
+	setGrayedState (grayed);
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -998,7 +1048,7 @@ public void setImage (int index, Image image) {
 		}
 		images [index] = image;
 	}
-	cached = true;
+	setCachedState (true);
 	if (index == 0) parent.setScrollWidth (this);
 	redraw (index);
 }
@@ -1025,7 +1075,7 @@ public void setImage (Image image) {
 public void setImageIndent (int indent) {
 	checkWidget ();
 	if (indent < 0) return;
-	cached = true;
+	setCachedState (true);
 	/* Image indent is not supported on the Macintosh */
 }
 
@@ -1085,7 +1135,7 @@ public void setText (int index, String string) {
 		if (string.equals (strings [index])) return;
 		strings [index] = string;
 	}
-	cached = true;
+	setCachedState (true);
 	if (index == 0) parent.setScrollWidth (this);
 	redraw (index);
 }
