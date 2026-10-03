@@ -340,6 +340,109 @@ public void test_virtualTreeVisibleRowCountUsesLogicalCountsPlusSparseExpansion(
 	assertEquals(109L, rootVisibleExtraRowsField.getLong(topology));
 }
 
+
+@Test
+public void test_virtualTreeViewportUsesLogicalRowsAndBoundedOverscan() throws Exception {
+	Class<?> topologyType = Class.forName("org.eclipse.swt.widgets.VirtualTreeTopology");
+	Constructor<?> topologyConstructor = topologyType.getDeclaredConstructor();
+	topologyConstructor.setAccessible(true);
+	Object topology = topologyConstructor.newInstance();
+
+	Method setChildCount = topologyType.getDeclaredMethod("setChildCount", int.class, int.class);
+	Method bind = topologyType.getDeclaredMethod("bind", int.class, int.class, int.class);
+	Method flag = topologyType.getDeclaredMethod("flag", int.class, long.class, boolean.class);
+	setChildCount.setAccessible(true);
+	bind.setAccessible(true);
+	flag.setAccessible(true);
+
+	Field rootField = topologyType.getDeclaredField("ROOT");
+	rootField.setAccessible(true);
+	int root = rootField.getInt(null);
+
+	Class<?> stateType = Class.forName("org.eclipse.swt.widgets.VirtualItemState");
+	Field expandedField = stateType.getDeclaredField("EXPANDED");
+	expandedField.setAccessible(true);
+	long expanded = expandedField.getLong(null);
+
+	setChildCount.invoke(topology, root, 10_000_000);
+	bind.invoke(topology, 0, root, 100);
+	setChildCount.invoke(topology, 0, 1_000);
+	flag.invoke(topology, 0, expanded, true);
+
+	Class<?> projectionType = Class.forName("org.eclipse.swt.widgets.VirtualTreeVisibleProjection");
+	Constructor<?> projectionConstructor = projectionType.getDeclaredConstructor(topologyType);
+	projectionConstructor.setAccessible(true);
+	Object projection = projectionConstructor.newInstance(topology);
+
+	Class<?> viewportType = Class.forName("org.eclipse.swt.widgets.VirtualTreeViewport");
+	Constructor<?> viewportConstructor = viewportType.getDeclaredConstructor(projectionType);
+	viewportConstructor.setAccessible(true);
+	Object viewport = viewportConstructor.newInstance(projection);
+
+	Method configure = viewportType.getDeclaredMethod("configureGeometry", int.class, int.class);
+	Method setTopRow = viewportType.getDeclaredMethod("setTopRow", long.class);
+	Method topRow = viewportType.getDeclaredMethod("topRow");
+	Method visibleRows = viewportType.getDeclaredMethod("visibleRows");
+	Method firstPaintRow = viewportType.getDeclaredMethod("firstPaintRow");
+	Method paintRowCount = viewportType.getDeclaredMethod("paintRowCount");
+	Method visibleWindow = viewportType.getDeclaredMethod("visibleWindow");
+	Method paintWindow = viewportType.getDeclaredMethod("paintWindow");
+	Method maximum = viewportType.getDeclaredMethod("scrollbarMaximum");
+	Method thumb = viewportType.getDeclaredMethod("scrollbarThumb");
+	Method selection = viewportType.getDeclaredMethod("scrollbarSelection");
+	for (Method method : new Method[] {
+			configure, setTopRow, topRow, visibleRows, firstPaintRow,
+			paintRowCount, visibleWindow, paintWindow, maximum, thumb, selection}) {
+		method.setAccessible(true);
+	}
+
+	configure.invoke(viewport, 20, 200);
+	assertEquals(10, visibleRows.invoke(viewport));
+	assertEquals(10_001_000, maximum.invoke(viewport));
+	assertEquals(10, thumb.invoke(viewport));
+
+	setTopRow.invoke(viewport, 5_000_000L);
+	assertEquals(5_000_000L, topRow.invoke(viewport));
+	assertEquals(4_999_992L, firstPaintRow.invoke(viewport));
+	assertEquals(26, paintRowCount.invoke(viewport),
+			"paint window must be visible rows plus bounded eight-row overscan on each side");
+	assertEquals(10, ((Object[]) visibleWindow.invoke(viewport)).length);
+	assertEquals(26, ((Object[]) paintWindow.invoke(viewport)).length);
+	assertEquals(5_000_000, selection.invoke(viewport));
+
+	// Prove logical coordinates can exceed the native int scrollbar range.
+	setChildCount.invoke(topology, root, Integer.MAX_VALUE);
+	setChildCount.invoke(topology, 0, Integer.MAX_VALUE);
+	configure.invoke(viewport, 20, 200);
+	setTopRow.invoke(viewport, 3_000_000_000L);
+	assertEquals(Integer.MAX_VALUE, maximum.invoke(viewport));
+	assertTrue((Long) topRow.invoke(viewport) > Integer.MAX_VALUE,
+			"logical top row must remain exact even when native scrollbar range saturates");
+}
+
+@Test
+public void test_virtualGtkSetTopItemMirrorsLogicalTopRow() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(200);
+	shell.setLayout(new FillLayout());
+	shell.setSize(240, 180);
+	shell.open();
+	SwtTestUtil.processEvents();
+
+	TreeItem item = virtualTree.getItem(120);
+	virtualTree.setTopItem(item);
+	SwtTestUtil.processEvents();
+
+	Method topRowMethod = Tree.class.getDeclaredMethod("virtualViewportTopRow");
+	topRowMethod.setAccessible(true);
+	long topRow = (Long) topRowMethod.invoke(virtualTree);
+	assertEquals(120L, topRow,
+			"GTK setTopItem must mirror the public top item into logical visible-row coordinates");
+	assertSame(item, virtualTree.getTopItem());
+}
+
 @Test
 public void test_virtualGtkTopologyStaysSparseAndTracksCoordinates() throws Exception {
 	if (!"gtk".equals(SWT.getPlatform())) return;
