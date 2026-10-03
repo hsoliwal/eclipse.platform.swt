@@ -92,6 +92,19 @@ public void test_virtualMaterializedIdentityTracksLogicalRemovals() {
 }
 
 @Test
+public void test_virtualExplicitInsertionShiftsMaterializedIdentity() {
+	Table virtualTable = new Table(shell, SWT.VIRTUAL);
+	virtualTable.setItemCount(16);
+	TableItem ten = virtualTable.getItem(10);
+
+	TableItem inserted = new TableItem(virtualTable, SWT.NONE, 3);
+	assertEquals(17, virtualTable.getItemCount());
+	assertEquals(3, virtualTable.indexOf(inserted));
+	assertEquals(11, virtualTable.indexOf(ten));
+	assertSame(ten, virtualTable.getItem(11));
+}
+
+@Test
 public void test_deselect$I() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
