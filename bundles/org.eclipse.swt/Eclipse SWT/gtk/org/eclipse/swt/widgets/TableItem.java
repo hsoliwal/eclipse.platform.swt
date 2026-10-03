@@ -47,7 +47,6 @@ public class TableItem extends Item {
 	Color virtualBackground, virtualForeground;
 	Color [] virtualCellBackground, virtualCellForeground;
 	Image [] virtualImages;
-	boolean virtualChecked;
 	boolean cached, grayed, settingData;
 
 /**
@@ -410,7 +409,7 @@ void clear () {
 		return;
 	}
 	if (parent.currentItem == this) return;
-	if (cached || (parent.style & SWT.VIRTUAL) == 0) {
+	if (isCachedState () || (parent.style & SWT.VIRTUAL) == 0) {
 		int columnCount = GTK.gtk_tree_model_get_n_columns (parent.modelHandle);
 		/* the columns before FOREGROUND_COLUMN contain int values, subsequent columns contain pointers */
 		for (int i=Table.CHECKED_COLUMN; i<Table.FOREGROUND_COLUMN; i++) {
@@ -1126,7 +1125,7 @@ public void setBackground (int index, Color color) {
  */
 public void setChecked (boolean checked) {
 	checkWidget();
-	if (parent.usesVirtualNativeModel ()) {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
 		if ((parent.style & SWT.CHECK) == 0 || isCheckedState () == checked) return;
 		setCheckedState (checked);
 		setCachedState (true);
@@ -1370,7 +1369,7 @@ public void setForeground (int index, Color color){
  */
 public void setGrayed (boolean grayed) {
 	checkWidget();
-	if (parent.usesVirtualNativeModel ()) {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
 		if ((parent.style & SWT.CHECK) == 0 || isGrayedState () == grayed) return;
 		setGrayedState (grayed);
 		setCachedState (true);
