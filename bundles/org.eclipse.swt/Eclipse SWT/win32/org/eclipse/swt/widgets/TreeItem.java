@@ -771,7 +771,7 @@ public TreeItem getItem (int index) {
 	if (hFirstItem == 0) error (SWT.ERROR_INVALID_RANGE);
 	long hItem = parent.findItem (hFirstItem, index);
 	if (hItem == 0) error (SWT.ERROR_INVALID_RANGE);
-	return parent._getItem (hItem);
+	return parent.exposeVirtualItem (parent._getItem (hItem));
 }
 
 /**
@@ -813,7 +813,7 @@ public TreeItem [] getItems () {
 	long hwnd = parent.handle;
 	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
 	if (hItem == 0) return new TreeItem [0];
-	return parent.getItems (hItem);
+	return parent.exposeVirtualItems (parent.getItems (hItem));
 }
 
 @Override
@@ -905,7 +905,7 @@ public TreeItem getParentItem () {
 	checkWidget ();
 	long hwnd = parent.handle;
 	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_PARENT, handle);
-	return hItem != 0 ? parent._getItem (hItem) : null;
+	return hItem != 0 ? parent.exposeVirtualItem (parent._getItem (hItem)) : null;
 }
 
 @Override
