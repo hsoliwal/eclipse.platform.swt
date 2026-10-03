@@ -41,10 +41,9 @@ final class TreeExpansionModel {
 	static void expandToLevel(Tree tree, int level) {
 		checkLevel(level);
 		runLocked(tree, () -> {
+			if (level == 0 || level == 1) return;
 			int childLevel = level == ALL_LEVELS ? ALL_LEVELS : level - 1;
-			if (level == 0) return;
 			TreeItem[] roots = tree.modelChildren(null, true);
-			if (level == 1) return;
 			apply(tree, roots, childLevel, true);
 		});
 	}
