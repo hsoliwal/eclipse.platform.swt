@@ -344,9 +344,9 @@ boolean canDragRowsWithIndexes_atPoint(long id, long sel, long rowIndexes, NSPoi
 }
 
 boolean checkData (TreeItem item) {
-	if (item.cached) return true;
+	if (item.isCachedState ()) return true;
 	if ((style & SWT.VIRTUAL) != 0) {
-		item.cached = true;
+		item.setCachedState (true);
 		Event event = new Event ();
 		TreeItem parentItem = item.getParentItem ();
 		event.item = item;
@@ -758,7 +758,7 @@ void createItem (TreeItem item, TreeItem parentItem, int index) {
 	} else {
 		reloadPending = true;
 	}
-	if (parentItem != null && parentItem.itemCount == 1 && parentItem.expanded) widget.expandItem (parentItem.handle);
+	if (parentItem != null && parentItem.itemCount == 1 && parentItem.isExpandedState ()) widget.expandItem (parentItem.handle);
 	ignoreExpand = false;
 	if (parentItem == null && itemCount == 1) {
 		Event event = new Event ();
@@ -2178,10 +2178,10 @@ long nextState (long id, long sel) {
 	int index = (int)outlineView.clickedRow();
 	if (index == -1) index = (int)outlineView.selectedRow ();
 	TreeItem item = (TreeItem)display.getWidget (outlineView.itemAtRow (index).id);
-	if (item.grayed) {
-		return item.checked ? OS.NSControlStateValueOff : OS.NSControlStateValueMixed;
+	if (item.isGrayedState ()) {
+		return item.isCheckedState () ? OS.NSControlStateValueOff : OS.NSControlStateValueMixed;
 	}
-	return item.checked ? OS.NSControlStateValueOff : OS.NSControlStateValueOn;
+	return item.isCheckedState () ? OS.NSControlStateValueOff : OS.NSControlStateValueOn;
 }
 
 @Override
@@ -2207,10 +2207,10 @@ long outlineView_objectValueForTableColumn_byItem (long id, long sel, long outli
 	checkData (item);
 	if (checkColumn != null && tableColumn == checkColumn.id) {
 		NSNumber value;
-		if (item.checked && item.grayed) {
+		if (item.isCheckedState () && item.isGrayedState ()) {
 			value = NSNumber.numberWithInt (OS.NSControlStateValueMixed);
 		} else {
-			value = NSNumber.numberWithInt (item.checked ? OS.NSControlStateValueOn : OS.NSControlStateValueOff);
+			value = NSNumber.numberWithInt (item.isCheckedState () ? OS.NSControlStateValueOn : OS.NSControlStateValueOff);
 		}
 		return value.id;
 	}
@@ -2445,7 +2445,7 @@ void outlineViewSelectionIsChanging (long id, long sel, long notification) {
 void outlineView_setObjectValue_forTableColumn_byItem (long id, long sel, long outlineView, long object, long tableColumn, long itemID) {
 	if (checkColumn != null && tableColumn == checkColumn.id)  {
 		TreeItem item = (TreeItem) display.getWidget (itemID);
-		item.checked = !item.checked;
+		item.setCheckedState (!item.isCheckedState ());
 		Event event = new Event ();
 		event.detail = SWT.CHECK;
 		event.item = item;
@@ -3078,7 +3078,7 @@ void setItemCount (TreeItem parentItem, int count) {
 			widget.reloadItem (parentItem != null ? parentItem.handle : null, expanded);
 		}
 		selectItems (selectedItems, true);
-		if (parentItem != null && oldCount == 0 && parentItem.expanded) {
+		if (parentItem != null && oldCount == 0 && parentItem.isExpandedState ()) {
 			ignoreExpand = true;
 			widget.expandItem (parentItem.handle);
 			ignoreExpand = false;
