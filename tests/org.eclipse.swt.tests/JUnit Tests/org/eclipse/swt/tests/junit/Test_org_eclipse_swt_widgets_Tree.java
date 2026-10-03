@@ -19,9 +19,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +56,56 @@ public void setUp() {
 	super.setUp();
 	tree = new Tree(shell, SWT.MULTI);
 	setWidget(tree);
+}
+
+@Test
+public void test_virtualItemResidencyDoesNotScaleWithLogicalCount() throws Exception {
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(4096);
+
+	Field itemsField = Tree.class.getDeclaredField("items");
+	itemsField.setAccessible(true);
+	TreeItem[] backing = (TreeItem[]) itemsField.get(virtualTree);
+	assertTrue(backing.length <= 16, "virtual Tree must not allocate one Java slot per logical root");
+
+	TreeItem last = virtualTree.getItem(4095);
+	assertSame(last, virtualTree.getItem(4095));
+}
+
+@Test
+public void test_virtualChildResidencyDoesNotScaleWithLogicalCount() throws Exception {
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(1);
+	TreeItem root = virtualTree.getItem(0);
+	root.setItemCount(4096);
+
+	Field itemsField = TreeItem.class.getDeclaredField("items");
+	itemsField.setAccessible(true);
+	TreeItem[] backing = (TreeItem[]) itemsField.get(root);
+	assertTrue(backing.length <= 16, "virtual TreeItem must not allocate one Java slot per logical child");
+
+	TreeItem last = root.getItem(4095);
+	assertSame(last, root.getItem(4095));
+	backing = (TreeItem[]) itemsField.get(root);
+	assertTrue(backing.length <= 16, "materializing one distant child must keep branch residency sparse");
+}
+
+@Test
+public void test_virtualBranchResidencyDoesNotScaleWithLogicalChildCount() throws Exception {
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(1);
+	TreeItem root = virtualTree.getItem(0);
+	root.setItemCount(4096);
+
+	if ("cocoa".equals(SWT.getPlatform())) {
+		Field itemsField = TreeItem.class.getDeclaredField("items");
+		itemsField.setAccessible(true);
+		TreeItem[] backing = (TreeItem[]) itemsField.get(root);
+		assertTrue(backing.length <= 16, "Cocoa virtual TreeItem must not allocate one Java slot per logical child");
+	}
+
+	TreeItem last = root.getItem(4095);
+	assertSame(last, root.getItem(4095));
 }
 
 @Override

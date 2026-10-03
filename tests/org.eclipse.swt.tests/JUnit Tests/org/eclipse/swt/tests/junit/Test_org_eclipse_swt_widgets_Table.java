@@ -18,9 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,6 +59,49 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 @Override
 @Test
 public void test_computeSizeIIZ() {
+}
+
+@Test
+public void test_virtualItemResidencyDoesNotScaleWithLogicalCount() throws Exception {
+	Table virtualTable = new Table(shell, SWT.VIRTUAL);
+	virtualTable.setItemCount(4096);
+
+	Field itemsField = Table.class.getDeclaredField("items");
+	itemsField.setAccessible(true);
+	TableItem[] backing = (TableItem[]) itemsField.get(virtualTable);
+	assertTrue(backing.length <= 16, "virtual Table must not allocate one Java slot per logical row");
+
+	TableItem last = virtualTable.getItem(4095);
+	assertSame(last, virtualTable.getItem(4095));
+	backing = (TableItem[]) itemsField.get(virtualTable);
+	assertTrue(backing.length <= 16, "materializing one distant row must keep residency sparse");
+}
+
+@Test
+public void test_virtualMaterializedIdentityTracksLogicalRemovals() {
+	Table virtualTable = new Table(shell, SWT.VIRTUAL);
+	virtualTable.setItemCount(32);
+	TableItem five = virtualTable.getItem(5);
+	TableItem twenty = virtualTable.getItem(20);
+
+	virtualTable.remove(0, 2);
+	assertEquals(2, virtualTable.indexOf(five));
+	assertEquals(17, virtualTable.indexOf(twenty));
+	assertSame(five, virtualTable.getItem(2));
+	assertSame(twenty, virtualTable.getItem(17));
+}
+
+@Test
+public void test_virtualExplicitInsertionShiftsMaterializedIdentity() {
+	Table virtualTable = new Table(shell, SWT.VIRTUAL);
+	virtualTable.setItemCount(16);
+	TableItem ten = virtualTable.getItem(10);
+
+	TableItem inserted = new TableItem(virtualTable, SWT.NONE, 3);
+	assertEquals(17, virtualTable.getItemCount());
+	assertEquals(3, virtualTable.indexOf(inserted));
+	assertEquals(11, virtualTable.indexOf(ten));
+	assertSame(ten, virtualTable.getItem(11));
 }
 
 @Test

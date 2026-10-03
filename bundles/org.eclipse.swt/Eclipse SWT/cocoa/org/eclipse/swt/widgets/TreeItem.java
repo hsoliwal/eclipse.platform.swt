@@ -40,6 +40,7 @@ public class TreeItem extends Item {
 	Tree parent;
 	TreeItem parentItem;
 	TreeItem[] items;
+	VirtualItemStorage<TreeItem> virtualItems;
 	int itemCount;
 	String [] strings;
 	Image [] images;
@@ -188,6 +189,7 @@ TreeItem (Tree parent, TreeItem parentItem, int style, int index, boolean create
 		createJNIRef ();
 		register ();
 		items = new TreeItem[4];
+		if ((parent.style & SWT.VIRTUAL) != 0) virtualItems = new VirtualItemStorage<> ();
 	}
 }
 
@@ -922,10 +924,7 @@ public int indexOf (TreeItem item) {
 	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
 	if (item.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
 	if (item.parentItem != this) return -1;
-	for (int i = 0; i < itemCount; i++) {
-		if (item == items [i]) return i;
-	}
-	return -1;
+	return parent.indexOfChild (this, item);
 }
 
 @Override
@@ -975,12 +974,11 @@ void release(boolean destroy) {
 
 @Override
 void releaseChildren (boolean destroy) {
-	for (int i=0; i<items.length; i++) {
-		TreeItem item = items [i];
-		if (item != null && !item.isDisposed ()) {
-			item.release (false);
-		}
+	for (int i=0; i<parent.materializedItemCount (this); i++) {
+		TreeItem item = parent.materializedItem (this, i);
+		if (item != null && !item.isDisposed ()) item.release (false);
 	}
+	if (virtualItems != null) virtualItems.clear (ignored -> { });
 	items = null;
 	itemCount = 0;
 	super.releaseChildren (destroy);
@@ -1031,8 +1029,9 @@ void sendExpand (boolean expand, boolean recurse) {
 		expanded = expand;
 	}
 	if (recurse) {
-		for (int i = 0; i < itemCount; i++) {
-			if (items[i] != null) items[i].sendExpand (expand, recurse);
+		for (int i = 0; i < parent.materializedItemCount (this); i++) {
+			TreeItem item = parent.materializedItem (this, i);
+			if (item != null) item.sendExpand (expand, true);
 		}
 	}
 }
@@ -1484,14 +1483,13 @@ void updateExpanded () {
 	if (itemCount == 0) return;
 	NSOutlineView outlineView = (NSOutlineView)parent.view;
 	if (expanded != outlineView.isItemExpanded (handle)) {
-		if (expanded) {
-			outlineView.expandItem (handle);
-		} else {
-			outlineView.collapseItem (handle);
-		}
+		if (expanded) outlineView.expandItem (handle);
+		else outlineView.collapseItem (handle);
 	}
-	for (int i = 0; i < itemCount; i++) {
-		if (items[i] != null) items[i].updateExpanded ();
+	for (int i = 0; i < parent.materializedItemCount (this); i++) {
+		TreeItem item = parent.materializedItem (this, i);
+		if (item != null) item.updateExpanded ();
 	}
 }
+
 }

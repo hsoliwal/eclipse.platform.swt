@@ -4266,10 +4266,17 @@ void setItemCount (int count, long hParent) {
 			}
 		}
 	} else {
-		// For performance reasons, reserve the necessary space in items[]
-		int freeCapacity = itemsGetFreeCapacity();
-		if (numInserted > freeCapacity)
-			itemsGrowArray (items.length + numInserted - freeCapacity);
+		/*
+		 * Dense trees reserve Java item IDs up front. Virtual placeholder nodes use
+		 * lParam=-1 and do not own a TreeItem until they are materialized, so growing
+		 * items[] to the logical child count defeats virtual residency without helping
+		 * native insertion.
+		 */
+		if ((style & SWT.VIRTUAL) == 0) {
+			int freeCapacity = itemsGetFreeCapacity();
+			if (numInserted > freeCapacity)
+				itemsGrowArray (items.length + numInserted - freeCapacity);
+		}
 
 		// Adjust cached variables to insertion point.
 		// Tree#createItem() will adjust them further after each insert.
