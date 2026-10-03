@@ -14,16 +14,20 @@ package org.eclipse.swt.widgets;
  * Scroll geometry derived from logical model cardinality, one representative
  * row extent and the current body viewport.
  *
- * <p>Scrollbar units are logical rows rather than pixels. This avoids overflow
- * and makes scrollbar visibility/thumb calculations independent of whether the
- * logical content would span millions or billions of pixels.</p>
+ * <p>Logical row coordinates use {@code long}. SWT/native scrollbar controls
+ * still expose integer ranges, so very large logical models are projected onto
+ * that integer range while preserving exact row coordinates in the model.</p>
  */
 final class VirtualScrollMetrics {
-	private int logicalRows;
+	private long logicalRows;
 	private int sampleRowExtent = 1;
 	private int viewportExtent;
 
 	void configure (int logicalRows, int sampleRowExtent, int viewportExtent) {
+		configure ((long)logicalRows, sampleRowExtent, viewportExtent);
+	}
+
+	void configure (long logicalRows, int sampleRowExtent, int viewportExtent) {
 		if (logicalRows < 0) throw new IllegalArgumentException ("negative logical rows");
 		if (sampleRowExtent <= 0) throw new IllegalArgumentException ("non-positive sample row extent");
 		if (viewportExtent < 0) throw new IllegalArgumentException ("negative viewport extent");
@@ -33,6 +37,10 @@ final class VirtualScrollMetrics {
 	}
 
 	int logicalRows () {
+		return (int)Math.min (Integer.MAX_VALUE, logicalRows);
+	}
+
+	long logicalRowCount () {
 		return logicalRows;
 	}
 
@@ -45,7 +53,7 @@ final class VirtualScrollMetrics {
 	}
 
 	long estimatedContentExtent () {
-		return Math.multiplyExact ((long)logicalRows, sampleRowExtent);
+		return Math.multiplyExact (logicalRows, sampleRowExtent);
 	}
 
 	int visibleRows () {
@@ -63,16 +71,16 @@ final class VirtualScrollMetrics {
 	}
 
 	int maximum () {
-		/*
-		 * SWT ScrollBar semantics use maximum together with thumb. Row units keep
-		 * this bounded by logical cardinality rather than logical pixel extent.
-		 */
-		return logicalRows;
+		return (int)Math.min (Integer.MAX_VALUE, logicalRows);
 	}
 
 	int thumb () {
 		if (logicalRows == 0) return 0;
-		return Math.max (1, visibleRows ());
+		int visible = Math.max (1, visibleRows ());
+		int maximum = maximum ();
+		if (logicalRows <= Integer.MAX_VALUE) return Math.min (maximum, visible);
+		long scaled = ((long)visible * maximum + logicalRows - 1L) / logicalRows;
+		return (int)Math.max (1L, Math.min (maximum, scaled));
 	}
 
 	int increment () {
@@ -80,14 +88,36 @@ final class VirtualScrollMetrics {
 	}
 
 	int pageIncrement () {
-		return Math.max (1, visibleRows ());
+		return Math.max (1, thumb ());
 	}
 
-	int maxTopRow () {
-		return Math.max (0, logicalRows - visibleRows ());
+	long maxTopRow () {
+		return Math.max (0L, logicalRows - visibleRows ());
 	}
 
 	int clampTopRow (int requested) {
-		return Math.max (0, Math.min (requested, maxTopRow ()));
+		return (int)Math.min (Integer.MAX_VALUE, clampTopRow ((long)requested));
+	}
+
+	long clampTopRow (long requested) {
+		return Math.max (0L, Math.min (requested, maxTopRow ()));
+	}
+
+	int selectionForTopRow (long topRow) {
+		long clamped = clampTopRow (topRow);
+		long maxTop = maxTopRow ();
+		int maxSelection = Math.max (0, maximum () - thumb ());
+		if (clamped == 0 || maxTop == 0 || maxSelection == 0) return 0;
+		if (logicalRows <= Integer.MAX_VALUE) return (int)clamped;
+		return (int)Math.round ((double)clamped * maxSelection / maxTop);
+	}
+
+	long topRowForSelection (int selection) {
+		int maxSelection = Math.max (0, maximum () - thumb ());
+		int clamped = Math.max (0, Math.min (selection, maxSelection));
+		long maxTop = maxTopRow ();
+		if (clamped == 0 || maxSelection == 0 || maxTop == 0) return 0;
+		if (logicalRows <= Integer.MAX_VALUE) return clamped;
+		return Math.round ((double)clamped * maxTop / maxSelection);
 	}
 }
