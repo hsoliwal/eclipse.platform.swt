@@ -89,7 +89,6 @@ public class Tree extends Composite {
 	long ignoreCell;
 	TreeItem[] items;
 	VirtualTreeTopology virtualTopology;
-	final Set<Integer> virtualFrontierPending = new HashSet<> ();
 	int nextId;
 	TreeColumn [] columns;
 	TreeColumn sortColumn;
@@ -130,8 +129,6 @@ public class Tree extends Composite {
 	static final int CELL_FONT = 4;
 	static final int CELL_SURFACE = 5;
 	static final int CELL_TYPES = CELL_SURFACE + 1;
-	static final int VIRTUAL_FRONTIER_CHUNK = 256;
-	static final int VIRTUAL_FRONTIER_TRIGGER = 32;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -339,6 +336,11 @@ void pinVirtualFacade (TreeItem item) {
 	virtualFlag (item, VirtualItemState.PINNED, true);
 }
 
+TreeItem exposeVirtualItem (TreeItem item) {
+	if (item != null && virtualTopology != null) pinVirtualFacade (item);
+	return item;
+}
+
 void ensureVirtualNativeChildren (long parentIter, int requiredExclusive) {
 	if (virtualTopology == null) return;
 	int parentId = virtualParentId (parentIter);
@@ -348,7 +350,6 @@ void ensureVirtualNativeChildren (long parentIter, int requiredExclusive) {
 	int target = Math.min (logicalCount, Math.max (0, requiredExclusive));
 	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
 	if (target <= resident) return;
-
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
 	try {
@@ -368,42 +369,67 @@ void ensureVirtualNativeItem (long parentIter, int index) {
 	ensureVirtualNativeChildren (parentIter, index + 1);
 }
 
+void restoreVirtualChildren (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	int id = virtualItemId (item);
+	if (!virtualTopology.childCountKnown (id)) return;
+	ensureVirtualNativeChildren (item.handle, virtualTopology.childCount (id));
+}
+
 int virtualResidentChildCount (long parentIter) {
 	return GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
 }
 
-void requestVirtualFrontier (TreeItem item) {
+int virtualResidentChildCount (TreeItem parentItem) {
+	return virtualResidentChildCount (parentItem == null ? 0 : parentItem.handle);
+}
+
+void scheduleVirtualCollapseCompaction (TreeItem item) {
 	if (virtualTopology == null || item == null || item.isDisposed ()) return;
-	int itemId = virtualItemId (item);
-	int parentId = virtualTopology.parentId (itemId);
+	display.asyncExec (() -> {
+		if (isDisposed () || item.isDisposed () || item.getExpanded ()) return;
+		compactCollapsedVirtualChildren (item);
+	});
+}
+
+void compactCollapsedVirtualChildren (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed () || item.getExpanded ()) return;
+	int parentId = virtualItemId (item);
 	if (!virtualTopology.childCountKnown (parentId)) return;
 	int logicalCount = virtualTopology.childCount (parentId);
-	long parentIter = 0;
-	if (parentId != VirtualTreeTopology.ROOT) {
-		if (parentId >= items.length) return;
-		TreeItem parentItem = items [parentId];
-		if (parentItem == null || parentItem.isDisposed ()) return;
-		parentIter = parentItem.handle;
-	}
-	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
-	if (resident >= logicalCount) return;
-	if (virtualTopology.childIndex (itemId) < Math.max (0, resident - VIRTUAL_FRONTIER_TRIGGER)) return;
+	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, item.handle);
+	if (resident == 0) return;
 
-	int key = parentId + 1;
-	if (!virtualFrontierPending.add (key)) return;
-	display.asyncExec (() -> {
-		virtualFrontierPending.remove (key);
-		if (isDisposed () || virtualTopology == null) return;
-		long currentParent = 0;
-		if (parentId != VirtualTreeTopology.ROOT) {
-			if (parentId >= items.length) return;
-			TreeItem parentItem = items [parentId];
-			if (parentItem == null || parentItem.isDisposed ()) return;
-			currentParent = parentItem.handle;
+	int highestPinned = virtualTopology.highestChildIndexWithSubtreeFlag (
+			parentId, VirtualItemState.PINNED);
+	int keep = logicalCount == 0 ? 0 : Math.max (1, highestPinned + 1);
+	keep = Math.min (keep, resident);
+	if (keep >= resident) return;
+
+	long selection = GTK.gtk_tree_view_get_selection (handle);
+	OS.g_signal_handlers_block_matched (
+			selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+	try {
+		for (int index = resident - 1; index >= keep; index--) {
+			if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, item.handle, index)) continue;
+			int [] value = new int [1];
+			GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, value, -1);
+			int id = value [0];
+			if (id >= 0 && virtualTopology.contains (id)) {
+				releaseItems (iter);
+				TreeItem child = id < items.length ? items [id] : null;
+				if (child != null && !child.isDisposed ()) releaseItem (child, true);
+				virtualTopology.forgetSubtree (id);
+			}
+			GTK.gtk_tree_store_remove (modelHandle, iter);
 		}
-		int current = GTK.gtk_tree_model_iter_n_children (modelHandle, currentParent);
-		ensureVirtualNativeChildren (currentParent, Math.min (logicalCount, current + VIRTUAL_FRONTIER_CHUNK));
-	});
+	} finally {
+		OS.g_free (iter);
+		OS.g_signal_handlers_unblock_matched (
+				selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+	}
 }
 
 static int checkStyle (int style) {
@@ -508,7 +534,6 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 		setScrollWidth (tree_column, item);
 		ignoreCell = 0;
 	}
-	if ((style & SWT.VIRTUAL) != 0) requestVirtualFrontier (item);
 	return 0;
 }
 
@@ -1339,6 +1364,7 @@ void createItem (TreeItem item, long parentIter, int index) {
 	int id = getId (item.handle, false);
 	items [id] = item;
 	if (virtualTopology != null) {
+		pinVirtualFacade (item);
 		int parentId = virtualParentId (parentIter);
 		int logicalIndex = index;
 		if (logicalIndex == -1) {
@@ -2067,7 +2093,7 @@ public TreeItem getItem (int index) {
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	try {
 		if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index)) error (SWT.ERROR_INVALID_RANGE);
-		return _getItem (0, iter, index);
+		return exposeVirtualItem (_getItem (0, iter, index));
 	} finally {
 		OS.g_free (iter);
 	}
@@ -2134,7 +2160,7 @@ public TreeItem getItem (Point point) {
 	}
 	OS.g_free (iter);
 	GTK.gtk_tree_path_free (path [0]);
-	return item;
+	return exposeVirtualItem (item);
 }
 
 /**
@@ -2242,7 +2268,7 @@ TreeItem [] getItems (long parent) {
 	try {
 		boolean valid = GTK.gtk_tree_model_iter_children (modelHandle, iter, parent);
 		while (valid) {
-			result.add (_getItem (parent, iter, result.size ()));
+			result.add (exposeVirtualItem (_getItem (parent, iter, result.size ())));
 			valid = GTK.gtk_tree_model_iter_next (modelHandle, iter);
 		}
 	} finally {
@@ -2358,7 +2384,7 @@ public TreeItem[] getSelection () {
 			}
 		}
 		if (found) {
-			treeSelection [length++] = _getItem (iters [depth - 1]);
+			treeSelection [length++] = exposeVirtualItem (_getItem (iters [depth - 1]));
 			previous = indices;
 		} else {
 			previous = new int [0];
@@ -2484,7 +2510,7 @@ public TreeItem getTopItem () {
 	 * it. If it is, find the topItem using GtkTreeView API.
 	 */
 	if(item != null && !item.isDisposed()){
-		return item;
+		return exposeVirtualItem (item);
 	}
 	// Use GTK method to get topItem if there has been changes to the vAdjustment
 	long [] path = new long [1];
@@ -2499,7 +2525,7 @@ public TreeItem getTopItem () {
 	OS.g_free (iter);
 	GTK.gtk_tree_path_free (path [0]);
 	topItem = item;
-	return item;
+	return exposeVirtualItem (item);
 }
 
 TreeItem _getCachedTopItem() {
@@ -2706,6 +2732,7 @@ void sendTreeDefaultSelection() {
 	TreeItem treeItem = getFocusItem ();
 	if (treeItem == null)
 		return;
+	pinVirtualFacade (treeItem);
 
 	Event event = new Event ();
 	event.item = treeItem;
@@ -2765,6 +2792,7 @@ long gtk3_button_release_event (long widget, long event) {
 long gtk_changed (long widget) {
 	TreeItem item = getFocusItem ();
 	if (item != null) {
+		pinVirtualFacade (item);
 		Event event = new Event ();
 		event.item = item;
 		sendSelectionEvent (SWT.Selection, event, false);
@@ -2907,6 +2935,7 @@ long gtk_test_collapse_row (long tree, long iter, long path) {
 	int [] index = new int [1];
 	GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, index, -1);
 	TreeItem item = items [index [0]];
+	pinVirtualFacade (item);
 	Event event = new Event ();
 	event.item = item;
 	boolean oldModelChanged = modelChanged;
@@ -2938,8 +2967,10 @@ long gtk_test_collapse_row (long tree, long iter, long path) {
 		OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, TEST_COLLAPSE_ROW);
 		GTK.gtk_tree_view_collapse_row (handle, path);
 		OS.g_signal_handlers_unblock_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, TEST_COLLAPSE_ROW);
+		scheduleVirtualCollapseCompaction (item);
 		return 1;
 	}
+	scheduleVirtualCollapseCompaction (item);
 	return 0;
 }
 
@@ -2948,6 +2979,8 @@ long gtk_test_expand_row (long tree, long iter, long path) {
 	int [] index = new int [1];
 	GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, index, -1);
 	TreeItem item = items [index [0]];
+	pinVirtualFacade (item);
+	restoreVirtualChildren (item);
 	Event event = new Event ();
 	event.item = item;
 	boolean oldModelChanged = modelChanged;
@@ -3000,6 +3033,7 @@ long gtk_toggled (long renderer, long pathStr) {
 	OS.g_free (iter);
 	GTK.gtk_tree_path_free (path);
 	if (item != null) {
+		pinVirtualFacade (item);
 		item.setChecked (!item.getChecked ());
 		Event event = new Event ();
 		event.detail = SWT.CHECK;
@@ -3413,6 +3447,7 @@ void sendMeasureEvent (long cell, long width, long height) {
 		TreeItem item = null;
 		if (iter != 0) item = _getItem (iter);
 		if (item != null && !item.isDisposed()) {
+			pinVirtualFacade (item);
 			int columnIndex = 0;
 			if (columnCount > 0) {
 				long columnHandle = OS.g_object_get_qdata (cell, Display.SWT_OBJECT_INDEX1);
@@ -3584,6 +3619,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 			if (textRenderer != 0) gtk_cell_renderer_get_preferred_size (textRenderer, handle, null, null);
 
 			if (hooks (SWT.EraseItem)) {
+				pinVirtualFacade (item);
 				Cairo.cairo_save(cr);
 				/*
 				 * Cache the selection state so that it is not lost if a
@@ -3839,35 +3875,42 @@ public void setInsertMark (TreeItem item, boolean before) {
 }
 
 void setItemCount (long parentIter, int count) {
-	int residentCount = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
+	int itemCount = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
 	int topologyParentId = virtualTopology != null ? virtualParentId (parentIter) : VirtualTreeTopology.ROOT;
+	if (count == itemCount) return;
 	boolean isVirtual = (style & SWT.VIRTUAL) != 0;
-	int logicalCount = isVirtual && virtualTopology.childCountKnown (topologyParentId)
-			? virtualTopology.childCount (topologyParentId)
-			: residentCount;
-	if (count == logicalCount) return;
-
 	if (!isVirtual) setRedraw (false);
-	if (parentIter == 0 && count == 0) {
-		removeAll ();
-		return;
-	}
-
-	if (count < residentCount) {
-		remove (parentIter, count, residentCount - 1);
-		residentCount = count;
-	}
-
-	if (isVirtual) {
-		virtualTopology.setChildCount (topologyParentId, count);
-		int initialTarget = Math.min (count, Math.max (residentCount, VIRTUAL_FRONTIER_CHUNK));
-		ensureVirtualNativeChildren (parentIter, initialTarget);
+	if(parentIter == 0 && count == 0) {
+		removeAll();
 	} else {
-		for (int i = residentCount; i < count; i++) {
-			new TreeItem (this, parentIter, SWT.NONE, residentCount, 0);
-		}
-		setRedraw (true);
+		remove (parentIter, count, itemCount - 1);
 	}
+	if (isVirtual) {
+		long iters = OS.g_malloc (2 * GTK.GtkTreeIter_sizeof ());
+		if (iters == 0) error (SWT.ERROR_NO_HANDLES);
+
+		long iterResult = iters;
+		long iterInsertAfter;
+		if (itemCount != 0) {
+			iterInsertAfter = iters + GTK.GtkTreeIter_sizeof ();
+			GTK.gtk_tree_model_iter_nth_child(modelHandle, iterInsertAfter, parentIter, itemCount - 1);
+		} else {
+			iterInsertAfter = 0;
+		}
+
+		for (int i=itemCount; i<count; i++) {
+			GTK.gtk_tree_store_insert_after (modelHandle, iterResult, parentIter, iterInsertAfter);
+			GTK.gtk_tree_store_set (modelHandle, iterResult, ID_COLUMN, -1, -1);
+		}
+
+		OS.g_free (iters);
+	} else {
+		for (int i=itemCount; i<count; i++) {
+			new TreeItem (this, parentIter, SWT.NONE, itemCount, 0);
+		}
+	}
+	if (!isVirtual) setRedraw (true);
+	if (virtualTopology != null) virtualTopology.setChildCount (topologyParentId, count);
 	modelChanged = true;
 }
 
