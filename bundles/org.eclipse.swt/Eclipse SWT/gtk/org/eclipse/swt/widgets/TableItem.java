@@ -47,7 +47,6 @@ public class TableItem extends Item {
 	Color virtualBackground, virtualForeground;
 	Color [] virtualCellBackground, virtualCellForeground;
 	Image [] virtualImages;
-	boolean virtualChecked;
 	boolean cached, grayed, settingData;
 
 /**
@@ -137,6 +136,64 @@ static Table checkNull (Table control) {
 	return control;
 }
 
+boolean isCachedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return cached;
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.CACHED);
+}
+
+void setCachedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		cached = value;
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.CACHED, value);
+}
+
+boolean isCheckedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return _getChecked ();
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.CHECKED);
+}
+
+void setCheckedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		GTK.gtk_list_store_set (parent.modelHandle, handle, Table.CHECKED_COLUMN, value, -1);
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.CHECKED, value);
+}
+
+boolean isGrayedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return grayed;
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.GRAYED);
+}
+
+void setGrayedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		grayed = value;
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.GRAYED, value);
+}
+
+void pinVirtualFacade () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.PINNED, true);
+	}
+}
+
+void markVirtualDirty () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.DIRTY, true);
+	}
+}
+
+void markVirtualPainted () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.DIRTY, false);
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.PAINT_RESIDENT, true);
+	}
+}
+
 Color _getBackground () {
 	if (parent.usesVirtualNativeModel ()) {
 		return virtualBackground != null ? virtualBackground : parent.getBackground ();
@@ -171,7 +228,7 @@ Color _getBackground (int index) {
 }
 
 boolean _getChecked () {
-	if (parent.usesVirtualNativeModel ()) return virtualChecked;
+	if ((parent.style & SWT.VIRTUAL) != 0) return isCheckedState ();
 	int [] ptr = new int [1];
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, Table.CHECKED_COLUMN, ptr, -1);
 	return ptr [0] != 0;
@@ -339,20 +396,20 @@ protected void checkSubclass () {
 void clear () {
 	if (parent.usesVirtualNativeModel ()) {
 		if (parent.currentItem == this) return;
-		cached = false;
+		setCachedState (false);
 		font = null;
 		cellFont = null;
 		strings = null;
 		virtualBackground = virtualForeground = null;
 		virtualCellBackground = virtualCellForeground = null;
 		virtualImages = null;
-		virtualChecked = false;
-		grayed = false;
+		setCheckedState (false);
+		setGrayedState (false);
 		parent.virtualItemChanged (this);
 		return;
 	}
 	if (parent.currentItem == this) return;
-	if (cached || (parent.style & SWT.VIRTUAL) == 0) {
+	if (isCachedState () || (parent.style & SWT.VIRTUAL) == 0) {
 		int columnCount = GTK.gtk_tree_model_get_n_columns (parent.modelHandle);
 		/* the columns before FOREGROUND_COLUMN contain int values, subsequent columns contain pointers */
 		for (int i=Table.CHECKED_COLUMN; i<Table.FOREGROUND_COLUMN; i++) {
@@ -362,7 +419,7 @@ void clear () {
 			GTK.gtk_list_store_set (parent.modelHandle, handle, i, (long )0, -1);
 		}
 	}
-	cached = false;
+	setCachedState (false);
 	font = null;
 	cellFont = null;
 	strings = null;
@@ -682,7 +739,7 @@ public boolean getGrayed () {
 	checkWidget ();
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	return grayed;
+	return isGrayedState ();
 }
 
 @Override
@@ -793,7 +850,7 @@ public int getImageIndent () {
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (!cached) return "*virtual*"; //$NON-NLS-1$
+		if (!isCachedState ()) return "*virtual*"; //$NON-NLS-1$
 	}
 	return super.getNameText ();
 }
@@ -973,7 +1030,7 @@ public void setBackground (Color color) {
 		if (color != null && color.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
 		if (virtualBackground == color || virtualBackground != null && virtualBackground.equals (color)) return;
 		virtualBackground = color;
-		cached = true;
+		setCachedState (true);
 		parent.virtualItemChanged (this);
 		return;
 	}
@@ -983,7 +1040,7 @@ public void setBackground (Color color) {
 	if (_getBackground ().equals (color)) return;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.BACKGROUND_COLUMN, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1014,7 +1071,7 @@ public void setBackground (int index, Color color) {
 		Color old = virtualCellBackground [index];
 		if (old == color || old != null && old.equals (color)) return;
 		virtualCellBackground [index] = color;
-		cached = true;
+		setCachedState (true);
 		parent.virtualItemChanged (this);
 		return;
 	}
@@ -1027,7 +1084,7 @@ public void setBackground (int index, Color color) {
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_BACKGROUND, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 
 	if (color != null) {
 		boolean customDraw = (parent.columnCount == 0)  ? parent.firstCustomDraw : parent.columns [index].customDraw;
@@ -1068,10 +1125,10 @@ public void setBackground (int index, Color color) {
  */
 public void setChecked (boolean checked) {
 	checkWidget();
-	if (parent.usesVirtualNativeModel ()) {
-		if ((parent.style & SWT.CHECK) == 0 || virtualChecked == checked) return;
-		virtualChecked = checked;
-		cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		if ((parent.style & SWT.CHECK) == 0 || isCheckedState () == checked) return;
+		setCheckedState (checked);
+		setCachedState (true);
 		parent.virtualItemChanged (this);
 		return;
 	}
@@ -1084,7 +1141,7 @@ public void setChecked (boolean checked) {
 	* grayed state on check and uncheck.
 	*/
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.GRAYED_COLUMN, !checked ? false : grayed, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1114,13 +1171,13 @@ public void setFont (Font font){
 	this.font = font;
 	if (oldFont != null && oldFont.equals (font)) return;
 	if (parent.usesVirtualNativeModel ()) {
-		cached = true;
+		setCachedState (true);
 		parent.virtualItemChanged (this);
 		return;
 	}
 	long fontHandle = font != null ? font.handle : 0;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.FONT_COLUMN, fontHandle, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1159,14 +1216,14 @@ public void setFont (int index, Font font) {
 	if (oldFont != null && oldFont.equals (font)) return;
 
 	if (parent.usesVirtualNativeModel ()) {
-		cached = true;
+		setCachedState (true);
 		parent.virtualItemChanged (this);
 		return;
 	}
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	long fontHandle  = font != null ? font.handle : 0;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_FONT, fontHandle, -1);
-	cached = true;
+	setCachedState (true);
 
 	if (font != null) {
 		boolean customDraw = (parent.columnCount == 0)  ? parent.firstCustomDraw : parent.columns [index].customDraw;
@@ -1217,7 +1274,7 @@ public void setForeground (Color color){
 		if (color != null && color.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
 		if (virtualForeground == color || virtualForeground != null && virtualForeground.equals (color)) return;
 		virtualForeground = color;
-		cached = true;
+		setCachedState (true);
 		parent.virtualItemChanged (this);
 		return;
 	}
@@ -1227,7 +1284,7 @@ public void setForeground (Color color){
 	if (_getForeground ().equals (color)) return;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.FOREGROUND_COLUMN, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1258,7 +1315,7 @@ public void setForeground (int index, Color color){
 		Color old = virtualCellForeground [index];
 		if (old == color || old != null && old.equals (color)) return;
 		virtualCellForeground [index] = color;
-		cached = true;
+		setCachedState (true);
 		parent.virtualItemChanged (this);
 		return;
 	}
@@ -1271,7 +1328,7 @@ public void setForeground (int index, Color color){
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_FOREGROUND, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 
 	if (color != null) {
 		boolean customDraw = (parent.columnCount == 0)  ? parent.firstCustomDraw : parent.columns [index].customDraw;
@@ -1312,10 +1369,10 @@ public void setForeground (int index, Color color){
  */
 public void setGrayed (boolean grayed) {
 	checkWidget();
-	if (parent.usesVirtualNativeModel ()) {
-		if ((parent.style & SWT.CHECK) == 0 || this.grayed == grayed) return;
-		this.grayed = grayed;
-		cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		if ((parent.style & SWT.CHECK) == 0 || isGrayedState () == grayed) return;
+		setGrayedState (grayed);
+		setCachedState (true);
 		parent.virtualItemChanged (this);
 		return;
 	}
@@ -1329,7 +1386,7 @@ public void setGrayed (boolean grayed) {
 	int [] ptr = new int [1];
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, Table.CHECKED_COLUMN, ptr, -1);
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.GRAYED_COLUMN, ptr [0] == 0 ? false : grayed, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1407,7 +1464,7 @@ public void setImage(int index, Image image) {
 	}
 	if (parent.usesVirtualNativeModel ()) {
 		if (pixbuf != 0) OS.g_object_unref (pixbuf);
-		cached = true;
+		setCachedState (true);
 		parent.virtualItemChanged (this);
 		if (parent.columnCount == 0) {
 			column = GTK.gtk_tree_view_get_column (parent.handle, index);
@@ -1425,7 +1482,7 @@ public void setImage(int index, Image image) {
 		OS.g_object_unref(pixbuf);
 	}
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_SURFACE, surface, -1);
-	cached = true;
+	setCachedState (true);
 	/*
 	 * Bug 465056: single column Tables have a very small initial width.
 	 * Fix: when text or an image is set for a Table, compute its
@@ -1482,7 +1539,7 @@ public void setImageIndent (int indent) {
 	checkWidget ();
 	if (indent < 0) return;
 	/* Image indent is not supported on GTK */
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1521,7 +1578,7 @@ public void setText (int index, String string) {
 		string = string.substring(0, TEXT_LIMIT - ELLIPSIS.length()) + ELLIPSIS;
 	}
 	if (parent.usesVirtualNativeModel ()) {
-		cached = true;
+		setCachedState (true);
 		parent.virtualItemChanged (this);
 		long column;
 		if (parent.columnCount == 0) {
@@ -1533,7 +1590,7 @@ public void setText (int index, String string) {
 	byte[] buffer = Converter.wcsToMbcs (string, true);
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_TEXT, buffer, -1);
-	cached = true;
+	setCachedState (true);
 	/*
 	 * Bug 465056: single column Tables have a very small initial width.
 	 * Fix: when text or an image is set for a Table, compute its

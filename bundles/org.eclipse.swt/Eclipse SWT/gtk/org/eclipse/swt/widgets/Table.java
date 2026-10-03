@@ -81,6 +81,7 @@ public class Table extends Composite {
 	long ignoreCell;
 	TableItem [] items;
 	VirtualItemStorage<TableItem> virtualItems;
+	VirtualViewportPlanner virtualViewport;
 	TableColumn [] columns;
 	TableItem currentItem;
 	TableColumn sortColumn;
@@ -199,7 +200,34 @@ int materializedIndex (int position) {
 }
 
 void virtualItemChanged (TableItem item) {
-	if (usesVirtualNativeModel () && handle != 0) GTK.gtk_widget_queue_draw (handle);
+	if ((style & SWT.VIRTUAL) == 0 || handle == 0) return;
+	if (!isVirtualPaintCandidate (item)) {
+		item.markVirtualDirty ();
+		return;
+	}
+	GTK.gtk_widget_queue_draw (handle);
+}
+
+void updateVirtualViewport () {
+	if (virtualViewport == null) return;
+	virtualViewport.setLogicalCount (itemCount);
+	if (itemCount == 0) {
+		virtualViewport.setViewport (0, 0);
+		return;
+	}
+	int first = Math.min (getTopIndex (), itemCount - 1);
+	Rectangle client = getClientAreaInPixels ();
+	int rowHeight = Math.max (1, getItemHeight ());
+	int visible = Math.min (itemCount - first,
+			Math.max (1, (client.height + rowHeight - 1) / rowHeight + 1));
+	virtualViewport.setViewport (first, visible);
+}
+
+boolean isVirtualPaintCandidate (TableItem item) {
+	if (virtualViewport == null) return true;
+	updateVirtualViewport ();
+	int index = virtualItems.indexOfIdentity (item);
+	return index >= 0 && virtualViewport.isPaintCandidate (index);
 }
 
 boolean usesVirtualNativeModel () {
@@ -363,10 +391,18 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 	if (modelIndex == -1) return 0;
 
 	boolean setData = false;
-	if ((style & SWT.VIRTUAL) != 0 && !item.cached) {
+	if ((style & SWT.VIRTUAL) != 0 && !item.isCachedState ()) {
 		lastIndexOf = index[0];
 		setData = checkData (item);
 		if (!setData || isDisposed () || item.isDisposed ()) return 0;
+	}
+	if ((style & SWT.VIRTUAL) != 0) item.markVirtualPainted ();
+
+	if ((style & SWT.VIRTUAL) != 0 && isToggle) {
+		OS.g_object_set (cell, OS.active, item.isCheckedState (), 0);
+		OS.g_object_set (cell, OS.inconsistent,
+				item.isCheckedState () && item.isGrayedState (), 0);
+		return 0;
 	}
 
 	if (usesVirtualNativeModel ()) {
@@ -378,12 +414,6 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 				: itemBackground != null ? itemBackground.handle : null;
 		OS.g_object_set (cell, OS.cell_background_rgba, backgroundRGBA, 0);
 
-		if (isToggle) {
-			OS.g_object_set (cell, OS.active, item.virtualChecked, 0);
-			OS.g_object_set (cell, OS.inconsistent,
-					item.virtualChecked && item.grayed, 0);
-			return 0;
-		}
 		if (isPixbuf) {
 			Image image = item.virtualImages != null && columnIndex < item.virtualImages.length
 					? item.virtualImages [columnIndex] : null;
@@ -470,9 +500,10 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 }
 
 boolean checkData (TableItem item) {
-	if (item.cached) return true;
+	if (item.isCachedState ()) return true;
 	if ((style & SWT.VIRTUAL) != 0) {
-		item.cached = true;
+		item.pinVirtualFacade ();
+		item.setCachedState (true);
 		Event event = new Event ();
 		event.item = item;
 		event.index = indexOf (item);
@@ -1038,7 +1069,7 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
 						OS.cell_background_rgba, BACKGROUND_COLUMN);
 			}
 		}
-		if (logicalVirtual || ownerDraw) {
+		if ((style & SWT.VIRTUAL) != 0 || ownerDraw) {
 			GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, checkRenderer,
 					display.cellDataProc, handle, 0);
 			OS.g_object_set_qdata (checkRenderer, Display.SWT_OBJECT_INDEX1, columnHandle);
@@ -1115,7 +1146,10 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
 void createWidget (int index) {
 	super.createWidget (index);
 	items = new TableItem [4];
-	if ((style & SWT.VIRTUAL) != 0) virtualItems = new VirtualItemStorage<> ();
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems = new VirtualItemStorage<> ();
+		virtualViewport = new VirtualViewportPlanner ();
+	}
 	columns = new TableColumn [4];
 	itemCount = columnCount = 0;
 	// In GTK 3 font description is inherited from parent widget which is not how SWT has always worked,
@@ -1655,6 +1689,7 @@ TableItem getFocusItem () {
 		int [] index = new int []{-1};
 		C.memmove (index, indices, 4);
 		item = _getItem (index [0]);
+		if (item != null) item.pinVirtualFacade ();
 	}
 	GTK.gtk_tree_path_free (path [0]);
 	return item;
@@ -1799,7 +1834,9 @@ public boolean getHeaderVisible () {
 public TableItem getItem (int index) {
 	checkWidget();
 	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
-	return _getItem (index);
+	TableItem item = _getItem (index);
+	item.pinVirtualFacade ();
+	return item;
 }
 
 /**
@@ -1847,6 +1884,7 @@ public TableItem getItem (Point point) {
 		int [] index = new int [1];
 		C.memmove (index, indices, 4);
 		item = _getItem (index [0]);
+		if (item != null) item.pinVirtualFacade ();
 	}
 	GTK.gtk_tree_path_free (path [0]);
 	return item;
@@ -1946,6 +1984,7 @@ public TableItem [] getItems () {
 	if ((style & SWT.VIRTUAL) != 0) {
 		for (int i=0; i<itemCount; i++) {
 			result [i] = _getItem (i);
+			result [i].pinVirtualFacade ();
 		}
 	} else {
 		System.arraycopy (items, 0, result, 0, itemCount);
@@ -2032,7 +2071,10 @@ public TableItem [] getSelection () {
 		}
 		OS.g_list_free (originalList);
 		TableItem [] result = new TableItem [length];
-		for (int i=0; i<result.length; i++) result [i] = _getItem (treeSelection [i]);
+		for (int i=0; i<result.length; i++) {
+			result [i] = _getItem (treeSelection [i]);
+			result [i].pinVirtualFacade ();
+		}
 		return result;
 	}
 	return new TableItem [0];
@@ -2401,6 +2443,7 @@ long gtk3_key_press_event (long widget, long event) {
 }
 
 private void toggleItemAndSendEvent(TableItem item) {
+	item.pinVirtualFacade ();
 	item.setChecked (!item.getChecked ());
 
 	Event event = new Event ();
@@ -3124,6 +3167,7 @@ void sendMeasureEvent (long cell, long width, long height) {
 			GC gc = new GC (this);
 			gc.setFont (item.getFont (columnIndex));
 			Event event = new Event ();
+			item.pinVirtualFacade ();
 			event.item = item;
 			event.index = columnIndex;
 			event.gc = gc;
@@ -3312,6 +3356,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 					eventRect.y += y_offset;
 					Cairo.cairo_translate (cr, 0, -y_offset);
 
+					item.pinVirtualFacade ();
 					event.item = item;
 					event.index = columnIndex;
 					event.gc = gc;
@@ -3431,6 +3476,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 					eventRect.y += y_offset;
 					Cairo.cairo_translate (cr, 0, -y_offset);
 
+					item.pinVirtualFacade ();
 					event.item = item;
 					event.index = columnIndex;
 					event.gc = gc;

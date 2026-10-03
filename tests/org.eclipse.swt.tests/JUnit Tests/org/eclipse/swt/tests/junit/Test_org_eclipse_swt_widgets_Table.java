@@ -77,6 +77,80 @@ public void test_virtualItemResidencyDoesNotScaleWithLogicalCount() throws Excep
 	assertTrue(backing.length <= 16, "materializing one distant row must keep residency sparse");
 }
 
+
+@Test
+public void test_virtualPackedStateFollowsLogicalInsertAndRemove() throws Exception {
+	String platform = SWT.getPlatform();
+	if (!("cocoa".equals(platform) || "gtk".equals(platform))) return;
+
+	Table virtualTable = new Table(shell, SWT.VIRTUAL | SWT.CHECK);
+	virtualTable.setItemCount(32);
+	TableItem marked = virtualTable.getItem(20);
+	marked.setChecked(true);
+	marked.setGrayed(true);
+
+	Field storageField = Table.class.getDeclaredField("virtualItems");
+	storageField.setAccessible(true);
+	Object storage = storageField.get(virtualTable);
+	Field stateMasksField = storage.getClass().getDeclaredField("stateMasks");
+	stateMasksField.setAccessible(true);
+	Field indicesField = storage.getClass().getDeclaredField("indices");
+	indicesField.setAccessible(true);
+	Field sizeField = storage.getClass().getDeclaredField("size");
+	sizeField.setAccessible(true);
+
+	long[] before = (long[]) stateMasksField.get(storage);
+	int[] beforeIndices = (int[]) indicesField.get(storage);
+	int beforeSize = sizeField.getInt(storage);
+	int markedSlot = -1;
+	for (int i = 0; i < beforeSize; i++) {
+		if (beforeIndices[i] == 20) {
+			markedSlot = i;
+			break;
+		}
+	}
+	assertTrue(markedSlot >= 0);
+	long markedState = before[markedSlot];
+	assertTrue(markedState != 0, "virtual semantic state must be represented by a packed mask");
+	assertTrue(before.length <= 16, "packed state capacity must follow materialized residency");
+
+	TableItem inserted = new TableItem(virtualTable, SWT.NONE, 3);
+	long[] afterInsert = (long[]) stateMasksField.get(storage);
+	int[] afterInsertIndices = (int[]) indicesField.get(storage);
+	int afterInsertSize = sizeField.getInt(storage);
+	int shiftedSlot = -1;
+	for (int i = 0; i < afterInsertSize; i++) {
+		if (afterInsertIndices[i] == 21) {
+			shiftedSlot = i;
+			break;
+		}
+	}
+	assertTrue(shiftedSlot >= 0);
+	assertEquals(markedState, afterInsert[shiftedSlot],
+			"packed state must move with the logical item");
+	assertSame(marked, virtualTable.getItem(21));
+	assertTrue(marked.getChecked());
+	assertTrue(marked.getGrayed());
+
+	inserted.dispose();
+	long[] afterRemove = (long[]) stateMasksField.get(storage);
+	int[] afterRemoveIndices = (int[]) indicesField.get(storage);
+	int afterRemoveSize = sizeField.getInt(storage);
+	int restoredSlot = -1;
+	for (int i = 0; i < afterRemoveSize; i++) {
+		if (afterRemoveIndices[i] == 20) {
+			restoredSlot = i;
+			break;
+		}
+	}
+	assertTrue(restoredSlot >= 0);
+	assertEquals(markedState, afterRemove[restoredSlot],
+			"packed state must shift back with logical removal");
+	assertSame(marked, virtualTable.getItem(20));
+	assertTrue(marked.getChecked());
+	assertTrue(marked.getGrayed());
+}
+
 @Test
 public void test_virtualMaterializedIdentityTracksLogicalRemovals() {
 	Table virtualTable = new Table(shell, SWT.VIRTUAL);
