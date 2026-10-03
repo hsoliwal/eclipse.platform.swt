@@ -102,6 +102,28 @@ public void test_virtualScrollMetricsUseLogicalRowsAndSampleExtent() throws Exce
 	assertEquals(10, visibleRows.invoke(metrics));
 	assertTrue((Long) estimatedContentExtent.invoke(metrics) > Integer.MAX_VALUE,
 			"estimated pixel extent may exceed int while row-coordinate scrollbar remains valid");
+
+	Method configureLong = type.getDeclaredMethod("configure", long.class, int.class, int.class);
+	Method logicalRowCount = type.getDeclaredMethod("logicalRowCount");
+	Method selectionForTopRow = type.getDeclaredMethod("selectionForTopRow", long.class);
+	Method topRowForSelection = type.getDeclaredMethod("topRowForSelection", int.class);
+	for (Method method : new Method[] {
+		configureLong, logicalRowCount, selectionForTopRow, topRowForSelection}) {
+		method.setAccessible(true);
+	}
+
+	long hugeRows = 6_000_000_000L;
+	configureLong.invoke(metrics, hugeRows, 24, 480);
+	assertEquals(hugeRows, logicalRowCount.invoke(metrics));
+	assertEquals(Integer.MAX_VALUE, maximum.invoke(metrics));
+	assertEquals(20, visibleRows.invoke(metrics));
+	assertEquals(144_000_000_000L, estimatedContentExtent.invoke(metrics));
+
+	long requestedTop = 3_000_000_000L;
+	int projectedSelection = (Integer) selectionForTopRow.invoke(metrics, requestedTop);
+	long roundTripTop = (Long) topRowForSelection.invoke(metrics, projectedSelection);
+	assertTrue(Math.abs(roundTripTop - requestedTop) <= 4,
+			"integer scrollbar projection must round-trip a huge logical row coordinate within one projected step");
 }
 
 @Test
