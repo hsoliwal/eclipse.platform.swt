@@ -1689,6 +1689,7 @@ TableItem getFocusItem () {
 		int [] index = new int []{-1};
 		C.memmove (index, indices, 4);
 		item = _getItem (index [0]);
+		if (item != null) item.pinVirtualFacade ();
 	}
 	GTK.gtk_tree_path_free (path [0]);
 	return item;
@@ -2070,7 +2071,10 @@ public TableItem [] getSelection () {
 		}
 		OS.g_list_free (originalList);
 		TableItem [] result = new TableItem [length];
-		for (int i=0; i<result.length; i++) result [i] = _getItem (treeSelection [i]);
+		for (int i=0; i<result.length; i++) {
+			result [i] = _getItem (treeSelection [i]);
+			result [i].pinVirtualFacade ();
+		}
 		return result;
 	}
 	return new TableItem [0];
@@ -3162,6 +3166,7 @@ void sendMeasureEvent (long cell, long width, long height) {
 			GC gc = new GC (this);
 			gc.setFont (item.getFont (columnIndex));
 			Event event = new Event ();
+			item.pinVirtualFacade ();
 			event.item = item;
 			event.index = columnIndex;
 			event.gc = gc;
