@@ -198,6 +198,29 @@ int indexOfChild (TreeItem parentItem, TreeItem child) {
 	return -1;
 }
 
+boolean isVirtualPaintCandidate (TreeItem item) {
+	if ((style & SWT.VIRTUAL) == 0) return true;
+	NSOutlineView outline = (NSOutlineView)view;
+	long row = outline.rowForItem (item.handle);
+	if (row < 0) return false;
+	NSRect visible = scrollView.documentVisibleRect ();
+	double overscan = Math.max (1, getItemHeight ()) * VirtualViewportPlanner.DEFAULT_OVERSCAN_ROWS;
+	NSRect rowRect = outline.rectOfRow (row);
+	double visibleTop = visible.y - overscan;
+	double visibleBottom = visible.y + visible.height + overscan;
+	return rowRect.y + rowRect.height >= visibleTop && rowRect.y <= visibleBottom;
+}
+
+void clearVirtualPaintResidency (TreeItem parentItem) {
+	if ((style & SWT.VIRTUAL) == 0) return;
+	for (int i = 0; i < materializedItemCount (parentItem); i++) {
+		TreeItem child = materializedItem (parentItem, i);
+		if (child == null || child.isDisposed ()) continue;
+		child.clearVirtualPaintResidency ();
+		clearVirtualPaintResidency (child);
+	}
+}
+
 @Override
 boolean acceptsFirstResponder (long id, long sel) {
 	return true;
@@ -628,6 +651,7 @@ void collapseItem_collapseChildren (long id, long sel, long itemID, boolean chil
 	super.collapseItem_collapseChildren (id, sel, itemID, children);
 	ignoreExpand = false;
 	if (isDisposed() || item.isDisposed()) return;
+	clearVirtualPaintResidency (item);
 	setScrollWidth ();
 }
 
@@ -1158,6 +1182,7 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect rect, long view) {
 	}
 	TreeItem item = (TreeItem) display.getWidget (outValue [0]);
 	if (item == null) return;
+	item.markVirtualPainted ();
 	OS.object_getInstanceVariable(id, Display.SWT_COLUMN, outValue);
 	long tableColumn = outValue[0];
 	long nsColumnIndex = widget.tableColumns().indexOfObjectIdenticalTo(new id(tableColumn));
