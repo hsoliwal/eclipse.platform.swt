@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -57,6 +58,144 @@ public void setUp() {
 	super.setUp();
 	tree = new Tree(shell, SWT.MULTI);
 	setWidget(tree);
+}
+
+
+@Test
+public void test_virtualTreeVisibleProjectionSkipsColdLogicalRanges() throws Exception {
+	Class<?> topologyType = Class.forName("org.eclipse.swt.widgets.VirtualTreeTopology");
+	Constructor<?> topologyConstructor = topologyType.getDeclaredConstructor();
+	topologyConstructor.setAccessible(true);
+	Object topology = topologyConstructor.newInstance();
+
+	Field rootField = topologyType.getDeclaredField("ROOT");
+	rootField.setAccessible(true);
+	int root = rootField.getInt(null);
+
+	Method bind = topologyType.getDeclaredMethod("bind", int.class, int.class, int.class);
+	Method setChildCount = topologyType.getDeclaredMethod("setChildCount", int.class, int.class);
+	Method flag = topologyType.getDeclaredMethod("flag", int.class, long.class, boolean.class);
+	Method insertCoordinate = topologyType.getDeclaredMethod("insertCoordinate", int.class, int.class, int.class);
+	Method releaseSubtree = topologyType.getDeclaredMethod("releaseSubtree", int.class);
+	Method materializedCount = topologyType.getDeclaredMethod("materializedCount");
+	for (Method method : new Method[] {
+			bind, setChildCount, flag, insertCoordinate, releaseSubtree, materializedCount}) {
+		method.setAccessible(true);
+	}
+
+	Class<?> stateType = Class.forName("org.eclipse.swt.widgets.VirtualItemState");
+	Field expandedField = stateType.getDeclaredField("EXPANDED");
+	expandedField.setAccessible(true);
+	long expanded = expandedField.getLong(null);
+
+	setChildCount.invoke(topology, root, 10_000_000);
+	bind.invoke(topology, 1, root, 5);
+	setChildCount.invoke(topology, 1, 3);
+	flag.invoke(topology, 1, expanded, true);
+
+	bind.invoke(topology, 2, root, 1_000);
+	setChildCount.invoke(topology, 2, 2);
+
+	bind.invoke(topology, 3, 1, 1);
+	setChildCount.invoke(topology, 3, 2);
+	flag.invoke(topology, 3, expanded, true);
+
+	assertEquals(3, ((Integer) materializedCount.invoke(topology)).intValue(),
+			"ten million logical roots must retain only the observed topology nodes");
+
+	Class<?> projectionType = Class.forName("org.eclipse.swt.widgets.VirtualTreeVisibleProjection");
+	Constructor<?> projectionConstructor = projectionType.getDeclaredConstructor(topologyType);
+	projectionConstructor.setAccessible(true);
+	Object projection = projectionConstructor.newInstance(topology);
+
+	Method visibleRowCount = projectionType.getDeclaredMethod("visibleRowCount");
+	Method rowAt = projectionType.getDeclaredMethod("rowAt", long.class);
+	Method visibleIndexOf = projectionType.getDeclaredMethod("visibleIndexOf", int.class);
+	visibleRowCount.setAccessible(true);
+	rowAt.setAccessible(true);
+	visibleIndexOf.setAccessible(true);
+
+	assertEquals(10_000_005L, ((Long) visibleRowCount.invoke(projection)).longValue());
+	assertEquals(5L, ((Long) visibleIndexOf.invoke(projection, 1)).longValue());
+	assertEquals(7L, ((Long) visibleIndexOf.invoke(projection, 3)).longValue());
+	assertEquals(1_005L, ((Long) visibleIndexOf.invoke(projection, 2)).longValue());
+
+	Object rootFive = rowAt.invoke(projection, 5L);
+	Class<?> rowType = rootFive.getClass();
+	Method rowParent = rowType.getDeclaredMethod("parentId");
+	Method rowChild = rowType.getDeclaredMethod("childIndex");
+	Method rowId = rowType.getDeclaredMethod("materializedId");
+	Method rowDepth = rowType.getDeclaredMethod("depth");
+	for (Method method : new Method[] {rowParent, rowChild, rowId, rowDepth}) method.setAccessible(true);
+
+	assertEquals(root, ((Integer) rowParent.invoke(rootFive)).intValue());
+	assertEquals(5, ((Integer) rowChild.invoke(rootFive)).intValue());
+	assertEquals(1, ((Integer) rowId.invoke(rootFive)).intValue());
+	assertEquals(0, ((Integer) rowDepth.invoke(rootFive)).intValue());
+
+	Object nested = rowAt.invoke(projection, 8L);
+	assertEquals(3, ((Integer) rowParent.invoke(nested)).intValue());
+	assertEquals(0, ((Integer) rowChild.invoke(nested)).intValue());
+	assertEquals(-1, ((Integer) rowId.invoke(nested)).intValue());
+	assertEquals(2, ((Integer) rowDepth.invoke(nested)).intValue());
+
+	Object afterExpandedSubtree = rowAt.invoke(projection, 11L);
+	assertEquals(root, ((Integer) rowParent.invoke(afterExpandedSubtree)).intValue());
+	assertEquals(6, ((Integer) rowChild.invoke(afterExpandedSubtree)).intValue());
+	assertEquals(-1, ((Integer) rowId.invoke(afterExpandedSubtree)).intValue());
+
+	flag.invoke(topology, 1, expanded, false);
+	assertEquals(10_000_000L, ((Long) visibleRowCount.invoke(projection)).longValue());
+	assertEquals(-1L, ((Long) visibleIndexOf.invoke(projection, 3)).longValue());
+	Object collapsedNext = rowAt.invoke(projection, 6L);
+	assertEquals(root, ((Integer) rowParent.invoke(collapsedNext)).intValue());
+	assertEquals(6, ((Integer) rowChild.invoke(collapsedNext)).intValue());
+
+	flag.invoke(topology, 1, expanded, true);
+	insertCoordinate.invoke(topology, root, 2, 4);
+	assertEquals(10_000_006L, ((Long) visibleRowCount.invoke(projection)).longValue());
+	assertEquals(6L, ((Long) visibleIndexOf.invoke(projection, 1)).longValue());
+	assertEquals(8L, ((Long) visibleIndexOf.invoke(projection, 3)).longValue());
+	assertEquals(1_006L, ((Long) visibleIndexOf.invoke(projection, 2)).longValue());
+
+	releaseSubtree.invoke(topology, 4);
+	assertEquals(10_000_005L, ((Long) visibleRowCount.invoke(projection)).longValue());
+	assertEquals(5L, ((Long) visibleIndexOf.invoke(projection, 1)).longValue());
+
+	setChildCount.invoke(topology, root, 5);
+	assertEquals(5L, ((Long) visibleRowCount.invoke(projection)).longValue());
+	assertEquals(0, ((Integer) materializedCount.invoke(topology)).intValue(),
+			"root shrink must prune materialized coordinates outside the logical range");
+}
+
+
+@Test
+public void test_virtualGtkVisibleProjectionTracksExpansionIndependentlyOfResidency() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(100);
+	TreeItem root = virtualTree.getItem(5);
+	root.setItemCount(3);
+	TreeItem child = root.getItem(1);
+	child.setItemCount(2);
+
+	Method visibleRows = Tree.class.getDeclaredMethod("virtualVisibleRowCount");
+	visibleRows.setAccessible(true);
+
+	assertEquals(100L, ((Long) visibleRows.invoke(virtualTree)).longValue());
+	root.setExpanded(true);
+	assertEquals(103L, ((Long) visibleRows.invoke(virtualTree)).longValue());
+	child.setExpanded(true);
+	assertEquals(105L, ((Long) visibleRows.invoke(virtualTree)).longValue());
+
+	root.setExpanded(false);
+	assertEquals(100L, ((Long) visibleRows.invoke(virtualTree)).longValue(),
+			"collapsed descendants must leave the logical visible-row projection");
+	assertEquals(100, virtualTree.getItemCount());
+	assertEquals(3, root.getItemCount());
+	assertEquals(2, child.getItemCount(),
+			"logical child counts remain independent of current native visibility/residency");
 }
 
 @Test
