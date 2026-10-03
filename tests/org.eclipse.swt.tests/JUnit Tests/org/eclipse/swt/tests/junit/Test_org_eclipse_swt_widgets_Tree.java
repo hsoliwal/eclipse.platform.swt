@@ -63,12 +63,10 @@ public void test_virtualItemResidencyDoesNotScaleWithLogicalCount() throws Excep
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(4096);
 
-	if ("cocoa".equals(SWT.getPlatform())) {
-		Field itemsField = Tree.class.getDeclaredField("items");
-		itemsField.setAccessible(true);
-		TreeItem[] backing = (TreeItem[]) itemsField.get(virtualTree);
-		assertTrue(backing.length <= 16, "Cocoa virtual Tree must not allocate one Java slot per logical root");
-	}
+	Field itemsField = Tree.class.getDeclaredField("items");
+	itemsField.setAccessible(true);
+	TreeItem[] backing = (TreeItem[]) itemsField.get(virtualTree);
+	assertTrue(backing.length <= 16, "virtual Tree must not allocate one Java slot per logical root");
 
 	TreeItem last = virtualTree.getItem(4095);
 	assertSame(last, virtualTree.getItem(4095));
