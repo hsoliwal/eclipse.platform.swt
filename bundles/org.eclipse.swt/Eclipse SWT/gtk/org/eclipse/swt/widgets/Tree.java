@@ -2084,10 +2084,11 @@ public boolean getHeaderVisible () {
 public TreeItem getItem (int index) {
 	checkWidget();
 	if (index < 0) error (SWT.ERROR_INVALID_RANGE);
+	ensureVirtualNativeItem (0, index);
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	try {
 		if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index)) error (SWT.ERROR_INVALID_RANGE);
-		return _getItem (0, iter, index);
+		return exposeVirtualItem (_getItem (0, iter, index));
 	} finally {
 		OS.g_free (iter);
 	}
@@ -2154,7 +2155,7 @@ public TreeItem getItem (Point point) {
 	}
 	OS.g_free (iter);
 	GTK.gtk_tree_path_free (path [0]);
-	return item;
+	return exposeVirtualItem (item);
 }
 
 /**
@@ -2256,12 +2257,13 @@ public TreeItem [] getItems () {
 }
 
 TreeItem [] getItems (long parent) {
+	if (virtualTopology != null) ensureVirtualNativeChildren (parent, virtualChildCount (parent));
 	ArrayList<TreeItem> result = new ArrayList<> ();
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	try {
 		boolean valid = GTK.gtk_tree_model_iter_children (modelHandle, iter, parent);
 		while (valid) {
-			result.add (_getItem (parent, iter, result.size ()));
+			result.add (exposeVirtualItem (_getItem (parent, iter, result.size ())));
 			valid = GTK.gtk_tree_model_iter_next (modelHandle, iter);
 		}
 	} finally {
@@ -2377,7 +2379,7 @@ public TreeItem[] getSelection () {
 			}
 		}
 		if (found) {
-			treeSelection [length++] = _getItem (iters [depth - 1]);
+			treeSelection [length++] = exposeVirtualItem (_getItem (iters [depth - 1]));
 			previous = indices;
 		} else {
 			previous = new int [0];
@@ -2503,7 +2505,7 @@ public TreeItem getTopItem () {
 	 * it. If it is, find the topItem using GtkTreeView API.
 	 */
 	if(item != null && !item.isDisposed()){
-		return item;
+		return exposeVirtualItem (item);
 	}
 	// Use GTK method to get topItem if there has been changes to the vAdjustment
 	long [] path = new long [1];
@@ -2518,7 +2520,7 @@ public TreeItem getTopItem () {
 	OS.g_free (iter);
 	GTK.gtk_tree_path_free (path [0]);
 	topItem = item;
-	return item;
+	return exposeVirtualItem (item);
 }
 
 TreeItem _getCachedTopItem() {
