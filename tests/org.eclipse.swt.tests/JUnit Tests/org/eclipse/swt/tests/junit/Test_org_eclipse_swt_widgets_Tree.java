@@ -444,8 +444,9 @@ public void test_virtualGtkSetTopItemMirrorsLogicalTopRow() throws Exception {
 }
 
 @Test
-public void test_virtualGtkTopologyStaysSparseAndTracksCoordinates() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+public void test_virtualGtkAndWin32TopologyStaysSparseAndTracksCoordinates() throws Exception {
+	String platform = SWT.getPlatform();
+	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(64);
@@ -490,7 +491,7 @@ public void test_virtualGtkTopologyStaysSparseAndTracksCoordinates() throws Exce
 	assertEquals(rootId, parentIds[childId]);
 	assertEquals(12, childIndices[childId]);
 	assertTrue(materializedCountField.getInt(topology) <= 2,
-			"logical child counts must not allocate topology slots for cold rows");
+			"logical child counts must not allocate topology slots for cold rows on " + platform);
 
 	TreeItem insertedRoot = new TreeItem(virtualTree, SWT.NONE, 3);
 	assertEquals(21, childIndices[rootId],
