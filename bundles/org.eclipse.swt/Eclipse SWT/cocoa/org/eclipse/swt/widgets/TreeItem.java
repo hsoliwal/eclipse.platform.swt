@@ -287,6 +287,25 @@ boolean isVirtualFacadePinned () {
 			&& parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.PINNED);
 }
 
+void markVirtualDirty () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.DIRTY, true);
+	}
+}
+
+void markVirtualPainted () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.DIRTY, false);
+		parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.PAINT_RESIDENT, true);
+	}
+}
+
+void clearVirtualPaintResidency () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.PAINT_RESIDENT, false);
+	}
+}
+
 int calculateWidth (int index, GC gc) {
 	if (index == 0 && width != -1) return width;
 	Font font = null;
@@ -1014,6 +1033,10 @@ boolean isDrawing () {
 
 void redraw (int columnIndex) {
 	if (parent.ignoreRedraw || !isDrawing()) return;
+	if ((parent.style & SWT.VIRTUAL) != 0 && !parent.isVirtualPaintCandidate (this)) {
+		markVirtualDirty ();
+		return;
+	}
 	/* redraw the full item if columnIndex == -1 */
 	NSOutlineView outlineView = (NSOutlineView) parent.view;
 	NSRect rect;
