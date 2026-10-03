@@ -4168,12 +4168,16 @@ void releaseItem (long hItem, TVITEM tvItem, boolean release) {
 	tvItem.hItem = hItem;
 	if (OS.SendMessage (handle, OS.TVM_GETITEM, 0, tvItem) != 0) {
 		if (tvItem.lParam != -1) {
-			if (tvItem.lParam < lastID) lastID = (int)tvItem.lParam;
+			int id = (int)tvItem.lParam;
+			if (virtualTopology != null && virtualTopology.contains (id)) {
+				virtualTopology.releaseSubtree (id);
+			}
+			if (tvItem.lParam < lastID) lastID = id;
 			if (release) {
-				TreeItem item = items [(int)tvItem.lParam];
+				TreeItem item = items [id];
 				if (item != null) item.release (false);
 			}
-			items [(int)tvItem.lParam] = null;
+			items [id] = null;
 		}
 	}
 }
