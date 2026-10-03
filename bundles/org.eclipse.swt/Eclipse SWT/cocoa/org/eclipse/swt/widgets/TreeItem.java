@@ -37,6 +37,16 @@ import org.eclipse.swt.internal.cocoa.*;
  * @noextend This class is not intended to be subclassed by clients.
  */
 public class TreeItem extends Item {
+	/*
+	 * Virtual TreeItem state lives in the parent's sparse columnar store.  This keeps
+	 * logical state independent of the Java/native Item shell and lets index shifts
+	 * move state with the logical coordinate without a dense object graph.
+	 */
+	private static final long VIRTUAL_CACHED = 1L << 0;
+	private static final long VIRTUAL_CHECKED = 1L << 1;
+	private static final long VIRTUAL_GRAYED = 1L << 2;
+	private static final long VIRTUAL_EXPANDED = 1L << 3;
+
 	Tree parent;
 	TreeItem parentItem;
 	TreeItem[] items;
@@ -208,6 +218,58 @@ static int checkIndex (int index) {
 	return index;
 }
 
+boolean isCachedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return cached;
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_CACHED);
+}
+
+void setCachedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		cached = value;
+		return;
+	}
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_CACHED, value);
+}
+
+boolean isCheckedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return checked;
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_CHECKED);
+}
+
+void setCheckedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		checked = value;
+		return;
+	}
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_CHECKED, value);
+}
+
+boolean isGrayedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return grayed;
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_GRAYED);
+}
+
+void setGrayedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		grayed = value;
+		return;
+	}
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_GRAYED, value);
+}
+
+boolean isExpandedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return expanded;
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_EXPANDED);
+}
+
+void setExpandedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		expanded = value;
+		return;
+	}
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_EXPANDED, value);
+}
+
 int calculateWidth (int index, GC gc) {
 	if (index == 0 && width != -1) return width;
 	Font font = null;
@@ -247,7 +309,7 @@ int calculateWidth (int index, GC gc) {
 	width += Tree.TEXT_GAP; // To fix truncation
 	boolean sendMeasure = true;
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		sendMeasure = cached;
+		sendMeasure = isCachedState ();
 	}
 	if (sendMeasure && parent.hooks (SWT.MeasureItem)) {
 		gc.setFont (font);
@@ -281,12 +343,13 @@ protected void checkSubclass () {
 }
 
 void clear () {
-	cached = false;
+	setCachedState (false);
 	text = "";
 	image = null;
 	strings = null;
 	images = null;
-	checked = grayed = false;
+	setCheckedState (false);
+	setGrayedState (false);
 	foreground = background = null;
 	cellForeground = cellBackground = null;
 	font = null;
@@ -527,7 +590,7 @@ public boolean getChecked () {
 	checkWidget ();
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	return checked;
+	return isCheckedState ();
 }
 
 /**
@@ -543,7 +606,7 @@ public boolean getChecked () {
  */
 public boolean getExpanded () {
 	checkWidget ();
-	return expanded;
+	return isExpandedState ();
 }
 
 /**
@@ -644,7 +707,7 @@ public boolean getGrayed () {
 	checkWidget ();
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	return grayed;
+	return isGrayedState ();
 }
 
 @Override
@@ -788,7 +851,7 @@ public TreeItem [] getItems () {
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (!cached) return "*virtual*"; //$NON-NLS-1$
+		if (!isCachedState ()) return "*virtual*"; //$NON-NLS-1$
 	}
 	return super.getNameText ();
 }
@@ -1021,12 +1084,12 @@ public void removeAll () {
 
 void sendExpand (boolean expand, boolean recurse) {
 	if (itemCount == 0) return;
-	if (expanded != expand) {
+	if (isExpandedState () != expand) {
 		Event event = new Event ();
 		event.item = this;
 		parent.sendEvent (expand ? SWT.Expand : SWT.Collapse, event);
 		if (isDisposed ()) return;
-		expanded = expand;
+		setExpandedState (expand);
 	}
 	if (recurse) {
 		for (int i = 0; i < parent.materializedItemCount (this); i++) {
@@ -1062,7 +1125,7 @@ public void setBackground (Color color) {
 	if (oldColor == color) return;
 	background = color;
 	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -1099,7 +1162,7 @@ public void setBackground (int index, Color color) {
 	if (oldColor == color) return;
 	cellBackground [index] = color;
 	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+	setCachedState (true);
 	redraw (index);
 }
 
@@ -1116,9 +1179,9 @@ public void setBackground (int index, Color color) {
 public void setChecked (boolean checked) {
 	checkWidget ();
 	if ((parent.style & SWT.CHECK) == 0) return;
-	if (this.checked == checked) return;
-	this.checked = checked;
-	cached = true;
+	if (isCheckedState () == checked) return;
+	setCheckedState (checked);
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -1140,14 +1203,14 @@ public void setExpanded (boolean expanded) {
 
 	parent.checkItems ();
 	parent.ignoreExpand = true;
-	this.expanded = expanded;
+	setExpandedState (expanded);
 	if (expanded) {
 		((NSOutlineView) parent.view).expandItem (handle);
 	} else {
 		((NSOutlineView) parent.view).collapseItem (handle);
 	}
 	parent.ignoreExpand = false;
-	cached = true;
+	setCachedState (true);
 	if (!expanded) {
 		parent.setScrollWidth ();
 	}
@@ -1180,7 +1243,7 @@ public void setFont (Font font) {
 	this.font = font;
 	if (oldFont != null && oldFont.equals (font)) return;
 	width = -1;
-	cached = true;
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -1219,7 +1282,7 @@ public void setFont (int index, Font font) {
 	cellFont [index] = font;
 	if (oldFont != null && oldFont.equals (font)) return;
 	width = -1;
-	cached = true;
+	setCachedState (true);
 	redraw (index);
 }
 
@@ -1249,7 +1312,7 @@ public void setForeground (Color color) {
 	if (oldColor == color) return;
 	foreground = color;
 	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -1286,7 +1349,7 @@ public void setForeground (int index, Color color){
 	if (oldColor == color) return;
 	cellForeground [index] = color;
 	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+	setCachedState (true);
 	redraw (index);
 }
 
@@ -1304,9 +1367,9 @@ public void setForeground (int index, Color color){
 public void setGrayed (boolean grayed) {
 	checkWidget ();
 	if ((parent.style & SWT.CHECK) == 0) return;
-	if (this.grayed == grayed) return;
-	this.grayed = grayed;
-	cached = true;
+	if (isGrayedState () == grayed) return;
+	setGrayedState (grayed);
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -1373,7 +1436,7 @@ public void setImage (int index, Image image) {
 		}
 		images [index] = image;
 	}
-	cached = true;
+	setCachedState (true);
 	if (index == 0) parent.setScrollWidth (this);
 	if (0 <= index && index < count) redraw (index);
 }
@@ -1468,7 +1531,7 @@ public void setText (int index, String string) {
 		if (string.equals (strings [index])) return;
 		strings [index] = string;
 	}
-	cached = true;
+	setCachedState (true);
 	if (index == 0) parent.setScrollWidth (this);
 	if (0 <= index && index < count) redraw (index);
 }
@@ -1482,8 +1545,9 @@ public void setText (String string) {
 void updateExpanded () {
 	if (itemCount == 0) return;
 	NSOutlineView outlineView = (NSOutlineView)parent.view;
-	if (expanded != outlineView.isItemExpanded (handle)) {
-		if (expanded) outlineView.expandItem (handle);
+	boolean expandedState = isExpandedState ();
+	if (expandedState != outlineView.isItemExpanded (handle)) {
+		if (expandedState) outlineView.expandItem (handle);
 		else outlineView.collapseItem (handle);
 	}
 	for (int i = 0; i < parent.materializedItemCount (this); i++) {
