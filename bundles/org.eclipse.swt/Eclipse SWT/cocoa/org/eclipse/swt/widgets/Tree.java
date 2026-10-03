@@ -1841,8 +1841,9 @@ public TreeItem getItem (Point point) {
 	if (OS.NSPointInRect(pt, rect)) return null;
 	id id = widget.itemAtRow(row);
 	Widget item = display.getWidget (id.id);
-	if (item != null && item instanceof TreeItem) {
-		return (TreeItem)item;
+	if (item != null && item instanceof TreeItem treeItem) {
+		treeItem.pinVirtualFacade ();
+		return treeItem;
 	}
 	return null;
 }
@@ -1984,8 +1985,9 @@ public TreeItem [] getSelection () {
 	for (int i=0; i<count; i++) {
 		id id = widget.itemAtRow (indexBuffer [i]);
 		Widget item = display.getWidget (id.id);
-		if (item != null && item instanceof TreeItem) {
-			result[i] = (TreeItem) item;
+		if (item != null && item instanceof TreeItem treeItem) {
+			treeItem.pinVirtualFacade ();
+			result[i] = treeItem;
 		}
 	}
 	return result;
