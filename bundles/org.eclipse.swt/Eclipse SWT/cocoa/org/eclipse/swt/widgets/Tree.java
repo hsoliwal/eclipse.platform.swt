@@ -480,6 +480,7 @@ boolean canDragRowsWithIndexes_atPoint(long id, long sel, long rowIndexes, NSPoi
 boolean checkData (TreeItem item) {
 	if (item.isCachedState ()) return true;
 	if ((style & SWT.VIRTUAL) != 0) {
+		item.pinVirtualFacade ();
 		item.setCachedState (true);
 		Event event = new Event ();
 		TreeItem parentItem = item.getParentItem ();
@@ -1798,7 +1799,9 @@ public TreeItem getItem (int index) {
 	checkWidget ();
 	int count = getItemCount ();
 	if (index < 0 || index >= count) error (SWT.ERROR_INVALID_RANGE);
-	return _getItem (null, index, true);
+	TreeItem item = _getItem (null, index, true);
+	item.pinVirtualFacade ();
+	return item;
 }
 
 /**
@@ -1904,6 +1907,7 @@ public TreeItem [] getItems () {
 	TreeItem [] result = new TreeItem [itemCount];
 	for (int i=0; i<itemCount; i++) {
 		result [i] = _getItem (null, i, true);
+		result [i].pinVirtualFacade ();
 	}
 	return result;
 }
@@ -3199,6 +3203,7 @@ void setItemCount (TreeItem parentItem, int count) {
 	boolean expanded = parentItem == null || parentItem.getExpanded();
 	if ((style & SWT.VIRTUAL) != 0) {
 		TreeItem[] selectedItems = getSelection ();
+		if (parentItem != null) parentItem.setVirtualChildTopologyKnown (count);
 		if (count < oldCount) {
 			if (parentItem == null) itemCount = count;
 			else parentItem.itemCount = count;
