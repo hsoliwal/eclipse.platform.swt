@@ -2443,6 +2443,7 @@ long gtk3_key_press_event (long widget, long event) {
 }
 
 private void toggleItemAndSendEvent(TableItem item) {
+	item.pinVirtualFacade ();
 	item.setChecked (!item.getChecked ());
 
 	Event event = new Event ();
@@ -3355,6 +3356,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 					eventRect.y += y_offset;
 					Cairo.cairo_translate (cr, 0, -y_offset);
 
+					item.pinVirtualFacade ();
 					event.item = item;
 					event.index = columnIndex;
 					event.gc = gc;
@@ -3474,6 +3476,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 					eventRect.y += y_offset;
 					Cairo.cairo_translate (cr, 0, -y_offset);
 
+					item.pinVirtualFacade ();
 					event.item = item;
 					event.index = columnIndex;
 					event.gc = gc;
