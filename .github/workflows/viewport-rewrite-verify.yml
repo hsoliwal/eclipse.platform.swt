@@ -1,0 +1,66 @@
+name: Viewport Rewrite Verification
+
+on:
+  push:
+    branches:
+      - m3/swt-viewport-packed-tree-state-20261003
+
+permissions:
+  contents: read
+
+jobs:
+  source-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        with:
+          fetch-depth: 0
+          lfs: false
+      - uses: actions/setup-java@de5a937a1dc73fbc1a67d7d1aa4bebc1082f3190
+        with:
+          java-version: '25'
+          distribution: temurin
+          cache: maven
+      - uses: stCarolas/setup-maven@12eb41b233df95d49b0c11fc1b5bc8312e5d4ce0
+        with:
+          maven-version: 3.9.16
+      - name: Verify JavaDoc consistency
+        run: |
+          mvn --non-recursive --batch-mode --no-transfer-progress -Pjavadoc-basher exec:exec@run-javadoc-basher
+          git diff --exit-code
+      - name: Verify JNI consistency
+        run: |
+          mvn --non-recursive --batch-mode --no-transfer-progress -Pjni-generator exec:exec@run-jni-generator
+          git diff --exit-code
+
+  linux:
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: ubuntu-latest
+      java: '25'
+      native: gtk.linux.x86_64
+      gtk: gtk3
+      gdk_backend: x11
+      api_check: true
+      performance: false
+      runtodotests: false
+
+  windows:
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: windows-latest
+      java: '25'
+      native: win32.win32.x86_64
+      api_check: true
+      performance: false
+      runtodotests: false
+
+  macos:
+    uses: ./.github/workflows/build.yml
+    with:
+      runner: macos-latest
+      java: '25'
+      native: cocoa.macosx.aarch64
+      api_check: true
+      performance: false
+      runtodotests: false
