@@ -10,10 +10,13 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.manual;
 
-import java.io.*;
-import java.nio.charset.*;
-import java.nio.file.*;
-import java.util.*;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.*;
 
 import org.eclipse.swt.*;
