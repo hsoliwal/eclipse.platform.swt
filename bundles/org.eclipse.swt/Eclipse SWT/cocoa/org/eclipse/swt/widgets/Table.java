@@ -405,13 +405,6 @@ void clearCachedWidth (TableItem[] items) {
 	}
 }
 
-void clearCachedWidth (TableItem[] items) {
-	if (items == null) return;
-	for (int i = 0; i < items.length; i++) {
-		if (items [i] != null) items [i].width = -1;
-	}
-}
-
 @Override
 long columnAtPoint(long id, long sel, NSPoint point) {
 	if ((style & SWT.CHECK) != 0) {
@@ -610,13 +603,9 @@ void createItem (TableColumn column, int index) {
 	nsColumn.setWidth(0);
 	System.arraycopy (columns, index, columns, index + 1, columnCount++ - index);
 	columns [index] = column;
-	for (int i = 0; i < itemCount; i++) {
-		TableItem item = items [i];
-		if (item != null) {
-			if (columnCount > 1) {
-				createColumn (item, index);
-			}
-		}
+	for (int i = 0; i < materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
+		if (item != null && columnCount > 1) createColumn (item, index);
 	}
 }
 
@@ -796,8 +785,8 @@ void destroyItem (TableColumn column) {
 		if (columns [index] == column) break;
 		index++;
 	}
-	for (int i=0; i<itemCount; i++) {
-		TableItem item = items [i];
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
 		if (item != null) {
 			if (columnCount <= 1) {
 				item.strings = null;
@@ -808,15 +797,13 @@ void destroyItem (TableColumn column) {
 			} else {
 				if (item.strings != null) {
 					String [] strings = item.strings;
-					if (index == 0) {
-						item.text = strings [1] != null ? strings [1] : "";
-					}
+					if (index == 0) item.text = strings [1] != null ? strings [1] : "";
 					String [] temp = new String [columnCount - 1];
 					System.arraycopy (strings, 0, temp, 0, index);
 					System.arraycopy (strings, index + 1, temp, index, columnCount - 1 - index);
 					item.strings = temp;
-				} else {
-					if (index == 0) item.text = "";
+				} else if (index == 0) {
+					item.text = "";
 				}
 				if (item.images != null) {
 					Image [] images = item.images;
@@ -825,28 +812,25 @@ void destroyItem (TableColumn column) {
 					System.arraycopy (images, 0, temp, 0, index);
 					System.arraycopy (images, index + 1, temp, index, columnCount - 1 - index);
 					item.images = temp;
-				} else {
-					if (index == 0) item.image = null;
+				} else if (index == 0) {
+					item.image = null;
 				}
 				if (item.cellBackground != null) {
-					Color [] cellBackground = item.cellBackground;
 					Color [] temp = new Color [columnCount - 1];
-					System.arraycopy (cellBackground, 0, temp, 0, index);
-					System.arraycopy (cellBackground, index + 1, temp, index, columnCount - 1 - index);
+					System.arraycopy (item.cellBackground, 0, temp, 0, index);
+					System.arraycopy (item.cellBackground, index + 1, temp, index, columnCount - 1 - index);
 					item.cellBackground = temp;
 				}
 				if (item.cellForeground != null) {
-					Color [] cellForeground = item.cellForeground;
 					Color [] temp = new Color [columnCount - 1];
-					System.arraycopy (cellForeground, 0, temp, 0, index);
-					System.arraycopy (cellForeground, index + 1, temp, index, columnCount - 1 - index);
+					System.arraycopy (item.cellForeground, 0, temp, 0, index);
+					System.arraycopy (item.cellForeground, index + 1, temp, index, columnCount - 1 - index);
 					item.cellForeground = temp;
 				}
 				if (item.cellFont != null) {
-					Font [] cellFont = item.cellFont;
 					Font [] temp = new Font [columnCount - 1];
-					System.arraycopy (cellFont, 0, temp, 0, index);
-					System.arraycopy (cellFont, index + 1, temp, index, columnCount - 1 - index);
+					System.arraycopy (item.cellFont, 0, temp, 0, index);
+					System.arraycopy (item.cellFont, index + 1, temp, index, columnCount - 1 - index);
 					item.cellFont = temp;
 				}
 			}
@@ -854,20 +838,11 @@ void destroyItem (TableColumn column) {
 	}
 
 	int oldIndex = indexOf (column.nsColumn);
-
 	System.arraycopy (columns, index + 1, columns, index, --columnCount - index);
 	columns [columnCount] = null;
 	if (columnCount == 0) {
-		//TODO - reset attributes
 		firstColumn = column.nsColumn;
 		firstColumn.retain ();
-		/*
-		* Feature in Cocoa.  If a column's width is too small to show any content
-		* then tableView_objectValueForTableColumn_row is never invoked to
-		* query for item values, which is a problem for VIRTUAL Tables.  The
-		* workaround is to ensure that, for 0-column Tables, the internal first
-		* column always has a minimal width that makes this call come in.
-		*/
 		firstColumn.setMinWidth (FIRST_COLUMN_MINIMUM_WIDTH);
 		firstColumn.setResizingMask (OS.NSTableColumnNoResizing);
 		setScrollWidth ();
@@ -889,6 +864,16 @@ void destroyItem (TableColumn column) {
 }
 
 void destroyItem (TableItem item) {
+	if ((style & SWT.VIRTUAL) != 0) {
+		int index = virtualItems.indexOfIdentity (item);
+		if (index < 0) return;
+		if (index != itemCount - 1) fixSelection (index, false);
+		virtualItems.remove (index);
+		itemCount--;
+		updateRowCount ();
+		if (itemCount == 0) setTableEmpty ();
+		return;
+	}
 	int index = 0;
 	while (index < itemCount) {
 		if (items [index] == item) break;
@@ -1580,7 +1565,7 @@ public TableItem getItem (Point point) {
 	pt.y = point.y;
 	int row = (int)widget.rowAtPoint(pt);
 	if (row == -1) return null;
-	return items[row];
+	return _getItem (row);
 }
 
 /**
@@ -1952,19 +1937,16 @@ public int indexOf (TableColumn column) {
 public int indexOf (TableItem item) {
 	checkWidget ();
 	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+	if ((style & SWT.VIRTUAL) != 0) return virtualItems.indexOfIdentity (item);
 	if (1 <= lastIndexOf && lastIndexOf < itemCount - 1) {
 		if (items [lastIndexOf] == item) return lastIndexOf;
 		if (items [lastIndexOf + 1] == item) return ++lastIndexOf;
 		if (items [lastIndexOf - 1] == item) return --lastIndexOf;
 	}
 	if (lastIndexOf < itemCount / 2) {
-		for (int i=0; i<itemCount; i++) {
-			if (items [i] == item) return lastIndexOf = i;
-		}
+		for (int i=0; i<itemCount; i++) if (items [i] == item) return lastIndexOf = i;
 	} else {
-		for (int i=itemCount - 1; i>=0; --i) {
-			if (items [i] == item) return lastIndexOf = i;
-		}
+		for (int i=itemCount - 1; i>=0; --i) if (items [i] == item) return lastIndexOf = i;
 	}
 	return -1;
 }
@@ -2097,7 +2079,7 @@ long nextState (long id, long sel) {
 	NSTableView tableView = (NSTableView)view;
 	int index = (int)tableView.clickedRow();
 	if (index == -1) index = (int)tableView.selectedRow ();
-	TableItem item = items[index];
+	TableItem item = _getItem (index);
 	if (item.grayed) {
 		return item.checked ? OS.NSControlStateValueOff : OS.NSControlStateValueMixed;
 	}
@@ -2119,40 +2101,20 @@ void register () {
 
 @Override
 void releaseChildren (boolean destroy) {
-	if (items != null) {
-		for (int i=0; i<itemCount; i++) {
-			TableItem item = items [i];
-			if (item != null && !item.isDisposed ()) {
-				item.release (false);
-			}
-		}
-		items = null;
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
+		if (item != null && !item.isDisposed ()) item.release (false);
 	}
+	if (virtualItems != null) virtualItems.clear (ignored -> { });
+	items = null;
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
 			TableColumn column = columns [i];
-			if (column != null && !column.isDisposed ()) {
-				column.release (false);
-			}
+			if (column != null && !column.isDisposed ()) column.release (false);
 		}
 		columns = null;
 	}
 	super.releaseChildren (destroy);
-}
-
-@Override
-void releaseHandle () {
-	super.releaseHandle ();
-	if (headerView != null) headerView.release();
-	headerView = null;
-	if (firstColumn != null) firstColumn.release();
-	firstColumn = null;
-	if (checkColumn != null) checkColumn.release();
-	checkColumn = null;
-	if (dataCell != null) dataCell.release();
-	dataCell = null;
-	if (buttonCell != null) buttonCell.release();
-	buttonCell = null;
 }
 
 @Override
@@ -2179,15 +2141,18 @@ void releaseWidget () {
 public void remove (int index) {
 	checkWidget ();
 	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
-	TableItem item = items [index];
+	TableItem item = _getItem (index, false);
 	if (item != null) item.release (false);
 	if (index != itemCount - 1) fixSelection (index, false);
-	System.arraycopy (items, index + 1, items, index, --itemCount - index);
-	items [itemCount] = null;
-	updateRowCount();
-	if (itemCount == 0) {
-		setTableEmpty ();
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.remove (index);
+		itemCount--;
+	} else {
+		System.arraycopy (items, index + 1, items, index, --itemCount - index);
+		items [itemCount] = null;
 	}
+	updateRowCount();
+	if (itemCount == 0) setTableEmpty ();
 }
 
 /**
@@ -2209,47 +2174,45 @@ public void remove (int index) {
 public void remove (int start, int end) {
 	checkWidget ();
 	if (start > end) return;
-	if (!(0 <= start && start <= end && end < itemCount)) {
-		error (SWT.ERROR_INVALID_RANGE);
-	}
+	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
 	if (start == 0 && end == itemCount - 1) {
 		removeAll ();
+		return;
+	}
+	int numOfItemsRemoved = end - start + 1;
+	int [] selection = getSelectionIndices ();
+	if (selection.length != 0) {
+		int newCount = 0;
+		boolean fix = false;
+		for (int i = 0; i < selection.length; i++) {
+			if (selection [i] >= start && selection[i] <= end) {
+				fix = true;
+			} else {
+				int newIndex = newCount++;
+				selection [newIndex] = selection [i];
+				if (selection [newIndex] > end) {
+					selection [newIndex] -= numOfItemsRemoved;
+					fix = true;
+				}
+			}
+		}
+		if (fix) select (selection, newCount, true);
+	}
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.removeRange (start, end + 1, item -> {
+			if (!item.isDisposed ()) item.release (false);
+		});
 	} else {
-		int numOfItemsRemoved = end - start + 1;
 		for (int i=start; i<=end; i++) {
 			TableItem item = items [i];
 			if (item != null) item.release (false);
 		}
-		//fix selection
-		int [] selection = getSelectionIndices ();
-		if (selection.length != 0) {
-			int newCount = 0;
-			boolean fix = false;
-			for (int i = 0; i < selection.length; i++) {
-				if (selection [i] >= start && selection[i] <= end) {
-					fix = true;
-				} else {
-					int newIndex = newCount++;
-					selection [newIndex] = selection [i];
-					if (selection [newIndex] > end) {
-						selection [newIndex] -= numOfItemsRemoved;
-						fix = true;
-					}
-				}
-			}
-			if (fix) select (selection, newCount, true);
-		}
-		//fix items array
 		System.arraycopy (items, start + numOfItemsRemoved, items, start, itemCount - (start + numOfItemsRemoved));
-		for (int i = itemCount - numOfItemsRemoved; i < itemCount; i++) {
-			items [i] = null;
-		}
-		itemCount -= numOfItemsRemoved;
-		updateRowCount();
+		for (int i = itemCount - numOfItemsRemoved; i < itemCount; i++) items [i] = null;
 	}
-	if (itemCount == 0) {
-		setTableEmpty ();
-	}
+	itemCount -= numOfItemsRemoved;
+	updateRowCount();
+	if (itemCount == 0) setTableEmpty ();
 }
 
 /**
@@ -2275,25 +2238,25 @@ public void remove (int [] indices) {
 	System.arraycopy (indices, 0, newIndices, 0, indices.length);
 	sort (newIndices);
 	int start = newIndices [newIndices.length - 1], end = newIndices [0];
-	if (!(0 <= start && start <= end && end < itemCount)) {
-		error (SWT.ERROR_INVALID_RANGE);
-	}
+	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
 	int last = -1;
 	for (int i=0; i<newIndices.length; i++) {
 		int index = newIndices [i];
-		if (index != last) {
-			TableItem item = items [index];
-			if (item != null) item.release (false);
-			if (index != itemCount - 1) fixSelection (index, false);
+		if (index == last) continue;
+		TableItem item = _getItem (index, false);
+		if (item != null) item.release (false);
+		if (index != itemCount - 1) fixSelection (index, false);
+		if ((style & SWT.VIRTUAL) != 0) {
+			virtualItems.remove (index);
+			itemCount--;
+		} else {
 			System.arraycopy (items, index + 1, items, index, --itemCount - index);
 			items [itemCount] = null;
-			last = index;
 		}
+		last = index;
 	}
 	updateRowCount();
-	if (itemCount == 0) {
-		setTableEmpty ();
-	}
+	if (itemCount == 0) setTableEmpty ();
 }
 
 /**
@@ -2306,8 +2269,8 @@ public void remove (int [] indices) {
  */
 public void removeAll () {
 	checkWidget ();
-	for (int i=0; i<itemCount; i++) {
-		TableItem item = items [i];
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
 		if (item != null && !item.isDisposed ()) item.release (false);
 	}
 	setTableEmpty ();
@@ -2341,11 +2304,9 @@ public void removeSelectionListener(SelectionListener listener) {
 
 @Override
 void reskinChildren (int flags) {
-	if (items != null) {
-		for (int i=0; i<itemCount; i++) {
-			TableItem item = items [i];
-			if (item != null) item.reskin (flags);
-		}
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
+		if (item != null) item.reskin (flags);
 	}
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
@@ -2864,10 +2825,11 @@ boolean setScrollWidth (TableItem [] items, boolean set) {
 	}
 	GC gc = new GC (this);
 	int newWidth = 0;
-	for (int i = 0; i < items.length; i++) {
-		TableItem item = items [i];
+	for (int i = 0; i < materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
 		if (item != null) {
-			newWidth = Math.max (newWidth, item.calculateWidth (0, gc, isSelected(indexOf(item))));
+			newWidth = Math.max (newWidth,
+					item.calculateWidth (0, gc, isSelected (materializedIndex (i))));
 		}
 	}
 	gc.dispose ();
@@ -3494,11 +3456,11 @@ void tableView_setObjectValue_forTableColumn_row (long id, long sel, long aTable
 			selection.getIndexes (indices, count, 0);
 			for (int i = 0; i < indices.length; i++) {
 				int index = (int)indices [i];
-				TableItem item = items [index];
+				TableItem item = _getItem (index);
 				toggleCheckedItem (item, index);
 			}
 		} else {
-			TableItem item = items [(int)rowIndex];
+			TableItem item = _getItem ((int)rowIndex);
 			toggleCheckedItem (item, rowIndex);
 		}
 	}
@@ -3517,7 +3479,7 @@ private void toggleCheckedItem (TableItem item, long rowIndex) {
 @Override
 void tableView_willDisplayCell_forTableColumn_row (long id, long sel, long aTableView, long cell, long tableColumn, long rowIndex) {
 	if (checkColumn != null && tableColumn == checkColumn.id) return;
-	TableItem item = items [(int)rowIndex];
+	TableItem item = _getItem ((int)rowIndex);
 	int index = 0;
 	for (int i=0; i<columnCount; i++) {
 		if (columns [i].nsColumn.id == tableColumn) {
