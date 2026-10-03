@@ -941,6 +941,12 @@ void createItem (TableColumn column, int index) {
 
 void createItem (TableItem item, int index) {
 	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+	if (usesVirtualNativeModel ()) {
+		int oldCount = itemCount;
+		virtualItems.insert (index, item);
+		resetVirtualNativeModel (oldCount + 1, index, 0, 1);
+		return;
+	}
 	if ((style & SWT.VIRTUAL) == 0 && itemCount == items.length) {
 		int length = drawCount <= 0 ? items.length + 4 : Math.max (4, items.length * 3 / 2);
 		TableItem [] newItems = new TableItem [length];
@@ -1264,6 +1270,13 @@ void destroyItem (TableItem item) {
 		while (index < itemCount && items [index] != item) index++;
 	}
 	if (index == itemCount || index < 0) return;
+	if (usesVirtualNativeModel ()) {
+		int oldCount = itemCount;
+		virtualItems.remove (index);
+		resetVirtualNativeModel (oldCount - 1, index, 1, 0);
+		if (itemCount == 0) resetCustomDraw ();
+		return;
+	}
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_list_store_remove (modelHandle, item.handle);
@@ -2757,6 +2770,14 @@ void releaseWidget () {
 public void remove (int index) {
 	checkWidget();
 	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_ITEM_NOT_REMOVED);
+	if (usesVirtualNativeModel ()) {
+		int oldCount = itemCount;
+		TableItem item = _getItem (index, false);
+		if (item != null && !item.isDisposed ()) item.release (false);
+		virtualItems.remove (index);
+		resetVirtualNativeModel (oldCount - 1, index, 1, 0);
+		return;
+	}
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	TableItem item = _getItem (index, false);
 	boolean disposed = false;
@@ -2810,6 +2831,15 @@ public void remove (int start, int end) {
 		return;
 	}
 	checkSetDataInProcessBeforeRemoval(start, end + 1);
+	int removed = end - start + 1;
+	if (usesVirtualNativeModel ()) {
+		int oldCount = itemCount;
+		virtualItems.removeRange (start, end + 1, item -> {
+			if (!item.isDisposed ()) item.release (false);
+		});
+		resetVirtualNativeModel (oldCount - removed, start, removed, 0);
+		return;
+	}
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
@@ -2822,7 +2852,6 @@ public void remove (int start, int end) {
 		OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	}
 	OS.g_free (iter);
-	int removed = end - start + 1;
 	if ((style & SWT.VIRTUAL) != 0) {
 		virtualItems.removeRange (start, end + 1, ignored -> { });
 	} else {
@@ -2856,37 +2885,52 @@ public void remove (int [] indices) {
 	sort (newIndices);
 	int start = newIndices [newIndices.length - 1], end = newIndices [0];
 	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+	if (usesVirtualNativeModel ()) {
+		int last = -1;
+		for (int i=0; i<newIndices.length; i++) {
+			int index = newIndices [i];
+			if (index == last) continue;
+			int oldCount = itemCount;
+			TableItem item = _getItem (index, false);
+			if (item != null && !item.isDisposed ()) item.release (false);
+			virtualItems.remove (index);
+			resetVirtualNativeModel (oldCount - 1, index, 1, 0);
+			last = index;
+		}
+		return;
+	}
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	int last = -1;
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
 	for (int i=0; i<newIndices.length; i++) {
 		int index = newIndices [i];
-		if (index == last) continue;
-		TableItem item = _getItem (index, false);
-		boolean disposed = false;
-		if (item != null) {
-			disposed = item.isDisposed ();
-			if (!disposed) {
-				C.memmove (iter, item.handle, GTK.GtkTreeIter_sizeof ());
-				item.release (false);
-			}
-		} else {
-			GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
-		}
-		if (!disposed) {
-			OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-			GTK.gtk_list_store_remove (modelHandle, iter);
-			OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-			if ((style & SWT.VIRTUAL) != 0) {
-				virtualItems.remove (index);
-				itemCount--;
+		if (index != last) {
+			TableItem item = _getItem (index, false);
+			boolean disposed = false;
+			if (item != null) {
+				disposed = item.isDisposed ();
+				if (!disposed) {
+					C.memmove (iter, item.handle, GTK.GtkTreeIter_sizeof ());
+					item.release (false);
+				}
 			} else {
-				System.arraycopy (items, index + 1, items, index, --itemCount - index);
-				items [itemCount] = null;
+				GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
 			}
+			if (!disposed) {
+				OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+				GTK.gtk_list_store_remove (modelHandle, iter);
+				OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+				if ((style & SWT.VIRTUAL) != 0) {
+					virtualItems.remove (index);
+					itemCount--;
+				} else {
+					System.arraycopy (items, index + 1, items, index, --itemCount - index);
+					items [itemCount] = null;
+				}
+			}
+			last = index;
 		}
-		last = index;
 	}
 	OS.g_free (iter);
 }
@@ -2902,6 +2946,17 @@ public void remove (int [] indices) {
 public void removeAll () {
 	checkWidget();
 	checkSetDataInProcessBeforeRemoval(0, itemCount);
+	if (usesVirtualNativeModel ()) {
+		int oldCount = itemCount;
+		for (int i=0; i<materializedItemCount (); i++) {
+			TableItem item = materializedItem (i);
+			if (item != null && !item.isDisposed ()) item.release (false);
+		}
+		virtualItems = new VirtualItemStorage<> ();
+		resetVirtualNativeModel (0, 0, oldCount, 0);
+		resetCustomDraw ();
+		return;
+	}
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
 		if (item != null && !item.isDisposed ()) item.release (false);
@@ -2923,13 +2978,7 @@ public void removeAll () {
 	if (changeMode) GTK.gtk_tree_selection_set_mode(selectionHandle, GTK.GTK_SELECTION_MULTIPLE);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	resetCustomDraw ();
-	if (!searchEnabled ()) {
-		GTK.gtk_tree_view_set_search_column (handle, -1);
-	} else {
-		/* Set the search column whenever the model changes */
-		int firstColumn = columnCount == 0 ? FIRST_COLUMN : columns [0].modelIndex;
-		GTK.gtk_tree_view_set_search_column (handle, firstColumn + CELL_TEXT);
-	}
+	if (!searchEnabled ()) GTK.gtk_tree_view_set_search_column (handle, -1);
 }
 
 /**
@@ -3747,6 +3796,18 @@ public void setItemCount (int count) {
 	count = Math.max (0, count);
 	if (count == itemCount) return;
 	boolean isVirtual = (style & SWT.VIRTUAL) != 0;
+	if (usesVirtualNativeModel ()) {
+		int oldCount = itemCount;
+		if (count < oldCount) {
+			virtualItems.truncate (count, item -> {
+				if (!item.isDisposed ()) item.release (false);
+			});
+			resetVirtualNativeModel (count, count, oldCount - count, 0);
+		} else {
+			resetVirtualNativeModel (count, oldCount, 0, count - oldCount);
+		}
+		return;
+	}
 	if (!isVirtual) setRedraw (false);
 	if (count < itemCount) remove (count, itemCount - 1);
 	if (isVirtual) {
