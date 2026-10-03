@@ -1069,7 +1069,7 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
 						OS.cell_background_rgba, BACKGROUND_COLUMN);
 			}
 		}
-		if (logicalVirtual || ownerDraw) {
+		if ((style & SWT.VIRTUAL) != 0 || ownerDraw) {
 			GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, checkRenderer,
 					display.cellDataProc, handle, 0);
 			OS.g_object_set_qdata (checkRenderer, Display.SWT_OBJECT_INDEX1, columnHandle);
