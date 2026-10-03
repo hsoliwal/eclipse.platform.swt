@@ -3503,7 +3503,7 @@ TreeItem getItem (NMTVCUSTOMDRAW nmcd) {
 			id = (int)tvItem.lParam;
 		}
 	}
-	return _getItem (nmcd.dwItemSpec, id);
+	return exposeVirtualItem (_getItem (nmcd.dwItemSpec, id));
 }
 
 /**
@@ -6417,6 +6417,7 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 					}
 					tvItem.state = state << 12;
 					OS.SendMessage (handle, OS.TVM_SETITEM, 0, tvItem);
+					syncVirtualCheckState (_getItem (tvItem.hItem, (int)tvItem.lParam), state);
 					long id = OS.SendMessage (handle, OS.TVM_MAPHTREEITEMTOACCID, hItem, 0);
 					OS.NotifyWinEvent (OS.EVENT_OBJECT_FOCUS, handle, OS.OBJID_CLIENT, (int)id);
 				}
@@ -6456,7 +6457,7 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 			*/
 			Event event = new Event ();
 			long hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0);
-			if (hItem != 0) event.item = _getItem (hItem);
+			if (hItem != 0) event.item = exposeVirtualItem (_getItem (hItem));
 			sendSelectionEvent (SWT.DefaultSelection, event, false);
 			return LRESULT.ZERO;
 		}
@@ -6761,10 +6762,11 @@ LRESULT WM_LBUTTONDBLCLK (long wParam, long lParam) {
 				}
 				tvItem.state = state << 12;
 				OS.SendMessage (handle, OS.TVM_SETITEM, 0, tvItem);
+				syncVirtualCheckState (_getItem (tvItem.hItem, (int)tvItem.lParam), state);
 				long id = OS.SendMessage (handle, OS.TVM_MAPHTREEITEMTOACCID, tvItem.hItem, 0);
 				OS.NotifyWinEvent (OS.EVENT_OBJECT_FOCUS, handle, OS.OBJID_CLIENT, (int)id);
 				Event event = new Event ();
-				event.item = _getItem (tvItem.hItem, (int)tvItem.lParam);
+				event.item = exposeVirtualItem (_getItem (tvItem.hItem, (int)tvItem.lParam));
 				event.detail = SWT.CHECK;
 				sendSelectionEvent (SWT.Selection, event, false);
 				return LRESULT.ZERO;
@@ -6787,7 +6789,7 @@ LRESULT WM_LBUTTONDBLCLK (long wParam, long lParam) {
 		}
 		if ((lpht.flags & flags) != 0) {
 			Event event = new Event ();
-			event.item = _getItem (lpht.hItem);
+			event.item = exposeVirtualItem (_getItem (lpht.hItem));
 			sendSelectionEvent (SWT.DefaultSelection, event, false);
 		}
 	}
@@ -6889,7 +6891,7 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 		}
 		if (deselected) {
 			Event event = new Event ();
-			event.item = _getItem (lpht.hItem);
+			event.item = exposeVirtualItem (_getItem (lpht.hItem));
 			sendSelectionEvent (SWT.Selection, event, false);
 		}
 		return new LRESULT (code);
@@ -6923,10 +6925,11 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 			}
 			tvItem.state = state << 12;
 			OS.SendMessage (handle, OS.TVM_SETITEM, 0, tvItem);
+			syncVirtualCheckState (_getItem (tvItem.hItem, (int)tvItem.lParam), state);
 			long id = OS.SendMessage (handle, OS.TVM_MAPHTREEITEMTOACCID, tvItem.hItem, 0);
 			OS.NotifyWinEvent (OS.EVENT_OBJECT_FOCUS, handle, OS.OBJID_CLIENT, (int)id);
 			Event event = new Event ();
-			event.item = _getItem (tvItem.hItem, (int)tvItem.lParam);
+			event.item = exposeVirtualItem (_getItem (tvItem.hItem, (int)tvItem.lParam));
 			event.detail = SWT.CHECK;
 			sendSelectionEvent (SWT.Selection, event, false);
 			return LRESULT.ZERO;
@@ -7164,7 +7167,7 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
 		OS.SendMessage (handle, OS.TVM_GETITEM, 0, tvItem);
 		Event event = new Event ();
-		event.item = _getItem (tvItem.hItem, (int)tvItem.lParam);
+		event.item = exposeVirtualItem (_getItem (tvItem.hItem, (int)tvItem.lParam));
 		sendSelectionEvent (SWT.Selection, event, false);
 	}
 	gestureCompleted = false;
@@ -7901,7 +7904,7 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				TVITEM tvItem = treeView.itemNew;
 				hAnchor = tvItem.hItem;
 				Event event = new Event ();
-				event.item = _getItem (tvItem.hItem, (int)tvItem.lParam);
+				event.item = exposeVirtualItem (_getItem (tvItem.hItem, (int)tvItem.lParam));
 				sendSelectionEvent (SWT.Selection, event, false);
 			}
 			updateScrollBar ();
