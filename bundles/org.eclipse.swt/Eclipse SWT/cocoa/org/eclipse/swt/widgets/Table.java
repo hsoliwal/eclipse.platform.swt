@@ -1752,6 +1752,7 @@ public TableItem [] getItems () {
 	if ((style & SWT.VIRTUAL) != 0) {
 		for (int i=0; i<itemCount; i++) {
 			result [i] = _getItem (i);
+			result [i].pinVirtualFacade ();
 		}
 	} else {
 		System.arraycopy (items, 0, result, 0, itemCount);
@@ -1811,6 +1812,7 @@ public TableItem [] getSelection () {
 	TableItem [] result = new TableItem  [count];
 	for (int i=0; i<count; i++) {
 		result [i] = _getItem ((int)indexBuffer [i]);
+		result [i].pinVirtualFacade ();
 	}
 	return result;
 }
