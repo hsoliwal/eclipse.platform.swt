@@ -79,6 +79,7 @@ import org.eclipse.swt.internal.win32.*;
  */
 public class Tree extends Composite {
 	TreeItem [] items;
+	VirtualTreeTopology virtualTopology;
 	TreeColumn [] columns;
 	int columnCount;
 	ImageList imageList, headerImageList;
@@ -258,7 +259,73 @@ TreeItem _getItem (long hItem) {
 
 TreeItem _getItem (long hItem, int id) {
 	if ((style & SWT.VIRTUAL) == 0) return items [id];
-	return id != -1 ? items [id] : new TreeItem (this, SWT.NONE, -1, -1, hItem);
+	TreeItem item = id != -1 ? items [id] : new TreeItem (this, SWT.NONE, -1, -1, hItem);
+	if (item != null) bindVirtualTopology (item, false);
+	return item;
+}
+
+int virtualItemId (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return -1;
+	TVITEM tvItem = new TVITEM ();
+	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
+	tvItem.hItem = item.handle;
+	if (OS.SendMessage (handle, OS.TVM_GETITEM, 0, tvItem) == 0) return -1;
+	return (int)tvItem.lParam;
+}
+
+int virtualParentId (long hParent) {
+	if (virtualTopology == null || hParent == 0 || hParent == OS.TVI_ROOT) {
+		return VirtualTreeTopology.ROOT;
+	}
+	TreeItem parentItem = _getItem (hParent);
+	return virtualItemId (parentItem);
+}
+
+long nativeFirstChild (long hParent) {
+	if (hParent == 0 || hParent == OS.TVI_ROOT) {
+		return OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_ROOT, 0);
+	}
+	return OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, hParent);
+}
+
+int nativeChildCount (long hParent) {
+	int count = 0;
+	long hItem = nativeFirstChild (hParent);
+	while (hItem != 0) {
+		count++;
+		hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_NEXT, hItem);
+	}
+	return count;
+}
+
+void bindVirtualTopology (TreeItem item, boolean inserted) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	int id = virtualItemId (item);
+	if (id < 0) return;
+	if (!inserted && virtualTopology.contains (id)) return;
+
+	long hParent = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_PARENT, item.handle);
+	int parentId = virtualParentId (hParent);
+	long hFirstItem = nativeFirstChild (hParent);
+	int childIndex = findIndex (hFirstItem, item.handle);
+	if (childIndex < 0) return;
+
+	if (inserted) virtualTopology.insertCoordinate (parentId, childIndex, id);
+	else virtualTopology.bind (id, parentId, childIndex);
+	virtualTopology.setChildCount (parentId, nativeChildCount (hParent));
+}
+
+int virtualChildCount (long hParent) {
+	if (virtualTopology == null) return nativeChildCount (hParent);
+	int parentId = virtualParentId (hParent);
+	if (virtualTopology.childCountKnown (parentId)) return virtualTopology.childCount (parentId);
+	int count = nativeChildCount (hParent);
+	virtualTopology.setChildCount (parentId, count);
+	return count;
+}
+
+int virtualChildCount (TreeItem parentItem) {
+	return virtualChildCount (parentItem == null ? OS.TVI_ROOT : parentItem.handle);
 }
 
 @Override
@@ -2253,6 +2320,7 @@ void createItem (TreeItem item, long hParent, long hInsertAfter, long hItem) {
 	if (item != null) {
 		item.handle = hNewItem;
 		items [id] = item;
+		if (virtualTopology != null) bindVirtualTopology (item, hItem == 0);
 	}
 
 	// Adjust cached variables
@@ -2489,6 +2557,7 @@ void createParent () {
 void createWidget () {
 	super.createWidget ();
 	items = new TreeItem [4];
+	if ((style & SWT.VIRTUAL) != 0) virtualTopology = new VirtualTreeTopology ();
 	columns = new TreeColumn [4];
 	cachedItemCount = -1;
 }
@@ -2723,6 +2792,7 @@ void destroyItem (TreeColumn column) {
 }
 
 void destroyItem (TreeItem item, long hItem) {
+	int topologyId = virtualTopology != null && item != null ? virtualItemId (item) : -1;
 	cachedFirstItem = cachedIndexItem = 0;
 	cachedItemCount = -1;
 	/*
@@ -2771,6 +2841,9 @@ void destroyItem (TreeItem item, long hItem) {
 	shrink = ignoreShrink = true;
 	OS.SendMessage (handle, OS.TVM_DELETEITEM, 0, hItem);
 	ignoreShrink = false;
+	if (virtualTopology != null && topologyId >= 0 && virtualTopology.contains (topologyId)) {
+		virtualTopology.releaseSubtree (topologyId);
+	}
 	/*
 	 * Bug 546333: When TVGN_CARET item is deleted, Windows automatically
 	 * sets selection to some other item. We do not want that.
@@ -3443,9 +3516,12 @@ TreeItem getItemInPixels (Point point) {
  */
 public int getItemCount () {
 	checkWidget ();
-	long hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_ROOT, 0);
-	if (hItem == 0) return 0;
-	return getItemCount (hItem);
+	if (virtualTopology != null && virtualTopology.childCountKnown (VirtualTreeTopology.ROOT)) {
+		return virtualTopology.childCount (VirtualTreeTopology.ROOT);
+	}
+	int count = nativeChildCount (OS.TVI_ROOT);
+	if (virtualTopology != null) virtualTopology.setChildCount (VirtualTreeTopology.ROOT, count);
+	return count;
 }
 
 int getItemCount (long hItem) {
@@ -4118,6 +4194,7 @@ void releaseChildren (boolean destroy) {
 		}
 		items = null;
 	}
+	if (virtualTopology != null) virtualTopology.clear ();
 	if (columns != null) {
 		for (TreeColumn column : columns) {
 			if (column != null && !column.isDisposed ()) {
@@ -4203,6 +4280,10 @@ public void removeAll () {
 	hAnchor = hInsert = cachedFirstItem = cachedIndexItem = 0;
 	cachedItemCount = -1;
 	items = new TreeItem [4];
+	if (virtualTopology != null) {
+		virtualTopology.clear ();
+		virtualTopology.setChildCount (VirtualTreeTopology.ROOT, 0);
+	}
 	scrollWidth = 0;
 	setScrollWidth ();
 	updateScrollBar ();
@@ -4324,6 +4405,7 @@ public void setItemCount (int count) {
 }
 
 void setItemCount (int count, long hParent) {
+	int topologyParentId = virtualTopology != null ? virtualParentId (hParent) : VirtualTreeTopology.ROOT;
 	// Investigate existing items and decide what to do
 	long itemFirstChild = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, hParent);
 	long itemInsertAfter = 0;
@@ -4344,6 +4426,7 @@ void setItemCount (int count, long hParent) {
 
 		if ((itemCount == count) && (itemNext == 0)) {
 			// Exactly 'count' items, no need to do anything.
+			if (virtualTopology != null) virtualTopology.setChildCount (topologyParentId, count);
 			return;
 		} else if (itemCount == count) {
 			// Too many items, going to delete some
@@ -4453,6 +4536,7 @@ void setItemCount (int count, long hParent) {
 		OS.DefWindowProc (handle, OS.WM_SETREDRAW, 1, 0);
 		OS.InvalidateRect (handle, null, true);
 	}
+	if (virtualTopology != null) virtualTopology.setChildCount (topologyParentId, count);
 }
 
 /**
