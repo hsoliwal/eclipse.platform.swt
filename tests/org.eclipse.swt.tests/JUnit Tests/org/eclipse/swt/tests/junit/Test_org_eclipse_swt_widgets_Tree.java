@@ -19,10 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.lang.reflect.Field;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -54,6 +56,22 @@ public void setUp() {
 	super.setUp();
 	tree = new Tree(shell, SWT.MULTI);
 	setWidget(tree);
+}
+
+@Test
+public void test_virtualItemResidencyDoesNotScaleWithLogicalCount() throws Exception {
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(4096);
+
+	Field itemsField = Tree.class.getDeclaredField("items");
+	itemsField.setAccessible(true);
+	TreeItem[] backing = (TreeItem[]) itemsField.get(virtualTree);
+	assertTrue(backing.length <= 16, "virtual Tree must not allocate one Java slot per logical root");
+
+	TreeItem last = virtualTree.getItem(4095);
+	assertSame(last, virtualTree.getItem(4095));
+	backing = (TreeItem[]) itemsField.get(virtualTree);
+	assertTrue(backing.length <= 16, "materializing one distant root must keep residency sparse");
 }
 
 @Override
