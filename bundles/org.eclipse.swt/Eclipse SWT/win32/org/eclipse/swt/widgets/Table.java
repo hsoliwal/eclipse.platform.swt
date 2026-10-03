@@ -3321,6 +3321,7 @@ public void selectAll () {
 }
 
 void sendEraseItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd, long lParam, Event measureEvent) {
+	item.pinVirtualFacade ();
 	long hDC = nmcd.hdc;
 	int clrText = item.cellForeground != null ? item.cellForeground [nmcd.iSubItem] : -1;
 	if (clrText == -1) clrText = item.foreground;
@@ -3512,6 +3513,7 @@ void sendEraseItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd, long lParam, Event
 }
 
 Event sendEraseItemEvent (TableItem item, NMTTCUSTOMDRAW nmcd, int column, RECT cellRect) {
+	item.pinVirtualFacade ();
 	int nSavedDC = OS.SaveDC (nmcd.hdc);
 	RECT insetRect = toolTipInset (cellRect);
 	OS.SetWindowOrgEx (nmcd.hdc, insetRect.left, insetRect.top, null);
@@ -3538,6 +3540,7 @@ Event sendEraseItemEvent (TableItem item, NMTTCUSTOMDRAW nmcd, int column, RECT 
 }
 
 Event sendMeasureItemEvent (TableItem item, int row, int column, long hDC) {
+	item.pinVirtualFacade ();
 	GCData data = new GCData ();
 	data.device = display;
 	data.font = item.getFont (column);
@@ -3762,6 +3765,7 @@ LRESULT sendMouseDownEvent (int type, int button, int msg, long wParam, long lPa
 }
 
 void sendPaintItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd) {
+	item.pinVirtualFacade ();
 	long hDC = nmcd.hdc;
 	GCData data = new GCData ();
 	data.device = display;
@@ -3861,6 +3865,7 @@ void sendPaintItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd) {
 }
 
 Event sendPaintItemEvent (TableItem item, NMTTCUSTOMDRAW nmcd, int column, RECT itemRect) {
+	item.pinVirtualFacade ();
 	int nSavedDC = OS.SaveDC (nmcd.hdc);
 	RECT insetRect = toolTipInset (itemRect);
 	OS.SetWindowOrgEx (nmcd.hdc, insetRect.left, insetRect.top, null);
@@ -6661,7 +6666,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			OS.MoveMemory(pnmlv, lParam, NMLISTVIEW.sizeof);
 			if (pnmlv.iItem != -1) {
 				Event event = new Event ();
-				event.item = _getItem (pnmlv.iItem);
+				TableItem item = _getItem (pnmlv.iItem);
+				item.pinVirtualFacade ();
+				event.item = item;
 				sendSelectionEvent (SWT.DefaultSelection, event, false);
 			}
 			break;
