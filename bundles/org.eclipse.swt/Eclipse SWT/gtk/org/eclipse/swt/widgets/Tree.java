@@ -90,6 +90,7 @@ public class Tree extends Composite {
 	TreeItem[] items;
 	VirtualTreeTopology virtualTopology;
 	VirtualTreeVisibleProjection virtualProjection;
+	VirtualTreeViewport virtualViewport;
 	int nextId;
 	TreeColumn [] columns;
 	TreeColumn sortColumn;
@@ -1511,6 +1512,7 @@ void createWidget (int index) {
 	if ((style & SWT.VIRTUAL) != 0) {
 		virtualTopology = new VirtualTreeTopology ();
 		virtualProjection = new VirtualTreeVisibleProjection (virtualTopology);
+		virtualViewport = new VirtualTreeViewport (virtualProjection);
 	}
 	columns = new TreeColumn [4];
 	columnCount = 0;
@@ -2507,6 +2509,7 @@ long getTextRenderer (long column) {
  */
 public TreeItem getTopItem () {
 	checkWidget ();
+	if (virtualViewport != null) syncVirtualTopRowFromNative ();
 	/*
 	 * Feature in GTK: fetch the topItem using the topItem global variable
 	 * if setTopItem() has been called and the widget has not been scrolled
@@ -2923,9 +2926,57 @@ void initializeViewportLayers () {
 			vertical != 0 ? GTK.gtk_adjustment_get_value (vertical) : 0);
 }
 
+void updateVirtualViewportGeometry () {
+	if (virtualViewport == null) return;
+	Rectangle client = getClientAreaInPixels ();
+	int chromeHeight = getHeaderVisible () ? getHeaderHeight () : 0;
+	int bodyHeight = Math.max (0, client.height - chromeHeight);
+	virtualViewport.configureGeometry (Math.max (1, getItemHeight ()), bodyHeight);
+}
+
+void syncVirtualTopRowFromNative () {
+	if (virtualViewport == null) return;
+	updateVirtualViewportGeometry ();
+	long [] path = new long [1];
+	GTK.gtk_widget_realize (handle);
+	if (!GTK.gtk_tree_view_get_path_at_pos (handle, 1, 1, path, null, null, null)) return;
+	if (path [0] == 0) return;
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+	try {
+		if (!GTK.gtk_tree_model_get_iter (modelHandle, iter, path [0])) return;
+		TreeItem item = _getItem (iter);
+		if (item == null || item.isDisposed ()) return;
+		virtualViewport.setTopMaterializedId (virtualItemId (item));
+		topItem = item;
+	} finally {
+		OS.g_free (iter);
+		GTK.gtk_tree_path_free (path [0]);
+	}
+}
+
+long virtualViewportTopRow () {
+	if (virtualViewport == null) return 0;
+	updateVirtualViewportGeometry ();
+	return virtualViewport.topRow ();
+}
+
+VirtualTreeVisibleProjection.Row [] virtualViewportVisibleWindow () {
+	if (virtualViewport == null) return new VirtualTreeVisibleProjection.Row [0];
+	updateVirtualViewportGeometry ();
+	return virtualViewport.visibleWindow ();
+}
+
+VirtualTreeVisibleProjection.Row [] virtualViewportPaintWindow () {
+	if (virtualViewport == null) return new VirtualTreeVisibleProjection.Row [0];
+	updateVirtualViewportGeometry ();
+	return virtualViewport.paintWindow ();
+}
+
 @Override
 long gtk_scroll_event (long widget, long eventPtr) {
 	long result = super.gtk_scroll_event(widget, eventPtr);
+	syncVirtualTopRowFromNative ();
 	long horizontal = GTK.gtk_scrollable_get_hadjustment (handle);
 	long vertical = GTK.gtk_scrollable_get_vadjustment (handle);
 	int dirtyLayers = viewportLayers.scrollTo (
@@ -4531,6 +4582,10 @@ public void setTopItem (TreeItem item) {
 	long path = GTK.gtk_tree_model_get_path (modelHandle, item.handle);
 	showItem (path, false);
 	GTK.gtk_tree_view_scroll_to_cell (handle, path, 0, true, 0, 0);
+	if (virtualViewport != null) {
+		updateVirtualViewportGeometry ();
+		virtualViewport.setTopMaterializedId (virtualItemId (item));
+	}
 	GTK.gtk_tree_path_free (path);
 }
 
