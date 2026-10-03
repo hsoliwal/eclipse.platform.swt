@@ -828,11 +828,12 @@ public TreeItem getItem (int index) {
 	checkWidget();
 	if (index < 0) error (SWT.ERROR_INVALID_RANGE);
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+	parent.ensureVirtualNativeItem (handle, index);
 
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	try {
 		if (!GTK.gtk_tree_model_iter_nth_child (parent.modelHandle, iter, handle, index)) error (SWT.ERROR_INVALID_RANGE);
-		return parent._getItem (handle, iter, index);
+		return parent.exposeVirtualItem (parent._getItem (handle, iter, index));
 	} finally {
 		OS.g_free (iter);
 	}
@@ -903,7 +904,7 @@ public TreeItem getParentItem () {
 		item = parent._getItem (iter);
 	}
 	OS.g_free (iter);
-	return item;
+	return parent.exposeVirtualItem (item);
 }
 
 @Override
@@ -1268,9 +1269,10 @@ public void setChecked (boolean checked) {
  */
 public void setExpanded (boolean expanded) {
 	checkWidget();
+	if (expanded) parent.restoreVirtualChildren (this);
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	// Do nothing when the item is a leaf or already expanded
-	boolean hasChildren = GTK.gtk_tree_model_iter_n_children (parent.modelHandle, handle) != 0;
+	boolean hasChildren = parent.virtualChildCount (this) != 0;
 	if (hasChildren) {
 		if (expanded != GTK.gtk_tree_view_row_expanded (parent.handle, path)) {
 			if (expanded) {
@@ -1285,6 +1287,7 @@ public void setExpanded (boolean expanded) {
 			}
 		}
 		setExpandedState (expanded);
+		if (!expanded) parent.compactCollapsedVirtualChildren (this);
 	}
 	GTK.gtk_tree_path_free (path);
 }
