@@ -192,11 +192,11 @@ public void test_virtualGtkCollapseCompactsNativeTailAndRestoresOnExpand() throw
 	TreeItem root = virtualTree.getItem(0);
 	root.setItemCount(1_000);
 
-	Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", long.class);
+	Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", TreeItem.class);
 	residentCount.setAccessible(true);
 
 	assertEquals(1_000, root.getItemCount());
-	assertEquals(1_000, residentCount.invoke(virtualTree, root.handle),
+	assertEquals(1_000, residentCount.invoke(virtualTree, root),
 			"expanded-compatible native projection starts fully resident");
 
 	TreeItem pinned = root.getItem(10);
@@ -205,13 +205,13 @@ public void test_virtualGtkCollapseCompactsNativeTailAndRestoresOnExpand() throw
 
 	root.setExpanded(true);
 	assertTrue(root.getExpanded());
-	assertEquals(1_000, residentCount.invoke(virtualTree, root.handle));
+	assertEquals(1_000, residentCount.invoke(virtualTree, root));
 
 	root.setExpanded(false);
 	assertFalse(root.getExpanded());
 	assertEquals(1_000, root.getItemCount(),
 			"collapse must preserve the logical child count");
-	assertEquals(11, residentCount.invoke(virtualTree, root.handle),
+	assertEquals(11, residentCount.invoke(virtualTree, root),
 			"collapsed residency must retain only the prefix through the highest pinned subtree");
 	assertSame(pinned, root.getItem(10),
 			"an exposed TreeItem facade must survive collapsed-tail compaction");
@@ -219,12 +219,12 @@ public void test_virtualGtkCollapseCompactsNativeTailAndRestoresOnExpand() throw
 
 	root.setExpanded(true);
 	assertTrue(root.getExpanded());
-	assertEquals(1_000, residentCount.invoke(virtualTree, root.handle),
+	assertEquals(1_000, residentCount.invoke(virtualTree, root),
 			"expansion must restore the full native projection before it becomes scrollable");
 	assertSame(pinned, root.getItem(10));
 
 	root.setExpanded(false);
-	assertEquals(11, residentCount.invoke(virtualTree, root.handle),
+	assertEquals(11, residentCount.invoke(virtualTree, root),
 			"repeated collapse must converge to the same bounded residency");
 }
 
@@ -237,17 +237,17 @@ public void test_virtualGtkCollapseKeepsOneSentinelWhenNoChildFacadeEscapes() th
 	TreeItem root = virtualTree.getItem(0);
 	root.setItemCount(2_000);
 
-	Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", long.class);
+	Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", TreeItem.class);
 	residentCount.setAccessible(true);
 
 	root.setExpanded(false);
 	assertEquals(2_000, root.getItemCount());
-	assertEquals(1, residentCount.invoke(virtualTree, root.handle),
+	assertEquals(1, residentCount.invoke(virtualTree, root),
 			"a collapsed branch with no exposed child facade needs only one native sentinel row");
 
 	TreeItem last = root.getItem(1_999);
 	assertSame(last, root.getItem(1_999));
-	assertEquals(2_000, residentCount.invoke(virtualTree, root.handle),
+	assertEquals(2_000, residentCount.invoke(virtualTree, root),
 			"explicit indexed access may reconstruct the requested native coordinate while collapsed");
 	assertEquals(2_000, root.getItemCount());
 }
