@@ -76,9 +76,10 @@ import org.eclipse.swt.internal.win32.*;
  */
 public class Table extends Composite {
 	TableItem [] items;
-	int [] keys;
+	VirtualItemStorage<TableItem> virtualItems;
+	VirtualViewportPlanner virtualViewport;
 	TableColumn [] columns;
-	int columnCount, customCount, keyCount;
+	int columnCount, customCount;
 	ImageList imageList, headerImageList;
 	TableItem currentItem;
 	TableColumn sortColumn;
@@ -102,7 +103,6 @@ public class Table extends Composite {
 	static final int H_SCROLL_LIMIT = 32;
 	static final int V_SCROLL_LIMIT = 16;
 	static final int DRAG_IMAGE_SIZE = 301;
-	static boolean COMPRESS_ITEMS = true;
 	static final long TableProc;
 	static final TCHAR TableClass = new TCHAR (OS.WC_LISTVIEW, true);
 	static final TCHAR HeaderClass = new TCHAR (OS.WC_HEADER, true);
@@ -166,100 +166,52 @@ void _addListener (int eventType, Listener listener) {
 }
 
 boolean _checkGrow (int count) {
-	//TODO - code could be shared but it would mix keyed and non-keyed logic
-	if (keys == null) {
-		if (count == items.length) {
-			/*
-			* Grow the array faster when redraw is off or the
-			* table is not visible.  When the table is painted,
-			* the items array is resized to be smaller to reduce
-			* memory usage.
-			*/
-			boolean small = getDrawing () && OS.IsWindowVisible (handle);
-			int length = small ? items.length + 4 : Math.max (4, items.length * 3 / 2);
-			TableItem [] newItems = new TableItem [length];
-			System.arraycopy (items, 0, newItems, 0, items.length);
-			items = newItems;
-		}
-	} else {
-		//TODO - don't shrink when count is very small (ie. 2 or 4 elements)?
-		//TODO - why? if setItemCount(1000000) is used after a shrink, then we won't compress
-		//TODO - get rid of ignoreShrink?
-		if (!ignoreShrink && keyCount > count / 2) {
-			boolean small = getDrawing () && OS.IsWindowVisible (handle);
-			int length = small ? count + 4 : Math.max (4, count * 3 / 2);
-			TableItem [] newItems = new TableItem [length];
-			for (int i=0; i<keyCount; i++) {
-				newItems [keys [i]] = items [i];
-			}
-			items = newItems;
-			keys = null;
-			keyCount = 0;
-			return true;
-		} else {
-			//TODO - grow by page size or screen height?
-			//TODO - experiment to determine an optimal growth rate for keys
-			if (keyCount == keys.length) {
-				boolean small = getDrawing () && OS.IsWindowVisible (handle);
-				int length = small ? keys.length + 4 : Math.max (4, keys.length * 3 / 2);
-				int [] newKeys = new int [length];
-				System.arraycopy (keys, 0, newKeys, 0, keys.length);
-				keys = newKeys;
-				TableItem [] newItems = new TableItem [length];
-				System.arraycopy (items, 0, newItems, 0, items.length);
-				items = newItems;
-			}
-		}
+	if ((style & SWT.VIRTUAL) != 0) return false;
+	if (count == items.length) {
+		/*
+		* Grow the array faster when redraw is off or the
+		* table is not visible.  When the table is painted,
+		* the items array is resized to be smaller to reduce
+		* memory usage.
+		*/
+		boolean small = getDrawing () && OS.IsWindowVisible (handle);
+		int length = small ? items.length + 4 : Math.max (4, items.length * 3 / 2);
+		TableItem [] newItems = new TableItem [length];
+		System.arraycopy (items, 0, newItems, 0, items.length);
+		items = newItems;
 	}
 	return false;
 }
 
 void _checkShrink () {
-	//TODO - code could be shared but it would mix keyed and non-keyed logic
-	//TODO - move ignoreShrink test back to the caller
-	if (keys == null) {
-		if (!ignoreShrink) {
-			/* Resize the item array to match the item count */
-			int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
+	if ((style & SWT.VIRTUAL) != 0 || ignoreShrink) return;
+	/* Resize the item array to match the item count */
+	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 
-			/*
-			* Bug in Windows. Call to OS.LVM_GETITEMCOUNT unexpectedly returns zero,
-			* leading to a possible "ArrayIndexOutOfBoundsException: 4" in SWT table.
-			* So, double check for any existing living items in the table and fixing
-			* the count value. Refer bug 292199.
-			*/
-			if (count == 0 && items.length > 4) {
-				while (count<items.length && items[count] != null && !items[count].isDisposed()) {
-					count++;
-				}
-			}
+	/*
+	* Bug in Windows. Call to OS.LVM_GETITEMCOUNT unexpectedly returns zero,
+	* leading to a possible "ArrayIndexOutOfBoundsException: 4" in SWT table.
+	* So, double check for any existing living items in the table and fixing
+	* the count value. Refer bug 292199.
+	*/
+	if (count == 0 && items.length > 4) {
+		while (count < items.length && items[count] != null && !items[count].isDisposed()) {
+			count++;
+		}
+	}
 
-			if (items.length > 4 && items.length - count > 3) {
-				int length = Math.max (4, (count + 3) / 4 * 4);
-				TableItem [] newItems = new TableItem [length];
-				System.arraycopy (items, 0, newItems, 0, count);
-				items = newItems;
-			}
-		}
-	} else {
-		if (!ignoreShrink) {
-			if (keys.length > 4 && keys.length - keyCount > 3) {
-				int length = Math.max (4, (keyCount + 3) / 4 * 4);
-				int [] newKeys = new int [length];
-				System.arraycopy (keys, 0, newKeys, 0, keyCount);
-				keys = newKeys;
-				TableItem [] newItems = new TableItem [length];
-				System.arraycopy (items, 0, newItems, 0, keyCount);
-				items = newItems;
-			}
-		}
+	if (items.length > 4 && items.length - count > 3) {
+		int length = Math.max (4, (count + 3) / 4 * 4);
+		TableItem [] newItems = new TableItem [length];
+		System.arraycopy (items, 0, newItems, 0, count);
+		items = newItems;
 	}
 }
 
 void _clearItems () {
 	items = null;
-	keys = null;
-	keyCount = 0;
+	virtualItems = null;
+	virtualViewport = null;
 }
 
 TableItem _getItem (int index) {
@@ -272,145 +224,85 @@ TableItem _getItem (int index, boolean create) {
 }
 
 TableItem _getItem (int index, boolean create, int count) {
-	//TODO - code could be shared but it would mix keyed and non-keyed logic
-	if (keys == null) {
-		if (index >= items.length) return null;
-		if ((style & SWT.VIRTUAL) == 0 || !create) return items [index];
-		if (items [index] != null) return items [index];
-		return items [index] = new TableItem (this, SWT.NONE, -1, false);
-	} else {
-		if ((style & SWT.VIRTUAL) == 0 || !create) {
-			if (keyCount == 0) return null;
-			if (index > keys [keyCount - 1]) return null;
-		}
-		int keyIndex = binarySearch (keys, 0, keyCount, index);
-		if ((style & SWT.VIRTUAL) == 0 || !create) {
-			return keyIndex < 0 ? null : items [keyIndex];
-		}
-		if (keyIndex < 0) {
-			if (count == -1) {
-				count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-			}
-			//TODO - _checkGrow() doesn't return a value, check keys == null instead
-			if (_checkGrow (count)) {
-				if (items [index] != null) return items [index];
-				return items [index] = new TableItem (this, SWT.NONE, -1, false);
-			}
-			keyIndex = -keyIndex - 1;
-			if (keyIndex < keyCount) {
-				System.arraycopy(keys, keyIndex, keys, keyIndex + 1, keyCount - keyIndex);
-				System.arraycopy(items, keyIndex, items, keyIndex + 1, keyCount - keyIndex);
-			}
-			keyCount++;
-			keys [keyIndex] = index;
-		} else {
-			if (items [keyIndex] != null) return items [keyIndex];
-		}
-		return items [keyIndex] = new TableItem (this, SWT.NONE, -1, false);
+	if ((style & SWT.VIRTUAL) != 0) {
+		TableItem item = virtualItems.get (index);
+		if (item != null || !create) return item;
+		item = new TableItem (this, SWT.NONE, -1, false);
+		virtualItems.put (index, item);
+		return item;
 	}
+	if (index >= items.length) return null;
+	return items [index];
 }
 
 void _getItems (TableItem [] result, int count) {
-	if (keys == null) {
-		System.arraycopy (items, 0, result, 0, count);
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.forEachIndexed ((index, item) -> {
+			if (index < count) result [index] = item;
+		});
 	} else {
-		/* NOTE: Null items will be in the array when keyCount != count */
-		for (int i=0; i<keyCount; i++) {
-			if (keys [i] >= count) break;
-			result [keys [i]] = items [keys [i]];
-		}
+		System.arraycopy (items, 0, result, 0, count);
 	}
 }
 
 boolean _hasItems () {
-	return items != null;
+	return (style & SWT.VIRTUAL) != 0 ? virtualItems != null : items != null;
 }
 
 void _initItems () {
-	items = new TableItem [4];
-	if (COMPRESS_ITEMS) {
-		if ((style & SWT.VIRTUAL) != 0) {
-			keyCount = 0;
-			keys = new int [4];
-		}
+	if ((style & SWT.VIRTUAL) != 0) {
+		items = null;
+		virtualItems = new VirtualItemStorage<> ();
+		virtualViewport = new VirtualViewportPlanner ();
+	} else {
+		items = new TableItem [4];
+		virtualItems = null;
+		virtualViewport = null;
 	}
 }
 
 /* NOTE: The array has already been grown to have space for the new item */
 void _insertItem (int index, TableItem item, int count) {
-	if (keys == null) {
-		System.arraycopy (items, index, items, index + 1, count - index);
-		items [index] = item;
-	} else {
-		int keyIndex = binarySearch (keys, 0, keyCount, index);
-		if (keyIndex < 0) keyIndex = -keyIndex - 1;
-		System.arraycopy(keys, keyIndex, keys, keyIndex + 1, keyCount - keyIndex);
-		keys [keyIndex] = index;
-		System.arraycopy(items, keyIndex, items, keyIndex + 1, keyCount - keyIndex);
-		items [keyIndex] = item;
-		keyCount++;
-		for (int i=keyIndex + 1; i<keyCount; i++) keys[i]++;
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.insert (index, item);
+		virtualViewport.insert (index, 1);
+		return;
 	}
+	System.arraycopy (items, index, items, index + 1, count - index);
+	items [index] = item;
 }
 
 void _removeItem (int index, int count) {
-	if (keys == null) {
-		System.arraycopy (items, index + 1, items, index, --count - index);
-		items [count] = null;
-	} else {
-		int keyIndex = binarySearch (keys, 0, keyCount, index);
-		if (keyIndex < 0) {
-			keyIndex = -keyIndex - 1;
-		} else {
-			--keyCount;
-			System.arraycopy (keys, keyIndex + 1, keys, keyIndex, keyCount - keyIndex);
-			keys [keyCount] = 0;
-			System.arraycopy (items, keyIndex + 1, items, keyIndex, keyCount - keyIndex);
-			items [keyCount] = null;
-		}
-		for (int i=keyIndex; i<keyCount; i++) --keys[i];
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.remove (index);
+		virtualViewport.remove (index, 1);
+		return;
 	}
+	System.arraycopy (items, index + 1, items, index, --count - index);
+	items [count] = null;
 }
 
 /* NOTE: Removes from start to index - 1 */
 void _removeItems (int start, int index, int count) {
-	if (keys == null) {
-		System.arraycopy (items, index, items, start, count - index);
-		for (int i=count-(index-start); i<count; i++) items [i] = null;
-	} else {
-		int end = index;
-		int left = binarySearch (keys, 0, keyCount, start);
-		if (left < 0) left = -left - 1;
-		int right = binarySearch (keys, left, keyCount, end);
-		if (right < 0) right = -right - 1;
-		//TODO - optimize when left and right are the same
-		System.arraycopy (keys, right, keys, left, keyCount - right);
-		for (int i=keyCount-(right-left); i<keyCount; i++) keys [i] = 0;
-		System.arraycopy (items, right, items, left, keyCount - right);
-		for (int i=keyCount-(right-left); i<keyCount; i++) items [i] = null;
-		keyCount -= (right - left);
-		for (int i=left; i<keyCount; i++) keys[i] -= (right - left);
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.removeRange (start, index, item -> {});
+		virtualViewport.remove (start, index - start);
+		return;
 	}
+	System.arraycopy (items, index, items, start, count - index);
+	for (int i=count-(index-start); i<count; i++) items [i] = null;
 }
 
 void _setItemCount (int count, int itemCount) {
-	if (keys == null) {
-		int length = Math.max (4, (count + 3) / 4 * 4);
-		TableItem [] newItems = new TableItem [length];
-		System.arraycopy (items, 0, newItems, 0, Math.min (count, itemCount));
-		items = newItems;
-	} else {
-		int index = Math.min (count, itemCount);
-		keyCount = binarySearch (keys, 0, keyCount, index);
-		if (keyCount < 0) keyCount = -keyCount - 1;
-		int length = Math.max (4, (keyCount + 3) / 4 * 4);
-		int [] newKeys = new int [length];
-		System.arraycopy (keys, 0, newKeys, 0, keyCount);
-		keys = newKeys;
-		TableItem [] newItems = new TableItem [length];
-		System.arraycopy (items, 0, newItems, 0, keyCount);
-		items = newItems;
+	if ((style & SWT.VIRTUAL) != 0) {
+		if (count < itemCount) virtualItems.truncate (count, item -> {});
+		virtualViewport.setLogicalCount (count);
+		return;
 	}
+	int length = Math.max (4, (count + 3) / 4 * 4);
+	TableItem [] newItems = new TableItem [length];
+	System.arraycopy (items, 0, newItems, 0, Math.min (count, itemCount));
+	items = newItems;
 }
 
 /**
