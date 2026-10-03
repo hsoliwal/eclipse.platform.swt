@@ -380,6 +380,10 @@ int virtualResidentChildCount (long parentIter) {
 	return GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
 }
 
+int virtualResidentChildCount (TreeItem parentItem) {
+	return virtualResidentChildCount (parentItem == null ? 0 : parentItem.handle);
+}
+
 void scheduleVirtualCollapseCompaction (TreeItem item) {
 	if (virtualTopology == null || item == null || item.isDisposed ()) return;
 	display.asyncExec (() -> {
