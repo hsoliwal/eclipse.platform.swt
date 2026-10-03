@@ -271,6 +271,22 @@ void pinVirtualFacade () {
 	}
 }
 
+void setVirtualChildTopologyKnown (int count) {
+	if ((parent.style & SWT.VIRTUAL) == 0) return;
+	VirtualItemStorage<TreeItem> storage = parent.virtualStorage (parentItem);
+	long state = storage.stateOfIdentity (this);
+	state |= VirtualItemState.CHILDREN_KNOWN | VirtualItemState.CHILDREN_COMPLETE;
+	state &= ~(VirtualItemState.CHILDREN_LOADING | VirtualItemState.CHILDREN_PARTIAL);
+	if (count == 0) state &= ~VirtualItemState.HAS_CHILDREN;
+	else state |= VirtualItemState.HAS_CHILDREN;
+	storage.state (parent.indexOfChild (parentItem, this), state);
+}
+
+boolean isVirtualFacadePinned () {
+	return (parent.style & SWT.VIRTUAL) != 0
+			&& parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.PINNED);
+}
+
 int calculateWidth (int index, GC gc) {
 	if (index == 0 && width != -1) return width;
 	Font font = null;
