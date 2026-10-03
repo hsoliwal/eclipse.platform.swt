@@ -866,8 +866,8 @@ void destroyItem (TreeColumn column) {
 		if (columns [index] == column) break;
 		index++;
 	}
-	for (int i=0; i<items.length; i++) {
-		TreeItem item = items [i];
+	for (int i=0; i<materializedItemCount (null); i++) {
+		TreeItem item = materializedItem (null, i);
 		if (item != null) {
 			if (columnCount <= 1) {
 				item.strings = null;
@@ -962,52 +962,35 @@ void destroyItem (TreeColumn column) {
 }
 
 void destroyItem (TreeItem item) {
-	int count;
-	TreeItem[] items;
 	TreeItem parentItem = item.parentItem;
-	if (parentItem != null) {
-		count = parentItem.itemCount;
-		items = parentItem.items;
+	int count = getItemCount (parentItem);
+	int index = indexOfChild (parentItem, item);
+	if (index < 0) return;
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualStorage (parentItem).remove (index);
+		count--;
 	} else {
-		count = this.itemCount;
-		items = this.items;
+		TreeItem [] children = parentItem != null ? parentItem.items : items;
+		System.arraycopy (children, index + 1, children, index, --count - index);
+		children [count] = null;
 	}
-	int index = 0;
-	while (index < count) {
-		if (items [index] == item) break;
-		index++;
-	}
-	System.arraycopy (items, index + 1, items, index, --count - index);
-	items [count] = null;
-	if (parentItem != null) {
-		parentItem.itemCount = count;
-	} else {
-		this.itemCount = count;
-	}
+	if (parentItem != null) parentItem.itemCount = count;
+	else itemCount = count;
 	NSOutlineView widget = (NSOutlineView)view;
 	if (getDrawing()) {
-		if (parentItem != null) {
-			widget.reloadItem (parentItem.handle, true);
-		} else {
-			widget.reloadData ();
-		}
+		if (parentItem != null) widget.reloadItem (parentItem.handle, true);
+		else widget.reloadData ();
 	} else {
 		reloadPending = true;
 	}
 	setScrollWidth ();
-	if (this.itemCount == 0) imageBounds = null;
+	if (itemCount == 0) imageBounds = null;
 	if (insertItem == item) insertItem = null;
-	if (parentItem == null && this.itemCount == 0) {
+	if (parentItem == null && itemCount == 0) {
 		Event event = new Event ();
 		event.detail = 1;
 		sendEvent (SWT.EmptinessChanged, event);
 	}
-}
-
-@Override
-boolean dragDetect(int x, int y, boolean filter, boolean[] consume) {
-	// Let Cocoa determine if a drag is starting and fire the notification when we get the callback.
-	return false;
 }
 
 @Override
@@ -1323,13 +1306,13 @@ void expandItem_expandChildren (long id, long sel, long itemID, boolean children
 	if (isDisposed() || item.isDisposed()) return;
 	if (!children) {
 		ignoreExpand = true;
-		TreeItem[] items = item.items;
-		for (int i = 0; i < item.itemCount; i++) {
-			if (items[i] != null) items[i].updateExpanded ();
+		for (int i = 0; i < materializedItemCount (item); i++) {
+			TreeItem child = materializedItem (item, i);
+			if (child != null) child.updateExpanded ();
 		}
 		ignoreExpand = false;
 	}
-	setScrollWidth (false, item.items, true);
+	setScrollWidth (false, item, true);
 }
 
 @Override
@@ -2071,10 +2054,7 @@ public int indexOf (TreeItem item) {
 	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
 	if (item.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
 	if (item.parentItem != null) return -1;
-	for (int i = 0; i < itemCount; i++) {
-		if (item == items[i]) return i;
-	}
-	return -1;
+	return indexOfChild (null, item);
 }
 
 @Override
@@ -2483,19 +2463,16 @@ void register () {
 
 @Override
 void releaseChildren (boolean destroy) {
-	for (int i=0; i<items.length; i++) {
-		TreeItem item = items [i];
-		if (item != null && !item.isDisposed ()) {
-			item.release (false);
-		}
+	for (int i=0; i<materializedItemCount (null); i++) {
+		TreeItem item = materializedItem (null, i);
+		if (item != null && !item.isDisposed ()) item.release (false);
 	}
+	if (virtualItems != null) virtualItems.clear (ignored -> { });
 	items = null;
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
 			TreeColumn column = columns [i];
-			if (column != null && !column.isDisposed ()) {
-				column.release (false);
-			}
+			if (column != null && !column.isDisposed ()) column.release (false);
 		}
 		columns = null;
 	}
@@ -2533,11 +2510,12 @@ void releaseWidget () {
  */
 public void removeAll () {
 	checkWidget ();
-	for (int i=0; i<items.length; i++) {
-		TreeItem item = items [i];
+	for (int i=0; i<materializedItemCount (null); i++) {
+		TreeItem item = materializedItem (null, i);
 		if (item != null && !item.isDisposed ()) item.release (false);
 	}
 	items = new TreeItem [4];
+	if (virtualItems != null) virtualItems = new VirtualItemStorage<> ();
 	itemCount = 0;
 	imageBounds = null;
 	insertItem = null;
@@ -2598,11 +2576,9 @@ public void removeTreeListener (TreeListener listener) {
 
 @Override
 void reskinChildren (int flags) {
-	if (items != null) {
-		for (int i=0; i<items.length; i++) {
-			TreeItem item = items [i];
-			if (item != null) item.reskinChildren (flags);
-		}
+	for (int i=0; i<materializedItemCount (null); i++) {
+		TreeItem item = materializedItem (null, i);
+		if (item != null) item.reskinChildren (flags);
 	}
 	if (columns != null) {
 		for (int i=0; i<columns.length; i++) {
@@ -2946,7 +2922,7 @@ void setFont (NSFont font) {
 	}
 	setItemHeight (null, font, !hooks (SWT.MeasureItem));
 	view.setNeedsDisplay (true);
-	clearCachedWidth (items);
+	clearCachedWidth (null);
 	setScrollWidth ();
 }
 
@@ -3077,67 +3053,50 @@ public void setItemCount (int count) {
 }
 
 void setItemCount (TreeItem parentItem, int count) {
-	int itemCount = getItemCount (parentItem);
-	if (count == itemCount) return;
+	int oldCount = getItemCount (parentItem);
+	if (count == oldCount) return;
 	NSOutlineView widget = (NSOutlineView) view;
-	int length = Math.max (4, (count + 3) / 4 * 4);
-	TreeItem [] children = parentItem == null ? items : parentItem.items;
 	boolean expanded = parentItem == null || parentItem.getExpanded();
-	if (count < itemCount) {
-		/*
-		* Note that the item count has to be updated before the call to reloadItem(), but
-		* the items have to be released after.
-		*/
-		if (parentItem == null) {
-			this.itemCount = count;
+	if ((style & SWT.VIRTUAL) != 0) {
+		TreeItem[] selectedItems = getSelection ();
+		if (count < oldCount) {
+			if (parentItem == null) itemCount = count;
+			else parentItem.itemCount = count;
+			widget.reloadItem (parentItem != null ? parentItem.handle : null, expanded);
+			virtualStorage (parentItem).truncate (count, item -> {
+				if (!item.isDisposed ()) item.release (false);
+			});
 		} else {
-			parentItem.itemCount = count;
+			if (parentItem == null) itemCount = count;
+			else parentItem.itemCount = count;
+			widget.reloadItem (parentItem != null ? parentItem.handle : null, expanded);
 		}
+		selectItems (selectedItems, true);
+		if (parentItem != null && oldCount == 0 && parentItem.expanded) {
+			ignoreExpand = true;
+			widget.expandItem (parentItem.handle);
+			ignoreExpand = false;
+		}
+		return;
+	}
+	if (count < oldCount) {
+		if (parentItem == null) itemCount = count;
+		else parentItem.itemCount = count;
 		TreeItem[] selectedItems = getSelection ();
 		widget.reloadItem (parentItem != null ? parentItem.handle : null, expanded);
-		for (int index = count; index < itemCount; index ++) {
+		TreeItem [] children = parentItem == null ? items : parentItem.items;
+		for (int index = count; index < oldCount; index ++) {
 			TreeItem item = children [index];
 			if (item != null && !item.isDisposed()) item.release (false);
 		}
 		selectItems (selectedItems, true);
+		int length = Math.max (4, (count + 3) / 4 * 4);
 		TreeItem [] newItems = new TreeItem [length];
-		if (children != null) {
-			System.arraycopy (children, 0, newItems, 0, count);
-		}
-		children = newItems;
-		if (parentItem == null) {
-			this.items = newItems;
-		} else {
-			parentItem.items = newItems;
-		}
+		System.arraycopy (children, 0, newItems, 0, count);
+		if (parentItem == null) items = newItems;
+		else parentItem.items = newItems;
 	} else {
-		if ((style & SWT.VIRTUAL) == 0) {
-			for (int i=itemCount; i<count; i++) {
-				new TreeItem (this, parentItem, SWT.NONE, i, true);
-			}
-		} else {
-			TreeItem [] newItems = new TreeItem [length];
-			if (children != null) {
-				System.arraycopy (children, 0, newItems, 0, itemCount);
-			}
-			children = newItems;
-			if (parentItem == null) {
-				this.items = newItems;
-				this.itemCount = count;
-			} else {
-				parentItem.items = newItems;
-				parentItem.itemCount = count;
-			}
-			TreeItem[] selectedItems = getSelection ();
-			widget.reloadItem (parentItem != null ? parentItem.handle : null, expanded);
-			selectItems (selectedItems, true);
-
-			if (parentItem != null && itemCount == 0 && parentItem.expanded) {
-				ignoreExpand = true;
-				widget.expandItem (parentItem.handle);
-				ignoreExpand = false;
-			}
-		}
+		for (int i=oldCount; i<count; i++) new TreeItem (this, parentItem, SWT.NONE, i, true);
 	}
 }
 
@@ -3213,15 +3172,14 @@ public void setRedraw (boolean redraw) {
 }
 
 boolean setScrollWidth () {
-	return setScrollWidth (true, items, true);
+	return setScrollWidth (true, null, true);
 }
 
-boolean setScrollWidth (boolean set, TreeItem[] items, boolean recurse) {
-	if (items == null) return false;
+boolean setScrollWidth (boolean set, TreeItem parentItem, boolean recurse) {
 	if (ignoreRedraw || !getDrawing()) return false;
 	if (columnCount != 0) return false;
 	GC gc = new GC (this);
-	int newWidth = calculateWidth (items, 0, gc, recurse);
+	int newWidth = calculateWidth (parentItem, 0, gc, recurse);
 	gc.dispose ();
 	if (!set) {
 		int oldWidth = (int)firstColumn.width ();
