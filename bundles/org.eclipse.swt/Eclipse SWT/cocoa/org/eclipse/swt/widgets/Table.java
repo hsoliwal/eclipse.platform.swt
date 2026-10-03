@@ -70,6 +70,7 @@ import org.eclipse.swt.internal.cocoa.*;
  */
 public class Table extends Composite {
 	TableItem [] items;
+	VirtualItemStorage<TableItem> virtualItems;
 	TableColumn [] columns;
 	TableColumn sortColumn;
 	TableItem currentItem;
@@ -207,88 +208,40 @@ public void addSelectionListener (SelectionListener listener) {
 
 TableItem _getItem (int index) {
 	if ((style & SWT.VIRTUAL) == 0) return items [index];
-	if (items [index] != null) return items [index];
-	return items [index] = new TableItem (this, SWT.NULL, -1, false);
+	TableItem item = virtualItems.get (index);
+	if (item != null) return item;
+	item = new TableItem (this, SWT.NULL, -1, false);
+	virtualItems.put (index, item);
+	return item;
+}
+
+TableItem _getItem (int index, boolean create) {
+	if ((style & SWT.VIRTUAL) == 0) return items [index];
+	TableItem item = virtualItems.get (index);
+	return item != null || !create ? item : _getItem (index);
+}
+
+int materializedItemCount () {
+	return (style & SWT.VIRTUAL) != 0 ? virtualItems.size () : itemCount;
+}
+
+TableItem materializedItem (int position) {
+	return (style & SWT.VIRTUAL) != 0 ? virtualItems.valueAt (position) : items [position];
+}
+
+int materializedIndex (int position) {
+	return (style & SWT.VIRTUAL) != 0 ? virtualItems.indexAt (position) : position;
 }
 
 int calculateWidth (TableItem[] items, int index, GC gc) {
 	int width = 0;
-	for (int i=0; i < itemCount; i++) {
-		TableItem item = items [i];
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
 		if (item != null && item.cached) {
-			width = Math.max (width, item.calculateWidth (index, gc, isSelected(index)));
+			width = Math.max (width, item.calculateWidth (index, gc, isSelected (materializedIndex (i))));
 		}
 	}
 	return width;
-}
-
-@Override
-NSSize cellSize (long id, long sel) {
-	NSSize size = super.cellSize(id, sel);
-	NSCell cell = new NSCell(id);
-	NSImage image = cell.image();
-	if (image != null) size.width += imageBounds.width + IMAGE_GAP;
-	if (hooks(SWT.MeasureItem)) {
-		long [] outValue = new long [1];
-		OS.object_getInstanceVariable(id, Display.SWT_ROW, outValue);
-		long rowIndex = outValue [0];
-		TableItem item = _getItem((int)rowIndex);
-		OS.object_getInstanceVariable(id, Display.SWT_COLUMN, outValue);
-		long tableColumn = outValue[0];
-		int columnIndex = 0;
-		for (int i=0; i<columnCount; i++) {
-			if (columns [i].nsColumn.id == tableColumn) {
-				columnIndex = i;
-				break;
-			}
-		}
-		sendMeasureItem (item, columnIndex, size, cell.isHighlighted());
-	}
-	return size;
-}
-
-@Override
-boolean canDragRowsWithIndexes_atPoint(long id, long sel, long rowIndexes, NSPoint mouseDownPoint) {
-	if (!super.canDragRowsWithIndexes_atPoint(id, sel, rowIndexes, mouseDownPoint)) return false;
-
-	// If the current row is not selected and the user is not attempting to modify the selection, select the row first.
-	NSTableView widget = (NSTableView)view;
-	long row = widget.rowAtPoint(mouseDownPoint);
-	long modifiers = NSApplication.sharedApplication().currentEvent().modifierFlags();
-
-	boolean drag = (state & DRAG_DETECT) != 0 && hooks (SWT.DragDetect);
-	if (drag) {
-		if (!widget.isRowSelected(row) && (modifiers & (OS.NSEventModifierFlagCommand | OS.NSEventModifierFlagShift | OS.NSAlternateKeyMask)) == 0) {
-			NSIndexSet set = (NSIndexSet)new NSIndexSet().alloc();
-			set = set.initWithIndex(row);
-			widget.selectRowIndexes (set, false);
-			set.release();
-		}
-	}
-
-	// The clicked row must be selected to initiate a drag.
-	return (widget.isRowSelected(row) && drag) || !hasFocus();
-}
-
-boolean checkData (TableItem item) {
-	return checkData (item, indexOf (item));
-}
-
-boolean checkData (TableItem item, int index) {
-	if (item.cached) return true;
-	if ((style & SWT.VIRTUAL) != 0) {
-		item.cached = true;
-		Event event = new Event ();
-		event.item = item;
-		event.index = indexOf (item);
-		currentItem = item;
-		sendEvent (SWT.SetData, event);
-		//widget could be disposed at this point
-		currentItem = null;
-		if (isDisposed () || item.isDisposed ()) return false;
-		if (!setScrollWidth (item)) item.redraw (-1);
-	}
-	return true;
 }
 
 static int checkStyle (int style) {
@@ -338,7 +291,7 @@ protected void checkSubclass () {
 public void clear (int index) {
 	checkWidget ();
 	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
-	TableItem item = items [index];
+	TableItem item = _getItem (index, false);
 	if (item != null) {
 		if (currentItem != item) item.clear ();
 		if (currentItem == null) item.redraw (-1);
@@ -376,13 +329,16 @@ public void clear (int start, int end) {
 	}
 	if (start == 0 && end == itemCount - 1) {
 		clearAll ();
+	} else if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.forEachIndexed ((index, item) -> {
+			if (start <= index && index <= end && currentItem != item) item.clear ();
+		});
+		if (currentItem == null && isDrawing ()) view.setNeedsDisplay (true);
+		setScrollWidth (items, true);
 	} else {
-		for (int i=start; i<=end; i++) {
-			clear (i);
-		}
+		for (int i=start; i<=end; i++) clear (i);
 	}
 }
-
 /**
  * Clears the items at the given zero-relative indices in the receiver.
  * The text, icon and other attributes of the items are set to their default
@@ -414,11 +370,8 @@ public void clear (int [] indices) {
 			error (SWT.ERROR_INVALID_RANGE);
 		}
 	}
-	for (int i=0; i<indices.length; i++) {
-		clear (indices [i]);
-	}
+	for (int i=0; i<indices.length; i++) clear (indices [i]);
 }
-
 /**
  * Clears all the items in the receiver. The text, icon and other
  * attributes of the items are set to their default values. If the
@@ -437,14 +390,19 @@ public void clear (int [] indices) {
  */
 public void clearAll () {
 	checkWidget ();
-	for (int i=0; i<itemCount; i++) {
-		TableItem item = items [i];
-		if (item != null) {
-			item.clear ();
-		}
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
+		if (item != null) item.clear ();
 	}
-	if (currentItem == null && isDrawing ()) view.setNeedsDisplay(true);
+	if (currentItem == null && isDrawing ()) view.setNeedsDisplay (true);
 	setScrollWidth (items, true);
+}
+
+void clearCachedWidth (TableItem[] items) {
+	for (int i=0; i<materializedItemCount (); i++) {
+		TableItem item = materializedItem (i);
+		if (item != null) item.width = -1;
+	}
 }
 
 void clearCachedWidth (TableItem[] items) {
@@ -664,6 +622,13 @@ void createItem (TableColumn column, int index) {
 
 void createItem (TableItem item, int index) {
 	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.insert (index, item);
+		itemCount++;
+		updateRowCount ();
+		if (index != itemCount) fixSelection (index, true);
+		return;
+	}
 	if (itemCount == items.length) {
 		/* Grow the array faster when redraw is off */
 		int length = getDrawing () ? items.length + 4 : Math.max (4, items.length * 3 / 2);
@@ -681,6 +646,7 @@ void createItem (TableItem item, int index) {
 void createWidget () {
 	super.createWidget ();
 	items = new TableItem [4];
+	if ((style & SWT.VIRTUAL) != 0) virtualItems = new VirtualItemStorage<> ();
 	columns = new TableColumn [4];
 }
 
