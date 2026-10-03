@@ -168,6 +168,36 @@ public void test_virtualTreeVisibleProjectionSkipsColdLogicalRanges() throws Exc
 			"root shrink must prune materialized coordinates outside the logical range");
 }
 
+
+@Test
+public void test_virtualGtkVisibleProjectionTracksExpansionIndependentlyOfResidency() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(100);
+	TreeItem root = virtualTree.getItem(5);
+	root.setItemCount(3);
+	TreeItem child = root.getItem(1);
+	child.setItemCount(2);
+
+	Method visibleRows = Tree.class.getDeclaredMethod("virtualVisibleRowCount");
+	visibleRows.setAccessible(true);
+
+	assertEquals(100L, ((Long) visibleRows.invoke(virtualTree)).longValue());
+	root.setExpanded(true);
+	assertEquals(103L, ((Long) visibleRows.invoke(virtualTree)).longValue());
+	child.setExpanded(true);
+	assertEquals(105L, ((Long) visibleRows.invoke(virtualTree)).longValue());
+
+	root.setExpanded(false);
+	assertEquals(100L, ((Long) visibleRows.invoke(virtualTree)).longValue(),
+			"collapsed descendants must leave the logical visible-row projection");
+	assertEquals(100, virtualTree.getItemCount());
+	assertEquals(3, root.getItemCount());
+	assertEquals(2, child.getItemCount(),
+			"logical child counts remain independent of current native visibility/residency");
+}
+
 @Test
 public void test_virtualItemResidencyDoesNotScaleWithLogicalCount() throws Exception {
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
