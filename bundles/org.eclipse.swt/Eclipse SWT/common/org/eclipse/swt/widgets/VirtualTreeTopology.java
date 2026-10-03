@@ -47,6 +47,7 @@ final class VirtualTreeTopology {
 		if (id < 0) throw new IllegalArgumentException ("negative tree id");
 		if (parentId < ROOT) throw new IllegalArgumentException ("invalid parent id");
 		if (childIndex < 0) throw new IllegalArgumentException ("negative child index");
+		if (parentId != ROOT) requirePresent (parentId);
 		ensureCapacity (id + 1);
 		boolean absent = parentIds [id] == ABSENT;
 		if (absent) {
