@@ -152,6 +152,53 @@ visible/overscan viewport planner
 bounded native residency / paint
 ```
 
+## Screenshot + SWT Spy regression lane
+
+The viewport stress harness can capture deterministic visual checkpoints together with structural diagnostics.
+
+Launch `org.eclipse.swt.tests.manual.ViewportRewriteStress` with:
+
+```text
+-Dswt.viewport.screenshots=<output-directory>
+-Dswt.viewport.screenshots.exit=true
+```
+
+The second property is optional; when true, the shell closes after the scripted capture sequence.
+
+Each checkpoint writes:
+
+- `<scenario>.png` — the rendered widget surface;
+- `<scenario>.txt` — Spy-style structural diagnostics.
+
+The diagnostic sidecar records:
+
+- platform;
+- control class and SWT style bits;
+- parent class;
+- bounds and client area;
+- visibility/enabled state;
+- layout and layout-data classes;
+- horizontal/vertical scrollbar selection, minimum, maximum, thumb, increment, page increment and visibility;
+- Table/Tree logical counts, top coordinate, selection count, row height, columns and header state;
+- ScrolledComposite origin/minimum/expansion state;
+- live `TableItem` and `TreeItem` counts captured with SWT's existing `WidgetSpy.NonDisposedWidgetTracker`, both globally and scoped to the captured widget subtree.
+
+The scripted sequence includes top/middle/end virtual Table states, expanded/collapsed large Tree states, vertical and horizontal ScrolledComposite states, fixed-surface logical viewport states, and narrow/wide resize cases that exercise interdependent scrollbar visibility. Each PNG is hashed so a same-platform/theme/DPI lane can cheaply detect an unexpected visual change before a human inspects the image.
+
+The purpose is not pixel-identical output across operating systems or themes. Compare screenshots within the same platform/theme/DPI lane and combine visual evidence with the structural sidecar and SetData/paint counters.
+
+### Donor evidence for the screenshot lane
+
+The supplied legacy viewer sources reinforce the test shape:
+
+- the old `ViewPort` recomputes horizontal/vertical scrollbar visibility together because showing one scrollbar changes the other axis' available extent;
+- `TreeViewerLazyTool` uses bounded progressive reveal while keeping the full logical child count separately;
+- `DeferrredTreeViewer` retains expansion/selection while progressively increasing realized child counts;
+- Virtual TreeView separates node/visibility state from current painting and maintains a dedicated header implementation.
+
+SWT's own current `WidgetSpy` creation/disposal hook is reused for residency evidence rather than adding another tracker.
+
+
 ## Compatibility requests and SWT classic
 
 The optimized viewport implementation is the forward development path. Public SWT API and observable behavior remain the compatibility boundary.

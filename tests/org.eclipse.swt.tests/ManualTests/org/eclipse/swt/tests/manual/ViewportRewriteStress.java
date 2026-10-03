@@ -10,11 +10,21 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.manual;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.custom.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
@@ -32,12 +42,21 @@ public final class ViewportRewriteStress {
 	private static final int CANVAS_ROWS = 1_000_000;
 	private static final int ROW_HEIGHT = 22;
 	private static final int OVERSCAN = 8;
+	private static final String SCREENSHOT_DIR_PROPERTY = "swt.viewport.screenshots";
+	private static final String SCREENSHOT_EXIT_PROPERTY = "swt.viewport.screenshots.exit";
+	private static final List<ScreenshotScenario> SCREENSHOT_SCENARIOS = new ArrayList<> ();
+
+	private record ScreenshotScenario (String name, Control target, Runnable prepare) {
+	}
 
 	private ViewportRewriteStress () {
 	}
 
 	public static void main (String[] args) {
 		Display display = new Display ();
+		WidgetSpy.NonDisposedWidgetTracker spyTracker = screenshotTrackingEnabled ()
+				? createViewportSpyTracker () : null;
+		if (spyTracker != null) spyTracker.startTracking ();
 		Shell shell = new Shell (display);
 		shell.setText ("SWT viewport rewrite stress");
 		shell.setLayout (new FillLayout ());
@@ -50,9 +69,11 @@ public final class ViewportRewriteStress {
 		createLogicalViewportShellTab (tabs);
 
 		shell.open ();
+		scheduleScreenshotSuite (display, shell, spyTracker);
 		while (!shell.isDisposed ()) {
 			if (!display.readAndDispatch ()) display.sleep ();
 		}
+		if (spyTracker != null) spyTracker.stopTracking ();
 		display.dispose ();
 	}
 
@@ -107,6 +128,19 @@ public final class ViewportRewriteStress {
 				+ "  selected=" + table.getSelectionCount ()
 				+ "  SetData=" + setData.get ()
 				+ "  PaintItem=" + paint.get ());
+
+		screenshotScenario ("table-top", root, () -> {
+			selectTab (tabs, root);
+			redrawLocked (table, () -> table.setTopIndex (0));
+		});
+		screenshotScenario ("table-middle", root, () -> {
+			selectTab (tabs, root);
+			redrawLocked (table, () -> table.setTopIndex (TABLE_ROWS / 2));
+		});
+		screenshotScenario ("table-end", root, () -> {
+			selectTab (tabs, root);
+			redrawLocked (table, () -> table.setTopIndex (TABLE_ROWS - 1));
+		});
 	}
 
 	private static void createTreeTab (TabFolder tabs) {
@@ -172,6 +206,31 @@ public final class ViewportRewriteStress {
 				+ "  selection=" + tree.getSelectionCount ()
 				+ "  SetData=" + setData.get ()
 				+ "  PaintItem=" + paints.get ());
+
+		screenshotScenario ("tree-first-expanded", root, () -> {
+			selectTab (tabs, root);
+			redrawLocked (tree, () -> {
+				TreeItem item = tree.getItem (0);
+				item.setExpanded (true);
+				tree.setTopItem (item);
+			});
+		});
+		screenshotScenario ("tree-middle-expanded", root, () -> {
+			selectTab (tabs, root);
+			redrawLocked (tree, () -> {
+				TreeItem item = tree.getItem (TREE_ROOTS / 2);
+				item.setExpanded (true);
+				tree.setTopItem (item);
+			});
+		});
+		screenshotScenario ("tree-middle-collapsed", root, () -> {
+			selectTab (tabs, root);
+			redrawLocked (tree, () -> {
+				TreeItem item = tree.getItem (TREE_ROOTS / 2);
+				item.setExpanded (false);
+				tree.setTopItem (item);
+			});
+		});
 	}
 
 	private static void createScrolledCanvasTab (TabFolder tabs) {
@@ -278,6 +337,20 @@ public final class ViewportRewriteStress {
 					+ "  vScrolls=" + verticalScrolls.get ()
 					+ "  rowsAttempted=" + paintedRows.get ()
 					+ "  stateBytes~=" + (selectionMasks.length * Long.BYTES);
+		});
+
+		screenshotScenario ("scrolled-top", root, () -> {
+			selectTab (tabs, root);
+			jumpVertical (scroller, canvas, 0);
+		});
+		screenshotScenario ("scrolled-middle", root, () -> {
+			selectTab (tabs, root);
+			jumpVertical (scroller, canvas, CANVAS_ROWS / 2);
+		});
+		screenshotScenario ("scrolled-middle-x600", root, () -> {
+			selectTab (tabs, root);
+			jumpVertical (scroller, canvas, CANVAS_ROWS / 2);
+			jumpHorizontal (scroller, canvas, header, headerOriginX, 600);
 		});
 	}
 
@@ -434,6 +507,250 @@ public final class ViewportRewriteStress {
 					+ "  vEvents=" + verticalEvents.get ()
 					+ "  hEvents=" + horizontalEvents.get ();
 		});
+
+		screenshotScenario ("logical-top", root, () -> {
+			selectTab (tabs, root);
+			vertical.setSelection (0);
+			topRow.set (vertical.getSelection ());
+			horizontal.setSelection (0);
+			horizontalOrigin.set (horizontal.getSelection ());
+			header.redraw ();
+			body.redraw ();
+		});
+		screenshotScenario ("logical-middle", root, () -> {
+			selectTab (tabs, root);
+			vertical.setSelection (CANVAS_ROWS / 2);
+			topRow.set (vertical.getSelection ());
+			horizontal.setSelection (0);
+			horizontalOrigin.set (horizontal.getSelection ());
+			header.redraw ();
+			body.redraw ();
+		});
+		screenshotScenario ("logical-middle-x720", root, () -> {
+			selectTab (tabs, root);
+			vertical.setSelection (CANVAS_ROWS / 2);
+			topRow.set (vertical.getSelection ());
+			horizontal.setSelection (720);
+			horizontalOrigin.set (horizontal.getSelection ());
+			header.redraw ();
+			body.redraw ();
+		});
+		screenshotScenario ("logical-resize-narrow", root, () -> {
+			selectTab (tabs, root);
+			root.getShell ().setSize (640, 420);
+			root.getShell ().layout (true, true);
+			configureScrollbars.run ();
+		});
+		screenshotScenario ("logical-resize-wide", root, () -> {
+			selectTab (tabs, root);
+			root.getShell ().setSize (1400, 900);
+			root.getShell ().layout (true, true);
+			configureScrollbars.run ();
+		});
+	}
+
+	private static boolean screenshotTrackingEnabled () {
+		String directory = System.getProperty (SCREENSHOT_DIR_PROPERTY);
+		return directory != null && !directory.isBlank ();
+	}
+
+	private static WidgetSpy.NonDisposedWidgetTracker createViewportSpyTracker () {
+		WidgetSpy.NonDisposedWidgetTracker tracker = new WidgetSpy.NonDisposedWidgetTracker ();
+		tracker.setTrackedTypes (List.of (TreeItem.class, TableItem.class));
+		return tracker;
+	}
+
+	private static void screenshotScenario (String name, Control target, Runnable prepare) {
+		SCREENSHOT_SCENARIOS.add (new ScreenshotScenario (name, target, prepare));
+	}
+
+	private static void scheduleScreenshotSuite (
+			Display display, Shell shell, WidgetSpy.NonDisposedWidgetTracker tracker) {
+		String directory = System.getProperty (SCREENSHOT_DIR_PROPERTY);
+		if (directory == null || directory.isBlank () || SCREENSHOT_SCENARIOS.isEmpty ()) return;
+		Path output = Path.of (directory);
+		try {
+			Files.createDirectories (output);
+		} catch (IOException failure) {
+			throw new IllegalStateException ("Cannot create screenshot directory " + output, failure);
+		}
+		display.asyncExec (() -> captureNext (display, shell, output, tracker, 0));
+	}
+
+	private static void captureNext (
+			Display display, Shell shell, Path output,
+			WidgetSpy.NonDisposedWidgetTracker tracker, int index) {
+		if (index >= SCREENSHOT_SCENARIOS.size ()) {
+			if (Boolean.getBoolean (SCREENSHOT_EXIT_PROPERTY) && !shell.isDisposed ()) shell.dispose ();
+			return;
+		}
+		ScreenshotScenario scenario = SCREENSHOT_SCENARIOS.get (index);
+		if (scenario.target ().isDisposed ()) {
+			captureNext (display, shell, output, tracker, index + 1);
+			return;
+		}
+		scenario.prepare ().run ();
+		scenario.target ().getShell ().layout (true, true);
+		scenario.target ().redraw ();
+		scenario.target ().update ();
+		display.timerExec (150, () -> {
+			if (!scenario.target ().isDisposed ()) {
+				Path png = output.resolve (scenario.name () + ".png");
+				capturePng (scenario.target (), png);
+				writeSpySnapshot (
+						scenario.name (), scenario.target (), tracker, png,
+						output.resolve (scenario.name () + ".txt"));
+			}
+			captureNext (display, shell, output, tracker, index + 1);
+		});
+	}
+
+	private static void capturePng (Control control, Path path) {
+		Point size = control.getSize ();
+		if (size.x <= 0 || size.y <= 0) return;
+		Image image = new Image (control.getDisplay (), size.x, size.y);
+		GC gc = new GC (image);
+		try {
+			if (!control.print (gc)) {
+				gc.dispose ();
+				gc = new GC (control);
+				gc.copyArea (image, 0, 0);
+			}
+		} finally {
+			gc.dispose ();
+		}
+		try {
+			ImageLoader loader = new ImageLoader ();
+			loader.data = new ImageData[] {image.getImageData ()};
+			loader.save (path.toString (), SWT.IMAGE_PNG);
+		} finally {
+			image.dispose ();
+		}
+	}
+
+	private static void writeSpySnapshot (
+			String scenario, Control target,
+			WidgetSpy.NonDisposedWidgetTracker tracker, Path png, Path path) {
+		StringBuilder out = new StringBuilder (4096);
+		out.append ("scenario=").append (scenario).append ('\n');
+		out.append ("platform=").append (SWT.getPlatform ()).append ('\n');
+		out.append ("screenshot=").append (png.getFileName ()).append ('\n');
+		out.append ("screenshot.sha256=").append (sha256 (png)).append ('\n');
+		appendControlSnapshot (out, target, "");
+		if (tracker != null) {
+			Map<Widget, Error> widgets = tracker.getNonDisposedWidgets ();
+			long tables = widgets.keySet ().stream ().filter (TableItem.class::isInstance).count ();
+			long trees = widgets.keySet ().stream ().filter (TreeItem.class::isInstance).count ();
+			long localTables = widgets.keySet ().stream ()
+					.filter (TableItem.class::isInstance)
+					.map (TableItem.class::cast)
+					.filter (item -> belongsTo (target, item.getParent ()))
+					.count ();
+			long localTrees = widgets.keySet ().stream ()
+					.filter (TreeItem.class::isInstance)
+					.map (TreeItem.class::cast)
+					.filter (item -> belongsTo (target, item.getParent ()))
+					.count ();
+			out.append ("spy.liveTableItems=").append (tables).append ('\n');
+			out.append ("spy.liveTreeItems=").append (trees).append ('\n');
+			out.append ("spy.liveTrackedItems=").append (widgets.size ()).append ('\n');
+			out.append ("spy.localTableItems=").append (localTables).append ('\n');
+			out.append ("spy.localTreeItems=").append (localTrees).append ('\n');
+		}
+		try {
+			Files.writeString (path, out, StandardCharsets.UTF_8);
+		} catch (IOException failure) {
+			throw new IllegalStateException ("Cannot write viewport spy snapshot " + path, failure);
+		}
+	}
+
+	private static boolean belongsTo (Control root, Control control) {
+		for (Control current = control; current != null; current = current.getParent ()) {
+			if (current == root) return true;
+		}
+		return false;
+	}
+
+	private static String sha256 (Path path) {
+		try {
+			byte[] digest = MessageDigest.getInstance ("SHA-256").digest (Files.readAllBytes (path));
+			return java.util.HexFormat.of ().formatHex (digest);
+		} catch (IOException | NoSuchAlgorithmException failure) {
+			throw new IllegalStateException ("Cannot hash screenshot " + path, failure);
+		}
+	}
+
+	private static void appendControlSnapshot (StringBuilder out, Control control, String indent) {
+		if (control == null || control.isDisposed ()) return;
+		Composite parent = control.getParent ();
+		Object layoutData = control.getLayoutData ();
+		out.append (indent).append ("control=").append (control.getClass ().getName ())
+				.append (" style=0x").append (Integer.toHexString (control.getStyle ()))
+				.append (" parent=").append (parent == null ? "<none>" : parent.getClass ().getName ())
+				.append (" bounds=").append (control.getBounds ())
+				.append (" client=").append (control.getClientArea ())
+				.append (" visible=").append (control.getVisible ())
+				.append (" enabled=").append (control.getEnabled ())
+				.append (" layoutData=").append (layoutData == null ? "<none>" : layoutData.getClass ().getName ())
+				.append ('\n');
+		appendScrollBarSnapshot (out, indent + "  h.", control.getHorizontalBar ());
+		appendScrollBarSnapshot (out, indent + "  v.", control.getVerticalBar ());
+		if (control instanceof Table table) {
+			out.append (indent).append ("  table.itemCount=").append (table.getItemCount ())
+					.append (" topIndex=").append (table.getTopIndex ())
+					.append (" selectionCount=").append (table.getSelectionCount ())
+					.append (" itemHeight=").append (table.getItemHeight ())
+					.append (" columns=").append (table.getColumnCount ())
+					.append (" headerVisible=").append (table.getHeaderVisible ())
+					.append ('\n');
+		} else if (control instanceof Tree tree) {
+			TreeItem top = tree.getTopItem ();
+			out.append (indent).append ("  tree.rootCount=").append (tree.getItemCount ())
+					.append (" selectionCount=").append (tree.getSelectionCount ())
+					.append (" itemHeight=").append (tree.getItemHeight ())
+					.append (" columns=").append (tree.getColumnCount ())
+					.append (" headerVisible=").append (tree.getHeaderVisible ())
+					.append (" topRootIndex=").append (top == null ? -1 : tree.indexOf (top))
+					.append ('\n');
+		} else if (control instanceof ScrolledComposite scrolled) {
+			out.append (indent).append ("  scrolled.origin=").append (scrolled.getOrigin ())
+					.append (" min=").append (scrolled.getMinSize ())
+					.append (" expandH=").append (scrolled.getExpandHorizontal ())
+					.append (" expandV=").append (scrolled.getExpandVertical ())
+					.append ('\n');
+		}
+		if (control instanceof Composite composite) {
+			Layout layout = composite.getLayout ();
+			out.append (indent).append ("  layout=")
+					.append (layout == null ? "<none>" : layout.getClass ().getName ())
+					.append ('\n');
+			for (Control child : composite.getChildren ()) {
+				appendControlSnapshot (out, child, indent + "  ");
+			}
+		}
+	}
+
+	private static void appendScrollBarSnapshot (
+			StringBuilder out, String prefix, ScrollBar bar) {
+		if (bar == null || bar.isDisposed ()) return;
+		out.append (prefix).append ("scrollbar selection=").append (bar.getSelection ())
+				.append (" min=").append (bar.getMinimum ())
+				.append (" max=").append (bar.getMaximum ())
+				.append (" thumb=").append (bar.getThumb ())
+				.append (" increment=").append (bar.getIncrement ())
+				.append (" pageIncrement=").append (bar.getPageIncrement ())
+				.append (" visible=").append (bar.getVisible ())
+				.append ('\n');
+	}
+
+	private static void selectTab (TabFolder folder, Control control) {
+		TabItem[] items = folder.getItems ();
+		for (int index = 0; index < items.length; index++) {
+			if (items [index].getControl () == control) {
+				folder.setSelection (index);
+				return;
+			}
+		}
 	}
 
 	private static Composite tab (TabFolder folder, String text) {
