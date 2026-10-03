@@ -211,17 +211,12 @@ void virtualItemChanged (TableItem item) {
 
 void updateVirtualViewport () {
 	if (virtualViewport == null) return;
-	virtualViewport.setLogicalCount (itemCount);
-	if (itemCount == 0) {
-		virtualViewport.setViewport (0, 0);
-		return;
-	}
-	int first = Math.min (getTopIndex (), itemCount - 1);
 	Rectangle client = getClientAreaInPixels ();
 	int rowHeight = Math.max (1, getItemHeight ());
-	int visible = Math.min (itemCount - first,
-			Math.max (1, (client.height + rowHeight - 1) / rowHeight + 1));
-	virtualViewport.setViewport (first, visible);
+	int chromeHeight = getHeaderVisible () ? getHeaderHeight () : 0;
+	int bodyHeight = Math.max (0, client.height - chromeHeight);
+	int first = itemCount == 0 ? 0 : Math.min (getTopIndex (), itemCount - 1);
+	virtualViewport.setUniformGeometry (itemCount, rowHeight, bodyHeight, first);
 }
 
 boolean isVirtualPaintCandidate (TableItem item) {
