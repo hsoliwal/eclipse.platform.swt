@@ -2255,6 +2255,186 @@ swt_releaseArrayOfStringsUTF(JNIEnv *env, jobjectArray javaArray, char **cString
     free(cStrings);
 }
 
+#if !defined(GTK4)
+/*
+ * Allocation-free flat GtkTreeModel used by SWT.VIRTUAL Table.
+ *
+ * The model stores only the logical row count. GtkTreeIter encodes the row
+ * number directly, so GtkTreeView can keep its native scrolling, selection,
+ * keyboard and accessibility behavior without one GtkListStore node per row.
+ * Cell state remains owned by SWT TableItem and is supplied by cellDataProc.
+ */
+typedef struct _SwtVirtualTableModel {
+	GObject parent_instance;
+	gint item_count;
+	gint stamp;
+} SwtVirtualTableModel;
+
+typedef struct _SwtVirtualTableModelClass {
+	GObjectClass parent_class;
+} SwtVirtualTableModelClass;
+
+static void swt_virtual_table_model_tree_model_init(GtkTreeModelIface *iface);
+
+G_DEFINE_TYPE_WITH_CODE(SwtVirtualTableModel, swt_virtual_table_model, G_TYPE_OBJECT,
+	G_IMPLEMENT_INTERFACE(GTK_TYPE_TREE_MODEL, swt_virtual_table_model_tree_model_init))
+
+enum {
+	SWT_VIRTUAL_TABLE_MODEL_PROP_0,
+	SWT_VIRTUAL_TABLE_MODEL_PROP_ITEM_COUNT,
+	SWT_VIRTUAL_TABLE_MODEL_N_PROPERTIES
+};
+
+static GParamSpec *swt_virtual_table_model_properties[SWT_VIRTUAL_TABLE_MODEL_N_PROPERTIES];
+
+static gboolean swt_virtual_table_model_iter_valid(SwtVirtualTableModel *self, GtkTreeIter *iter) {
+	if (iter == NULL || iter->stamp != self->stamp || iter->user_data == NULL) return FALSE;
+	gint row = GPOINTER_TO_INT(iter->user_data) - 1;
+	return row >= 0 && row < self->item_count;
+}
+
+static void swt_virtual_table_model_set_iter(SwtVirtualTableModel *self, GtkTreeIter *iter, gint row) {
+	iter->stamp = self->stamp;
+	iter->user_data = GINT_TO_POINTER(row + 1);
+	iter->user_data2 = NULL;
+	iter->user_data3 = NULL;
+}
+
+static GtkTreeModelFlags swt_virtual_table_model_get_flags(GtkTreeModel *tree_model) {
+	return GTK_TREE_MODEL_LIST_ONLY;
+}
+
+static gint swt_virtual_table_model_get_n_columns(GtkTreeModel *tree_model) {
+	return 1;
+}
+
+static GType swt_virtual_table_model_get_column_type(GtkTreeModel *tree_model, gint index) {
+	return index == 0 ? G_TYPE_INT : G_TYPE_INVALID;
+}
+
+static gboolean swt_virtual_table_model_get_iter(GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreePath *path) {
+	SwtVirtualTableModel *self = (SwtVirtualTableModel *)tree_model;
+	if (gtk_tree_path_get_depth(path) != 1) return FALSE;
+	gint *indices = gtk_tree_path_get_indices(path);
+	if (indices == NULL || indices[0] < 0 || indices[0] >= self->item_count) return FALSE;
+	swt_virtual_table_model_set_iter(self, iter, indices[0]);
+	return TRUE;
+}
+
+static GtkTreePath *swt_virtual_table_model_get_path(GtkTreeModel *tree_model, GtkTreeIter *iter) {
+	SwtVirtualTableModel *self = (SwtVirtualTableModel *)tree_model;
+	if (!swt_virtual_table_model_iter_valid(self, iter)) return NULL;
+	gint row = GPOINTER_TO_INT(iter->user_data) - 1;
+	return gtk_tree_path_new_from_indices(row, -1);
+}
+
+static void swt_virtual_table_model_get_value(GtkTreeModel *tree_model, GtkTreeIter *iter, gint column, GValue *value) {
+	SwtVirtualTableModel *self = (SwtVirtualTableModel *)tree_model;
+	g_value_init(value, G_TYPE_INT);
+	gint row = swt_virtual_table_model_iter_valid(self, iter)
+		? GPOINTER_TO_INT(iter->user_data) - 1 : -1;
+	g_value_set_int(value, column == 0 ? row : 0);
+}
+
+static gboolean swt_virtual_table_model_iter_next(GtkTreeModel *tree_model, GtkTreeIter *iter) {
+	SwtVirtualTableModel *self = (SwtVirtualTableModel *)tree_model;
+	if (!swt_virtual_table_model_iter_valid(self, iter)) return FALSE;
+	gint row = GPOINTER_TO_INT(iter->user_data);
+	if (row >= self->item_count) return FALSE;
+	swt_virtual_table_model_set_iter(self, iter, row);
+	return TRUE;
+}
+
+static gboolean swt_virtual_table_model_iter_children(GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *parent) {
+	SwtVirtualTableModel *self = (SwtVirtualTableModel *)tree_model;
+	if (parent != NULL || self->item_count == 0) return FALSE;
+	swt_virtual_table_model_set_iter(self, iter, 0);
+	return TRUE;
+}
+
+static gboolean swt_virtual_table_model_iter_has_child(GtkTreeModel *tree_model, GtkTreeIter *iter) {
+	return FALSE;
+}
+
+static gint swt_virtual_table_model_iter_n_children(GtkTreeModel *tree_model, GtkTreeIter *iter) {
+	SwtVirtualTableModel *self = (SwtVirtualTableModel *)tree_model;
+	return iter == NULL ? self->item_count : 0;
+}
+
+static gboolean swt_virtual_table_model_iter_nth_child(
+	GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *parent, gint n) {
+	SwtVirtualTableModel *self = (SwtVirtualTableModel *)tree_model;
+	if (parent != NULL || n < 0 || n >= self->item_count) return FALSE;
+	swt_virtual_table_model_set_iter(self, iter, n);
+	return TRUE;
+}
+
+static gboolean swt_virtual_table_model_iter_parent(
+	GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *child) {
+	return FALSE;
+}
+
+static void swt_virtual_table_model_tree_model_init(GtkTreeModelIface *iface) {
+	iface->get_flags = swt_virtual_table_model_get_flags;
+	iface->get_n_columns = swt_virtual_table_model_get_n_columns;
+	iface->get_column_type = swt_virtual_table_model_get_column_type;
+	iface->get_iter = swt_virtual_table_model_get_iter;
+	iface->get_path = swt_virtual_table_model_get_path;
+	iface->get_value = swt_virtual_table_model_get_value;
+	iface->iter_next = swt_virtual_table_model_iter_next;
+	iface->iter_children = swt_virtual_table_model_iter_children;
+	iface->iter_has_child = swt_virtual_table_model_iter_has_child;
+	iface->iter_n_children = swt_virtual_table_model_iter_n_children;
+	iface->iter_nth_child = swt_virtual_table_model_iter_nth_child;
+	iface->iter_parent = swt_virtual_table_model_iter_parent;
+}
+
+static void swt_virtual_table_model_set_property(
+	GObject *object, guint property_id, const GValue *value, GParamSpec *pspec) {
+	SwtVirtualTableModel *self = (SwtVirtualTableModel *)object;
+	switch (property_id) {
+		case SWT_VIRTUAL_TABLE_MODEL_PROP_ITEM_COUNT:
+			self->item_count = g_value_get_int(value);
+			self->stamp++;
+			if (self->stamp == 0) self->stamp = 1;
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+			break;
+	}
+}
+
+static void swt_virtual_table_model_get_property(
+	GObject *object, guint property_id, GValue *value, GParamSpec *pspec) {
+	SwtVirtualTableModel *self = (SwtVirtualTableModel *)object;
+	switch (property_id) {
+		case SWT_VIRTUAL_TABLE_MODEL_PROP_ITEM_COUNT:
+			g_value_set_int(value, self->item_count);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+			break;
+	}
+}
+
+static void swt_virtual_table_model_class_init(SwtVirtualTableModelClass *klass) {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->set_property = swt_virtual_table_model_set_property;
+	object_class->get_property = swt_virtual_table_model_get_property;
+	swt_virtual_table_model_properties[SWT_VIRTUAL_TABLE_MODEL_PROP_ITEM_COUNT] =
+		g_param_spec_int("swt-item-count", "SWT item count", "Logical SWT virtual table row count",
+			0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	g_object_class_install_properties(object_class, SWT_VIRTUAL_TABLE_MODEL_N_PROPERTIES,
+		swt_virtual_table_model_properties);
+}
+
+static void swt_virtual_table_model_init(SwtVirtualTableModel *self) {
+	self->item_count = 0;
+	self->stamp = (gint)g_random_int();
+	if (self->stamp == 0) self->stamp = 1;
+}
+#endif
+
 static void *content_providers_copy(void *ptr) {
     return ptr;
 }
@@ -2269,7 +2449,14 @@ JNIEXPORT jlong JNICALL OS_NATIVE(content_1providers_1create_1gtype)
 	const char *lpname = NULL;
 	OS_NATIVE_ENTER(env, that, content_1providers_1create_1gtype_FUNC)
 	if (name) lpname= (const char *) (*env)->GetStringUTFChars(env, name, NULL);
-	rc = g_boxed_type_register_static(lpname, content_providers_copy, content_providers_free);
+#if !defined(GTK4)
+	if (lpname && strcmp(lpname, "SwtVirtualTableModel") == 0) {
+		rc = swt_virtual_table_model_get_type();
+	} else
+#endif
+	{
+		rc = g_boxed_type_register_static(lpname, content_providers_copy, content_providers_free);
+	}
 	if (name && lpname) (*env)->ReleaseStringUTFChars(env, name, lpname);
 	OS_NATIVE_EXIT(env, that, content_1providers_1create_1gtype_FUNC)
 	return rc;
