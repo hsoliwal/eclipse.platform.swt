@@ -336,6 +336,98 @@ void pinVirtualFacade (TreeItem item) {
 	virtualFlag (item, VirtualItemState.PINNED, true);
 }
 
+TreeItem exposeVirtualItem (TreeItem item) {
+	if (item != null && virtualTopology != null) pinVirtualFacade (item);
+	return item;
+}
+
+void ensureVirtualNativeChildren (long parentIter, int requiredExclusive) {
+	if (virtualTopology == null) return;
+	int parentId = virtualParentId (parentIter);
+	int logicalCount = virtualTopology.childCountKnown (parentId)
+			? virtualTopology.childCount (parentId)
+			: GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
+	int target = Math.min (logicalCount, Math.max (0, requiredExclusive));
+	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
+	if (target <= resident) return;
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+	try {
+		for (int i = resident; i < target; i++) {
+			GTK.gtk_tree_store_append (modelHandle, iter, parentIter);
+			GTK.gtk_tree_store_set (modelHandle, iter, ID_COLUMN, -1, -1);
+		}
+	} finally {
+		OS.g_free (iter);
+	}
+}
+
+void ensureVirtualNativeItem (long parentIter, int index) {
+	if (virtualTopology == null) return;
+	int logicalCount = virtualChildCount (parentIter);
+	if (!(0 <= index && index < logicalCount)) error (SWT.ERROR_INVALID_RANGE);
+	ensureVirtualNativeChildren (parentIter, index + 1);
+}
+
+void restoreVirtualChildren (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	int id = virtualItemId (item);
+	if (!virtualTopology.childCountKnown (id)) return;
+	ensureVirtualNativeChildren (item.handle, virtualTopology.childCount (id));
+}
+
+int virtualResidentChildCount (long parentIter) {
+	return GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
+}
+
+void scheduleVirtualCollapseCompaction (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	display.asyncExec (() -> {
+		if (isDisposed () || item.isDisposed () || item.getExpanded ()) return;
+		compactCollapsedVirtualChildren (item);
+	});
+}
+
+void compactCollapsedVirtualChildren (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed () || item.getExpanded ()) return;
+	int parentId = virtualItemId (item);
+	if (!virtualTopology.childCountKnown (parentId)) return;
+	int logicalCount = virtualTopology.childCount (parentId);
+	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, item.handle);
+	if (resident == 0) return;
+
+	int highestPinned = virtualTopology.highestChildIndexWithSubtreeFlag (
+			parentId, VirtualItemState.PINNED);
+	int keep = logicalCount == 0 ? 0 : Math.max (1, highestPinned + 1);
+	keep = Math.min (keep, resident);
+	if (keep >= resident) return;
+
+	long selection = GTK.gtk_tree_view_get_selection (handle);
+	OS.g_signal_handlers_block_matched (
+			selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+	try {
+		for (int index = resident - 1; index >= keep; index--) {
+			if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, item.handle, index)) continue;
+			int [] value = new int [1];
+			GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, value, -1);
+			int id = value [0];
+			if (id >= 0 && virtualTopology.contains (id)) {
+				releaseItems (iter);
+				TreeItem child = id < items.length ? items [id] : null;
+				if (child != null && !child.isDisposed ()) releaseItem (child, true);
+				virtualTopology.forgetSubtree (id);
+			}
+			GTK.gtk_tree_store_remove (modelHandle, iter);
+		}
+	} finally {
+		OS.g_free (iter);
+		OS.g_signal_handlers_unblock_matched (
+				selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+	}
+}
+
 static int checkStyle (int style) {
 	/*
 	* Feature in Windows.  Even when WS_HSCROLL or
