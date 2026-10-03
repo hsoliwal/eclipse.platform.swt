@@ -139,6 +139,7 @@ final class VirtualTreeTopology {
 		if (count < 0) throw new IllegalArgumentException ("negative child count");
 		if (parentId == ROOT) {
 			rootChildCount = count;
+			pruneCoordinatesPast (ROOT, count);
 			return;
 		}
 		requirePresent (parentId);
