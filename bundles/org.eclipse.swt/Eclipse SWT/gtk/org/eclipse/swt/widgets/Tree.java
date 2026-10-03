@@ -384,7 +384,7 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 	boolean setData = false;
 	boolean updated = false;
 	if ((style & SWT.VIRTUAL) != 0) {
-		if (!item.cached) {
+		if (!item.isCachedState ()) {
 			//lastIndexOf = index [0];
 			setData = checkData (item);
 		}
@@ -2849,7 +2849,7 @@ long gtk_test_collapse_row (long tree, long iter, long path) {
 	modelChanged = oldModelChanged;
 	if (isDisposed () || item.isDisposed ()) return 1;
 	if (virtualTopology != null) virtualFlag (item, VirtualItemState.EXPANDED, false);
-	item.isExpanded = false;
+	item.setExpandedState (false);
 	/*
 	* Bug in GTK.  Expanding or collapsing a row which has no more
 	* children causes the model state to become invalid, causing
@@ -2890,7 +2890,7 @@ long gtk_test_expand_row (long tree, long iter, long path) {
 	modelChanged = oldModelChanged;
 	if (isDisposed () || item.isDisposed ()) return 1;
 	if (virtualTopology != null) virtualFlag (item, VirtualItemState.EXPANDED, true);
-	item.isExpanded = true;
+	item.setExpandedState (true);
 	/*
 	* Bug in GTK.  Expanding or collapsing a row which has no more
 	* children causes the model state to become invalid, causing
