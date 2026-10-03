@@ -994,6 +994,12 @@ void destroyItem (TreeItem item) {
 }
 
 @Override
+boolean dragDetect(int x, int y, boolean filter, boolean[] consume) {
+	// Let Cocoa determine if a drag is starting and fire the notification when we get the callback.
+	return false;
+}
+
+@Override
 void drawBackgroundInClipRect(long id, long sel, NSRect rect) {
 	super.drawViewBackgroundInRect(id, sel, rect);
 	if (id != view.id) return;
