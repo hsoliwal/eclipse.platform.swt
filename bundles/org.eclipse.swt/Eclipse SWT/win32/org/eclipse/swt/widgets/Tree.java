@@ -358,6 +358,14 @@ TreeItem exposeVirtualItem (TreeItem item) {
 	return item;
 }
 
+void syncVirtualCheckState (TreeItem item, int stateImage) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	pinVirtualFacade (item);
+	virtualFlag (item, VirtualItemState.CHECKED, (stateImage & 0x1) == 0);
+	virtualFlag (item, VirtualItemState.GRAYED, stateImage > 2);
+	virtualFlag (item, VirtualItemState.CACHED, true);
+}
+
 @Override
 void _removeListener (int eventType, Listener listener) {
 	super._removeListener (eventType, listener);
@@ -7665,7 +7673,7 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				*/
 				if (!ignoreShrink) {
 					if (items != null && lptvdi.lParam != -1) {
-						if (items [(int)lptvdi.lParam] != null && items [(int)lptvdi.lParam].cached) {
+						if (items [(int)lptvdi.lParam] != null && items [(int)lptvdi.lParam].isCachedState ()) {
 							checkVisible = false;
 						}
 					}
@@ -7725,11 +7733,11 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			*/
 			if (item == null) break;
 			if (item.isDisposed ()) break;
-			if (!item.cached) {
+			if (!item.isCachedState ()) {
 				if ((style & SWT.VIRTUAL) != 0) {
 					if (!checkData (item, false)) break;
 				}
-				if (painted) item.cached = true;
+				if (painted) item.setCachedState (true);
 			}
 			int index = 0;
 			if (hwndHeader != 0) {
@@ -7931,6 +7939,7 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				if (items == null) break;
 				TreeItem item = _getItem (tvItem.hItem, (int)tvItem.lParam);
 				if (item == null) break;
+				pinVirtualFacade (item);
 				Event event = new Event ();
 				event.item = item;
 				switch (treeView.action) {
@@ -7966,6 +7975,15 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			//FALL THROUGH
 		}
 		case OS.TVN_ITEMEXPANDED: {
+			if (virtualTopology != null) {
+				NMTREEVIEW treeView = new NMTREEVIEW ();
+				OS.MoveMemory (treeView, lParam, NMTREEVIEW.sizeof);
+				TVITEM tvItem = treeView.itemNew;
+				if (tvItem.hItem != 0) {
+					TreeItem item = _getItem (tvItem.hItem, (int)tvItem.lParam);
+					if (item != null) item.setExpandedState ((tvItem.state & OS.TVIS_EXPANDED) != 0);
+				}
+			}
 			if ((style & SWT.VIRTUAL) != 0) style |= SWT.DOUBLE_BUFFERED;
 			if (hooks (SWT.EraseItem) || hooks (SWT.PaintItem)) style |= SWT.DOUBLE_BUFFERED;
 			if (findImageControl () != null && getDrawing () /*&& OS.IsWindowVisible (handle)*/) {
