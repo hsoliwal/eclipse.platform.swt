@@ -189,6 +189,55 @@ static Tree checkNull (Tree control) {
 	return control;
 }
 
+boolean isCachedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return cached;
+	return parent.virtualFlag (this, VirtualItemState.CACHED);
+}
+
+void setCachedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		cached = value;
+		return;
+	}
+	parent.virtualFlag (this, VirtualItemState.CACHED, value);
+}
+
+boolean isCheckedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return _getChecked ();
+	return parent.virtualFlag (this, VirtualItemState.CHECKED);
+}
+
+void setCheckedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) return;
+	parent.virtualFlag (this, VirtualItemState.CHECKED, value);
+}
+
+boolean isGrayedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return grayed;
+	return parent.virtualFlag (this, VirtualItemState.GRAYED);
+}
+
+void setGrayedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		grayed = value;
+		return;
+	}
+	parent.virtualFlag (this, VirtualItemState.GRAYED, value);
+}
+
+boolean isExpandedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return isExpanded;
+	return parent.virtualFlag (this, VirtualItemState.EXPANDED);
+}
+
+void setExpandedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		isExpanded = value;
+		return;
+	}
+	parent.virtualFlag (this, VirtualItemState.EXPANDED, value);
+}
+
 @Override
 protected void checkSubclass () {
 	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
@@ -279,7 +328,7 @@ String _getText (int index) {
 
 void clear () {
 	if (parent.currentItem == this) return;
-	if (cached || (parent.style & SWT.VIRTUAL) == 0) {
+	if (isCachedState () || (parent.style & SWT.VIRTUAL) == 0) {
 		int columnCount = GTK.gtk_tree_model_get_n_columns (parent.modelHandle);
 		/* the columns before FOREGROUND_COLUMN contain int values, subsequent columns contain pointers */
 		for (int i=Tree.CHECKED_COLUMN; i<Tree.FOREGROUND_COLUMN; i++) {
@@ -289,7 +338,14 @@ void clear () {
 			GTK.gtk_tree_store_set (parent.modelHandle, handle, i, (long )0, -1);
 		}
 	}
-	cached = false;
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		setCachedState (false);
+		setCheckedState (false);
+		setGrayedState (false);
+		setExpandedState (false);
+	} else {
+		cached = false;
+	}
 	font = null;
 	strings = null;
 	cellFont = null;
@@ -516,7 +572,7 @@ public boolean getChecked () {
 	checkWidget();
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	return _getChecked ();
+	return (parent.style & SWT.VIRTUAL) != 0 ? isCheckedState () : _getChecked ();
 }
 
 /**
@@ -532,7 +588,7 @@ public boolean getChecked () {
  */
 public boolean getExpanded () {
 	checkWidget();
-	return isExpanded;
+	return isExpandedState ();
 }
 
 /**
@@ -631,7 +687,7 @@ public boolean getGrayed () {
 	checkWidget ();
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	return grayed;
+	return isGrayedState ();
 }
 
 @Override
@@ -808,7 +864,7 @@ public TreeItem [] getItems () {
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (!cached) return "*virtual*"; //$NON-NLS-1$
+		if (!isCachedState ()) return "*virtual*"; //$NON-NLS-1$
 	}
 	return super.getNameText ();
 }
@@ -1187,15 +1243,18 @@ public void setBackground (int index, Color color) {
 public void setChecked (boolean checked) {
 	checkWidget();
 	if ((parent.style & SWT.CHECK) == 0) return;
-	if (_getChecked () == checked) return;
+	boolean oldChecked = (parent.style & SWT.VIRTUAL) != 0 ? isCheckedState () : _getChecked ();
+	if (oldChecked == checked) return;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCheckedState (checked);
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.CHECKED_COLUMN, checked, -1);
 	/*
 	* GTK+'s "inconsistent" state does not match SWT's concept of grayed.  To
 	* show checked+grayed differently from unchecked+grayed, we must toggle the
 	* grayed state on check and uncheck.
 	*/
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.GRAYED_COLUMN, !checked ? false : grayed, -1);
-	cached = true;
+	boolean grayState = isGrayedState ();
+	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.GRAYED_COLUMN, !checked ? false : grayState, -1);
+	setCachedState (true);
 }
 
 /**
@@ -1226,7 +1285,7 @@ public void setExpanded (boolean expanded) {
 				OS.g_signal_handlers_unblock_matched (parent.handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, TEST_COLLAPSE_ROW);
 			}
 		}
-		isExpanded = expanded;
+		setExpandedState (expanded);
 	}
 	GTK.gtk_tree_path_free (path);
 }
@@ -1429,16 +1488,15 @@ public void setForeground (int index, Color color){
 public void setGrayed (boolean grayed) {
 	checkWidget();
 	if ((parent.style & SWT.CHECK) == 0) return;
-	if (this.grayed == grayed) return;
-	this.grayed = grayed;
+	if (isGrayedState () == grayed) return;
+	setGrayedState (grayed);
 	/*
 	* GTK+'s "inconsistent" state does not match SWT's concept of grayed.
 	* Render checked+grayed as "inconsistent", unchecked+grayed as blank.
 	*/
-	int [] ptr = new int [1];
-	GTK.gtk_tree_model_get (parent.modelHandle, handle, Tree.CHECKED_COLUMN, ptr, -1);
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.GRAYED_COLUMN, ptr [0] == 0 ? false : grayed, -1);
-	cached = true;
+	boolean checked = (parent.style & SWT.VIRTUAL) != 0 ? isCheckedState () : _getChecked ();
+	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.GRAYED_COLUMN, !checked ? false : grayed, -1);
+	setCachedState (true);
 }
 
 /**
