@@ -184,37 +184,72 @@ public void test_virtualGtkTopologyStaysSparseAndTracksCoordinates() throws Exce
 
 
 @Test
-public void test_virtualGtkNativeFrontierIsBoundedAndGrowsOnDemand() throws Exception {
+public void test_virtualGtkCollapseCompactsNativeTailAndRestoresOnExpand() throws Exception {
 	if (!"gtk".equals(SWT.getPlatform())) return;
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
-	virtualTree.setItemCount(100_000);
-	assertEquals(100_000, virtualTree.getItemCount(),
-			"logical count must not be reduced to the native resident prefix");
+	virtualTree.setItemCount(1);
+	TreeItem root = virtualTree.getItem(0);
+	root.setItemCount(1_000);
 
-	Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", long.class);
-	Method requestFrontier = Tree.class.getDeclaredMethod("requestVirtualFrontier", TreeItem.class);
+	Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", TreeItem.class);
 	residentCount.setAccessible(true);
-	requestFrontier.setAccessible(true);
 
-	assertEquals(256, residentCount.invoke(virtualTree, 0L),
-			"initial native residency must be bounded to one frontier chunk");
+	assertEquals(1_000, root.getItemCount());
+	assertEquals(1_000, residentCount.invoke(virtualTree, root),
+			"expanded-compatible native projection starts fully resident");
 
-	TreeItem nearEdge = virtualTree.getItem(250);
-	assertSame(nearEdge, virtualTree.getItem(250));
-	assertEquals(256, residentCount.invoke(virtualTree, 0L));
+	TreeItem pinned = root.getItem(10);
+	pinned.setText("pinned");
+	assertSame(pinned, root.getItem(10));
 
-	requestFrontier.invoke(virtualTree, nearEdge);
-	SwtTestUtil.processEvents();
-	assertEquals(512, residentCount.invoke(virtualTree, 0L),
-			"near-edge demand must extend only one additional native chunk");
-	assertEquals(100_000, virtualTree.getItemCount());
+	root.setExpanded(true);
+	assertTrue(root.getExpanded());
+	assertEquals(1_000, residentCount.invoke(virtualTree, root));
 
-	TreeItem distant = virtualTree.getItem(1023);
-	assertSame(distant, virtualTree.getItem(1023));
-	assertEquals(1024, residentCount.invoke(virtualTree, 0L),
-			"explicit indexed access must synchronously materialize only through the requested coordinate");
-	assertEquals(100_000, virtualTree.getItemCount());
+	root.setExpanded(false);
+	assertFalse(root.getExpanded());
+	assertEquals(1_000, root.getItemCount(),
+			"collapse must preserve the logical child count");
+	assertEquals(11, residentCount.invoke(virtualTree, root),
+			"collapsed residency must retain only the prefix through the highest pinned subtree");
+	assertSame(pinned, root.getItem(10),
+			"an exposed TreeItem facade must survive collapsed-tail compaction");
+	assertEquals("pinned", pinned.getText());
+
+	root.setExpanded(true);
+	assertTrue(root.getExpanded());
+	assertEquals(1_000, residentCount.invoke(virtualTree, root),
+			"expansion must restore the full native projection before it becomes scrollable");
+	assertSame(pinned, root.getItem(10));
+
+	root.setExpanded(false);
+	assertEquals(11, residentCount.invoke(virtualTree, root),
+			"repeated collapse must converge to the same bounded residency");
+}
+
+@Test
+public void test_virtualGtkCollapseKeepsOneSentinelWhenNoChildFacadeEscapes() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(1);
+	TreeItem root = virtualTree.getItem(0);
+	root.setItemCount(2_000);
+
+	Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", TreeItem.class);
+	residentCount.setAccessible(true);
+
+	root.setExpanded(false);
+	assertEquals(2_000, root.getItemCount());
+	assertEquals(1, residentCount.invoke(virtualTree, root),
+			"a collapsed branch with no exposed child facade needs only one native sentinel row");
+
+	TreeItem last = root.getItem(1_999);
+	assertSame(last, root.getItem(1_999));
+	assertEquals(2_000, residentCount.invoke(virtualTree, root),
+			"explicit indexed access may reconstruct the requested native coordinate while collapsed");
+	assertEquals(2_000, root.getItemCount());
 }
 
 @Test
