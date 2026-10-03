@@ -42,11 +42,6 @@ public class TreeItem extends Item {
 	 * logical state independent of the Java/native Item shell and lets index shifts
 	 * move state with the logical coordinate without a dense object graph.
 	 */
-	private static final long VIRTUAL_CACHED = 1L << 0;
-	private static final long VIRTUAL_CHECKED = 1L << 1;
-	private static final long VIRTUAL_GRAYED = 1L << 2;
-	private static final long VIRTUAL_EXPANDED = 1L << 3;
-
 	Tree parent;
 	TreeItem parentItem;
 	TreeItem[] items;
@@ -220,7 +215,7 @@ static int checkIndex (int index) {
 
 boolean isCachedState () {
 	if ((parent.style & SWT.VIRTUAL) == 0) return cached;
-	return parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_CACHED);
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.CACHED);
 }
 
 void setCachedState (boolean value) {
@@ -228,12 +223,12 @@ void setCachedState (boolean value) {
 		cached = value;
 		return;
 	}
-	parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_CACHED, value);
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.CACHED, value);
 }
 
 boolean isCheckedState () {
 	if ((parent.style & SWT.VIRTUAL) == 0) return checked;
-	return parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_CHECKED);
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.CHECKED);
 }
 
 void setCheckedState (boolean value) {
@@ -241,12 +236,12 @@ void setCheckedState (boolean value) {
 		checked = value;
 		return;
 	}
-	parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_CHECKED, value);
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.CHECKED, value);
 }
 
 boolean isGrayedState () {
 	if ((parent.style & SWT.VIRTUAL) == 0) return grayed;
-	return parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_GRAYED);
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.GRAYED);
 }
 
 void setGrayedState (boolean value) {
@@ -254,12 +249,12 @@ void setGrayedState (boolean value) {
 		grayed = value;
 		return;
 	}
-	parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_GRAYED, value);
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.GRAYED, value);
 }
 
 boolean isExpandedState () {
 	if ((parent.style & SWT.VIRTUAL) == 0) return expanded;
-	return parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_EXPANDED);
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.EXPANDED);
 }
 
 void setExpandedState (boolean value) {
@@ -267,7 +262,13 @@ void setExpandedState (boolean value) {
 		expanded = value;
 		return;
 	}
-	parent.virtualStorage (parentItem).flagOfIdentity (this, VIRTUAL_EXPANDED, value);
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.EXPANDED, value);
+}
+
+void pinVirtualFacade () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.PINNED, true);
+	}
 }
 
 int calculateWidth (int index, GC gc) {
