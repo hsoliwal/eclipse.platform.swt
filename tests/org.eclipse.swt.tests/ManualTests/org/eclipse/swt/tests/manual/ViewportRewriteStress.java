@@ -533,6 +533,18 @@ public final class ViewportRewriteStress {
 			header.redraw ();
 			body.redraw ();
 		});
+		screenshotScenario ("logical-resize-narrow", root, () -> {
+			selectTab (tabs, root);
+			root.getShell ().setSize (640, 420);
+			root.getShell ().layout (true, true);
+			configureScrollbars.run ();
+		});
+		screenshotScenario ("logical-resize-wide", root, () -> {
+			selectTab (tabs, root);
+			root.getShell ().setSize (1400, 900);
+			root.getShell ().layout (true, true);
+			configureScrollbars.run ();
+		});
 	}
 
 	private static boolean screenshotTrackingEnabled () {
@@ -638,12 +650,16 @@ public final class ViewportRewriteStress {
 
 	private static void appendControlSnapshot (StringBuilder out, Control control, String indent) {
 		if (control == null || control.isDisposed ()) return;
+		Composite parent = control.getParent ();
+		Object layoutData = control.getLayoutData ();
 		out.append (indent).append ("control=").append (control.getClass ().getName ())
 				.append (" style=0x").append (Integer.toHexString (control.getStyle ()))
+				.append (" parent=").append (parent == null ? "<none>" : parent.getClass ().getName ())
 				.append (" bounds=").append (control.getBounds ())
 				.append (" client=").append (control.getClientArea ())
 				.append (" visible=").append (control.getVisible ())
 				.append (" enabled=").append (control.getEnabled ())
+				.append (" layoutData=").append (layoutData == null ? "<none>" : layoutData.getClass ().getName ())
 				.append ('\n');
 		appendScrollBarSnapshot (out, indent + "  h.", control.getHorizontalBar ());
 		appendScrollBarSnapshot (out, indent + "  v.", control.getVerticalBar ());
@@ -672,6 +688,10 @@ public final class ViewportRewriteStress {
 					.append ('\n');
 		}
 		if (control instanceof Composite composite) {
+			Layout layout = composite.getLayout ();
+			out.append (indent).append ("  layout=")
+					.append (layout == null ? "<none>" : layout.getClass ().getName ())
+					.append ('\n');
 			for (Control child : composite.getChildren ()) {
 				appendControlSnapshot (out, child, indent + "  ");
 			}
