@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -180,6 +181,41 @@ public void test_virtualGtkTopologyStaysSparseAndTracksCoordinates() throws Exce
 	assertEquals(5, childCounts[rootId]);
 }
 
+
+
+@Test
+public void test_virtualGtkNativeFrontierIsBoundedAndGrowsOnDemand() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(100_000);
+	assertEquals(100_000, virtualTree.getItemCount(),
+			"logical count must not be reduced to the native resident prefix");
+
+	Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", long.class);
+	Method requestFrontier = Tree.class.getDeclaredMethod("requestVirtualFrontier", TreeItem.class);
+	residentCount.setAccessible(true);
+	requestFrontier.setAccessible(true);
+
+	assertEquals(256, residentCount.invoke(virtualTree, 0L),
+			"initial native residency must be bounded to one frontier chunk");
+
+	TreeItem nearEdge = virtualTree.getItem(250);
+	assertSame(nearEdge, virtualTree.getItem(250));
+	assertEquals(256, residentCount.invoke(virtualTree, 0L));
+
+	requestFrontier.invoke(virtualTree, nearEdge);
+	SwtTestUtil.processEvents();
+	assertEquals(512, residentCount.invoke(virtualTree, 0L),
+			"near-edge demand must extend only one additional native chunk");
+	assertEquals(100_000, virtualTree.getItemCount());
+
+	TreeItem distant = virtualTree.getItem(1023);
+	assertSame(distant, virtualTree.getItem(1023));
+	assertEquals(1024, residentCount.invoke(virtualTree, 0L),
+			"explicit indexed access must synchronously materialize only through the requested coordinate");
+	assertEquals(100_000, virtualTree.getItemCount());
+}
 
 @Test
 public void test_virtualGtkPackedStateLivesInTopologyAndSurvivesCoordinateShift() throws Exception {

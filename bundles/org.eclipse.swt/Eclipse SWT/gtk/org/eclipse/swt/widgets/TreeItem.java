@@ -828,6 +828,7 @@ public TreeItem getItem (int index) {
 	checkWidget();
 	if (index < 0) error (SWT.ERROR_INVALID_RANGE);
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+	parent.ensureVirtualNativeItem (handle, index);
 
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	try {
