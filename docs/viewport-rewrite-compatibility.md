@@ -151,3 +151,16 @@ visible/overscan viewport planner
         v
 bounded native residency / paint
 ```
+
+## Compatibility requests and SWT classic
+
+The optimized viewport implementation is the forward development path. Public SWT API and observable behavior remain the compatibility boundary.
+
+When a real application reports a regression:
+
+1. reproduce it against the existing SWT snippets/manual/JUnit coverage;
+2. prefer a narrow compatibility repair that preserves the optimized storage/viewport model;
+3. add the reproducer as a regression test;
+4. use the `swt-classic` branch only when the client genuinely depends on legacy implementation behavior that cannot yet be preserved safely.
+
+`hsoliwal/eclipse.platform.swt:swt-classic` is intentionally retained as the classic escape hatch. It is not the architecture target and should not absorb new viewport work. Compatibility requests are accepted; one exceptional client must not force the optimized core back to dense/eager widget construction.
