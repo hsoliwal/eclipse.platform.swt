@@ -233,7 +233,7 @@ int materializedIndex (int position) {
 	return (style & SWT.VIRTUAL) != 0 ? virtualItems.indexAt (position) : position;
 }
 
-int calculateWidth (TableItem[] items, int index, GC gc) {
+int calculateWidth (int index, GC gc) {
 	int width = 0;
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
@@ -467,7 +467,7 @@ public void clearAll () {
 	setScrollWidth (items, true);
 }
 
-void clearCachedWidth (TableItem[] items) {
+void clearCachedWidth () {
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
 		if (item != null) item.width = -1;
@@ -494,7 +494,7 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 			}
 		} else {
 			GC gc = new GC (this);
-			width += calculateWidth (items, 0, gc) + CELL_GAP;
+			width += calculateWidth (0, gc) + CELL_GAP;
 			gc.dispose ();
 		}
 		if ((style & SWT.CHECK) != 0) width += getCheckColumnWidth ();
@@ -2648,7 +2648,7 @@ void setFont (NSFont font) {
 	}
 	setItemHeight (null, font, !hooks (SWT.MeasureItem));
 	view.setNeedsDisplay (true);
-	clearCachedWidth (items);
+	clearCachedWidth ();
 	setScrollWidth (items, true);
 }
 
