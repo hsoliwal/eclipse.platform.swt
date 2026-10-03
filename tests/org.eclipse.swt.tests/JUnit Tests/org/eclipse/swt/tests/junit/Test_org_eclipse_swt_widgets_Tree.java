@@ -261,8 +261,17 @@ public void test_virtualTreeVisibleRowCountUsesLogicalCountsPlusSparseExpansion(
 	Method setChildCount = topologyType.getDeclaredMethod("setChildCount", int.class, int.class);
 	Method flag = topologyType.getDeclaredMethod("flag", int.class, long.class, boolean.class);
 	Method visibleRowCount = topologyType.getDeclaredMethod("visibleRowCount");
-	for (Method method : new Method[] {bind, setChildCount, flag, visibleRowCount}) {
+	Method releaseSubtree = topologyType.getDeclaredMethod("releaseSubtree", int.class);
+	for (Method method : new Method[] {bind, setChildCount, flag, visibleRowCount, releaseSubtree}) {
 		method.setAccessible(true);
+	}
+
+	Field visibleExtraRowsField = topologyType.getDeclaredField("visibleExtraRows");
+	Field childVisibleExtraSumsField = topologyType.getDeclaredField("childVisibleExtraSums");
+	Field rootVisibleExtraRowsField = topologyType.getDeclaredField("rootVisibleExtraRows");
+	for (Field field : new Field[] {
+		visibleExtraRowsField, childVisibleExtraSumsField, rootVisibleExtraRowsField}) {
+		field.setAccessible(true);
 	}
 
 	Class<?> stateType = Class.forName("org.eclipse.swt.widgets.VirtualItemState");
@@ -294,9 +303,41 @@ public void test_virtualTreeVisibleRowCountUsesLogicalCountsPlusSparseExpansion(
 	flag.invoke(topology, 2, expanded, true);
 	assertEquals(1_000_160L, visibleRowCount.invoke(topology));
 
+	long[] visibleExtraRows = (long[]) visibleExtraRowsField.get(topology);
+	long[] childVisibleExtraSums = (long[]) childVisibleExtraSumsField.get(topology);
+	assertEquals(150L, visibleExtraRows[0],
+			"expanded root aggregate includes direct logical rows plus expanded child extras");
+	assertEquals(50L, childVisibleExtraSums[0]);
+	assertEquals(160L, rootVisibleExtraRowsField.getLong(topology));
+
 	flag.invoke(topology, 0, expanded, false);
 	assertEquals(1_000_010L, visibleRowCount.invoke(topology),
 			"collapsing a branch removes all of its visible descendants from the logical range");
+	visibleExtraRows = (long[]) visibleExtraRowsField.get(topology);
+	childVisibleExtraSums = (long[]) childVisibleExtraSumsField.get(topology);
+	assertEquals(0L, visibleExtraRows[0],
+			"collapsed node contributes no visible descendant rows to its parent");
+	assertEquals(50L, childVisibleExtraSums[0],
+			"hidden child aggregate is retained for O(depth) re-expansion");
+	assertEquals(10L, rootVisibleExtraRowsField.getLong(topology));
+
+	flag.invoke(topology, 0, expanded, true);
+	assertEquals(1_000_160L, visibleRowCount.invoke(topology));
+	assertEquals(160L, rootVisibleExtraRowsField.getLong(topology));
+
+	setChildCount.invoke(topology, 1, 70);
+	assertEquals(1_000_180L, visibleRowCount.invoke(topology),
+			"child-count growth propagates only through expanded ancestors");
+	visibleExtraRows = (long[]) visibleExtraRowsField.get(topology);
+	childVisibleExtraSums = (long[]) childVisibleExtraSumsField.get(topology);
+	assertEquals(70L, visibleExtraRows[1]);
+	assertEquals(70L, childVisibleExtraSums[0]);
+	assertEquals(170L, visibleExtraRows[0]);
+
+	releaseSubtree.invoke(topology, 1);
+	assertEquals(1_000_109L, visibleRowCount.invoke(topology),
+			"subtree release removes its aggregate and the direct child row exactly once");
+	assertEquals(109L, rootVisibleExtraRowsField.getLong(topology));
 }
 
 @Test
