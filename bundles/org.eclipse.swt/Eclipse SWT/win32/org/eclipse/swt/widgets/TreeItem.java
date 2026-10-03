@@ -620,13 +620,7 @@ public boolean getChecked () {
 	checkWidget ();
 	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	long hwnd = parent.handle;
-	TVITEM tvItem = new TVITEM ();
-	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
-	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
-	tvItem.hItem = handle;
-	long result = OS.SendMessage (hwnd, OS.TVM_GETITEM, 0, tvItem);
-	return (result != 0) && (((tvItem.state >> 12) & 1) == 0);
+	return isCheckedState ();
 }
 
 /**
@@ -642,15 +636,7 @@ public boolean getChecked () {
  */
 public boolean getExpanded () {
 	checkWidget ();
-	long hwnd = parent.handle;
-	/*
-	* Bug in Windows.  Despite the fact that TVM_GETITEMSTATE claims
-	* to return only the bits specified by the stateMask, when called
-	* with TVIS_EXPANDED, the entire state is returned.  The fix is
-	* to explicitly check for the TVIS_EXPANDED bit.
-	*/
-	int state = (int)OS.SendMessage (hwnd, OS.TVM_GETITEMSTATE, handle, OS.TVIS_EXPANDED);
-	return (state & OS.TVIS_EXPANDED) != 0;
+	return isExpandedState ();
 }
 
 /**
@@ -752,13 +738,7 @@ public boolean getGrayed () {
 	checkWidget ();
 	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	long hwnd = parent.handle;
-	TVITEM tvItem = new TVITEM ();
-	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
-	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
-	tvItem.hItem = handle;
-	long result = OS.SendMessage (hwnd, OS.TVM_GETITEM, 0, tvItem);
-	return (result != 0) && ((tvItem.state >> 12) > 2);
+	return isGrayedState ();
 }
 
 /**
@@ -1208,6 +1188,19 @@ public void setChecked (boolean checked) {
 	checkWidget ();
 	if ((parent.style & SWT.CHECK) == 0) return;
 	long hwnd = parent.handle;
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		if (isCheckedState () == checked) return;
+		setCheckedState (checked);
+		setCachedState (true);
+		updateNativeVirtualCheckState ();
+		if (parent.currentItem == this && OS.IsWindowVisible (hwnd)) {
+			RECT rect = new RECT ();
+			if (OS.TreeView_GetItemRect (hwnd, handle, rect, false)) {
+				OS.InvalidateRect (hwnd, rect, true);
+			}
+		}
+		return;
+	}
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
 	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
@@ -1221,23 +1214,8 @@ public void setChecked (boolean checked) {
 	}
 	state <<= 12;
 	if (tvItem.state == state) return;
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	tvItem.state = state;
 	OS.SendMessage (hwnd, OS.TVM_SETITEM, 0, tvItem);
-	/*
-	* Bug in Windows.  When TVM_SETITEM is used to set
-	* the state image of an item inside TVN_GETDISPINFO,
-	* the new state is not redrawn.  The fix is to force
-	* a redraw.
-	*/
-	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (parent.currentItem == this && OS.IsWindowVisible (hwnd)) {
-			RECT rect = new RECT ();
-			if (OS.TreeView_GetItemRect (hwnd, handle, rect, false)) {
-				OS.InvalidateRect (hwnd, rect, true);
-			}
-		}
-	}
 }
 
 /**
@@ -1622,6 +1600,19 @@ public void setGrayed (boolean grayed) {
 	checkWidget ();
 	if ((parent.style & SWT.CHECK) == 0) return;
 	long hwnd = parent.handle;
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		if (isGrayedState () == grayed) return;
+		setGrayedState (grayed);
+		setCachedState (true);
+		updateNativeVirtualCheckState ();
+		if (parent.currentItem == this && OS.IsWindowVisible (hwnd)) {
+			RECT rect = new RECT ();
+			if (OS.TreeView_GetItemRect (hwnd, handle, rect, false)) {
+				OS.InvalidateRect (hwnd, rect, true);
+			}
+		}
+		return;
+	}
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
 	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
@@ -1635,23 +1626,8 @@ public void setGrayed (boolean grayed) {
 	}
 	state <<= 12;
 	if (tvItem.state == state) return;
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	tvItem.state = state;
 	OS.SendMessage (hwnd, OS.TVM_SETITEM, 0, tvItem);
-	/*
-	* Bug in Windows.  When TVM_SETITEM is used to set
-	* the state image of an item inside TVN_GETDISPINFO,
-	* the new state is not redrawn.  The fix is to force
-	* a redraw.
-	*/
-	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (parent.currentItem == this && OS.IsWindowVisible (hwnd)) {
-			RECT rect = new RECT ();
-			if (OS.TreeView_GetItemRect (hwnd, handle, rect, false)) {
-				OS.InvalidateRect (hwnd, rect, true);
-			}
-		}
-	}
 }
 
 /**
