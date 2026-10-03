@@ -2928,6 +2928,7 @@ long gtk_test_collapse_row (long tree, long iter, long path) {
 	int [] index = new int [1];
 	GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, index, -1);
 	TreeItem item = items [index [0]];
+	pinVirtualFacade (item);
 	Event event = new Event ();
 	event.item = item;
 	boolean oldModelChanged = modelChanged;
@@ -2959,8 +2960,10 @@ long gtk_test_collapse_row (long tree, long iter, long path) {
 		OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, TEST_COLLAPSE_ROW);
 		GTK.gtk_tree_view_collapse_row (handle, path);
 		OS.g_signal_handlers_unblock_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, TEST_COLLAPSE_ROW);
+		scheduleVirtualCollapseCompaction (item);
 		return 1;
 	}
+	scheduleVirtualCollapseCompaction (item);
 	return 0;
 }
 
@@ -2969,6 +2972,8 @@ long gtk_test_expand_row (long tree, long iter, long path) {
 	int [] index = new int [1];
 	GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, index, -1);
 	TreeItem item = items [index [0]];
+	pinVirtualFacade (item);
+	restoreVirtualChildren (item);
 	Event event = new Event ();
 	event.item = item;
 	boolean oldModelChanged = modelChanged;
@@ -3021,6 +3026,7 @@ long gtk_toggled (long renderer, long pathStr) {
 	OS.g_free (iter);
 	GTK.gtk_tree_path_free (path);
 	if (item != null) {
+		pinVirtualFacade (item);
 		item.setChecked (!item.getChecked ());
 		Event event = new Event ();
 		event.detail = SWT.CHECK;
@@ -3434,6 +3440,7 @@ void sendMeasureEvent (long cell, long width, long height) {
 		TreeItem item = null;
 		if (iter != 0) item = _getItem (iter);
 		if (item != null && !item.isDisposed()) {
+			pinVirtualFacade (item);
 			int columnIndex = 0;
 			if (columnCount > 0) {
 				long columnHandle = OS.g_object_get_qdata (cell, Display.SWT_OBJECT_INDEX1);
@@ -3605,6 +3612,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 			if (textRenderer != 0) gtk_cell_renderer_get_preferred_size (textRenderer, handle, null, null);
 
 			if (hooks (SWT.EraseItem)) {
+				pinVirtualFacade (item);
 				Cairo.cairo_save(cr);
 				/*
 				 * Cache the selection state so that it is not lost if a
