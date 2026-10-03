@@ -198,6 +198,10 @@ int materializedIndex (int position) {
 	return (style & SWT.VIRTUAL) != 0 ? virtualItems.indexAt (position) : position;
 }
 
+void virtualItemChanged (TableItem item) {
+	if (usesVirtualNativeModel () && handle != 0) GTK.gtk_widget_queue_draw (handle);
+}
+
 boolean usesVirtualNativeModel () {
 	return (style & SWT.VIRTUAL) != 0 && !GTK.GTK4;
 }
@@ -322,40 +326,102 @@ static int checkStyle (int style) {
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
 	if (cell == ignoreCell) return 0;
 	long path = GTK.gtk_tree_model_get_path (tree_model, iter);
+	if (path == 0) return 0;
 	int [] index = new int [1];
-	C.memmove (index, GTK.gtk_tree_path_get_indices (path), 4);
-	TableItem item = _getItem (index[0]);
-	GTK.gtk_tree_path_free (path);
-	if (item == null || item.isDisposed()) {
+	long pathIndices = GTK.gtk_tree_path_get_indices (path);
+	if (pathIndices == 0) {
+		GTK.gtk_tree_path_free (path);
 		return 0;
 	}
-	if (item != null) OS.g_object_set_qdata (cell, Display.SWT_OBJECT_INDEX2, item.handle);
+	C.memmove (index, pathIndices, 4);
+	TableItem item = _getItem (index[0]);
+	GTK.gtk_tree_path_free (path);
+	if (item == null || item.isDisposed()) return 0;
+	OS.g_object_set_qdata (cell, Display.SWT_OBJECT_INDEX2, item.handle);
+
 	boolean isPixbuf = GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell);
 	boolean isText = GTK.GTK_IS_CELL_RENDERER_TEXT (cell);
-	if (isText) {
-		GTK.gtk_cell_renderer_set_fixed_size (cell, -1, -1);
-	}
-	if (!(isPixbuf || isText)) return 0;
+	boolean isToggle = GTK.GTK_IS_CELL_RENDERER_TOGGLE (cell);
+	if (isText) GTK.gtk_cell_renderer_set_fixed_size (cell, -1, -1);
+
+	int columnIndex = 0;
 	int modelIndex = -1;
 	boolean customDraw = false;
 	if (columnCount == 0) {
 		modelIndex = Table.FIRST_COLUMN;
 		customDraw = firstCustomDraw;
 	} else {
-		TableColumn column = (TableColumn) display.getWidget (tree_column);
-		if (column != null) {
-			modelIndex = column.modelIndex;
-			customDraw = column.customDraw;
+		for (int i = 0; i < columnCount; i++) {
+			if (columns [i] != null && columns [i].handle == tree_column) {
+				columnIndex = i;
+				modelIndex = columns [i].modelIndex;
+				customDraw = columns [i].customDraw;
+				break;
+			}
 		}
 	}
 	if (modelIndex == -1) return 0;
+
 	boolean setData = false;
-	if ((style & SWT.VIRTUAL) != 0) {
-		if (!item.cached) {
-			lastIndexOf = index[0];
-			setData = checkData (item);
-		}
+	if ((style & SWT.VIRTUAL) != 0 && !item.cached) {
+		lastIndexOf = index[0];
+		setData = checkData (item);
+		if (!setData || isDisposed () || item.isDisposed ()) return 0;
 	}
+
+	if (usesVirtualNativeModel ()) {
+		Color itemBackground = item.virtualBackground;
+		Color cellBackground = item.virtualCellBackground != null
+				&& columnIndex < item.virtualCellBackground.length
+				? item.virtualCellBackground [columnIndex] : null;
+		GdkRGBA backgroundRGBA = cellBackground != null ? cellBackground.handle
+				: itemBackground != null ? itemBackground.handle : null;
+		OS.g_object_set (cell, OS.cell_background_rgba, backgroundRGBA, 0);
+
+		if (isToggle) {
+			OS.g_object_set (cell, OS.active, item.virtualChecked, 0);
+			OS.g_object_set (cell, OS.inconsistent,
+					item.virtualChecked && item.grayed, 0);
+			return 0;
+		}
+		if (isPixbuf) {
+			Image image = item.virtualImages != null && columnIndex < item.virtualImages.length
+					? item.virtualImages [columnIndex] : null;
+			long pixbuf = 0;
+			if (image != null) {
+				if (imageList == null) imageList = new ImageList ();
+				int imageIndex = imageList.indexOf (image);
+				if (imageIndex == -1) imageIndex = imageList.add (image);
+				pixbuf = ImageList.createPixbuf (imageList.getSurface (imageIndex));
+			}
+			OS.g_object_set (cell, OS.pixbuf, pixbuf, 0);
+			if (pixbuf != 0) OS.g_object_unref (pixbuf);
+			return 0;
+		}
+		if (isText) {
+			byte [] text = Converter.wcsToMbcs (item.virtualDisplayText (columnIndex), true);
+			OS.g_object_set (cell, OS.text, text, 0);
+			Color itemForeground = item.virtualForeground;
+			Color cellForeground = item.virtualCellForeground != null
+					&& columnIndex < item.virtualCellForeground.length
+					? item.virtualCellForeground [columnIndex] : null;
+			GdkRGBA foregroundRGBA = cellForeground != null ? cellForeground.handle
+					: itemForeground != null ? itemForeground.handle : null;
+			OS.g_object_set (cell, OS.foreground_rgba, foregroundRGBA, 0);
+			Font cellFont = item.cellFont != null && columnIndex < item.cellFont.length
+					? item.cellFont [columnIndex] : null;
+			Font renderFont = cellFont != null ? cellFont : item.font;
+			OS.g_object_set (cell, OS.font_desc, renderFont != null ? renderFont.handle : 0, 0);
+		}
+		if (setData) {
+			ignoreCell = cell;
+			setScrollWidth (tree_column, item);
+			ignoreCell = 0;
+		}
+		return 0;
+	}
+
+	if (!(isPixbuf || isText)) return 0;
 	long [] ptr = new long [1];
 	if (setData) {
 		ptr [0] = 0;
@@ -711,14 +777,14 @@ void copyModel(long oldModel, int oldStart, long newModel, int newStart, int mod
 
 void createColumn (TableColumn column, int index) {
 	int modelIndex = FIRST_COLUMN;
-	if (columnCount != 0) {
+	if (usesVirtualNativeModel ()) {
+		modelIndex = FIRST_COLUMN + columnCount * CELL_TYPES;
+	} else if (columnCount != 0) {
 		int modelLength = GTK.gtk_tree_model_get_n_columns (modelHandle);
 		boolean [] usedColumns = new boolean [modelLength];
 		for (int i=0; i<columnCount; i++) {
 			int columnIndex = columns [i].modelIndex;
-			for (int j = 0; j < CELL_TYPES; j++) {
-				usedColumns [columnIndex + j] = true;
-			}
+			for (int j = 0; j < CELL_TYPES; j++) usedColumns [columnIndex + j] = true;
 		}
 		while (modelIndex < modelLength) {
 			if (!usedColumns [modelIndex]) break;
@@ -726,17 +792,9 @@ void createColumn (TableColumn column, int index) {
 		}
 		if (modelIndex == modelLength) {
 			long oldModel = modelHandle;
-			long [] types = getColumnTypes (columnCount + 4); // grow by 4 rows at a time
+			long [] types = getColumnTypes (columnCount + 4);
 			long newModel = GTK.gtk_list_store_newv (types.length, types);
 			if (newModel == 0) error (SWT.ERROR_NO_HANDLES);
-			/*
-			 * In VIRTUAL Table, GTK may react to `gtk_list_store_remove()` by
-			 * calling `cellDataProc()`, and SWT will be confused because
-			 * `items[]` no longer match the GTK model, which has some rows
-			 * deleted by `gtk_list_store_remove()`. The fix is to disconnect
-			 * model during rebuilding. The new model will replace the old one
-			 * anyway, so it doesn't matter if old is removed a bit earlier.
-			 */
 			GTK.gtk_tree_view_set_model (handle, 0);
 			copyModel (oldModel, FIRST_COLUMN, newModel, FIRST_COLUMN, modelLength);
 			GTK.gtk_tree_view_set_model (handle, newModel);
@@ -759,11 +817,6 @@ void createColumn (TableColumn column, int index) {
 	GTK.gtk_tree_view_column_set_clickable (columnHandle, true);
 	GTK.gtk_tree_view_column_set_min_width (columnHandle, 0);
 	GTK.gtk_tree_view_insert_column (handle, columnHandle, index);
-	/*
-	* Bug in GTK3.  The column header has the wrong CSS styling if it is hidden
-	* when inserting to the tree widget.  The fix is to hide the column only
-	* after it is inserted.
-	*/
 	if (columnCount != 0) GTK.gtk_tree_view_column_set_visible (columnHandle, false);
 	if (column != null) {
 		column.handle = columnHandle;
@@ -772,7 +825,6 @@ void createColumn (TableColumn column, int index) {
 	if (!searchEnabled ()) {
 		GTK.gtk_tree_view_set_search_column (handle, -1);
 	} else {
-		/* Set the search column whenever the model changes */
 		int firstColumn = columnCount == 0 ? FIRST_COLUMN : columns [0].modelIndex;
 		GTK.gtk_tree_view_set_search_column (handle, firstColumn + CELL_TEXT);
 	}
@@ -971,48 +1023,42 @@ void createItem (TableItem item, int index) {
 
 void createRenderers (long columnHandle, int modelIndex, boolean check, int columnStyle) {
 	GTK.gtk_tree_view_column_clear (columnHandle);
+	boolean logicalVirtual = usesVirtualNativeModel ();
 	if ((style & SWT.CHECK) != 0 && check) {
 		GTK.gtk_tree_view_column_pack_start (columnHandle, checkRenderer, false);
-		GTK.gtk_tree_view_column_add_attribute (columnHandle, checkRenderer, OS.active, CHECKED_COLUMN);
-		GTK.gtk_tree_view_column_add_attribute (columnHandle, checkRenderer, OS.inconsistent, GRAYED_COLUMN);
-		if (ownerDraw) {
-			GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, checkRenderer, display.cellDataProc, handle, 0);
+		if (!logicalVirtual) {
+			GTK.gtk_tree_view_column_add_attribute (columnHandle, checkRenderer, OS.active, CHECKED_COLUMN);
+			GTK.gtk_tree_view_column_add_attribute (columnHandle, checkRenderer, OS.inconsistent, GRAYED_COLUMN);
+			if (!ownerDraw) {
+				GTK.gtk_tree_view_column_add_attribute (columnHandle, checkRenderer,
+						OS.cell_background_rgba, BACKGROUND_COLUMN);
+			}
+		}
+		if (logicalVirtual || ownerDraw) {
+			GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, checkRenderer,
+					display.cellDataProc, handle, 0);
 			OS.g_object_set_qdata (checkRenderer, Display.SWT_OBJECT_INDEX1, columnHandle);
-		} else {
-			GTK.gtk_tree_view_column_add_attribute (columnHandle, checkRenderer, OS.cell_background_rgba, BACKGROUND_COLUMN);
 		}
 	}
 	long pixbufType = display.gtk_cell_renderer_pixbuf_get_type ();
-	long pixbufRenderer = ownerDraw && pixbufType != 0 ? OS.g_object_new (pixbufType, 0) : GTK.gtk_cell_renderer_pixbuf_new ();
+	long pixbufRenderer = ownerDraw && pixbufType != 0
+			? OS.g_object_new (pixbufType, 0) : GTK.gtk_cell_renderer_pixbuf_new ();
 	if (pixbufRenderer == 0) {
 		error (SWT.ERROR_NO_HANDLES);
-	} else {
-		// set default size this size is used for calculating the icon and text positions in a table
-		if (!ownerDraw) {
-			// Set render size to 0x0 until we actually add images, fix for
-			// Bug 457196 (this applies to Tables as well).
-			GTK.gtk_cell_renderer_set_fixed_size(pixbufRenderer, 0, 0);
-		}
+	} else if (!ownerDraw) {
+		GTK.gtk_cell_renderer_set_fixed_size(pixbufRenderer, 0, 0);
 	}
-	long textRenderer = ownerDraw ? OS.g_object_new (display.gtk_cell_renderer_text_get_type (), 0) : GTK.gtk_cell_renderer_text_new ();
+	long textRenderer = ownerDraw
+			? OS.g_object_new (display.gtk_cell_renderer_text_get_type (), 0)
+			: GTK.gtk_cell_renderer_text_new ();
 	if (textRenderer == 0) error (SWT.ERROR_NO_HANDLES);
-
 	if (ownerDraw) {
 		OS.g_object_set_qdata (pixbufRenderer, Display.SWT_OBJECT_INDEX1, columnHandle);
 		OS.g_object_set_qdata (textRenderer, Display.SWT_OBJECT_INDEX1, columnHandle);
 	}
-
-	/*
-	* Feature in GTK.  When a tree view column contains only one activatable
-	* cell renderer such as a toggle renderer, mouse clicks anywhere in a cell
-	* activate that renderer. The workaround is to set a second cell renderer
-	* to be activatable.
-	*/
 	if ((style & SWT.CHECK) != 0 && check) {
 		OS.g_object_set (pixbufRenderer, OS.mode, GTK.GTK_CELL_RENDERER_MODE_ACTIVATABLE, 0);
 	}
-
-	/* Set alignment */
 	if ((columnStyle & SWT.RIGHT) != 0) {
 		OS.g_object_set(textRenderer, OS.xalign, 1f, 0);
 		GTK.gtk_tree_view_column_pack_end (columnHandle, textRenderer, true);
@@ -1028,22 +1074,22 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
 		GTK.gtk_tree_view_column_pack_start (columnHandle, textRenderer, true);
 		GTK.gtk_tree_view_column_set_alignment (columnHandle, 0f);
 	}
-
-	/* Add attributes */
-	/*
-	 * Formerly OS.gicon was set if on GTK3, but this is being removed do to spacing issues in Tables/Trees with
-	 * no images. Fix for Bug 457196. NOTE: this change has been ported to Tables since Tables/Trees both
-	 * use the same underlying GTK structure.
-	 */
-	GTK.gtk_tree_view_column_add_attribute (columnHandle, pixbufRenderer, OS.pixbuf, modelIndex + CELL_PIXBUF);
-	if (!ownerDraw) {
-		GTK.gtk_tree_view_column_add_attribute (columnHandle, pixbufRenderer, OS.cell_background_rgba, BACKGROUND_COLUMN);
-		GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer, OS.cell_background_rgba, BACKGROUND_COLUMN);
+	if (!logicalVirtual) {
+		GTK.gtk_tree_view_column_add_attribute (columnHandle, pixbufRenderer,
+				OS.pixbuf, modelIndex + CELL_PIXBUF);
+		if (!ownerDraw) {
+			GTK.gtk_tree_view_column_add_attribute (columnHandle, pixbufRenderer,
+					OS.cell_background_rgba, BACKGROUND_COLUMN);
+			GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer,
+					OS.cell_background_rgba, BACKGROUND_COLUMN);
+		}
+		GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer,
+				OS.text, modelIndex + CELL_TEXT);
+		GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer,
+				OS.foreground_rgba, FOREGROUND_COLUMN);
+		GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer,
+				OS.font_desc, FONT_COLUMN);
 	}
-	GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer, OS.text, modelIndex + CELL_TEXT);
-	GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer, OS.foreground_rgba, FOREGROUND_COLUMN);
-	GTK.gtk_tree_view_column_add_attribute (columnHandle, textRenderer, OS.font_desc, FONT_COLUMN);
-
 	boolean customDraw = firstCustomDraw;
 	if (columnCount != 0) {
 		for (int i=0; i<columnCount; i++) {
@@ -1053,9 +1099,11 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
 			}
 		}
 	}
-	if ((style & SWT.VIRTUAL) != 0 || customDraw || ownerDraw) {
-		GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, textRenderer, display.cellDataProc, handle, 0);
-		GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, pixbufRenderer, display.cellDataProc, handle, 0);
+	if (logicalVirtual || (style & SWT.VIRTUAL) != 0 || customDraw || ownerDraw) {
+		GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, textRenderer,
+				display.cellDataProc, handle, 0);
+		GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, pixbufRenderer,
+				display.cellDataProc, handle, 0);
 	}
 }
 
