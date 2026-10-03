@@ -368,6 +368,10 @@ void ensureVirtualNativeItem (long parentIter, int index) {
 	ensureVirtualNativeChildren (parentIter, index + 1);
 }
 
+int virtualResidentChildCount (long parentIter) {
+	return GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
+}
+
 void requestVirtualFrontier (TreeItem item) {
 	if (virtualTopology == null || item == null || item.isDisposed ()) return;
 	int itemId = virtualItemId (item);
