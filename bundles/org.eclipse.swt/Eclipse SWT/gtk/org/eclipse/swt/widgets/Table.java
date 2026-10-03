@@ -2802,6 +2802,11 @@ public void removeAll () {
 	itemCount = 0;
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
+	/*
+	 * Bug 499850: On GTK3, calling gtk_list_store_clear with GtkSelectionMode GTK_SELECTION_MULTIPLE
+	 * takes exponential time. Temporarily change the mode GTK_SELECTION_BROWSE before
+	 * making the call to avoid performance hang.
+	 */
 	long selectionHandle = GTK.gtk_tree_view_get_selection(handle);
 	boolean changeMode = (style & SWT.MULTI) != 0;
 	if (changeMode) GTK.gtk_tree_selection_set_mode(selectionHandle, GTK.GTK_SELECTION_BROWSE);
