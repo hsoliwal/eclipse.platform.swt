@@ -573,12 +573,29 @@ public void collapseSelectionToLevel (int level) {
 
 
 TreeItem [] modelChildren (TreeItem parentItem, boolean materialize) {
-	/*
-	 * GTK and Win32 currently retain their native structural projection.
-	 * Keep the SWT-level bulk API platform-neutral now; their sparse array
-	 * backends can replace this materializing fallback independently.
-	 */
-	return parentItem == null ? getItems () : parentItem.getItems ();
+	if (virtualTopology == null || materialize) {
+		return parentItem == null ? getItems () : parentItem.getItems ();
+	}
+	int parentId = parentItem == null ? VirtualTreeTopology.ROOT : virtualItemId (parentItem);
+	if (parentId < VirtualTreeTopology.ROOT
+			|| (parentId != VirtualTreeTopology.ROOT && !virtualTopology.contains (parentId))) {
+		return new TreeItem [0];
+	}
+	int count = 0;
+	for (int id = virtualTopology.firstMaterializedChildId (parentId);
+			id >= 0; id = virtualTopology.nextMaterializedSiblingId (id)) {
+		if (id < items.length && items [id] != null && !items [id].isDisposed ()) count++;
+	}
+	TreeItem [] result = new TreeItem [count];
+	int index = 0;
+	for (int id = virtualTopology.firstMaterializedChildId (parentId);
+			id >= 0; id = virtualTopology.nextMaterializedSiblingId (id)) {
+		if (id < items.length) {
+			TreeItem item = items [id];
+			if (item != null && !item.isDisposed ()) result [index++] = item;
+		}
+	}
+	return result;
 }
 
 
