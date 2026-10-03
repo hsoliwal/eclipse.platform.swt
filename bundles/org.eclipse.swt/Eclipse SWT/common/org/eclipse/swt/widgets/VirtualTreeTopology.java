@@ -63,16 +63,9 @@ final class VirtualTreeTopology {
 
 	void releaseSubtree (int id) {
 		if (!contains (id)) return;
-		for (int child = 0; child < parentIds.length; child++) {
-			if (parentIds [child] == id) releaseSubtree (child);
-		}
 		int parentId = parentIds [id];
 		int removedIndex = childIndices [id];
-		parentIds [id] = ABSENT;
-		childIndices [id] = -1;
-		childCounts [id] = UNKNOWN_CHILD_COUNT;
-		stateMasks [id] = 0;
-		materializedCount--;
+		discardSubtree (id);
 		shiftSiblingIndices (parentId, removedIndex + 1, -1);
 		adjustKnownChildCount (parentId, -1);
 	}
@@ -161,9 +154,21 @@ final class VirtualTreeTopology {
 	private void pruneCoordinatesPast (int parentId, int count) {
 		for (int id = 0; id < parentIds.length; id++) {
 			if (parentIds [id] == parentId && childIndices [id] >= count) {
-				releaseSubtree (id);
+				discardSubtree (id);
 			}
 		}
+	}
+
+	private void discardSubtree (int id) {
+		if (!contains (id)) return;
+		for (int child = 0; child < parentIds.length; child++) {
+			if (parentIds [child] == id) discardSubtree (child);
+		}
+		parentIds [id] = ABSENT;
+		childIndices [id] = -1;
+		childCounts [id] = UNKNOWN_CHILD_COUNT;
+		stateMasks [id] = 0;
+		materializedCount--;
 	}
 
 	private void adjustKnownChildCount (int parentId, int delta) {
