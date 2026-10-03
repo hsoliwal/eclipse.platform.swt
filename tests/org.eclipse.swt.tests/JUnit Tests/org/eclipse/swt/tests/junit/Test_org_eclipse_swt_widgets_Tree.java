@@ -587,8 +587,9 @@ public void test_virtualGtkCollapseKeepsOneSentinelWhenNoChildFacadeEscapes() th
 }
 
 @Test
-public void test_virtualGtkPackedStateLivesInTopologyAndSurvivesCoordinateShift() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+public void test_virtualGtkAndWin32PackedStateLivesInTopologyAndSurvivesCoordinateShift() throws Exception {
+	String platform = SWT.getPlatform();
+	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.CHECK);
 	virtualTree.setItemCount(32);
