@@ -959,15 +959,15 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	 */
 	if (hHint == SWT.DEFAULT && size.y == getHeaderHeight()) {
 		int itemHeight = getItemHeight();
-
-		// Initialize to height of root items & header
-		size.y = getItemCount() * itemHeight + getHeaderHeight();
-
-		for (TreeItem item : items) {
-			if (item != null && item.isExpanded) {
-				size.y += GTK.gtk_tree_model_iter_n_children (modelHandle, item.handle) * itemHeight;
-			}
+		long visibleRows;
+		if (virtualTopology != null && virtualTopology.childCountKnown (VirtualTreeTopology.ROOT)) {
+			visibleRows = virtualTopology.visibleRowCount ();
+		} else {
+			visibleRows = getItemCount ();
 		}
+		long logicalHeight = Math.addExact (
+				Math.multiplyExact (visibleRows, itemHeight), getHeaderHeight ());
+		size.y = (int)Math.min (Integer.MAX_VALUE, logicalHeight);
 	}
 
 	/*
