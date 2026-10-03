@@ -2836,26 +2836,21 @@ public int indexOf (TableColumn column) {
 public int indexOf (TableItem item) {
 	checkWidget ();
 	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+	if ((style & SWT.VIRTUAL) != 0) return virtualItems.indexOfIdentity (item);
 	//TODO - find other loops that can be optimized
-	if (keys == null) {
-		int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-		if (1 <= lastIndexOf && lastIndexOf < count - 1) {
-			if (_getItem (lastIndexOf, false) == item) return lastIndexOf;
-			if (_getItem (lastIndexOf + 1, false) == item) return ++lastIndexOf;
-			if (_getItem (lastIndexOf - 1, false) == item) return --lastIndexOf;
-		}
-		if (lastIndexOf < count / 2) {
-			for (int i=0; i<count; i++) {
-				if (_getItem (i, false) == item) return lastIndexOf = i;
-			}
-		} else {
-			for (int i=count - 1; i>=0; --i) {
-				if (_getItem (i, false) == item) return lastIndexOf = i;
-			}
+	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
+	if (1 <= lastIndexOf && lastIndexOf < count - 1) {
+		if (_getItem (lastIndexOf, false) == item) return lastIndexOf;
+		if (_getItem (lastIndexOf + 1, false) == item) return ++lastIndexOf;
+		if (_getItem (lastIndexOf - 1, false) == item) return --lastIndexOf;
+	}
+	if (lastIndexOf < count / 2) {
+		for (int i=0; i<count; i++) {
+			if (_getItem (i, false) == item) return lastIndexOf = i;
 		}
 	} else {
-		for (int i=0; i<keyCount; i++) {
-			if (items [i] == item) return keys [i];
+		for (int i=count - 1; i>=0; --i) {
+			if (_getItem (i, false) == item) return lastIndexOf = i;
 		}
 	}
 	return -1;
@@ -2907,15 +2902,14 @@ void register () {
 @Override
 void releaseChildren (boolean destroy) {
 	if (_hasItems ()) {
-		int itemCount = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-		if (keys == null) {
+		if ((style & SWT.VIRTUAL) != 0) {
+			virtualItems.forEach (item -> {
+				if (item != null && !item.isDisposed ()) item.release (false);
+			});
+		} else {
+			int itemCount = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 			for (int i=0; i<itemCount; i++) {
 				TableItem item = _getItem (i, false);
-				if (item != null && !item.isDisposed ()) item.release (false);
-			}
-		} else {
-			for (int i=0; i<keyCount; i++) {
-				TableItem item = items [i];
 				if (item != null && !item.isDisposed ()) item.release (false);
 			}
 		}
