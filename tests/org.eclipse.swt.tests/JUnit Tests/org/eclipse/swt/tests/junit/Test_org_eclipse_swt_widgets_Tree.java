@@ -108,6 +108,43 @@ public void test_virtualBranchResidencyDoesNotScaleWithLogicalChildCount() throw
 	assertSame(last, root.getItem(4095));
 }
 
+@Test
+public void test_virtualPackedStateFollowsLogicalInsertAndRemoveOnCocoa() throws Exception {
+	if (!"cocoa".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.CHECK);
+	virtualTree.setItemCount(32);
+	TreeItem marked = virtualTree.getItem(20);
+	marked.setChecked(true);
+	marked.setGrayed(true);
+
+	Field storageField = Tree.class.getDeclaredField("virtualItems");
+	storageField.setAccessible(true);
+	Object storage = storageField.get(virtualTree);
+	Field stateMasksField = storage.getClass().getDeclaredField("stateMasks");
+	stateMasksField.setAccessible(true);
+
+	long[] before = (long[]) stateMasksField.get(storage);
+	long markedState = before[0];
+	assertTrue(markedState != 0, "materialized virtual state must be represented by a packed mask");
+	assertTrue(before.length <= 16, "packed state capacity must follow materialized residency, not logical count");
+
+	TreeItem inserted = new TreeItem(virtualTree, SWT.NONE, 3);
+	long[] afterInsert = (long[]) stateMasksField.get(storage);
+	assertEquals(0L, afterInsert[0], "newly inserted virtual item must start with a clear packed state");
+	assertEquals(markedState, afterInsert[1], "packed state must move with the shifted logical item");
+	assertSame(marked, virtualTree.getItem(21));
+	assertTrue(marked.getChecked());
+	assertTrue(marked.getGrayed());
+
+	inserted.dispose();
+	long[] afterRemove = (long[]) stateMasksField.get(storage);
+	assertEquals(markedState, afterRemove[0], "packed state must shift back with logical removal");
+	assertSame(marked, virtualTree.getItem(20));
+	assertTrue(marked.getChecked());
+	assertTrue(marked.getGrayed());
+}
+
 @Override
 @Test
 public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
