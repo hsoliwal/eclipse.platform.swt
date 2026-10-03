@@ -168,23 +168,24 @@ public void test_virtualItemResidencyDoesNotScaleWithLogicalCount() throws Excep
 	Table virtualTable = new Table(shell, SWT.VIRTUAL);
 	virtualTable.setItemCount(4096);
 
-	Field itemsField = Table.class.getDeclaredField("items");
-	itemsField.setAccessible(true);
-	TableItem[] backing = (TableItem[]) itemsField.get(virtualTable);
+	Field storageField = Table.class.getDeclaredField("virtualItems");
+	storageField.setAccessible(true);
+	Object storage = storageField.get(virtualTable);
+	assertNotNull(storage, "all virtual Table backends must use the shared sparse owner");
+	Field valuesField = storage.getClass().getDeclaredField("values");
+	valuesField.setAccessible(true);
+	Object[] backing = (Object[]) valuesField.get(storage);
 	assertTrue(backing.length <= 16, "virtual Table must not allocate one Java slot per logical row");
 
 	TableItem last = virtualTable.getItem(4095);
 	assertSame(last, virtualTable.getItem(4095));
-	backing = (TableItem[]) itemsField.get(virtualTable);
+	backing = (Object[]) valuesField.get(storage);
 	assertTrue(backing.length <= 16, "materializing one distant row must keep residency sparse");
 }
 
 
 @Test
 public void test_virtualPackedStateFollowsLogicalInsertAndRemove() throws Exception {
-	String platform = SWT.getPlatform();
-	if (!("cocoa".equals(platform) || "gtk".equals(platform))) return;
-
 	Table virtualTable = new Table(shell, SWT.VIRTUAL | SWT.CHECK);
 	virtualTable.setItemCount(32);
 	TableItem marked = virtualTable.getItem(20);

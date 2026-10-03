@@ -127,6 +127,64 @@ static Table checkNull (Table control) {
 	return control;
 }
 
+boolean isCachedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return cached;
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.CACHED);
+}
+
+void setCachedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		cached = value;
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.CACHED, value);
+}
+
+boolean isCheckedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return checked;
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.CHECKED);
+}
+
+void setCheckedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		checked = value;
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.CHECKED, value);
+}
+
+boolean isGrayedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return grayed;
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.GRAYED);
+}
+
+void setGrayedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		grayed = value;
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.GRAYED, value);
+}
+
+void pinVirtualFacade () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.PINNED, true);
+	}
+}
+
+void markVirtualDirty () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.DIRTY, true);
+	}
+}
+
+void markVirtualPainted () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.DIRTY, false);
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.PAINT_RESIDENT, true);
+	}
+}
+
 @Override
 protected void checkSubclass () {
 	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
@@ -138,12 +196,13 @@ void clear () {
 	strings = null;
 	images = null;
 	imageIndent = 0;
-	checked = grayed = false;
+	setCheckedState (false);
+	setGrayedState (false);
 	font = null;
 	background = foreground = -1;
 	cellFont = null;
 	cellBackground = cellForeground = null;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = false;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (false);
 }
 
 @Override
@@ -436,7 +495,7 @@ public boolean getChecked () {
 	checkWidget();
 	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	return checked;
+	return isCheckedState ();
 }
 
 /**
@@ -538,7 +597,7 @@ public boolean getGrayed () {
 	checkWidget();
 	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	return grayed;
+	return isGrayedState ();
 }
 
 @Override
@@ -617,7 +676,7 @@ public int getImageIndent () {
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (!cached) return "*virtual*"; //$NON-NLS-1$
+		if (!isCachedState ()) return "*virtual*"; //$NON-NLS-1$
 	}
 	return super.getNameText ();
 }
@@ -710,6 +769,10 @@ void redraw () {
 	if (!OS.IsWindowVisible (hwnd)) return;
 	int index = parent.indexOf (this);
 	if (index == -1) return;
+	if ((parent.style & SWT.VIRTUAL) != 0 && !parent.isVirtualPaintCandidate (index)) {
+		markVirtualDirty ();
+		return;
+	}
 	OS.SendMessage (hwnd, OS.LVM_REDRAWITEMS, index, index);
 }
 
@@ -719,6 +782,10 @@ void redraw (int column, boolean drawText, boolean drawImage) {
 	if (!OS.IsWindowVisible (hwnd)) return;
 	int index = parent.indexOf (this);
 	if (index == -1) return;
+	if ((parent.style & SWT.VIRTUAL) != 0 && !parent.isVirtualPaintCandidate (index)) {
+		markVirtualDirty ();
+		return;
+	}
 	RECT rect = getBounds (index, column, drawText, drawImage, true);
 	OS.InvalidateRect (hwnd, rect, true);
 }
@@ -767,7 +834,7 @@ public void setBackground (Color color) {
 	}
 	if (background == pixel) return;
 	background = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	redraw ();
 }
 
@@ -809,7 +876,7 @@ public void setBackground (int index, Color color) {
 	}
 	if (cellBackground [index] == pixel) return;
 	cellBackground [index] = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	redraw (index, true, true);
 }
 
@@ -827,13 +894,13 @@ public void setBackground (int index, Color color) {
 public void setChecked (boolean checked) {
 	checkWidget();
 	if ((parent.style & SWT.CHECK) == 0) return;
-	if (this.checked == checked) return;
+	if (isCheckedState () == checked) return;
 	setChecked (checked, false);
 }
 
 void setChecked (boolean checked, boolean notify) {
-	this.checked = checked;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	setCheckedState (checked);
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	if (notify) {
 		Event event = new Event();
 		event.item = this;
@@ -871,7 +938,7 @@ public void setFont (Font font){
 	this.font = newFont;
 	if (oldFont != null && oldFont.equals (newFont)) return;
 	if (font != null) parent.setCustomDraw (true);
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	/*
 	* Bug in Windows.  Despite the fact that every item in the
 	* table always has LPSTR_TEXTCALLBACK, Windows caches the
@@ -934,7 +1001,7 @@ public void setFont (int index, Font font) {
 	cellFont [index] = font == null ? font : Font.win32_new(font, nativeZoom);
 	if (oldFont != null && oldFont.equals (font)) return;
 	if (font != null) parent.setCustomDraw (true);
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	if (index == 0) {
 		/*
 		* Bug in Windows.  Despite the fact that every item in the
@@ -993,7 +1060,7 @@ public void setForeground (Color color){
 	}
 	if (foreground == pixel) return;
 	foreground = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	redraw ();
 }
 
@@ -1035,7 +1102,7 @@ public void setForeground (int index, Color color){
 	}
 	if (cellForeground [index] == pixel) return;
 	cellForeground [index] = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	redraw (index, true, false);
 }
 
@@ -1053,9 +1120,9 @@ public void setForeground (int index, Color color){
 public void setGrayed (boolean grayed) {
 	checkWidget();
 	if ((parent.style & SWT.CHECK) == 0) return;
-	if (this.grayed == grayed) return;
-	this.grayed = grayed;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if (isGrayedState () == grayed) return;
+	setGrayedState (grayed);
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	redraw ();
 }
 
@@ -1121,7 +1188,7 @@ public void setImage (int index, Image image) {
 		oldImage = images [index];
 		images [index] = image;
 	}
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 
 	/* Ensure that the image list is created */
 	parent.imageIndex (image, index);
@@ -1156,7 +1223,7 @@ public void setImageIndent (int indent) {
 	if (imageIndent == indent) return;
 	imageIndent = indent;
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		cached = true;
+		setCachedState (true);
 	} else {
 		int index = parent.indexOf (this);
 		if (index != -1) {
@@ -1231,7 +1298,7 @@ public void setText (int index, String string) {
 		if (string.equals (strings [index])) return;
 		strings [index] = string;
 	}
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	if (index == 0) {
 		/*
 		* Bug in Windows.  Despite the fact that every item in the
