@@ -954,26 +954,29 @@ void createItem (TableColumn column, int index) {
 	if (columnCount >= 1) {
 		for (int i=0; i<materializedItemCount (); i++) {
 			TableItem item = materializedItem (i);
-			if (item != null) {
-				// Bug 545139: For consistency, do not wipe out content of first TableColumn created after TableItem
-				boolean doNotModify;
-				Font [] cellFont = item.cellFont;
-				doNotModify = columnCount == 1 && cellFont != null && cellFont.length == columnCount;
-				if (cellFont != null && !doNotModify) {
-					Font [] temp = new Font [columnCount];
-					System.arraycopy (cellFont, 0, temp, 0, index);
-					System.arraycopy (cellFont, index, temp, index+1, columnCount-index-1);
-					item.cellFont = temp;
-				}
-				String [] strings = item.strings;
-				doNotModify = columnCount == 1 && strings != null && strings.length == columnCount;
-				if (strings != null && !doNotModify) {
-					String [] temp = new String [columnCount];
-					System.arraycopy (strings, 0, temp, 0, index);
-					System.arraycopy (strings, index, temp, index+1, columnCount-index-1);
-					temp [index] = "";
-					item.strings = temp;
-				}
+			if (item == null) continue;
+			if (usesVirtualNativeModel ()) {
+				if (columnCount > 1) item.insertVirtualColumn (index, columnCount);
+				continue;
+			}
+			// Bug 545139: For consistency, do not wipe out content of first TableColumn created after TableItem
+			boolean doNotModify;
+			Font [] cellFont = item.cellFont;
+			doNotModify = columnCount == 1 && cellFont != null && cellFont.length == columnCount;
+			if (cellFont != null && !doNotModify) {
+				Font [] temp = new Font [columnCount];
+				System.arraycopy (cellFont, 0, temp, 0, index);
+				System.arraycopy (cellFont, index, temp, index+1, columnCount-index-1);
+				item.cellFont = temp;
+			}
+			String [] strings = item.strings;
+			doNotModify = columnCount == 1 && strings != null && strings.length == columnCount;
+			if (strings != null && !doNotModify) {
+				String [] temp = new String [columnCount];
+				System.arraycopy (strings, 0, temp, 0, index);
+				System.arraycopy (strings, index, temp, index+1, columnCount-index-1);
+				temp [index] = "";
+				item.strings = temp;
 			}
 		}
 	}
@@ -1246,25 +1249,29 @@ void destroyItem (TableColumn column) {
 	}
 	if (index == columnCount) return;
 	long columnHandle = column.handle;
-	if (columnCount == 1) {
-		firstCustomDraw = column.customDraw;
-	}
+	if (columnCount == 1) firstCustomDraw = column.customDraw;
 	System.arraycopy (columns, index + 1, columns, index, --columnCount - index);
 	columns [columnCount] = null;
 	GTK.gtk_tree_view_remove_column (handle, columnHandle);
-	if (columnCount == 0) {
+
+	if (usesVirtualNativeModel ()) {
+		if (columnCount == 0) {
+			createColumn (null, 0);
+		} else {
+			for (int i=0; i<materializedItemCount (); i++) {
+				TableItem item = materializedItem (i);
+				if (item != null) item.removeVirtualColumn (index, columnCount);
+			}
+			if (index == 0) {
+				TableColumn checkColumn = columns [0];
+				createRenderers (checkColumn.handle, checkColumn.modelIndex, true, checkColumn.style);
+			}
+		}
+	} else if (columnCount == 0) {
 		long oldModel = modelHandle;
 		long [] types = getColumnTypes (1);
 		long newModel = GTK.gtk_list_store_newv (types.length, types);
 		if (newModel == 0) error (SWT.ERROR_NO_HANDLES);
-		/*
-		 * In VIRTUAL Table, GTK may react to `gtk_list_store_remove()` by
-		 * calling `cellDataProc()`, and SWT will be confused because
-		 * `items[]` no longer match the GTK model, which has some rows
-		 * deleted by `gtk_list_store_remove()`. The fix is to disconnect
-		 * model during rebuilding. The new model will replace the old one
-		 * anyway, so it doesn't matter if old is removed a bit earlier.
-		 */
 		GTK.gtk_tree_view_set_model (handle, 0);
 		copyModel (oldModel, column.modelIndex, newModel, FIRST_COLUMN, FIRST_COLUMN + CELL_TYPES);
 		GTK.gtk_tree_view_set_model (handle, newModel);
@@ -1281,17 +1288,12 @@ void destroyItem (TableColumn column) {
 				GTK.gtk_list_store_set (modelHandle, iter, modelIndex + CELL_FOREGROUND, (long )0, -1);
 				GTK.gtk_list_store_set (modelHandle, iter, modelIndex + CELL_BACKGROUND, (long )0, -1);
 				GTK.gtk_list_store_set (modelHandle, iter, modelIndex + CELL_FONT, (long )0, -1);
-
 				Font [] cellFont = item.cellFont;
 				if (cellFont != null) {
-					if (columnCount == 0) {
-						item.cellFont = null;
-					} else {
-						Font [] temp = new Font [columnCount];
-						System.arraycopy (cellFont, 0, temp, 0, index);
-						System.arraycopy (cellFont, index + 1, temp, index, columnCount - index);
-						item.cellFont = temp;
-					}
+					Font [] temp = new Font [columnCount];
+					System.arraycopy (cellFont, 0, temp, 0, index);
+					System.arraycopy (cellFont, index + 1, temp, index, columnCount - index);
+					item.cellFont = temp;
 				}
 			}
 		}
@@ -1303,7 +1305,6 @@ void destroyItem (TableColumn column) {
 	if (!searchEnabled ()) {
 		GTK.gtk_tree_view_set_search_column (handle, -1);
 	} else {
-		/* Set the search column whenever the model changes */
 		int firstColumn = columnCount == 0 ? FIRST_COLUMN : columns [0].modelIndex;
 		GTK.gtk_tree_view_set_search_column (handle, firstColumn + CELL_TEXT);
 	}
