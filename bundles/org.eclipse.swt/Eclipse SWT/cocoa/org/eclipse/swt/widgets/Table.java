@@ -237,7 +237,7 @@ int calculateWidth (int index, GC gc) {
 	int width = 0;
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null && item.cached) {
+		if (item != null && item.isCachedState ()) {
 			width = Math.max (width, item.calculateWidth (index, gc, isSelected (materializedIndex (i))));
 		}
 	}
@@ -297,9 +297,9 @@ boolean checkData (TableItem item) {
 }
 
 boolean checkData (TableItem item, int index) {
-	if (item.cached) return true;
+	if (item.isCachedState ()) return true;
 	if ((style & SWT.VIRTUAL) != 0) {
-		item.cached = true;
+		item.setCachedState (true);
 		Event event = new Event ();
 		event.item = item;
 		event.index = indexOf (item);
@@ -2149,10 +2149,10 @@ long nextState (long id, long sel) {
 	int index = (int)tableView.clickedRow();
 	if (index == -1) index = (int)tableView.selectedRow ();
 	TableItem item = _getItem (index);
-	if (item.grayed) {
-		return item.checked ? OS.NSControlStateValueOff : OS.NSControlStateValueMixed;
+	if (item.isGrayedState ()) {
+		return item.isCheckedState () ? OS.NSControlStateValueOff : OS.NSControlStateValueMixed;
 	}
-	return item.checked ? OS.NSControlStateValueOff : OS.NSControlStateValueOn;
+	return item.isCheckedState () ? OS.NSControlStateValueOff : OS.NSControlStateValueOn;
 }
 
 @Override
@@ -3489,10 +3489,10 @@ long tableView_objectValueForTableColumn_row (long id, long sel, long aTableView
 	checkData (item, index);
 	if (checkColumn != null && aTableColumn == checkColumn.id) {
 		NSNumber value;
-		if (item.checked && item.grayed) {
+		if (item.isCheckedState () && item.isGrayedState ()) {
 			value = NSNumber.numberWithInt (OS.NSControlStateValueMixed);
 		} else {
-			value = NSNumber.numberWithInt (item.checked ? OS.NSControlStateValueOn : OS.NSControlStateValueOff);
+			value = NSNumber.numberWithInt (item.isCheckedState () ? OS.NSControlStateValueOn : OS.NSControlStateValueOff);
 		}
 		return value.id;
 	}
@@ -3554,7 +3554,7 @@ void tableView_setObjectValue_forTableColumn_row (long id, long sel, long aTable
 }
 
 private void toggleCheckedItem (TableItem item, long rowIndex) {
-	item.checked = !item.checked;
+	item.setCheckedState (!item.isCheckedState ());
 	Event event = new Event ();
 	event.detail = SWT.CHECK;
 	event.item = item;
