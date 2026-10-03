@@ -99,6 +99,7 @@ public class Table extends Composite {
 	int pixbufHeight, pixbufWidth;
 	int headerHeight;
 	boolean boundsChangedSinceLastDraw, headerVisible, wasScrolled;
+	final ViewportLayerState viewportLayers = new ViewportLayerState ();
 	boolean rowActivated;
 
 	private long headerCSSProvider;
@@ -210,17 +211,12 @@ void virtualItemChanged (TableItem item) {
 
 void updateVirtualViewport () {
 	if (virtualViewport == null) return;
-	virtualViewport.setLogicalCount (itemCount);
-	if (itemCount == 0) {
-		virtualViewport.setViewport (0, 0);
-		return;
-	}
-	int first = Math.min (getTopIndex (), itemCount - 1);
 	Rectangle client = getClientAreaInPixels ();
 	int rowHeight = Math.max (1, getItemHeight ());
-	int visible = Math.min (itemCount - first,
-			Math.max (1, (client.height + rowHeight - 1) / rowHeight + 1));
-	virtualViewport.setViewport (first, visible);
+	int chromeHeight = getHeaderVisible () ? getHeaderHeight () : 0;
+	int bodyHeight = Math.max (0, client.height - chromeHeight);
+	int first = itemCount == 0 ? 0 : Math.min (getTopIndex (), itemCount - 1);
+	virtualViewport.setUniformGeometry (itemCount, rowHeight, bodyHeight, first);
 }
 
 boolean isVirtualPaintCandidate (TableItem item) {
@@ -1152,6 +1148,7 @@ void createWidget (int index) {
 	}
 	columns = new TableColumn [4];
 	itemCount = columnCount = 0;
+	initializeViewportLayers ();
 	// In GTK 3 font description is inherited from parent widget which is not how SWT has always worked,
 	// reset to default font to get the usual behavior
 	setFontDescription(defaultFont().handle);
@@ -2598,10 +2595,23 @@ long gtk3_motion_notify_event (long widget, long event) {
 	return super.gtk3_motion_notify_event (widget, event);
 }
 
+void initializeViewportLayers () {
+	long horizontal = GTK.gtk_scrollable_get_hadjustment (handle);
+	long vertical = GTK.gtk_scrollable_get_vadjustment (handle);
+	viewportLayers.initialize (
+			horizontal != 0 ? GTK.gtk_adjustment_get_value (horizontal) : 0,
+			vertical != 0 ? GTK.gtk_adjustment_get_value (vertical) : 0);
+}
+
 @Override
 long gtk_scroll_event (long widget, long eventPtr) {
 	long result = super.gtk_scroll_event(widget, eventPtr);
-	if (!wasScrolled) wasScrolled = true;
+	long horizontal = GTK.gtk_scrollable_get_hadjustment (handle);
+	long vertical = GTK.gtk_scrollable_get_vadjustment (handle);
+	int dirtyLayers = viewportLayers.scrollTo (
+			horizontal != 0 ? GTK.gtk_adjustment_get_value (horizontal) : 0,
+			vertical != 0 ? GTK.gtk_adjustment_get_value (vertical) : 0);
+	if ((dirtyLayers & ViewportLayerState.HEADER) != 0) wasScrolled = true;
 	return result;
 }
 

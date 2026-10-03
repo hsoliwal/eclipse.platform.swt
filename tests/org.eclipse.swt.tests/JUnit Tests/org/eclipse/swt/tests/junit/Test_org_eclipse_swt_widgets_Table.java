@@ -22,7 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +61,84 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 @Override
 @Test
 public void test_computeSizeIIZ() {
+}
+
+
+
+@Test
+public void test_virtualScrollMetricsUseLogicalRowsAndSampleExtent() throws Exception {
+	Class<?> type = Class.forName("org.eclipse.swt.widgets.VirtualScrollMetrics");
+	Constructor<?> constructor = type.getDeclaredConstructor();
+	constructor.setAccessible(true);
+	Object metrics = constructor.newInstance();
+
+	Method configure = type.getDeclaredMethod("configure", int.class, int.class, int.class);
+	Method visibleRows = type.getDeclaredMethod("visibleRows");
+	Method maximum = type.getDeclaredMethod("maximum");
+	Method thumb = type.getDeclaredMethod("thumb");
+	Method pageIncrement = type.getDeclaredMethod("pageIncrement");
+	Method maxTopRow = type.getDeclaredMethod("maxTopRow");
+	Method clampTopRow = type.getDeclaredMethod("clampTopRow", int.class);
+	Method estimatedContentExtent = type.getDeclaredMethod("estimatedContentExtent");
+	for (Method method : new Method[] {
+			configure, visibleRows, maximum, thumb, pageIncrement,
+			maxTopRow, clampTopRow, estimatedContentExtent}) {
+		method.setAccessible(true);
+	}
+
+	configure.invoke(metrics, 1_000_000, 22, 440);
+	assertEquals(20, visibleRows.invoke(metrics));
+	assertEquals(1_000_000, maximum.invoke(metrics),
+			"scrollbar maximum must stay in logical row units");
+	assertEquals(20, thumb.invoke(metrics));
+	assertEquals(20, pageIncrement.invoke(metrics));
+	assertEquals(999_980, maxTopRow.invoke(metrics));
+	assertEquals(999_980, clampTopRow.invoke(metrics, Integer.MAX_VALUE));
+	assertEquals(22_000_000L, estimatedContentExtent.invoke(metrics));
+
+	configure.invoke(metrics, Integer.MAX_VALUE, 64, 640);
+	assertEquals(Integer.MAX_VALUE, maximum.invoke(metrics),
+			"huge logical models must not convert pixel extent into scrollbar maximum");
+	assertEquals(10, visibleRows.invoke(metrics));
+	assertTrue((Long) estimatedContentExtent.invoke(metrics) > Integer.MAX_VALUE,
+			"estimated pixel extent may exceed int while row-coordinate scrollbar remains valid");
+}
+
+@Test
+public void test_viewportLayerStateSeparatesHeaderFromVerticalScroll() throws Exception {
+	Class<?> type = Class.forName("org.eclipse.swt.widgets.ViewportLayerState");
+	Constructor<?> constructor = type.getDeclaredConstructor();
+	constructor.setAccessible(true);
+	Object layers = constructor.newInstance();
+
+	Method initialize = type.getDeclaredMethod("initialize", double.class, double.class);
+	Method scrollTo = type.getDeclaredMethod("scrollTo", double.class, double.class);
+	initialize.setAccessible(true);
+	scrollTo.setAccessible(true);
+
+	Field bodyField = type.getDeclaredField("BODY");
+	Field frozenField = type.getDeclaredField("FROZEN");
+	Field headerField = type.getDeclaredField("HEADER");
+	Field scrollBarField = type.getDeclaredField("SCROLLBAR");
+	for (Field field : new Field[] {bodyField, frozenField, headerField, scrollBarField}) {
+		field.setAccessible(true);
+	}
+	int body = bodyField.getInt(null);
+	int frozen = frozenField.getInt(null);
+	int header = headerField.getInt(null);
+	int scrollBar = scrollBarField.getInt(null);
+
+	initialize.invoke(layers, 10d, 20d);
+	int vertical = (Integer) scrollTo.invoke(layers, 10d, 25d);
+	assertEquals(body | frozen | scrollBar, vertical,
+			"vertical scrolling must not invalidate the column-header plane");
+
+	int horizontal = (Integer) scrollTo.invoke(layers, 15d, 25d);
+	assertEquals(body | header | scrollBar, horizontal,
+			"horizontal scrolling must invalidate the scroll-coupled header plane");
+
+	int unchanged = (Integer) scrollTo.invoke(layers, 15d, 25d);
+	assertEquals(0, unchanged, "unchanged viewport origin must not dirty any plane");
 }
 
 @Test

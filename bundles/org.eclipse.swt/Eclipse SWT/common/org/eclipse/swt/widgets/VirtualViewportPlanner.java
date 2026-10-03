@@ -23,6 +23,7 @@ final class VirtualViewportPlanner {
 	static final int DEFAULT_OVERSCAN_ROWS = 8;
 
 	private final VirtualSelectionModel selection = new VirtualSelectionModel ();
+	private final VirtualScrollMetrics scrollMetrics = new VirtualScrollMetrics ();
 	private int logicalCount;
 	private int firstVisible;
 	private int visibleCount;
@@ -71,6 +72,18 @@ final class VirtualViewportPlanner {
 		firstVisible = nextFirst;
 		visibleCount = nextVisible;
 		generation++;
+	}
+
+	void setUniformGeometry (
+			int logicalRows, int sampleRowExtent, int viewportExtent, int requestedTopRow) {
+		scrollMetrics.configure (logicalRows, sampleRowExtent, viewportExtent);
+		setLogicalCount (logicalRows);
+		int top = scrollMetrics.clampTopRow (requestedTopRow);
+		setViewport (top, scrollMetrics.visibleRows ());
+	}
+
+	VirtualScrollMetrics scrollMetrics () {
+		return scrollMetrics;
 	}
 
 	int firstVisible () {
