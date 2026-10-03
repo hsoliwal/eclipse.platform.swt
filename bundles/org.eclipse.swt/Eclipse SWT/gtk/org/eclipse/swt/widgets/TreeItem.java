@@ -342,7 +342,6 @@ void clear () {
 		setCachedState (false);
 		setCheckedState (false);
 		setGrayedState (false);
-		setExpandedState (false);
 	} else {
 		cached = false;
 	}
@@ -1169,7 +1168,7 @@ public void setBackground (Color color) {
 	if (_getBackground ().equals (color)) return;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.BACKGROUND_COLUMN, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1201,7 +1200,7 @@ public void setBackground (int index, Color color) {
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_BACKGROUND, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 	updated = true;
 
 	if (color != null) {
@@ -1319,7 +1318,7 @@ public void setFont (Font font){
 	if (oldFont != null && oldFont.equals (font)) return;
 	long fontHandle = font != null ? font.handle : 0;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.FONT_COLUMN, fontHandle, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1360,7 +1359,7 @@ public void setFont (int index, Font font) {
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	long fontHandle  = font != null ? font.handle : 0;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_FONT, fontHandle, -1);
-	cached = true;
+	setCachedState (true);
 
 	if (font != null) {
 		boolean customDraw = (parent.columnCount == 0)  ? parent.firstCustomDraw : parent.columns [index].customDraw;
@@ -1413,7 +1412,7 @@ public void setForeground (Color color){
 	if (_getForeground ().equals (color)) return;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.FOREGROUND_COLUMN, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1445,7 +1444,7 @@ public void setForeground (int index, Color color){
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_FOREGROUND, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 	updated = true;
 
 	if (color != null) {
@@ -1598,7 +1597,7 @@ public void setImage(int index, Image image) {
 		OS.g_object_unref(pixbuf);
 	}
 	GTK.gtk_tree_store_set(parent.modelHandle, handle, modelIndex + Tree.CELL_SURFACE, surface, -1);
-	cached = true;
+	setCachedState (true);
 	updated = true;
 }
 
@@ -1696,7 +1695,7 @@ public void setText (int index, String string) {
 	byte[] buffer = Converter.wcsToMbcs (string, true);
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_TEXT, buffer, -1);
-	cached = true;
+	setCachedState (true);
 	updated = true;
 }
 
