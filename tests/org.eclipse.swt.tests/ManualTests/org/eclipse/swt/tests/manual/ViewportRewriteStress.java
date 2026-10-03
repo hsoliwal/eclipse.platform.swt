@@ -47,6 +47,7 @@ public final class ViewportRewriteStress {
 		createTableTab (tabs);
 		createTreeTab (tabs);
 		createScrolledCanvasTab (tabs);
+		createLogicalViewportShellTab (tabs);
 
 		shell.open ();
 		while (!shell.isDisposed ()) {
@@ -277,6 +278,161 @@ public final class ViewportRewriteStress {
 					+ "  vScrolls=" + verticalScrolls.get ()
 					+ "  rowsAttempted=" + paintedRows.get ()
 					+ "  stateBytes~=" + (selectionMasks.length * Long.BYTES);
+		});
+	}
+
+
+	private static void createLogicalViewportShellTab (TabFolder tabs) {
+		Composite root = tab (tabs, "Logical viewport + chrome planes");
+		root.setLayout (new GridLayout (1, false));
+
+		Label status = new Label (root, SWT.NONE);
+		status.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
+
+		AtomicInteger horizontalOrigin = new AtomicInteger ();
+		AtomicInteger topRow = new AtomicInteger ();
+		AtomicLong bodyPaints = new AtomicLong ();
+		AtomicLong headerPaints = new AtomicLong ();
+		AtomicLong verticalEvents = new AtomicLong ();
+		AtomicLong horizontalEvents = new AtomicLong ();
+
+		Canvas header = new Canvas (root, SWT.DOUBLE_BUFFERED | SWT.BORDER);
+		GridData headerData = new GridData (SWT.FILL, SWT.CENTER, true, false);
+		headerData.heightHint = 28;
+		header.setLayoutData (headerData);
+		header.addListener (SWT.Paint, event -> {
+			headerPaints.incrementAndGet ();
+			int x = -horizontalOrigin.get ();
+			for (int column = 0; column < 8; column++) {
+				int width = 240;
+				event.gc.drawRectangle (x, 0, width, 27);
+				event.gc.drawText ("logical column " + column, x + 8, 5, true);
+				x += width;
+			}
+		});
+
+		Canvas body = new Canvas (
+				root, SWT.DOUBLE_BUFFERED | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
+		body.setLayoutData (new GridData (SWT.FILL, SWT.FILL, true, true));
+		long [] selectionMasks = new long [(CANVAS_ROWS + Long.SIZE - 1) / Long.SIZE];
+
+		ScrollBar vertical = body.getVerticalBar ();
+		ScrollBar horizontal = body.getHorizontalBar ();
+
+		Runnable configureScrollbars = () -> {
+			Rectangle client = body.getClientArea ();
+			int visibleRows = Math.max (1,
+					Math.min (CANVAS_ROWS, (client.height + ROW_HEIGHT - 1) / ROW_HEIGHT));
+			vertical.setValues (
+					Math.min (topRow.get (), Math.max (0, CANVAS_ROWS - visibleRows)),
+					0, CANVAS_ROWS, visibleRows, 1, visibleRows);
+
+			int logicalWidth = 8 * 240;
+			int visibleWidth = Math.max (1, Math.min (logicalWidth, client.width));
+			horizontal.setValues (
+					Math.min (horizontalOrigin.get (), Math.max (0, logicalWidth - visibleWidth)),
+					0, logicalWidth, visibleWidth, 24, visibleWidth);
+			topRow.set (vertical.getSelection ());
+			horizontalOrigin.set (horizontal.getSelection ());
+		};
+		body.addListener (SWT.Resize, event -> configureScrollbars.run ());
+
+		vertical.addListener (SWT.Selection, event -> {
+			verticalEvents.incrementAndGet ();
+			topRow.set (vertical.getSelection ());
+			body.redraw ();
+			// Deliberately do not redraw the header plane on vertical-only scroll.
+		});
+		horizontal.addListener (SWT.Selection, event -> {
+			horizontalEvents.incrementAndGet ();
+			horizontalOrigin.set (horizontal.getSelection ());
+			body.redraw ();
+			header.redraw ();
+		});
+
+		body.addListener (SWT.Paint, event -> {
+			bodyPaints.incrementAndGet ();
+			Rectangle client = body.getClientArea ();
+			int firstVisible = topRow.get ();
+			int visibleRows = Math.max (1,
+					Math.min (CANVAS_ROWS - firstVisible,
+							(client.height + ROW_HEIGHT - 1) / ROW_HEIGHT));
+			int firstPaint = Math.max (0, firstVisible - OVERSCAN);
+			int lastPaint = Math.min (CANVAS_ROWS, firstVisible + visibleRows + OVERSCAN);
+			int xOffset = horizontalOrigin.get ();
+
+			for (int row = firstPaint; row < lastPaint; row++) {
+				int screenY = (row - firstVisible) * ROW_HEIGHT;
+				if (screenY + ROW_HEIGHT < 0 || screenY > client.height) continue;
+				if (selected (selectionMasks, row)) {
+					event.gc.fillRectangle (0, screenY, client.width, ROW_HEIGHT);
+				}
+				event.gc.drawText ("logical row " + row, 8 - xOffset, screenY + 3, true);
+				for (int column = 1; column < 8; column++) {
+					int x = column * 240 - xOffset;
+					event.gc.drawLine (x, screenY, x, screenY + ROW_HEIGHT);
+				}
+				event.gc.drawLine (0, screenY + ROW_HEIGHT - 1, client.width, screenY + ROW_HEIGHT - 1);
+			}
+		});
+
+		body.addListener (SWT.MouseDown, event -> {
+			int row = topRow.get () + Math.max (0, event.y / ROW_HEIGHT);
+			if (row < CANVAS_ROWS) {
+				toggle (selectionMasks, row);
+				body.redraw (0, (row - topRow.get ()) * ROW_HEIGHT,
+						body.getClientArea ().width, ROW_HEIGHT, false);
+			}
+		});
+
+		Composite buttons = new Composite (root, SWT.NONE);
+		buttons.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
+		buttons.setLayout (new RowLayout ());
+		jumpButton (buttons, "top", () -> {
+			vertical.setSelection (0);
+			topRow.set (vertical.getSelection ());
+			body.redraw ();
+		});
+		jumpButton (buttons, "middle", () -> {
+			vertical.setSelection (CANVAS_ROWS / 2);
+			topRow.set (vertical.getSelection ());
+			body.redraw ();
+		});
+		jumpButton (buttons, "end", () -> {
+			vertical.setSelection (CANVAS_ROWS);
+			topRow.set (vertical.getSelection ());
+			body.redraw ();
+		});
+		jumpButton (buttons, "x=720", () -> {
+			horizontal.setSelection (720);
+			horizontalOrigin.set (horizontal.getSelection ());
+			body.redraw ();
+			header.redraw ();
+		});
+		jumpButton (buttons, "x=0", () -> {
+			horizontal.setSelection (0);
+			horizontalOrigin.set (horizontal.getSelection ());
+			body.redraw ();
+			header.redraw ();
+		});
+
+		root.getDisplay ().asyncExec (configureScrollbars);
+		refreshStatus (root.getDisplay (), status, () -> {
+			Rectangle client = body.getClientArea ();
+			int visibleRows = Math.max (1,
+					Math.min (CANVAS_ROWS, (client.height + ROW_HEIGHT - 1) / ROW_HEIGHT));
+			long estimatedPixelHeight = (long) CANVAS_ROWS * ROW_HEIGHT;
+			return "logicalRows=" + CANVAS_ROWS
+					+ "  sampleRow=" + ROW_HEIGHT + "px"
+					+ "  estimatedPixels=" + estimatedPixelHeight
+					+ "  nativeBodyHeight=" + client.height
+					+ "  topRow=" + topRow.get ()
+					+ "  visibleRows=" + visibleRows
+					+ "  vThumb=" + vertical.getThumb ()
+					+ "  bodyPaints=" + bodyPaints.get ()
+					+ "  headerPaints=" + headerPaints.get ()
+					+ "  vEvents=" + verticalEvents.get ()
+					+ "  hEvents=" + horizontalEvents.get ();
 		});
 	}
 
