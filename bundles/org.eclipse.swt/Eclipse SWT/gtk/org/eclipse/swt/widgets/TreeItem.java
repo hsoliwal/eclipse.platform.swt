@@ -749,7 +749,7 @@ public Rectangle getImageBounds (int index) {
 public int getItemCount () {
 	checkWidget();
 	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	return GTK.gtk_tree_model_iter_n_children (parent.modelHandle, handle);
+	return parent.virtualChildCount (this);
 }
 
 /**
