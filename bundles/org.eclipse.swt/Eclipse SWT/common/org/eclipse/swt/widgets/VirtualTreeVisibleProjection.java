@@ -39,15 +39,7 @@ final class VirtualTreeVisibleProjection {
 
 	long visibleChildren (int parentId) {
 		if (!topology.childCountKnown (parentId)) return 0;
-		long rows = topology.childCount (parentId);
-		for (int id = topology.firstMaterializedChildId (parentId);
-				id >= 0; id = topology.nextMaterializedSiblingId (id)) {
-			if (topology.flag (id, VirtualItemState.EXPANDED)
-					&& topology.childCountKnown (id)) {
-				rows = Math.addExact (rows, visibleChildren (id));
-			}
-		}
-		return rows;
+		return topology.visibleChildrenRowCount (parentId);
 	}
 
 	Row rowAt (long visibleIndex) {
@@ -70,44 +62,54 @@ final class VirtualTreeVisibleProjection {
 
 	long visibleIndexOf (int materializedId) {
 		if (!topology.contains (materializedId)) return -1;
-		int parentId = topology.parentId (materializedId);
-		long offset = offsetWithinParent (parentId, topology.childIndex (materializedId));
-		if (parentId == VirtualTreeTopology.ROOT) return offset;
-		if (!topology.flag (parentId, VirtualItemState.EXPANDED)) return -1;
-		long parentIndex = visibleIndexOf (parentId);
-		if (parentIndex < 0) return -1;
-		return Math.addExact (Math.addExact (parentIndex, 1), offset);
+		long offset = 0;
+		int id = materializedId;
+		while (true) {
+			int parentId = topology.parentId (id);
+			offset = Math.addExact (offset, offsetWithinParent (parentId, topology.childIndex (id)));
+			if (parentId == VirtualTreeTopology.ROOT) return offset;
+			if (!topology.flag (parentId, VirtualItemState.EXPANDED)) return -1;
+			offset = Math.addExact (offset, 1);
+			id = parentId;
+		}
 	}
 
 	private Row rowAt (int parentId, long row, int depth) {
-		int logicalCount = topology.childCount (parentId);
-		int coordinate = 0;
-		for (int id = topology.firstMaterializedChildId (parentId);
-				id >= 0; id = topology.nextMaterializedSiblingId (id)) {
-			int index = topology.childIndex (id);
-			if (index >= logicalCount) break;
-
-			int coldGap = index - coordinate;
-			if (row < coldGap) {
-				return new Row (parentId, Math.addExact (coordinate, (int)row), -1, depth);
+		while (true) {
+			int logicalCount = topology.childCount (parentId);
+			int coordinate = 0;
+			int descendantId = -1;
+			for (int id = topology.firstMaterializedChildId (parentId);
+					id >= 0; id = topology.nextMaterializedSiblingId (id)) {
+				int index = topology.childIndex (id);
+				if (index >= logicalCount) break;
+				int coldGap = index - coordinate;
+				if (row < coldGap) {
+					return new Row (parentId, Math.addExact (coordinate, (int)row), -1, depth);
+				}
+				row -= coldGap;
+				if (row == 0) return new Row (parentId, index, id, depth);
+				row--;
+				if (topology.flag (id, VirtualItemState.EXPANDED)
+						&& topology.childCountKnown (id)) {
+					long descendants = visibleChildren (id);
+					if (row < descendants) {
+						descendantId = id;
+						break;
+					}
+					row -= descendants;
+				}
+				coordinate = index + 1;
 			}
-			row -= coldGap;
-
-			if (row == 0) return new Row (parentId, index, id, depth);
-			row--;
-
-			if (topology.flag (id, VirtualItemState.EXPANDED)
-					&& topology.childCountKnown (id)) {
-				long descendants = visibleChildren (id);
-				if (row < descendants) return rowAt (id, row, depth + 1);
-				row -= descendants;
+			if (descendantId >= 0) {
+				parentId = descendantId;
+				depth = Math.incrementExact (depth);
+				continue;
 			}
-			coordinate = index + 1;
+			long childIndex = Math.addExact ((long)coordinate, row);
+			if (childIndex >= logicalCount) throw new IllegalStateException ("projection overflow");
+			return new Row (parentId, Math.toIntExact (childIndex), -1, depth);
 		}
-
-		long childIndex = Math.addExact ((long)coordinate, row);
-		if (childIndex >= logicalCount) throw new IllegalStateException ("projection overflow");
-		return new Row (parentId, Math.toIntExact (childIndex), -1, depth);
 	}
 
 	private long offsetWithinParent (int parentId, int targetChildIndex) {
