@@ -1251,6 +1251,7 @@ public void setExpanded (boolean expanded) {
 	int state = (int)OS.SendMessage (hwnd, OS.TVM_GETITEMSTATE, handle, OS.TVIS_EXPANDED);
 	if (((state & OS.TVIS_EXPANDED) != 0) == expanded) {
 		setExpandedState (expanded);
+		if (!expanded) parent.scheduleVirtualCollapseCompaction (this);
 		return;
 	}
 
