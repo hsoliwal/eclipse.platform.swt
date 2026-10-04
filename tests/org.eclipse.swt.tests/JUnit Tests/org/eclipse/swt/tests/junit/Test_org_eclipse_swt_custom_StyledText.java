@@ -3357,6 +3357,39 @@ public void test_setHorizontalIndexI(){
 }
 
 @Test
+public void test_viewportRuntimeMirrorsStyledTextScrollState() throws Exception {
+	text.setSize(100, 40);
+	text.setText(IntStream.range(0, 40)
+			.mapToObj(i -> "line-" + i + "-abcdefghijklmnopqrstuvwxyz")
+			.collect(Collectors.joining("\n")));
+
+	text.setHorizontalPixel(23);
+	text.setTopPixel(text.getLineHeight() * 7 + 3);
+
+	Field runtimeField = StyledText.class.getDeclaredField("viewportRuntime");
+	runtimeField.setAccessible(true);
+	Object runtime = runtimeField.get(text);
+	Method originX = runtime.getClass().getMethod("originX");
+	Method originY = runtime.getClass().getMethod("originY");
+
+	assertEquals((double)text.getHorizontalPixel(), (double)originX.invoke(runtime), 0.0,
+			"StyledText horizontal public state must be mirrored into the shared viewport runtime");
+	assertEquals((double)text.getTopPixel(), (double)originY.invoke(runtime), 0.0,
+			"StyledText vertical public state must be mirrored into the shared viewport runtime");
+
+	text.setWordWrap(true);
+	assertEquals(0, text.getHorizontalPixel());
+	assertEquals(0.0, (double)originX.invoke(runtime), 0.0,
+			"word-wrap reset must update the shared viewport origin");
+
+	text.setText("");
+	assertEquals(0, text.getHorizontalPixel());
+	assertEquals(0, text.getTopPixel());
+	assertEquals(0.0, (double)originX.invoke(runtime), 0.0);
+	assertEquals(0.0, (double)originY.invoke(runtime), 0.0);
+}
+
+@Test
 public void test_setHorizontalPixelI(){
 	text.setHorizontalPixel(-1);
 	assertEquals(0 , text.getHorizontalPixel());
