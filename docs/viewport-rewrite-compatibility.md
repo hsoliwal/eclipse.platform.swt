@@ -258,3 +258,111 @@ When a real application reports a regression:
 4. use the `swt-classic` branch only when the client genuinely depends on legacy implementation behavior that cannot yet be preserved safely.
 
 `hsoliwal/eclipse.platform.swt:swt-classic` is intentionally retained as the classic escape hatch. It is not the architecture target and should not absorb new viewport work. Compatibility requests are accepted; one exceptional client must not force the optimized core back to dense/eager widget construction.
+
+
+## Java2s SWT/Swing distillation matrix
+
+The following catalogues are treated as behavioral donor corpora. Their source is not copied:
+
+- https://www.java2s.com/Tutorial/Java/0280__SWT/Catalog0280__SWT.html
+- https://www.java2s.com/Tutorial/Java/0300__SWT-2D-Graphics/Catalog0300__SWT-2D-Graphics.html
+- https://www.java2s.com/Tutorial/Java/0240__Swing/Catalog0240__Swing.html
+- https://www.java2s.com/Tutorial/Java/0260__Swing-Event/Catalog0260__Swing-Event.html
+
+The SWT catalogue contributes API-behavior shapes for Table/TableItem/TableColumn,
+Tree/TreeItem/TreeColumn, TreeViewer, editors, renderers, ScrolledComposite,
+ScrollBar, Canvas, focus, keyboard/mouse events, drag/drop, timers and screen
+capture. The rewrite must continue to satisfy those ordinary application shapes
+even when the retained implementation is sparse.
+
+The SWT 2D Graphics catalogue contributes independent paint dimensions: GC state,
+paint clipping, transforms, paths, line/stroke state, text, animation and image
+rendering. These are not flattened into widget state. They are composed at the
+paint boundary.
+
+The Swing catalogue is useful as an independent design cross-check:
+
+- `JViewport` demonstrates that logical view coordinates and viewport coordinates
+  are separate concerns.
+- `JLayeredPane` reinforces independent z-planes for body, frozen content,
+  header, editor and transient feedback.
+- `JTableHeader` being independently managed from table rows reinforces the SWT
+  header/body split.
+- JTable/JTree model-vs-view indexing reinforces explicit coordinate mapping after
+  sort/filter/structural edits.
+- renderer/editor examples reinforce reusable transient presentation objects rather
+  than one retained component per row.
+
+The Swing Event catalogue reinforces event-space separation:
+
+- scrollbar adjustment is a viewport-origin event, not a data-model mutation;
+- mouse/mouse-wheel coordinates must be mapped through the inverse of the same
+  transform used for paint;
+- tree expansion/selection/model events are distinct semantic channels;
+- model-change events should invalidate logical ranges rather than force eager
+  widget reconstruction.
+
+### Internal paint-state DAG
+
+`ViewportPaintDAG` is the distilled common primitive for these graphics/event
+ideas. It deliberately does **not** proxy or replace public `GC` objects.
+
+Each node is held in primitive lanes and owns:
+
+- one parent coordinate space;
+- one viewport z-plane;
+- a local 2D affine transform;
+- an optional local clip;
+- optional inherited stroke width/style/cap/join.
+
+It provides:
+
+- local -> root/device coordinate mapping;
+- root/device -> local inverse mapping for hit testing and events;
+- conservative root-space clip intersection;
+- nearest-ancestor stroke-state inheritance.
+
+This makes the intended paint pipeline:
+
+```text
+logical row/cell coordinates
+        |
+        v
+ViewportPaintDAG
+  body / frozen / header / editor / feedback
+  affine transform + clip + inherited stroke
+        |
+        v
+real SWT GC
+        |
+        v
+platform renderer
+```
+
+The public `PaintEvent.gc` remains the real SWT `GC`; identity and existing GC
+semantics are therefore unchanged.
+
+Win32 already contains an internal replay mechanism for reapplicable GC operations
+such as transform, clipping, alpha, line state and drawing operations. That
+existing backend behavior is a useful donor for future common replay work; the
+viewport rewrite should consolidate around it rather than create another public
+graphics abstraction.
+
+### Distilled rendering invariants
+
+1. **Vertical scrolling does not repaint the header merely because the body moved.**
+2. **Horizontal scrolling translates the normal header and body together while
+   frozen content stays on its own x-plane.**
+3. **Paint and input use the same coordinate transform in opposite directions.**
+4. **Nested clips intersect before rendering reaches the platform GC.**
+5. **Stroke/path/transform state is presentation state, not row-model state.**
+6. **Owner-draw callbacks still receive the ordinary SWT GC and item facade.**
+7. **Renderer/editor shells may be transient/reusable; exposed SWT Item identity may
+   not be rebound.**
+8. **Model/view coordinate conversion is explicit after sorting, filtering,
+   insertion, removal or expansion changes.**
+
+The deterministic screenshot lane includes
+`viewport-affine-clip-stroke.png`, which exercises a real SWT GC with transform,
+clip, cubic Path, line width/style/cap/join and text while preserving/restoring
+incoming GC state.
