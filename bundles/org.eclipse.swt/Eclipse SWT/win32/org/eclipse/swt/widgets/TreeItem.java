@@ -142,7 +142,7 @@ public TreeItem (Tree parent, int style, int index) {
  * @see Widget#getStyle
  */
 public TreeItem (TreeItem parentItem, int style) {
-	this (checkNull (parentItem).parent, style, parentItem.handle, OS.TVI_LAST, 0);
+	this (checkNull (parentItem).parent, style, parentItem.handle, findLast (parentItem), 0);
 }
 
 /**
@@ -255,6 +255,15 @@ void updateNativeVirtualCheckState () {
 	OS.SendMessage (hwnd, OS.TVM_SETITEM, 0, tvItem);
 }
 
+static long findLast (TreeItem parentItem) {
+	if (parentItem == null) return 0;
+	Tree parent = parentItem.parent;
+	if ((parent.style & SWT.VIRTUAL) == 0) return OS.TVI_LAST;
+	int count = parent.virtualChildCount (parentItem);
+	if (count == 0) return OS.TVI_FIRST;
+	return findPrevious (parentItem, count);
+}
+
 static long findPrevious (Tree parent, int index) {
 	if (parent == null) return 0;
 	if (index < 0) SWT.error (SWT.ERROR_INVALID_RANGE);
@@ -272,6 +281,7 @@ static long findPrevious (TreeItem parentItem, int index) {
 	if (index == 0) return OS.TVI_FIRST;
 	Tree parent = parentItem.parent;
 	long hwnd = parent.handle, hParent = parentItem.handle;
+	parent.ensureVirtualNativeItem (hParent, index - 1);
 	long hFirstItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, hParent);
 	long hItem = parent.findItem (hFirstItem, index - 1);
 	if (hItem == 0) SWT.error (SWT.ERROR_INVALID_RANGE);
@@ -1075,6 +1085,7 @@ void releaseWidget () {
  */
 public void removeAll () {
 	checkWidget ();
+	parent.restoreVirtualChildren (this);
 	long hwnd = parent.handle;
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
