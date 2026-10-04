@@ -71,12 +71,14 @@ public class ViewportScreenshotRegressionTest {
 		Table table = createTableScene (tabs);
 		Tree tree = createTreeScene (tabs);
 		ViewportChromeScene viewport = createViewportChromeScene (tabs);
+		GraphicsStateScene graphics = createGraphicsStateScene (tabs);
 		shell.open ();
 		drainEvents (120);
 
 		captureTableCheckedSelection (tabs, table, output);
 		captureTreeResidencySequence (tabs, tree, output);
 		captureViewportChromeSequence (tabs, viewport, output);
+		captureGraphicsState (tabs, graphics, output);
 
 		assertTrue (Files.size (output.resolve ("table-checked-selection.png")) > 0);
 		assertTrue (Files.size (output.resolve ("tree-pinned-expanded.png")) > 0);
@@ -86,6 +88,7 @@ public class ViewportScreenshotRegressionTest {
 		assertTrue (Files.size (output.resolve ("viewport-horizontal-scroll.png")) > 0);
 		assertTrue (Files.size (output.resolve ("viewport-narrow.png")) > 0);
 		assertTrue (Files.size (output.resolve ("viewport-wide.png")) > 0);
+		assertTrue (Files.size (output.resolve ("viewport-affine-clip-stroke.png")) > 0);
 	}
 
 	private Table createTableScene (TabFolder tabs) {
@@ -139,6 +142,95 @@ public class ViewportScreenshotRegressionTest {
 		return tree;
 	}
 
+
+
+	private static final class GraphicsStateScene {
+		final Canvas canvas;
+		final long [] paints = {0};
+		Rectangle lastIncomingClip;
+
+		GraphicsStateScene (Canvas canvas) {
+			this.canvas = canvas;
+		}
+	}
+
+	private GraphicsStateScene createGraphicsStateScene (TabFolder tabs) {
+		TabItem tab = new TabItem (tabs, SWT.NONE);
+		tab.setText ("GC transform/clip/stroke");
+
+		Canvas canvas = new Canvas (tabs, SWT.DOUBLE_BUFFERED | SWT.BORDER);
+		tab.setControl (canvas);
+		GraphicsStateScene scene = new GraphicsStateScene (canvas);
+
+		canvas.addListener (SWT.Paint, event -> {
+			scene.paints[0]++;
+			GC gc = event.gc;
+			scene.lastIncomingClip = gc.getClipping ();
+
+			Rectangle oldClip = gc.getClipping ();
+			int oldLineWidth = gc.getLineWidth ();
+			int oldLineStyle = gc.getLineStyle ();
+			int oldLineCap = gc.getLineCap ();
+			int oldLineJoin = gc.getLineJoin ();
+			Transform oldTransform = new Transform (canvas.getDisplay ());
+			gc.getTransform (oldTransform);
+			try {
+				Transform transform = new Transform (canvas.getDisplay ());
+				try {
+					transform.translate (180, 120);
+					transform.rotate (14);
+					transform.scale (1.12f, 0.92f);
+					gc.setTransform (transform);
+				} finally {
+					transform.dispose ();
+				}
+
+				gc.setClipping (new Rectangle (-60, -50, 520, 300));
+				gc.setLineWidth (3);
+				gc.setLineStyle (SWT.LINE_DASH);
+				gc.setLineCap (SWT.CAP_ROUND);
+				gc.setLineJoin (SWT.JOIN_BEVEL);
+
+				org.eclipse.swt.graphics.Path path =
+						new org.eclipse.swt.graphics.Path (canvas.getDisplay ());
+				try {
+					path.moveTo (0, 40);
+					path.cubicTo (80, -25, 160, 120, 250, 30);
+					path.lineTo (340, 140);
+					gc.drawPath (path);
+				} finally {
+					path.dispose ();
+				}
+
+				gc.drawRectangle (0, 0, 360, 190);
+				gc.drawLine (-80, 95, 460, 95);
+				gc.drawText ("affine + clip + stroke", 24, 132, true);
+			} finally {
+				gc.setTransform (oldTransform);
+				oldTransform.dispose ();
+				gc.setClipping (oldClip);
+				gc.setLineWidth (oldLineWidth);
+				gc.setLineStyle (oldLineStyle);
+				gc.setLineCap (oldLineCap);
+				gc.setLineJoin (oldLineJoin);
+			}
+		});
+		return scene;
+	}
+
+	private void captureGraphicsState (
+			TabFolder tabs, GraphicsStateScene scene, Path output) throws Exception {
+		tabs.setSelection (3);
+		shell.setSize (1000, 700);
+		drainEvents (120);
+		capture (
+				"viewport-affine-clip-stroke", scene.canvas, output,
+				"graphics.paints=" + scene.paints[0] + "\n"
+				+ "graphics.incomingClip=" + scene.lastIncomingClip + "\n"
+				+ "graphics.transform=translate(180,120),rotate(14),scale(1.12,0.92)\n"
+				+ "graphics.localClip=(-60,-50,520,300)\n"
+				+ "graphics.stroke=width:3,style:DASH,cap:ROUND,join:BEVEL\n");
+	}
 
 	private static final class ViewportChromeScene {
 		final Composite root;
