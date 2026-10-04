@@ -15,6 +15,7 @@ package org.eclipse.swt.custom;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
@@ -69,13 +70,9 @@ protected void layout(Composite composite, boolean flushCache) {
 	}
 	inLayout = true;
 	Rectangle contentRect = sc.content.getBounds();
-	if (!sc.alwaysShowScroll) {
-		boolean hVisible = sc.needHScroll(contentRect, false);
-		boolean vVisible = sc.needVScroll(contentRect, hVisible);
-		if (!hVisible && vVisible) hVisible = sc.needHScroll(contentRect, vVisible);
-		if (hBar != null) hBar.setVisible(hVisible);
-		if (vBar != null) vBar.setVisible(vVisible);
-	}
+	ViewportRuntime.PixelLayout viewport = sc.solveViewportLayout (contentRect);
+	if (hBar != null) hBar.setVisible (viewport.horizontalVisible ());
+	if (vBar != null) vBar.setVisible (viewport.verticalVisible ());
 	Rectangle hostRect = sc.getClientArea();
 	if (sc.expandHorizontal) {
 		contentRect.width = Math.max(sc.minWidth, hostRect.width);
@@ -119,6 +116,7 @@ protected void layout(Composite composite, boolean flushCache) {
 	gc.dispose ();
 
 	sc.content.setBounds (contentRect);
+	sc.syncViewportOriginFromContent ();
 	inLayout = false;
 }
 }

@@ -10,19 +10,16 @@
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
+import org.eclipse.swt.internal.*;
+
 /**
- * Resolves viewport body/chrome geometry when scrollbar visibility on one axis
- * changes the available viewport on the other axis.
- *
- * <p>The solver is deliberately model-first: vertical demand is derived from a
- * logical row count and one representative row extent, while horizontal demand
- * is derived from logical content width. Scrollbar controls are consumers of
- * the result, not the source of truth.</p>
+ * Package-local compatibility adapter for the canonical viewport scrollbar
+ * fixed-point solver in {@link ViewportRuntime}.
  */
 final class ViewportScrollLayout {
-	static final int AUTO = 0;
-	static final int ALWAYS = 1;
-	static final int NEVER = 2;
+	static final int AUTO = ViewportRuntime.AUTO;
+	static final int ALWAYS = ViewportRuntime.ALWAYS;
+	static final int NEVER = ViewportRuntime.NEVER;
 
 	record Result (
 			boolean horizontalVisible,
@@ -52,89 +49,28 @@ final class ViewportScrollLayout {
 			int verticalBarWidth,
 			int horizontalPolicy,
 			int verticalPolicy) {
-		if (outerWidth < 0 || outerHeight < 0) {
-			throw new IllegalArgumentException ("negative viewport extent");
-		}
-		if (headerHeight < 0 || headerHeight > outerHeight) {
-			throw new IllegalArgumentException ("invalid header extent");
-		}
-		if (logicalRows < 0 || logicalContentWidth < 0) {
-			throw new IllegalArgumentException ("negative logical extent");
-		}
-		if (sampleRowHeight <= 0) {
-			throw new IllegalArgumentException ("non-positive sample row extent");
-		}
-		if (horizontalBarHeight < 0 || verticalBarWidth < 0) {
-			throw new IllegalArgumentException ("negative scrollbar extent");
-		}
-		checkPolicy (horizontalPolicy);
-		checkPolicy (verticalPolicy);
-
-		boolean horizontal = horizontalPolicy == ALWAYS;
-		boolean vertical = verticalPolicy == ALWAYS;
-
-		/*
-		 * Two axes can only force each other once, but allow a few fixed-point
-		 * passes so platform-specific zero-width bars/policies remain harmless.
-		 */
-		for (int pass = 0; pass < 4; pass++) {
-			int bodyWidth = Math.max (0, outerWidth - (vertical ? verticalBarWidth : 0));
-			int bodyHeight = Math.max (
-					0, outerHeight - headerHeight - (horizontal ? horizontalBarHeight : 0));
-
-			boolean nextHorizontal = policyVisible (
-					horizontalPolicy, logicalContentWidth > bodyWidth);
-			int visibleRows = visibleRows (logicalRows, sampleRowHeight, bodyHeight);
-			boolean nextVertical = policyVisible (
-					verticalPolicy, logicalRows > visibleRows);
-
-			if (horizontal == nextHorizontal && vertical == nextVertical) break;
-			horizontal = nextHorizontal;
-			vertical = nextVertical;
-		}
-
-		int bodyWidth = Math.max (0, outerWidth - (vertical ? verticalBarWidth : 0));
-		int bodyHeight = Math.max (
-				0, outerHeight - headerHeight - (horizontal ? horizontalBarHeight : 0));
-		int visibleRows = visibleRows (logicalRows, sampleRowHeight, bodyHeight);
-
-		return new Result (
-				horizontal,
-				vertical,
-				horizontal && vertical,
-				bodyWidth,
-				bodyHeight,
-				bodyWidth,
+		ViewportRuntime.RowLayout layout = ViewportRuntime.solveRows (
+				outerWidth,
+				outerHeight,
 				headerHeight,
-				visibleRows,
 				logicalRows,
-				saturatedMultiply (logicalRows, sampleRowHeight),
-				logicalContentWidth);
-	}
-
-	private static long saturatedMultiply (long value, int multiplier) {
-		if (value == 0) return 0;
-		if (value > Long.MAX_VALUE / multiplier) return Long.MAX_VALUE;
-		return value * multiplier;
-	}
-
-	private static boolean policyVisible (int policy, boolean autoValue) {
-		return switch (policy) {
-			case ALWAYS -> true;
-			case NEVER -> false;
-			default -> autoValue;
-		};
-	}
-
-	private static int visibleRows (long logicalRows, int sampleRowHeight, int bodyHeight) {
-		if (logicalRows == 0 || bodyHeight == 0) return 0;
-		long rows = ((long)bodyHeight + sampleRowHeight - 1L) / sampleRowHeight;
-		return (int)Math.min (logicalRows, Math.max (1L, rows));
-	}
-
-	private static void checkPolicy (int policy) {
-		if (policy != AUTO && policy != ALWAYS && policy != NEVER) {
-			throw new IllegalArgumentException ("invalid scrollbar policy");
-		}
+				sampleRowHeight,
+				logicalContentWidth,
+				horizontalBarHeight,
+				verticalBarWidth,
+				horizontalPolicy,
+				verticalPolicy);
+		return new Result (
+				layout.horizontalVisible (),
+				layout.verticalVisible (),
+				layout.cornerVisible (),
+				layout.bodyWidth (),
+				layout.bodyHeight (),
+				layout.headerWidth (),
+				layout.headerHeight (),
+				layout.visibleRows (),
+				layout.logicalRows (),
+				layout.estimatedContentHeight (),
+				layout.logicalContentWidth ());
 	}
 }

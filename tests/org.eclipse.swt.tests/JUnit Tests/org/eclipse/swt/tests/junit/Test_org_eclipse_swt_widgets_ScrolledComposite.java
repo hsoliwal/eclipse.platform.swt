@@ -261,4 +261,41 @@ public class Test_org_eclipse_swt_widgets_ScrolledComposite extends Test_org_ecl
 	public void test_setLayout() {
 		// setLayout() has been overwritten for scrollableComposite to not set a layout
 	}
+	@Test
+	public void test_viewportOriginMirrorsLegacyContentMovementAndLayoutStabilizes() {
+		scrolledComposite = new ScrolledComposite(shell, SWT.H_SCROLL | SWT.V_SCROLL);
+		scrolledComposite.setSize(120, 100);
+		Composite content = new Composite(scrolledComposite, SWT.NONE);
+		content.setSize(600, 400);
+		scrolledComposite.setContent(content);
+		scrolledComposite.layout(false);
+
+		assertTrue(scrolledComposite.getHorizontalBar().getVisible());
+		assertTrue(scrolledComposite.getVerticalBar().getVisible());
+
+		scrolledComposite.setOrigin(37, 41);
+		assertEquals(new Point(37, 41), scrolledComposite.getOrigin());
+		assertEquals(new Point(-37, -41), content.getLocation());
+
+		/*
+		 * Legacy callers are still allowed to move the physical content directly.
+		 * The shared logical viewport mirrors that state instead of replacing it.
+		 */
+		content.setLocation(-19, -23);
+		assertEquals(new Point(19, 23), scrolledComposite.getOrigin());
+		content.setLocation(4, 6);
+		assertEquals(new Point(-4, -6), scrolledComposite.getOrigin(),
+				"direct legacy content movement must retain the historical physical-origin reflection");
+		content.setLocation(-19, -23);
+		assertEquals(new Point(19, 23), scrolledComposite.getOrigin());
+
+		for (int pass = 0; pass < 8; pass++) {
+			scrolledComposite.layout(false);
+			assertTrue(scrolledComposite.getHorizontalBar().getVisible());
+			assertTrue(scrolledComposite.getVerticalBar().getVisible());
+		}
+		assertEquals(new Point(19, 23), scrolledComposite.getOrigin());
+	}
+
+
 }

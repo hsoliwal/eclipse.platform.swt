@@ -286,4 +286,49 @@ public class Test_ViewportRewriteContracts {
 	}
 
 
+	@Test
+	public void sharedViewportRuntimeSolvesPixelsAndTracksLayerDirtiness() throws Exception {
+		Class<?> type = Class.forName("org.eclipse.swt.internal.ViewportRuntime");
+		Object runtime = type.getDeclaredConstructor().newInstance();
+		Method initialize = type.getMethod("initializeOrigin", double.class, double.class);
+		Method scrollTo = type.getMethod("scrollTo", double.class, double.class);
+		Method solvePixels = type.getMethod(
+				"solvePixels",
+				int.class, int.class, long.class, long.class,
+				int.class, int.class, int.class, int.class);
+
+		int auto = type.getField("AUTO").getInt(null);
+		int never = type.getField("NEVER").getInt(null);
+		int body = type.getField("BODY").getInt(null);
+		int frozen = type.getField("FROZEN").getInt(null);
+		int header = type.getField("HEADER").getInt(null);
+		int scrollbar = type.getField("SCROLLBAR").getInt(null);
+
+		initialize.invoke(runtime, 0.0, 0.0);
+		assertEquals(body | header | scrollbar, scrollTo.invoke(runtime, 5.0, 0.0));
+		assertEquals(body | frozen | scrollbar, scrollTo.invoke(runtime, 5.0, 7.0));
+		assertEquals(0, scrollTo.invoke(runtime, 5.0, 7.0));
+
+		Object horizontalForcesVertical = solvePixels.invoke(
+				null, 100, 100, 105L, 90L, 16, 16, auto, auto);
+		assertEquals(true, call(horizontalForcesVertical, "horizontalVisible"));
+		assertEquals(true, call(horizontalForcesVertical, "verticalVisible"));
+		assertEquals(84, call(horizontalForcesVertical, "bodyWidth"));
+		assertEquals(84, call(horizontalForcesVertical, "bodyHeight"));
+
+		Object verticalForcesHorizontal = solvePixels.invoke(
+				null, 100, 100, 90L, 105L, 16, 16, auto, auto);
+		assertEquals(true, call(verticalForcesHorizontal, "horizontalVisible"));
+		assertEquals(true, call(verticalForcesHorizontal, "verticalVisible"));
+
+		Object suppressed = solvePixels.invoke(
+				null, 100, 100, Long.MAX_VALUE, Long.MAX_VALUE,
+				16, 16, never, never);
+		assertEquals(false, call(suppressed, "horizontalVisible"));
+		assertEquals(false, call(suppressed, "verticalVisible"));
+		assertEquals(100, call(suppressed, "bodyWidth"));
+		assertEquals(100, call(suppressed, "bodyHeight"));
+	}
+
+
 }
