@@ -505,6 +505,12 @@ public final class ViewportPaintGraph {
 		int drawn = 0;
 		int culled = 0;
 		int transformSwitches = 0;
+		/*
+		 * Culling uses a conservative stroke envelope. The real GC remains the
+		 * exact clipping/rendering authority; this only prevents us from
+		 * dropping geometry whose stroke reaches into the requested clip.
+		 */
+		long strokeOutset = Math.max (1L, gc.getLineWidth ()) + 1;
 
 		try {
 			while (stackSize != 0) {
@@ -563,7 +569,7 @@ public final class ViewportPaintGraph {
 							continue;
 						}
 						if (clip != null && transform.isIntegralTranslation ()
-								&& outsideClip (node, transform, clip)) {
+								&& outsideClip (node, transform, clip, strokeOutset)) {
 							culled++;
 							continue;
 						}
@@ -632,25 +638,26 @@ public final class ViewportPaintGraph {
 				|| boundsScratch [1] >= clip.y + clip.height;
 	}
 
-	private boolean outsideClip (int node, Affine transform, Rectangle clip) {
+	private boolean outsideClip (
+			int node, Affine transform, Rectangle clip, long strokeOutset) {
 		int dx = Math.round (transform.dx);
 		int dy = Math.round (transform.dy);
-		int left;
-		int top;
-		int right;
-		int bottom;
+		long left;
+		long top;
+		long right;
+		long bottom;
 		switch (kinds [node]) {
 			case LINE -> {
-				left = Math.min (a [node], c [node]) + dx;
-				top = Math.min (b [node], d [node]) + dy;
-				right = Math.max (a [node], c [node]) + dx + 1;
-				bottom = Math.max (b [node], d [node]) + dy + 1;
+				left = Math.min (a [node], c [node]) + (long)dx;
+				top = Math.min (b [node], d [node]) + (long)dy;
+				right = Math.max (a [node], c [node]) + (long)dx + 1;
+				bottom = Math.max (b [node], d [node]) + (long)dy + 1;
 			}
 			case DRAW_RECT, FILL_RECT -> {
-				left = Math.min (a [node], a [node] + c [node]) + dx;
-				top = Math.min (b [node], b [node] + d [node]) + dy;
-				right = Math.max (a [node], a [node] + c [node]) + dx + 1;
-				bottom = Math.max (b [node], b [node] + d [node]) + dy + 1;
+				left = Math.min (a [node], (long)a [node] + c [node]) + dx;
+				top = Math.min (b [node], (long)b [node] + d [node]) + dy;
+				right = Math.max (a [node], (long)a [node] + c [node]) + dx + 1;
+				bottom = Math.max (b [node], (long)b [node] + d [node]) + dy + 1;
 			}
 			case TEXT -> {
 				// Font metrics are intentionally not retained in the graph.
@@ -660,8 +667,14 @@ public final class ViewportPaintGraph {
 				return false;
 			}
 		}
+		if (kinds [node] == LINE || kinds [node] == DRAW_RECT) {
+			left -= strokeOutset;
+			top -= strokeOutset;
+			right += strokeOutset;
+			bottom += strokeOutset;
+		}
 		return right <= clip.x || bottom <= clip.y
-				|| left >= clip.x + clip.width || top >= clip.y + clip.height;
+				|| left >= (long)clip.x + clip.width || top >= (long)clip.y + clip.height;
 	}
 
 	private int newNode (byte kind, int parent) {
