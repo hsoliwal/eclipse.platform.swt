@@ -78,6 +78,50 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 		assertEquals (1, graph.geometryNodeCount ());
 	}
 
+
+	@Test
+	public void test_groupCullBoundsSkipOffscreenRetainedSubtreesBeforeCommands () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int row = graph.template ();
+		graph.setCullBounds (row, 0, 0, 96, 20);
+		for (int i = 0; i < 64; i++) {
+			graph.line (row, 0, i % 20, 95, i % 20);
+		}
+		for (int i = 0; i < 200; i++) {
+			graph.instance (graph.root (), row, Affine.translation (0, i * 24));
+		}
+
+		var stats = graph.replay (
+				gc, Affine.IDENTITY, new Rectangle (0, 0, 96, 20));
+
+		assertEquals (64, stats.drawnCommands (),
+				"only the first row instance intersects the replay clip");
+		assertTrue (stats.visitedNodes () < 500,
+				"coarse retained bounds must reject offscreen row subtrees before their child commands");
+		assertEquals (64, graph.geometryNodeCount (),
+				"culling must not duplicate or mutate retained geometry");
+	}
+
+	@Test
+	public void test_groupCullBoundsAreConservativeUnderAffineTransforms () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int group = graph.group (
+				graph.root (),
+				new Affine (0, 1, -1, 0, 40, 10));
+		graph.setCullBounds (group, 0, 0, 20, 10);
+		graph.fillRectangle (group, 0, 0, 20, 10);
+
+		var visible = graph.replay (
+				gc, Affine.IDENTITY, new Rectangle (28, 8, 16, 24));
+		assertEquals (1, visible.drawnCommands (),
+				"conservative affine AABB must retain a rotated subtree that intersects the clip");
+
+		var hidden = graph.replay (
+				gc, Affine.IDENTITY, new Rectangle (0, 40, 12, 12));
+		assertEquals (0, hidden.drawnCommands (),
+				"affine subtree bounds outside the clip must be rejected as a unit");
+	}
+
 	@Test
 	public void test_generalAffineReplayRestoresCallerTransform () {
 		ViewportPaintGraph graph = new ViewportPaintGraph ();
