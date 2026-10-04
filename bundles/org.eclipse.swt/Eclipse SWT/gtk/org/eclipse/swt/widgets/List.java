@@ -47,6 +47,7 @@ public class List extends Scrollable {
 	long modelHandle;
 	int topIndex;
 	int selectionCountOnPress,selectionCountOnRelease;
+	final ViewportRuntime viewportRuntime = new ViewportRuntime ();
 
 	static final int TEXT_COLUMN = 0;
 	double cachedAdjustment, currentAdjustment;
@@ -83,6 +84,7 @@ public class List extends Scrollable {
  */
 public List (Composite parent, int style) {
 	super (parent, checkStyle (style));
+	viewportRuntime.initializeOrigin (0, 0);
 }
 
 /**
@@ -764,12 +766,19 @@ public int getTopIndex () {
 		if (Device.DEBUG) {
 			System.out.println("Using the cached GtkAdjustment, topIndex is " + topIndex);
 		}
+		viewportRuntime.scrollTo (0, topIndex);
 		return topIndex;
 	} else {
 		long [] path = new long [1];
 		GTK.gtk_widget_realize (handle);
-		if (!GTK.gtk_tree_view_get_path_at_pos (handle, 1, 1, path, null, null, null)) return 0;
-		if (path [0] == 0) return 0;
+		if (!GTK.gtk_tree_view_get_path_at_pos (handle, 1, 1, path, null, null, null)) {
+			viewportRuntime.scrollTo (0, 0);
+			return 0;
+		}
+		if (path [0] == 0) {
+			viewportRuntime.scrollTo (0, 0);
+			return 0;
+		}
 		long indices = GTK.gtk_tree_path_get_indices (path[0]);
 		int[] index = new int [1];
 		if (indices != 0) C.memmove (index, indices, 4);
@@ -777,6 +786,7 @@ public int getTopIndex () {
 		if (Device.DEBUG) {
 			System.out.println("Fetching the top index from GTK, topIndex is " + index[0]);
 		}
+		viewportRuntime.scrollTo (0, index [0]);
 		return index [0];
 	}
 }
@@ -1709,6 +1719,7 @@ public void setTopIndex (int index) {
 	GTK.gtk_tree_view_scroll_to_cell (handle, path, 0, true, 0, 0);
 	GTK.gtk_tree_path_free (path);
 	OS.g_free (iter);
+	viewportRuntime.scrollTo (0, index);
 }
 
 /**
@@ -1754,6 +1765,7 @@ public void showSelection () {
 	}
 	GTK.gtk_tree_path_free (path);
 	OS.g_free (iter);
+	viewportRuntime.scrollTo (0, getTopIndex ());
 }
 
 }

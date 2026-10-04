@@ -46,6 +46,7 @@ public class List extends Scrollable {
 	static final long ListProc;
 	static final TCHAR ListClass = new TCHAR ("LISTBOX", true);
 	boolean addedUCC = false; // indicates whether Bidi UCC were added; 'state & HAS_AUTO_DIRECTION' isn't a sufficient indicator
+	final ViewportRuntime viewportRuntime = new ViewportRuntime ();
 	static {
 		WNDCLASS lpWndClass = new WNDCLASS ();
 		OS.GetClassInfo (0, ListClass, lpWndClass);
@@ -83,6 +84,7 @@ public class List extends Scrollable {
  */
 public List (Composite parent, int style) {
 	super (parent, checkStyle (style));
+	viewportRuntime.initializeOrigin (0, 0);
 }
 /**
  * Adds the argument to the end of the receiver's list.
@@ -199,6 +201,10 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 	switch (msg) {
 		case OS.WM_HSCROLL:
 		case OS.WM_VSCROLL: {
+			if (msg == OS.WM_VSCROLL) {
+				int top = (int)OS.SendMessage (handle, OS.LB_GETTOPINDEX, 0, 0);
+				if (top != OS.LB_ERR) viewportRuntime.scrollTo (0, Math.max (0, top));
+			}
 			if (redraw) {
 				OS.DefWindowProc (handle, OS.WM_SETREDRAW, 1, 0);
 				OS.InvalidateRect (handle, null, true);
@@ -629,7 +635,9 @@ public int [] getSelectionIndices () {
  */
 public int getTopIndex () {
 	checkWidget ();
-	return (int)OS.SendMessage (handle, OS.LB_GETTOPINDEX, 0, 0);
+	int top = (int)OS.SendMessage (handle, OS.LB_GETTOPINDEX, 0, 0);
+	viewportRuntime.scrollTo (0, top);
+	return top;
 }
 
 /**
@@ -1492,6 +1500,8 @@ public void setTopIndex (int index) {
 		index = Math.min (count - 1, Math.max (0, index));
 		OS.SendMessage (handle, OS.LB_SETTOPINDEX, index, 0);
 	}
+	int top = (int)OS.SendMessage (handle, OS.LB_GETTOPINDEX, 0, 0);
+	if (top != OS.LB_ERR) viewportRuntime.scrollTo (0, Math.max (0, top));
 }
 
 /**
@@ -1528,6 +1538,7 @@ public void showSelection () {
 	if (topIndex <= index && index <= bottomIndex) return;
 	int newTop = Math.min (Math.max (index - (visibleCount / 2), 0), count - 1);
 	OS.SendMessage (handle, OS.LB_SETTOPINDEX, newTop, 0);
+	viewportRuntime.scrollTo (0, newTop);
 }
 
 @Override
@@ -1832,6 +1843,7 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 			if (info.nPos != 0) OS.InvalidateRect (handle, null, true);
 		}
 		int newIndex = (int)OS.SendMessage (handle, OS.LB_GETTOPINDEX, 0, 0);
+		if (newIndex != OS.LB_ERR) viewportRuntime.scrollTo (0, Math.max (0, newIndex));
 		if (oldIndex != newIndex) OS.InvalidateRect (handle, null, true);
 	}
 	return result;
