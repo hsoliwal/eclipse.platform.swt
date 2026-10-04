@@ -22,6 +22,8 @@ import java.util.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.custom.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
+import org.eclipse.swt.internal.ViewportPaintGraph.Affine;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
@@ -146,22 +148,56 @@ public class ViewportScreenshotRegressionTest {
 
 	private static final class GraphicsStateScene {
 		final Canvas canvas;
+		final ViewportPaintGraph graph;
 		final long [] paints = {0};
 		Rectangle lastIncomingClip;
 
-		GraphicsStateScene (Canvas canvas) {
+		GraphicsStateScene (Canvas canvas, ViewportPaintGraph graph) {
 			this.canvas = canvas;
+			this.graph = graph;
 		}
 	}
 
 	private GraphicsStateScene createGraphicsStateScene (TabFolder tabs) {
 		TabItem tab = new TabItem (tabs, SWT.NONE);
-		tab.setText ("GC transform/clip/stroke");
+		tab.setText ("retained affine/clip/stroke/path");
 
 		Canvas canvas = new Canvas (tabs, SWT.DOUBLE_BUFFERED | SWT.BORDER);
 		tab.setControl (canvas);
-		GraphicsStateScene scene = new GraphicsStateScene (canvas);
 
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		float [] elements = new float [6];
+		Transform transform = new Transform (canvas.getDisplay ());
+		try {
+			transform.translate (180, 120);
+			transform.rotate (14);
+			transform.scale (1.12f, 0.92f);
+			transform.getElements (elements);
+		} finally {
+			transform.dispose ();
+		}
+		int graphics = graph.group (
+				graph.root (),
+				new Affine (
+						elements [0], elements [1], elements [2],
+						elements [3], elements [4], elements [5]));
+		graph.setLayer (graphics, 40);
+		graph.setClip (graphics, -60, -50, 520, 300);
+		graph.setStroke (graphics, 3, SWT.LINE_DASH, SWT.CAP_ROUND, SWT.JOIN_BEVEL);
+
+		PathData retainedPath = new PathData ();
+		retainedPath.types = new byte[] {
+				SWT.PATH_MOVE_TO, SWT.PATH_CUBIC_TO, SWT.PATH_LINE_TO};
+		retainedPath.points = new float[] {
+				0, 40,
+				80, -25, 160, 120, 250, 30,
+				340, 140};
+		graph.drawPath (graphics, retainedPath);
+		graph.drawRectangle (graphics, 0, 0, 360, 190);
+		graph.line (graphics, -80, 95, 460, 95);
+		graph.text (graphics, "affine + clip + stroke + retained path", 24, 132, true);
+
+		GraphicsStateScene scene = new GraphicsStateScene (canvas, graph);
 		canvas.addListener (SWT.Paint, event -> {
 			scene.paints[0]++;
 			GC gc = event.gc;
@@ -172,42 +208,16 @@ public class ViewportScreenshotRegressionTest {
 			int oldLineStyle = gc.getLineStyle ();
 			int oldLineCap = gc.getLineCap ();
 			int oldLineJoin = gc.getLineJoin ();
-			Transform oldTransform = new Transform (canvas.getDisplay ());
-			gc.getTransform (oldTransform);
 			try {
-				Transform transform = new Transform (canvas.getDisplay ());
-				try {
-					transform.translate (180, 120);
-					transform.rotate (14);
-					transform.scale (1.12f, 0.92f);
-					gc.setTransform (transform);
-				} finally {
-					transform.dispose ();
-				}
-
 				gc.setClipping (new Rectangle (-60, -50, 520, 300));
 				gc.setLineWidth (3);
 				gc.setLineStyle (SWT.LINE_DASH);
 				gc.setLineCap (SWT.CAP_ROUND);
 				gc.setLineJoin (SWT.JOIN_BEVEL);
-
-				org.eclipse.swt.graphics.Path path =
-						new org.eclipse.swt.graphics.Path (canvas.getDisplay ());
-				try {
-					path.moveTo (0, 40);
-					path.cubicTo (80, -25, 160, 120, 250, 30);
-					path.lineTo (340, 140);
-					gc.drawPath (path);
-				} finally {
-					path.dispose ();
-				}
-
-				gc.drawRectangle (0, 0, 360, 190);
-				gc.drawLine (-80, 95, 460, 95);
-				gc.drawText ("affine + clip + stroke", 24, 132, true);
+				graph.replay (
+						gc, Affine.IDENTITY,
+						new Rectangle (-60, -50, 520, 300));
 			} finally {
-				gc.setTransform (oldTransform);
-				oldTransform.dispose ();
 				gc.setClipping (oldClip);
 				gc.setLineWidth (oldLineWidth);
 				gc.setLineStyle (oldLineStyle);
@@ -229,7 +239,9 @@ public class ViewportScreenshotRegressionTest {
 				+ "graphics.incomingClip=" + scene.lastIncomingClip + "\n"
 				+ "graphics.transform=translate(180,120),rotate(14),scale(1.12,0.92)\n"
 				+ "graphics.localClip=(-60,-50,520,300)\n"
-				+ "graphics.stroke=width:3,style:DASH,cap:ROUND,join:BEVEL\n");
+				+ "graphics.stroke=width:3,style:DASH,cap:ROUND,join:BEVEL\n"
+				+ "graphics.retainedPath=true\n"
+				+ "graphics.geometryNodes=" + scene.graph.geometryNodeCount () + "\n");
 	}
 
 	private static final class ViewportChromeScene {
