@@ -7333,6 +7333,7 @@ LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
 LRESULT WM_MOUSEWHEEL (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSEWHEEL (wParam, lParam);
 	if (itemToolTipHandle != 0) OS.ShowWindow (itemToolTipHandle, OS.SW_HIDE);
+	syncVirtualTopRowFromNative ();
 	return result;
 }
 
@@ -7660,6 +7661,7 @@ LRESULT WM_VSCROLL (long wParam, long lParam) {
 			OS.SendMessage (handle, OS.TVM_SETEXTENDEDSTYLE, OS.TVS_EX_DOUBLEBUFFER, OS.TVS_EX_DOUBLEBUFFER);
 		}
 	}
+	syncVirtualTopRowFromNative ();
 	if (result != null) return result;
 	return result;
 }
