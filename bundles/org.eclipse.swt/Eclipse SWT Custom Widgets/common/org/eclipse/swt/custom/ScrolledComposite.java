@@ -15,6 +15,7 @@ package org.eclipse.swt.custom;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
@@ -118,6 +119,7 @@ public class ScrolledComposite extends Composite {
 	boolean alwaysShowScroll = false;
 	boolean showFocusedControl = false;
 	boolean showNextFocusedControl = true;
+	final ViewportRuntime viewportRuntime = new ViewportRuntime ();
 
 /**
  * Constructs a new instance of this class given its parent
@@ -148,6 +150,7 @@ public class ScrolledComposite extends Composite {
  */
 public ScrolledComposite(Composite parent, int style) {
 	super(parent, checkStyle(style));
+	viewportRuntime.initializeOrigin (0, 0);
 	super.setLayout(new ScrolledCompositeLayout());
 	ScrollBar hBar = getHorizontalBar ();
 	if (hBar != null) {
@@ -325,10 +328,64 @@ public boolean getShowFocusedControl() {
 
 void hScroll() {
 	if (content == null) return;
-	Point location = content.getLocation ();
+	Point origin = syncViewportOriginFromContent ();
 	ScrollBar hBar = getHorizontalBar ();
-	int hSelection = hBar.getSelection ();
-	content.setLocation (-hSelection, location.y);
+	int hSelection = hBar != null ? hBar.getSelection () : 0;
+	applyViewportOrigin (hSelection, origin.y);
+}
+
+Point syncViewportOriginFromContent () {
+	if (content == null || content.isDisposed ()) {
+		viewportRuntime.scrollTo (0, 0);
+		return new Point (0, 0);
+	}
+	Point location = content.getLocation ();
+	int x = Math.max (0, -location.x);
+	int y = Math.max (0, -location.y);
+	viewportRuntime.scrollTo (x, y);
+	return new Point (x, y);
+}
+
+void applyViewportOrigin (int x, int y) {
+	if (content == null || content.isDisposed ()) {
+		viewportRuntime.scrollTo (0, 0);
+		return;
+	}
+	x = Math.max (0, x);
+	y = Math.max (0, y);
+	viewportRuntime.scrollTo (x, y);
+	Point location = content.getLocation ();
+	int targetX = -x;
+	int targetY = -y;
+	if (location.x != targetX || location.y != targetY) {
+		content.setLocation (targetX, targetY);
+	}
+}
+
+ViewportRuntime.PixelLayout solveViewportLayout (Rectangle contentRect) {
+	ScrollBar hBar = getHorizontalBar ();
+	ScrollBar vBar = getVerticalBar ();
+	Point size = getSize ();
+	int border = getBorderWidth ();
+	int outerWidth = Math.max (0, size.x - 2 * border);
+	int outerHeight = Math.max (0, size.y - 2 * border);
+	long logicalWidth = expandHorizontal ? minWidth : Math.max (0, contentRect.width);
+	long logicalHeight = expandVertical ? minHeight : Math.max (0, contentRect.height);
+	int horizontalPolicy = hBar == null
+			? ViewportRuntime.NEVER
+			: alwaysShowScroll ? ViewportRuntime.ALWAYS : ViewportRuntime.AUTO;
+	int verticalPolicy = vBar == null
+			? ViewportRuntime.NEVER
+			: alwaysShowScroll ? ViewportRuntime.ALWAYS : ViewportRuntime.AUTO;
+	return ViewportRuntime.solvePixels (
+			outerWidth,
+			outerHeight,
+			logicalWidth,
+			logicalHeight,
+			hBar == null ? 0 : hBar.getSize ().y,
+			vBar == null ? 0 : vBar.getSize ().x,
+			horizontalPolicy,
+			verticalPolicy);
 }
 boolean needHScroll(Rectangle contentRect, boolean vVisible) {
 	ScrollBar hBar = getHorizontalBar();
@@ -377,9 +434,7 @@ boolean needVScroll(Rectangle contentRect, boolean hVisible) {
  */
 public Point getOrigin() {
 	checkWidget();
-	if (content == null) return new Point(0, 0);
-	Point location = content.getLocation();
-	return new Point(-location.x, -location.y);
+	return syncViewportOriginFromContent ();
 }
 /**
  * Scrolls the content so that the specified point in the content is in the top
@@ -423,19 +478,19 @@ public void setOrigin(int x, int y) {
 	if (content == null) return;
 	ScrollBar hBar = getHorizontalBar ();
 	if (hBar != null) {
-		hBar.setSelection(x);
-		x = -hBar.getSelection ();
+		hBar.setSelection (x);
+		x = hBar.getSelection ();
 	} else {
 		x = 0;
 	}
 	ScrollBar vBar = getVerticalBar ();
 	if (vBar != null) {
-		vBar.setSelection(y);
-		y = -vBar.getSelection ();
+		vBar.setSelection (y);
+		y = vBar.getSelection ();
 	} else {
 		y = 0;
 	}
-	content.setLocation(x, y);
+	applyViewportOrigin (x, y);
 }
 /**
  * Set the Always Show Scrollbars flag.  True if the scrollbars are
@@ -493,6 +548,7 @@ public void setContent(Control content) {
 			hBar.setThumb (0);
 			hBar.setSelection(0);
 		}
+		viewportRuntime.scrollTo (0, 0);
 		content.setLocation(0, 0);
 		layout(false);
 		this.content.addListener(SWT.Resize, contentListener);
@@ -703,9 +759,9 @@ public void showControl(Control control) {
 
 void vScroll() {
 	if (content == null) return;
-	Point location = content.getLocation ();
+	Point origin = syncViewportOriginFromContent ();
 	ScrollBar vBar = getVerticalBar ();
-	int vSelection = vBar.getSelection ();
-	content.setLocation (location.x, -vSelection);
+	int vSelection = vBar != null ? vBar.getSelection () : 0;
+	applyViewportOrigin (origin.x, vSelection);
 }
 }
