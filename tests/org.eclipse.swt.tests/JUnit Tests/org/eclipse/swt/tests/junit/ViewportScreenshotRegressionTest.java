@@ -20,6 +20,7 @@ import java.security.*;
 import java.util.*;
 
 import org.eclipse.swt.*;
+import org.eclipse.swt.custom.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
@@ -69,16 +70,22 @@ public class ViewportScreenshotRegressionTest {
 		TabFolder tabs = new TabFolder (shell, SWT.NONE);
 		Table table = createTableScene (tabs);
 		Tree tree = createTreeScene (tabs);
+		ViewportChromeScene viewport = createViewportChromeScene (tabs);
 		shell.open ();
 		drainEvents (120);
 
 		captureTableCheckedSelection (tabs, table, output);
 		captureTreeResidencySequence (tabs, tree, output);
+		captureViewportChromeSequence (tabs, viewport, output);
 
 		assertTrue (Files.size (output.resolve ("table-checked-selection.png")) > 0);
 		assertTrue (Files.size (output.resolve ("tree-pinned-expanded.png")) > 0);
 		assertTrue (Files.size (output.resolve ("tree-pinned-collapsed.png")) > 0);
 		assertTrue (Files.size (output.resolve ("tree-pinned-restored.png")) > 0);
+		assertTrue (Files.size (output.resolve ("viewport-vertical-scroll.png")) > 0);
+		assertTrue (Files.size (output.resolve ("viewport-horizontal-scroll.png")) > 0);
+		assertTrue (Files.size (output.resolve ("viewport-narrow.png")) > 0);
+		assertTrue (Files.size (output.resolve ("viewport-wide.png")) > 0);
 	}
 
 	private Table createTableScene (TabFolder tabs) {
@@ -130,6 +137,123 @@ public class ViewportScreenshotRegressionTest {
 		});
 		tree.setItemCount (64);
 		return tree;
+	}
+
+
+	private static final class ViewportChromeScene {
+		final Composite root;
+		final Canvas header;
+		final ScrolledComposite scroller;
+		final int[] headerOriginX = {0};
+		final long[] headerPaints = {0};
+		final long[] bodyPaints = {0};
+
+		ViewportChromeScene (Composite root, Canvas header, ScrolledComposite scroller) {
+			this.root = root;
+			this.header = header;
+			this.scroller = scroller;
+		}
+	}
+
+	private ViewportChromeScene createViewportChromeScene (TabFolder tabs) {
+		TabItem tab = new TabItem (tabs, SWT.NONE);
+		tab.setText ("Viewport chrome");
+		Composite root = new Composite (tabs, SWT.NONE);
+		root.setLayout (new GridLayout (1, false));
+		tab.setControl (root);
+
+		Canvas header = new Canvas (root, SWT.DOUBLE_BUFFERED | SWT.BORDER);
+		GridData headerData = new GridData (SWT.FILL, SWT.CENTER, true, false);
+		headerData.heightHint = 30;
+		header.setLayoutData (headerData);
+
+		ScrolledComposite scroller = new ScrolledComposite (
+				root, SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
+		scroller.setLayoutData (new GridData (SWT.FILL, SWT.FILL, true, true));
+
+		Canvas body = new Canvas (scroller, SWT.DOUBLE_BUFFERED);
+		body.setSize (1800, 6000);
+		scroller.setContent (body);
+
+		ViewportChromeScene scene = new ViewportChromeScene (root, header, scroller);
+		header.addListener (SWT.Paint, event -> {
+			scene.headerPaints[0]++;
+			int x = -scene.headerOriginX[0];
+			for (int column = 0; column < 8; column++) {
+				event.gc.drawRectangle (x, 0, 224, 29);
+				event.gc.drawText ("column " + column, x + 8, 6, true);
+				x += 224;
+			}
+		});
+		body.addListener (SWT.Paint, event -> {
+			scene.bodyPaints[0]++;
+			Rectangle clip = event.gc.getClipping ();
+			int first = Math.max (0, clip.y / 22);
+			int last = Math.min (273, (clip.y + clip.height + 21) / 22);
+			for (int row = first; row < last; row++) {
+				int y = row * 22;
+				event.gc.drawText ("row " + row, 8, y + 3, true);
+				for (int column = 1; column < 8; column++) {
+					int x = column * 224;
+					event.gc.drawLine (x, y, x, y + 22);
+				}
+				event.gc.drawLine (0, y + 21, 1800, y + 21);
+			}
+		});
+
+		ScrollBar horizontal = scroller.getHorizontalBar ();
+		if (horizontal != null) {
+			horizontal.addListener (SWT.Selection, event -> {
+				scene.headerOriginX[0] = scroller.getOrigin ().x;
+				header.redraw ();
+			});
+		}
+		return scene;
+	}
+
+	private void captureViewportChromeSequence (
+			TabFolder tabs, ViewportChromeScene scene, Path output) throws Exception {
+		tabs.setSelection (2);
+		shell.setSize (1000, 700);
+		drainEvents (120);
+
+		scene.scroller.setOrigin (0, 1400);
+		drainEvents (120);
+		capture (
+				"viewport-vertical-scroll", scene.root, output,
+				viewportChromeSidecar (scene));
+
+		scene.scroller.setOrigin (620, 1400);
+		scene.headerOriginX[0] = scene.scroller.getOrigin ().x;
+		scene.header.redraw ();
+		drainEvents (120);
+		capture (
+				"viewport-horizontal-scroll", scene.root, output,
+				viewportChromeSidecar (scene));
+
+		shell.setSize (520, 420);
+		drainEvents (120);
+		capture (
+				"viewport-narrow", scene.root, output,
+				viewportChromeSidecar (scene));
+
+		shell.setSize (1000, 700);
+		drainEvents (120);
+		capture (
+				"viewport-wide", scene.root, output,
+				viewportChromeSidecar (scene));
+	}
+
+	private String viewportChromeSidecar (ViewportChromeScene scene) {
+		Point origin = scene.scroller.getOrigin ();
+		return "viewport.origin=" + origin + "\n"
+				+ "viewport.headerOriginX=" + scene.headerOriginX[0] + "\n"
+				+ "viewport.headerPaints=" + scene.headerPaints[0] + "\n"
+				+ "viewport.bodyPaints=" + scene.bodyPaints[0] + "\n"
+				+ "viewport.rootClient=" + scene.root.getClientArea () + "\n"
+				+ "viewport.scrollerClient=" + scene.scroller.getClientArea () + "\n"
+				+ scrollBarText ("h", scene.scroller.getHorizontalBar ())
+				+ scrollBarText ("v", scene.scroller.getVerticalBar ());
 	}
 
 	private void captureTableCheckedSelection (TabFolder tabs, Table table, Path output) throws Exception {
