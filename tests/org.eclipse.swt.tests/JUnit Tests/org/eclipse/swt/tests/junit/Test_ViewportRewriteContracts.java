@@ -302,11 +302,15 @@ public class Test_ViewportRewriteContracts {
 		int body = type.getField("BODY").getInt(null);
 		int frozen = type.getField("FROZEN").getInt(null);
 		int header = type.getField("HEADER").getInt(null);
+		int editor = type.getField("EDITOR").getInt(null);
 		int scrollbar = type.getField("SCROLLBAR").getInt(null);
+		int feedback = type.getField("FEEDBACK").getInt(null);
 
 		initialize.invoke(runtime, 0.0, 0.0);
-		assertEquals(body | header | scrollbar, scrollTo.invoke(runtime, 5.0, 0.0));
-		assertEquals(body | frozen | scrollbar, scrollTo.invoke(runtime, 5.0, 7.0));
+		assertEquals(body | header | editor | scrollbar | feedback,
+				scrollTo.invoke(runtime, 5.0, 0.0));
+		assertEquals(body | frozen | editor | scrollbar | feedback,
+				scrollTo.invoke(runtime, 5.0, 7.0));
 		assertEquals(0, scrollTo.invoke(runtime, 5.0, 7.0));
 
 		Object horizontalForcesVertical = solvePixels.invoke(
