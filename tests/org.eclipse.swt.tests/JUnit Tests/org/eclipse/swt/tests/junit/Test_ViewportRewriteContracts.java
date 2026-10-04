@@ -225,4 +225,61 @@ public class Test_ViewportRewriteContracts {
 			display.dispose();
 		}
 	}
+	@Test
+	public void viewportScrollbarVisibilityConvergesAcrossAxes() throws Exception {
+		Class<?> type = Class.forName("org.eclipse.swt.widgets.ViewportScrollLayout");
+		Method solve = type.getDeclaredMethod(
+				"solve",
+				int.class, int.class, int.class,
+				long.class, int.class, long.class,
+				int.class, int.class, int.class, int.class);
+		solve.setAccessible(true);
+
+		Field autoField = type.getDeclaredField("AUTO");
+		Field neverField = type.getDeclaredField("NEVER");
+		autoField.setAccessible(true);
+		neverField.setAccessible(true);
+		int auto = autoField.getInt(null);
+		int never = neverField.getInt(null);
+
+		Object horizontalForcesVertical = solve.invoke(
+				null, 100, 100, 20,
+				4L, 25, 105L,
+				16, 16, auto, auto);
+		assertEquals(true, call(horizontalForcesVertical, "horizontalVisible"));
+		assertEquals(true, call(horizontalForcesVertical, "verticalVisible"));
+		assertEquals(true, call(horizontalForcesVertical, "cornerVisible"));
+		assertEquals(84, call(horizontalForcesVertical, "bodyWidth"));
+		assertEquals(64, call(horizontalForcesVertical, "bodyHeight"));
+		assertEquals(3, call(horizontalForcesVertical, "visibleRows"));
+		assertEquals(84, call(horizontalForcesVertical, "headerWidth"));
+
+		Object verticalForcesHorizontal = solve.invoke(
+				null, 100, 100, 20,
+				5L, 20, 90L,
+				16, 16, auto, auto);
+		assertEquals(true, call(verticalForcesHorizontal, "verticalVisible"));
+		assertEquals(true, call(verticalForcesHorizontal, "horizontalVisible"));
+		assertEquals(84, call(verticalForcesHorizontal, "bodyWidth"));
+		assertEquals(64, call(verticalForcesHorizontal, "bodyHeight"));
+
+		Object policySuppressed = solve.invoke(
+				null, 100, 100, 20,
+				1_000_000L, 22, 10_000L,
+				16, 16, never, never);
+		assertEquals(false, call(policySuppressed, "horizontalVisible"));
+		assertEquals(false, call(policySuppressed, "verticalVisible"));
+		assertEquals(100, call(policySuppressed, "bodyWidth"));
+		assertEquals(80, call(policySuppressed, "bodyHeight"));
+
+		Object huge = solve.invoke(
+				null, 640, 480, 24,
+				Long.MAX_VALUE, 64, Long.MAX_VALUE,
+				16, 16, auto, auto);
+		assertEquals(Long.MAX_VALUE, call(huge, "estimatedContentHeight"));
+		assertEquals(true, call(huge, "horizontalVisible"));
+		assertEquals(true, call(huge, "verticalVisible"));
+	}
+
+
 }
