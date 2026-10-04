@@ -302,35 +302,37 @@ The Swing Event catalogue reinforces event-space separation:
 - model-change events should invalidate logical ranges rather than force eager
   widget reconstruction.
 
-### Internal paint-state DAG
+### Retained paint graph + viewport state
 
-`ViewportPaintDAG` is the distilled common primitive for these graphics/event
-ideas. It deliberately does **not** proxy or replace public `GC` objects.
+`org.eclipse.swt.internal.ViewportPaintGraph` is the canonical retained rendering
+owner. The Java2s/Swing distillation extends that existing graph rather than
+introducing a parallel paint DAG.
 
-Each node is held in primitive lanes and owns:
+The graph already stores reusable geometry templates and DAG instance edges in
+structure-of-arrays form and replays through the real SWT `GC`. It now also
+carries the viewport state needed around those retained atoms:
 
-- one parent coordinate space;
-- one viewport z-plane;
-- a local 2D affine transform;
-- an optional local clip;
-- optional inherited stroke width/style/cap/join.
-
-It provides:
-
+- inherited viewport z-plane metadata;
+- group-local 2D affine transforms;
+- local clip bounds that can be conservatively intersected in root/device space;
+- inherited stroke width/style/cap/join metadata;
 - local -> root/device coordinate mapping;
-- root/device -> local inverse mapping for hit testing and events;
-- conservative root-space clip intersection;
-- nearest-ancestor stroke-state inheritance.
+- root/device -> local inverse mapping for hit testing and input events.
 
-This makes the intended paint pipeline:
+Detached reusable templates deliberately have no unique root coordinate until
+instanced. Coordinate queries therefore reject detached nodes rather than
+inventing a device location.
+
+This makes the ownership pipeline:
 
 ```text
 logical row/cell coordinates
         |
         v
-ViewportPaintDAG
-  body / frozen / header / editor / feedback
-  affine transform + clip + inherited stroke
+ViewportPaintGraph
+  retained templates + instance DAG
+  body / frozen / header / editor / feedback state
+  affine mapping + clip bounds + inherited stroke
         |
         v
 real SWT GC
@@ -340,13 +342,15 @@ platform renderer
 ```
 
 The public `PaintEvent.gc` remains the real SWT `GC`; identity and existing GC
-semantics are therefore unchanged.
+semantics are unchanged. The graph's clip/stroke lanes are viewport planning
+state: callers can derive the effective root clip/stroke without retaining a GC
+or a native graphics resource.
 
-Win32 already contains an internal replay mechanism for reapplicable GC operations
-such as transform, clipping, alpha, line state and drawing operations. That
-existing backend behavior is a useful donor for future common replay work; the
-viewport rewrite should consolidate around it rather than create another public
-graphics abstraction.
+Win32 already contains a lower-level replay mechanism for reapplicable GC
+operations such as transform, clipping, alpha, line state and drawing
+operations. That backend mechanism remains complementary: the viewport graph
+plans reusable viewport paint atoms and coordinate state, while the platform GC
+continues to own native graphics lifetime.
 
 ### Distilled rendering invariants
 
