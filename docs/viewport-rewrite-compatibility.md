@@ -258,3 +258,178 @@ When a real application reports a regression:
 4. use the `swt-classic` branch only when the client genuinely depends on legacy implementation behavior that cannot yet be preserved safely.
 
 `hsoliwal/eclipse.platform.swt:swt-classic` is intentionally retained as the classic escape hatch. It is not the architecture target and should not absorb new viewport work. Compatibility requests are accepted; one exceptional client must not force the optimized core back to dense/eager widget construction.
+
+
+## Java2s SWT/Swing distillation matrix
+
+The following catalogues are treated as behavioral donor corpora. Their source is not copied:
+
+- https://www.java2s.com/Tutorial/Java/0280__SWT/Catalog0280__SWT.html
+- https://www.java2s.com/Tutorial/Java/0300__SWT-2D-Graphics/Catalog0300__SWT-2D-Graphics.html
+- https://www.java2s.com/Tutorial/Java/0240__Swing/Catalog0240__Swing.html
+- https://www.java2s.com/Tutorial/Java/0260__Swing-Event/Catalog0260__Swing-Event.html
+
+The SWT catalogue contributes API-behavior shapes for Table/TableItem/TableColumn,
+Tree/TreeItem/TreeColumn, TreeViewer, editors, renderers, ScrolledComposite,
+ScrollBar, Canvas, focus, keyboard/mouse events, drag/drop, timers and screen
+capture. The rewrite must continue to satisfy those ordinary application shapes
+even when the retained implementation is sparse.
+
+The SWT 2D Graphics catalogue contributes independent paint dimensions: GC state,
+paint clipping, transforms, paths, line/stroke state, text, animation and image
+rendering. These are not flattened into widget state. They are composed at the
+paint boundary.
+
+The Swing catalogue is useful as an independent design cross-check:
+
+- `JViewport` demonstrates that logical view coordinates and viewport coordinates
+  are separate concerns.
+- `JLayeredPane` reinforces independent z-planes for body, frozen content,
+  header, editor and transient feedback.
+- `JTableHeader` being independently managed from table rows reinforces the SWT
+  header/body split.
+- JTable/JTree model-vs-view indexing reinforces explicit coordinate mapping after
+  sort/filter/structural edits.
+- renderer/editor examples reinforce reusable transient presentation objects rather
+  than one retained component per row.
+
+The Swing Event catalogue reinforces event-space separation:
+
+- scrollbar adjustment is a viewport-origin event, not a data-model mutation;
+- mouse/mouse-wheel coordinates must be mapped through the inverse of the same
+  transform used for paint;
+- tree expansion/selection/model events are distinct semantic channels;
+- model-change events should invalidate logical ranges rather than force eager
+  widget reconstruction.
+
+### Retained paint graph + viewport state
+
+`org.eclipse.swt.internal.ViewportPaintGraph` is the canonical retained rendering
+owner. The Java2s/Swing distillation extends that existing graph rather than
+introducing a parallel paint DAG.
+
+The graph already stores reusable geometry templates and DAG instance edges in
+structure-of-arrays form and replays through the real SWT `GC`. It now also
+carries the viewport state needed around those retained atoms:
+
+- inherited viewport z-plane metadata;
+- group-local 2D affine transforms;
+- local clip bounds that can be conservatively intersected in root/device space;
+- inherited stroke width/style/cap/join metadata;
+- local -> root/device coordinate mapping;
+- root/device -> local inverse mapping for hit testing and input events.
+
+Detached reusable templates deliberately have no unique root coordinate until
+instanced. Coordinate queries therefore reject detached nodes rather than
+inventing a device location.
+
+This makes the ownership pipeline:
+
+```text
+logical row/cell coordinates
+        |
+        v
+ViewportPaintGraph
+  retained templates + instance DAG
+  body / frozen / header / editor / feedback state
+  affine mapping + clip bounds + inherited stroke
+        |
+        v
+real SWT GC
+        |
+        v
+platform renderer
+```
+
+The public `PaintEvent.gc` remains the real SWT `GC`; identity and existing GC
+semantics are unchanged. The graph's clip/stroke lanes are viewport planning
+state: callers can derive the effective root clip/stroke without retaining a GC
+or a native graphics resource.
+
+Win32 already contains a lower-level replay mechanism for reapplicable GC
+operations such as transform, clipping, alpha, line state and drawing
+operations. That backend mechanism remains complementary: the viewport graph
+plans reusable viewport paint atoms and coordinate state, while the platform GC
+continues to own native graphics lifetime.
+
+### Distilled rendering invariants
+
+1. **Vertical scrolling does not repaint the header merely because the body moved.**
+2. **Horizontal scrolling translates the normal header and body together while
+   frozen content stays on its own x-plane.**
+3. **Paint and input use the same coordinate transform in opposite directions.**
+4. **Nested clips intersect before rendering reaches the platform GC.**
+5. **Stroke/path/transform state is presentation state, not row-model state.**
+6. **Owner-draw callbacks still receive the ordinary SWT GC and item facade.**
+7. **Renderer/editor shells may be transient/reusable; exposed SWT Item identity may
+   not be rebound.**
+8. **Model/view coordinate conversion is explicit after sorting, filtering,
+   insertion, removal or expansion changes.**
+
+The deterministic screenshot lane includes
+`viewport-affine-clip-stroke.png`, which exercises a real SWT GC with transform,
+clip, cubic Path, line width/style/cap/join and text while preserving/restoring
+incoming GC state.
+
+
+### Additional viewport/GPU donor distillation
+
+The viewport rewrite also reviews modern native/immediate/GPU GUI projects as
+architecture donors. Source is not copied.
+
+- **viewport-lib (Rust/wgpu)** separates the host application's window, event
+  loop and tool state from viewport rendering. It builds frame data, prepares
+  renderer resources once per frame, batches instances, and treats camera input,
+  picking and overlays as viewport-space concerns. Because viewport-lib is
+  GPL-3.0, SWT uses these ideas only as design evidence.
+- **Dear ImGui** carries clip rectangles with draw commands, keeps background and
+  foreground viewport draw lists, and can split/merge draw channels so layers
+  can be emitted out of order before being flattened for the backend. It also
+  keeps coarse culling above the primitive draw-list level.
+- **LVGL** separates draw tasks from draw units/backends, dispatches tasks into
+  layers, and allocates layer buffers lazily. Simple layers may be rendered in
+  bounded chunks, while transformed layers require a larger complete transform
+  extent. This reinforces SWT's distinction between cheap translated viewport
+  planes and transform-heavy presentation.
+- **MyGUI** keeps one GUI core while selecting among OpenGL, Direct3D, Vulkan,
+  Ogre and other rendering backends. Its cross-backend screenshot comparison
+  reinforces keeping SWT's retained paint plan backend-neutral.
+- **NanoGUI/NanoVG** reinforces the ordinary retained-widget + immediate vector
+  drawing split and the need to keep event/layout ownership above the graphics
+  backend rather than embedding semantic widget state in draw commands.
+
+The common distilled rule is:
+
+```text
+semantic widgets / events / selection
+              |
+              v
+logical viewport coordinates
+              |
+              v
+ViewportPaintGraph
+  retained templates
+  affine transforms
+  clips + stroke metadata
+  z-plane channels
+              |
+              v
+prepare / cull / choose layers
+              |
+       +------+------+
+       |             |
+       v             v
+    SWT GC       future GPU
+  platform API    draw unit
+```
+
+`ViewportPaintGraph.replayLayer(...)` and `replayLayers(...)` provide the
+first backend-neutral draw-channel contract. Ordinary `replay(...)` keeps its
+existing insertion order, so this is additive. Viewport owners may replay only a
+dirty plane or specify an explicit back-to-front order such as body, frozen
+content, header, editor and feedback.
+
+This deliberately stops short of introducing a GPU dependency into SWT core.
+A future GPU backend should consume prepared graph state through a narrow backend
+boundary while the existing Cocoa/GTK/Win32 GC paths remain authoritative for
+public SWT behavior.
