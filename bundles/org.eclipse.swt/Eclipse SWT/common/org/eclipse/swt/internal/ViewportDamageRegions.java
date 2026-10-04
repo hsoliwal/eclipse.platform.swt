@@ -34,6 +34,7 @@ public final class ViewportDamageRegions {
 	private int [] width;
 	private int [] height;
 	private int count;
+	private boolean fullDamage;
 
 	public ViewportDamageRegions () {
 		this (DEFAULT_MAX_REGIONS);
@@ -64,6 +65,11 @@ public final class ViewportDamageRegions {
 
 	public void clear () {
 		count = 0;
+		fullDamage = false;
+	}
+
+	public boolean isFullDamage () {
+		return fullDamage;
 	}
 
 	/**
@@ -73,7 +79,7 @@ public final class ViewportDamageRegions {
 	 * than allowed to overflow while unions are computed.</p>
 	 */
 	public void invalidate (int layer, int rx, int ry, int rWidth, int rHeight) {
-		if (rWidth <= 0 || rHeight <= 0) return;
+		if (rWidth <= 0 || rHeight <= 0 || fullDamage) return;
 		int left = rx;
 		int top = ry;
 		int right = saturatedAdd (rx, rWidth);
@@ -114,8 +120,12 @@ public final class ViewportDamageRegions {
 		layers [count] = layer;
 		x [count] = left;
 		y [count] = top;
-		width [count] = saturatedExtent (left, right);
-		height [count] = saturatedExtent (top, bottom);
+		if (!representableExtent (left, right) || !representableExtent (top, bottom)) {
+			collapseToFullDamage ();
+			return;
+		}
+		width [count] = right - left;
+		height [count] = bottom - top;
 		count++;
 	}
 
@@ -195,12 +205,16 @@ public final class ViewportDamageRegions {
 			right = Math.max (right, saturatedAdd (x [index], width [index]));
 			bottom = Math.max (bottom, saturatedAdd (y [index], height [index]));
 		}
+		if (!representableExtent (left, right) || !representableExtent (top, bottom)) {
+			collapseToFullDamage ();
+			return;
+		}
 		count = 1;
 		layers [0] = ALL_LAYERS;
 		x [0] = left;
 		y [0] = top;
-		width [0] = saturatedExtent (left, right);
-		height [0] = saturatedExtent (top, bottom);
+		width [0] = right - left;
+		height [0] = bottom - top;
 	}
 
 	private boolean touches (int index, int left, int top, int right, int bottom) {
@@ -221,10 +235,15 @@ public final class ViewportDamageRegions {
 		int nextTop = Math.min (y [index], top);
 		int nextRight = Math.max (existingRight, right);
 		int nextBottom = Math.max (existingBottom, bottom);
+		if (!representableExtent (nextLeft, nextRight)
+				|| !representableExtent (nextTop, nextBottom)) {
+			collapseToFullDamage ();
+			return;
+		}
 		x [index] = nextLeft;
 		y [index] = nextTop;
-		width [index] = saturatedExtent (nextLeft, nextRight);
-		height [index] = saturatedExtent (nextTop, nextBottom);
+		width [index] = nextRight - nextLeft;
+		height [index] = nextBottom - nextTop;
 	}
 
 	private void removeAt (int index) {
@@ -256,9 +275,16 @@ public final class ViewportDamageRegions {
 		return saturatingInt (value);
 	}
 
-	private static int saturatedExtent (int start, int end) {
-		if (end <= start) return 0;
-		return saturatingInt ((long)end - start);
+	private void collapseToFullDamage () {
+		ensureCapacity (1);
+		count = 1;
+		fullDamage = true;
+		layers [0] = ALL_LAYERS;
+		x [0] = y [0] = width [0] = height [0] = 0;
+	}
+
+	private static boolean representableExtent (int start, int end) {
+		return end > start && (long)end - start <= Integer.MAX_VALUE;
 	}
 
 	private static int saturatingInt (long value) {
