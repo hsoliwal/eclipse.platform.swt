@@ -74,6 +74,16 @@ public final class ViewportPaintGraph {
 	private float [] transforms = new float [6 * 8];
 	private int transformCount = 1;
 
+	/*
+	 * Viewport paint state is UI-thread confined. Reuse primitive scratch lanes
+	 * for paint/input coordinate mapping so mouse motion and hit testing do not
+	 * allocate transient matrix objects.
+	 */
+	private final float [] transformScratch = new float [6];
+	private final float [] clipScratch = new float [4];
+	private final float [] gcTransformScratch = new float [6];
+	private final int [] strokeScratch = new int [4];
+
 	public ViewportPaintGraph () {
 		Arrays.fill (firstChild, NONE);
 		Arrays.fill (lastChild, NONE);
@@ -224,9 +234,9 @@ public final class ViewportPaintGraph {
 		checkOut (out, 2);
 		requireFinite (x);
 		requireFinite (y);
-		Affine transform = rootTransform (node);
-		out [0] = transform.m11 * x + transform.m21 * y + transform.dx;
-		out [1] = transform.m12 * x + transform.m22 * y + transform.dy;
+		rootTransformElements (node, transformScratch);
+		out [0] = transformScratch [0] * x + transformScratch [2] * y + transformScratch [4];
+		out [1] = transformScratch [1] * x + transformScratch [3] * y + transformScratch [5];
 	}
 
 	public boolean mapFromRoot (int node, float x, float y, float [] out) {
@@ -234,13 +244,14 @@ public final class ViewportPaintGraph {
 		checkOut (out, 2);
 		requireFinite (x);
 		requireFinite (y);
-		Affine transform = rootTransform (node);
-		float determinant = transform.m11 * transform.m22 - transform.m12 * transform.m21;
+		rootTransformElements (node, transformScratch);
+		float determinant = transformScratch [0] * transformScratch [3]
+				- transformScratch [1] * transformScratch [2];
 		if (determinant == 0) return false;
-		float dx = x - transform.dx;
-		float dy = y - transform.dy;
-		out [0] = (transform.m22 * dx - transform.m21 * dy) / determinant;
-		out [1] = (-transform.m12 * dx + transform.m11 * dy) / determinant;
+		float dx = x - transformScratch [4];
+		float dy = y - transformScratch [5];
+		out [0] = (transformScratch [3] * dx - transformScratch [2] * dy) / determinant;
+		out [1] = (-transformScratch [1] * dx + transformScratch [0] * dy) / determinant;
 		return true;
 	}
 
@@ -254,20 +265,20 @@ public final class ViewportPaintGraph {
 		float bottom = Float.POSITIVE_INFINITY;
 		for (int current = node; current != NONE; current = parents [current]) {
 			if ((flags [current] & HAS_CLIP) == 0) continue;
-			Affine transform = rootTransform (current);
+			rootTransformElements (current, transformScratch);
 			float x = clipX [current];
 			float y = clipY [current];
 			float width = clipWidth [current];
 			float height = clipHeight [current];
 
-			float x0 = transform.m11 * x + transform.m21 * y + transform.dx;
-			float y0 = transform.m12 * x + transform.m22 * y + transform.dy;
-			float x1 = transform.m11 * (x + width) + transform.m21 * y + transform.dx;
-			float y1 = transform.m12 * (x + width) + transform.m22 * y + transform.dy;
-			float x2 = transform.m11 * x + transform.m21 * (y + height) + transform.dx;
-			float y2 = transform.m12 * x + transform.m22 * (y + height) + transform.dy;
-			float x3 = transform.m11 * (x + width) + transform.m21 * (y + height) + transform.dx;
-			float y3 = transform.m12 * (x + width) + transform.m22 * (y + height) + transform.dy;
+			float x0 = transformScratch [0] * x + transformScratch [2] * y + transformScratch [4];
+			float y0 = transformScratch [1] * x + transformScratch [3] * y + transformScratch [5];
+			float x1 = transformScratch [0] * (x + width) + transformScratch [2] * y + transformScratch [4];
+			float y1 = transformScratch [1] * (x + width) + transformScratch [3] * y + transformScratch [5];
+			float x2 = transformScratch [0] * x + transformScratch [2] * (y + height) + transformScratch [4];
+			float y2 = transformScratch [1] * x + transformScratch [3] * (y + height) + transformScratch [5];
+			float x3 = transformScratch [0] * (x + width) + transformScratch [2] * (y + height) + transformScratch [4];
+			float y3 = transformScratch [1] * (x + width) + transformScratch [3] * (y + height) + transformScratch [5];
 
 			float clipLeft = Math.min (Math.min (x0, x1), Math.min (x2, x3));
 			float clipTop = Math.min (Math.min (y0, y1), Math.min (y2, y3));
@@ -331,33 +342,37 @@ public final class ViewportPaintGraph {
 			gc.getClipping (savedClip);
 			gc.getClipping (workClip);
 
-			float [] clip = new float [4];
-			if (rootClip (node, clip)) {
-				int x = (int)Math.floor (clip [0]);
-				int y = (int)Math.floor (clip [1]);
-				int right = (int)Math.ceil (clip [0] + clip [2]);
-				int bottom = (int)Math.ceil (clip [1] + clip [3]);
+			if (rootClip (node, clipScratch)) {
+				int x = (int)Math.floor (clipScratch [0]);
+				int y = (int)Math.floor (clipScratch [1]);
+				int right = (int)Math.ceil (clipScratch [0] + clipScratch [2]);
+				int bottom = (int)Math.ceil (clipScratch [1] + clipScratch [3]);
 				workClip.intersect (x, y, Math.max (0, right - x), Math.max (0, bottom - y));
 				gc.setClipping (workClip);
 			}
 
-			float [] existing = new float [6];
-			savedTransform.getElements (existing);
-			Affine base = new Affine (
-					existing [0], existing [1], existing [2],
-					existing [3], existing [4], existing [5]);
-			Affine combined = base.compose (rootTransform (node));
-			workTransform.setElements (
-					combined.m11, combined.m12, combined.m21,
-					combined.m22, combined.dx, combined.dy);
+			savedTransform.getElements (gcTransformScratch);
+			rootTransformElements (node, transformScratch);
+			float m11 = gcTransformScratch [0] * transformScratch [0]
+					+ gcTransformScratch [2] * transformScratch [1];
+			float m12 = gcTransformScratch [1] * transformScratch [0]
+					+ gcTransformScratch [3] * transformScratch [1];
+			float m21 = gcTransformScratch [0] * transformScratch [2]
+					+ gcTransformScratch [2] * transformScratch [3];
+			float m22 = gcTransformScratch [1] * transformScratch [2]
+					+ gcTransformScratch [3] * transformScratch [3];
+			float dx = gcTransformScratch [0] * transformScratch [4]
+					+ gcTransformScratch [2] * transformScratch [5] + gcTransformScratch [4];
+			float dy = gcTransformScratch [1] * transformScratch [4]
+					+ gcTransformScratch [3] * transformScratch [5] + gcTransformScratch [5];
+			workTransform.setElements (m11, m12, m21, m22, dx, dy);
 			gc.setTransform (workTransform);
 
-			int [] stroke = new int [4];
-			if (effectiveStroke (node, stroke)) {
-				gc.setLineWidth (stroke [0]);
-				gc.setLineStyle (stroke [1]);
-				gc.setLineCap (stroke [2]);
-				gc.setLineJoin (stroke [3]);
+			if (effectiveStroke (node, strokeScratch)) {
+				gc.setLineWidth (strokeScratch [0]);
+				gc.setLineStyle (strokeScratch [1]);
+				gc.setLineCap (strokeScratch [2]);
+				gc.setLineJoin (strokeScratch [3]);
 			}
 			painter.run ();
 		} finally {
@@ -652,13 +667,37 @@ public final class ViewportPaintGraph {
 		return false;
 	}
 
-	private Affine rootTransform (int node) {
-		Affine result = Affine.IDENTITY;
+	private void rootTransformElements (int node, float [] out) {
+		float m11 = 1, m12 = 0, m21 = 0, m22 = 1, dx = 0, dy = 0;
 		for (int current = node; current != NONE; current = parents [current]) {
 			if (kinds [current] != GROUP) continue;
-			result = transform (transformIds [current]).compose (result);
+			int offset = transformIds [current] * 6;
+			float local11 = transforms [offset];
+			float local12 = transforms [offset + 1];
+			float local21 = transforms [offset + 2];
+			float local22 = transforms [offset + 3];
+			float localDx = transforms [offset + 4];
+			float localDy = transforms [offset + 5];
+
+			float next11 = local11 * m11 + local21 * m12;
+			float next12 = local12 * m11 + local22 * m12;
+			float next21 = local11 * m21 + local21 * m22;
+			float next22 = local12 * m21 + local22 * m22;
+			float nextDx = local11 * dx + local21 * dy + localDx;
+			float nextDy = local12 * dx + local22 * dy + localDy;
+			m11 = next11;
+			m12 = next12;
+			m21 = next21;
+			m22 = next22;
+			dx = nextDx;
+			dy = nextDy;
 		}
-		return result;
+		out [0] = m11;
+		out [1] = m12;
+		out [2] = m21;
+		out [3] = m22;
+		out [4] = dx;
+		out [5] = dy;
 	}
 
 	private static void checkOut (float [] out, int length) {
