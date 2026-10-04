@@ -340,8 +340,8 @@ Point syncViewportOriginFromContent () {
 		return new Point (0, 0);
 	}
 	Point location = content.getLocation ();
-	int x = Math.max (0, -location.x);
-	int y = Math.max (0, -location.y);
+	int x = -location.x;
+	int y = -location.y;
 	viewportRuntime.scrollTo (x, y);
 	return new Point (x, y);
 }
