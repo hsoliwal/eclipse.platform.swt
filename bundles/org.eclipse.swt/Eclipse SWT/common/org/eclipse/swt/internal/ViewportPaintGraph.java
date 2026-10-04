@@ -785,14 +785,14 @@ public final class ViewportPaintGraph {
 			}
 			case DRAW_PATH, FILL_PATH -> {
 				double envelope = kinds [node] == DRAW_PATH ? strokeOutset : 1d;
-				double left = pathMinX [node] + dx - envelope;
-				double top = pathMinY [node] + dy - envelope;
-				double right = pathMaxX [node] + dx + envelope;
-				double bottom = pathMaxY [node] + dy + envelope;
+				double pathLeft = pathMinX [node] + dx - envelope;
+				double pathTop = pathMinY [node] + dy - envelope;
+				double pathRight = pathMaxX [node] + dx + envelope;
+				double pathBottom = pathMaxY [node] + dy + envelope;
 				long clipRight = (long)clip.x + clip.width;
 				long clipBottom = (long)clip.y + clip.height;
-				return right <= clip.x || bottom <= clip.y
-						|| left >= clipRight || top >= clipBottom;
+				return pathRight <= clip.x || pathBottom <= clip.y
+						|| pathLeft >= clipRight || pathTop >= clipBottom;
 			}
 			case TEXT -> {
 				// Font metrics are intentionally not retained in the graph.
