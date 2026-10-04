@@ -258,3 +258,75 @@ When a real application reports a regression:
 4. use the `swt-classic` branch only when the client genuinely depends on legacy implementation behavior that cannot yet be preserved safely.
 
 `hsoliwal/eclipse.platform.swt:swt-classic` is intentionally retained as the classic escape hatch. It is not the architecture target and should not absorb new viewport work. Compatibility requests are accepted; one exceptional client must not force the optimized core back to dense/eager widget construction.
+
+
+## Java2s SWT/Swing graphics and event distillation
+
+The following historical catalogues are behavioral donor corpora only; their source is not copied:
+
+- https://www.java2s.com/Tutorial/Java/0280__SWT/Catalog0280__SWT.html
+- https://www.java2s.com/Tutorial/Java/0300__SWT-2D-Graphics/Catalog0300__SWT-2D-Graphics.html
+- https://www.java2s.com/Tutorial/Java/0240__Swing/Catalog0240__Swing.html
+- https://www.java2s.com/Tutorial/Java/0260__Swing-Event/Catalog0260__Swing-Event.html
+
+The recurring mechanics are distilled below the public SWT API:
+
+- SWT Table/Tree/ScrolledComposite examples remain behavior contracts for selection, SetData, owner draw, editors, scrolling and event delivery.
+- SWT 2D examples separate GC transform, clip, Path and stroke state from widget/model state.
+- Swing JViewport reinforces logical-vs-device viewport coordinates.
+- Swing JTable/JTree renderers reinforce reuse of private presentation machinery rather than one retained component per logical row.
+- JTableHeader/JLayeredPane reinforce independently invalidated header, body, editor and feedback planes.
+- Swing adjustment/mouse events reinforce that input coordinates must be mapped through the inverse of the same transform used for paint.
+
+### One retained paint owner
+
+There is deliberately **one** viewport rendering/state owner: internal
+`org.eclipse.swt.internal.ViewportPaintGraph`.
+
+It combines two orthogonal roles in one structure-of-arrays graph:
+
+1. **retained rendering DAG**
+   - detached reusable geometry templates;
+   - instance edges;
+   - primitive geometry/opcode lanes;
+   - affine replay through the real SWT `GC`.
+
+2. **viewport presentation-state DAG**
+   - z-plane/layer identity;
+   - parent-relative affine transforms;
+   - local clips composed into root/device clip;
+   - inherited stroke width/style/cap/join;
+   - local -> root/device mapping;
+   - root/device -> local inverse mapping for hit testing and events.
+
+No alternate `ViewportPaintDAG` or public GC wrapper is introduced. Public
+`PaintEvent.gc` remains the real SWT `GC`, and `TableItem`/`TreeItem`
+semantic identity remains outside the paint graph.
+
+The intended pipeline is:
+
+```text
+logical model coordinates
+        |
+        v
+ViewportPaintGraph
+  body / frozen / header / editor / feedback
+  affine + clip + inherited stroke
+  retained templates / instances
+        |
+        v
+real SWT GC
+        |
+        v
+platform renderer
+```
+
+Vertical-only scrolling invalidates the body/frozen planes, not the header simply
+because rows moved. Horizontal scrolling translates normal header/body content
+while frozen content remains on its own x-plane. Input and hit testing use the
+inverse of the same affine chain used by paint.
+
+The deterministic visual lane includes
+`viewport-affine-clip-stroke.png`, exercising the consolidated graph with a
+real SWT GC, affine translation/rotation/scale, local clipping, cubic Path,
+line width/style/cap/join and text while proving incoming GC state restoration.
