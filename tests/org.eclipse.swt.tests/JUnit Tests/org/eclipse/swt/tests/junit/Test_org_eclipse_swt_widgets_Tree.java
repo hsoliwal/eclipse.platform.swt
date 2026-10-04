@@ -601,8 +601,13 @@ public void test_virtualGtkAndWin32CollapseCompactsNativeTailAndRestoresOnExpand
 	residentCount.setAccessible(true);
 
 	assertEquals(1_000, root.getItemCount());
-	assertEquals(1_000, residentCount.invoke(virtualTree, root),
-			"expanded-compatible native projection starts fully resident");
+	if ("gtk".equals(platform)) {
+		assertEquals(1, residentCount.invoke(virtualTree, root),
+				"GTK cold child branches keep one native expander sentinel");
+	} else {
+		assertEquals(1_000, residentCount.invoke(virtualTree, root),
+				"Win32 keeps its current expanded-compatible native projection");
+	}
 
 	TreeItem pinned = root.getItem(10);
 	pinned.setText("pinned");
@@ -610,7 +615,12 @@ public void test_virtualGtkAndWin32CollapseCompactsNativeTailAndRestoresOnExpand
 
 	root.setExpanded(true);
 	assertTrue(root.getExpanded());
-	assertEquals(1_000, residentCount.invoke(virtualTree, root));
+	if ("gtk".equals(platform)) {
+		assertEquals(256, residentCount.invoke(virtualTree, root),
+				"GTK expansion restores one frontier chunk rather than the full logical branch");
+	} else {
+		assertEquals(1_000, residentCount.invoke(virtualTree, root));
+	}
 
 	root.setExpanded(false);
 	SwtTestUtil.processEvents();
@@ -625,8 +635,13 @@ public void test_virtualGtkAndWin32CollapseCompactsNativeTailAndRestoresOnExpand
 
 	root.setExpanded(true);
 	assertTrue(root.getExpanded());
-	assertEquals(1_000, residentCount.invoke(virtualTree, root),
-			"expansion must restore the full native projection before it becomes scrollable");
+	if ("gtk".equals(platform)) {
+		assertEquals(256, residentCount.invoke(virtualTree, root),
+				"GTK re-expansion restores only the bounded frontier");
+	} else {
+		assertEquals(1_000, residentCount.invoke(virtualTree, root),
+				"Win32 keeps its current full native restoration");
+	}
 	assertSame(pinned, root.getItem(10));
 
 	root.setExpanded(false);
