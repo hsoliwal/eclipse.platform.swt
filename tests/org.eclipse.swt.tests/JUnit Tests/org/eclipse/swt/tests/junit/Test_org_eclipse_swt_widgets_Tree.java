@@ -143,30 +143,45 @@ public void test_virtualDndHitPinsColdTreeChildAcrossCollapseCompaction() throws
 	assertNotNull(child);
 	assertSame(root, child.getParentItem());
 
-	Field topologyField = Tree.class.getDeclaredField("virtualTopology");
-	topologyField.setAccessible(true);
-	Object topology = topologyField.get(virtualTree);
-	assertNotNull(topology);
+	int residentCount;
+	if ("cocoa".equals(SWT.getPlatform())) {
+		Method pinnedMethod = child.getClass().getDeclaredMethod("isVirtualFacadePinned");
+		pinnedMethod.setAccessible(true);
+		assertTrue((Boolean) pinnedMethod.invoke(child),
+				"a TreeItem exposed by DND hit-testing must be pinned");
 
-	Method itemId = Tree.class.getDeclaredMethod("virtualItemId", TreeItem.class);
-	itemId.setAccessible(true);
-	int childId = ((Number) itemId.invoke(virtualTree, child)).intValue();
+		Method storageMethod = Tree.class.getDeclaredMethod("virtualStorage", TreeItem.class);
+		storageMethod.setAccessible(true);
+		Object storage = storageMethod.invoke(virtualTree, root);
+		Field sizeField = storage.getClass().getDeclaredField("size");
+		sizeField.setAccessible(true);
+		residentCount = sizeField.getInt(storage);
+	} else {
+		Field topologyField = Tree.class.getDeclaredField("virtualTopology");
+		topologyField.setAccessible(true);
+		Object topology = topologyField.get(virtualTree);
+		assertNotNull(topology);
 
-	Method stateMethod = topology.getClass().getDeclaredMethod("state", int.class);
-	stateMethod.setAccessible(true);
-	long state = ((Number) stateMethod.invoke(topology, childId)).longValue();
+		Method itemId = Tree.class.getDeclaredMethod("virtualItemId", TreeItem.class);
+		itemId.setAccessible(true);
+		int childId = ((Number) itemId.invoke(virtualTree, child)).intValue();
 
-	Field pinnedField = Class.forName("org.eclipse.swt.widgets.VirtualItemState")
-			.getDeclaredField("PINNED");
-	pinnedField.setAccessible(true);
-	long pinned = pinnedField.getLong(null);
-	assertTrue((state & pinned) != 0,
-			"a TreeItem exposed by DND hit-testing must be pinned");
+		Method stateMethod = topology.getClass().getDeclaredMethod("state", int.class);
+		stateMethod.setAccessible(true);
+		long state = ((Number) stateMethod.invoke(topology, childId)).longValue();
 
-	Method materializedCount = topology.getClass().getDeclaredMethod("materializedCount");
-	materializedCount.setAccessible(true);
-	int beforeCollapse = ((Number) materializedCount.invoke(topology)).intValue();
-	assertTrue(beforeCollapse < 128,
+		Field pinnedField = Class.forName("org.eclipse.swt.widgets.VirtualItemState")
+				.getDeclaredField("PINNED");
+		pinnedField.setAccessible(true);
+		long pinned = pinnedField.getLong(null);
+		assertTrue((state & pinned) != 0,
+				"a TreeItem exposed by DND hit-testing must be pinned");
+
+		Method materializedCount = topology.getClass().getDeclaredMethod("materializedCount");
+		materializedCount.setAccessible(true);
+		residentCount = ((Number) materializedCount.invoke(topology)).intValue();
+	}
+	assertTrue(residentCount < 128,
 			"DND hit-testing must not materialize the 1K cold sibling range");
 
 	root.setExpanded(false);
