@@ -187,6 +187,26 @@ The scripted sequence includes top/middle/end virtual Table states, expanded/col
 
 The purpose is not pixel-identical output across operating systems or themes. Compare screenshots within the same platform/theme/DPI lane and combine visual evidence with the structural sidecar and SetData/paint counters.
 
+### Example-driven visual contracts
+
+The supplied historical examples are mapped to visual checkpoints instead of copied into SWT:
+
+- `ViewPort.java`: narrow/wide resize states verify the interdependent horizontal/vertical scrollbar visibility calculation. Its implementation deliberately recomputes horizontal visibility after vertical visibility changes because one scrollbar reduces the other axis' client extent.
+- `TreeViewerWithViewPort.java`: scroll-position checkpoints verify redraw-locked projection changes and top-item stability while an external scrollbar drives the underlying Tree.
+- `TreeViewerLazyTool.java`: its bounded `PROGRESSIVE_REVEAL_STEP = 100` pattern motivates frontier/residency screenshots while the full logical child count remains visible in the sidecar.
+- `DeferrredTreeViewer.java`: its 2,000-child step, dummy loading element, separate expansion list and retained selection motivate the pinned-child collapse/restore screenshot sequence.
+- Virtual TreeView 8.4.1: logical node visibility/state, visible-column calculations, dedicated header painting/backbuffer and scroll-range management motivate separate header/body screenshots plus logical-vs-resident diagnostics.
+- SWT/Java2s examples remain API-behavior donors for SetData, owner draw, selection, check state, ScrolledComposite and resize combinations; their source is not copied.
+
+Additional scripted images cover:
+
+- `table-checked-selection.png`: checkbox state and selection painting together;
+- `tree-pinned-expanded.png`: a pinned checked/grayed child while expanded;
+- `tree-pinned-collapsed.png`: the same logical branch after collapsed native-residency compaction;
+- `tree-pinned-restored.png`: restored expansion proving the pinned facade/state remains stable.
+
+For Tree scenes the sidecar also attempts to record virtual visible-row count, topology materialized count, viewport first/visible/paint range, and native resident child count for the scripted root. These diagnostics are reflective and best-effort so the manual harness remains usable on every SWT platform.
+
 ### Donor evidence for the screenshot lane
 
 The supplied legacy viewer sources reinforce the test shape:
