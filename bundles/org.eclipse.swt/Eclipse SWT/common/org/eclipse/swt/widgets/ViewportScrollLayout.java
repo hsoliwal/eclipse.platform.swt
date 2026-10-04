@@ -108,8 +108,14 @@ final class ViewportScrollLayout {
 				headerHeight,
 				visibleRows,
 				logicalRows,
-				Math.multiplyExact (logicalRows, (long)sampleRowHeight),
+				saturatedMultiply (logicalRows, sampleRowHeight),
 				logicalContentWidth);
+	}
+
+	private static long saturatedMultiply (long value, int multiplier) {
+		if (value == 0) return 0;
+		if (value > Long.MAX_VALUE / multiplier) return Long.MAX_VALUE;
+		return value * multiplier;
 	}
 
 	private static boolean policyVisible (int policy, boolean autoValue) {
