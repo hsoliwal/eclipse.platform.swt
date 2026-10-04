@@ -518,6 +518,42 @@ public void test_virtualGtkAndWin32TopologyStaysSparseAndTracksCoordinates() thr
 
 
 @Test
+public void test_virtualWin32CollapseAllDoesNotMaterializeColdPlaceholders() throws Exception {
+	if (!"win32".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(4_096);
+
+	TreeItem first = virtualTree.getItem(100);
+	first.setItemCount(2_048);
+	TreeItem firstChild = first.getItem(7);
+	firstChild.setItemCount(32);
+
+	TreeItem second = virtualTree.getItem(3_000);
+	second.setItemCount(64);
+
+	Field topologyField = Tree.class.getDeclaredField("virtualTopology");
+	topologyField.setAccessible(true);
+	Object topology = topologyField.get(virtualTree);
+	assertNotNull(topology);
+
+	Field materializedCountField = topology.getClass().getDeclaredField("materializedCount");
+	materializedCountField.setAccessible(true);
+	int before = materializedCountField.getInt(topology);
+	assertTrue(before <= 3,
+			"explicit access should materialize only the touched Win32 coordinates");
+
+	virtualTree.collapseAll();
+
+	int after = materializedCountField.getInt(topology);
+	assertEquals(before, after,
+			"collapseAll must traverse only materialized Win32 facades, not 4K native placeholders");
+	assertSame(first, virtualTree.getItem(100));
+	assertSame(firstChild, first.getItem(7));
+	assertSame(second, virtualTree.getItem(3_000));
+}
+
+@Test
 public void test_virtualGtkCollapseCompactsNativeTailAndRestoresOnExpand() throws Exception {
 	if (!"gtk".equals(SWT.getPlatform())) return;
 
