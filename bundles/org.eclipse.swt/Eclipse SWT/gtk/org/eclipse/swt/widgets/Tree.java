@@ -112,7 +112,7 @@ public class Tree extends Composite {
 	double cachedAdjustment, currentAdjustment;
 	Color headerBackground, headerForeground;
 	boolean boundsChangedSinceLastDraw, wasScrolled;
-	final ViewportLayerState viewportLayers = new ViewportLayerState ();
+	ViewportLayerState viewportLayers;
 	boolean rowActivated;
 
 	private long headerCSSProvider;
@@ -1507,6 +1507,7 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
 
 @Override
 void createWidget (int index) {
+	viewportLayers = new ViewportLayerState ();
 	super.createWidget (index);
 	items = new TreeItem [4];
 	if ((style & SWT.VIRTUAL) != 0) {
@@ -2919,7 +2920,7 @@ long gtk_row_has_child_toggled (long model, long path, long iter) {
 }
 
 void initializeViewportLayers () {
-	long horizontal = GTK.gtk_scrollable_get_hadjustment (handle);
+	long horizontal = GTK.gtk_scrolled_window_get_hadjustment (scrolledHandle);
 	long vertical = GTK.gtk_scrollable_get_vadjustment (handle);
 	viewportLayers.initialize (
 			horizontal != 0 ? GTK.gtk_adjustment_get_value (horizontal) : 0,
@@ -2977,7 +2978,7 @@ VirtualTreeVisibleProjection.Row [] virtualViewportPaintWindow () {
 long gtk_scroll_event (long widget, long eventPtr) {
 	long result = super.gtk_scroll_event(widget, eventPtr);
 	syncVirtualTopRowFromNative ();
-	long horizontal = GTK.gtk_scrollable_get_hadjustment (handle);
+	long horizontal = GTK.gtk_scrolled_window_get_hadjustment (scrolledHandle);
 	long vertical = GTK.gtk_scrollable_get_vadjustment (handle);
 	int dirtyLayers = viewportLayers.scrollTo (
 			horizontal != 0 ? GTK.gtk_adjustment_get_value (horizontal) : 0,
