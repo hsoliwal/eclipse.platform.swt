@@ -177,6 +177,90 @@ public void test_virtualTreeEditorTracksPinnedItemAcrossViewportAndCollapse() {
 	virtualTree.dispose();
 }
 
+
+@Test
+public void test_virtualDndHitPinsColdTreeChildAcrossCollapseCompaction() throws Exception {
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.V_SCROLL);
+	virtualTree.setBounds(0, 0, 320, 200);
+	virtualTree.setItemCount(1);
+	shell.setSize(360, 260);
+	shell.open();
+	while (shell.getDisplay().readAndDispatch()) {
+		// drain native layout/paint work before coordinate hit testing
+	}
+
+	org.eclipse.swt.dnd.DropTargetEffect effect =
+			new org.eclipse.swt.dnd.DropTargetEffect(virtualTree);
+	int rowHeight = Math.max(1, virtualTree.getItemHeight());
+	org.eclipse.swt.graphics.Point rootPoint =
+			virtualTree.toDisplay(4, Math.max(1, rowHeight / 2));
+	TreeItem root = (TreeItem) effect.getItem(rootPoint.x, rootPoint.y);
+	assertNotNull(root);
+	assertEquals(0, virtualTree.indexOf(root));
+
+	root.setItemCount(1_024);
+	root.setExpanded(true);
+	while (shell.getDisplay().readAndDispatch()) {
+		// allow native expansion to publish the first child row
+	}
+
+	org.eclipse.swt.graphics.Point childPoint =
+			virtualTree.toDisplay(12, rowHeight + Math.max(1, rowHeight / 2));
+	TreeItem child = (TreeItem) effect.getItem(childPoint.x, childPoint.y);
+	assertNotNull(child);
+	assertSame(root, child.getParentItem());
+
+	int residentCount;
+	if ("cocoa".equals(SWT.getPlatform())) {
+		Method pinnedMethod = child.getClass().getDeclaredMethod("isVirtualFacadePinned");
+		pinnedMethod.setAccessible(true);
+		assertTrue((Boolean) pinnedMethod.invoke(child),
+				"a TreeItem exposed by DND hit-testing must be pinned");
+
+		Method storageMethod = Tree.class.getDeclaredMethod("virtualStorage", TreeItem.class);
+		storageMethod.setAccessible(true);
+		Object storage = storageMethod.invoke(virtualTree, root);
+		Field sizeField = storage.getClass().getDeclaredField("size");
+		sizeField.setAccessible(true);
+		residentCount = sizeField.getInt(storage);
+	} else {
+		Field topologyField = Tree.class.getDeclaredField("virtualTopology");
+		topologyField.setAccessible(true);
+		Object topology = topologyField.get(virtualTree);
+		assertNotNull(topology);
+
+		Method itemId = Tree.class.getDeclaredMethod("virtualItemId", TreeItem.class);
+		itemId.setAccessible(true);
+		int childId = ((Number) itemId.invoke(virtualTree, child)).intValue();
+
+		Method stateMethod = topology.getClass().getDeclaredMethod("state", int.class);
+		stateMethod.setAccessible(true);
+		long state = ((Number) stateMethod.invoke(topology, childId)).longValue();
+
+		Field pinnedField = Class.forName("org.eclipse.swt.widgets.VirtualItemState")
+				.getDeclaredField("PINNED");
+		pinnedField.setAccessible(true);
+		long pinned = pinnedField.getLong(null);
+		assertTrue((state & pinned) != 0,
+				"a TreeItem exposed by DND hit-testing must be pinned");
+
+		Method materializedCount = topology.getClass().getDeclaredMethod("materializedCount");
+		materializedCount.setAccessible(true);
+		residentCount = ((Number) materializedCount.invoke(topology)).intValue();
+	}
+	assertTrue(residentCount < 128,
+			"DND hit-testing must not materialize the 1K cold sibling range");
+
+	root.setExpanded(false);
+	assertFalse(child.isDisposed(),
+			"collapse compaction must preserve a DND-exposed pinned child facade");
+	root.setExpanded(true);
+	assertSame(child, root.getItem(0),
+			"re-expansion must restore the same DND-exposed TreeItem facade");
+
+	virtualTree.dispose();
+}
+
 @Test
 public void test_virtualTreeVisibleProjectionSkipsColdLogicalRanges() throws Exception {
 	Class<?> topologyType = Class.forName("org.eclipse.swt.widgets.VirtualTreeTopology");
