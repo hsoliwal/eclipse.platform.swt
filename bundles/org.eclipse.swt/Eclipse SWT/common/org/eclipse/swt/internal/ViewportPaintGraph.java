@@ -58,6 +58,7 @@ public final class ViewportPaintGraph {
 	private int [] targets = new int [16];
 	private int [] transformIds = new int [16];
 	private int [] layers = new int [16];
+	private int [] zOrders = new int [16];
 	private float [] clipX = new float [16];
 	private float [] clipY = new float [16];
 	private float [] clipWidth = new float [16];
@@ -231,6 +232,28 @@ public final class ViewportPaintGraph {
 	public void clearLayer (int group) {
 		requireGroup (group);
 		flags [group] &= ~HAS_LAYER;
+	}
+
+	/**
+	 * Orders one retained node among siblings in the same parent/viewport plane.
+	 *
+	 * <p>Lower values paint first. Equal values retain creation order. The sibling
+	 * links are reordered when this method is called, so replay performs no
+	 * sorting or allocation.</p>
+	 */
+	public void setZOrder (int node, int zOrder) {
+		requireNode (node);
+		int parent = parents [node];
+		if (parent < 0) throw new IllegalArgumentException ("z-order requires an attached sibling");
+		if (zOrders [node] == zOrder) return;
+		unlinkChild (parent, node);
+		zOrders [node] = zOrder;
+		linkChild (parent, node);
+	}
+
+	public int zOrder (int node) {
+		requireNode (node);
+		return zOrders [node];
 	}
 
 	public boolean effectiveLayer (int node, int [] out) {
@@ -834,14 +857,43 @@ public final class ViewportPaintGraph {
 	}
 
 	private void linkChild (int parent, int child) {
-		int tail = lastChild [parent];
-		if (tail == NONE) {
-			firstChild [parent] = lastChild [parent] = child;
+		int cursor = firstChild [parent];
+		while (cursor != NONE && comesBefore (cursor, child)) {
+			cursor = nextSibling [cursor];
+		}
+		if (cursor == NONE) {
+			int tail = lastChild [parent];
+			if (tail == NONE) {
+				firstChild [parent] = lastChild [parent] = child;
+				return;
+			}
+			nextSibling [tail] = child;
+			previousSibling [child] = tail;
+			lastChild [parent] = child;
 			return;
 		}
-		nextSibling [tail] = child;
-		previousSibling [child] = tail;
-		lastChild [parent] = child;
+		int previous = previousSibling [cursor];
+		nextSibling [child] = cursor;
+		previousSibling [child] = previous;
+		previousSibling [cursor] = child;
+		if (previous == NONE) firstChild [parent] = child;
+		else nextSibling [previous] = child;
+	}
+
+	private void unlinkChild (int parent, int child) {
+		int previous = previousSibling [child];
+		int next = nextSibling [child];
+		if (previous == NONE) firstChild [parent] = next;
+		else nextSibling [previous] = next;
+		if (next == NONE) lastChild [parent] = previous;
+		else previousSibling [next] = previous;
+		previousSibling [child] = NONE;
+		nextSibling [child] = NONE;
+	}
+
+	private boolean comesBefore (int left, int right) {
+		int order = Integer.compare (zOrders [left], zOrders [right]);
+		return order < 0 || (order == 0 && left < right);
 	}
 
 	private boolean wouldReach (int start, int wanted) {
@@ -1003,6 +1055,7 @@ public final class ViewportPaintGraph {
 		targets = grow (targets, old, next, NONE);
 		transformIds = Arrays.copyOf (transformIds, next);
 		layers = Arrays.copyOf (layers, next);
+		zOrders = Arrays.copyOf (zOrders, next);
 		clipX = Arrays.copyOf (clipX, next);
 		clipY = Arrays.copyOf (clipY, next);
 		clipWidth = Arrays.copyOf (clipWidth, next);

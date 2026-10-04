@@ -468,3 +468,26 @@ This deliberately stops short of introducing a GPU dependency into SWT core.
 A future GPU backend should consume prepared graph state through a narrow backend
 boundary while the existing Cocoa/GTK/Win32 GC paths remain authoritative for
 public SWT behavior.
+
+## GPU viewport donor: viewport-lib
+
+`grimandgreedy/viewport-lib` is used as a conceptual donor only. Its GPL-3.0 source is not copied into SWT.
+
+Useful distilled shapes:
+
+- retained draw groups may carry an explicit stable z-order across render families;
+- equal-z work keeps insertion order;
+- repeated geometry should be instanced/reused rather than rebuilt per visible row;
+- host-owned event loops and render targets remain authoritative;
+- preparation and paint can be separated so expensive state updates are bounded outside the draw pass;
+- picking/event coordinates belong to the viewport coordinate model rather than to transient render shells.
+
+SWT maps those ideas onto its existing owners:
+
+- `org.eclipse.swt.internal.ViewportPaintGraph` retains primitive paint atoms, transforms, paths, clips, layers and stable sibling z-order;
+- real SWT `GC` remains short-lived and public API behavior remains immediate-mode;
+- `ViewportLayerState` owns coarse BODY/FROZEN/HEADER/EDITOR/SCROLLBAR/FEEDBACK planes;
+- `VirtualViewportPlanner` / `VirtualTreeViewport` own logical visible coordinates and overscan;
+- public `Item` identities and SWT events remain outside retained rendering.
+
+This donor does not justify adding a wgpu dependency, a second scene graph, or another render-command owner.

@@ -381,6 +381,47 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 
 
 	@Test
+	public void test_retainedZOrderReordersSiblingsAndPreservesEqualOrder () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int fill = graph.group (graph.root ());
+		graph.fillRectangle (fill, 8, 8, 24, 12);
+		int stroke = graph.group (graph.root ());
+		graph.line (stroke, 8, 10, 31, 10);
+
+		gc.setBackground (display.getSystemColor (SWT.COLOR_RED));
+		gc.setForeground (display.getSystemColor (SWT.COLOR_BLUE));
+
+		graph.setZOrder (fill, 10);
+		graph.setZOrder (stroke, 20);
+		assertEquals (10, graph.zOrder (fill));
+		assertEquals (20, graph.zOrder (stroke));
+		graph.replay (gc, Affine.IDENTITY, new Rectangle (0, 0, 64, 64));
+		assertEquals (rgb (SWT.COLOR_BLUE), pixelRgb (12, 10),
+				"higher z retained stroke must paint above the fill");
+
+		gc.setBackground (display.getSystemColor (SWT.COLOR_WHITE));
+		gc.fillRectangle (image.getBounds ());
+		gc.setBackground (display.getSystemColor (SWT.COLOR_RED));
+		graph.setZOrder (stroke, 0);
+		graph.replay (gc, Affine.IDENTITY, new Rectangle (0, 0, 64, 64));
+		assertEquals (rgb (SWT.COLOR_RED), pixelRgb (12, 10),
+				"lower z retained stroke must paint behind the fill");
+
+		gc.setBackground (display.getSystemColor (SWT.COLOR_WHITE));
+		gc.fillRectangle (image.getBounds ());
+		gc.setBackground (display.getSystemColor (SWT.COLOR_RED));
+		graph.setZOrder (fill, 5);
+		graph.setZOrder (stroke, 5);
+		graph.replay (gc, Affine.IDENTITY, new Rectangle (0, 0, 64, 64));
+		assertEquals (rgb (SWT.COLOR_BLUE), pixelRgb (12, 10),
+				"equal z must preserve creation order, matching historical replay order");
+
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.setZOrder (graph.root (), 1),
+				"the root has no sibling stacking context");
+	}
+
+	@Test
 	public void test_orderedLayerReplayFiltersAndPreservesBackToFrontSequence () {
 		ViewportPaintGraph graph = new ViewportPaintGraph ();
 		int body = graph.group (graph.root ());
