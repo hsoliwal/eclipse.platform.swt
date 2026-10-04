@@ -17,6 +17,7 @@ package org.eclipse.swt.widgets;
 import org.eclipse.swt.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.internal.cocoa.*;
 
 /**
@@ -45,6 +46,7 @@ public class List extends Scrollable {
 	String [] items;
 	int itemCount;
 	boolean ignoreSelect, didSelect, rowsChanged, mouseIsDown;
+	final ViewportRuntime viewportRuntime = new ViewportRuntime ();
 
 	final int nativeItemHeight;
 
@@ -86,6 +88,7 @@ public List (Composite parent, int style) {
 
 	this.nativeItemHeight = (int)((NSTableView)view).rowHeight();
 	setFont(defaultFont ().handle); // update height
+	viewportRuntime.initializeOrigin (0, 0);
 }
 
 @Override
@@ -666,6 +669,7 @@ public int getTopIndex () {
 	point.y = rect.y;
 	int result = (int)((NSTableView)view).rowAtPoint(point);
 	if (result == -1) result = 0;
+	viewportRuntime.scrollTo (0, result);
 	return result;
 }
 
@@ -1464,11 +1468,13 @@ public void setTopIndex (int index) {
 	pt.x = scrollView.contentView().bounds().x;
 	pt.y = widget.frameOfCellAtColumn(0, row).y;
 	view.scrollPoint(pt);
+	viewportRuntime.scrollTo (0, getTopIndex ());
 }
 
 void showIndex (int index) {
 	if (0 <= index && index < itemCount) {
 		((NSTableView)view).scrollRowToVisible(index);
+		viewportRuntime.scrollTo (0, getTopIndex ());
 	}
 }
 
