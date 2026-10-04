@@ -119,8 +119,8 @@ public class Test_org_eclipse_swt_widgets_ViewportPaintDAG {
 
 		double [] clip = new double [4];
 		assertTrue ((boolean)rootClip.invoke (dag, child, clip));
-		assertArrayEquals (new double[] { -50d, -175d, 300d, 300d }, clip, 0.00001,
-				"child clip is transformed and intersected in root coordinates");
+		assertArrayEquals (new double[] {0d, 0d, 250d, 125d}, clip, 0.00001,
+				"child clip is transformed and intersected with body/root clips");
 
 		setStroke.invoke (dag, body, 3, SWT.LINE_DASH, SWT.CAP_ROUND, SWT.JOIN_BEVEL);
 		int [] stroke = new int [4];
