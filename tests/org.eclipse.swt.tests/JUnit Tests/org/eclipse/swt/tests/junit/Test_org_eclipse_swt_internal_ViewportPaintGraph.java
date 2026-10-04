@@ -409,6 +409,96 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 	}
 
 
+
+	@Test
+	public void test_damageReplayMatchesFullReplayAndPreservesCallerClip () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int body = graph.group (graph.root ());
+		graph.setLayer (body, 10);
+		graph.fillRectangle (body, 2, 2, 8, 8);
+		PathData triangle = new PathData ();
+		triangle.types = new byte[] {
+				SWT.PATH_MOVE_TO, SWT.PATH_LINE_TO, SWT.PATH_LINE_TO, SWT.PATH_CLOSE};
+		triangle.points = new float[] {2, 12, 10, 12, 6, 18};
+		graph.fillPath (body, triangle);
+
+		int header = graph.group (graph.root ());
+		graph.setLayer (header, 30);
+		graph.fillRectangle (header, 40, 2, 8, 8);
+
+		// Existing backing image before the viewport-body move.
+		graph.replayLayers (
+				gc, new int[] {10, 30}, Affine.IDENTITY, new Rectangle (0, 0, 64, 64));
+
+		graph.setTransform (body, Affine.translation (20, 0));
+
+		Image expected = new Image (display, 64, 64);
+		GC expectedGc = new GC (expected);
+		Region incoming = new Region (display);
+		Region after = new Region (display);
+		try {
+			expectedGc.setBackground (display.getSystemColor (SWT.COLOR_WHITE));
+			expectedGc.fillRectangle (expected.getBounds ());
+			expectedGc.setBackground (display.getSystemColor (SWT.COLOR_BLACK));
+			expectedGc.setForeground (display.getSystemColor (SWT.COLOR_BLACK));
+			graph.replayLayers (
+					expectedGc, new int[] {10, 30},
+					Affine.IDENTITY, new Rectangle (0, 0, 64, 64));
+
+			ViewportDamageRegions damage = new ViewportDamageRegions ();
+			damage.invalidate (10, 1, 1, 11, 19);   // old body envelope
+			damage.invalidate (10, 21, 1, 11, 19);  // translated body envelope
+
+			gc.setBackground (display.getSystemColor (SWT.COLOR_WHITE));
+			for (int index = 0; index < damage.count (); index++) {
+				gc.fillRectangle (
+						damage.xAt (index), damage.yAt (index),
+						damage.widthAt (index), damage.heightAt (index));
+			}
+			gc.setBackground (display.getSystemColor (SWT.COLOR_BLACK));
+			gc.setForeground (display.getSystemColor (SWT.COLOR_BLACK));
+
+			incoming.add (new Rectangle (0, 0, 64, 64));
+			incoming.subtract (new Rectangle (55, 55, 5, 5));
+			gc.setClipping (incoming);
+
+			var stats = graph.replayDamage (
+					gc, damage, new int[] {10, 30}, Affine.IDENTITY);
+			assertTrue (stats.drawnCommands () > 0);
+			assertImagesEqual (
+					expected, image,
+					"damage replay must match an equivalent complete retained replay");
+
+			gc.getClipping (after);
+			assertTrue (after.contains (0, 0));
+			assertFalse (after.contains (56, 56),
+					"damage replay must restore the caller's non-rectangular GC clip");
+		} finally {
+			after.dispose ();
+			incoming.dispose ();
+			expectedGc.dispose ();
+			expected.dispose ();
+		}
+	}
+
+	@Test
+	public void test_damageReplayRejectsUnorderedOrDuplicateLayers () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int body = graph.group (graph.root ());
+		graph.setLayer (body, 10);
+		graph.fillRectangle (body, 0, 0, 4, 4);
+
+		ViewportDamageRegions damage = new ViewportDamageRegions ();
+		damage.invalidate (10, 0, 0, 4, 4);
+
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.replayDamage (
+						gc, damage, new int[] {30}, Affine.IDENTITY));
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.replayDamage (
+						gc, damage, new int[] {10, 10}, Affine.IDENTITY));
+	}
+
 	@Test
 	public void test_retainedPathCopiesPrimitiveGeometryAndReplaysAcrossInstances () {
 		ViewportPaintGraph graph = new ViewportPaintGraph ();
