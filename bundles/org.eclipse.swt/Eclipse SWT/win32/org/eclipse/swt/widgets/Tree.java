@@ -389,6 +389,129 @@ VirtualTreeVisibleProjection.Row [] virtualViewportPaintWindow () {
 	return virtualViewport.paintWindow ();
 }
 
+int virtualResidentChildCount (long hParent) {
+	return nativeChildCount (hParent);
+}
+
+int virtualResidentChildCount (TreeItem parentItem) {
+	return virtualResidentChildCount (parentItem == null ? OS.TVI_ROOT : parentItem.handle);
+}
+
+void ensureVirtualNativeChildren (long hParent, int requiredExclusive) {
+	if (virtualTopology == null) return;
+	int parentId = virtualParentId (hParent);
+	int logicalCount = virtualTopology.childCountKnown (parentId)
+			? virtualTopology.childCount (parentId)
+			: nativeChildCount (hParent);
+	int target = Math.min (logicalCount, Math.max (0, requiredExclusive));
+	int resident = nativeChildCount (hParent);
+	if (target <= resident) return;
+	for (int index = resident; index < target; index++) {
+		createItem (null, hParent, OS.TVI_LAST, 0);
+	}
+}
+
+void ensureVirtualNativeItem (long hParent, int index) {
+	if (virtualTopology == null) return;
+	int logicalCount = virtualChildCount (hParent);
+	if (!(0 <= index && index < logicalCount)) error (SWT.ERROR_INVALID_RANGE);
+	ensureVirtualNativeChildren (hParent, index + 1);
+}
+
+void restoreVirtualChildren (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	int id = virtualItemId (item);
+	if (id < 0 || !virtualTopology.childCountKnown (id)) return;
+	ensureVirtualNativeChildren (item.handle, virtualTopology.childCount (id));
+}
+
+void scheduleVirtualCollapseCompaction (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	display.asyncExec (() -> {
+		if (isDisposed () || item.isDisposed () || item.getExpanded ()) return;
+		compactCollapsedVirtualChildren (item);
+	});
+}
+
+void compactCollapsedVirtualChildren (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed () || item.getExpanded ()) return;
+	int parentId = virtualItemId (item);
+	if (parentId < 0 || !virtualTopology.childCountKnown (parentId)) return;
+	int logicalCount = virtualTopology.childCount (parentId);
+	int resident = nativeChildCount (item.handle);
+	if (resident == 0) return;
+
+	int highestPinned = virtualTopology.highestChildIndexWithSubtreeFlag (
+			parentId, VirtualItemState.PINNED);
+	int keep = logicalCount == 0 ? 0 : Math.max (1, highestPinned + 1);
+	keep = Math.min (keep, resident);
+	if (keep >= resident) return;
+
+	long hChild = nativeFirstChild (item.handle);
+	for (int index = 0; index < keep && hChild != 0; index++) {
+		hChild = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_NEXT, hChild);
+	}
+	if (hChild == 0) return;
+
+	boolean redraw = getDrawing ();
+	if (redraw) setRedraw (false);
+	ignoreDeselect = ignoreSelect = true;
+	try {
+		while (hChild != 0) {
+			long hNext = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_NEXT, hChild);
+			discardVirtualNativeSubtree (hChild);
+			hChild = hNext;
+		}
+	} finally {
+		ignoreDeselect = ignoreSelect = false;
+		cachedFirstItem = cachedIndexItem = 0;
+		cachedItemCount = -1;
+		if (redraw && !isDisposed ()) setRedraw (true);
+	}
+	updateScrollBar ();
+}
+
+void discardVirtualNativeSubtree (long hItem) {
+	if (hItem == 0 || virtualTopology == null) return;
+	TVITEM top = new TVITEM ();
+	top.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
+	top.hItem = hItem;
+	OS.SendMessage (handle, OS.TVM_GETITEM, 0, top);
+	int topologyId = (int)top.lParam;
+
+	releaseVirtualResidentFacades (hItem);
+	if (topologyId >= 0 && virtualTopology.contains (topologyId)) {
+		virtualTopology.forgetSubtree (topologyId);
+	}
+	boolean oldIgnoreShrink = ignoreShrink;
+	ignoreShrink = true;
+	try {
+		OS.SendMessage (handle, OS.TVM_DELETEITEM, 0, hItem);
+	} finally {
+		ignoreShrink = oldIgnoreShrink;
+	}
+}
+
+void releaseVirtualResidentFacades (long hItem) {
+	long hChild = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, hItem);
+	while (hChild != 0) {
+		long hNext = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_NEXT, hChild);
+		releaseVirtualResidentFacades (hChild);
+		hChild = hNext;
+	}
+	TVITEM tvItem = new TVITEM ();
+	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
+	tvItem.hItem = hItem;
+	if (OS.SendMessage (handle, OS.TVM_GETITEM, 0, tvItem) == 0 || tvItem.lParam < 0) return;
+	int id = (int)tvItem.lParam;
+	tvItem.lParam = -1;
+	OS.SendMessage (handle, OS.TVM_SETITEM, 0, tvItem);
+	TreeItem resident = id < items.length ? items [id] : null;
+	if (resident != null && !resident.isDisposed ()) resident.release (false);
+	if (id < items.length) items [id] = null;
+	if (id < lastID) lastID = id;
+}
+
 boolean virtualFlag (TreeItem item, long flag) {
 	if (virtualTopology == null || item == null || item.isDisposed ()) return false;
 	int id = virtualItemId (item);
@@ -1968,7 +2091,6 @@ boolean checkData (TreeItem item, int index, boolean redraw) {
 		pinVirtualFacade (item);
 		item.setCachedState (true);
 		Event event = new Event ();
-		pinVirtualFacade (item);
 		event.item = item;
 		event.index = index;
 		TreeItem oldItem = currentItem;
@@ -2441,7 +2563,10 @@ void createItem (TreeItem item, long hParent, long hInsertAfter, long hItem) {
 	if (item != null) {
 		item.handle = hNewItem;
 		items [id] = item;
-		if (virtualTopology != null) bindVirtualTopology (item, hItem == 0);
+		if (virtualTopology != null) {
+			bindVirtualTopology (item, hItem == 0);
+			pinVirtualFacade (item);
+		}
 	}
 
 	// Adjust cached variables
@@ -8033,10 +8158,10 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				if (item == null) break;
 				pinVirtualFacade (item);
 				Event event = new Event ();
-				pinVirtualFacade (item);
 				event.item = item;
 				switch (treeView.action) {
 					case OS.TVE_EXPAND:
+						restoreVirtualChildren (item);
 						/*
 						* Bug in Windows.  When the numeric keypad asterisk
 						* key is used to expand every item in the tree, Windows
@@ -8074,7 +8199,11 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				TVITEM tvItem = treeView.itemNew;
 				if (tvItem.hItem != 0) {
 					TreeItem item = _getItem (tvItem.hItem, (int)tvItem.lParam);
-					if (item != null) item.setExpandedState ((tvItem.state & OS.TVIS_EXPANDED) != 0);
+					if (item != null) {
+						boolean expanded = (tvItem.state & OS.TVIS_EXPANDED) != 0;
+						item.setExpandedState (expanded);
+						if (!expanded) scheduleVirtualCollapseCompaction (item);
+					}
 				}
 			}
 			if ((style & SWT.VIRTUAL) != 0) style |= SWT.DOUBLE_BUFFERED;
