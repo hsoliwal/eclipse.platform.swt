@@ -220,14 +220,15 @@ public void test_virtualChildResidencyDoesNotScaleWithLogicalCount() throws Exce
 	TreeItem root = virtualTree.getItem(0);
 	root.setItemCount(4096);
 
-	Field itemsField = TreeItem.class.getDeclaredField("items");
+	Object itemOwner = "cocoa".equals(SWT.getPlatform()) ? root : virtualTree;
+	Field itemsField = itemOwner.getClass().getDeclaredField("items");
 	itemsField.setAccessible(true);
-	TreeItem[] backing = (TreeItem[]) itemsField.get(root);
+	TreeItem[] backing = (TreeItem[]) itemsField.get(itemOwner);
 	assertTrue(backing.length <= 16, "virtual TreeItem must not allocate one Java slot per logical child");
 
 	TreeItem last = root.getItem(4095);
 	assertSame(last, root.getItem(4095));
-	backing = (TreeItem[]) itemsField.get(root);
+	backing = (TreeItem[]) itemsField.get(itemOwner);
 	assertTrue(backing.length <= 16, "materializing one distant child must keep branch residency sparse");
 }
 
@@ -521,6 +522,73 @@ public void test_virtualGtkAndWin32TopologyStaysSparseAndTracksCoordinates() thr
 
 
 @Test
+public void test_virtualGtkInsertAndAppendUseLogicalCountBeyondResidentPrefix() {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(2_000);
+	TreeItem inserted = new TreeItem(virtualTree, SWT.NONE, 1_000);
+	assertEquals(2_001, virtualTree.getItemCount());
+	assertSame(inserted, virtualTree.getItem(1_000));
+	TreeItem appended = new TreeItem(virtualTree, SWT.NONE);
+	assertEquals(2_002, virtualTree.getItemCount());
+	assertSame(appended, virtualTree.getItem(2_001));
+	inserted.dispose();
+	assertEquals(2_001, virtualTree.getItemCount());
+	assertSame(appended, virtualTree.getItem(2_000));
+}
+
+@Test
+public void test_virtualGtkQueuedFrontierRespectsShrunkLogicalCount() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(10_000);
+	TreeItem edge = virtualTree.getItem(250);
+	Method request = Tree.class.getDeclaredMethod("requestVirtualFrontier", TreeItem.class);
+	Method resident = Tree.class.getDeclaredMethod("virtualResidentChildCount", long.class);
+	request.setAccessible(true);
+	resident.setAccessible(true);
+	request.invoke(virtualTree, edge);
+	virtualTree.setItemCount(10);
+	SwtTestUtil.processEvents();
+	assertEquals(10, virtualTree.getItemCount());
+	assertEquals(10, resident.invoke(virtualTree, 0L));
+}
+
+@Test
+public void test_virtualGtkQueuedFrontierDoesNotRegrowCollapsedBranch() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(1);
+	TreeItem root = virtualTree.getItem(0);
+	root.setItemCount(10_000);
+	root.setExpanded(true);
+	TreeItem edge = root.getItem(250);
+	Method request = Tree.class.getDeclaredMethod("requestVirtualFrontier", TreeItem.class);
+	Method resident = Tree.class.getDeclaredMethod("virtualResidentChildCount", TreeItem.class);
+	request.setAccessible(true);
+	resident.setAccessible(true);
+	request.invoke(virtualTree, edge);
+	root.setExpanded(false);
+	SwtTestUtil.processEvents();
+	assertFalse(root.getExpanded());
+	assertEquals(10_000, root.getItemCount());
+	assertEquals(251, resident.invoke(virtualTree, root));
+	assertSame(edge, root.getItem(250));
+}
+
+@Test
+public void test_gtkSetItemCountZeroRestoresRedraw() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+	Tree regular = new Tree(shell, SWT.NONE);
+	regular.setItemCount(2);
+	regular.setItemCount(0);
+	Field redraw = org.eclipse.swt.widgets.Control.class.getDeclaredField("drawCount");
+	redraw.setAccessible(true);
+	assertEquals(0, redraw.getInt(regular));
+	assertEquals(0, regular.getItemCount());
+}
+
+@Test
 public void test_virtualGtkNativeFrontierIsBoundedAndGrowsOnDemand() throws Exception {
 	if (!"gtk".equals(SWT.getPlatform())) return;
 
@@ -772,7 +840,7 @@ public void test_virtualGtkAndWin32PackedStateLivesInTopologyAndSurvivesCoordina
 	assertEquals(expected, masks[markedId] & expected);
 	assertSame(marked, virtualTree.getItem(20));
 
-	marked.clear();
+	virtualTree.clear(virtualTree.indexOf(marked), false);
 	masks = (long[]) stateMasksField.get(topology);
 	Field expandedField = stateType.getDeclaredField("EXPANDED");
 	expandedField.setAccessible(true);
@@ -1842,10 +1910,19 @@ public void test_emptinessChanged() {
 }
 
 private void testTreeRegularAndVirtual(Runnable runnable) {
+	testTreeRegularAndVirtual(SWT.NONE, runnable);
+}
+
+private void testTreeRegularAndVirtual(int style, Runnable runnable) {
+	if (style != SWT.NONE) {
+		tree.dispose();
+		tree = new Tree(shell, style);
+		setWidget(tree);
+	}
 	runnable.run();
 
 	tree.dispose();
-	tree = new Tree(shell, SWT.VIRTUAL);
+	tree = new Tree(shell, SWT.VIRTUAL | style);
 	setWidget(tree);
 
 	runnable.run();
@@ -2010,7 +2087,7 @@ public void test_setItemCount_itemCount2() {
 
 @Test
 public void test_bulkExpansionModelApi() {
-	testTreeRegularAndVirtual(() -> {
+	testTreeRegularAndVirtual(SWT.MULTI, () -> {
 		TreeItem root0 = new TreeItem(tree, SWT.NONE);
 		TreeItem child00 = new TreeItem(root0, SWT.NONE);
 		TreeItem grand000 = new TreeItem(child00, SWT.NONE);

@@ -291,7 +291,7 @@ public void open () {
 	panelLayout.numColumns = 1;
 	panel.setLayout(panelLayout);
 	
-	Listener updateMainClassListener =  _ -> {
+	Listener updateMainClassListener =  ignoredEvent -> {
 		updateMainClass();
 		if (!updateOutputDir()) return;
 		updateClasses();
@@ -853,7 +853,7 @@ void createActionButtons(Composite parent) {
 	actionsLayout.numColumns = 1;
 	actionsPanel.setLayout(actionsLayout);
 	
-	createActionButton(actionsPanel, "Generate &All", _ -> generateAll());
+	createActionButton(actionsPanel, "Generate &All", ignoredEvent -> generateAll());
 	
 	Label separator = new Label(actionsPanel, SWT.SEPARATOR | SWT.HORIZONTAL);
 	data = new GridData(GridData.FILL_HORIZONTAL);
@@ -862,12 +862,12 @@ void createActionButtons(Composite parent) {
 	data = new GridData(GridData.FILL_HORIZONTAL);
 	separator.setLayoutData(data);
 	
-	createActionButton(actionsPanel, "Generate Structs &Header", _ -> generateStructsHeader());
-	createActionButton(actionsPanel, "Generate &Structs", _ -> generateStructs());
-	createActionButton(actionsPanel, "Generate &Natives", _ -> generateNatives());
-	createActionButton(actionsPanel, "Generate Meta &Data", _ -> generateMetaData());
-	createActionButton(actionsPanel, "Generate Cons&tants", _ -> generateConstants());	
-	createActionButton(actionsPanel, "Generate Si&zeof", _ -> generateSizeof());
+	createActionButton(actionsPanel, "Generate Structs &Header", ignoredEvent -> generateStructsHeader());
+	createActionButton(actionsPanel, "Generate &Structs", ignoredEvent -> generateStructs());
+	createActionButton(actionsPanel, "Generate &Natives", ignoredEvent -> generateNatives());
+	createActionButton(actionsPanel, "Generate Meta &Data", ignoredEvent -> generateMetaData());
+	createActionButton(actionsPanel, "Generate Cons&tants", ignoredEvent -> generateConstants());
+	createActionButton(actionsPanel, "Generate Si&zeof", ignoredEvent -> generateSizeof());
 
 	Composite filler = new Composite(actionsPanel, SWT.NONE);
 	filler.setLayoutData(new GridData(GridData.FILL_BOTH));

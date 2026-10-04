@@ -92,7 +92,7 @@ public void test_virtualScrollMetricsUseLogicalRowsAndSampleExtent() throws Exce
 			"scrollbar maximum must stay in logical row units");
 	assertEquals(20, thumb.invoke(metrics));
 	assertEquals(20, pageIncrement.invoke(metrics));
-	assertEquals(999_980, maxTopRow.invoke(metrics));
+	assertEquals(999_980L, maxTopRow.invoke(metrics));
 	assertEquals(999_980, clampTopRow.invoke(metrics, Integer.MAX_VALUE));
 	assertEquals(22_000_000L, estimatedContentExtent.invoke(metrics));
 

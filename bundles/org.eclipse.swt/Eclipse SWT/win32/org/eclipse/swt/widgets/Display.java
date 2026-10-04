@@ -5373,12 +5373,13 @@ private class ThemeData {
 }
 
 /**
- * {@return whether rescaling of shells at runtime when the DPI scaling of a
- * shell's monitor changes is activated for this device}
+ * Returns whether rescaling of shells at runtime when the DPI scaling of a
+ * shell's monitor changes is activated for this device.
  * <p>
  * <b>Note:</b> This functionality is only available on Windows. Calling this
  * method on other operating system will always return false.
  *
+ * @return whether runtime shell rescaling is activated for this device
  * @since 3.127
  */
 public boolean isRescalingAtRuntime() {

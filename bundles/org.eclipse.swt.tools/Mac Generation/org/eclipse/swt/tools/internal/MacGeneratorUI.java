@@ -186,7 +186,7 @@ public class MacGeneratorUI {
 		GridData data = new GridData(GridData.FILL_HORIZONTAL);
 		search.setLayoutData(data);
 		search.setText(".*");
-		search.addListener(SWT.DefaultSelection, _ -> searchFor(search.getText()));
+		search.addListener(SWT.DefaultSelection, ignoredEvent -> searchFor(search.getText()));
 		search.addListener(SWT.KeyDown, event -> {
 			if (event.keyCode == SWT.F6) {
 				searchFor(search.getText());					
@@ -313,7 +313,7 @@ public class MacGeneratorUI {
 		
 		Button generate = new Button(panel, SWT.PUSH);
 		generate.setText("Generate");
-		generate.addListener(SWT.Selection, _ -> generate(null));
+		generate.addListener(SWT.Selection, ignoredEvent -> generate(null));
 		return panel;
 	}
 	

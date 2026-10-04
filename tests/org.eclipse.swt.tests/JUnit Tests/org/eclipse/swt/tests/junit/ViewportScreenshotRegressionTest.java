@@ -453,7 +453,7 @@ public class ViewportScreenshotRegressionTest {
 		return out.toString ();
 	}
 
-	private void capture (String name, Control target, Path output, String sidecar) throws Exception {
+	private void capture (String name, Scrollable target, Path output, String sidecar) throws Exception {
 		target.getShell ().layout (true, true);
 		target.redraw ();
 		target.update ();
