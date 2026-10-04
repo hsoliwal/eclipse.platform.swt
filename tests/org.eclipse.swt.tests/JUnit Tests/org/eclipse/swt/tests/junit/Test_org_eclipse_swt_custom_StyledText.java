@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.function.BooleanSupplier;
