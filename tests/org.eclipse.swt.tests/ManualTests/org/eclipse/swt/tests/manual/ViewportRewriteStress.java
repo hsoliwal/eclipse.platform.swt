@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,8 @@ public final class ViewportRewriteStress {
 	private static final int OVERSCAN = 8;
 	private static final String SCREENSHOT_DIR_PROPERTY = "swt.viewport.screenshots";
 	private static final String SCREENSHOT_EXIT_PROPERTY = "swt.viewport.screenshots.exit";
+	private static final String SCREENSHOT_TREE_ROOT_KEY = "viewport.screenshot.root";
+	private static final String SCREENSHOT_TREE_CHILD_KEY = "viewport.screenshot.child";
 	private static final List<ScreenshotScenario> SCREENSHOT_SCENARIOS = new ArrayList<> ();
 
 	private record ScreenshotScenario (String name, Control target, Runnable prepare) {
@@ -141,6 +144,14 @@ public final class ViewportRewriteStress {
 			selectTab (tabs, root);
 			redrawLocked (table, () -> table.setTopIndex (TABLE_ROWS - 1));
 		});
+		screenshotScenario ("table-checked-selection", root, () -> {
+			selectTab (tabs, root);
+			redrawLocked (table, () -> {
+				table.setTopIndex (0);
+				table.setSelection (new int[] {0, 1, 32, 33, 64});
+				table.showSelection ();
+			});
+		});
 	}
 
 	private static void createTreeTab (TabFolder tabs) {
@@ -229,6 +240,57 @@ public final class ViewportRewriteStress {
 				TreeItem item = tree.getItem (TREE_ROOTS / 2);
 				item.setExpanded (false);
 				tree.setTopItem (item);
+			});
+		});
+
+		AtomicReference<TreeItem> screenshotRoot = new AtomicReference<> ();
+		AtomicReference<TreeItem> screenshotChild = new AtomicReference<> ();
+		Runnable preparePinnedTree = () -> {
+			TreeItem branch = screenshotRoot.get ();
+			if (branch == null || branch.isDisposed ()) {
+				branch = tree.getItem (17);
+				branch.setText ("screenshot root 17");
+				branch.setItemCount (2_000);
+				TreeItem child = branch.getItem (10);
+				child.setText ("pinned child 10");
+				child.setChecked (true);
+				child.setGrayed (true);
+				screenshotRoot.set (branch);
+				screenshotChild.set (child);
+				tree.setData (SCREENSHOT_TREE_ROOT_KEY, branch);
+				tree.setData (SCREENSHOT_TREE_CHILD_KEY, child);
+			}
+		};
+		screenshotScenario ("tree-pinned-expanded", root, () -> {
+			selectTab (tabs, root);
+			preparePinnedTree.run ();
+			TreeItem branch = screenshotRoot.get ();
+			TreeItem child = screenshotChild.get ();
+			redrawLocked (tree, () -> {
+				branch.setExpanded (true);
+				tree.setTopItem (branch);
+				tree.setSelection (child);
+			});
+		});
+		screenshotScenario ("tree-pinned-collapsed", root, () -> {
+			selectTab (tabs, root);
+			preparePinnedTree.run ();
+			TreeItem branch = screenshotRoot.get ();
+			redrawLocked (tree, () -> {
+				branch.setExpanded (false);
+				tree.setTopItem (branch);
+				tree.setSelection (branch);
+			});
+		});
+		screenshotScenario ("tree-pinned-restored", root, () -> {
+			selectTab (tabs, root);
+			preparePinnedTree.run ();
+			TreeItem branch = screenshotRoot.get ();
+			TreeItem child = screenshotChild.get ();
+			redrawLocked (tree, () -> {
+				branch.setExpanded (true);
+				tree.setTopItem (branch);
+				tree.setSelection (child);
 			});
 		});
 	}
@@ -712,6 +774,7 @@ public final class ViewportRewriteStress {
 					.append (" headerVisible=").append (tree.getHeaderVisible ())
 					.append (" topRootIndex=").append (top == null ? -1 : tree.indexOf (top))
 					.append ('\n');
+			appendTreeViewportInternals (out, tree, indent + "  ");
 		} else if (control instanceof ScrolledComposite scrolled) {
 			out.append (indent).append ("  scrolled.origin=").append (scrolled.getOrigin ())
 					.append (" min=").append (scrolled.getMinSize ())
@@ -727,6 +790,85 @@ public final class ViewportRewriteStress {
 			for (Control child : composite.getChildren ()) {
 				appendControlSnapshot (out, child, indent + "  ");
 			}
+		}
+	}
+
+	private static void appendTreeViewportInternals (
+			StringBuilder out, Tree tree, String indent) {
+		Object rootValue = tree.getData (SCREENSHOT_TREE_ROOT_KEY);
+		Object childValue = tree.getData (SCREENSHOT_TREE_CHILD_KEY);
+		if (rootValue instanceof TreeItem rootItem && !rootItem.isDisposed ()) {
+			out.append (indent).append ("tree.screenshotRoot childCount=")
+					.append (rootItem.getItemCount ())
+					.append (" expanded=").append (rootItem.getExpanded ())
+					.append (" checked=").append (rootItem.getChecked ())
+					.append (" grayed=").append (rootItem.getGrayed ())
+					.append ('\n');
+			appendReflectiveValue (
+					out, indent, "tree.screenshotRoot.nativeResidentChildren",
+					tree, "virtualResidentChildCount",
+					new Class<?>[] {TreeItem.class}, new Object[] {rootItem});
+		}
+		if (childValue instanceof TreeItem childItem && !childItem.isDisposed ()) {
+			out.append (indent).append ("tree.screenshotChild checked=")
+					.append (childItem.getChecked ())
+					.append (" grayed=").append (childItem.getGrayed ())
+					.append (" expanded=").append (childItem.getExpanded ())
+					.append (" text=").append (childItem.getText ())
+					.append ('\n');
+		}
+		appendReflectiveValue (
+				out, indent, "tree.virtualVisibleRows",
+				tree, "virtualVisibleRowCount", new Class<?>[0], new Object[0]);
+		appendReflectiveFieldMethod (
+				out, indent, "tree.topology.materializedCount",
+				tree, "virtualTopology", "materializedCount");
+		appendReflectiveFieldMethod (
+				out, indent, "tree.viewport.firstVisible",
+				tree, "virtualViewport", "firstVisible");
+		appendReflectiveFieldMethod (
+				out, indent, "tree.viewport.visibleCount",
+				tree, "virtualViewport", "visibleCount");
+		appendReflectiveFieldMethod (
+				out, indent, "tree.viewport.paintStart",
+				tree, "virtualViewport", "paintStart");
+		appendReflectiveFieldMethod (
+				out, indent, "tree.viewport.paintEndExclusive",
+				tree, "virtualViewport", "paintEndExclusive");
+	}
+
+	private static void appendReflectiveValue (
+			StringBuilder out, String indent, String label, Object target,
+			String methodName, Class<?>[] parameterTypes, Object[] args) {
+		try {
+			Method method = target.getClass ().getDeclaredMethod (methodName, parameterTypes);
+			method.setAccessible (true);
+			out.append (indent).append (label).append ('=')
+					.append (method.invoke (target, args)).append ('\n');
+		} catch (ReflectiveOperationException | RuntimeException unavailable) {
+			out.append (indent).append (label).append ("=<unavailable>")
+					.append ('\n');
+		}
+	}
+
+	private static void appendReflectiveFieldMethod (
+			StringBuilder out, String indent, String label, Object target,
+			String fieldName, String methodName) {
+		try {
+			Field field = target.getClass ().getDeclaredField (fieldName);
+			field.setAccessible (true);
+			Object owner = field.get (target);
+			if (owner == null) {
+				out.append (indent).append (label).append ("=<none>").append ('\n');
+				return;
+			}
+			Method method = owner.getClass ().getDeclaredMethod (methodName);
+			method.setAccessible (true);
+			out.append (indent).append (label).append ('=')
+					.append (method.invoke (owner)).append ('\n');
+		} catch (ReflectiveOperationException | RuntimeException unavailable) {
+			out.append (indent).append (label).append ("=<unavailable>")
+					.append ('\n');
 		}
 	}
 
