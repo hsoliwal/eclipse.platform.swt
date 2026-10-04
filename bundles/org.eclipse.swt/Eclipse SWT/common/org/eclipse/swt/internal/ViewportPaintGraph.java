@@ -584,6 +584,12 @@ public final class ViewportPaintGraph {
 		int visited = 0, drawn = 0, culled = 0, switches = 0;
 		try {
 			gc.getClipping (savedClip);
+			if (damage.isFullDamage ()) {
+				if (savedClip.isEmpty ()) return new ReplayStats (0, 0, 0, 0);
+				replayClip = savedClip.getBounds ();
+				gc.setClipping (savedClip);
+				return replay (gc, transform, replayClip);
+			}
 			if (damage.count () == 1
 					&& damage.layerAt (0) == ViewportDamageRegions.ALL_LAYERS) {
 				replayClip.x = damage.xAt (0);
