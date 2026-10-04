@@ -22,6 +22,8 @@ import java.util.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.custom.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
+import org.eclipse.swt.internal.ViewportPaintGraph.Affine;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
@@ -71,12 +73,14 @@ public class ViewportScreenshotRegressionTest {
 		Table table = createTableScene (tabs);
 		Tree tree = createTreeScene (tabs);
 		ViewportChromeScene viewport = createViewportChromeScene (tabs);
+		GraphicsStateScene graphics = createGraphicsStateScene (tabs);
 		shell.open ();
 		drainEvents (120);
 
 		captureTableCheckedSelection (tabs, table, output);
 		captureTreeResidencySequence (tabs, tree, output);
 		captureViewportChromeSequence (tabs, viewport, output);
+		captureGraphicsState (tabs, graphics, output);
 
 		assertTrue (Files.size (output.resolve ("table-checked-selection.png")) > 0);
 		assertTrue (Files.size (output.resolve ("tree-pinned-expanded.png")) > 0);
@@ -86,6 +90,7 @@ public class ViewportScreenshotRegressionTest {
 		assertTrue (Files.size (output.resolve ("viewport-horizontal-scroll.png")) > 0);
 		assertTrue (Files.size (output.resolve ("viewport-narrow.png")) > 0);
 		assertTrue (Files.size (output.resolve ("viewport-wide.png")) > 0);
+		assertTrue (Files.size (output.resolve ("viewport-affine-clip-stroke.png")) > 0);
 	}
 
 	private Table createTableScene (TabFolder tabs) {
@@ -139,6 +144,81 @@ public class ViewportScreenshotRegressionTest {
 		return tree;
 	}
 
+
+
+	private static final class GraphicsStateScene {
+		final Canvas canvas;
+		final ViewportPaintGraph graph;
+		final int stateNode;
+		final long [] paints = {0};
+		Rectangle lastIncomingClip;
+
+		GraphicsStateScene (
+				Canvas canvas, ViewportPaintGraph graph, int stateNode) {
+			this.canvas = canvas;
+			this.graph = graph;
+			this.stateNode = stateNode;
+		}
+	}
+
+	private GraphicsStateScene createGraphicsStateScene (TabFolder tabs) {
+		TabItem tab = new TabItem (tabs, SWT.NONE);
+		tab.setText ("GC affine / clip / stroke");
+
+		Canvas canvas = new Canvas (tabs, SWT.DOUBLE_BUFFERED | SWT.BORDER);
+		tab.setControl (canvas);
+
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int stateNode = graph.group (graph.root (), 0);
+		float angle = (float)Math.toRadians (14);
+		float cos = (float)Math.cos (angle);
+		float sin = (float)Math.sin (angle);
+		Affine rotation = new Affine (cos, sin, -sin, cos, 0, 0);
+		Affine affine = Affine.translation (180, 120)
+				.compose (rotation)
+				.compose (Affine.scale (1.12f, 0.92f));
+		graph.setTransform (stateNode, affine);
+		graph.setClip (stateNode, -60, -50, 520, 300);
+		graph.setStroke (
+				stateNode, 3, SWT.LINE_DASH, SWT.CAP_ROUND, SWT.JOIN_BEVEL);
+
+		GraphicsStateScene scene = new GraphicsStateScene (canvas, graph, stateNode);
+		canvas.addListener (SWT.Paint, event -> {
+			scene.paints [0]++;
+			scene.lastIncomingClip = event.gc.getClipping ();
+			graph.withState (event.gc, stateNode, () -> {
+				org.eclipse.swt.graphics.Path path =
+						new org.eclipse.swt.graphics.Path (canvas.getDisplay ());
+				try {
+					path.moveTo (0, 40);
+					path.cubicTo (80, -25, 160, 120, 250, 30);
+					path.lineTo (340, 140);
+					event.gc.drawPath (path);
+				} finally {
+					path.dispose ();
+				}
+				event.gc.drawRectangle (0, 0, 360, 190);
+				event.gc.drawLine (-80, 95, 460, 95);
+				event.gc.drawText ("affine + clip + stroke", 24, 132, true);
+			});
+		});
+		return scene;
+	}
+
+	private void captureGraphicsState (
+			TabFolder tabs, GraphicsStateScene scene, Path output) throws Exception {
+		tabs.setSelection (3);
+		shell.setSize (1000, 700);
+		drainEvents (120);
+		capture (
+				"viewport-affine-clip-stroke", scene.canvas, output,
+				"graphics.paints=" + scene.paints [0] + "\n"
+				+ "graphics.incomingClip=" + scene.lastIncomingClip + "\n"
+				+ "graphics.transform=translate(180,120),rotate(14),scale(1.12,0.92)\n"
+				+ "graphics.localClip=(-60,-50,520,300)\n"
+				+ "graphics.stroke=width:3,style:DASH,cap:ROUND,join:BEVEL\n"
+				+ "graphics.graphNodes=" + scene.graph.nodeCount () + "\n");
+	}
 
 	private static final class ViewportChromeScene {
 		final Composite root;
