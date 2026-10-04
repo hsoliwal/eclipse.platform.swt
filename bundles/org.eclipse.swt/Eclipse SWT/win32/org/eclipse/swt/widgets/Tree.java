@@ -504,6 +504,8 @@ void releaseVirtualResidentFacades (long hItem) {
 	tvItem.hItem = hItem;
 	if (OS.SendMessage (handle, OS.TVM_GETITEM, 0, tvItem) == 0 || tvItem.lParam < 0) return;
 	int id = (int)tvItem.lParam;
+	tvItem.lParam = -1;
+	OS.SendMessage (handle, OS.TVM_SETITEM, 0, tvItem);
 	TreeItem resident = id < items.length ? items [id] : null;
 	if (resident != null && !resident.isDisposed ()) resident.release (false);
 	if (id < items.length) items [id] = null;
