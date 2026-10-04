@@ -370,3 +370,66 @@ The deterministic screenshot lane includes
 `viewport-affine-clip-stroke.png`, which exercises a real SWT GC with transform,
 clip, cubic Path, line width/style/cap/join and text while preserving/restoring
 incoming GC state.
+
+
+### Additional viewport/GPU donor distillation
+
+The viewport rewrite also reviews modern native/immediate/GPU GUI projects as
+architecture donors. Source is not copied.
+
+- **viewport-lib (Rust/wgpu)** separates the host application's window, event
+  loop and tool state from viewport rendering. It builds frame data, prepares
+  renderer resources once per frame, batches instances, and treats camera input,
+  picking and overlays as viewport-space concerns. Because viewport-lib is
+  GPL-3.0, SWT uses these ideas only as design evidence.
+- **Dear ImGui** carries clip rectangles with draw commands, keeps background and
+  foreground viewport draw lists, and can split/merge draw channels so layers
+  can be emitted out of order before being flattened for the backend. It also
+  keeps coarse culling above the primitive draw-list level.
+- **LVGL** separates draw tasks from draw units/backends, dispatches tasks into
+  layers, and allocates layer buffers lazily. Simple layers may be rendered in
+  bounded chunks, while transformed layers require a larger complete transform
+  extent. This reinforces SWT's distinction between cheap translated viewport
+  planes and transform-heavy presentation.
+- **MyGUI** keeps one GUI core while selecting among OpenGL, Direct3D, Vulkan,
+  Ogre and other rendering backends. Its cross-backend screenshot comparison
+  reinforces keeping SWT's retained paint plan backend-neutral.
+- **NanoGUI/NanoVG** reinforces the ordinary retained-widget + immediate vector
+  drawing split and the need to keep event/layout ownership above the graphics
+  backend rather than embedding semantic widget state in draw commands.
+
+The common distilled rule is:
+
+```text
+semantic widgets / events / selection
+              |
+              v
+logical viewport coordinates
+              |
+              v
+ViewportPaintGraph
+  retained templates
+  affine transforms
+  clips + stroke metadata
+  z-plane channels
+              |
+              v
+prepare / cull / choose layers
+              |
+       +------+------+
+       |             |
+       v             v
+    SWT GC       future GPU
+  platform API    draw unit
+```
+
+`ViewportPaintGraph.replayLayer(...)` and `replayLayers(...)` provide the
+first backend-neutral draw-channel contract. Ordinary `replay(...)` keeps its
+existing insertion order, so this is additive. Viewport owners may replay only a
+dirty plane or specify an explicit back-to-front order such as body, frozen
+content, header, editor and feedback.
+
+This deliberately stops short of introducing a GPU dependency into SWT core.
+A future GPU backend should consume prepared graph state through a narrow backend
+boundary while the existing Cocoa/GTK/Win32 GC paths remain authoritative for
+public SWT behavior.
