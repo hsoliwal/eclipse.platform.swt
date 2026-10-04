@@ -80,11 +80,16 @@ public final class ViewportDamageRegions {
 	 */
 	public void invalidate (int layer, int rx, int ry, int rWidth, int rHeight) {
 		if (rWidth <= 0 || rHeight <= 0 || fullDamage) return;
+		long rawRight = (long)rx + rWidth;
+		long rawBottom = (long)ry + rHeight;
+		if (rawRight > Integer.MAX_VALUE || rawBottom > Integer.MAX_VALUE) {
+			collapseToFullDamage ();
+			return;
+		}
 		int left = rx;
 		int top = ry;
-		int right = saturatedAdd (rx, rWidth);
-		int bottom = saturatedAdd (ry, rHeight);
-		if (right <= left || bottom <= top) return;
+		int right = (int)rawRight;
+		int bottom = (int)rawBottom;
 
 		if (count == 1 && layers [0] == ALL_LAYERS) {
 			unionInto (0, left, top, right, bottom);
@@ -97,6 +102,7 @@ public final class ViewportDamageRegions {
 			if (!touches (index, left, top, right, bottom)) continue;
 			if (merged < 0) {
 				unionInto (index, left, top, right, bottom);
+				if (fullDamage) return;
 				merged = index;
 			} else {
 				unionInto (
@@ -104,6 +110,7 @@ public final class ViewportDamageRegions {
 						x [index], y [index],
 						saturatedAdd (x [index], width [index]),
 						saturatedAdd (y [index], height [index]));
+				if (fullDamage) return;
 				removeAt (index--);
 			}
 		}
@@ -190,6 +197,7 @@ public final class ViewportDamageRegions {
 						x [index], y [index],
 						saturatedAdd (x [index], width [index]),
 						saturatedAdd (y [index], height [index]));
+				if (fullDamage) return;
 				removeAt (index);
 				if (index < merged) merged--;
 				changed = true;
