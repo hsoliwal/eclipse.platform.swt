@@ -39,6 +39,7 @@ final class ViewportPaintGraph {
 	private int [] edgeNext = filled (INITIAL_CAPACITY, -1);
 
 	private long [] dirtyWords = new long [1];
+	private long [] pendingWords = new long [1];
 	private int nodeCount;
 	private int edgeCount;
 
@@ -121,8 +122,9 @@ final class ViewportPaintGraph {
 			throw new IllegalArgumentException ("invalid viewport layer mask");
 		}
 		for (int node = 0; node < nodeCount; node++) {
-			if ((layers [node] & layerMask) != 0) markDirtyAndDependants (node);
+			if ((layers [node] & layerMask) != 0) queueDirty (node);
 		}
+		propagateDirty ();
 	}
 
 	void invalidateBounds (
@@ -138,9 +140,10 @@ final class ViewportPaintGraph {
 			if (intersects (
 					x [node], y [node], width [node], height [node],
 					dirtyX, dirtyY, dirtyWidth, dirtyHeight)) {
-				markDirtyAndDependants (node);
+				queueDirty (node);
 			}
 		}
+		propagateDirty ();
 	}
 
 	ViewportAffineTransform.Bounds deviceBounds (
@@ -157,18 +160,26 @@ final class ViewportPaintGraph {
 		}
 	}
 
-	private void markDirtyAndDependants (int start) {
-		if (!isDirty (start)) setDirty (start, true);
-		int [] stack = new int [Math.max (4, nodeCount)];
-		int size = 0;
-		stack [size++] = start;
-		while (size != 0) {
-			int node = stack [--size];
-			for (int edge = firstOutgoing [node]; edge >= 0; edge = edgeNext [edge]) {
-				int dependant = edgeTo [edge];
-				if (!isDirty (dependant)) {
-					setDirty (dependant, true);
-					stack [size++] = dependant;
+	private void queueDirty (int node) {
+		long mask = 1L << (node & 63);
+		int word = node >>> 6;
+		dirtyWords [word] |= mask;
+		pendingWords [word] |= mask;
+	}
+
+	private void propagateDirty () {
+		/*
+		 * Dirty means "needs painting", not "visited during this invalidation".
+		 * An intermediate node can remain dirty after a dependant was painted.
+		 * Forward-only edges let this reusable pending lane visit each affected
+		 * node once, even with diamonds/duplicate edges or partially clean planes.
+		 */
+		for (int word = 0; word < pendingWords.length; word++) {
+			while (pendingWords [word] != 0) {
+				int node = (word << 6) + Long.numberOfTrailingZeros (pendingWords [word]);
+				pendingWords [word] &= pendingWords [word] - 1;
+				for (int edge = firstOutgoing [node]; edge >= 0; edge = edgeNext [edge]) {
+					queueDirty (edgeTo [edge]);
 				}
 			}
 		}
@@ -208,6 +219,7 @@ final class ViewportPaintGraph {
 		int requiredWords = (requiredNodes + 63) >>> 6;
 		if (requiredWords > dirtyWords.length) {
 			dirtyWords = java.util.Arrays.copyOf (dirtyWords, requiredWords);
+			pendingWords = java.util.Arrays.copyOf (pendingWords, requiredWords);
 		}
 	}
 
