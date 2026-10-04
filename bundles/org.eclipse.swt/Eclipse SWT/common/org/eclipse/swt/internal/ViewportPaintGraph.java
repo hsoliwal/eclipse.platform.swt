@@ -37,6 +37,8 @@ public final class ViewportPaintGraph {
 	private static final byte FILL_RECT = 3;
 	private static final byte TEXT = 4;
 	private static final byte INSTANCE = 5;
+	private static final byte DRAW_PATH = 6;
+	private static final byte FILL_PATH = 7;
 
 	private static final int ROOT = 0;
 	private static final int DETACHED = -2;
@@ -68,6 +70,14 @@ public final class ViewportPaintGraph {
 	private int [] lineStyle = new int [16];
 	private int [] lineCap = new int [16];
 	private int [] lineJoin = new int [16];
+	private int [] pathTypeOffsets = new int [16];
+	private int [] pathTypeCounts = new int [16];
+	private int [] pathPointOffsets = new int [16];
+	private int [] pathPointCounts = new int [16];
+	private float [] pathMinX = new float [16];
+	private float [] pathMinY = new float [16];
+	private float [] pathMaxX = new float [16];
+	private float [] pathMaxY = new float [16];
 	private int [] a = new int [16];
 	private int [] b = new int [16];
 	private int [] c = new int [16];
@@ -76,6 +86,12 @@ public final class ViewportPaintGraph {
 	private Object [] payloads = new Object [16];
 	private int nodeCount = 1;
 	private int geometryNodeCount;
+	private int pathNodeCount;
+
+	private byte [] pathTypes = new byte [64];
+	private int pathTypeSize;
+	private float [] pathPoints = new float [128];
+	private int pathPointSize;
 
 	private float [] transforms = new float [6 * 8];
 	private int transformCount = 1;
@@ -405,6 +421,69 @@ public final class ViewportPaintGraph {
 		return node;
 	}
 
+	public int drawPath (int parent, PathData data) {
+		return addPath (parent, data, DRAW_PATH);
+	}
+
+	public int fillPath (int parent, PathData data) {
+		return addPath (parent, data, FILL_PATH);
+	}
+
+	private int addPath (int parent, PathData data, byte kind) {
+		requireGroup (parent);
+		Objects.requireNonNull (data, "data");
+		byte [] types = Objects.requireNonNull (data.types, "data.types");
+		float [] points = Objects.requireNonNull (data.points, "data.points");
+		int expectedPoints = 0;
+		for (byte type : types) {
+			expectedPoints += switch (type) {
+				case org.eclipse.swt.SWT.PATH_MOVE_TO, org.eclipse.swt.SWT.PATH_LINE_TO -> 2;
+				case org.eclipse.swt.SWT.PATH_CUBIC_TO -> 6;
+				case org.eclipse.swt.SWT.PATH_QUAD_TO -> 4;
+				case org.eclipse.swt.SWT.PATH_CLOSE -> 0;
+				default -> throw new IllegalArgumentException ("invalid retained path type");
+			};
+		}
+		if (expectedPoints != points.length) {
+			throw new IllegalArgumentException ("retained path point count does not match types");
+		}
+		float minX = Float.POSITIVE_INFINITY;
+		float minY = Float.POSITIVE_INFINITY;
+		float maxX = Float.NEGATIVE_INFINITY;
+		float maxY = Float.NEGATIVE_INFINITY;
+		for (int index = 0; index < points.length; index += 2) {
+			float x = points [index];
+			float y = points [index + 1];
+			if (!Float.isFinite (x) || !Float.isFinite (y)) {
+				throw new IllegalArgumentException ("non-finite retained path point");
+			}
+			minX = Math.min (minX, x);
+			minY = Math.min (minY, y);
+			maxX = Math.max (maxX, x);
+			maxY = Math.max (maxY, y);
+		}
+		if (points.length == 0) minX = minY = maxX = maxY = 0;
+
+		int node = newNode (kind, parent);
+		ensurePathTypeCapacity (pathTypeSize + types.length);
+		ensurePathPointCapacity (pathPointSize + points.length);
+		pathTypeOffsets [node] = pathTypeSize;
+		pathTypeCounts [node] = types.length;
+		System.arraycopy (types, 0, pathTypes, pathTypeSize, types.length);
+		pathTypeSize += types.length;
+		pathPointOffsets [node] = pathPointSize;
+		pathPointCounts [node] = points.length;
+		System.arraycopy (points, 0, pathPoints, pathPointSize, points.length);
+		pathPointSize += points.length;
+		pathMinX [node] = minX;
+		pathMinY [node] = minY;
+		pathMaxX [node] = maxX;
+		pathMaxY [node] = maxY;
+		pathNodeCount++;
+		geometryNodeCount++;
+		return node;
+	}
+
 	/**
 	 * Adds one DAG edge from {@code parent} to a detached template.
 	 */
@@ -499,6 +578,7 @@ public final class ViewportPaintGraph {
 
 		Transform saved = null;
 		Transform work = null;
+		Path [] replayPaths = pathNodeCount == 0 ? null : new Path [nodeCount];
 		Affine savedAffine = null;
 		boolean transformedGc = false;
 		int visited = 0;
@@ -573,8 +653,17 @@ public final class ViewportPaintGraph {
 							culled++;
 							continue;
 						}
-						boolean fast = transform.isIntegralTranslation ();
-						if (!fast) {
+						boolean pathCommand = kinds [node] == DRAW_PATH || kinds [node] == FILL_PATH;
+						boolean directPath = pathCommand && transform.equals (Affine.IDENTITY);
+						boolean fast = transform.isIntegralTranslation () && !pathCommand;
+						if (directPath) {
+							if (transformedGc) {
+								gc.setTransform (saved);
+								transformedGc = false;
+								transformSwitches++;
+							}
+							drawRaw (gc, node, 0, 0, replayPaths);
+						} else if (!fast) {
 							if (saved == null) {
 								saved = new Transform (gc.getDevice ());
 								work = new Transform (gc.getDevice ());
@@ -592,14 +681,14 @@ public final class ViewportPaintGraph {
 							gc.setTransform (work);
 							transformedGc = true;
 							transformSwitches++;
-							drawRaw (gc, node, 0, 0);
+							drawRaw (gc, node, 0, 0, replayPaths);
 						} else {
 							if (transformedGc) {
 								gc.setTransform (saved);
 								transformedGc = false;
 								transformSwitches++;
 							}
-							drawRaw (gc, node, Math.round (transform.dx), Math.round (transform.dy));
+							drawRaw (gc, node, Math.round (transform.dx), Math.round (transform.dy), replayPaths);
 						}
 						drawn++;
 					}
@@ -611,11 +700,16 @@ public final class ViewportPaintGraph {
 				work.dispose ();
 				saved.dispose ();
 			}
+			if (replayPaths != null) {
+				for (Path replayPath : replayPaths) {
+					if (replayPath != null && !replayPath.isDisposed ()) replayPath.dispose ();
+				}
+			}
 		}
 		return new ReplayStats (visited, drawn, culled, transformSwitches);
 	}
 
-	private void drawRaw (GC gc, int node, int dx, int dy) {
+	private void drawRaw (GC gc, int node, int dx, int dy, Path [] replayPaths) {
 		switch (kinds [node]) {
 			case LINE -> gc.drawLine (a [node] + dx, b [node] + dy, c [node] + dx, d [node] + dy);
 			case DRAW_RECT -> gc.drawRectangle (a [node] + dx, b [node] + dy, c [node], d [node]);
@@ -623,8 +717,23 @@ public final class ViewportPaintGraph {
 			case TEXT -> gc.drawText (
 					(String)payloads [node], a [node] + dx, b [node] + dy,
 					(flags [node] & TEXT_TRANSPARENT) != 0);
+			case DRAW_PATH -> gc.drawPath (replayPath (gc, node, replayPaths));
+			case FILL_PATH -> gc.fillPath (replayPath (gc, node, replayPaths));
 			default -> throw new IllegalStateException ("not a paint command");
 		}
+	}
+
+	private Path replayPath (GC gc, int node, Path [] replayPaths) {
+		Path path = replayPaths [node];
+		if (path != null) return path;
+		PathData data = new PathData ();
+		int typeOffset = pathTypeOffsets [node];
+		int typeCount = pathTypeCounts [node];
+		data.types = Arrays.copyOfRange (pathTypes, typeOffset, typeOffset + typeCount);
+		int pointOffset = pathPointOffsets [node];
+		int pointCount = pathPointCounts [node];
+		data.points = Arrays.copyOfRange (pathPoints, pointOffset, pointOffset + pointCount);
+		return replayPaths [node] = new Path (gc.getDevice (), data);
 	}
 
 	private boolean outsideBounds (
@@ -673,6 +782,17 @@ public final class ViewportPaintGraph {
 				top = Math.min (b [node], (long)b [node] + d [node]) + dy;
 				right = Math.max (a [node], (long)a [node] + c [node]) + dx + 1;
 				bottom = Math.max (b [node], (long)b [node] + d [node]) + dy + 1;
+			}
+			case DRAW_PATH, FILL_PATH -> {
+				double envelope = kinds [node] == DRAW_PATH ? strokeOutset : 1d;
+				double left = pathMinX [node] + dx - envelope;
+				double top = pathMinY [node] + dy - envelope;
+				double right = pathMaxX [node] + dx + envelope;
+				double bottom = pathMaxY [node] + dy + envelope;
+				long clipRight = (long)clip.x + clip.width;
+				long clipBottom = (long)clip.y + clip.height;
+				return right <= clip.x || bottom <= clip.y
+						|| left >= clipRight || top >= clipBottom;
 			}
 			case TEXT -> {
 				// Font metrics are intentionally not retained in the graph.
@@ -887,6 +1007,14 @@ public final class ViewportPaintGraph {
 		lineStyle = Arrays.copyOf (lineStyle, next);
 		lineCap = Arrays.copyOf (lineCap, next);
 		lineJoin = Arrays.copyOf (lineJoin, next);
+		pathTypeOffsets = Arrays.copyOf (pathTypeOffsets, next);
+		pathTypeCounts = Arrays.copyOf (pathTypeCounts, next);
+		pathPointOffsets = Arrays.copyOf (pathPointOffsets, next);
+		pathPointCounts = Arrays.copyOf (pathPointCounts, next);
+		pathMinX = Arrays.copyOf (pathMinX, next);
+		pathMinY = Arrays.copyOf (pathMinY, next);
+		pathMaxX = Arrays.copyOf (pathMaxX, next);
+		pathMaxY = Arrays.copyOf (pathMaxY, next);
 		a = Arrays.copyOf (a, next);
 		b = Arrays.copyOf (b, next);
 		c = Arrays.copyOf (c, next);
@@ -899,6 +1027,16 @@ public final class ViewportPaintGraph {
 		int [] result = Arrays.copyOf (source, newLength);
 		Arrays.fill (result, oldLength, newLength, fill);
 		return result;
+	}
+
+	private void ensurePathTypeCapacity (int required) {
+		if (required <= pathTypes.length) return;
+		pathTypes = Arrays.copyOf (pathTypes, Math.max (required, pathTypes.length * 2));
+	}
+
+	private void ensurePathPointCapacity (int required) {
+		if (required <= pathPoints.length) return;
+		pathPoints = Arrays.copyOf (pathPoints, Math.max (required, pathPoints.length * 2));
 	}
 
 	private void ensureTransformCapacity (int required) {

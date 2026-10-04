@@ -352,6 +352,41 @@ operations. That backend mechanism remains complementary: the viewport graph
 plans reusable viewport paint atoms and coordinate state, while the platform GC
 continues to own native graphics lifetime.
 
+### Retained vector paths and graphics-resource lifetime
+
+The SWT 2D Graphics catalogue's `Path` examples are distilled into the existing
+`ViewportPaintGraph` rather than a second retained graphics API.
+
+A retained path stores only copied, device-independent primitive geometry:
+
+- SWT path opcode bytes;
+- float point/control-point coordinates;
+- per-node offsets/counts and conservative bounds.
+
+The graph never retains an SWT `Path`, `GC`, `Transform`, `Color`, `Font`
+or `Image`. During one replay, path nodes are lazily materialized as temporary
+native SWT `Path` objects, cached only for that replay so repeated DAG instances
+share one native path, and disposed before replay returns. Caller-owned `PathData`
+arrays are copied when the node is created, so later caller mutation cannot
+change retained geometry.
+
+This keeps the resource boundary explicit:
+
+```text
+stable primitive geometry                 native/resource state
+-------------------------                 ---------------------
+PathData opcode/point copy  retained      Path             replay-local
+affine transforms          retained      Transform         replay-local
+clip/cull/stroke metadata  retained      GC               PaintEvent/caller
+z-layer/channel ids        retained      Color/Font/Image  widget/application
+```
+
+Arbitrary vector geometry therefore participates in the same affine, layer and
+viewport culling pipeline as lines/rectangles without changing public GC or
+native graphics lifetimes. Draw-path culling includes the current conservative
+stroke envelope; fill-path culling includes an antialiasing safety pixel. The
+real platform GC remains the exact rasterization and clipping authority.
+
 ### Distilled rendering invariants
 
 1. **Vertical scrolling does not repaint the header merely because the body moved.**
