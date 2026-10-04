@@ -46,6 +46,7 @@ public final class ViewportRewriteStress {
 	private static final int OVERSCAN = 8;
 	private static final String SCREENSHOT_DIR_PROPERTY = "swt.viewport.screenshots";
 	private static final String SCREENSHOT_EXIT_PROPERTY = "swt.viewport.screenshots.exit";
+	private static final String SCREENSHOT_NATIVE_PROPERTY = "swt.viewport.screenshots.native";
 	private static final String SCREENSHOT_TREE_ROOT_KEY = "viewport.screenshot.root";
 	private static final String SCREENSHOT_TREE_CHILD_KEY = "viewport.screenshot.child";
 	private static final List<ScreenshotScenario> SCREENSHOT_SCENARIOS = new ArrayList<> ();
@@ -677,9 +678,20 @@ public final class ViewportRewriteStress {
 			if (!scenario.target ().isDisposed ()) {
 				Path png = output.resolve (scenario.name () + ".png");
 				capturePng (scenario.target (), png);
+				Path nativePng = null;
+				String nativeCaptureError = null;
+				if (Boolean.getBoolean (SCREENSHOT_NATIVE_PROPERTY)) {
+					nativePng = output.resolve (scenario.name () + "-native.png");
+					try {
+						captureNativeWindowPng (scenario.target (), nativePng);
+					} catch (RuntimeException failure) {
+						nativeCaptureError = failure.toString ();
+						nativePng = null;
+					}
+				}
 				writeSpySnapshot (
-						scenario.name (), scenario.target (), tracker, png,
-						output.resolve (scenario.name () + ".txt"));
+						scenario.name (), scenario.target (), tracker, png, nativePng,
+						nativeCaptureError, output.resolve (scenario.name () + ".txt"));
 			}
 			captureNext (display, shell, output, tracker, index + 1);
 		});
@@ -708,14 +720,48 @@ public final class ViewportRewriteStress {
 		}
 	}
 
+	private static void captureNativeWindowPng (Control control, Path path) {
+		Shell shell = control.getShell ();
+		Rectangle bounds = shell.getBounds ();
+		if (bounds.width <= 0 || bounds.height <= 0) return;
+		Display display = control.getDisplay ();
+		Image image = new Image (display, bounds.width, bounds.height);
+		GC gc = new GC (display);
+		try {
+			/*
+			 * Java2s/SWT Snippet-style screen capture: the Display GC reads native
+			 * pixels, so this complementary image includes OS/native chrome that
+			 * Control.print() may not. Wayland may reject or blank desktop capture;
+			 * therefore this path is opt-in diagnostic evidence, not a CI oracle.
+			 */
+			gc.copyArea (image, bounds.x, bounds.y);
+		} finally {
+			gc.dispose ();
+		}
+		try {
+			ImageLoader loader = new ImageLoader ();
+			loader.data = new ImageData[] {image.getImageData ()};
+			loader.save (path.toString (), SWT.IMAGE_PNG);
+		} finally {
+			image.dispose ();
+		}
+	}
+
 	private static void writeSpySnapshot (
 			String scenario, Control target,
-			WidgetSpy.NonDisposedWidgetTracker tracker, Path png, Path path) {
+			WidgetSpy.NonDisposedWidgetTracker tracker, Path png, Path nativePng,
+			String nativeCaptureError, Path path) {
 		StringBuilder out = new StringBuilder (4096);
 		out.append ("scenario=").append (scenario).append ('\n');
 		out.append ("platform=").append (SWT.getPlatform ()).append ('\n');
 		out.append ("screenshot=").append (png.getFileName ()).append ('\n');
 		out.append ("screenshot.sha256=").append (sha256 (png)).append ('\n');
+		if (nativePng != null && Files.exists (nativePng)) {
+			out.append ("nativeScreenshot=").append (nativePng.getFileName ()).append ('\n');
+			out.append ("nativeScreenshot.sha256=").append (sha256 (nativePng)).append ('\n');
+		} else if (nativeCaptureError != null) {
+			out.append ("nativeScreenshot.error=").append (nativeCaptureError).append ('\n');
+		}
 		appendControlSnapshot (out, target, "");
 		if (tracker != null) {
 			Map<Widget, Error> widgets = tracker.getNonDisposedWidgets ();
@@ -768,13 +814,15 @@ public final class ViewportRewriteStress {
 				.append (" style=0x").append (Integer.toHexString (control.getStyle ()))
 				.append (" parent=").append (parent == null ? "<none>" : parent.getClass ().getName ())
 				.append (" bounds=").append (control.getBounds ())
-				.append (" client=").append (control.getClientArea ())
+				.append (" client=").append (control instanceof Scrollable scrollable ? scrollable.getClientArea () : "<not scrollable>")
 				.append (" visible=").append (control.getVisible ())
 				.append (" enabled=").append (control.getEnabled ())
 				.append (" layoutData=").append (layoutData == null ? "<none>" : layoutData.getClass ().getName ())
 				.append ('\n');
-		appendScrollBarSnapshot (out, indent + "  h.", control.getHorizontalBar ());
-		appendScrollBarSnapshot (out, indent + "  v.", control.getVerticalBar ());
+		if (control instanceof Scrollable scrollable) {
+			appendScrollBarSnapshot (out, indent + "  h.", scrollable.getHorizontalBar ());
+			appendScrollBarSnapshot (out, indent + "  v.", scrollable.getVerticalBar ());
+		}
 		if (control instanceof Table table) {
 			out.append (indent).append ("  table.itemCount=").append (table.getItemCount ())
 					.append (" topIndex=").append (table.getTopIndex ())
@@ -795,7 +843,8 @@ public final class ViewportRewriteStress {
 			appendTreeViewportInternals (out, tree, indent + "  ");
 		} else if (control instanceof ScrolledComposite scrolled) {
 			out.append (indent).append ("  scrolled.origin=").append (scrolled.getOrigin ())
-					.append (" min=").append (scrolled.getMinSize ())
+					.append (" minWidth=").append (scrolled.getMinWidth ())
+					.append (" minHeight=").append (scrolled.getMinHeight ())
 					.append (" expandH=").append (scrolled.getExpandHorizontal ())
 					.append (" expandV=").append (scrolled.getExpandVertical ())
 					.append ('\n');
