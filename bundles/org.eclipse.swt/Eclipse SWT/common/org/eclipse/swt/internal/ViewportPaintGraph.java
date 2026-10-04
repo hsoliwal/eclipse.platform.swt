@@ -41,7 +41,9 @@ public final class ViewportPaintGraph {
 	private static final int ROOT = 0;
 	private static final int DETACHED = -2;
 	private static final int NONE = -1;
-	private static final byte TEXT_TRANSPARENT = 1;
+	private static final int TEXT_TRANSPARENT = 1 << 0;
+	private static final int HAS_CLIP = 1 << 1;
+	private static final int HAS_STROKE = 1 << 2;
 
 	private byte [] kinds = new byte [16];
 	private int [] firstChild = new int [16];
@@ -51,11 +53,20 @@ public final class ViewportPaintGraph {
 	private int [] parents = new int [16];
 	private int [] targets = new int [16];
 	private int [] transformIds = new int [16];
+	private int [] layers = new int [16];
+	private float [] clipX = new float [16];
+	private float [] clipY = new float [16];
+	private float [] clipWidth = new float [16];
+	private float [] clipHeight = new float [16];
+	private int [] lineWidth = new int [16];
+	private int [] lineStyle = new int [16];
+	private int [] lineCap = new int [16];
+	private int [] lineJoin = new int [16];
 	private int [] a = new int [16];
 	private int [] b = new int [16];
 	private int [] c = new int [16];
 	private int [] d = new int [16];
-	private byte [] flags = new byte [16];
+	private int [] flags = new int [16];
 	private Object [] payloads = new Object [16];
 	private int nodeCount = 1;
 	private int geometryNodeCount;
@@ -142,8 +153,210 @@ public final class ViewportPaintGraph {
 	}
 
 	public int group (int parent) {
+		return group (parent, 0);
+	}
+
+	public int group (int parent, int layer) {
 		requireGroup (parent);
-		return newNode (GROUP, parent);
+		int node = newNode (GROUP, parent);
+		layers [node] = layer;
+		return node;
+	}
+
+	public int layer (int node) {
+		requireGroup (node);
+		return layers [node];
+	}
+
+	public void setLayer (int node, int layer) {
+		requireGroup (node);
+		layers [node] = layer;
+	}
+
+	public void setTransform (int node, Affine transform) {
+		requireGroup (node);
+		Objects.requireNonNull (transform, "transform");
+		int id = transformIds [node];
+		if (id == 0) transformIds [node] = storeTransform (transform);
+		else setTransformElements (id, transform);
+	}
+
+	public void setTranslation (int node, float x, float y) {
+		setTransform (node, Affine.translation (x, y));
+	}
+
+	public void setClip (int node, float x, float y, float width, float height) {
+		requireGroup (node);
+		requireFinite (x);
+		requireFinite (y);
+		requireFinite (width);
+		requireFinite (height);
+		if (width < 0 || height < 0) throw new IllegalArgumentException ("negative clip extent");
+		clipX [node] = x;
+		clipY [node] = y;
+		clipWidth [node] = width;
+		clipHeight [node] = height;
+		flags [node] |= HAS_CLIP;
+	}
+
+	public void clearClip (int node) {
+		requireGroup (node);
+		flags [node] &= ~HAS_CLIP;
+	}
+
+	public void setStroke (int node, int width, int style, int cap, int join) {
+		requireGroup (node);
+		if (width < 0) throw new IllegalArgumentException ("negative line width");
+		lineWidth [node] = width;
+		lineStyle [node] = style;
+		lineCap [node] = cap;
+		lineJoin [node] = join;
+		flags [node] |= HAS_STROKE;
+	}
+
+	public void clearStroke (int node) {
+		requireGroup (node);
+		flags [node] &= ~HAS_STROKE;
+	}
+
+	public void mapToRoot (int node, float x, float y, float [] out) {
+		requireGroup (node);
+		checkOut (out, 2);
+		requireFinite (x);
+		requireFinite (y);
+		Affine transform = rootTransform (node);
+		out [0] = transform.m11 * x + transform.m21 * y + transform.dx;
+		out [1] = transform.m12 * x + transform.m22 * y + transform.dy;
+	}
+
+	public boolean mapFromRoot (int node, float x, float y, float [] out) {
+		requireGroup (node);
+		checkOut (out, 2);
+		requireFinite (x);
+		requireFinite (y);
+		Affine transform = rootTransform (node);
+		float determinant = transform.m11 * transform.m22 - transform.m12 * transform.m21;
+		if (determinant == 0) return false;
+		float dx = x - transform.dx;
+		float dy = y - transform.dy;
+		out [0] = (transform.m22 * dx - transform.m21 * dy) / determinant;
+		out [1] = (-transform.m12 * dx + transform.m11 * dy) / determinant;
+		return true;
+	}
+
+	public boolean rootClip (int node, float [] out) {
+		requireGroup (node);
+		checkOut (out, 4);
+		boolean clipped = false;
+		float left = Float.NEGATIVE_INFINITY;
+		float top = Float.NEGATIVE_INFINITY;
+		float right = Float.POSITIVE_INFINITY;
+		float bottom = Float.POSITIVE_INFINITY;
+		float [] bounds = new float [4];
+		for (int current = node; current != NONE; current = parents [current]) {
+			if ((flags [current] & HAS_CLIP) == 0) continue;
+			mapRectBounds (
+					current, clipX [current], clipY [current],
+					clipWidth [current], clipHeight [current], bounds);
+			if (!clipped) {
+				left = bounds [0];
+				top = bounds [1];
+				right = bounds [0] + bounds [2];
+				bottom = bounds [1] + bounds [3];
+				clipped = true;
+			} else {
+				left = Math.max (left, bounds [0]);
+				top = Math.max (top, bounds [1]);
+				right = Math.min (right, bounds [0] + bounds [2]);
+				bottom = Math.min (bottom, bounds [1] + bounds [3]);
+			}
+		}
+		if (!clipped) return false;
+		out [0] = left;
+		out [1] = top;
+		out [2] = Math.max (0, right - left);
+		out [3] = Math.max (0, bottom - top);
+		return true;
+	}
+
+	public boolean effectiveStroke (int node, int [] out) {
+		requireGroup (node);
+		if (out == null || out.length < 4) throw new IllegalArgumentException ("stroke output too small");
+		for (int current = node; current != NONE; current = parents [current]) {
+			if ((flags [current] & HAS_STROKE) == 0) continue;
+			out [0] = lineWidth [current];
+			out [1] = lineStyle [current];
+			out [2] = lineCap [current];
+			out [3] = lineJoin [current];
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Applies a viewport group's coordinate/clip/stroke state to the real SWT
+	 * GC for one bounded callback and restores the caller's state afterwards.
+	 */
+	public void withState (GC gc, int node, Runnable painter) {
+		Objects.requireNonNull (gc, "gc");
+		Objects.requireNonNull (painter, "painter");
+		requireGroup (node);
+		if (gc.isDisposed ()) throw new IllegalArgumentException ("disposed GC");
+
+		Transform savedTransform = new Transform (gc.getDevice ());
+		Transform workTransform = new Transform (gc.getDevice ());
+		Region savedClip = new Region (gc.getDevice ());
+		Region workClip = new Region (gc.getDevice ());
+		int oldLineWidth = gc.getLineWidth ();
+		int oldLineStyle = gc.getLineStyle ();
+		int oldLineCap = gc.getLineCap ();
+		int oldLineJoin = gc.getLineJoin ();
+		try {
+			gc.getTransform (savedTransform);
+			gc.getClipping (savedClip);
+			gc.getClipping (workClip);
+
+			float [] clip = new float [4];
+			if (rootClip (node, clip)) {
+				int x = (int)Math.floor (clip [0]);
+				int y = (int)Math.floor (clip [1]);
+				int right = (int)Math.ceil (clip [0] + clip [2]);
+				int bottom = (int)Math.ceil (clip [1] + clip [3]);
+				workClip.intersect (x, y, Math.max (0, right - x), Math.max (0, bottom - y));
+				gc.setClipping (workClip);
+			}
+
+			float [] existing = new float [6];
+			savedTransform.getElements (existing);
+			Affine base = new Affine (
+					existing [0], existing [1], existing [2],
+					existing [3], existing [4], existing [5]);
+			Affine combined = base.compose (rootTransform (node));
+			workTransform.setElements (
+					combined.m11, combined.m12, combined.m21,
+					combined.m22, combined.dx, combined.dy);
+			gc.setTransform (workTransform);
+
+			int [] stroke = new int [4];
+			if (effectiveStroke (node, stroke)) {
+				gc.setLineWidth (stroke [0]);
+				gc.setLineStyle (stroke [1]);
+				gc.setLineCap (stroke [2]);
+				gc.setLineJoin (stroke [3]);
+			}
+			painter.run ();
+		} finally {
+			gc.setTransform (savedTransform);
+			gc.setClipping (savedClip);
+			gc.setLineWidth (oldLineWidth);
+			gc.setLineStyle (oldLineStyle);
+			gc.setLineCap (oldLineCap);
+			gc.setLineJoin (oldLineJoin);
+			workClip.dispose ();
+			savedClip.dispose ();
+			workTransform.dispose ();
+			savedTransform.dispose ();
+		}
 	}
 
 	public int line (int parent, int x1, int y1, int x2, int y2) {
@@ -267,19 +480,8 @@ public final class ViewportPaintGraph {
 
 				switch (kinds [node]) {
 					case GROUP -> {
-						for (int child = lastChild [node]; child != NONE; child = previousSibling [child]) {
-							if (stackSize == nodeStack.length) {
-								nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
-								transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
-							}
-							nodeStack [stackSize] = child;
-							transformStack [stackSize++] = transform;
-						}
-					}
-					case INSTANCE -> {
 						Affine next = transform.compose (transform (transformIds [node]));
-						int template = targets [node];
-						for (int child = lastChild [template]; child != NONE; child = previousSibling [child]) {
+						for (int child = lastChild [node]; child != NONE; child = previousSibling [child]) {
 							if (stackSize == nodeStack.length) {
 								nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
 								transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
@@ -287,6 +489,15 @@ public final class ViewportPaintGraph {
 							nodeStack [stackSize] = child;
 							transformStack [stackSize++] = next;
 						}
+					}
+					case INSTANCE -> {
+						Affine next = transform.compose (transform (transformIds [node]));
+						if (stackSize == nodeStack.length) {
+							nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
+							transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
+						}
+						nodeStack [stackSize] = targets [node];
+						transformStack [stackSize++] = next;
 					}
 					default -> {
 						if (clip != null && transform.isIntegralTranslation ()
@@ -426,6 +637,44 @@ public final class ViewportPaintGraph {
 		return false;
 	}
 
+	private Affine rootTransform (int node) {
+		Affine result = Affine.IDENTITY;
+		for (int current = node; current != NONE; current = parents [current]) {
+			if (kinds [current] != GROUP) continue;
+			result = transform (transformIds [current]).compose (result);
+		}
+		return result;
+	}
+
+	private void mapRectBounds (
+			int node, float x, float y, float width, float height, float [] out) {
+		float [] point = new float [2];
+		mapToRoot (node, x, y, point);
+		float minX = point [0], maxX = point [0];
+		float minY = point [1], maxY = point [1];
+		mapToRoot (node, x + width, y, point);
+		minX = Math.min (minX, point [0]); maxX = Math.max (maxX, point [0]);
+		minY = Math.min (minY, point [1]); maxY = Math.max (maxY, point [1]);
+		mapToRoot (node, x, y + height, point);
+		minX = Math.min (minX, point [0]); maxX = Math.max (maxX, point [0]);
+		minY = Math.min (minY, point [1]); maxY = Math.max (maxY, point [1]);
+		mapToRoot (node, x + width, y + height, point);
+		minX = Math.min (minX, point [0]); maxX = Math.max (maxX, point [0]);
+		minY = Math.min (minY, point [1]); maxY = Math.max (maxY, point [1]);
+		out [0] = minX;
+		out [1] = minY;
+		out [2] = maxX - minX;
+		out [3] = maxY - minY;
+	}
+
+	private static void checkOut (float [] out, int length) {
+		if (out == null || out.length < length) throw new IllegalArgumentException ("paint output too small");
+	}
+
+	private static void requireFinite (float value) {
+		if (!Float.isFinite (value)) throw new IllegalArgumentException ("non-finite paint coordinate");
+	}
+
 	private int storeTransform (Affine transform) {
 		ensureTransformCapacity (transformCount + 1);
 		int id = transformCount++;
@@ -468,6 +717,15 @@ public final class ViewportPaintGraph {
 		parents = grow (parents, old, next, NONE);
 		targets = grow (targets, old, next, NONE);
 		transformIds = Arrays.copyOf (transformIds, next);
+		layers = Arrays.copyOf (layers, next);
+		clipX = Arrays.copyOf (clipX, next);
+		clipY = Arrays.copyOf (clipY, next);
+		clipWidth = Arrays.copyOf (clipWidth, next);
+		clipHeight = Arrays.copyOf (clipHeight, next);
+		lineWidth = Arrays.copyOf (lineWidth, next);
+		lineStyle = Arrays.copyOf (lineStyle, next);
+		lineCap = Arrays.copyOf (lineCap, next);
+		lineJoin = Arrays.copyOf (lineJoin, next);
 		a = Arrays.copyOf (a, next);
 		b = Arrays.copyOf (b, next);
 		c = Arrays.copyOf (c, next);
