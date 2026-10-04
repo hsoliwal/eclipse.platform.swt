@@ -43,6 +43,71 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 	}
 
 	@Test
+	public void test_thickLineOutsideClipStillPaintsItsVisibleStroke () {
+		assertStrokeMatchesImmediate (false, 4, 8, 52, 8, 12, SWT.CAP_FLAT,
+				new Rectangle (0, 12, 64, 16));
+	}
+
+	@Test
+	public void test_squareCapOutsideClipStillPaintsItsVisibleCorner () {
+		assertStrokeMatchesImmediate (false, 8, 8, 20, 20, 12, SWT.CAP_SQUARE,
+				new Rectangle (22, 18, 20, 20));
+	}
+
+	@Test
+	public void test_rectangleOutsideClipStillPaintsItsVisibleJoin () {
+		assertStrokeMatchesImmediate (true, 8, 8, 32, 32, 12, SWT.CAP_FLAT,
+				new Rectangle (43, 43, 12, 12));
+	}
+
+	@Test
+	public void test_fractionalStrokeOutsideClipMatchesImmediateGc () {
+		assertStrokeMatchesImmediate (false, 4, 9, 52, 9, 9.5f, SWT.CAP_ROUND,
+				new Rectangle (0, 12, 64, 16));
+	}
+
+	private void assertStrokeMatchesImmediate (boolean rectangle, int x, int y,
+			int x2OrWidth, int y2OrHeight, float width, int cap, Rectangle clip) {
+		Image reference = new Image (display, 64, 64);
+		GC immediate = new GC (reference);
+		try {
+			immediate.setBackground (display.getSystemColor (SWT.COLOR_WHITE));
+			immediate.fillRectangle (reference.getBounds ());
+			immediate.setForeground (display.getSystemColor (SWT.COLOR_BLACK));
+			LineAttributes stroke = new LineAttributes (width, cap, SWT.JOIN_MITER);
+			immediate.setLineAttributes (stroke);
+			gc.setLineAttributes (stroke);
+			immediate.setClipping (clip);
+			gc.setClipping (clip);
+			ViewportPaintGraph graph = new ViewportPaintGraph ();
+			if (rectangle) {
+				immediate.drawRectangle (x, y, x2OrWidth, y2OrHeight);
+				graph.drawRectangle (graph.root (), x, y, x2OrWidth, y2OrHeight);
+			} else {
+				immediate.drawLine (x, y, x2OrWidth, y2OrHeight);
+				graph.line (graph.root (), x, y, x2OrWidth, y2OrHeight);
+			}
+			var stats = graph.replay (gc, Affine.IDENTITY, clip);
+			ImageData expected = reference.getImageData ();
+			ImageData actual = image.getImageData ();
+			int painted = 0;
+			for (int py = 0; py < 64; py++) {
+				for (int px = 0; px < 64; px++) {
+					RGB expectedRgb = expected.palette.getRGB (expected.getPixel (px, py));
+					if (!expectedRgb.equals (rgb (SWT.COLOR_WHITE))) painted++;
+					assertEquals (expectedRgb, actual.palette.getRGB (actual.getPixel (px, py)),
+							"retained stroke differs from immediate GC at " + px + "," + py);
+				}
+			}
+			assertTrue (painted > 0, "the native oracle must paint inside the clip");
+			assertEquals (1, stats.drawnCommands ());
+		} finally {
+			immediate.dispose ();
+			reference.dispose ();
+		}
+	}
+
+	@Test
 	public void test_sharedTemplateInstancesDoNotDuplicateGeometry () {
 		ViewportPaintGraph graph = new ViewportPaintGraph ();
 		int row = graph.template ();
