@@ -18,12 +18,12 @@ import org.eclipse.swt.SWT;
 enum WidgetStylePolicy implements IntUnaryOperator {
 	MENU_ITEM {
 		@Override public int applyAsInt (int style) {
-			return WidgetStyleBits.normalize (style, SWT.PUSH, SWT.CHECK, SWT.RADIO, SWT.SEPARATOR, SWT.CASCADE, 0);
+			return StyleBits.normalize (style, SWT.PUSH, SWT.CHECK, SWT.RADIO, SWT.SEPARATOR, SWT.CASCADE, 0);
 		}
 	},
 	ORIENTATION {
 		@Override public int applyAsInt (int style) {
-			return WidgetStyleBits.normalize (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
 		}
 	},
 	MESSAGE_BOX {
@@ -41,10 +41,10 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 		@Override public int applyAsInt (int style) {
 			style |= SWT.NO_FOCUS;
 			if ((style & SWT.SEPARATOR) != 0) {
-				style = WidgetStyleBits.normalize (style, SWT.VERTICAL, SWT.HORIZONTAL, 0, 0, 0, 0);
-				return WidgetStyleBits.normalize (style, SWT.SHADOW_OUT, SWT.SHADOW_IN, SWT.SHADOW_NONE, 0, 0, 0);
+				style = StyleBits.normalize (style, SWT.VERTICAL, SWT.HORIZONTAL, 0, 0, 0, 0);
+				return StyleBits.normalize (style, SWT.SHADOW_OUT, SWT.SHADOW_IN, SWT.SHADOW_NONE, 0, 0, 0);
 			}
-			return WidgetStyleBits.normalize (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
 		}
 	},
 	TABLE_FULL_SELECTION {
@@ -63,7 +63,7 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			}
 			/* This platform is always FULL_SELECTION */
 			style |= SWT.FULL_SELECTION;
-			return WidgetStyleBits.normalize (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
 		}
 	},
 	WITHOUT_SCROLLBARS {
@@ -80,13 +80,13 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 	},
 	COLUMN_ALIGNMENT {
 		@Override public int applyAsInt (int style) {
-			return WidgetStyleBits.normalize (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
 		}
 	},
 	PROGRESS {
 		@Override public int applyAsInt (int style) {
 			style |= SWT.NO_FOCUS;
-			return WidgetStyleBits.normalize (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
 		}
 	},
 	SMOOTH_SASH {
@@ -95,7 +95,7 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			* Macintosh only supports smooth dragging.
 			*/
 			style |= SWT.SMOOTH;
-			return WidgetStyleBits.normalize (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
 		}
 	},
 	TRACKER {
@@ -146,7 +146,7 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			if ((style & SWT.SINGLE) != 0 && (style & SWT.MULTI) != 0) {
 				style &= ~SWT.MULTI;
 			}
-			style = WidgetStyleBits.normalize (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
+			style = StyleBits.normalize (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
 			if ((style & SWT.SINGLE) != 0) style &= ~(SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP);
 			if ((style & SWT.WRAP) != 0) {
 				style |= SWT.MULTI;
@@ -160,16 +160,16 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 	},
 	BUTTON {
 		@Override public int applyAsInt (int style) {
-			style = WidgetStyleBits.normalize (style, SWT.PUSH, SWT.ARROW, SWT.CHECK, SWT.RADIO, SWT.TOGGLE, 0);
+			style = StyleBits.normalize (style, SWT.PUSH, SWT.ARROW, SWT.CHECK, SWT.RADIO, SWT.TOGGLE, 0);
 			if ((style & (SWT.PUSH | SWT.TOGGLE)) != 0) {
-				return WidgetStyleBits.normalize (style, SWT.CENTER, SWT.LEFT, SWT.RIGHT, 0, 0, 0);
+				return StyleBits.normalize (style, SWT.CENTER, SWT.LEFT, SWT.RIGHT, 0, 0, 0);
 			}
 			if ((style & (SWT.CHECK | SWT.RADIO)) != 0) {
-				return WidgetStyleBits.normalize (style, SWT.LEFT, SWT.RIGHT, SWT.CENTER, 0, 0, 0);
+				return StyleBits.normalize (style, SWT.LEFT, SWT.RIGHT, SWT.CENTER, 0, 0, 0);
 			}
 			if ((style & SWT.ARROW) != 0) {
 				style |= SWT.NO_FOCUS;
-				return WidgetStyleBits.normalize (style, SWT.UP, SWT.DOWN, SWT.LEFT, SWT.RIGHT, 0, 0);
+				return StyleBits.normalize (style, SWT.UP, SWT.DOWN, SWT.LEFT, SWT.RIGHT, 0, 0);
 			}
 			return style;
 		}
@@ -198,14 +198,14 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			* the SWT style.
 			*/
 			style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
-			style = WidgetStyleBits.normalize (style, SWT.DROP_DOWN, SWT.SIMPLE, 0, 0, 0, 0);
+			style = StyleBits.normalize (style, SWT.DROP_DOWN, SWT.SIMPLE, 0, 0, 0, 0);
 			if ((style & SWT.SIMPLE) != 0) return style & ~SWT.READ_ONLY;
 			return style;
 		}
 	},
 	TAB_FOLDER {
 		@Override public int applyAsInt (int style) {
-			style = WidgetStyleBits.normalize (style, SWT.TOP, SWT.BOTTOM, 0, 0, 0, 0);
+			style = StyleBits.normalize (style, SWT.TOP, SWT.BOTTOM, 0, 0, 0, 0);
 			/*
 			* Even though it is legal to create this widget
 			* with scroll bars, they serve no useful purpose
@@ -218,17 +218,17 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 	},
 	LIST_SELECTION {
 		@Override public int applyAsInt (int style) {
-			return WidgetStyleBits.normalize (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
 		}
 	},
 	MENU {
 		@Override public int applyAsInt (int style) {
-			return WidgetStyleBits.normalize (style, SWT.POP_UP, SWT.BAR, SWT.DROP_DOWN, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.POP_UP, SWT.BAR, SWT.DROP_DOWN, 0, 0, 0);
 		}
 	},
 	TOOL_ITEM {
 		@Override public int applyAsInt (int style) {
-			return WidgetStyleBits.normalize (style, SWT.PUSH, SWT.CHECK, SWT.RADIO, SWT.SEPARATOR, SWT.DROP_DOWN, 0);
+			return StyleBits.normalize (style, SWT.PUSH, SWT.CHECK, SWT.RADIO, SWT.SEPARATOR, SWT.DROP_DOWN, 0);
 		}
 	},
 	DATE_TIME {
@@ -241,8 +241,8 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			* the SWT style.
 			*/
 			style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
-			style = WidgetStyleBits.normalize (style, SWT.DATE, SWT.TIME, SWT.CALENDAR, 0, 0, 0);
-			style = WidgetStyleBits.normalize (style, SWT.MEDIUM, SWT.SHORT, SWT.LONG, 0, 0, 0);
+			style = StyleBits.normalize (style, SWT.DATE, SWT.TIME, SWT.CALENDAR, 0, 0, 0);
+			style = StyleBits.normalize (style, SWT.MEDIUM, SWT.SHORT, SWT.LONG, 0, 0, 0);
 			if ((style & SWT.DATE) == 0) style &=~ SWT.DROP_DOWN;
 			return style;
 		}
@@ -257,7 +257,7 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 		@Override public int applyAsInt (int style) {
 			int mask = SWT.ICON_ERROR | SWT.ICON_INFORMATION | SWT.ICON_WARNING;
 			if ((style & mask) == 0) return style;
-			return WidgetStyleBits.normalize (style, SWT.ICON_INFORMATION, SWT.ICON_WARNING, SWT.ICON_ERROR, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.ICON_INFORMATION, SWT.ICON_WARNING, SWT.ICON_ERROR, 0, 0, 0);
 		}
 	},
 	TOOLBAR_WINDOWS {
@@ -297,7 +297,7 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			if ((style & SWT.NO_SCROLL) == 0) {
 				style |= SWT.H_SCROLL | SWT.V_SCROLL;
 			}
-			return WidgetStyleBits.normalize (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
 		}
 	},
 	TREE_WINDOWS {
@@ -320,7 +320,7 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			if ((style & SWT.H_SCROLL) != 0 && (style & SWT.V_SCROLL) == 0) {
 				style |= SWT.V_SCROLL;
 			}
-			return WidgetStyleBits.normalize (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
 		}
 	},
 	DECORATIONS_WINDOWS {
@@ -355,7 +355,7 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			if ((style & SWT.SINGLE) != 0 && (style & SWT.MULTI) != 0) {
 				style &= ~SWT.MULTI;
 			}
-			style = WidgetStyleBits.normalize (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
+			style = StyleBits.normalize (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
 			/*
 			 * NOTE: ICON_CANCEL and ICON_SEARCH have the same value as H_SCROLL and
 			 * V_SCROLL. The meaning is determined by whether SWT.SEARCH is set.
@@ -378,16 +378,16 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 	},
 	BUTTON_COMMAND {
 		@Override public int applyAsInt (int style) {
-			style = WidgetStyleBits.normalize (style, SWT.PUSH, SWT.ARROW, SWT.CHECK, SWT.RADIO, SWT.TOGGLE, SWT.COMMAND);
+			style = StyleBits.normalize (style, SWT.PUSH, SWT.ARROW, SWT.CHECK, SWT.RADIO, SWT.TOGGLE, SWT.COMMAND);
 			if ((style & (SWT.PUSH | SWT.TOGGLE)) != 0) {
-				return WidgetStyleBits.normalize (style, SWT.CENTER, SWT.LEFT, SWT.RIGHT, 0, 0, 0);
+				return StyleBits.normalize (style, SWT.CENTER, SWT.LEFT, SWT.RIGHT, 0, 0, 0);
 			}
 			if ((style & (SWT.CHECK | SWT.RADIO)) != 0) {
-				return WidgetStyleBits.normalize (style, SWT.LEFT, SWT.RIGHT, SWT.CENTER, 0, 0, 0);
+				return StyleBits.normalize (style, SWT.LEFT, SWT.RIGHT, SWT.CENTER, 0, 0, 0);
 			}
 			if ((style & SWT.ARROW) != 0) {
 				style |= SWT.NO_FOCUS;
-				return WidgetStyleBits.normalize (style, SWT.UP, SWT.DOWN, SWT.LEFT, SWT.RIGHT, 0, 0);
+				return StyleBits.normalize (style, SWT.UP, SWT.DOWN, SWT.LEFT, SWT.RIGHT, 0, 0);
 			}
 			return style;
 		}
@@ -410,9 +410,9 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			*/
 			style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
 
-			style = WidgetStyleBits.normalize (style, SWT.DATE, SWT.TIME, SWT.CALENDAR, 0, 0, 0);
+			style = StyleBits.normalize (style, SWT.DATE, SWT.TIME, SWT.CALENDAR, 0, 0, 0);
 			if ((style & SWT.DATE) == 0) style &=~ SWT.DROP_DOWN;
-			return WidgetStyleBits.normalize (style, SWT.MEDIUM, SWT.SHORT, SWT.LONG, 0, 0, 0);
+			return StyleBits.normalize (style, SWT.MEDIUM, SWT.SHORT, SWT.LONG, 0, 0, 0);
 		}
 	},
 	EXPAND_BAR_EMULATED {

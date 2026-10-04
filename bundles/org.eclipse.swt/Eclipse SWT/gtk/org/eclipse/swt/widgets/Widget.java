@@ -404,7 +404,7 @@ long cssHandle() {
 }
 
 static int checkBits (int style, int int0, int int1, int int2, int int3, int int4, int int5) {
-	return WidgetStyleBits.normalize(style, int0, int1, int2, int3, int4, int5);
+	return StyleBits.normalize (style, int0, int1, int2, int3, int4, int5);
 }
 
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
