@@ -45,6 +45,7 @@ public final class ViewportPaintGraph {
 	private static final byte HAS_CLIP = 1 << 1;
 	private static final byte HAS_STROKE = 1 << 2;
 	private static final byte HAS_LAYER = 1 << 3;
+	private static final byte HAS_CULL_BOUNDS = 1 << 4;
 
 	private byte [] kinds = new byte [16];
 	private int [] firstChild = new int [16];
@@ -59,6 +60,10 @@ public final class ViewportPaintGraph {
 	private float [] clipY = new float [16];
 	private float [] clipWidth = new float [16];
 	private float [] clipHeight = new float [16];
+	private float [] cullX = new float [16];
+	private float [] cullY = new float [16];
+	private float [] cullWidth = new float [16];
+	private float [] cullHeight = new float [16];
 	private int [] lineWidth = new int [16];
 	private int [] lineStyle = new int [16];
 	private int [] lineCap = new int [16];
@@ -233,6 +238,34 @@ public final class ViewportPaintGraph {
 	public void clearClip (int group) {
 		requireGroup (group);
 		flags [group] &= ~HAS_CLIP;
+	}
+
+	/**
+	 * Sets conservative local-space bounds for coarse subtree culling.
+	 *
+	 * <p>This is deliberately separate from clipping.  A clip changes what may
+	 * be drawn inside a group; cull bounds only let replay skip the whole
+	 * retained subtree when none of it can intersect the requested replay
+	 * region.  Callers should use the cheapest stable row/pane bounds they
+	 * already know.</p>
+	 */
+	public void setCullBounds (int group, float x, float y, float width, float height) {
+		requireGroup (group);
+		if (!Float.isFinite (x) || !Float.isFinite (y)
+				|| !Float.isFinite (width) || !Float.isFinite (height)
+				|| width < 0 || height < 0) {
+			throw new IllegalArgumentException ("invalid viewport cull bounds");
+		}
+		cullX [group] = x;
+		cullY [group] = y;
+		cullWidth [group] = width;
+		cullHeight [group] = height;
+		flags [group] |= HAS_CULL_BOUNDS;
+	}
+
+	public void clearCullBounds (int group) {
+		requireGroup (group);
+		flags [group] &= ~HAS_CULL_BOUNDS;
 	}
 
 	/**
@@ -485,6 +518,14 @@ public final class ViewportPaintGraph {
 					case GROUP -> {
 						Affine next = transform;
 						if (transformIds [node] != 0) next = transform.compose (transform (transformIds [node]));
+						if (clip != null && (flags [node] & HAS_CULL_BOUNDS) != 0
+								&& outsideBounds (
+										next,
+										cullX [node], cullY [node],
+										cullWidth [node], cullHeight [node],
+										clip)) {
+							continue;
+						}
 						boolean hasNextLayer = hasInheritedLayer;
 						int nextLayer = inheritedLayer;
 						if ((flags [node] & HAS_LAYER) != 0) {
@@ -578,6 +619,17 @@ public final class ViewportPaintGraph {
 					(flags [node] & TEXT_TRANSPARENT) != 0);
 			default -> throw new IllegalStateException ("not a paint command");
 		}
+	}
+
+	private boolean outsideBounds (
+			Affine transform, float x, float y, float width, float height,
+			Rectangle clip) {
+		mapRect (transform, x, y, width, height, boundsScratch);
+		float right = boundsScratch [0] + boundsScratch [2];
+		float bottom = boundsScratch [1] + boundsScratch [3];
+		return right <= clip.x || bottom <= clip.y
+				|| boundsScratch [0] >= clip.x + clip.width
+				|| boundsScratch [1] >= clip.y + clip.height;
 	}
 
 	private boolean outsideClip (int node, Affine transform, Rectangle clip) {
@@ -746,16 +798,31 @@ public final class ViewportPaintGraph {
 	private void mapRectToRoot (
 			int node, float x, float y, float width, float height, float [] out) {
 		rootTransform (node, affineScratch);
-		float x1 = affineScratch [0] * x + affineScratch [2] * y + affineScratch [4];
-		float y1 = affineScratch [1] * x + affineScratch [3] * y + affineScratch [5];
-		float x2 = affineScratch [0] * (x + width) + affineScratch [2] * y + affineScratch [4];
-		float y2 = affineScratch [1] * (x + width) + affineScratch [3] * y + affineScratch [5];
-		float x3 = affineScratch [0] * x + affineScratch [2] * (y + height) + affineScratch [4];
-		float y3 = affineScratch [1] * x + affineScratch [3] * (y + height) + affineScratch [5];
-		float x4 = affineScratch [0] * (x + width)
-				+ affineScratch [2] * (y + height) + affineScratch [4];
-		float y4 = affineScratch [1] * (x + width)
-				+ affineScratch [3] * (y + height) + affineScratch [5];
+		mapRect (
+				affineScratch [0], affineScratch [1], affineScratch [2],
+				affineScratch [3], affineScratch [4], affineScratch [5],
+				x, y, width, height, out);
+	}
+
+	private static void mapRect (
+			Affine transform, float x, float y, float width, float height, float [] out) {
+		mapRect (
+				transform.m11, transform.m12, transform.m21,
+				transform.m22, transform.dx, transform.dy,
+				x, y, width, height, out);
+	}
+
+	private static void mapRect (
+			float m11, float m12, float m21, float m22, float dx, float dy,
+			float x, float y, float width, float height, float [] out) {
+		float x1 = m11 * x + m21 * y + dx;
+		float y1 = m12 * x + m22 * y + dy;
+		float x2 = m11 * (x + width) + m21 * y + dx;
+		float y2 = m12 * (x + width) + m22 * y + dy;
+		float x3 = m11 * x + m21 * (y + height) + dx;
+		float y3 = m12 * x + m22 * (y + height) + dy;
+		float x4 = m11 * (x + width) + m21 * (y + height) + dx;
+		float y4 = m12 * (x + width) + m22 * (y + height) + dy;
 		float left = Math.min (Math.min (x1, x2), Math.min (x3, x4));
 		float top = Math.min (Math.min (y1, y2), Math.min (y3, y4));
 		float right = Math.max (Math.max (x1, x2), Math.max (x3, x4));
@@ -783,6 +850,10 @@ public final class ViewportPaintGraph {
 		clipY = Arrays.copyOf (clipY, next);
 		clipWidth = Arrays.copyOf (clipWidth, next);
 		clipHeight = Arrays.copyOf (clipHeight, next);
+		cullX = Arrays.copyOf (cullX, next);
+		cullY = Arrays.copyOf (cullY, next);
+		cullWidth = Arrays.copyOf (cullWidth, next);
+		cullHeight = Arrays.copyOf (cullHeight, next);
 		lineWidth = Arrays.copyOf (lineWidth, next);
 		lineStyle = Arrays.copyOf (lineStyle, next);
 		lineCap = Arrays.copyOf (lineCap, next);
