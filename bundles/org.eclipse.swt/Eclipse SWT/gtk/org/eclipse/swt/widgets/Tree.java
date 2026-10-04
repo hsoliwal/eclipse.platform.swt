@@ -89,6 +89,7 @@ public class Tree extends Composite {
 	long ignoreCell;
 	TreeItem[] items;
 	VirtualTreeTopology virtualTopology;
+	final Set<Integer> virtualFrontierPending = new HashSet<> ();
 	VirtualTreeVisibleProjection virtualProjection;
 	VirtualTreeViewport virtualViewport;
 	int nextId;
@@ -131,6 +132,8 @@ public class Tree extends Composite {
 	static final int CELL_FONT = 4;
 	static final int CELL_SURFACE = 5;
 	static final int CELL_TYPES = CELL_SURFACE + 1;
+	static final int VIRTUAL_FRONTIER_CHUNK = 256;
+	static final int VIRTUAL_FRONTIER_TRIGGER = 32;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -385,7 +388,45 @@ void restoreVirtualChildren (TreeItem item) {
 	if (virtualTopology == null || item == null || item.isDisposed ()) return;
 	int id = virtualItemId (item);
 	if (!virtualTopology.childCountKnown (id)) return;
-	ensureVirtualNativeChildren (item.handle, virtualTopology.childCount (id));
+	int logicalCount = virtualTopology.childCount (id);
+	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, item.handle);
+	int target = Math.min (logicalCount, Math.max (resident, VIRTUAL_FRONTIER_CHUNK));
+	ensureVirtualNativeChildren (item.handle, target);
+}
+
+void requestVirtualFrontier (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	int itemId = virtualItemId (item);
+	int parentId = virtualTopology.parentId (itemId);
+	if (!virtualTopology.childCountKnown (parentId)) return;
+	int logicalCount = virtualTopology.childCount (parentId);
+	long parentIter = 0;
+	if (parentId != VirtualTreeTopology.ROOT) {
+		if (parentId >= items.length) return;
+		TreeItem parentItem = items [parentId];
+		if (parentItem == null || parentItem.isDisposed ()) return;
+		parentIter = parentItem.handle;
+	}
+	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
+	if (resident >= logicalCount) return;
+	if (virtualTopology.childIndex (itemId) < Math.max (0, resident - VIRTUAL_FRONTIER_TRIGGER)) return;
+
+	int key = parentId + 1;
+	if (!virtualFrontierPending.add (key)) return;
+	display.asyncExec (() -> {
+		virtualFrontierPending.remove (key);
+		if (isDisposed () || virtualTopology == null) return;
+		long currentParent = 0;
+		if (parentId != VirtualTreeTopology.ROOT) {
+			if (parentId >= items.length) return;
+			TreeItem parentItem = items [parentId];
+			if (parentItem == null || parentItem.isDisposed ()) return;
+			currentParent = parentItem.handle;
+		}
+		int current = GTK.gtk_tree_model_iter_n_children (modelHandle, currentParent);
+		ensureVirtualNativeChildren (
+				currentParent, Math.min (logicalCount, current + VIRTUAL_FRONTIER_CHUNK));
+	});
 }
 
 int virtualResidentChildCount (long parentIter) {
@@ -546,6 +587,7 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 		setScrollWidth (tree_column, item);
 		ignoreCell = 0;
 	}
+	if ((style & SWT.VIRTUAL) != 0) requestVirtualFrontier (item);
 	return 0;
 }
 
@@ -3941,42 +3983,41 @@ public void setInsertMark (TreeItem item, boolean before) {
 }
 
 void setItemCount (long parentIter, int count) {
-	int itemCount = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
+	int residentCount = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
 	int topologyParentId = virtualTopology != null ? virtualParentId (parentIter) : VirtualTreeTopology.ROOT;
-	if (count == itemCount) return;
 	boolean isVirtual = (style & SWT.VIRTUAL) != 0;
+	int logicalCount = isVirtual && virtualTopology.childCountKnown (topologyParentId)
+			? virtualTopology.childCount (topologyParentId)
+			: residentCount;
+	if (count == logicalCount) return;
+
 	if (!isVirtual) setRedraw (false);
-	if(parentIter == 0 && count == 0) {
-		removeAll();
-	} else {
-		remove (parentIter, count, itemCount - 1);
+	if (parentIter == 0 && count == 0) {
+		removeAll ();
+		return;
 	}
+
+	if (count < residentCount) {
+		remove (parentIter, count, residentCount - 1);
+		residentCount = count;
+	}
+
 	if (isVirtual) {
-		long iters = OS.g_malloc (2 * GTK.GtkTreeIter_sizeof ());
-		if (iters == 0) error (SWT.ERROR_NO_HANDLES);
-
-		long iterResult = iters;
-		long iterInsertAfter;
-		if (itemCount != 0) {
-			iterInsertAfter = iters + GTK.GtkTreeIter_sizeof ();
-			GTK.gtk_tree_model_iter_nth_child(modelHandle, iterInsertAfter, parentIter, itemCount - 1);
-		} else {
-			iterInsertAfter = 0;
-		}
-
-		for (int i=itemCount; i<count; i++) {
-			GTK.gtk_tree_store_insert_after (modelHandle, iterResult, parentIter, iterInsertAfter);
-			GTK.gtk_tree_store_set (modelHandle, iterResult, ID_COLUMN, -1, -1);
-		}
-
-		OS.g_free (iters);
+		virtualTopology.setChildCount (topologyParentId, count);
+		/*
+		 * Root rows need a scrollable prefix. A collapsed child branch only needs
+		 * one sentinel row for its expander; expansion grows that prefix to one
+		 * frontier chunk and rendering near the edge grows it asynchronously.
+		 */
+		int minimumResident = parentIter == 0 ? VIRTUAL_FRONTIER_CHUNK : 1;
+		int initialTarget = Math.min (count, Math.max (residentCount, minimumResident));
+		ensureVirtualNativeChildren (parentIter, initialTarget);
 	} else {
-		for (int i=itemCount; i<count; i++) {
-			new TreeItem (this, parentIter, SWT.NONE, itemCount, 0);
+		for (int i = residentCount; i < count; i++) {
+			new TreeItem (this, parentIter, SWT.NONE, residentCount, 0);
 		}
+		setRedraw (true);
 	}
-	if (!isVirtual) setRedraw (true);
-	if (virtualTopology != null) virtualTopology.setChildCount (topologyParentId, count);
 	modelChanged = true;
 }
 
