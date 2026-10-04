@@ -42,6 +42,9 @@ public final class ViewportPaintGraph {
 	private static final int DETACHED = -2;
 	private static final int NONE = -1;
 	private static final byte TEXT_TRANSPARENT = 1;
+	private static final byte HAS_CLIP = 1 << 1;
+	private static final byte HAS_STROKE = 1 << 2;
+	private static final byte HAS_LAYER = 1 << 3;
 
 	private byte [] kinds = new byte [16];
 	private int [] firstChild = new int [16];
@@ -51,6 +54,15 @@ public final class ViewportPaintGraph {
 	private int [] parents = new int [16];
 	private int [] targets = new int [16];
 	private int [] transformIds = new int [16];
+	private int [] layers = new int [16];
+	private float [] clipX = new float [16];
+	private float [] clipY = new float [16];
+	private float [] clipWidth = new float [16];
+	private float [] clipHeight = new float [16];
+	private int [] lineWidth = new int [16];
+	private int [] lineStyle = new int [16];
+	private int [] lineCap = new int [16];
+	private int [] lineJoin = new int [16];
 	private int [] a = new int [16];
 	private int [] b = new int [16];
 	private int [] c = new int [16];
@@ -62,6 +74,13 @@ public final class ViewportPaintGraph {
 
 	private float [] transforms = new float [6 * 8];
 	private int transformCount = 1;
+
+	/*
+	 * Viewport paint graphs are UI-thread confined. These reusable lanes keep
+	 * coordinate/hit-test/clip queries allocation-free on paint and pointer paths.
+	 */
+	private final float [] affineScratch = new float [6];
+	private final float [] boundsScratch = new float [4];
 
 	public ViewportPaintGraph () {
 		Arrays.fill (firstChild, NONE);
@@ -118,6 +137,23 @@ public final class ViewportPaintGraph {
 					&& dx == Math.rint (dx) && dy == Math.rint (dy);
 		}
 
+		public void map (float x, float y, float [] out) {
+			if (out == null || out.length < 2) throw new IllegalArgumentException ("affine output too small");
+			out [0] = m11 * x + m21 * y + dx;
+			out [1] = m12 * x + m22 * y + dy;
+		}
+
+		public boolean inverseMap (float x, float y, float [] out) {
+			if (out == null || out.length < 2) throw new IllegalArgumentException ("affine output too small");
+			float determinant = m11 * m22 - m21 * m12;
+			if (determinant == 0) return false;
+			float px = x - dx;
+			float py = y - dy;
+			out [0] = (m22 * px - m21 * py) / determinant;
+			out [1] = (-m12 * px + m11 * py) / determinant;
+			return true;
+		}
+
 		private static boolean same (float left, float right) {
 			return Float.floatToIntBits (left) == Float.floatToIntBits (right);
 		}
@@ -142,8 +178,153 @@ public final class ViewportPaintGraph {
 	}
 
 	public int group (int parent) {
+		return group (parent, Affine.IDENTITY);
+	}
+
+	public int group (int parent, Affine transform) {
 		requireGroup (parent);
-		return newNode (GROUP, parent);
+		int node = newNode (GROUP, parent);
+		transformIds [node] = transformId (Objects.requireNonNull (transform, "transform"));
+		return node;
+	}
+
+	public void setTransform (int group, Affine transform) {
+		requireGroup (group);
+		transformIds [group] = transformId (Objects.requireNonNull (transform, "transform"));
+	}
+
+	public void setLayer (int group, int layer) {
+		requireGroup (group);
+		layers [group] = layer;
+		flags [group] |= HAS_LAYER;
+	}
+
+	public void clearLayer (int group) {
+		requireGroup (group);
+		flags [group] &= ~HAS_LAYER;
+	}
+
+	public boolean effectiveLayer (int node, int [] out) {
+		requireNode (node);
+		if (out == null || out.length == 0) throw new IllegalArgumentException ("layer output too small");
+		for (int current = node; current >= 0; current = parents [current]) {
+			if ((flags [current] & HAS_LAYER) != 0) {
+				out [0] = layers [current];
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void setClip (int group, float x, float y, float width, float height) {
+		requireGroup (group);
+		if (!Float.isFinite (x) || !Float.isFinite (y)
+				|| !Float.isFinite (width) || !Float.isFinite (height)
+				|| width < 0 || height < 0) {
+			throw new IllegalArgumentException ("invalid viewport clip");
+		}
+		clipX [group] = x;
+		clipY [group] = y;
+		clipWidth [group] = width;
+		clipHeight [group] = height;
+		flags [group] |= HAS_CLIP;
+	}
+
+	public void clearClip (int group) {
+		requireGroup (group);
+		flags [group] &= ~HAS_CLIP;
+	}
+
+	/**
+	 * Computes the conservative root-space bounds of all clips inherited by
+	 * one attached graph node. Detached templates have no unique root mapping.
+	 */
+	public boolean rootClip (int node, float [] out) {
+		requireAttachedNode (node);
+		if (out == null || out.length < 4) throw new IllegalArgumentException ("clip output too small");
+		boolean clipped = false;
+		float left = Float.NEGATIVE_INFINITY;
+		float top = Float.NEGATIVE_INFINITY;
+		float right = Float.POSITIVE_INFINITY;
+		float bottom = Float.POSITIVE_INFINITY;
+		for (int current = node; current >= 0; current = parents [current]) {
+			if ((flags [current] & HAS_CLIP) == 0) continue;
+			mapRectToRoot (
+					current,
+					clipX [current], clipY [current],
+					clipWidth [current], clipHeight [current],
+					boundsScratch);
+			if (!clipped) {
+				left = boundsScratch [0];
+				top = boundsScratch [1];
+				right = boundsScratch [0] + boundsScratch [2];
+				bottom = boundsScratch [1] + boundsScratch [3];
+				clipped = true;
+			} else {
+				left = Math.max (left, boundsScratch [0]);
+				top = Math.max (top, boundsScratch [1]);
+				right = Math.min (right, boundsScratch [0] + boundsScratch [2]);
+				bottom = Math.min (bottom, boundsScratch [1] + boundsScratch [3]);
+			}
+		}
+		if (!clipped) return false;
+		out [0] = left;
+		out [1] = top;
+		out [2] = Math.max (0, right - left);
+		out [3] = Math.max (0, bottom - top);
+		return true;
+	}
+
+	public void setStroke (int group, int width, int style, int cap, int join) {
+		requireGroup (group);
+		if (width < 0) throw new IllegalArgumentException ("negative line width");
+		lineWidth [group] = width;
+		lineStyle [group] = style;
+		lineCap [group] = cap;
+		lineJoin [group] = join;
+		flags [group] |= HAS_STROKE;
+	}
+
+	public void clearStroke (int group) {
+		requireGroup (group);
+		flags [group] &= ~HAS_STROKE;
+	}
+
+	public boolean effectiveStroke (int node, int [] out) {
+		requireNode (node);
+		if (out == null || out.length < 4) throw new IllegalArgumentException ("stroke output too small");
+		for (int current = node; current >= 0; current = parents [current]) {
+			if ((flags [current] & HAS_STROKE) != 0) {
+				out [0] = lineWidth [current];
+				out [1] = lineStyle [current];
+				out [2] = lineCap [current];
+				out [3] = lineJoin [current];
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void mapToRoot (int node, float x, float y, float [] out) {
+		requireAttachedNode (node);
+		if (out == null || out.length < 2) throw new IllegalArgumentException ("coordinate output too small");
+		rootTransform (node, affineScratch);
+		out [0] = affineScratch [0] * x + affineScratch [2] * y + affineScratch [4];
+		out [1] = affineScratch [1] * x + affineScratch [3] * y + affineScratch [5];
+	}
+
+	public boolean mapFromRoot (int node, float x, float y, float [] out) {
+		requireAttachedNode (node);
+		if (out == null || out.length < 2) throw new IllegalArgumentException ("coordinate output too small");
+		rootTransform (node, affineScratch);
+		float determinant = affineScratch [0] * affineScratch [3]
+				- affineScratch [2] * affineScratch [1];
+		if (determinant == 0) return false;
+		float px = x - affineScratch [4];
+		float py = y - affineScratch [5];
+		out [0] = (affineScratch [3] * px - affineScratch [2] * py) / determinant;
+		out [1] = (-affineScratch [1] * px + affineScratch [0] * py) / determinant;
+		return true;
 	}
 
 	public int line (int parent, int x1, int y1, int x2, int y2) {
@@ -205,7 +386,7 @@ public final class ViewportPaintGraph {
 		}
 		int node = newNode (INSTANCE, parent);
 		targets [node] = template;
-		transformIds [node] = storeTransform (Objects.requireNonNull (transform, "transform"));
+		transformIds [node] = transformId (Objects.requireNonNull (transform, "transform"));
 		return node;
 	}
 
@@ -267,19 +448,9 @@ public final class ViewportPaintGraph {
 
 				switch (kinds [node]) {
 					case GROUP -> {
+						Affine next = transform;
+						if (transformIds [node] != 0) next = transform.compose (transform (transformIds [node]));
 						for (int child = lastChild [node]; child != NONE; child = previousSibling [child]) {
-							if (stackSize == nodeStack.length) {
-								nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
-								transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
-							}
-							nodeStack [stackSize] = child;
-							transformStack [stackSize++] = transform;
-						}
-					}
-					case INSTANCE -> {
-						Affine next = transform.compose (transform (transformIds [node]));
-						int template = targets [node];
-						for (int child = lastChild [template]; child != NONE; child = previousSibling [child]) {
 							if (stackSize == nodeStack.length) {
 								nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
 								transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
@@ -287,6 +458,15 @@ public final class ViewportPaintGraph {
 							nodeStack [stackSize] = child;
 							transformStack [stackSize++] = next;
 						}
+					}
+					case INSTANCE -> {
+						Affine next = transform.compose (transform (transformIds [node]));
+						if (stackSize == nodeStack.length) {
+							nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
+							transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
+						}
+						nodeStack [stackSize] = targets [node];
+						transformStack [stackSize++] = next;
 					}
 					default -> {
 						if (clip != null && transform.isIntegralTranslation ()
@@ -426,6 +606,10 @@ public final class ViewportPaintGraph {
 		return false;
 	}
 
+	private int transformId (Affine transform) {
+		return transform.equals (Affine.IDENTITY) ? 0 : storeTransform (transform);
+	}
+
 	private int storeTransform (Affine transform) {
 		ensureTransformCapacity (transformCount + 1);
 		int id = transformCount++;
@@ -456,6 +640,80 @@ public final class ViewportPaintGraph {
 		}
 	}
 
+	private void requireNode (int node) {
+		if (node < 0 || node >= nodeCount) throw new IllegalArgumentException ("invalid paint node");
+	}
+
+	private void requireAttachedNode (int node) {
+		requireNode (node);
+		for (int current = node; current >= 0; current = parents [current]) {
+			if (parents [current] == DETACHED) {
+				throw new IllegalArgumentException ("detached paint node has no unique root mapping");
+			}
+		}
+	}
+
+	private void rootTransform (int node, float [] out) {
+		float r11 = 1, r12 = 0, r21 = 0, r22 = 1, rdx = 0, rdy = 0;
+		for (int current = node; current >= 0; current = parents [current]) {
+			if (parents [current] == DETACHED) {
+				throw new IllegalArgumentException ("detached paint node has no unique root mapping");
+			}
+			int transformId = (kinds [current] == GROUP || kinds [current] == INSTANCE)
+					? transformIds [current] : 0;
+			if (transformId == 0) continue;
+			int offset = transformId * 6;
+			float l11 = transforms [offset];
+			float l12 = transforms [offset + 1];
+			float l21 = transforms [offset + 2];
+			float l22 = transforms [offset + 3];
+			float ldx = transforms [offset + 4];
+			float ldy = transforms [offset + 5];
+
+			float next11 = l11 * r11 + l21 * r12;
+			float next12 = l12 * r11 + l22 * r12;
+			float next21 = l11 * r21 + l21 * r22;
+			float next22 = l12 * r21 + l22 * r22;
+			float nextDx = l11 * rdx + l21 * rdy + ldx;
+			float nextDy = l12 * rdx + l22 * rdy + ldy;
+			r11 = next11;
+			r12 = next12;
+			r21 = next21;
+			r22 = next22;
+			rdx = nextDx;
+			rdy = nextDy;
+		}
+		out [0] = r11;
+		out [1] = r12;
+		out [2] = r21;
+		out [3] = r22;
+		out [4] = rdx;
+		out [5] = rdy;
+	}
+
+	private void mapRectToRoot (
+			int node, float x, float y, float width, float height, float [] out) {
+		rootTransform (node, affineScratch);
+		float x1 = affineScratch [0] * x + affineScratch [2] * y + affineScratch [4];
+		float y1 = affineScratch [1] * x + affineScratch [3] * y + affineScratch [5];
+		float x2 = affineScratch [0] * (x + width) + affineScratch [2] * y + affineScratch [4];
+		float y2 = affineScratch [1] * (x + width) + affineScratch [3] * y + affineScratch [5];
+		float x3 = affineScratch [0] * x + affineScratch [2] * (y + height) + affineScratch [4];
+		float y3 = affineScratch [1] * x + affineScratch [3] * (y + height) + affineScratch [5];
+		float x4 = affineScratch [0] * (x + width)
+				+ affineScratch [2] * (y + height) + affineScratch [4];
+		float y4 = affineScratch [1] * (x + width)
+				+ affineScratch [3] * (y + height) + affineScratch [5];
+		float left = Math.min (Math.min (x1, x2), Math.min (x3, x4));
+		float top = Math.min (Math.min (y1, y2), Math.min (y3, y4));
+		float right = Math.max (Math.max (x1, x2), Math.max (x3, x4));
+		float bottom = Math.max (Math.max (y1, y2), Math.max (y3, y4));
+		out [0] = left;
+		out [1] = top;
+		out [2] = right - left;
+		out [3] = bottom - top;
+	}
+
 	private void ensureNodeCapacity (int required) {
 		if (required <= kinds.length) return;
 		int old = kinds.length;
@@ -468,6 +726,15 @@ public final class ViewportPaintGraph {
 		parents = grow (parents, old, next, NONE);
 		targets = grow (targets, old, next, NONE);
 		transformIds = Arrays.copyOf (transformIds, next);
+		layers = Arrays.copyOf (layers, next);
+		clipX = Arrays.copyOf (clipX, next);
+		clipY = Arrays.copyOf (clipY, next);
+		clipWidth = Arrays.copyOf (clipWidth, next);
+		clipHeight = Arrays.copyOf (clipHeight, next);
+		lineWidth = Arrays.copyOf (lineWidth, next);
+		lineStyle = Arrays.copyOf (lineStyle, next);
+		lineCap = Arrays.copyOf (lineCap, next);
+		lineJoin = Arrays.copyOf (lineJoin, next);
 		a = Arrays.copyOf (a, next);
 		b = Arrays.copyOf (b, next);
 		c = Arrays.copyOf (c, next);
