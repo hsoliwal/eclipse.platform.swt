@@ -432,6 +432,23 @@ public final class ViewportRewriteStress {
 		AtomicLong headerPaints = new AtomicLong ();
 		AtomicLong verticalEvents = new AtomicLong ();
 		AtomicLong horizontalEvents = new AtomicLong ();
+		AtomicLong retainedCommands = new AtomicLong ();
+		final int logicalWidth = 8 * 240;
+
+		ViewportPaintGraph headerGraph = new ViewportPaintGraph ();
+		for (int column = 0; column < 8; column++) {
+			int x = column * 240;
+			headerGraph.drawRectangle (headerGraph.root (), x, 0, 240, 27);
+			headerGraph.text (headerGraph.root (), "logical column " + column, x + 8, 5, true);
+		}
+
+		ViewportPaintGraph rowStrokeGraph = new ViewportPaintGraph ();
+		int rowStroke = rowStrokeGraph.template ();
+		for (int column = 1; column < 8; column++) {
+			int x = column * 240;
+			rowStrokeGraph.line (rowStroke, x, 0, x, ROW_HEIGHT);
+		}
+		rowStrokeGraph.line (rowStroke, 0, ROW_HEIGHT - 1, logicalWidth, ROW_HEIGHT - 1);
 
 		Canvas header = new Canvas (root, SWT.DOUBLE_BUFFERED | SWT.BORDER);
 		GridData headerData = new GridData (SWT.FILL, SWT.CENTER, true, false);
@@ -439,13 +456,11 @@ public final class ViewportRewriteStress {
 		header.setLayoutData (headerData);
 		header.addListener (SWT.Paint, event -> {
 			headerPaints.incrementAndGet ();
-			int x = -horizontalOrigin.get ();
-			for (int column = 0; column < 8; column++) {
-				int width = 240;
-				event.gc.drawRectangle (x, 0, width, 27);
-				event.gc.drawText ("logical column " + column, x + 8, 5, true);
-				x += width;
-			}
+			ViewportPaintGraph.ReplayStats stats = headerGraph.replay (
+					event.gc,
+					ViewportPaintGraph.Affine.translation (-horizontalOrigin.get (), 0),
+					event.gc.getClipping ());
+			retainedCommands.addAndGet (stats.drawnCommands ());
 		});
 
 		Canvas body = new Canvas (
@@ -464,7 +479,6 @@ public final class ViewportRewriteStress {
 					Math.min (topRow.get (), Math.max (0, CANVAS_ROWS - visibleRows)),
 					0, CANVAS_ROWS, visibleRows, 1, visibleRows);
 
-			int logicalWidth = 8 * 240;
 			int visibleWidth = Math.max (1, Math.min (logicalWidth, client.width));
 			horizontal.setValues (
 					Math.min (horizontalOrigin.get (), Math.max (0, logicalWidth - visibleWidth)),
@@ -505,11 +519,11 @@ public final class ViewportRewriteStress {
 					event.gc.fillRectangle (0, screenY, client.width, ROW_HEIGHT);
 				}
 				event.gc.drawText ("logical row " + row, 8 - xOffset, screenY + 3, true);
-				for (int column = 1; column < 8; column++) {
-					int x = column * 240 - xOffset;
-					event.gc.drawLine (x, screenY, x, screenY + ROW_HEIGHT);
-				}
-				event.gc.drawLine (0, screenY + ROW_HEIGHT - 1, client.width, screenY + ROW_HEIGHT - 1);
+				ViewportPaintGraph.ReplayStats stats = rowStrokeGraph.replayTemplate (
+						event.gc, rowStroke,
+						ViewportPaintGraph.Affine.translation (-xOffset, screenY),
+						event.gc.getClipping ());
+				retainedCommands.addAndGet (stats.drawnCommands ());
 			}
 		});
 
@@ -569,7 +583,10 @@ public final class ViewportRewriteStress {
 					+ "  bodyPaints=" + bodyPaints.get ()
 					+ "  headerPaints=" + headerPaints.get ()
 					+ "  vEvents=" + verticalEvents.get ()
-					+ "  hEvents=" + horizontalEvents.get ();
+					+ "  hEvents=" + horizontalEvents.get ()
+					+ "  retainedGeometry="
+					+ (headerGraph.geometryNodeCount () + rowStrokeGraph.geometryNodeCount ())
+					+ "  retainedDraws=" + retainedCommands.get ();
 		});
 
 		screenshotScenario ("logical-top", root, () -> {
