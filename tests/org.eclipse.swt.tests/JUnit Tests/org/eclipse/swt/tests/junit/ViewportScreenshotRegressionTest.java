@@ -150,7 +150,9 @@ public class ViewportScreenshotRegressionTest {
 	private static final class GraphicsStateScene {
 		final Canvas canvas;
 		final ViewportPaintGraph graph;
+		final ViewportDamageRegions damage = new ViewportDamageRegions ();
 		final long [] paints = {0};
+		final long [] damageReplays = {0};
 		Rectangle lastIncomingClip;
 
 		GraphicsStateScene (Canvas canvas, ViewportPaintGraph graph) {
@@ -210,14 +212,21 @@ public class ViewportScreenshotRegressionTest {
 			int oldLineCap = gc.getLineCap ();
 			int oldLineJoin = gc.getLineJoin ();
 			try {
-				gc.setClipping (new Rectangle (-60, -50, 520, 300));
+				Rectangle localClip = new Rectangle (-60, -50, 520, 300);
+				scene.damage.clear ();
+				scene.damage.invalidateClipped (
+						40,
+						scene.lastIncomingClip.x, scene.lastIncomingClip.y,
+						scene.lastIncomingClip.width, scene.lastIncomingClip.height,
+						localClip.x, localClip.y, localClip.width, localClip.height);
+				gc.setClipping (localClip);
 				gc.setLineWidth (3);
 				gc.setLineStyle (SWT.LINE_DASH);
 				gc.setLineCap (SWT.CAP_ROUND);
 				gc.setLineJoin (SWT.JOIN_BEVEL);
-				graph.replay (
-						gc, Affine.IDENTITY,
-						new Rectangle (-60, -50, 520, 300));
+				graph.replayDamage (
+						gc, scene.damage, new int[] {40}, Affine.IDENTITY);
+				scene.damageReplays[0]++;
 			} finally {
 				gc.setClipping (oldClip);
 				gc.setLineWidth (oldLineWidth);
@@ -242,6 +251,9 @@ public class ViewportScreenshotRegressionTest {
 				+ "graphics.localClip=(-60,-50,520,300)\n"
 				+ "graphics.stroke=width:3,style:DASH,cap:ROUND,join:BEVEL\n"
 				+ "graphics.retainedPath=true\n"
+				+ "graphics.damageReplay=true\n"
+				+ "graphics.damageReplays=" + scene.damageReplays[0] + "\n"
+				+ "graphics.damageRegions=" + scene.damage.count () + "\n"
 				+ "graphics.geometryNodes=" + scene.graph.geometryNodeCount () + "\n");
 	}
 
