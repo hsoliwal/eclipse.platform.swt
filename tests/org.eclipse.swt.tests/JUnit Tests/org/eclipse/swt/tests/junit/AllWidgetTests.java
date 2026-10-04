@@ -68,6 +68,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_ProgressBar.class, //
 		Test_org_eclipse_swt_widgets_Sash.class, //
 		Test_org_eclipse_swt_widgets_Scale.class, //
+		Test_org_eclipse_swt_widgets_StyleBits.class, //
 		Test_org_eclipse_swt_widgets_ScrollBar.class, //
 		Test_org_eclipse_swt_widgets_ScrolledComposite.class, //
 		Test_org_eclipse_swt_widgets_Shell.class, //

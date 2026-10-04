@@ -160,6 +160,15 @@ public void test_virtualDndHitPinsColdTableCoordinateWithoutDenseMaterialization
 	assertNotNull(hit);
 	assertEquals(top, virtualTable.indexOf(hit),
 			"DND hit-testing must resolve the logical visible row");
+	assertSame(hit, effect.getItem(displayPoint.x, displayPoint.y),
+			"pending native scroll must not rebind an exposed facade");
+	org.eclipse.swt.graphics.Point nextPoint = virtualTable.toDisplay(4, rowHeight + Math.max(1, rowHeight / 2));
+	TableItem nextHit = (TableItem) effect.getItem(nextPoint.x, nextPoint.y);
+	assertNotNull(nextHit);
+	assertEquals(top + 1, virtualTable.indexOf(nextHit),
+			"row offsets must be retained while the native scroll is pending");
+	org.junit.jupiter.api.Assertions.assertNull(virtualTable.getItem(new org.eclipse.swt.graphics.Point(-100, -100)),
+			"logical translation must retain native clipping");
 
 	Field storageField = Table.class.getDeclaredField("virtualItems");
 	storageField.setAccessible(true);
@@ -276,21 +285,25 @@ public void test_viewportLayerStateSeparatesHeaderFromVerticalScroll() throws Ex
 	Field frozenField = type.getDeclaredField("FROZEN");
 	Field headerField = type.getDeclaredField("HEADER");
 	Field scrollBarField = type.getDeclaredField("SCROLLBAR");
-	for (Field field : new Field[] {bodyField, frozenField, headerField, scrollBarField}) {
+	Field editorField = type.getDeclaredField("EDITOR");
+	Field feedbackField = type.getDeclaredField("FEEDBACK");
+	for (Field field : new Field[] {bodyField, frozenField, headerField, scrollBarField, editorField, feedbackField}) {
 		field.setAccessible(true);
 	}
 	int body = bodyField.getInt(null);
 	int frozen = frozenField.getInt(null);
 	int header = headerField.getInt(null);
 	int scrollBar = scrollBarField.getInt(null);
+	int editor = editorField.getInt(null);
+	int feedback = feedbackField.getInt(null);
 
 	initialize.invoke(layers, 10d, 20d);
 	int vertical = (Integer) scrollTo.invoke(layers, 10d, 25d);
-	assertEquals(body | frozen | scrollBar, vertical,
+	assertEquals(body | frozen | scrollBar | editor | feedback, vertical,
 			"vertical scrolling must not invalidate the column-header plane");
 
 	int horizontal = (Integer) scrollTo.invoke(layers, 15d, 25d);
-	assertEquals(body | header | scrollBar, horizontal,
+	assertEquals(body | header | scrollBar | editor | feedback, horizontal,
 			"horizontal scrolling must invalidate the scroll-coupled header plane");
 
 	int unchanged = (Integer) scrollTo.invoke(layers, 15d, 25d);

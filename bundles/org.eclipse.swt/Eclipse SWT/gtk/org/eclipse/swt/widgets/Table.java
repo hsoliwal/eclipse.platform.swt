@@ -1881,11 +1881,33 @@ public TableItem getItem (Point point) {
 	if (indices != 0) {
 		int [] index = new int [1];
 		C.memmove (index, indices, 4);
-		item = _getItem (index [0]);
+		int logicalIndex = logicalIndexForNativeHit (index [0]);
+		if (logicalIndex >= 0) item = _getItem (logicalIndex);
 		if (item != null) item.pinVirtualFacade ();
 	}
 	GTK.gtk_tree_path_free (path [0]);
 	return item;
+}
+
+/* Translate a native hit while GTK is still applying a programmatic virtual scroll.
+ * Native hit testing continues to own columns, clipping and row geometry. */
+private int logicalIndexForNativeHit (int nativeIndex) {
+	if (!usesVirtualNativeModel ()) return nativeIndex;
+	long adjustment = GTK.gtk_scrollable_get_vadjustment (handle);
+	if (GTK.gtk_adjustment_get_value (adjustment) != cachedAdjustment) return nativeIndex;
+	long [] topPath = new long [1];
+	if (!GTK.gtk_tree_view_get_path_at_pos (handle, 1, 1, topPath, null, null, null)
+			|| topPath [0] == 0) return nativeIndex;
+	try {
+		long indices = GTK.gtk_tree_path_get_indices (topPath [0]);
+		if (indices == 0) return nativeIndex;
+		int [] nativeTop = new int [1];
+		C.memmove (nativeTop, indices, 4);
+		long logicalIndex = (long) nativeIndex + topIndex - nativeTop [0];
+		return logicalIndex >= 0 && logicalIndex < itemCount ? (int) logicalIndex : -1;
+	} finally {
+		GTK.gtk_tree_path_free (topPath [0]);
+	}
 }
 
 /**
