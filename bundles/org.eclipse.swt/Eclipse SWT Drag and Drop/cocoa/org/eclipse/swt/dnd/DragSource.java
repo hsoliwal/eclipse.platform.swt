@@ -336,8 +336,7 @@ protected void checkSubclass () {
 }
 
 static int checkStyle (int style) {
-	if (style == SWT.NONE) return DND.DROP_MOVE;
-	return style;
+	return StylePolicy.normalize(style);
 }
 
 void drag(Event dragDetectEvent) {

@@ -151,7 +151,7 @@ static int[] bezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int 
 	return polygon;
 }
 static int checkStyle (int style) {
-	return SWT.NONE;
+	return StylePolicy.NONE.applyAsInt(style);
 }
 /*
 * This class was not intended to be subclassed but this restriction

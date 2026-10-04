@@ -238,11 +238,7 @@ public void addSelectionListener(SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* Macintosh only supports smooth dragging.
-	*/
-	style |= SWT.SMOOTH;
-	return checkBits (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+	return WidgetStylePolicy.SMOOTH_SASH.applyAsInt(style);
 }
 
 @Override

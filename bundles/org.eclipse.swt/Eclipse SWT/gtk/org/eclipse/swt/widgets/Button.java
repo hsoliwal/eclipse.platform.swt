@@ -107,18 +107,7 @@ public Button (Composite parent, int style) {
 }
 
 static int checkStyle (int style) {
-	style = checkBits (style, SWT.PUSH, SWT.ARROW, SWT.CHECK, SWT.RADIO, SWT.TOGGLE, 0);
-	if ((style & (SWT.PUSH | SWT.TOGGLE)) != 0) {
-		return checkBits (style, SWT.CENTER, SWT.LEFT, SWT.RIGHT, 0, 0, 0);
-	}
-	if ((style & (SWT.CHECK | SWT.RADIO)) != 0) {
-		return checkBits (style, SWT.LEFT, SWT.RIGHT, SWT.CENTER, 0, 0, 0);
-	}
-	if ((style & SWT.ARROW) != 0) {
-		style |= SWT.NO_FOCUS;
-		return checkBits (style, SWT.UP, SWT.DOWN, SWT.LEFT, SWT.RIGHT, 0, 0);
-	}
-	return style;
+	return WidgetStylePolicy.BUTTON.applyAsInt(style);
 }
 
 GtkBorder getBorder (byte[] border, long handle, int defaultBorder) {

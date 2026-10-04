@@ -216,7 +216,7 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
+	return WidgetStylePolicy.LIST_SELECTION.applyAsInt(style);
 }
 
 @Override

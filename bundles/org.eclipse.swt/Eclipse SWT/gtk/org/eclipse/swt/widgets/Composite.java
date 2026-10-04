@@ -156,9 +156,7 @@ public Composite (Composite parent, int style) {
 }
 
 static int checkStyle (int style) {
-	style &= ~SWT.NO_BACKGROUND;
-	style &= ~SWT.TRANSPARENT;
-	return style;
+	return WidgetStylePolicy.COMPOSITE_GTK.applyAsInt(style);
 }
 
 Control[] _getChildren () {

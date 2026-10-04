@@ -181,7 +181,7 @@ public void addSelectionListener (SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
+	return WidgetStylePolicy.COLUMN_ALIGNMENT.applyAsInt(style);
 }
 
 @Override

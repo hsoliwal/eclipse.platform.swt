@@ -141,7 +141,7 @@ public void addExpandListener (ExpandListener listener) {
 }
 
 static int checkStyle (int style) {
-	return style & ~SWT.H_SCROLL;
+	return WidgetStylePolicy.EXPAND_BAR_EMULATED.applyAsInt(style);
 }
 
 @Override

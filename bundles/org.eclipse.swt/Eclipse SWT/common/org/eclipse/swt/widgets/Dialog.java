@@ -170,6 +170,10 @@ void checkParent (Shell parent) {
 }
 
 static int checkStyle (Shell parent, int style) {
+	return Dialog.normalizeStyle(parent, style);
+}
+
+private static int normalizeStyle(Shell parent, int style) {
 	int mask = SWT.PRIMARY_MODAL | SWT.APPLICATION_MODAL | SWT.SYSTEM_MODAL;
 	if ((style & SWT.SHEET) != 0) {
 		style &= ~SWT.SHEET;

@@ -184,14 +184,7 @@ void addVerifyListener (VerifyListener listener) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	return style & ~(SWT.H_SCROLL | SWT.V_SCROLL);
+	return WidgetStylePolicy.WITHOUT_SCROLLBARS.applyAsInt(style);
 }
 
 @Override

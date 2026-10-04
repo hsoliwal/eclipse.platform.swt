@@ -99,18 +99,7 @@ public DateTime (Composite parent, int style) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
-	style = checkBits (style, SWT.DATE, SWT.TIME, SWT.CALENDAR, 0, 0, 0);
-	style = checkBits (style, SWT.MEDIUM, SWT.SHORT, SWT.LONG, 0, 0, 0);
-	if ((style & SWT.DATE) == 0) style &=~ SWT.DROP_DOWN;
-	return style;
+	return WidgetStylePolicy.DATE_TIME.applyAsInt(style);
 }
 
 @Override

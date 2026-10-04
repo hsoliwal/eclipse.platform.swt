@@ -153,6 +153,10 @@ boolean accessibilityIsIgnored(long id, long sel) {
 }
 
 static int checkStyle (Composite parent, int style, boolean internal) {
+	return ToolBar.normalizeStyle(parent, style, internal);
+}
+
+private static int normalizeStyle(Composite parent, int style, boolean internal) {
 	/*
 	* Even though it is legal to create this widget
 	* with scroll bars, they serve no useful purpose

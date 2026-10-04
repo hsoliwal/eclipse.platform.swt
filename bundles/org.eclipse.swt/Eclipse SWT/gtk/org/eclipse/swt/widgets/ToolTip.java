@@ -102,9 +102,7 @@ public ToolTip (Shell parent, int style) {
 }
 
 static int checkStyle (int style) {
-	int mask = SWT.ICON_ERROR | SWT.ICON_INFORMATION | SWT.ICON_WARNING;
-	if ((style & mask) == 0) return style;
-	return checkBits (style, SWT.ICON_INFORMATION, SWT.ICON_WARNING, SWT.ICON_ERROR, 0, 0, 0);
+	return WidgetStylePolicy.TOOLTIP.applyAsInt(style);
 }
 
 /**

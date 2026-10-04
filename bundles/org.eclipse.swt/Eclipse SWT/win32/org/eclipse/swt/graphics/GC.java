@@ -208,8 +208,7 @@ public GC(Drawable drawable, int style) {
 }
 
 static int checkStyle(int style) {
-	if ((style & SWT.LEFT_TO_RIGHT) != 0) style &= ~SWT.RIGHT_TO_LEFT;
-	return style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT);
+	return GCStylePolicy.normalize(style);
 }
 
 private void validateGCState() {

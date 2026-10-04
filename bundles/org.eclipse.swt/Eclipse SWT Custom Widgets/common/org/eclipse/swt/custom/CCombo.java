@@ -187,8 +187,7 @@ public CCombo (Composite parent, int style) {
 	});
 }
 static int checkStyle (int style) {
-	int mask = SWT.BORDER | SWT.READ_ONLY | SWT.FLAT | SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT | SWT.LEAD | SWT.CENTER | SWT.TRAIL;
-	return SWT.NO_FOCUS | (style & mask);
+	return StylePolicy.COMBO.applyAsInt(style);
 }
 void createText(int comboStyle) {
 	String textValue = null, tooltip = null;

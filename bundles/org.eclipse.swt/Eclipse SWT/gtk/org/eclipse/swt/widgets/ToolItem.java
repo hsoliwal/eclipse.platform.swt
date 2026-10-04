@@ -198,7 +198,7 @@ public void addSelectionListener(SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.PUSH, SWT.CHECK, SWT.RADIO, SWT.SEPARATOR, SWT.DROP_DOWN, 0);
+	return WidgetStylePolicy.TOOL_ITEM.applyAsInt(style);
 }
 
 @Override
