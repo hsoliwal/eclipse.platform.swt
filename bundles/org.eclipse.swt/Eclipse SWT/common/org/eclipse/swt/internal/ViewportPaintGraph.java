@@ -505,6 +505,12 @@ public final class ViewportPaintGraph {
 		int drawn = 0;
 		int culled = 0;
 		int transformSwitches = 0;
+		/*
+		 * One conservative envelope per replay.  It intentionally overestimates
+		 * fractional widths, caps/joins and antialiasing so clipping can never
+		 * remove a native GC pixel that would otherwise be visible.
+		 */
+		long strokeOutset = Math.max (1L, gc.getLineWidth ()) + 1;
 
 		try {
 			while (stackSize != 0) {
@@ -523,7 +529,7 @@ public final class ViewportPaintGraph {
 										next,
 										cullX [node], cullY [node],
 										cullWidth [node], cullHeight [node],
-										clip)) {
+										clip, strokeOutset)) {
 							continue;
 						}
 						boolean hasNextLayer = hasInheritedLayer;
@@ -563,7 +569,7 @@ public final class ViewportPaintGraph {
 							continue;
 						}
 						if (clip != null && transform.isIntegralTranslation ()
-								&& outsideClip (node, transform, clip)) {
+								&& outsideClip (node, transform, clip, strokeOutset)) {
 							culled++;
 							continue;
 						}
@@ -623,34 +629,50 @@ public final class ViewportPaintGraph {
 
 	private boolean outsideBounds (
 			Affine transform, float x, float y, float width, float height,
-			Rectangle clip) {
+			Rectangle clip, long strokeOutset) {
 		mapRect (transform, x, y, width, height, boundsScratch);
-		float right = boundsScratch [0] + boundsScratch [2];
-		float bottom = boundsScratch [1] + boundsScratch [3];
+		/*
+		 * Cull bounds describe retained geometry, not necessarily its rasterized
+		 * stroke.  Expand them by a conservative transform-scaled envelope so a
+		 * child stroke that crosses the logical group edge remains eligible.
+		 */
+		double m11 = transform.m11;
+		double m12 = transform.m12;
+		double m21 = transform.m21;
+		double m22 = transform.m22;
+		double scaleUpperBound = Math.max (
+				1d, Math.sqrt (m11 * m11 + m12 * m12 + m21 * m21 + m22 * m22));
+		double envelope = strokeOutset * scaleUpperBound;
+		double left = boundsScratch [0] - envelope;
+		double top = boundsScratch [1] - envelope;
+		double right = boundsScratch [0] + boundsScratch [2] + envelope;
+		double bottom = boundsScratch [1] + boundsScratch [3] + envelope;
+		long clipRight = (long)clip.x + clip.width;
+		long clipBottom = (long)clip.y + clip.height;
 		return right <= clip.x || bottom <= clip.y
-				|| boundsScratch [0] >= clip.x + clip.width
-				|| boundsScratch [1] >= clip.y + clip.height;
+				|| left >= clipRight || top >= clipBottom;
 	}
 
-	private boolean outsideClip (int node, Affine transform, Rectangle clip) {
+	private boolean outsideClip (
+			int node, Affine transform, Rectangle clip, long strokeOutset) {
 		int dx = Math.round (transform.dx);
 		int dy = Math.round (transform.dy);
-		int left;
-		int top;
-		int right;
-		int bottom;
+		long left;
+		long top;
+		long right;
+		long bottom;
 		switch (kinds [node]) {
 			case LINE -> {
-				left = Math.min (a [node], c [node]) + dx;
-				top = Math.min (b [node], d [node]) + dy;
-				right = Math.max (a [node], c [node]) + dx + 1;
-				bottom = Math.max (b [node], d [node]) + dy + 1;
+				left = Math.min (a [node], c [node]) + (long)dx;
+				top = Math.min (b [node], d [node]) + (long)dy;
+				right = Math.max (a [node], c [node]) + (long)dx + 1;
+				bottom = Math.max (b [node], d [node]) + (long)dy + 1;
 			}
 			case DRAW_RECT, FILL_RECT -> {
-				left = Math.min (a [node], a [node] + c [node]) + dx;
-				top = Math.min (b [node], b [node] + d [node]) + dy;
-				right = Math.max (a [node], a [node] + c [node]) + dx + 1;
-				bottom = Math.max (b [node], b [node] + d [node]) + dy + 1;
+				left = Math.min (a [node], (long)a [node] + c [node]) + dx;
+				top = Math.min (b [node], (long)b [node] + d [node]) + dy;
+				right = Math.max (a [node], (long)a [node] + c [node]) + dx + 1;
+				bottom = Math.max (b [node], (long)b [node] + d [node]) + dy + 1;
 			}
 			case TEXT -> {
 				// Font metrics are intentionally not retained in the graph.
@@ -660,8 +682,15 @@ public final class ViewportPaintGraph {
 				return false;
 			}
 		}
+		if (kinds [node] == LINE || kinds [node] == DRAW_RECT) {
+			left -= strokeOutset;
+			top -= strokeOutset;
+			right += strokeOutset;
+			bottom += strokeOutset;
+		}
 		return right <= clip.x || bottom <= clip.y
-				|| left >= clip.x + clip.width || top >= clip.y + clip.height;
+				|| left >= (long)clip.x + clip.width
+				|| top >= (long)clip.y + clip.height;
 	}
 
 	private int newNode (byte kind, int parent) {
