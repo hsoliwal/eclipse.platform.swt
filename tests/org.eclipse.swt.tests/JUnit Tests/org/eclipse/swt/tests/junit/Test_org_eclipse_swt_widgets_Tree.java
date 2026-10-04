@@ -33,12 +33,15 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.TreeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.swt.widgets.ScrollBar;
+import org.eclipse.swt.widgets.Text;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -60,6 +63,53 @@ public void setUp() {
 	setWidget(tree);
 }
 
+
+@Test
+public void test_virtualTreeEditorTracksPinnedItemAcrossViewportAndCollapse() {
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.V_SCROLL);
+	virtualTree.setSize(320, 180);
+	virtualTree.setItemCount(1);
+	TreeItem root = virtualTree.getItem(0);
+	root.setItemCount(256);
+	TreeItem edited = root.getItem(128);
+	edited.setText("edited");
+	root.setExpanded(true);
+
+	org.eclipse.swt.custom.TreeEditor cellEditor =
+			new org.eclipse.swt.custom.TreeEditor(virtualTree);
+	cellEditor.grabHorizontal = true;
+	Text control = new Text(virtualTree, SWT.NONE);
+	cellEditor.setEditor(control, edited, 0);
+
+	virtualTree.setTopItem(edited);
+	ScrollBar vertical = virtualTree.getVerticalBar();
+	if (vertical != null) vertical.notifyListeners(SWT.Selection, new Event());
+	cellEditor.layout();
+
+	assertSame(edited, cellEditor.getItem());
+	assertSame(edited, root.getItem(128));
+	Rectangle cell = edited.getBounds(0);
+	Rectangle overlay = control.getBounds();
+	assertEquals(cell.y, overlay.y,
+			"editor overlay must follow the logical tree row after viewport scroll");
+
+	root.setExpanded(false);
+	assertFalse(edited.isDisposed(),
+			"collapse compaction must preserve the TreeItem facade held by TreeEditor");
+	assertSame(edited, cellEditor.getItem());
+
+	root.setExpanded(true);
+	virtualTree.setTopItem(edited);
+	if (vertical != null) vertical.notifyListeners(SWT.Selection, new Event());
+	cellEditor.layout();
+	assertSame(edited, root.getItem(128),
+			"re-expansion must restore the same editor-bound TreeItem facade");
+	assertEquals(edited.getBounds(0).y, control.getBounds().y);
+
+	cellEditor.dispose();
+	control.dispose();
+	virtualTree.dispose();
+}
 
 @Test
 public void test_virtualTreeVisibleProjectionSkipsColdLogicalRanges() throws Exception {
