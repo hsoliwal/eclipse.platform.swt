@@ -110,6 +110,7 @@ public class StyledText extends Canvas {
 	TextChangeListener textChangeListener;	// listener for TextChanging, TextChanged and TextSet events from StyledTextContent
 	int verticalScrollOffset = 0;		// pixel based
 	int horizontalScrollOffset = 0;		// pixel based
+	final ViewportRuntime viewportRuntime = new ViewportRuntime ();
 	boolean alwaysShowScroll = true;
 	int ignoreResize = 0;
 	int topIndex = 0;					// top visible line
@@ -716,6 +717,7 @@ public class StyledText extends Canvas {
  */
 public StyledText(Composite parent, int style) {
 	super(parent, checkStyle(style));
+	viewportRuntime.initializeOrigin (0, 0);
 	// set the fg in the OS to ensure that these are the same as StyledText, necessary
 	// for ensuring that the bg/fg the IME box uses is the same as what StyledText uses
 	super.setForeground(getForeground());
@@ -3479,6 +3481,7 @@ public int getHorizontalIndex() {
  */
 public int getHorizontalPixel() {
 	checkWidget();
+	syncViewportRuntime (false);
 	return horizontalScrollOffset;
 }
 /**
@@ -5070,7 +5073,9 @@ public int getTopMargin() {
  */
 public int getTopPixel() {
 	checkWidget();
-	return getVerticalScrollOffset();
+	int topPixel = getVerticalScrollOffset();
+	viewportRuntime.scrollTo (horizontalScrollOffset, topPixel);
+	return topPixel;
 }
 /**
  * Returns the vertical scroll increment.
@@ -5080,6 +5085,15 @@ public int getTopPixel() {
 int getVerticalIncrement() {
 	return renderer.getLineHeight();
 }
+void syncViewportRuntime (boolean resolveVertical) {
+	int vertical = verticalScrollOffset;
+	if (resolveVertical && vertical == -1) {
+		vertical = getVerticalScrollOffset();
+	}
+	double y = vertical == -1 ? viewportRuntime.originY () : vertical;
+	viewportRuntime.scrollTo (horizontalScrollOffset, y);
+}
+
 int getVerticalScrollOffset() {
 	if (verticalScrollOffset == -1) {
 		renderer.calculate(0, topIndex);
@@ -6078,6 +6092,7 @@ void handleResize(Event event) {
 			}
 		}
 	}
+	syncViewportRuntime (false);
 	updateCaretVisibility();
 	claimBottomFreeSpace();
 	setAlignment();
@@ -6179,6 +6194,7 @@ void handleTextChanging(TextChangingEvent event) {
 		lastLineBottom += srcY - destY;
 		verticalScrollOffset += destY - srcY;
 		calculateTopIndex(destY - srcY);
+		syncViewportRuntime (false);
 		setScrollBars(true);
 	} else {
 		scrollText(srcY, destY);
@@ -7848,6 +7864,7 @@ void reset() {
 	topIndexY = 0;
 	verticalScrollOffset = 0;
 	horizontalScrollOffset = 0;
+	viewportRuntime.scrollTo (0, 0);
 	resetSelection();
 	renderer.setContent(content);
 	if (verticalBar != null) {
@@ -7960,6 +7977,7 @@ boolean scrollHorizontal(int pixels, boolean adjustScrollBar) {
 		}
 	}
 	horizontalScrollOffset += pixels;
+	syncViewportRuntime (false);
 	setCaretLocations();
 	return true;
 }
@@ -8009,6 +8027,7 @@ boolean scrollVertical(int pixels, boolean adjustScrollBar) {
 		calculateTopIndex(pixels);
 		super.redraw();
 	}
+	syncViewportRuntime (true);
 	setCaretLocations();
 	return true;
 }
@@ -9346,6 +9365,7 @@ public void setLineVerticalIndent(int lineIndex, int verticalLineIndent) {
 	ScrollBar verticalScrollbar = getVerticalBar();
 	if (lineIndex < initialTopIndex) {
 		verticalScrollOffset += verticalIndentDiff; // just change value, don't actually scroll/redraw
+		syncViewportRuntime (false);
 		if (verticalScrollbar != null) {
 			verticalScrollbar.setSelection(verticalScrollOffset);
 			verticalScrollbar.setMaximum(verticalScrollbar.getMaximum() + verticalIndentDiff);
@@ -10731,6 +10751,7 @@ public void setWordWrap(boolean wrap) {
 	wordWrap = wrap;
 	resetCache(0, content.getLineCount());
 	horizontalScrollOffset = 0;
+	syncViewportRuntime (false);
 	ScrollBar horizontalBar = getHorizontalBar();
 	if (horizontalBar != null) {
 		horizontalBar.setVisible(!wordWrap);
