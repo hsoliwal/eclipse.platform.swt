@@ -89,6 +89,56 @@ public void test_virtualTableEditorTracksPinnedItemAcrossViewportScroll() {
 	virtualTable.dispose();
 }
 
+@Test
+public void test_virtualDndHitPinsColdTableCoordinateWithoutDenseMaterialization() throws Exception {
+	Table virtualTable = new Table(shell, SWT.VIRTUAL | SWT.V_SCROLL);
+	virtualTable.setBounds(0, 0, 320, 180);
+	virtualTable.setItemCount(4_096);
+	shell.setSize(360, 240);
+	shell.open();
+	while (shell.getDisplay().readAndDispatch()) {
+		// drain native layout/paint work before coordinate hit testing
+	}
+
+	virtualTable.setTopIndex(2_000);
+	int top = virtualTable.getTopIndex();
+	int rowHeight = Math.max(1, virtualTable.getItemHeight());
+	org.eclipse.swt.graphics.Point displayPoint =
+			virtualTable.toDisplay(4, Math.max(1, rowHeight / 2));
+
+	org.eclipse.swt.dnd.DropTargetEffect effect =
+			new org.eclipse.swt.dnd.DropTargetEffect(virtualTable);
+	TableItem hit = (TableItem) effect.getItem(displayPoint.x, displayPoint.y);
+
+	assertNotNull(hit);
+	assertEquals(top, virtualTable.indexOf(hit),
+			"DND hit-testing must resolve the logical visible row");
+
+	Field storageField = Table.class.getDeclaredField("virtualItems");
+	storageField.setAccessible(true);
+	Object storage = storageField.get(virtualTable);
+	Method stateOfIdentity = storage.getClass().getDeclaredMethod("stateOfIdentity", Object.class);
+	stateOfIdentity.setAccessible(true);
+	long state = ((Number) stateOfIdentity.invoke(storage, hit)).longValue();
+
+	Field pinnedField = Class.forName("org.eclipse.swt.widgets.VirtualItemState")
+			.getDeclaredField("PINNED");
+	pinnedField.setAccessible(true);
+	long pinned = pinnedField.getLong(null);
+	assertTrue((state & pinned) != 0,
+			"a TableItem exposed by DND hit-testing must be pinned");
+
+	Field sizeField = storage.getClass().getDeclaredField("size");
+	sizeField.setAccessible(true);
+	assertTrue(sizeField.getInt(storage) < 128,
+			"DND hit-testing must stay within the visible sparse frontier");
+
+	virtualTable.setTopIndex(0);
+	assertSame(hit, virtualTable.getItem(top),
+			"scrolling away must not rebind a DND-exposed TableItem facade");
+	virtualTable.dispose();
+}
+
 @Override
 @Test
 public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
