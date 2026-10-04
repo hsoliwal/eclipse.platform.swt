@@ -229,16 +229,16 @@ final class ViewportPaintDAG {
 						clipWidth [current], clipHeight [current],
 						boundsScratch);
 				if (!clipped) {
-					left = bounds [0];
-					top = bounds [1];
-					right = bounds [0] + bounds [2];
-					bottom = bounds [1] + bounds [3];
+					left = boundsScratch [0];
+					top = boundsScratch [1];
+					right = boundsScratch [0] + boundsScratch [2];
+					bottom = boundsScratch [1] + boundsScratch [3];
 					clipped = true;
 				} else {
-					left = Math.max (left, bounds [0]);
-					top = Math.max (top, bounds [1]);
-					right = Math.min (right, bounds [0] + bounds [2]);
-					bottom = Math.min (bottom, bounds [1] + bounds [3]);
+					left = Math.max (left, boundsScratch [0]);
+					top = Math.max (top, boundsScratch [1]);
+					right = Math.min (right, boundsScratch [0] + boundsScratch [2]);
+					bottom = Math.min (bottom, boundsScratch [1] + boundsScratch [3]);
 				}
 			}
 			current = parents [current];
