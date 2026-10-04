@@ -219,6 +219,33 @@ The supplied legacy viewer sources reinforce the test shape:
 SWT's own current `WidgetSpy` creation/disposal hook is reused for residency evidence rather than adding another tracker.
 
 
+## Automated GTK screenshot regression
+
+The compiled JUnit visual lane is `ViewportScreenshotRegressionTest`. It is property-gated and therefore skipped during ordinary SWT test runs.
+
+The reusable build workflow exposes:
+
+`viewport_screenshots: true`
+
+When enabled for a GTK build it runs the visual test under the same Xvfb/Wayland compositor environment used by SWT CI with:
+
+```text
+-Dtest=ViewportScreenshotRegressionTest
+-Dswt.viewport.screenshotRegression=true
+-Dswt.viewport.screenshots=target/screenshots/viewport
+```
+
+`.github/workflows/viewport-screenshots.yml` currently runs the deterministic GTK3/X11 lane on relevant pull requests and on manual dispatch. The existing SWT build artifact uploader already includes `**/target/screenshots/*.png`, so the generated images and their text sidecars are retained with the CI run.
+
+The CI scenes deliberately focus on state that is difficult to prove from unit assertions alone:
+
+- two-million-row virtual Table with checked + selected rows;
+- expanded virtual Tree with a pinned checked/grayed child;
+- the same branch after collapsed native-residency compaction;
+- restored expansion with the same public child facade and semantic state.
+
+This complements, rather than replaces, the larger manual screenshot matrix.
+
 ## Compatibility requests and SWT classic
 
 The optimized viewport implementation is the forward development path. Public SWT API and observable behavior remain the compatibility boundary.
