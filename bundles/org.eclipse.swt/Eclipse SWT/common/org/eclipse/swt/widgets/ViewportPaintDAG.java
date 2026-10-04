@@ -55,6 +55,15 @@ final class ViewportPaintDAG {
 
 	private int size;
 
+	/*
+	 * Viewport widget state is UI-thread confined. Reuse scratch lanes so
+	 * transform/hit-test/clip operations stay allocation-free on paint and
+	 * pointer-move paths.
+	 */
+	private final double [] transformScratch = new double [6];
+	private final double [] boundsScratch = new double [4];
+	private final double [] pointScratch = new double [2];
+
 	int addNode (int parent, int layer) {
 		if (parent < ROOT || parent >= size) {
 			throw new IllegalArgumentException ("invalid paint-state parent");
@@ -185,14 +194,14 @@ final class ViewportPaintDAG {
 		checkOut (out, 2);
 		requireFinite (x);
 		requireFinite (y);
-		double [] transform = new double [6];
-		rootTransform (node, transform);
-		double determinant = transform [0] * transform [3] - transform [1] * transform [2];
+		rootTransform (node, transformScratch);
+		double determinant = transformScratch [0] * transformScratch [3]
+				- transformScratch [1] * transformScratch [2];
 		if (determinant == 0) return false;
-		double dx = x - transform [4];
-		double dy = y - transform [5];
-		out [0] = (transform [3] * dx - transform [1] * dy) / determinant;
-		out [1] = (-transform [2] * dx + transform [0] * dy) / determinant;
+		double dx = x - transformScratch [4];
+		double dy = y - transformScratch [5];
+		out [0] = (transformScratch [3] * dx - transformScratch [1] * dy) / determinant;
+		out [1] = (-transformScratch [2] * dx + transformScratch [0] * dy) / determinant;
 		return true;
 	}
 
@@ -212,14 +221,13 @@ final class ViewportPaintDAG {
 		double right = Double.POSITIVE_INFINITY;
 		double bottom = Double.POSITIVE_INFINITY;
 		int current = node;
-		double [] bounds = new double [4];
 		while (current != ROOT) {
 			if ((flags [current] & HAS_CLIP) != 0) {
 				mapRectBounds (
 						current,
 						clipX [current], clipY [current],
 						clipWidth [current], clipHeight [current],
-						bounds);
+						boundsScratch);
 				if (!clipped) {
 					left = bounds [0];
 					top = bounds [1];
@@ -263,28 +271,27 @@ final class ViewportPaintDAG {
 
 	private void mapRectBounds (
 			int node, double x, double y, double width, double height, double [] out) {
-		double [] point = new double [2];
-		mapToRoot (node, x, y, point);
-		double minX = point [0], maxX = point [0];
-		double minY = point [1], maxY = point [1];
+		mapToRoot (node, x, y, pointScratch);
+		double minX = pointScratch [0], maxX = pointScratch [0];
+		double minY = pointScratch [1], maxY = pointScratch [1];
 
-		mapToRoot (node, x + width, y, point);
-		minX = Math.min (minX, point [0]);
-		maxX = Math.max (maxX, point [0]);
-		minY = Math.min (minY, point [1]);
-		maxY = Math.max (maxY, point [1]);
+		mapToRoot (node, x + width, y, pointScratch);
+		minX = Math.min (minX, pointScratch [0]);
+		maxX = Math.max (maxX, pointScratch [0]);
+		minY = Math.min (minY, pointScratch [1]);
+		maxY = Math.max (maxY, pointScratch [1]);
 
-		mapToRoot (node, x, y + height, point);
-		minX = Math.min (minX, point [0]);
-		maxX = Math.max (maxX, point [0]);
-		minY = Math.min (minY, point [1]);
-		maxY = Math.max (maxY, point [1]);
+		mapToRoot (node, x, y + height, pointScratch);
+		minX = Math.min (minX, pointScratch [0]);
+		maxX = Math.max (maxX, pointScratch [0]);
+		minY = Math.min (minY, pointScratch [1]);
+		maxY = Math.max (maxY, pointScratch [1]);
 
-		mapToRoot (node, x + width, y + height, point);
-		minX = Math.min (minX, point [0]);
-		maxX = Math.max (maxX, point [0]);
-		minY = Math.min (minY, point [1]);
-		maxY = Math.max (maxY, point [1]);
+		mapToRoot (node, x + width, y + height, pointScratch);
+		minX = Math.min (minX, pointScratch [0]);
+		maxX = Math.max (maxX, pointScratch [0]);
+		minY = Math.min (minY, pointScratch [1]);
+		maxY = Math.max (maxY, pointScratch [1]);
 
 		out [0] = minX;
 		out [1] = minY;
