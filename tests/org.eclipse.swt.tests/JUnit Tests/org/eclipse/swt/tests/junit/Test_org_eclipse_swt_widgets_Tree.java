@@ -520,8 +520,9 @@ public void test_virtualGtkAndWin32TopologyStaysSparseAndTracksCoordinates() thr
 
 
 @Test
-public void test_virtualGtkCollapseCompactsNativeTailAndRestoresOnExpand() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+public void test_virtualGtkAndWin32CollapseCompactsNativeTailAndRestoresOnExpand() throws Exception {
+	String platform = SWT.getPlatform();
+	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(1);
@@ -544,6 +545,7 @@ public void test_virtualGtkCollapseCompactsNativeTailAndRestoresOnExpand() throw
 	assertEquals(1_000, residentCount.invoke(virtualTree, root));
 
 	root.setExpanded(false);
+	SwtTestUtil.processEvents();
 	assertFalse(root.getExpanded());
 	assertEquals(1_000, root.getItemCount(),
 			"collapse must preserve the logical child count");
@@ -560,13 +562,15 @@ public void test_virtualGtkCollapseCompactsNativeTailAndRestoresOnExpand() throw
 	assertSame(pinned, root.getItem(10));
 
 	root.setExpanded(false);
+	SwtTestUtil.processEvents();
 	assertEquals(11, residentCount.invoke(virtualTree, root),
 			"repeated collapse must converge to the same bounded residency");
 }
 
 @Test
-public void test_virtualGtkCollapseKeepsOneSentinelWhenNoChildFacadeEscapes() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+public void test_virtualGtkAndWin32CollapseKeepsOneSentinelWhenNoChildFacadeEscapes() throws Exception {
+	String platform = SWT.getPlatform();
+	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(1);
@@ -577,6 +581,7 @@ public void test_virtualGtkCollapseKeepsOneSentinelWhenNoChildFacadeEscapes() th
 	residentCount.setAccessible(true);
 
 	root.setExpanded(false);
+	SwtTestUtil.processEvents();
 	assertEquals(2_000, root.getItemCount());
 	assertEquals(1, residentCount.invoke(virtualTree, root),
 			"a collapsed branch with no exposed child facade needs only one native sentinel row");
