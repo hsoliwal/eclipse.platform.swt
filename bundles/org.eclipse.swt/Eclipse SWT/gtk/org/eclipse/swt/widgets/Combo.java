@@ -364,31 +364,7 @@ public void addVerifyListener (VerifyListener listener) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* Feature in Windows.  It is not possible to create
-	* a combo box that has a border using Windows style
-	* bits.  All combo boxes draw their own border and
-	* do not use the standard Windows border styles.
-	* Therefore, no matter what style bits are specified,
-	* clear the BORDER bits so that the SWT style will
-	* match the Windows widget.
-	*
-	* The Windows behavior is currently implemented on
-	* all platforms.
-	*/
-	style &= ~SWT.BORDER;
-
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
-	style = checkBits (style, SWT.DROP_DOWN, SWT.SIMPLE, 0, 0, 0, 0);
-	if ((style & SWT.SIMPLE) != 0) return style & ~SWT.READ_ONLY;
-	return style;
+	return WidgetStylePolicy.COMBO.applyAsInt(style);
 }
 
 @Override

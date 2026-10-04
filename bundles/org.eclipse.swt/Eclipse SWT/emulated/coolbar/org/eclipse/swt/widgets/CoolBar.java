@@ -126,8 +126,7 @@ public CoolBar (Composite parent, int style) {
 	}
 }
 static int checkStyle (int style) {
-	style |= SWT.NO_FOCUS;
-	return (style | SWT.NO_REDRAW_RESIZE) & ~(SWT.V_SCROLL | SWT.H_SCROLL);
+	return WidgetStylePolicy.COOL_BAR_EMULATED.applyAsInt(style);
 }
 void _setCursor (Cursor cursor) {
 	if (this.cursor != null) return;

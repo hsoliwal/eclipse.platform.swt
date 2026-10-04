@@ -122,8 +122,7 @@ protected void checkSubclass () {
 }
 
 static int checkStyle (int style) {
-	style &= ~SWT.H_SCROLL;
-	return style | SWT.NO_BACKGROUND;
+	return WidgetStylePolicy.EXPAND_BAR_WINDOWS.applyAsInt(style);
 }
 
 @Override

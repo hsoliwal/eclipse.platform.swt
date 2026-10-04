@@ -149,7 +149,7 @@ public void addSelectionListener(SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+	return WidgetStylePolicy.ORIENTATION.applyAsInt(style);
 }
 
 @Override

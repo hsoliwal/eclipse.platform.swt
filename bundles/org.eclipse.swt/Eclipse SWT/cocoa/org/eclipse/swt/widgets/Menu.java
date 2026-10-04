@@ -237,7 +237,7 @@ void checkParent (Widget parent) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.POP_UP, SWT.BAR, SWT.DROP_DOWN, 0, 0, 0);
+	return WidgetStylePolicy.MENU.applyAsInt(style);
 }
 
 void _setVisible (boolean visible) {

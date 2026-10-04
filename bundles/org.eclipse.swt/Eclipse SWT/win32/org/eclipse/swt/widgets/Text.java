@@ -626,28 +626,7 @@ void applySegments () {
 }
 
 static int checkStyle (int style) {
-	if ((style & SWT.SINGLE) != 0 && (style & SWT.MULTI) != 0) {
-		style &= ~SWT.MULTI;
-	}
-	style = checkBits (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
-	/*
-	 * NOTE: ICON_CANCEL and ICON_SEARCH have the same value as H_SCROLL and
-	 * V_SCROLL. The meaning is determined by whether SWT.SEARCH is set.
-	 */
-	if ((style & SWT.SEARCH) != 0) {
-		style |= SWT.SINGLE | SWT.BORDER;
-		style &= ~(SWT.PASSWORD | SWT.WRAP);
-	} else if ((style & SWT.SINGLE) != 0) {
-		style &= ~(SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP);
-	}
-	if ((style & SWT.WRAP) != 0) {
-		style |= SWT.MULTI;
-		style &= ~SWT.H_SCROLL;
-	}
-	if ((style & SWT.MULTI) != 0) style &= ~SWT.PASSWORD;
-	if ((style & (SWT.SINGLE | SWT.MULTI)) != 0) return style;
-	if ((style & (SWT.H_SCROLL | SWT.V_SCROLL)) != 0) return style | SWT.MULTI;
-	return style | SWT.SINGLE;
+	return WidgetStylePolicy.TEXT_WINDOWS.applyAsInt(style);
 }
 
 void clearSegments (boolean applyText) {

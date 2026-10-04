@@ -213,29 +213,7 @@ void bringToTop () {
 }
 
 static int checkStyle (int style) {
-	if ((style & SWT.NO_TRIM) != 0) {
-		style &= ~(SWT.CLOSE | SWT.TITLE | SWT.MIN | SWT.MAX | SWT.RESIZE | SWT.BORDER);
-	} else if ((style & SWT.NO_MOVE) != 0) {
-		style |= SWT.TITLE;
-	}
-	if ((style & (SWT.MENU | SWT.MIN | SWT.MAX | SWT.CLOSE)) != 0) {
-		style |= SWT.TITLE;
-	}
-
-	/*
-	* If either WS_MINIMIZEBOX or WS_MAXIMIZEBOX are set,
-	* we must also set WS_SYSMENU or the buttons will not
-	* appear.
-	*/
-	if ((style & (SWT.MIN | SWT.MAX)) != 0) style |= SWT.CLOSE;
-
-	/*
-	* Both WS_SYSMENU and WS_CAPTION must be set in order
-	* to for the system menu to appear.
-	*/
-	if ((style & SWT.CLOSE) != 0) style |= SWT.TITLE;
-
-	return style;
+	return WidgetStylePolicy.DECORATIONS_WINDOWS.applyAsInt(style);
 }
 
 @Override

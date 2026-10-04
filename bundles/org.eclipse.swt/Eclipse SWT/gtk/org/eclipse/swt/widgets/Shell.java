@@ -429,6 +429,10 @@ public static Shell internal_new (Display display, long handle) {
 }
 
 static int checkStyle (Shell parent, int style) {
+	return Shell.normalizeStyle(parent, style);
+}
+
+private static int normalizeStyle(Shell parent, int style) {
 	style = Decorations.checkStyle (style);
 	style &= ~SWT.TRANSPARENT;
 	if (parent != null && (style & SWT.ON_TOP) != 0) style &= ~(SWT.CLOSE | SWT.TITLE | SWT.MIN | SWT.MAX);

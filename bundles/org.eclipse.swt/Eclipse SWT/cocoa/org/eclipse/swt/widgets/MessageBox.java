@@ -111,13 +111,7 @@ public MessageBox (Shell parent, int style) {
 }
 
 static int checkStyle (int style) {
-	int mask = (SWT.YES | SWT.NO | SWT.OK | SWT.CANCEL | SWT.ABORT | SWT.RETRY | SWT.IGNORE);
-	int bits = style & mask;
-	if (bits == SWT.OK || bits == SWT.CANCEL || bits == (SWT.OK | SWT.CANCEL)) return style;
-	if (bits == SWT.YES || bits == SWT.NO || bits == (SWT.YES | SWT.NO) || bits == (SWT.YES | SWT.NO | SWT.CANCEL)) return style;
-	if (bits == (SWT.RETRY | SWT.CANCEL) || bits == (SWT.ABORT | SWT.RETRY | SWT.IGNORE)) return style;
-	style = (style & ~mask) | SWT.OK;
-	return style;
+	return WidgetStylePolicy.MESSAGE_BOX.applyAsInt(style);
 }
 
 private int getBits () {

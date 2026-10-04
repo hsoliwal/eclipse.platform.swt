@@ -317,15 +317,7 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
  * @return the new style bits
  */
 static int checkBits (int style, int int0, int int1, int int2, int int3, int int4, int int5) {
-	int mask = int0 | int1 | int2 | int3 | int4 | int5;
-	if ((style & mask) == 0) style |= int0;
-	if ((style & int0) != 0) style = (style & ~mask) | int0;
-	if ((style & int1) != 0) style = (style & ~mask) | int1;
-	if ((style & int2) != 0) style = (style & ~mask) | int2;
-	if ((style & int3) != 0) style = (style & ~mask) | int3;
-	if ((style & int4) != 0) style = (style & ~mask) | int4;
-	if ((style & int5) != 0) style = (style & ~mask) | int5;
-	return style;
+	return WidgetStyleBits.normalize(style, int0, int1, int2, int3, int4, int5);
 }
 
 void checkOrientation (Widget parent) {

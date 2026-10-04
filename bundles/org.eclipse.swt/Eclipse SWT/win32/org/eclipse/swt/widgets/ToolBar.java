@@ -176,25 +176,7 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* On Windows, only flat tool bars can be traversed.
-	*/
-	if ((style & SWT.FLAT) == 0) style |= SWT.NO_FOCUS;
-
-	/*
-	* A vertical tool bar cannot wrap because TB_SETROWS
-	* fails when the toolbar has TBSTYLE_WRAPABLE.
-	*/
-	if ((style & SWT.VERTICAL) != 0) style &= ~SWT.WRAP;
-
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	return style & ~(SWT.H_SCROLL | SWT.V_SCROLL);
+	return WidgetStylePolicy.TOOLBAR_WINDOWS.applyAsInt(style);
 }
 
 @Override

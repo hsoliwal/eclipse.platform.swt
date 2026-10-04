@@ -427,6 +427,10 @@ public static Shell cocoa_new (Display display, long handle) {
 }
 
 static int checkStyle (Shell parent, int style) {
+	return Shell.normalizeStyle(parent, style);
+}
+
+private static int normalizeStyle(Shell parent, int style) {
 	style = Decorations.checkStyle (style);
 	style &= ~SWT.TRANSPARENT;
 	int mask = SWT.SYSTEM_MODAL | SWT.APPLICATION_MODAL | SWT.PRIMARY_MODAL;

@@ -262,10 +262,7 @@ Point adjustResizeCursor (boolean movePointer) {
 }
 
 static int checkStyle (int style) {
-	if ((style & (SWT.LEFT | SWT.RIGHT | SWT.UP | SWT.DOWN)) == 0) {
-		style |= SWT.LEFT | SWT.RIGHT | SWT.UP | SWT.DOWN;
-	}
-	return style;
+	return WidgetStylePolicy.TRACKER.applyAsInt(style);
 }
 
 /**
