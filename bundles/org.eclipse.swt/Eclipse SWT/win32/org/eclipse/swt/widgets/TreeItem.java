@@ -766,6 +766,7 @@ public TreeItem getItem (int index) {
 	checkWidget ();
 	if (index < 0) error (SWT.ERROR_INVALID_RANGE);
 	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+	parent.ensureVirtualNativeItem (handle, index);
 	long hwnd = parent.handle;
 	long hFirstItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
 	if (hFirstItem == 0) error (SWT.ERROR_INVALID_RANGE);
@@ -810,6 +811,7 @@ public int getItemCount () {
 public TreeItem [] getItems () {
 	checkWidget ();
 	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+	parent.restoreVirtualChildren (this);
 	long hwnd = parent.handle;
 	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
 	if (hItem == 0) return new TreeItem [0];
@@ -1324,10 +1326,12 @@ public void setExpanded (boolean expanded) {
 	long hOldItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0);
 
 	/* Expand or collapse the item */
+	if (expanded) parent.restoreVirtualChildren (this);
 	parent.ignoreExpand = true;
 	OS.SendMessage (hwnd, OS.TVM_EXPAND, expanded ? OS.TVE_EXPAND : OS.TVE_COLLAPSE, handle);
 	parent.ignoreExpand = false;
 	setExpandedState (expanded);
+	if (!expanded) parent.scheduleVirtualCollapseCompaction (this);
 
 	/* Scroll back to the top item */
 	if (noScroll && hTopItem != 0) {
