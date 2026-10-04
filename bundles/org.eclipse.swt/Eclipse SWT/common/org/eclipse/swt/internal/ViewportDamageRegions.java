@@ -75,8 +75,7 @@ public final class ViewportDamageRegions {
 	/**
 	 * Adds one damaged rectangle.
 	 *
-	 * <p>Non-positive extents are ignored. Coordinates are saturated rather
-	 * than allowed to overflow while unions are computed.</p>
+	 * <p>Non-positive extents are ignored. Unrepresentable coordinate spans conservatively fall back to full incoming-GC damage.</p>
 	 */
 	public void invalidate (int layer, int rx, int ry, int rWidth, int rHeight) {
 		if (rWidth <= 0 || rHeight <= 0 || fullDamage) return;
@@ -111,7 +110,10 @@ public final class ViewportDamageRegions {
 						saturatedAdd (x [index], width [index]),
 						saturatedAdd (y [index], height [index]));
 				if (fullDamage) return;
-				removeAt (index--);
+				int removed = index;
+				removeAt (removed);
+				if (removed < merged) merged--;
+				index--;
 			}
 		}
 		if (merged >= 0) {
@@ -255,13 +257,15 @@ public final class ViewportDamageRegions {
 	}
 
 	private void removeAt (int index) {
-		int tail = --count;
-		if (index == tail) return;
-		layers [index] = layers [tail];
-		x [index] = x [tail];
-		y [index] = y [tail];
-		width [index] = width [tail];
-		height [index] = height [tail];
+		int moved = count - index - 1;
+		if (moved > 0) {
+			System.arraycopy (layers, index + 1, layers, index, moved);
+			System.arraycopy (x, index + 1, x, index, moved);
+			System.arraycopy (y, index + 1, y, index, moved);
+			System.arraycopy (width, index + 1, width, index, moved);
+			System.arraycopy (height, index + 1, height, index, moved);
+		}
+		count--;
 	}
 
 	private void ensureCapacity (int required) {
