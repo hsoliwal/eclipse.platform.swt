@@ -31,10 +31,14 @@ import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.ScrollBar;
+import org.eclipse.swt.widgets.Text;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -50,6 +54,39 @@ public class Test_org_eclipse_swt_widgets_Table extends Test_org_eclipse_swt_wid
 public void setUp() {
 	super.setUp();
 	makeCleanEnvironment(false); // by default, use multi-select table.
+}
+
+@Test
+public void test_virtualTableEditorTracksPinnedItemAcrossViewportScroll() {
+	Table virtualTable = new Table(shell, SWT.VIRTUAL | SWT.V_SCROLL);
+	virtualTable.setSize(320, 180);
+	virtualTable.setItemCount(256);
+	TableItem edited = virtualTable.getItem(200);
+	edited.setText("edited");
+
+	org.eclipse.swt.custom.TableEditor cellEditor =
+			new org.eclipse.swt.custom.TableEditor(virtualTable);
+	cellEditor.grabHorizontal = true;
+	Text control = new Text(virtualTable, SWT.NONE);
+	cellEditor.setEditor(control, edited, 0);
+
+	virtualTable.setTopIndex(196);
+	ScrollBar vertical = virtualTable.getVerticalBar();
+	if (vertical != null) vertical.notifyListeners(SWT.Selection, new Event());
+	cellEditor.layout();
+
+	assertSame(edited, cellEditor.getItem());
+	assertSame(edited, virtualTable.getItem(200),
+			"viewport scroll must not rebind an exposed TableItem facade");
+	Rectangle cell = edited.getBounds(0);
+	Rectangle overlay = control.getBounds();
+	assertEquals(cell.y, overlay.y,
+			"editor overlay must follow the logical row after viewport scroll");
+	assertTrue(overlay.height >= cell.height);
+
+	cellEditor.dispose();
+	control.dispose();
+	virtualTable.dispose();
 }
 
 @Override
