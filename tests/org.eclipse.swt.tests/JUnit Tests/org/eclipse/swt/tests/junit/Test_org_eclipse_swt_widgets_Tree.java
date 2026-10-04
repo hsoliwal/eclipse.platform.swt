@@ -593,6 +593,36 @@ public void test_virtualGtkAndWin32CollapseKeepsOneSentinelWhenNoChildFacadeEsca
 	assertEquals(2_000, root.getItemCount());
 }
 
+
+@Test
+public void test_virtualWin32IndexedInsertRestoresOnlyRequiredCollapsedPrefix() throws Exception {
+	if (!"win32".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(1);
+	TreeItem root = virtualTree.getItem(0);
+	root.setItemCount(2_000);
+
+	Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", TreeItem.class);
+	residentCount.setAccessible(true);
+
+	root.setExpanded(false);
+	SwtTestUtil.processEvents();
+	assertEquals(1, residentCount.invoke(virtualTree, root));
+
+	TreeItem inserted = new TreeItem(root, SWT.NONE, 100);
+	assertEquals(2_001, root.getItemCount());
+	assertEquals(100, root.indexOf(inserted));
+	assertSame(inserted, root.getItem(100));
+	assertEquals(101, residentCount.invoke(virtualTree, root),
+			"indexed insertion should restore only the prefix required to identify the logical insertion point");
+
+	root.setExpanded(false);
+	SwtTestUtil.processEvents();
+	assertEquals(101, residentCount.invoke(virtualTree, root),
+			"explicitly constructed facade is pinned and must remain resident after collapse");
+}
+
 @Test
 public void test_virtualGtkAndWin32PackedStateLivesInTopologyAndSurvivesCoordinateShift() throws Exception {
 	String platform = SWT.getPlatform();
