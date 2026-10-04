@@ -3266,12 +3266,23 @@ void propagateDraw (long container, long cairo) {
 	 */
 	super.propagateDraw(container, cairo);
 	if (headerVisible && noChildDrawing && wasScrolled) {
-		for (TreeColumn column : columns) {
-			if (column != null) {
-				GTK.gtk_widget_queue_draw(column.buttonHandle);
-			}
-		}
+		redrawVisibleHeaderButtons ();
 		wasScrolled = false;
+	}
+}
+
+void redrawVisibleHeaderButtons () {
+	int viewportWidth = getClientAreaInPixels ().width;
+	if (viewportWidth <= 0) return;
+	for (TreeColumn column : columns) {
+		if (column == null || column.buttonHandle == 0
+				|| !GTK.gtk_widget_get_visible (column.buttonHandle)) continue;
+		GtkAllocation allocation = new GtkAllocation ();
+		GTK.gtk_widget_get_allocation (column.buttonHandle, allocation);
+		if (ViewportLayerState.intersectsViewport (
+				allocation.x, allocation.width, viewportWidth)) {
+			GTK.gtk_widget_queue_draw (column.buttonHandle);
+		}
 	}
 }
 
