@@ -263,7 +263,7 @@ public final class ViewportPaintGraph {
 		float top = Float.NEGATIVE_INFINITY;
 		float right = Float.POSITIVE_INFINITY;
 		float bottom = Float.POSITIVE_INFINITY;
-		for (int current = node; current != NONE; current = parents [current]) {
+		for (int current = node; current >= 0; current = parents [current]) {
 			if ((flags [current] & HAS_CLIP) == 0) continue;
 			rootTransformElements (current, transformScratch);
 			float x = clipX [current];
@@ -308,7 +308,7 @@ public final class ViewportPaintGraph {
 	public boolean effectiveStroke (int node, int [] out) {
 		requireGroup (node);
 		if (out == null || out.length < 4) throw new IllegalArgumentException ("stroke output too small");
-		for (int current = node; current != NONE; current = parents [current]) {
+		for (int current = node; current >= 0; current = parents [current]) {
 			if ((flags [current] & HAS_STROKE) == 0) continue;
 			out [0] = lineWidth [current];
 			out [1] = lineStyle [current];
@@ -669,7 +669,7 @@ public final class ViewportPaintGraph {
 
 	private void rootTransformElements (int node, float [] out) {
 		float m11 = 1, m12 = 0, m21 = 0, m22 = 1, dx = 0, dy = 0;
-		for (int current = node; current != NONE; current = parents [current]) {
+		for (int current = node; current >= 0; current = parents [current]) {
 			if (kinds [current] != GROUP) continue;
 			int offset = transformIds [current] * 6;
 			float local11 = transforms [offset];
