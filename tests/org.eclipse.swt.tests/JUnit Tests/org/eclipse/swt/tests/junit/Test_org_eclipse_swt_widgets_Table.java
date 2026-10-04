@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
+import org.eclipse.swt.dnd.DropTargetEffect;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
@@ -86,6 +87,50 @@ public void test_virtualTableEditorTracksPinnedItemAcrossViewportScroll() {
 
 	cellEditor.dispose();
 	control.dispose();
+	virtualTable.dispose();
+}
+
+@Test
+public void test_virtualDndProjectionPinsSparseTableFacade() throws Exception {
+	Table virtualTable = new Table(shell, SWT.VIRTUAL | SWT.V_SCROLL);
+	virtualTable.setItemCount(100_000);
+	shell.setLayout(new FillLayout());
+	shell.setSize(320, 180);
+	shell.open();
+	SwtTestUtil.processEvents();
+
+	virtualTable.setTopIndex(50_000);
+	SwtTestUtil.processEvents();
+
+	DropTargetEffect effect = new DropTargetEffect(virtualTable);
+	org.eclipse.swt.graphics.Point global =
+			virtualTable.toDisplay(5, Math.max(1, virtualTable.getItemHeight() / 2));
+	org.eclipse.swt.widgets.Widget hit = effect.getItem(global.x, global.y);
+	TableItem item = assertInstanceOf(TableItem.class, hit);
+	assertSame(item, effect.getItem(global.x, global.y),
+			"DND projection must preserve the same logical TableItem facade");
+
+	Field storageField = Table.class.getDeclaredField("virtualItems");
+	storageField.setAccessible(true);
+	Object storage = storageField.get(virtualTable);
+	assertNotNull(storage);
+
+	Method size = storage.getClass().getDeclaredMethod("size");
+	size.setAccessible(true);
+	int materialized = (Integer) size.invoke(storage);
+	assertTrue(materialized < 128,
+			"DND hit projection must remain viewport-bounded for a 100K-row virtual Table");
+
+	Class<?> stateClass = Class.forName("org.eclipse.swt.widgets.VirtualItemState");
+	Field pinnedField = stateClass.getDeclaredField("PINNED");
+	pinnedField.setAccessible(true);
+	long pinned = pinnedField.getLong(null);
+	Method stateOfIdentity = storage.getClass().getDeclaredMethod("stateOfIdentity", Object.class);
+	stateOfIdentity.setAccessible(true);
+	long state = (Long) stateOfIdentity.invoke(storage, item);
+	assertTrue((state & pinned) != 0,
+			"DropTargetEvent item projection must pin the exposed virtual TableItem identity");
+
 	virtualTable.dispose();
 }
 
