@@ -789,6 +789,12 @@ public final class ViewportPaintGraph {
 			top -= strokeOutset;
 			right += strokeOutset;
 			bottom += strokeOutset;
+		} else if (kinds [node] == FILL_PATH) {
+			// Native path antialiasing may cover the immediately adjacent device pixel.
+			left -= 1;
+			top -= 1;
+			right += 1;
+			bottom += 1;
 		}
 		return right <= clip.x || bottom <= clip.y
 				|| left >= (long)clip.x + clip.width || top >= (long)clip.y + clip.height;
