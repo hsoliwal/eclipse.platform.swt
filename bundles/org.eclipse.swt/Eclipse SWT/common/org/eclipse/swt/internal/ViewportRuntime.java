@@ -84,8 +84,8 @@ public final class ViewportRuntime {
 		originY = y;
 
 		int dirty = 0;
-		if (horizontal) dirty |= BODY | HEADER | SCROLLBAR;
-		if (vertical) dirty |= BODY | FROZEN | SCROLLBAR;
+		if (horizontal) dirty |= BODY | HEADER | EDITOR | FEEDBACK | SCROLLBAR;
+		if (vertical) dirty |= BODY | FROZEN | EDITOR | FEEDBACK | SCROLLBAR;
 		return dirty;
 	}
 
