@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.DropTargetEffect;
 import org.eclipse.swt.events.TreeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
@@ -63,6 +64,70 @@ public void setUp() {
 	setWidget(tree);
 }
 
+
+@Test
+public void test_virtualDndProjectionPinsSparseTreeFacade() throws Exception {
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.V_SCROLL);
+	virtualTree.setItemCount(100_000);
+	shell.setLayout(new FillLayout());
+	shell.setSize(320, 180);
+	shell.open();
+	SwtTestUtil.processEvents();
+
+	DropTargetEffect effect = new DropTargetEffect(virtualTree);
+	org.eclipse.swt.graphics.Point global =
+			virtualTree.toDisplay(5, Math.max(1, virtualTree.getItemHeight() / 2));
+	org.eclipse.swt.widgets.Widget hit = effect.getItem(global.x, global.y);
+	TreeItem item = assertInstanceOf(TreeItem.class, hit);
+	assertSame(item, effect.getItem(global.x, global.y),
+			"DND projection must preserve the same logical TreeItem facade");
+
+	Class<?> stateClass = Class.forName("org.eclipse.swt.widgets.VirtualItemState");
+	Field pinnedField = stateClass.getDeclaredField("PINNED");
+	pinnedField.setAccessible(true);
+	long pinned = pinnedField.getLong(null);
+
+	if ("cocoa".equals(SWT.getPlatform())) {
+		Field storageField = Tree.class.getDeclaredField("virtualItems");
+		storageField.setAccessible(true);
+		Object storage = storageField.get(virtualTree);
+		assertNotNull(storage);
+
+		Method size = storage.getClass().getDeclaredMethod("size");
+		size.setAccessible(true);
+		assertTrue((Integer) size.invoke(storage) < 128,
+				"DND hit projection must remain viewport-bounded for a 100K-root Cocoa Tree");
+
+		Method stateOfIdentity =
+				storage.getClass().getDeclaredMethod("stateOfIdentity", Object.class);
+		stateOfIdentity.setAccessible(true);
+		long state = (Long) stateOfIdentity.invoke(storage, item);
+		assertTrue((state & pinned) != 0,
+				"DND projection must pin the exposed Cocoa TreeItem identity");
+	} else {
+		Field topologyField = Tree.class.getDeclaredField("virtualTopology");
+		topologyField.setAccessible(true);
+		Object topology = topologyField.get(virtualTree);
+		assertNotNull(topology);
+
+		Method materializedCount = topology.getClass().getDeclaredMethod("materializedCount");
+		materializedCount.setAccessible(true);
+		assertTrue((Integer) materializedCount.invoke(topology) < 256,
+				"DND hit projection must remain viewport-bounded for a 100K-root virtual Tree");
+
+		Method virtualItemId = Tree.class.getDeclaredMethod("virtualItemId", TreeItem.class);
+		virtualItemId.setAccessible(true);
+		int id = (Integer) virtualItemId.invoke(virtualTree, item);
+		assertTrue(id >= 0);
+
+		Method flag = topology.getClass().getDeclaredMethod("flag", int.class, long.class);
+		flag.setAccessible(true);
+		assertTrue((Boolean) flag.invoke(topology, id, pinned),
+				"DND projection must pin the exposed virtual TreeItem identity");
+	}
+
+	virtualTree.dispose();
+}
 
 @Test
 public void test_virtualTreeEditorTracksPinnedItemAcrossViewportAndCollapse() {
