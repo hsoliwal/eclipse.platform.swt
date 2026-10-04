@@ -252,23 +252,38 @@ public final class ViewportPaintGraph {
 		float top = Float.NEGATIVE_INFINITY;
 		float right = Float.POSITIVE_INFINITY;
 		float bottom = Float.POSITIVE_INFINITY;
-		float [] bounds = new float [4];
 		for (int current = node; current != NONE; current = parents [current]) {
 			if ((flags [current] & HAS_CLIP) == 0) continue;
-			mapRectBounds (
-					current, clipX [current], clipY [current],
-					clipWidth [current], clipHeight [current], bounds);
+			Affine transform = rootTransform (current);
+			float x = clipX [current];
+			float y = clipY [current];
+			float width = clipWidth [current];
+			float height = clipHeight [current];
+
+			float x0 = transform.m11 * x + transform.m21 * y + transform.dx;
+			float y0 = transform.m12 * x + transform.m22 * y + transform.dy;
+			float x1 = transform.m11 * (x + width) + transform.m21 * y + transform.dx;
+			float y1 = transform.m12 * (x + width) + transform.m22 * y + transform.dy;
+			float x2 = transform.m11 * x + transform.m21 * (y + height) + transform.dx;
+			float y2 = transform.m12 * x + transform.m22 * (y + height) + transform.dy;
+			float x3 = transform.m11 * (x + width) + transform.m21 * (y + height) + transform.dx;
+			float y3 = transform.m12 * (x + width) + transform.m22 * (y + height) + transform.dy;
+
+			float clipLeft = Math.min (Math.min (x0, x1), Math.min (x2, x3));
+			float clipTop = Math.min (Math.min (y0, y1), Math.min (y2, y3));
+			float clipRight = Math.max (Math.max (x0, x1), Math.max (x2, x3));
+			float clipBottom = Math.max (Math.max (y0, y1), Math.max (y2, y3));
 			if (!clipped) {
-				left = bounds [0];
-				top = bounds [1];
-				right = bounds [0] + bounds [2];
-				bottom = bounds [1] + bounds [3];
+				left = clipLeft;
+				top = clipTop;
+				right = clipRight;
+				bottom = clipBottom;
 				clipped = true;
 			} else {
-				left = Math.max (left, bounds [0]);
-				top = Math.max (top, bounds [1]);
-				right = Math.min (right, bounds [0] + bounds [2]);
-				bottom = Math.min (bottom, bounds [1] + bounds [3]);
+				left = Math.max (left, clipLeft);
+				top = Math.max (top, clipTop);
+				right = Math.min (right, clipRight);
+				bottom = Math.min (bottom, clipBottom);
 			}
 		}
 		if (!clipped) return false;
@@ -644,27 +659,6 @@ public final class ViewportPaintGraph {
 			result = transform (transformIds [current]).compose (result);
 		}
 		return result;
-	}
-
-	private void mapRectBounds (
-			int node, float x, float y, float width, float height, float [] out) {
-		float [] point = new float [2];
-		mapToRoot (node, x, y, point);
-		float minX = point [0], maxX = point [0];
-		float minY = point [1], maxY = point [1];
-		mapToRoot (node, x + width, y, point);
-		minX = Math.min (minX, point [0]); maxX = Math.max (maxX, point [0]);
-		minY = Math.min (minY, point [1]); maxY = Math.max (maxY, point [1]);
-		mapToRoot (node, x, y + height, point);
-		minX = Math.min (minX, point [0]); maxX = Math.max (maxX, point [0]);
-		minY = Math.min (minY, point [1]); maxY = Math.max (maxY, point [1]);
-		mapToRoot (node, x + width, y + height, point);
-		minX = Math.min (minX, point [0]); maxX = Math.max (maxX, point [0]);
-		minY = Math.min (minY, point [1]); maxY = Math.max (maxY, point [1]);
-		out [0] = minX;
-		out [1] = minY;
-		out [2] = maxX - minX;
-		out [3] = maxY - minY;
 	}
 
 	private static void checkOut (float [] out, int length) {
