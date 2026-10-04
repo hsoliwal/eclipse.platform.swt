@@ -753,10 +753,10 @@ public final class ViewportPaintGraph {
 			int node, Affine transform, Rectangle clip, long strokeOutset) {
 		int dx = Math.round (transform.dx);
 		int dy = Math.round (transform.dy);
-		long left;
-		long top;
-		long right;
-		long bottom;
+		double left;
+		double top;
+		double right;
+		double bottom;
 		switch (kinds [node]) {
 			case LINE -> {
 				left = Math.min (a [node], c [node]) + (long)dx;
