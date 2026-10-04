@@ -173,7 +173,7 @@ long accessibilityAttributeValue(long id, long sel, long arg0) {
 @Override
 void _addListener (int eventType, Listener listener) {
 	super._addListener (eventType, listener);
-	clearCachedWidth(items);
+	clearCachedWidth ();
 }
 
 /**
