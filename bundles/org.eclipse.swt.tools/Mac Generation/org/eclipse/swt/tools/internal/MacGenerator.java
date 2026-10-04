@@ -862,7 +862,7 @@ public String[] getXmls() {
 		} else {
 			String packageName = getPackageName();
 			File folder = new File(extrasDir != null ? extrasDir : outputDir + packageName.replace('.', '/'));
-			File[] files = folder.listFiles((FilenameFilter) (_, name) -> name.endsWith("Full.bridgesupport"));
+			File[] files = folder.listFiles((FilenameFilter) (ignoredDirectory, name) -> name.endsWith("Full.bridgesupport"));
 			if(files == null) {
 				files = new File[0];
 			}
