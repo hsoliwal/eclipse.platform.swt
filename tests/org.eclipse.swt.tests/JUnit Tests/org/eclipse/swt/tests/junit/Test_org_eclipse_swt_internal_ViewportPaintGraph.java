@@ -299,6 +299,74 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (21, 3));
 	}
 
+
+	@Test
+	public void test_retainedPathCopiesPrimitiveGeometryAndReplaysAcrossInstances () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int template = graph.template ();
+		PathData data = new PathData ();
+		data.types = new byte[] {
+				SWT.PATH_MOVE_TO, SWT.PATH_LINE_TO, SWT.PATH_LINE_TO, SWT.PATH_CLOSE};
+		data.points = new float[] {0, 0, 10, 0, 10, 10};
+		graph.fillPath (template, data);
+		graph.instance (graph.root (), template, Affine.translation (10, 10));
+		graph.instance (graph.root (), template, Affine.translation (30, 10));
+
+		// Retained geometry owns a copy; caller mutation must not rewrite the graph.
+		data.types [0] = SWT.PATH_CLOSE;
+		Arrays.fill (data.points, 50);
+
+		var first = graph.replay (gc, Affine.IDENTITY, new Rectangle (0, 0, 64, 64));
+		assertEquals (2, first.drawnCommands ());
+		assertEquals (1, graph.geometryNodeCount ());
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (17, 13));
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (37, 13));
+		assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (55, 55));
+
+		// Native Path objects are replay-local; a second replay must reconstruct cleanly.
+		var second = graph.replay (gc, Affine.IDENTITY, new Rectangle (0, 0, 64, 64));
+		assertEquals (2, second.drawnCommands ());
+	}
+
+	@Test
+	public void test_retainedPathRejectsMalformedOrNonFiniteGeometry () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+
+		PathData mismatched = new PathData ();
+		mismatched.types = new byte[] {SWT.PATH_MOVE_TO};
+		mismatched.points = new float[] {1};
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.drawPath (graph.root (), mismatched));
+
+		PathData unknown = new PathData ();
+		unknown.types = new byte[] {(byte)0x7f};
+		unknown.points = new float[0];
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.drawPath (graph.root (), unknown));
+
+		PathData nonFinite = new PathData ();
+		nonFinite.types = new byte[] {SWT.PATH_MOVE_TO};
+		nonFinite.points = new float[] {Float.NaN, 0};
+		assertThrows (IllegalArgumentException.class,
+				() -> graph.fillPath (graph.root (), nonFinite));
+	}
+
+	@Test
+	public void test_retainedDrawPathCullingIncludesStrokeEnvelope () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		PathData data = new PathData ();
+		data.types = new byte[] {SWT.PATH_MOVE_TO, SWT.PATH_LINE_TO};
+		data.points = new float[] {4, 8, 52, 8};
+		graph.drawPath (graph.root (), data);
+
+		gc.setLineWidth (12);
+		Rectangle clip = new Rectangle (0, 12, 64, 16);
+		gc.setClipping (clip);
+		var stats = graph.replay (gc, Affine.IDENTITY, clip);
+		assertEquals (1, stats.drawnCommands (),
+				"path centreline outside the clip must survive when its stroke enters the viewport");
+	}
+
 	private RGB pixelRgb (int x, int y) {
 		ImageData data = image.getImageData ();
 		int pixel = data.getPixel (x, y);
