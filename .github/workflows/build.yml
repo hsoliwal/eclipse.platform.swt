@@ -53,6 +53,11 @@ on:
         type: string
         required: false
         default: ""
+      viewport_screenshots:
+        description: "Run the property-gated viewport screenshot regression after the build."
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   build:
@@ -126,6 +131,25 @@ jobs:
         ${{ (inputs.runtodotests == false && inputs.gtk =='gtk4' && inputs.gdk_backend == 'x11')     && '-DexcludedGroups=gtk4-todo' || '' }}
         ${{ (inputs.runtodotests == false && inputs.gtk =='gtk3' && inputs.gdk_backend == 'wayland') && '-DexcludedGroups=gtk3-wayland-todo' || '' }}
         clean install
+    - name: Viewport screenshot regression
+      if: ${{ inputs.viewport_screenshots && inputs.native == 'gtk.linux.x86_64' }}
+      env:
+        SWT_GTK4: "${{ inputs.gtk == 'gtk4' && '1' || '0' }}"
+        GDK_BACKEND: "${{ inputs.gdk_backend }}"
+      working-directory: tests/org.eclipse.swt.tests
+      run: >-
+        ${{ inputs.gdk_backend == 'x11' && 'dbus-run-session -- xvfb-run -a -s "-screen 0 1200x800x24 -noreset"' || '' }}
+        ${{ inputs.gdk_backend == 'wayland' && 'XDG_RUNTIME_DIR="$(mktemp -p $(pwd) -d xdg-runtime-XXXXXX)" dbus-run-session -- mutter --headless --wayland --no-x11 --virtual-monitor 1200x800 --  ' || '' }}
+        mvn --batch-mode -V -U -e
+        -DforkCount=1
+        '-Dnative=${{ inputs.native }}'
+        -DskipNativeTests=true
+        -DfailIfNoTests=true
+        -Dtest=ViewportScreenshotRegressionTest
+        -Dswt.viewport.screenshotRegression=true
+        -Dswt.viewport.screenshots=target/screenshots/viewport
+        integration-test
+
     - name: Performance tests
       if: ${{ inputs.performance }}
       env:
@@ -150,7 +174,8 @@ jobs:
         if-no-files-found: warn
         path: |
           ${{ github.workspace }}/**/target/surefire-reports/*.xml
-          ${{ github.workspace }}/**/target/screenshots/*.png
+          ${{ github.workspace }}/**/target/screenshots/**/*.png
+          ${{ github.workspace }}/**/target/screenshots/**/*.txt
           ${{ github.workspace }}/**/*.log
           ${{ github.workspace }}/**/*.dump
           ${{ github.workspace }}/**/*.dumpstream
