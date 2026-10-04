@@ -567,13 +567,24 @@ public final class ViewportPaintGraph {
 		if (gc.isDisposed ()) throw new IllegalArgumentException ("disposed GC");
 		if (damage.isEmpty ()) return new ReplayStats (0, 0, 0, 0);
 
-		HashSet<Integer> layerOrder = new HashSet<> ();
-		for (int layer : orderedLayers) {
-			if (!layerOrder.add (layer)) throw new IllegalArgumentException ("duplicate viewport layer");
+		for (int index = 0; index < orderedLayers.length; index++) {
+			for (int previous = 0; previous < index; previous++) {
+				if (orderedLayers [index] == orderedLayers [previous]) {
+					throw new IllegalArgumentException ("duplicate viewport layer");
+				}
+			}
 		}
 		for (int index = 0; index < damage.count (); index++) {
 			int layer = damage.layerAt (index);
-			if (layer != ViewportDamageRegions.ALL_LAYERS && !layerOrder.contains (layer)) {
+			if (layer == ViewportDamageRegions.ALL_LAYERS) continue;
+			boolean ordered = false;
+			for (int candidate : orderedLayers) {
+				if (candidate == layer) {
+					ordered = true;
+					break;
+				}
+			}
+			if (!ordered) {
 				throw new IllegalArgumentException ("damage layer absent from orderedLayers: " + layer);
 			}
 		}
