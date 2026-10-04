@@ -114,8 +114,8 @@ public final class ViewportDamageRegions {
 		layers [count] = layer;
 		x [count] = left;
 		y [count] = top;
-		width [count] = right - left;
-		height [count] = bottom - top;
+		width [count] = saturatedExtent (left, right);
+		height [count] = saturatedExtent (top, bottom);
 		count++;
 	}
 
@@ -199,8 +199,8 @@ public final class ViewportDamageRegions {
 		layers [0] = ALL_LAYERS;
 		x [0] = left;
 		y [0] = top;
-		width [0] = Math.max (0, right - left);
-		height [0] = Math.max (0, bottom - top);
+		width [0] = saturatedExtent (left, right);
+		height [0] = saturatedExtent (top, bottom);
 	}
 
 	private boolean touches (int index, int left, int top, int right, int bottom) {
@@ -223,8 +223,8 @@ public final class ViewportDamageRegions {
 		int nextBottom = Math.max (existingBottom, bottom);
 		x [index] = nextLeft;
 		y [index] = nextTop;
-		width [index] = Math.max (0, nextRight - nextLeft);
-		height [index] = Math.max (0, nextBottom - nextTop);
+		width [index] = saturatedExtent (nextLeft, nextRight);
+		height [index] = saturatedExtent (nextTop, nextBottom);
 	}
 
 	private void removeAt (int index) {
@@ -254,6 +254,11 @@ public final class ViewportDamageRegions {
 	private static int saturatedAdd (int left, int right) {
 		long value = (long)left + right;
 		return saturatingInt (value);
+	}
+
+	private static int saturatedExtent (int start, int end) {
+		if (end <= start) return 0;
+		return saturatingInt ((long)end - start);
 	}
 
 	private static int saturatingInt (long value) {
