@@ -99,7 +99,7 @@ public class Table extends Composite {
 	int pixbufHeight, pixbufWidth;
 	int headerHeight;
 	boolean boundsChangedSinceLastDraw, headerVisible, wasScrolled;
-	final ViewportLayerState viewportLayers = new ViewportLayerState ();
+	ViewportLayerState viewportLayers;
 	boolean rowActivated;
 
 	private long headerCSSProvider;
@@ -189,7 +189,7 @@ TableItem _getItem (int index, boolean create) {
 }
 
 int materializedItemCount () {
-	return (style & SWT.VIRTUAL) != 0 ? virtualItems.size () : itemCount;
+	return (style & SWT.VIRTUAL) != 0 ? (virtualItems == null ? 0 : virtualItems.size ()) : itemCount;
 }
 
 TableItem materializedItem (int position) {
@@ -1140,6 +1140,7 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
 
 @Override
 void createWidget (int index) {
+	viewportLayers = new ViewportLayerState ();
 	super.createWidget (index);
 	items = new TableItem [4];
 	if ((style & SWT.VIRTUAL) != 0) {
@@ -2596,7 +2597,7 @@ long gtk3_motion_notify_event (long widget, long event) {
 }
 
 void initializeViewportLayers () {
-	long horizontal = GTK.gtk_scrollable_get_hadjustment (handle);
+	long horizontal = GTK.gtk_scrolled_window_get_hadjustment (scrolledHandle);
 	long vertical = GTK.gtk_scrollable_get_vadjustment (handle);
 	viewportLayers.initialize (
 			horizontal != 0 ? GTK.gtk_adjustment_get_value (horizontal) : 0,
@@ -2606,7 +2607,7 @@ void initializeViewportLayers () {
 @Override
 long gtk_scroll_event (long widget, long eventPtr) {
 	long result = super.gtk_scroll_event(widget, eventPtr);
-	long horizontal = GTK.gtk_scrollable_get_hadjustment (handle);
+	long horizontal = GTK.gtk_scrolled_window_get_hadjustment (scrolledHandle);
 	long vertical = GTK.gtk_scrollable_get_vadjustment (handle);
 	int dirtyLayers = viewportLayers.scrollTo (
 			horizontal != 0 ? GTK.gtk_adjustment_get_value (horizontal) : 0,
