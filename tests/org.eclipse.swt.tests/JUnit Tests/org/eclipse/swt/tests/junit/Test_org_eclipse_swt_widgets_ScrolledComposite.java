@@ -283,6 +283,11 @@ public class Test_org_eclipse_swt_widgets_ScrolledComposite extends Test_org_ecl
 		 */
 		content.setLocation(-19, -23);
 		assertEquals(new Point(19, 23), scrolledComposite.getOrigin());
+		content.setLocation(4, 6);
+		assertEquals(new Point(-4, -6), scrolledComposite.getOrigin(),
+				"direct legacy content movement must retain the historical physical-origin reflection");
+		content.setLocation(-19, -23);
+		assertEquals(new Point(19, 23), scrolledComposite.getOrigin());
 
 		for (int pass = 0; pass < 8; pass++) {
 			scrolledComposite.layout(false);
