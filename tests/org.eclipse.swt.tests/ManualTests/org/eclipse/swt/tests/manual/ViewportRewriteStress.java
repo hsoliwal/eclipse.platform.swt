@@ -751,13 +751,15 @@ public final class ViewportRewriteStress {
 				.append (" style=0x").append (Integer.toHexString (control.getStyle ()))
 				.append (" parent=").append (parent == null ? "<none>" : parent.getClass ().getName ())
 				.append (" bounds=").append (control.getBounds ())
-				.append (" client=").append (control.getClientArea ())
+				.append (" client=").append (control instanceof Scrollable scrollable ? scrollable.getClientArea () : "<not scrollable>")
 				.append (" visible=").append (control.getVisible ())
 				.append (" enabled=").append (control.getEnabled ())
 				.append (" layoutData=").append (layoutData == null ? "<none>" : layoutData.getClass ().getName ())
 				.append ('\n');
-		appendScrollBarSnapshot (out, indent + "  h.", control.getHorizontalBar ());
-		appendScrollBarSnapshot (out, indent + "  v.", control.getVerticalBar ());
+		if (control instanceof Scrollable scrollable) {
+			appendScrollBarSnapshot (out, indent + "  h.", scrollable.getHorizontalBar ());
+			appendScrollBarSnapshot (out, indent + "  v.", scrollable.getVerticalBar ());
+		}
 		if (control instanceof Table table) {
 			out.append (indent).append ("  table.itemCount=").append (table.getItemCount ())
 					.append (" topIndex=").append (table.getTopIndex ())
@@ -778,7 +780,8 @@ public final class ViewportRewriteStress {
 			appendTreeViewportInternals (out, tree, indent + "  ");
 		} else if (control instanceof ScrolledComposite scrolled) {
 			out.append (indent).append ("  scrolled.origin=").append (scrolled.getOrigin ())
-					.append (" min=").append (scrolled.getMinSize ())
+					.append (" minWidth=").append (scrolled.getMinWidth ())
+					.append (" minHeight=").append (scrolled.getMinHeight ())
 					.append (" expandH=").append (scrolled.getExpandHorizontal ())
 					.append (" expandV=").append (scrolled.getExpandVertical ())
 					.append ('\n');
