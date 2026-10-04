@@ -211,7 +211,15 @@ public final class ViewportPaintGraph {
 
 	public void setTransform (int group, Affine transform) {
 		requireGroup (group);
-		transformIds [group] = transformId (Objects.requireNonNull (transform, "transform"));
+		Objects.requireNonNull (transform, "transform");
+		int id = transformIds [group];
+		if (id == 0) {
+			transformIds [group] = transformId (transform);
+		} else {
+			// Non-identity slots have one owner. Reuse its lane across scroll frames,
+			// including identity resets, instead of retaining every past transform.
+			setTransformElements (id, transform);
+		}
 	}
 
 	public void setLayer (int group, int layer) {

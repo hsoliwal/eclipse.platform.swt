@@ -136,4 +136,99 @@ public class Test_org_eclipse_swt_widgets_ViewportPaintGraph {
 		method.setAccessible (true);
 		return ((Double)method.invoke (record)).doubleValue ();
 	}
+	@Test
+	public void test_dirtyIntermediateDoesNotHideCleanDependant () throws Exception {
+		DirtyFixture fixture = new DirtyFixture (3);
+		fixture.edge (0, 1);
+		fixture.edge (1, 2);
+		fixture.call ("markClean", new Class<?>[] {int.class}, 2);
+		fixture.invalidate (0);
+		assertTrue (fixture.dirty (2), "a previously painted dependant must be invalidated again");
+	}
+
+	@Test
+	public void test_partialPaintAndRepeatedInvalidationMatchReachabilityOracle () throws Exception {
+		int count = 193; // Exercise multiple packed words and a partial final word.
+		DirtyFixture fixture = new DirtyFixture (count);
+		boolean [][] edges = new boolean [count][count];
+		boolean [] expected = new boolean [count];
+		Arrays.fill (expected, true);
+		Random random = new Random (0x535754);
+		for (int source = 0; source < count; source++) {
+			for (int target = source + 1; target < count; target++) {
+				if (random.nextInt (40) == 0) {
+					edges [source][target] = true;
+					fixture.edge (source, target);
+					fixture.edge (source, target); // Duplicate edges must not amplify work.
+				}
+			}
+		}
+		for (int pass = 0; pass < 200; pass++) {
+			for (int node = 0; node < count; node++) {
+				if (random.nextInt (4) == 0) {
+					fixture.call ("markClean", new Class<?>[] {int.class}, node);
+					expected [node] = false;
+				}
+			}
+			int seed = random.nextInt (count);
+			fixture.invalidate (seed);
+			boolean [] visited = new boolean [count];
+			ArrayDeque<Integer> queue = new ArrayDeque<> ();
+			queue.add (seed);
+			while (!queue.isEmpty ()) {
+				int node = queue.remove ();
+				if (visited [node]) continue;
+				visited [node] = true;
+				expected [node] = true;
+				for (int target = 0; target < count; target++) {
+					if (edges [node][target]) queue.add (target);
+				}
+			}
+			int dirtyCount = 0;
+			for (int node = 0; node < count; node++) {
+				assertEquals (expected [node], fixture.dirty (node), "pass=" + pass + " node=" + node);
+				if (expected [node]) dirtyCount++;
+			}
+			assertEquals (dirtyCount, fixture.call ("dirtyCount", new Class<?>[0]));
+		}
+		fixture.call ("markAllClean", new Class<?>[0]);
+		fixture.call ("invalidateLayers", new Class<?>[] {int.class}, fixture.body);
+		assertEquals (count, fixture.call ("dirtyCount", new Class<?>[0]));
+	}
+
+	private static final class DirtyFixture {
+		final Class<?> type = Class.forName ("org.eclipse.swt.widgets.ViewportPaintGraph");
+		final Object graph;
+		final int body = constant (Class.forName ("org.eclipse.swt.widgets.ViewportLayerState"), "BODY");
+
+		DirtyFixture (int count) throws Exception {
+			Constructor<?> constructor = type.getDeclaredConstructor ();
+			constructor.setAccessible (true);
+			graph = constructor.newInstance ();
+			for (int node = 0; node < count; node++) {
+				call ("addNode", new Class<?>[] {long.class, int.class, long.class, long.class, long.class, long.class},
+						(long)node, body, node * 10L, 0L, 10L, 10L);
+			}
+		}
+
+		Object call (String name, Class<?>[] signature, Object... args) throws Exception {
+			Method method = type.getDeclaredMethod (name, signature);
+			method.setAccessible (true);
+			return method.invoke (graph, args);
+		}
+
+		void edge (int source, int target) throws Exception {
+			call ("addDependency", new Class<?>[] {int.class, int.class}, source, target);
+		}
+
+		void invalidate (int seed) throws Exception {
+			call ("invalidateBounds", new Class<?>[] {long.class, long.class, long.class, long.class, int.class},
+					seed * 10L, 0L, 10L, 10L, body);
+		}
+
+		boolean dirty (int node) throws Exception {
+			return (Boolean)call ("isDirty", new Class<?>[] {int.class}, node);
+		}
+	}
+
 }

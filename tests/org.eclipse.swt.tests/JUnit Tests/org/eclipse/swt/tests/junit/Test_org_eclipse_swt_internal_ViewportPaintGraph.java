@@ -484,4 +484,24 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 	private RGB rgb (int swtColor) {
 		return display.getSystemColor (swtColor).getRGB ();
 	}
+	@Test
+	public void test_repeatedViewportTransformsReuseOneOwnedSlot () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int moving = graph.group (graph.root ());
+		int stationary = graph.group (graph.root (), Affine.translation (40, 50));
+		int baseline = graph.transformCount ();
+		float [] point = new float [2];
+		for (int frame = 0; frame < 10_000; frame++) {
+			Affine transform = (frame & 1) == 0 ? Affine.translation (frame, -frame) : Affine.IDENTITY;
+			graph.setTransform (moving, transform);
+			graph.mapToRoot (moving, 2, 3, point);
+			assertArrayEquals (new float [] {2 + transform.dx (), 3 + transform.dy ()}, point);
+			assertTrue (graph.transformCount () <= baseline + 1,
+					"scrolling must retain at most one transform slot per moving group");
+		}
+		graph.mapToRoot (stationary, 2, 3, point);
+		assertArrayEquals (new float [] {42, 53}, point,
+				"updating one group must not change another group's transform");
+	}
+
 }
