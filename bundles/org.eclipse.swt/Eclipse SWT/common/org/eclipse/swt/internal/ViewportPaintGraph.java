@@ -403,11 +403,38 @@ public final class ViewportPaintGraph {
 	}
 
 	public ReplayStats replay (GC gc) {
-		return replay (gc, ROOT, Affine.IDENTITY, null);
+		return replay (gc, ROOT, Affine.IDENTITY, null, false, 0);
 	}
 
 	public ReplayStats replay (GC gc, Affine transform, Rectangle clip) {
-		return replay (gc, ROOT, transform, clip);
+		return replay (gc, ROOT, transform, clip, false, 0);
+	}
+
+	/**
+	 * Replays only commands in the requested effective viewport layer.
+	 * Commands without a layer, and commands inherited into other layers, are skipped.
+	 */
+	public ReplayStats replayLayer (GC gc, int layer, Affine transform, Rectangle clip) {
+		return replay (gc, ROOT, transform, clip, true, layer);
+	}
+
+	/**
+	 * Replays viewport layers in caller-supplied back-to-front order.
+	 *
+	 * <p>This mirrors draw-channel/layer scheduling used by immediate-mode and GPU
+	 * renderers without changing ordinary {@link #replay(GC)} semantics.</p>
+	 */
+	public ReplayStats replayLayers (GC gc, int [] orderedLayers, Affine transform, Rectangle clip) {
+		Objects.requireNonNull (orderedLayers, "orderedLayers");
+		int visited = 0, drawn = 0, culled = 0, switches = 0;
+		for (int layer : orderedLayers) {
+			ReplayStats stats = replayLayer (gc, layer, transform, clip);
+			visited += stats.visitedNodes ();
+			drawn += stats.drawnCommands ();
+			culled += stats.culledCommands ();
+			switches += stats.transformSwitches ();
+		}
+		return new ReplayStats (visited, drawn, culled, switches);
 	}
 
 	public ReplayStats replayTemplate (GC gc, int template, Affine transform, Rectangle clip) {
@@ -415,10 +442,12 @@ public final class ViewportPaintGraph {
 				|| parents [template] != DETACHED) {
 			throw new IllegalArgumentException ("not a detached template");
 		}
-		return replay (gc, template, transform, clip);
+		return replay (gc, template, transform, clip, false, 0);
 	}
 
-	private ReplayStats replay (GC gc, int start, Affine initialTransform, Rectangle clip) {
+	private ReplayStats replay (
+			GC gc, int start, Affine initialTransform, Rectangle clip,
+			boolean filterLayer, int requestedLayer) {
 		Objects.requireNonNull (gc, "gc");
 		Objects.requireNonNull (initialTransform, "initialTransform");
 		if (gc.isDisposed ()) throw new IllegalArgumentException ("disposed GC");
@@ -426,10 +455,14 @@ public final class ViewportPaintGraph {
 		int initialCapacity = Math.max (16, nodeCount);
 		int [] nodeStack = new int [initialCapacity];
 		Affine [] transformStack = new Affine [initialCapacity];
+		int [] layerStack = new int [initialCapacity];
+		boolean [] hasLayerStack = new boolean [initialCapacity];
 		int stackSize = 0;
 
 		nodeStack [stackSize] = start;
-		transformStack [stackSize++] = initialTransform;
+		transformStack [stackSize] = initialTransform;
+		layerStack [stackSize] = 0;
+		hasLayerStack [stackSize++] = false;
 
 		Transform saved = null;
 		Transform work = null;
@@ -444,19 +477,31 @@ public final class ViewportPaintGraph {
 			while (stackSize != 0) {
 				int node = nodeStack [--stackSize];
 				Affine transform = transformStack [stackSize];
+				int inheritedLayer = layerStack [stackSize];
+				boolean hasInheritedLayer = hasLayerStack [stackSize];
 				visited++;
 
 				switch (kinds [node]) {
 					case GROUP -> {
 						Affine next = transform;
 						if (transformIds [node] != 0) next = transform.compose (transform (transformIds [node]));
+						boolean hasNextLayer = hasInheritedLayer;
+						int nextLayer = inheritedLayer;
+						if ((flags [node] & HAS_LAYER) != 0) {
+							hasNextLayer = true;
+							nextLayer = layers [node];
+						}
 						for (int child = lastChild [node]; child != NONE; child = previousSibling [child]) {
 							if (stackSize == nodeStack.length) {
 								nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
 								transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
+								layerStack = Arrays.copyOf (layerStack, layerStack.length * 2);
+								hasLayerStack = Arrays.copyOf (hasLayerStack, hasLayerStack.length * 2);
 							}
 							nodeStack [stackSize] = child;
-							transformStack [stackSize++] = next;
+							transformStack [stackSize] = next;
+							layerStack [stackSize] = nextLayer;
+							hasLayerStack [stackSize++] = hasNextLayer;
 						}
 					}
 					case INSTANCE -> {
@@ -464,11 +509,18 @@ public final class ViewportPaintGraph {
 						if (stackSize == nodeStack.length) {
 							nodeStack = Arrays.copyOf (nodeStack, nodeStack.length * 2);
 							transformStack = Arrays.copyOf (transformStack, transformStack.length * 2);
+							layerStack = Arrays.copyOf (layerStack, layerStack.length * 2);
+							hasLayerStack = Arrays.copyOf (hasLayerStack, hasLayerStack.length * 2);
 						}
 						nodeStack [stackSize] = targets [node];
-						transformStack [stackSize++] = next;
+						transformStack [stackSize] = next;
+						layerStack [stackSize] = inheritedLayer;
+						hasLayerStack [stackSize++] = hasInheritedLayer;
 					}
 					default -> {
+						if (filterLayer && (!hasInheritedLayer || inheritedLayer != requestedLayer)) {
+							continue;
+						}
 						if (clip != null && transform.isIntegralTranslation ()
 								&& outsideClip (node, transform, clip)) {
 							culled++;
