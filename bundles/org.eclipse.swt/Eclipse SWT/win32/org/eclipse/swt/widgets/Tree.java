@@ -337,6 +337,44 @@ int virtualChildCount (TreeItem parentItem) {
 	return virtualChildCount (parentItem == null ? OS.TVI_ROOT : parentItem.handle);
 }
 
+boolean virtualFlag (TreeItem item, long flag) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return false;
+	int id = virtualItemId (item);
+	return id >= 0 && virtualTopology.contains (id) && virtualTopology.flag (id, flag);
+}
+
+void virtualFlag (TreeItem item, long flag, boolean value) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	int id = virtualItemId (item);
+	if (id >= 0 && virtualTopology.contains (id)) virtualTopology.flag (id, flag, value);
+}
+
+void pinVirtualFacade (TreeItem item) {
+	virtualFlag (item, VirtualItemState.PINNED, true);
+}
+
+TreeItem exposeVirtualItem (TreeItem item) {
+	if (item != null && virtualTopology != null) pinVirtualFacade (item);
+	return item;
+}
+
+TreeItem [] exposeVirtualItems (TreeItem [] result) {
+	if (virtualTopology != null) {
+		for (TreeItem item : result) {
+			if (item != null) pinVirtualFacade (item);
+		}
+	}
+	return result;
+}
+
+void syncVirtualCheckState (TreeItem item, int stateImage) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	pinVirtualFacade (item);
+	virtualFlag (item, VirtualItemState.CHECKED, (stateImage & 0x1) == 0);
+	virtualFlag (item, VirtualItemState.GRAYED, stateImage > 2);
+	virtualFlag (item, VirtualItemState.CACHED, true);
+}
+
 @Override
 void _removeListener (int eventType, Listener listener) {
 	super._removeListener (eventType, listener);
@@ -847,6 +885,7 @@ LRESULT CDDS_ITEMPOSTPAINT (NMTVCUSTOMDRAW nmcd, long wParam, long lParam) {
 						data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
 						GC gc = createNewGC(hDC, data);
 						Event event = new Event ();
+						pinVirtualFacade (item);
 						event.item = item;
 						event.index = index;
 						event.gc = gc;
@@ -1062,6 +1101,7 @@ LRESULT CDDS_ITEMPOSTPAINT (NMTVCUSTOMDRAW nmcd, long wParam, long lParam) {
 				data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
 				GC gc = createNewGC(hDC, data);
 				Event event = new Event ();
+				pinVirtualFacade (item);
 				event.item = item;
 				event.index = index;
 				event.gc = gc;
@@ -1283,6 +1323,7 @@ LRESULT CDDS_ITEMPREPAINT (NMTVCUSTOMDRAW nmcd, long wParam, long lParam) {
 			GC gc = createNewGC(hDC, data);
 			Event event = new Event ();
 			event.index = index;
+			pinVirtualFacade (item);
 			event.item = item;
 			event.gc = gc;
 			event.detail |= SWT.FOREGROUND;
@@ -1862,7 +1903,7 @@ void checkBuffered () {
 
 boolean checkData (TreeItem item, boolean redraw) {
 	if ((style & SWT.VIRTUAL) == 0) return true;
-	if (!item.cached) {
+	if (!item.isCachedState ()) {
 		TreeItem parentItem = item.getParentItem ();
 		return checkData (item, parentItem == null ? indexOf (item) : parentItem.indexOf (item), redraw);
 	}
@@ -1871,9 +1912,11 @@ boolean checkData (TreeItem item, boolean redraw) {
 
 boolean checkData (TreeItem item, int index, boolean redraw) {
 	if ((style & SWT.VIRTUAL) == 0) return true;
-	if (!item.cached) {
-		item.cached = true;
+	if (!item.isCachedState ()) {
+		pinVirtualFacade (item);
+		item.setCachedState (true);
 		Event event = new Event ();
+		pinVirtualFacade (item);
 		event.item = item;
 		event.index = index;
 		TreeItem oldItem = currentItem;
@@ -1968,7 +2011,7 @@ void clear (long hItem, TVITEM tvItem) {
 		item = tvItem.lParam != -1 ? items [(int)tvItem.lParam] : null;
 	}
 	if (item != null) {
-		if ((style & SWT.VIRTUAL) != 0 && !item.cached) return;
+		if ((style & SWT.VIRTUAL) != 0 && !item.isCachedState ()) return;
 		item.clear ();
 		item.redraw ();
 	}
@@ -3451,7 +3494,7 @@ public TreeItem getItem (int index) {
 	if (hFirstItem == 0) error (SWT.ERROR_INVALID_RANGE);
 	long hItem = findItem (hFirstItem, index);
 	if (hItem == 0) error (SWT.ERROR_INVALID_RANGE);
-	return _getItem (hItem);
+	return exposeVirtualItem (_getItem (hItem));
 }
 
 TreeItem getItem (NMTVCUSTOMDRAW nmcd) {
@@ -3522,7 +3565,7 @@ TreeItem getItemInPixels (Point point) {
 				}
 			}
 		}
-		if ((lpht.flags & flags) != 0) return _getItem (lpht.hItem);
+		if ((lpht.flags & flags) != 0) return exposeVirtualItem (_getItem (lpht.hItem));
 	}
 	return null;
 }
@@ -3607,7 +3650,7 @@ public TreeItem [] getItems () {
 	checkWidget ();
 	long hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_ROOT, 0);
 	if (hItem == 0) return new TreeItem [0];
-	return getItems (hItem);
+	return exposeVirtualItems (getItems (hItem));
 }
 
 TreeItem [] getItems (long hTreeItem) {
@@ -3776,7 +3819,7 @@ public TreeItem [] getSelection () {
 		if ((tvItem.state & OS.TVIS_SELECTED) == 0) return new TreeItem [0];
 		TreeItem item = _getItem (tvItem.hItem, (int)tvItem.lParam);
 		if (item == null) return new TreeItem [0];
-		return new TreeItem [] {item};
+		return exposeVirtualItems (new TreeItem [] {item});
 	}
 	int count = 0;
 	TreeItem [] guess = new TreeItem [(style & SWT.VIRTUAL) != 0 ? 8 : 1];
@@ -3801,11 +3844,11 @@ public TreeItem [] getSelection () {
 	}
 	OS.SetWindowLongPtr (handle, OS.GWLP_WNDPROC, oldProc);
 	if (count == 0) return new TreeItem [0];
-	if (count == guess.length) return guess;
+	if (count == guess.length) return exposeVirtualItems (guess);
 	TreeItem [] result = new TreeItem [count];
 	if (count < guess.length) {
 		System.arraycopy (guess, 0, result, 0, count);
-		return result;
+		return exposeVirtualItems (result);
 	}
 	OS.SetWindowLongPtr (handle, OS.GWLP_WNDPROC, TreeProc);
 	TVITEM tvItem = new TVITEM ();
@@ -3822,7 +3865,7 @@ public TreeItem [] getSelection () {
 		result = newResult;
 	}
 	OS.SetWindowLongPtr (handle, OS.GWLP_WNDPROC, oldProc);
-	return result;
+	return exposeVirtualItems (result);
 }
 
 /**
@@ -3926,7 +3969,7 @@ public int getSortDirection () {
 public TreeItem getTopItem () {
 	checkWidget ();
 	long hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_FIRSTVISIBLE, 0);
-	return hItem != 0 ? _getItem (hItem) : null;
+	return hItem != 0 ? exposeVirtualItem (_getItem (hItem)) : null;
 }
 
 boolean hitTestSelection (long hItem, int x, int y) {
@@ -4763,6 +4806,7 @@ Event sendEraseItemEvent (TreeItem item, NMTTCUSTOMDRAW nmcd, int column, RECT c
 	data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
 	GC gc = createNewGC(nmcd.hdc, data);
 	Event event = new Event ();
+	pinVirtualFacade (item);
 	event.item = item;
 	event.index = column;
 	event.gc = gc;
@@ -4785,6 +4829,7 @@ Event sendMeasureItemEvent (TreeItem item, int index, long hDC, int detail) {
 	data.font = item.getFont (index);
 	GC gc = createNewGC(hDC, data);
 	Event event = new Event ();
+	pinVirtualFacade (item);
 	event.item = item;
 	event.gc = gc;
 	event.index = index;
@@ -4819,6 +4864,7 @@ Event sendPaintItemEvent (TreeItem item, NMTTCUSTOMDRAW nmcd, int column, RECT i
 	data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
 	GC gc = createNewGC(nmcd.hdc, data);
 	Event event = new Event ();
+	pinVirtualFacade (item);
 	event.item = item;
 	event.index = column;
 	event.gc = gc;
@@ -6387,6 +6433,7 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 					}
 					tvItem.state = state << 12;
 					OS.SendMessage (handle, OS.TVM_SETITEM, 0, tvItem);
+					syncVirtualCheckState (_getItem (tvItem.hItem, (int)tvItem.lParam), state);
 					long id = OS.SendMessage (handle, OS.TVM_MAPHTREEITEMTOACCID, hItem, 0);
 					OS.NotifyWinEvent (OS.EVENT_OBJECT_FOCUS, handle, OS.OBJID_CLIENT, (int)id);
 				}
@@ -6404,10 +6451,12 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 				OS.SendMessage (handle, OS.TVM_SETITEM, 0, tvItem);
 				TreeItem item = _getItem (hItem, (int)tvItem.lParam);
 				Event event = new Event ();
+				pinVirtualFacade (item);
 				event.item = item;
 				sendSelectionEvent (SWT.Selection, event, false);
 				if ((style & SWT.CHECK) != 0) {
 					event = new Event ();
+					pinVirtualFacade (item);
 					event.item = item;
 					event.detail = SWT.CHECK;
 					sendSelectionEvent (SWT.Selection, event, false);
@@ -6426,7 +6475,7 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 			*/
 			Event event = new Event ();
 			long hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0);
-			if (hItem != 0) event.item = _getItem (hItem);
+			if (hItem != 0) event.item = exposeVirtualItem (_getItem (hItem));
 			sendSelectionEvent (SWT.DefaultSelection, event, false);
 			return LRESULT.ZERO;
 		}
@@ -6731,10 +6780,11 @@ LRESULT WM_LBUTTONDBLCLK (long wParam, long lParam) {
 				}
 				tvItem.state = state << 12;
 				OS.SendMessage (handle, OS.TVM_SETITEM, 0, tvItem);
+				syncVirtualCheckState (_getItem (tvItem.hItem, (int)tvItem.lParam), state);
 				long id = OS.SendMessage (handle, OS.TVM_MAPHTREEITEMTOACCID, tvItem.hItem, 0);
 				OS.NotifyWinEvent (OS.EVENT_OBJECT_FOCUS, handle, OS.OBJID_CLIENT, (int)id);
 				Event event = new Event ();
-				event.item = _getItem (tvItem.hItem, (int)tvItem.lParam);
+				event.item = exposeVirtualItem (_getItem (tvItem.hItem, (int)tvItem.lParam));
 				event.detail = SWT.CHECK;
 				sendSelectionEvent (SWT.Selection, event, false);
 				return LRESULT.ZERO;
@@ -6757,7 +6807,7 @@ LRESULT WM_LBUTTONDBLCLK (long wParam, long lParam) {
 		}
 		if ((lpht.flags & flags) != 0) {
 			Event event = new Event ();
-			event.item = _getItem (lpht.hItem);
+			event.item = exposeVirtualItem (_getItem (lpht.hItem));
 			sendSelectionEvent (SWT.DefaultSelection, event, false);
 		}
 	}
@@ -6859,7 +6909,7 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 		}
 		if (deselected) {
 			Event event = new Event ();
-			event.item = _getItem (lpht.hItem);
+			event.item = exposeVirtualItem (_getItem (lpht.hItem));
 			sendSelectionEvent (SWT.Selection, event, false);
 		}
 		return new LRESULT (code);
@@ -6893,10 +6943,11 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 			}
 			tvItem.state = state << 12;
 			OS.SendMessage (handle, OS.TVM_SETITEM, 0, tvItem);
+			syncVirtualCheckState (_getItem (tvItem.hItem, (int)tvItem.lParam), state);
 			long id = OS.SendMessage (handle, OS.TVM_MAPHTREEITEMTOACCID, tvItem.hItem, 0);
 			OS.NotifyWinEvent (OS.EVENT_OBJECT_FOCUS, handle, OS.OBJID_CLIENT, (int)id);
 			Event event = new Event ();
-			event.item = _getItem (tvItem.hItem, (int)tvItem.lParam);
+			event.item = exposeVirtualItem (_getItem (tvItem.hItem, (int)tvItem.lParam));
 			event.detail = SWT.CHECK;
 			sendSelectionEvent (SWT.Selection, event, false);
 			return LRESULT.ZERO;
@@ -7134,7 +7185,7 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
 		OS.SendMessage (handle, OS.TVM_GETITEM, 0, tvItem);
 		Event event = new Event ();
-		event.item = _getItem (tvItem.hItem, (int)tvItem.lParam);
+		event.item = exposeVirtualItem (_getItem (tvItem.hItem, (int)tvItem.lParam));
 		sendSelectionEvent (SWT.Selection, event, false);
 	}
 	gestureCompleted = false;
@@ -7643,7 +7694,7 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				*/
 				if (!ignoreShrink) {
 					if (items != null && lptvdi.lParam != -1) {
-						if (items [(int)lptvdi.lParam] != null && items [(int)lptvdi.lParam].cached) {
+						if (items [(int)lptvdi.lParam] != null && items [(int)lptvdi.lParam].isCachedState ()) {
 							checkVisible = false;
 						}
 					}
@@ -7703,11 +7754,11 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			*/
 			if (item == null) break;
 			if (item.isDisposed ()) break;
-			if (!item.cached) {
+			if (!item.isCachedState ()) {
 				if ((style & SWT.VIRTUAL) != 0) {
 					if (!checkData (item, false)) break;
 				}
-				if (painted) item.cached = true;
+				if (painted) item.setCachedState (true);
 			}
 			int index = 0;
 			if (hwndHeader != 0) {
@@ -7871,7 +7922,7 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				TVITEM tvItem = treeView.itemNew;
 				hAnchor = tvItem.hItem;
 				Event event = new Event ();
-				event.item = _getItem (tvItem.hItem, (int)tvItem.lParam);
+				event.item = exposeVirtualItem (_getItem (tvItem.hItem, (int)tvItem.lParam));
 				sendSelectionEvent (SWT.Selection, event, false);
 			}
 			updateScrollBar ();
@@ -7909,7 +7960,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				if (items == null) break;
 				TreeItem item = _getItem (tvItem.hItem, (int)tvItem.lParam);
 				if (item == null) break;
+				pinVirtualFacade (item);
 				Event event = new Event ();
+				pinVirtualFacade (item);
 				event.item = item;
 				switch (treeView.action) {
 					case OS.TVE_EXPAND:
@@ -7944,6 +7997,15 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			//FALL THROUGH
 		}
 		case OS.TVN_ITEMEXPANDED: {
+			if (virtualTopology != null) {
+				NMTREEVIEW treeView = new NMTREEVIEW ();
+				OS.MoveMemory (treeView, lParam, NMTREEVIEW.sizeof);
+				TVITEM tvItem = treeView.itemNew;
+				if (tvItem.hItem != 0) {
+					TreeItem item = _getItem (tvItem.hItem, (int)tvItem.lParam);
+					if (item != null) item.setExpandedState ((tvItem.state & OS.TVIS_EXPANDED) != 0);
+				}
+			}
 			if ((style & SWT.VIRTUAL) != 0) style |= SWT.DOUBLE_BUFFERED;
 			if (hooks (SWT.EraseItem) || hooks (SWT.PaintItem)) style |= SWT.DOUBLE_BUFFERED;
 			if (findImageControl () != null && getDrawing () /*&& OS.IsWindowVisible (handle)*/) {

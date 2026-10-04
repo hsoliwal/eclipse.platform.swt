@@ -185,6 +185,76 @@ static TreeItem checkNull (TreeItem item) {
 	return item;
 }
 
+boolean isCachedState () {
+	if ((parent.style & SWT.VIRTUAL) == 0) return cached;
+	return parent.virtualFlag (this, VirtualItemState.CACHED);
+}
+
+void setCachedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		cached = value;
+		return;
+	}
+	parent.virtualFlag (this, VirtualItemState.CACHED, value);
+}
+
+boolean isCheckedState () {
+	if ((parent.style & SWT.VIRTUAL) != 0) return parent.virtualFlag (this, VirtualItemState.CHECKED);
+	long hwnd = parent.handle;
+	TVITEM tvItem = new TVITEM ();
+	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
+	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
+	tvItem.hItem = handle;
+	long result = OS.SendMessage (hwnd, OS.TVM_GETITEM, 0, tvItem);
+	return (result != 0) && (((tvItem.state >> 12) & 1) == 0);
+}
+
+void setCheckedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) != 0) parent.virtualFlag (this, VirtualItemState.CHECKED, value);
+}
+
+boolean isGrayedState () {
+	if ((parent.style & SWT.VIRTUAL) != 0) return parent.virtualFlag (this, VirtualItemState.GRAYED);
+	long hwnd = parent.handle;
+	TVITEM tvItem = new TVITEM ();
+	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
+	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
+	tvItem.hItem = handle;
+	long result = OS.SendMessage (hwnd, OS.TVM_GETITEM, 0, tvItem);
+	return (result != 0) && ((tvItem.state >> 12) > 2);
+}
+
+void setGrayedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) != 0) parent.virtualFlag (this, VirtualItemState.GRAYED, value);
+}
+
+boolean isExpandedState () {
+	if ((parent.style & SWT.VIRTUAL) != 0) return parent.virtualFlag (this, VirtualItemState.EXPANDED);
+	int state = (int)OS.SendMessage (parent.handle, OS.TVM_GETITEMSTATE, handle, OS.TVIS_EXPANDED);
+	return (state & OS.TVIS_EXPANDED) != 0;
+}
+
+void setExpandedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) != 0) parent.virtualFlag (this, VirtualItemState.EXPANDED, value);
+}
+
+void pinVirtualFacade () {
+	if ((parent.style & SWT.VIRTUAL) != 0) parent.pinVirtualFacade (this);
+}
+
+void updateNativeVirtualCheckState () {
+	long hwnd = parent.handle;
+	TVITEM tvItem = new TVITEM ();
+	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
+	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
+	tvItem.hItem = handle;
+	int state = 1;
+	if (isCheckedState ()) state++;
+	if (isGrayedState ()) state += 2;
+	tvItem.state = state << 12;
+	OS.SendMessage (hwnd, OS.TVM_SETITEM, 0, tvItem);
+}
+
 static long findPrevious (Tree parent, int index) {
 	if (parent == null) return 0;
 	if (index < 0) SWT.error (SWT.ERROR_INVALID_RANGE);
@@ -231,7 +301,11 @@ void clear () {
 	font = null;
 	cellBackground = cellForeground = null;
 	cellFont = null;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = false;
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		setCheckedState (false);
+		setGrayedState (false);
+		setCachedState (false);
+	}
 }
 
 /**
@@ -550,13 +624,7 @@ public boolean getChecked () {
 	checkWidget ();
 	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	long hwnd = parent.handle;
-	TVITEM tvItem = new TVITEM ();
-	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
-	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
-	tvItem.hItem = handle;
-	long result = OS.SendMessage (hwnd, OS.TVM_GETITEM, 0, tvItem);
-	return (result != 0) && (((tvItem.state >> 12) & 1) == 0);
+	return isCheckedState ();
 }
 
 /**
@@ -572,15 +640,7 @@ public boolean getChecked () {
  */
 public boolean getExpanded () {
 	checkWidget ();
-	long hwnd = parent.handle;
-	/*
-	* Bug in Windows.  Despite the fact that TVM_GETITEMSTATE claims
-	* to return only the bits specified by the stateMask, when called
-	* with TVIS_EXPANDED, the entire state is returned.  The fix is
-	* to explicitly check for the TVIS_EXPANDED bit.
-	*/
-	int state = (int)OS.SendMessage (hwnd, OS.TVM_GETITEMSTATE, handle, OS.TVIS_EXPANDED);
-	return (state & OS.TVIS_EXPANDED) != 0;
+	return isExpandedState ();
 }
 
 /**
@@ -682,13 +742,7 @@ public boolean getGrayed () {
 	checkWidget ();
 	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
 	if ((parent.style & SWT.CHECK) == 0) return false;
-	long hwnd = parent.handle;
-	TVITEM tvItem = new TVITEM ();
-	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
-	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
-	tvItem.hItem = handle;
-	long result = OS.SendMessage (hwnd, OS.TVM_GETITEM, 0, tvItem);
-	return (result != 0) && ((tvItem.state >> 12) > 2);
+	return isGrayedState ();
 }
 
 /**
@@ -717,7 +771,7 @@ public TreeItem getItem (int index) {
 	if (hFirstItem == 0) error (SWT.ERROR_INVALID_RANGE);
 	long hItem = parent.findItem (hFirstItem, index);
 	if (hItem == 0) error (SWT.ERROR_INVALID_RANGE);
-	return parent._getItem (hItem);
+	return parent.exposeVirtualItem (parent._getItem (hItem));
 }
 
 /**
@@ -759,7 +813,7 @@ public TreeItem [] getItems () {
 	long hwnd = parent.handle;
 	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
 	if (hItem == 0) return new TreeItem [0];
-	return parent.getItems (hItem);
+	return parent.exposeVirtualItems (parent.getItems (hItem));
 }
 
 @Override
@@ -851,7 +905,7 @@ public TreeItem getParentItem () {
 	checkWidget ();
 	long hwnd = parent.handle;
 	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_PARENT, handle);
-	return hItem != 0 ? parent._getItem (hItem) : null;
+	return hItem != 0 ? parent.exposeVirtualItem (parent._getItem (hItem)) : null;
 }
 
 @Override
@@ -1078,7 +1132,7 @@ public void setBackground (Color color) {
 	}
 	if (background == pixel) return;
 	background = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	redraw ();
 }
 
@@ -1120,7 +1174,7 @@ public void setBackground (int index, Color color) {
 	}
 	if (cellBackground [index] == pixel) return;
 	cellBackground [index] = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	redraw (index, true, true);
 }
 
@@ -1138,6 +1192,19 @@ public void setChecked (boolean checked) {
 	checkWidget ();
 	if ((parent.style & SWT.CHECK) == 0) return;
 	long hwnd = parent.handle;
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		if (isCheckedState () == checked) return;
+		setCheckedState (checked);
+		setCachedState (true);
+		updateNativeVirtualCheckState ();
+		if (parent.currentItem == this && OS.IsWindowVisible (hwnd)) {
+			RECT rect = new RECT ();
+			if (OS.TreeView_GetItemRect (hwnd, handle, rect, false)) {
+				OS.InvalidateRect (hwnd, rect, true);
+			}
+		}
+		return;
+	}
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
 	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
@@ -1151,23 +1218,8 @@ public void setChecked (boolean checked) {
 	}
 	state <<= 12;
 	if (tvItem.state == state) return;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
 	tvItem.state = state;
 	OS.SendMessage (hwnd, OS.TVM_SETITEM, 0, tvItem);
-	/*
-	* Bug in Windows.  When TVM_SETITEM is used to set
-	* the state image of an item inside TVN_GETDISPINFO,
-	* the new state is not redrawn.  The fix is to force
-	* a redraw.
-	*/
-	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (parent.currentItem == this && OS.IsWindowVisible (hwnd)) {
-			RECT rect = new RECT ();
-			if (OS.TreeView_GetItemRect (hwnd, handle, rect, false)) {
-				OS.InvalidateRect (hwnd, rect, true);
-			}
-		}
-	}
 }
 
 /**
@@ -1195,7 +1247,10 @@ public void setExpanded (boolean expanded) {
 	* to explicitly check for the TVIS_EXPANDED bit.
 	*/
 	int state = (int)OS.SendMessage (hwnd, OS.TVM_GETITEMSTATE, handle, OS.TVIS_EXPANDED);
-	if (((state & OS.TVIS_EXPANDED) != 0) == expanded) return;
+	if (((state & OS.TVIS_EXPANDED) != 0) == expanded) {
+		setExpandedState (expanded);
+		return;
+	}
 
 	/*
 	* Feature in Windows.  When TVM_EXPAND is used to expand
@@ -1272,6 +1327,7 @@ public void setExpanded (boolean expanded) {
 	parent.ignoreExpand = true;
 	OS.SendMessage (hwnd, OS.TVM_EXPAND, expanded ? OS.TVE_EXPAND : OS.TVE_COLLAPSE, handle);
 	parent.ignoreExpand = false;
+	setExpandedState (expanded);
 
 	/* Scroll back to the top item */
 	if (noScroll && hTopItem != 0) {
@@ -1386,7 +1442,7 @@ public void setFont (Font font){
 	this.font = newFont;
 	if (oldFont != null && oldFont.equals (font)) return;
 	if (font != null) parent.customDraw = true;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	/*
 	* Bug in Windows.  When the font is changed for an item,
 	* the bounds for the item are not updated, causing the text
@@ -1440,7 +1496,7 @@ public void setFont (int index, Font font) {
 	cellFont [index] = font == null ? font : Font.win32_new(font, nativeZoom);
 	if (oldFont != null && oldFont.equals (font)) return;
 	if (font != null) parent.customDraw = true;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	/*
 	* Bug in Windows.  When the font is changed for an item,
 	* the bounds for the item are not updated, causing the text
@@ -1491,7 +1547,7 @@ public void setForeground (Color color) {
 	}
 	if (foreground == pixel) return;
 	foreground = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	redraw ();
 }
 
@@ -1533,7 +1589,7 @@ public void setForeground (int index, Color color){
 	}
 	if (cellForeground [index] == pixel) return;
 	cellForeground [index] = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	redraw (index, true, false);
 }
 
@@ -1552,6 +1608,19 @@ public void setGrayed (boolean grayed) {
 	checkWidget ();
 	if ((parent.style & SWT.CHECK) == 0) return;
 	long hwnd = parent.handle;
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		if (isGrayedState () == grayed) return;
+		setGrayedState (grayed);
+		setCachedState (true);
+		updateNativeVirtualCheckState ();
+		if (parent.currentItem == this && OS.IsWindowVisible (hwnd)) {
+			RECT rect = new RECT ();
+			if (OS.TreeView_GetItemRect (hwnd, handle, rect, false)) {
+				OS.InvalidateRect (hwnd, rect, true);
+			}
+		}
+		return;
+	}
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
 	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
@@ -1565,23 +1634,8 @@ public void setGrayed (boolean grayed) {
 	}
 	state <<= 12;
 	if (tvItem.state == state) return;
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
 	tvItem.state = state;
 	OS.SendMessage (hwnd, OS.TVM_SETITEM, 0, tvItem);
-	/*
-	* Bug in Windows.  When TVM_SETITEM is used to set
-	* the state image of an item inside TVN_GETDISPINFO,
-	* the new state is not redrawn.  The fix is to force
-	* a redraw.
-	*/
-	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (parent.currentItem == this && OS.IsWindowVisible (hwnd)) {
-			RECT rect = new RECT ();
-			if (OS.TreeView_GetItemRect (hwnd, handle, rect, false)) {
-				OS.InvalidateRect (hwnd, rect, true);
-			}
-		}
-	}
 }
 
 /**
@@ -1650,7 +1704,7 @@ public void setImage (int index, Image image) {
 		oldImage = images [index];
 		images [index] = image;
 	}
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 
 	/* Ensure that the image list is created */
 	//TODO - items that are not in column zero don't need to be in the image list
@@ -1773,7 +1827,7 @@ public void setText (int index, String string) {
 		if (string.equals (strings [index])) return;
 		strings [index] = string;
 	}
-	if ((parent.style & SWT.VIRTUAL) != 0) cached = true;
+	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
 	if (index == 0) {
 		if ((parent.style & SWT.VIRTUAL) == 0 && !cached && !parent.painted) {
 			return;
@@ -1804,7 +1858,7 @@ public void setText (String string) {
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (!cached) return "*virtual*"; //$NON-NLS-1$
+		if (!isCachedState ()) return "*virtual*"; //$NON-NLS-1$
 	}
 	return super.getNameText ();
 }
