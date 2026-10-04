@@ -549,6 +549,86 @@ public final class ViewportPaintGraph {
 		return new ReplayStats (visited, drawn, culled, switches);
 	}
 
+	/**
+	 * Replays only damaged viewport regions while preserving the caller's exact
+	 * native GC clipping region.
+	 *
+	 * <p>Layer-specific damage is processed in {@code orderedLayers} z-order,
+	 * independent of invalidation arrival order. A bounded damage accumulator may
+	 * conservatively collapse to {@link ViewportDamageRegions#ALL_LAYERS}; in
+	 * that case one full-graph replay is performed through the union clip.</p>
+	 */
+	public ReplayStats replayDamage (
+			GC gc, ViewportDamageRegions damage, int [] orderedLayers, Affine transform) {
+		Objects.requireNonNull (gc, "gc");
+		Objects.requireNonNull (damage, "damage");
+		Objects.requireNonNull (orderedLayers, "orderedLayers");
+		Objects.requireNonNull (transform, "transform");
+		if (gc.isDisposed ()) throw new IllegalArgumentException ("disposed GC");
+		if (damage.isEmpty ()) return new ReplayStats (0, 0, 0, 0);
+
+		HashSet<Integer> layerOrder = new HashSet<> ();
+		for (int layer : orderedLayers) {
+			if (!layerOrder.add (layer)) throw new IllegalArgumentException ("duplicate viewport layer");
+		}
+		for (int index = 0; index < damage.count (); index++) {
+			int layer = damage.layerAt (index);
+			if (layer != ViewportDamageRegions.ALL_LAYERS && !layerOrder.contains (layer)) {
+				throw new IllegalArgumentException ("damage layer absent from orderedLayers: " + layer);
+			}
+		}
+
+		Region savedClip = new Region (gc.getDevice ());
+		Region regionClip = null;
+		Rectangle replayClip = new Rectangle (0, 0, 0, 0);
+		int visited = 0, drawn = 0, culled = 0, switches = 0;
+		try {
+			gc.getClipping (savedClip);
+			if (damage.count () == 1
+					&& damage.layerAt (0) == ViewportDamageRegions.ALL_LAYERS) {
+				replayClip.x = damage.xAt (0);
+				replayClip.y = damage.yAt (0);
+				replayClip.width = damage.widthAt (0);
+				replayClip.height = damage.heightAt (0);
+				regionClip = clippedRegion (gc, savedClip, replayClip);
+				if (regionClip.isEmpty ()) return new ReplayStats (0, 0, 0, 0);
+				gc.setClipping (regionClip);
+				return replay (gc, transform, replayClip);
+			}
+
+			for (int layer : orderedLayers) {
+				for (int index = 0; index < damage.count (); index++) {
+					if (damage.layerAt (index) != layer) continue;
+					replayClip.x = damage.xAt (index);
+					replayClip.y = damage.yAt (index);
+					replayClip.width = damage.widthAt (index);
+					replayClip.height = damage.heightAt (index);
+					if (regionClip != null) regionClip.dispose ();
+					regionClip = clippedRegion (gc, savedClip, replayClip);
+					if (regionClip.isEmpty ()) continue;
+					gc.setClipping (regionClip);
+					ReplayStats stats = replayLayer (gc, layer, transform, replayClip);
+					visited += stats.visitedNodes ();
+					drawn += stats.drawnCommands ();
+					culled += stats.culledCommands ();
+					switches += stats.transformSwitches ();
+				}
+			}
+			return new ReplayStats (visited, drawn, culled, switches);
+		} finally {
+			if (!gc.isDisposed ()) gc.setClipping (savedClip);
+			if (regionClip != null && !regionClip.isDisposed ()) regionClip.dispose ();
+			if (!savedClip.isDisposed ()) savedClip.dispose ();
+		}
+	}
+
+	private static Region clippedRegion (GC gc, Region savedClip, Rectangle damage) {
+		Region clip = new Region (gc.getDevice ());
+		clip.add (damage);
+		clip.intersect (savedClip);
+		return clip;
+	}
+
 	public ReplayStats replayTemplate (GC gc, int template, Affine transform, Rectangle clip) {
 		if (template <= ROOT || template >= nodeCount || kinds [template] != GROUP
 				|| parents [template] != DETACHED) {
