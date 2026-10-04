@@ -158,15 +158,18 @@ final class ViewportPaintGraph {
 	}
 
 	private void markDirtyAndDependants (int start) {
+		if (!isDirty (start)) setDirty (start, true);
 		int [] stack = new int [Math.max (4, nodeCount)];
 		int size = 0;
 		stack [size++] = start;
 		while (size != 0) {
 			int node = stack [--size];
-			if (!isDirty (node)) setDirty (node, true);
 			for (int edge = firstOutgoing [node]; edge >= 0; edge = edgeNext [edge]) {
 				int dependant = edgeTo [edge];
-				if (!isDirty (dependant)) stack [size++] = dependant;
+				if (!isDirty (dependant)) {
+					setDirty (dependant, true);
+					stack [size++] = dependant;
+				}
 			}
 		}
 	}
