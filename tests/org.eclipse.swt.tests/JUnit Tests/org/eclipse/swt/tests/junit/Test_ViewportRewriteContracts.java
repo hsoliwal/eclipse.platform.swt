@@ -161,7 +161,9 @@ public class Test_ViewportRewriteContracts {
 
 	@Test
 	public void virtualTableTextDirectionPreservesSparseItemsAndExplicitPinning() throws Exception {
-		Display display = new Display();
+		Display display = Display.getCurrent();
+		boolean ownsDisplay = display == null;
+		if (ownsDisplay) display = new Display();
 		try {
 			Shell shell = new Shell(display);
 			try {
@@ -188,13 +190,15 @@ public class Test_ViewportRewriteContracts {
 				shell.dispose();
 			}
 		} finally {
-			display.dispose();
+			if (ownsDisplay) display.dispose();
 		}
 	}
 
 	@Test
 	public void virtualColumnsPackAndMeasureListenerKeepExposedIdentity() {
-		Display display = new Display();
+		Display display = Display.getCurrent();
+		boolean ownsDisplay = display == null;
+		if (ownsDisplay) display = new Display();
 		try {
 			Shell shell = new Shell(display);
 			try {
@@ -222,7 +226,7 @@ public class Test_ViewportRewriteContracts {
 				shell.dispose();
 			}
 		} finally {
-			display.dispose();
+			if (ownsDisplay) display.dispose();
 		}
 	}
 	@Test
