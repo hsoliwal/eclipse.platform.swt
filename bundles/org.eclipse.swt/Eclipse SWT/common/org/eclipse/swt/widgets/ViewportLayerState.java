@@ -65,6 +65,12 @@ final class ViewportLayerState {
 		return dirty;
 	}
 
+	static boolean intersectsViewport (int start, int extent, int viewportExtent) {
+		if (extent <= 0 || viewportExtent <= 0) return false;
+		long end = (long)start + extent;
+		return end > 0 && start < viewportExtent;
+	}
+
 	double originX () {
 		return originX;
 	}
