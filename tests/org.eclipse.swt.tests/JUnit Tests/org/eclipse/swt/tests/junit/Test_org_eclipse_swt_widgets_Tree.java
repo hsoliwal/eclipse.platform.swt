@@ -170,8 +170,9 @@ public void test_virtualTreeVisibleProjectionSkipsColdLogicalRanges() throws Exc
 
 
 @Test
-public void test_virtualGtkVisibleProjectionTracksExpansionIndependentlyOfResidency() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+public void test_virtualGtkAndWin32VisibleProjectionTracksExpansionIndependentlyOfResidency() throws Exception {
+	String platform = SWT.getPlatform();
+	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(100);
@@ -421,8 +422,9 @@ public void test_virtualTreeViewportUsesLogicalRowsAndBoundedOverscan() throws E
 }
 
 @Test
-public void test_virtualGtkSetTopItemMirrorsLogicalTopRow() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+public void test_virtualGtkAndWin32SetTopItemMirrorsLogicalTopRow() throws Exception {
+	String platform = SWT.getPlatform();
+	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(200);
@@ -439,7 +441,7 @@ public void test_virtualGtkSetTopItemMirrorsLogicalTopRow() throws Exception {
 	topRowMethod.setAccessible(true);
 	long topRow = (Long) topRowMethod.invoke(virtualTree);
 	assertEquals(120L, topRow,
-			"GTK setTopItem must mirror the public top item into logical visible-row coordinates");
+			"setTopItem must mirror the public top item into logical visible-row coordinates");
 	assertSame(item, virtualTree.getTopItem());
 }
 

@@ -80,6 +80,8 @@ import org.eclipse.swt.internal.win32.*;
 public class Tree extends Composite {
 	TreeItem [] items;
 	VirtualTreeTopology virtualTopology;
+	VirtualTreeVisibleProjection virtualProjection;
+	VirtualTreeViewport virtualViewport;
 	TreeColumn [] columns;
 	int columnCount;
 	ImageList imageList, headerImageList;
@@ -335,6 +337,56 @@ int virtualChildCount (long hParent) {
 
 int virtualChildCount (TreeItem parentItem) {
 	return virtualChildCount (parentItem == null ? OS.TVI_ROOT : parentItem.handle);
+}
+
+long virtualVisibleRowCount () {
+	return virtualProjection != null ? virtualProjection.visibleRowCount () : 0;
+}
+
+VirtualTreeVisibleProjection.Row [] virtualVisibleWindow (long firstVisible, int rowCount) {
+	return virtualProjection != null
+			? virtualProjection.window (firstVisible, rowCount)
+			: new VirtualTreeVisibleProjection.Row [0];
+}
+
+void updateVirtualViewportGeometry () {
+	if (virtualViewport == null) return;
+	RECT rect = new RECT ();
+	OS.GetClientRect (handle, rect);
+	int bodyHeight = Math.max (0, rect.bottom - rect.top);
+	virtualViewport.configureGeometry (Math.max (1, getItemHeightInPixels ()), bodyHeight);
+}
+
+void syncVirtualTopRowFromNative () {
+	if (virtualViewport == null) return;
+	updateVirtualViewportGeometry ();
+	long hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_FIRSTVISIBLE, 0);
+	if (hItem == 0) {
+		virtualViewport.setTopRow (0);
+		return;
+	}
+	TreeItem item = _getItem (hItem);
+	if (item == null || item.isDisposed ()) return;
+	int id = virtualItemId (item);
+	if (id >= 0) virtualViewport.setTopMaterializedId (id);
+}
+
+long virtualViewportTopRow () {
+	if (virtualViewport == null) return 0;
+	syncVirtualTopRowFromNative ();
+	return virtualViewport.topRow ();
+}
+
+VirtualTreeVisibleProjection.Row [] virtualViewportVisibleWindow () {
+	if (virtualViewport == null) return new VirtualTreeVisibleProjection.Row [0];
+	syncVirtualTopRowFromNative ();
+	return virtualViewport.visibleWindow ();
+}
+
+VirtualTreeVisibleProjection.Row [] virtualViewportPaintWindow () {
+	if (virtualViewport == null) return new VirtualTreeVisibleProjection.Row [0];
+	syncVirtualTopRowFromNative ();
+	return virtualViewport.paintWindow ();
 }
 
 boolean virtualFlag (TreeItem item, long flag) {
@@ -2626,7 +2678,11 @@ void createParent () {
 void createWidget () {
 	super.createWidget ();
 	items = new TreeItem [4];
-	if ((style & SWT.VIRTUAL) != 0) virtualTopology = new VirtualTreeTopology ();
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualTopology = new VirtualTreeTopology ();
+		virtualProjection = new VirtualTreeVisibleProjection (virtualTopology);
+		virtualViewport = new VirtualTreeViewport (virtualProjection);
+	}
 	columns = new TreeColumn [4];
 	cachedItemCount = -1;
 }
@@ -3968,6 +4024,7 @@ public int getSortDirection () {
  */
 public TreeItem getTopItem () {
 	checkWidget ();
+	if (virtualViewport != null) syncVirtualTopRowFromNative ();
 	long hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_FIRSTVISIBLE, 0);
 	return hItem != 0 ? exposeVirtualItem (_getItem (hItem)) : null;
 }
@@ -4268,6 +4325,8 @@ void releaseChildren (boolean destroy) {
 		items = null;
 	}
 	if (virtualTopology != null) virtualTopology.clear ();
+	virtualProjection = null;
+	virtualViewport = null;
 	if (columns != null) {
 		for (TreeColumn column : columns) {
 			if (column != null && !column.isDisposed ()) {
@@ -5579,7 +5638,13 @@ public void setTopItem (TreeItem item) {
 	if (item.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
 	long hItem = item.handle;
 	long hTopItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_FIRSTVISIBLE, 0);
-	if (hItem == hTopItem) return;
+	if (hItem == hTopItem) {
+		if (virtualViewport != null) {
+			updateVirtualViewportGeometry ();
+			virtualViewport.setTopMaterializedId (virtualItemId (item));
+		}
+		return;
+	}
 	boolean fixScroll = checkScroll (hItem), redraw = false;
 	if (fixScroll) {
 		OS.SendMessage (handle, OS.WM_SETREDRAW, 1, 0);
@@ -5616,6 +5681,10 @@ public void setTopItem (TreeItem item) {
 		}
 	}
 	updateScrollBar ();
+	if (virtualViewport != null) {
+		updateVirtualViewportGeometry ();
+		virtualViewport.setTopMaterializedId (virtualItemId (item));
+	}
 }
 
 /**
@@ -7264,6 +7333,7 @@ LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
 LRESULT WM_MOUSEWHEEL (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSEWHEEL (wParam, lParam);
 	if (itemToolTipHandle != 0) OS.ShowWindow (itemToolTipHandle, OS.SW_HIDE);
+	syncVirtualTopRowFromNative ();
 	return result;
 }
 
@@ -7591,6 +7661,7 @@ LRESULT WM_VSCROLL (long wParam, long lParam) {
 			OS.SendMessage (handle, OS.TVM_SETEXTENDEDSTYLE, OS.TVS_EX_DOUBLEBUFFER, OS.TVS_EX_DOUBLEBUFFER);
 		}
 	}
+	syncVirtualTopRowFromNative ();
 	if (result != null) return result;
 	return result;
 }
