@@ -53,6 +53,7 @@ on:
         type: string
         required: false
         default: ""
+
       viewport_screenshots:
         description: "Run the property-gated viewport screenshot regression after the build."
         type: boolean
