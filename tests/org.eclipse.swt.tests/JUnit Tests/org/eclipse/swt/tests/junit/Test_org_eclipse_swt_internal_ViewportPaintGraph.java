@@ -226,6 +226,35 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 		assertFalse (graph.mapFromRoot (node, 10, 10, new float [2]));
 	}
 
+
+	@Test
+	public void test_orderedLayerReplayFiltersAndPreservesBackToFrontSequence () {
+		ViewportPaintGraph graph = new ViewportPaintGraph ();
+		int body = graph.group (graph.root ());
+		graph.setLayer (body, 10);
+		graph.fillRectangle (body, 2, 2, 4, 4);
+
+		int header = graph.group (graph.root ());
+		graph.setLayer (header, 30);
+		graph.fillRectangle (header, 20, 2, 4, 4);
+
+		var headerOnly = graph.replayLayer (
+				gc, 30, Affine.IDENTITY, new Rectangle (0, 0, 64, 64));
+		assertEquals (1, headerOnly.drawnCommands ());
+		assertEquals (rgb (SWT.COLOR_WHITE), pixelRgb (3, 3));
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (21, 3));
+
+		gc.setBackground (display.getSystemColor (SWT.COLOR_WHITE));
+		gc.fillRectangle (image.getBounds ());
+		gc.setBackground (display.getSystemColor (SWT.COLOR_BLACK));
+
+		var layered = graph.replayLayers (
+				gc, new int[] {10, 30}, Affine.IDENTITY, new Rectangle (0, 0, 64, 64));
+		assertEquals (2, layered.drawnCommands ());
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (3, 3));
+		assertEquals (rgb (SWT.COLOR_BLACK), pixelRgb (21, 3));
+	}
+
 	private RGB pixelRgb (int x, int y) {
 		ImageData data = image.getImageData ();
 		int pixel = data.getPixel (x, y);
