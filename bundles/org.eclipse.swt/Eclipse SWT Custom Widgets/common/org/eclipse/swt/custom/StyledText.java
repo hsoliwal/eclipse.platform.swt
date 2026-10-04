@@ -1166,17 +1166,7 @@ void calculateTopIndex(int delta) {
  * Hides the scroll bars if widget is created in single line mode.
  */
 static int checkStyle(int style) {
-	if ((style & SWT.SINGLE) != 0) {
-		style &= ~(SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP | SWT.MULTI);
-	} else {
-		style |= SWT.MULTI;
-		if ((style & SWT.WRAP) != 0) {
-			style &= ~SWT.H_SCROLL;
-		}
-	}
-	style |= SWT.NO_REDRAW_RESIZE | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND;
-	/* Clear SWT.CENTER to avoid the conflict with SWT.EMBEDDED */
-	return style & ~SWT.CENTER;
+	return StylePolicy.STYLED_TEXT.applyAsInt(style);
 }
 /**
  * Scrolls down the text to use new space made available by a resize or by

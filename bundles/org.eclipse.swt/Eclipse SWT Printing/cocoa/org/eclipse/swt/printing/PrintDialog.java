@@ -95,6 +95,10 @@ public PrintDialog (Shell parent, int style) {
 }
 
 static int checkStyle (Shell parent, int style) {
+	return PrintDialog.m3NormalizeStyle(parent, style);
+}
+
+private static int m3NormalizeStyle(Shell parent, int style) {
 	int mask = SWT.PRIMARY_MODAL | SWT.APPLICATION_MODAL | SWT.SYSTEM_MODAL;
 	if ((style & SWT.SHEET) != 0) {
 		if (getSheetEnabled ()) {

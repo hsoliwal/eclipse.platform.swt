@@ -107,6 +107,10 @@ public GLCanvas (Composite parent, int style, GLData data) {
 }
 
 static int checkStyle(Composite parent, int style) {
+	return GLCanvas.m3NormalizeStyle(parent, style);
+}
+
+private static int m3NormalizeStyle(Composite parent, int style) {
 	if (parent != null) {
 		parent.getDisplay ().setData (USE_OWNDC_KEY, true);
 	}

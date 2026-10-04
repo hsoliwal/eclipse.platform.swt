@@ -237,8 +237,7 @@ long dndCallSuper (long id, long sel, long arg0) {
 }
 
 static int checkStyle (int style) {
-	if (style == SWT.NONE) return DND.DROP_MOVE;
-	return style;
+	return StylePolicy.normalize(style);
 }
 
 @Override

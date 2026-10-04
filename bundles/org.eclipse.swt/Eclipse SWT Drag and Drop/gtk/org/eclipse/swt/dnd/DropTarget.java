@@ -278,8 +278,7 @@ public DropTarget(Control control, int style) {
 }
 
 static int checkStyle (int style) {
-	if (style == SWT.NONE) return DND.DROP_MOVE;
-	return style;
+	return StylePolicy.normalize(style);
 }
 
 static long Drag_Data_Received ( long widget, long context, long x, long y, long data, long info, long time){

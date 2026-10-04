@@ -211,6 +211,10 @@ static Composite checkParent (Composite parent) {
 }
 
 static int checkStyle(int style) {
+	return Browser.m3NormalizeStyle(style);
+}
+
+private static int m3NormalizeStyle(int style) {
 	String platform = SWT.getPlatform ();
 	if (DefaultType == SWT.DEFAULT) {
 		/*

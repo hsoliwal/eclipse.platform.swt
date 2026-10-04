@@ -399,6 +399,10 @@ void onActivate(Event event) {
 }
 
 static int checkStyle (Composite parent, int style) {
+	return CTabFolder.m3NormalizeStyle(parent, style);
+}
+
+private static int m3NormalizeStyle(Composite parent, int style) {
 	int mask = SWT.CLOSE | SWT.TOP | SWT.BOTTOM | SWT.FLAT | SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT | SWT.SINGLE | SWT.MULTI;
 	style = style & mask;
 	// TOP and BOTTOM are mutually exclusive.

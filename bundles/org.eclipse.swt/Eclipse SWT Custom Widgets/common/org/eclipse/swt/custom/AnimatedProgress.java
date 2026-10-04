@@ -91,8 +91,7 @@ public AnimatedProgress(Composite parent, int style) {
 	addDisposeListener(e -> stop());
 }
 private static int checkStyle (int style) {
-	int mask = SWT.NONE;
-	return style & mask;
+	return StylePolicy.NONE.applyAsInt(style);
 }
 /**
  * Stop the animation if it is not already stopped and
