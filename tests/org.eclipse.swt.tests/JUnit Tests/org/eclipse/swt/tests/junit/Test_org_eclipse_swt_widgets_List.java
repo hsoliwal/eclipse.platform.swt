@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
+import java.lang.reflect.*;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -673,6 +675,30 @@ public void test_getTopIndex() {
 	list.setItems(items);
 	assertEquals(0, list.getTopIndex());
 
+}
+
+@Test
+public void test_viewportRuntimeMirrorsPublicTopIndex() throws Exception {
+	String[] items = new String [64];
+	for (int i = 0; i < items.length; i++) items[i] = "row-" + i;
+	list.setItems(items);
+
+	Field runtimeField = List.class.getDeclaredField("viewportRuntime");
+	runtimeField.setAccessible(true);
+	Object runtime = runtimeField.get(list);
+	assertTrue(runtime != null);
+
+	Method originY = runtime.getClass().getMethod("originY");
+
+	list.setTopIndex(12);
+	int actual = list.getTopIndex();
+	assertEquals(actual, ((Double) originY.invoke(runtime)).intValue(),
+			"List viewport runtime must mirror the public top-row coordinate");
+
+	list.setTopIndex(31);
+	actual = list.getTopIndex();
+	assertEquals(actual, ((Double) originY.invoke(runtime)).intValue(),
+			"programmatic List scrolling must keep the shared runtime synchronized");
 }
 
 @Test
