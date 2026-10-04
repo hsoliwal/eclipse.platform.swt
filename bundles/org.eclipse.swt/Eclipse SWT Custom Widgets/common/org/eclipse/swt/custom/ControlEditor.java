@@ -215,6 +215,7 @@ public void layout () {
 	// resizing the column takes the focus away
 	// before we get here
 	editor.setBounds (computeBounds ());
+	editor.moveAbove (null);
 	if (hadFocus) {
 		if (editor == null || editor.isDisposed()) return;
 		editor.setFocus ();
