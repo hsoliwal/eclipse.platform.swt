@@ -32,11 +32,27 @@ import org.junit.jupiter.api.*;
  * legacy JFace viewport/lazy-viewer and Virtual TreeView behavioral examples.
  * Donor source is not copied.</p>
  */
-public class ViewportScreenshotRegressionTest extends Test_org_eclipse_swt_widgets_Widget {
+public class ViewportScreenshotRegressionTest {
 	private static final String ENABLED = "swt.viewport.screenshotRegression";
 	private static final String OUTPUT = "swt.viewport.screenshots";
 	private static final int TABLE_ROWS = 2_000_000;
 	private static final int TREE_CHILDREN = 2_000;
+
+	private Shell shell;
+
+	@BeforeEach
+	void setUpShell () {
+		shell = new Shell ();
+	}
+
+	@AfterEach
+	void tearDownShell () {
+		Display display = shell != null && !shell.isDisposed () ? shell.getDisplay () : Display.getCurrent ();
+		if (shell != null && !shell.isDisposed ()) shell.dispose ();
+		while (display != null && !display.isDisposed () && display.readAndDispatch ()) {
+			// Flush native destroy/redraw work.
+		}
+	}
 
 	@Test
 	public void test_viewportScreenshotRegression () throws Exception {
