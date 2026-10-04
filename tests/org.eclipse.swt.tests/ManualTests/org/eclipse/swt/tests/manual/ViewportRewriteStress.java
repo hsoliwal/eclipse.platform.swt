@@ -54,6 +54,16 @@ public final class ViewportRewriteStress {
 	private record ScreenshotScenario (String name, Control target, Runnable prepare) {
 	}
 
+	private record ScrollLayoutSnapshot (
+			boolean horizontalVisible,
+			boolean verticalVisible,
+			boolean cornerVisible,
+			int bodyWidth,
+			int bodyHeight,
+			int headerWidth,
+			int visibleRows) {
+	}
+
 	private ViewportRewriteStress () {
 	}
 
@@ -428,6 +438,9 @@ public final class ViewportRewriteStress {
 
 		AtomicInteger horizontalOrigin = new AtomicInteger ();
 		AtomicInteger topRow = new AtomicInteger ();
+		AtomicInteger logicalRows = new AtomicInteger (CANVAS_ROWS);
+		AtomicInteger logicalWidth = new AtomicInteger (8 * 240);
+		AtomicReference<ScrollLayoutSnapshot> scrollLayout = new AtomicReference<> ();
 		AtomicLong bodyPaints = new AtomicLong ();
 		AtomicLong headerPaints = new AtomicLong ();
 		AtomicLong verticalEvents = new AtomicLong ();
@@ -440,8 +453,9 @@ public final class ViewportRewriteStress {
 		header.addListener (SWT.Paint, event -> {
 			headerPaints.incrementAndGet ();
 			int x = -horizontalOrigin.get ();
-			for (int column = 0; column < 8; column++) {
-				int width = 240;
+			int columns = Math.max (1, (logicalWidth.get () + 239) / 240);
+			for (int column = 0; column < columns; column++) {
+				int width = Math.min (240, Math.max (1, logicalWidth.get () - column * 240));
 				event.gc.drawRectangle (x, 0, width, 27);
 				event.gc.drawText ("logical column " + column, x + 8, 5, true);
 				x += width;
@@ -458,17 +472,28 @@ public final class ViewportRewriteStress {
 
 		Runnable configureScrollbars = () -> {
 			Rectangle client = body.getClientArea ();
-			int visibleRows = Math.max (1,
-					Math.min (CANVAS_ROWS, (client.height + ROW_HEIGHT - 1) / ROW_HEIGHT));
-			vertical.setValues (
-					Math.min (topRow.get (), Math.max (0, CANVAS_ROWS - visibleRows)),
-					0, CANVAS_ROWS, visibleRows, 1, visibleRows);
+			Point horizontalSize = horizontal.getSize ();
+			Point verticalSize = vertical.getSize ();
+			int outerWidth = client.width + (vertical.getVisible () ? verticalSize.x : 0);
+			int outerHeight = client.height + (horizontal.getVisible () ? horizontalSize.y : 0);
+			ScrollLayoutSnapshot layout = solveViewportScrollLayout (
+					outerWidth, outerHeight, 0,
+					logicalRows.get (), ROW_HEIGHT, logicalWidth.get (),
+					Math.max (0, horizontalSize.y), Math.max (0, verticalSize.x));
+			scrollLayout.set (layout);
 
-			int logicalWidth = 8 * 240;
-			int visibleWidth = Math.max (1, Math.min (logicalWidth, client.width));
-			horizontal.setValues (
-					Math.min (horizontalOrigin.get (), Math.max (0, logicalWidth - visibleWidth)),
-					0, logicalWidth, visibleWidth, 24, visibleWidth);
+			horizontal.setVisible (layout.horizontalVisible ());
+			vertical.setVisible (layout.verticalVisible ());
+
+			int rows = Math.max (1, logicalRows.get ());
+			int visibleRows = Math.max (1, Math.min (rows, layout.visibleRows ()));
+			int top = Math.min (topRow.get (), Math.max (0, rows - visibleRows));
+			vertical.setValues (top, 0, rows, visibleRows, 1, visibleRows);
+
+			int width = Math.max (1, logicalWidth.get ());
+			int visibleWidth = Math.max (1, Math.min (width, layout.bodyWidth ()));
+			int x = Math.min (horizontalOrigin.get (), Math.max (0, width - visibleWidth));
+			horizontal.setValues (x, 0, width, visibleWidth, 24, visibleWidth);
 			topRow.set (vertical.getSelection ());
 			horizontalOrigin.set (horizontal.getSelection ());
 		};
@@ -491,11 +516,12 @@ public final class ViewportRewriteStress {
 			bodyPaints.incrementAndGet ();
 			Rectangle client = body.getClientArea ();
 			int firstVisible = topRow.get ();
+			int rowLimit = logicalRows.get ();
 			int visibleRows = Math.max (1,
-					Math.min (CANVAS_ROWS - firstVisible,
+					Math.min (Math.max (0, rowLimit - firstVisible),
 							(client.height + ROW_HEIGHT - 1) / ROW_HEIGHT));
 			int firstPaint = Math.max (0, firstVisible - OVERSCAN);
-			int lastPaint = Math.min (CANVAS_ROWS, firstVisible + visibleRows + OVERSCAN);
+			int lastPaint = Math.min (rowLimit, firstVisible + visibleRows + OVERSCAN);
 			int xOffset = horizontalOrigin.get ();
 
 			for (int row = firstPaint; row < lastPaint; row++) {
@@ -505,7 +531,8 @@ public final class ViewportRewriteStress {
 					event.gc.fillRectangle (0, screenY, client.width, ROW_HEIGHT);
 				}
 				event.gc.drawText ("logical row " + row, 8 - xOffset, screenY + 3, true);
-				for (int column = 1; column < 8; column++) {
+				int columns = Math.max (1, (logicalWidth.get () + 239) / 240);
+				for (int column = 1; column < columns; column++) {
 					int x = column * 240 - xOffset;
 					event.gc.drawLine (x, screenY, x, screenY + ROW_HEIGHT);
 				}
@@ -515,7 +542,7 @@ public final class ViewportRewriteStress {
 
 		body.addListener (SWT.MouseDown, event -> {
 			int row = topRow.get () + Math.max (0, event.y / ROW_HEIGHT);
-			if (row < CANVAS_ROWS) {
+			if (row < logicalRows.get ()) {
 				toggle (selectionMasks, row);
 				body.redraw (0, (row - topRow.get ()) * ROW_HEIGHT,
 						body.getClientArea ().width, ROW_HEIGHT, false);
@@ -531,12 +558,12 @@ public final class ViewportRewriteStress {
 			body.redraw ();
 		});
 		jumpButton (buttons, "middle", () -> {
-			vertical.setSelection (CANVAS_ROWS / 2);
+			vertical.setSelection (logicalRows.get () / 2);
 			topRow.set (vertical.getSelection ());
 			body.redraw ();
 		});
 		jumpButton (buttons, "end", () -> {
-			vertical.setSelection (CANVAS_ROWS);
+			vertical.setSelection (logicalRows.get ());
 			topRow.set (vertical.getSelection ());
 			body.redraw ();
 		});
@@ -556,16 +583,19 @@ public final class ViewportRewriteStress {
 		root.getDisplay ().asyncExec (configureScrollbars);
 		refreshStatus (root.getDisplay (), status, () -> {
 			Rectangle client = body.getClientArea ();
-			int visibleRows = Math.max (1,
-					Math.min (CANVAS_ROWS, (client.height + ROW_HEIGHT - 1) / ROW_HEIGHT));
-			long estimatedPixelHeight = (long) CANVAS_ROWS * ROW_HEIGHT;
-			return "logicalRows=" + CANVAS_ROWS
+			ScrollLayoutSnapshot layout = scrollLayout.get ();
+			int visibleRows = layout == null ? 0 : layout.visibleRows ();
+			long estimatedPixelHeight = (long) logicalRows.get () * ROW_HEIGHT;
+			return "logicalRows=" + logicalRows.get ()
+					+ "  logicalWidth=" + logicalWidth.get ()
 					+ "  sampleRow=" + ROW_HEIGHT + "px"
 					+ "  estimatedPixels=" + estimatedPixelHeight
 					+ "  nativeBodyHeight=" + client.height
 					+ "  topRow=" + topRow.get ()
 					+ "  visibleRows=" + visibleRows
-					+ "  vThumb=" + vertical.getThumb ()
+					+ "  hVisible=" + horizontal.getVisible ()
+					+ "  vVisible=" + vertical.getVisible ()
+					+ "  corner=" + (layout != null && layout.cornerVisible ())
 					+ "  bodyPaints=" + bodyPaints.get ()
 					+ "  headerPaints=" + headerPaints.get ()
 					+ "  vEvents=" + verticalEvents.get ()
@@ -574,6 +604,9 @@ public final class ViewportRewriteStress {
 
 		screenshotScenario ("logical-top", root, () -> {
 			selectTab (tabs, root);
+			logicalRows.set (CANVAS_ROWS);
+			logicalWidth.set (8 * 240);
+			configureScrollbars.run ();
 			vertical.setSelection (0);
 			topRow.set (vertical.getSelection ());
 			horizontal.setSelection (0);
@@ -583,6 +616,9 @@ public final class ViewportRewriteStress {
 		});
 		screenshotScenario ("logical-middle", root, () -> {
 			selectTab (tabs, root);
+			logicalRows.set (CANVAS_ROWS);
+			logicalWidth.set (8 * 240);
+			configureScrollbars.run ();
 			vertical.setSelection (CANVAS_ROWS / 2);
 			topRow.set (vertical.getSelection ());
 			horizontal.setSelection (0);
@@ -592,6 +628,9 @@ public final class ViewportRewriteStress {
 		});
 		screenshotScenario ("logical-middle-x720", root, () -> {
 			selectTab (tabs, root);
+			logicalRows.set (CANVAS_ROWS);
+			logicalWidth.set (8 * 240);
+			configureScrollbars.run ();
 			vertical.setSelection (CANVAS_ROWS / 2);
 			topRow.set (vertical.getSelection ());
 			horizontal.setSelection (720);
@@ -601,15 +640,41 @@ public final class ViewportRewriteStress {
 		});
 		screenshotScenario ("logical-resize-narrow", root, () -> {
 			selectTab (tabs, root);
+			logicalRows.set (CANVAS_ROWS);
+			logicalWidth.set (8 * 240);
 			root.getShell ().setSize (640, 420);
 			root.getShell ().layout (true, true);
 			configureScrollbars.run ();
 		});
 		screenshotScenario ("logical-resize-wide", root, () -> {
 			selectTab (tabs, root);
+			logicalRows.set (CANVAS_ROWS);
+			logicalWidth.set (8 * 240);
+			root.getShell ().setSize (2400, 900);
+			root.getShell ().layout (true, true);
+			configureScrollbars.run ();
+		});
+		screenshotScenario ("logical-vertical-only", root, () -> {
+			selectTab (tabs, root);
+			logicalRows.set (CANVAS_ROWS);
+			logicalWidth.set (600);
+			root.getShell ().setSize (1200, 800);
+			root.getShell ().layout (true, true);
+			configureScrollbars.run ();
+			header.redraw ();
+			body.redraw ();
+		});
+		screenshotScenario ("logical-no-scrollbars", root, () -> {
+			selectTab (tabs, root);
+			logicalRows.set (12);
+			logicalWidth.set (600);
+			topRow.set (0);
+			horizontalOrigin.set (0);
 			root.getShell ().setSize (1400, 900);
 			root.getShell ().layout (true, true);
 			configureScrollbars.run ();
+			header.redraw ();
+			body.redraw ();
 		});
 	}
 
@@ -885,6 +950,46 @@ public final class ViewportRewriteStress {
 		appendReflectiveFieldMethod (
 				out, indent, "tree.viewport.paintEndExclusive",
 				tree, "virtualViewport", "paintEndExclusive");
+	}
+
+	private static ScrollLayoutSnapshot solveViewportScrollLayout (
+			int outerWidth, int outerHeight, int headerHeight,
+			long logicalRows, int sampleRowHeight, long logicalContentWidth,
+			int horizontalBarHeight, int verticalBarWidth) {
+		try {
+			Class<?> type = Class.forName ("org.eclipse.swt.widgets.ViewportScrollLayout");
+			Field autoField = type.getDeclaredField ("AUTO");
+			autoField.setAccessible (true);
+			int auto = autoField.getInt (null);
+			Method solve = type.getDeclaredMethod (
+					"solve",
+					int.class, int.class, int.class,
+					long.class, int.class, long.class,
+					int.class, int.class, int.class, int.class);
+			solve.setAccessible (true);
+			Object result = solve.invoke (
+					null,
+					outerWidth, outerHeight, headerHeight,
+					logicalRows, sampleRowHeight, logicalContentWidth,
+					horizontalBarHeight, verticalBarWidth, auto, auto);
+			return new ScrollLayoutSnapshot (
+					(boolean) invokeNoArg (result, "horizontalVisible"),
+					(boolean) invokeNoArg (result, "verticalVisible"),
+					(boolean) invokeNoArg (result, "cornerVisible"),
+					(int) invokeNoArg (result, "bodyWidth"),
+					(int) invokeNoArg (result, "bodyHeight"),
+					(int) invokeNoArg (result, "headerWidth"),
+					(int) invokeNoArg (result, "visibleRows"));
+		} catch (ReflectiveOperationException failure) {
+			throw new IllegalStateException ("Cannot evaluate viewport scrollbar layout", failure);
+		}
+	}
+
+	private static Object invokeNoArg (Object target, String methodName)
+			throws ReflectiveOperationException {
+		Method method = target.getClass ().getDeclaredMethod (methodName);
+		method.setAccessible (true);
+		return method.invoke (target);
 	}
 
 	private static void appendReflectiveValue (
