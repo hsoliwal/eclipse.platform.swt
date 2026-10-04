@@ -2091,7 +2091,6 @@ boolean checkData (TreeItem item, int index, boolean redraw) {
 		pinVirtualFacade (item);
 		item.setCachedState (true);
 		Event event = new Event ();
-		pinVirtualFacade (item);
 		event.item = item;
 		event.index = index;
 		TreeItem oldItem = currentItem;
@@ -2564,7 +2563,10 @@ void createItem (TreeItem item, long hParent, long hInsertAfter, long hItem) {
 	if (item != null) {
 		item.handle = hNewItem;
 		items [id] = item;
-		if (virtualTopology != null) bindVirtualTopology (item, hItem == 0);
+		if (virtualTopology != null) {
+			bindVirtualTopology (item, hItem == 0);
+			pinVirtualFacade (item);
+		}
 	}
 
 	// Adjust cached variables
@@ -8156,7 +8158,6 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				if (item == null) break;
 				pinVirtualFacade (item);
 				Event event = new Event ();
-				pinVirtualFacade (item);
 				event.item = item;
 				switch (treeView.action) {
 					case OS.TVE_EXPAND:
