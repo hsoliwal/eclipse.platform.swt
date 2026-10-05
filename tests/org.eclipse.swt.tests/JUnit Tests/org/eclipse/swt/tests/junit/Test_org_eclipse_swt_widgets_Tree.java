@@ -1008,6 +1008,72 @@ public void test_virtualGtkCollapsedChildStartsAtSentinelAndExpansionStaysBounde
 }
 
 @Test
+public void test_virtualGtkPresentationStateSurvivesDynamicColumns() {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.CHECK);
+	new TreeColumn(virtualTree, SWT.NONE);
+	new TreeColumn(virtualTree, SWT.NONE);
+	virtualTree.setItemCount(2);
+
+	TreeItem item = virtualTree.getItem(0);
+	Display display = virtualTree.getDisplay();
+	Image image = new Image(display, 4, 4);
+	try {
+		Color rowBackground = display.getSystemColor(SWT.COLOR_RED);
+		Color rowForeground = display.getSystemColor(SWT.COLOR_BLUE);
+		Color cellBackground = display.getSystemColor(SWT.COLOR_YELLOW);
+		Color cellForeground = display.getSystemColor(SWT.COLOR_DARK_GREEN);
+
+		item.setText(0, "root");
+		item.setText(1, "detail");
+		item.setImage(1, image);
+		item.setBackground(rowBackground);
+		item.setForeground(rowForeground);
+		item.setBackground(1, cellBackground);
+		item.setForeground(1, cellForeground);
+		item.setFont(1, virtualTree.getFont());
+		item.setChecked(true);
+		item.setGrayed(true);
+
+		assertEquals("root", item.getText(0));
+		assertEquals("detail", item.getText(1));
+		assertSame(image, item.getImage(1));
+		assertSame(rowBackground, item.getBackground());
+		assertSame(rowForeground, item.getForeground());
+		assertSame(cellBackground, item.getBackground(1));
+		assertSame(cellForeground, item.getForeground(1));
+		assertSame(virtualTree.getFont(), item.getFont(1));
+		assertTrue(item.getChecked());
+		assertTrue(item.getGrayed());
+
+		TreeColumn inserted = new TreeColumn(virtualTree, SWT.NONE, 1);
+		assertEquals("", item.getText(1), "new column must receive empty virtual presentation state");
+		assertEquals("detail", item.getText(2), "old column state must shift with its logical column");
+		assertSame(image, item.getImage(2));
+		assertSame(cellBackground, item.getBackground(2));
+		assertSame(cellForeground, item.getForeground(2));
+
+		inserted.dispose();
+		assertEquals("detail", item.getText(1));
+		assertSame(image, item.getImage(1));
+		assertSame(cellBackground, item.getBackground(1));
+		assertSame(cellForeground, item.getForeground(1));
+
+		virtualTree.clear(0, false);
+		assertEquals("", item.getText(0));
+		assertEquals("", item.getText(1));
+		assertNull(item.getImage(1));
+		assertFalse(item.getChecked());
+		assertFalse(item.getGrayed());
+		assertEquals(virtualTree.getBackground(), item.getBackground());
+		assertEquals(virtualTree.getForeground(), item.getForeground());
+	} finally {
+		image.dispose();
+	}
+}
+
+@Test
 public void test_virtualGtkAndWin32CollapseCompactsNativeTailAndRestoresOnExpand() throws Exception {
 	String platform = SWT.getPlatform();
     if (!("gtk".equals(platform) || "win32".equals(platform))) {
