@@ -1,4 +1,5 @@
 name: SWT Native Source Distillation
+# Reconciled SWT master: c9a833ac94c65b895b4927da41d76dbf1412a294
 
 on:
   workflow_dispatch:
