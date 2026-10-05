@@ -74,7 +74,7 @@ public void test_virtualGtk3LogicalNativeModelKeepsDistantAccessSparseAndStable(
 	gtk4Field.setAccessible(true);
 	if (gtk4Field.getBoolean(null)) return;
 
-	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL);
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL | SWT.CHECK);
 	virtualTree.setItemCount(1_000_000);
 	shell.setLayout(new FillLayout());
 	shell.setSize(360, 220);
@@ -119,6 +119,28 @@ public void test_virtualGtk3LogicalNativeModelKeepsDistantAccessSparseAndStable(
 			"snapshot refresh must restore the logical top item");
 	assertTrue(((Integer) materializedCount.invoke(topology)).intValue() <= 3,
 			"explicit insertion must not materialize the cold million-row prefix");
+
+	distant.setChecked(true);
+	distant.setGrayed(true);
+	distant.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+	distant.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+	assertTrue(distant.getChecked());
+	assertTrue(distant.getGrayed());
+
+	TreeColumn firstColumn = new TreeColumn(virtualTree, SWT.NONE);
+	firstColumn.setText("logical");
+	TreeColumn secondColumn = new TreeColumn(virtualTree, SWT.NONE);
+	secondColumn.setText("temporary");
+	secondColumn.dispose();
+	assertEquals(1, virtualTree.getColumnCount(),
+			"column mutation must not replace the logical native model");
+
+	distant.removeAll();
+	assertEquals(0, distant.getItemCount(),
+			"TreeItem.removeAll must mutate topology without GtkTreeStore");
+	virtualTree.removeAll();
+	assertEquals(0, virtualTree.getItemCount());
+	assertEquals(0, ((Integer) materializedCount.invoke(topology)).intValue());
 }
 
 @Test
