@@ -323,12 +323,15 @@ void bindVirtualTopology (TreeItem item, boolean inserted) {
         return;
     }
 
+    boolean childCountKnown = virtualTopology.childCountKnown(parentId);
     if (inserted) {
         virtualTopology.insertCoordinate(parentId, childIndex, id);
     } else {
         virtualTopology.bind(id, parentId, childIndex);
     }
-	virtualTopology.setChildCount (parentId, nativeChildCount (hParent));
+    if (!childCountKnown) {
+        virtualTopology.setChildCount(parentId, nativeChildCount(hParent));
+    }
 }
 
 int virtualChildCount (long hParent) {
