@@ -2013,6 +2013,10 @@ public TreeItem getItem (Point point) {
 	NSPoint pt = new NSPoint();
 	pt.x = point.x;
 	pt.y = point.y;
+	NSView clipView = scrollView.contentView ();
+	if (clipView != null) {
+		pt = widget.convertPoint_fromView_ (pt, clipView);
+	}
 	int row = (int)widget.rowAtPoint(pt);
     if (row == -1) {
         return null;
