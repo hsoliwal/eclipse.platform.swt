@@ -44,6 +44,9 @@ public class TreeItem extends Item {
 	Font font;
 	Font[] cellFont;
 	String [] strings;
+	Color virtualBackground, virtualForeground;
+	Color [] virtualCellBackground, virtualCellForeground;
+	Image [] virtualImages;
 	boolean cached, grayed, isExpanded, updated, settingData;
 	static final int EXPANDER_EXTRA_PADDING = 4;
 
@@ -264,6 +267,9 @@ protected void checkSubclass () {
 }
 
 Color _getBackground () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		return virtualBackground != null ? virtualBackground : parent.getBackground ();
+	}
 	long [] ptr = new long [1];
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, Tree.BACKGROUND_COLUMN, ptr, -1);
     if (ptr [0] == 0) {
@@ -276,6 +282,13 @@ Color _getBackground () {
 }
 
 Color _getBackground (int index) {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		int count = Math.max (1, parent.columnCount);
+		if (index < 0 || index >= count) return _getBackground ();
+		Color color = virtualCellBackground != null && index < virtualCellBackground.length
+				? virtualCellBackground [index] : null;
+		return color != null ? color : _getBackground ();
+	}
 	int count = Math.max (1, parent.columnCount);
     if (0 > index || index > count - 1) {
         return _getBackground();
@@ -299,6 +312,9 @@ boolean _getChecked () {
 }
 
 Color _getForeground () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		return virtualForeground != null ? virtualForeground : parent.getForeground ();
+	}
 	long [] ptr = new long [1];
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, Tree.FOREGROUND_COLUMN, ptr, -1);
     if (ptr [0] == 0) {
@@ -311,6 +327,13 @@ Color _getForeground () {
 }
 
 Color _getForeground (int index) {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		int count = Math.max (1, parent.columnCount);
+		if (index < 0 || index >= count) return _getForeground ();
+		Color color = virtualCellForeground != null && index < virtualCellForeground.length
+				? virtualCellForeground [index] : null;
+		return color != null ? color : _getForeground ();
+	}
 	int count = Math.max (1, parent.columnCount);
     if (0 > index || index > count - 1) {
         return _getForeground();
@@ -328,6 +351,11 @@ Color _getForeground (int index) {
 }
 
 Image _getImage(int index) {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		int count = Math.max(1, parent.getColumnCount());
+		if (index < 0 || index >= count || virtualImages == null || index >= virtualImages.length) return null;
+		return virtualImages [index];
+	}
 	int count = Math.max(1, parent.getColumnCount());
     if (0 > index || index > count - 1) {
         return null;
@@ -349,6 +377,12 @@ Image _getImage(int index) {
 }
 
 String _getText (int index) {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		int count = Math.max (1, parent.getColumnCount ());
+		if (index < 0 || index >= count || strings == null || index >= strings.length) return "";
+		String value = strings [index];
+		return value != null ? value : "";
+	}
 	int count = Math.max (1, parent.getColumnCount ());
     if (0 > index || index > count - 1) {
         return "";
@@ -364,6 +398,83 @@ String _getText (int index) {
 	C.memmove (buffer, ptr [0], length);
 	OS.g_free (ptr [0]);
 	return new String (Converter.mbcsToWcs (buffer));
+}
+
+String virtualDisplayText (int index) {
+	String value = _getText (index);
+	if (value.length () > TEXT_LIMIT) {
+		return value.substring (0, TEXT_LIMIT - ELLIPSIS.length ()) + ELLIPSIS;
+	}
+	return value;
+}
+
+void insertVirtualColumn (int index, int newCount) {
+	if ((parent.style & SWT.VIRTUAL) == 0) return;
+	if (cellFont != null) {
+		Font [] next = new Font [newCount];
+		System.arraycopy (cellFont, 0, next, 0, index);
+		System.arraycopy (cellFont, index, next, index + 1, newCount - index - 1);
+		cellFont = next;
+	}
+	if (strings != null) {
+		String [] next = new String [newCount];
+		System.arraycopy (strings, 0, next, 0, index);
+		System.arraycopy (strings, index, next, index + 1, newCount - index - 1);
+		next [index] = "";
+		strings = next;
+	}
+	if (virtualImages != null) {
+		Image [] next = new Image [newCount];
+		System.arraycopy (virtualImages, 0, next, 0, index);
+		System.arraycopy (virtualImages, index, next, index + 1, newCount - index - 1);
+		virtualImages = next;
+	}
+	if (virtualCellBackground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellBackground, 0, next, 0, index);
+		System.arraycopy (virtualCellBackground, index, next, index + 1, newCount - index - 1);
+		virtualCellBackground = next;
+	}
+	if (virtualCellForeground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellForeground, 0, next, 0, index);
+		System.arraycopy (virtualCellForeground, index, next, index + 1, newCount - index - 1);
+		virtualCellForeground = next;
+	}
+}
+
+void removeVirtualColumn (int index, int newCount) {
+	if ((parent.style & SWT.VIRTUAL) == 0) return;
+	if (cellFont != null) {
+		Font [] next = new Font [newCount];
+		System.arraycopy (cellFont, 0, next, 0, index);
+		System.arraycopy (cellFont, index + 1, next, index, newCount - index);
+		cellFont = next;
+	}
+	if (strings != null) {
+		String [] next = new String [newCount];
+		System.arraycopy (strings, 0, next, 0, index);
+		System.arraycopy (strings, index + 1, next, index, newCount - index);
+		strings = next;
+	}
+	if (virtualImages != null) {
+		Image [] next = new Image [newCount];
+		System.arraycopy (virtualImages, 0, next, 0, index);
+		System.arraycopy (virtualImages, index + 1, next, index, newCount - index);
+		virtualImages = next;
+	}
+	if (virtualCellBackground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellBackground, 0, next, 0, index);
+		System.arraycopy (virtualCellBackground, index + 1, next, index, newCount - index);
+		virtualCellBackground = next;
+	}
+	if (virtualCellForeground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellForeground, 0, next, 0, index);
+		System.arraycopy (virtualCellForeground, index + 1, next, index, newCount - index);
+		virtualCellForeground = next;
+	}
 }
 
 void clear () {
@@ -390,6 +501,9 @@ void clear () {
 	font = null;
 	strings = null;
 	cellFont = null;
+	virtualBackground = virtualForeground = null;
+	virtualCellBackground = virtualCellForeground = null;
+	virtualImages = null;
 }
 
 /**
@@ -1228,6 +1342,9 @@ void releaseWidget () {
 	font = null;
 	cellFont = null;
 	strings = null;
+	virtualBackground = virtualForeground = null;
+	virtualCellBackground = virtualCellForeground = null;
+	virtualImages = null;
 }
 
 @Override
