@@ -395,6 +395,9 @@ public class ViewportScreenshotRegressionTest {
 		tree.setTopItem (branch);
 		tree.setSelection (child);
 		drainEvents (150);
+		int expandedResident = requiredResidentChildren (tree, branch);
+		assertTrue (expandedResident >= 11 && expandedResident < TREE_CHILDREN,
+				"expanded branch must retain the pinned child without eagerly allocating all children");
 		capture (
 				"tree-pinned-expanded", tree, output,
 				treeSidecar (tree, branch, child));
@@ -404,6 +407,9 @@ public class ViewportScreenshotRegressionTest {
 		tree.setSelection (branch);
 		drainEvents (220);
 		assertEquals (TREE_CHILDREN, branch.getItemCount ());
+		int collapsedResident = requiredResidentChildren (tree, branch);
+		assertTrue (collapsedResident >= 11 && collapsedResident < expandedResident,
+				"collapse must release native rows while retaining the pinned child");
 		capture (
 				"tree-pinned-collapsed", tree, output,
 				treeSidecar (tree, branch, child));
@@ -415,9 +421,19 @@ public class ViewportScreenshotRegressionTest {
 		assertSame (child, branch.getItem (10));
 		assertTrue (child.getChecked ());
 		assertTrue (child.getGrayed ());
+		assertEquals ("pinned child 10", child.getText ());
+		assertEquals (TREE_CHILDREN, branch.getItemCount ());
+		assertTrue (requiredResidentChildren (tree, branch) < TREE_CHILDREN,
+				"restore must remain lazy");
 		capture (
 				"tree-pinned-restored", tree, output,
 				treeSidecar (tree, branch, child));
+	}
+
+	private static int requiredResidentChildren (Tree tree, TreeItem branch) throws Exception {
+		Method method = Tree.class.getDeclaredMethod ("virtualResidentChildCount", TreeItem.class);
+		method.setAccessible (true);
+		return ((Number) method.invoke (tree, branch)).intValue ();
 	}
 
 	private String treeSidecar (Tree tree, TreeItem branch, TreeItem child) {
@@ -441,17 +457,17 @@ public class ViewportScreenshotRegressionTest {
 				tree, "virtualTopology", "materializedCount",
 				"tree.topology.materializedCount"));
 		out.append (reflectFieldMethod (
-				tree, "virtualViewport", "firstVisible",
-				"tree.viewport.firstVisible"));
+				tree, "virtualViewport", "topRow",
+				"tree.viewport.topRow"));
 		out.append (reflectFieldMethod (
-				tree, "virtualViewport", "visibleCount",
-				"tree.viewport.visibleCount"));
+				tree, "virtualViewport", "visibleRows",
+				"tree.viewport.visibleRows"));
 		out.append (reflectFieldMethod (
-				tree, "virtualViewport", "paintStart",
-				"tree.viewport.paintStart"));
+				tree, "virtualViewport", "firstPaintRow",
+				"tree.viewport.firstPaintRow"));
 		out.append (reflectFieldMethod (
-				tree, "virtualViewport", "paintEndExclusive",
-				"tree.viewport.paintEndExclusive"));
+				tree, "virtualViewport", "paintRowCount",
+				"tree.viewport.paintRowCount"));
 		out.append (scrollBarText ("h", tree.getHorizontalBar ()));
 		out.append (scrollBarText ("v", tree.getVerticalBar ()));
 		return out.toString ();

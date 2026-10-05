@@ -784,8 +784,8 @@ public int getImageIndent () {
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
         if (!isCachedState()) {
-            return "*virtual*";
-        } //$NON-NLS-1$
+            return "*virtual*"; //$NON-NLS-1$
+        }
 	}
 	return super.getNameText ();
 }

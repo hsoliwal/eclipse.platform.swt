@@ -296,71 +296,71 @@ public static void error (int code, int hresult) {
 		case ERROR_CANNOT_CREATE_FILE : {
 			String msg = ERROR_CANNOT_CREATE_FILE_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            }//$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_CANNOT_CREATE_OBJECT : {
 			String msg = ERROR_CANNOT_CREATE_OBJECT_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            }//$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_CANNOT_OPEN_FILE : {
 			String msg = ERROR_CANNOT_OPEN_FILE_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            }//$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_INTERFACE_NOT_FOUND : {
 			String msg = ERROR_INTERFACE_NOT_FOUND_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            }//$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_INVALID_CLASSID : {
 			String msg = ERROR_INVALID_CLASSID_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            }//$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_CANNOT_ACCESS_CLASSFACTORY : {
 			String msg = ERROR_CANNOT_ACCESS_CLASSFACTORY_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            }//$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_CANNOT_CREATE_LICENSED_OBJECT : {
 			String msg = ERROR_CANNOT_CREATE_LICENSED_OBJECT_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            }//$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_CANNOT_CHANGE_VARIANT_TYPE : {
 			String msg = ERROR_CANNOT_CHANGE_VARIANT_TYPE_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            }//$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_APPLICATION_NOT_FOUND : {
 			String msg = ERROR_APPLICATION_NOT_FOUND_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            }//$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_ACTION_NOT_PERFORMED : {
 			String msg = ERROR_ACTION_NOT_PERFORMED_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            }//$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 
@@ -368,8 +368,8 @@ public static void error (int code, int hresult) {
 		case ERROR_OUT_OF_MEMORY : {
 			String msg = ERROR_ACTION_NOT_PERFORMED_MSG;
             if (hresult != 0) {
-                msg += " result = " + hresult;
-            } //$NON-NLS-1$
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTError (code, msg);
 		}
 	}
@@ -395,12 +395,12 @@ public static String findProgramID (String extension) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
     if (extension.length() == 0) {
-        return "";
-    } //$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 
     if (extension.charAt(0) != '.') {
-        extension = "." + extension;
-    } //$NON-NLS-1$
+        extension = "." + extension; //$NON-NLS-1$
+    }
 
 	TCHAR extensionKey = new TCHAR(extension, true);
 	String result = getKeyValue(extensionKey);
@@ -408,8 +408,8 @@ public static String findProgramID (String extension) {
 		// look for "<programID>\NotInsertable"
 		TCHAR notInsertableKey = new TCHAR(result+"\\NotInsertable", true); //$NON-NLS-1$
         if (getKeyExists(notInsertableKey)) {
-            return "";
-        } //$NON-NLS-1$
+            return ""; //$NON-NLS-1$
+        }
 		// look for "<programID>\Insertable"
 		TCHAR insertableKey = new TCHAR(result+"\\Insertable", true); //$NON-NLS-1$
         if (getKeyExists(insertableKey)) {

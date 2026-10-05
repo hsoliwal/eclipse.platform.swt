@@ -2069,8 +2069,8 @@ void destroyItem (TableColumn column) {
 					item.strings = temp;
 				} else {
                     if (index == 0) {
-                        item.text = "";
-                    } //$NON-NLS-1$
+                        item.text = ""; //$NON-NLS-1$
+                    }
 				}
 				if (item.images != null) {
 					Image [] images = item.images;
@@ -5850,8 +5850,8 @@ RECT toolTipRect (RECT rect) {
 String toolTipText (NMTTDISPINFO hdr) {
 	long hwndToolTip = OS.SendMessage (handle, OS.LVM_GETTOOLTIPS, 0, 0);
     if (hwndToolTip == hdr.hwndFrom && toolTipText != null) {
-        return "";
-    } //$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	if (headerToolTipHandle == hdr.hwndFrom) {
 		for (int i=0; i<columnCount; i++) {
 			TableColumn column = columns [i];

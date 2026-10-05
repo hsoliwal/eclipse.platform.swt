@@ -6723,8 +6723,8 @@ RECT toolTipRect (RECT rect) {
 String toolTipText (NMTTDISPINFO hdr) {
 	long hwndToolTip = OS.SendMessage (handle, OS.TVM_GETTOOLTIPS, 0, 0);
     if (hwndToolTip == hdr.hwndFrom && toolTipText != null) {
-        return "";
-    } //$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	if (headerToolTipHandle == hdr.hwndFrom) {
 		for (int i=0; i<columnCount; i++) {
 			TreeColumn column = columns [i];

@@ -2474,8 +2474,8 @@ int _getOffset(int offset, int movement, boolean forward) {
 	computeRuns(null);
 	int length = text.length();
     if (!(0 <= offset && offset <= length)) {
-        SWT.error(SWT.ERROR_INVALID_RANGE, null, " [offset value: " + offset + "]");
-    }//$NON-NLS-1$ $NON-NLS-2$
+        SWT.error(SWT.ERROR_INVALID_RANGE, null, " [offset value: " + offset + "]"); //$NON-NLS-1$ $NON-NLS-2$
+    }
     if (forward && offset == length) {
         return length;
     }

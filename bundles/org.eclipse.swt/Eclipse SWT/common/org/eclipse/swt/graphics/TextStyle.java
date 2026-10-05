@@ -455,29 +455,29 @@ public String toString () {
 	int startLength = buffer.length();
 	if (font != null) {
         if (buffer.length() > startLength) {
-            buffer.append(", ");
-        } //$NON-NLS-1$
+            buffer.append(", "); //$NON-NLS-1$
+        }
 		buffer.append("font="); //$NON-NLS-1$
 		buffer.append(font);
 	}
 	if (foreground != null) {
         if (buffer.length() > startLength) {
-            buffer.append(", ");
-        } //$NON-NLS-1$
+            buffer.append(", "); //$NON-NLS-1$
+        }
 		buffer.append("foreground="); //$NON-NLS-1$
 		buffer.append(foreground);
 	}
 	if (background != null) {
         if (buffer.length() > startLength) {
-            buffer.append(", ");
-        } //$NON-NLS-1$
+            buffer.append(", "); //$NON-NLS-1$
+        }
 		buffer.append("background="); //$NON-NLS-1$
 		buffer.append(background);
 	}
 	if (underline) {
         if (buffer.length() > startLength) {
-            buffer.append(", ");
-        } //$NON-NLS-1$
+            buffer.append(", "); //$NON-NLS-1$
+        }
 		buffer.append("underline="); //$NON-NLS-1$
 		switch (underlineStyle) {
 			case SWT.UNDERLINE_SINGLE: buffer.append("single"); break; //$NON-NLS-1$
@@ -493,8 +493,8 @@ public String toString () {
 	}
 	if (strikeout) {
         if (buffer.length() > startLength) {
-            buffer.append(", ");
-        } //$NON-NLS-1$
+            buffer.append(", "); //$NON-NLS-1$
+        }
 		buffer.append("striked out"); //$NON-NLS-1$
 		if (strikeoutColor != null) {
 			buffer.append(", strikeoutColor="); //$NON-NLS-1$
@@ -503,8 +503,8 @@ public String toString () {
 	}
 	if (borderStyle != SWT.NONE) {
         if (buffer.length() > startLength) {
-            buffer.append(", ");
-        } //$NON-NLS-1$
+            buffer.append(", "); //$NON-NLS-1$
+        }
 		buffer.append("border="); //$NON-NLS-1$
 		switch (borderStyle) {
 			case SWT.BORDER_SOLID:	buffer.append("solid"); break; //$NON-NLS-1$
@@ -518,15 +518,15 @@ public String toString () {
 	}
 	if (rise != 0) {
         if (buffer.length() > startLength) {
-            buffer.append(", ");
-        } //$NON-NLS-1$
+            buffer.append(", "); //$NON-NLS-1$
+        }
 		buffer.append("rise="); //$NON-NLS-1$
 		buffer.append(rise);
 	}
 	if (metrics != null) {
         if (buffer.length() > startLength) {
-            buffer.append(", ");
-        } //$NON-NLS-1$
+            buffer.append(", "); //$NON-NLS-1$
+        }
 		buffer.append("metrics="); //$NON-NLS-1$
 		buffer.append(metrics);
 	}

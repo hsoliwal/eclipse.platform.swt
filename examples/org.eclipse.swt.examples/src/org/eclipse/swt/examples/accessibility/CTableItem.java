@@ -1208,14 +1208,14 @@ String getText (int columnIndex, boolean checkData) {
     }
 	int validColumnCount = Math.max (1, parent.columns.length);
     if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
-        return "";
-    }	//$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
     if (columnIndex == 0) {
         return super.getText();
     } /* super is intentional here */
     if (texts [columnIndex] == null) {
-        return "";
-    }	//$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	return texts [columnIndex];
 }
 /**

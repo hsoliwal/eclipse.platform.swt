@@ -550,16 +550,16 @@ public String getText() {
 	WebFrame mainFrame = webView.mainFrame();
 	WebDataSource dataSource = mainFrame.dataSource();
     if (dataSource == null) {
-        return "";
-    }	//$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	WebDocumentRepresentation representation = dataSource.representation();
     if (representation == null) {
-        return "";
-    }	//$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	NSString source = representation.documentSource();
     if (source == null) {
-        return "";
-    }	//$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	return source.getString();
 }
 

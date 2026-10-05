@@ -721,8 +721,8 @@ public class TextEditor {
 		baselineUpItem.setImage(iBaselineUp);
 		String tooltip = "IncreaseFont"; //$NON-NLS-1$
         if (USE_BASELINE) {
-            tooltip = "IncreaseBaseline";
-        } //$NON-NLS-1$
+            tooltip = "IncreaseBaseline"; //$NON-NLS-1$
+        }
 		baselineUpItem.setToolTipText(getResourceString(tooltip));
 		baselineUpItem.addSelectionListener(widgetSelectedAdapter(event -> {
 			if (USE_BASELINE) {
@@ -736,8 +736,8 @@ public class TextEditor {
 		baselineDownItem.setImage(iBaselineDown);
 		tooltip = "DecreaseFont"; //$NON-NLS-1$
         if (USE_BASELINE) {
-            tooltip = "DecreaseBaseline";
-        } //$NON-NLS-1$
+            tooltip = "DecreaseBaseline"; //$NON-NLS-1$
+        }
 		baselineDownItem.setToolTipText(getResourceString(tooltip));
 		baselineDownItem.addSelectionListener(widgetSelectedAdapter(event -> {
 			if (USE_BASELINE) {

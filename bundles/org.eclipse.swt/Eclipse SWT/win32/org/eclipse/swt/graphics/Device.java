@@ -662,8 +662,8 @@ public FontData [] getFontList (String faceName, boolean scalable) {
 String getLastError () {
 	int error = OS.GetLastError();
     if (error == 0) {
-        return "";
-    } //$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	return " [GetLastError=0x" + Integer.toHexString(error) + "]"; //$NON-NLS-1$ //$NON-NLS-2$
 }
 
