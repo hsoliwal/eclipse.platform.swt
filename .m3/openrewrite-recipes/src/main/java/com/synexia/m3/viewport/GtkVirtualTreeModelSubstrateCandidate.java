@@ -16,6 +16,10 @@ public final class GtkVirtualTreeModelSubstrateCandidate {
             "d257dbfe16ff6b06f5f22a7d4bb0d3f9fe635272ab2e0cb4391930646cbd81b3";
     static final String NATIVE_PREIMAGE =
             "f49d321ef991514c53c2b0e5da6812c199540e2ea770ed411b8e4b4488c51e28";
+    static final String TOPOLOGY_POSTIMAGE =
+            "0ae6c0796b39cfe318efb7175b2a2b8981335e409d473d6e06256dd67e0b2eef";
+    static final String NATIVE_POSTIMAGE =
+            "17916c76157392c7f94c6f3cda3538ec9543419b4dfa4b7572cd2e91bd7f0ee1";
 
     static final String TOPOLOGY_ANCHOR =
             "\tint childCount (int parentId) {\n"
@@ -369,13 +373,19 @@ public final class GtkVirtualTreeModelSubstrateCandidate {
     static String propose(Path path, String source, boolean enforceHash) {
         String normalized = path.toString().replace('\\', '/');
         if (normalized.endsWith(TOPOLOGY_PATH)) {
-            if (source.contains("int [] nativeModelSnapshot ()")) return source;
+            if (source.contains("int [] nativeModelSnapshot ()")) {
+                requirePostimage(source, TOPOLOGY_POSTIMAGE, enforceHash, "TOPOLOGY");
+                return source;
+            }
             requireHash(source, TOPOLOGY_PREIMAGE, enforceHash, "TOPOLOGY");
             if (!source.contains(TOPOLOGY_ANCHOR)) throw new IllegalStateException("M3_TREE_TOPOLOGY_ATOM_DRIFT");
             return source.replace(TOPOLOGY_ANCHOR, TOPOLOGY_ANCHOR + TOPOLOGY_INSERT);
         }
         if (normalized.endsWith(NATIVE_PATH)) {
-            if (source.contains(NATIVE_MARKER)) return source;
+            if (source.contains(NATIVE_MARKER)) {
+                requirePostimage(source, NATIVE_POSTIMAGE, enforceHash, "NATIVE");
+                return source;
+            }
             requireHash(source, NATIVE_PREIMAGE, enforceHash, "NATIVE");
             String marker = "\n#endif\n\nstatic void *content_providers_copy";
             if (!source.contains(marker)) throw new IllegalStateException("M3_TREE_NATIVE_MODEL_ANCHOR_DRIFT");
@@ -413,6 +423,14 @@ public final class GtkVirtualTreeModelSubstrateCandidate {
         if (source.length() > 2 * 1024 * 1024) throw new IllegalStateException("M3_TREE_" + owner + "_BUDGET");
         if (enforce && !expected.equals(sha256(source))) {
             throw new IllegalStateException("M3_TREE_" + owner + "_PREIMAGE_DRIFT");
+        }
+    }
+
+    private static void requirePostimage(
+            String source, String expected, boolean enforce, String owner) {
+        if (source.length() > 2 * 1024 * 1024) throw new IllegalStateException("M3_TREE_" + owner + "_BUDGET");
+        if (enforce && !expected.equals(sha256(source))) {
+            throw new IllegalStateException("M3_TREE_" + owner + "_POSTIMAGE_DRIFT");
         }
     }
 }
