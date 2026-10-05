@@ -2433,6 +2433,320 @@ static void swt_virtual_table_model_init(SwtVirtualTableModel *self) {
 	self->stamp = (gint)g_random_int();
 	if (self->stamp == 0) self->stamp = 1;
 }
+/*
+ * Hierarchical logical GtkTreeModel substrate for SWT.VIRTUAL Tree.
+ *
+ * The model owns only a rebuildable primitive snapshot of VirtualTreeTopology.
+ * Cold logical siblings are represented by (parent-id, child-index) in GtkTreeIter;
+ * they do not require GtkTreeStore nodes. Java remains the semantic owner.
+ */
+#define SWT_VIRTUAL_TREE_ROOT (-1)
+#define SWT_VIRTUAL_TREE_ABSENT G_MININT
+#define SWT_VIRTUAL_TREE_UNKNOWN_CHILD_COUNT (-1)
+
+typedef struct _SwtVirtualTreeModel {
+	GObject parent_instance;
+	gint stamp;
+	gint capacity;
+	gint root_count;
+	gint *snapshot;
+} SwtVirtualTreeModel;
+
+typedef struct _SwtVirtualTreeModelClass {
+	GObjectClass parent_class;
+} SwtVirtualTreeModelClass;
+
+static void swt_virtual_tree_model_tree_model_init(GtkTreeModelIface *iface);
+
+G_DEFINE_TYPE_WITH_CODE(SwtVirtualTreeModel, swt_virtual_tree_model, G_TYPE_OBJECT,
+	G_IMPLEMENT_INTERFACE(GTK_TYPE_TREE_MODEL, swt_virtual_tree_model_tree_model_init))
+
+enum {
+	SWT_VIRTUAL_TREE_MODEL_PROP_0,
+	SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY,
+	SWT_VIRTUAL_TREE_MODEL_N_PROPERTIES
+};
+
+static GParamSpec *swt_virtual_tree_model_properties[SWT_VIRTUAL_TREE_MODEL_N_PROPERTIES];
+
+static gint *swt_virtual_tree_model_parents(SwtVirtualTreeModel *self) {
+	return self->snapshot == NULL ? NULL : self->snapshot + 2;
+}
+
+static gint *swt_virtual_tree_model_indices(SwtVirtualTreeModel *self) {
+	return self->snapshot == NULL ? NULL : self->snapshot + 2 + self->capacity;
+}
+
+static gint *swt_virtual_tree_model_counts(SwtVirtualTreeModel *self) {
+	return self->snapshot == NULL ? NULL : self->snapshot + 2 + self->capacity * 2;
+}
+
+static gboolean swt_virtual_tree_model_present(SwtVirtualTreeModel *self, gint id) {
+	gint *parents = swt_virtual_tree_model_parents(self);
+	return id >= 0 && id < self->capacity && parents != NULL
+		&& parents[id] != SWT_VIRTUAL_TREE_ABSENT;
+}
+
+static gint swt_virtual_tree_model_child_count(SwtVirtualTreeModel *self, gint parent_id) {
+	if (parent_id == SWT_VIRTUAL_TREE_ROOT) return MAX(0, self->root_count);
+	if (!swt_virtual_tree_model_present(self, parent_id)) return 0;
+	gint count = swt_virtual_tree_model_counts(self)[parent_id];
+	return count == SWT_VIRTUAL_TREE_UNKNOWN_CHILD_COUNT ? 0 : MAX(0, count);
+}
+
+static gint swt_virtual_tree_model_lookup_id(
+	SwtVirtualTreeModel *self, gint parent_id, gint child_index) {
+	gint *parents = swt_virtual_tree_model_parents(self);
+	gint *indices = swt_virtual_tree_model_indices(self);
+	if (parents == NULL || indices == NULL) return -1;
+	for (gint id = 0; id < self->capacity; id++) {
+		if (parents[id] == parent_id && indices[id] == child_index) return id;
+	}
+	return -1;
+}
+
+static void swt_virtual_tree_model_set_iter(
+	SwtVirtualTreeModel *self, GtkTreeIter *iter, gint parent_id, gint child_index) {
+	gint id = swt_virtual_tree_model_lookup_id(self, parent_id, child_index);
+	iter->stamp = self->stamp;
+	iter->user_data = GINT_TO_POINTER(parent_id + 2);
+	iter->user_data2 = GINT_TO_POINTER(child_index + 1);
+	iter->user_data3 = id >= 0 ? GINT_TO_POINTER(id + 1) : NULL;
+}
+
+static gboolean swt_virtual_tree_model_iter_valid(
+	SwtVirtualTreeModel *self, GtkTreeIter *iter) {
+	if (iter == NULL || iter->stamp != self->stamp
+			|| iter->user_data == NULL || iter->user_data2 == NULL) return FALSE;
+	gint parent_id = GPOINTER_TO_INT(iter->user_data) - 2;
+	gint child_index = GPOINTER_TO_INT(iter->user_data2) - 1;
+	return parent_id >= SWT_VIRTUAL_TREE_ROOT && child_index >= 0
+		&& child_index < swt_virtual_tree_model_child_count(self, parent_id);
+}
+
+static gint swt_virtual_tree_model_iter_id(SwtVirtualTreeModel *self, GtkTreeIter *iter) {
+	if (!swt_virtual_tree_model_iter_valid(self, iter)) return -1;
+	gint parent_id = GPOINTER_TO_INT(iter->user_data) - 2;
+	gint child_index = GPOINTER_TO_INT(iter->user_data2) - 1;
+	if (iter->user_data3 != NULL) {
+		gint id = GPOINTER_TO_INT(iter->user_data3) - 1;
+		if (swt_virtual_tree_model_present(self, id)
+				&& swt_virtual_tree_model_parents(self)[id] == parent_id
+				&& swt_virtual_tree_model_indices(self)[id] == child_index) return id;
+	}
+	return swt_virtual_tree_model_lookup_id(self, parent_id, child_index);
+}
+
+static GtkTreeModelFlags swt_virtual_tree_model_get_flags(GtkTreeModel *tree_model) {
+	return 0;
+}
+
+static gint swt_virtual_tree_model_get_n_columns(GtkTreeModel *tree_model) {
+	return 1;
+}
+
+static GType swt_virtual_tree_model_get_column_type(GtkTreeModel *tree_model, gint index) {
+	return index == 0 ? G_TYPE_INT : G_TYPE_INVALID;
+}
+
+static gboolean swt_virtual_tree_model_get_iter(
+	GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreePath *path) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
+	gint depth = gtk_tree_path_get_depth(path);
+	gint *indices = gtk_tree_path_get_indices(path);
+	if (depth < 1 || indices == NULL) return FALSE;
+	gint parent_id = SWT_VIRTUAL_TREE_ROOT;
+	for (gint level = 0; level < depth; level++) {
+		gint child_index = indices[level];
+		if (child_index < 0
+				|| child_index >= swt_virtual_tree_model_child_count(self, parent_id)) return FALSE;
+		if (level == depth - 1) {
+			swt_virtual_tree_model_set_iter(self, iter, parent_id, child_index);
+			return TRUE;
+		}
+		gint id = swt_virtual_tree_model_lookup_id(self, parent_id, child_index);
+		if (id < 0) return FALSE;
+		parent_id = id;
+	}
+	return FALSE;
+}
+
+static GtkTreePath *swt_virtual_tree_model_get_path(
+	GtkTreeModel *tree_model, GtkTreeIter *iter) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
+	if (!swt_virtual_tree_model_iter_valid(self, iter)) return NULL;
+	gint parent_id = GPOINTER_TO_INT(iter->user_data) - 2;
+	gint child_index = GPOINTER_TO_INT(iter->user_data2) - 1;
+	GtkTreePath *path = gtk_tree_path_new();
+	gtk_tree_path_prepend_index(path, child_index);
+	for (gint depth = 0; parent_id != SWT_VIRTUAL_TREE_ROOT; depth++) {
+		if (depth > self->capacity || !swt_virtual_tree_model_present(self, parent_id)) {
+			gtk_tree_path_free(path);
+			return NULL;
+		}
+		gtk_tree_path_prepend_index(path, swt_virtual_tree_model_indices(self)[parent_id]);
+		parent_id = swt_virtual_tree_model_parents(self)[parent_id];
+	}
+	return path;
+}
+
+static void swt_virtual_tree_model_get_value(
+	GtkTreeModel *tree_model, GtkTreeIter *iter, gint column, GValue *value) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
+	g_value_init(value, G_TYPE_INT);
+	g_value_set_int(value, column == 0 ? swt_virtual_tree_model_iter_id(self, iter) : -1);
+}
+
+static gboolean swt_virtual_tree_model_iter_next(GtkTreeModel *tree_model, GtkTreeIter *iter) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
+	if (!swt_virtual_tree_model_iter_valid(self, iter)) return FALSE;
+	gint parent_id = GPOINTER_TO_INT(iter->user_data) - 2;
+	gint next = GPOINTER_TO_INT(iter->user_data2);
+	if (next >= swt_virtual_tree_model_child_count(self, parent_id)) return FALSE;
+	swt_virtual_tree_model_set_iter(self, iter, parent_id, next);
+	return TRUE;
+}
+
+static gboolean swt_virtual_tree_model_iter_children(
+	GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *parent) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
+	if (parent == NULL) {
+		if (self->root_count <= 0) return FALSE;
+		swt_virtual_tree_model_set_iter(self, iter, SWT_VIRTUAL_TREE_ROOT, 0);
+		return TRUE;
+	}
+	gint id = swt_virtual_tree_model_iter_id(self, parent);
+	if (id < 0 || swt_virtual_tree_model_child_count(self, id) <= 0) return FALSE;
+	swt_virtual_tree_model_set_iter(self, iter, id, 0);
+	return TRUE;
+}
+
+static gboolean swt_virtual_tree_model_iter_has_child(GtkTreeModel *tree_model, GtkTreeIter *iter) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
+	gint id = swt_virtual_tree_model_iter_id(self, iter);
+	return id >= 0 && swt_virtual_tree_model_child_count(self, id) > 0;
+}
+
+static gint swt_virtual_tree_model_iter_n_children(GtkTreeModel *tree_model, GtkTreeIter *iter) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
+	if (iter == NULL) return self->root_count;
+	gint id = swt_virtual_tree_model_iter_id(self, iter);
+	return id < 0 ? 0 : swt_virtual_tree_model_child_count(self, id);
+}
+
+static gboolean swt_virtual_tree_model_iter_nth_child(
+	GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *parent, gint n) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
+	gint parent_id = SWT_VIRTUAL_TREE_ROOT;
+	if (parent != NULL) {
+		parent_id = swt_virtual_tree_model_iter_id(self, parent);
+		if (parent_id < 0) return FALSE;
+	}
+	if (n < 0 || n >= swt_virtual_tree_model_child_count(self, parent_id)) return FALSE;
+	swt_virtual_tree_model_set_iter(self, iter, parent_id, n);
+	return TRUE;
+}
+
+static gboolean swt_virtual_tree_model_iter_parent(
+	GtkTreeModel *tree_model, GtkTreeIter *iter, GtkTreeIter *child) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
+	if (!swt_virtual_tree_model_iter_valid(self, child)) return FALSE;
+	gint parent_id = GPOINTER_TO_INT(child->user_data) - 2;
+	if (parent_id == SWT_VIRTUAL_TREE_ROOT
+			|| !swt_virtual_tree_model_present(self, parent_id)) return FALSE;
+	swt_virtual_tree_model_set_iter(self, iter,
+		swt_virtual_tree_model_parents(self)[parent_id],
+		swt_virtual_tree_model_indices(self)[parent_id]);
+	return TRUE;
+}
+
+static void swt_virtual_tree_model_tree_model_init(GtkTreeModelIface *iface) {
+	iface->get_flags = swt_virtual_tree_model_get_flags;
+	iface->get_n_columns = swt_virtual_tree_model_get_n_columns;
+	iface->get_column_type = swt_virtual_tree_model_get_column_type;
+	iface->get_iter = swt_virtual_tree_model_get_iter;
+	iface->get_path = swt_virtual_tree_model_get_path;
+	iface->get_value = swt_virtual_tree_model_get_value;
+	iface->iter_next = swt_virtual_tree_model_iter_next;
+	iface->iter_children = swt_virtual_tree_model_iter_children;
+	iface->iter_has_child = swt_virtual_tree_model_iter_has_child;
+	iface->iter_n_children = swt_virtual_tree_model_iter_n_children;
+	iface->iter_nth_child = swt_virtual_tree_model_iter_nth_child;
+	iface->iter_parent = swt_virtual_tree_model_iter_parent;
+}
+
+static void swt_virtual_tree_model_set_property(
+	GObject *object, guint property_id, const GValue *value, GParamSpec *pspec) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)object;
+	switch (property_id) {
+		case SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY: {
+			const gint *snapshot = (const gint *)g_value_get_pointer(value);
+			g_free(self->snapshot);
+			self->snapshot = NULL;
+			self->capacity = 0;
+			self->root_count = 0;
+			if (snapshot != NULL) {
+				gint capacity = snapshot[0];
+				gint root_count = snapshot[1];
+				if (capacity >= 0 && capacity <= (G_MAXINT - 2) / 3 && root_count >= 0) {
+					gsize length = (gsize)(2 + capacity * 3);
+					self->snapshot = g_new(gint, length);
+					memcpy(self->snapshot, snapshot, length * sizeof(gint));
+					self->capacity = capacity;
+					self->root_count = root_count;
+				}
+			}
+			self->stamp++;
+			if (self->stamp == 0) self->stamp = 1;
+			break;
+		}
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+			break;
+	}
+}
+
+static void swt_virtual_tree_model_get_property(
+	GObject *object, guint property_id, GValue *value, GParamSpec *pspec) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)object;
+	switch (property_id) {
+		case SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY:
+			g_value_set_pointer(value, self->snapshot);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+			break;
+	}
+}
+
+static void swt_virtual_tree_model_finalize(GObject *object) {
+	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)object;
+	g_free(self->snapshot);
+	self->snapshot = NULL;
+	G_OBJECT_CLASS(swt_virtual_tree_model_parent_class)->finalize(object);
+}
+
+static void swt_virtual_tree_model_class_init(SwtVirtualTreeModelClass *klass) {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->set_property = swt_virtual_tree_model_set_property;
+	object_class->get_property = swt_virtual_tree_model_get_property;
+	object_class->finalize = swt_virtual_tree_model_finalize;
+	swt_virtual_tree_model_properties[SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY] =
+		g_param_spec_pointer("swt-topology", "SWT topology",
+			"Primitive SWT virtual Tree topology snapshot",
+			G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	g_object_class_install_properties(object_class, SWT_VIRTUAL_TREE_MODEL_N_PROPERTIES,
+		swt_virtual_tree_model_properties);
+}
+
+static void swt_virtual_tree_model_init(SwtVirtualTreeModel *self) {
+	self->stamp = (gint)g_random_int();
+	if (self->stamp == 0) self->stamp = 1;
+	self->capacity = 0;
+	self->root_count = 0;
+	self->snapshot = NULL;
+}
+
 #endif
 
 static void *content_providers_copy(void *ptr) {
@@ -2452,6 +2766,8 @@ JNIEXPORT jlong JNICALL OS_NATIVE(content_1providers_1create_1gtype)
 #if !defined(GTK4)
 	if (lpname && strcmp(lpname, "SwtVirtualTableModel") == 0) {
 		rc = swt_virtual_table_model_get_type();
+	} else if (lpname && strcmp(lpname, "SwtVirtualTreeModel") == 0) {
+		rc = swt_virtual_tree_model_get_type();
 	} else
 #endif
 	{
