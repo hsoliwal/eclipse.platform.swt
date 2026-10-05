@@ -76,10 +76,18 @@ class ToolTipTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (balloonButton.getSelection ()) style |= SWT.BALLOON;
-		if (iconErrorButton.getSelection ()) style |= SWT.ICON_ERROR;
-		if (iconInformationButton.getSelection ()) style |= SWT.ICON_INFORMATION;
-		if (iconWarningButton.getSelection ()) style |= SWT.ICON_WARNING;
+        if (balloonButton.getSelection()) {
+            style |= SWT.BALLOON;
+        }
+        if (iconErrorButton.getSelection()) {
+            style |= SWT.ICON_ERROR;
+        }
+        if (iconInformationButton.getSelection()) {
+            style |= SWT.ICON_INFORMATION;
+        }
+        if (iconWarningButton.getSelection()) {
+            style |= SWT.ICON_WARNING;
+        }
 
 		/* Create the example widgets */
 		toolTip1 = new ToolTip (shell, style);

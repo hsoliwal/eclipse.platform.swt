@@ -60,8 +60,9 @@ class RtfSelection implements Transferable {
 
 	@Override
 	public Object getTransferData(DataFlavor f) throws UnsupportedFlavorException {
-		if (f.equals(flavor))
-			return new ByteArrayInputStream(rtf);
+        if (f.equals(flavor)) {
+            return new ByteArrayInputStream(rtf);
+        }
 		throw new UnsupportedFlavorException(f);
 	}
 

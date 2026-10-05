@@ -27,7 +27,9 @@ public MetaData(String mainClass) {
 	int length = mainClass.length();
 	while (index < length) {
 		index = mainClass.indexOf('.', index);
-		if (index == -1) index = length;
+        if (index == -1) {
+            index = length;
+        }
 		try (InputStream is = clazz.getResourceAsStream(mainClass.substring(0, index) + ".properties")) {
 			if (is != null) {
 				data.load(is);
@@ -44,8 +46,12 @@ public MetaData(Properties data) {
 
 public String getCopyright() {
 	String copyright = getMetaData("swt_copyright", null);
-	if (copyright == null) return "";
-	if (copyright.length() == 0) return "";
+    if (copyright == null) {
+        return "";
+    }
+    if (copyright.length() == 0) {
+        return "";
+    }
 	String end_year_tag = "%END_YEAR";
 	int index = copyright.indexOf(end_year_tag);
 	if (index != -1) {

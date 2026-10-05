@@ -71,7 +71,9 @@ public final class ViewportRewriteStress {
 		Display display = new Display ();
 		WidgetSpy.NonDisposedWidgetTracker spyTracker = screenshotTrackingEnabled ()
 				? createViewportSpyTracker () : null;
-		if (spyTracker != null) spyTracker.startTracking ();
+        if (spyTracker != null) {
+            spyTracker.startTracking();
+        }
 		Shell shell = new Shell (display);
 		shell.setText ("SWT viewport rewrite stress");
 		shell.setLayout (new FillLayout ());
@@ -86,9 +88,13 @@ public final class ViewportRewriteStress {
 		shell.open ();
 		scheduleScreenshotSuite (display, shell, spyTracker);
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
-		if (spyTracker != null) spyTracker.stopTracking ();
+        if (spyTracker != null) {
+            spyTracker.stopTracking();
+        }
 		display.dispose ();
 	}
 
@@ -121,7 +127,9 @@ public final class ViewportRewriteStress {
 					"hex " + Integer.toHexString (index),
 					"mask " + (index & 63)
 			});
-			if ((index & 31) == 0) item.setChecked (true);
+            if ((index & 31) == 0) {
+                item.setChecked(true);
+            }
 		});
 		table.addListener (SWT.PaintItem, event -> paint.incrementAndGet ());
 		table.setItemCount (TABLE_ROWS);
@@ -187,8 +195,12 @@ public final class ViewportRewriteStress {
 			TreeItem item = (TreeItem) event.item;
 			int depth = depth (item);
 			item.setText ("depth=" + depth + " index=" + event.index);
-			if (depth < 3 && item.getItemCount () == 0) item.setItemCount (TREE_CHILDREN);
-			if ((event.index & 63) == 0) item.setChecked (true);
+            if (depth < 3 && item.getItemCount() == 0) {
+                item.setItemCount(TREE_CHILDREN);
+            }
+            if ((event.index & 63) == 0) {
+                item.setChecked(true);
+            }
 		});
 		tree.addListener (SWT.PaintItem, event -> paints.incrementAndGet ());
 		tree.setItemCount (TREE_ROOTS);
@@ -347,7 +359,9 @@ public final class ViewportRewriteStress {
 			horizontal.addListener (SWT.Selection, event -> {
 				horizontalScrolls.incrementAndGet ();
 				int next = horizontal.getSelection ();
-				if (headerOriginX.getAndSet (next) != next) header.redraw ();
+                if (headerOriginX.getAndSet(next) != next) {
+                    header.redraw();
+                }
 			});
 		}
 		ScrollBar vertical = scroller.getVerticalBar ();
@@ -537,7 +551,9 @@ public final class ViewportRewriteStress {
 
 			for (int row = firstPaint; row < lastPaint; row++) {
 				int screenY = (row - firstVisible) * ROW_HEIGHT;
-				if (screenY + ROW_HEIGHT < 0 || screenY > client.height) continue;
+                if (screenY + ROW_HEIGHT < 0 || screenY > client.height) {
+                    continue;
+                }
 				if (selected (selectionMasks, row)) {
 					event.gc.fillRectangle (0, screenY, client.width, ROW_HEIGHT);
 				}
@@ -702,7 +718,9 @@ public final class ViewportRewriteStress {
 	private static void scheduleScreenshotSuite (
 			Display display, Shell shell, WidgetSpy.NonDisposedWidgetTracker tracker) {
 		String directory = System.getProperty (SCREENSHOT_DIR_PROPERTY);
-		if (directory == null || directory.isBlank () || SCREENSHOT_SCENARIOS.isEmpty ()) return;
+        if (directory == null || directory.isBlank() || SCREENSHOT_SCENARIOS.isEmpty()) {
+            return;
+        }
 		Path output = Path.of (directory);
 		try {
 			Files.createDirectories (output);
@@ -716,7 +734,9 @@ public final class ViewportRewriteStress {
 			Display display, Shell shell, Path output,
 			WidgetSpy.NonDisposedWidgetTracker tracker, int index) {
 		if (index >= SCREENSHOT_SCENARIOS.size ()) {
-			if (Boolean.getBoolean (SCREENSHOT_EXIT_PROPERTY) && !shell.isDisposed ()) shell.dispose ();
+            if (Boolean.getBoolean(SCREENSHOT_EXIT_PROPERTY) && !shell.isDisposed()) {
+                shell.dispose();
+            }
 			return;
 		}
 		ScreenshotScenario scenario = SCREENSHOT_SCENARIOS.get (index);
@@ -753,7 +773,9 @@ public final class ViewportRewriteStress {
 
 	private static void capturePng (Control control, Path path) {
 		Point size = control.getSize ();
-		if (size.x <= 0 || size.y <= 0) return;
+        if (size.x <= 0 || size.y <= 0) {
+            return;
+        }
 		Image image = new Image (control.getDisplay (), size.x, size.y);
 		GC gc = new GC (image);
 		try {
@@ -777,7 +799,9 @@ public final class ViewportRewriteStress {
 	private static void captureNativeWindowPng (Control control, Path path) {
 		Shell shell = control.getShell ();
 		Rectangle bounds = shell.getBounds ();
-		if (bounds.width <= 0 || bounds.height <= 0) return;
+        if (bounds.width <= 0 || bounds.height <= 0) {
+            return;
+        }
 		Display display = control.getDisplay ();
 		Image image = new Image (display, bounds.width, bounds.height);
 		GC gc = new GC (display);
@@ -846,7 +870,9 @@ public final class ViewportRewriteStress {
 
 	private static boolean belongsTo (Control root, Control control) {
 		for (Control current = control; current != null; current = current.getParent ()) {
-			if (current == root) return true;
+            if (current == root) {
+                return true;
+            }
 		}
 		return false;
 	}
@@ -861,7 +887,9 @@ public final class ViewportRewriteStress {
 	}
 
 	private static void appendControlSnapshot (StringBuilder out, Control control, String indent) {
-		if (control == null || control.isDisposed ()) return;
+        if (control == null || control.isDisposed()) {
+            return;
+        }
 		Composite parent = control.getParent ();
 		Object layoutData = control.getLayoutData ();
 		out.append (indent).append ("control=").append (control.getClass ().getName ())
@@ -1033,7 +1061,9 @@ public final class ViewportRewriteStress {
 
 	private static void appendScrollBarSnapshot (
 			StringBuilder out, String prefix, ScrollBar bar) {
-		if (bar == null || bar.isDisposed ()) return;
+        if (bar == null || bar.isDisposed()) {
+            return;
+        }
 		out.append (prefix).append ("scrollbar selection=").append (bar.getSelection ())
 				.append (" min=").append (bar.getMinimum ())
 				.append (" max=").append (bar.getMaximum ())
@@ -1080,7 +1110,9 @@ public final class ViewportRewriteStress {
 		Point origin = scroller.getOrigin ();
 		redrawLocked (canvas, () -> scroller.setOrigin (x, origin.y));
 		int actual = scroller.getOrigin ().x;
-		if (headerOriginX.getAndSet (actual) != actual) header.redraw ();
+        if (headerOriginX.getAndSet(actual) != actual) {
+            header.redraw();
+        }
 		canvas.redraw ();
 	}
 
@@ -1089,13 +1121,17 @@ public final class ViewportRewriteStress {
 		try {
 			mutation.run ();
 		} finally {
-			if (!control.isDisposed ()) control.setRedraw (true);
+            if (!control.isDisposed()) {
+                control.setRedraw(true);
+            }
 		}
 	}
 
 	private static int depth (TreeItem item) {
 		int result = 0;
-		while ((item = item.getParentItem ()) != null) result++;
+        while ((item = item.getParentItem()) != null) {
+            result++;
+        }
 		return result;
 	}
 
@@ -1111,7 +1147,9 @@ public final class ViewportRewriteStress {
 		Runnable refresh = new Runnable () {
 			@Override
 			public void run () {
-				if (label.isDisposed ()) return;
+                if (label.isDisposed()) {
+                    return;
+                }
 				label.setText (text.get ());
 				display.timerExec (250, this);
 			}

@@ -70,7 +70,9 @@ public final class RGBA implements Serializable {
  * </ul>
  */
 public RGBA(int red, int green, int blue, int alpha) {
-	if ((alpha > 255) || (alpha < 0)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if ((alpha > 255) || (alpha < 0)) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.rgb = new RGB (red, green, blue);
 	this.alpha = alpha;
 }
@@ -91,7 +93,9 @@ public RGBA(int red, int green, int blue, int alpha) {
 * </ul>
 */
 public RGBA(float hue, float saturation, float brightness, float alpha) {
-	if ((alpha > 255) || (alpha < 0)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if ((alpha > 255) || (alpha < 0)) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	rgb = new RGB(hue, saturation, brightness);
 	this.alpha = (int)(alpha + 0.5);
 }
@@ -124,8 +128,12 @@ public float[] getHSBA() {
  */
 @Override
 public boolean equals(Object object) {
-	if (object == this) return true;
-	if (!(object instanceof RGBA rgba)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof RGBA rgba)) {
+        return false;
+    }
 	return (rgba.rgb.red == this.rgb.red) && (rgba.rgb.green == this.rgb.green) && (rgba.rgb.blue == this.rgb.blue)
 			&& (rgba.alpha == this.alpha);
 }

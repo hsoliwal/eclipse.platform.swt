@@ -31,8 +31,12 @@ final class VirtualTreeViewport {
 	}
 
 	VirtualTreeViewport (VirtualTreeVisibleProjection projection, int overscanRows) {
-		if (projection == null) throw new IllegalArgumentException ("projection");
-		if (overscanRows < 0) throw new IllegalArgumentException ("negative overscan");
+        if (projection == null) {
+            throw new IllegalArgumentException("projection");
+        }
+        if (overscanRows < 0) {
+            throw new IllegalArgumentException("negative overscan");
+        }
 		this.projection = projection;
 		this.overscanRows = overscanRows;
 	}
@@ -41,7 +45,9 @@ final class VirtualTreeViewport {
 		long beforeTop = topRow;
 		scrollMetrics.configure (projection.visibleRowCount (), sampleRowExtent, viewportExtent);
 		topRow = scrollMetrics.clampTopRow (topRow);
-		if (beforeTop != topRow) generation++;
+        if (beforeTop != topRow) {
+            generation++;
+        }
 	}
 
 	void refreshLogicalRange () {
@@ -51,19 +57,25 @@ final class VirtualTreeViewport {
 				scrollMetrics.sampleRowExtent (),
 				scrollMetrics.viewportExtent ());
 		topRow = scrollMetrics.clampTopRow (topRow);
-		if (beforeTop != topRow) generation++;
+        if (beforeTop != topRow) {
+            generation++;
+        }
 	}
 
 	void setTopRow (long requested) {
 		long next = scrollMetrics.clampTopRow (requested);
-		if (next == topRow) return;
+        if (next == topRow) {
+            return;
+        }
 		topRow = next;
 		generation++;
 	}
 
 	void setTopMaterializedId (int materializedId) {
 		long row = projection.visibleIndexOf (materializedId);
-		if (row >= 0) setTopRow (row);
+        if (row >= 0) {
+            setTopRow(row);
+        }
 	}
 
 	long topRow () {
@@ -104,7 +116,9 @@ final class VirtualTreeViewport {
 
 	int paintRowCount () {
 		long total = visibleRowCount ();
-		if (total == 0) return 0;
+        if (total == 0) {
+            return 0;
+        }
 		long first = firstPaintRow ();
 		long visibleEnd = Math.min (total, Math.addExact (topRow, visibleRows ()));
 		long end = Math.min (total, Math.addExact (visibleEnd, overscanRows));
@@ -121,7 +135,9 @@ final class VirtualTreeViewport {
 
 	void ensureVisible (long row) {
 		long total = visibleRowCount ();
-		if (row < 0 || row >= total) throw new IllegalArgumentException ("row outside viewport model");
+        if (row < 0 || row >= total) {
+            throw new IllegalArgumentException("row outside viewport model");
+        }
 		int visible = visibleRows ();
 		if (visible <= 0) {
 			setTopRow (row);
@@ -132,7 +148,9 @@ final class VirtualTreeViewport {
 			return;
 		}
 		long end = Math.addExact (topRow, visible);
-		if (row >= end) setTopRow (row - visible + 1L);
+        if (row >= end) {
+            setTopRow(row - visible + 1L);
+        }
 	}
 
 	long generation () {

@@ -88,7 +88,9 @@ public class Bug560284_DarkTableHeaderLineColor {
 				Button btnNo = new Button(grpTableOwnerDraw, SWT.RADIO);
 				btnNo.setText("No");
 				btnNo.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 
 					table.removeListener(SWT.EraseItem, emptyListener);
 					table.removeListener(SWT.MeasureItem, emptyListener);
@@ -102,7 +104,9 @@ public class Bug560284_DarkTableHeaderLineColor {
 				Button btnYes = new Button(grpTableOwnerDraw, SWT.RADIO);
 				btnYes.setText("Yes");
 				btnYes.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 
 					table.addListener(SWT.EraseItem, emptyListener);
 					table.addListener(SWT.MeasureItem, emptyListener);
@@ -119,7 +123,9 @@ public class Bug560284_DarkTableHeaderLineColor {
 				Button btnNo = new Button(grpTableLinesVisible, SWT.RADIO);
 				btnNo.setText("No");
 				btnNo.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 
 					table.setLinesVisible(false);
 				});
@@ -127,7 +133,9 @@ public class Bug560284_DarkTableHeaderLineColor {
 				Button btnYes = new Button(grpTableLinesVisible, SWT.RADIO);
 				btnYes.setText("Yes");
 				btnYes.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 
 					table.setLinesVisible(true);
 				});
@@ -142,7 +150,9 @@ public class Bug560284_DarkTableHeaderLineColor {
 				Button btnDefault = new Button(grpTheme, SWT.RADIO);
 				btnDefault.setText("Default");
 				btnDefault.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 
 					setColors(shell, null, null);
 				});
@@ -150,7 +160,9 @@ public class Bug560284_DarkTableHeaderLineColor {
 				Button btnLight = new Button(grpTheme, SWT.RADIO);
 				btnLight.setText("Light");
 				btnLight.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 
 					Color backColor = new Color(display, 0xFF, 0xFF, 0xFF);
 					Color foreColor = new Color(display, 0x00, 0x00, 0x00);
@@ -160,7 +172,9 @@ public class Bug560284_DarkTableHeaderLineColor {
 				Button btnDark = new Button(grpTheme, SWT.RADIO);
 				btnDark.setText("Dark");
 				btnDark.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 
 					Color backColor = new Color(display, 0x30, 0x30, 0x30);
 					Color foreColor = new Color(display, 0xD0, 0xD0, 0xD0);
@@ -180,28 +194,36 @@ public class Bug560284_DarkTableHeaderLineColor {
 				Button btnDefault = new Button(grpTableHeaderLineColor, SWT.RADIO);
 				btnDefault.setText("Default");
 				btnDefault.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 					setTableHeaderLineColor(table, null);
 				});
 
 				Button btnLight = new Button(grpTableHeaderLineColor, SWT.RADIO);
 				btnLight.setText("For light");
 				btnLight.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 					setTableHeaderLineColor(table, new Color(display, 0xE5, 0xE5, 0xE5));
 				});
 
 				Button btnDark = new Button(grpTableHeaderLineColor, SWT.RADIO);
 				btnDark.setText("For dark");
 				btnDark.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 					setTableHeaderLineColor(table, new Color(display, 0x50, 0x50, 0x50));
 				});
 
 				Button btnRed = new Button(grpTableHeaderLineColor, SWT.RADIO);
 				btnRed.setText("Red");
 				btnRed.addListener(SWT.Selection, event -> {
-					if (!((Button)event.widget).getSelection()) return;
+                    if (!((Button) event.widget).getSelection()) {
+                        return;
+                    }
 					setTableHeaderLineColor(table, new Color(display, 0xFF, 0x00, 0x00));
 				});
 
@@ -213,7 +235,9 @@ public class Bug560284_DarkTableHeaderLineColor {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		display.dispose ();

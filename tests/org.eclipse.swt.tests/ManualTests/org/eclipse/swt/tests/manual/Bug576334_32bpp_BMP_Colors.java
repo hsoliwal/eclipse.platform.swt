@@ -39,8 +39,9 @@ public class Bug576334_32bpp_BMP_Colors {
 		shell.pack ();
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ())
-				display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

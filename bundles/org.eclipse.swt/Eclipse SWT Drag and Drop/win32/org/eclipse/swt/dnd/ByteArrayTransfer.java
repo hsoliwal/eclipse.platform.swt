@@ -143,13 +143,16 @@ public TransferData[] getSupportedTypes() {
 
 @Override
 public boolean isSupportedType(TransferData transferData){
-	if (transferData == null) return false;
+    if (transferData == null) {
+        return false;
+    }
 	for (int type : getTypeIds()) {
 		FORMATETC format = transferData.formatetc;
-		if (format.cfFormat == type &&
-			(format.dwAspect & COM.DVASPECT_CONTENT) == COM.DVASPECT_CONTENT &&
-			(format.tymed & COM.TYMED_HGLOBAL) == COM.TYMED_HGLOBAL  )
-			return true;
+        if (format.cfFormat == type &&
+                (format.dwAspect & COM.DVASPECT_CONTENT) == COM.DVASPECT_CONTENT &&
+                (format.tymed & COM.TYMED_HGLOBAL) == COM.TYMED_HGLOBAL) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -194,7 +197,9 @@ protected void javaToNative (Object object, TransferData transferData) {
  */
 @Override
 protected Object nativeToJava(TransferData transferData) {
-	if (!isSupportedType(transferData) || transferData.pIDataObject == 0)  return null;
+    if (!isSupportedType(transferData) || transferData.pIDataObject == 0) {
+        return null;
+    }
 
 	IDataObject data = new IDataObject(transferData.pIDataObject);
 	data.AddRef();
@@ -203,7 +208,9 @@ protected Object nativeToJava(TransferData transferData) {
 	stgmedium.tymed = COM.TYMED_HGLOBAL;
 	transferData.result = getData(data, formatetc, stgmedium);
 	data.Release();
-	if (transferData.result != COM.S_OK) return null;
+    if (transferData.result != COM.S_OK) {
+        return null;
+    }
 	long hMem = stgmedium.unionField;
 	int size = OS.GlobalSize(hMem);
 	byte[] buffer = new byte[size];

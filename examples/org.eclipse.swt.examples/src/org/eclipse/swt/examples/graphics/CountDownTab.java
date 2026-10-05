@@ -64,14 +64,16 @@ public class CountDownTab extends AnimatedGraphicsTab {
 	public void createControlPanel(Composite parent) {
 		super.createControlPanel(parent);
 
-		if (nextNumber < 1)
-			nextNumber = startNumber;
+        if (nextNumber < 1) {
+            nextNumber = startNumber;
+        }
 
 		// add selection listener to reset nextNumber after
 		// the sequence has completed
 		playItem.addListener(SWT.Selection, event -> {
-			if (nextNumber < 1)
-				nextNumber = startNumber;
+            if (nextNumber < 1) {
+                nextNumber = startNumber;
+            }
 		});
 
 		Composite comp;
@@ -165,7 +167,9 @@ public class CountDownTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 		Device device = gc.getDevice();
 
 		// diameter of the circle in pixels

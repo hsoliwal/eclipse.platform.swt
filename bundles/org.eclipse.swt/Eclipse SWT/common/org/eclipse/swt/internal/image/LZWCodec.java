@@ -162,8 +162,9 @@ int encodeLoop() {
 		node = nodeStack[currentPrefix];
 		found = true;
 		pixel = nextPixel();
-		if (pixel < 0)
-			return currentPrefix;
+        if (pixel < 0) {
+            return currentPrefix;
+        }
 		while (found && (node.children != null)) {
 			node = node.children;
 			while (found && (node.suffix != pixel)) {
@@ -184,8 +185,9 @@ int encodeLoop() {
 			if (found) {
 				currentPrefix = node.code;
 				pixel = nextPixel();
-				if (pixel < 0)
-					return currentPrefix;
+                if (pixel < 0) {
+                    return currentPrefix;
+                }
 			}
 		}
 		if (found) {
@@ -283,7 +285,9 @@ int nextCode() {
 		if (blockIndex >= blockSize) {
 			blockSize = readBlock();
 			blockIndex = 0;
-			if (blockSize == 0) return endCode;
+            if (blockSize == 0) {
+                return endCode;
+            }
 		}
 		blockIndex++;
 		currentByte = block[blockIndex] & 0xFF;
@@ -291,16 +295,19 @@ int nextCode() {
 		code = currentByte;
 	} else {
 		int shift = bitsLeft - 8;
-		if (shift < 0)
-			code = currentByte >> (0 - shift);
-		else
-			code = currentByte << shift;
+        if (shift < 0) {
+            code = currentByte >> (0 - shift);
+        } else {
+            code = currentByte << shift;
+        }
 	}
 	while (codeSize > bitsLeft) {
 		if (blockIndex >= blockSize) {
 			blockSize = readBlock();
 			blockIndex = 0;
-			if (blockSize == 0) return endCode;
+            if (blockSize == 0) {
+                return endCode;
+            }
 		}
 		blockIndex++;
 		currentByte = block[blockIndex] & 0xFF;
@@ -416,10 +423,15 @@ void nextPutPixels(byte[] buf) {
 		}
 		if (line >= imageHeight) {
 			pass++;
-			if (pass == 2) line = 4;
-			else if (pass == 3) line = 2;
-			else if (pass == 4) line = 1;
-			else if (pass == 5) line = 0;
+            if (pass == 2) {
+                line = 4;
+            } else if (pass == 3) {
+                line = 2;
+            } else if (pass == 4) {
+                line = 1;
+            } else if (pass == 5) {
+                line = 0;
+            }
 			if (pass < 5) {
 				if (loader.hasListeners()) {
 					ImageData imageCopy = (ImageData) image.clone();
@@ -428,7 +440,9 @@ void nextPutPixels(byte[] buf) {
 				}
 			}
 		}
-		if (line >= imageHeight) line = 0;
+        if (line >= imageHeight) {
+            line = 0;
+        }
 	} else {
 		line++;
 	}

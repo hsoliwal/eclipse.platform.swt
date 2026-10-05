@@ -123,7 +123,9 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -163,7 +165,9 @@ void createHandle () {
 
 void createItem (TabItem item, int index) {
 	int count = itemCount;
-	if (!(0 <= index && index <= count)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= count)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (count == items.length) {
 		TabItem [] newItems = new TabItem [items.length + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -194,10 +198,14 @@ void destroyItem (TabItem item) {
 	int count = itemCount;
 	int index = 0;
 	while (index < count) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	if (index == count) return;
+    if (index == count) {
+        return;
+    }
 	--count;
 	System.arraycopy (items, index + 1, items, index, count - index);
 	items [count] = null;
@@ -210,7 +218,9 @@ void destroyItem (TabItem item) {
 
 @Override
 void drawBackground (long id, NSGraphicsContext context, NSRect rect) {
-	if (id != view.id) return;
+    if (id != view.id) {
+        return;
+    }
 	fillBackground (view, context, rect, -1);
 }
 
@@ -221,7 +231,9 @@ Widget findTooltip (NSPoint pt) {
 	if (nsItem != null) {
 		for (int i = 0; i < itemCount; i++) {
 			TabItem item = items [i];
-			if (item.nsItem.id == nsItem.id) return item;
+            if (item.nsItem.id == nsItem.id) {
+                return item;
+            }
 		}
 	}
 	return super.findTooltip (pt);
@@ -256,7 +268,9 @@ public Rectangle getClientArea () {
 public TabItem getItem (int index) {
 	checkWidget ();
 	int count = itemCount;
-	if (!(0 <= index && index < count)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < count)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return items [index];
 }
 
@@ -280,7 +294,9 @@ public TabItem getItem (int index) {
  */
 public TabItem getItem (Point point) {
 	checkWidget ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSPoint nsPoint = new NSPoint ();
 	nsPoint.x = point.x;
 	nsPoint.y = point.y;
@@ -353,7 +369,9 @@ public TabItem [] getItems () {
 public TabItem [] getSelection () {
 	checkWidget ();
 	int index = getSelectionIndex ();
-	if (index == -1) return new TabItem [0];
+    if (index == -1) {
+        return new TabItem [0];
+    }
 	return new TabItem [] {items [index]};
 }
 
@@ -371,9 +389,13 @@ public TabItem [] getSelection () {
 public int getSelectionIndex () {
 	checkWidget ();
 	NSTabViewItem selected =  ((NSTabView)view).selectedTabViewItem();
-	if (selected == null) return -1;
+    if (selected == null) {
+        return -1;
+    }
 	for (int i = 0; i < itemCount; i++) {
-		if (items[i].nsItem.id == selected.id) return i;
+        if (items[i].nsItem.id == selected.id) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -402,10 +424,14 @@ float getThemeAlpha () {
  */
 public int indexOf (TabItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int count = itemCount;
 	for (int i=0; i<count; i++) {
-		if (items [i] == item) return i;
+        if (items [i] == item) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -424,7 +450,9 @@ Point minimumSize (int wHint, int hHint, boolean flushCache) {
 		int index = 0;
 		int count = itemCount;
 		while (index < count) {
-			if (items [index].control == child) break;
+            if (items [index].control == child) {
+                break;
+            }
 			index++;
 		}
 		if (index == count) {
@@ -460,7 +488,9 @@ void removeControl (Control control) {
 	int count = itemCount;
 	for (int i=0; i<count; i++) {
 		TabItem item = items [i];
-		if (item.control == control) item.setControl (null);
+        if (item.control == control) {
+            item.setControl(null);
+        }
 	}
 }
 
@@ -483,8 +513,12 @@ void removeControl (Control control) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -494,7 +528,9 @@ void reskinChildren (int flags) {
 	if (items != null) {
 		for (int i=0; i<itemCount; i++) {
 			TabItem item = items [i];
-			if (item != null) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -537,7 +573,9 @@ void setForeground (double [] color) {
  */
 public void setSelection (TabItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setSelection (new TabItem [] {item});
 }
 
@@ -558,13 +596,17 @@ public void setSelection (TabItem item) {
  */
 public void setSelection (TabItem [] items) {
 	checkWidget ();
-	if (items == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (items == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (items.length == 0) {
 		setSelection (-1, false, false);
 	} else {
 		for (int i=items.length - 1; i>=0; --i) {
 			int index = indexOf (items [i]);
-			if (index != -1) setSelection (index, false, false);
+            if (index != -1) {
+                setSelection(index, false, false);
+            }
 		}
 	}
 }
@@ -585,14 +627,20 @@ public void setSelection (TabItem [] items) {
 public void setSelection (int index) {
 	checkWidget ();
 	int count = itemCount;
-	if (!(0 <= index && index < count)) return;
+    if (!(0 <= index && index < count)) {
+        return;
+    }
 	setSelection (index, false, false);
 }
 
 void setSelection (int index, boolean notify, boolean force) {
-	if (!(0 <= index && index < itemCount)) return;
+    if (!(0 <= index && index < itemCount)) {
+        return;
+    }
 	int currentIndex = getSelectionIndex ();
-	if (!force && currentIndex == index) return;
+    if (!force && currentIndex == index) {
+        return;
+    }
 	if (currentIndex != -1) {
 		TabItem item = items [currentIndex];
 		if (item != null) {
@@ -630,7 +678,9 @@ void setSmallSize () {
 @Override
 boolean traversePage (boolean next) {
 	int count = getItemCount ();
-	if (count == 0) return false;
+    if (count == 0) {
+        return false;
+    }
 	int index = getSelectionIndex ();
 	if (index == -1) {
 		index = 0;
@@ -644,7 +694,9 @@ boolean traversePage (boolean next) {
 
 @Override
 void tabView_willSelectTabViewItem(long id, long sel, long tabView, long tabViewItem) {
-	if (tabViewItem == 0) return;
+    if (tabViewItem == 0) {
+        return;
+    }
 	for (int i = 0; i < itemCount; i++) {
 		TabItem item = items [i];
 		if (item.nsItem.id == tabViewItem) {
@@ -671,7 +723,9 @@ void tabView_willSelectTabViewItem(long id, long sel, long tabView, long tabView
 
 @Override
 void tabView_didSelectTabViewItem(long id, long sel, long tabView, long tabViewItem) {
-	if (tabViewItem == 0) return;
+    if (tabViewItem == 0) {
+        return;
+    }
 	for (int i = 0; i < itemCount; i++) {
 		TabItem item = items [i];
 		/*

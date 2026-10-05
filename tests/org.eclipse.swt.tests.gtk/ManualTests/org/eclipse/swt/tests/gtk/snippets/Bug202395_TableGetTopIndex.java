@@ -59,7 +59,9 @@ public class Bug202395_TableGetTopIndex {
 		System.err.println("TOP-INDEX: " + table.getTopIndex());
 		
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

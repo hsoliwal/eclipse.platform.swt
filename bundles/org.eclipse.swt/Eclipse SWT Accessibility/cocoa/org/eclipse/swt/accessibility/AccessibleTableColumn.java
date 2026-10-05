@@ -52,7 +52,9 @@ class AccessibleTableColumn extends Accessible {
 				for (int j = 0; j < cells.length; j++) {
 					NSValue sizeObj = (NSValue)cells[j].getSizeAttribute(ACC.CHILDID_SELF);
 					NSSize size = sizeObj.sizeValue();
-					if (size.width > width) width = (int) size.width;
+                    if (size.width > width) {
+                        width = (int) size.width;
+                    }
 					height += size.height;
 				}
 

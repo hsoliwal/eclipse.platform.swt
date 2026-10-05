@@ -74,7 +74,9 @@ public void test_virtualTableEditorTracksPinnedItemAcrossViewportScroll() {
 
 	virtualTable.setTopIndex(196);
 	ScrollBar vertical = virtualTable.getVerticalBar();
-	if (vertical != null) vertical.notifyListeners(SWT.Selection, new Event());
+    if (vertical != null) {
+        vertical.notifyListeners(SWT.Selection, new Event());
+    }
 	cellEditor.layout();
 
 	assertSame(edited, cellEditor.getItem());
@@ -432,8 +434,9 @@ public void test_virtualExplicitInsertionShiftsMaterializedIdentity() {
 public void test_deselect$I() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-	items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.select(new int[] {0, 3});
 	assertEquals(2, table.getSelectionCount());
@@ -450,8 +453,9 @@ public void test_deselect$I() {
 	makeCleanEnvironment(false);
 
 	items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.selectAll();
 	assertEquals(number, table.getSelectionCount());
@@ -482,8 +486,9 @@ public void test_deselect$I() {
 public void test_deselectAll() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertEquals(0, table.getSelectionCount());
 	table.select(new int[] {2, 4, 5, 10});
@@ -535,8 +540,9 @@ public void test_deselectI() {
 public void test_deselectII() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.select(new int[] {0, 3, 6});
 	assertEquals(3, table.getSelectionCount());
@@ -559,8 +565,9 @@ public void test_deselectII() {
 	makeCleanEnvironment(false);
 
 	items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.selectAll();
 	assertEquals(number, table.getSelectionCount());
@@ -706,11 +713,13 @@ public void test_getItemHeight() {
 public void test_getItemI() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
-	for (int i = 0; i < number; i++)
-		assertEquals(items[i], table.getItem(i));
+    for (int i = 0; i < number; i++) {
+        assertEquals(items[i], table.getItem(i));
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.getItem(number), "No exception thrown for illegal index argument");
 
 	assertThrows(IllegalArgumentException.class, () -> table.getItem(number+1), "No exception thrown for illegal index argument");
@@ -718,8 +727,9 @@ public void test_getItemI() {
 	// note: SWT.SINGLE
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	for (int i = 0; i < number; i++) {
 		assertEquals(items[i], table.getItem(i));
 	}
@@ -781,8 +791,9 @@ public void test_getItems() {
 public void test_getSelection() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertArrayEquals(new TableItem[] {}, table.getSelection());
 
@@ -798,8 +809,9 @@ public void test_getSelection() {
 	// note: SWT.SINGLE
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertArrayEquals(new TableItem[] {}, table.getSelection());
 
@@ -823,8 +835,9 @@ public void test_getSelection() {
 public void test_getSelectionCount() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertEquals(0, table.getSelectionCount());
 
@@ -840,8 +853,9 @@ public void test_getSelectionCount() {
 	// note: SWT.SINGLE
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertEquals(0, table.getSelectionCount());
 
@@ -865,8 +879,9 @@ public void test_getSelectionCount() {
 public void test_getSelectionIndex() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertEquals(-1, table.getSelectionIndex());
 
@@ -882,8 +897,9 @@ public void test_getSelectionIndex() {
 	// note: SWT.SINGLE
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertEquals(-1, table.getSelectionIndex());
 
@@ -907,24 +923,27 @@ public void test_getSelectionIndex() {
 public void test_getSelectionIndices() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertArrayEquals(new int[]{}, table.getSelectionIndices());
 	table.setSelection(new TableItem[]{items[2], items[number-1], items[10]});
 	assertArrayEquals(new int[]{2, 10, number-1}, table.getSelectionIndices()); // 10 < number
 
 	int[] all = new int[number];
-	for (int i = 0; i<number; i++)
-		all[i]=i;
+    for (int i = 0; i < number; i++) {
+        all[i] = i;
+    }
 	table.setSelection(items);
 	assertArrayEquals(all, table.getSelectionIndices());
 
 	// note: SWT.SINGLE
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertArrayEquals(new int[]{}, table.getSelectionIndices());
 
@@ -1024,44 +1043,52 @@ public void test_indexOfLorg_eclipse_swt_widgets_TableItem() {
 public void test_isSelectedI() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
-	for (int i = 0; i < number; i++)
-		assertTrue(!table.isSelected(i));
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
+    for (int i = 0; i < number; i++) {
+        assertTrue(!table.isSelected(i));
+    }
 	table.setSelection(new TableItem[] {items[2], items[number-1], items[10]});
 	for (int i = 0; i < number; i++) {
-		if (i == 2 || i == number-1 || i == 10)
-			assertTrue(table.isSelected(i));
-		else
-			assertTrue(!table.isSelected(i));
+        if (i == 2 || i == number - 1 || i == 10) {
+            assertTrue(table.isSelected(i));
+        } else {
+            assertTrue(!table.isSelected(i));
+        }
 	}
 
 	table.setSelection(items[0]);
 	for (int i = 0; i < number; i++) {
-		if (i == 0)
-			assertTrue(table.isSelected(i));
-		else
-			assertTrue(!table.isSelected(i));
+        if (i == 0) {
+            assertTrue(table.isSelected(i));
+        } else {
+            assertTrue(!table.isSelected(i));
+        }
 	}
 
 
 	table.setSelection(items);
-	for (int i = 0; i < number; i++)
-		assertTrue(table.isSelected(i));
+    for (int i = 0; i < number; i++) {
+        assertTrue(table.isSelected(i));
+    }
 
 	// note: SWT.SINGLE
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
-	for (int i = 0; i < number; i++)
-		assertTrue(!table.isSelected(i));
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
+    for (int i = 0; i < number; i++) {
+        assertTrue(!table.isSelected(i));
+    }
 	table.setSelection(new TableItem[] {items[10]});
 	for (int i = 0; i < number; i++) {
-		if (i == 10)
-			assertTrue(table.isSelected(i));
-		else
-			assertTrue(!table.isSelected(i));
+        if (i == 10) {
+            assertTrue(table.isSelected(i));
+        } else {
+            assertTrue(!table.isSelected(i));
+        }
 	}
 
 	table.setSelection(items);
@@ -1074,8 +1101,9 @@ public void test_isSelectedI() {
 public void test_remove$I() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.remove(null), "No exception thrown for tableItems == null");
 
 	assertThrows(IllegalArgumentException.class, () -> table.remove(new int[] {2, 1, 0, -100, 5, 5, 2, 1, 0, 0, 0}), "No exception thrown for illegal index arguments");
@@ -1086,8 +1114,9 @@ public void test_remove$I() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertTrue(!items[2].isDisposed());
 	table.remove(new int[] {2});
@@ -1114,8 +1143,9 @@ public void test_remove$I() {
 public void test_removeAll() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.removeAll();
 
@@ -1126,8 +1156,9 @@ public void test_removeAll() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.removeAll();
 	table.removeAll();
@@ -1139,15 +1170,17 @@ public void test_removeAll() {
 public void test_removeII() {
 	int number = 5;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.remove(-number, number + 100), "No exception thrown for illegal index range");
 
 	makeCleanEnvironment(false);
 
 	items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	table.remove(2, 3);
 	assertArrayEquals(new TableItem[]{items[0], items[1], items[4]}, table.getItems());
 	// Make sure the removed items are disposed and other items are not.
@@ -1160,24 +1193,27 @@ public void test_removeII() {
 	makeCleanEnvironment(false);
 
 	items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.remove(2, 100), "No exception thrown for illegal index range");
 	assertArrayEquals(items, table.getItems());
 
 	makeCleanEnvironment(false);
 
 	items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.remove(2, number), "No exception thrown for illegal index range");
 	assertArrayEquals(items, table.getItems());
 
 	makeCleanEnvironment(false);
 
 	items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	table.remove(2, number-1);
 	assertArrayEquals(new TableItem[] {items[0], items[1]}, table.getItems());
 	for (int i = 0; i < 2; i++) {
@@ -1189,8 +1225,9 @@ public void test_removeII() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	table.remove(0, 3);
 	assertArrayEquals(new TableItem[] {items[4]}, table.getItems());
 	for (int i = 0; i <= 3; i++) {
@@ -1202,8 +1239,9 @@ public void test_removeII() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	table.remove(0, number-1);
 	assertArrayEquals(new TableItem[] {}, table.getItems());
 	for (int i = 0; i <= number-1; i++) {
@@ -1212,37 +1250,42 @@ public void test_removeII() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.remove(new int[] {});
 	assertEquals(number, table.getItemCount());
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.remove(-20, -10), "No exception thrown for illegal index range");
 	assertArrayEquals(items, table.getItems());
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.remove(20, 40), "No exception thrown for illegal index range");
 	assertArrayEquals(items, table.getItems());
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	table.remove(200, 40);
 	assertArrayEquals(items, table.getItems());
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	table.remove(2, 2);
 	assertArrayEquals(new TableItem[]{items[0], items[1], items[3], items[4]}, table.getItems());
 	assertTrue(items[2].isDisposed());
@@ -1252,8 +1295,9 @@ public void test_removeII() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	table.remove(0, 0);
 	assertArrayEquals(new TableItem[]{items[1], items[2], items[3], items[4]}, table.getItems());
 	assertTrue(items[0].isDisposed());
@@ -1263,8 +1307,9 @@ public void test_removeII() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	table.remove(4, 4);
 	assertArrayEquals(new TableItem[]{items[0], items[1], items[2], items[3]}, table.getItems());
 	assertTrue(items[4].isDisposed());
@@ -1274,8 +1319,9 @@ public void test_removeII() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertEquals(number, table.getItemCount());
 	assertThrows(IllegalArgumentException.class, () -> table.remove(-10, 2), "No exception thrown for illegal index range");
 	assertEquals(number, table.getItemCount());
@@ -1298,8 +1344,9 @@ public void test_removeII() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.remove(0, number-1);
 	assertEquals(0, table.getItemCount());
@@ -1309,22 +1356,25 @@ public void test_removeII() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.remove(number, number), "No exception thrown for illegal index range");
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.remove(number, number + 100), "No exception thrown for illegal index range");
 
 	makeCleanEnvironment(false);
 
 	int largerNumber = 15;
 	items = new TableItem[largerNumber];
-	for (int i = 0; i < largerNumber; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < largerNumber; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.remove(new int[] {2, 1, 0, 5, 5});
 	assertEquals(largerNumber-4, table.getItemCount());
@@ -1342,8 +1392,9 @@ public void test_select$I() {
 
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.select(new int[] {2, 10, 14});
 	assertArrayEquals(new int[] {2, 10, 14}, table.getSelectionIndices());
@@ -1387,8 +1438,9 @@ public void test_select$I() {
 	makeCleanEnvironment(true);
 
 	items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertThrows(IllegalArgumentException.class, () -> table.select(null), "No exception thrown for selection == null");
 	assertEquals(0, table.getSelectionCount());
@@ -1423,8 +1475,9 @@ public void test_select$I() {
 public void test_selectAll() {
 	int number = 5;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertArrayEquals(new int[]{}, table.getSelectionIndices());
 	table.selectAll();
@@ -1432,8 +1485,9 @@ public void test_selectAll() {
 
 	// test single-selection table
 	makeCleanEnvironment(true);
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertArrayEquals(new int[]{}, table.getSelectionIndices());
 	table.selectAll();
@@ -1444,8 +1498,9 @@ public void test_selectAll() {
 public void test_selectI() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.select(new int[] {10, 2, 14});
 	assertArrayEquals(new int[] {2, 10, 14}, table.getSelectionIndices());
@@ -1459,8 +1514,9 @@ public void test_selectI() {
 	// note: SWT.SINGLE
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.select(0);
 	assertArrayEquals(new int[] {0}, table.getSelectionIndices());
@@ -1487,8 +1543,9 @@ public void test_selectI() {
 public void test_selectII() {
 	int number = 15;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.select(new int[] {10, 2, 14});
 	assertArrayEquals(new int[] {2, 10, 14}, table.getSelectionIndices());
@@ -1513,8 +1570,9 @@ public void test_selectII() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.select(-100, 1000);
 	assertEquals(number, table.getSelectionCount());
@@ -1542,8 +1600,9 @@ public void test_selectII() {
 
 	// note: SWT.SINGLE
 	makeCleanEnvironment(true);
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.select(0, 0);
 	assertEquals(1, table.getSelectionCount());
@@ -1702,8 +1761,9 @@ public void test_setRedrawZ() {
 public void test_setSelection$I() {
 	int number = 5;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.setSelection((int[]) null), "No exception thrown for selection == null");
 
 	table.setSelection(new int[]{});
@@ -1733,8 +1793,9 @@ public void test_setSelection$I() {
 	// test single-selection table
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	assertThrows(IllegalArgumentException.class, () -> table.setSelection((int[]) null), "No exception thrown for selection range == null");
 	assertEquals(0, table.getSelectionCount());
@@ -1774,8 +1835,9 @@ public void test_setSelection$I() {
 public void test_setSelection$Lorg_eclipse_swt_widgets_TableItem() {
 	int number = 5;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> table.setSelection((TableItem[]) null), "No exception thrown for selection range == null");
 	assertEquals(0, table.getSelectionCount());
 
@@ -1808,8 +1870,9 @@ public void test_setSelection$Lorg_eclipse_swt_widgets_TableItem() {
 
 	makeCleanEnvironment(false);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.setSelection(new TableItem[] {items[0]});
 	assertArrayEquals(new TableItem[] {items[0]}, table.getSelection());
@@ -1827,8 +1890,9 @@ public void test_setSelection$Lorg_eclipse_swt_widgets_TableItem() {
 	// test single-selection table
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.setSelection(new TableItem[]{});
 	assertEquals(0, table.getSelectionCount());
@@ -1874,8 +1938,9 @@ public void test_setSelection$Lorg_eclipse_swt_widgets_TableItem() {
 public void test_setSelectionI() {
 	int number = 5;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.setSelection(0);
 	assertArrayEquals(new int[]{0}, table.getSelectionIndices());
@@ -1893,8 +1958,9 @@ public void test_setSelectionI() {
 	// test single-selection table
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.setSelection(0);
 	assertArrayEquals(new int[]{0}, table.getSelectionIndices());
@@ -1917,8 +1983,9 @@ public void test_setSelectionI() {
 public void test_setSelectionII() {
 	int number = 5;
 	TableItem[] items = new TableItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 
 	table.setSelection(0, 1);
 	assertArrayEquals(new int[]{0, 1}, table.getSelectionIndices());
@@ -1944,25 +2011,31 @@ public void test_setSelectionII() {
 	// test single-selection table
 	makeCleanEnvironment(true);
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TableItem(table, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TableItem(table, 0);
+    }
 	table.setSelection(0, 1);
-	if (SwtTestUtil.fCheckSWTPolicy)
-		assertArrayEquals(new int[] {1}, table.getSelectionIndices());
+    if (SwtTestUtil.fCheckSWTPolicy) {
+        assertArrayEquals(new int[]{1}, table.getSelectionIndices());
+    }
 	table.setSelection(2, 4);
-	if (SwtTestUtil.fCheckSWTPolicy)
-		assertArrayEquals(new int[] {4}, table.getSelectionIndices());
+    if (SwtTestUtil.fCheckSWTPolicy) {
+        assertArrayEquals(new int[]{4}, table.getSelectionIndices());
+    }
 	table.setSelection(5, 4);
-	if (SwtTestUtil.fCheckSWTPolicy)
-		assertArrayEquals(new int[] {}, table.getSelectionIndices());
+    if (SwtTestUtil.fCheckSWTPolicy) {
+        assertArrayEquals(new int[]{}, table.getSelectionIndices());
+    }
 	table.setSelection(2, 2);
 	assertArrayEquals(new int[] {2}, table.getSelectionIndices());
 	table.setSelection(1, 4);
-	if (SwtTestUtil.fCheckSWTPolicy)
-		assertArrayEquals(new int[] {4}, table.getSelectionIndices());
+    if (SwtTestUtil.fCheckSWTPolicy) {
+        assertArrayEquals(new int[]{4}, table.getSelectionIndices());
+    }
 	table.setSelection(0, 4);
-	if (SwtTestUtil.fCheckSWTPolicy)
-		assertArrayEquals(new int[] {4}, table.getSelectionIndices());
+    if (SwtTestUtil.fCheckSWTPolicy) {
+        assertArrayEquals(new int[]{4}, table.getSelectionIndices());
+    }
 }
 
 @Test
@@ -1975,7 +2048,9 @@ protected Table table;
 
 private void makeCleanEnvironment(boolean single) {
 // this method must be private or protected so the auto-gen tool keeps it
-	if (table != null) table.dispose();
+    if (table != null) {
+        table.dispose();
+    }
 	table = new Table(shell, single?SWT.SINGLE:SWT.MULTI);
 	setWidget(table);
 }

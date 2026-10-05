@@ -157,8 +157,9 @@ public class ConsistencyUtility {
 		int dups=0;
 		for(int i=0; i<names.length; i++) {
 			int index = names[i].indexOf(':');
-			if(index != -1)
-				names[i] = names[i].substring(0, index);
+            if (index != -1) {
+                names[i] = names[i].substring(0, index);
+            }
 			for(int j=0; j<i; j++) {
 				if(names[i].equals(names[j])) {
 					for(int k=i+1; k<names.length; k++) {
@@ -194,8 +195,9 @@ public class ConsistencyUtility {
 
 	static String getSelectionType(int type) {
 		for (int[] element : selectionConversion) {
-			if(type == element[0])
-				return selectionTypes[element[1]];
+            if (type == element[0]) {
+                return selectionTypes[element[1]];
+            }
 		}
 		return "";
 	}
@@ -207,8 +209,9 @@ public class ConsistencyUtility {
 
 	static String getTraversalType(int type) {
 		int pow = 0;
-		if(type != 0)
-			pow =(int)(Math.log(type)/Math.log(2));
+        if (type != 0) {
+            pow = (int) (Math.log(type) / Math.log(2));
+        }
 		return traversalTypes[pow];
 	}
 
@@ -363,8 +366,9 @@ public class ConsistencyUtility {
 
 	//determines which button to drag with
 	private static int determineDrag() {
-		if(SwtTestUtil.isWindows || SwtTestUtil.isGTK)
-			return 1;
+        if (SwtTestUtil.isWindows || SwtTestUtil.isGTK) {
+            return 1;
+        }
 		return 2;
 	}
 

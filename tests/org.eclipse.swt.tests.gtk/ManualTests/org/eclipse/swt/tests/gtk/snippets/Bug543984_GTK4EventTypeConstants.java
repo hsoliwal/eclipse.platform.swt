@@ -75,8 +75,9 @@ public class Bug543984_GTK4EventTypeConstants {
 		});
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 }

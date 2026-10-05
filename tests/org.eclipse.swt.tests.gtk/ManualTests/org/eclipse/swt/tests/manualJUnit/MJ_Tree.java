@@ -355,14 +355,16 @@ public class MJ_Tree extends MJ_root {
 			int c1w = (int)(width * 0.9);
 			column1.setWidth(c1w);
 			int c1wPost = column1.getWidth();
-			if (c1w != c1wPost)
-				System.err.println("COL_SIZE_ERROR 1 Expected:" + c1w + " actual:" + c1wPost);
+            if (c1w != c1wPost) {
+                System.err.println("COL_SIZE_ERROR 1 Expected:" + c1w + " actual:" + c1wPost);
+            }
 
 			int c2w = width - column1.getWidth();
 			column2.setWidth(c2w);
 			int c2wPost = column2.getWidth();
-			if (c2w != c2wPost)
-				System.err.println("COL_SIZE_ERROR 2 Expected:" + c2w + " actual:" + column2.getWidth());
+            if (c2w != c2wPost) {
+                System.err.println("COL_SIZE_ERROR 2 Expected:" + c2w + " actual:" + column2.getWidth());
+            }
 		};
 
 		comp.addControlListener(ControlListener.controlResizedAdapter(e -> {

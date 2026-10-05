@@ -146,7 +146,9 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -160,23 +162,35 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 			for (int i = 0; i < itemCount; i++) {
 				ExpandItem item = items [i];
 				height += item.getHeaderHeight ();
-				if (item.expanded) height += item.height;
+                if (item.expanded) {
+                    height += item.height;
+                }
 				height += spacing;
 				width = Math.max (width, item.getPreferredWidth (gc));
 			}
 			gc.dispose ();
 		}
 	}
-	if (width == 0) width = DEFAULT_WIDTH;
-	if (height == 0) height = DEFAULT_HEIGHT;
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (width == 0) {
+        width = DEFAULT_WIDTH;
+    }
+    if (height == 0) {
+        height = DEFAULT_HEIGHT;
+    }
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	Rectangle trim = computeTrim (0, 0, width, height);
 	return new Point (trim.width, trim.height);
 }
 
 void createItem (ExpandItem item, int style, int index) {
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (itemCount == items.length) {
 		ExpandItem [] newItems = new ExpandItem [itemCount + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -185,19 +199,27 @@ void createItem (ExpandItem item, int style, int index) {
 	System.arraycopy (items, index, items, index + 1, itemCount - index);
 	items [index] = item;
 	itemCount++;
-	if (focusItem == null) focusItem = item;
+    if (focusItem == null) {
+        focusItem = item;
+    }
 	item.width = Math.max (0, getClientArea ().width - spacing * 2);
 	layoutItems (index, true);
 }
 
 void destroyItem (ExpandItem item) {
-	if (inDispose) return;
+    if (inDispose) {
+        return;
+    }
 	int index = 0;
 	while (index < itemCount) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	if (index == itemCount) return;
+    if (index == itemCount) {
+        return;
+    }
 	if (item == focusItem) {
 		int focusIndex = index > 0 ? index - 1 : 1;
 		if (focusIndex < itemCount) {
@@ -214,7 +236,9 @@ void destroyItem (ExpandItem item) {
 }
 
 int getBandHeight () {
-	if (font == null) return ExpandItem.CHEVRON_SIZE;
+    if (font == null) {
+        return ExpandItem.CHEVRON_SIZE;
+    }
 	GC gc = new GC (this);
 	FontMetrics metrics = gc.getFontMetrics ();
 	gc.dispose ();
@@ -248,7 +272,9 @@ public Color getForeground () {
  */
 public ExpandItem getItem (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return items [index];
 }
 
@@ -325,9 +351,13 @@ public int getSpacing () {
  */
 public int indexOf (ExpandItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i = 0; i < itemCount; i++) {
-		if (items [i] == item) return i;
+        if (items [i] == item) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -337,17 +367,23 @@ void layoutItems (int index, boolean setScrollbar) {
 		int y = spacing - yCurrentScroll;
 		for (int i = 0; i < index; i++) {
 			ExpandItem item = items [i];
-			if (item.expanded) y += item.height;
+            if (item.expanded) {
+                y += item.height;
+            }
 			y += item.getHeaderHeight() + spacing;
 		}
 		for (int i = index; i < itemCount; i++) {
 			ExpandItem item = items [i];
 			item.setBounds (spacing, y, 0, 0, true, false);
-			if (item.expanded) y += item.height;
+            if (item.expanded) {
+                y += item.height;
+            }
 			y += item.getHeaderHeight() + spacing;
 		}
 	}
-	if (setScrollbar) setScrollbar ();
+    if (setScrollbar) {
+        setScrollbar();
+    }
 }
 
 /**
@@ -369,8 +405,12 @@ void layoutItems (int index, boolean setScrollbar) {
  */
 public void removeExpandListener (ExpandListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Expand, listener);
 	eventTable.unhook (SWT.Collapse, listener);
 }
@@ -380,7 +420,9 @@ void reskinChildren (int flags) {
 	if (items != null) {
 		for (int i=0; i<items.length; i++) {
 			ExpandItem item = items [i];
-			if (item != null ) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -400,13 +442,19 @@ public void setForeground (Color color) {
 }
 
 void setScrollbar () {
-	if (itemCount == 0) return;
+    if (itemCount == 0) {
+        return;
+    }
 	ScrollBar verticalBar = getVerticalBar ();
-	if (verticalBar == null) return;
+    if (verticalBar == null) {
+        return;
+    }
 	int height = getClientArea ().height;
 	ExpandItem item = items [itemCount - 1];
 	int maxHeight = item.y + getBandHeight () + spacing;
-	if (item.expanded) maxHeight += item.height;
+    if (item.expanded) {
+        maxHeight += item.height;
+    }
 
 	//claim bottom free space
 	if (yCurrentScroll > 0 && height > maxHeight) {
@@ -435,13 +483,19 @@ void setScrollbar () {
  */
 public void setSpacing (int spacing) {
 	checkWidget ();
-	if (spacing < 0) return;
-	if (spacing == this.spacing) return;
+    if (spacing < 0) {
+        return;
+    }
+    if (spacing == this.spacing) {
+        return;
+    }
 	this.spacing = spacing;
 	int width = Math.max (0, getClientArea ().width - spacing * 2);
 	for (int i = 0; i < itemCount; i++) {
 		ExpandItem item = items[i];
-		if (item.width != width) item.setBounds (0, 0, width, item.height, false, true);
+        if (item.width != width) {
+            item.setBounds(0, 0, width, item.height, false, true);
+        }
 	}
 	layoutItems (0, true);
 	redraw ();
@@ -479,11 +533,15 @@ void onDispose (Event event) {
 }
 
 void onFocus () {
-	if (focusItem != null) focusItem.redraw ();
+    if (focusItem != null) {
+        focusItem.redraw();
+    }
 }
 
 void onKeyDown (Event event) {
-	if (focusItem == null) return;
+    if (focusItem == null) {
+        return;
+    }
 	switch (event.keyCode) {
 		case 13: /* Return */
 		case 32: /* Space */
@@ -515,7 +573,9 @@ void onKeyDown (Event event) {
 }
 
 void onMouseDown (Event event) {
-	if (event.button != 1) return;
+    if (event.button != 1) {
+        return;
+    }
 	int x = event.x;
 	int y = event.y;
 	for (int i = 0; i < itemCount; i++) {
@@ -532,8 +592,12 @@ void onMouseDown (Event event) {
 }
 
 void onMouseUp (Event event) {
-	if (event.button != 1) return;
-	if (focusItem == null) return;
+    if (event.button != 1) {
+        return;
+    }
+    if (focusItem == null) {
+        return;
+    }
 	int x = event.x;
 	int y = event.y;
 	boolean hover = focusItem.x <= x && x < (focusItem.x + focusItem.width) && focusItem.y <= y && y < (focusItem.y + getBandHeight ());

@@ -98,11 +98,15 @@ public class BlockEffectTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (sourceImage == null) {
 			Image loaded = example.loadImage(gc.getDevice(), "flower.jpg"); //$NON-NLS-1$
-			if (loaded == null) return;
+            if (loaded == null) {
+                return;
+            }
 			sourceImage = loaded.getImageData();
 			imgWidth = sourceImage.width;
 			imgHeight = sourceImage.height;

@@ -45,7 +45,9 @@ public static void main(String [] args) {
 	text2.setText("But Tab will NOT traverse out from here (Ctrl+Tab will).");
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

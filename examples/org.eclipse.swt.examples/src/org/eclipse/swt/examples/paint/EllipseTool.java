@@ -59,11 +59,13 @@ public class EllipseTool extends DragPaintSession implements PaintTool {
 	@Override
 	protected Figure createFigure(Point a, Point b) {
 		ContainerFigure container = new ContainerFigure();
-		if (settings.commonFillType != ToolSettings.ftNone)
-			container.add(new SolidEllipseFigure(settings.commonBackgroundColor, a.x, a.y, b.x, b.y));
-		if (settings.commonFillType != ToolSettings.ftSolid)
-			container.add(new EllipseFigure(settings.commonForegroundColor, settings.commonBackgroundColor, settings.commonLineStyle,
-				a.x, a.y, b.x, b.y));
+        if (settings.commonFillType != ToolSettings.ftNone) {
+            container.add(new SolidEllipseFigure(settings.commonBackgroundColor, a.x, a.y, b.x, b.y));
+        }
+        if (settings.commonFillType != ToolSettings.ftSolid) {
+            container.add(new EllipseFigure(settings.commonForegroundColor, settings.commonBackgroundColor, settings.commonLineStyle,
+                    a.x, a.y, b.x, b.y));
+        }
 		return container;
 	}
 }

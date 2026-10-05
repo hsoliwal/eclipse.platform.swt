@@ -50,8 +50,9 @@ public class Bug286244_ShellActivateLoop {
 		shell.setSize(160, 100);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

@@ -105,13 +105,25 @@ public class Bug497705_setBoundsAfterSetVisible {
 	public void fails_moveInnvisibleControl() {
 		testControl.setBounds(4, 4, 6, 6);
 
-		shell.open(); for (int i = 0; i < 500; i++) display.readAndDispatch();
+		shell.open();
+        for (int i = 0; i < 500; i++) {
+            display.readAndDispatch();
+        }
 		testControl.setVisible(false);
-		shell.open(); for (int i = 0; i < 500; i++) display.readAndDispatch();
+		shell.open();
+        for (int i = 0; i < 500; i++) {
+            display.readAndDispatch();
+        }
 		testControl.setBounds(x, y, width, height);
-		shell.open(); for (int i = 0; i < 500; i++) display.readAndDispatch();
+		shell.open();
+        for (int i = 0; i < 500; i++) {
+            display.readAndDispatch();
+        }
 		testControl.setVisible(true);
-		shell.open(); for (int i = 0; i < 500; i++) display.readAndDispatch();
+		shell.open();
+        for (int i = 0; i < 500; i++) {
+            display.readAndDispatch();
+        }
 
 		bounds = testControl.getBounds(); // Visually looks ok. (width/height), but programmatically incorrect getBounds().
 		verifyBounds();
@@ -177,8 +189,9 @@ public class Bug497705_setBoundsAfterSetVisible {
 
 		// doing readAndDispatch *After* setBounds *many times* gives gtk time to update it's cache, and getBounds() returns correct coordinates.
 		shell.open();
-		for (int i = 0; i < 1000; i++)
-			display.readAndDispatch();
+        for (int i = 0; i < 1000; i++) {
+            display.readAndDispatch();
+        }
 
 		bounds = testControl.getBounds();
 		verifyBounds();
@@ -187,12 +200,15 @@ public class Bug497705_setBoundsAfterSetVisible {
 	@AfterEach
 	public void tearDown() {
 		if (debugShowWidget) {
-			if (!passed) System.err.println(log.toString());
+            if (!passed) {
+                System.err.println(log.toString());
+            }
 
 			shell.open();
 			while (!shell.isDisposed()) {
-				if (!display.readAndDispatch())
-					display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 			display.dispose();
 		}

@@ -52,7 +52,9 @@ public class Snippet328 {
 		shell.setSize(800, 400);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}
@@ -78,7 +80,9 @@ public class Snippet328 {
 						}
 						break;
 					case SWT.MouseExit:
-						if (hover != -1) redraw();
+                        if (hover != -1) {
+                            redraw();
+                        }
 						hover = -1;
 						break;
 				}
@@ -136,7 +140,9 @@ public class Snippet328 {
 		}
 
 		void handleDragMark (Event e) {
-			if (hover <= 0) return;
+            if (hover <= 0) {
+                return;
+            }
 			int [] tabs = styledText.getLineTabStops(line);
 			int margin = styledText.getLeftMargin() + styledText.getBorderWidth();
 			int count = tabs.length;
@@ -167,7 +173,9 @@ public class Snippet328 {
 				tabs = newTabs;
 			}
 			int min = index > 0 ? tabs [index - 1] + 1 : 0;
-			if (x < min) x = min;
+            if (x < min) {
+                x = min;
+            }
 			int max = tabs[index + 1] - 1;
 			if (x > max) {
 				int diff = x - tabs[index];
@@ -190,7 +198,9 @@ public class Snippet328 {
 			int i;
 			for (i = 0; i < tabs.length; i++) {
 				x = tabs[i] + margin;
-				if (x > e.x + e.width) break;
+                if (x > e.x + e.width) {
+                    break;
+                }
 				gc.setBackground(display.getSystemColor(hover == i + 1 ? SWT.COLOR_RED : SWT.COLOR_BLACK));
 				gc.fillPolygon(new int[] {x,0, x+5,0, x, 10});
 			}

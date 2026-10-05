@@ -45,8 +45,9 @@ byte[] loadData(byte[] infoHeader, int stride) {
 	int dataSize = height * stride;
 	byte[] data = new byte[dataSize];
 	try {
-		if (inputStream.read(data) != dataSize)
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (inputStream.read(data) != dataSize) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
@@ -63,8 +64,9 @@ int[] loadFileHeader() {
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
-	if (header[0] != 0x4D42)
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (header[0] != 0x4D42) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	return header;
 }
 @Override
@@ -115,15 +117,20 @@ PaletteData loadPalette(byte[] infoHeader) {
 		int numColors = 1 << bitCount;
 		byte[] buf = new byte[numColors * 3];
 		try {
-			if (inputStream.read(buf) != buf.length)
-				SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (inputStream.read(buf) != buf.length) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 		} catch (IOException e) {
 			SWT.error(SWT.ERROR_IO, e);
 		}
 		return paletteFromBytes(buf, numColors);
 	}
-	if (bitCount == 16) return new PaletteData(0x7C00, 0x3E0, 0x1F);
-	if (bitCount == 24) return new PaletteData(0xFF, 0xFF00, 0xFF0000);
+    if (bitCount == 16) {
+        return new PaletteData(0x7C00, 0x3E0, 0x1F);
+    }
+    if (bitCount == 24) {
+        return new PaletteData(0xFF, 0xFF00, 0xFF0000);
+    }
 	return new PaletteData(0xFF00, 0xFF0000, 0xFF000000);
 }
 PaletteData paletteFromBytes(byte[] bytes, int numColors) {
@@ -171,7 +178,9 @@ int unloadData(ImageData image, OutputStream out) {
 		if (image.depth == 16) {
 			for (int y = 0; y < image.height; y += linesPerBuf) {
 				int count = image.height - y;
-				if (linesPerBuf < count) count = linesPerBuf;
+                if (linesPerBuf < count) {
+                    count = linesPerBuf;
+                }
 				int bufOffset = 0;
 				for (int i = 0; i < count; i++) {
 					for (int wIndex = 0; wIndex < bpl; wIndex += 2) {
@@ -210,18 +219,21 @@ void unloadIntoByteStream(ImageLoader loader) {
 	ImageData image = loader.data[0];
 	byte[] rgbs;
 	int numCols;
-	if (!((image.depth == 1) || (image.depth == 4) || (image.depth == 8) ||
-		  (image.depth == 16) || (image.depth == 24) || (image.depth == 32)))
-			SWT.error(SWT.ERROR_UNSUPPORTED_DEPTH);
+    if (!((image.depth == 1) || (image.depth == 4) || (image.depth == 8) ||
+            (image.depth == 16) || (image.depth == 24) || (image.depth == 32))) {
+        SWT.error(SWT.ERROR_UNSUPPORTED_DEPTH);
+    }
 	PaletteData pal = image.palette;
 	if ((image.depth == 16) || (image.depth == 24) || (image.depth == 32)) {
-		if (!pal.isDirect)
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (!pal.isDirect) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		numCols = 0;
 		rgbs = null;
 	} else {
-		if (pal.isDirect)
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (pal.isDirect) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		numCols = pal.colors.length;
 		rgbs = paletteToBytes(pal);
 	}

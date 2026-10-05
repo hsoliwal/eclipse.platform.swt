@@ -32,7 +32,9 @@ PngIhdrChunk getIhdrChunk() {
 	if (headerChunk == null) {
 		try {
 			PngChunk chunk = PngChunk.readNextFromStream(inputStream);
-			if (chunk == null) SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (chunk == null) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 			headerChunk = (PngIhdrChunk) chunk;
 			headerChunk.validate(readState, null);
 		} catch (ClassCastException e) {
@@ -43,10 +45,14 @@ PngIhdrChunk getIhdrChunk() {
 }
 
 PngChunk readNextChunk() {
-	if (headerChunk == null) return getIhdrChunk();
+    if (headerChunk == null) {
+        return getIhdrChunk();
+    }
 
 	PngChunk chunk = PngChunk.readNextFromStream(inputStream);
-	if (chunk == null) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (chunk == null) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	switch (chunk.getChunkType()) {
 		case PngChunk.CHUNK_tRNS:
 			((PngTrnsChunk) chunk).validate(readState, headerChunk, paletteChunk);

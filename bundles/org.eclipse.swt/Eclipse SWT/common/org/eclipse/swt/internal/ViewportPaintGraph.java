@@ -160,15 +160,21 @@ public final class ViewportPaintGraph {
 		}
 
 		public void map (float x, float y, float [] out) {
-			if (out == null || out.length < 2) throw new IllegalArgumentException ("affine output too small");
+            if (out == null || out.length < 2) {
+                throw new IllegalArgumentException("affine output too small");
+            }
 			out [0] = m11 * x + m21 * y + dx;
 			out [1] = m12 * x + m22 * y + dy;
 		}
 
 		public boolean inverseMap (float x, float y, float [] out) {
-			if (out == null || out.length < 2) throw new IllegalArgumentException ("affine output too small");
+            if (out == null || out.length < 2) {
+                throw new IllegalArgumentException("affine output too small");
+            }
 			float determinant = m11 * m22 - m21 * m12;
-			if (determinant == 0) return false;
+            if (determinant == 0) {
+                return false;
+            }
 			float px = x - dx;
 			float py = y - dy;
 			out [0] = (m22 * px - m21 * py) / determinant;
@@ -244,8 +250,12 @@ public final class ViewportPaintGraph {
 	public void setZOrder (int node, int zOrder) {
 		requireNode (node);
 		int parent = parents [node];
-		if (parent < 0) throw new IllegalArgumentException ("z-order requires an attached sibling");
-		if (zOrders [node] == zOrder) return;
+        if (parent < 0) {
+            throw new IllegalArgumentException("z-order requires an attached sibling");
+        }
+        if (zOrders [node] == zOrder) {
+            return;
+        }
 		unlinkChild (parent, node);
 		zOrders [node] = zOrder;
 		linkChild (parent, node);
@@ -258,7 +268,9 @@ public final class ViewportPaintGraph {
 
 	public boolean effectiveLayer (int node, int [] out) {
 		requireNode (node);
-		if (out == null || out.length == 0) throw new IllegalArgumentException ("layer output too small");
+        if (out == null || out.length == 0) {
+            throw new IllegalArgumentException("layer output too small");
+        }
 		for (int current = node; current >= 0; current = parents [current]) {
 			if ((flags [current] & HAS_LAYER) != 0) {
 				out [0] = layers [current];
@@ -321,14 +333,18 @@ public final class ViewportPaintGraph {
 	 */
 	public boolean rootClip (int node, float [] out) {
 		requireAttachedNode (node);
-		if (out == null || out.length < 4) throw new IllegalArgumentException ("clip output too small");
+        if (out == null || out.length < 4) {
+            throw new IllegalArgumentException("clip output too small");
+        }
 		boolean clipped = false;
 		float left = Float.NEGATIVE_INFINITY;
 		float top = Float.NEGATIVE_INFINITY;
 		float right = Float.POSITIVE_INFINITY;
 		float bottom = Float.POSITIVE_INFINITY;
 		for (int current = node; current >= 0; current = parents [current]) {
-			if ((flags [current] & HAS_CLIP) == 0) continue;
+            if ((flags [current] & HAS_CLIP) == 0) {
+                continue;
+            }
 			mapRectToRoot (
 					current,
 					clipX [current], clipY [current],
@@ -347,7 +363,9 @@ public final class ViewportPaintGraph {
 				bottom = Math.min (bottom, boundsScratch [1] + boundsScratch [3]);
 			}
 		}
-		if (!clipped) return false;
+        if (!clipped) {
+            return false;
+        }
 		out [0] = left;
 		out [1] = top;
 		out [2] = Math.max (0, right - left);
@@ -357,7 +375,9 @@ public final class ViewportPaintGraph {
 
 	public void setStroke (int group, int width, int style, int cap, int join) {
 		requireGroup (group);
-		if (width < 0) throw new IllegalArgumentException ("negative line width");
+        if (width < 0) {
+            throw new IllegalArgumentException("negative line width");
+        }
 		lineWidth [group] = width;
 		lineStyle [group] = style;
 		lineCap [group] = cap;
@@ -372,7 +392,9 @@ public final class ViewportPaintGraph {
 
 	public boolean effectiveStroke (int node, int [] out) {
 		requireNode (node);
-		if (out == null || out.length < 4) throw new IllegalArgumentException ("stroke output too small");
+        if (out == null || out.length < 4) {
+            throw new IllegalArgumentException("stroke output too small");
+        }
 		for (int current = node; current >= 0; current = parents [current]) {
 			if ((flags [current] & HAS_STROKE) != 0) {
 				out [0] = lineWidth [current];
@@ -387,7 +409,9 @@ public final class ViewportPaintGraph {
 
 	public void mapToRoot (int node, float x, float y, float [] out) {
 		requireAttachedNode (node);
-		if (out == null || out.length < 2) throw new IllegalArgumentException ("coordinate output too small");
+        if (out == null || out.length < 2) {
+            throw new IllegalArgumentException("coordinate output too small");
+        }
 		rootTransform (node, affineScratch);
 		out [0] = affineScratch [0] * x + affineScratch [2] * y + affineScratch [4];
 		out [1] = affineScratch [1] * x + affineScratch [3] * y + affineScratch [5];
@@ -395,11 +419,15 @@ public final class ViewportPaintGraph {
 
 	public boolean mapFromRoot (int node, float x, float y, float [] out) {
 		requireAttachedNode (node);
-		if (out == null || out.length < 2) throw new IllegalArgumentException ("coordinate output too small");
+        if (out == null || out.length < 2) {
+            throw new IllegalArgumentException("coordinate output too small");
+        }
 		rootTransform (node, affineScratch);
 		float determinant = affineScratch [0] * affineScratch [3]
 				- affineScratch [2] * affineScratch [1];
-		if (determinant == 0) return false;
+        if (determinant == 0) {
+            return false;
+        }
 		float px = x - affineScratch [4];
 		float py = y - affineScratch [5];
 		out [0] = (affineScratch [3] * px - affineScratch [2] * py) / determinant;
@@ -447,7 +475,9 @@ public final class ViewportPaintGraph {
 		a [node] = x;
 		b [node] = y;
 		payloads [node] = text;
-		if (transparent) flags [node] |= TEXT_TRANSPARENT;
+        if (transparent) {
+            flags [node] |= TEXT_TRANSPARENT;
+        }
 		geometryNodeCount++;
 		return node;
 	}
@@ -493,7 +523,9 @@ public final class ViewportPaintGraph {
 			maxX = Math.max (maxX, x);
 			maxY = Math.max (maxY, y);
 		}
-		if (points.length == 0) minX = minY = maxX = maxY = 0;
+        if (points.length == 0) {
+            minX = minY = maxX = maxY = 0;
+        }
 
 		int node = newNode (kind, parent);
 		ensurePathTypeCapacity (pathTypeSize + types.length);
@@ -593,7 +625,9 @@ public final class ViewportPaintGraph {
 			boolean filterLayer, int requestedLayer) {
 		Objects.requireNonNull (gc, "gc");
 		Objects.requireNonNull (initialTransform, "initialTransform");
-		if (gc.isDisposed ()) throw new IllegalArgumentException ("disposed GC");
+        if (gc.isDisposed()) {
+            throw new IllegalArgumentException("disposed GC");
+        }
 
 		int initialCapacity = Math.max (16, nodeCount);
 		int [] nodeStack = new int [initialCapacity];
@@ -634,7 +668,9 @@ public final class ViewportPaintGraph {
 				switch (kinds [node]) {
 					case GROUP -> {
 						Affine next = transform;
-						if (transformIds [node] != 0) next = transform.compose (transform (transformIds [node]));
+                        if (transformIds [node] != 0) {
+                            next = transform.compose(transform(transformIds [node]));
+                        }
 						if (clip != null && (flags [node] & HAS_CULL_BOUNDS) != 0
 								&& outsideBounds (
 										next,
@@ -727,13 +763,17 @@ public final class ViewportPaintGraph {
 			}
 		} finally {
 			if (saved != null) {
-				if (transformedGc) gc.setTransform (saved);
+                if (transformedGc) {
+                    gc.setTransform(saved);
+                }
 				work.dispose ();
 				saved.dispose ();
 			}
 			if (replayPaths != null) {
 				for (Path replayPath : replayPaths) {
-					if (replayPath != null && !replayPath.isDisposed ()) replayPath.dispose ();
+                    if (replayPath != null && !replayPath.isDisposed()) {
+                        replayPath.dispose();
+                    }
 				}
 			}
 		}
@@ -756,7 +796,9 @@ public final class ViewportPaintGraph {
 
 	private Path replayPath (GC gc, int node, Path [] replayPaths) {
 		Path path = replayPaths [node];
-		if (path != null) return path;
+        if (path != null) {
+            return path;
+        }
 		PathData data = new PathData ();
 		int typeOffset = pathTypeOffsets [node];
 		int typeCount = pathTypeCounts [node];
@@ -852,7 +894,9 @@ public final class ViewportPaintGraph {
 		nextSibling [node] = previousSibling [node] = NONE;
 		parents [node] = parent;
 		targets [node] = NONE;
-		if (parent >= 0) linkChild (parent, node);
+        if (parent >= 0) {
+            linkChild(parent, node);
+        }
 		return node;
 	}
 
@@ -876,17 +920,26 @@ public final class ViewportPaintGraph {
 		nextSibling [child] = cursor;
 		previousSibling [child] = previous;
 		previousSibling [cursor] = child;
-		if (previous == NONE) firstChild [parent] = child;
-		else nextSibling [previous] = child;
+        if (previous == NONE) {
+            firstChild [parent] = child;
+        } else {
+            nextSibling [previous] = child;
+        }
 	}
 
 	private void unlinkChild (int parent, int child) {
 		int previous = previousSibling [child];
 		int next = nextSibling [child];
-		if (previous == NONE) firstChild [parent] = next;
-		else nextSibling [previous] = next;
-		if (next == NONE) lastChild [parent] = previous;
-		else previousSibling [next] = previous;
+        if (previous == NONE) {
+            firstChild [parent] = next;
+        } else {
+            nextSibling [previous] = next;
+        }
+        if (next == NONE) {
+            lastChild [parent] = previous;
+        } else {
+            previousSibling [next] = previous;
+        }
 		previousSibling [child] = NONE;
 		nextSibling [child] = NONE;
 	}
@@ -897,21 +950,31 @@ public final class ViewportPaintGraph {
 	}
 
 	private boolean wouldReach (int start, int wanted) {
-		if (start == wanted) return true;
+        if (start == wanted) {
+            return true;
+        }
 		boolean [] seen = new boolean [nodeCount];
 		int [] stack = new int [Math.max (16, nodeCount)];
 		int size = 0;
 		stack [size++] = start;
 		while (size != 0) {
 			int node = stack [--size];
-			if (node == wanted) return true;
-			if (seen [node]) continue;
+            if (node == wanted) {
+                return true;
+            }
+            if (seen [node]) {
+                continue;
+            }
 			seen [node] = true;
 			for (int child = firstChild [node]; child != NONE; child = nextSibling [child]) {
-				if (size == stack.length) stack = Arrays.copyOf (stack, stack.length * 2);
+                if (size == stack.length) {
+                    stack = Arrays.copyOf(stack, stack.length * 2);
+                }
 				stack [size++] = child;
 				if (kinds [child] == INSTANCE) {
-					if (size == stack.length) stack = Arrays.copyOf (stack, stack.length * 2);
+                    if (size == stack.length) {
+                        stack = Arrays.copyOf(stack, stack.length * 2);
+                    }
 					stack [size++] = targets [child];
 				}
 			}
@@ -954,7 +1017,9 @@ public final class ViewportPaintGraph {
 	}
 
 	private void requireNode (int node) {
-		if (node < 0 || node >= nodeCount) throw new IllegalArgumentException ("invalid paint node");
+        if (node < 0 || node >= nodeCount) {
+            throw new IllegalArgumentException("invalid paint node");
+        }
 	}
 
 	private void requireAttachedNode (int node) {
@@ -974,7 +1039,9 @@ public final class ViewportPaintGraph {
 			}
 			int transformId = (kinds [current] == GROUP || kinds [current] == INSTANCE)
 					? transformIds [current] : 0;
-			if (transformId == 0) continue;
+            if (transformId == 0) {
+                continue;
+            }
 			int offset = transformId * 6;
 			float l11 = transforms [offset];
 			float l12 = transforms [offset + 1];
@@ -1043,7 +1110,9 @@ public final class ViewportPaintGraph {
 	}
 
 	private void ensureNodeCapacity (int required) {
-		if (required <= kinds.length) return;
+        if (required <= kinds.length) {
+            return;
+        }
 		int old = kinds.length;
 		int next = Math.max (required, old * 2);
 		kinds = Arrays.copyOf (kinds, next);
@@ -1091,18 +1160,24 @@ public final class ViewportPaintGraph {
 	}
 
 	private void ensurePathTypeCapacity (int required) {
-		if (required <= pathTypes.length) return;
+        if (required <= pathTypes.length) {
+            return;
+        }
 		pathTypes = Arrays.copyOf (pathTypes, Math.max (required, pathTypes.length * 2));
 	}
 
 	private void ensurePathPointCapacity (int required) {
-		if (required <= pathPoints.length) return;
+        if (required <= pathPoints.length) {
+            return;
+        }
 		pathPoints = Arrays.copyOf (pathPoints, Math.max (required, pathPoints.length * 2));
 	}
 
 	private void ensureTransformCapacity (int required) {
 		int current = transforms.length / 6;
-		if (required <= current) return;
+        if (required <= current) {
+            return;
+        }
 		transforms = Arrays.copyOf (transforms, Math.max (required, current * 2) * 6);
 	}
 }

@@ -113,7 +113,9 @@ public class SessionManagerDBus {
 		// session manager connection implemented in application itself.
 		boolean isDisabled = System.getProperty("org.eclipse.swt.internal.SessionManagerDBus.disable") != null
 				|| System.getenv("org.eclipse.swt.internal.SessionManagerDBus.disable") != null;
-		if (isDisabled) return;
+        if (isDisabled) {
+            return;
+        }
 
 		start();
 	}
@@ -449,7 +451,9 @@ public class SessionManagerDBus {
 
 		// NOTE: the returned pointer is not valid after g_unsetenv()
 		long valueC = OS.g_getenv(DESKTOP_AUTOSTART_ID);
-		if (valueC == 0) return null;
+        if (valueC == 0) {
+            return null;
+        }
 		String result = Converter.cCharPtrToJavaString(valueC, false);
 
 		// Unset value, so it doesn't leak into child processes
@@ -480,7 +484,9 @@ public class SessionManagerDBus {
 				0,
 				error);
 
-		if (clientInfo == 0) return extractFreeGError(error[0]);
+        if (clientInfo == 0) {
+            return extractFreeGError(error[0]);
+        }
 
 		/*
 		 * Bug 548806: LXDE's emulation of Gnome session manager is
@@ -504,31 +510,40 @@ public class SessionManagerDBus {
 		// This ID doesn't matter much, at least according to what I know.
 		// Still, I decided to make it customizable for those who love identity.
 		String appID = System.getProperty("org.eclipse.swt.internal.SessionManagerDBus.appID");	//$NON-NLS-1$
-		if (appID == null) appID = "org.eclipse.swt.Application";	//$NON-NLS-1$
+        if (appID == null) {
+            appID = "org.eclipse.swt.Application";
+        }	//$NON-NLS-1$
 
 		// Applications are expected to register using value of
 		// 'DESKTOP_AUTOSTART_ID' environment if it's present.
 		String desktopAutostartID = claimDesktopAutostartID();
 		if (desktopAutostartID != null) {
 			String errorText = registerClient(appID, desktopAutostartID);
-			if (errorText == null) return true;
+            if (errorText == null) {
+                return true;
+            }
 
 			// Bugged launchers use their 'DESKTOP_AUTOSTART_ID', but forget to unset it.
 			// This leaks a value that can't be used.
 			// The workaround is to retry with empty ID below.
 			// This pretends that parent's bug is already fixed.
 			boolean parentLeakedID = errorText.startsWith("GDBus.Error:org.gnome.SessionManager.AlreadyRegistered:");	//$NON-NLS-1$
-			if (!parentLeakedID) return false;
+            if (!parentLeakedID) {
+                return false;
+            }
 		}
 
 		// In absence of 'DESKTOP_AUTOSTART_ID' just use empty ID.
 		String errorText = registerClient(appID, "");
-		if (errorText == null) return true;
+        if (errorText == null) {
+            return true;
+        }
 
-		// On XFCE 'RegisterClient' is only available since 4.13.0.
-		// Don't print this error since it's expected.
-		if (!isGnome && errorText.startsWith("GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: "))	//$NON-NLS-1$
-			return false;
+        // On XFCE 'RegisterClient' is only available since 4.13.0.
+        // Don't print this error since it's expected.
+        if (!isGnome && errorText.startsWith("GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: ")) {	//$NON-NLS-1$
+            return false;
+        }
 
 		System.err.format(
 				"SWT SessionManagerDBus: Failed to RegisterClient: %s%n",

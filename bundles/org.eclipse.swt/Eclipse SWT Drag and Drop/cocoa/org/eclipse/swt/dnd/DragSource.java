@@ -233,7 +233,9 @@ public DragSource(Control control, int style) {
 	}
 
 	delegateJniRef = OS.NewGlobalRef(this);
-	if (delegateJniRef == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (delegateJniRef == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 
 	// The dragSourceDelegate implements the pasteboard callback to provide the dragged data, so we always need
 	// to create it. NSDraggingSource methods are ignored in the table and tree case.
@@ -250,7 +252,9 @@ public DragSource(Control control, int style) {
 
 		// If we already added it, no need to do it again.
 		long procPtr = OS.class_getMethodImplementation(cls, OS.sel_draggingSourceOperationMaskForLocal_);
-		if (procPtr == proc3) return;
+        if (procPtr == proc3) {
+            return;
+        }
 
 		long draggedImage_endedAt_operationProc = OS.CALLBACK_draggedImage_endedAt_operation_(proc5);
 
@@ -297,7 +301,9 @@ public DragSource(Control control, int style) {
  * @see DragSourceEvent
  */
 public void addDragListener(DragSourceListener listener) {
-	if (listener == null) DND.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	DNDListener typedListener = new DNDListener (listener);
 	typedListener.dndWidget = this;
 	addListener (DND.DragStart, typedListener);
@@ -342,7 +348,9 @@ static int checkStyle (int style) {
 void drag(Event dragDetectEvent) {
 
 	DNDEvent event = startDrag(dragDetectEvent);
-	if (event == null) return;
+    if (event == null) {
+        return;
+    }
 
 	// Start the drag here from the Control's view.
 	NSEvent currEvent = NSApplication.sharedApplication().currentEvent();
@@ -379,10 +387,11 @@ void drag(Event dragDetectEvent) {
 		NSSize imageSize = dragImage.size();
 		viewPt.x -= event.offsetX;
 
-		if (control.view.isFlipped())
-			viewPt.y += imageSize.height - event.offsetY;
-		else
-			viewPt.y -= event.offsetY;
+        if (control.view.isFlipped()) {
+            viewPt.y += imageSize.height - event.offsetY;
+        } else {
+            viewPt.y -= event.offsetY;
+        }
 
 		// The third argument to dragImage is ignored as of 10.4.
 		NSSize ignored = new NSSize();
@@ -390,7 +399,9 @@ void drag(Event dragDetectEvent) {
 		control.view.dragImage(dragImage, viewPt, ignored, NSApplication.sharedApplication().currentEvent(), NSPasteboard.pasteboardWithName(OS.NSDragPboard), dragSourceDelegate, true);
 
 	} finally {
-		if (defaultDragImage != null) defaultDragImage.dispose();
+        if (defaultDragImage != null) {
+            defaultDragImage.dispose();
+        }
 	}
 }
 
@@ -472,9 +483,13 @@ long draggingSourceOperationMaskForLocal(long id, long sel, long arg0) {
 
 static long dragSourceProc(long id, long sel) {
 	Display display = Display.findDisplay(Thread.currentThread());
-	if (display == null || display.isDisposed()) return 0;
+    if (display == null || display.isDisposed()) {
+        return 0;
+    }
 	Widget widget = display.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	DragSource ds = null;
 
 	if (widget instanceof DragSource) {
@@ -483,7 +498,9 @@ static long dragSourceProc(long id, long sel) {
 		ds = (DragSource)widget.getData(DND.DRAG_SOURCE_KEY);
 	}
 
-	if (ds == null) return 0;
+    if (ds == null) {
+        return 0;
+    }
 
 	if (sel == OS.sel_ignoreModifierKeysWhileDragging) {
 		return (ds.ignoreModifierKeysWhileDragging(id, sel) ? 1 : 0);
@@ -494,9 +511,13 @@ static long dragSourceProc(long id, long sel) {
 
 static long dragSourceProc(long id, long sel, long arg0) {
 	Display display = Display.findDisplay(Thread.currentThread());
-	if (display == null || display.isDisposed()) return 0;
+    if (display == null || display.isDisposed()) {
+        return 0;
+    }
 	Widget widget = display.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	DragSource ds = null;
 
 	if (widget instanceof DragSource) {
@@ -505,7 +526,9 @@ static long dragSourceProc(long id, long sel, long arg0) {
 		ds = (DragSource)widget.getData(DND.DRAG_SOURCE_KEY);
 	}
 
-	if (ds == null) return 0;
+    if (ds == null) {
+        return 0;
+    }
 
 	if (sel == OS.sel_draggingSourceOperationMaskForLocal_) {
 		return ds.draggingSourceOperationMaskForLocal(id, sel, arg0);
@@ -516,9 +539,13 @@ static long dragSourceProc(long id, long sel, long arg0) {
 
 static long dragSourceProc(long id, long sel, long arg0, long arg1) {
 	Display display = Display.findDisplay(Thread.currentThread());
-	if (display == null || display.isDisposed()) return 0;
+    if (display == null || display.isDisposed()) {
+        return 0;
+    }
 	Widget widget = display.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	DragSource ds = null;
 
 	if (widget instanceof DragSource) {
@@ -527,7 +554,9 @@ static long dragSourceProc(long id, long sel, long arg0, long arg1) {
 		ds = (DragSource)widget.getData(DND.DRAG_SOURCE_KEY);
 	}
 
-	if (ds == null) return 0;
+    if (ds == null) {
+        return 0;
+    }
 
 	if (sel == OS.sel_draggedImage_beganAt_) {
 		ds.draggedImage_beganAt(id, sel, arg0, arg1);
@@ -540,9 +569,13 @@ static long dragSourceProc(long id, long sel, long arg0, long arg1) {
 
 static long dragSourceProc(long id, long sel, long arg0, long arg1, long arg2) {
 	Display display = Display.findDisplay(Thread.currentThread());
-	if (display == null || display.isDisposed()) return 0;
+    if (display == null || display.isDisposed()) {
+        return 0;
+    }
 	Widget widget = display.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	DragSource ds = null;
 
 	if (widget instanceof DragSource) {
@@ -551,7 +584,9 @@ static long dragSourceProc(long id, long sel, long arg0, long arg1, long arg2) {
 		ds = (DragSource)widget.getData(DND.DRAG_SOURCE_KEY);
 	}
 
-	if (ds == null) return 0;
+    if (ds == null) {
+        return 0;
+    }
 
 	if (sel == OS.sel_draggedImage_endedAt_operation_) {
 		NSPoint point = new NSPoint();
@@ -564,9 +599,13 @@ static long dragSourceProc(long id, long sel, long arg0, long arg1, long arg2) {
 
 static long dragSourceProc(long id, long sel, long arg0, long arg1, long arg2, long arg3) {
 	Display display = Display.findDisplay(Thread.currentThread());
-	if (display == null || display.isDisposed()) return 0;
+    if (display == null || display.isDisposed()) {
+        return 0;
+    }
 	Widget widget = display.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	DragSource ds = null;
 
 	if (widget instanceof DragSource) {
@@ -575,7 +614,9 @@ static long dragSourceProc(long id, long sel, long arg0, long arg1, long arg2, l
 		ds = (DragSource)widget.getData(DND.DRAG_SOURCE_KEY);
 	}
 
-	if (ds == null) return 0;
+    if (ds == null) {
+        return 0;
+    }
 
 	if (sel == OS.sel_dragImageForRowsWithIndexes_tableColumns_event_offset_) {
 		return ds.dragImageForRowsWithIndexes_tableColumns_event_offset(id, sel, arg0, arg1, arg2, arg3);
@@ -647,8 +688,9 @@ boolean ignoreModifierKeysWhileDragging(long id, long sel) {
 }
 
 void onDispose() {
-	if (control == null)
-		return;
+    if (control == null) {
+        return;
+    }
 
 	if (controlListener != null) {
 		control.removeListener(SWT.Dispose, controlListener);
@@ -659,7 +701,9 @@ void onDispose() {
 	control = null;
 	transferAgents = null;
 
-	if (delegateJniRef != 0) OS.DeleteGlobalRef(delegateJniRef);
+    if (delegateJniRef != 0) {
+        OS.DeleteGlobalRef(delegateJniRef);
+    }
 	delegateJniRef = 0;
 
 	if (dragSourceDelegate != null) {
@@ -708,7 +752,9 @@ int osOpToOp(long osOperation){
 void pasteboard_provideDataForType(long id, long sel, long arg0, long arg1) {
 	NSPasteboard pasteboard = new NSPasteboard(arg0);
 	NSString dataType = new NSString(arg1);
-	if (pasteboard == null || dataType == null) return;
+    if (pasteboard == null || dataType == null) {
+        return;
+    }
 	TransferData transferData = new TransferData();
 	transferData.type = Transfer.registerType(dataType.getString());
 	DNDEvent event = new DNDEvent();
@@ -716,7 +762,9 @@ void pasteboard_provideDataForType(long id, long sel, long arg0, long arg1) {
 	event.time = (int)System.currentTimeMillis();
 	event.dataType = transferData;
 	notifyListeners(DND.DragSetData, event);
-	if (!event.doit) return;
+    if (!event.doit) {
+        return;
+    }
 	Transfer transfer = null;
 	for (int i = 0; i < transferAgents.length; i++) {
 		Transfer transferAgent = transferAgents[i];
@@ -725,9 +773,13 @@ void pasteboard_provideDataForType(long id, long sel, long arg0, long arg1) {
 			break;
 		}
 	}
-	if (transfer == null) return;
+    if (transfer == null) {
+        return;
+    }
 	transfer.javaToNative(event.data, transferData);
-	if (transferData.data == null) return;
+    if (transferData.data == null) {
+        return;
+    }
 
 	NSObject tdata = transferData.data;
 
@@ -774,7 +826,9 @@ void pasteboard_provideDataForType(long id, long sel, long arg0, long arg1) {
  * @see #getDragListeners
  */
 public void removeDragListener(DragSourceListener listener) {
-	if (listener == null) DND.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(DND.DragStart, listener);
 	removeTypedListener(DND.DragSetData, listener);
 	removeTypedListener(DND.DragEnd, listener);
@@ -804,7 +858,9 @@ public void setTransfer(Transfer... transferAgents){
 }
 
 boolean canBeginDrag() {
-	if (transferAgents == null || transferAgents.length == 0) return false;
+    if (transferAgents == null || transferAgents.length == 0) {
+        return false;
+    }
 	return true;
 }
 
@@ -816,7 +872,9 @@ DNDEvent startDrag(Event dragEvent) {
 	event.time = dragEvent.time;
 	event.doit = true;
 	notifyListeners(DND.DragStart, event);
-	if (!event.doit || !canBeginDrag()) return null;
+    if (!event.doit || !canBeginDrag()) {
+        return null;
+    }
 
 	NSPasteboard dragBoard = NSPasteboard.pasteboardWithName(OS.NSDragPboard);
 	NSMutableArray nativeTypeArray = NSMutableArray.arrayWithCapacity(10);

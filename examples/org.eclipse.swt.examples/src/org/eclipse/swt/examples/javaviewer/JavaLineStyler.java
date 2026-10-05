@@ -62,11 +62,17 @@ Color getColor(int type) {
 
 boolean inBlockComment(int start, int end) {
 	for (int[] offsets : blockComments) {
-		// start of comment in the line
-		if ((offsets[0] >= start) && (offsets[0] <= end)) return true;
-		// end of comment in the line
-		if ((offsets[1] >= start) && (offsets[1] <= end)) return true;
-		if ((offsets[0] <= start) && (offsets[1] >= end)) return true;
+        // start of comment in the line
+        if ((offsets[0] >= start) && (offsets[0] <= end)) {
+            return true;
+        }
+        // end of comment in the line
+        if ((offsets[1] >= start) && (offsets[1] <= end)) {
+            return true;
+        }
+        if ((offsets[0] <= start) && (offsets[1] >= end)) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -254,8 +260,9 @@ public static class JavaScanner {
 	void initialize() {
 		fgKeys= new HashMap<>();
 		Integer k= Integer.valueOf(KEY);
-		for (String word : fgKeywords)
-			fgKeys.put(word, k);
+        for (String word : fgKeywords) {
+            fgKeys.put(word, k);
+        }
 	}
 
 	/**
@@ -341,8 +348,9 @@ public static class JavaScanner {
 					} while(Character.isJavaIdentifierPart((char)c));
 					unread(c);
 					Integer i= fgKeys.get(fBuffer.toString());
-					if (i != null)
-						return i.intValue();
+                    if (i != null) {
+                        return i.intValue();
+                    }
 						return WORD;
 				}
 				return OTHER;
@@ -367,8 +375,9 @@ public static class JavaScanner {
 	}
 
 	protected void unread(int c) {
-		if (c != EOF)
-			fPos--;
+        if (c != EOF) {
+            fPos--;
+        }
 	}
 }
 

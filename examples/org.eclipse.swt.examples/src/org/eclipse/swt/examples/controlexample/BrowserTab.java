@@ -91,10 +91,18 @@ class BrowserTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
-		if (webKitButton.getSelection ()) style |= SWT.WEBKIT;
-		if (edgeButton.getSelection ()) style |= SWT.EDGE;
-		if (ieButton.getSelection ()) style |= SWT.IE;
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (webKitButton.getSelection()) {
+            style |= SWT.WEBKIT;
+        }
+        if (edgeButton.getSelection()) {
+            style |= SWT.EDGE;
+        }
+        if (ieButton.getSelection()) {
+            style |= SWT.IE;
+        }
 
 		/* Create the example widgets */
 		try {
@@ -239,7 +247,9 @@ class BrowserTab extends Tab {
 	 */
 	@Override
 	Widget [] getExampleWidgets () {
-		if (browser != null) return new Widget [] {browser};
+        if (browser != null) {
+            return new Widget []{browser};
+        }
 		return super.getExampleWidgets();
 	}
 
@@ -265,7 +275,9 @@ class BrowserTab extends Tab {
 	 */
 	@Override
 	void hookCustomListener (final String eventName) {
-		if (browser == null) return;
+        if (browser == null) {
+            return;
+        }
 		if (eventName == "AuthenticationListener") {
 			browser.addAuthenticationListener(event -> log (eventName, event));
 		}

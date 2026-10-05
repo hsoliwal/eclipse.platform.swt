@@ -30,9 +30,13 @@ public class Snippet336 {
 
 static TaskItem getTaskBarItem () {
 	TaskBar bar = display.getSystemTaskBar();
-	if (bar == null) return null;
+    if (bar == null) {
+        return null;
+    }
 	TaskItem item = bar.getItem(shell);
-	if (item == null) item = bar.getItem(null);
+    if (item == null) {
+        item = bar.getItem(null);
+    }
 	return item;
 }
 
@@ -52,7 +56,9 @@ public static void main(String[] args) {
 	item.setControl(composite);
 	Listener listener = event -> {
 		Button button = (Button)event.widget;
-		if (!button.getSelection()) return;
+        if (!button.getSelection()) {
+            return;
+        }
 		TaskItem item1 = getTaskBarItem();
 		if (item1 != null) {
 			int state = ((Integer)button.getData()).intValue();
@@ -71,7 +77,9 @@ public static void main(String[] args) {
 		button.setText(stateLabels[i]);
 		button.setData(Integer.valueOf(states[i]));
 		button.addListener(SWT.Selection, listener);
-		if (i==0) button.setSelection(true);
+        if (i == 0) {
+            button.setSelection(true);
+        }
 	}
 	group = new Group (composite, SWT.NONE);
 	group.setText("Value");
@@ -83,7 +91,9 @@ public static void main(String[] args) {
 	scale.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	scale.addListener(SWT.Selection, event -> {
 		TaskItem item1 = getTaskBarItem();
-		if (item1 != null) item1.setProgress(scale.getSelection());
+        if (item1 != null) {
+            item1.setProgress(scale.getSelection());
+        }
 	});
 
 	//Overlay text tab
@@ -104,14 +114,18 @@ public static void main(String[] args) {
 	button.setText("Set");
 	button.addListener(SWT.Selection, event -> {
 		TaskItem item1 = getTaskBarItem();
-		if (item1 != null) item1.setOverlayText(text.getText());
+        if (item1 != null) {
+            item1.setOverlayText(text.getText());
+        }
 	});
 	button = new Button(group, SWT.PUSH);
 	button.setText("Clear");
 	button.addListener(SWT.Selection, event -> {
 		text.setText("");
 		TaskItem item1 = getTaskBarItem();
-		if (item1 != null) item1.setOverlayText("");
+        if (item1 != null) {
+            item1.setOverlayText("");
+        }
 	});
 
 	//Overlay image tab
@@ -122,15 +136,21 @@ public static void main(String[] args) {
 	item.setControl(composite);
 	Listener listener3 = event -> {
 		Button button1 = (Button)event.widget;
-		if (!button1.getSelection()) return;
+        if (!button1.getSelection()) {
+            return;
+        }
 		TaskItem item1 = getTaskBarItem();
 		if (item1 != null) {
 			String text1 = button1.getText();
 			Image image = null;
-			if (!text1.equals("NONE")) image = new Image (display, Snippet336.class.getResourceAsStream(text1));
+            if (!text1.equals("NONE")) {
+                image = new Image(display, Snippet336.class.getResourceAsStream(text1));
+            }
 			Image oldImage = item1.getOverlayImage();
 			item1.setOverlayImage (image);
-			if (oldImage != null) oldImage.dispose();
+            if (oldImage != null) {
+                oldImage.dispose();
+            }
 		}
 	};
 	group = new Group (composite, SWT.NONE);
@@ -150,7 +170,9 @@ public static void main(String[] args) {
 	shell.pack();
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

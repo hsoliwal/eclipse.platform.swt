@@ -118,11 +118,14 @@ public void createControlPanel(Composite parent) {
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
-	if (textColor != null && textColor.getBgColor1() != null)
-		gc.setForeground(textColor.getBgColor1());
+    if (textColor != null && textColor.getBgColor1() != null) {
+        gc.setForeground(textColor.getBgColor1());
+    }
 
 	gc.setTextAntialias(aliasValues[aliasCombo.getSelectionIndex()]);
 

@@ -89,7 +89,9 @@ public class VoxelTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void next(int width, int height) {
-		if (virtualScreen == null) return;
+        if (virtualScreen == null) {
+            return;
+        }
 
 		viewAngY = (viewAngY + 2) % ANGLE_360;
 		viewPosX = ((viewPosX + (speed * cosLook(viewAngY) >> FIXP_SHIFT)) % HFIELD_WIDTH + HFIELD_WIDTH) % HFIELD_WIDTH;
@@ -149,12 +151,16 @@ public class VoxelTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (virtualScreen == null) {
 			Image heightLoaded = example.loadImage(gc.getDevice(), "heightmap1.gif"); //$NON-NLS-1$
 			Image colorLoaded = example.loadImage(gc.getDevice(), "colormap.jpg"); //$NON-NLS-1$
-			if (heightLoaded == null || colorLoaded == null) return;
+            if (heightLoaded == null || colorLoaded == null) {
+                return;
+            }
 			ImageData heightImage = heightLoaded.getImageData();
 			ImageData colorImage = colorLoaded.getImageData();
 
@@ -179,7 +185,9 @@ public class VoxelTab extends AnimatedGraphicsTab {
 			}
 		}
 
-		if (imageData == null) return;
+        if (imageData == null) {
+            return;
+        }
 
 		if (outputImage != null) {
 			outputImage.dispose();
@@ -192,14 +200,22 @@ public class VoxelTab extends AnimatedGraphicsTab {
 	}
 
 	private int cosLook(int theta) {
-		if (theta < 0) return cosLook[theta + ANGLE_360];
-		if (theta >= ANGLE_360) return cosLook[theta - ANGLE_360];
+        if (theta < 0) {
+            return cosLook[theta + ANGLE_360];
+        }
+        if (theta >= ANGLE_360) {
+            return cosLook[theta - ANGLE_360];
+        }
 		return cosLook[theta];
 	}
 
 	private int sinLook(int theta) {
-		if (theta < 0) return sinLook[theta + ANGLE_360];
-		if (theta >= ANGLE_360) return sinLook[theta - ANGLE_360];
+        if (theta < 0) {
+            return sinLook[theta + ANGLE_360];
+        }
+        if (theta >= ANGLE_360) {
+            return sinLook[theta - ANGLE_360];
+        }
 		return sinLook[theta];
 	}
 }

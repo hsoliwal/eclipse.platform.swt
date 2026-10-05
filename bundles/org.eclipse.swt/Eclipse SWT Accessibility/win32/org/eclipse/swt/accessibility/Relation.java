@@ -67,8 +67,10 @@ class Relation {
 	}
 
 	long getAddress() {
-		/* The address of a Relation is the address of its IAccessibleRelation COMObject. */
-		if (objIAccessibleRelation == null) createIAccessibleRelation();
+        /* The address of a Relation is the address of its IAccessibleRelation COMObject. */
+        if (objIAccessibleRelation == null) {
+            createIAccessibleRelation();
+        }
 		return objIAccessibleRelation.getAddress();
 	}
 
@@ -119,8 +121,9 @@ class Relation {
 		refCount--;
 
 		if (refCount == 0) {
-			if (objIAccessibleRelation != null)
-				objIAccessibleRelation.dispose();
+            if (objIAccessibleRelation != null) {
+                objIAccessibleRelation.dispose();
+            }
 			objIAccessibleRelation = null;
 		}
 		return refCount;
@@ -146,7 +149,9 @@ class Relation {
 
 	/* IAccessibleRelation::get_target([in] targetIndex, [out] ppTarget) */
 	int get_target(int targetIndex, long ppTarget) {
-		if (targetIndex < 0 || targetIndex >= targets.length) return COM.E_INVALIDARG;
+        if (targetIndex < 0 || targetIndex >= targets.length) {
+            return COM.E_INVALIDARG;
+        }
 		Accessible target = targets[targetIndex];
 		target.AddRef();
 		OS.MoveMemory(ppTarget, new long[] { target.getAddress() }, C.PTR_SIZEOF);
@@ -166,7 +171,9 @@ class Relation {
 	}
 
 	void addTarget(Accessible target) {
-		if (containsTarget(target)) return;
+        if (containsTarget(target)) {
+            return;
+        }
 		Accessible[] newTargets = new Accessible[targets.length + 1];
 		System.arraycopy(targets, 0, newTargets, 0, targets.length);
 		newTargets[targets.length] = target;
@@ -175,13 +182,17 @@ class Relation {
 
 	boolean containsTarget(Accessible searched) {
 		for (Accessible target : targets) {
-			if (target == searched) return true;
+            if (target == searched) {
+                return true;
+            }
 		}
 		return false;
 	}
 
 	void removeTarget(Accessible searched) {
-		if (!containsTarget(searched)) return;
+        if (!containsTarget(searched)) {
+            return;
+        }
 		Accessible[] newTargets = new Accessible[targets.length - 1];
 		int j = 0;
 		for (Accessible target : targets) {

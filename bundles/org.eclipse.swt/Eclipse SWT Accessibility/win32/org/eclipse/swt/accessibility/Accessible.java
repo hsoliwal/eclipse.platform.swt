@@ -128,11 +128,15 @@ public class Accessible {
 		 * AddRef has already been called on ppvObject by the callee and must be released by the caller.
 		 */
 		int result = COM.CreateStdAccessibleObject(control.handle, OS.OBJID_CLIENT, COM.IIDIAccessible, ppvObject);
-		/* The object needs to be checked, because if the CreateStdAccessibleObject()
-		 * symbol is not found, the return value is S_OK.
-		 */
-		if (ppvObject[0] == 0) return;
-		if (result != COM.S_OK) OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        /* The object needs to be checked, because if the CreateStdAccessibleObject()
+         * symbol is not found, the return value is S_OK.
+         */
+        if (ppvObject[0] == 0) {
+            return;
+        }
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        }
 		iaccessible = new IAccessible(ppvObject[0]);
 		createIAccessible();
 		AddRef();
@@ -144,7 +148,9 @@ public class Accessible {
 	}
 
 	static Accessible checkNull (Accessible parent) {
-		if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (parent == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		return parent;
 	}
 
@@ -576,8 +582,12 @@ public class Accessible {
 	 */
 	public void addAccessibleListener(AccessibleListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleListeners == null) accessibleListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleListeners == null) {
+            accessibleListeners = new ArrayList<>();
+        }
 		accessibleListeners.add(listener);
 	}
 
@@ -604,8 +614,12 @@ public class Accessible {
 	 */
 	public void addAccessibleControlListener(AccessibleControlListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleControlListeners == null) accessibleControlListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleControlListeners == null) {
+            accessibleControlListeners = new ArrayList<>();
+        }
 		accessibleControlListeners.add(listener);
 	}
 
@@ -635,12 +649,18 @@ public class Accessible {
 	 */
 	public void addAccessibleTextListener (AccessibleTextListener listener) {
 		checkWidget ();
-		if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (listener instanceof AccessibleTextExtendedListener) {
-			if (accessibleTextExtendedListeners == null) accessibleTextExtendedListeners = new ArrayList<>();
+            if (accessibleTextExtendedListeners == null) {
+                accessibleTextExtendedListeners = new ArrayList<>();
+            }
 			accessibleTextExtendedListeners.add ((AccessibleTextExtendedListener) listener);
 		} else {
-			if (accessibleTextListeners == null) accessibleTextListeners = new ArrayList<>();
+            if (accessibleTextListeners == null) {
+                accessibleTextListeners = new ArrayList<>();
+            }
 			accessibleTextListeners.add (listener);
 		}
 	}
@@ -668,8 +688,12 @@ public class Accessible {
 	 */
 	public void addAccessibleActionListener(AccessibleActionListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleActionListeners == null) accessibleActionListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleActionListeners == null) {
+            accessibleActionListeners = new ArrayList<>();
+        }
 		accessibleActionListeners.add(listener);
 	}
 
@@ -696,8 +720,12 @@ public class Accessible {
 	 */
 	public void addAccessibleEditableTextListener(AccessibleEditableTextListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleEditableTextListeners == null) accessibleEditableTextListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleEditableTextListeners == null) {
+            accessibleEditableTextListeners = new ArrayList<>();
+        }
 		accessibleEditableTextListeners.add(listener);
 	}
 
@@ -724,8 +752,12 @@ public class Accessible {
 	 */
 	public void addAccessibleHyperlinkListener(AccessibleHyperlinkListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleHyperlinkListeners == null) accessibleHyperlinkListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleHyperlinkListeners == null) {
+            accessibleHyperlinkListeners = new ArrayList<>();
+        }
 		accessibleHyperlinkListeners.add(listener);
 	}
 
@@ -752,8 +784,12 @@ public class Accessible {
 	 */
 	public void addAccessibleTableListener(AccessibleTableListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleTableListeners == null) accessibleTableListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleTableListeners == null) {
+            accessibleTableListeners = new ArrayList<>();
+        }
 		accessibleTableListeners.add(listener);
 	}
 
@@ -780,8 +816,12 @@ public class Accessible {
 	 */
 	public void addAccessibleTableCellListener(AccessibleTableCellListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleTableCellListeners == null) accessibleTableCellListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleTableCellListeners == null) {
+            accessibleTableCellListeners = new ArrayList<>();
+        }
 		accessibleTableCellListeners.add(listener);
 	}
 
@@ -808,8 +848,12 @@ public class Accessible {
 	 */
 	public void addAccessibleValueListener(AccessibleValueListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleValueListeners == null) accessibleValueListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleValueListeners == null) {
+            accessibleValueListeners = new ArrayList<>();
+        }
 		accessibleValueListeners.add(listener);
 	}
 
@@ -836,8 +880,12 @@ public class Accessible {
 	 */
 	public void addAccessibleAttributeListener(AccessibleAttributeListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleAttributeListeners == null) accessibleAttributeListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleAttributeListeners == null) {
+            accessibleAttributeListeners = new ArrayList<>();
+        }
 		accessibleAttributeListeners.add(listener);
 	}
 
@@ -852,7 +900,9 @@ public class Accessible {
 	 */
 	public void addRelation(int type, Accessible target) {
 		checkWidget();
-		if (target == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (target == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (relations[type] == null) {
 			relations[type] = new Relation(this, type);
 		}
@@ -876,15 +926,19 @@ public class Accessible {
 	 * @since 3.6
 	 */
 	public void dispose () {
-		if (parent == null) return;
+        if (parent == null) {
+            return;
+        }
 		Release();
 		parent.children.remove(this);
 		parent = null;
 	}
 
 	long getAddress() {
-		/* The address of an Accessible is the address of its IAccessible COMObject. */
-		if (objIAccessible == null) createIAccessible();
+        /* The address of an Accessible is the address of its IAccessible COMObject. */
+        if (objIAccessible == null) {
+            createIAccessible();
+        }
 		return objIAccessible.getAddress();
 	}
 
@@ -935,7 +989,9 @@ public class Accessible {
 	 * @noreference This method is not intended to be referenced by clients.
 	 */
 	public long internal_WM_GETOBJECT (long wParam, long lParam) {
-		if (objIAccessible == null) return 0;
+        if (objIAccessible == null) {
+            return 0;
+        }
 		if ((int)lParam == OS.OBJID_CLIENT) {
 			/* LresultFromObject([in] riid, [in] wParam, [in] pAcc)
 			 * The argument pAcc is owned by the caller so reference count does not
@@ -967,10 +1023,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleListener(AccessibleListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleListeners != null) {
 			accessibleListeners.remove(listener);
-			if (accessibleListeners.isEmpty()) accessibleListeners = null;
+            if (accessibleListeners.isEmpty()) {
+                accessibleListeners = null;
+            }
 		}
 	}
 
@@ -995,10 +1055,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleControlListener(AccessibleControlListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleControlListeners != null) {
 			accessibleControlListeners.remove(listener);
-			if (accessibleControlListeners.isEmpty()) accessibleControlListeners = null;
+            if (accessibleControlListeners.isEmpty()) {
+                accessibleControlListeners = null;
+            }
 		}
 	}
 
@@ -1026,16 +1090,22 @@ public class Accessible {
 	 */
 	public void removeAccessibleTextListener (AccessibleTextListener listener) {
 		checkWidget ();
-		if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (listener instanceof AccessibleTextExtendedListener) {
 			if (accessibleTextExtendedListeners != null) {
 				accessibleTextExtendedListeners.remove (listener);
-				if (accessibleTextExtendedListeners.isEmpty()) accessibleTextExtendedListeners = null;
+                if (accessibleTextExtendedListeners.isEmpty()) {
+                    accessibleTextExtendedListeners = null;
+                }
 			}
 		} else {
 			if (accessibleTextListeners != null) {
 				accessibleTextListeners.remove (listener);
-				if (accessibleTextListeners.isEmpty()) accessibleTextListeners = null;
+                if (accessibleTextListeners.isEmpty()) {
+                    accessibleTextListeners = null;
+                }
 			}
 		}
 	}
@@ -1063,10 +1133,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleActionListener(AccessibleActionListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleActionListeners != null) {
 			accessibleActionListeners.remove(listener);
-			if (accessibleActionListeners.isEmpty()) accessibleActionListeners = null;
+            if (accessibleActionListeners.isEmpty()) {
+                accessibleActionListeners = null;
+            }
 		}
 	}
 
@@ -1093,10 +1167,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleEditableTextListener(AccessibleEditableTextListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleEditableTextListeners != null) {
 			accessibleEditableTextListeners.remove(listener);
-			if (accessibleEditableTextListeners.isEmpty()) accessibleEditableTextListeners = null;
+            if (accessibleEditableTextListeners.isEmpty()) {
+                accessibleEditableTextListeners = null;
+            }
 		}
 	}
 
@@ -1123,10 +1201,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleHyperlinkListener(AccessibleHyperlinkListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleHyperlinkListeners != null) {
 			accessibleHyperlinkListeners.remove(listener);
-			if (accessibleHyperlinkListeners.isEmpty()) accessibleHyperlinkListeners = null;
+            if (accessibleHyperlinkListeners.isEmpty()) {
+                accessibleHyperlinkListeners = null;
+            }
 		}
 	}
 
@@ -1153,10 +1235,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleTableListener(AccessibleTableListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleTableListeners != null) {
 			accessibleTableListeners.remove(listener);
-			if (accessibleTableListeners.isEmpty()) accessibleTableListeners = null;
+            if (accessibleTableListeners.isEmpty()) {
+                accessibleTableListeners = null;
+            }
 		}
 	}
 
@@ -1183,10 +1269,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleTableCellListener(AccessibleTableCellListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleTableCellListeners != null) {
 			accessibleTableCellListeners.remove(listener);
-			if (accessibleTableCellListeners.isEmpty()) accessibleTableCellListeners = null;
+            if (accessibleTableCellListeners.isEmpty()) {
+                accessibleTableCellListeners = null;
+            }
 		}
 	}
 
@@ -1213,10 +1303,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleValueListener(AccessibleValueListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleValueListeners != null) {
 			accessibleValueListeners.remove(listener);
-			if (accessibleValueListeners.isEmpty()) accessibleValueListeners = null;
+            if (accessibleValueListeners.isEmpty()) {
+                accessibleValueListeners = null;
+            }
 		}
 	}
 
@@ -1243,10 +1337,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleAttributeListener(AccessibleAttributeListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleAttributeListeners != null) {
 			accessibleAttributeListeners.remove(listener);
-			if (accessibleAttributeListeners.isEmpty()) accessibleAttributeListeners = null;
+            if (accessibleAttributeListeners.isEmpty()) {
+                accessibleAttributeListeners = null;
+            }
 		}
 	}
 
@@ -1261,7 +1359,9 @@ public class Accessible {
 	 */
 	public void removeRelation(int type, Accessible target) {
 		checkWidget();
-		if (target == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (target == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		Relation relation = relations[type];
 		if (relation != null) {
 			relation.removeTarget(target);
@@ -1322,18 +1422,28 @@ public class Accessible {
 	 */
 	public void sendEvent(int event, Object eventData) {
 		checkWidget();
-		if (!isATRunning ()) return;
-		if (!UseIA2) return;
-		if (DEBUG) print(this + ".NotifyWinEvent " + getEventString(event) + " hwnd=" + control.handle + " childID=" + eventChildID());
+        if (!isATRunning()) {
+            return;
+        }
+        if (!UseIA2) {
+            return;
+        }
+        if (DEBUG) {
+            print(this + ".NotifyWinEvent " + getEventString(event) + " hwnd=" + control.handle + " childID=" + eventChildID());
+        }
 		switch (event) {
 			case ACC.EVENT_TABLE_CHANGED: {
-				if (!(eventData instanceof int[] && ((int[])eventData).length == TABLE_MODEL_CHANGE_SIZE)) break;
+                if (!(eventData instanceof int[] && ((int[]) eventData).length == TABLE_MODEL_CHANGE_SIZE)) {
+                    break;
+                }
 				tableChange = (int[])eventData;
 				OS.NotifyWinEvent (COM.IA2_EVENT_TABLE_CHANGED, control.handle, OS.OBJID_CLIENT, eventChildID());
 				break;
 			}
 			case ACC.EVENT_TEXT_CHANGED: {
-				if (!(eventData instanceof Object[] && ((Object[])eventData).length == TEXT_CHANGE_SIZE)) break;
+                if (!(eventData instanceof Object[] && ((Object[]) eventData).length == TEXT_CHANGE_SIZE)) {
+                    break;
+                }
 				Object[] data = (Object[])eventData;
 				int type = ((Integer)data[0]).intValue();
 				switch (type) {
@@ -1349,7 +1459,9 @@ public class Accessible {
 				break;
 			}
 			case ACC.EVENT_HYPERTEXT_LINK_SELECTED: {
-				if (!(eventData instanceof Integer)) break;
+                if (!(eventData instanceof Integer)) {
+                    break;
+                }
 	//			int index = ((Integer)eventData).intValue();
 				// TODO: IA2 currently does not use the index, however the plan is to use it in future
 				OS.NotifyWinEvent (COM.IA2_EVENT_HYPERTEXT_LINK_SELECTED, control.handle, OS.OBJID_CLIENT, eventChildID());
@@ -1446,10 +1558,16 @@ public class Accessible {
 	 */
 	public void sendEvent(int event, Object eventData, int childID) {
 		checkWidget();
-		if (!isATRunning ()) return;
-		if (!UseIA2) return;
+        if (!isATRunning()) {
+            return;
+        }
+        if (!UseIA2) {
+            return;
+        }
 		int osChildID = childID == ACC.CHILDID_SELF ? eventChildID() : childIDToOs(childID);
-		if (DEBUG) print(this + ".NotifyWinEvent " + getEventString(event) + " hwnd=" + control.handle + " childID=" + osChildID);
+        if (DEBUG) {
+            print(this + ".NotifyWinEvent " + getEventString(event) + " hwnd=" + control.handle + " childID=" + osChildID);
+        }
 		switch (event) {
 			case ACC.EVENT_STATE_CHANGED:
 				OS.NotifyWinEvent (COM.EVENT_OBJECT_STATECHANGE, control.handle, OS.OBJID_CLIENT, osChildID); break;
@@ -1482,8 +1600,12 @@ public class Accessible {
 	 */
 	public void selectionChanged () {
 		checkWidget();
-		if (!isATRunning ()) return;
-		if (DEBUG) print(this + ".NotifyWinEvent EVENT_OBJECT_SELECTIONWITHIN hwnd=" + control.handle + " childID=" + eventChildID());
+        if (!isATRunning()) {
+            return;
+        }
+        if (DEBUG) {
+            print(this + ".NotifyWinEvent EVENT_OBJECT_SELECTIONWITHIN hwnd=" + control.handle + " childID=" + eventChildID());
+        }
 		OS.NotifyWinEvent (COM.EVENT_OBJECT_SELECTIONWITHIN, control.handle, OS.OBJID_CLIENT, eventChildID());
 	}
 
@@ -1500,9 +1622,13 @@ public class Accessible {
 	 */
 	public void setFocus(int childID) {
 		checkWidget();
-		if (!isATRunning ()) return;
+        if (!isATRunning()) {
+            return;
+        }
 		int osChildID = childID == ACC.CHILDID_SELF ? eventChildID() : childIDToOs(childID);
-		if (DEBUG) print(this + ".NotifyWinEvent EVENT_OBJECT_FOCUS hwnd=" + control.handle + " childID=" + osChildID);
+        if (DEBUG) {
+            print(this + ".NotifyWinEvent EVENT_OBJECT_FOCUS hwnd=" + control.handle + " childID=" + osChildID);
+        }
 		OS.NotifyWinEvent (OS.EVENT_OBJECT_FOCUS, control.handle, OS.OBJID_CLIENT, osChildID);
 	}
 
@@ -1525,11 +1651,19 @@ public class Accessible {
 			timer = new Runnable() {
 				@Override
 				public void run() {
-					if (!isATRunning ()) return;
-					if (DEBUG) print(this + ".NotifyWinEvent EVENT_OBJECT_LOCATIONCHANGE hwnd=" + control.handle + " childID=" + eventChildID());
+                    if (!isATRunning()) {
+                        return;
+                    }
+                    if (DEBUG) {
+                        print(this + ".NotifyWinEvent EVENT_OBJECT_LOCATIONCHANGE hwnd=" + control.handle + " childID=" + eventChildID());
+                    }
 					OS.NotifyWinEvent (COM.EVENT_OBJECT_LOCATIONCHANGE, control.handle, OS.OBJID_CARET, eventChildID());
-					if (!UseIA2) return;
-					if (DEBUG) print(this + ".NotifyWinEvent IA2_EVENT_TEXT_CARET_MOVED hwnd=" + control.handle + " childID=" + eventChildID());
+                    if (!UseIA2) {
+                        return;
+                    }
+                    if (DEBUG) {
+                        print(this + ".NotifyWinEvent IA2_EVENT_TEXT_CARET_MOVED hwnd=" + control.handle + " childID=" + eventChildID());
+                    }
 					OS.NotifyWinEvent (COM.IA2_EVENT_TEXT_CARET_MOVED, control.handle, OS.OBJID_CLIENT, eventChildID());
 				}
 			};
@@ -1558,7 +1692,9 @@ public class Accessible {
 	 */
 	public void textChanged (int type, int startIndex, int length) {
 		checkWidget();
-		if (!isATRunning ()) return;
+        if (!isATRunning()) {
+            return;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.start = startIndex;
 		event.end = startIndex + length;
@@ -1577,7 +1713,9 @@ public class Accessible {
 			sendEvent(ACC.EVENT_TEXT_CHANGED, eventData);
 			return;
 		}
-		if (DEBUG) print(this + ".NotifyWinEvent EVENT_OBJECT_VALUECHANGE hwnd=" + control.handle + " childID=" + eventChildID());
+        if (DEBUG) {
+            print(this + ".NotifyWinEvent EVENT_OBJECT_VALUECHANGE hwnd=" + control.handle + " childID=" + eventChildID());
+        }
 		OS.NotifyWinEvent (COM.EVENT_OBJECT_VALUECHANGE, control.handle, OS.OBJID_CLIENT, eventChildID());
 	}
 
@@ -1594,8 +1732,12 @@ public class Accessible {
 	 */
 	public void textSelectionChanged () {
 		checkWidget();
-		if (!isATRunning ()) return;
-		if (DEBUG) print(this + ".NotifyWinEvent EVENT_OBJECT_TEXTSELECTIONCHANGED hwnd=" + control.handle + " childID=" + eventChildID());
+        if (!isATRunning()) {
+            return;
+        }
+        if (DEBUG) {
+            print(this + ".NotifyWinEvent EVENT_OBJECT_TEXTSELECTIONCHANGED hwnd=" + control.handle + " childID=" + eventChildID());
+        }
 		OS.NotifyWinEvent (COM.EVENT_OBJECT_TEXTSELECTIONCHANGED, control.handle, OS.OBJID_CLIENT, eventChildID());
 	}
 
@@ -1604,48 +1746,70 @@ public class Accessible {
 	 * must be incremented before returning.  Caller is responsible for releasing ppvObject.
 	 */
 	int QueryInterface(long iid, long ppvObject) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		OS.MoveMemory(ppvObject, new long[] { 0 }, C.PTR_SIZEOF);
 		GUID guid = new GUID();
 		COM.MoveMemory(guid, iid, GUID.sizeof);
 
 		if (COM.IsEqualGUID(guid, COM.IIDIUnknown) || COM.IsEqualGUID(guid, COM.IIDIDispatch) || COM.IsEqualGUID(guid, COM.IIDIAccessible)) {
-			if (objIAccessible == null) createIAccessible();
+            if (objIAccessible == null) {
+                createIAccessible();
+            }
 			OS.MoveMemory(ppvObject, new long[] { objIAccessible.getAddress() }, C.PTR_SIZEOF);
 			AddRef();
-			if (DEBUG) print(this + ".QueryInterface guid=" + guidString(guid) + " returning " + objIAccessible.getAddress() + hresult(COM.S_OK));
+            if (DEBUG) {
+                print(this + ".QueryInterface guid=" + guidString(guid) + " returning " + objIAccessible.getAddress() + hresult(COM.S_OK));
+            }
 			return COM.S_OK;
 		}
 
 		if (COM.IsEqualGUID(guid, COM.IIDIEnumVARIANT)) {
-			if (objIEnumVARIANT == null) createIEnumVARIANT();
+            if (objIEnumVARIANT == null) {
+                createIEnumVARIANT();
+            }
 			OS.MoveMemory(ppvObject, new long[] { objIEnumVARIANT.getAddress() }, C.PTR_SIZEOF);
 			AddRef();
 			enumIndex = 0;
-			if (DEBUG) print(this + ".QueryInterface guid=" + guidString(guid) + " returning " + objIEnumVARIANT.getAddress() + hresult(COM.S_OK));
+            if (DEBUG) {
+                print(this + ".QueryInterface guid=" + guidString(guid) + " returning " + objIEnumVARIANT.getAddress() + hresult(COM.S_OK));
+            }
 			return COM.S_OK;
 		}
 
 		if (COM.IsEqualGUID(guid, COM.IIDIServiceProvider)) {
-			if (!UseIA2) return COM.E_NOINTERFACE;
+            if (!UseIA2) {
+                return COM.E_NOINTERFACE;
+            }
 			if (accessibleActionListenersSize() > 0 || accessibleAttributeListenersSize() > 0 ||
 				accessibleHyperlinkListenersSize() > 0 || accessibleTableListenersSize() > 0 ||
 				accessibleTableCellListenersSize() > 0 || accessibleTextExtendedListenersSize() > 0 ||
 				accessibleValueListenersSize() > 0 || accessibleControlListenersSize() > 0 || getRelationCount() > 0
 				|| (control instanceof Button && ((control.getStyle() & SWT.RADIO) != 0)) || (control instanceof Composite)) {
-				if (objIServiceProvider == null) createIServiceProvider();
+                if (objIServiceProvider == null) {
+                    createIServiceProvider();
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIServiceProvider.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
-				if (DEBUG) print(this + ".QueryInterface guid=" + guidString(guid) + " returning " + objIServiceProvider.getAddress() + hresult(COM.S_OK));
+                if (DEBUG) {
+                    print(this + ".QueryInterface guid=" + guidString(guid) + " returning " + objIServiceProvider.getAddress() + hresult(COM.S_OK));
+                }
 				return COM.S_OK;
 			}
-			if (DEBUG) if (interesting(guid)) print("QueryInterface guid=" + guidString(guid) + " returning" + hresult(COM.E_NOINTERFACE));
+            if (DEBUG) {
+                if (interesting(guid)) {
+                    print("QueryInterface guid=" + guidString(guid) + " returning" + hresult(COM.E_NOINTERFACE));
+                }
+            }
 			return COM.E_NOINTERFACE;
 		}
 
 		int code = queryAccessible2Interfaces(guid, ppvObject);
 		if (code != COM.S_FALSE) {
-			if (DEBUG) print(this + ".QueryInterface guid=" + guidString(guid) + " returning" + hresult(code));
+            if (DEBUG) {
+                print(this + ".QueryInterface guid=" + guidString(guid) + " returning" + hresult(code));
+            }
 			return code;
 		}
 
@@ -1654,11 +1818,19 @@ public class Accessible {
 			long[] ppv = new long[1];
 			code = iaccessible.QueryInterface(guid, ppv);
 			OS.MoveMemory(ppvObject, ppv, C.PTR_SIZEOF);
-			if (DEBUG) if (interesting(guid)) print("QueryInterface guid=" + guidString(guid) + " returning super" + hresult(code));
+            if (DEBUG) {
+                if (interesting(guid)) {
+                    print("QueryInterface guid=" + guidString(guid) + " returning super" + hresult(code));
+                }
+            }
 			return code;
 		}
 
-		if (DEBUG) if (interesting(guid)) print("QueryInterface guid=" + guidString(guid) + " returning" + hresult(COM.E_NOINTERFACE));
+        if (DEBUG) {
+            if (interesting(guid)) {
+                print("QueryInterface guid=" + guidString(guid) + " returning" + hresult(COM.E_NOINTERFACE));
+            }
+        }
 		return COM.E_NOINTERFACE;
 	}
 
@@ -1715,58 +1887,70 @@ public class Accessible {
 		refCount--;
 
 		if (refCount == 0) {
-			if (objIAccessible != null)
-				objIAccessible.dispose();
+            if (objIAccessible != null) {
+                objIAccessible.dispose();
+            }
 			objIAccessible = null;
 
-			if (objIEnumVARIANT != null)
-				objIEnumVARIANT.dispose();
+            if (objIEnumVARIANT != null) {
+                objIEnumVARIANT.dispose();
+            }
 			objIEnumVARIANT = null;
 
-			if (objIServiceProvider != null)
-				objIServiceProvider.dispose();
+            if (objIServiceProvider != null) {
+                objIServiceProvider.dispose();
+            }
 			objIServiceProvider = null;
 
-			if (objIAccessibleApplication != null)
-				objIAccessibleApplication.dispose();
+            if (objIAccessibleApplication != null) {
+                objIAccessibleApplication.dispose();
+            }
 			objIAccessibleApplication = null;
 
-			// The following lines are intentionally commented. We are not providing IAccessibleComponent at this time.
+            // The following lines are intentionally commented. We are not providing IAccessibleComponent at this time.
 //			if (objIAccessibleComponent != null)
 //				objIAccessibleComponent.dispose();
 //			objIAccessibleComponent = null;
 
-			if (objIAccessibleEditableText != null)
-				objIAccessibleEditableText.dispose();
+            if (objIAccessibleEditableText != null) {
+                objIAccessibleEditableText.dispose();
+            }
 			objIAccessibleEditableText = null;
 
-			if (objIAccessibleHyperlink != null)
-				objIAccessibleHyperlink.dispose();
+            if (objIAccessibleHyperlink != null) {
+                objIAccessibleHyperlink.dispose();
+            }
 			objIAccessibleHyperlink = null;
 
-			if (objIAccessibleHypertext != null)
-				objIAccessibleHypertext.dispose();
+            if (objIAccessibleHypertext != null) {
+                objIAccessibleHypertext.dispose();
+            }
 			objIAccessibleHypertext = null;
 
-			// The following lines are intentionally commented. We are not providing IAccessibleImage at this time.
+            // The following lines are intentionally commented. We are not providing IAccessibleImage at this time.
 //			if (objIAccessibleImage != null)
 //				objIAccessibleImage.dispose();
 //			objIAccessibleImage = null;
 
-			if (objIAccessibleTable2 != null)
-				objIAccessibleTable2.dispose();
+            if (objIAccessibleTable2 != null) {
+                objIAccessibleTable2.dispose();
+            }
 			objIAccessibleTable2 = null;
 
-			if (objIAccessibleTableCell != null)
-				objIAccessibleTableCell.dispose();
+            if (objIAccessibleTableCell != null) {
+                objIAccessibleTableCell.dispose();
+            }
 			objIAccessibleTableCell = null;
 
-			if (objIAccessibleValue != null)
-				objIAccessibleValue.dispose();
+            if (objIAccessibleValue != null) {
+                objIAccessibleValue.dispose();
+            }
 			objIAccessibleValue = null;
 
 			for (Relation relation : relations) {
-				if (relation != null) relation.Release();
+                if (relation != null) {
+                    relation.Release();
+                }
 			}
 			// TODO: also remove all relations for which 'this' is a target??
 		}
@@ -1783,15 +1967,21 @@ public class Accessible {
 
 		if (COM.IsEqualGUID(service, COM.IIDIAccessible)) {
 			if (COM.IsEqualGUID(guid, COM.IIDIUnknown) || COM.IsEqualGUID(guid, COM.IIDIDispatch) || COM.IsEqualGUID(guid, COM.IIDIAccessible)) {
-				if (objIAccessible == null) createIAccessible();
-				if (DEBUG) print(this + ".QueryService service=" + guidString(service) + " guid=" + guidString(guid) + " returning " + objIAccessible.getAddress() + hresult(COM.S_OK));
+                if (objIAccessible == null) {
+                    createIAccessible();
+                }
+                if (DEBUG) {
+                    print(this + ".QueryService service=" + guidString(service) + " guid=" + guidString(guid) + " returning " + objIAccessible.getAddress() + hresult(COM.S_OK));
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIAccessible.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
 				return COM.S_OK;
 			}
 			int code = queryAccessible2Interfaces(guid, ppvObject);
 			if (code != COM.S_FALSE) {
-				if (DEBUG) print(this + ".QueryService service=" + guidString(service) + " guid=" + guidString(guid) + " returning" + hresult(code));
+                if (DEBUG) {
+                    print(this + ".QueryService service=" + guidString(service) + " guid=" + guidString(guid) + " returning" + hresult(code));
+                }
 				return code;
 			}
 		}
@@ -1799,7 +1989,9 @@ public class Accessible {
 		if (COM.IsEqualGUID(service, COM.IIDIAccessible2)) {
 			int code = queryAccessible2Interfaces(guid, ppvObject);
 			if (code != COM.S_FALSE) {
-				if (DEBUG) print(this + ".*QueryService service=" + guidString(service) + " guid=" + guidString(guid) + " returning" + hresult(code));
+                if (DEBUG) {
+                    print(this + ".*QueryService service=" + guidString(service) + " guid=" + guidString(guid) + " returning" + hresult(code));
+                }
 				return code;
 			}
 		}
@@ -1813,25 +2005,37 @@ public class Accessible {
 				long [] ppvx = new long [1];
 				code = iserviceProvider.QueryService(service, guid, ppvx);
 				OS.MoveMemory(ppvObject, ppvx, C.PTR_SIZEOF);
-				if (DEBUG) if (interesting(service) && interesting(guid)) print("QueryService service=" + guidString(service) + " guid=" + guidString(guid) + " returning super" + hresult(code));
+                if (DEBUG) {
+                    if (interesting(service) && interesting(guid)) {
+                        print("QueryService service=" + guidString(service) + " guid=" + guidString(guid) + " returning super" + hresult(code));
+                    }
+                }
 				return code;
 			}
 		}
 
-		if (DEBUG) if (interesting(service) && interesting(guid)) print("QueryService service=" + guidString(service) + " guid=" + guidString(guid) + " returning" + hresult(COM.E_NOINTERFACE));
+        if (DEBUG) {
+            if (interesting(service) && interesting(guid)) {
+                print("QueryService service=" + guidString(service) + " guid=" + guidString(guid) + " returning" + hresult(COM.E_NOINTERFACE));
+            }
+        }
 		return COM.E_NOINTERFACE;
 	}
 
 	int queryAccessible2Interfaces(GUID guid, long ppvObject) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		if (COM.IsEqualGUID(guid, COM.IIDIAccessible2)) {
 			if (accessibleActionListenersSize() > 0 || accessibleAttributeListenersSize() > 0 ||
 					accessibleHyperlinkListenersSize() > 0 || accessibleTableListenersSize() > 0 ||
 					accessibleTableCellListenersSize() > 0 || accessibleTextExtendedListenersSize() > 0 ||
 					accessibleValueListenersSize() > 0 || accessibleControlListenersSize() > 0 || getRelationCount() > 0
 					|| (control instanceof Button && ((control.getStyle() & SWT.RADIO) != 0)) || (control instanceof Composite)) {
-				// NOTE: IAccessible2 vtable is shared with IAccessible
-				if (objIAccessible == null) createIAccessible();
+                // NOTE: IAccessible2 vtable is shared with IAccessible
+                if (objIAccessible == null) {
+                    createIAccessible();
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIAccessible.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
 				return COM.S_OK;
@@ -1841,8 +2045,10 @@ public class Accessible {
 
 		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleAction)) {
 			if (accessibleActionListenersSize() > 0) {
-				// NOTE: IAccessibleAction vtable is shared with IAccessibleHyperlink
-				if (objIAccessibleHyperlink == null) createIAccessibleHyperlink();
+                // NOTE: IAccessibleAction vtable is shared with IAccessibleHyperlink
+                if (objIAccessibleHyperlink == null) {
+                    createIAccessibleHyperlink();
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIAccessibleHyperlink.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
 				return COM.S_OK;
@@ -1851,7 +2057,9 @@ public class Accessible {
 		}
 
 		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleApplication)) {
-			if (objIAccessibleApplication == null) createIAccessibleApplication();
+            if (objIAccessibleApplication == null) {
+                createIAccessibleApplication();
+            }
 			OS.MoveMemory(ppvObject, new long[] { objIAccessibleApplication.getAddress() }, C.PTR_SIZEOF);
 			AddRef();
 			return COM.S_OK;
@@ -1870,7 +2078,9 @@ public class Accessible {
 
 		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleEditableText)) {
 			if (accessibleEditableTextListenersSize() > 0) {
-				if (objIAccessibleEditableText == null) createIAccessibleEditableText();
+                if (objIAccessibleEditableText == null) {
+                    createIAccessibleEditableText();
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIAccessibleEditableText.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
 				return COM.S_OK;
@@ -1880,7 +2090,9 @@ public class Accessible {
 
 		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleHyperlink)) {
 			if (accessibleHyperlinkListenersSize() > 0) {
-				if (objIAccessibleHyperlink == null) createIAccessibleHyperlink();
+                if (objIAccessibleHyperlink == null) {
+                    createIAccessibleHyperlink();
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIAccessibleHyperlink.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
 				return COM.S_OK;
@@ -1890,7 +2102,9 @@ public class Accessible {
 
 		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleHypertext)) {
 			if (accessibleTextExtendedListenersSize() > 0) {
-				if (objIAccessibleHypertext == null) createIAccessibleHypertext();
+                if (objIAccessibleHypertext == null) {
+                    createIAccessibleHypertext();
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIAccessibleHypertext.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
 				return COM.S_OK;
@@ -1916,7 +2130,9 @@ public class Accessible {
 
 		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTable2)) {
 			if (accessibleTableListenersSize() > 0) {
-				if (objIAccessibleTable2 == null) createIAccessibleTable2();
+                if (objIAccessibleTable2 == null) {
+                    createIAccessibleTable2();
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIAccessibleTable2.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
 				return COM.S_OK;
@@ -1926,7 +2142,9 @@ public class Accessible {
 
 		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTableCell)) {
 			if (accessibleTableCellListenersSize() > 0) {
-				if (objIAccessibleTableCell == null) createIAccessibleTableCell();
+                if (objIAccessibleTableCell == null) {
+                    createIAccessibleTableCell();
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIAccessibleTableCell.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
 				return COM.S_OK;
@@ -1936,8 +2154,10 @@ public class Accessible {
 
 		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleText)) {
 			if (accessibleTextExtendedListenersSize() > 0 || accessibleAttributeListenersSize() > 0) {
-				// NOTE: IAccessibleText vtable is shared with IAccessibleHypertext
-				if (objIAccessibleHypertext == null) createIAccessibleHypertext();
+                // NOTE: IAccessibleText vtable is shared with IAccessibleHypertext
+                if (objIAccessibleHypertext == null) {
+                    createIAccessibleHypertext();
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIAccessibleHypertext.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
 				return COM.S_OK;
@@ -1947,7 +2167,9 @@ public class Accessible {
 
 		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleValue)) {
 			if (accessibleValueListenersSize() > 0) {
-				if (objIAccessibleValue == null) createIAccessibleValue();
+                if (objIAccessibleValue == null) {
+                    createIAccessibleValue();
+                }
 				OS.MoveMemory(ppvObject, new long[] { objIAccessibleValue.getAddress() }, C.PTR_SIZEOF);
 				AddRef();
 				return COM.S_OK;
@@ -1960,25 +2182,37 @@ public class Accessible {
 
 	/* IAccessible::accDoDefaultAction([in] varChild) */
 	int accDoDefaultAction(long varChild) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessible::accDoDefaultAction");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible::accDoDefaultAction");
+        }
 		if (accessibleActionListenersSize() > 0) {
 			VARIANT v = getVARIANT(varChild);
-			if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
-			if (v.lVal == COM.CHILDID_SELF) return doAction(0);
+            if (v.vt != COM.VT_I4) {
+                return COM.E_INVALIDARG;
+            }
+            if (v.lVal == COM.CHILDID_SELF) {
+                return doAction(0);
+            }
 		}
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		if (iaccessible != null) {
 			/* If there were no action listeners, forward to the proxy. */
 			code = iaccessible.accDoDefaultAction(varChild);
-			if (code == COM.E_INVALIDARG) code = COM.DISP_E_MEMBERNOTFOUND; // proxy doesn't know about app childID
+            if (code == COM.E_INVALIDARG) {
+                code = COM.DISP_E_MEMBERNOTFOUND;
+            } // proxy doesn't know about app childID
 		}
 		return code;
 	}
 
 	/* IAccessible::accHitTest([in] xLeft, [in] yTop, [out] pvarChild) */
 	int accHitTest(int xLeft, int yTop, long pvarChild) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int osChild = ACC.CHILDID_NONE;
 		long osChildObject = 0;
 		if (iaccessible != null) {
@@ -1986,14 +2220,19 @@ public class Accessible {
 			int code = iaccessible.accHitTest(xLeft, yTop, pvarChild);
 			if (code == COM.S_OK) {
 				VARIANT v = getVARIANT(pvarChild);
-				if (v.vt == COM.VT_I4) osChild = v.lVal;
-				else if (v.vt == COM.VT_DISPATCH) {
-					osChildObject = v.lVal; // TODO: don't use struct. lVal is an int.
-					if (DEBUG) print(this + ".IAccessible::accHitTest() super returned VT_DISPATCH");
-				}
+                if (v.vt == COM.VT_I4) {
+                    osChild = v.lVal;
+                } else if (v.vt == COM.VT_DISPATCH) {
+                    osChildObject = v.lVal; // TODO: don't use struct. lVal is an int.
+                    if (DEBUG) {
+                        print(this + ".IAccessible::accHitTest() super returned VT_DISPATCH");
+                    }
+                }
 			}
 			if (accessibleControlListenersSize() == 0) {
-				if (DEBUG) print(this + ".IAccessible::accHitTest returning childID=" + osChild + " from super" + hresult(code));
+                if (DEBUG) {
+                    print(this + ".IAccessible::accHitTest returning childID=" + osChild + " from super" + hresult(code));
+                }
 				return code;
 			}
 		}
@@ -2009,7 +2248,9 @@ public class Accessible {
 		}
 		Accessible accessible = event.accessible;
 		if (accessible != null) {
-			if (DEBUG) print(this + ".IAccessible::accHitTest returning " + accessible.getAddress() + hresult(COM.S_OK));
+            if (DEBUG) {
+                print(this + ".IAccessible::accHitTest returning " + accessible.getAddress() + hresult(COM.S_OK));
+            }
 			accessible.AddRef();
 			setPtrVARIANT(pvarChild, COM.VT_DISPATCH, accessible.getAddress());
 			return COM.S_OK;
@@ -2017,30 +2258,44 @@ public class Accessible {
 		int childID = event.childID;
 		if (childID == ACC.CHILDID_NONE) {
 			if (osChildObject != 0) {
-				if (DEBUG) print(this + ".IAccessible::accHitTest returning osChildObject " + osChildObject + " from super" + hresult(COM.S_OK));
+                if (DEBUG) {
+                    print(this + ".IAccessible::accHitTest returning osChildObject " + osChildObject + " from super" + hresult(COM.S_OK));
+                }
 				return COM.S_OK;
 			}
-			if (DEBUG) print(this + ".IAccessible::accHitTest returning VT_EMPTY" + hresult(COM.S_FALSE));
+            if (DEBUG) {
+                print(this + ".IAccessible::accHitTest returning VT_EMPTY" + hresult(COM.S_FALSE));
+            }
 			setIntVARIANT(pvarChild, COM.VT_EMPTY, 0);
 			return COM.S_FALSE;
 		}
-		if (DEBUG) print(this + ".IAccessible::accHitTest returning " + childIDToOs(childID) + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible::accHitTest returning " + childIDToOs(childID) + hresult(COM.S_OK));
+        }
 		setIntVARIANT(pvarChild, COM.VT_I4, childIDToOs(childID));
 		return COM.S_OK;
 	}
 
 	/* IAccessible::accLocation([out] pxLeft, [out] pyTop, [out] pcxWidth, [out] pcyHeight, [in] varChild) */
 	int accLocation(long pxLeft, long pyTop, long pcxWidth, long pcyHeight, long varChild) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		int osLeft = 0, osTop = 0, osWidth = 0, osHeight = 0;
 		if (iaccessible != null) {
 			/* Get the default location from the OS. */
 			int code = iaccessible.accLocation(pxLeft, pyTop, pcxWidth, pcyHeight, varChild);
-			if (code == COM.E_INVALIDARG) code = COM.DISP_E_MEMBERNOTFOUND; // proxy doesn't know about app childID
+            if (code == COM.E_INVALIDARG) {
+                code = COM.DISP_E_MEMBERNOTFOUND;
+            } // proxy doesn't know about app childID
 			if (accessibleControlListenersSize() == 0) {
-				if (DEBUG) print(this + ".IAccessible::accLocation returning from super" + hresult(code));
+                if (DEBUG) {
+                    print(this + ".IAccessible::accLocation returning from super" + hresult(code));
+                }
 				return code;
 			}
 			if (code == COM.S_OK) {
@@ -2063,7 +2318,9 @@ public class Accessible {
 			AccessibleControlListener listener = accessibleControlListeners.get(i);
 			listener.getLocation(event);
 		}
-		if (DEBUG) print(this + ".IAccessible::accLocation(" + v.lVal + ") returning x=" + event.x + " y=" + event.y + "w=" + event.width + "h=" + event.height + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible::accLocation(" + v.lVal + ") returning x=" + event.x + " y=" + event.y + "w=" + event.width + "h=" + event.height + hresult(COM.S_OK));
+        }
 		OS.MoveMemory(pxLeft, new int[] { event.x }, 4);
 		OS.MoveMemory(pyTop, new int[] { event.y }, 4);
 		OS.MoveMemory(pcxWidth, new int[] { event.width }, 4);
@@ -2073,15 +2330,21 @@ public class Accessible {
 
 	/* IAccessible::accNavigate([in] navDir, [in] varStart, [out] pvarEndUpAt) */
 	int accNavigate(int navDir, long varStart, long pvarEndUpAt) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessible::accNavigate");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible::accNavigate");
+        }
 		/* MSAA: "The accNavigate method is deprecated and should not be used." */
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		if (iaccessible != null) {
 			/* Since many of the native controls still handle accNavigate,
 			 * we will continue to send this through to the proxy. */
 			code = iaccessible.accNavigate(navDir, varStart, pvarEndUpAt);
-			if (code == COM.E_INVALIDARG) code = COM.DISP_E_MEMBERNOTFOUND; // proxy doesn't know about app childID
+            if (code == COM.E_INVALIDARG) {
+                code = COM.DISP_E_MEMBERNOTFOUND;
+            } // proxy doesn't know about app childID
 		}
 		return code;
 	}
@@ -2089,14 +2352,20 @@ public class Accessible {
 	// TODO: Consider supporting this in future.
 	/* IAccessible::accSelect([in] flagsSelect, [in] varChild) */
 	int accSelect(int flagsSelect, long varChild) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		if (iaccessible != null) {
 			/* Currently, we don't expose this as API. Forward to the proxy. */
 			code = iaccessible.accSelect(flagsSelect, varChild);
-			if (code == COM.E_INVALIDARG) code = COM.DISP_E_MEMBERNOTFOUND; // proxy doesn't know about app childID
+            if (code == COM.E_INVALIDARG) {
+                code = COM.DISP_E_MEMBERNOTFOUND;
+            } // proxy doesn't know about app childID
 		}
-		if (DEBUG) print(this + ".IAccessible::accSelect(" + flagsSelect + ") returning" + hresult(code));
+        if (DEBUG) {
+            print(this + ".IAccessible::accSelect(" + flagsSelect + ") returning" + hresult(code));
+        }
 		return code;
 	}
 
@@ -2105,11 +2374,17 @@ public class Accessible {
 	 * must be incremented before returning.  The caller is responsible for releasing ppdispChild.
 	 */
 	int get_accChild(long varChild, long ppdispChild) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		if (v.lVal == COM.CHILDID_SELF) {
-			if (DEBUG) print(this + ".IAccessible::get_accChild(" + v.lVal + ") returning " + getAddress() + hresult(COM.S_OK));
+            if (DEBUG) {
+                print(this + ".IAccessible::get_accChild(" + v.lVal + ") returning " + getAddress() + hresult(COM.S_OK));
+            }
 			AddRef();
 			OS.MoveMemory(ppdispChild, new long[] { getAddress() }, C.PTR_SIZEOF);
 			return COM.S_OK;
@@ -2120,7 +2395,9 @@ public class Accessible {
 		if (iaccessible != null) {
 			/* Get the default child from the OS. */
 			code = iaccessible.get_accChild(varChild, ppdispChild);
-			if (code == COM.E_INVALIDARG) code = COM.S_FALSE; // proxy doesn't know about app childID
+            if (code == COM.E_INVALIDARG) {
+                code = COM.S_FALSE;
+            } // proxy doesn't know about app childID
 			if (code == COM.S_OK && control instanceof ToolBar) {
 				ToolBar toolBar = (ToolBar) control;
 				final ToolItem item = toolBar.getItem(childID);
@@ -2177,20 +2454,28 @@ public class Accessible {
 			listener.getChild(event);
 		}
 		Accessible accessible = event.accessible;
-		if (accessible == null) accessible = osAccessible;
+        if (accessible == null) {
+            accessible = osAccessible;
+        }
 		if (accessible != null) {
-			if (DEBUG) print(this + ".IAccessible::get_accChild(" + v.lVal + ") returning " + accessible.getAddress() + hresult(COM.S_OK));
+            if (DEBUG) {
+                print(this + ".IAccessible::get_accChild(" + v.lVal + ") returning " + accessible.getAddress() + hresult(COM.S_OK));
+            }
 			accessible.AddRef();
 			OS.MoveMemory(ppdispChild, new long[] { accessible.getAddress() }, C.PTR_SIZEOF);
 			return COM.S_OK;
 		}
-		if (DEBUG) print(this + ".IAccessible::get_accChild(" + v.lVal + ") returning from super" + hresult(code));
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accChild(" + v.lVal + ") returning from super" + hresult(code));
+        }
 		return code;
 	}
 
 	/* IAccessible::get_accChildCount([out] pcountChildren) */
 	int get_accChildCount(long pcountChildren) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int osChildCount = 0;
 		if (iaccessible != null) {
 			/* Get the default child count from the OS. */
@@ -2201,7 +2486,9 @@ public class Accessible {
 				osChildCount = pChildCount[0];
 			}
 			if (accessibleControlListenersSize() == 0) {
-				if (DEBUG) print(this + ".IAccessible::get_accChildCount() returning " + osChildCount + " from super" + hresult(code));
+                if (DEBUG) {
+                    print(this + ".IAccessible::get_accChildCount() returning " + osChildCount + " from super" + hresult(code));
+                }
 				return code;
 			}
 		}
@@ -2213,24 +2500,36 @@ public class Accessible {
 			AccessibleControlListener listener = accessibleControlListeners.get(i);
 			listener.getChildCount(event);
 		}
-		if (DEBUG) print(this + ".IAccessible::get_accChildCount() returning " + event.detail + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accChildCount() returning " + event.detail + hresult(COM.S_OK));
+        }
 		OS.MoveMemory(pcountChildren, new int[] { event.detail }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessible::get_accDefaultAction([in] varChild, [out] pszDefaultAction) */
 	int get_accDefaultAction(long varChild, long pszDefaultAction) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessible::get_accDefaultAction");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accDefaultAction");
+        }
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		String osDefaultAction = null;
 		if (iaccessible != null) {
 			/* Get the default defaultAction from the OS. */
 			code = iaccessible.get_accDefaultAction(varChild, pszDefaultAction);
-			if (code == COM.E_INVALIDARG) code = COM.S_FALSE; // proxy doesn't know about app childID
-			if (accessibleControlListenersSize() == 0) return code;
+            if (code == COM.E_INVALIDARG) {
+                code = COM.S_FALSE;
+            } // proxy doesn't know about app childID
+            if (accessibleControlListenersSize() == 0) {
+                return code;
+            }
 			if (code == COM.S_OK) {
 				long[] pDefaultAction = new long[1];
 				OS.MoveMemory(pDefaultAction, pszDefaultAction, C.PTR_SIZEOF);
@@ -2253,15 +2552,21 @@ public class Accessible {
 		if ((event.result == null || event.result.length() == 0) && v.lVal == COM.CHILDID_SELF) {
 			code = get_name(0, pszDefaultAction);
 		}
-		if (event.result == null) return code;
-		if (event.result.length() == 0) return COM.S_FALSE;
+        if (event.result == null) {
+            return code;
+        }
+        if (event.result.length() == 0) {
+            return COM.S_FALSE;
+        }
 		setString(pszDefaultAction, event.result);
 		return COM.S_OK;
 	}
 
 	/* IAccessible::get_accDescription([in] varChild, [out] pszDescription) */
 	int get_accDescription(long varChild, long pszDescription) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		/*
 		 * MSAA: "The accDescription property is not supported in the transition to
 		 * UI Automation. MSAA servers and applications should not use it."
@@ -2273,16 +2578,22 @@ public class Accessible {
 		 * so it should be replaced.
 		 */
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		String osDescription = null;
 		if (iaccessible != null) {
 			/* Get the default description from the OS. */
 			code = iaccessible.get_accDescription(varChild, pszDescription);
-			if (code == COM.E_INVALIDARG) code = COM.S_FALSE; // proxy doesn't know about app childID
+            if (code == COM.E_INVALIDARG) {
+                code = COM.S_FALSE;
+            } // proxy doesn't know about app childID
 			// TEMPORARY CODE - process tree even if there are no apps listening
 			if (accessibleListenersSize() == 0 && !(control instanceof Tree)) {
-				if (DEBUG) print(this + ".IAccessible::get_accDescription(" + v.lVal + ") returning super" + hresult(code));
+                if (DEBUG) {
+                    print(this + ".IAccessible::get_accDescription(" + v.lVal + ") returning super" + hresult(code));
+                }
 				return code;
 			}
 			if (code == COM.S_OK) {
@@ -2322,7 +2633,9 @@ public class Accessible {
 								return COM.S_OK;
 							}
 							event.result += tree.getColumn(i).getText() + ": " + item.getText(i);
-							if (i + 1 < columnCount) event.result += ", ";
+                            if (i + 1 < columnCount) {
+                                event.result += ", ";
+                            }
 						}
 					}
 				}
@@ -2332,9 +2645,15 @@ public class Accessible {
 			AccessibleListener listener = accessibleListeners.get(i);
 			listener.getDescription(event);
 		}
-		if (DEBUG) print(this + ".IAccessible::get_accDescription(" + v.lVal + ") returning " + event.result + hresult(event.result == null ? code : event.result.length() == 0 ? COM.S_FALSE : COM.S_OK));
-		if (event.result == null) return code;
-		if (event.result.length() == 0) return COM.S_FALSE;
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accDescription(" + v.lVal + ") returning " + event.result + hresult(event.result == null ? code : event.result.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        }
+        if (event.result == null) {
+            return code;
+        }
+        if (event.result.length() == 0) {
+            return COM.S_FALSE;
+        }
 		setString(pszDescription, event.result);
 		return COM.S_OK;
 	}
@@ -2344,19 +2663,29 @@ public class Accessible {
 	 * must be incremented before returning.  The caller is responsible for releasing pvarChild.
 	 */
 	int get_accFocus(long pvarChild) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int osChild = ACC.CHILDID_NONE;
 		if (iaccessible != null) {
 			/* Get the default focus child from the OS. */
 			int code = iaccessible.get_accFocus(pvarChild);
 			if (code == COM.S_OK) {
 				VARIANT v = getVARIANT(pvarChild);
-				if (v.vt == COM.VT_I4) osChild = v.lVal;
-				// TODO: need to check VT_DISPATCH (don't use struct)
-				if (DEBUG) if (v.vt == COM.VT_DISPATCH) print("IAccessible::get_accFocus() super returned VT_DISPATCH");
+                if (v.vt == COM.VT_I4) {
+                    osChild = v.lVal;
+                }
+                // TODO: need to check VT_DISPATCH (don't use struct)
+                if (DEBUG) {
+                    if (v.vt == COM.VT_DISPATCH) {
+                        print("IAccessible::get_accFocus() super returned VT_DISPATCH");
+                    }
+                }
 			}
 			if (accessibleControlListenersSize() == 0) {
-				if (DEBUG) print(this + ".IAccessible::get_accFocus() returning childID=" + osChild + " from super" + hresult(code));
+                if (DEBUG) {
+                    print(this + ".IAccessible::get_accFocus() returning childID=" + osChild + " from super" + hresult(code));
+                }
 				return code;
 			}
 		}
@@ -2369,41 +2698,59 @@ public class Accessible {
 		}
 		Accessible accessible = event.accessible;
 		if (accessible != null) {
-			if (DEBUG) print(this + ".IAccessible::get_accFocus() returning accessible " + accessible.getAddress() + hresult(COM.S_OK));
+            if (DEBUG) {
+                print(this + ".IAccessible::get_accFocus() returning accessible " + accessible.getAddress() + hresult(COM.S_OK));
+            }
 			accessible.AddRef();
 			setPtrVARIANT(pvarChild, COM.VT_DISPATCH, accessible.getAddress());
 			return COM.S_OK;
 		}
 		int childID = event.childID;
 		if (childID == ACC.CHILDID_NONE) {
-			if (DEBUG) print(this + ".IAccessible::get_accFocus() returning VT_EMPTY" + hresult(COM.S_FALSE));
+            if (DEBUG) {
+                print(this + ".IAccessible::get_accFocus() returning VT_EMPTY" + hresult(COM.S_FALSE));
+            }
 			setIntVARIANT(pvarChild, COM.VT_EMPTY, 0);
 			return COM.S_FALSE;
 		}
 		if (childID == ACC.CHILDID_SELF) {
-			if (DEBUG) print(this + ".IAccessible::get_accFocus() returning CHILDID_SELF " + hresult(COM.S_OK));
+            if (DEBUG) {
+                print(this + ".IAccessible::get_accFocus() returning CHILDID_SELF " + hresult(COM.S_OK));
+            }
 			AddRef();
 			setIntVARIANT(pvarChild, COM.VT_I4, COM.CHILDID_SELF);
 			return COM.S_OK;
 		}
-		if (DEBUG) print(this + ".IAccessible::get_accFocus() returning childID " + childIDToOs(childID) + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accFocus() returning childID " + childIDToOs(childID) + hresult(COM.S_OK));
+        }
 		setIntVARIANT(pvarChild, COM.VT_I4, childIDToOs(childID));
 		return COM.S_OK;
 	}
 
 	/* IAccessible::get_accHelp([in] varChild, [out] pszHelp) */
 	int get_accHelp(long varChild, long pszHelp) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessible::get_accHelp");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accHelp");
+        }
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		String osHelp = null;
 		if (iaccessible != null) {
 			/* Get the default help string from the OS. */
 			code = iaccessible.get_accHelp(varChild, pszHelp);
-			if (code == COM.E_INVALIDARG) code = COM.S_FALSE; // proxy doesn't know about app childID
-			if (accessibleListenersSize() == 0) return code;
+            if (code == COM.E_INVALIDARG) {
+                code = COM.S_FALSE;
+            } // proxy doesn't know about app childID
+            if (accessibleListenersSize() == 0) {
+                return code;
+            }
 			if (code == COM.S_OK) {
 				long[] pHelp = new long[1];
 				OS.MoveMemory(pHelp, pszHelp, C.PTR_SIZEOF);
@@ -2423,41 +2770,61 @@ public class Accessible {
 			AccessibleListener listener = accessibleListeners.get(i);
 			listener.getHelp(event);
 		}
-		if (event.result == null) return code;
-		if (event.result.length() == 0) return COM.S_FALSE;
+        if (event.result == null) {
+            return code;
+        }
+        if (event.result.length() == 0) {
+            return COM.S_FALSE;
+        }
 		setString(pszHelp, event.result);
 		return COM.S_OK;
 	}
 
 	/* IAccessible::get_accHelpTopic([out] pszHelpFile, [in] varChild, [out] pidTopic) */
 	int get_accHelpTopic(long pszHelpFile, long varChild, long pidTopic) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessible::get_accHelpTopic");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accHelpTopic");
+        }
 		/* MSAA: "The accHelpTopic property is deprecated and should not be used." */
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		if (iaccessible != null) {
 			/* Since it is possible that a native control might still handle get_accHelpTopic,
 			 * we will continue to send this through to the proxy. */
 			code = iaccessible.get_accHelpTopic(pszHelpFile, varChild, pidTopic);
-			if (code == COM.E_INVALIDARG) code = COM.DISP_E_MEMBERNOTFOUND; // proxy doesn't know about app childID
+            if (code == COM.E_INVALIDARG) {
+                code = COM.DISP_E_MEMBERNOTFOUND;
+            } // proxy doesn't know about app childID
 		}
 		return code;
 	}
 
 	/* IAccessible::get_accKeyboardShortcut([in] varChild, [out] pszKeyboardShortcut) */
 	int get_accKeyboardShortcut(long varChild, long pszKeyboardShortcut) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessible::get_accKeyboardShortcut");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accKeyboardShortcut");
+        }
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		String osKeyboardShortcut = null;
 		if (iaccessible != null) {
 			/* Get the default keyboard shortcut from the OS. */
 			code = iaccessible.get_accKeyboardShortcut(varChild, pszKeyboardShortcut);
-			if (code == COM.E_INVALIDARG) code = COM.S_FALSE; // proxy doesn't know about app childID
-			/* Process TabFolder even if there are no apps listening. */
-			if (accessibleListenersSize() == 0 && !(control instanceof TabFolder)) return code;
+            if (code == COM.E_INVALIDARG) {
+                code = COM.S_FALSE;
+            } // proxy doesn't know about app childID
+            /* Process TabFolder even if there are no apps listening. */
+            if (accessibleListenersSize() == 0 && !(control instanceof TabFolder)) {
+                return code;
+            }
 			if (code == COM.S_OK) {
 				long[] pKeyboardShortcut = new long[1];
 				OS.MoveMemory(pKeyboardShortcut, pszKeyboardShortcut, C.PTR_SIZEOF);
@@ -2481,17 +2848,25 @@ public class Accessible {
 			AccessibleListener listener = accessibleListeners.get(i);
 			listener.getKeyboardShortcut(event);
 		}
-		if (event.result == null) return code;
-		if (event.result.length() == 0) return COM.S_FALSE;
+        if (event.result == null) {
+            return code;
+        }
+        if (event.result.length() == 0) {
+            return COM.S_FALSE;
+        }
 		setString(pszKeyboardShortcut, event.result);
 		return COM.S_OK;
 	}
 
 	/* IAccessible::get_accName([in] varChild, [out] pszName) */
 	int get_accName(long varChild, long pszName) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		int code = COM.S_FALSE;
 		String osName = null;
 		if (iaccessible != null) {
@@ -2507,10 +2882,14 @@ public class Accessible {
 					osName = new String(buffer);
 				}
 			}
-			if (code == COM.E_INVALIDARG) code = COM.S_FALSE; // proxy doesn't know about app childID
+            if (code == COM.E_INVALIDARG) {
+                code = COM.S_FALSE;
+            } // proxy doesn't know about app childID
 			/* Process Text even if there are no apps listening. */
 			if (accessibleListenersSize() == 0 && !(control instanceof Text)) {
-				if (DEBUG) print(this + ".IAccessible::get_accName(" + v.lVal + ") returning name=" + osName + " from super" + hresult(code));
+                if (DEBUG) {
+                    print(this + ".IAccessible::get_accName(" + v.lVal + ") returning name=" + osName + " from super" + hresult(code));
+                }
 				return code;
 			}
 		}
@@ -2531,9 +2910,15 @@ public class Accessible {
 			AccessibleListener listener = accessibleListeners.get(i);
 			listener.getName(event);
 		}
-		if (DEBUG) print(this + ".IAccessible::get_accName(" + v.lVal + ") returning " + event.result + hresult(event.result == null ? code : event.result.length() == 0 ? COM.S_FALSE : COM.S_OK));
-		if (event.result == null) return code;
-		if (event.result.length() == 0) return COM.S_FALSE;
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accName(" + v.lVal + ") returning " + event.result + hresult(event.result == null ? code : event.result.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        }
+        if (event.result == null) {
+            return code;
+        }
+        if (event.result.length() == 0) {
+            return COM.S_FALSE;
+        }
 		setString(pszName, event.result);
 		return COM.S_OK;
 	}
@@ -2543,7 +2928,9 @@ public class Accessible {
 	 * must be incremented before returning.  The caller is responsible for releasing ppdispParent.
 	 */
 	int get_accParent(long ppdispParent) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		if (iaccessible != null) {
 			/* Currently, we don't expose this as API. Forward to the proxy. */
@@ -2555,22 +2942,30 @@ public class Accessible {
 			OS.MoveMemory(ppdispParent, new long[] { parent.getAddress() }, C.PTR_SIZEOF);
 			code = COM.S_OK;
 		}
-		if (DEBUG) print(this + ".IAccessible::get_accParent() returning" + (parent != null ? " " + parent.getAddress() : " from super") + hresult(code));
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accParent() returning" + (parent != null ? " " + parent.getAddress() : " from super") + hresult(code));
+        }
 		return code;
 	}
 
 	/* IAccessible::get_accRole([in] varChild, [out] pvarRole) */
 	int get_accRole(long varChild, long pvarRole) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		int osRole = COM.ROLE_SYSTEM_CLIENT;
 		if (iaccessible != null) {
 			/* Get the default role from the OS. */
 			int code = iaccessible.get_accRole(varChild, pvarRole);
 			if (code == COM.S_OK) {
 				VARIANT v2 = getVARIANT(pvarRole);
-				if (v2.vt == COM.VT_I4) osRole = v2.lVal;
+                if (v2.vt == COM.VT_I4) {
+                    osRole = v2.lVal;
+                }
 			}
 		}
 
@@ -2581,13 +2976,17 @@ public class Accessible {
 		/* Currently our checkbox table and tree are emulated using state mask images,
 		 * so we need to specify 'checkbox' role for the items. */
 		if (control instanceof Tree || control instanceof Table) {
-			if (v.lVal != COM.CHILDID_SELF && (control.getStyle() & SWT.CHECK) != 0) event.detail = ACC.ROLE_CHECKBUTTON;
+            if (v.lVal != COM.CHILDID_SELF && (control.getStyle() & SWT.CHECK) != 0) {
+                event.detail = ACC.ROLE_CHECKBUTTON;
+            }
 		}
 		for (int i = 0; i < accessibleControlListenersSize(); i++) {
 			AccessibleControlListener listener = accessibleControlListeners.get(i);
 			listener.getRole(event);
 		}
-		if (DEBUG) print(this + ".IAccessible::get_accRole(" + v.lVal + ") returning " + getRoleString(roleToOs(event.detail)) + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accRole(" + v.lVal + ") returning " + getRoleString(roleToOs(event.detail)) + hresult(COM.S_OK));
+        }
 		setIntVARIANT(pvarRole, COM.VT_I4, roleToOs(event.detail));
 		return COM.S_OK;
 	}
@@ -2597,14 +2996,20 @@ public class Accessible {
 	 * must be incremented before returning.  The caller is responsible for releasing pvarChildren.
 	 */
 	int get_accSelection(long pvarChildren) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessible::get_accSelection");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accSelection");
+        }
 		int osChild = ACC.CHILDID_NONE;
 		long osChildObject = 0;
 		if (iaccessible != null) {
 			/* Get the default selection from the OS. */
 			int code = iaccessible.get_accSelection(pvarChildren);
-			if (accessibleControlListenersSize() == 0) return code;
+            if (accessibleControlListenersSize() == 0) {
+                return code;
+            }
 			if (code == COM.S_OK) {
 				VARIANT v = getVARIANT(pvarChildren);
 				if (v.vt == COM.VT_I4) {
@@ -2632,7 +3037,9 @@ public class Accessible {
 		}
 		int childID = event.childID;
 		if (childID == ACC.CHILDID_NONE) {
-			if (osChildObject != 0) return COM.S_OK;
+            if (osChildObject != 0) {
+                return COM.S_OK;
+            }
 			setIntVARIANT(pvarChildren, COM.VT_EMPTY, 0);
 			return COM.S_FALSE;
 		}
@@ -2653,16 +3060,22 @@ public class Accessible {
 
 	/* IAccessible::get_accState([in] varChild, [out] pvarState) */
 	int get_accState(long varChild, long pvarState) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		int osState = 0;
 		if (iaccessible != null) {
 			/* Get the default state from the OS. */
 			int code = iaccessible.get_accState(varChild, pvarState);
 			if (code == COM.S_OK) {
 				VARIANT v2 = getVARIANT(pvarState);
-				if (v2.vt == COM.VT_I4) osState = v2.lVal;
+                if (v2.vt == COM.VT_I4) {
+                    osState = v2.lVal;
+                }
 			}
 		}
 
@@ -2682,15 +3095,21 @@ public class Accessible {
 				tvItem.hItem = OS.SendMessage (hwnd, OS.TVM_MAPACCIDTOHTREEITEM, v.lVal, 0);
 				long result = OS.SendMessage (hwnd, OS.TVM_GETITEM, 0, tvItem);
 				boolean checked = (result != 0) && (((tvItem.state >> 12) & 1) == 0);
-				if (checked) event.detail |= ACC.STATE_CHECKED;
+                if (checked) {
+                    event.detail |= ACC.STATE_CHECKED;
+                }
 				grayed = tvItem.state >> 12 > 2;
 			} else if (control instanceof Table && (control.getStyle() & SWT.CHECK) != 0) {
 				Table table = (Table) control;
 				int index = event.childID;
 				if (0 <= index && index < table.getItemCount()) {
 					TableItem item = table.getItem(index);
-					if (item.getChecked()) event.detail |= ACC.STATE_CHECKED;
-					if (item.getGrayed()) grayed = true;
+                    if (item.getChecked()) {
+                        event.detail |= ACC.STATE_CHECKED;
+                    }
+                    if (item.getGrayed()) {
+                        grayed = true;
+                    }
 				}
 			}
 		}
@@ -2703,16 +3122,22 @@ public class Accessible {
 			state &= ~ COM.STATE_SYSTEM_CHECKED;
 			state |= COM.STATE_SYSTEM_MIXED;
 		}
-		if (DEBUG) print(this + ".IAccessible::get_accState(" + v.lVal + ") returning" + getStateString(state) + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accState(" + v.lVal + ") returning" + getStateString(state) + hresult(COM.S_OK));
+        }
 		setIntVARIANT(pvarState, COM.VT_I4, state);
 		return COM.S_OK;
 	}
 
 	/* IAccessible::get_accValue([in] varChild, [out] pszValue) */
 	int get_accValue(long varChild, long pszValue) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		String osValue = null;
 		if (iaccessible != null) {
@@ -2728,10 +3153,14 @@ public class Accessible {
 					osValue = new String(buffer);
 				}
 			}
-			if (code == COM.E_INVALIDARG) code = COM.DISP_E_MEMBERNOTFOUND; // proxy doesn't know about app childID
+            if (code == COM.E_INVALIDARG) {
+                code = COM.DISP_E_MEMBERNOTFOUND;
+            } // proxy doesn't know about app childID
 			/* Process Text even if there are no apps listening. */
 			if (accessibleControlListenersSize() == 0 && !(control instanceof Text)) {
-				if (DEBUG) print(this + ".IAccessible::get_accValue(" + v.lVal + ") returning value=" + osValue + " from super" + hresult(code));
+                if (DEBUG) {
+                    print(this + ".IAccessible::get_accValue(" + v.lVal + ") returning value=" + osValue + " from super" + hresult(code));
+                }
 				return code;
 			}
 		}
@@ -2752,8 +3181,12 @@ public class Accessible {
 			AccessibleControlListener listener = accessibleControlListeners.get(i);
 			listener.getValue(event);
 		}
-		if (DEBUG) print(this + ".IAccessible::get_accValue(" + v.lVal + ") returning " + event.result + hresult(event.result == null ? code : COM.S_OK));
-		if (event.result == null) return code;
+        if (DEBUG) {
+            print(this + ".IAccessible::get_accValue(" + v.lVal + ") returning " + event.result + hresult(event.result == null ? code : COM.S_OK));
+        }
+        if (event.result == null) {
+            return code;
+        }
 		// empty string is a valid value, so do not test for it
 		setString(pszValue, event.result);
 		return COM.S_OK;
@@ -2767,10 +3200,14 @@ public class Accessible {
 
 	/* put_accValue([in] varChild, [in] szValue) */
 	int put_accValue(long varChild, long szValue) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		/* MSAA: this method is supported for some UI elements (usually edit controls). */
 		VARIANT v = getVARIANT(varChild);
-		if (v.vt != COM.VT_I4) return COM.E_INVALIDARG;
+        if (v.vt != COM.VT_I4) {
+            return COM.E_INVALIDARG;
+        }
 		int code = COM.DISP_E_MEMBERNOTFOUND;
 		if (v.lVal == COM.CHILDID_SELF && accessibleEditableTextListenersSize() > 0) {
 			/*
@@ -2789,15 +3226,23 @@ public class Accessible {
 					AccessibleEditableTextListener listener = accessibleEditableTextListeners.get(i);
 					listener.replaceText(event);
 				}
-				if (event.result != null && event.result.equals(ACC.OK)) code = COM.S_OK;
-				if (DEBUG) print(this + ".IAccessible::put_accValue(" + v.lVal + ", \"" + event.string + "\") returning " + hresult(code));
+                if (event.result != null && event.result.equals(ACC.OK)) {
+                    code = COM.S_OK;
+                }
+                if (DEBUG) {
+                    print(this + ".IAccessible::put_accValue(" + v.lVal + ", \"" + event.string + "\") returning " + hresult(code));
+                }
 			}
 		}
 		if (code != COM.S_OK && iaccessible != null) {
 			/* If the object did not handle the event, then forward to the proxy. */
 			code = iaccessible.put_accValue(varChild, szValue);
-			if (code == COM.E_INVALIDARG) code = COM.DISP_E_MEMBERNOTFOUND; // proxy doesn't know about app childID
-			if (DEBUG) print(this + ".IAccessible::put_accValue(" + v.lVal + ") returning " + hresult(code) + " from proxy");
+            if (code == COM.E_INVALIDARG) {
+                code = COM.DISP_E_MEMBERNOTFOUND;
+            } // proxy doesn't know about app childID
+            if (DEBUG) {
+                print(this + ".IAccessible::put_accValue(" + v.lVal + ") returning " + hresult(code) + " from proxy");
+            }
 		}
 		return code;
 	}
@@ -2815,15 +3260,21 @@ public class Accessible {
 	 * must be incremented before returning.  The caller is responsible for releasing rgvar.
 	 */
 	int Next(int celt, long rgvar, long pceltFetched) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IEnumVARIANT::Next");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IEnumVARIANT::Next");
+        }
 		/* If there are no listeners, query the proxy for
 		 * its IEnumVariant, and get the Next items from it.
 		 */
 		if (iaccessible != null && accessibleControlListenersSize() == 0) {
 			long[] ppvObject = new long[1];
 			int code = iaccessible.QueryInterface(COM.IIDIEnumVARIANT, ppvObject);
-			if (code != COM.S_OK) return code;
+            if (code != COM.S_OK) {
+                return code;
+            }
 			IEnumVARIANT ienumvariant = new IEnumVARIANT(ppvObject[0]);
 			int[] celtFetched = new int[1];
 			code = ienumvariant.Next(celt, rgvar, celtFetched);
@@ -2832,8 +3283,12 @@ public class Accessible {
 			return code;
 		}
 
-		if (rgvar == 0) return COM.E_INVALIDARG;
-		if (pceltFetched == 0 && celt != 1) return COM.E_INVALIDARG;
+        if (rgvar == 0) {
+            return COM.E_INVALIDARG;
+        }
+        if (pceltFetched == 0 && celt != 1) {
+            return COM.E_INVALIDARG;
+        }
 		if (enumIndex == 0) {
 			AccessibleControlEvent event = new AccessibleControlEvent(this);
 			event.childID = ACC.CHILDID_SELF;
@@ -2846,7 +3301,9 @@ public class Accessible {
 		Object[] nextItems = null;
 		if (variants != null && celt >= 1) {
 			int endIndex = enumIndex + celt - 1;
-			if (endIndex > (variants.length - 1)) endIndex = variants.length - 1;
+            if (endIndex > (variants.length - 1)) {
+                endIndex = variants.length - 1;
+            }
 			if (enumIndex <= endIndex) {
 				nextItems = new Object[endIndex - enumIndex + 1];
 				for (int i = 0; i < nextItems.length; i++) {
@@ -2872,34 +3329,46 @@ public class Accessible {
 					setPtrVARIANT(rgvar + i * VARIANT.sizeof, COM.VT_DISPATCH, accessible.getAddress());
 				}
 			}
-			if (pceltFetched != 0)
-				OS.MoveMemory(pceltFetched, new int[] {nextItems.length}, 4);
-			if (nextItems.length == celt) return COM.S_OK;
+            if (pceltFetched != 0) {
+                OS.MoveMemory(pceltFetched, new int[]{nextItems.length}, 4);
+            }
+            if (nextItems.length == celt) {
+                return COM.S_OK;
+            }
 		} else {
-			if (pceltFetched != 0)
-				OS.MoveMemory(pceltFetched, new int[] {0}, 4);
+            if (pceltFetched != 0) {
+                OS.MoveMemory(pceltFetched, new int[]{0}, 4);
+            }
 		}
 		return COM.S_FALSE;
 	}
 
 	/* IEnumVARIANT::Skip([in] celt) over the specified number of elements in the enumeration sequence. */
 	int Skip(int celt) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IEnumVARIANT::Skip");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IEnumVARIANT::Skip");
+        }
 		/* If there are no listeners, query the proxy
 		 * for its IEnumVariant, and tell it to Skip.
 		 */
 		if (iaccessible != null && accessibleControlListenersSize() == 0) {
 			long[] ppvObject = new long[1];
 			int code = iaccessible.QueryInterface(COM.IIDIEnumVARIANT, ppvObject);
-			if (code != COM.S_OK) return code;
+            if (code != COM.S_OK) {
+                return code;
+            }
 			IEnumVARIANT ienumvariant = new IEnumVARIANT(ppvObject[0]);
 			code = ienumvariant.Skip(celt);
 			ienumvariant.Release();
 			return code;
 		}
 
-		if (celt < 1 ) return COM.E_INVALIDARG;
+        if (celt < 1) {
+            return COM.E_INVALIDARG;
+        }
 		enumIndex += celt;
 		if (enumIndex > (variants.length - 1)) {
 			enumIndex = variants.length - 1;
@@ -2910,15 +3379,21 @@ public class Accessible {
 
 	/* IEnumVARIANT::Reset() the enumeration sequence to the beginning. */
 	int Reset() {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IEnumVARIANT::Reset");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IEnumVARIANT::Reset");
+        }
 		/* If there are no listeners, query the proxy
 		 * for its IEnumVariant, and tell it to Reset.
 		 */
 		if (iaccessible != null && accessibleControlListenersSize() == 0) {
 			long[] ppvObject = new long[1];
 			int code = iaccessible.QueryInterface(COM.IIDIEnumVARIANT, ppvObject);
-			if (code != COM.S_OK) return code;
+            if (code != COM.S_OK) {
+                return code;
+            }
 			IEnumVARIANT ienumvariant = new IEnumVARIANT(ppvObject[0]);
 			code = ienumvariant.Reset();
 			ienumvariant.Release();
@@ -2934,15 +3409,21 @@ public class Accessible {
 	 * must be incremented before returning.  The caller is responsible for releasing ppEnum.
 	 */
 	int Clone(long ppEnum) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IEnumVARIANT::Clone");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IEnumVARIANT::Clone");
+        }
 		/* If there are no listeners, query the proxy for
 		 * its IEnumVariant, and get the Clone from it.
 		 */
 		if (iaccessible != null && accessibleControlListenersSize() == 0) {
 			long[] ppvObject = new long[1];
 			int code = iaccessible.QueryInterface(COM.IIDIEnumVARIANT, ppvObject);
-			if (code != COM.S_OK) return code;
+            if (code != COM.S_OK) {
+                return code;
+            }
 			IEnumVARIANT ienumvariant = new IEnumVARIANT(ppvObject[0]);
 			long [] pEnum = new long [1];
 			code = ienumvariant.Clone(pEnum);
@@ -2951,7 +3432,9 @@ public class Accessible {
 			return code;
 		}
 
-		if (ppEnum == 0) return COM.E_INVALIDARG;
+        if (ppEnum == 0) {
+            return COM.E_INVALIDARG;
+        }
 		OS.MoveMemory(ppEnum, new long[] { objIEnumVARIANT.getAddress() }, C.PTR_SIZEOF);
 		AddRef();
 		return COM.S_OK;
@@ -2959,37 +3442,53 @@ public class Accessible {
 
 	/* IAccessible2::get_nRelations([out] pNRelations) */
 	int get_nRelations(long pNRelations) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int count = getRelationCount();
-		if (DEBUG) print(this + ".IAccessible2::get_nRelations returning " + count + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_nRelations returning " + count + hresult(COM.S_OK));
+        }
 		OS.MoveMemory(pNRelations, new int [] { count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessible2::get_relation([in] relationIndex, [out] ppRelation) */
 	int get_relation(int relationIndex, long ppRelation) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int i = -1;
 		for (int type = 0; type < MAX_RELATION_TYPES; type++) {
 			Relation relation = relations[type];
-			if (relation != null) i++;
+            if (relation != null) {
+                i++;
+            }
 			if (i == relationIndex) {
-				if (DEBUG) print(this + ".IAccessible2::get_relation(" + relationIndex + ") returning " + relation.getAddress() + hresult(COM.S_OK));
+                if (DEBUG) {
+                    print(this + ".IAccessible2::get_relation(" + relationIndex + ") returning " + relation.getAddress() + hresult(COM.S_OK));
+                }
 				relation.AddRef();
 				OS.MoveMemory(ppRelation, new long[] { relation.getAddress() }, C.PTR_SIZEOF);
 				return COM.S_OK;
 			}
 		}
-		if (DEBUG) print(this + ".IAccessible2::get_relation(" + relationIndex + ") returning" + hresult(COM.E_INVALIDARG));
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_relation(" + relationIndex + ") returning" + hresult(COM.E_INVALIDARG));
+        }
 		return COM.E_INVALIDARG;
 	}
 
 	/* IAccessible2::get_relations([in] maxRelations, [out] ppRelations, [out] pNRelations) */
 	int get_relations(int maxRelations, long ppRelations, long pNRelations) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int count = 0;
 		for (int type = 0; type < MAX_RELATION_TYPES; type++) {
-			if (count == maxRelations) break;
+            if (count == maxRelations) {
+                break;
+            }
 			Relation relation = relations[type];
 			if (relation != null) {
 				relation.AddRef();
@@ -2997,40 +3496,62 @@ public class Accessible {
 				count++;
 			}
 		}
-		if (DEBUG) print(this + ".IAccessible2::get_relations(" + maxRelations + ") returning " + count + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_relations(" + maxRelations + ") returning " + count + hresult(COM.S_OK));
+        }
 		OS.MoveMemory(pNRelations, new int [] { count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessible2::get_role([out] pRole) */
 	int get_role(long pRole) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int role = getRole();
-		if (role == 0) role = getDefaultRole();
-		if (DEBUG) print(this + ".IAccessible2::get_role() returning " + getRoleString(role) + hresult(COM.S_OK));
+        if (role == 0) {
+            role = getDefaultRole();
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_role() returning " + getRoleString(role) + hresult(COM.S_OK));
+        }
 		OS.MoveMemory(pRole, new int [] { role }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessible2::scrollTo([in] scrollType) */
 	int scrollTo(int scrollType) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessible2::scrollTo");
-		if (scrollType < ACC.SCROLL_TYPE_LEFT_EDGE || scrollType > ACC.SCROLL_TYPE_ANYWHERE) return COM.E_INVALIDARG;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible2::scrollTo");
+        }
+        if (scrollType < ACC.SCROLL_TYPE_LEFT_EDGE || scrollType > ACC.SCROLL_TYPE_ANYWHERE) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.E_NOTIMPL;
 	}
 
 	/* IAccessible2::scrollToPoint([in] coordinateType, [in] x, [in] y) */
 	int scrollToPoint(int coordinateType, int x, int y) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessible2::scrollToPoint");
-		if (coordinateType != COM.IA2_COORDTYPE_SCREEN_RELATIVE) return COM.E_INVALIDARG;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible2::scrollToPoint");
+        }
+        if (coordinateType != COM.IA2_COORDTYPE_SCREEN_RELATIVE) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.E_NOTIMPL;
 	}
 
 	/* IAccessible2::get_groupPosition([out] pGroupLevel, [out] pSimilarItemsInGroup, [out] pPositionInGroup) */
 	int get_groupPosition(long pGroupLevel, long pSimilarItemsInGroup, long pPositionInGroup) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleAttributeEvent event = new AccessibleAttributeEvent(this);
 		event.groupLevel = event.groupCount = event.groupIndex = -1;
 		for (int i = 0; i < accessibleAttributeListenersSize(); i++) {
@@ -3047,8 +3568,11 @@ public class Accessible {
 				similarItemsInGroup = 1;
 				for (Control child : control.getParent().getChildren()) {
 					if (child instanceof Button && ((child.getStyle() & SWT.RADIO) != 0)) {
-						if (child == control) positionInGroup = similarItemsInGroup;
-						else similarItemsInGroup++;
+                        if (child == control) {
+                            positionInGroup = similarItemsInGroup;
+                        } else {
+                            similarItemsInGroup++;
+                        }
 					}
 				}
 			}
@@ -3056,14 +3580,20 @@ public class Accessible {
 		OS.MoveMemory(pGroupLevel, new int [] { groupLevel }, 4);
 		OS.MoveMemory(pSimilarItemsInGroup, new int [] { similarItemsInGroup }, 4);
 		OS.MoveMemory(pPositionInGroup, new int [] { positionInGroup }, 4);
-		if (DEBUG) print(this + ".IAccessible2::get_groupPosition() returning level=" + groupLevel + ", count=" + similarItemsInGroup + ", index=" + positionInGroup + hresult(groupLevel == 0 && similarItemsInGroup == 0 && positionInGroup == 0 ? COM.S_FALSE : COM.S_OK));
-		if (groupLevel == 0 && similarItemsInGroup == 0 && positionInGroup == 0) return COM.S_FALSE;
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_groupPosition() returning level=" + groupLevel + ", count=" + similarItemsInGroup + ", index=" + positionInGroup + hresult(groupLevel == 0 && similarItemsInGroup == 0 && positionInGroup == 0 ? COM.S_FALSE : COM.S_OK));
+        }
+        if (groupLevel == 0 && similarItemsInGroup == 0 && positionInGroup == 0) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessible2::get_states([out] pStates) */
 	int get_states(long pStates) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleControlEvent event = new AccessibleControlEvent(this);
 		event.childID = ACC.CHILDID_SELF;
 		for (int i = 0; i < accessibleControlListenersSize(); i++) {
@@ -3072,12 +3602,24 @@ public class Accessible {
 		}
 		int states = event.detail;
 		int ia2States = 0;
-		if ((states & ACC.STATE_ACTIVE) != 0) ia2States |= COM.IA2_STATE_ACTIVE;
-		if ((states & ACC.STATE_SINGLELINE) != 0) ia2States |= COM.IA2_STATE_SINGLE_LINE;
-		if ((states & ACC.STATE_MULTILINE) != 0) ia2States |= COM.IA2_STATE_MULTI_LINE;
-		if ((states & ACC.STATE_REQUIRED) != 0) ia2States |= COM.IA2_STATE_REQUIRED;
-		if ((states & ACC.STATE_INVALID_ENTRY) != 0) ia2States |= COM.IA2_STATE_INVALID_ENTRY;
-		if ((states & ACC.STATE_SUPPORTS_AUTOCOMPLETION) != 0) ia2States |= COM.IA2_STATE_SUPPORTS_AUTOCOMPLETION;
+        if ((states & ACC.STATE_ACTIVE) != 0) {
+            ia2States |= COM.IA2_STATE_ACTIVE;
+        }
+        if ((states & ACC.STATE_SINGLELINE) != 0) {
+            ia2States |= COM.IA2_STATE_SINGLE_LINE;
+        }
+        if ((states & ACC.STATE_MULTILINE) != 0) {
+            ia2States |= COM.IA2_STATE_MULTI_LINE;
+        }
+        if ((states & ACC.STATE_REQUIRED) != 0) {
+            ia2States |= COM.IA2_STATE_REQUIRED;
+        }
+        if ((states & ACC.STATE_INVALID_ENTRY) != 0) {
+            ia2States |= COM.IA2_STATE_INVALID_ENTRY;
+        }
+        if ((states & ACC.STATE_SUPPORTS_AUTOCOMPLETION) != 0) {
+            ia2States |= COM.IA2_STATE_SUPPORTS_AUTOCOMPLETION;
+        }
 
 		/* If the role is text and there are TextExtendedListeners, then set IA2_STATE_EDITABLE.
 		 * Note that IA2_STATE_EDITABLE is not the opposite of STATE_READONLY.
@@ -3086,14 +3628,18 @@ public class Accessible {
 		if (getRole() == ACC.ROLE_TEXT && accessibleTextExtendedListenersSize() > 0) {
 			ia2States |= COM.IA2_STATE_EDITABLE;
 		}
-		if (DEBUG) print(this + ".IAccessible2::get_states returning" + getIA2StatesString(ia2States) + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_states returning" + getIA2StatesString(ia2States) + hresult(COM.S_OK));
+        }
 		OS.MoveMemory(pStates, new int [] { ia2States }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessible2::get_extendedRole([out] pbstrExtendedRole) */
 	int get_extendedRole(long pbstrExtendedRole) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		/* This feature is not supported. */
 		setString(pbstrExtendedRole, null);
 		return COM.S_FALSE;
@@ -3101,7 +3647,9 @@ public class Accessible {
 
 	/* IAccessible2::get_localizedExtendedRole([out] pbstrLocalizedExtendedRole) */
 	int get_localizedExtendedRole(long pbstrLocalizedExtendedRole) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		/* This feature is not supported. */
 		setString(pbstrLocalizedExtendedRole, null);
 		return COM.S_FALSE;
@@ -3109,7 +3657,9 @@ public class Accessible {
 
 	/* IAccessible2::get_nExtendedStates([out] pNExtendedStates) */
 	int get_nExtendedStates(long pNExtendedStates) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		/* This feature is not supported. */
 		OS.MoveMemory(pNExtendedStates, new int [] { 0 }, 4);
 		return COM.S_OK;
@@ -3117,7 +3667,9 @@ public class Accessible {
 
 	/* IAccessible2::get_extendedStates([in] maxExtendedStates, [out] ppbstrExtendedStates, [out] pNExtendedStates) */
 	int get_extendedStates(int maxExtendedStates, long ppbstrExtendedStates, long pNExtendedStates) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		/* This feature is not supported. */
 		setString(ppbstrExtendedStates, null);
 		OS.MoveMemory(pNExtendedStates, new int [] { 0 }, 4);
@@ -3126,7 +3678,9 @@ public class Accessible {
 
 	/* IAccessible2::get_localizedExtendedStates([in] maxLocalizedExtendedStates, [out] ppbstrLocalizedExtendedStates, [out] pNLocalizedExtendedStates) */
 	int get_localizedExtendedStates(int maxLocalizedExtendedStates, long ppbstrLocalizedExtendedStates, long pNLocalizedExtendedStates) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		/* This feature is not supported. */
 		setString(ppbstrLocalizedExtendedStates, null);
 		OS.MoveMemory(pNLocalizedExtendedStates, new int [] { 0 }, 4);
@@ -3135,24 +3689,36 @@ public class Accessible {
 
 	/* IAccessible2::get_uniqueID([out] pUniqueID) */
 	int get_uniqueID(long pUniqueID) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (uniqueID == -1) uniqueID = UniqueID--;
-		if (DEBUG) print(this + ".IAccessible2::get_uniqueID returning " + uniqueID + hresult(COM.S_OK));
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (uniqueID == -1) {
+            uniqueID = UniqueID--;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_uniqueID returning " + uniqueID + hresult(COM.S_OK));
+        }
 		OS.MoveMemory(pUniqueID, new long [] { uniqueID }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessible2::get_windowHandle([out] pWindowHandle) */
 	int get_windowHandle(long pWindowHandle) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessible2::get_windowHandle returning " + control.handle + hresult(COM.S_OK));
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_windowHandle returning " + control.handle + hresult(COM.S_OK));
+        }
 		OS.MoveMemory(pWindowHandle, new long [] { control.handle }, C.PTR_SIZEOF);
 		return COM.S_OK;
 	}
 
 	/* IAccessible2::get_indexInParent([out] pIndexInParent) */
 	int get_indexInParent(long pIndexInParent) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleControlEvent event = new AccessibleControlEvent(this);
 		event.childID = ACC.CHILDID_CHILD_INDEX;
 		event.detail = -1;
@@ -3206,14 +3772,18 @@ public class Accessible {
 //			}
 		}
 
-		if (DEBUG) print(this + ".IAccessible2::get_indexInParent returning " + indexInParent + hresult(indexInParent == -1 ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_indexInParent returning " + indexInParent + hresult(indexInParent == -1 ? COM.S_FALSE : COM.S_OK));
+        }
 		OS.MoveMemory(pIndexInParent, new int [] { indexInParent }, 4);
 		return indexInParent == -1 ? COM.S_FALSE : COM.S_OK;
 	}
 
 	/* IAccessible2::get_locale([out] pLocale) */
 	int get_locale(long pLocale) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		/* Return the default locale for the JVM. */
 		Locale locale = Locale.getDefault();
 
@@ -3229,13 +3799,17 @@ public class Accessible {
 		ptr = COM.SysAllocString(data);
 		OS.MoveMemory(pLocale + 2 * C.PTR_SIZEOF, new long[] {ptr}, C.PTR_SIZEOF);
 
-		if (DEBUG) print(this + ".IAccessible2::get_locale() returning" + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_locale() returning" + hresult(COM.S_OK));
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessible2::get_attributes([out] pbstrAttributes) */
 	int get_attributes(long pbstrAttributes) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleAttributeEvent event = new AccessibleAttributeEvent(this);
 		for (int i = 0; i < accessibleAttributeListenersSize(); i++) {
 			AccessibleAttributeListener listener = accessibleAttributeListeners.get(i);
@@ -3251,7 +3825,9 @@ public class Accessible {
 				attributes += "tab-stop:position=" + tabStop + ";";
 			}
 		}
-		if (event.justify) attributes += "text-align:justify;";
+        if (event.justify) {
+            attributes += "text-align:justify;";
+        }
 		attributes += "text-align:" + (event.alignment == SWT.LEFT ? "left" : event.alignment == SWT.RIGHT ? "right" : "center") + ";";
 		attributes += "text-indent:" + event.indent + ";";
 		if (event.attributes != null) {
@@ -3264,57 +3840,79 @@ public class Accessible {
 		if (getRole() == ACC.ROLE_TEXT) {
 			attributes += "text-model:a1;";
 		}
-		if (DEBUG) print(this + ".IAccessible2::get_attributes() returning " + attributes + hresult(attributes.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessible2::get_attributes() returning " + attributes + hresult(attributes.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        }
 		setString(pbstrAttributes, attributes);
-		if (attributes.length() == 0) return COM.S_FALSE;
+        if (attributes.length() == 0) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleAction::get_nActions([out] pNActions) */
 	int get_nActions(long pNActions) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleActionEvent event = new AccessibleActionEvent(this);
 		for (int i = 0; i < accessibleActionListenersSize(); i++) {
 			AccessibleActionListener listener = accessibleActionListeners.get(i);
 			listener.getActionCount(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleAction::get_nActions() returning " + event.count + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleAction::get_nActions() returning " + event.count + hresult(COM.S_OK));
+        }
 		OS.MoveMemory(pNActions, new int [] { event.count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleAction::doAction([in] actionIndex) */
 	int doAction(int actionIndex) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleActionEvent event = new AccessibleActionEvent(this);
 		event.index = actionIndex;
 		for (int i = 0; i < accessibleActionListenersSize(); i++) {
 			AccessibleActionListener listener = accessibleActionListeners.get(i);
 			listener.doAction(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleAction::doAction(" + actionIndex + ") returning" + hresult(event.result == null || !event.result.equals(ACC.OK) ? COM.E_INVALIDARG : COM.S_OK));
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (DEBUG) {
+            print(this + ".IAccessibleAction::doAction(" + actionIndex + ") returning" + hresult(event.result == null || !event.result.equals(ACC.OK) ? COM.E_INVALIDARG : COM.S_OK));
+        }
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleAction::get_description([in] actionIndex, [out] pbstrDescription) */
 	int get_description(int actionIndex, long pbstrDescription) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleActionEvent event = new AccessibleActionEvent(this);
 		event.index = actionIndex;
 		for (int i = 0; i < accessibleActionListenersSize(); i++) {
 			AccessibleActionListener listener = accessibleActionListeners.get(i);
 			listener.getDescription(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleAction::get_description(" + actionIndex + ") returning " + event.result + hresult(event.result == null || event.result.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleAction::get_description(" + actionIndex + ") returning " + event.result + hresult(event.result == null || event.result.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        }
 		setString(pbstrDescription, event.result);
-		if (event.result == null || event.result.length() == 0) return COM.S_FALSE;
+        if (event.result == null || event.result.length() == 0) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleAction::get_keyBinding([in] actionIndex, [in] nMaxBindings, [out] ppbstrKeyBindings, [out] pNBindings) */
 	int get_keyBinding(int actionIndex, int nMaxBindings, long ppbstrKeyBindings, long pNBindings) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleActionEvent event = new AccessibleActionEvent(this);
 		event.index = actionIndex;
 		for (int i = 0; i < accessibleActionListenersSize(); i++) {
@@ -3323,12 +3921,18 @@ public class Accessible {
 		}
 		String keyBindings = event.result;
 		int length = 0;
-		if (keyBindings != null) length = keyBindings.length();
+        if (keyBindings != null) {
+            length = keyBindings.length();
+        }
 		int i = 0, count = 0;
 		while (i < length) {
-			if (count == nMaxBindings) break;
+            if (count == nMaxBindings) {
+                break;
+            }
 			int j = keyBindings.indexOf(';', i);
-			if (j == -1) j = length;
+            if (j == -1) {
+                j = length;
+            }
 			String keyBinding = keyBindings.substring(i, j);
 			if (keyBinding.length() > 0) {
 				setString(ppbstrKeyBindings + count * C.PTR_SIZEOF, keyBinding);
@@ -3336,7 +3940,9 @@ public class Accessible {
 			}
 			i = j + 1;
 		}
-		if (DEBUG) print(this + ".IAccessibleAction::get_keyBinding(index=" + actionIndex + " max=" + nMaxBindings + ") returning count=" + count + hresult(count == 0 ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleAction::get_keyBinding(index=" + actionIndex + " max=" + nMaxBindings + ") returning count=" + count + hresult(count == 0 ? COM.S_FALSE : COM.S_OK));
+        }
 		OS.MoveMemory(pNBindings, new int [] { count }, 4);
 		if (count == 0) {
 			setString(ppbstrKeyBindings, null);
@@ -3347,7 +3953,9 @@ public class Accessible {
 
 	/* IAccessibleAction::get_name([in] actionIndex, [out] pbstrName) */
 	int get_name(int actionIndex, long pbstrName) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleActionEvent event = new AccessibleActionEvent(this);
 		event.index = actionIndex;
 		event.localized = false;
@@ -3355,7 +3963,9 @@ public class Accessible {
 			AccessibleActionListener listener = accessibleActionListeners.get(i);
 			listener.getName(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleAction::get_name(" + actionIndex + ") returning " + event.result + hresult(event.result == null || event.result.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleAction::get_name(" + actionIndex + ") returning " + event.result + hresult(event.result == null || event.result.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        }
 		if (event.result == null || event.result.length() == 0) {
 			setString(pbstrName, null);
 			return COM.S_FALSE;
@@ -3366,7 +3976,9 @@ public class Accessible {
 
 	/* IAccessibleAction::get_localizedName([in] actionIndex, [out] pbstrLocalizedName) */
 	int get_localizedName(int actionIndex, long pbstrLocalizedName) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleActionEvent event = new AccessibleActionEvent(this);
 		event.index = actionIndex;
 		event.localized = true;
@@ -3374,7 +3986,9 @@ public class Accessible {
 			AccessibleActionListener listener = accessibleActionListeners.get(i);
 			listener.getName(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleAction::get_localizedName(" + actionIndex + ") returning " + event.result + hresult(event.result == null || event.result.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleAction::get_localizedName(" + actionIndex + ") returning " + event.result + hresult(event.result == null || event.result.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        }
 		if (event.result == null || event.result.length() == 0) {
 			setString(pbstrLocalizedName, null);
 			return COM.S_FALSE;
@@ -3385,9 +3999,13 @@ public class Accessible {
 
 	/* IAccessibleApplication::get_appName([out] pbstrName) */
 	int get_appName(long pbstrName) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		String appName = Display.getAppName();
-		if (DEBUG) print(this + ".IAccessibleApplication::get_appName() returning " + appName + hresult(appName == null || appName.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleApplication::get_appName() returning " + appName + hresult(appName == null || appName.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        }
 		if (appName == null || appName.length() == 0) {
 			setString(pbstrName, null);
 			return COM.S_FALSE;
@@ -3398,9 +4016,13 @@ public class Accessible {
 
 	/* IAccessibleApplication::get_appVersion([out] pbstrVersion) */
 	int get_appVersion(long pbstrVersion) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		String appVersion = Display.getAppVersion();
-		if (DEBUG) print(this + ".IAccessibleApplication::get_appVersion() returning" + appVersion + hresult(appVersion == null || appVersion.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleApplication::get_appVersion() returning" + appVersion + hresult(appVersion == null || appVersion.length() == 0 ? COM.S_FALSE : COM.S_OK));
+        }
 		if (appVersion == null || appVersion.length() == 0) {
 			setString(pbstrVersion, null);
 			return COM.S_FALSE;
@@ -3411,18 +4033,26 @@ public class Accessible {
 
 	/* IAccessibleApplication::get_toolkitName([out] pbstrName) */
 	int get_toolkitName(long pbstrName) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		String toolkitName = "SWT";
-		if (DEBUG) print(this + ".IAccessibleApplication::get_toolkitName() returning" + toolkitName + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleApplication::get_toolkitName() returning" + toolkitName + hresult(COM.S_OK));
+        }
 		setString(pbstrName, toolkitName);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleApplication::get_toolkitVersion([out] pbstrVersion) */
 	int get_toolkitVersion(long pbstrVersion) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		String toolkitVersion = "" + SWT.getVersion(); //$NON-NLS-1$
-		if (DEBUG) print(this + ".IAccessibleApplication::get_toolkitVersion() returning" + toolkitVersion + hresult(COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleApplication::get_toolkitVersion() returning" + toolkitVersion + hresult(COM.S_OK));
+        }
 		setString(pbstrVersion, toolkitVersion);
 		return COM.S_OK;
 	}
@@ -3460,8 +4090,12 @@ public class Accessible {
 
 	/* IAccessibleEditableText::copyText([in] startOffset, [in] endOffset) */
 	int copyText(int startOffset, int endOffset) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleEditableText::copyText, start=" + startOffset + ", end=" + endOffset);
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleEditableText::copyText, start=" + startOffset + ", end=" + endOffset);
+        }
 		AccessibleEditableTextEvent event = new AccessibleEditableTextEvent(this);
 		event.start = startOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : startOffset;
 		event.end = endOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : endOffset;
@@ -3469,14 +4103,20 @@ public class Accessible {
 			AccessibleEditableTextListener listener = accessibleEditableTextListeners.get(i);
 			listener.copyText(event);
 		}
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleEditableText::deleteText([in] startOffset, [in] endOffset) */
 	int deleteText(int startOffset, int endOffset) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleEditableText::deleteText, start=" + startOffset + ", end=" + endOffset);
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleEditableText::deleteText, start=" + startOffset + ", end=" + endOffset);
+        }
 		AccessibleEditableTextEvent event = new AccessibleEditableTextEvent(this);
 		event.start = startOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : startOffset;
 		event.end = endOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : endOffset;
@@ -3485,14 +4125,20 @@ public class Accessible {
 			AccessibleEditableTextListener listener = accessibleEditableTextListeners.get(i);
 			listener.replaceText(event);
 		}
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleEditableText::insertText([in] offset, [in] pbstrText) */
 	int insertText(int offset, long pbstrText) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleEditableText::insertText, offset=" + offset + ", pbstrText=" + pbstrText);
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleEditableText::insertText, offset=" + offset + ", pbstrText=" + pbstrText);
+        }
 		AccessibleEditableTextEvent event = new AccessibleEditableTextEvent(this);
 		event.start = offset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : offset;
 		event.end = event.start;
@@ -3501,14 +4147,20 @@ public class Accessible {
 			AccessibleEditableTextListener listener = accessibleEditableTextListeners.get(i);
 			listener.replaceText(event);
 		}
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleEditableText::cutText([in] startOffset, [in] endOffset) */
 	int cutText(int startOffset, int endOffset) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleEditableText::cutText, start=" + startOffset + ", end=" + endOffset);
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleEditableText::cutText, start=" + startOffset + ", end=" + endOffset);
+        }
 		AccessibleEditableTextEvent event = new AccessibleEditableTextEvent(this);
 		event.start = startOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : startOffset;
 		event.end = endOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : endOffset;
@@ -3516,14 +4168,20 @@ public class Accessible {
 			AccessibleEditableTextListener listener = accessibleEditableTextListeners.get(i);
 			listener.cutText(event);
 		}
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleEditableText::pasteText([in] offset) */
 	int pasteText(int offset) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleEditableText::pasteText, offset=" + offset);
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleEditableText::pasteText, offset=" + offset);
+        }
 		AccessibleEditableTextEvent event = new AccessibleEditableTextEvent(this);
 		event.start = offset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : offset;
 		event.end = event.start;
@@ -3531,14 +4189,20 @@ public class Accessible {
 			AccessibleEditableTextListener listener = accessibleEditableTextListeners.get(i);
 			listener.pasteText(event);
 		}
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleEditableText::replaceText([in] startOffset, [in] endOffset, [in] pbstrText) */
 	int replaceText(int startOffset, int endOffset, long pbstrText) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleEditableText::replaceText, start=" + startOffset + ", end=" + endOffset + ", pbstrText=" + pbstrText);
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleEditableText::replaceText, start=" + startOffset + ", end=" + endOffset + ", pbstrText=" + pbstrText);
+        }
 		AccessibleEditableTextEvent event = new AccessibleEditableTextEvent(this);
 		event.start = startOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : startOffset;
 		event.end = endOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : endOffset;
@@ -3547,14 +4211,20 @@ public class Accessible {
 			AccessibleEditableTextListener listener = accessibleEditableTextListeners.get(i);
 			listener.replaceText(event);
 		}
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleEditableText::setAttributes([in] startOffset, [in] endOffset, [in] pbstrAttributes) */
 	int setAttributes(int startOffset, int endOffset, long pbstrAttributes) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleEditableText::setAttributes, start=" + startOffset + ", end=" + endOffset + ", pbstrAttributes=" + pbstrAttributes);
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleEditableText::setAttributes, start=" + startOffset + ", end=" + endOffset + ", pbstrAttributes=" + pbstrAttributes);
+        }
 		AccessibleTextAttributeEvent event = new AccessibleTextAttributeEvent(this);
 		String string = getString(pbstrAttributes);
 		if (string != null && string.length() > 0) {
@@ -3583,16 +4253,20 @@ public class Accessible {
 				String key = attributes[i];
 				String value = attributes[i+1];
 				if (key.equals("text-position")) {
-					if (value.equals("super")) style.rise = points / 2;
-					else if (value.equals("sub")) style.rise = - points / 2;
+                    if (value.equals("super")) {
+                        style.rise = points / 2;
+                    } else if (value.equals("sub")) {
+                        style.rise = -points / 2;
+                    }
 				} else if (key.equals("text-underline-type")) {
 					style.underline = true;
-					if (value.equals("double")) style.underlineStyle = SWT.UNDERLINE_DOUBLE;
-					else if (value.equals("single")) {
-						if (style.underlineStyle != SWT.UNDERLINE_SQUIGGLE && style.underlineStyle != SWT.UNDERLINE_ERROR) {
-							style.underlineStyle = SWT.UNDERLINE_SINGLE;
-						}
-					}
+                    if (value.equals("double")) {
+                        style.underlineStyle = SWT.UNDERLINE_DOUBLE;
+                    } else if (value.equals("single")) {
+                        if (style.underlineStyle != SWT.UNDERLINE_SQUIGGLE && style.underlineStyle != SWT.UNDERLINE_ERROR) {
+                            style.underlineStyle = SWT.UNDERLINE_SINGLE;
+                        }
+                    }
 				} else if (key.equals("text-underline-style") && value.equals("wave")) {
 					style.underline = true;
 					style.underlineStyle = SWT.UNDERLINE_SQUIGGLE;
@@ -3600,33 +4274,50 @@ public class Accessible {
 					style.underline = true;
 					style.underlineStyle = SWT.UNDERLINE_ERROR;
 				} else if (key.equals("text-line-through-type")) {
-					if (value.equals("single")) style.strikeout = true;
+                    if (value.equals("single")) {
+                        style.strikeout = true;
+                    }
 				} else if (key.equals("font-family")) {
-					if (fontData == null) fontData = new FontData ();
+                    if (fontData == null) {
+                        fontData = new FontData();
+                    }
 					fontData.setName(value);
 				} else if (key.equals("font-size")) {
 					try {
 						String pts = value.endsWith("pt") ? value.substring(0, value.length() - 2) : value;
 						points = Integer.parseInt(pts);
-						if (fontData == null) fontData = new FontData ();
+                        if (fontData == null) {
+                            fontData = new FontData();
+                        }
 						fontData.setHeight(points);
-						if (style.rise > 0) style.rise = points / 2;
-						else if (style.rise < 0) style.rise = - points / 2;
+                        if (style.rise > 0) {
+                            style.rise = points / 2;
+                        } else if (style.rise < 0) {
+                            style.rise = -points / 2;
+                        }
 					} catch (NumberFormatException ex) {}
 				} else if (key.equals("font-style")) {
 					if (value.equals("italic")) {
-						if (fontData == null) fontData = new FontData ();
+                        if (fontData == null) {
+                            fontData = new FontData();
+                        }
 						fontData.setStyle(fontData.getStyle() | SWT.ITALIC);
 					}
 				} else if (key.equals("font-weight")) {
 					if (value.equals("bold")) {
-						if (fontData == null) fontData = new FontData ();
+                        if (fontData == null) {
+                            fontData = new FontData();
+                        }
 						fontData.setStyle(fontData.getStyle() | SWT.BOLD);
 					} else {
 						try {
 							int weight = Integer.parseInt(value);
-							if (fontData == null) fontData = new FontData ();
-							if (weight > 400) fontData.setStyle(fontData.getStyle() | SWT.BOLD);
+                            if (fontData == null) {
+                                fontData = new FontData();
+                            }
+                            if (weight > 400) {
+                                fontData.setStyle(fontData.getStyle() | SWT.BOLD);
+                            }
 						} catch (NumberFormatException ex) {}
 					}
 				} else if (key.equals("color")) {
@@ -3640,7 +4331,9 @@ public class Accessible {
 				if (fontData != null) {
 					style.font = new Font(control.getDisplay(), fontData);
 				}
-				if (!style.equals(new TextStyle())) event.textStyle = style;
+                if (!style.equals(new TextStyle())) {
+                    event.textStyle = style;
+                }
 			}
 			for (int i = 0; i < accessibleEditableTextListenersSize(); i++) {
 				AccessibleEditableTextListener listener = accessibleEditableTextListeners.get(i);
@@ -3656,14 +4349,20 @@ public class Accessible {
 				style.background.dispose();
 			}
 		}
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleHyperlink::get_anchor([in] index, [out] pAnchor) */
 	int get_anchor(int index, long pAnchor) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleHyperlink::get_anchor");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleHyperlink::get_anchor");
+        }
 		AccessibleHyperlinkEvent event = new AccessibleHyperlinkEvent(this);
 		event.index = index;
 		for (int i = 0; i < accessibleHyperlinkListenersSize(); i++) {
@@ -3677,14 +4376,20 @@ public class Accessible {
 			return COM.S_OK;
 		}
 		setStringVARIANT(pAnchor, event.result);
-		if (event.result == null) return COM.S_FALSE;
+        if (event.result == null) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleHyperlink::get_anchorTarget([in] index, [out] pAnchorTarget) */
 	int get_anchorTarget(int index, long pAnchorTarget) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleHyperlink::get_anchorTarget");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleHyperlink::get_anchorTarget");
+        }
 		AccessibleHyperlinkEvent event = new AccessibleHyperlinkEvent(this);
 		event.index = index;
 		for (int i = 0; i < accessibleHyperlinkListenersSize(); i++) {
@@ -3698,14 +4403,20 @@ public class Accessible {
 			return COM.S_OK;
 		}
 		setStringVARIANT(pAnchorTarget, event.result);
-		if (event.result == null) return COM.S_FALSE;
+        if (event.result == null) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleHyperlink::get_startIndex([out] pIndex) */
 	int get_startIndex(long pIndex) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleHyperlink::get_startIndex");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleHyperlink::get_startIndex");
+        }
 		AccessibleHyperlinkEvent event = new AccessibleHyperlinkEvent(this);
 		for (int i = 0; i < accessibleHyperlinkListenersSize(); i++) {
 			AccessibleHyperlinkListener listener = accessibleHyperlinkListeners.get(i);
@@ -3717,8 +4428,12 @@ public class Accessible {
 
 	/* IAccessibleHyperlink::get_endIndex([out] pIndex) */
 	int get_endIndex(long pIndex) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleHyperlink::get_endIndex");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleHyperlink::get_endIndex");
+        }
 		AccessibleHyperlinkEvent event = new AccessibleHyperlinkEvent(this);
 		for (int i = 0; i < accessibleHyperlinkListenersSize(); i++) {
 			AccessibleHyperlinkListener listener = accessibleHyperlinkListeners.get(i);
@@ -3736,8 +4451,12 @@ public class Accessible {
 
 	/* IAccessibleHypertext::get_nHyperlinks([out] pHyperlinkCount) */
 	int get_nHyperlinks(long pHyperlinkCount) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleHypertext::get_nHyperlinks");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleHypertext::get_nHyperlinks");
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		for (int i = 0; i < accessibleTextExtendedListenersSize(); i++) {
 			AccessibleTextExtendedListener listener = accessibleTextExtendedListeners.get(i);
@@ -3749,8 +4468,12 @@ public class Accessible {
 
 	/* IAccessibleHypertext::get_hyperlink([in] index, [out] ppHyperlink) */
 	int get_hyperlink(int index, long ppHyperlink) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleHypertext::get_hyperlink");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleHypertext::get_hyperlink");
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.index = index;
 		for (int i = 0; i < accessibleTextExtendedListenersSize(); i++) {
@@ -3769,8 +4492,12 @@ public class Accessible {
 
 	/* IAccessibleHypertext::get_hyperlinkIndex([in] charIndex, [out] pHyperlinkIndex) */
 	int get_hyperlinkIndex(int charIndex, long pHyperlinkIndex) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleHypertext::get_hyperlinkIndex");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleHypertext::get_hyperlinkIndex");
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.offset = charIndex;
 		event.index = -1;
@@ -3779,7 +4506,9 @@ public class Accessible {
 			listener.getHyperlinkIndex(event);
 		}
 		OS.MoveMemory(pHyperlinkIndex, new int [] { event.index }, 4);
-		if (event.index == -1) return COM.S_FALSE;
+        if (event.index == -1) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
@@ -3830,7 +4559,9 @@ public class Accessible {
 
 	/* IAccessibleTable2::get_cellAt([in] row, [in] column, [out] ppCell) */
 	int get_cellAt(int row, int column, long ppCell) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		event.row = row;
 		event.column = column;
@@ -3839,8 +4570,12 @@ public class Accessible {
 			listener.getCell(event);
 		}
 		Accessible accessible = event.accessible;
-		if (DEBUG) print(this + ".IAccessibleTable2::get_cellAt(row=" + row + ", column=" + column + ") returning " + accessible);
-		if (accessible == null) return COM.E_INVALIDARG;
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_cellAt(row=" + row + ", column=" + column + ") returning " + accessible);
+        }
+        if (accessible == null) {
+            return COM.E_INVALIDARG;
+        }
 		accessible.AddRef();
 		OS.MoveMemory(ppCell, new long[] { accessible.getAddress() }, C.PTR_SIZEOF);
 		return COM.S_OK;
@@ -3849,14 +4584,18 @@ public class Accessible {
 	/* IAccessibleTable2::get_caption([out] ppAccessible) */
 	@SuppressWarnings("deprecation")
 	int get_caption(long ppAccessible) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getCaption(event);
 		}
 		Accessible accessible = event.accessible;
-		if (DEBUG) print(this + ".IAccessibleTable2::get_caption() returning " + accessible);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_caption() returning " + accessible);
+        }
 		if (accessible == null) {
 			OS.MoveMemory(ppAccessible, new long[] { 0 }, C.PTR_SIZEOF);
 			return COM.S_FALSE;
@@ -3868,108 +4607,144 @@ public class Accessible {
 
 	/* IAccessibleTable2::get_columnDescription([in] column, [out] pbstrDescription) */
 	int get_columnDescription(int column, long pbstrDescription) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		event.column = column;
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getColumnDescription(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::get_columnDescription(column=" + column + ") returning " + event.result);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_columnDescription(column=" + column + ") returning " + event.result);
+        }
 		setString(pbstrDescription, event.result);
-		if (event.result == null) return COM.S_FALSE;
+        if (event.result == null) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::get_nColumns([out] pColumnCount) */
 	int get_nColumns(long pColumnCount) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getColumnCount(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::get_nColumns() returning " + event.count);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_nColumns() returning " + event.count);
+        }
 		OS.MoveMemory(pColumnCount, new int [] { event.count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::get_nRows([out] pRowCount) */
 	int get_nRows(long pRowCount) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getRowCount(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::get_nRows() returning " + event.count);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_nRows() returning " + event.count);
+        }
 		OS.MoveMemory(pRowCount, new int [] { event.count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::get_nSelectedCells([out] pCellCount) */
 	int get_nSelectedCells(long pCellCount) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getSelectedCellCount(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::get_nSelectedCells() returning " + event.count);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_nSelectedCells() returning " + event.count);
+        }
 		OS.MoveMemory(pCellCount, new int [] { event.count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::get_nSelectedColumns([out] pColumnCount) */
 	int get_nSelectedColumns(long pColumnCount) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getSelectedColumnCount(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::get_nSelectedColumns() returning " + event.count);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_nSelectedColumns() returning " + event.count);
+        }
 		OS.MoveMemory(pColumnCount, new int [] { event.count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::get_nSelectedRows([out] pRowCount) */
 	int get_nSelectedRows(long pRowCount) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getSelectedRowCount(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::get_nSelectedRows() returning " + event.count);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_nSelectedRows() returning " + event.count);
+        }
 		OS.MoveMemory(pRowCount, new int [] { event.count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::get_rowDescription([in] row, [out] pbstrDescription) */
 	int get_rowDescription(int row, long pbstrDescription) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		event.row = row;
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getRowDescription(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::get_rowDescription(row=" + row + ") returning " + event.result);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_rowDescription(row=" + row + ") returning " + event.result);
+        }
 		setString(pbstrDescription, event.result);
-		if (event.result == null) return COM.S_FALSE;
+        if (event.result == null) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::get_selectedCells([out] ppCells, [out] pNSelectedCells) */
 	int get_selectedCells(long ppCells, long pNSelectedCells) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getSelectedCells(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::get_selectedCells() returning " + (event.accessibles == null ? "null" : "accessibles[" + event.accessibles.length + "]"));
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_selectedCells() returning " + (event.accessibles == null ? "null" : "accessibles[" + event.accessibles.length + "]"));
+        }
 		if (event.accessibles == null || event.accessibles.length == 0) {
 			OS.MoveMemory(ppCells, new long[] { 0 }, C.PTR_SIZEOF);
 			OS.MoveMemory(pNSelectedCells, new int [] { 0 }, 4);
@@ -3993,14 +4768,18 @@ public class Accessible {
 
 	/* IAccessibleTable2::get_selectedColumns([out] ppSelectedColumns, [out] pNColumns) */
 	int get_selectedColumns(long ppSelectedColumns, long pNColumns) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getSelectedColumns(event);
 		}
 		int count = event.selected == null ? 0 : event.selected.length;
-		if (DEBUG) print(this + ".IAccessibleTable2::get_selectedColumns() returning " + (count == 0 ? "null" : "selected[" + count + "]"));
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_selectedColumns() returning " + (count == 0 ? "null" : "selected[" + count + "]"));
+        }
 		if (count == 0) {
 			OS.MoveMemory(ppSelectedColumns, new long[] { 0 }, C.PTR_SIZEOF);
 			OS.MoveMemory(pNColumns, new int [] { 0 }, 4);
@@ -4015,14 +4794,18 @@ public class Accessible {
 
 	/* IAccessibleTable2::get_selectedRows([out] ppSelectedRows, [out] pNRows) */
 	int get_selectedRows(long ppSelectedRows, long pNRows) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getSelectedRows(event);
 		}
 		int count = event.selected == null ? 0 : event.selected.length;
-		if (DEBUG) print(this + ".IAccessibleTable2::get_selectedRows() returning " + (count == 0 ? "null" : "selected[" + count + "]"));
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_selectedRows() returning " + (count == 0 ? "null" : "selected[" + count + "]"));
+        }
 		if (count == 0) {
 			OS.MoveMemory(ppSelectedRows, new long[] { 0 }, C.PTR_SIZEOF);
 			OS.MoveMemory(pNRows, new int [] { 0 }, 4);
@@ -4038,14 +4821,18 @@ public class Accessible {
 	/* IAccessibleTable2::get_summary([out] ppAccessible) */
 	@SuppressWarnings("deprecation")
 	int get_summary(long ppAccessible) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getSummary(event);
 		}
 		Accessible accessible = event.accessible;
-		if (DEBUG) print(this + ".IAccessibleTable2::get_summary() returning " + accessible);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_summary() returning " + accessible);
+        }
 		if (accessible == null) {
 			OS.MoveMemory(ppAccessible, new long[] { 0 }, C.PTR_SIZEOF);
 			return COM.S_FALSE;
@@ -4057,92 +4844,128 @@ public class Accessible {
 
 	/* IAccessibleTable2::get_isColumnSelected([in] column, [out] pIsSelected) */
 	int get_isColumnSelected(int column, long pIsSelected) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		event.column = column;
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.isColumnSelected(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::get_isColumnSelected() returning " + event.isSelected);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_isColumnSelected() returning " + event.isSelected);
+        }
 		OS.MoveMemory(pIsSelected, new int [] {event.isSelected ? 1 : 0}, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::get_isRowSelected([in] row, [out] pIsSelected) */
 	int get_isRowSelected(int row, long pIsSelected) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		event.row = row;
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.isRowSelected(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::get_isRowSelected() returning " + event.isSelected);
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_isRowSelected() returning " + event.isSelected);
+        }
 		OS.MoveMemory(pIsSelected, new int [] {event.isSelected ? 1 : 0}, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::selectRow([in] row) */
 	int selectRow(int row) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		event.row = row;
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.setSelectedRow(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::selectRow() returning " + (event.result == null ? "E_INVALIDARG" : event.result));
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::selectRow() returning " + (event.result == null ? "E_INVALIDARG" : event.result));
+        }
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::selectColumn([in] column) */
 	int selectColumn(int column) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		event.column = column;
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.setSelectedColumn(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::selectColumn() returning " + (event.result == null ? "E_INVALIDARG" : event.result));
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::selectColumn() returning " + (event.result == null ? "E_INVALIDARG" : event.result));
+        }
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::unselectRow([in] row) */
 	int unselectRow(int row) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		event.row = row;
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.deselectRow(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::unselectRow() returning " + (event.result == null ? "E_INVALIDARG" : event.result));
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::unselectRow() returning " + (event.result == null ? "E_INVALIDARG" : event.result));
+        }
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::unselectColumn([in] column) */
 	int unselectColumn(int column) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		event.column = column;
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.deselectColumn(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTable2::unselectColumn() returning " + (event.result == null ? "E_INVALIDARG" : event.result));
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::unselectColumn() returning " + (event.result == null ? "E_INVALIDARG" : event.result));
+        }
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTable2::get_modelChange([out] pModelChange) */
 	int get_modelChange(long pModelChange) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleTable2::get_modelChange() returning " + (tableChange == null ? "null" : "tableChange=" + tableChange[0] + ", " + tableChange[1] + ", " + tableChange[2] + ", " + tableChange[3]));
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleTable2::get_modelChange() returning " + (tableChange == null ? "null" : "tableChange=" + tableChange[0] + ", " + tableChange[1] + ", " + tableChange[2] + ", " + tableChange[3]));
+        }
 		if (tableChange == null) {
 			OS.MoveMemory(pModelChange, new long [] { 0 }, C.PTR_SIZEOF);
 			return COM.S_FALSE;
@@ -4153,26 +4976,34 @@ public class Accessible {
 
 	/* IAccessibleTableCell::get_columnExtent([out] pNColumnsSpanned) */
 	int get_columnExtent(long pNColumnsSpanned) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableCellEvent event = new AccessibleTableCellEvent(this);
 		for (int i = 0; i < accessibleTableCellListenersSize(); i++) {
 			AccessibleTableCellListener listener = accessibleTableCellListeners.get(i);
 			listener.getColumnSpan(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTableCell::get_columnExtent() returning " + event.count);
+        if (DEBUG) {
+            print(this + ".IAccessibleTableCell::get_columnExtent() returning " + event.count);
+        }
 		OS.MoveMemory(pNColumnsSpanned, new int [] { event.count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTableCell::get_columnHeaderCells([out] ppCellAccessibles, [out] pNColumnHeaderCells) */
 	int get_columnHeaderCells(long ppCellAccessibles, long pNColumnHeaderCells) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableCellEvent event = new AccessibleTableCellEvent(this);
 		for (int i = 0; i < accessibleTableCellListenersSize(); i++) {
 			AccessibleTableCellListener listener = accessibleTableCellListeners.get(i);
 			listener.getColumnHeaders(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTableCell::get_columnHeaderCells() returning " + (event.accessibles == null ? "null" : "accessibles[" + event.accessibles.length + "]"));
+        if (DEBUG) {
+            print(this + ".IAccessibleTableCell::get_columnHeaderCells() returning " + (event.accessibles == null ? "null" : "accessibles[" + event.accessibles.length + "]"));
+        }
 		if (event.accessibles == null || event.accessibles.length == 0) {
 			OS.MoveMemory(ppCellAccessibles, new long[] { 0 }, C.PTR_SIZEOF);
 			OS.MoveMemory(pNColumnHeaderCells, new int [] { 0 }, 4);
@@ -4196,39 +5027,51 @@ public class Accessible {
 
 	/* IAccessibleTableCell::get_columnIndex([out] pColumnIndex) */
 	int get_columnIndex(long pColumnIndex) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableCellEvent event = new AccessibleTableCellEvent(this);
 		for (int i = 0; i < accessibleTableCellListenersSize(); i++) {
 			AccessibleTableCellListener listener = accessibleTableCellListeners.get(i);
 			listener.getColumnIndex(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTableCell::get_columnIndex() returning " + event.index);
+        if (DEBUG) {
+            print(this + ".IAccessibleTableCell::get_columnIndex() returning " + event.index);
+        }
 		OS.MoveMemory(pColumnIndex, new int [] { event.index }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTableCell::get_rowExtent([out] pNRowsSpanned) */
 	int get_rowExtent(long pNRowsSpanned) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableCellEvent event = new AccessibleTableCellEvent(this);
 		for (int i = 0; i < accessibleTableCellListenersSize(); i++) {
 			AccessibleTableCellListener listener = accessibleTableCellListeners.get(i);
 			listener.getRowSpan(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTableCell::get_rowExtent() returning " + event.count);
+        if (DEBUG) {
+            print(this + ".IAccessibleTableCell::get_rowExtent() returning " + event.count);
+        }
 		OS.MoveMemory(pNRowsSpanned, new int [] { event.count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTableCell::get_rowHeaderCells([out] ppCellAccessibles, [out] pNRowHeaderCells) */
 	int get_rowHeaderCells(long ppCellAccessibles, long pNRowHeaderCells) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableCellEvent event = new AccessibleTableCellEvent(this);
 		for (int i = 0; i < accessibleTableCellListenersSize(); i++) {
 			AccessibleTableCellListener listener = accessibleTableCellListeners.get(i);
 			listener.getRowHeaders(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTableCell::get_rowHeaderCells() returning " + (event.accessibles == null ? "null" : "accessibles[" + event.accessibles.length + "]"));
+        if (DEBUG) {
+            print(this + ".IAccessibleTableCell::get_rowHeaderCells() returning " + (event.accessibles == null ? "null" : "accessibles[" + event.accessibles.length + "]"));
+        }
 		if (event.accessibles == null || event.accessibles.length == 0) {
 			OS.MoveMemory(ppCellAccessibles, new long[] { 0 }, C.PTR_SIZEOF);
 			OS.MoveMemory(pNRowHeaderCells, new int [] { 0 }, 4);
@@ -4252,34 +5095,46 @@ public class Accessible {
 
 	/* IAccessibleTableCell::get_rowIndex([out] pRowIndex) */
 	int get_rowIndex(long pRowIndex) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableCellEvent event = new AccessibleTableCellEvent(this);
 		for (int i = 0; i < accessibleTableCellListenersSize(); i++) {
 			AccessibleTableCellListener listener = accessibleTableCellListeners.get(i);
 			listener.getRowIndex(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTableCell::get_rowIndex() returning " + event.index);
+        if (DEBUG) {
+            print(this + ".IAccessibleTableCell::get_rowIndex() returning " + event.index);
+        }
 		OS.MoveMemory(pRowIndex, new int [] { event.index }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTableCell::get_isSelected([out] pIsSelected) */
 	int get_isSelected(long pIsSelected) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableCellEvent event = new AccessibleTableCellEvent(this);
 		for (int i = 0; i < accessibleTableCellListenersSize(); i++) {
 			AccessibleTableCellListener listener = accessibleTableCellListeners.get(i);
 			listener.isSelected(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleTableCell::get_isSelected() returning " + event.isSelected);
+        if (DEBUG) {
+            print(this + ".IAccessibleTableCell::get_isSelected() returning " + event.isSelected);
+        }
 		OS.MoveMemory(pIsSelected, new int [] {event.isSelected ? 1 : 0}, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleTableCell::get_rowColumnExtents([out] pRow, [out] pColumn, [out] pRowExtents, [out] pColumnExtents, [out] pIsSelected) */
 	int get_rowColumnExtents(long pRow, long pColumn, long pRowExtents, long pColumnExtents, long pIsSelected) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleTableCell::get_rowColumnExtents");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleTableCell::get_rowColumnExtents");
+        }
 		// TODO: should we implement this? It is just a convenience function.
 		return COM.DISP_E_MEMBERNOTFOUND;
 //		AccessibleTableCellEvent event = new AccessibleTableCellEvent(this);
@@ -4296,14 +5151,18 @@ public class Accessible {
 
 	/* IAccessibleTableCell::get_table([out] ppTable) */
 	int get_table(long ppTable) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTableCellEvent event = new AccessibleTableCellEvent(this);
 		for (int i = 0; i < accessibleTableCellListenersSize(); i++) {
 			AccessibleTableCellListener listener = accessibleTableCellListeners.get(i);
 			listener.getTable(event);
 		}
 		Accessible accessible = event.accessible;
-		if (DEBUG) print(this + ".IAccessibleTableCell::get_table() returning " + accessible);
+        if (DEBUG) {
+            print(this + ".IAccessibleTableCell::get_table() returning " + accessible);
+        }
 		if (accessible == null) {
 			// TODO: This is not supposed to return S_FALSE. We need to lookup the table role parent and return that.
 			OS.MoveMemory(ppTable, new long[] { 0 }, C.PTR_SIZEOF);
@@ -4316,8 +5175,12 @@ public class Accessible {
 
 	/* IAccessibleText::addSelection([in] startOffset, [in] endOffset) */
 	int addSelection(int startOffset, int endOffset) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleText::addSelection(" + startOffset + ", " + endOffset + ")");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleText::addSelection(" + startOffset + ", " + endOffset + ")");
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.start = startOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : startOffset;
 		event.end = endOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : endOffset;
@@ -4325,13 +5188,17 @@ public class Accessible {
 			AccessibleTextExtendedListener listener = accessibleTextExtendedListeners.get(i);
 			listener.addSelection(event);
 		}
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_attributes([in] offset, [out] pStartOffset, [out] pEndOffset, [out] pbstrTextAttributes) */
 	int get_attributes(int offset, long pStartOffset, long pEndOffset, long pbstrTextAttributes) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextAttributeEvent event = new AccessibleTextAttributeEvent(this);
 		event.offset = offset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : offset;
 		for (int i = 0; i < accessibleAttributeListenersSize(); i++) {
@@ -4343,8 +5210,11 @@ public class Accessible {
 		if (style != null) {
 			if (style.rise != 0) {
 				textAttributes += "text-position:";
-				if (style.rise > 0) textAttributes += "super";
-				else textAttributes += "sub";
+                if (style.rise > 0) {
+                    textAttributes += "super";
+                } else {
+                    textAttributes += "sub";
+                }
 			}
 			if (style.underline) {
 				textAttributes += "text-underline-type:";
@@ -4383,27 +5253,39 @@ public class Accessible {
 				textAttributes += event.attributes[i] + ":" + event.attributes[i+1] + ";";
 			}
 		}
-		if (DEBUG) print(this + ".IAccessibleText::get_attributes(" + offset + ") returning start = " + event.start + ", end = " + event.end + ", attributes = " + textAttributes);
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_attributes(" + offset + ") returning start = " + event.start + ", end = " + event.end + ", attributes = " + textAttributes);
+        }
 		OS.MoveMemory(pStartOffset, new int [] { event.start }, 4);
 		OS.MoveMemory(pEndOffset, new int [] { event.end }, 4);
 		setString(pbstrTextAttributes, textAttributes);
-		if (textAttributes.length() == 0) return COM.S_FALSE;
+        if (textAttributes.length() == 0) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_caretOffset([out] pOffset) */
 	int get_caretOffset(long pOffset) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int offset = getCaretOffset();
-		if (DEBUG) print(this + ".IAccessibleText::get_caretOffset returning " + offset + hresult(offset == -1 ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_caretOffset returning " + offset + hresult(offset == -1 ? COM.S_FALSE : COM.S_OK));
+        }
 		OS.MoveMemory(pOffset, new int [] { offset }, 4);
-		if (offset == -1) return COM.S_FALSE;
+        if (offset == -1) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_characterExtents([in] offset, [in] coordType, [out] pX, [out] pY, [out] pWidth, [out] pHeight) */
 	int get_characterExtents(int offset, int coordType, long pX, long pY, long pWidth, long pHeight) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int length = getCharacterCount();
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.start = offset == COM.IA2_TEXT_OFFSET_LENGTH ? length : offset < 0 ? 0 : offset;
@@ -4412,19 +5294,25 @@ public class Accessible {
 			AccessibleTextExtendedListener listener = accessibleTextExtendedListeners.get(i);
 			listener.getTextBounds(event);
 		}
-		/* Note: event.rectangles is not used here, because IAccessibleText::get_characterExtents is just for one character. */
-		if (DEBUG) print(this + ".IAccessibleText::get_characterExtents(" + offset + ") returning " + event.x + ", " + event.y + ", " + event.width + ", " + event.height);
+        /* Note: event.rectangles is not used here, because IAccessibleText::get_characterExtents is just for one character. */
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_characterExtents(" + offset + ") returning " + event.x + ", " + event.y + ", " + event.width + ", " + event.height);
+        }
 		OS.MoveMemory(pX, new int [] { event.x }, 4);
 		OS.MoveMemory(pY, new int [] { event.y }, 4);
 		OS.MoveMemory(pWidth, new int [] { event.width }, 4);
 		OS.MoveMemory(pHeight, new int [] { event.height }, 4);
-		if (event.width == 0 && event.height == 0) return COM.E_INVALIDARG;
+        if (event.width == 0 && event.height == 0) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_nSelections([out] pNSelections) */
 	int get_nSelections(long pNSelections) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.count = -1;
 		for (int i = 0; i < accessibleTextExtendedListenersSize(); i++) {
@@ -4441,14 +5329,18 @@ public class Accessible {
 			}
 			event.count = event.offset != -1 && event.length > 0 ? 1 : 0;
 		}
-		if (DEBUG) print(this + ".IAccessibleText::get_nSelections returning " + event.count);
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_nSelections returning " + event.count);
+        }
 		OS.MoveMemory(pNSelections, new int [] { event.count }, 4);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_offsetAtPoint([in] x, [in] y, [in] coordType, [out] pOffset) */
 	int get_offsetAtPoint(int x, int y, int coordType, long pOffset) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.x = x;
 		event.y = y;
@@ -4457,19 +5349,25 @@ public class Accessible {
 			AccessibleTextExtendedListener listener = accessibleTextExtendedListeners.get(i);
 			listener.getOffsetAtPoint(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleText::get_offsetAtPoint(" + x + ", " + y + ") returning " + event.offset + hresult(event.offset == -1 ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_offsetAtPoint(" + x + ", " + y + ") returning " + event.offset + hresult(event.offset == -1 ? COM.S_FALSE : COM.S_OK));
+        }
 		/*
 		 * Note that the current IA2 spec says to return 0 when there's nothing to return,
 		 * but since 0 is a valid return value, the spec is going to be updated to return -1.
 		 */
 		OS.MoveMemory(pOffset, new int [] { event.offset }, 4);
-		if (event.offset == -1) return COM.S_FALSE;
+        if (event.offset == -1) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_selection([in] selectionIndex, [out] pStartOffset, [out] pEndOffset) */
 	int get_selection(int selectionIndex, long pStartOffset, long pEndOffset) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.index = selectionIndex;
 		event.start = -1;
@@ -4489,20 +5387,26 @@ public class Accessible {
 			event.start = event.offset;
 			event.end = event.offset + event.length;
 		}
-		if (DEBUG) print(this + ".IAccessibleText::get_selection(" + selectionIndex + ") returning " + event.start + ", " + event.end);
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_selection(" + selectionIndex + ") returning " + event.start + ", " + event.end);
+        }
 		OS.MoveMemory(pStartOffset, new int [] { event.start }, 4);
 		OS.MoveMemory(pEndOffset, new int [] { event.end }, 4);
-		/*
-		 * Note that the current IA2 spec says to return 0,0 when there's nothing to return,
-		 * but since 0 is a valid return value, the spec is going to be updated to return -1,-1.
-		 */
-		if (event.start == -1) return COM.S_FALSE;
+        /*
+         * Note that the current IA2 spec says to return 0,0 when there's nothing to return,
+         * but since 0 is a valid return value, the spec is going to be updated to return -1,-1.
+         */
+        if (event.start == -1) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_text([in] startOffset, [in] endOffset, [out] pbstrText) */
 	int get_text(int startOffset, int endOffset, long pbstrText) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.start = startOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : startOffset;
 		event.end = endOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : endOffset;
@@ -4531,15 +5435,21 @@ public class Accessible {
 				event.result = e.result;
 			}
 		}
-		if (DEBUG) print(this + ".IAccessibleText::get_text(" + startOffset + ", " + endOffset + ") returning " + event.result + hresult(event.result == null ? COM.E_INVALIDARG : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_text(" + startOffset + ", " + endOffset + ") returning " + event.result + hresult(event.result == null ? COM.E_INVALIDARG : COM.S_OK));
+        }
 		setString(pbstrText, event.result);
-		if (event.result == null) return COM.E_INVALIDARG;
+        if (event.result == null) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_textBeforeOffset([in] offset, [in] boundaryType, [out] pStartOffset, [out] pEndOffset, [out] pbstrText) */
 	int get_textBeforeOffset(int offset, int boundaryType, long pStartOffset, long pEndOffset, long pbstrText) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		int charCount = getCharacterCount();
 		event.start = offset == COM.IA2_TEXT_OFFSET_LENGTH ? charCount : offset == COM.IA2_TEXT_OFFSET_CARET ? getCaretOffset() : offset;
@@ -4583,17 +5493,23 @@ public class Accessible {
 					}
 			}
 		}
-		if (DEBUG) print(this + ".IAccessibleText::get_textBeforeOffset(" + offset + ") returning start=" + event.start + ", end=" + event.end + " " + event.result + hresult(event.result == null ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_textBeforeOffset(" + offset + ") returning start=" + event.start + ", end=" + event.end + " " + event.result + hresult(event.result == null ? COM.S_FALSE : COM.S_OK));
+        }
 		OS.MoveMemory(pStartOffset, new int [] { event.start }, 4);
 		OS.MoveMemory(pEndOffset, new int [] { event.end }, 4);
 		setString(pbstrText, event.result);
-		if (event.result == null) return COM.S_FALSE;
+        if (event.result == null) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_textAfterOffset([in] offset, [in] boundaryType, [out] pStartOffset, [out] pEndOffset, [out] pbstrText) */
 	int get_textAfterOffset(int offset, int boundaryType, long pStartOffset, long pEndOffset, long pbstrText) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		int charCount = getCharacterCount();
 		event.start = offset == COM.IA2_TEXT_OFFSET_LENGTH ? charCount : offset == COM.IA2_TEXT_OFFSET_CARET ? getCaretOffset() : offset;
@@ -4637,17 +5553,23 @@ public class Accessible {
 					}
 			}
 		}
-		if (DEBUG) print(this + ".IAccessibleText::get_textAfterOffset(" + offset + ") returning start=" + event.start + ", end=" + event.end + " " + event.result + hresult(event.result == null ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_textAfterOffset(" + offset + ") returning start=" + event.start + ", end=" + event.end + " " + event.result + hresult(event.result == null ? COM.S_FALSE : COM.S_OK));
+        }
 		OS.MoveMemory(pStartOffset, new int [] { event.start }, 4);
 		OS.MoveMemory(pEndOffset, new int [] { event.end }, 4);
 		setString(pbstrText, event.result);
-		if (event.result == null) return COM.S_FALSE;
+        if (event.result == null) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_textAtOffset([in] offset, [in] boundaryType, [out] pStartOffset, [out] pEndOffset, [out] pbstrText) */
 	int get_textAtOffset(int offset, int boundaryType, long pStartOffset, long pEndOffset, long pbstrText) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		int charCount = getCharacterCount();
 		event.start = offset == COM.IA2_TEXT_OFFSET_LENGTH ? charCount : offset == COM.IA2_TEXT_OFFSET_CARET ? getCaretOffset() : offset;
@@ -4698,45 +5620,63 @@ public class Accessible {
 					}
 			}
 		}
-		if (DEBUG) print(this + ".IAccessibleText::get_textAtOffset(" + offset + ") returning start=" + event.start + ", end=" + event.end + " " + event.result + hresult(event.result == null ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_textAtOffset(" + offset + ") returning start=" + event.start + ", end=" + event.end + " " + event.result + hresult(event.result == null ? COM.S_FALSE : COM.S_OK));
+        }
 		OS.MoveMemory(pStartOffset, new int [] { event.start }, 4);
 		OS.MoveMemory(pEndOffset, new int [] { event.end }, 4);
 		setString(pbstrText, event.result);
-		if (event.result == null) return COM.S_FALSE;
+        if (event.result == null) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::removeSelection([in] selectionIndex) */
 	int removeSelection(int selectionIndex) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.index = selectionIndex;
 		for (int i = 0; i < accessibleTextExtendedListenersSize(); i++) {
 			AccessibleTextExtendedListener listener = accessibleTextExtendedListeners.get(i);
 			listener.removeSelection(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleText::removeSelection(" + selectionIndex + ") returning" + hresult(event.result == null || !event.result.equals(ACC.OK) ? COM.E_INVALIDARG : COM.S_OK));
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (DEBUG) {
+            print(this + ".IAccessibleText::removeSelection(" + selectionIndex + ") returning" + hresult(event.result == null || !event.result.equals(ACC.OK) ? COM.E_INVALIDARG : COM.S_OK));
+        }
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::setCaretOffset([in] offset) */
 	int setCaretOffset(int offset) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.offset = offset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : offset;
 		for (int i = 0; i < accessibleTextExtendedListenersSize(); i++) {
 			AccessibleTextExtendedListener listener = accessibleTextExtendedListeners.get(i);
 			listener.setCaretOffset(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleText::setCaretOffset(" + offset + ") returning" + hresult(event.result == null || !event.result.equals(ACC.OK) ? COM.E_INVALIDARG : COM.S_OK));
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG; // TODO: @retval E_FAIL if the caret cannot be set ?
+        if (DEBUG) {
+            print(this + ".IAccessibleText::setCaretOffset(" + offset + ") returning" + hresult(event.result == null || !event.result.equals(ACC.OK) ? COM.E_INVALIDARG : COM.S_OK));
+        }
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        } // TODO: @retval E_FAIL if the caret cannot be set ?
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::setSelection([in] selectionIndex, [in] startOffset, [in] endOffset) */
 	int setSelection(int selectionIndex, int startOffset, int endOffset) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.index = selectionIndex;
 		event.start = startOffset == COM.IA2_TEXT_OFFSET_LENGTH ? getCharacterCount() : startOffset;
@@ -4745,24 +5685,36 @@ public class Accessible {
 			AccessibleTextExtendedListener listener = accessibleTextExtendedListeners.get(i);
 			listener.setSelection(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleText::setSelection(index=" + selectionIndex + ", start=" + event.start + ", end=" + event.end + ") returning " + (event.result.equals(ACC.OK) ? "OK" : "INVALIDARG"));
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (DEBUG) {
+            print(this + ".IAccessibleText::setSelection(index=" + selectionIndex + ", start=" + event.start + ", end=" + event.end + ") returning " + (event.result.equals(ACC.OK) ? "OK" : "INVALIDARG"));
+        }
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_nCharacters([out] pNCharacters) */
 	int get_nCharacters(long pNCharacters) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		int count = getCharacterCount();
 		OS.MoveMemory(pNCharacters, new int [] { count }, 4);
-		if (DEBUG) print(this + ".IAccessibleText::get_nCharacters returning " + count);
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_nCharacters returning " + count);
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::scrollSubstringTo([in] startIndex, [in] endIndex, [in] scrollType) */
 	int scrollSubstringTo(int startIndex, int endIndex, int scrollType) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleText::scrollSubstringTo");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleText::scrollSubstringTo");
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.start = startIndex;
 		event.end = endIndex;
@@ -4779,14 +5731,20 @@ public class Accessible {
 			AccessibleTextExtendedListener listener = accessibleTextExtendedListeners.get(i);
 			listener.scrollText(event);
 		}
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG;
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::scrollSubstringToPoint([in] startIndex, [in] endIndex, [in] coordinateType, [in] x, [in] y) */
 	int scrollSubstringToPoint(int startIndex, int endIndex, int coordinateType, int x, int y) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleText::scrollSubstringToPoint");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleText::scrollSubstringToPoint");
+        }
 		AccessibleTextEvent event = new AccessibleTextEvent(this);
 		event.start = startIndex;
 		event.end = endIndex;
@@ -4797,14 +5755,20 @@ public class Accessible {
 			AccessibleTextExtendedListener listener = accessibleTextExtendedListeners.get(i);
 			listener.scrollText(event);
 		}
-		if (event.result == null || !event.result.equals(ACC.OK)) return COM.E_INVALIDARG; // TODO: @retval S_FALSE if the object is already at the specified location.
+        if (event.result == null || !event.result.equals(ACC.OK)) {
+            return COM.E_INVALIDARG;
+        } // TODO: @retval S_FALSE if the object is already at the specified location.
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_newText([out] pNewText) */
 	int get_newText(long pNewText) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleText::get_newText");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_newText");
+        }
 		String text = null;
 		int start = 0;
 		int end = 0;
@@ -4816,14 +5780,20 @@ public class Accessible {
 		setString(pNewText, text);
 		OS.MoveMemory(pNewText + C.PTR_SIZEOF, new int [] {start}, 4);
 		OS.MoveMemory(pNewText + C.PTR_SIZEOF + 4, new int [] {end}, 4);
-		if (textInserted == null) return COM.S_FALSE;
+        if (textInserted == null) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleText::get_oldText([out] pOldText) */
 	int get_oldText(long pOldText) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleText::get_oldText");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleText::get_oldText");
+        }
 		String text = null;
 		int start = 0;
 		int end = 0;
@@ -4835,27 +5805,37 @@ public class Accessible {
 		setString(pOldText, text);
 		OS.MoveMemory(pOldText + C.PTR_SIZEOF, new int [] {start}, 4);
 		OS.MoveMemory(pOldText + C.PTR_SIZEOF + 4, new int [] {end}, 4);
-		if (textDeleted == null) return COM.S_FALSE;
+        if (textDeleted == null) {
+            return COM.S_FALSE;
+        }
 		return COM.S_OK;
 	}
 
 	/* IAccessibleValue::get_currentValue([out] pCurrentValue) */
 	int get_currentValue(long pCurrentValue) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleValueEvent event = new AccessibleValueEvent(this);
 		for (int i = 0; i < accessibleValueListenersSize(); i++) {
 			AccessibleValueListener listener = accessibleValueListeners.get(i);
 			listener.getCurrentValue(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleValue::get_currentValue returning " + event.value + hresult(event.value == null ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleValue::get_currentValue returning " + event.value + hresult(event.value == null ? COM.S_FALSE : COM.S_OK));
+        }
 		setNumberVARIANT(pCurrentValue, event.value);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleValue::setCurrentValue([in] value) */
 	int setCurrentValue(long value) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
-		if (DEBUG) print(this + ".IAccessibleValue::setCurrentValue");
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
+        if (DEBUG) {
+            print(this + ".IAccessibleValue::setCurrentValue");
+        }
 		AccessibleValueEvent event = new AccessibleValueEvent(this);
 		event.value = getNumberVARIANT(value);
 		for (int i = 0; i < accessibleValueListenersSize(); i++) {
@@ -4868,33 +5848,45 @@ public class Accessible {
 
 	/* IAccessibleValue::get_maximumValue([out] pMaximumValue) */
 	int get_maximumValue(long pMaximumValue) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleValueEvent event = new AccessibleValueEvent(this);
 		for (int i = 0; i < accessibleValueListenersSize(); i++) {
 			AccessibleValueListener listener = accessibleValueListeners.get(i);
 			listener.getMaximumValue(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleValue::get_maximumValue returning " + event.value + hresult(event.value == null ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleValue::get_maximumValue returning " + event.value + hresult(event.value == null ? COM.S_FALSE : COM.S_OK));
+        }
 		setNumberVARIANT(pMaximumValue, event.value);
 		return COM.S_OK;
 	}
 
 	/* IAccessibleValue::get_minimumValue([out] pMinimumValue) */
 	int get_minimumValue(long pMinimumValue) {
-		if (control != null && control.isDisposed()) return COM.CO_E_OBJNOTCONNECTED;
+        if (control != null && control.isDisposed()) {
+            return COM.CO_E_OBJNOTCONNECTED;
+        }
 		AccessibleValueEvent event = new AccessibleValueEvent(this);
 		for (int i = 0; i < accessibleValueListenersSize(); i++) {
 			AccessibleValueListener listener = accessibleValueListeners.get(i);
 			listener.getMinimumValue(event);
 		}
-		if (DEBUG) print(this + ".IAccessibleValue::get_minimumValue returning " + event.value + hresult(event.value == null ? COM.S_FALSE : COM.S_OK));
+        if (DEBUG) {
+            print(this + ".IAccessibleValue::get_minimumValue returning " + event.value + hresult(event.value == null ? COM.S_FALSE : COM.S_OK));
+        }
 		setNumberVARIANT(pMinimumValue, event.value);
 		return COM.S_OK;
 	}
 
 	int eventChildID() {
-		if (parent == null) return COM.CHILDID_SELF;
-		if (uniqueID == -1) uniqueID = UniqueID--;
+        if (parent == null) {
+            return COM.CHILDID_SELF;
+        }
+        if (uniqueID == -1) {
+            uniqueID = UniqueID--;
+        }
 		return uniqueID;
 	}
 
@@ -4914,7 +5906,9 @@ public class Accessible {
 	}
 
 	int childIDToOs(int childID) {
-		if (childID == ACC.CHILDID_SELF) return COM.CHILDID_SELF;
+        if (childID == ACC.CHILDID_SELF) {
+            return COM.CHILDID_SELF;
+        }
 		/* ChildIDs are 1-based indices. */
 		int osChildID = childID + 1;
 		if (control instanceof Tree) {
@@ -4925,60 +5919,132 @@ public class Accessible {
 	}
 
 	int osToChildID(int osChildID) {
-		if (osChildID == COM.CHILDID_SELF) return ACC.CHILDID_SELF;
-		/*
-		* Feature of Windows:
-		* Before Windows XP, tree item ids were 1-based indices.
-		* Windows XP and later use the tree item handle for the
-		* accessible child ID. For backward compatibility, we still
-		* take 1-based childIDs for tree items prior to Windows XP.
-		* All other childIDs are 1-based indices.
-		*/
-		if (!(control instanceof Tree)) return osChildID - 1;
+        if (osChildID == COM.CHILDID_SELF) {
+            return ACC.CHILDID_SELF;
+        }
+        /*
+        * Feature of Windows:
+        * Before Windows XP, tree item ids were 1-based indices.
+        * Windows XP and later use the tree item handle for the
+        * accessible child ID. For backward compatibility, we still
+        * take 1-based childIDs for tree items prior to Windows XP.
+        * All other childIDs are 1-based indices.
+        */
+        if (!(control instanceof Tree)) {
+            return osChildID - 1;
+        }
 		return (int)OS.SendMessage (control.handle, OS.TVM_MAPACCIDTOHTREEITEM, osChildID, 0);
 	}
 
 	int stateToOs(int state) {
 		int osState = 0;
-		if ((state & ACC.STATE_SELECTED) != 0) osState |= COM.STATE_SYSTEM_SELECTED;
-		if ((state & ACC.STATE_SELECTABLE) != 0) osState |= COM.STATE_SYSTEM_SELECTABLE;
-		if ((state & ACC.STATE_MULTISELECTABLE) != 0) osState |= COM.STATE_SYSTEM_MULTISELECTABLE;
-		if ((state & ACC.STATE_FOCUSED) != 0) osState |= COM.STATE_SYSTEM_FOCUSED;
-		if ((state & ACC.STATE_FOCUSABLE) != 0) osState |= COM.STATE_SYSTEM_FOCUSABLE;
-		if ((state & ACC.STATE_PRESSED) != 0) osState |= COM.STATE_SYSTEM_PRESSED;
-		if ((state & ACC.STATE_CHECKED) != 0) osState |= COM.STATE_SYSTEM_CHECKED;
-		if ((state & ACC.STATE_EXPANDED) != 0) osState |= COM.STATE_SYSTEM_EXPANDED;
-		if ((state & ACC.STATE_COLLAPSED) != 0) osState |= COM.STATE_SYSTEM_COLLAPSED;
-		if ((state & ACC.STATE_HOTTRACKED) != 0) osState |= COM.STATE_SYSTEM_HOTTRACKED;
-		if ((state & ACC.STATE_BUSY) != 0) osState |= COM.STATE_SYSTEM_BUSY;
-		if ((state & ACC.STATE_READONLY) != 0) osState |= COM.STATE_SYSTEM_READONLY;
-		if ((state & ACC.STATE_INVISIBLE) != 0) osState |= COM.STATE_SYSTEM_INVISIBLE;
-		if ((state & ACC.STATE_OFFSCREEN) != 0) osState |= COM.STATE_SYSTEM_OFFSCREEN;
-		if ((state & ACC.STATE_SIZEABLE) != 0) osState |= COM.STATE_SYSTEM_SIZEABLE;
-		if ((state & ACC.STATE_LINKED) != 0) osState |= COM.STATE_SYSTEM_LINKED;
-		if ((state & ACC.STATE_DISABLED) != 0) osState |= COM.STATE_SYSTEM_UNAVAILABLE;
+        if ((state & ACC.STATE_SELECTED) != 0) {
+            osState |= COM.STATE_SYSTEM_SELECTED;
+        }
+        if ((state & ACC.STATE_SELECTABLE) != 0) {
+            osState |= COM.STATE_SYSTEM_SELECTABLE;
+        }
+        if ((state & ACC.STATE_MULTISELECTABLE) != 0) {
+            osState |= COM.STATE_SYSTEM_MULTISELECTABLE;
+        }
+        if ((state & ACC.STATE_FOCUSED) != 0) {
+            osState |= COM.STATE_SYSTEM_FOCUSED;
+        }
+        if ((state & ACC.STATE_FOCUSABLE) != 0) {
+            osState |= COM.STATE_SYSTEM_FOCUSABLE;
+        }
+        if ((state & ACC.STATE_PRESSED) != 0) {
+            osState |= COM.STATE_SYSTEM_PRESSED;
+        }
+        if ((state & ACC.STATE_CHECKED) != 0) {
+            osState |= COM.STATE_SYSTEM_CHECKED;
+        }
+        if ((state & ACC.STATE_EXPANDED) != 0) {
+            osState |= COM.STATE_SYSTEM_EXPANDED;
+        }
+        if ((state & ACC.STATE_COLLAPSED) != 0) {
+            osState |= COM.STATE_SYSTEM_COLLAPSED;
+        }
+        if ((state & ACC.STATE_HOTTRACKED) != 0) {
+            osState |= COM.STATE_SYSTEM_HOTTRACKED;
+        }
+        if ((state & ACC.STATE_BUSY) != 0) {
+            osState |= COM.STATE_SYSTEM_BUSY;
+        }
+        if ((state & ACC.STATE_READONLY) != 0) {
+            osState |= COM.STATE_SYSTEM_READONLY;
+        }
+        if ((state & ACC.STATE_INVISIBLE) != 0) {
+            osState |= COM.STATE_SYSTEM_INVISIBLE;
+        }
+        if ((state & ACC.STATE_OFFSCREEN) != 0) {
+            osState |= COM.STATE_SYSTEM_OFFSCREEN;
+        }
+        if ((state & ACC.STATE_SIZEABLE) != 0) {
+            osState |= COM.STATE_SYSTEM_SIZEABLE;
+        }
+        if ((state & ACC.STATE_LINKED) != 0) {
+            osState |= COM.STATE_SYSTEM_LINKED;
+        }
+        if ((state & ACC.STATE_DISABLED) != 0) {
+            osState |= COM.STATE_SYSTEM_UNAVAILABLE;
+        }
 		return osState;
 	}
 
 	int osToState(int osState) {
 		int state = ACC.STATE_NORMAL;
-		if ((osState & COM.STATE_SYSTEM_SELECTED) != 0) state |= ACC.STATE_SELECTED;
-		if ((osState & COM.STATE_SYSTEM_SELECTABLE) != 0) state |= ACC.STATE_SELECTABLE;
-		if ((osState & COM.STATE_SYSTEM_MULTISELECTABLE) != 0) state |= ACC.STATE_MULTISELECTABLE;
-		if ((osState & COM.STATE_SYSTEM_FOCUSED) != 0) state |= ACC.STATE_FOCUSED;
-		if ((osState & COM.STATE_SYSTEM_FOCUSABLE) != 0) state |= ACC.STATE_FOCUSABLE;
-		if ((osState & COM.STATE_SYSTEM_PRESSED) != 0) state |= ACC.STATE_PRESSED;
-		if ((osState & COM.STATE_SYSTEM_CHECKED) != 0) state |= ACC.STATE_CHECKED;
-		if ((osState & COM.STATE_SYSTEM_EXPANDED) != 0) state |= ACC.STATE_EXPANDED;
-		if ((osState & COM.STATE_SYSTEM_COLLAPSED) != 0) state |= ACC.STATE_COLLAPSED;
-		if ((osState & COM.STATE_SYSTEM_HOTTRACKED) != 0) state |= ACC.STATE_HOTTRACKED;
-		if ((osState & COM.STATE_SYSTEM_BUSY) != 0) state |= ACC.STATE_BUSY;
-		if ((osState & COM.STATE_SYSTEM_READONLY) != 0) state |= ACC.STATE_READONLY;
-		if ((osState & COM.STATE_SYSTEM_INVISIBLE) != 0) state |= ACC.STATE_INVISIBLE;
-		if ((osState & COM.STATE_SYSTEM_OFFSCREEN) != 0) state |= ACC.STATE_OFFSCREEN;
-		if ((osState & COM.STATE_SYSTEM_SIZEABLE) != 0) state |= ACC.STATE_SIZEABLE;
-		if ((osState & COM.STATE_SYSTEM_LINKED) != 0) state |= ACC.STATE_LINKED;
-		if ((osState & COM.STATE_SYSTEM_UNAVAILABLE) != 0) state |= ACC.STATE_DISABLED;
+        if ((osState & COM.STATE_SYSTEM_SELECTED) != 0) {
+            state |= ACC.STATE_SELECTED;
+        }
+        if ((osState & COM.STATE_SYSTEM_SELECTABLE) != 0) {
+            state |= ACC.STATE_SELECTABLE;
+        }
+        if ((osState & COM.STATE_SYSTEM_MULTISELECTABLE) != 0) {
+            state |= ACC.STATE_MULTISELECTABLE;
+        }
+        if ((osState & COM.STATE_SYSTEM_FOCUSED) != 0) {
+            state |= ACC.STATE_FOCUSED;
+        }
+        if ((osState & COM.STATE_SYSTEM_FOCUSABLE) != 0) {
+            state |= ACC.STATE_FOCUSABLE;
+        }
+        if ((osState & COM.STATE_SYSTEM_PRESSED) != 0) {
+            state |= ACC.STATE_PRESSED;
+        }
+        if ((osState & COM.STATE_SYSTEM_CHECKED) != 0) {
+            state |= ACC.STATE_CHECKED;
+        }
+        if ((osState & COM.STATE_SYSTEM_EXPANDED) != 0) {
+            state |= ACC.STATE_EXPANDED;
+        }
+        if ((osState & COM.STATE_SYSTEM_COLLAPSED) != 0) {
+            state |= ACC.STATE_COLLAPSED;
+        }
+        if ((osState & COM.STATE_SYSTEM_HOTTRACKED) != 0) {
+            state |= ACC.STATE_HOTTRACKED;
+        }
+        if ((osState & COM.STATE_SYSTEM_BUSY) != 0) {
+            state |= ACC.STATE_BUSY;
+        }
+        if ((osState & COM.STATE_SYSTEM_READONLY) != 0) {
+            state |= ACC.STATE_READONLY;
+        }
+        if ((osState & COM.STATE_SYSTEM_INVISIBLE) != 0) {
+            state |= ACC.STATE_INVISIBLE;
+        }
+        if ((osState & COM.STATE_SYSTEM_OFFSCREEN) != 0) {
+            state |= ACC.STATE_OFFSCREEN;
+        }
+        if ((osState & COM.STATE_SYSTEM_SIZEABLE) != 0) {
+            state |= ACC.STATE_SIZEABLE;
+        }
+        if ((osState & COM.STATE_SYSTEM_LINKED) != 0) {
+            state |= ACC.STATE_LINKED;
+        }
+        if ((osState & COM.STATE_SYSTEM_UNAVAILABLE) != 0) {
+            state |= ACC.STATE_DISABLED;
+        }
 		return state;
 	}
 
@@ -5147,7 +6213,9 @@ public class Accessible {
 	int getRelationCount() {
 		int count = 0;
 		for (int type = 0; type < MAX_RELATION_TYPES; type++) {
-			if (relations[type] != null) count++;
+            if (relations[type] != null) {
+                count++;
+            }
 		}
 		return count;
 	}
@@ -5173,7 +6241,9 @@ public class Accessible {
 			int code = iaccessible.get_accRole(varChild, pvarRole);
 			if (code == COM.S_OK) {
 				VARIANT v = getVARIANT(pvarRole);
-				if (v.vt == COM.VT_I4) role = v.lVal;
+                if (v.vt == COM.VT_I4) {
+                    role = v.lVal;
+                }
 			}
 			OS.GlobalFree(varChild);
 			OS.GlobalFree(pvarRole);
@@ -5185,7 +6255,9 @@ public class Accessible {
 		long [] ptr = new long [1];
 		OS.MoveMemory (ptr, psz, C.PTR_SIZEOF);
 		int size = COM.SysStringByteLen(ptr [0]);
-		if (size == 0) return "";
+        if (size == 0) {
+            return "";
+        }
 		char [] buffer = new char [(size + 1) / 2];
 		OS.MoveMemory (buffer, ptr [0], size);
 		return new String (buffer);
@@ -5200,7 +6272,9 @@ public class Accessible {
 	Number getNumberVARIANT(long variant) {
 		VARIANT v = new VARIANT();
 		COM.MoveMemory(v, variant, VARIANT.sizeof);
-		if (v.vt == COM.VT_I8) return Long.valueOf(v.lVal); // TODO: Fix this - v.lVal is an int - don't use struct
+        if (v.vt == COM.VT_I8) {
+            return Long.valueOf(v.lVal);
+        } // TODO: Fix this - v.lVal is an int - don't use struct
 		return Integer.valueOf(v.lVal);
 	}
 
@@ -5258,8 +6332,12 @@ public class Accessible {
 
 	/* checkWidget was copied from Widget, and rewritten to work in this package */
 	void checkWidget () {
-		if (!isValidThread ()) SWT.error (SWT.ERROR_THREAD_INVALID_ACCESS);
-		if (control.isDisposed ()) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+        if (!isValidThread()) {
+            SWT.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+        }
+        if (control.isDisposed()) {
+            SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+        }
 	}
 
 	boolean isATRunning () {
@@ -5279,183 +6357,383 @@ public class Accessible {
 
 	// START DEBUG CODE
 	static void print (String str) {
-		if (DEBUG) System.out.println (str);
+        if (DEBUG) {
+            System.out.println(str);
+        }
 	}
 	String getRoleString(int role) {
-		if (DEBUG) switch (role) {
-			case COM.ROLE_SYSTEM_CLIENT: return "ROLE_SYSTEM_CLIENT";
-			case COM.ROLE_SYSTEM_WINDOW: return "ROLE_SYSTEM_WINDOW";
-			case COM.ROLE_SYSTEM_MENUBAR: return "ROLE_SYSTEM_MENUBAR";
-			case COM.ROLE_SYSTEM_MENUPOPUP: return "ROLE_SYSTEM_MENUPOPUP";
-			case COM.ROLE_SYSTEM_MENUITEM: return "ROLE_SYSTEM_MENUITEM";
-			case COM.ROLE_SYSTEM_SEPARATOR: return "ROLE_SYSTEM_SEPARATOR";
-			case COM.ROLE_SYSTEM_TOOLTIP: return "ROLE_SYSTEM_TOOLTIP";
-			case COM.ROLE_SYSTEM_SCROLLBAR: return "ROLE_SYSTEM_SCROLLBAR";
-			case COM.ROLE_SYSTEM_DIALOG: return "ROLE_SYSTEM_DIALOG";
-			case COM.ROLE_SYSTEM_STATICTEXT: return "ROLE_SYSTEM_STATICTEXT";
-			case COM.ROLE_SYSTEM_PUSHBUTTON: return "ROLE_SYSTEM_PUSHBUTTON";
-			case COM.ROLE_SYSTEM_CHECKBUTTON: return "ROLE_SYSTEM_CHECKBUTTON";
-			case COM.ROLE_SYSTEM_RADIOBUTTON: return "ROLE_SYSTEM_RADIOBUTTON";
-			case COM.ROLE_SYSTEM_SPLITBUTTON: return "ROLE_SYSTEM_SPLITBUTTON";
-			case COM.ROLE_SYSTEM_COMBOBOX: return "ROLE_SYSTEM_COMBOBOX";
-			case COM.ROLE_SYSTEM_TEXT: return "ROLE_SYSTEM_TEXT";
-			case COM.ROLE_SYSTEM_TOOLBAR: return "ROLE_SYSTEM_TOOLBAR";
-			case COM.ROLE_SYSTEM_LIST: return "ROLE_SYSTEM_LIST";
-			case COM.ROLE_SYSTEM_LISTITEM: return "ROLE_SYSTEM_LISTITEM";
-			case COM.ROLE_SYSTEM_TABLE: return "ROLE_SYSTEM_TABLE";
-			case COM.ROLE_SYSTEM_CELL: return "ROLE_SYSTEM_CELL";
-			case COM.ROLE_SYSTEM_COLUMNHEADER: return "ROLE_SYSTEM_COLUMNHEADER";
-			case COM.ROLE_SYSTEM_ROWHEADER: return "ROLE_SYSTEM_ROWHEADER";
-			case COM.ROLE_SYSTEM_OUTLINE: return "ROLE_SYSTEM_OUTLINE";
-			case COM.ROLE_SYSTEM_OUTLINEITEM: return "ROLE_SYSTEM_OUTLINEITEM";
-			case COM.ROLE_SYSTEM_PAGETABLIST: return "ROLE_SYSTEM_PAGETABLIST";
-			case COM.ROLE_SYSTEM_PAGETAB: return "ROLE_SYSTEM_PAGETAB";
-			case COM.ROLE_SYSTEM_PROGRESSBAR: return "ROLE_SYSTEM_PROGRESSBAR";
-			case COM.ROLE_SYSTEM_SLIDER: return "ROLE_SYSTEM_SLIDER";
-			case COM.ROLE_SYSTEM_LINK: return "ROLE_SYSTEM_LINK";
-			case COM.ROLE_SYSTEM_ALERT: return "ROLE_SYSTEM_ALERT";
-			case COM.ROLE_SYSTEM_ANIMATION: return "ROLE_SYSTEM_ANIMATION";
-			case COM.ROLE_SYSTEM_COLUMN: return "ROLE_SYSTEM_COLUMN";
-			case COM.ROLE_SYSTEM_DOCUMENT: return "ROLE_SYSTEM_DOCUMENT";
-			case COM.ROLE_SYSTEM_GRAPHIC: return "ROLE_SYSTEM_GRAPHIC";
-			case COM.ROLE_SYSTEM_GROUPING: return "ROLE_SYSTEM_GROUPING";
-			case COM.ROLE_SYSTEM_ROW: return "ROLE_SYSTEM_ROW";
-			case COM.ROLE_SYSTEM_SPINBUTTON: return "ROLE_SYSTEM_SPINBUTTON";
-			case COM.ROLE_SYSTEM_STATUSBAR: return "ROLE_SYSTEM_STATUSBAR";
-			case COM.ROLE_SYSTEM_CLOCK: return "ROLE_SYSTEM_CLOCK";
-			case COM.ROLE_SYSTEM_DROPLIST: return "ROLE_SYSTEM_DROPLIST";
-			// IA2 roles
-			case ACC.ROLE_CANVAS: return "IA2_ROLE_CANVAS";
-			case ACC.ROLE_CHECKMENUITEM: return "IA2_ROLE_CHECKMENUITEM";
-			case ACC.ROLE_RADIOMENUITEM: return "IA2_ROLE_RADIOMENUITEM";
-			case ACC.ROLE_DATETIME: return "IA2_ROLE_DATETIME";
-			case ACC.ROLE_FOOTER: return "IA2_ROLE_FOOTER";
-			case ACC.ROLE_FORM: return "IA2_ROLE_FORM";
-			case ACC.ROLE_HEADER: return "IA2_ROLE_HEADER";
-			case ACC.ROLE_HEADING: return "IA2_ROLE_HEADING";
-			case ACC.ROLE_PAGE: return "IA2_ROLE_PAGE";
-			case ACC.ROLE_PARAGRAPH: return "IA2_ROLE_PARAGRAPH";
-			case ACC.ROLE_SECTION: return "IA2_ROLE_SECTION";
-		}
+        if (DEBUG) {
+            switch (role) {
+                case COM.ROLE_SYSTEM_CLIENT:
+                    return "ROLE_SYSTEM_CLIENT";
+                case COM.ROLE_SYSTEM_WINDOW:
+                    return "ROLE_SYSTEM_WINDOW";
+                case COM.ROLE_SYSTEM_MENUBAR:
+                    return "ROLE_SYSTEM_MENUBAR";
+                case COM.ROLE_SYSTEM_MENUPOPUP:
+                    return "ROLE_SYSTEM_MENUPOPUP";
+                case COM.ROLE_SYSTEM_MENUITEM:
+                    return "ROLE_SYSTEM_MENUITEM";
+                case COM.ROLE_SYSTEM_SEPARATOR:
+                    return "ROLE_SYSTEM_SEPARATOR";
+                case COM.ROLE_SYSTEM_TOOLTIP:
+                    return "ROLE_SYSTEM_TOOLTIP";
+                case COM.ROLE_SYSTEM_SCROLLBAR:
+                    return "ROLE_SYSTEM_SCROLLBAR";
+                case COM.ROLE_SYSTEM_DIALOG:
+                    return "ROLE_SYSTEM_DIALOG";
+                case COM.ROLE_SYSTEM_STATICTEXT:
+                    return "ROLE_SYSTEM_STATICTEXT";
+                case COM.ROLE_SYSTEM_PUSHBUTTON:
+                    return "ROLE_SYSTEM_PUSHBUTTON";
+                case COM.ROLE_SYSTEM_CHECKBUTTON:
+                    return "ROLE_SYSTEM_CHECKBUTTON";
+                case COM.ROLE_SYSTEM_RADIOBUTTON:
+                    return "ROLE_SYSTEM_RADIOBUTTON";
+                case COM.ROLE_SYSTEM_SPLITBUTTON:
+                    return "ROLE_SYSTEM_SPLITBUTTON";
+                case COM.ROLE_SYSTEM_COMBOBOX:
+                    return "ROLE_SYSTEM_COMBOBOX";
+                case COM.ROLE_SYSTEM_TEXT:
+                    return "ROLE_SYSTEM_TEXT";
+                case COM.ROLE_SYSTEM_TOOLBAR:
+                    return "ROLE_SYSTEM_TOOLBAR";
+                case COM.ROLE_SYSTEM_LIST:
+                    return "ROLE_SYSTEM_LIST";
+                case COM.ROLE_SYSTEM_LISTITEM:
+                    return "ROLE_SYSTEM_LISTITEM";
+                case COM.ROLE_SYSTEM_TABLE:
+                    return "ROLE_SYSTEM_TABLE";
+                case COM.ROLE_SYSTEM_CELL:
+                    return "ROLE_SYSTEM_CELL";
+                case COM.ROLE_SYSTEM_COLUMNHEADER:
+                    return "ROLE_SYSTEM_COLUMNHEADER";
+                case COM.ROLE_SYSTEM_ROWHEADER:
+                    return "ROLE_SYSTEM_ROWHEADER";
+                case COM.ROLE_SYSTEM_OUTLINE:
+                    return "ROLE_SYSTEM_OUTLINE";
+                case COM.ROLE_SYSTEM_OUTLINEITEM:
+                    return "ROLE_SYSTEM_OUTLINEITEM";
+                case COM.ROLE_SYSTEM_PAGETABLIST:
+                    return "ROLE_SYSTEM_PAGETABLIST";
+                case COM.ROLE_SYSTEM_PAGETAB:
+                    return "ROLE_SYSTEM_PAGETAB";
+                case COM.ROLE_SYSTEM_PROGRESSBAR:
+                    return "ROLE_SYSTEM_PROGRESSBAR";
+                case COM.ROLE_SYSTEM_SLIDER:
+                    return "ROLE_SYSTEM_SLIDER";
+                case COM.ROLE_SYSTEM_LINK:
+                    return "ROLE_SYSTEM_LINK";
+                case COM.ROLE_SYSTEM_ALERT:
+                    return "ROLE_SYSTEM_ALERT";
+                case COM.ROLE_SYSTEM_ANIMATION:
+                    return "ROLE_SYSTEM_ANIMATION";
+                case COM.ROLE_SYSTEM_COLUMN:
+                    return "ROLE_SYSTEM_COLUMN";
+                case COM.ROLE_SYSTEM_DOCUMENT:
+                    return "ROLE_SYSTEM_DOCUMENT";
+                case COM.ROLE_SYSTEM_GRAPHIC:
+                    return "ROLE_SYSTEM_GRAPHIC";
+                case COM.ROLE_SYSTEM_GROUPING:
+                    return "ROLE_SYSTEM_GROUPING";
+                case COM.ROLE_SYSTEM_ROW:
+                    return "ROLE_SYSTEM_ROW";
+                case COM.ROLE_SYSTEM_SPINBUTTON:
+                    return "ROLE_SYSTEM_SPINBUTTON";
+                case COM.ROLE_SYSTEM_STATUSBAR:
+                    return "ROLE_SYSTEM_STATUSBAR";
+                case COM.ROLE_SYSTEM_CLOCK:
+                    return "ROLE_SYSTEM_CLOCK";
+                case COM.ROLE_SYSTEM_DROPLIST:
+                    return "ROLE_SYSTEM_DROPLIST";
+                // IA2 roles
+                case ACC.ROLE_CANVAS:
+                    return "IA2_ROLE_CANVAS";
+                case ACC.ROLE_CHECKMENUITEM:
+                    return "IA2_ROLE_CHECKMENUITEM";
+                case ACC.ROLE_RADIOMENUITEM:
+                    return "IA2_ROLE_RADIOMENUITEM";
+                case ACC.ROLE_DATETIME:
+                    return "IA2_ROLE_DATETIME";
+                case ACC.ROLE_FOOTER:
+                    return "IA2_ROLE_FOOTER";
+                case ACC.ROLE_FORM:
+                    return "IA2_ROLE_FORM";
+                case ACC.ROLE_HEADER:
+                    return "IA2_ROLE_HEADER";
+                case ACC.ROLE_HEADING:
+                    return "IA2_ROLE_HEADING";
+                case ACC.ROLE_PAGE:
+                    return "IA2_ROLE_PAGE";
+                case ACC.ROLE_PARAGRAPH:
+                    return "IA2_ROLE_PARAGRAPH";
+                case ACC.ROLE_SECTION:
+                    return "IA2_ROLE_SECTION";
+            }
+        }
 		return "Unknown role (" + role + ")";
 	}
 	String getStateString(int state) {
-		if (state == 0) return " no state bits set";
+        if (state == 0) {
+            return " no state bits set";
+        }
 		StringBuilder stateString = new StringBuilder();
 		if (DEBUG) {
-		if ((state & COM.STATE_SYSTEM_SELECTED) != 0) stateString.append(" STATE_SYSTEM_SELECTED");
-		if ((state & COM.STATE_SYSTEM_SELECTABLE) != 0) stateString.append(" STATE_SYSTEM_SELECTABLE");
-		if ((state & COM.STATE_SYSTEM_MULTISELECTABLE) != 0) stateString.append(" STATE_SYSTEM_MULTISELECTABLE");
-		if ((state & COM.STATE_SYSTEM_FOCUSED) != 0) stateString.append(" STATE_SYSTEM_FOCUSED");
-		if ((state & COM.STATE_SYSTEM_FOCUSABLE) != 0) stateString.append(" STATE_SYSTEM_FOCUSABLE");
-		if ((state & COM.STATE_SYSTEM_PRESSED) != 0) stateString.append(" STATE_SYSTEM_PRESSED");
-		if ((state & COM.STATE_SYSTEM_CHECKED) != 0) stateString.append(" STATE_SYSTEM_CHECKED");
-		if ((state & COM.STATE_SYSTEM_EXPANDED) != 0) stateString.append(" STATE_SYSTEM_EXPANDED");
-		if ((state & COM.STATE_SYSTEM_COLLAPSED) != 0) stateString.append(" STATE_SYSTEM_COLLAPSED");
-		if ((state & COM.STATE_SYSTEM_HOTTRACKED) != 0) stateString.append(" STATE_SYSTEM_HOTTRACKED");
-		if ((state & COM.STATE_SYSTEM_BUSY) != 0) stateString.append(" STATE_SYSTEM_BUSY");
-		if ((state & COM.STATE_SYSTEM_READONLY) != 0) stateString.append(" STATE_SYSTEM_READONLY");
-		if ((state & COM.STATE_SYSTEM_INVISIBLE) != 0) stateString.append(" STATE_SYSTEM_INVISIBLE");
-		if ((state & COM.STATE_SYSTEM_OFFSCREEN) != 0) stateString.append(" STATE_SYSTEM_OFFSCREEN");
-		if ((state & COM.STATE_SYSTEM_SIZEABLE) != 0) stateString.append(" STATE_SYSTEM_SIZEABLE");
-		if ((state & COM.STATE_SYSTEM_LINKED) != 0) stateString.append(" STATE_SYSTEM_LINKED");
-		if ((state & COM.STATE_SYSTEM_UNAVAILABLE) != 0) stateString.append(" STATE_SYSTEM_UNAVAILABLE");
-		if (stateString.length() == 0) stateString.append(" Unknown state[s] (" + Integer.toHexString(state) + ")");
+            if ((state & COM.STATE_SYSTEM_SELECTED) != 0) {
+                stateString.append(" STATE_SYSTEM_SELECTED");
+            }
+            if ((state & COM.STATE_SYSTEM_SELECTABLE) != 0) {
+                stateString.append(" STATE_SYSTEM_SELECTABLE");
+            }
+            if ((state & COM.STATE_SYSTEM_MULTISELECTABLE) != 0) {
+                stateString.append(" STATE_SYSTEM_MULTISELECTABLE");
+            }
+            if ((state & COM.STATE_SYSTEM_FOCUSED) != 0) {
+                stateString.append(" STATE_SYSTEM_FOCUSED");
+            }
+            if ((state & COM.STATE_SYSTEM_FOCUSABLE) != 0) {
+                stateString.append(" STATE_SYSTEM_FOCUSABLE");
+            }
+            if ((state & COM.STATE_SYSTEM_PRESSED) != 0) {
+                stateString.append(" STATE_SYSTEM_PRESSED");
+            }
+            if ((state & COM.STATE_SYSTEM_CHECKED) != 0) {
+                stateString.append(" STATE_SYSTEM_CHECKED");
+            }
+            if ((state & COM.STATE_SYSTEM_EXPANDED) != 0) {
+                stateString.append(" STATE_SYSTEM_EXPANDED");
+            }
+            if ((state & COM.STATE_SYSTEM_COLLAPSED) != 0) {
+                stateString.append(" STATE_SYSTEM_COLLAPSED");
+            }
+            if ((state & COM.STATE_SYSTEM_HOTTRACKED) != 0) {
+                stateString.append(" STATE_SYSTEM_HOTTRACKED");
+            }
+            if ((state & COM.STATE_SYSTEM_BUSY) != 0) {
+                stateString.append(" STATE_SYSTEM_BUSY");
+            }
+            if ((state & COM.STATE_SYSTEM_READONLY) != 0) {
+                stateString.append(" STATE_SYSTEM_READONLY");
+            }
+            if ((state & COM.STATE_SYSTEM_INVISIBLE) != 0) {
+                stateString.append(" STATE_SYSTEM_INVISIBLE");
+            }
+            if ((state & COM.STATE_SYSTEM_OFFSCREEN) != 0) {
+                stateString.append(" STATE_SYSTEM_OFFSCREEN");
+            }
+            if ((state & COM.STATE_SYSTEM_SIZEABLE) != 0) {
+                stateString.append(" STATE_SYSTEM_SIZEABLE");
+            }
+            if ((state & COM.STATE_SYSTEM_LINKED) != 0) {
+                stateString.append(" STATE_SYSTEM_LINKED");
+            }
+            if ((state & COM.STATE_SYSTEM_UNAVAILABLE) != 0) {
+                stateString.append(" STATE_SYSTEM_UNAVAILABLE");
+            }
+            if (stateString.length() == 0) {
+                stateString.append(" Unknown state[s] (" + Integer.toHexString(state) + ")");
+            }
 		}
 		return stateString.toString();
 	}
 	String getIA2StatesString(int ia2States) {
-		if (ia2States == 0) return " no state bits set";
+        if (ia2States == 0) {
+            return " no state bits set";
+        }
 		StringBuilder stateString = new StringBuilder();
 		if (DEBUG) {
-		if ((ia2States & COM.IA2_STATE_ACTIVE) != 0) stateString.append(" IA2_STATE_ACTIVE");
-		if ((ia2States & COM.IA2_STATE_EDITABLE) != 0) stateString.append(" IA2_STATE_EDITABLE");
-		if ((ia2States & COM.IA2_STATE_SINGLE_LINE) != 0) stateString.append(" IA2_STATE_SINGLE_LINE");
-		if ((ia2States & COM.IA2_STATE_MULTI_LINE) != 0) stateString.append(" IA2_STATE_MULTI_LINE");
-		if ((ia2States & COM.IA2_STATE_REQUIRED) != 0) stateString.append(" IA2_STATE_REQUIRED");
-		if ((ia2States & COM.IA2_STATE_INVALID_ENTRY) != 0) stateString.append(" IA2_STATE_INVALID_ENTRY");
-		if ((ia2States & COM.IA2_STATE_SUPPORTS_AUTOCOMPLETION) != 0) stateString.append(" IA2_STATE_SUPPORTS_AUTOCOMPLETION");
-		if (stateString.length() == 0) stateString.append(" Unknown IA2 state[s] (" + ia2States + ")");
+            if ((ia2States & COM.IA2_STATE_ACTIVE) != 0) {
+                stateString.append(" IA2_STATE_ACTIVE");
+            }
+            if ((ia2States & COM.IA2_STATE_EDITABLE) != 0) {
+                stateString.append(" IA2_STATE_EDITABLE");
+            }
+            if ((ia2States & COM.IA2_STATE_SINGLE_LINE) != 0) {
+                stateString.append(" IA2_STATE_SINGLE_LINE");
+            }
+            if ((ia2States & COM.IA2_STATE_MULTI_LINE) != 0) {
+                stateString.append(" IA2_STATE_MULTI_LINE");
+            }
+            if ((ia2States & COM.IA2_STATE_REQUIRED) != 0) {
+                stateString.append(" IA2_STATE_REQUIRED");
+            }
+            if ((ia2States & COM.IA2_STATE_INVALID_ENTRY) != 0) {
+                stateString.append(" IA2_STATE_INVALID_ENTRY");
+            }
+            if ((ia2States & COM.IA2_STATE_SUPPORTS_AUTOCOMPLETION) != 0) {
+                stateString.append(" IA2_STATE_SUPPORTS_AUTOCOMPLETION");
+            }
+            if (stateString.length() == 0) {
+                stateString.append(" Unknown IA2 state[s] (" + ia2States + ")");
+            }
 		}
 		return stateString.toString();
 	}
 	String getEventString(int event) {
-		if (DEBUG) switch (event) {
-			case ACC.EVENT_TABLE_CHANGED: return "IA2_EVENT_TABLE_CHANGED";
-			case ACC.EVENT_TEXT_CHANGED: return "IA2_EVENT_TEXT_REMOVED or IA2_EVENT_TEXT_INSERTED";
-			case ACC.EVENT_HYPERTEXT_LINK_SELECTED: return "IA2_EVENT_HYPERTEXT_LINK_SELECTED";
-			case ACC.EVENT_VALUE_CHANGED: return "EVENT_OBJECT_VALUECHANGE";
-			case ACC.EVENT_STATE_CHANGED: return "EVENT_OBJECT_STATECHANGE";
-			case ACC.EVENT_SELECTION_CHANGED: return "EVENT_OBJECT_SELECTIONWITHIN";
-			case ACC.EVENT_TEXT_SELECTION_CHANGED: return "EVENT_OBJECT_TEXTSELECTIONCHANGED";
-			case ACC.EVENT_LOCATION_CHANGED: return "EVENT_OBJECT_LOCATIONCHANGE";
-			case ACC.EVENT_NAME_CHANGED: return "EVENT_OBJECT_NAMECHANGE";
-			case ACC.EVENT_DESCRIPTION_CHANGED: return "EVENT_OBJECT_DESCRIPTIONCHANGE";
-			case ACC.EVENT_DOCUMENT_LOAD_COMPLETE: return "IA2_EVENT_DOCUMENT_LOAD_COMPLETE";
-			case ACC.EVENT_DOCUMENT_LOAD_STOPPED: return "IA2_EVENT_DOCUMENT_LOAD_STOPPED";
-			case ACC.EVENT_DOCUMENT_RELOAD: return "IA2_EVENT_DOCUMENT_RELOAD";
-			case ACC.EVENT_PAGE_CHANGED: return "IA2_EVENT_PAGE_CHANGED";
-			case ACC.EVENT_SECTION_CHANGED: return "IA2_EVENT_SECTION_CHANGED";
-			case ACC.EVENT_ACTION_CHANGED: return "IA2_EVENT_ACTION_CHANGED";
-			case ACC.EVENT_HYPERLINK_START_INDEX_CHANGED: return "IA2_EVENT_HYPERLINK_START_INDEX_CHANGED";
-			case ACC.EVENT_HYPERLINK_END_INDEX_CHANGED: return "IA2_EVENT_HYPERLINK_END_INDEX_CHANGED";
-			case ACC.EVENT_HYPERLINK_ANCHOR_COUNT_CHANGED: return "IA2_EVENT_HYPERLINK_ANCHOR_COUNT_CHANGED";
-			case ACC.EVENT_HYPERLINK_SELECTED_LINK_CHANGED: return "IA2_EVENT_HYPERLINK_SELECTED_LINK_CHANGED";
-			case ACC.EVENT_HYPERLINK_ACTIVATED: return "IA2_EVENT_HYPERLINK_ACTIVATED";
-			case ACC.EVENT_HYPERTEXT_LINK_COUNT_CHANGED: return "IA2_EVENT_HYPERTEXT_LINK_COUNT_CHANGED";
-			case ACC.EVENT_ATTRIBUTE_CHANGED: return "IA2_EVENT_ATTRIBUTE_CHANGED";
-			case ACC.EVENT_TABLE_CAPTION_CHANGED: return "IA2_EVENT_TABLE_CAPTION_CHANGED";
-			case ACC.EVENT_TABLE_COLUMN_DESCRIPTION_CHANGED: return "IA2_EVENT_TABLE_COLUMN_DESCRIPTION_CHANGED";
-			case ACC.EVENT_TABLE_COLUMN_HEADER_CHANGED: return "IA2_EVENT_TABLE_COLUMN_HEADER_CHANGED";
-			case ACC.EVENT_TABLE_ROW_DESCRIPTION_CHANGED: return "IA2_EVENT_TABLE_ROW_DESCRIPTION_CHANGED";
-			case ACC.EVENT_TABLE_ROW_HEADER_CHANGED: return "IA2_EVENT_TABLE_ROW_HEADER_CHANGED";
-			case ACC.EVENT_TABLE_SUMMARY_CHANGED: return "IA2_EVENT_TABLE_SUMMARY_CHANGED";
-			case ACC.EVENT_TEXT_ATTRIBUTE_CHANGED: return "IA2_EVENT_TEXT_ATTRIBUTE_CHANGED";
-			case ACC.EVENT_TEXT_CARET_MOVED: return "IA2_EVENT_TEXT_CARET_MOVED";
-			case ACC.EVENT_TEXT_COLUMN_CHANGED: return "IA2_EVENT_TEXT_COLUMN_CHANGED";
-		}
+        if (DEBUG) {
+            switch (event) {
+                case ACC.EVENT_TABLE_CHANGED:
+                    return "IA2_EVENT_TABLE_CHANGED";
+                case ACC.EVENT_TEXT_CHANGED:
+                    return "IA2_EVENT_TEXT_REMOVED or IA2_EVENT_TEXT_INSERTED";
+                case ACC.EVENT_HYPERTEXT_LINK_SELECTED:
+                    return "IA2_EVENT_HYPERTEXT_LINK_SELECTED";
+                case ACC.EVENT_VALUE_CHANGED:
+                    return "EVENT_OBJECT_VALUECHANGE";
+                case ACC.EVENT_STATE_CHANGED:
+                    return "EVENT_OBJECT_STATECHANGE";
+                case ACC.EVENT_SELECTION_CHANGED:
+                    return "EVENT_OBJECT_SELECTIONWITHIN";
+                case ACC.EVENT_TEXT_SELECTION_CHANGED:
+                    return "EVENT_OBJECT_TEXTSELECTIONCHANGED";
+                case ACC.EVENT_LOCATION_CHANGED:
+                    return "EVENT_OBJECT_LOCATIONCHANGE";
+                case ACC.EVENT_NAME_CHANGED:
+                    return "EVENT_OBJECT_NAMECHANGE";
+                case ACC.EVENT_DESCRIPTION_CHANGED:
+                    return "EVENT_OBJECT_DESCRIPTIONCHANGE";
+                case ACC.EVENT_DOCUMENT_LOAD_COMPLETE:
+                    return "IA2_EVENT_DOCUMENT_LOAD_COMPLETE";
+                case ACC.EVENT_DOCUMENT_LOAD_STOPPED:
+                    return "IA2_EVENT_DOCUMENT_LOAD_STOPPED";
+                case ACC.EVENT_DOCUMENT_RELOAD:
+                    return "IA2_EVENT_DOCUMENT_RELOAD";
+                case ACC.EVENT_PAGE_CHANGED:
+                    return "IA2_EVENT_PAGE_CHANGED";
+                case ACC.EVENT_SECTION_CHANGED:
+                    return "IA2_EVENT_SECTION_CHANGED";
+                case ACC.EVENT_ACTION_CHANGED:
+                    return "IA2_EVENT_ACTION_CHANGED";
+                case ACC.EVENT_HYPERLINK_START_INDEX_CHANGED:
+                    return "IA2_EVENT_HYPERLINK_START_INDEX_CHANGED";
+                case ACC.EVENT_HYPERLINK_END_INDEX_CHANGED:
+                    return "IA2_EVENT_HYPERLINK_END_INDEX_CHANGED";
+                case ACC.EVENT_HYPERLINK_ANCHOR_COUNT_CHANGED:
+                    return "IA2_EVENT_HYPERLINK_ANCHOR_COUNT_CHANGED";
+                case ACC.EVENT_HYPERLINK_SELECTED_LINK_CHANGED:
+                    return "IA2_EVENT_HYPERLINK_SELECTED_LINK_CHANGED";
+                case ACC.EVENT_HYPERLINK_ACTIVATED:
+                    return "IA2_EVENT_HYPERLINK_ACTIVATED";
+                case ACC.EVENT_HYPERTEXT_LINK_COUNT_CHANGED:
+                    return "IA2_EVENT_HYPERTEXT_LINK_COUNT_CHANGED";
+                case ACC.EVENT_ATTRIBUTE_CHANGED:
+                    return "IA2_EVENT_ATTRIBUTE_CHANGED";
+                case ACC.EVENT_TABLE_CAPTION_CHANGED:
+                    return "IA2_EVENT_TABLE_CAPTION_CHANGED";
+                case ACC.EVENT_TABLE_COLUMN_DESCRIPTION_CHANGED:
+                    return "IA2_EVENT_TABLE_COLUMN_DESCRIPTION_CHANGED";
+                case ACC.EVENT_TABLE_COLUMN_HEADER_CHANGED:
+                    return "IA2_EVENT_TABLE_COLUMN_HEADER_CHANGED";
+                case ACC.EVENT_TABLE_ROW_DESCRIPTION_CHANGED:
+                    return "IA2_EVENT_TABLE_ROW_DESCRIPTION_CHANGED";
+                case ACC.EVENT_TABLE_ROW_HEADER_CHANGED:
+                    return "IA2_EVENT_TABLE_ROW_HEADER_CHANGED";
+                case ACC.EVENT_TABLE_SUMMARY_CHANGED:
+                    return "IA2_EVENT_TABLE_SUMMARY_CHANGED";
+                case ACC.EVENT_TEXT_ATTRIBUTE_CHANGED:
+                    return "IA2_EVENT_TEXT_ATTRIBUTE_CHANGED";
+                case ACC.EVENT_TEXT_CARET_MOVED:
+                    return "IA2_EVENT_TEXT_CARET_MOVED";
+                case ACC.EVENT_TEXT_COLUMN_CHANGED:
+                    return "IA2_EVENT_TEXT_COLUMN_CHANGED";
+            }
+        }
 		return "Unknown event (" + event + ")";
 	}
 	private String hresult(int code) {
-		if (DEBUG) switch (code) {
-			case COM.S_OK: return " S_OK";
-			case COM.S_FALSE: return " S_FALSE";
-			case COM.E_ACCESSDENIED: return " E_ACCESSDENIED";
-			case COM.E_FAIL: return " E_FAIL";
-			case COM.E_INVALIDARG: return " E_INVALIDARG";
-			case COM.E_NOINTERFACE: return " E_NOINTERFACE";
-			case COM.E_NOTIMPL: return " E_NOTIMPL";
-			case COM.E_NOTSUPPORTED: return " E_NOTSUPPORTED";
-			case COM.E_OUTOFMEMORY: return " E_OUTOFMEMORY";
-			case OS.E_POINTER: return " E_POINTER";
-			case COM.DISP_E_EXCEPTION: return " DISP_E_EXCEPTION";
-			case COM.DISP_E_MEMBERNOTFOUND: return " DISP_E_MEMBERNOTFOUND";
-			case COM.DISP_E_UNKNOWNINTERFACE: return " DISP_E_UNKNOWNINTERFACE";
-			case COM.DISP_E_UNKNOWNNAME: return " DISP_E_UNKNOWNNAME";
-		}
+        if (DEBUG) {
+            switch (code) {
+                case COM.S_OK:
+                    return " S_OK";
+                case COM.S_FALSE:
+                    return " S_FALSE";
+                case COM.E_ACCESSDENIED:
+                    return " E_ACCESSDENIED";
+                case COM.E_FAIL:
+                    return " E_FAIL";
+                case COM.E_INVALIDARG:
+                    return " E_INVALIDARG";
+                case COM.E_NOINTERFACE:
+                    return " E_NOINTERFACE";
+                case COM.E_NOTIMPL:
+                    return " E_NOTIMPL";
+                case COM.E_NOTSUPPORTED:
+                    return " E_NOTSUPPORTED";
+                case COM.E_OUTOFMEMORY:
+                    return " E_OUTOFMEMORY";
+                case OS.E_POINTER:
+                    return " E_POINTER";
+                case COM.DISP_E_EXCEPTION:
+                    return " DISP_E_EXCEPTION";
+                case COM.DISP_E_MEMBERNOTFOUND:
+                    return " DISP_E_MEMBERNOTFOUND";
+                case COM.DISP_E_UNKNOWNINTERFACE:
+                    return " DISP_E_UNKNOWNINTERFACE";
+                case COM.DISP_E_UNKNOWNNAME:
+                    return " DISP_E_UNKNOWNNAME";
+            }
+        }
 		return " HRESULT=" + code;
 	}
 	boolean interesting(GUID guid) {
 		if (DEBUG) {
-		if (COM.IsEqualGUID(guid, COM.IIDIUnknown)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessible)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIEnumVARIANT)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIServiceProvider)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessible2)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleRelation)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleAction)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleComponent)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleValue)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleText)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleEditableText)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleHyperlink)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleHypertext)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTable)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTable2)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTableCell)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleImage)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleApplication)) return true;
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleContext)) return true;
+            if (COM.IsEqualGUID(guid, COM.IIDIUnknown)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessible)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIEnumVARIANT)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIServiceProvider)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessible2)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleRelation)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleAction)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleComponent)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleValue)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleText)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleEditableText)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleHyperlink)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleHypertext)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTable)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTable2)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTableCell)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleImage)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleApplication)) {
+                return true;
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleContext)) {
+                return true;
+            }
 		}
 		return false;
 	}
@@ -5521,126 +6799,364 @@ public class Accessible {
 		final GUID IIDIAccIdentity = IIDFromString("{7852B78D-1CFD-41C1-A615-9C0C85960B5F}"); //$NON-NLS-1$
 		final GUID IIDIAccPropServer = IIDFromString("{76C0DBBB-15E0-4E7B-B61B-20EEEA2001E0}"); //$NON-NLS-1$
 		final GUID IIDIAccPropServices = IIDFromString("{6E26E776-04F0-495D-80E4-3330352E3169}"); //$NON-NLS-1$
-		if (COM.IsEqualGUID(guid, COM.IID_IDropTargetHelper)) return "IID_IDropTargetHelper";
-		if (COM.IsEqualGUID(guid, COM.IIDJavaBeansBridge)) return "IIDJavaBeansBridge";
-		if (COM.IsEqualGUID(guid, COM.IIDShockwaveActiveXControl)) return "IIDShockwaveActiveXControl";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessible)) return "IIDIAccessible";
-		if (COM.IsEqualGUID(guid, IIDIAccessibleHandler)) return "IIDIAccessibleHandler";
-		if (COM.IsEqualGUID(guid, IIDIAccessor)) return "IIDIAccessor";
-		if (COM.IsEqualGUID(guid, COM.IIDIAdviseSink)) return "IIDIAdviseSink";
-		if (COM.IsEqualGUID(guid, IIDIAdviseSink2)) return "IIDIAdviseSink2";
-		if (COM.IsEqualGUID(guid, IIDIBindCtx)) return "IIDIBindCtx";
-		if (COM.IsEqualGUID(guid, COM.IIDIClassFactory)) return "IIDIClassFactory";
-		if (COM.IsEqualGUID(guid, COM.IIDIClassFactory2)) return "IIDIClassFactory2";
-		if (COM.IsEqualGUID(guid, COM.IIDIConnectionPointContainer)) return "IIDIConnectionPointContainer";
-		if (COM.IsEqualGUID(guid, IIDICreateErrorInfo)) return "IIDICreateErrorInfo";
-		if (COM.IsEqualGUID(guid, IIDICreateTypeInfo)) return "IIDICreateTypeInfo";
-		if (COM.IsEqualGUID(guid, IIDICreateTypeLib)) return "IIDICreateTypeLib";
-		if (COM.IsEqualGUID(guid, IIDIDataAdviseHolder)) return "IIDIDataAdviseHolder";
-		if (COM.IsEqualGUID(guid, COM.IIDIDataObject)) return "IIDIDataObject";
-		if (COM.IsEqualGUID(guid, COM.IIDIDispatch)) return "IIDIDispatch";
-		if (COM.IsEqualGUID(guid, COM.IIDIDispatchEx)) return "IIDIDispatchEx";
-		if (COM.IsEqualGUID(guid, COM.IIDIDocHostUIHandler)) return "IIDIDocHostUIHandler";
-		if (COM.IsEqualGUID(guid, COM.IIDIDocHostShowUI)) return "IIDIDocHostShowUI";
-		if (COM.IsEqualGUID(guid, COM.IIDIDropSource)) return "IIDIDropSource";
-		if (COM.IsEqualGUID(guid, COM.IIDIDropTarget)) return "IIDIDropTarget";
-		if (COM.IsEqualGUID(guid, IIDIEnumConnectionPoints)) return "IIDIEnumConnectionPoints";
-		if (COM.IsEqualGUID(guid, IIDIEnumConnections)) return "IIDIEnumConnections";
-		if (COM.IsEqualGUID(guid, COM.IIDIEnumFORMATETC)) return "IIDIEnumFORMATETC";
-		if (COM.IsEqualGUID(guid, IIDIEnumMoniker)) return "IIDIEnumMoniker";
-		if (COM.IsEqualGUID(guid, IIDIEnumOLEVERB)) return "IIDIEnumOLEVERB";
-		if (COM.IsEqualGUID(guid, IIDIEnumSTATDATA)) return "IIDIEnumSTATDATA";
-		if (COM.IsEqualGUID(guid, IIDIEnumSTATSTG)) return "IIDIEnumSTATSTG";
-		if (COM.IsEqualGUID(guid, IIDIEnumString)) return "IIDIEnumString";
-		if (COM.IsEqualGUID(guid, IIDIEnumUnknown)) return "IIDIEnumUnknown";
-		if (COM.IsEqualGUID(guid, COM.IIDIEnumVARIANT)) return "IIDIEnumVARIANT";
-		if (COM.IsEqualGUID(guid, IIDIErrorInfo)) return "IIDIErrorInfo";
-		if (COM.IsEqualGUID(guid, IIDIErrorLog)) return "IIDIErrorLog";
-		if (COM.IsEqualGUID(guid, IIDIExternalConnection)) return "IIDIExternalConnection";
-		if (COM.IsEqualGUID(guid, IIDIFontDisp)) return "IIDIFontDisp";
-	//	if (COM.IsEqualGUID(guid, COM.IIDIHTMLDocumentEvents2)) return "IIDIHTMLDocumentEvents2";
-		if (COM.IsEqualGUID(guid, COM.IIDIInternetSecurityManager)) return "IIDIInternetSecurityManager";
-		if (COM.IsEqualGUID(guid, COM.IIDIAuthenticate)) return "IIDIAuthenticate";
-		if (COM.IsEqualGUID(guid, COM.IIDIJScriptTypeInfo)) return "IIDIJScriptTypeInfo";
-		if (COM.IsEqualGUID(guid, IIDILockBytes)) return "IIDILockBytes";
-		if (COM.IsEqualGUID(guid, IIDIMalloc)) return "IIDIMalloc";
-		if (COM.IsEqualGUID(guid, IIDIMallocSpy)) return "IIDIMallocSpy";
-		if (COM.IsEqualGUID(guid, IIDIMarshal)) return "IIDIMarshal";
-		if (COM.IsEqualGUID(guid, IIDIMessageFilter)) return "IIDIMessageFilter";
-		if (COM.IsEqualGUID(guid, IIDIMoniker)) return "IIDIMoniker";
-		if (COM.IsEqualGUID(guid, IIDIOleAdviseHolder)) return "IIDIOleAdviseHolder";
-		if (COM.IsEqualGUID(guid, IIDIOleCache)) return "IIDIOleCache";
-		if (COM.IsEqualGUID(guid, IIDIOleCache2)) return "IIDIOleCache2";
-		if (COM.IsEqualGUID(guid, IIDIOleCacheControl)) return "IIDIOleCacheControl";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleClientSite)) return "IIDIOleClientSite";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleCommandTarget)) return "IIDIOleCommandTarget";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleControl)) return "IIDIOleControl";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleControlSite)) return "IIDIOleControlSite";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleDocument)) return "IIDIOleDocument";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleDocumentSite)) return "IIDIOleDocumentSite";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleInPlaceFrame)) return "IIDIOleInPlaceFrame";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleInPlaceObject)) return "IIDIOleInPlaceObject";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleInPlaceSite)) return "IIDIOleInPlaceSite";
-		if (COM.IsEqualGUID(guid, IIDIOleItemContainer)) return "IIDIOleItemContainer";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleLink)) return "IIDIOleLink";
-		if (COM.IsEqualGUID(guid, COM.IIDIOleObject)) return "IIDIOleObject";
-		if (COM.IsEqualGUID(guid, IIDIParseDisplayName)) return "IIDIParseDisplayName";
-		if (COM.IsEqualGUID(guid, IIDIPerPropertyBrowsing)) return "IIDIPerPropertyBrowsing";
-		if (COM.IsEqualGUID(guid, COM.IIDIPersist)) return "IIDIPersist";
-		if (COM.IsEqualGUID(guid, COM.IIDIPersistFile)) return "IIDIPersistFile";
-		if (COM.IsEqualGUID(guid, IIDIPersistMemory)) return "IIDIPersistMemory";
-		if (COM.IsEqualGUID(guid, IIDIPersistPropertyBag)) return "IIDIPersistPropertyBag";
-		if (COM.IsEqualGUID(guid, COM.IIDIPersistStorage)) return "IIDIPersistStorage";
-		if (COM.IsEqualGUID(guid, COM.IIDIPersistStreamInit)) return "IIDIPersistStreamInit";
-		if (COM.IsEqualGUID(guid, IIDIPicture)) return "IIDIPicture";
-		if (COM.IsEqualGUID(guid, IIDIPictureDisp)) return "IIDIPictureDisp";
-		if (COM.IsEqualGUID(guid, IIDIPropertyBag)) return "IIDIPropertyBag";
-		if (COM.IsEqualGUID(guid, COM.IIDIPropertyNotifySink)) return "IIDIPropertyNotifySink";
-		if (COM.IsEqualGUID(guid, IIDIPropertyPage)) return "IIDIPropertyPage";
-		if (COM.IsEqualGUID(guid, IIDIPropertyPage2)) return "IIDIPropertyPage2";
-		if (COM.IsEqualGUID(guid, IIDIPropertyPageSite)) return "IIDIPropertyPageSite";
-		if (COM.IsEqualGUID(guid, COM.IIDIProvideClassInfo)) return "IIDIProvideClassInfo";
-		if (COM.IsEqualGUID(guid, COM.IIDIProvideClassInfo2)) return "IIDIProvideClassInfo2";
-		if (COM.IsEqualGUID(guid, IIDIPSFactoryBuffer)) return "IIDIPSFactoryBuffer";
-		if (COM.IsEqualGUID(guid, IIDIRootStorage)) return "IIDIRootStorage";
-		if (COM.IsEqualGUID(guid, IIDIROTData)) return "IIDIROTData";
-		if (COM.IsEqualGUID(guid, IIDIRpcChannelBuffer)) return "IIDIRpcChannelBuffer";
-		if (COM.IsEqualGUID(guid, IIDIRpcProxyBuffer)) return "IIDIRpcProxyBuffer";
-		if (COM.IsEqualGUID(guid, IIDIRpcStubBuffer)) return "IIDIRpcStubBuffer";
-		if (COM.IsEqualGUID(guid, IIDIRunnableObject)) return "IIDIRunnableObject";
-		if (COM.IsEqualGUID(guid, IIDIRunningObjectTable)) return "IIDIRunningObjectTable";
-		if (COM.IsEqualGUID(guid, IIDISimpleFrameSite)) return "IIDISimpleFrameSite";
-		if (COM.IsEqualGUID(guid, COM.IIDIServiceProvider)) return "IIDIServiceProvider";
-		if (COM.IsEqualGUID(guid, COM.IIDISpecifyPropertyPages)) return "IIDISpecifyPropertyPages";
-		if (COM.IsEqualGUID(guid, IIDIStdMarshalInfo)) return "IIDIStdMarshalInfo";
-		if (COM.IsEqualGUID(guid, IIDISupportErrorInfo)) return "IIDISupportErrorInfo";
-		if (COM.IsEqualGUID(guid, IIDITypeComp)) return "IIDITypeComp";
-		if (COM.IsEqualGUID(guid, IIDITypeLib)) return "IIDITypeLib";
-		if (COM.IsEqualGUID(guid, COM.IIDIUnknown)) return "IIDIUnknown";
-		if (COM.IsEqualGUID(guid, IIDIViewObject)) return "IIDIViewObject";
-		if (COM.IsEqualGUID(guid, COM.IIDIViewObject2)) return "IIDIViewObject2";
-		if (COM.IsEqualGUID(guid, COM.CGID_DocHostCommandHandler)) return "CGID_DocHostCommandHandler";
-		if (COM.IsEqualGUID(guid, COM.CGID_Explorer)) return "CGID_Explorer";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessible2)) return "IIDIAccessible2";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleRelation)) return "IIDIAccessibleRelation";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleAction)) return "IIDIAccessibleAction";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleComponent)) return "IIDIAccessibleComponent";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleValue)) return "IIDIAccessibleValue";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleText)) return "IIDIAccessibleText";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleEditableText)) return "IIDIAccessibleEditableText";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleHyperlink)) return "IIDIAccessibleHyperlink";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleHypertext)) return "IIDIAccessibleHypertext";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTable)) return "IIDIAccessibleTable";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTable2)) return "IIDIAccessibleTable2";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTableCell)) return "IIDIAccessibleTableCell";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleImage)) return "IIDIAccessibleImage";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleApplication)) return "IIDIAccessibleApplication";
-		if (COM.IsEqualGUID(guid, COM.IIDIAccessibleContext)) return "IIDIAccessibleContext";
-		if (COM.IsEqualGUID(guid, IIDIdentityUnmarshal)) return "IIDIdentityUnmarshal";
-		if (COM.IsEqualGUID(guid, IIDInternalMSMarshaller)) return "IIDInternalMSMarshaller";
-		if (COM.IsEqualGUID(guid, IIDIAccIdentity)) return "IIDIAccIdentity";
-		if (COM.IsEqualGUID(guid, IIDIAccPropServer)) return "IIDIAccPropServer";
-		if (COM.IsEqualGUID(guid, IIDIAccPropServices)) return "IIDIAccPropServices";
+            if (COM.IsEqualGUID(guid, COM.IID_IDropTargetHelper)) {
+                return "IID_IDropTargetHelper";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDJavaBeansBridge)) {
+                return "IIDJavaBeansBridge";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDShockwaveActiveXControl)) {
+                return "IIDShockwaveActiveXControl";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessible)) {
+                return "IIDIAccessible";
+            }
+            if (COM.IsEqualGUID(guid, IIDIAccessibleHandler)) {
+                return "IIDIAccessibleHandler";
+            }
+            if (COM.IsEqualGUID(guid, IIDIAccessor)) {
+                return "IIDIAccessor";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAdviseSink)) {
+                return "IIDIAdviseSink";
+            }
+            if (COM.IsEqualGUID(guid, IIDIAdviseSink2)) {
+                return "IIDIAdviseSink2";
+            }
+            if (COM.IsEqualGUID(guid, IIDIBindCtx)) {
+                return "IIDIBindCtx";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIClassFactory)) {
+                return "IIDIClassFactory";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIClassFactory2)) {
+                return "IIDIClassFactory2";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIConnectionPointContainer)) {
+                return "IIDIConnectionPointContainer";
+            }
+            if (COM.IsEqualGUID(guid, IIDICreateErrorInfo)) {
+                return "IIDICreateErrorInfo";
+            }
+            if (COM.IsEqualGUID(guid, IIDICreateTypeInfo)) {
+                return "IIDICreateTypeInfo";
+            }
+            if (COM.IsEqualGUID(guid, IIDICreateTypeLib)) {
+                return "IIDICreateTypeLib";
+            }
+            if (COM.IsEqualGUID(guid, IIDIDataAdviseHolder)) {
+                return "IIDIDataAdviseHolder";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIDataObject)) {
+                return "IIDIDataObject";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIDispatch)) {
+                return "IIDIDispatch";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIDispatchEx)) {
+                return "IIDIDispatchEx";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIDocHostUIHandler)) {
+                return "IIDIDocHostUIHandler";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIDocHostShowUI)) {
+                return "IIDIDocHostShowUI";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIDropSource)) {
+                return "IIDIDropSource";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIDropTarget)) {
+                return "IIDIDropTarget";
+            }
+            if (COM.IsEqualGUID(guid, IIDIEnumConnectionPoints)) {
+                return "IIDIEnumConnectionPoints";
+            }
+            if (COM.IsEqualGUID(guid, IIDIEnumConnections)) {
+                return "IIDIEnumConnections";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIEnumFORMATETC)) {
+                return "IIDIEnumFORMATETC";
+            }
+            if (COM.IsEqualGUID(guid, IIDIEnumMoniker)) {
+                return "IIDIEnumMoniker";
+            }
+            if (COM.IsEqualGUID(guid, IIDIEnumOLEVERB)) {
+                return "IIDIEnumOLEVERB";
+            }
+            if (COM.IsEqualGUID(guid, IIDIEnumSTATDATA)) {
+                return "IIDIEnumSTATDATA";
+            }
+            if (COM.IsEqualGUID(guid, IIDIEnumSTATSTG)) {
+                return "IIDIEnumSTATSTG";
+            }
+            if (COM.IsEqualGUID(guid, IIDIEnumString)) {
+                return "IIDIEnumString";
+            }
+            if (COM.IsEqualGUID(guid, IIDIEnumUnknown)) {
+                return "IIDIEnumUnknown";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIEnumVARIANT)) {
+                return "IIDIEnumVARIANT";
+            }
+            if (COM.IsEqualGUID(guid, IIDIErrorInfo)) {
+                return "IIDIErrorInfo";
+            }
+            if (COM.IsEqualGUID(guid, IIDIErrorLog)) {
+                return "IIDIErrorLog";
+            }
+            if (COM.IsEqualGUID(guid, IIDIExternalConnection)) {
+                return "IIDIExternalConnection";
+            }
+            if (COM.IsEqualGUID(guid, IIDIFontDisp)) {
+                return "IIDIFontDisp";
+            }
+            //	if (COM.IsEqualGUID(guid, COM.IIDIHTMLDocumentEvents2)) return "IIDIHTMLDocumentEvents2";
+            if (COM.IsEqualGUID(guid, COM.IIDIInternetSecurityManager)) {
+                return "IIDIInternetSecurityManager";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAuthenticate)) {
+                return "IIDIAuthenticate";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIJScriptTypeInfo)) {
+                return "IIDIJScriptTypeInfo";
+            }
+            if (COM.IsEqualGUID(guid, IIDILockBytes)) {
+                return "IIDILockBytes";
+            }
+            if (COM.IsEqualGUID(guid, IIDIMalloc)) {
+                return "IIDIMalloc";
+            }
+            if (COM.IsEqualGUID(guid, IIDIMallocSpy)) {
+                return "IIDIMallocSpy";
+            }
+            if (COM.IsEqualGUID(guid, IIDIMarshal)) {
+                return "IIDIMarshal";
+            }
+            if (COM.IsEqualGUID(guid, IIDIMessageFilter)) {
+                return "IIDIMessageFilter";
+            }
+            if (COM.IsEqualGUID(guid, IIDIMoniker)) {
+                return "IIDIMoniker";
+            }
+            if (COM.IsEqualGUID(guid, IIDIOleAdviseHolder)) {
+                return "IIDIOleAdviseHolder";
+            }
+            if (COM.IsEqualGUID(guid, IIDIOleCache)) {
+                return "IIDIOleCache";
+            }
+            if (COM.IsEqualGUID(guid, IIDIOleCache2)) {
+                return "IIDIOleCache2";
+            }
+            if (COM.IsEqualGUID(guid, IIDIOleCacheControl)) {
+                return "IIDIOleCacheControl";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleClientSite)) {
+                return "IIDIOleClientSite";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleCommandTarget)) {
+                return "IIDIOleCommandTarget";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleControl)) {
+                return "IIDIOleControl";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleControlSite)) {
+                return "IIDIOleControlSite";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleDocument)) {
+                return "IIDIOleDocument";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleDocumentSite)) {
+                return "IIDIOleDocumentSite";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleInPlaceFrame)) {
+                return "IIDIOleInPlaceFrame";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleInPlaceObject)) {
+                return "IIDIOleInPlaceObject";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleInPlaceSite)) {
+                return "IIDIOleInPlaceSite";
+            }
+            if (COM.IsEqualGUID(guid, IIDIOleItemContainer)) {
+                return "IIDIOleItemContainer";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleLink)) {
+                return "IIDIOleLink";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIOleObject)) {
+                return "IIDIOleObject";
+            }
+            if (COM.IsEqualGUID(guid, IIDIParseDisplayName)) {
+                return "IIDIParseDisplayName";
+            }
+            if (COM.IsEqualGUID(guid, IIDIPerPropertyBrowsing)) {
+                return "IIDIPerPropertyBrowsing";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIPersist)) {
+                return "IIDIPersist";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIPersistFile)) {
+                return "IIDIPersistFile";
+            }
+            if (COM.IsEqualGUID(guid, IIDIPersistMemory)) {
+                return "IIDIPersistMemory";
+            }
+            if (COM.IsEqualGUID(guid, IIDIPersistPropertyBag)) {
+                return "IIDIPersistPropertyBag";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIPersistStorage)) {
+                return "IIDIPersistStorage";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIPersistStreamInit)) {
+                return "IIDIPersistStreamInit";
+            }
+            if (COM.IsEqualGUID(guid, IIDIPicture)) {
+                return "IIDIPicture";
+            }
+            if (COM.IsEqualGUID(guid, IIDIPictureDisp)) {
+                return "IIDIPictureDisp";
+            }
+            if (COM.IsEqualGUID(guid, IIDIPropertyBag)) {
+                return "IIDIPropertyBag";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIPropertyNotifySink)) {
+                return "IIDIPropertyNotifySink";
+            }
+            if (COM.IsEqualGUID(guid, IIDIPropertyPage)) {
+                return "IIDIPropertyPage";
+            }
+            if (COM.IsEqualGUID(guid, IIDIPropertyPage2)) {
+                return "IIDIPropertyPage2";
+            }
+            if (COM.IsEqualGUID(guid, IIDIPropertyPageSite)) {
+                return "IIDIPropertyPageSite";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIProvideClassInfo)) {
+                return "IIDIProvideClassInfo";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIProvideClassInfo2)) {
+                return "IIDIProvideClassInfo2";
+            }
+            if (COM.IsEqualGUID(guid, IIDIPSFactoryBuffer)) {
+                return "IIDIPSFactoryBuffer";
+            }
+            if (COM.IsEqualGUID(guid, IIDIRootStorage)) {
+                return "IIDIRootStorage";
+            }
+            if (COM.IsEqualGUID(guid, IIDIROTData)) {
+                return "IIDIROTData";
+            }
+            if (COM.IsEqualGUID(guid, IIDIRpcChannelBuffer)) {
+                return "IIDIRpcChannelBuffer";
+            }
+            if (COM.IsEqualGUID(guid, IIDIRpcProxyBuffer)) {
+                return "IIDIRpcProxyBuffer";
+            }
+            if (COM.IsEqualGUID(guid, IIDIRpcStubBuffer)) {
+                return "IIDIRpcStubBuffer";
+            }
+            if (COM.IsEqualGUID(guid, IIDIRunnableObject)) {
+                return "IIDIRunnableObject";
+            }
+            if (COM.IsEqualGUID(guid, IIDIRunningObjectTable)) {
+                return "IIDIRunningObjectTable";
+            }
+            if (COM.IsEqualGUID(guid, IIDISimpleFrameSite)) {
+                return "IIDISimpleFrameSite";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIServiceProvider)) {
+                return "IIDIServiceProvider";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDISpecifyPropertyPages)) {
+                return "IIDISpecifyPropertyPages";
+            }
+            if (COM.IsEqualGUID(guid, IIDIStdMarshalInfo)) {
+                return "IIDIStdMarshalInfo";
+            }
+            if (COM.IsEqualGUID(guid, IIDISupportErrorInfo)) {
+                return "IIDISupportErrorInfo";
+            }
+            if (COM.IsEqualGUID(guid, IIDITypeComp)) {
+                return "IIDITypeComp";
+            }
+            if (COM.IsEqualGUID(guid, IIDITypeLib)) {
+                return "IIDITypeLib";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIUnknown)) {
+                return "IIDIUnknown";
+            }
+            if (COM.IsEqualGUID(guid, IIDIViewObject)) {
+                return "IIDIViewObject";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIViewObject2)) {
+                return "IIDIViewObject2";
+            }
+            if (COM.IsEqualGUID(guid, COM.CGID_DocHostCommandHandler)) {
+                return "CGID_DocHostCommandHandler";
+            }
+            if (COM.IsEqualGUID(guid, COM.CGID_Explorer)) {
+                return "CGID_Explorer";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessible2)) {
+                return "IIDIAccessible2";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleRelation)) {
+                return "IIDIAccessibleRelation";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleAction)) {
+                return "IIDIAccessibleAction";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleComponent)) {
+                return "IIDIAccessibleComponent";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleValue)) {
+                return "IIDIAccessibleValue";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleText)) {
+                return "IIDIAccessibleText";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleEditableText)) {
+                return "IIDIAccessibleEditableText";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleHyperlink)) {
+                return "IIDIAccessibleHyperlink";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleHypertext)) {
+                return "IIDIAccessibleHypertext";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTable)) {
+                return "IIDIAccessibleTable";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTable2)) {
+                return "IIDIAccessibleTable2";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleTableCell)) {
+                return "IIDIAccessibleTableCell";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleImage)) {
+                return "IIDIAccessibleImage";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleApplication)) {
+                return "IIDIAccessibleApplication";
+            }
+            if (COM.IsEqualGUID(guid, COM.IIDIAccessibleContext)) {
+                return "IIDIAccessibleContext";
+            }
+            if (COM.IsEqualGUID(guid, IIDIdentityUnmarshal)) {
+                return "IIDIdentityUnmarshal";
+            }
+            if (COM.IsEqualGUID(guid, IIDInternalMSMarshaller)) {
+                return "IIDInternalMSMarshaller";
+            }
+            if (COM.IsEqualGUID(guid, IIDIAccIdentity)) {
+                return "IIDIAccIdentity";
+            }
+            if (COM.IsEqualGUID(guid, IIDIAccPropServer)) {
+                return "IIDIAccPropServer";
+            }
+            if (COM.IsEqualGUID(guid, IIDIAccPropServices)) {
+                return "IIDIAccPropServices";
+            }
 		}
 		return guid.toString();
 	}
@@ -5650,7 +7166,9 @@ public class Accessible {
 		char[] buffer = new char[length + 1];
 		lpsz.getChars(0, length, buffer, 0);
 		GUID lpiid = new GUID();
-		if (COM.IIDFromString(buffer, lpiid) == COM.S_OK) return lpiid;
+            if (COM.IIDFromString(buffer, lpiid) == COM.S_OK) {
+                return lpiid;
+            }
 		}
 		return null;
 	}
@@ -5659,7 +7177,9 @@ public class Accessible {
 		String toString = super.toString();
 		if (DEBUG) {
 			int role = getRole();
-			if (role == 0) role = getDefaultRole();
+            if (role == 0) {
+                role = getDefaultRole();
+            }
 			return toString.substring(toString.lastIndexOf('.') + 1) + "(" + getRoleString(role) + ")";
 		}
 		return toString;

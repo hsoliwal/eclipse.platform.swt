@@ -83,8 +83,9 @@ public class Bug569468_GtkLafSync {
 		final Display display = new Display();
 		Shell shell = createShell(display);
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

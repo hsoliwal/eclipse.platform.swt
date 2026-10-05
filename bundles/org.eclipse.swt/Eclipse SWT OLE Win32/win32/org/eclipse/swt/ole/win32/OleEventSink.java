@@ -48,16 +48,21 @@ void connect () {
 		if (cpc.FindConnectionPoint(eventGuid, ppCP) == COM.S_OK) {
 			IConnectionPoint cp = new IConnectionPoint(ppCP[0]);
 			int[] pCookie = new int[1];
-			if (cp.Advise(iDispatch.getAddress(), pCookie) == COM.S_OK)
-				eventCookie = pCookie[0];
+            if (cp.Advise(iDispatch.getAddress(), pCookie) == COM.S_OK) {
+                eventCookie = pCookie[0];
+            }
 			cp.Release();
 		}
 		cpc.Release();
 	}
 }
 void addListener(int eventID, OleListener listener) {
-	if (listener == null) OLE.error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) eventTable = new OleEventTable ();
+    if (listener == null) {
+        OLE.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        eventTable = new OleEventTable();
+    }
 	eventTable.hook(eventID, listener);
 }
 int AddRef() {
@@ -97,14 +102,17 @@ void disconnect() {
 	}
 }
 private void disposeCOMInterfaces() {
-	if (iDispatch != null)
-		iDispatch.dispose();
+    if (iDispatch != null) {
+        iDispatch.dispose();
+    }
 	iDispatch = null;
 
 }
 private int Invoke(int dispIdMember, long riid, int lcid, int dwFlags, long pDispParams, long pVarResult, long pExcepInfo, long pArgErr)
 {
-	if (eventTable == null || !eventTable.hooks(dispIdMember)) return COM.S_OK;
+    if (eventTable == null || !eventTable.hooks(dispIdMember)) {
+        return COM.S_OK;
+    }
 
 	// Construct an array of the parameters that are passed in
 	// Note: parameters are passed in reverse order - here we will correct the order
@@ -153,16 +161,21 @@ private int Invoke(int dispIdMember, long riid, int lcid, int dwFlags, long pDis
 *	</ul>
 */
 private void notifyListener (int eventType, OleEvent event) {
-	if (event == null) OLE.error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (event == null) {
+        OLE.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	event.type = eventType;
 	event.widget = widget;
 	eventTable.sendEvent (event);
 }
 private int QueryInterface(long riid, long ppvObject) {
 
-	if (riid == 0 || ppvObject == 0)
-		return COM.E_INVALIDARG;
+    if (riid == 0 || ppvObject == 0) {
+        return COM.E_INVALIDARG;
+    }
 	GUID guid = new GUID();
 	COM.MoveMemory(guid, riid, GUID.sizeof);
 
@@ -185,8 +198,12 @@ int Release() {
 	return refCount;
 }
 void removeListener(int eventID, OleListener listener) {
-	if (listener == null) OLE.error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        OLE.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (eventID, listener);
 }
 boolean hasListeners() {

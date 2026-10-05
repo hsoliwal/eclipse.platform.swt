@@ -145,14 +145,20 @@ public Transform(Device device, float[] elements) {
 public Transform (Device device, float m11, float m12, float m21, float m22, float dx, float dy) {
 	super(device);
 	handle = new double[6];
-	if (handle == null) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (handle == null) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Cairo.cairo_matrix_init(handle, m11, m12, m21, m22, dx, dy);
 	init();
 }
 
 static float[] checkTransform(float[] elements) {
-	if (elements == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (elements.length < 6) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (elements == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (elements.length < 6) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	return elements;
 }
 
@@ -176,9 +182,15 @@ void destroy() {
  * </ul>
  */
 public void getElements(float[] elements) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (elements == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (elements.length < 6) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (elements == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (elements.length < 6) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	elements[0] = (float)handle[0];
 	elements[1] = (float)handle[1];
 	elements[2] = (float)handle[2];
@@ -198,7 +210,9 @@ public void getElements(float[] elements) {
  * @since 3.4
  */
 public void identity() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	Cairo.cairo_matrix_init(handle, 1, 0, 0, 1, 0, 0);
 }
 
@@ -212,7 +226,9 @@ public void identity() {
  * </ul>
  */
 public void invert() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	if (Cairo.cairo_matrix_invert(handle) != 0) {
 		SWT.error(SWT.ERROR_CANNOT_INVERT_MATRIX);
 	}
@@ -240,7 +256,9 @@ public boolean isDisposed() {
  * @return <code>true</code> if the receiver is an identity Transform, and <code>false</code> otherwise
  */
 public boolean isIdentity() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	float[] m  = new float[6];
 	getElements(m);
 	return m[0] == 1 && m[1] == 0 && m[2] == 0 && m[3] == 1 && m[4] == 0 && m[5] == 0;
@@ -262,9 +280,15 @@ public boolean isIdentity() {
  * </ul>
  */
 public void multiply(Transform matrix) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (matrix == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (matrix.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (matrix == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (matrix.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Cairo.cairo_matrix_multiply(handle, matrix.handle, handle);
 }
 
@@ -282,7 +306,9 @@ public void multiply(Transform matrix) {
  * </ul>
  */
 public void rotate(float angle) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	Cairo.cairo_matrix_rotate(handle, angle * (float)Math.PI / 180);
 }
 
@@ -298,7 +324,9 @@ public void rotate(float angle) {
  * </ul>
  */
 public void scale(float scaleX, float scaleY) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	Cairo.cairo_matrix_scale(handle, scaleX, scaleY);
 }
 
@@ -318,7 +346,9 @@ public void scale(float scaleX, float scaleY) {
  * </ul>
  */
 public void setElements(float m11, float m12, float m21, float m22, float dx, float dy) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	Cairo.cairo_matrix_init(handle, m11, m12, m21, m22, dx, dy);
 }
 
@@ -336,7 +366,9 @@ public void setElements(float m11, float m12, float m21, float m22, float dx, fl
  * @since 3.4
  */
 public void shear(float shearX, float shearY) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	double[] matrix = {1, shearX, shearY, 1, 0, 0};
 	Cairo.cairo_matrix_multiply(handle, matrix, handle);
 }
@@ -356,8 +388,12 @@ public void shear(float shearX, float shearY) {
  * </ul>
  */
 public void transform(float[] pointArray) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (pointArray == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (pointArray == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	double[] dx = new double[1], dy = new double[1];
 	int length = pointArray.length / 2;
 	for (int i = 0, j = 0; i < length; i++, j += 2) {
@@ -381,7 +417,9 @@ public void transform(float[] pointArray) {
  * </ul>
  */
 public void translate(float offsetX, float offsetY) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	Cairo.cairo_matrix_translate(handle, offsetX, offsetY);
 }
 
@@ -393,7 +431,9 @@ public void translate(float offsetX, float offsetY) {
  */
 @Override
 public String toString() {
-	if (isDisposed()) return "Transform {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Transform {*DISPOSED*}";
+    }
 	float[] elements = new float[6];
 	getElements(elements);
 	return "Transform {" + elements [0] + "," + elements [1] + "," +elements [2] + "," +elements [3] + "," +elements [4] + "," +elements [5] + "}";

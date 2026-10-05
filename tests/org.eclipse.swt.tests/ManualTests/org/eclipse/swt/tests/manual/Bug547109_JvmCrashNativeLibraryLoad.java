@@ -73,7 +73,9 @@ public class Bug547109_JvmCrashNativeLibraryLoad {
 			// Test for errors
 			for (Process process : processes) {
 				int exitCode = process.waitFor();
-				if (EXIT_CODE_GOOD != exitCode) numErrors++;
+                if (EXIT_CODE_GOOD != exitCode) {
+                    numErrors++;
+                }
 			}
 		} catch (Throwable ex) {
 			ex.printStackTrace();

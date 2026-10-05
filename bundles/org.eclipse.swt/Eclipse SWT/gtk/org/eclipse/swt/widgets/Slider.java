@@ -161,17 +161,23 @@ static int checkStyle (int style) {
 void createHandle (int index) {
 	state |= HANDLE;
 	fixedHandle = OS.g_object_new(display.gtk_fixed_get_type(), 0);
-	if (fixedHandle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (fixedHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	// Initialize GtkScrollbar with default GtkAdjustment values
 	long adjustmentHandle = GTK.gtk_adjustment_new(0, 0, 100, 1, 10, 10);
-	if (adjustmentHandle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (adjustmentHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if ((style & SWT.HORIZONTAL) != 0) {
 		handle = GTK.gtk_scrollbar_new(GTK.GTK_ORIENTATION_HORIZONTAL, adjustmentHandle);
 	} else {
 		handle = GTK.gtk_scrollbar_new(GTK.GTK_ORIENTATION_VERTICAL, adjustmentHandle);
 	}
-	if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	/*
 	 * On GTK4, the GtkRange widget is a child of the GtkScrollbar
@@ -190,7 +196,9 @@ void createHandle (int index) {
 @Override
 long gtk3_button_press_event(long widget, long eventPtr) {
 	long result = super.gtk3_button_press_event (widget, eventPtr);
-	if (result != 0) return result;
+    if (result != 0) {
+        return result;
+    }
 	scrollType = GTK.GTK_SCROLL_NONE;
 	dragSent = false;
 	return result;
@@ -224,7 +232,9 @@ long gtk_value_changed(long range) {
 		case GTK.GTK_SCROLL_STEP_LEFT:
 		case GTK.GTK_SCROLL_STEP_BACKWARD:	event.detail = SWT.ARROW_UP; break;
 	}
-	if (!dragSent) scrollType = GTK.GTK_SCROLL_NONE;
+    if (!dragSent) {
+        scrollType = GTK.GTK_SCROLL_NONE;
+    }
 	sendSelectionEvent (SWT.Selection, event, false);
 	return 0;
 }
@@ -289,13 +299,21 @@ void deregister() {
 Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	checkWidget();
 	GTK.gtk_widget_realize(handle);
-	if (wHint != SWT.DEFAULT && wHint < 0) wHint = 0;
-	if (hHint != SWT.DEFAULT && hHint < 0) hHint = 0;
+    if (wHint != SWT.DEFAULT && wHint < 0) {
+        wHint = 0;
+    }
+    if (hHint != SWT.DEFAULT && hHint < 0) {
+        hHint = 0;
+    }
 	Point size = computeNativeSize(handle, wHint, hHint, changed);
 	if ((style & SWT.HORIZONTAL) != 0) {
-		if (wHint == SWT.DEFAULT) size.x = 2 * size.x;
+        if (wHint == SWT.DEFAULT) {
+            size.x = 2 * size.x;
+        }
 	} else {
-		if (hHint == SWT.DEFAULT) size.y = 2 * size.y;
+        if (hHint == SWT.DEFAULT) {
+            size.y = 2 * size.y;
+        }
 	}
 	return size;
 }
@@ -418,8 +436,12 @@ public int getThumb() {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -439,7 +461,9 @@ public void removeSelectionListener (SelectionListener listener) {
  */
 public void setIncrement(int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 
 	OS.g_signal_handlers_block_matched(handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
 	GTK.gtk_range_set_increments(rangeHandle, value, getPageIncrement());
@@ -466,7 +490,9 @@ public void setMaximum(int value) {
 	gtk_adjustment_get(adjustmentHandle, adjustment);
 
 	int minimum = (int) adjustment.lower;
-	if (value <= minimum) return;
+    if (value <= minimum) {
+        return;
+    }
 	adjustment.upper = value;
 	adjustment.page_size = Math.min((int)adjustment.page_size, value - minimum);
 	adjustment.value = Math.min((int)adjustment.value, (int)(value - adjustment.page_size));
@@ -492,13 +518,17 @@ public void setMaximum(int value) {
  */
 public void setMinimum(int value) {
 	checkWidget();
-	if (value < 0) return;
+    if (value < 0) {
+        return;
+    }
 	long adjustmentHandle = GTK.gtk_range_get_adjustment(rangeHandle);
 	GtkAdjustment adjustment = new GtkAdjustment();
 	gtk_adjustment_get(adjustmentHandle, adjustment);
 
 	int maximum = (int) adjustment.upper;
-	if (value >= maximum) return;
+    if (value >= maximum) {
+        return;
+    }
 	adjustment.lower = value;
 	adjustment.page_size = Math.min ((int)adjustment.page_size, maximum - value);
 	adjustment.value = Math.max ((int)adjustment.value, value);
@@ -535,7 +565,9 @@ void setOrientation(boolean create) {
  */
 public void setPageIncrement(int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 
 	OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
 	GTK.gtk_range_set_increments(rangeHandle, getIncrement(), value);
@@ -581,7 +613,9 @@ public void setSelection(int value) {
  */
 public void setThumb(int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 
 	long adjustmentHandle = GTK.gtk_range_get_adjustment(rangeHandle);
 	GtkAdjustment adjustment = new GtkAdjustment();
@@ -619,7 +653,9 @@ public void setThumb(int value) {
  */
 public void setValues (int selection, int minimum, int maximum, int thumb, int increment, int pageIncrement) {
 	checkWidget();
-	if (minimum < 0 || maximum < 0 || thumb < 1 || increment < 1 || pageIncrement < 1) return;
+    if (minimum < 0 || maximum < 0 || thumb < 1 || increment < 1 || pageIncrement < 1) {
+        return;
+    }
 	thumb = Math.min(thumb, maximum - minimum);
 
 	long adjustmentHandle = GTK.gtk_range_get_adjustment(rangeHandle);

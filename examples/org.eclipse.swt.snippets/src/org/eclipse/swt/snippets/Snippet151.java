@@ -48,7 +48,9 @@ public static void main (String [] args) {
 			int count = 0;
 			Random random = new Random();
 			while (count++ < 500) {
-				if (table.isDisposed()) return;
+                if (table.isDisposed()) {
+                    return;
+                }
 				// add 10 random numbers to array and sort
 				int grow = 10;
 				int[] newData = new int[data.length + grow];
@@ -60,7 +62,9 @@ public static void main (String [] args) {
 				}
 				Arrays.sort(data);
 				display.syncExec(() -> {
-					if (table.isDisposed()) return;
+                    if (table.isDisposed()) {
+                        return;
+                    }
 					table.setItemCount(data.length);
 					table.clearAll();
 				});
@@ -71,7 +75,9 @@ public static void main (String [] args) {
 	thread.start();
 	shell.open ();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

@@ -69,7 +69,9 @@ public class HoverHelp {
 		Shell shell = new HoverHelp().open(display);
 		// Event loop
 		while (shell != null && ! shell.isDisposed()) {
-			if (! display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		// Cleanup
 		display.dispose();
@@ -108,7 +110,9 @@ public class HoverHelp {
 			/* Free resources */
 			if (images != null) {
 				for (final Image image : images) {
-					if (image != null) image.dispose();
+                    if (image != null) {
+                        image.dispose();
+                    }
 				}
 				images = null;
 			}
@@ -160,8 +164,12 @@ public class HoverHelp {
 
 		String platform = SWT.getPlatform();
 		String helpKey = "F1";
-		if (platform.equals("gtk")) helpKey = "Ctrl+F1";
-		if (platform.equals("cocoa")) helpKey = "Help";
+        if (platform.equals("gtk")) {
+            helpKey = "Ctrl+F1";
+        }
+        if (platform.equals("cocoa")) {
+            helpKey = "Help";
+        }
 
 		ToolBar bar = new ToolBar (frame, SWT.BORDER);
 		for (int i=0; i<5; i++) {
@@ -272,8 +280,9 @@ public class HoverHelp {
 			 * Get out of the way if we attempt to activate the control underneath the tooltip
 			 */
 			control.addMouseListener(MouseListener.mouseDownAdapter(e -> {
-				if (tipShell.isVisible())
-					tipShell.setVisible(false);
+                if (tipShell.isVisible()) {
+                    tipShell.setVisible(false);
+                }
 			}));
 
 			/*
@@ -282,7 +291,9 @@ public class HoverHelp {
 			control.addMouseTrackListener(new MouseTrackAdapter () {
 				@Override
 				public void mouseExit(MouseEvent e) {
-					if (tipShell.isVisible()) tipShell.setVisible(false);
+                    if (tipShell.isVisible()) {
+                        tipShell.setVisible(false);
+                    }
 					tipWidget = null;
 				}
 				@Override
@@ -303,7 +314,9 @@ public class HoverHelp {
 						tipWidget = null;
 						return;
 					}
-					if (widget == tipWidget) return;
+                    if (widget == tipWidget) {
+                        return;
+                    }
 					tipWidget = widget;
 					tipPosition = control.toDisplay(pt);
 					String text = (String) widget.getData("TIP_TEXT");
@@ -320,12 +333,18 @@ public class HoverHelp {
 			 * Trap F1 Help to pop up a custom help box
 			 */
 			control.addHelpListener(event -> {
-				if (tipWidget == null) return;
+                if (tipWidget == null) {
+                    return;
+                }
 				ToolTipHelpTextHandler handler = (ToolTipHelpTextHandler)
 					tipWidget.getData("TIP_HELPTEXTHANDLER");
-				if (handler == null) return;
+                if (handler == null) {
+                    return;
+                }
 				String text = handler.getHelpText(tipWidget);
-				if (text == null) return;
+                if (text == null) {
+                    return;
+                }
 
 				if (tipShell.isVisible()) {
 					tipShell.setVisible(false);

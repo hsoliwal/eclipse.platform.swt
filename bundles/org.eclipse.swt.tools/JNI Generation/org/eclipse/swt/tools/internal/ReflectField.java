@@ -34,7 +34,9 @@ public int hashCode() {
 
 @Override
 public boolean equals(Object obj) {
-	if (!(obj instanceof ReflectField)) return false;
+    if (!(obj instanceof ReflectField)) {
+        return false;
+    }
 	return ((ReflectField)obj).field.equals(field);
 }
 
@@ -67,8 +69,12 @@ public String getAccessor() {
 public String getCast() {
 	String cast = ((String)getParam("cast")).trim();
 	if (cast.length() > 0) {
-		if (!cast.startsWith("(")) cast = "(" + cast;
-		if (!cast.endsWith(")")) cast = cast + ")";
+        if (!cast.startsWith("(")) {
+            cast = "(" + cast;
+        }
+        if (!cast.endsWith(")")) {
+            cast = cast + ")";
+        }
 	}
 	return cast;
 }

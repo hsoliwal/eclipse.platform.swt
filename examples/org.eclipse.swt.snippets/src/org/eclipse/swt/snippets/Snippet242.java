@@ -45,7 +45,9 @@ public static void main(String [] args) {
 	shell.open();
 	canvas.setCursor(cursor);
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	cursor.dispose();
 	display.dispose();

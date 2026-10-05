@@ -142,8 +142,12 @@ public void scaleBy(int qualityFactor) {
 		if (pq == 0) {
 			for (int i = ofs + 1; i <= ofs + 64; i++) {
 				int temp = ((reference[i] & 0xFF) * qFactor + 50) / 100;
-				if (temp <= 0) temp = 1;
-				if (temp > 255) temp = 255;
+                if (temp <= 0) {
+                    temp = 1;
+                }
+                if (temp > 255) {
+                    temp = 255;
+                }
 				reference[i] = (byte)temp;
 			}
 			ofs += 65;
@@ -151,8 +155,12 @@ public void scaleBy(int qualityFactor) {
 		} else {
 			for (int i = ofs + 1; i <= ofs + 128; i += 2) {
 				int temp = (((reference[i] & 0xFF) * 256 + (reference[i + 1] & 0xFF)) * qFactor + 50) / 100;
-				if (temp <= 0) temp = 1;
-				if (temp > 32767) temp = 32767;
+                if (temp <= 0) {
+                    temp = 1;
+                }
+                if (temp > 32767) {
+                    temp = 32767;
+                }
 				reference[i] = (byte)(temp >> 8);
 				reference[i + 1] = (byte)(temp & 0xFF);
 			}

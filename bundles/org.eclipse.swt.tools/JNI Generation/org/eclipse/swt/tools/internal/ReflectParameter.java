@@ -28,8 +28,12 @@ public ReflectParameter(ReflectMethod method, int parameter) {
 public String getCast() {
 	String cast = ((String)getParam("cast")).trim();
 	if (cast.length() > 0) {
-		if (!cast.startsWith("(")) cast = "(" + cast;
-		if (!cast.endsWith(")")) cast = cast + ")";
+        if (!cast.startsWith("(")) {
+            cast = "(" + cast;
+        }
+        if (!cast.endsWith(")")) {
+            cast = cast + ")";
+        }
 	}
 	return cast;
 }
@@ -72,7 +76,9 @@ public String getMetaData() {
 			value = metaData.getMetaData(key, null);
 		}
 	}
-	if (value == null) value = "";	
+    if (value == null) {
+        value = "";
+    }	
 	return value;
 }
 

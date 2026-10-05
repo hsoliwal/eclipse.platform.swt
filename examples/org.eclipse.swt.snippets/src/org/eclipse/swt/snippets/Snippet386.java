@@ -141,8 +141,9 @@ public class Snippet386 {
 
 	private static void eventLoop(Display display, Shell shell) {
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 

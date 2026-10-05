@@ -84,19 +84,33 @@ static String assocQueryString (int assocStr, TCHAR key, boolean expand) {
  *	</ul>
  */
 public static Program findProgram (String extension) {
-	if (extension == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (extension.length () == 0) return null;
-	if (extension.charAt (0) != '.') extension = "." + extension; //$NON-NLS-1$
+    if (extension == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (extension.length() == 0) {
+        return null;
+    }
+    if (extension.charAt(0) != '.') {
+        extension = "." + extension;
+    } //$NON-NLS-1$
 	TCHAR key = new TCHAR (extension, true);
 	Program program = null;
 	String command = assocQueryString (OS.ASSOCSTR_COMMAND, key, true);
 	if (command != null) {
 		String name = null;
-		if (name == null) name = assocQueryString (OS.ASSOCSTR_FRIENDLYDOCNAME, key, false);
-		if (name == null) name = assocQueryString (OS.ASSOCSTR_FRIENDLYAPPNAME, key, false);
-		if (name == null) name = "";
+        if (name == null) {
+            name = assocQueryString(OS.ASSOCSTR_FRIENDLYDOCNAME, key, false);
+        }
+        if (name == null) {
+            name = assocQueryString(OS.ASSOCSTR_FRIENDLYAPPNAME, key, false);
+        }
+        if (name == null) {
+            name = "";
+        }
 		String iconName = assocQueryString (OS.ASSOCSTR_DEFAULTICON, key, true);
-		if (iconName == null) iconName = "";
+        if (iconName == null) {
+            iconName = "";
+        }
 		program = new Program ();
 		program.name = name;
 		program.command = command;
@@ -179,7 +193,9 @@ static String getKeyValue (String string, boolean expand) {
 			}
 		}
 	}
-	if (phkResult [0] != 0) OS.RegCloseKey (phkResult [0]);
+    if (phkResult [0] != 0) {
+        OS.RegCloseKey(phkResult [0]);
+    }
 	return result;
 }
 
@@ -194,15 +210,21 @@ static Program getProgram (String key, String extension) {
 	/* Command */
 	String DEFAULT_COMMAND = "\\shell"; //$NON-NLS-1$
 	String defaultCommand = getKeyValue (key + DEFAULT_COMMAND, true);
-	if (defaultCommand == null || defaultCommand.length() == 0) defaultCommand = "open"; //$NON-NLS-1$
+    if (defaultCommand == null || defaultCommand.length() == 0) {
+        defaultCommand = "open";
+    } //$NON-NLS-1$
 	String COMMAND = "\\shell\\" + defaultCommand + "\\command"; //$NON-NLS-1$
 	String command = getKeyValue (key + COMMAND, true);
-	if (command == null || command.length () == 0) return null;
+    if (command == null || command.length() == 0) {
+        return null;
+    }
 
 	/* Icon */
 	String DEFAULT_ICON = "\\DefaultIcon"; //$NON-NLS-1$
 	String iconName = getKeyValue (key + DEFAULT_ICON, true);
-	if (iconName == null) iconName = ""; //$NON-NLS-1$
+    if (iconName == null) {
+        iconName = "";
+    } //$NON-NLS-1$
 
 	/* Program */
 	Program program = new Program ();
@@ -282,7 +304,9 @@ public static boolean launch (String fileName) {
  * @since 3.6
  */
 public static boolean launch (String fileName, String workingDir) {
-	if (fileName == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (fileName == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	long hHeap = OS.GetProcessHeap ();
 	TCHAR buffer = new TCHAR (fileName, true);
@@ -304,8 +328,12 @@ public static boolean launch (String fileName, String workingDir) {
 	info.lpDirectory = lpDirectory;
 	info.nShow = OS.SW_SHOW;
 	boolean result = OS.ShellExecuteEx (info);
-	if (lpFile != 0) OS.HeapFree (hHeap, 0, lpFile);
-	if (lpDirectory != 0) OS.HeapFree (hHeap, 0, lpDirectory);
+    if (lpFile != 0) {
+        OS.HeapFree(hHeap, 0, lpFile);
+    }
+    if (lpDirectory != 0) {
+        OS.HeapFree(hHeap, 0, lpDirectory);
+    }
 	return result;
 }
 
@@ -323,7 +351,9 @@ public static boolean launch (String fileName, String workingDir) {
  * </ul>
  */
 public boolean execute (String fileName) {
-	if (fileName == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (fileName == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int index = 0;
 	boolean append = true;
 	String prefix = command, suffix = ""; //$NON-NLS-1$
@@ -337,7 +367,9 @@ public boolean execute (String fileName) {
 		}
 		index++;
 	}
-	if (append) fileName = " \"" + fileName + "\"";
+    if (append) {
+        fileName = " \"" + fileName + "\"";
+    }
 	String commandLine = prefix + fileName + suffix;
 	long hHeap = OS.GetProcessHeap ();
 	TCHAR buffer = new TCHAR (commandLine, true);
@@ -348,9 +380,15 @@ public boolean execute (String fileName) {
 	lpStartupInfo.cb = STARTUPINFO.sizeof;
 	PROCESS_INFORMATION lpProcessInformation = new PROCESS_INFORMATION ();
 	boolean success = OS.CreateProcess (0, lpCommandLine, 0, 0, false, 0, 0, 0, lpStartupInfo, lpProcessInformation);
-	if (lpCommandLine != 0) OS.HeapFree (hHeap, 0, lpCommandLine);
-	if (lpProcessInformation.hProcess != 0) OS.CloseHandle (lpProcessInformation.hProcess);
-	if (lpProcessInformation.hThread != 0) OS.CloseHandle (lpProcessInformation.hThread);
+    if (lpCommandLine != 0) {
+        OS.HeapFree(hHeap, 0, lpCommandLine);
+    }
+    if (lpProcessInformation.hProcess != 0) {
+        OS.CloseHandle(lpProcessInformation.hProcess);
+    }
+    if (lpProcessInformation.hThread != 0) {
+        OS.CloseHandle(lpProcessInformation.hThread);
+    }
 	return success;
 }
 
@@ -463,7 +501,9 @@ public String getName () {
  */
 @Override
 public boolean equals(Object other) {
-	if (this == other) return true;
+    if (this == other) {
+        return true;
+    }
 	if (other instanceof Program) {
 		final Program program = (Program) other;
 		return name.equals(program.name) && command.equals(program.command)

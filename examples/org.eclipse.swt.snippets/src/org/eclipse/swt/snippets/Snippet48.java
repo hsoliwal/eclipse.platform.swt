@@ -80,11 +80,15 @@ public static void main (String [] args) {
 		int hSelection = hBar.getSelection ();
 		int vSelection = vBar.getSelection ();
 		if (hSelection >= hPage) {
-			if (hPage <= 0) hSelection = 0;
+            if (hPage <= 0) {
+                hSelection = 0;
+            }
 			origin.x = -hSelection;
 		}
 		if (vSelection >= vPage) {
-			if (vPage <= 0) vSelection = 0;
+            if (vPage <= 0) {
+                vSelection = 0;
+            }
 			origin.y = -vSelection;
 		}
 		canvas.redraw ();
@@ -107,7 +111,9 @@ public static void main (String [] args) {
 	shell.setSize (Math.max(200, rect.width - 100), Math.max(150, rect.height - 100));
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	originalImage.dispose();
 	display.dispose ();

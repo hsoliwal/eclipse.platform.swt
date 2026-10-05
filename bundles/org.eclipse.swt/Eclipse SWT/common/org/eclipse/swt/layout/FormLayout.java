@@ -229,8 +229,12 @@ int computeHeight (Control control, FormData data, boolean flushCache) {
 	FormAttachment bottom = data.getBottomAttachment (control, spacing, flushCache);
 	FormAttachment height = bottom.minus (top);
 	if (height.numerator == 0) {
-		if (bottom.numerator == 0) return bottom.offset;
-		if (bottom.numerator == bottom.denominator) return -top.offset;
+        if (bottom.numerator == 0) {
+            return bottom.offset;
+        }
+        if (bottom.numerator == bottom.denominator) {
+            return -top.offset;
+        }
 		if (bottom.offset <= 0) {
 			return -top.offset * top.denominator / bottom.numerator;
 		}
@@ -243,22 +247,30 @@ int computeHeight (Control control, FormData data, boolean flushCache) {
 @Override
 protected Point computeSize (Composite composite, int wHint, int hHint, boolean flushCache) {
 	Point size = layout (composite, false, 0, 0, wHint, hHint, flushCache);
-	if (wHint != SWT.DEFAULT) size.x = wHint;
-	if (hHint != SWT.DEFAULT) size.y = hHint;
+    if (wHint != SWT.DEFAULT) {
+        size.x = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        size.y = hHint;
+    }
 	return size;
 }
 
 @Override
 protected boolean flushCache (Control control) {
 	Object data = control.getLayoutData ();
-	if (data != null) ((FormData) data).flushCache ();
+    if (data != null) {
+        ((FormData) data).flushCache();
+    }
 	return true;
 }
 
 String getName () {
 	String string = getClass ().getName ();
 	int index = string.lastIndexOf ('.');
-	if (index == -1) return string;
+    if (index == -1) {
+        return string;
+    }
 	return string.substring (index + 1, string.length ());
 }
 
@@ -271,8 +283,12 @@ int computeWidth (Control control, FormData data, boolean flushCache) {
 	FormAttachment right = data.getRightAttachment (control, spacing, flushCache);
 	FormAttachment width = right.minus (left);
 	if (width.numerator == 0) {
-		if (right.numerator == 0) return right.offset;
-		if (right.numerator == right.denominator) return -left.offset;
+        if (right.numerator == 0) {
+            return right.offset;
+        }
+        if (right.numerator == right.denominator) {
+            return -left.offset;
+        }
 		if (right.offset <= 0) {
 			return -left.offset * left.denominator / left.numerator;
 		}
@@ -296,8 +312,12 @@ Point layout (Composite composite, boolean move, int x, int y, int width, int he
 	Control [] children = composite.getChildren ();
 	for (Control child : children) {
 		FormData data = (FormData) child.getLayoutData ();
-		if (data == null) child.setLayoutData (data = new FormData ());
-		if (flushCache) data.flushCache ();
+        if (data == null) {
+            child.setLayoutData(data = new FormData());
+        }
+        if (flushCache) {
+            data.flushCache();
+        }
 		data.cacheLeft = data.cacheRight = data.cacheTop = data.cacheBottom = null;
 	}
 	boolean [] flush = null;
@@ -323,12 +343,16 @@ Point layout (Composite composite, boolean move, int x, int y, int width, int he
 				data.cacheWidth = data.cacheHeight = -1;
 				int currentWidth = Math.max (0, x2 - x1 - trim);
 				data.computeSize (child, currentWidth, data.height, flushCache);
-				if (flush == null) flush = new boolean [children.length];
+                if (flush == null) {
+                    flush = new boolean [children.length];
+                }
 				flush [i] = true;
 			}
 			w = Math.max (x2, w);
 			if (move) {
-				if (bounds == null) bounds = new Rectangle [children.length];
+                if (bounds == null) {
+                    bounds = new Rectangle [children.length];
+                }
 				bounds [i] = new Rectangle (0, 0, 0, 0);
 				bounds [i].x = x + x1;
 				bounds [i].width = x2 - x1;
@@ -355,7 +379,9 @@ Point layout (Composite composite, boolean move, int x, int y, int width, int he
 	for (int i=0; i<children.length; i++) {
 		Control child = children [i];
 		FormData data = (FormData) child.getLayoutData ();
-		if (flush != null && flush [i]) data.cacheWidth = data.cacheHeight = -1;
+        if (flush != null && flush [i]) {
+            data.cacheWidth = data.cacheHeight = -1;
+        }
 		data.cacheLeft = data.cacheRight = data.cacheTop = data.cacheBottom = null;
 	}
 	if (move) {
@@ -377,13 +403,27 @@ Point layout (Composite composite, boolean move, int x, int y, int width, int he
 @Override
 public String toString () {
 	String string =  getName ()+" {";
-	if (marginWidth != 0) string += "marginWidth="+marginWidth+" ";
-	if (marginHeight != 0) string += "marginHeight="+marginHeight+" ";
-	if (marginLeft != 0) string += "marginLeft="+marginLeft+" ";
-	if (marginRight != 0) string += "marginRight="+marginRight+" ";
-	if (marginTop != 0) string += "marginTop="+marginTop+" ";
-	if (marginBottom != 0) string += "marginBottom="+marginBottom+" ";
-	if (spacing != 0) string += "spacing="+spacing+" ";
+    if (marginWidth != 0) {
+        string += "marginWidth=" + marginWidth + " ";
+    }
+    if (marginHeight != 0) {
+        string += "marginHeight=" + marginHeight + " ";
+    }
+    if (marginLeft != 0) {
+        string += "marginLeft=" + marginLeft + " ";
+    }
+    if (marginRight != 0) {
+        string += "marginRight=" + marginRight + " ";
+    }
+    if (marginTop != 0) {
+        string += "marginTop=" + marginTop + " ";
+    }
+    if (marginBottom != 0) {
+        string += "marginBottom=" + marginBottom + " ";
+    }
+    if (spacing != 0) {
+        string += "spacing=" + spacing + " ";
+    }
 	string = string.trim();
 	string += "}";
 	return string;

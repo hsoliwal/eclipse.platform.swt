@@ -44,7 +44,9 @@ public static void main (String [] args) {
 	shell.setToolTipText ("Shell toolTip: " + string);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

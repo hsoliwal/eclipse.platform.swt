@@ -29,7 +29,9 @@ public class Bug436085_TextEntryTabs {
 		text.append("1\t12\t123\t1234\t12345\t123456\t1234567\t12345678\t12345678");
 		shell.open ();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 }

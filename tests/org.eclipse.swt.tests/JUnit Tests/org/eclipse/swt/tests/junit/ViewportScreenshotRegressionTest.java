@@ -52,7 +52,9 @@ public class ViewportScreenshotRegressionTest {
 	@AfterEach
 	void tearDownShell () {
 		Display display = shell != null && !shell.isDisposed () ? shell.getDisplay () : Display.getCurrent ();
-		if (shell != null && !shell.isDisposed ()) shell.dispose ();
+        if (shell != null && !shell.isDisposed()) {
+            shell.dispose();
+        }
 		while (display != null && !display.isDisposed () && display.readAndDispatch ()) {
 			// Flush native destroy/redraw work.
 		}
@@ -119,7 +121,9 @@ public class ViewportScreenshotRegressionTest {
 					"hex " + Integer.toHexString (index),
 					"mask " + (index & 63)
 			});
-			if ((index & 31) == 0) item.setChecked (true);
+            if ((index & 31) == 0) {
+                item.setChecked(true);
+            }
 		});
 		table.setItemCount (TABLE_ROWS);
 		return table;
@@ -476,7 +480,9 @@ public class ViewportScreenshotRegressionTest {
 					gc = null;
 				}
 			} finally {
-				if (gc != null && !gc.isDisposed ()) gc.dispose ();
+                if (gc != null && !gc.isDisposed()) {
+                    gc.dispose();
+                }
 			}
 			Path png = output.resolve (name + ".png");
 			ImageLoader loader = new ImageLoader ();
@@ -507,7 +513,9 @@ public class ViewportScreenshotRegressionTest {
 	}
 
 	private static String scrollBarText (String prefix, ScrollBar bar) {
-		if (bar == null || bar.isDisposed ()) return prefix + ".scrollbar=<none>\n";
+        if (bar == null || bar.isDisposed()) {
+            return prefix + ".scrollbar=<none>\n";
+        }
 		return prefix + ".selection=" + bar.getSelection () + "\n"
 				+ prefix + ".minimum=" + bar.getMinimum () + "\n"
 				+ prefix + ".maximum=" + bar.getMaximum () + "\n"
@@ -535,7 +543,9 @@ public class ViewportScreenshotRegressionTest {
 			Field field = target.getClass ().getDeclaredField (fieldName);
 			field.setAccessible (true);
 			Object owner = field.get (target);
-			if (owner == null) return label + "=<none>\n";
+            if (owner == null) {
+                return label + "=<none>\n";
+            }
 			Method method = owner.getClass ().getDeclaredMethod (methodName);
 			method.setAccessible (true);
 			return label + "=" + method.invoke (owner) + "\n";
@@ -546,7 +556,9 @@ public class ViewportScreenshotRegressionTest {
 
 	private static int depth (TreeItem item) {
 		int result = 0;
-		while ((item = item.getParentItem ()) != null) result++;
+        while ((item = item.getParentItem()) != null) {
+            result++;
+        }
 		return result;
 	}
 

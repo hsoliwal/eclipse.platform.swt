@@ -106,7 +106,9 @@ public static void main (String[] args) {
 	upButton.addListener (SWT.Selection, event -> sc.setOrigin (0, sc.getOrigin ().y - 10));
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

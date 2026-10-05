@@ -99,8 +99,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 		width = size;
 		height = width * 10;
 	}
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	return new Point (width, height);
 }
 
@@ -109,7 +113,9 @@ void createHandle () {
 	NSProgressIndicator widget = (NSProgressIndicator)new SWTProgressIndicator().alloc();
 	widget.init();
 	widget.setUsesThreadedAnimation(false);
-	if ((style & SWT.VERTICAL) != 0) widget.setBoundsRotation(-90);
+    if ((style & SWT.VERTICAL) != 0) {
+        widget.setBoundsRotation(-90);
+    }
 	widget.setIndeterminate((style & SWT.INDETERMINATE) != 0);
 	view = widget;
 }
@@ -129,7 +135,9 @@ void _drawThemeProgressArea (long id, long sel, long arg0) {
 	* is zero sized.
 	*/
 	NSRect frame = view.frame();
-	if (frame.width == 0 || frame.height == 0) return;
+    if (frame.width == 0 || frame.height == 0) {
+        return;
+    }
 
 	/*
 	* Bug in Cocoa. When the progress bar is animating it calls
@@ -232,7 +240,9 @@ public int getState () {
 public void setMaximum (int value) {
 	checkWidget();
 	int minimum = (int)((NSProgressIndicator)view).minValue();
-	if (value <= minimum) return;
+    if (value <= minimum) {
+        return;
+    }
 	((NSProgressIndicator)view).setMaxValue(value);
 	int selection = (int)((NSProgressIndicator)view).doubleValue();
 	int newSelection = Math.min (selection, value);
@@ -257,7 +267,9 @@ public void setMaximum (int value) {
 public void setMinimum (int value) {
 	checkWidget();
 	int maximum =  (int)((NSProgressIndicator)view).maxValue();
-	if (!(0 <= value && value < maximum)) return;
+    if (!(0 <= value && value < maximum)) {
+        return;
+    }
 	((NSProgressIndicator)view).setMinValue(value);
 	int selection = (int)((NSProgressIndicator)view).doubleValue();
 	int newSelection = Math.max (selection, value);
@@ -320,14 +332,18 @@ public void setState (int state) {
 @Override
 void releaseWidget () {
 	super.releaseWidget();
-	if (visiblePath != null) visiblePath.release();
+    if (visiblePath != null) {
+        visiblePath.release();
+    }
 	visiblePath = null;
 }
 
 @Override
 void resetVisibleRegion () {
 	super.resetVisibleRegion ();
-	if (visiblePath != null) visiblePath.release();
+    if (visiblePath != null) {
+        visiblePath.release();
+    }
 	visiblePath = null;
 }
 

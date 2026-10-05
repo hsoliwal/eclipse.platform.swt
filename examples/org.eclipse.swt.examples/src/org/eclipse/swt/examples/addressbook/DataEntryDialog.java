@@ -76,7 +76,9 @@ private void createControlButtons() {
 }
 
 private void createTextWidgets() {
-	if (labels == null) return;
+    if (labels == null) {
+        return;
+    }
 
 	Composite composite = new Composite(shell, SWT.NONE);
 	composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -84,8 +86,9 @@ private void createTextWidgets() {
 	layout.numColumns = 2;
 	composite.setLayout(layout);
 
-	if (values == null)
-		values = new String[labels.length];
+    if (values == null) {
+        values = new String[labels.length];
+    }
 
 	for (int i = 0; i < labels.length; i++) {
 		Label label = new Label(composite, SWT.RIGHT);
@@ -130,8 +133,9 @@ public String[] open() {
 	shell.open();
 	Display display = shell.getDisplay();
 	while(!shell.isDisposed()){
-		if(!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 
 	return getValues();
@@ -150,10 +154,13 @@ public void setTitle(String title) {
  * 						The values to which the dialog contents will be set.
  */
 public void setValues(String[] itemInfo) {
-	if (labels == null) return;
+    if (labels == null) {
+        return;
+    }
 
-	if (values == null)
-		values = new String[labels.length];
+    if (values == null) {
+        values = new String[labels.length];
+    }
 
 	int numItems = Math.min(values.length, itemInfo.length);
 	System.arraycopy(itemInfo, 0, values, 0, numItems);

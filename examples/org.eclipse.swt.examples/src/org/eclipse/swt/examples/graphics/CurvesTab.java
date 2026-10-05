@@ -90,11 +90,13 @@ public boolean getDoubleBuffered() {
 
 @Override
 public void dispose() {
-	if (mouseListener != null)
-		example.canvas.removeMouseListener(mouseListener);
+    if (mouseListener != null) {
+        example.canvas.removeMouseListener(mouseListener);
+    }
 
-	if (mouseMoveListener != null)
-		example.canvas.removeMouseMoveListener(mouseMoveListener);
+    if (mouseMoveListener != null) {
+        example.canvas.removeMouseMoveListener(mouseMoveListener);
+    }
 
 	cursor = null;
 }
@@ -217,16 +219,21 @@ public void createControlPanel(Composite parent) {
 				example.canvas.setCursor(null);
 			}
 
-			if (quadPtMoved)
-				quadPtMoved = false;
-			if (quadEndPtMoved)
-				quadEndPtMoved = false;
-			if (cubPt1Moved)
-				cubPt1Moved = false;
-			if (cubPt2Moved)
-				cubPt2Moved = false;
-			if (cubEndPtMoved)
-				cubEndPtMoved = false;
+            if (quadPtMoved) {
+                quadPtMoved = false;
+            }
+            if (quadEndPtMoved) {
+                quadEndPtMoved = false;
+            }
+            if (cubPt1Moved) {
+                cubPt1Moved = false;
+            }
+            if (cubPt2Moved) {
+                cubPt2Moved = false;
+            }
+            if (cubEndPtMoved) {
+                cubEndPtMoved = false;
+            }
 
 			example.redraw();
 		}
@@ -237,7 +244,9 @@ public void createControlPanel(Composite parent) {
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	Font font = new Font(device, getPlatformFont(), 16, SWT.ITALIC);

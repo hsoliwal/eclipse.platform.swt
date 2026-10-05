@@ -228,7 +228,9 @@ TF_DISPLAYATTRIBUTE getDisplayAttribute (short langid, int attInfo) {
  */
 public int [] getRanges () {
 	checkWidget ();
-	if (ranges == null) return new int [0];
+    if (ranges == null) {
+        return new int [0];
+    }
 	int [] result = new int [ranges.length];
 	for (int i = 0; i < result.length; i++) {
 		result [i] = ranges [i] + startOffset;
@@ -256,7 +258,9 @@ public int [] getRanges () {
  */
 public TextStyle [] getStyles () {
 	checkWidget ();
-	if (styles == null) return new TextStyle [0];
+    if (styles == null) {
+        return new TextStyle [0];
+    }
 	TextStyle [] result = new TextStyle [styles.length];
 	System.arraycopy (styles, 0, result, 0, styles.length);
 	return result;
@@ -310,7 +314,9 @@ boolean isInlineEnabled () {
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (this == parent.getIME ()) parent.setIME (null);
+    if (this == parent.getIME()) {
+        parent.setIME(null);
+    }
 }
 
 @Override
@@ -340,14 +346,18 @@ void releaseWidget () {
  */
 public void setCompositionOffset (int offset) {
 	checkWidget ();
-	if (offset < 0) return;
+    if (offset < 0) {
+        return;
+    }
 	if (startOffset != -1) {
 		startOffset = offset;
 	}
 }
 
 LRESULT WM_IME_COMPOSITION (long wParam, long lParam) {
-	if (!isInlineEnabled ()) return null;
+    if (!isInlineEnabled()) {
+        return null;
+    }
 	ranges = null;
 	styles = null;
 	caretOffset = commitCount = 0;
@@ -391,7 +401,9 @@ LRESULT WM_IME_COMPOSITION (long wParam, long lParam) {
 					}
 				}
 			}
-			if ((lParam & OS.GCS_COMPSTR) == 0) return LRESULT.ONE;
+            if ((lParam & OS.GCS_COMPSTR) == 0) {
+                return LRESULT.ONE;
+            }
 		}
 		buffer = null;
 		if ((lParam & OS.GCS_COMPSTR) != 0) {
@@ -546,7 +558,9 @@ LRESULT WM_KEYDOWN (long wParam, long lParam) {
 }
 
 LRESULT WM_KILLFOCUS (long wParam, long lParam) {
-	if (!isInlineEnabled ()) return null;
+    if (!isInlineEnabled()) {
+        return null;
+    }
 	long hwnd = parent.handle;
 	long hIMC = OS.ImmGetContext (hwnd);
 	if (hIMC != 0) {
@@ -559,7 +573,9 @@ LRESULT WM_KILLFOCUS (long wParam, long lParam) {
 }
 
 LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
-	if (!isInlineEnabled ()) return null;
+    if (!isInlineEnabled()) {
+        return null;
+    }
 	long hwnd = parent.handle;
 	long hIMC = OS.ImmGetContext (hwnd);
 	if (hIMC != 0) {

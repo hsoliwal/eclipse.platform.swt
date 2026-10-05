@@ -126,7 +126,9 @@ public class LauncherPlugin extends AbstractUIPlugin {
 	public static void freeResources() {
 		if (images != null) {
 			for (Image image : images) {
-				if (image != null) image.dispose();
+                if (image != null) {
+                    image.dispose();
+                }
 			}
 			images = null;
 		}
@@ -198,8 +200,10 @@ public class LauncherPlugin extends AbstractUIPlugin {
 		for (IConfigurationElement ce: configurationElements) {
 			final String ceName = ce.getName();
 			final String attribId = getItemAttribute(ce, LAUNCH_ITEMS_XML_ATTRIB_ID, null);
-			
-			if (idMap.containsKey(attribId)) continue;
+
+            if (idMap.containsKey(attribId)) {
+                continue;
+            }
 			if (ceName.equalsIgnoreCase(LAUNCH_ITEMS_XML_CATEGORY)) {
 				final String attribName = getItemName(ce); 
 				ItemDescriptor theDescriptor = new ItemDescriptor(attribId, attribName,
@@ -213,8 +217,10 @@ public class LauncherPlugin extends AbstractUIPlugin {
 		for (IConfigurationElement ce : configurationElements) {
 			final String ceName = ce.getName();
 			final String attribId = getItemAttribute(ce, LAUNCH_ITEMS_XML_ATTRIB_ID, null);
-			
-			if (tempIdSet.contains(attribId)) continue;
+
+            if (tempIdSet.contains(attribId)) {
+                continue;
+            }
 			if (ceName.equalsIgnoreCase(LAUNCH_ITEMS_XML_CATEGORY)) {
 				final ItemTreeNode theNode = idMap.get(attribId);
 				addItemByCategory(ce, categoryTree, theNode, idMap);
@@ -227,13 +233,17 @@ public class LauncherPlugin extends AbstractUIPlugin {
 			final String ceName = ce.getName();
 			final String attribId = getItemAttribute(ce, LAUNCH_ITEMS_XML_ATTRIB_ID, null);
 
-			if (idMap.containsKey(attribId)) continue;
+            if (idMap.containsKey(attribId)) {
+                continue;
+            }
 			if (ceName.equalsIgnoreCase(LAUNCH_ITEMS_XML_CATEGORY)) {
 				// ignore
 			} else if (ceName.equalsIgnoreCase(LAUNCH_ITEMS_XML_ITEM)) {
 				final String enabled = getItemAttribute(ce, LAUNCH_ITEMS_XML_ATTRIB_ENABLED, 
 					LAUNCH_ITEMS_XML_VALUE_TRUE);
-				if (enabled.equalsIgnoreCase(LAUNCH_ITEMS_XML_VALUE_FALSE)) continue;
+                if (enabled.equalsIgnoreCase(LAUNCH_ITEMS_XML_VALUE_FALSE)) {
+                    continue;
+                }
 				ItemDescriptor theDescriptor = createItemDescriptor(ce, attribId);				
 			
 				if (theDescriptor != null) {
@@ -259,7 +269,9 @@ public class LauncherPlugin extends AbstractUIPlugin {
 		if (attribCategory != null) {
 			parentNode = idMap.get(attribCategory);
 		}
-		if (parentNode == null) parentNode = root;
+        if (parentNode == null) {
+            parentNode = root;
+        }
 				
 		// add the item
 		parentNode.addSortedNode(theNode);
@@ -402,7 +414,9 @@ public class LauncherPlugin extends AbstractUIPlugin {
 			return null;
 		} finally {
 			try {
-				if (is != null) is.close();
+                if (is != null) {
+                    is.close();
+                }
 			} catch (IOException e) {
 			}
 		}

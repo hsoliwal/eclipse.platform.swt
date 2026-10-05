@@ -58,13 +58,15 @@ public static void main(String[] args) {
 	table.addSelectionListener(widgetSelectedAdapter(e -> {
 			// Clean up any previous editor control
 			Control oldEditor = editor.getEditor();
-			if (oldEditor != null)
-				oldEditor.dispose();
+        if (oldEditor != null) {
+            oldEditor.dispose();
+        }
 
 			// Identify the selected row
 			TableItem item = (TableItem) e.item;
-			if (item == null)
-				return;
+        if (item == null) {
+            return;
+        }
 
 			// The control that will be the editor must be a child of the Table
 			Text newEditor = new Text(table, SWT.NONE);
@@ -81,8 +83,9 @@ public static void main(String[] args) {
 	shell.open();
 
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

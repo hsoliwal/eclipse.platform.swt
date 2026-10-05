@@ -76,8 +76,9 @@ public static void main(String[] args) {
 	AddressBook application = new AddressBook();
 	Shell shell = application.open(display);
 	while(!shell.isDisposed()){
-		if(!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }
@@ -98,7 +99,9 @@ public Shell open(Display display) {
 	table.setMenu(createPopUpMenu());
 	table.addSelectionListener(widgetDefaultSelectedAdapter(e -> {
 		TableItem[] items = table.getSelection();
-		if (items.length > 0) editEntry(items[0]);
+        if (items.length > 0) {
+            editEntry(items[0]);
+        }
 	}));
 	for(int i = 0; i < columnNames.length; i++) {
 		TableColumn column = new TableColumn(table, SWT.NONE);
@@ -126,7 +129,9 @@ private boolean closeAddressBook() {
 		if(choice == SWT.CANCEL) {
 			return false;
 		} else if(choice == SWT.YES) {
-			if (!save()) return false;
+            if (!save()) {
+                return false;
+            }
 		}
 	}
 
@@ -160,7 +165,9 @@ private Menu createMenuBar() {
  * Converts an encoded <code>String</code> to a String array representing a table entry.
  */
 private String[] decodeLine(String line) {
-	if(line == null) return null;
+    if (line == null) {
+        return null;
+    }
 
 	String[] parsedLine = new String[table.getColumnCount()];
 	for(int i = 0; i < parsedLine.length - 1; i++) {
@@ -173,7 +180,9 @@ private String[] decodeLine(String line) {
 		}
 	}
 
-	if (line.contains(DELIMITER)) return null;
+    if (line.contains(DELIMITER)) {
+        return null;
+    }
 
 	parsedLine[parsedLine.length - 1] = line;
 
@@ -278,7 +287,9 @@ private void openAddressBook() {
 											resAddressBook.getString("All_filter_name") + " (*.*)"});
 	String name = fileDialog.open();
 
-	if(name == null) return;
+    if (name == null) {
+        return;
+    }
 	File file = new File(name);
 	if (!file.exists()) {
 		displayError(resAddressBook.getString("File")+file.getName()+" "+resAddressBook.getString("Does_not_exist"));
@@ -305,7 +316,9 @@ private void openAddressBook() {
 	int writeIndex = 0;
 	for (String element : data) {
 		String[] line = decodeLine(element);
-		if (line != null) tableInfo[writeIndex++] = line;
+        if (line != null) {
+            tableInfo[writeIndex++] = line;
+        }
 	}
 	if (writeIndex != data.size()) {
 		String[][] result = new String[writeIndex][table.getColumnCount()];
@@ -323,7 +336,9 @@ private void openAddressBook() {
 	this.file = file;
 }
 private boolean save() {
-	if(file == null) return saveAs();
+    if (file == null) {
+        return saveAs();
+    }
 
 	Cursor waitCursor = new Cursor(shell.getDisplay(), SWT.CURSOR_WAIT);
 	shell.setCursor(waitCursor);
@@ -363,7 +378,9 @@ private boolean saveAs() {
 	saveDialog.open();
 	String name = saveDialog.getFileName();
 
-	if(name.isEmpty()) return false;
+    if (name.isEmpty()) {
+        return false;
+    }
 
 	if(name.indexOf(".adr") != name.length() - 4) {
 		name += ".adr";
@@ -382,7 +399,9 @@ private boolean saveAs() {
 	return save();
 }
 private void sort(int column) {
-	if(table.getItemCount() <= 1) return;
+    if (table.getItemCount() <= 1) {
+        return;
+    }
 
 	TableItem[] items = table.getItems();
 	String[][] data = new String[items.length][table.getColumnCount()];
@@ -450,7 +469,9 @@ private void createFileMenu(Menu menuBar) {
 	subItem.setAccelerator(SWT.MOD1 + 'E');
 	subItem.addSelectionListener(widgetSelectedAdapter( e -> {
 		TableItem[] items = table.getSelection();
-		if (items.length == 0) return;
+        if (items.length == 0) {
+            return;
+        }
 		editEntry(items[0]);
 	}));
 
@@ -537,7 +558,9 @@ private MenuItem createEditMenu(Menu menuBar) {
 	subItem.setAccelerator(SWT.MOD1 + 'E');
 	subItem.addSelectionListener(widgetSelectedAdapter( e -> {
 		TableItem[] items = table.getSelection();
-		if (items.length == 0) return;
+        if (items.length == 0) {
+            return;
+        }
 		editEntry(items[0]);
 	}));
 
@@ -547,7 +570,9 @@ private MenuItem createEditMenu(Menu menuBar) {
 	subItem.setAccelerator(SWT.MOD1 + 'C');
 	subItem.addSelectionListener(widgetSelectedAdapter( e -> {
 		TableItem[] items = table.getSelection();
-		if (items.length == 0) return;
+        if (items.length == 0) {
+            return;
+        }
 		copyBuffer = new String[table.getColumnCount()];
 		for (int i = 0; i < copyBuffer.length; i++) {
 			copyBuffer[i] = items[0].getText(i);
@@ -559,7 +584,9 @@ private MenuItem createEditMenu(Menu menuBar) {
 	subItem.setText(resAddressBook.getString("Paste"));
 	subItem.setAccelerator(SWT.MOD1 + 'V');
 	subItem.addSelectionListener(widgetSelectedAdapter( e -> {
-		if (copyBuffer == null) return;
+        if (copyBuffer == null) {
+            return;
+        }
 		TableItem tableItem = new TableItem(table, SWT.NONE);
 		tableItem.setText(copyBuffer);
 		isModified = true;
@@ -570,7 +597,9 @@ private MenuItem createEditMenu(Menu menuBar) {
 	subItem.setText(resAddressBook.getString("Delete"));
 	subItem.addSelectionListener(widgetSelectedAdapter( e -> {
 		TableItem[] items = table.getSelection();
-		if (items.length == 0) return;
+        if (items.length == 0) {
+            return;
+        }
 		items[0].dispose();
 		isModified = true;
 	}));
@@ -682,7 +711,9 @@ private Menu createPopUpMenu() {
 	item.setText(resAddressBook.getString("Pop_up_edit"));
 	item.addSelectionListener(widgetSelectedAdapter( e -> {
 		TableItem[] items = table.getSelection();
-		if (items.length == 0) return;
+        if (items.length == 0) {
+            return;
+        }
 		editEntry(items[0]);
 	}));
 
@@ -691,7 +722,9 @@ private Menu createPopUpMenu() {
 	item.setText(resAddressBook.getString("Pop_up_copy"));
 	item.addSelectionListener(widgetSelectedAdapter( e -> {
 		TableItem[] items = table.getSelection();
-		if (items.length == 0) return;
+        if (items.length == 0) {
+            return;
+        }
 		copyBuffer = new String[table.getColumnCount()];
 		for (int i = 0; i < copyBuffer.length; i++) {
 			copyBuffer[i] = items[0].getText(i);
@@ -702,7 +735,9 @@ private Menu createPopUpMenu() {
 	item = new MenuItem(popUpMenu, SWT.PUSH);
 	item.setText(resAddressBook.getString("Pop_up_paste"));
 	item.addSelectionListener(widgetSelectedAdapter( e -> {
-		if (copyBuffer == null) return;
+        if (copyBuffer == null) {
+            return;
+        }
 		TableItem tableItem = new TableItem(table, SWT.NONE);
 		tableItem.setText(copyBuffer);
 		isModified = true;
@@ -713,7 +748,9 @@ private Menu createPopUpMenu() {
 	item.setText(resAddressBook.getString("Pop_up_delete"));
 	item.addSelectionListener(widgetSelectedAdapter( e -> {
 		TableItem[] items = table.getSelection();
-		if (items.length == 0) return;
+        if (items.length == 0) {
+            return;
+        }
 		items[0].dispose();
 		isModified = true;
 	}));

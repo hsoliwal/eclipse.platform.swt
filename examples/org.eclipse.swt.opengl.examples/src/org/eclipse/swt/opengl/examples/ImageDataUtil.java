@@ -63,10 +63,16 @@ public class ImageDataUtil {
 	static {
 		for (int b = 0; b < 9; ++b) {
 			byte[] data = ANY_TO_EIGHT[b] = new byte[1 << b];
-			if (b == 0) continue;
+            if (b == 0) {
+                continue;
+            }
 			int inc = 0;
-			for (int bit = 0x10000; (bit >>= b) != 0;) inc |= bit;
-			for (int v = 0, p = 0; v < 0x10000; v+= inc) data[p++] = (byte)(v >> 8);
+            for (int bit = 0x10000; (bit >>= b) != 0; ) {
+                inc |= bit;
+            }
+            for (int v = 0, p = 0; v < 0x10000; v += inc) {
+                data[p++] = (byte) (v >> 8);
+            }
 		}
 	}
 
@@ -126,7 +132,9 @@ public class ImageDataUtil {
 		int destX, int destY, int destWidth, int destHeight,
 		int destRedMask, int destGreenMask, int destBlueMask,
 		boolean flipX, boolean flipY) {
-		if ((destWidth <= 0) || (destHeight <= 0) || (alphaMode == ALPHA_TRANSPARENT)) return;
+        if ((destWidth <= 0) || (destHeight <= 0) || (alphaMode == ALPHA_TRANSPARENT)) {
+            return;
+        }
 
 		// these should be supplied as params later
 		final int srcAlphaMask = 0, destAlphaMask = 0;
@@ -195,11 +203,15 @@ public class ImageDataUtil {
 			switch (alphaMode) {
 				case ALPHA_MASK_UNPACKED:
 				case ALPHA_CHANNEL_SEPARATE:
-					if (alphaData == null) alphaMode = 0x10000;
+                    if (alphaData == null) {
+                        alphaMode = 0x10000;
+                    }
 					apr = alphaY * alphaStride + alphaX;
 					break;
 				case ALPHA_MASK_PACKED:
-					if (alphaData == null) alphaMode = 0x10000;
+                    if (alphaData == null) {
+                        alphaMode = 0x10000;
+                    }
 					alphaStride <<= 3;
 					apr = alphaY * alphaStride + alphaX;
 					break;
@@ -207,7 +219,9 @@ public class ImageDataUtil {
 					//throw new IllegalArgumentException("Invalid alpha type");
 					return;
 				case ALPHA_MASK_RGB:
-					if (alphaData == null) alphaMode = 0x10000;
+                    if (alphaData == null) {
+                        alphaMode = 0x10000;
+                    }
 					apr = 0;
 					break;
 				default:
@@ -396,7 +410,9 @@ public class ImageDataUtil {
 						break;
 				}
 				if (alpha != 0x10000) {
-					if (alpha == 0x0000) continue;
+                    if (alpha == 0x0000) {
+                        continue;
+                    }
 					switch (dtype) {
 						case TYPE_GENERIC_8: {
 							final int data = destData[dp] & 0xff;
@@ -500,7 +516,9 @@ public class ImageDataUtil {
 	 * Computes the required channel shift from a mask.
 	 */
 	static int getChannelShift(int mask) {
-		if (mask == 0) return 0;
+        if (mask == 0) {
+            return 0;
+        }
 		int i;
 		for (i = 0; ((mask & 1) == 0) && (i < 32); ++i) {
 			mask >>>= 1;
@@ -512,7 +530,9 @@ public class ImageDataUtil {
 	 * Computes the required channel width (depth) from a mask.
 	 */
 	static int getChannelWidth(int mask, int shift) {
-		if (mask == 0) return 0;
+        if (mask == 0) {
+            return 0;
+        }
 		int i;
 		mask >>>= shift;
 		for (i = shift; ((mask & 1) != 0) && (i < 32); ++i) {

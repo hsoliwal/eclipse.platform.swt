@@ -34,7 +34,9 @@ public static void main (String [] args) {
 	dialog.setSize (200, 200);
 	dialog.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

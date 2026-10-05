@@ -46,8 +46,9 @@ public void setUp() {
 
 @Override
 protected void setWidget(Widget w) {
-	if (!canvas.isDisposed())
-		canvas.dispose();
+    if (!canvas.isDisposed()) {
+        canvas.dispose();
+    }
 	canvas = (Canvas)w;
 	super.setWidget(w);
 }

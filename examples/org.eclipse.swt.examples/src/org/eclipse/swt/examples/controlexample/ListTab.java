@@ -63,11 +63,21 @@ class ListTab extends ScrollableTab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (singleButton.getSelection ()) style |= SWT.SINGLE;
-		if (multiButton.getSelection ()) style |= SWT.MULTI;
-		if (horizontalButton.getSelection ()) style |= SWT.H_SCROLL;
-		if (verticalButton.getSelection ()) style |= SWT.V_SCROLL;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
+        if (singleButton.getSelection()) {
+            style |= SWT.SINGLE;
+        }
+        if (multiButton.getSelection()) {
+            style |= SWT.MULTI;
+        }
+        if (horizontalButton.getSelection()) {
+            style |= SWT.H_SCROLL;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.V_SCROLL;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
 
 		/* Create the example widgets */
 		list1 = new List (listGroup, style);

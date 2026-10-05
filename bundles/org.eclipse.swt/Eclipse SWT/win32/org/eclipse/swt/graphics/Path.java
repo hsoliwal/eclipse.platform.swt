@@ -117,8 +117,12 @@ public Path (Device device) {
  */
 public Path (Device device, Path path, float flatness) {
 	super(device);
-	if (path == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (path.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (path == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (path.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	flatness = Math.max(0, flatness);
 	path.operations.forEach(this::storeAndApplyOperationOnAllHandles);
 	if (flatness != 0) {
@@ -158,7 +162,9 @@ public Path (Device device, Path path, float flatness) {
  */
 public Path (Device device, PathData data) {
 	this(device);
-	if (data == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (data == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	init(data);
 }
 
@@ -192,7 +198,9 @@ public Path (Device device, PathData data) {
  * </ul>
  */
 public void addArc (float x, float y, float width, float height, float startAngle, float arcAngle) {
-	if (width == 0 || height == 0 || arcAngle == 0) return;
+    if (width == 0 || height == 0 || arcAngle == 0) {
+        return;
+    }
 	storeAndApplyOperationOnAllHandles(new AddArcOperation(x, y, width, height, startAngle, arcAngle));
 }
 
@@ -210,9 +218,15 @@ public void addArc (float x, float y, float width, float height, float startAngl
  * </ul>
  */
 public void addPath(Path path) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (path == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (path.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (path == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (path.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	storeAndApplyOperationOnAllHandles(new AddPathOperation(path));
 }
 
@@ -229,7 +243,9 @@ public void addPath(Path path) {
  * </ul>
  */
 public void addRectangle (float x, float y, float width, float height) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	storeAndApplyOperationOnAllHandles(new AddRectangleOperation(x, y, width, height));
 }
 
@@ -251,9 +267,15 @@ public void addRectangle (float x, float y, float width, float height) {
  * </ul>
  */
 public void addString (String string, float x, float y, Font font) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (font == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (font.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (font == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (font.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	storeAndApplyOperationOnAllHandles(new AddStringOperation(string, x, y, font));
 }
 
@@ -267,7 +289,9 @@ public void addString (String string, float x, float y, Font font) {
  * </ul>
  */
 public void close() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	storeAndApplyOperationOnAllHandles(new CloseOperation());
 }
 
@@ -295,9 +319,15 @@ public void close() {
  * </ul>
  */
 public boolean contains (float x, float y, GC gc, boolean outline) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (gc == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (gc == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	return applyUsingAnyHandle(handle -> {
 		return handle.contains(x, y, gc, outline);
 	});
@@ -318,7 +348,9 @@ public boolean contains (float x, float y, GC gc, boolean outline) {
  * </ul>
  */
 public void cubicTo (float cx1, float cy1, float cx2, float cy2, float x, float y) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	storeAndApplyOperationOnAllHandles(new CubicToOperation(cx1, cy1, cx2, cy2, x, y));
 }
 
@@ -358,9 +390,15 @@ void destroyHandlesExcept(Set<Integer> zoomLevels) {
  * </ul>
  */
 public void getBounds (float[] bounds) {
-	if (bounds == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (bounds.length < 4) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (bounds == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (bounds.length < 4) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	applyUsingAnyHandle(handle -> {
 		handle.fillBounds(bounds);
 		return true;
@@ -382,9 +420,15 @@ public void getBounds (float[] bounds) {
  * </ul>
  */
 public void getCurrentPoint (float[] point) {
-	if (point == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (point.length < 2) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (point == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (point.length < 2) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	applyUsingAnyHandle(handle -> {
 		handle.fillCurrentPoint(point);
 		return true;
@@ -403,7 +447,9 @@ public void getCurrentPoint (float[] point) {
  * @see PathData
  */
 public PathData getPathData() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return applyUsingAnyHandle(handle -> {
 		return handle.getPathData();
 	});
@@ -421,7 +467,9 @@ public PathData getPathData() {
  * </ul>
  */
 public void lineTo (float x, float y) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	storeAndApplyOperationOnAllHandles(new LineToOperation(x, y));
 }
 
@@ -481,7 +529,9 @@ public boolean isDisposed() {
  * </ul>
  */
 public void moveTo (float x, float y) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	storeAndApplyOperationOnAllHandles(new MoveToOperation(x, y));
 }
 
@@ -498,7 +548,9 @@ public void moveTo (float x, float y) {
  * </ul>
  */
 public void quadTo (float cx, float cy, float x, float y) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	storeAndApplyOperationOnAllHandles(new QuadToOperation(cx, cy, x, y));
 }
 
@@ -640,7 +692,9 @@ private class AddArcOperation implements Operation {
 
 	@Override
 	public void apply(PathHandle pathHandle) {
-		if (width == 0 || height == 0 || arcAngle == 0) return;
+        if (width == 0 || height == 0 || arcAngle == 0) {
+            return;
+        }
 		int zoom = pathHandle.zoom;
 		Drawable drawable = getDevice();
 		float xInPixels = Win32DPIUtils.pointToPixel(drawable, x, zoom);
@@ -665,9 +719,13 @@ private class AddArcOperation implements Operation {
 			Gdip.GraphicsPath_AddArc(handle, x, y, width, height, -startAngle, -arcAngle);
 		} else {
 			long path = Gdip.GraphicsPath_new(Gdip.FillModeAlternate);
-			if (path == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (path == 0) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 			long matrix = Gdip.Matrix_new(width, 0, 0, height, x, y);
-			if (matrix == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (matrix == 0) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 			Gdip.GraphicsPath_AddArc(path, 0, 0, 1, 1, -startAngle, -arcAngle);
 			Gdip.GraphicsPath_Transform(path, matrix);
 			Gdip.GraphicsPath_AddPath(handle, path, true);
@@ -965,13 +1023,17 @@ private static <T> T applyOnTemporaryHandle(Device device, int zoom, List<Operat
  */
 @Override
 public String toString() {
-	if (isDisposed()) return "Path {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Path {*DISPOSED*}";
+    }
 	return "Path " + zoomToHandle;
 }
 
 private static PathHandle newEmptyPathHandle(Device device, int zoom) {
 	long newHandle = Gdip.GraphicsPath_new(Gdip.FillModeAlternate);
-	if (newHandle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (newHandle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	PathHandle newPathHandle = new PathHandle(device, newHandle, zoom);
 	return newPathHandle;
 }

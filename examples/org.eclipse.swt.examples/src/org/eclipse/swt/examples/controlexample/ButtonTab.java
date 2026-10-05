@@ -62,7 +62,9 @@ class ButtonTab extends AlignableTab {
 
 		/* Add the listeners */
 		SelectionListener selectionListener = widgetSelectedAdapter(event -> {
-			if (!((Button) event.widget).getSelection()) return;
+            if (!((Button) event.widget).getSelection()) {
+                return;
+            }
 			setExampleWidgetAlignment ();
 		});
 		upButton.addSelectionListener(selectionListener);
@@ -109,21 +111,45 @@ class ButtonTab extends AlignableTab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (pushButton.getSelection()) style |= SWT.PUSH;
-		if (checkButton.getSelection()) style |= SWT.CHECK;
-		if (radioButton.getSelection()) style |= SWT.RADIO;
-		if (toggleButton.getSelection()) style |= SWT.TOGGLE;
-		if (flatButton.getSelection()) style |= SWT.FLAT;
-		if (wrapButton.getSelection()) style |= SWT.WRAP;
-		if (borderButton.getSelection()) style |= SWT.BORDER;
-		if (leftButton.getSelection()) style |= SWT.LEFT;
-		if (rightButton.getSelection()) style |= SWT.RIGHT;
+        if (pushButton.getSelection()) {
+            style |= SWT.PUSH;
+        }
+        if (checkButton.getSelection()) {
+            style |= SWT.CHECK;
+        }
+        if (radioButton.getSelection()) {
+            style |= SWT.RADIO;
+        }
+        if (toggleButton.getSelection()) {
+            style |= SWT.TOGGLE;
+        }
+        if (flatButton.getSelection()) {
+            style |= SWT.FLAT;
+        }
+        if (wrapButton.getSelection()) {
+            style |= SWT.WRAP;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (leftButton.getSelection()) {
+            style |= SWT.LEFT;
+        }
+        if (rightButton.getSelection()) {
+            style |= SWT.RIGHT;
+        }
 		if (arrowButton.getSelection()) {
 			style |= SWT.ARROW;
-			if (upButton.getSelection()) style |= SWT.UP;
-			if (downButton.getSelection()) style |= SWT.DOWN;
+            if (upButton.getSelection()) {
+                style |= SWT.UP;
+            }
+            if (downButton.getSelection()) {
+                style |= SWT.DOWN;
+            }
 		} else {
-			if (centerButton.getSelection()) style |= SWT.CENTER;
+            if (centerButton.getSelection()) {
+                style |= SWT.CENTER;
+            }
 		}
 
 		/* Create the example widgets */
@@ -215,11 +241,21 @@ class ButtonTab extends AlignableTab {
 	@Override
 	void setExampleWidgetAlignment () {
 		int alignment = 0;
-		if (leftButton.getSelection ()) alignment = SWT.LEFT;
-		if (centerButton.getSelection ()) alignment = SWT.CENTER;
-		if (rightButton.getSelection ()) alignment = SWT.RIGHT;
-		if (upButton.getSelection ()) alignment = SWT.UP;
-		if (downButton.getSelection ()) alignment = SWT.DOWN;
+        if (leftButton.getSelection()) {
+            alignment = SWT.LEFT;
+        }
+        if (centerButton.getSelection()) {
+            alignment = SWT.CENTER;
+        }
+        if (rightButton.getSelection()) {
+            alignment = SWT.RIGHT;
+        }
+        if (upButton.getSelection()) {
+            alignment = SWT.UP;
+        }
+        if (downButton.getSelection()) {
+            alignment = SWT.DOWN;
+        }
 		button1.setAlignment (alignment);
 		button2.setAlignment (alignment);
 		button3.setAlignment (alignment);

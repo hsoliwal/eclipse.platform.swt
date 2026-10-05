@@ -150,9 +150,15 @@ protected void checkSubclass () {
  */
 protected void checkWidget () {
 	Display display = this.display;
-	if (display == null) DND.error (SWT.ERROR_WIDGET_DISPOSED);
-	if (display.getThread() != Thread.currentThread ()) DND.error (SWT.ERROR_THREAD_INVALID_ACCESS);
-	if (display.isDisposed()) DND.error(SWT.ERROR_WIDGET_DISPOSED);
+    if (display == null) {
+        DND.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (display.getThread() != Thread.currentThread()) {
+        DND.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
+    if (display.isDisposed()) {
+        DND.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 }
 
 /**
@@ -223,8 +229,12 @@ public void clearContents(int clipboards) {
  * </ul>
  */
 public void dispose () {
-	if (isDisposed()) return;
-	if (display.getThread() != Thread.currentThread()) DND.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    if (isDisposed()) {
+        return;
+    }
+    if (display.getThread() != Thread.currentThread()) {
+        DND.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
 	display = null;
 }
 
@@ -341,7 +351,9 @@ public Object getContents(Transfer transfer, int clipboards) {
 
 private Object gtk3_getContents(Transfer transfer, int clipboards) {
 	checkWidget();
-	if (transfer == null) DND.error(SWT.ERROR_NULL_ARGUMENT);
+    if (transfer == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	long selection_data = 0;
 	int[] typeIds = transfer.getTypeIds();
 	boolean textTransfer = transfer.getTypeNames()[0].equals("UTF8_STRING");
@@ -460,8 +472,9 @@ public CompletableFuture<Object> getContentsAsync(Transfer transfer, int clipboa
 
 private CompletableFuture<Object> gtk4_getContentsAsync(Transfer transfer, int clipboards) {
 	checkWidget();
-	if (transfer == null)
-		DND.error(SWT.ERROR_NULL_ARGUMENT);
+    if (transfer == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	ClipboardProxyGTK4 proxy = ClipboardProxyGTK4._getInstance(display);
 	return proxy.getData(this, transfer, clipboards);

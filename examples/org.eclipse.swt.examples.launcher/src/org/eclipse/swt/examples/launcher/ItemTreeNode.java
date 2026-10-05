@@ -46,7 +46,9 @@ class ItemTreeNode {
 			ItemTreeNode cursor;
 			for (cursor = firstChild; cursor.nextSibling != null; cursor = cursor.nextSibling) {
 				ItemTreeNode sibling = cursor.nextSibling;
-				if (sibling.descriptor.getName().compareTo(node.descriptor.getName()) > 0) break;
+                if (sibling.descriptor.getName().compareTo(node.descriptor.getName()) > 0) {
+                    break;
+                }
 			}
 			node.nextSibling = cursor.nextSibling;
 			cursor.nextSibling = node;

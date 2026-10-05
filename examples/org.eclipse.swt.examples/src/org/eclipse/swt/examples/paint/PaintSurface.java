@@ -92,22 +92,30 @@ public class PaintSurface {
 			@Override
 			public void mouseDown(MouseEvent event) {
 				processMouseEventCoordinates(event);
-				if (paintSession != null) paintSession.mouseDown(event);
+                if (paintSession != null) {
+                    paintSession.mouseDown(event);
+                }
 			}
 			@Override
 			public void mouseUp(MouseEvent event) {
 				processMouseEventCoordinates(event);
-				if (paintSession != null) paintSession.mouseUp(event);
+                if (paintSession != null) {
+                    paintSession.mouseUp(event);
+                }
 			}
 			@Override
 			public void mouseDoubleClick(MouseEvent event) {
 				processMouseEventCoordinates(event);
-				if (paintSession != null) paintSession.mouseDoubleClick(event);
+                if (paintSession != null) {
+                    paintSession.mouseDoubleClick(event);
+                }
 			}
 		});
 		paintCanvas.addMouseMoveListener(event -> {
 			processMouseEventCoordinates(event);
-			if (paintSession != null) paintSession.mouseMove(event);
+            if (paintSession != null) {
+                paintSession.mouseMove(event);
+            }
 		});
 		paintCanvas.addPaintListener(event -> {
 			if (rubberband.isEmpty()) {
@@ -231,7 +239,9 @@ public class PaintSurface {
 	 */
 	public void setPaintSession(PaintSession paintSession) {
 		if (this.paintSession != null) {
-			if (this.paintSession == paintSession) return;
+            if (this.paintSession == paintSession) {
+                return;
+            }
 			this.paintSession.endSession();
 		}
 		this.paintSession = paintSession;
@@ -295,7 +305,9 @@ public class PaintSurface {
 	 */
 	public void addRubberbandSelection(Figure object) {
 		rubberband.add(object);
-		if (! isRubberbandHidden()) object.draw(displayFDC);
+        if (!isRubberbandHidden()) {
+            object.draw(displayFDC);
+        }
 	}
 
 	/**
@@ -324,7 +336,9 @@ public class PaintSurface {
 	 */
 	public void commitRubberbandSelection() {
 		rubberband.draw(imageFDC);
-		if (isRubberbandHidden()) rubberband.draw(displayFDC);
+        if (isRubberbandHidden()) {
+            rubberband.draw(displayFDC);
+        }
 		rubberband.clear();
 	}
 
@@ -355,8 +369,9 @@ public class PaintSurface {
 	 * </p>
 	 */
 	public void showRubberband() {
-		if (rubberbandHiddenNestingCount <= 0)
-			throw new IllegalStateException("rubberbandHiddenNestingCount > 0");
+        if (rubberbandHiddenNestingCount <= 0) {
+            throw new IllegalStateException("rubberbandHiddenNestingCount > 0");
+        }
 		if (--rubberbandHiddenNestingCount == 0) {
 			rubberband.draw(displayFDC);
 		}
@@ -377,7 +392,9 @@ public class PaintSurface {
 	 * @param scrollBar the horizontal scroll bar that posted this event
 	 */
 	public void scrollHorizontally(ScrollBar scrollBar) {
-		if (image == null) return;
+        if (image == null) {
+            return;
+        }
 		if (imageWidth > visibleWidth) {
 			final int oldOffset = displayFDC.xOffset;
 			final int newOffset = Math.min(scrollBar.getSelection(), imageWidth - visibleWidth);
@@ -396,7 +413,9 @@ public class PaintSurface {
 	 * @param scrollBar the vertical scroll bar that posted this event
 	 */
 	public void scrollVertically(ScrollBar scrollBar) {
-		if (image == null) return;
+        if (image == null) {
+            return;
+        }
 		if (imageHeight > visibleHeight) {
 			final int oldOffset = displayFDC.yOffset;
 			final int newOffset = Math.min(scrollBar.getSelection(), imageHeight - visibleHeight);

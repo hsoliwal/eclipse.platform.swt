@@ -57,7 +57,9 @@ public class CustomControlExample extends ControlExample {
 		setShellSize(shell);
 		shell.open();
 		while (! shell.isDisposed()) {
-			if (! display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		instance.dispose();
 	}

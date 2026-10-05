@@ -49,8 +49,9 @@ public static void main(String[] args) {
 	/* any website with popups */
 	browser.setUrl("http://www.popuptest.com/");
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 		}
 		display.dispose();
 	}
@@ -83,7 +84,9 @@ static void initialize(final Display display, Browser browser) {
 				event.display.asyncExec(shell::close);
 				return;
 			}
-			if (event.location != null) shell.setLocation(event.location);
+            if (event.location != null) {
+                shell.setLocation(event.location);
+            }
 			if (event.size != null) {
 				Point size = event.size;
 				shell.setSize(shell.computeSize(size.x, size.y));

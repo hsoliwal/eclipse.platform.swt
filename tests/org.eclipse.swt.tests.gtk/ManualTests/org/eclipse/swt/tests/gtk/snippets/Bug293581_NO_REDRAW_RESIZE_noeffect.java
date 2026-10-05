@@ -37,7 +37,9 @@ public class Bug293581_NO_REDRAW_RESIZE_noeffect {
 		shell.setBounds(10,10,200,200);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		image.dispose();
 		display.dispose();

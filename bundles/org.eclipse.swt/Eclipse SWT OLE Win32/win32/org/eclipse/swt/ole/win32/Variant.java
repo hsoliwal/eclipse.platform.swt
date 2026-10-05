@@ -278,8 +278,9 @@ public OleAutomation getAutomation() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_DISPATCH);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant autoVar = new Variant();
 		autoVar.setData(newPtr);
 		return autoVar.getAutomation();
@@ -322,8 +323,9 @@ public IDispatch getDispatch() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_DISPATCH);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant autoVar = new Variant();
 		autoVar.setData(newPtr);
 		return autoVar.getDispatch();
@@ -363,8 +365,9 @@ public boolean getBoolean() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_BOOL);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant boolVar = new Variant();
 		boolVar.setData(newPtr);
 		return boolVar.getBoolean();
@@ -420,8 +423,9 @@ public byte getByte() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_I1);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant byteVar = new Variant();
 		byteVar.setData(newPtr);
 		return byteVar.getByte();
@@ -460,8 +464,9 @@ public char getChar() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_UI2);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant charVar = new Variant();
 		charVar.setData(newPtr);
 		return charVar.getChar();
@@ -473,7 +478,9 @@ public char getChar() {
 	}
 }
 void getData(long pData){
-	if (pData == 0) OLE.error(OLE.ERROR_OUT_OF_MEMORY);
+    if (pData == 0) {
+        OLE.error(OLE.ERROR_OUT_OF_MEMORY);
+    }
 
 	COM.VariantInit(pData);
 
@@ -570,8 +577,9 @@ public double getDouble() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_R8);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant doubleVar = new Variant();
 		doubleVar.setData(newPtr);
 		return doubleVar.getDouble();
@@ -609,8 +617,9 @@ public float getFloat() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_R4);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant floatVar = new Variant();
 		floatVar.setData(newPtr);
 		return floatVar.getFloat();
@@ -648,8 +657,9 @@ public int getInt() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_I4);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant intVar = new Variant();
 		intVar.setData(newPtr);
 		return intVar.getInt();
@@ -688,8 +698,9 @@ public long getLong() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_I8);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant longVar = new Variant();
 		longVar.setData(newPtr);
 		return longVar.getLong();
@@ -726,8 +737,9 @@ public short getShort() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_I2);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant shortVar = new Variant();
 		shortVar.setData(newPtr);
 		return shortVar.getShort();
@@ -765,8 +777,9 @@ public String getString() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_BSTR);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 
 		Variant stringVar = new Variant();
 		stringVar.setData(newPtr);
@@ -820,8 +833,9 @@ public IUnknown getUnknown() {
 	try {
 		getData(oldPtr);
 		int result = COM.VariantChangeType(newPtr, oldPtr, (short) 0, COM.VT_UNKNOWN);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CHANGE_VARIANT_TYPE, result);
+        }
 		Variant unknownVar = new Variant();
 		unknownVar.setData(newPtr);
 		return unknownVar.getUnknown();
@@ -906,7 +920,9 @@ public void setByRef(short val) {
 	OS.MoveMemory(byRefPtr, new short[]{val}, 2);
 }
 void setData(long pData){
-	if (pData == 0) OLE.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (pData == 0) {
+        OLE.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
 	//TODO - use VARIANT structure
 	short[] dataType = new short[1];

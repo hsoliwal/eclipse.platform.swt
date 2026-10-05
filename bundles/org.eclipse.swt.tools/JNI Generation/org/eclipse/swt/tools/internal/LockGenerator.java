@@ -24,14 +24,20 @@ public LockGenerator() {
 
 String getParams(JNIMethod method) {
 	int n_args = method.getParameters().length;
-	if (n_args == 0) return "";
+    if (n_args == 0) {
+        return "";
+    }
 	String name = method.getName();
 	String params = "";
 	int index = 0;
 	while (true) {
 		index = classSource.indexOf(name, index + 1);
-		if (!Character.isWhitespace(classSource.charAt(index - 1))) continue;
-		if (index == -1) return null;
+        if (!Character.isWhitespace(classSource.charAt(index - 1))) {
+            continue;
+        }
+        if (index == -1) {
+            return null;
+        }
 		int parantesesStart = classSource.indexOf("(", index);
 		if (classSource.substring(index + name.length(), parantesesStart).trim().length() == 0) {
 			int parantesesEnd = classSource.indexOf(")", parantesesStart);
@@ -44,7 +50,9 @@ String getParams(JNIMethod method) {
 
 String getReturn(JNIMethod method) {
 	JNIType returnType = method.getReturnType();
-	if (!returnType.isType("int")) return returnType.getTypeSignature3();
+    if (!returnType.isType("int")) {
+        return returnType.getTypeSignature3();
+    }
 	String modifierStr = Modifier.toString(method.getModifiers());
 	String name = method.getName();
 	Pattern p = Pattern.compile(modifierStr + ".*" + name + ".*(.*)");
@@ -69,7 +77,9 @@ public void generate(JNIClass clazz) {
 public void generate(JNIMethod[] methods) {
 	sort(methods);	
 	for (JNIMethod method : methods) {
-		if ((method.getModifiers() & Modifier.NATIVE) == 0) continue;
+        if ((method.getModifiers() & Modifier.NATIVE) == 0) {
+            continue;
+        }
 		generate(method);
 	}
 }
@@ -82,7 +92,9 @@ public void generate(JNIMethod method) {
 	if (lock) {
 		String modifiersStr = Modifier.toString(modifiers & ~Modifier.SYNCHRONIZED);
 		output(modifiersStr);
-		if (modifiersStr.length() > 0) output(" ");
+        if (modifiersStr.length() > 0) {
+            output(" ");
+        }
 		output(returnStr);
 		output(" _");
 		output(method.getName());
@@ -92,7 +104,9 @@ public void generate(JNIMethod method) {
 	}
 	String modifiersStr = Modifier.toString(modifiers & ~(Modifier.SYNCHRONIZED | (lock ? Modifier.NATIVE : 0)));
 	output(modifiersStr);
-	if (modifiersStr.length() > 0) output(" ");
+    if (modifiersStr.length() > 0) {
+        output(" ");
+    }
 	output(returnStr);
 	output(" ");
 	output(method.getName());
@@ -112,7 +126,9 @@ public void generate(JNIMethod method) {
 		output("(");
 		String[] paramNames = getArgNames(method);
 		for (int i = 0; i < paramNames.length; i++) {
-			if (i != 0) output(", ");
+            if (i != 0) {
+                output(", ");
+            }
 			output(paramNames[i]);
 		}
 		outputln(");");

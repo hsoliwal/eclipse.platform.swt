@@ -191,7 +191,9 @@ private class WebViewUnavailableDialog {
 
 static Composite checkParent (Composite parent) {
 	String platform = SWT.getPlatform ();
-	if (!"gtk".equals (platform)) return parent; //$NON-NLS-1$
+    if (!"gtk".equals(platform)) {
+        return parent;
+    } //$NON-NLS-1$
 
 	/*
 	* Note.  Mozilla provides all IM support needed for text input in web pages.
@@ -310,8 +312,12 @@ public static void clearSessions () {
  * @since 3.5
  */
 public static String getCookie (String name, String url) {
-	if (name == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (url == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (name == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (url == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return WebBrowser.GetCookie (name, url);
 }
 
@@ -340,8 +346,12 @@ public static String getCookie (String name, String url) {
  * @since 3.5
  */
 public static boolean setCookie (String value, String url) {
-	if (value == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (url == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (value == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (url == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return WebBrowser.SetCookie (value, url, true);
 }
 
@@ -368,7 +378,9 @@ public static boolean setCookie (String value, String url) {
  */
 public void addAuthenticationListener (AuthenticationListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.addAuthenticationListener (listener);
 }
 
@@ -395,7 +407,9 @@ public void addAuthenticationListener (AuthenticationListener listener) {
  */
 public void addCloseWindowListener (CloseWindowListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.addCloseWindowListener (listener);
 }
 
@@ -423,7 +437,9 @@ public void addCloseWindowListener (CloseWindowListener listener) {
  */
 public void addLocationListener (LocationListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.addLocationListener (listener);
 }
 
@@ -450,7 +466,9 @@ public void addLocationListener (LocationListener listener) {
  */
 public void addOpenWindowListener (OpenWindowListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.addOpenWindowListener (listener);
 }
 
@@ -474,7 +492,9 @@ public void addOpenWindowListener (OpenWindowListener listener) {
  */
 public void addProgressListener (ProgressListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.addProgressListener (listener);
 }
 
@@ -501,7 +521,9 @@ public void addProgressListener (ProgressListener listener) {
  */
 public void addStatusTextListener (StatusTextListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.addStatusTextListener (listener);
 }
 
@@ -525,7 +547,9 @@ public void addStatusTextListener (StatusTextListener listener) {
  */
 public void addTitleListener (TitleListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.addTitleListener (listener);
 }
 
@@ -549,7 +573,9 @@ public void addTitleListener (TitleListener listener) {
  */
 public void addVisibilityWindowListener (VisibilityWindowListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.addVisibilityWindowListener (listener);
 }
 
@@ -608,7 +634,9 @@ protected void checkSubclass () {
  */
 public boolean execute (String script) {
 	checkWidget();
-	if (script == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (script == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return webBrowser.execute (script);
 }
 
@@ -735,7 +763,9 @@ public Object evaluate (String script) throws SWTException {
  */
 public Object evaluate (String script, boolean trusted) throws SWTException {
 	checkWidget();
-	if (script == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (script == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return webBrowser.evaluate (script, trusted);
 }
 
@@ -886,7 +916,9 @@ public boolean isBackEnabled () {
 @Override
 public boolean isFocusControl () {
 	checkWidget();
-	if (webBrowser.isFocusControl ()) return true;
+    if (webBrowser.isFocusControl()) {
+        return true;
+    }
 	return super.isFocusControl ();
 }
 
@@ -942,7 +974,9 @@ public void refresh () {
  */
 public void removeAuthenticationListener (AuthenticationListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.removeAuthenticationListener (listener);
 }
 
@@ -965,7 +999,9 @@ public void removeAuthenticationListener (AuthenticationListener listener) {
  */
 public void removeCloseWindowListener (CloseWindowListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.removeCloseWindowListener (listener);
 }
 
@@ -988,7 +1024,9 @@ public void removeCloseWindowListener (CloseWindowListener listener) {
  */
 public void removeLocationListener (LocationListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.removeLocationListener (listener);
 }
 
@@ -1011,7 +1049,9 @@ public void removeLocationListener (LocationListener listener) {
  */
 public void removeOpenWindowListener (OpenWindowListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.removeOpenWindowListener (listener);
 }
 
@@ -1035,7 +1075,9 @@ public void removeOpenWindowListener (OpenWindowListener listener) {
  */
 public void removeProgressListener (ProgressListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.removeProgressListener (listener);
 }
 
@@ -1058,7 +1100,9 @@ public void removeProgressListener (ProgressListener listener) {
  */
 public void removeStatusTextListener (StatusTextListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.removeStatusTextListener (listener);
 }
 
@@ -1082,7 +1126,9 @@ public void removeStatusTextListener (StatusTextListener listener) {
  */
 public void removeTitleListener (TitleListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.removeTitleListener (listener);
 }
 
@@ -1106,7 +1152,9 @@ public void removeTitleListener (TitleListener listener) {
  */
 public void removeVisibilityWindowListener (VisibilityWindowListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	webBrowser.removeVisibilityWindowListener (listener);
 }
 
@@ -1204,7 +1252,9 @@ public boolean setText (String html) {
  */
 public boolean setText (String html, boolean trusted) {
 	checkWidget();
-	if (html == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (html == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return webBrowser.setText (html, trusted);
 }
 
@@ -1262,7 +1312,9 @@ public boolean setUrl (String url) {
  */
 public boolean setUrl (String url, String postData, String[] headers) {
 	checkWidget();
-	if (url == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (url == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return webBrowser.setUrl (url, postData, headers);
 }
 
@@ -1284,7 +1336,9 @@ public void stop () {
 @Override
 public String toString () {
 	String base = super.toString ();
-	if (webBrowser == null) return base;
+    if (webBrowser == null) {
+        return base;
+    }
 	return base + " [" + webBrowser.getBrowserType () + "]";
 }
 }

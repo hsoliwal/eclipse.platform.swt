@@ -28,9 +28,15 @@ final class VirtualScrollMetrics {
 	}
 
 	void configure (long logicalRows, int sampleRowExtent, int viewportExtent) {
-		if (logicalRows < 0) throw new IllegalArgumentException ("negative logical rows");
-		if (sampleRowExtent <= 0) throw new IllegalArgumentException ("non-positive sample row extent");
-		if (viewportExtent < 0) throw new IllegalArgumentException ("negative viewport extent");
+        if (logicalRows < 0) {
+            throw new IllegalArgumentException("negative logical rows");
+        }
+        if (sampleRowExtent <= 0) {
+            throw new IllegalArgumentException("non-positive sample row extent");
+        }
+        if (viewportExtent < 0) {
+            throw new IllegalArgumentException("negative viewport extent");
+        }
 		this.logicalRows = logicalRows;
 		this.sampleRowExtent = sampleRowExtent;
 		this.viewportExtent = viewportExtent;
@@ -57,7 +63,9 @@ final class VirtualScrollMetrics {
 	}
 
 	int visibleRows () {
-		if (logicalRows == 0 || viewportExtent == 0) return 0;
+        if (logicalRows == 0 || viewportExtent == 0) {
+            return 0;
+        }
 		long rows = ((long)viewportExtent + sampleRowExtent - 1L) / sampleRowExtent;
 		return (int)Math.min (logicalRows, Math.max (1L, rows));
 	}
@@ -75,10 +83,14 @@ final class VirtualScrollMetrics {
 	}
 
 	int thumb () {
-		if (logicalRows == 0) return 0;
+        if (logicalRows == 0) {
+            return 0;
+        }
 		int visible = Math.max (1, visibleRows ());
 		int maximum = maximum ();
-		if (logicalRows <= Integer.MAX_VALUE) return Math.min (maximum, visible);
+        if (logicalRows <= Integer.MAX_VALUE) {
+            return Math.min(maximum, visible);
+        }
 		long scaled = (long)Math.ceil ((double)visible * maximum / logicalRows);
 		return (int)Math.max (1L, Math.min (maximum, scaled));
 	}
@@ -107,8 +119,12 @@ final class VirtualScrollMetrics {
 		long clamped = clampTopRow (topRow);
 		long maxTop = maxTopRow ();
 		int maxSelection = Math.max (0, maximum () - thumb ());
-		if (clamped == 0 || maxTop == 0 || maxSelection == 0) return 0;
-		if (logicalRows <= Integer.MAX_VALUE) return (int)clamped;
+        if (clamped == 0 || maxTop == 0 || maxSelection == 0) {
+            return 0;
+        }
+        if (logicalRows <= Integer.MAX_VALUE) {
+            return (int) clamped;
+        }
 		return (int)Math.round ((double)clamped * maxSelection / maxTop);
 	}
 
@@ -116,8 +132,12 @@ final class VirtualScrollMetrics {
 		int maxSelection = Math.max (0, maximum () - thumb ());
 		int clamped = Math.max (0, Math.min (selection, maxSelection));
 		long maxTop = maxTopRow ();
-		if (clamped == 0 || maxSelection == 0 || maxTop == 0) return 0;
-		if (logicalRows <= Integer.MAX_VALUE) return clamped;
+        if (clamped == 0 || maxSelection == 0 || maxTop == 0) {
+            return 0;
+        }
+        if (logicalRows <= Integer.MAX_VALUE) {
+            return clamped;
+        }
 		return Math.round ((double)clamped * maxTop / maxSelection);
 	}
 }

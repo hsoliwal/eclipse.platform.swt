@@ -169,28 +169,38 @@ TreeItem (Tree parent, long parentIter, int style, int index, long iter) {
 	} else {
 		assert handle == 0;
 		handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-		if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (handle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		C.memmove(handle, iter, GTK.GtkTreeIter_sizeof ());
 	}
 }
 
 static int checkIndex (int index) {
-	if (index < 0) SWT.error (SWT.ERROR_INVALID_RANGE);
+    if (index < 0) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	return index;
 }
 
 static TreeItem checkNull (TreeItem item) {
-	if (item == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return item;
 }
 
 static Tree checkNull (Tree control) {
-	if (control == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (control == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return control;
 }
 
 boolean isCachedState () {
-	if ((parent.style & SWT.VIRTUAL) == 0) return cached;
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return cached;
+    }
 	return parent.virtualFlag (this, VirtualItemState.CACHED);
 }
 
@@ -203,17 +213,23 @@ void setCachedState (boolean value) {
 }
 
 boolean isCheckedState () {
-	if ((parent.style & SWT.VIRTUAL) == 0) return _getChecked ();
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return _getChecked();
+    }
 	return parent.virtualFlag (this, VirtualItemState.CHECKED);
 }
 
 void setCheckedState (boolean value) {
-	if ((parent.style & SWT.VIRTUAL) == 0) return;
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return;
+    }
 	parent.virtualFlag (this, VirtualItemState.CHECKED, value);
 }
 
 boolean isGrayedState () {
-	if ((parent.style & SWT.VIRTUAL) == 0) return grayed;
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return grayed;
+    }
 	return parent.virtualFlag (this, VirtualItemState.GRAYED);
 }
 
@@ -226,7 +242,9 @@ void setGrayedState (boolean value) {
 }
 
 boolean isExpandedState () {
-	if ((parent.style & SWT.VIRTUAL) == 0) return isExpanded;
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return isExpanded;
+    }
 	return parent.virtualFlag (this, VirtualItemState.EXPANDED);
 }
 
@@ -240,13 +258,17 @@ void setExpandedState (boolean value) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 Color _getBackground () {
 	long [] ptr = new long [1];
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, Tree.BACKGROUND_COLUMN, ptr, -1);
-	if (ptr [0] == 0) return parent.getBackground ();
+    if (ptr [0] == 0) {
+        return parent.getBackground();
+    }
 	GdkRGBA gdkRGBA = new GdkRGBA ();
 	OS.memmove(gdkRGBA, ptr [0], GdkRGBA.sizeof);
 	GDK.gdk_rgba_free (ptr [0]);
@@ -255,11 +277,15 @@ Color _getBackground () {
 
 Color _getBackground (int index) {
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count - 1) return _getBackground ();
+    if (0 > index || index > count - 1) {
+        return _getBackground();
+    }
 	long [] ptr = new long [1];
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, modelIndex + Tree.CELL_BACKGROUND, ptr, -1);
-	if (ptr [0] == 0) return _getBackground ();
+    if (ptr [0] == 0) {
+        return _getBackground();
+    }
 	GdkRGBA gdkRGBA = new GdkRGBA ();
 	OS.memmove(gdkRGBA, ptr [0], GdkRGBA.sizeof);
 	GDK.gdk_rgba_free (ptr [0]);
@@ -275,7 +301,9 @@ boolean _getChecked () {
 Color _getForeground () {
 	long [] ptr = new long [1];
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, Tree.FOREGROUND_COLUMN, ptr, -1);
-	if (ptr [0] == 0) return parent.getForeground ();
+    if (ptr [0] == 0) {
+        return parent.getForeground();
+    }
 	GdkRGBA gdkRGBA = new GdkRGBA ();
 	OS.memmove(gdkRGBA, ptr [0], GdkRGBA.sizeof);
 	GDK.gdk_rgba_free (ptr [0]);
@@ -284,11 +312,15 @@ Color _getForeground () {
 
 Color _getForeground (int index) {
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count - 1) return _getForeground ();
+    if (0 > index || index > count - 1) {
+        return _getForeground();
+    }
 	long [] ptr = new long [1];
 	int modelIndex =  parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, modelIndex + Tree.CELL_FOREGROUND, ptr, -1);
-	if (ptr [0] == 0) return _getForeground ();
+    if (ptr [0] == 0) {
+        return _getForeground();
+    }
 	GdkRGBA gdkRGBA = new GdkRGBA ();
 	OS.memmove(gdkRGBA, ptr [0], GdkRGBA.sizeof);
 	GDK.gdk_rgba_free (ptr [0]);
@@ -297,12 +329,16 @@ Color _getForeground (int index) {
 
 Image _getImage(int index) {
 	int count = Math.max(1, parent.getColumnCount());
-	if (0 > index || index > count - 1) return null;
+    if (0 > index || index > count - 1) {
+        return null;
+    }
 
 	long[] surfaceHandle = new long[1];
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns[index].modelIndex;
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, modelIndex + Tree.CELL_SURFACE, surfaceHandle, -1);
-	if (surfaceHandle[0] == 0) return null;
+    if (surfaceHandle[0] == 0) {
+        return null;
+    }
 
 	int imageIndex = parent.imageList.indexOf(surfaceHandle[0]);
 	if (imageIndex == -1) {
@@ -314,11 +350,15 @@ Image _getImage(int index) {
 
 String _getText (int index) {
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return "";
+    if (0 > index || index > count - 1) {
+        return "";
+    }
 	long [] ptr = new long [1];
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, modelIndex + Tree.CELL_TEXT, ptr, -1);
-	if (ptr [0] == 0) return ""; //$NON-NLS-1$
+    if (ptr [0] == 0) {
+        return "";
+    } //$NON-NLS-1$
 	int length = C.strlen (ptr [0]);
 	byte[] buffer = new byte [length];
 	C.memmove (buffer, ptr [0], length);
@@ -327,7 +367,9 @@ String _getText (int index) {
 }
 
 void clear () {
-	if (parent.currentItem == this) return;
+    if (parent.currentItem == this) {
+        return;
+    }
 	if (isCachedState () || (parent.style & SWT.VIRTUAL) == 0) {
 		int columnCount = GTK.gtk_tree_model_get_n_columns (parent.modelHandle);
 		/* the columns before FOREGROUND_COLUMN contain int values, subsequent columns contain pointers */
@@ -423,7 +465,9 @@ void destroyWidget () {
  */
 public Color getBackground () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return _getBackground ();
 }
 
@@ -442,7 +486,9 @@ public Color getBackground () {
  */
 public Color getBackground (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return _getBackground (index);
 }
 
@@ -462,8 +508,10 @@ public Color getBackground (int index) {
  */
 public Rectangle getBounds (int index) {
 	checkWidget ();
-	// TODO fully test on early and later versions of GTK
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    // TODO fully test on early and later versions of GTK
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	long parentHandle = parent.handle;
 	long column = 0;
 	if (index >= 0 && index < parent.columnCount) {
@@ -471,12 +519,16 @@ public Rectangle getBounds (int index) {
 	} else {
 		column = GTK.gtk_tree_view_get_column (parentHandle, index);
 	}
-	if (column == 0) return new Rectangle (0, 0, 0, 0);
+    if (column == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	GTK.gtk_widget_realize (parentHandle);
 	GdkRectangle rect = new GdkRectangle ();
 	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
-	if ((parent.getStyle () & SWT.MIRRORED) != 0) rect.x = parent.getClientWidth () - rect.width - rect.x;
+    if ((parent.getStyle() & SWT.MIRRORED) != 0) {
+        rect.x = parent.getClientWidth() - rect.width - rect.x;
+    }
 
 	GTK.gtk_tree_path_free (path);
 
@@ -504,15 +556,21 @@ public Rectangle getBounds (int index) {
  */
 public Rectangle getBounds () {
 	checkWidget ();
-	// TODO fully test on early and later versions of GTK
-	// shifted a bit too far right on later versions of GTK - however, old Tree also had this problem
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    // TODO fully test on early and later versions of GTK
+    // shifted a bit too far right on later versions of GTK - however, old Tree also had this problem
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	long parentHandle = parent.handle;
 	long column = GTK.gtk_tree_view_get_column (parentHandle, 0);
-	if (column == 0) return new Rectangle (0, 0, 0, 0);
+    if (column == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	long textRenderer = parent.getTextRenderer (column);
 	long pixbufRenderer = parent.getPixbufRenderer (column);
-	if (textRenderer == 0 || pixbufRenderer == 0)  return new Rectangle (0, 0, 0, 0);
+    if (textRenderer == 0 || pixbufRenderer == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	GTK.gtk_widget_realize (parentHandle);
@@ -523,7 +581,9 @@ public Rectangle getBounds () {
 
 	GdkRectangle rect = new GdkRectangle ();
 	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
-	if ((parent.getStyle () & SWT.MIRRORED) != 0) rect.x = parent.getClientWidth () - rect.width - rect.x;
+    if ((parent.getStyle() & SWT.MIRRORED) != 0) {
+        rect.x = parent.getClientWidth() - rect.width - rect.x;
+    }
 	int right = rect.x + rect.width;
 
 	int [] x = new int [1], w = new int [1];
@@ -569,8 +629,12 @@ public Rectangle getBounds () {
  */
 public boolean getChecked () {
 	checkWidget();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if ((parent.style & SWT.CHECK) == 0) return false;
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if ((parent.style & SWT.CHECK) == 0) {
+        return false;
+    }
 	return (parent.style & SWT.VIRTUAL) != 0 ? isCheckedState () : _getChecked ();
 }
 
@@ -604,7 +668,9 @@ public boolean getExpanded () {
  */
 public Font getFont () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return font != null ? font : parent.getFont ();
 }
 
@@ -624,10 +690,16 @@ public Font getFont () {
  */
 public Font getFont (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count - 1) return getFont ();
-	if (cellFont == null || cellFont [index] == null) return getFont ();
+    if (0 > index || index > count - 1) {
+        return getFont();
+    }
+    if (cellFont == null || cellFont [index] == null) {
+        return getFont();
+    }
 	return cellFont [index];
 }
 
@@ -646,7 +718,9 @@ public Font getFont (int index) {
  */
 public Color getForeground () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return _getForeground ();
 }
 
@@ -666,7 +740,9 @@ public Color getForeground () {
  */
 public Color getForeground (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return _getForeground (index);
 }
 
@@ -684,15 +760,21 @@ public Color getForeground (int index) {
  */
 public boolean getGrayed () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if ((parent.style & SWT.CHECK) == 0) return false;
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if ((parent.style & SWT.CHECK) == 0) {
+        return false;
+    }
 	return isGrayedState ();
 }
 
 @Override
 public Image getImage () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return getImage (0);
 }
 
@@ -712,7 +794,9 @@ public Image getImage () {
  */
 public Image getImage (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return _getImage (index);
 }
 
@@ -733,8 +817,10 @@ public Image getImage (int index) {
  */
 public Rectangle getImageBounds (int index) {
 	checkWidget ();
-	// TODO fully test on early and later versions of GTK
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    // TODO fully test on early and later versions of GTK
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	long parentHandle = parent.handle;
 	long column = 0;
 	if (index >= 0 && index < parent.getColumnCount ()) {
@@ -742,14 +828,20 @@ public Rectangle getImageBounds (int index) {
 	} else {
 		column = GTK.gtk_tree_view_get_column (parentHandle, index);
 	}
-	if (column == 0) return new Rectangle (0, 0, 0, 0);
+    if (column == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	long pixbufRenderer = parent.getPixbufRenderer (column);
-	if (pixbufRenderer == 0)  return new Rectangle (0, 0, 0, 0);
+    if (pixbufRenderer == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	GdkRectangle rect = new GdkRectangle ();
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	GTK.gtk_widget_realize (parentHandle);
 	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
-	if ((parent.getStyle () & SWT.MIRRORED) != 0) rect.x = parent.getClientWidth () - rect.width - rect.x;
+    if ((parent.getStyle() & SWT.MIRRORED) != 0) {
+        rect.x = parent.getClientWidth() - rect.width - rect.x;
+    }
 	GTK.gtk_tree_path_free (path);
 	/*
 	 * Feature in GTK. When a pixbufRenderer has size of 0x0, gtk_tree_view_column_cell_get_position
@@ -771,7 +863,9 @@ public Rectangle getImageBounds (int index) {
 		 * text.
 		 */
 		long textRenderer = parent.getTextRenderer (column);
-		if (textRenderer == 0)  return new Rectangle (0, 0, 0, 0);
+        if (textRenderer == 0) {
+            return new Rectangle(0, 0, 0, 0);
+        }
 		int [] xText = new int [1], wText = new int [1];
 		gtk_tree_view_column_cell_get_position (column, textRenderer, xText, wText);
 		rect.x += xText [0];
@@ -803,7 +897,9 @@ public Rectangle getImageBounds (int index) {
  */
 public int getItemCount () {
 	checkWidget();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return parent.virtualChildCount (this);
 }
 
@@ -826,13 +922,19 @@ public int getItemCount () {
  */
 public TreeItem getItem (int index) {
 	checkWidget();
-	if (index < 0) error (SWT.ERROR_INVALID_RANGE);
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (index < 0) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	parent.ensureVirtualNativeItem (handle, index);
 
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	try {
-		if (!GTK.gtk_tree_model_iter_nth_child (parent.modelHandle, iter, handle, index)) error (SWT.ERROR_INVALID_RANGE);
+        if (!GTK.gtk_tree_model_iter_nth_child(parent.modelHandle, iter, handle, index)) {
+            error(SWT.ERROR_INVALID_RANGE);
+        }
 		return parent.exposeVirtualItem (parent._getItem (handle, iter, index));
 	} finally {
 		OS.g_free (iter);
@@ -857,14 +959,18 @@ public TreeItem getItem (int index) {
  */
 public TreeItem [] getItems () {
 	checkWidget();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return parent.getItems (handle);
 }
 
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (!isCachedState ()) return "*virtual*"; //$NON-NLS-1$
+        if (!isCachedState()) {
+            return "*virtual*";
+        } //$NON-NLS-1$
 	}
 	return super.getNameText ();
 }
@@ -910,7 +1016,9 @@ public TreeItem getParentItem () {
 @Override
 public String getText () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return getText (0);
 }
 
@@ -930,7 +1038,9 @@ public String getText () {
  */
 public String getText (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	if (strings != null) {
 		if (0 <= index && index < strings.length) {
 			String string = strings [index];
@@ -957,9 +1067,13 @@ public String getText (int index) {
  */
 public Rectangle getTextBounds (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return new Rectangle (0, 0, 0, 0);
+    if (0 > index || index > count - 1) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	// TODO fully test on early and later versions of GTK
 	// shifted a bit too far right on later versions of GTK - however, old Tree also had this problem
 	long parentHandle = parent.handle;
@@ -969,10 +1083,14 @@ public Rectangle getTextBounds (int index) {
 	} else {
 		column = GTK.gtk_tree_view_get_column (parentHandle, index);
 	}
-	if (column == 0) return new Rectangle (0, 0, 0, 0);
+    if (column == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	long textRenderer = parent.getTextRenderer (column);
 	long pixbufRenderer = parent.getPixbufRenderer (column);
-	if (textRenderer == 0 || pixbufRenderer == 0)  return new Rectangle (0, 0, 0, 0);
+    if (textRenderer == 0 || pixbufRenderer == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	GTK.gtk_widget_realize (parentHandle);
@@ -983,7 +1101,9 @@ public Rectangle getTextBounds (int index) {
 
 	GdkRectangle rect = new GdkRectangle ();
 	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
-	if ((parent.getStyle () & SWT.MIRRORED) != 0) rect.x = parent.getClientWidth () - rect.width - rect.x;
+    if ((parent.getStyle() & SWT.MIRRORED) != 0) {
+        rect.x = parent.getClientWidth() - rect.width - rect.x;
+    }
 	int right = rect.x + rect.width;
 
 	int [] x = new int [1], w = new int [1];
@@ -1050,19 +1170,27 @@ public Rectangle getTextBounds (int index) {
  */
 public int indexOf (TreeItem item) {
 	checkWidget();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (item.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (item.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int index = -1;
 	boolean isParent = false;
 	long currentPath = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	long parentPath = GTK.gtk_tree_model_get_path (parent.modelHandle, item.handle);
 	int depth = GTK.gtk_tree_path_get_depth (parentPath);
 	if (depth > 1 && GTK.gtk_tree_path_up(parentPath)) {
-		if (GTK.gtk_tree_path_compare(currentPath, parentPath) == 0) isParent = true;
+        if (GTK.gtk_tree_path_compare(currentPath, parentPath) == 0) {
+            isParent = true;
+        }
 	}
 	GTK.gtk_tree_path_free (currentPath);
 	GTK.gtk_tree_path_free (parentPath);
-	if (!isParent) return index;
+    if (!isParent) {
+        return index;
+    }
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, item.handle);
 	if (depth > 1) {
 		long indices = GTK.gtk_tree_path_get_indices (path);
@@ -1086,7 +1214,9 @@ void releaseChildren (boolean destroy) {
 
 @Override
 void releaseHandle () {
-	if (handle != 0) OS.g_free (handle);
+    if (handle != 0) {
+        OS.g_free(handle);
+    }
 	handle = 0;
 	super.releaseHandle ();
 	parent = null;
@@ -1108,7 +1238,9 @@ public void dispose () {
 		tmpParent = parent;
 	}
 	super.dispose();
-	if (tmpParent != null && !tmpParent.isDisposed()) tmpParent.deselectAll();
+    if (tmpParent != null && !tmpParent.isDisposed()) {
+        tmpParent.deselectAll();
+    }
 }
 
 /**
@@ -1125,9 +1257,13 @@ public void removeAll () {
 	checkWidget ();
 	long modelHandle = parent.modelHandle;
 	int length = GTK.gtk_tree_model_iter_n_children (modelHandle, handle);
-	if (length == 0) return;
+    if (length == 0) {
+        return;
+    }
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+    if (iter == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	long selection = GTK.gtk_tree_view_get_selection (parent.handle);
 	int [] value = new int [1];
 	while (GTK.gtk_tree_model_iter_children (modelHandle, iter, handle)) {
@@ -1166,7 +1302,9 @@ public void setBackground (Color color) {
 	if (color != null && color.isDisposed ()) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (_getBackground ().equals (color)) return;
+    if (_getBackground().equals(color)) {
+        return;
+    }
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.BACKGROUND_COLUMN, gdkRGBA, -1);
 	setCachedState (true);
@@ -1195,9 +1333,13 @@ public void setBackground (int index, Color color) {
 	if (color != null && color.isDisposed ()) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (_getBackground (index).equals (color)) return;
+    if (_getBackground(index).equals(color)) {
+        return;
+    }
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_BACKGROUND, gdkRGBA, -1);
@@ -1215,7 +1357,9 @@ public void setBackground (int index, Color color) {
 				} else {
 					column = GTK.gtk_tree_view_get_column (parentHandle, index);
 				}
-				if (column == 0) return;
+                if (column == 0) {
+                    return;
+                }
 				long textRenderer = parent.getTextRenderer (column);
 				long imageRenderer = parent.getPixbufRenderer (column);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, display.cellDataProc, parentHandle, 0);
@@ -1242,10 +1386,16 @@ public void setBackground (int index, Color color) {
  */
 public void setChecked (boolean checked) {
 	checkWidget();
-	if ((parent.style & SWT.CHECK) == 0) return;
+    if ((parent.style & SWT.CHECK) == 0) {
+        return;
+    }
 	boolean oldChecked = (parent.style & SWT.VIRTUAL) != 0 ? isCheckedState () : _getChecked ();
-	if (oldChecked == checked) return;
-	if ((parent.style & SWT.VIRTUAL) != 0) setCheckedState (checked);
+    if (oldChecked == checked) {
+        return;
+    }
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        setCheckedState(checked);
+    }
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.CHECKED_COLUMN, checked, -1);
 	/*
 	* GTK+'s "inconsistent" state does not match SWT's concept of grayed.  To
@@ -1269,7 +1419,9 @@ public void setChecked (boolean checked) {
  */
 public void setExpanded (boolean expanded) {
 	checkWidget();
-	if (expanded) parent.restoreVirtualChildren (this);
+    if (expanded) {
+        parent.restoreVirtualChildren(this);
+    }
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	// Do nothing when the item is a leaf or already expanded
 	boolean hasChildren = parent.virtualChildCount (this) != 0;
@@ -1287,7 +1439,9 @@ public void setExpanded (boolean expanded) {
 			}
 		}
 		setExpandedState (expanded);
-		if (!expanded) parent.compactCollapsedVirtualChildren (this);
+        if (!expanded) {
+            parent.compactCollapsedVirtualChildren(this);
+        }
 	}
 	GTK.gtk_tree_path_free (path);
 }
@@ -1316,9 +1470,13 @@ public void setFont (Font font){
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	Font oldFont = this.font;
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	this.font = font;
-	if (oldFont != null && oldFont.equals (font)) return;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
 	long fontHandle = font != null ? font.handle : 0;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.FONT_COLUMN, fontHandle, -1);
 	setCachedState (true);
@@ -1349,15 +1507,23 @@ public void setFont (int index, Font font) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	if (cellFont == null) {
-		if (font == null) return;
+        if (font == null) {
+            return;
+        }
 		cellFont = new Font [count];
 	}
 	Font oldFont = cellFont [index];
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	cellFont [index] = font;
-	if (oldFont != null && oldFont.equals (font)) return;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
 
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	long fontHandle  = font != null ? font.handle : 0;
@@ -1375,7 +1541,9 @@ public void setFont (int index, Font font) {
 				} else {
 					column = GTK.gtk_tree_view_get_column (parentHandle, index);
 				}
-				if (column == 0) return;
+                if (column == 0) {
+                    return;
+                }
 				long textRenderer = parent.getTextRenderer (column);
 				long imageRenderer = parent.getPixbufRenderer (column);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, display.cellDataProc, parentHandle, 0);
@@ -1412,7 +1580,9 @@ public void setForeground (Color color){
 	if (color != null && color.isDisposed ()) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (_getForeground ().equals (color)) return;
+    if (_getForeground().equals(color)) {
+        return;
+    }
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.FOREGROUND_COLUMN, gdkRGBA, -1);
 	setCachedState (true);
@@ -1441,9 +1611,13 @@ public void setForeground (int index, Color color){
 	if (color != null && color.isDisposed ()) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (_getForeground (index).equals (color)) return;
+    if (_getForeground(index).equals(color)) {
+        return;
+    }
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_FOREGROUND, gdkRGBA, -1);
@@ -1461,7 +1635,9 @@ public void setForeground (int index, Color color){
 				} else {
 					column = GTK.gtk_tree_view_get_column (parentHandle, index);
 				}
-				if (column == 0) return;
+                if (column == 0) {
+                    return;
+                }
 				long textRenderer = parent.getTextRenderer (column);
 				long imageRenderer = parent.getPixbufRenderer (column);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, display.cellDataProc, parentHandle, 0);
@@ -1489,8 +1665,12 @@ public void setForeground (int index, Color color){
  */
 public void setGrayed (boolean grayed) {
 	checkWidget();
-	if ((parent.style & SWT.CHECK) == 0) return;
-	if (isGrayedState () == grayed) return;
+    if ((parent.style & SWT.CHECK) == 0) {
+        return;
+    }
+    if (isGrayedState() == grayed) {
+        return;
+    }
 	setGrayedState (grayed);
 	/*
 	* GTK+'s "inconsistent" state does not match SWT's concept of grayed.
@@ -1523,15 +1703,21 @@ public void setImage(int index, Image image) {
 		error(SWT.ERROR_INVALID_ARGUMENT);
 	}
 	if (image != null && image.type == SWT.ICON) {
-		if (image.equals(_getImage(index))) return;
+        if (image.equals(_getImage(index))) {
+            return;
+        }
 	}
 	int count = Math.max(1, parent.getColumnCount());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 
 	long pixbuf = 0, surface = 0;
 	if (image != null) {
 		ImageList imageList = parent.imageList;
-		if (imageList == null) imageList = parent.imageList = new ImageList();
+        if (imageList == null) {
+            imageList = parent.imageList = new ImageList();
+        }
 		int imageIndex = imageList.indexOf(image);
 		// When we create a blank image surface gets created with dimensions 0, 0.
         // This call recreates the surface with correct dimensions
@@ -1628,7 +1814,9 @@ public void setImage (Image image) {
  */
 public void setImage (Image [] images) {
 	checkWidget ();
-	if (images == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (images == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<images.length; i++) {
 		setImage (i, images [i]);
 	}
@@ -1679,17 +1867,29 @@ public void setItemCount (int count) {
  */
 public void setText (int index, String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (strings == null) {
-		if (_getText (index).equals (string)) return;
+        if (_getText(index).equals(string)) {
+            return;
+        }
 	}
-	else if ( getText (index).equals (string)) return;
+	else if (getText(index).equals(string)) {
+        return;
+    }
 
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	if (0 <= index && index < count) {
-		if (strings == null) strings = new String [count];
-		if (string.equals (strings [index])) return;
+        if (strings == null) {
+            strings = new String [count];
+        }
+        if (string.equals(strings [index])) {
+            return;
+        }
 		strings [index] = string;
 	}
 	if ((string != null) && (string.length() > TEXT_LIMIT)) {
@@ -1728,10 +1928,14 @@ public void setText (String string) {
  */
 public void setText (String [] strings) {
 	checkWidget ();
-	if (strings == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (strings == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<strings.length; i++) {
 		String string = strings [i];
-		if (string != null) setText (i, string);
+        if (string != null) {
+            setText(i, string);
+        }
 	}
 }
 }

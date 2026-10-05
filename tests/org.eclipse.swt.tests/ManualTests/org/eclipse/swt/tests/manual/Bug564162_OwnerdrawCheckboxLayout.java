@@ -26,29 +26,36 @@ public class Bug564162_OwnerdrawCheckboxLayout {
 
 		Font biggerFont = new Font(display, "Courier new", 15, SWT.NONE);
 
-		for (int iFont      = 0; iFont < 2;      iFont++)
-		for (int iCheckbox  = 0; iCheckbox < 2;  iCheckbox++)
-		for (int iBackColor = 0; iBackColor < 2; iBackColor++)
-		for (int iDisabled  = 0; iDisabled < 2;  iDisabled++)
-		{
-			Button button = new Button(shell, (iCheckbox == 0) ? SWT.RADIO : SWT.CHECK);
-			button.setText("000 Every control with same font shall have same text position");
+        for (int iFont = 0; iFont < 2; iFont++) {
+            for (int iCheckbox = 0; iCheckbox < 2; iCheckbox++) {
+                for (int iBackColor = 0; iBackColor < 2; iBackColor++) {
+                    for (int iDisabled = 0; iDisabled < 2; iDisabled++)
+                    {
+                        Button button = new Button(shell, (iCheckbox == 0) ? SWT.RADIO : SWT.CHECK);
+                        button.setText("000 Every control with same font shall have same text position");
 
-			if (iFont != 0)
-				button.setFont(biggerFont);
+                        if (iFont != 0) {
+                            button.setFont(biggerFont);
+                        }
 
-			if (iBackColor != 0)
-				button.setForeground(shell.getForeground());
+                        if (iBackColor != 0) {
+                            button.setForeground(shell.getForeground());
+                        }
 
-			if (iDisabled != 0)
-				button.setEnabled(false);
-		}
+                        if (iDisabled != 0) {
+                            button.setEnabled(false);
+                        }
+                    }
+                }
+            }
+        }
 
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

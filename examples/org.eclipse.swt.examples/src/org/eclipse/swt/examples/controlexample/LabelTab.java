@@ -65,17 +65,39 @@ class LabelTab extends AlignableTab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (wrapButton.getSelection ()) style |= SWT.WRAP;
-		if (separatorButton.getSelection ()) style |= SWT.SEPARATOR;
-		if (horizontalButton.getSelection ()) style |= SWT.HORIZONTAL;
-		if (verticalButton.getSelection ()) style |= SWT.VERTICAL;
-		if (shadowInButton.getSelection ()) style |= SWT.SHADOW_IN;
-		if (shadowOutButton.getSelection ()) style |= SWT.SHADOW_OUT;
-		if (shadowNoneButton.getSelection ()) style |= SWT.SHADOW_NONE;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
-		if (leftButton.getSelection ()) style |= SWT.LEFT;
-		if (centerButton.getSelection ()) style |= SWT.CENTER;
-		if (rightButton.getSelection ()) style |= SWT.RIGHT;
+        if (wrapButton.getSelection()) {
+            style |= SWT.WRAP;
+        }
+        if (separatorButton.getSelection()) {
+            style |= SWT.SEPARATOR;
+        }
+        if (horizontalButton.getSelection()) {
+            style |= SWT.HORIZONTAL;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.VERTICAL;
+        }
+        if (shadowInButton.getSelection()) {
+            style |= SWT.SHADOW_IN;
+        }
+        if (shadowOutButton.getSelection()) {
+            style |= SWT.SHADOW_OUT;
+        }
+        if (shadowNoneButton.getSelection()) {
+            style |= SWT.SHADOW_NONE;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (leftButton.getSelection()) {
+            style |= SWT.LEFT;
+        }
+        if (centerButton.getSelection()) {
+            style |= SWT.CENTER;
+        }
+        if (rightButton.getSelection()) {
+            style |= SWT.RIGHT;
+        }
 
 		/* Create the example widgets */
 		label1 = new Label (textLabelGroup, style);
@@ -155,9 +177,15 @@ class LabelTab extends AlignableTab {
 	@Override
 	void setExampleWidgetAlignment () {
 		int alignment = 0;
-		if (leftButton.getSelection ()) alignment = SWT.LEFT;
-		if (centerButton.getSelection ()) alignment = SWT.CENTER;
-		if (rightButton.getSelection ()) alignment = SWT.RIGHT;
+        if (leftButton.getSelection()) {
+            alignment = SWT.LEFT;
+        }
+        if (centerButton.getSelection()) {
+            alignment = SWT.CENTER;
+        }
+        if (rightButton.getSelection()) {
+            alignment = SWT.RIGHT;
+        }
 		label1.setAlignment (alignment);
 		label2.setAlignment (alignment);
 		label3.setAlignment (alignment);

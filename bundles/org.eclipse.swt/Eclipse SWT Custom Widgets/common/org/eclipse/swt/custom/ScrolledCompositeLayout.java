@@ -41,8 +41,12 @@ protected Point computeSize(Composite composite, int wHint, int hHint, boolean f
 	}
 	size.x = Math.max(size.x, sc.minWidth);
 	size.y = Math.max(size.y, sc.minHeight);
-	if (wHint != SWT.DEFAULT) size.x = wHint;
-	if (hHint != SWT.DEFAULT) size.y = hHint;
+    if (wHint != SWT.DEFAULT) {
+        size.x = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        size.y = hHint;
+    }
 	return size;
 }
 
@@ -53,9 +57,13 @@ protected boolean flushCache(Control control) {
 
 @Override
 protected void layout(Composite composite, boolean flushCache) {
-	if (inLayout) return;
+    if (inLayout) {
+        return;
+    }
 	ScrolledComposite sc = (ScrolledComposite)composite;
-	if (sc.content == null) return;
+    if (sc.content == null) {
+        return;
+    }
 	ScrollBar hBar = sc.getHorizontalBar();
 	ScrollBar vBar = sc.getVerticalBar();
 	if (hBar != null) {
@@ -71,8 +79,12 @@ protected void layout(Composite composite, boolean flushCache) {
 	inLayout = true;
 	Rectangle contentRect = sc.content.getBounds();
 	ViewportRuntime.PixelLayout viewport = sc.solveViewportLayout (contentRect);
-	if (hBar != null) hBar.setVisible (viewport.horizontalVisible ());
-	if (vBar != null) vBar.setVisible (viewport.verticalVisible ());
+    if (hBar != null) {
+        hBar.setVisible(viewport.horizontalVisible());
+    }
+    if (vBar != null) {
+        vBar.setVisible(viewport.verticalVisible());
+    }
 	Rectangle hostRect = sc.getClientArea();
 	if (sc.expandHorizontal) {
 		contentRect.width = Math.max(sc.minWidth, hostRect.width);

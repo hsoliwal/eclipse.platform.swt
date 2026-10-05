@@ -33,7 +33,9 @@ public class Bug209977_GCEraseItemEventBackground {
 		Text text = new Text(shell, SWT.SINGLE);
 		text.setBounds(10,140,100,30);
 		table.addListener(SWT.EraseItem, event -> {
-			if ((event.detail & SWT.SELECTED) == 0) return;
+            if ((event.detail & SWT.SELECTED) == 0) {
+                return;
+            }
 			if (table.isFocusControl()) {
 				System.out.print("selection background while focused: ");
 			} else {
@@ -44,7 +46,9 @@ public class Bug209977_GCEraseItemEventBackground {
 		table.select(0);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

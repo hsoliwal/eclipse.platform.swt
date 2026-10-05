@@ -47,17 +47,27 @@ final class VirtualTreeTopology {
 	}
 
 	void bind (int id, int parentId, int childIndex) {
-		if (id < 0) throw new IllegalArgumentException ("negative tree id");
-		if (parentId < ROOT) throw new IllegalArgumentException ("invalid parent id");
-		if (childIndex < 0) throw new IllegalArgumentException ("negative child index");
-		if (parentId != ROOT) requirePresent (parentId);
+        if (id < 0) {
+            throw new IllegalArgumentException("negative tree id");
+        }
+        if (parentId < ROOT) {
+            throw new IllegalArgumentException("invalid parent id");
+        }
+        if (childIndex < 0) {
+            throw new IllegalArgumentException("negative child index");
+        }
+        if (parentId != ROOT) {
+            requirePresent(parentId);
+        }
 		int existing = materializedChildId (parentId, childIndex);
 		if (existing >= 0 && existing != id) {
 			throw new IllegalStateException ("duplicate materialized tree coordinate");
 		}
 		if (contains (id)) {
 			for (int ancestor = parentId; ancestor != ROOT; ancestor = parentIds [ancestor]) {
-				if (ancestor == id) throw new IllegalArgumentException ("cyclic tree parent");
+                if (ancestor == id) {
+                    throw new IllegalArgumentException("cyclic tree parent");
+                }
 			}
 		}
 		ensureCapacity (id + 1);
@@ -68,27 +78,37 @@ final class VirtualTreeTopology {
 		} else {
 			int oldParent = parentIds [id];
 			int oldIndex = childIndices [id];
-			if (oldParent == parentId && oldIndex == childIndex) return;
+            if (oldParent == parentId && oldIndex == childIndex) {
+                return;
+            }
 			visibleContribution = visibleExtraRows [id];
-			if (visibleContribution != 0) propagateVisibleContribution (oldParent, -visibleContribution);
+            if (visibleContribution != 0) {
+                propagateVisibleContribution(oldParent, -visibleContribution);
+            }
 			unlink (id);
 		}
 		parentIds [id] = parentId;
 		childIndices [id] = childIndex;
 		nextSiblingIds [id] = -1;
 		linkSorted (id);
-		if (visibleContribution != 0) propagateVisibleContribution (parentId, visibleContribution);
+        if (visibleContribution != 0) {
+            propagateVisibleContribution(parentId, visibleContribution);
+        }
 	}
 
 	void insertCoordinate (int parentId, int childIndex, int id) {
-		if (childIndex < 0) throw new IllegalArgumentException ("negative child index");
+        if (childIndex < 0) {
+            throw new IllegalArgumentException("negative child index");
+        }
 		shiftSiblingIndices (parentId, childIndex, 1);
 		bind (id, parentId, childIndex);
 		adjustKnownChildCount (parentId, 1);
 	}
 
 	void releaseSubtree (int id) {
-		if (!contains (id)) return;
+        if (!contains(id)) {
+            return;
+        }
 		int parentId = parentIds [id];
 		int removedIndex = childIndices [id];
 		discardSubtree (id);
@@ -130,7 +150,9 @@ final class VirtualTreeTopology {
 	}
 
 	int firstMaterializedChildId (int parentId) {
-		if (parentId == ROOT) return rootFirstChildId;
+        if (parentId == ROOT) {
+            return rootFirstChildId;
+        }
 		requirePresent (parentId);
 		return firstChildIds [parentId];
 	}
@@ -141,18 +163,26 @@ final class VirtualTreeTopology {
 	}
 
 	int materializedChildId (int parentId, int childIndex) {
-		if (childIndex < 0) return -1;
+        if (childIndex < 0) {
+            return -1;
+        }
 		for (int id = parentId == ROOT ? rootFirstChildId : contains (parentId) ? firstChildIds [parentId] : -1;
 				id >= 0; id = nextSiblingIds [id]) {
 			int index = childIndices [id];
-			if (index == childIndex) return id;
-			if (index > childIndex) break;
+            if (index == childIndex) {
+                return id;
+            }
+            if (index > childIndex) {
+                break;
+            }
 		}
 		return -1;
 	}
 
 	void setChildCount (int parentId, int count) {
-		if (count < 0) throw new IllegalArgumentException ("negative child count");
+        if (count < 0) {
+            throw new IllegalArgumentException("negative child count");
+        }
 		if (parentId == ROOT) {
 			pruneCoordinatesPast (ROOT, count);
 			rootChildCount = count;
@@ -164,25 +194,34 @@ final class VirtualTreeTopology {
 		long state = stateMasks [parentId] | VirtualItemState.CHILDREN_KNOWN
 				| VirtualItemState.CHILDREN_COMPLETE;
 		state &= ~(VirtualItemState.CHILDREN_LOADING | VirtualItemState.CHILDREN_PARTIAL);
-		if (count == 0) state &= ~VirtualItemState.HAS_CHILDREN;
-		else state |= VirtualItemState.HAS_CHILDREN;
+        if (count == 0) {
+            state &= ~VirtualItemState.HAS_CHILDREN;
+        } else {
+            state |= VirtualItemState.HAS_CHILDREN;
+        }
 		stateMasks [parentId] = state;
 		refreshVisibleExtra (parentId);
 	}
 
 	boolean childCountKnown (int parentId) {
-		if (parentId == ROOT) return rootChildCount != UNKNOWN_CHILD_COUNT;
+        if (parentId == ROOT) {
+            return rootChildCount != UNKNOWN_CHILD_COUNT;
+        }
 		return contains (parentId) && childCounts [parentId] != UNKNOWN_CHILD_COUNT;
 	}
 
 	int childCount (int parentId) {
 		if (parentId == ROOT) {
-			if (rootChildCount == UNKNOWN_CHILD_COUNT) throw new IllegalStateException ("root child count unknown");
+            if (rootChildCount == UNKNOWN_CHILD_COUNT) {
+                throw new IllegalStateException("root child count unknown");
+            }
 			return rootChildCount;
 		}
 		requirePresent (parentId);
 		int count = childCounts [parentId];
-		if (count == UNKNOWN_CHILD_COUNT) throw new IllegalStateException ("child count unknown");
+        if (count == UNKNOWN_CHILD_COUNT) {
+            throw new IllegalStateException("child count unknown");
+        }
 		return count;
 	}
 
@@ -190,7 +229,9 @@ final class VirtualTreeTopology {
 		requirePresent (id);
 		boolean expansionChanged = ((stateMasks [id] ^ state) & VirtualItemState.EXPANDED) != 0;
 		stateMasks [id] = state;
-		if (expansionChanged) refreshVisibleExtra (id);
+        if (expansionChanged) {
+            refreshVisibleExtra(id);
+        }
 	}
 
 	long state (int id) {
@@ -201,10 +242,17 @@ final class VirtualTreeTopology {
 	void flag (int id, long flag, boolean value) {
 		requirePresent (id);
 		boolean old = (stateMasks [id] & flag) != 0;
-		if (old == value) return;
-		if (value) stateMasks [id] |= flag;
-		else stateMasks [id] &= ~flag;
-		if ((flag & VirtualItemState.EXPANDED) != 0) refreshVisibleExtra (id);
+        if (old == value) {
+            return;
+        }
+        if (value) {
+            stateMasks [id] |= flag;
+        } else {
+            stateMasks [id] &= ~flag;
+        }
+        if ((flag & VirtualItemState.EXPANDED) != 0) {
+            refreshVisibleExtra(id);
+        }
 	}
 
 	boolean flag (int id, long flag) {
@@ -224,7 +272,9 @@ final class VirtualTreeTopology {
 	int highestChildIndexWithSubtreeFlag (int parentId, long flag) {
 		int highest = -1;
 		for (int id = firstMaterializedChildId (parentId); id >= 0; id = nextSiblingIds [id]) {
-			if (subtreeHasFlag (id, flag)) highest = childIndices [id];
+            if (subtreeHasFlag(id, flag)) {
+                highest = childIndices [id];
+            }
 		}
 		return highest;
 	}
@@ -234,10 +284,16 @@ final class VirtualTreeTopology {
 	}
 
 	private boolean subtreeHasFlag (int id, long flag) {
-		if (!contains (id)) return false;
-		if ((stateMasks [id] & flag) != 0) return true;
+        if (!contains(id)) {
+            return false;
+        }
+        if ((stateMasks [id] & flag) != 0) {
+            return true;
+        }
 		for (int child = firstChildIds [id]; child >= 0; child = nextSiblingIds [child]) {
-			if (subtreeHasFlag (child, flag)) return true;
+            if (subtreeHasFlag(child, flag)) {
+                return true;
+            }
 		}
 		return false;
 	}
@@ -246,21 +302,29 @@ final class VirtualTreeTopology {
 		int id = firstMaterializedChildId (parentId);
 		while (id >= 0) {
 			int next = nextSiblingIds [id];
-			if (childIndices [id] >= count) discardSubtree (id);
+            if (childIndices [id] >= count) {
+                discardSubtree(id);
+            }
 			id = next;
 		}
 	}
 
 	private void discardSubtree (int id) {
-		if (!contains (id)) return;
+        if (!contains(id)) {
+            return;
+        }
 		int parentId = parentIds [id];
 		long visibleContribution = visibleExtraRows [id];
-		if (visibleContribution != 0) propagateVisibleContribution (parentId, -visibleContribution);
+        if (visibleContribution != 0) {
+            propagateVisibleContribution(parentId, -visibleContribution);
+        }
 		discardSubtreeDetached (id);
 	}
 
 	private void discardSubtreeDetached (int id) {
-		if (!contains (id)) return;
+        if (!contains(id)) {
+            return;
+        }
 		int child = firstChildIds [id];
 		while (child >= 0) {
 			int next = nextSiblingIds [child];
@@ -281,13 +345,18 @@ final class VirtualTreeTopology {
 
 	private void adjustKnownChildCount (int parentId, int delta) {
 		if (parentId == ROOT) {
-			if (rootChildCount != UNKNOWN_CHILD_COUNT) rootChildCount = Math.max (0, rootChildCount + delta);
+            if (rootChildCount != UNKNOWN_CHILD_COUNT) {
+                rootChildCount = Math.max(0, rootChildCount + delta);
+            }
 			return;
 		}
 		if (contains (parentId) && childCounts [parentId] != UNKNOWN_CHILD_COUNT) {
 			childCounts [parentId] = Math.max (0, childCounts [parentId] + delta);
-			if (childCounts [parentId] == 0) stateMasks [parentId] &= ~VirtualItemState.HAS_CHILDREN;
-			else stateMasks [parentId] |= VirtualItemState.HAS_CHILDREN;
+            if (childCounts [parentId] == 0) {
+                stateMasks [parentId] &= ~VirtualItemState.HAS_CHILDREN;
+            } else {
+                stateMasks [parentId] |= VirtualItemState.HAS_CHILDREN;
+            }
 			refreshVisibleExtra (parentId);
 		}
 	}
@@ -300,18 +369,24 @@ final class VirtualTreeTopology {
 			next = Math.addExact ((long)childCounts [id], childVisibleExtraSums [id]);
 		}
 		long delta = Math.subtractExact (next, visibleExtraRows [id]);
-		if (delta == 0) return;
+        if (delta == 0) {
+            return;
+        }
 		visibleExtraRows [id] = next;
 		propagateVisibleContribution (parentIds [id], delta);
 	}
 
 	private void propagateVisibleContribution (int parentId, long delta) {
-		if (delta == 0) return;
+        if (delta == 0) {
+            return;
+        }
 		while (parentId != ROOT) {
 			requirePresent (parentId);
 			childVisibleExtraSums [parentId] = Math.addExact (childVisibleExtraSums [parentId], delta);
-			if ((stateMasks [parentId] & VirtualItemState.EXPANDED) == 0
-					|| childCounts [parentId] == UNKNOWN_CHILD_COUNT) return;
+            if ((stateMasks [parentId] & VirtualItemState.EXPANDED) == 0
+                    || childCounts [parentId] == UNKNOWN_CHILD_COUNT) {
+                return;
+            }
 			visibleExtraRows [parentId] = Math.addExact (visibleExtraRows [parentId], delta);
 			parentId = parentIds [parentId];
 		}
@@ -319,7 +394,9 @@ final class VirtualTreeTopology {
 	}
 
 	private void shiftSiblingIndices (int parentId, int fromInclusive, int delta) {
-		if (delta == 0) return;
+        if (delta == 0) {
+            return;
+        }
 		for (int id = 0; id < parentIds.length; id++) {
 			if (parentIds [id] == parentId && childIndices [id] >= fromInclusive) {
 				childIndices [id] = Math.addExact (childIndices [id], delta);
@@ -332,8 +409,11 @@ final class VirtualTreeTopology {
 		int head = parentId == ROOT ? rootFirstChildId : firstChildIds [parentId];
 		if (head < 0 || childIndices [id] < childIndices [head]) {
 			nextSiblingIds [id] = head;
-			if (parentId == ROOT) rootFirstChildId = id;
-			else firstChildIds [parentId] = id;
+            if (parentId == ROOT) {
+                rootFirstChildId = id;
+            } else {
+                firstChildIds [parentId] = id;
+            }
 			return;
 		}
 		int previous = head;
@@ -347,12 +427,17 @@ final class VirtualTreeTopology {
 	}
 
 	private void unlink (int id) {
-		if (!contains (id)) return;
+        if (!contains(id)) {
+            return;
+        }
 		int parentId = parentIds [id];
 		int head = parentId == ROOT ? rootFirstChildId : firstChildIds [parentId];
 		if (head == id) {
-			if (parentId == ROOT) rootFirstChildId = nextSiblingIds [id];
-			else firstChildIds [parentId] = nextSiblingIds [id];
+            if (parentId == ROOT) {
+                rootFirstChildId = nextSiblingIds [id];
+            } else {
+                firstChildIds [parentId] = nextSiblingIds [id];
+            }
 			nextSiblingIds [id] = -1;
 			return;
 		}
@@ -367,7 +452,9 @@ final class VirtualTreeTopology {
 	}
 
 	private void ensureCapacity (int required) {
-		if (required <= parentIds.length) return;
+        if (required <= parentIds.length) {
+            return;
+        }
 		int next = Math.max (required, Math.max (4, parentIds.length * 3 / 2));
 		int old = parentIds.length;
 		parentIds = Arrays.copyOf (parentIds, next);
@@ -386,6 +473,8 @@ final class VirtualTreeTopology {
 	}
 
 	private void requirePresent (int id) {
-		if (!contains (id)) throw new IllegalArgumentException ("unknown tree id " + id);
+        if (!contains(id)) {
+            throw new IllegalArgumentException("unknown tree id " + id);
+        }
 	}
 }

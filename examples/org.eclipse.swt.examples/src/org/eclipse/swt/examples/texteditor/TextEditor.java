@@ -153,8 +153,9 @@ public class TextEditor {
 		TextEditor editor = new TextEditor();
 		Shell shell = editor.open(display);
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		editor.releaseResources();
 		display.dispose();
@@ -243,7 +244,9 @@ public class TextEditor {
 			dialog.setFilterNames(new String [] {getResourceString("Text_Documents")}); //$NON-NLS-1$
 			dialog.setFilterExtensions (new String [] {"*.txt"}); //$NON-NLS-1$
 			String name = dialog.open();
-			if (name == null)  return;
+            if (name == null) {
+                return;
+            }
 			fileName = name;
 			try (FileInputStream file = new FileInputStream(name);){
 				styledText.setText(openFile(file));
@@ -264,7 +267,9 @@ public class TextEditor {
 			FileDialog dialog = new FileDialog (shell, SWT.SAVE);
 			dialog.setFilterNames(new String [] {getResourceString("Text_Documents")}); //$NON-NLS-1$
 			dialog.setFilterExtensions(new String [] {"*.txt"}); //$NON-NLS-1$
-			if (fileName != null) dialog.setFileName(fileName);
+            if (fileName != null) {
+                dialog.setFileName(fileName);
+            }
 			String name = dialog.open();
 			if (name != null) {
 				fileName = name;
@@ -346,7 +351,9 @@ public class TextEditor {
 			if (data != null) {
 				Font newFont = new Font(display, data);
 				styledText.setFont(newFont);
-				if (font != null) font.dispose();
+                if (font != null) {
+                    font.dispose();
+                }
 				font = newFont;
 				updateToolBar();
 			}
@@ -552,10 +559,15 @@ public class TextEditor {
 				if (!newRgb.equals(rgb)) {
 					underlineColor = new Color(newRgb);
 				}
-				if (underlineSingleItem.getSelection()) setStyle(UNDERLINE_SINGLE);
-				else if (underlineDoubleItem.getSelection()) setStyle(UNDERLINE_DOUBLE);
-				else if (underlineErrorItem.getSelection()) setStyle(UNDERLINE_ERROR);
-				else if (underlineSquiggleItem.getSelection()) setStyle(UNDERLINE_SQUIGGLE);
+                if (underlineSingleItem.getSelection()) {
+                    setStyle(UNDERLINE_SINGLE);
+                } else if (underlineDoubleItem.getSelection()) {
+                    setStyle(UNDERLINE_DOUBLE);
+                } else if (underlineErrorItem.getSelection()) {
+                    setStyle(UNDERLINE_ERROR);
+                } else if (underlineSquiggleItem.getSelection()) {
+                    setStyle(UNDERLINE_SQUIGGLE);
+                }
 			}
 		}));
 
@@ -569,10 +581,15 @@ public class TextEditor {
 				underlineMenu.setLocation(display.map(underlineControl.getParent(), null, pt));
 				underlineMenu.setVisible(true);
 			} else {
-				if (underlineSingleItem.getSelection()) setStyle(UNDERLINE_SINGLE);
-				else if (underlineDoubleItem.getSelection()) setStyle(UNDERLINE_DOUBLE);
-				else if (underlineErrorItem.getSelection()) setStyle(UNDERLINE_ERROR);
-				else if (underlineSquiggleItem.getSelection()) setStyle(UNDERLINE_SQUIGGLE);
+                if (underlineSingleItem.getSelection()) {
+                    setStyle(UNDERLINE_SINGLE);
+                } else if (underlineDoubleItem.getSelection()) {
+                    setStyle(UNDERLINE_DOUBLE);
+                } else if (underlineErrorItem.getSelection()) {
+                    setStyle(UNDERLINE_ERROR);
+                } else if (underlineSquiggleItem.getSelection()) {
+                    setStyle(UNDERLINE_SQUIGGLE);
+                }
 			}
 		}));
 
@@ -585,7 +602,9 @@ public class TextEditor {
 				RGB rgb = strikeoutColor != null ? strikeoutColor.getRGB() : null;
 				dialog.setRGB(rgb);
 				RGB newRgb = dialog.open();
-				if (newRgb == null) return;
+                if (newRgb == null) {
+                    return;
+                }
 				if (!newRgb.equals(rgb)) {
 					strikeoutColor = new Color(newRgb);
 				}
@@ -630,9 +649,13 @@ public class TextEditor {
 				if (!newRgb.equals(rgb)) {
 					borderColor = new Color(newRgb);
 				}
-				if (borderDashItem.getSelection()) setStyle(BORDER_DASH);
-				else if (borderDotItem.getSelection()) setStyle(BORDER_DOT);
-				else if (borderSolidItem.getSelection()) setStyle(BORDER_SOLID);
+                if (borderDashItem.getSelection()) {
+                    setStyle(BORDER_DASH);
+                } else if (borderDotItem.getSelection()) {
+                    setStyle(BORDER_DOT);
+                } else if (borderSolidItem.getSelection()) {
+                    setStyle(BORDER_SOLID);
+                }
 			}
 		}));
 
@@ -646,9 +669,13 @@ public class TextEditor {
 				borderMenu.setLocation(display.map(borderControl.getParent(), null, pt));
 				borderMenu.setVisible(true);
 			} else {
-				if (borderDashItem.getSelection()) setStyle(BORDER_DASH);
-				else if (borderDotItem.getSelection()) setStyle(BORDER_DOT);
-				else if (borderSolidItem.getSelection()) setStyle(BORDER_SOLID);
+                if (borderDashItem.getSelection()) {
+                    setStyle(BORDER_DASH);
+                } else if (borderDotItem.getSelection()) {
+                    setStyle(BORDER_DOT);
+                } else if (borderSolidItem.getSelection()) {
+                    setStyle(BORDER_SOLID);
+                }
 			}
 		}));
 
@@ -661,7 +688,9 @@ public class TextEditor {
 				RGB rgb = textForeground != null ? textForeground.getRGB() : null;
 				dialog.setRGB(rgb);
 				RGB newRgb = dialog.open();
-				if (newRgb == null) return;
+                if (newRgb == null) {
+                    return;
+                }
 				if (!newRgb.equals(rgb)) {
 					textForeground = new Color(newRgb);
 				}
@@ -678,7 +707,9 @@ public class TextEditor {
 				RGB rgb = textBackground != null ? textBackground.getRGB() : null;
 				dialog.setRGB(rgb);
 				RGB newRgb = dialog.open();
-				if (newRgb == null) return;
+                if (newRgb == null) {
+                    return;
+                }
 				if (!newRgb.equals(rgb)) {
 					textBackground = new Color(newRgb);
 				}
@@ -689,7 +720,9 @@ public class TextEditor {
 		ToolItem baselineUpItem = new ToolItem(styleToolBar, SWT.PUSH);
 		baselineUpItem.setImage(iBaselineUp);
 		String tooltip = "IncreaseFont"; //$NON-NLS-1$
-		if (USE_BASELINE) tooltip = "IncreaseBaseline"; //$NON-NLS-1$
+        if (USE_BASELINE) {
+            tooltip = "IncreaseBaseline";
+        } //$NON-NLS-1$
 		baselineUpItem.setToolTipText(getResourceString(tooltip));
 		baselineUpItem.addSelectionListener(widgetSelectedAdapter(event -> {
 			if (USE_BASELINE) {
@@ -702,7 +735,9 @@ public class TextEditor {
 		ToolItem baselineDownItem = new ToolItem(styleToolBar, SWT.PUSH);
 		baselineDownItem.setImage(iBaselineDown);
 		tooltip = "DecreaseFont"; //$NON-NLS-1$
-		if (USE_BASELINE) tooltip = "DecreaseBaseline"; //$NON-NLS-1$
+        if (USE_BASELINE) {
+            tooltip = "DecreaseBaseline";
+        } //$NON-NLS-1$
 		baselineDownItem.setToolTipText(getResourceString(tooltip));
 		baselineDownItem.addSelectionListener(widgetSelectedAdapter(event -> {
 			if (USE_BASELINE) {
@@ -859,25 +894,37 @@ public class TextEditor {
 					break;
 				}
 			}
-			if (disposeFont && rangeToDispose.font != textFont && rangeToDispose.font != null)  rangeToDispose.font.dispose();
+            if (disposeFont && rangeToDispose.font != textFont && rangeToDispose.font != null) {
+                rangeToDispose.font.dispose();
+            }
 
 			Object data = rangeToDispose.data;
 			if (data != null) {
-				if (data instanceof Image image) image.dispose();
-				if (data instanceof Control control) control.dispose();
+                if (data instanceof Image image) {
+                    image.dispose();
+                }
+                if (data instanceof Control control) {
+                    control.dispose();
+                }
 			}
 		}
 	}
 
 	void disposeResource(Font font) {
-		if (font == null) return;
+        if (font == null) {
+            return;
+        }
 		StyleRange[] styles = styledText.getStyleRanges(0, styledText.getCharCount(), false);
 		int index = 0;
 		while (index < styles.length) {
-			if (styles[index].font == font) break;
+            if (styles[index].font == font) {
+                break;
+            }
 			index++;
 		}
-		if (index == styles.length) font.dispose();
+        if (index == styles.length) {
+            font.dispose();
+        }
 	}
 
 	String[] getFontNames() {
@@ -887,10 +934,13 @@ public class TextEditor {
 		mainfor:
 		for (FontData fontData : fontNames) {
 			String fontName = fontData.getName();
-			if (fontName.startsWith("@")) //$NON-NLS-1$
-				continue;
+            if (fontName.startsWith("@")) { //$NON-NLS-1$
+                continue;
+            }
 			for (int j = 0; j < count; j++) {
-				if (names[j].equals(fontName)) continue mainfor;
+                if (names[j].equals(fontName)) {
+                    continue mainfor;
+                }
 			}
 			names[count++] = fontName;
 		}
@@ -960,8 +1010,12 @@ public class TextEditor {
 				style.font = textFont;
 			} else {
 				style.fontStyle = SWT.NONE;
-				if (boldControl.getSelection()) style.fontStyle |= SWT.BOLD;
-				if (italicControl.getSelection()) style.fontStyle |= SWT.ITALIC;
+                if (boldControl.getSelection()) {
+                    style.fontStyle |= SWT.BOLD;
+                }
+                if (italicControl.getSelection()) {
+                    style.fontStyle |= SWT.ITALIC;
+                }
 			}
 			if ((styleState & FOREGROUND) != 0) {
 				style.foreground = textForeground;
@@ -1101,8 +1155,12 @@ public class TextEditor {
 			for (StyleRange style : styles) {
 				Object data = style.data;
 				if (data != null) {
-					if (data instanceof Image image) image.dispose();
-					if (data instanceof Control control) control.dispose();
+                    if (data instanceof Image image) {
+                        image.dispose();
+                    }
+                    if (data instanceof Control control) {
+                        control.dispose();
+                    }
 				}
 			}
 		});
@@ -1128,7 +1186,9 @@ public class TextEditor {
 					String text = openFile(TextEditor.class.getResourceAsStream("text.txt"));  //$NON-NLS-1$
 					StyleRange[] styles = getStyles(TextEditor.class.getResourceAsStream("styles.txt"));  //$NON-NLS-1$
 					styledText.setText(text);
-					if (styles != null) styledText.setStyleRanges(styles);
+                    if (styles != null) {
+                        styledText.setStyleRanges(styles);
+                    }
 					break;
 				}
 				case 2: {
@@ -1205,7 +1265,9 @@ public class TextEditor {
 		iLink.dispose();
 		iLink = null;
 
-		if (textFont != null) textFont.dispose();
+        if (textFont != null) {
+            textFont.dispose();
+        }
 		textFont = null;
 		textForeground = null;
 		textBackground = null;
@@ -1213,7 +1275,9 @@ public class TextEditor {
 		underlineColor = null;
 		borderColor = null;
 
-		if (font != null) font.dispose();
+        if (font != null) {
+            font.dispose();
+        }
 		font = null;
 	}
 
@@ -1289,7 +1353,9 @@ public class TextEditor {
 		updateStyleState(style, BORDER);
 	}
 	void setStyle(int style, int start, int length) {
-		if (length == 0) return;
+        if (length == 0) {
+            return;
+        }
 
 		/* Create new style range */
 		StyleRange newRange = new StyleRange();
@@ -1305,8 +1371,12 @@ public class TextEditor {
 		if ((style & BACKGROUND) != 0) {
 			newRange.background = textBackground;
 		}
-		if ((style & BASELINE_UP) != 0)	newRange.rise++;
-		if ((style & BASELINE_DOWN) != 0) newRange.rise--;
+        if ((style & BASELINE_UP) != 0) {
+            newRange.rise++;
+        }
+        if ((style & BASELINE_DOWN) != 0) {
+            newRange.rise--;
+        }
 		if ((style & STRIKEOUT) != 0) {
 			newRange.strikeout = true;
 			newRange.strikeoutColor = strikeoutColor;
@@ -1404,8 +1474,12 @@ public class TextEditor {
 			if ((style & BACKGROUND) != 0) {
 				mergedRange.background = newRange.background != range.background ? newRange.background : null;
 			}
-			if ((style & BASELINE_UP) != 0) mergedRange.rise++;
-			if ((style & BASELINE_DOWN) != 0) mergedRange.rise--;
+            if ((style & BASELINE_UP) != 0) {
+                mergedRange.rise++;
+            }
+            if ((style & BASELINE_DOWN) != 0) {
+                mergedRange.rise--;
+            }
 			if ((style & STRIKEOUT) != 0) {
 				mergedRange.strikeout = !range.strikeout || range.strikeoutColor != newRange.strikeoutColor;
 				mergedRange.strikeoutColor = mergedRange.strikeout ? newRange.strikeoutColor : null;
@@ -1501,8 +1575,12 @@ public class TextEditor {
 				FontData[] fds = font.getFontData();
 				for (FontData fd : fds) {
 					int fontStyle = fd.getStyle();
-					if (!bold && (fontStyle & SWT.BOLD) != 0) bold = true;
-					if (!italic && (fontStyle & SWT.ITALIC) != 0) italic = true;
+                    if (!bold && (fontStyle & SWT.BOLD) != 0) {
+                        bold = true;
+                    }
+                    if (!italic && (fontStyle & SWT.ITALIC) != 0) {
+                        italic = true;
+                    }
 				}
 			} else {
 				bold = (range.fontStyle & SWT.BOLD) != 0;

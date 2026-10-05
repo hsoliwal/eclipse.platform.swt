@@ -90,21 +90,24 @@ public class Snippet128 {
 		Listener listener = event -> {
 			ToolItem item = (ToolItem) event.widget;
 			String string = item.getText();
-			if (string.equals("Back"))
-				browser.back();
-			else if (string.equals("Forward"))
-				browser.forward();
-			else if (string.equals("Stop"))
-				browser.stop();
-			else if (string.equals("Refresh"))
-				browser.refresh();
-			else if (string.equals("Go"))
-				browser.setUrl(location.getText());
+            if (string.equals("Back")) {
+                browser.back();
+            } else if (string.equals("Forward")) {
+                browser.forward();
+            } else if (string.equals("Stop")) {
+                browser.stop();
+            } else if (string.equals("Refresh")) {
+                browser.refresh();
+            } else if (string.equals("Go")) {
+                browser.setUrl(location.getText());
+            }
 		};
 		browser.addProgressListener(new ProgressListener() {
 			@Override
 			public void changed(ProgressEvent event) {
-					if (event.total == 0) return;
+                if (event.total == 0) {
+                    return;
+                }
 					int ratio = event.current * 100 / event.total;
 					progressBar.setSelection(ratio);
 			}
@@ -115,7 +118,9 @@ public class Snippet128 {
 		});
 		browser.addStatusTextListener(event -> status.setText(event.text));
 		browser.addLocationListener(LocationListener.changedAdapter(event -> {
-				if (event.top) location.setText(event.location);
+            if (event.top) {
+                location.setText(event.location);
+            }
 			}
 		));
 		itemBack.addListener(SWT.Selection, listener);
@@ -129,8 +134,9 @@ public class Snippet128 {
 		browser.setUrl("http://eclipse.org");
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

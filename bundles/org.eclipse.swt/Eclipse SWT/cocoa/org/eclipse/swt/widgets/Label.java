@@ -105,19 +105,25 @@ long accessibleHandle() {
 
 @Override
 boolean accessibilityIsIgnored(long id, long sel) {
-	if (id == view.id) return true;
+    if (id == view.id) {
+        return true;
+    }
 	return super.accessibilityIsIgnored(id, sel);
 }
 
 @Override
 void addRelation (Control control) {
-	if (!control.isDescribedByLabel ()) return;
+    if (!control.isDescribedByLabel()) {
+        return;
+    }
 
 	if (textView != null) {
 		NSObject accessibleElement = control.focusView();
 
 		if (accessibleElement instanceof NSControl viewAsControl) {
-			if (viewAsControl.cell() != null) accessibleElement = viewAsControl.cell();
+            if (viewAsControl.cell() != null) {
+                accessibleElement = viewAsControl.cell();
+            }
 		}
 
 		accessibleElement.accessibilitySetOverrideValue(textView.cell(), OS.NSAccessibilityTitleUIElementAttribute);
@@ -142,8 +148,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 		} else {
 			width = (int)Math.ceil (lineWidth * 2);
 		}
-		if (wHint != SWT.DEFAULT) width = wHint;
-		if (hHint != SWT.DEFAULT) height = hHint;
+        if (wHint != SWT.DEFAULT) {
+            width = wHint;
+        }
+        if (hHint != SWT.DEFAULT) {
+            height = hHint;
+        }
 		int border = getBorderWidth ();
 		width += border * 2; height += border * 2;
 		return new Point (width, height);
@@ -170,8 +180,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 		width = (int)Math.ceil (size.width);
 		height = (int)Math.ceil (size.height);
 	}
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	return new Point (width, height);
 }
 
@@ -283,19 +297,25 @@ void deregister () {
 		display.removeWidget (imageView);
 		display.removeWidget (imageView.cell());
 	}
-	if (separator != null) display.removeWidget(separator);
+    if (separator != null) {
+        display.removeWidget(separator);
+    }
 }
 
 @Override
 void drawBackground (long id, NSGraphicsContext context, NSRect rect) {
-	if (id != view.id) return;
+    if (id != view.id) {
+        return;
+    }
 	fillBackground(view, context, rect, -1);
 }
 
 @Override
 long imageView() {
-	//This function is modified to include a check for SWT Separator NSBox to handle cases where the image view is not present.
-	if (imageView != null) return imageView.id;
+    //This function is modified to include a check for SWT Separator NSBox to handle cases where the image view is not present.
+    if (imageView != null) {
+        return imageView.id;
+    }
 	return 0L;
 };
 
@@ -325,9 +345,15 @@ NSView eventView () {
  */
 public int getAlignment () {
 	checkWidget();
-	if ((style & SWT.SEPARATOR) != 0) return SWT.LEFT;
-	if ((style & SWT.CENTER) != 0) return SWT.CENTER;
-	if ((style & SWT.RIGHT) != 0) return SWT.RIGHT;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return SWT.LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        return SWT.CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        return SWT.RIGHT;
+    }
 	return SWT.LEFT;
 }
 
@@ -366,7 +392,9 @@ String getNameText () {
  */
 public String getText () {
 	checkWidget();
-	if ((style & SWT.SEPARATOR) != 0) return "";
+    if ((style & SWT.SEPARATOR) != 0) {
+        return "";
+    }
 	return text;
 }
 
@@ -386,15 +414,23 @@ void register () {
 		display.addWidget (imageView, this);
 		display.addWidget (imageView.cell(), this);
 	}
-	if (separator != null) display.addWidget(separator, this);
+    if (separator != null) {
+        display.addWidget(separator, this);
+    }
 }
 
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (textView != null) textView.release();
-	if (imageView != null) imageView.release();
-	if (separator != null) separator.release();
+    if (textView != null) {
+        textView.release();
+    }
+    if (imageView != null) {
+        imageView.release();
+    }
+    if (separator != null) {
+        separator.release();
+    }
 	textView = null;
 	imageView = null;
 	separator = null;
@@ -425,8 +461,12 @@ void removeRelation () {
  */
 public void setAlignment (int alignment) {
 	checkWidget();
-	if ((style & SWT.SEPARATOR) != 0) return;
-	if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) return;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
+    if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) {
+        return;
+    }
 	style &= ~(SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	style |= alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	_setAlignment();
@@ -434,9 +474,15 @@ public void setAlignment (int alignment) {
 
 void _setAlignment() {
 	if (image != null) {
-		if ((style & SWT.RIGHT) != 0) imageView.setImageAlignment(OS.NSImageAlignRight);
-		if ((style & SWT.LEFT) != 0) imageView.setImageAlignment(OS.NSImageAlignLeft);
-		if ((style & SWT.CENTER) != 0) imageView.setImageAlignment(OS.NSImageAlignCenter);
+        if ((style & SWT.RIGHT) != 0) {
+            imageView.setImageAlignment(OS.NSImageAlignRight);
+        }
+        if ((style & SWT.LEFT) != 0) {
+            imageView.setImageAlignment(OS.NSImageAlignLeft);
+        }
+        if ((style & SWT.CENTER) != 0) {
+            imageView.setImageAlignment(OS.NSImageAlignCenter);
+        }
 	}
 	if (text != null) {
 		NSCell cell = new NSCell(textView.cell());
@@ -455,7 +501,9 @@ void setFont(NSFont font) {
 
 @Override
 void setForeground (double [] color) {
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	NSCell cell = new NSCell(textView.cell());
 	cell.setAttributedStringValue(createString());
 }
@@ -481,9 +529,13 @@ boolean setTabItemFocus () {
  */
 public void setImage (Image image) {
 	checkWidget();
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	if (image != null) {
-		if (image.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (image.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 
 		this.image = image;
 		isImage = true;
@@ -502,7 +554,9 @@ public void setImage (Image image) {
 		imageView.setImage(image.handle);
 		((NSBox)view).setContentView(imageView);
 	} else {
-		if (this.image == null) return; // do nothing if image is already null
+        if (this.image == null) {
+            return;
+        } // do nothing if image is already null
 
 		this.image = image;
 		imageView.setImage(null);
@@ -543,8 +597,12 @@ public void setImage (Image image) {
  */
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	text = string;
 	_setText();
 }

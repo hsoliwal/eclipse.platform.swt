@@ -38,8 +38,12 @@ public class TaskBar extends Widget {
 	TaskItem [] items = new TaskItem [4];
 
 TaskBar (Display display, int style) {
-	if (display == null) display = Display.getCurrent ();
-	if (display == null) display = Display.getDefault ();
+    if (display == null) {
+        display = Display.getCurrent();
+    }
+    if (display == null) {
+        display = Display.getDefault();
+    }
 	if (!display.isValidThread ()) {
 		error (SWT.ERROR_THREAD_INVALID_ACCESS);
 	}
@@ -48,8 +52,12 @@ TaskBar (Display display, int style) {
 }
 
 void createItem (TaskItem item, int index) {
-	if (index == -1) index = itemCount;
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (index == -1) {
+        index = itemCount;
+    }
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (itemCount == items.length) {
 		TaskItem [] newItems = new TaskItem [items.length + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -66,10 +74,14 @@ void createItems () {
 void destroyItem (TaskItem item) {
 	int index = 0;
 	while (index < itemCount) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	if (index == itemCount) return;
+    if (index == itemCount) {
+        return;
+    }
 	System.arraycopy (items, index + 1, items, index, --itemCount - index);
 	items [itemCount] = null;
 }
@@ -92,7 +104,9 @@ void destroyItem (TaskItem item) {
 public TaskItem getItem (int index) {
 	checkWidget ();
 	createItems ();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return items [index];
 }
 
@@ -184,7 +198,9 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (display.taskBar == this) display.taskBar = null;
+    if (display.taskBar == this) {
+        display.taskBar = null;
+    }
 }
 
 @Override
@@ -192,7 +208,9 @@ void reskinChildren (int flags) {
 	if (items != null) {
 		for (int i=0; i<items.length; i++) {
 			TaskItem item = items [i];
-			if (item != null) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);

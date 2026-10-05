@@ -88,8 +88,9 @@ public class Bug372607_TreeArrowExpand {
 		shell.setSize(200, 320);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 

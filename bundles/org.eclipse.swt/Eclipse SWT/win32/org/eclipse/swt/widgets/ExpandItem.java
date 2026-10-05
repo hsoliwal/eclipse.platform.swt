@@ -116,7 +116,9 @@ public ExpandItem (ExpandBar parent, int style, int index) {
 }
 
 static ExpandBar checkNull (ExpandBar control) {
-	if (control == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (control == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return control;
 }
 
@@ -423,9 +425,15 @@ void setBoundsInPixels (int x, int y, int width, int height, boolean move, boole
 			width = Math.max (0, width - BORDER * 2);
 			height = Math.max (0, height - BORDER);
 		}
-		if (move && size) control.setBoundsInPixels (x, y + headerHeightInPixels, width, height);
-		if (move && !size) control.setLocationInPixels (x, y + headerHeightInPixels);
-		if (!move && size) control.setSizeInPixels (width, height);
+        if (move && size) {
+            control.setBoundsInPixels(x, y + headerHeightInPixels, width, height);
+        }
+        if (move && !size) {
+            control.setLocationInPixels(x, y + headerHeightInPixels);
+        }
+        if (!move && size) {
+            control.setSizeInPixels(width, height);
+        }
 	}
 }
 
@@ -446,8 +454,12 @@ void setBoundsInPixels (int x, int y, int width, int height, boolean move, boole
 public void setControl (Control control) {
 	checkWidget ();
 	if (control != null) {
-		if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (control.parent != parent) error (SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.parent != parent) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
 	this.control = control;
 	if (control != null) {
@@ -496,9 +508,13 @@ public void setHeight (int height) {
 }
 
 void setHeightInPixels (int height) {
-	if (height < 0) return;
+    if (height < 0) {
+        return;
+    }
 	setBoundsInPixels (0, 0, width, height, false, true);
-	if (expanded) parent.layoutItems (parent.indexOf (this) + 1, true);
+    if (expanded) {
+        parent.layoutItems(parent.indexOf(this) + 1, true);
+    }
 }
 
 @Override

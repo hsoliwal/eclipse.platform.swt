@@ -51,8 +51,9 @@ public static GUID IIDFromString(String lpsz) {
 
 	// invoke system method
 	GUID lpiid = new GUID();
-	if (COM.IIDFromString(buffer, lpiid) == COM.S_OK)
-		return lpiid;
+    if (COM.IIDFromString(buffer, lpiid) == COM.S_OK) {
+        return lpiid;
+    }
 	return null;
 }
 
@@ -60,7 +61,9 @@ static long callback0(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method0(args);
@@ -69,7 +72,9 @@ static long callback1(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method1(args);
@@ -78,7 +83,9 @@ static long callback2(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method2(args);
@@ -87,7 +94,9 @@ static long callback3(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method3(args);
@@ -96,7 +105,9 @@ static long callback4(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method4(args);
@@ -105,7 +116,9 @@ static long callback5(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method5(args);
@@ -114,7 +127,9 @@ static long callback6(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method6(args);
@@ -123,7 +138,9 @@ static long callback7(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method7(args);
@@ -132,7 +149,9 @@ static long callback8(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method8(args);
@@ -141,7 +160,9 @@ static long callback9(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method9(args);
@@ -150,7 +171,9 @@ static long callback10(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method10(args);
@@ -159,7 +182,9 @@ static long callback11(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method11(args);
@@ -168,7 +193,9 @@ static long callback12(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method12(args);
@@ -177,7 +204,9 @@ static long callback13(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method13(args);
@@ -186,7 +215,9 @@ static long callback14(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method14(args);
@@ -195,7 +226,9 @@ static long callback15(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method15(args);
@@ -204,7 +237,9 @@ static long callback16(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method16(args);
@@ -213,7 +248,9 @@ static long callback17(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method17(args);
@@ -222,7 +259,9 @@ static long callback18(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method18(args);
@@ -231,7 +270,9 @@ static long callback19(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method19(args);
@@ -240,7 +281,9 @@ static long callback20(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method20(args);
@@ -249,7 +292,9 @@ static long callback21(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method21(args);
@@ -258,7 +303,9 @@ static long callback22(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method22(args);
@@ -267,7 +314,9 @@ static long callback23(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method23(args);
@@ -276,7 +325,9 @@ static long callback24(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method24(args);
@@ -285,7 +336,9 @@ static long callback25(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method25(args);
@@ -294,7 +347,9 @@ static long callback26(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method26(args);
@@ -303,7 +358,9 @@ static long callback27(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method27(args);
@@ -312,7 +369,9 @@ static long callback28(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method28(args);
@@ -321,7 +380,9 @@ static long callback29(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method29(args);
@@ -330,7 +391,9 @@ static long callback30(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method30(args);
@@ -339,7 +402,9 @@ static long callback31(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method31(args);
@@ -348,7 +413,9 @@ static long callback32(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method32(args);
@@ -357,7 +424,9 @@ static long callback33(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method33(args);
@@ -366,7 +435,9 @@ static long callback34(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method34(args);
@@ -375,7 +446,9 @@ static long callback35(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method35(args);
@@ -384,7 +457,9 @@ static long callback36(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method36(args);
@@ -393,7 +468,9 @@ static long callback37(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method37(args);
@@ -402,7 +479,9 @@ static long callback38(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method38(args);
@@ -411,7 +490,9 @@ static long callback39(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method39(args);
@@ -420,7 +501,9 @@ static long callback40(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method40(args);
@@ -429,7 +512,9 @@ static long callback41(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method41(args);
@@ -438,7 +523,9 @@ static long callback42(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method42(args);
@@ -447,7 +534,9 @@ static long callback43(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method43(args);
@@ -456,7 +545,9 @@ static long callback44(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method44(args);
@@ -465,7 +556,9 @@ static long callback45(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method45(args);
@@ -474,7 +567,9 @@ static long callback46(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method46(args);
@@ -483,7 +578,9 @@ static long callback47(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method47(args);
@@ -492,7 +589,9 @@ static long callback48(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method48(args);
@@ -501,7 +600,9 @@ static long callback49(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method49(args);
@@ -510,7 +611,9 @@ static long callback50(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method50(args);
@@ -519,7 +622,9 @@ static long callback51(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method51(args);
@@ -528,7 +633,9 @@ static long callback52(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method52(args);
@@ -537,7 +644,9 @@ static long callback53(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method53(args);
@@ -546,7 +655,9 @@ static long callback54(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method54(args);
@@ -555,7 +666,9 @@ static long callback55(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method55(args);
@@ -564,7 +677,9 @@ static long callback56(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method56(args);
@@ -573,7 +688,9 @@ static long callback57(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method57(args);
@@ -582,7 +699,9 @@ static long callback58(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method58(args);
@@ -591,7 +710,9 @@ static long callback59(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method59(args);
@@ -600,7 +721,9 @@ static long callback60(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method60(args);
@@ -609,7 +732,9 @@ static long callback61(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method61(args);
@@ -618,7 +743,9 @@ static long callback62(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method62(args);
@@ -627,7 +754,9 @@ static long callback63(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method63(args);
@@ -636,7 +765,9 @@ static long callback64(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method64(args);
@@ -645,7 +776,9 @@ static long callback65(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method65(args);
@@ -654,7 +787,9 @@ static long callback66(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method66(args);
@@ -663,7 +798,9 @@ static long callback67(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method67(args);
@@ -672,7 +809,9 @@ static long callback68(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method68(args);
@@ -681,7 +820,9 @@ static long callback69(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method69(args);
@@ -690,7 +831,9 @@ static long callback70(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method70(args);
@@ -699,7 +842,9 @@ static long callback71(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method71(args);
@@ -708,7 +853,9 @@ static long callback72(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method72(args);
@@ -717,7 +864,9 @@ static long callback73(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method73(args);
@@ -726,7 +875,9 @@ static long callback74(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method74(args);
@@ -735,7 +886,9 @@ static long callback75(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method75(args);
@@ -744,7 +897,9 @@ static long callback76(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method76(args);
@@ -753,7 +908,9 @@ static long callback77(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method77(args);
@@ -762,7 +919,9 @@ static long callback78(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method78(args);
@@ -771,7 +930,9 @@ static long callback79(long[] callbackArgs) {
 	// find the object on which this call was invoked
 	long address = callbackArgs[0];
 	COMObject object = ObjectMap.get(new LONG(address));
-	if (object == null) return COM.E_FAIL;
+    if (object == null) {
+        return COM.E_FAIL;
+    }
 	long[] args = new long[callbackArgs.length - 1];
 	System.arraycopy(callbackArgs, 1, args, 0, args.length);
 	return object.method79(args);

@@ -49,13 +49,19 @@ public class GLCanvas extends Canvas {
  */
 public GLCanvas (Composite parent, int style, GLData data) {
 	super (parent, style);
-	if (data == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (data == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int attrib [] = new int [MAX_ATTRIBUTES];
 	int pos = 0;
 
-	if (data.doubleBuffer) attrib [pos++] = OS.NSOpenGLPFADoubleBuffer;
+    if (data.doubleBuffer) {
+        attrib [pos++] = OS.NSOpenGLPFADoubleBuffer;
+    }
 
-	if (data.stereo) attrib [pos++] = OS.NSOpenGLPFAStereo;
+    if (data.stereo) {
+        attrib [pos++] = OS.NSOpenGLPFAStereo;
+    }
 
 	/*
 	 * Feature in Cocoa: NSOpenGL/CoreOpenGL only supports specifying the total number of bits
@@ -135,7 +141,9 @@ public GLCanvas (Composite parent, int style, GLData data) {
 					context.release();
 				}
 				context = null;
-				if (pixelFormat != null) pixelFormat.release();
+                if (pixelFormat != null) {
+                    pixelFormat.release();
+                }
 				pixelFormat = null;
 				break;
 		}

@@ -48,8 +48,9 @@ public static void main(String[] args) {
 	shell.open();
 	browser.setUrl("http://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_win_open");
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 		}
 		display.dispose();
 	}
@@ -57,7 +58,9 @@ public static void main(String[] args) {
 /* register WindowEvent listeners */
 static void initialize(final Display display, Browser browser) {
 	browser.addOpenWindowListener(event -> {
-		if (!event.required) return;	/* only do it if necessary */
+        if (!event.required) {
+            return;
+        }	/* only do it if necessary */
 		Shell shell = new Shell(display);
 		shell.setText("New Window");
 		shell.setLayout(new FillLayout());
@@ -76,7 +79,9 @@ static void initialize(final Display display, Browser browser) {
 		public void show(WindowEvent event) {
 			Browser browser = (Browser)event.widget;
 			final Shell shell = browser.getShell();
-			if (event.location != null) shell.setLocation(event.location);
+            if (event.location != null) {
+                shell.setLocation(event.location);
+            }
 			if (event.size != null) {
 				Point size = event.size;
 				shell.setSize(shell.computeSize(size.x, size.y));

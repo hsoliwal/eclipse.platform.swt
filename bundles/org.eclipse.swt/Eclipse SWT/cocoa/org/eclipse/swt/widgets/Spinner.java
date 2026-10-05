@@ -104,13 +104,17 @@ public Spinner (Composite parent, int style) {
 
 @Override
 boolean acceptsFirstResponder(long id, long sel) {
-	if (id == view.id) return false;
+    if (id == view.id) {
+        return false;
+    }
 	return super.acceptsFirstResponder (id, sel);
 }
 
 @Override
 boolean accessibilityIsIgnored(long id, long sel) {
-	if (id == view.id) return true;
+    if (id == view.id) {
+        return true;
+    }
 	return super.accessibilityIsIgnored(id, sel);
 }
 
@@ -194,7 +198,9 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -208,8 +214,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 	str.release ();
 	width = (float)size.width;
 	height = (float)size.height;
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	Rectangle trim = computeTrim (0, 0, (int)Math.ceil (width), (int)Math.ceil (height));
 	if (hHint == SWT.DEFAULT) {
 		size = buttonView.cell ().cellSize ();
@@ -295,7 +305,9 @@ void createHandle () {
  */
 public void cut () {
 	checkWidget ();
-	if ((style & SWT.READ_ONLY) != 0) return;
+    if ((style & SWT.READ_ONLY) != 0) {
+        return;
+    }
 	NSText fieldEditor = textView.currentEditor();
 	if (fieldEditor != null) {
 		fieldEditor.cut(null);
@@ -332,10 +344,14 @@ void deregister () {
 
 @Override
 void drawBackground (long id, NSGraphicsContext context, NSRect rect) {
-	if (backgroundImage == null) return;
+    if (backgroundImage == null) {
+        return;
+    }
 	if (new NSView(id).isKindOfClass(OS.class_NSText)) {
 		NSText text = new NSText(id);
-		if (!text.isFieldEditor()) return;
+        if (!text.isFieldEditor()) {
+            return;
+        }
 	}
 	fillBackground (view, context, rect, -1);
 }
@@ -343,7 +359,9 @@ void drawBackground (long id, NSGraphicsContext context, NSRect rect) {
 @Override
 void drawInteriorWithFrame_inView(long id, long sel, NSRect cellFrame, long viewid) {
 	Control control = findBackgroundControl();
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	Image image = control.backgroundImage;
 	if (image != null && !image.isDisposed()) {
 		NSGraphicsContext context = NSGraphicsContext.currentContext();
@@ -470,19 +488,27 @@ int getSelectionText (boolean[] parseFail) {
 				}
 				int wholeValue = Integer.parseInt (wholePart);
 				int decimalValue = Integer.parseInt (decimalPart);
-				for (int i = 0; i < digits; i++) wholeValue *= 10;
+                for (int i = 0; i < digits; i++) {
+                    wholeValue *= 10;
+                }
 				value = wholeValue + decimalValue;
-				if (string.startsWith ("-")) value = -value;
+                if (string.startsWith("-")) {
+                    value = -value;
+                }
 			} else {
 				value = Integer.parseInt (string);
-				for (int i = 0; i < digits; i++) value *= 10;
+                for (int i = 0; i < digits; i++) {
+                    value *= 10;
+                }
 			}
 		} else {
 			value = Integer.parseInt (string);
 		}
 		int max = getMaximum();
 		int min = getMinimum();
-		if (min <= value && value <= max) return value;
+        if (min <= value && value <= max) {
+            return value;
+        }
 	} catch (NumberFormatException e) {
 	}
 	parseFail [0] = true;
@@ -557,7 +583,9 @@ boolean isEventView (long id) {
  */
 public void paste () {
 	checkWidget ();
-	if ((style & SWT.READ_ONLY) != 0) return;
+    if ((style & SWT.READ_ONLY) != 0) {
+        return;
+    }
 	NSText fieldEditor = textView.currentEditor();
 	if (fieldEditor != null) {
 		fieldEditor.paste(null);
@@ -583,9 +611,15 @@ void register () {
 @Override
 void releaseHandle () {
 	super.releaseHandle();
-	if (textFormatter != null) textFormatter.release();
-	if (buttonView != null) buttonView.release();
-	if (textView != null) textView.release();
+    if (textFormatter != null) {
+        textFormatter.release();
+    }
+    if (buttonView != null) {
+        buttonView.release();
+    }
+    if (textView != null) {
+        textView.release();
+    }
 	textFormatter = null;
 	buttonView = null;
 	textView = null;
@@ -594,7 +628,9 @@ void releaseHandle () {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (textView != null) textView.abortEditing();
+    if (textView != null) {
+        textView.abortEditing();
+    }
 }
 
 /**
@@ -616,8 +652,12 @@ void releaseWidget () {
  */
 public void removeModifyListener (ModifyListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Modify, listener);
 }
 
@@ -640,8 +680,12 @@ public void removeModifyListener (ModifyListener listener) {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -665,8 +709,12 @@ public void removeSelectionListener(SelectionListener listener) {
  */
 void removeVerifyListener (VerifyListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Verify, listener);
 }
 
@@ -691,8 +739,12 @@ void resized () {
 @Override
 boolean sendKeyEvent (NSEvent nsEvent, int type) {
 	boolean result = super.sendKeyEvent (nsEvent, type);
-	if (!result) return result;
-	if (type != SWT.KeyDown) return result;
+    if (!result) {
+        return result;
+    }
+    if (type != SWT.KeyDown) {
+        return result;
+    }
 	int delta = 0;
 	short keyCode = nsEvent.keyCode ();
 	switch (keyCode) {
@@ -718,11 +770,17 @@ boolean sendKeyEvent (NSEvent nsEvent, int type) {
 		int max = (int)buttonView.maxValue();
 		int min = (int)buttonView.minValue();
 		if ((style & SWT.WRAP) != 0) {
-			if (newValue > max) newValue = min;
-			if (newValue < min) newValue = max;
+            if (newValue > max) {
+                newValue = min;
+            }
+            if (newValue < min) {
+                newValue = max;
+            }
 		}
 		newValue = Math.min (Math.max (min, newValue), max);
-		if (value != newValue) setSelection (newValue, true, true, true);
+        if (value != newValue) {
+            setSelection(newValue, true, true, true);
+        }
 		// Prevent the arrow or page up/down from being handled by the text field.
 		result = false;
 	} else {
@@ -730,7 +788,9 @@ boolean sendKeyEvent (NSEvent nsEvent, int type) {
 		int value = getSelectionText (parseFail);
 		if (!parseFail [0]) {
 			int pos = (int)buttonView.doubleValue();
-			if (pos != value) setSelection (value, true, false, true);
+            if (pos != value) {
+                setSelection(value, true, false, true);
+            }
 		}
 	}
 
@@ -776,8 +836,12 @@ void setBackgroundImage(NSImage image) {
  */
 public void setDigits (int value) {
 	checkWidget ();
-	if (value < 0) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (value == digits) return;
+    if (value < 0) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (value == digits) {
+        return;
+    }
 	digits = value;
 	int pos = (int)buttonView.doubleValue();
 	setSelection (pos, false, true, false);
@@ -813,7 +877,9 @@ void setForeground (double [] color) {
  */
 public void setIncrement (int value) {
 	checkWidget ();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	buttonView.setIncrement(value);
 }
 
@@ -833,10 +899,14 @@ public void setIncrement (int value) {
 public void setMaximum (int value) {
 	checkWidget ();
 	int min = getMinimum ();
-	if (value < min) return;
+    if (value < min) {
+        return;
+    }
 	int pos = getSelection();
 	buttonView.setMaxValue(value);
-	if (pos > value) setSelection (value, true, true, false);
+    if (pos > value) {
+        setSelection(value, true, true, false);
+    }
 }
 
 /**
@@ -855,10 +925,14 @@ public void setMaximum (int value) {
 public void setMinimum (int value) {
 	checkWidget ();
 	int max = getMaximum();
-	if (value > max) return;
+    if (value > max) {
+        return;
+    }
 	int pos = getSelection();
 	buttonView.setMinValue(value);
-	if (pos < value) setSelection (value, true, true, false);
+    if (pos < value) {
+        setSelection(value, true, true, false);
+    }
 }
 
 /**
@@ -875,7 +949,9 @@ public void setMinimum (int value) {
  */
 public void setPageIncrement (int value) {
 	checkWidget ();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	pageIncrement = value;
 }
 
@@ -923,7 +999,9 @@ void setSelection (int value, boolean setPos, boolean setText, boolean notify) {
 			} else {
 				buffer.append ("0");
 				buffer.append (decimalSeparator);
-				while (index++ < 0) buffer.append ("0");
+                while (index++ < 0) {
+                    buffer.append("0");
+                }
 				buffer.append (string);
 			}
 			string = buffer.toString ();
@@ -932,17 +1010,23 @@ void setSelection (int value, boolean setPos, boolean setText, boolean notify) {
 		if (hooks (SWT.Verify) || filters (SWT.Verify)) {
 			int length = (int)cell.title().length();
 			string = verifyText (string, 0, length, null);
-			if (string == null) return;
+            if (string == null) {
+                return;
+            }
 		}
 		textView.setStringValue(NSString.stringWith(string));
 		NSRange selection = new NSRange();
 		selection.location = 0;
 		selection.length = string.length();
 		NSText fieldEditor = textView.currentEditor();
-		if (fieldEditor != null) fieldEditor.setSelectedRange(selection);
+        if (fieldEditor != null) {
+            fieldEditor.setSelectedRange(selection);
+        }
 		sendEvent (SWT.Modify);
 	}
-	if (notify) sendSelectionEvent (SWT.Selection);
+    if (notify) {
+        sendSelectionEvent(SWT.Selection);
+    }
 }
 
 @Override
@@ -975,7 +1059,9 @@ void setSmallSize () {
  */
 public void setTextLimit (int limit) {
 	checkWidget();
-	if (limit == 0) error (SWT.ERROR_CANNOT_BE_ZERO);
+    if (limit == 0) {
+        error(SWT.ERROR_CANNOT_BE_ZERO);
+    }
 	textLimit = limit;
 }
 
@@ -1004,10 +1090,18 @@ public void setTextLimit (int limit) {
  */
 public void setValues (int selection, int minimum, int maximum, int digits, int increment, int pageIncrement) {
 	checkWidget ();
-	if (maximum < minimum) return;
-	if (digits < 0) return;
-	if (increment < 1) return;
-	if (pageIncrement < 1) return;
+    if (maximum < minimum) {
+        return;
+    }
+    if (digits < 0) {
+        return;
+    }
+    if (increment < 1) {
+        return;
+    }
+    if (pageIncrement < 1) {
+        return;
+    }
 	selection = Math.min (Math.max (minimum, selection), maximum);
 	this.pageIncrement = pageIncrement;
 	this.digits = digits;
@@ -1026,9 +1120,13 @@ boolean shouldChangeTextInRange_replacementString(long id, long sel, long affect
 		String text = new NSString(replacementString).getString();
 		NSEvent currentEvent = display.application.currentEvent();
 		long type = currentEvent.type();
-		if (type != OS.NSKeyDown && type != OS.NSKeyUp) currentEvent = null;
+        if (type != OS.NSKeyDown && type != OS.NSKeyUp) {
+            currentEvent = null;
+        }
 		String newText = verifyText(text, (int)range.location, (int)(range.location+range.length), currentEvent);
-		if (newText == null) return false;
+        if (newText == null) {
+            return false;
+        }
 		if (text != newText) {
 			int length = newText.length();
 			NSText fieldEditor = textView.currentEditor ();
@@ -1047,7 +1145,9 @@ boolean shouldChangeTextInRange_replacementString(long id, long sel, long affect
 				result = false;
 			}
 		}
-		if (!result) sendEvent (SWT.Modify);
+        if (!result) {
+            sendEvent(SWT.Modify);
+        }
 	}
 	return result;
 }
@@ -1094,7 +1194,9 @@ void updateCursorRects (boolean enabled) {
 
 String verifyText (String string, int start, int end, NSEvent keyEvent) {
 	Event event = new Event ();
-	if (keyEvent != null) setKeyState(event, SWT.MouseDown, keyEvent);
+    if (keyEvent != null) {
+        setKeyState(event, SWT.MouseDown, keyEvent);
+    }
 	event.text = string;
 	event.start = start;
 	event.end = end;
@@ -1108,7 +1210,9 @@ String verifyText (String string, int start, int end, NSEvent keyEvent) {
 		index = 0;
 	}
 	while (index < string.length ()) {
-		if (!Character.isDigit (string.charAt (index))) break;
+        if (!Character.isDigit(string.charAt(index))) {
+            break;
+        }
 		index++;
 	}
 	event.doit = index == string.length ();
@@ -1119,7 +1223,9 @@ String verifyText (String string, int start, int end, NSEvent keyEvent) {
 	 * the operation.
 	 */
 	sendEvent (SWT.Verify, event);
-	if (!event.doit || isDisposed ()) return null;
+    if (!event.doit || isDisposed()) {
+        return null;
+    }
 	return event.text;
 }
 

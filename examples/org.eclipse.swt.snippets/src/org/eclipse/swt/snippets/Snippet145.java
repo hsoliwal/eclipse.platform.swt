@@ -55,7 +55,9 @@ public class Snippet145 {
 		shell.addListener(SWT.Paint, event -> layout.draw(event.gc, 10, 10));
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		font1.dispose();
 		font2.dispose();

@@ -123,25 +123,63 @@ class DialogTab extends Tab {
 
 		/* Compute the appropriate dialog style */
 		int style = getDefaultStyle();
-		if (okButton.getEnabled () && okButton.getSelection ()) style |= SWT.OK;
-		if (cancelButton.getEnabled () && cancelButton.getSelection ()) style |= SWT.CANCEL;
-		if (yesButton.getEnabled () && yesButton.getSelection ()) style |= SWT.YES;
-		if (noButton.getEnabled () && noButton.getSelection ()) style |= SWT.NO;
-		if (retryButton.getEnabled () && retryButton.getSelection ()) style |= SWT.RETRY;
-		if (abortButton.getEnabled () && abortButton.getSelection ()) style |= SWT.ABORT;
-		if (ignoreButton.getEnabled () && ignoreButton.getSelection ()) style |= SWT.IGNORE;
-		if (iconErrorButton.getEnabled () && iconErrorButton.getSelection ()) style |= SWT.ICON_ERROR;
-		if (iconInformationButton.getEnabled () && iconInformationButton.getSelection ()) style |= SWT.ICON_INFORMATION;
-		if (iconQuestionButton.getEnabled () && iconQuestionButton.getSelection ()) style |= SWT.ICON_QUESTION;
-		if (iconWarningButton.getEnabled () && iconWarningButton.getSelection ()) style |= SWT.ICON_WARNING;
-		if (iconWorkingButton.getEnabled () && iconWorkingButton.getSelection ()) style |= SWT.ICON_WORKING;
-		if (primaryModalButton.getEnabled () && primaryModalButton.getSelection ()) style |= SWT.PRIMARY_MODAL;
-		if (applicationModalButton.getEnabled () && applicationModalButton.getSelection ()) style |= SWT.APPLICATION_MODAL;
-		if (systemModalButton.getEnabled () && systemModalButton.getSelection ()) style |= SWT.SYSTEM_MODAL;
-		if (sheetButton.getSelection ()) style |= SWT.SHEET;
-		if (saveButton.getEnabled () && saveButton.getSelection ()) style |= SWT.SAVE;
-		if (openButton.getEnabled () && openButton.getSelection ()) style |= SWT.OPEN;
-		if (multiButton.getEnabled () && multiButton.getSelection ()) style |= SWT.MULTI;
+        if (okButton.getEnabled() && okButton.getSelection()) {
+            style |= SWT.OK;
+        }
+        if (cancelButton.getEnabled() && cancelButton.getSelection()) {
+            style |= SWT.CANCEL;
+        }
+        if (yesButton.getEnabled() && yesButton.getSelection()) {
+            style |= SWT.YES;
+        }
+        if (noButton.getEnabled() && noButton.getSelection()) {
+            style |= SWT.NO;
+        }
+        if (retryButton.getEnabled() && retryButton.getSelection()) {
+            style |= SWT.RETRY;
+        }
+        if (abortButton.getEnabled() && abortButton.getSelection()) {
+            style |= SWT.ABORT;
+        }
+        if (ignoreButton.getEnabled() && ignoreButton.getSelection()) {
+            style |= SWT.IGNORE;
+        }
+        if (iconErrorButton.getEnabled() && iconErrorButton.getSelection()) {
+            style |= SWT.ICON_ERROR;
+        }
+        if (iconInformationButton.getEnabled() && iconInformationButton.getSelection()) {
+            style |= SWT.ICON_INFORMATION;
+        }
+        if (iconQuestionButton.getEnabled() && iconQuestionButton.getSelection()) {
+            style |= SWT.ICON_QUESTION;
+        }
+        if (iconWarningButton.getEnabled() && iconWarningButton.getSelection()) {
+            style |= SWT.ICON_WARNING;
+        }
+        if (iconWorkingButton.getEnabled() && iconWorkingButton.getSelection()) {
+            style |= SWT.ICON_WORKING;
+        }
+        if (primaryModalButton.getEnabled() && primaryModalButton.getSelection()) {
+            style |= SWT.PRIMARY_MODAL;
+        }
+        if (applicationModalButton.getEnabled() && applicationModalButton.getSelection()) {
+            style |= SWT.APPLICATION_MODAL;
+        }
+        if (systemModalButton.getEnabled() && systemModalButton.getSelection()) {
+            style |= SWT.SYSTEM_MODAL;
+        }
+        if (sheetButton.getSelection()) {
+            style |= SWT.SHEET;
+        }
+        if (saveButton.getEnabled() && saveButton.getSelection()) {
+            style |= SWT.SAVE;
+        }
+        if (openButton.getEnabled() && openButton.getSelection()) {
+            style |= SWT.OPEN;
+        }
+        if (multiButton.getEnabled() && multiButton.getSelection()) {
+            style |= SWT.MULTI;
+        }
 
 		/* Open the appropriate dialog type */
 		String name = dialogCombo.getText ();

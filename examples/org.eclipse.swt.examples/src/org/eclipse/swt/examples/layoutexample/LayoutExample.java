@@ -79,13 +79,16 @@ public class LayoutExample {
 		shell.addShellListener(ShellListener.shellClosedAdapter(e -> {
 			Shell[] shells = display.getShells();
 			for (Shell currentShell : shells) {
-				if (currentShell != shell)
-					currentShell.close();
+                if (currentShell != shell) {
+                    currentShell.close();
+                }
 			}
 		}));
 		shell.open();
 		while (! shell.isDisposed()) {
-			if (! display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 

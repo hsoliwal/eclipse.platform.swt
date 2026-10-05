@@ -29,7 +29,9 @@ final class VirtualTreeVisibleProjection {
 	private final VirtualTreeTopology topology;
 
 	VirtualTreeVisibleProjection (VirtualTreeTopology topology) {
-		if (topology == null) throw new IllegalArgumentException ("topology");
+        if (topology == null) {
+            throw new IllegalArgumentException("topology");
+        }
 		this.topology = topology;
 	}
 
@@ -38,7 +40,9 @@ final class VirtualTreeVisibleProjection {
 	}
 
 	long visibleChildren (int parentId) {
-		if (!topology.childCountKnown (parentId)) return 0;
+        if (!topology.childCountKnown(parentId)) {
+            return 0;
+        }
 		return topology.visibleChildrenRowCount (parentId);
 	}
 
@@ -51,24 +55,36 @@ final class VirtualTreeVisibleProjection {
 	}
 
 	Row [] window (long firstVisible, int rowCount) {
-		if (firstVisible < 0 || rowCount < 0) throw new IllegalArgumentException ("negative window");
+        if (firstVisible < 0 || rowCount < 0) {
+            throw new IllegalArgumentException("negative window");
+        }
 		long total = visibleRowCount ();
-		if (firstVisible >= total || rowCount == 0) return new Row [0];
+        if (firstVisible >= total || rowCount == 0) {
+            return new Row [0];
+        }
 		int length = (int)Math.min ((long)rowCount, total - firstVisible);
 		Row [] rows = new Row [length];
-		for (int i = 0; i < length; i++) rows [i] = rowAt (firstVisible + i);
+        for (int i = 0; i < length; i++) {
+            rows [i] = rowAt(firstVisible + i);
+        }
 		return rows;
 	}
 
 	long visibleIndexOf (int materializedId) {
-		if (!topology.contains (materializedId)) return -1;
+        if (!topology.contains(materializedId)) {
+            return -1;
+        }
 		long offset = 0;
 		int id = materializedId;
 		while (true) {
 			int parentId = topology.parentId (id);
 			offset = Math.addExact (offset, offsetWithinParent (parentId, topology.childIndex (id)));
-			if (parentId == VirtualTreeTopology.ROOT) return offset;
-			if (!topology.flag (parentId, VirtualItemState.EXPANDED)) return -1;
+            if (parentId == VirtualTreeTopology.ROOT) {
+                return offset;
+            }
+            if (!topology.flag(parentId, VirtualItemState.EXPANDED)) {
+                return -1;
+            }
 			offset = Math.addExact (offset, 1);
 			id = parentId;
 		}
@@ -82,13 +98,17 @@ final class VirtualTreeVisibleProjection {
 			for (int id = topology.firstMaterializedChildId (parentId);
 					id >= 0; id = topology.nextMaterializedSiblingId (id)) {
 				int index = topology.childIndex (id);
-				if (index >= logicalCount) break;
+                if (index >= logicalCount) {
+                    break;
+                }
 				int coldGap = index - coordinate;
 				if (row < coldGap) {
 					return new Row (parentId, Math.addExact (coordinate, (int)row), -1, depth);
 				}
 				row -= coldGap;
-				if (row == 0) return new Row (parentId, index, id, depth);
+                if (row == 0) {
+                    return new Row(parentId, index, id, depth);
+                }
 				row--;
 				if (topology.flag (id, VirtualItemState.EXPANDED)
 						&& topology.childCountKnown (id)) {
@@ -107,7 +127,9 @@ final class VirtualTreeVisibleProjection {
 				continue;
 			}
 			long childIndex = Math.addExact ((long)coordinate, row);
-			if (childIndex >= logicalCount) throw new IllegalStateException ("projection overflow");
+            if (childIndex >= logicalCount) {
+                throw new IllegalStateException("projection overflow");
+            }
 			return new Row (parentId, Math.toIntExact (childIndex), -1, depth);
 		}
 	}
@@ -117,7 +139,9 @@ final class VirtualTreeVisibleProjection {
 		for (int id = topology.firstMaterializedChildId (parentId);
 				id >= 0; id = topology.nextMaterializedSiblingId (id)) {
 			int index = topology.childIndex (id);
-			if (index >= targetChildIndex) break;
+            if (index >= targetChildIndex) {
+                break;
+            }
 			if (topology.flag (id, VirtualItemState.EXPANDED)
 					&& topology.childCountKnown (id)) {
 				offset = Math.addExact (offset, visibleChildren (id));

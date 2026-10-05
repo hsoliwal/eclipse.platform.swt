@@ -1068,17 +1068,20 @@ RGB getRealRGB(Color color) {
 @Test
 public void test_bug566545_efficientGrayscaleImage() {
 	RGB[] grayscale = new RGB[256];
-	for (int i = 0; i < grayscale.length; i++)
-		grayscale[i] = new RGB(i, i, i);
+    for (int i = 0; i < grayscale.length; i++) {
+        grayscale[i] = new RGB(i, i, i);
+    }
 	int width = 128;
 	int height = 128;
 	ImageData imageDataIndexed = new ImageData(width, height, 8, new PaletteData(grayscale));
 	ImageData imageDataDirect = new ImageData(width, height, 8, new PaletteData(0xFF, 0xFF, 0xFF));
 
 	Consumer<ImageData> fillImage = imageData -> {
-		for (int y = 0; y < imageData.height; y++)
-			for (int x = 0; x < imageData.width; x++)
-				imageData.setPixel(x, y, (x + y) % 256);
+        for (int y = 0; y < imageData.height; y++) {
+            for (int x = 0; x < imageData.width; x++) {
+                imageData.setPixel(x, y, (x + y) % 256);
+            }
+        }
 	};
 	fillImage.accept(imageDataIndexed);
 	fillImage.accept(imageDataDirect);

@@ -108,7 +108,9 @@ public class Accessible {
 	 * @since 3.6
 	 */
 	public Accessible(Accessible parent) {
-		if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (parent == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		this.parent = parent;
 		this.control = parent.control;
 		delegate = new SWTAccessibleDelegate(this, ACC.CHILDID_SELF);
@@ -146,7 +148,9 @@ public class Accessible {
 	}
 
 	id accessibleHandle(Accessible accessible) {
-		if (accessible.delegate != null) return accessible.delegate;
+        if (accessible.delegate != null) {
+            return accessible.delegate;
+        }
 		if (accessible.control != null) {
 			NSView view = accessible.control.view;
 			long handle = OS.objc_msgSend(view.id, OS.sel_accessibleHandle);
@@ -178,8 +182,12 @@ public class Accessible {
 	 */
 	public void addAccessibleListener(AccessibleListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleListeners == null) accessibleListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleListeners == null) {
+            accessibleListeners = new ArrayList<>();
+        }
 		accessibleListeners.add(listener);
 	}
 
@@ -206,8 +214,12 @@ public class Accessible {
 	 */
 	public void addAccessibleControlListener(AccessibleControlListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleControlListeners == null) accessibleControlListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleControlListeners == null) {
+            accessibleControlListeners = new ArrayList<>();
+        }
 		accessibleControlListeners.add(listener);
 	}
 
@@ -237,12 +249,18 @@ public class Accessible {
 	 */
 	public void addAccessibleTextListener (AccessibleTextListener listener) {
 		checkWidget ();
-		if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (listener instanceof AccessibleTextExtendedListener) {
-			if (accessibleTextExtendedListeners == null) accessibleTextExtendedListeners = new ArrayList<>();
+            if (accessibleTextExtendedListeners == null) {
+                accessibleTextExtendedListeners = new ArrayList<>();
+            }
 			accessibleTextExtendedListeners.add ((AccessibleTextExtendedListener) listener);
 		} else {
-			if (accessibleTextListeners == null) accessibleTextListeners = new ArrayList<>();
+            if (accessibleTextListeners == null) {
+                accessibleTextListeners = new ArrayList<>();
+            }
 			accessibleTextListeners.add (listener);
 		}
 	}
@@ -270,8 +288,12 @@ public class Accessible {
 	 */
 	public void addAccessibleActionListener(AccessibleActionListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleActionListeners == null) accessibleActionListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleActionListeners == null) {
+            accessibleActionListeners = new ArrayList<>();
+        }
 		accessibleActionListeners.add(listener);
 	}
 
@@ -298,8 +320,12 @@ public class Accessible {
 	 */
 	public void addAccessibleEditableTextListener(AccessibleEditableTextListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleEditableTextListeners == null) accessibleEditableTextListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleEditableTextListeners == null) {
+            accessibleEditableTextListeners = new ArrayList<>();
+        }
 		accessibleEditableTextListeners.add(listener);
 	}
 
@@ -326,8 +352,12 @@ public class Accessible {
 	 */
 	public void addAccessibleHyperlinkListener(AccessibleHyperlinkListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleHyperlinkListeners == null) accessibleHyperlinkListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleHyperlinkListeners == null) {
+            accessibleHyperlinkListeners = new ArrayList<>();
+        }
 		accessibleHyperlinkListeners.add(listener);
 	}
 
@@ -354,8 +384,12 @@ public class Accessible {
 	 */
 	public void addAccessibleTableListener(AccessibleTableListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleTableListeners == null) accessibleTableListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleTableListeners == null) {
+            accessibleTableListeners = new ArrayList<>();
+        }
 		accessibleTableListeners.add(listener);
 	}
 
@@ -382,8 +416,12 @@ public class Accessible {
 	 */
 	public void addAccessibleTableCellListener(AccessibleTableCellListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleTableCellListeners == null) accessibleTableCellListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleTableCellListeners == null) {
+            accessibleTableCellListeners = new ArrayList<>();
+        }
 		accessibleTableCellListeners.add(listener);
 	}
 
@@ -410,8 +448,12 @@ public class Accessible {
 	 */
 	public void addAccessibleValueListener(AccessibleValueListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleValueListeners == null) accessibleValueListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleValueListeners == null) {
+            accessibleValueListeners = new ArrayList<>();
+        }
 		accessibleValueListeners.add(listener);
 	}
 
@@ -438,8 +480,12 @@ public class Accessible {
 	 */
 	public void addAccessibleAttributeListener(AccessibleAttributeListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleAttributeListeners == null) accessibleAttributeListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleAttributeListeners == null) {
+            accessibleAttributeListeners = new ArrayList<>();
+        }
 		accessibleAttributeListeners.add(listener);
 	}
 
@@ -462,7 +508,9 @@ public class Accessible {
 	 */
 	public void addRelation(int type, Accessible target) {
 		checkWidget();
-		if (target == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (target == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (relations[type] == null) {
 			relations[type] = new Relation(this, type);
 		}
@@ -574,10 +622,11 @@ public class Accessible {
 			event.row = index;
 			for (int i = 0; i < accessibleTableListenersSize(); i++) {
 				AccessibleTableListener listener = accessibleTableListeners.get(i);
-				if (currentRole == ACC.ROLE_ROW)
-					listener.isRowSelected(event);
-				else
-					listener.isColumnSelected(event);
+                if (currentRole == ACC.ROLE_ROW) {
+                    listener.isRowSelected(event);
+                } else {
+                    listener.isColumnSelected(event);
+                }
 			}
 			return NSNumber.numberWithBool(event.isSelected);
 		}
@@ -596,13 +645,17 @@ public class Accessible {
 			AccessibleTableListener listener = accessibleTableListeners.get(i);
 			listener.getColumnHeader(tableEvent);
 		}
-		if (tableEvent.accessible != null) returnValue = tableEvent.accessible.delegate;
+        if (tableEvent.accessible != null) {
+            returnValue = tableEvent.accessible.delegate;
+        }
 
 		return returnValue;
 	}
 
 	id getVisibleColumnsAttribute(int childID) {
-		if (accessibleTableListenersSize() == 0) return null;
+        if (accessibleTableListenersSize() == 0) {
+            return null;
+        }
 		id returnValue = null;
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
@@ -622,7 +675,9 @@ public class Accessible {
 	}
 
 	id getVisibleRowsAttribute(int childID) {
-		if (accessibleTableListenersSize() == 0) return null;
+        if (accessibleTableListenersSize() == 0) {
+            return null;
+        }
 		id returnValue = null;
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
@@ -642,7 +697,9 @@ public class Accessible {
 	}
 
 	id getSelectedRowsAttribute(int childID) {
-		if (accessibleTableListenersSize() == 0) return null;
+        if (accessibleTableListenersSize() == 0) {
+            return null;
+        }
 		id returnValue = null;
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
@@ -658,7 +715,9 @@ public class Accessible {
 					AccessibleTableListener listener = accessibleTableListeners.get(j);
 					listener.getRow(event);
 				}
-				if (event.accessible != null) array.addObject(event.accessible.delegate);
+                if (event.accessible != null) {
+                    array.addObject(event.accessible.delegate);
+                }
 			}
 			returnValue = array;
 		}
@@ -678,7 +737,9 @@ public class Accessible {
 	}
 
 	id getRowsAttribute(int childID) {
-		if (accessibleTableListenersSize() == 0) return null;
+        if (accessibleTableListenersSize() == 0) {
+            return null;
+        }
 
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
@@ -687,7 +748,9 @@ public class Accessible {
 			listener.getRows(event);
 		}
 
-		if (event.accessibles == null) event.accessibles = new Accessible[0];
+        if (event.accessibles == null) {
+            event.accessibles = new Accessible[0];
+        }
 
 		if (event.count != event.accessibles.length) {
 			createTableDelegate();
@@ -711,7 +774,9 @@ public class Accessible {
 	}
 
 	id getSelectedColumnsAttribute(int childID) {
-		if (accessibleTableListenersSize() == 0) return null;
+        if (accessibleTableListenersSize() == 0) {
+            return null;
+        }
 
 		id returnValue = null;
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
@@ -728,7 +793,9 @@ public class Accessible {
 					AccessibleTableListener listener = accessibleTableListeners.get(j);
 					listener.getColumn(event);
 				}
-				if (event.accessible != null) array.addObject(event.accessible.delegate);
+                if (event.accessible != null) {
+                    array.addObject(event.accessible.delegate);
+                }
 			}
 			returnValue = array;
 		}
@@ -747,7 +814,9 @@ public class Accessible {
 	}
 
 	id getColumnsAttribute(int childID) {
-		if (accessibleTableListenersSize() == 0) return null;
+        if (accessibleTableListenersSize() == 0) {
+            return null;
+        }
 
 		AccessibleTableEvent event = new AccessibleTableEvent(this);
 		for (int i = 0; i < accessibleTableListenersSize(); i++) {
@@ -756,7 +825,9 @@ public class Accessible {
 			listener.getColumns(event);
 		}
 
-		if (event.accessibles == null) event.accessibles = new Accessible[0];
+        if (event.accessibles == null) {
+            event.accessibles = new Accessible[0];
+        }
 
 		if (event.count != event.accessibles.length) {
 			createTableDelegate();
@@ -819,7 +890,9 @@ public class Accessible {
 					AccessibleActionListener listener = accessibleActionListeners.get(i);
 					listener.getDescription(event);
 				}
-				if (event.result != null) returnValue = NSString.stringWith(event.result);
+                if (event.result != null) {
+                    returnValue = NSString.stringWith(event.result);
+                }
 			}
 		}
 		return returnValue;
@@ -925,14 +998,22 @@ public class Accessible {
 	 */
 	public boolean internal_accessibilityIsAttributeSettable(NSString attribute, int childID) {
 		if (accessibleTextExtendedListenersSize() > 0) {
-			if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextRangeAttribute)) return true;
-			if (attribute.isEqualToString(OS.NSAccessibilityVisibleCharacterRangeAttribute)) return true;
+            if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextRangeAttribute)) {
+                return true;
+            }
+            if (attribute.isEqualToString(OS.NSAccessibilityVisibleCharacterRangeAttribute)) {
+                return true;
+            }
 		}
 		if (accessibleEditableTextListenersSize() > 0) {
-			if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextAttribute)) return true;
+            if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextAttribute)) {
+                return true;
+            }
 		}
 		if (accessibleValueListenersSize() > 0) {
-			if (attribute.isEqualToString(OS.NSAccessibilityValueAttribute)) return true;
+            if (attribute.isEqualToString(OS.NSAccessibilityValueAttribute)) {
+                return true;
+            }
 		}
 		return false;
 	}
@@ -960,15 +1041,18 @@ public class Accessible {
 			listener.getRole(event);
 		}
 
-		// No accessible listener is overriding the role of the control, so let Cocoa
-		// return the default set for the control.
-		if (event.detail == -1)
-			return null;
+        // No accessible listener is overriding the role of the control, so let Cocoa
+        // return the default set for the control.
+        if (event.detail == -1) {
+            return null;
+        }
 
 		checkRole(event.detail);
 
-		// If the attributes haven't changed return the cached list.
-		if (attributeNames != null) return retainedAutoreleased(attributeNames);
+        // If the attributes haven't changed return the cached list.
+        if (attributeNames != null) {
+            return retainedAutoreleased(attributeNames);
+        }
 
 		// Set up the base set of attributes.
 		NSMutableArray returnValue = NSMutableArray.arrayWithCapacity(baseAttributes.length);
@@ -1198,8 +1282,9 @@ public class Accessible {
 		 */
 		if (event.detail != -1) {
 			String osRole = roleToOs(event.detail);
-			if (osRole.indexOf(':') == -1)
-				returnValue.removeObject(OS.NSAccessibilitySubroleAttribute);
+            if (osRole.indexOf(':') == -1) {
+                returnValue.removeObject(OS.NSAccessibilitySubroleAttribute);
+            }
 		}
 
 		/*
@@ -1233,47 +1318,127 @@ public class Accessible {
 	 * @nooverride This method is not intended to be re-implemented or extended by clients.
 	 */
 	public id internal_accessibilityAttributeValue(NSString attribute, int childID) {
-		if (attribute.isEqualToString(OS.NSAccessibilityRoleAttribute)) return getRoleAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilitySubroleAttribute)) return getSubroleAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityRoleDescriptionAttribute)) return getRoleDescriptionAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityExpandedAttribute)) return getExpandedAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityHelpAttribute)) return getHelpAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityTitleAttribute)) return getTitleAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityValueAttribute)) return getValueAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityMaxValueAttribute)) return getMaxValueAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityMinValueAttribute)) return getMinValueAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityEnabledAttribute)) return getEnabledAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityFocusedAttribute)) return getFocusedAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityParentAttribute)) return getParentAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityChildrenAttribute)) return getChildrenAttribute(childID, false);
-		if (attribute.isEqualToString(OS.NSAccessibilityVisibleChildrenAttribute)) return getChildrenAttribute(childID, true);
-		if (attribute.isEqualToString(OS.NSAccessibilityContentsAttribute)) return getChildrenAttribute(childID, false);
-		// FIXME:  There's no specific API just for tabs, which won't include the buttons (if any.)
-		if (attribute.isEqualToString(OS.NSAccessibilityTabsAttribute)) return getTabsAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityWindowAttribute)) return getWindowAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityTopLevelUIElementAttribute)) return getTopLevelUIElementAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityPositionAttribute)) return getPositionAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilitySizeAttribute)) return getSizeAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityDescriptionAttribute)) return getDescriptionAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityNumberOfCharactersAttribute)) return getNumberOfCharactersAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextAttribute)) return getSelectedTextAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextRangeAttribute)) return getSelectedTextRangeAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityInsertionPointLineNumberAttribute)) return getInsertionPointLineNumberAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextRangesAttribute)) return getSelectedTextRangesAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityVisibleCharacterRangeAttribute)) return getVisibleCharacterRangeAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityServesAsTitleForUIElementsAttribute)) return getServesAsTitleForUIElementsAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityTitleUIElementAttribute)) return getTitleUIElementAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityColumnsAttribute)) return getColumnsAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilitySelectedColumnsAttribute)) return getSelectedColumnsAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityRowsAttribute)) return getRowsAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilitySelectedRowsAttribute)) return getSelectedRowsAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityVisibleRowsAttribute)) return getVisibleRowsAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityVisibleColumnsAttribute)) return getVisibleColumnsAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityHeaderAttribute)) return getHeaderAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityIndexAttribute)) return getIndexAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilitySelectedAttribute)) return getSelectedAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityRowIndexRangeAttribute)) return getRowIndexRangeAttribute(childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityColumnIndexRangeAttribute)) return getColumnIndexRangeAttribute(childID);
+        if (attribute.isEqualToString(OS.NSAccessibilityRoleAttribute)) {
+            return getRoleAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilitySubroleAttribute)) {
+            return getSubroleAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityRoleDescriptionAttribute)) {
+            return getRoleDescriptionAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityExpandedAttribute)) {
+            return getExpandedAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityHelpAttribute)) {
+            return getHelpAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityTitleAttribute)) {
+            return getTitleAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityValueAttribute)) {
+            return getValueAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityMaxValueAttribute)) {
+            return getMaxValueAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityMinValueAttribute)) {
+            return getMinValueAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityEnabledAttribute)) {
+            return getEnabledAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityFocusedAttribute)) {
+            return getFocusedAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityParentAttribute)) {
+            return getParentAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityChildrenAttribute)) {
+            return getChildrenAttribute(childID, false);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityVisibleChildrenAttribute)) {
+            return getChildrenAttribute(childID, true);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityContentsAttribute)) {
+            return getChildrenAttribute(childID, false);
+        }
+        // FIXME:  There's no specific API just for tabs, which won't include the buttons (if any.)
+        if (attribute.isEqualToString(OS.NSAccessibilityTabsAttribute)) {
+            return getTabsAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityWindowAttribute)) {
+            return getWindowAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityTopLevelUIElementAttribute)) {
+            return getTopLevelUIElementAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityPositionAttribute)) {
+            return getPositionAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilitySizeAttribute)) {
+            return getSizeAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityDescriptionAttribute)) {
+            return getDescriptionAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityNumberOfCharactersAttribute)) {
+            return getNumberOfCharactersAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextAttribute)) {
+            return getSelectedTextAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextRangeAttribute)) {
+            return getSelectedTextRangeAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityInsertionPointLineNumberAttribute)) {
+            return getInsertionPointLineNumberAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextRangesAttribute)) {
+            return getSelectedTextRangesAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityVisibleCharacterRangeAttribute)) {
+            return getVisibleCharacterRangeAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityServesAsTitleForUIElementsAttribute)) {
+            return getServesAsTitleForUIElementsAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityTitleUIElementAttribute)) {
+            return getTitleUIElementAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityColumnsAttribute)) {
+            return getColumnsAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilitySelectedColumnsAttribute)) {
+            return getSelectedColumnsAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityRowsAttribute)) {
+            return getRowsAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilitySelectedRowsAttribute)) {
+            return getSelectedRowsAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityVisibleRowsAttribute)) {
+            return getVisibleRowsAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityVisibleColumnsAttribute)) {
+            return getVisibleColumnsAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityHeaderAttribute)) {
+            return getHeaderAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityIndexAttribute)) {
+            return getIndexAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilitySelectedAttribute)) {
+            return getSelectedAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityRowIndexRangeAttribute)) {
+            return getRowIndexRangeAttribute(childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityColumnIndexRangeAttribute)) {
+            return getColumnIndexRangeAttribute(childID);
+        }
 
 		// If this object don't know how to get the value it's up to the control itself to return an attribute value.
 		return null;
@@ -1293,15 +1458,33 @@ public class Accessible {
 	 * @nooverride This method is not intended to be re-implemented or extended by clients.
 	 */
 	public id internal_accessibilityAttributeValue_forParameter(NSString attribute, id parameter, int childID) {
-		if (attribute.isEqualToString(OS.NSAccessibilityStringForRangeParameterizedAttribute)) return getStringForRangeParameterizedAttribute(parameter, childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityRangeForLineParameterizedAttribute)) return getRangeForLineParameterizedAttribute(parameter, childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityRangeForIndexParameterizedAttribute)) return getRangeForIndexParameterizedAttribute(parameter, childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityLineForIndexParameterizedAttribute)) return getLineForIndexParameterizedAttribute(parameter, childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityBoundsForRangeParameterizedAttribute)) return getBoundsForRangeParameterizedAttribute(parameter, childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityRangeForPositionParameterizedAttribute)) return getRangeForPositionParameterizedAttribute(parameter, childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityAttributedStringForRangeParameterizedAttribute)) return getAttributedStringForRangeParameterizedAttribute(parameter, childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityStyleRangeForIndexParameterizedAttribute)) return getStyleRangeForIndexAttribute(parameter, childID);
-		if (attribute.isEqualToString(OS.NSAccessibilityCellForColumnAndRowParameterizedAttribute)) return getCellForColumnAndRowParameter(parameter, childID);
+        if (attribute.isEqualToString(OS.NSAccessibilityStringForRangeParameterizedAttribute)) {
+            return getStringForRangeParameterizedAttribute(parameter, childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityRangeForLineParameterizedAttribute)) {
+            return getRangeForLineParameterizedAttribute(parameter, childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityRangeForIndexParameterizedAttribute)) {
+            return getRangeForIndexParameterizedAttribute(parameter, childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityLineForIndexParameterizedAttribute)) {
+            return getLineForIndexParameterizedAttribute(parameter, childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityBoundsForRangeParameterizedAttribute)) {
+            return getBoundsForRangeParameterizedAttribute(parameter, childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityRangeForPositionParameterizedAttribute)) {
+            return getRangeForPositionParameterizedAttribute(parameter, childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityAttributedStringForRangeParameterizedAttribute)) {
+            return getAttributedStringForRangeParameterizedAttribute(parameter, childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityStyleRangeForIndexParameterizedAttribute)) {
+            return getStyleRangeForIndexAttribute(parameter, childID);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityCellForColumnAndRowParameterizedAttribute)) {
+            return getCellForColumnAndRowParameter(parameter, childID);
+        }
 		return null;
 	}
 
@@ -1329,9 +1512,10 @@ public class Accessible {
 			listener.getFocus(event);
 		}
 
-		// The listener did not respond, so let Cocoa figure it out.
-		if (event.childID == ACC.CHILDID_MULTIPLE)
-			return null;
+        // The listener did not respond, so let Cocoa figure it out.
+        if (event.childID == ACC.CHILDID_MULTIPLE) {
+            return null;
+        }
 
 		/* The application can optionally answer an accessible. */
 		if (event.accessible != null) {
@@ -1374,9 +1558,10 @@ public class Accessible {
 			listener.getChildAtPoint(event);
 		}
 
-		// The listener did not respond, so let Cocoa figure it out.
-		if (event.childID == ACC.CHILDID_MULTIPLE && event.accessible == null)
-			return null;
+        // The listener did not respond, so let Cocoa figure it out.
+        if (event.childID == ACC.CHILDID_MULTIPLE && event.accessible == null) {
+            return null;
+        }
 
 		if (event.accessible != null) {
 			return new id(OS.NSAccessibilityUnignoredAncestor(event.accessible.delegate.id));
@@ -1441,10 +1626,11 @@ public class Accessible {
 			listener.getRole(event);
 		}
 
-		// No accessible listener is overriding the role of the control, so let Cocoa
-		// return the default set for the control.
-		if (event.detail == -1)
-			return null;
+        // No accessible listener is overriding the role of the control, so let Cocoa
+        // return the default set for the control.
+        if (event.detail == -1) {
+            return null;
+        }
 
 		checkRole(event.detail);
 
@@ -1541,9 +1727,15 @@ public class Accessible {
 	 * @nooverride This method is not intended to be re-implemented or extended by clients.
 	 */
 	public void internal_accessibilitySetValue_forAttribute(id value, NSString attribute, int childId) {
-		if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextRangeAttribute)) setSelectedTextRangeAttribute(value, childId);
-		if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextAttribute)) setSelectedTextAttribute(value, childId);
-		if (attribute.isEqualToString(OS.NSAccessibilityVisibleCharacterRangeAttribute)) setVisibleCharacterRangeAttribute(value, childId);
+        if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextRangeAttribute)) {
+            setSelectedTextRangeAttribute(value, childId);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilitySelectedTextAttribute)) {
+            setSelectedTextAttribute(value, childId);
+        }
+        if (attribute.isEqualToString(OS.NSAccessibilityVisibleCharacterRangeAttribute)) {
+            setVisibleCharacterRangeAttribute(value, childId);
+        }
 
 		if (accessibleValueListenersSize() > 0) {
 			AccessibleValueEvent event = new AccessibleValueEvent(this);
@@ -1573,7 +1765,9 @@ public class Accessible {
 	 * @since 3.6
 	 */
 	public void dispose () {
-		if (parent == null) return;
+        if (parent == null) {
+            return;
+        }
 		release(true);
 		parent = null;
 	}
@@ -1605,7 +1799,9 @@ public class Accessible {
 	}
 
 	id getAttributedStringForRangeParameterizedAttribute(id parameter, int childID) {
-		if (accessibleAttributeListenersSize() == 0) return null;
+        if (accessibleAttributeListenersSize() == 0) {
+            return null;
+        }
 
 		id stringFragment = getStringForRangeParameterizedAttribute(parameter, childID);
 		NSMutableAttributedString attribString = (NSMutableAttributedString)new NSMutableAttributedString().alloc();
@@ -1629,7 +1825,9 @@ public class Accessible {
 				listener.getTextAttributes(event);
 			}
 
-			if (event.start == -1 && event.end == -1) return stringFragment;
+            if (event.start == -1 && event.end == -1) {
+                return stringFragment;
+            }
 
 			// The returned attributed string must have zero-based attributes.
 			attributeRange.location = event.start - range.location;
@@ -1740,7 +1938,9 @@ public class Accessible {
 	}
 
 	id getBoundsForRangeParameterizedAttribute(id parameter, int childID) {
-		if (accessibleTextExtendedListenersSize() == 0) return null;
+        if (accessibleTextExtendedListenersSize() == 0) {
+            return null;
+        }
 
 		id returnValue = null;
 		NSValue parameterObject = new NSValue(parameter.id);
@@ -1759,7 +1959,9 @@ public class Accessible {
 
 			// Flip y coordinate for Cocoa.
 			NSArray screens = NSScreen.screens();
-			if (screens == null) return null;
+            if (screens == null) {
+                return null;
+            }
 
 			NSScreen screen = new NSScreen(screens.objectAtIndex(0));
 			NSRect frame = screen.frame();
@@ -1803,7 +2005,9 @@ public class Accessible {
 		NSRange range = new NSRange();
 		if (accessibleTextExtendedListenersSize() > 0) {
 			NSArray screens = NSScreen.screens();
-			if (screens == null) return null;
+            if (screens == null) {
+                return null;
+            }
 
 			NSScreen screen = new NSScreen(screens.objectAtIndex(0));
 			NSRect frame = screen.frame();
@@ -1838,7 +2042,9 @@ public class Accessible {
 		if (event.detail != -1) {
 			String appRole = roleToOs (event.detail);
 			int index = appRole.indexOf(':');
-			if (index != -1) appRole = appRole.substring(0, index);
+            if (index != -1) {
+                appRole = appRole.substring(0, index);
+            }
 			returnValue = NSString.stringWith(appRole);
 		}
 
@@ -1888,7 +2094,9 @@ public class Accessible {
 				NSString nsAppRole = NSString.stringWith(appRole);
 				NSString nsAppSubrole = null;
 
-				if (appSubrole != null) nsAppSubrole = NSString.stringWith(appSubrole);
+                if (appSubrole != null) {
+                    nsAppSubrole = NSString.stringWith(appSubrole);
+                }
 				returnValue = new NSString(OS.NSAccessibilityRoleDescription (((nsAppRole != null) ? nsAppRole.id : 0), (nsAppSubrole != null) ? nsAppSubrole.id : 0));
 			}
 		}
@@ -1919,8 +2127,9 @@ public class Accessible {
 				listener.getName(event);
 			}
 
-			if (event.result != null)
-				returnValue = NSString.stringWith(event.result);
+            if (event.result != null) {
+                returnValue = NSString.stringWith(event.result);
+            }
 		}
 		return returnValue;
 	}
@@ -1999,7 +2208,9 @@ public class Accessible {
 				case ACC.ROLE_TEXT: // text in the text field
 				case ACC.ROLE_PARAGRAPH: // text in the text field
 				case ACC.ROLE_HEADING: // text in the text field
-					if (value != null) returnValue = NSString.stringWith(value);
+                    if (value != null) {
+                        returnValue = NSString.stringWith(value);
+                    }
 					break;
 				case ACC.ROLE_TABLECELL: // text in the cell
 				case ACC.ROLE_LABEL: // text in the label
@@ -2014,7 +2225,9 @@ public class Accessible {
 					if (e.result != null) {
 						returnValue = NSString.stringWith(e.result);
 					} else {
-						if (value != null) returnValue = NSString.stringWith(value);
+                        if (value != null) {
+                            returnValue = NSString.stringWith(value);
+                        }
 					}
 					returnValue = returnValue == null ? NSString.string() : returnValue;
 					break;
@@ -2032,7 +2245,9 @@ public class Accessible {
 			listener.getState(event);
 		}
 		boolean enabled = (event.detail & ACC.STATE_DISABLED) == 0;
-		if (!enabled && delegate == null) enabled = control.isEnabled();
+        if (!enabled && delegate == null) {
+            enabled = control.isEnabled();
+        }
 		return NSNumber.numberWithBool(enabled);
 	}
 
@@ -2229,10 +2444,11 @@ public class Accessible {
 				Point pt = null;
 				Rectangle location = control.getBounds();
 
-				if (control.getParent() != null)
-					pt = control.getParent().toDisplay(location.x, location.y);
-				else
-					pt = ((Shell)control).toDisplay(location.x, location.y);
+                if (control.getParent() != null) {
+                    pt = control.getParent().toDisplay(location.x, location.y);
+                } else {
+                    pt = ((Shell) control).toDisplay(location.x, location.y);
+                }
 
 				osPositionAttribute.x = pt.x;
 				osPositionAttribute.y = pt.y;
@@ -2300,7 +2516,9 @@ public class Accessible {
 		// If no description was provided, and this is a composite or canvas, return a blank string
 		// -- otherwise, let the Cocoa control handle it.
 		if (returnValue == null) {
-			if (control instanceof Composite) returnValue = NSString.string();
+            if (control instanceof Composite) {
+                returnValue = NSString.string();
+            }
 		}
 
 		return returnValue;
@@ -2373,7 +2591,9 @@ public class Accessible {
 				listener.getValue(controlEvent);
 			}
 			String text = controlEvent.result;
-			if (text != null) returnValue = NSNumber.numberWithInt(lineNumberForOffset(text, charNumber));
+            if (text != null) {
+                returnValue = NSNumber.numberWithInt(lineNumberForOffset(text, charNumber));
+            }
 		}
 		return returnValue;
 	}
@@ -2521,7 +2741,9 @@ public class Accessible {
 				}
 			}
 			String text = event.result;
-			if (text != null) returnValue = NSString.stringWith(text);
+            if (text != null) {
+                returnValue = NSString.stringWith(text);
+            }
 		} else if (accessibleTextListenersSize() > 0) {
 			AccessibleTextEvent event = new AccessibleTextEvent(this);
 			event.childID = childID;
@@ -2586,7 +2808,9 @@ public class Accessible {
 	id getServesAsTitleForUIElementsAttribute(int childID) {
 		id returnValue = null;
 		Relation relation = relations[ACC.RELATION_LABEL_FOR];
-		if (relation != null) returnValue = relation.getServesAsTitleForUIElements();
+        if (relation != null) {
+            returnValue = relation.getServesAsTitleForUIElements();
+        }
 		return returnValue;
 	}
 
@@ -2606,7 +2830,9 @@ public class Accessible {
 				AccessibleTextExtendedListener listener = accessibleTextExtendedListeners.get(i);
 				listener.getText(event);
 			}
-			if (event.result != null) returnValue = NSString.stringWith(event.result);
+            if (event.result != null) {
+                returnValue = NSString.stringWith(event.result);
+            }
 		} else if (accessibleControlListenersSize() > 0) {
 			AccessibleControlEvent event = new AccessibleControlEvent(this);
 			event.childID = childID;
@@ -2671,7 +2897,9 @@ public class Accessible {
 	}
 
 	id getStyleRangeForIndexAttribute (id parameter, int childID) {
-		if (accessibleAttributeListenersSize() == 0) return null;
+        if (accessibleAttributeListenersSize() == 0) {
+            return null;
+        }
 
 		// Parameter is an NSRange wrapped in an NSValue.
 		NSNumber parameterObject = new NSNumber(parameter.id);
@@ -2737,7 +2965,9 @@ public class Accessible {
 			switch (text.charAt (i)) {
 				case '\r':
 					if (i + 1 < length) {
-						if (text.charAt (i + 1) == '\n') ++i;
+                        if (text.charAt(i + 1) == '\n') {
+                            ++i;
+                        }
 					}
 					// FALL THROUGH
 				case '\n':
@@ -2760,10 +2990,14 @@ public class Accessible {
 				}
 				count++;
 			}
-			if (line > lineNumber) break;
+            if (line > lineNumber) {
+                break;
+            }
 			switch (text.charAt (i)) {
 				case '\r':
-					if (i + 1 < length && text.charAt (i + 1) == '\n') i++;
+                    if (i + 1 < length && text.charAt(i + 1) == '\n') {
+                        i++;
+                    }
 					// FALL THROUGH
 				case '\n':
 					line++;
@@ -2794,10 +3028,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleListener(AccessibleListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleListeners != null) {
 			accessibleListeners.remove(listener);
-			if (accessibleListeners.isEmpty()) accessibleListeners = null;
+            if (accessibleListeners.isEmpty()) {
+                accessibleListeners = null;
+            }
 		}
 	}
 
@@ -2822,10 +3060,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleControlListener(AccessibleControlListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleControlListeners != null) {
 			accessibleControlListeners.remove(listener);
-			if (accessibleControlListeners.isEmpty()) accessibleControlListeners = null;
+            if (accessibleControlListeners.isEmpty()) {
+                accessibleControlListeners = null;
+            }
 		}
 	}
 
@@ -2853,16 +3095,22 @@ public class Accessible {
 	 */
 	public void removeAccessibleTextListener (AccessibleTextListener listener) {
 		checkWidget ();
-		if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (listener instanceof AccessibleTextExtendedListener) {
 			if (accessibleTextExtendedListeners != null) {
 				accessibleTextExtendedListeners.remove(listener);
-				if (accessibleTextExtendedListeners.isEmpty()) accessibleTextExtendedListeners = null;
+                if (accessibleTextExtendedListeners.isEmpty()) {
+                    accessibleTextExtendedListeners = null;
+                }
 			}
 		} else {
 			if (accessibleTextListeners != null) {
 				accessibleTextListeners.remove(listener);
-				if (accessibleTextListeners.isEmpty()) accessibleTextListeners = null;
+                if (accessibleTextListeners.isEmpty()) {
+                    accessibleTextListeners = null;
+                }
 			}
 		}
 	}
@@ -2890,10 +3138,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleActionListener(AccessibleActionListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleActionListeners != null) {
 			accessibleActionListeners.remove(listener);
-			if (accessibleActionListeners.isEmpty()) accessibleActionListeners = null;
+            if (accessibleActionListeners.isEmpty()) {
+                accessibleActionListeners = null;
+            }
 		}
 	}
 
@@ -2920,10 +3172,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleEditableTextListener(AccessibleEditableTextListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleEditableTextListeners != null) {
 			accessibleEditableTextListeners.remove(listener);
-			if (accessibleEditableTextListeners.isEmpty()) accessibleEditableTextListeners = null;
+            if (accessibleEditableTextListeners.isEmpty()) {
+                accessibleEditableTextListeners = null;
+            }
 		}
 	}
 
@@ -2950,10 +3206,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleHyperlinkListener(AccessibleHyperlinkListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleHyperlinkListeners != null) {
 			accessibleHyperlinkListeners.remove(listener);
-			if (accessibleHyperlinkListeners.isEmpty()) accessibleHyperlinkListeners = null;
+            if (accessibleHyperlinkListeners.isEmpty()) {
+                accessibleHyperlinkListeners = null;
+            }
 		}
 	}
 
@@ -2980,10 +3240,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleTableListener(AccessibleTableListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleTableListeners != null) {
 			accessibleTableListeners.remove(listener);
-			if (accessibleTableListeners.isEmpty()) accessibleTableListeners = null;
+            if (accessibleTableListeners.isEmpty()) {
+                accessibleTableListeners = null;
+            }
 		}
 	}
 
@@ -3010,10 +3274,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleTableCellListener(AccessibleTableCellListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleTableCellListeners != null) {
 			accessibleTableCellListeners.remove(listener);
-			if (accessibleTableCellListeners.isEmpty()) accessibleTableCellListeners = null;
+            if (accessibleTableCellListeners.isEmpty()) {
+                accessibleTableCellListeners = null;
+            }
 		}
 	}
 
@@ -3040,10 +3308,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleValueListener(AccessibleValueListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleValueListeners != null) {
 			accessibleValueListeners.remove(listener);
-			if (accessibleValueListeners.isEmpty()) accessibleValueListeners = null;
+            if (accessibleValueListeners.isEmpty()) {
+                accessibleValueListeners = null;
+            }
 		}
 	}
 
@@ -3070,10 +3342,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleAttributeListener(AccessibleAttributeListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleAttributeListeners != null) {
 			accessibleAttributeListeners.remove(listener);
-			if (accessibleAttributeListeners.isEmpty()) accessibleAttributeListeners = null;
+            if (accessibleAttributeListeners.isEmpty()) {
+                accessibleAttributeListeners = null;
+            }
 		}
 	}
 
@@ -3088,18 +3364,26 @@ public class Accessible {
 	 */
 	public void removeRelation(int type, Accessible target) {
 		checkWidget();
-		if (target == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (target == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (relations[type] != null) {
 			relations[type].removeTarget(target);
 		}
 	}
 
 	void release(boolean destroy) {
-		if (actionNames != null) actionNames.release();
+        if (actionNames != null) {
+            actionNames.release();
+        }
 		actionNames = null;
-		if (attributeNames != null) attributeNames.release();
+        if (attributeNames != null) {
+            attributeNames.release();
+        }
 		attributeNames = null;
-		if (parameterizedAttributeNames != null) parameterizedAttributeNames.release();
+        if (parameterizedAttributeNames != null) {
+            parameterizedAttributeNames.release();
+        }
 		parameterizedAttributeNames = null;
 		if (delegate != null) {
 			delegate.internal_dispose_SWTAccessibleDelegate();
@@ -3117,7 +3401,9 @@ public class Accessible {
 			childToIdMap = null;
 		}
 
-		if (tableDelegate != null) tableDelegate.release();
+        if (tableDelegate != null) {
+            tableDelegate.release();
+        }
 	}
 
 	static NSArray retainedAutoreleased(NSArray inObject) {
@@ -3178,7 +3464,9 @@ public class Accessible {
 		checkWidget();
 
 		id eventSource = accessibleHandle(this);
-		if (DEBUG) System.out.println("sendEvent: 0x" + Integer.toHexString(event) + ", data = " + eventData + ", source = " + eventSource);
+        if (DEBUG) {
+            System.out.println("sendEvent: 0x" + Integer.toHexString(event) + ", data = " + eventData + ", source = " + eventSource);
+        }
 
 		switch (event) {
 		case ACC.EVENT_TEXT_CHANGED:
@@ -3223,9 +3511,11 @@ public class Accessible {
 			}
 			if (eventData != null) {
 				int[] eventParams = (int[])eventData;
-				// Slot 2 of the array is the number of rows that were either added or deleted. If non-zero, fire a notification.
-				// Cocoa doesn't have a notification for a change in the number of columns.
-				if (eventParams[2] != 0) OS.NSAccessibilityPostNotification(eventSource.id, OS.NSAccessibilityRowCountChangedNotification.id);
+                // Slot 2 of the array is the number of rows that were either added or deleted. If non-zero, fire a notification.
+                // Cocoa doesn't have a notification for a change in the number of columns.
+                if (eventParams[2] != 0) {
+                    OS.NSAccessibilityPostNotification(eventSource.id, OS.NSAccessibilityRowCountChangedNotification.id);
+                }
 			}
 			break;
 
@@ -3271,7 +3561,9 @@ public class Accessible {
 		checkWidget();
 
 		id eventSource = childIDToOs(childID);
-		if (DEBUG) System.out.println("sendEvent: 0x" + Integer.toHexString(event) + ", data = " + eventData + ", source = " + eventSource);
+        if (DEBUG) {
+            System.out.println("sendEvent: 0x" + Integer.toHexString(event) + ", data = " + eventData + ", source = " + eventSource);
+        }
 
 		switch (event) {
 			case ACC.EVENT_VALUE_CHANGED:
@@ -3302,7 +3594,9 @@ public class Accessible {
 	public void selectionChanged () {
 		checkWidget();
 		id eventSource = accessibleHandle(this);
-		if (DEBUG) System.out.println("selectionChanged on " + eventSource);
+        if (DEBUG) {
+            System.out.println("selectionChanged on " + eventSource);
+        }
 		if (currentRole == ACC.ROLE_TABLE) {
 			OS.NSAccessibilityPostNotification(eventSource.id, OS.NSAccessibilitySelectedRowsChangedNotification.id);
 		} else {
@@ -3324,7 +3618,9 @@ public class Accessible {
 	public void setFocus(int childID) {
 		checkWidget();
 		id accessible = childIDToOs(childID);
-		if (DEBUG) System.out.println("setFocus on " + accessible);
+        if (DEBUG) {
+            System.out.println("setFocus on " + accessible);
+        }
 		OS.NSAccessibilityPostNotification(accessible.id, OS.NSAccessibilityFocusedUIElementChangedNotification.id);
 	}
 
@@ -3550,8 +3846,12 @@ public class Accessible {
 
 	/* checkWidget was copied from Widget, and rewritten to work in this package */
 	void checkWidget () {
-		if (!isValidThread ()) SWT.error (SWT.ERROR_THREAD_INVALID_ACCESS);
-		if (control.isDisposed ()) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+        if (!isValidThread()) {
+            SWT.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+        }
+        if (control.isDisposed()) {
+            SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+        }
 	}
 
 	/* isValidThread was copied from Widget, and rewritten to work in this package */
@@ -3576,23 +3876,33 @@ public class Accessible {
 		returnArray.addObjectsFromArray(attributes);
 
 		if (getTitleAttribute(ACC.CHILDID_SELF) != null) {
-			if (!returnArray.containsObject(OS.NSAccessibilityTitleAttribute)) returnArray.addObject(OS.NSAccessibilityTitleAttribute);
+            if (!returnArray.containsObject(OS.NSAccessibilityTitleAttribute)) {
+                returnArray.addObject(OS.NSAccessibilityTitleAttribute);
+            }
 		}
 
 		if (getDescriptionAttribute(ACC.CHILDID_SELF) != null) {
-			if (!returnArray.containsObject(OS.NSAccessibilityDescriptionAttribute)) returnArray.addObject(OS.NSAccessibilityDescriptionAttribute);
+            if (!returnArray.containsObject(OS.NSAccessibilityDescriptionAttribute)) {
+                returnArray.addObject(OS.NSAccessibilityDescriptionAttribute);
+            }
 		}
 
 		// See if this object has a label or is a label for something else. If so, add that to the list.
 		if (relations[ACC.RELATION_LABEL_FOR] != null) {
-			if (!returnArray.containsObject(OS.NSAccessibilityServesAsTitleForUIElementsAttribute)) returnArray.addObject(OS.NSAccessibilityServesAsTitleForUIElementsAttribute);
-			if (!returnArray.containsObject(OS.NSAccessibilityTitleAttribute)) returnArray.addObject(OS.NSAccessibilityTitleAttribute);
+            if (!returnArray.containsObject(OS.NSAccessibilityServesAsTitleForUIElementsAttribute)) {
+                returnArray.addObject(OS.NSAccessibilityServesAsTitleForUIElementsAttribute);
+            }
+            if (!returnArray.containsObject(OS.NSAccessibilityTitleAttribute)) {
+                returnArray.addObject(OS.NSAccessibilityTitleAttribute);
+            }
 		} else {
 			returnArray.removeObject(OS.NSAccessibilityServesAsTitleForUIElementsAttribute);
 		}
 
 		if (relations[ACC.RELATION_LABELLED_BY] != null) {
-			if (!returnArray.containsObject(OS.NSAccessibilityTitleUIElementAttribute)) returnArray.addObject(OS.NSAccessibilityTitleUIElementAttribute);
+            if (!returnArray.containsObject(OS.NSAccessibilityTitleUIElementAttribute)) {
+                returnArray.addObject(OS.NSAccessibilityTitleUIElementAttribute);
+            }
 		} else {
 			returnArray.removeObject(OS.NSAccessibilityTitleUIElementAttribute);
 		}

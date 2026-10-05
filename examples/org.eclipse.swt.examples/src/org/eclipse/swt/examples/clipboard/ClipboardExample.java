@@ -149,7 +149,9 @@ public void open(Display display) {
 	shell.setSize(Math.min(size.x, monitorArea.width - 20), Math.min(size.y, monitorArea.height - 20));
 	shell.open();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	clipboard.dispose();
 }
@@ -256,7 +258,9 @@ private String stringToRtf(String textData) {
 				buffer.append('\\');
 			}
 			buffer.append(ch);
-			if (ch == '\n') buffer.append("\\par ");
+            if (ch == '\n') {
+                buffer.append("\\par ");
+            }
 			if (ch == '\r' && (i - 1 == textData.length() || textData.charAt(i + 1) != '\n')) {
 				buffer.append("\\par ");
 			}

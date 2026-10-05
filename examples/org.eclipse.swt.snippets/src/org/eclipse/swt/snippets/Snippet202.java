@@ -49,7 +49,9 @@ public static void main(String[] args) {
 	shell.setSize(400, 300);
 	shell.open();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

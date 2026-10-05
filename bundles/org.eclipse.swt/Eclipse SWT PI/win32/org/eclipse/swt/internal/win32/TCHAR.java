@@ -67,7 +67,9 @@ public int length () {
 
 public int strlen () {
 	for (int i=0; i<chars.length; i++) {
-		if (chars [i] == '\0') return i;
+        if (chars [i] == '\0') {
+            return i;
+        }
 	}
 	return chars.length;
 }

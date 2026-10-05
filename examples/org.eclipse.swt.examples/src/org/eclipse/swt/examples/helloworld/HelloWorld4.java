@@ -31,7 +31,9 @@ public static void main (String [] args) {
 	Display display = new Display ();
 	Shell shell = new HelloWorld4 ().open (display);
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

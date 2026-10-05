@@ -40,7 +40,9 @@ public class Bug107877_TreeEditorInconsitency {
 			editor.setEditor(pb, item);
 		}
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

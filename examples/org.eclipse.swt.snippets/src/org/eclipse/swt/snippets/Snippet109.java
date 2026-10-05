@@ -50,7 +50,9 @@ public static void main (String [] args) {
 	form.setWeights(30, 40, 30);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

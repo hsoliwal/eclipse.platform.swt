@@ -28,15 +28,33 @@ public class Snippet324 {
 
 	static String stateMask (int stateMask) {
 		String string = "[";
-		if ((stateMask & SWT.CTRL) != 0) string += " CTRL";
-		if ((stateMask & SWT.ALT) != 0) string += " ALT";
-		if ((stateMask & SWT.SHIFT) != 0) string += " SHIFT";
-		if ((stateMask & SWT.COMMAND) != 0) string += " COMMAND";
-		if ((stateMask & SWT.BUTTON1) != 0) string += " BUTTON1";
-		if ((stateMask & SWT.BUTTON2) != 0) string += " BUTTON2";
-		if ((stateMask & SWT.BUTTON3) != 0) string += " BUTTON3";
-		if ((stateMask & SWT.BUTTON4) != 0) string += " BUTTON4";
-		if ((stateMask & SWT.BUTTON5) != 0) string += " BUTTON5";
+        if ((stateMask & SWT.CTRL) != 0) {
+            string += " CTRL";
+        }
+        if ((stateMask & SWT.ALT) != 0) {
+            string += " ALT";
+        }
+        if ((stateMask & SWT.SHIFT) != 0) {
+            string += " SHIFT";
+        }
+        if ((stateMask & SWT.COMMAND) != 0) {
+            string += " COMMAND";
+        }
+        if ((stateMask & SWT.BUTTON1) != 0) {
+            string += " BUTTON1";
+        }
+        if ((stateMask & SWT.BUTTON2) != 0) {
+            string += " BUTTON2";
+        }
+        if ((stateMask & SWT.BUTTON3) != 0) {
+            string += " BUTTON3";
+        }
+        if ((stateMask & SWT.BUTTON4) != 0) {
+            string += " BUTTON4";
+        }
+        if ((stateMask & SWT.BUTTON5) != 0) {
+            string += " BUTTON5";
+        }
 		return string + "], ";
 	}
 
@@ -87,7 +105,9 @@ public class Snippet324 {
 		shell.setSize(240, 240);
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

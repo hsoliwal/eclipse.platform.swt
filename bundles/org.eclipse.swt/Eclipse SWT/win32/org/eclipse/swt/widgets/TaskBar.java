@@ -73,14 +73,22 @@ TaskBar (Display display, int style) {
 void createHandle () {
 	long[] ppv = new long [1];
 	int hr = COM.CoCreateInstance (COM.CLSID_TaskbarList, 0, COM.CLSCTX_INPROC_SERVER, COM.IID_ITaskbarList3, ppv);
-	if (hr == COM.REGDB_E_CLASSNOTREG) error (SWT.ERROR_NOT_IMPLEMENTED);
-	if (hr != OS.S_OK) error (SWT.ERROR_NO_HANDLES);
+    if (hr == COM.REGDB_E_CLASSNOTREG) {
+        error(SWT.ERROR_NOT_IMPLEMENTED);
+    }
+    if (hr != OS.S_OK) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	mTaskbarList3 = new ITaskbarList3 (ppv [0]);
 }
 
 void createItem (TaskItem item, int index) {
-	if (index == -1) index = itemCount;
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (index == -1) {
+        index = itemCount;
+    }
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (itemCount == items.length) {
 		TaskItem [] newItems = new TaskItem [items.length + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -99,10 +107,14 @@ void createItems () {
 
 IShellLink createShellLink (MenuItem item) {
 	int style = item.getStyle ();
-	if ((style & SWT.CASCADE) != 0) return null;
+    if ((style & SWT.CASCADE) != 0) {
+        return null;
+    }
 	long [] ppv = new long [1];
 	int hr = COM.CoCreateInstance (COM.CLSID_ShellLink, 0, COM.CLSCTX_INPROC_SERVER, COM.IID_IShellLinkW, ppv);
-	if (hr != OS.S_OK) error (SWT.ERROR_NO_HANDLES);
+    if (hr != OS.S_OK) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	IShellLink pLink = new IShellLink (ppv [0]);
 
 	long hHeap = OS.GetProcessHeap ();
@@ -133,15 +145,21 @@ IShellLink createShellLink (MenuItem item) {
 			buffer = EXE_PATH;
 		}
 		hr = pLink.SetPath(buffer);
-		if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (hr != OS.S_OK) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 
 		text = (String)item.getData (EXE_ARGS_KEY);
-		if (text == null) text = Display.LAUNCHER_PREFIX + Display.TASKBAR_EVENT + item.id;
+        if (text == null) {
+            text = Display.LAUNCHER_PREFIX + Display.TASKBAR_EVENT + item.id;
+        }
 		length = text.length ();
 		buffer = new char [length + 1];
 		text.getChars (0, length, buffer, 0);
 		hr = pLink.SetArguments(buffer);
-		if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (hr != OS.S_OK) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 
 		/* This code is intentionally commented */
 //		String tooltip = item.tooltip;
@@ -157,11 +175,15 @@ IShellLink createShellLink (MenuItem item) {
 		int index = 0;
 		if (icon != null) {
 			text = (String)item.getData (ICON_INDEX_KEY);
-			if (text != null) index = Integer.parseInt (text);
+            if (text != null) {
+                index = Integer.parseInt(text);
+            }
 		} else {
 			String directory = null;
 			Image image = item.getImage ();
-			if (image != null) directory = getIconsDir ();
+            if (image != null) {
+                directory = getIconsDir();
+            }
 			if (directory != null) {
 				icon = directory + "\\" + "menu" + item.id + ".ico";
 				ImageData data;
@@ -183,40 +205,58 @@ IShellLink createShellLink (MenuItem item) {
 			buffer = new char [length + 1];
 			icon.getChars (0, length, buffer, 0);
 			hr = pLink.SetIconLocation(buffer, index);
-			if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+            if (hr != OS.S_OK) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 		}
 	}
 
 	hr = pLink.QueryInterface(COM.IID_IPropertyStore, ppv);
-	if (hr != OS.S_OK) error (SWT.ERROR_NO_HANDLES);
+    if (hr != OS.S_OK) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	IPropertyStore pPropStore = new IPropertyStore (ppv [0]);
 	hr = pPropStore.SetValue(key, pv);
-	if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (hr != OS.S_OK) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	pPropStore.Commit();
 	pPropStore.Release();
 
 	OS.HeapFree (hHeap, 0, pv);
-	if (titlePtr != 0) OS.HeapFree (hHeap, 0, titlePtr);
+    if (titlePtr != 0) {
+        OS.HeapFree(hHeap, 0, titlePtr);
+    }
 	return pLink;
 }
 
 IObjectArray createShellLinkArray (MenuItem [] items) {
-	if (items == null) return null;
-	if (items.length == 0) return null;
+    if (items == null) {
+        return null;
+    }
+    if (items.length == 0) {
+        return null;
+    }
 	long [] ppv = new long [1];
 	int hr = COM.CoCreateInstance (COM.CLSID_EnumerableObjectCollection, 0, COM.CLSCTX_INPROC_SERVER, COM.IID_IObjectCollection, ppv);
-	if (hr != OS.S_OK) error (SWT.ERROR_NO_HANDLES);
+    if (hr != OS.S_OK) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	IObjectCollection pObjColl = new IObjectCollection (ppv [0]);
 	for (MenuItem item : items) {
 		IShellLink pLink = createShellLink (item);
 		if (pLink != null) {
 			pObjColl.AddObject (pLink);
-			if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+            if (hr != OS.S_OK) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 			pLink.Release ();
 		}
 	}
 	hr = pObjColl.QueryInterface(COM.IID_IObjectArray, ppv);
-	if (hr != OS.S_OK) error (SWT.ERROR_NO_HANDLES);
+    if (hr != OS.S_OK) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	IObjectArray poa = new IObjectArray (ppv [0]);
 	pObjColl.Release ();
 	return poa;
@@ -225,20 +265,28 @@ IObjectArray createShellLinkArray (MenuItem [] items) {
 void destroyItem (TaskItem item) {
 	int index = 0;
 	while (index < itemCount) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	if (index == itemCount) return;
+    if (index == itemCount) {
+        return;
+    }
 	System.arraycopy (items, index + 1, items, index, --itemCount - index);
 	items [itemCount] = null;
 }
 
 String getIconsDir() {
-	if (iconsDir != null) return iconsDir;
+    if (iconsDir != null) {
+        return iconsDir;
+    }
 	File dir = new File(display.appLocalDir + "\\ico_dir");
 	if (dir.exists()) {
-		// remove old icons
-		for (File file : dir.listFiles()) file.delete();
+        // remove old icons
+        for (File file : dir.listFiles()) {
+            file.delete();
+        }
 	} else if (!dir.mkdirs()) {
 		return null;
 	}
@@ -263,7 +311,9 @@ String getIconsDir() {
 public TaskItem getItem (int index) {
 	checkWidget ();
 	createItems ();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return items [index];
 }
 
@@ -288,7 +338,9 @@ public TaskItem getItem (Shell shell) {
 		}
 	}
 	TaskItem item = new TaskItem (this, SWT.NONE);
-	if (shell != null) item.setShell (shell);
+    if (shell != null) {
+        item.setShell(shell);
+    }
 	return item;
 }
 
@@ -348,7 +400,9 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (display.taskBar == this) display.taskBar = null;
+    if (display.taskBar == this) {
+        display.taskBar = null;
+    }
 }
 
 @Override
@@ -362,7 +416,9 @@ void releaseWidget () {
 void reskinChildren (int flags) {
 	if (items != null) {
 		for (TaskItem item : items) {
-			if (item != null) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -371,7 +427,9 @@ void reskinChildren (int flags) {
 void setMenu (Menu menu) {
 	long [] ppv = new long [1];
 	int hr = COM.CoCreateInstance (COM.CLSID_DestinationList, 0, COM.CLSCTX_INPROC_SERVER, COM.IID_ICustomDestinationList, ppv);
-	if (hr != OS.S_OK) error (SWT.ERROR_NO_HANDLES);
+    if (hr != OS.S_OK) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	ICustomDestinationList pDestList = new ICustomDestinationList (ppv [0]);
 	String appName = Display.APP_NAME;
 	char [] buffer = {'S', 'W', 'T', '\0'};
@@ -385,18 +443,24 @@ void setMenu (Menu menu) {
 		IObjectArray poa = createShellLinkArray (items);
 		if (poa != null) {
 			hr = pDestList.SetAppID (buffer);
-			if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+            if (hr != OS.S_OK) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 
 			int [] cMaxSlots = new int [1];
 			pDestList.BeginList(cMaxSlots, COM.IID_IObjectArray, ppv);
-			if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+            if (hr != OS.S_OK) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 			IObjectArray pRemovedItems = new IObjectArray (ppv [0]);
 
 			int [] count = new int [1];
 			poa.GetCount (count);
 			if (count [0] != 0) {
 				hr = pDestList.AddUserTasks (poa);
-				if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+                if (hr != OS.S_OK) {
+                    error(SWT.ERROR_INVALID_ARGUMENT);
+                }
 			}
 
 			for (MenuItem item : items) {
@@ -413,7 +477,9 @@ void setMenu (Menu menu) {
 								char [] buffer2 = new char [length + 1];
 								text.getChars (0, length, buffer2, 0);
 								hr = pDestList.AppendCategory (buffer2, poa2);
-								if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+                                if (hr != OS.S_OK) {
+                                    error(SWT.ERROR_INVALID_ARGUMENT);
+                                }
 							}
 							poa2.Release ();
 						}
@@ -422,12 +488,16 @@ void setMenu (Menu menu) {
 			}
 			poa.Release();
 			hr = pDestList.CommitList ();
-			if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+            if (hr != OS.S_OK) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 			pRemovedItems.Release ();
 		}
 	} else {
 		hr = pDestList.DeleteList (buffer);
-		if (hr != OS.S_OK) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (hr != OS.S_OK) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	pDestList.Release ();
 }

@@ -128,7 +128,9 @@ public Caret getCaret () {
 
 @Override
 Point getIMCaretPos () {
-	if (caret == null) return super.getIMCaretPos ();
+    if (caret == null) {
+        return super.getIMCaretPos();
+    }
 	return new Point (caret.x, caret.y);
 }
 
@@ -153,7 +155,9 @@ public IME getIME () {
 long gtk3_button_press_event (long widget, long event) {
 	if (ime != null) {
 		long result = ime.gtk3_button_press_event (widget, event);
-		if (result != 0) return result;
+        if (result != 0) {
+            return result;
+        }
 	}
 	return  super.gtk3_button_press_event (widget, event);
 }
@@ -162,14 +166,18 @@ long gtk3_button_press_event (long widget, long event) {
 long gtk_commit (long imcontext, long text) {
 	if (ime != null) {
 		long result = ime.gtk_commit (imcontext, text);
-		if (result != 0) return result;
+        if (result != 0) {
+            return result;
+        }
 	}
 	return super.gtk_commit (imcontext, text);
 }
 
 @Override
 long gtk_draw (long widget, long cairo) {
-	if ((state & OBSCURED) != 0) return 0;
+    if ((state & OBSCURED) != 0) {
+        return 0;
+    }
 	long result = super.gtk_draw (widget, cairo);
 	drawCaretInFocus(cairo);
 	return result;
@@ -177,14 +185,18 @@ long gtk_draw (long widget, long cairo) {
 
 @Override
 void gtk4_draw (long widget, long cairo, Rectangle bounds) {
-	if ((state & OBSCURED) != 0) return;
+    if ((state & OBSCURED) != 0) {
+        return;
+    }
 	super.gtk4_draw (widget, cairo, bounds);
 	drawCaretInFocus(cairo);
 }
 
 @Override
 boolean hooksPaint() {
-	if (GTK.GTK4 && caret != null && caret.isShowing && caret.isFocusCaret()) return true;
+    if (GTK.GTK4 && caret != null && caret.isShowing && caret.isFocusCaret()) {
+        return true;
+    }
 	return super.hooksPaint();
 }
 
@@ -214,8 +226,12 @@ void drawCaretInFocus(long cairo) {
 }
 
 private void drawCaret(long cairo) {
-	if(this.isDisposed()) return;
-	if (cairo == 0) error(SWT.ERROR_NO_HANDLES);
+    if (this.isDisposed()) {
+        return;
+    }
+    if (cairo == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	/*
 	 * The drawFlag toggle is a GTK3 mechanism only.
@@ -235,7 +251,9 @@ private void drawCaret(long cairo) {
 					break;
 			}
 			int nX = caret.x;
-			if ((style & SWT.MIRRORED) != 0) nX = getClientWidth () - nWidth - nX;
+            if ((style & SWT.MIRRORED) != 0) {
+                nX = getClientWidth() - nWidth - nX;
+            }
 			Cairo.cairo_translate(cairo, nX, caret.y);
 			if (GTK.GTK4) {
 				/*
@@ -250,9 +268,13 @@ private void drawCaret(long cairo) {
 			Cairo.cairo_paint(cairo);
 		} else {
 			int nWidth = caret.width, nHeight = caret.height;
-			if (nWidth <= 0) nWidth = Caret.DEFAULT_WIDTH;
+            if (nWidth <= 0) {
+                nWidth = Caret.DEFAULT_WIDTH;
+            }
 			int nX = caret.x;
-			if ((style & SWT.MIRRORED) != 0) nX = getClientWidth () - nWidth - nX;
+            if ((style & SWT.MIRRORED) != 0) {
+                nX = getClientWidth() - nWidth - nX;
+            }
 			Cairo.cairo_rectangle(cairo, nX, caret.y, nWidth, nHeight);
 			if (GTK.GTK4) {
 				/*
@@ -282,34 +304,44 @@ private void drawCaret(long cairo) {
 @Override
 long gtk_focus_in_event (long widget, long event) {
 	long result = super.gtk_focus_in_event (widget, event);
-	if (caret != null) caret.setFocus ();
+    if (caret != null) {
+        caret.setFocus();
+    }
 	return result;
 }
 
 @Override
 long gtk_focus_out_event (long widget, long event) {
 	long result = super.gtk_focus_out_event (widget, event);
-	if (caret != null) caret.killFocus ();
+    if (caret != null) {
+        caret.killFocus();
+    }
 	return result;
 }
 
 @Override
 void gtk4_focus_enter_event(long handle, long event) {
 	super.gtk4_focus_enter_event (handle, event);
-	if (caret != null) caret.setFocus ();
+    if (caret != null) {
+        caret.setFocus();
+    }
 }
 
 @Override
 void gtk4_focus_leave_event(long handle, long event) {
 	super.gtk4_focus_leave_event (handle, event);
-	if (caret != null) caret.killFocus ();
+    if (caret != null) {
+        caret.killFocus();
+    }
 }
 
 @Override
 long gtk_preedit_changed (long imcontext) {
 	if (ime != null) {
 		long result = ime.gtk_preedit_changed (imcontext);
-		if (result != 0) return result;
+        if (result != 0) {
+            return result;
+        }
 	}
 	return super.gtk_preedit_changed (imcontext);
 }
@@ -317,9 +349,13 @@ long gtk_preedit_changed (long imcontext) {
 @Override
 void redrawWidget (int x, int y, int width, int height, boolean redrawAll, boolean all, boolean trim) {
 	boolean isFocus = caret != null && caret.isFocusCaret ();
-	if (isFocus) caret.killFocus ();
+    if (isFocus) {
+        caret.killFocus();
+    }
 	super.redrawWidget (x, y, width, height, redrawAll, all, trim);
-	if (isFocus) caret.setFocus ();
+    if (isFocus) {
+        caret.setFocus();
+    }
 }
 
 @Override
@@ -337,8 +373,12 @@ void releaseChildren (boolean destroy) {
 
 @Override
 void reskinChildren (int flags) {
-	if (caret != null) caret.reskin (flags);
-	if (ime != null)  ime.reskin (flags);
+    if (caret != null) {
+        caret.reskin(flags);
+    }
+    if (ime != null) {
+        ime.reskin(flags);
+    }
 	super.reskinChildren (flags);
 }
 
@@ -366,24 +406,34 @@ void reskinChildren (int flags) {
  */
 public void scroll (int destX, int destY, int x, int y, int width, int height, boolean all) {
 	checkWidget();
-	if (width <= 0 || height <= 0) return;
-	/*
-	 * scrollInPixels() doesn't seem to be needed on GTK4, so we can return early.
-	 * In fact it doesn't seem to be needed on GTK3 either, but it's been left
-	 * here for stability on older GTK3 versions. The investigation
-	 * as to why it's unneeded is left as a TODO. See bug 546274.
-	 */
-	if (GTK.GTK4) return;
+    if (width <= 0 || height <= 0) {
+        return;
+    }
+    /*
+     * scrollInPixels() doesn't seem to be needed on GTK4, so we can return early.
+     * In fact it doesn't seem to be needed on GTK3 either, but it's been left
+     * here for stability on older GTK3 versions. The investigation
+     * as to why it's unneeded is left as a TODO. See bug 546274.
+     */
+    if (GTK.GTK4) {
+        return;
+    }
 	if ((style & SWT.MIRRORED) != 0) {
 		int clientWidth = getClientWidth ();
 		x = clientWidth - width - x;
 		destX = clientWidth - width - destX;
 	}
 	int deltaX = destX - x, deltaY = destY - y;
-	if (deltaX == 0 && deltaY == 0) return;
-	if (!isVisible ()) return;
+    if (deltaX == 0 && deltaY == 0) {
+        return;
+    }
+    if (!isVisible()) {
+        return;
+    }
 	boolean isFocus = caret != null && caret.isFocusCaret ();
-	if (isFocus) caret.killFocus ();
+    if (isFocus) {
+        caret.killFocus();
+    }
 	long window = paintWindow ();
 	long visibleRegion = GDK.gdk_window_get_visible_region (window);
 	cairo_rectangle_int_t srcRect = new cairo_rectangle_int_t ();
@@ -427,7 +477,9 @@ public void scroll (int destX, int destY, int x, int y, int width, int height, b
 		update ();
 	}
 	Control control = findBackgroundControl ();
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	if (control.backgroundImage != null) {
 		redrawWidget (x, y, width, height, false, false, false);
 		redrawWidget (destX, destY, width, height, false, false, false);
@@ -459,7 +511,9 @@ public void scroll (int destX, int destY, int x, int y, int width, int height, b
 			cairo_rectangle_int_t rect = new cairo_rectangle_int_t();
 			if (deltaX != 0) {
 				int newX = destX - deltaX;
-				if (deltaX < 0) newX = destX + width;
+                if (deltaX < 0) {
+                    newX = destX + width;
+                }
 				rect.x = newX;
 				rect.y = y;
 				rect.width = Math.abs(deltaX);
@@ -468,7 +522,9 @@ public void scroll (int destX, int destY, int x, int y, int width, int height, b
 			}
 			if (deltaY != 0) {
 				int newY = destY - deltaY;
-				if (deltaY < 0) newY = destY + height;
+                if (deltaY < 0) {
+                    newY = destY + height;
+                }
 				rect.x = x;
 				rect.y = newY;
 				rect.width = width;
@@ -490,7 +546,9 @@ public void scroll (int destX, int destY, int x, int y, int width, int height, b
 			}
 		}
 	}
-	if (isFocus) caret.setFocus ();
+    if (isFocus) {
+        caret.setFocus();
+    }
 	/*
 	 * Due to overlay drawing of scrollbars current method of scrolling leaves scrollbar and notifiers for them inside the canvas
 	 * after scroll. Fix is to redraw once done.
@@ -501,9 +559,13 @@ public void scroll (int destX, int destY, int x, int y, int width, int height, b
 @Override
 int setBounds (int x, int y, int width, int height, boolean move, boolean resize) {
 	boolean isFocus = caret != null && caret.isFocusCaret ();
-	if (isFocus) caret.killFocus ();
+    if (isFocus) {
+        caret.killFocus();
+    }
 	int result = super.setBounds (x, y, width, height, move, resize);
-	if (isFocus) caret.setFocus ();
+    if (isFocus) {
+        caret.setFocus();
+    }
 	return result;
 }
 
@@ -533,9 +595,13 @@ public void setCaret (Caret caret) {
 	Caret oldCaret = this.caret;
 	this.caret = newCaret;
 	if (hasFocus ()) {
-		if (oldCaret != null) oldCaret.killFocus ();
+        if (oldCaret != null) {
+            oldCaret.killFocus();
+        }
 		if (newCaret != null) {
-			if (newCaret.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+            if (newCaret.isDisposed()) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 			newCaret.setFocus ();
 		}
 	}
@@ -544,7 +610,9 @@ public void setCaret (Caret caret) {
 @Override
 public void setFont (Font font) {
 	checkWidget();
-	if (caret != null) caret.setFont (font);
+    if (caret != null) {
+        caret.setFont(font);
+    }
 	super.setFont (font);
 }
 
@@ -565,13 +633,17 @@ public void setFont (Font font) {
  */
 public void setIME (IME ime) {
 	checkWidget ();
-	if (ime != null && ime.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (ime != null && ime.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.ime = ime;
 }
 
 void updateCaret () {
 	long imHandle = imHandle ();
-	if (imHandle == 0) return;
+    if (imHandle == 0) {
+        return;
+    }
 	GdkRectangle rect = new GdkRectangle ();
 	rect.x = caret.x;
 	rect.y = caret.y;

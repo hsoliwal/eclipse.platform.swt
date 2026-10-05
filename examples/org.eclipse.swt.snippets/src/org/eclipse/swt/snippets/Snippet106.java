@@ -43,8 +43,9 @@ public static void main (String [] args) {
 			item.setText (j, "Item " + i);
 		}
 	}
-	for (TableColumn col : columns)
-		col.pack ();
+    for (TableColumn col : columns) {
+        col.pack();
+    }
 	Button button = new Button (shell, SWT.PUSH);
 	final int index = 1;
 	button.setText ("Insert Column " + index + "a");
@@ -60,7 +61,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

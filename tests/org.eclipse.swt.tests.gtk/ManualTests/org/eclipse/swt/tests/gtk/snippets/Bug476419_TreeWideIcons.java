@@ -75,7 +75,9 @@ public class Bug476419_TreeWideIcons {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		xImage.dispose();
 		display.dispose();

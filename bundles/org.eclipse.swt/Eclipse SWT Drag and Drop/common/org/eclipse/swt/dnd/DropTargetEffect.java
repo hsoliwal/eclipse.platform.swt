@@ -63,7 +63,9 @@ public class DropTargetEffect extends DropTargetAdapter {
 	 * </ul>
 	 */
 	public DropTargetEffect(Control control) {
-		if (control == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (control == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		this.control = control;
 	}
 
@@ -99,7 +101,9 @@ public class DropTargetEffect extends DropTargetAdapter {
 	Widget getItem(Table table, int x, int y) {
 		Point coordinates = table.toControl(x, y);
 		TableItem item = table.getItem(coordinates);
-		if (item != null) return item;
+        if (item != null) {
+            return item;
+        }
 		Rectangle area = table.getClientArea();
 		int tableBottom = area.y + area.height;
 		int itemCount = table.getItemCount();
@@ -108,8 +112,12 @@ public class DropTargetEffect extends DropTargetAdapter {
 			Rectangle rect = item.getBounds();
 			rect.x = area.x;
 			rect.width = area.width;
-			if (rect.contains(coordinates)) return item;
-			if (rect.y > tableBottom) break;
+            if (rect.contains(coordinates)) {
+                return item;
+            }
+            if (rect.y > tableBottom) {
+                break;
+            }
 		}
 		return null;
 	}
@@ -125,8 +133,12 @@ public class DropTargetEffect extends DropTargetAdapter {
 				while (item != null) {
 					Rectangle rect = item.getBounds();
 					int itemBottom = rect.y + rect.height;
-					if (rect.y <= point.y && point.y < itemBottom) return item;
-					if (itemBottom > treeBottom) break;
+                    if (rect.y <= point.y && point.y < itemBottom) {
+                        return item;
+                    }
+                    if (itemBottom > treeBottom) {
+                        break;
+                    }
 					item = nextItem(tree, item);
 				}
 				return null;
@@ -136,15 +148,23 @@ public class DropTargetEffect extends DropTargetAdapter {
 	}
 
 	TreeItem nextItem(Tree tree, TreeItem item) {
-		if (item == null) return null;
-		if (item.getExpanded() && item.getItemCount() > 0) return item.getItem(0);
+        if (item == null) {
+            return null;
+        }
+        if (item.getExpanded() && item.getItemCount() > 0) {
+            return item.getItem(0);
+        }
 		TreeItem childItem = item;
 		TreeItem parentItem = childItem.getParentItem();
 		int index = parentItem == null ? tree.indexOf(childItem) : parentItem.indexOf(childItem);
 		int count = parentItem == null ? tree.getItemCount() : parentItem.getItemCount();
 		while (true) {
-			if (index + 1 < count) return parentItem == null ? tree.getItem(index + 1) : parentItem.getItem(index + 1);
-			if (parentItem == null) return null;
+            if (index + 1 < count) {
+                return parentItem == null ? tree.getItem(index + 1) : parentItem.getItem(index + 1);
+            }
+            if (parentItem == null) {
+                return null;
+            }
 			childItem = parentItem;
 			parentItem = childItem.getParentItem();
 			index = parentItem == null ? tree.indexOf(childItem) : parentItem.indexOf(childItem);
@@ -153,11 +173,15 @@ public class DropTargetEffect extends DropTargetAdapter {
 	}
 
 	TreeItem previousItem(Tree tree, TreeItem item) {
-		if (item == null) return null;
+        if (item == null) {
+            return null;
+        }
 		TreeItem childItem = item;
 		TreeItem parentItem = childItem.getParentItem();
 		int index = parentItem == null ? tree.indexOf(childItem) : parentItem.indexOf(childItem);
-		if (index == 0) return parentItem;
+        if (index == 0) {
+            return parentItem;
+        }
 		TreeItem nextItem = parentItem == null ? tree.getItem(index-1) : parentItem.getItem(index-1);
 		int count = nextItem.getItemCount();
 		while (count > 0 && nextItem.getExpanded()) {

@@ -72,7 +72,9 @@ public void javaToNative (Object object, TransferData transferData){
 	string.getChars(0, charCount , chars, 0);
 	int byteCount = chars.length*2;
 	long pValue = OS.g_malloc(byteCount);
-	if (pValue == 0) return;
+    if (pValue == 0) {
+        return;
+    }
 	C.memmove(pValue, chars, byteCount);
 	transferData.length = byteCount;
 	transferData.format = 8;
@@ -92,10 +94,14 @@ public void javaToNative (Object object, TransferData transferData){
  */
 @Override
 public Object nativeToJava(TransferData transferData){
-	if (!isSupportedType(transferData) ||  transferData.pValue == 0) return null;
+    if (!isSupportedType(transferData) || transferData.pValue == 0) {
+        return null;
+    }
 	/* Ensure byteCount is a multiple of 2 bytes */
 	int size = (transferData.format * transferData.length / 8) / 2 * 2;
-	if (size <= 0) return null;
+    if (size <= 0) {
+        return null;
+    }
 	char[] chars = new char [size/2];
 	C.memmove (chars, transferData.pValue, size);
 	String string = new String (chars);

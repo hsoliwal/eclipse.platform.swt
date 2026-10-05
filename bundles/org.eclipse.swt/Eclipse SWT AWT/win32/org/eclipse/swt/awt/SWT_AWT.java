@@ -58,7 +58,9 @@ static native final Object initFrame (long handle, String className);
 static native final void synthesizeWindowActivation (Frame frame, boolean doActivate);
 
 static synchronized void loadLibrary () {
-	if (loaded) return;
+    if (loaded) {
+        return;
+    }
 	loaded = true;
 	Toolkit.getDefaultToolkit();
 	/*
@@ -74,13 +76,17 @@ static synchronized void loadLibrary () {
 }
 
 static synchronized void initializeSwing() {
-	if (swingInitialized) return;
+    if (swingInitialized) {
+        return;
+    }
 	swingInitialized = true;
 	try {
 		/* Initialize the default focus traversal policy */
 		Class<?> clazz = Class.forName("javax.swing.UIManager");
 		Method method = clazz.getMethod("getDefaults");
-		if (method != null) method.invoke(clazz);
+        if (method != null) {
+            method.invoke(clazz);
+        }
 	} catch (Throwable e) {}
 }
 
@@ -98,8 +104,12 @@ static synchronized void initializeSwing() {
  * @since 3.2
  */
 public static Frame getFrame (Composite parent) {
-	if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if ((parent.getStyle () & SWT.EMBEDDED) == 0) return null;
+    if (parent == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((parent.getStyle() & SWT.EMBEDDED) == 0) {
+        return null;
+    }
 	return (Frame)parent.getData(EMBEDDED_FRAME_KEY);
 }
 
@@ -127,7 +137,9 @@ public static Frame getFrame (Composite parent) {
  * @since 3.0
  */
 public static Frame new_Frame (final Composite parent) {
-	if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (parent == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if ((parent.getStyle () & SWT.EMBEDDED) == 0) {
 		SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 	}
@@ -232,13 +244,17 @@ public static Frame new_Frame (final Composite parent) {
 			case SWT.FocusIn:
 			case SWT.Activate:
 				EventQueue.invokeLater(() -> {
-					if (frame.isActive()) return;
+                    if (frame.isActive()) {
+                        return;
+                    }
 					synthesizeWindowActivation(frame, true);
 				});
 				break;
 			case SWT.Deactivate:
 				EventQueue.invokeLater(() -> {
-					if (!frame.isActive()) return;
+                    if (!frame.isActive()) {
+                        return;
+                    }
 					synthesizeWindowActivation(frame, false);
 				});
 				break;
@@ -249,7 +265,9 @@ public static Frame new_Frame (final Composite parent) {
 	parent.addListener (SWT.Dispose, listener);
 
 	parent.getDisplay().asyncExec(() -> {
-		if (parent.isDisposed()) return;
+        if (parent.isDisposed()) {
+            return;
+        }
 		final Rectangle clientArea = Win32DPIUtils.pointToPixel(parent.getClientArea(), DPIUtil.getZoomForAutoscaleProperty(parent.nativeZoom)); // To Pixels
 		EventQueue.invokeLater(() -> {
 			frame.setSize (clientArea.width, clientArea.height);
@@ -276,8 +294,12 @@ public static Frame new_Frame (final Composite parent) {
  * @since 3.0
  */
 public static Shell new_Shell (final Display display, final Canvas parent) {
-	if (display == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (display == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (parent == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	long handle = 0;
 	try {
 		loadLibrary ();
@@ -285,13 +307,17 @@ public static Shell new_Shell (final Display display, final Canvas parent) {
 	} catch (Throwable e) {
 		SWT.error (SWT.ERROR_NOT_IMPLEMENTED, e);
 	}
-	if (handle == 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT, null, " [peer not created]");
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT, null, " [peer not created]");
+    }
 	final Shell shell = Shell.win32_new (display, handle);
 	final ComponentListener listener = new ComponentAdapter () {
 		@Override
 		public void componentResized (ComponentEvent e) {
 			display.syncExec (() -> {
-				if (shell.isDisposed()) return;
+                if (shell.isDisposed()) {
+                    return;
+                }
 				Dimension dim = parent.getSize ();
 				shell.setSize(Win32DPIUtils.pixelToPointAsSize(new Point(dim.width, dim.height), DPIUtil.getDeviceZoom())); // To Points
 			});

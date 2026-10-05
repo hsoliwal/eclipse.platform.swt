@@ -58,12 +58,16 @@ public class Bug404448_ImageButtons {
 			item.setImage (image);
 			item.setDisabledImage (disabledImage);
 			item.setHotImage (hotImage);
-			if (i % 3 == 0) item.setEnabled (false);
+            if (i % 3 == 0) {
+                item.setEnabled(false);
+            }
 		}
 		
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		image.dispose ();
 		disabledImage.dispose ();

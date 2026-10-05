@@ -50,8 +50,9 @@ public class Bug321573_ImageScalingLeakTest {
 			return thumbnail;
 		} finally {
 			image.dispose();
-			if (gc != null)
-				gc.dispose();
+            if (gc != null) {
+                gc.dispose();
+            }
 		}
 	}
 

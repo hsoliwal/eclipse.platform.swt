@@ -94,7 +94,9 @@ public static void main(String [] args) {
 	shell.setBounds(10,10,500,500);
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

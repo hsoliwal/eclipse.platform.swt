@@ -181,7 +181,9 @@ Control[] _getChildren () {
 		return childrenList.toArray(new Control[childrenList.size()]);
 	} else {
 		long list = GTK3.gtk_container_get_children (parentHandle);
-		if (list == 0) return new Control [0];
+        if (list == 0) {
+            return new Control [0];
+        }
 		int count = OS.g_list_length (list);
 		Control [] children = new Control [count];
 		int i = 0;
@@ -199,7 +201,9 @@ Control[] _getChildren () {
 			temp = OS.g_list_next (temp);
 		}
 		OS.g_list_free (list);
-		if (i == count) return children;
+        if (i == count) {
+            return children;
+        }
 		Control [] newChildren = new Control [i];
 		System.arraycopy (children, 0, newChildren, 0, i);
 		return newChildren;
@@ -207,12 +211,18 @@ Control[] _getChildren () {
 }
 
 Control [] _getTabList () {
-	if (tabList == null) return tabList;
+    if (tabList == null) {
+        return tabList;
+    }
 	int count = 0;
 	for (int i=0; i<tabList.length; i++) {
-		if (!tabList [i].isDisposed ()) count++;
+        if (!tabList [i].isDisposed()) {
+            count++;
+        }
 	}
-	if (count == tabList.length) return tabList;
+    if (count == tabList.length) {
+        return tabList;
+    }
 	Control [] newList = new Control [count];
 	int index = 0;
 	for (int i=0; i<tabList.length; i++) {
@@ -265,8 +275,12 @@ protected void checkSubclass () {
 Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	checkWidget ();
 	display.runSkin();
-	if (wHint != SWT.DEFAULT && wHint < 0) wHint = 0;
-	if (hHint != SWT.DEFAULT && hHint < 0) hHint = 0;
+    if (wHint != SWT.DEFAULT && wHint < 0) {
+        wHint = 0;
+    }
+    if (hHint != SWT.DEFAULT && hHint < 0) {
+        hHint = 0;
+    }
 	Point size;
 	if (layout != null) {
 		if (wHint == SWT.DEFAULT || hHint == SWT.DEFAULT) {
@@ -278,11 +292,19 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 		}
 	} else {
 		size = minimumSize (wHint, hHint, changed);
-		if (size.x == 0) size.x = DEFAULT_WIDTH;
-		if (size.y == 0) size.y = DEFAULT_HEIGHT;
+        if (size.x == 0) {
+            size.x = DEFAULT_WIDTH;
+        }
+        if (size.y == 0) {
+            size.y = DEFAULT_HEIGHT;
+        }
 	}
-	if (wHint != SWT.DEFAULT) size.x = wHint;
-	if (hHint != SWT.DEFAULT) size.y = hHint;
+    if (wHint != SWT.DEFAULT) {
+        size.x = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        size.y = hHint;
+    }
 	Rectangle trim = computeTrim (0, 0, size.x, size.y);
 	return new Point (trim.width, trim.height);
 }
@@ -290,7 +312,9 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 @Override
 Widget [] computeTabList () {
 	Widget result [] = super.computeTabList ();
-	if (result.length == 0) return result;
+    if (result.length == 0) {
+        return result;
+    }
 	Control [] list = tabList != null ? _getTabList () : _getChildren ();
 	for (int i=0; i<list.length; i++) {
 		Control child = list [i];
@@ -309,7 +333,9 @@ Widget [] computeTabList () {
 void createHandle (int index) {
 	state |= HANDLE | CANVAS | CHECK_SUBWINDOW;
 	boolean scrolled = (style & (SWT.H_SCROLL | SWT.V_SCROLL)) != 0;
-	if (!scrolled) state |= THEME_BACKGROUND;
+    if (!scrolled) {
+        state |= THEME_BACKGROUND;
+    }
 	createHandle (index, true, scrolled || (style & SWT.BORDER) != 0);
 }
 
@@ -322,14 +348,22 @@ void createHandle (int index, boolean fixed, boolean scrolled) {
 	if (scrolled) {
 		if (fixed) {
 			fixedHandle = OS.g_object_new (display.gtk_fixed_get_type (), 0);
-			if (fixedHandle == 0) error (SWT.ERROR_NO_HANDLES);
-			if (!GTK.GTK4) GTK3.gtk_widget_set_has_window(fixedHandle, true);
+            if (fixedHandle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
+            if (!GTK.GTK4) {
+                GTK3.gtk_widget_set_has_window(fixedHandle, true);
+            }
 		}
 
 		long vadj = GTK.gtk_adjustment_new (0, 0, 100, 1, 10, 10);
-		if (vadj == 0) error (SWT.ERROR_NO_HANDLES);
+        if (vadj == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		long hadj = GTK.gtk_adjustment_new (0, 0, 100, 1, 10, 10);
-		if (hadj == 0) error (SWT.ERROR_NO_HANDLES);
+        if (hadj == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		if (GTK.GTK4) {
 			scrolledHandle = GTK4.gtk_scrolled_window_new();
@@ -340,11 +374,15 @@ void createHandle (int index, boolean fixed, boolean scrolled) {
 		} else {
 			scrolledHandle = GTK3.gtk_scrolled_window_new (hadj, vadj);
 		}
-		if (scrolledHandle == 0) error (SWT.ERROR_NO_HANDLES);
+        if (scrolledHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 	}
 
 	handle = OS.g_object_new(display.gtk_fixed_get_type(), 0);
-	if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK4) {
 		GTK4.gtk_widget_set_focusable(handle, true);
@@ -363,7 +401,9 @@ void createHandle (int index, boolean fixed, boolean scrolled) {
 			/* Prevent an input method context from being created for the Browser widget */
 			if (display.getData (NO_INPUT_METHOD) == null) {
 				imHandle = GTK.gtk_im_multicontext_new ();
-				if (imHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (imHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 			}
 		}
 	}
@@ -417,7 +457,9 @@ void createHandle (int index, boolean fixed, boolean scrolled) {
 				}
 			} else {
 				socketHandle = GTK.gtk_socket_new ();
-				if (socketHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (socketHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 				GTK3.gtk_container_add (handle, socketHandle);
 			}
 		}
@@ -511,9 +553,11 @@ long gtk_draw (long widget, long cairo) {
 	if (backgroundImage == null) {
 		GTK.gtk_render_background(context, cairo, 0, 0, width, height);
 	}
-	// If fixClipHandle is set: iterate through the children of widget
-	// and set their clips to be that of their allocation
-	if (widget == fixClipHandle) fixClippings();
+    // If fixClipHandle is set: iterate through the children of widget
+    // and set their clips to be that of their allocation
+    if (widget == fixClipHandle) {
+        fixClippings();
+    }
 	return super.gtk_draw(widget, cairo);
 }
 
@@ -529,12 +573,16 @@ boolean mustBeVisibleOnInitBounds() {
 @Override
 void deregister () {
 	super.deregister ();
-	if (socketHandle != 0) display.removeWidget (socketHandle);
+    if (socketHandle != 0) {
+        display.removeWidget(socketHandle);
+    }
 }
 
 @Override
 void snapshotBackground (long handle, long snapshot) {
-	if ((state & OBSCURED) != 0) return;
+    if ((state & OBSCURED) != 0) {
+        return;
+    }
 	/*
 	 * Draw the effective background before children are snapshotted.
 	 *
@@ -551,9 +599,13 @@ void snapshotBackground (long handle, long snapshot) {
 	if (!draw && (state & CANVAS) != 0) {
 		draw = (state & BACKGROUND) == 0;
 	}
-	if (!draw) return;
+    if (!draw) {
+        return;
+    }
 
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	GtkAllocation allocation = new GtkAllocation();
 	GTK.gtk_widget_get_allocation(handle, allocation);
 	int width = (state & ZERO_WIDTH) != 0 ? 0 : allocation.width;
@@ -610,8 +662,12 @@ void snapshotToDrawAfterChildren (long handle, long snapshot) {
  */
 public void drawBackground (GC gc, int x, int y, int width, int height, int offsetX, int offsetY) {
 	checkWidget();
-	if (gc == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Control control = findBackgroundControl ();
 	if (control != null) {
 		GCData data = gc.getGCData ();
@@ -623,10 +679,14 @@ public void drawBackground (GC gc, int x, int y, int width, int height, int offs
 			x += pt.x + offsetX;
 			y += pt.y + offsetY;
 			long surface = control.backgroundImage.surface;
-			if (surface == 0) error (SWT.ERROR_NO_HANDLES);
+            if (surface == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 			Cairo.cairo_surface_reference(surface);
 			long pattern = Cairo.cairo_pattern_create_for_surface (surface);
-			if (pattern == 0) error (SWT.ERROR_NO_HANDLES);
+            if (pattern == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 			Cairo.cairo_pattern_set_extend (pattern, Cairo.CAIRO_EXTEND_REPEAT);
 			if ((data.style & SWT.MIRRORED) != 0) {
 				double[] matrix = {-1, 0, 0, 1, 0, 0};
@@ -650,7 +710,9 @@ public void drawBackground (GC gc, int x, int y, int width, int height, int offs
 
 @Override
 void enableWidget (boolean enabled) {
-	if ((state & CANVAS) != 0) return;
+    if ((state & CANVAS) != 0) {
+        return;
+    }
 	super.enableWidget (enabled);
 }
 
@@ -660,7 +722,9 @@ Composite findDeferredControl () {
 
 @Override
 Menu [] findMenus (Control control) {
-	if (control == this) return new Menu [0];
+    if (control == this) {
+        return new Menu [0];
+    }
 	Menu result [] = super.findMenus (control);
 	for (Control child : _getChildren ()) {
 		Menu [] menuList = child.findMenus (control);
@@ -701,19 +765,27 @@ void fixModal(long group, long modalGroup)  {
 @Override
 void fixStyle () {
 	super.fixStyle ();
-	if (scrolledHandle == 0) fixStyle (handle);
+    if (scrolledHandle == 0) {
+        fixStyle(handle);
+    }
 	for (Control child : _getChildren ()) {
 		child.fixStyle ();
 	}
 }
 
 void fixTabList (Control control) {
-	if (tabList == null) return;
+    if (tabList == null) {
+        return;
+    }
 	int count = 0;
 	for (int i=0; i<tabList.length; i++) {
-		if (tabList [i] == control) count++;
+        if (tabList [i] == control) {
+            count++;
+        }
 	}
-	if (count == 0) return;
+    if (count == 0) {
+        return;
+    }
 	Control [] newList = null;
 	int length = tabList.length - count;
 	if (length != 0) {
@@ -729,7 +801,9 @@ void fixTabList (Control control) {
 }
 
 void fixZOrder () {
-	if ((state & CANVAS) != 0) return;
+    if ((state & CANVAS) != 0) {
+        return;
+    }
 	long parentHandle = parentingHandle ();
 	if (GTK.GTK4) {
 		/*
@@ -744,7 +818,9 @@ void fixZOrder () {
 		}
 	} else {
 		long parentWindow = gtk_widget_get_window (parentHandle);
-		if (parentWindow == 0) return;
+        if (parentWindow == 0) {
+            return;
+        }
 		long [] userData = new long [1];
 		long windowList = GDK.gdk_window_get_children (parentWindow);
 		if (windowList != 0) {
@@ -766,15 +842,21 @@ void fixZOrder () {
 
 @Override
 long focusHandle () {
-	if (socketHandle != 0) return socketHandle;
+    if (socketHandle != 0) {
+        return socketHandle;
+    }
 	return super.focusHandle ();
 }
 
 @Override
 boolean forceFocus (long focusHandle) {
-	if (socketHandle != 0) GTK.gtk_widget_set_can_focus (focusHandle, true);
+    if (socketHandle != 0) {
+        GTK.gtk_widget_set_can_focus(focusHandle, true);
+    }
 	boolean result = super.forceFocus (focusHandle);
-	if (socketHandle != 0) GTK.gtk_widget_set_can_focus (focusHandle, false);
+    if (socketHandle != 0) {
+        GTK.gtk_widget_set_can_focus(focusHandle, false);
+    }
 	return result;
 }
 
@@ -925,7 +1007,9 @@ public Control [] getTabList () {
 		int count = 0;
 		Control [] list =_getChildren ();
 		for (Control element : list) {
-			if (element.isTabGroup ()) count++;
+            if (element.isTabGroup()) {
+                count++;
+            }
 		}
 		tabList = new Control [count];
 		int index = 0;
@@ -941,14 +1025,18 @@ public Control [] getTabList () {
 @Override
 long gtk3_button_press_event (long widget, long event) {
 	long result = super.gtk3_button_press_event (widget, event);
-	if (result != 0) return result;
+    if (result != 0) {
+        return result;
+    }
 	if ((state & CANVAS) != 0) {
 		if ((style & SWT.NO_FOCUS) == 0 && hooksKeys ()) {
 			int [] eventButton = new int [1];
 			GDK.gdk_event_get_button(event, eventButton);
 
 			if (eventButton[0] == 1) {
-				if (getChildrenCount () == 0) setFocus ();
+                if (getChildrenCount() == 0) {
+                    setFocus();
+                }
 			}
 		}
 	}
@@ -982,7 +1070,9 @@ boolean gtk4_key_press_event(long controller, int keyval, int keycode, int state
 @Override
 long gtk3_key_press_event (long widget, long event) {
 	long result = super.gtk3_key_press_event (widget, event);
-	if (result != 0) return result;
+    if (result != 0) {
+        return result;
+    }
 	/*
 	* Feature in GTK.  The default behavior when the return key
 	* is pressed is to select the default button.  This is not the
@@ -1003,7 +1093,9 @@ long gtk3_key_press_event (long widget, long event) {
 
 @Override
 long gtk_focus (long widget, long directionType) {
-	if (widget == socketHandle) return 0;
+    if (widget == socketHandle) {
+        return 0;
+    }
 	return super.gtk_focus (widget, directionType);
 }
 
@@ -1039,9 +1131,13 @@ long gtk_scroll_child (long widget, long scrollType, long horizontal) {
 	/* Stop GTK scroll child signal for canvas */
 	OS.g_signal_stop_emission_by_name (widget, OS.scroll_child);
 	if (GTK.GTK4) {
-		// GtkScrollBar moved out of GtkRange, get GtkScrollType from this signal instead
-		if (horizontalBar != null ) horizontalBar.detail = (int) scrollType;
-		if (verticalBar != null) verticalBar.detail = (int) scrollType;
+        // GtkScrollBar moved out of GtkRange, get GtkScrollType from this signal instead
+        if (horizontalBar != null) {
+            horizontalBar.detail = (int) scrollType;
+        }
+        if (verticalBar != null) {
+            verticalBar.detail = (int) scrollType;
+        }
 	}
 	return 1;
 }
@@ -1063,7 +1159,9 @@ boolean hasBorder () {
 void hookEvents () {
 	super.hookEvents ();
 	if ((state & CANVAS) != 0) {
-		if (!GTK.GTK4) GTK3.gtk_widget_add_events (handle, GDK.GDK_POINTER_MOTION_HINT_MASK);
+        if (!GTK.GTK4) {
+            GTK3.gtk_widget_add_events(handle, GDK.GDK_POINTER_MOTION_HINT_MASK);
+        }
 		if (scrolledHandle != 0) {
 			OS.g_signal_connect_closure (scrolledHandle, OS.scroll_child, display.getClosure (SCROLL_CHILD), false);
 		}
@@ -1104,7 +1202,9 @@ public boolean isLayoutDeferred () {
 
 @Override
 boolean isTabGroup() {
-	if ((state & CANVAS) != 0) return true;
+    if ((state & CANVAS) != 0) {
+        return true;
+    }
 	return super.isTabGroup();
 }
 
@@ -1180,7 +1280,9 @@ public void layout () {
  */
 public void layout (boolean changed) {
 	checkWidget ();
-	if (layout == null) return;
+    if (layout == null) {
+        return;
+    }
 	layout (changed, false);
 }
 
@@ -1227,7 +1329,9 @@ public void layout (boolean changed) {
  */
 public void layout (boolean changed, boolean all) {
 	checkWidget ();
-	if (layout == null && !all) return;
+    if (layout == null && !all) {
+        return;
+    }
 	markLayout (changed, all);
 	updateLayout (all);
 }
@@ -1269,7 +1373,9 @@ public void layout (boolean changed, boolean all) {
  */
 public void layout (Control [] changed) {
 	checkWidget ();
-	if (changed == null) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (changed == null) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	layout (changed, SWT.NONE);
 }
 
@@ -1336,16 +1442,24 @@ public void layout (Control [] changed, int flags) {
 	if (changed != null) {
 		for (int i=0; i<changed.length; i++) {
 			Control control = changed [i];
-			if (control == null) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+            if (control == null) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (control.isDisposed()) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 			boolean ancestor = false;
 			Composite composite = control.parent;
 			while (composite != null) {
 				ancestor = composite == this;
-				if (ancestor) break;
+                if (ancestor) {
+                    break;
+                }
 				composite = composite.parent;
 			}
-			if (!ancestor) error (SWT.ERROR_INVALID_PARENT);
+            if (!ancestor) {
+                error(SWT.ERROR_INVALID_PARENT);
+            }
 		}
 		int updateCount = 0;
 		Composite [] update = new Composite [16];
@@ -1379,7 +1493,9 @@ public void layout (Control [] changed, int flags) {
 			update [i].updateLayout (false);
 		}
 	} else {
-		if (layout == null && (flags & SWT.ALL) == 0) return;
+        if (layout == null && (flags & SWT.ALL) == 0) {
+            return;
+        }
 		markLayout ((flags & SWT.CHANGED) != 0, (flags & SWT.ALL) != 0);
 		if (!display.externalEventLoop && (flags & SWT.DEFER) != 0) {
 			setLayoutDeferred (true);
@@ -1393,7 +1509,9 @@ public void layout (Control [] changed, int flags) {
 void markLayout (boolean changed, boolean all) {
 	if (layout != null) {
 		state |= LAYOUT_NEEDED;
-		if (changed) state |= LAYOUT_CHANGED;
+        if (changed) {
+            state |= LAYOUT_CHANGED;
+        }
 	}
 	if (all) {
 		for (Control child : _getChildren ()) {
@@ -1403,7 +1521,9 @@ void markLayout (boolean changed, boolean all) {
 }
 
 void moveAbove (long child, long sibling) {
-	if (child == sibling) return;
+    if (child == sibling) {
+        return;
+    }
 	long parentHandle = parentingHandle ();
 	if (GTK.GTK4) {
 		/*
@@ -1428,7 +1548,9 @@ void moveAbove (long child, long sibling) {
 }
 
 void moveBelow (long child, long sibling) {
-	if (child == sibling) return;
+    if (child == sibling) {
+        return;
+    }
 	long parentHandle = parentingHandle ();
     /*
      * GTK3-only: when sibling == 0 (move to the bottom of the z-order) the
@@ -1465,7 +1587,9 @@ void moveChildren(int oldWidth) {
 		int x = allocation.x;
 		int y = allocation.y;
 		int controlWidth = (child.state & ZERO_WIDTH) != 0 ? 0 : allocation.width;
-		if (oldWidth > 0) x = oldWidth - controlWidth - x;
+        if (oldWidth > 0) {
+            x = oldWidth - controlWidth - x;
+        }
 		int clientWidth = getClientWidth ();
 		x = clientWidth - controlWidth - x;
 		if (!GTK.GTK4) {
@@ -1486,7 +1610,9 @@ void moveChildren(int oldWidth) {
 		gtk_widget_size_allocate(topHandle, allocation, -1);
 		Control control = child.findBackgroundControl ();
 		if (control != null && control.backgroundImage != null) {
-			if (child.isVisible ()) child.redrawWidget (0, 0, 0, 0, true, true, true);
+            if (child.isVisible()) {
+                child.redrawWidget(0, 0, 0, 0, true, true, true);
+            }
 		}
 	}
 }
@@ -1507,7 +1633,9 @@ Point minimumSize (int wHint, int hHint, boolean changed) {
 }
 
 long parentingHandle () {
-	if ((state & CANVAS) != 0) return handle;
+    if ((state & CANVAS) != 0) {
+        return handle;
+    }
 	return fixedHandle != 0 ? fixedHandle : handle;
 }
 
@@ -1629,15 +1757,18 @@ void redrawChildren () {
 @Override
 void register () {
 	super.register ();
-	if (socketHandle != 0) display.addWidget (socketHandle, this);
+    if (socketHandle != 0) {
+        display.addWidget(socketHandle, this);
+    }
 }
 
 @Override
 void releaseChildren (boolean destroy) {
 	try (ExceptionStash exceptions = new ExceptionStash ()) {
 		for (Control child : _getChildren ()) {
-			if (child == null || child.isDisposed ())
-				continue;
+            if (child == null || child.isDisposed()) {
+                continue;
+            }
 
 			try {
 				child.release (false);
@@ -1658,7 +1789,9 @@ void releaseHandle () {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (imHandle != 0) OS.g_object_unref (imHandle);
+    if (imHandle != 0) {
+        OS.g_object_unref(imHandle);
+    }
 	imHandle = 0;
 	layout = null;
 	tabList = null;
@@ -1672,7 +1805,9 @@ void removeControl (Control control) {
 void reskinChildren (int flags) {
 	super.reskinChildren (flags);
 	for (Control child : _getChildren ()) {
-		if (child != null) child.reskin (flags);
+        if (child != null) {
+            child.reskin(flags);
+        }
 	}
 }
 
@@ -1747,7 +1882,9 @@ int setBounds (int x, int y, int width, int height, boolean move, boolean resize
 public boolean setFocus () {
 	checkWidget();
 	for (Control child : _getChildren ()) {
-		if (child.getVisible () && child.setFocus ()) return true;
+        if (child.getVisible() && child.setFocus()) {
+            return true;
+        }
 	}
 	return super.setFocus ();
 }
@@ -1830,24 +1967,36 @@ boolean setScrollBarVisible (ScrollBar bar, boolean visible) {
 
 @Override
 boolean setTabGroupFocus (boolean next) {
-	if (isTabItem ()) return setTabItemFocus (next);
+    if (isTabItem()) {
+        return setTabItemFocus(next);
+    }
 	boolean takeFocus = (style & SWT.NO_FOCUS) == 0;
-	if ((state & CANVAS) != 0) takeFocus = hooksKeys ();
-	if (socketHandle != 0) takeFocus = true;
-	if (takeFocus  && setTabItemFocus (next)) return true;
+    if ((state & CANVAS) != 0) {
+        takeFocus = hooksKeys();
+    }
+    if (socketHandle != 0) {
+        takeFocus = true;
+    }
+    if (takeFocus && setTabItemFocus(next)) {
+        return true;
+    }
 	for (Control child : _getChildren ()) {
-		/*
-		 * It is unlikely but possible that a child is disposed at this point, for more
-		 * details refer bug 381668.
-		 */
-		if (!child.isDisposed() && child.isTabItem () && child.setTabItemFocus (next)) return true;
+        /*
+         * It is unlikely but possible that a child is disposed at this point, for more
+         * details refer bug 381668.
+         */
+        if (!child.isDisposed() && child.isTabItem() && child.setTabItemFocus(next)) {
+            return true;
+        }
 	}
 	return false;
 }
 
 @Override
 boolean setTabItemFocus (boolean next) {
-	if (!super.setTabItemFocus (next)) return false;
+    if (!super.setTabItemFocus(next)) {
+        return false;
+    }
 	if (socketHandle != 0) {
 		int direction = next ? GTK.GTK_DIR_TAB_FORWARD : GTK.GTK_DIR_TAB_BACKWARD;
 		GTK.gtk_widget_child_focus (socketHandle, direction);
@@ -1875,9 +2024,15 @@ public void setTabList (Control [] tabList) {
 	if (tabList != null) {
 		for (int i=0; i<tabList.length; i++) {
 			Control control = tabList [i];
-			if (control == null) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (control.parent != this) error (SWT.ERROR_INVALID_PARENT);
+            if (control == null) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (control.isDisposed()) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (control.parent != this) {
+                error(SWT.ERROR_INVALID_PARENT);
+            }
 		}
 		Control [] newList = new Control [tabList.length];
 		System.arraycopy (tabList, 0, newList, 0, tabList.length);
@@ -1893,7 +2048,9 @@ void showWidget () {
 		gtk_widget_show (socketHandle);
 		embeddedHandle = GTK.gtk_socket_get_id (socketHandle);
 	}
-	if (scrolledHandle == 0) fixStyle (handle);
+    if (scrolledHandle == 0) {
+        fixStyle(handle);
+    }
 }
 
 @Override
@@ -1903,10 +2060,14 @@ boolean checkSubwindow () {
 
 @Override
 boolean translateMnemonic (Event event, Control control) {
-	if (super.translateMnemonic (event, control)) return true;
+    if (super.translateMnemonic(event, control)) {
+        return true;
+    }
 	if (control != null) {
 		for (Control child : _getChildren ()) {
-			if (child.translateMnemonic (event, control)) return true;
+            if (child.translateMnemonic(event, control)) {
+                return true;
+            }
 		}
 	}
 	return false;
@@ -1915,15 +2076,21 @@ boolean translateMnemonic (Event event, Control control) {
 @Override
 int traversalCode(int key, long event) {
 	if ((state & CANVAS) != 0) {
-		if ((style & SWT.NO_FOCUS) != 0) return 0;
-		if (hooksKeys ()) return 0;
+        if ((style & SWT.NO_FOCUS) != 0) {
+            return 0;
+        }
+        if (hooksKeys()) {
+            return 0;
+        }
 	}
 	return super.traversalCode (key, event);
 }
 
 @Override
 boolean translateTraversal (long event) {
-	if (socketHandle != 0) return false;
+    if (socketHandle != 0) {
+        return false;
+    }
 	return super.translateTraversal (event);
 }
 

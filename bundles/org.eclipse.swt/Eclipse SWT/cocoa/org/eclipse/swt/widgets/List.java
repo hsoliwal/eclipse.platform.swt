@@ -132,7 +132,9 @@ boolean acceptsFirstResponder (long id, long sel) {
  */
 public void add (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (itemCount == items.length) {
 		String [] newItems = new String [itemCount + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -171,8 +173,12 @@ public void add (String string) {
  */
 public void add (String string, int index) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (itemCount == items.length) {
 		String [] newItems = new String [itemCount + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -181,7 +187,9 @@ public void add (String string, int index) {
 	System.arraycopy (items, index, items, index + 1, itemCount++ - index);
 	items [index] = string;
 	updateRowCount();
-	if (index != itemCount) fixSelection (index, true);
+    if (index != itemCount) {
+        fixSelection(index, true);
+    }
 	setScrollWidth(string);
 }
 
@@ -236,7 +244,9 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 	} else {
 		width = wHint;
 	}
-	if (width <= 0) width = DEFAULT_WIDTH;
+    if (width <= 0) {
+        width = DEFAULT_WIDTH;
+    }
 	int height = 0;
 	if (hHint == SWT.DEFAULT) {
 		int itemHeight = getItemHeight () + CELL_GAP;
@@ -244,7 +254,9 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 	} else {
 		height = hHint;
 	}
-	if (height <= 0) height = DEFAULT_HEIGHT;
+    if (height <= 0) {
+        height = DEFAULT_HEIGHT;
+    }
 	Rectangle rect = computeTrim (0, 0, width, height);
 	return new Point (rect.width, rect.height);
 }
@@ -253,8 +265,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 void createHandle () {
 	NSScrollView scrollWidget = (NSScrollView)new SWTScrollView().alloc();
 	scrollWidget.init();
-	if ((style & SWT.H_SCROLL) != 0) scrollWidget.setHasHorizontalScroller(true);
-	if ((style & SWT.V_SCROLL) != 0) scrollWidget.setHasVerticalScroller(true);
+    if ((style & SWT.H_SCROLL) != 0) {
+        scrollWidget.setHasHorizontalScroller(true);
+    }
+    if ((style & SWT.V_SCROLL) != 0) {
+        scrollWidget.setHasVerticalScroller(true);
+    }
 	scrollWidget.setAutohidesScrollers(true);
 	scrollWidget.setBorderType((style & SWT.BORDER) != 0 ? OS.NSBezelBorder : OS.NSNoBorder);
 
@@ -272,7 +288,9 @@ void createHandle () {
 	widget.setIntercellSpacing(spacing);
 	widget.setDoubleAction(OS.sel_sendDoubleSelection);
 	OS.objc_msgSend(widget.id, OS.sel_setStyle, OS.NSTableViewStylePlain);
-	if (!hasBorder()) widget.setFocusRingType(OS.NSFocusRingTypeNone);
+    if (!hasBorder()) {
+        widget.setFocusRingType(OS.NSFocusRingTypeNone);
+    }
 
 	column = (NSTableColumn)new NSTableColumn().alloc();
 	column = column.initWithIdentifier(NSString.stringWith(String.valueOf(++NEXT_ID)));
@@ -343,8 +361,12 @@ public void deselect (int index) {
  */
 public void deselect (int start, int end) {
 	checkWidget();
-	if (start > end) return;
-	if (end < 0 || start >= itemCount) return;
+    if (start > end) {
+        return;
+    }
+    if (end < 0 || start >= itemCount) {
+        return;
+    }
 	start = Math.max (0, start);
 	end = Math.min (itemCount - 1, end);
 	if (start == 0 && end == itemCount - 1) {
@@ -378,7 +400,9 @@ public void deselect (int start, int end) {
  */
 public void deselect (int [] indices) {
 	checkWidget();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSTableView widget = (NSTableView)view;
 	ignoreSelect = true;
 	for (int i=0; i<indices.length; i++) {
@@ -410,7 +434,9 @@ boolean dragDetect(int x, int y, boolean filter, boolean[] consume) {
 	pt.x = x;
 	pt.y = y;
 	long row = widget.rowAtPoint(pt);
-	if (row == -1) return false;
+    if (row == -1) {
+        return false;
+    }
 	boolean dragging = super.dragDetect(x, y, filter, consume);
 	if (dragging) {
 		if (!widget.isRowSelected(row)) {
@@ -428,13 +454,17 @@ boolean dragDetect(int x, int y, boolean filter, boolean[] consume) {
 @Override
 void drawBackgroundInClipRect(long id, long sel, NSRect rect) {
 	super.drawViewBackgroundInRect(id, sel, rect);
-	if (id != view.id) return;
+    if (id != view.id) {
+        return;
+    }
 	fillBackground (view, NSGraphicsContext.currentContext(), rect, -1);
 }
 
 void fixSelection (int index, boolean add) {
 	int [] selection = getSelectionIndices ();
-	if (selection.length == 0) return;
+    if (selection.length == 0) {
+        return;
+    }
 	int newCount = 0;
 	boolean fix = false;
 	for (int i = 0; i < selection.length; i++) {
@@ -449,7 +479,9 @@ void fixSelection (int index, boolean add) {
 			}
 		}
 	}
-	if (fix) select (selection, newCount, true);
+    if (fix) {
+        select(selection, newCount, true);
+    }
 }
 
 /**
@@ -485,7 +517,9 @@ public int getFocusIndex () {
  */
 public String getItem (int index) {
 	checkWidget();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return items [index];
 }
 
@@ -668,7 +702,9 @@ public int getTopIndex () {
 	point.x = rect.x;
 	point.y = rect.y;
 	int result = (int)((NSTableView)view).rowAtPoint(point);
-	if (result == -1) result = 0;
+    if (result == -1) {
+        result = 0;
+    }
 	viewportRuntime.scrollTo (0, result);
 	return result;
 }
@@ -694,9 +730,13 @@ public int getTopIndex () {
  */
 public int indexOf (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<itemCount; i++) {
-		if (items [i].equals (string)) return i;
+        if (items [i].equals(string)) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -722,9 +762,13 @@ public int indexOf (String string) {
  */
 public int indexOf (String string, int start) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=start; i<itemCount; i++) {
-		if (items [i].equals (string)) return i;
+        if (items [i].equals(string)) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -744,7 +788,9 @@ public int indexOf (String string, int start) {
  */
 public boolean isSelected (int index) {
 	checkWidget();
-	if (!(0 <= index && index < itemCount)) return false;
+    if (!(0 <= index && index < itemCount)) {
+        return false;
+    }
 	return ((NSTableView)view).isRowSelected(index);
 }
 
@@ -755,7 +801,9 @@ public boolean isSelected (int index) {
  */
 @Override
 long menuForEvent(long id, long sel, long theEvent) {
-	if (display.lastHandledMenuForEventId == theEvent) return 0;
+    if (display.lastHandledMenuForEventId == theEvent) {
+        return 0;
+    }
 	NSEvent event = new NSEvent(theEvent);
 	NSTableView table = (NSTableView)view;
 
@@ -810,7 +858,9 @@ long numberOfRowsInTableView(long id, long sel, long aTableView) {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (column != null) column.release();
+    if (column != null) {
+        column.release();
+    }
 	column = null;
 }
 
@@ -836,16 +886,22 @@ void releaseWidget () {
  */
 public void remove (int index) {
 	checkWidget();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	remove(index, true);
 }
 
 void remove (int index, boolean fixScroll) {
-	if (index != itemCount - 1) fixSelection (index, false);
+    if (index != itemCount - 1) {
+        fixSelection(index, false);
+    }
 	System.arraycopy (items, index + 1, items, index, --itemCount - index);
 	items [itemCount] = null;
 	updateRowCount();
-	if (fixScroll) setScrollWidth();
+    if (fixScroll) {
+        setScrollWidth();
+    }
 }
 
 /**
@@ -866,12 +922,16 @@ void remove (int index, boolean fixScroll) {
  */
 public void remove (int start, int end) {
 	checkWidget();
-	if (start > end) return;
+    if (start > end) {
+        return;
+    }
 	if (!(0 <= start && start <= end && end < itemCount)) {
 		error (SWT.ERROR_INVALID_RANGE);
 	}
 	int length = end - start + 1;
-	for (int i=0; i<length; i++) remove (start, false);
+    for (int i = 0; i < length; i++) {
+        remove(start, false);
+    }
 	setScrollWidth();
 }
 
@@ -893,9 +953,13 @@ public void remove (int start, int end) {
  */
 public void remove (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int index = indexOf (string, 0);
-	if (index == -1) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (index == -1) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	remove (index);
 }
 
@@ -916,8 +980,12 @@ public void remove (String string) {
  */
 public void remove (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (indices.length == 0) return;
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (indices.length == 0) {
+        return;
+    }
 	int [] newIndices = new int [indices.length];
 	System.arraycopy (indices, 0, newIndices, 0, indices.length);
 	sort (newIndices);
@@ -972,8 +1040,12 @@ public void removeAll () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Selection, listener);
 	eventTable.unhook(SWT.DefaultSelection,listener);
 }
@@ -1027,8 +1099,12 @@ public void select (int index) {
  */
 public void select (int start, int end) {
 	checkWidget ();
-	if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) return;
-	if (itemCount == 0 || start >= itemCount) return;
+    if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) {
+        return;
+    }
+    if (itemCount == 0 || start >= itemCount) {
+        return;
+    }
 	if (start == 0 && end == itemCount - 1) {
 		selectAll ();
 	} else {
@@ -1071,9 +1147,13 @@ public void select (int start, int end) {
  */
 public void select (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int length = indices.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	int count = 0;
 	NSMutableIndexSet set = (NSMutableIndexSet)new NSMutableIndexSet().alloc().init();
 	for (int i=0; i<length; i++) {
@@ -1094,7 +1174,9 @@ public void select (int [] indices) {
 
 void select (int [] indices, int count, boolean clear) {
 	NSMutableIndexSet set = (NSMutableIndexSet)new NSMutableIndexSet().alloc().init();
-	for (int i=0; i<count; i++) set.addIndex (indices [i]);
+    for (int i = 0; i < count; i++) {
+        set.addIndex(indices [i]);
+    }
 	NSTableView widget = (NSTableView)view;
 	ignoreSelect = true;
 	widget.selectRowIndexes(set, !clear);
@@ -1114,7 +1196,9 @@ void select (int [] indices, int count, boolean clear) {
  */
 public void selectAll () {
 	checkWidget ();
-	if ((style & SWT.SINGLE) != 0) return;
+    if ((style & SWT.SINGLE) != 0) {
+        return;
+    }
 	NSTableView widget = (NSTableView)view;
 	ignoreSelect = true;
 	widget.selectAll(null);
@@ -1131,8 +1215,12 @@ void sendDoubleSelection() {
 @Override
 boolean sendKeyEvent (NSEvent nsEvent, int type) {
 	boolean result = super.sendKeyEvent (nsEvent, type);
-	if (!result) return result;
-	if (type != SWT.KeyDown) return result;
+    if (!result) {
+        return result;
+    }
+    if (type != SWT.KeyDown) {
+        return result;
+    }
 	short keyCode = nsEvent.keyCode ();
 	switch (keyCode) {
 		case 76: /* KP Enter */
@@ -1168,7 +1256,9 @@ boolean sendMouseEvent (NSEvent nsEvent, int type, boolean send) {
 
 @Override
 void sendSelection () {
-	if (ignoreSelect) return;
+    if (ignoreSelect) {
+        return;
+    }
 	sendSelectionEvent(SWT.Selection);
 }
 
@@ -1208,8 +1298,12 @@ void setFont (NSFont font) {
  */
 public void setItem (int index, String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	items [index] = string;
 	NSTableView tableView = (NSTableView)view;
 	NSRect rect = tableView.rectOfRow (index);
@@ -1233,9 +1327,13 @@ public void setItem (int index, String string) {
  */
 public void setItems (String... items) {
 	checkWidget();
-	if (items == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (items == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<items.length; i++) {
-		if (items [i] == null) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (items [i] == null) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	this.items = new String [items.length];
 	System.arraycopy (items, 0, this.items, 0, items.length);
@@ -1245,7 +1343,9 @@ public void setItems (String... items) {
 }
 
 boolean setScrollWidth (String item) {
-	if ((style & SWT.H_SCROLL) == 0) return false;
+    if ((style & SWT.H_SCROLL) == 0) {
+        return false;
+    }
 	NSCell cell = column.dataCell ();
 	Font font = this.font != null ? this.font : defaultFont ();
 	cell.setFont (font.handle);
@@ -1260,8 +1360,12 @@ boolean setScrollWidth (String item) {
 }
 
 boolean setScrollWidth () {
-	if ((style & SWT.H_SCROLL) == 0) return false;
-	if (items == null) return false;
+    if ((style & SWT.H_SCROLL) == 0) {
+        return false;
+    }
+    if (items == null) {
+        return false;
+    }
 	NSCell cell = column.dataCell ();
 	Font font = this.font != null ? this.font : defaultFont ();
 	cell.setFont (font.handle);
@@ -1331,8 +1435,12 @@ public void setSelection (int index) {
 public void setSelection (int start, int end) {
 	checkWidget ();
 	deselectAll ();
-	if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) return;
-	if (itemCount == 0 || start >= itemCount) return;
+    if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) {
+        return;
+    }
+    if (itemCount == 0 || start >= itemCount) {
+        return;
+    }
 	start = Math.max (0, start);
 	end = Math.min (end, itemCount - 1);
 	NSRange range = new NSRange();
@@ -1372,10 +1480,14 @@ public void setSelection (int start, int end) {
  */
 public void setSelection (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	deselectAll ();
 	int length = indices.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	int [] newIndices = new int [length];
 	int count = 0;
 	for (int i=0; i<length; i++) {
@@ -1415,10 +1527,14 @@ public void setSelection (int [] indices) {
  */
 public void setSelection (String [] items) {
 	checkWidget ();
-	if (items == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (items == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	deselectAll ();
 	int length = items.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	int count = 0;
 	int [] indices = new int [length];
 	for (int i=0; i<length; i++) {
@@ -1491,12 +1607,16 @@ void showIndex (int index) {
 public void showSelection () {
 	checkWidget();
 	int index = getSelectionIndex ();
-	if (index >= 0) showIndex (index);
+    if (index >= 0) {
+        showIndex(index);
+    }
 }
 
 @Override
 void tableViewSelectionDidChange (long id, long sel, long aNotification) {
-	if (didSelect) return;
+    if (didSelect) {
+        return;
+    }
 	sendSelection();
 }
 

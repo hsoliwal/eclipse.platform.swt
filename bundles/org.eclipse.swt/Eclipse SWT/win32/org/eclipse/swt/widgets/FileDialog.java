@@ -251,7 +251,9 @@ public Optional<String> openDialog () {
 	} else {
 		hr = COM.CoCreateInstance(COM.CLSID_FileOpenDialog, 0, COM.CLSCTX_INPROC_SERVER, COM.IID_IFileOpenDialog, ppv);
 	}
-	if (hr != COM.S_OK) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (hr != COM.S_OK) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	IFileDialog fileDialog = new IFileDialog(ppv[0]);
 
 	/* Update dialog options */
@@ -260,9 +262,13 @@ public Optional<String> openDialog () {
 	options[0] |= OS.FOS_FORCEFILESYSTEM | OS.FOS_NOCHANGEDIR;
 	options[0] &= ~OS.FOS_FILEMUSTEXIST;
 	if ((style & SWT.SAVE) != 0) {
-		if (!overwrite) options[0] &= ~OS.FOS_OVERWRITEPROMPT;
+        if (!overwrite) {
+            options[0] &= ~OS.FOS_OVERWRITEPROMPT;
+        }
 	} else {
-		if ((style & SWT.MULTI) != 0) options[0] |= OS.FOS_ALLOWMULTISELECT;
+        if ((style & SWT.MULTI) != 0) {
+            options[0] |= OS.FOS_ALLOWMULTISELECT;
+        }
 	}
 	fileDialog.SetOptions(options[0]);
 

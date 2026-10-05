@@ -49,13 +49,19 @@ public String getDescription() {
 public void next(int width, int height) {
 	upDownValue += inc;
 
-	if (upDownValue > 5) inc = -1;
-	if (upDownValue < -5) inc = 1;
+    if (upDownValue > 5) {
+        inc = -1;
+    }
+    if (upDownValue < -5) {
+        inc = 1;
+    }
 }
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	int size = 100;

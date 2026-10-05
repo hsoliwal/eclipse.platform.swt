@@ -76,16 +76,18 @@ private void createCoolBar(List<String> events) {
 			ToolItem item = new ToolItem(coolItemToolBar[i], SWT.CHECK);
 			item.setText("CB" + ((i*2) + j));
 			item.setToolTipText("ToolItem ToolTip" + i + j);
-			if (item.getWidth() > toolItemWidth)
-				toolItemWidth = item.getWidth();
+            if (item.getWidth() > toolItemWidth) {
+                toolItemWidth = item.getWidth();
+            }
 			hookExpectedEvents(item, test, events);
 		}
 		coolItem.setControl(coolItemToolBar[i]);
 		Point size;
-		if(i == 1)
-			size = coolItemToolBar[i].computeSize(20, SWT.DEFAULT);
-		else
-			size = coolItemToolBar[i].computeSize(SWT.DEFAULT, SWT.DEFAULT);
+        if (i == 1) {
+            size = coolItemToolBar[i].computeSize(20, SWT.DEFAULT);
+        } else {
+            size = coolItemToolBar[i].computeSize(SWT.DEFAULT, SWT.DEFAULT);
+        }
 		Point coolSize = coolItem.computeSize (size.x, size.y);
 		coolItem.setMinimumSize(toolItemWidth/3, coolSize.y);
 		coolItem.setPreferredSize(coolSize);
@@ -185,7 +187,9 @@ class CoolItemSelectionListener extends SelectionAdapter {
 				toolBounds.x = pt.x;
 				toolBounds.y = pt.y;
 				Rectangle intersection = itemBounds.intersection (toolBounds);
-				if (!intersection.equals (toolBounds)) break;
+                if (!intersection.equals(toolBounds)) {
+                    break;
+                }
 				i++;
 			}
 
@@ -206,7 +210,9 @@ class CoolItemSelectionListener extends SelectionAdapter {
 			menu.setVisible (true);
 			Display display = coolBar.getDisplay ();
 			while (menu != null && !menu.isDisposed() && menu.isVisible ()) {
-				if (!display.readAndDispatch ()) display.sleep ();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 			if (menu != null) {
 				menu.dispose ();

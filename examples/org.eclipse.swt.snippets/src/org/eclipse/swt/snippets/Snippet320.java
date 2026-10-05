@@ -52,7 +52,9 @@ public static void main(String [] args) {
 				break;
 			case SWT.ARROW_UP:
 				index = table.getSelectionIndex() - 1;
-				if (index < 0) index = table.getItemCount() - 1;
+                if (index < 0) {
+                    index = table.getItemCount() - 1;
+                }
 				table.setSelection(index);
 				event.doit = false;
 				break;
@@ -93,7 +95,9 @@ public static void main(String [] args) {
 	});
 
 	Listener focusOutListener = event -> display.asyncExec(() -> {
-		if (display.isDisposed()) return;
+        if (display.isDisposed()) {
+            return;
+        }
 		Control control = display.getFocusControl();
 		if (control == null || (control != text && control != table)) {
 			popupShell.setVisible(false);
@@ -105,7 +109,9 @@ public static void main(String [] args) {
 	shell.addListener(SWT.Move, event -> popupShell.setVisible(false));
 
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

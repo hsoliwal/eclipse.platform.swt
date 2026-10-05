@@ -197,12 +197,16 @@ void registerDPIChangeListener() {
 }
 
 void _addListener (int eventType, Listener listener) {
-	if (eventTable == null) eventTable = new EventTable ();
+    if (eventTable == null) {
+        eventTable = new EventTable();
+    }
 	eventTable.hook (eventType, listener);
 }
 
 void _removeListener (int eventType, Listener listener) {
-	if (eventTable == null) return;
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (eventType, listener);
 }
 
@@ -230,7 +234,9 @@ void _removeListener (int eventType, Listener listener) {
  */
 public void addListener (int eventType, Listener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	_addListener (eventType, listener);
 }
 
@@ -324,8 +330,12 @@ void checkOrientation (Widget parent) {
 	style &= ~SWT.MIRRORED;
 	if ((style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT)) == 0) {
 		if (parent != null) {
-			if ((parent.style & SWT.LEFT_TO_RIGHT) != 0) style |= SWT.LEFT_TO_RIGHT;
-			if ((parent.style & SWT.RIGHT_TO_LEFT) != 0) style |= SWT.RIGHT_TO_LEFT;
+            if ((parent.style & SWT.LEFT_TO_RIGHT) != 0) {
+                style |= SWT.LEFT_TO_RIGHT;
+            }
+            if ((parent.style & SWT.RIGHT_TO_LEFT) != 0) {
+                style |= SWT.RIGHT_TO_LEFT;
+            }
 		}
 	}
 	style = checkBits (style, SWT.LEFT_TO_RIGHT, SWT.RIGHT_TO_LEFT, 0, 0, 0, 0);
@@ -348,8 +358,12 @@ void checkOpened () {
  * </ul>
  */
 void checkParent (Widget parent) {
-	if (parent == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (parent.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (parent == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (parent.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	parent.checkWidget ();
 	parent.checkOpened ();
 }
@@ -391,7 +405,9 @@ void maybeEnableDarkSystemTheme(long handle) {
  * </ul>
  */
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -418,9 +434,15 @@ protected void checkSubclass () {
  */
 protected void checkWidget () {
 	Display display = this.display;
-	if (display == null) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (display.thread != Thread.currentThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
-	if ((state & DISPOSED) != 0) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (display == null) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (display.thread != Thread.currentThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
+    if ((state & DISPOSED) != 0) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 }
 
 /**
@@ -471,18 +493,26 @@ void destroyWidget () {
  * @see #checkWidget
  */
 public void dispose () {
-	/*
-	* Note:  It is valid to attempt to dispose a widget
-	* more than once.  If this happens, fail silently.
-	*/
-	if (isDisposed ()) return;
-	if (!isValidThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
+    /*
+    * Note:  It is valid to attempt to dispose a widget
+    * more than once.  If this happens, fail silently.
+    */
+    if (isDisposed()) {
+        return;
+    }
+    if (!isValidThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
 	release (true);
 }
 
 boolean dragDetect (long hwnd, int x, int y, boolean filter, boolean [] detect, boolean [] consume) {
-	if (consume != null) consume [0] = false;
-	if (detect != null) detect [0] = true;
+    if (consume != null) {
+        consume [0] = false;
+    }
+    if (detect != null) {
+        detect [0] = true;
+    }
 	POINT pt = new POINT ();
 	pt.x = x;
 	pt.y = y;
@@ -531,13 +561,17 @@ char [] fixMnemonic (String string, boolean spaces, boolean removeAppended) {
 			}
 			i++;
 		} else if (buffer [i] == '(' && removeAppended && i + 4 == string.length () && buffer [i + 1] == '&' && buffer [i + 3] == ')') {
-			if (spaces) buffer [j++] = ' ';
+            if (spaces) {
+                buffer [j++] = ' ';
+            }
 			i += 4;
 		} else {
 			buffer [j++] = buffer [i++];
 		}
 	}
-	while (j < buffer.length) buffer [j++] = 0;
+    while (j < buffer.length) {
+        buffer [j++] = 0;
+    }
 	return buffer;
 }
 
@@ -594,10 +628,14 @@ public Object getData () {
  */
 public Object getData (String key) {
 	checkWidget();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if ((state & KEYED_DATA) != 0 && data instanceof Object [] table) {
 		for (int i=1; i<table.length; i+=2) {
-			if (key.equals (table [i])) return table [i+1];
+            if (key.equals(table [i])) {
+                return table [i + 1];
+            }
 		}
 	}
 	return null;
@@ -620,7 +658,9 @@ public Object getData (String key) {
  */
 public Display getDisplay () {
 	Display display = this.display;
-	if (display == null) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (display == null) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return display;
 }
 
@@ -645,7 +685,9 @@ public Display getDisplay () {
  */
 public Listener[] getListeners (int eventType) {
 	checkWidget();
-	if (eventTable == null) return new Listener[0];
+    if (eventTable == null) {
+        return new Listener[0];
+    }
 	return eventTable.getListeners(eventType);
 }
 
@@ -690,7 +732,9 @@ Menu getMenu () {
 String getName () {
 	String string = getClass ().getName ();
 	int index = string.lastIndexOf ('.');
-	if (index == -1) return string;
+    if (index == -1) {
+        return string;
+    }
 	return string.substring (index + 1, string.length ());
 }
 
@@ -747,7 +791,9 @@ public int getStyle () {
  * @see #isListening
  */
 boolean hooks (int eventType) {
-	if (eventTable == null) return false;
+    if (eventTable == null) {
+        return false;
+    }
 	return eventTable.hooks (eventType);
 }
 
@@ -851,7 +897,9 @@ GC new_GC (GCData data) {
  */
 public void notifyListeners (int eventType, Event event) {
 	checkWidget();
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	sendEvent (eventType, event);
 }
 
@@ -1011,7 +1059,9 @@ void releaseWidget () {
  */
 public void removeListener (int eventType, Listener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	_removeListener (eventType, listener);
 }
 
@@ -1108,8 +1158,12 @@ protected void removeListener (int eventType, EventListener listener) {
  */
 protected void removeTypedListener (int eventType, EventListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (eventType, listener);
 }
 
@@ -1132,8 +1186,12 @@ protected void removeTypedListener (int eventType, EventListener listener) {
  */
 public void removeDisposeListener (DisposeListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Dispose, listener);
 }
 
@@ -1168,7 +1226,9 @@ public void removeDisposeListener (DisposeListener listener) {
 public void reskin (int flags) {
 	checkWidget ();
 	reskinWidget ();
-	if ((flags & SWT.ALL) != 0) reskinChildren (flags);
+    if ((flags & SWT.ALL) != 0) {
+        reskinChildren(flags);
+    }
 }
 
 void reskinChildren (int flags) {
@@ -1188,7 +1248,9 @@ boolean sendDragEvent (int button, int x, int y) {
 	event.setLocation(DPIUtil.pixelToPoint(x, zoom), DPIUtil.pixelToPoint(y, zoom));
 	setInputState (event, SWT.DragDetect);
 	postEvent (SWT.DragDetect, event);
-	if (isDisposed ()) return false;
+    if (isDisposed()) {
+        return false;
+    }
 	return event.doit;
 }
 
@@ -1199,14 +1261,18 @@ boolean sendDragEvent (int button, int stateMask, int x, int y) {
 	event.setLocation(DPIUtil.pixelToPoint(x, zoom), DPIUtil.pixelToPoint(y, zoom));
 	event.stateMask = stateMask;
 	postEvent (SWT.DragDetect, event);
-	if (isDisposed ()) return false;
+    if (isDisposed()) {
+        return false;
+    }
 	return event.doit;
 }
 
 void sendEvent (Event event) {
 	Display display = event.display;
 	if (!display.filterEvent (event)) {
-		if (eventTable != null) display.sendEvent(eventTable, event);
+        if (eventTable != null) {
+            display.sendEvent(eventTable, event);
+        }
 	}
 }
 
@@ -1222,7 +1288,9 @@ void sendEvent (int eventType, Event event, boolean send) {
 	if (eventTable == null && !display.filters (eventType)) {
 		return;
 	}
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	event.type = eventType;
 	event.display = display;
 	event.widget = this;
@@ -1245,20 +1313,26 @@ void sendSelectionEvent (int type, Event event, boolean send) {
 	if (eventTable == null && !display.filters (type)) {
 		return;
 	}
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	setInputState (event, type);
 	sendEvent (type, event, send);
 }
 
 boolean sendKeyEvent (int type, int msg, long wParam, long lParam) {
 	Event event = new Event ();
-	if (!setKeyState (event, type, wParam, lParam)) return true;
+    if (!setKeyState(event, type, wParam, lParam)) {
+        return true;
+    }
 	return sendKeyEvent (type, msg, wParam, lParam, event);
 }
 
 boolean sendKeyEvent (int type, int msg, long wParam, long lParam, Event event) {
 	sendEvent (type, event);
-	if (isDisposed ()) return false;
+    if (isDisposed()) {
+        return false;
+    }
 	return event.doit;
 }
 
@@ -1267,7 +1341,9 @@ boolean sendMouseEvent (int type, int button, long hwnd, long lParam) {
 }
 
 boolean sendMouseEvent (int type, int button, int count, int detail, boolean send, long hwnd, long lParam) {
-	if (!hooks (type) && !filters (type)) return true;
+    if (!hooks(type) && !filters(type)) {
+        return true;
+    }
 	Event event = new Event ();
 	event.button = button;
 	event.detail = detail;
@@ -1278,7 +1354,9 @@ boolean sendMouseEvent (int type, int button, int count, int detail, boolean sen
 	mapEvent (hwnd, event);
 	if (send) {
 		sendEvent (type, event);
-		if (isDisposed ()) return false;
+        if (isDisposed()) {
+            return false;
+        }
 	} else {
 		postEvent (type, event);
 	}
@@ -1325,10 +1403,14 @@ class MouseWheelData {
 		 *     directions or when window focus changes.
 		 */
 		if (isVertical) {
-			if ((delta ^ remainder.y) >= 0) delta += remainder.y;
+            if ((delta ^ remainder.y) >= 0) {
+                delta += remainder.y;
+            }
 			remainder.y = delta % OS.WHEEL_DELTA;
 		} else {
-			if ((delta ^ remainder.x) >= 0) delta += remainder.x;
+            if ((delta ^ remainder.x) >= 0) {
+                delta += remainder.x;
+            }
 			remainder.x = delta % OS.WHEEL_DELTA;
 		}
 
@@ -1341,16 +1423,21 @@ class MouseWheelData {
 }
 
 boolean sendMouseWheelEvent (int type, long hwnd, long wParam, long lParam) {
-	if (!hooks (type) && !filters (type)) return true;
+    if (!hooks(type) && !filters(type)) {
+        return true;
+    }
 
 	boolean vertical = (type == SWT.MouseWheel);
 	MouseWheelData wheelData = new MouseWheelData (vertical, null, wParam, display.scrollRemainderEvt);
 
-	if (wheelData.count == 0) return true;
+    if (wheelData.count == 0) {
+        return true;
+    }
 
-	/* Legacy code. I wonder if any SWT application actually cares? */
-	if (!vertical)
-		wheelData.count = -wheelData.count;
+    /* Legacy code. I wonder if any SWT application actually cares? */
+    if (!vertical) {
+        wheelData.count = -wheelData.count;
+    }
 
 	POINT pt = new POINT ();
 	OS.POINTSTOPOINT (pt, lParam);
@@ -1416,13 +1503,17 @@ public void setData (Object data) {
  */
 public void setData (String key, Object value) {
 	checkWidget();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int index = 1;
 	Object [] table = null;
 	if ((state & KEYED_DATA) != 0) {
 		table = (Object []) data;
 		while (index < table.length) {
-			if (key.equals (table [index])) break;
+            if (key.equals(table [index])) {
+                break;
+            }
 			index += 2;
 		}
 	}
@@ -1457,7 +1548,9 @@ public void setData (String key, Object value) {
 			}
 		}
 	}
-	if (key.equals(SWT.SKIN_CLASS) || key.equals(SWT.SKIN_ID)) this.reskin(SWT.ALL);
+    if (key.equals(SWT.SKIN_CLASS) || key.equals(SWT.SKIN_ID)) {
+        this.reskin(SWT.ALL);
+    }
 }
 
 boolean sendFocusEvent (int type) {
@@ -1467,12 +1560,24 @@ boolean sendFocusEvent (int type) {
 }
 
 boolean setInputState (Event event, int type) {
-	if (OS.GetKeyState (OS.VK_MENU) < 0) event.stateMask |= SWT.ALT;
-	if (OS.GetKeyState (OS.VK_SHIFT) < 0) event.stateMask |= SWT.SHIFT;
-	if (OS.GetKeyState (OS.VK_CONTROL) < 0) event.stateMask |= SWT.CONTROL;
-	if (OS.GetKeyState (OS.VK_LBUTTON) < 0) event.stateMask |= SWT.BUTTON1;
-	if (OS.GetKeyState (OS.VK_MBUTTON) < 0) event.stateMask |= SWT.BUTTON2;
-	if (OS.GetKeyState (OS.VK_RBUTTON) < 0) event.stateMask |= SWT.BUTTON3;
+    if (OS.GetKeyState(OS.VK_MENU) < 0) {
+        event.stateMask |= SWT.ALT;
+    }
+    if (OS.GetKeyState(OS.VK_SHIFT) < 0) {
+        event.stateMask |= SWT.SHIFT;
+    }
+    if (OS.GetKeyState(OS.VK_CONTROL) < 0) {
+        event.stateMask |= SWT.CONTROL;
+    }
+    if (OS.GetKeyState(OS.VK_LBUTTON) < 0) {
+        event.stateMask |= SWT.BUTTON1;
+    }
+    if (OS.GetKeyState(OS.VK_MBUTTON) < 0) {
+        event.stateMask |= SWT.BUTTON2;
+    }
+    if (OS.GetKeyState(OS.VK_RBUTTON) < 0) {
+        event.stateMask |= SWT.BUTTON3;
+    }
 	/*
 	* Bug in Windows.  On some machines that do not have XBUTTONs,
 	* the MK_XBUTTON1 and OS.MK_XBUTTON2 bits are sometimes set,
@@ -1480,35 +1585,71 @@ boolean setInputState (Event event, int type) {
 	* for the extra buttons only when they exist.
 	*/
 	if (display.xMouse) {
-		if (OS.GetKeyState (OS.VK_XBUTTON1) < 0) event.stateMask |= SWT.BUTTON4;
-		if (OS.GetKeyState (OS.VK_XBUTTON2) < 0) event.stateMask |= SWT.BUTTON5;
+        if (OS.GetKeyState(OS.VK_XBUTTON1) < 0) {
+            event.stateMask |= SWT.BUTTON4;
+        }
+        if (OS.GetKeyState(OS.VK_XBUTTON2) < 0) {
+            event.stateMask |= SWT.BUTTON5;
+        }
 	}
 	switch (type) {
 		case SWT.MouseDown:
 		case SWT.MouseDoubleClick:
-			if (event.button == 1) event.stateMask &= ~SWT.BUTTON1;
-			if (event.button == 2) event.stateMask &= ~SWT.BUTTON2;
-			if (event.button == 3) event.stateMask &= ~SWT.BUTTON3;
-			if (event.button == 4) event.stateMask &= ~SWT.BUTTON4;
-			if (event.button == 5) event.stateMask &= ~SWT.BUTTON5;
+            if (event.button == 1) {
+                event.stateMask &= ~SWT.BUTTON1;
+            }
+            if (event.button == 2) {
+                event.stateMask &= ~SWT.BUTTON2;
+            }
+            if (event.button == 3) {
+                event.stateMask &= ~SWT.BUTTON3;
+            }
+            if (event.button == 4) {
+                event.stateMask &= ~SWT.BUTTON4;
+            }
+            if (event.button == 5) {
+                event.stateMask &= ~SWT.BUTTON5;
+            }
 			break;
 		case SWT.MouseUp:
-			if (event.button == 1) event.stateMask |= SWT.BUTTON1;
-			if (event.button == 2) event.stateMask |= SWT.BUTTON2;
-			if (event.button == 3) event.stateMask |= SWT.BUTTON3;
-			if (event.button == 4) event.stateMask |= SWT.BUTTON4;
-			if (event.button == 5) event.stateMask |= SWT.BUTTON5;
+            if (event.button == 1) {
+                event.stateMask |= SWT.BUTTON1;
+            }
+            if (event.button == 2) {
+                event.stateMask |= SWT.BUTTON2;
+            }
+            if (event.button == 3) {
+                event.stateMask |= SWT.BUTTON3;
+            }
+            if (event.button == 4) {
+                event.stateMask |= SWT.BUTTON4;
+            }
+            if (event.button == 5) {
+                event.stateMask |= SWT.BUTTON5;
+            }
 			break;
 		case SWT.KeyDown:
 		case SWT.Traverse:
-			if (event.keyCode == SWT.ALT) event.stateMask &= ~SWT.ALT;
-			if (event.keyCode == SWT.SHIFT) event.stateMask &= ~SWT.SHIFT;
-			if (event.keyCode == SWT.CONTROL) event.stateMask &= ~SWT.CONTROL;
+            if (event.keyCode == SWT.ALT) {
+                event.stateMask &= ~SWT.ALT;
+            }
+            if (event.keyCode == SWT.SHIFT) {
+                event.stateMask &= ~SWT.SHIFT;
+            }
+            if (event.keyCode == SWT.CONTROL) {
+                event.stateMask &= ~SWT.CONTROL;
+            }
 			break;
 		case SWT.KeyUp:
-			if (event.keyCode == SWT.ALT) event.stateMask |= SWT.ALT;
-			if (event.keyCode == SWT.SHIFT) event.stateMask |= SWT.SHIFT;
-			if (event.keyCode == SWT.CONTROL) event.stateMask |= SWT.CONTROL;
+            if (event.keyCode == SWT.ALT) {
+                event.stateMask |= SWT.ALT;
+            }
+            if (event.keyCode == SWT.SHIFT) {
+                event.stateMask |= SWT.SHIFT;
+            }
+            if (event.keyCode == SWT.CONTROL) {
+                event.stateMask |= SWT.CONTROL;
+            }
 			break;
 	}
 	return true;
@@ -1580,10 +1721,14 @@ boolean setKeyState (Event event, int type, long wParam, long lParam) {
 	*/
 	switch (display.lastAscii) {
 		case SWT.DEL:
-			if (display.lastKey == SWT.BS) display.lastAscii = SWT.BS;
+            if (display.lastKey == SWT.BS) {
+                display.lastAscii = SWT.BS;
+            }
 			break;
 		case SWT.LF:
-			if (display.lastKey == SWT.CR) display.lastAscii = SWT.CR;
+            if (display.lastKey == SWT.CR) {
+                display.lastAscii = SWT.CR;
+            }
 			break;
 	}
 
@@ -1595,30 +1740,36 @@ boolean setKeyState (Event event, int type, long wParam, long lParam) {
 	* is set, assume that the numeric keypad Enter was pressed.
 	*/
 	if (display.lastKey == SWT.CR && display.lastAscii == SWT.CR) {
-		if ((lParam & 0x1000000) != 0) display.lastKey = SWT.KEYPAD_CR;
+        if ((lParam & 0x1000000) != 0) {
+            display.lastKey = SWT.KEYPAD_CR;
+        }
 	}
 
 	setLocationMask(event, type, wParam, lParam);
 
 	if (display.lastVirtual) {
-		/*
-		* Feature in Windows.  The virtual key VK_DELETE is not
-		* treated as both a virtual key and an ASCII key by Windows.
-		* Therefore, we will not receive a WM_CHAR for this key.
-		* The fix is to treat VK_DELETE as a special case and map
-		* the ASCII value explicitly (Delete is 0x7F).
-		*/
-		if (display.lastKey == OS.VK_DELETE) display.lastAscii = 0x7F;
+        /*
+        * Feature in Windows.  The virtual key VK_DELETE is not
+        * treated as both a virtual key and an ASCII key by Windows.
+        * Therefore, we will not receive a WM_CHAR for this key.
+        * The fix is to treat VK_DELETE as a special case and map
+        * the ASCII value explicitly (Delete is 0x7F).
+        */
+        if (display.lastKey == OS.VK_DELETE) {
+            display.lastAscii = 0x7F;
+        }
 
-		/*
-		* Feature in Windows.  When the user presses Ctrl+Pause, the
-		* VK_CANCEL key is generated and a WM_CHAR is sent with 0x03,
-		* possibly to allow an application to look for Ctrl+C and the
-		* the Break key at the same time.  This is unexpected and
-		* unwanted.  The fix is to detect the case and set the character
-		* to zero.
-		*/
-		if (display.lastKey == OS.VK_CANCEL) display.lastAscii = 0x0;
+        /*
+        * Feature in Windows.  When the user presses Ctrl+Pause, the
+        * VK_CANCEL key is generated and a WM_CHAR is sent with 0x03,
+        * possibly to allow an application to look for Ctrl+C and the
+        * the Break key at the same time.  This is unexpected and
+        * unwanted.  The fix is to detect the case and set the character
+        * to zero.
+        */
+        if (display.lastKey == OS.VK_CANCEL) {
+            display.lastAscii = 0x0;
+        }
 
 		event.keyCode = Display.translateKey (display.lastKey);
 	} else {
@@ -1636,8 +1787,12 @@ int setLocationMask (Event event, int type, long wParam, long lParam) {
 	if (display.lastVirtual) {
 		switch (display.lastKey) {
 			case OS.VK_SHIFT:
-				if (OS.GetKeyState(OS.VK_LSHIFT) < 0) location = SWT.LEFT;
-				if (OS.GetKeyState(OS.VK_RSHIFT) < 0) location = SWT.RIGHT;
+                if (OS.GetKeyState(OS.VK_LSHIFT) < 0) {
+                    location = SWT.LEFT;
+                }
+                if (OS.GetKeyState(OS.VK_RSHIFT) < 0) {
+                    location = SWT.RIGHT;
+                }
 				break;
 			case OS.VK_NUMLOCK:
 				location = SWT.KEYPAD;
@@ -1694,9 +1849,13 @@ boolean showMenu (int x, int y, int detail) {
 		updateMenuLocation (event);
 	}
 	sendEvent (SWT.MenuDetect, event);
-	// widget could be disposed at this point
-	if (isDisposed ()) return false;
-	if (!event.doit) return true;
+    // widget could be disposed at this point
+    if (isDisposed()) {
+        return false;
+    }
+    if (!event.doit) {
+        return true;
+    }
 	Menu menu = getMenu ();
 	if (menu != null && !menu.isDisposed ()) {
 		Point locInPixels = Win32DPIUtils.pointToPixelAsLocation(event.getLocation(), getAutoscalingZoom()); // In Pixels
@@ -1720,7 +1879,9 @@ public String toString () {
 	String string = "*Disposed*"; //$NON-NLS-1$
 	if (!isDisposed ()) {
 		string = "*Wrong Thread*"; //$NON-NLS-1$
-		if (isValidThread ()) string = getNameText ();
+        if (isValidThread()) {
+            string = getNameText();
+        }
 	}
 	return getName () + " {" + string + "}"; //$NON-NLS-1$ //$NON-NLS-2$
 }
@@ -1744,7 +1905,9 @@ LRESULT wmChar (long hwnd, long wParam, long lParam) {
 }
 
 LRESULT wmContextMenu (long hwnd, long wParam, long lParam) {
-	if (wParam != hwnd) return null;
+    if (wParam != hwnd) {
+        return null;
+    }
 
 	/*
 	* Feature in Windows.  When the user presses  WM_NCRBUTTONUP,
@@ -1767,7 +1930,9 @@ LRESULT wmContextMenu (long hwnd, long wParam, long lParam) {
 		OS.ScreenToClient (hwnd, pt);
 		RECT rect = new RECT ();
 		OS.GetClientRect (hwnd, rect);
-		if (!OS.PtInRect (rect, pt)) return null;
+        if (!OS.PtInRect(rect, pt)) {
+            return null;
+        }
 	} else {
 		int pos = OS.GetMessagePos ();
 		x = OS.GET_X_LPARAM (pos);
@@ -1828,7 +1993,9 @@ LRESULT wmKeyDown (long hwnd, long wParam, long lParam) {
 		case OS.VK_CAPITAL:
 		case OS.VK_NUMLOCK:
 		case OS.VK_SCROLL:
-			if ((lParam & 0x40000000) != 0) return null;
+            if ((lParam & 0x40000000) != 0) {
+                return null;
+            }
 	}
 
 	/* Clear last key and last ascii because a new key has been typed */
@@ -1891,16 +2058,18 @@ LRESULT wmKeyDown (long hwnd, long wParam, long lParam) {
 		isCharPending = true;
 	}
 
-	/*
-	* Bug 88281: Sometimes, 'PeekMessage()' could result in widget
-	* being disposed. Most likely this was due to 'WH_MSGFILTER' hook
-	* that previously incorrectly reacted to 'PM_NOREMOVE' as well
-	* as 'PM_REMOVE'. Some SWT hooks can do no-trivial things. I'm
-	* not sure if this can still happen now that hooks are fixed to
-	* only react to 'PM_REMOVE'. I'm also not 100% sure that hooks
-	* are the only way to trigger this problem.
-	*/
-	if (isDisposed ()) return LRESULT.ONE;
+    /*
+    * Bug 88281: Sometimes, 'PeekMessage()' could result in widget
+    * being disposed. Most likely this was due to 'WH_MSGFILTER' hook
+    * that previously incorrectly reacted to 'PM_NOREMOVE' as well
+    * as 'PM_REMOVE'. Some SWT hooks can do no-trivial things. I'm
+    * not sure if this can still happen now that hooks are fixed to
+    * only react to 'PM_REMOVE'. I'm also not 100% sure that hooks
+    * are the only way to trigger this problem.
+    */
+    if (isDisposed()) {
+        return LRESULT.ONE;
+    }
 
 	/*
 	* If we are going to get a WM_CHAR, ensure that last key has
@@ -1920,14 +2089,16 @@ LRESULT wmKeyDown (long hwnd, long wParam, long lParam) {
 	display.lastVirtual = mapKey == 0 || display.numpadKey ((int)wParam) != 0;
 	if (display.lastVirtual) {
 		display.lastKey = (int)wParam;
-		/*
-		* Feature in Windows.  The virtual key VK_DELETE is not
-		* treated as both a virtual key and an ASCII key by Windows.
-		* Therefore, we will not receive a WM_CHAR for this key.
-		* The fix is to treat VK_DELETE as a special case and map
-		* the ASCII value explicitly (Delete is 0x7F).
-		*/
-		if (display.lastKey == OS.VK_DELETE) display.lastAscii = 0x7F;
+        /*
+        * Feature in Windows.  The virtual key VK_DELETE is not
+        * treated as both a virtual key and an ASCII key by Windows.
+        * Therefore, we will not receive a WM_CHAR for this key.
+        * The fix is to treat VK_DELETE as a special case and map
+        * the ASCII value explicitly (Delete is 0x7F).
+        */
+        if (display.lastKey == OS.VK_DELETE) {
+            display.lastAscii = 0x7F;
+        }
 
 		/*
 		* It is possible to get a WM_CHAR for a virtual key when
@@ -1950,14 +2121,16 @@ LRESULT wmKeyDown (long hwnd, long wParam, long lParam) {
 		*/
 		display.lastKey = (int)OS.CharLower (OS.LOWORD (mapKey));
 
-		/*
-		* Feature in Windows. The virtual key VK_CANCEL is treated
-		* as both a virtual key and ASCII key by Windows.  This
-		* means that a WM_CHAR with WPARAM=3 will be issued for
-		* this key.  In order to distinguish between this key and
-		* Ctrl+C, mark the key as virtual.
-		*/
-		if (wParam == OS.VK_CANCEL) display.lastVirtual = true;
+        /*
+        * Feature in Windows. The virtual key VK_CANCEL is treated
+        * as both a virtual key and ASCII key by Windows.  This
+        * means that a WM_CHAR with WPARAM=3 will be issued for
+        * this key.  In order to distinguish between this key and
+        * Ctrl+C, mark the key as virtual.
+        */
+        if (wParam == OS.VK_CANCEL) {
+            display.lastVirtual = true;
+        }
 
 		if (OS.GetKeyState (OS.VK_CONTROL) < 0) {
 			/*
@@ -1969,7 +2142,9 @@ LRESULT wmKeyDown (long hwnd, long wParam, long lParam) {
 			 */
 			if (OS.GetKeyState (OS.VK_SHIFT) < 0) {
 				display.lastAscii = display.shiftedKey ((int)wParam);
-				if (display.lastAscii == 0) display.lastAscii = mapKey;
+                if (display.lastAscii == 0) {
+                    display.lastAscii = mapKey;
+                }
 			} else {
 				display.lastAscii = (int)OS.CharLower (OS.LOWORD (mapKey));
 			}
@@ -2005,7 +2180,9 @@ LRESULT wmKeyUp (long hwnd, long wParam, long lParam) {
 	/* Map the virtual key. */
 	int mapKey = OS.MapVirtualKey ((int)wParam, 2);
 
-	if (display.lastDead) return null;
+    if (display.lastDead) {
+        return null;
+    }
 
 	/*
 	* NOTE: On Windows 98, keypad keys are virtual despite the
@@ -2017,14 +2194,16 @@ LRESULT wmKeyUp (long hwnd, long wParam, long lParam) {
 	if (display.lastVirtual) {
 		display.lastKey = (int)wParam;
 	} else {
-		/*
-		* Feature in Windows. The virtual key VK_CANCEL is treated
-		* as both a virtual key and ASCII key by Windows.  This
-		* means that a WM_CHAR with WPARAM=3 will be issued for
-		* this key.  In order to distinguish between this key and
-		* Ctrl+C, mark the key as virtual.
-		*/
-		if (wParam == OS.VK_CANCEL) display.lastVirtual = true;
+        /*
+        * Feature in Windows. The virtual key VK_CANCEL is treated
+        * as both a virtual key and ASCII key by Windows.  This
+        * means that a WM_CHAR with WPARAM=3 will be issued for
+        * this key.  In order to distinguish between this key and
+        * Ctrl+C, mark the key as virtual.
+        */
+        if (wParam == OS.VK_CANCEL) {
+            display.lastVirtual = true;
+        }
 		if (display.lastKey == 0) {
 			display.lastAscii = 0;
 			display.lastDead = false;
@@ -2053,17 +2232,21 @@ LRESULT wmKillFocus (long hwnd, long wParam, long lParam) {
 
 	long code = callWindowProc (hwnd, OS.WM_KILLFOCUS, wParam, lParam);
 	sendFocusEvent (SWT.FocusOut);
-	// widget could be disposed at this point
+    // widget could be disposed at this point
 
-	/*
-	* It is possible (but unlikely), that application
-	* code could have disposed the widget in the focus
-	* or deactivate events.  If this happens, end the
-	* processing of the Windows message by returning
-	* zero as the result of the window proc.
-	*/
-	if (isDisposed ()) return LRESULT.ZERO;
-	if (code == 0) return LRESULT.ZERO;
+    /*
+    * It is possible (but unlikely), that application
+    * code could have disposed the widget in the focus
+    * or deactivate events.  If this happens, end the
+    * processing of the Windows message by returning
+    * zero as the result of the window proc.
+    */
+    if (isDisposed()) {
+        return LRESULT.ZERO;
+    }
+    if (code == 0) {
+        return LRESULT.ZERO;
+    }
 	return new LRESULT (code);
 }
 
@@ -2091,7 +2274,9 @@ LRESULT wmLButtonDblClk (long hwnd, long wParam, long lParam) {
 		result = LRESULT.ZERO;
 	}
 	if (!display.captureChanged && !isDisposed ()) {
-		if (OS.GetCapture () != hwnd) OS.SetCapture (hwnd);
+        if (OS.GetCapture() != hwnd) {
+            OS.SetCapture(hwnd);
+        }
 	}
 	return result;
 }
@@ -2116,7 +2301,9 @@ LRESULT wmLButtonDown (long hwnd, long wParam, long lParam) {
 		detect = new boolean [1];
 		consume = new boolean [1];
 		dragging = dragDetect (hwnd, x, y, true, detect, consume);
-		if (isDisposed ()) return LRESULT.ZERO;
+        if (isDisposed()) {
+            return LRESULT.ZERO;
+        }
 		mouseDown = OS.GetKeyState (OS.VK_LBUTTON) < 0;
 	}
 	display.captureChanged = false;
@@ -2128,7 +2315,9 @@ LRESULT wmLButtonDown (long hwnd, long wParam, long lParam) {
 	}
 	if (mouseDown) {
 		if (!display.captureChanged && !isDisposed ()) {
-			if (OS.GetCapture () != hwnd) OS.SetCapture (hwnd);
+            if (OS.GetCapture() != hwnd) {
+                OS.SetCapture(hwnd);
+            }
 		}
 	}
 	if (dragging) {
@@ -2178,9 +2367,13 @@ LRESULT wmLButtonUp (long hwnd, long wParam, long lParam) {
 	* for the extra buttons only when they exist.
 	*/
 	int mask = OS.MK_LBUTTON | OS.MK_MBUTTON | OS.MK_RBUTTON;
-	if (display.xMouse) mask |= OS.MK_XBUTTON1 | OS.MK_XBUTTON2;
+    if (display.xMouse) {
+        mask |= OS.MK_XBUTTON1 | OS.MK_XBUTTON2;
+    }
 	if ((wParam & mask) == 0) {
-		if (OS.GetCapture () == hwnd) OS.ReleaseCapture ();
+        if (OS.GetCapture() == hwnd) {
+            OS.ReleaseCapture();
+        }
 	}
 	return result;
 }
@@ -2209,7 +2402,9 @@ LRESULT wmMButtonDblClk (long hwnd, long wParam, long lParam) {
 		result = LRESULT.ZERO;
 	}
 	if (!display.captureChanged && !isDisposed ()) {
-		if (OS.GetCapture () != hwnd) OS.SetCapture (hwnd);
+        if (OS.GetCapture() != hwnd) {
+            OS.SetCapture(hwnd);
+        }
 	}
 	return result;
 }
@@ -2224,7 +2419,9 @@ LRESULT wmMButtonDown (long hwnd, long wParam, long lParam) {
 		result = LRESULT.ZERO;
 	}
 	if (!display.captureChanged && !isDisposed ()) {
-		if (OS.GetCapture () != hwnd) OS.SetCapture (hwnd);
+        if (OS.GetCapture() != hwnd) {
+            OS.SetCapture(hwnd);
+        }
 	}
 	return result;
 }
@@ -2244,9 +2441,13 @@ LRESULT wmMButtonUp (long hwnd, long wParam, long lParam) {
 	* for the extra buttons only when they exist.
 	*/
 	int mask = OS.MK_LBUTTON | OS.MK_MBUTTON | OS.MK_RBUTTON;
-	if (display.xMouse) mask |= OS.MK_XBUTTON1 | OS.MK_XBUTTON2;
+    if (display.xMouse) {
+        mask |= OS.MK_XBUTTON1 | OS.MK_XBUTTON2;
+    }
 	if ((wParam & mask) == 0) {
-		if (OS.GetCapture () == hwnd) OS.ReleaseCapture ();
+        if (OS.GetCapture() == hwnd) {
+            OS.ReleaseCapture();
+        }
 	}
 	return result;
 }
@@ -2260,7 +2461,9 @@ LRESULT wmMouseHover (long hwnd, long wParam, long lParam) {
 
 LRESULT wmMouseLeave (long hwnd, long wParam, long lParam) {
 	state &= ~MOUSE_OVER;
-	if (!hooks (SWT.MouseExit) && !filters (SWT.MouseExit)) return null;
+    if (!hooks(SWT.MouseExit) && !filters(SWT.MouseExit)) {
+        return null;
+    }
 	int pos = OS.GetMessagePos ();
 	POINT pt = new POINT ();
 	OS.POINTSTOPOINT (pt, pos);
@@ -2362,7 +2565,9 @@ LRESULT wmPaint (long hwnd, long wParam, long lParam) {
 		OS.ShowCaret (hwnd);
 	}
 	OS.DeleteObject (rgn);
-	if (result == 0) return LRESULT.ZERO;
+    if (result == 0) {
+        return LRESULT.ZERO;
+    }
 	return new LRESULT (result);
 }
 
@@ -2415,7 +2620,9 @@ LRESULT wmRButtonDblClk (long hwnd, long wParam, long lParam) {
 		result = LRESULT.ZERO;
 	}
 	if (!display.captureChanged && !isDisposed ()) {
-		if (OS.GetCapture () != hwnd) OS.SetCapture (hwnd);
+        if (OS.GetCapture() != hwnd) {
+            OS.SetCapture(hwnd);
+        }
 	}
 	return result;
 }
@@ -2430,7 +2637,9 @@ LRESULT wmRButtonDown (long hwnd, long wParam, long lParam) {
 		result = LRESULT.ZERO;
 	}
 	if (!display.captureChanged && !isDisposed ()) {
-		if (OS.GetCapture () != hwnd) OS.SetCapture (hwnd);
+        if (OS.GetCapture() != hwnd) {
+            OS.SetCapture(hwnd);
+        }
 	}
 	return result;
 }
@@ -2452,9 +2661,13 @@ LRESULT wmRButtonUp (long hwnd, long wParam, long lParam) {
 	* for the extra buttons only when they exist.
 	*/
 	int mask = OS.MK_LBUTTON | OS.MK_MBUTTON | OS.MK_RBUTTON;
-	if (display.xMouse) mask |= OS.MK_XBUTTON1 | OS.MK_XBUTTON2;
+    if (display.xMouse) {
+        mask |= OS.MK_XBUTTON1 | OS.MK_XBUTTON2;
+    }
 	if ((wParam & mask) == 0) {
-		if (OS.GetCapture () == hwnd) OS.ReleaseCapture ();
+        if (OS.GetCapture() == hwnd) {
+            OS.ReleaseCapture();
+        }
 	}
 	return result;
 }
@@ -2462,17 +2675,21 @@ LRESULT wmRButtonUp (long hwnd, long wParam, long lParam) {
 LRESULT wmSetFocus (long hwnd, long wParam, long lParam) {
 	long code = callWindowProc (hwnd, OS.WM_SETFOCUS, wParam, lParam);
 	sendFocusEvent (SWT.FocusIn);
-	// widget could be disposed at this point
+    // widget could be disposed at this point
 
-	/*
-	* It is possible (but unlikely), that application
-	* code could have disposed the widget in the focus
-	* or activate events.  If this happens, end the
-	* processing of the Windows message by returning
-	* zero as the result of the window proc.
-	*/
-	if (isDisposed ()) return LRESULT.ZERO;
-	if (code == 0) return LRESULT.ZERO;
+    /*
+    * It is possible (but unlikely), that application
+    * code could have disposed the widget in the focus
+    * or activate events.  If this happens, end the
+    * processing of the Windows message by returning
+    * zero as the result of the window proc.
+    */
+    if (isDisposed()) {
+        return LRESULT.ZERO;
+    }
+    if (code == 0) {
+        return LRESULT.ZERO;
+    }
 	return new LRESULT (code);
 }
 
@@ -2509,8 +2726,10 @@ LRESULT wmSysKeyDown (long hwnd, long wParam, long lParam) {
 	* is pressed.
 	*/
 	if (wParam != OS.VK_F10) {
-		/* Make sure WM_SYSKEYDOWN was sent by ALT-<aKey>. */
-		if ((lParam & 0x20000000) == 0) return null;
+        /* Make sure WM_SYSKEYDOWN was sent by ALT-<aKey>. */
+        if ((lParam & 0x20000000) == 0) {
+            return null;
+        }
 	}
 
 	/* Ignore well known system keys */
@@ -2518,11 +2737,15 @@ LRESULT wmSysKeyDown (long hwnd, long wParam, long lParam) {
 		case OS.VK_F4: {
 			long hwndShell = hwnd;
 			while (OS.GetParent (hwndShell) != 0) {
-				if (OS.GetWindow (hwndShell, OS.GW_OWNER) != 0) break;
+                if (OS.GetWindow(hwndShell, OS.GW_OWNER) != 0) {
+                    break;
+                }
 				hwndShell = OS.GetParent (hwndShell);
 			}
 			int bits = OS.GetWindowLong (hwndShell, OS.GWL_STYLE);
-			if ((bits & OS.WS_SYSMENU) != 0) return null;
+            if ((bits & OS.WS_SYSMENU) != 0) {
+                return null;
+            }
 		}
 	}
 
@@ -2534,7 +2757,9 @@ LRESULT wmSysKeyDown (long hwnd, long wParam, long lParam) {
 		case OS.VK_CAPITAL:
 		case OS.VK_NUMLOCK:
 		case OS.VK_SCROLL:
-			if ((lParam & 0x40000000) != 0) return null;
+            if ((lParam & 0x40000000) != 0) {
+                return null;
+            }
 	}
 
 	/* Clear last key and last ascii because a new key has been typed */
@@ -2559,20 +2784,24 @@ LRESULT wmSysKeyDown (long hwnd, long wParam, long lParam) {
 		isCharPending = true;
 	}
 
-	// See corresponding code block in 'WM_KEYDOWN' for an explanation.
-	if (isDisposed ()) return LRESULT.ONE;
+    // See corresponding code block in 'WM_KEYDOWN' for an explanation.
+    if (isDisposed()) {
+        return LRESULT.ONE;
+    }
 
 	display.lastVirtual = mapKey == 0 || display.numpadKey ((int)wParam) != 0;
 	if (display.lastVirtual) {
 		display.lastKey = (int)wParam;
-		/*
-		* Feature in Windows.  The virtual key VK_DELETE is not
-		* treated as both a virtual key and an ASCII key by Windows.
-		* Therefore, we will not receive a WM_SYSCHAR for this key.
-		* The fix is to treat VK_DELETE as a special case and map
-		* the ASCII value explicitly (Delete is 0x7F).
-		*/
-		if (display.lastKey == OS.VK_DELETE) display.lastAscii = 0x7F;
+        /*
+        * Feature in Windows.  The virtual key VK_DELETE is not
+        * treated as both a virtual key and an ASCII key by Windows.
+        * Therefore, we will not receive a WM_SYSCHAR for this key.
+        * The fix is to treat VK_DELETE as a special case and map
+        * the ASCII value explicitly (Delete is 0x7F).
+        */
+        if (display.lastKey == OS.VK_DELETE) {
+            display.lastAscii = 0x7F;
+        }
 
 		if (OS.VK_NUMPAD0 <= display.lastKey && display.lastKey <= OS.VK_DIVIDE) {
 			display.lastAscii = display.numpadKey (display.lastKey);
@@ -2627,7 +2856,9 @@ LRESULT wmXButtonDblClk (long hwnd, long wParam, long lParam) {
 		result = LRESULT.ZERO;
 	}
 	if (!display.captureChanged && !isDisposed ()) {
-		if (OS.GetCapture () != hwnd) OS.SetCapture (hwnd);
+        if (OS.GetCapture() != hwnd) {
+            OS.SetCapture(hwnd);
+        }
 	}
 	return result;
 }
@@ -2644,7 +2875,9 @@ LRESULT wmXButtonDown (long hwnd, long wParam, long lParam) {
 		result = LRESULT.ZERO;
 	}
 	if (!display.captureChanged && !isDisposed ()) {
-		if (OS.GetCapture () != hwnd) OS.SetCapture (hwnd);
+        if (OS.GetCapture() != hwnd) {
+            OS.SetCapture(hwnd);
+        }
 	}
 	return result;
 }
@@ -2665,9 +2898,13 @@ LRESULT wmXButtonUp (long hwnd, long wParam, long lParam) {
 	* for the extra buttons only when they exist.
 	*/
 	int mask = OS.MK_LBUTTON | OS.MK_MBUTTON | OS.MK_RBUTTON;
-	if (display.xMouse) mask |= OS.MK_XBUTTON1 | OS.MK_XBUTTON2;
+    if (display.xMouse) {
+        mask |= OS.MK_XBUTTON1 | OS.MK_XBUTTON2;
+    }
 	if ((wParam & mask) == 0) {
-		if (OS.GetCapture () == hwnd) OS.ReleaseCapture ();
+        if (OS.GetCapture() == hwnd) {
+            OS.ReleaseCapture();
+        }
 	}
 	return result;
 }

@@ -314,8 +314,9 @@ public static void debugDisplayImage(Image image) {
 	canvas.addPaintListener(e -> e.gc.drawImage(image, 10, 10));
 	SwtTestUtil.openShell(shell);
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 }
 
@@ -342,8 +343,9 @@ public static void debugDisplayImages(Image[] images, int numColumns) {
 	SwtTestUtil.openShell(shell);
 
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 }
 
@@ -390,8 +392,9 @@ public static void debugDisplayDifferences(Image expected, Image actual) {
 
 	SwtTestUtil.openShell(shell);
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 
 }
@@ -555,12 +558,15 @@ public static boolean waitEvent(Runnable trigger, Control control, int swtEvent,
 
 	control.addListener(swtEvent, listener);
 	try {
-		if (trigger != null)
-			trigger.run();
+        if (trigger != null) {
+            trigger.run();
+        }
 
 		long start = System.currentTimeMillis();
 		while (!eventReceived.get()) {
-			if (System.currentTimeMillis() - start > timeoutMsec) return false;
+            if (System.currentTimeMillis() - start > timeoutMsec) {
+                return false;
+            }
 			processEvents();
 		}
 	} finally {
@@ -593,13 +599,15 @@ public static boolean waitAllEvents(Runnable trigger, Control control, Set<Integ
 		control.addListener(swtEvent, listener);
 	}
 	try {
-		if (trigger != null)
-			trigger.run();
+        if (trigger != null) {
+            trigger.run();
+        }
 
 		long start = System.currentTimeMillis();
 		while (!eventsLeftToReceive.isEmpty()) {
-			if (System.currentTimeMillis() - start > timeoutMsec)
-				return false;
+            if (System.currentTimeMillis() - start > timeoutMsec) {
+                return false;
+            }
 			processEvents();
 		}
 	} finally {
@@ -631,9 +639,11 @@ public static void waitShellActivate(Runnable trigger, Shell shell) {
 		}
 	};
 
-	// Issue #726: On GTK, 'Display.getActiveShell()' reports incorrect Shell.
-	// The workaround is to wait until 'SWT.Activate' is received.
-	if (waitEvent(triggerWithEnforcedShellActivationOnMacOs, shell, SWT.Activate, timeoutInMsec)) return;
+    // Issue #726: On GTK, 'Display.getActiveShell()' reports incorrect Shell.
+    // The workaround is to wait until 'SWT.Activate' is received.
+    if (waitEvent(triggerWithEnforcedShellActivationOnMacOs, shell, SWT.Activate, timeoutInMsec)) {
+        return;
+    }
 
 	// Something went wrong? Get more info to diagnose
 	Screenshots.takeScreenshot(SwtTestUtil.class, "waitShellActivate-" + System.currentTimeMillis());

@@ -79,13 +79,15 @@ public static void main (String [] args) {
 	target.addDropListener(new DropTargetAdapter() {
 		@Override
 		public void dragEnter(DropTargetEvent e) {
-			if (e.detail == DND.DROP_DEFAULT)
-				e.detail = DND.DROP_COPY;
+            if (e.detail == DND.DROP_DEFAULT) {
+                e.detail = DND.DROP_COPY;
+            }
 		}
 		@Override
 		public void dragOperationChanged(DropTargetEvent e) {
-			if (e.detail == DND.DROP_DEFAULT)
-				e.detail = DND.DROP_COPY;
+            if (e.detail == DND.DROP_DEFAULT) {
+                e.detail = DND.DROP_COPY;
+            }
 		}
 		@Override
 		public void drop(DropTargetEvent e) {
@@ -94,7 +96,9 @@ public static void main (String [] args) {
 	});
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

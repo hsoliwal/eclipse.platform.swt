@@ -89,26 +89,42 @@ public void javaToNative(Object object, TransferData transferData) {
 		DND.error(DND.ERROR_INVALID_DATA);
 	}
 	ImageData imgData = (ImageData)object;
-	if (imgData == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (imgData == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	Image image = new Image(Display.getCurrent(), imgData);
 	long pixbuf = ImageList.createPixbuf(image);
 	if (pixbuf != 0) {
 		String typeStr = "";
-		if (transferData.type ==  JPEG_ID) typeStr = "jpeg";
-		else if (transferData.type ==  PNG_ID) typeStr = "png";
-		else if (transferData.type ==  BMP_ID) typeStr = "bmp";
-		else if (transferData.type ==  EPS_ID) typeStr = "eps";
-		else if (transferData.type ==  PCX_ID) typeStr = "pcx";
-		else if (transferData.type ==  PPM_ID) typeStr = "ppm";
-		else if (transferData.type ==  RGB_ID) typeStr = "rgb";
-		else if (transferData.type ==  TGA_ID) typeStr = "tga";
-		else if (transferData.type ==  XBM_ID) typeStr = "xbm";
-		else if (transferData.type ==  XPM_ID) typeStr = "xpm";
-		else if (transferData.type ==  XV_ID) typeStr = "xv";
+        if (transferData.type == JPEG_ID) {
+            typeStr = "jpeg";
+        } else if (transferData.type == PNG_ID) {
+            typeStr = "png";
+        } else if (transferData.type == BMP_ID) {
+            typeStr = "bmp";
+        } else if (transferData.type == EPS_ID) {
+            typeStr = "eps";
+        } else if (transferData.type == PCX_ID) {
+            typeStr = "pcx";
+        } else if (transferData.type == PPM_ID) {
+            typeStr = "ppm";
+        } else if (transferData.type == RGB_ID) {
+            typeStr = "rgb";
+        } else if (transferData.type == TGA_ID) {
+            typeStr = "tga";
+        } else if (transferData.type == XBM_ID) {
+            typeStr = "xbm";
+        } else if (transferData.type == XPM_ID) {
+            typeStr = "xpm";
+        } else if (transferData.type == XV_ID) {
+            typeStr = "xv";
+        }
 		byte[] type = Converter.wcsToMbcs(typeStr, true);
 		long [] buffer = new long [1];
 		long [] len = new long [1];
-		if (type == null) return;
+        if (type == null) {
+            return;
+        }
 		GDK.gdk_pixbuf_save_to_bufferv(pixbuf, buffer, len, type, null, null, null);
 		OS.g_object_unref(pixbuf);
 		transferData.pValue = buffer[0];
@@ -165,7 +181,9 @@ protected String[] getTypeNames(){
 }
 
 boolean checkImage(Object object) {
-	if (!(object instanceof ImageData)) return false;
+    if (!(object instanceof ImageData)) {
+        return false;
+    }
 	return true;
 }
 

@@ -98,8 +98,9 @@ static class MyTransfer extends ByteArrayTransfer {
 	public Object nativeToJava(TransferData transferData) {
 		if (isSupportedType(transferData)) {
 			byte[] buffer = (byte[]) super.nativeToJava(transferData);
-			if (buffer == null)
-				return null;
+            if (buffer == null) {
+                return null;
+            }
 			return byteArrayToJava(buffer);
 		}
 		return null;
@@ -205,8 +206,9 @@ static class MyTransfer2 extends MyTransfer {
 	}
 
 	boolean checkMyType2(Object object) {
-		if (!checkMyType(object))
-			return false;
+        if (!checkMyType(object)) {
+            return false;
+        }
 		return object != null && object instanceof MyType2;
 	}
 
@@ -246,14 +248,16 @@ public static void main(String[] args) {
 	targetMyType.addDropListener(new DropTargetAdapter() {
 		@Override
 		public void dragEnter(DropTargetEvent event) {
-			if (event.detail == DND.DROP_DEFAULT)
-				event.detail = DND.DROP_COPY;
+            if (event.detail == DND.DROP_DEFAULT) {
+                event.detail = DND.DROP_COPY;
+            }
 		}
 
 		@Override
 		public void dragOperationChanged(DropTargetEvent event) {
-			if (event.detail == DND.DROP_DEFAULT)
-				event.detail = DND.DROP_COPY;
+            if (event.detail == DND.DROP_DEFAULT) {
+                event.detail = DND.DROP_COPY;
+            }
 		}
 
 		@Override
@@ -273,14 +277,16 @@ public static void main(String[] args) {
 	targetMyType2.addDropListener(new DropTargetAdapter() {
 		@Override
 		public void dragEnter(DropTargetEvent event) {
-			if (event.detail == DND.DROP_DEFAULT)
-				event.detail = DND.DROP_COPY;
+            if (event.detail == DND.DROP_DEFAULT) {
+                event.detail = DND.DROP_COPY;
+            }
 		}
 
 		@Override
 		public void dragOperationChanged(DropTargetEvent event) {
-			if (event.detail == DND.DROP_DEFAULT)
-				event.detail = DND.DROP_COPY;
+            if (event.detail == DND.DROP_DEFAULT) {
+                event.detail = DND.DROP_COPY;
+            }
 		}
 
 		@Override
@@ -299,8 +305,9 @@ public static void main(String[] args) {
 	shell.setSize(300, 200);
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

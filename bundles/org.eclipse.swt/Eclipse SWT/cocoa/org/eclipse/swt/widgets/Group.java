@@ -90,7 +90,9 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -154,7 +156,9 @@ void deregister () {
 
 @Override
 void drawBackground (long id, NSGraphicsContext context, NSRect rect) {
-	if (id != view.id) return;
+    if (id != view.id) {
+        return;
+    }
 	fillBackground (view, context, rect, -1);
 }
 
@@ -214,13 +218,17 @@ void register () {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (contentView != null) contentView.release();
+    if (contentView != null) {
+        contentView.release();
+    }
 	contentView = null;
 }
 
 @Override
 void resized() {
-	if (!ignoreResize) super.resized();
+    if (!ignoreResize) {
+        super.resized();
+    }
 }
 
 @Override
@@ -276,7 +284,9 @@ void setOrientation () {
  */
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	text = string;
 	char [] buffer = new char [text.length ()];
 	text.getChars (0, buffer.length, buffer, 0);

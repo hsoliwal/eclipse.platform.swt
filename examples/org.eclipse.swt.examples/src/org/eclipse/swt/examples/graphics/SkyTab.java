@@ -133,11 +133,15 @@ public class SkyTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (sprite == null) {
 			Image loaded = example.loadImage(gc.getDevice(), "DEMO2.png"); //$NON-NLS-1$
-			if (loaded == null) return;
+            if (loaded == null) {
+                return;
+            }
 			sprite = loaded.getImageData();
 
 			imageData = new ImageData(RENDER_WIDTH, RENDER_HEIGHT, sprite.depth, sprite.palette);

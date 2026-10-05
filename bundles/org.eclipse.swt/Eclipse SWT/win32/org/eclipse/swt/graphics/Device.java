@@ -84,7 +84,9 @@ public abstract class Device implements Drawable {
 * TEMPORARY CODE.
 */
 static synchronized Device getDevice () {
-	if (DeviceFinder != null) DeviceFinder.run();
+    if (DeviceFinder != null) {
+        DeviceFinder.run();
+    }
 	Device device = CurrentDevice;
 	CurrentDevice = null;
 	return device;
@@ -179,14 +181,20 @@ private void stopTracking() {
 
 
 void addFont (String font) {
-	if (loadedFonts == null) loadedFonts = new String [4];
+    if (loadedFonts == null) {
+        loadedFonts = new String [4];
+    }
 	int length = loadedFonts.length;
 	for (int i=0; i<length; i++) {
-		if (font.equals(loadedFonts [i])) return;
+        if (font.equals(loadedFonts [i])) {
+            return;
+        }
 	}
 	int index = 0;
 	while (index < length) {
-		if (loadedFonts [index] == null) break;
+        if (loadedFonts [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -217,21 +225,31 @@ void addFont (String font) {
  * </ul>
  */
 protected void checkDevice () {
-	if (disposed) SWT.error(SWT.ERROR_DEVICE_DISPOSED);
+    if (disposed) {
+        SWT.error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 }
 
 void checkGDIP() {
-	if (gdipToken != null) return;
+    if (gdipToken != null) {
+        return;
+    }
 	long [] token = new long [1];
 	GdiplusStartupInput input = new GdiplusStartupInput ();
 	input.GdiplusVersion = 1;
-	if (Gdip.GdiplusStartup (token, input, 0) != 0) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (Gdip.GdiplusStartup(token, input, 0) != 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	gdipToken = token;
 	if (loadedFonts != null) {
 		fontCollection = Gdip.PrivateFontCollection_new();
-		if (fontCollection == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (fontCollection == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		for (String path : loadedFonts) {
-			if (path == null) break;
+            if (path == null) {
+                break;
+            }
 			int length = path.length();
 			char [] buffer = new char [length + 1];
 			path.getChars(0, length, buffer, 0);
@@ -337,7 +355,9 @@ protected void destroy () {
 public void dispose () {
 	synchronized (Device.class) {
 		try (ExceptionStash exceptions = new ExceptionStash ()) {
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 			checkDevice ();
 
 			try {
@@ -386,7 +406,9 @@ long EnumFontFamProc (long lpelfe, long lpntme, long FontType, long lParam) {
 			pixels = newPixels;
 		}
 		LOGFONT logFont = logFonts [nFonts];
-		if (logFont == null) logFont = new LOGFONT ();
+        if (logFont == null) {
+            logFont = new LOGFONT();
+        }
 		OS.MoveMemory (logFont, lpelfe, LOGFONT.sizeof);
 		logFonts [nFonts] = logFont;
 		if (logFont.lfHeight > 0) {
@@ -452,7 +474,9 @@ public DeviceData getDeviceData () {
 		synchronized (trackingLock) {
 			int count = 0, length = objects.length;
 			for (int i=0; i<length; i++) {
-				if (objects [i] != null) count++;
+                if (objects [i] != null) {
+                    count++;
+                }
 			}
 			int index = 0;
 			data.objects = new Object [count];
@@ -613,9 +637,13 @@ public FontData [] getFontList (String faceName, boolean scalable) {
 		FontData fd = FontData.win32_new (logFonts [i], pixels [i] * 72f / logPixelsY);
 		int j;
 		for (j = 0; j < count; j++) {
-			if (fd.equals (result [j])) break;
+            if (fd.equals(result [j])) {
+                break;
+            }
 		}
-		if (j == count) result [count++] = fd;
+        if (j == count) {
+            result [count++] = fd;
+        }
 	}
 	if (count != result.length) {
 		FontData [] newResult = new FontData [count];
@@ -633,7 +661,9 @@ public FontData [] getFontList (String faceName, boolean scalable) {
 
 String getLastError () {
 	int error = OS.GetLastError();
-	if (error == 0) return ""; //$NON-NLS-1$
+    if (error == 0) {
+        return "";
+    } //$NON-NLS-1$
 	return " [GetLastError=0x" + Integer.toHexString(error) + "]"; //$NON-NLS-1$ //$NON-NLS-2$
 }
 
@@ -819,14 +849,18 @@ public boolean isDisposed () {
  */
 public boolean loadFont (String path) {
 	checkDevice();
-	if (path == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (path == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	TCHAR lpszFilename = new TCHAR (path, true);
 	boolean loaded = OS.AddFontResourceEx (lpszFilename, OS.FR_PRIVATE, 0) != 0;
 	if (loaded) {
 		if (gdipToken != null) {
 			if (fontCollection == 0) {
 				fontCollection = Gdip.PrivateFontCollection_new();
-				if (fontCollection == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                if (fontCollection == 0) {
+                    SWT.error(SWT.ERROR_NO_HANDLES);
+                }
 			}
 			int length = path.length();
 			char [] buffer = new char [length + 1];
@@ -860,46 +894,92 @@ void new_Object (Object object) {
 }
 
 void printErrors () {
-	if (!DEBUG) return;
+    if (!DEBUG) {
+        return;
+    }
 	if (tracking) {
 		synchronized (trackingLock) {
-			if (objects == null || errors == null) return;
+            if (objects == null || errors == null) {
+                return;
+            }
 			int objectCount = 0;
 			int colors = 0, cursors = 0, fonts = 0, gcs = 0, images = 0;
 			int paths = 0, patterns = 0, regions = 0, textLayouts = 0, transforms = 0;
 			for (Object object : objects) {
 				if (object != null) {
 					objectCount++;
-					if (object instanceof Color) colors++;
-					if (object instanceof Cursor) cursors++;
-					if (object instanceof Font) fonts++;
-					if (object instanceof GC) gcs++;
-					if (object instanceof Image) images++;
-					if (object instanceof Path) paths++;
-					if (object instanceof Pattern) patterns++;
-					if (object instanceof Region) regions++;
-					if (object instanceof TextLayout) textLayouts++;
-					if (object instanceof Transform) transforms++;
+                    if (object instanceof Color) {
+                        colors++;
+                    }
+                    if (object instanceof Cursor) {
+                        cursors++;
+                    }
+                    if (object instanceof Font) {
+                        fonts++;
+                    }
+                    if (object instanceof GC) {
+                        gcs++;
+                    }
+                    if (object instanceof Image) {
+                        images++;
+                    }
+                    if (object instanceof Path) {
+                        paths++;
+                    }
+                    if (object instanceof Pattern) {
+                        patterns++;
+                    }
+                    if (object instanceof Region) {
+                        regions++;
+                    }
+                    if (object instanceof TextLayout) {
+                        textLayouts++;
+                    }
+                    if (object instanceof Transform) {
+                        transforms++;
+                    }
 				}
 			}
 			if (objectCount != 0) {
 				String string = "Summary: ";
-				if (colors != 0) string += colors + " Color(s), ";
-				if (cursors != 0) string += cursors + " Cursor(s), ";
-				if (fonts != 0) string += fonts + " Font(s), ";
-				if (gcs != 0) string += gcs + " GC(s), ";
-				if (images != 0) string += images + " Image(s), ";
-				if (paths != 0) string += paths + " Path(s), ";
-				if (patterns != 0) string += patterns + " Pattern(s), ";
-				if (regions != 0) string += regions + " Region(s), ";
-				if (textLayouts != 0) string += textLayouts + " TextLayout(s), ";
-				if (transforms != 0) string += transforms + " Transforms(s), ";
+                if (colors != 0) {
+                    string += colors + " Color(s), ";
+                }
+                if (cursors != 0) {
+                    string += cursors + " Cursor(s), ";
+                }
+                if (fonts != 0) {
+                    string += fonts + " Font(s), ";
+                }
+                if (gcs != 0) {
+                    string += gcs + " GC(s), ";
+                }
+                if (images != 0) {
+                    string += images + " Image(s), ";
+                }
+                if (paths != 0) {
+                    string += paths + " Path(s), ";
+                }
+                if (patterns != 0) {
+                    string += patterns + " Pattern(s), ";
+                }
+                if (regions != 0) {
+                    string += regions + " Region(s), ";
+                }
+                if (textLayouts != 0) {
+                    string += textLayouts + " TextLayout(s), ";
+                }
+                if (transforms != 0) {
+                    string += transforms + " Transforms(s), ";
+                }
 				if (string.length () != 0) {
 					string = string.substring (0, string.length () - 2);
 					System.err.println (string);
 				}
 				for (Error error : errors) {
-					if (error != null) error.printStackTrace (System.err);
+                    if (error != null) {
+                        error.printStackTrace(System.err);
+                    }
 				}
 			}
 		}
@@ -1015,8 +1095,12 @@ private static class ResourceReference extends WeakReference<Resource> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if(this == obj) return true;
-		if (!(obj instanceof ResourceReference passedResource)) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof ResourceReference passedResource)) {
+            return false;
+        }
 		return Objects.equals(this.get(), passedResource.get());
 	}
 

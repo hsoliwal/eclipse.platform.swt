@@ -51,7 +51,9 @@ public PopupList(Shell parent) {
 */
 public PopupList(Shell parent, int style) {
 	int listStyle = SWT.SINGLE | SWT.V_SCROLL;
-	if ((style & SWT.H_SCROLL) != 0) listStyle |= SWT.H_SCROLL;
+    if ((style & SWT.H_SCROLL) != 0) {
+        listStyle |= SWT.H_SCROLL;
+    }
 
 	shell = new Shell(parent, checkStyle(style));
 
@@ -169,9 +171,10 @@ public String open (Rectangle rect) {
 
 	// Make dialog as wide as the cell
 	listSize.x = rect.width;
-	// dialog width should not be less than minimumWidth
-	if (listSize.x < minimumWidth)
-		listSize.x = minimumWidth;
+    // dialog width should not be less than minimumWidth
+    if (listSize.x < minimumWidth) {
+        listSize.x = minimumWidth;
+    }
 
 	// Align right side of dialog with right side of cell
 	int x = rect.x + rect.width - listSize.x;
@@ -183,14 +186,18 @@ public String open (Rectangle rect) {
 
 	Display display = shell.getDisplay();
 	while (!shell.isDisposed () && shell.isVisible ()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 
 	String result = null;
 	if (!shell.isDisposed ()) {
 		String [] strings = list.getSelection ();
 		shell.dispose();
-		if (strings.length != 0) result = strings [0];
+        if (strings.length != 0) {
+            result = strings [0];
+        }
 	}
 	return result;
 }
@@ -270,8 +277,9 @@ public void setItems (String[] strings) {
 * @param width the minimum width of the list
 */
 public void setMinimumWidth (int width) {
-	if (width < 0)
-		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (width < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
 	minimumWidth = width;
 }

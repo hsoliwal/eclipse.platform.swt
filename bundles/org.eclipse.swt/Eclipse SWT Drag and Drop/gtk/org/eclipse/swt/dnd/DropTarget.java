@@ -230,7 +230,9 @@ public DropTarget(Control control, int style) {
 
 	dragOverHeartbeat = () -> {
 		Control control1 = DropTarget.this.control;
-		if (control1 == null || control1.isDisposed() || dragOverStart == 0) return;
+        if (control1 == null || control1.isDisposed() || dragOverStart == 0) {
+            return;
+        }
 		long time = System.currentTimeMillis();
 		int delay = DRAGOVER_HYSTERESIS;
 		if (time < dragOverStart) {
@@ -272,7 +274,9 @@ public DropTarget(Control control, int style) {
 			}
 		}
 		control1 = DropTarget.this.control;
-		if (control1 == null || control1.isDisposed()) return;
+        if (control1 == null || control1.isDisposed()) {
+            return;
+        }
 		control1.getDisplay().timerExec(delay, dragOverHeartbeat);
 	};
 }
@@ -283,71 +287,95 @@ static int checkStyle (int style) {
 
 static long Drag_Data_Received ( long widget, long context, long x, long y, long data, long info, long time){
 	DropTarget target = FindDropTarget(widget);
-	if (target == null) return 0;
+    if (target == null) {
+        return 0;
+    }
 	target.drag_data_received (widget, context, (int)x, (int)y, data, (int)info, (int)time);
 	return 0;
 }
 
 static long Drag_Drop(long widget, long context, long x, long y, long time) {
 	DropTarget target = FindDropTarget(widget);
-	if (target == null) return 0;
+    if (target == null) {
+        return 0;
+    }
 	return target.drag_drop (widget, context, (int)x, (int)y, (int)time) ? 1 : 0;
 }
 
 static long Drag_Leave ( long widget, long context, long time){
 	DropTarget target = FindDropTarget(widget);
-	if (target == null) return 0;
+    if (target == null) {
+        return 0;
+    }
 	target.drag_leave (widget, context, (int)time);
 	return 0;
 }
 
 static long Drag_Motion ( long widget, long context, long x, long y, long time){
 	DropTarget target = FindDropTarget(widget);
-	if (target == null) return 0;
+    if (target == null) {
+        return 0;
+    }
 	return target.drag_motion (widget, context, (int)x, (int)y, (int)time) ? 1 : 0;
 }
 
 static DropTarget FindDropTarget(long handle) {
 	Display display = Display.findDisplay(Thread.currentThread());
-	if (display == null || display.isDisposed()) return null;
+    if (display == null || display.isDisposed()) {
+        return null;
+    }
 	Widget widget = display.findWidget(handle);
-	if (widget == null) return null;
+    if (widget == null) {
+        return null;
+    }
 	return (DropTarget)widget.getData(DND.DROP_TARGET_KEY);
 }
 
 static DropTarget FindDropTargetGtk4(long controller) {
 	long widget = GTK.gtk_event_controller_get_widget(controller);
-	if (widget == 0) return null;
+    if (widget == 0) {
+        return null;
+    }
 	return FindDropTarget(widget);
 }
 
 static long DropAccept(long controller, long drop) {
 	DropTarget target = FindDropTargetGtk4(controller);
-	if (target == null) return 0;
+    if (target == null) {
+        return 0;
+    }
 	return target.dropAcceptGtk4(drop) ? 1 : 0;
 }
 
 static long DropEnter(long controller, long drop, double x, double y) {
 	DropTarget target = FindDropTargetGtk4(controller);
-	if (target == null) return 0;
+    if (target == null) {
+        return 0;
+    }
 	return target.dropMotionGtk4(drop, x, y, true);
 }
 
 static long DropMotion(long controller, long drop, double x, double y) {
 	DropTarget target = FindDropTargetGtk4(controller);
-	if (target == null) return 0;
+    if (target == null) {
+        return 0;
+    }
 	return target.dropMotionGtk4(drop, x, y, false);
 }
 
 static void DropLeave(long controller, long drop) {
 	DropTarget target = FindDropTargetGtk4(controller);
-	if (target == null) return;
+    if (target == null) {
+        return;
+    }
 	target.dropLeaveGtk4(drop);
 }
 
 static long Drop(long controller, long drop, double x, double y) {
 	DropTarget target = FindDropTargetGtk4(controller);
-	if (target == null) return 0;
+    if (target == null) {
+        return 0;
+    }
 	return target.dropGtk4(drop, x, y) ? 1 : 0;
 }
 
@@ -385,7 +413,9 @@ static long Drop(long controller, long drop, double x, double y) {
  * @see DropTargetEvent
  */
 public void addDropListener(DropTargetListener listener) {
-	if (listener == null) DND.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	DNDListener typedListener = new DNDListener (listener);
 	typedListener.dndWidget = this;
 	addListener (DND.DragEnter, typedListener);
@@ -495,7 +525,9 @@ boolean drag_drop(long widget, long context, int x, int y, int time) {
 void drag_leave ( long widget, long context, int time){
 	updateDragOverHover(0, null);
 
-	if (keyOperation == -1) return;
+    if (keyOperation == -1) {
+        return;
+    }
 	keyOperation = -1;
 
 	DNDEvent event = new DNDEvent();
@@ -642,9 +674,15 @@ int getOperationFromKeyState() {
 	}
 	boolean ctrl = (state[0] & GDK.GDK_CONTROL_MASK) != 0;
 	boolean shift = (state[0] & GDK.GDK_SHIFT_MASK) != 0;
-	if (ctrl && shift) return DND.DROP_LINK;
-	if (ctrl)return DND.DROP_COPY;
-	if (shift)return DND.DROP_MOVE;
+    if (ctrl && shift) {
+        return DND.DROP_LINK;
+    }
+    if (ctrl) {
+        return DND.DROP_COPY;
+    }
+    if (shift) {
+        return DND.DROP_MOVE;
+    }
 	return DND.DROP_DEFAULT;
 }
 
@@ -658,7 +696,9 @@ public Transfer[] getTransfer() {
 }
 
 void onDispose(){
-	if (control == null) return;
+    if (control == null) {
+        return;
+    }
 	if (GTK.GTK4) {
 		if (dropController != 0) {
 			GTK4.gtk_widget_remove_controller(control.handle, dropController);
@@ -669,12 +709,14 @@ void onDispose(){
 		OS.g_signal_handler_disconnect(control.handle, drag_leave_handler);
 		OS.g_signal_handler_disconnect(control.handle, drag_data_received_handler);
 		OS.g_signal_handler_disconnect(control.handle, drag_drop_handler);
-		if (transferAgents.length != 0)
-			GTK3.gtk_drag_dest_unset(control.handle);
+        if (transferAgents.length != 0) {
+            GTK3.gtk_drag_dest_unset(control.handle);
+        }
 	}
 	transferAgents = null;
-	if (controlListener != null)
-		control.removeListener(SWT.Dispose, controlListener);
+    if (controlListener != null) {
+        control.removeListener(SWT.Dispose, controlListener);
+    }
 	control.setData(DND.DROP_TARGET_KEY, null);
 	control = null;
 	controlListener = null;
@@ -686,12 +728,15 @@ int opToOsOp(int operation){
 	int copy = GTK.GTK4 ? GTK4.GDK_ACTION_COPY : GDK.GDK_ACTION_COPY;
 	int move = GTK.GTK4 ? GTK4.GDK_ACTION_MOVE : GDK.GDK_ACTION_MOVE;
 	int link = GTK.GTK4 ? GTK4.GDK_ACTION_LINK : GDK.GDK_ACTION_LINK;
-	if ((operation & DND.DROP_COPY) == DND.DROP_COPY)
-		osOperation |= copy;
-	if ((operation & DND.DROP_MOVE) == DND.DROP_MOVE)
-		osOperation |= move;
-	if ((operation & DND.DROP_LINK) == DND.DROP_LINK)
-		osOperation |= link;
+    if ((operation & DND.DROP_COPY) == DND.DROP_COPY) {
+        osOperation |= copy;
+    }
+    if ((operation & DND.DROP_MOVE) == DND.DROP_MOVE) {
+        osOperation |= move;
+    }
+    if ((operation & DND.DROP_LINK) == DND.DROP_LINK) {
+        osOperation |= link;
+    }
 	return osOperation;
 }
 
@@ -701,12 +746,15 @@ int osOpToOp(int osOperation){
 	int copy = GTK.GTK4 ? GTK4.GDK_ACTION_COPY : GDK.GDK_ACTION_COPY;
 	int move = GTK.GTK4 ? GTK4.GDK_ACTION_MOVE : GDK.GDK_ACTION_MOVE;
 	int link = GTK.GTK4 ? GTK4.GDK_ACTION_LINK : GDK.GDK_ACTION_LINK;
-	if ((osOperation & copy) == copy)
-		operation |= DND.DROP_COPY;
-	if ((osOperation & move) == move)
-		operation |= DND.DROP_MOVE;
-	if ((osOperation & link) == link)
-		operation |= DND.DROP_LINK;
+    if ((osOperation & copy) == copy) {
+        operation |= DND.DROP_COPY;
+    }
+    if ((osOperation & move) == move) {
+        operation |= DND.DROP_MOVE;
+    }
+    if ((osOperation & link) == link) {
+        operation |= DND.DROP_LINK;
+    }
 	return operation;
 }
 
@@ -729,7 +777,9 @@ int osOpToOp(int osOperation){
  * @see #getDropListeners
  */
 public void removeDropListener(DropTargetListener listener) {
-	if (listener == null) DND.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(DND.DragEnter, listener);
 	removeTypedListener(DND.DragLeave, listener);
 	removeTypedListener(DND.DragOver, listener);
@@ -752,13 +802,17 @@ public void removeDropListener(DropTargetListener listener) {
  * </ul>
  */
 public void setTransfer(Transfer... transferAgents){
-	if (transferAgents == null) DND.error(SWT.ERROR_NULL_ARGUMENT);
+    if (transferAgents == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (GTK.GTK4) {
 		this.transferAgents = transferAgents;
 
 		long contentFormatsBuilder = GTK4.gdk_content_formats_builder_new();
 		for (Transfer agent : transferAgents) {
-			if (agent == null) continue;
+            if (agent == null) {
+                continue;
+            }
 			for (String typeName : agent.getTypeNames()) {
 				GTK4.gdk_content_formats_builder_add_mime_type(contentFormatsBuilder, Converter.javaStringToCString(typeName));
 			}
@@ -830,15 +884,21 @@ public void setDropTargetEffect(DropTargetEffect effect) {
 }
 
 boolean setEventData(long context, int x, int y, int time, DNDEvent event) {
-	if (context == 0) return false;
+    if (context == 0) {
+        return false;
+    }
 	long targets = GDK.gdk_drag_context_list_targets(context);
 	int actions = GDK.gdk_drag_context_get_actions(context);
-	if (targets == 0) return false;
+    if (targets == 0) {
+        return false;
+    }
 
 	// get allowed operations
 	int style = getStyle();
 	int operations = osOpToOp(actions) & style;
-	if (operations == DND.DROP_NONE) return false;
+    if (operations == DND.DROP_NONE) {
+        return false;
+    }
 
 	// get current operation
 	int operation = getOperationFromKeyState();
@@ -848,7 +908,9 @@ boolean setEventData(long context, int x, int y, int time, DNDEvent event) {
 			operation = (operations & DND.DROP_MOVE) != 0 ? DND.DROP_MOVE : DND.DROP_NONE;
 		}
 	} else {
-		if ((operation & operations) == 0) operation = DND.DROP_NONE;
+        if ((operation & operations) == 0) {
+            operation = DND.DROP_NONE;
+        }
 	}
 
 	// Get allowed transfer types
@@ -869,7 +931,9 @@ boolean setEventData(long context, int x, int y, int time, DNDEvent event) {
 		}
 		targets = OS.g_list_next (targets);
 	}
-	if (dataTypes.length == 0) return false;
+    if (dataTypes.length == 0) {
+        return false;
+    }
 	int [] origin_x = new int[1], origin_y = new int[1];
 	if (GTK.GTK4) {
 		// TODO: GTK4 no gdk_surface_get_origin
@@ -901,7 +965,9 @@ void updateDragOverHover(long delay, DNDEvent event) {
 		return;
 	}
 	dragOverStart = System.currentTimeMillis() + delay;
-	if (dragOverEvent == null) dragOverEvent = new DNDEvent();
+    if (dragOverEvent == null) {
+        dragOverEvent = new DNDEvent();
+    }
 	dragOverEvent.x = event.x;
 	dragOverEvent.y = event.y;
 	TransferData[] dataTypes = new TransferData[ event.dataTypes.length];
@@ -914,11 +980,17 @@ void updateDragOverHover(long delay, DNDEvent event) {
 /* GTK4 drop target handlers */
 
 boolean dropAcceptGtk4(long drop) {
-	if (control == null || control.isDisposed()) return false;
+    if (control == null || control.isDisposed()) {
+        return false;
+    }
 	long formats = GTK4.gdk_drop_get_formats(drop);
-	if (formats == 0) return false;
+    if (formats == 0) {
+        return false;
+    }
 	for (Transfer transfer : transferAgents) {
-		if (transfer == null) continue;
+        if (transfer == null) {
+            continue;
+        }
 		long gtype = ContentProviders.getInstance().getGType(transfer);
 		if (gtype != 0 && GTK4.gdk_content_formats_contain_gtype(formats, gtype)) {
 			return true;
@@ -983,7 +1055,9 @@ long dropMotionGtk4(long drop, double x, double y, boolean isEnter) {
 void dropLeaveGtk4(long drop) {
 	updateDragOverHover(0, null);
 
-	if (keyOperation == -1) return;
+    if (keyOperation == -1) {
+        return;
+    }
 	keyOperation = -1;
 
 	DNDEvent event = new DNDEvent();
@@ -1082,15 +1156,21 @@ boolean dropGtk4(long drop, double x, double y) {
 }
 
 boolean setEventDataGtk4(long drop, double x, double y, DNDEvent event) {
-	if (drop == 0) return false;
+    if (drop == 0) {
+        return false;
+    }
 	long formats = GTK4.gdk_drop_get_formats(drop);
 	int actions = GTK4.gdk_drop_get_actions(drop);
-	if (formats == 0) return false;
+    if (formats == 0) {
+        return false;
+    }
 
 	// get allowed operations
 	int style = getStyle();
 	int operations = osOpToOp(actions) & style;
-	if (operations == DND.DROP_NONE) return false;
+    if (operations == DND.DROP_NONE) {
+        return false;
+    }
 
 	// get current operation
 	int operation = getOperationFromKeyState();
@@ -1100,22 +1180,30 @@ boolean setEventDataGtk4(long drop, double x, double y, DNDEvent event) {
 			operation = (operations & DND.DROP_MOVE) != 0 ? DND.DROP_MOVE : DND.DROP_NONE;
 		}
 	} else {
-		if ((operation & operations) == 0) operation = DND.DROP_NONE;
+        if ((operation & operations) == 0) {
+            operation = DND.DROP_NONE;
+        }
 	}
 
 	// Get allowed transfer types
 	TransferData[] dataTypes = new TransferData[0];
 	for (Transfer transfer : transferAgents) {
-		if (transfer == null) continue;
+        if (transfer == null) {
+            continue;
+        }
 		long gtype = ContentProviders.getInstance().getGType(transfer);
-		if (gtype == 0 || !GTK4.gdk_content_formats_contain_gtype(formats, gtype)) continue;
+        if (gtype == 0 || !GTK4.gdk_content_formats_contain_gtype(formats, gtype)) {
+            continue;
+        }
 		TransferData[] supported = transfer.getSupportedTypes();
 		TransferData[] newDataTypes = new TransferData[dataTypes.length + supported.length];
 		System.arraycopy(dataTypes, 0, newDataTypes, 0, dataTypes.length);
 		System.arraycopy(supported, 0, newDataTypes, dataTypes.length, supported.length);
 		dataTypes = newDataTypes;
 	}
-	if (dataTypes.length == 0) return false;
+    if (dataTypes.length == 0) {
+        return false;
+    }
 
 	// x and y are relative to the widget; translate to display coordinates
 	Point coordinates = control.toDisplay((int) x, (int) y);

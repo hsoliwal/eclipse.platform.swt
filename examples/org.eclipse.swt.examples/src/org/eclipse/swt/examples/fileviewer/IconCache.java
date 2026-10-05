@@ -110,7 +110,9 @@ class IconCache {
 	public void freeResources() {
 		if (stockImages != null) {
 			for (Image image : stockImages) {
-				if (image != null) image.dispose();
+                if (image != null) {
+                    image.dispose();
+                }
 			}
 			stockImages = null;
 		}

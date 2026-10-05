@@ -113,10 +113,18 @@ public class CLabel extends Canvas {
  */
 public CLabel(Composite parent, int style) {
 	super(parent, checkStyle(style));
-	if ((style & (SWT.CENTER | SWT.RIGHT)) == 0) style |= SWT.LEFT;
-	if ((style & SWT.CENTER) != 0) align = SWT.CENTER;
-	if ((style & SWT.RIGHT) != 0)  align = SWT.RIGHT;
-	if ((style & SWT.LEFT) != 0)   align = SWT.LEFT;
+    if ((style & (SWT.CENTER | SWT.RIGHT)) == 0) {
+        style |= SWT.LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        align = SWT.CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        align = SWT.RIGHT;
+    }
+    if ((style & SWT.LEFT) != 0) {
+        align = SWT.LEFT;
+    }
 
 	addPaintListener(this::onPaint);
 
@@ -172,13 +180,21 @@ private void drawBevelRect(GC gc, int x, int y, int w, int h, Color topleft, Col
  * characters in the given string, return '\0'.
  */
 char _findMnemonic (String string) {
-	if (string == null) return '\0';
+    if (string == null) {
+        return '\0';
+    }
 	int index = 0;
 	int length = string.length ();
 	do {
-		while (index < length && string.charAt (index) != '&') index++;
-		if (++index >= length) return '\0';
-		if (string.charAt (index) != '&') return Character.toLowerCase (string.charAt (index));
+        while (index < length && string.charAt(index) != '&') {
+            index++;
+        }
+        if (++index >= length) {
+            return '\0';
+        }
+        if (string.charAt(index) != '&') {
+            return Character.toLowerCase(string.charAt(index));
+        }
 		index++;
 	} while (index < length);
 	return '\0';
@@ -272,7 +288,9 @@ private Point getTotalSize(Image image, String text) {
 		Point e = gc.textExtent(text, DRAW_FLAGS);
 		size.x += e.x;
 		size.y = Math.max(size.y, e.y);
-		if (image != null) size.x += GAP;
+        if (image != null) {
+            size.x += GAP;
+        }
 	} else {
 		size.y = Math.max(size.y, gc.getFontMetrics().getHeight());
 	}
@@ -396,14 +414,20 @@ void onDispose(Event event) {
 }
 void onMnemonic(TraverseEvent event) {
 	char mnemonic = _findMnemonic(text);
-	if (mnemonic == '\0') return;
-	if (Character.toLowerCase(event.character) != mnemonic) return;
+    if (mnemonic == '\0') {
+        return;
+    }
+    if (Character.toLowerCase(event.character) != mnemonic) {
+        return;
+    }
 	Composite control = this.getParent();
 	while (control != null) {
 		Control [] children = control.getChildren();
 		int index = 0;
 		while (index < children.length) {
-			if (children [index] == this) break;
+            if (children [index] == this) {
+                break;
+            }
 			index++;
 		}
 		index++;
@@ -419,7 +443,9 @@ void onMnemonic(TraverseEvent event) {
 
 void onPaint(PaintEvent event) {
 	Rectangle rect = getClientArea();
-	if (rect.width == 0 || rect.height == 0) return;
+    if (rect.width == 0 || rect.height == 0) {
+        return;
+    }
 
 	boolean shortenText = false;
 	String t = text;
@@ -486,17 +512,23 @@ void onPaint(PaintEvent event) {
 			// draw a gradient behind the text
 			final Color oldBackground = gc.getBackground();
 			if (gradientColors.length == 1) {
-				if (gradientColors[0] != null) gc.setBackground(gradientColors[0]);
+                if (gradientColors[0] != null) {
+                    gc.setBackground(gradientColors[0]);
+                }
 				gc.fillRectangle(0, 0, rect.width, rect.height);
 			} else {
 				final Color oldForeground = gc.getForeground();
 				Color lastColor = gradientColors[0];
-				if (lastColor == null) lastColor = oldBackground;
+                if (lastColor == null) {
+                    lastColor = oldBackground;
+                }
 				int pos = 0;
 				for (int i = 0; i < gradientPercents.length; ++i) {
 					gc.setForeground(lastColor);
 					lastColor = gradientColors[i + 1];
-					if (lastColor == null) lastColor = oldBackground;
+                    if (lastColor == null) {
+                        lastColor = oldBackground;
+                    }
 					gc.setBackground(lastColor);
 					if (gradientVertical) {
 						final int gradientHeight = (gradientPercents[i] * rect.height / 100) - pos;
@@ -557,14 +589,20 @@ void onPaint(PaintEvent event) {
 
 	int imageY = 0, midPoint = 0, lineY = 0;
 	if (imageHeight > textHeight ) {
-		if (topMargin == DEFAULT_MARGIN && bottomMargin == DEFAULT_MARGIN) imageY = rect.y + (rect.height - imageHeight) / 2;
-		else imageY = topMargin;
+        if (topMargin == DEFAULT_MARGIN && bottomMargin == DEFAULT_MARGIN) {
+            imageY = rect.y + (rect.height - imageHeight) / 2;
+        } else {
+            imageY = topMargin;
+        }
 		midPoint = imageY + imageHeight/2;
 		lineY = midPoint - textHeight / 2;
 	}
 	else {
-		if (topMargin == DEFAULT_MARGIN && bottomMargin == DEFAULT_MARGIN) lineY = rect.y + (rect.height - textHeight) / 2;
-		else lineY = topMargin;
+        if (topMargin == DEFAULT_MARGIN && bottomMargin == DEFAULT_MARGIN) {
+            lineY = rect.y + (rect.height - textHeight) / 2;
+        } else {
+            lineY = topMargin;
+        }
 		midPoint = lineY + textHeight/2;
 		imageY = midPoint - imageHeight / 2;
 	}
@@ -651,9 +689,13 @@ public void setBackground (Color color) {
 		gradientColors == null &&
 		gradientPercents == null) {
 		if (color == null) {
-			if (background == null) return;
+            if (background == null) {
+                return;
+            }
 		} else {
-			if (color.equals(background)) return;
+            if (color.equals(background)) {
+                return;
+            }
 		}
 	}
 	background = color;
@@ -752,15 +794,21 @@ public void setBackground(Color[] colors, int[] percents, boolean vertical) {
 				same = (gradientColors[i] == colors[i]) ||
 					((gradientColors[i] == null) && (colors[i] == background)) ||
 					((gradientColors[i] == background) && (colors[i] == null));
-				if (!same) break;
+                if (!same) {
+                    break;
+                }
 			}
 			if (same) {
 				for (int i = 0; i < gradientPercents.length; i++) {
 					same = gradientPercents[i] == percents[i];
-					if (!same) break;
+                    if (!same) {
+                        break;
+                    }
 				}
 			}
-			if (same && this.gradientVertical == vertical) return;
+            if (same && this.gradientVertical == vertical) {
+                return;
+            }
 		}
 	} else {
 		backgroundImage = null;
@@ -772,11 +820,13 @@ public void setBackground(Color[] colors, int[] percents, boolean vertical) {
 		gradientVertical = false;
 	} else {
 		gradientColors = new Color[colors.length];
-		for (int i = 0; i < colors.length; ++i)
-			gradientColors[i] = (colors[i] != null) ? colors[i] : background;
+        for (int i = 0; i < colors.length; ++i) {
+            gradientColors[i] = (colors[i] != null) ? colors[i] : background;
+        }
 		gradientPercents = new int[percents.length];
-		for (int i = 0; i < percents.length; ++i)
-			gradientPercents[i] = percents[i];
+        for (int i = 0; i < percents.length; ++i) {
+            gradientPercents[i] = percents[i];
+        }
 		gradientVertical = vertical;
 	}
 	// Refresh with the new settings
@@ -794,7 +844,9 @@ public void setBackground(Color[] colors, int[] percents, boolean vertical) {
  */
 public void setBackground(Image image) {
 	checkWidget();
-	if (image == backgroundImage) return;
+    if (image == backgroundImage) {
+        return;
+    }
 	if (image != null) {
 		gradientColors = null;
 		gradientPercents = null;
@@ -817,7 +869,9 @@ public void setBackground(Image image) {
  */
 public void setBottomMargin(int bottomMargin) {
 	checkWidget();
-	if (this.bottomMargin == bottomMargin || bottomMargin < 0) return;
+    if (this.bottomMargin == bottomMargin || bottomMargin < 0) {
+        return;
+    }
 	this.bottomMargin = bottomMargin;
 	redraw();
 }
@@ -858,7 +912,9 @@ public void setImage(Image image) {
  */
 public void setLeftMargin(int leftMargin) {
 	checkWidget();
-	if (this.leftMargin == leftMargin || leftMargin < 0) return;
+    if (this.leftMargin == leftMargin || leftMargin < 0) {
+        return;
+    }
 	this.leftMargin = leftMargin;
 	redraw();
 }
@@ -898,7 +954,9 @@ public void setMargins (int leftMargin, int topMargin, int rightMargin, int bott
  */
 public void setRightMargin(int rightMargin) {
 	checkWidget();
-	if (this.rightMargin == rightMargin || rightMargin < 0) return;
+    if (this.rightMargin == rightMargin || rightMargin < 0) {
+        return;
+    }
 	this.rightMargin = rightMargin;
 	redraw();
 }
@@ -928,7 +986,9 @@ public void setRightMargin(int rightMargin) {
  */
 public void setText(String text) {
 	checkWidget();
-	if (text == null) text = ""; //$NON-NLS-1$
+    if (text == null) {
+        text = "";
+    } //$NON-NLS-1$
 	if (! text.equals(this.text)) {
 		this.text = text;
 		redraw();
@@ -953,7 +1013,9 @@ public void setToolTipText (String string) {
  */
 public void setTopMargin(int topMargin) {
 	checkWidget();
-	if (this.topMargin == topMargin || topMargin < 0) return;
+    if (this.topMargin == topMargin || topMargin < 0) {
+        return;
+    }
 	this.topMargin = topMargin;
 	redraw();
 }
@@ -969,14 +1031,20 @@ public void setTopMargin(int topMargin) {
  * @return the shortened text
  */
 protected String shortenText(GC gc, String t, int width) {
-	if (t == null) return null;
+    if (t == null) {
+        return null;
+    }
 	int w = gc.textExtent(ELLIPSIS, DRAW_FLAGS).x;
-	if (width<=w) return t;
+    if (width <= w) {
+        return t;
+    }
 	int l = t.length();
 	int max = l/2;
 	int min = 0;
 	int mid = (max+min)/2 - 1;
-	if (mid <= 0) return t;
+    if (mid <= 0) {
+        return t;
+    }
 	TextLayout layout = new TextLayout (getDisplay());
 	layout.setText(t);
 	mid = validateOffset(layout, mid);
@@ -1001,7 +1069,9 @@ protected String shortenText(GC gc, String t, int width) {
 }
 int validateOffset(TextLayout layout, int offset) {
 	int nextOffset = layout.getNextOffset(offset, SWT.MOVEMENT_CLUSTER);
-	if (nextOffset != offset) return layout.getPreviousOffset(nextOffset, SWT.MOVEMENT_CLUSTER);
+    if (nextOffset != offset) {
+        return layout.getPreviousOffset(nextOffset, SWT.MOVEMENT_CLUSTER);
+    }
 	return offset;
 }
 private String[] splitString(String text) {

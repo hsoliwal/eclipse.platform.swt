@@ -181,12 +181,16 @@ TreeItem (Tree parent, int style, long hParent, long hInsertAfter, long hItem) {
 }
 
 static TreeItem checkNull (TreeItem item) {
-	if (item == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return item;
 }
 
 boolean isCachedState () {
-	if ((parent.style & SWT.VIRTUAL) == 0) return cached;
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return cached;
+    }
 	return parent.virtualFlag (this, VirtualItemState.CACHED);
 }
 
@@ -199,7 +203,9 @@ void setCachedState (boolean value) {
 }
 
 boolean isCheckedState () {
-	if ((parent.style & SWT.VIRTUAL) != 0) return parent.virtualFlag (this, VirtualItemState.CHECKED);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        return parent.virtualFlag(this, VirtualItemState.CHECKED);
+    }
 	long hwnd = parent.handle;
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
@@ -210,11 +216,15 @@ boolean isCheckedState () {
 }
 
 void setCheckedState (boolean value) {
-	if ((parent.style & SWT.VIRTUAL) != 0) parent.virtualFlag (this, VirtualItemState.CHECKED, value);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        parent.virtualFlag(this, VirtualItemState.CHECKED, value);
+    }
 }
 
 boolean isGrayedState () {
-	if ((parent.style & SWT.VIRTUAL) != 0) return parent.virtualFlag (this, VirtualItemState.GRAYED);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        return parent.virtualFlag(this, VirtualItemState.GRAYED);
+    }
 	long hwnd = parent.handle;
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_STATE;
@@ -225,21 +235,29 @@ boolean isGrayedState () {
 }
 
 void setGrayedState (boolean value) {
-	if ((parent.style & SWT.VIRTUAL) != 0) parent.virtualFlag (this, VirtualItemState.GRAYED, value);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        parent.virtualFlag(this, VirtualItemState.GRAYED, value);
+    }
 }
 
 boolean isExpandedState () {
-	if ((parent.style & SWT.VIRTUAL) != 0) return parent.virtualFlag (this, VirtualItemState.EXPANDED);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        return parent.virtualFlag(this, VirtualItemState.EXPANDED);
+    }
 	int state = (int)OS.SendMessage (parent.handle, OS.TVM_GETITEMSTATE, handle, OS.TVIS_EXPANDED);
 	return (state & OS.TVIS_EXPANDED) != 0;
 }
 
 void setExpandedState (boolean value) {
-	if ((parent.style & SWT.VIRTUAL) != 0) parent.virtualFlag (this, VirtualItemState.EXPANDED, value);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        parent.virtualFlag(this, VirtualItemState.EXPANDED, value);
+    }
 }
 
 void pinVirtualFacade () {
-	if ((parent.style & SWT.VIRTUAL) != 0) parent.pinVirtualFacade (this);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        parent.pinVirtualFacade(this);
+    }
 }
 
 void updateNativeVirtualCheckState () {
@@ -249,48 +267,76 @@ void updateNativeVirtualCheckState () {
 	tvItem.stateMask = OS.TVIS_STATEIMAGEMASK;
 	tvItem.hItem = handle;
 	int state = 1;
-	if (isCheckedState ()) state++;
-	if (isGrayedState ()) state += 2;
+    if (isCheckedState()) {
+        state++;
+    }
+    if (isGrayedState()) {
+        state += 2;
+    }
 	tvItem.state = state << 12;
 	OS.SendMessage (hwnd, OS.TVM_SETITEM, 0, tvItem);
 }
 
 static long findLast (TreeItem parentItem) {
-	if (parentItem == null) return 0;
+    if (parentItem == null) {
+        return 0;
+    }
 	Tree parent = parentItem.parent;
-	if ((parent.style & SWT.VIRTUAL) == 0) return OS.TVI_LAST;
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return OS.TVI_LAST;
+    }
 	int count = parent.virtualChildCount (parentItem);
-	if (count == 0) return OS.TVI_FIRST;
+    if (count == 0) {
+        return OS.TVI_FIRST;
+    }
 	return findPrevious (parentItem, count);
 }
 
 static long findPrevious (Tree parent, int index) {
-	if (parent == null) return 0;
-	if (index < 0) SWT.error (SWT.ERROR_INVALID_RANGE);
-	if (index == 0) return OS.TVI_FIRST;
+    if (parent == null) {
+        return 0;
+    }
+    if (index < 0) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
+    if (index == 0) {
+        return OS.TVI_FIRST;
+    }
 	long hwnd = parent.handle;
 	long hFirstItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_ROOT, 0);
 	long hItem = parent.findItem (hFirstItem, index - 1);
-	if (hItem == 0) SWT.error (SWT.ERROR_INVALID_RANGE);
+    if (hItem == 0) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	return hItem;
 }
 
 static long findPrevious (TreeItem parentItem, int index) {
-	if (parentItem == null) return 0;
-	if (index < 0) SWT.error (SWT.ERROR_INVALID_RANGE);
-	if (index == 0) return OS.TVI_FIRST;
+    if (parentItem == null) {
+        return 0;
+    }
+    if (index < 0) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
+    if (index == 0) {
+        return OS.TVI_FIRST;
+    }
 	Tree parent = parentItem.parent;
 	long hwnd = parent.handle, hParent = parentItem.handle;
 	parent.ensureVirtualNativeItem (hParent, index - 1);
 	long hFirstItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, hParent);
 	long hItem = parent.findItem (hFirstItem, index - 1);
-	if (hItem == 0) SWT.error (SWT.ERROR_INVALID_RANGE);
+    if (hItem == 0) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	return hItem;
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 void clear () {
@@ -345,9 +391,13 @@ public void clear (int index, boolean all) {
 	checkWidget ();
 	long hwnd = parent.handle;
 	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
-	if (hItem == 0) error (SWT.ERROR_INVALID_RANGE);
+    if (hItem == 0) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	hItem = parent.findItem (hItem, index);
-	if (hItem == 0) error (SWT.ERROR_INVALID_RANGE);
+    if (hItem == 0) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
 	parent.clear (hItem, tvItem);
@@ -380,7 +430,9 @@ public void clearAll (boolean all) {
 	checkWidget ();
 	long hwnd = parent.handle;
 	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
-	if (hItem == 0) return;
+    if (hItem == 0) {
+        return;
+    }
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
 	parent.clearAll (hItem, tvItem, all);
@@ -396,8 +448,12 @@ void destroyWidget () {
 }
 
 long fontHandle (int index) {
-	if (cellFont != null && cellFont [index] != null) return SWTFontProvider.getFontHandle(cellFont[index], nativeZoom);
-	if (font != null) return SWTFontProvider.getFontHandle(font, nativeZoom);
+    if (cellFont != null && cellFont [index] != null) {
+        return SWTFontProvider.getFontHandle(cellFont[index], nativeZoom);
+    }
+    if (font != null) {
+        return SWTFontProvider.getFontHandle(font, nativeZoom);
+    }
 	return -1;
 }
 
@@ -415,8 +471,12 @@ long fontHandle (int index) {
  */
 public Color getBackground () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (background == -1) return parent.getBackground ();
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (background == -1) {
+        return parent.getBackground();
+    }
 	return Color.win32_new (display, background);
 }
 
@@ -435,9 +495,13 @@ public Color getBackground () {
  */
 public Color getBackground (int index) {
 	checkWidget ();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return getBackground ();
+    if (0 > index || index > count - 1) {
+        return getBackground();
+    }
 	int pixel = cellBackground != null ? cellBackground [index] : -1;
 	return pixel == -1 ? getBackground () : Color.win32_new (display, pixel);
 }
@@ -459,7 +523,9 @@ public Rectangle getBounds () {
 }
 
 Rectangle getBoundsInPixels () {
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	RECT rect = getBounds (0, true, false, false);
 	int width = rect.right - rect.left, height = rect.bottom - rect.top;
 	return new Rectangle (rect.left, rect.top, width, height);
@@ -485,7 +551,9 @@ public Rectangle getBounds (int index) {
 }
 
 Rectangle getBoundsInPixels (int index) {
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	RECT rect = getBounds (index, true, true, true);
 	int width = rect.right - rect.left, height = rect.bottom - rect.top;
 	return new Rectangle (rect.left, rect.top, width, height);
@@ -497,7 +565,9 @@ RECT getBounds (int index, boolean getText, boolean getImage, boolean fullText) 
 
 //TODO - take into account grid (add boolean arg) to damage less during redraw
 RECT getBounds (int index, boolean getText, boolean getImage, boolean fullText, boolean fullImage, boolean clip, long hDC) {
-	if (!getText && !getImage) return new RECT ();
+    if (!getText && !getImage) {
+        return new RECT();
+    }
 	long hwnd = parent.handle;
 	if ((parent.style & SWT.VIRTUAL) == 0 && !cached && !parent.painted) {
 		TVITEM tvItem = new TVITEM ();
@@ -525,9 +595,13 @@ RECT getBounds (int index, boolean getText, boolean getImage, boolean fullText, 
 			if (OS.SendMessage (hwnd, OS.TVM_GETIMAGELIST, OS.TVSIL_NORMAL, 0) != 0) {
 				Point size = parent.getImageSize ();
 				rect.left -= size.x + Tree.INSET;
-				if (!getText) rect.right = rect.left + size.x;
+                if (!getText) {
+                    rect.right = rect.left + size.x;
+                }
 			} else {
-				if (!getText) rect.right = rect.left;
+                if (!getText) {
+                    rect.right = rect.left;
+                }
 			}
 		}
 		if (fullText || fullImage || clip) {
@@ -541,17 +615,25 @@ RECT getBounds (int index, boolean getText, boolean getImage, boolean fullText, 
 				} else {
 					headerRect = new RECT ();
 					headerRect.right = parent.scrollWidth;
-					if (headerRect.right == 0) headerRect = rect;
+                    if (headerRect.right == 0) {
+                        headerRect = rect;
+                    }
 				}
-				if (fullText && clip) rect.right = headerRect.right;
-				if (fullImage) rect.left = headerRect.left;
+                if (fullText && clip) {
+                    rect.right = headerRect.right;
+                }
+                if (fullImage) {
+                    rect.left = headerRect.left;
+                }
 				if (clip && headerRect.right < rect.right) {
 					rect.right = headerRect.right;
 				}
 			}
 		}
 	} else {
-		if (!(0 <= index && index < columnCount)) return new RECT ();
+        if (!(0 <= index && index < columnCount)) {
+            return new RECT();
+        }
 		RECT headerRect = parent.getColumnRect(index);
 		if (headerRect == null) {
 			return new RECT ();
@@ -568,7 +650,9 @@ RECT getBounds (int index, boolean getText, boolean getImage, boolean fullText, 
 			if (index == 0) {
 				image = this.image;
 			} else {
-				if (images != null) image = images [index];
+                if (images != null) {
+                    image = images [index];
+                }
 			}
 			if (image != null) {
 				Point size = parent.getImageSize ();
@@ -588,7 +672,9 @@ RECT getBounds (int index, boolean getText, boolean getImage, boolean fullText, 
 						if (hDC == 0) {
 							hNewDC = OS.GetDC (hwnd);
 							hFont = fontHandle (index);
-							if (hFont == -1) hFont = OS.SendMessage (hwnd, OS.WM_GETFONT, 0, 0);
+                            if (hFont == -1) {
+                                hFont = OS.SendMessage(hwnd, OS.WM_GETFONT, 0, 0);
+                            }
 							hFont = OS.SelectObject (hNewDC, hFont);
 						}
 						OS.DrawText (hNewDC, buffer, buffer.length, textRect, flags);
@@ -632,8 +718,12 @@ RECT getBounds (int index, boolean getText, boolean getImage, boolean fullText, 
  */
 public boolean getChecked () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if ((parent.style & SWT.CHECK) == 0) return false;
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if ((parent.style & SWT.CHECK) == 0) {
+        return false;
+    }
 	return isCheckedState ();
 }
 
@@ -667,7 +757,9 @@ public boolean getExpanded () {
  */
 public Font getFont () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return font != null ? font : parent.getFont ();
 }
 
@@ -687,10 +779,16 @@ public Font getFont () {
  */
 public Font getFont (int index) {
 	checkWidget ();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count -1) return getFont ();
-	if (cellFont == null || cellFont [index] == null) return getFont ();
+    if (0 > index || index > count - 1) {
+        return getFont();
+    }
+    if (cellFont == null || cellFont [index] == null) {
+        return getFont();
+    }
 	return cellFont [index];
 }
 
@@ -708,8 +806,12 @@ public Font getFont (int index) {
  */
 public Color getForeground () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (foreground == -1) return parent.getForeground ();
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (foreground == -1) {
+        return parent.getForeground();
+    }
 	return Color.win32_new (display, foreground);
 }
 
@@ -729,9 +831,13 @@ public Color getForeground () {
  */
 public Color getForeground (int index) {
 	checkWidget ();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count -1) return getForeground ();
+    if (0 > index || index > count - 1) {
+        return getForeground();
+    }
 	int pixel = cellForeground != null ? cellForeground [index] : -1;
 	return pixel == -1 ? getForeground () : Color.win32_new (display, pixel);
 }
@@ -750,8 +856,12 @@ public Color getForeground (int index) {
  */
 public boolean getGrayed () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if ((parent.style & SWT.CHECK) == 0) return false;
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if ((parent.style & SWT.CHECK) == 0) {
+        return false;
+    }
 	return isGrayedState ();
 }
 
@@ -774,14 +884,22 @@ public boolean getGrayed () {
  */
 public TreeItem getItem (int index) {
 	checkWidget ();
-	if (index < 0) error (SWT.ERROR_INVALID_RANGE);
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (index < 0) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	parent.ensureVirtualNativeItem (handle, index);
 	long hwnd = parent.handle;
 	long hFirstItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
-	if (hFirstItem == 0) error (SWT.ERROR_INVALID_RANGE);
+    if (hFirstItem == 0) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	long hItem = parent.findItem (hFirstItem, index);
-	if (hItem == 0) error (SWT.ERROR_INVALID_RANGE);
+    if (hItem == 0) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return parent.exposeVirtualItem (parent._getItem (hItem));
 }
 
@@ -798,7 +916,9 @@ public TreeItem getItem (int index) {
  */
 public int getItemCount () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return parent.virtualChildCount (this);
 }
 
@@ -820,18 +940,24 @@ public int getItemCount () {
  */
 public TreeItem [] getItems () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	parent.restoreVirtualChildren (this);
 	long hwnd = parent.handle;
 	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
-	if (hItem == 0) return new TreeItem [0];
+    if (hItem == 0) {
+        return new TreeItem [0];
+    }
 	return parent.exposeVirtualItems (parent.getItems (hItem));
 }
 
 @Override
 public Image getImage () {
 	checkWidget();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return super.getImage ();
 }
 
@@ -851,10 +977,16 @@ public Image getImage () {
  */
 public Image getImage (int index) {
 	checkWidget();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (index == 0) return getImage ();
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (index == 0) {
+        return getImage();
+    }
 	if (images != null) {
-		if (0 <= index && index < images.length) return images [index];
+        if (0 <= index && index < images.length) {
+            return images [index];
+        }
 	}
 	return null;
 }
@@ -880,7 +1012,9 @@ public Rectangle getImageBounds (int index) {
 }
 
 Rectangle getImageBoundsInPixels (int index) {
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	RECT rect = getBounds (index, false, true, false);
 	int width = rect.right - rect.left, height = rect.bottom - rect.top;
 	return new Rectangle (rect.left, rect.top, width, height);
@@ -923,7 +1057,9 @@ public TreeItem getParentItem () {
 @Override
 public String getText () {
 	checkWidget();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return super.getText ();
 }
 
@@ -943,8 +1079,12 @@ public String getText () {
  */
 public String getText (int index) {
 	checkWidget();
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (index == 0) return getText ();
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (index == 0) {
+        return getText();
+    }
 	if (strings != null) {
 		if (0 <= index && index < strings.length) {
 			String string = strings [index];
@@ -975,9 +1115,13 @@ public Rectangle getTextBounds (int index) {
 }
 
 Rectangle getTextBoundsInPixels (int index) {
-	if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	RECT rect = getBounds (index, true, false, true);
-	if (index == 0) rect.left += Tree.INSET - 1;
+    if (index == 0) {
+        rect.left += Tree.INSET - 1;
+    }
 	rect.left = Math.min (rect.left, rect.right);
 	rect.right = rect.right - Tree.INSET + 1; // Add 1 px margin to avoid truncation of text seen with "Segoe UI" font
 	int width = Math.max (0, rect.right - rect.left);
@@ -1007,17 +1151,25 @@ Rectangle getTextBoundsInPixels (int index) {
  */
 public int indexOf (TreeItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (item.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (item.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	long hwnd = parent.handle;
 	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
 	return hItem == 0 ? -1 : parent.findIndex (hItem, item.handle);
 }
 
 void redraw () {
-	if (parent.currentItem == this || !parent.getDrawing ()) return;
+    if (parent.currentItem == this || !parent.getDrawing()) {
+        return;
+    }
 	long hwnd = parent.handle;
-	if (!OS.IsWindowVisible (hwnd)) return;
+    if (!OS.IsWindowVisible(hwnd)) {
+        return;
+    }
 	/*
 	* When there are no columns and the tree is not
 	* full selection, redraw only the text.  This is
@@ -1039,9 +1191,13 @@ void redraw () {
 }
 
 void redraw (int column, boolean drawText, boolean drawImage) {
-	if (parent.currentItem == this || !parent.getDrawing ()) return;
+    if (parent.currentItem == this || !parent.getDrawing()) {
+        return;
+    }
 	long hwnd = parent.handle;
-	if (!OS.IsWindowVisible (hwnd)) return;
+    if (!OS.IsWindowVisible(hwnd)) {
+        return;
+    }
 	boolean fullImage = column == 0 && drawText && drawImage;
 	RECT rect = getBounds (column, drawText, drawImage, true, fullImage, true, 0);
 	OS.InvalidateRect (hwnd, rect, true);
@@ -1143,9 +1299,13 @@ public void setBackground (Color color) {
 		parent.customDraw = true;
 		pixel = color.handle;
 	}
-	if (background == pixel) return;
+    if (background == pixel) {
+        return;
+    }
 	background = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        setCachedState(true);
+    }
 	redraw ();
 }
 
@@ -1173,7 +1333,9 @@ public void setBackground (int index, Color color) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	int pixel = -1;
 	if (color != null) {
 		parent.customDraw = true;
@@ -1185,9 +1347,13 @@ public void setBackground (int index, Color color) {
 			cellBackground [i] = -1;
 		}
 	}
-	if (cellBackground [index] == pixel) return;
+    if (cellBackground [index] == pixel) {
+        return;
+    }
 	cellBackground [index] = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        setCachedState(true);
+    }
 	redraw (index, true, true);
 }
 
@@ -1203,10 +1369,14 @@ public void setBackground (int index, Color color) {
  */
 public void setChecked (boolean checked) {
 	checkWidget ();
-	if ((parent.style & SWT.CHECK) == 0) return;
+    if ((parent.style & SWT.CHECK) == 0) {
+        return;
+    }
 	long hwnd = parent.handle;
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (isCheckedState () == checked) return;
+        if (isCheckedState() == checked) {
+            return;
+        }
 		setCheckedState (checked);
 		setCachedState (true);
 		updateNativeVirtualCheckState ();
@@ -1225,12 +1395,18 @@ public void setChecked (boolean checked) {
 	OS.SendMessage (hwnd, OS.TVM_GETITEM, 0, tvItem);
 	int state = tvItem.state >> 12;
 	if (checked) {
-		if ((state & 0x1) != 0) state++;
+        if ((state & 0x1) != 0) {
+            state++;
+        }
 	} else {
-		if ((state & 0x1) == 0) --state;
+        if ((state & 0x1) == 0) {
+            --state;
+        }
 	}
 	state <<= 12;
-	if (tvItem.state == state) return;
+    if (tvItem.state == state) {
+        return;
+    }
 	tvItem.state = state;
 	OS.SendMessage (hwnd, OS.TVM_SETITEM, 0, tvItem);
 }
@@ -1262,7 +1438,9 @@ public void setExpanded (boolean expanded) {
 	int state = (int)OS.SendMessage (hwnd, OS.TVM_GETITEMSTATE, handle, OS.TVIS_EXPANDED);
 	if (((state & OS.TVIS_EXPANDED) != 0) == expanded) {
 		setExpandedState (expanded);
-		if (!expanded) parent.scheduleVirtualCollapseCompaction (this);
+        if (!expanded) {
+            parent.scheduleVirtualCollapseCompaction(this);
+        }
 		return;
 	}
 
@@ -1337,13 +1515,17 @@ public void setExpanded (boolean expanded) {
 	*/
 	long hOldItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0);
 
-	/* Expand or collapse the item */
-	if (expanded) parent.restoreVirtualChildren (this);
+    /* Expand or collapse the item */
+    if (expanded) {
+        parent.restoreVirtualChildren(this);
+    }
 	parent.ignoreExpand = true;
 	OS.SendMessage (hwnd, OS.TVM_EXPAND, expanded ? OS.TVE_EXPAND : OS.TVE_COLLAPSE, handle);
 	parent.ignoreExpand = false;
 	setExpandedState (expanded);
-	if (!expanded) parent.scheduleVirtualCollapseCompaction (this);
+    if (!expanded) {
+        parent.scheduleVirtualCollapseCompaction(this);
+    }
 
 	/* Scroll back to the top item */
 	if (noScroll && hTopItem != 0) {
@@ -1454,11 +1636,19 @@ public void setFont (Font font){
 	}
 	Font oldFont = this.font;
 	Font newFont = (font == null ? font : Font.win32_new(font, nativeZoom));
-	if (oldFont == newFont) return;
+    if (oldFont == newFont) {
+        return;
+    }
 	this.font = newFont;
-	if (oldFont != null && oldFont.equals (font)) return;
-	if (font != null) parent.customDraw = true;
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
+    if (font != null) {
+        parent.customDraw = true;
+    }
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        setCachedState(true);
+    }
 	/*
 	* Bug in Windows.  When the font is changed for an item,
 	* the bounds for the item are not updated, causing the text
@@ -1502,17 +1692,29 @@ public void setFont (int index, Font font) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	if (cellFont == null) {
-		if (font == null) return;
+        if (font == null) {
+            return;
+        }
 		cellFont = new Font [count];
 	}
 	Font oldFont = cellFont [index];
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	cellFont [index] = font == null ? font : Font.win32_new(font, nativeZoom);
-	if (oldFont != null && oldFont.equals (font)) return;
-	if (font != null) parent.customDraw = true;
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
+    if (font != null) {
+        parent.customDraw = true;
+    }
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        setCachedState(true);
+    }
 	/*
 	* Bug in Windows.  When the font is changed for an item,
 	* the bounds for the item are not updated, causing the text
@@ -1561,9 +1763,13 @@ public void setForeground (Color color) {
 		parent.customDraw = true;
 		pixel = color.handle;
 	}
-	if (foreground == pixel) return;
+    if (foreground == pixel) {
+        return;
+    }
 	foreground = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        setCachedState(true);
+    }
 	redraw ();
 }
 
@@ -1591,7 +1797,9 @@ public void setForeground (int index, Color color){
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	int pixel = -1;
 	if (color != null) {
 		parent.customDraw = true;
@@ -1603,9 +1811,13 @@ public void setForeground (int index, Color color){
 			cellForeground [i] = -1;
 		}
 	}
-	if (cellForeground [index] == pixel) return;
+    if (cellForeground [index] == pixel) {
+        return;
+    }
 	cellForeground [index] = pixel;
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        setCachedState(true);
+    }
 	redraw (index, true, false);
 }
 
@@ -1622,10 +1834,14 @@ public void setForeground (int index, Color color){
  */
 public void setGrayed (boolean grayed) {
 	checkWidget ();
-	if ((parent.style & SWT.CHECK) == 0) return;
+    if ((parent.style & SWT.CHECK) == 0) {
+        return;
+    }
 	long hwnd = parent.handle;
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (isGrayedState () == grayed) return;
+        if (isGrayedState() == grayed) {
+            return;
+        }
 		setGrayedState (grayed);
 		setCachedState (true);
 		updateNativeVirtualCheckState ();
@@ -1644,12 +1860,18 @@ public void setGrayed (boolean grayed) {
 	OS.SendMessage (hwnd, OS.TVM_GETITEM, 0, tvItem);
 	int state = tvItem.state >> 12;
 	if (grayed) {
-		if (state <= 2) state +=2;
+        if (state <= 2) {
+            state += 2;
+        }
 	} else {
-		if (state > 2) state -=2;
+        if (state > 2) {
+            state -= 2;
+        }
 	}
 	state <<= 12;
-	if (tvItem.state == state) return;
+    if (tvItem.state == state) {
+        return;
+    }
 	tvItem.state = state;
 	OS.SendMessage (hwnd, OS.TVM_SETITEM, 0, tvItem);
 }
@@ -1672,7 +1894,9 @@ public void setGrayed (boolean grayed) {
  */
 public void setImage (Image [] images) {
 	checkWidget();
-	if (images == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (images == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<images.length; i++) {
 		setImage (i, images [i]);
 	}
@@ -1702,25 +1926,33 @@ public void setImage (int index, Image image) {
 	Image oldImage = null;
 	if (index == 0) {
 		if (image != null && image.type == SWT.ICON) {
-			if (image.equals (this.image)) return;
+            if (image.equals(this.image)) {
+                return;
+            }
 		}
 		oldImage = this.image;
 		super.setImage (image);
 	}
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	if (images == null && index != 0) {
 		images = new Image [count];
 		images [0] = image;
 	}
 	if (images != null) {
 		if (image != null && image.type == SWT.ICON) {
-			if (image.equals (images [index])) return;
+            if (image.equals(images [index])) {
+                return;
+            }
 		}
 		oldImage = images [index];
 		images [index] = image;
 	}
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        setCachedState(true);
+    }
 
 	/* Ensure that the image list is created */
 	//TODO - items that are not in column zero don't need to be in the image list
@@ -1800,10 +2032,14 @@ public void setItemCount (int count) {
  */
 public void setText (String [] strings) {
 	checkWidget();
-	if (strings == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (strings == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<strings.length; i++) {
 		String string = strings [i];
-		if (string != null) setText (i, string);
+        if (string != null) {
+            setText(i, string);
+        }
 	}
 }
 
@@ -1828,22 +2064,32 @@ public void setText (String [] strings) {
  */
 public void setText (int index, String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (index == 0) {
-		if (string.equals (text)) return;
+        if (string.equals(text)) {
+            return;
+        }
 		super.setText (string);
 	}
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	if (strings == null && index != 0) {
 		strings = new String [count];
 		strings [0] = text;
 	}
 	if (strings != null) {
-		if (string.equals (strings [index])) return;
+        if (string.equals(strings [index])) {
+            return;
+        }
 		strings [index] = string;
 	}
-	if ((parent.style & SWT.VIRTUAL) != 0) setCachedState (true);
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        setCachedState(true);
+    }
 	if (index == 0) {
 		if ((parent.style & SWT.VIRTUAL) == 0 && !cached && !parent.painted) {
 			return;
@@ -1867,14 +2113,18 @@ public void setText (String string) {
 
 /*public*/ void sort () {
 	checkWidget ();
-	if ((parent.style & SWT.VIRTUAL) != 0) return;
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        return;
+    }
 	parent.sort (handle, false);
 }
 
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (!isCachedState ()) return "*virtual*"; //$NON-NLS-1$
+        if (!isCachedState()) {
+            return "*virtual*";
+        } //$NON-NLS-1$
 	}
 	return super.getNameText ();
 }

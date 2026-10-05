@@ -104,8 +104,11 @@ public static void main (String [] args) {
 	Display display = new Display();
 	JavaViewer example = new JavaViewer ();
 	Shell shell = example.open (display);
-	while (!shell.isDisposed ())
-		if (!display.readAndDispatch ()) display.sleep ();
+    while (!shell.isDisposed()) {
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
+    }
 	display.dispose ();
 }
 
@@ -132,7 +135,9 @@ void openFile() {
 void open(String name) {
 	final String textString;
 
-	if ((name == null) || (name.length() == 0)) return;
+    if ((name == null) || (name.length() == 0)) {
+        return;
+    }
 
 	File file = new File(name);
 	if (!file.exists()) {

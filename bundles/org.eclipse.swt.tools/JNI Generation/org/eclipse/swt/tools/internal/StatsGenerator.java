@@ -126,15 +126,21 @@ void generateStatsNatives(String className) {
 }
 
 void generateFunctionEnum(JNIMethod[] methods) {
-	if (methods.length == 0) return;
+    if (methods.length == 0) {
+        return;
+    }
 	outputln("typedef enum {");
 	for (JNIMethod method : methods) {
-		if ((method.getModifiers() & Modifier.NATIVE) == 0) continue;
+        if ((method.getModifiers() & Modifier.NATIVE) == 0) {
+            continue;
+        }
 		String function = getFunctionName(method);
 		output("\t");
 		output(function);
 		outputln("_FUNC,");
-		if (progress != null) progress.step();
+        if (progress != null) {
+            progress.step();
+        }
 	}
 	JNIClass clazz = methods[0].getDeclaringClass();
 	output("} ");

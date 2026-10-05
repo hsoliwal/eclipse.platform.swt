@@ -70,8 +70,9 @@ public static void main (String [] args) {
 		}
 		@Override
 		public void dragFinished(DragSourceEvent event) {
-			if (event.detail == DND.DROP_MOVE)
-				dragSourceItem[0].dispose();
+            if (event.detail == DND.DROP_MOVE) {
+                dragSourceItem[0].dispose();
+            }
 				dragSourceItem[0] = null;
 		}
 	});
@@ -159,7 +160,9 @@ public static void main (String [] args) {
 	shell.setSize (400, 400);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

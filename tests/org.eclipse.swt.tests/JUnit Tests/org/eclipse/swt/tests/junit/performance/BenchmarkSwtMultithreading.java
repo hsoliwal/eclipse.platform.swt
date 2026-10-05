@@ -46,9 +46,10 @@ public class BenchmarkSwtMultithreading {
 
 				long nanoTime = System.nanoTime();
 				while (countdown.get() > 0) {
-					// handling;
-					if (!display.readAndDispatch())
-						display.sleep();
+                    // handling;
+                    if (!display.readAndDispatch()) {
+                        display.sleep();
+                    }
 				}
 				long nanoTime2 = System.nanoTime();
 				long durationNanos = nanoTime2 - nanoTime;

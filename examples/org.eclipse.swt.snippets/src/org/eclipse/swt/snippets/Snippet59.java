@@ -30,27 +30,33 @@ public static void main (String [] args) {
 	Shell shell = new Shell (display);
 	shell.setText("Snippet 59");
 	final List list = new List (shell, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
-	for (int i=0; i<128; i++) list.add ("Item " + i);
+    for (int i = 0; i < 128; i++) {
+        list.add("Item " + i);
+    }
 	Rectangle clientArea = shell.getClientArea ();
 	list.setBounds (clientArea.x, clientArea.y, 100, 100);
 	list.addListener (SWT.Selection, e -> {
 		String string = "";
 		int [] selection = list.getSelectionIndices ();
-		for (int element : selection)
-			string += element + " ";
+        for (int element : selection) {
+            string += element + " ";
+        }
 		System.out.println ("Selection={" + string + "}");
 	});
 	list.addListener (SWT.DefaultSelection, e -> {
 		String string = "";
 		int [] selection = list.getSelectionIndices ();
-		for (int element : selection)
-			string += element + " ";
+        for (int element : selection) {
+            string += element + " ";
+        }
 		System.out.println ("DefaultSelection={" + string + "}");
 	});
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

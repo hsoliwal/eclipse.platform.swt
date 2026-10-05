@@ -603,14 +603,20 @@ Control _getFocusControl () {
 }
 
 void addBar (Menu menu) {
-	if (bars == null) bars = new Menu [4];
+    if (bars == null) {
+        bars = new Menu [4];
+    }
 	int length = bars.length;
 	for (int i=0; i<length; i++) {
-		if (bars [i] == menu) return;
+        if (bars [i] == menu) {
+            return;
+        }
 	}
 	int index = 0;
 	while (index < length) {
-		if (bars [index] == null) break;
+        if (bars [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -621,7 +627,9 @@ void addBar (Menu menu) {
 	bars [index] = menu;
 }
 void addControl (long handle, Control control) {
-	if (handle == 0) return;
+    if (handle == 0) {
+        return;
+    }
 	controlByHandle.put(handle, control);
 }
 
@@ -672,13 +680,19 @@ void addSkinnableWidget (Widget widget) {
  */
 public void addFilter (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (filterTable == null) filterTable = new EventTable ();
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (filterTable == null) {
+        filterTable = new EventTable();
+    }
 	filterTable.hook (eventType, listener);
 }
 
 void addLayoutDeferred (Composite comp) {
-	if (layoutDeferred == null) layoutDeferred = new Composite [64];
+    if (layoutDeferred == null) {
+        layoutDeferred = new Composite [64];
+    }
 	if (layoutDeferredCount == layoutDeferred.length) {
 		Composite [] temp = new Composite [layoutDeferred.length + 64];
 		System.arraycopy (layoutDeferred, 0, temp, 0, layoutDeferred.length);
@@ -713,13 +727,19 @@ void addLayoutDeferred (Composite comp) {
  */
 public void addListener (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) eventTable = new EventTable ();
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        eventTable = new EventTable();
+    }
 	eventTable.hook (eventType, listener);
 }
 
 void addMenuItem (MenuItem item) {
-	if (items == null) items = new MenuItem [64];
+    if (items == null) {
+        items = new MenuItem [64];
+    }
 	for (int i=0; i<items.length; i++) {
 		if (items [i] == null) {
 			item.id = i + ID_START;
@@ -735,14 +755,20 @@ void addMenuItem (MenuItem item) {
 }
 
 void addPopup (Menu menu) {
-	if (popups == null) popups = new Menu [4];
+    if (popups == null) {
+        popups = new Menu [4];
+    }
 	int length = popups.length;
 	for (int i=0; i<length; i++) {
-		if (popups [i] == menu) return;
+        if (popups [i] == menu) {
+            return;
+        }
 	}
 	int index = 0;
 	while (index < length) {
-		if (popups [index] == null) break;
+        if (popups [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -754,9 +780,13 @@ void addPopup (Menu menu) {
 }
 
 int asciiKey (int key) {
-	/* Get the current keyboard. */
-	for (int i=0; i<keyboard.length; i++) keyboard [i] = 0;
-	if (!OS.GetKeyboardState (keyboard)) return 0;
+    /* Get the current keyboard. */
+    for (int i = 0; i < keyboard.length; i++) {
+        keyboard [i] = 0;
+    }
+    if (!OS.GetKeyboardState(keyboard)) {
+        return 0;
+    }
 
 	/* Translate the key to ASCII or UNICODE using the virtual keyboard */
 	char [] buffer = new char [1];
@@ -793,7 +823,9 @@ int asciiKey (int key) {
  */
 public void asyncExec (Runnable runnable) {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		synchronizer.asyncExec (runnable);
 	}
 }
@@ -868,48 +900,72 @@ public void beep () {
  * @see Widget#checkSubclass
  */
 protected void checkSubclass () {
-	if (!isValidClass (getClass ())) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidClass(getClass())) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
 protected void checkDevice () {
-	if (thread == null) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (thread != Thread.currentThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
-	if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+    if (thread == null) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (thread != Thread.currentThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
+    if (isDisposed()) {
+        error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 }
 
 static void checkDisplay (Thread thread, boolean multiple) {
 	synchronized (Device.class) {
 		for (Display display : Displays) {
 			if (display != null) {
-				if (!multiple) SWT.error (SWT.ERROR_NOT_IMPLEMENTED, null, " [multiple displays]"); //$NON-NLS-1$
-				if (display.thread == thread)
-					SWT.error(SWT.ERROR_THREAD_INVALID_ACCESS, null,
-							" Another Display is already associated by this thread: " + thread);
+                if (!multiple) {
+                    SWT.error(SWT.ERROR_NOT_IMPLEMENTED, null, " [multiple displays]");
+                } //$NON-NLS-1$
+                if (display.thread == thread) {
+                    SWT.error(SWT.ERROR_THREAD_INVALID_ACCESS, null,
+                            " Another Display is already associated by this thread: " + thread);
+                }
 			}
 		}
 	}
 }
 
 void clearModal (Shell shell) {
-	if (modalShells == null) return;
+    if (modalShells == null) {
+        return;
+    }
 	int index = 0, length = modalShells.length;
 	while (index < length) {
-		if (modalShells [index] == shell) break;
-		if (modalShells [index] == null) return;
+        if (modalShells [index] == shell) {
+            break;
+        }
+        if (modalShells [index] == null) {
+            return;
+        }
 		index++;
 	}
-	if (index == length) return;
+    if (index == length) {
+        return;
+    }
 	System.arraycopy (modalShells, index + 1, modalShells, index, --length - index);
 	modalShells [length] = null;
-	if (index == 0 && modalShells [0] == null) modalShells = null;
-	for (Shell activeShell : getShells ())
-		activeShell.updateModal ();
+    if (index == 0 && modalShells [0] == null) {
+        modalShells = null;
+    }
+    for (Shell activeShell : getShells()) {
+        activeShell.updateModal();
+    }
 }
 
 int controlKey (int key) {
 	int upper = (int)OS.CharUpper (OS.LOWORD (key));
-	if (64 <= upper && upper <= 95) return upper & 0xBF;
+    if (64 <= upper && upper <= 95) {
+        return upper & 0xBF;
+    }
 	return key;
 }
 
@@ -930,7 +986,9 @@ public void close () {
 	checkDevice ();
 	Event event = new Event ();
 	sendEvent (SWT.Close, event);
-	if (event.doit) dispose ();
+    if (event.doit) {
+        dispose();
+    }
 }
 
 /**
@@ -952,7 +1010,9 @@ protected void create (DeviceData data) {
 	initializeAutoscaling(DPIUtil.isMonitorSpecificScalingActive());
 	createDisplay (data);
 	register (this);
-	if (Default == null) Default = this;
+    if (Default == null) {
+        Default = this;
+    }
 }
 
 void createDisplay (DeviceData data) {
@@ -997,7 +1057,9 @@ static long create32bitDIB (Image image, int zoom) {
 	OS.MoveMemory (bmi, bmiHeader, BITMAPINFOHEADER.sizeof);
 	long [] pBits = new long [1];
 	long memDib = OS.CreateDIBSection (0, bmi, OS.DIB_RGB_COLORS, pBits, 0, 0);
-	if (memDib == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (memDib == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	long oldMemBitmap = OS.SelectObject (memHdc, memDib);
 	BITMAP dibBM = new BITMAP ();
 	OS.GetObject (memDib, BITMAP.sizeof, dibBM);
@@ -1070,8 +1132,12 @@ static long create32bitDIB (Image image, int zoom) {
 	OS.DeleteObject (srcHdc);
 	OS.DeleteObject (memHdc);
 	OS.ReleaseDC (0, hDC);
-	if (hBitmap != handle && hBitmap != 0) OS.DeleteObject (hBitmap);
-	if (hMask != 0) OS.DeleteObject (hMask);
+    if (hBitmap != handle && hBitmap != 0) {
+        OS.DeleteObject(hBitmap);
+    }
+    if (hMask != 0) {
+        OS.DeleteObject(hMask);
+    }
 	return memDib;
 }
 static long create32bitDIB (long hBitmap, int alpha, byte [] alphaData, int transparentPixel) {
@@ -1094,7 +1160,9 @@ static long create32bitDIB (long hBitmap, int alpha, byte [] alphaData, int tran
 	OS.MoveMemory (bmi, bmiHeader, BITMAPINFOHEADER.sizeof);
 	long [] pBits = new long [1];
 	long memDib = OS.CreateDIBSection (0, bmi, OS.DIB_RGB_COLORS, pBits, 0, 0);
-	if (memDib == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (memDib == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	long oldMemBitmap = OS.SelectObject (memHdc, memDib);
 	BITMAP dibBM = new BITMAP ();
 	OS.GetObject (memDib, BITMAP.sizeof, dibBM);
@@ -1204,8 +1272,9 @@ static Image createIcon (Image image, int zoom) {
 		info.hbmColor = hBitmap;
 		info.hbmMask = hMask;
 		long hIcon = OS.CreateIconIndirect(info);
-		if (hIcon == 0)
-			SWT.error(SWT.ERROR_NO_HANDLES);
+        if (hIcon == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		OS.DeleteObject(hBitmap);
 		OS.DeleteObject(hMask);
 		return Image.win32_new(device, SWT.ICON, hIcon, zoom);
@@ -1216,7 +1285,9 @@ long getTextSearchIcon(int size) {
 	if (!sizeToSearchIconHandle.containsKey(size)) {
 		int searchIconResource = textUseDarkthemeIcons ? Text.IDI_SEARCH_DARKTHEME : Text.IDI_SEARCH;
 	    long iconHandle = OS.LoadImage (OS.GetLibraryHandle (), searchIconResource, OS.IMAGE_ICON, size, size, 0);
-	    if (iconHandle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (iconHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 	    sizeToSearchIconHandle.put(size, iconHandle);
 	}
     return sizeToSearchIconHandle.get(size);
@@ -1226,7 +1297,9 @@ long getTextCancelIcon(int size) {
 	if (!sizeToCancelIconHandle.containsKey(size)) {
 		int searchIconResource = textUseDarkthemeIcons ? Text.IDI_CANCEL_DARKTHEME : Text.IDI_CANCEL;
 	    long iconHandle = OS.LoadImage (OS.GetLibraryHandle (), searchIconResource, OS.IMAGE_ICON, size, size, 0);
-	    if (iconHandle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (iconHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 	    sizeToCancelIconHandle.put(size, iconHandle);
 	}
     return sizeToCancelIconHandle.get(size);
@@ -1235,7 +1308,9 @@ long getTextCancelIcon(int size) {
 static void deregister (Display display) {
 	synchronized (Device.class) {
 		for (int i=0; i<Displays.length; i++) {
-			if (display == Displays [i]) Displays [i] = null;
+            if (display == Displays [i]) {
+                Displays [i] = null;
+            }
 		}
 	}
 }
@@ -1252,7 +1327,9 @@ static void deregister (Display display) {
  */
 @Override
 protected void destroy () {
-	if (this == Default) Default = null;
+    if (this == Default) {
+        Default = null;
+    }
 	deregister (this);
 	destroyDisplay ();
 }
@@ -1275,7 +1352,9 @@ void destroyDisplay () {
  */
 public void disposeExec (Runnable runnable) {
 	checkDevice ();
-	if (disposeList == null) disposeList = new Runnable [4];
+    if (disposeList == null) {
+        disposeList = new Runnable [4];
+    }
 	for (int i=0; i<disposeList.length; i++) {
 		if (disposeList [i] == null) {
 			disposeList [i] = runnable;
@@ -1289,9 +1368,13 @@ public void disposeExec (Runnable runnable) {
 }
 
 void drawMenuBars () {
-	if (bars == null) return;
+    if (bars == null) {
+        return;
+    }
 	for (Menu menu : bars) {
-		if (menu != null && !menu.isDisposed ()) menu.update ();
+        if (menu != null && !menu.isDisposed()) {
+            menu.update();
+        }
 	}
 	bars = null;
 }
@@ -1309,8 +1392,12 @@ long embeddedProc (long hwnd, long msg, long wParam, long lParam) {
 		}
 		case SWT_DESTROY: {
 			OS.DestroyWindow (hwnd);
-			if (embeddedCallback != null) embeddedCallback.dispose ();
-			if (getMsgCallback != null) getMsgCallback.dispose ();
+            if (embeddedCallback != null) {
+                embeddedCallback.dispose();
+            }
+            if (getMsgCallback != null) {
+                getMsgCallback.dispose();
+            }
 			embeddedCallback = getMsgCallback = null;
 			embeddedProc = getMsgProc = 0;
 			break;
@@ -1345,7 +1432,9 @@ boolean filterEvent (Event event) {
 }
 
 boolean filters (int eventType) {
-	if (filterTable == null) return false;
+    if (filterTable == null) {
+        return false;
+    }
 	return filterTable.hooks (eventType);
 }
 
@@ -1365,11 +1454,15 @@ boolean filterMessage (MSG msg) {
 }
 
 Control findControl (long handle) {
-	if (handle == 0) return null;
+    if (handle == 0) {
+        return null;
+    }
 	long hwndOwner = 0;
 	do {
 		Control control = getControl (handle);
-		if (control != null) return control;
+        if (control != null) {
+            return control;
+        }
 		hwndOwner = OS.GetWindow (handle, OS.GW_OWNER);
 		handle = OS.GetParent (handle);
 	} while (handle != 0 && handle != hwndOwner);
@@ -1484,7 +1577,9 @@ long foregroundIdleProc (long code, long wParam, long lParam) {
 			*/
 			MSG msg = new MSG();
 			int flags = OS.PM_NOREMOVE | OS.PM_NOYIELD | OS.PM_QS_INPUT;
-			if (!OS.PeekMessage (msg, 0, 0, 0, flags)) wakeThread ();
+            if (!OS.PeekMessage(msg, 0, 0, 0, flags)) {
+                wakeThread();
+            }
 			sendPreExternalEventDispatchEvent ();
 			return true;
 		};
@@ -1523,7 +1618,9 @@ public static Display findDisplay (Thread thread) {
 }
 
 TouchSource findTouchSource (long touchDevice, Monitor monitor) {
-	if (touchSources == null) touchSources = new TouchSource [4];
+    if (touchSources == null) {
+        touchSources = new TouchSource [4];
+    }
 	int length = touchSources.length;
 	for (int i=0; i<length; i++) {
 		if (touchSources [i] != null && touchSources [i].handle == touchDevice) {
@@ -1532,7 +1629,9 @@ TouchSource findTouchSource (long touchDevice, Monitor monitor) {
 	}
 	int index = 0;
 	while (index < length) {
-		if (touchSources [index] == null) break;
+        if (touchSources [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -1624,7 +1723,9 @@ int getClickCount (int type, int button, long hwnd, long lParam) {
 	switch (type) {
 		case SWT.MouseDown:
 			int doubleClick = OS.GetDoubleClickTime ();
-			if (clickRect == null) clickRect = new RECT ();
+            if (clickRect == null) {
+                clickRect = new RECT();
+            }
 			int deltaTime = Math.abs (lastTime - getLastEventTime ());
 			POINT pt = new POINT ();
 			OS.POINTSTOPOINT (pt, lParam);
@@ -1704,7 +1805,9 @@ Control getControl (long handle) {
 public Control getCursorControl () {
 	checkDevice ();
 	POINT pt = new POINT ();
-	if (!OS.GetCursorPos (pt)) return null;
+    if (!OS.GetCursorPos(pt)) {
+        return null;
+    }
 	return findControl (OS.WindowFromPoint (pt));
 }
 
@@ -1779,7 +1882,9 @@ public Point [] getCursorSizes () {
  */
 public static Display getDefault () {
 	synchronized (Device.class) {
-		if (Default == null) Default = new Display ();
+        if (Default == null) {
+            Default = new Display();
+        }
 		return Default;
 	}
 }
@@ -1829,7 +1934,9 @@ static boolean isValidClass (Class<?> clazz) {
  */
 public Object getData (String key) {
 	checkDevice ();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (key.equals (RUN_MESSAGES_IN_IDLE_KEY)) {
 		return runMessagesInIdle;
 	}
@@ -1845,9 +1952,13 @@ public Object getData (String key) {
 	if (key.equals (APPLOCAL_DIR_KEY)) {
 		return appLocalDir;
 	}
-	if (keys == null) return null;
+    if (keys == null) {
+        return null;
+    }
 	for (int i=0; i<keys.length; i++) {
-		if (keys [i].equals (key)) return values [i];
+        if (keys [i].equals(key)) {
+            return values [i];
+        }
 	}
 	return null;
 }
@@ -1945,7 +2056,9 @@ String getFontName (LOGFONT logFont) {
 	char[] chars = logFont.lfFaceName;
 	int index = 0;
 	while (index < chars.length) {
-		if (chars [index] == 0) break;
+        if (chars [index] == 0) {
+            break;
+        }
 		index++;
 	}
 	return new String (chars, 0, index);
@@ -1991,12 +2104,16 @@ public boolean getHighContrast () {
  */
 public int getIconDepth () {
 	checkDevice ();
-	if (getDepth () >= 24) return 32;
+    if (getDepth() >= 24) {
+        return 32;
+    }
 
 	TCHAR buffer1 = new TCHAR ("Control Panel\\Desktop\\WindowMetrics", true); //$NON-NLS-1$
 	long [] phkResult = new long [1];
 	int result = OS.RegOpenKeyEx (OS.HKEY_CURRENT_USER, buffer1, 0, OS.KEY_READ, phkResult);
-	if (result != 0) return 4;
+    if (result != 0) {
+        return 4;
+    }
 	int depth = 4;
 	int [] lpcbData = new int [1];
 
@@ -2038,13 +2155,17 @@ public Point [] getIconSizes () {
 }
 
 ImageList getImageList (int style, int width, int height, int zoom) {
-	if (imageList == null) imageList = new ImageList [4];
+    if (imageList == null) {
+        imageList = new ImageList [4];
+    }
 
 	int i = 0;
 	int length = imageList.length;
 	while (i < length) {
 		ImageList list = imageList [i];
-		if (list == null) break;
+        if (list == null) {
+            break;
+        }
 		if (list.isFittingFor(style, width, height)) {
 			list.addRef();
 			return list;
@@ -2065,13 +2186,17 @@ ImageList getImageList (int style, int width, int height, int zoom) {
 }
 
 ImageList getImageListToolBar (int style, int width, int height, int zoom) {
-	if (toolImageList == null) toolImageList = new ImageList [4];
+    if (toolImageList == null) {
+        toolImageList = new ImageList [4];
+    }
 
 	int i = 0;
 	int length = toolImageList.length;
 	while (i < length) {
 		ImageList list = toolImageList [i];
-		if (list == null) break;
+        if (list == null) {
+            break;
+        }
 		if (list.isFittingFor(style, width, height)) {
 			list.addRef();
 			return list;
@@ -2092,13 +2217,17 @@ ImageList getImageListToolBar (int style, int width, int height, int zoom) {
 }
 
 ImageList getImageListToolBarDisabled (int style, int width, int height, int zoom) {
-	if (toolDisabledImageList == null) toolDisabledImageList = new ImageList [4];
+    if (toolDisabledImageList == null) {
+        toolDisabledImageList = new ImageList [4];
+    }
 
 	int i = 0;
 	int length = toolDisabledImageList.length;
 	while (i < length) {
 		ImageList list = toolDisabledImageList [i];
-		if (list == null) break;
+        if (list == null) {
+            break;
+        }
 		if (list.isFittingFor(style, width, height)) {
 			list.addRef();
 			return list;
@@ -2119,13 +2248,17 @@ ImageList getImageListToolBarDisabled (int style, int width, int height, int zoo
 }
 
 ImageList getImageListToolBarHot (int style, int width, int height, int zoom) {
-	if (toolHotImageList == null) toolHotImageList = new ImageList [4];
+    if (toolHotImageList == null) {
+        toolHotImageList = new ImageList [4];
+    }
 
 	int i = 0;
 	int length = toolHotImageList.length;
 	while (i < length) {
 		ImageList list = toolHotImageList [i];
-		if (list == null) break;
+        if (list == null) {
+            break;
+        }
 		if (list.isFittingFor(style, width, height)) {
 			list.addRef();
 			return list;
@@ -2198,18 +2331,26 @@ int getLastEventTime () {
 }
 
 MenuItem getMenuItem (int id) {
-	if (items == null) return null;
+    if (items == null) {
+        return null;
+    }
 	id = id - ID_START;
-	if (0 <= id && id < items.length) return items [id];
+    if (0 <= id && id < items.length) {
+        return items [id];
+    }
 	return null;
 }
 
 Shell getModalShell () {
-	if (modalShells == null) return null;
+    if (modalShells == null) {
+        return null;
+    }
 	int index = modalShells.length;
 	while (--index >= 0) {
 		Shell shell = modalShells [index];
-		if (shell != null) return shell;
+        if (shell != null) {
+            return shell;
+        }
 	}
 	return null;
 }
@@ -2347,7 +2488,9 @@ public Shell [] getShells () {
 		if (control instanceof Shell) {
 			int j = 0;
 			while (j < index) {
-				if (result [j] == control) break;
+                if (result [j] == control) {
+                    break;
+                }
 				j++;
 			}
 			if (j == index) {
@@ -2360,7 +2503,9 @@ public Shell [] getShells () {
 			}
 		}
 	}
-	if (index == result.length) return result;
+    if (index == result.length) {
+        return result;
+    }
 	Shell [] newResult = new Shell [index];
 	System.arraycopy (result, 0, newResult, 0, index);
 	return newResult;
@@ -2400,7 +2545,9 @@ public Synchronizer getSynchronizer () {
  */
 public Thread getSyncThread () {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		return synchronizer.syncThread;
 	}
 }
@@ -2449,13 +2596,17 @@ public Color getSystemColor (int id) {
 		case SWT.COLOR_TITLE_BACKGROUND:		pixel = OS.GetSysColor (OS.COLOR_ACTIVECAPTION);		break;
 		case SWT.COLOR_TITLE_BACKGROUND_GRADIENT:
 			pixel = OS.GetSysColor (OS.COLOR_GRADIENTACTIVECAPTION);
-			if (pixel == 0) pixel = OS.GetSysColor (OS.COLOR_ACTIVECAPTION);
+            if (pixel == 0) {
+                pixel = OS.GetSysColor(OS.COLOR_ACTIVECAPTION);
+            }
 			break;
 		case SWT.COLOR_TITLE_INACTIVE_FOREGROUND: 		pixel = OS.GetSysColor (OS.COLOR_INACTIVECAPTIONTEXT);	break;
 		case SWT.COLOR_TITLE_INACTIVE_BACKGROUND:			pixel = OS.GetSysColor (OS.COLOR_INACTIVECAPTION);		break;
 		case SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT:
 			pixel = OS.GetSysColor (OS.COLOR_GRADIENTINACTIVECAPTION);
-			if (pixel == 0) pixel = OS.GetSysColor (OS.COLOR_INACTIVECAPTION);
+            if (pixel == 0) {
+                pixel = OS.GetSysColor(OS.COLOR_INACTIVECAPTION);
+            }
 			break;
 		default:
 			return super.getSystemColor (id);
@@ -2507,7 +2658,9 @@ public Color getSystemColor (int id) {
  */
 public Cursor getSystemCursor (int id) {
 	checkDevice ();
-	if (!(0 <= id && id < cursors.length)) return null;
+    if (!(0 <= id && id < cursors.length)) {
+        return null;
+    }
 	if (cursors [id] == null) {
 		cursors [id] = new Cursor (this, id);
 	}
@@ -2584,23 +2737,31 @@ public Image getSystemImage (int id) {
 	checkDevice ();
 	switch (id) {
 		case SWT.ICON_ERROR: {
-			if (errorImage != null) return errorImage;
+            if (errorImage != null) {
+                return errorImage;
+            }
 			errorImage = new Image(this, getImageDataProviderForIcon(OS.OIC_HAND));
 			return errorImage;
 		}
 		case SWT.ICON_WORKING:
 		case SWT.ICON_INFORMATION: {
-			if (infoImage != null) return infoImage;
+            if (infoImage != null) {
+                return infoImage;
+            }
 			infoImage = new Image(this, getImageDataProviderForIcon(OS.OIC_INFORMATION));
 			return infoImage;
 		}
 		case SWT.ICON_QUESTION: {
-			if (questionImage != null) return questionImage;
+            if (questionImage != null) {
+                return questionImage;
+            }
 			questionImage = new Image(this, getImageDataProviderForIcon(OS.OIC_QUES));
 			return questionImage;
 		}
 		case SWT.ICON_WARNING: {
-			if (warningIcon != null) return warningIcon;
+            if (warningIcon != null) {
+                return warningIcon;
+            }
 			warningIcon = new Image(this, getImageDataProviderForIcon(OS.OIC_BANG));
 			return warningIcon;
 		}
@@ -2652,7 +2813,9 @@ public Menu getSystemMenu () {
  */
 public TaskBar getSystemTaskBar () {
 	checkDevice ();
-	if (taskBar != null) return taskBar;
+    if (taskBar != null) {
+        return taskBar;
+    }
 	try {
 		taskBar = new TaskBar (this, SWT.NONE);
 	} catch (SWTError e) {
@@ -2679,7 +2842,9 @@ public TaskBar getSystemTaskBar () {
  */
 public Tray getSystemTray () {
 	checkDevice ();
-	if (tray == null) tray = new Tray (this, SWT.NONE);
+    if (tray == null) {
+        tray = new Tray(this, SWT.NONE);
+    }
 	return tray;
 }
 
@@ -2694,7 +2859,9 @@ public Tray getSystemTray () {
  */
 public Thread getThread () {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		return thread;
 	}
 }
@@ -2793,9 +2960,13 @@ void resetThemes() {
  */
 @Override
 public long internal_new_GC (GCData data) {
-	if (isDisposed()) error(SWT.ERROR_DEVICE_DISPOSED);
+    if (isDisposed()) {
+        error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 	long hDC = OS.GetDC (0);
-	if (hDC == 0) error (SWT.ERROR_NO_HANDLES);
+    if (hDC == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (data != null) {
 		int mask = SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
 		if ((data.style & mask) != 0) {
@@ -2840,7 +3011,9 @@ protected void init () {
 		if (OS.GetCurrentProcessExplicitAppUserModelID(appID) != 0) {
 			OS.SetCurrentProcessExplicitAppUserModelID (appName);
 		}
-		if (appID[0] != 0) OS.CoTaskMemFree(appID[0]);
+        if (appID[0] != 0) {
+            OS.CoTaskMemFree(appID[0]);
+        }
 	}
 
 	/* Create the callbacks */
@@ -3001,7 +3174,9 @@ boolean isValidThread () {
  */
 public Point map (Control from, Control to, Point point) {
 	checkDevice ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return coordinateSystemMapper.map(from, to, point);
 }
 
@@ -3051,9 +3226,15 @@ public Point map (Control from, Control to, int x, int y) {
 }
 
 Point mapInPixels (Control from, Control to, int x, int y) {
-	if (from != null && from.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (to != null && to.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (from == to) return new Point (x, y);
+    if (from != null && from.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (to != null && to.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (from == to) {
+        return new Point(x, y);
+    }
 	long hwndFrom = from != null ? from.handle : 0;
 	long hwndTo = to != null ? to.handle : 0;
 	POINT point = new POINT ();
@@ -3101,7 +3282,9 @@ Point mapInPixels (Control from, Control to, int x, int y) {
  */
 public Rectangle map (Control from, Control to, Rectangle rectangle) {
 	checkDevice ();
-	if (rectangle == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rectangle == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return coordinateSystemMapper.map(from, to, rectangle);
 }
 
@@ -3153,9 +3336,15 @@ public Rectangle map (Control from, Control to, int x, int y, int width, int hei
 }
 
 Rectangle mapInPixels (Control from, Control to, int x, int y, int width, int height) {
-	if (from != null && from.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (to != null && to.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (from == to) return new Rectangle (x, y, width, height);
+    if (from != null && from.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (to != null && to.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (from == to) {
+        return new Rectangle(x, y, width, height);
+    }
 	long hwndFrom = from != null ? from.handle : 0;
 	long hwndTo = to != null ? to.handle : 0;
 	RECT rect = new RECT ();
@@ -3186,7 +3375,9 @@ Rectangle translateToDisplayCoordinates(Rectangle rect) {
 long messageProc (long hwnd, long msg, long wParam, long lParam) {
 	switch ((int)msg) {
 		case SWT_RUNASYNC: {
-			if (runMessagesInIdle) runAsyncMessages (false);
+            if (runMessagesInIdle) {
+                runAsyncMessages(false);
+            }
 			break;
 		}
 		case SWT_KEYMSG: {
@@ -3228,7 +3419,9 @@ long messageProc (long hwnd, long msg, long wParam, long lParam) {
 												if ((OS.GetKeyState (OS.VK_SHIFT) < 0) == ((state & 0x1) != 0) &&
 													(OS.GetKeyState (OS.VK_CONTROL) < 0) == ((state & 0x2) != 0) &&
 													(OS.GetKeyState (OS.VK_MENU) < 0) == ((state & 0x4) != 0)) {
-														if ((state & 0x7) != 0) accentKey = true;
+                                                    if ((state & 0x7) != 0) {
+                                                        accentKey = true;
+                                                    }
 														break;
 												}
 											}
@@ -3320,13 +3513,17 @@ long messageProc (long hwnd, long msg, long wParam, long lParam) {
 			if (wParam != 0) {
 				if (!isXMouseActive ()) {
 					long hwndActive = OS.GetActiveWindow ();
-					if (hwndActive != 0 && OS.IsWindowEnabled (hwndActive)) break;
+                    if (hwndActive != 0 && OS.IsWindowEnabled(hwndActive)) {
+                        break;
+                    }
 					Shell modal = modalDialog != null ? modalDialog.parent : getModalShell ();
 					if (modal != null && !modal.isDisposed ()) {
 						long hwndModal = modal.handle;
 						if (OS.IsWindowEnabled (hwndModal)) {
 							modal.bringToTop ();
-							if (modal.isDisposed ()) break;
+                            if (modal.isDisposed()) {
+                                break;
+                            }
 						}
 						long hwndPopup = OS.GetLastActivePopup (hwndModal);
 						if (hwndPopup != 0 && hwndPopup != modal.handle) {
@@ -3350,7 +3547,9 @@ long messageProc (long hwnd, long msg, long wParam, long lParam) {
 		case OS.WM_QUERYENDSESSION: {
 			Event event = new Event ();
 			sendEvent (SWT.Close, event);
-			if (!event.doit) return 0;
+            if (!event.doit) {
+                return 0;
+            }
 			break;
 		}
 		case OS.WM_DWMCOLORIZATIONCOLORCHANGED:
@@ -3376,7 +3575,9 @@ long messageProc (long hwnd, long msg, long wParam, long lParam) {
 			if ((int)msg == TASKBARCREATED) {
 				if (tray != null) {
 					for (TrayItem item : tray.items) {
-						if (item != null) item.recreate ();
+                        if (item != null) {
+                            item.recreate();
+                        }
 					}
 				}
 			}
@@ -3414,13 +3615,17 @@ String getSharedData(int pid, int  handle) {
 		mapHandle[0] = handle;
 	} else {
 		long processHandle = OS.OpenProcess(OS.PROCESS_VM_READ|OS.PROCESS_DUP_HANDLE, false, pid);
-		if (processHandle == 0) return null;
+        if (processHandle == 0) {
+            return null;
+        }
 		OS.DuplicateHandle(processHandle, handle, OS.GetCurrentProcess(), mapHandle, OS.DUPLICATE_SAME_ACCESS, false, OS.DUPLICATE_SAME_ACCESS);
 		OS.CloseHandle(processHandle);
 	}
 
 	long sharedData = OS.MapViewOfFile(mapHandle[0], OS.FILE_MAP_READ, 0, 0, 0);
-	if (sharedData == 0) return null;
+    if (sharedData == 0) {
+        return null;
+    }
 	int length = OS.wcslen (sharedData);
 	TCHAR buffer = new TCHAR (length);
 	int byteCount = buffer.length () * TCHAR.sizeof;
@@ -3482,7 +3687,9 @@ long msgFilterProc (long code, long wParam, long lParam) {
 				// with the correct DPI awareness
 				Win32DPIUtils.runWithProperDPIAwareness(this, () -> {
 					if (!OS.PeekMessage (msg, 0, 0, 0, flags)) {
-						if (runAsyncMessages (false)) wakeThread ();
+                        if (runAsyncMessages(false)) {
+                            wakeThread();
+                        }
 					}
 					return true;
 				});
@@ -3579,8 +3786,12 @@ int numpadKey (int key) {
  */
 public boolean post (Event event) {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
-		if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
+        if (event == null) {
+            error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		int type = event.type;
 		switch (type){
 			case SWT.KeyDown:
@@ -3603,7 +3814,9 @@ public boolean post (Event event) {
 						case SWT.LF: return false;
 						default: {
 							inputs.wVk = OS.VkKeyScan ((short) key);
-							if (inputs.wVk == -1) return false;
+                            if (inputs.wVk == -1) {
+                                return false;
+                            }
 							inputs.wVk &= 0xFF;
 						}
 					}
@@ -3689,17 +3902,21 @@ public boolean post (Event event) {
 }
 
 void postEvent (Event event) {
-	/*
-	* Place the event at the end of the event queue.
-	* This code is always called in the Display's
-	* thread so it must be re-enterant but does not
-	* need to be synchronized.
-	*/
-	if (eventQueue == null) eventQueue = new Event [4];
+    /*
+    * Place the event at the end of the event queue.
+    * This code is always called in the Display's
+    * thread so it must be re-enterant but does not
+    * need to be synchronized.
+    */
+    if (eventQueue == null) {
+        eventQueue = new Event [4];
+    }
 	int index = 0;
 	int length = eventQueue.length;
 	while (index < length) {
-		if (eventQueue [index] == null) break;
+        if (eventQueue [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -3802,21 +4019,27 @@ protected void release () {
 
 		for (Shell shell : getShells ()) {
 			try {
-				if (!shell.isDisposed ()) shell.dispose ();
+                if (!shell.isDisposed()) {
+                    shell.dispose();
+                }
 			} catch (Error | RuntimeException ex) {
 				exceptions.stash (ex);
 			}
 		}
 
 		try {
-			if (tray != null) tray.dispose ();
+            if (tray != null) {
+                tray.dispose();
+            }
 		} catch (Error | RuntimeException ex) {
 			exceptions.stash (ex);
 		}
 		tray = null;
 
 		try {
-			if (taskBar != null) taskBar.dispose ();
+            if (taskBar != null) {
+                taskBar.dispose();
+            }
 		} catch (Error | RuntimeException ex) {
 			exceptions.stash (ex);
 		}
@@ -3824,7 +4047,9 @@ protected void release () {
 
 		for (;;) {
 			try {
-				if (!readAndDispatch ()) break;
+                if (!readAndDispatch()) {
+                    break;
+                }
 			} catch (Error | RuntimeException ex) {
 				exceptions.stash (ex);
 			}
@@ -3832,7 +4057,9 @@ protected void release () {
 
 		if (disposeList != null) {
 			for (Runnable next : disposeList) {
-				if (next == null) continue;
+                if (next == null) {
+                    continue;
+                }
 
 				try {
 					next.run ();
@@ -3863,22 +4090,30 @@ void releaseDisplay () {
 
 	/* Release XP Themes */
 	resetThemes();
-	if (menuBarBorderPen != 0) OS.DeleteObject (menuBarBorderPen);
+    if (menuBarBorderPen != 0) {
+        OS.DeleteObject(menuBarBorderPen);
+    }
 	menuBarBorderPen = 0;
 
-	/* Unhook the message hook */
-	if (msgHook != 0) OS.UnhookWindowsHookEx (msgHook);
+    /* Unhook the message hook */
+    if (msgHook != 0) {
+        OS.UnhookWindowsHookEx(msgHook);
+    }
 	msgHook = 0;
 
-	/* Unhook the filter hook */
-	if (filterHook != 0) OS.UnhookWindowsHookEx (filterHook);
+    /* Unhook the filter hook */
+    if (filterHook != 0) {
+        OS.UnhookWindowsHookEx(filterHook);
+    }
 	filterHook = 0;
 	msgFilterCallback.dispose ();
 	msgFilterCallback = null;
 	msgFilterProc = 0;
 
-	/* Unhook the idle hook */
-	if (idleHook != 0) OS.UnhookWindowsHookEx (idleHook);
+    /* Unhook the idle hook */
+    if (idleHook != 0) {
+        OS.UnhookWindowsHookEx(idleHook);
+    }
 	idleHook = 0;
 	foregroundIdleCallback.dispose ();
 	foregroundIdleCallback = null;
@@ -3887,8 +4122,10 @@ void releaseDisplay () {
 	/* Stop the settings timer */
 	OS.KillTimer (hwndMessage, SETTINGS_ID);
 
-	/* Destroy the message only HWND */
-	if (hwndMessage != 0) OS.DestroyWindow (hwndMessage);
+    /* Destroy the message only HWND */
+    if (hwndMessage != 0) {
+        OS.DestroyWindow(hwndMessage);
+    }
 	hwndMessage = 0;
 	messageCallback.dispose ();
 	messageCallback = null;
@@ -3910,29 +4147,43 @@ void releaseDisplay () {
 	/* Release the System fonts */
 	systemFont = null;
 	lfSystemFont = null;
-	/* Release the System Images */
-	if (errorImage != null) errorImage.dispose ();
-	if (infoImage != null) infoImage.dispose ();
-	if (questionImage != null) questionImage.dispose ();
-	if (warningIcon != null) warningIcon.dispose ();
+    /* Release the System Images */
+    if (errorImage != null) {
+        errorImage.dispose();
+    }
+    if (infoImage != null) {
+        infoImage.dispose();
+    }
+    if (questionImage != null) {
+        questionImage.dispose();
+    }
+    if (warningIcon != null) {
+        warningIcon.dispose();
+    }
 	errorImage = infoImage = questionImage = warningIcon = null;
 
 	/* Release the System Cursors */
 	for (Cursor cursor : cursors) {
-		if (cursor != null) cursor.dispose ();
+        if (cursor != null) {
+            cursor.dispose();
+        }
 	}
 	cursors = null;
 
 	/* Release Acquired Resources */
 	if (resources != null) {
 		for (Resource resource : resources) {
-			if (resource != null) resource.dispose ();
+            if (resource != null) {
+                resource.dispose();
+            }
 		}
 		resources = null;
 	}
 
-	/* Release Custom Colors for ChooseColor */
-	if (lpCustColors != 0) OS.HeapFree (hHeap, 0, lpCustColors);
+    /* Release Custom Colors for ChooseColor */
+    if (lpCustColors != 0) {
+        OS.HeapFree(hHeap, 0, lpCustColors);
+    }
 	lpCustColors = 0;
 
 	/* Uninitialize OLE */
@@ -3971,12 +4222,16 @@ void releaseImageList (ImageList list) {
 	int length = imageList.length;
 	while (i < length) {
 		if (imageList [i] == list) {
-			if (list.removeRef () > 0) return;
+            if (list.removeRef() > 0) {
+                return;
+            }
 			list.dispose ();
 			System.arraycopy (imageList, i + 1, imageList, i, --length - i);
 			imageList [length] = null;
 			for (int j=0; j<length; j++) {
-				if (imageList [j] != null) return;
+                if (imageList [j] != null) {
+                    return;
+                }
 			}
 			imageList = null;
 			return;
@@ -3990,12 +4245,16 @@ void releaseToolImageList (ImageList list) {
 	int length = toolImageList.length;
 	while (i < length) {
 		if (toolImageList [i] == list) {
-			if (list.removeRef () > 0) return;
+            if (list.removeRef() > 0) {
+                return;
+            }
 			list.dispose ();
 			System.arraycopy (toolImageList, i + 1, toolImageList, i, --length - i);
 			toolImageList [length] = null;
 			for (int j=0; j<length; j++) {
-				if (toolImageList [j] != null) return;
+                if (toolImageList [j] != null) {
+                    return;
+                }
 			}
 			toolImageList = null;
 			return;
@@ -4009,12 +4268,16 @@ void releaseToolHotImageList (ImageList list) {
 	int length = toolHotImageList.length;
 	while (i < length) {
 		if (toolHotImageList [i] == list) {
-			if (list.removeRef () > 0) return;
+            if (list.removeRef() > 0) {
+                return;
+            }
 			list.dispose ();
 			System.arraycopy (toolHotImageList, i + 1, toolHotImageList, i, --length - i);
 			toolHotImageList [length] = null;
 			for (int j=0; j<length; j++) {
-				if (toolHotImageList [j] != null) return;
+                if (toolHotImageList [j] != null) {
+                    return;
+                }
 			}
 			toolHotImageList = null;
 			return;
@@ -4028,12 +4291,16 @@ void releaseToolDisabledImageList (ImageList list) {
 	int length = toolDisabledImageList.length;
 	while (i < length) {
 		if (toolDisabledImageList [i] == list) {
-			if (list.removeRef () > 0) return;
+            if (list.removeRef() > 0) {
+                return;
+            }
 			list.dispose ();
 			System.arraycopy (toolDisabledImageList, i + 1, toolDisabledImageList, i, --length - i);
 			toolDisabledImageList [length] = null;
 			for (int j=0; j<length; j++) {
-				if (toolDisabledImageList [j] != null) return;
+                if (toolDisabledImageList [j] != null) {
+                    return;
+                }
 			}
 			toolDisabledImageList = null;
 			return;
@@ -4067,10 +4334,16 @@ void releaseToolDisabledImageList (ImageList list) {
  */
 public void removeFilter (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (filterTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (filterTable == null) {
+        return;
+    }
 	filterTable.unhook (eventType, listener);
-	if (filterTable.size () == 0) filterTable = null;
+    if (filterTable.size() == 0) {
+        filterTable = null;
+    }
 }
 
 /**
@@ -4097,13 +4370,19 @@ public void removeFilter (int eventType, Listener listener) {
  */
 public void removeListener (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (eventType, listener);
 }
 
 void removeBar (Menu menu) {
-	if (bars == null) return;
+    if (bars == null) {
+        return;
+    }
 	for (int i=0; i<bars.length; i++) {
 		if (bars [i] == menu) {
 			bars [i] = null;
@@ -4118,12 +4397,16 @@ Control removeControl (long handle) {
 }
 
 void removeMenuItem (MenuItem item) {
-	if (items == null) return;
+    if (items == null) {
+        return;
+    }
 	items [item.id - ID_START] = null;
 }
 
 void removePopup (Menu menu) {
-	if (popups == null) return;
+    if (popups == null) {
+        return;
+    }
 	for (int i=0; i<popups.length; i++) {
 		if (popups [i] == menu) {
 			popups [i] = null;
@@ -4147,7 +4430,9 @@ boolean runDeferredEvents () {
 
 		/* Take an event off the queue */
 		Event event = eventQueue [0];
-		if (event == null) break;
+        if (event == null) {
+            break;
+        }
 		int length = eventQueue.length;
 		System.arraycopy (eventQueue, 1, eventQueue, 0, --length);
 		eventQueue [length] = null;
@@ -4182,7 +4467,9 @@ boolean runDeferredLayouts () {
 		layoutDeferredCount = 0;
 		for (int i = 0; i < count; i++) {
 			Composite comp = temp[i];
-			if (!comp.isDisposed()) comp.setLayoutDeferred (false);
+            if (!comp.isDisposed()) {
+                comp.setLayoutDeferred(false);
+            }
 		}
 		return true;
 	}
@@ -4190,16 +4477,22 @@ boolean runDeferredLayouts () {
 }
 
 boolean runPopups () {
-	if (popups == null) return false;
+    if (popups == null) {
+        return false;
+    }
 	boolean result = false;
 	while (popups != null) {
 		Menu menu = popups [0];
-		if (menu == null) break;
+        if (menu == null) {
+            break;
+        }
 		int length = popups.length;
 		System.arraycopy (popups, 1, popups, 0, --length);
 		popups [length] = null;
 		runDeferredEvents ();
-		if (!menu.isDisposed ()) menu._setVisible (true);
+        if (!menu.isDisposed()) {
+            menu._setVisible(true);
+        }
 		result = true;
 	}
 	popups = null;
@@ -4308,13 +4601,23 @@ void saveResources () {
 			}
 		}
 	}
-	if (errorImage != null) resources [resourceCount++] = errorImage;
-	if (infoImage != null) resources [resourceCount++] = infoImage;
-	if (questionImage != null) resources [resourceCount++] = questionImage;
-	if (warningIcon != null) resources [resourceCount++] = warningIcon;
+    if (errorImage != null) {
+        resources [resourceCount++] = errorImage;
+    }
+    if (infoImage != null) {
+        resources [resourceCount++] = infoImage;
+    }
+    if (questionImage != null) {
+        resources [resourceCount++] = questionImage;
+    }
+    if (warningIcon != null) {
+        resources [resourceCount++] = warningIcon;
+    }
 	errorImage = infoImage = questionImage = warningIcon = null;
 	for (int i=0; i<cursors.length; i++) {
-		if (cursors [i] != null) resources [resourceCount++] = cursors [i];
+        if (cursors [i] != null) {
+            resources [resourceCount++] = cursors [i];
+        }
 		cursors [i] = null;
 	}
 	if (resourceCount < RESOURCE_SIZE) {
@@ -4347,12 +4650,18 @@ void sendEvent (int eventType, Event event) {
 	if (eventTable == null && filterTable == null) {
 		return;
 	}
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	event.display = this;
 	event.type = eventType;
-	if (event.time == 0) event.time = getLastEventTime ();
+    if (event.time == 0) {
+        event.time = getLastEventTime();
+    }
 	if (!filterEvent (event)) {
-		if (eventTable != null) sendEvent (eventTable, event);
+        if (eventTable != null) {
+            sendEvent(eventTable, event);
+        }
 	}
 }
 
@@ -4441,7 +4750,9 @@ void setCursorLocationInPixels (int x, int y) {
  */
 public void setCursorLocation (Point point) {
 	checkDevice ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setCursorLocation (point.x, point.y);
 }
 
@@ -4450,7 +4761,9 @@ boolean _toBoolean (Object value) {
 }
 
 int _toColorPixel (Object value) {
-	if (value == null) return -1;
+    if (value == null) {
+        return -1;
+    }
 	return ((Color)value).handle;
 }
 
@@ -4481,7 +4794,9 @@ int _toColorPixel (Object value) {
  */
 public void setData (String key, Object value) {
 	checkDevice ();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	switch (key) {
 		case RUN_MESSAGES_IN_IDLE_KEY:
@@ -4536,14 +4851,16 @@ public void setData (String key, Object value) {
 			menuBarBackgroundPixel = disableCustomThemeTweaks ? -1 : _toColorPixel(value);
 			return;
 		case MENUBAR_BORDER_COLOR_KEY:
-			if (menuBarBorderPen != 0)
-				OS.DeleteObject(menuBarBorderPen);
+            if (menuBarBorderPen != 0) {
+                OS.DeleteObject(menuBarBorderPen);
+            }
 
 			int pixel = _toColorPixel(value);
-			if (disableCustomThemeTweaks || (pixel == -1))
-				menuBarBorderPen = 0;
-			else
-				menuBarBorderPen = OS.CreatePen (OS.PS_SOLID, 1, pixel);
+            if (disableCustomThemeTweaks || (pixel == -1)) {
+                menuBarBorderPen = 0;
+            } else {
+                menuBarBorderPen = OS.CreatePen(OS.PS_SOLID, 1, pixel);
+            }
 			return;
 		case USE_WS_BORDER_ALL_KEY:
 			useWsBorderAll     = !disableCustomThemeTweaks && _toBoolean(value);
@@ -4587,10 +4904,16 @@ public void setData (String key, Object value) {
 
 	/* Remove the key/value pair */
 	if (value == null) {
-		if (keys == null) return;
+        if (keys == null) {
+            return;
+        }
 		int index = 0;
-		while (index < keys.length && !keys [index].equals (key)) index++;
-		if (index == keys.length) return;
+        while (index < keys.length && !keys [index].equals(key)) {
+            index++;
+        }
+        if (index == keys.length) {
+            return;
+        }
 		if (keys.length == 1) {
 			keys = null;
 			values = null;
@@ -4725,11 +5048,17 @@ void setModalDialog(Dialog modalDailog) {
 }
 
 void setModalShell (Shell shell) {
-	if (modalShells == null) modalShells = new Shell [4];
+    if (modalShells == null) {
+        modalShells = new Shell [4];
+    }
 	int index = 0, length = modalShells.length;
 	while (index < length) {
-		if (modalShells [index] == shell) return;
-		if (modalShells [index] == null) break;
+        if (modalShells [index] == shell) {
+            return;
+        }
+        if (modalShells [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -4760,8 +5089,12 @@ void setModalShell (Shell shell) {
  */
 public void setSynchronizer (Synchronizer synchronizer) {
 	checkDevice ();
-	if (synchronizer == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (synchronizer == this.synchronizer) return;
+    if (synchronizer == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (synchronizer == this.synchronizer) {
+        return;
+    }
 	Synchronizer oldSynchronizer;
 	synchronized (Device.class) {
 		oldSynchronizer = this.synchronizer;
@@ -4831,13 +5164,17 @@ public final Consumer<Error> getErrorHandler () {
 }
 
 int shiftedKey (int key) {
-	/* Clear the virtual keyboard and press the shift key */
-	for (int i=0; i<keyboard.length; i++) keyboard [i] = 0;
+    /* Clear the virtual keyboard and press the shift key */
+    for (int i = 0; i < keyboard.length; i++) {
+        keyboard [i] = 0;
+    }
 	keyboard [OS.VK_SHIFT] |= 0x80;
 
 	/* Translate the key to ASCII or UNICODE using the virtual keyboard */
 	char [] result = new char [1];
-	if (OS.ToUnicode (key, key, keyboard, result, 1, 0) == 1) return result [0];
+    if (OS.ToUnicode(key, key, keyboard, result, 1, 0) == 1) {
+        return result [0];
+    }
 	return 0;
 }
 
@@ -4857,7 +5194,9 @@ int shiftedKey (int key) {
  */
 public boolean sleep () {
 	checkDevice ();
-	if (!synchronizer.isMessagesEmpty()) return true;
+    if (!synchronizer.isMessagesEmpty()) {
+        return true;
+    }
 	sendPreExternalEventDispatchEvent ();
 	boolean result = OS.WaitMessage ();
 	sendPostExternalEventDispatchEvent ();
@@ -4889,7 +5228,9 @@ public boolean sleep () {
 public void syncExec (Runnable runnable) {
 	Synchronizer synchronizer;
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		synchronizer = this.synchronizer;
 	}
 	synchronizer.syncExec (runnable);
@@ -4970,12 +5311,20 @@ public <T, E extends Exception> T syncCall(SwtCallable<T, E> callable) throws E 
  */
 public void timerExec (int milliseconds, Runnable runnable) {
 	checkDevice ();
-	if (runnable == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (timerList == null) timerList = new Runnable [4];
-	if (timerIds == null) timerIds = new long [4];
+    if (runnable == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (timerList == null) {
+        timerList = new Runnable [4];
+    }
+    if (timerIds == null) {
+        timerIds = new long [4];
+    }
 	int index = 0;
 	while (index < timerList.length) {
-		if (timerList [index] == runnable) break;
+        if (timerList [index] == runnable) {
+            break;
+        }
 		index++;
 	}
 	long timerId = 0;
@@ -4988,10 +5337,14 @@ public void timerExec (int milliseconds, Runnable runnable) {
 			return;
 		}
 	} else {
-		if (milliseconds < 0) return;
+        if (milliseconds < 0) {
+            return;
+        }
 		index = 0;
 		while (index < timerList.length) {
-			if (timerList [index] == null) break;
+            if (timerList [index] == null) {
+                break;
+            }
 			index++;
 		}
 		timerId = nextTimerId++;
@@ -5005,7 +5358,9 @@ public void timerExec (int milliseconds, Runnable runnable) {
 		}
 	}
 	long newTimerID = OS.SetTimer (hwndMessage, timerId, milliseconds, 0);
-	if (newTimerID == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (newTimerID == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	timerList [index] = runnable;
 	timerIds [index] = newTimerID;
 }
@@ -5019,7 +5374,9 @@ boolean translateAccelerator (MSG msg, Control control) {
 
 static int translateKey (int key) {
 	for (int[] element : KeyTable) {
-		if (element [0] == key) return element [1];
+        if (element [0] == key) {
+            return element [1];
+        }
 	}
 	return 0;
 }
@@ -5061,7 +5418,9 @@ boolean translateTraversal (MSG msg, Control control) {
 
 static int untranslateKey (int key) {
 	for (int[] element : KeyTable) {
-		if (element [1] == key) return element [0];
+        if (element [1] == key) {
+            return element [0];
+        }
 	}
 	return 0;
 }
@@ -5098,7 +5457,9 @@ public void update() {
 		OS.PeekMessage (msg, hwndMessage, SWT_NULL, SWT_NULL, flags);
 	}
 	for (Shell shell : getShells ()) {
-		if (!shell.isDisposed ()) shell.update (true);
+        if (!shell.isDisposed()) {
+            shell.update(true);
+        }
 	}
 }
 
@@ -5115,8 +5476,12 @@ public void update() {
  */
 public void wake () {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
-		if (thread == Thread.currentThread ()) return;
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
+        if (thread == Thread.currentThread()) {
+            return;
+        }
 		wakeThread ();
 	}
 }
@@ -5138,11 +5503,15 @@ int textWidth (String text, long handle) {
 	RECT rect = new RECT ();
 	long hDC = OS.GetDC (handle);
 	long newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-	if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+    if (newFont != 0) {
+        oldFont = OS.SelectObject(hDC, newFont);
+    }
 	int flags = OS.DT_CALCRECT | OS.DT_SINGLELINE | OS.DT_NOPREFIX;
 	char [] buffer = text.toCharArray ();
 	OS.DrawText (hDC, buffer, buffer.length, rect, flags);
-	if (newFont != 0) OS.SelectObject (hDC, oldFont);
+    if (newFont != 0) {
+        OS.SelectObject(hDC, oldFont);
+    }
 	OS.ReleaseDC (handle, hDC);
 	return (rect.right - rect.left);
 }
@@ -5151,13 +5520,17 @@ String wrapText (String text, long handle, int width) {
 	String Lf = "\r\n"; //$NON-NLS-1$
 	text = withCrLf (text);
 	int length = text.length ();
-	if (width <= 0 || length == 0 || length == 1) return text;
+    if (width <= 0 || length == 0 || length == 1) {
+        return text;
+    }
 	StringBuilder result = new StringBuilder ();
 	int lineStart = 0, lineEnd = 0;
 	while (lineStart < length) {
 		lineEnd = text.indexOf (Lf, lineStart);
 		boolean noLf = lineEnd == -1;
-		if (noLf) lineEnd = length;
+        if (noLf) {
+            lineEnd = length;
+        }
 		int nextStart = lineEnd + Lf.length ();
 		while (lineEnd > lineStart + 1 && Character.isWhitespace (text.charAt (lineEnd - 1))) {
 			lineEnd--;
@@ -5181,10 +5554,14 @@ String wrapText (String text, long handle, int width) {
 					while (wordStart < wordEnd) {
 						line = text.substring (lineStart, wordStart + 1);
 						lineWidth = textWidth (line, handle);
-						if (lineWidth >= width) break;
+                        if (lineWidth >= width) {
+                            break;
+                        }
 						wordStart++;
 					}
-					if (wordStart == lastStart) wordStart++;
+                    if (wordStart == lastStart) {
+                        wordStart++;
+                    }
 					lastEnd = wordStart - 1;
 				}
 				line = text.substring (lineStart, lastEnd + 1);
@@ -5214,7 +5591,9 @@ static String withCrLf (String string) {
 			result.append(string.substring(i, j + 1));
 			i = j + 1;
 		} else {
-			if (j == -1) j = length;
+            if (j == -1) {
+                j = length;
+            }
 			result.append (string.substring (i, j));
 			if ((i = j) < length) {
 				result.append ("\r\n"); //$NON-NLS-1$
@@ -5223,15 +5602,19 @@ static String withCrLf (String string) {
 		}
 	}
 
-	/* Avoid creating a copy of the string if it has not changed */
-	if (string.length()== result.length()) return string;
+    /* Avoid creating a copy of the string if it has not changed */
+    if (string.length() == result.length()) {
+        return string;
+    }
 	return result.toString ();
 }
 
 static char [] withCrLf (char [] string) {
 	/* If the string is empty, return the string. */
 	int length = string.length;
-	if (length == 0) return string;
+    if (length == 0) {
+        return string;
+    }
 
 	/*
 	* Check for an LF or CR/LF and assume the rest of
@@ -5243,10 +5626,14 @@ static char [] withCrLf (char [] string) {
 	for (int i = 0; i < string.length; i++) {
 		if (string [i] == '\n') {
 			count++;
-			if (count == 1 && i > 0 && string [i - 1] == '\r') return string;
+            if (count == 1 && i > 0 && string [i - 1] == '\r') {
+                return string;
+            }
 		}
 	}
-	if (count == 0) return string;
+    if (count == 0) {
+        return string;
+    }
 
 	/*
 	* The string is formatted with LF.
@@ -5294,43 +5681,57 @@ private class ThemeData {
 	}
 
 	long hButtonTheme () {
-		if (hButtonTheme != 0) return hButtonTheme;
+        if (hButtonTheme != 0) {
+            return hButtonTheme;
+        }
 		final char[] themeName = "BUTTON\0".toCharArray();
 		return hButtonTheme = openThemeData(themeName);
 	}
 
 	long hButtonThemeDark () {
-		if (hButtonThemeDark != 0) return hButtonThemeDark;
+        if (hButtonThemeDark != 0) {
+            return hButtonThemeDark;
+        }
 		final char[] themeName = "Darkmode_Explorer::BUTTON\0".toCharArray();
 		return hButtonThemeDark = openThemeData(themeName);
 	}
 
 	long hEditTheme () {
-		if (hEditTheme != 0) return hEditTheme;
+        if (hEditTheme != 0) {
+            return hEditTheme;
+        }
 		final char[] themeName = "EDIT\0".toCharArray();
 		return hEditTheme = openThemeData(themeName);
 	}
 
 	long hExplorerBarTheme () {
-		if (hExplorerBarTheme != 0) return hExplorerBarTheme;
+        if (hExplorerBarTheme != 0) {
+            return hExplorerBarTheme;
+        }
 		final char[] themeName = "EXPLORERBAR\0".toCharArray();
 		return hExplorerBarTheme = openThemeData(themeName);
 	}
 
 	long hScrollBarTheme () {
-		if (hScrollBarTheme != 0) return hScrollBarTheme;
+        if (hScrollBarTheme != 0) {
+            return hScrollBarTheme;
+        }
 		final char[] themeName = "SCROLLBAR\0".toCharArray();
 		return hScrollBarTheme = openThemeData(themeName);
 	}
 
 	long hScrollBarThemeDark () {
-		if (hScrollBarThemeDark != 0) return hScrollBarThemeDark;
+        if (hScrollBarThemeDark != 0) {
+            return hScrollBarThemeDark;
+        }
 		final char[] themeName = "Darkmode_Explorer::SCROLLBAR\0".toCharArray();
 		return hScrollBarThemeDark = openThemeData(themeName);
 	}
 
 	long hTabTheme () {
-		if (hTabTheme != 0) return hTabTheme;
+        if (hTabTheme != 0) {
+            return hTabTheme;
+        }
 		final char[] themeName = "TAB\0".toCharArray();
 		return hTabTheme = openThemeData(themeName);
 	}

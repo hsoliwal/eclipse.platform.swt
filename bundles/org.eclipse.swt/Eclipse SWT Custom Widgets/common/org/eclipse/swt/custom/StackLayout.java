@@ -103,8 +103,12 @@ protected Point computeSize(Composite composite, int wHint, int hHint, boolean f
 	}
 	int width = maxWidth + 2 * marginWidth;
 	int height = maxHeight + 2 * marginHeight;
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	return new Point(width, height);
 }
 
@@ -129,7 +133,9 @@ protected void layout(Composite composite, boolean flushCache) {
 String getName () {
 	String string = getClass ().getName ();
 	int index = string.lastIndexOf ('.');
-	if (index == -1) return string;
+    if (index == -1) {
+        return string;
+    }
 	return string.substring (index + 1, string.length ());
 }
 
@@ -142,9 +148,15 @@ String getName () {
 @Override
 public String toString () {
 	String string = getName ()+" {";
-	if (marginWidth != 0) string += "marginWidth="+marginWidth+" ";
-	if (marginHeight != 0) string += "marginHeight="+marginHeight+" ";
-	if (topControl != null) string += "topControl="+topControl+" ";
+    if (marginWidth != 0) {
+        string += "marginWidth=" + marginWidth + " ";
+    }
+    if (marginHeight != 0) {
+        string += "marginHeight=" + marginHeight + " ";
+    }
+    if (topControl != null) {
+        string += "topControl=" + topControl + " ";
+    }
 	string = string.trim();
 	string += "}";
 	return string;

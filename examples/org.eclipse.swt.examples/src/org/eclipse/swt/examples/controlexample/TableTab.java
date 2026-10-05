@@ -121,8 +121,12 @@ class TableTab extends ScrollableTab {
 		item.setText(ControlExample.getResourceString ("Header_Background_Color"));
 
 		shell.addDisposeListener(event -> {
-			if (itemFont != null) itemFont.dispose();
-			if (cellFont != null) cellFont.dispose();
+            if (itemFont != null) {
+                itemFont.dispose();
+            }
+            if (cellFont != null) {
+                cellFont.dispose();
+            }
 			itemBackgroundColor = null;
 			itemForegroundColor = null;
 			itemFont = null;
@@ -139,86 +143,122 @@ class TableTab extends ScrollableTab {
 		switch (index) {
 		case ITEM_FOREGROUND_COLOR: {
 			Color oldColor = itemForegroundColor;
-			if (oldColor == null) oldColor = table1.getItem (0).getForeground ();
+            if (oldColor == null) {
+                oldColor = table1.getItem(0).getForeground();
+            }
 			colorDialog.setRGB(oldColor.getRGB());
 			RGB rgb = colorDialog.open();
-			if (rgb == null) return;
+            if (rgb == null) {
+                return;
+            }
 			itemForegroundColor = new Color (rgb);
 			setItemForeground ();
 		}
 		break;
 		case ITEM_BACKGROUND_COLOR: {
 			Color oldColor = itemBackgroundColor;
-			if (oldColor == null) oldColor = table1.getItem (0).getBackground ();
+            if (oldColor == null) {
+                oldColor = table1.getItem(0).getBackground();
+            }
 			colorDialog.setRGB(oldColor.getRGB());
 			RGB rgb = colorDialog.open();
-			if (rgb == null) return;
+            if (rgb == null) {
+                return;
+            }
 			itemBackgroundColor = new Color (rgb);
 			setItemBackground ();
 		}
 		break;
 		case ITEM_FONT: {
 			Font oldFont = itemFont;
-			if (oldFont == null) oldFont = table1.getItem (0).getFont ();
+            if (oldFont == null) {
+                oldFont = table1.getItem(0).getFont();
+            }
 			fontDialog.setFontList(oldFont.getFontData());
 			FontData fontData = fontDialog.open ();
-			if (fontData == null) return;
+            if (fontData == null) {
+                return;
+            }
 			oldFont = itemFont;
 			itemFont = new Font (display, fontData);
 			setItemFont ();
 			setExampleWidgetSize ();
-			if (oldFont != null) oldFont.dispose ();
+            if (oldFont != null) {
+                oldFont.dispose();
+            }
 		}
 		break;
 		case CELL_FOREGROUND_COLOR: {
 			Color oldColor = cellForegroundColor;
-			if (oldColor == null) oldColor = table1.getItem (0).getForeground (1);
+            if (oldColor == null) {
+                oldColor = table1.getItem(0).getForeground(1);
+            }
 			colorDialog.setRGB(oldColor.getRGB());
 			RGB rgb = colorDialog.open();
-			if (rgb == null) return;
+            if (rgb == null) {
+                return;
+            }
 			cellForegroundColor = new Color (rgb);
 			setCellForeground ();
 		}
 		break;
 		case CELL_BACKGROUND_COLOR: {
 			Color oldColor = cellBackgroundColor;
-			if (oldColor == null) oldColor = table1.getItem (0).getBackground (1);
+            if (oldColor == null) {
+                oldColor = table1.getItem(0).getBackground(1);
+            }
 			colorDialog.setRGB(oldColor.getRGB());
 			RGB rgb = colorDialog.open();
-			if (rgb == null) return;
+            if (rgb == null) {
+                return;
+            }
 			cellBackgroundColor = new Color (rgb);
 			setCellBackground ();
 		}
 		break;
 		case CELL_FONT: {
 			Font oldFont = cellFont;
-			if (oldFont == null) oldFont = table1.getItem (0).getFont (1);
+            if (oldFont == null) {
+                oldFont = table1.getItem(0).getFont(1);
+            }
 			fontDialog.setFontList(oldFont.getFontData());
 			FontData fontData = fontDialog.open ();
-			if (fontData == null) return;
+            if (fontData == null) {
+                return;
+            }
 			oldFont = cellFont;
 			cellFont = new Font (display, fontData);
 			setCellFont ();
 			setExampleWidgetSize ();
-			if (oldFont != null) oldFont.dispose ();
+            if (oldFont != null) {
+                oldFont.dispose();
+            }
 		}
 		break;
 		case HEADER_FOREGROUND_COLOR: {
 			Color oldColor = headerForegroundColor;
-			if (oldColor == null) oldColor = table1.getHeaderForeground();
+            if (oldColor == null) {
+                oldColor = table1.getHeaderForeground();
+            }
 			colorDialog.setRGB(oldColor.getRGB());
 			RGB rgb = colorDialog.open();
-			if (rgb == null) return;
+            if (rgb == null) {
+                return;
+            }
 			headerForegroundColor = new Color (rgb);
 			setHeaderForeground ();
 		}
 		break;
 		case HEADER_BACKGROUND_COLOR: {
 			Color oldColor = headerBackgroundColor;
-			if (oldColor == null) oldColor = table1.getHeaderBackground();
+            if (oldColor == null) {
+                oldColor = table1.getHeaderBackground();
+            }
 			colorDialog.setRGB(oldColor.getRGB());
 			RGB rgb = colorDialog.open();
-			if (rgb == null) return;
+            if (rgb == null) {
+                return;
+            }
 			headerBackgroundColor = new Color (rgb);
 			setHeaderBackground ();
 		}
@@ -354,15 +394,33 @@ class TableTab extends ScrollableTab {
 	void createExampleWidgets () {
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (singleButton.getSelection ()) style |= SWT.SINGLE;
-		if (multiButton.getSelection ()) style |= SWT.MULTI;
-		if (verticalButton.getSelection ()) style |= SWT.V_SCROLL;
-		if (horizontalButton.getSelection ()) style |= SWT.H_SCROLL;
-		if (noScrollButton.getSelection ()) style |= SWT.NO_SCROLL;
-		if (checkButton.getSelection ()) style |= SWT.CHECK;
-		if (fullSelectionButton.getSelection ()) style |= SWT.FULL_SELECTION;
-		if (hideSelectionButton.getSelection ()) style |= SWT.HIDE_SELECTION;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
+        if (singleButton.getSelection()) {
+            style |= SWT.SINGLE;
+        }
+        if (multiButton.getSelection()) {
+            style |= SWT.MULTI;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.V_SCROLL;
+        }
+        if (horizontalButton.getSelection()) {
+            style |= SWT.H_SCROLL;
+        }
+        if (noScrollButton.getSelection()) {
+            style |= SWT.NO_SCROLL;
+        }
+        if (checkButton.getSelection()) {
+            style |= SWT.CHECK;
+        }
+        if (fullSelectionButton.getSelection()) {
+            style |= SWT.FULL_SELECTION;
+        }
+        if (hideSelectionButton.getSelection()) {
+            style |= SWT.HIDE_SELECTION;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
 
 		/* Create the table widget */
 		table1 = new Table (tableGroup, style);
@@ -374,7 +432,9 @@ class TableTab extends ScrollableTab {
 				TableColumn tableColumn = new TableColumn(table1, SWT.NONE);
 				tableColumn.setText(columnTitles[i]);
 				tableColumn.setToolTipText(ControlExample.getResourceString("Tooltip", columnTitles[i]));
-				if (headerImagesButton.getSelection()) tableColumn.setImage(instance.images [i % 3]);
+                if (headerImagesButton.getSelection()) {
+                    tableColumn.setImage(instance.images [i % 3]);
+                }
 			}
 			table1.setSortColumn(table1.getColumn(0));
 		}
@@ -486,10 +546,14 @@ class TableTab extends ScrollableTab {
 
 	@Override
 	Object[] parameterForType(String typeName, String value, Widget widget) {
-		if (value.isEmpty()) return new Object[] {new TableItem[0]}; // bug in Table?
+        if (value.isEmpty()) {
+            return new Object[]{new TableItem[0]};
+        } // bug in Table?
 		if (typeName.equals("org.eclipse.swt.widgets.TableItem")) {
 			TableItem item = findItem(value, ((Table) widget).getItems());
-			if (item != null) return new Object[] {item};
+            if (item != null) {
+                return new Object[]{item};
+            }
 		}
 		if (typeName.equals("[Lorg.eclipse.swt.widgets.TableItem;")) {
 			String[] values = split(value, ',');
@@ -504,7 +568,9 @@ class TableTab extends ScrollableTab {
 
 	TableItem findItem(String value, TableItem[] items) {
 		for (TableItem item : items) {
-			if (item.getText().equals(value)) return item;
+            if (item.getText().equals(value)) {
+                return item;
+            }
 		}
 		return null;
 	}
@@ -533,7 +599,9 @@ class TableTab extends ScrollableTab {
 		Font oldFont = font;
 		itemFont = null;
 		setItemFont ();
-		if (oldFont != null) oldFont.dispose();
+        if (oldFont != null) {
+            oldFont.dispose();
+        }
 		cellForegroundColor = null;
 		setCellForeground ();
 		cellBackgroundColor = null;
@@ -541,7 +609,9 @@ class TableTab extends ScrollableTab {
 		oldFont = font;
 		cellFont = null;
 		setCellFont ();
-		if (oldFont != null) oldFont.dispose();
+        if (oldFont != null) {
+            oldFont.dispose();
+        }
 		headerBackgroundColor = null;
 		setHeaderBackground ();
 		headerForegroundColor = null;
@@ -557,10 +627,14 @@ class TableTab extends ScrollableTab {
 		}
 		/* Set the background color item's image to match the background color of the cell. */
 		Color color = cellBackgroundColor;
-		if (color == null) color = table1.getItem (0).getBackground (1);
+        if (color == null) {
+            color = table1.getItem(0).getBackground(1);
+        }
 		TableItem item = colorAndFontTable.getItem(CELL_BACKGROUND_COLOR);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (colorImage(color));
 	}
 
@@ -573,10 +647,14 @@ class TableTab extends ScrollableTab {
 		}
 		/* Set the foreground color item's image to match the foreground color of the cell. */
 		Color color = cellForegroundColor;
-		if (color == null) color = table1.getItem (0).getForeground (1);
+        if (color == null) {
+            color = table1.getItem(0).getForeground(1);
+        }
 		TableItem item = colorAndFontTable.getItem(CELL_FOREGROUND_COLOR);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (colorImage(color));
 	}
 
@@ -589,10 +667,14 @@ class TableTab extends ScrollableTab {
 		}
 		/* Set the font item's image to match the font of the item. */
 		Font ft = cellFont;
-		if (ft == null) ft = table1.getItem (0).getFont (1);
+        if (ft == null) {
+            ft = table1.getItem(0).getFont(1);
+        }
 		TableItem item = colorAndFontTable.getItem(CELL_FONT);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (fontImage(ft));
 		item.setFont(ft);
 		colorAndFontTable.layout ();
@@ -607,10 +689,14 @@ class TableTab extends ScrollableTab {
 		}
 		/* Set the background color item's image to match the background color of the item. */
 		Color color = itemBackgroundColor;
-		if (color == null) color = table1.getItem (0).getBackground ();
+        if (color == null) {
+            color = table1.getItem(0).getBackground();
+        }
 		TableItem item = colorAndFontTable.getItem(ITEM_BACKGROUND_COLOR);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (colorImage(color));
 	}
 
@@ -623,10 +709,14 @@ class TableTab extends ScrollableTab {
 		}
 		/* Set the foreground color item's image to match the foreground color of the item. */
 		Color color = itemForegroundColor;
-		if (color == null) color = table1.getItem (0).getForeground ();
+        if (color == null) {
+            color = table1.getItem(0).getForeground();
+        }
 		TableItem item = colorAndFontTable.getItem(ITEM_FOREGROUND_COLOR);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (colorImage(color));
 	}
 
@@ -639,10 +729,14 @@ class TableTab extends ScrollableTab {
 		}
 		/* Set the font item's image to match the font of the item. */
 		Font ft = itemFont;
-		if (ft == null) ft = table1.getItem (0).getFont ();
+        if (ft == null) {
+            ft = table1.getItem(0).getFont();
+        }
 		TableItem item = colorAndFontTable.getItem(ITEM_FONT);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (fontImage(ft));
 		item.setFont(ft);
 		colorAndFontTable.layout ();
@@ -654,10 +748,14 @@ class TableTab extends ScrollableTab {
 		}
 		/* Set the header background color item's image to match the header background color. */
 		Color color = headerBackgroundColor;
-		if (color == null) color = table1.getHeaderBackground();
+        if (color == null) {
+            color = table1.getHeaderBackground();
+        }
 		TableItem item = colorAndFontTable.getItem(HEADER_BACKGROUND_COLOR);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (colorImage(color));
 	}
 
@@ -667,10 +765,14 @@ class TableTab extends ScrollableTab {
 		}
 		/* Set the header foreground color item's image to match the header foreground color. */
 		Color color = headerForegroundColor;
-		if (color == null) color = table1.getHeaderForeground();
+        if (color == null) {
+            color = table1.getHeaderForeground();
+        }
 		TableItem item = colorAndFontTable.getItem(HEADER_FOREGROUND_COLOR);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (colorImage(color));
 	}
 
@@ -747,7 +849,9 @@ class TableTab extends ScrollableTab {
 			table1.setSortDirection (SWT.DOWN);
 			for (int i = 0; i < columns.length; i++) {
 				TableColumn column = columns[i];
-				if (i == 0) table1.setSortColumn(column);
+                if (i == 0) {
+                    table1.setSortColumn(column);
+                }
 				SelectionListener listener = widgetSelectedAdapter(e -> {
 					int sortDirection = SWT.DOWN;
 					if (e.widget == table1.getSortColumn()) {
@@ -768,7 +872,9 @@ class TableTab extends ScrollableTab {
 			table1.setSortDirection (SWT.NONE);
 			for (TableColumn column : columns) {
 				SelectionListener listener = (SelectionListener)column.getData("SortListener");	//$NON-NLS-1$
-				if (listener != null) column.removeSelectionListener(listener);
+                if (listener != null) {
+                    column.removeSelectionListener(listener);
+                }
 			}
 		}
 	}

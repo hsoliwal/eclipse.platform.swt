@@ -56,8 +56,9 @@ public void test_getLevel() {
 //	assertEquals(0, layout.getLevel(4)); //bug in windows (uniscribe)
 	assertEquals(1, layout.getLevel(5));
 	assertEquals(1, layout.getLevel(6));
-	if (!SwtTestUtil.isWindows)
-		assertEquals(2, layout.getLevel(7));  // skipping windows due to fix for bug 565526
+    if (!SwtTestUtil.isWindows) {
+        assertEquals(2, layout.getLevel(7));
+    }  // skipping windows due to fix for bug 565526
 	assertEquals(0, layout.getLevel(9));
 	assertThrows(IllegalArgumentException.class, () -> layout.getLevel(-1));
 	assertThrows(IllegalArgumentException.class, () -> layout.getLevel(text.length() + 1));
@@ -858,8 +859,9 @@ public void test_getOffset() {
 	assertEquals(1, trailing[0]);
 	point = layout.getLocation(4, true);
 	assertEquals(2, layout.getOffset(point.x - 1, 0, trailing));
-	if (!isCocoa)
-		assertEquals(1, trailing[0]);
+    if (!isCocoa) {
+        assertEquals(1, trailing[0]);
+    }
 	point = layout.getLocation(4, false);
 	assertEquals(3, layout.getOffset(point.x + 1, 0, trailing));
 	assertEquals(1, trailing[0]);
@@ -912,7 +914,9 @@ public void test_getTextDirection() {
 		int orientation = styles[i];
 		if (orientation != -1) {
 			layout.setOrientation(orientation);
-			if (orientation != 0) prevDirection = orientation;
+            if (orientation != 0) {
+                prevDirection = orientation;
+            }
 		}
 		for (int j = n - 1; j >= 0; j--) {
 			int direction = styles[j];
@@ -989,12 +993,15 @@ public void test_bug568740_multilineTextStyle() {
 		assertFalse(SwtTestUtil.hasPixel(image, display.getSystemColor(SWT.COLOR_DARK_GREEN), searchRangeUnder));
 		assertTrue(SwtTestUtil.hasPixel(image, display.getSystemColor(SWT.COLOR_GREEN), searchRangeUnder));
 	} finally {
-		if (layout != null)
-			layout.dispose();
-		if (image != null)
-			image.dispose();
-		if (font != null)
-			font.dispose();
+        if (layout != null) {
+            layout.dispose();
+        }
+        if (image != null) {
+            image.dispose();
+        }
+        if (font != null) {
+            font.dispose();
+        }
 	}
 }
 
@@ -1038,12 +1045,15 @@ private int[][] draw(String input, int antialias) {
 		return SwtTestUtil.getAllPixels(image);
 
 	} finally {
-		if (layout != null)
-			layout.dispose();
-		if (image != null)
-			image.dispose();
-		if (font != null)
-			font.dispose();
+        if (layout != null) {
+            layout.dispose();
+        }
+        if (image != null) {
+            image.dispose();
+        }
+        if (font != null) {
+            font.dispose();
+        }
 	}
 }
 
@@ -1203,12 +1213,15 @@ public void test_Bug579335_win32_StyledText_LongLine() {
 //		 SwtTestUtil.debugDisplayImage(image);
 	} finally {
 
-		if (layout != null)
-			layout.dispose();
-		if (image != null)
-			image.dispose();
-		if (font != null)
-			font.dispose();
+        if (layout != null) {
+            layout.dispose();
+        }
+        if (image != null) {
+            image.dispose();
+        }
+        if (font != null) {
+            font.dispose();
+        }
 	}
 }
 }

@@ -48,11 +48,15 @@ public static void main (String [] args) {
 	dialog.open ();
 	System.out.println ("Prompt ...");
 	while (!dialog.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	System.out.println ("Result: " + result [0]);
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

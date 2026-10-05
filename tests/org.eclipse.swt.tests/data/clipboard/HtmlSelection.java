@@ -61,8 +61,9 @@ class HtmlSelection implements Transferable {
 
 	@Override
 	public Object getTransferData(DataFlavor f) throws UnsupportedFlavorException {
-		if (f.equals(flavor))
-			return new ByteArrayInputStream(html);
+        if (f.equals(flavor)) {
+            return new ByteArrayInputStream(html);
+        }
 		throw new UnsupportedFlavorException(f);
 	}
 }

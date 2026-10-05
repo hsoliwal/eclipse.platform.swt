@@ -218,10 +218,16 @@ public final class ImageData implements Cloneable {
 	static {
 		for (int b = 0; b < 9; ++b) {
 			byte[] data = ANY_TO_EIGHT[b] = new byte[1 << b];
-			if (b == 0) continue;
+            if (b == 0) {
+                continue;
+            }
 			int inc = 0;
-			for (int bit = 0x10000; (bit >>= b) != 0;) inc |= bit;
-			for (int v = 0, p = 0; v < 0x10000; v+= inc) data[p++] = (byte)(v >> 8);
+            for (int bit = 0x10000; (bit >>= b) != 0; ) {
+                inc |= bit;
+            }
+            for (int v = 0, p = 0; v < 0x10000; v += inc) {
+                data[p++] = (byte) (v >> 8);
+            }
 		}
 	}
 
@@ -415,7 +421,9 @@ ImageData(
 	int x, int y, int disposalMethod, int delayTime)
 {
 
-	if (palette == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (palette == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (!(depth == 1 || depth == 2 || depth == 4 || depth == 8
 		|| depth == 16 || depth == 24 || depth == 32)) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
@@ -423,7 +431,9 @@ ImageData(
 	if (width <= 0 || height <= 0) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (scanlinePad == 0) SWT.error (SWT.ERROR_CANNOT_BE_ZERO);
+    if (scanlinePad == 0) {
+        SWT.error(SWT.ERROR_CANNOT_BE_ZERO);
+    }
 
 	int bytesPerLine = (((width * depth + 7) / 8) + (scanlinePad - 1))
 		/ scanlinePad * scanlinePad;
@@ -538,7 +548,9 @@ ImageData colorMaskImage(int pixel) {
 }
 
 static byte[] checkData(byte [] data) {
-	if (data == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (data == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return data;
 }
 
@@ -598,9 +610,13 @@ public Object clone() {
  * </ul>
  */
 public int getAlpha(int x, int y) {
-	if (x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
-	if (alphaData == null) return 255;
+    if (alphaData == null) {
+        return 255;
+    }
 	return alphaData[y * width + x] & 0xFF;
 }
 
@@ -625,9 +641,15 @@ public int getAlpha(int x, int y) {
  * </ul>
  */
 public void getAlphas(int x, int y, int getWidth, byte[] alphas, int startIndex) {
-	if (alphas == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (getWidth < 0 || x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (getWidth == 0) return;
+    if (alphas == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (getWidth < 0 || x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (getWidth == 0) {
+        return;
+    }
 
 	if (alphaData == null) {
 		int endIndex = startIndex + getWidth;
@@ -656,7 +678,9 @@ public void getAlphas(int x, int y, int getWidth, byte[] alphas, int startIndex)
  * </ul>
  */
 public int getPixel(int x, int y) {
-	if (x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int index;
 	int theByte;
 	int mask;
@@ -726,9 +750,15 @@ public int getPixel(int x, int y) {
  * </ul>
  */
 public void getPixels(int x, int y, int getWidth, byte[] pixels, int startIndex) {
-	if (pixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (getWidth < 0 || x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (getWidth == 0) return;
+    if (pixels == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (getWidth < 0 || x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (getWidth == 0) {
+        return;
+    }
 	int index;
 	int theByte;
 	int mask = 0;
@@ -810,7 +840,9 @@ public void getPixels(int x, int y, int getWidth, byte[] pixels, int startIndex)
 				if (srcX >= width) {
 					srcY++;
 					index = srcY * bytesPerLine;
-					if (n > 0) theByte = data[index] & 0xFF;
+                    if (n > 0) {
+                        theByte = data[index] & 0xFF;
+                    }
 					srcX = 0;
 				} else {
 					if (offset == 0) {
@@ -836,12 +868,16 @@ public void getPixels(int x, int y, int getWidth, byte[] pixels, int startIndex)
 				if (srcX >= width) {
 					srcY++;
 					index = srcY * bytesPerLine;
-					if (n > 0) theByte = data[index] & 0xFF;
+                    if (n > 0) {
+                        theByte = data[index] & 0xFF;
+                    }
 					srcX = 0;
 				} else {
 					if (mask == 1) {
 						index++;
-						if (n > 0) theByte = data[index] & 0xFF;
+                        if (n > 0) {
+                            theByte = data[index] & 0xFF;
+                        }
 					}
 				}
 			}
@@ -872,9 +908,15 @@ public void getPixels(int x, int y, int getWidth, byte[] pixels, int startIndex)
  * </ul>
  */
 public void getPixels(int x, int y, int getWidth, int[] pixels, int startIndex) {
-	if (pixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (getWidth < 0 || x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (getWidth == 0) return;
+    if (pixels == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (getWidth < 0 || x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (getWidth == 0) {
+        return;
+    }
 	int index;
 	int theByte;
 	int mask;
@@ -1004,7 +1046,9 @@ public void getPixels(int x, int y, int getWidth, int[] pixels, int startIndex) 
 				if (srcX >= width) {
 					srcY++;
 					index = srcY * bytesPerLine;
-					if (n > 0) theByte = data[index] & 0xFF;
+                    if (n > 0) {
+                        theByte = data[index] & 0xFF;
+                    }
 					srcX = 0;
 				} else {
 					if (offset == 0) {
@@ -1030,12 +1074,16 @@ public void getPixels(int x, int y, int getWidth, int[] pixels, int startIndex) 
 				if (srcX >= width) {
 					srcY++;
 					index = srcY * bytesPerLine;
-					if (n > 0) theByte = data[index] & 0xFF;
+                    if (n > 0) {
+                        theByte = data[index] & 0xFF;
+                    }
 					srcX = 0;
 				} else {
 					if (mask == 1) {
 						index++;
-						if (n > 0) theByte = data[index] & 0xFF;
+                        if (n > 0) {
+                            theByte = data[index] & 0xFF;
+                        }
 					}
 				}
 			}
@@ -1099,9 +1147,15 @@ ImageData getTransparencyMaskFromAlphaData() {
  * @return the receiver's transparency type
  */
 public int getTransparencyType() {
-	if (maskData != null) return SWT.TRANSPARENCY_MASK;
-	if (transparentPixel != -1) return SWT.TRANSPARENCY_PIXEL;
-	if (alphaData != null) return SWT.TRANSPARENCY_ALPHA;
+    if (maskData != null) {
+        return SWT.TRANSPARENCY_MASK;
+    }
+    if (transparentPixel != -1) {
+        return SWT.TRANSPARENCY_PIXEL;
+    }
+    if (alphaData != null) {
+        return SWT.TRANSPARENCY_ALPHA;
+    }
 	return SWT.TRANSPARENCY_NONE;
 }
 
@@ -1127,9 +1181,13 @@ int getByteOrder() {
 public ImageData scaledTo(int width, int height) {
 	/* Create a destination image with no data */
 	final boolean flipX = (width < 0);
-	if (flipX) width = - width;
+    if (flipX) {
+        width = -width;
+    }
 	final boolean flipY = (height < 0);
-	if (flipY) height = - height;
+    if (flipY) {
+        height = -height;
+    }
 
 	ImageData dest = new ImageData(
 		width, height, depth, palette,
@@ -1137,15 +1195,18 @@ public ImageData scaledTo(int width, int height) {
 		null, -1, transparentPixel, type,
 		x, y, disposalMethod, delayTime);
 
-	/* Scale the image contents */
-	if (palette.isDirect) blit(
-		this.data, this.depth, this.bytesPerLine, this.getByteOrder(), this.width, this.height, 0, 0, 0,
-		dest.data, dest.depth, dest.bytesPerLine, dest.getByteOrder(), dest.width, dest.height, 0, 0, 0,
-		flipX, flipY);
-	else blit(
-		this.data, this.depth, this.bytesPerLine, this.getByteOrder(), this.width, this.height,
-		dest.data, dest.depth, dest.bytesPerLine, dest.getByteOrder(), dest.width, dest.height,
-		flipX, flipY);
+    /* Scale the image contents */
+    if (palette.isDirect) {
+        blit(
+                this.data, this.depth, this.bytesPerLine, this.getByteOrder(), this.width, this.height, 0, 0, 0,
+                dest.data, dest.depth, dest.bytesPerLine, dest.getByteOrder(), dest.width, dest.height, 0, 0, 0,
+                flipX, flipY);
+    } else {
+        blit(
+                this.data, this.depth, this.bytesPerLine, this.getByteOrder(), this.width, this.height,
+                dest.data, dest.depth, dest.bytesPerLine, dest.getByteOrder(), dest.width, dest.height,
+                flipX, flipY);
+    }
 
 	/* Scale the image mask or alpha */
 	if (maskData != null) {
@@ -1186,10 +1247,13 @@ public ImageData scaledTo(int width, int height) {
  *  </ul>
  */
 public void setAlpha(int x, int y, int alpha) {
-	if (x >= width || y >= height || x < 0 || y < 0 || alpha < 0 || alpha > 255)
-		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (x >= width || y >= height || x < 0 || y < 0 || alpha < 0 || alpha > 255) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
-	if (alphaData == null) alphaData = new byte[width * height];
+    if (alphaData == null) {
+        alphaData = new byte[width * height];
+    }
 	alphaData[y * width + x] = (byte)alpha;
 }
 
@@ -1214,11 +1278,19 @@ public void setAlpha(int x, int y, int alpha) {
  * </ul>
  */
 public void setAlphas(int x, int y, int putWidth, byte[] alphas, int startIndex) {
-	if (alphas == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (putWidth < 0 || x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (putWidth == 0) return;
+    if (alphas == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (putWidth < 0 || x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (putWidth == 0) {
+        return;
+    }
 
-	if (alphaData == null) alphaData = new byte[width * height];
+    if (alphaData == null) {
+        alphaData = new byte[width * height];
+    }
 	// may throw an IndexOutOfBoundsException
 	System.arraycopy(alphas, startIndex, alphaData, y * width + x, putWidth);
 }
@@ -1239,7 +1311,9 @@ public void setAlphas(int x, int y, int putWidth, byte[] alphas, int startIndex)
  * </ul>
  */
 public void setPixel(int x, int y, int pixelValue) {
-	if (x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int index;
 	byte theByte;
 	int mask;
@@ -1319,9 +1393,15 @@ public void setPixel(int x, int y, int pixelValue) {
  * </ul>
  */
 public void setPixels(int x, int y, int putWidth, byte[] pixels, int startIndex) {
-	if (pixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (putWidth < 0 || x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (putWidth == 0) return;
+    if (pixels == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (putWidth < 0 || x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (putWidth == 0) {
+        return;
+    }
 	int index;
 	int theByte;
 	int mask;
@@ -1363,7 +1443,9 @@ public void setPixels(int x, int y, int putWidth, byte[] pixels, int startIndex)
 					high = true;
 					srcX = 0;
 				} else {
-					if (!high) index++;
+                    if (!high) {
+                        index++;
+                    }
 					high = !high;
 				}
 			}
@@ -1443,9 +1525,15 @@ public void setPixels(int x, int y, int putWidth, byte[] pixels, int startIndex)
  * </ul>
  */
 public void setPixels(int x, int y, int putWidth, int[] pixels, int startIndex) {
-	if (pixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (putWidth < 0 || x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (putWidth == 0) return;
+    if (pixels == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (putWidth < 0 || x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (putWidth == 0) {
+        return;
+    }
 	int index;
 	int theByte;
 	int mask;
@@ -1542,7 +1630,9 @@ public void setPixels(int x, int y, int putWidth, int[] pixels, int startIndex) 
 					high = true;
 					srcX = 0;
 				} else {
-					if (!high) index++;
+                    if (!high) {
+                        index++;
+                    }
 					high = !high;
 				}
 			}
@@ -1607,7 +1697,9 @@ static PaletteData bwPalette() {
 }
 
 static ImageData convertMask(ImageData mask) {
-	if (mask.depth == 1) return mask;
+    if (mask.depth == 1) {
+        return mask;
+    }
 	PaletteData palette = new PaletteData(new RGB(0, 0, 0), new RGB(255,255,255));
 	ImageData newMask = new ImageData(mask.width, mask.height, 1, palette);
 	/* Find index of black in mask palette */
@@ -1615,7 +1707,9 @@ static ImageData convertMask(ImageData mask) {
 	RGB[] rgbs = mask.getRGBs();
 	if (rgbs != null) {
 		while (blackIndex < rgbs.length) {
-			if (rgbs[blackIndex].equals(palette.colors[0])) break;
+            if (rgbs[blackIndex].equals(palette.colors[0])) {
+                break;
+            }
 			blackIndex++;
 		}
 	}
@@ -1635,7 +1729,9 @@ static ImageData convertMask(ImageData mask) {
 }
 
 static byte[] convertPad(byte[] data, int width, int height, int depth, int pad, int newPad) {
-	if (pad == newPad) return data;
+    if (pad == newPad) {
+        return data;
+    }
 	int stride = (width * depth + 7) / 8;
 	int bpl = (stride + (pad - 1)) / pad * pad;
 	int newBpl = (stride + (newPad - 1)) / newPad * newPad;
@@ -1714,7 +1810,9 @@ static void blit(
 	int destWidth, int destHeight,
 	int destRedMask, int destGreenMask, int destBlueMask,
 	boolean flipX, boolean flipY) {
-	if ((destWidth <= 0) || (destHeight <= 0)) return;
+    if ((destWidth <= 0) || (destHeight <= 0)) {
+        return;
+    }
 
 	/*** Prepare scaling data ***/
 	final int dwm1 = destWidth - 1;
@@ -2005,7 +2103,9 @@ static void blit(
 	byte[] destData, int destDepth, int destStride, int destOrder,
 	int destWidth, int destHeight,
 	boolean flipX, boolean flipY) {
-	if ((destWidth <= 0) || (destHeight <= 0)) return;
+    if ((destWidth <= 0) || (destHeight <= 0)) {
+        return;
+    }
 
 	if (srcDepth > destDepth) {
 		// This case doesn't really make sense - what to do when source palette index
@@ -2111,11 +2211,17 @@ static void blit(
 				for (int dy = destHeight, sfy = sfyi; dy > 0; --dy, sp = spr += (sfy >>> 16) * srcPixelsPerStride, sfy = (sfy & 0xffff) + sfyi, dp = dpr += dpryi) {
 					for (int dx = destWidth, sfx = sfxi; dx > 0; --dx, dp += dprxi, sfx = (sfx & 0xffff) + sfxi) {
 						final int v;
-						if ((sp & 1) != 0) v = srcData[sp >> 1] & 0x0f;
-						else v = (srcData[sp >> 1] >>> 4) & 0x0f;
+                        if ((sp & 1) != 0) {
+                            v = srcData[sp >> 1] & 0x0f;
+                        } else {
+                            v = (srcData[sp >> 1] >>> 4) & 0x0f;
+                        }
 						sp += (sfx >>> 16);
-						if ((dp & 1) != 0) destData[dp >> 1] = (byte)((destData[dp >> 1] & 0xf0) | v);
-						else destData[dp >> 1] = (byte)((destData[dp >> 1] & 0x0f) | (v << 4));
+                        if ((dp & 1) != 0) {
+                            destData[dp >> 1] = (byte) ((destData[dp >> 1] & 0xf0) | v);
+                        } else {
+                            destData[dp >> 1] = (byte) ((destData[dp >> 1] & 0x0f) | (v << 4));
+                        }
 					}
 				}
 				break;
@@ -2170,8 +2276,11 @@ static void blit(
 						index = srcData[sp] & 0xff;
 						break;
 					case TYPE_INDEX_4:
-						if ((sp & 1) != 0) index = srcData[sp >> 1] & 0x0f;
-						else index = (srcData[sp >> 1] >>> 4) & 0x0f;
+                        if ((sp & 1) != 0) {
+                            index = srcData[sp >> 1] & 0x0f;
+                        } else {
+                            index = (srcData[sp >> 1] >>> 4) & 0x0f;
+                        }
 						break;
 					case TYPE_INDEX_2:
 						index = (srcData[sp >> 2] >>> (6 - (sp & 3) * 2)) & 0x03;
@@ -2196,8 +2305,11 @@ static void blit(
 						destData[dp] = (byte) index;
 						break;
 					case TYPE_INDEX_4:
-						if ((dp & 1) != 0) destData[dp >> 1] = (byte)((destData[dp >> 1] & 0xf0) | index);
-						else destData[dp >> 1] = (byte)((destData[dp >> 1] & 0x0f) | (index << 4));
+                        if ((dp & 1) != 0) {
+                            destData[dp >> 1] = (byte) ((destData[dp >> 1] & 0xf0) | index);
+                        } else {
+                            destData[dp >> 1] = (byte) ((destData[dp >> 1] & 0x0f) | (index << 4));
+                        }
 						break;
 					case TYPE_INDEX_2: {
 						final int shift = 6 - (dp & 3) * 2;
@@ -2355,8 +2467,11 @@ static void blit(
 					index = srcData[sp] & 0xff;
 					break;
 				case TYPE_INDEX_4:
-					if ((sp & 1) != 0) index = srcData[sp >> 1] & 0x0f;
-					else index = (srcData[sp >> 1] >>> 4) & 0x0f;
+                    if ((sp & 1) != 0) {
+                        index = srcData[sp >> 1] & 0x0f;
+                    } else {
+                        index = (srcData[sp >> 1] >>> 4) & 0x0f;
+                    }
 					break;
 				case TYPE_INDEX_2:
 					index = (srcData[sp >> 2] >>> (6 - (sp & 3) * 2)) & 0x03;
@@ -2417,7 +2532,9 @@ static void blit(
  * Computes the required channel shift from a mask.
  */
 static int getChannelShift(int mask) {
-	if (mask == 0) return 0;
+    if (mask == 0) {
+        return 0;
+    }
 	int i;
 	for (i = 0; ((mask & 1) == 0) && (i < 32); ++i) {
 		mask >>>= 1;
@@ -2429,7 +2546,9 @@ static int getChannelShift(int mask) {
  * Computes the required channel width (depth) from a mask.
  */
 static int getChannelWidth(int mask, int shift) {
-	if (mask == 0) return 0;
+    if (mask == 0) {
+        return 0;
+    }
 	int i;
 	mask >>>= shift;
 	for (i = shift; ((mask & 1) != 0) && (i < 32); ++i) {
@@ -2572,8 +2691,11 @@ static void buildDitheredGradientChannel(int from, int to, int steps,
 			for (int dx = 0, dptr = dp; dx < bandWidth; ++dx, dptr += 4) {
 				final int thresh = DITHER_MATRIX[dy & 7][dx] >>> bits;
 				int temp = val + thresh;
-				if (temp > 0xffffff) bitmapData[dptr] = -1;
-				else bitmapData[dptr] = (byte)((temp >>> 16) & mask);
+                if (temp > 0xffffff) {
+                    bitmapData[dptr] = -1;
+                } else {
+                    bitmapData[dptr] = (byte) ((temp >>> 16) & mask);
+                }
 			}
 			val += inc;
 		}
@@ -2582,8 +2704,11 @@ static void buildDitheredGradientChannel(int from, int to, int steps,
 			for (int dy = 0, dptr = dp; dy < bandHeight; ++dy, dptr += bytesPerLine) {
 				final int thresh = DITHER_MATRIX[dy][dx & 7] >>> bits;
 				int temp = val + thresh;
-				if (temp > 0xffffff) bitmapData[dptr] = -1;
-				else bitmapData[dptr] = (byte)((temp >>> 16) & mask);
+                if (temp > 0xffffff) {
+                    bitmapData[dptr] = -1;
+                } else {
+                    bitmapData[dptr] = (byte) ((temp >>> 16) & mask);
+                }
 			}
 			val += inc;
 		}
@@ -2630,14 +2755,18 @@ static void fillGradientRectangle(GC gc, Device device,
 		if (vertical) {
 			for (int dx = 0; dx < width; dx += band.width) {
 				int blitWidth = width - dx;
-				if (blitWidth > band.width) blitWidth = band.width;
+                if (blitWidth > band.width) {
+                    blitWidth = band.width;
+                }
 				gc.drawImage(image, DPIUtil.pixelToPoint(dx + x, zoom), DPIUtil.pixelToPoint(y, zoom),
 						DPIUtil.pixelToPoint(blitWidth, zoom), DPIUtil.pixelToPoint(band.height, zoom));
 				}
 		} else {
 			for (int dy = 0; dy < height; dy += band.height) {
 				int blitHeight = height - dy;
-				if (blitHeight > band.height) blitHeight = band.height;
+                if (blitHeight > band.height) {
+                    blitHeight = band.height;
+                }
 				gc.drawImage(image, DPIUtil.pixelToPoint(x, zoom), DPIUtil.pixelToPoint(dy + y, zoom),
 						DPIUtil.pixelToPoint(band.width, zoom), DPIUtil.pixelToPoint(blitHeight, zoom));
 				}

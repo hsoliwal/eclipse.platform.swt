@@ -145,8 +145,12 @@ public ToolItem (ToolBar parent, int style, int index) {
 
 @Override
 long accessibleHandle() {
-	if (button != null && button.cell() != null) return button.cell().id;
-	if (view != null) return view.id;
+    if (button != null && button.cell() != null) {
+        return button.cell().id;
+    }
+    if (view != null) {
+        return view.id;
+    }
 	return 0;
 }
 
@@ -246,8 +250,10 @@ long accessibilityAttributeValue(long id, long sel, long arg0) {
 
 @Override
 boolean accessibilityIsIgnored(long id, long sel) {
-	// The interesting part of a ToolItem is its button, if it has one.
-	if (id == accessibleHandle()) return false;
+    // The interesting part of a ToolItem is its button, if it has one.
+    if (id == accessibleHandle()) {
+        return false;
+    }
 	return super.accessibilityIsIgnored(id, sel);
 }
 
@@ -292,7 +298,9 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 boolean handleKeyDown() {
@@ -316,12 +324,16 @@ Point computeSize () {
 		// In the unified toolbar case the width is ignored if 0, DEFAULT, or SEPARATOR_FILL.
 		if ((parent.style & SWT.HORIZONTAL) != 0) {
 			width = getWidth ();
-			if (width <= 0) width = DEFAULT_SEPARATOR_WIDTH;
+            if (width <= 0) {
+                width = DEFAULT_SEPARATOR_WIDTH;
+            }
 			height = DEFAULT_HEIGHT;
 		} else {
 			width = DEFAULT_WIDTH;
 			height = getWidth ();
-			if (height <= 0) height = DEFAULT_SEPARATOR_WIDTH;
+            if (height <= 0) {
+                height = DEFAULT_SEPARATOR_WIDTH;
+            }
 		}
 		if (control != null) {
 			height = Math.max (height, control.getMininumHeight ());
@@ -389,7 +401,9 @@ void createHandle () {
 		button.setBordered(false);
 		button.setAction(OS.sel_sendSelection);
 		button.setTarget(button);
-		if (nsMenuRep != null) nsMenuRep.setTarget(button);
+        if (nsMenuRep != null) {
+            nsMenuRep.setTarget(button);
+        }
 		Font font = parent.font != null ? parent.font : parent.defaultFont ();
 		button.setFont(font.handle);
 		button.setImagePosition(OS.NSImageOverlaps);
@@ -760,7 +774,9 @@ public ToolBar getParent () {
  */
 public boolean getSelection () {
 	checkWidget();
-	if ((style & (SWT.CHECK | SWT.RADIO)) == 0) return false;
+    if ((style & (SWT.CHECK | SWT.RADIO)) == 0) {
+        return false;
+    }
 	return selection;
 }
 
@@ -826,7 +842,9 @@ long menuForEvent (long id, long sel, long theEvent) {
 
 @Override
 void mouseDown(long id, long sel, long theEvent) {
-	if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseDown)) return;
+    if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseDown)) {
+        return;
+    }
 	Display display = this.display;
 	display.trackingControl = parent;
 	super.mouseDown(id, sel, theEvent);
@@ -843,55 +861,73 @@ void mouseDown(long id, long sel, long theEvent) {
 
 @Override
 boolean mouseDownCanMoveWindow(long id, long sel) {
-	if (id == view.id) return false;
+    if (id == view.id) {
+        return false;
+    }
 	return super.mouseDownCanMoveWindow(id, sel);
 }
 
 @Override
 void mouseUp(long id, long sel, long theEvent) {
-	if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseUp)) return;
+    if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseUp)) {
+        return;
+    }
 	super.mouseUp(id, sel, theEvent);
 }
 
 @Override
 void mouseDragged(long id, long sel, long theEvent) {
-	if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseMove)) return;
+    if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseMove)) {
+        return;
+    }
 	super.mouseDragged(id, sel, theEvent);
 }
 
 @Override
 void rightMouseDown(long id, long sel, long theEvent) {
-	if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseDown)) return;
+    if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseDown)) {
+        return;
+    }
 	super.rightMouseDown(id, sel, theEvent);
 }
 
 @Override
 void rightMouseUp(long id, long sel, long theEvent) {
-	if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseUp)) return;
+    if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseUp)) {
+        return;
+    }
 	super.rightMouseUp(id, sel, theEvent);
 }
 
 @Override
 void rightMouseDragged(long id, long sel, long theEvent) {
-	if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseMove)) return;
+    if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseMove)) {
+        return;
+    }
 	super.rightMouseDragged(id, sel, theEvent);
 }
 
 @Override
 void otherMouseDown(long id, long sel, long theEvent) {
-	if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseDown)) return;
+    if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseDown)) {
+        return;
+    }
 	super.otherMouseDown(id, sel, theEvent);
 }
 
 @Override
 void otherMouseUp(long id, long sel, long theEvent) {
-	if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseUp)) return;
+    if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseUp)) {
+        return;
+    }
 	super.otherMouseUp(id, sel, theEvent);
 }
 
 @Override
 void otherMouseDragged(long id, long sel, long theEvent) {
-	if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseMove)) return;
+    if (!parent.mouseEvent(parent.view.id, sel, theEvent, SWT.MouseMove)) {
+        return;
+    }
 	super.otherMouseDragged(id, sel, theEvent);
 }
 
@@ -925,8 +961,12 @@ void register () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Selection, listener);
 	eventTable.unhook(SWT.DefaultSelection,listener);
 }
@@ -940,8 +980,12 @@ void releaseParent () {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (view != null) view.release ();
-	if (button != null) button.release ();
+    if (view != null) {
+        view.release();
+    }
+    if (button != null) {
+        button.release();
+    }
 	view = button = null;
 	if (nsItem != null) {
 		nsItem.release();
@@ -969,11 +1013,17 @@ void releaseWidget () {
 void selectRadio () {
 	int index = 0;
 	ToolItem [] items = parent.getItems ();
-	while (index < items.length && items [index] != this) index++;
+    while (index < items.length && items [index] != this) {
+        index++;
+    }
 	int i = index - 1;
-	while (i >= 0 && items [i].setRadioSelection (false)) --i;
+    while (i >= 0 && items [i].setRadioSelection(false)) {
+        --i;
+    }
 	int j = index + 1;
-	while (j < items.length && items [j].setRadioSelection (false)) j++;
+    while (j < items.length && items [j].setRadioSelection(false)) {
+        j++;
+    }
 	setSelection (true);
 }
 
@@ -984,7 +1034,9 @@ void sendSelection () {
 			selectRadio ();
 		}
 	}
-	if ((style & SWT.CHECK) != 0) setSelection (!getSelection ());
+    if ((style & SWT.CHECK) != 0) {
+        setSelection(!getSelection());
+    }
 	sendSelectionEvent (SWT.Selection);
 }
 
@@ -1001,7 +1053,9 @@ void setBounds (int x, int y, int width, int height) {
 			rect.y = 0;
 			rect.width = width;
 			rect.height = height;
-			if ((style & SWT.DROP_DOWN) != 0) rect.width -= ARROW_WIDTH + INSET;
+            if ((style & SWT.DROP_DOWN) != 0) {
+                rect.width -= ARROW_WIDTH + INSET;
+            }
 			button.setFrame(rect);
 		}
 	} else {
@@ -1013,9 +1067,15 @@ void setBounds (int x, int y, int width, int height) {
 		// when the view is set again.
 		nsItem.setView(null);
 		view.setFrameSize(newSize);
-		if ((style & SWT.DROP_DOWN) != 0) newSize.width -= ARROW_WIDTH + INSET;
-		if (button != null) button.setFrameSize(newSize);
-		if ((style & SWT.DROP_DOWN) != 0) newSize.width += ARROW_WIDTH + INSET;
+        if ((style & SWT.DROP_DOWN) != 0) {
+            newSize.width -= ARROW_WIDTH + INSET;
+        }
+        if (button != null) {
+            button.setFrameSize(newSize);
+        }
+        if ((style & SWT.DROP_DOWN) != 0) {
+            newSize.width += ARROW_WIDTH + INSET;
+        }
 		nsItem.setMinSize(newSize);
 		nsItem.setMaxSize(newSize);
 		nsItem.setView(view);
@@ -1048,7 +1108,9 @@ public void setBackground (Color color) {
 	}
 	Color oldColor = background;
 	background = color;
-	if (Objects.equals (oldColor, background)) return;
+    if (Objects.equals(oldColor, background)) {
+        return;
+    }
 	view.setNeedsDisplay (true);
 }
 
@@ -1070,11 +1132,19 @@ public void setBackground (Color color) {
 public void setControl (Control control) {
 	checkWidget();
 	if (control != null) {
-		if (control.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (control.parent != parent) error (SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.parent != parent) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
-	if ((style & SWT.SEPARATOR) == 0) return;
-	if (this.control == control) return;
+    if ((style & SWT.SEPARATOR) == 0) {
+        return;
+    }
+    if (this.control == control) {
+        return;
+    }
 
 	if (parent.nsToolbar == null) {
 		NSBox widget = (NSBox)view;
@@ -1112,7 +1182,9 @@ public void setControl (Control control) {
  */
 public void setEnabled (boolean enabled) {
 	checkWidget();
-	if ((state & DISABLED) == 0 && enabled) return;
+    if ((state & DISABLED) == 0 && enabled) {
+        return;
+    }
 	if (enabled) {
 		state &= ~DISABLED;
 	} else {
@@ -1140,16 +1212,26 @@ public void setEnabled (boolean enabled) {
  */
 public void setDisabledImage (Image image) {
 	checkWidget();
-	if (this.disabledImage == image) return;
-	if (image != null && image.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if (this.disabledImage == image) {
+        return;
+    }
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	disabledImage = image;
 	updateImage (true);
 }
 
 boolean setFocus () {
-	if (button == null) return false;
-	if (!isEnabled ()) return false;
+    if (button == null) {
+        return false;
+    }
+    if (!isEnabled()) {
+        return false;
+    }
 	NSWindow window = view.window ();
 	if(window == null) {
 		return false;
@@ -1183,7 +1265,9 @@ public void setForeground (Color color) {
 	}
 	Color oldColor = foreground;
 	foreground = color;
-	if (Objects.equals (oldColor, foreground)) return;
+    if (Objects.equals(oldColor, foreground)) {
+        return;
+    }
 	updateStyle ();
 }
 
@@ -1206,9 +1290,15 @@ public void setForeground (Color color) {
  */
 public void setHotImage (Image image) {
 	checkWidget();
-	if (this.hotImage == image) return;
-	if (image != null && image.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if (this.hotImage == image) {
+        return;
+    }
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	hotImage = image;
 	updateImage (true);
 }
@@ -1216,15 +1306,23 @@ public void setHotImage (Image image) {
 @Override
 public void setImage (Image image) {
 	checkWidget();
-	if (this.image == image) return;
-	if (image != null && image.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if (this.image == image) {
+        return;
+    }
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	super.setImage (image);
 	updateImage (true);
 }
 
 boolean setRadioSelection (boolean value) {
-	if ((style & SWT.RADIO) == 0) return false;
+    if ((style & SWT.RADIO) == 0) {
+        return false;
+    }
 	if (getSelection () != value) {
 		setSelection (value);
 		sendSelectionEvent (SWT.Selection);
@@ -1249,7 +1347,9 @@ boolean setRadioSelection (boolean value) {
  */
 public void setSelection (boolean selected) {
 	checkWidget();
-	if ((style & (SWT.CHECK | SWT.RADIO)) == 0) return;
+    if ((style & (SWT.CHECK | SWT.RADIO)) == 0) {
+        return;
+    }
 	this.selection = selected;
 
 	if (parent.nsToolbar != null) {
@@ -1291,9 +1391,15 @@ public void setSelection (boolean selected) {
 @Override
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.SEPARATOR) != 0) return;
-	if (string.equals (getText ())) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
+    if (string.equals(getText())) {
+        return;
+    }
 	super.setText (string);
 	NSButton widget = (NSButton)button;
 	if (parent.nsToolbar != null) {
@@ -1343,8 +1449,12 @@ public void setText (String string) {
  */
 public void setToolTipText (String string) {
 	checkWidget();
-	if (string == null && toolTipText == null) return;
-	if (string != null && string.equals (toolTipText)) return;
+    if (string == null && toolTipText == null) {
+        return;
+    }
+    if (string != null && string.equals(toolTipText)) {
+        return;
+    }
 	toolTipText = string;
 	if (parent.nsToolbar != null) {
 		char[] chars = new char [toolTipText.length ()];
@@ -1358,10 +1468,14 @@ public void setToolTipText (String string) {
 
 void setVisible (boolean visible) {
 	if (visible) {
-		if ((state & HIDDEN) == 0) return;
+        if ((state & HIDDEN) == 0) {
+            return;
+        }
 		state &= ~HIDDEN;
 	} else {
-		if ((state & HIDDEN) != 0) return;
+        if ((state & HIDDEN) != 0) {
+            return;
+        }
 		state |= HIDDEN;
 	}
 	view.setHidden(!visible);
@@ -1386,8 +1500,12 @@ void setVisible (boolean visible) {
  */
 public void setWidth (int width) {
 	checkWidget();
-	if ((style & SWT.SEPARATOR) == 0) return;
-	if (width < SWT.SEPARATOR_FILL || this.width == width) return;
+    if ((style & SWT.SEPARATOR) == 0) {
+        return;
+    }
+    if (width < SWT.SEPARATOR_FILL || this.width == width) {
+        return;
+    }
 	this.width = width;
 	if (parent.nsToolbar != null) {
 		NSToolbar toolbar = parent.nsToolbar;
@@ -1404,7 +1522,9 @@ String tooltipText () {
 }
 
 void updateImage (boolean layout) {
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	Image newImage = null;
 
 	if ((state & DISABLED) == DISABLED && disabledImage != null) {
@@ -1440,7 +1560,9 @@ void updateImage (boolean layout) {
 }
 
 void updateStyle () {
-	if (button != null) ((NSButton)button).setAttributedTitle(createString());
+    if (button != null) {
+        ((NSButton) button).setAttributedTitle(createString());
+    }
 }
 
 @Override

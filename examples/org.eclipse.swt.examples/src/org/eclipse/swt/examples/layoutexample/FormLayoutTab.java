@@ -74,11 +74,21 @@ class FormLayoutTab extends Tab {
 	 * attachment given a string.
 	 */
 	int alignmentConstant (String align) {
-		if (align.equals("LEFT")) return SWT.LEFT;
-		if (align.equals("RIGHT")) return SWT.RIGHT;
-		if (align.equals("TOP")) return SWT.TOP;
-		if (align.equals("BOTTOM")) return SWT.BOTTOM;
-		if (align.equals("CENTER")) return SWT.CENTER;
+        if (align.equals("LEFT")) {
+            return SWT.LEFT;
+        }
+        if (align.equals("RIGHT")) {
+            return SWT.RIGHT;
+        }
+        if (align.equals("TOP")) {
+            return SWT.TOP;
+        }
+        if (align.equals("BOTTOM")) {
+            return SWT.BOTTOM;
+        }
+        if (align.equals("CENTER")) {
+            return SWT.CENTER;
+        }
 		return SWT.DEFAULT;
 	}
 
@@ -140,8 +150,9 @@ class FormLayoutTab extends Tab {
 			index = table.getSelectionIndex();
 			Point pt = new Point(e.x, e.y);
 			newItem = table.getItem(pt);
-			if (newItem == null)
-				return;
+            if (newItem == null) {
+                return;
+            }
 			TableItem oldItem = comboEditor.getItem();
 			if (newItem == oldItem || newItem != lastSelected) {
 				lastSelected = newItem;
@@ -193,8 +204,9 @@ class FormLayoutTab extends Tab {
 				dialog.setColumn(RIGHT_COL);
 				String attach = dialog.open();
 				newItem.setText(RIGHT_COL, attach);
-				if (newItem.getText(LEFT_COL).endsWith(")"))
-					newItem.setText(LEFT_COL, "");
+                if (newItem.getText(LEFT_COL).endsWith(")")) {
+                    newItem.setText(LEFT_COL, "");
+                }
 				resetEditors();
 			}));
 
@@ -226,8 +238,9 @@ class FormLayoutTab extends Tab {
 				dialog.setColumn(BOTTOM_COL);
 				String attach = dialog.open();
 				newItem.setText(BOTTOM_COL, attach);
-				if (newItem.getText(TOP_COL).endsWith(")"))
-					newItem.setText(TOP_COL, "");
+                if (newItem.getText(TOP_COL).endsWith(")")) {
+                    newItem.setText(TOP_COL, "");
+                }
 				resetEditors();
 			}));
 
@@ -485,7 +498,9 @@ class FormLayoutTab extends Tab {
 			for (int i = 0 ; i < MODIFY_COLS; i++) {
 				oldItem.setText (i, data.get (row) [i]);
 			}
-			if (!tab) disposeEditors ();
+            if (!tab) {
+                disposeEditors();
+            }
 		}
 		setLayoutState ();
 		refreshLayoutComposite ();
@@ -560,8 +575,12 @@ class FormLayoutTab extends Tab {
 			width = Integer.parseInt(items [i].getText (WIDTH_COL));
 			height = Integer.parseInt(items [i].getText (HEIGHT_COL));
 			data = new FormData ();
-			if (width > 0) data.width = width;
-			if (height > 0) data.height = height;
+            if (width > 0) {
+                data.width = width;
+            }
+            if (height > 0) {
+                data.height = height;
+            }
 
 			left = items [i].getText (LEFT_COL);
 			if (left.length () > 0) {
@@ -691,8 +710,11 @@ class FormLayoutTab extends Tab {
 					}
 				}
 			}
-			if (oldControl.length () != 0) control.setText (oldControl);
-			else control.select (0);
+            if (oldControl.length() != 0) {
+                control.setText(oldControl);
+            } else {
+                control.select(0);
+            }
 			control.setEnabled (isControl);
 			control.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false, 2, 1));
 
@@ -744,16 +766,18 @@ class FormLayoutTab extends Tab {
 				controlInput = control.getText();
 				alignmentInput = alignment.getText().substring(4);
 				positionInput = position.getText();
-				if (positionInput.length() == 0)
-					positionInput = "0";
+                if (positionInput.length() == 0) {
+                    positionInput = "0";
+                }
 				try {
 					Integer.parseInt(positionInput);
 				} catch (NumberFormatException except) {
 					positionInput = "0";
 				}
 				offsetInput = offset.getText();
-				if (offsetInput.length() == 0)
-					offsetInput = "0";
+                if (offsetInput.length() == 0) {
+                    offsetInput = "0";
+                }
 				try {
 					Integer.parseInt(offsetInput);
 				} catch (NumberFormatException except) {
@@ -779,7 +803,9 @@ class FormLayoutTab extends Tab {
 			shell.setLocation (center);
 			shell.open ();
 			while (!shell.isDisposed ()) {
-				if (display.readAndDispatch ()) display.sleep ();
+                if (display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 
 			return result;

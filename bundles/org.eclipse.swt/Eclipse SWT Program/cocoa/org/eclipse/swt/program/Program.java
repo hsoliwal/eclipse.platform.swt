@@ -60,8 +60,12 @@ Program () {
 public static Program findProgram (String extension) {
 	NSAutoreleasePool pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
 	try {
-		if (extension == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-		if (extension.length () == 0) return null;
+        if (extension == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (extension.length() == 0) {
+            return null;
+        }
 		Program program = null;
 		char[] chars;
 		if (extension.charAt (0) != '.') {
@@ -76,7 +80,9 @@ public static Program findProgram (String extension) {
 			NSURL appURL = findAppURLForExtension(ext);
 			if (appURL != null) {
 				NSBundle bundle = NSBundle.bundleWithPath(appURL.path());
-				if (bundle != null) program = getProgram(bundle);
+                if (bundle != null) {
+                    program = getProgram(bundle);
+                }
 			}
 		}
 		return program;
@@ -135,7 +141,9 @@ public static String [] getExtensions () {
 		id id;
 		while ((id = enumerator.nextObject()) != null) {
 			String ext = new NSString(id.id).getString();
-			if (!ext.equals("*")) exts[i++] = "." + ext;
+            if (!ext.equals("*")) {
+                exts[i++] = "." + ext;
+            }
 		}
 		if (i != exts.length) {
 			String[] temp = new String[i];
@@ -176,13 +184,17 @@ static Program getProgram(NSBundle bundle) {
 		bundleName = bundle.objectForInfoDictionaryKey(CFBundleName);
 	}
 	if (bundleName == null) {
-		if (fullPath == null) return null;
+        if (fullPath == null) {
+            return null;
+        }
 		bundleName = fullPath.lastPathComponent().stringByDeletingPathExtension();
 	}
 	NSString name = new NSString(bundleName.id);
 	Program program = new Program();
 	program.name = name.getString();
-	if (fullPath != null) program.fullPath = fullPath.getString();
+    if (fullPath != null) {
+        program.fullPath = fullPath.getString();
+    }
 	program.identifier = identifier != null ? identifier.getString() : "";
 	return program;
 }
@@ -214,7 +226,9 @@ public static Program [] getPrograms () {
 						NSBundle bundle = NSBundle.bundleWithPath(fullPath);
 						if (bundle != null) {
 							Program program = getProgram(bundle);
-							if (program != null) programs.add(program);
+                            if (program != null) {
+                                programs.add(program);
+                            }
 						}
 					}
 				}
@@ -301,7 +315,9 @@ public static boolean launch (String fileName) {
  * @since 3.6
  */
 public static boolean launch (String fileName, String workingDir) {
-	if (fileName == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (fileName == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSAutoreleasePool pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
 	try {
 		if (workingDir != null && isExecutable(fileName)) {
@@ -334,7 +350,9 @@ public static boolean launch (String fileName, String workingDir) {
  * </ul>
  */
 public boolean execute (String fileName) {
-	if (fileName == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (fileName == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSAutoreleasePool pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
 	try {
 		NSWorkspace workspace = NSWorkspace.sharedWorkspace();
@@ -422,7 +440,9 @@ public String getName () {
  */
 @Override
 public boolean equals(Object other) {
-	if (this == other) return true;
+    if (this == other) {
+        return true;
+    }
 	if (other instanceof final Program program) {
 		return name.equals(program.name) && identifier.equals(program.identifier);
 	}

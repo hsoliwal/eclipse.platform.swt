@@ -32,8 +32,10 @@ public int QueryStatus(
 	OLECMD     prgCmds,       // Array of commands
 	long       pCmdText       // Pointer to name or status of command
 ){
-	// we only support querying for one command at a time
-	if (cCmds > 1) return COM.E_INVALIDARG;
+    // we only support querying for one command at a time
+    if (cCmds > 1) {
+        return COM.E_INVALIDARG;
+    }
 	return COM.VtblCall(3, address, pguidCmdGroup, cCmds, prgCmds, pCmdText);
 }
 }

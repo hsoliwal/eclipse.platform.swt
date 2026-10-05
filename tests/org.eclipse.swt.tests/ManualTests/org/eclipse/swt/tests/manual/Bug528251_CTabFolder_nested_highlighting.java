@@ -88,8 +88,9 @@ public class Bug528251_CTabFolder_nested_highlighting {
 
 	private void waitForClose() {
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

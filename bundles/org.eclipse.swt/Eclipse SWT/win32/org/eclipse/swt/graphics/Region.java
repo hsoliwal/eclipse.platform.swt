@@ -102,8 +102,12 @@ public Region (Device device) {
  * @since 3.0
  */
 public void add (int[] pointArray) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (pointArray == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (pointArray == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	final Operation operation = new OperationWithArray(Operation::add, Arrays.copyOf(pointArray, pointArray.length));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -123,8 +127,12 @@ public void add (int[] pointArray) {
  * </ul>
  */
 public void add (Rectangle rect) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	final Operation operation = new OperationWithRectangle(Operation::add, new Rectangle(rect.x, rect.y, rect.width, rect.height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -148,7 +156,9 @@ public void add (Rectangle rect) {
  * @since 3.1
  */
 public void add (int x, int y, int width, int height) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	final Operation operation = new OperationWithRectangle(Operation::add, new Rectangle(x, y, width, height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -169,9 +179,15 @@ public void add (int x, int y, int width, int height) {
  * </ul>
  */
 public void add (Region region) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (region == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (region.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (region == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (region.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	if (!region.operations.isEmpty()) {
 		adoptTemporaryHandleZoomHint(region);
 		final Operation operation = new OperationWithRegion(Operation::add, region.operations);
@@ -199,7 +215,9 @@ private void adoptTemporaryHandleZoomHint(Region region) {
  * </ul>
  */
 public boolean contains (int x, int y) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return applyUsingAnyHandle(regionHandle -> {
 		int zoom = regionHandle.zoom();
 		int xInPixels = DPIUtil.pointToPixel(x, zoom);
@@ -228,8 +246,12 @@ boolean containsInPixels (long handle, int x, int y) {
  * </ul>
  */
 public boolean contains (Point pt) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (pt == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (pt == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return applyUsingAnyHandle(regionHandle -> {
 		int zoom = regionHandle.zoom();
 		Point p = Win32DPIUtils.pointToPixelAsLocation(pt, zoom);
@@ -288,7 +310,9 @@ public boolean equals (Object object) {
  * @see Rectangle#union
  */
 public Rectangle getBounds () {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return applyUsingAnyHandle(regionHandle ->
 		Win32DPIUtils.pixelToPoint(getBoundsInPixels(regionHandle.handle()), regionHandle.zoom()));
 }
@@ -330,8 +354,12 @@ public int hashCode () {
  * @since 3.0
  */
 public void intersect (Rectangle rect) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	final Operation operation = new OperationWithRectangle(Operation::intersect, new Rectangle(rect.x, rect.y, rect.width, rect.height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -355,7 +383,9 @@ public void intersect (Rectangle rect) {
  * @since 3.1
  */
 public void intersect (int x, int y, int width, int height) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	final Operation operation = new OperationWithRectangle(Operation::intersect, new Rectangle(x, y, width, height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -378,9 +408,15 @@ public void intersect (int x, int y, int width, int height) {
  * @since 3.0
  */
 public void intersect (Region region) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (region == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (region.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (region == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (region.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	if (!region.operations.isEmpty()) {
 		adoptTemporaryHandleZoomHint(region);
 		final Operation operation = new OperationWithRegion(Operation::intersect, region.operations);
@@ -406,7 +442,9 @@ public void intersect (Region region) {
  * @see Rectangle#intersects(Rectangle)
  */
 public boolean intersects (int x, int y, int width, int height) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return intersects(new Rectangle(x, y, width, height));
 }
 
@@ -434,8 +472,12 @@ boolean intersectsInPixels (long handle, int x, int y, int width, int height) {
  * @see Rectangle#intersects(Rectangle)
  */
 public boolean intersects (Rectangle rect) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return applyUsingAnyHandle(regionHandle -> {
 		Rectangle r = Win32DPIUtils.pointToPixel(rect, regionHandle.zoom());
 		return intersectsInPixels(regionHandle.handle(), r.x, r.y, r.width, r.height);
@@ -469,11 +511,15 @@ public boolean isDisposed() {
  * </ul>
  */
 public boolean isEmpty () {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return applyUsingAnyHandle(regionHandle -> {
 		RECT rect = new RECT();
 		int result = OS.GetRgnBox(regionHandle.handle(), rect);
-		if (result == OS.NULLREGION) return true;
+        if (result == OS.NULLREGION) {
+            return true;
+        }
 		return ((rect.right - rect.left) <= 0) || ((rect.bottom - rect.top) <= 0);
 	});
 }
@@ -538,8 +584,12 @@ void set(ZoomToRegionMap zoomToRegionHandleMap, int contextZoom) {
  * @since 3.0
  */
 public void subtract (int[] pointArray) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (pointArray == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (pointArray == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	final Operation operation = new OperationWithArray(Operation::subtract, Arrays.copyOf(pointArray, pointArray.length));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -561,8 +611,12 @@ public void subtract (int[] pointArray) {
  * @since 3.0
  */
 public void subtract (Rectangle rect) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	final Operation operation = new OperationWithRectangle(Operation::subtract, new Rectangle(rect.x, rect.y, rect.width, rect.height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -586,7 +640,9 @@ public void subtract (Rectangle rect) {
  * @since 3.1
  */
 public void subtract (int x, int y, int width, int height) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	final Operation operation = new OperationWithRectangle(Operation::subtract, new Rectangle(x, y, width, height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -609,9 +665,15 @@ public void subtract (int x, int y, int width, int height) {
  * @since 3.0
  */
 public void subtract (Region region) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (region == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (region.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (region == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (region.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	if (!region.operations.isEmpty()) {
 		adoptTemporaryHandleZoomHint(region);
 		final Operation operation = new OperationWithRegion(Operation::subtract, region.operations);
@@ -633,7 +695,9 @@ public void subtract (Region region) {
  * @since 3.1
  */
 public void translate (int x, int y) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	final Operation operation = new OperationWithPoint(Operation::translate, new Point(x, y));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -654,8 +718,12 @@ public void translate (int x, int y) {
  * @since 3.1
  */
 public void translate (Point pt) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (pt == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (pt == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	final Operation operation = new OperationWithPoint(Operation::translate, new Point(pt.x, pt.y));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -684,7 +752,9 @@ private static <T> T applyUsingTemporaryHandle(int zoom, List<Operation> operati
 
 private static RegionHandle newRegionHandle(int zoom, List<Operation> operations) {
 	long newHandle = OS.CreateRectRgn (0, 0, 0, 0);
-	if (newHandle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (newHandle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	RegionHandle newRegionHandle = new RegionHandle(newHandle, zoom);
 	for (Operation operation : operations) {
 		operation.apply(newRegionHandle);
@@ -733,7 +803,9 @@ public static long win32_getHandle(Region region, int zoom) {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Region {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Region {*DISPOSED*}";
+    }
 	return "Region {" + zoomToHandle.entrySet().stream().map(entry -> entry.getValue().toString()).collect(Collectors.joining(",")) + "}";
 }
 
@@ -822,7 +894,9 @@ private static class OperationWithRectangle extends Operation {
 	}
 
 	private static void combineWithRectInPixels(long handle, int x, int y, int width, int height, int mode) {
-		if (width < 0 || height < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (width < 0 || height < 0) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		long rectRgn = OS.CreateRectRgn(x, y, x + width, y + height);
 		OS.CombineRgn(handle, handle, rectRgn, mode);
 		OS.DeleteObject(rectRgn);

@@ -688,13 +688,19 @@ public Display (DeviceData data) {
  */
 public void addFilter (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (filterTable == null) filterTable = new EventTable ();
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (filterTable == null) {
+        filterTable = new EventTable();
+    }
 	filterTable.hook (eventType, listener);
 }
 
 void addLayoutDeferred (Composite comp) {
-	if (layoutDeferred == null) layoutDeferred = new Composite [64];
+    if (layoutDeferred == null) {
+        layoutDeferred = new Composite [64];
+    }
 	if (layoutDeferredCount == layoutDeferred.length) {
 		Composite [] temp = new Composite [layoutDeferred.length + 64];
 		System.arraycopy (layoutDeferred, 0, temp, 0, layoutDeferred.length);
@@ -770,8 +776,12 @@ void addIdleProc() {
  */
 public void addListener (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) eventTable = new EventTable ();
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        eventTable = new EventTable();
+    }
 	if (eventType == SWT.OpenDocument || eventType == SWT.OpenUrl) {
 		gdbus_init_methods();
 	}
@@ -832,7 +842,9 @@ long allChildrenProc (long widget, long recurse) {
 }
 
 void addMouseHoverTimeout (long handle) {
-	if (mouseHoverId != 0) OS.g_source_remove (mouseHoverId);
+    if (mouseHoverId != 0) {
+        OS.g_source_remove(mouseHoverId);
+    }
 	if (GTK.GTK4) {
 		mouseHoverId = OS.g_timeout_add (400, mouseHoverProc, handle);
 	} else {
@@ -842,20 +854,28 @@ void addMouseHoverTimeout (long handle) {
 }
 
 void addPopup (Menu menu) {
-	if (popups == null) popups = new Menu [4];
+    if (popups == null) {
+        popups = new Menu [4];
+    }
 	int length = popups.length;
 	for (int i=0; i<length; i++) {
-		if (popups [i] == menu) return;
-		/* Bug 530577, 528998: Clicking on button that triggers popup menus causes
-		 * menu.setVisible to be called twice, once due to MouseDown, and once due to ButtonClicked.
-		 * This causes two duplicate menus (with different handles) to popup at the same time.
-		 * The fix is to avoid having two identical popup menus in the queue.
-		 */
-		if (popups[i] != null && popups[i].getNameText().equals(menu.getNameText())) return;
+        if (popups [i] == menu) {
+            return;
+        }
+        /* Bug 530577, 528998: Clicking on button that triggers popup menus causes
+         * menu.setVisible to be called twice, once due to MouseDown, and once due to ButtonClicked.
+         * This causes two duplicate menus (with different handles) to popup at the same time.
+         * The fix is to avoid having two identical popup menus in the queue.
+         */
+        if (popups[i] != null && popups[i].getNameText().equals(menu.getNameText())) {
+            return;
+        }
 	}
 	int index = 0;
 	while (index < length) {
-		if (popups [index] == null) break;
+        if (popups [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -876,7 +896,9 @@ void addSkinnableWidget (Widget widget) {
 }
 
 void addWidget (long handle, Widget widget) {
-	if (handle == 0) return;
+    if (handle == 0) {
+        return;
+    }
 	// Last element in the indexTable is -1, so if freeSlot == -1 we have no place anymore
 	if (freeSlot == LAST_TABLE_INDEX) {
 		int length = (freeSlot = indexTable.length) + GROW_SIZE;
@@ -934,7 +956,9 @@ void addWidget (long handle, Widget widget) {
  */
 public void asyncExec (Runnable runnable) {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		synchronized (idleLock) {
 			if (idleNeeded && idleHandle == 0) {
 				if (GTK.GTK4) {
@@ -1002,30 +1026,44 @@ public void execute(Runnable runnable) {
  * </ul>
  */
 public void beep () {
-	if (!isValidThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
+    if (!isValidThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
 	GDK.gdk_display_beep(GDK.gdk_display_get_default());
 }
 
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
 	Widget widget = getWidget (data);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	return widget.cellDataProc (tree_column, cell, tree_model, iter, data);
 }
 
 
 @Override
 protected void checkDevice () {
-	if (thread == null) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (thread != Thread.currentThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
-	if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+    if (thread == null) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (thread != Thread.currentThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
+    if (isDisposed()) {
+        error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 }
 
 static void checkDisplay (Thread thread, boolean multiple) {
 	synchronized (Device.class) {
 		for (int i=0; i<Displays.length; i++) {
 			if (Displays [i] != null) {
-				if (!multiple) SWT.error (SWT.ERROR_NOT_IMPLEMENTED, null, " [multiple displays]"); //$NON-NLS-1$
-				if (Displays [i].thread == thread) SWT.error (SWT.ERROR_THREAD_INVALID_ACCESS);
+                if (!multiple) {
+                    SWT.error(SWT.ERROR_NOT_IMPLEMENTED, null, " [multiple displays]");
+                } //$NON-NLS-1$
+                if (Displays [i].thread == thread) {
+                    SWT.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+                }
 			}
 		}
 	}
@@ -1044,16 +1082,24 @@ long checkIfEventProc (long display, long xEvent, long userData) {
 			return 0;
 	}
 	long window = GDK.gdk_x11_window_lookup_for_display(GDK.gdk_display_get_default(), OS.X_EVENT_WINDOW (xEvent));
-	if (window == 0) return 0;
+    if (window == 0) {
+        return 0;
+    }
 	if (flushWindow != 0) {
 		if (flushAll) {
 			long tempWindow = window;
 			do {
-				if (tempWindow == flushWindow) break;
+                if (tempWindow == flushWindow) {
+                    break;
+                }
 			} while ((tempWindow = GDK.gdk_window_get_parent (tempWindow)) != 0);
-			if (tempWindow != flushWindow) return 0;
+            if (tempWindow != flushWindow) {
+                return 0;
+            }
 		} else {
-			if (window != flushWindow) return 0;
+            if (window != flushWindow) {
+                return 0;
+            }
 		}
 	}
 	OS.memmove (exposeEvent, xEvent, XExposeEvent.sizeof);
@@ -1086,23 +1132,37 @@ long checkIfEventProc (long display, long xEvent, long userData) {
  * @see Widget#checkSubclass
  */
 protected void checkSubclass () {
-	if (!isValidClass (getClass ())) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidClass(getClass())) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 void clearModal (Shell shell) {
-	if (modalShells == null) return;
+    if (modalShells == null) {
+        return;
+    }
 	int index = 0, length = modalShells.length;
 	while (index < length) {
-		if (modalShells [index] == shell) break;
-		if (modalShells [index] == null) return;
+        if (modalShells [index] == shell) {
+            break;
+        }
+        if (modalShells [index] == null) {
+            return;
+        }
 		index++;
 	}
-	if (index == length) return;
+    if (index == length) {
+        return;
+    }
 	System.arraycopy (modalShells, index + 1, modalShells, index, --length - index);
 	modalShells [length] = null;
-	if (index == 0 && modalShells [0] == null) modalShells = null;
+    if (index == 0 && modalShells [0] == null) {
+        modalShells = null;
+    }
 	Shell [] shells = getShells ();
-	for (int i=0; i<shells.length; i++) shells [i].updateModal ();
+    for (int i = 0; i < shells.length; i++) {
+        shells [i].updateModal();
+    }
 }
 
 /**
@@ -1122,7 +1182,9 @@ public void close () {
 	checkDevice ();
 	Event event = new Event ();
 	sendEvent (SWT.Close, event);
-	if (event.doit) dispose ();
+    if (event.doit) {
+        dispose();
+    }
 }
 
 /**
@@ -1143,7 +1205,9 @@ protected void create (DeviceData data) {
 	checkDisplay(thread = Thread.currentThread (), false);
 	createDisplay (data);
 	register (this);
-	if (Default == null) Default = this;
+    if (Default == null) {
+        Default = this;
+    }
 }
 
 /**
@@ -1164,7 +1228,9 @@ void checkIMModule () {
 		if (OS.isGNOME && OS.isX11()) {
 			long settings = GTK.gtk_settings_get_default ();
 			byte[] ibus = Converter.wcsToMbcs ("ibus", true);
-			if (settings != 0) OS.g_object_set (settings, GTK.gtk_im_module, ibus, 0);
+            if (settings != 0) {
+                OS.g_object_set(settings, GTK.gtk_im_module, ibus, 0);
+            }
 		}
 	}
 }
@@ -1217,7 +1283,9 @@ void createDisplay (DeviceData data) {
 	} else {
 		init = GTK3.gtk_init_check(new long[]{0}, null);
 	}
-	if (!init) SWT.error(SWT.ERROR_NO_HANDLES, null, " [gtk_init_check() failed]"); //$NON-NLS-1$
+    if (!init) {
+        SWT.error(SWT.ERROR_NO_HANDLES, null, " [gtk_init_check() failed]");
+    } //$NON-NLS-1$
 	checkIMModule();
 	//set GTK+ Theme name as property for introspection purposes
 	themeName = OS.GTK_THEME_SET ? OS.GTK_THEME_SET_NAME : OS.getThemeName();
@@ -1232,7 +1300,9 @@ void createDisplay (DeviceData data) {
 		// from unknown to real value.
 		System.setProperty("org.eclipse.swt.internal.gdk.backend", "unknown");
 	}
-	if (OS.SWT_DEBUG) Device.DEBUG = true;
+    if (OS.SWT_DEBUG) {
+        Device.DEBUG = true;
+    }
 	if (!GTK.GTK4) {
 		long ptr = GTK.gtk_check_version (GTK3_MAJOR, GTK3_MINOR, GTK3_MICRO);
 		if (ptr != 0) {
@@ -1310,7 +1380,9 @@ void createDisplay (DeviceData data) {
 	} else {
 		shellHandle = GTK3.gtk_window_new (GTK.GTK_WINDOW_TOPLEVEL);
 	}
-	if (shellHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (shellHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	GTK.gtk_widget_realize (shellHandle);
 
 	/* Initialize the filter and event callback */
@@ -1452,7 +1524,9 @@ Image createImage (String name) {
 		pixbuf = GTK3.gtk_icon_theme_load_icon(iconTheme, buffer, 48, GTK.GTK_ICON_LOOKUP_FORCE_SIZE|GTK.GTK_ICON_LOOKUP_FORCE_REGULAR, 0);
 	}
 
-	if (pixbuf == 0) return null;
+    if (pixbuf == 0) {
+        return null;
+    }
 	int width = GDK.gdk_pixbuf_get_width (pixbuf);
 	int height = GDK.gdk_pixbuf_get_height (pixbuf);
 	int stride = GDK.gdk_pixbuf_get_rowstride (pixbuf);
@@ -1485,7 +1559,9 @@ Image createImage (String name) {
 static void deregister (Display display) {
 	synchronized (Device.class) {
 		for (int i=0; i<Displays.length; i++) {
-			if (display == Displays [i]) Displays [i] = null;
+            if (display == Displays [i]) {
+                Displays [i] = null;
+            }
 		}
 	}
 }
@@ -1502,13 +1578,17 @@ static void deregister (Display display) {
  */
 @Override
 protected void destroy () {
-	if (this == Default) Default = null;
+    if (this == Default) {
+        Default = null;
+    }
 	deregister (this);
 	destroyDisplay ();
 }
 
 void destroyDisplay () {
-	if (!GTK.GTK4) GDK.gdk_threads_leave ();
+    if (!GTK.GTK4) {
+        GDK.gdk_threads_leave();
+    }
 }
 
 long emissionProc (long ihint, long n_param_values, long param_values, long data) {
@@ -1563,7 +1643,9 @@ public static Display findDisplay (Thread thread) {
  */
 public void disposeExec (Runnable runnable) {
 	checkDevice ();
-	if (disposeList == null) disposeList = new Runnable [4];
+    if (disposeList == null) {
+        disposeList = new Runnable [4];
+    }
 	for (int i=0; i<disposeList.length; i++) {
 		if (disposeList [i] == null) {
 			disposeList [i] = runnable;
@@ -1599,7 +1681,9 @@ long eventProc (long event, long data) {
 	* return zero.
 	*/
 	int time = GDK.gdk_event_get_time (event);
-	if (time != 0) lastEventTime = time;
+    if (time != 0) {
+        lastEventTime = time;
+    }
 
 	int eventType = GDK.gdk_event_get_event_type(event);
 	switch (eventType) {
@@ -1627,8 +1711,12 @@ long eventProc (long event, long data) {
 	if (tracker != null) {
 		dispatch = tracker.processEvent (event);
 	}
-	if (dispatch) GTK3.gtk_main_do_event (event);
-	if (dispatchEvents == null) putGdkEvents ();
+    if (dispatch) {
+        GTK3.gtk_main_do_event(event);
+    }
+    if (dispatchEvents == null) {
+        putGdkEvents();
+    }
 	return 0;
 }
 
@@ -1726,11 +1814,15 @@ static long rendererClassInitProc (long g_class, long class_data) {
 void snapshotDrawProc(long handle, long snapshot) {
 	Display display = getCurrent ();
 	Widget widget = display.getWidget (handle);
-	// Draw background before children so it appears behind them
-	if (widget != null) widget.snapshotBackground(handle, snapshot);
+    // Draw background before children so it appears behind them
+    if (widget != null) {
+        widget.snapshotBackground(handle, snapshot);
+    }
 
-	// Paint before children (used by Composite subclasses for backgrounds)
-	if (widget != null) widget.snapshotToDraw(handle, snapshot);
+    // Paint before children (used by Composite subclasses for backgrounds)
+    if (widget != null) {
+        widget.snapshotToDraw(handle, snapshot);
+    }
 
 	long child = GTK4.gtk_widget_get_first_child(handle);
 	// Propagate the snapshot down the widget tree.
@@ -1739,35 +1831,45 @@ void snapshotDrawProc(long handle, long snapshot) {
 		child = GTK4.gtk_widget_get_next_sibling(child);
 	}
 
-	// Paint after children (used by leaf controls for overlay/on-top drawing)
-	if (widget != null) widget.snapshotToDrawAfterChildren(handle, snapshot);
+    // Paint after children (used by leaf controls for overlay/on-top drawing)
+    if (widget != null) {
+        widget.snapshotToDrawAfterChildren(handle, snapshot);
+    }
 }
 
 static long rendererGetPreferredWidthProc (long cell, long handle, long minimun_size, long natural_size) {
 	Display display = getCurrent ();
 	Widget widget = display.getWidget (handle);
-	if (widget != null) return widget.rendererGetPreferredWidthProc (cell, handle, minimun_size, natural_size);
+    if (widget != null) {
+        return widget.rendererGetPreferredWidthProc(cell, handle, minimun_size, natural_size);
+    }
 	return 0;
 }
 
 static long rendererRenderProc (long cell, long cr, long handle, long background_area, long cell_area, long flags) {
 	Display display = getCurrent ();
 	Widget widget = display.getWidget (handle);
-	if (widget != null) return widget.rendererRenderProc (cell, cr, handle, background_area, cell_area, flags);
+    if (widget != null) {
+        return widget.rendererRenderProc(cell, cr, handle, background_area, cell_area, flags);
+    }
 	return 0;
 }
 
 static long rendererSnapshotProc (long cell, long snapshot, long handle, long background_area, long cell_area, long flags) {
 	Display display = getCurrent ();
 	Widget widget = display.getWidget (handle);
-	if (widget != null) return widget.rendererSnapshotProc (cell, snapshot, handle, background_area, cell_area, flags);
+    if (widget != null) {
+        return widget.rendererSnapshotProc(cell, snapshot, handle, background_area, cell_area, flags);
+    }
 	return 0;
 }
 
 void flushExposes (long window, boolean all) {
-	// GTK4 uses a frame-clock/render-node draw model and has no X11 Expose events
-	// or GdkWindows to flush, so checkIfEventProc rejects everything: skip the scan.
-	if (GTK.GTK4) return;
+    // GTK4 uses a frame-clock/render-node draw model and has no X11 Expose events
+    // or GdkWindows to flush, so checkIfEventProc rejects everything: skip the scan.
+    if (GTK.GTK4) {
+        return;
+    }
 	if (OS.isX11()) {
 		this.flushWindow = window;
 		this.flushAll = all;
@@ -1830,12 +1932,14 @@ public Rectangle getBounds () {
 public Rectangle getClientArea () {
 	if (OS.isX11()) {
 		Rectangle workArea = getWorkArea();
-		/*
-		 * getWorkArea() can return null if the WM isn't running Xorg (i.e. x11 on Wayland).
-		 * To workaround these cases, return the workArea only if getWorkArea() succeeds,
-		 * otherwise call super.getClientArea(). See bug 33659.
-		 */
-		if (workArea != null) return workArea;
+        /*
+         * getWorkArea() can return null if the WM isn't running Xorg (i.e. x11 on Wayland).
+         * To workaround these cases, return the workArea only if getWorkArea() succeeds,
+         * otherwise call super.getClientArea(). See bug 33659.
+         */
+        if (workArea != null) {
+            return workArea;
+        }
 	}
 	return super.getClientArea();
 }
@@ -1860,8 +1964,12 @@ Rectangle getBoundsInPixels () {
 			GdkRectangle geometry = new GdkRectangle();
 			GDK.gdk_monitor_get_geometry(monitor, geometry);
 
-			if ((geometry.x + geometry.width) > maxWidth) maxWidth = geometry.x + geometry.width;
-			if ((geometry.y + geometry.height) > maxHeight) maxHeight = geometry.y + geometry.height;
+            if ((geometry.x + geometry.width) > maxWidth) {
+                maxWidth = geometry.x + geometry.width;
+            }
+            if ((geometry.y + geometry.height) > maxHeight) {
+                maxHeight = geometry.y + geometry.height;
+            }
 		}
 
 		bounds.width = maxWidth;
@@ -1890,12 +1998,18 @@ public static Display getCurrent () {
 int getCaretBlinkTime () {
 //	checkDevice ();
 	long settings = GTK.gtk_settings_get_default ();
-	if (settings == 0) return 500;
+    if (settings == 0) {
+        return 500;
+    }
 	int [] buffer = new int [1];
 	OS.g_object_get (settings, GTK.gtk_cursor_blink, buffer, 0);
-	if (buffer [0] == 0) return 0;
+    if (buffer [0] == 0) {
+        return 0;
+    }
 	OS.g_object_get (settings, GTK.gtk_cursor_blink_time, buffer, 0);
-	if (buffer [0] == 0) return 500;
+    if (buffer [0] == 0) {
+        return 500;
+    }
 	/*
 	* By experimentation, GTK application don't use the whole
 	* blink cycle time.  Instead, they divide up the time, using
@@ -1905,7 +2019,9 @@ int getCaretBlinkTime () {
 }
 
 long getClosure (int id) {
-	if (closures [id] != 0) OS.g_closure_unref (closures [id]);
+    if (closures [id] != 0) {
+        OS.g_closure_unref(closures [id]);
+    }
 	closures [id] = OS.g_cclosure_new (closuresProc [id], id, 0);
 	OS.g_closure_ref (closures [id]);
 	OS.g_closure_sink (closures [id]);
@@ -1948,12 +2064,14 @@ public Control getCursorControl () {
 			GDK.gdk_window_get_user_data (gdkResource, user_data);
 			handle = user_data [0];
 		} else {
-			// Feature in GTK. The gdk_device_get_[surface/window]_at_position() functions will not return a
-			// surface/window if the pointer is over a foreign embedded window. The fix is to use XQueryPointer
-			// to find the containing GDK window (see bug 177368.)
-			// However embedding foreign windows is not supported by the Wayland backend for GTK3 and is not
-			// supported at all on GTK4, so skip the heuristic in these situations.
-			if (OS.isWayland() || GTK.GTK4) return null;
+            // Feature in GTK. The gdk_device_get_[surface/window]_at_position() functions will not return a
+            // surface/window if the pointer is over a foreign embedded window. The fix is to use XQueryPointer
+            // to find the containing GDK window (see bug 177368.)
+            // However embedding foreign windows is not supported by the Wayland backend for GTK3 and is not
+            // supported at all on GTK4, so skip the heuristic in these situations.
+            if (OS.isWayland() || GTK.GTK4) {
+                return null;
+            }
 			long gdkDisplay = GDK.gdk_display_get_default();
 			if (OS.isX11()) {
 				GDK.gdk_x11_display_error_trap_push(gdkDisplay);
@@ -1971,7 +2089,9 @@ public Control getCursorControl () {
 					long gdkWindow = GDK.gdk_x11_window_lookup_for_display(gdkDisplay, xWindow);
 					if (gdkWindow != 0)	{
 						GDK.gdk_window_get_user_data (gdkWindow, user_data);
-						if (user_data[0] != 0) handle = user_data[0];
+                        if (user_data[0] != 0) {
+                            handle = user_data[0];
+                        }
 					}
 				}
 			} while (xWindow != 0);
@@ -1980,12 +2100,16 @@ public Control getCursorControl () {
 			}
 		}
 	}
-	if (handle == 0) return null;
+    if (handle == 0) {
+        return null;
+    }
 	do {
 		Widget widget = getWidget (handle);
 		if (widget != null && widget instanceof Control) {
 			Control control = (Control) widget;
-			if (control.isEnabled ()) return control;
+            if (control.isEnabled()) {
+                return control;
+            }
 		}
 	} while ((handle = GTK.gtk_widget_get_parent (handle)) != 0);
 	return null;
@@ -2005,7 +2129,9 @@ boolean filterEvent (Event event) {
 }
 
 boolean filters (int eventType) {
-	if (filterTable == null) return false;
+    if (filterTable == null) {
+        return false;
+    }
 	return filterTable.hooks (eventType);
 }
 
@@ -2102,7 +2228,9 @@ public Point [] getCursorSizes () {
  */
 public Object getData (String key) {
 	checkDevice ();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (key.equals (DISPATCH_EVENT_KEY)) {
 		return dispatchEvents;
 	}
@@ -2115,9 +2243,13 @@ public Object getData (String key) {
 	if (key.equals (GET_EMISSION_PROC_KEY)) {
 		return new LONG (emissionProc);
 	}
-	if (keys == null) return null;
+    if (keys == null) {
+        return null;
+    }
 	for (int i=0; i<keys.length; i++) {
-		if (keys [i].equals (key)) return values [i];
+        if (keys [i].equals(key)) {
+            return values [i];
+        }
 	}
 	return null;
 }
@@ -2209,7 +2341,9 @@ GdkRGBA gtk_css_parse_background (String css, String precise) {
 	String shortOutput;
 	int startIndex;
 	GdkRGBA rgba = new GdkRGBA ();
-	if (css.isEmpty()) return COLOR_WIDGET_BACKGROUND_RGBA;
+    if (css.isEmpty()) {
+        return COLOR_WIDGET_BACKGROUND_RGBA;
+    }
 	String searched = "";
 	/*
 	 * This section allows for finer searching: for example
@@ -2253,7 +2387,9 @@ String gtk_css_provider_to_string (long provider) {
 		return "";
 	}
 	long str = GTK.gtk_css_provider_to_string(provider);
-	if (str == 0) return "";
+    if (str == 0) {
+        return "";
+    }
 	int length = C.strlen (str);
 	byte [] buffer = new byte [length];
 	C.memmove (buffer, str, length);
@@ -2277,7 +2413,9 @@ String gtk_css_provider_to_string (long provider) {
  * if the foreground color could not be parsed or isn't set
  */
 GdkRGBA gtk_css_parse_foreground (String css, String precise) {
-	if (css.isEmpty()) return COLOR_WIDGET_FOREGROUND_RGBA;
+    if (css.isEmpty()) {
+        return COLOR_WIDGET_FOREGROUND_RGBA;
+    }
 	GdkRGBA rgba = new GdkRGBA ();
 	String searched = "";
 	/*
@@ -2431,7 +2569,9 @@ String gtk_widget_class_get_css_name(long handle) {
  */
 public static Display getDefault () {
 	synchronized (Device.class) {
-		if (Default == null) Default = new Display ();
+        if (Default == null) {
+            Default = new Display();
+        }
 		return Default;
 	}
 }
@@ -2522,9 +2662,13 @@ public Control getFocusControl () {
 	if (focusControl != null && !focusControl.isDisposed ()) {
 		return focusControl;
 	}
-	if (activeShell == null) return null;
+    if (activeShell == null) {
+        return null;
+    }
 	long handle = GTK.gtk_window_get_focus (activeShell.focusWindowHandle ());
-	if (handle == 0) return null;
+    if (handle == 0) {
+        return null;
+    }
 	do {
 		Widget widget = getWidget (handle);
 		if (widget != null && widget instanceof Control) {
@@ -2682,7 +2826,9 @@ Dialog getModalDialog () {
 Rectangle getWorkArea() {
 	byte[] name = Converter.wcsToMbcs ("_NET_WORKAREA", true); //$NON-NLS-1$
 	long atom = GDK.gdk_atom_intern (name, true);
-	if (atom == GDK.GDK_NONE) return null;
+    if (atom == GDK.GDK_NONE) {
+        return null;
+    }
 	long [] actualType = new long [1];
 	int[] actualFormat = new int[1];
 	int[] actualLength = new int[1];
@@ -2748,10 +2894,12 @@ public Monitor[] getMonitors() {
 					monitor.zoom = _getDeviceZoom(monitor.handle);
 				}
 
-				/* workarea was defined in GTK 3.4. If present, it will return the best results
-				 * since it takes into account per-monitor trim. Not available in GTK4.
-				 */
-				if (!GTK.GTK4) GDK.gdk_monitor_get_workarea(gdkMonitor, geometry);
+                /* workarea was defined in GTK 3.4. If present, it will return the best results
+                 * since it takes into account per-monitor trim. Not available in GTK4.
+                 */
+                if (!GTK.GTK4) {
+                    GDK.gdk_monitor_get_workarea(gdkMonitor, geometry);
+                }
 				monitor.clientX = geometry.x;
 				monitor.clientY = geometry.y;
 				monitor.clientWidth = geometry.width;
@@ -2844,7 +2992,9 @@ public Shell [] getShells () {
 		if (!widget.isDisposed()) {
 			int j = 0;
 			while (j < index) {
-				if (result [j] == widget) break;
+                if (result [j] == widget) {
+                    break;
+                }
 				j++;
 			}
 			if (j == index) {
@@ -2873,7 +3023,9 @@ public Shell [] getShells () {
 			}
 		}
 	}
-	if (index == result.length) return result;
+    if (index == result.length) {
+        return result;
+    }
 	Shell [] newResult = new Shell [index];
 	System.arraycopy (result, 0, newResult, 0, index);
 	return newResult;
@@ -2913,7 +3065,9 @@ public Synchronizer getSynchronizer () {
  */
 public Thread getSyncThread () {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		return synchronizer.syncThread;
 	}
 }
@@ -2967,7 +3121,9 @@ public Color getSystemColor (int id) {
 	default:
 		return super.getSystemColor (id);
 	}
-	if (gdkRGBA == null) return super.getSystemColor (SWT.COLOR_BLACK);
+    if (gdkRGBA == null) {
+        return super.getSystemColor(SWT.COLOR_BLACK);
+    }
 	return Color.gtk_new (this, gdkRGBA);
 }
 
@@ -3015,7 +3171,9 @@ public Color getSystemColor (int id) {
  */
 public Cursor getSystemCursor (int id) {
 	checkDevice ();
-	if (!(0 <= id && id < cursors.length)) return null;
+    if (!(0 <= id && id < cursors.length)) {
+        return null;
+    }
 	if (cursors [id] == null) {
 		cursors [id] = new Cursor (this, id);
 	}
@@ -3189,7 +3347,9 @@ GdkRGBA toGdkRGBA (GdkRGBA rgba, double brightness) {
  * multiplied component, so all of those inverses are equivalent.
  */
 static int inversePremultipliedColor(int color, int alpha) {
-	if (alpha == 0) return 0;
+    if (alpha == 0) {
+        return 0;
+    }
 	return (255*color + alpha-1) / alpha;
 }
 
@@ -3201,7 +3361,9 @@ private static void renderAllBackgrounds(long styleContext, long cairo) {
 	if (!GTK.GTK4) {
 		// GTK4 GtkStyleContext has no concept of parents
 		long parentStyleContext = GTK3.gtk_style_context_get_parent (styleContext);
-		if (parentStyleContext != 0) renderAllBackgrounds (parentStyleContext, cairo);
+        if (parentStyleContext != 0) {
+            renderAllBackgrounds(parentStyleContext, cairo);
+        }
 	}
 
 	GTK.gtk_render_background (styleContext, cairo, -50, -50, 100, 100);
@@ -3472,7 +3634,9 @@ public TaskBar getSystemTaskBar () {
  */
 public Tray getSystemTray () {
 	checkDevice ();
-	if (tray != null) return tray;
+    if (tray != null) {
+        return tray;
+    }
 	return tray = new Tray (this, SWT.NONE);
 }
 
@@ -3487,7 +3651,9 @@ public Tray getSystemTray () {
  */
 public Thread getThread () {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		return thread;
 	}
 }
@@ -3511,8 +3677,12 @@ public boolean getTouchEnabled() {
 }
 
 Widget getWidget (long handle) {
-	if (handle == 0) return null;
-	if (lastWidget != null && lastHandle == handle) return lastWidget;
+    if (handle == 0) {
+        return null;
+    }
+    if (lastWidget != null && lastHandle == handle) {
+        return lastWidget;
+    }
 	long index = OS.g_object_get_qdata (handle, SWT_OBJECT_INDEX) - 1;
 	if (0 <= index && index < widgetTable.length) {
 		lastHandle = handle;
@@ -3594,8 +3764,12 @@ void initializeCallbacks () {
 	signalIds [Widget.REALIZE] = OS.g_signal_lookup (OS.realize, GTK.GTK_TYPE_WIDGET ());
 	signalIds [Widget.SCROLL_EVENT] = OS.g_signal_lookup (OS.scroll_event, GTK.GTK_TYPE_WIDGET ());
 	signalIds [Widget.SHOW] = OS.g_signal_lookup (OS.show, GTK.GTK_TYPE_WIDGET ());
-	if (!GTK.GTK4) signalIds[Widget.SHOW_HELP] = OS.g_signal_lookup(OS.show_help, GTK.GTK_TYPE_WIDGET());
-	if (!GTK.GTK4) signalIds[Widget.SIZE_ALLOCATE] = OS.g_signal_lookup(OS.size_allocate, GTK.GTK_TYPE_WIDGET());
+    if (!GTK.GTK4) {
+        signalIds[Widget.SHOW_HELP] = OS.g_signal_lookup(OS.show_help, GTK.GTK_TYPE_WIDGET());
+    }
+    if (!GTK.GTK4) {
+        signalIds[Widget.SIZE_ALLOCATE] = OS.g_signal_lookup(OS.size_allocate, GTK.GTK_TYPE_WIDGET());
+    }
 	signalIds [Widget.STYLE_UPDATED] = OS.g_signal_lookup (OS.style_updated, GTK.GTK_TYPE_WIDGET ());
 	signalIds [Widget.UNMAP] = OS.g_signal_lookup (OS.unmap, GTK.GTK_TYPE_WIDGET ());
 	signalIds [Widget.UNMAP_EVENT] = OS.g_signal_lookup (OS.unmap_event, GTK.GTK_TYPE_WIDGET ());
@@ -3889,7 +4063,9 @@ void initializeSystemSettings () {
 void initializeWidgetTable () {
 	indexTable = new int [GROW_SIZE];
 	widgetTable = new Widget [GROW_SIZE];
-	for (int i=0; i<GROW_SIZE-1; i++) indexTable [i] = i + 1;
+    for (int i = 0; i < GROW_SIZE - 1; i++) {
+        indexTable [i] = i + 1;
+    }
 	indexTable [GROW_SIZE - 1] = -1;
 }
 
@@ -3967,7 +4143,9 @@ public void internal_dispose_GC (long hDC, GCData data) {
  */
 @Override
 public long internal_new_GC (GCData data) {
-	if (isDisposed()) error(SWT.ERROR_DEVICE_DISPOSED);
+    if (isDisposed()) {
+        error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 	long gc = 0;
 	long root = 0;
 	if (GTK.GTK4) {
@@ -3977,7 +4155,9 @@ public long internal_new_GC (GCData data) {
 		root = GDK.gdk_get_default_root_window();
 		gc = GDK.gdk_cairo_create(root);
 	}
-	if (gc == 0) error (SWT.ERROR_NO_HANDLES);
+    if (gc == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	//TODO how gdk_gc_set_subwindow is done in cairo?
 	if (data != null) {
 		int mask = SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
@@ -4035,7 +4215,9 @@ boolean isValidThread () {
  */
 public Point map (Control from, Control to, Point point) {
 	checkDevice ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return map (from, to, point.x, point.y);
 }
 
@@ -4077,13 +4259,21 @@ public Point map (Control from, Control to, Point point) {
  */
 public Point map (Control from, Control to, int x, int y) {
 	checkDevice ();
-	if (from != null && from.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (to != null && to.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (from != null && from.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (to != null && to.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Point point = new Point (x, y);
-	if (from == to) return point;
+    if (from == to) {
+        return point;
+    }
 	if (from != null) {
 		Point origin = GTK.GTK4 ? from.getSurfaceOrigin() : from.getWindowOrigin ();
-		if ((from.style & SWT.MIRRORED) != 0) point.x = from.getClientWidth () - point.x;
+        if ((from.style & SWT.MIRRORED) != 0) {
+            point.x = from.getClientWidth() - point.x;
+        }
 		point.x += origin.x;
 		point.y += origin.y;
 	}
@@ -4091,7 +4281,9 @@ public Point map (Control from, Control to, int x, int y) {
 		Point origin = GTK.GTK4 ? to.getSurfaceOrigin() : to.getWindowOrigin ();
 		point.x -= origin.x;
 		point.y -= origin.y;
-		if ((to.style & SWT.MIRRORED) != 0) point.x = to.getClientWidth () - point.x;
+        if ((to.style & SWT.MIRRORED) != 0) {
+            point.x = to.getClientWidth() - point.x;
+        }
 	}
 	return point;
 }
@@ -4134,7 +4326,9 @@ public Point map (Control from, Control to, int x, int y) {
  */
 public Rectangle map (Control from, Control to, Rectangle rectangle) {
 	checkDevice();
-	if (rectangle == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rectangle == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return map (from, to, rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 }
 
@@ -4178,14 +4372,22 @@ public Rectangle map (Control from, Control to, Rectangle rectangle) {
  */
 public Rectangle map (Control from, Control to, int x, int y, int width, int height) {
 	checkDevice();
-	if (from != null && from.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (to != null && to.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (from != null && from.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (to != null && to.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Rectangle rect = new Rectangle (x, y, width, height);
-	if (from == to) return rect;
+    if (from == to) {
+        return rect;
+    }
 	boolean fromRTL = false, toRTL = false;
 	if (from != null) {
 		Point origin = GTK.GTK4 ? from.getSurfaceOrigin () : from.getWindowOrigin ();
-		if (fromRTL = (from.style & SWT.MIRRORED) != 0) rect.x = from.getClientWidth () - rect.x;
+        if (fromRTL = (from.style & SWT.MIRRORED) != 0) {
+            rect.x = from.getClientWidth() - rect.x;
+        }
 		rect.x += origin.x;
 		rect.y += origin.y;
 	}
@@ -4193,10 +4395,14 @@ public Rectangle map (Control from, Control to, int x, int y, int width, int hei
 		Point origin = GTK.GTK4 ? to.getSurfaceOrigin() : to.getWindowOrigin ();
 		rect.x -= origin.x;
 		rect.y -= origin.y;
-		if (toRTL = (to.style & SWT.MIRRORED) != 0) rect.x = to.getClientWidth () - rect.x;
+        if (toRTL = (to.style & SWT.MIRRORED) != 0) {
+            rect.x = to.getClientWidth() - rect.x;
+        }
 	}
 
-	if (fromRTL != toRTL) rect.x -= rect.width;
+    if (fromRTL != toRTL) {
+        rect.x -= rect.width;
+    }
 	return rect;
 }
 
@@ -4297,14 +4503,20 @@ long findFocusedWindow() {
 public boolean post (Event event) {
 
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
-		if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
+        if (event == null) {
+            error(SWT.ERROR_NULL_ARGUMENT);
+        }
 
-		/*
-		 * GdkEvents are now strictly read-only
-		 * https://docs.gtk.org/gtk4/migrating-3to4.html#adapt-to-gdkevent-api-changes
-		 */
-		if (GTK.GTK4) return false;
+        /*
+         * GdkEvents are now strictly read-only
+         * https://docs.gtk.org/gtk4/migrating-3to4.html#adapt-to-gdkevent-api-changes
+         */
+        if (GTK.GTK4) {
+            return false;
+        }
 
 		int type = event.type;
 
@@ -4321,7 +4533,9 @@ public boolean post (Event event) {
 			case SWT.KeyDown:
 			case SWT.KeyUp: {
 				long gdkWindow = findFocusedWindow();
-				if (gdkWindow == 0) return false;
+                if (gdkWindow == 0) {
+                    return false;
+                }
 
 				/* Translate the SWT Event fields to GDK fields
 				 * We need hardware_keycode, GdkModifierType, group to get keyval
@@ -4353,7 +4567,9 @@ public boolean post (Event event) {
 
 				int hardware_keycode = 0;
 				int raw_keyval = untranslateKey(event.keyCode);
-				if (raw_keyval == 0) raw_keyval = event.character;
+                if (raw_keyval == 0) {
+                    raw_keyval = event.character;
+                }
 
 				long [] keys_list = new long [1];
 				int [] n_keys = new int [1];
@@ -4379,7 +4595,9 @@ public boolean post (Event event) {
 					OS.g_free(keys_list[0]);
 
 					GDK.gdk_keymap_translate_keyboard_state(keymap, hardware_keycode, state, 0, keyval, effective_group, level, consumed_modifiers);
-					if (is_modifier == 1) final_keyval = keyval[0];
+                    if (is_modifier == 1) {
+                        final_keyval = keyval[0];
+                    }
 				}
 
 				/* Construct GdkEventKey */
@@ -4415,9 +4633,11 @@ public boolean post (Event event) {
 				int[] x = new int[1], y = new int[1], mask = new int[1];
 				final long gdkPointerDevice = GDK.gdk_seat_get_pointer(gdkSeat);
 				final long gdkWindow = GDK.gdk_device_get_window_at_position(gdkPointerDevice, x, y);
-				// Under Wayland or some window managers, gdkWindow is not known to GDK and null is returned,
-				// cannot post mouse events as it will lead to crash
-				if (gdkWindow == 0) return false;
+                // Under Wayland or some window managers, gdkWindow is not known to GDK and null is returned,
+                // cannot post mouse events as it will lead to crash
+                if (gdkWindow == 0) {
+                    return false;
+                }
 				OS.g_object_ref(gdkWindow);
 
 				/* Construct GdkEventButton */
@@ -4450,17 +4670,21 @@ public boolean post (Event event) {
 }
 
 void postEvent (Event event) {
-	/*
-	* Place the event at the end of the event queue.
-	* This code is always called in the Display's
-	* thread so it must be re-enterant but does not
-	* need to be synchronized.
-	*/
-	if (eventQueue == null) eventQueue = new Event [4];
+    /*
+    * Place the event at the end of the event queue.
+    * This code is always called in the Display's
+    * thread so it must be re-enterant but does not
+    * need to be synchronized.
+    */
+    if (eventQueue == null) {
+        eventQueue = new Event [4];
+    }
 	int index = 0;
 	int length = eventQueue.length;
 	while (index < length) {
-		if (eventQueue [index] == null) break;
+        if (eventQueue [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -4591,14 +4815,18 @@ protected void release () {
 
 		for (Shell shell : getShells ()) {
 			try {
-				if (!shell.isDisposed ()) shell.dispose ();
+                if (!shell.isDisposed()) {
+                    shell.dispose();
+                }
 			} catch (Error | RuntimeException ex) {
 				exceptions.stash (ex);
 			}
 		}
 
 		try {
-			if (tray != null) tray.dispose ();
+            if (tray != null) {
+                tray.dispose();
+            }
 		} catch (Error | RuntimeException ex) {
 			exceptions.stash (ex);
 		}
@@ -4606,7 +4834,9 @@ protected void release () {
 
 		for (;;) {
 			try {
-				if (!readAndDispatch ()) break;
+                if (!readAndDispatch()) {
+                    break;
+                }
 			} catch (Error | RuntimeException ex) {
 				exceptions.stash (ex);
 			}
@@ -4614,7 +4844,9 @@ protected void release () {
 
 		if (disposeList != null) {
 			for (Runnable next : disposeList) {
-				if (next == null) continue;
+                if (next == null) {
+                    continue;
+                }
 
 				try {
 					next.run ();
@@ -4734,7 +4966,9 @@ void releaseDisplay () {
 	/* Dispose the run async messages callback */
 	idleCallback.dispose (); idleCallback = null;
 	idleProc = 0;
-	if (idleHandle != 0) OS.g_source_remove (idleHandle);
+    if (idleHandle != 0) {
+        OS.g_source_remove(idleHandle);
+    }
 	idleHandle = 0;
 
 	/* Dispose GtkTreeView callbacks */
@@ -4753,8 +4987,10 @@ void releaseDisplay () {
 	allChildrenCallback.dispose (); allChildrenCallback = null;
 	allChildrenProc = 0;
 
-	/* Dispose the caret callback */
-	if (caretId != 0) OS.g_source_remove (caretId);
+    /* Dispose the caret callback */
+    if (caretId != 0) {
+        OS.g_source_remove(caretId);
+    }
 	caretId = 0;
 	caretProc = 0;
 	caretCallback.dispose ();
@@ -4762,14 +4998,20 @@ void releaseDisplay () {
 
 	/* Release closures */
 	for (int i = 0; i < Widget.LAST_SIGNAL; i++) {
-		if (closures [i] != 0) OS.g_closure_unref (closures [i]);
+        if (closures [i] != 0) {
+            OS.g_closure_unref(closures [i]);
+        }
 	}
-	if (shellMapProcClosure != 0) OS.g_closure_unref (shellMapProcClosure);
+    if (shellMapProcClosure != 0) {
+        OS.g_closure_unref(shellMapProcClosure);
+    }
 
 	/* Dispose the timer callback */
 	if (timerIds != null) {
 		for (int i=0; i<timerIds.length; i++) {
-			if (timerIds [i] != 0) OS.g_source_remove (timerIds [i]);
+            if (timerIds [i] != 0) {
+                OS.g_source_remove(timerIds [i]);
+            }
 		}
 	}
 	timerIds = null;
@@ -4781,30 +5023,44 @@ void releaseDisplay () {
 	windowTimerCallback.dispose ();
 	windowTimerCallback = null;
 
-	/* Dispose mouse hover callback */
-	if (mouseHoverId != 0) OS.g_source_remove (mouseHoverId);
+    /* Dispose mouse hover callback */
+    if (mouseHoverId != 0) {
+        OS.g_source_remove(mouseHoverId);
+    }
 	mouseHoverId = 0;
 	mouseHoverHandle = mouseHoverProc = 0;
 	mouseHoverCallback.dispose ();
 	mouseHoverCallback = null;
 
-	/* Dispose the System Images */
-	if (errorImage != null) errorImage.dispose();
-	if (infoImage != null) infoImage.dispose();
-	if (questionImage != null) questionImage.dispose();
-	if (warningImage != null) warningImage.dispose();
+    /* Dispose the System Images */
+    if (errorImage != null) {
+        errorImage.dispose();
+    }
+    if (infoImage != null) {
+        infoImage.dispose();
+    }
+    if (questionImage != null) {
+        questionImage.dispose();
+    }
+    if (warningImage != null) {
+        warningImage.dispose();
+    }
 	errorImage = infoImage = questionImage = warningImage = null;
 
 	/* Release the System Cursors */
 	for (int i = 0; i < cursors.length; i++) {
-		if (cursors [i] != null) cursors [i].dispose ();
+        if (cursors [i] != null) {
+            cursors [i].dispose();
+        }
 	}
 	cursors = null;
 
 	/* Release Acquired Resources */
 	if (resources != null) {
 		for (int i=0; i<resources.length; i++) {
-			if (resources [i] != null) resources [i].dispose ();
+            if (resources [i] != null) {
+                resources [i].dispose();
+            }
 		}
 		resources = null;
 	}
@@ -4879,7 +5135,9 @@ void releaseDisplay () {
 
 	/* Release the sleep resources */
 	max_priority = timeout = null;
-	if (fds != 0) OS.g_free (fds);
+    if (fds != 0) {
+        OS.g_free(fds);
+    }
 	fds = 0;
 
 	/* Release references */
@@ -4905,10 +5163,14 @@ void releaseDisplay () {
 			File file = new File (dir, "trims.prefs");
 			Properties props = new Properties ();
 			StringBuilder buf = new StringBuilder ();
-			for (int w : trimWidths) buf.append (w).append (' ');
+            for (int w : trimWidths) {
+                buf.append(w).append(' ');
+            }
 			props.put ("trimWidths", buf.toString ());
 			buf = new StringBuilder();
-			for (int h : trimHeights) buf.append (h).append (' ');
+            for (int h : trimHeights) {
+                buf.append(h).append(' ');
+            }
 			props.put ("trimHeights", buf.toString ());
 			try (FileOutputStream fos = new FileOutputStream (file)){
 				props.store (fos, null);
@@ -4944,14 +5206,22 @@ void releaseDisplay () {
  */
 public void removeFilter (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (filterTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (filterTable == null) {
+        return;
+    }
 	filterTable.unhook (eventType, listener);
-	if (filterTable.size () == 0) filterTable = null;
+    if (filterTable.size() == 0) {
+        filterTable = null;
+    }
 }
 
 long removeGdkEvent () {
-	if (gdkEventCount == 0) return 0;
+    if (gdkEventCount == 0) {
+        return 0;
+    }
 	long event = gdkEvents [0];
 	--gdkEventCount;
 	System.arraycopy (gdkEvents, 1, gdkEvents, 0, gdkEventCount);
@@ -4967,7 +5237,9 @@ long removeGdkEvent () {
 
 void removeIdleProc () {
 	synchronized (idleLock) {
-		if (idleHandle != 0) OS.g_source_remove (idleHandle);
+        if (idleHandle != 0) {
+            OS.g_source_remove(idleHandle);
+        }
 		idleNeeded = false;
 		idleHandle = 0;
 	}
@@ -4996,20 +5268,30 @@ void removeIdleProc () {
  */
 public void removeListener (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (eventType, listener);
 }
 
 void removeMouseHoverTimeout (long handle) {
-	if (handle != mouseHoverHandle) return;
-	if (mouseHoverId != 0) OS.g_source_remove (mouseHoverId);
+    if (handle != mouseHoverHandle) {
+        return;
+    }
+    if (mouseHoverId != 0) {
+        OS.g_source_remove(mouseHoverId);
+    }
 	mouseHoverId = 0;
 	mouseHoverHandle = 0;
 }
 
 void removePopup (Menu menu) {
-	if (popups == null) return;
+    if (popups == null) {
+        return;
+    }
 	for (int i=0; i<popups.length; i++) {
 		if (popups [i] == menu) {
 			popups [i] = null;
@@ -5019,7 +5301,9 @@ void removePopup (Menu menu) {
 }
 
 Widget removeWidget (long handle) {
-	if (handle == 0) return null;
+    if (handle == 0) {
+        return null;
+    }
 	lastWidget = null;
 	Widget widget = null;
 	int index;
@@ -5097,7 +5381,9 @@ boolean runDeferredEvents () {
 
 		/* Take an event off the queue */
 		Event event = eventQueue [0];
-		if (event == null) break;
+        if (event == null) {
+            break;
+        }
 		int length = eventQueue.length;
 		System.arraycopy (eventQueue, 1, eventQueue, 0, --length);
 		eventQueue [length] = null;
@@ -5132,7 +5418,9 @@ boolean runDeferredLayouts () {
 		layoutDeferredCount = 0;
 		for (int i = 0; i < count; i++) {
 			Composite comp = temp[i];
-			if (!comp.isDisposed()) comp.setLayoutDeferred (false);
+            if (!comp.isDisposed()) {
+                comp.setLayoutDeferred(false);
+            }
 		}
 		update ();
 		return true;
@@ -5141,16 +5429,22 @@ boolean runDeferredLayouts () {
 }
 
 boolean runPopups () {
-	if (popups == null) return false;
+    if (popups == null) {
+        return false;
+    }
 	boolean result = false;
 	while (popups != null) {
 		Menu menu = popups [0];
-		if (menu == null) break;
+        if (menu == null) {
+            break;
+        }
 		int length = popups.length;
 		System.arraycopy (popups, 1, popups, 0, --length);
 		popups [length] = null;
 		runDeferredEvents ();
-		if (!menu.isDisposed ()) menu._setVisible (true);
+        if (!menu.isDisposed()) {
+            menu._setVisible(true);
+        }
 		result = true;
 	}
 	popups = null;
@@ -5158,7 +5452,9 @@ boolean runPopups () {
 }
 
 boolean runSettings () {
-	if (!runSettings) return false;
+    if (!runSettings) {
+        return false;
+    }
 	runSettings = false;
 	saveResources ();
 	initializeSystemColors ();
@@ -5305,7 +5601,9 @@ public void setCursorLocation (int x, int y) {
  */
 public void setCursorLocation (Point point) {
 	checkDevice ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	long gdkDisplay = GDK.gdk_display_get_default();
 	long gdkPointer = GDK.gdk_get_pointer(gdkDisplay);
 	if (GTK.GTK4) {
@@ -5343,12 +5641,16 @@ public void setCursorLocation (Point point) {
  */
 public void setData (String key, Object value) {
 	checkDevice ();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	if (key.equals (DISPATCH_EVENT_KEY)) {
 		if (value == null || value instanceof int []) {
 			dispatchEvents = (int []) value;
-			if (value == null) putGdkEvents ();
+            if (value == null) {
+                putGdkEvents();
+            }
 			return;
 		}
 	}
@@ -5382,10 +5684,16 @@ public void setData (String key, Object value) {
 
 	/* Remove the key/value pair */
 	if (value == null) {
-		if (keys == null) return;
+        if (keys == null) {
+            return;
+        }
 		int index = 0;
-		while (index < keys.length && !keys [index].equals (key)) index++;
-		if (index == keys.length) return;
+        while (index < keys.length && !keys [index].equals(key)) {
+            index++;
+        }
+        if (index == keys.length) {
+            return;
+        }
 		if (keys.length == 1) {
 			keys = null;
 			values = null;
@@ -5470,15 +5778,23 @@ long setDirectionProc (long widget, long direction) {
 void setModalDialog (Dialog modalDailog) {
 	this.modalDialog = modalDailog;
 	Shell [] shells = getShells ();
-	for (int i=0; i<shells.length; i++) shells [i].updateModal ();
+    for (int i = 0; i < shells.length; i++) {
+        shells [i].updateModal();
+    }
 }
 
 void setModalShell (Shell shell) {
-	if (modalShells == null) modalShells = new Shell [4];
+    if (modalShells == null) {
+        modalShells = new Shell [4];
+    }
 	int index = 0, length = modalShells.length;
 	while (index < length) {
-		if (modalShells [index] == shell) return;
-		if (modalShells [index] == null) break;
+        if (modalShells [index] == shell) {
+            return;
+        }
+        if (modalShells [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -5488,7 +5804,9 @@ void setModalShell (Shell shell) {
 	}
 	modalShells [index] = shell;
 	Shell [] shells = getShells ();
-	for (int i=0; i<shells.length; i++) shells [i].updateModal ();
+    for (int i = 0; i < shells.length; i++) {
+        shells [i].updateModal();
+    }
 }
 
 /**
@@ -5508,8 +5826,12 @@ void setModalShell (Shell shell) {
  */
 public void setSynchronizer (Synchronizer synchronizer) {
 	checkDevice ();
-	if (synchronizer == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (synchronizer == this.synchronizer) return;
+    if (synchronizer == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (synchronizer == this.synchronizer) {
+        return;
+    }
 	Synchronizer oldSynchronizer;
 	synchronized (Device.class) {
 		oldSynchronizer = this.synchronizer;
@@ -5582,9 +5904,13 @@ void showIMWindow (Control control) {
 	imControl = control;
 	if (preeditWindow == 0) {
 		preeditWindow = GTK3.gtk_window_new (GTK.GTK_WINDOW_POPUP);
-		if (preeditWindow == 0) error (SWT.ERROR_NO_HANDLES);
+        if (preeditWindow == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		preeditLabel = GTK.gtk_label_new (null);
-		if (preeditLabel == 0) error (SWT.ERROR_NO_HANDLES);
+        if (preeditLabel == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		if (GTK.GTK4) {
 			GTK4.gtk_window_set_child(preeditWindow, preeditLabel);
@@ -5599,13 +5925,17 @@ void showIMWindow (Control control) {
 	GTK.gtk_im_context_get_preedit_string (imHandle, preeditString, pangoAttrs, null);
 	if (preeditString [0] != 0 && C.strlen (preeditString [0]) > 0) {
 		Control widget = control.findBackgroundControl ();
-		if (widget == null) widget = control;
+        if (widget == null) {
+            widget = control;
+        }
 		widget.setBackgroundGdkRGBA (preeditWindow, control.getBackgroundGdkRGBA());
 		widget.setForegroundGdkRGBA (preeditLabel, control.getForegroundGdkRGBA());
 		long fontDesc = control.getFontDescription ();
 		widget.setFontDescription (preeditLabel, fontDesc);
 		OS.pango_font_description_free (fontDesc);
-		if (pangoAttrs [0] != 0) GTK.gtk_label_set_attributes (preeditLabel, pangoAttrs[0]);
+        if (pangoAttrs [0] != 0) {
+            GTK.gtk_label_set_attributes(preeditLabel, pangoAttrs[0]);
+        }
 		GTK.gtk_label_set_text (preeditLabel, preeditString [0]);
 		Point point = control.toDisplay (control.getIMCaretPos ());
 		GTK3.gtk_window_move (preeditWindow, point.x, point.y);
@@ -5616,8 +5946,12 @@ void showIMWindow (Control control) {
 	} else {
 		GTK3.gtk_widget_hide (preeditWindow);
 	}
-	if (preeditString [0] != 0) OS.g_free (preeditString [0]);
-	if (pangoAttrs [0] != 0) OS.pango_attr_list_unref (pangoAttrs [0]);
+    if (preeditString [0] != 0) {
+        OS.g_free(preeditString [0]);
+    }
+    if (pangoAttrs [0] != 0) {
+        OS.pango_attr_list_unref(pangoAttrs [0]);
+    }
 }
 
 /**
@@ -5645,9 +5979,13 @@ public boolean sleep () {
 		runSettings = true;
 		return false;
 	}
-	if (!synchronizer.isMessagesEmpty()) return true;
+    if (!synchronizer.isMessagesEmpty()) {
+        return true;
+    }
 	sendPreExternalEventDispatchEvent ();
-	if (!GTK.GTK4) GDK.gdk_threads_leave ();
+    if (!GTK.GTK4) {
+        GDK.gdk_threads_leave();
+    }
 	/*
 	 * The code below replicates event waiting behavior of g_main_context_iteration
 	 * but leaves out event dispatch.
@@ -5671,12 +6009,14 @@ public boolean sleep () {
 			long poll = OS.g_main_context_get_poll_func (context);
 			if (poll != 0) {
 				if (nfds > 0 || timeout [0] != 0) {
-					/*
-					* Bug in GTK. For some reason, g_main_context_wakeup() may
-					* fail to wake up the UI thread from the polling function.
-					* The fix is to sleep for a maximum of 50 milliseconds.
-					*/
-					if (timeout [0] < 0) timeout [0] = 50;
+                    /*
+                    * Bug in GTK. For some reason, g_main_context_wakeup() may
+                    * fail to wake up the UI thread from the polling function.
+                    * The fix is to sleep for a maximum of 50 milliseconds.
+                    */
+                    if (timeout [0] < 0) {
+                        timeout [0] = 50;
+                    }
 
 					wake = false;
 					OS.Call (poll, fds, nfds, timeout [0]);
@@ -5687,7 +6027,9 @@ public boolean sleep () {
 		}
 	} while (!result && synchronizer.isMessagesEmpty() && !wake);
 	wake = false;
-	if (!GTK.GTK4) GDK.gdk_threads_enter ();
+    if (!GTK.GTK4) {
+        GDK.gdk_threads_enter();
+    }
 	sendPostExternalEventDispatchEvent ();
 	return true;
 }
@@ -5720,24 +6062,38 @@ public boolean sleep () {
  */
 public void timerExec (int milliseconds, Runnable runnable) {
 	checkDevice ();
-	if (runnable == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (timerList == null) timerList = new Runnable [4];
-	if (timerIds == null) timerIds = new int [4];
+    if (runnable == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (timerList == null) {
+        timerList = new Runnable [4];
+    }
+    if (timerIds == null) {
+        timerIds = new int [4];
+    }
 	int index = 0;
 	while (index < timerList.length) {
-		if (timerList [index] == runnable) break;
+        if (timerList [index] == runnable) {
+            break;
+        }
 		index++;
 	}
 	if (index != timerList.length) {
 		OS.g_source_remove (timerIds [index]);
 		timerList [index] = null;
 		timerIds [index] = 0;
-		if (milliseconds < 0) return;
+        if (milliseconds < 0) {
+            return;
+        }
 	} else {
-		if (milliseconds < 0) return;
+        if (milliseconds < 0) {
+            return;
+        }
 		index = 0;
 		while (index < timerList.length) {
-			if (timerList [index] == null) break;
+            if (timerList [index] == null) {
+                break;
+            }
 			index++;
 		}
 		if (index == timerList.length) {
@@ -5755,13 +6111,17 @@ public void timerExec (int milliseconds, Runnable runnable) {
 	} else {
 		timerId = GDK.gdk_threads_add_timeout (milliseconds, timerProc, index);
 	}
-	if (timerId == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (timerId == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	timerIds [index] = timerId;
 	timerList [index] = runnable;
 }
 
 long timerProc (long i) {
-	if (timerList == null) return 0;
+    if (timerList == null) {
+        return 0;
+    }
 	int index = (int)i;
 	if (0 <= index && index < timerList.length) {
 		Runnable runnable = timerList [index];
@@ -5787,7 +6147,9 @@ long caretProc (long clientData) {
 	}
 	if (currentCaret.blinkCaret()) {
 		int blinkRate = currentCaret.blinkRate;
-		if (blinkRate == 0) return 0;
+        if (blinkRate == 0) {
+            return 0;
+        }
 		/*
 		 * blink is set to true so that when gtk_draw() is called, we know it is the correct
 		 * state to draw/redraw the caret. See Bug 517487.
@@ -5821,13 +6183,17 @@ void resetCaretTiming() {
 
 long sizeAllocateProc (long handle, long arg0, long user_data) {
 	Widget widget = getWidget (user_data);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	return widget.sizeAllocateProc (handle, arg0, user_data);
 }
 
 long sizeRequestProc (long handle, long arg0, long user_data) {
 	Widget widget = getWidget (user_data);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	return widget.sizeRequestProc (handle, arg0, user_data);
 }
 
@@ -5841,13 +6207,23 @@ void saveResources () {
 		System.arraycopy (resources, 0, newResources, 0, resourceCount);
 		resources = newResources;
 	}
-	if (errorImage != null) resources [resourceCount++] = errorImage;
-	if (infoImage != null) resources [resourceCount++] = infoImage;
-	if (questionImage != null) resources [resourceCount++] = questionImage;
-	if (warningImage != null) resources [resourceCount++] = warningImage;
+    if (errorImage != null) {
+        resources [resourceCount++] = errorImage;
+    }
+    if (infoImage != null) {
+        resources [resourceCount++] = infoImage;
+    }
+    if (questionImage != null) {
+        resources [resourceCount++] = questionImage;
+    }
+    if (warningImage != null) {
+        resources [resourceCount++] = warningImage;
+    }
 	errorImage = infoImage = questionImage = warningImage = null;
 	for (int i=0; i<cursors.length; i++) {
-		if (cursors [i] != null) resources [resourceCount++] = cursors [i];
+        if (cursors [i] != null) {
+            resources [resourceCount++] = cursors [i];
+        }
 		cursors [i] = null;
 	}
 	if (resourceCount < RESOURCE_SIZE) {
@@ -5880,12 +6256,18 @@ void sendEvent (int eventType, Event event) {
 	if (eventTable == null && filterTable == null) {
 		return;
 	}
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	event.display = this;
 	event.type = eventType;
-	if (event.time == 0) event.time = getLastEventTime ();
+    if (event.time == 0) {
+        event.time = getLastEventTime();
+    }
 	if (!filterEvent (event)) {
-		if (eventTable != null) sendEvent (eventTable, event);
+        if (eventTable != null) {
+            sendEvent(eventTable, event);
+        }
 	}
 }
 
@@ -5934,10 +6316,14 @@ public void sendPostExternalEventDispatchEvent () {
 }
 
 void setCurrentCaret (Caret caret) {
-	if (caretId != 0) OS.g_source_remove(caretId);
+    if (caretId != 0) {
+        OS.g_source_remove(caretId);
+    }
 	caretId = 0;
 	currentCaret = caret;
-	if (caret == null) return;
+    if (caret == null) {
+        return;
+    }
 	int blinkRate = currentCaret.blinkRate;
 	if (GTK.GTK4) {
 		caretId = OS.g_timeout_add (blinkRate, caretProc, 0);
@@ -5948,7 +6334,9 @@ void setCurrentCaret (Caret caret) {
 
 long shellMapProc (long handle, long arg0, long user_data) {
 	Widget widget = getWidget (handle);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	return widget.shellMapProc (handle, arg0, user_data);
 }
 
@@ -5986,7 +6374,9 @@ long signalProc (long gobject, long arg1, long user_data) {
 public void syncExec (Runnable runnable) {
 	Synchronizer synchronizer;
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		synchronizer = this.synchronizer;
 		synchronized (idleLock) {
 			if (idleNeeded && idleHandle == 0) {
@@ -6050,14 +6440,18 @@ public <T, E extends Exception> T syncCall(SwtCallable<T, E> callable) throws E 
 
 static int translateKey (int key) {
 	for (int i=0; i<KeyTable.length; i++) {
-		if (KeyTable [i] [0] == key) return KeyTable [i] [1];
+        if (KeyTable [i] [0] == key) {
+            return KeyTable [i] [1];
+        }
 	}
 	return 0;
 }
 
 static int untranslateKey (int key) {
 	for (int i=0; i<KeyTable.length; i++) {
-		if (KeyTable [i] [1] == key) return KeyTable [i] [0];
+        if (KeyTable [i] [1] == key) {
+            return KeyTable [i] [0];
+        }
 	}
 	return 0;
 }
@@ -6091,8 +6485,12 @@ public void update () {
  */
 public void wake () {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
-		if (thread == Thread.currentThread ()) return;
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
+        if (thread == Thread.currentThread()) {
+            return;
+        }
 		wakeThread ();
 	}
 }
@@ -6106,14 +6504,18 @@ void enterMotionProc(long controller, double x, double y, long user_data) {
 	long handle = GTK.gtk_event_controller_get_widget(controller);
 	Widget widget = getWidget(handle);
 
-	if (widget != null) widget.enterMotionProc(controller, x, y, user_data);
+    if (widget != null) {
+        widget.enterMotionProc(controller, x, y, user_data);
+    }
 }
 
 boolean scrollProc(long controller, double dx, double dy, long user_data) {
 	long handle = GTK.gtk_event_controller_get_widget(controller);
 	Widget widget = getWidget(handle);
 
-	if (widget != null) return widget.scrollProc(controller, dx, dy, user_data);
+    if (widget != null) {
+        return widget.scrollProc(controller, dx, dy, user_data);
+    }
 
 	return false;
 }
@@ -6122,17 +6524,23 @@ void focusProc(long controller, long user_data) {;
 	long handle = GTK.gtk_event_controller_get_widget(controller);
 	Widget widget = getWidget(handle);
 
-	if (widget != null) widget.focusProc(controller, user_data);
+    if (widget != null) {
+        widget.focusProc(controller, user_data);
+    }
 }
 
 void windowActiveProc(long handle, long user_data) {;
 	Widget widget = getWidget(handle);
-	if (widget != null) widget.windowActiveProc(handle, user_data);
+    if (widget != null) {
+        widget.windowActiveProc(handle, user_data);
+    }
 }
 
 /** GTK4 only: lets the pointer pick the menu row again, see Shell#gtk_move_focus. */
 void restoreMenuRowTarget () {
-	if (untargetableMenuRow == 0) return;
+    if (untargetableMenuRow == 0) {
+        return;
+    }
 	OS.g_object_set (untargetableMenuRow, Converter.javaStringToCString ("can-target"), true, 0);
 	OS.g_object_unref (untargetableMenuRow);
 	untargetableMenuRow = 0;
@@ -6141,7 +6549,9 @@ void restoreMenuRowTarget () {
 
 /** GTK4 only: restores the row once the pointer has moved; the first event after hiding the submenu is GTK's synthesized crossing. */
 void restoreMenuRowTargetOnMotion (double x, double y) {
-	if (untargetableMenuRow == 0) return;
+    if (untargetableMenuRow == 0) {
+        return;
+    }
 	if (!untargetableMenuRowSeen) {
 		untargetableMenuRowSeen = true;
 		untargetableMenuRowX = x;
@@ -6155,7 +6565,9 @@ boolean keyPressReleaseProc(long controller, int keyval, int keycode, int state,
 	lastKeyEventTime = System.nanoTime();
 	long handle = GTK.gtk_event_controller_get_widget(controller);
 	Widget widget = getWidget(handle);
-	if (widget == null) return false;
+    if (widget == null) {
+        return false;
+    }
 
 	return widget.keyPressReleaseProc(controller, keyval, keycode, state, user_data);
 }
@@ -6164,14 +6576,18 @@ void gesturePressReleaseProc(long gesture, int n_press, double x, double y, long
 	long handle = GTK.gtk_event_controller_get_widget(gesture);
 	Widget widget = getWidget(handle);
 
-	if (widget != null) widget.gesturePressReleaseProc(gesture, n_press, x, y, user_data);
+    if (widget != null) {
+        widget.gesturePressReleaseProc(gesture, n_press, x, y, user_data);
+    }
 }
 
 void leaveProc(long controller, long user_data) {
 	long handle = GTK.gtk_event_controller_get_widget(controller);
 	Widget widget = getWidget(handle);
 
-	if (widget != null) widget.leaveProc(controller, handle, user_data);
+    if (widget != null) {
+        widget.leaveProc(controller, handle, user_data);
+    }
 }
 
 void computeSizeProc(long toplevel, long size, long user_data) {
@@ -6180,24 +6596,32 @@ void computeSizeProc(long toplevel, long size, long user_data) {
 
 void activateProc(long action, long parameter, long user_data) {
 	Widget widget = getWidget(user_data);
-	if(widget == null) return;
+    if (widget == null) {
+        return;
+    }
 
 	widget.gtk_activate(user_data);
 }
 
 void menuItemsChangedProc(long model, int position, int removed, int added, long user_data) {
 	Widget widget = getWidget(user_data);
-	if (widget instanceof Menu menu) menu.modelItemsChanged();
+    if (widget instanceof Menu menu) {
+        menu.modelItemsChanged();
+    }
 }
 
 void resizeProc(long handle, int width, int height) {
 	Widget widget = getWidget(handle);
-	if (widget != null) widget.gtk_size_allocate(handle, 0);
+    if (widget != null) {
+        widget.gtk_size_allocate(handle, 0);
+    }
 }
 
 void layoutProc(long surface, int width, int height, long user_data) {
 	Widget widget = getWidget(user_data);
-	if (widget != null) widget.gtk_layout(surface, width, height);
+    if (widget != null) {
+        widget.gtk_layout(surface, width, height);
+    }
 }
 
 long notifyProc (long object, long param_spec, long user_data) {
@@ -6219,43 +6643,57 @@ long notifyProc (long object, long param_spec, long user_data) {
 
 boolean changeValue (long handle, int scroll, double value, long user_data) {
 	Widget widget = getWidget (handle);
-	if (widget == null) return false;
+    if (widget == null) {
+        return false;
+    }
 	return widget.gtk_change_value(handle, scroll, value, user_data);
 }
 
 long windowProc (long handle, long user_data) {
 	Widget widget = getWidget (handle);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	return widget.windowProc (handle, user_data);
 }
 
 long windowProc (long handle, long arg0, long user_data) {
 	Widget widget = getWidget (handle);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	return widget.windowProc (handle, arg0, user_data);
 }
 
 long windowProc (long handle, long arg0, long arg1, long user_data) {
 	Widget widget = getWidget (handle);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	return widget.windowProc (handle, arg0, arg1, user_data);
 }
 
 long windowProc (long handle, long arg0, long arg1, long arg2, long user_data) {
 	Widget widget = getWidget (handle);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	return widget.windowProc (handle, arg0, arg1, arg2, user_data);
 }
 
 long windowProc (long handle, long arg0, long arg1, long arg2, long arg3, long user_data) {
 	Widget widget = getWidget (handle);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	return widget.windowProc (handle, arg0, arg1, arg2, arg3, user_data);
 }
 
 long windowTimerProc (long handle) {
 	Widget widget = getWidget (handle);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	return widget.timerProc (handle);
 }
 

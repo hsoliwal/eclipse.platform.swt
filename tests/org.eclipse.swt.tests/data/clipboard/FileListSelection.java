@@ -34,8 +34,9 @@ final class FileListSelection implements Transferable {
 
 	@Override
 	public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
-		if (!isDataFlavorSupported(flavor))
-			throw new UnsupportedFlavorException(flavor);
+        if (!isDataFlavorSupported(flavor)) {
+            throw new UnsupportedFlavorException(flavor);
+        }
 		return files;
 	}
 }
