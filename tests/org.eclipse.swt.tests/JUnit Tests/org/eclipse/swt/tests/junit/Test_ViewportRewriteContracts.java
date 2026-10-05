@@ -403,9 +403,9 @@ public class Test_ViewportRewriteContracts {
 		assertEquals(Long.MAX_VALUE, call(window, "paintEndExclusive"));
 
 		assertThrows(IllegalArgumentException.class,
-				() -> setLogicalCount.invoke(window, -1L));
+				() -> call(window, "setLogicalCount", -1L));
 		assertThrows(IllegalArgumentException.class,
-				() -> setOverscanRows.invoke(window, -1));
+				() -> call(window, "setOverscanRows", -1));
 	}
 
 
