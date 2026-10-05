@@ -24,7 +24,9 @@ Existing APIs, style atoms, examples, tests, resources, build definitions and wo
 
 ## Gate status
 
-The native GTK reactor is under validation. Windows/Cocoa native execution, strict canonical
+The 22-module GTK-enabled Maven verify reactor passed. The main SWT suite ran 4,430 tests with
+zero failures/errors and 20 skips. The separate GTK test bundle retains its upstream default test
+skip; Windows/Cocoa native execution, strict canonical
 repository admission, full canonical reactor and repository-owned offline dependency closure are
 not claimed here. Strict-toolchain compilation currently stops at the existing missing closing
 parenthesis in `ChallengeSupersetCatalog.java`; the canonical PR preserves that diagnostic.
