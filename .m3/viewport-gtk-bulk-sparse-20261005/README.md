@@ -47,4 +47,11 @@ Authored gates:
 - OpenRewrite Java round-trip,
 - GTK runtime regression in the existing SWT JUnit suite.
 
-Execution of Maven/native gates is delegated to the repository CI for this branch/PR. No unexecuted gate is claimed as passed here.
+Executed independently in the ChatGPT Java 21 environment:
+- `javac --release 21 -Xlint:all -Werror` on the sealed candidate plus a deterministic check harness,
+- candidate fixed-point: PASS,
+- atom-drift refusal: PASS.
+
+OpenRewrite SDK execution was not available in that environment because Maven/OpenRewrite dependencies were not installed.
+
+Repository Actions did trigger for PR #69, but the current repository workflows fail before emitting any jobs; the same SWT Matrix Build failure is present on current `master` and completes in roughly one second. This is therefore recorded as a CI-startup/infrastructure blocker rather than evidence of a source regression. Platform-native SWT runtime acceptance for this branch remains unclaimed.
