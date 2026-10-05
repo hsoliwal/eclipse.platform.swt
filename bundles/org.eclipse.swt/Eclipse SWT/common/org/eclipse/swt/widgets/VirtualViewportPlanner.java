@@ -10,88 +10,56 @@
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
+import org.eclipse.swt.internal.*;
+
 /**
- * Toolkit-neutral plan for a logical virtual widget and its bounded paint window.
+ * Compatibility adapter over the shared viewport runtime for flat virtual
+ * widgets.
  *
- * <p>The planner owns coordinates, selection and repaint geometry only.  Native
- * TableItem/TreeItem facades are deliberately not evicted here: once a facade is
- * exposed through SWT API or SetData it remains identity-pinned until normal SWT
- * removal/disposal.  Painting can nevertheless remain limited to the visible
- * window plus a small overscan.</p>
+ * <p>Selection remains widget-specific, while visible/overscan coordinates are
+ * owned by {@link ViewportRuntime.RowWindow}. Native TableItem/TreeItem facades
+ * remain identity-pinned once exposed.</p>
  */
 final class VirtualViewportPlanner {
-	static final int DEFAULT_OVERSCAN_ROWS = 8;
+	static final int DEFAULT_OVERSCAN_ROWS = ViewportRuntime.RowWindow.DEFAULT_OVERSCAN_ROWS;
 
 	private final VirtualSelectionModel selection = new VirtualSelectionModel ();
 	private final VirtualScrollMetrics scrollMetrics = new VirtualScrollMetrics ();
-	private int logicalCount;
-	private int firstVisible;
-	private int visibleCount;
-	private int overscanRows = DEFAULT_OVERSCAN_ROWS;
+	private final ViewportRuntime.RowWindow window = new ViewportRuntime.RowWindow ();
 	private int repaintLockDepth;
 	private int generation;
 
 	int logicalCount () {
-		return logicalCount;
+		return Math.toIntExact (window.logicalCount ());
 	}
 
 	void setLogicalCount (int count) {
-        if (count < 0) {
-            throw new IllegalArgumentException("negative logical count");
-        }
-        if (count == logicalCount) {
-            return;
-        }
+		if (count < 0) throw new IllegalArgumentException ("negative logical count");
+		if (count == logicalCount ()) return;
 		selection.setLogicalCount (count);
-		logicalCount = count;
-		clampViewport ();
-		generation++;
+		mutateWindow (() -> window.setLogicalCount (count));
 	}
 
 	void insert (int index, int count) {
-        if (count < 0 || index < 0 || index > logicalCount) {
-            throw new IllegalArgumentException("invalid insert");
-        }
-        if (count == 0) {
-            return;
-        }
+		if (count < 0 || index < 0 || index > logicalCount ()) {
+			throw new IllegalArgumentException ("invalid insert");
+		}
+		if (count == 0) return;
 		selection.insert (index, count);
-        if (index <= firstVisible && logicalCount != 0) {
-            firstVisible = Math.addExact(firstVisible, count);
-        }
-		logicalCount = Math.addExact (logicalCount, count);
-		clampViewport ();
-		generation++;
+		mutateWindow (() -> window.insert (index, count));
 	}
 
 	void remove (int index, int count) {
-        if (count < 0 || index < 0 || index > logicalCount - count) {
-            throw new IllegalArgumentException("invalid remove");
-        }
-        if (count == 0) {
-            return;
-        }
+		if (count < 0 || index < 0 || index > logicalCount () - count) {
+			throw new IllegalArgumentException ("invalid remove");
+		}
+		if (count == 0) return;
 		selection.remove (index, count);
-        if (index < firstVisible) {
-            firstVisible -= Math.min(count, firstVisible - index);
-        }
-		logicalCount -= count;
-		clampViewport ();
-		generation++;
+		mutateWindow (() -> window.remove (index, count));
 	}
 
 	void setViewport (int first, int visibleRows) {
-        if (first < 0 || visibleRows < 0) {
-            throw new IllegalArgumentException("negative viewport");
-        }
-		int nextFirst = logicalCount == 0 ? 0 : Math.min (first, logicalCount - 1);
-		int nextVisible = Math.min (visibleRows, Math.max (0, logicalCount - nextFirst));
-        if (nextFirst == firstVisible && nextVisible == visibleCount) {
-            return;
-        }
-		firstVisible = nextFirst;
-		visibleCount = nextVisible;
-		generation++;
+		mutateWindow (() -> window.setViewport (first, visibleRows));
 	}
 
 	void setUniformGeometry (
@@ -107,44 +75,35 @@ final class VirtualViewportPlanner {
 	}
 
 	int firstVisible () {
-		return firstVisible;
+		return Math.toIntExact (window.firstVisible ());
 	}
 
 	int visibleCount () {
-		return visibleCount;
+		return window.visibleCount ();
 	}
 
 	void setOverscanRows (int rows) {
-        if (rows < 0) {
-            throw new IllegalArgumentException("negative overscan");
-        }
-        if (rows == overscanRows) {
-            return;
-        }
-		overscanRows = rows;
-		generation++;
+		mutateWindow (() -> window.setOverscanRows (rows));
 	}
 
 	int overscanRows () {
-		return overscanRows;
+		return window.overscanRows ();
 	}
 
 	int paintStart () {
-		return Math.max (0, firstVisible - overscanRows);
+		return Math.toIntExact (window.paintStart ());
 	}
 
 	int paintEndExclusive () {
-		long end = (long) firstVisible + visibleCount + overscanRows;
-		return (int) Math.min (logicalCount, end);
+		return Math.toIntExact (window.paintEndExclusive ());
 	}
 
 	boolean isVisible (int index) {
-		return 0 <= index && index < logicalCount
-				&& firstVisible <= index && index < firstVisible + visibleCount;
+		return window.isVisible (index);
 	}
 
 	boolean isPaintCandidate (int index) {
-		return paintStart () <= index && index < paintEndExclusive ();
+		return window.isPaintCandidate (index);
 	}
 
 	VirtualSelectionModel selection () {
@@ -156,9 +115,7 @@ final class VirtualViewportPlanner {
 	}
 
 	void endRepaintLock () {
-        if (repaintLockDepth == 0) {
-            throw new IllegalStateException("repaint lock underflow");
-        }
+		if (repaintLockDepth == 0) throw new IllegalStateException ("repaint lock underflow");
 		repaintLockDepth--;
 		generation++;
 	}
@@ -171,12 +128,9 @@ final class VirtualViewportPlanner {
 		return generation;
 	}
 
-	private void clampViewport () {
-		if (logicalCount == 0) {
-			firstVisible = visibleCount = 0;
-			return;
-		}
-		firstVisible = Math.min (firstVisible, logicalCount - 1);
-		visibleCount = Math.min (visibleCount, logicalCount - firstVisible);
+	private void mutateWindow (Runnable mutation) {
+		long before = window.generation ();
+		mutation.run ();
+		if (window.generation () != before) generation++;
 	}
 }
