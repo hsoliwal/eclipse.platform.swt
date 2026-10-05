@@ -245,14 +245,14 @@ int findAvailableId() {
 
 	// Search from 'nextId' to end
 	for (int id = nextId; id < items.length; id++) {
-        if (items [id] == null) {
+        if (items [id] == null && (virtualTopology == null || !virtualTopology.contains (id))) {
             return id;
         }
 	}
 
 	// Search from begin to nextId
 	for (int id = 0; id < nextId; id++) {
-        if (items [id] == null) {
+        if (items [id] == null && (virtualTopology == null || !virtualTopology.contains (id))) {
             return id;
         }
 	}
@@ -274,13 +274,39 @@ int getId (long iter, boolean queryModel) {
 	if (queryModel) {
 		int[] value = new int[1];
 		GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, value, -1);
-        if (value [0] != -1) {
-            return value [0];
-        }
+		if (value [0] != -1) return value [0];
+		if (usesVirtualNativeModel ()) {
+			int existing = virtualMaterializedId (iter);
+			if (existing >= 0) return existing;
+		}
 	}
 
 	int id = findAvailableId();
 	nextId = id + 1;
+	if (usesVirtualNativeModel ()) {
+		long path = GTK.gtk_tree_model_get_path (modelHandle, iter);
+		if (path == 0) return id;
+		try {
+			int depth = GTK.gtk_tree_path_get_depth (path);
+			if (depth <= 0) return id;
+			int [] indices = new int [depth];
+			C.memmove (indices, GTK.gtk_tree_path_get_indices (path), 4L * depth);
+			int parentId = VirtualTreeTopology.ROOT;
+			for (int level = 0; level < depth - 1; level++) {
+				int parent = virtualTopology.materializedChildId (parentId, indices [level]);
+				if (parent < 0) {
+					parent = findAvailableId ();
+					nextId = parent + 1;
+					virtualTopology.bind (parent, parentId, indices [level]);
+				}
+				parentId = parent;
+			}
+			virtualTopology.bind (id, parentId, indices [depth - 1]);
+		} finally {
+			GTK.gtk_tree_path_free (path);
+		}
+		return id;
+	}
 
 	GTK.gtk_tree_store_set (modelHandle, iter, ID_COLUMN, id, -1);
 	return id;
@@ -1518,7 +1544,13 @@ void createColumn (TreeColumn column, int index) {
 */
 
 	int modelIndex = FIRST_COLUMN;
-	if (columnCount != 0) {
+	if (usesVirtualNativeModel ()) {
+		for (int i = 0; i < columnCount; i++) {
+			if (columns [i] != null) {
+				modelIndex = Math.max (modelIndex, columns [i].modelIndex + CELL_TYPES);
+			}
+		}
+	} else if (columnCount != 0) {
 		int modelLength = GTK.gtk_tree_model_get_n_columns (modelHandle);
 		boolean [] usedColumns = new boolean [modelLength];
 		for (int i=0; i<columnCount; i++) {
@@ -1528,18 +1560,14 @@ void createColumn (TreeColumn column, int index) {
 			}
 		}
 		while (modelIndex < modelLength) {
-            if (!usedColumns [modelIndex]) {
-                break;
-            }
+			if (!usedColumns [modelIndex]) break;
 			modelIndex++;
 		}
 		if (modelIndex == modelLength) {
 			long oldModel = modelHandle;
-			long [] types = getColumnTypes (columnCount + 4); // grow by 4 rows at a time
+			long [] types = getColumnTypes (columnCount + 4);
 			long newModel = GTK.gtk_tree_store_newv (types.length, types);
-            if (newModel == 0) {
-                error(SWT.ERROR_NO_HANDLES);
-            }
+			if (newModel == 0) error(SWT.ERROR_NO_HANDLES);
 			copyModel (oldModel, FIRST_COLUMN, newModel, FIRST_COLUMN, (long )0, (long )0, modelLength);
 			GTK.gtk_tree_view_set_model (handle, newModel);
 			setModel (newModel);
@@ -1575,7 +1603,7 @@ void createColumn (TreeColumn column, int index) {
 		column.handle = columnHandle;
 		column.modelIndex = modelIndex;
 	}
-	if (!searchEnabled ()) {
+	if (!searchEnabled () || usesVirtualNativeModel ()) {
 		GTK.gtk_tree_view_set_search_column (handle, -1);
 	} else {
 		/* Set the search column whenever the model changes */
@@ -2145,7 +2173,7 @@ void destroyItem (TreeColumn column) {
 			createRenderers (firstColumn.handle, firstColumn.modelIndex, true, firstColumn.style);
 		}
 	}
-	if (!searchEnabled ()) {
+	if (!searchEnabled () || usesVirtualNativeModel ()) {
 		GTK.gtk_tree_view_set_search_column (handle, -1);
 	} else {
 		/* Set the search column whenever the model changes */
@@ -4111,7 +4139,7 @@ public void removeAll () {
 		virtualTopology.setChildCount (VirtualTreeTopology.ROOT, 0);
 	}
 
-	if (!searchEnabled ()) {
+	if (!searchEnabled () || usesVirtualNativeModel ()) {
 		GTK.gtk_tree_view_set_search_column (handle, -1);
 	} else {
 		/* Set the search column whenever the model changes */
