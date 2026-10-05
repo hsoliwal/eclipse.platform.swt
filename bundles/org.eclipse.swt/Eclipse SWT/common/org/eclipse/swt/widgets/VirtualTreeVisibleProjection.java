@@ -64,10 +64,67 @@ final class VirtualTreeVisibleProjection {
         }
 		int length = (int)Math.min ((long)rowCount, total - firstVisible);
 		Row [] rows = new Row [length];
-        for (int i = 0; i < length; i++) {
-            rows [i] = rowAt(firstVisible + i);
-        }
+		fillWindow (firstVisible, rows);
 		return rows;
+	}
+
+
+	/**
+	 * Seek by cached subtree weights, then emit one continuous preorder range.
+	 * Existing parent/sibling lanes supply the return path, so no traversal
+	 * stack or retained cursor is needed. Cold siblings are skipped arithmetically.
+	 */
+	private void fillWindow (long skip, Row [] rows) {
+		int parentId = VirtualTreeTopology.ROOT, coordinate = 0, depth = 0, written = 0;
+		int nextId = topology.firstMaterializedChildId (parentId);
+		while (written < rows.length) {
+			int logicalCount = topology.childCount (parentId);
+			int coldEnd = nextId >= 0 ? Math.min (logicalCount, topology.childIndex (nextId)) : logicalCount;
+			if (coordinate < coldEnd) {
+				int omitted = (int)Math.min (skip, (long)coldEnd - coordinate);
+				coordinate += omitted;
+				skip -= omitted;
+				int emit = Math.min (coldEnd - coordinate, rows.length - written);
+				for (int i = 0; i < emit; i++) {
+					rows [written++] = new Row (parentId, coordinate++, -1, depth);
+				}
+				if (written == rows.length) {
+					return;
+				}
+			}
+			if (nextId >= 0 && coordinate < logicalCount) {
+				int id = nextId;
+				nextId = topology.nextMaterializedSiblingId (id);
+				int index = coordinate++;
+				if (skip > 0) {
+					skip--;
+				} else {
+					rows [written++] = new Row (parentId, index, id, depth);
+					if (written == rows.length) {
+						return;
+					}
+				}
+				if (topology.flag (id, VirtualItemState.EXPANDED) && topology.childCountKnown (id)) {
+					long descendants = visibleChildren (id);
+					if (skip >= descendants) {
+						skip -= descendants;
+					} else {
+						depth++;
+						parentId = id;
+						coordinate = 0;
+						nextId = topology.firstMaterializedChildId (id);
+					}
+				}
+				continue;
+			}
+			if (depth == 0) {
+				throw new IllegalStateException ("projection overflow");
+			}
+			depth--;
+			coordinate = topology.childIndex (parentId) + 1;
+			nextId = topology.nextMaterializedSiblingId (parentId);
+			parentId = topology.parentId (parentId);
+		}
 	}
 
 	long visibleIndexOf (int materializedId) {
