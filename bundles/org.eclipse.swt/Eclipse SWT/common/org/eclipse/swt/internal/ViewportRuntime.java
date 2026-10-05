@@ -607,6 +607,11 @@ public final class ViewportRuntime {
 		return (int)Math.min (logicalRows, Math.max (1L, rows));
 	}
 
+	/** Saturating addition for the nonnegative row coordinates and counts above. */
+	private static long saturatedAdd (long value, int increment) {
+		return value > Long.MAX_VALUE - increment ? Long.MAX_VALUE : value + increment;
+	}
+
 	private static long saturatedMultiply (long value, int multiplier) {
         if (value == 0) {
             return 0;

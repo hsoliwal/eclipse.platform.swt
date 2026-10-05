@@ -922,6 +922,57 @@ public void test_virtualGtkNativeFrontierIsBoundedAndGrowsOnDemand() throws Exce
 }
 
 @Test
+public void test_virtualGtkFrontierGrowthPreservesExposedPrefixAndDemandIndices() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) {
+		return;
+	}
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.CHECK | SWT.MULTI);
+	java.util.List<Integer> requested = new java.util.ArrayList<>();
+	virtualTree.addListener(SWT.SetData, event -> {
+		requested.add(event.index);
+		((TreeItem) event.item).setText("row " + event.index);
+	});
+	virtualTree.setItemCount(20_000);
+	TreeItem first = virtualTree.getItem(0);
+	TreeItem tail = virtualTree.getItem(255);
+	first.setText("first");
+	tail.setText("tail");
+	tail.setChecked(true);
+	tail.setGrayed(true);
+	tail.setItemCount(20_000);
+	TreeItem child = tail.getItem(0);
+	child.setText("child");
+	tail.setExpanded(true);
+	virtualTree.setSelection(new TreeItem[] {first, tail});
+	int[] selectionEvents = {0};
+	virtualTree.addListener(SWT.Selection, event -> selectionEvents[0]++);
+
+	TreeItem distant = virtualTree.getItem(10_000);
+	assertEquals("row 10000", distant.getText());
+	TreeItem distantChild = tail.getItem(10_000);
+	assertEquals("row 10000", distantChild.getText());
+	assertSame(first, virtualTree.getItem(0));
+	assertSame(tail, virtualTree.getItem(255));
+	assertSame(child, tail.getItem(0));
+	assertSame(distant, virtualTree.getItem(10_000));
+	assertSame(distantChild, tail.getItem(10_000));
+	assertEquals(10_000, virtualTree.indexOf(distant));
+	assertEquals(10_000, tail.indexOf(distantChild));
+	assertEquals(20_000, virtualTree.getItemCount());
+	assertEquals(20_000, tail.getItemCount());
+	assertEquals("first", first.getText());
+	assertEquals("tail", tail.getText());
+	assertEquals("child", child.getText());
+	assertTrue(tail.getChecked());
+	assertTrue(tail.getGrayed());
+	assertTrue(tail.getExpanded());
+	assertArrayEquals(new TreeItem[] {first, tail}, virtualTree.getSelection());
+	assertEquals(0, selectionEvents[0]);
+	assertEquals(java.util.List.of(10_000, 10_000), requested,
+			"cold frontier creation must not request placeholder payloads");
+}
+
+@Test
 public void test_virtualGtkCollapsedChildStartsAtSentinelAndExpansionStaysBounded() throws Exception {
     if (!"gtk".equals(SWT.getPlatform())) {
         return;
