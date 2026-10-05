@@ -22,6 +22,8 @@ import org.junit.platform.suite.api.Suite;
  */
 @Suite(failIfNoTests = false)
 @SelectClasses({
+	Test_VirtualTreeTopology.class,
+	Test_VirtualTreeWindow.class,
 	AllNonBrowserTests.class,
 	AllBrowserTests.class
 })

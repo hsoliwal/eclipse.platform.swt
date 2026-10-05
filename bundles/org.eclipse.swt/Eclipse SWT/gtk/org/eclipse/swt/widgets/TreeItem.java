@@ -483,14 +483,14 @@ void clear () {
     if (parent.currentItem == this) {
         return;
     }
-	if (isCachedState () || (parent.style & SWT.VIRTUAL) == 0) {
+	if (!parent.usesVirtualNativeModel () && (isCachedState () || (parent.style & SWT.VIRTUAL) == 0)) {
 		int columnCount = GTK.gtk_tree_model_get_n_columns (parent.modelHandle);
 		/* the columns before FOREGROUND_COLUMN contain int values, subsequent columns contain pointers */
 		for (int i=Tree.CHECKED_COLUMN; i<Tree.FOREGROUND_COLUMN; i++) {
-			GTK.gtk_tree_store_set (parent.modelHandle, handle, i, 0, -1);
+			if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, i, 0, -1);
 		}
 		for (int i=Tree.FOREGROUND_COLUMN; i<columnCount; i++) {
-			GTK.gtk_tree_store_set (parent.modelHandle, handle, i, (long )0, -1);
+			if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, i, (long )0, -1);
 		}
 	}
 	if ((parent.style & SWT.VIRTUAL) != 0) {
@@ -638,15 +638,15 @@ public Rectangle getBounds (int index) {
     if (column == 0) {
         return new Rectangle(0, 0, 0, 0);
     }
-	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
+	long path = parent.viewPath (handle);
 	GTK.gtk_widget_realize (parentHandle);
 	GdkRectangle rect = new GdkRectangle ();
-	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
+	parent.virtualCellArea (this, path, column, rect);
     if ((parent.getStyle() & SWT.MIRRORED) != 0) {
         rect.x = parent.getClientWidth() - rect.width - rect.x;
     }
 
-	GTK.gtk_tree_path_free (path);
+	if (path != 0) GTK.gtk_tree_path_free (path);
 
 	if (index == 0 && (parent.style & SWT.CHECK) != 0) {
 		int [] x = new int [1], w = new int [1];
@@ -688,15 +688,15 @@ public Rectangle getBounds () {
         return new Rectangle(0, 0, 0, 0);
     }
 
-	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
+	long path = parent.viewPath (handle);
 	GTK.gtk_widget_realize (parentHandle);
 
 	boolean isExpander = GTK.gtk_tree_model_iter_n_children (parent.modelHandle, handle) > 0;
-	boolean isExpanded = GTK.gtk_tree_view_row_expanded (parentHandle, path);
+	boolean isExpanded = parent.usesBoundedVirtualView () ? isExpandedState () : GTK.gtk_tree_view_row_expanded (parentHandle, path);
 	GTK.gtk_tree_view_column_cell_set_cell_data (column, parent.modelHandle, handle, isExpander, isExpanded);
 
 	GdkRectangle rect = new GdkRectangle ();
-	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
+	parent.virtualCellArea (this, path, column, rect);
     if ((parent.getStyle() & SWT.MIRRORED) != 0) {
         rect.x = parent.getClientWidth() - rect.width - rect.x;
     }
@@ -708,7 +708,7 @@ public Rectangle getBounds () {
 	parent.ignoreSize = false;
 	rect.width = w [0];
 	int [] buffer = new int [1];
-	GTK.gtk_tree_path_free (path);
+	if (path != 0) GTK.gtk_tree_path_free (path);
 
 	int horizontalSeparator;
 	if (GTK.GTK4) {
@@ -952,13 +952,13 @@ public Rectangle getImageBounds (int index) {
         return new Rectangle(0, 0, 0, 0);
     }
 	GdkRectangle rect = new GdkRectangle ();
-	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
+	long path = parent.viewPath (handle);
 	GTK.gtk_widget_realize (parentHandle);
-	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
+	parent.virtualCellArea (this, path, column, rect);
     if ((parent.getStyle() & SWT.MIRRORED) != 0) {
         rect.x = parent.getClientWidth() - rect.width - rect.x;
     }
-	GTK.gtk_tree_path_free (path);
+	if (path != 0) GTK.gtk_tree_path_free (path);
 	/*
 	 * Feature in GTK. When a pixbufRenderer has size of 0x0, gtk_tree_view_column_cell_get_position
 	 * returns a position of 0 as well. This causes offset issues meaning that images/widgets/etc.
@@ -1214,15 +1214,15 @@ public Rectangle getTextBounds (int index) {
         return new Rectangle(0, 0, 0, 0);
     }
 
-	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
+	long path = parent.viewPath (handle);
 	GTK.gtk_widget_realize (parentHandle);
 
 	boolean isExpander = GTK.gtk_tree_model_iter_n_children (parent.modelHandle, handle) > 0;
-	boolean isExpanded = GTK.gtk_tree_view_row_expanded (parentHandle, path);
+	boolean isExpanded = parent.usesBoundedVirtualView () ? isExpandedState () : GTK.gtk_tree_view_row_expanded (parentHandle, path);
 	GTK.gtk_tree_view_column_cell_set_cell_data (column, parent.modelHandle, handle, isExpander, isExpanded);
 
 	GdkRectangle rect = new GdkRectangle ();
-	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
+	parent.virtualCellArea (this, path, column, rect);
     if ((parent.getStyle() & SWT.MIRRORED) != 0) {
         rect.x = parent.getClientWidth() - rect.width - rect.x;
     }
@@ -1233,7 +1233,7 @@ public Rectangle getTextBounds (int index) {
 	gtk_cell_renderer_get_preferred_size (textRenderer, parentHandle, w, null);
 	parent.ignoreSize = false;
 	int [] buffer = new int [1];
-	GTK.gtk_tree_path_free (path);
+	if (path != 0) GTK.gtk_tree_path_free (path);
 
 	int horizontalSeparator;
 	if (GTK.GTK4) {
@@ -1353,6 +1353,7 @@ void releaseHandle () {
 
 @Override
 void releaseWidget () {
+	parent.releaseVirtualAccessibleItem (this);
 	super.releaseWidget ();
 	font = null;
 	cellFont = null;
@@ -1387,6 +1388,18 @@ public void dispose () {
  */
 public void removeAll () {
 	checkWidget ();
+	if (parent.usesVirtualNativeModel ()) {
+		parent.checkSetDataInProcessBeforeRemoval ();
+		int parentId = parent.virtualItemId (this);
+		if (parentId < 0 || !parent.virtualTopology.childCountKnown (parentId)
+				|| parent.virtualTopology.childCount (parentId) == 0) return;
+		Tree.VirtualNativeViewState state = parent.captureVirtualNativeViewState ();
+		parent.releaseItems (handle);
+		parent.virtualTopology.setChildCount (parentId, 0);
+		parent.modelChanged = true;
+		parent.finishVirtualNativeMutation (state);
+		return;
+	}
 	long modelHandle = parent.modelHandle;
 	int length = GTK.gtk_tree_model_iter_n_children (modelHandle, handle);
     if (length == 0) {
@@ -1439,7 +1452,7 @@ public void setBackground (Color color) {
     }
 	if ((parent.style & SWT.VIRTUAL) != 0) virtualBackground = color;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.BACKGROUND_COLUMN, gdkRGBA, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.BACKGROUND_COLUMN, gdkRGBA, -1);
 	setCachedState (true);
 }
 
@@ -1479,7 +1492,7 @@ public void setBackground (int index, Color color) {
 	}
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_BACKGROUND, gdkRGBA, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_BACKGROUND, gdkRGBA, -1);
 	setCachedState (true);
 	updated = true;
 
@@ -1533,14 +1546,14 @@ public void setChecked (boolean checked) {
     if ((parent.style & SWT.VIRTUAL) != 0) {
         setCheckedState(checked);
     }
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.CHECKED_COLUMN, checked, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.CHECKED_COLUMN, checked, -1);
 	/*
 	* GTK+'s "inconsistent" state does not match SWT's concept of grayed.  To
 	* show checked+grayed differently from unchecked+grayed, we must toggle the
 	* grayed state on check and uncheck.
 	*/
 	boolean grayState = isGrayedState ();
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.GRAYED_COLUMN, !checked ? false : grayState, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.GRAYED_COLUMN, !checked ? false : grayState, -1);
 	setCachedState (true);
 }
 
@@ -1556,6 +1569,12 @@ public void setChecked (boolean checked) {
  */
 public void setExpanded (boolean expanded) {
 	checkWidget();
+	if (parent.usesBoundedVirtualView ()) {
+		if (parent.virtualChildCount (this) == 0) return;
+		setExpandedState (expanded);
+		parent.reconcileVirtualResidency ();
+		return;
+	}
     if (expanded) {
         parent.restoreVirtualChildren(this);
     }
@@ -1615,7 +1634,7 @@ public void setFont (Font font){
         return;
     }
 	long fontHandle = font != null ? font.handle : 0;
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.FONT_COLUMN, fontHandle, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.FONT_COLUMN, fontHandle, -1);
 	setCachedState (true);
 }
 
@@ -1664,7 +1683,7 @@ public void setFont (int index, Font font) {
 
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	long fontHandle  = font != null ? font.handle : 0;
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_FONT, fontHandle, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_FONT, fontHandle, -1);
 	setCachedState (true);
 
 	if (font != null) {
@@ -1722,7 +1741,7 @@ public void setForeground (Color color){
     }
 	if ((parent.style & SWT.VIRTUAL) != 0) virtualForeground = color;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.FOREGROUND_COLUMN, gdkRGBA, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.FOREGROUND_COLUMN, gdkRGBA, -1);
 	setCachedState (true);
 }
 
@@ -1762,7 +1781,7 @@ public void setForeground (int index, Color color){
 	}
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_FOREGROUND, gdkRGBA, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_FOREGROUND, gdkRGBA, -1);
 	setCachedState (true);
 	updated = true;
 
@@ -1819,7 +1838,7 @@ public void setGrayed (boolean grayed) {
 	* Render checked+grayed as "inconsistent", unchecked+grayed as blank.
 	*/
 	boolean checked = (parent.style & SWT.VIRTUAL) != 0 ? isCheckedState () : _getChecked ();
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.GRAYED_COLUMN, !checked ? false : grayed, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.GRAYED_COLUMN, !checked ? false : grayed, -1);
 	setCachedState (true);
 }
 
@@ -1923,7 +1942,7 @@ public void setImage(int index, Image image) {
 		}
 	}
 
-	GTK.gtk_tree_store_set(parent.modelHandle, handle, modelIndex + Tree.CELL_PIXBUF, pixbuf, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set(parent.modelHandle, handle, modelIndex + Tree.CELL_PIXBUF, pixbuf, -1);
 	/*
 	 * Bug 573633: gtk_tree_store_set() will reference the handle. So we unref the pixbuf here,
 	 * and leave the destruction of the handle to be done later on by the GTK+ tree.
@@ -1931,7 +1950,7 @@ public void setImage(int index, Image image) {
 	if (pixbuf != 0) {
 		OS.g_object_unref(pixbuf);
 	}
-	GTK.gtk_tree_store_set(parent.modelHandle, handle, modelIndex + Tree.CELL_SURFACE, surface, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set(parent.modelHandle, handle, modelIndex + Tree.CELL_SURFACE, surface, -1);
 	setCachedState (true);
 	updated = true;
 }
@@ -2043,7 +2062,7 @@ public void setText (int index, String string) {
 	}
 	byte[] buffer = Converter.wcsToMbcs (string, true);
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
-	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_TEXT, buffer, -1);
+	if (!parent.usesVirtualNativeModel ()) GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_TEXT, buffer, -1);
 	setCachedState (true);
 	updated = true;
 }

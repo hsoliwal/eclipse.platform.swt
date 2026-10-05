@@ -67,6 +67,83 @@ public void setUp() {
 
 
 @Test
+public void test_virtualGtk3LogicalNativeModelKeepsDistantAccessSparseAndStable() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+	Class<?> gtk = Class.forName("org.eclipse.swt.internal.gtk.GTK");
+	Field gtk4Field = gtk.getDeclaredField("GTK4");
+	gtk4Field.setAccessible(true);
+	if (gtk4Field.getBoolean(null)) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL | SWT.CHECK);
+	virtualTree.setItemCount(1_000_000);
+	shell.setLayout(new FillLayout());
+	shell.setSize(360, 220);
+	shell.open();
+	SwtTestUtil.processEvents();
+
+	Method usesVirtualNativeModel = Tree.class.getDeclaredMethod("usesVirtualNativeModel");
+	usesVirtualNativeModel.setAccessible(true);
+	assertTrue((Boolean) usesVirtualNativeModel.invoke(virtualTree),
+			"GTK3 SWT.VIRTUAL Tree must use the sparse logical native model");
+
+	TreeItem distant = virtualTree.getItem(750_000);
+	distant.setText("distant");
+	distant.setItemCount(16);
+	TreeItem child = distant.getItem(5);
+	child.setText("child");
+	distant.setExpanded(true);
+	virtualTree.setSelection(distant);
+	virtualTree.setTopItem(distant);
+	SwtTestUtil.processEvents();
+
+	Field topologyField = Tree.class.getDeclaredField("virtualTopology");
+	topologyField.setAccessible(true);
+	Object topology = topologyField.get(virtualTree);
+	Method materializedCount = topology.getClass().getDeclaredMethod("materializedCount");
+	materializedCount.setAccessible(true);
+	assertTrue(((Integer) materializedCount.invoke(topology)).intValue() <= 2,
+			"distant GTK3 access must materialize only touched logical coordinates");
+
+	TreeItem inserted = new TreeItem(virtualTree, SWT.NONE, 3);
+	inserted.setText("inserted");
+	SwtTestUtil.processEvents();
+
+	assertSame(distant, virtualTree.getItem(750_001),
+			"snapshot refresh must preserve exposed facade identity after coordinate shift");
+	assertSame(child, distant.getItem(5));
+	assertTrue(distant.getExpanded(),
+			"snapshot refresh must restore expansion state");
+	assertArrayEquals(new TreeItem[] {distant}, virtualTree.getSelection(),
+			"snapshot refresh must restore selection");
+	assertSame(distant, virtualTree.getTopItem(),
+			"snapshot refresh must restore the logical top item");
+	assertTrue(((Integer) materializedCount.invoke(topology)).intValue() <= 3,
+			"explicit insertion must not materialize the cold million-row prefix");
+
+	distant.setChecked(true);
+	distant.setGrayed(true);
+	distant.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+	distant.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+	assertTrue(distant.getChecked());
+	assertTrue(distant.getGrayed());
+
+	TreeColumn firstColumn = new TreeColumn(virtualTree, SWT.NONE);
+	firstColumn.setText("logical");
+	TreeColumn secondColumn = new TreeColumn(virtualTree, SWT.NONE);
+	secondColumn.setText("temporary");
+	secondColumn.dispose();
+	assertEquals(1, virtualTree.getColumnCount(),
+			"column mutation must not replace the logical native model");
+
+	distant.removeAll();
+	assertEquals(0, distant.getItemCount(),
+			"TreeItem.removeAll must mutate topology without GtkTreeStore");
+	virtualTree.removeAll();
+	assertEquals(0, virtualTree.getItemCount());
+	assertEquals(0, ((Integer) materializedCount.invoke(topology)).intValue());
+}
+
+@Test
 public void test_virtualDndProjectionPinsSparseTreeFacade() throws Exception {
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.V_SCROLL);
 	virtualTree.setItemCount(100_000);

@@ -15,6 +15,7 @@ package org.eclipse.swt.accessibility;
 
 import java.util.*;
 import java.util.List;
+import java.util.function.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
@@ -35,6 +36,8 @@ class AccessibleObject {
 	* to a logical child of a widget (eg.- a CTabItem, which is simply drawn)
 	*/
 	boolean isLightweight = false;
+	boolean ownsNativeReference;
+	boolean logicalObject, disposed;
 
 	static long actionNamePtr = -1;
 	static long descriptionPtr = -1;
@@ -55,7 +58,11 @@ class AccessibleObject {
 				} else {
 					// Lightweight widgets map to no "real" GTK widget, so we
 					// just instantiate a new SwtFixedAccessible
-					atkHandle = OS.g_object_new (OS.swt_fixed_accessible_get_type(), 0);
+					long accessibleType = OS.swt_fixed_accessible_get_type();
+					if (accessible.logicalChildren && accessible.transientChild) {
+						accessibleType = OS.content_providers_create_gtype("SwtLogicalTableCellAccessible");
+					}
+					atkHandle = OS.g_object_new(accessibleType, 0);
 				}
 				OS.swt_fixed_accessible_register_accessible(atkHandle, false, widget);
 			} else {
@@ -67,7 +74,59 @@ class AccessibleObject {
 
 		this.accessible = accessible;
 		this.isLightweight = isLightweight;
+		logicalObject = accessible.logicalChildren;
+		ownsNativeReference = isLightweight;
 		AccessibleObjects.put (new LONG (atkHandle), this);
+	}
+
+	long ref() {
+		long result = OS.g_object_ref(atkHandle);
+		if (ownsNativeReference && accessible != null && accessible.transientChild) {
+			// Transfer the creation reference to this ATK caller. The Java map
+			// keeps callback state alive but does not own another native ref.
+			ownsNativeReference = false;
+			OS.g_object_unref(atkHandle);
+		}
+		return result;
+	}
+
+	AccessibleObject demandChild(int childId) {
+		if (childId == ACC.CHILDID_SELF) return this;
+		if (childId < 0 || accessible == null) return null;
+		AccessibleControlEvent event = new AccessibleControlEvent(accessible);
+		event.childID = childId;
+		List<AccessibleControlListener> listeners = accessible.accessibleControlListeners;
+		for (int i = 0; i < size(listeners); i++) listeners.get(i).getChild(event);
+		return event.accessible != null ? event.accessible.getAccessibleObject() : getChildByID(childId);
+	}
+
+	long logicalTableIndex(long row, long column) {
+		long columns = atkTable_get_n_columns(atkHandle);
+		long rows = atkTable_get_n_rows(atkHandle);
+		if (row < 0 || column < 0 || row >= rows || column >= columns) return -1;
+		long result = (row + accessible.tableHeaderRows) * columns + column;
+		return result <= Integer.MAX_VALUE ? result : -1;
+	}
+
+	long logicalTableRow(long childIndex) {
+		long columns = atkTable_get_n_columns(atkHandle);
+		if (childIndex < 0 || columns <= 0) return -1;
+		long row = childIndex / columns - accessible.tableHeaderRows;
+		return row >= 0 && row < atkTable_get_n_rows(atkHandle) ? row : -1;
+	}
+
+	int selectedRowAt(long rank) {
+		if (rank < 0 || rank > Integer.MAX_VALUE || accessible == null) return -1;
+		if (accessible.selectedRowHandler != null) return accessible.selectedRowHandler.applyAsInt((int)rank);
+		int[] selected = selectedRows();
+		return selected != null && rank < selected.length ? selected[(int)rank] : -1;
+	}
+
+	int[] selectedRows() {
+		AccessibleTableEvent event = new AccessibleTableEvent(accessible);
+		List<AccessibleTableListener> listeners = accessible.accessibleTableListeners;
+		for (int i = 0; i < size(listeners); i++) listeners.get(i).getSelectedRows(event);
+		return event.selected;
 	}
 
 	static void print (String str) {
@@ -386,6 +445,7 @@ class AccessibleObject {
 		C.memmove (y, new int[] {0}, 4);
 		C.memmove (width, new int[] {0}, 4);
 		C.memmove (height, new int[] {0}, 4);
+		if (isDefunctLogicalObject(atkObject)) return 0;
 		AtkComponentIface iface = getParentComponentIface (atkObject);
 		if (iface != null && iface.get_extents != 0) {
 			OS.call (iface.get_extents, atkObject, x, y, width, height, coord_type);
@@ -406,18 +466,30 @@ class AccessibleObject {
 				event.x = parentX [0]; event.y = parentY [0];
 				event.width = parentWidth [0]; event.height = parentHeight [0];
 				int[] topWindowX = new int [1], topWindowY = new int [1];
-				if (coord_type == ATK.ATK_XY_WINDOW) {
-					windowPoint (object, topWindowX, topWindowY);
-					event.x += topWindowX [0];
-					event.y += topWindowY [0];
+				boolean relative = coord_type == ATK.ATK_XY_WINDOW || accessible.logicalChildren && coord_type == ATK.ATK_XY_PARENT;
+				if (relative) {
+					if (coord_type == ATK.ATK_XY_WINDOW) windowPoint(object, topWindowX, topWindowY);
+					else componentPoint(atkObject_get_parent(atkObject), topWindowX, topWindowY);
+					if (accessible.logicalChildren) {
+						event.x = logicalCoordinate(event.x, topWindowX[0]);
+						event.y = logicalCoordinate(event.y, topWindowY[0]);
+					} else {
+						event.x += topWindowX[0];
+						event.y += topWindowY[0];
+					}
 				}
 				for (int i = 0; i < length; i++) {
 					AccessibleControlListener listener = listeners.get (i);
 					listener.getLocation (event);
 				}
-				if (coord_type == ATK.ATK_XY_WINDOW) {
-					event.x -= topWindowX [0];
-					event.y -= topWindowY [0];
+				if (relative) {
+					if (accessible.logicalChildren) {
+						event.x = logicalCoordinate(event.x, -(long)topWindowX[0]);
+						event.y = logicalCoordinate(event.y, -(long)topWindowY[0]);
+					} else {
+						event.x -= topWindowX[0];
+						event.y -= topWindowY[0];
+					}
 				}
 				C.memmove (x, new int[] {event.x}, 4);
 				C.memmove (y, new int[] {event.y}, 4);
@@ -426,6 +498,26 @@ class AccessibleObject {
 			}
 		}
 		return 0;
+	}
+
+	static int logicalCoordinate(int coordinate, long offset) {
+		if (coordinate == Integer.MIN_VALUE) return coordinate;
+		return (int)Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, coordinate + offset));
+	}
+
+	static void componentPoint(long atkObject, int[] x, int[] y) {
+		if (atkObject == 0 || !OS.g_type_is_a(OS.G_OBJECT_TYPE(atkObject), ATK.ATK_TYPE_COMPONENT())) return;
+		AtkComponentIface iface = new AtkComponentIface();
+		ATK.memmove(iface, ATK.ATK_COMPONENT_GET_IFACE(atkObject));
+		if (iface.get_extents == 0) return;
+		long bounds = OS.g_malloc(16);
+		try {
+			OS.call(iface.get_extents, atkObject, bounds, bounds + 4, bounds + 8, bounds + 12, ATK.ATK_XY_SCREEN);
+			C.memmove(x, bounds, 4);
+			C.memmove(y, bounds + 4, 4);
+		} finally {
+			OS.g_free(bounds);
+		}
 	}
 
 	/**
@@ -472,16 +564,48 @@ class AccessibleObject {
 				Accessible result = event.accessible;
 				AccessibleObject accObj = result != null ? result.getAccessibleObject() : object.getChildByID (event.childID);
 				if (accObj != null) {
-					return OS.g_object_ref (accObj.atkHandle);
+					return accObj.ref();
 				}
 			}
 		}
+		if (object != null && object.accessible.logicalChildren) return 0;
 		long parentResult = 0;
 		AtkComponentIface iface = getParentComponentIface (atkObject);
 		if (iface != null && iface.ref_accessible_at_point != 0) {
 			parentResult = OS.call (iface.ref_accessible_at_point, atkObject, x, y, coord_type);
 		}
 		return parentResult;
+	}
+
+	static long atkComponent_grab_focus(long atkObject) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		if (object != null && object.accessible.focusHandler != null) {
+			return object.accessible.focusHandler.getAsBoolean() ? 1 : 0;
+		}
+		if (object != null && object.logicalObject || isDefunctLogicalObject(atkObject)) return 0;
+		AtkComponentIface iface = getParentComponentIface(atkObject);
+		return iface != null && iface.grab_focus != 0 ? ATK.call(iface.grab_focus, atkObject) : 0;
+	}
+
+	static long atkComponent_scroll_to(long atkObject, long scrollType) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		if (object != null && object.accessible.scrollToHandler != null) {
+			return object.accessible.scrollToHandler.test((int)scrollType) ? 1 : 0;
+		}
+		return object != null && object.logicalObject || isDefunctLogicalObject(atkObject) ? 0 : -1;
+	}
+
+	static long atkComponent_scroll_to_point(long atkObject, long coordinateType, long x, long y) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		if (object != null && object.accessible.scrollToPointHandler != null) {
+			AccessibleControlEvent event = new AccessibleControlEvent(object.accessible);
+			event.childID = object.id;
+			event.detail = (int)coordinateType;
+			event.x = (int)x;
+			event.y = (int)y;
+			return object.accessible.scrollToPointHandler.test(event) ? 1 : 0;
+		}
+		return object != null && object.logicalObject || isDefunctLogicalObject(atkObject) ? 0 : -1;
 	}
 
 
@@ -1352,6 +1476,7 @@ class AccessibleObject {
 	 */
 	static long atkObject_get_n_children (long atkObject) {
 		AccessibleObject object = getAccessibleObject (atkObject);
+		if (isDefunctLogicalObject(atkObject)) return 0;
 		long parentResult = 0;
 		AtkObjectClass objectClass = getParentAtkObjectClass ();
 		if (objectClass.get_n_children != 0) {
@@ -1401,13 +1526,14 @@ class AccessibleObject {
 				AccessibleControlListener listener = listeners.get(i);
 				listener.getChild(event);
 			}
-			if (event.detail != -1) {
+			if (accessible.logicalChildren && object.isLightweight || event.detail != -1) {
 				return event.detail;
 			}
 			if (object.index != -1) {
 				return object.index;
 			}
 		}
+		if (isDefunctLogicalObject(atkObject)) return -1;
 		AtkObjectClass objectClass = getParentAtkObjectClass ();
         if (objectClass.get_index_in_parent == 0) {
             return 0;
@@ -1437,6 +1563,7 @@ class AccessibleObject {
 				return object.parent.atkHandle;
 			}
 		}
+		if (isDefunctLogicalObject(atkObject)) return 0;
 		AtkObjectClass objectClass = getParentAtkObjectClass ();
         if (objectClass.get_parent == 0) {
             return 0;
@@ -1461,6 +1588,7 @@ class AccessibleObject {
 		AccessibleObject object = getAccessibleObject (atkObject);
 		if (object != null) {
 			Accessible accessible = object.accessible;
+			if (accessible.nativeRole != -1) return accessible.nativeRole;
 			List<AccessibleControlListener> listeners = accessible.accessibleControlListeners;
 			int length = size(listeners);
 			if (length > 0) {
@@ -1552,6 +1680,8 @@ class AccessibleObject {
 	 */
 	static long atkObject_ref_child (long atkObject, long index) {
 		AccessibleObject object = getAccessibleObject (atkObject);
+		if (isDefunctLogicalObject(atkObject)) return 0;
+		if (object != null && object.accessible.logicalChildren && (index < 0 || index > Integer.MAX_VALUE)) return 0;
 		if (object != null && object.id == ACC.CHILDID_SELF) {
 			Accessible accessible = object.accessible;
 			List<AccessibleControlListener> listeners = accessible.accessibleControlListeners;
@@ -1567,14 +1697,15 @@ class AccessibleObject {
 				if (event.accessible != null) {
 					AccessibleObject accObject = event.accessible.getAccessibleObject();
 					if (accObject != null) {
-						return OS.g_object_ref (accObject.atkHandle);
+						return accObject.ref();
 					}
 				}
 			}
+			if (accessible.logicalChildren) return 0;
 			object.updateChildren ();
 			AccessibleObject accObject = object.getChildByIndex ((int)index);
 			if (accObject != null) {
-				return OS.g_object_ref (accObject.atkHandle);
+				return accObject.ref();
 			}
 		}
 		AtkObjectClass objectClass = getParentAtkObjectClass ();
@@ -1599,10 +1730,32 @@ class AccessibleObject {
 	 */
 	static long atkObject_ref_state_set (long atkObject) {
 		AccessibleObject object = getAccessibleObject (atkObject);
+		AccessibleObject registered = AccessibleObjects.get(new LONG(atkObject));
 		long parentResult = 0;
 		AtkObjectClass objectClass = getParentAtkObjectClass ();
 		if (objectClass.ref_state_set != 0) {
 			parentResult = ATK.call (objectClass.ref_state_set, atkObject);
+		}
+		if (registered != null && registered.logicalObject && parentResult != 0) {
+			// Widgetless logical children are live while their Java control is
+			// live. Do not inherit DEFUNCT or old selection/focus from a widget.
+			long stateType = OS.G_OBJECT_TYPE(parentResult);
+			OS.g_object_unref(parentResult);
+			parentResult = OS.g_object_new(stateType, 0);
+			if (object == null) {
+				ATK.atk_state_set_add_state(parentResult, ATK.ATK_STATE_DEFUNCT);
+				return parentResult;
+			}
+			if (object.accessible.transientChild) ATK.atk_state_set_add_state(parentResult, ATK.ATK_STATE_TRANSIENT);
+			if (object.accessible.managesDescendants) ATK.atk_state_set_add_state(parentResult, ATK.ATK_STATE_MANAGES_DESCENDANTS);
+			if (object.accessible.nativeStatesHandler != null) {
+				long states = object.accessible.nativeStatesHandler.getAsLong();
+				while (states != 0) {
+					int state = Long.numberOfTrailingZeros(states);
+					if (state != 0) ATK.atk_state_set_add_state(parentResult, state);
+					states &= states - 1;
+				}
+			}
 		}
 		if (object != null) {
 			Accessible accessible = object.accessible;
@@ -1664,7 +1817,11 @@ class AccessibleObject {
                     }
                     if ((state & ACC.STATE_DISABLED) == 0) {
                         ATK.atk_state_set_add_state(set, ATK.ATK_STATE_ENABLED);
+						if (accessible.logicalChildren) ATK.atk_state_set_add_state(set, ATK.ATK_STATE_SENSITIVE);
                     }
+					if (accessible.logicalChildren && (state & (ACC.STATE_EXPANDED | ACC.STATE_COLLAPSED)) != 0) {
+						ATK.atk_state_set_add_state(set, ATK.ATK_STATE_EXPANDABLE);
+					}
                     if ((state & ACC.STATE_ACTIVE) != 0) {
                         ATK.atk_state_set_add_state(set, ATK.ATK_STATE_ACTIVE);
                     }
@@ -1726,6 +1883,10 @@ class AccessibleObject {
 	 */
 	static long atkSelection_is_child_selected (long atkObject, long index) {
 		AccessibleObject object = getAccessibleObject (atkObject);
+		if (object != null && object.accessible.logicalChildren) {
+			long row = object.logicalTableRow(index);
+			return row >= 0 ? atkTable_is_row_selected(atkObject, row) : 0;
+		}
 		long parentResult = 0;
 		AtkSelectionIface iface = getParentSelectionIface (atkObject);
 		if (iface != null && iface.is_child_selected != 0) {
@@ -1769,6 +1930,12 @@ class AccessibleObject {
 	 */
 	static long atkSelection_ref_selection (long atkObject, long index) {
 		AccessibleObject object = getAccessibleObject (atkObject);
+		if (object != null && object.accessible.logicalChildren) {
+			long columns = atkTable_get_n_columns(atkObject);
+			if (index < 0 || columns <= 0) return 0;
+			int row = object.selectedRowAt(index / columns);
+			return row >= 0 ? atkTable_ref_at(atkObject, row, index % columns) : 0;
+		}
 		long parentResult = 0;
 		AtkSelectionIface iface = getParentSelectionIface (atkObject);
 		if (iface != null && iface.ref_selection != 0) {
@@ -1796,6 +1963,179 @@ class AccessibleObject {
 			}
 		}
 		return parentResult;
+	}
+
+	static long atkSelection_get_selection_count(long atkObject) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		if (object != null && object.accessible.logicalChildren) {
+			Accessible accessible = object.accessible;
+			AccessibleTableEvent event = new AccessibleTableEvent(accessible);
+			List<AccessibleTableListener> listeners = accessible.accessibleTableListeners;
+			for (int i = 0; i < size(listeners); i++) listeners.get(i).getSelectedRowCount(event);
+			long count = Math.max(0, event.count) * atkTable_get_n_columns(atkObject);
+			return Math.min(Integer.MAX_VALUE, count);
+		}
+		AtkSelectionIface iface = getParentSelectionIface(atkObject);
+		return iface != null && iface.get_selection_count != 0 ? ATK.call(iface.get_selection_count, atkObject) : 0;
+	}
+
+	static long atkSelection_add_selection(long atkObject, long index) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		if (object != null && object.accessible.logicalChildren) {
+			long row = object.logicalTableRow(index);
+			return row >= 0 ? atkTable_add_row_selection(atkObject, row) : 0;
+		}
+		AtkSelectionIface iface = getParentSelectionIface(atkObject);
+		return iface != null && iface.add_selection != 0 ? ATK.call(iface.add_selection, atkObject, index) : 0;
+	}
+
+	static long atkSelection_remove_selection(long atkObject, long index) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		if (object != null && object.accessible.logicalChildren) {
+			long columns = atkTable_get_n_columns(atkObject);
+			if (index < 0 || columns <= 0) return 0;
+			int row = object.selectedRowAt(index / columns);
+			return row >= 0 ? atkTable_remove_row_selection(atkObject, row) : 0;
+		}
+		AtkSelectionIface iface = getParentSelectionIface(atkObject);
+		return iface != null && iface.remove_selection != 0 ? ATK.call(iface.remove_selection, atkObject, index) : 0;
+	}
+
+	static long atkSelection_clear_selection(long atkObject) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		if (object != null && object.accessible.clearSelectionHandler != null) {
+			return object.accessible.clearSelectionHandler.getAsBoolean() ? 1 : 0;
+		}
+		AtkSelectionIface iface = getParentSelectionIface(atkObject);
+		return iface != null && iface.clear_selection != 0 ? ATK.call(iface.clear_selection, atkObject) : 0;
+	}
+
+	static long atkSelection_select_all_selection(long atkObject) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		if (object != null && object.accessible.selectAllSelectionHandler != null) {
+			return object.accessible.selectAllSelectionHandler.getAsBoolean() ? 1 : 0;
+		}
+		AtkSelectionIface iface = getParentSelectionIface(atkObject);
+		return iface != null && iface.select_all_selection != 0 ? ATK.call(iface.select_all_selection, atkObject) : 0;
+	}
+
+	int tableCellIndex(boolean column) {
+		Accessible owner = accessible;
+		if (owner == null) return -1;
+		AccessibleTableCellEvent event = new AccessibleTableCellEvent(owner);
+		event.index = -1;
+		List<AccessibleTableCellListener> listeners = owner.accessibleTableCellListeners;
+		for (int i = 0; i < size(listeners); i++) {
+			if (column) listeners.get(i).getColumnIndex(event);
+			else listeners.get(i).getRowIndex(event);
+		}
+		return owner.isLogicalReleased() ? -1 : Math.max(-1, event.index);
+	}
+
+	int tableCellSpan(boolean column) {
+		Accessible owner = accessible;
+		if (owner == null) return 0;
+		AccessibleTableCellEvent event = new AccessibleTableCellEvent(owner);
+		event.count = 1;
+		List<AccessibleTableCellListener> listeners = owner.accessibleTableCellListeners;
+		for (int i = 0; i < size(listeners); i++) {
+			if (column) listeners.get(i).getColumnSpan(event);
+			else listeners.get(i).getRowSpan(event);
+		}
+		return owner.isLogicalReleased() ? 0 : Math.max(0, event.count);
+	}
+
+	static long atkTableCell_get_column_span(long atkObject) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		return object != null ? object.tableCellSpan(true) : 0;
+	}
+
+	static long atkTableCell_get_row_span(long atkObject) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		return object != null ? object.tableCellSpan(false) : 0;
+	}
+
+	static long atkTableCell_get_position(long atkObject, long row, long column) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		int rowIndex = object != null ? object.tableCellIndex(false) : -1;
+		int columnIndex = object != null ? object.tableCellIndex(true) : -1;
+		if (row != 0) C.memmove(row, new int[] { rowIndex }, 4);
+		if (column != 0) C.memmove(column, new int[] { columnIndex }, 4);
+		return rowIndex >= 0 && columnIndex >= 0 ? 1 : 0;
+	}
+
+	static long atkTableCell_get_row_column_span(long atkObject, long row, long column, long rowSpan, long columnSpan) {
+		long position = atkTableCell_get_position(atkObject, row, column);
+		int rows = (int)atkTableCell_get_row_span(atkObject);
+		int columns = (int)atkTableCell_get_column_span(atkObject);
+		if (rowSpan != 0) C.memmove(rowSpan, new int[] { rows }, 4);
+		if (columnSpan != 0) C.memmove(columnSpan, new int[] { columns }, 4);
+		return position == 1 && rows > 0 && columns > 0 ? 1 : 0;
+	}
+
+	static long atkTableCell_get_table(long atkObject) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		if (object == null) return 0;
+		Accessible owner = object.accessible;
+		AccessibleTableCellEvent event = new AccessibleTableCellEvent(owner);
+		List<AccessibleTableCellListener> listeners = owner.accessibleTableCellListeners;
+		for (int i = 0; i < size(listeners); i++) listeners.get(i).getTable(event);
+		Accessible table = event.accessible;
+		// ATK get_table returns a borrowed handle. Only persistent tables can
+		// satisfy this contract without retaining every queried cell.
+		if (owner.isLogicalReleased() || table == null || table.transientChild || table.control != owner.control) return 0;
+		AccessibleObject tableObject = table.getAccessibleObject();
+		return tableObject != null ? tableObject.atkHandle : 0;
+	}
+
+	long tableCellHeaderSnapshot(boolean column) {
+		Accessible owner = accessible;
+		if (owner == null) return 0;
+		AccessibleTableCellEvent event = new AccessibleTableCellEvent(owner);
+		List<AccessibleTableCellListener> listeners = owner.accessibleTableCellListeners;
+		for (int i = 0; i < size(listeners); i++) {
+			if (column) listeners.get(i).getColumnHeaders(event);
+			else listeners.get(i).getRowHeaders(event);
+		}
+		if (event.accessibles == null || owner.isLogicalReleased()) return 0;
+		int maximum = Math.min(event.accessibles.length, owner.tableCellHeaderLimit);
+		// A snapshot of jlongs keeps this callback ABI independent of pointer
+		// width. Native code consumes the refs and frees the snapshot.
+		long[] snapshot = new long[maximum + 1];
+		long address = 0;
+		try {
+			for (int i = 0; i < maximum; i++) {
+				Accessible header = event.accessibles[i];
+				if (header == null || header.control != owner.control) continue;
+				AccessibleObject headerObject = header.getAccessibleObject();
+				if (headerObject != null) {
+					long headerHandle = headerObject.ref();
+					int count = (int)snapshot[0] + 1;
+					snapshot[count] = headerHandle;
+					snapshot[0] = count;
+				}
+			}
+			long length = (snapshot[0] + 1) * 8;
+			address = OS.g_malloc(length);
+			C.memmove(address, snapshot, length);
+			return address;
+		} catch (RuntimeException | Error failure) {
+			if (address != 0) OS.g_free(address);
+			for (int i = 1; i <= snapshot[0]; i++) {
+				if (snapshot[i] != 0) OS.g_object_unref(snapshot[i]);
+			}
+			throw failure;
+		}
+	}
+
+	static long atkTableCell_get_column_header_cells(long atkObject) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		return object != null ? object.tableCellHeaderSnapshot(true) : 0;
+	}
+
+	static long atkTableCell_get_row_header_cells(long atkObject) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		return object != null ? object.tableCellHeaderSnapshot(false) : 0;
 	}
 
 	/**
@@ -1834,6 +2174,7 @@ class AccessibleObject {
 	 */
 	static long atkTable_ref_at (long atkObject, long row, long column) {
 		AccessibleObject object = getAccessibleObject (atkObject);
+		if (object != null && object.accessible.logicalChildren && object.logicalTableIndex(row, column) < 0) return 0;
 		if (object != null) {
 			Accessible accessible = object.accessible;
 			List<AccessibleTableListener> listeners = accessible.accessibleTableListeners;
@@ -1849,8 +2190,7 @@ class AccessibleObject {
 				Accessible result = event.accessible;
 				if (result != null) {
 					AccessibleObject accessibleObject = result.getAccessibleObject();
-					OS.g_object_ref(accessibleObject.atkHandle);
-					return accessibleObject.atkHandle;
+					return accessibleObject != null ? accessibleObject.ref() : 0;
 				}
 			}
 		}
@@ -1878,6 +2218,7 @@ class AccessibleObject {
 	 */
 	static long atkTable_get_index_at (long atkObject, long row, long column) {
 		AccessibleObject object = getAccessibleObject (atkObject);
+		if (object != null && object.accessible.logicalChildren) return object.logicalTableIndex(row, column);
 		if (object != null) {
 			Accessible accessible = object.accessible;
 			List<AccessibleTableListener> listeners = accessible.accessibleTableListeners;
@@ -1926,6 +2267,11 @@ class AccessibleObject {
 	 */
 	static long atkTable_get_column_at_index (long atkObject, long index) {
 		AccessibleObject object = getAccessibleObject (atkObject);
+		if (object != null && object.accessible.logicalChildren) {
+			long columns = atkTable_get_n_columns(atkObject);
+			long rows = atkTable_get_n_rows(atkObject) + object.accessible.tableHeaderRows;
+			return columns > 0 && index >= 0 && index < rows * columns ? index % columns : -1;
+		}
 		if (object != null) {
 			Accessible accessible = object.accessible;
 			List<AccessibleTableListener> listeners = accessible.accessibleTableListeners;
@@ -1964,6 +2310,7 @@ class AccessibleObject {
 	 */
 	static long atkTable_get_row_at_index (long atkObject, long index) {
 		AccessibleObject object = getAccessibleObject (atkObject);
+		if (object != null && object.accessible.logicalChildren) return object.logicalTableRow(index);
 		if (object != null) {
 			Accessible accessible = object.accessible;
 			List<AccessibleTableListener> listeners = accessible.accessibleTableListeners;
@@ -2493,16 +2840,18 @@ class AccessibleObject {
 			int length = size(listeners);
 			if (length > 0) {
 				AccessibleTableEvent event = new AccessibleTableEvent(accessible);
+				if (accessible.logicalChildren && selected == 0) {
+					for (int i = 0; i < length; i++) listeners.get(i).getSelectedRowCount(event);
+					return Math.max(0, event.count);
+				}
 				for (int i = 0; i < length; i++) {
 					AccessibleTableListener listener = listeners.get(i);
 					listener.getSelectedRows(event);
 				}
 				int count = event.selected != null ? event.selected.length : 0;
-				long result = OS.g_malloc(count * 4);
-                if (event.selected != null) {
-                    C.memmove(result, event.selected, count * 4);
-                }
                 if (selected != 0) {
+					long result = count > 0 ? OS.g_malloc(count * 4L) : 0;
+					if (count > 0) C.memmove(result, event.selected, count * 4L);
                     C.memmove(selected, new long []{result}, C.PTR_SIZEOF);
                 }
 				return count;
@@ -2609,6 +2958,9 @@ class AccessibleObject {
 	 */
 	static long atkTable_is_selected (long atkObject, long row, long column) {
 		AccessibleObject object = getAccessibleObject (atkObject);
+		if (object != null && object.accessible.logicalChildren) {
+			return object.logicalTableIndex(row, column) >= 0 ? atkTable_is_row_selected(atkObject, row) : 0;
+		}
 		long parentResult = 0;
 		AtkTableIface iface = getParentTableIface (atkObject);
 		if (iface != null && iface.is_selected != 0) {
@@ -4596,14 +4948,32 @@ class AccessibleObject {
         if (object == null) {
             return null;
         }
-        if (object.accessible == null) {
+        if (object.disposed || object.accessible == null) {
             return null;
         }
 		Control control = object.accessible.control;
         if (control == null || control.isDisposed()) {
-            return null;
+			return null;
         }
+		if (object.logicalObject && object.accessible.isLogicalReleased()) return null;
 		return object;
+	}
+
+	static boolean isDefunctLogicalObject(long atkObject) {
+		AccessibleObject object = AccessibleObjects.get(new LONG(atkObject));
+		return object != null && object.logicalObject && getAccessibleObject(atkObject) == null;
+	}
+
+	static long atkObject_ref_node_parent(long atkObject) {
+		AccessibleObject object = getAccessibleObject(atkObject);
+		if (object == null) return isDefunctLogicalObject(atkObject) ? 0 : -1;
+		Accessible owner = object.accessible;
+		Supplier<Accessible> handler = owner.nodeParentHandler;
+		if (handler == null) return -1;
+		Accessible target = handler.get();
+		if (owner.isLogicalReleased() || target == null || target == owner || target.control != owner.control) return 0;
+		AccessibleObject parentObject = target.getAccessibleObject();
+		return parentObject != null ? parentObject.ref() : 0;
 	}
 
 	AccessibleObject getChildByID (int childId) {
@@ -4667,6 +5037,17 @@ class AccessibleObject {
 		AccessibleObject object = AccessibleObjects.get (new LONG (atkObject));
 		if (object != null) {
 			AccessibleObjects.remove (new LONG (atkObject));
+			Accessible owner = object.accessible;
+			if (owner != null && owner.transientChild && owner.accessibleObject == object) {
+				owner.accessibleObject = null;
+				object.accessible = null;
+				object.atkHandle = 0;
+				object.ownsNativeReference = false;
+			}
+			if (object.logicalObject) {
+				object.atkHandle = 0;
+				object.ownsNativeReference = false;
+			}
 		}
 		return 0;
 	}
@@ -4808,12 +5189,32 @@ class AccessibleObject {
 			 * circumstances the target doesn't have an accessibleObject, that's
 			 * the best way we know to avoid throwing an NPE.
 			 */
-			ATK.atk_object_add_relationship(atkHandle, toATKRelation(type), targetAccessibleObject.atkHandle);
+			if (accessible != null && accessible.logicalChildren) {
+				long targetHandle = targetAccessibleObject.ref();
+				try {
+					ATK.atk_object_add_relationship(atkHandle, toATKRelation(type), targetHandle);
+				} finally {
+					OS.g_object_unref(targetHandle);
+				}
+			} else {
+				ATK.atk_object_add_relationship(atkHandle, toATKRelation(type), targetAccessibleObject.atkHandle);
+			}
 		}
 	}
 
 	void release () {
+		boolean notifyDefunct = logicalObject && !disposed && atkHandle != 0;
+		disposed = true;
 		accessible = null;
+		if (logicalObject) parent = null;
+		if (notifyDefunct) {
+			long handle = OS.g_object_ref(atkHandle);
+			try {
+				ATK.atk_object_notify_state_change(handle, ATK.ATK_STATE_DEFUNCT, true);
+			} finally {
+				OS.g_object_unref(handle);
+			}
+		}
 		/*
 		 * GObject destruction is implemented in os_custom.c for GTK3:
 		 * only unref lightweight widgets and children.
@@ -4827,7 +5228,8 @@ class AccessibleObject {
 			}
 			children = null;
 		}
-		if (isLightweight) {
+		if (ownsNativeReference) {
+			ownsNativeReference = false;
 			OS.g_object_unref(atkHandle);
 		}
 	}
@@ -4846,7 +5248,16 @@ class AccessibleObject {
 			 * circumstances the target doesn't have an accessibleObject, that's
 			 * the best way we know to avoid throwing an NPE.
 			 */
-			ATK.atk_object_remove_relationship (atkHandle, toATKRelation(type), targetAccessibleObject.atkHandle);
+			if (accessible != null && accessible.logicalChildren) {
+				long targetHandle = targetAccessibleObject.ref();
+				try {
+					ATK.atk_object_remove_relationship(atkHandle, toATKRelation(type), targetHandle);
+				} finally {
+					OS.g_object_unref(targetHandle);
+				}
+			} else {
+				ATK.atk_object_remove_relationship (atkHandle, toATKRelation(type), targetAccessibleObject.atkHandle);
+			}
 		}
 	}
 
@@ -5081,6 +5492,17 @@ class AccessibleObject {
 	}
 
 	void sendEvent(int event, Object eventData, int childID) {
+		if (accessible != null && accessible.logicalChildren) {
+			AccessibleObject child = demandChild(childID);
+			if (child == null) return;
+			long childHandle = child.ref();
+			try {
+				child.sendEvent(event, eventData);
+			} finally {
+				OS.g_object_unref(childHandle);
+			}
+			return;
+		}
 		updateChildren ();
 		AccessibleObject accObject = getChildByID (childID);
 		if (accObject != null) {
@@ -5092,6 +5514,18 @@ class AccessibleObject {
         if (GTK.GTK4) {
             return;
         } //TODO investigate proper way for GTK 4.x
+		if (accessible != null && accessible.logicalChildren) {
+			AccessibleObject child = demandChild(childID);
+			if (child == null) return;
+			long childHandle = child.ref();
+			try {
+				OS.g_signal_emit_by_name(childHandle, ATK.focus_event, 1, 0);
+				ATK.atk_object_notify_state_change(childHandle, ATK.ATK_STATE_FOCUSED, true);
+			} finally {
+				OS.g_object_unref(childHandle);
+			}
+			return;
+		}
 		updateChildren ();
 		AccessibleObject accObject = getChildByID (childID);
 		if (accObject != null) {
@@ -5126,6 +5560,7 @@ class AccessibleObject {
 	}
 
 	void updateChildren () {
+		if (accessible == null || accessible.logicalChildren) return;
 		List<AccessibleControlListener> listeners = accessible.accessibleControlListeners;
 		int length = size(listeners);
 		AccessibleControlEvent event = new AccessibleControlEvent (accessible);

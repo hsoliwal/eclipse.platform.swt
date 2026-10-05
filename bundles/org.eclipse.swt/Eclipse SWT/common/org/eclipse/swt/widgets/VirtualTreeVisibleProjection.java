@@ -42,8 +42,29 @@ final class VirtualTreeVisibleProjection {
 		private long [] visibleRows = new long [0];
 		private int [] paintEntries = new int [0];
 		private int [] pathIds = new int [0], pathEntries = new int [0];
+		private long [] pathVisibleRows = new long [0];
 		private int size, paintCount, rootCount, firstRoot = -1, lastRoot = -1;
 		private long firstPaintRow, sourceGeneration = -1;
+
+		boolean isHint (int entry) { requireEntry (entry); return materializedIds [entry] == -2; }
+
+		void bindFacade (int entry, int id) {
+			requireEntry (entry);
+			if (id < 0 || isHint (entry)) throw new IllegalArgumentException ("facade binding");
+			materializedIds [entry] = id;
+		}
+
+		/** One non-paint child gives GTK a real expander without advertising N. */
+		void addExpanderHints (VirtualTreeTopology topology) {
+			int rows = size;
+			for (int entry = 0; entry < rows; entry++) {
+				int id = materializedIds [entry];
+				if (id >= 0 && childCounts [entry] == 0 && topology.childCountKnown (id)
+						&& topology.childCount (id) > 0) {
+					appendEntry (id, 0, -2, depths [entry] + 1, entry, -1);
+				}
+			}
+		}
 
 		int size () { return size; }
 		int paintCount () { return paintCount; }
@@ -141,9 +162,14 @@ final class VirtualTreeVisibleProjection {
 			ensurePathCapacity (Math.incrementExact (depth));
 			if (paintCount == 0) {
 				VirtualTreeTopology topology = projection.topology;
-				int ancestor = parentId;
+				int ancestor = parentId, index = childIndex;
+				long ancestorRow = visibleRow;
 				for (int level = depth - 1; level >= 0; level--) {
 					pathIds [level] = ancestor;
+					ancestorRow = Math.subtractExact (ancestorRow,
+							Math.addExact (1, projection.offsetWithinParent (ancestor, index)));
+					pathVisibleRows [level] = ancestorRow;
+					index = topology.childIndex (ancestor);
 					ancestor = topology.parentId (ancestor);
 				}
 				if (ancestor != VirtualTreeTopology.ROOT) {
@@ -153,7 +179,7 @@ final class VirtualTreeVisibleProjection {
 					ancestor = pathIds [level];
 					pathEntries [level] = appendEntry (topology.parentId (ancestor),
 							topology.childIndex (ancestor), ancestor, level,
-							level == 0 ? -1 : pathEntries [level - 1], projection.visibleIndexOf (ancestor));
+							level == 0 ? -1 : pathEntries [level - 1], pathVisibleRows [level]);
 				}
 			}
 			int parentEntry = depth == 0 ? -1 : pathEntries [depth - 1];
@@ -216,6 +242,7 @@ final class VirtualTreeVisibleProjection {
 			int next = capacity (pathIds.length, required);
 			pathIds = Arrays.copyOf (pathIds, next);
 			pathEntries = Arrays.copyOf (pathEntries, next);
+			pathVisibleRows = Arrays.copyOf (pathVisibleRows, next);
 		}
 
 		private static int capacity (int current, int required) {
@@ -257,7 +284,7 @@ final class VirtualTreeVisibleProjection {
 		if (visibleIndex < 0 || visibleIndex >= total) {
 			throw new IllegalArgumentException ("visible row outside projection");
 		}
-		return rowAt (VirtualTreeTopology.ROOT, visibleIndex, 0, null, visibleIndex);
+		return rowAt (VirtualTreeTopology.ROOT, visibleIndex, 0);
 	}
 
 	Row [] window (long firstVisible, int rowCount) {
@@ -270,13 +297,16 @@ final class VirtualTreeVisibleProjection {
         }
 		int length = (int)Math.min ((long)rowCount, total - firstVisible);
 		Row [] rows = new Row [length];
-        for (int i = 0; i < length; i++) {
-            rows [i] = rowAt(firstVisible + i);
-        }
+		fillWindow (firstVisible, length, rows, null);
 		return rows;
 	}
 
-	/** Fills bounded native demand using the same sparse traversal as {@link #rowAt(long)}. */
+
+	/**
+	 * Seek by cached subtree weights, then emit one continuous preorder range.
+	 * Existing parent/sibling lanes supply the return path, so no traversal
+	 * stack or retained cursor is needed. Cold siblings are skipped arithmetically.
+	 */
 	void residencyWindow (long firstVisible, int rowCount, Residency target) {
 		if (firstVisible < 0 || rowCount < 0 || target == null) {
 			throw new IllegalArgumentException ("residency window");
@@ -284,11 +314,76 @@ final class VirtualTreeVisibleProjection {
 		long total = visibleRowCount ();
 		target.reset (firstVisible);
 		int length = firstVisible >= total ? 0 : (int)Math.min ((long)rowCount, total - firstVisible);
-		for (int i = 0; i < length; i++) {
-			long row = firstVisible + i;
-			rowAt (VirtualTreeTopology.ROOT, row, 0, target, row);
-		}
+		fillWindow (firstVisible, length, null, target);
 		target.sourceGeneration = generation ();
+	}
+
+	private void emitWindowRow (Row [] rows, Residency target, long firstVisible,
+			int offset, int parentId, int childIndex, int id, int depth) {
+		if (target == null) rows [offset] = new Row (parentId, childIndex, id, depth);
+		else target.appendPaintRow (this, parentId, childIndex, id, depth, firstVisible + offset);
+	}
+
+	private void fillWindow (long firstVisible, int length, Row [] rows, Residency target) {
+		long skip = firstVisible;
+		int parentId = VirtualTreeTopology.ROOT, coordinate = 0, depth = 0, written = 0;
+		int nextId = topology.firstMaterializedChildId (parentId);
+		while (written < length) {
+			int logicalCount = topology.childCount (parentId);
+			int coldEnd = nextId >= 0 ? Math.min (logicalCount, topology.childIndex (nextId)) : logicalCount;
+			if (coordinate < coldEnd) {
+				int omitted = (int)Math.min (skip, (long)coldEnd - coordinate);
+				coordinate += omitted;
+				skip -= omitted;
+				int emit = Math.min (coldEnd - coordinate, length - written);
+				for (int i = 0; i < emit; i++) {
+					emitWindowRow (rows, target, firstVisible, written++, parentId, coordinate++, -1, depth);
+				}
+				if (written == length) {
+					return;
+				}
+			}
+			if (nextId >= 0 && coordinate < logicalCount) {
+				int id = nextId;
+				nextId = topology.nextMaterializedSiblingId (id);
+				int index = coordinate++;
+				if (skip > 0) {
+					skip--;
+				} else {
+					emitWindowRow (rows, target, firstVisible, written++, parentId, index, id, depth);
+					if (written == length) {
+						return;
+					}
+				}
+				if (topology.flag (id, VirtualItemState.EXPANDED) && topology.childCountKnown (id)) {
+					long descendants = visibleChildren (id);
+					if (skip >= descendants) {
+						skip -= descendants;
+					} else {
+						depth++;
+						parentId = id;
+						coordinate = 0;
+						nextId = topology.firstMaterializedChildId (id);
+					}
+				}
+				continue;
+			}
+			if (depth == 0) {
+				throw new IllegalStateException ("projection overflow");
+			}
+			depth--;
+			coordinate = topology.childIndex (parentId) + 1;
+			nextId = topology.nextMaterializedSiblingId (parentId);
+			parentId = topology.parentId (parentId);
+		}
+	}
+
+	long visibleIndexOfCoordinate (int parentId, int childIndex) {
+		if (!topology.childCountKnown (parentId) || childIndex < 0 || childIndex >= topology.childCount (parentId)) {
+			throw new IllegalArgumentException ("logical coordinate");
+		}
+		long base = parentId == VirtualTreeTopology.ROOT ? 0 : Math.addExact (visibleIndexOf (parentId), 1);
+		return Math.addExact (base, offsetWithinParent (parentId, childIndex));
 	}
 
 	long visibleIndexOf (int materializedId) {
@@ -311,7 +406,7 @@ final class VirtualTreeVisibleProjection {
 		}
 	}
 
-	private Row rowAt (int parentId, long row, int depth, Residency target, long visibleRow) {
+	private Row rowAt (int parentId, long row, int depth) {
 		while (true) {
 			int logicalCount = topology.childCount (parentId);
 			int coordinate = 0;
@@ -324,11 +419,11 @@ final class VirtualTreeVisibleProjection {
                 }
 				int coldGap = index - coordinate;
 				if (row < coldGap) {
-					return emitRow (parentId, Math.addExact (coordinate, (int)row), -1, depth, target, visibleRow);
+					return new Row (parentId, Math.addExact (coordinate, (int)row), -1, depth);
 				}
 				row -= coldGap;
                 if (row == 0) {
-                    return emitRow(parentId, index, id, depth, target, visibleRow);
+                    return new Row(parentId, index, id, depth);
                 }
 				row--;
 				if (topology.flag (id, VirtualItemState.EXPANDED)
@@ -351,14 +446,8 @@ final class VirtualTreeVisibleProjection {
             if (childIndex >= logicalCount) {
                 throw new IllegalStateException("projection overflow");
             }
-			return emitRow (parentId, Math.toIntExact (childIndex), -1, depth, target, visibleRow);
+			return new Row (parentId, Math.toIntExact (childIndex), -1, depth);
 		}
-	}
-
-	private Row emitRow (int parentId, int childIndex, int id, int depth, Residency target, long visibleRow) {
-		if (target == null) return new Row (parentId, childIndex, id, depth);
-		target.appendPaintRow (this, parentId, childIndex, id, depth, visibleRow);
-		return null;
 	}
 
 	private long offsetWithinParent (int parentId, int targetChildIndex) {
