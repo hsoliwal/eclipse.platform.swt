@@ -409,4 +409,47 @@ public class Test_ViewportRewriteContracts {
 	}
 
 
+	@Test
+	public void sharedViewportSelectionKeepsSparseAndComplementStateAcrossShifts() throws Exception {
+		Class<?> type = Class.forName("org.eclipse.swt.internal.ViewportRuntime$Selection");
+		Object selection = type.getDeclaredConstructor().newInstance();
+
+		call(selection, "setLogicalCount", 1_000_000);
+		call(selection, "setSelected", 10, true);
+		call(selection, "selectRange", 100, 110);
+		assertEquals(11, call(selection, "selectedCount"));
+		assertEquals(2, call(selection, "rangeCount"));
+		assertEquals(false, call(selection, "complementMode"));
+
+		call(selection, "insert", 5, 3);
+		assertEquals(true, call(selection, "isSelected", 13));
+		assertEquals(true, call(selection, "isSelected", 103));
+		assertEquals(1_000_003, call(selection, "logicalCount"));
+
+		call(selection, "remove", 0, 2);
+		assertEquals(true, call(selection, "isSelected", 11));
+		assertEquals(true, call(selection, "isSelected", 101));
+		assertEquals(1_000_001, call(selection, "logicalCount"));
+
+		call(selection, "selectAll");
+		assertEquals(true, call(selection, "complementMode"));
+		assertEquals(1_000_001, call(selection, "selectedCount"));
+		call(selection, "deselectRange", 500_000, 900_000);
+		assertEquals(600_001, call(selection, "selectedCount"));
+		assertEquals(1, call(selection, "rangeCount"));
+		assertEquals(500_000, call(selection, "rangeStart", 0));
+		assertEquals(900_000, call(selection, "rangeEndExclusive", 0));
+
+		call(selection, "insert", 700_000, 5);
+		assertEquals(600_001, call(selection, "selectedCount"),
+				"inserted coordinates must remain unselected in complement mode");
+		assertEquals(false, call(selection, "isSelected", 700_000));
+		call(selection, "remove", 700_000, 5);
+		assertEquals(600_001, call(selection, "selectedCount"));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> call(selection, "setSelected", 1_000_001, true));
+	}
+
+
 }
