@@ -105,6 +105,17 @@ final class VirtualTreeTopology {
 		adjustKnownChildCount (parentId, 1);
 	}
 
+	void removeCoordinate (int parentId, int childIndex) {
+		if (childIndex < 0) throw new IllegalArgumentException ("negative child index");
+		if (parentId != ROOT) requirePresent (parentId);
+		int count = childCount (parentId);
+		if (childIndex >= count) throw new IndexOutOfBoundsException (childIndex);
+		int id = materializedChildId (parentId, childIndex);
+		if (id >= 0) discardSubtree (id);
+		shiftSiblingIndices (parentId, childIndex + 1, -1);
+		adjustKnownChildCount (parentId, -1);
+	}
+
 	void releaseSubtree (int id) {
         if (!contains(id)) {
             return;
