@@ -266,6 +266,48 @@ public void test_virtualDndHitPinsColdTreeChildAcrossCollapseCompaction() throws
 }
 
 @Test
+public void test_virtualTreeNativeModelSnapshotStaysSparseAcrossTenMillionRoots() throws Exception {
+	Class<?> topologyType = Class.forName("org.eclipse.swt.widgets.VirtualTreeTopology");
+	Constructor<?> topologyConstructor = topologyType.getDeclaredConstructor();
+	topologyConstructor.setAccessible(true);
+	Object topology = topologyConstructor.newInstance();
+
+	Field rootField = topologyType.getDeclaredField("ROOT");
+	rootField.setAccessible(true);
+	int root = rootField.getInt(null);
+
+	Method setChildCount = topologyType.getDeclaredMethod("setChildCount", int.class, int.class);
+	Method bind = topologyType.getDeclaredMethod("bind", int.class, int.class, int.class);
+	Method snapshotMethod = topologyType.getDeclaredMethod("nativeModelSnapshot");
+	for (Method method : new Method[] {setChildCount, bind, snapshotMethod}) {
+		method.setAccessible(true);
+	}
+
+	setChildCount.invoke(topology, root, 10_000_000);
+	bind.invoke(topology, 2, root, 9);
+	setChildCount.invoke(topology, 2, 3);
+	bind.invoke(topology, 7, 2, 1);
+
+	int [] snapshot = (int []) snapshotMethod.invoke(topology);
+	int capacity = snapshot [0];
+	assertEquals(10_000_000, snapshot [1]);
+	assertTrue(capacity < 64,
+			"native logical Tree snapshot must scale with sparse topology capacity, not logical roots");
+	assertEquals(2 + capacity * 3, snapshot.length);
+
+	int parentOffset = 2;
+	int indexOffset = 2 + capacity;
+	int countOffset = 2 + capacity * 2;
+	assertEquals(root, snapshot [parentOffset + 2]);
+	assertEquals(9, snapshot [indexOffset + 2]);
+	assertEquals(3, snapshot [countOffset + 2]);
+	assertEquals(2, snapshot [parentOffset + 7]);
+	assertEquals(1, snapshot [indexOffset + 7]);
+	assertEquals(-1, snapshot [countOffset + 7],
+			"unobserved child count stays unknown in the rebuildable native snapshot");
+}
+
+@Test
 public void test_virtualTreeVisibleProjectionSkipsColdLogicalRanges() throws Exception {
 	Class<?> topologyType = Class.forName("org.eclipse.swt.widgets.VirtualTreeTopology");
 	Constructor<?> topologyConstructor = topologyType.getDeclaredConstructor();
