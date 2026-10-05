@@ -94,7 +94,7 @@ public class Table extends Composite {
 	Color headerBackground, headerForeground;
 	boolean ownerDraw, ignoreSize, pixbufSizeSet, hasChildren;
 	int maxWidth = 0;
-	int topIndex;
+	int topIndex, pendingTopIndex = -1;
 	double cachedAdjustment, currentAdjustment;
 	int pixbufHeight, pixbufWidth;
 	int headerHeight;
@@ -292,6 +292,7 @@ private void restoreVirtualNativeState (int [] selected, int focus, int top) {
 				GTK.gtk_tree_path_free (path);
 			}
 			topIndex = top;
+			pendingTopIndex = top;
 			long adjustment = GTK.gtk_scrollable_get_vadjustment (handle);
 			cachedAdjustment = GTK.gtk_adjustment_get_value (adjustment);
 		}
@@ -1878,19 +1879,30 @@ public TableItem getItem (Point point) {
 /* Translate a native hit while GTK is still applying a programmatic virtual scroll.
  * Native hit testing continues to own columns, clipping and row geometry. */
 private int logicalIndexForNativeHit (int nativeIndex) {
-	if (!usesVirtualNativeModel ()) return nativeIndex;
-	long adjustment = GTK.gtk_scrollable_get_vadjustment (handle);
-	if (GTK.gtk_adjustment_get_value (adjustment) != cachedAdjustment) return nativeIndex;
+	if (!usesVirtualNativeModel () || pendingTopIndex < 0) return nativeIndex;
+	int nativeTop = nativeTopIndex ();
+	if (nativeTop < 0) return nativeIndex;
+	if (nativeTop == pendingTopIndex) {
+		topIndex = pendingTopIndex;
+		pendingTopIndex = -1;
+		long adjustment = GTK.gtk_scrollable_get_vadjustment (handle);
+		cachedAdjustment = GTK.gtk_adjustment_get_value (adjustment);
+		return nativeIndex;
+	}
+	long logicalIndex = (long) nativeIndex + pendingTopIndex - nativeTop;
+	return logicalIndex >= 0 && logicalIndex < itemCount ? (int) logicalIndex : -1;
+}
+
+private int nativeTopIndex () {
 	long [] topPath = new long [1];
 	if (!GTK.gtk_tree_view_get_path_at_pos (handle, 1, 1, topPath, null, null, null)
-			|| topPath [0] == 0) return nativeIndex;
+			|| topPath [0] == 0) return -1;
 	try {
 		long indices = GTK.gtk_tree_path_get_indices (topPath [0]);
-		if (indices == 0) return nativeIndex;
+		if (indices == 0) return -1;
 		int [] nativeTop = new int [1];
 		C.memmove (nativeTop, indices, 4);
-		long logicalIndex = (long) nativeIndex + topIndex - nativeTop [0];
-		return logicalIndex >= 0 && logicalIndex < itemCount ? (int) logicalIndex : -1;
+		return nativeTop [0];
 	} finally {
 		GTK.gtk_tree_path_free (topPath [0]);
 	}
@@ -2257,27 +2269,19 @@ long getTextRenderer (long column) {
  */
 public int getTopIndex () {
 	checkWidget();
-	/*
-	 * Feature in GTK: fetch the topIndex using the topItem global variable
-	 * if setTopIndex() has been called and the widget has not been scrolled
-	 * using the UI. Otherwise, fetch topIndex using GtkTreeView API.
-	 */
-	long vAdjustment;
-	vAdjustment = GTK.gtk_scrollable_get_vadjustment(handle);
+	long vAdjustment = GTK.gtk_scrollable_get_vadjustment(handle);
 	currentAdjustment = GTK.gtk_adjustment_get_value(vAdjustment);
-	if (cachedAdjustment == currentAdjustment){
+	int nativeTop = nativeTopIndex ();
+	if (pendingTopIndex >= 0) {
+		if (nativeTop == pendingTopIndex) {
+			topIndex = pendingTopIndex;
+			pendingTopIndex = -1;
+			cachedAdjustment = currentAdjustment;
+		}
 		return topIndex;
-	} else {
-		long [] path = new long [1];
-		GTK.gtk_widget_realize (handle);
-		if (!GTK.gtk_tree_view_get_path_at_pos (handle, 1, 1, path, null, null, null)) return 0;
-		if (path [0] == 0) return 0;
-		long indices = GTK.gtk_tree_path_get_indices (path[0]);
-		int[] index = new int [1];
-		if (indices != 0) C.memmove (index, indices, 4);
-		GTK.gtk_tree_path_free (path [0]);
-		return index [0];
 	}
+	if (cachedAdjustment == currentAdjustment) return topIndex;
+	return nativeTop >= 0 ? nativeTop : 0;
 }
 
 @Override
@@ -2614,6 +2618,7 @@ void initializeViewportLayers () {
 
 @Override
 long gtk_scroll_event (long widget, long eventPtr) {
+	pendingTopIndex = -1;
 	long result = super.gtk_scroll_event(widget, eventPtr);
 	long horizontal = GTK.gtk_scrolled_window_get_hadjustment (scrolledHandle);
 	long vertical = GTK.gtk_scrollable_get_vadjustment (handle);
@@ -4374,6 +4379,7 @@ public void setTopIndex (int index) {
 	long vAdjustment = GTK.gtk_scrollable_get_vadjustment(handle);
 	cachedAdjustment = GTK.gtk_adjustment_get_value(vAdjustment);
 	topIndex = index;
+	pendingTopIndex = index;
 	long iter = 0;
 	long itemHandle;
 	if (usesVirtualNativeModel ()) {
