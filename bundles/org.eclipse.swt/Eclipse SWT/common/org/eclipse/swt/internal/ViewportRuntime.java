@@ -58,6 +58,137 @@ public final class ViewportRuntime {
 			long logicalContentWidth) {
 	}
 
+	public static final class RowWindow {
+		public static final int DEFAULT_OVERSCAN_ROWS = 8;
+
+		private long logicalCount;
+		private long firstVisible;
+		private int visibleCount;
+		private int overscanRows = DEFAULT_OVERSCAN_ROWS;
+		private long generation;
+
+		public long logicalCount () {
+			return logicalCount;
+		}
+
+		public void setLogicalCount (long count) {
+			if (count < 0) throw new IllegalArgumentException ("negative logical count");
+			if (count == logicalCount) return;
+			logicalCount = count;
+			clampViewport ();
+			generation++;
+		}
+
+		public void insert (long index, long count) {
+			if (count < 0 || index < 0 || index > logicalCount) {
+				throw new IllegalArgumentException ("invalid insert");
+			}
+			if (count == 0) return;
+			if (index <= firstVisible && logicalCount != 0) {
+				firstVisible = Math.addExact (firstVisible, count);
+			}
+			logicalCount = Math.addExact (logicalCount, count);
+			clampViewport ();
+			generation++;
+		}
+
+		public void remove (long index, long count) {
+			if (count < 0 || index < 0 || index > logicalCount - count) {
+				throw new IllegalArgumentException ("invalid remove");
+			}
+			if (count == 0) return;
+			if (index < firstVisible) {
+				firstVisible -= Math.min (count, firstVisible - index);
+			}
+			logicalCount -= count;
+			clampViewport ();
+			generation++;
+		}
+
+		public void setViewport (long first, int visibleRows) {
+			if (first < 0 || visibleRows < 0) {
+				throw new IllegalArgumentException ("negative viewport");
+			}
+			long nextFirst = logicalCount == 0 ? 0 : Math.min (first, logicalCount - 1);
+			int nextVisible = (int)Math.min (
+					(long)visibleRows, Math.max (0L, logicalCount - nextFirst));
+			if (nextFirst == firstVisible && nextVisible == visibleCount) return;
+			firstVisible = nextFirst;
+			visibleCount = nextVisible;
+			generation++;
+		}
+
+		public long firstVisible () {
+			return firstVisible;
+		}
+
+		public int visibleCount () {
+			return visibleCount;
+		}
+
+		public void setOverscanRows (int rows) {
+			if (rows < 0) throw new IllegalArgumentException ("negative overscan");
+			if (rows == overscanRows) return;
+			overscanRows = rows;
+			generation++;
+		}
+
+		public int overscanRows () {
+			return overscanRows;
+		}
+
+		public long paintStart () {
+			return Math.max (0L, firstVisible - overscanRows);
+		}
+
+		public long paintEndExclusive () {
+			long visibleEnd = saturatedAdd (firstVisible, visibleCount);
+			return Math.min (logicalCount, saturatedAdd (visibleEnd, overscanRows));
+		}
+
+		public int paintCount () {
+			return Math.toIntExact (paintEndExclusive () - paintStart ());
+		}
+
+		public boolean isVisible (long index) {
+			return 0 <= index && index < logicalCount
+					&& firstVisible <= index
+					&& index < saturatedAdd (firstVisible, visibleCount);
+		}
+
+		public boolean isPaintCandidate (long index) {
+			return 0 <= index && index < logicalCount
+					&& paintStart () <= index && index < paintEndExclusive ();
+		}
+
+		public void ensureVisible (long row) {
+			if (row < 0 || row >= logicalCount) {
+				throw new IllegalArgumentException ("row outside viewport model");
+			}
+			if (visibleCount <= 0 || row < firstVisible) {
+				setViewport (row, visibleCount);
+				return;
+			}
+			long end = saturatedAdd (firstVisible, visibleCount);
+			if (row >= end) setViewport (row - visibleCount + 1L, visibleCount);
+		}
+
+		public long generation () {
+			return generation;
+		}
+
+		private void clampViewport () {
+			if (logicalCount == 0) {
+				firstVisible = 0;
+				visibleCount = 0;
+				return;
+			}
+			firstVisible = Math.min (firstVisible, logicalCount - 1);
+			visibleCount = (int)Math.min (
+					(long)visibleCount, Math.max (0L, logicalCount - firstVisible));
+		}
+	}
+
 	private double originX;
 	private double originY;
 	private boolean originInitialized;
