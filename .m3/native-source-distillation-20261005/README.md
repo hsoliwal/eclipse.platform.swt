@@ -1,49 +1,40 @@
-# SWT native source distillation
+# Executed SWT native source distillation
 
-Canonical owner: `com.synexia.rewrite.M3SwtNativeSourceReceipt` from
-`hsoliwal/com.synexia:synexia-openrewrite-recipes:1.0.0-SNAPSHOT`.
+All 124 tracked C-family source files are represented by recoverable atom packets:
+58 C files, 54 headers, 11 C++ files and one Objective-C++ file. The 2,973,211
+source bytes recompose exactly from 60,054 atoms. Native sources and JNI signatures
+retain their bytes. Generated JNI files were not edited.
 
-This lane complements the already-merged Java statement/atom receipt. It does not mutate native
-source; it parses C-family files as OpenRewrite PlainText, runs the canonical byte-preserving native
-atomizer, and generates:
+The canonical owner is `M3NativeSourceAtomizer`, composed through
+`M3SwtNativeSourceReceiptRecipe` and `M3NativeSourceReceiptWriter` in
+`hsoliwal/com.synexia`. The `native-packets-20261005` Maven recipe crate seals its
+Java changes and the SWT workflow/documentation updates. The original native
+source-distillation workflow is retained as a read-only PR/master verification
+gate, with the canonical CLI pinned by commit.
 
-- `.m3/native-source-distillation-20261005/native-files.tsv`
-- `.m3/native-source-distillation-20261005/COMPLETE.properties`
+`atoms/<original-source-path>.tsv` contains ordered atom payloads, byte ranges,
+kinds, nesting depths and SHA-256. Base64 preserves high bytes and line endings.
+`native-files.tsv` seals whole files and atom signatures; `native-patterns.tsv`
+groups lexical kind and depth. The generated `COMPLETE.properties` records the
+exact finite source universe. These lexical groups do not claim C/C++ type or
+macro semantics, interchangeable behavior, or automatic replacement authority.
 
-Current SWT master pin when this lane was added:
-`b22afa0f8b16d0099730c6e3a484a3483c40a5b1`.
+To regenerate with the qualified canonical classes:
 
-Current semantic native source universe:
-
-- 124 files total;
-- 58 `.c`;
-- 54 `.h`;
-- 11 `.cpp`;
-- 1 `.mm`.
-
-The broader historical count of 170 native payloads includes build/native assets that remain under
-byte custody but are not C-family semantic source.
-
-## Regenerate
-
-Install the canonical Synexia recipe artifact into the local Maven repository, then run:
-
-```bash
-mvn -f .m3/analysis-pom.xml -Pm3-native-source-distillation \
-  org.openrewrite.maven:rewrite-maven-plugin:run
+```sh
+java -cp /path/to/canonical/target/classes com.synexia.rewrite.M3NativeSourceReceiptCli "$PWD"
+java -cp /path/to/canonical/target/classes com.synexia.rewrite.M3NativeSourceReceiptCli "$PWD" --check
 ```
 
-The recipe adds plain-text masks for `.c/.h/.cc/.cpp/.cxx/.hpp/.m/.mm`.
+The existing Maven/OpenRewrite lane is also retained:
 
-A second run must produce no source or receipt changes. Native source files must remain byte exact.
-Only the two receipt files are mutation targets.
+```sh
+mvn -f .m3/analysis-pom.xml -Pm3-native-source-distillation org.openrewrite.maven:rewrite-maven-plugin:run
+```
 
-## Invariants
-
-- lossless native source recomposition;
-- fixed-point atom replay;
-- comments/strings shield syntax delimiters;
-- multiline preprocessor directives remain whole atoms;
-- `for (;;)` semicolons do not split statements;
-- native source mutation is forbidden;
-- public SWT/JNI behavior is unchanged.
+Install the qualified canonical recipe artifact first. Its receipt scanner now
+recognizes every generated packet and the pattern catalogue, so the second recipe
+pass is a fixed point. Full-source OpenRewrite execution and an independent Base64
+decoder both checked all native outputs. See `.m3/source-coverage-20261005/` for
+current Java packet restoration, native proofs and the explicit remaining runtime
+criteria. A lexical atom receipt is not a native optimization benchmark.
