@@ -1798,43 +1798,44 @@ void createItem (TreeItem item, long parentIter, int index) {
 		topologyParentId = virtualParentId (parentIter);
 		int logicalCount = virtualChildCount (parentIter);
 		logicalIndex = index == -1 ? logicalCount : index;
-        if (logicalIndex < 0 || logicalIndex > logicalCount) {
-            error(SWT.ERROR_INVALID_RANGE);
-        }
-		ensureVirtualNativeChildren (parentIter, logicalIndex);
+		if (logicalIndex < 0 || logicalIndex > logicalCount) error (SWT.ERROR_INVALID_RANGE);
 	}
-	/*
-	 * Try to achieve maximum possible performance in bulk insert scenarios.
-	 * Even a single call to 'gtk_tree_model_iter_n_children' already
-	 * reduces performance 3x, so try to avoid any unneeded API calls.
-	 */
+
+	if (usesVirtualNativeModel ()) {
+		VirtualNativeViewState state = captureVirtualNativeViewState ();
+		int oldRootCount = virtualTopology.childCountKnown (VirtualTreeTopology.ROOT)
+				? virtualTopology.childCount (VirtualTreeTopology.ROOT) : 0;
+		int id = findAvailableId ();
+		nextId = id + 1;
+		item.handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (item.handle == 0) error (SWT.ERROR_NO_HANDLES);
+		virtualTopology.insertCoordinate (topologyParentId, logicalIndex, id);
+		items [id] = item;
+		virtualTopology.flag (id, VirtualItemState.PINNED, true);
+		modelChanged = true;
+		finishVirtualNativeMutation (state);
+		if (topologyParentId == VirtualTreeTopology.ROOT && oldRootCount == 0) {
+			Event event = new Event ();
+			event.detail = 0;
+			sendEvent (SWT.EmptinessChanged, event);
+		}
+		return;
+	}
+
+	if (virtualTopology != null) ensureVirtualNativeChildren (parentIter, logicalIndex);
 	if (index == 0) {
 		item.handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-        if (item.handle == 0) {
-            error(SWT.ERROR_NO_HANDLES);
-        }
+		if (item.handle == 0) error (SWT.ERROR_NO_HANDLES);
 		GTK.gtk_tree_store_prepend (modelHandle, item.handle, parentIter);
 	} else if (index == -1) {
 		item.handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-        if (item.handle == 0) {
-            error(SWT.ERROR_NO_HANDLES);
-        }
+		if (item.handle == 0) error (SWT.ERROR_NO_HANDLES);
 		GTK.gtk_tree_store_append (modelHandle, item.handle, parentIter);
 	} else {
 		int count = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
-        if (!(0 <= index && index <= count)) {
-            error(SWT.ERROR_INVALID_RANGE);
-        }
-
+		if (!(0 <= index && index <= count)) error (SWT.ERROR_INVALID_RANGE);
 		item.handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-        if (item.handle == 0) {
-            error(SWT.ERROR_NO_HANDLES);
-        }
-
-		/*
-		 * Feature in GTK.  It is much faster to append to a tree store
-		 * than to insert at the end using gtk_tree_store_insert().
-		 */
+		if (item.handle == 0) error (SWT.ERROR_NO_HANDLES);
 		if (index == count) {
 			GTK.gtk_tree_store_append (modelHandle, item.handle, parentIter);
 		} else {
@@ -1849,17 +1850,10 @@ void createItem (TreeItem item, long parentIter, int index) {
 		pinVirtualFacade (item);
 	}
 	modelChanged = true;
-
-	if (parentIter == 0 ) {
-		/*
-		 If this was the first root item fire an EmptinessChanged event.
-		 */
-		int roots = GTK.gtk_tree_model_iter_n_children (modelHandle, 0);
-		if (roots == 1) {
-			Event event = new Event ();
-			event.detail = 0;
-			sendEvent (SWT.EmptinessChanged, event);
-		}
+	if (parentIter == 0 && GTK.gtk_tree_model_iter_n_children (modelHandle, 0) == 1) {
+		Event event = new Event ();
+		event.detail = 0;
+		sendEvent (SWT.EmptinessChanged, event);
 	}
 }
 
@@ -2141,6 +2135,24 @@ void destroyItem (TreeColumn column) {
 
 
 void destroyItem (TreeItem item) {
+	if (usesVirtualNativeModel ()) {
+		int topologyId = virtualItemId (item);
+		int parentId = virtualTopology.parentId (topologyId);
+		boolean lastRoot = parentId == VirtualTreeTopology.ROOT
+				&& virtualTopology.childCount (VirtualTreeTopology.ROOT) == 1;
+		VirtualNativeViewState state = captureVirtualNativeViewState ();
+		virtualTopology.releaseSubtree (topologyId);
+		if (topologyId < items.length) items [topologyId] = null;
+		modelChanged = true;
+		finishVirtualNativeMutation (state);
+		if (lastRoot) {
+			Event event = new Event ();
+			event.detail = 1;
+			sendEvent (SWT.EmptinessChanged, event);
+		}
+		return;
+	}
+
 	int topologyId = -1;
 	if (virtualTopology != null) {
 		int [] value = new int [1];
@@ -2151,16 +2163,9 @@ void destroyItem (TreeItem item) {
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_tree_store_remove (modelHandle, item.handle);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-    if (virtualTopology != null && topologyId >= 0) {
-        virtualTopology.releaseSubtree(topologyId);
-    }
+	if (virtualTopology != null && topologyId >= 0) virtualTopology.releaseSubtree (topologyId);
 	modelChanged = true;
-
-	/*
-	 If this was the last root item fire an EmptinessChanged event.
-	 */
-	int roots = GTK.gtk_tree_model_iter_n_children (modelHandle, 0);
-	if (roots == 0) {
+	if (GTK.gtk_tree_model_iter_n_children (modelHandle, 0) == 0) {
 		Event event = new Event ();
 		event.detail = 1;
 		sendEvent (SWT.EmptinessChanged, event);
@@ -2168,6 +2173,7 @@ void destroyItem (TreeItem item) {
 }
 
 @Override
+boolean dragDetect@Override
 boolean dragDetect (int x, int y, boolean filter, boolean dragOnTimeout, boolean [] consume) {
 	boolean selected = false;
 	if (OS.isX11()) {
@@ -3939,18 +3945,38 @@ void register () {
 }
 
 void releaseItem (TreeItem item, boolean release) {
+	if (usesVirtualNativeModel ()) {
+		int id = virtualMaterializedId (item.handle);
+		if (id < 0) return;
+		if (release) {
+			item.release (false);
+			if (id < items.length) items [id] = null;
+		}
+		return;
+	}
 	int [] index = new int [1];
 	GTK.gtk_tree_model_get (modelHandle, item.handle, ID_COLUMN, index, -1);
-    if (index [0] == -1) {
-        return;
-    }
-    if (release) {
-        item.release(false);
-    }
+	if (index [0] == -1) return;
+	if (release) item.release (false);
 	items [index [0]] = null;
 }
 
 void releaseItems (long parentIter) {
+	if (usesVirtualNativeModel ()) {
+		int parentId = parentIter == 0 ? VirtualTreeTopology.ROOT : virtualMaterializedId (parentIter);
+		if (parentId < VirtualTreeTopology.ROOT) return;
+		int child = virtualTopology.firstMaterializedChildId (parentId);
+		while (child >= 0) {
+			int next = virtualTopology.nextMaterializedSiblingId (child);
+			TreeItem item = child < items.length ? items [child] : null;
+			if (item != null && !item.isDisposed ()) {
+				releaseItems (item.handle);
+				releaseItem (item, true);
+			}
+			child = next;
+		}
+		return;
+	}
 	int[] index = new int [1];
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	boolean valid = GTK.gtk_tree_model_iter_children (modelHandle, iter, parentIter);
@@ -3960,9 +3986,7 @@ void releaseItems (long parentIter) {
 			GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, index, -1);
 			if (index [0] != -1) {
 				TreeItem item = items [index [0]];
-                if (item != null) {
-                    releaseItem(item, true);
-                }
+				if (item != null) releaseItem (item, true);
 			}
 		}
 		valid = GTK.gtk_tree_model_iter_next (modelHandle, iter);
@@ -3971,6 +3995,7 @@ void releaseItems (long parentIter) {
 }
 
 @Override
+void releaseChildren (boolean destroy) {@Override
 void releaseChildren (boolean destroy) {
 	if (items != null) {
 		for (int i=0; i<items.length; i++) {
