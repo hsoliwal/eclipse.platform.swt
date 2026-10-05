@@ -296,18 +296,28 @@ final class VirtualTreeTopology {
 	}
 
 	private boolean subtreeHasFlag (int id, long flag) {
-        if (!contains(id)) {
-            return false;
-        }
-        if ((stateMasks [id] & flag) != 0) {
-            return true;
-        }
-		for (int child = firstChildIds [id]; child >= 0; child = nextSiblingIds [child]) {
-            if (subtreeHasFlag(child, flag)) {
-                return true;
-            }
+		if (!contains (id)) {
+			return false;
 		}
-		return false;
+		int current = id;
+		while (true) {
+			if ((stateMasks [current] & flag) != 0) {
+				return true;
+			}
+			int child = firstChildIds [current];
+			if (child >= 0) {
+				current = child;
+				continue;
+			}
+			/* Reuse parent links, but never escape the queried subtree. */
+			while (current != id && nextSiblingIds [current] < 0) {
+				current = parentIds [current];
+			}
+			if (current == id) {
+				return false;
+			}
+			current = nextSiblingIds [current];
+		}
 	}
 
 	private void pruneCoordinatesPast (int parentId, int count) {
@@ -334,25 +344,35 @@ final class VirtualTreeTopology {
 	}
 
 	private void discardSubtreeDetached (int id) {
-        if (!contains(id)) {
-            return;
-        }
-		int child = firstChildIds [id];
-		while (child >= 0) {
-			int next = nextSiblingIds [child];
-			discardSubtreeDetached (child);
-			child = next;
+		if (!contains (id)) {
+			return;
 		}
-		unlink (id);
-		parentIds [id] = ABSENT;
-		childIndices [id] = -1;
-		childCounts [id] = UNKNOWN_CHILD_COUNT;
-		firstChildIds [id] = -1;
-		nextSiblingIds [id] = -1;
-		stateMasks [id] = 0;
-		visibleExtraRows [id] = 0;
-		childVisibleExtraSums [id] = 0;
-		materializedCount--;
+		int current = id;
+		while (true) {
+			int child = firstChildIds [current];
+			if (child >= 0) {
+				current = child;
+				continue;
+			}
+			/* Delete leaves before their parents. Unlink advances the parent's
+			 * first-child lane, which supplies the next postorder step without
+			 * recursion, an auxiliary stack, or per-node temporary objects. */
+			int parentId = parentIds [current];
+			unlink (current);
+			parentIds [current] = ABSENT;
+			childIndices [current] = -1;
+			childCounts [current] = UNKNOWN_CHILD_COUNT;
+			firstChildIds [current] = -1;
+			nextSiblingIds [current] = -1;
+			stateMasks [current] = 0;
+			visibleExtraRows [current] = 0;
+			childVisibleExtraSums [current] = 0;
+			materializedCount--;
+			if (current == id) {
+				return;
+			}
+			current = parentId;
+		}
 	}
 
 	private void adjustKnownChildCount (int parentId, int delta) {
