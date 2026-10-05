@@ -17,4 +17,9 @@ No behavioral, JUnit, refusal, GUI or native runtime tests were added or run. Na
 
 ## Publication
 
-Pending: additive update of SWT draft #81 and a new canonical draft. Canonical #9293 was merged during implementation and remains the historical phase1 delivery. Both final immutable source trees must be matched before the requested source milestone is closed.
+- [SWT draft #81](https://github.com/hsoliwal/eclipse.platform.swt/pull/81): source commit `9fc138c56f36112c9233f86aca586c3376bc5d28`; exact tree `fc5a0dbd7b77c0bfd47e1466f30b9dbd62d4b344`.
+- [Canonical recipe draft #9339](https://github.com/hsoliwal/com.synexia/pull/9339): source commit `6eb587dd91d8721df99b27bb9f94b306dde83cba`; exact tree `946a6179dc0e265c0304d82a4f547c38b74cf764`.
+- All 58 source/recipe/receipt files were read from those immutable commits and matched exact content and Git blob identities.
+- [Publication receipt](publication.json) records every reviewed file hash. Final metadata commits only complete this receipt and plan; the compiled nine-owner production cohort is unchanged.
+
+The requested implementation/draft-source milestone is delivered. Runtime and merge qualification remain pending, as listed above. Canonical #9293 remains the merged historical phase1 delivery.

@@ -2,7 +2,7 @@
 
 **Goal:** Attach and reconcile native GTK3 virtual Tree rows from the logical visible-plus-overscan window, preserve Java semantic authority and exposed Item identity, and publish the source with its exact canonical recipe.
 
-**Current source milestone:** implemented and compiled; draft publication and immutable readback are the final steps. Runtime and merge qualification remain separate pending gates.
+**Current source milestone:** delivered in [SWT #81](https://github.com/hsoliwal/eclipse.platform.swt/pull/81) and [recipe #9339](https://github.com/hsoliwal/com.synexia/pull/9339), with exact immutable readback of all 58 files. Runtime and merge qualification remain separate pending gates.
 
 **Worktrees:** `swt-residency-live` and sparse `synexia-residency-live`.
 **Source baselines:** SWT `97be47c95bc6ee075b3992bb8f0fa2d2e0cbbe46`; canonical develop `aa37ab2d7bb851bb2e86f314225dc43e118df071`.
@@ -58,9 +58,9 @@
 
 - [x] Prepare exact source/engine custody, compile-input inventory, reuse ledgers and retained license notices.
 - [x] Review the explicit file cohort and preserve current canonical develop outside the new recipe/crate paths.
-- [ ] Publish an additive SWT #81 update and a new canonical live recipe draft.
-- [ ] Match both immutable published Git trees and source blobs to the reviewed local candidate.
-- [ ] Record the delivered PR links and close the requested source milestone in the goal tracker.
+- [x] Publish an additive SWT #81 update and a new canonical live recipe draft.
+- [x] Match both immutable published Git trees and all 58 source/recipe blobs to the reviewed local candidate.
+- [x] Record the delivered PR links and source milestone receipt; the goal tracker closes after final receipt readback.
 
 ## Pending qualification
 

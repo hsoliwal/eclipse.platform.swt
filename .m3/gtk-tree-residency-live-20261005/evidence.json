@@ -167,7 +167,17 @@
     "SWT public scrollbar integer range, ATK signed integer counts and double pixel precision retain ABI limits."
   ],
   "publication": {
-    "status_at_capture": "pending immutable remote readback",
-    "strategy": "additive SWT #81 update; new canonical live draft based on current develop; no force push"
+    "schema": "swt-live-residency-publication-v1",
+    "swt_pr": "https://github.com/hsoliwal/eclipse.platform.swt/pull/81",
+    "recipe_pr": "https://github.com/hsoliwal/com.synexia/pull/9339",
+    "qualification": "draft source milestone; runtime and merge gates remain pending",
+    "source_readback": {
+      "swt_commit": "9fc138c56f36112c9233f86aca586c3376bc5d28",
+      "swt_tree": "fc5a0dbd7b77c0bfd47e1466f30b9dbd62d4b344",
+      "recipe_commit": "6eb587dd91d8721df99b27bb9f94b306dde83cba",
+      "recipe_tree": "946a6179dc0e265c0304d82a4f547c38b74cf764",
+      "file_count": 58,
+      "all_content_and_git_blobs_exact": true
+    }
   }
 }
