@@ -4240,7 +4240,16 @@ void updateRowCount() {
 	ignoreSelect = true;
 	widget.noteNumberOfRowsChanged ();
 	ignoreSelect = false;
-	widget.tile();
+	/*
+	 * A hidden virtual Table has no meaningful viewport yet.  Tiling it here
+	 * makes AppKit ask the data source for a provisional batch of rows and
+	 * manufactures public TableItem facades before any row is actually visible.
+	 * Publish the logical count immediately, but let AppKit tile naturally when
+	 * the control becomes showing. Dense Tables retain the historical eager tile.
+	 */
+	if ((style & SWT.VIRTUAL) == 0 || isShowing ()) {
+		widget.tile();
+	}
 	setRedraw(true);
 }
 
