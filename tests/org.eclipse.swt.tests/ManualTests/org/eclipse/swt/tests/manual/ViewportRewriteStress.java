@@ -246,7 +246,13 @@ public final class ViewportRewriteStress {
 			selectTab (tabs, root);
 			redrawLocked (tree, () -> {
 				TreeItem item = tree.getItem (0);
+				if (item.getItemCount () != TREE_CHILDREN) {
+					throw new AssertionError ("stress branch must demand its logical children");
+				}
 				item.setExpanded (true);
+				if (!item.getExpanded ()) {
+					throw new AssertionError ("stress branch did not expand");
+				}
 				tree.setTopItem (item);
 			});
 		});
@@ -254,7 +260,13 @@ public final class ViewportRewriteStress {
 			selectTab (tabs, root);
 			redrawLocked (tree, () -> {
 				TreeItem item = tree.getItem (TREE_ROOTS / 2);
+				if (item.getItemCount () != TREE_CHILDREN) {
+					throw new AssertionError ("stress branch must demand its logical children");
+				}
 				item.setExpanded (true);
+				if (!item.getExpanded ()) {
+					throw new AssertionError ("stress branch did not expand");
+				}
 				tree.setTopItem (item);
 			});
 		});
@@ -967,23 +979,26 @@ public final class ViewportRewriteStress {
 					.append ('\n');
 		}
 		appendReflectiveValue (
+				out, indent, "tree.nativeResidentRoots",
+				tree, "virtualResidentChildCount", new Class<?>[] {long.class}, new Object[] {0L});
+		appendReflectiveValue (
 				out, indent, "tree.virtualVisibleRows",
 				tree, "virtualVisibleRowCount", new Class<?>[0], new Object[0]);
 		appendReflectiveFieldMethod (
 				out, indent, "tree.topology.materializedCount",
 				tree, "virtualTopology", "materializedCount");
 		appendReflectiveFieldMethod (
-				out, indent, "tree.viewport.firstVisible",
-				tree, "virtualViewport", "firstVisible");
+				out, indent, "tree.viewport.topRow",
+				tree, "virtualViewport", "topRow");
 		appendReflectiveFieldMethod (
-				out, indent, "tree.viewport.visibleCount",
-				tree, "virtualViewport", "visibleCount");
+				out, indent, "tree.viewport.visibleRows",
+				tree, "virtualViewport", "visibleRows");
 		appendReflectiveFieldMethod (
-				out, indent, "tree.viewport.paintStart",
-				tree, "virtualViewport", "paintStart");
+				out, indent, "tree.viewport.firstPaintRow",
+				tree, "virtualViewport", "firstPaintRow");
 		appendReflectiveFieldMethod (
-				out, indent, "tree.viewport.paintEndExclusive",
-				tree, "virtualViewport", "paintEndExclusive");
+				out, indent, "tree.viewport.paintRowCount",
+				tree, "virtualViewport", "paintRowCount");
 	}
 
 	private static ScrollLayoutSnapshot solveViewportScrollLayout (

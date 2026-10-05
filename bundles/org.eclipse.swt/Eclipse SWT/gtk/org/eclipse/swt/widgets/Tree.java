@@ -410,12 +410,30 @@ void ensureVirtualNativeChildren (long parentIter, int requiredExclusive) {
     if (iter == 0) {
         error(SWT.ERROR_NO_HANDLES);
     }
+	long anchor = 0;
 	try {
+		if (resident != 0) {
+			anchor = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+			if (anchor == 0) {
+				error (SWT.ERROR_NO_HANDLES);
+			}
+			GTK.gtk_tree_model_iter_nth_child (modelHandle, anchor, parentIter, resident - 1);
+		}
+		/*
+		 * New cold rows have identical sentinel state and no public facade.
+		 * Insert them immediately after the existing resident tail. Keeping
+		 * this anchor fixed avoids GTK walking a growing new sibling prefix
+		 * for every append/row-changed path. Existing rows keep their order,
+		 * native iterators and coordinates throughout the operation.
+		 */
 		for (int i = resident; i < target; i++) {
-			GTK.gtk_tree_store_append (modelHandle, iter, parentIter);
+			GTK.gtk_tree_store_insert_after (modelHandle, iter, parentIter, anchor);
 			GTK.gtk_tree_store_set (modelHandle, iter, ID_COLUMN, -1, -1);
 		}
 	} finally {
+		if (anchor != 0) {
+			OS.g_free (anchor);
+		}
 		OS.g_free (iter);
 	}
 }
