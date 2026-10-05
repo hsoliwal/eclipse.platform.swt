@@ -2439,6 +2439,12 @@ static void swt_virtual_table_model_init(SwtVirtualTableModel *self) {
  * The model owns only a rebuildable primitive snapshot of VirtualTreeTopology.
  * Cold logical siblings are represented by (parent-id, child-index) in GtkTreeIter;
  * they do not require GtkTreeStore nodes. Java remains the semantic owner.
+ *
+ * A separate swt-residency packet uses dense physical entry ids and child
+ * counts for an attached view. Its fourth lane translates entries to SWT
+ * facade ids. Full logical sibling counts must not be attached to GtkTreeView.
+ * Snapshot replacement is a detached-view operation: callers must suppress
+ * callbacks, detach the view, replace the packet and restore the view/state.
  */
 #define SWT_VIRTUAL_TREE_ROOT (-1)
 #define SWT_VIRTUAL_TREE_ABSENT G_MININT
@@ -2450,6 +2456,7 @@ typedef struct _SwtVirtualTreeModel {
 	gint capacity;
 	gint root_count;
 	gint *snapshot;
+	gboolean residency;
 } SwtVirtualTreeModel;
 
 typedef struct _SwtVirtualTreeModelClass {
@@ -2464,6 +2471,7 @@ G_DEFINE_TYPE_WITH_CODE(SwtVirtualTreeModel, swt_virtual_tree_model, G_TYPE_OBJE
 enum {
 	SWT_VIRTUAL_TREE_MODEL_PROP_0,
 	SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY,
+	SWT_VIRTUAL_TREE_MODEL_PROP_RESIDENCY,
 	SWT_VIRTUAL_TREE_MODEL_N_PROPERTIES
 };
 
@@ -2479,6 +2487,43 @@ static gint *swt_virtual_tree_model_indices(SwtVirtualTreeModel *self) {
 
 static gint *swt_virtual_tree_model_counts(SwtVirtualTreeModel *self) {
 	return self->snapshot == NULL ? NULL : self->snapshot + 2 + self->capacity * 2;
+}
+
+/* Only the bounded packet has a fourth facade-id lane. */
+static gint swt_virtual_tree_model_facade_id(SwtVirtualTreeModel *self, gint entry) {
+	if (entry < 0) return -1;
+	if (!self->residency) return entry;
+	return self->snapshot[2 + self->capacity * 3 + entry];
+}
+
+/* Reject holes, invalid parents and advertised counts outside the actual packet. */
+static gboolean swt_virtual_tree_model_residency_valid(const gint *snapshot, gint capacity) {
+	gint root_count = snapshot[1];
+	if (root_count > capacity) return FALSE;
+	const gint *parents = snapshot + 2;
+	const gint *indices = parents + capacity;
+	const gint *counts = indices + capacity;
+	const gint *facades = counts + capacity;
+	gint *actual_counts = g_new0(gint, capacity);
+	gint actual_roots = 0;
+	gboolean valid = TRUE;
+	for (gint entry = 0; entry < capacity && valid; entry++) {
+		gint parent = parents[entry];
+		if (parent < SWT_VIRTUAL_TREE_ROOT || parent >= entry
+				|| counts[entry] < 0 || counts[entry] > capacity || facades[entry] < -1) {
+			valid = FALSE;
+			break;
+		}
+		gint index = parent == SWT_VIRTUAL_TREE_ROOT
+			? actual_roots++ : actual_counts[parent]++;
+		if (indices[entry] != index) valid = FALSE;
+	}
+	if (actual_roots != root_count) valid = FALSE;
+	for (gint entry = 0; entry < capacity && valid; entry++) {
+		if (counts[entry] != actual_counts[entry]) valid = FALSE;
+	}
+	g_free(actual_counts);
+	return valid;
 }
 
 static gboolean swt_virtual_tree_model_present(SwtVirtualTreeModel *self, gint id) {
@@ -2594,7 +2639,8 @@ static void swt_virtual_tree_model_get_value(
 	GtkTreeModel *tree_model, GtkTreeIter *iter, gint column, GValue *value) {
 	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
 	g_value_init(value, G_TYPE_INT);
-	g_value_set_int(value, column == 0 ? swt_virtual_tree_model_iter_id(self, iter) : -1);
+	g_value_set_int(value, column == 0
+		? swt_virtual_tree_model_facade_id(self, swt_virtual_tree_model_iter_id(self, iter)) : -1);
 }
 
 static gboolean swt_virtual_tree_model_iter_next(GtkTreeModel *tree_model, GtkTreeIter *iter) {
@@ -2679,24 +2725,32 @@ static void swt_virtual_tree_model_set_property(
 	GObject *object, guint property_id, const GValue *value, GParamSpec *pspec) {
 	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)object;
 	switch (property_id) {
-		case SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY: {
+		case SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY:
+		case SWT_VIRTUAL_TREE_MODEL_PROP_RESIDENCY: {
 			const gint *snapshot = (const gint *)g_value_get_pointer(value);
-			g_free(self->snapshot);
-			self->snapshot = NULL;
-			self->capacity = 0;
-			self->root_count = 0;
+			gboolean residency = property_id == SWT_VIRTUAL_TREE_MODEL_PROP_RESIDENCY;
+			gint lanes = residency ? 4 : 3;
+			gint capacity = 0, root_count = 0;
+			gint *replacement = NULL;
 			if (snapshot != NULL) {
-				gint capacity = snapshot[0];
-				gint root_count = snapshot[1];
-				if (capacity >= 0 && capacity <= (G_MAXINT - 2) / 3 && root_count >= 0) {
-					gsize length = (gsize)(2 + capacity * 3);
-					self->snapshot = g_new(gint, length);
-					memcpy(self->snapshot, snapshot, length * sizeof(gint));
-					self->capacity = capacity;
-					self->root_count = root_count;
+				capacity = snapshot[0];
+				root_count = snapshot[1];
+				if (capacity < 0 || capacity > (G_MAXINT - 2) / lanes || root_count < 0
+						|| (residency && !swt_virtual_tree_model_residency_valid(snapshot, capacity))) {
+					g_warning("Invalid SWT virtual Tree snapshot");
+					return;
 				}
+				gsize length = (gsize)(2 + capacity * lanes);
+				replacement = g_new(gint, length);
+				memcpy(replacement, snapshot, length * sizeof(gint));
 			}
-			self->stamp++;
+			/* Copy before releasing: even a getter/setter round trip may alias the old packet. */
+			g_free(self->snapshot);
+			self->snapshot = replacement;
+			self->capacity = capacity;
+			self->root_count = root_count;
+			self->residency = residency;
+			self->stamp = (gint)((guint)self->stamp + 1u);
 			if (self->stamp == 0) self->stamp = 1;
 			break;
 		}
@@ -2711,7 +2765,10 @@ static void swt_virtual_tree_model_get_property(
 	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)object;
 	switch (property_id) {
 		case SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY:
-			g_value_set_pointer(value, self->snapshot);
+			g_value_set_pointer(value, self->residency ? NULL : self->snapshot);
+			break;
+		case SWT_VIRTUAL_TREE_MODEL_PROP_RESIDENCY:
+			g_value_set_pointer(value, self->residency ? self->snapshot : NULL);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -2735,6 +2792,10 @@ static void swt_virtual_tree_model_class_init(SwtVirtualTreeModelClass *klass) {
 		g_param_spec_pointer("swt-topology", "SWT topology",
 			"Primitive SWT virtual Tree topology snapshot",
 			G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	swt_virtual_tree_model_properties[SWT_VIRTUAL_TREE_MODEL_PROP_RESIDENCY] =
+		g_param_spec_pointer("swt-residency", "SWT native residency",
+			"Bounded physical Tree projection with SWT facade-id translation",
+			G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 	g_object_class_install_properties(object_class, SWT_VIRTUAL_TREE_MODEL_N_PROPERTIES,
 		swt_virtual_tree_model_properties);
 }
@@ -2745,6 +2806,7 @@ static void swt_virtual_tree_model_init(SwtVirtualTreeModel *self) {
 	self->capacity = 0;
 	self->root_count = 0;
 	self->snapshot = NULL;
+	self->residency = FALSE;
 }
 
 #endif

@@ -41,6 +41,8 @@ import org.eclipse.swt.internal.gtk3.*;
  */
 public class TreeItem extends Item {
 	Tree parent;
+	/** Stable semantic slot; a native iterator is only a rendering projection. */
+	int virtualId = -1;
 	Font font;
 	Font[] cellFont;
 	String [] strings;
@@ -1118,6 +1120,12 @@ public Tree getParent () {
  */
 public TreeItem getParentItem () {
 	checkWidget();
+	if (parent.virtualTopology != null) {
+		int parentId = parent.virtualTopology.parentId (parent.virtualItemId (this));
+		if (parentId == VirtualTreeTopology.ROOT) return null;
+		TreeItem item = parent.items [parentId];
+		if (item != null) return parent.exposeVirtualItem (item);
+	}
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	TreeItem item = null;
 	if (GTK.gtk_tree_model_iter_parent (parent.modelHandle, iter, handle)) {
@@ -1290,6 +1298,12 @@ public int indexOf (TreeItem item) {
     if (item.isDisposed()) {
         error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	if (parent.virtualTopology != null) {
+		if (item.parent != parent) return -1;
+		int id = parent.virtualItemId (item);
+		return parent.virtualTopology.parentId (id) == parent.virtualItemId (this)
+				? parent.virtualTopology.childIndex (id) : -1;
+	}
 	int index = -1;
 	boolean isParent = false;
 	long currentPath = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
@@ -1332,6 +1346,7 @@ void releaseHandle () {
         OS.g_free(handle);
     }
 	handle = 0;
+	virtualId = -1;
 	super.releaseHandle ();
 	parent = null;
 }
