@@ -74,7 +74,16 @@ public void test_virtualGtk3LogicalNativeModelKeepsDistantAccessSparseAndStable(
 	gtk4Field.setAccessible(true);
 	if (gtk4Field.getBoolean(null)) return;
 
-	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL | SWT.CHECK);
+	String admission = "org.eclipse.swt.internal.experimentalLogicalTreeModel";
+	String priorAdmission = System.getProperty(admission);
+	Tree virtualTree;
+	try {
+		System.setProperty(admission, "true");
+		virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL | SWT.CHECK);
+	} finally {
+		if (priorAdmission == null) System.clearProperty(admission);
+		else System.setProperty(admission, priorAdmission);
+	}
 	virtualTree.setItemCount(1_000_000);
 	shell.setLayout(new FillLayout());
 	shell.setSize(360, 220);
@@ -122,6 +131,7 @@ public void test_virtualGtk3LogicalNativeModelKeepsDistantAccessSparseAndStable(
 
 	distant.setChecked(true);
 	distant.setGrayed(true);
+	Display display = virtualTree.getDisplay();
 	distant.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
 	distant.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
 	assertTrue(distant.getChecked());

@@ -586,8 +586,10 @@ void compactCollapsedVirtualChildren (TreeItem item) {
 	}
 }
 
+boolean virtualNativeModelEnabled;
+
 boolean usesVirtualNativeModel () {
-	return (style & SWT.VIRTUAL) != 0 && !GTK.GTK4;
+	return virtualNativeModelEnabled;
 }
 
 long virtualPath (int id) {
@@ -677,7 +679,9 @@ TreeItem virtualFocusItem () {
 		error (SWT.ERROR_NO_HANDLES);
 	}
 	try {
-		return GTK.gtk_tree_model_get_iter (modelHandle, iter, path [0]) ? _getItem (iter) : null;
+		if (!GTK.gtk_tree_model_get_iter (modelHandle, iter, path [0])) return null;
+		int id = virtualMaterializedId (iter);
+		return id >= 0 && id < items.length ? items [id] : null;
 	} finally {
 		OS.g_free (iter);
 		GTK.gtk_tree_path_free (path [0]);
@@ -686,7 +690,26 @@ TreeItem virtualFocusItem () {
 
 VirtualNativeViewState captureVirtualNativeViewState () {
 	if (!usesVirtualNativeModel () || handle == 0) return null;
-	return new VirtualNativeViewState (getSelection (), virtualFocusItem (), getTopItem ());
+	long adjustment = GTK.gtk_scrollable_get_vadjustment (handle);
+	TreeItem top = cachedAdjustment == GTK.gtk_adjustment_get_value (adjustment) ? topItem : null;
+	long [] path = new long [1];
+	if (top == null && GTK.gtk_tree_view_get_path_at_pos (handle, 1, 1, path, null, null, null) && path [0] != 0) {
+		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+		if (iter == 0) {
+			GTK.gtk_tree_path_free (path [0]);
+			error (SWT.ERROR_NO_HANDLES);
+		}
+		try {
+			if (GTK.gtk_tree_model_get_iter (modelHandle, iter, path [0])) {
+				int id = virtualMaterializedId (iter);
+				if (id >= 0 && id < items.length) top = items [id];
+			}
+		} finally {
+			OS.g_free (iter);
+			GTK.gtk_tree_path_free (path [0]);
+		}
+	}
+	return new VirtualNativeViewState (getSelection (), virtualFocusItem (), top);
 }
 
 void restoreVirtualNativeViewState (VirtualNativeViewState state) {
@@ -743,6 +766,7 @@ void restoreVirtualNativeViewState (VirtualNativeViewState state) {
 
 void finishVirtualNativeMutation (VirtualNativeViewState state) {
 	if (!usesVirtualNativeModel ()) return;
+	if (currentItem == null) GTK.gtk_tree_view_set_model (handle, 0);
 	updateVirtualNativeSnapshot ();
 	if (currentItem == null) {
 		restoreVirtualNativeViewState (state);
@@ -767,6 +791,9 @@ static int checkStyle (int style) {
 @Override
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
 	if (cell == ignoreCell) return 0;
+	if (usesVirtualNativeModel () && virtualMaterializedId (iter) < 0
+			&& !hooks (SWT.SetData) && !display.filters (SWT.SetData) && !hooks (SWT.MeasureItem)
+			&& !hooks (SWT.EraseItem) && !hooks (SWT.PaintItem)) return 0;
 	TreeItem item = _getItem (iter);
 	if (item == null || item.isDisposed()) return 0;
 	OS.g_object_set_qdata (cell, Display.SWT_OBJECT_INDEX2, item.handle);
@@ -1287,6 +1314,17 @@ public void clear(int index, boolean all) {
 }
 
 void clear (long parentIter, int index, boolean all) {
+	if (usesVirtualNativeModel ()) {
+		int parentId = virtualParentId (parentIter);
+		if (index < 0 || index >= virtualTopology.childCount (parentId)) error (SWT.ERROR_INVALID_RANGE);
+		int id = virtualTopology.materializedChildId (parentId, index);
+		TreeItem item = id >= 0 && id < items.length ? items [id] : null;
+		if (item != null && !item.isDisposed ()) {
+			item.clear ();
+			if (all) clearAll (true, item.handle);
+		}
+		return;
+	}
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	GTK.gtk_tree_model_iter_nth_child(modelHandle, iter, parentIter, index);
 	int[] value = new int[1];
@@ -1325,6 +1363,18 @@ public void clearAll (boolean all) {
 	clearAll (all, 0);
 }
 void clearAll (boolean all, long parentIter) {
+	if (usesVirtualNativeModel ()) {
+		int parentId = virtualParentId (parentIter);
+		for (int id = virtualTopology.firstMaterializedChildId (parentId);
+				id >= 0; id = virtualTopology.nextMaterializedSiblingId (id)) {
+			TreeItem item = id < items.length ? items [id] : null;
+			if (item != null && !item.isDisposed ()) {
+				item.clear ();
+				if (all) clearAll (true, item.handle);
+			}
+		}
+		return;
+	}
 	int length = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
     if (length == 0) {
         return;
@@ -1571,6 +1621,11 @@ void createColumn (TreeColumn column, int index) {
 
 @Override
 void createHandle (int index) {
+	// The logical GtkTreeModel still causes GtkTreeView to allocate per logical row.
+	// Retain the proven bounded frontier by default; latch explicit experimental
+	// admission per widget so later property changes cannot change a live model's type.
+	virtualNativeModelEnabled = (style & SWT.VIRTUAL) != 0 && !GTK.GTK4
+			&& Boolean.getBoolean ("org.eclipse.swt.internal.experimentalLogicalTreeModel");
 	state |= HANDLE;
 	fixedHandle = OS.g_object_new (display.gtk_fixed_get_type (), 0);
     if (fixedHandle == 0) {
@@ -4712,6 +4767,36 @@ void setItemCount (long parentIter, int count) {
     if (count == logicalCount) {
         return;
     }
+
+	if (usesVirtualNativeModel ()) {
+		if (parentIter == 0 && count == 0) {
+			removeAll ();
+			return;
+		}
+		VirtualNativeViewState state = captureVirtualNativeViewState ();
+		int child = virtualTopology.firstMaterializedChildId (topologyParentId);
+		while (child >= 0) {
+			int next = virtualTopology.nextMaterializedSiblingId (child);
+			if (virtualTopology.childIndex (child) >= count && child < items.length) {
+				TreeItem item = items [child];
+				if (item != null && !item.isDisposed ()) {
+					if (item.settingData) throwCannotRemoveItem (virtualTopology.childIndex (child));
+					releaseItems (item.handle);
+					releaseItem (item, true);
+				}
+			}
+			child = next;
+		}
+		virtualTopology.setChildCount (topologyParentId, count);
+		modelChanged = true;
+		finishVirtualNativeMutation (state);
+		if (topologyParentId == VirtualTreeTopology.ROOT && logicalCount == 0 && count > 0) {
+			Event event = new Event ();
+			event.detail = 0;
+			sendEvent (SWT.EmptinessChanged, event);
+		}
+		return;
+	}
 
     if (!isVirtual) {
         setRedraw(false);
