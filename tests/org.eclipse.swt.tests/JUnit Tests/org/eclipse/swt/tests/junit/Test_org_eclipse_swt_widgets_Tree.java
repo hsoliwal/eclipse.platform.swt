@@ -408,6 +408,37 @@ public void test_virtualGtkAndWin32VisibleProjectionTracksExpansionIndependently
 }
 
 @Test
+public void test_virtualGtkCollapseAllDoesNotMaterializeColdRoots() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.V_SCROLL);
+	virtualTree.setItemCount(4096);
+	TreeItem root = virtualTree.getItem(0);
+	root.setItemCount(4);
+	TreeItem child = root.getItem(0);
+	root.setExpanded(true);
+
+	Field topologyField = Tree.class.getDeclaredField("virtualTopology");
+	topologyField.setAccessible(true);
+	Object topology = topologyField.get(virtualTree);
+	assertNotNull(topology);
+	Method materializedCount = topology.getClass().getDeclaredMethod("materializedCount");
+	materializedCount.setAccessible(true);
+	int before = ((Number) materializedCount.invoke(topology)).intValue();
+	assertTrue(before < 32, "fixture must begin with only the touched virtual topology");
+
+	virtualTree.collapseAll();
+
+	int after = ((Number) materializedCount.invoke(topology)).intValue();
+	assertTrue(after <= before,
+			"collapseAll must traverse the existing GTK virtual topology without materializing cold roots");
+	assertSame(root, virtualTree.getItem(0));
+	assertSame(child, root.getItem(0));
+	assertEquals(4096, virtualTree.getItemCount());
+	assertEquals(4, root.getItemCount());
+}
+
+@Test
 public void test_virtualItemResidencyDoesNotScaleWithLogicalCount() throws Exception {
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(4096);
