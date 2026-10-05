@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "repository": "hsoliwal/eclipse.platform.swt",
+  "master": "b22afa0f8b16d0099730c6e3a484a3483c40a5b1",
+  "date": "2026-10-05",
+  "status": "distillation-complete",
+  "java_files": 2465,
+  "atoms": 371112,
+  "application_java_files": 2462,
+  "application_atoms": 371035,
+  "tooling_java_files": 3,
+  "tooling_atoms": 77,
+  "png_assets": 412,
+  "native_payloads": 170,
+  "gtk_native_verify": {
+    "modules": 22,
+    "tests": 4490,
+    "failures": 0,
+    "errors": 0,
+    "existing_skips": 20
+  },
+  "merged_closure_prs": [
+    69,
+    70,
+    71
+  ],
+  "donor_catalogues": [
+    "java2s:SWT",
+    "java2s:SWT-2D-Graphics",
+    "java2s:Swing",
+    "java2s:Swing-Event",
+    "EclipseNebula",
+    "OpenJFX"
+  ],
+  "challenge_review_order": [
+    "LEETCODE",
+    "HACKERRANK",
+    "GEEKSFORGEEKS"
+  ],
+  "remaining_gates": [
+    "windows-final-native-runtime",
+    "cocoa-final-native-runtime",
+    "full-synexia-offline-admission",
+    "complete-native-c-semantic-distillation",
+    "500k-root-distant-index-prefix-cost",
+    "gtk-sparse-native-model-live-activation"
+  ],
+  "mutation_authority": false,
+  "donor_source_copy_authority": false,
+  "promotion_authority": false
+}
