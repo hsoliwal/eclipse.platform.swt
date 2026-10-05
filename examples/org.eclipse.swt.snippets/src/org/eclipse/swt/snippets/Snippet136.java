@@ -29,7 +29,9 @@ import org.eclipse.swt.widgets.*;
 public class Snippet136 {
 	public static void main(String [] args) {
 		String html = "<HTML><HEAD><TITLE>HTML Test</TITLE></HEAD><BODY>";
-		for (int i = 0; i < 100; i++) html += "<P>This is line "+i+"</P>";
+        for (int i = 0; i < 100; i++) {
+            html += "<P>This is line " + i + "</P>";
+        }
 		html += "</BODY></HTML>";
 
 		Display display = new Display();
@@ -47,8 +49,9 @@ public class Snippet136 {
 		browser.setText(html);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

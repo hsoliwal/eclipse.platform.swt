@@ -145,13 +145,19 @@ public class DancingLightTab extends AnimatedGraphicsTab {
 					float nvy = vy / dist;
 					float nvz = vz / dist;
 					double dot = ux * nvx + uy * nvy + uz * nvz;
-					if (dot < -1) dot = -1;
-					if (dot > 1) dot = 1;
+                    if (dot < -1) {
+                        dot = -1;
+                    }
+                    if (dot > 1) {
+                        dot = 1;
+                    }
 					a = Math.abs(Math.acos(dot));
 				}
 
 				double attenuation = dist / DIST_ATTENUATION;
-				if (attenuation < 0.001) attenuation = 0.001;
+                if (attenuation < 0.001) {
+                    attenuation = 0.001;
+                }
 				int colr = clamp((int) ((Math.PI - a) * LIGHT_R / attenuation));
 				int colg = clamp((int) ((Math.PI - a) * LIGHT_G / attenuation));
 				int colb = clamp((int) ((Math.PI - a) * LIGHT_B / attenuation));
@@ -178,8 +184,12 @@ public class DancingLightTab extends AnimatedGraphicsTab {
 	}
 
 	private static int clamp(int v) {
-		if (v < 0) return 0;
-		if (v > 255) return 255;
+        if (v < 0) {
+            return 0;
+        }
+        if (v > 255) {
+            return 255;
+        }
 		return v;
 	}
 
@@ -192,8 +202,12 @@ public class DancingLightTab extends AnimatedGraphicsTab {
 
 		pw = width / cw;
 		ph = height / ch;
-		if (pw < 2) pw = 2;
-		if (ph < 2) ph = 2;
+        if (pw < 2) {
+            pw = 2;
+        }
+        if (ph < 2) {
+            ph = 2;
+        }
 
 		waveCx = pw / 2;
 		waveCy = ph / 2;

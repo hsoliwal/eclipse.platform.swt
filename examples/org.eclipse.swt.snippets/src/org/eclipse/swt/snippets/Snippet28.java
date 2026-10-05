@@ -30,7 +30,9 @@ public static void main (String [] args) {
 	shell.setMaximized (true);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

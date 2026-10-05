@@ -50,13 +50,17 @@ final class VirtualItemStorage<T> {
 
 	@SuppressWarnings ("unchecked")
 	T get (int index) {
-		if (index < 0) return null;
+        if (index < 0) {
+            return null;
+        }
 		int position = Arrays.binarySearch (indices, 0, size, index);
 		return position < 0 ? null : (T) values [position];
 	}
 
 	void put (int index, T value) {
-		if (index < 0) throw new IllegalArgumentException ("negative index");
+        if (index < 0) {
+            throw new IllegalArgumentException("negative index");
+        }
 		Objects.requireNonNull (value, "value");
 		int position = Arrays.binarySearch (indices, 0, size, index);
 		if (position >= 0) {
@@ -75,14 +79,18 @@ final class VirtualItemStorage<T> {
 	}
 
 	void insert (int index, T value) {
-		if (index < 0) throw new IllegalArgumentException ("negative index");
+        if (index < 0) {
+            throw new IllegalArgumentException("negative index");
+        }
 		Objects.requireNonNull (value, "value");
 		int position = lowerBound (index);
 		ensureCapacity (size + 1);
 		System.arraycopy (indices, position, indices, position + 1, size - position);
 		System.arraycopy (values, position, values, position + 1, size - position);
 		System.arraycopy (stateMasks, position, stateMasks, position + 1, size - position);
-		for (int i = position + 1; i <= size; i++) indices [i]++;
+        for (int i = position + 1; i <= size; i++) {
+            indices [i]++;
+        }
 		indices [position] = index;
 		values [position] = value;
 		stateMasks [position] = 0;
@@ -91,7 +99,9 @@ final class VirtualItemStorage<T> {
 
 	@SuppressWarnings ("unchecked")
 	T remove (int index) {
-		if (index < 0) throw new IllegalArgumentException ("negative index");
+        if (index < 0) {
+            throw new IllegalArgumentException("negative index");
+        }
 		int position = Arrays.binarySearch (indices, 0, size, index);
 		T removed = null;
 		if (position >= 0) {
@@ -108,17 +118,25 @@ final class VirtualItemStorage<T> {
 		} else {
 			position = -position - 1;
 		}
-		for (int i = position; i < size; i++) indices [i]--;
+        for (int i = position; i < size; i++) {
+            indices [i]--;
+        }
 		return removed;
 	}
 
 	void removeRange (int start, int endExclusive, Consumer<? super T> removed) {
-		if (start < 0 || endExclusive < start) throw new IllegalArgumentException ("invalid range");
-		if (start == endExclusive) return;
+        if (start < 0 || endExclusive < start) {
+            throw new IllegalArgumentException("invalid range");
+        }
+        if (start == endExclusive) {
+            return;
+        }
 		Objects.requireNonNull (removed, "removed");
 		int left = lowerBound (start);
 		int right = lowerBound (endExclusive);
-		for (int i = left; i < right; i++) removed.accept (valueAt (i));
+        for (int i = left; i < right; i++) {
+            removed.accept(valueAt(i));
+        }
 		int removedCount = right - left;
 		int tail = size - right;
 		if (tail > 0) {
@@ -128,16 +146,22 @@ final class VirtualItemStorage<T> {
 		}
 		int logicalWidth = endExclusive - start;
 		size -= removedCount;
-		for (int i = left; i < size; i++) indices [i] -= logicalWidth;
+        for (int i = left; i < size; i++) {
+            indices [i] -= logicalWidth;
+        }
 		Arrays.fill (values, size, size + removedCount, null);
 		Arrays.fill (stateMasks, size, size + removedCount, 0L);
 	}
 
 	void truncate (int logicalCount, Consumer<? super T> removed) {
-		if (logicalCount < 0) throw new IllegalArgumentException ("negative logical count");
+        if (logicalCount < 0) {
+            throw new IllegalArgumentException("negative logical count");
+        }
 		Objects.requireNonNull (removed, "removed");
 		int firstRemoved = lowerBound (logicalCount);
-		for (int i = firstRemoved; i < size; i++) removed.accept (valueAt (i));
+        for (int i = firstRemoved; i < size; i++) {
+            removed.accept(valueAt(i));
+        }
 		Arrays.fill (values, firstRemoved, size, null);
 		Arrays.fill (stateMasks, firstRemoved, size, 0L);
 		size = firstRemoved;
@@ -145,7 +169,9 @@ final class VirtualItemStorage<T> {
 
 	void clear (Consumer<? super T> removed) {
 		Objects.requireNonNull (removed, "removed");
-		for (int i = 0; i < size; i++) removed.accept (valueAt (i));
+        for (int i = 0; i < size; i++) {
+            removed.accept(valueAt(i));
+        }
 		Arrays.fill (values, 0, size, null);
 		Arrays.fill (stateMasks, 0, size, 0L);
 		size = 0;
@@ -153,12 +179,16 @@ final class VirtualItemStorage<T> {
 
 	void forEach (Consumer<? super T> consumer) {
 		Objects.requireNonNull (consumer, "consumer");
-		for (int i = 0; i < size; i++) consumer.accept (valueAt (i));
+        for (int i = 0; i < size; i++) {
+            consumer.accept(valueAt(i));
+        }
 	}
 
 	void forEachIndexed (IndexedConsumer<? super T> consumer) {
 		Objects.requireNonNull (consumer, "consumer");
-		for (int i = 0; i < size; i++) consumer.accept (indices [i], valueAt (i));
+        for (int i = 0; i < size; i++) {
+            consumer.accept(indices [i], valueAt(i));
+        }
 	}
 
 	int indexOfIdentity (T value) {
@@ -173,7 +203,9 @@ final class VirtualItemStorage<T> {
 
 	void state (int index, long state) {
 		int position = Arrays.binarySearch (indices, 0, size, index);
-		if (position < 0) throw new IllegalStateException ("logical item is not materialized");
+        if (position < 0) {
+            throw new IllegalStateException("logical item is not materialized");
+        }
 		stateMasks [position] = state;
 	}
 
@@ -183,9 +215,14 @@ final class VirtualItemStorage<T> {
 
 	void flag (int index, long mask, boolean enabled) {
 		int position = Arrays.binarySearch (indices, 0, size, index);
-		if (position < 0) throw new IllegalStateException ("logical item is not materialized");
-		if (enabled) stateMasks [position] |= mask;
-		else stateMasks [position] &= ~mask;
+        if (position < 0) {
+            throw new IllegalStateException("logical item is not materialized");
+        }
+        if (enabled) {
+            stateMasks [position] |= mask;
+        } else {
+            stateMasks [position] &= ~mask;
+        }
 	}
 
 	long stateOfIdentity (T value) {
@@ -199,9 +236,14 @@ final class VirtualItemStorage<T> {
 
 	void flagOfIdentity (T value, long mask, boolean enabled) {
 		int position = positionOfIdentity (value);
-		if (position < 0) throw new IllegalStateException ("materialized item is not in storage");
-		if (enabled) stateMasks [position] |= mask;
-		else stateMasks [position] &= ~mask;
+        if (position < 0) {
+            throw new IllegalStateException("materialized item is not in storage");
+        }
+        if (enabled) {
+            stateMasks [position] |= mask;
+        } else {
+            stateMasks [position] &= ~mask;
+        }
 	}
 
 	int indexAt (int materializedIndex) {
@@ -215,7 +257,9 @@ final class VirtualItemStorage<T> {
 
 	private int positionOfIdentity (T value) {
 		for (int i = 0; i < size; i++) {
-			if (values [i] == value) return i;
+            if (values [i] == value) {
+                return i;
+            }
 		}
 		return -1;
 	}
@@ -226,7 +270,9 @@ final class VirtualItemStorage<T> {
 	}
 
 	private void ensureCapacity (int required) {
-		if (required <= indices.length) return;
+        if (required <= indices.length) {
+            return;
+        }
 		int next = Math.max (required, Math.max (4, indices.length * 3 / 2));
 		indices = Arrays.copyOf (indices, next);
 		values = Arrays.copyOf (values, next);

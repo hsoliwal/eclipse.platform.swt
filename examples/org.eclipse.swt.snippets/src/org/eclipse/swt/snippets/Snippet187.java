@@ -53,9 +53,13 @@ public static void main(String[] args) {
 		@Override
 		public void handleEvent(OleEvent event) {
 			int[] htmlDocumentID = webBrowser.getIDsOfNames(new String[]{"Document"});
-			if (htmlDocumentID == null) return;
+            if (htmlDocumentID == null) {
+                return;
+            }
 			Variant pVarResult = webBrowser.getProperty(htmlDocumentID[0]);
-			if (pVarResult == null || pVarResult.getType() == 0) return;
+            if (pVarResult == null || pVarResult.getType() == 0) {
+                return;
+            }
 			//IHTMLDocument2
 			OleAutomation htmlDocument = null;
 			try {
@@ -63,20 +67,28 @@ public static void main(String[] args) {
 				pVarResult.dispose();
 
 				int[] scriptID = htmlDocument.getIDsOfNames(new String[]{"Script"});
-				if (scriptID == null) return;
+                if (scriptID == null) {
+                    return;
+                }
 				pVarResult = htmlDocument.getProperty(scriptID[0]);
-				if (pVarResult == null || pVarResult.getType() == 0) return;
+                if (pVarResult == null || pVarResult.getType() == 0) {
+                    return;
+                }
 				OleAutomation htmlWindow = null;
 				try {
 					//IHTMLWindow2
 					htmlWindow = pVarResult.getAutomation();
 					pVarResult.dispose();
 					int[] evaluateID = htmlWindow.getIDsOfNames(new String[] {"evaluate"});
-					if (evaluateID == null) return;
+                    if (evaluateID == null) {
+                        return;
+                    }
 					String expression = "5+Math.sin(9)";
 					Variant[] rgvarg = new Variant[] {new Variant(expression)};
 					pVarResult = htmlWindow.invoke(evaluateID[0], rgvarg, null);
-					if (pVarResult == null || pVarResult.getType() == 0) return;
+                    if (pVarResult == null || pVarResult.getType() == 0) {
+                        return;
+                    }
 					System.out.println(expression+" ="+pVarResult.getString());
 				} finally {
 					htmlWindow.dispose();
@@ -95,8 +107,9 @@ public static void main(String[] args) {
 
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	//Remember to release OleAutomation Object
 	webBrowser.dispose();

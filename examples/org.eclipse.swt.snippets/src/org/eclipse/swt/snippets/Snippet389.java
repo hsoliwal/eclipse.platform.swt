@@ -70,8 +70,9 @@ public class Snippet389 {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		image.dispose();

@@ -97,8 +97,9 @@ public class Bug536141_BrowserFunctionLostReload {
 		System.out.println("To test that theJavaFunction was deleted, remove the \"2\""
 				+ " at the end of theJavaFunction in the console and press enter.");
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

@@ -236,7 +236,9 @@ private static class MetricsAdapter {
 	public boolean GetTextMetrics(long hdc, TEXTMETRIC lptm) {
 		// Even in fixed mode, still call original to get `tmAveCharWidth` etc.
 		boolean ret = OS.GetTextMetrics(hdc, lptm);
-		if (!ret) return false;
+        if (!ret) {
+            return false;
+        }
 
 		if (isFixedMetrics()) {
 			// Force desired line metrics
@@ -252,7 +254,9 @@ private static class MetricsAdapter {
 	public int GetOutlineTextMetrics(long hdc, int cbData, OUTLINETEXTMETRIC lpOTM) {
 		// Even in fixed mode, still call original to get `tmAveCharWidth` etc.
 		int ret = OS.GetOutlineTextMetrics(hdc, cbData, lpOTM);
-		if (0 == ret) return 0;
+        if (0 == ret) {
+            return 0;
+        }
 
 		if (isFixedMetrics()) {
 			TEXTMETRIC lptm = lpOTM.otmTextMetrics;
@@ -344,18 +348,24 @@ RECT addClipRect(StyleItem run, RECT clipRect, RECT rect, int selectionStart, in
 }
 
 void breakRun(StyleItem run) {
-	if (run.psla != 0) return;
+    if (run.psla != 0) {
+        return;
+    }
 	char[] chars = new char[run.length];
 	segmentsText.getChars(run.start, run.start + run.length, chars, 0);
 	long hHeap = OS.GetProcessHeap();
 	run.pslaAllocSize = SCRIPT_LOGATTR.sizeof * chars.length;
 	run.psla = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, SCRIPT_LOGATTR.sizeof * chars.length);
-	if (run.psla == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (run.psla == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.ScriptBreak(chars, chars.length, run.analysis, run.psla);
 }
 
 void checkLayout () {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 }
 
 /*
@@ -368,7 +378,9 @@ void computeRuns (GC gc) {
 		nativeZoom = newNativeZoom;
 		freeRuns();
 	}
-	if (runs != null) return;
+    if (runs != null) {
+        return;
+    }
 	long hDC = gc != null ? gc.handle : device.internal_new_GC(null);
 	long srcHdc = OS.CreateCompatibleDC(hDC);
 	allRuns = itemize();
@@ -398,7 +410,9 @@ void computeRuns (GC gc) {
 				int tabX = tabsInPixels[tabsLength-1];
 				int lastTabWidth = tabsLength > 1 ? tabsInPixels[tabsLength-1] - tabsInPixels[tabsLength-2] : tabsInPixels[0];
 				if (lastTabWidth > 0) {
-					while (tabX <= lineWidth) tabX += lastTabWidth;
+                    while (tabX <= lineWidth) {
+                        tabX += lastTabWidth;
+                    }
 					run.width = tabX - lineWidth;
 				}
 			}
@@ -440,7 +454,9 @@ void computeRuns (GC gc) {
 				breakRun(run);
 				while (start >= 0) {
 					OS.MoveMemory(logAttr, run.psla + (start * SCRIPT_LOGATTR.sizeof), SCRIPT_LOGATTR.sizeof);
-					if (logAttr.fSoftBreak || logAttr.fWhiteSpace) break;
+                    if (logAttr.fSoftBreak || logAttr.fWhiteSpace) {
+                        break;
+                    }
 					start--;
 				}
 
@@ -458,11 +474,15 @@ void computeRuns (GC gc) {
 						if (properties.langid == langID || langID == OS.LANG_NEUTRAL || properties.langid == OS.LANG_NEUTRAL) {
 							breakRun(pRun);
 							OS.MoveMemory(logAttr, pRun.psla + ((pRun.length - 1) * SCRIPT_LOGATTR.sizeof), SCRIPT_LOGATTR.sizeof);
-							if (!logAttr.fWhiteSpace) start = -1;
+                            if (!logAttr.fWhiteSpace) {
+                                start = -1;
+                            }
 						}
 					}
 				}
-				if (start >= 0 || i == lineStart) break;
+                if (start >= 0 || i == lineStart) {
+                    break;
+                }
 				run = allRuns[--i];
 				start = run.length - 1;
 			}
@@ -494,7 +514,9 @@ void computeRuns (GC gc) {
 			breakRun(run);
 			while (start < run.length) {
 				OS.MoveMemory(logAttr, run.psla + (start * SCRIPT_LOGATTR.sizeof), SCRIPT_LOGATTR.sizeof);
-				if (!logAttr.fWhiteSpace) break;
+                if (!logAttr.fWhiteSpace) {
+                    break;
+                }
 				start++;
 			}
 			if (0 < start && start < run.length) {
@@ -575,7 +597,9 @@ void computeRuns (GC gc) {
 					int iDx = item.width * wrapWidthInPixels / lineWidth;
 					if (iDx != item.width) {
 						item.justify = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, item.glyphCount * 4);
-						if (item.justify == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                        if (item.justify == 0) {
+                            SWT.error(SWT.ERROR_NO_HANDLES);
+                        }
 						OS.ScriptJustify(item.visAttrs, item.advances, item.glyphCount, iDx - item.width, 2, item.justify);
 						item.width = iDx;
 					}
@@ -607,8 +631,12 @@ void computeRuns (GC gc) {
 			descentInPoints = Math.max(0, descent);
 		}
 	}
-	if (srcHdc != 0) OS.DeleteDC(srcHdc);
-	if (gc == null) device.internal_dispose_GC(hDC, null);
+    if (srcHdc != 0) {
+        OS.DeleteDC(srcHdc);
+    }
+    if (gc == null) {
+        device.internal_dispose_GC(hDC, null);
+    }
 }
 
 @Override
@@ -664,7 +692,9 @@ int[] computePolyline(int left, int top, int right, int bottom) {
 		peaks = 1;
 	}
 	int length = ((2 * peaks) + 1) * 2;
-	if (length < 0) return new int[0];
+    if (length < 0) {
+        return new int[0];
+    }
 
 	int[] coordinates = new int[length];
 	for (int i = 0; i < peaks; i++) {
@@ -789,12 +819,22 @@ void drawInPixels (GC gc, int xInPoints, int yInPoints) {
 
 void drawInPixels (GC gc, int xInPoints, int yInPoints, int selectionStart, int selectionEnd, Color selectionForeground, Color selectionBackground, int flags) {
 	computeRuns(gc);
-	if (gc == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (selectionForeground != null && selectionForeground.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (selectionBackground != null && selectionBackground.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (selectionForeground != null && selectionForeground.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (selectionBackground != null && selectionBackground.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int length = text.length();
-	if (length == 0 && flags == 0) return;
+    if (length == 0 && flags == 0) {
+        return;
+    }
 	yInPoints += verticalIndentInPoints;
 	long hdc = gc.handle;
 	Rectangle clip = gc.getClippingInPixels();
@@ -854,7 +894,9 @@ void drawInPixels (GC gc, int xInPoints, int yInPoints, int selectionStart, int 
 			} else {
 				StyleItem run = lineRuns[lineRuns.length - 1];
 				if (run.lineBreak && !run.softBreak) {
-					if (selectionStart <= run.start && run.start <= selectionEnd) extents = true;
+                    if (selectionStart <= run.start && run.start <= selectionEnd) {
+                        extents = true;
+                    }
 				} else {
 					int endOffset = run.start + run.length - 1;
 					if (selectionStart <= endOffset && endOffset < selectionEnd && (flags & SWT.FULL_SELECTION) != 0) {
@@ -877,14 +919,22 @@ void drawInPixels (GC gc, int xInPoints, int yInPoints, int selectionStart, int 
 				}
 			}
 		}
-		if (drawX > clip.x + clip.width) continue;
-		if (drawX + lineWidthInPixels[line] < clip.x) continue;
+        if (drawX > clip.x + clip.width) {
+            continue;
+        }
+        if (drawX + lineWidthInPixels[line] < clip.x) {
+            continue;
+        }
 
 		//Draw the background of the runs in the line
 		int alignmentX = drawX;
 		for (StyleItem run : lineRuns) {
-			if (run.length == 0) continue;
-			if (drawX > clip.x + clip.width) break;
+            if (run.length == 0) {
+                continue;
+            }
+            if (drawX > clip.x + clip.width) {
+                break;
+            }
 			if (drawX + run.width >= clip.x) {
 				if (!run.lineBreak || run.softBreak) {
 					if (extents) {
@@ -915,8 +965,12 @@ void drawInPixels (GC gc, int xInPoints, int yInPoints, int selectionStart, int 
 			StyleItem run = lineRuns[i];
 			TextStyle style = run.style;
 			boolean hasAdorners = style != null && (style.underline || style.strikeout || style.borderStyle != SWT.NONE);
-			if (run.length == 0) continue;
-			if (drawX > clip.x + clip.width) break;
+            if (run.length == 0) {
+                continue;
+            }
+            if (drawX > clip.x + clip.width) {
+                break;
+            }
 			if (drawX + run.width >= clip.x) {
 				boolean skipTab = run.tab && !hasAdorners;
 				if (!skipTab && (!run.lineBreak || run.softBreak) && !(style != null && style.metrics != null)) {
@@ -925,11 +979,15 @@ void drawInPixels (GC gc, int xInPoints, int yInPoints, int selectionStart, int 
 						long hFont = getItemFont(run, gc);
 						if (hFont != lastHFont) {
 							lastHFont = hFont;
-							if (gdipFont != 0) Gdip.Font_delete(gdipFont);
+                            if (gdipFont != 0) {
+                                Gdip.Font_delete(gdipFont);
+                            }
 							long oldFont = OS.SelectObject(hdc, hFont);
 							gdipFont = Gdip.Font_new(hdc, hFont);
 							OS.SelectObject(hdc, oldFont);
-							if (gdipFont == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                            if (gdipFont == 0) {
+                                SWT.error(SWT.ERROR_NO_HANDLES);
+                            }
 							if (!Gdip.Font_IsAvailable(gdipFont)) {
 								Gdip.Font_delete(gdipFont);
 								gdipFont = 0;
@@ -937,7 +995,9 @@ void drawInPixels (GC gc, int xInPoints, int yInPoints, int selectionStart, int 
 						}
 						long gdipFg = gdipForeground;
 						if (style != null && style.underline && style.underlineStyle == SWT.UNDERLINE_LINK) {
-							if (gdipLinkColor == 0) gdipLinkColor = createGdipBrush(linkColor, alpha);
+                            if (gdipLinkColor == 0) {
+                                gdipLinkColor = createGdipBrush(linkColor, alpha);
+                            }
 							gdipFg = gdipLinkColor;
 						}
 						if (gdipFont != 0 && !run.analysis.fNoGlyphIndex) {
@@ -961,19 +1021,35 @@ void drawInPixels (GC gc, int xInPoints, int yInPoints, int selectionStart, int 
 			drawX += run.width;
 		}
 	}
-	if (gdipSelBackground != 0) Gdip.SolidBrush_delete(gdipSelBackground);
-	if (gdipSelForeground != 0) Gdip.SolidBrush_delete(gdipSelForeground);
-	if (gdipLinkColor != 0) Gdip.SolidBrush_delete(gdipLinkColor);
-	if (gdipFont != 0) Gdip.Font_delete(gdipFont);
-	if (state != 0)	OS.RestoreDC(hdc, state);
-	if (selBackground != 0) OS.DeleteObject (selBackground);
+    if (gdipSelBackground != 0) {
+        Gdip.SolidBrush_delete(gdipSelBackground);
+    }
+    if (gdipSelForeground != 0) {
+        Gdip.SolidBrush_delete(gdipSelForeground);
+    }
+    if (gdipLinkColor != 0) {
+        Gdip.SolidBrush_delete(gdipLinkColor);
+    }
+    if (gdipFont != 0) {
+        Gdip.Font_delete(gdipFont);
+    }
+    if (state != 0) {
+        OS.RestoreDC(hdc, state);
+    }
+    if (selBackground != 0) {
+        OS.DeleteObject(selBackground);
+    }
 }
 
 RECT drawBorder(long hdc, int x, int y, int lineHeight, StyleItem[] line, int index, int color, int selectionColor, RECT clipRect, RECT pRect, int selectionStart, int selectionEnd, Rectangle drawClip) {
 	StyleItem run = line[index];
 	TextStyle style = run.style;
-	if (style == null) return null;
-	if (style.borderStyle == SWT.NONE) return null;
+    if (style == null) {
+        return null;
+    }
+    if (style.borderStyle == SWT.NONE) {
+        return null;
+    }
 	clipRect = addClipRect(run, clipRect, pRect, selectionStart, selectionEnd);
 	boolean lastRunVisible = drawClip != null && (x + run.x + run.width) > (drawClip.x + drawClip.width);
 	if (index + 1 >= line.length || lastRunVisible || line[index + 1].lineBreak || !style.isAdherentBorder(line[index + 1].style)) {
@@ -1039,8 +1115,12 @@ RECT drawBorder(long hdc, int x, int y, int lineHeight, StyleItem[] line, int in
 		OS.DeleteObject(newPen);
 		if (clipRect != null) {
 			int state = OS.SaveDC(hdc);
-			if (clipRect.left == -1) clipRect.left = 0;
-			if (clipRect.right == -1) clipRect.right = 0x7ffff;
+            if (clipRect.left == -1) {
+                clipRect.left = 0;
+            }
+            if (clipRect.right == -1) {
+                clipRect.right = 0x7ffff;
+            }
 			OS.IntersectClipRect(hdc, clipRect.left, clipRect.top, clipRect.right, clipRect.bottom);
 			logBrush.lbColor = selectionColor;
 			long selPen = OS.ExtCreatePen (lineStyle | OS.PS_GEOMETRIC, lineWidth, logBrush, 0, null);
@@ -1059,8 +1139,12 @@ RECT drawBorder(long hdc, int x, int y, int lineHeight, StyleItem[] line, int in
 RECT drawBorderGDIP(long graphics, int x, int y, int lineHeight, StyleItem[] line, int index, long color, long selectionColor, RECT clipRect, RECT pRect,  int selectionStart, int selectionEnd, int alpha, Rectangle drawClip) {
 	StyleItem run = line[index];
 	TextStyle style = run.style;
-	if (style == null) return null;
-	if (style.borderStyle == SWT.NONE) return null;
+    if (style == null) {
+        return null;
+    }
+    if (style.borderStyle == SWT.NONE) {
+        return null;
+    }
 	clipRect = addClipRect(run, clipRect, pRect, selectionStart, selectionEnd);
 	boolean lastRunVisible = drawClip != null && (x + run.x + run.width) > (drawClip.x + drawClip.width);
 	if (index + 1 >= line.length || lastRunVisible || line[index + 1].lineBreak || !style.isAdherentBorder(line[index + 1].style)) {
@@ -1102,8 +1186,12 @@ RECT drawBorderGDIP(long graphics, int x, int y, int lineHeight, StyleItem[] lin
 		Gdip.Graphics_SetSmoothingMode(graphics, Gdip.SmoothingModeNone);
 		if (clipRect != null) {
 			int gstate = Gdip.Graphics_Save(graphics);
-			if (clipRect.left == -1) clipRect.left = 0;
-			if (clipRect.right == -1) clipRect.right = 0x7ffff;
+            if (clipRect.left == -1) {
+                clipRect.left = 0;
+            }
+            if (clipRect.right == -1) {
+                clipRect.right = 0x7ffff;
+            }
 			Rect gdipRect = new Rect();
 			gdipRect.X = clipRect.left;
 			gdipRect.Y = clipRect.top;
@@ -1125,7 +1213,9 @@ RECT drawBorderGDIP(long graphics, int x, int y, int lineHeight, StyleItem[] lin
 		Gdip.Graphics_SetPixelOffsetMode(graphics, Gdip.PixelOffsetModeHalf);
 		Gdip.Graphics_SetSmoothingMode(graphics, smoothingMode);
 		Gdip.Pen_delete(pen);
-		if (brush != selectionColor && brush != color) Gdip.SolidBrush_delete(brush);
+        if (brush != selectionColor && brush != color) {
+            Gdip.SolidBrush_delete(brush);
+        }
 		return null;
 	}
 	return clipRect;
@@ -1217,7 +1307,9 @@ RECT drawRunTextGDIP(GC gc, long graphics, StyleItem run, RECT rect, long gdipFo
 	// rendering (such as ScriptTextOut()) which put top of the character
 	// at requested position.
 	int drawY = rect.top + baselineInPixels;
-	if (run.style != null && run.style.rise != 0) drawY -= Win32DPIUtils.pointToPixel(getDevice(), run.style.rise, getZoom(gc));
+    if (run.style != null && run.style.rise != 0) {
+        drawY -= Win32DPIUtils.pointToPixel(getDevice(), run.style.rise, getZoom(gc));
+    }
 
 	int drawX = rect.left;
 	long brush = color;
@@ -1293,7 +1385,9 @@ RECT drawRunTextGDIP(GC gc, long graphics, StyleItem run, RECT rect, long gdipFo
 		}
 		Gdip.Graphics_Restore(graphics, gstateMirrored);
 	}
-	if (brush != selectionColor && brush != color) Gdip.SolidBrush_delete(brush);
+    if (brush != selectionColor && brush != color) {
+        Gdip.SolidBrush_delete(brush);
+    }
 	return fullSelection || partialSelection ? rect : null;
 }
 
@@ -1301,7 +1395,9 @@ RECT drawRunTextGDIPRaster(GC gc, long graphics, StyleItem run, RECT rect, int b
 	long clipRgn = 0;
 	Gdip.Graphics_SetPixelOffsetMode(graphics, Gdip.PixelOffsetModeNone);
 	long rgn = Gdip.Region_new();
-	if (rgn == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (rgn == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Gdip.Graphics_GetClip(graphics, rgn);
 	if (!Gdip.Region_IsInfinite(rgn, graphics)) {
 		clipRgn = Gdip.Region_GetHRGN(rgn, graphics);
@@ -1310,7 +1406,9 @@ RECT drawRunTextGDIPRaster(GC gc, long graphics, StyleItem run, RECT rect, int b
 	Gdip.Graphics_SetPixelOffsetMode(graphics, Gdip.PixelOffsetModeHalf);
 	float[] lpXform = null;
 	long matrix = Gdip.Matrix_new(1, 0, 0, 1, 0, 0);
-	if (matrix == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (matrix == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Gdip.Graphics_GetTransform(graphics, matrix);
 	if (!Gdip.Matrix_IsIdentity(matrix)) {
 		lpXform = new float[6];
@@ -1340,8 +1438,12 @@ RECT drawRunTextGDIPRaster(GC gc, long graphics, StyleItem run, RECT rect, int b
 RECT drawStrikeout(GC gc, long hdc, int x, int baselineInPixels, StyleItem[] line, int index, int color, int selectionColor, RECT clipRect, RECT pRect, int selectionStart, int selectionEnd, Rectangle drawClip) {
 	StyleItem run = line[index];
 	TextStyle style = run.style;
-	if (style == null) return null;
-	if (!style.strikeout) return null;
+    if (style == null) {
+        return null;
+    }
+    if (!style.strikeout) {
+        return null;
+    }
 	clipRect = addClipRect(run, clipRect, pRect, selectionStart, selectionEnd);
 	boolean lastRunVisible = drawClip != null && (x + run.x + run.width) > (drawClip.x + drawClip.width);
 	if (index + 1 >= line.length || lastRunVisible || line[index + 1].lineBreak || !style.isAdherentStrikeout(line[index + 1].style)) {
@@ -1376,8 +1478,12 @@ RECT drawStrikeout(GC gc, long hdc, int x, int baselineInPixels, StyleItem[] lin
 		OS.DeleteObject(brush);
 		if (clipRect != null) {
 			long selBrush = OS.CreateSolidBrush(selectionColor);
-			if (clipRect.left == -1) clipRect.left = 0;
-			if (clipRect.right == -1) clipRect.right = 0x7ffff;
+            if (clipRect.left == -1) {
+                clipRect.left = 0;
+            }
+            if (clipRect.right == -1) {
+                clipRect.right = 0x7ffff;
+            }
 			OS.SetRect(clipRect, Math.max(rect.left, clipRect.left), rect.top, Math.min(rect.right, clipRect.right), rect.bottom);
 			OS.FillRect(hdc, clipRect, selBrush);
 			OS.DeleteObject(selBrush);
@@ -1390,8 +1496,12 @@ RECT drawStrikeout(GC gc, long hdc, int x, int baselineInPixels, StyleItem[] lin
 RECT drawStrikeoutGDIP(GC gc, long graphics, int x, int baselineInPixels, StyleItem[] line, int index, long color, long selectionColor, RECT clipRect, RECT pRect, int selectionStart, int selectionEnd, int alpha, Rectangle drawClip) {
 	StyleItem run = line[index];
 	TextStyle style = run.style;
-	if (style == null) return null;
-	if (!style.strikeout) return null;
+    if (style == null) {
+        return null;
+    }
+    if (!style.strikeout) {
+        return null;
+    }
 	clipRect = addClipRect(run, clipRect, pRect, selectionStart, selectionEnd);
 	boolean lastRunVisible = drawClip != null && (x + run.x + run.width) > (drawClip.x + drawClip.width);
 	if (index + 1 >= line.length || lastRunVisible || line[index + 1].lineBreak || !style.isAdherentStrikeout(line[index + 1].style)) {
@@ -1422,8 +1532,12 @@ RECT drawStrikeoutGDIP(GC gc, long graphics, int x, int baselineInPixels, StyleI
 		int riseInPixels = Win32DPIUtils.pointToPixel(getDevice(), style.rise, getZoom(gc));
 		if (clipRect != null) {
 			int gstate = Gdip.Graphics_Save(graphics);
-			if (clipRect.left == -1) clipRect.left = 0;
-			if (clipRect.right == -1) clipRect.right = 0x7ffff;
+            if (clipRect.left == -1) {
+                clipRect.left = 0;
+            }
+            if (clipRect.right == -1) {
+                clipRect.right = 0x7ffff;
+            }
 			Rect gdipRect = new Rect();
 			gdipRect.X = clipRect.left;
 			gdipRect.Y = clipRect.top;
@@ -1439,7 +1553,9 @@ RECT drawStrikeoutGDIP(GC gc, long graphics, int x, int baselineInPixels, StyleI
 		} else {
 			Gdip.Graphics_FillRectangle(graphics, brush, x + left, baselineInPixels - run.strikeoutPos - riseInPixels, run.x + run.width - left, run.strikeoutThickness);
 		}
-		if (brush != selectionColor && brush != color) Gdip.SolidBrush_delete(brush);
+        if (brush != selectionColor && brush != color) {
+            Gdip.SolidBrush_delete(brush);
+        }
 		return null;
 	}
 	return clipRect;
@@ -1448,8 +1564,12 @@ RECT drawStrikeoutGDIP(GC gc, long graphics, int x, int baselineInPixels, StyleI
 RECT drawUnderline(GC gc, long hdc, int x, int baselineInPixels, int lineUnderlinePos, int lineBottom, StyleItem[] line, int index, int color, int selectionColor, RECT clipRect, RECT pRect, int selectionStart, int selectionEnd, Rectangle drawClip) {
 	StyleItem run = line[index];
 	TextStyle style = run.style;
-	if (style == null) return null;
-	if (!style.underline) return null;
+    if (style == null) {
+        return null;
+    }
+    if (!style.underline) {
+        return null;
+    }
 	clipRect = addClipRect(run, clipRect, pRect, selectionStart, selectionEnd);
 	boolean lastRunVisible = drawClip != null && (x + run.x + run.width) > (drawClip.x + drawClip.width);
 	if (index + 1 >= line.length || lastRunVisible || line[index + 1].lineBreak || !style.isAdherentUnderline(line[index + 1].style)) {
@@ -1480,8 +1600,12 @@ RECT drawUnderline(GC gc, long hdc, int x, int baselineInPixels, int lineUnderli
 		int riseInPixels = Win32DPIUtils.pointToPixel(getDevice(), style.rise, getZoom(gc));
 		OS.SetRect(rect, x + left, baselineInPixels - lineUnderlinePos - riseInPixels, x + run.x + run.width, baselineInPixels - lineUnderlinePos + run.underlineThickness - riseInPixels);
 		if (clipRect != null) {
-			if (clipRect.left == -1) clipRect.left = 0;
-			if (clipRect.right == -1) clipRect.right = 0x7ffff;
+            if (clipRect.left == -1) {
+                clipRect.left = 0;
+            }
+            if (clipRect.right == -1) {
+                clipRect.right = 0x7ffff;
+            }
 			OS.SetRect(clipRect, Math.max(rect.left, clipRect.left), rect.top, Math.min(rect.right, clipRect.right), rect.bottom);
 		}
 		switch (style.underlineStyle) {
@@ -1524,12 +1648,16 @@ RECT drawUnderline(GC gc, long hdc, int x, int baselineInPixels, int lineUnderli
 			case UNDERLINE_IME_THICK:
 				if (style.underlineStyle == UNDERLINE_IME_THICK) {
 					rect.top -= run.underlineThickness;
-					if (clipRect != null) clipRect.top -= run.underlineThickness;
+                    if (clipRect != null) {
+                        clipRect.top -= run.underlineThickness;
+                    }
 				}
 				int bottom = style.underlineStyle == SWT.UNDERLINE_DOUBLE ? rect.bottom + run.underlineThickness * 2 : rect.bottom;
 				if (bottom > lineBottom) {
 					OS.OffsetRect(rect, 0, lineBottom - bottom);
-					if (clipRect != null) OS.OffsetRect(clipRect, 0, lineBottom - bottom);
+                    if (clipRect != null) {
+                        OS.OffsetRect(clipRect, 0, lineBottom - bottom);
+                    }
 				}
 				long brush = OS.CreateSolidBrush(color);
 				OS.FillRect(hdc, rect, brush);
@@ -1579,8 +1707,12 @@ RECT drawUnderline(GC gc, long hdc, int x, int baselineInPixels, int lineUnderli
 RECT drawUnderlineGDIP (GC gc, long graphics, int x, int baselineInPixels, int lineUnderlinePos, int lineBottom, StyleItem[] line, int index, long color, long selectionColor, RECT clipRect, RECT pRect, int selectionStart, int selectionEnd, int alpha, Rectangle drawClip) {
 	StyleItem run = line[index];
 	TextStyle style = run.style;
-	if (style == null) return null;
-	if (!style.underline) return null;
+    if (style == null) {
+        return null;
+    }
+    if (!style.underline) {
+        return null;
+    }
 	clipRect = addClipRect(run, clipRect, pRect, selectionStart, selectionEnd);
 	boolean lastRunVisible = drawClip != null && (x + run.x + run.width) > (drawClip.x + drawClip.width);
 	if (index + 1 >= line.length || lastRunVisible || line[index + 1].lineBreak || !style.isAdherentUnderline(line[index + 1].style)) {
@@ -1613,8 +1745,12 @@ RECT drawUnderlineGDIP (GC gc, long graphics, int x, int baselineInPixels, int l
 		OS.SetRect(rect, x + left, baselineInPixels - lineUnderlinePos - riseInPixels, x + run.x + run.width, baselineInPixels - lineUnderlinePos + run.underlineThickness - riseInPixels);
 		Rect gdipRect = null;
 		if (clipRect != null) {
-			if (clipRect.left == -1) clipRect.left = 0;
-			if (clipRect.right == -1) clipRect.right = 0x7ffff;
+            if (clipRect.left == -1) {
+                clipRect.left = 0;
+            }
+            if (clipRect.right == -1) {
+                clipRect.right = 0x7ffff;
+            }
 			OS.SetRect(clipRect, Math.max(rect.left, clipRect.left), rect.top, Math.min(rect.right, clipRect.right), rect.bottom);
 			gdipRect = new Rect();
 			gdipRect.X = clipRect.left;
@@ -1656,7 +1792,9 @@ RECT drawUnderlineGDIP (GC gc, long graphics, int x, int baselineInPixels, int l
 				}
 				Gdip.Graphics_Restore(graphics, gstate);
 				Gdip.Pen_delete(pen);
-				if (gstate != 0) Gdip.Graphics_Restore(graphics, gstate);
+                if (gstate != 0) {
+                    Gdip.Graphics_Restore(graphics, gstate);
+                }
 				break;
 			}
 			case SWT.UNDERLINE_SINGLE:
@@ -1721,7 +1859,9 @@ RECT drawUnderlineGDIP (GC gc, long graphics, int x, int baselineInPixels, int l
 				break;
 			}
 		}
-		if (brush != selectionColor && brush != color) Gdip.SolidBrush_delete(brush);
+        if (brush != selectionColor && brush != color) {
+            Gdip.SolidBrush_delete(brush);
+        }
 		Gdip.Graphics_SetPixelOffsetMode(graphics, Gdip.PixelOffsetModeHalf);
 		Gdip.Graphics_SetSmoothingMode(graphics, smoothingMode);
 		return null;
@@ -1730,7 +1870,9 @@ RECT drawUnderlineGDIP (GC gc, long graphics, int x, int baselineInPixels, int l
 }
 
 void freeRuns () {
-	if (allRuns == null) return;
+    if (allRuns == null) {
+        return;
+    }
 	for (StyleItem run : allRuns) {
 		run.free();
 	}
@@ -1824,8 +1966,12 @@ public Rectangle getBounds (int start, int end) {
 Rectangle getBoundsInPixels (int start, int end) {
 	computeRuns(null);
 	int length = text.length();
-	if (length == 0) return new Rectangle(0, 0, 0, 0);
-	if (start > end) return new Rectangle(0, 0, 0, 0);
+    if (length == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
+    if (start > end) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	start = Math.min(Math.max(0, start), length - 1);
 	end = Math.min(Math.max(0, end), length - 1);
 	start = translateOffset(start);
@@ -1856,8 +2002,12 @@ Rectangle getBoundsInPixels (int start, int end) {
 	for (int i = 0; i < allRuns.length - 1; i++) {
 		StyleItem run = allRuns[i];
 		int runEnd = run.start + run.length;
-		if (runEnd <= start) continue;
-		if (run.start > end) break;
+        if (runEnd <= start) {
+            continue;
+        }
+        if (run.start > end) {
+            break;
+        }
 		int runLead = run.x;
 		int runTrail = run.x + run.width;
 		if (run.start <= start && start < runEnd) {
@@ -1969,7 +2119,9 @@ public boolean getJustify () {
 }
 
 long getItemFont (StyleItem item, GC gc) {
-	if (item.fallbackFont != 0) return item.fallbackFont;
+    if (item.fallbackFont != 0) {
+        return item.fallbackFont;
+    }
 	final int zoom = getNativeZoom(gc);
 	if (item.style != null && item.style.font != null) {
 		return SWTFontProvider.getFontHandle(item.style.font, zoom);
@@ -1998,7 +2150,9 @@ public int getLevel (int offset) {
 	checkLayout();
 	computeRuns(null);
 	int length = text.length();
-	if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= offset && offset <= length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	offset = translateOffset(offset);
 	for (int i=1; i<allRuns.length; i++) {
 		if (allRuns[i].start > offset) {
@@ -2028,7 +2182,9 @@ public Rectangle getLineBounds (int lineIndex) {
 
 Rectangle getLineBoundsInPixels(int lineIndex) {
 	computeRuns(null);
-	if (!(0 <= lineIndex && lineIndex < runs.length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= lineIndex && lineIndex < runs.length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	int x = getLineIndentInPixel(lineIndex);
 	int y = Win32DPIUtils.pointToPixel(getDevice(), lineY[lineIndex], getZoom());
 	int width = lineWidthInPixels[lineIndex];
@@ -2104,7 +2260,9 @@ public int getLineIndex (int offset) {
 	checkLayout();
 	computeRuns(null);
 	int length = text.length();
-	if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= offset && offset <= length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	offset = translateOffset(offset);
 	for (int line=0; line<runs.length; line++) {
 		if (lineOffset[line + 1] > offset) {
@@ -2130,7 +2288,9 @@ public int getLineIndex (int offset) {
 public FontMetrics getLineMetrics (int lineIndex) {
 	checkLayout();
 	computeRuns(null);
-	if (!(0 <= lineIndex && lineIndex < runs.length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= lineIndex && lineIndex < runs.length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	long hDC = device.internal_new_GC(null);
 	long srcHdc = OS.CreateCompatibleDC(hDC);
 	TEXTMETRIC lptm = new TEXTMETRIC();
@@ -2205,12 +2365,16 @@ public Point getLocation (int offset, boolean trailing) {
 Point getLocationInPixels (int offset, boolean trailing) {
 	computeRuns(null);
 	int length = text.length();
-	if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= offset && offset <= length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	length = segmentsText.length();
 	offset = translateOffset(offset);
 	int line;
 	for (line=0; line<runs.length; line++) {
-		if (lineOffset[line + 1] > offset) break;
+        if (lineOffset[line + 1] > offset) {
+            break;
+        }
 	}
 	line = Math.min(line, runs.length - 1);
 	if (offset == length) {
@@ -2309,11 +2473,19 @@ public int getNextOffset (int offset, int movement) {
 int _getOffset(int offset, int movement, boolean forward) {
 	computeRuns(null);
 	int length = text.length();
-	if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE, null, " [offset value: " + offset + "]");//$NON-NLS-1$ $NON-NLS-2$
-	if (forward && offset == length) return length;
-	if (!forward && offset == 0) return 0;
+    if (!(0 <= offset && offset <= length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE, null, " [offset value: " + offset + "]");
+    }//$NON-NLS-1$ $NON-NLS-2$
+    if (forward && offset == length) {
+        return length;
+    }
+    if (!forward && offset == 0) {
+        return 0;
+    }
 	int step = forward ? 1 : -1;
-	if ((movement & SWT.MOVEMENT_CHAR) != 0) return offset + step;
+    if ((movement & SWT.MOVEMENT_CHAR) != 0) {
+        return offset + step;
+    }
 	length = segmentsText.length();
 	offset = translateOffset(offset);
 	SCRIPT_LOGATTR logAttr = new SCRIPT_LOGATTR();
@@ -2323,11 +2495,17 @@ int _getOffset(int offset, int movement, boolean forward) {
 	do {
 		StyleItem run = allRuns[i];
 		if (run.start <= offset && offset < run.start + run.length) {
-			if (run.lineBreak && !run.softBreak) return untranslateOffset(run.start);
-			if (run.tab) return untranslateOffset(run.start);
+            if (run.lineBreak && !run.softBreak) {
+                return untranslateOffset(run.start);
+            }
+            if (run.tab) {
+                return untranslateOffset(run.start);
+            }
 			OS.MoveMemory(properties, device.scripts[run.analysis.eScript], SCRIPT_PROPERTIES.sizeof);
 			boolean isComplex = properties.fNeedsCaretInfo || properties.fNeedsWordBreaking;
-			if (isComplex) breakRun(run);
+            if (isComplex) {
+                breakRun(run);
+            }
 			while (run.start <= offset && offset < run.start + run.length) {
 				if (isComplex) {
 					OS.MoveMemory(logAttr, run.psla + ((offset - run.start) * SCRIPT_LOGATTR.sizeof), SCRIPT_LOGATTR.sizeof);
@@ -2351,7 +2529,9 @@ int _getOffset(int offset, int movement, boolean forward) {
 					case SWT.MOVEMENT_WORD_START:
 					case SWT.MOVEMENT_WORD: {
 						if (properties.fNeedsWordBreaking) {
-							if (!logAttr.fInvalid && logAttr.fWordStop) return untranslateOffset(offset);
+                            if (!logAttr.fInvalid && logAttr.fWordStop) {
+                                return untranslateOffset(offset);
+                            }
 						} else {
 							if (offset > 0) {
 								boolean letterOrDigit = Character.isLetterOrDigit(segmentsText.charAt(offset));
@@ -2409,7 +2589,9 @@ int _getOffset(int offset, int movement, boolean forward) {
  */
 public int getOffset (Point point, int[] trailing) {
 	checkLayout();
-	if (point == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);	return getOffsetInPixels(Win32DPIUtils.pointToPixelAsLocation(getDevice(), point, getZoom()), trailing);
+    if (point == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }	return getOffsetInPixels(Win32DPIUtils.pointToPixelAsLocation(getDevice(), point, getZoom()), trailing);
 }
 
 int getOffsetInPixels (Point point, int[] trailing) {
@@ -2446,17 +2628,25 @@ public int getOffset (int x, int y, int[] trailing) {
 
 int getOffsetInPixels (int x, int y, int[] trailing) {
 	computeRuns(null);
-	if (trailing != null && trailing.length < 1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (trailing != null && trailing.length < 1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int line;
 	int lineCount = runs.length;
 	for (line=0; line<lineCount; line++) {
-		if (Win32DPIUtils.pointToPixel(getDevice(), lineY[line + 1], getZoom()) > y) break;
+        if (Win32DPIUtils.pointToPixel(getDevice(), lineY[line + 1], getZoom()) > y) {
+            break;
+        }
 	}
 	line = Math.min(line, runs.length - 1);
 	StyleItem[] lineRuns = runs[line];
 	int lineIndent = getLineIndentInPixel(line);
-	if (x >= lineIndent + lineWidthInPixels[line]) x = lineIndent + lineWidthInPixels[line] - 1;
-	if (x < lineIndent) x = lineIndent;
+    if (x >= lineIndent + lineWidthInPixels[line]) {
+        x = lineIndent + lineWidthInPixels[line] - 1;
+    }
+    if (x < lineIndent) {
+        x = lineIndent;
+    }
 	int low = -1;
 	int high = lineRuns.length;
 	while (high - low > 1) {
@@ -2467,7 +2657,9 @@ int getOffsetInPixels (int x, int y, int[] trailing) {
 		} else if (run.x + run.width <= x) {
 			low = index;
 		} else {
-			if (run.lineBreak && !run.softBreak) return untranslateOffset(run.start);
+            if (run.lineBreak && !run.softBreak) {
+                return untranslateOffset(run.start);
+            }
 			int xRun = x - run.x;
 			if (run.style != null && run.style.metrics != null) {
 				GlyphMetrics metrics = run.style.metrics;
@@ -2480,7 +2672,9 @@ int getOffsetInPixels (int x, int y, int[] trailing) {
 				}
 			}
 			if (run.tab) {
-				if (trailing != null) trailing[0] = x < (run.x + run.width / 2) ? 0 : 1;
+                if (trailing != null) {
+                    trailing[0] = x < (run.x + run.width / 2) ? 0 : 1;
+                }
 				return untranslateOffset(run.start);
 			}
 			int cChars = run.length;
@@ -2499,7 +2693,9 @@ int getOffsetInPixels (int x, int y, int[] trailing) {
 				if (offset + 1 < length) {
 					ch = segmentsText.charAt(offset + 1);
 					if (0xDC00 <= ch && ch <= 0xDFFF) {
-						if (trailing != null) trailing[0] = 0;
+                        if (trailing != null) {
+                            trailing[0] = 0;
+                        }
 					}
 				}
 			} else if (0xDC00 <= ch && ch <= 0xDFFF && piTrailing[0] <= 1) {
@@ -2507,19 +2703,27 @@ int getOffsetInPixels (int x, int y, int[] trailing) {
 					ch = segmentsText.charAt(offset - 1);
 					if (0xD800 <= ch && ch <= 0xDBFF) {
 						offset--;
-						if (trailing != null) trailing[0] = 2;
+                        if (trailing != null) {
+                            trailing[0] = 2;
+                        }
 					}
 				}
 			} else {
-				if (trailing != null) trailing[0] = piTrailing[0];
+                if (trailing != null) {
+                    trailing[0] = piTrailing[0];
+                }
 			}
 			return untranslateOffset(offset);
 		}
 	}
-	if (trailing != null) trailing[0] = 0;
+    if (trailing != null) {
+        trailing[0] = 0;
+    }
 	if (lineRuns.length == 1) {
 		StyleItem run = lineRuns[0];
-		if (run.lineBreak && !run.softBreak) return untranslateOffset(run.start);
+        if (run.lineBreak && !run.softBreak) {
+            return untranslateOffset(run.start);
+        }
 	}
 	return untranslateOffset(lineOffset[line + 1]);
 }
@@ -2639,14 +2843,24 @@ public char[] getSegmentsChars () {
 
 String getSegmentsText() {
 	int length = text.length();
-	if (length == 0) return text;
-	if (segments == null) return text;
+    if (length == 0) {
+        return text;
+    }
+    if (segments == null) {
+        return text;
+    }
 	int nSegments = segments.length;
-	if (nSegments == 0) return text;
+    if (nSegments == 0) {
+        return text;
+    }
 	if (segmentsChars == null) {
-		if (nSegments == 1) return text;
+        if (nSegments == 1) {
+            return text;
+        }
 		if (nSegments == 2) {
-			if (segments[0] == 0 && segments[1] == length) return text;
+            if (segments[0] == 0 && segments[1] == length) {
+                return text;
+            }
 		}
 	}
 	char[] oldChars = new char[length];
@@ -2728,7 +2942,9 @@ private int getScaledVerticalIndent() {
 public TextStyle getStyle (int offset) {
 	checkLayout();
 	int length = text.length();
-	if (!(0 <= offset && offset < length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= offset && offset < length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	for (int i=1; i<stylesCount; i++) {
 		if (styles[i].start > offset) {
 			return styles[i - 1].style;
@@ -2880,7 +3096,9 @@ StyleItem[] itemize () {
 	// and https://bugzilla.mozilla.org/show_bug.cgi?id=366643 which was a similar bug
 	// in Mozilla. The MSDN docs have been updated since the Mozilla bug to make this clear
 	long pItems = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, (1 + MAX_ITEM) * SCRIPT_ITEM.sizeof);
-	if (pItems == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (pItems == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	int[] pcItems = new int[1];
 	char[] chars = new char[length];
 	segmentsText.getChars(0, length, chars, 0);
@@ -2989,12 +3207,20 @@ StyleItem[] merge (long items, int itemCount) {
 					OS.MoveMemory(sp, device.scripts[item.analysis.eScript], SCRIPT_PROPERTIES.sizeof);
 					if (!sp.fComplex || item.tab) {
 						for (int i = 0; i < MERGE_MAX; i++) {
-							if (nextItemIndex == itemCount) break;
+                            if (nextItemIndex == itemCount) {
+                                break;
+                            }
 							char c = segmentsText.charAt(itemLimit);
-							if (c == '\n' || c == '\r') break;
-							if (c == '\t' != item.tab) break;
+                            if (c == '\n' || c == '\r') {
+                                break;
+                            }
+                            if (c == '\t' != item.tab) {
+                                break;
+                            }
 							OS.MoveMemory(sp, device.scripts[scriptItem.a.eScript], SCRIPT_PROPERTIES.sizeof);
-							if (!item.tab && sp.fComplex) break;
+                            if (!item.tab && sp.fComplex) {
+                                break;
+                            }
 							nextItemIndex++;
 							OS.MoveMemory(scriptItem, items + nextItemIndex * SCRIPT_ITEM.sizeof, SCRIPT_ITEM.sizeof);
 							itemLimit = scriptItem.iCharPos;
@@ -3089,7 +3315,9 @@ int resolveTextDirection () {
  */
 StyleItem[] reorder (StyleItem[] runs, boolean terminate) {
 	int length = runs.length;
-	if (length <= 1) return runs;
+    if (length <= 1) {
+        return runs;
+    }
 	byte[] bidiLevels = new byte[length];
 	for (int i=0; i<length; i++) {
 		bidiLevels[i] = (byte)(runs[i].analysis.s.uBidiLevel & 0x1F);
@@ -3111,7 +3339,9 @@ StyleItem[] reorder (StyleItem[] runs, boolean terminate) {
 		result[log2vis[i]] = runs[i];
 	}
 	if ((orientation & SWT.RIGHT_TO_LEFT) != 0) {
-		if (terminate) length--;
+        if (terminate) {
+            length--;
+        }
 		for (int i = 0; i < length / 2 ; i++) {
 			StyleItem tmp = result[i];
 			result[i] = result[length - i - 1];
@@ -3143,10 +3373,18 @@ public void setAlignment (int alignment) {
 	checkLayout();
 	int mask = SWT.LEFT | SWT.CENTER | SWT.RIGHT;
 	alignment &= mask;
-	if (alignment == 0) return;
-	if ((alignment & SWT.LEFT) != 0) alignment = SWT.LEFT;
-	if ((alignment & SWT.RIGHT) != 0) alignment = SWT.RIGHT;
-	if (this.alignment == alignment) return;
+    if (alignment == 0) {
+        return;
+    }
+    if ((alignment & SWT.LEFT) != 0) {
+        alignment = SWT.LEFT;
+    }
+    if ((alignment & SWT.RIGHT) != 0) {
+        alignment = SWT.RIGHT;
+    }
+    if (this.alignment == alignment) {
+        return;
+    }
 	freeRuns();
 	this.alignment = alignment;
 }
@@ -3171,8 +3409,12 @@ public void setAlignment (int alignment) {
  */
 public void setAscent (int ascent) {
 	checkLayout();
-	if (ascent < -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.ascent == ascent) return;
+    if (ascent < -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.ascent == ascent) {
+        return;
+    }
 	freeRuns();
 	this.ascent = ascent;
 }
@@ -3197,8 +3439,12 @@ public void setAscent (int ascent) {
  */
 public void setDescent (int descent) {
 	checkLayout();
-	if (descent < -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.descent == descent) return;
+    if (descent < -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.descent == descent) {
+        return;
+    }
 	freeRuns();
 	this.descent = descent;
 }
@@ -3254,12 +3500,18 @@ public void setFixedLineMetrics (FontMetrics metrics) {
  */
 public void setFont (Font font) {
 	checkLayout();
-	if (font != null && font.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (font != null && font.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Font oldFont = this.font;
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	this.font = font;
 	this.nativeZoom = this.font == null ? nativeZoom : this.font.zoom;
-	if (oldFont != null && oldFont.equals(font)) return;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
 	freeRuns();
 }
 
@@ -3279,8 +3531,12 @@ public void setFont (Font font) {
  */
 public void setIndent (int indent) {
 	checkLayout();
-	if (indent < 0) return;
-	if (this.indent == indent) return;
+    if (indent < 0) {
+        return;
+    }
+    if (this.indent == indent) {
+        return;
+    }
 	freeRuns();
 	this.indent = indent;
 }
@@ -3299,7 +3555,9 @@ public void setIndent (int indent) {
  */
 public void setJustify (boolean justify) {
 	checkLayout();
-	if (this.justify == justify) return;
+    if (this.justify == justify) {
+        return;
+    }
 	freeRuns();
 	this.justify = justify;
 }
@@ -3318,9 +3576,15 @@ public void setOrientation (int orientation) {
 	checkLayout();
 	int mask = SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
 	orientation &= mask;
-	if (orientation == 0) return;
-	if ((orientation & SWT.LEFT_TO_RIGHT) != 0) orientation = SWT.LEFT_TO_RIGHT;
-	if (this.orientation == orientation) return;
+    if (orientation == 0) {
+        return;
+    }
+    if ((orientation & SWT.LEFT_TO_RIGHT) != 0) {
+        orientation = SWT.LEFT_TO_RIGHT;
+    }
+    if (this.orientation == orientation) {
+        return;
+    }
 	textDirection = this.orientation = orientation;
 	freeRuns();
 }
@@ -3351,14 +3615,20 @@ public void setOrientation (int orientation) {
  */
 public void setSegments(int[] segments) {
 	checkLayout();
-	if (this.segments == null && segments == null) return;
+    if (this.segments == null && segments == null) {
+        return;
+    }
 	if (this.segments != null && segments != null) {
 		if (this.segments.length == segments.length) {
 			int i;
 			for (i = 0; i <segments.length; i++) {
-				if (this.segments[i] != segments[i]) break;
+                if (this.segments[i] != segments[i]) {
+                    break;
+                }
 			}
-			if (i == segments.length) return;
+            if (i == segments.length) {
+                return;
+            }
 		}
 	}
 	freeRuns();
@@ -3384,14 +3654,20 @@ public void setSegments(int[] segments) {
  */
 public void setSegmentsChars(char[] segmentsChars) {
 	checkLayout();
-	if (this.segmentsChars == null && segmentsChars == null) return;
+    if (this.segmentsChars == null && segmentsChars == null) {
+        return;
+    }
 	if (this.segmentsChars != null && segmentsChars != null) {
 		if (this.segmentsChars.length == segmentsChars.length) {
 			int i;
 			for (i = 0; i <segmentsChars.length; i++) {
-				if (this.segmentsChars[i] != segmentsChars[i]) break;
+                if (this.segmentsChars[i] != segmentsChars[i]) {
+                    break;
+                }
 			}
-			if (i == segmentsChars.length) return;
+            if (i == segmentsChars.length) {
+                return;
+            }
 		}
 	}
 	freeRuns();
@@ -3413,8 +3689,12 @@ public void setSegmentsChars(char[] segmentsChars) {
  */
 public void setSpacing (int spacing) {
 	checkLayout();
-	if (spacing < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.lineSpacingInPoints == spacing) return;
+    if (spacing < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.lineSpacingInPoints == spacing) {
+        return;
+    }
 	freeRuns();
 	this.lineSpacingInPoints = spacing;
 }
@@ -3435,8 +3715,12 @@ public void setSpacing (int spacing) {
  */
 public void setVerticalIndent (int verticalIndent) {
 	checkLayout();
-	if (verticalIndent < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.verticalIndentInPoints == verticalIndent) return;
+    if (verticalIndent < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.verticalIndentInPoints == verticalIndent) {
+        return;
+    }
 	this.verticalIndentInPoints = verticalIndent;
 }
 
@@ -3456,8 +3740,12 @@ public void setVerticalIndent (int verticalIndent) {
 public void setStyle (TextStyle style, int start, int end) {
 	checkLayout();
 	int length = text.length();
-	if (length == 0) return;
-	if (start > end) return;
+    if (length == 0) {
+        return;
+    }
+    if (start > end) {
+        return;
+    }
 	start = Math.min(Math.max(0, start), length - 1);
 	end = Math.min(Math.max(0, end), length - 1);
 	int low = -1;
@@ -3474,9 +3762,13 @@ public void setStyle (TextStyle style, int start, int end) {
 		StyleItem item = styles[high];
 		if (item.start == start && styles[high + 1].start - 1 == end) {
 			if (style == null) {
-				if (item.style == null) return;
+                if (item.style == null) {
+                    return;
+                }
 			} else {
-				if (style.equals(item.style)) return;
+                if (style.equals(item.style)) {
+                    return;
+                }
 			}
 		}
 	}
@@ -3484,7 +3776,9 @@ public void setStyle (TextStyle style, int start, int end) {
 	int modifyStart = high;
 	int modifyEnd = modifyStart;
 	while (modifyEnd < stylesCount) {
-		if (styles[modifyEnd + 1].start > end) break;
+        if (styles[modifyEnd + 1].start > end) {
+            break;
+        }
 		modifyEnd++;
 	}
 	if (modifyStart == modifyEnd) {
@@ -3515,8 +3809,12 @@ public void setStyle (TextStyle style, int start, int end) {
 			return;
 		}
 	}
-	if (start == styles[modifyStart].start) modifyStart--;
-	if (end == styles[modifyEnd + 1].start - 1) modifyEnd++;
+    if (start == styles[modifyStart].start) {
+        modifyStart--;
+    }
+    if (end == styles[modifyEnd + 1].start - 1) {
+        modifyEnd++;
+    }
 	int newLength = stylesCount + 1 - (modifyEnd - modifyStart - 1);
 	if (newLength > styles.length) {
 		int newSize = Math.min(newLength + 1024, Math.max(64, newLength * 2));
@@ -3546,8 +3844,12 @@ public void setStyle (TextStyle style, int start, int end) {
  */
 public void setTabs (int[] tabs) {
 	checkLayout();
-	if (this.tabs == null && tabs == null) return;
-	if (Arrays.equals (this.tabs, tabs)) return;
+    if (this.tabs == null && tabs == null) {
+        return;
+    }
+    if (Arrays.equals(this.tabs, tabs)) {
+        return;
+    }
 	freeRuns();
 	this.tabs = tabs;
 }
@@ -3571,8 +3873,12 @@ public void setTabs (int[] tabs) {
  */
 public void setText (String text) {
 	checkLayout();
-	if (text == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (text.equals(this.text)) return;
+    if (text == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (text.equals(this.text)) {
+        return;
+    }
 	freeRuns();
 	this.text = text;
 	styles = new StyleItem[2];
@@ -3603,10 +3909,16 @@ public void setTextDirection (int textDirection) {
 	checkLayout();
 	int mask = SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
 	textDirection &= mask;
-	if (textDirection == 0) return;
+    if (textDirection == 0) {
+        return;
+    }
 	if (textDirection != SWT.AUTO_TEXT_DIRECTION) {
-		if ((textDirection & SWT.LEFT_TO_RIGHT) != 0) textDirection = SWT.LEFT_TO_RIGHT;
-		if (this.textDirection == textDirection) return;
+        if ((textDirection & SWT.LEFT_TO_RIGHT) != 0) {
+            textDirection = SWT.LEFT_TO_RIGHT;
+        }
+        if (this.textDirection == textDirection) {
+            return;
+        }
 	}
 	this.textDirection = textDirection;
 	freeRuns();
@@ -3630,8 +3942,12 @@ public void setTextDirection (int textDirection) {
  */
 public void setWidth (int width) {
 	checkLayout();
-	if (width < -1 || width == 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.wrapWidth == width) return;
+    if (width < -1 || width == 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.wrapWidth == width) {
+        return;
+    }
 	freeRuns();
 	this.wrapWidth = width;
 }
@@ -3652,8 +3968,12 @@ public void setWidth (int width) {
  */
 public void setWrapIndent (int wrapIndent) {
 	checkLayout();
-	if (wrapIndent < 0) return;
-	if (this.wrapIndent == wrapIndent) return;
+    if (wrapIndent < 0) {
+        return;
+    }
+    if (this.wrapIndent == wrapIndent) {
+        return;
+    }
 	freeRuns();
 	this.wrapIndent = wrapIndent;
 }
@@ -3675,15 +3995,19 @@ boolean shape (long hdc, StyleItem run, char[] chars, int[] glyphCount, int maxG
 			run.clusters, run.visAttrs, glyphCount);
 	if (scriptShaprHr == OS.S_OK) {
 		run.glyphCount = glyphCount[0];
-		if (useCMAPcheck) return true;
+        if (useCMAPcheck) {
+            return true;
+        }
 
-		/*
-		 * scriptShapeHr could have been OS.USP_E_SCRIPT_NOT_IN_FONT which indicates
-		 * the whole run doesn't work with the font. The rest of this method verifies that
-		 * none of the individual glyphs are missing an entry in the font.
-		 * The fallback is to try other fonts (See caller)
-		 */
-		if (run.analysis.fNoGlyphIndex) return true;
+        /*
+         * scriptShapeHr could have been OS.USP_E_SCRIPT_NOT_IN_FONT which indicates
+         * the whole run doesn't work with the font. The rest of this method verifies that
+         * none of the individual glyphs are missing an entry in the font.
+         * The fallback is to try other fonts (See caller)
+         */
+        if (run.analysis.fNoGlyphIndex) {
+            return true;
+        }
 		SCRIPT_FONTPROPERTIES fp = new SCRIPT_FONTPROPERTIES ();
 		fp.cBytes = SCRIPT_FONTPROPERTIES.sizeof;
 		OS.ScriptGetFontProperties(hdc, run.psc, fp);
@@ -3691,9 +4015,13 @@ boolean shape (long hdc, StyleItem run, char[] chars, int[] glyphCount, int maxG
 		OS.MoveMemory(glyphs, run.glyphs, glyphs.length * 2);
 		int i;
 		for (i = 0; i < glyphs.length; i++) {
-			if (glyphs[i] == fp.wgDefault) break;
+            if (glyphs[i] == fp.wgDefault) {
+                break;
+            }
 		}
-		if (i == glyphs.length) return true;
+        if (i == glyphs.length) {
+            return true;
+        }
 	}
 	if (run.psc != 0) {
 		OS.ScriptFreeCache(run.psc);
@@ -3738,8 +4066,12 @@ long createMetafileWithChars(long hdc, long hFont, char[] chars, int charCount) 
  * Generate glyphs for one Run.
  */
 void shape (GC  gc, final long hdc, final StyleItem run) {
-	if (run.lineBreak) return;
-	if (run.glyphs != 0) return;
+    if (run.lineBreak) {
+        return;
+    }
+    if (run.glyphs != 0) {
+        return;
+    }
 	final int[] buffer = new int[1];
 	final char[] chars = new char[run.length];
 	segmentsText.getChars(run.start, run.start + run.length, chars, 0);
@@ -3747,13 +4079,21 @@ void shape (GC  gc, final long hdc, final StyleItem run) {
 	final int maxGlyphs = (chars.length * 3 / 2) + 16;
 	long hHeap = OS.GetProcessHeap();
 	run.glyphs = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, maxGlyphs * 2);
-	if (run.glyphs == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (run.glyphs == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	run.clusters = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, maxGlyphs * 2);
-	if (run.clusters == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (run.clusters == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	run.visAttrs = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, maxGlyphs * SCRIPT_VISATTR_SIZEOF);
-	if (run.visAttrs == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (run.visAttrs == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	run.psc = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, C.PTR_SIZEOF);
-	if (run.psc == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (run.psc == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	final short script = run.analysis.eScript;
 	final SCRIPT_PROPERTIES sp = new SCRIPT_PROPERTIES();
 	OS.MoveMemory(sp, device.scripts[script], SCRIPT_PROPERTIES.sizeof);
@@ -3781,7 +4121,9 @@ void shape (GC  gc, final long hdc, final StyleItem run) {
 			OS.MoveMemory(logAttr, run.psla + (i * SCRIPT_LOGATTR.sizeof), SCRIPT_LOGATTR.sizeof);
 			if (!logAttr.fWhiteSpace) {
 				sampleChars[count++] = chars[i];
-				if (count == sampleChars.length) break;
+                if (count == sampleChars.length) {
+                    break;
+                }
 			}
 		}
 		if (count > 0) {
@@ -3803,7 +4145,9 @@ void shape (GC  gc, final long hdc, final StyleItem run) {
 			MetaFileEnumProc object = new MetaFileEnumProc();
 			/* Avoid compiler warnings */
 			boolean compilerWarningWorkaround = false;
-			if (compilerWarningWorkaround) object.metaFileEnumProc(0, 0, 0, 0, 0);
+            if (compilerWarningWorkaround) {
+                object.metaFileEnumProc(0, 0, 0, 0, 0);
+            }
 			Callback callback = new Callback(object, "metaFileEnumProc", 5);
 			OS.EnumEnhMetaFile(0, metaFile, callback.getAddress(), 0, null);
 			OS.DeleteEnhMetaFile(metaFile);
@@ -3882,8 +4226,12 @@ void shape (GC  gc, final long hdc, final StyleItem run) {
 				}
 			}
 		}
-		if (!shapeSucceed) OS.SelectObject(hdc, hFont);
-		if (newFont != 0 && newFont != run.fallbackFont) OS.DeleteObject(newFont);
+        if (!shapeSucceed) {
+            OS.SelectObject(hdc, hFont);
+        }
+        if (newFont != 0 && newFont != run.fallbackFont) {
+            OS.DeleteObject(newFont);
+        }
 	}
 
 	if (!shapeSucceed) {
@@ -3897,9 +4245,13 @@ void shape (GC  gc, final long hdc, final StyleItem run) {
 	}
 	int[] abc = new int[3];
 	run.advances = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, run.glyphCount * 4);
-	if (run.advances == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (run.advances == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	run.goffsets = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, run.glyphCount * GOFFSET_SIZEOF);
-	if (run.goffsets == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (run.goffsets == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.ScriptPlace(hdc, run.psc, run.glyphs, run.glyphCount, run.visAttrs, run.analysis, run.advances, run.goffsets, abc);
 	run.width = abc[0] + abc[1] + abc[2];
 	TextStyle style = run.style;
@@ -3969,20 +4321,32 @@ int validadeOffset(int offset, int step) {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "TextLayout {*DISPOSED*}";
+    if (isDisposed()) {
+        return "TextLayout {*DISPOSED*}";
+    }
 	return "TextLayout {}";
 }
 
 int translateOffset(int offset) {
 	int length = text.length();
-	if (length == 0) return offset;
-	if (segments == null) return offset;
+    if (length == 0) {
+        return offset;
+    }
+    if (segments == null) {
+        return offset;
+    }
 	int nSegments = segments.length;
-	if (nSegments == 0) return offset;
+    if (nSegments == 0) {
+        return offset;
+    }
 	if (segmentsChars == null) {
-		if (nSegments == 1) return offset;
+        if (nSegments == 1) {
+            return offset;
+        }
 		if (nSegments == 2) {
-			if (segments[0] == 0 && segments[1] == length) return offset;
+            if (segments[0] == 0 && segments[1] == length) {
+                return offset;
+            }
 		}
 	}
 	for (int i = 0; i < nSegments && offset - i >= segments[i]; i++) {
@@ -3993,14 +4357,24 @@ int translateOffset(int offset) {
 
 int untranslateOffset(int offset) {
 	int length = text.length();
-	if (length == 0) return offset;
-	if (segments == null) return offset;
+    if (length == 0) {
+        return offset;
+    }
+    if (segments == null) {
+        return offset;
+    }
 	int nSegments = segments.length;
-	if (nSegments == 0) return offset;
+    if (nSegments == 0) {
+        return offset;
+    }
 	if (segmentsChars == null) {
-		if (nSegments == 1) return offset;
+        if (nSegments == 1) {
+            return offset;
+        }
 		if (nSegments == 2) {
-			if (segments[0] == 0 && segments[1] == length) return offset;
+            if (segments[0] == 0 && segments[1] == length) {
+                return offset;
+            }
 		}
 	}
 	for (int i = 0; i < nSegments && offset > segments[i]; i++) {

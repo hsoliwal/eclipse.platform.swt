@@ -91,11 +91,15 @@ public class WormholeTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (wormTexture == null) {
 			Image loaded = example.loadImage(gc.getDevice(), "texture.png"); //$NON-NLS-1$
-			if (loaded == null) return;
+            if (loaded == null) {
+                return;
+            }
 			ImageData texImage = loaded.getImageData();
 
 			imageData = new ImageData(RENDER_WIDTH, RENDER_HEIGHT, texImage.depth, texImage.palette);
@@ -110,7 +114,9 @@ public class WormholeTab extends AnimatedGraphicsTab {
 			initSpokes();
 		}
 
-		if (imageData == null) return;
+        if (imageData == null) {
+            return;
+        }
 
 		if (outputImage != null) {
 			outputImage.dispose();

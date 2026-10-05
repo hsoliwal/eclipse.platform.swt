@@ -129,15 +129,17 @@ public class ControlExample {
 	 * instance of the ControlExample.
 	 */
 	public void dispose() {
-		/*
-		 * Destroy any shells that may have been created
-		 * by the Shells tab.  When a shell is disposed,
-		 * all child shells are also disposed.  Therefore
-		 * it is necessary to check for disposed shells
-		 * in the shells list to avoid disposing a shell
-		 * twice.
-		 */
-		if (shellTab != null) shellTab.closeAllShells ();
+        /*
+         * Destroy any shells that may have been created
+         * by the Shells tab.  When a shell is disposed,
+         * all child shells are also disposed.  Therefore
+         * it is necessary to check for disposed shells
+         * in the shells list to avoid disposing a shell
+         * twice.
+         */
+        if (shellTab != null) {
+            shellTab.closeAllShells();
+        }
 		shellTab = null;
 		tabFolder = null;
 		freeResources();
@@ -149,7 +151,9 @@ public class ControlExample {
 	void freeResources() {
 		if (images != null) {
 			for (Image image : images) {
-				if (image != null) image.dispose();
+                if (image != null) {
+                    image.dispose();
+                }
 			}
 			images = null;
 		}
@@ -225,7 +229,9 @@ public class ControlExample {
 		setShellSize(shell);
 		shell.open();
 		while (! shell.isDisposed()) {
-			if (! display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		instance.dispose();
 		display.dispose();

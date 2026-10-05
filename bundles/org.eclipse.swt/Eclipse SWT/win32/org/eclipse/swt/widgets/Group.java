@@ -107,7 +107,9 @@ public Group (Composite parent, int style) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	/*
 	* Feature in Windows.  When the user clicks on the group
 	* box label, the group box takes focus.  This is unwanted.
@@ -127,7 +129,9 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -146,11 +150,15 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		long newFont, oldFont = 0;
 		long hDC = OS.GetDC (handle);
 		newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-		if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+        if (newFont != 0) {
+            oldFont = OS.SelectObject(hDC, newFont);
+        }
 		RECT rect = new RECT ();
 		int flags = OS.DT_CALCRECT | OS.DT_SINGLELINE;
 		OS.DrawText (hDC, buffer, buffer.length, rect, flags);
-		if (newFont != 0) OS.SelectObject (hDC, oldFont);
+        if (newFont != 0) {
+            OS.SelectObject(hDC, oldFont);
+        }
 		OS.ReleaseDC (handle, hDC);
 		size.x = Math.max (size.x, rect.right - rect.left + CLIENT_INSET * 6);
 	}
@@ -163,10 +171,14 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 	long newFont, oldFont = 0;
 	long hDC = OS.GetDC (handle);
 	newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-	if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+    if (newFont != 0) {
+        oldFont = OS.SelectObject(hDC, newFont);
+    }
 	TEXTMETRIC tm = new TEXTMETRIC ();
 	OS.GetTextMetrics (hDC, tm);
-	if (newFont != 0) OS.SelectObject (hDC, oldFont);
+    if (newFont != 0) {
+        OS.SelectObject(hDC, oldFont);
+    }
 	OS.ReleaseDC (handle, hDC);
 	trim.x -= CLIENT_INSET;
 	trim.y -= tm.tmHeight;
@@ -207,7 +219,9 @@ void enableWidget (boolean enabled) {
 }
 
 String fixText () {
-	if (text.length() == 0) return null;
+    if (text.length() == 0) {
+        return null;
+    }
 	if ((style & SWT.RIGHT_TO_LEFT) != 0) {
 		return (style & SWT.FLIP_TEXT_DIRECTION) == 0 ? null : LRE + text;
 	} else if ((style & SWT.FLIP_TEXT_DIRECTION) != 0) {
@@ -224,10 +238,14 @@ String fixText () {
 	long newFont, oldFont = 0;
 	long hDC = OS.GetDC (handle);
 	newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-	if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+    if (newFont != 0) {
+        oldFont = OS.SelectObject(hDC, newFont);
+    }
 	TEXTMETRIC tm = new TEXTMETRIC ();
 	OS.GetTextMetrics (hDC, tm);
-	if (newFont != 0) OS.SelectObject (hDC, oldFont);
+    if (newFont != 0) {
+        OS.SelectObject(hDC, oldFont);
+    }
 	OS.ReleaseDC (handle, hDC);
 	int x = CLIENT_INSET, y = tm.tmHeight;
 	int width = Math.max (0, rect.right - CLIENT_INSET * 2);
@@ -265,7 +283,9 @@ boolean mnemonicHit (char key) {
 @Override
 boolean mnemonicMatch (char key) {
 	char mnemonic = findMnemonic (getText ());
-	if (mnemonic == '\0') return false;
+    if (mnemonic == '\0') {
+        return false;
+    }
 	return Character.toUpperCase (key) == Character.toUpperCase (mnemonic);
 }
 
@@ -358,7 +378,9 @@ public void setFont (Font font) {
 	Rectangle oldRect = getClientAreaInPixels ();
 	super.setFont (font);
 	Rectangle newRect = getClientAreaInPixels ();
-	if (!oldRect.equals (newRect)) sendResize ();
+    if (!oldRect.equals(newRect)) {
+        sendResize();
+    }
 }
 
 /**
@@ -390,7 +412,9 @@ public void setFont (Font font) {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	text = string;
 	if ((state & HAS_AUTO_DIRECTION) == 0 || !updateTextDirection (AUTO_TEXT_DIRECTION)) {
 		string = fixText ();
@@ -439,7 +463,9 @@ long windowProc () {
 @Override
 LRESULT WM_ERASEBKGND (long wParam, long lParam) {
 	LRESULT result = super.WM_ERASEBKGND (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  Group boxes do not erase
 	* the background before drawing.  The fix is to
@@ -452,7 +478,9 @@ LRESULT WM_ERASEBKGND (long wParam, long lParam) {
 @Override
 LRESULT WM_NCHITTEST (long wParam, long lParam) {
 	LRESULT result = super.WM_NCHITTEST (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  The window proc for the group box
 	* returns HTTRANSPARENT indicating that mouse messages
@@ -463,14 +491,18 @@ LRESULT WM_NCHITTEST (long wParam, long lParam) {
 	* to be delivered to the children.
 	*/
 	long code = callWindowProc (handle, OS.WM_NCHITTEST, wParam, lParam);
-	if (code == OS.HTTRANSPARENT) code = OS.HTCLIENT;
+    if (code == OS.HTTRANSPARENT) {
+        code = OS.HTCLIENT;
+    }
 	return new LRESULT (code);
 }
 
 @Override
 LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSEMOVE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  In version 6.00 of COMCTL32.DLL,
 	* every time the mouse moves, the group title redraws.
@@ -496,7 +528,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 
 		long newFont, oldFont = 0;
 		newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-		if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+        if (newFont != 0) {
+            oldFont = OS.SelectObject(hDC, newFont);
+        }
 
 		OS.DrawText(hDC, buffer, buffer.length, rect, OS.DT_SINGLELINE | OS.DT_LEFT | OS.DT_TOP | OS.DT_CALCRECT);
 		// The calculated rectangle is a little bit too small. Italic fonts would show some small part in the default color.
@@ -506,7 +540,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 		OS.SetTextColor(hDC, getForegroundPixel());
 		OS.DrawText(hDC, buffer, buffer.length, rect, OS.DT_SINGLELINE | OS.DT_LEFT | OS.DT_TOP);
 
-		if (newFont != 0) OS.SelectObject (hDC, oldFont);
+        if (newFont != 0) {
+            OS.SelectObject(hDC, oldFont);
+        }
 		OS.ReleaseDC(handle, hDC);
 		// Without validating the drawn area it would be overdrawn by windows
 		OS.ValidateRect(handle, rect);
@@ -517,7 +553,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 @Override
 LRESULT WM_PRINTCLIENT (long wParam, long lParam) {
 	LRESULT result = super.WM_PRINTCLIENT (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  In version 6.00 of COMCTL32.DLL,
 	* when WM_PRINTCLIENT is sent from a child BS_GROUP
@@ -537,7 +575,9 @@ LRESULT WM_PRINTCLIENT (long wParam, long lParam) {
 @Override
 LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 	LRESULT result = super.WM_UPDATEUISTATE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  When WM_UPDATEUISTATE is sent to
 	* a group, it sends WM_CTLCOLORBTN to get the foreground
@@ -551,7 +591,9 @@ LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 		if ((state & THEME_BACKGROUND) != 0) {
 			redraw = findThemeControl () != null;
 		}
-		if (!redraw) redraw = findBackgroundControl () != null;
+        if (!redraw) {
+            redraw = findBackgroundControl() != null;
+        }
 	}
 	if (redraw) {
 		OS.InvalidateRect (handle, null, false);
@@ -564,14 +606,18 @@ LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 @Override
 LRESULT WM_WINDOWPOSCHANGING (long wParam, long lParam) {
 	LRESULT result = super.WM_WINDOWPOSCHANGING (wParam, lParam);
-	if (result != null) return result;
-	/*
-	* Invalidate the portion of the group widget that needs to
-	* be redrawn.  Note that for some reason, invalidating the
-	* group from inside WM_SIZE causes pixel corruption for
-	* radio button children.
-	*/
-	if (!OS.IsWindowVisible (handle)) return result;
+    if (result != null) {
+        return result;
+    }
+    /*
+    * Invalidate the portion of the group widget that needs to
+    * be redrawn.  Note that for some reason, invalidating the
+    * group from inside WM_SIZE causes pixel corruption for
+    * radio button children.
+    */
+    if (!OS.IsWindowVisible(handle)) {
+        return result;
+    }
 	WINDOWPOS lpwp = new WINDOWPOS ();
 	OS.MoveMemory (lpwp, lParam, WINDOWPOS.sizeof);
 	if ((lpwp.flags & (OS.SWP_NOSIZE | OS.SWP_NOREDRAW)) != 0) {
@@ -590,14 +636,20 @@ LRESULT WM_WINDOWPOSCHANGING (long wParam, long lParam) {
 	}
 	if (newWidth != oldWidth) {
 		int left = oldWidth;
-		if (newWidth < oldWidth) left = newWidth;
+        if (newWidth < oldWidth) {
+            left = newWidth;
+        }
 		OS.SetRect (rect, left - CLIENT_INSET, 0, newWidth, newHeight);
 		OS.InvalidateRect (handle, rect, true);
 	}
 	if (newHeight != oldHeight) {
 		int bottom = oldHeight;
-		if (newHeight < oldHeight) bottom = newHeight;
-		if (newWidth < oldWidth) oldWidth -= CLIENT_INSET;
+        if (newHeight < oldHeight) {
+            bottom = newHeight;
+        }
+        if (newWidth < oldWidth) {
+            oldWidth -= CLIENT_INSET;
+        }
 		OS.SetRect (rect, 0, bottom - CLIENT_INSET, oldWidth, newHeight);
 		OS.InvalidateRect (handle, rect, true);
 	}

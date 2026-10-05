@@ -70,8 +70,9 @@ public class Bug290650_FillLayoutComputeSize {
 		init(shell);
 		shell.open();
 		while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

@@ -80,8 +80,9 @@ public class EchoHttpServer implements Closeable {
 	}
 
 	private String extractMessageFromQuery(String query) {
-		if (query == null)
-			return "";
+        if (query == null) {
+            return "";
+        }
 		// XXX: This is not real/complete query decoding, add more
 		// as needed if tests require it
 		for (String part : query.split("&")) {

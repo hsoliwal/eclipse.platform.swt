@@ -13,7 +13,9 @@ import org.eclipse.swt.SWT;
 final class StylePolicy {
 	private StylePolicy () {}
 	static int normalize (int style) {
-		if (style == SWT.NONE) return DND.DROP_MOVE;
+        if (style == SWT.NONE) {
+            return DND.DROP_MOVE;
+        }
 		return style;
 	}
 }

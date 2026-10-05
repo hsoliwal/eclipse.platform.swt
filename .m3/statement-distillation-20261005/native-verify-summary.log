@@ -1,0 +1,34 @@
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 26, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 26, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 4430, Failures: 0, Errors: 0, Skipped: 20
+[INFO] Reactor Summary:
+[INFO] 
+[INFO] eclipse.platform.swt 4.42.0-SNAPSHOT ............... SUCCESS [  0.061 s]
+[INFO] org.eclipse.swt 3.136.0-SNAPSHOT ................... SUCCESS [  5.307 s]
+[INFO] eclipse.platform.swt.binaries 4.42.0-SNAPSHOT ...... SUCCESS [  0.197 s]
+[INFO] [bundle] Standard Widget Toolkit for GTK on x86_64 3.136.0-SNAPSHOT SUCCESS [  7.224 s]
+[INFO] org.eclipse.swt.svg 3.133.100-SNAPSHOT ............. SUCCESS [  1.731 s]
+[INFO] [aggregator] bundles 4.42.0-SNAPSHOT ............... SUCCESS [  0.002 s]
+[INFO] [bundle] SWT Tools 3.112.200-SNAPSHOT .............. SUCCESS [  0.340 s]
+[INFO] [bundle] Standard Widget Toolkit for Mac OS X (Cocoa) on x86_64 3.136.0-SNAPSHOT SUCCESS [  4.188 s]
+[INFO] [bundle] Standard Widget Toolkit for Mac OS X (Cocoa) on aarch64 3.136.0-SNAPSHOT SUCCESS [  3.508 s]
+[INFO] [bundle] Standard Widget Toolkit for GTK on aarch64 3.136.0-SNAPSHOT SUCCESS [  3.302 s]
+[INFO] [bundle] Standard Widget Toolkit for GTK on ppc64le 3.136.0-SNAPSHOT SUCCESS [  3.226 s]
+[INFO] [bundle] Standard Widget Toolkit for GTK on riscv64 3.136.0-SNAPSHOT SUCCESS [  3.069 s]
+[INFO] [bundle] Standard Widget Toolkit for Windows on aarch64 3.136.0-SNAPSHOT SUCCESS [  4.267 s]
+[INFO] [bundle] Standard Widget Toolkit for Windows on x86_64 3.136.0-SNAPSHOT SUCCESS [  3.829 s]
+[INFO] [bundle] SWT Standalone Examples Plugin 3.109.300-SNAPSHOT SUCCESS [  0.832 s]
+[INFO] [bundle] SWT Browser Demos Plugin 3.109.100-SNAPSHOT SUCCESS [  0.235 s]
+[INFO] [bundle] SWT Launcher Example Plugin 3.109.100-SNAPSHOT SUCCESS [  0.179 s]
+[INFO] org.eclipse.swt.examples.ole.win32 3.110.100-SNAPSHOT SUCCESS [  0.545 s]
+[INFO] [bundle] SWT Views Example Plugin 3.109.100-SNAPSHOT SUCCESS [  0.145 s]
+[INFO] org.eclipse.swt.tests 3.108.100-SNAPSHOT ........... SUCCESS [04:35 min]
+[INFO] [feature] SWT Tools 3.111.200-SNAPSHOT ............. SUCCESS [  0.251 s]
+[INFO] [test-bundle] Eclipse SWT Tests Linux/gtk 3.110.0-SNAPSHOT SUCCESS [  0.945 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  05:25 min
+[INFO] Finished at: 2026-10-04T22:44:43-04:00
+[INFO] ------------------------------------------------------------------------

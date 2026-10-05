@@ -24,11 +24,21 @@ public class Issue0351_EventKeyCode {
 		assert(SWT.MODIFIER_MASK == (SWT.ALT | SWT.SHIFT | SWT.CTRL | SWT.COMMAND | SWT.ALT_GR));
 
 		StringBuilder sb = new StringBuilder();
-		if ((stateMask & SWT.ALT_GR) != 0)      sb.append("AltGr+");
-		if ((stateMask & SWT.ALT) != 0)         sb.append("Alt+");
-		if ((stateMask & SWT.COMMAND) != 0)     sb.append("Cmd+");
-		if ((stateMask & SWT.CTRL) != 0)        sb.append("Ctrl+");
-		if ((stateMask & SWT.SHIFT) != 0)       sb.append("Shift+");
+        if ((stateMask & SWT.ALT_GR) != 0) {
+            sb.append("AltGr+");
+        }
+        if ((stateMask & SWT.ALT) != 0) {
+            sb.append("Alt+");
+        }
+        if ((stateMask & SWT.COMMAND) != 0) {
+            sb.append("Cmd+");
+        }
+        if ((stateMask & SWT.CTRL) != 0) {
+            sb.append("Ctrl+");
+        }
+        if ((stateMask & SWT.SHIFT) != 0) {
+            sb.append("Shift+");
+        }
 
 		return sb.toString();
 	}

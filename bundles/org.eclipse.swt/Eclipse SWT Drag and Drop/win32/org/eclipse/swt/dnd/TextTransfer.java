@@ -122,7 +122,9 @@ public void javaToNative (Object object, TransferData transferData){
  */
 @Override
 public Object nativeToJava(TransferData transferData){
-	if (!isSupportedType(transferData) || transferData.pIDataObject == 0) return null;
+    if (!isSupportedType(transferData) || transferData.pIDataObject == 0) {
+        return null;
+    }
 
 	IDataObject data = new IDataObject(transferData.pIDataObject);
 	data.AddRef();
@@ -131,17 +133,23 @@ public Object nativeToJava(TransferData transferData){
 	stgmedium.tymed = COM.TYMED_HGLOBAL;
 	transferData.result = getData(data, formatetc, stgmedium);
 	data.Release();
-	if (transferData.result != COM.S_OK) return null;
+    if (transferData.result != COM.S_OK) {
+        return null;
+    }
 	long hMem = stgmedium.unionField;
 	try {
 		switch (transferData.type) {
 			case CF_UNICODETEXTID: {
 				/* Ensure byteCount is a multiple of 2 bytes */
 				int size = OS.GlobalSize(hMem) / 2 * 2;
-				if (size == 0) return null;
+                if (size == 0) {
+                    return null;
+                }
 				char[] chars = new char[size/2];
 				long ptr = OS.GlobalLock(hMem);
-				if (ptr == 0) return null;
+                if (ptr == 0) {
+                    return null;
+                }
 				try {
 					OS.MoveMemory(chars, ptr, size);
 					int length = chars.length;
@@ -158,11 +166,15 @@ public Object nativeToJava(TransferData transferData){
 			}
 			case CF_TEXTID: {
 				long lpMultiByteStr = OS.GlobalLock(hMem);
-				if (lpMultiByteStr == 0) return null;
+                if (lpMultiByteStr == 0) {
+                    return null;
+                }
 				try {
 					int codePage = OS.GetACP();
 					int cchWideChar = OS.MultiByteToWideChar (codePage, OS.MB_PRECOMPOSED, lpMultiByteStr, -1, null, 0);
-					if (cchWideChar == 0) return null;
+                    if (cchWideChar == 0) {
+                        return null;
+                    }
 					char[] lpWideCharStr = new char [cchWideChar - 1];
 					OS.MultiByteToWideChar (codePage, OS.MB_PRECOMPOSED, lpMultiByteStr, -1, lpWideCharStr, lpWideCharStr.length);
 					return new String(lpWideCharStr);

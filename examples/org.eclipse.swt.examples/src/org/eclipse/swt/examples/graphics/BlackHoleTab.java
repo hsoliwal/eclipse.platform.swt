@@ -36,8 +36,11 @@ public String getDescription() {
 
 @Override
 public void next(int width, int height) {
-	if (size > width * 3 / 2) size = 0;
-	else size += 10;
+    if (size > width * 3 / 2) {
+        size = 0;
+    } else {
+        size += 10;
+    }
 }
 
 @Override

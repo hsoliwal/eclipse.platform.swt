@@ -38,27 +38,44 @@ public static String skipCopyrights(InputStream is) throws IOException {
 	StringBuilder copyrights = new StringBuilder();
 	while (state != 5) {
 		int c = is.read();
-		if (c == -1) return null;
+        if (c == -1) {
+            return null;
+        }
 		switch (state) {
 			case 0:
-				if (!Character.isWhitespace((char)c)) state = 1;
+                if (!Character.isWhitespace((char) c)) {
+                    state = 1;
+                }
 			case 1:
-				if (c == '/') state = 2;
-				else return null;
+                if (c == '/') {
+                    state = 2;
+                } else {
+                    return null;
+                }
 				break;
 			case 2:
-				if (c == '*') state = 3;
-				else return null;
+                if (c == '*') {
+                    state = 3;
+                } else {
+                    return null;
+                }
 				break;
 			case 3:
-				if (c == '*') state = 4;
+                if (c == '*') {
+                    state = 4;
+                }
 				break;
 			case 4:
-				if (c == '/') state = 5;
-				else state = 3;
+                if (c == '/') {
+                    state = 5;
+                } else {
+                    state = 3;
+                }
 				break;
 		}
-		if (state > 0) copyrights.append((char)c);
+        if (state > 0) {
+            copyrights.append((char) c);
+        }
 	}
 	return copyrights.toString();
 }
@@ -69,15 +86,21 @@ public static boolean compare(InputStream is1, InputStream is2) throws IOExcepti
 	while (true) {
 		int c1 = is1.read();
 		int c2 = is2.read();
-		if (c1 != c2) return false;
-		if (c1 == -1) break;
+        if (c1 != c2) {
+            return false;
+        }
+        if (c1 == -1) {
+            break;
+        }
 	}
 	return true;
 }
 
 public static void output(byte[] bytes, String fileName) throws IOException {
 	try (FileInputStream is = new FileInputStream(fileName)){
-		if (compare(new ByteArrayInputStream(bytes), new BufferedInputStream(is))) return;
+        if (compare(new ByteArrayInputStream(bytes), new BufferedInputStream(is))) {
+            return;
+        }
 	} catch (FileNotFoundException e) {
 	}
 	try (FileOutputStream out = new FileOutputStream(fileName)) {
@@ -90,7 +113,9 @@ public static String getDelimiter(String fileName) {
 	try (InputStream is = new BufferedInputStream(new FileInputStream(fileName))){
 		int c;
 		while ((c = is.read()) != -1) {
-			if (c == '\n') return "\n";
+            if (c == '\n') {
+                return "\n";
+            }
 			if (c == '\r') {
 				int c1 = is.read();
 				if (c1 == '\n') {
@@ -105,7 +130,9 @@ public static String getDelimiter(String fileName) {
 }
 
 String fixDelimiter(String str) {
-	if (delimiter.equals("\n")) return str;
+    if (delimiter.equals("\n")) {
+        return str;
+    }
 	int index = 0, length = str.length();
 	StringBuilder buffer = new StringBuilder();
 	while (index != -1) {
@@ -127,7 +154,9 @@ static String getFunctionName(JNIMethod method) {
 }
 
 static String getFunctionName(JNIMethod method, JNIType[] paramTypes) {
-	if ((method.getModifiers() & Modifier.NATIVE) == 0) return method.getName();
+    if ((method.getModifiers() & Modifier.NATIVE) == 0) {
+        return method.getName();
+    }
 	String function = toC(method.getName());
 	if (!method.isNativeUnique()) {
 		StringBuilder buffer = new StringBuilder();
@@ -213,14 +242,20 @@ public void generateIncludes() {
 }
 
 public void generate() {
-	if (classes == null) return;
+    if (classes == null) {
+        return;
+    }
 	generateCopyright();
 	generateAutoGenNote();
 	generateIncludes();
 	sort(classes);
 	for (JNIClass clazz : classes) {
-		if (getGenerate(clazz)) generate(clazz);
-		if (progress != null) progress.step();
+        if (getGenerate(clazz)) {
+            generate(clazz);
+        }
+        if (progress != null) {
+            progress.step();
+        }
 	}
 	output.flush();
 }
@@ -228,8 +263,12 @@ public void generate() {
 public void generateMetaData(String key) {
 	MetaData mt = getMetaData();
 	String data = mt.getMetaData(key, null);
-	if (data == null) return;
-	if (data.length() == 0) return;
+    if (data == null) {
+        return;
+    }
+    if (data.length() == 0) {
+        return;
+    }
 	outputln(fixDelimiter(data));
 }
 

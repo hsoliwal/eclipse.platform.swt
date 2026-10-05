@@ -63,20 +63,48 @@ class TextTab extends ScrollableTab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (singleButton.getSelection ()) style |= SWT.SINGLE;
-		if (multiButton.getSelection ()) style |= SWT.MULTI;
-		if (horizontalButton.getSelection ()) style |= SWT.H_SCROLL;
-		if (verticalButton.getSelection ()) style |= SWT.V_SCROLL;
-		if (wrapButton.getSelection ()) style |= SWT.WRAP;
-		if (readOnlyButton.getSelection ()) style |= SWT.READ_ONLY;
-		if (passwordButton.getSelection ()) style |= SWT.PASSWORD;
-		if (searchButton.getSelection ()) style |= SWT.SEARCH;
-		if (iconCancelButton.getSelection ()) style |= SWT.ICON_CANCEL;
-		if (iconSearchButton.getSelection ()) style |= SWT.ICON_SEARCH;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
-		if (leftButton.getSelection ()) style |= SWT.LEFT;
-		if (centerButton.getSelection ()) style |= SWT.CENTER;
-		if (rightButton.getSelection ()) style |= SWT.RIGHT;
+        if (singleButton.getSelection()) {
+            style |= SWT.SINGLE;
+        }
+        if (multiButton.getSelection()) {
+            style |= SWT.MULTI;
+        }
+        if (horizontalButton.getSelection()) {
+            style |= SWT.H_SCROLL;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.V_SCROLL;
+        }
+        if (wrapButton.getSelection()) {
+            style |= SWT.WRAP;
+        }
+        if (readOnlyButton.getSelection()) {
+            style |= SWT.READ_ONLY;
+        }
+        if (passwordButton.getSelection()) {
+            style |= SWT.PASSWORD;
+        }
+        if (searchButton.getSelection()) {
+            style |= SWT.SEARCH;
+        }
+        if (iconCancelButton.getSelection()) {
+            style |= SWT.ICON_CANCEL;
+        }
+        if (iconSearchButton.getSelection()) {
+            style |= SWT.ICON_SEARCH;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (leftButton.getSelection()) {
+            style |= SWT.LEFT;
+        }
+        if (centerButton.getSelection()) {
+            style |= SWT.CENTER;
+        }
+        if (rightButton.getSelection()) {
+            style |= SWT.RIGHT;
+        }
 
 		/* Create the example widgets */
 		text = new Text (textGroup, style);

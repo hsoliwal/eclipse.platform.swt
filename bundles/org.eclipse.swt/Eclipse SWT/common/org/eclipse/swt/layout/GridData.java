@@ -418,14 +418,30 @@ public GridData () {
  */
 public GridData (int style) {
 	super ();
-	if ((style & VERTICAL_ALIGN_BEGINNING) != 0) verticalAlignment = BEGINNING;
-	if ((style & VERTICAL_ALIGN_CENTER) != 0) verticalAlignment = CENTER;
-	if ((style & VERTICAL_ALIGN_FILL) != 0) verticalAlignment = FILL;
-	if ((style & VERTICAL_ALIGN_END) != 0) verticalAlignment = END;
-	if ((style & HORIZONTAL_ALIGN_BEGINNING) != 0) horizontalAlignment = BEGINNING;
-	if ((style & HORIZONTAL_ALIGN_CENTER) != 0) horizontalAlignment = CENTER;
-	if ((style & HORIZONTAL_ALIGN_FILL) != 0) horizontalAlignment = FILL;
-	if ((style & HORIZONTAL_ALIGN_END) != 0) horizontalAlignment = END;
+    if ((style & VERTICAL_ALIGN_BEGINNING) != 0) {
+        verticalAlignment = BEGINNING;
+    }
+    if ((style & VERTICAL_ALIGN_CENTER) != 0) {
+        verticalAlignment = CENTER;
+    }
+    if ((style & VERTICAL_ALIGN_FILL) != 0) {
+        verticalAlignment = FILL;
+    }
+    if ((style & VERTICAL_ALIGN_END) != 0) {
+        verticalAlignment = END;
+    }
+    if ((style & HORIZONTAL_ALIGN_BEGINNING) != 0) {
+        horizontalAlignment = BEGINNING;
+    }
+    if ((style & HORIZONTAL_ALIGN_CENTER) != 0) {
+        horizontalAlignment = CENTER;
+    }
+    if ((style & HORIZONTAL_ALIGN_FILL) != 0) {
+        horizontalAlignment = FILL;
+    }
+    if ((style & HORIZONTAL_ALIGN_END) != 0) {
+        horizontalAlignment = END;
+    }
 	grabExcessHorizontalSpace = (style & GRAB_HORIZONTAL) != 0;
 	grabExcessVerticalSpace = (style & GRAB_VERTICAL) != 0;
 }
@@ -487,7 +503,9 @@ public GridData (int width, int height) {
 }
 
 void computeSize (Control control, int wHint, int hHint, boolean flushCache) {
-	if (cacheWidth != -1 && cacheHeight != -1) return;
+    if (cacheWidth != -1 && cacheHeight != -1) {
+        return;
+    }
 	if (wHint == this.widthHint && hHint == this.heightHint) {
 		if (defaultWidth == -1 || defaultHeight == -1 || wHint != defaultWhint || hHint != defaultHhint) {
 			Point size = control.computeSize (wHint, hHint, flushCache);
@@ -520,7 +538,9 @@ void flushCache () {
 String getName () {
 	String string = getClass ().getName ();
 	int index = string.lastIndexOf ('.');
-	if (index == -1) return string;
+    if (index == -1) {
+        return string;
+    }
 	return string.substring (index + 1, string.length ());
 }
 
@@ -558,18 +578,40 @@ public String toString () {
 	};
 	String string = getName()+" {";
 	string += "horizontalAlignment="+hAlign+" ";
-	if (horizontalIndent != 0) string += "horizontalIndent="+horizontalIndent+" ";
-	if (horizontalSpan != 1) string += "horizontalSpan="+horizontalSpan+" ";
-	if (grabExcessHorizontalSpace) string += "grabExcessHorizontalSpace="+grabExcessHorizontalSpace+" ";
-	if (widthHint != SWT.DEFAULT) string += "widthHint="+widthHint+" ";
-	if (minimumWidth != 0) string += "minimumWidth="+minimumWidth+" ";
+    if (horizontalIndent != 0) {
+        string += "horizontalIndent=" + horizontalIndent + " ";
+    }
+    if (horizontalSpan != 1) {
+        string += "horizontalSpan=" + horizontalSpan + " ";
+    }
+    if (grabExcessHorizontalSpace) {
+        string += "grabExcessHorizontalSpace=" + grabExcessHorizontalSpace + " ";
+    }
+    if (widthHint != SWT.DEFAULT) {
+        string += "widthHint=" + widthHint + " ";
+    }
+    if (minimumWidth != 0) {
+        string += "minimumWidth=" + minimumWidth + " ";
+    }
 	string += "verticalAlignment="+vAlign+" ";
-	if (verticalIndent != 0) string += "verticalIndent="+verticalIndent+" ";
-	if (verticalSpan != 1) string += "verticalSpan="+verticalSpan+" ";
-	if (grabExcessVerticalSpace) string += "grabExcessVerticalSpace="+grabExcessVerticalSpace+" ";
-	if (heightHint != SWT.DEFAULT) string += "heightHint="+heightHint+" ";
-	if (minimumHeight != 0) string += "minimumHeight="+minimumHeight+" ";
-	if (exclude) string += "exclude="+exclude+" ";
+    if (verticalIndent != 0) {
+        string += "verticalIndent=" + verticalIndent + " ";
+    }
+    if (verticalSpan != 1) {
+        string += "verticalSpan=" + verticalSpan + " ";
+    }
+    if (grabExcessVerticalSpace) {
+        string += "grabExcessVerticalSpace=" + grabExcessVerticalSpace + " ";
+    }
+    if (heightHint != SWT.DEFAULT) {
+        string += "heightHint=" + heightHint + " ";
+    }
+    if (minimumHeight != 0) {
+        string += "minimumHeight=" + minimumHeight + " ";
+    }
+    if (exclude) {
+        string += "exclude=" + exclude + " ";
+    }
 	string = string.trim();
 	string += "}";
 	return string;

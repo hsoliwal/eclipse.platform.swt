@@ -58,8 +58,9 @@ public class Snippet10 {
 		shell.setSize(shell.computeSize(rect.width / 2, rect.height / 2));
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		image.dispose();
 		font.dispose();

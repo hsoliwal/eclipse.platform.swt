@@ -156,7 +156,9 @@ public ImageData[] load(InputStream stream) {
 }
 
 List<ElementAtZoom<ImageData>> loadByZoom(InputStream stream, int fileZoom, int targetZoom) {
-	if (stream == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (stream == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	reset();
 	List<ElementAtZoom<ImageData>> images = NativeImageLoader.load(new ElementAtZoom<>(stream, fileZoom), this, targetZoom);
 	data = images.stream().map(ElementAtZoom::element).toArray(ImageData[]::new);
@@ -164,7 +166,9 @@ List<ElementAtZoom<ImageData>> loadByZoom(InputStream stream, int fileZoom, int 
 }
 
 ImageData loadBySize(InputStream stream, int width, int height) {
-	if (stream == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (stream == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	reset();
 	ImageData image = NativeImageLoader.load(stream, this, width, height);
 	data = new ImageData[] {image};
@@ -172,7 +176,9 @@ ImageData loadBySize(InputStream stream, int width, int height) {
 }
 
 static boolean canLoadAtZoom(InputStream stream, int fileZoom, int targetZoom) {
-	if (stream == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (stream == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return FileFormat.canLoadAtZoom(new ElementAtZoom<>(stream, fileZoom), targetZoom);
 }
 
@@ -200,7 +206,9 @@ public ImageData[] load(String filename) {
 }
 
 List<ElementAtZoom<ImageData>> loadByZoom(String filename, int fileZoom, int targetZoom) {
-	if (filename == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (filename == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	try (InputStream stream = new FileInputStream(filename)) {
 		return loadByZoom(stream, fileZoom, targetZoom);
 	} catch (IOException e) {
@@ -210,7 +218,9 @@ List<ElementAtZoom<ImageData>> loadByZoom(String filename, int fileZoom, int tar
 }
 
 static boolean canLoadAtZoom(String filename, int fileZoom, int targetZoom) {
-	if (filename == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (filename == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	try (InputStream stream = new FileInputStream(filename)) {
 		return canLoadAtZoom(stream, fileZoom, targetZoom);
 	} catch (IOException e) {
@@ -256,7 +266,9 @@ static boolean isDynamicallySizable(InputStream stream) {
  * </ul>
  */
 public void save(OutputStream stream, int format) {
-	if (stream == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (stream == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NativeImageLoader.save(stream, format, this);
 }
 
@@ -293,7 +305,9 @@ public void save(OutputStream stream, int format) {
  * </ul>
  */
 public void save(String filename, int format) {
-	if (filename == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (filename == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	try (OutputStream stream = new FileOutputStream(filename)) {
 		save(stream, format);
 	} catch (IOException e) {
@@ -321,7 +335,9 @@ public void save(String filename, int format) {
  * @see ImageLoaderEvent
  */
 public void addImageLoaderListener(ImageLoaderListener listener) {
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (imageLoaderListeners == null) {
 		imageLoaderListeners = new ArrayList<>();
 	}
@@ -341,8 +357,12 @@ public void addImageLoaderListener(ImageLoaderListener listener) {
  * @see #addImageLoaderListener(ImageLoaderListener)
  */
 public void removeImageLoaderListener(ImageLoaderListener listener) {
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (imageLoaderListeners == null) return;
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (imageLoaderListeners == null) {
+        return;
+    }
 	imageLoaderListeners.remove(listener);
 }
 
@@ -366,7 +386,9 @@ public boolean hasListeners() {
  * @param event the <code>ImageLoaderEvent</code> to send to each <code>ImageLoaderListener</code>
  */
 public void notifyListeners(ImageLoaderEvent event) {
-	if (!hasListeners()) return;
+    if (!hasListeners()) {
+        return;
+    }
 	int size = imageLoaderListeners.size();
 	for (int i = 0; i < size; i++) {
 		ImageLoaderListener listener = imageLoaderListeners.get(i);

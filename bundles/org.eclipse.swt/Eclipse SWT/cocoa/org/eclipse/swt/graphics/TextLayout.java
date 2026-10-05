@@ -111,7 +111,9 @@ public TextLayout (Device device) {
 }
 
 void checkLayout() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 }
 
 float[] computePolyline(int left, int top, int right, int bottom) {
@@ -122,7 +124,9 @@ float[] computePolyline(int left, int top, int right, int bottom) {
 		peaks = 1;
 	}
 	int length = ((2 * peaks) + 1) * 2;
-	if (length < 0) return new float[0];
+    if (length < 0) {
+        return new float[0];
+    }
 
 	float[] coordinates = new float[length];
 	for (int i = 0; i < peaks; i++) {
@@ -139,7 +143,9 @@ float[] computePolyline(int left, int top, int right, int bottom) {
 
 
 void computeRuns() {
-	if (lineBounds != null) return;
+    if (lineBounds != null) {
+        return;
+    }
 	String segmentsText = ignoreSegments ? text : getSegmentsText();
 	char[] chars = new char[segmentsText.length()];
 	segmentsText.getChars(0, chars.length, chars, 0);
@@ -228,7 +234,9 @@ void computeRuns() {
 	long textLength = attrStr.length();
 	for (int i = 0; i < stylesCount - 1; i++) {
 		StyleItem run = styles[i];
-		if (run.style == null) continue;
+        if (run.style == null) {
+            continue;
+        }
 		TextStyle style = run.style;
 		range.location = textLength != 0 ? translateOffset(run.start) : 0;
 		range.length = translateOffset(styles[i + 1].start) - range.location;
@@ -300,7 +308,9 @@ void computeRuns() {
 			string.release();
 
 			run.jniRef =  OS.NewGlobalRef(run);
-			if (run.jniRef == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (run.jniRef == 0) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 			run.cell = (SWTTextAttachmentCell) new SWTTextAttachmentCell().alloc().init();
 			OS.object_setInstanceVariable(run.cell.id, SWT_OBJECT, run.jniRef);
 
@@ -342,12 +352,16 @@ void computeRuns() {
 		OS.memmove(lineRange, rangePtr, NSRange.sizeof);
 		index = lineRange.location + lineRange.length;
 	}
-	if (numberOfLines == 0) numberOfLines++;
+    if (numberOfLines == 0) {
+        numberOfLines++;
+    }
 	int[] offsets = new int[numberOfLines + 1];
 	NSRect[] bounds = new NSRect[numberOfLines];
 	for (numberOfLines = 0, index = 0; index < numberOfGlyphs; numberOfLines++){
 		bounds[numberOfLines] = layoutManager.lineFragmentUsedRectForGlyphAtIndex(index, rangePtr, true);
-		if (numberOfLines < bounds.length - 1) bounds[numberOfLines].height -= spacing;
+        if (numberOfLines < bounds.length - 1) {
+            bounds[numberOfLines].height -= spacing;
+        }
 		OS.memmove(lineRange, rangePtr, NSRange.sizeof);
 		offsets[numberOfLines] = (int)lineRange.location;
 		index = lineRange.location + lineRange.length;
@@ -377,7 +391,9 @@ void computeRuns() {
 @Override
 void destroy() {
 	freeRuns();
-	if (textStorage != null) textStorage.release();
+    if (textStorage != null) {
+        textStorage.release();
+    }
 	textStorage = null;
 	layoutManager = null;
 	textContainer = null;
@@ -459,15 +475,25 @@ public void draw(GC gc, int x, int y, int selectionStart, int selectionEnd, Colo
  */
 public void draw(GC gc, int x, int y, int selectionStart, int selectionEnd, Color selectionForeground, Color selectionBackground, int flags) {
 	checkLayout ();
-	if (gc == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (selectionForeground != null && selectionForeground.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (selectionBackground != null && selectionBackground.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (selectionForeground != null && selectionForeground.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (selectionBackground != null && selectionBackground.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	NSAutoreleasePool pool = gc.checkGC(GC.CLIPPING | GC.TRANSFORM | GC.FOREGROUND);
 	try {
 		computeRuns();
 		int length = translateOffset(text.length());
-		if (length == 0 && flags == 0) return;
+        if (length == 0 && flags == 0) {
+            return;
+        }
 		y += getVerticalIndent();
 		gc.handle.saveGraphicsState();
 		NSPoint pt = new NSPoint();
@@ -482,7 +508,9 @@ public void draw(GC gc, int x, int y, int selectionStart, int selectionEnd, Colo
 		}
 		boolean hasSelection = selectionStart <= selectionEnd && selectionStart != -1 && selectionEnd != -1;
 		if (hasSelection || ((flags & SWT.LAST_LINE_SELECTION) != 0 && (flags & (SWT.FULL_SELECTION | SWT.DELIMITER_SELECTION)) != 0)) {
-			if (selectionBackground == null) selectionBackground = device.getSystemColor(SWT.COLOR_LIST_SELECTION);
+            if (selectionBackground == null) {
+                selectionBackground = device.getSystemColor(SWT.COLOR_LIST_SELECTION);
+            }
 			NSColor selectionColor = NSColor.colorWithDeviceRed(selectionBackground.handle[0], selectionBackground.handle[1], selectionBackground.handle[2], selectionBackground.handle[3]);
 			NSBezierPath path = NSBezierPath.bezierPath();
 			NSRect rect = new NSRect();
@@ -496,7 +524,9 @@ public void draw(GC gc, int x, int y, int selectionStart, int selectionEnd, Colo
 					fixRect(rect);
 					rect.x += pt.x;
 					rect.y += pt.y;
-					if (fixedLineMetrics != null) rect.height = fixedLineMetrics.height;
+                    if (fixedLineMetrics != null) {
+                        rect.height = fixedLineMetrics.height;
+                    }
 					rect.height = Math.max(rect.height, ascent + descent);
 					if ((flags & (SWT.FULL_SELECTION | SWT.DELIMITER_SELECTION)) != 0 && (/*hasSelection ||*/ (flags & SWT.LAST_LINE_SELECTION) != 0)) {
 						rect.height += spacing;
@@ -524,8 +554,12 @@ public void draw(GC gc, int x, int y, int selectionStart, int selectionEnd, Colo
 			if (!defaultFg) {
 				for (int i = 0; i < stylesCount - 1; i++) {
 					StyleItem run = styles[i];
-					if (run.style != null && run.style.foreground != null) continue;
-					if (run.style != null && run.style.underline && run.style.underlineStyle == SWT.UNDERLINE_LINK) continue;
+                    if (run.style != null && run.style.foreground != null) {
+                        continue;
+                    }
+                    if (run.style != null && run.style.underline && run.style.underlineStyle == SWT.UNDERLINE_LINK) {
+                        continue;
+                    }
 					range.location = length != 0 ? translateOffset(run.start) : 0;
 					range.length = translateOffset(styles[i + 1].start) - range.location;
 					layoutManager.addTemporaryAttribute(OS.NSForegroundColorAttributeName, gc.data.fg, range);
@@ -534,7 +568,9 @@ public void draw(GC gc, int x, int y, int selectionStart, int selectionEnd, Colo
 			NSPoint ptGlyphs = new NSPoint();
 			ptGlyphs.x = pt.x;
 			ptGlyphs.y = pt.y;
-			if (fixedLineMetrics != null) ptGlyphs.y += fixedLineMetricsDy;
+            if (fixedLineMetrics != null) {
+                ptGlyphs.y += fixedLineMetricsDy;
+            }
 			range.location = 0;
 			range.length = numberOfGlyphs;
 			layoutManager.drawGlyphsForGlyphRange(range, ptGlyphs);
@@ -547,12 +583,16 @@ public void draw(GC gc, int x, int y, int selectionStart, int selectionEnd, Colo
 			for (int j = 0; j < stylesCount; j++) {
 				StyleItem run = styles[j];
 				TextStyle style = run.style;
-				if (style == null) continue;
+                if (style == null) {
+                    continue;
+                }
 				boolean drawUnderline = style.underline && !isUnderlineSupported(style);
 				drawUnderline = drawUnderline && (j + 1 == stylesCount || !style.isAdherentUnderline(styles[j + 1].style));
 				boolean drawBorder = style.borderStyle != SWT.NONE;
 				drawBorder = drawBorder && (j + 1 == stylesCount || !style.isAdherentBorder(styles[j + 1].style));
-				if (!drawUnderline && !drawBorder) continue;
+                if (!drawUnderline && !drawBorder) {
+                    continue;
+                }
 				int end = j + 1 < stylesCount ? translateOffset(styles[j + 1].start - 1) : length;
 				for (int i = 0; i < lineOffsets.length - 1; i++) {
 					int lineStart = untranslateOffset(lineOffsets[i]);
@@ -573,8 +613,12 @@ public void draw(GC gc, int x, int y, int selectionStart, int selectionEnd, Colo
 								gc.handle.saveGraphicsState();
 								double baseline = layoutManager.typesetter().baselineOffsetInLayoutManager(layoutManager, lineStart);
 								double [] color = null;
-								if (style.underlineColor != null) color = style.underlineColor.handle;
-								if (color == null && style.foreground != null) color = style.foreground.handle;
+                                if (style.underlineColor != null) {
+                                    color = style.underlineColor.handle;
+                                }
+                                if (color == null && style.foreground != null) {
+                                    color = style.foreground.handle;
+                                }
 								if (color != null) {
 									NSColor.colorWithDeviceRed(color[0], color[1], color[2], color[3]).setStroke();
 								}
@@ -640,8 +684,12 @@ public void draw(GC gc, int x, int y, int selectionStart, int selectionEnd, Colo
 								NSRect rect = new NSRect();
 								gc.handle.saveGraphicsState();
 								double [] color = null;
-								if (style.borderColor != null) color = style.borderColor.handle;
-								if (color == null && style.foreground != null) color = style.foreground.handle;
+                                if (style.borderColor != null) {
+                                    color = style.borderColor.handle;
+                                }
+                                if (color == null && style.foreground != null) {
+                                    color = style.foreground.handle;
+                                }
 								if (color != null) {
 									NSColor.colorWithDeviceRed(color[0], color[1], color[2], color[3]).setStroke();
 								}
@@ -764,21 +812,29 @@ public int getAscent () {
 public Rectangle getBounds() {
 	checkLayout();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
 		NSRect rect = layoutManager.usedRectForTextContainer(textContainer);
-		if (wrapWidth != -1) rect.width = wrapWidth;
+        if (wrapWidth != -1) {
+            rect.width = wrapWidth;
+        }
 		if (text.length() == 0) {
 			Font font = this.font != null ? this.font : device.systemFont;
 			NSFont nsFont = font.handle;
 			rect.height = layoutManager.defaultLineHeightForFont(nsFont);
 		}
-		if (fixedLineMetrics != null) rect.height = fixedLineMetrics.height;
+        if (fixedLineMetrics != null) {
+            rect.height = fixedLineMetrics.height;
+        }
 		rect.height = Math.max(rect.height, ascent + descent) + spacing;
 		return new Rectangle(0, 0, (int)Math.ceil(rect.width), (int)Math.ceil(rect.height) + getVerticalIndent());
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -799,12 +855,18 @@ public Rectangle getBounds() {
 public Rectangle getBounds(int start, int end) {
 	checkLayout();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
 		int length = text.length();
-		if (length == 0) return new Rectangle(0, 0, 0, 0);
-		if (start > end) return new Rectangle(0, 0, 0, 0);
+        if (length == 0) {
+            return new Rectangle(0, 0, 0, 0);
+        }
+        if (start > end) {
+            return new Rectangle(0, 0, 0, 0);
+        }
 		start = Math.min(Math.max(0, start), length - 1);
 		end = Math.min(Math.max(0, end), length - 1);
 		start = translateOffset(start);
@@ -825,10 +887,14 @@ public Rectangle getBounds(int start, int end) {
 			top = Math.min(top, (int)rect.y);
 			bottom = Math.max(bottom, (int)Math.ceil(rect.y + rect.height));
 		}
-		if (fixedLineMetrics != null) bottom = top + fixedLineMetrics.height;
+        if (fixedLineMetrics != null) {
+            bottom = top + fixedLineMetrics.height;
+        }
 		return new Rectangle(left, top, right - left, bottom - top + getVerticalIndent());
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -915,11 +981,15 @@ public boolean getJustify () {
 public int getLevel(int offset) {
 	checkLayout();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
 		int length = text.length();
-		if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+        if (!(0 <= offset && offset <= length)) {
+            SWT.error(SWT.ERROR_INVALID_RANGE);
+        }
 		offset = translateOffset(offset);
 		long glyphOffset = layoutManager.glyphIndexForCharacterAtIndex(offset);
 		NSRange range  = new NSRange();
@@ -929,7 +999,9 @@ public int getLevel(int offset) {
 		layoutManager.getGlyphsInRange(range, 0, 0, 0, 0, bidiLevels);
 		return bidiLevels[0];
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -947,7 +1019,9 @@ public int getLevel(int offset) {
 public int[] getLineOffsets() {
 	checkLayout ();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
 		int[] offsets = new int[lineOffsets.length];
@@ -956,7 +1030,9 @@ public int[] getLineOffsets() {
 		}
 		return offsets;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -977,11 +1053,15 @@ public int[] getLineOffsets() {
 public int getLineIndex(int offset) {
 	checkLayout ();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
 		int length = text.length();
-		if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+        if (!(0 <= offset && offset <= length)) {
+            SWT.error(SWT.ERROR_INVALID_RANGE);
+        }
 		offset = translateOffset(offset);
 		for (int line=0; line<lineOffsets.length - 1; line++) {
 			if (lineOffsets[line + 1] > offset) {
@@ -990,7 +1070,9 @@ public int getLineIndex(int offset) {
 		}
 		return lineBounds.length - 1;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1010,15 +1092,21 @@ public int getLineIndex(int offset) {
 public Rectangle getLineBounds(int lineIndex) {
 	checkLayout();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
-		if (!(0 <= lineIndex && lineIndex < lineBounds.length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+        if (!(0 <= lineIndex && lineIndex < lineBounds.length)) {
+            SWT.error(SWT.ERROR_INVALID_RANGE);
+        }
 		NSRect rect = lineBounds[lineIndex];
 		int height =  Math.max((int)Math.ceil(rect.height), ascent + descent);
 		return new Rectangle((int)rect.x, (int)rect.y, (int)Math.ceil(rect.width), height);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1035,12 +1123,16 @@ public Rectangle getLineBounds(int lineIndex) {
 public int getLineCount() {
 	checkLayout ();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
 		return lineOffsets.length - 1;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1060,12 +1152,18 @@ public int getLineCount() {
 public FontMetrics getLineMetrics (int lineIndex) {
 	checkLayout ();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
 		int lineCount = getLineCount();
-		if (!(0 <= lineIndex && lineIndex < lineCount)) SWT.error(SWT.ERROR_INVALID_RANGE);
-		if (fixedLineMetrics != null) return fixedLineMetrics.makeCopy();
+        if (!(0 <= lineIndex && lineIndex < lineCount)) {
+            SWT.error(SWT.ERROR_INVALID_RANGE);
+        }
+        if (fixedLineMetrics != null) {
+            return fixedLineMetrics.makeCopy();
+        }
 		int length = text.length();
 		if (length == 0) {
 			Font font = this.font != null ? this.font : device.systemFont;
@@ -1079,7 +1177,9 @@ public FontMetrics getLineMetrics (int lineIndex) {
 		int baseline = (int)layoutManager.typesetter().baselineOffsetInLayoutManager(layoutManager, getLineOffsets()[lineIndex]);
 		return FontMetrics.cocoa_new(rect.height - baseline, baseline, 0.0, 0, rect.height);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1116,12 +1216,18 @@ NSColor getLinkForeground() {
 public Point getLocation(int offset, boolean trailing) {
 	checkLayout();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
 		int length = text.length();
-		if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE);
-		if (length == 0) return new Point(0, 0);
+        if (!(0 <= offset && offset <= length)) {
+            SWT.error(SWT.ERROR_INVALID_RANGE);
+        }
+        if (length == 0) {
+            return new Point(0, 0);
+        }
 		if (offset == length) {
 			NSRect rect = lineBounds[lineBounds.length - 1];
 			return new Point((int)(rect.x + rect.width), (int)rect.y);
@@ -1152,7 +1258,9 @@ public Point getLocation(int offset, boolean trailing) {
 			return new Point((int)point.x, (int)rect.y + getVerticalIndent());
 		}
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1177,11 +1285,15 @@ public Point getLocation(int offset, boolean trailing) {
  */
 public int getNextOffset (int offset, int movement) {
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		return _getOffset(offset, movement, true);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1189,11 +1301,19 @@ int _getOffset (int offset, int movement, boolean forward) {
 	checkLayout();
 	computeRuns();
 	int length = text.length();
-	if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE);
-	if (forward && offset == length) return length;
-	if (!forward && offset == 0) return 0;
+    if (!(0 <= offset && offset <= length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
+    if (forward && offset == length) {
+        return length;
+    }
+    if (!forward && offset == 0) {
+        return 0;
+    }
 	int step = forward ? 1 : -1;
-	if ((movement & SWT.MOVEMENT_CHAR) != 0) return offset + step;
+    if ((movement & SWT.MOVEMENT_CHAR) != 0) {
+        return offset + step;
+    }
 	switch (movement) {
 		case SWT.MOVEMENT_CLUSTER:
 			//TODO cluster
@@ -1279,7 +1399,9 @@ int _getOffset (int offset, int movement, boolean forward) {
  */
 public int getOffset(Point point, int[] trailing) {
 	checkLayout();
-	if (point == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return getOffset(point.x, point.y, trailing);
 }
 
@@ -1309,19 +1431,27 @@ public int getOffset(Point point, int[] trailing) {
 public int getOffset(int x, int y, int[] trailing) {
 	checkLayout();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
-		if (trailing != null && trailing.length < 1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (trailing != null && trailing.length < 1) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		int length = text.length();
-		if (length == 0) return 0;
+        if (length == 0) {
+            return 0;
+        }
 		NSPoint pt = new NSPoint();
 		pt.x = x;
 		pt.y =  y - getVerticalIndent();
 		double[] partialFraction = new double[1];
 		long glyphIndex = layoutManager.glyphIndexForPoint(pt, textContainer, partialFraction);
 		long charOffset = layoutManager.characterIndexForGlyphAtIndex(glyphIndex);
-		if (textStorage.string().characterAtIndex(charOffset) == '\n') charOffset--;
+        if (textStorage.string().characterAtIndex(charOffset) == '\n') {
+            charOffset--;
+        }
 		int offset = (int)charOffset;
 		offset = Math.min(untranslateOffset(offset), length - 1);
 		if (trailing != null) {
@@ -1340,7 +1470,9 @@ public int getOffset(int x, int y, int[] trailing) {
 		}
 		return offset;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1379,11 +1511,15 @@ public int getOrientation() {
  */
 public int getPreviousOffset (int offset, int movement) {
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		return _getOffset(offset, movement, false);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1451,14 +1587,24 @@ public char[] getSegmentsChars () {
 
 String getSegmentsText() {
 	int length = text.length();
-	if (length == 0) return text;
-	if (segments == null) return text;
+    if (length == 0) {
+        return text;
+    }
+    if (segments == null) {
+        return text;
+    }
 	int nSegments = segments.length;
-	if (nSegments == 0) return text;
+    if (nSegments == 0) {
+        return text;
+    }
 	if (segmentsChars == null) {
-		if (nSegments == 1) return text;
+        if (nSegments == 1) {
+            return text;
+        }
 		if (nSegments == 2) {
-			if (segments[0] == 0 && segments[1] == length) return text;
+            if (segments[0] == 0 && segments[1] == length) {
+                return text;
+            }
 		}
 	}
 	char[] oldChars = new char[length];
@@ -1527,7 +1673,9 @@ public int getVerticalIndent () {
 public TextStyle getStyle (int offset) {
 	checkLayout();
 	int length = text.length();
-	if (!(0 <= offset && offset < length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= offset && offset < length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	for (int i=1; i<stylesCount; i++) {
 		StyleItem item = styles[i];
 		if (item.start > offset) {
@@ -1643,7 +1791,9 @@ public int getWrapIndent () {
 
 void initClasses () {
 	String className = "SWTTextAttachmentCell";
-	if (OS.objc_lookUpClass(className) != 0) return;
+    if (OS.objc_lookUpClass(className) != 0) {
+        return;
+    }
 
 	textLayoutCallback2 = new Callback(getClass(), "textLayoutProc", 2);
 	long proc2 = textLayoutCallback2.getAddress();
@@ -1711,17 +1861,29 @@ public void setAlignment (int alignment) {
 	checkLayout();
 	int mask = SWT.LEFT | SWT.CENTER | SWT.RIGHT;
 	alignment &= mask;
-	if (alignment == 0) return;
-	if ((alignment & SWT.LEFT) != 0) alignment = SWT.LEFT;
-	if ((alignment & SWT.RIGHT) != 0) alignment = SWT.RIGHT;
-	if (this.alignment == alignment) return;
+    if (alignment == 0) {
+        return;
+    }
+    if ((alignment & SWT.LEFT) != 0) {
+        alignment = SWT.LEFT;
+    }
+    if ((alignment & SWT.RIGHT) != 0) {
+        alignment = SWT.RIGHT;
+    }
+    if (this.alignment == alignment) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.alignment = alignment;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1745,15 +1907,23 @@ public void setAlignment (int alignment) {
  */
 public void setAscent (int ascent) {
 	checkLayout ();
-	if (ascent < -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.ascent == ascent) return;
+    if (ascent < -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.ascent == ascent) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.ascent = ascent;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1777,15 +1947,23 @@ public void setAscent (int ascent) {
  */
 public void setDescent (int descent) {
 	checkLayout ();
-	if (descent < -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.descent == descent) return;
+    if (descent < -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.descent == descent) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.descent = descent;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1845,17 +2023,27 @@ public void setFixedLineMetrics (FontMetrics metrics) {
  */
 public void setFont (Font font) {
 	checkLayout ();
-	if (font != null && font.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (font != null && font.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Font oldFont = this.font;
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	this.font = font;
-	if (oldFont != null && oldFont.equals(font)) return;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1875,15 +2063,23 @@ public void setFont (Font font) {
  */
 public void setIndent (int indent) {
 	checkLayout ();
-	if (indent < 0) return;
-	if (this.indent == indent) return;
+    if (indent < 0) {
+        return;
+    }
+    if (this.indent == indent) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.indent = indent;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1903,15 +2099,23 @@ public void setIndent (int indent) {
  */
 public void setWrapIndent (int wrapIndent) {
 	checkLayout ();
-	if (wrapIndent < 0) return;
-	if (this.wrapIndent == wrapIndent) return;
+    if (wrapIndent < 0) {
+        return;
+    }
+    if (this.wrapIndent == wrapIndent) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.wrapIndent = wrapIndent;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1929,14 +2133,20 @@ public void setWrapIndent (int wrapIndent) {
  */
 public void setJustify (boolean justify) {
 	checkLayout ();
-	if (justify == this.justify) return;
+    if (justify == this.justify) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.justify = justify;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1954,16 +2164,26 @@ public void setOrientation(int orientation) {
 	checkLayout();
 	int mask = SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
 	orientation &= mask;
-	if (orientation == 0) return;
-	if ((orientation & SWT.LEFT_TO_RIGHT) != 0) orientation = SWT.LEFT_TO_RIGHT;
-	if (this.orientation == orientation) return;
+    if (orientation == 0) {
+        return;
+    }
+    if ((orientation & SWT.LEFT_TO_RIGHT) != 0) {
+        orientation = SWT.LEFT_TO_RIGHT;
+    }
+    if (this.orientation == orientation) {
+        return;
+    }
 	this.orientation = orientation;
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1993,23 +2213,33 @@ public void setOrientation(int orientation) {
  */
 public void setSegments(int[] segments) {
 	checkLayout();
-	if (this.segments == null && segments == null) return;
+    if (this.segments == null && segments == null) {
+        return;
+    }
 	if (this.segments != null && segments !=null) {
 		if (this.segments.length == segments.length) {
 			int i;
 			for (i = 0; i <segments.length; i++) {
-				if (this.segments[i] != segments[i]) break;
+                if (this.segments[i] != segments[i]) {
+                    break;
+                }
 			}
-			if (i == segments.length) return;
+            if (i == segments.length) {
+                return;
+            }
 		}
 	}
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.segments = segments;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -2032,23 +2262,33 @@ public void setSegments(int[] segments) {
  */
 public void setSegmentsChars(char[] segmentsChars) {
 	checkLayout();
-	if (this.segmentsChars == null && segmentsChars == null) return;
+    if (this.segmentsChars == null && segmentsChars == null) {
+        return;
+    }
 	if (this.segmentsChars != null && segmentsChars != null) {
 		if (this.segmentsChars.length == segmentsChars.length) {
 			int i;
 			for (i = 0; i <segmentsChars.length; i++) {
-				if (this.segmentsChars[i] != segmentsChars[i]) break;
+                if (this.segmentsChars[i] != segmentsChars[i]) {
+                    break;
+                }
 			}
-			if (i == segmentsChars.length) return;
+            if (i == segmentsChars.length) {
+                return;
+            }
 		}
 	}
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.segmentsChars = segmentsChars;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -2067,15 +2307,23 @@ public void setSegmentsChars(char[] segmentsChars) {
  */
 public void setSpacing (int spacing) {
 	checkLayout();
-	if (spacing < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.spacing == spacing) return;
+    if (spacing < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.spacing == spacing) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.spacing = spacing;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -2095,15 +2343,23 @@ public void setSpacing (int spacing) {
  */
 public void setVerticalIndent (int verticalIndent) {
 	checkLayout();
-	if (verticalIndent < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.verticalIndentInPoints == verticalIndent) return;
+    if (verticalIndent < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.verticalIndentInPoints == verticalIndent) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.verticalIndentInPoints = verticalIndent;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -2123,11 +2379,17 @@ public void setVerticalIndent (int verticalIndent) {
 public void setStyle (TextStyle style, int start, int end) {
 	checkLayout();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		int length = text.length();
-		if (length == 0) return;
-		if (start > end) return;
+        if (length == 0) {
+            return;
+        }
+        if (start > end) {
+            return;
+        }
 		start = Math.min(Math.max(0, start), length - 1);
 		end = Math.min(Math.max(0, end), length - 1);
 		int low = -1;
@@ -2144,9 +2406,13 @@ public void setStyle (TextStyle style, int start, int end) {
 			StyleItem item = styles[high];
 			if (item.start == start && styles[high + 1].start - 1 == end) {
 				if (style == null) {
-					if (item.style == null) return;
+                    if (item.style == null) {
+                        return;
+                    }
 				} else {
-					if (style.equals(item.style)) return;
+                    if (style.equals(item.style)) {
+                        return;
+                    }
 				}
 			}
 		}
@@ -2154,7 +2420,9 @@ public void setStyle (TextStyle style, int start, int end) {
 		int modifyStart = high;
 		int modifyEnd = modifyStart;
 		while (modifyEnd < stylesCount) {
-			if (styles[modifyEnd + 1].start > end) break;
+            if (styles[modifyEnd + 1].start > end) {
+                break;
+            }
 			modifyEnd++;
 		}
 		if (modifyStart == modifyEnd) {
@@ -2185,8 +2453,12 @@ public void setStyle (TextStyle style, int start, int end) {
 				return;
 			}
 		}
-		if (start == styles[modifyStart].start) modifyStart--;
-		if (end == styles[modifyEnd + 1].start - 1) modifyEnd++;
+        if (start == styles[modifyStart].start) {
+            modifyStart--;
+        }
+        if (end == styles[modifyEnd + 1].start - 1) {
+            modifyEnd++;
+        }
 		int newLength = stylesCount + 1 - (modifyEnd - modifyStart - 1);
 		if (newLength > styles.length) {
 			int newSize = Math.min(newLength + 1024, Math.max(64, newLength * 2));
@@ -2202,7 +2474,9 @@ public void setStyle (TextStyle style, int start, int end) {
 		styles[modifyStart + 2].start = end + 1;
 		stylesCount = newLength;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -2219,23 +2493,33 @@ public void setStyle (TextStyle style, int start, int end) {
  */
 public void setTabs(int[] tabs) {
 	checkLayout();
-	if (this.tabs == null && tabs == null) return;
+    if (this.tabs == null && tabs == null) {
+        return;
+    }
 	if (this.tabs != null && tabs !=null) {
 		if (this.tabs.length == tabs.length) {
 			int i;
 			for (i = 0; i < tabs.length; i++) {
-				if (this.tabs[i] != tabs[i]) break;
+                if (this.tabs[i] != tabs[i]) {
+                    break;
+                }
 			}
-			if (i == tabs.length) return;
+            if (i == tabs.length) {
+                return;
+            }
 		}
 	}
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.tabs = tabs;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -2258,10 +2542,16 @@ public void setTabs(int[] tabs) {
  */
 public void setText (String text) {
 	checkLayout ();
-	if (text == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (text.equals(this.text)) return;
+    if (text == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (text.equals(this.text)) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.text = text;
@@ -2271,7 +2561,9 @@ public void setText (String text) {
 		styles[1].start = text.length();
 		stylesCount = 2;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -2314,15 +2606,23 @@ public void setTextDirection (int textDirection) {
  */
 public void setWidth (int width) {
 	checkLayout();
-	if (width < -1 || width == 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.wrapWidth == width) return;
+    if (width < -1 || width == 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.wrapWidth == width) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		freeRuns();
 		this.wrapWidth = width;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -2334,20 +2634,30 @@ public void setWidth (int width) {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "TextLayout {*DISPOSED*}";
+    if (isDisposed()) {
+        return "TextLayout {*DISPOSED*}";
+    }
 	return "TextLayout {" + text + "}";
 }
 
 static long textLayoutProc(long id, long sel) {
 	long [] jniRef = new long [1];
 	OS.object_getInstanceVariable(id, SWT_OBJECT, jniRef);
-	if (jniRef[0] == 0) return 0;
+    if (jniRef[0] == 0) {
+        return 0;
+    }
 	StyleItem run = (StyleItem) OS.JNIGetObject(jniRef[0]);
-	if (run == null) return 0;
+    if (run == null) {
+        return 0;
+    }
 	TextStyle style = run.style;
-	if (style == null) return 0;
+    if (style == null) {
+        return 0;
+    }
 	GlyphMetrics metrics = style.metrics;
-	if (metrics == null) return 0;
+    if (metrics == null) {
+        return 0;
+    }
 	if (sel == OS.sel_cellSize) {
 		NSSize size = new NSSize();
 		size.width = metrics.width;
@@ -2374,14 +2684,24 @@ static long textLayoutProc(long id, long sel) {
  */
 int translateOffset (int offset) {
 	int length = text.length();
-	if (length == 0) return offset;
-	if (segments == null) return offset;
+    if (length == 0) {
+        return offset;
+    }
+    if (segments == null) {
+        return offset;
+    }
 	int nSegments = segments.length;
-	if (nSegments == 0) return offset;
+    if (nSegments == 0) {
+        return offset;
+    }
 	if (segmentsChars == null) {
-		if (nSegments == 1) return offset;
+        if (nSegments == 1) {
+            return offset;
+        }
 		if (nSegments == 2) {
-			if (segments[0] == 0 && segments[1] == length) return offset;
+            if (segments[0] == 0 && segments[1] == length) {
+                return offset;
+            }
 		}
 	}
 	for (int i = 0; i < nSegments && offset - i >= segments[i]; i++) {
@@ -2395,14 +2715,24 @@ int translateOffset (int offset) {
  */
 int untranslateOffset (int offset) {
 	int length = text.length();
-	if (length == 0) return offset;
-	if (segments == null) return offset;
+    if (length == 0) {
+        return offset;
+    }
+    if (segments == null) {
+        return offset;
+    }
 	int nSegments = segments.length;
-	if (nSegments == 0) return offset;
+    if (nSegments == 0) {
+        return offset;
+    }
 	if (segmentsChars == null) {
-		if (nSegments == 1) return offset;
+        if (nSegments == 1) {
+            return offset;
+        }
 		if (nSegments == 2) {
-			if (segments[0] == 0 && segments[1] == length) return offset;
+            if (segments[0] == 0 && segments[1] == length) {
+                return offset;
+            }
 		}
 	}
 	for (int i = 0; i < nSegments && offset > segments[i]; i++) {
@@ -2430,7 +2760,9 @@ int untranslateOffset (int offset) {
  */
 public void setDefaultTabWidth(int tabLength) {
 
-	if (tabLength < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (tabLength < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
 	checkLayout();
 	String oldString = getText();
@@ -2447,14 +2779,20 @@ public void setDefaultTabWidth(int tabLength) {
 
 double getTabWidth() {
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		computeRuns();
 		NSRect rect = layoutManager.usedRectForTextContainer(textContainer);
-		if (wrapWidth != -1) rect.width = wrapWidth;
+        if (wrapWidth != -1) {
+            rect.width = wrapWidth;
+        }
 		return rect.width;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 

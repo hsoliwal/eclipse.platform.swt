@@ -46,8 +46,9 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI(){
 	label = new Label(shell, 0);
 
 	int[] cases = {SWT.LEFT, SWT.RIGHT, SWT.CENTER, SWT.SEPARATOR, SWT.HORIZONTAL, SWT.VERTICAL, SWT.SHADOW_IN, SWT.SHADOW_OUT};
-	for (int style : cases)
-		label = new Label(shell, style);
+    for (int style : cases) {
+        label = new Label(shell, style);
+    }
 }
 
 @Override
@@ -72,8 +73,9 @@ public void test_getImage(){
 	for (Image image : cases) {
 		label.setImage(image);
 		assertEquals(label.getImage(), image);
-		if (image!=null)
-			image.dispose();
+        if (image != null) {
+            image.dispose();
+        }
 	}
 }
 

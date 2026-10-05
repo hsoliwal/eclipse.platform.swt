@@ -136,21 +136,24 @@ public final class Bug572242_LeakInTreeDragSourceEffect {
 				dragSource.addDragListener (new DragSourceListener () {
 					@Override
 					public void dragStart(DragSourceEvent event) {
-						if (itemCancelStart == controlType.getSelectedItem())
-							event.doit = false;
+                        if (itemCancelStart == controlType.getSelectedItem()) {
+                            event.doit = false;
+                        }
 
-						if (itemNoAgents == controlType.getSelectedItem())
-							dragSource.setTransfer ((Transfer[])null);
-						else
-							dragSource.setTransfer (TextTransfer.getInstance ());
+                        if (itemNoAgents == controlType.getSelectedItem()) {
+                            dragSource.setTransfer((Transfer[]) null);
+                        } else {
+                            dragSource.setTransfer(TextTransfer.getInstance());
+                        }
 					}
 
 					@Override
 					public void dragSetData(DragSourceEvent event) {
 						event.data = controlType.getSelectedItem().getText();
 
-						if (itemCancelSetData == controlType.getSelectedItem())
-							event.doit = false;
+                        if (itemCancelSetData == controlType.getSelectedItem()) {
+                            event.doit = false;
+                        }
 					}
 
 					@Override

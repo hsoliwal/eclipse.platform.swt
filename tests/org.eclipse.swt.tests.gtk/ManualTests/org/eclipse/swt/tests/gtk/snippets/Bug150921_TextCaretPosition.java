@@ -44,7 +44,9 @@ public class Bug150921_TextCaretPosition {
 		multi.addModifyListener(new TestListener());
 		shell.open();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

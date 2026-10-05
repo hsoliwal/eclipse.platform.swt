@@ -42,8 +42,9 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 	assertThrows(IllegalArgumentException.class, () -> new ProgressBar(null, 0), "No exception thrown");
 
 	int[] cases = {0, SWT.HORIZONTAL, SWT.VERTICAL};
-	for (int style : cases)
-		progressBar = new ProgressBar(shell, style);
+    for (int style : cases) {
+        progressBar = new ProgressBar(shell, style);
+    }
 }
 
 @Override

@@ -92,8 +92,9 @@ public static void main(String[] args) {
 	b.addListener(SWT.Selection, e -> shell.close());
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	region.dispose();
 	display.dispose();

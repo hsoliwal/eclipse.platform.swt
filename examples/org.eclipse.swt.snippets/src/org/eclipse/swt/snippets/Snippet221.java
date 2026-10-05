@@ -65,7 +65,9 @@ public static void main(String[] args) {
 	column2.pack();
 
 	Heartbeat = () -> {
-		if (!Tracking || tree.isDisposed()) return;
+        if (!Tracking || tree.isDisposed()) {
+            return;
+        }
 		Point cursor = display.getCursorLocation();
 		cursor = display.map(null, tree, cursor);
 		Scroll(tree, cursor.x, cursor.y);
@@ -86,14 +88,17 @@ public static void main(String[] args) {
 	tree.addListener(SWT.MouseExit, listener);
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }
 static void Scroll(Tree tree, int x, int y) {
 	TreeItem item = tree.getItem(new Point(x, y));
-	if (item == null) return;
+    if (item == null) {
+        return;
+    }
 	Rectangle area = tree.getClientArea();
 	int headerHeight = tree.getHeaderHeight();
 	int itemHeight= tree.getItemHeight();
@@ -104,11 +109,15 @@ static void Scroll(Tree tree, int x, int y) {
 	if (y > area.y + area.height - 2 * itemHeight) {
 		nextItem = NextItem(tree, item);
 	}
-	if (nextItem != null) tree.showItem(nextItem);
+    if (nextItem != null) {
+        tree.showItem(nextItem);
+    }
 }
 
 static TreeItem PreviousItem(Tree tree, TreeItem item) {
-	if (item == null) return null;
+    if (item == null) {
+        return null;
+    }
 	TreeItem childItem = item;
 	TreeItem parentItem = childItem.getParentItem();
 	int index = parentItem == null ? tree.indexOf(childItem) : parentItem.indexOf(childItem);
@@ -125,7 +134,9 @@ static TreeItem PreviousItem(Tree tree, TreeItem item) {
 	}
 }
 static TreeItem NextItem(Tree tree, TreeItem item) {
-	if (item == null) return null;
+    if (item == null) {
+        return null;
+    }
 	if (item.getExpanded()) {
 		return item.getItem(0);
 	} else {

@@ -26,14 +26,20 @@ int usedCount, unusedCount;
 
 String[] getArgNames(JNIMethod method) {
 	int n_args = method.getParameters().length;
-	if (n_args == 0) return new String[0];
+    if (n_args == 0) {
+        return new String[0];
+    }
 	String name = method.getName();
 	String params = "";
 	int index = 0;
 	while (true) {
 		index = classSource.indexOf(name, index + 1);
-		if (!Character.isWhitespace(classSource.charAt(index - 1))) continue;
-		if (index == -1) return null;
+        if (!Character.isWhitespace(classSource.charAt(index - 1))) {
+            continue;
+        }
+        if (index == -1) {
+            return null;
+        }
 		int parantesesStart = classSource.indexOf("(", index);
 		if (classSource.substring(index + name.length(), parantesesStart).trim().length() == 0) {
 			int parantesesEnd = classSource.indexOf(")", parantesesStart);
@@ -57,14 +63,18 @@ String[] getArgNames(JNIMethod method) {
 
 
 void loadClassSource() {
-	if (classSourcePath == null) return;
+    if (classSourcePath == null) {
+        return;
+    }
 	File f = new File(classSourcePath);
 	classSource = loadFile(f);
 }
 
 void loadFiles () {
-	// BAD - holds on to a lot of memory
-	if (sourcePath == null) return;
+    // BAD - holds on to a lot of memory
+    if (sourcePath == null) {
+        return;
+    }
 	files = new HashMap<> ();
 	for (String path : sourcePath) {
 		File file = new File(path);

@@ -70,12 +70,24 @@ class CComboTab extends AlignableTab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (flatButton.getSelection ()) style |= SWT.FLAT;
-		if (readOnlyButton.getSelection ()) style |= SWT.READ_ONLY;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
-		if (leftButton.getSelection ()) style |= SWT.LEFT;
-		if (centerButton.getSelection ()) style |= SWT.CENTER;
-		if (rightButton.getSelection ()) style |= SWT.RIGHT;
+        if (flatButton.getSelection()) {
+            style |= SWT.FLAT;
+        }
+        if (readOnlyButton.getSelection()) {
+            style |= SWT.READ_ONLY;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (leftButton.getSelection()) {
+            style |= SWT.LEFT;
+        }
+        if (centerButton.getSelection()) {
+            style |= SWT.CENTER;
+        }
+        if (rightButton.getSelection()) {
+            style |= SWT.RIGHT;
+        }
 
 		/* Create the example widgets */
 		combo1 = new CCombo (comboGroup, style);
@@ -143,9 +155,15 @@ class CComboTab extends AlignableTab {
 	@Override
 	void setExampleWidgetAlignment() {
 		int alignment = 0;
-		if (leftButton.getSelection ()) alignment = SWT.LEFT;
-		if (centerButton.getSelection ()) alignment = SWT.CENTER;
-		if (rightButton.getSelection ()) alignment = SWT.RIGHT;
+        if (leftButton.getSelection()) {
+            alignment = SWT.LEFT;
+        }
+        if (centerButton.getSelection()) {
+            alignment = SWT.CENTER;
+        }
+        if (rightButton.getSelection()) {
+            alignment = SWT.RIGHT;
+        }
 		combo1.setAlignment (alignment);
 	}
 }

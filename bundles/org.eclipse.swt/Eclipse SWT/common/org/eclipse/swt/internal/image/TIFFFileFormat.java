@@ -31,7 +31,9 @@ public final class TIFFFileFormat extends StaticImageFileFormat {
 		byte[] header = new byte[4];
 		stream.read(header);
 		stream.unread(header);
-		if (header[0] != header[1]) return false;
+        if (header[0] != header[1]) {
+            return false;
+        }
 		if (!(header[0] == 0x49 && header[2] == 42 && header[3] == 0) &&
 			!(header[0] == 0x4d && header[2] == 0 && header[3] == 42)) {
 			return false;
@@ -47,7 +49,9 @@ ImageData[] loadFromByteStream() {
 	TIFFRandomFileAccess file = new TIFFRandomFileAccess(inputStream);
 	try {
 		file.read(header);
-		if (header[0] != header[1]) SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (header[0] != header[1]) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		if (!(header[0] == 0x49 && header[2] == 42 && header[3] == 0) &&
 			!(header[0] == 0x4d && header[2] == 0 && header[3] == 42)) {
 			SWT.error(SWT.ERROR_INVALID_IMAGE);

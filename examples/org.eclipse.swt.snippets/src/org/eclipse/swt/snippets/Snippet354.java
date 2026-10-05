@@ -33,7 +33,9 @@ public class Snippet354 {
 	static MenuItem getItem(Menu menu, int id) {
 		MenuItem[] items = menu.getItems();
 		for (MenuItem item : items) {
-			if (item.getID() == id) return item;
+            if (item.getID() == id) {
+                return item;
+            }
 		}
 		return null;
 	}
@@ -118,8 +120,9 @@ public class Snippet354 {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

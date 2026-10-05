@@ -89,11 +89,15 @@ public class LakeTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (waveFrames == null) {
 			Image loaded = example.loadImage(gc.getDevice(), "ash.jpg"); //$NON-NLS-1$
-			if (loaded == null) return;
+            if (loaded == null) {
+                return;
+            }
 			ImageData src = loaded.getImageData();
 			imgWidth = src.width;
 			imgHeight = src.height;
@@ -168,7 +172,9 @@ public class LakeTab extends AnimatedGraphicsTab {
 			}
 			// Match the seam band at the bottom of the original.
 			for (int j = imgHeight - SEAM_SIZE; j < imgHeight; j++) {
-				if (j < 0) continue;
+                if (j < 0) {
+                    continue;
+                }
 				System.arraycopy(transparentRow, 0, topPixels, j * imgWidth, imgWidth);
 			}
 

@@ -29,10 +29,18 @@ public class Snippet25 {
 
 static String stateMask (int stateMask) {
 	String string = "";
-	if ((stateMask & SWT.CTRL) != 0) string += " CTRL";
-	if ((stateMask & SWT.ALT) != 0) string += " ALT";
-	if ((stateMask & SWT.SHIFT) != 0) string += " SHIFT";
-	if ((stateMask & SWT.COMMAND) != 0) string += " COMMAND";
+    if ((stateMask & SWT.CTRL) != 0) {
+        string += " CTRL";
+    }
+    if ((stateMask & SWT.ALT) != 0) {
+        string += " ALT";
+    }
+    if ((stateMask & SWT.SHIFT) != 0) {
+        string += " SHIFT";
+    }
+    if ((stateMask & SWT.COMMAND) != 0) {
+        string += " COMMAND";
+    }
 	return string;
 }
 
@@ -137,9 +145,15 @@ public static void main (String [] args) {
 		string += " character=0x" + Integer.toHexString (e.character) + " " + character (e.character);
 		if (e.keyLocation != 0) {
 			string +=  " location=";
-			if (e.keyLocation == SWT.LEFT) string +=  "LEFT";
-			if (e.keyLocation == SWT.RIGHT) string +=  "RIGHT";
-			if (e.keyLocation == SWT.KEYPAD) string +=  "KEYPAD";
+            if (e.keyLocation == SWT.LEFT) {
+                string += "LEFT";
+            }
+            if (e.keyLocation == SWT.RIGHT) {
+                string += "RIGHT";
+            }
+            if (e.keyLocation == SWT.KEYPAD) {
+                string += "KEYPAD";
+            }
 		}
 		System.out.println (string);
 	};
@@ -151,7 +165,9 @@ public static void main (String [] args) {
 	label.setText("Start typing to see key state, code and character in console.");
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

@@ -143,7 +143,9 @@ public final class PDFDocument extends Device {
 	 * Validates and prepares the data for construction.
 	 */
 	static PDFDocumentData checkData(String filename, PageSize pageSize) {
-		if (pageSize == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (pageSize == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		return checkData(filename, pageSize.width(), pageSize.height());
 	}
 
@@ -151,8 +153,12 @@ public final class PDFDocument extends Device {
 	 * Validates and prepares the data for construction.
 	 */
 	static PDFDocumentData checkData(String filename, double widthInPoints, double heightInPoints) {
-		if (filename == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (widthInPoints <= 0 || heightInPoints <= 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (filename == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (widthInPoints <= 0 || heightInPoints <= 0) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		PDFDocumentData data = new PDFDocumentData();
 		data.filename = filename;
 		data.widthInPoints = widthInPoints;
@@ -175,7 +181,9 @@ public final class PDFDocument extends Device {
 
 		byte[] filenameBytes = Converter.wcsToMbcs(filename, true);
 		surface = Cairo.cairo_pdf_surface_create(filenameBytes, widthInPoints, heightInPoints);
-		if (surface == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (surface == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 
 		cairo = Cairo.cairo_create(surface);
 		if (cairo == 0) {
@@ -225,7 +233,9 @@ public final class PDFDocument extends Device {
 	 */
 	public void newPage(double widthInPoints, double heightInPoints) {
 		checkDevice();
-		if (widthInPoints <= 0 || heightInPoints <= 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (widthInPoints <= 0 || heightInPoints <= 0) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 
 		Cairo.cairo_show_page(cairo);
 		Cairo.cairo_pdf_surface_set_size(surface, widthInPoints, heightInPoints);
@@ -324,7 +334,9 @@ public final class PDFDocument extends Device {
 	@Override
 	public long internal_new_GC(GCData data) {
 		checkDevice();
-		if (isGCCreated) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (isGCCreated) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 
 		if (data != null) {
 			int mask = SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
@@ -360,7 +372,9 @@ public final class PDFDocument extends Device {
 	 */
 	@Override
 	public void internal_dispose_GC(long hDC, GCData data) {
-		if (data != null) isGCCreated = false;
+        if (data != null) {
+            isGCCreated = false;
+        }
 	}
 
 	/**

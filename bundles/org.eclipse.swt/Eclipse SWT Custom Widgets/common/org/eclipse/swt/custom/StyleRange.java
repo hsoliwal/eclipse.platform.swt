@@ -108,10 +108,16 @@ public StyleRange(int start, int length, Color foreground, Color background, int
  */
 @Override
 public boolean equals(Object object) {
-	if (object == this) return true;
+    if (object == this) {
+        return true;
+    }
 	if (object instanceof StyleRange style) {
-		if (start != style.start) return false;
-		if (length != style.length) return false;
+        if (start != style.start) {
+            return false;
+        }
+        if (length != style.length) {
+            return false;
+        }
 		return similarTo(style);
 	}
 	return false;
@@ -141,15 +147,33 @@ boolean isVariableHeight() {
  * @return true if the receiver is unstyled, false otherwise.
  */
 public boolean isUnstyled() {
-	if (font != null) return false;
-	if (rise != 0) return false;
-	if (metrics != null) return false;
-	if (foreground != null) return false;
-	if (background != null) return false;
-	if (fontStyle != SWT.NORMAL) return false;
-	if (underline) return false;
-	if (strikeout) return false;
-	if (borderStyle != SWT.NONE) return false;
+    if (font != null) {
+        return false;
+    }
+    if (rise != 0) {
+        return false;
+    }
+    if (metrics != null) {
+        return false;
+    }
+    if (foreground != null) {
+        return false;
+    }
+    if (background != null) {
+        return false;
+    }
+    if (fontStyle != SWT.NORMAL) {
+        return false;
+    }
+    if (underline) {
+        return false;
+    }
+    if (strikeout) {
+        return false;
+    }
+    if (borderStyle != SWT.NONE) {
+        return false;
+    }
 	return true;
 }
 
@@ -162,8 +186,12 @@ public boolean isUnstyled() {
  * @return true if the objects are similar, false otherwise
  */
 public boolean similarTo(StyleRange style) {
-	if (!super.equals(style)) return false;
-	if (fontStyle != style.fontStyle) return false;
+    if (!super.equals(style)) {
+        return false;
+    }
+    if (fontStyle != style.fontStyle) {
+        return false;
+    }
 	return true;
 }
 
@@ -211,7 +239,9 @@ public String toString() {
 	String str = super.toString();
 	int index = str.indexOf('{');
 	str = str.substring(index + 1);
-	if (str.length() > 1) buffer.append(", ");
+    if (str.length() > 1) {
+        buffer.append(", ");
+    }
 	buffer.append(str);
 	return buffer.toString();
 }

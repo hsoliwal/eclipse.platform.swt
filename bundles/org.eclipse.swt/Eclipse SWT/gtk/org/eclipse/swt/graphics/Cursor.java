@@ -140,15 +140,21 @@ public Cursor(Device device, int style) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
 	for (String name : new String[] { name1, name2, "left_ptr", "default" }) {
-		if (name == null) continue;
+        if (name == null) {
+            continue;
+        }
 		if (GTK.GTK4) {
 			handle = GDK.gdk_cursor_new_from_name (name, 0);
 		} else {
 			handle = GDK.gdk_cursor_new_from_name (GDK.gdk_display_get_default(), name);
 		}
-		if (handle != 0) break;
+        if (handle != 0) {
+            break;
+        }
 	}
-	if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	init();
 }
 
@@ -190,9 +196,13 @@ public Cursor(Device device, int style) {
 @Deprecated
 public Cursor(Device device, ImageData source, ImageData mask, int hotspotX, int hotspotY) {
 	super(device);
-	if (source == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (source == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (mask == null) {
-		if (!(source.getTransparencyType() == SWT.TRANSPARENCY_MASK)) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (!(source.getTransparencyType() == SWT.TRANSPARENCY_MASK)) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		mask = source.getTransparencyMask();
 	}
 	/* Check the bounds. Mask must be the same size as source */
@@ -240,7 +250,9 @@ public Cursor(Device device, ImageData source, ImageData mask, int hotspotX, int
 	}
 	maskData = ImageData.convertPad(maskData, mask.width, mask.height, mask.depth, mask.scanlinePad, 1);
 	handle = createCursor(sourceData, maskData, source.width, source.height, hotspotX, hotspotY, true);
-	if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	init();
 }
 
@@ -280,7 +292,9 @@ public Cursor(Device device, ImageData source, int hotspotX, int hotspotY) {
 }
 
 private void setupCursorFromImageData(ImageData source, int hotspotX, int hotspotY) {
-	if (source == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (source == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (hotspotX >= source.width || hotspotX < 0 ||
 		hotspotY >= source.height || hotspotY < 0) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
@@ -291,7 +305,9 @@ private void setupCursorFromImageData(ImageData source, int hotspotX, int hotspo
 	int height = source.height;
 	PaletteData palette = source.palette;
 	long pixbuf = GDK.gdk_pixbuf_new(GDK.GDK_COLORSPACE_RGB, true, 8, width, height);
-	if (pixbuf == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (pixbuf == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	int stride = GDK.gdk_pixbuf_get_rowstride(pixbuf);
 	long data = GDK.gdk_pixbuf_get_pixels(pixbuf);
 	byte[] buffer = source.data;
@@ -310,7 +326,9 @@ private void setupCursorFromImageData(ImageData source, int hotspotX, int hotspo
 			byte[] srcBlues = new byte[length];
 			for (int i = 0; i < rgbs.length; i++) {
 				RGB rgb = rgbs[i];
-				if (rgb == null) continue;
+                if (rgb == null) {
+                    continue;
+                }
 				srcReds[i] = (byte)rgb.red;
 				srcGreens[i] = (byte)rgb.green;
 				srcBlues[i] = (byte)rgb.blue;
@@ -359,7 +377,9 @@ private void setupCursorFromImageData(ImageData source, int hotspotX, int hotspo
 	}
 	OS.g_object_unref(pixbuf);
 
-	if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	init();
 }
 
@@ -394,7 +414,9 @@ private void setupCursorFromImageData(ImageData source, int hotspotX, int hotspo
  */
 public Cursor(Device device, ImageDataProvider imageDataProvider, int hotspotX, int hotspotY) {
 	super(device);
-	if (imageDataProvider == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (imageDataProvider == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setupCursorFromImageData(imageDataProvider.getImageData(100), hotspotX, hotspotY);
 }
 
@@ -448,7 +470,9 @@ long createCursor(byte[] sourceData, byte[] maskData, int width, int height, int
 		}
 	}
 	long pixbuf = GDK.gdk_pixbuf_new(GDK.GDK_COLORSPACE_RGB, true, 8, width, height);
-	if (pixbuf == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (pixbuf == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	int stride = GDK.gdk_pixbuf_get_rowstride(pixbuf);
 	long pixels = GDK.gdk_pixbuf_get_pixels(pixbuf);
 	C.memmove(pixels, data, stride * height);
@@ -484,8 +508,12 @@ void destroy() {
  */
 @Override
 public boolean equals(Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Cursor)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Cursor)) {
+        return false;
+    }
 	Cursor cursor = (Cursor) object;
 	return device == cursor.device && handle == cursor.handle;
 }
@@ -549,7 +577,9 @@ public boolean isDisposed() {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Cursor {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Cursor {*DISPOSED*}";
+    }
 	return "Cursor {" + handle + "}";
 }
 

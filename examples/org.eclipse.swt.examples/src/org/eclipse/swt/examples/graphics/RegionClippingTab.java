@@ -144,7 +144,9 @@ public void createControlPanel(Composite parent) {
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	// array of coordinate points of polygon 1 (region 1)

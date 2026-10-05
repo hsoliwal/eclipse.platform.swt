@@ -190,8 +190,9 @@ public class Bug561444_JvmCrash_SetRedraw {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

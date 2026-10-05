@@ -57,16 +57,21 @@ public class Snippet218 {
 			};
 			Image newImage = new Image (display, imageGcDrawer, 1, Math.max (1, rect.height));
 			styledText.setBackgroundImage (newImage);
-			if (oldImage != null) oldImage.dispose ();
+            if (oldImage != null) {
+                oldImage.dispose();
+            }
 			oldImage = newImage;
 		});
 		shell.setSize(700, 400);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
-		if (oldImage != null) oldImage.dispose ();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		font.dispose();
 		display.dispose();
 	}

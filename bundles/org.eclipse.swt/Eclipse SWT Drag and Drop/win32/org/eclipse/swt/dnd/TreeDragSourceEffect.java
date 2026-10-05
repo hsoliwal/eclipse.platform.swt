@@ -60,7 +60,9 @@ public class TreeDragSourceEffect extends DragSourceEffect {
 	 */
 	@Override
 	public void dragFinished(DragSourceEvent event) {
-		if (dragSourceImage != null) dragSourceImage.dispose();
+        if (dragSourceImage != null) {
+            dragSourceImage.dispose();
+        }
 		dragSourceImage = null;
 	}
 
@@ -81,7 +83,9 @@ public class TreeDragSourceEffect extends DragSourceEffect {
 	}
 
 	Image getDragSourceImage(DragSourceEvent event) {
-		if (dragSourceImage != null) dragSourceImage.dispose();
+        if (dragSourceImage != null) {
+            dragSourceImage.dispose();
+        }
 		dragSourceImage = null;
 		SHDRAGIMAGE shdi = new SHDRAGIMAGE();
 		int DI_GETDRAGIMAGE = OS.RegisterWindowMessage (new TCHAR ("ShellGetDragImage", true)); //$NON-NLS-1$
@@ -115,7 +119,9 @@ public class TreeDragSourceEffect extends DragSourceEffect {
 				OS.MoveMemory (bmi, bmiHeader, BITMAPINFOHEADER.sizeof);
 				long [] pBits = new long [1];
 				long memDib = OS.CreateDIBSection (0, bmi, OS.DIB_RGB_COLORS, pBits, 0, 0);
-				if (memDib == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+                if (memDib == 0) {
+                    SWT.error(SWT.ERROR_NO_HANDLES);
+                }
 				long oldMemBitmap = OS.SelectObject (memHdc, memDib);
 
 				BITMAP dibBM = new BITMAP ();
@@ -157,7 +163,9 @@ public class TreeDragSourceEffect extends DragSourceEffect {
 	}
 
 	private static byte computeAlpha(byte[] src, int sp, int crColorKey) {
-	    if (crColorKey == -1) return src[sp];
+        if (crColorKey == -1) {
+            return src[sp];
+        }
 	    int b = src[sp] & 0xFF;
 	    int g = src[sp + 1] & 0xFF;
 	    int r = src[sp + 2] & 0xFF;

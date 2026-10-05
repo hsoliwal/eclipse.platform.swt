@@ -56,7 +56,9 @@ public static void main (String [] args) {
 //	System.out.println ("caret position=" + widget.text.getCaretPosition ());
 //	System.out.println ("caret location=" + widget.text.getCaretLocation ());
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 		if (text.getTopIndex() != 20) {
 			System.out.println("initial " + perm + " " + "current " + text.getTopIndex());
 		}

@@ -158,13 +158,17 @@ public class BarChart extends Canvas {
 					case SWT.ARROW_DOWN:
 					case SWT.ARROW_RIGHT:
 						selectedItem++;
-						if (selectedItem >= data.size()) selectedItem = 0;
+                        if (selectedItem >= data.size()) {
+                            selectedItem = 0;
+                        }
 						change = true;
 						break;
 					case SWT.ARROW_UP:
 					case SWT.ARROW_LEFT:
 						selectedItem--;
-						if (selectedItem <= -1) selectedItem = data.size() - 1;
+                        if (selectedItem <= -1) {
+                            selectedItem = data.size() - 1;
+                        }
 						change = true;
 						break;
 					case SWT.HOME:
@@ -304,10 +308,14 @@ public class BarChart extends Canvas {
 			public void getState(AccessibleControlEvent e) {
 				int childID = e.childID;
 				e.detail = ACC.STATE_FOCUSABLE;
-				if (isFocusControl()) e.detail |= ACC.STATE_FOCUSED;
+                if (isFocusControl()) {
+                    e.detail |= ACC.STATE_FOCUSED;
+                }
 				if (childID != ACC.CHILDID_SELF) {
 					e.detail |= ACC.STATE_SELECTABLE;
-					if (childID == selectedItem) e.detail |= ACC.STATE_SELECTED;
+                    if (childID == selectedItem) {
+                        e.detail |= ACC.STATE_SELECTED;
+                    }
 				}
 			}
 		});
@@ -329,8 +337,12 @@ public class BarChart extends Canvas {
 		gc.dispose();
 		int width = Math.max(titleWidth, count * (itemWidth + GAP) + GAP) + 3 * GAP + AXIS_WIDTH + valueSize.x;
 		int height = 3 * GAP + AXIS_WIDTH + valueSize.y * ((valueMax - valueMin) / valueIncrement + 3);
-		if (wHint != SWT.DEFAULT) width = wHint;
-		if (hHint != SWT.DEFAULT) height = hHint;
+        if (wHint != SWT.DEFAULT) {
+            width = wHint;
+        }
+        if (hHint != SWT.DEFAULT) {
+            height = hHint;
+        }
 		int border = getBorderWidth ();
 		Rectangle trim = computeTrim (0, 0, width + border*2, height + border*2);
 		return new Point (trim.width, trim.height);

@@ -73,7 +73,9 @@ public class Shape extends Canvas {
 			} else {
 				gc.fillRectangle(0, 0, length, length);
 			}
-			if (isFocusControl()) gc.drawFocus(rect.x, rect.y, rect.width, rect.height);
+            if (isFocusControl()) {
+                gc.drawFocus(rect.x, rect.y, rect.width, rect.height);
+            }
 		});
 
 		addFocusListener(new FocusAdapter() {
@@ -128,7 +130,9 @@ public class Shape extends Canvas {
 			@Override
 			public void getState(AccessibleControlEvent e) {
 				e.detail = ACC.STATE_FOCUSABLE;
-				if (isFocusControl()) e.detail |= ACC.STATE_FOCUSED;
+                if (isFocusControl()) {
+                    e.detail |= ACC.STATE_FOCUSED;
+                }
 			}
 		});
 	}

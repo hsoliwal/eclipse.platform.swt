@@ -61,7 +61,9 @@ public Object nativeToJava(TransferData transferData){
 	if (isSupportedType(transferData)) {
 
 		byte[] buffer = (byte[])super.nativeToJava(transferData);
-		if (buffer == null) return null;
+        if (buffer == null) {
+            return null;
+        }
 
 		MyType[] myData = new MyType[0];
 		try {
@@ -100,13 +102,17 @@ protected int[] getTypeIds(){
 	return new int[] {MYTYPEID};
 }
 boolean checkMyType(Object object) {
-	if (object == null || !(object instanceof MyType[] myTypes) || myTypes.length == 0) return false;
+    if (object == null || !(object instanceof MyType[] myTypes) || myTypes.length == 0) {
+        return false;
+    }
 	for (MyType myType : myTypes) {
-		if (myType == null ||
-			myType.firstName == null ||
-			myType.firstName.length() == 0 ||
-			myType.lastName == null ||
-			myType.lastName.length() == 0) return false;
+        if (myType == null ||
+                myType.firstName == null ||
+                myType.firstName.length() == 0 ||
+                myType.lastName == null ||
+                myType.lastName.length() == 0) {
+            return false;
+        }
 	}
 	return true;
 }

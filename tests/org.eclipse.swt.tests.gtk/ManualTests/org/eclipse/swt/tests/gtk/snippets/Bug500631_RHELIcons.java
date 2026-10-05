@@ -61,8 +61,9 @@ public class Bug500631_RHELIcons {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		
 	}

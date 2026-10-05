@@ -114,8 +114,9 @@ public static void main (String [] args) {
 	shell.setCursor(cursor);
 
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	cursor.dispose();
 	source.dispose();

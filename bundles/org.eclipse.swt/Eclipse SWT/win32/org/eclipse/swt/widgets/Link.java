@@ -140,7 +140,9 @@ public void addSelectionListener (SelectionListener listener) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	/*
 	* Feature in Windows.  By convention, native Windows controls
 	* check for a non-NULL wParam, assume that it is an HDC and
@@ -175,7 +177,9 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		OS.GetTextMetrics (hDC, lptm);
 		width = 0;
 		height = lptm.tmHeight;
-		if (newFont != 0) OS.SelectObject (hDC, oldFont);
+        if (newFont != 0) {
+            OS.SelectObject(hDC, oldFont);
+        }
 		OS.ReleaseDC (handle, hDC);
 	} else {
 		SIZE size = new SIZE ();
@@ -184,8 +188,12 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		width = size.cx;
 		height = size.cy;
 	}
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x;
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y;
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x;
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y;
+    }
 	int border = getBorderWidthInPixels ();
 	width += border * 2;
 	height += border * 2;
@@ -322,7 +330,9 @@ void parse (String string) {
 				}
 				break;
 			case 1:
-				if (c == 'a') state++;
+                if (c == 'a') {
+                    state++;
+                }
 				break;
 			case 2:
 				switch (c) {
@@ -334,8 +344,11 @@ void parse (String string) {
 						state++;
 						break;
 					default:
-						if (Character.isWhitespace(c)) break;
-						else state = 13;
+                        if (Character.isWhitespace(c)) {
+                            break;
+                        } else {
+                            state = 13;
+                        }
 				}
 				break;
 			case 3:
@@ -404,14 +417,18 @@ void parse (String string) {
 				state = c == '"' ? state + 1 : 0;
 				break;
 			case 15:
-				if (c == '"') state = 2;
+                if (c == '"') {
+                    state = 2;
+                }
 				break;
 			case 16:
 				if (c == '<') {
 					state = 1;
 				} else {
 					state = 0;
-					if (c != '&') mnemonic = Character.toUpperCase (c);
+                    if (c != '&') {
+                        mnemonic = Character.toUpperCase(c);
+                    }
 				}
 				break;
 			default:
@@ -451,8 +468,12 @@ void releaseWidget () {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection, listener);
 }
@@ -466,7 +487,9 @@ boolean setFocusItem (int index) {
 	item.mask = OS.LIF_ITEMINDEX | OS.LIF_STATE;
 	item.stateMask = OS.LIS_FOCUSED;
 	int activeIndex = getFocusItem ();
-	if (activeIndex == index) return true;
+    if (activeIndex == index) {
+        return true;
+    }
 	if (activeIndex >= 0) {
 		/* Feature in Windows. Unfocus any element unfocus all elements.
 		 * For example if item 2 is focused and we set unfocus (state = 0)
@@ -513,10 +536,14 @@ public void setLinkForeground (Color color) {
 	checkWidget ();
 	int pixel = -1;
 	if (color != null) {
-		if (color.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		pixel = color.handle;
 	}
-	if (pixel == linkForeground) return;
+    if (pixel == linkForeground) {
+        return;
+    }
 	linkForeground = pixel;
 	OS.InvalidateRect (handle, null, true);
 }
@@ -561,8 +588,12 @@ public void setLinkForeground (Color color) {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (string.equals (text)) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (string.equals(text)) {
+        return;
+    }
 	text = string;
 	if ((state & HAS_AUTO_DIRECTION) != 0) {
 		updateTextDirection (AUTO_TEXT_DIRECTION);
@@ -610,7 +641,9 @@ long windowProc () {
 @Override
 LRESULT WM_CHAR (long wParam, long lParam) {
 	LRESULT result = super.WM_CHAR (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	switch ((int)wParam) {
 		case SWT.SPACE:
 		case SWT.CR:
@@ -630,7 +663,9 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 @Override
 LRESULT WM_ERASEBKGND (long wParam, long lParam) {
 	LRESULT result = super.WM_ERASEBKGND (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  The SysLink control flashes when resized.
 	* The fix is to prevent the background from being erased.
@@ -656,7 +691,9 @@ LRESULT WM_GETDLGCODE (long wParam, long lParam) {
 @Override
 LRESULT WM_KEYDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_KEYDOWN (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	switch ((int)wParam) {
 		case OS.VK_SPACE:
 		case OS.VK_RETURN:
@@ -681,7 +718,9 @@ LRESULT WM_KILLFOCUS (long wParam, long lParam) {
 @Override
 LRESULT WM_NCHITTEST (long wParam, long lParam) {
 	LRESULT result = super.WM_NCHITTEST (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 
 	/*
 	* Feature in Windows. For WM_NCHITTEST, the Syslink window proc
@@ -694,10 +733,14 @@ LRESULT WM_NCHITTEST (long wParam, long lParam) {
 @Override
 LRESULT WM_SETCURSOR(long wParam, long lParam) {
 	LRESULT result = super.WM_SETCURSOR (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	long fDone = callWindowProc (handle, OS.WM_SETCURSOR, wParam, lParam);
-	/* Take responsibility for cursor over plain text after overriding WM_NCHITTEST. */
-	if (fDone == 0) OS.DefWindowProc (handle, OS.WM_SETCURSOR, wParam, lParam);
+    /* Take responsibility for cursor over plain text after overriding WM_NCHITTEST. */
+    if (fDone == 0) {
+        OS.DefWindowProc(handle, OS.WM_SETCURSOR, wParam, lParam);
+    }
 	return LRESULT.ONE;
 }
 

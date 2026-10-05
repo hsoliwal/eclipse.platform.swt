@@ -131,17 +131,25 @@ protected Point computeSize (Composite composite, int wHint, int hHint, boolean 
 	int width = 0, height = 0;
 	if (type == SWT.HORIZONTAL) {
 		width = count * maxWidth;
-		if (count != 0) width += (count - 1) * spacing;
+        if (count != 0) {
+            width += (count - 1) * spacing;
+        }
 		height = maxHeight;
 	} else {
 		width = maxWidth;
 		height = count * maxHeight;
-		if (count != 0) height += (count - 1) * spacing;
+        if (count != 0) {
+            height += (count - 1) * spacing;
+        }
 	}
 	width += marginWidth * 2;
 	height += marginHeight * 2;
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	return new Point (width, height);
 }
 
@@ -189,7 +197,9 @@ protected boolean flushCache (Control control) {
 String getName () {
 	String string = getClass ().getName ();
 	int index = string.lastIndexOf ('.');
-	if (index == -1) return string;
+    if (index == -1) {
+        return string;
+    }
 	return string.substring (index + 1, string.length ());
 }
 
@@ -198,7 +208,9 @@ protected void layout (Composite composite, boolean flushCache) {
 	Rectangle rect = composite.getClientArea ();
 	Control [] children = composite.getChildren ();
 	int count = children.length;
-	if (count == 0) return;
+    if (count == 0) {
+        return;
+    }
 	int width = rect.width - marginWidth * 2;
 	int height = rect.height - marginHeight * 2;
 	if (type == SWT.HORIZONTAL) {
@@ -211,7 +223,9 @@ protected void layout (Composite composite, boolean flushCache) {
 			if (i == 0) {
 				childWidth += extra / 2;
 			} else {
-				if (i == count - 1) childWidth += (extra + 1) / 2;
+                if (i == count - 1) {
+                    childWidth += (extra + 1) / 2;
+                }
 			}
 			child.setBounds (x, y, childWidth, height);
 			x += childWidth + spacing;
@@ -226,7 +240,9 @@ protected void layout (Composite composite, boolean flushCache) {
 			if (i == 0) {
 				childHeight += extra / 2;
 			} else {
-				if (i == count - 1) childHeight += (extra + 1) / 2;
+                if (i == count - 1) {
+                    childHeight += (extra + 1) / 2;
+                }
 			}
 			child.setBounds (x, y, width, childHeight);
 			y += childHeight + spacing;
@@ -244,9 +260,15 @@ protected void layout (Composite composite, boolean flushCache) {
 public String toString () {
 	String string = getName ()+" {";
 	string += "type="+((type == SWT.VERTICAL) ? "SWT.VERTICAL" : "SWT.HORIZONTAL")+" ";
-	if (marginWidth != 0) string += "marginWidth="+marginWidth+" ";
-	if (marginHeight != 0) string += "marginHeight="+marginHeight+" ";
-	if (spacing != 0) string += "spacing="+spacing+" ";
+    if (marginWidth != 0) {
+        string += "marginWidth=" + marginWidth + " ";
+    }
+    if (marginHeight != 0) {
+        string += "marginHeight=" + marginHeight + " ";
+    }
+    if (spacing != 0) {
+        string += "spacing=" + spacing + " ";
+    }
 	string = string.trim();
 	string += "}";
 	return string;

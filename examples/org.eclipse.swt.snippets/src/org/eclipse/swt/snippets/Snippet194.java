@@ -82,7 +82,9 @@ public class Snippet194 {
 		gc.drawString(letter, 5, 5);
 		gc.dispose();
 		ImageData frame = image.getImageData();
-		if (transparent) frame.transparentPixel = 0; // white
+        if (transparent) {
+            frame.transparentPixel = 0;
+        } // white
 		image.dispose();
 		frame.x = x;
 		frame.y = y;

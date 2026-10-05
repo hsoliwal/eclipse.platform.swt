@@ -1,0 +1,31 @@
+{
+  "source_commit": "393c1affaed96382280721140b31d87e37a9d652",
+  "source_tree": "32354bd4ebecd01fc8490373771b032bb780c3bc",
+  "command": "mvn -Pbuild-individual-bundles verify",
+  "result": "BUILD SUCCESS",
+  "platform": "Linux x86_64, GTK3, WebKitGTK 4.1 2.52.6, Xvfb",
+  "jdk": "OpenJDK 21.0.12.1+1-24.04.4",
+  "maven": "3.9.11",
+  "main_swt_suite": {
+    "tests": 4430,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 20
+  },
+  "additional_default_gtk_test_bundle": "upstream POM skips tests; not overridden",
+  "raw_log_sha256": "5f6dcade69ed9c8ed7a677df16760b62c13f28cb7a4686849a1aa496167024a4",
+  "raw_log_not_published": "Browser tests emit system properties and environment; selected test and reactor summaries retained",
+  "native_libraries": {
+    "libswt-webkit-gtk-4975r7.so": "14d2e697896d6879625ab23350daa7faa1aa2eae369e4ebdb0bf4c8449e920d8",
+    "libswt-gtk-4975r7.so": "37e0fdf931b6edf192729c74ff9fb4e75233a7d7546d72c91a729fc4f44f3685",
+    "libswt-cairo-gtk-4975r7.so": "9831d69a167f8f939da8ed49eeefda34638b99753d08c05b589696003d3283e5",
+    "libswt-pi3-gtk-4975r7.so": "992bbcbd9ebbd2ac4b7eb904779730d0ee5e93f51d959825fb59921158995dcb"
+  },
+  "remaining": [
+    "Windows/Cocoa native execution",
+    "native C semantic atomization",
+    "strict canonical repository admission",
+    "full Synexia reactor",
+    "repository-owned offline dependency closure"
+  ]
+}

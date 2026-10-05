@@ -4894,12 +4894,18 @@ public static void error (int code, Throwable throwable, String detail) {
 	* wrapped.
 	*/
 	if (code != SWT.ERROR_FAILED_EXEC) {
-		if (throwable instanceof SWTError) throw (SWTError) throwable;
-		if (throwable instanceof SWTException) throw (SWTException) throwable;
+        if (throwable instanceof SWTError) {
+            throw (SWTError) throwable;
+        }
+        if (throwable instanceof SWTException) {
+            throw (SWTException) throwable;
+        }
 	}
 
 	String message = findErrorText (code);
-	if (detail != null) message += detail;
+    if (detail != null) {
+        message += detail;
+    }
 	switch (code) {
 
 		/* Illegal Arguments (non-fatal) */

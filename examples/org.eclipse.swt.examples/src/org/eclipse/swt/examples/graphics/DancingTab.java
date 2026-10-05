@@ -138,8 +138,12 @@ public class DancingTab extends AnimatedGraphicsTab {
 
 		pw = width / cw;
 		ph = height / ch;
-		if (pw < 2) pw = 2;
-		if (ph < 2) ph = 2;
+        if (pw < 2) {
+            pw = 2;
+        }
+        if (ph < 2) {
+            ph = 2;
+        }
 
 		waveCx = pw / 2;
 		waveCy = ph / 2;

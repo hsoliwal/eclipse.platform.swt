@@ -90,7 +90,9 @@ private void generateTable(int[] lengths) {
 			codeLengthInfo[last - 1].baseIndex = i;
 			codeLengthInfo[last - 1].min = codes[i];
 		}
-		if (last != 0) codeLengthInfo[last - 1].max = codes[i];
+        if (last != 0) {
+            codeLengthInfo[last - 1].max = codes[i];
+        }
 	}
 }
 
@@ -104,7 +106,9 @@ int getNextValue(PngDecodingDataStream stream) throws IOException {
 		code = ((code << 1) | stream.getNextIdatBit());
 		codelength++;
 	}
-	if (codelength >= MAX_CODE_LENGTH) stream.error();
+    if (codelength >= MAX_CODE_LENGTH) {
+        stream.error();
+    }
 
 	// Now we have a Huffman code of length (codelength + 1) that
 	// is somewhere in the range

@@ -25,8 +25,12 @@ class OleEventTable {
 	int [] types;
 	OleListener [] handlers;
 void hook (int eventType, OleListener handler) {
-	if (types == null) types = new int [4];
-	if (handlers == null) handlers = new OleListener [4];
+    if (types == null) {
+        types = new int [4];
+    }
+    if (handlers == null) {
+        handlers = new OleListener [4];
+    }
 	for (int i=0; i<types.length; i++) {
 		if (types [i] == 0) {
 			types [i] = eventType;
@@ -43,23 +47,33 @@ void hook (int eventType, OleListener handler) {
 	types [size] = eventType;  handlers [size] = handler;
 }
 boolean hooks (int eventType) {
-	if (handlers == null) return false;
+    if (handlers == null) {
+        return false;
+    }
 	for (int type : types) {
-		if (type == eventType) return true;
+        if (type == eventType) {
+            return true;
+        }
 	}
 	return false;
 }
 void sendEvent (OleEvent event) {
-	if (handlers == null) return;
+    if (handlers == null) {
+        return;
+    }
 	for (int i=0; i<types.length; i++) {
 		if (types [i] == event.type) {
 			OleListener listener = handlers [i];
-			if (listener != null) listener.handleEvent (event);
+            if (listener != null) {
+                listener.handleEvent(event);
+            }
 		}
 	}
 }
 void unhook (int eventType, OleListener handler) {
-	if (handlers == null) return;
+    if (handlers == null) {
+        return;
+    }
 	for (int i=0; i<types.length; i++) {
 		if ((types [i] == eventType) && (handlers [i] == handler)) {
 			types [i] = 0;
@@ -70,7 +84,9 @@ void unhook (int eventType, OleListener handler) {
 }
 boolean hasEntries() {
 	for (int type : types) {
-		if (type != 0) return true;
+        if (type != 0) {
+            return true;
+        }
 	}
 	return false;
 }

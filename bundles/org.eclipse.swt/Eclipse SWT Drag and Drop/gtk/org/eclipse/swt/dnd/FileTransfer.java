@@ -85,20 +85,30 @@ public void javaToNative(Object object, TransferData transferData) {
 	String[] files = (String[])object;
 	for (int i = 0; i < files.length; i++) {
 		String string = files[i];
-		if (string == null) continue;
+        if (string == null) {
+            continue;
+        }
 		int length = string.length();
-		if (length == 0) continue;
+        if (length == 0) {
+            continue;
+        }
 		char[] chars = new char[length];
 		string.getChars(0, length, chars, 0);
 		long [] error = new long [1];
 		long utf8Ptr = OS.g_utf16_to_utf8(chars, chars.length, null, null, error);
-		if (error[0] != 0 || utf8Ptr == 0) continue;
+        if (error[0] != 0 || utf8Ptr == 0) {
+            continue;
+        }
 		long localePtr = OS.g_filename_from_utf8(utf8Ptr, -1, null, null, error);
 		OS.g_free(utf8Ptr);
-		if (error[0] != 0 || localePtr == 0) continue;
+        if (error[0] != 0 || localePtr == 0) {
+            continue;
+        }
 		long uriPtr = OS.g_filename_to_uri(localePtr, 0, error);
 		OS.g_free(localePtr);
-		if (error[0] != 0 || uriPtr == 0) continue;
+        if (error[0] != 0 || uriPtr == 0) {
+            continue;
+        }
 		length = C.strlen(uriPtr);
 		byte[] temp = new byte[length];
 		C.memmove (temp, uriPtr, length);
@@ -115,7 +125,9 @@ public void javaToNative(Object object, TransferData transferData) {
 		System.arraycopy(temp, 0, newBuffer, offset, temp.length);
 		buffer = newBuffer;
 	}
-	if (buffer.length == 0) return;
+    if (buffer.length == 0) {
+        return;
+    }
 	long ptr = OS.g_malloc(buffer.length+1);
 	C.memset(ptr, '\0', buffer.length+1);
 	C.memmove(ptr, buffer, buffer.length);
@@ -137,7 +149,9 @@ public void javaToNative(Object object, TransferData transferData) {
  */
 @Override
 public Object nativeToJava(TransferData transferData) {
-	if ( !isSupportedType(transferData) ||  transferData.pValue == 0 ||  transferData.length <= 0 ) return null;
+    if (!isSupportedType(transferData) || transferData.pValue == 0 || transferData.length <= 0) {
+        return null;
+    }
 	int length = transferData.length;
 	byte[] temp = new byte[length];
 	C.memmove(temp, transferData.pValue, length);
@@ -179,15 +193,25 @@ public Object nativeToJava(TransferData transferData) {
 		long [] error = new long [1];
 		long localePtr = OS.g_filename_from_uri(files[i], null, error);
 		OS.g_free(files[i]);
-		if (error[0] != 0 || localePtr == 0) continue;
+        if (error[0] != 0 || localePtr == 0) {
+            continue;
+        }
 		long utf8Ptr = OS.g_filename_to_utf8(localePtr, -1, null, null, null);
-		if (utf8Ptr == 0) utf8Ptr = OS.g_filename_display_name (localePtr);
-		if (localePtr != utf8Ptr) OS.g_free (localePtr);
-		if (utf8Ptr == 0) continue;
+        if (utf8Ptr == 0) {
+            utf8Ptr = OS.g_filename_display_name(localePtr);
+        }
+        if (localePtr != utf8Ptr) {
+            OS.g_free(localePtr);
+        }
+        if (utf8Ptr == 0) {
+            continue;
+        }
 		long [] items_written = new long [1];
 		long utf16Ptr = OS.g_utf8_to_utf16(utf8Ptr, -1, null, items_written, null);
 		OS.g_free(utf8Ptr);
-		if (utf16Ptr == 0) continue;
+        if (utf16Ptr == 0) {
+            continue;
+        }
 		length = (int)items_written[0];
 		char[] buffer = new char[length];
 		C.memmove(buffer, utf16Ptr, length * 2);
@@ -198,7 +222,9 @@ public Object nativeToJava(TransferData transferData) {
 		newFileNames[fileNames.length] = name;
 		fileNames = newFileNames;
 	}
-	if (fileNames.length == 0) return null;
+    if (fileNames.length == 0) {
+        return null;
+    }
 	return fileNames;
 }
 
@@ -213,10 +239,14 @@ protected String[] getTypeNames(){
 }
 
 boolean checkFile(Object object) {
-	if (object == null || !(object instanceof String[]) || ((String[])object).length == 0) return false;
+    if (object == null || !(object instanceof String[]) || ((String[]) object).length == 0) {
+        return false;
+    }
 	String[] strings = (String[])object;
 	for (int i = 0; i < strings.length; i++) {
-		if (strings[i] == null || strings[i].length() == 0) return false;
+        if (strings[i] == null || strings[i].length() == 0) {
+            return false;
+        }
 	}
 	return true;
 }

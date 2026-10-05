@@ -27,8 +27,9 @@ public class Bug233897_BrowserNeverExits {
 		new Browser( shell, SWT.None );
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) 
-				display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 		System.out.println("finished");

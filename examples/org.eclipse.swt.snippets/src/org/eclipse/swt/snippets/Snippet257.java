@@ -74,8 +74,9 @@ public static void main (String [] args) {
 				Point newSelection= text.getSelection();
 				int length = selection.y - selection.x;
 				int delta = 0;
-				if (newSelection.x < selection.x)
-					delta = length;
+                if (newSelection.x < selection.x) {
+                    delta = length;
+                }
 				text.replaceTextRange(selection.x + delta, length, "");
 			}
 			selection = null;
@@ -89,19 +90,21 @@ public static void main (String [] args) {
 		@Override
 		public void dragEnter(DropTargetEvent event) {
 			if (event.detail == DND.DROP_DEFAULT) {
-				if (text.getData(DRAG_START_DATA) == null)
-					event.detail = DND.DROP_COPY;
-				else
-					event.detail = DND.DROP_MOVE;
+                if (text.getData(DRAG_START_DATA) == null) {
+                    event.detail = DND.DROP_COPY;
+                } else {
+                    event.detail = DND.DROP_MOVE;
+                }
 			}
 		}
 		@Override
 		public void dragOperationChanged(DropTargetEvent event) {
 			if (event.detail == DND.DROP_DEFAULT) {
-				if (text.getData(DRAG_START_DATA) == null)
-					event.detail = DND.DROP_COPY;
-				else
-					event.detail = DND.DROP_MOVE;
+                if (text.getData(DRAG_START_DATA) == null) {
+                    event.detail = DND.DROP_COPY;
+                } else {
+                    event.detail = DND.DROP_MOVE;
+                }
 			}
 		}
 		@Override
@@ -120,15 +123,18 @@ public static void main (String [] args) {
 				} else {
 					String string = (String)event.data;
 					text.insert(string);
-					if (selection != null)
-						text.setSelectionRange(insertPos, string.length());
+                    if (selection != null) {
+                        text.setSelectionRange(insertPos, string.length());
+                    }
 				}
 			}
 		}
 	});
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

@@ -102,11 +102,15 @@ public class FlatTextTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (!initialized) {
 			Image sourceImage = example.loadImage(gc.getDevice(), "TEXFLAT2.png"); //$NON-NLS-1$
-			if (sourceImage == null) return;
+            if (sourceImage == null) {
+                return;
+            }
 			textureData = sourceImage.getImageData();
 
 			tex = new int[65536];

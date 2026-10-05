@@ -80,8 +80,9 @@ public class OLEExample {
 	}
 	
 	void disposeClient() {
-		if (clientSite != null)
-			clientSite.dispose();
+        if (clientSite != null) {
+            clientSite.dispose();
+        }
 		clientSite = null;
 	}
 
@@ -92,7 +93,9 @@ public class OLEExample {
 		Shell shell = oleFrame.getShell();
 		FileDialog dialog = new FileDialog(shell, SWT.OPEN);
 		String fileName = dialog.open();
-		if (fileName == null) return;
+        if (fileName == null) {
+            return;
+        }
 
 		disposeClient();
 
@@ -147,8 +150,9 @@ public class OLEExample {
 						int playURL[] = player.getIDsOfNames(new String[] { "URL" });
 						if (playURL != null) {
 							boolean succeeded = player.setProperty(playURL[0], new Variant(fileName));
-							if (!succeeded)
-								disposeClient();
+                            if (!succeeded) {
+                                disposeClient();
+                            }
 						} else {
 							disposeClient();
 						}
@@ -173,10 +177,11 @@ public class OLEExample {
 						int loadFile[] = pdf.getIDsOfNames (new String [] {"LoadFile"});
 						if (loadFile != null) {
 							Variant result = pdf.invoke(loadFile[0], new Variant[] {new Variant(fileName)});
-							if (result == null)
-								disposeClient();
-							else
-								result.dispose();
+                            if (result == null) {
+                                disposeClient();
+                            } else {
+                                result.dispose();
+                            }
 						} else {
 							disposeClient();
 						}
@@ -197,10 +202,11 @@ public class OLEExample {
 				
 				if (navigate != null) {
 					Variant result = explorer.invoke(navigate[0], new Variant[] {new Variant(fileName)});
-					if (result == null)
-						disposeClient();
-					else
-						result.dispose();
+                    if (result == null) {
+                        disposeClient();
+                    } else {
+                        result.dispose();
+                    }
 				} else {
 					disposeClient();
 				}
@@ -222,8 +228,9 @@ public class OLEExample {
 		} catch (SWTException error) {
 
 		}
-		if (clientSite != null)
-			clientSite.doVerb(OLE.OLEIVERB_INPLACEACTIVATE);
+        if (clientSite != null) {
+            clientSite.doVerb(OLE.OLEIVERB_INPLACEACTIVATE);
+        }
 	}
 
 	public void open(Display display) {
@@ -246,34 +253,39 @@ public class OLEExample {
 		Button excelButton = new Button(buttons, SWT.RADIO);
 		excelButton.setText("New Excel Sheet");
 		excelButton.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
-			if (((Button) e.widget).getSelection())
-				newClientSite("Excel.Sheet");
+            if (((Button) e.widget).getSelection()) {
+                newClientSite("Excel.Sheet");
+            }
 		}));
 		Button mediaPlayerButton = new Button(buttons, SWT.RADIO);
 		mediaPlayerButton.setText("New MPlayer");
 		mediaPlayerButton.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
-			if (((Button) e.widget).getSelection())
-				newClientSite("WMPlayer.OCX");
+            if (((Button) e.widget).getSelection()) {
+                newClientSite("WMPlayer.OCX");
+            }
 		}));
 		Button wordButton = new Button(buttons, SWT.RADIO);
 		wordButton.setText("New Word Document");
 		wordButton.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
-			if (((Button) e.widget).getSelection())
-				newClientSite("Word.Document");
+            if (((Button) e.widget).getSelection()) {
+                newClientSite("Word.Document");
+            }
 		}));
 		new Label(buttons, SWT.NONE);
 		Button openButton = new Button(buttons, SWT.RADIO);
 		openButton.setText("Open file...");
 		openButton.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
-			if (((Button) e.widget).getSelection())
-				fileOpen();
+            if (((Button) e.widget).getSelection()) {
+                fileOpen();
+            }
 		}));
 		new Label(buttons, SWT.NONE);
 		closeButton = new Button(buttons, SWT.RADIO);
 		closeButton.setText("Close file");
 		closeButton.addSelectionListener(SelectionListener.widgetSelectedAdapter(e ->{
-				if (((Button) e.widget).getSelection())
-					disposeClient();
+            if (((Button) e.widget).getSelection()) {
+                disposeClient();
+            }
 			}
 		));	
 		closeButton.setSelection(true);
@@ -285,8 +297,9 @@ public class OLEExample {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 }

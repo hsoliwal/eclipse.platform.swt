@@ -39,8 +39,9 @@ public class Test_org_eclipse_swt_widgets_Spinner extends Test_org_eclipse_swt_w
 	public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 		assertThrows(IllegalArgumentException.class, () -> new Spinner(null, 0));
 		int[] cases = { 0, SWT.READ_ONLY, SWT.WRAP };
-		for (int style : cases)
-			spinner = new Spinner(shell, style);
+        for (int style : cases) {
+            spinner = new Spinner(shell, style);
+        }
 	}
 
 	@Test
@@ -98,8 +99,9 @@ public class Test_org_eclipse_swt_widgets_Spinner extends Test_org_eclipse_swt_w
 	public void test_getSelection() {
 		int [] cases = {5,1000,25,1};
 		for (int i=0;i<cases.length;i++){
-			if(cases[i]>=spinner.getMaximum())
-				cases[i] = spinner.getMaximum()-1;
+            if (cases[i] >= spinner.getMaximum()) {
+                cases[i] = spinner.getMaximum() - 1;
+            }
 			spinner.setSelection(cases[i]);
 			assertEquals(cases[i], spinner.getSelection());
 		}

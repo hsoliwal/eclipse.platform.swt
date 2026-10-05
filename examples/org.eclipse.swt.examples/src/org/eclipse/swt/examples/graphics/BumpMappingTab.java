@@ -100,11 +100,15 @@ public class BumpMappingTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (bumpImage == null) {
 			Image sourceImage = example.loadImage(gc.getDevice(), "bump.png"); //$NON-NLS-1$
-			if (sourceImage == null) return;
+            if (sourceImage == null) {
+                return;
+            }
 			bumpImage = sourceImage.getImageData();
 			imgWidth = bumpImage.width;
 			imgHeight = bumpImage.height;

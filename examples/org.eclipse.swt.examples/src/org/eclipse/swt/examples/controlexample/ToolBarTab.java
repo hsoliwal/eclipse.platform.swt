@@ -84,13 +84,27 @@ class ToolBarTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (horizontalButton.getSelection()) style |= SWT.HORIZONTAL;
-		if (verticalButton.getSelection()) style |= SWT.VERTICAL;
-		if (flatButton.getSelection()) style |= SWT.FLAT;
-		if (wrapButton.getSelection()) style |= SWT.WRAP;
-		if (borderButton.getSelection()) style |= SWT.BORDER;
-		if (shadowOutButton.getSelection()) style |= SWT.SHADOW_OUT;
-		if (rightButton.getSelection()) style |= SWT.RIGHT;
+        if (horizontalButton.getSelection()) {
+            style |= SWT.HORIZONTAL;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.VERTICAL;
+        }
+        if (flatButton.getSelection()) {
+            style |= SWT.FLAT;
+        }
+        if (wrapButton.getSelection()) {
+            style |= SWT.WRAP;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (shadowOutButton.getSelection()) {
+            style |= SWT.SHADOW_OUT;
+        }
+        if (rightButton.getSelection()) {
+            style |= SWT.RIGHT;
+        }
 
 		/*
 		* Create the example widgets.

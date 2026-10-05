@@ -56,11 +56,21 @@ class ProgressBarTab extends RangeTab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (horizontalButton.getSelection ()) style |= SWT.HORIZONTAL;
-		if (verticalButton.getSelection ()) style |= SWT.VERTICAL;
-		if (smoothButton.getSelection ()) style |= SWT.SMOOTH;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
-		if (indeterminateButton.getSelection ()) style |= SWT.INDETERMINATE;
+        if (horizontalButton.getSelection()) {
+            style |= SWT.HORIZONTAL;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.VERTICAL;
+        }
+        if (smoothButton.getSelection()) {
+            style |= SWT.SMOOTH;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (indeterminateButton.getSelection()) {
+            style |= SWT.INDETERMINATE;
+        }
 
 		/* Create the example widgets */
 		progressBar1 = new ProgressBar (progressBarGroup, style);
@@ -194,6 +204,8 @@ class ProgressBarTab extends RangeTab {
 	}
 
 	void updateSpinner(Spinner spinner, int selection) {
-		if (spinner.getSelection() != selection) spinner.setSelection (selection);
+        if (spinner.getSelection() != selection) {
+            spinner.setSelection(selection);
+        }
 	}
 }

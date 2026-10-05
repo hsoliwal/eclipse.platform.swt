@@ -100,7 +100,9 @@ public class Bug514483_SelectionEventLostFocus {
 		shell.open ();
 
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

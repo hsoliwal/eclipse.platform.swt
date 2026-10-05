@@ -37,13 +37,23 @@ public static void main(String[] args) {
 	final StyledText styledText = new StyledText (shell, SWT.FULL_SELECTION | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
 	StringBuilder text = new StringBuilder();
 	text.append("Here is StyledText with some bulleted lists:\n\n");
-	for (int i = 0; i < 4; i++) text.append("Red Bullet List Item " + i + "\n");
+    for (int i = 0; i < 4; i++) {
+        text.append("Red Bullet List Item " + i + "\n");
+    }
 	text.append("\n");
-	for (int i = 0; i < 2; i++) text.append("Numbered List Item " + i + "\n");
-	for (int i = 0; i < 4; i++) text.append("Sub List Item " + i + "\n");
-	for (int i = 0; i < 2; i++) text.append("Numbered List Item " + (2 + i) + "\n");
+    for (int i = 0; i < 2; i++) {
+        text.append("Numbered List Item " + i + "\n");
+    }
+    for (int i = 0; i < 4; i++) {
+        text.append("Sub List Item " + i + "\n");
+    }
+    for (int i = 0; i < 2; i++) {
+        text.append("Numbered List Item " + (2 + i) + "\n");
+    }
 	text.append("\n");
-	for (int i = 0; i < 4; i++) text.append("Custom Draw List Item " + i + "\n");
+    for (int i = 0; i < 4; i++) {
+        text.append("Custom Draw List Item " + i + "\n");
+    }
 	styledText.setText(text.toString());
 
 	StyleRange style0 = new StyleRange();
@@ -74,7 +84,9 @@ public static void main(String[] args) {
 		Display display1 = event.display;
 		StyleRange style = event.style;
 		Font font = style.font;
-		if (font == null) font = styledText.getFont();
+        if (font == null) {
+            font = styledText.getFont();
+        }
 		TextLayout layout = new TextLayout(display1);
 		layout.setAscent(event.ascent);
 		layout.setDescent(event.descent);
@@ -85,7 +97,9 @@ public static void main(String[] args) {
 	});
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

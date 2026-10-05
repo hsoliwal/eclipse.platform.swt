@@ -78,7 +78,9 @@ static void gtk_init() {
 		init = GTK3.gtk_init_check(new long[]{0}, null);
 	}
 
-	if (!init) SWT.error(SWT.ERROR_NO_HANDLES, null, " [gtk_init_check() failed]");
+    if (!init) {
+        SWT.error(SWT.ERROR_NO_HANDLES, null, " [gtk_init_check() failed]");
+    }
 }
 
 /**
@@ -106,15 +108,17 @@ static long GtkPrinterFunc_List (long printer, long user_data) {
 	System.arraycopy (printerList, 0, newList, 0, length);
 	printerList = newList;
 	printerList [length] = printerDataFromGtkPrinter(printer);
-	/*
-	* Bug in GTK. While performing a gtk_enumerate_printers(), GTK finds all of the
-	* available printers from each backend and can hang. If a backend requires more
-	* time to gather printer info, GTK will start an event loop waiting for a done
-	* signal before continuing. For the Lpr backend, GTK does not send a done signal
-	* which means the event loop never ends. The fix is to check to see if the driver
-	* is of type Lpr, and stop the enumeration, which exits the event loop.
-	*/
-	if (printerList[length].driver.equals (GTK_LPR_BACKEND)) return 1;
+    /*
+    * Bug in GTK. While performing a gtk_enumerate_printers(), GTK finds all of the
+    * available printers from each backend and can hang. If a backend requires more
+    * time to gather printer info, GTK will start an event loop waiting for a done
+    * signal before continuing. For the Lpr backend, GTK does not send a done signal
+    * which means the event loop never ends. The fix is to check to see if the driver
+    * is of type Lpr, and stop the enumeration, which exits the event loop.
+    */
+    if (printerList[length].driver.equals(GTK_LPR_BACKEND)) {
+        return 1;
+    }
 	return 0;
 }
 
@@ -194,17 +198,23 @@ static void restore(byte [] data, long settings, long page_setup) {
 	start = end = 0;
 	while (end < settingsData.length && settingsData[end] != 0) {
 		start = end;
-		while (end < settingsData.length && settingsData[end] != 0) end++;
+        while (end < settingsData.length && settingsData[end] != 0) {
+            end++;
+        }
 		end++;
 		byte [] keyBuffer = new byte [end - start];
 		System.arraycopy (settingsData, start, keyBuffer, 0, keyBuffer.length);
 		start = end;
-		while (end < settingsData.length && settingsData[end] != 0) end++;
+        while (end < settingsData.length && settingsData[end] != 0) {
+            end++;
+        }
 		end++;
 		byte [] valueBuffer = new byte [end - start];
 		System.arraycopy (settingsData, start, valueBuffer, 0, valueBuffer.length);
 		GTK.gtk_print_settings_set(settings, keyBuffer, valueBuffer);
-		if (DEBUG) System.out.println(new String (Converter.mbcsToWcs (keyBuffer))+": "+new String (Converter.mbcsToWcs (valueBuffer)));
+        if (DEBUG) {
+            System.out.println(new String(Converter.mbcsToWcs(keyBuffer)) + ": " + new String(Converter.mbcsToWcs(valueBuffer)));
+        }
 	}
 	end++; // skip extra null terminator
 
@@ -237,20 +247,30 @@ static void restore(byte [] data, long settings, long page_setup) {
 }
 
 static byte [] uriFromFilename(String filename) {
-	if (filename == null) return null;
+    if (filename == null) {
+        return null;
+    }
 	int length = filename.length();
-	if (length == 0) return null;
+    if (length == 0) {
+        return null;
+    }
 	char[] chars = new char[length];
 	filename.getChars(0, length, chars, 0);
 	long [] error = new long [1];
 	long utf8Ptr = OS.g_utf16_to_utf8(chars, chars.length, null, null, error);
-	if (error[0] != 0 || utf8Ptr == 0) return null;
+    if (error[0] != 0 || utf8Ptr == 0) {
+        return null;
+    }
 	long localePtr = OS.g_filename_from_utf8(utf8Ptr, -1, null, null, error);
 	OS.g_free(utf8Ptr);
-	if (error[0] != 0 || localePtr == 0) return null;
+    if (error[0] != 0 || localePtr == 0) {
+        return null;
+    }
 	long uriPtr = OS.g_filename_to_uri(localePtr, 0, error);
 	OS.g_free(localePtr);
-	if (error[0] != 0 || uriPtr == 0) return null;
+    if (error[0] != 0 || uriPtr == 0) {
+        return null;
+    }
 	length = C.strlen(uriPtr);
 	byte[] uri = new byte[length + 1];
 	C.memmove (uri, uriPtr, length);
@@ -259,7 +279,9 @@ static byte [] uriFromFilename(String filename) {
 }
 
 static DeviceData checkNull (PrinterData data) {
-	if (data == null) data = new PrinterData();
+    if (data == null) {
+        data = new PrinterData();
+    }
 	if (data.driver == null || data.name == null) {
 		PrinterData defaultData = null;
 		if (data.printToFile) {
@@ -271,7 +293,9 @@ static DeviceData checkNull (PrinterData data) {
 		}
 		if (defaultData == null) {
 			defaultData = getDefaultPrinterData();
-			if (defaultData == null) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (defaultData == null) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 		}
 		data.driver = defaultData.driver;
 		data.name = defaultData.name;
@@ -336,21 +360,29 @@ static boolean restoreBoolean(String key) {
 static byte [] restoreBytes(String key, boolean nullTerminate) {
 	//get key
 	start = end;
-	while (end < settingsData.length && settingsData[end] != 0) end++;
+    while (end < settingsData.length && settingsData[end] != 0) {
+        end++;
+    }
 	end++;
 	byte [] keyBuffer = new byte [end - start];
 	System.arraycopy (settingsData, start, keyBuffer, 0, keyBuffer.length);
 
 	//get value
 	start = end;
-	while (end < settingsData.length && settingsData[end] != 0) end++;
+    while (end < settingsData.length && settingsData[end] != 0) {
+        end++;
+    }
 	int length = end - start;
 	end++;
-	if (nullTerminate) length++;
+    if (nullTerminate) {
+        length++;
+    }
 	byte [] valueBuffer = new byte [length];
 	System.arraycopy (settingsData, start, valueBuffer, 0, length);
 
-	if (DEBUG) System.out.println(new String (Converter.mbcsToWcs (keyBuffer))+": "+new String (Converter.mbcsToWcs (valueBuffer)));
+    if (DEBUG) {
+        System.out.println(new String(Converter.mbcsToWcs(keyBuffer)) + ": " + new String(Converter.mbcsToWcs(valueBuffer)));
+    }
 
 	return valueBuffer;
 }
@@ -374,9 +406,13 @@ static byte [] restoreBytes(String key, boolean nullTerminate) {
 public long internal_new_GC(GCData data) {
 	long drawable = 0;
 	long gc = cairo;
-	if (gc == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (gc == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	if (data != null) {
-		if (isGCCreated) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (isGCCreated) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		int mask = SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
 		if ((data.style & mask) == 0) {
 			data.style |= SWT.LEFT_TO_RIGHT;
@@ -389,7 +425,9 @@ public long internal_new_GC(GCData data) {
 		Point dpi = getDPI(), screenDPI = getIndependentDPI();
 		data.width = (int)(GTK.gtk_page_setup_get_paper_width (pageSetup, GTK.GTK_UNIT_POINTS) * dpi.x / screenDPI.x);
 		data.height = (int)(GTK.gtk_page_setup_get_paper_height (pageSetup, GTK.GTK_UNIT_POINTS) * dpi.y / screenDPI.y);
-		if (cairo == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (cairo == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		Cairo.cairo_identity_matrix(cairo);
 		double printX = GTK.gtk_page_setup_get_left_margin(pageSetup, GTK.GTK_UNIT_POINTS);
 		double printY = GTK.gtk_page_setup_get_top_margin(pageSetup, GTK.GTK_UNIT_POINTS);
@@ -421,7 +459,9 @@ public long internal_new_GC(GCData data) {
  */
 @Override
 public void internal_dispose_GC(long hDC, GCData data) {
-	if (data != null) isGCCreated = false;
+    if (data != null) {
+        isGCCreated = false;
+    }
 }
 
 /**
@@ -457,7 +497,9 @@ public boolean startJob(String jobName) {
 	checkDevice();
 	byte [] buffer = Converter.wcsToMbcs (jobName, true);
 	printJob = GTK.gtk_print_job_new (buffer, printer, settings, pageSetup);
-	if (printJob == 0) return false;
+    if (printJob == 0) {
+        return false;
+    }
 	surface = GTK.gtk_print_job_get_surface(printJob, null);
 	if (surface == 0) {
 		OS.g_object_unref(printJob);
@@ -480,11 +522,21 @@ public boolean startJob(String jobName) {
  */
 @Override
 protected void destroy () {
-	if (printer != 0) OS.g_object_unref (printer);
-	if (settings != 0) OS.g_object_unref (settings);
-	if (pageSetup != 0) OS.g_object_unref (pageSetup);
-	if (cairo != 0) Cairo.cairo_destroy (cairo);
-	if (printJob != 0) OS.g_object_unref (printJob);
+    if (printer != 0) {
+        OS.g_object_unref(printer);
+    }
+    if (settings != 0) {
+        OS.g_object_unref(settings);
+    }
+    if (pageSetup != 0) {
+        OS.g_object_unref(pageSetup);
+    }
+    if (cairo != 0) {
+        Cairo.cairo_destroy(cairo);
+    }
+    if (printJob != 0) {
+        OS.g_object_unref(printJob);
+    }
 	printer = settings = pageSetup = cairo = printJob = 0;
 }
 
@@ -501,7 +553,9 @@ protected void destroy () {
  */
 public void endJob() {
 	checkDevice();
-	if (printJob == 0) return;
+    if (printJob == 0) {
+        return;
+    }
 	Cairo.cairo_surface_finish(surface);
 	GTK.gtk_print_job_send(printJob, 0, 0, 0);
 	OS.g_object_unref(printJob);
@@ -517,7 +571,9 @@ public void endJob() {
  */
 public void cancelJob() {
 	checkDevice();
-	if (printJob == 0) return;
+    if (printJob == 0) {
+        return;
+    }
 	//TODO: Need to implement (waiting on gtk bug 339323)
 	Cairo.cairo_surface_finish(surface);
 	OS.g_object_unref(printJob);
@@ -544,7 +600,9 @@ public void cancelJob() {
  */
 public boolean startPage() {
 	checkDevice();
-	if (printJob == 0) return false;
+    if (printJob == 0) {
+        return false;
+    }
 	double width = GTK.gtk_page_setup_get_paper_width (pageSetup, GTK.GTK_UNIT_POINTS);
 	double height = GTK.gtk_page_setup_get_paper_height (pageSetup, GTK.GTK_UNIT_POINTS);
 	int type = Cairo.cairo_surface_get_type (surface);
@@ -590,9 +648,13 @@ public void endPage() {
 public Point getDPI() {
 	checkDevice();
 	int resolution = GTK.gtk_print_settings_get_resolution(settings);
-	if (DEBUG) System.out.println("print_settings.resolution=" + resolution);
-	//TODO: use new api for get x resolution and get y resolution
-	if (resolution == 0) return new Point(72, 72);
+    if (DEBUG) {
+        System.out.println("print_settings.resolution=" + resolution);
+    }
+    //TODO: use new api for get x resolution and get y resolution
+    if (resolution == 0) {
+        return new Point(72, 72);
+    }
 	return new Point(resolution, resolution);
 }
 
@@ -708,9 +770,13 @@ public Rectangle computeTrim(int x, int y, int width, int height) {
 @Override
 protected void create(DeviceData deviceData) {
 	this.data = (PrinterData)deviceData;
-	if (disablePrinting) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (disablePrinting) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	printer = gtkPrinterFromPrinterData(data);
-	if (printer == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (printer == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 }
 
 /**
@@ -753,8 +819,11 @@ protected void init() {
 		 * The fix is to manually set cups-Duplex to Tumble or NoTumble.
 		 */
 		String cupsDuplexType = null;
-		if (duplex == GTK.GTK_PRINT_DUPLEX_HORIZONTAL) cupsDuplexType = "DuplexNoTumble";
-		else if (duplex == GTK.GTK_PRINT_DUPLEX_VERTICAL) cupsDuplexType = "DuplexTumble";
+        if (duplex == GTK.GTK_PRINT_DUPLEX_HORIZONTAL) {
+            cupsDuplexType = "DuplexNoTumble";
+        } else if (duplex == GTK.GTK_PRINT_DUPLEX_VERTICAL) {
+            cupsDuplexType = "DuplexTumble";
+        }
 		if (cupsDuplexType != null) {
 			byte [] keyBuffer = Converter.wcsToMbcs ("cups-Duplex", true);
 			byte [] valueBuffer = Converter.wcsToMbcs (cupsDuplexType, true);

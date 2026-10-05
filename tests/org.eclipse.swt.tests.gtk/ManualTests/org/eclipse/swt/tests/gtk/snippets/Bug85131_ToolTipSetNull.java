@@ -72,9 +72,11 @@ public class Bug85131_ToolTipSetNull
 
 		shell.setSize( 300, 200 );
 		shell.open();
-		
-		while (!shell.isDisposed())
-			if (!disp.readAndDispatch())
-				disp.sleep();
+
+        while (!shell.isDisposed()) {
+            if (!disp.readAndDispatch()) {
+                disp.sleep();
+            }
+        }
 	}
 }

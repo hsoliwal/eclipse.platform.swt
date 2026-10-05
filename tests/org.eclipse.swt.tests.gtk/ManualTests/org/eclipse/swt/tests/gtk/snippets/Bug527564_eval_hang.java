@@ -51,8 +51,9 @@ public class Bug527564_eval_hang {
 //		browser2.execute("");
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

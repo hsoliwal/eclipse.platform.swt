@@ -140,7 +140,9 @@ public void addSelectionListener(SelectionListener listener) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -153,7 +155,9 @@ void createWidget (int index) {
 void createHandle (int index) {
 	state |= HANDLE;
 	handle = GTK3.gtk_status_icon_new ();
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	imageHandle = GTK.gtk_image_new ();
 	GTK3.gtk_status_icon_set_visible (handle,true);
 }
@@ -273,7 +277,9 @@ long gtk3_button_press_event (long widget, long event) {
 	GDK.gdk_event_get_button(event, eventButton);
 
 
-	if (eventType == GDK.GDK_3BUTTON_PRESS) return 0;
+    if (eventType == GDK.GDK_3BUTTON_PRESS) {
+        return 0;
+    }
 	if (eventButton[0] == 3 && eventType == GDK.GDK_BUTTON_PRESS) {
 		sendEvent (SWT.MenuDetect);
 		return 0;
@@ -322,7 +328,9 @@ long gtk_status_icon_popup_menu (long widget, long button, long activate_time) {
 	Display display = this.display;
 	display.currentTrayItem = this;
 	sendEvent (SWT.MenuDetect);
-	if (!isDisposed ()) display.runPopups();
+    if (!isDisposed()) {
+        display.runPopups();
+    }
 	display.currentTrayItem = null;
 	return 0;
 }
@@ -368,9 +376,13 @@ void releaseHandle () {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (tooltipsHandle != 0) OS.g_object_unref (tooltipsHandle);
+    if (tooltipsHandle != 0) {
+        OS.g_object_unref(tooltipsHandle);
+    }
 	tooltipsHandle = 0;
-	if (imageList != null) imageList.dispose ();
+    if (imageList != null) {
+        imageList.dispose();
+    }
 	imageList = null;
 	toolTipText = null;
 	highlightImage = null;
@@ -398,8 +410,12 @@ void releaseWidget () {
  */
 public void removeMenuDetectListener (MenuDetectListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MenuDetect, listener);
 }
 
@@ -422,8 +438,12 @@ public void removeMenuDetectListener (MenuDetectListener listener) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection, listener);
 }
@@ -445,7 +465,9 @@ public void removeSelectionListener (SelectionListener listener) {
  */
 public void setHighlightImage (Image image) {
 	checkWidget ();
-	if (image != null && image.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	highlightImage = image;
 }
 
@@ -467,7 +489,9 @@ public void setImage (Image image) {
 	super.setImage(image);
 
 	if (image != null) {
-		if (imageList == null) imageList = new ImageList ();
+        if (imageList == null) {
+            imageList = new ImageList();
+        }
 		int imageIndex = imageList.indexOf (image);
 		if (imageIndex == -1) {
 			imageIndex = imageList.add (image);
@@ -500,9 +524,13 @@ public void setImage (Image image) {
 public void setToolTip (ToolTip toolTip) {
 	checkWidget ();
 	ToolTip oldTip = this.toolTip, newTip = toolTip;
-	if (oldTip != null) oldTip.item = null;
+    if (oldTip != null) {
+        oldTip.item = null;
+    }
 	this.toolTip = newTip;
-	if (newTip != null) newTip.item = this;
+    if (newTip != null) {
+        newTip.item = this;
+    }
 }
 
 /**
@@ -553,7 +581,9 @@ public void setToolTipText (String string) {
  */
 public void setVisible (boolean visible) {
 	checkWidget ();
-	if(GTK3.gtk_status_icon_get_visible (handle) == visible) return;
+    if (GTK3.gtk_status_icon_get_visible(handle) == visible) {
+        return;
+    }
 	if (visible) {
 		/*
 		* It is possible (but unlikely), that application
@@ -561,7 +591,9 @@ public void setVisible (boolean visible) {
 		* event.  If this happens, just return.
 		*/
 		sendEvent (SWT.Show);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 		GTK3.gtk_status_icon_set_visible (handle, visible);
 	} else {
 		GTK3.gtk_status_icon_set_visible (handle, visible);

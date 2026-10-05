@@ -121,25 +121,35 @@ FontData(LOGFONT data, float height) {
  * @see #toString
  */
 public FontData(String string) {
-	if (string == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int start = 0;
 	int end = string.indexOf('|');
-	if (end == -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (end == -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	String version1 = string.substring(start, end);
 	try {
-		if (Integer.parseInt(version1) != 1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (Integer.parseInt(version1) != 1) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	} catch (NumberFormatException e) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
 
 	start = end + 1;
 	end = string.indexOf('|', start);
-	if (end == -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (end == -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	String name = string.substring(start, end);
 
 	start = end + 1;
 	end = string.indexOf('|', start);
-	if (end == -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (end == -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	float height = 0;
 	try {
 		height = Float.parseFloat(string.substring(start, end));
@@ -149,7 +159,9 @@ public FontData(String string) {
 
 	start = end + 1;
 	end = string.indexOf('|', start);
-	if (end == -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (end == -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int style = 0;
 	try {
 		style = Integer.parseInt(string.substring(start, end));
@@ -164,12 +176,16 @@ public FontData(String string) {
 	setName(name);
 	setHeight(height);
 	setStyle(style);
-	if (end == -1) return;
+    if (end == -1) {
+        return;
+    }
 	String platform = string.substring(start, end);
 
 	start = end + 1;
 	end = string.indexOf('|', start);
-	if (end == -1) return;
+    if (end == -1) {
+        return;
+    }
 	String version2 = string.substring(start, end);
 
 	if (platform.equals("WINDOWS") && version2.equals("1")) {  //$NON-NLS-1$//$NON-NLS-2$
@@ -177,55 +193,81 @@ public FontData(String string) {
 		try {
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfHeight = Integer.parseInt(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfWidth = Integer.parseInt(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfEscapement = Integer.parseInt(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfOrientation = Integer.parseInt(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfWeight = Integer.parseInt(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfItalic = Byte.parseByte(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfUnderline = Byte.parseByte(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfStrikeOut = Byte.parseByte(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfCharSet = Byte.parseByte(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfOutPrecision = Byte.parseByte(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfClipPrecision = Byte.parseByte(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfQuality = Byte.parseByte(string.substring(start, end));
 			start = end + 1;
 			end = string.indexOf('|', start);
-			if (end == -1) return;
+            if (end == -1) {
+                return;
+            }
 			newData.lfPitchAndFamily = Byte.parseByte(string.substring(start, end));
 			start = end + 1;
 		} catch (NumberFormatException e) {
@@ -308,7 +350,9 @@ private static LOGFONT cloneLogFont(FontData fontData) {
  * </ul>
  */
 public FontData(String name, int height, int style) {
-	if (name == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (name == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	data = new LOGFONT ();
 	setName(name);
 	setHeight(height);
@@ -320,7 +364,9 @@ public FontData(String name, int height, int style) {
 }
 
 /*public*/ FontData(String name, float height, int style) {
-	if (name == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (name == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	data = new LOGFONT ();
 	setName(name);
 	setHeight(height);
@@ -343,8 +389,12 @@ public FontData(String name, int height, int style) {
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof FontData)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof FontData)) {
+        return false;
+    }
 	FontData fd = (FontData)object;
 	LOGFONT lf = fd.data;
 	return data.lfCharSet == lf.lfCharSet &&
@@ -381,17 +431,23 @@ long EnumLocalesProc(long lpLocaleString) {
 
 	/* Check the language */
 	int size = OS.GetLocaleInfo(lcid, OS.LOCALE_SISO639LANGNAME, buffer, length);
-	if (size <= 0 || !lang.equals(buffer.toString(0, size - 1))) return 1;
+    if (size <= 0 || !lang.equals(buffer.toString(0, size - 1))) {
+        return 1;
+    }
 
 	/* Check the country */
 	if (country != null) {
 		size = OS.GetLocaleInfo(lcid, OS.LOCALE_SISO3166CTRYNAME, buffer, length);
-		if (size <= 0 || !country.equals(buffer.toString(0, size - 1))) return 1;
+        if (size <= 0 || !country.equals(buffer.toString(0, size - 1))) {
+            return 1;
+        }
 	}
 
 	/* Get the charset */
 	size = OS.GetLocaleInfo(lcid, OS.LOCALE_IDEFAULTANSICODEPAGE, buffer, length);
-	if (size <= 0) return 1;
+    if (size <= 0) {
+        return 1;
+    }
 	int cp = Integer.parseInt(buffer.toString(0, size - 1));
 	int [] lpCs = new int[8];
 	OS.TranslateCharsetInfo(cp, lpCs, OS.TCI_SRCCODEPAGE);
@@ -470,7 +526,9 @@ public String getName() {
 	char[] chars = data.lfFaceName;
 	int index = 0;
 	while (index < chars.length) {
-		if (chars [index] == 0) break;
+        if (chars [index] == 0) {
+            break;
+        }
 		index++;
 	}
 	return new String (chars, 0, index);
@@ -487,8 +545,12 @@ public String getName() {
  */
 public int getStyle() {
 	int style = SWT.NORMAL;
-	if (data.lfWeight == 700) style |= SWT.BOLD;
-	if (data.lfItalic != 0) style |= SWT.ITALIC;
+    if (data.lfWeight == 700) {
+        style |= SWT.BOLD;
+    }
+    if (data.lfItalic != 0) {
+        style |= SWT.ITALIC;
+    }
 	return style;
 }
 
@@ -525,13 +587,17 @@ public int hashCode () {
  * @see #getHeight
  */
 public void setHeight(int height) {
-	if (height < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (height < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.height = height;
 	data.lfWidth = 0;
 }
 
 /*public*/ void setHeight(float height) {
-	if (height < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (height < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.height = height;
 }
 
@@ -564,11 +630,19 @@ public void setLocale(String locale) {
 			firstSep = secondSep = length;
 		} else {
 			secondSep = locale.indexOf(sep, firstSep + 1);
-			if (secondSep == -1) secondSep = length;
+            if (secondSep == -1) {
+                secondSep = length;
+            }
 		}
-		if (firstSep > 0) lang = locale.substring(0, firstSep);
-		if (secondSep > firstSep + 1) country = locale.substring(firstSep + 1, secondSep);
-		if (length > secondSep + 1) variant = locale.substring(secondSep + 1);
+        if (firstSep > 0) {
+            lang = locale.substring(0, firstSep);
+        }
+        if (secondSep > firstSep + 1) {
+            country = locale.substring(firstSep + 1, secondSep);
+        }
+        if (length > secondSep + 1) {
+            variant = locale.substring(secondSep + 1);
+        }
 	}
 	if (lang == null) {
 		data.lfCharSet = (byte)OS.DEFAULT_CHARSET;
@@ -606,13 +680,17 @@ public void setLocale(String locale) {
  * @see #getName
  */
 public void setName(String name) {
-	if (name == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (name == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	/* The field lfFaceName must be NULL terminated */
 	char[] lfFaceName = data.lfFaceName;
 	int length = Math.min(lfFaceName.length - 1, name.length());
 	name.getChars (0, length, lfFaceName, 0);
-	for (int i = length; i < lfFaceName.length; i++) lfFaceName[i] = 0;
+    for (int i = length; i < lfFaceName.length; i++) {
+        lfFaceName[i] = 0;
+    }
 }
 
 /**

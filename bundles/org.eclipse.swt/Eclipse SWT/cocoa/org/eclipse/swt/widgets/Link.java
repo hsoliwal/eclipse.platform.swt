@@ -116,16 +116,24 @@ public void addSelectionListener (SelectionListener listener) {
 @Override
 public Point computeSize (int wHint, int hHint, boolean changed) {
 	checkWidget ();
-	if (wHint != SWT.DEFAULT && wHint < 0) wHint = 0;
-	if (hHint != SWT.DEFAULT && hHint < 0) hHint = 0;
+    if (wHint != SWT.DEFAULT && wHint < 0) {
+        wHint = 0;
+    }
+    if (hHint != SWT.DEFAULT && hHint < 0) {
+        hHint = 0;
+    }
 
 	int width = 0, height = 0;
 	NSLayoutManager layoutManager = (NSLayoutManager)new NSLayoutManager ().alloc ().init ();
 	NSTextContainer textContainer = (NSTextContainer)new NSTextContainer ().alloc ();
 	NSSize size = new NSSize ();
 	size.width = size.height = OS.MAX_TEXT_CONTAINER_SIZE;
-	if (wHint != SWT.DEFAULT) size.width = wHint;
-	if (hHint != SWT.DEFAULT) size.height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        size.width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        size.height = hHint;
+    }
 	textContainer.initWithContainerSize (size);
 	textContainer.setLineFragmentPadding(2);
 	layoutManager.addTextContainer (textContainer);
@@ -142,10 +150,18 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 	textContainer.release ();
 	layoutManager.release ();
 
-	if (width <= 0) width = DEFAULT_WIDTH;
-	if (height <= 0) height = DEFAULT_HEIGHT;
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (width <= 0) {
+        width = DEFAULT_WIDTH;
+    }
+    if (height <= 0) {
+        height = DEFAULT_HEIGHT;
+    }
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 
 	// Accommodate any border.
 	size.width = width;
@@ -216,19 +232,25 @@ NSFont defaultNSFont () {
 @Override
 void deregister () {
 	super.deregister ();
-	if (scrollView != null) display.removeWidget (scrollView);
+    if (scrollView != null) {
+        display.removeWidget(scrollView);
+    }
 }
 
 @Override
 void drawBackground (long id, NSGraphicsContext context, NSRect rectangle) {
 	fillBackground (view, context, rectangle, -1);
-	if (!hasFocus() || focusIndex == -1) return;
+    if (!hasFocus() || focusIndex == -1) {
+        return;
+    }
 	int [] outMetric = new int [1];
 	OS.GetThemeMetric (OS.kThemeMetricFocusRectOutset, outMetric);
 	outMetric[0]--;
 	CGRect r = new CGRect();
 	NSRect[] rect = getRectangles(focusIndex);
-	if (rect == null) return;
+    if (rect == null) {
+        return;
+    }
 	for (int i = 0; i < rect.length && rect[i] != null; i++) {
 		r.origin.x = rect[i].x + outMetric[0];
 		r.origin.y = rect[i].y + outMetric[0];
@@ -260,7 +282,9 @@ void enableWidget (boolean enabled) {
 @Override
 Cursor findCursor () {
 	Cursor cursor = super.findCursor();
-	if (cursor != null) return cursor;
+    if (cursor != null) {
+        return cursor;
+    }
 	NSWindow window = view.window();
 	NSTextView widget = (NSTextView) view;
 	NSPoint point = view.convertPoint_fromView_(window.convertScreenToBase(NSEvent.mouseLocation()), null);
@@ -299,11 +323,13 @@ String getNameText () {
 }
 
 NSRect[] getRectangles(int linkIndex) {
-	/*
-	 * Returns the focus rectangles to be drawn for a link. Number of
-	 * rectangles is > 1 when the link has multiple lines.
-	 */
-	if (linkIndex == -1) return null;
+    /*
+     * Returns the focus rectangles to be drawn for a link. Number of
+     * rectangles is > 1 when the link has multiple lines.
+     */
+    if (linkIndex == -1) {
+        return null;
+    }
 
 	NSTextView widget = ((NSTextView)view);
 	NSLayoutManager layoutManager = widget.layoutManager();
@@ -338,7 +364,9 @@ NSRect[] getRectangles(int linkIndex) {
 			lineRange.length = index - glyphRange.location;
 			lineRange.location = glyphRange.location;
 		}
-		if (index > glyphEndIndex) lineRange.length = glyphEndIndex - lineRange.location;
+        if (index > glyphEndIndex) {
+            lineRange.length = glyphEndIndex - lineRange.location;
+        }
 		NSRect boundsRect = layoutManager.boundingRectForGlyphRange(lineRange, widget.textContainer());
 		result[i] = new NSRect();
 		OS.NSIntersectionRect(result[i], usedRect, boundsRect);
@@ -408,7 +436,9 @@ String parse (String string) {
 				}
 				break;
 			case 1:
-				if (c == 'a') state++;
+                if (c == 'a') {
+                    state++;
+                }
 				break;
 			case 2:
 				switch (c) {
@@ -420,8 +450,11 @@ String parse (String string) {
 						state++;
 						break;
 					default:
-						if (Character.isWhitespace(c)) break;
-						else state = 13;
+                        if (Character.isWhitespace(c)) {
+                            break;
+                        } else {
+                            state = 13;
+                        }
 				}
 				break;
 			case 3:
@@ -489,7 +522,9 @@ String parse (String string) {
 				state = c == '"' ? state + 1 : 0;
 				break;
 			case 15:
-				if (c == '"') state = 2;
+                if (c == '"') {
+                    state = 2;
+                }
 				break;
 			default:
 				state = 0;
@@ -500,7 +535,9 @@ String parse (String string) {
 	if (start < length) {
 		int tmp = parseMnemonics (buffer, start, tagStart, result);
 		int mnemonic = parseMnemonics (buffer, Math.max (tagStart, linkStart), length, result);
-		if (mnemonic == -1) mnemonic = tmp;
+        if (mnemonic == -1) {
+            mnemonic = tmp;
+        }
 		mnemonics [linkIndex] = mnemonic;
 	} else {
 		mnemonics [linkIndex] = -1;
@@ -546,7 +583,9 @@ void register () {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (scrollView != null) scrollView.release();
+    if (scrollView != null) {
+        scrollView.release();
+    }
 	scrollView = null;
 }
 
@@ -580,8 +619,12 @@ void releaseWidget () {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection, listener);
 }
@@ -594,16 +637,24 @@ void scrollWheel(long id, long sel, long theEvent) {
 
 @Override
 void sendFocusEvent(int type) {
-	if (focusIndex != -1) redrawWidget(view, false);
+    if (focusIndex != -1) {
+        redrawWidget(view, false);
+    }
 	super.sendFocusEvent(type);
 }
 
 @Override
 boolean sendKeyEvent(int type, Event event) {
 	boolean result = super.sendKeyEvent (type, event);
-	if (!result) return result;
-	if (focusIndex == -1) return result;
-	if (type != SWT.KeyDown)  return result;
+    if (!result) {
+        return result;
+    }
+    if (focusIndex == -1) {
+        return result;
+    }
+    if (type != SWT.KeyDown) {
+        return result;
+    }
 
 	int keyCode = event.keyCode;
 	switch (keyCode) {
@@ -672,7 +723,9 @@ void setFont(NSFont font) {
 
 @Override
 void setForeground (double [] color) {
-	if (!getEnabled ()) return;
+    if (!getEnabled()) {
+        return;
+    }
 	((NSTextView) view).setTextColor (getTextColor (true));
 }
 
@@ -707,10 +760,14 @@ void setLinkColor (boolean enabled) {
 public void setLinkForeground (Color color) {
 	checkWidget ();
 	if (color != null) {
-		if (color.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	double [] linkForeground = color != null ? color.handle : null;
-	if (equals (linkForeground, this.linkForeground)) return;
+    if (equals(linkForeground, this.linkForeground)) {
+        return;
+    }
 	this.linkForeground = linkForeground;
 	if (getEnabled ()) {
 		setLinkColor (true);
@@ -765,8 +822,12 @@ void setOrientation () {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (string.equals (text)) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (string.equals(text)) {
+        return;
+    }
 	text = string;
 	NSTextView widget = (NSTextView)view;
 	widget.setString(NSString.stringWith(parse(string)));
@@ -786,7 +847,9 @@ public void setText (String string) {
 @Override
 void setZOrder () {
 	super.setZOrder ();
-	if (scrollView != null) scrollView.setDocumentView (view);
+    if (scrollView != null) {
+        scrollView.setDocumentView(view);
+    }
 }
 
 @Override
@@ -800,8 +863,10 @@ boolean textView_clickOnLink_atIndex(long id, long sel, long textView, long link
 	Event event = new Event ();
 	event.text = str.getString();
 	sendSelectionEvent (SWT.Selection, event, true);
-	// Widget may be disposed at this point.
-	if (isDisposed()) return true;
+    // Widget may be disposed at this point.
+    if (isDisposed()) {
+        return true;
+    }
 	for (int i = 0; i < offsets.length; i++) {
 		if ((charIndex >= offsets[i].x) && (charIndex <= offsets[i].y)) {
 			focusIndex = i;
@@ -820,7 +885,9 @@ NSView topView () {
 
 @Override
 int traversalCode (int key, NSEvent theEvent) {
-	if (offsets.length == 0) return  0;
+    if (offsets.length == 0) {
+        return 0;
+    }
 	int bits = super.traversalCode (key, theEvent);
 	if (key == 48 /* Tab */ && theEvent != null) {
 		long modifierFlags = theEvent.modifierFlags();
@@ -838,7 +905,9 @@ int traversalCode (int key, NSEvent theEvent) {
 @Override
 void updateCursorRects (boolean enabled) {
 	super.updateCursorRects (enabled);
-	if (scrollView == null) return;
+    if (scrollView == null) {
+        return;
+    }
 	updateCursorRects (enabled, scrollView);
 	NSClipView contentView = scrollView.contentView ();
 	updateCursorRects (enabled, contentView);
@@ -846,22 +915,26 @@ void updateCursorRects (boolean enabled) {
 }
 
 void updateThemeColors() {
-	/*
-	 * On macOS 10.14 and 10.15, when application sets Dark appearance, NSTextView
-	 * does not change the text color. In case of the link, this means that text
-	 * outside <a></a> will be black-on-dark. Fix this by setting the text color
-	 * explicitly. It seems that this is no longer needed on macOS 11.0. Note that
-	 * there is 'setUsesAdaptiveColorMappingForDarkAppearance:' which causes
-	 * NSTextView to adapt its colors, but it will also remap any colors used in
-	 * .setBackground(), which makes it difficult to use. I wasn't able to find an
-	 * event that colors changed, 'drawRect' seems to be the best option.
-	 */
+    /*
+     * On macOS 10.14 and 10.15, when application sets Dark appearance, NSTextView
+     * does not change the text color. In case of the link, this means that text
+     * outside <a></a> will be black-on-dark. Fix this by setting the text color
+     * explicitly. It seems that this is no longer needed on macOS 11.0. Note that
+     * there is 'setUsesAdaptiveColorMappingForDarkAppearance:' which causes
+     * NSTextView to adapt its colors, but it will also remap any colors used in
+     * .setBackground(), which makes it difficult to use. I wasn't able to find an
+     * event that colors changed, 'drawRect' seems to be the best option.
+     */
 
-	// Avoid infinite loop of redraws
-	if (lastAppAppearance == display.appAppearance) return;
+    // Avoid infinite loop of redraws
+    if (lastAppAppearance == display.appAppearance) {
+        return;
+    }
 	lastAppAppearance = display.appAppearance;
-	// Only default colors are affected
-	if (foreground != null) return;
+    // Only default colors are affected
+    if (foreground != null) {
+        return;
+    }
 
 	((NSTextView) view).setTextColor (getTextColor (getEnabled ()));
 }

@@ -90,7 +90,9 @@ public class BallTab extends AnimatedGraphicsTab {
 	@Override
 	public void next(int width, int height) {
 		for (int i = 0; i < bc.length; i++) {
-			if (bc[i] == null) return;
+            if (bc[i] == null) {
+                return;
+            }
 			if (bc[i].prevx.isEmpty()) {
 				bc[i].prevx.addLast(Float.valueOf(bc[i].x));
 				bc[i].prevy.addLast(Float.valueOf(bc[i].y));
@@ -131,7 +133,9 @@ public class BallTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 		Device device = gc.getDevice();
 
 		if (bc[0] == null) {

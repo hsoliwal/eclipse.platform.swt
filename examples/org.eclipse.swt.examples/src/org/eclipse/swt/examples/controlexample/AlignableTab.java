@@ -65,7 +65,9 @@ abstract class AlignableTab extends Tab {
 
 		/* Add the listeners */
 		SelectionListener selectionListener = widgetSelectedAdapter(event -> {
-			if (!((Button) event.widget).getSelection ()) return;
+            if (!((Button) event.widget).getSelection()) {
+                return;
+            }
 			setExampleWidgetAlignment ();
 		});
 		leftButton.addSelectionListener (selectionListener);

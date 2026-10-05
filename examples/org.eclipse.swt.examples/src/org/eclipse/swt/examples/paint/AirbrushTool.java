@@ -51,8 +51,9 @@ public class AirbrushTool extends ContinuousPaintSession implements PaintTool {
 		settings = toolSettings;
 		cachedRadiusSquared = settings.airbrushRadius * settings.airbrushRadius;
 		cachedNumPoints = 314 * settings.airbrushIntensity * cachedRadiusSquared / 250000;
-		if (cachedNumPoints == 0 && settings.airbrushIntensity != 0)
-			cachedNumPoints = 1;
+        if (cachedNumPoints == 0 && settings.airbrushIntensity != 0) {
+            cachedNumPoints = 1;
+        }
 	}
 
 	/**

@@ -38,14 +38,20 @@ public static void main (String [] args) {
 		int i = 0;
 		@Override
 		public void run() {
-			if (bar.isDisposed()) return;
+            if (bar.isDisposed()) {
+                return;
+            }
 			bar.setSelection(i++);
-			if (i <= bar.getMaximum()) display.timerExec(100, this);
+            if (i <= bar.getMaximum()) {
+                display.timerExec(100, this);
+            }
 		}
 	});
 
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

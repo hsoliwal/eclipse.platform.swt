@@ -87,7 +87,9 @@ public class Bug489751_TreeItemDisposeSelect {
 		});
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

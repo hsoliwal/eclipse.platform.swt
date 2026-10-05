@@ -73,10 +73,13 @@ public class Snippet305 {
 		shell.setSize(800, 600);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
-		if (application != null) application.dispose();
+        if (application != null) {
+            application.dispose();
+        }
 		display.dispose();
 	}
 }

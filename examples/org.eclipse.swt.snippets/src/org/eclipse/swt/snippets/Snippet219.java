@@ -92,7 +92,9 @@ public class Snippet219 {
 
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		region.dispose();
 		image.dispose ();

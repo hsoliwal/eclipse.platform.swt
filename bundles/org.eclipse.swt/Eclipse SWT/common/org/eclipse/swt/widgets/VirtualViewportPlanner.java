@@ -36,8 +36,12 @@ final class VirtualViewportPlanner {
 	}
 
 	void setLogicalCount (int count) {
-		if (count < 0) throw new IllegalArgumentException ("negative logical count");
-		if (count == logicalCount) return;
+        if (count < 0) {
+            throw new IllegalArgumentException("negative logical count");
+        }
+        if (count == logicalCount) {
+            return;
+        }
 		selection.setLogicalCount (count);
 		logicalCount = count;
 		clampViewport ();
@@ -45,30 +49,46 @@ final class VirtualViewportPlanner {
 	}
 
 	void insert (int index, int count) {
-		if (count < 0 || index < 0 || index > logicalCount) throw new IllegalArgumentException ("invalid insert");
-		if (count == 0) return;
+        if (count < 0 || index < 0 || index > logicalCount) {
+            throw new IllegalArgumentException("invalid insert");
+        }
+        if (count == 0) {
+            return;
+        }
 		selection.insert (index, count);
-		if (index <= firstVisible && logicalCount != 0) firstVisible = Math.addExact (firstVisible, count);
+        if (index <= firstVisible && logicalCount != 0) {
+            firstVisible = Math.addExact(firstVisible, count);
+        }
 		logicalCount = Math.addExact (logicalCount, count);
 		clampViewport ();
 		generation++;
 	}
 
 	void remove (int index, int count) {
-		if (count < 0 || index < 0 || index > logicalCount - count) throw new IllegalArgumentException ("invalid remove");
-		if (count == 0) return;
+        if (count < 0 || index < 0 || index > logicalCount - count) {
+            throw new IllegalArgumentException("invalid remove");
+        }
+        if (count == 0) {
+            return;
+        }
 		selection.remove (index, count);
-		if (index < firstVisible) firstVisible -= Math.min (count, firstVisible - index);
+        if (index < firstVisible) {
+            firstVisible -= Math.min(count, firstVisible - index);
+        }
 		logicalCount -= count;
 		clampViewport ();
 		generation++;
 	}
 
 	void setViewport (int first, int visibleRows) {
-		if (first < 0 || visibleRows < 0) throw new IllegalArgumentException ("negative viewport");
+        if (first < 0 || visibleRows < 0) {
+            throw new IllegalArgumentException("negative viewport");
+        }
 		int nextFirst = logicalCount == 0 ? 0 : Math.min (first, logicalCount - 1);
 		int nextVisible = Math.min (visibleRows, Math.max (0, logicalCount - nextFirst));
-		if (nextFirst == firstVisible && nextVisible == visibleCount) return;
+        if (nextFirst == firstVisible && nextVisible == visibleCount) {
+            return;
+        }
 		firstVisible = nextFirst;
 		visibleCount = nextVisible;
 		generation++;
@@ -95,8 +115,12 @@ final class VirtualViewportPlanner {
 	}
 
 	void setOverscanRows (int rows) {
-		if (rows < 0) throw new IllegalArgumentException ("negative overscan");
-		if (rows == overscanRows) return;
+        if (rows < 0) {
+            throw new IllegalArgumentException("negative overscan");
+        }
+        if (rows == overscanRows) {
+            return;
+        }
 		overscanRows = rows;
 		generation++;
 	}
@@ -132,7 +156,9 @@ final class VirtualViewportPlanner {
 	}
 
 	void endRepaintLock () {
-		if (repaintLockDepth == 0) throw new IllegalStateException ("repaint lock underflow");
+        if (repaintLockDepth == 0) {
+            throw new IllegalStateException("repaint lock underflow");
+        }
 		repaintLockDepth--;
 		generation++;
 	}

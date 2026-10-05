@@ -40,8 +40,9 @@ public class Bug304020_TextLayoutPerformance {
 
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		layout.dispose();

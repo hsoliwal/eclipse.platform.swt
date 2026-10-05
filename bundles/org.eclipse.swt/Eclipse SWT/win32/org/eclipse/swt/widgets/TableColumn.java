@@ -184,7 +184,9 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -207,9 +209,15 @@ void destroyWidget () {
  */
 public int getAlignment () {
 	checkWidget ();
-	if ((style & SWT.LEFT) != 0) return SWT.LEFT;
-	if ((style & SWT.CENTER) != 0) return SWT.CENTER;
-	if ((style & SWT.RIGHT) != 0) return SWT.RIGHT;
+    if ((style & SWT.LEFT) != 0) {
+        return SWT.LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        return SWT.CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        return SWT.RIGHT;
+    }
 	return SWT.LEFT;
 }
 
@@ -310,7 +318,9 @@ public int getWidth () {
 
 int getWidthInPixels () {
 	int index = parent.indexOf (this);
-	if (index == -1) return 0;
+    if (index == -1) {
+        return 0;
+    }
 	long hwnd = parent.handle;
 	return (int)OS.SendMessage (hwnd, OS.LVM_GETCOLUMNWIDTH, index, 0);
 }
@@ -397,7 +407,9 @@ private int calcAutoWidth(int index, boolean withHeader) {
 public void pack () {
 	checkWidget ();
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	long hwnd = parent.handle;
 	int oldWidth = (int)OS.SendMessage (hwnd, OS.LVM_GETCOLUMNWIDTH, index, 0);
 	TCHAR buffer = new TCHAR (text, true);
@@ -420,33 +432,45 @@ public void pack () {
 		OS.MapWindowPoints (hwndHeader, hwnd, headerRect, 2);
 		long hDC = OS.GetDC (hwnd);
 		long oldFont = 0, newFont = OS.SendMessage (hwnd, OS.WM_GETFONT, 0, 0);
-		if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+        if (newFont != 0) {
+            oldFont = OS.SelectObject(hDC, newFont);
+        }
 		int count = (int)OS.SendMessage (hwnd, OS.LVM_GETITEMCOUNT, 0, 0);
 		for (int i=0; i<count; i++) {
 			TableItem item = parent._getItem (i, false);
 			if (item != null) {
 				long hFont = item.fontHandle (index);
-				if (hFont != -1) hFont = OS.SelectObject (hDC, hFont);
+                if (hFont != -1) {
+                    hFont = OS.SelectObject(hDC, hFont);
+                }
 				Event event = parent.sendMeasureItemEvent (item, i, index, hDC);
-				if (hFont != -1) hFont = OS.SelectObject (hDC, hFont);
-				if (isDisposed () || parent.isDisposed ()) break;
+                if (hFont != -1) {
+                    hFont = OS.SelectObject(hDC, hFont);
+                }
+                if (isDisposed() || parent.isDisposed()) {
+                    break;
+                }
 				Rectangle bounds = event.getBounds();
 				columnWidth = Math.max (columnWidth, DPIUtil.pointToPixel(bounds.x + bounds.width, getAutoscalingZoom()) - headerRect.left);
 			}
 		}
-		if (newFont != 0) OS.SelectObject (hDC, oldFont);
+        if (newFont != 0) {
+            OS.SelectObject(hDC, oldFont);
+        }
 		OS.ReleaseDC (hwnd, hDC);
 	} else {
 		columnWidth = calcAutoWidth (index, false);
 		if (index == 0) {
-			/*
-			* Bug in Windows.  When LVM_SETCOLUMNWIDTH is used with LVSCW_AUTOSIZE
-			* where each item has I_IMAGECALLBACK but there are no images in the
-			* table, the size computed by LVM_SETCOLUMNWIDTH is too small for the
-			* first column, causing long items to be clipped with '...'.  The fix
-			* is to increase the column width by a small amount.
-			*/
-			if (parent.imageList == null) columnWidth += 2;
+            /*
+            * Bug in Windows.  When LVM_SETCOLUMNWIDTH is used with LVSCW_AUTOSIZE
+            * where each item has I_IMAGECALLBACK but there are no images in the
+            * table, the size computed by LVM_SETCOLUMNWIDTH is too small for the
+            * first column, causing long items to be clipped with '...'.  The fix
+            * is to increase the column width by a small amount.
+            */
+            if (parent.imageList == null) {
+                columnWidth += 2;
+            }
 			/*
 			* Bug in Windows.  When LVM_SETCOLUMNWIDTH is used with LVSCW_AUTOSIZE
 			* for a table with a state image list, the column is width does not
@@ -480,7 +504,9 @@ public void pack () {
 	if (oldWidth != columnWidth) {
 		updateToolTip (index);
 		sendEvent (SWT.Resize);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 		boolean moved = false;
 		TableColumn [] columns = parent.getColumns ();
 		for (int columnindex : parent.getColumnOrder ()) {
@@ -489,7 +515,9 @@ public void pack () {
 				column.updateToolTip (columnindex);
 				column.sendEvent (SWT.Move);
 			}
-			if (column == this) moved = true;
+            if (column == this) {
+                moved = true;
+            }
 		}
 	}
 }
@@ -527,8 +555,12 @@ void releaseParent () {
  */
 public void removeControlListener (ControlListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Move, listener);
 	eventTable.unhook (SWT.Resize, listener);
 }
@@ -552,8 +584,12 @@ public void removeControlListener (ControlListener listener) {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -575,9 +611,13 @@ public void removeSelectionListener(SelectionListener listener) {
  */
 public void setAlignment (int alignment) {
 	checkWidget ();
-	if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) return;
+    if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) {
+        return;
+    }
 	int index = parent.indexOf (this);
-	if (index == -1 || index == 0) return;
+    if (index == -1 || index == 0) {
+        return;
+    }
 	style &= ~(SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	style |= alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	long hwnd = parent.handle;
@@ -586,9 +626,15 @@ public void setAlignment (int alignment) {
 	OS.SendMessage (hwnd, OS.LVM_GETCOLUMN, index, lvColumn);
 	lvColumn.fmt &= ~OS.LVCFMT_JUSTIFYMASK;
 	int fmt = 0;
-	if ((style & SWT.LEFT) == SWT.LEFT) fmt = OS.LVCFMT_LEFT;
-	if ((style & SWT.CENTER) == SWT.CENTER) fmt = OS.LVCFMT_CENTER;
-	if ((style & SWT.RIGHT) == SWT.RIGHT) fmt = OS.LVCFMT_RIGHT;
+    if ((style & SWT.LEFT) == SWT.LEFT) {
+        fmt = OS.LVCFMT_LEFT;
+    }
+    if ((style & SWT.CENTER) == SWT.CENTER) {
+        fmt = OS.LVCFMT_CENTER;
+    }
+    if ((style & SWT.RIGHT) == SWT.RIGHT) {
+        fmt = OS.LVCFMT_RIGHT;
+    }
 	lvColumn.fmt |= fmt;
 	OS.SendMessage (hwnd, OS.LVM_SETCOLUMN, index, lvColumn);
 	/*
@@ -624,7 +670,9 @@ public void setImage (Image image) {
 
 void setImage (Image image, boolean sort, boolean right) {
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	long hwnd = parent.handle;
 	LVCOLUMN lvColumn = new LVCOLUMN ();
 	lvColumn.mask = OS.LVCF_FMT | OS.LVCF_IMAGE;
@@ -632,7 +680,9 @@ void setImage (Image image, boolean sort, boolean right) {
 	if (image != null) {
 		lvColumn.fmt |= OS.LVCFMT_IMAGE;
 		lvColumn.iImage = parent.imageIndexHeader (image);
-		if (right) lvColumn.fmt |= OS.LVCFMT_BITMAP_ON_RIGHT;
+        if (right) {
+            lvColumn.fmt |= OS.LVCFMT_BITMAP_ON_RIGHT;
+        }
 	} else {
 		lvColumn.mask &= ~OS.LVCF_IMAGE;
 		lvColumn.fmt &= ~(OS.LVCFMT_IMAGE | OS.LVCFMT_BITMAP_ON_RIGHT);
@@ -688,7 +738,9 @@ public void setResizable (boolean resizable) {
 
 void setSortDirection (int direction) {
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	long hwnd = parent.handle;
 	long hwndHeader = OS.SendMessage (hwnd, OS.LVM_GETHEADER, 0, 0);
 	HDITEM hdItem = new HDITEM ();
@@ -698,12 +750,16 @@ void setSortDirection (int direction) {
 		case SWT.UP:
 			hdItem.fmt &= ~(OS.HDF_IMAGE | OS.HDF_SORTDOWN);
 			hdItem.fmt |= OS.HDF_SORTUP;
-			if (image == null) hdItem.mask &= ~OS.HDI_IMAGE;
+            if (image == null) {
+                hdItem.mask &= ~OS.HDI_IMAGE;
+            }
 			break;
 		case SWT.DOWN:
 			hdItem.fmt &= ~(OS.HDF_IMAGE | OS.HDF_SORTUP);
 			hdItem.fmt |= OS.HDF_SORTDOWN;
-			if (image == null) hdItem.mask &= ~OS.HDI_IMAGE;
+            if (image == null) {
+                hdItem.mask &= ~OS.HDI_IMAGE;
+            }
 			break;
 		case SWT.NONE:
 			hdItem.fmt &= ~(OS.HDF_SORTUP | OS.HDF_SORTDOWN);
@@ -759,10 +815,16 @@ void setSortDirection (int direction) {
 @Override
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (string.equals (text)) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (string.equals(text)) {
+        return;
+    }
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	super.setText (string);
 
 	/*
@@ -792,8 +854,12 @@ public void setText (String string) {
 	lvColumn.mask |= OS.LVCF_TEXT;
 	lvColumn.pszText = pszText;
 	long result = OS.SendMessage (hwnd, OS.LVM_SETCOLUMN, index, lvColumn);
-	if (pszText != 0) OS.HeapFree (hHeap, 0, pszText);
-	if (result == 0) error (SWT.ERROR_CANNOT_SET_TEXT);
+    if (pszText != 0) {
+        OS.HeapFree(hHeap, 0, pszText);
+    }
+    if (result == 0) {
+        error(SWT.ERROR_CANNOT_SET_TEXT);
+    }
 }
 
 /**
@@ -849,9 +915,13 @@ public void setWidth (int width) {
 }
 
 void setWidthInPixels (int width) {
-	if (width < 0) return;
+    if (width < 0) {
+        return;
+    }
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	long hwnd = parent.handle;
 	if (width != (int)OS.SendMessage (hwnd, OS.LVM_GETCOLUMNWIDTH, index, 0)) {
 		OS.SendMessage (hwnd, OS.LVM_SETCOLUMNWIDTH, index, width);

@@ -201,11 +201,13 @@ public class Issue0932_StyledText_FixedLineHeight {
 					charInfos.sort((lhs, rhs) -> {
 						final int lhsHeight = lhs.ascent + lhs.descent;
 						final int rhsHeight = rhs.ascent + rhs.descent;
-						if (lhsHeight != rhsHeight)
-							return lhsHeight - rhsHeight;
+                        if (lhsHeight != rhsHeight) {
+                            return lhsHeight - rhsHeight;
+                        }
 
-						if (lhs.ascent != rhs.ascent)
-							return lhs.ascent - rhs.ascent;
+                        if (lhs.ascent != rhs.ascent) {
+                            return lhs.ascent - rhs.ascent;
+                        }
 
 						return lhs.descent - rhs.descent;
 					});
@@ -286,8 +288,9 @@ public class Issue0932_StyledText_FixedLineHeight {
 							numCharsPlane = 0;
 						}
 
-						if (numCharsPlane++ >= 8)
-							continue;
+                        if (numCharsPlane++ >= 8) {
+                            continue;
+                        }
 
 						galleryText.append(charInfo.character);
 						// Prevent characters from merging into surrogate pairs etc

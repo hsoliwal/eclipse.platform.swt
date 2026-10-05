@@ -37,7 +37,9 @@ public class MacGeneratorUI {
 
 	TreeItem lastParent;
 	TreeItem addChild (Node node, TreeItem superItem) {
-		if (node.getNodeType() == Node.TEXT_NODE) return null;
+        if (node.getNodeType() == Node.TEXT_NODE) {
+            return null;
+        }
 		String name = node.getNodeName();
 		TreeItem parentItem = null;
 		if (lastParent != null && !lastParent.isDisposed() && lastParent.getParentItem() == superItem && name.equals(lastParent.getData())) {
@@ -62,12 +64,16 @@ public class MacGeneratorUI {
 		item.setData(node);
 		checkItem(node, item);
 		NodeList childNodes = node.getChildNodes();
-		if (childNodes.getLength() > 0) new TreeItem(item, SWT.NONE);
+        if (childNodes.getLength() > 0) {
+            new TreeItem(item, SWT.NONE);
+        }
 		return item;
 	}
 	
 	void checkPath(TreeItem item, boolean checked, boolean grayed) {
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		if (grayed) {
 			checked = true;
 		} else {
@@ -101,15 +107,23 @@ public class MacGeneratorUI {
 	}
 	
 	boolean getEditable(TableItem item, int column) {
-		if (!(item.getData() instanceof Node)) return false;
-		if (column == 0) return false;
+        if (!(item.getData() instanceof Node)) {
+            return false;
+        }
+        if (column == 0) {
+            return false;
+        }
 		String attribName = item.getText();
 		return attribName.startsWith("swt_") || item.getData("swt_") != null;
 	}
 
 	String getPrettyText(String text) {
-		if (text.equals("class")) return "Classes";
-		if (text.equals("depends_on")) return "Depends_on";
+        if (text.equals("class")) {
+            return "Classes";
+        }
+        if (text.equals("depends_on")) {
+            return "Depends_on";
+        }
 		return text.substring(0, 1).toUpperCase() + text.substring(1) + "s";
 	}
 
@@ -127,8 +141,12 @@ public class MacGeneratorUI {
 				TreeItem[] children = child.getItems();
 				int checkedCount = 0;
 				for (TreeItem element : children) {
-					if (element.getChecked()) checkedCount++;
-					if (element.getGrayed()) break;
+                    if (element.getChecked()) {
+                        checkedCount++;
+                    }
+                    if (element.getGrayed()) {
+                        break;
+                    }
 				}
 				child.setChecked(checkedCount != 0);
 				child.setGrayed(checkedCount != children.length);
@@ -200,7 +218,9 @@ public class MacGeneratorUI {
 		
 		nodesTree.addListener(SWT.Selection, event -> {
 			TreeItem item = (TreeItem)event.item;
-			if (item == null) return;
+            if (item == null) {
+                return;
+            }
 			if (event.detail != SWT.CHECK) {
 				selectChild(item);
 				return;
@@ -220,7 +240,9 @@ public class MacGeneratorUI {
 		Composite comp = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout(1, false);
 		layout.marginWidth = 0;
-		if (!actions) layout.marginRight = 5;
+        if (!actions) {
+            layout.marginRight = 5;
+        }
 		comp.setLayout(layout);
 		
 		Label label = new Label(comp, SWT.NONE);
@@ -244,7 +266,9 @@ public class MacGeneratorUI {
 		editor.setEditor(editorTx);
 		Listener textListener = e -> {
 			if (e.type == SWT.KeyDown) {
-				if (e.keyCode != SWT.F6) return;
+                if (e.keyCode != SWT.F6) {
+                    return;
+                }
 			}
 			if (e.type == SWT.Traverse) {
 				switch (e.detail) {
@@ -257,7 +281,9 @@ public class MacGeneratorUI {
 			}
 			editorTx.setVisible(false);
 			TableItem item = editor.getItem();
-			if (item == null) return;
+            if (item == null) {
+                return;
+            }
 			int column = editor.getColumn();
 			String value = editorTx.getText();
 			item.setText(column, value);
@@ -279,11 +305,17 @@ public class MacGeneratorUI {
 		attribTable.addListener(SWT.MouseDown, e -> e.display.asyncExec (new Runnable () {
 			@Override
 			public void run () {
-				if (attribTable.isDisposed ()) return;
-				if (e.button != 1) return;
+                if (attribTable.isDisposed()) {
+                    return;
+                }
+                if (e.button != 1) {
+                    return;
+                }
 				Point pt = new Point(e.x, e.y);
 				TableItem item = attribTable.getItem(pt);
-				if (item == null) return;
+                if (item == null) {
+                    return;
+                }
 				int column = -1;
 				for (int i = 0; i < attribTable.getColumnCount(); i++) {
 					if (item.getBounds(i).contains(pt)) {
@@ -291,8 +323,12 @@ public class MacGeneratorUI {
 						break;
 					}				
 				}
-				if (column == -1) return;
-				if (!getEditable(item, column)) return;
+                if (column == -1) {
+                    return;
+                }
+                if (!getEditable(item, column)) {
+                    return;
+                }
 				editor.setColumn(column);
 				editor.setItem(item);
 				editorTx.setText(item.getText(column));
@@ -402,12 +438,16 @@ public class MacGeneratorUI {
 		Document[] documents = gen.getDocuments();
 		if (node == null && documents.length > 0) {
 			int index = 0;
-			while (index < documents.length && (node = documents[index]) == null) index++;
+            while (index < documents.length && (node = documents[index]) == null) {
+                index++;
+            }
 		}
 		if (flatNodes == null) {
 			flatNodes = new ArrayList<>();
 			for (Document document : documents) {
-				if (document != null) addNodes(document, flatNodes);
+                if (document != null) {
+                    addNodes(document, flatNodes);
+                }
 			}
 		}
 		int index = 0;
@@ -446,7 +486,9 @@ public class MacGeneratorUI {
 		path.remove(0);
 		while (true) {
 			TreeItem item = findItem(items, path.remove(0));
-			if (item == null) return;
+            if (item == null) {
+                return;
+            }
 			if (path.isEmpty()) {
 				nodesTree.setSelection(item);
 				selectChild(item);
@@ -459,17 +501,23 @@ public class MacGeneratorUI {
 	TreeItem findItem(TreeItem[] items, Node node) {
 		for (TreeItem item : items) {
 			checkChildren(item);
-			if (item.getData() == node) return item;
+            if (item.getData() == node) {
+                return item;
+            }
 		}
 		for (TreeItem item : items) {
 			TreeItem child = findItem(item.getItems(), node);
-			if (child != null) return child;
+            if (child != null) {
+                return child;
+            }
 		}
 		return null;
 	}
 	
 	void addNodes(Node node, ArrayList<Node> list) {
-		if (node.getNodeType() == Node.TEXT_NODE) return;
+        if (node.getNodeType() == Node.TEXT_NODE) {
+            return;
+        }
 		list.add(node);
 		NodeList children = node.getChildNodes();
 		for (int i = 0, length = children.getLength(); i < length; i++) {
@@ -480,7 +528,9 @@ public class MacGeneratorUI {
 	
 	void selectChild(TreeItem item) {
 		attribTable.removeAll();
-		if (!(item.getData() instanceof Node)) return;
+        if (!(item.getData() instanceof Node)) {
+            return;
+        }
 		Node node = (Node)item.getData();
 		NamedNodeMap attributes = node.getAttributes();
 		for (String extraAttrib : gen.getExtraAttributeNames(node)) {
@@ -503,7 +553,9 @@ public class MacGeneratorUI {
 		for (int i = 0, length = attributes.getLength(); i < length; i++) {
 			Node attrib = attributes.item(i);
 			String attribName = attrib.getNodeName();
-			if (attribName.startsWith("swt_")) continue;
+            if (attribName.startsWith("swt_")) {
+                continue;
+            }
 			TableItem attribItem = new TableItem(attribTable, SWT.NONE);
 			attribItem.setText(attribName);
 			attribItem.setText(1, attrib.getNodeValue());
@@ -529,7 +581,9 @@ public class MacGeneratorUI {
 	
 	void updateNodes() {
 		String[] xmls = gen.getXmls();
-		if (xmls == null) return;
+        if (xmls == null) {
+            return;
+        }
 		Document[] documents = gen.getDocuments();
 		for (int x = 0; x < xmls.length; x++) {
 			String xmlPath = xmls[x];
@@ -555,11 +609,15 @@ public class MacGeneratorUI {
 	}
 	
 	public void refresh () {
-		if (nodesTree == null) return;
+        if (nodesTree == null) {
+            return;
+        }
 		gen.setXmls(null);
 		flatNodes = null;
 		nodesTree.getDisplay().asyncExec(() -> {
-			if (nodesTree == null || nodesTree.isDisposed()) return;
+            if (nodesTree == null || nodesTree.isDisposed()) {
+                return;
+            }
 			nodesTree.removeAll();
 			attribTable.removeAll();
 			updateNodes();
@@ -595,8 +653,9 @@ public class MacGeneratorUI {
 			ui.open(shell);
 			shell.open();
 			while (!shell.isDisposed()) {
-				if (!display.readAndDispatch())
-					display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 			ui.dispose();
 			display.dispose();

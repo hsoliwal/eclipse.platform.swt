@@ -405,20 +405,26 @@ static byte [] ascii (String name) {
 
 static int translateKey (int key) {
 	for (int i=0; i<KeyTable.length; i++) {
-		if (KeyTable [i] [0] == key) return KeyTable [i] [1];
+        if (KeyTable [i] [0] == key) {
+            return KeyTable [i] [1];
+        }
 	}
 	return 0;
 }
 
 static int untranslateKey (int key) {
 	for (int i=0; i<KeyTable.length; i++) {
-		if (KeyTable [i] [1] == key) return KeyTable [i] [0];
+        if (KeyTable [i] [1] == key) {
+            return KeyTable [i] [0];
+        }
 	}
 	return 0;
 }
 
 void addContext (GCData context) {
-	if (contexts == null) contexts = new GCData [12];
+    if (contexts == null) {
+        contexts = new GCData [12];
+    }
 	for (int i=0; i<contexts.length; i++) {
 		if (contexts[i] == null || contexts [i] == context) {
 			contexts [i] = context;
@@ -469,13 +475,19 @@ void addContext (GCData context) {
  */
 public void addFilter (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (filterTable == null) filterTable = new EventTable ();
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (filterTable == null) {
+        filterTable = new EventTable();
+    }
 	filterTable.hook (eventType, listener);
 }
 
 void addLayoutDeferred (Composite comp) {
-	if (layoutDeferred == null) layoutDeferred = new Composite [64];
+    if (layoutDeferred == null) {
+        layoutDeferred = new Composite [64];
+    }
 	if (layoutDeferredCount == layoutDeferred.length) {
 		Composite [] temp = new Composite [layoutDeferred.length + 64];
 		System.arraycopy (layoutDeferred, 0, temp, 0, layoutDeferred.length);
@@ -510,13 +522,19 @@ void addLayoutDeferred (Composite comp) {
  */
 public void addListener (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) eventTable = new EventTable ();
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        eventTable = new EventTable();
+    }
 	eventTable.hook (eventType, listener);
 }
 
 void addMenu (Menu menu) {
-	if (menus == null) menus = new Menu [12];
+    if (menus == null) {
+        menus = new Menu [12];
+    }
 	for (int i=0; i<menus.length; i++) {
 		if (menus [i] == null) {
 			menus [i] = menu;
@@ -534,7 +552,9 @@ void addPool () {
 }
 
 void addPool (NSAutoreleasePool pool) {
-	if (pools == null) pools = new NSAutoreleasePool [4];
+    if (pools == null) {
+        pools = new NSAutoreleasePool [4];
+    }
 	if (poolCount == pools.length) {
 		NSAutoreleasePool[] temp = new NSAutoreleasePool [poolCount + 4];
 		System.arraycopy (pools, 0, temp, 0, poolCount);
@@ -548,14 +568,20 @@ void addPool (NSAutoreleasePool pool) {
 }
 
 void addPopup (Menu menu) {
-	if (popups == null) popups = new Menu [4];
+    if (popups == null) {
+        popups = new Menu [4];
+    }
 	int length = popups.length;
 	for (int i=0; i<length; i++) {
-		if (popups [i] == menu) return;
+        if (popups [i] == menu) {
+            return;
+        }
 	}
 	int index = 0;
 	while (index < length) {
-		if (popups [index] == null) break;
+        if (popups [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -576,7 +602,9 @@ void addSkinnableWidget (Widget widget) {
 }
 
 void addWidget (NSObject view, Widget widget) {
-	if (view == null) return;
+    if (view == null) {
+        return;
+    }
 	long ivar = OS.object_setInstanceVariable (view.id, SWT_OBJECT, widget.jniRef);
 
 	if (ivar == 0) {
@@ -612,7 +640,9 @@ void addWidget (NSObject view, Widget widget) {
  */
 public void asyncExec (Runnable runnable) {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		synchronizer.asyncExec (runnable);
 	}
 }
@@ -681,7 +711,9 @@ void cascadeWindow (NSWindow window, NSScreen screen) {
 		if (screenNumberObject != null) {
 			int screenNumber = new NSNumber(screenNumberObject.id).intValue();
 			int index = 0;
-			while (screenID[index] != 0 && screenID[index] != screenNumber) index++;
+            while (screenID[index] != 0 && screenID[index] != screenNumber) {
+                index++;
+            }
 			screenID[index] = screenNumber;
 			NSPoint cascade = screenCascade[index];
 			if (cascade == null) {
@@ -706,9 +738,15 @@ void cascadeWindow (NSWindow window, NSScreen screen) {
 
 @Override
 protected void checkDevice () {
-	if (thread == null) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (thread != Thread.currentThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
-	if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+    if (thread == null) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (thread != Thread.currentThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
+    if (isDisposed()) {
+        error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 }
 
 void checkEnterExit (Control control, NSEvent nsEvent, boolean send) {
@@ -716,7 +754,9 @@ void checkEnterExit (Control control, NSEvent nsEvent, boolean send) {
 		if (currentControl != null && !currentControl.isDisposed()) {
 			currentControl.sendMouseEvent (nsEvent, SWT.MouseExit, send);
 		}
-		if (control != null && control.isDisposed()) control = null;
+        if (control != null && control.isDisposed()) {
+            control = null;
+        }
 		currentControl = control;
 		if (control != null) {
 			control.sendMouseEvent (nsEvent, SWT.MouseEnter, send);
@@ -765,7 +805,9 @@ void checkFocus () {
  * @see Widget#checkSubclass
  */
 protected void checkSubclass () {
-	if (!Display.isValidClass (getClass ())) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!Display.isValidClass(getClass())) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -804,8 +846,12 @@ static void checkDisplay (Thread thread, boolean multiple) {
 	synchronized (Device.class) {
 		for (int i=0; i<Displays.length; i++) {
 			if (Displays [i] != null) {
-				if (!multiple) SWT.error (SWT.ERROR_NOT_IMPLEMENTED, null, " [multiple displays]");
-				if (Displays [i].thread == thread) SWT.error (SWT.ERROR_THREAD_INVALID_ACCESS);
+                if (!multiple) {
+                    SWT.error(SWT.ERROR_NOT_IMPLEMENTED, null, " [multiple displays]");
+                }
+                if (Displays [i].thread == thread) {
+                    SWT.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+                }
 			}
 		}
 	}
@@ -815,14 +861,20 @@ static String convertToLf(String text) {
 	char Cr = '\r';
 	char Lf = '\n';
 	int length = text.length ();
-	if (length == 0) return text;
+    if (length == 0) {
+        return text;
+    }
 
 	/* Check for an LF or CR/LF.  Assume the rest of the string
 	 * is formated that way.  This will not work if the string
 	 * contains mixed delimiters. */
 	int i = text.indexOf (Lf, 0);
-	if (i == -1 || i == 0) return text;
-	if (text.charAt (i - 1) != Cr) return text;
+    if (i == -1 || i == 0) {
+        return text;
+    }
+    if (text.charAt(i - 1) != Cr) {
+        return text;
+    }
 
 	/* The string is formatted with CR/LF.
 	 * Create a new string with the LF line delimiter. */
@@ -830,7 +882,9 @@ static String convertToLf(String text) {
 	StringBuilder result = new StringBuilder ();
 	while (i < length) {
 		int j = text.indexOf (Cr, i);
-		if (j == -1) j = length;
+        if (j == -1) {
+            j = length;
+        }
 		String s = text.substring (i, j);
 		result.append (s);
 		i = j + 2;
@@ -840,19 +894,31 @@ static String convertToLf(String text) {
 }
 
 void clearModal (Shell shell) {
-	if (modalShells == null) return;
+    if (modalShells == null) {
+        return;
+    }
 	int index = 0, length = modalShells.length;
 	while (index < length) {
-		if (modalShells [index] == shell) break;
-		if (modalShells [index] == null) return;
+        if (modalShells [index] == shell) {
+            break;
+        }
+        if (modalShells [index] == null) {
+            return;
+        }
 		index++;
 	}
-	if (index == length) return;
+    if (index == length) {
+        return;
+    }
 	System.arraycopy (modalShells, index + 1, modalShells, index, --length - index);
 	modalShells [length] = null;
-	if (index == 0 && modalShells [0] == null) modalShells = null;
+    if (index == 0 && modalShells [0] == null) {
+        modalShells = null;
+    }
 	Shell [] shells = getShells ();
-	for (int i=0; i<shells.length; i++) shells [i].updateModal ();
+    for (int i = 0; i < shells.length; i++) {
+        shells [i].updateModal();
+    }
 }
 
 void clearPool () {
@@ -879,7 +945,9 @@ public void close () {
 	checkDevice ();
 	Event event = new Event ();
 	sendEvent (SWT.Close, event);
-	if (event.doit) dispose ();
+    if (event.doit) {
+        dispose();
+    }
 }
 
 static private void configureSystemOption (String option, boolean value) {
@@ -939,7 +1007,9 @@ protected void create (DeviceData data) {
 	createDisplay (data);
 	register (this);
 	synchronizer = new Synchronizer (this);
-	if (Default == null) Default = this;
+    if (Default == null) {
+        Default = this;
+    }
 }
 
 void createDisplay (DeviceData data) {
@@ -980,7 +1050,9 @@ void createDisplay (DeviceData data) {
 	if (OS.GetCurrentProcess (psn) == OS.noErr) {
 		int pid = OS.getpid ();
 		long ptr = getApplicationName().UTF8String();
-		if (ptr != 0) OS.CPSSetProcessName (psn, ptr);
+        if (ptr != 0) {
+            OS.CPSSetProcessName(psn, ptr);
+        }
 		ptr = C.getenv (ascii ("APP_ICON_" + pid));
 		if (ptr != 0) {
 			NSString path = NSString.stringWithUTF8String (ptr);
@@ -1136,7 +1208,9 @@ long cursorSetProc (long id, long sel) {
 	if (lockCursor) {
 		if (currentControl != null) {
 			Cursor cursor = currentControl.findCursor ();
-			if (cursor != null && cursor.handle.id != id) return 0;
+            if (cursor != null && cursor.handle.id != id) {
+                return 0;
+            }
 		}
 	}
 	OS.call (oldCursorSetProc, id, sel);
@@ -1146,7 +1220,9 @@ long cursorSetProc (long id, long sel) {
 static void deregister (Display display) {
 	synchronized (Device.class) {
 		for (int i=0; i<Displays.length; i++) {
-			if (display == Displays [i]) Displays [i] = null;
+            if (display == Displays [i]) {
+                Displays [i] = null;
+            }
 		}
 	}
 }
@@ -1163,7 +1239,9 @@ static void deregister (Display display) {
  */
 @Override
 protected void destroy () {
-	if (this == Default) Default = null;
+    if (this == Default) {
+        Default = null;
+    }
 	deregister (this);
 	destroyDisplay ();
 }
@@ -1187,7 +1265,9 @@ void destroyDisplay () {
  */
 public void disposeExec (Runnable runnable) {
 	checkDevice ();
-	if (disposeList == null) disposeList = new Runnable [4];
+    if (disposeList == null) {
+        disposeList = new Runnable [4];
+    }
 	for (int i=0; i<disposeList.length; i++) {
 		if (disposeList [i] == null) {
 			disposeList [i] = runnable;
@@ -1218,7 +1298,9 @@ boolean filterEvent (Event event) {
 }
 
 boolean filters (int eventType) {
-	if (filterTable == null) return false;
+    if (filterTable == null) {
+        return false;
+    }
 	return filterTable.hooks (eventType);
 }
 
@@ -1323,7 +1405,9 @@ public static Display findDisplay (Thread thread) {
 }
 
 TouchSource findTouchSource(NSTouch touch) {
-	if (touchSources == null) touchSources = new TouchSource [4];
+    if (touchSources == null) {
+        touchSources = new TouchSource [4];
+    }
 	int index = 0;
 	int length = touchSources.length;
 	id touchDevice = touch.device();
@@ -1337,7 +1421,9 @@ TouchSource findTouchSource(NSTouch touch) {
 		index++;
 	}
 
-	if (source != null) return source;
+    if (source != null) {
+        return source;
+    }
 
 	if (index == length) {
 		TouchSource [] newList = new TouchSource [length + 4];
@@ -1407,7 +1493,9 @@ public Rectangle getBounds () {
 }
 
 Rectangle getBounds (NSArray screens) {
-	if (screens == null) return new Rectangle(0, 0, 0, 0);
+    if (screens == null) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
 	NSScreen screen = new NSScreen(screens.objectAtIndex(0));
 	NSRect primaryFrame = screen.frame();
@@ -1419,14 +1507,30 @@ Rectangle getBounds (NSArray screens) {
 		NSRect frame = screen.frame();
 		double x1 = frame.x, x2 = frame.x + frame.width;
 		double y1 = primaryFrame.height - frame.y, y2 = primaryFrame.height - (frame.y + frame.height);
-		if (x1 < minX) minX = x1;
-		if (x2 < minX) minX = x2;
-		if (x1 > maxX) maxX = x1;
-		if (x2 > maxX) maxX = x2;
-		if (y1 < minY) minY = y1;
-		if (y2 < minY) minY = y2;
-		if (y1 > maxY) maxY = y1;
-		if (y2 > maxY) maxY = y2;
+        if (x1 < minX) {
+            minX = x1;
+        }
+        if (x2 < minX) {
+            minX = x2;
+        }
+        if (x1 > maxX) {
+            maxX = x1;
+        }
+        if (x2 > maxX) {
+            maxX = x2;
+        }
+        if (y1 < minY) {
+            minY = y1;
+        }
+        if (y2 < minY) {
+            minY = y2;
+        }
+        if (y1 > maxY) {
+            maxY = y1;
+        }
+        if (y2 > maxY) {
+            maxY = y2;
+        }
 	}
 	return new Rectangle ((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));
 }
@@ -1464,9 +1568,13 @@ int getCaretBlinkTime () {
 public Rectangle getClientArea () {
 	checkDevice ();
 	NSArray screens = NSScreen.screens();
-	if (screens == null) return new Rectangle(0, 0, 0, 0);
+    if (screens == null) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
-	if (screens.count() != 1) return getBounds (screens);
+    if (screens.count() != 1) {
+        return getBounds(screens);
+    }
 	NSScreen screen = new NSScreen(screens.objectAtIndex(0));
 	NSRect frame = screen.frame();
 	NSRect visibleFrame = screen.visibleFrame();
@@ -1535,7 +1643,9 @@ public Point [] getCursorSizes () {
  */
 public static Display getDefault () {
 	synchronized (Device.class) {
-		if (Default == null) Default = new Display ();
+        if (Default == null) {
+            Default = new Display();
+        }
 		return Default;
 	}
 }
@@ -1567,10 +1677,16 @@ public static Display getDefault () {
  */
 public Object getData (String key) {
 	checkDevice ();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (keys == null) return null;
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (keys == null) {
+        return null;
+    }
 	for (int i=0; i<keys.length; i++) {
-		if (keys [i].equals (key)) return values [i];
+        if (keys [i].equals(key)) {
+            return values [i];
+        }
 	}
 	return null;
 }
@@ -1783,7 +1899,9 @@ public void setDarkThemePreferred(boolean preferred) {
 
 int getLastEventTime () {
 	NSEvent event = application != null ? application.currentEvent() : null;
-	if (event == null) return 0;
+    if (event == null) {
+        return 0;
+    }
 	double timestamp = event.timestamp() * 1000;
 	while (timestamp > 0x7FFFFFFF) {
 		timestamp -= 0x7FFFFFFF;
@@ -1792,11 +1910,15 @@ int getLastEventTime () {
 }
 
 Menu [] getMenus (Decorations shell) {
-	if (menus == null) return new Menu [0];
+    if (menus == null) {
+        return new Menu [0];
+    }
 	int count = 0;
 	for (int i = 0; i < menus.length; i++) {
 		Menu menu = menus[i];
-		if (menu != null && menu.parent == shell) count++;
+        if (menu != null && menu.parent == shell) {
+            count++;
+        }
 	}
 	int index = 0;
 	Menu[] result = new Menu[count];
@@ -1827,7 +1949,9 @@ NSPanel getModalPanel () {
 public Monitor [] getMonitors () {
 	checkDevice ();
 	NSArray screens = NSScreen.screens();
-	if (screens == null) return new Monitor[] {};
+    if (screens == null) {
+        return new Monitor[]{};
+    }
 
 	NSRect primaryFrame = new NSScreen(screens.objectAtIndex(0)).frame();
 	int count = (int)screens.count();
@@ -1868,7 +1992,9 @@ public Monitor getPrimaryMonitor () {
 	checkDevice ();
 	Monitor monitor = new Monitor ();
 	NSArray screens = NSScreen.screens();
-	if (screens == null) return monitor;
+    if (screens == null) {
+        return monitor;
+    }
 
 	NSScreen screen = new NSScreen(screens.objectAtIndex(0));
 	NSRect frame = screen.frame();
@@ -1909,7 +2035,9 @@ public Shell [] getShells () {
 			result[index++] = (Shell)widget;
 		}
 	}
-	if (index == result.length) return result;
+    if (index == result.length) {
+        return result;
+    }
 	Shell [] newResult = new Shell [index];
 	System.arraycopy (result, 0, newResult, 0, index);
 	return newResult;
@@ -1953,7 +2081,9 @@ public Synchronizer getSynchronizer () {
  */
 public Thread getSyncThread () {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		return synchronizer.syncThread;
 	}
 }
@@ -1981,7 +2111,9 @@ public Thread getSyncThread () {
 public Color getSystemColor (int id) {
 	checkDevice ();
 	Color color = getWidgetColor (id);
-	if (color != null) return color;
+    if (color != null) {
+        return color;
+    }
 	return super.getSystemColor (id);
 }
 
@@ -2036,12 +2168,16 @@ double [] getWidgetColorRGB (int id) {
 }
 
 double [] getNSColorRGB (NSColor color) {
-	if (color == null) return null;
+    if (color == null) {
+        return null;
+    }
 	NSColorSpace colorSpace = color.colorSpace();
 	if (colorSpace == null || colorSpace.colorSpaceModel() != OS.NSColorSpaceModelRGB) {
 		color = color.colorUsingColorSpaceName(OS.NSDeviceRGBColorSpace);
 	}
-	if (color == null) return null;
+    if (color == null) {
+        return null;
+    }
 	double[] components = new double[(int)color.numberOfComponents()];
 	color.getComponents(components);
 	return new double []{components[0], components[1], components[2], components[3]};
@@ -2091,7 +2227,9 @@ double [] getNSColorRGB (NSColor color) {
  */
 public Cursor getSystemCursor (int id) {
 	checkDevice ();
-	if (!(0 <= id && id < cursors.length)) return null;
+    if (!(0 <= id && id < cursors.length)) {
+        return null;
+    }
 	if (cursors [id] == null) {
 		cursors [id] = new Cursor (this, id);
 	}
@@ -2150,14 +2288,18 @@ public Image getSystemImage (int id) {
 	checkDevice ();
 	switch(id) {
 		case SWT.ICON_ERROR: {
-			if (errorImage != null) return errorImage;
+            if (errorImage != null) {
+                return errorImage;
+            }
 			NSImage img = getSystemImageForID(OS.kAlertStopIcon);
 			return errorImage = Image.cocoa_new (this, SWT.ICON, img);
 		}
 		case SWT.ICON_INFORMATION:
 		case SWT.ICON_QUESTION:
 		case SWT.ICON_WORKING: {
-			if (infoImage != null) return infoImage;
+            if (infoImage != null) {
+                return infoImage;
+            }
 			NSImage img = NSImage.imageNamed(OS.NSImageNameInfo);
 			/*
 			 * retain() is required here, as img is used below to create Image object.
@@ -2167,7 +2309,9 @@ public Image getSystemImage (int id) {
 			return infoImage = Image.cocoa_new (this, SWT.ICON, img);
 		}
 		case SWT.ICON_WARNING: {
-			if (warningImage != null) return warningImage;
+            if (warningImage != null) {
+                return warningImage;
+            }
 			NSImage img = NSImage.imageNamed(OS.NSImageNameCaution);
 			/*
 			 * retain() is required here, as img is used below to create Image object.
@@ -2194,7 +2338,9 @@ public Image getSystemImage (int id) {
  */
 public Menu getMenuBar () {
 	checkDevice ();
-	if (appMenuBar != null) return appMenuBar;
+    if (appMenuBar != null) {
+        return appMenuBar;
+    }
 	appMenuBar = new Menu (this);
 	// the menubar will be updated when the Shell or the application activates.
 	return appMenuBar;
@@ -2244,7 +2390,9 @@ public Menu getSystemMenu () {
  */
 public Tray getSystemTray () {
 	checkDevice ();
-	if (tray != null) return tray;
+    if (tray != null) {
+        return tray;
+    }
 	return tray = new Tray (this, SWT.NONE);
 }
 
@@ -2262,7 +2410,9 @@ public Tray getSystemTray () {
  */
 public TaskBar getSystemTaskBar () {
 	checkDevice ();
-	if (taskBar != null) return taskBar;
+    if (taskBar != null) {
+        return taskBar;
+    }
 	taskBar = new TaskBar (this, SWT.NONE);
 	return taskBar;
 }
@@ -2300,7 +2450,9 @@ double [] getSecondarySelectedControlColor() {
  */
 public Thread getThread () {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		return thread;
 	}
 }
@@ -2334,23 +2486,31 @@ Widget getWidget (long id) {
 }
 
 static Widget GetWidget (long id) {
-	if (id == 0) return null;
+    if (id == 0) {
+        return null;
+    }
 	long [] jniRef = new long [1];
 	long iVar = OS.object_getInstanceVariable(id, SWT_OBJECT, jniRef);
 	if (iVar == 0) {
 		if (dynamicObjectMap != null) {
 			NSObject key = new NSObject(id);
 			LONG dynJNIRef = dynamicObjectMap.get(key);
-			if (dynJNIRef != null) jniRef[0] = dynJNIRef.value;
+            if (dynJNIRef != null) {
+                jniRef[0] = dynJNIRef.value;
+            }
 		}
 	}
 
-	if (jniRef[0] == 0) return null;
+    if (jniRef[0] == 0) {
+        return null;
+    }
 	return (Widget)OS.JNIGetObject(jniRef[0]);
 }
 
 Widget getWidget (NSView view) {
-	if (view == null) return null;
+    if (view == null) {
+        return null;
+    }
 	return getWidget(view.id);
 }
 
@@ -2439,17 +2599,23 @@ protected void init () {
 	 */
 	NSMenu appleMenu = application.mainMenu().itemAtIndex(0).submenu();
 	NSMenuItem prefsItem = appleMenu.itemWithTag(SWT.ID_PREFERENCES);
-	if (prefsItem != null) prefsItem.setTag(42);
+    if (prefsItem != null) {
+        prefsItem.setTag(42);
+    }
 	if (currAppDelegate != null) {
 		currAppDelegate.init();
 	}
-	if (prefsItem != null) prefsItem.setTag(SWT.ID_PREFERENCES);
+    if (prefsItem != null) {
+        prefsItem.setTag(SWT.ID_PREFERENCES);
+    }
 
 	observerCallback = new Callback (this, "observerProc", 3); //$NON-NLS-1$
 	long observerProc = observerCallback.getAddress ();
 	int activities = OS.kCFRunLoopBeforeWaiting;
 	runLoopObserver = OS.CFRunLoopObserverCreate (0, activities, true, 0, observerProc, 0);
-	if (runLoopObserver == 0) error (SWT.ERROR_NO_HANDLES);
+    if (runLoopObserver == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.CFRunLoopAddObserver (OS.CFRunLoopGetCurrent (), runLoopObserver, OS.kCFRunLoopCommonModes ());
 
 	// Add AWT Runloop mode for SWT/AWT.
@@ -2461,7 +2627,9 @@ protected void init () {
 	cursorSetCallback = new Callback(this, "cursorSetProc", 2);
 	long cursorSetProc = cursorSetCallback.getAddress();
 	long method = OS.class_getInstanceMethod(OS.class_NSCursor, OS.sel_set);
-	if (method != 0) oldCursorSetProc = OS.method_setImplementation(method, cursorSetProc);
+    if (method != 0) {
+        oldCursorSetProc = OS.method_setImplementation(method, cursorSetProc);
+    }
 
 	timerDelegate = (SWTWindowDelegate)new SWTWindowDelegate().alloc().init();
 
@@ -2479,8 +2647,12 @@ protected void init () {
 	NSUserDefaults defaults = NSUserDefaults.standardUserDefaults();
 	defaults.setInteger(0, NSString.stringWith("NSScrollAnimationEnabled"));
 	id blink = defaults.objectForKey(NSString.stringWith("NSTextInsertionPointBlinkPeriod"));
-	if (blink != null) blinkTime = (int)new NSNumber(blink).integerValue();
-	if (blinkTime == 0) blinkTime = 560;
+    if (blink != null) {
+        blinkTime = (int) new NSNumber(blink).integerValue();
+    }
+    if (blinkTime == 0) {
+        blinkTime = 560;
+    }
 
 	/** Disable automatic quote & dash substitution for the application by default **/
 	defaults.setInteger(0, NSString.stringWith("NSAutomaticQuoteSubstitutionEnabled"));
@@ -2633,7 +2805,9 @@ long registerCellSubclass(long cellClass, int size, int align, byte[] types) {
 
 long createWindowSubclass(long baseClass, String newClass, boolean isDynamic) {
 	long cls = OS.objc_lookUpClass(newClass);
-	if (cls != 0) return cls;
+    if (cls != 0) {
+        return cls;
+    }
 	cls = OS.objc_allocateClassPair(baseClass, newClass, 0);
 	long proc3 = windowCallback3.getAddress();
 	long proc2 = windowCallback2.getAddress();
@@ -2642,7 +2816,9 @@ long createWindowSubclass(long baseClass, String newClass, boolean isDynamic) {
 	long view_stringForToolTip_point_userDataProc = OS.CALLBACK_view_stringForToolTip_point_userData_(proc6);
 	long accessibilityHitTestProc = OS.CALLBACK_accessibilityHitTest_(proc3);
 
-	if (!isDynamic) OS.class_addIvar(cls, SWT_OBJECT, size, (byte)align, types);
+    if (!isDynamic) {
+        OS.class_addIvar(cls, SWT_OBJECT, size, (byte) align, types);
+    }
 	OS.class_addMethod(cls, OS.sel_sendEvent_, proc3, "@:@");
 	OS.class_addMethod(cls, OS.sel_helpRequested_, proc3, "@:@");
 	OS.class_addMethod(cls, OS.sel_canBecomeKeyWindow, proc2, "@:");
@@ -2657,7 +2833,9 @@ long createWindowSubclass(long baseClass, String newClass, boolean isDynamic) {
 
 long createMenuSubclass(long baseClass, String newClass, boolean isDynamic) {
 	long cls = OS.objc_lookUpClass(newClass);
-	if (cls != 0) return cls;
+    if (cls != 0) {
+        return cls;
+    }
 	cls = OS.objc_allocateClassPair(baseClass, newClass, 0);
 	long proc3 = windowCallback3.getAddress();
 	long proc4 = windowCallback4.getAddress();
@@ -2672,17 +2850,23 @@ long createMenuSubclass(long baseClass, String newClass, boolean isDynamic) {
 
 long createMenuItemSubclass(long baseClass, String newClass, boolean isDynamic) {
 	long cls = OS.objc_lookUpClass(newClass);
-	if (cls != 0) return cls;
+    if (cls != 0) {
+        return cls;
+    }
 	cls = OS.objc_allocateClassPair(baseClass, newClass, 0);
 	long proc2 = windowCallback2.getAddress();
-	if (!isDynamic) OS.class_addIvar(cls, SWT_OBJECT, size, (byte)align, types);
+    if (!isDynamic) {
+        OS.class_addIvar(cls, SWT_OBJECT, size, (byte) align, types);
+    }
 	OS.class_addMethod(cls, OS.sel_sendSelection, proc2, "@:");
 	OS.objc_registerClassPair(cls);
 	return cls;
 }
 
 void initClasses () {
-	if (OS.objc_lookUpClass ("SWTView") != 0) return;
+    if (OS.objc_lookUpClass("SWTView") != 0) {
+        return;
+    }
 
 	Class<?> clazz = getClass ();
 	dialogCallback3 = new Callback(clazz, "dialogProc", 3);
@@ -3355,7 +3539,9 @@ void initFonts () {
  */
 @Override
 public long internal_new_GC (GCData data) {
-	if (isDisposed()) error(SWT.ERROR_DEVICE_DISPOSED);
+    if (isDisposed()) {
+        error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 	if (screenWindow == null) {
 		NSWindow window = (NSWindow) new NSWindow ().alloc ();
 		NSRect rect = new NSRect();
@@ -3411,7 +3597,9 @@ public long internal_new_GC (GCData data) {
  */
 @Override
 public void internal_dispose_GC (long hDC, GCData data) {
-	if (isDisposed()) error(SWT.ERROR_DEVICE_DISPOSED);
+    if (isDisposed()) {
+        error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 }
 
 boolean isBundled () {
@@ -3449,11 +3637,19 @@ boolean isValidThread () {
 static long getCurrentKeyLayout () {
 	long currentKbd = OS.TISCopyCurrentKeyboardInputSource ();
 	long keyLayoutData = OS.TISGetInputSourceProperty (currentKbd, OS.kTISPropertyUnicodeKeyLayoutData());
-	if (currentKbd != 0) OS.CFRelease (currentKbd);
-	if (keyLayoutData == 0) return 0;
+    if (currentKbd != 0) {
+        OS.CFRelease(currentKbd);
+    }
+    if (keyLayoutData == 0) {
+        return 0;
+    }
 	long keyLayout = OS.CFDataGetBytePtr (keyLayoutData);
-	if (keyLayout == 0) return 0;
-	if (OS.CFDataGetLength (keyLayoutData) == 0) return 0;
+    if (keyLayout == 0) {
+        return 0;
+    }
+    if (OS.CFDataGetLength(keyLayoutData) == 0) {
+        return 0;
+    }
 	return keyLayout;
 }
 
@@ -3521,11 +3717,17 @@ static long getCurrentKeyLayout () {
  */
 public boolean post(Event event) {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
-		if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
+        if (event == null) {
+            error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		long eventRef = 0;
 		long eventSource = OS.CGEventSourceCreate(OS.kCGEventSourceStateHIDSystemState);
-		if (eventSource == 0) return false;
+        if (eventSource == 0) {
+            return false;
+        }
 		boolean returnValue = false;
 		int deadKeyState[] = new int[1];
 		int type = event.type;
@@ -3535,7 +3737,9 @@ public boolean post(Event event) {
 				short vKey = (short)Display.untranslateKey (event.keyCode);
 				if (vKey == 0) {
 					long keyLayout = getCurrentKeyLayout ();
-					if (keyLayout == 0) return false;
+                    if (keyLayout == 0) {
+                        return false;
+                    }
 					int maxStringLength = 256;
 					vKey = -1;
 					char [] output = new char [maxStringLength];
@@ -3631,23 +3835,29 @@ public boolean post(Event event) {
 			returnValue = true;
 		}
 
-		if (eventSource != 0) OS.CFRelease(eventSource);
+        if (eventSource != 0) {
+            OS.CFRelease(eventSource);
+        }
 		return returnValue;
 	}
 }
 
 void postEvent (Event event) {
-	/*
-	* Place the event at the end of the event queue.
-	* This code is always called in the Display's
-	* thread so it must be re-enterant but does not
-	* need to be synchronized.
-	*/
-	if (eventQueue == null) eventQueue = new Event [4];
+    /*
+    * Place the event at the end of the event queue.
+    * This code is always called in the Display's
+    * thread so it must be re-enterant but does not
+    * need to be synchronized.
+    */
+    if (eventQueue == null) {
+        eventQueue = new Event [4];
+    }
 	int index = 0;
 	int length = eventQueue.length;
 	while (index < length) {
-		if (eventQueue [index] == null) break;
+        if (eventQueue [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -3696,7 +3906,9 @@ void postEvent (Event event) {
  */
 public Point map (Control from, Control to, Point point) {
 	checkDevice ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return map (from, to, point.x, point.y);
 }
 
@@ -3738,10 +3950,16 @@ public Point map (Control from, Control to, Point point) {
  */
 public Point map (Control from, Control to, int x, int y) {
 	checkDevice ();
-	if (from != null && from.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (to != null && to.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (from != null && from.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (to != null && to.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Point point = new Point (x, y);
-	if (from == to) return point;
+    if (from == to) {
+        return point;
+    }
 	NSPoint pt = new NSPoint();
 	pt.x = x;
 	pt.y = y;
@@ -3819,7 +4037,9 @@ public Point map (Control from, Control to, int x, int y) {
  */
 public Rectangle map (Control from, Control to, Rectangle rectangle) {
 	checkDevice ();
-	if (rectangle == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rectangle == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return map (from, to, rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 }
 
@@ -3863,10 +4083,16 @@ public Rectangle map (Control from, Control to, Rectangle rectangle) {
  */
 public Rectangle map (Control from, Control to, int x, int y, int width, int height) {
 	checkDevice ();
-	if (from != null && from.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (to != null && to.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (from != null && from.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (to != null && to.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Rectangle rectangle = new Rectangle (x, y, width, height);
-	if (from == to) return rectangle;
+    if (from == to) {
+        return rectangle;
+    }
 	NSPoint pt = new NSPoint();
 	pt.x = x;
 	pt.y = y;
@@ -3910,7 +4136,9 @@ long observerProc (long observer, long activity, long info) {
 	switch ((int)activity) {
 		case OS.kCFRunLoopBeforeWaiting:
 			if (runAsyncMessages) {
-				if (runAsyncMessages (false)) wakeThread ();
+                if (runAsyncMessages(false)) {
+                    wakeThread();
+                }
 			}
 			break;
 	}
@@ -3918,15 +4146,27 @@ long observerProc (long observer, long activity, long info) {
 }
 
 boolean performKeyEquivalent(NSWindow window, NSEvent nsEvent) {
-	if (modalDialog == null) return false;
-	if (nsEvent.type() != OS.NSKeyDown) return false;
+    if (modalDialog == null) {
+        return false;
+    }
+    if (nsEvent.type() != OS.NSKeyDown) {
+        return false;
+    }
 	int stateMask = 0;
 	long selector = 0;
 	long modifierFlags = nsEvent.modifierFlags();
-	if ((modifierFlags & OS.NSAlternateKeyMask) != 0) stateMask |= SWT.ALT;
-	if ((modifierFlags & OS.NSEventModifierFlagShift) != 0) stateMask |= SWT.SHIFT;
-	if ((modifierFlags & OS.NSEventModifierFlagControl) != 0) stateMask |= SWT.CONTROL;
-	if ((modifierFlags & OS.NSEventModifierFlagCommand) != 0) stateMask |= SWT.COMMAND;
+    if ((modifierFlags & OS.NSAlternateKeyMask) != 0) {
+        stateMask |= SWT.ALT;
+    }
+    if ((modifierFlags & OS.NSEventModifierFlagShift) != 0) {
+        stateMask |= SWT.SHIFT;
+    }
+    if ((modifierFlags & OS.NSEventModifierFlagControl) != 0) {
+        stateMask |= SWT.CONTROL;
+    }
+    if ((modifierFlags & OS.NSEventModifierFlagCommand) != 0) {
+        stateMask |= SWT.COMMAND;
+    }
 	if (stateMask == SWT.COMMAND) {
 		short keyCode = nsEvent.keyCode ();
 		switch (keyCode) {
@@ -3978,7 +4218,9 @@ boolean performKeyEquivalent(NSWindow window, NSEvent nsEvent) {
  */
 public boolean readAndDispatch () {
 	checkDevice ();
-	if (sendEventCount == 0 && loopCount == poolCount - 1 && Callback.getEntryCount () == 0) removePool ();
+    if (sendEventCount == 0 && loopCount == poolCount - 1 && Callback.getEntryCount() == 0) {
+        removePool();
+    }
 	addPool ();
 	runSkin ();
 	runDeferredLayouts ();
@@ -4002,7 +4244,9 @@ public boolean readAndDispatch () {
 	} finally {
 		removePool ();
 		loopCount--;
-		if (sendEventCount == 0 && loopCount == poolCount && Callback.getEntryCount () == 0) addPool ();
+        if (sendEventCount == 0 && loopCount == poolCount && Callback.getEntryCount() == 0) {
+            addPool();
+        }
 	}
 	return events;
 }
@@ -4059,21 +4303,27 @@ protected void release () {
 
 		for (Shell shell : getShells ()) {
 			try {
-				if (!shell.isDisposed ()) shell.dispose ();
+                if (!shell.isDisposed()) {
+                    shell.dispose();
+                }
 			} catch (Error | RuntimeException ex) {
 				exceptions.stash (ex);
 			}
 		}
 
 		try {
-			if (tray != null) tray.dispose ();
+            if (tray != null) {
+                tray.dispose();
+            }
 		} catch (Error | RuntimeException ex) {
 			exceptions.stash (ex);
 		}
 		tray = null;
 
 		try {
-			if (taskBar != null) taskBar.dispose ();
+            if (taskBar != null) {
+                taskBar.dispose();
+            }
 		} catch (Error | RuntimeException ex) {
 			exceptions.stash (ex);
 		}
@@ -4081,7 +4331,9 @@ protected void release () {
 
 		for (;;) {
 			try {
-				if (!readAndDispatch ()) break;
+                if (!readAndDispatch()) {
+                    break;
+                }
 			} catch (Error | RuntimeException ex) {
 				exceptions.stash (ex);
 			}
@@ -4089,7 +4341,9 @@ protected void release () {
 
 		if (disposeList != null) {
 			for (Runnable next : disposeList) {
-				if (next == null) continue;
+                if (next == null) {
+                    continue;
+                }
 
 				try {
 					next.run ();
@@ -4104,14 +4358,18 @@ protected void release () {
 		synchronizer = null;
 
 		try {
-			if (appMenu != null) appMenu.dispose();
+            if (appMenu != null) {
+                appMenu.dispose();
+            }
 		} catch (Error | RuntimeException ex) {
 			exceptions.stash (ex);
 		}
 		appMenu = null;
 
 		try {
-			if (appMenuBar != null) appMenuBar.dispose();
+            if (appMenuBar != null) {
+                appMenuBar.dispose();
+            }
 		} catch (Error | RuntimeException ex) {
 			exceptions.stash (ex);
 		}
@@ -4123,18 +4381,28 @@ protected void release () {
 }
 
 void releaseDisplay () {
-	/* Release the System Images */
-	if (errorImage != null) errorImage.dispose ();
-	if (infoImage != null) infoImage.dispose ();
-	if (warningImage != null) warningImage.dispose ();
+    /* Release the System Images */
+    if (errorImage != null) {
+        errorImage.dispose();
+    }
+    if (infoImage != null) {
+        infoImage.dispose();
+    }
+    if (warningImage != null) {
+        warningImage.dispose();
+    }
 	errorImage = infoImage = warningImage = null;
 
 	currentCaret = null;
 
-	/* Release Timers */
-	if (hoverTimer != null) timerExec(-1, hoverTimer);
+    /* Release Timers */
+    if (hoverTimer != null) {
+        timerExec(-1, hoverTimer);
+    }
 	hoverTimer = null;
-	if (caretTimer != null) timerExec(-1, caretTimer);
+    if (caretTimer != null) {
+        timerExec(-1, caretTimer);
+    }
 	caretTimer = null;
 	if (nsTimers != null) {
 		for (int i=0; i<nsTimers.length; i++) {
@@ -4145,47 +4413,93 @@ void releaseDisplay () {
 		}
 	}
 	nsTimers = null;
-	if (timerDelegate != null) timerDelegate.release();
+    if (timerDelegate != null) {
+        timerDelegate.release();
+    }
 	timerDelegate = null;
 
 	/* Release the System Cursors */
 	for (int i = 0; i < cursors.length; i++) {
-		if (cursors [i] != null) cursors [i].dispose ();
+        if (cursors [i] != null) {
+            cursors [i].dispose();
+        }
 	}
 	cursors = null;
 
-	/* Release default fonts */
-	if (buttonFont != null) buttonFont.release ();
-	if (popUpButtonFont != null) popUpButtonFont.release ();
-	if (textFieldFont != null) textFieldFont.release ();
-	if (secureTextFieldFont != null) secureTextFieldFont.release ();
-	if (searchFieldFont != null) searchFieldFont.release ();
-	if (comboBoxFont != null) comboBoxFont.release ();
-	if (sliderFont != null) sliderFont.release ();
-	if (scrollerFont != null) scrollerFont.release ();
-	if (textViewFont != null) textViewFont.release ();
-	if (tableViewFont != null) tableViewFont.release ();
-	if (outlineViewFont != null) outlineViewFont.release ();
-	if (datePickerFont != null) datePickerFont.release ();
-	if (boxFont != null) boxFont.release ();
-	if (tabViewFont != null) tabViewFont.release ();
-	if (progressIndicatorFont != null) progressIndicatorFont.release ();
+    /* Release default fonts */
+    if (buttonFont != null) {
+        buttonFont.release();
+    }
+    if (popUpButtonFont != null) {
+        popUpButtonFont.release();
+    }
+    if (textFieldFont != null) {
+        textFieldFont.release();
+    }
+    if (secureTextFieldFont != null) {
+        secureTextFieldFont.release();
+    }
+    if (searchFieldFont != null) {
+        searchFieldFont.release();
+    }
+    if (comboBoxFont != null) {
+        comboBoxFont.release();
+    }
+    if (sliderFont != null) {
+        sliderFont.release();
+    }
+    if (scrollerFont != null) {
+        scrollerFont.release();
+    }
+    if (textViewFont != null) {
+        textViewFont.release();
+    }
+    if (tableViewFont != null) {
+        tableViewFont.release();
+    }
+    if (outlineViewFont != null) {
+        outlineViewFont.release();
+    }
+    if (datePickerFont != null) {
+        datePickerFont.release();
+    }
+    if (boxFont != null) {
+        boxFont.release();
+    }
+    if (tabViewFont != null) {
+        tabViewFont.release();
+    }
+    if (progressIndicatorFont != null) {
+        progressIndicatorFont.release();
+    }
 	buttonFont = popUpButtonFont = textFieldFont = secureTextFieldFont = null;
 	searchFieldFont = comboBoxFont = sliderFont = scrollerFont;
 	textViewFont = tableViewFont = outlineViewFont = datePickerFont = null;
 	boxFont = tabViewFont = progressIndicatorFont = null;
 
-	/* Release Dock image */
-	if (dockImage != null) dockImage.release();
+    /* Release Dock image */
+    if (dockImage != null) {
+        dockImage.release();
+    }
 	dockImage = null;
 
-	if (screenWindow != null) screenWindow.release();
+    if (screenWindow != null) {
+        screenWindow.release();
+    }
 	screenWindow = null;
 
-	if (needsDisplay != null) needsDisplay.release();
-	if (needsDisplayInRect != null) needsDisplayInRect.release();
-	if (isPainting != null) isPainting.release();
-	if (runLoopModes != null) runLoopModes.release();
+    if (needsDisplay != null) {
+        needsDisplay.release();
+    }
+    if (needsDisplayInRect != null) {
+        needsDisplayInRect.release();
+    }
+    if (isPainting != null) {
+        isPainting.release();
+    }
+    if (runLoopModes != null) {
+        runLoopModes.release();
+    }
 	needsDisplay = needsDisplayInRect = isPainting = runLoopModes = null;
 
 	modalShells = null;
@@ -4193,14 +4507,18 @@ void releaseDisplay () {
 	menuBar = null;
 	menus = null;
 
-	if (markedAttributes != null) markedAttributes.release();
+    if (markedAttributes != null) {
+        markedAttributes.release();
+    }
 	markedAttributes = null;
 
 	if (oldCursorSetProc != 0) {
 		long method = OS.class_getInstanceMethod(OS.class_NSCursor, OS.sel_set);
 		OS.method_setImplementation(method, oldCursorSetProc);
 	}
-	if (cursorSetCallback != null) cursorSetCallback.dispose();
+    if (cursorSetCallback != null) {
+        cursorSetCallback.dispose();
+    }
 	cursorSetCallback = null;
 
 	if (settingsDelegate != null) {
@@ -4238,12 +4556,16 @@ void releaseDisplay () {
 		OS.CFRelease (runLoopObserver);
 	}
 	runLoopObserver = 0;
-	if (observerCallback != null) observerCallback.dispose();
+    if (observerCallback != null) {
+        observerCallback.dispose();
+    }
 	observerCallback = null;
 }
 
 void removeContext (GCData context) {
-	if (contexts == null) return;
+    if (contexts == null) {
+        return;
+    }
 	int count = 0;
 	for (int i = 0; i < contexts.length; i++) {
 		if (contexts[i] != null) {
@@ -4254,7 +4576,9 @@ void removeContext (GCData context) {
 			}
 		}
 	}
-	if (count == 0) contexts = null;
+    if (count == 0) {
+        contexts = null;
+    }
 }
 
 /**
@@ -4282,10 +4606,16 @@ void removeContext (GCData context) {
  */
 public void removeFilter (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (filterTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (filterTable == null) {
+        return;
+    }
 	filterTable.unhook (eventType, listener);
-	if (filterTable.size () == 0) filterTable = null;
+    if (filterTable.size() == 0) {
+        filterTable = null;
+    }
 }
 
 /**
@@ -4312,32 +4642,44 @@ public void removeFilter (int eventType, Listener listener) {
  */
 public void removeListener (int eventType, Listener listener) {
 	checkDevice ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (eventType, listener);
 }
 
 Widget removeWidget (NSObject view) {
-	if (view == null) return null;
+    if (view == null) {
+        return null;
+    }
 	long [] jniRef = new long [1];
 	long iVar = OS.object_getInstanceVariable(view.id, SWT_OBJECT, jniRef);
 
 	if (iVar == 0) {
 		if (dynamicObjectMap != null) {
 			LONG dynJNIRef = dynamicObjectMap.get(view);
-			if (dynJNIRef != null) jniRef[0] = dynJNIRef.value;
+            if (dynJNIRef != null) {
+                jniRef[0] = dynJNIRef.value;
+            }
 			dynamicObjectMap.remove(view);
 		}
 	}
 
-	if (jniRef[0] == 0) return null;
+    if (jniRef[0] == 0) {
+        return null;
+    }
 	Widget widget = (Widget)OS.JNIGetObject(jniRef[0]);
 	OS.object_setInstanceVariable(view.id, SWT_OBJECT, 0);
 	return widget;
 }
 
 void removeMenu (Menu menu) {
-	if (menus == null) return;
+    if (menus == null) {
+        return;
+    }
 	for (int i = 0; i < menus.length; i++) {
 		if (menus [i] == menu) {
 			menus[i] = null;
@@ -4357,7 +4699,9 @@ void removePool () {
 }
 
 void removePopup (Menu menu) {
-	if (popups == null) return;
+    if (popups == null) {
+        return;
+    }
 	for (int i=0; i<popups.length; i++) {
 		if (popups [i] == menu) {
 			popups [i] = null;
@@ -4379,7 +4723,9 @@ boolean runAsyncMessages (boolean all) {
 
 boolean runAWTInvokeLater() {
 	NSString javaRunLoopMode = getAwtRunLoopMode();
-	if (javaRunLoopMode == null) return false;
+    if (javaRunLoopMode == null) {
+        return false;
+    }
 	allowTimers = runAsyncMessages = false;
 	NSRunLoop.currentRunLoop().runMode(javaRunLoopMode, NSDate.distantFuture());
 	allowTimers = runAsyncMessages = true;
@@ -4408,7 +4754,9 @@ boolean runDeferredEvents () {
 
 		/* Take an event off the queue */
 		Event event = eventQueue [0];
-		if (event == null) break;
+        if (event == null) {
+            break;
+        }
 		int length = eventQueue.length;
 		System.arraycopy (eventQueue, 1, eventQueue, 0, --length);
 		eventQueue [length] = null;
@@ -4443,7 +4791,9 @@ boolean runDeferredLayouts () {
 		layoutDeferredCount = 0;
 		for (int i = 0; i < count; i++) {
 			Composite comp = temp[i];
-			if (!comp.isDisposed()) comp.setLayoutDeferred (false);
+            if (!comp.isDisposed()) {
+                comp.setLayoutDeferred(false);
+            }
 		}
 		return true;
 	}
@@ -4465,7 +4815,9 @@ NSArray runLoopModes() {
 }
 
 boolean runPaint () {
-	if (needsDisplay == null && needsDisplayInRect == null) return false;
+    if (needsDisplay == null && needsDisplayInRect == null) {
+        return false;
+    }
 	if (needsDisplay != null) {
 		long count = needsDisplay.count();
 		for (int i = 0; i < count; i++) {
@@ -4487,16 +4839,22 @@ boolean runPaint () {
 }
 
 boolean runPopups () {
-	if (popups == null) return false;
+    if (popups == null) {
+        return false;
+    }
 	boolean result = false;
 	while (popups != null) {
 		Menu menu = popups [0];
-		if (menu == null) break;
+        if (menu == null) {
+            break;
+        }
 		int length = popups.length;
 		System.arraycopy (popups, 1, popups, 0, --length);
 		popups [length] = null;
 		runDeferredEvents ();
-		if (!menu.isDisposed ()) menu._setVisible (true);
+        if (!menu.isDisposed()) {
+            menu._setVisible(true);
+        }
 		result = true;
 	}
 	popups = null;
@@ -4504,7 +4862,9 @@ boolean runPopups () {
 }
 
 boolean runSettings () {
-	if (!runSettings) return false;
+    if (!runSettings) {
+        return false;
+    }
 	runSettings = false;
 
 	boolean ignoreColorChange = false;
@@ -4595,7 +4955,9 @@ boolean runSkin () {
 }
 
 boolean runTimers () {
-	if (timerList == null) return false;
+    if (timerList == null) {
+        return false;
+    }
 	boolean result = false;
 	for (int i=0; i<timerList.length; i++) {
 		if (nsTimers [i] == null && timerList [i] != null) {
@@ -4633,10 +4995,14 @@ void sendEvent (int eventType, Event event) {
 	if (eventTable == null && filterTable == null) {
 		return;
 	}
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	event.display = this;
 	event.type = eventType;
-	if (event.time == 0) event.time = getLastEventTime ();
+    if (event.time == 0) {
+        event.time = getLastEventTime();
+    }
 	sendEvent (eventTable, event);
 }
 
@@ -4697,8 +5063,12 @@ static NSString getApplicationName() {
 	NSString name = null;
 	int pid = OS.getpid ();
 	long ptr = C.getenv (ascii ("APP_NAME_" + pid));
-	if (ptr != 0) name = NSString.stringWithUTF8String(ptr);
-	if (name == null && APP_NAME != null) name = NSString.stringWith(APP_NAME);
+    if (ptr != 0) {
+        name = NSString.stringWithUTF8String(ptr);
+    }
+    if (name == null && APP_NAME != null) {
+        name = NSString.stringWith(APP_NAME);
+    }
 	if (name == null) {
 		id value = NSBundle.mainBundle().objectForInfoDictionaryKey(NSString.stringWith("CFBundleName"));
 		if (value != null) {
@@ -4707,9 +5077,13 @@ static NSString getApplicationName() {
 	}
 	if (name == null) {
 		String macAppName = System.getProperty("com.apple.mrj.application.apple.menu.about.name");
-		if (macAppName != null) name = NSString.stringWith(macAppName);
+        if (macAppName != null) {
+            name = NSString.stringWith(macAppName);
+        }
 	}
-	if (name == null) name = NSString.stringWith("SWT");
+    if (name == null) {
+        name = NSString.stringWith("SWT");
+    }
 	return name;
 }
 
@@ -4785,10 +5159,14 @@ Runnable caretTimer = new Runnable () {
 	@Override
 	public void run () {
 		if (currentCaret != null) {
-			if (currentCaret == null || currentCaret.isDisposed()) return;
+            if (currentCaret == null || currentCaret.isDisposed()) {
+                return;
+            }
 			if (currentCaret.blinkCaret ()) {
 				int blinkRate = currentCaret.blinkRate;
-				if (blinkRate != 0) timerExec (blinkRate, this);
+                if (blinkRate != 0) {
+                    timerExec(blinkRate, this);
+                }
 			} else {
 				currentCaret = null;
 			}
@@ -4801,7 +5179,9 @@ Runnable caretTimer = new Runnable () {
 Runnable defaultButtonTimer = new Runnable() {
 	@Override
 	public void run() {
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 		Shell shell = getActiveShell();
 		if (shell != null && !shell.isDisposed()) {
 			Button defaultButton = shell.defaultButton;
@@ -4810,8 +5190,12 @@ Runnable defaultButtonTimer = new Runnable() {
 				view.display();
 			}
 		}
-		if (isDisposed ()) return;
-		if (hasDefaultButton()) timerExec(DEFAULT_BUTTON_INTERVAL, this);
+        if (isDisposed()) {
+            return;
+        }
+        if (hasDefaultButton()) {
+            timerExec(DEFAULT_BUTTON_INTERVAL, this);
+        }
 	}
 };
 
@@ -4823,7 +5207,9 @@ void setCurrentCaret (Caret caret) {
 
 void setCursor (Control control) {
 	Cursor cursor = null;
-	if (control != null && !control.isDisposed()) cursor = control.findCursor ();
+    if (control != null && !control.isDisposed()) {
+        cursor = control.findCursor();
+    }
 	if (cursor == null) {
 		NSWindow window = application.keyWindow();
 		if (window != null) {
@@ -4881,7 +5267,9 @@ public void setCursorLocation (int x, int y) {
  */
 public void setCursorLocation (Point point) {
 	checkDevice ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setCursorLocation (point.x, point.y);
 }
 
@@ -4912,7 +5300,9 @@ public void setCursorLocation (Point point) {
  */
 public void setData (String key, Object value) {
 	checkDevice ();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	if (key.equals (ADD_WIDGET_KEY)) {
 		Object [] data = (Object [])value;
@@ -4941,10 +5331,16 @@ public void setData (String key, Object value) {
 
 	/* Remove the key/value pair */
 	if (value == null) {
-		if (keys == null) return;
+        if (keys == null) {
+            return;
+        }
 		int index = 0;
-		while (index < keys.length && !keys [index].equals (key)) index++;
-		if (index == keys.length) return;
+        while (index < keys.length && !keys [index].equals(key)) {
+            index++;
+        }
+        if (index == keys.length) {
+            return;
+        }
 		if (keys.length == 1) {
 			keys = null;
 			values = null;
@@ -4989,17 +5385,23 @@ void setDeviceZoom() {
 
 static void cancelRootMenuTracking () {
 	long rootMenu = OS.AcquireRootMenu ();
-	if (rootMenu == 0) return; // Extra safety, not sure if it can happen
+    if (rootMenu == 0) {
+        return;
+    } // Extra safety, not sure if it can happen
 	OS.CancelMenuTracking (rootMenu, true, 0);
 	OS.CFRelease (rootMenu);
 }
 
 void setMenuBar (Menu menu) {
-	// If passed a null menu bar don't clear out the menu bar, but switch back to the
-	// application menu bar instead, if it exists.  If the app menu bar is already active
-	// we jump out without harming the current menu bar.
-	if (menu == null) menu = appMenuBar;
-	if (menu == menuBar) return;
+    // If passed a null menu bar don't clear out the menu bar, but switch back to the
+    // application menu bar instead, if it exists.  If the app menu bar is already active
+    // we jump out without harming the current menu bar.
+    if (menu == null) {
+        menu = appMenuBar;
+    }
+    if (menu == menuBar) {
+        return;
+    }
 	menuBar = menu;
 	//remove all existing menu items except the application menu
 	NSMenu menubar = application.mainMenu();
@@ -5058,11 +5460,17 @@ void setModalDialog (Dialog modalDialog, NSPanel panel) {
 }
 
 void setModalShell (Shell shell) {
-	if (modalShells == null) modalShells = new Shell [4];
+    if (modalShells == null) {
+        modalShells = new Shell [4];
+    }
 	int index = 0, length = modalShells.length;
 	while (index < length) {
-		if (modalShells [index] == shell) return;
-		if (modalShells [index] == null) break;
+        if (modalShells [index] == shell) {
+            return;
+        }
+        if (modalShells [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == length) {
@@ -5072,7 +5480,9 @@ void setModalShell (Shell shell) {
 	}
 	modalShells [index] = shell;
 	Shell [] shells = getShells ();
-	for (int i=0; i<shells.length; i++) shells [i].updateModal ();
+    for (int i = 0; i < shells.length; i++) {
+        shells [i].updateModal();
+    }
 }
 
 /**
@@ -5120,8 +5530,12 @@ public void setData (Object data) {
  */
 public void setSynchronizer (Synchronizer synchronizer) {
 	checkDevice ();
-	if (synchronizer == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (synchronizer == this.synchronizer) return;
+    if (synchronizer == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (synchronizer == this.synchronizer) {
+        return;
+    }
 	Synchronizer oldSynchronizer;
 	synchronized (Device.class) {
 		oldSynchronizer = this.synchronizer;
@@ -5206,7 +5620,9 @@ public final Consumer<Error> getErrorHandler () {
  */
 public boolean sleep () {
 	checkDevice ();
-	if (!synchronizer.isMessagesEmpty()) return true;
+    if (!synchronizer.isMessagesEmpty()) {
+        return true;
+    }
 	sendPreExternalEventDispatchEvent ();
 	try {
 		addPool();
@@ -5249,7 +5665,9 @@ int sourceProc (int info) {
 public void syncExec (Runnable runnable) {
 	Synchronizer synchronizer;
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		synchronizer = this.synchronizer;
 	}
 	synchronizer.syncExec (runnable);
@@ -5330,13 +5748,21 @@ public <T, E extends Exception> T syncCall(SwtCallable<T, E> callable) throws E 
  */
 public void timerExec (int milliseconds, Runnable runnable) {
 	checkDevice ();
-	//TODO - remove a timer, reschedule a timer not tested
-	if (runnable == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (timerList == null) timerList = new Runnable [4];
-	if (nsTimers == null) nsTimers = new NSTimer [4];
+    //TODO - remove a timer, reschedule a timer not tested
+    if (runnable == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (timerList == null) {
+        timerList = new Runnable [4];
+    }
+    if (nsTimers == null) {
+        nsTimers = new NSTimer [4];
+    }
 	int index = 0;
 	while (index < timerList.length) {
-		if (timerList [index] == runnable) break;
+        if (timerList [index] == runnable) {
+            break;
+        }
 		index++;
 	}
 	if (index != timerList.length) {
@@ -5355,10 +5781,14 @@ public void timerExec (int milliseconds, Runnable runnable) {
 			return;
 		}
 	}
-	if (milliseconds < 0) return;
+    if (milliseconds < 0) {
+        return;
+    }
 	index = 0;
 	while (index < timerList.length) {
-		if (timerList [index] == null) break;
+        if (timerList [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == timerList.length) {
@@ -5371,7 +5801,9 @@ public void timerExec (int milliseconds, Runnable runnable) {
 	}
 	NSNumber userInfo = NSNumber.numberWithInt(index);
 	NSTimer timer = NSTimer.scheduledTimerWithTimeInterval(milliseconds / 1000.0, timerDelegate, OS.sel_timerProc_, userInfo, false);
-	if (timer == null) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (timer == null) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	NSRunLoop runLoop = NSRunLoop.currentRunLoop();
 	runLoop.addTimer(timer, OS.NSModalPanelRunLoopMode);
 	runLoop.addTimer(timer, OS.NSEventTrackingRunLoopMode);
@@ -5385,7 +5817,9 @@ long timerProc (long id, long sel, long timerID) {
 	try {
 		NSNumber number = new NSNumber(timer.userInfo());
 		int index = number.intValue();
-		if (timerList == null) return 0;
+        if (timerList == null) {
+            return 0;
+        }
 		if (0 <= index && index < timerList.length) {
 			if (allowTimers) {
 				Runnable runnable = timerList [index];
@@ -5428,7 +5862,9 @@ public void update () {
 	Shell [] shells = getShells ();
 	for (int i=0; i<shells.length; i++) {
 		Shell shell = shells [i];
-		if (!shell.isDisposed ()) shell.update (true);
+        if (!shell.isDisposed()) {
+            shell.update(true);
+        }
 	}
 }
 
@@ -5437,8 +5873,10 @@ void updateDefaultButton () {
 }
 
 void updateQuitMenu () {
-	// If we did not create the menu bar, don't modify it.
-	if (isEmbedded) return;
+    // If we did not create the menu bar, don't modify it.
+    if (isEmbedded) {
+        return;
+    }
 	boolean enabled = true;
 	Shell [] shells = getShells ();
 	int mask = SWT.PRIMARY_MODAL | SWT.APPLICATION_MODAL | SWT.SYSTEM_MODAL;
@@ -5479,8 +5917,12 @@ void updateQuitMenu () {
  */
 public void wake () {
 	synchronized (Device.class) {
-		if (isDisposed ()) error (SWT.ERROR_DEVICE_DISPOSED);
-		if (thread == Thread.currentThread ()) return;
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
+        if (thread == Thread.currentThread()) {
+            return;
+        }
 		wakeThread ();
 	}
 }
@@ -5502,7 +5944,9 @@ Control findControl (boolean checkTrim, NSView[] hitView) {
 	NSWindow window = application.windowWithWindowNumber(hitWindowNumber);
 	if (window != null) {
 		NSView contentView = window.contentView();
-		if (contentView != null) contentView = contentView.superview();
+        if (contentView != null) {
+            contentView = contentView.superview();
+        }
 		if (contentView != null) {
 			NSPoint location = window.convertScreenToBase(screenLocation);
 			view = contentView.hitTest (location);
@@ -5524,18 +5968,24 @@ Control findControl (boolean checkTrim, NSView[] hitView) {
 		} while (view != null);
 	}
 	if (checkTrim) {
-		if (control != null && control.isTrim (view)) control = null;
+        if (control != null && control.isTrim(view)) {
+            control = null;
+        }
 	}
-	if (control != null && hitView != null) hitView[0] = view;
+    if (control != null && hitView != null) {
+        hitView[0] = view;
+    }
 	return control;
 }
 
 void finishLaunching (long id, long sel) {
-	/*
-	* [NSApplication finishLaunching] cannot run multiple times otherwise
-	* multiple main menus are added.
-	*/
-	if (launched) return;
+    /*
+    * [NSApplication finishLaunching] cannot run multiple times otherwise
+    * multiple main menus are added.
+    */
+    if (launched) {
+        return;
+    }
 	launched = true;
 	objc_super super_struct = new objc_super();
 	super_struct.receiver = id;
@@ -5560,7 +6010,9 @@ void applicationDidResignActive (long id, long sel, long notification) {
 }
 
 long applicationNextEventMatchingMask (long id, long sel, long mask, long expiration, long mode, long dequeue) {
-	if (dequeue != 0 && trackingControl != null && !trackingControl.isDisposed()) runDeferredEvents();
+    if (dequeue != 0 && trackingControl != null && !trackingControl.isDisposed()) {
+        runDeferredEvents();
+    }
 	sendPreExternalEventDispatchEvent();
 	try {
 		objc_super super_struct = new objc_super();
@@ -5606,7 +6058,9 @@ void applicationSendTrackingEvent (NSEvent nsEvent, Control trackingControl) {
 			if (clickCount == 2) {
 				control.sendMouseEvent (nsEvent, SWT.MouseDoubleClick, false);
 			}
-			if (!control.isDisposed()) control.sendMouseEvent (nsEvent, SWT.MouseUp, false);
+            if (!control.isDisposed()) {
+                control.sendMouseEvent(nsEvent, SWT.MouseUp, false);
+            }
 			break;
 		case OS.NSLeftMouseDragged:
 		case OS.NSRightMouseDragged:
@@ -5619,7 +6073,9 @@ void applicationSendTrackingEvent (NSEvent nsEvent, Control trackingControl) {
 			break;
 	}
 	if (runEnterExit) {
-		if (runEnterExitControl == null || !runEnterExitControl.isDisposed()) checkEnterExit (runEnterExitControl, nsEvent, false);
+        if (runEnterExitControl == null || !runEnterExitControl.isDisposed()) {
+            checkEnterExit(runEnterExitControl, nsEvent, false);
+        }
 	}
 }
 
@@ -5627,7 +6083,9 @@ void applicationSendEvent (long id, long sel, long event) {
 	NSEvent nsEvent = new NSEvent(event);
 	NSWindow window = nsEvent.window ();
 
-	if (performKeyEquivalent(window, nsEvent)) return;
+    if (performKeyEquivalent(window, nsEvent)) {
+        return;
+    }
 
 	int type = (int)nsEvent.type ();
 	boolean activate = false, down = false;
@@ -5664,7 +6122,9 @@ void applicationSendEvent (long id, long sel, long event) {
 							if (down) {
 								NSRect rect = window.contentView().frame();
 								NSPoint pt = window.convertBaseToScreen(nsEvent.locationInWindow());
-								if (OS.NSPointInRect(pt, rect)) beep ();
+                                if (OS.NSPointInRect(pt, rect)) {
+                                    beep();
+                                }
 							}
 						}
 						return;
@@ -5673,7 +6133,9 @@ void applicationSendEvent (long id, long sel, long event) {
 			}
 			break;
 	}
-	if (type != OS.NSAppKitDefined) sendEvent = true;
+    if (type != OS.NSAppKitDefined) {
+        sendEvent = true;
+    }
 
 	/*
 	 * Feature in Cocoa. The help key triggers context-sensitive help but doesn't get forwarded to the window as a key event.
@@ -5695,7 +6157,9 @@ void applicationSendEvent (long id, long sel, long event) {
 		super_struct.super_class = OS.objc_msgSend (id, OS.sel_superclass);
 		OS.objc_msgSendSuper (super_struct, sel, event);
 	}
-	if (type != OS.NSAppKitDefined) sendEvent = false;
+    if (type != OS.NSAppKitDefined) {
+        sendEvent = false;
+    }
 }
 
 void applicationDidFinishLaunching (long id, long sel, long notification) {
@@ -5717,7 +6181,9 @@ void applicationWillFinishLaunching (long id, long sel, long notification) {
 	NSLocale englishLocale = (NSLocale) new NSLocale().alloc();
 	englishLocale = new NSLocale(englishLocale.initWithLocaleIdentifier(NSString.stringWith("en_US")));
 	NSString languageDisplayName = englishLocale.displayNameForKey(OS.NSLocaleLanguageCode, NSString.stringWith(languageISOValue));
-	if (englishLocale != null) englishLocale.release();
+    if (englishLocale != null) {
+        englishLocale.release();
+    }
 
 	/* To find the nib look for each of these paths, in order, until one is found:
 	 * 		/System/Library/..../Resources/<display name>.lproj/DefaultApp.nib
@@ -5731,11 +6197,15 @@ void applicationWillFinishLaunching (long id, long sel, long notification) {
 	NSBundle bundle = NSBundle.bundleWithPath(NSString.stringWith("/System/Library/Frameworks/JavaVM.framework/"));
 	if (bundle != null) {
 		path = bundle.pathForResource(NSString.stringWith("DefaultApp"), NSString.stringWith("nib"), null, languageDisplayName);
-		if (path == null) path = bundle.pathForResource(NSString.stringWith("DefaultApp"), NSString.stringWith("nib"), null, NSString.stringWith(languageISOValue));
+        if (path == null) {
+            path = bundle.pathForResource(NSString.stringWith("DefaultApp"), NSString.stringWith("nib"), null, NSString.stringWith(languageISOValue));
+        }
 		if (path == null && languageISOValue.equals("en")) {
 			path = bundle.pathForResource(NSString.stringWith("DefaultApp"), NSString.stringWith("nib"));
 		}
-		if (!loaded) loaded = path != null && NSBundle.loadNibFile(path, dict, 0);
+        if (!loaded) {
+            loaded = path != null && NSBundle.loadNibFile(path, dict, 0);
+        }
 	}
 	/*
 	 * Create the main menu ourselves if Default.nib was not loaded or was not found for the specific language
@@ -5779,7 +6249,9 @@ void applicationWillFinishLaunching (long id, long sel, long notification) {
 					newTag = SWT.ID_QUIT;
 					break;
 			}
-			if (newTag != 0) ni.setTag(newTag);
+            if (newTag != 0) {
+                ni.setTag(newTag);
+            }
 		}
 
 		long quitIndex = sm.indexOfItemWithTarget(applicationDelegate, OS.sel_terminate_);
@@ -5821,7 +6293,9 @@ static long applicationProc(long id, long sel, long arg0) {
 	}
 
 	if (currAppDelegate != null) {
-		if (currAppDelegate.respondsToSelector(sel)) OS.objc_msgSend(currAppDelegate.id, sel, arg0);
+        if (currAppDelegate.respondsToSelector(sel)) {
+            OS.objc_msgSend(currAppDelegate.id, sel, arg0);
+        }
 	}
 
 	NSApplication application = display.application;
@@ -5911,7 +6385,9 @@ static long applicationProc(long id, long sel, long arg0, long arg1) {
 
 	// Forward to the AWT, if necessary.
 	if (currAppDelegate != null) {
-		if (currAppDelegate.respondsToSelector(sel)) OS.objc_msgSend(currAppDelegate.id, sel, arg0, arg1);
+        if (currAppDelegate.respondsToSelector(sel)) {
+            OS.objc_msgSend(currAppDelegate.id, sel, arg0, arg1);
+        }
 	}
 
 	switch (Selector.valueOf(sel)) {
@@ -5975,7 +6451,9 @@ static long applicationProc(long id, long sel, long arg0, long arg1, long arg2, 
 static long dialogProc(long id, long sel, long arg0) {
 	long [] jniRef = new long [1];
 	OS.object_getInstanceVariable(id, SWT_OBJECT, jniRef);
-	if (jniRef[0] == 0) return 0;
+    if (jniRef[0] == 0) {
+        return 0;
+    }
 
 	switch (Selector.valueOf(sel)) {
 		case sel_changeColor_: {
@@ -5987,18 +6465,24 @@ static long dialogProc(long id, long sel, long arg0) {
 		}
 		case sel_changeFont_: {
 			FontDialog dialog = (FontDialog)OS.JNIGetObject(jniRef[0]);
-			if (dialog == null) return 0;
+            if (dialog == null) {
+                return 0;
+            }
 			dialog.changeFont(id, sel, arg0);
 			return 0;
 		}
 		case sel_validModesForFontPanel_: {
 			FontDialog dialog = (FontDialog)OS.JNIGetObject(jniRef[0]);
-			if (dialog == null) return 0;
+            if (dialog == null) {
+                return 0;
+            }
 			return dialog.validModesForFontPanel(id, sel, arg0);
 		}
 		case sel_sendSelection_: {
 			FileDialog dialog = (FileDialog)OS.JNIGetObject(jniRef[0]);
-			if (dialog == null) return 0;
+            if (dialog == null) {
+                return 0;
+            }
 			dialog.sendSelection(id, sel, arg0);
 			return 0;
 		}
@@ -6020,15 +6504,21 @@ static long dialogProc(long id, long sel, long arg0) {
 static long dialogProc(long id, long sel, long arg0, long arg1) {
 	long [] jniRef = new long [1];
 	OS.object_getInstanceVariable(id, SWT_OBJECT, jniRef);
-	if (jniRef[0] == 0) return 0;
+    if (jniRef[0] == 0) {
+        return 0;
+    }
 	if (sel == OS.sel_panel_shouldEnableURL_) {
 		FileDialog dialog = (FileDialog)OS.JNIGetObject(jniRef[0]);
-		if (dialog == null) return 0;
+        if (dialog == null) {
+            return 0;
+        }
 		return dialog.panel_shouldEnableURL(id, sel, arg0, arg1);
 	}
 	if (sel == OS.sel_setColor_forAttribute_) {
 		FontDialog dialog = (FontDialog)OS.JNIGetObject(jniRef[0]);
-		if (dialog == null) return 0;
+        if (dialog == null) {
+            return 0;
+        }
 		dialog.setColor_forAttribute(id, sel, arg0, arg1);
 		return 0;
 	}
@@ -6038,10 +6528,14 @@ static long dialogProc(long id, long sel, long arg0, long arg1) {
 static long dialogProc(long id, long sel, long arg0, long arg1, long arg2) {
 	long [] jniRef = new long [1];
 	OS.object_getInstanceVariable(id, SWT_OBJECT, jniRef);
-	if (jniRef[0] == 0) return 0;
+    if (jniRef[0] == 0) {
+        return 0;
+    }
 	if (sel == OS.sel_panel_userEnteredFilename_confirmed_) {
 		FileDialog dialog = (FileDialog)OS.JNIGetObject(jniRef[0]);
-		if (dialog == null) return 0;
+        if (dialog == null) {
+            return 0;
+        }
 		return dialog.panel_userEnteredFilename_confirmed(id, sel, arg0, arg1, arg2);
 	}
 	return 0;
@@ -6081,7 +6575,9 @@ static long windowProc(long id, long sel) {
 		}
 	}
 	Widget widget = LookupWidget(id, sel);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 
 	return switch (Selector.valueOf(sel)) {
 	case sel_sendSelection -> {
@@ -6209,13 +6705,17 @@ static long windowProc(long id, long sel, long arg0) {
 		case sel_timerProc_: {
 			//TODO optimize getting the display
 			Display display = getCurrent ();
-			if (display == null) return 0;
+            if (display == null) {
+                return 0;
+            }
 			return display.timerProc (id, sel, arg0);
 		}
 		case sel_screenParametersChanged_: {
 			//TODO optimize getting the display
 			Display display = getCurrent ();
-			if (display == null) return 0;
+            if (display == null) {
+                return 0;
+            }
 			display.runSettings = true;
 			display.setDeviceZoom();
 			return 0;
@@ -6223,7 +6723,9 @@ static long windowProc(long id, long sel, long arg0) {
 		case sel_systemColorSettingsChanged_: {
 			//TODO optimize getting the display
 			Display display = getCurrent ();
-			if (display == null) return 0;
+            if (display == null) {
+                return 0;
+            }
 			display.runSettings = true;
 			return 0;
 		}
@@ -6233,7 +6735,9 @@ static long windowProc(long id, long sel, long arg0) {
 	}
 
 	Widget widget = LookupWidget(id, sel);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 
 	return switch (Selector.valueOf(sel)) {
 	case sel_windowWillClose_ -> {
@@ -6628,7 +7132,9 @@ static long windowProc(long id, long sel, long arg0) {
 
 static long windowProc(long id, long sel, long arg0, long arg1) {
 	Widget widget = LookupWidget(id, sel);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 
 	return switch (Selector.valueOf(sel)) {
 	case sel_tabView_willSelectTabViewItem_ -> {
@@ -6743,7 +7249,9 @@ static long windowProc(long id, long sel, long arg0, long arg1) {
 
 static long windowProc(long id, long sel, long arg0, long arg1, long arg2) {
 	Widget widget = LookupWidget(id, sel);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 
 	return switch (Selector.valueOf(sel)) {
 	case sel_tableView_objectValueForTableColumn_row_ -> widget.tableView_objectValueForTableColumn_row(id, sel, arg0, arg1, arg2);
@@ -6795,7 +7303,9 @@ static long windowProc(long id, long sel, long arg0, long arg1, long arg2) {
 
 static long windowProc(long id, long sel, long arg0, long arg1, long arg2, long arg3) {
 	Widget widget = LookupWidget(id, sel);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 
 	return switch (Selector.valueOf(sel)) {
 	case sel_tableView_willDisplayCell_forTableColumn_row_ -> {

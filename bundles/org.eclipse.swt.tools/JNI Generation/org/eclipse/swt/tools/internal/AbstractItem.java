@@ -24,7 +24,9 @@ static String[] split(String str, String separator) {
 }
 
 void checkParams() {
-	if (params != null) return;
+    if (params != null) {
+        return;
+    }
 	parse(getMetaData());
 }
 
@@ -45,7 +47,9 @@ public String flatten() {
 			valueStr = value.toString();
 		}
 		if (valueStr.length() > 0) {
-			if (buffer.length() != 0) buffer.append(",");
+            if (buffer.length() != 0) {
+                buffer.append(",");
+            }
 			buffer.append(key);
 			buffer.append("=");
 			String quote = "";
@@ -63,8 +67,12 @@ public String flatten() {
 @Override
 public String[] getFlags() {
 	Object flags = getParam("flags");
-	if (flags == null) return new String[0];
-	if (flags instanceof String[]) return (String[])flags;
+    if (flags == null) {
+        return new String[0];
+    }
+    if (flags instanceof String[]) {
+        return (String[]) flags;
+    }
 	String[] result = split((String)flags, " ");
 	setParam("flags", result);
 	return result;
@@ -73,7 +81,9 @@ public String[] getFlags() {
 @Override
 public boolean getFlag(String flag) {
 	for (String f : getFlags()) {
-		if (f.equals(flag)) return true;
+        if (f.equals(flag)) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -100,7 +110,9 @@ public void setFlags(String[] flags) {
 public void parse(String str) {
 	this.params = new HashMap<>();
 	int length = str.length();
-	if (length == 0) return;
+    if (length == 0) {
+        return;
+    }
 	int index = 0;
 	while (index < length) {
 		int equals = str.indexOf('=', index);
@@ -110,7 +122,9 @@ public void parse(String str) {
 		}
 		String key = str.substring(index, equals).trim();
 		equals++;
-		while (equals < length && Character.isWhitespace(str.charAt(equals))) equals++;
+        while (equals < length && Character.isWhitespace(str.charAt(equals))) {
+            equals++;
+        }
 		char c = str.charAt(equals), ending = ',';
 		switch (c) {
 			case '"':
@@ -120,11 +134,15 @@ public void parse(String str) {
 				break;
 		}
 		int end = equals;
-		while (end < length && str.charAt(end) != ending) end++;
+        while (end < length && str.charAt(end) != ending) {
+            end++;
+        }
 		String value = str.substring(equals, end).trim();
 		setParam(key, value);
 		if (ending != ',') {
-			while (end < length && str.charAt(end) != ',') end++;
+            while (end < length && str.charAt(end) != ',') {
+                end++;
+            }
 		}
 		index = end + 1;
 	}

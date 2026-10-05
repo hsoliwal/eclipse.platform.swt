@@ -2243,8 +2243,9 @@ public static final void setTheme(boolean isDarkTheme) {
 	 */
 
 	Display display = Display.getCurrent();
-	if (display == null)
-		throw new NullPointerException("Display must be already created before you call OS.setTheme()");
+    if (display == null) {
+        throw new NullPointerException("Display must be already created before you call OS.setTheme()");
+    }
 
 	display.setData("org.eclipse.swt.internal.win32.useDarkModeExplorerTheme", isDarkTheme);
 	display.setData("org.eclipse.swt.internal.win32.useShellTitleColoring",    isDarkTheme);

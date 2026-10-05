@@ -307,13 +307,19 @@ void convert4BitRGBToYCbCr(ImageData image) {
 		int b = color.blue;
 		int n = RYTable[r] + GYTable[g] + BYTable[b];
 		yComp[i] = (byte)(n >> 16);
-		if ((n < 0) && ((n & 0xFFFF) != 0)) yComp[i]--;
+        if ((n < 0) && ((n & 0xFFFF) != 0)) {
+            yComp[i]--;
+        }
 		n = RCbTable[r] + GCbTable[g] + BCbTable[b];
 		cbComp[i] = (byte)(n >> 16);
-		if ((n < 0) && ((n & 0xFFFF) != 0)) cbComp[i]--;
+        if ((n < 0) && ((n & 0xFFFF) != 0)) {
+            cbComp[i]--;
+        }
 		n = RCrTable[r] + GCrTable[g] + BCrTable[b];
 		crComp[i] = (byte)(n >> 16);
-		if ((n < 0) && ((n & 0xFFFF) != 0)) crComp[i]--;
+        if ((n < 0) && ((n & 0xFFFF) != 0)) {
+            crComp[i]--;
+        }
 	}
 	int bSize = srcWidth * srcHeight;
 	byte[] dataYComp = new byte[bSize];
@@ -354,13 +360,19 @@ void convert8BitRGBToYCbCr(ImageData image) {
 		int b = color.blue;
 		int n = RYTable[r] + GYTable[g] + BYTable[b];
 		yComp[i] = (byte)(n >> 16);
-		if ((n < 0) && ((n & 0xFFFF) != 0)) yComp[i]--;
+        if ((n < 0) && ((n & 0xFFFF) != 0)) {
+            yComp[i]--;
+        }
 		n = RCbTable[r] + GCbTable[g] + BCbTable[b];
 		cbComp[i] = (byte)(n >> 16);
-		if ((n < 0) && ((n & 0xFFFF) != 0)) cbComp[i]--;
+        if ((n < 0) && ((n & 0xFFFF) != 0)) {
+            cbComp[i]--;
+        }
 		n = RCrTable[r] + GCrTable[g] + BCrTable[b];
 		crComp[i] = (byte)(n >> 16);
-		if ((n < 0) && ((n & 0xFFFF) != 0)) crComp[i]--;
+        if ((n < 0) && ((n & 0xFFFF) != 0)) {
+            crComp[i]--;
+        }
 	}
 	int dstWidth = image.width;
 	int dstHeight = srcHeight;
@@ -470,7 +482,9 @@ byte[] convertYToRGB() {
 			if (y < 0) {
 				y = 0;
 			} else {
-				if (y > 255) y = 255;
+                if (y > 255) {
+                    y = 255;
+                }
 			}
 			if (j >= imageWidth) {
 				y = 0;
@@ -530,17 +544,23 @@ byte[] convertYCbCrToRGB() {
 			if (r < 0) {
 				r = 0;
 			} else {
-				if (r > 255) r = 255;
+                if (r > 255) {
+                    r = 255;
+                }
 			}
 			if (g < 0) {
 				g = 0;
 			} else {
-				if (g > 255) g = 255;
+                if (g > 255) {
+                    g = 255;
+                }
 			}
 			if (b < 0) {
 				b = 0;
 			} else {
-				if (b > 255) b = 255;
+                if (b > 255) {
+                    b = 255;
+                }
 			}
 			rgbData[destIndex] = (byte)b;
 			rgbData[destIndex + 1] = (byte)g;
@@ -804,7 +824,9 @@ void decodeScan() {
 	for (int ymcu = 0; ymcu < mcuRowsInScan; ymcu++) {
 		for (int xmcu = 0; xmcu < mcusPerRow; xmcu++) {
 			if (restartInterval != 0) {
-				if (restartsToGo == 0) processRestartInterval();
+                if (restartsToGo == 0) {
+                    processRestartInterval();
+                }
 				restartsToGo--;
 			}
 			decodeMCUAtXAndY(xmcu, ymcu, nComponentsInScan, first, start, end, approxBit);
@@ -840,7 +862,9 @@ void emit(int huffCode, int nBits) {
 	codeBuffer[2] = (byte)((code >> 16) & 0xFF);
 	codeBuffer[3] = (byte)((code >> 24) & 0xFF);
 	int abs = nBits - (8 - currentBitCount);
-	if (abs < 0) abs = -abs;
+    if (abs < 0) {
+        abs = -abs;
+    }
 	if ((abs >> 3) > 0) {
 		currentByte += codeBuffer[2];
 		emitByte((byte)currentByte);
@@ -892,7 +916,9 @@ void encodeACCoefficients(int[] dataUnit, int iComp) {
 			}
 			if (acValue < 0) {
 				int absACValue = acValue;
-				if (absACValue < 0) absACValue = -absACValue;
+                if (absACValue < 0) {
+                    absACValue = -absACValue;
+                }
 				int nBits = NBitsTable[absACValue];
 				int rs = r * 16 + nBits;
 				emit(ehCodes[rs], ehSizes[rs] & 0xFF);
@@ -1025,10 +1051,14 @@ void forwardDCT(int[] dataUnit) {
 		int z1 = (tmp12 + tmp13) * FIX_0_541196100;
 		int n = z1 + (tmp13 * FIX_0_765366865) + 1024;
 		dataUnit[rIndex + 2] = n >> 11;
-		if ((n < 0) && ((n & 0x07FF) != 0)) dataUnit[rIndex + 2]--;
+        if ((n < 0) && ((n & 0x07FF) != 0)) {
+            dataUnit[rIndex + 2]--;
+        }
 		n = z1 + (tmp12 * (0 - FIX_1_847759065)) + 1024;
 		dataUnit[rIndex + 6] = n >> 11;
-		if ((n < 0) && ((n & 0x07FF) != 0)) dataUnit[rIndex + 6]--;
+        if ((n < 0) && ((n & 0x07FF) != 0)) {
+            dataUnit[rIndex + 6]--;
+        }
 
 		/**
 		 * Odd part per figure 8 --- note paper omits factor of sqrt(2).
@@ -1055,16 +1085,24 @@ void forwardDCT(int[] dataUnit) {
 
 		n = tmp4 + z1 + z3 + 1024;
 		dataUnit[rIndex + 7] = n >> 11;
-		if ((n < 0) && ((n & 0x07FF) != 0)) dataUnit[rIndex + 7]--;
+        if ((n < 0) && ((n & 0x07FF) != 0)) {
+            dataUnit[rIndex + 7]--;
+        }
 		n = tmp5 + z2 + z4 + 1024;
 		dataUnit[rIndex + 5] = n >> 11;
-		if ((n < 0) && ((n & 0x07FF) != 0)) dataUnit[rIndex + 5]--;
+        if ((n < 0) && ((n & 0x07FF) != 0)) {
+            dataUnit[rIndex + 5]--;
+        }
 		n = tmp6 + z2 + z3 + 1024;
 		dataUnit[rIndex + 3] = n >> 11;
-		if ((n < 0) && ((n & 0x07FF) != 0)) dataUnit[rIndex + 3]--;
+        if ((n < 0) && ((n & 0x07FF) != 0)) {
+            dataUnit[rIndex + 3]--;
+        }
 		n = tmp7 + z1 + z4 + 1024;
 		dataUnit[rIndex + 1] = n >> 11;
-		if ((n < 0) && ((n & 0x07FF) != 0)) dataUnit[rIndex + 1]--;
+        if ((n < 0) && ((n & 0x07FF) != 0)) {
+            dataUnit[rIndex + 1]--;
+        }
 	}
 
 	/**
@@ -1101,18 +1139,26 @@ void forwardDCT(int[] dataUnit) {
 
 		int n = tmp10 + tmp11 + 16;
 		dataUnit[c0] = n >> 5;
-		if ((n < 0) && ((n & 0x1F) != 0)) dataUnit[c0]--;
+        if ((n < 0) && ((n & 0x1F) != 0)) {
+            dataUnit[c0]--;
+        }
 		n = tmp10 - tmp11 + 16;
 		dataUnit[c4] = n >> 5;
-		if ((n < 0) && ((n & 0x1F) != 0)) dataUnit[c4]--;
+        if ((n < 0) && ((n & 0x1F) != 0)) {
+            dataUnit[c4]--;
+        }
 
 		int z1 = (tmp12 + tmp13) * FIX_0_541196100;
 		n = z1 + (tmp13 * FIX_0_765366865) + 131072;
 		dataUnit[c2] = n >> 18;
-		if ((n < 0) && ((n & 0x3FFFF) != 0)) dataUnit[c2]--;
+        if ((n < 0) && ((n & 0x3FFFF) != 0)) {
+            dataUnit[c2]--;
+        }
 		n = z1 + (tmp12 * (0 - FIX_1_847759065)) + 131072;
 		dataUnit[c6] = n >> 18;
-		if ((n < 0) && ((n & 0x3FFFF) != 0)) dataUnit[c6]--;
+        if ((n < 0) && ((n & 0x3FFFF) != 0)) {
+            dataUnit[c6]--;
+        }
 
 		/**
 		 * Odd part per figure 8 --- note paper omits factor of sqrt(2).
@@ -1139,16 +1185,24 @@ void forwardDCT(int[] dataUnit) {
 
 		n = tmp4 + z1 + z3 + 131072;
 		dataUnit[c7] = n >> 18;
-		if ((n < 0) && ((n & 0x3FFFF) != 0)) dataUnit[c7]--;
+        if ((n < 0) && ((n & 0x3FFFF) != 0)) {
+            dataUnit[c7]--;
+        }
 		n = tmp5 + z2 + z4 + 131072;
 		dataUnit[c5] = n >> 18;
-		if ((n < 0) && ((n & 0x3FFFF) != 0)) dataUnit[c5]--;
+        if ((n < 0) && ((n & 0x3FFFF) != 0)) {
+            dataUnit[c5]--;
+        }
 		n = tmp6 + z2 + z3 + 131072;
 		dataUnit[c3] = n >> 18;
-		if ((n < 0) && ((n & 0x3FFFF) != 0)) dataUnit[c3]--;
+        if ((n < 0) && ((n & 0x3FFFF) != 0)) {
+            dataUnit[c3]--;
+        }
 		n = tmp7 + z1 + z4 + 131072;
 		dataUnit[c1] = n >> 18;
-		if ((n < 0) && ((n & 0x3FFFF) != 0)) dataUnit[c1]--;
+        if ((n < 0) && ((n & 0x3FFFF) != 0)) {
+            dataUnit[c1]--;
+        }
 	}
 }
 void getAPP0() {
@@ -1391,7 +1445,9 @@ ImageData[] loadFromByteStream() {
 		return JPEGDecoder.loadFromByteStream(inputStream, loader);
 	}
 	JPEGStartOfImage soi = new JPEGStartOfImage(inputStream);
-	if (!soi.verify()) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (!soi.verify()) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	restartInterval = 0;
 
 	/* Process the tables preceding the frame header. */
@@ -1399,7 +1455,9 @@ ImageData[] loadFromByteStream() {
 
 	/* Start of Frame. */
 	frameHeader = new JPEGFrameHeader(inputStream);
-	if (!frameHeader.verify()) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (!frameHeader.verify()) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	imageWidth = frameHeader.getSamplesPerLine();
 	imageHeight = frameHeader.getNumberOfLines();
 	maxH = frameHeader.getMaxHFactor();
@@ -1435,7 +1493,9 @@ ImageData[] loadFromByteStream() {
 
 	/* Start of Scan. */
 	scanHeader = new JPEGScanHeader(inputStream);
-	if (!scanHeader.verify()) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (!scanHeader.verify()) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 
 	/* Process scan(s) and further tables until EOI. */
 	int progressiveScanCount = 0;
@@ -1468,7 +1528,9 @@ ImageData[] loadFromByteStream() {
 			done = true;
 		} else {
 			scanHeader = new JPEGScanHeader(inputStream);
-			if (!scanHeader.verify()) SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (!scanHeader.verify()) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 		}
 	}
 
@@ -1612,7 +1674,9 @@ void processRestartInterval() {
 JPEGSegment processTables() {
 	while (true) {
 		JPEGSegment jpegSegment = seekUnspecifiedMarker(inputStream);
-		if (jpegSegment == null) return null;
+        if (jpegSegment == null) {
+            return null;
+        }
 		JPEGFrameHeader sof = new JPEGFrameHeader(jpegSegment.reference);
 		if (sof.verify()) {
 			return jpegSegment;
@@ -1704,9 +1768,13 @@ static JPEGSegment seekUnspecifiedMarker(LEDataInputStream byteStream) {
 	byte[] byteArray = new byte[2];
 	try {
 		while (true) {
-			if (byteStream.read(byteArray, 0, 1) != 1) return null;
+            if (byteStream.read(byteArray, 0, 1) != 1) {
+                return null;
+            }
 			if (byteArray[0] == (byte) 0xFF) {
-				if (byteStream.read(byteArray, 1, 1) != 1) return null;
+                if (byteStream.read(byteArray, 1, 1) != 1) {
+                    return null;
+                }
 				if (byteArray[1] != (byte) 0xFF && byteArray[1] != 0) {
 					byteStream.unread(byteArray);
 					return new JPEGSegment(byteArray);
@@ -1757,7 +1825,9 @@ void storeData(int[] dataUnit, int iComp, int xmcu, int ymcu, int hi, int ihi, i
 			if (x < 0) {
 				x = 0;
 			} else {
-				if (x > 255) x = 255;
+                if (x > 255) {
+                    x = 255;
+                }
 			}
 			compImage[destIndex + col] = (byte)x;
 			srcIndex++;

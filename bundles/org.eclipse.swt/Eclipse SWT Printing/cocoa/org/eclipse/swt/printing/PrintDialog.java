@@ -128,7 +128,9 @@ private static int m3NormalizeStyle(Shell parent, int style) {
  * @since 3.4
  */
 public void setPrinterData(PrinterData data) {
-	if (data == null) data = new PrinterData();
+    if (data == null) {
+        data = new PrinterData();
+    }
 	this.printerData = data;
 }
 
@@ -200,15 +202,23 @@ public PrinterData open() {
 		initClasses();
 		SWTPrintPanelDelegate delegate = (SWTPrintPanelDelegate)new SWTPrintPanelDelegate().alloc().init();
 		long jniRef = OS.NewGlobalRef(this);
-		if (jniRef == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (jniRef == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		OS.object_setInstanceVariable(delegate.id, SWT_OBJECT, jniRef);
 		returnCode = -1;
 		panel.beginSheetWithPrintInfo(printInfo, parent.view.window(), delegate, OS.sel_panelDidEnd_returnCode_contextInfo_, 0);
 		while (returnCode == -1) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
-		if (delegate != null) delegate.release();
-		if (jniRef != 0) OS.DeleteGlobalRef(jniRef);
+        if (delegate != null) {
+            delegate.release();
+        }
+        if (jniRef != 0) {
+            OS.DeleteGlobalRef(jniRef);
+        }
 		response = returnCode;
 	} else {
 		display.setData(SET_MODAL_DIALOG, this);
@@ -279,10 +289,14 @@ static boolean getSheetEnabled () {
 static long dialogProc(long id, long sel, long arg0, long arg1, long arg2) {
 	long [] jniRef = new long [1];
 	OS.object_getInstanceVariable(id, SWT_OBJECT, jniRef);
-	if (jniRef[0] == 0) return 0;
+    if (jniRef[0] == 0) {
+        return 0;
+    }
 	if (sel == OS.sel_panelDidEnd_returnCode_contextInfo_) {
 		PrintDialog dialog = (PrintDialog)OS.JNIGetObject(jniRef[0]);
-		if (dialog == null) return 0;
+        if (dialog == null) {
+            return 0;
+        }
 		dialog.panelDidEnd_returnCode_contextInfo(id, sel, arg0, arg1, arg2);
 	}
 	return 0;
@@ -290,7 +304,9 @@ static long dialogProc(long id, long sel, long arg0, long arg1, long arg2) {
 
 void initClasses () {
 	String className = "SWTPrintPanelDelegate";
-	if (OS.objc_lookUpClass (className) != 0) return;
+    if (OS.objc_lookUpClass(className) != 0) {
+        return;
+    }
 
 	dialogCallback5 = new Callback(getClass(), "dialogProc", 5);
 	long dialogProc5 = dialogCallback5.getAddress();

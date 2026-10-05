@@ -30,9 +30,15 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 		@Override public int applyAsInt (int style) {
 			int mask = (SWT.YES | SWT.NO | SWT.OK | SWT.CANCEL | SWT.ABORT | SWT.RETRY | SWT.IGNORE);
 			int bits = style & mask;
-			if (bits == SWT.OK || bits == SWT.CANCEL || bits == (SWT.OK | SWT.CANCEL)) return style;
-			if (bits == SWT.YES || bits == SWT.NO || bits == (SWT.YES | SWT.NO) || bits == (SWT.YES | SWT.NO | SWT.CANCEL)) return style;
-			if (bits == (SWT.RETRY | SWT.CANCEL) || bits == (SWT.ABORT | SWT.RETRY | SWT.IGNORE)) return style;
+            if (bits == SWT.OK || bits == SWT.CANCEL || bits == (SWT.OK | SWT.CANCEL)) {
+                return style;
+            }
+            if (bits == SWT.YES || bits == SWT.NO || bits == (SWT.YES | SWT.NO) || bits == (SWT.YES | SWT.NO | SWT.CANCEL)) {
+                return style;
+            }
+            if (bits == (SWT.RETRY | SWT.CANCEL) || bits == (SWT.ABORT | SWT.RETRY | SWT.IGNORE)) {
+                return style;
+            }
 			style = (style & ~mask) | SWT.OK;
 			return style;
 		}
@@ -147,14 +153,22 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 				style &= ~SWT.MULTI;
 			}
 			style = StyleBits.normalize (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
-			if ((style & SWT.SINGLE) != 0) style &= ~(SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP);
+            if ((style & SWT.SINGLE) != 0) {
+                style &= ~(SWT.H_SCROLL | SWT.V_SCROLL | SWT.WRAP);
+            }
 			if ((style & SWT.WRAP) != 0) {
 				style |= SWT.MULTI;
 				style &= ~SWT.H_SCROLL;
 			}
-			if ((style & SWT.MULTI) != 0) style &= ~SWT.PASSWORD;
-			if ((style & (SWT.SINGLE | SWT.MULTI)) != 0) return style;
-			if ((style & (SWT.H_SCROLL | SWT.V_SCROLL)) != 0) return style | SWT.MULTI;
+            if ((style & SWT.MULTI) != 0) {
+                style &= ~SWT.PASSWORD;
+            }
+            if ((style & (SWT.SINGLE | SWT.MULTI)) != 0) {
+                return style;
+            }
+            if ((style & (SWT.H_SCROLL | SWT.V_SCROLL)) != 0) {
+                return style | SWT.MULTI;
+            }
 			return style | SWT.SINGLE;
 		}
 	},
@@ -199,7 +213,9 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			*/
 			style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
 			style = StyleBits.normalize (style, SWT.DROP_DOWN, SWT.SIMPLE, 0, 0, 0, 0);
-			if ((style & SWT.SIMPLE) != 0) return style & ~SWT.READ_ONLY;
+            if ((style & SWT.SIMPLE) != 0) {
+                return style & ~SWT.READ_ONLY;
+            }
 			return style;
 		}
 	},
@@ -243,7 +259,9 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
 			style = StyleBits.normalize (style, SWT.DATE, SWT.TIME, SWT.CALENDAR, 0, 0, 0);
 			style = StyleBits.normalize (style, SWT.MEDIUM, SWT.SHORT, SWT.LONG, 0, 0, 0);
-			if ((style & SWT.DATE) == 0) style &=~ SWT.DROP_DOWN;
+            if ((style & SWT.DATE) == 0) {
+                style &= ~SWT.DROP_DOWN;
+            }
 			return style;
 		}
 	},
@@ -256,22 +274,28 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 	TOOLTIP {
 		@Override public int applyAsInt (int style) {
 			int mask = SWT.ICON_ERROR | SWT.ICON_INFORMATION | SWT.ICON_WARNING;
-			if ((style & mask) == 0) return style;
+            if ((style & mask) == 0) {
+                return style;
+            }
 			return StyleBits.normalize (style, SWT.ICON_INFORMATION, SWT.ICON_WARNING, SWT.ICON_ERROR, 0, 0, 0);
 		}
 	},
 	TOOLBAR_WINDOWS {
 		@Override public int applyAsInt (int style) {
-			/*
-			* On Windows, only flat tool bars can be traversed.
-			*/
-			if ((style & SWT.FLAT) == 0) style |= SWT.NO_FOCUS;
+            /*
+            * On Windows, only flat tool bars can be traversed.
+            */
+            if ((style & SWT.FLAT) == 0) {
+                style |= SWT.NO_FOCUS;
+            }
 
-			/*
-			* A vertical tool bar cannot wrap because TB_SETROWS
-			* fails when the toolbar has TBSTYLE_WRAPABLE.
-			*/
-			if ((style & SWT.VERTICAL) != 0) style &= ~SWT.WRAP;
+            /*
+            * A vertical tool bar cannot wrap because TB_SETROWS
+            * fails when the toolbar has TBSTYLE_WRAPABLE.
+            */
+            if ((style & SWT.VERTICAL) != 0) {
+                style &= ~SWT.WRAP;
+            }
 
 			/*
 			* Even though it is legal to create this widget
@@ -334,18 +358,22 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 				style |= SWT.TITLE;
 			}
 
-			/*
-			* If either WS_MINIMIZEBOX or WS_MAXIMIZEBOX are set,
-			* we must also set WS_SYSMENU or the buttons will not
-			* appear.
-			*/
-			if ((style & (SWT.MIN | SWT.MAX)) != 0) style |= SWT.CLOSE;
+            /*
+            * If either WS_MINIMIZEBOX or WS_MAXIMIZEBOX are set,
+            * we must also set WS_SYSMENU or the buttons will not
+            * appear.
+            */
+            if ((style & (SWT.MIN | SWT.MAX)) != 0) {
+                style |= SWT.CLOSE;
+            }
 
-			/*
-			* Both WS_SYSMENU and WS_CAPTION must be set in order
-			* to for the system menu to appear.
-			*/
-			if ((style & SWT.CLOSE) != 0) style |= SWT.TITLE;
+            /*
+            * Both WS_SYSMENU and WS_CAPTION must be set in order
+            * to for the system menu to appear.
+            */
+            if ((style & SWT.CLOSE) != 0) {
+                style |= SWT.TITLE;
+            }
 
 			return style;
 		}
@@ -370,9 +398,15 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 				style |= SWT.MULTI;
 				style &= ~SWT.H_SCROLL;
 			}
-			if ((style & SWT.MULTI) != 0) style &= ~SWT.PASSWORD;
-			if ((style & (SWT.SINGLE | SWT.MULTI)) != 0) return style;
-			if ((style & (SWT.H_SCROLL | SWT.V_SCROLL)) != 0) return style | SWT.MULTI;
+            if ((style & SWT.MULTI) != 0) {
+                style &= ~SWT.PASSWORD;
+            }
+            if ((style & (SWT.SINGLE | SWT.MULTI)) != 0) {
+                return style;
+            }
+            if ((style & (SWT.H_SCROLL | SWT.V_SCROLL)) != 0) {
+                return style | SWT.MULTI;
+            }
 			return style | SWT.SINGLE;
 		}
 	},
@@ -411,7 +445,9 @@ enum WidgetStylePolicy implements IntUnaryOperator {
 			style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
 
 			style = StyleBits.normalize (style, SWT.DATE, SWT.TIME, SWT.CALENDAR, 0, 0, 0);
-			if ((style & SWT.DATE) == 0) style &=~ SWT.DROP_DOWN;
+            if ((style & SWT.DATE) == 0) {
+                style &= ~SWT.DROP_DOWN;
+            }
 			return StyleBits.normalize (style, SWT.MEDIUM, SWT.SHORT, SWT.LONG, 0, 0, 0);
 		}
 	},

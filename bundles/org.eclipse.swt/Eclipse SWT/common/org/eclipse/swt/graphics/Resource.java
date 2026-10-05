@@ -73,8 +73,12 @@ public abstract class Resource {
 
 		@Override
 		public void run() {
-			if (!reporting.get()) return;
-			if (nonDisposedReporter == null) return;
+            if (!reporting.get()) {
+                return;
+            }
+            if (nonDisposedReporter == null) {
+                return;
+            }
 
 			nonDisposedReporter.accept(allocationStack);
 		}
@@ -118,8 +122,12 @@ public Resource() {
 }
 
 Resource(Device device) {
-	if (device == null) device = Device.getDevice();
-	if (device == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (device == null) {
+        device = Device.getDevice();
+    }
+    if (device == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.device = device;
 	initNonDisposeTracking();
 }
@@ -145,12 +153,22 @@ void destroyHandlesExcept(Set<Integer> zoomLevels) {
  * This method does nothing if the resource is already disposed.
  */
 public void dispose() {
-	if (tracker != null) tracker.reporting.set(false);
-	if (cleanable != null) cleanable.clean();
-	if (device == null) return;
-	if (device.isDisposed()) return;
+    if (tracker != null) {
+        tracker.reporting.set(false);
+    }
+    if (cleanable != null) {
+        cleanable.clean();
+    }
+    if (device == null) {
+        return;
+    }
+    if (device.isDisposed()) {
+        return;
+    }
 	destroy();
-	if (device.tracking) device.dispose_Object(this);
+    if (device.tracking) {
+        device.dispose_Object(this);
+    }
 	device = null;
 }
 
@@ -164,28 +182,40 @@ public void dispose() {
  */
 public Device getDevice() {
 	Device device = this.device;
-	if (device == null || isDisposed ()) SWT.error (SWT.ERROR_GRAPHIC_DISPOSED);
+    if (device == null || isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return device;
 }
 
 void ignoreNonDisposed() {
-	if (tracker != null) tracker.reporting.set(false);
-	if (cleanable != null) cleanable.clean();
+    if (tracker != null) {
+        tracker.reporting.set(false);
+    }
+    if (cleanable != null) {
+        cleanable.clean();
+    }
 }
 
 void init() {
-	if (device.tracking) device.new_Object(this);
+    if (device.tracking) {
+        device.new_Object(this);
+    }
 	if (tracker != null && tracker.reporting.compareAndSet(false, true)) {
 		cleanable = ResourceTracker.cleaner.register(this, tracker);
 	}
 }
 
 void initNonDisposeTracking() {
-	// Color doesn't really have any resource to be leaked, ignore.
-	if (this instanceof Color) return;
+    // Color doesn't really have any resource to be leaked, ignore.
+    if (this instanceof Color) {
+        return;
+    }
 
-	// Avoid performance costs of gathering the current stack trace when not tracking.
-	if (nonDisposedReporter == null) return;
+    // Avoid performance costs of gathering the current stack trace when not tracking.
+    if (nonDisposedReporter == null) {
+        return;
+    }
 
 	// Capture a stack trace to help investigating the leak
 	Error error = new Error("SWT Resource was not properly disposed"); //$NON-NLS-1$

@@ -84,15 +84,21 @@ public class Path extends Resource {
 public Path (Device device) {
 	super(device);
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		handle = NSBezierPath.bezierPath();
-		if (handle == null) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (handle == null) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		handle.retain();
 		handle.moveToPoint(new NSPoint());
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -133,10 +139,16 @@ public Path (Device device) {
 public Path (Device device, Path path, float flatness) {
 	super(device);
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
-		if (path == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (path.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (path == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (path.isDisposed()) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		flatness = Math.max(0, flatness);
 		if (flatness == 0) {
 			handle = new NSBezierPath(path.handle.copy().id);
@@ -147,10 +159,14 @@ public Path (Device device, Path path, float flatness) {
 			handle.retain();
 			NSBezierPath.setDefaultFlatness(defaultFlatness);
 		}
-		if (handle == null) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (handle == null) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -185,12 +201,18 @@ public Path (Device device, Path path, float flatness) {
 public Path (Device device, PathData data) {
 	this(device);
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
-		if (data == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (data == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		init(data);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -224,10 +246,16 @@ public Path (Device device, PathData data) {
  * </ul>
  */
 public void addArc(float x, float y, float width, float height, float startAngle, float arcAngle) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (width == 0 || height == 0 || arcAngle == 0) return;
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (width == 0 || height == 0 || arcAngle == 0) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSAffineTransform transform = NSAffineTransform.transform();
 		transform.translateXBy(x + width / 2f, y + height / 2f);
@@ -244,14 +272,18 @@ public void addArc(float x, float y, float width, float height, float startAngle
 			handle.closePath();
 		}
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
 void appendBezierPath (NSBezierPath path) {
 	int count = (int)path.elementCount();
 	long points = C.malloc(3 * NSPoint.sizeof);
-	if (points == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (points == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	NSPoint pt1 = new NSPoint();
 	NSPoint pt2 = new NSPoint();
 	NSPoint pt3 = new NSPoint();
@@ -301,16 +333,26 @@ void appendBezierPath (NSBezierPath path) {
  * </ul>
  */
 public void addPath(Path path) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (path == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (path.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (path == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (path.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		handle.appendBezierPath(path.handle);
 		closed = path.closed;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -327,19 +369,25 @@ public void addPath(Path path) {
  * </ul>
  */
 public void addRectangle(float x, float y, float width, float height) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSRect rect = new NSRect();
 	rect.x = x;
 	rect.y = y;
 	rect.width = width;
 	rect.height = height;
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		handle.appendBezierPathWithRect(rect);
 		closed = true;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -361,11 +409,19 @@ public void addRectangle(float x, float y, float width, float height) {
  * </ul>
  */
 public void addString(String string, float x, float y, Font font) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (font == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (font.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (font == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (font.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		closed = true;
 		NSString str = NSString.stringWith(string);
@@ -419,7 +475,9 @@ public void addString(String string, float x, float y, Font font) {
 		layoutManager.release();
 		textStorage.release();
 	} finally  {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -433,14 +491,20 @@ public void addString(String string, float x, float y, Font font) {
  * </ul>
  */
 public void close() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		handle.closePath();
 		closed = true;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -468,16 +532,26 @@ public void close() {
  * </ul>
  */
 public boolean contains(float x, float y, GC gc, boolean outline) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (gc == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (gc == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		//TODO - see windows
 		if (outline) {
 			long pixel = C.malloc(4);
-			if (pixel == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (pixel == 0) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 			int[] buffer = new int[]{0xFFFFFFFF};
 			C.memmove(pixel, buffer, 4);
 			long colorspace = OS.CGColorSpaceCreateDeviceRGB();
@@ -519,7 +593,9 @@ public boolean contains(float x, float y, GC gc, boolean outline) {
 			return handle.containsPoint(point);
 		}
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -538,9 +614,13 @@ public boolean contains(float x, float y, GC gc, boolean outline) {
  * </ul>
  */
 public void cubicTo(float cx1, float cy1, float cx2, float cy2, float x, float y) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSPoint pt = new NSPoint();
 		pt.x = x;
@@ -554,7 +634,9 @@ public void cubicTo(float cx1, float cy1, float cx2, float cy2, float x, float y
 		handle.curveToPoint(pt, ct1, ct2);
 		closed = false;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -580,11 +662,19 @@ void destroy() {
  * </ul>
  */
 public void getBounds(float[] bounds) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (bounds == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (bounds.length < 4) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (bounds == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (bounds.length < 4) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSRect rect = handle.controlPointBounds();
 		bounds[0] = (float)rect.x;
@@ -592,7 +682,9 @@ public void getBounds(float[] bounds) {
 		bounds[2] = (float)rect.width;
 		bounds[3] = (float)rect.height;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -611,17 +703,27 @@ public void getBounds(float[] bounds) {
  * </ul>
  */
 public void getCurrentPoint(float[] point) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (point == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (point.length < 2) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (point == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (point.length < 2) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSPoint pt = handle.currentPoint();
 		point[0] = (float)pt.x;
 		point[1] = (float)pt.y;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -637,16 +739,22 @@ public void getCurrentPoint(float[] point) {
  * @see PathData
  */
 public PathData getPathData() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		int count = (int)handle.elementCount();
 		int pointCount = 0, typeCount = 0;
 		byte[] types = new byte[count];
 		float[] pointArray = new float[count * 6];
 		long points = C.malloc(3 * NSPoint.sizeof);
-		if (points == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (points == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		NSPoint pt = new NSPoint();
 		for (int i = 0; i < count; i++) {
 			int element = (int)handle.elementAtIndex(i, points);
@@ -691,7 +799,9 @@ public PathData getPathData() {
 		data.points = pointArray;
 		return data;
 	} finally {
-		if (pool != null)  pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -749,9 +859,13 @@ public boolean isDisposed() {
  * </ul>
  */
 public void lineTo(float x, float y) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSPoint pt = new NSPoint();
 		pt.x = x;
@@ -759,7 +873,9 @@ public void lineTo(float x, float y) {
 		handle.lineToPoint(pt);
 		closed = false;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -776,9 +892,13 @@ public void lineTo(float x, float y) {
  * </ul>
  */
 public void moveTo(float x, float y) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSPoint pt = new NSPoint();
 		pt.x = x;
@@ -786,7 +906,9 @@ public void moveTo(float x, float y) {
 		handle.moveToPoint(pt);
 		closed = true;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -803,9 +925,13 @@ public void moveTo(float x, float y) {
  * </ul>
  */
 public void quadTo(float cx, float cy, float x, float y) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSPoint current = handle.isEmpty() ? new NSPoint() : handle.currentPoint();
 		NSPoint ct1 = new NSPoint();
@@ -820,7 +946,9 @@ public void quadTo(float cx, float cy, float x, float y) {
 		handle.curveToPoint(pt, ct1, ct2);
 		closed = false;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -832,7 +960,9 @@ public void quadTo(float cx, float cy, float x, float y) {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Path {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Path {*DISPOSED*}";
+    }
 	return "Path {" + handle + "}";
 }
 

@@ -117,14 +117,30 @@ class StyledTextTab extends ScrollableTab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (singleButton.getSelection ()) style |= SWT.SINGLE;
-		if (multiButton.getSelection ()) style |= SWT.MULTI;
-		if (horizontalButton.getSelection ()) style |= SWT.H_SCROLL;
-		if (verticalButton.getSelection ()) style |= SWT.V_SCROLL;
-		if (wrapButton.getSelection ()) style |= SWT.WRAP;
-		if (readOnlyButton.getSelection ()) style |= SWT.READ_ONLY;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
-		if (fullSelectionButton.getSelection ()) style |= SWT.FULL_SELECTION;
+        if (singleButton.getSelection()) {
+            style |= SWT.SINGLE;
+        }
+        if (multiButton.getSelection()) {
+            style |= SWT.MULTI;
+        }
+        if (horizontalButton.getSelection()) {
+            style |= SWT.H_SCROLL;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.V_SCROLL;
+        }
+        if (wrapButton.getSelection()) {
+            style |= SWT.WRAP;
+        }
+        if (readOnlyButton.getSelection()) {
+            style |= SWT.READ_ONLY;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (fullSelectionButton.getSelection()) {
+            style |= SWT.FULL_SELECTION;
+        }
 
 		/* Create the example widgets */
 		styledText = new StyledText (styledTextGroup, style);
@@ -216,7 +232,9 @@ class StyledTextTab extends ScrollableTab {
 		yellowButton.setImage (yellowImage);
 		SelectionListener styleListener = widgetSelectedAdapter(e -> {
 			Point sel = styledText.getSelectionRange();
-			if ((sel == null) || (sel.y == 0)) return;
+            if ((sel == null) || (sel.y == 0)) {
+                return;
+            }
 			StyleRange style;
 			for (int i = sel.x; i<sel.x+sel.y; i++) {
 				StyleRange range = styledText.getStyleRangeAtOffset(i);
@@ -242,7 +260,9 @@ class StyledTextTab extends ScrollableTab {
 		});
 		SelectionListener colorListener = widgetSelectedAdapter(e -> {
 			Point sel = styledText.getSelectionRange();
-			if ((sel == null) || (sel.y == 0)) return;
+            if ((sel == null) || (sel.y == 0)) {
+                return;
+            }
 			Color fg = null, bg = null;
 			if (e.widget == redButton) {
 				fg = display.getSystemColor (SWT.COLOR_RED);
@@ -256,8 +276,12 @@ class StyledTextTab extends ScrollableTab {
 					style = (StyleRange)range.clone();
 					style.start = i;
 					style.length = 1;
-					if (fg != null) style.foreground = style.foreground != null ? null : fg;
-					if (bg != null) style.background = style.background != null ? null : bg;
+                    if (fg != null) {
+                        style.foreground = style.foreground != null ? null : fg;
+                    }
+                    if (bg != null) {
+                        style.background = style.background != null ? null : bg;
+                    }
 				} else {
 					style = new StyleRange (i, 1, fg, bg, SWT.NORMAL);
 				}

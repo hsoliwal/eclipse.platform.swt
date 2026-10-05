@@ -37,7 +37,9 @@ public static void main (String [] args) {
 	b.setBounds (clientArea.x + 10, clientArea.y + 10, 200, 200);
 	b.addListener (SWT.Selection, e -> b.setCursor (cursor));
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

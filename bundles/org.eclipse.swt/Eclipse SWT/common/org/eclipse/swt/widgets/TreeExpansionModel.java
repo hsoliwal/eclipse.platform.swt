@@ -43,7 +43,9 @@ final class TreeExpansionModel {
 	static void expandToLevel(Tree tree, int level) {
 		checkLevel(level);
 		runLocked(tree, () -> {
-			if (level == 0 || level == 1) return;
+            if (level == 0 || level == 1) {
+                return;
+            }
 			int childLevel = level == ALL_LEVELS ? ALL_LEVELS : level - 1;
 			TreeItem[] roots = tree.modelChildren(null, true);
 			apply(tree, roots, childLevel, true);
@@ -53,7 +55,9 @@ final class TreeExpansionModel {
 	static void collapseToLevel(Tree tree, int level) {
 		checkLevel(level);
 		runLocked(tree, () -> {
-			if (level == 0 || level == 1) return;
+            if (level == 0 || level == 1) {
+                return;
+            }
 			int childLevel = level == ALL_LEVELS ? ALL_LEVELS : level - 1;
 			TreeItem[] roots = tree.modelChildren(null, false);
 			apply(tree, roots, childLevel, false);
@@ -83,18 +87,26 @@ final class TreeExpansionModel {
 	}
 
 	private static void apply(Tree tree, TreeItem[] roots, int level, boolean expand) {
-		if (level == 0 || roots.length == 0) return;
+        if (level == 0 || roots.length == 0) {
+            return;
+        }
 		ArrayDeque<Pending> pending = new ArrayDeque<>();
 		for (int index = roots.length - 1; index >= 0; index--) {
 			TreeItem item = roots[index];
-			if (item != null && !item.isDisposed()) pending.push(new Pending(item, level));
+            if (item != null && !item.isDisposed()) {
+                pending.push(new Pending(item, level));
+            }
 		}
 		while (!pending.isEmpty()) {
 			Pending current = pending.pop();
 			TreeItem item = current.item();
-			if (item.isDisposed()) continue;
+            if (item.isDisposed()) {
+                continue;
+            }
 			int remaining = current.level();
-			if (remaining == 0) continue;
+            if (remaining == 0) {
+                continue;
+            }
 
 			if (expand) {
 				/*
@@ -103,14 +115,20 @@ final class TreeExpansionModel {
 				 * when the requested level requires descending into them.
 				 */
 				int childCount = item.getItemCount();
-				if (childCount == 0) continue;
+                if (childCount == 0) {
+                    continue;
+                }
 				item.setExpanded(true);
-				if (remaining == 1) continue;
+                if (remaining == 1) {
+                    continue;
+                }
 				int next = remaining == ALL_LEVELS ? ALL_LEVELS : remaining - 1;
 				TreeItem[] children = tree.modelChildren(item, true);
 				for (int index = children.length - 1; index >= 0; index--) {
 					TreeItem child = children[index];
-					if (child != null && !child.isDisposed()) pending.push(new Pending(child, next));
+                    if (child != null && !child.isDisposed()) {
+                        pending.push(new Pending(child, next));
+                    }
 				}
 			} else {
 				/*
@@ -119,12 +137,16 @@ final class TreeExpansionModel {
 				 * projection here and can be made sparse independently.
 				 */
 				item.setExpanded(false);
-				if (remaining == 1) continue;
+                if (remaining == 1) {
+                    continue;
+                }
 				int next = remaining == ALL_LEVELS ? ALL_LEVELS : remaining - 1;
 				TreeItem[] children = tree.modelChildren(item, false);
 				for (int index = children.length - 1; index >= 0; index--) {
 					TreeItem child = children[index];
-					if (child != null && !child.isDisposed()) pending.push(new Pending(child, next));
+                    if (child != null && !child.isDisposed()) {
+                        pending.push(new Pending(child, next));
+                    }
 				}
 			}
 		}
@@ -135,17 +157,27 @@ final class TreeExpansionModel {
 		try {
 			operation.run();
 		} finally {
-			if (!tree.isDisposed()) tree.setRedraw(true);
+            if (!tree.isDisposed()) {
+                tree.setRedraw(true);
+            }
 		}
 	}
 
 	private static void checkLevel(int level) {
-		if (level < ALL_LEVELS) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (level < ALL_LEVELS) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 
 	private static void checkItem(Tree tree, TreeItem item) {
-		if (item == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (item.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-		if (item.getParent() != tree) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (item == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (item.isDisposed()) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (item.getParent() != tree) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 }

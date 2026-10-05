@@ -61,7 +61,9 @@ public class TableDragSourceEffect extends DragSourceEffect {
 	 */
 	@Override
 	public void dragFinished(DragSourceEvent event) {
-		if (dragSourceImage != null) dragSourceImage.dispose();
+        if (dragSourceImage != null) {
+            dragSourceImage.dispose();
+        }
 		dragSourceImage = null;
 	}
 
@@ -82,7 +84,9 @@ public class TableDragSourceEffect extends DragSourceEffect {
 	}
 
 	Image getDragSourceImage(DragSourceEvent event) {
-		if (dragSourceImage != null) dragSourceImage.dispose();
+        if (dragSourceImage != null) {
+            dragSourceImage.dispose();
+        }
 		dragSourceImage = null;
 		NSPoint point = new NSPoint();
 		long ptr = C.malloc(NSPoint.sizeof);
@@ -92,7 +96,9 @@ public class TableDragSourceEffect extends DragSourceEffect {
 		NSImage nsImage = widget.dragImageForRowsWithIndexes(widget.selectedRowIndexes(), widget.tableColumns(), nsEvent, ptr);
 		OS.memmove(point, ptr, NSPoint.sizeof);
 		C.free(ptr);
-		if (nsImage == null) return null;
+        if (nsImage == null) {
+            return null;
+        }
 		//TODO: Image representation wrong???
 		Image image = Image.cocoa_new(control.getDisplay(), SWT.BITMAP, nsImage);
 		dragSourceImage = image;

@@ -39,8 +39,9 @@ public class Bug97527_LabelSizing {
 		System.out.println(shell.getSize());
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

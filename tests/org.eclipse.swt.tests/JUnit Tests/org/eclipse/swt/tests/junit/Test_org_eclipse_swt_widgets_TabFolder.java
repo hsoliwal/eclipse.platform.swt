@@ -173,8 +173,9 @@ public void test_getSelection() {
 public void test_getSelectionIndex() {
 	int number = 15;
 	TabItem[] items = new TabItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TabItem(tabFolder, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TabItem(tabFolder, 0);
+    }
 
 	assertEquals(0, tabFolder.getSelectionIndex());
 
@@ -285,8 +286,9 @@ public void test_setSelectionI() {
 
 	number = 5;
 	TabItem[] items = new TabItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TabItem(tabFolder, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TabItem(tabFolder, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> tabFolder.setSelection((TabItem) null), "No exception thrown for selection == null");
 	assertArrayEquals(new TabItem[]{items[0]}, tabFolder.getSelection());
 
@@ -297,8 +299,9 @@ public void test_setSelectionI() {
 	makeCleanEnvironment();
 
 	items = new TabItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TabItem(tabFolder, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TabItem(tabFolder, 0);
+    }
 
 	tabFolder.setSelection(0);
 	assertArrayEquals(new TabItem[]{items[0]}, tabFolder.getSelection());
@@ -327,8 +330,9 @@ public void test_setSelectionI() {
 	//
 	makeCleanEnvironment();
 
-	for (int i = 0; i < number; i++)
-		items[i] = new TabItem(tabFolder, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TabItem(tabFolder, 0);
+    }
 
 	tabFolder.setSelection(items[0]);
 	assertArrayEquals(new TabItem[]{items[0]}, tabFolder.getSelection());
@@ -352,8 +356,9 @@ public void test_setSelectionI() {
 	makeCleanEnvironment();
 
 	TabItem[] recreatedItems = new TabItem[number];
-	for (int i = 0; i < number; i++)
-		recreatedItems[i] = new TabItem(tabFolder, 0);
+    for (int i = 0; i < number; i++) {
+        recreatedItems[i] = new TabItem(tabFolder, 0);
+    }
 	assertThrows(IllegalArgumentException.class, () -> tabFolder.setSelection(new TabItem[]{recreatedItems[0], null}), "No exception thrown for a null item in the selection");
 	assertThrows(IllegalArgumentException.class, () -> tabFolder.setSelection(new TabItem[]{null}), "No exception thrown for selection == null");
 	assertArrayEquals(new TabItem[]{recreatedItems[0]}, tabFolder.getSelection());

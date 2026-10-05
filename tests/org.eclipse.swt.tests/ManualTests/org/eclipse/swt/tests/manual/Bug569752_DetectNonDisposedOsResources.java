@@ -48,8 +48,9 @@ public class Bug569752_DetectNonDisposedOsResources {
 			ImageGcDrawer noOpGcDrawer = (gc, height, width) -> {};
 			Image image = new Image(display, noOpGcDrawer, 10, 10);
 
-			if (chkDispose.getSelection())
-				image.dispose();
+            if (chkDispose.getSelection()) {
+                image.dispose();
+            }
 
 			image = null;
 			System.gc();

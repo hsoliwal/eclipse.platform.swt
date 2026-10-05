@@ -28,7 +28,9 @@ import org.eclipse.swt.widgets.*;
 public class Snippet274 {
 
 	static void checkPath(TreeItem item, boolean checked, boolean grayed) {
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		if (grayed) {
 			checked = true;
 		} else {
@@ -86,7 +88,9 @@ public class Snippet274 {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

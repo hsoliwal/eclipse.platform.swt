@@ -27,15 +27,23 @@ import org.eclipse.swt.widgets.*;
 public class Snippet254 {
 
 	static TreeItem nextItem(Tree tree, TreeItem item) {
-		if (item == null) return null;
-		if (item.getExpanded() && item.getItemCount() > 0) return item.getItem(0);
+        if (item == null) {
+            return null;
+        }
+        if (item.getExpanded() && item.getItemCount() > 0) {
+            return item.getItem(0);
+        }
 		TreeItem childItem = item;
 		TreeItem parentItem = childItem.getParentItem();
 		int index = parentItem == null ? tree.indexOf(childItem) : parentItem.indexOf(childItem);
 		int count = parentItem == null ? tree.getItemCount() : parentItem.getItemCount();
 		while (true) {
-			if (index + 1 < count) return parentItem == null ? tree.getItem(index + 1) : parentItem.getItem(index + 1);
-			if (parentItem == null) return null;
+            if (index + 1 < count) {
+                return parentItem == null ? tree.getItem(index + 1) : parentItem.getItem(index + 1);
+            }
+            if (parentItem == null) {
+                return null;
+            }
 			childItem = parentItem;
 			parentItem = childItem.getParentItem();
 			index = parentItem == null ? tree.indexOf(childItem) : parentItem.indexOf(childItem);
@@ -88,7 +96,9 @@ public class Snippet254 {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

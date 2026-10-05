@@ -48,7 +48,9 @@ public class Bug84054_TableActivateEventScroll {
 		shell.open();
 		
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

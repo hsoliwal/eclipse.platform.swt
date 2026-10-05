@@ -143,7 +143,9 @@ public final class PDFDocument extends Device {
 	 * Validates and prepares the data for construction.
 	 */
 	static PDFDocumentData checkData(String filename, PageSize pageSize) {
-		if (pageSize == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (pageSize == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		return checkData(filename, pageSize.width(), pageSize.height());
 	}
 
@@ -151,8 +153,12 @@ public final class PDFDocument extends Device {
 	 * Validates and prepares the data for construction.
 	 */
 	static PDFDocumentData checkData(String filename, double widthInPoints, double heightInPoints) {
-		if (filename == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (widthInPoints <= 0 || heightInPoints <= 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (filename == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (widthInPoints <= 0 || heightInPoints <= 0) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		PDFDocumentData data = new PDFDocumentData();
 		data.filename = filename;
 		data.widthInPoints = widthInPoints;
@@ -174,7 +180,9 @@ public final class PDFDocument extends Device {
 		this.heightInPoints = pdfData.heightInPoints;
 
 		NSAutoreleasePool pool = null;
-		if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+        if (!NSThread.isMainThread()) {
+            pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+        }
 		try {
 			// Create CFURL from the filename
 			NSString path = NSString.stringWith(filename);
@@ -185,7 +193,9 @@ public final class PDFDocument extends Device {
 
 			// Use CGPDFContextCreateWithURL
 			pdfContext = OS.CGPDFContextCreateWithURL(fileURL.id, mediaBox, 0);
-			if (pdfContext == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (pdfContext == 0) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 
 			// Create an NSGraphicsContext from the CGContext
 			graphicsContext = NSGraphicsContext.graphicsContextWithGraphicsPort(pdfContext, false);
@@ -196,7 +206,9 @@ public final class PDFDocument extends Device {
 			}
 			graphicsContext.retain();
 		} finally {
-			if (pool != null) pool.release();
+            if (pool != null) {
+                pool.release();
+            }
 		}
 	}
 
@@ -237,7 +249,9 @@ public final class PDFDocument extends Device {
 	public void newPage() {
 		checkDevice();
 		NSAutoreleasePool pool = null;
-		if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+        if (!NSThread.isMainThread()) {
+            pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+        }
 		try {
 			if (pageStarted) {
 				OS.CGPDFContextEndPage(pdfContext);
@@ -245,7 +259,9 @@ public final class PDFDocument extends Device {
 			OS.CGPDFContextBeginPage(pdfContext, 0);
 			pageStarted = true;
 		} finally {
-			if (pool != null) pool.release();
+            if (pool != null) {
+                pool.release();
+            }
 		}
 	}
 
@@ -272,7 +288,9 @@ public final class PDFDocument extends Device {
 	 */
 	public void newPage(double widthInPoints, double heightInPoints) {
 		checkDevice();
-		if (widthInPoints <= 0 || heightInPoints <= 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (widthInPoints <= 0 || heightInPoints <= 0) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 
 		this.widthInPoints = widthInPoints;
 		this.heightInPoints = heightInPoints;
@@ -370,10 +388,14 @@ public final class PDFDocument extends Device {
 	@Override
 	public long internal_new_GC(GCData data) {
 		checkDevice();
-		if (isGCCreated) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (isGCCreated) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 
 		NSAutoreleasePool pool = null;
-		if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+        if (!NSThread.isMainThread()) {
+            pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+        }
 		try {
 			ensurePageStarted();
 
@@ -400,7 +422,9 @@ public final class PDFDocument extends Device {
 			isGCCreated = true;
 			return graphicsContext.id;
 		} finally {
-			if (pool != null) pool.release();
+            if (pool != null) {
+                pool.release();
+            }
 		}
 	}
 
@@ -422,16 +446,22 @@ public final class PDFDocument extends Device {
 	@Override
 	public void internal_dispose_GC(long hDC, GCData data) {
 		NSAutoreleasePool pool = null;
-		if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+        if (!NSThread.isMainThread()) {
+            pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+        }
 		try {
 			// Only restore the graphics state if it hasn't been restored yet by uncheckGC()
 			if (data != null && data.restoreContext) {
 				NSGraphicsContext.static_restoreGraphicsState();
 				data.restoreContext = false;
 			}
-			if (data != null) isGCCreated = false;
+            if (data != null) {
+                isGCCreated = false;
+            }
 		} finally {
-			if (pool != null) pool.release();
+            if (pool != null) {
+                pool.release();
+            }
 		}
 	}
 
@@ -451,7 +481,9 @@ public final class PDFDocument extends Device {
 	@Override
 	protected void destroy() {
 		NSAutoreleasePool pool = null;
-		if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+        if (!NSThread.isMainThread()) {
+            pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+        }
 		try {
 			if (pdfContext != 0) {
 				if (pageStarted) {
@@ -466,7 +498,9 @@ public final class PDFDocument extends Device {
 				graphicsContext = null;
 			}
 		} finally {
-			if (pool != null) pool.release();
+            if (pool != null) {
+                pool.release();
+            }
 		}
 	}
 }

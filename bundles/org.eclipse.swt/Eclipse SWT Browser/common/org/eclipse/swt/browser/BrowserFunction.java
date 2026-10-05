@@ -130,9 +130,15 @@ public BrowserFunction (Browser browser, String name, boolean top, String[] fram
 
 BrowserFunction (Browser browser, String name, boolean top, String[] frameNames, boolean create) {
 	super ();
-	if (browser == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (name == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (browser.isDisposed ()) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (browser == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (name == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (browser.isDisposed()) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	browser.checkWidget ();
 	this.browser = browser;
 	this.name = name;
@@ -147,7 +153,9 @@ BrowserFunction (Browser browser, String name, boolean top, String[] frameNames,
 		buffer.append (Integer.toHexString (b & 0xff));
 	}
 	token = buffer.toString ();
-	if (create) browser.webBrowser.createFunction (this);
+    if (create) {
+        browser.webBrowser.createFunction(this);
+    }
 }
 
 /**
@@ -163,8 +171,12 @@ public void dispose () {
 }
 
 void dispose (boolean remove) {
-	if (index < 0) return;
-	if (remove) browser.webBrowser.destroyFunction (this);
+    if (index < 0) {
+        return;
+    }
+    if (remove) {
+        browser.webBrowser.destroyFunction(this);
+    }
 	browser = null;
 	name = functionString = null;
 	index = -1;
@@ -201,7 +213,9 @@ void dispose (boolean remove) {
  * </ul>
  */
 public Object function (Object[] arguments) {
-	if (index < 0) SWT.error (SWT.ERROR_FUNCTION_DISPOSED);
+    if (index < 0) {
+        SWT.error(SWT.ERROR_FUNCTION_DISPOSED);
+    }
 	browser.checkWidget ();
 	return null;
 }
@@ -217,7 +231,9 @@ public Object function (Object[] arguments) {
  * </ul>
  */
 public Browser getBrowser () {
-	if (index < 0) SWT.error (SWT.ERROR_FUNCTION_DISPOSED);
+    if (index < 0) {
+        SWT.error(SWT.ERROR_FUNCTION_DISPOSED);
+    }
 	browser.checkWidget ();
 	return browser;
 }
@@ -233,7 +249,9 @@ public Browser getBrowser () {
  * </ul>
  */
 public String getName () {
-	if (index < 0) SWT.error (SWT.ERROR_FUNCTION_DISPOSED);
+    if (index < 0) {
+        SWT.error(SWT.ERROR_FUNCTION_DISPOSED);
+    }
 	browser.checkWidget ();
 	return name;
 }

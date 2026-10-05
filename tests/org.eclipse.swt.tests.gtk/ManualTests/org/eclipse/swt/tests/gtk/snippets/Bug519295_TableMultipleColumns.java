@@ -80,8 +80,9 @@ public class Bug519295_TableMultipleColumns {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 

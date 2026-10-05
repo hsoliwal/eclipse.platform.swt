@@ -79,8 +79,12 @@ public class Pattern extends Resource {
  */
 public Pattern(Device device, Image image) {
 	super(device);
-	if (image == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (image == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (image.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.device.checkGDIP();
 	this.image = image;
 	init();
@@ -167,10 +171,18 @@ public Pattern(Device device, float x1, float y1, float x2, float y2, Color colo
  */
 public Pattern(Device device, float x1, float y1, float x2, float y2, Color color1, int alpha1, Color color2, int alpha2) {
 	super(device);
-	if (color1 == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color1.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (color2 == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color2.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (color1 == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color1.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (color2 == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color2.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.baseX1 = x1;
 	this.baseX2 = x2;
 	this.baseY1 = y1;
@@ -242,7 +254,9 @@ public boolean isDisposed() {
  */
 @Override
 public String toString() {
-	if (isDisposed()) return "Pattern {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Pattern {*DISPOSED*}";
+    }
 	return "Pattern {" + zoomToHandle + "}";
 }
 
@@ -266,14 +280,20 @@ private class BasePatternHandle extends PatternHandle {
 		float y1 = Win32DPIUtils.pointToPixel(baseY1, zoom);
 		float x2 = Win32DPIUtils.pointToPixel(baseX2, zoom);
 		float y2 = Win32DPIUtils.pointToPixel(baseY2, zoom);
-		if (color1.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-		if (color2.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (color1.isDisposed()) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (color2.isDisposed()) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		device.checkGDIP();
 		int colorRef1 = color1.handle;
 		int foreColor = colorRefToArgb(colorRef1, alpha1);
 		if (x1 == x2 && y1 == y2) {
 			handle = Gdip.SolidBrush_new(foreColor);
-			if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (handle == 0) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 		} else {
 			int colorRef2 = color2.handle;
 			int backColor = colorRefToArgb(colorRef2, alpha2);
@@ -284,7 +304,9 @@ private class BasePatternHandle extends PatternHandle {
 			p2.X = x2;
 			p2.Y = y2;
 			handle = Gdip.LinearGradientBrush_new(p1, p2, foreColor, backColor);
-			if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (handle == 0) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 			if (alpha1 != 0xFF || alpha2 != 0xFF) {
 				int a = (int)((alpha1 & 0xFF) * 0.5f + (alpha2 & 0xFF) * 0.5f);
 				int r = (int)((colorRef1 & 0xFF) * 0.5f + (colorRef2 & 0xFF) * 0.5f);
@@ -326,7 +348,9 @@ private class ImagePatternHandle extends PatternHandle {
 	}
 
 	private void cleanupBitmap() {
-		if (gdipImage == null) return;
+        if (gdipImage == null) {
+            return;
+        }
 		Image.GdipImage tempGdipImage = gdipImage;
 		gdipImage = null;
 		tempGdipImage.destroy();

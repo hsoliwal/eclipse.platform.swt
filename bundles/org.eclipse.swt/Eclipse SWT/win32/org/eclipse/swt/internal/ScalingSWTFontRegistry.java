@@ -91,10 +91,12 @@ final class ScalingSWTFontRegistry implements SWTFontRegistry {
 				LOGFONT logFont = info.lfMessageFont;
 				hFont = OS.CreateFontIndirect(logFont);
 			}
-			if (hFont == 0)
-				hFont = OS.GetStockObject(OS.DEFAULT_GUI_FONT);
-			if (hFont == 0)
-				hFont = OS.GetStockObject(OS.SYSTEM_FONT);
+            if (hFont == 0) {
+                hFont = OS.GetStockObject(OS.DEFAULT_GUI_FONT);
+            }
+            if (hFont == 0) {
+                hFont = OS.GetStockObject(OS.SYSTEM_FONT);
+            }
 			return hFont;
 		}
 

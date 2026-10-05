@@ -51,8 +51,9 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 		"No exception thrown for parent == null");
 
 	int[] cases = {0, SWT.HORIZONTAL, SWT.VERTICAL};
-	for (int style : cases)
-		slider = new Slider(shell, style);
+    for (int style : cases) {
+        slider = new Slider(shell, style);
+    }
 }
 
 @Test

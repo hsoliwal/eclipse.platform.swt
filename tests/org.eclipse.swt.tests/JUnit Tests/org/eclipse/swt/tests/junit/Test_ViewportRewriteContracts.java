@@ -29,9 +29,15 @@ public class Test_ViewportRewriteContracts {
 
 	private static Class<?>[] types(Object[] arguments) {
 		return Arrays.stream(arguments).map(value -> {
-			if (value instanceof Integer) return int.class;
-			if (value instanceof Long) return long.class;
-			if (value instanceof Boolean) return boolean.class;
+            if (value instanceof Integer) {
+                return int.class;
+            }
+            if (value instanceof Long) {
+                return long.class;
+            }
+            if (value instanceof Boolean) {
+                return boolean.class;
+            }
 			return value.getClass();
 		}).toArray(Class<?>[]::new);
 	}
@@ -42,8 +48,12 @@ public class Test_ViewportRewriteContracts {
 		try {
 			return method.invoke(receiver, arguments);
 		} catch (InvocationTargetException exception) {
-			if (exception.getCause() instanceof Error error) throw error;
-			if (exception.getCause() instanceof Exception cause) throw cause;
+            if (exception.getCause() instanceof Error error) {
+                throw error;
+            }
+            if (exception.getCause() instanceof Exception cause) {
+                throw cause;
+            }
 			throw exception;
 		}
 	}
@@ -82,7 +92,9 @@ public class Test_ViewportRewriteContracts {
 			call(topology, "setChildCount", id, id + 1 == depth ? 0 : 1);
 		}
 		long expanded = stateBit("EXPANDED");
-		for (int id = depth - 1; id >= 0; id--) call(topology, "flag", id, expanded, true);
+        for (int id = depth - 1; id >= 0; id--) {
+            call(topology, "flag", id, expanded, true);
+        }
 		Object projection = construct("VirtualTreeVisibleProjection", topology);
 		assertEquals((long)depth, call(projection, "visibleRowCount"));
 		Object last = call(projection, "rowAt", (long)depth - 1);
@@ -123,7 +135,9 @@ public class Test_ViewportRewriteContracts {
 		Object topology = construct("VirtualTreeTopology");
 		call(topology, "setChildCount", -1, 17);
 		int[] coordinates = {1, 4, 10, 15};
-		for (int id = 0; id < coordinates.length; id++) call(topology, "bind", id, -1, coordinates[id]);
+        for (int id = 0; id < coordinates.length; id++) {
+            call(topology, "bind", id, -1, coordinates[id]);
+        }
 		Object projection = construct("VirtualTreeVisibleProjection", topology);
 		Random random = new Random(0x535754);
 		long expandedBit = stateBit("EXPANDED");
@@ -143,7 +157,9 @@ public class Test_ViewportRewriteContracts {
 				assertEquals(-1, call(row, "parentId"));
 				assertEquals(root, call(row, "childIndex"));
 				assertEquals(id < 0 ? -1 : id, call(row, "materializedId"));
-				if (id >= 0) assertEquals(index, call(projection, "visibleIndexOf", id));
+                if (id >= 0) {
+                    assertEquals(index, call(projection, "visibleIndexOf", id));
+                }
 				index++;
 				if (id >= 0 && expanded[id]) {
 					for (int child = 0; child < counts[id]; child++) {
@@ -163,7 +179,9 @@ public class Test_ViewportRewriteContracts {
 	public void virtualTableTextDirectionPreservesSparseItemsAndExplicitPinning() throws Exception {
 		Display display = Display.getCurrent();
 		boolean ownsDisplay = display == null;
-		if (ownsDisplay) display = new Display();
+        if (ownsDisplay) {
+            display = new Display();
+        }
 		try {
 			Shell shell = new Shell(display);
 			try {
@@ -190,7 +208,9 @@ public class Test_ViewportRewriteContracts {
 				shell.dispose();
 			}
 		} finally {
-			if (ownsDisplay) display.dispose();
+            if (ownsDisplay) {
+                display.dispose();
+            }
 		}
 	}
 
@@ -198,7 +218,9 @@ public class Test_ViewportRewriteContracts {
 	public void virtualColumnsPackAndMeasureListenerKeepExposedIdentity() {
 		Display display = Display.getCurrent();
 		boolean ownsDisplay = display == null;
-		if (ownsDisplay) display = new Display();
+        if (ownsDisplay) {
+            display = new Display();
+        }
 		try {
 			Shell shell = new Shell(display);
 			try {
@@ -226,7 +248,9 @@ public class Test_ViewportRewriteContracts {
 				shell.dispose();
 			}
 		} finally {
-			if (ownsDisplay) display.dispose();
+            if (ownsDisplay) {
+                display.dispose();
+            }
 		}
 	}
 	@Test

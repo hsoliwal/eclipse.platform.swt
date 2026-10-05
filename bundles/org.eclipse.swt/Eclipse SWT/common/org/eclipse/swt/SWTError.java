@@ -126,7 +126,9 @@ public Throwable getCause() {
  */
 @Override
 public String getMessage () {
-	if (throwable == null) return super.getMessage ();
+    if (throwable == null) {
+        return super.getMessage();
+    }
 	return super.getMessage () + " (" + throwable.toString () + ")"; //$NON-NLS-1$ //$NON-NLS-2$
 }
 

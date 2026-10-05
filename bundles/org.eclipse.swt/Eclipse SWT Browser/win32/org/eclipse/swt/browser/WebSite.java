@@ -225,8 +225,12 @@ protected int AddRef() {
 @Override
 protected int QueryInterface(long riid, long ppvObject) {
 	int result = super.QueryInterface(riid, ppvObject);
-	if (result == COM.S_OK) return result;
-	if (riid == 0 || ppvObject == 0) return COM.E_INVALIDARG;
+    if (result == COM.S_OK) {
+        return result;
+    }
+    if (riid == 0 || ppvObject == 0) {
+        return COM.E_INVALIDARG;
+    }
 	GUID guid = new GUID();
 	COM.MoveMemory(guid, riid, GUID.sizeof);
 	if (COM.IsEqualGUID(guid, COM.IIDIDocHostUIHandler)) {
@@ -281,7 +285,9 @@ int GetExternal(long ppDispatch) {
 int GetHostInfo(long pInfo) {
 	int info = IE.DOCHOSTUIFLAG_THEME | IE.DOCHOSTUIFLAG_ENABLE_REDIRECT_NOTIFICATION | IE.DOCHOSTUIFLAG_DPI_AWARE;
 	IE browser = (IE)((Browser)getParent().getParent()).webBrowser;
-	if ((browser.style & SWT.BORDER) == 0) info |= IE.DOCHOSTUIFLAG_NO3DOUTERBORDER;
+    if ((browser.style & SWT.BORDER) == 0) {
+        info |= IE.DOCHOSTUIFLAG_NO3DOUTERBORDER;
+    }
 	DOCHOSTUIINFO uiInfo = new DOCHOSTUIINFO ();
 	OS.MoveMemory(uiInfo, pInfo, DOCHOSTUIINFO.sizeof);
 	uiInfo.dwFlags = info;
@@ -325,7 +331,9 @@ int ShowContextMenu(int dwID, long ppt, long pcmdtReserved, long pdispReserved) 
 	event.x = pt.x;
 	event.y = pt.y;
 	browser.notifyListeners(SWT.MenuDetect, event);
-	if (!event.doit) return COM.S_OK;
+    if (!event.doit) {
+        return COM.S_OK;
+    }
 	Menu menu = browser.getMenu();
 	if (menu != null && !menu.isDisposed ()) {
 		if (pt.x != event.x || pt.y != event.y) {
@@ -357,7 +365,9 @@ int TranslateAccelerator(long lpMsg, long pguidCmdGroup, int nCmdID) {
 		if (hAccel != 0) {
 			MSG msg = new MSG();
 			OS.MoveMemory(msg, lpMsg, MSG.sizeof);
-			if (OS.TranslateAccelerator(hwnd, hAccel, msg) != 0) return COM.S_OK;
+            if (OS.TranslateAccelerator(hwnd, hAccel, msg) != 0) {
+                return COM.S_OK;
+            }
 		}
 	}
 	/*
@@ -383,7 +393,9 @@ int TranslateAccelerator(long lpMsg, long pguidCmdGroup, int nCmdID) {
 				if (pVarResult != null) {
 					if (pVarResult.getType() == OLE.VT_BSTR) {
 						String url = pVarResult.getString();
-						if (url.equals(IE.ABOUT_BLANK)) result = COM.S_OK;
+                        if (url.equals(IE.ABOUT_BLANK)) {
+                            result = COM.S_OK;
+                        }
 					}
 					pVarResult.dispose();
 				}
@@ -456,7 +468,9 @@ int TranslateAccelerator(long lpMsg, long pguidCmdGroup, int nCmdID) {
 									if ((OS.GetKeyState (OS.VK_SHIFT) < 0) == ((state & 0x1) != 0) &&
 										(OS.GetKeyState (OS.VK_CONTROL) < 0) == ((state & 0x2) != 0) &&
 										(OS.GetKeyState (OS.VK_MENU) < 0) == ((state & 0x4) != 0)) {
-											if ((state & 0x7) != 0) isAccent = true;
+                                        if ((state & 0x7) != 0) {
+                                            isAccent = true;
+                                        }
 											break;
 									}
 								}
@@ -466,7 +480,9 @@ int TranslateAccelerator(long lpMsg, long pguidCmdGroup, int nCmdID) {
 					break;
 				}
 			}
-			if (isAccent) result = COM.S_OK;
+            if (isAccent) {
+                result = COM.S_OK;
+            }
 		}
 	}
 	return result;
@@ -501,7 +517,9 @@ int ShowHelp(long hwnd, long pszHelpFile, int uCommand, int dwData, long pt, lon
 			control.notifyListeners(SWT.Help, event);
 			break;
 		}
-		if (control == shell) break;
+        if (control == shell) {
+            break;
+        }
 		control = control.getParent();
 	} while (true);
 	return COM.S_OK;
@@ -510,7 +528,9 @@ int ShowHelp(long hwnd, long pszHelpFile, int uCommand, int dwData, long pt, lon
 /* IServiceProvider */
 
 int QueryService(long guidService, long riid, long ppvObject) {
-	if (riid == 0 || ppvObject == 0) return COM.E_INVALIDARG;
+    if (riid == 0 || ppvObject == 0) {
+        return COM.E_INVALIDARG;
+    }
 	GUID guid = new GUID();
 	COM.MoveMemory(guid, riid, GUID.sizeof);
 	if (COM.IsEqualGUID(guid, COM.IIDIInternetSecurityManager)) {
@@ -565,7 +585,9 @@ int ProcessUrlAction(long pwszUrl, int dwAction, long pPolicy, int cbPolicy, lon
 	if (dwAction == IE.URLACTION_FEATURE_ZONE_ELEVATION) {
 		IE ie = (IE)((Browser)getParent().getParent()).webBrowser;
 		if (ie.auto != null && ie._getUrl().startsWith(IE.ABOUT_BLANK) && !ie.untrustedText) {
-			if (cbPolicy >= 4) OS.MoveMemory(pPolicy, new int[] {IE.URLPOLICY_ALLOW}, 4);
+            if (cbPolicy >= 4) {
+                OS.MoveMemory(pPolicy, new int[]{IE.URLPOLICY_ALLOW}, 4);
+            }
 			return COM.S_OK;
 		}
 	}
@@ -597,29 +619,35 @@ int ProcessUrlAction(long pwszUrl, int dwAction, long pPolicy, int cbPolicy, lon
 		policy = browser.jsEnabled ? IE.URLPOLICY_ALLOW : IE.URLPOLICY_DISALLOW;
 	}
 
-	if (policy == IE.INET_E_DEFAULT_ACTION) return IE.INET_E_DEFAULT_ACTION;
-	if (cbPolicy >= 4) OS.MoveMemory(pPolicy, new int[] {policy}, 4);
+    if (policy == IE.INET_E_DEFAULT_ACTION) {
+        return IE.INET_E_DEFAULT_ACTION;
+    }
+    if (cbPolicy >= 4) {
+        OS.MoveMemory(pPolicy, new int[]{policy}, 4);
+    }
 	return policy == IE.URLPOLICY_ALLOW ? COM.S_OK : COM.S_FALSE;
 }
 
 boolean canExecuteApplets () {
-	/*
-	* Executing an applet in embedded IE will crash if IE's Java plug-in
-	* launches its jre in IE's process, because this new jre conflicts
-	* with the one running eclipse.  These cases need to be avoided by
-	* vetoing the running of applets.
-	*
-	* However as of Sun jre 1.6u10, applets can be launched in a separate
-	* process, which avoids the conflict with the jre running eclipse.
-	* Therefore if this condition is detected, and if the required jar
-	* libraries are available, then applets can be executed.
-	*/
+    /*
+    * Executing an applet in embedded IE will crash if IE's Java plug-in
+    * launches its jre in IE's process, because this new jre conflicts
+    * with the one running eclipse.  These cases need to be avoided by
+    * vetoing the running of applets.
+    *
+    * However as of Sun jre 1.6u10, applets can be launched in a separate
+    * process, which avoids the conflict with the jre running eclipse.
+    * Therefore if this condition is detected, and if the required jar
+    * libraries are available, then applets can be executed.
+    */
 
-	/*
-	* executing applets with IE6 embedded can crash, so do not
-	* attempt this if the version is less than IE7
-	*/
-	if (IE.IEVersion < 7) return false;
+    /*
+    * executing applets with IE6 embedded can crash, so do not
+    * attempt this if the version is less than IE7
+    */
+    if (IE.IEVersion < 7) {
+        return false;
+    }
 
 	if (canExecuteApplets == null) {
 		WebBrowser webBrowser = ((Browser)getParent ().getParent ()).webBrowser;
@@ -665,7 +693,9 @@ int Exec(long pguidCmdGroup, int nCmdID, int nCmdExecOpt, long pvaIn, long pvaOu
 		* If a javascript error occurred then suppress IE's default script error dialog.
 		*/
 		if (COM.IsEqualGUID(guid, COM.CGID_DocHostCommandHandler)) {
-			if (nCmdID == OLECMDID_SHOWSCRIPTERROR) return COM.S_OK;
+            if (nCmdID == OLECMDID_SHOWSCRIPTERROR) {
+                return COM.S_OK;
+            }
 		}
 
 		/*
@@ -691,7 +721,9 @@ int Authenticate (long hwnd, long szUsername, long szPassword) {
 		AuthenticationEvent event = new AuthenticationEvent (browser.browser);
 		event.location = browser.lastNavigateURL;
 		authenticationListener.authenticate (event);
-		if (!event.doit) return COM.E_ACCESSDENIED;
+        if (!event.doit) {
+            return COM.E_ACCESSDENIED;
+        }
 		if (event.user != null && event.password != null) {
 			TCHAR user = new TCHAR (event.user, true);
 			int size = user.length () * TCHAR.sizeof;
@@ -912,9 +944,13 @@ Variant convertToJS (Object value) {
 		IE browser = (IE)((Browser)getParent ().getParent ()).webBrowser;
 		OleAutomation auto = browser.auto;
 		int[] rgdispid = auto.getIDsOfNames (new String[] {"Document"}); //$NON-NLS-1$
-		if (rgdispid == null) return new Variant ();
+        if (rgdispid == null) {
+            return new Variant();
+        }
 		Variant pVarResult = auto.getProperty (rgdispid[0]);
-		if (pVarResult == null) return new Variant ();
+        if (pVarResult == null) {
+            return new Variant();
+        }
 		if (pVarResult.getType () == COM.VT_EMPTY) {
 			pVarResult.dispose ();
 			return new Variant ();
@@ -930,7 +966,9 @@ Variant convertToJS (Object value) {
 		}
 		pVarResult = document.getProperty (rgdispid[0]);
 		if (pVarResult == null || pVarResult.getType () == COM.VT_EMPTY) {
-			if (pVarResult != null) pVarResult.dispose ();
+            if (pVarResult != null) {
+                pVarResult.dispose();
+            }
 			document.dispose ();
 			return new Variant ();
 		}
@@ -950,7 +988,9 @@ Variant convertToJS (Object value) {
 		long[] result = new long[1];
 		int rc = arrayTypeDispatch.QueryInterface (COM.IIDIDispatchEx, result);
 		arrayType.dispose ();
-		if (rc != COM.S_OK) return new Variant ();
+        if (rc != COM.S_OK) {
+            return new Variant();
+        }
 
 		IDispatchEx arrayTypeDispatchEx = new IDispatchEx (result[0]);
 		result[0] = 0;

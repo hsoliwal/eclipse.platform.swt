@@ -67,7 +67,9 @@ public abstract class SegmentedPaintSession extends BasicPaintSession {
 	@Override
 	public void endSession() {
 		getPaintSurface().clearRubberbandSelection();
-		if (previousFigure != null) getPaintSurface().drawFigure(previousFigure);
+        if (previousFigure != null) {
+            getPaintSurface().drawFigure(previousFigure);
+        }
 	}
 
 	/**
@@ -77,7 +79,9 @@ public abstract class SegmentedPaintSession extends BasicPaintSession {
 	@Override
 	public void resetSession() {
 		getPaintSurface().clearRubberbandSelection();
-		if (previousFigure != null) getPaintSurface().drawFigure(previousFigure);
+        if (previousFigure != null) {
+            getPaintSurface().drawFigure(previousFigure);
+        }
 
 		getPaintSurface().setStatusMessage(PaintExample.getResourceString(
 			"session.SegmentedInteractivePaint.message.anchorMode"));
@@ -93,7 +97,9 @@ public abstract class SegmentedPaintSession extends BasicPaintSession {
 	 */
 	@Override
 	public void mouseDown(MouseEvent event) {
-		if (event.button != 1) return;
+        if (event.button != 1) {
+            return;
+        }
 
 		getPaintSurface().setStatusMessage(PaintExample.getResourceString(
 			"session.SegmentedInteractivePaint.message.interactiveMode"));
@@ -101,7 +107,9 @@ public abstract class SegmentedPaintSession extends BasicPaintSession {
 
 		if (controlPoints.size() > 0) {
 			final Point lastPoint = controlPoints.get(controlPoints.size() - 1);
-			if (lastPoint.x == event.x || lastPoint.y == event.y) return; // spurious event
+            if (lastPoint.x == event.x || lastPoint.y == event.y) {
+                return;
+            } // spurious event
 		}
 		controlPoints.add(new Point(event.x, event.y));
 	}
@@ -113,7 +121,9 @@ public abstract class SegmentedPaintSession extends BasicPaintSession {
 	 */
 	@Override
 	public void mouseDoubleClick(MouseEvent event) {
-		if (event.button != 1) return;
+        if (event.button != 1) {
+            return;
+        }
 		if (controlPoints.size() >= 2) {
 			getPaintSurface().clearRubberbandSelection();
 			previousFigure = createFigure(

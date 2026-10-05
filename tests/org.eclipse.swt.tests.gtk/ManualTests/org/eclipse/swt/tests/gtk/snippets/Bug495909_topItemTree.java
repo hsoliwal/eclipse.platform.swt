@@ -30,7 +30,9 @@ public static void main (String [] args) {
 	Display display = new Display ();
 	Shell shell = new Shell (display);
 	final Tree tree = new Tree (shell, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
-	for (int i=0; i<128; i++) new TreeItem (tree, 0).setText("Item " + i);
+    for (int i = 0; i < 128; i++) {
+        new TreeItem(tree, 0).setText("Item " + i);
+    }
 	tree.setTopItem(tree.getItem(40));
 	System.out.println(tree.getTopItem().getText());
 	Rectangle clientArea = shell.getClientArea ();
@@ -46,7 +48,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

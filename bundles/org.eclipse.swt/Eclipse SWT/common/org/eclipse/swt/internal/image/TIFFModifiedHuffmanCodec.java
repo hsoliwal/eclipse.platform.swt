@@ -134,7 +134,9 @@ boolean decodeRow() {
 	int n = 0;
 	while (n < rowSize) {
 		int runLength = decodeRunLength();
-		if (runLength < 0) return false;
+        if (runLength < 0) {
+            return false;
+        }
 		n += runLength;
 		setNextBits(isWhite ? whiteValue : blackValue, runLength);
 		isWhite = !isWhite;
@@ -156,20 +158,28 @@ int decodeRunLength() {
 					found = true;
 					partialRun = element[1];
 					if (partialRun == -1) {
-						/* Stop when reaching final EOL on last byte */
-						if (byteOffsetSrc == src.length - 1) return -1;
+                        /* Stop when reaching final EOL on last byte */
+                        if (byteOffsetSrc == src.length - 1) {
+                            return -1;
+                        }
 						/* Group 3 starts each row with an EOL - ignore it */
 					} else {
 						runLength += partialRun;
-						if (partialRun < 64) return runLength;
+                        if (partialRun < 64) {
+                            return runLength;
+                        }
 					}
 					break;
 				}
 			}
-			if (found) break;
+            if (found) {
+                break;
+            }
 			code = code << 1 | getNextBit();
 		}
-		if (!found) SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (!found) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 	}
 }
 

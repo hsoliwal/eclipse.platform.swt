@@ -36,7 +36,9 @@ public static long convertSurface(Image image) {
 		Rectangle bounds = image.getBounds();
 		int format = Cairo.cairo_surface_get_content(newSurface) == Cairo.CAIRO_CONTENT_COLOR ? Cairo.CAIRO_FORMAT_RGB24 : Cairo.CAIRO_FORMAT_ARGB32;
 		newSurface = Cairo.cairo_image_surface_create(format, bounds.width, bounds.height);
-		if (newSurface == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (newSurface == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		//retain device scale set in the original surface
 		double sx[] = new double[1];
 		double sy[] = new double[1];
@@ -46,7 +48,9 @@ public static long convertSurface(Image image) {
 		}
 		Cairo.cairo_surface_set_device_scale(newSurface, sx[0], sy[0]);
 		long cairo = Cairo.cairo_create(newSurface);
-		if (cairo == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (cairo == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		Cairo.cairo_set_operator(cairo, Cairo.CAIRO_OPERATOR_SOURCE);
 		Cairo.cairo_set_source_surface (cairo, image.surface, 0, 0);
 		Cairo.cairo_paint (cairo);
@@ -63,7 +67,9 @@ public static long createPixbuf(long surface) {
 	int height = Cairo.cairo_image_surface_get_height(surface);
 	boolean hasAlpha = format == Cairo.CAIRO_FORMAT_ARGB32;
 	long pixbuf = GDK.gdk_pixbuf_new (GDK.GDK_COLORSPACE_RGB, hasAlpha, 8, width, height);
-	if (pixbuf == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (pixbuf == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	int stride = GDK.gdk_pixbuf_get_rowstride (pixbuf);
 	long pixels = GDK.gdk_pixbuf_get_pixels (pixbuf);
 	int oa, or, og, ob;
@@ -131,7 +137,9 @@ public static long createPixbuf(Image image) {
 	int height = Cairo.cairo_image_surface_get_height(surface);
 	boolean hasAlpha = format == Cairo.CAIRO_FORMAT_ARGB32;
 	long pixbuf = GDK.gdk_pixbuf_new (GDK.GDK_COLORSPACE_RGB, hasAlpha, 8, width, height);
-	if (pixbuf == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (pixbuf == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	int stride = GDK.gdk_pixbuf_get_rowstride (pixbuf);
 	long pixels = GDK.gdk_pixbuf_get_pixels (pixbuf);
 	int oa, or, og, ob;
@@ -189,7 +197,9 @@ public int add (Image image) {
 				surfaces [index] = 0;
 			}
 		}
-		if (images [index] == null) break;
+        if (images [index] == null) {
+            break;
+        }
 		index++;
 	}
 	if (index == images.length) {
@@ -205,10 +215,14 @@ public int add (Image image) {
 }
 
 public void dispose () {
-	if (surfaces == null) return;
+    if (surfaces == null) {
+        return;
+    }
 	for (int index = 0; index < surfaces.length; index++) {
 		long surface = surfaces[index];
-		if (surface != 0) Cairo.cairo_surface_destroy(surface);
+        if (surface != 0) {
+            Cairo.cairo_surface_destroy(surface);
+        }
 	}
 
 	images = null;
@@ -224,17 +238,25 @@ public long getSurface(int index) {
 }
 
 public int indexOf (Image image) {
-	if (image == null) return -1;
+    if (image == null) {
+        return -1;
+    }
 	for (int index=0; index<images.length; index++) {
-		if (image == images [index]) return index;
+        if (image == images [index]) {
+            return index;
+        }
 	}
 	return -1;
 }
 
 public int indexOf (long pixbuf) {
-	if (pixbuf == 0) return -1;
+    if (pixbuf == 0) {
+        return -1;
+    }
 	for (int index=0; index<images.length; index++) {
-		if (pixbuf == surfaces [index]) return index;
+        if (pixbuf == surfaces [index]) {
+            return index;
+        }
 	}
 	return -1;
 }
@@ -245,19 +267,27 @@ public boolean isDisposed () {
 
 public void put (int index, Image image) {
 	int count = images.length;
-	if (!(0 <= index && index < count)) return;
-	if (images [index] == image) return;
+    if (!(0 <= index && index < count)) {
+        return;
+    }
+    if (images [index] == image) {
+        return;
+    }
 	if (image != null) {
 		set (index, image);
 	} else {
 		images [index] = null;
-		if (surfaces [index] != 0) Cairo.cairo_surface_destroy (surfaces [index]);
+        if (surfaces [index] != 0) {
+            Cairo.cairo_surface_destroy(surfaces [index]);
+        }
 		surfaces [index] = 0;
 	}
 }
 
 public void remove(Image image) {
-	if (image == null) return;
+    if (image == null) {
+        return;
+    }
 	for (int index = 0; index < images.length; index++) {
 		if (image == images[index]) {
 			images [index] = null;
@@ -315,10 +345,14 @@ void set (int index, Image image) {
 long scaleSurface(Image image, int width, int height) {
 	int format = Cairo.cairo_surface_get_content(image.surface) == Cairo.CAIRO_CONTENT_COLOR ? Cairo.CAIRO_FORMAT_RGB24 : Cairo.CAIRO_FORMAT_ARGB32;
 	long scaledSurface = Cairo.cairo_image_surface_create(format, width, height);
-	if (scaledSurface == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (scaledSurface == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 
 	long cairo = Cairo.cairo_create(scaledSurface);
-	if (cairo == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (cairo == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 
 	int w = Cairo.cairo_image_surface_get_width(image.surface);
 	int h = Cairo.cairo_image_surface_get_height(image.surface);

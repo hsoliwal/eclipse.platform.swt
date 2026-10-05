@@ -32,7 +32,9 @@ public class Bug97723_TreeHoverParent {
 		shell.open();
 		shell.addListener(SWT.MouseHover, event -> System.out.println("hover"));
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

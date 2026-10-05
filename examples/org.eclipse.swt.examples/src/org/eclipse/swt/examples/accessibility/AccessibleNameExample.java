@@ -47,7 +47,9 @@ public class AccessibleNameExample {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		image.dispose();
 		display.dispose();

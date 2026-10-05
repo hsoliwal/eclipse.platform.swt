@@ -109,12 +109,15 @@ public void test_ConstructorLorg_eclipse_swt_graphics_Drawable() {
 			gc1 = new GC(image);
 			gc2 = new GC(image);
 		} finally {
-			if (image != null)
-				image.dispose();
-			if (gc1 != null)
-				gc1.dispose();
-			if (gc2 != null)
-				gc2.dispose();
+            if (image != null) {
+                image.dispose();
+            }
+            if (gc1 != null) {
+                gc1.dispose();
+            }
+            if (gc2 != null) {
+                gc2.dispose();
+            }
 		}
 	}, "No exception thrown for more than one GC on one image");
 	assertSWTProblem("Incorrect exception thrown for more than one GC on one image", SWT.ERROR_INVALID_ARGUMENT, e1);
@@ -134,12 +137,15 @@ public void test_ConstructorLorg_eclipse_swt_graphics_DrawableI() {
 			new GC(image, SWT.RIGHT_TO_LEFT);
 			new GC(image, SWT.LEFT_TO_RIGHT);
 		} finally {
-			if (image != null)
-				image.dispose();
-			if (gc1 != null)
-				gc1.dispose();
-			if (gc2 != null)
-				gc2.dispose();
+            if (image != null) {
+                image.dispose();
+            }
+            if (gc1 != null) {
+                gc1.dispose();
+            }
+            if (gc2 != null) {
+                gc2.dispose();
+            }
 		}
 	}, "No exception thrown for more than one GC on one image");
 	assertSWTProblem("Incorrect exception thrown for more than one GC on one image", SWT.ERROR_INVALID_ARGUMENT, e1);
@@ -345,9 +351,13 @@ private TestImages createTestImages(Display display) {
 	ImageData data = new ImageData(30,30, 8, paletteData);
 	for (int y = 0; y < data.height; y++) {
 		for (int x = 0; x < data.width; x++) {
-			if (x > y) data.setPixel(x, y, paletteData.getPixel(c1.getRGB()));
-			else if (x < y) data.setPixel(x, y, paletteData.getPixel(c2.getRGB()));
-			else data.setPixel(x, y, paletteData.getPixel(c3.getRGB()));
+            if (x > y) {
+                data.setPixel(x, y, paletteData.getPixel(c1.getRGB()));
+            } else if (x < y) {
+                data.setPixel(x, y, paletteData.getPixel(c2.getRGB()));
+            } else {
+                data.setPixel(x, y, paletteData.getPixel(c3.getRGB()));
+            }
 		}
 	}
 	Image image = new Image(display, data);
@@ -719,12 +729,16 @@ public void test_fillGradientRectangle_doesNotChangeLaterDrawing() {
 private ImageData drawGradientAndRectangle(boolean gradientFirst) {
 	Image image = new Image(display, 40, 40);
 	try {
-		if (gradientFirst) drawGradient(image);
+        if (gradientFirst) {
+            drawGradient(image);
+        }
 		GC rectangleGC = new GC(image);
 		rectangleGC.setBackground(display.getSystemColor(SWT.COLOR_RED));
 		rectangleGC.fillRectangle(10, 10, 5, 5);
 		rectangleGC.dispose();
-		if (!gradientFirst) drawGradient(image);
+        if (!gradientFirst) {
+            drawGradient(image);
+        }
 		return image.getImageData(100);
 	} finally {
 		image.dispose();

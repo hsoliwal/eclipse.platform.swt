@@ -100,7 +100,9 @@ public GraphicsExample(final Composite parent) {
 }
 
 boolean checkAdvancedGraphics() {
-	if (advanceGraphicsInit) return advanceGraphics;
+    if (advanceGraphicsInit) {
+        return advanceGraphics;
+    }
 	advanceGraphicsInit = true;
 	Display display = parent.getDisplay();
 	try {
@@ -108,12 +110,16 @@ boolean checkAdvancedGraphics() {
 		path.dispose();
 	} catch (SWTException e) {
 		Shell shell = display.getActiveShell(), newShell = null;
-		if (shell == null) shell = newShell = new Shell(display);
+        if (shell == null) {
+            shell = newShell = new Shell(display);
+        }
 		MessageBox dialog = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
 		dialog.setText(RESOURCE_BUNDLE.getString("Warning")); //$NON-NLS-1$
 		dialog.setMessage(RESOURCE_BUNDLE.getString("LibNotFound")); //$NON-NLS-1$
 		dialog.open();
-		if (newShell != null) newShell.dispose();
+        if (newShell != null) {
+            newShell.dispose();
+        }
 		return false;
 	}
 	return advanceGraphics = true;
@@ -204,7 +210,9 @@ void createControls(final Composite parent) {
 
 void createCanvas(Composite parent) {
 	int style = SWT.NO_BACKGROUND;
-	if (dbItem.getSelection()) style |= SWT.DOUBLE_BUFFERED;
+    if (dbItem.getSelection()) {
+        style |= SWT.DOUBLE_BUFFERED;
+    }
 	canvas = new Canvas(parent, style);
 	canvas.addListener(SWT.Paint, event -> {
 		GC gc = event.gc;
@@ -227,15 +235,23 @@ void createCanvas(Composite parent) {
 		}
 		gc.fillRectangle(rect);
 		GraphicsTab tab = getTab();
-		if (tab != null) tab.paint(gc, rect.width, rect.height);
-		if (pattern != null) pattern.dispose();
+        if (tab != null) {
+            tab.paint(gc, rect.width, rect.height);
+        }
+        if (pattern != null) {
+            pattern.dispose();
+        }
 	});
 }
 
 void recreateCanvas() {
-	if (dbItem.getSelection() == ((canvas.getStyle() & SWT.DOUBLE_BUFFERED) != 0)) return;
+    if (dbItem.getSelection() == ((canvas.getStyle() & SWT.DOUBLE_BUFFERED) != 0)) {
+        return;
+    }
 	Object data = canvas.getLayoutData();
-	if (canvas != null) canvas.dispose();
+    if (canvas != null) {
+        canvas.dispose();
+    }
 	createCanvas(parent);
 	canvas.setLayoutData(data);
 	parent.layout(true, true);
@@ -262,8 +278,9 @@ void createToolBar(final Composite parent) {
 
 	back.addListener(SWT.Selection, event -> {
 		int index = tabs_in_order.indexOf(tab) - 1;
-		if (index < 0)
-			index = tabs_in_order.size() - 1;
+        if (index < 0) {
+            index = tabs_in_order.size() - 1;
+        }
 		setTab(tabs_in_order.get(index));
 	});
 
@@ -286,7 +303,9 @@ void createToolBar(final Composite parent) {
 	backMenu = colorMenu.createMenu(parent, gb -> {
 		background = gb;
 		backItem.setImage(gb.getThumbNail());
-		if (canvas != null) canvas.redraw();
+        if (canvas != null) {
+            canvas.redraw();
+        }
 	});
 
 	// initialize the background to the first item in the menu
@@ -424,7 +443,9 @@ void createTabList(Composite parent) {
 		TreeItem item = (TreeItem)event.item;
 		if (item != null) {
 			GraphicsTab gt = (GraphicsTab)item.getData();
-			if (gt == tab) return;
+            if (gt == tab) {
+                return;
+            }
 			setTab((GraphicsTab)item.getData());
 		}
 	});
@@ -542,9 +563,13 @@ public void dispose() {
 
 TreeItem findItemByData(TreeItem[] items, Object data) {
 	for (TreeItem item : items) {
-		if (item.getData() == data) return item;
+        if (item.getData() == data) {
+            return item;
+        }
 		item = findItemByData(item.getItems(), data);
-		if (item != null) return item;
+        if (item != null) {
+            return item;
+        }
 	}
 	return null;
 }
@@ -573,8 +598,9 @@ static String getResourceString(String key) {
 
 static Image loadImage(Device device, Class<GraphicsExample> clazz, String string) {
 	try (InputStream stream = clazz.getResourceAsStream(string)) {
-		if (stream == null)
-			return null;
+        if (stream == null) {
+            return null;
+        }
 		return new Image(device, stream);
 	} catch (SWTException ex) {
 	} catch (IOException ex) {
@@ -584,7 +610,9 @@ static Image loadImage(Device device, Class<GraphicsExample> clazz, String strin
 
 Image loadImage(Device device, String name) {
 	Image image = loadImage(device, GraphicsExample.class, name);
-	if (image != null) resources.add(image);
+    if (image != null) {
+        resources.add(image);
+    }
 	return image;
 }
 
@@ -627,7 +655,9 @@ public void setTab(GraphicsTab tab) {
 	for (Control control: children) {
 		control.dispose();
 	}
-	if (this.tab != null) this.tab.dispose();
+    if (this.tab != null) {
+        this.tab.dispose();
+    }
 	this.tab = tab;
 	if (tab != null) {
 		setDoubleBuffered(tab.getDoubleBuffered());
@@ -648,7 +678,9 @@ public void setTab(GraphicsTab tab) {
 		TreeItem[] selection = tabList.getSelection();
 		if (selection.length == 0 || selection[0].getData() != tab) {
 			TreeItem item = findItemByData(tabList.getItems(), tab);
-			if (item != null) tabList.setSelection(new TreeItem[]{item});
+            if (item != null) {
+                tabList.setSelection(new TreeItem[]{item});
+            }
 		}
 	}
 	canvas.redraw();
@@ -662,7 +694,9 @@ void startAnimationTimer() {
 	display.timerExec(TIMER, new Runnable() {
 		@Override
 		public void run() {
-			if (canvas.isDisposed()) return;
+            if (canvas.isDisposed()) {
+                return;
+            }
 			int timeout = TIMER;
 			GraphicsTab tab = getTab();
 			if (tab instanceof AnimatedGraphicsTab animTab) {
@@ -683,8 +717,9 @@ public static void main(String[] args) {
 	Display display = new Display();
 	Shell shell = new GraphicsExample().open(display);
 	while (shell != null && !shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

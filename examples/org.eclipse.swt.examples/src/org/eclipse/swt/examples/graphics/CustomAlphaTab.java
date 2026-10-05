@@ -127,7 +127,9 @@ public void next(int width, int height) {
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	Pattern pattern = null;
@@ -166,6 +168,8 @@ public void paint(GC gc, int width, int height) {
 	gc.fillPath(path);
 	path.dispose();
 
-	if (pattern != null) pattern.dispose();
+    if (pattern != null) {
+        pattern.dispose();
+    }
 }
 }

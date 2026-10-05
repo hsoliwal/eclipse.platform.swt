@@ -108,11 +108,15 @@ public class WobbleTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (baseline == null) {
 			Image loaded = example.loadImage(gc.getDevice(), "bu.jpg"); //$NON-NLS-1$
-			if (loaded == null) return;
+            if (loaded == null) {
+                return;
+            }
 			ImageData src = loaded.getImageData();
 
 			imgWidth = src.width;

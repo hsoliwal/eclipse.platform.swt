@@ -78,7 +78,9 @@ public void getBestMove(int[] point) {
 
 /* Given an expanded representation of the board, format internal compact mode */
 static void convert(byte[][] board, byte[] g) {
-	for (int i = 0; i < board.length; i++) System.arraycopy(board[i], 0, g, i * 8, 8);
+    for (int i = 0; i < board.length; i++) {
+        System.arraycopy(board[i], 0, g, i * 8, 8);
+    }
 }
 /* Update given compact model based on player move in natural coordinates */
 static void set(byte[] g, int x, int y, byte type) {
@@ -99,7 +101,9 @@ static void convert(int index, /*out [0] x [1] y */int[] point) {
  * 5 6 7 
  */
 static int getNeighbourIndex(byte[] g, int index, int neighbour) {
-	if (index < 0 || index >= g.length) return -1;
+    if (index < 0 || index >= g.length) {
+        return -1;
+    }
 	int result = -1;
 	switch (neighbour) {
 		case 0: result = index < 8 || index % 8 == 0 ? -1 : index - 9; break;
@@ -128,7 +132,9 @@ static void play(byte[] g, int index, byte type) {
 			nIndex = getNeighbourIndex(g, nIndex, neighbour);			
 		}
 		if (nReversi > 0 && nIndex != -1 && g[nIndex] == type) {
-			for (int i = 0; i < nReversi; i++) g[reversiIndeces[i]] = type;
+            for (int i = 0; i < nReversi; i++) {
+                g[reversiIndeces[i]] = type;
+            }
 		}
 	}
 	g[index] = type;
@@ -148,11 +154,17 @@ static int eval(byte[] g) {
 			cntBlack++;
 			cntBlackWallAdvantage += gameWallWeight[i];
 		}
-		else if (g[i] == EMPTY) cntEmpty++;
+		else if (g[i] == EMPTY) {
+            cntEmpty++;
+        }
 	}
 	if (cntEmpty == 0) {
-		if (cntWhite > cntBlack) return Integer.MAX_VALUE; /* White wins */
-		if (cntWhite < cntBlack) return Integer.MIN_VALUE; /* Black wins */
+        if (cntWhite > cntBlack) {
+            return Integer.MAX_VALUE;
+        } /* White wins */
+        if (cntWhite < cntBlack) {
+            return Integer.MIN_VALUE;
+        } /* Black wins */
 		return 0; /* Stalemate */
 	}
 	return cntWhite + cntWhiteWallAdvantage - cntBlack - cntBlackWallAdvantage;
@@ -192,14 +204,24 @@ static void initPawnBorders(byte[] g, int[] gameWallWeight) {
 		for (int n = 0; n < 8; n++) {
 			int nIndex = getNeighbourIndex(g, i, n);
 			nTypes[n] = nIndex != -1 ? g[nIndex] : WALL;
-			if (nTypes[n] == WALL) nWalls++;
+            if (nTypes[n] == WALL) {
+                nWalls++;
+            }
 		}
 		int score = nWalls;
 		if (nWalls > 0) {
-			if (nTypes[0] == WALL || nTypes[7] == WALL) nAxis++;
-			if (nTypes[1] == WALL || nTypes[6] == WALL) nAxis++;
-			if (nTypes[2] == WALL || nTypes[5] == WALL) nAxis++;
-			if (nTypes[4] == WALL || nTypes[3] == WALL) nAxis++;
+            if (nTypes[0] == WALL || nTypes[7] == WALL) {
+                nAxis++;
+            }
+            if (nTypes[1] == WALL || nTypes[6] == WALL) {
+                nAxis++;
+            }
+            if (nTypes[2] == WALL || nTypes[5] == WALL) {
+                nAxis++;
+            }
+            if (nTypes[4] == WALL || nTypes[3] == WALL) {
+                nAxis++;
+            }
 			switch (nAxis) {
 				case 4: switch (nWalls) { case 4: score = 16; break; case 5: score = 14; break; case 6: score = 9; case 7: score = 6; break; case 8: score = 0; break;} break;
 				case 3: switch (nWalls) { case 3: score = 9; break; case 4: score = 8;} break;

@@ -50,12 +50,16 @@ static ClipboardProxy _getInstance(final Display display) {
 		throw new UnsupportedOperationException("Illegal attempt to use GTK3 ClipboardProxy on GTK4");
 	}
 	ClipboardProxy proxy = (ClipboardProxy) display.getData(ID);
-	if (proxy != null) return proxy;
+    if (proxy != null) {
+        return proxy;
+    }
 	proxy = new ClipboardProxy(display);
 	display.setData(ID, proxy);
 	display.disposeExec(() -> {
 		ClipboardProxy clipbordProxy = (ClipboardProxy)display.getData(ID);
-		if (clipbordProxy == null) return;
+        if (clipbordProxy == null) {
+            return;
+        }
 		display.setData(ID, null);
 		clipbordProxy.dispose();
 	});
@@ -107,9 +111,13 @@ void gtk_gdk_clipboard_clear(long clipboard) {
 private void finishDispose() {
 	if (display == null) {
 		if (clipboardDataTypes == null && primaryClipboardDataTypes == null) {
-			if (getFunc != null ) getFunc.dispose();
+            if (getFunc != null) {
+                getFunc.dispose();
+            }
 			getFunc = null;
-			if (clearFunc != null) clearFunc.dispose();
+            if (clearFunc != null) {
+                clearFunc.dispose();
+            }
 			clearFunc = null;
 			if (clipboardOwner != 0) {
 				GTK3.gtk_widget_destroy(clipboardOwner);
@@ -138,7 +146,9 @@ long clearFunc(long clipboard,long user_data_or_owner){
 }
 
 void dispose () {
-	if (display == null) return;
+    if (display == null) {
+        return;
+    }
 	if (activeClipboard != null) {
 		GTK3.gtk_clipboard_store(Clipboard.GTKCLIPBOARD);
 	}
@@ -158,7 +168,9 @@ long getFunc(long clipboard, long selection_data, long info, long user_data_or_o
 		System.err.println("***WARNING: Attempt to access SWT clipboard after disposing SWT Display.");
 		return 0;
 	}
-	if (selection_data == 0) return 0;
+    if (selection_data == 0) {
+        return 0;
+    }
 	long target = GTK3.gtk_selection_data_get_target(selection_data);
 	TransferData tdata = new TransferData();
 	tdata.type = target;
@@ -170,7 +182,9 @@ long getFunc(long clipboard, long selection_data, long info, long user_data_or_o
 			break;
 		}
 	}
-	if (index == -1) return 0;
+    if (index == -1) {
+        return 0;
+    }
 	Object[] data = (clipboard == Clipboard.GTKCLIPBOARD) ? clipboardData : primaryClipboardData;
 	types[index].javaToNative(data[index], tdata);
 	if (tdata.format < 8 || tdata.format % 8 != 0) {
@@ -245,9 +259,13 @@ boolean setData(Clipboard owner, Object[] data, Transfer[] dataTypes, int clipbo
 	} finally {
 		for (int i = 0; i < entries.length; i++) {
 			GtkTargetEntry entry = entries[i];
-			if( entry.target != 0) OS.g_free(entry.target);
+            if (entry.target != 0) {
+                OS.g_free(entry.target);
+            }
 		}
-		if (pTargetsList != 0) OS.g_free(pTargetsList);
+        if (pTargetsList != 0) {
+            OS.g_free(pTargetsList);
+        }
 	}
 }
 }

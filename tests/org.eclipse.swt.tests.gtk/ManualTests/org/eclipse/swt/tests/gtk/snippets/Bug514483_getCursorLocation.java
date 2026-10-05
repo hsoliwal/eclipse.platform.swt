@@ -64,10 +64,11 @@ public class Bug514483_getCursorLocation
 		childShell.addMouseListener(MouseListener.mouseDownAdapter(e -> {
 			Point loc = display.getCursorLocation();
 			resultLbl.setText(loc.toString());
-			if (loc.x > 300 && loc.x < 700 && loc.y > 300 && loc.y < 700) // give user some slack.
-				resultLbl.setBackground(display.getSystemColor(SWT.COLOR_GREEN));
-			else
-				resultLbl.setBackground(display.getSystemColor(SWT.COLOR_RED));
+            if (loc.x > 300 && loc.x < 700 && loc.y > 300 && loc.y < 700) { // give user some slack.
+                resultLbl.setBackground(display.getSystemColor(SWT.COLOR_GREEN));
+            } else {
+                resultLbl.setBackground(display.getSystemColor(SWT.COLOR_RED));
+            }
 		}));
 
 //		display.addFilter(SWT.KeyDown, new Listener() {
@@ -96,7 +97,9 @@ public class Bug514483_getCursorLocation
 		childShell.setBounds(400, 400, 200, 200);
 		while (!shell.isDisposed())
 		{
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

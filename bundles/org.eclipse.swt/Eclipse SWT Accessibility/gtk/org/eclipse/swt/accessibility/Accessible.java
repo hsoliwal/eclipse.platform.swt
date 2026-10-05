@@ -75,8 +75,12 @@ public class Accessible {
 
 		@Override
 		public boolean equals(Object object) {
-			if (object == this) return true;
-			if (!(object instanceof Relation)) return false;
+            if (object == this) {
+                return true;
+            }
+            if (!(object instanceof Relation)) {
+                return false;
+            }
 			Relation relation = (Relation)object;
 			return (relation.type == this.type) && (relation.target == this.target);
 		}
@@ -99,7 +103,9 @@ public class Accessible {
 	public Accessible(Accessible parent) {
 		this.parent = checkNull(parent);
 		this.control = parent.control;
-		if (parent.children == null) parent.children = new ArrayList<>();
+        if (parent.children == null) {
+            parent.children = new ArrayList<>();
+        }
 		parent.children.add(this);
 	}
 
@@ -112,7 +118,9 @@ public class Accessible {
 	}
 
 	static Accessible checkNull (Accessible parent) {
-		if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (parent == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		return parent;
 	}
 
@@ -147,8 +155,12 @@ public class Accessible {
 	 */
 	public void addAccessibleListener (AccessibleListener listener) {
 		checkWidget ();
-		if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleListeners == null) accessibleListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleListeners == null) {
+            accessibleListeners = new ArrayList<>();
+        }
 		accessibleListeners.add (listener);
 	}
 
@@ -175,8 +187,12 @@ public class Accessible {
 	 */
 	public void addAccessibleControlListener (AccessibleControlListener listener) {
 		checkWidget ();
-		if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleControlListeners == null) accessibleControlListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleControlListeners == null) {
+            accessibleControlListeners = new ArrayList<>();
+        }
 		accessibleControlListeners.add (listener);
 	}
 
@@ -206,12 +222,18 @@ public class Accessible {
 	 */
 	public void addAccessibleTextListener (AccessibleTextListener listener) {
 		checkWidget ();
-		if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (listener instanceof AccessibleTextExtendedListener) {
-			if (accessibleTextExtendedListeners == null) accessibleTextExtendedListeners = new ArrayList<>();
+            if (accessibleTextExtendedListeners == null) {
+                accessibleTextExtendedListeners = new ArrayList<>();
+            }
 			accessibleTextExtendedListeners.add ((AccessibleTextExtendedListener)listener);
 		} else {
-			if (accessibleTextListeners == null) accessibleTextListeners = new ArrayList<>();
+            if (accessibleTextListeners == null) {
+                accessibleTextListeners = new ArrayList<>();
+            }
 			accessibleTextListeners.add (listener);
 		}
 	}
@@ -239,8 +261,12 @@ public class Accessible {
 	 */
 	public void addAccessibleActionListener(AccessibleActionListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleActionListeners == null) accessibleActionListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleActionListeners == null) {
+            accessibleActionListeners = new ArrayList<>();
+        }
 		accessibleActionListeners.add(listener);
 	}
 
@@ -267,8 +293,12 @@ public class Accessible {
 	 */
 	public void addAccessibleEditableTextListener(AccessibleEditableTextListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleEditableTextListeners == null) accessibleEditableTextListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleEditableTextListeners == null) {
+            accessibleEditableTextListeners = new ArrayList<>();
+        }
 		accessibleEditableTextListeners.add(listener);
 	}
 
@@ -295,8 +325,12 @@ public class Accessible {
 	 */
 	public void addAccessibleHyperlinkListener(AccessibleHyperlinkListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleHyperlinkListeners == null) accessibleHyperlinkListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleHyperlinkListeners == null) {
+            accessibleHyperlinkListeners = new ArrayList<>();
+        }
 		accessibleHyperlinkListeners.add(listener);
 	}
 
@@ -323,8 +357,12 @@ public class Accessible {
 	 */
 	public void addAccessibleTableListener(AccessibleTableListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleTableListeners == null) accessibleTableListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleTableListeners == null) {
+            accessibleTableListeners = new ArrayList<>();
+        }
 		accessibleTableListeners.add(listener);
 	}
 
@@ -351,8 +389,12 @@ public class Accessible {
 	 */
 	public void addAccessibleTableCellListener(AccessibleTableCellListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleTableCellListeners == null) accessibleTableCellListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleTableCellListeners == null) {
+            accessibleTableCellListeners = new ArrayList<>();
+        }
 		accessibleTableCellListeners.add(listener);
 	}
 
@@ -379,8 +421,12 @@ public class Accessible {
 	 */
 	public void addAccessibleValueListener(AccessibleValueListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleValueListeners == null) accessibleValueListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleValueListeners == null) {
+            accessibleValueListeners = new ArrayList<>();
+        }
 		accessibleValueListeners.add(listener);
 	}
 
@@ -407,8 +453,12 @@ public class Accessible {
 	 */
 	public void addAccessibleAttributeListener(AccessibleAttributeListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (accessibleAttributeListeners == null) accessibleAttributeListeners = new ArrayList<>();
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (accessibleAttributeListeners == null) {
+            accessibleAttributeListeners = new ArrayList<>();
+        }
 		accessibleAttributeListeners.add(listener);
 	}
 
@@ -423,17 +473,29 @@ public class Accessible {
 	 */
 	public void addRelation(int type, Accessible target) {
 		checkWidget();
-		if (target == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-		if (relations == null) relations = new ArrayList<>();
+        if (target == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (relations == null) {
+            relations = new ArrayList<>();
+        }
 		Relation relation = new Relation(type, target);
-		if (relations.indexOf(relation) != -1) return;
+        if (relations.indexOf(relation) != -1) {
+            return;
+        }
 		relations.add(relation);
-		if (accessibleObject != null) accessibleObject.addRelation(type, target);
+        if (accessibleObject != null) {
+            accessibleObject.addRelation(type, target);
+        }
 	}
 
 	void addRelations () {
-		if (relations == null) return;
-		if (accessibleObject == null) return;
+        if (relations == null) {
+            return;
+        }
+        if (accessibleObject == null) {
+            return;
+        }
 		for (int i = 0; i < relations.size(); i++) {
 			Relation relation = relations.get(i);
 			accessibleObject.addRelation(relation.type, relation.target);
@@ -457,7 +519,9 @@ public class Accessible {
 	 * @since 3.6
 	 */
 	public void dispose () {
-		if (parent == null) return;
+        if (parent == null) {
+            return;
+        }
 		release();
 		parent.children.remove(this);
 		parent = null;
@@ -475,8 +539,12 @@ public class Accessible {
 
 	/* checkWidget was copied from Widget, and rewritten to work in this package */
 	void checkWidget () {
-		if (!isValidThread ()) SWT.error (SWT.ERROR_THREAD_INVALID_ACCESS);
-		if (control.isDisposed ()) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+        if (!isValidThread()) {
+            SWT.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+        }
+        if (control.isDisposed()) {
+            SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+        }
 	}
 
 	AccessibleObject getAccessibleObject () {
@@ -599,10 +667,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleControlListener (AccessibleControlListener listener) {
 		checkWidget ();
-		if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleControlListeners != null) {
 			accessibleControlListeners.remove(listener);
-			if (accessibleControlListeners.isEmpty()) accessibleControlListeners = null;
+            if (accessibleControlListeners.isEmpty()) {
+                accessibleControlListeners = null;
+            }
 		}
 	}
 
@@ -627,10 +699,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleListener (AccessibleListener listener) {
 		checkWidget ();
-		if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleListeners != null) {
 			accessibleListeners.remove(listener);
-			if (accessibleListeners.isEmpty()) accessibleListeners = null;
+            if (accessibleListeners.isEmpty()) {
+                accessibleListeners = null;
+            }
 		}
 	}
 
@@ -658,16 +734,22 @@ public class Accessible {
 	 */
 	public void removeAccessibleTextListener (AccessibleTextListener listener) {
 		checkWidget ();
-		if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (listener instanceof AccessibleTextExtendedListener) {
 			if (accessibleTextExtendedListeners != null) {
 				accessibleTextExtendedListeners.remove (listener);
-				if (accessibleTextExtendedListeners.isEmpty()) accessibleTextExtendedListeners = null;
+                if (accessibleTextExtendedListeners.isEmpty()) {
+                    accessibleTextExtendedListeners = null;
+                }
 			}
 		} else {
 			if (accessibleTextListeners != null) {
 				accessibleTextListeners.remove (listener);
-				if (accessibleTextListeners.isEmpty()) accessibleTextListeners = null;
+                if (accessibleTextListeners.isEmpty()) {
+                    accessibleTextListeners = null;
+                }
 			}
 		}
 	}
@@ -695,10 +777,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleActionListener(AccessibleActionListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleActionListeners != null) {
 			accessibleActionListeners.remove(listener);
-			if (accessibleActionListeners.isEmpty()) accessibleActionListeners = null;
+            if (accessibleActionListeners.isEmpty()) {
+                accessibleActionListeners = null;
+            }
 		}
 	}
 
@@ -725,10 +811,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleEditableTextListener(AccessibleEditableTextListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleEditableTextListeners != null) {
 			accessibleEditableTextListeners.remove(listener);
-			if (accessibleEditableTextListeners.isEmpty()) accessibleEditableTextListeners = null;
+            if (accessibleEditableTextListeners.isEmpty()) {
+                accessibleEditableTextListeners = null;
+            }
 		}
 	}
 
@@ -755,10 +845,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleHyperlinkListener(AccessibleHyperlinkListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleHyperlinkListeners != null) {
 			accessibleHyperlinkListeners.remove(listener);
-			if (accessibleHyperlinkListeners.isEmpty()) accessibleHyperlinkListeners = null;
+            if (accessibleHyperlinkListeners.isEmpty()) {
+                accessibleHyperlinkListeners = null;
+            }
 		}
 	}
 
@@ -785,10 +879,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleTableListener(AccessibleTableListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleTableListeners != null) {
 			accessibleTableListeners.remove(listener);
-			if (accessibleTableListeners.isEmpty()) accessibleTableListeners = null;
+            if (accessibleTableListeners.isEmpty()) {
+                accessibleTableListeners = null;
+            }
 		}
 	}
 
@@ -815,10 +913,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleTableCellListener(AccessibleTableCellListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleTableCellListeners != null) {
 			accessibleTableCellListeners.remove(listener);
-			if (accessibleTableCellListeners.isEmpty()) accessibleTableCellListeners = null;
+            if (accessibleTableCellListeners.isEmpty()) {
+                accessibleTableCellListeners = null;
+            }
 		}
 	}
 
@@ -845,10 +947,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleValueListener(AccessibleValueListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleValueListeners != null) {
 			accessibleValueListeners.remove(listener);
-			if (accessibleValueListeners.isEmpty()) accessibleValueListeners = null;
+            if (accessibleValueListeners.isEmpty()) {
+                accessibleValueListeners = null;
+            }
 		}
 	}
 
@@ -875,10 +981,14 @@ public class Accessible {
 	 */
 	public void removeAccessibleAttributeListener(AccessibleAttributeListener listener) {
 		checkWidget();
-		if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (listener == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (accessibleAttributeListeners != null) {
 			accessibleAttributeListeners.remove(listener);
-			if (accessibleAttributeListeners.isEmpty()) accessibleAttributeListeners = null;
+            if (accessibleAttributeListeners.isEmpty()) {
+                accessibleAttributeListeners = null;
+            }
 		}
 	}
 
@@ -893,13 +1003,21 @@ public class Accessible {
 	 */
 	public void removeRelation(int type, Accessible target) {
 		checkWidget();
-		if (relations == null) return;
-		if (target == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+        if (relations == null) {
+            return;
+        }
+        if (target == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		Relation relation = new Relation(type, target);
 		int index = relations.indexOf(relation);
-		if (index == -1) return;
+        if (index == -1) {
+            return;
+        }
 		relations.remove(index);
-		if (accessibleObject != null) accessibleObject.removeRelation(type, target);
+        if (accessibleObject != null) {
+            accessibleObject.removeRelation(type, target);
+        }
 	}
 
 	/**

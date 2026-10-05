@@ -52,7 +52,9 @@ public static void main(String[] args) {
 			MenuItem mi = new MenuItem (menu, SWT.PUSH);
 			mi.setText ("Item" + i);
 			mi.addListener (SWT.Selection, event -> System.out.println("selection " + event.widget));
-			if (i == 0) menu.setDefaultItem(mi);
+            if (i == 0) {
+                menu.setDefaultItem(mi);
+            }
 		}
 		item.addListener (SWT.MenuDetect, event -> menu.setVisible (true));
 		item.setImage (image2);
@@ -61,7 +63,9 @@ public static void main(String[] args) {
 	shell.setBounds(50, 50, 300, 200);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	image.dispose ();
 	image2.dispose ();

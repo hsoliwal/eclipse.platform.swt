@@ -199,8 +199,12 @@ class AccessibleObject {
 					AccessibleActionListener listener = listeners.get(i);
 					listener.getDescription(event);
 				}
-				if (event.result == null) return 0;
-				if (descriptionPtr != -1) OS.g_free (descriptionPtr);
+                if (event.result == null) {
+                    return 0;
+                }
+                if (descriptionPtr != -1) {
+                    OS.g_free(descriptionPtr);
+                }
 				return descriptionPtr = getStringPtr (event.result);
 			}
 		}
@@ -245,7 +249,9 @@ class AccessibleObject {
 					listener.getKeyBinding(event);
 				}
 				if (event.result != null) {
-					if (keybindingPtr != -1) OS.g_free (keybindingPtr);
+                    if (keybindingPtr != -1) {
+                        OS.g_free(keybindingPtr);
+                    }
 					return keybindingPtr = getStringPtr (event.result);
 				}
 			}
@@ -254,13 +260,17 @@ class AccessibleObject {
 			if (length > 0) {
 				AccessibleEvent event = new AccessibleEvent (accessible);
 				event.childID = object.id;
-				if (parentResult != 0) event.result = getString (parentResult);
+                if (parentResult != 0) {
+                    event.result = getString(parentResult);
+                }
 				for (int i = 0; i < length; i++) {
 					AccessibleListener listener = listeners2.get(i);
 					listener.getKeyboardShortcut (event);
 				}
 				if (event.result != null) {
-					if (keybindingPtr != -1) OS.g_free (keybindingPtr);
+                    if (keybindingPtr != -1) {
+                        OS.g_free(keybindingPtr);
+                    }
 					return keybindingPtr = getStringPtr (event.result);
 				}
 			}
@@ -300,7 +310,9 @@ class AccessibleObject {
 					listener.getName(event);
 				}
 				if (event.result != null) {
-					if (actionNamePtr != -1) OS.g_free (actionNamePtr);
+                    if (actionNamePtr != -1) {
+                        OS.g_free(actionNamePtr);
+                    }
 					return actionNamePtr = getStringPtr (event.result);
 				}
 			}
@@ -310,13 +322,17 @@ class AccessibleObject {
 				if (length > 0) {
 					AccessibleControlEvent event = new AccessibleControlEvent (accessible);
 					event.childID = object.id;
-					if (parentResult != 0) event.result = getString (parentResult);
+                    if (parentResult != 0) {
+                        event.result = getString(parentResult);
+                    }
 					for (int i = 0; i < length; i++) {
 						AccessibleControlListener listener = listeners2.get(i);
 						listener.getDefaultAction (event);
 					}
 					if (event.result != null) {
-						if (actionNamePtr != -1) OS.g_free (actionNamePtr);
+                        if (actionNamePtr != -1) {
+                            OS.g_free(actionNamePtr);
+                        }
 						return actionNamePtr = getStringPtr (event.result);
 					}
 				}
@@ -450,7 +466,9 @@ class AccessibleObject {
 					AccessibleControlListener listener = listeners.get (i);
 					listener.getChildAtPoint (event);
 				}
-				if (event.childID == object.id) event.childID = ACC.CHILDID_SELF;
+                if (event.childID == object.id) {
+                    event.childID = ACC.CHILDID_SELF;
+                }
 				Accessible result = event.accessible;
 				AccessibleObject accObj = result != null ? result.getAccessibleObject() : object.getChildByID (event.childID);
 				if (accObj != null) {
@@ -550,8 +568,10 @@ class AccessibleObject {
 									style.underlineStyle = SWT.UNDERLINE_SQUIGGLE;
 								}
 							} else if (name.equals(getString(ATK.atk_text_attribute_get_name(ATK.ATK_TEXT_ATTR_STRIKETHROUGH)))) {
-								// "true" or "false" (also allow "1" and "single")
-								if (value.equals("true") || value.equals("1") || value.equals("single")) style.strikeout = true;
+                                // "true" or "false" (also allow "1" and "single")
+                                if (value.equals("true") || value.equals("1") || value.equals("single")) {
+                                    style.strikeout = true;
+                                }
 							} else if (name.equals(getString(ATK.atk_text_attribute_get_name(ATK.ATK_TEXT_ATTR_FAMILY_NAME)))) {
 								// font family name
 								byte [] buffer = Converter.wcsToMbcs(value, true);
@@ -565,9 +585,13 @@ class AccessibleObject {
 							} else if (name.equals(getString(ATK.atk_text_attribute_get_name(ATK.ATK_TEXT_ATTR_STYLE)))) {
 								// "normal", "italic" or "oblique"
 								int fontStyle = -1;
-								if (value.equals("normal")) fontStyle = OS.PANGO_STYLE_NORMAL;
-								else if (value.equals("italic")) fontStyle = OS.PANGO_STYLE_ITALIC;
-								else if (value.equals("oblique")) fontStyle = OS.PANGO_STYLE_OBLIQUE;
+                                if (value.equals("normal")) {
+                                    fontStyle = OS.PANGO_STYLE_NORMAL;
+                                } else if (value.equals("italic")) {
+                                    fontStyle = OS.PANGO_STYLE_ITALIC;
+                                } else if (value.equals("oblique")) {
+                                    fontStyle = OS.PANGO_STYLE_OBLIQUE;
+                                }
 								if (fontStyle != -1) {
 									OS.pango_font_description_set_style(fontDesc, fontStyle);
 									createFont = true;
@@ -575,8 +599,11 @@ class AccessibleObject {
 							} else if (name.equals(getString(ATK.atk_text_attribute_get_name(ATK.ATK_TEXT_ATTR_VARIANT)))) {
 								// "normal" or "small_caps"
 								int variant = -1;
-								if (value.equals("normal")) variant = OS.PANGO_VARIANT_NORMAL;
-								else if (value.equals("small_caps")) variant = OS.PANGO_VARIANT_SMALL_CAPS;
+                                if (value.equals("normal")) {
+                                    variant = OS.PANGO_VARIANT_NORMAL;
+                                } else if (value.equals("small_caps")) {
+                                    variant = OS.PANGO_VARIANT_SMALL_CAPS;
+                                }
 								if (variant != -1) {
 									OS.pango_font_description_set_variant(fontDesc, variant);
 									createFont = true;
@@ -584,15 +611,25 @@ class AccessibleObject {
 							} else if (name.equals(getString(ATK.atk_text_attribute_get_name(ATK.ATK_TEXT_ATTR_STRETCH)))) {
 								//"ultra_condensed", "extra_condensed", "condensed", "semi_condensed", "normal", "semi_expanded", "expanded", "extra_expanded" or "ultra_expanded"
 								int stretch = -1;
-								if (value.equals("ultra_condensed")) stretch = OS.PANGO_STRETCH_ULTRA_CONDENSED;
-								else if (value.equals("extra_condensed")) stretch = OS.PANGO_STRETCH_EXTRA_CONDENSED;
-								else if (value.equals("condensed")) stretch = OS.PANGO_STRETCH_CONDENSED;
-								else if (value.equals("semi_condensed")) stretch = OS.PANGO_STRETCH_SEMI_CONDENSED;
-								else if (value.equals("normal")) stretch = OS.PANGO_STRETCH_NORMAL;
-								else if (value.equals("semi_expanded")) stretch = OS.PANGO_STRETCH_SEMI_EXPANDED;
-								else if (value.equals("expanded")) stretch = OS.PANGO_STRETCH_EXPANDED;
-								else if (value.equals("extra_expanded")) stretch = OS.PANGO_STRETCH_EXTRA_EXPANDED;
-								else if (value.equals("ultra_expanded")) stretch = OS.PANGO_STRETCH_ULTRA_EXPANDED;
+                                if (value.equals("ultra_condensed")) {
+                                    stretch = OS.PANGO_STRETCH_ULTRA_CONDENSED;
+                                } else if (value.equals("extra_condensed")) {
+                                    stretch = OS.PANGO_STRETCH_EXTRA_CONDENSED;
+                                } else if (value.equals("condensed")) {
+                                    stretch = OS.PANGO_STRETCH_CONDENSED;
+                                } else if (value.equals("semi_condensed")) {
+                                    stretch = OS.PANGO_STRETCH_SEMI_CONDENSED;
+                                } else if (value.equals("normal")) {
+                                    stretch = OS.PANGO_STRETCH_NORMAL;
+                                } else if (value.equals("semi_expanded")) {
+                                    stretch = OS.PANGO_STRETCH_SEMI_EXPANDED;
+                                } else if (value.equals("expanded")) {
+                                    stretch = OS.PANGO_STRETCH_EXPANDED;
+                                } else if (value.equals("extra_expanded")) {
+                                    stretch = OS.PANGO_STRETCH_EXTRA_EXPANDED;
+                                } else if (value.equals("ultra_expanded")) {
+                                    stretch = OS.PANGO_STRETCH_ULTRA_EXPANDED;
+                                }
 								if (stretch != -1) {
 									OS.pango_font_description_set_stretch(fontDesc, stretch);
 									createFont = true;
@@ -1050,7 +1087,9 @@ class AccessibleObject {
 		long type = OS.swt_fixed_accessible_get_type();
 		if (type != 0) {
 			long parentType = OS.g_type_parent (type);
-			if (parentType != 0) ATK.memmove (objectClass, OS.g_type_class_peek (parentType));
+            if (parentType != 0) {
+                ATK.memmove(objectClass, OS.g_type_class_peek(parentType));
+            }
 		}
 		return objectClass;
 	}
@@ -1082,13 +1121,19 @@ class AccessibleObject {
 			if (length > 0) {
 				AccessibleEvent event = new AccessibleEvent (accessible);
 				event.childID = object.id;
-				if (parentResult != 0) event.result = getString (parentResult);
+                if (parentResult != 0) {
+                    event.result = getString(parentResult);
+                }
 				for (int i = 0; i < length; i++) {
 					AccessibleListener listener = listeners.get (i);
 					listener.getDescription (event);
 				}
-				if (event.result == null) return parentResult;
-				if (descriptionPtr != -1) OS.g_free (descriptionPtr);
+                if (event.result == null) {
+                    return parentResult;
+                }
+                if (descriptionPtr != -1) {
+                    OS.g_free(descriptionPtr);
+                }
 				return descriptionPtr = getStringPtr (event.result);
 			}
 		}
@@ -1199,8 +1244,11 @@ class AccessibleObject {
 						for (int i = 0; i < children.length; i++) {
 							Control child = children[i];
 							if (child instanceof Button && ((child.getStyle() & SWT.RADIO) != 0)) {
-								if (child == control) posinset = setsize;
-								else setsize++;
+                                if (child == control) {
+                                    posinset = setsize;
+                                } else {
+                                    setsize++;
+                                }
 							}
 						}
 					}
@@ -1269,13 +1317,19 @@ class AccessibleObject {
 			if (length > 0) {
 				AccessibleEvent event = new AccessibleEvent (accessible);
 				event.childID = object.id;
-				if (parentResult != 0) event.result = getString (parentResult);
+                if (parentResult != 0) {
+                    event.result = getString(parentResult);
+                }
 				for (int i = 0; i < length; i++) {
 					AccessibleListener listener = listeners.get (i);
 					listener.getName (event);
 				}
-				if (event.result == null) return parentResult;
-				if (namePtr != -1) OS.g_free (namePtr);
+                if (event.result == null) {
+                    return parentResult;
+                }
+                if (namePtr != -1) {
+                    OS.g_free(namePtr);
+                }
 				return namePtr = getStringPtr (event.result);
 			}
 		}
@@ -1355,7 +1409,9 @@ class AccessibleObject {
 			}
 		}
 		AtkObjectClass objectClass = getParentAtkObjectClass ();
-		if (objectClass.get_index_in_parent == 0) return 0;
+        if (objectClass.get_index_in_parent == 0) {
+            return 0;
+        }
 		long result = ATK.call (objectClass.get_index_in_parent, atkObject);
 		return result;
 	}
@@ -1382,7 +1438,9 @@ class AccessibleObject {
 			}
 		}
 		AtkObjectClass objectClass = getParentAtkObjectClass ();
-		if (objectClass.get_parent == 0) return 0;
+        if (objectClass.get_parent == 0) {
+            return 0;
+        }
 		long parentResult = ATK.call (objectClass.get_parent, atkObject);
 		return parentResult;
 	}
@@ -1473,7 +1531,9 @@ class AccessibleObject {
 			}
 		}
 		AtkObjectClass objectClass = getParentAtkObjectClass ();
-		if (objectClass.get_role == 0) return 0;
+        if (objectClass.get_role == 0) {
+            return 0;
+        }
 		return ATK.call (objectClass.get_role, atkObject);
 	}
 
@@ -1518,7 +1578,9 @@ class AccessibleObject {
 			}
 		}
 		AtkObjectClass objectClass = getParentAtkObjectClass ();
-		if (objectClass.ref_child == 0) return 0;
+        if (objectClass.ref_child == 0) {
+            return 0;
+        }
 		return ATK.call (objectClass.ref_child, atkObject, index);
 	}
 
@@ -1558,27 +1620,69 @@ class AccessibleObject {
 				if (event.detail != -1) {
 					/*	Convert from win32 state values to atk state values */
 					int state = event.detail;
-					if ((state & ACC.STATE_BUSY) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_BUSY);
-					if ((state & ACC.STATE_CHECKED) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_CHECKED);
-					if ((state & ACC.STATE_EXPANDED) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_EXPANDED);
-					if ((state & ACC.STATE_FOCUSABLE) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_FOCUSABLE);
-					if ((state & ACC.STATE_FOCUSED) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_FOCUSED);
-					if ((state & ACC.STATE_HOTTRACKED) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_ARMED);
-					if ((state & ACC.STATE_INVISIBLE) == 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_VISIBLE);
-					if ((state & ACC.STATE_MULTISELECTABLE) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_MULTISELECTABLE);
-					if ((state & ACC.STATE_OFFSCREEN) == 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_SHOWING);
-					if ((state & ACC.STATE_PRESSED) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_PRESSED);
-					if ((state & ACC.STATE_READONLY) == 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_EDITABLE);
-					if ((state & ACC.STATE_SELECTABLE) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_SELECTABLE);
-					if ((state & ACC.STATE_SELECTED) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_SELECTED);
-					if ((state & ACC.STATE_SIZEABLE) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_RESIZABLE);
-					if ((state & ACC.STATE_DISABLED) == 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_ENABLED);
-					if ((state & ACC.STATE_ACTIVE) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_ACTIVE);
-					if ((state & ACC.STATE_SINGLELINE) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_SINGLE_LINE);
-					if ((state & ACC.STATE_MULTILINE) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_MULTI_LINE);
-					if ((state & ACC.STATE_REQUIRED) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_REQUIRED);
-					if ((state & ACC.STATE_INVALID_ENTRY) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_INVALID_ENTRY);
-					if ((state & ACC.STATE_SUPPORTS_AUTOCOMPLETION) != 0) ATK.atk_state_set_add_state (set, ATK.ATK_STATE_SUPPORTS_AUTOCOMPLETION);
+                    if ((state & ACC.STATE_BUSY) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_BUSY);
+                    }
+                    if ((state & ACC.STATE_CHECKED) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_CHECKED);
+                    }
+                    if ((state & ACC.STATE_EXPANDED) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_EXPANDED);
+                    }
+                    if ((state & ACC.STATE_FOCUSABLE) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_FOCUSABLE);
+                    }
+                    if ((state & ACC.STATE_FOCUSED) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_FOCUSED);
+                    }
+                    if ((state & ACC.STATE_HOTTRACKED) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_ARMED);
+                    }
+                    if ((state & ACC.STATE_INVISIBLE) == 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_VISIBLE);
+                    }
+                    if ((state & ACC.STATE_MULTISELECTABLE) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_MULTISELECTABLE);
+                    }
+                    if ((state & ACC.STATE_OFFSCREEN) == 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_SHOWING);
+                    }
+                    if ((state & ACC.STATE_PRESSED) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_PRESSED);
+                    }
+                    if ((state & ACC.STATE_READONLY) == 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_EDITABLE);
+                    }
+                    if ((state & ACC.STATE_SELECTABLE) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_SELECTABLE);
+                    }
+                    if ((state & ACC.STATE_SELECTED) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_SELECTED);
+                    }
+                    if ((state & ACC.STATE_SIZEABLE) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_RESIZABLE);
+                    }
+                    if ((state & ACC.STATE_DISABLED) == 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_ENABLED);
+                    }
+                    if ((state & ACC.STATE_ACTIVE) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_ACTIVE);
+                    }
+                    if ((state & ACC.STATE_SINGLELINE) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_SINGLE_LINE);
+                    }
+                    if ((state & ACC.STATE_MULTILINE) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_MULTI_LINE);
+                    }
+                    if ((state & ACC.STATE_REQUIRED) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_REQUIRED);
+                    }
+                    if ((state & ACC.STATE_INVALID_ENTRY) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_INVALID_ENTRY);
+                    }
+                    if ((state & ACC.STATE_SUPPORTS_AUTOCOMPLETION) != 0) {
+                        ATK.atk_state_set_add_state(set, ATK.ATK_STATE_SUPPORTS_AUTOCOMPLETION);
+                    }
 					/* Note: STATE_COLLAPSED, STATE_LINKED and STATE_NORMAL have no ATK equivalents */
 				}
 				return set;
@@ -1683,7 +1787,9 @@ class AccessibleObject {
 				}
 				AccessibleObject accObj = object.getChildByID (event.childID);
 				if (accObj != null) {
-					if (parentResult != 0) OS.g_object_unref (parentResult);
+                    if (parentResult != 0) {
+                        OS.g_object_unref(parentResult);
+                    }
 					OS.g_object_ref (accObj.atkHandle);
 					return accObj.atkHandle;
 				}
@@ -1785,7 +1891,9 @@ class AccessibleObject {
 					listener.getCell(event);
 				}
 				Accessible result = event.accessible;
-				if (result == null) return -1;
+                if (result == null) {
+                    return -1;
+                }
 				event = new AccessibleTableEvent(accessible);
 				for (int i = 0; i < length; i++) {
 					AccessibleTableListener listener = listeners.get(i);
@@ -2086,7 +2194,9 @@ class AccessibleObject {
 					listener.getCaption(event);
 				}
 				Accessible result = event.accessible;
-				if (result != null) return result.getAccessibleObject().atkHandle;
+                if (result != null) {
+                    return result.getAccessibleObject().atkHandle;
+                }
 			}
 		}
 		long parentResult = 0;
@@ -2123,7 +2233,9 @@ class AccessibleObject {
 					listener.getSummary(event);
 				}
 				Accessible result = event.accessible;
-				if (result != null) return result.getAccessibleObject().atkHandle;
+                if (result != null) {
+                    return result.getAccessibleObject().atkHandle;
+                }
 			}
 		}
 		long parentResult = 0;
@@ -2162,13 +2274,19 @@ class AccessibleObject {
 			if (length > 0) {
 				AccessibleTableEvent event = new AccessibleTableEvent(accessible);
 				event.column = (int)column;
-				if (parentResult != 0) event.result = getString (parentResult);
+                if (parentResult != 0) {
+                    event.result = getString(parentResult);
+                }
 				for (int i = 0; i < length; i++) {
 					AccessibleTableListener listener = listeners.get(i);
 					listener.getColumnDescription(event);
 				}
-				if (event.result == null) return parentResult;
-				if (descriptionPtr != -1) OS.g_free (descriptionPtr);
+                if (event.result == null) {
+                    return parentResult;
+                }
+                if (descriptionPtr != -1) {
+                    OS.g_free(descriptionPtr);
+                }
 				return descriptionPtr = getStringPtr (event.result);
 			}
 		}
@@ -2245,13 +2363,19 @@ class AccessibleObject {
 			if (length > 0) {
 				AccessibleTableEvent event = new AccessibleTableEvent(accessible);
 				event.row = (int)row;
-				if (parentResult != 0) event.result = getString (parentResult);
+                if (parentResult != 0) {
+                    event.result = getString(parentResult);
+                }
 				for (int i = 0; i < length; i++) {
 					AccessibleTableListener listener = listeners.get(i);
 					listener.getRowDescription(event);
 				}
-				if (event.result == null) return parentResult;
-				if (descriptionPtr != -1) OS.g_free (descriptionPtr);
+                if (event.result == null) {
+                    return parentResult;
+                }
+                if (descriptionPtr != -1) {
+                    OS.g_free(descriptionPtr);
+                }
 				return descriptionPtr = getStringPtr (event.result);
 			}
 		}
@@ -2329,8 +2453,12 @@ class AccessibleObject {
 				}
 				int count = event.selected != null ? event.selected.length : 0;
 				long result = OS.g_malloc(count * 4);
-				if (event.selected != null) C.memmove(result, event.selected, count * 4);
-				if (selected != 0) C.memmove(selected, new long []{result}, C.PTR_SIZEOF);
+                if (event.selected != null) {
+                    C.memmove(result, event.selected, count * 4);
+                }
+                if (selected != 0) {
+                    C.memmove(selected, new long []{result}, C.PTR_SIZEOF);
+                }
 				return count;
 			}
 		}
@@ -2371,8 +2499,12 @@ class AccessibleObject {
 				}
 				int count = event.selected != null ? event.selected.length : 0;
 				long result = OS.g_malloc(count * 4);
-				if (event.selected != null) C.memmove(result, event.selected, count * 4);
-				if (selected != 0) C.memmove(selected, new long []{result}, C.PTR_SIZEOF);
+                if (event.selected != null) {
+                    C.memmove(result, event.selected, count * 4);
+                }
+                if (selected != 0) {
+                    C.memmove(selected, new long []{result}, C.PTR_SIZEOF);
+                }
 				return count;
 			}
 		}
@@ -3313,7 +3445,9 @@ class AccessibleObject {
 				return text != null && text.length() > 0 ? text.charAt(0) : 0;
 			}
 			String text = object.getText ();
-			if (text != null && text.length() > offset) return text.charAt ((int)offset);
+            if (text != null && text.length() > offset) {
+                return text.charAt((int) offset);
+            }
 		}
 		AtkTextIface iface = getParentTextIface (atkObject);
 		if (iface != null && iface.get_character_at_offset != 0) {
@@ -3349,7 +3483,9 @@ class AccessibleObject {
 				return event.count;
 			}
 			String text = object.getText ();
-			if (text != null) return text.length ();
+            if (text != null) {
+                return text.length();
+            }
 		}
 		AtkTextIface iface = getParentTextIface (atkObject);
 		if (iface != null && iface.get_character_count != 0) {
@@ -3393,7 +3529,9 @@ class AccessibleObject {
 					AccessibleTextListener listener = listeners2.get(i);
 					listener.getSelectionRange (event);
 				}
-				if (event.length > 0) return 1;
+                if (event.length > 0) {
+                    return 1;
+                }
 			}
 		}
 		long parentResult = 0;
@@ -3456,7 +3594,9 @@ class AccessibleObject {
 					AccessibleTextExtendedListener listener = listeners.get(i);
 					listener.getText(event);
 				}
-				if (parentResult != 0) OS.g_free(parentResult);
+                if (parentResult != 0) {
+                    OS.g_free(parentResult);
+                }
 				return getStringPtr (event.result);
 			}
 			if (selection_num == 0) {
@@ -3473,7 +3613,9 @@ class AccessibleObject {
 					}
 					C.memmove (start_offset, new int[] {event.offset}, 4);
 					C.memmove (end_offset, new int[] {event.offset + event.length}, 4);
-					if (parentResult != 0) OS.g_free(parentResult);
+                    if (parentResult != 0) {
+                        OS.g_free(parentResult);
+                    }
 					String text = object.getText();
 					if (text != null && text.length () > event.offset && text.length() >= event.offset + event.length) {
 						return getStringPtr (text.substring(event.offset, event.offset + event.length));
@@ -3642,7 +3784,9 @@ class AccessibleObject {
 				int endBounds = offset;
 				switch ((int)boundary_type) {
 					case ATK.ATK_TEXT_BOUNDARY_CHAR: {
-						if (length > offset) endBounds++;
+                        if (length > offset) {
+                            endBounds++;
+                        }
 						break;
 					}
 					case ATK.ATK_TEXT_BOUNDARY_WORD_START: {
@@ -3907,7 +4051,9 @@ class AccessibleObject {
 				int endBounds = offset;
 				switch ((int)boundary_type) {
 					case ATK.ATK_TEXT_BOUNDARY_CHAR: {
-						if (length > offset) endBounds++;
+                        if (length > offset) {
+                            endBounds++;
+                        }
 						break;
 					}
 					case ATK.ATK_TEXT_BOUNDARY_WORD_START: {
@@ -3985,7 +4131,9 @@ class AccessibleObject {
 					case ATK.ATK_TEXT_BOUNDARY_LINE_START: {
 						startBounds = previousIndexOfChar (text, "\n", offset) + 1;
 						int lineEnd2 = nextIndexOfChar (text, "\n", startBounds);
-						if (lineEnd2 < length) lineEnd2++;
+                        if (lineEnd2 < length) {
+                            lineEnd2++;
+                        }
 						endBounds = lineEnd2;
 						break;
 					}
@@ -4115,7 +4263,9 @@ class AccessibleObject {
 				int endBounds = offset;
 				switch ((int)boundary_type) {
 					case ATK.ATK_TEXT_BOUNDARY_CHAR: {
-						if (length >= offset && offset > 0) startBounds--;
+                        if (length >= offset && offset > 0) {
+                            startBounds--;
+                        }
 						break;
 					}
 					case ATK.ATK_TEXT_BOUNDARY_WORD_START: {
@@ -4208,7 +4358,9 @@ class AccessibleObject {
 						}
 						endBounds = lineEnd1;
 						startBounds = previousIndexOfChar (text, "\n", lineEnd1);
-						if (startBounds == -1) startBounds = 0;
+                        if (startBounds == -1) {
+                            startBounds = 0;
+                        }
 						break;
 					}
 				}
@@ -4226,8 +4378,12 @@ class AccessibleObject {
 	}
 
 	static void setGValue (long value, Number number) {
-		if (number == null) return;
-		if (OS.G_VALUE_TYPE(value) != 0) OS.g_value_unset(value);
+        if (number == null) {
+            return;
+        }
+        if (OS.G_VALUE_TYPE(value) != 0) {
+            OS.g_value_unset(value);
+        }
 		if (number instanceof Double) {
 			OS.g_value_init(value, OS.G_TYPE_DOUBLE());
 			OS.g_value_set_double(value, number.doubleValue());
@@ -4245,10 +4401,18 @@ class AccessibleObject {
 
 	static Number getGValue (long value) {
 		long type = OS.G_VALUE_TYPE(value);
-		if (type == 0) return null;
-		if (type == OS.G_TYPE_DOUBLE()) return Double.valueOf(OS.g_value_get_double(value));
-		if (type == OS.G_TYPE_FLOAT()) return Float.valueOf(OS.g_value_get_float(value));
-		if (type == OS.G_TYPE_INT64()) return Long.valueOf(OS.g_value_get_int64(value));
+        if (type == 0) {
+            return null;
+        }
+        if (type == OS.G_TYPE_DOUBLE()) {
+            return Double.valueOf(OS.g_value_get_double(value));
+        }
+        if (type == OS.G_TYPE_FLOAT()) {
+            return Float.valueOf(OS.g_value_get_float(value));
+        }
+        if (type == OS.G_TYPE_INT64()) {
+            return Long.valueOf(OS.g_value_get_int64(value));
+        }
 		return Integer.valueOf(OS.g_value_get_int(value));
 	}
 
@@ -4429,27 +4593,41 @@ class AccessibleObject {
 	 */
 	static AccessibleObject getAccessibleObject (long atkObject) {
 		AccessibleObject object = AccessibleObjects.get (new LONG (atkObject));
-		if (object == null) return null;
-		if (object.accessible == null) return null;
+        if (object == null) {
+            return null;
+        }
+        if (object.accessible == null) {
+            return null;
+        }
 		Control control = object.accessible.control;
-		if (control == null || control.isDisposed()) return null;
+        if (control == null || control.isDisposed()) {
+            return null;
+        }
 		return object;
 	}
 
 	AccessibleObject getChildByID (int childId) {
-		if (childId == ACC.CHILDID_SELF) return this;
-		if (childId == ACC.CHILDID_NONE || childId == ACC.CHILDID_MULTIPLE) return null;
+        if (childId == ACC.CHILDID_SELF) {
+            return this;
+        }
+        if (childId == ACC.CHILDID_NONE || childId == ACC.CHILDID_MULTIPLE) {
+            return null;
+        }
 		if (children != null) {
 			for (int i = 0; i < children.length; i++) {
 				AccessibleObject child = children[i];
-				if (child != null && child.id == childId) return child;
+                if (child != null && child.id == childId) {
+                    return child;
+                }
 			}
 		}
 		return null;
 	}
 
 	AccessibleObject getChildByIndex (int childIndex) {
-		if (children != null && childIndex < children.length) return children [childIndex];
+        if (children != null && childIndex < children.length) {
+            return children [childIndex];
+        }
 		return null;
 	}
 
@@ -4547,7 +4725,9 @@ class AccessibleObject {
 			object = object.parent;
 			widget = GTK3.gtk_accessible_get_widget(object.atkHandle);
 		}
-		if (widget == 0) return;
+        if (widget == 0) {
+            return;
+        }
 
 		if (GTK.GTK4) {
 			//TODO: GTK4 no gdk_surface_get_origin
@@ -4563,7 +4743,9 @@ class AccessibleObject {
 		for (int i = 0; i < searchChars.length (); i++) {
 			char current = searchChars.charAt (i);
 			int index = string.indexOf (current, startIndex);
-			if (index != -1) result = Math.min (result, index);
+            if (index != -1) {
+                result = Math.min(result, index);
+            }
 		}
 		return result;
 	}
@@ -4573,7 +4755,9 @@ class AccessibleObject {
 		int index = startIndex;
 		while (index < length) {
 			char current = string.charAt (index);
-			if (searchChars.indexOf (current) == -1) break;
+            if (searchChars.indexOf(current) == -1) {
+                break;
+            }
 			index++;
 		}
 		return index;
@@ -4581,29 +4765,39 @@ class AccessibleObject {
 
 	static int previousIndexOfChar (String string, String searchChars, int startIndex) {
 		int result = -1;
-		if (startIndex < 0) return result;
+        if (startIndex < 0) {
+            return result;
+        }
 		string = string.substring (0, startIndex);
 		for (int i = 0; i < searchChars.length (); i++) {
 			char current = searchChars.charAt (i);
 			int index = string.lastIndexOf (current);
-			if (index != -1) result = Math.max (result, index);
+            if (index != -1) {
+                result = Math.max(result, index);
+            }
 		}
 		return result;
 	}
 
 	static int previousIndexOfNotChar (String string, String searchChars, int startIndex) {
-		if (startIndex < 0) return -1;
+        if (startIndex < 0) {
+            return -1;
+        }
 		int index = startIndex - 1;
 		while (index >= 0) {
 			char current = string.charAt (index);
-			if (searchChars.indexOf (current) == -1) break;
+            if (searchChars.indexOf(current) == -1) {
+                break;
+            }
 			index--;
 		}
 		return index;
 	}
 
 	void addRelation (int type, Accessible target) {
-		if(GTK.GTK4) return; //TODO investigate proper way for GTK 4.x
+        if (GTK.GTK4) {
+            return;
+        } //TODO investigate proper way for GTK 4.x
 		AccessibleObject targetAccessibleObject = target.getAccessibleObject();
 		if (targetAccessibleObject != null) {
 			/*
@@ -4627,7 +4821,9 @@ class AccessibleObject {
 		if (children != null) {
 			for (int i = 0; i < children.length; i++) {
 				AccessibleObject child = children [i];
-				if (child != null) OS.g_object_unref(child.atkHandle);
+                if (child != null) {
+                    OS.g_object_unref(child.atkHandle);
+                }
 			}
 			children = null;
 		}
@@ -4637,7 +4833,9 @@ class AccessibleObject {
 	}
 
 	void removeRelation (int type, Accessible target) {
-		if(GTK.GTK4) return; //TODO investigate proper way for GTK 4.x
+        if (GTK.GTK4) {
+            return;
+        } //TODO investigate proper way for GTK 4.x
 		AccessibleObject targetAccessibleObject = target.getAccessibleObject();
 		if (targetAccessibleObject != null) {
 			/*
@@ -4653,12 +4851,16 @@ class AccessibleObject {
 	}
 
 	void selectionChanged () {
-		if(GTK.GTK4) return; //TODO investigate proper way for GTK 4.x
+        if (GTK.GTK4) {
+            return;
+        } //TODO investigate proper way for GTK 4.x
 		OS.g_signal_emit_by_name (atkHandle, ATK.selection_changed);
 	}
 
 	void sendEvent(int event, Object eventData) {
-		if(GTK.GTK4) return; //TODO reenable for GTK 4.x
+        if (GTK.GTK4) {
+            return;
+        } //TODO reenable for GTK 4.x
 		switch (event) {
 			case ACC.EVENT_SELECTION_CHANGED:
 				OS.g_signal_emit_by_name (atkHandle, ATK.selection_changed);
@@ -4667,7 +4869,9 @@ class AccessibleObject {
 				OS.g_signal_emit_by_name (atkHandle, ATK.text_selection_changed);
 				break;
 			case ACC.EVENT_STATE_CHANGED: {
-				if (!(eventData instanceof int[])) break;
+                if (!(eventData instanceof int[])) {
+                    break;
+                }
 				int[] array = (int[])eventData;
 				int state =  array[0];
 				int value = array[1];
@@ -4697,7 +4901,9 @@ class AccessibleObject {
 					case ACC.STATE_INVALID_ENTRY: atkState = ATK.ATK_STATE_INVALID_ENTRY; break;
 					case ACC.STATE_SUPPORTS_AUTOCOMPLETION: atkState = ATK.ATK_STATE_SUPPORTS_AUTOCOMPLETION; break;
 				}
-				if (atkState == -1) break;
+                if (atkState == -1) {
+                    break;
+                }
 				ATK.atk_object_notify_state_change(atkHandle, atkState, value != 0);
 				break;
 			}
@@ -4760,7 +4966,9 @@ class AccessibleObject {
 				OS.g_signal_emit_by_name (atkHandle, ATK.link_activated);
 				break;
 			case ACC.EVENT_HYPERTEXT_LINK_SELECTED:
-				if (!(eventData instanceof Integer)) break;
+                if (!(eventData instanceof Integer)) {
+                    break;
+                }
 				int index =  ((Integer)eventData).intValue();
 				OS.g_signal_emit_by_name (atkHandle, ATK.link_selected, index);
 				break;
@@ -4769,7 +4977,9 @@ class AccessibleObject {
 				break;
 			case ACC.EVENT_ATTRIBUTE_CHANGED:
 				long gType = OS.G_OBJECT_TYPE(atkHandle);
-				if (gType == GTK.GTK_TYPE_TEXT_VIEW_ACCESSIBLE()) break;
+                if (gType == GTK.GTK_TYPE_TEXT_VIEW_ACCESSIBLE()) {
+                    break;
+                }
 				OS.g_signal_emit_by_name (atkHandle, ATK.attributes_changed);
 				break;
 			case ACC.EVENT_TABLE_CAPTION_CHANGED:
@@ -4782,7 +4992,9 @@ class AccessibleObject {
 				OS.g_object_notify(atkHandle, ATK.accessible_table_column_header);
 				break;
 			case ACC.EVENT_TABLE_CHANGED: {
-				if (!(eventData instanceof int[])) break;
+                if (!(eventData instanceof int[])) {
+                    break;
+                }
 				int[] array = (int[])eventData;
 				int type =  array[0];
 				int rowStart = array[1];
@@ -4791,12 +5003,20 @@ class AccessibleObject {
 				int columnCount = array[4];
 				switch (type) {
 					case ACC.DELETE:
-						if (rowCount > 0) OS.g_signal_emit_by_name (atkHandle, ATK.row_deleted, rowStart, rowCount);
-						if (columnCount > 0) OS.g_signal_emit_by_name (atkHandle, ATK.column_deleted, columnStart, columnCount);
+                        if (rowCount > 0) {
+                            OS.g_signal_emit_by_name(atkHandle, ATK.row_deleted, rowStart, rowCount);
+                        }
+                        if (columnCount > 0) {
+                            OS.g_signal_emit_by_name(atkHandle, ATK.column_deleted, columnStart, columnCount);
+                        }
 						break;
 					case ACC.INSERT:
-						if (rowCount > 0) OS.g_signal_emit_by_name (atkHandle, ATK.row_inserted, rowStart, rowCount);
-						if (columnCount > 0) OS.g_signal_emit_by_name (atkHandle, ATK.column_inserted, columnStart, columnCount);
+                        if (rowCount > 0) {
+                            OS.g_signal_emit_by_name(atkHandle, ATK.row_inserted, rowStart, rowCount);
+                        }
+                        if (columnCount > 0) {
+                            OS.g_signal_emit_by_name(atkHandle, ATK.column_inserted, columnStart, columnCount);
+                        }
 						break;
 				}
 				break;
@@ -4840,7 +5060,9 @@ class AccessibleObject {
 				break;
 			}
 			case ACC.EVENT_TEXT_CHANGED: {
-				if (!(eventData instanceof Object[])) break;
+                if (!(eventData instanceof Object[])) {
+                    break;
+                }
 				Object[] data = (Object[])eventData;
 				int type = ((Integer)data[0]).intValue();
 				int start = ((Integer)data[1]).intValue();
@@ -4867,7 +5089,9 @@ class AccessibleObject {
 	}
 
 	void setFocus (int childID) {
-		if(GTK.GTK4) return; //TODO investigate proper way for GTK 4.x
+        if (GTK.GTK4) {
+            return;
+        } //TODO investigate proper way for GTK 4.x
 		updateChildren ();
 		AccessibleObject accObject = getChildByID (childID);
 		if (accObject != null) {
@@ -4877,12 +5101,16 @@ class AccessibleObject {
 	}
 
 	void textCaretMoved(int index) {
-		if(GTK.GTK4) return; //TODO investigate proper way for GTK 4.x
+        if (GTK.GTK4) {
+            return;
+        } //TODO investigate proper way for GTK 4.x
 		OS.g_signal_emit_by_name (atkHandle, ATK.text_caret_moved, index);
 	}
 
 	void textChanged(int type, int startIndex, int length) {
-		if(GTK.GTK4) return; //TODO investigate proper way for GTK 4.x
+        if (GTK.GTK4) {
+            return;
+        } //TODO investigate proper way for GTK 4.x
 		if (type == ACC.TEXT_DELETE) {
 			OS.g_signal_emit_by_name (atkHandle, ATK.text_changed_delete, startIndex, length);
 		} else {
@@ -4891,7 +5119,9 @@ class AccessibleObject {
 	}
 
 	void textSelectionChanged() {
-		if(GTK.GTK4) return; //TODO investigate proper way for GTK 4.x
+        if (GTK.GTK4) {
+            return;
+        } //TODO investigate proper way for GTK 4.x
 		OS.g_signal_emit_by_name (atkHandle, ATK.text_selection_changed);
 	}
 
@@ -4924,7 +5154,9 @@ class AccessibleObject {
 					}
 					if (event.accessible != null) {
 						object = event.accessible.getAccessibleObject();
-						if (object != null)	OS.g_object_ref(object.atkHandle);
+                        if (object != null) {
+                            OS.g_object_ref(object.atkHandle);
+                        }
 					} else {
 						long type = OS.G_OBJECT_TYPE (accessible.getControlHandle());
 						long widget = accessible.getControlHandle();
@@ -4936,7 +5168,9 @@ class AccessibleObject {
 				}
 			} else if (child instanceof Accessible) {
 				object = ((Accessible)child).getAccessibleObject();
-				if (object != null)	OS.g_object_ref(object.atkHandle);
+                if (object != null) {
+                    OS.g_object_ref(object.atkHandle);
+                }
 			}
 			if (object != null) {
 				object.index = i;
@@ -4947,7 +5181,9 @@ class AccessibleObject {
 		if (oldChildren != null) {
 			for (int i = 0; i < oldChildren.length; i++) {
 				AccessibleObject object = oldChildren [i];
-				if (object != null) OS.g_object_unref(object.atkHandle);
+                if (object != null) {
+                    OS.g_object_unref(object.atkHandle);
+                }
 			}
 		}
 		this.children = newChildren;

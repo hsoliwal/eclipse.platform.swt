@@ -58,8 +58,12 @@ class ColorSelectionGroup implements Listener {
 		button.addListener(SWT.Selection, this);
 		button.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent event) {
-				if (image != null) image.dispose();
-				if (color != null) color.dispose();
+                if (image != null) {
+                    image.dispose();
+                }
+                if (color != null) {
+                    color.dispose();
+                }
 			}
 		});
 		
@@ -101,7 +105,9 @@ class ColorSelectionGroup implements Listener {
 		colorDialog.setRGB(
 			new RGB(color.getRed(), color.getGreen(), color.getBlue()));
 		RGB rgb = colorDialog.open();
-		if (rgb == null) return;
+        if (rgb == null) {
+            return;
+        }
 		setRGB(rgb);
 		notifyListeners(rgb);
 	}
@@ -165,6 +171,8 @@ class ColorSelectionGroup implements Listener {
 		color = new Color(button.getDisplay(), rgb);
 		drawButtonImage();
 		button.setImage(image);
-		if (oldColor != null) oldColor.dispose();
+        if (oldColor != null) {
+            oldColor.dispose();
+        }
 	}
 }

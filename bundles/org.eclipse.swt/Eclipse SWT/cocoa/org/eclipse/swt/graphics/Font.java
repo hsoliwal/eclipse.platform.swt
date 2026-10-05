@@ -98,14 +98,20 @@ Font(Device device) {
  */
 public Font(Device device, FontData fd) {
 	super(device);
-	if (fd == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (fd == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		init(fd.getName(), fd.getHeightF(), fd.getStyle(), fd.nsName);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -136,19 +142,29 @@ public Font(Device device, FontData fd) {
  */
 public Font(Device device, FontData[] fds) {
 	super(device);
-	if (fds == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (fds.length == 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (fds == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (fds.length == 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	for (int i=0; i<fds.length; i++) {
-		if (fds[i] == null) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (fds[i] == null) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		FontData fd = fds[0];
 		init(fd.getName(), fd.getHeightF(), fd.getStyle(), fd.nsName);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -179,12 +195,16 @@ public Font(Device device, FontData[] fds) {
 public Font(Device device, String name, int height, int style) {
 	super(device);
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		init(name, height, style, null);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -225,8 +245,12 @@ void destroy() {
  */
 @Override
 public boolean equals(Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Font font)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Font font)) {
+        return false;
+    }
 	return handle == font.handle;
 }
 
@@ -243,9 +267,13 @@ public boolean equals(Object object) {
  * </ul>
  */
 public FontData[] getFontData() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSString family = handle.familyName();
 		String name = family.getString();
@@ -254,16 +282,26 @@ public FontData[] getFontData() {
 		NSFontManager manager = NSFontManager.sharedFontManager();
 		long traits = manager.traitsOfFont(handle);
 		int style = SWT.NORMAL;
-		if ((traits & OS.NSItalicFontMask) != 0) style |= SWT.ITALIC;
-		if ((traits & OS.NSBoldFontMask) != 0) style |= SWT.BOLD;
-		if ((extraTraits & OS.NSItalicFontMask) != 0) style |= SWT.ITALIC;
-		if ((extraTraits & OS.NSBoldFontMask) != 0) style |= SWT.BOLD;
+        if ((traits & OS.NSItalicFontMask) != 0) {
+            style |= SWT.ITALIC;
+        }
+        if ((traits & OS.NSBoldFontMask) != 0) {
+            style |= SWT.BOLD;
+        }
+        if ((extraTraits & OS.NSItalicFontMask) != 0) {
+            style |= SWT.ITALIC;
+        }
+        if ((extraTraits & OS.NSBoldFontMask) != 0) {
+            style |= SWT.BOLD;
+        }
 		Point dpi = device.dpi, screenDPI = device.getScreenDPI();
 		FontData data = new FontData(name, (float)handle.pointSize() * screenDPI.y / dpi.y, style);
 		data.nsName = nsName;
 		return new FontData[]{data};
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -310,8 +348,12 @@ public int hashCode() {
 }
 
 void init(String name, float height, int style, String nsName) {
-	if (name == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (height < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (name == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (height < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Point dpi = device.dpi, screenDPI = device.getScreenDPI();
 	float size = height * dpi.y / screenDPI.y;
 	NSFont systemFont = NSFont.systemFontOfSize(size);
@@ -373,7 +415,9 @@ public boolean isDisposed() {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Font {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Font {*DISPOSED*}";
+    }
 	return "Font {" + handle + "}";
 }
 

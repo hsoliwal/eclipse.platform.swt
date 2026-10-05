@@ -83,7 +83,9 @@ public void stash(Throwable throwable) {
 }
 
 public void close() {
-	if (storedThrowable == null) return;
+    if (storedThrowable == null) {
+        return;
+    }
 
 	Throwable throwable = storedThrowable;
 	storedThrowable = null;

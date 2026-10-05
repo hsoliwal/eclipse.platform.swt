@@ -225,7 +225,9 @@ public void addSelectionListener (SelectionListener listener) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 static int checkStyle (int style) {
@@ -240,8 +242,12 @@ void destroyWidget () {
 
 boolean fillAccel (ACCEL accel) {
 	accel.cmd = accel.key = accel.fVirt = 0;
-	if (accelerator == 0 || !getEnabled ()) return false;
-	if ((accelerator & SWT.COMMAND) != 0) return false;
+    if (accelerator == 0 || !getEnabled()) {
+        return false;
+    }
+    if ((accelerator & SWT.COMMAND) != 0) {
+        return false;
+    }
 	int fVirt = OS.FVIRTKEY;
 	int key = accelerator & SWT.KEY_MASK;
 	int vKey = Display.untranslateKey (key);
@@ -258,7 +264,9 @@ boolean fillAccel (ACCEL accel) {
 			case 27: key = OS.VK_ESCAPE; break;
 			case 127: key = OS.VK_DELETE; break;
 			default: {
-				if (key == 0) return false;
+                if (key == 0) {
+                    return false;
+                }
 				vKey = OS.VkKeyScan ((short) key);
 				if (vKey == -1) {
 					if (key != (int)OS.CharUpper (OS.LOWORD (key))) {
@@ -273,15 +281,23 @@ boolean fillAccel (ACCEL accel) {
 	accel.key = (short) key;
 	accel.cmd = (short) id;
 	accel.fVirt = (byte) fVirt;
-	if ((accelerator & SWT.ALT) != 0) accel.fVirt |= OS.FALT;
-	if ((accelerator & SWT.SHIFT) != 0) accel.fVirt |= OS.FSHIFT;
-	if ((accelerator & SWT.CONTROL) != 0) accel.fVirt |= OS.FCONTROL;
+    if ((accelerator & SWT.ALT) != 0) {
+        accel.fVirt |= OS.FALT;
+    }
+    if ((accelerator & SWT.SHIFT) != 0) {
+        accel.fVirt |= OS.FSHIFT;
+    }
+    if ((accelerator & SWT.CONTROL) != 0) {
+        accel.fVirt |= OS.FCONTROL;
+    }
 	return true;
 }
 
 void fixMenus (Decorations newParent) {
 	this.nativeZoom = newParent.nativeZoom;
-	if (menu != null && !menu.isDisposed() && !newParent.isDisposed()) menu.fixMenus (newParent);
+    if (menu != null && !menu.isDisposed() && !newParent.isDisposed()) {
+        menu.fixMenus(newParent);
+    }
 }
 
 /**
@@ -319,7 +335,9 @@ public int getAccelerator () {
 /*public*/ Rectangle getBounds () {
 	checkWidget ();
 	int index = parent.indexOf (this);
-	if (index == -1) return new Rectangle (0, 0, 0, 0);
+    if (index == -1) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	if ((parent.style & SWT.BAR) != 0) {
 		Decorations shell = parent.parent;
 		if (shell.menuBar != parent) {
@@ -390,7 +408,9 @@ public boolean getEnabled () {
 	info.cbSize = MENUITEMINFO.sizeof;
 	info.fMask = OS.MIIM_STATE;
 	boolean success = OS.GetMenuItemInfo (hMenu, id, false, info);
-	if (!success) error (SWT.ERROR_CANNOT_GET_ENABLED);
+    if (!success) {
+        error(SWT.ERROR_CANNOT_GET_ENABLED);
+    }
 	return (info.fState & (OS.MFS_DISABLED | OS.MFS_GRAYED)) == 0;
 }
 
@@ -433,7 +453,9 @@ public Menu getMenu () {
 
 @Override
 String getNameText () {
-	if ((style & SWT.SEPARATOR) != 0) return "|";
+    if ((style & SWT.SEPARATOR) != 0) {
+        return "|";
+    }
 	return super.getNameText ();
 }
 
@@ -468,13 +490,17 @@ public Menu getParent () {
  */
 public boolean getSelection () {
 	checkWidget ();
-	if ((style & (SWT.CHECK | SWT.RADIO)) == 0) return false;
+    if ((style & (SWT.CHECK | SWT.RADIO)) == 0) {
+        return false;
+    }
 	long hMenu = parent.handle;
 	MENUITEMINFO info = new MENUITEMINFO ();
 	info.cbSize = MENUITEMINFO.sizeof;
 	info.fMask = OS.MIIM_STATE;
 	boolean success = OS.GetMenuItemInfo (hMenu, id, false, info);
-	if (!success) error (SWT.ERROR_CANNOT_GET_SELECTION);
+    if (!success) {
+        error(SWT.ERROR_CANNOT_GET_SELECTION);
+    }
 	return (info.fState & OS.MFS_CHECKED) !=0;
 }
 
@@ -496,7 +522,9 @@ public String getToolTipText () {
 }
 
 void hideToolTip () {
-	if (itemToolTip == null || itemToolTip.isDisposed()) return;
+    if (itemToolTip == null || itemToolTip.isDisposed()) {
+        return;
+    }
 	itemToolTip.setVisible (false);
 }
 
@@ -538,16 +566,22 @@ void releaseHandle () {
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (menu != null) menu.dispose ();
+    if (menu != null) {
+        menu.dispose();
+    }
 	menu = null;
 }
 
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (hBitmap != 0) OS.DeleteObject (hBitmap);
+    if (hBitmap != 0) {
+        OS.DeleteObject(hBitmap);
+    }
 	hBitmap = 0;
-	if (hBitmapSelected != 0) OS.DeleteObject (hBitmapSelected);
+    if (hBitmapSelected != 0) {
+        OS.DeleteObject(hBitmapSelected);
+    }
 	hBitmapSelected = 0;
 	if (imageSelected != null) {
 		imageSelected.dispose();
@@ -584,8 +618,12 @@ void releaseWidget () {
  */
 public void removeArmListener (ArmListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Arm, listener);
 }
 /**
@@ -607,8 +645,12 @@ public void removeArmListener (ArmListener listener) {
  */
 public void removeHelpListener (HelpListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Help, listener);
 }
 /**
@@ -630,8 +672,12 @@ public void removeHelpListener (HelpListener listener) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -648,11 +694,17 @@ void reskinChildren (int flags) {
 void selectRadio () {
 	int index = 0;
 	MenuItem [] items = parent.getItems ();
-	while (index < items.length && items [index] != this) index++;
+    while (index < items.length && items [index] != this) {
+        index++;
+    }
 	int i = index - 1;
-	while (i >= 0 && items [i].setRadioSelection (false)) --i;
+    while (i >= 0 && items [i].setRadioSelection(false)) {
+        --i;
+    }
 	int j = index + 1;
-	while (j < items.length && items [j].setRadioSelection (false)) j++;
+    while (j < items.length && items [j].setRadioSelection(false)) {
+        j++;
+    }
 	setSelection (true);
 }
 
@@ -673,7 +725,9 @@ void selectRadio () {
  */
 public void setAccelerator (int accelerator) {
 	checkWidget ();
-	if (this.accelerator == accelerator) return;
+    if (this.accelerator == accelerator) {
+        return;
+    }
 	this.accelerator = accelerator;
 	parent.destroyAccelerators ();
 }
@@ -717,10 +771,14 @@ public void setEnabled (boolean enabled) {
 	}
 	int bits = OS.MFS_DISABLED | OS.MFS_GRAYED;
 	if (enabled) {
-		if ((info.fState & bits) == 0) return;
+        if ((info.fState & bits) == 0) {
+            return;
+        }
 		info.fState &= ~bits;
 	} else {
-		if ((info.fState & bits) == bits) return;
+        if ((info.fState & bits) == bits) {
+            return;
+        }
 		info.fState |= bits;
 	}
 	success = OS.SetMenuItemInfo (hMenu, id, false, info);
@@ -758,7 +816,9 @@ public void setEnabled (boolean enabled) {
  */
 public void setID (int id) {
 	checkWidget();
-	if (id < 0) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (id < 0) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	userId = id;
 }
 
@@ -781,8 +841,12 @@ public void setID (int id) {
 @Override
 public void setImage (Image image) {
 	checkWidget ();
-	if (this.image == image) return;
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if (this.image == image) {
+        return;
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	super.setImage (image);
 	if (imageSelected != null) {
 		imageSelected.dispose();
@@ -802,7 +866,9 @@ private void updateImage () {
 	if (parent.needsMenuCallback()) {
 		info.hbmpItem = OS.HBMMENU_CALLBACK;
 	} else {
-		if (hBitmap != 0) OS.DeleteObject (hBitmap);
+        if (hBitmap != 0) {
+            OS.DeleteObject(hBitmap);
+        }
 		hBitmap = getMenuItemIconBitmapHandle(image);
 		if ((style & (SWT.CHECK | SWT.RADIO)) != 0 && CUSTOM_SELECTION_IMAGE > 0) {
 			info.fMask |= OS.MIIM_CHECKMARKS;
@@ -897,7 +963,9 @@ private long getMenuItemIconSelectedBitmapHandle() {
 	if (image == null) {
 		return 0;
 	}
-	if (hBitmapSelected != 0) OS.DeleteObject (hBitmapSelected);
+    if (hBitmapSelected != 0) {
+        OS.DeleteObject(hBitmapSelected);
+    }
 	int zoom = adaptZoomForMenuItem(nativeZoom, image);
 	return hBitmapSelected = Display.create32bitDIB (image, zoom);
 }
@@ -968,7 +1036,9 @@ public void setMenu (Menu menu) {
 		error (SWT.ERROR_MENUITEM_NOT_CASCADE);
 	}
 	if (menu != null) {
-		if (menu.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (menu.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		if ((menu.style & SWT.DROP_DOWN) == 0) {
 			error (SWT.ERROR_MENU_NOT_DROP_DOWN);
 		}
@@ -983,8 +1053,12 @@ void setMenu (Menu menu, boolean dispose) {
 
 	/* Assign the new menu */
 	Menu oldMenu = this.menu;
-	if (oldMenu == menu) return;
-	if (oldMenu != null) oldMenu.cascade = null;
+    if (oldMenu == menu) {
+        return;
+    }
+    if (oldMenu != null) {
+        oldMenu.cascade = null;
+    }
 	this.menu = menu;
 
 	long hMenu = parent.handle;
@@ -993,10 +1067,14 @@ void setMenu (Menu menu, boolean dispose) {
 	info.fMask = OS.MIIM_DATA;
 	int index = 0;
 	while (OS.GetMenuItemInfo (hMenu, index, true, info)) {
-		if (info.dwItemData == id) break;
+        if (info.dwItemData == id) {
+            break;
+        }
 		index++;
 	}
-	if (info.dwItemData != id) return;
+    if (info.dwItemData != id) {
+        return;
+    }
 	int cch = 128;
 	long hHeap = OS.GetProcessHeap ();
 	int byteCount = cch * 2;
@@ -1032,7 +1110,9 @@ void setMenu (Menu menu, boolean dispose) {
 		OS.RemoveMenu (hMenu, index, OS.MF_BYPOSITION);
 		success = OS.InsertMenuItem (hMenu, index, true, info);
 	}
-	if (pszText != 0) OS.HeapFree (hHeap, 0, pszText);
+    if (pszText != 0) {
+        OS.HeapFree(hHeap, 0, pszText);
+    }
 	if (!success) {
 		int error = OS.GetLastError();
 		SWT.error (SWT.ERROR_CANNOT_SET_MENU, null, " [GetLastError=0x" + Integer.toHexString(error) + "]");//$NON-NLS-1$ $NON-NLS-2$
@@ -1041,7 +1121,9 @@ void setMenu (Menu menu, boolean dispose) {
 }
 
 boolean setRadioSelection (boolean value) {
-	if ((style & SWT.RADIO) == 0) return false;
+    if ((style & SWT.RADIO) == 0) {
+        return false;
+    }
 	if (getSelection () != value) {
 		setSelection (value);
 		sendSelectionEvent (SWT.Selection);
@@ -1056,7 +1138,9 @@ void setOrientation (int orientation) {
 	info.fMask = OS.MIIM_FTYPE;
 	info.fType = widgetStyle ();
 	OS.SetMenuItemInfo (hMenu, id, false, info);
-	if (menu != null) menu._setOrientation (orientation);
+    if (menu != null) {
+        menu._setOrientation(orientation);
+    }
 }
 
 /**
@@ -1074,15 +1158,21 @@ void setOrientation (int orientation) {
  */
 public void setSelection (boolean selected) {
 	checkWidget ();
-	if ((style & (SWT.CHECK | SWT.RADIO)) == 0) return;
+    if ((style & (SWT.CHECK | SWT.RADIO)) == 0) {
+        return;
+    }
 	long hMenu = parent.handle;
 	MENUITEMINFO info = new MENUITEMINFO ();
 	info.cbSize = MENUITEMINFO.sizeof;
 	info.fMask = OS.MIIM_STATE;
 	boolean success = OS.GetMenuItemInfo (hMenu, id, false, info);
-	if (!success) error (SWT.ERROR_CANNOT_SET_SELECTION);
+    if (!success) {
+        error(SWT.ERROR_CANNOT_SET_SELECTION);
+    }
 	info.fState &= ~OS.MFS_CHECKED;
-	if (selected) info.fState |= OS.MFS_CHECKED;
+    if (selected) {
+        info.fState |= OS.MFS_CHECKED;
+    }
 
 	if (selected && CUSTOM_SELECTION_IMAGE > 1 && hBitmap != 0 && imageSelected == null) {
 		initCustomSelectedImage();
@@ -1149,9 +1239,15 @@ public void setSelection (boolean selected) {
 @Override
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.SEPARATOR) != 0) return;
-	if (text.equals (string)) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
+    if (text.equals(string)) {
+        return;
+    }
 	super.setText (string);
 	long hHeap = OS.GetProcessHeap ();
 	long pszText = 0;
@@ -1171,7 +1267,9 @@ public void setText (String string) {
 	info.fMask = OS.MIIM_STRING;
 	info.dwTypeData = pszText;
 	boolean success = OS.SetMenuItemInfo (hMenu, id, false, info);
-	if (pszText != 0) OS.HeapFree (hHeap, 0, pszText);
+    if (pszText != 0) {
+        OS.HeapFree(hHeap, 0, pszText);
+    }
 	if (!success) {
 		int error = OS.GetLastError();
 		SWT.error (SWT.ERROR_CANNOT_SET_TEXT, null, " [GetLastError=0x" + Integer.toHexString(error) + "]");//$NON-NLS-1$ $NON-NLS-2$
@@ -1220,17 +1318,23 @@ public void setToolTipText (String toolTip) {
 		itemToolTip = null;
 	}
 
-	if (toolTip == null || toolTip.trim().length() == 0
-			|| (itemToolTip != null && !itemToolTip.isDisposed() && toolTip.equals(itemToolTip.getMessage()))) return;
+    if (toolTip == null || toolTip.trim().length() == 0
+            || (itemToolTip != null && !itemToolTip.isDisposed() && toolTip.equals(itemToolTip.getMessage()))) {
+        return;
+    }
 
-	if (itemToolTip != null) itemToolTip.dispose();
+    if (itemToolTip != null) {
+        itemToolTip.dispose();
+    }
 	itemToolTip = new MenuItemToolTip (this.getParent().getShell());
 	itemToolTip.setMessage (toolTip);
 	itemToolTip.setVisible (false);
 }
 
 void showTooltip (int x, int y) {
-	if (itemToolTip == null || itemToolTip.isDisposed()) return;
+    if (itemToolTip == null || itemToolTip.isDisposed()) {
+        return;
+    }
 	itemToolTip.setLocationInPixels (x, y);
 	itemToolTip.setVisible (true);
 }
@@ -1247,8 +1351,12 @@ int widgetStyle () {
 			bits |= OS.MFT_RIGHTJUSTIFY | OS.MFT_RIGHTORDER;
 		}
 	}
-	if ((style & SWT.SEPARATOR) != 0) return bits | OS.MFT_SEPARATOR;
-	if ((style & SWT.RADIO) != 0) return bits | OS.MFT_RADIOCHECK;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return bits | OS.MFT_SEPARATOR;
+    }
+    if ((style & SWT.RADIO) != 0) {
+        return bits | OS.MFT_RADIOCHECK;
+    }
 	return bits | OS.MFT_STRING;
 }
 

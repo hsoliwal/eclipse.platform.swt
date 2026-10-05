@@ -137,10 +137,18 @@ public static void main(String[] args) {
 	// Show the TableCursor when the user releases the "SHIFT" or "CTRL" key.
 	// This signals the end of the multiple selection task.
 	table.addKeyListener(keyReleasedAdapter(e-> {
-			if (e.keyCode == SWT.CONTROL && (e.stateMask & SWT.SHIFT) != 0) return;
-			if (e.keyCode == SWT.SHIFT && (e.stateMask & SWT.CONTROL) != 0) return;
-			if (e.keyCode != SWT.CONTROL && (e.stateMask & SWT.CONTROL) != 0) return;
-			if (e.keyCode != SWT.SHIFT && (e.stateMask & SWT.SHIFT) != 0) return;
+        if (e.keyCode == SWT.CONTROL && (e.stateMask & SWT.SHIFT) != 0) {
+            return;
+        }
+        if (e.keyCode == SWT.SHIFT && (e.stateMask & SWT.CONTROL) != 0) {
+            return;
+        }
+        if (e.keyCode != SWT.CONTROL && (e.stateMask & SWT.CONTROL) != 0) {
+            return;
+        }
+        if (e.keyCode != SWT.SHIFT && (e.stateMask & SWT.SHIFT) != 0) {
+            return;
+        }
 
 			TableItem[] selection = table.getSelection();
 			TableItem row = (selection.length == 0) ? table.getItem(table.getTopIndex()) : selection[0];
@@ -152,8 +160,9 @@ public static void main(String[] args) {
 
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

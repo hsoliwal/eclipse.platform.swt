@@ -100,11 +100,15 @@ public class UnlimitedBallsTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (offscreenImages == null) {
 			ball = example.loadImage(gc.getDevice(), "ball.gif"); //$NON-NLS-1$
-			if (ball == null) return;
+            if (ball == null) {
+                return;
+            }
 
 			currentShape = 0;
 			count = 0;

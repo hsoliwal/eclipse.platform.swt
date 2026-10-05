@@ -83,10 +83,16 @@ public class Pattern extends Resource {
  */
 public Pattern(Device device, Image image) {
 	super(device);
-	if (image == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (image == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (image.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	handle = Cairo.cairo_pattern_create_for_surface(image.surface);
-	if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Cairo.cairo_pattern_set_extend(handle, Cairo.CAIRO_EXTEND_REPEAT);
 	surface = image.surface;
 	init();
@@ -171,12 +177,22 @@ public Pattern(Device device, float x1, float y1, float x2, float y2, Color colo
  */
 public Pattern(Device device, float x1, float y1, float x2, float y2, Color color1, int alpha1, Color color2, int alpha2) {
 	super(device);
-	if (color1 == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color1.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (color2 == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color2.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (color1 == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color1.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (color2 == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color2.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	handle = Cairo.cairo_pattern_create_linear(x1, y1, x2, y2);
-	if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	GC.setCairoPatternColor(handle, 0, color1, alpha1);
 	GC.setCairoPatternColor(handle, 1, color2, alpha2);
 	Cairo.cairo_pattern_set_extend(handle, Cairo.CAIRO_EXTEND_REPEAT);
@@ -212,7 +228,9 @@ public boolean isDisposed() {
  */
 @Override
 public String toString() {
-	if (isDisposed()) return "Pattern {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Pattern {*DISPOSED*}";
+    }
 	return "Pattern {" + handle + "}";
 }
 

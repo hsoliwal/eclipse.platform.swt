@@ -86,7 +86,9 @@ TaskItem (TaskBar parent, int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -199,7 +201,9 @@ public int getProgressState () {
 void releaseHandle () {
 	super.releaseHandle ();
 	parent = null;
-	if (defaultImage != null) defaultImage.release ();
+    if (defaultImage != null) {
+        defaultImage.release();
+    }
 	defaultImage = null;
 }
 
@@ -245,7 +249,9 @@ void releaseWidget () {
 public void setMenu (Menu menu) {
 	checkWidget ();
 	if (menu != null) {
-		if (menu.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (menu.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		if ((menu.style & SWT.POP_UP) == 0) {
 			error (SWT.ERROR_MENU_NOT_POP_UP);
 		}
@@ -282,7 +288,9 @@ public void setMenu (Menu menu) {
  */
 public void setOverlayImage (Image overlayImage) {
 	checkWidget ();
-	if (overlayImage != null && overlayImage.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (overlayImage != null && overlayImage.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.overlayImage = overlayImage;
 	updateOverlayText (overlayImage != null ? null : overlayText);
 	updateImage ();
@@ -316,7 +324,9 @@ public void setOverlayImage (Image overlayImage) {
  */
 public void setOverlayText (String overlayText) {
 	checkWidget ();
-	if (overlayText == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (overlayText == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.overlayText = overlayText;
 	updateOverlayText (overlayText);
 	updateImage ();
@@ -350,7 +360,9 @@ public void setOverlayText (String overlayText) {
 public void setProgress (int progress) {
 	checkWidget ();
 	progress = Math.max (0, Math.min (progress, PROGRESS_MAX));
-	if (this.progress == progress) return;
+    if (this.progress == progress) {
+        return;
+    }
 	this.progress = progress;
 	updateImage ();
 }
@@ -392,7 +404,9 @@ public void setProgress (int progress) {
  */
 public void setProgressState (int progressState) {
 	checkWidget ();
-	if (this.progressState == progressState) return;
+    if (this.progressState == progressState) {
+        return;
+    }
 	this.progressState = progressState;
 	updateImage ();
 }
@@ -400,7 +414,9 @@ public void setProgressState (int progressState) {
 void setShell (Shell shell) {
 	this.shell = shell;
 	shell.addListener (SWT.Dispose, event -> {
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 		dispose ();
 	});
 }

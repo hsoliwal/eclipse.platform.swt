@@ -75,7 +75,9 @@ Font(Device device) {
  */
 public Font(Device device, FontData fd) {
 	super(device);
-	if (fd == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (fd == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	init(fd.getName(), fd.getHeightF(), fd.getStyle(), fd.string);
 	init();
 }
@@ -107,10 +109,16 @@ public Font(Device device, FontData fd) {
  */
 public Font(Device device, FontData[] fds) {
 	super(device);
-	if (fds == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (fds.length == 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (fds == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (fds.length == 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	for (int i=0; i<fds.length; i++) {
-		if (fds[i] == null) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (fds[i] == null) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	FontData fd = fds[0];
 	init(fd.getName(), fd.getHeightF(), fd.getStyle(), fd.string);
@@ -165,8 +173,12 @@ void destroy() {
  */
 @Override
 public boolean equals(Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Font)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Font)) {
+        return false;
+    }
 	return handle == ((Font)object).handle;
 }
 
@@ -183,7 +195,9 @@ public boolean equals(Object object) {
  * </ul>
  */
 public FontData[] getFontData() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 
 	long family = OS.pango_font_description_get_family(handle);
 	int length = C.strlen(family);
@@ -196,9 +210,15 @@ public FontData[] getFontData() {
 	int pangoStyle = OS.pango_font_description_get_style(handle);
 	int pangoWeight = OS.pango_font_description_get_weight(handle);
 	int style = SWT.NORMAL;
-	if (pangoStyle == OS.PANGO_STYLE_ITALIC) style |= SWT.ITALIC;
-	if (pangoStyle == OS.PANGO_STYLE_OBLIQUE) style |= SWT.ROMAN;
-	if (pangoWeight >= OS.PANGO_WEIGHT_BOLD) style |= SWT.BOLD;
+    if (pangoStyle == OS.PANGO_STYLE_ITALIC) {
+        style |= SWT.ITALIC;
+    }
+    if (pangoStyle == OS.PANGO_STYLE_OBLIQUE) {
+        style |= SWT.ROMAN;
+    }
+    if (pangoWeight >= OS.PANGO_WEIGHT_BOLD) {
+        style |= SWT.BOLD;
+    }
 	long fontString = OS.pango_font_description_to_string (handle);
 	length = C.strlen (fontString);
 	buffer = new byte [length + 1];
@@ -252,16 +272,24 @@ public int hashCode() {
 }
 
 void init(String name, float height, int style, byte[] fontString) {
-	if (name == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (height < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (name == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (height < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Point dpi = device.dpi, screenDPI = device.getScreenDPI();
 	float size = height * dpi.y / screenDPI.y;
 	if (fontString != null) {
 		handle = OS.pango_font_description_from_string (fontString);
-		if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (handle == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 	} else {
 		handle = OS.pango_font_description_new();
-		if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (handle == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		byte[] buffer = Converter.wcsToMbcs(name, true);
 		OS.pango_font_description_set_family(handle, buffer);
 		if (size > 0) {
@@ -270,9 +298,15 @@ void init(String name, float height, int style, byte[] fontString) {
 		OS.pango_font_description_set_stretch(handle, OS.PANGO_STRETCH_NORMAL);
 		int pangoStyle = OS.PANGO_STYLE_NORMAL;
 		int pangoWeight = OS.PANGO_WEIGHT_NORMAL;
-		if ((style & SWT.ITALIC) != 0) pangoStyle = OS.PANGO_STYLE_ITALIC;
-		if ((style & SWT.ROMAN) != 0) pangoStyle = OS.PANGO_STYLE_OBLIQUE;
-		if ((style & SWT.BOLD) != 0) pangoWeight = OS.PANGO_WEIGHT_BOLD;
+        if ((style & SWT.ITALIC) != 0) {
+            pangoStyle = OS.PANGO_STYLE_ITALIC;
+        }
+        if ((style & SWT.ROMAN) != 0) {
+            pangoStyle = OS.PANGO_STYLE_OBLIQUE;
+        }
+        if ((style & SWT.BOLD) != 0) {
+            pangoWeight = OS.PANGO_WEIGHT_BOLD;
+        }
 		OS.pango_font_description_set_style(handle, pangoStyle);
 		OS.pango_font_description_set_weight(handle, pangoWeight);
 	}
@@ -301,7 +335,9 @@ public boolean isDisposed() {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Font {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Font {*DISPOSED*}";
+    }
 	return "Font {" + handle + "}";
 }
 

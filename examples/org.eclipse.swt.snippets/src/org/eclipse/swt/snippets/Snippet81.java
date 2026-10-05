@@ -65,16 +65,22 @@ public static void main(String[] args) {
 private static void printTypeInfo(OleAutomation auto) {
 	TYPEATTR typeattr = auto.getTypeInfoAttributes();
 	if (typeattr != null) {
-		if (typeattr.cFuncs > 0) System.out.println("Functions :\n");
+        if (typeattr.cFuncs > 0) {
+            System.out.println("Functions :\n");
+        }
 		for (int i = 0; i < typeattr.cFuncs; i++) {
 			OleFunctionDescription data = auto.getFunctionDescription(i);
 			String argList = "";
 			int firstOptionalArgIndex = data.args.length - data.optionalArgCount;
 			for (int j = 0; j < data.args.length; j++) {
 				argList += "[";
-				if (j >= firstOptionalArgIndex) argList += "optional, ";
+                if (j >= firstOptionalArgIndex) {
+                    argList += "optional, ";
+                }
 				argList += getDirection(data.args[j].flags)+"] "+getTypeName(data.args[j].type)+" "+data.args[j].name;
-				if ( j < data.args.length - 1) argList += ", ";
+                if (j < data.args.length - 1) {
+                    argList += ", ";
+                }
 			}
 			System.out.println(getInvokeKind(data.invokeKind)+" (id = "+data.id+") : "
 							+"\n\tSignature   : "+getTypeName(data.returnType)+" "+data.name+"("+argList+")"
@@ -82,7 +88,9 @@ private static void printTypeInfo(OleAutomation auto) {
 								+"\n\tHelp File   : "+data.helpFile+"\n");
 		}
 
-		if (typeattr.cVars > 0) System.out.println("\n\nVariables  :\n");
+        if (typeattr.cVars > 0) {
+            System.out.println("\n\nVariables  :\n");
+        }
 		for (int i = 0; i < typeattr.cVars; i++) {
 			OlePropertyDescription data = auto.getPropertyDescription(i);
 			System.out.println("PROPERTY (id = "+data.id+") :"
@@ -135,17 +143,23 @@ private static String getDirection(int direction){
 		comma = true;
 	}
 	if ((direction & OLE.IDLFLAG_FOUT) != 0){
-		if (comma) dirString += ", ";
+        if (comma) {
+            dirString += ", ";
+        }
 		dirString += "out";
 		comma = true;
 	}
 	if ((direction & OLE.IDLFLAG_FLCID) != 0){
-		if (comma) dirString += ", ";
+        if (comma) {
+            dirString += ", ";
+        }
 		dirString += "lcid";
 		comma = true;
 	}
 	if ((direction & OLE.IDLFLAG_FRETVAL) != 0){
-		if (comma) dirString += ", ";
+        if (comma) {
+            dirString += ", ";
+        }
 		dirString += "retval";
 	}
 

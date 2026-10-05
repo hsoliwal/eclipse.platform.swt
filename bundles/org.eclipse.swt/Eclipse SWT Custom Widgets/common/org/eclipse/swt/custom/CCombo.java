@@ -104,7 +104,9 @@ public CCombo (Composite parent, int style) {
 	_shell = super.getShell ();
 
 	listener = event -> {
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 		if (popup == event.widget) {
 			popupEvent (event);
 			return;
@@ -127,7 +129,9 @@ public CCombo (Composite parent, int style) {
 		}
 		if (getShell () == event.widget) {
 			getDisplay().asyncExec(() -> {
-				if (isDisposed ()) return;
+                if (isDisposed()) {
+                    return;
+                }
 				handleFocus (SWT.FocusOut);
 			});
 		}
@@ -136,10 +140,14 @@ public CCombo (Composite parent, int style) {
 	createText(style);
 
 	int arrowStyle = SWT.ARROW | SWT.DOWN;
-	if ((style & SWT.FLAT) != 0) arrowStyle |= SWT.FLAT;
+    if ((style & SWT.FLAT) != 0) {
+        arrowStyle |= SWT.FLAT;
+    }
 	arrow = new Button (this, arrowStyle);
 	filter = event -> {
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 		if (event.type == SWT.Selection) {
 			if (event.widget instanceof ScrollBar) {
 				handleScroll(event);
@@ -155,13 +163,15 @@ public CCombo (Composite parent, int style) {
 	};
 
 	int [] comboEvents = {SWT.Dispose, SWT.FocusIn, SWT.Move, SWT.Resize, SWT.FocusOut};
-	for (int comboEvent : comboEvents)
-		this.addListener (comboEvent, listener);
+    for (int comboEvent : comboEvents) {
+        this.addListener(comboEvent, listener);
+    }
 
 	int [] arrowEvents = {SWT.DragDetect, SWT.MouseDown, SWT.MouseEnter, SWT.MouseExit, SWT.MouseHover,
 		SWT.MouseMove, SWT.MouseUp, SWT.MouseWheel, SWT.Selection, SWT.FocusIn};
-	for (int arrowEvent : arrowEvents)
-		arrow.addListener (arrowEvent, listener);
+    for (int arrowEvent : arrowEvents) {
+        arrow.addListener(arrowEvent, listener);
+    }
 
 	createPopup(null, -1);
 	if ((style & SWT.SIMPLE) == 0) {
@@ -213,30 +223,47 @@ void createText(int comboStyle) {
 	}
 
 	int textStyle = SWT.SINGLE;
-	if ((comboStyle & SWT.READ_ONLY) != 0) textStyle |= SWT.READ_ONLY;
-	if ((comboStyle & SWT.FLAT) != 0) textStyle |= SWT.FLAT;
+    if ((comboStyle & SWT.READ_ONLY) != 0) {
+        textStyle |= SWT.READ_ONLY;
+    }
+    if ((comboStyle & SWT.FLAT) != 0) {
+        textStyle |= SWT.FLAT;
+    }
 	textStyle |= comboStyle & (SWT.LEAD | SWT.CENTER | SWT.TRAIL);
 	text = new Text (this, textStyle);
 	if (textValue != null) {
 		text.setText(textValue);
 		text.setToolTipText(tooltip);
-		if (selection != null) text.setSelection(selection);
+        if (selection != null) {
+            text.setSelection(selection);
+        }
 		text.setTextLimit(limit);
 		text.setEnabled(enabled);
 		text.setEditable(editable);
-		if (focus) text.setFocus();
-		if (font != null && !font.isDisposed()) text.setFont(font);
-		if (fg != null && !fg.isDisposed()) text.setForeground(fg);
-		if (bg != null && !bg.isDisposed()) text.setBackground(bg);
-		if (menu != null && !menu.isDisposed()) text.setMenu(menu);
+        if (focus) {
+            text.setFocus();
+        }
+        if (font != null && !font.isDisposed()) {
+            text.setFont(font);
+        }
+        if (fg != null && !fg.isDisposed()) {
+            text.setForeground(fg);
+        }
+        if (bg != null && !bg.isDisposed()) {
+            text.setBackground(bg);
+        }
+        if (menu != null && !menu.isDisposed()) {
+            text.setMenu(menu);
+        }
 		internalLayout(true);
 	}
 
 	int [] textEvents = {SWT.DefaultSelection, SWT.DragDetect, SWT.KeyDown, SWT.KeyUp, SWT.MenuDetect, SWT.Modify,
 			SWT.MouseDown, SWT.MouseUp, SWT.MouseDoubleClick, SWT.MouseEnter, SWT.MouseExit, SWT.MouseHover,
 			SWT.MouseMove, SWT.MouseWheel, SWT.Traverse, SWT.FocusIn, SWT.Verify};
-	for (int textEvent : textEvents)
-		text.addListener (textEvent, listener);
+    for (int textEvent : textEvents) {
+        text.addListener(textEvent, listener);
+    }
 }
 /**
  * Adds the argument to the end of the receiver's list.
@@ -258,7 +285,9 @@ void createText(int comboStyle) {
  */
 public void add (String string) {
 	checkWidget();
-	if (string == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	list.add (string);
 }
 /**
@@ -289,7 +318,9 @@ public void add (String string) {
  */
 public void add (String string, int index) {
 	checkWidget();
-	if (string == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	list.add (string, index);
 }
 /**
@@ -390,8 +421,12 @@ void arrowEvent (Event event) {
 			event.x = pt.x; event.y = pt.y;
 			notifyListeners (SWT.MouseWheel, event);
 			event.type = SWT.None;
-			if (isDisposed ()) break;
-			if (!event.doit) break;
+            if (isDisposed()) {
+                break;
+            }
+            if (!event.doit) {
+                break;
+            }
 			if (event.count != 0) {
 				event.doit = false;
 				int oldIndex = getSelectionIndex ();
@@ -406,7 +441,9 @@ void arrowEvent (Event event) {
 					e.stateMask = event.stateMask;
 					notifyListeners (SWT.Selection, e);
 				}
-				if (isDisposed ()) break;
+                if (isDisposed()) {
+                    break;
+                }
 			}
 			break;
 		}
@@ -470,7 +507,9 @@ void comboEvent (Event event) {
 			break;
 		case SWT.FocusIn:
 			Control focusControl = getDisplay ().getFocusControl ();
-			if (focusControl == arrow || focusControl == list) return;
+            if (focusControl == arrow || focusControl == list) {
+                return;
+            }
 			if (isDropped()) {
 				list.setFocus();
 			} else {
@@ -507,8 +546,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 
 	height = Math.max (textSize.y, arrowSize.y);
 	width = Math.max (textWidth + 2*spacer + arrowSize.x + 2*borderWidth, listSize.x);
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	return new Point (width + 2*borderWidth, height + 2*borderWidth);
 }
 /**
@@ -533,23 +576,41 @@ void createPopup(String[] items, int selectionIndex) {
 	popup = new Shell (getShell (), SWT.NO_TRIM | SWT.ON_TOP);
 	int style = getStyle ();
 	int listStyle = SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL;
-	if ((style & SWT.FLAT) != 0) listStyle |= SWT.FLAT;
-	if ((style & SWT.RIGHT_TO_LEFT) != 0) listStyle |= SWT.RIGHT_TO_LEFT;
-	if ((style & SWT.LEFT_TO_RIGHT) != 0) listStyle |= SWT.LEFT_TO_RIGHT;
+    if ((style & SWT.FLAT) != 0) {
+        listStyle |= SWT.FLAT;
+    }
+    if ((style & SWT.RIGHT_TO_LEFT) != 0) {
+        listStyle |= SWT.RIGHT_TO_LEFT;
+    }
+    if ((style & SWT.LEFT_TO_RIGHT) != 0) {
+        listStyle |= SWT.LEFT_TO_RIGHT;
+    }
 	list = new List (popup, listStyle);
-	if (font != null) list.setFont (font);
-	if (foreground != null) list.setForeground (foreground);
-	if (background != null) list.setBackground (background);
+    if (font != null) {
+        list.setFont(font);
+    }
+    if (foreground != null) {
+        list.setForeground(foreground);
+    }
+    if (background != null) {
+        list.setBackground(background);
+    }
 
 	int [] popupEvents = {SWT.Close, SWT.Paint};
-	for (int popupEvent : popupEvents)
-		popup.addListener (popupEvent, listener);
+    for (int popupEvent : popupEvents) {
+        popup.addListener(popupEvent, listener);
+    }
 	int [] listEvents = {SWT.MouseUp, SWT.Selection, SWT.Traverse, SWT.KeyDown, SWT.KeyUp, SWT.FocusIn, SWT.FocusOut, SWT.Dispose};
-	for (int listEvent : listEvents)
-		list.addListener (listEvent, listener);
+    for (int listEvent : listEvents) {
+        list.addListener(listEvent, listener);
+    }
 
-	if (items != null) list.setItems (items);
-	if (selectionIndex != -1) list.setSelection (selectionIndex);
+    if (items != null) {
+        list.setItems(items);
+    }
+    if (selectionIndex != -1) {
+        list.setSelection(selectionIndex);
+    }
 }
 /**
  * Cuts the selected text.
@@ -610,7 +671,9 @@ public void deselectAll () {
 	list.deselectAll ();
 }
 void dropDown (boolean drop) {
-	if (drop == isDropped ()) return;
+    if (drop == isDropped()) {
+        return;
+    }
 	Display display = getDisplay ();
 	if (!drop) {
 		display.removeFilter (SWT.Selection, filter);
@@ -620,7 +683,9 @@ void dropDown (boolean drop) {
 		}
 		return;
 	}
-	if (!isVisible()) return;
+    if (!isVisible()) {
+        return;
+    }
 	if (getShell() != popup.getParent ()) {
 		String[] items = list.getItems ();
 		int selectionIndex = list.getSelectionIndex ();
@@ -640,7 +705,9 @@ void dropDown (boolean drop) {
 	list.setBounds (1, 1, Math.max (comboSize.x - 2, Math.min(listSize.x, displayRect.width - 2)), listSize.y);
 
 	int index = list.getSelectionIndex ();
-	if (index != -1) list.setTopIndex (index);
+    if (index != -1) {
+        list.setTopIndex(index);
+    }
 	Rectangle listRect = list.getBounds ();
 	Rectangle parentRect = display.map (getParent (), null, getBounds ());
 	int width = listRect.width + 2;
@@ -670,7 +737,9 @@ void dropDown (boolean drop) {
 	list.setSize (listRect.width, listRect.height - emptyHBarSpace);
 	popup.setBounds (x, y, width, height - emptyHBarSpace);
 	popup.setVisible (true);
-	if (isFocusControl()) list.setFocus ();
+    if (isFocusControl()) {
+        list.setFocus();
+    }
 
 	/*
 	 * Add a filter to listen to scrolling of the parent composite, when the
@@ -686,13 +755,21 @@ void dropDown (boolean drop) {
  * characters in the given string, return '\0'.
  */
 char _findMnemonic (String string) {
-	if (string == null) return '\0';
+    if (string == null) {
+        return '\0';
+    }
 	int index = 0;
 	int length = string.length ();
 	do {
-		while (index < length && string.charAt (index) != '&') index++;
-		if (++index >= length) return '\0';
-		if (string.charAt (index) != '&') return Character.toLowerCase (string.charAt (index));
+        while (index < length && string.charAt(index) != '&') {
+            index++;
+        }
+        if (++index >= length) {
+            return '\0';
+        }
+        if (string.charAt(index) != '&') {
+            return Character.toLowerCase(string.charAt(index));
+        }
 		index++;
 	} while (index < length);
 	return '\0';
@@ -707,8 +784,12 @@ String getAssociatedLabel () {
 		if (siblings [i] == this) {
 			if (i > 0) {
 				Control sibling = siblings [i-1];
-				if (sibling instanceof Label) return ((Label) sibling).getText();
-				if (sibling instanceof CLabel) return ((CLabel) sibling).getText();
+                if (sibling instanceof Label) {
+                    return ((Label) sibling).getText();
+                }
+                if (sibling instanceof CLabel) {
+                    return ((CLabel) sibling).getText();
+                }
 			}
 			break;
 		}
@@ -891,7 +972,9 @@ public Shell getShell () {
 public int getStyle () {
 	int style = super.getStyle ();
 	style &= ~SWT.READ_ONLY;
-	if (!text.getEditable()) style |= SWT.READ_ONLY;
+    if (!text.getEditable()) {
+        style |= SWT.READ_ONLY;
+    }
 	style &= ~(SWT.LEFT | SWT.CENTER | SWT.RIGHT);
 	style |= getAlignment();
 	return style;
@@ -962,8 +1045,12 @@ public int getVisibleItemCount () {
 void handleFocus (int type) {
 	switch (type) {
 		case SWT.FocusIn: {
-			if (hasFocus) return;
-			if (getEditable ()) text.selectAll ();
+            if (hasFocus) {
+                return;
+            }
+            if (getEditable()) {
+                text.selectAll();
+            }
 			hasFocus = true;
 			Shell shell = getShell ();
 			shell.removeListener (SWT.Deactivate, listener);
@@ -976,9 +1063,13 @@ void handleFocus (int type) {
 			break;
 		}
 		case SWT.FocusOut: {
-			if (!hasFocus) return;
+            if (!hasFocus) {
+                return;
+            }
 			Control focusControl = getDisplay ().getFocusControl ();
-			if (focusControl == arrow || focusControl == list || focusControl == text) return;
+            if (focusControl == arrow || focusControl == list || focusControl == text) {
+                return;
+            }
 			hasFocus = false;
 			Shell shell = getShell ();
 			shell.removeListener(SWT.Deactivate, listener);
@@ -993,8 +1084,12 @@ void handleFocus (int type) {
 void handleScroll(Event event) {
 	ScrollBar scrollBar = (ScrollBar)event.widget;
 	Control scrollableParent = scrollBar.getParent();
-	if (scrollableParent.equals(list)) return;
-	if (isParentScrolling(scrollableParent)) dropDown(false);
+    if (scrollableParent.equals(list)) {
+        return;
+    }
+    if (isParentScrolling(scrollableParent)) {
+        dropDown(false);
+    }
 }
 /**
  * Searches the receiver's list starting at the first item
@@ -1015,7 +1110,9 @@ void handleScroll(Event event) {
  */
 public int indexOf (String string) {
 	checkWidget ();
-	if (string == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return list.indexOf (string);
 }
 /**
@@ -1039,7 +1136,9 @@ public int indexOf (String string) {
  */
 public int indexOf (String string, int start) {
 	checkWidget ();
-	if (string == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return list.indexOf (string, start);
 }
 
@@ -1174,14 +1273,17 @@ public boolean isFocusControl () {
 boolean isParentScrolling(Control scrollableParent) {
 	Control parent = this.getParent();
 	while (parent != null) {
-		if (parent.equals(scrollableParent))
-			return true;
+        if (parent.equals(scrollableParent)) {
+            return true;
+        }
 		parent = parent.getParent();
 	}
 	return false;
 }
 void internalLayout (boolean changed) {
-	if (isDropped ()) dropDown (false);
+    if (isDropped()) {
+        dropDown(false);
+    }
 	Rectangle rect = getClientArea ();
 	int width = rect.width;
 	int height = rect.height;
@@ -1220,22 +1322,30 @@ void listEvent (Event event) {
 			Rectangle rect = new Rectangle(0, 0, size.x, size.y);
 			if (rect.contains(point)) {
 				boolean comboShellActivated = getDisplay ().getActiveShell () == getShell ();
-				if (!comboShellActivated) dropDown (false);
+                if (!comboShellActivated) {
+                    dropDown(false);
+                }
 				break;
 			}
 			dropDown (false);
 			break;
 		}
 		case SWT.MouseUp: {
-			if (event.button != 1) return;
+            if (event.button != 1) {
+                return;
+            }
 			dropDown (false);
 			break;
 		}
 		case SWT.Selection: {
 			int index = list.getSelectionIndex ();
-			if (index == -1) return;
+            if (index == -1) {
+                return;
+            }
 			text.setText (list.getItem (index));
-			if (text.getEditable() && text.isFocusControl()) text.selectAll ();
+            if (text.getEditable() && text.isFocusControl()) {
+                text.selectAll();
+            }
 			list.setSelection (index);
 			Event e = new Event ();
 			e.time = event.time;
@@ -1257,7 +1367,9 @@ void listEvent (Event event) {
 				case SWT.TRAVERSE_TAB_PREVIOUS:
 					event.doit = text.traverse(event.detail);
 					event.detail = SWT.TRAVERSE_NONE;
-					if (event.doit) dropDown(false);
+                    if (event.doit) {
+                        dropDown(false);
+                    }
 					return;
 			}
 			Event e = new Event ();
@@ -1299,9 +1411,11 @@ void listEvent (Event event) {
 				e.stateMask = event.stateMask;
 				notifyListeners (SWT.DefaultSelection, e);
 			}
-			// At this point the widget may have been disposed.
-			// If so, do not continue.
-			if (isDisposed ()) break;
+            // At this point the widget may have been disposed.
+            // If so, do not continue.
+            if (isDisposed()) {
+                break;
+            }
 			Event e = new Event();
 			e.time = event.time;
 			e.character = event.character;
@@ -1353,7 +1467,9 @@ public void redraw () {
 	super.redraw();
 	text.redraw();
 	arrow.redraw();
-	if (popup.isVisible()) list.redraw();
+    if (popup.isVisible()) {
+        list.redraw();
+    }
 }
 @Override
 public void redraw (int x, int y, int width, int height, boolean all) {
@@ -1416,7 +1532,9 @@ public void remove (int start, int end) {
  */
 public void remove (String string) {
 	checkWidget();
-	if (string == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	list.remove (string);
 }
 /**
@@ -1452,7 +1570,9 @@ public void removeAll () {
  */
 public void removeModifyListener (ModifyListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(SWT.Modify, listener);
 }
 /**
@@ -1474,7 +1594,9 @@ public void removeModifyListener (ModifyListener listener) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(SWT.Selection, listener);
 	removeTypedListener(SWT.DefaultSelection, listener);
 }
@@ -1499,7 +1621,9 @@ public void removeSelectionListener (SelectionListener listener) {
  */
 public void removeVerifyListener (VerifyListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(SWT.Verify, listener);
 }
 /**
@@ -1524,7 +1648,9 @@ public void select (int index) {
 	if (0 <= index && index < list.getItemCount()) {
 		if (index != getSelectionIndex()) {
 			text.setText (list.getItem (index));
-			if (text.getEditable() && text.isFocusControl()) text.selectAll ();
+            if (text.getEditable() && text.isFocusControl()) {
+                text.selectAll();
+            }
 			list.select (index);
 			list.showSelection ();
 		}
@@ -1553,9 +1679,15 @@ public void setAlignment(int align) {
 public void setBackground (Color color) {
 	super.setBackground(color);
 	background = color;
-	if (text != null) text.setBackground(color);
-	if (list != null) list.setBackground(color);
-	if (arrow != null) arrow.setBackground(color);
+    if (text != null) {
+        text.setBackground(color);
+    }
+    if (list != null) {
+        list.setBackground(color);
+    }
+    if (arrow != null) {
+        arrow.setBackground(color);
+    }
 }
 /**
  * Sets the editable state.
@@ -1576,15 +1708,25 @@ public void setEditable (boolean editable) {
 @Override
 public void setEnabled (boolean enabled) {
 	super.setEnabled(enabled);
-	if (popup != null) popup.setVisible (false);
-	if (text != null) text.setEnabled(enabled);
-	if (arrow != null) arrow.setEnabled(enabled);
+    if (popup != null) {
+        popup.setVisible(false);
+    }
+    if (text != null) {
+        text.setEnabled(enabled);
+    }
+    if (arrow != null) {
+        arrow.setEnabled(enabled);
+    }
 }
 @Override
 public boolean setFocus () {
 	checkWidget();
-	if (!isEnabled () || !getVisible ()) return false;
-	if (isFocusControl ()) return true;
+    if (!isEnabled() || !getVisible()) {
+        return false;
+    }
+    if (isFocusControl()) {
+        return true;
+    }
 	return text.setFocus ();
 }
 @Override
@@ -1599,9 +1741,15 @@ public void setFont (Font font) {
 public void setForeground (Color color) {
 	super.setForeground(color);
 	foreground = color;
-	if (text != null) text.setForeground(color);
-	if (list != null) list.setForeground(color);
-	if (arrow != null) arrow.setForeground(color);
+    if (text != null) {
+        text.setForeground(color);
+    }
+    if (list != null) {
+        list.setForeground(color);
+    }
+    if (arrow != null) {
+        arrow.setForeground(color);
+    }
 }
 /**
  * Sets the text of the item in the receiver's list at the given
@@ -1642,7 +1790,9 @@ public void setItem (int index, String string) {
 public void setItems (String [] items) {
 	checkWidget ();
 	list.setItems (items);
-	if (!text.getEditable ()) text.setText (""); //$NON-NLS-1$
+    if (!text.getEditable()) {
+        text.setText("");
+    } //$NON-NLS-1$
 }
 /**
  * Sets the layout which is associated with the receiver to be
@@ -1708,7 +1858,9 @@ public void setMenu(Menu menu) {
  */
 public void setSelection (Point selection) {
 	checkWidget();
-	if (selection == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (selection == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	text.setSelection (selection.x, selection.y);
 }
 
@@ -1738,7 +1890,9 @@ public void setSelection (Point selection) {
  */
 public void setText (String string) {
 	checkWidget();
-	if (string == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int index = list.indexOf (string);
 	if (index == -1) {
 		list.deselectAll ();
@@ -1746,7 +1900,9 @@ public void setText (String string) {
 		return;
 	}
 	text.setText (string);
-	if (text.getEditable() && text.isFocusControl()) text.selectAll ();
+    if (text.getEditable() && text.isFocusControl()) {
+        text.selectAll();
+    }
 	list.setSelection (index);
 	list.showSelection ();
 }
@@ -1780,14 +1936,20 @@ public void setToolTipText (String string) {
 @Override
 public void setVisible (boolean visible) {
 	super.setVisible(visible);
-	/*
-	 * At this point the widget may have been disposed in a FocusOut event.
-	 * If so then do not continue.
-	 */
-	if (isDisposed ()) return;
-	// TEMPORARY CODE
-	if (popup == null || popup.isDisposed ()) return;
-	if (!visible) popup.setVisible (false);
+    /*
+     * At this point the widget may have been disposed in a FocusOut event.
+     * If so then do not continue.
+     */
+    if (isDisposed()) {
+        return;
+    }
+    // TEMPORARY CODE
+    if (popup == null || popup.isDisposed()) {
+        return;
+    }
+    if (!visible) {
+        popup.setVisible(false);
+    }
 }
 /**
  * Sets the number of items that are visible in the drop
@@ -1804,15 +1966,21 @@ public void setVisible (boolean visible) {
  */
 public void setVisibleItemCount (int count) {
 	checkWidget ();
-	if (count < 0) return;
+    if (count < 0) {
+        return;
+    }
 	visibleItemCount = count;
 }
 String stripMnemonic (String string) {
 	int index = 0;
 	int length = string.length ();
 	do {
-		while ((index < length) && (string.charAt (index) != '&')) index++;
-		if (++index >= length) return string;
+        while ((index < length) && (string.charAt(index) != '&')) {
+            index++;
+        }
+        if (++index >= length) {
+            return string;
+        }
 		if (string.charAt (index) != '&') {
 			return string.substring(0, index-1) + string.substring(index, length);
 		}
@@ -1854,15 +2022,23 @@ void textEvent (Event event) {
 			keyEvent.keyLocation = event.keyLocation;
 			keyEvent.stateMask = event.stateMask;
 			notifyListeners (SWT.KeyDown, keyEvent);
-			if (isDisposed ()) break;
+            if (isDisposed()) {
+                break;
+            }
 			event.doit = keyEvent.doit;
-			if (!event.doit) break;
+            if (!event.doit) {
+                break;
+            }
 			if (event.keyCode == SWT.ARROW_UP || event.keyCode == SWT.ARROW_DOWN) {
 				event.doit = false;
 				if ((event.stateMask & SWT.ALT) != 0) {
 					boolean dropped = isDropped ();
-					if (text.getEditable() && text.isFocusControl()) text.selectAll ();
-					if (!dropped) setFocus ();
+                    if (text.getEditable() && text.isFocusControl()) {
+                        text.selectAll();
+                    }
+                    if (!dropped) {
+                        setFocus();
+                    }
 					dropDown (!dropped);
 					break;
 				}
@@ -1879,7 +2055,9 @@ void textEvent (Event event) {
 					e.stateMask = event.stateMask;
 					notifyListeners (SWT.Selection, e);
 				}
-				if (isDisposed ()) break;
+                if (isDisposed()) {
+                    break;
+                }
 			}
 
 			// Further work : Need to add support for incremental search in
@@ -1930,14 +2108,26 @@ void textEvent (Event event) {
 			mouseEvent.time = event.time;
 			mouseEvent.x = pt.x; mouseEvent.y = pt.y;
 			notifyListeners (SWT.MouseDown, mouseEvent);
-			if (isDisposed ()) break;
+            if (isDisposed()) {
+                break;
+            }
 			event.doit = mouseEvent.doit;
-			if (!event.doit) break;
-			if (event.button != 1) return;
-			if (text.getEditable ()) return;
+            if (!event.doit) {
+                break;
+            }
+            if (event.button != 1) {
+                return;
+            }
+            if (text.getEditable()) {
+                return;
+            }
 			boolean dropped = isDropped ();
-			if (text.getEditable() && text.isFocusControl()) text.selectAll ();
-			if (!dropped) setFocus ();
+            if (text.getEditable() && text.isFocusControl()) {
+                text.selectAll();
+            }
+            if (!dropped) {
+                setFocus();
+            }
 			dropDown (!dropped);
 			break;
 		}
@@ -1950,19 +2140,33 @@ void textEvent (Event event) {
 			mouseEvent.time = event.time;
 			mouseEvent.x = pt.x; mouseEvent.y = pt.y;
 			notifyListeners (SWT.MouseUp, mouseEvent);
-			if (isDisposed ()) break;
+            if (isDisposed()) {
+                break;
+            }
 			event.doit = mouseEvent.doit;
-			if (!event.doit) break;
-			if (event.button != 1) return;
-			if (text.getEditable ()) return;
-			if (text.getEditable() && text.isFocusControl()) text.selectAll ();
+            if (!event.doit) {
+                break;
+            }
+            if (event.button != 1) {
+                return;
+            }
+            if (text.getEditable()) {
+                return;
+            }
+            if (text.getEditable() && text.isFocusControl()) {
+                text.selectAll();
+            }
 			break;
 		}
 		case SWT.MouseWheel: {
 			notifyListeners (SWT.MouseWheel, event);
 			event.type = SWT.None;
-			if (isDisposed ()) break;
-			if (!event.doit) break;
+            if (isDisposed()) {
+                break;
+            }
+            if (!event.doit) {
+                break;
+            }
 			if (event.count != 0) {
 				event.doit = false;
 				int oldIndex = getSelectionIndex ();
@@ -1977,7 +2181,9 @@ void textEvent (Event event) {
 					e.stateMask = event.stateMask;
 					notifyListeners (SWT.Selection, e);
 				}
-				if (isDisposed ()) break;
+                if (isDisposed()) {
+                    break;
+                }
 			}
 			break;
 		}

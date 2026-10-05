@@ -52,8 +52,9 @@ public class Bug518961_RTTest extends org.eclipse.swt.widgets.Shell {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

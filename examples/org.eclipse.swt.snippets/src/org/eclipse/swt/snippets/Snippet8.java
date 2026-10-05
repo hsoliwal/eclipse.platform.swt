@@ -44,12 +44,16 @@ public static void main (String [] args) {
 		final TreeItem root = (TreeItem) event.item;
 		TreeItem [] items = root.getItems ();
 		for (TreeItem item : items) {
-			if (item.getData () != null) return;
+            if (item.getData() != null) {
+                return;
+            }
 			item.dispose ();
 		}
 		File file = (File) root.getData ();
 		File [] files = file.listFiles ();
-		if (files == null) return;
+        if (files == null) {
+            return;
+        }
 		for (File rootFile : files) {
 			TreeItem item = new TreeItem (root, 0);
 			item.setText (rootFile.getName ());
@@ -65,7 +69,9 @@ public static void main (String [] args) {
 	shell.setSize (shell.computeSize (width, height));
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

@@ -53,8 +53,9 @@ private void createCOMInterfaces() {
 	};
 }
 private void disposeCOMInterfaces() {
-	if (iEnumFORMATETC != null)
-		iEnumFORMATETC.dispose();
+    if (iEnumFORMATETC != null) {
+        iEnumFORMATETC.dispose();
+    }
 	iEnumFORMATETC = null;
 }
 long getAddress() {
@@ -62,11 +63,17 @@ long getAddress() {
 }
 private FORMATETC[] getNextItems(int numItems){
 
-	if (formats == null || numItems < 1) return null;
+    if (formats == null || numItems < 1) {
+        return null;
+    }
 
 	int endIndex = index + numItems - 1;
-	if (endIndex > (formats.length - 1)) endIndex = formats.length - 1;
-	if (index > endIndex) return null;
+    if (endIndex > (formats.length - 1)) {
+        endIndex = formats.length - 1;
+    }
+    if (index > endIndex) {
+        return null;
+    }
 
 	FORMATETC[] items =  new FORMATETC[endIndex - index + 1];
 	for (int i = 0; i < items.length; i++){
@@ -77,15 +84,19 @@ private FORMATETC[] getNextItems(int numItems){
 	return items;
 }
 private int Next(int celt, long rgelt, long pceltFetched) {
-	/* Retrieves the next celt items in the enumeration sequence.
-	   If there are fewer than the requested number of elements left in the sequence,
-	   it retrieves the remaining elements.
-	   The number of elements actually retrieved is returned through pceltFetched
-	   (unless the caller passed in NULL for that parameter).
-	*/
+    /* Retrieves the next celt items in the enumeration sequence.
+       If there are fewer than the requested number of elements left in the sequence,
+       it retrieves the remaining elements.
+       The number of elements actually retrieved is returned through pceltFetched
+       (unless the caller passed in NULL for that parameter).
+    */
 
-	if (rgelt == 0)	return COM.E_INVALIDARG;
-	if (pceltFetched == 0 && celt != 1) return COM.E_INVALIDARG;
+    if (rgelt == 0) {
+        return COM.E_INVALIDARG;
+    }
+    if (pceltFetched == 0 && celt != 1) {
+        return COM.E_INVALIDARG;
+    }
 
 	FORMATETC[] nextItems = getNextItems(celt);
 	if (nextItems != null) {
@@ -93,14 +104,18 @@ private int Next(int celt, long rgelt, long pceltFetched) {
 			COM.MoveMemory(rgelt + i*FORMATETC.sizeof, nextItems[i], FORMATETC.sizeof);
 		}
 
-		if (pceltFetched != 0)
-			OS.MoveMemory(pceltFetched, new int[] {nextItems.length}, 4);
+        if (pceltFetched != 0) {
+            OS.MoveMemory(pceltFetched, new int[]{nextItems.length}, 4);
+        }
 
-		if (nextItems.length == celt) return COM.S_OK;
+        if (nextItems.length == celt) {
+            return COM.S_OK;
+        }
 
 	} else {
-		if (pceltFetched != 0)
-			OS.MoveMemory(pceltFetched, new int[] {0}, 4);
+        if (pceltFetched != 0) {
+            OS.MoveMemory(pceltFetched, new int[]{0}, 4);
+        }
 		COM.MoveMemory(rgelt, new FORMATETC(), FORMATETC.sizeof);
 
 	}
@@ -108,7 +123,9 @@ private int Next(int celt, long rgelt, long pceltFetched) {
 }
 private int QueryInterface(long riid, long ppvObject) {
 
-	if (riid == 0 || ppvObject == 0) return COM.E_NOINTERFACE;
+    if (riid == 0 || ppvObject == 0) {
+        return COM.E_NOINTERFACE;
+    }
 
 	GUID guid = new GUID();
 	COM.MoveMemory(guid, riid, GUID.sizeof);
@@ -143,8 +160,10 @@ void setFormats(FORMATETC[] newFormats) {
 	index = 0;
 }
 private int Skip(int celt) {
-	//Skips over the next specified number of elements in the enumeration sequence.
-	if (celt < 1 ) return COM.E_INVALIDARG;
+    //Skips over the next specified number of elements in the enumeration sequence.
+    if (celt < 1) {
+        return COM.E_INVALIDARG;
+    }
 
 	index += celt;
 	if (index > (formats.length - 1)){

@@ -34,7 +34,9 @@ public class Bug492783_tracker_glitches {
 			tracker.open ();
 		});
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

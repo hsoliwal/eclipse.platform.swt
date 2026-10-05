@@ -39,7 +39,9 @@ public static void main(String[] args) {
 		boolean ignore;
 		@Override
 		public void handleEvent(Event e) {
-			if (ignore) return;
+            if (ignore) {
+                return;
+            }
 			e.doit = false;
 			StringBuilder buffer = new StringBuilder(e.text);
 			char[] chars = new char[buffer.length()];
@@ -78,7 +80,9 @@ public static void main(String[] args) {
 			}
 
 			int start = e.start;
-			if (start > 9) return;
+            if (start > 9) {
+                return;
+            }
 			int index = 0;
 			for (char c : chars) {
 				if (start + index == 4 || start + index == 7) {
@@ -88,9 +92,15 @@ public static void main(String[] args) {
 					}
 					buffer.insert(index++, '/');
 				}
-				if (c < '0' || '9' < c) return;
-				if (start + index == 5 &&  '1' < c) return; /* [M]M */
-				if (start + index == 8 &&  '3' < c) return; /* [D]D */
+                if (c < '0' || '9' < c) {
+                    return;
+                }
+                if (start + index == 5 && '1' < c) {
+                    return;
+                } /* [M]M */
+                if (start + index == 8 && '3' < c) {
+                    return;
+                } /* [D]D */
 				index++;
 			}
 			String newText = buffer.toString();
@@ -109,19 +119,25 @@ public static void main(String[] args) {
 			if (mm.indexOf('M') == -1) {
 				int month =  Integer.parseInt(mm) - 1;
 				int maxMonth = calendar.getActualMaximum(Calendar.MONTH);
-				if (0 > month || month > maxMonth) return;
+                if (0 > month || month > maxMonth) {
+                    return;
+                }
 				calendar.set(Calendar.MONTH, month);
 			}
 			String dd = date.substring(8,10);
 			if (dd.indexOf('D') == -1) {
 				int day = Integer.parseInt(dd);
 				int maxDay = calendar.getActualMaximum(Calendar.DATE);
-				if (1 > day || day > maxDay) return;
+                if (1 > day || day > maxDay) {
+                    return;
+                }
 				calendar.set(Calendar.DATE, day);
 			} else {
 				if (calendar.get(Calendar.MONTH)  == Calendar.FEBRUARY) {
 					char firstChar = date.charAt(8);
-					if (firstChar != 'D' && '2' < firstChar) return;
+                    if (firstChar != 'D' && '2' < firstChar) {
+                        return;
+                    }
 				}
 			}
 			text.setSelection(e.start, e.start + length);
@@ -133,8 +149,9 @@ public static void main(String[] args) {
 	shell.pack();
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

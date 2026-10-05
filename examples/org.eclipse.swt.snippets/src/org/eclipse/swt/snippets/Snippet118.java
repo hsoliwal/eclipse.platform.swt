@@ -41,19 +41,26 @@ public static void main (String [] args) {
 		FileDialog dialog = new FileDialog(shell);
 		dialog.setFilterExtensions(new String[] {"*.ico", "*.gif", "*.*"});
 		String name = dialog.open();
-		if (name == null) return;
+        if (name == null) {
+            return;
+        }
 		ImageData image = new ImageData(name);
 		Cursor oldCursor = cursor[0];
 		cursor[0] = new Cursor(display, image, 0, 0);
 		shell.setCursor(cursor[0]);
-		if (oldCursor != null) oldCursor.dispose();
+        if (oldCursor != null) {
+            oldCursor.dispose();
+        }
 	});
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
-	if (cursor[0] != null) cursor[0].dispose();
+    if (cursor[0] != null) {
+        cursor[0].dispose();
+    }
 	display.dispose();
 }
 }

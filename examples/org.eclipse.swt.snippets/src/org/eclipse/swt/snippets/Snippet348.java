@@ -75,7 +75,9 @@ public class Snippet348 {
 					}
 				});
 			}
-			if (!hasAppMenuBar) s.setMenuBar(bar);
+            if (!hasAppMenuBar) {
+                s.setMenuBar(bar);
+            }
 			createdScreenBar = true;
 		}
 	}
@@ -93,7 +95,9 @@ public class Snippet348 {
 				shell.getMenuBar().dispose();
 				Shell[] shells = d.getShells();
 				if ((shells.length == 1) && (shells[0] == shell)) {
-					if (!d.isDisposed()) d.dispose();
+                    if (!d.isDisposed()) {
+                        d.dispose();
+                    }
 				}
 			}
 		});
@@ -108,8 +112,9 @@ public class Snippet348 {
 		shell.open();
 
 		while (!display.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 }

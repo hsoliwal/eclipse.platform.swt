@@ -71,8 +71,9 @@ public final class GIFFileFormat extends StaticImageFileFormat {
 		byte[] block = new byte[7];
 		try {
 			inputStream.read(signature);
-			if (!(signature[0] == 'G' && signature[1] == 'I' && signature[2] == 'F'))
-				SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (!(signature[0] == 'G' && signature[1] == 'I' && signature[2] == 'F')) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 
 			inputStream.read(versionBytes);
 
@@ -123,13 +124,17 @@ public final class GIFFileFormat extends StaticImageFileFormat {
 				 */
 				readExtension();
 			} else {
-				/* The GIF is not to spec, but try to salvage it
-				 * if we read at least one image. */
-				if (images.length > 0) break;
+                /* The GIF is not to spec, but try to salvage it
+                 * if we read at least one image. */
+                if (images.length > 0) {
+                    break;
+                }
 				SWT.error(SWT.ERROR_INVALID_IMAGE);
 			}
 			id = readID(); // block terminator (0)
-			if (id == 0) id = readID(); // next block ID (unless we just read it)
+            if (id == 0) {
+                id = readID();
+            } // next block ID (unless we just read it)
 		}
 		return images;
 	}
@@ -152,14 +157,18 @@ public final class GIFFileFormat extends StaticImageFileFormat {
 	 */
 	byte[] readExtension() {
 		int extensionID = readID();
-		if (extensionID == GIF_COMMENT_BLOCK_ID)
-			return readCommentExtension();
-		if (extensionID == GIF_PLAIN_TEXT_BLOCK_ID)
-			return readPlainTextExtension();
-		if (extensionID == GIF_GRAPHICS_CONTROL_BLOCK_ID)
-			return readGraphicsControlExtension();
-		if (extensionID == GIF_APPLICATION_EXTENSION_BLOCK_ID)
-			return readApplicationExtension();
+        if (extensionID == GIF_COMMENT_BLOCK_ID) {
+            return readCommentExtension();
+        }
+        if (extensionID == GIF_PLAIN_TEXT_BLOCK_ID) {
+            return readPlainTextExtension();
+        }
+        if (extensionID == GIF_GRAPHICS_CONTROL_BLOCK_ID) {
+            return readGraphicsControlExtension();
+        }
+        if (extensionID == GIF_APPLICATION_EXTENSION_BLOCK_ID) {
+            return readApplicationExtension();
+        }
 		// Otherwise, we don't recognize the block. If the
 		// field size is correct, we can just skip over
 		// the block contents.
@@ -350,10 +359,11 @@ public final class GIFFileFormat extends StaticImageFileFormat {
 		}
 		// Promote depth to next highest supported value.
 		if (!(depth == 1 || depth == 4 || depth == 8)) {
-			if (depth < 4)
-				depth = 4;
-			else
-				depth = 8;
+            if (depth < 4) {
+                depth = 4;
+            } else {
+                depth = 8;
+            }
 		}
 		if (palette == null) {
 			palette = grayRamp(1 << depth);
@@ -395,15 +405,17 @@ public final class GIFFileFormat extends StaticImageFileFormat {
 	PaletteData readPalette(int numColors) {
 		byte[] bytes = new byte[numColors * 3];
 		try {
-			if (inputStream.read(bytes) != bytes.length)
-				SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (inputStream.read(bytes) != bytes.length) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 		} catch (IOException e) {
 			SWT.error(SWT.ERROR_IO, e);
 		}
 		RGB[] colors = new RGB[numColors];
-		for (int i = 0; i < numColors; i++)
-			colors[i] = new RGB(bytes[i*3] & 0xFF,
-				bytes[i*3+1] & 0xFF, bytes[i*3+2] & 0xFF);
+        for (int i = 0; i < numColors; i++) {
+            colors[i] = new RGB(bytes[i * 3] & 0xFF,
+                    bytes[i * 3 + 1] & 0xFF, bytes[i * 3 + 2] & 0xFF);
+        }
 		return new PaletteData(colors);
 	}
 

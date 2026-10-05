@@ -117,7 +117,9 @@ public static void main(String[] args) {
 	childShell.open();
 	text1.setFocus();
 	while (!parentShell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

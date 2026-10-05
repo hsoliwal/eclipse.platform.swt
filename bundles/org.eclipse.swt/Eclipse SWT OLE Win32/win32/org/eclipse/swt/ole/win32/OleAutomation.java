@@ -94,7 +94,9 @@ public final class OleAutomation {
 	private ITypeInfo objITypeInfo;
 
 OleAutomation(IDispatch idispatch) {
-	if (idispatch == null) OLE.error(OLE.ERROR_INVALID_INTERFACE_ADDRESS);
+    if (idispatch == null) {
+        OLE.error(OLE.ERROR_INVALID_INTERFACE_ADDRESS);
+    }
 	objIDispatch = idispatch;
 	objIDispatch.AddRef();
 
@@ -118,7 +120,9 @@ OleAutomation(IDispatch idispatch) {
  *	</ul>
  */
 public OleAutomation(OleClientSite clientSite) {
-	if (clientSite == null) OLE.error(OLE.ERROR_INVALID_INTERFACE_ADDRESS);
+    if (clientSite == null) {
+        OLE.error(OLE.ERROR_INVALID_INTERFACE_ADDRESS);
+    }
 	objIDispatch = clientSite.getAutomationObject();
 
 	long[] ppv = new long[1];
@@ -165,7 +169,9 @@ public OleAutomation(String progId) {
 
 		ppvObject[0] = 0;
 		result = objIUnknown.QueryInterface(COM.IIDIDispatch, ppvObject);
-		if (result != COM.S_OK) OLE.error(OLE.ERROR_INTERFACE_NOT_FOUND);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_INTERFACE_NOT_FOUND);
+        }
 		objIDispatch = new IDispatch(ppvObject[0]);
 
 		ppvObject[0] = 0;
@@ -218,7 +224,9 @@ GUID getClassID(String clientName) {
 	}
 	if (COM.CLSIDFromProgID(buffer, guid) != COM.S_OK){
 		int result = COM.CLSIDFromString(buffer, guid);
-		if (result != COM.S_OK) return null;
+        if (result != COM.S_OK) {
+            return null;
+        }
 	}
 	return guid;
 }
@@ -230,10 +238,14 @@ GUID getClassID(String clientName) {
  * file or null.
  */
 public String getHelpFile(int dispId) {
-	if (objITypeInfo == null) return null;
+    if (objITypeInfo == null) {
+        return null;
+    }
 	String[] file = new String[1];
 	int rc = objITypeInfo.GetDocumentation(dispId, null, null, null, file );
-	if (rc == OLE.S_OK) return file[0];
+    if (rc == OLE.S_OK) {
+        return file[0];
+    }
 	return null;
 }
 /**
@@ -243,10 +255,14 @@ public String getHelpFile(int dispId) {
  * @return the documentation string if it exists; otherwise return null.
  */
 public String getDocumentation(int dispId) {
-	if (objITypeInfo == null) return null;
+    if (objITypeInfo == null) {
+        return null;
+    }
 	String[] doc = new String[1];
 	int rc = objITypeInfo.GetDocumentation(dispId, null, doc, null, null );
-	if (rc == OLE.S_OK) return doc[0];
+    if (rc == OLE.S_OK) {
+        return doc[0];
+    }
 	return null;
 }
 /**
@@ -256,10 +272,14 @@ public String getDocumentation(int dispId) {
  * @return an OlePropertyDescription for a variable at the given index.
  */
 public OlePropertyDescription getPropertyDescription(int index) {
-	if (objITypeInfo == null) return null;
+    if (objITypeInfo == null) {
+        return null;
+    }
 	long[] ppVarDesc = new long[1];
 	int rc = objITypeInfo.GetVarDesc(index, ppVarDesc);
-	if (rc != OLE.S_OK) return null;
+    if (rc != OLE.S_OK) {
+        return null;
+    }
 	VARDESC vardesc = new VARDESC();
 	COM.MoveMemory(vardesc, ppVarDesc[0], VARDESC.sizeof);
 
@@ -287,10 +307,14 @@ public OlePropertyDescription getPropertyDescription(int index) {
  * @return an OleFunctionDescription for a function at the given index.
  */
 public OleFunctionDescription getFunctionDescription(int index) {
-	if (objITypeInfo == null) return null;
+    if (objITypeInfo == null) {
+        return null;
+    }
 	long[] ppFuncDesc = new long[1];
 	int rc = objITypeInfo.GetFuncDesc(index, ppFuncDesc);
-	if (rc != OLE.S_OK) return null;
+    if (rc != OLE.S_OK) {
+        return null;
+    }
 	FUNCDESC funcdesc = new FUNCDESC();
 	COM.MoveMemory(funcdesc, ppFuncDesc[0], FUNCDESC.sizeof);
 
@@ -350,10 +374,14 @@ public OleFunctionDescription getFunctionDescription(int index) {
  * @noreference This method is not intended to be referenced by clients.
  */
 public TYPEATTR getTypeInfoAttributes() {
-	if (objITypeInfo == null) return null;
+    if (objITypeInfo == null) {
+        return null;
+    }
 	long [] ppTypeAttr = new long [1];
 	int rc = objITypeInfo.GetTypeAttr(ppTypeAttr);
-	if (rc != OLE.S_OK) return null;
+    if (rc != OLE.S_OK) {
+        return null;
+    }
 	TYPEATTR typeattr = new TYPEATTR();
 	COM.MoveMemory(typeattr, ppTypeAttr[0], TYPEATTR.sizeof);
 	objITypeInfo.ReleaseTypeAttr(ppTypeAttr[0]);
@@ -366,10 +394,14 @@ public TYPEATTR getTypeInfoAttributes() {
  * @return the name if it exists; otherwise return null.
  */
 public String getName(int dispId) {
-	if (objITypeInfo == null) return null;
+    if (objITypeInfo == null) {
+        return null;
+    }
 	String[] name = new String[1];
 	int rc = objITypeInfo.GetDocumentation(dispId, name, null, null, null );
-	if (rc == OLE.S_OK) return name[0];
+    if (rc == OLE.S_OK) {
+        return name[0];
+    }
 	return null;
 }
 /**
@@ -380,7 +412,9 @@ public String getName(int dispId) {
  * @return an array of name containing the function name and the parameter names
  */
 public String[] getNames(int dispId, int maxSize) {
-	if (objITypeInfo == null) return new String[0];
+    if (objITypeInfo == null) {
+        return new String[0];
+    }
 	String[] names = new String[maxSize];
 	int[] count = new int[1];
 	int rc = objITypeInfo.GetNames(dispId, names, maxSize, count);
@@ -405,7 +439,9 @@ public int[] getIDsOfNames(String[] names) {
 
 	int[] rgdispid = new int[names.length];
 	int result = objIDispatch.GetIDsOfNames(new GUID(), names, names.length, COM.LOCALE_USER_DEFAULT, rgdispid);
-	if (result != COM.S_OK) return null;
+    if (result != COM.S_OK) {
+        return null;
+    }
 
 	return rgdispid;
 }
@@ -476,11 +512,17 @@ public Variant getProperty(int dispIdMember, Variant[] rgvarg, int[] rgdispidNam
 }
 @Override
 public boolean equals(Object object) {
-	if (object == this) return true;
+    if (object == this) {
+        return true;
+    }
 	if (object instanceof OleAutomation) {
-		if (objIDispatch == null) return false;
+        if (objIDispatch == null) {
+            return false;
+        }
 		OleAutomation oleAutomation = ((OleAutomation) object);
-		if (oleAutomation.objIDispatch == null) return false;
+        if (oleAutomation.objIDispatch == null) {
+            return false;
+        }
 		long address1 = objIDispatch.getAddress();
 		long address2 = oleAutomation.objIDispatch.getAddress();
 		return address1 == address2;
@@ -541,8 +583,10 @@ public Variant invoke(int dispIdMember, Variant[] rgvarg, int[] rgdispidNamedArg
 }
 private int invoke(int dispIdMember, int wFlags, Variant[] rgvarg, int[] rgdispidNamedArgs, Variant pVarResult) {
 
-	// get the IDispatch interface for the control
-	if (objIDispatch == null) return COM.E_FAIL;
+    // get the IDispatch interface for the control
+    if (objIDispatch == null) {
+        return COM.E_FAIL;
+    }
 
 	// create a DISPPARAMS structure for the input parameters
 	DISPPARAMS pDispParams = new DISPPARAMS();
@@ -572,7 +616,9 @@ private int invoke(int dispIdMember, int wFlags, Variant[] rgvarg, int[] rgdispi
 	EXCEPINFO excepInfo = new EXCEPINFO();
 	int[] pArgErr = new int[1];
 	long pVarResultAddress = 0;
-	if (pVarResult != null)	pVarResultAddress = OS.GlobalAlloc(OS.GMEM_FIXED | OS.GMEM_ZEROINIT, VARIANT.sizeof);
+    if (pVarResult != null) {
+        pVarResultAddress = OS.GlobalAlloc(OS.GMEM_FIXED | OS.GMEM_ZEROINIT, VARIANT.sizeof);
+    }
 	int result = objIDispatch.Invoke(dispIdMember, new GUID(), COM.LOCALE_USER_DEFAULT, wFlags, pDispParams, pVarResultAddress, excepInfo, pArgErr);
 
 	if (pVarResultAddress != 0){
@@ -614,8 +660,9 @@ private int invoke(int dispIdMember, int wFlags, Variant[] rgvarg, int[] rgdispi
  */
 public void invokeNoReply(int dispIdMember) {
 	int result = invoke(dispIdMember, COM.DISPATCH_METHOD, null, null, null);
-	if (result != COM.S_OK)
-		OLE.error(OLE.ERROR_ACTION_NOT_PERFORMED, result);
+    if (result != COM.S_OK) {
+        OLE.error(OLE.ERROR_ACTION_NOT_PERFORMED, result);
+    }
 }
 /**
  * Invokes a method on the OLE Object; the method has no optional parameters.  In the early days of OLE,
@@ -635,8 +682,9 @@ public void invokeNoReply(int dispIdMember) {
  */
 public void invokeNoReply(int dispIdMember, Variant[] rgvarg) {
 	int result = invoke(dispIdMember, COM.DISPATCH_METHOD, rgvarg, null, null);
-	if (result != COM.S_OK)
-		OLE.error(OLE.ERROR_ACTION_NOT_PERFORMED, result);
+    if (result != COM.S_OK) {
+        OLE.error(OLE.ERROR_ACTION_NOT_PERFORMED, result);
+    }
 }
 /**
  * Invokes a method on the OLE Object; the method has optional parameters.  It is not
@@ -663,8 +711,9 @@ public void invokeNoReply(int dispIdMember, Variant[] rgvarg) {
  */
 public void invokeNoReply(int dispIdMember, Variant[] rgvarg, int[] rgdispidNamedArgs) {
 	int result = invoke(dispIdMember, COM.DISPATCH_METHOD, rgvarg, rgdispidNamedArgs, null);
-	if (result != COM.S_OK)
-		OLE.error(OLE.ERROR_ACTION_NOT_PERFORMED, result);
+    if (result != COM.S_OK) {
+        OLE.error(OLE.ERROR_ACTION_NOT_PERFORMED, result);
+    }
 }
 private void manageExcepinfo(int hResult, EXCEPINFO excepInfo) {
 
@@ -692,13 +741,16 @@ private void manageExcepinfo(int hResult, EXCEPINFO excepInfo) {
 		exceptionDescription = "OLE Automation Error HResult : " + hResult; //$NON-NLS-1$
 	}
 
-	// cleanup EXCEPINFO struct
-	if (excepInfo.bstrDescription != 0)
-		COM.SysFreeString(excepInfo.bstrDescription);
-	if (excepInfo.bstrHelpFile != 0)
-		COM.SysFreeString(excepInfo.bstrHelpFile);
-	if (excepInfo.bstrSource != 0)
-		COM.SysFreeString(excepInfo.bstrSource);
+    // cleanup EXCEPINFO struct
+    if (excepInfo.bstrDescription != 0) {
+        COM.SysFreeString(excepInfo.bstrDescription);
+    }
+    if (excepInfo.bstrHelpFile != 0) {
+        COM.SysFreeString(excepInfo.bstrHelpFile);
+    }
+    if (excepInfo.bstrSource != 0) {
+        COM.SysFreeString(excepInfo.bstrSource);
+    }
 }
 /**
  * Sets the property specified by the dispIdMember to a new value.
@@ -713,8 +765,9 @@ public boolean setProperty(int dispIdMember, Variant rgvarg) {
 	Variant[] rgvarg2 = new Variant[] {rgvarg};
 	int[] rgdispidNamedArgs = new int[] {COM.DISPID_PROPERTYPUT};
 	int dwFlags = COM.DISPATCH_PROPERTYPUT;
-	if ((rgvarg.getType() & COM.VT_BYREF) == COM.VT_BYREF)
-		dwFlags = COM.DISPATCH_PROPERTYPUTREF;
+    if ((rgvarg.getType() & COM.VT_BYREF) == COM.VT_BYREF) {
+        dwFlags = COM.DISPATCH_PROPERTYPUTREF;
+    }
 	Variant pVarResult = new Variant();
 	int result = invoke(dispIdMember, dwFlags, rgvarg2, rgdispidNamedArgs, pVarResult);
 	return (result == COM.S_OK);
@@ -735,8 +788,9 @@ public boolean setProperty(int dispIdMember, Variant[] rgvarg) {
 	int[] rgdispidNamedArgs = new int[] {COM.DISPID_PROPERTYPUT};
 	int dwFlags = COM.DISPATCH_PROPERTYPUT;
 	for (Variant element : rgvarg) {
-		if ((element.getType() & COM.VT_BYREF) == COM.VT_BYREF)
-		dwFlags = COM.DISPATCH_PROPERTYPUTREF;
+        if ((element.getType() & COM.VT_BYREF) == COM.VT_BYREF) {
+            dwFlags = COM.DISPATCH_PROPERTYPUTREF;
+        }
 	}
 	Variant pVarResult = new Variant();
 	int result = invoke(dispIdMember, dwFlags, rgvarg, rgdispidNamedArgs, pVarResult);

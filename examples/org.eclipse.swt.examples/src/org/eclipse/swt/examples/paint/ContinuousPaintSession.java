@@ -97,8 +97,12 @@ public abstract class ContinuousPaintSession extends BasicPaintSession {
 	 */
 	@Override
 	public final void mouseDown(MouseEvent event) {
-		if (event.button != 1) return;
-		if (dragInProgress) return; // spurious event
+        if (event.button != 1) {
+            return;
+        }
+        if (dragInProgress) {
+            return;
+        } // spurious event
 		dragInProgress = true;
 
 		points[0].x = event.x;
@@ -123,8 +127,12 @@ public abstract class ContinuousPaintSession extends BasicPaintSession {
 	 */
 	@Override
 	public final void mouseUp(MouseEvent event) {
-		if (event.button != 1) return;
-		if (! dragInProgress) return; // spurious event
+        if (event.button != 1) {
+            return;
+        }
+        if (!dragInProgress) {
+            return;
+        } // spurious event
 		abortRetrigger();
 		mouseSegmentFinished(event);
 		dragInProgress = false;
@@ -139,7 +147,9 @@ public abstract class ContinuousPaintSession extends BasicPaintSession {
 	public final void mouseMove(MouseEvent event) {
 		final PaintSurface ps = getPaintSurface();
 		ps.setStatusCoord(ps.getCurrentPosition());
-		if (! dragInProgress) return;
+        if (!dragInProgress) {
+            return;
+        }
 		mouseSegmentFinished(event);
 		prepareRetrigger();
 	}
@@ -150,7 +160,9 @@ public abstract class ContinuousPaintSession extends BasicPaintSession {
 	 * @param event the mouse event detail information
 	 */
 	private final void mouseSegmentFinished(MouseEvent event) {
-		if (points[0].x == -1) return; // spurious event
+        if (points[0].x == -1) {
+            return;
+        } // spurious event
 		if (points[0].x != event.x || points[0].y != event.y) {
 			// draw new segment
 			points[1].x = event.x;
@@ -173,7 +185,9 @@ public abstract class ContinuousPaintSession extends BasicPaintSession {
 		int absdX = Math.abs(dX);
 		int absdY = Math.abs(dY);
 
-		if ((dX == 0) && (dY == 0)) return;
+        if ((dX == 0) && (dY == 0)) {
+            return;
+        }
 
 		if (absdY > absdX) {
 			final int incfpX = (dX << 16) / absdY;
@@ -185,7 +199,9 @@ public abstract class ContinuousPaintSession extends BasicPaintSession {
 				points[0].x = (fpX += incfpX) >> 16;
 				render(points[0]);
 			}
-			if (points[0].x == points[1].x) return;
+            if (points[0].x == points[1].x) {
+                return;
+            }
 			points[0].x = points[1].x;
 		} else {
 			final int incfpY = (dY << 16) / absdX;
@@ -197,7 +213,9 @@ public abstract class ContinuousPaintSession extends BasicPaintSession {
 				points[0].y = (fpY += incfpY) >> 16;
 				render(points[0]);
 			}
-			if (points[0].y == points[1].y) return;
+            if (points[0].y == points[1].y) {
+                return;
+            }
 			points[0].y = points[1].y;
 		}
 		render(points[0]);

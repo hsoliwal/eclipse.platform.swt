@@ -125,7 +125,9 @@ public Rectangle computeTrim (int x, int y, int width, int height) {
 }
 
 ScrollBar createScrollBar (int style) {
-	if (scrollView == null) return null;
+    if (scrollView == null) {
+        return null;
+    }
 	ScrollBar bar = new ScrollBar ();
 	bar.parent = this;
 	bar.style = style;
@@ -165,14 +167,20 @@ ScrollBar createScrollBar (int style) {
 @Override
 void createWidget () {
 	super.createWidget ();
-	if ((style & SWT.H_SCROLL) != 0) horizontalBar = createScrollBar (SWT.H_SCROLL);
-	if ((style & SWT.V_SCROLL) != 0) verticalBar = createScrollBar (SWT.V_SCROLL);
+    if ((style & SWT.H_SCROLL) != 0) {
+        horizontalBar = createScrollBar(SWT.H_SCROLL);
+    }
+    if ((style & SWT.V_SCROLL) != 0) {
+        verticalBar = createScrollBar(SWT.V_SCROLL);
+    }
 }
 
 @Override
 void deregister () {
 	super.deregister ();
-	if (scrollView != null) display.removeWidget (scrollView);
+    if (scrollView != null) {
+        display.removeWidget(scrollView);
+    }
 }
 
 /**
@@ -309,9 +317,15 @@ boolean isNeeded(ScrollBar scrollbar) {
 @Override
 boolean isTrim (NSView view) {
 	if (scrollView != null) {
-		if (scrollView.id == view.id) return true;
-		if (horizontalBar != null && horizontalBar.view.id == view.id) return true;
-		if (verticalBar != null && verticalBar.view.id == view.id) return true;
+        if (scrollView.id == view.id) {
+            return true;
+        }
+        if (horizontalBar != null && horizontalBar.view.id == view.id) {
+            return true;
+        }
+        if (verticalBar != null && verticalBar.view.id == view.id) {
+            return true;
+        }
 	}
 	return super.isTrim (view);
 }
@@ -334,13 +348,17 @@ void reflectScrolledClipView(long id, long sel, long aClipView) {
 @Override
 void register () {
 	super.register ();
-	if (scrollView != null) display.addWidget (scrollView, this);
+    if (scrollView != null) {
+        display.addWidget(scrollView, this);
+    }
 }
 
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (scrollView != null) scrollView.release();
+    if (scrollView != null) {
+        scrollView.release();
+    }
 	scrollView = null;
 }
 
@@ -359,8 +377,12 @@ void releaseChildren (boolean destroy) {
 
 @Override
 void reskinChildren (int flags) {
-	if (horizontalBar != null) horizontalBar.reskin (flags);
-	if (verticalBar != null) verticalBar.reskin (flags);
+    if (horizontalBar != null) {
+        horizontalBar.reskin(flags);
+    }
+    if (verticalBar != null) {
+        verticalBar.reskin(flags);
+    }
 	super.reskinChildren (flags);
 }
 
@@ -369,8 +391,12 @@ void scrollClipViewToPoint (long id, long sel, long clipView, NSPoint point) {
 	if ((state & CANVAS) == 0 && scrollView != null) {
 		NSClipView clip = new NSClipView (clipView);
 		boolean oldCopies = clip.copiesOnScroll (), copies = oldCopies;
-		if (visibleRgn == 0) copies = !isObscured ();
-		if (copies) copies = !hasRegion ();
+        if (visibleRgn == 0) {
+            copies = !isObscured();
+        }
+        if (copies) {
+            copies = !hasRegion();
+        }
 		clip.setCopiesOnScroll (copies);
 	}
 	super.scrollClipViewToPoint (id, sel, clipView, point);
@@ -378,31 +404,47 @@ void scrollClipViewToPoint (long id, long sel, long clipView, NSPoint point) {
 
 @Override
 void sendHorizontalSelection () {
-	if (horizontalBar.view.isHiddenOrHasHiddenAncestor()) return;
+    if (horizontalBar.view.isHiddenOrHasHiddenAncestor()) {
+        return;
+    }
 	horizontalBar.sendSelection ();
 }
 
 @Override
 void sendVerticalSelection () {
-	if (verticalBar.view.isHiddenOrHasHiddenAncestor()) return;
+    if (verticalBar.view.isHiddenOrHasHiddenAncestor()) {
+        return;
+    }
 	verticalBar.sendSelection ();
 }
 
 @Override
 void enableWidget (boolean enabled) {
 	super.enableWidget (enabled);
-	if (horizontalBar != null) horizontalBar.enableWidget (enabled && isNeeded(horizontalBar));
-	if (verticalBar != null) verticalBar.enableWidget (enabled && isNeeded(verticalBar));
+    if (horizontalBar != null) {
+        horizontalBar.enableWidget(enabled && isNeeded(horizontalBar));
+    }
+    if (verticalBar != null) {
+        verticalBar.enableWidget(enabled && isNeeded(verticalBar));
+    }
 }
 
 boolean setScrollBarVisible (ScrollBar bar, boolean visible) {
-	if (scrollView == null) return false;
-	if ((state & CANVAS) == 0) return false;
+    if (scrollView == null) {
+        return false;
+    }
+    if ((state & CANVAS) == 0) {
+        return false;
+    }
 	if (visible) {
-		if ((bar.state & HIDDEN) == 0) return false;
+        if ((bar.state & HIDDEN) == 0) {
+            return false;
+        }
 		bar.state &= ~HIDDEN;
 	} else {
-		if ((bar.state & HIDDEN) != 0) return false;
+        if ((bar.state & HIDDEN) != 0) {
+            return false;
+        }
 		bar.state |= HIDDEN;
 	}
 	if ((bar.style & SWT.HORIZONTAL) != 0) {
@@ -418,19 +460,25 @@ boolean setScrollBarVisible (ScrollBar bar, boolean visible) {
 @Override
 void setZOrder () {
 	super.setZOrder ();
-	if (scrollView != null) scrollView.setDocumentView (view);
+    if (scrollView != null) {
+        scrollView.setDocumentView(view);
+    }
 }
 
 @Override
 NSView topView () {
-	if (scrollView != null) return scrollView;
+    if (scrollView != null) {
+        return scrollView;
+    }
 	return super.topView ();
 }
 
 @Override
 void updateCursorRects (boolean enabled) {
 	super.updateCursorRects (enabled);
-	if (scrollView == null) return;
+    if (scrollView == null) {
+        return;
+    }
 	updateCursorRects (enabled, scrollView);
 	NSClipView contentView = scrollView.contentView ();
 	updateCursorRects (enabled, contentView);

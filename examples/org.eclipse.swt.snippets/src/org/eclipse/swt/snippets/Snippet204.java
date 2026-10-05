@@ -93,7 +93,9 @@ public static void main(String[] args) {
 	});
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	layout0.dispose();
 	layout1.dispose();

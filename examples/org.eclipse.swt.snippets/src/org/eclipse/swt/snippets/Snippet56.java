@@ -39,16 +39,22 @@ public class Snippet56 {
 			public void run() {
 				for (final int[] i = new int[1]; i[0] <= maximum; i[0]++) {
 				try {Thread.sleep (100);} catch (Throwable th) {}
-					if (display.isDisposed()) return;
+                    if (display.isDisposed()) {
+                        return;
+                    }
 					display.asyncExec(() -> {
-					if (bar.isDisposed ()) return;
+                        if (bar.isDisposed()) {
+                            return;
+                        }
 						bar.setSelection(i[0]);
 					});
 				}
 			}
 		}.start();
 		while (!shell.isDisposed()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

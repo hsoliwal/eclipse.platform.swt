@@ -59,7 +59,9 @@ public class Snippet282 {
 			if (string != null) {
 				imageButton.setText("");
 				Image image = imageButton.getImage();
-				if (image != null) image.dispose();
+                if (image != null) {
+                    image.dispose();
+                }
 				image = new Image(display, string);
 				imageButton.setImage(image);
 				imageText.setText(string);
@@ -85,7 +87,9 @@ public class Snippet282 {
 			if (imageData != null) {
 				imageButton.setText("");
 				Image image = imageButton.getImage();
-				if (image != null) image.dispose();
+                if (image != null) {
+                    image.dispose();
+                }
 				image = new Image(display, imageData);
 				imageButton.setImage(image);
 				System.out.println("Image copied and pasted successfully");
@@ -107,7 +111,9 @@ public class Snippet282 {
 		button.addListener(SWT.Selection, event -> {
 			imageButton.setText("");
 			Image image = imageButton.getImage();
-			if (image != null) image.dispose();
+            if (image != null) {
+                image.dispose();
+            }
 			imageButton.setImage(null);
 			imageText.setText("");
 		});
@@ -115,8 +121,9 @@ public class Snippet282 {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

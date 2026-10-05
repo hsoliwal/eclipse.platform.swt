@@ -109,7 +109,9 @@ public TableEditor (Table table) {
 }
 @Override
 Rectangle computeBounds () {
-	if (item == null || column == -1 || item.isDisposed()) return new Rectangle(0, 0, 0, 0);
+    if (item == null || column == -1 || item.isDisposed()) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	Rectangle cell = item.getBounds(column);
 	Rectangle rect = item.getImageBounds(column);
 	if (rect.width != 0) {
@@ -219,7 +221,9 @@ public void setColumn(int column) {
 		this.column = -1;
 	}
 
-	if (column < 0  || column >= table.getColumnCount()) return;
+    if (column < 0 || column >= table.getColumnCount()) {
+        return;
+    }
 
 	this.column = column;
 	TableColumn tableColumn = table.getColumn(this.column);
@@ -257,11 +261,19 @@ public void setEditor (Control editor, TableItem item, int column) {
 }
 @Override
 public void layout () {
-	if (table == null || table.isDisposed()) return;
-	if (item == null || item.isDisposed()) return;
+    if (table == null || table.isDisposed()) {
+        return;
+    }
+    if (item == null || item.isDisposed()) {
+        return;
+    }
 	int columnCount = table.getColumnCount();
-	if (columnCount == 0 && column != 0) return;
-	if (columnCount > 0 && (column < 0 || column >= columnCount)) return;
+    if (columnCount == 0 && column != 0) {
+        return;
+    }
+    if (columnCount > 0 && (column < 0 || column >= columnCount)) {
+        return;
+    }
 	super.layout();
 }
 }

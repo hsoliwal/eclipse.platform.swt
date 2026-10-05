@@ -92,7 +92,9 @@ public class LauncherView extends ViewPart {
 					// Category selected, so just expand/colapse the node
 					TreeItem treeItem = (TreeItem) event.item;
 					boolean expanded = treeItem.getExpanded();
-					if (treeItem != null) treeItem.setExpanded(!expanded);
+                    if (treeItem != null) {
+                        treeItem.setExpanded(!expanded);
+                    }
 					treeItem.setImage(LauncherPlugin.images[expanded ? LauncherPlugin.liClosedFolder : LauncherPlugin.liOpenFolder]);
 				} else {
 					launchItem(getSelectedItem());
@@ -103,13 +105,17 @@ public class LauncherView extends ViewPart {
 			@Override
 			public void treeCollapsed(TreeEvent event) {
 				final TreeItem item = (TreeItem) event.item;
-				if (item == null) return;
+                if (item == null) {
+                    return;
+                }
 				item.setImage(LauncherPlugin.images[LauncherPlugin.liClosedFolder]);
 			}
 			@Override
 			public void treeExpanded(TreeEvent event) {
 				final TreeItem item = (TreeItem) event.item;
-				if (item == null) return;
+                if (item == null) {
+                    return;
+                }
 				item.setImage(LauncherPlugin.images[LauncherPlugin.liOpenFolder]);
 			}
 		});
@@ -166,11 +172,15 @@ public class LauncherView extends ViewPart {
 	 * @param newRoot the new tree of launch items for the UI
 	 */
 	public void setItemDescriptors(final ItemTreeNode newRoot) {
-		if (workbenchShell == null) return;
+        if (workbenchShell == null) {
+            return;
+        }
 		workbenchShell.getDisplay().syncExec(new Runnable() {
 			@Override
 			public void run() {
-				if ((launchTree == null) || (launchTree.isDisposed())) return;
+                if ((launchTree == null) || (launchTree.isDisposed())) {
+                    return;
+                }
 				launchTree.removeAll();
 			
 				for (ItemTreeNode node = newRoot.getFirstChild(); node != null;
@@ -217,8 +227,10 @@ public class LauncherView extends ViewPart {
 			}
 			return;
 		}
-		/* Case 2: The launch item is a standalone program */
-		if (workbenchShell == null) return;
+        /* Case 2: The launch item is a standalone program */
+        if (workbenchShell == null) {
+            return;
+        }
 		try {
 			Object instance = itemDescriptor.createItemInstance();
 			if (instance != null) {
@@ -240,7 +252,9 @@ public class LauncherView extends ViewPart {
 	 */
 	private ItemDescriptor getSelectedItem() {
 		final TreeItem[] selections = launchTree.getSelection();
-		if (selections.length == 0) return null;
+        if (selections.length == 0) {
+            return null;
+        }
 		final ItemDescriptor itemDescriptor = (ItemDescriptor) selections[0].getData();
 		return itemDescriptor;
 	}
@@ -254,11 +268,14 @@ public class LauncherView extends ViewPart {
 		String description;
 		if (itemDescriptor == null) {
 			description = LauncherPlugin.getResourceString("launchitem.Null.description");
-			if (runButton != null) runButton.setEnabled(false);
+            if (runButton != null) {
+                runButton.setEnabled(false);
+            }
 		} else {
 			description = itemDescriptor.getDescription();
-			if (description == null)
-				description = LauncherPlugin.getResourceString("launchitem.Missing.description");
+            if (description == null) {
+                description = LauncherPlugin.getResourceString("launchitem.Missing.description");
+            }
 			if (runButton != null) {
 				runButton.setEnabled(itemDescriptor.getView() != null || itemDescriptor.getMainType() != null);
 			}

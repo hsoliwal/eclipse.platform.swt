@@ -68,7 +68,9 @@ public PngEncoder(ImageLoader loader) {
 		this.colorType = 3;
 	}
 
-	if (!(colorType == 2 || colorType == 3 || colorType == 6)) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (!(colorType == 2 || colorType == 3 || colorType == 6)) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 
 }
 
@@ -138,7 +140,9 @@ void writePalette() {
 
 	RGB[] RGBs = data.palette.getRGBs();
 
-	if (RGBs.length > 256) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (RGBs.length > 256) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 
 	ByteArrayOutputStream baos = new ByteArrayOutputStream(RGBs.length);
 

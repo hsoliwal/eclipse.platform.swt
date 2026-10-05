@@ -91,8 +91,11 @@ public class AccessibleActionExample {
 			public void keyPressed(KeyEvent e) {
 				int modifierKeys = e.stateMask & SWT.MODIFIER_MASK;
 				if (modifierKeys == SWT.CTRL || modifierKeys == 0) {
-					if (e.character == '1') customButtonAction(0);
-					else if (e.character == '2') customButtonAction(1);
+                    if (e.character == '1') {
+                        customButtonAction(0);
+                    } else if (e.character == '2') {
+                        customButtonAction(1);
+                    }
 				}
 			}
 		});
@@ -155,7 +158,9 @@ public class AccessibleActionExample {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

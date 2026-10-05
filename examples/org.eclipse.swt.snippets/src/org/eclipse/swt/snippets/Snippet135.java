@@ -57,8 +57,12 @@ public class Snippet135 {
 		}
 		@Override
 		public Class<?> getColumnClass (int col) {
-			if (col == 1) return Long.class;
-			if (col == 2) return Date.class;
+            if (col == 1) {
+                return Long.class;
+            }
+            if (col == 2) {
+                return Date.class;
+            }
 			return String.class;
 		}
 		@Override
@@ -67,9 +71,15 @@ public class Snippet135 {
 		}
 		@Override
 		public Object getValueAt (int row, int col) {
-			if (col == 0) return files[row].getName();
-			if (col == 1) return Long.valueOf(files[row].length());
-			if (col == 2) return new Date(files[row].lastModified());
+            if (col == 0) {
+                return files[row].getName();
+            }
+            if (col == 1) {
+                return Long.valueOf(files[row].length());
+            }
+            if (col == 2) {
+                return new Date(files[row].lastModified());
+            }
 			return "";
 		}
 		@Override
@@ -87,8 +97,12 @@ public class Snippet135 {
 			MessageBox dialog = new MessageBox(shell, SWT.OK | SWT.CANCEL | SWT.ICON_QUESTION);
 			dialog.setText("Question");
 			dialog.setMessage("Exit?");
-			if (e.type == SWT.Close) e.doit = false;
-			if (dialog.open() != SWT.OK) return;
+            if (e.type == SWT.Close) {
+                e.doit = false;
+            }
+            if (dialog.open() != SWT.OK) {
+                return;
+            }
 			shell.dispose();
 		};
 		Listener aboutListener = e -> {
@@ -114,7 +128,9 @@ public class Snippet135 {
 			s.setLocation(x, y);
 			s.open();
 			while (!s.isDisposed()) {
-				if (!display.readAndDispatch()) display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 		};
 		shell.addListener(SWT.Close, exitListener);
@@ -174,7 +190,9 @@ public class Snippet135 {
 		statusLabel.setText("Select a file");
 
 		sash.addListener(SWT.Selection, e -> {
-			if (e.detail == SWT.DRAG) return;
+            if (e.detail == SWT.DRAG) {
+                return;
+            }
 			GridData data = (GridData)fileTree.getLayoutData();
 			Rectangle trim = fileTree.computeTrim(0, 0, 0, 0);
 			data.widthHint = e.x - trim.width;
@@ -190,17 +208,23 @@ public class Snippet135 {
 		}
 		fileTree.addListener(SWT.Expand, e -> {
 			TreeItem item = (TreeItem)e.item;
-			if (item == null) return;
+            if (item == null) {
+                return;
+            }
 			if (item.getItemCount() == 1) {
 				TreeItem firstItem = item.getItems()[0];
-				if (firstItem.getData() != null) return;
+                if (firstItem.getData() != null) {
+                    return;
+                }
 				firstItem.dispose();
 			} else {
 				return;
 			}
 			File root = (File)item.getData();
 			File[] files = root.listFiles();
-			if (files == null) return;
+            if (files == null) {
+                return;
+            }
 			for (File file : files) {
 				if (file.isDirectory()) {
 					TreeItem treeItem = new TreeItem(item, SWT.NONE);
@@ -212,7 +236,9 @@ public class Snippet135 {
 		});
 		fileTree.addListener(SWT.Selection, e -> {
 			TreeItem item = (TreeItem)e.item;
-			if (item == null) return;
+            if (item == null) {
+                return;
+            }
 			final File root = (File)item.getData();
 			EventQueue.invokeLater(() -> {
 				statusLabel.setText(root.getAbsolutePath());
@@ -268,7 +294,9 @@ public class Snippet135 {
 
 		shell.open();
 		while(!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

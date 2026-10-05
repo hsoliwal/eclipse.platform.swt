@@ -23,7 +23,9 @@ String getFieldValue(JNIField field) {
 	int index = 0;
 	while (true) {
 		index = classSource.indexOf(name, index + 1);
-		if (index == -1) return null;
+        if (index == -1) {
+            return null;
+        }
 		int equalsIndex = classSource.indexOf("=", index);
 		if (classSource.substring(index + name.length(), equalsIndex).trim().length() == 0) {
 			int semiIndex = classSource.indexOf(";", equalsIndex);
@@ -44,7 +46,9 @@ public void generate(JNIClass clazz) {
 public void generate(JNIField[] fields) {
 	sort(fields);
 	for (JNIField field : fields) {
-		if ((field.getModifiers() & Modifier.FINAL) == 0) continue;
+        if ((field.getModifiers() & Modifier.FINAL) == 0) {
+            continue;
+        }
 		generate(field);
 	}
 }
@@ -57,7 +61,9 @@ public void generate(JNIField field) {
 			String modifiersStr = Modifier.toString(modifiers);
 			output("\t");
 			output(modifiersStr);
-			if (modifiersStr.length() > 0) output(" ");
+            if (modifiersStr.length() > 0) {
+                output(" ");
+            }
 			output(field.getType().getTypeSignature3());
 			output(" " );
 			output(field.getName());
