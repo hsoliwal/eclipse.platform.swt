@@ -1422,6 +1422,7 @@ public void setBackground (Color color) {
     if (_getBackground().equals(color)) {
         return;
     }
+	if ((parent.style & SWT.VIRTUAL) != 0) virtualBackground = color;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.BACKGROUND_COLUMN, gdkRGBA, -1);
 	setCachedState (true);
@@ -1457,6 +1458,10 @@ public void setBackground (int index, Color color) {
     if (0 > index || index > count - 1) {
         return;
     }
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		if (virtualCellBackground == null) virtualCellBackground = new Color [count];
+		virtualCellBackground [index] = color;
+	}
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_BACKGROUND, gdkRGBA, -1);
@@ -1700,6 +1705,7 @@ public void setForeground (Color color){
     if (_getForeground().equals(color)) {
         return;
     }
+	if ((parent.style & SWT.VIRTUAL) != 0) virtualForeground = color;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, Tree.FOREGROUND_COLUMN, gdkRGBA, -1);
 	setCachedState (true);
@@ -1735,6 +1741,10 @@ public void setForeground (int index, Color color){
     if (0 > index || index > count - 1) {
         return;
     }
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		if (virtualCellForeground == null) virtualCellForeground = new Color [count];
+		virtualCellForeground [index] = color;
+	}
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_tree_store_set (parent.modelHandle, handle, modelIndex + Tree.CELL_FOREGROUND, gdkRGBA, -1);
@@ -1828,6 +1838,10 @@ public void setImage(int index, Image image) {
     if (0 > index || index > count - 1) {
         return;
     }
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		if (virtualImages == null) virtualImages = new Image [count];
+		virtualImages [index] = image;
+	}
 
 	long pixbuf = 0, surface = 0;
 	if (image != null) {
