@@ -66,6 +66,8 @@ public final class ViewportRuntime {
 		private long logicalCount;
 		private long firstVisible;
 		private int visibleCount;
+		// Capacity survives clipping at the logical tail or an empty model.
+		private int viewportRows;
 		private int overscanRows = DEFAULT_OVERSCAN_ROWS;
 		private long generation;
 
@@ -86,10 +88,11 @@ public final class ViewportRuntime {
 				throw new IllegalArgumentException ("invalid insert");
 			}
 			if (count == 0) return;
+			long nextCount = Math.addExact (logicalCount, count);
 			if (index <= firstVisible && logicalCount != 0) {
 				firstVisible = Math.addExact (firstVisible, count);
 			}
-			logicalCount = Math.addExact (logicalCount, count);
+			logicalCount = nextCount;
 			clampViewport ();
 			generation++;
 		}
@@ -114,9 +117,11 @@ public final class ViewportRuntime {
 			long nextFirst = logicalCount == 0 ? 0 : Math.min (first, logicalCount - 1);
 			int nextVisible = (int)Math.min (
 					(long)visibleRows, Math.max (0L, logicalCount - nextFirst));
-			if (nextFirst == firstVisible && nextVisible == visibleCount) return;
+			if (nextFirst == firstVisible && nextVisible == visibleCount
+					&& visibleRows == viewportRows) return;
 			firstVisible = nextFirst;
 			visibleCount = nextVisible;
+			viewportRows = visibleRows;
 			generation++;
 		}
 
@@ -167,12 +172,12 @@ public final class ViewportRuntime {
 			if (row < 0 || row >= logicalCount) {
 				throw new IllegalArgumentException ("row outside viewport model");
 			}
-			if (visibleCount <= 0 || row < firstVisible) {
-				setViewport (row, visibleCount);
+			if (viewportRows <= 0 || row < firstVisible) {
+				setViewport (row, viewportRows);
 				return;
 			}
-			long end = saturatedAdd (firstVisible, visibleCount);
-			if (row >= end) setViewport (row - visibleCount + 1L, visibleCount);
+			long end = saturatedAdd (firstVisible, viewportRows);
+			if (row >= end) setViewport (row - viewportRows + 1L, viewportRows);
 		}
 
 		public long generation () {
@@ -187,7 +192,7 @@ public final class ViewportRuntime {
 			}
 			firstVisible = Math.min (firstVisible, logicalCount - 1);
 			visibleCount = (int)Math.min (
-					(long)visibleCount, Math.max (0L, logicalCount - firstVisible));
+					(long)viewportRows, Math.max (0L, logicalCount - firstVisible));
 		}
 	}
 
