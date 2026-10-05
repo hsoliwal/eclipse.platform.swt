@@ -2088,7 +2088,7 @@ public TableItem getItem (Point point) {
 /* Translate a native hit while GTK is still applying a programmatic virtual scroll.
  * Native hit testing continues to own columns, clipping and row geometry. */
 private int logicalIndexForNativeHit (int nativeIndex) {
-    if (!usesVirtualNativeModel() || pendingTopIndex < 0) {
+    if ((style & SWT.VIRTUAL) == 0 || pendingTopIndex < 0) {
         return nativeIndex;
     }
 	int nativeTop = nativeTopIndex ();
