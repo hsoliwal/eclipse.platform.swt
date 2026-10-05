@@ -225,6 +225,18 @@ final class VirtualTreeTopology {
 		return count;
 	}
 
+	/** Primitive, rebuildable snapshot for a native logical GtkTreeModel. */
+	int [] nativeModelSnapshot () {
+		int capacity = parentIds.length;
+		int [] snapshot = new int [Math.addExact (2, Math.multiplyExact (capacity, 3))];
+		snapshot [0] = capacity;
+		snapshot [1] = rootChildCount == UNKNOWN_CHILD_COUNT ? 0 : rootChildCount;
+		System.arraycopy (parentIds, 0, snapshot, 2, capacity);
+		System.arraycopy (childIndices, 0, snapshot, 2 + capacity, capacity);
+		System.arraycopy (childCounts, 0, snapshot, 2 + capacity * 2, capacity);
+		return snapshot;
+	}
+
 	void state (int id, long state) {
 		requirePresent (id);
 		boolean expansionChanged = ((stateMasks [id] ^ state) & VirtualItemState.EXPANDED) != 0;
