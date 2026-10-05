@@ -427,69 +427,46 @@ TreeItem exposeVirtualItem (TreeItem item) {
 }
 
 void ensureVirtualNativeChildren (long parentIter, int requiredExclusive) {
-    if (virtualTopology == null) {
-        return;
-    }
+	if (virtualTopology == null) return;
+	if (usesVirtualNativeModel ()) return;
 	int parentId = virtualParentId (parentIter);
 	int logicalCount = virtualTopology.childCountKnown (parentId)
 			? virtualTopology.childCount (parentId)
 			: GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
 	int target = Math.min (logicalCount, Math.max (0, requiredExclusive));
 	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
-    if (target <= resident) {
-        return;
-    }
+	if (target <= resident) return;
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-    if (iter == 0) {
-        error(SWT.ERROR_NO_HANDLES);
-    }
+	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
 	long anchor = 0;
 	try {
 		if (resident != 0) {
 			anchor = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-			if (anchor == 0) {
-				error (SWT.ERROR_NO_HANDLES);
-			}
+			if (anchor == 0) error (SWT.ERROR_NO_HANDLES);
 			GTK.gtk_tree_model_iter_nth_child (modelHandle, anchor, parentIter, resident - 1);
 		}
-		/*
-		 * New cold rows have identical sentinel state and no public facade.
-		 * Insert them immediately after the existing resident tail. Keeping
-		 * this anchor fixed avoids GTK walking a growing new sibling prefix
-		 * for every append/row-changed path. Existing rows keep their order,
-		 * native iterators and coordinates throughout the operation.
-		 */
 		for (int i = resident; i < target; i++) {
 			GTK.gtk_tree_store_insert_after (modelHandle, iter, parentIter, anchor);
 			GTK.gtk_tree_store_set (modelHandle, iter, ID_COLUMN, -1, -1);
 		}
 	} finally {
-		if (anchor != 0) {
-			OS.g_free (anchor);
-		}
+		if (anchor != 0) OS.g_free (anchor);
 		OS.g_free (iter);
 	}
 }
 
 void ensureVirtualNativeItem (long parentIter, int index) {
-    if (virtualTopology == null) {
-        return;
-    }
+	if (virtualTopology == null) return;
 	int logicalCount = virtualChildCount (parentIter);
-    if (!(0 <= index && index < logicalCount)) {
-        error(SWT.ERROR_INVALID_RANGE);
-    }
-	ensureVirtualNativeChildren (parentIter, index + 1);
+	if (!(0 <= index && index < logicalCount)) error (SWT.ERROR_INVALID_RANGE);
+	if (!usesVirtualNativeModel ()) ensureVirtualNativeChildren (parentIter, index + 1);
 }
 
 void restoreVirtualChildren (TreeItem item) {
-    if (virtualTopology == null || item == null || item.isDisposed()) {
-        return;
-    }
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	if (usesVirtualNativeModel ()) return;
 	int id = virtualItemId (item);
-    if (!virtualTopology.childCountKnown(id)) {
-        return;
-    }
+	if (!virtualTopology.childCountKnown (id)) return;
 	int logicalCount = virtualTopology.childCount (id);
 	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, item.handle);
 	int target = Math.min (logicalCount, Math.max (resident, VIRTUAL_FRONTIER_CHUNK));
@@ -497,56 +474,33 @@ void restoreVirtualChildren (TreeItem item) {
 }
 
 void requestVirtualFrontier (TreeItem item) {
-    if (virtualTopology == null || item == null || item.isDisposed()) {
-        return;
-    }
+	if (usesVirtualNativeModel ()) return;
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
 	int itemId = virtualItemId (item);
 	int parentId = virtualTopology.parentId (itemId);
-    if (!virtualTopology.childCountKnown(parentId)) {
-        return;
-    }
+	if (!virtualTopology.childCountKnown (parentId)) return;
 	int logicalCount = virtualTopology.childCount (parentId);
 	long parentIter = 0;
 	if (parentId != VirtualTreeTopology.ROOT) {
-        if (parentId >= items.length) {
-            return;
-        }
+		if (parentId >= items.length) return;
 		TreeItem parentItem = items [parentId];
-        if (parentItem == null || parentItem.isDisposed()) {
-            return;
-        }
+		if (parentItem == null || parentItem.isDisposed ()) return;
 		parentIter = parentItem.handle;
 	}
 	int resident = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
-    if (resident >= logicalCount) {
-        return;
-    }
-    if (virtualTopology.childIndex(itemId)
-            < Math.max(0, resident - VIRTUAL_FRONTIER_TRIGGER)) {
-        return;
-    }
-
+	if (resident >= logicalCount) return;
+	if (virtualTopology.childIndex (itemId) < Math.max (0, resident - VIRTUAL_FRONTIER_TRIGGER)) return;
 	int key = parentId + 1;
-    if (!virtualFrontierPending.add(key)) {
-        return;
-    }
+	if (!virtualFrontierPending.add (key)) return;
 	display.asyncExec (() -> {
 		virtualFrontierPending.remove (key);
-        if (isDisposed() || item.isDisposed() || virtualTopology == null) {
-            return;
-        }
-        if (!virtualTopology.childCountKnown(parentId)) {
-            return;
-        }
+		if (isDisposed () || item.isDisposed () || virtualTopology == null) return;
+		if (!virtualTopology.childCountKnown (parentId)) return;
 		long currentParent = 0;
 		if (parentId != VirtualTreeTopology.ROOT) {
-            if (parentId >= items.length) {
-                return;
-            }
+			if (parentId >= items.length) return;
 			TreeItem parentItem = items [parentId];
-            if (parentItem == null || parentItem.isDisposed() || !parentItem.getExpanded()) {
-                return;
-            }
+			if (parentItem == null || parentItem.isDisposed () || !parentItem.getExpanded ()) return;
 			currentParent = parentItem.handle;
 		}
 		int current = GTK.gtk_tree_model_iter_n_children (modelHandle, currentParent);
@@ -556,7 +510,12 @@ void requestVirtualFrontier (TreeItem item) {
 }
 
 int virtualResidentChildCount (long parentIter) {
-	return GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
+	if (!usesVirtualNativeModel ()) return GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
+	int parentId = virtualParentId (parentIter);
+	int count = 0;
+	for (int id = virtualTopology.firstMaterializedChildId (parentId);
+			id >= 0; id = virtualTopology.nextMaterializedSiblingId (id)) count++;
+	return count;
 }
 
 int virtualResidentChildCount (TreeItem parentItem) {
@@ -564,18 +523,16 @@ int virtualResidentChildCount (TreeItem parentItem) {
 }
 
 void scheduleVirtualCollapseCompaction (TreeItem item) {
-    if (virtualTopology == null || item == null || item.isDisposed()) {
-        return;
-    }
+	if (usesVirtualNativeModel ()) return;
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
 	display.asyncExec (() -> {
-        if (isDisposed() || item.isDisposed() || item.getExpanded()) {
-            return;
-        }
+		if (isDisposed () || item.isDisposed () || item.getExpanded ()) return;
 		compactCollapsedVirtualChildren (item);
 	});
 }
 
 void compactCollapsedVirtualChildren (TreeItem item) {
+	if (usesVirtualNativeModel ()) return;
     if (virtualTopology == null || item == null || item.isDisposed() || item.getExpanded()) {
         return;
     }
