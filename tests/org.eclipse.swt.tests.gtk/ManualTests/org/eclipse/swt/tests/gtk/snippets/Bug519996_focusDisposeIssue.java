@@ -42,7 +42,9 @@ public class Bug519996_focusDisposeIssue {
 
 		Display display = shell.getDisplay();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

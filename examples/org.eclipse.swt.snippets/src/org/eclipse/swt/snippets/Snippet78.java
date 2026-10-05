@@ -40,7 +40,9 @@ public static void main (String [] args) {
 	shell.setSize (200, 200);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }
@@ -62,8 +64,9 @@ public static void setDragDrop (final Label label) {
 		}
 		@Override
 		public void dragFinished(DragSourceEvent event) {
-			if (event.detail == DND.DROP_MOVE)
-				label.setText ("");
+            if (event.detail == DND.DROP_MOVE) {
+                label.setText("");
+            }
 		}
 	});
 

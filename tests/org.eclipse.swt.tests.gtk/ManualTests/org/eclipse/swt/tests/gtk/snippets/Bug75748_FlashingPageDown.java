@@ -32,14 +32,18 @@ public class Bug75748_FlashingPageDown {
 		String mytext = new String();
 		int i, n = 256;
 		for(i = 0; i < n; i++) {
-			for(int j = 0; j < 72; j++) mytext += (j % 10);
+            for (int j = 0; j < 72; j++) {
+                mytext += (j % 10);
+            }
 			mytext += " [" + i + "]\n";
 		}
 		s.setText(mytext);
 		shell.setSize(400,400);
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

@@ -51,7 +51,9 @@ ImageData[] loadFromByteStream() {
 		PngChunkReader chunkReader = new PngChunkReader(inputStream);
 		headerChunk = chunkReader.getIhdrChunk();
 		int width = headerChunk.getWidth(), height = headerChunk.getHeight();
-		if (width <= 0 || height <= 0) SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (width <= 0 || height <= 0) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		int imageSize = getAlignedBytesPerRow() * height;
 		data = new byte[imageSize];
 		imageData = ImageData.internal_new(
@@ -158,14 +160,30 @@ void unloadIntoByteStream(ImageLoader loader) {
 		byte[] signature = new byte[SIGNATURE_LENGTH];
 		stream.read(signature);
 		stream.unread(signature);
-		if ((signature[0] & 0xFF) != 137) return false; //137
-		if ((signature[1] & 0xFF) != 80) return false; //P
-		if ((signature[2] & 0xFF) != 78) return false; //N
-		if ((signature[3] & 0xFF) != 71) return false; //G
-		if ((signature[4] & 0xFF) != 13) return false; //<RETURN>
-		if ((signature[5] & 0xFF) != 10) return false; //<LINEFEED>
-		if ((signature[6] & 0xFF) != 26) return false; //<CTRL/Z>
-		if ((signature[7] & 0xFF) != 10) return false; //<LINEFEED>
+        if ((signature[0] & 0xFF) != 137) {
+            return false;
+        } //137
+        if ((signature[1] & 0xFF) != 80) {
+            return false;
+        } //P
+        if ((signature[2] & 0xFF) != 78) {
+            return false;
+        } //N
+        if ((signature[3] & 0xFF) != 71) {
+            return false;
+        } //G
+        if ((signature[4] & 0xFF) != 13) {
+            return false;
+        } //<RETURN>
+        if ((signature[5] & 0xFF) != 10) {
+            return false;
+        } //<LINEFEED>
+        if ((signature[6] & 0xFF) != 26) {
+            return false;
+        } //<CTRL/Z>
+        if ((signature[7] & 0xFF) != 10) {
+            return false;
+        } //<LINEFEED>
 		return true;
 	}
 
@@ -202,7 +220,9 @@ void setPixelData(byte[] data, ImageData imageData) {
 			* to an 8-bit depth image.
 			*/
 			int srcBytesPerLine = getAlignedBytesPerRow();
-			if (headerChunk.getBitDepth() > 8) srcBytesPerLine /= 2;
+            if (headerChunk.getBitDepth() > 8) {
+                srcBytesPerLine /= 2;
+            }
 
 			byte[] rgbData = new byte[destBytesPerLine * height];
 			byte[] alphaData = new byte[width * height];
@@ -232,11 +252,13 @@ void setPixelData(byte[] data, ImageData imageData) {
 			int height = imageData.height;
 			int destBytesPerLine = imageData.bytesPerLine;
 			int srcBytesPerLine = getAlignedBytesPerRow();
-			/*
-			* If the image uses 16-bit depth, it is converted
-			* to an 8-bit depth image.
-			*/
-			if (headerChunk.getBitDepth() > 8) srcBytesPerLine /= 2;
+            /*
+            * If the image uses 16-bit depth, it is converted
+            * to an 8-bit depth image.
+            */
+            if (headerChunk.getBitDepth() > 8) {
+                srcBytesPerLine /= 2;
+            }
 
 			byte[] rgbData = new byte[destBytesPerLine * height];
 			byte[] alphaData = new byte[width * height];
@@ -276,11 +298,13 @@ void setPixelData(byte[] data, ImageData imageData) {
 			int height = imageData.height;
 			int destBytesPerLine = imageData.bytesPerLine;
 			int srcBytesPerLine = getAlignedBytesPerRow();
-			/*
-			* If the image uses 16-bit depth, it is converted
-			* to an 8-bit depth image.
-			*/
-			if (headerChunk.getBitDepth() > 8) srcBytesPerLine /= 2;
+            /*
+            * If the image uses 16-bit depth, it is converted
+            * to an 8-bit depth image.
+            */
+            if (headerChunk.getBitDepth() > 8) {
+                srcBytesPerLine /= 2;
+            }
 			if (destBytesPerLine != srcBytesPerLine) {
 				// Resize 'ImageData.data' to avoid bugs related to using 'ImageData.data.length'
 				imageData.data = new byte[destBytesPerLine*height];
@@ -321,12 +345,14 @@ void readPixelData(PngIdatChunk chunk, PngChunkReader chunkReader) throws IOExce
 		} else {
 			readInterlacedImage(stream);
 		}
-		/*
-		* InflaterInputStream does not consume all bytes in the stream
-		* when it is closed. This may leave unread IDAT chunks. The fix
-		* is to read all available bytes before closing it.
-		*/
-		while (stream.available() > 0) stream.read();
+        /*
+        * InflaterInputStream does not consume all bytes in the stream
+        * when it is closed. This may leave unread IDAT chunks. The fix
+        * is to read all available bytes before closing it.
+        */
+        while (stream.available() > 0) {
+            stream.read();
+        }
 	}
 }
 /**
@@ -383,7 +409,9 @@ void readInterlaceFrame(
 	int width = headerChunk.getWidth();
 	int alignedBytesPerRow = getAlignedBytesPerRow();
 	int height = headerChunk.getHeight();
-	if (startRow >= height || startColumn >= width) return;
+    if (startRow >= height || startColumn >= width) {
+        return;
+    }
 
 	int pixelsPerRow = (width - startColumn + columnInterval - 1) / columnInterval;
 	int bytesPerRow = getBytesPerRow(pixelsPerRow);

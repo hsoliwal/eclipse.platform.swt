@@ -33,7 +33,9 @@ public void generate(JNIClass clazz) {
 public void generate(JNIMethod[] methods) {
 	sort(methods);	
 	for (JNIMethod method : methods) {
-		if ((method.getModifiers() & Modifier.NATIVE) == 0) continue;
+        if ((method.getModifiers() & Modifier.NATIVE) == 0) {
+            continue;
+        }
 		generate(method);
 	}
 }

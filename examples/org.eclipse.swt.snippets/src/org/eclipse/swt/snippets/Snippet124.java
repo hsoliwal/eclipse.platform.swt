@@ -86,14 +86,18 @@ public static void main (String[] args) {
 					visible = true;
 				}
 			}
-			if (!visible) return;
+            if (!visible) {
+                return;
+            }
 			index++;
 		}
 	});
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

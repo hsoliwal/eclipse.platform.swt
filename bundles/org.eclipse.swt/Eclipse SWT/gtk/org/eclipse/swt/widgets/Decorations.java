@@ -163,7 +163,9 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 void _setImages (Image [] images) {
@@ -206,11 +208,15 @@ void _setImages (Image [] images) {
 		OS.g_object_unref(OS.g_list_data(temp));
 		temp = OS.g_list_next(temp);
 	}
-	if (icon_list != 0) OS.g_list_free(icon_list);
+    if (icon_list != 0) {
+        OS.g_list_free(icon_list);
+    }
 }
 
 void addMenu (Menu menu) {
-	if (menus == null) menus = new Menu [4];
+    if (menus == null) {
+        menus = new Menu [4];
+    }
 	for (int i=0; i<menus.length; i++) {
 		if (menus [i] == null) {
 			menus [i] = menu;
@@ -227,12 +233,24 @@ int compare (ImageData data1, ImageData data2) {
 	if (data1.width == data2.width && data1.height == data2.height) {
 		int transparent1 = data1.getTransparencyType ();
 		int transparent2 = data2.getTransparencyType ();
-		if (transparent1 == SWT.TRANSPARENCY_ALPHA) return -1;
-		if (transparent2 == SWT.TRANSPARENCY_ALPHA) return 1;
-		if (transparent1 == SWT.TRANSPARENCY_MASK) return -1;
-		if (transparent2 == SWT.TRANSPARENCY_MASK) return 1;
-		if (transparent1 == SWT.TRANSPARENCY_PIXEL) return -1;
-		if (transparent2 == SWT.TRANSPARENCY_PIXEL) return 1;
+        if (transparent1 == SWT.TRANSPARENCY_ALPHA) {
+            return -1;
+        }
+        if (transparent2 == SWT.TRANSPARENCY_ALPHA) {
+            return 1;
+        }
+        if (transparent1 == SWT.TRANSPARENCY_MASK) {
+            return -1;
+        }
+        if (transparent2 == SWT.TRANSPARENCY_MASK) {
+            return 1;
+        }
+        if (transparent1 == SWT.TRANSPARENCY_PIXEL) {
+            return -1;
+        }
+        if (transparent2 == SWT.TRANSPARENCY_PIXEL) {
+            return 1;
+        }
 		return 0;
 	}
 	return data1.width > data2.width || data1.height > data2.height ? -1 : 1;
@@ -249,9 +267,13 @@ Control computeTabRoot () {
 }
 
 void createAccelGroup () {
-	if (accelGroup != 0) return;
+    if (accelGroup != 0) {
+        return;
+    }
 	accelGroup = GTK.gtk_accel_group_new ();
-	if (accelGroup == 0) error (SWT.ERROR_NO_HANDLES);
+    if (accelGroup == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	//FIXME - what should we do for Decorations
 	long shellHandle = topHandle ();
 	GTK3.gtk_window_add_accel_group (shellHandle, accelGroup);
@@ -264,8 +286,12 @@ void createWidget (int index) {
 }
 
 void destroyAccelGroup () {
-	if (accelGroup == 0) return;
-	if (menuBar != null) menuBar.removeAccelerators(accelGroup);
+    if (accelGroup == 0) {
+        return;
+    }
+    if (menuBar != null) {
+        menuBar.removeAccelerators(accelGroup);
+    }
 	long shellHandle = topHandle ();
 	GTK3.gtk_window_remove_accel_group (shellHandle, accelGroup);
 	OS.g_object_unref (accelGroup);
@@ -273,18 +299,30 @@ void destroyAccelGroup () {
 }
 
 void fixAccelGroup () {
-	if (menuBar == null) return;
+    if (menuBar == null) {
+        return;
+    }
 	destroyAccelGroup ();
 	createAccelGroup ();
 	menuBar.addAccelerators (accelGroup);
 }
 
 void fixDecorations (Decorations newDecorations, Control control, Menu [] menus) {
-	if (this == newDecorations) return;
-	if (control == savedFocus) savedFocus = null;
-	if (control == defaultButton) defaultButton = null;
-	if (control == saveDefault) saveDefault = null;
-	if (menus == null) return;
+    if (this == newDecorations) {
+        return;
+    }
+    if (control == savedFocus) {
+        savedFocus = null;
+    }
+    if (control == defaultButton) {
+        defaultButton = null;
+    }
+    if (control == saveDefault) {
+        saveDefault = null;
+    }
+    if (menus == null) {
+        return;
+    }
 	Menu menu = control.menu;
 	if (menu != null) {
 		int index = 0;
@@ -315,7 +353,9 @@ void fixDecorations (Decorations newDecorations, Control control, Menu [] menus)
 public Button getDefaultButton () {
 	checkWidget();
 	Button button = defaultButton != null ? defaultButton : saveDefault;
-	if (button != null && button.isDisposed ()) return null;
+    if (button != null && button.isDisposed()) {
+        return null;
+    }
 	return button;
 }
 
@@ -374,7 +414,9 @@ public Image getImage () {
  */
 public Image [] getImages () {
 	checkWidget ();
-	if (images == null) return new Image [0];
+    if (images == null) {
+        return new Image [0];
+    }
 	Image [] result = new Image [images.length];
 	System.arraycopy (images, 0, result, 0, images.length);
 	return result;
@@ -477,7 +519,9 @@ Decorations menuShell () {
 }
 
 void removeMenu (Menu menu) {
-	if (menus == null) return;
+    if (menus == null) {
+        return;
+    }
 	for (int i=0; i<menus.length; i++) {
 		if (menus [i] == menu) {
 			menus [i] = null;
@@ -521,18 +565,24 @@ void releaseWidget () {
 
 @Override
 void reskinChildren (int flags) {
-	if (menuBar != null) menuBar.reskin (flags);
+    if (menuBar != null) {
+        menuBar.reskin(flags);
+    }
 	if (menus != null) {
 		for (int i=0; i<menus.length; i++) {
 			Menu menu = menus [i];
-			if (menu != null) menu.reskin (flags);
+            if (menu != null) {
+                menu.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
 }
 
 boolean restoreFocus () {
-	if (savedFocus != null && savedFocus.isDisposed ()) savedFocus = null;
+    if (savedFocus != null && savedFocus.isDisposed()) {
+        savedFocus = null;
+    }
 	boolean restored = savedFocus != null && savedFocus.setFocus ();
 	savedFocus = null;
 	return restored;
@@ -574,8 +624,12 @@ public void setDefaultButton (Button button) {
 		}
 	}
 	if (button != null) {
-		if (button.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (button.menuShell () != this) error (SWT.ERROR_INVALID_PARENT);
+        if (button.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (button.menuShell() != this) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 		buttonHandle = button.handle;
 	}
 	saveDefault = defaultButton = button;
@@ -643,9 +697,13 @@ public void setImage (Image image) {
  */
 public void setImages (Image [] images) {
 	checkWidget ();
-	if (images == null) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (images == null) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	for (int i = 0; i < images.length; i++) {
-		if (images [i] == null || images [i].isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (images [i] == null || images [i].isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	this.images = images;
 	_setImages (images);
@@ -696,10 +754,16 @@ public void setMaximized (boolean maximized) {
  */
 public void setMenuBar (Menu menu) {
 	checkWidget();
-	if (menuBar == menu) return;
+    if (menuBar == menu) {
+        return;
+    }
 	if (menu != null) {
-		if ((menu.style & SWT.BAR) == 0) error (SWT.ERROR_MENU_NOT_BAR);
-		if (menu.parent != this) error (SWT.ERROR_INVALID_PARENT);
+        if ((menu.style & SWT.BAR) == 0) {
+            error(SWT.ERROR_MENU_NOT_BAR);
+        }
+        if (menu.parent != this) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
 	menuBar = menu;
 }
@@ -736,12 +800,16 @@ public void setMinimized (boolean minimized) {
 void setOrientation (boolean create) {
 	super.setOrientation (create);
 	if (!create) {
-		if (menuBar != null) menuBar._setOrientation (style & (SWT.RIGHT_TO_LEFT | SWT.LEFT_TO_RIGHT));
+        if (menuBar != null) {
+            menuBar._setOrientation(style & (SWT.RIGHT_TO_LEFT | SWT.LEFT_TO_RIGHT));
+        }
 	}
 }
 
 void setSavedFocus (Control control) {
-	if (this == control) return;
+    if (this == control) {
+        return;
+    }
 	savedFocus = control;
 }
 
@@ -766,14 +834,18 @@ void setSavedFocus (Control control) {
  */
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	text = string;
 }
 
 void sort (Image [] images) {
 	/* Shell Sort from K&R, pg 108 */
 	int length = images.length;
-	if (length <= 1) return;
+    if (length <= 1) {
+        return;
+    }
 	ImageData [] datas = new ImageData [length];
 	for (int i = 0; i < length; i++) {
 		datas [i] = images [i].getImageData ();
@@ -802,14 +874,18 @@ boolean traverseItem (boolean next) {
 @Override
 boolean traverseReturn () {
 	Button button = defaultButton != null ? defaultButton: saveDefault;
-	if (button == null || button.isDisposed ()) return false;
-	/*
-	* Bug in GTK.  When a default button that is disabled is
-	* activated using the Enter key, GTK GP's.  The fix is to
-	* detect this case and stop GTK from processing the Enter
-	* key.
-	*/
-	if (!button.isVisible () || !button.isEnabled ()) return true;
+    if (button == null || button.isDisposed()) {
+        return false;
+    }
+    /*
+    * Bug in GTK.  When a default button that is disabled is
+    * activated using the Enter key, GTK GP's.  The fix is to
+    * detect this case and stop GTK from processing the Enter
+    * key.
+    */
+    if (!button.isVisible() || !button.isEnabled()) {
+        return true;
+    }
 	long shellHandle = _getShell ().topHandle ();
 
 	if (GTK.GTK4) {

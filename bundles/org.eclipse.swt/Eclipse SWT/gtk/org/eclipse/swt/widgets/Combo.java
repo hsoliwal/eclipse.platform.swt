@@ -145,7 +145,9 @@ public Combo (Composite parent, int style) {
  */
 public void add (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	add (string, items.length);
 }
 
@@ -177,7 +179,9 @@ public void add (String string) {
  */
 public void add(String string, int index) {
 	checkWidget();
-	if (string == null) error(SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (!(0 <= index && index <= items.length)) {
 		error(SWT.ERROR_INVALID_RANGE);
 	}
@@ -229,7 +233,9 @@ private void gtk_combo_box_insert(String string, int index) {
  *   It's a poorly working hack. If list has more than +-1000 entries, then we get visual cheese and jvm crashes. </p>
  */
 private void gtk_combo_box_toggle_wrap (boolean wrap) {
-	if (handle == 0 || GTK.GTK4) return;
+    if (handle == 0 || GTK.GTK4) {
+        return;
+    }
 	if (!wrap) {
 		if (GTK3.gtk_combo_box_get_wrap_width(handle) == 1) {
 			GTK3.gtk_combo_box_set_wrap_width(handle, 0);
@@ -369,7 +375,9 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -408,7 +416,9 @@ void clearText () {
 			GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
 			GTK.gtk_tree_model_get (modelHandle, iter, 0, ptr, -1);
 			OS.g_free (iter);
-			if (ptr [0] != 0 && C.strlen (ptr [0]) > 0) postEvent (SWT.Modify);
+            if (ptr [0] != 0 && C.strlen(ptr [0]) > 0) {
+                postEvent(SWT.Modify);
+            }
 			OS.g_free (ptr [0]);
 		}
 	} else {
@@ -436,7 +446,9 @@ Point computeNativeSize (long h, int wHint, int hHint, boolean changed) {
 		GTK.gtk_cell_view_set_fit_model(cellHandle, true);
 	}
 	int [] xpad = new int[1];
-	if (textRenderer != 0) GTK.gtk_cell_renderer_get_padding(textRenderer, xpad, null);
+    if (textRenderer != 0) {
+        GTK.gtk_cell_renderer_get_padding(textRenderer, xpad, null);
+    }
 	Point nativeSize = super.computeNativeSize(h, wHint, hHint, changed);
 	nativeSize.x += xpad[0] * 2;
 
@@ -494,24 +506,36 @@ void createHandle (int index) {
 	state |= HANDLE | MENU;
 
 	fixedHandle = OS.g_object_new(display.gtk_fixed_get_type(), 0);
-	if (fixedHandle == 0) error(SWT.ERROR_NO_HANDLES);
-	if (!GTK.GTK4) GTK3.gtk_widget_set_has_window(fixedHandle, true);
+    if (fixedHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
+    if (!GTK.GTK4) {
+        GTK3.gtk_widget_set_has_window(fixedHandle, true);
+    }
 
 	long oldList = GTK.gtk_window_list_toplevels();
 	if ((style & SWT.READ_ONLY) != 0) {
 		handle = GTK.gtk_combo_box_text_new();
-		if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (handle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		cellHandle = GTK.GTK4 ? GTK4.gtk_combo_box_get_child(handle) : GTK3.gtk_bin_get_child (handle);
-		if (cellHandle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (cellHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		gtk_combo_box_toggle_wrap(true);
 	} else {
 		handle = GTK.gtk_combo_box_text_new_with_entry();
-		if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (handle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		entryHandle = GTK.GTK4 ? GTK4.gtk_combo_box_get_child(handle) : GTK3.gtk_bin_get_child(handle);
-		if (entryHandle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (entryHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		if (DISABLE_EMOJI && GTK.GTK_VERSION >= OS.VERSION(3, 22, 20)) {
 		    GTK.gtk_entry_set_input_hints(entryHandle, GTK.GTK_INPUT_HINT_NO_EMOJI);
 		}
@@ -528,7 +552,9 @@ void createHandle (int index) {
 	}
 
 	textRenderer = GTK.gtk_cell_renderer_text_new();
-	if (textRenderer == 0) error(SWT.ERROR_NO_HANDLES);
+    if (textRenderer == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	GTK.gtk_cell_layout_clear (handle);
 	GTK.gtk_cell_layout_pack_start (handle, textRenderer, true);
@@ -540,12 +566,22 @@ void createHandle (int index) {
 	* for those versions of GTK that defer the creation.
 	*/
 	menuHandle = findMenuHandle();
-	if (menuHandle != 0) OS.g_object_ref (menuHandle);
+    if (menuHandle != 0) {
+        OS.g_object_ref(menuHandle);
+    }
 	buttonHandle = findButtonHandle ();
-	if (buttonHandle != 0) OS.g_object_ref (buttonHandle);
-	if (buttonBoxHandle != 0) OS.g_object_ref (buttonBoxHandle);
-	if (cellHandle != 0) cellBoxHandle = GTK.gtk_widget_get_parent(cellHandle);
-	if (cellBoxHandle != 0) OS.g_object_ref(cellBoxHandle);
+    if (buttonHandle != 0) {
+        OS.g_object_ref(buttonHandle);
+    }
+    if (buttonBoxHandle != 0) {
+        OS.g_object_ref(buttonBoxHandle);
+    }
+    if (cellHandle != 0) {
+        cellBoxHandle = GTK.gtk_widget_get_parent(cellHandle);
+    }
+    if (cellBoxHandle != 0) {
+        OS.g_object_ref(cellBoxHandle);
+    }
 	/*
 	* Feature in GTK. By default, read only combo boxes
 	* process the RETURN key rather than allowing the
@@ -560,7 +596,9 @@ void createHandle (int index) {
 	 * drop down arrow. See bug 539367.
 	 */
 	if ((style & SWT.READ_ONLY) != 0) {
-		if (cellBoxHandle != 0) arrowHandle = findArrowHandle();
+        if (cellBoxHandle != 0) {
+            arrowHandle = findArrowHandle();
+        }
 	}
 	// In GTK 3 font description is inherited from parent widget which is not how SWT has always worked,
 	// reset to default font to get the usual behavior
@@ -601,12 +639,22 @@ GdkRGBA defaultBackground () {
 @Override
 void deregister () {
 	super.deregister ();
-	if (buttonHandle != 0) display.removeWidget (buttonHandle);
-	if (entryHandle != 0) display.removeWidget (entryHandle);
-	if (popupHandle != 0) display.removeWidget (popupHandle);
-	if (menuHandle != 0) display.removeWidget (menuHandle);
+    if (buttonHandle != 0) {
+        display.removeWidget(buttonHandle);
+    }
+    if (entryHandle != 0) {
+        display.removeWidget(entryHandle);
+    }
+    if (popupHandle != 0) {
+        display.removeWidget(popupHandle);
+    }
+    if (menuHandle != 0) {
+        display.removeWidget(menuHandle);
+    }
 	long imContext = imContext ();
-	if (imContext != 0) display.removeWidget (imContext);
+    if (imContext != 0) {
+        display.removeWidget(imContext);
+    }
 }
 
 @Override
@@ -616,10 +664,11 @@ boolean filterKey (long event) {
 		lastEventTime = time;
 		long imContext = imContext ();
 		if (imContext != 0) {
-			if (GTK.GTK4)
-				return GTK4.gtk_im_context_filter_keypress (imContext, event);
-			else
-				return GTK3.gtk_im_context_filter_keypress (imContext, event);
+            if (GTK.GTK4) {
+                return GTK4.gtk_im_context_filter_keypress(imContext, event);
+            } else {
+                return GTK3.gtk_im_context_filter_keypress(imContext, event);
+            }
 		}
 	}
 	gdkEventKey = event;
@@ -832,10 +881,11 @@ void fixIM () {
 	if (gdkEventKey != 0 && gdkEventKey != -1) {
 		long imContext = imContext ();
 		if (imContext != 0) {
-			if (GTK.GTK4)
-				GTK4.gtk_im_context_filter_keypress (imContext, gdkEventKey);
-			else
-				GTK3.gtk_im_context_filter_keypress (imContext, gdkEventKey);
+            if (GTK.GTK4) {
+                GTK4.gtk_im_context_filter_keypress(imContext, gdkEventKey);
+            } else {
+                GTK3.gtk_im_context_filter_keypress(imContext, gdkEventKey);
+            }
 
 			gdkEventKey = -1;
 			return;
@@ -846,20 +896,28 @@ void fixIM () {
 
 @Override
 long fontHandle () {
-	if (entryHandle != 0) return entryHandle;
+    if (entryHandle != 0) {
+        return entryHandle;
+    }
 	return super.fontHandle ();
 }
 
 @Override
 long focusHandle () {
-	if (entryHandle != 0) return entryHandle;
+    if (entryHandle != 0) {
+        return entryHandle;
+    }
 	return super.focusHandle ();
 }
 
 @Override
 boolean hasFocus () {
-	if (super.hasFocus ()) return true;
-	if (entryHandle != 0 && GTK.gtk_widget_has_focus (entryHandle)) return true;
+    if (super.hasFocus()) {
+        return true;
+    }
+    if (entryHandle != 0 && GTK.gtk_widget_has_focus(entryHandle)) {
+        return true;
+    }
 	return false;
 }
 
@@ -873,7 +931,9 @@ void hookEvents () {
 		OS.g_signal_connect_closure (entryHandle, OS.insert_text, display.getClosure (INSERT_TEXT), false);
 		OS.g_signal_connect_closure (entryHandle, OS.delete_text, display.getClosure (DELETE_TEXT), false);
 		OS.g_signal_connect_closure (entryHandle, OS.activate, display.getClosure (ACTIVATE), false);
-		if (!GTK.GTK4) OS.g_signal_connect_closure (entryHandle, OS.populate_popup, display.getClosure (POPULATE_POPUP), false);
+        if (!GTK.GTK4) {
+            OS.g_signal_connect_closure(entryHandle, OS.populate_popup, display.getClosure(POPULATE_POPUP), false);
+        }
 	}
 
 	hookEvents(new long [] {buttonHandle, entryHandle, menuHandle});
@@ -936,7 +996,9 @@ void hookEvents(long [] handles) {
 }
 
 long imContext () {
-	if (imContext != 0) return imContext;
+    if (imContext != 0) {
+        return imContext;
+    }
 	return 0;
 }
 
@@ -954,7 +1016,9 @@ long imContext () {
  */
 public void deselect (int index) {
 	checkWidget();
-	if (index < 0 || index >= items.length) return;
+    if (index < 0 || index >= items.length) {
+        return;
+    }
 
 	if (GTK.gtk_combo_box_get_active (handle) == index) {
 		clearText ();
@@ -994,7 +1058,9 @@ boolean dragDetect(int x, int y, boolean filter, boolean dragOnTimeout, boolean[
 		GTK.gtk_editable_get_selection_bounds (entryHandle, start, end);
 		if (start [0] <= position && position < end [0]) {
 			if (super.dragDetect (x, y, filter, dragOnTimeout, consume)) {
-				if (consume != null) consume [0] = true;
+                if (consume != null) {
+                    consume [0] = true;
+                }
 				return true;
 			}
 		}
@@ -1270,7 +1336,9 @@ public Point getSelection () {
 	if ((style & SWT.READ_ONLY) != 0) {
 		int length = 0;
 		int index = GTK.gtk_combo_box_get_active (handle);
-		if (index != -1) length = getItem (index).length ();
+        if (index != -1) {
+            length = getItem(index).length();
+        }
 		return new Point (0, length);
 	}
 	int [] start = new int [1];
@@ -1436,7 +1504,9 @@ long gtk_changed (long widget) {
 		unselected = false;
 		if (entryHandle == 0) {
 			sendEvent(SWT.Modify);
-			if (isDisposed ()) return 0;
+            if (isDisposed()) {
+                return 0;
+            }
 		}
 		/*
 		* Feature in GTK.  GTK emits a changed signal whenever
@@ -1450,7 +1520,9 @@ long gtk_changed (long widget) {
 		* item and not matching the item as the user types.
 		*/
 		int index = GTK.gtk_combo_box_get_active (handle);
-		if (index != -1) sendSelectionEvent (SWT.Selection);
+        if (index != -1) {
+            sendSelectionEvent(SWT.Selection);
+        }
 		indexSelected = -1;
 		return 0;
 	}
@@ -1482,15 +1554,23 @@ long gtk_changed (long widget) {
 
 @Override
 long gtk_commit (long imContext, long text) {
-	if (text == 0) return 0;
-	if (!GTK.gtk_editable_get_editable (entryHandle)) return 0;
+    if (text == 0) {
+        return 0;
+    }
+    if (!GTK.gtk_editable_get_editable(entryHandle)) {
+        return 0;
+    }
 	int length = C.strlen (text);
-	if (length == 0) return 0;
+    if (length == 0) {
+        return 0;
+    }
 	byte [] buffer = new byte [length];
 	C.memmove (buffer, text, length);
 	char [] chars = Converter.mbcsToWcs (buffer);
 	char [] newChars = sendIMKeyEvent (SWT.KeyDown, 0, chars);
-	if (newChars == null) return 0;
+    if (newChars == null) {
+        return 0;
+    }
 	/*
 	* Feature in GTK.  For a GtkEntry, during the insert-text signal,
 	* GTK allows the programmer to change only the caret location,
@@ -1521,7 +1601,9 @@ long gtk_commit (long imContext, long text) {
 
 @Override
 long gtk_delete_text (long widget, long start_pos, long end_pos) {
-	if (!hooks (SWT.Verify) && !filters (SWT.Verify)) return 0;
+    if (!hooks(SWT.Verify) && !filters(SWT.Verify)) {
+        return 0;
+    }
 	long ptr;
 	if(GTK.GTK4) {
 		long bufferPtr = GTK4.gtk_entry_get_buffer(entryHandle);
@@ -1530,7 +1612,9 @@ long gtk_delete_text (long widget, long start_pos, long end_pos) {
 	else {
 		ptr = GTK3.gtk_entry_get_text(entryHandle);
 	}
-	if (end_pos == -1) end_pos = OS.g_utf8_strlen (ptr, -1);
+    if (end_pos == -1) {
+        end_pos = OS.g_utf8_strlen(ptr, -1);
+    }
 	int start = (int)OS.g_utf8_offset_to_utf16_offset (ptr, start_pos);
 	int end = (int)OS.g_utf8_offset_to_utf16_offset (ptr, end_pos);
 	String newText = verifyText ("", start, end);
@@ -1614,7 +1698,9 @@ long gtk_draw (long widget, long cairo) {
 	 */
 	long parentHandle = GTK.gtk_widget_get_parent(fixedHandle);
 	if (parentHandle != 0) {
-		if (parent.fixClipHandle == 0) parent.fixClipHandle = parentHandle;
+        if (parent.fixClipHandle == 0) {
+            parent.fixClipHandle = parentHandle;
+        }
 		if (firstDraw) {
 			if ((style & SWT.READ_ONLY) != 0) {
 				long [] array = {fixedHandle, handle, buttonBoxHandle, buttonHandle, cellBoxHandle, cellHandle};
@@ -1695,8 +1781,12 @@ long gtk_focus_out_event (long widget, long event) {
 
 @Override
 long gtk_insert_text (long widget, long new_text, long new_text_length, long position) {
-	if (!hooks (SWT.Verify) && !filters (SWT.Verify)) return 0;
-	if (new_text == 0 || new_text_length == 0) return 0;
+    if (!hooks(SWT.Verify) && !filters(SWT.Verify)) {
+        return 0;
+    }
+    if (new_text == 0 || new_text_length == 0) {
+        return 0;
+    }
 	byte [] buffer = new byte [(int)new_text_length];
 	C.memmove (buffer, new_text, buffer.length);
 	String oldText = new String (Converter.mbcsToWcs (buffer));
@@ -1711,7 +1801,9 @@ long gtk_insert_text (long widget, long new_text, long new_text_length, long pos
 		ptr = GTK3.gtk_entry_get_text (entryHandle);
 	}
 
-	if (pos [0] == -1) pos [0] = (int)OS.g_utf8_strlen (ptr, -1);
+    if (pos [0] == -1) {
+        pos [0] = (int) OS.g_utf8_strlen(ptr, -1);
+    }
 	int start = (int)OS.g_utf8_offset_to_utf16_offset (ptr, pos [0]);
 	String newText = verifyText (oldText, start, start);
 	if (newText != oldText) {
@@ -1750,7 +1842,9 @@ long gtk3_key_press_event (long widget, long event) {
 		fixIM ();
 		return result;
 	}
-	if (gdkEventKey == -1) result = 1;
+    if (gdkEventKey == -1) {
+        result = 1;
+    }
 	gdkEventKey = 0;
 	if ((style & SWT.READ_ONLY) == 0) {
 		int oldIndex = GTK.gtk_combo_box_get_active (handle);
@@ -1875,18 +1969,28 @@ public int indexOf (String string) {
  */
 public int indexOf (String string, int start) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (!(0 <= start && start < items.length)) return -1;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (!(0 <= start && start < items.length)) {
+        return -1;
+    }
 	for (int i=start; i<items.length; i++) {
-		if (string.equals(items [i])) return i;
+        if (string.equals(items [i])) {
+            return i;
+        }
 	}
 	return -1;
 }
 
 @Override
 boolean isFocusHandle(long widget) {
-	if (buttonHandle != 0 && widget == buttonHandle) return true;
-	if (entryHandle != 0 && widget == entryHandle) return true;
+    if (buttonHandle != 0 && widget == buttonHandle) {
+        return true;
+    }
+    if (entryHandle != 0 && widget == entryHandle) {
+        return true;
+    }
 	return super.isFocusHandle (widget);
 }
 
@@ -1895,7 +1999,9 @@ long paintSurface () {
 	long childHandle =  entryHandle != 0 ? entryHandle : handle;
 	GTK.gtk_widget_realize (childHandle);
 	long surface = gtk_widget_get_surface (childHandle);
-	if ((style & SWT.READ_ONLY) != 0) return surface;
+    if ((style & SWT.READ_ONLY) != 0) {
+        return surface;
+    }
 	/*
 	 * TODO: GTK4 no access to children of the surface
 	 * for combobox may need to use gtk_combo_box_get_child ().
@@ -1944,12 +2050,22 @@ long parentingHandle() {
 @Override
 void register () {
 	super.register ();
-	if (buttonHandle != 0) display.addWidget (buttonHandle, this);
-	if (entryHandle != 0) display.addWidget (entryHandle, this);
-	if (popupHandle != 0) display.addWidget (popupHandle, this);
-	if (menuHandle != 0) display.addWidget (menuHandle, this);
+    if (buttonHandle != 0) {
+        display.addWidget(buttonHandle, this);
+    }
+    if (entryHandle != 0) {
+        display.addWidget(entryHandle, this);
+    }
+    if (popupHandle != 0) {
+        display.addWidget(popupHandle, this);
+    }
+    if (menuHandle != 0) {
+        display.addWidget(menuHandle, this);
+    }
 	long imContext = imContext ();
-	if (imContext != 0) display.addWidget (imContext, this);
+    if (imContext != 0) {
+        display.addWidget(imContext, this);
+    }
 }
 
 @Override
@@ -2010,8 +2126,12 @@ public void remove (int index) {
 	System.arraycopy (oldItems, 0, newItems, 0, index);
 	System.arraycopy (oldItems, index + 1, newItems, index, oldItems.length - index - 1);
 	items = newItems;
-	if (GTK.gtk_combo_box_get_active (handle) == index) clearText ();
-	if (handle != 0) GTK.gtk_combo_box_text_remove(handle, index);
+    if (GTK.gtk_combo_box_get_active(handle) == index) {
+        clearText();
+    }
+    if (handle != 0) {
+        GTK.gtk_combo_box_text_remove(handle, index);
+    }
 }
 
 /**
@@ -2032,7 +2152,9 @@ public void remove (int index) {
  */
 public void remove (int start, int end) {
 	checkWidget();
-	if (start > end) return;
+    if (start > end) {
+        return;
+    }
 	if (!(0 <= start && start <= end && end < items.length)) {
 		error (SWT.ERROR_INVALID_RANGE);
 	}
@@ -2042,11 +2164,15 @@ public void remove (int start, int end) {
 	System.arraycopy (oldItems, end + 1, newItems, start, oldItems.length - end - 1);
 	items = newItems;
 	int index = GTK.gtk_combo_box_get_active (handle);
-	if (start <= index && index <= end) clearText();
+    if (start <= index && index <= end) {
+        clearText();
+    }
 
 	gtk_combo_box_toggle_wrap(false);
 	for (int i = end; i >= start; i--) {
-		if (handle != 0) GTK.gtk_combo_box_text_remove(handle, i);
+        if (handle != 0) {
+            GTK.gtk_combo_box_text_remove(handle, i);
+        }
 	}
 	gtk_combo_box_toggle_wrap(true);
 }
@@ -2069,9 +2195,13 @@ public void remove (int start, int end) {
  */
 public void remove (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int index = indexOf (string, 0);
-	if (index == -1) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (index == -1) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	remove (index);
 }
 
@@ -2110,8 +2240,12 @@ public void removeAll () {
  */
 public void removeModifyListener (ModifyListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Modify, listener);
 }
 
@@ -2137,7 +2271,9 @@ public void removeModifyListener (ModifyListener listener) {
  */
 public void removeSegmentListener (SegmentListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	eventTable.unhook (SWT.Segments, listener);
 }
 
@@ -2160,8 +2296,12 @@ public void removeSegmentListener (SegmentListener listener) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -2187,8 +2327,12 @@ public void removeSelectionListener (SelectionListener listener) {
  */
 public void removeVerifyListener (VerifyListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Verify, listener);
 }
 
@@ -2206,7 +2350,9 @@ public void removeVerifyListener (VerifyListener listener) {
  */
 public void select (int index) {
 	checkWidget();
-	if (index < 0 || index >= items.length) return;
+    if (index < 0 || index >= items.length) {
+        return;
+    }
 	int selected = GTK.gtk_combo_box_get_active (handle);
 	OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_combo_box_set_active (handle, index);
@@ -2231,12 +2377,16 @@ void setBackgroundGdkRGBA (long context, long handle, GdkRGBA rgba) {
 @Override
 int setBounds (int x, int y, int width, int height, boolean move, boolean resize) {
 	int newHeight = height;
-	if (resize) newHeight = Math.max (getTextHeight (), height);
+    if (resize) {
+        newHeight = Math.max(getTextHeight(), height);
+    }
 	return super.setBounds (x, y, width, newHeight, move, resize);
 }
 
 void setButtonHandle (long widget) {
-	if (buttonHandle == widget) return;
+    if (buttonHandle == widget) {
+        return;
+    }
 	if (buttonHandle != 0) {
 		display.removeWidget (buttonHandle);
 		OS.g_object_unref (buttonHandle);
@@ -2250,7 +2400,9 @@ void setButtonHandle (long widget) {
 }
 
 void setMenuHandle (long widget) {
-	if (menuHandle == widget) return;
+    if (menuHandle == widget) {
+        return;
+    }
 	if (menuHandle != 0) {
 		display.removeWidget (menuHandle);
 		OS.g_object_unref (menuHandle);
@@ -2266,7 +2418,9 @@ void setMenuHandle (long widget) {
 @Override
 void setFontDescription (long font) {
 	super.setFontDescription (font);
-	if (entryHandle != 0) setFontDescription (entryHandle, font);
+    if (entryHandle != 0) {
+        setFontDescription(entryHandle, font);
+    }
 	OS.g_object_set (textRenderer, OS.font_desc, font, 0);
 	if ((style & SWT.READ_ONLY) != 0) {
 		/*
@@ -2338,7 +2492,9 @@ void setInitialBounds () {
  */
 public void setItem (int index, String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (!(0 <= index && index < items.length)) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
@@ -2369,9 +2525,13 @@ public void setItem (int index, String string) {
  */
 public void setItems (String... items) {
 	checkWidget();
-	if (items == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (items == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<items.length; i++) {
-		if (items [i] == null) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (items [i] == null) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	this.items = new String [items.length];
 	System.arraycopy (items, 0, this.items, 0, items.length);
@@ -2389,7 +2549,9 @@ public void setItems (String... items) {
 
 private void gtk_combo_box_text_remove_all() {
 	gtk_combo_box_toggle_wrap(false);
-	if (handle != 0) GTK.gtk_combo_box_text_remove_all(handle);
+    if (handle != 0) {
+        GTK.gtk_combo_box_text_remove_all(handle);
+    }
 	gtk_combo_box_toggle_wrap(true);
 }
 
@@ -2425,10 +2587,16 @@ void setOrientation (boolean create) {
 	super.setOrientation (create);
 	if ((style & SWT.RIGHT_TO_LEFT) != 0 || !create) {
 		int dir = (style & SWT.RIGHT_TO_LEFT) != 0 ? GTK.GTK_TEXT_DIR_RTL : GTK.GTK_TEXT_DIR_LTR;
-		if (entryHandle != 0) GTK.gtk_widget_set_direction (entryHandle, dir);
-		if (cellHandle != 0) GTK.gtk_widget_set_direction (cellHandle, dir);
+        if (entryHandle != 0) {
+            GTK.gtk_widget_set_direction(entryHandle, dir);
+        }
+        if (cellHandle != 0) {
+            GTK.gtk_widget_set_direction(cellHandle, dir);
+        }
 		if (!create) {
-			if (popupHandle != 0) GTK3.gtk_container_forall (popupHandle, display.setDirectionProc, dir);
+            if (popupHandle != 0) {
+                GTK3.gtk_container_forall(popupHandle, display.setDirectionProc, dir);
+            }
 		}
 	}
 }
@@ -2469,8 +2637,12 @@ public void setOrientation (int orientation) {
  */
 public void setSelection (Point selection) {
 	checkWidget();
-	if (selection == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.READ_ONLY) != 0) return;
+    if (selection == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.READ_ONLY) != 0) {
+        return;
+    }
 
 	if (entryHandle != 0) {
 		long textPtr = 0;
@@ -2518,10 +2690,14 @@ public void setSelection (Point selection) {
  */
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if ((style & SWT.READ_ONLY) != 0) {
 		int index = indexOf (string);
-		if (index == -1) return;
+        if (index == -1) {
+            return;
+        }
 		select (index);
 		return;
 	}
@@ -2533,7 +2709,9 @@ public void setText (String string) {
 	if (hooks (SWT.Verify) || filters (SWT.Verify)) {
 		long ptr = GTK.GTK4 ? GTK4.gtk_entry_buffer_get_text (GTK4.gtk_entry_get_buffer (entryHandle)) : GTK3.gtk_entry_get_text (entryHandle);
 		string = verifyText (string, 0, (int)OS.g_utf16_strlen (ptr, -1));
-		if (string == null) return;
+        if (string == null) {
+            return;
+        }
 	}
 	byte [] buffer = Converter.wcsToMbcs (string, true);
 	OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
@@ -2575,14 +2753,22 @@ public void setText (String string) {
  */
 public void setTextLimit (int limit) {
 	checkWidget();
-	if (limit == 0) error (SWT.ERROR_CANNOT_BE_ZERO);
-	if (entryHandle != 0) GTK.gtk_entry_set_max_length (entryHandle, limit);
+    if (limit == 0) {
+        error(SWT.ERROR_CANNOT_BE_ZERO);
+    }
+    if (entryHandle != 0) {
+        GTK.gtk_entry_set_max_length(entryHandle, limit);
+    }
 }
 
 @Override
 void setToolTipText(Shell shell, String newString) {
-	if (entryHandle != 0) setToolTipText(entryHandle, newString);
-	if (buttonHandle != 0) setToolTipText(buttonHandle, newString);
+    if (entryHandle != 0) {
+        setToolTipText(entryHandle, newString);
+    }
+    if (buttonHandle != 0) {
+        setToolTipText(buttonHandle, newString);
+    }
 }
 
 /**
@@ -2604,7 +2790,9 @@ void setToolTipText(Shell shell, String newString) {
  */
 public void setVisibleItemCount (int count) {
 	checkWidget ();
-	if (count < 0) return;
+    if (count < 0) {
+        return;
+    }
 	visibleCount = count;
 }
 
@@ -2632,7 +2820,9 @@ boolean translateTraversal (long event) {
 				if (preeditString [0] != 0) {
 					int length = C.strlen (preeditString [0]);
 					OS.g_free (preeditString [0]);
-					if (length != 0) return false;
+                    if (length != 0) {
+                        return false;
+                    }
 				}
 			}
 		}
@@ -2714,7 +2904,9 @@ void updateCss() {
 }
 
 String verifyText (String string, int start, int end) {
-	if (string.length () == 0 && start == end) return null;
+    if (string.length() == 0 && start == end) {
+        return null;
+    }
 	Event event = new Event ();
 	event.text = string;
 	event.start = start;
@@ -2736,7 +2928,9 @@ String verifyText (String string, int start, int end) {
 	 * the operation.
 	 */
 	sendEvent (SWT.Verify, event);
-	if (!event.doit || isDisposed ()) return null;
+    if (!event.doit || isDisposed()) {
+        return null;
+    }
 	return event.text;
 }
 

@@ -76,8 +76,9 @@ public class MJ_root {
 
 	void mainLoop(Shell shell) {
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 

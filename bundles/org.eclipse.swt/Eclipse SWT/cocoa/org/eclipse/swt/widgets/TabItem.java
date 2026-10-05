@@ -139,7 +139,9 @@ long accessibilityAttributeValue (long id, long sel, long arg0) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -272,9 +274,13 @@ void register () {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (nsItem != null) nsItem.release();
+    if (nsItem != null) {
+        nsItem.release();
+    }
 	nsItem = null;
-	if (attriStr != null) attriStr.release();
+    if (attriStr != null) {
+        attriStr.release();
+    }
 	attriStr = null;
 	parent = null;
 }
@@ -284,7 +290,9 @@ void releaseParent () {
 	super.releaseParent ();
 	int index = parent.indexOf (this);
 	if (index == parent.getSelectionIndex ()) {
-		if (control != null) control.setVisible (false);
+        if (control != null) {
+            control.setVisible(false);
+        }
 	}
 }
 
@@ -312,8 +320,12 @@ void releaseWidget () {
 public void setControl (Control control) {
 	checkWidget ();
 	if (control != null) {
-		if (control.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (control.parent != parent) error (SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.parent != parent) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
 	if (this.control != null && this.control.isDisposed ()) {
 		this.control = null;
@@ -326,16 +338,21 @@ public void setControl (Control control) {
 			boolean hideControl = true;
 			if (selectionIndex != -1) {
 				Control selectedControl = parent.getItem(selectionIndex).getControl();
-				if (selectedControl == newControl) hideControl=false;
+                if (selectedControl == newControl) {
+                    hideControl = false;
+                }
 			}
-			if (hideControl) newControl.setVisible(false);
+            if (hideControl) {
+                newControl.setVisible(false);
+            }
 		}
 	} else {
 		if (newControl != null) {
 			newControl.setVisible (true);
 		}
-		if (oldControl != null && newControl != null && oldControl != newControl)
-			oldControl.setVisible (false);
+        if (oldControl != null && newControl != null && oldControl != newControl) {
+            oldControl.setVisible(false);
+        }
 	}
 	NSView view;
 	if (newControl != null) {
@@ -363,7 +380,9 @@ public void setControl (Control control) {
 public void setImage (Image image) {
 	checkWidget ();
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	super.setImage (image);
 	//force parent to resize
 	nsItem.setLabel(NSString.string());
@@ -396,9 +415,13 @@ public void setImage (Image image) {
 @Override
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	super.setText (string);
 	updateText ();
 }

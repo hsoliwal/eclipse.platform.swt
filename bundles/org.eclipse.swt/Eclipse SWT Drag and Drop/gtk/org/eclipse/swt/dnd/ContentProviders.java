@@ -73,10 +73,12 @@ class ContentProviders {
 		 * {@link DND#CLIPBOARD} and {@link DND#SELECTION_CLIPBOARD}
 		 */
 		public static CLIPBOARD_DATA fromDNDConstants(int clipboards) {
-			if (clipboards == DND.CLIPBOARD)
-				return CLIPBOARD;
-			if (clipboards == DND.SELECTION_CLIPBOARD)
-				return PRIMARYCLIPBOARD;
+            if (clipboards == DND.CLIPBOARD) {
+                return CLIPBOARD;
+            }
+            if (clipboards == DND.SELECTION_CLIPBOARD) {
+                return PRIMARYCLIPBOARD;
+            }
 			// the clipboards should have been error checked for validity before entering
 			// this method
 			throw new UnsupportedOperationException("Error - invalid clipboards");

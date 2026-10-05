@@ -47,7 +47,9 @@ public class Bug245593_DisposeWidgetParent {
 		createWidgets();
 		shell.open ();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

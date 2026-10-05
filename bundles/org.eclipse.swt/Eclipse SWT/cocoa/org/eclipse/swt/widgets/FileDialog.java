@@ -110,7 +110,9 @@ public FileDialog (Shell parent) {
 public FileDialog (Shell parent, int style) {
 	super (parent, checkStyle (parent, style));
 	if (Display.getSheetEnabled ()) {
-		if (parent != null && (style & SWT.SHEET) != 0) this.style |= SWT.SHEET;
+        if (parent != null && (style & SWT.SHEET) != 0) {
+            this.style |= SWT.SHEET;
+        }
 	}
 	checkSubclass ();
 }
@@ -388,7 +390,9 @@ public Optional<String> openDialog () {
 	fullPath = null;
 	if ((style & SWT.SAVE) != 0) {
 		NSSavePanel savePanel = NSSavePanel.savePanel();
-		if (savePanel == null) error(SWT.ERROR_INVALID_RETURN_VALUE);
+        if (savePanel == null) {
+            error(SWT.ERROR_INVALID_RETURN_VALUE);
+        }
 		panel = savePanel;
 		if (!overwrite) {
 			callback_overwrite_existing_file = new Callback(this, "_overwriteExistingFileCheck", 3);
@@ -400,7 +404,9 @@ public Optional<String> openDialog () {
 		}
 	} else {
 		NSOpenPanel openPanel = NSOpenPanel.openPanel();
-		if (openPanel == null) error(SWT.ERROR_INVALID_RETURN_VALUE);
+        if (openPanel == null) {
+            error(SWT.ERROR_INVALID_RETURN_VALUE);
+        }
 		openPanel.setAllowsMultipleSelection((style & SWT.MULTI) != 0);
 		panel = openPanel;
 	}
@@ -431,7 +437,9 @@ public Optional<String> openDialog () {
 	if (filterExtensions != null && filterExtensions.length != 0) {
 		delegate = (SWTOpenSavePanelDelegate)new SWTOpenSavePanelDelegate().alloc().init();
 		jniRef = OS.NewGlobalRef(this);
-		if (jniRef == 0) error(SWT.ERROR_NO_HANDLES);
+        if (jniRef == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		OS.object_setInstanceVariable(delegate.id, Display.SWT_OBJECT, jniRef);
 		panel.setDelegate(delegate);
 		NSPopUpButton widget = (NSPopUpButton)new NSPopUpButton().alloc();
@@ -458,7 +466,9 @@ public Optional<String> openDialog () {
 		panel.setTreatsFilePackagesAsDirectories(shouldTreatAppAsDirectory(filterExtensions[selectionIndex]));
 		if ((style & SWT.SAVE) != 0) {
 			NSArray extensions = getSelectedExtensions();
-			if (extensions != null) panel.setAllowedFileTypes(extensions);
+            if (extensions != null) {
+                panel.setAllowedFileTypes(extensions);
+            }
 			panel.setAllowsOtherFileTypes(true);
 		} else {
 			((NSOpenPanel)panel).setAccessoryViewDisclosed(true);
@@ -504,16 +514,24 @@ long panel_shouldEnableURL (long id, long sel, long arg0, long arg1) {
 				int start = 0, length = extensions.length ();
 				while (start < length) {
 					int index = extensions.indexOf (EXTENSION_SEPARATOR, start);
-					if (index == -1) index = length;
+                    if (index == -1) {
+                        index = length;
+                    }
 					String filter = extensions.substring (start, index).trim ();
-					if (filter.equalsIgnoreCase (fileName)) return 1;
-					if (filter.equals ("*") || filter.equals ("*.*")) return 1;
+                    if (filter.equalsIgnoreCase(fileName)) {
+                        return 1;
+                    }
+                    if (filter.equals("*") || filter.equals("*.*")) {
+                        return 1;
+                    }
 					if (filter.startsWith ("*.")) {
 						filter = filter.substring (2);
 					} else if (filter.startsWith (".")) {
 						filter = filter.substring (1);
 					}
-					if ((fileName.toLowerCase ()).endsWith("." + filter.toLowerCase ())) return 1;
+                    if ((fileName.toLowerCase()).endsWith("." + filter.toLowerCase())) {
+                        return 1;
+                    }
 					start = index + 1;
 				}
 				return 0;
@@ -524,17 +542,19 @@ long panel_shouldEnableURL (long id, long sel, long arg0, long arg1) {
 }
 
 long panel_userEnteredFilename_confirmed (long id, long sel, long sender, long filename, long okFlag) {
-	/*
-	 * From documentation: This delegate method is called when user confirmed
-	 * a filename choice by clicking Save in a Save panel. It's called before any
-	 * required extension is appended to the filename and before the Save panel asks
-	 * the user to replace an existing file, if applicable.
-	 *
-	 * If the filename in the File Dialog's name field has no extension, then the extension from the filter will be
-	 * applied on Save. Add the extension here, so that the NSSavePanel can use this filename with extension
-	 * for validation and show the replace existing file dialog, if required.
-	 */
-	if (okFlag == 0) return filename;
+    /*
+     * From documentation: This delegate method is called when user confirmed
+     * a filename choice by clicking Save in a Save panel. It's called before any
+     * required extension is appended to the filename and before the Save panel asks
+     * the user to replace an existing file, if applicable.
+     *
+     * If the filename in the File Dialog's name field has no extension, then the extension from the filter will be
+     * applied on Save. Add the extension here, so that the NSSavePanel can use this filename with extension
+     * for validation and show the replace existing file dialog, if required.
+     */
+    if (okFlag == 0) {
+        return filename;
+    }
 	NSString filenameWithExtension = new NSString(filename);
 	filenameWithExtension = appendSelectedExtension(filenameWithExtension);
 	return filenameWithExtension.id;
@@ -545,14 +565,18 @@ void releaseHandles() {
 		if (method_overwriteExistingFileCheck != 0) {
 			OS.method_setImplementation(method_overwriteExistingFileCheck, methodImpl_overwriteExistingFileCheck);
 		}
-		if (callback_overwrite_existing_file != null) callback_overwrite_existing_file.dispose();
+        if (callback_overwrite_existing_file != null) {
+            callback_overwrite_existing_file.dispose();
+        }
 		callback_overwrite_existing_file = null;
 	}
 
 	if (method_performKeyEquivalent != 0) {
 		OS.method_setImplementation(method_performKeyEquivalent, methodImpl_performKeyEquivalent);
 	}
-	if (callback_performKeyEquivalent != null) callback_performKeyEquivalent.dispose();
+    if (callback_performKeyEquivalent != null) {
+        callback_performKeyEquivalent.dispose();
+    }
 	callback_performKeyEquivalent = null;
 
 	if (callback_completion_handler != null) {
@@ -569,7 +593,9 @@ void releaseHandles() {
 		delegate.release();
 		delegate = null;
 	}
-	if (jniRef != 0) OS.DeleteGlobalRef(jniRef);
+    if (jniRef != 0) {
+        OS.DeleteGlobalRef(jniRef);
+    }
 	jniRef = 0;
 	panel = null;
 }
@@ -718,12 +744,18 @@ public void setOverwrite (boolean overwrite) {
  * for the filterExtensions passed as a parameter.
  */
 boolean shouldTreatAppAsDirectory (String extensions) {
-	if ((style & SWT.SAVE) != 0) return false;
+    if ((style & SWT.SAVE) != 0) {
+        return false;
+    }
 	StringTokenizer fileTypesToken = new StringTokenizer (extensions, String.valueOf(EXTENSION_SEPARATOR));
 	while (fileTypesToken.hasMoreTokens ()) {
 		String fileType = fileTypesToken.nextToken ();
-		if (fileType.equals ("*") || fileType.equals ("*.*")) return true;
-		if (fileType.equals ("*.app") || fileType.equals (".app")) return false;
+        if (fileType.equals("*") || fileType.equals("*.*")) {
+            return true;
+        }
+        if (fileType.equals("*.app") || fileType.equals(".app")) {
+            return false;
+        }
 	}
 	return true;
 }

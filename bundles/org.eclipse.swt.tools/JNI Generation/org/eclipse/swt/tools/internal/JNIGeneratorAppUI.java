@@ -150,13 +150,17 @@ void generateNatives () {
 }
 
 void generateAll() {
-	if (!updateOutputDir()) return;
+    if (!updateOutputDir()) {
+        return;
+    }
 	Cursor cursor = display.getSystemCursor(SWT.CURSOR_WAIT);
 	shell.setCursor(cursor);
 	shell.setEnabled(false);
 	Control[] children = actionsPanel.getChildren();
 	for (Control child : children) {
-		if (child instanceof Button) child.setEnabled(false);				
+        if (child instanceof Button) {
+            child.setEnabled(false);
+        }				
 	}
 	boolean showProgress = true;
 	final boolean finalShowProgress = showProgress; /* avoid dead code warning below */
@@ -183,7 +187,9 @@ void generateAll() {
 						int oldValue = step * maximum / total;
 						step++;
 						final int newValue = step * maximum / total;
-						if (oldValue == newValue) return;
+                        if (oldValue == newValue) {
+                            return;
+                        }
 						display.syncExec(() -> progressBar.setSelection(newValue));					
 					}
 					@Override
@@ -201,10 +207,14 @@ void generateAll() {
 		}
 	}.start();
 	while (!done[0]) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	for (Control child : children) {
-		if (child instanceof Button) child.setEnabled(true);				
+        if (child instanceof Button) {
+            child.setEnabled(true);
+        }				
 	}
 	if (showProgress) {
 		progressBar.setVisible(false);
@@ -293,7 +303,9 @@ public void open () {
 	
 	Listener updateMainClassListener =  ignoredEvent -> {
 		updateMainClass();
-		if (!updateOutputDir()) return;
+        if (!updateOutputDir()) {
+            return;
+        }
 		updateClasses();
 		updateMembers();
 		updateParameters();
@@ -395,7 +407,9 @@ void createClassesPanel(Composite panel) {
 		}
 		classEditorTx.setVisible(false);
 		TableItem item = classTextEditor.getItem();
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		int column1 = classTextEditor.getColumn();
 		JNIClass clazz = (JNIClass)item.getData();
 		if (column1 == CLASS_EXCLUDE_COLUMN) {
@@ -431,7 +445,9 @@ void createClassesPanel(Composite panel) {
 		}
 		floater.setVisible(false);
 		TableItem item = classListEditor.getItem();
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		int column1 = classListEditor.getColumn();
 		JNIClass clazz = (JNIClass)item.getData();
 		if (column1 == CLASS_FLAGS_COLUMN) {
@@ -447,11 +463,17 @@ void createClassesPanel(Composite panel) {
 	classEditorLt.addListener(SWT.Traverse, classesListListener);
 
 	classesLt.addListener(SWT.MouseDown, e -> e.display.asyncExec (() -> {
-		if (classesLt.isDisposed ()) return;
-		if (e.button != 1) return;
+        if (classesLt.isDisposed()) {
+            return;
+        }
+        if (e.button != 1) {
+            return;
+        }
 		Point pt = new Point(e.x, e.y);
 		TableItem item = classesLt.getItem(pt);
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		int column1 = -1;
 		for (int i = 0; i < classesLt.getColumnCount(); i++) {
 			if (item.getBounds(i).contains(pt)) {
@@ -459,7 +481,9 @@ void createClassesPanel(Composite panel) {
 				break;
 			}				
 		}
-		if (column1 == -1) return;
+        if (column1 == -1) {
+            return;
+        }
 		JNIClass data1 = (JNIClass)item.getData();
 		if (column1 == CLASS_EXCLUDE_COLUMN) {
 			classTextEditor.setColumn(column1);
@@ -512,10 +536,14 @@ void createMembersPanel(Composite panel) {
 			int count = membersLt.getItemCount();
 			selection++;
 			for (int i = selection; i < count; i++) {
-				if (match (i, pattern)) return;
+                if (match(i, pattern)) {
+                    return;
+                }
 			}
 			for (int i = 0; i < selection; i++) {
-				if (match (i, pattern)) return;
+                if (match(i, pattern)) {
+                    return;
+                }
 			}
 		}
 	});
@@ -548,7 +576,9 @@ void createMembersPanel(Composite panel) {
 		}
 		memberEditorTx.setVisible(false);
 		TableItem item = memberTextEditor.getItem();
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		int column = memberTextEditor.getColumn();
 		JNIItem memberData = (JNIItem)item.getData();
 		String text = memberEditorTx.getText();
@@ -613,7 +643,9 @@ void createMembersPanel(Composite panel) {
 		}
 		floater.setVisible(false);
 		TableItem item = memberListEditor.getItem();
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		int column = memberListEditor.getColumn();
 		JNIItem data1 = (JNIItem)item.getData();
 		String[] flags = memberEditorLt.getSelection();
@@ -627,11 +659,17 @@ void createMembersPanel(Composite panel) {
 	memberEditorLt.addListener(SWT.Traverse, memberListListener);
 	
 	membersLt.addListener(SWT.MouseDown, e -> e.display.asyncExec (() -> {
-		if (membersLt.isDisposed ()) return;
-		if (e.button != 1) return;
+        if (membersLt.isDisposed()) {
+            return;
+        }
+        if (e.button != 1) {
+            return;
+        }
 		Point pt = new Point(e.x, e.y);
 		TableItem item = membersLt.getItem(pt);
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		int column = -1;
 		for (int i = 0; i < membersLt.getColumnCount(); i++) {
 			if (item.getBounds(i).contains(pt)) {
@@ -639,7 +677,9 @@ void createMembersPanel(Composite panel) {
 				break;
 			}				
 		}
-		if (column == -1) return;
+        if (column == -1) {
+            return;
+        }
 		Object itemData = item.getData();
 		if (itemData instanceof JNIField) {
 			JNIField field = (JNIField)itemData;
@@ -687,7 +727,9 @@ void createMembersPanel(Composite panel) {
 				switch (column) {
 					case METHOD_ACCESSOR_COLUMN: {
 						text2 = method.getAccessor();
-						if (text2.length() == 0) text2 = method.getName();
+                        if (text2.length() == 0) {
+                            text2 = method.getName();
+                        }
 						break;
 					}
 					case METHOD_EXCLUDE_COLUMN: text2 = method.getExclude(); break;
@@ -751,7 +793,9 @@ void createParametersPanel(Composite panel) {
 		}
 		paramEditorTx.setVisible(false);
 		TableItem item = paramTextEditor.getItem();
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		int column1 = paramTextEditor.getColumn();
 		JNIParameter param = (JNIParameter)item.getData();
 		if (column1 == PARAM_CAST_COLUMN) {
@@ -787,7 +831,9 @@ void createParametersPanel(Composite panel) {
 		}
 		floater.setVisible(false);
 		TableItem item = paramListEditor.getItem();
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		int column1 = paramListEditor.getColumn();
 		JNIParameter param = (JNIParameter)item.getData();
 		if (column1 == PARAM_FLAGS_COLUMN) {
@@ -802,11 +848,17 @@ void createParametersPanel(Composite panel) {
 	paramEditorLt.addListener(SWT.Traverse, paramListListener);
 
 	paramsLt.addListener(SWT.MouseDown, e -> e.display.asyncExec (() -> {
-		if (paramsLt.isDisposed ()) return;
-		if (e.button != 1) return;
+        if (paramsLt.isDisposed()) {
+            return;
+        }
+        if (e.button != 1) {
+            return;
+        }
 		Point pt = new Point(e.x, e.y);
 		TableItem item = paramsLt.getItem(pt);
-		if (item == null) return;
+        if (item == null) {
+            return;
+        }
 		int column1 = -1;
 		for (int i = 0; i < paramsLt.getColumnCount(); i++) {
 			if (item.getBounds(i).contains(pt)) {
@@ -814,7 +866,9 @@ void createParametersPanel(Composite panel) {
 				break;
 			}				
 		}
-		if (column1 == -1) return;
+        if (column1 == -1) {
+            return;
+        }
 		JNIParameter param = (JNIParameter)item.getData();
 		if (column1 == PARAM_CAST_COLUMN) {
 			paramTextEditor.setColumn(column1);
@@ -893,26 +947,34 @@ public void run() {
 		shell.dispose();
 	}
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	cleanup();
 }
 
 String getPackageString() {
 	int dot = app.getMainClassName().lastIndexOf('.');
-	if (dot == -1) return "";
+    if (dot == -1) {
+        return "";
+    }
 	return app.getMainClassName().substring(0, dot);
 }
 
 String getClassString(JNIType type) {
 	String name = type.getTypeSignature3();
 	int index = name.lastIndexOf('.');
-	if (index == -1) return name;
+    if (index == -1) {
+        return name;
+    }
 	return name.substring(index + 1, name.length());
 }
 
 String getFlagsString(String[] flags) {
-	if (flags.length == 0) return "";
+    if (flags.length == 0) {
+        return "";
+    }
 	return String.join(", ", flags);
 }
 
@@ -924,9 +986,13 @@ String getMethodString(JNIMethod method) {
 	JNIParameter[] params = method.getParameters();
 	for (int i = 0; i < params.length; i++) {
 		JNIParameter param = params[i];
-		if (i != 0) buffer.append(",");
+        if (i != 0) {
+            buffer.append(",");
+        }
 		String string = param.getType().getTypeSignature3();
-		if (string.startsWith(pkgName)) string = string.substring(pkgName.length() + 1);
+        if (string.startsWith(pkgName)) {
+            string = string.substring(pkgName.length() + 1);
+        }
 		buffer.append(string);
 	}
 	buffer.append(")");
@@ -943,7 +1009,9 @@ void updateClasses() {
 	int mainIndex = 0;
 	for (int i = 0; i < classes.length; i++) {
 		JNIClass clazz = classes[i];
-		if (clazz.equals(app.getMainClass())) mainIndex = i;
+        if (clazz.equals(app.getMainClass())) {
+            mainIndex = i;
+        }
 		TableItem item = new TableItem(classesLt, SWT.NONE);
 		item.setData(clazz);
 		item.setText(CLASS_NAME_COLUMN, clazz.getSimpleName());
@@ -964,14 +1032,18 @@ void updateMembers() {
 		column.dispose();
 	}
 	int[] indices = classesLt.getSelectionIndices();
-	if (indices.length != 1) return;
+    if (indices.length != 1) {
+        return;
+    }
 	TableItem classItem = classesLt.getItem(indices[0]);
 	JNIClass clazz = (JNIClass)classItem.getData();
 	boolean hasNatives = false;
 	JNIMethod[] methods = clazz.getDeclaredMethods();
 	for (JNIMethod method : methods) {
 		int mods = method.getModifiers();
-		if (hasNatives =((mods & Modifier.NATIVE) != 0)) break;
+        if (hasNatives = ((mods & Modifier.NATIVE) != 0)) {
+            break;
+        }
 	}
 	membersLt.setRedraw(false);
 	if (hasNatives) {
@@ -988,7 +1060,9 @@ void updateMembers() {
 		*/
 		JNIGenerator.sort(methods);
 		for (JNIMethod method : methods) {
-			if ((method.getModifiers() & Modifier.NATIVE) == 0) continue;
+            if ((method.getModifiers() & Modifier.NATIVE) == 0) {
+                continue;
+            }
 			TableItem item = new TableItem(membersLt, SWT.NONE);
 			item.setData(method);
 			item.setText(METHOD_NAME_COLUMN, getMethodString(method));
@@ -1014,10 +1088,12 @@ void updateMembers() {
 		column.setText("Exclude");
 		*/
 		for (JNIField field : clazz.getDeclaredFields()) {
-			int mods = field.getModifiers(); 
-			if (((mods & Modifier.PUBLIC) == 0) ||
-				((mods & Modifier.FINAL) != 0) ||
-				((mods & Modifier.STATIC) != 0)) continue;
+			int mods = field.getModifiers();
+            if (((mods & Modifier.PUBLIC) == 0) ||
+                    ((mods & Modifier.FINAL) != 0) ||
+                    ((mods & Modifier.STATIC) != 0)) {
+                continue;
+            }
 			TableItem item = new TableItem(membersLt, SWT.NONE);
 			item.setData(field);
 			item.setText(FIELD_NAME_COLUMN, getFieldString(field));
@@ -1046,7 +1122,9 @@ void updateParameters() {
 	}
 	TableItem memberItem = membersLt.getItem(indices[0]);
 	Object data = memberItem.getData();
-	if (!(data instanceof JNIMethod)) return;
+    if (!(data instanceof JNIMethod)) {
+        return;
+    }
 	paramsLt.setRedraw(false);
 	JNIMethod method = (JNIMethod)data;
 	JNIParameter[] params = method.getParameters();
@@ -1125,7 +1203,9 @@ void updateMainClass() {
 		}
 		if (app.getOutputDir() != null) {
 			int index = outputDirCb.indexOf(app.getOutputDir());
-			if (index != -1) outputDirCb.select(index);
+            if (index != -1) {
+                outputDirCb.select(index);
+            }
 		}
 	}
 }
@@ -1134,7 +1214,9 @@ public static void main(String[] args) {
 	JNIGeneratorApp gen = new JNIGeneratorApp ();
 	if (args.length > 0) {
 		gen.setMainClassName(args[0]);
-		if (args.length > 1) gen.setOutputDir(args[1]);
+        if (args.length > 1) {
+            gen.setOutputDir(args[1]);
+        }
 	} else {
 		gen.setMainClassName(JNIGeneratorApp.getDefaultMainClass());
 	}

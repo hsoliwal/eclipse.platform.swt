@@ -54,8 +54,9 @@ public class Bug533799_shrinking_table_too_much_causes_pixman_errors_on_standard
 
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

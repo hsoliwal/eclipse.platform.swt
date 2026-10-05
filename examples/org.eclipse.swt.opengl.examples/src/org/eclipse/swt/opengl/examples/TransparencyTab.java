@@ -127,7 +127,9 @@ class TransparencyTab extends OpenGLTab {
 				tempSelection = pSelectBuff[i + 3];
 			}
 		}
-		if (tempSelection > 0) currentSelection = tempSelection;
+        if (tempSelection > 0) {
+            currentSelection = tempSelection;
+        }
 	}
 
 	/**

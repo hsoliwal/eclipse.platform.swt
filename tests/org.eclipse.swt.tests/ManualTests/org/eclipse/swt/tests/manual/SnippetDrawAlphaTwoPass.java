@@ -43,8 +43,9 @@ public class SnippetDrawAlphaTwoPass {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}
@@ -143,7 +144,9 @@ public class SnippetDrawAlphaTwoPass {
 
 	// copied from ImageData.convertPad as it is not accessible outside the org.eclipse.swt package
 	private static byte[] convertPad(byte[] data, int width, int height, int depth, int pad, int newPad) {
-		if (pad == newPad) return data;
+        if (pad == newPad) {
+            return data;
+        }
 		int stride = (width * depth + 7) / 8;
 		int bpl = (stride + (pad - 1)) / pad * pad;
 		int newBpl = (stride + (newPad - 1)) / newPad * newPad;

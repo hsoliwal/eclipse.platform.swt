@@ -24,11 +24,17 @@ public ITypeInfo(long address) {
 }
 public int GetDocumentation(int index, String[] name, String[] docString, int[] pdwHelpContext, String[] helpFile ) {
 	long[] pBstrName = null;
-	if (name != null) pBstrName = new long[1];
+    if (name != null) {
+        pBstrName = new long[1];
+    }
 	long[] pBstrDocString = null;
-	if (docString != null) pBstrDocString = new long[1];
+    if (docString != null) {
+        pBstrDocString = new long[1];
+    }
 	long[] pBstrHelpFile  = null;
-	if (helpFile != null) pBstrHelpFile = new long[1];
+    if (helpFile != null) {
+        pBstrHelpFile = new long[1];
+    }
 	int rc = COM.VtblCall(12, address, index, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
 	if (name != null && pBstrName[0] != 0) {
 		int size = COM.SysStringByteLen(pBstrName[0]);
@@ -38,8 +44,9 @@ public int GetDocumentation(int index, String[] name, String[] docString, int[] 
 			OS.MoveMemory(buffer, pBstrName[0], size);
 			name[0] = new String(buffer);
 			int subindex = name[0].indexOf("\0");
-			if (subindex > 0)
-				name[0] = name[0].substring(0, subindex);
+            if (subindex > 0) {
+                name[0] = name[0].substring(0, subindex);
+            }
 		}
 		COM.SysFreeString(pBstrName[0]);
 	}
@@ -51,8 +58,9 @@ public int GetDocumentation(int index, String[] name, String[] docString, int[] 
 			OS.MoveMemory(buffer, pBstrDocString[0], size);
 			docString[0] = new String(buffer);
 			int subindex = docString[0].indexOf("\0");
-			if (subindex > 0)
-				docString[0] = docString[0].substring(0, subindex);
+            if (subindex > 0) {
+                docString[0] = docString[0].substring(0, subindex);
+            }
 		}
 		COM.SysFreeString(pBstrDocString[0]);
 	}
@@ -64,8 +72,9 @@ public int GetDocumentation(int index, String[] name, String[] docString, int[] 
 			OS.MoveMemory(buffer, pBstrHelpFile[0], size);
 			helpFile[0] = new String(buffer);
 			int subindex = helpFile[0].indexOf("\0");
-			if (subindex > 0)
-				helpFile[0] = helpFile[0].substring(0, subindex);
+            if (subindex > 0) {
+                helpFile[0] = helpFile[0].substring(0, subindex);
+            }
 		}
 		COM.SysFreeString(pBstrHelpFile[0]);
 	}
@@ -92,8 +101,9 @@ public int GetNames(int memid, String[] names, int cMaxNames, int[] pcNames){
 				OS.MoveMemory(buffer, rgBstrNames[i], size);
 				names[i] = new String(buffer);
 				int subindex = names[i].indexOf("\0");
-				if (subindex > 0)
-					names[i] = names[i].substring(0, subindex);
+                if (subindex > 0) {
+                    names[i] = names[i].substring(0, subindex);
+                }
 			}
 			COM.SysFreeString(rgBstrNames[i]);
 		}

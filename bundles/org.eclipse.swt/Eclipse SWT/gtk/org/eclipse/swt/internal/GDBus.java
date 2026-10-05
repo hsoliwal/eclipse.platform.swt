@@ -141,10 +141,11 @@ public class GDBus {
 	public static void init (GDBusMethod[] methods, String appName) {
 		String serviceName = DBUS_SERVICE_NAME;
 
-		if (!initialized)
-			initialized = true;
-		else
-			return;
+        if (!initialized) {
+            initialized = true;
+        } else {
+            return;
+        }
 
 		if (methods == null || methods.length == 0) {
 			System.err.println("SWT Error, no gdbus methods to initialize.");

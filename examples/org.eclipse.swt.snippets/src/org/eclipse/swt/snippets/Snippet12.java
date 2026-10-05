@@ -44,7 +44,9 @@ public static void main (String [] args) {
 	System.out.println ("caret position=" + text.getCaretPosition ());
 	System.out.println ("caret location=" + text.getCaretLocation ());
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

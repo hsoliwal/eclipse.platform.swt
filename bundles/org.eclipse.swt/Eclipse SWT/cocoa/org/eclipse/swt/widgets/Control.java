@@ -129,7 +129,9 @@ public Control (Composite parent, int style) {
 @Override
 boolean acceptsFirstMouse (long id, long sel, long theEvent) {
 	Shell shell = getShell ();
-	if ((shell.style & SWT.ON_TOP) != 0) return true;
+    if ((shell.style & SWT.ON_TOP) != 0) {
+        return true;
+    }
 	return super.acceptsFirstMouse (id, sel, theEvent);
 }
 
@@ -151,7 +153,9 @@ long accessibilityActionDescription(long id, long sel, long arg0) {
 	if (id == accessibleHandle() && accessible != null) {
 		NSString actionName = new NSString(arg0);
 		id returnValue = accessible.internal_accessibilityActionDescription(actionName, ACC.CHILDID_SELF);
-		if (returnValue != null) return returnValue.id;
+        if (returnValue != null) {
+            return returnValue.id;
+        }
 	}
 	return super.accessibilityActionDescription(id, sel, arg0);
 }
@@ -162,7 +166,9 @@ long accessibilityActionNames(long id, long sel) {
 	if (handleIsAccessible(id)) {
 		if (accessible != null) {
 			NSArray baseArray = accessible.internal_accessibilityActionNames(ACC.CHILDID_SELF);
-			if (baseArray != null) returnValue = baseArray.id;
+            if (baseArray != null) {
+                returnValue = baseArray.id;
+            }
 		}
 		if (hooks(SWT.MenuDetect) || (menu != null && !menu.isDisposed())) {
 			NSArray baseArray = new NSArray(returnValue);
@@ -185,15 +191,19 @@ long accessibilityAttributeNames(long id, long sel) {
 		id value = accessible.internal_accessibilityAttributeNames(ACC.CHILDID_SELF);
 		returnValue = (value != null ? value.id : 0);
 
-		// If not, ask Cocoa for the set for this control.
-		if (returnValue == 0) returnValue = super.accessibilityAttributeNames(id, sel);
+        // If not, ask Cocoa for the set for this control.
+        if (returnValue == 0) {
+            returnValue = super.accessibilityAttributeNames(id, sel);
+        }
 
 		// Add relationship attributes.
 		returnValue = accessible.internal_addRelationAttributes(returnValue);
 	}
 
-	// If the SWT accessibility didn't give us anything get the default for the view/cell.
-	if (returnValue == 0) returnValue = super.accessibilityAttributeNames(id, sel);
+    // If the SWT accessibility didn't give us anything get the default for the view/cell.
+    if (returnValue == 0) {
+        returnValue = super.accessibilityAttributeNames(id, sel);
+    }
 
 	return returnValue;
 }
@@ -213,7 +223,9 @@ long accessibilityParameterizedAttributeNames(long id, long sel) {
 
 	if (handleIsAccessible(id) && accessible != null) {
 		NSArray returnValue = accessible.internal_accessibilityParameterizedAttributeNames(ACC.CHILDID_SELF);
-		if (returnValue != null) return returnValue.id;
+        if (returnValue != null) {
+            return returnValue.id;
+        }
 	}
 
 	return super.accessibilityParameterizedAttributeNames(id, sel);
@@ -223,7 +235,9 @@ long accessibilityParameterizedAttributeNames(long id, long sel) {
 void accessibilityPerformAction(long id, long sel, long arg0) {
 	if (handleIsAccessible(id) && accessible != null) {
 		NSString action = new NSString(arg0);
-		if (accessible.internal_accessibilityPerformAction(action, ACC.CHILDID_SELF)) return;
+        if (accessible.internal_accessibilityPerformAction(action, ACC.CHILDID_SELF)) {
+            return;
+        }
 	}
 	super.accessibilityPerformAction(id, sel, arg0);
 }
@@ -236,12 +250,13 @@ long accessibilityFocusedUIElement(long id, long sel) {
 		returnValue = accessible.internal_accessibilityFocusedUIElement(ACC.CHILDID_SELF);
 	}
 
-	// If we had an accessible and it didn't handle the attribute request, let the
-	// superclass handle it.
-	if (returnValue == null)
-		return super.accessibilityFocusedUIElement(id, sel);
-	else
-		return returnValue.id;
+    // If we had an accessible and it didn't handle the attribute request, let the
+    // superclass handle it.
+    if (returnValue == null) {
+        return super.accessibilityFocusedUIElement(id, sel);
+    } else {
+        return returnValue.id;
+    }
 }
 
 @Override
@@ -252,12 +267,13 @@ long accessibilityHitTest(long id, long sel, NSPoint point) {
 		returnValue = accessible.internal_accessibilityHitTest(point, ACC.CHILDID_SELF);
 	}
 
-	// If we had an accessible and it didn't handle the attribute request, let the
-	// superclass handle it.
-	if (returnValue == null)
-		return super.accessibilityHitTest(id, sel, point);
-	else
-		return returnValue.id;
+    // If we had an accessible and it didn't handle the attribute request, let the
+    // superclass handle it.
+    if (returnValue == null) {
+        return super.accessibilityHitTest(id, sel, point);
+    } else {
+        return returnValue.id;
+    }
 }
 
 @Override
@@ -279,7 +295,9 @@ long accessibilityAttributeValue(long id, long sel, long arg0) {
 		// help attribute was requested return toolTipText.
 		if (returnObject == null) {
 			if (attribute.isEqualToString(OS.NSAccessibilityHelpAttribute)) {
-				if (toolTipText != null) returnValue = NSString.stringWith(toolTipText).id;
+                if (toolTipText != null) {
+                    returnValue = NSString.stringWith(toolTipText).id;
+                }
 			}
 		}
 
@@ -301,12 +319,13 @@ long accessibilityAttributeValue_forParameter(long id, long sel, long arg0, long
 		returnValue = accessible.internal_accessibilityAttributeValue_forParameter(attribute, parameter, ACC.CHILDID_SELF);
 	}
 
-	// If we had an accessible and it didn't handle the attribute request, let the
-	// superclass handle it.
-	if (returnValue == null)
-		return super.accessibilityAttributeValue_forParameter(id, sel, arg0, arg1);
-	else
-		return returnValue.id;
+    // If we had an accessible and it didn't handle the attribute request, let the
+    // superclass handle it.
+    if (returnValue == null) {
+        return super.accessibilityAttributeValue_forParameter(id, sel, arg0, arg1);
+    } else {
+        return returnValue.id;
+    }
 }
 
 @Override
@@ -714,7 +733,9 @@ public void addTraverseListener (TraverseListener listener) {
 
 @Override
 boolean becomeFirstResponder (long id, long sel) {
-	if ((state & DISABLED) != 0) return false;
+    if ((state & DISABLED) != 0) {
+        return false;
+    }
 	return super.becomeFirstResponder (id, sel);
 }
 
@@ -756,14 +777,20 @@ void calculateVisibleRegion (NSView view, long visibleRgn, boolean clipChildren)
 		OS.SetRect(rect, (short)bounds.x, (short)bounds.y, (short)(bounds.x + bounds.width), (short)(bounds.y + bounds.height));
 		OS.RectRgn(tempRgn, rect);
 		OS.SectRgn (tempRgn, visibleRgn, visibleRgn);
-		if (OS.EmptyRgn (visibleRgn)) break;
+        if (OS.EmptyRgn(visibleRgn)) {
+            break;
+        }
 		if (clipChildren || tempView.id != view.id) {
 			NSArray subviews = tempView.subviews();
 			long count = subviews.count();
 			for (int i = 0; i < count; i++) {
 				NSView child = new NSView (subviews.objectAtIndex(count - i - 1));
-				if (lastControl != null && child.id == lastControl.id) break;
-				if (child.isHidden()) continue;
+                if (lastControl != null && child.id == lastControl.id) {
+                    break;
+                }
+                if (child.isHidden()) {
+                    continue;
+                }
 				bounds = child.visibleRect();
 				bounds = child.convertRect_toView_(bounds, view);
 				OS.SetRect(rect, (short)bounds.x, (short)bounds.y, (short)(bounds.x + bounds.width), (short)(bounds.y + bounds.height));
@@ -787,15 +814,23 @@ void cancelOperation(long id, long sel, long sender) {
 		Shell s = this.getShell();
 		s.keyInputHappened = false;
 		boolean [] consume = new boolean [1];
-		if (translateTraversal (nsEvent.keyCode (), nsEvent, consume)) return;
-		if (isDisposed ()) return;
-		if (!sendKeyEvent (nsEvent, SWT.KeyDown)) return;
+        if (translateTraversal(nsEvent.keyCode(), nsEvent, consume)) {
+            return;
+        }
+        if (isDisposed()) {
+            return;
+        }
+        if (!sendKeyEvent(nsEvent, SWT.KeyDown)) {
+            return;
+        }
 	}
 }
 
 void checkBackground () {
 	Shell shell = getShell ();
-	if (this == shell) return;
+    if (this == shell) {
+        return;
+    }
 	state &= ~PARENT_BACKGROUND;
 	Composite composite = parent;
 	do {
@@ -813,7 +848,9 @@ void checkBackground () {
 			state |= PARENT_BACKGROUND;
 			return;
 		}
-		if (composite == shell) break;
+        if (composite == shell) {
+            break;
+        }
 		composite = composite.parent;
 	} while (true);
 }
@@ -899,8 +936,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 	checkWidget ();
 	int width = DEFAULT_WIDTH;
 	int height = DEFAULT_HEIGHT;
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	int border = getBorderWidth ();
 	width += border * 2;
 	height += border * 2;
@@ -908,7 +949,9 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 }
 
 Widget computeTabGroup () {
-	if (isTabGroup()) return this;
+    if (isTabGroup()) {
+        return this;
+    }
 	return parent.computeTabGroup ();
 }
 
@@ -926,11 +969,15 @@ Control computeTabRoot () {
 	if (tabList != null) {
 		int index = 0;
 		while (index < tabList.length) {
-			if (tabList [index] == this) break;
+            if (tabList [index] == this) {
+                break;
+            }
 			index++;
 		}
 		if (index == tabList.length) {
-			if (isTabGroup ()) return this;
+            if (isTabGroup()) {
+                return this;
+            }
 		}
 	}
 	return parent.computeTabRoot ();
@@ -942,7 +989,9 @@ NSView contentView () {
 
 NSAttributedString createString (String string, Font font, double [] foreground, int alignment, boolean wrap, boolean enabled, boolean mnemonics) {
 	NSMutableDictionary dict = ((NSMutableDictionary)new NSMutableDictionary().alloc()).initWithCapacity(5);
-	if (font == null) font = this.font != null ? this.font : defaultFont();
+    if (font == null) {
+        font = this.font != null ? this.font : defaultFont();
+    }
 	dict.setObject (font.handle, OS.NSFontAttributeName);
 	addTraits(dict, font);
 	if (enabled) {
@@ -974,7 +1023,9 @@ NSAttributedString createString (String string, Font font, double [] foreground,
 	int length = string.length ();
 	char [] chars = new char [length];
 	string.getChars (0, chars.length, chars, 0);
-	if (mnemonics) length = fixMnemonic (chars);
+    if (mnemonics) {
+        length = fixMnemonic(chars);
+    }
 	NSString str = ((NSString)new NSString().alloc()).initWithCharacters(chars, length);
 	NSAttributedString attribStr = ((NSAttributedString) new NSAttributedString ().alloc ()).initWithString (str, dict);
 	str.release();
@@ -1003,7 +1054,9 @@ Color defaultBackground () {
 }
 
 Font defaultFont () {
-	if (display.smallFonts) return display.getSystemFont ();
+    if (display.smallFonts) {
+        return display.getSystemFont();
+    }
 	return Font.cocoa_new (display, defaultNSFont ());
 }
 
@@ -1031,7 +1084,9 @@ void destroyWidget () {
 @Override
 void doCommandBySelector (long id, long sel, long selector) {
 	if (hasKeyboardFocus(id)) {
-		if (imeInComposition ()) return;
+        if (imeInComposition()) {
+            return;
+        }
 		Shell s = this.getShell();
 		NSEvent nsEvent = NSApplication.sharedApplication ().currentEvent ();
 		if (nsEvent != null && nsEvent.type () == OS.NSKeyDown) {
@@ -1047,13 +1102,23 @@ void doCommandBySelector (long id, long sel, long selector) {
 			if (s.keyInputHappened == false || (modifiers & OS.NSEventModifierFlagCommand) != 0) {
 				s.keyInputHappened = true;
 				boolean [] consume = new boolean [1];
-				if (translateTraversal (nsEvent.keyCode (), nsEvent, consume)) return;
-				if (isDisposed ()) return;
-				if (!sendKeyEvent (nsEvent, SWT.KeyDown)) return;
-				if (consume [0]) return;
+                if (translateTraversal(nsEvent.keyCode(), nsEvent, consume)) {
+                    return;
+                }
+                if (isDisposed()) {
+                    return;
+                }
+                if (!sendKeyEvent(nsEvent, SWT.KeyDown)) {
+                    return;
+                }
+                if (consume [0]) {
+                    return;
+                }
 			}
 		}
-		if ((state & CANVAS) != 0) return;
+        if ((state & CANVAS) != 0) {
+            return;
+        }
 	}
 	super.doCommandBySelector (id, sel, selector);
 }
@@ -1096,7 +1161,9 @@ void doCommandBySelector (long id, long sel, long selector) {
  */
 public boolean dragDetect (Event event) {
 	checkWidget ();
-	if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (event == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return dragDetect (event.button, event.count, event.stateMask, event.x, event.y);
 }
 
@@ -1138,13 +1205,19 @@ public boolean dragDetect (Event event) {
  */
 public boolean dragDetect (MouseEvent event) {
 	checkWidget ();
-	if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (event == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return dragDetect (event.button, event.count, event.stateMask, event.x, event.y);
 }
 
 boolean dragDetect (int button, int count, int stateMask, int x, int y) {
-	if (button != 1 || count != 1) return false;
-	if (!dragDetect (x, y, false, null)) return false;
+    if (button != 1 || count != 1) {
+        return false;
+    }
+    if (!dragDetect(x, y, false, null)) {
+        return false;
+    }
 	return sendDragEvent (button, stateMask, x, y);
 }
 
@@ -1197,8 +1270,10 @@ boolean dragDetect (int x, int y, boolean filter, boolean [] consume) {
 		}
 	}
 
-	// Push back any events we took out of the queue so the control can receive them.
-	if (mouseUpEvent != null) application.postEvent(mouseUpEvent, true);
+    // Push back any events we took out of the queue so the control can receive them.
+    if (mouseUpEvent != null) {
+        application.postEvent(mouseUpEvent, true);
+    }
 
 	if (dragEvents.count() > 0) {
 		while (dragEvents.count() > 0) {
@@ -1221,8 +1296,12 @@ boolean drawsBackground() {
 
 @Override
 void drawWidget (long id, NSGraphicsContext context, NSRect rect) {
-	if (id != paintView().id) return;
-	if (!hooks (SWT.Paint) && !filters (SWT.Paint)) return;
+    if (id != paintView().id) {
+        return;
+    }
+    if (!hooks(SWT.Paint) && !filters(SWT.Paint)) {
+        return;
+    }
 
 	/* Send paint event */
 	GCData data = new GCData ();
@@ -1247,11 +1326,19 @@ void enableWidget (boolean enabled) {
 }
 
 boolean equals(double [] color1, double [] color2) {
-	if (color1 == color2) return true;
-	if (color1 == null) return color2 == null;
-	if (color2 == null) return color1 == null;
+    if (color1 == color2) {
+        return true;
+    }
+    if (color1 == null) {
+        return color2 == null;
+    }
+    if (color2 == null) {
+        return color1 == null;
+    }
 	for (int i = 0; i < color1.length; i++) {
-		if (color1 [i] != color2 [i]) return false;
+        if (color1 [i] != color2 [i]) {
+            return false;
+        }
 	}
 	return true;
 }
@@ -1265,9 +1352,13 @@ void fillBackground (NSView view, NSGraphicsContext context, NSRect rect, int im
 }
 
 void fillBackground (NSView view, NSGraphicsContext context, NSRect rect, int imgHeight, NSView gcView, int tx, int ty) {
-	if (!drawsBackground()) return;
+    if (!drawsBackground()) {
+        return;
+    }
 	Control control = findBackgroundControl();
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	Image image = control.backgroundImage;
 	if (image != null && !image.isDisposed()) {
 		context.saveGraphicsState();
@@ -1301,7 +1392,9 @@ void fillBackground (NSView view, NSGraphicsContext context, NSRect rect, int im
 	double [] background = control.background;
 	double alpha;
 	if (background == null) {
-		if (isTransparent()) return;
+        if (isTransparent()) {
+            return;
+        }
 		background = control.defaultBackground ().handle;
 		alpha = getThemeAlpha ();
 	} else {
@@ -1314,17 +1407,23 @@ void fillBackground (NSView view, NSGraphicsContext context, NSRect rect, int im
 }
 
 Cursor findCursor () {
-	if (cursor != null) return cursor;
+    if (cursor != null) {
+        return cursor;
+    }
 	return parent.findCursor ();
 }
 
 Control findBackgroundControl () {
-	if ((backgroundImage != null || background != null) && backgroundAlpha > 0) return this;
+    if ((backgroundImage != null || background != null) && backgroundAlpha > 0) {
+        return this;
+    }
 	return (parent != null && !isTransparent() && (state & PARENT_BACKGROUND) != 0) ? parent.findBackgroundControl () : null;
 }
 
 Menu [] findMenus (Control control) {
-	if (menu != null && this != control) return new Menu [] {menu};
+    if (menu != null && this != control) {
+        return new Menu []{menu};
+    }
 	return new Menu [0];
 }
 
@@ -1341,7 +1440,9 @@ void fixFocus (Control focusControl) {
 	Shell shell = getShell ();
 	Control control = this;
 	while (control != shell && (control = control.parent) != null) {
-		if (control.setFocus ()) return;
+        if (control.setFocus()) {
+            return;
+        }
 	}
 	shell.setSavedFocus (focusControl);
 	NSWindow window = view.window();
@@ -1382,7 +1483,9 @@ void flagsChanged (long id, long sel, long theEvent) {
 				event.keyCode = keyCode;
 				setLocationMask(event, nsEvent);
 				setInputState (event, nsEvent, type);
-				if (!sendKeyEvent (type, event)) return;
+                if (!sendKeyEvent(type, event)) {
+                    return;
+                }
 			}
 		}
 	}
@@ -1408,17 +1511,29 @@ NSView focusView () {
  */
 public boolean forceFocus () {
 	checkWidget();
-	if (display.focusEvent == SWT.FocusOut) return false;
+    if (display.focusEvent == SWT.FocusOut) {
+        return false;
+    }
 	Decorations shell = menuShell ();
 	shell.setSavedFocus (this);
-	if (!isEnabled () || !isVisible () || !isActive ()) return false;
-	if (display.getActiveShell() != shell && !Display.isActivateShellOnForceFocus()) return false;
-	if (isFocusControl ()) return true;
+    if (!isEnabled() || !isVisible() || !isActive()) {
+        return false;
+    }
+    if (display.getActiveShell() != shell && !Display.isActivateShellOnForceFocus()) {
+        return false;
+    }
+    if (isFocusControl()) {
+        return true;
+    }
 	shell.setSavedFocus (null);
 	NSView focusView = focusView ();
-	if (!focusView.canBecomeKeyView()) return false;
+    if (!focusView.canBecomeKeyView()) {
+        return false;
+    }
 	boolean result = forceFocus(focusView);
-	if (isDisposed ()) return false;
+    if (isDisposed()) {
+        return false;
+    }
 	shell.setSavedFocus (this);
 	/*
 	 * Feature in Cocoa. If the window is inactive when forceFocus is called bringToTop
@@ -1430,7 +1545,9 @@ public boolean forceFocus () {
 	 * before the window is activated or the wrong control will get focus.
 	 */
 	shell.bringToTop (false);
-	if (isDisposed ()) return false;
+    if (isDisposed()) {
+        return false;
+    }
 	return result;
 }
 
@@ -1441,13 +1558,21 @@ boolean forceFocus (NSView focusView) {
 }
 
 boolean gestureEvent(long id, long eventPtr, int detail) {
-	if (!display.sendEvent) return true;
+    if (!display.sendEvent) {
+        return true;
+    }
 	display.sendEvent = false;
-	// For cross-platform compatibility, touch events and gestures are mutually exclusive.
-	// Don't send a gesture if touch events are enabled for this control.
-	if (touchEnabled) return true;
-	if (!isEventView (id)) return true;
-	if (!hooks(SWT.Gesture) && !filters(SWT.Gesture)) return true;
+    // For cross-platform compatibility, touch events and gestures are mutually exclusive.
+    // Don't send a gesture if touch events are enabled for this control.
+    if (touchEnabled) {
+        return true;
+    }
+    if (!isEventView(id)) {
+        return true;
+    }
+    if (!hooks(SWT.Gesture) && !filters(SWT.Gesture)) {
+        return true;
+    }
 	NSEvent nsEvent = new NSEvent(eventPtr);
 	Event event = new Event();
 	NSPoint windowPoint;
@@ -1494,7 +1619,9 @@ boolean gestureEvent(long id, long eventPtr, int detail) {
 			event.xDirection = (int) nsEvent.deltaX();
 			event.yDirection = (int) nsEvent.deltaY();
 		}
-		if (event.xDirection == 0 && event.yDirection == 0) return true;
+        if (event.xDirection == 0 && event.yDirection == 0) {
+            return true;
+        }
 		break;
 	}
 
@@ -1524,7 +1651,9 @@ boolean gestureEvent(long id, long eventPtr, int detail) {
  */
 public Accessible getAccessible () {
 	checkWidget ();
-	if (accessible == null) accessible = new_Accessible (this);
+    if (accessible == null) {
+        accessible = new_Accessible(this);
+    }
 	return accessible;
 }
 
@@ -1550,7 +1679,9 @@ public Color getBackground () {
 	}
 	else {
 		Control control = findBackgroundControl ();
-		if (control == null) control = this;
+        if (control == null) {
+            control = this;
+        }
 		return control.getBackgroundColor ();
 	}
 }
@@ -1574,7 +1705,9 @@ Color getBackgroundColor () {
 public Image getBackgroundImage () {
 	checkWidget();
 	Control control = findBackgroundControl ();
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	return control.backgroundImage;
 }
 
@@ -1788,7 +1921,9 @@ int getMininumHeight () {
 public Monitor getMonitor () {
 	checkWidget();
 	Monitor [] monitors = display.getMonitors ();
-	if (monitors.length == 1) return monitors [0];
+    if (monitors.length == 1) {
+        return monitors [0];
+    }
 	int index = -1, value = -1;
 	Rectangle bounds = getBounds ();
 	if (this != getShell ()) {
@@ -1802,7 +1937,9 @@ public Monitor getMonitor () {
 			value = area;
 		}
 	}
-	if (index >= 0) return monitors [index];
+    if (index >= 0) {
+        return monitors [index];
+    }
 	int centerX = bounds.x + bounds.width / 2, centerY = bounds.y + bounds.height / 2;
 	for (int i=0; i<monitors.length; i++) {
 		Rectangle rect = monitors [i].getBounds ();
@@ -1870,7 +2007,9 @@ Control [] getPath () {
 }
 
 NSBezierPath getPath(Region region) {
-	if (region == null) return null;
+    if (region == null) {
+        return null;
+    }
 	return getPath(region.handle);
 }
 
@@ -1880,7 +2019,9 @@ NSBezierPath getPath(long region) {
 	path.retain();
 	OS.QDRegionToRects(region, OS.kQDParseRegionFromTopLeft, callback.getAddress(), path.id);
 	callback.dispose();
-	if (path.isEmpty()) path.appendBezierPathWithRect(new NSRect());
+    if (path.isEmpty()) {
+        path.appendBezierPathWithRect(new NSRect());
+    }
 	return path;
 }
 
@@ -2051,13 +2192,21 @@ boolean hasRegion () {
 
 @Override
 long hitTest (long id, long sel, NSPoint point) {
-	if ((state & DISABLED) != 0) return 0;
-	if (!isActive ()) return 0;
+    if ((state & DISABLED) != 0) {
+        return 0;
+    }
+    if (!isActive()) {
+        return 0;
+    }
 	if (regionPath != null) {
 		NSView rgnView = topView ();
-		if (!rgnView.isFlipped()) rgnView = eventView ();
+        if (!rgnView.isFlipped()) {
+            rgnView = eventView();
+        }
 		NSPoint pt = rgnView.convertPoint_fromView_ (point, new NSView (id).superview());
-		if (!regionPath.containsPoint(pt)) return 0;
+        if (!regionPath.containsPoint(pt)) {
+            return 0;
+        }
 	}
 	return super.hitTest(id, sel, point);
 }
@@ -2090,13 +2239,19 @@ boolean insertText (long id, long sel, long string) {
 					for (int i = 0; i < buffer.length; i++) {
 						s.keyInputHappened = true;
 						Event event = new Event ();
-						if (i == 0 && type == OS.NSKeyDown) setKeyState (event, SWT.KeyDown, nsEvent);
+                        if (i == 0 && type == OS.NSKeyDown) {
+                            setKeyState(event, SWT.KeyDown, nsEvent);
+                        }
 						event.character = buffer [i];
-						if (!sendKeyEvent (SWT.KeyDown, event)) return false;
+                        if (!sendKeyEvent(SWT.KeyDown, event)) {
+                            return false;
+                        }
 					}
 				}
 			}
-			if ((state & CANVAS) != 0) return true;
+            if ((state & CANVAS) != 0) {
+                return true;
+            }
 		}
 
 		return super.insertText (id, sel, string);
@@ -2127,7 +2282,9 @@ public long internal_new_GC (GCData data) {
 	NSGraphicsContext graphicsContext = null;
 	if (data != null && data.paintRect != null) {
 		graphicsContext = NSGraphicsContext.currentContext();
-		if (!view.isFlipped()) data.state &= ~VISIBLE_REGION;
+        if (!view.isFlipped()) {
+            data.state &= ~VISIBLE_REGION;
+        }
 	}
 	if (graphicsContext == null) {
 		NSWindow window = view.window();
@@ -2176,7 +2333,9 @@ public long internal_new_GC (GCData data) {
 		data.view.window().retain();
 		data.foreground = getForegroundColor ().handle;
 		Control control = findBackgroundControl ();
-		if (control == null) control = this;
+        if (control == null) {
+            control = this;
+        }
 		data.background = control.getBackgroundColor ().handle;
 		data.font = font != null ? font : defaultFont ();
 	}
@@ -2208,8 +2367,12 @@ public void internal_dispose_GC (long hDC, GCData data) {
 	NSGraphicsContext graphicsContext = new NSGraphicsContext (context);
 	display.removeContext (data);
 	if (data != null) {
-		if (data.paintRect == null) graphicsContext.flushGraphics ();
-		if (data.visibleRgn != 0) OS.DisposeRgn(data.visibleRgn);
+        if (data.paintRect == null) {
+            graphicsContext.flushGraphics();
+        }
+        if (data.visibleRgn != 0) {
+            OS.DisposeRgn(data.visibleRgn);
+        }
 		data.visibleRgn = 0;
 		if (data.view != null) {
 			data.view.window().release();
@@ -2225,7 +2388,9 @@ void invalidateChildrenVisibleRegion () {
 void invalidateVisibleRegion () {
 	int index = 0;
 	Control[] siblings = parent._getChildren ();
-	while (index < siblings.length && siblings [index] != this) index++;
+    while (index < siblings.length && siblings [index] != this) {
+        index++;
+    }
 	for (int i=index; i<siblings.length; i++) {
 		Control sibling = siblings [i];
 		sibling.resetVisibleRegion ();
@@ -2236,11 +2401,17 @@ void invalidateVisibleRegion () {
 
 @Override
 boolean isActive () {
-	if (getShell().getModalShell () != null) return false;
+    if (getShell().getModalShell() != null) {
+        return false;
+    }
 	Dialog dialog = display.getModalDialog();
-	if (dialog == null) return true;
+    if (dialog == null) {
+        return true;
+    }
 	NSPanel panel = display.getModalPanel();
-	if (panel == null) return false;
+    if (panel == null) {
+        return false;
+    }
 	NSWindow parentWindow = view.window().parentWindow();
 	return parentWindow == null || parentWindow.id == panel.id;
 }
@@ -2344,11 +2515,13 @@ boolean isResizing () {
 }
 
 boolean isShowing () {
-	/*
-	* This is not complete.  Need to check if the
-	* widget is obscurred by a parent or sibling.
-	*/
-	if (!isVisible ()) return false;
+    /*
+    * This is not complete.  Need to check if the
+    * widget is obscurred by a parent or sibling.
+    */
+    if (!isVisible()) {
+        return false;
+    }
 	Control control = this;
 	while (control != null) {
 		Point size = control.getSize ();
@@ -2364,11 +2537,15 @@ boolean isTabGroup () {
 	Control [] tabList = parent._getTabList ();
 	if (tabList != null) {
 		for (int i=0; i<tabList.length; i++) {
-			if (tabList [i] == this) return true;
+            if (tabList [i] == this) {
+                return true;
+            }
 		}
 	}
 	int code = traversalCode (0, null);
-	if ((code & (SWT.TRAVERSE_ARROW_PREVIOUS | SWT.TRAVERSE_ARROW_NEXT)) != 0) return false;
+    if ((code & (SWT.TRAVERSE_ARROW_PREVIOUS | SWT.TRAVERSE_ARROW_NEXT)) != 0) {
+        return false;
+    }
 	return (code & (SWT.TRAVERSE_TAB_PREVIOUS | SWT.TRAVERSE_TAB_NEXT)) != 0;
 }
 
@@ -2376,7 +2553,9 @@ boolean isTabItem () {
 	Control [] tabList = parent._getTabList ();
 	if (tabList != null) {
 		for (int i=0; i<tabList.length; i++) {
-			if (tabList [i] == this) return false;
+            if (tabList [i] == this) {
+                return false;
+            }
 		}
 	}
 	int code = traversalCode (0, null);
@@ -2384,7 +2563,9 @@ boolean isTabItem () {
 }
 
 boolean isTransparent() {
-	if (background != null) return false;
+    if (background != null) {
+        return false;
+    }
 	return parent.isTransparent();
 }
 
@@ -2421,23 +2602,41 @@ void keyDown (long id, long sel, long theEvent) {
 			// Not a text field, so send a key event here.
 			NSEvent nsEvent = new NSEvent (theEvent);
 			boolean [] consume = new boolean [1];
-			if (translateTraversal (nsEvent.keyCode (), nsEvent, consume)) return;
-			if (isDisposed ()) return;
-			if (!sendKeyEvent (nsEvent, SWT.KeyDown)) return;
-			if (consume [0]) return;
+            if (translateTraversal(nsEvent.keyCode(), nsEvent, consume)) {
+                return;
+            }
+            if (isDisposed()) {
+                return;
+            }
+            if (!sendKeyEvent(nsEvent, SWT.KeyDown)) {
+                return;
+            }
+            if (consume [0]) {
+                return;
+            }
 		} else {
 			// Control is some kind of text field, so the key event will be sent from insertText: or doCommandBySelector:
 			super.keyDown (id, sel, theEvent);
 
-			if (imeInComposition ()) return;
+            if (imeInComposition()) {
+                return;
+            }
 			// If none of those methods triggered a key event send one now.
 			if (!s.keyInputHappened) {
 				NSEvent nsEvent = new NSEvent (theEvent);
 				boolean [] consume = new boolean [1];
-				if (translateTraversal (nsEvent.keyCode (), nsEvent, consume)) return;
-				if (isDisposed ()) return;
-				if (!sendKeyEvent (nsEvent, SWT.KeyDown)) return;
-				if (consume [0]) return;
+                if (translateTraversal(nsEvent.keyCode(), nsEvent, consume)) {
+                    return;
+                }
+                if (isDisposed()) {
+                    return;
+                }
+                if (!sendKeyEvent(nsEvent, SWT.KeyDown)) {
+                    return;
+                }
+                if (consume [0]) {
+                    return;
+                }
 			}
 
 			return;
@@ -2454,14 +2653,18 @@ boolean hasKeyboardFocus(long inId) {
 void keyUp (long id, long sel, long theEvent) {
 	if (hasKeyboardFocus(id)) {
 		NSEvent nsEvent = new NSEvent (theEvent);
-		if (!sendKeyEvent (nsEvent, SWT.KeyUp)) return;
+        if (!sendKeyEvent(nsEvent, SWT.KeyUp)) {
+            return;
+        }
 	}
 	super.keyUp (id, sel, theEvent);
 }
 
 @Override
 void magnifyWithEvent(long id, long sel, long event) {
-	if (!gestureEvent(id, event, SWT.GESTURE_MAGNIFY)) return;
+    if (!gestureEvent(id, event, SWT.GESTURE_MAGNIFY)) {
+        return;
+    }
 	super.magnifyWithEvent(id, sel, event);
 }
 
@@ -2471,9 +2674,13 @@ void markLayout (boolean changed, boolean all) {
 
 @Override
 long menuForEvent (long id, long sel, long theEvent) {
-	if (display.lastHandledMenuForEventId == theEvent) return 0;
+    if (display.lastHandledMenuForEventId == theEvent) {
+        return 0;
+    }
 	display.lastHandledMenuForEventId = theEvent;
-	if (!isEnabled ()) return 0;
+    if (!isEnabled()) {
+        return 0;
+    }
 
 	NSPoint pt = NSEvent.mouseLocation();
 	pt.y = (int) (display.getPrimaryFrame().height - pt.y);
@@ -2485,9 +2692,13 @@ long menuForEvent (long id, long sel, long theEvent) {
 	NSEvent nsEvent = new NSEvent(theEvent);
 	event.detail = (nsEvent.type() == OS.NSLeftMouseDown || nsEvent.buttonNumber() > 0) ? SWT.MENU_MOUSE : SWT.MENU_KEYBOARD;
 	sendEvent (SWT.MenuDetect, event);
-	//widget could be disposed at this point
-	if (isDisposed ()) return 0;
-	if (!event.doit) return 0;
+    //widget could be disposed at this point
+    if (isDisposed()) {
+        return 0;
+    }
+    if (!event.doit) {
+        return 0;
+    }
 	Menu menu = getMenu ();
 	if (menu != null && !menu.isDisposed ()) {
 		if (x != event.x || y != event.y) {
@@ -2505,7 +2716,9 @@ Decorations menuShell () {
 
 @Override
 void scrollWheel (long id, long sel, long theEvent) {
-	if (display==null) return;
+    if (display == null) {
+        return;
+    }
 	boolean handled = false;
 	if (id == view.id) {
 		NSEvent nsEvent = new NSEvent(theEvent);
@@ -2531,7 +2744,9 @@ void scrollWheel (long id, long sel, long theEvent) {
 			}
 		}
 	}
-	if (!handled) super.scrollWheel(id, sel, theEvent);
+    if (!handled) {
+        super.scrollWheel(id, sel, theEvent);
+    }
 }
 
 boolean isEventView (long id) {
@@ -2539,9 +2754,13 @@ boolean isEventView (long id) {
 }
 
 boolean mouseEvent (long id, long sel, long theEvent, int type) {
-	if (!display.sendEvent) return true;
+    if (!display.sendEvent) {
+        return true;
+    }
 	display.sendEvent = false;
-	if (!isEventView (id)) return true;
+    if (!isEventView(id)) {
+        return true;
+    }
 	boolean dragging = false;
 	boolean[] consume = null;
 	NSEvent nsEvent = new NSEvent(theEvent);
@@ -2584,67 +2803,95 @@ boolean mouseEvent (long id, long sel, long theEvent, int type) {
 			break;
 	}
 	sendMouseEvent (nsEvent, type, false);
-	if (dragging) sendMouseEvent(nsEvent, SWT.DragDetect, false);
-	if (runEnterExit) display.checkEnterExit (runEnterExitControl, nsEvent, false);
-	if (consume != null && consume[0]) return false;
+    if (dragging) {
+        sendMouseEvent(nsEvent, SWT.DragDetect, false);
+    }
+    if (runEnterExit) {
+        display.checkEnterExit(runEnterExitControl, nsEvent, false);
+    }
+    if (consume != null && consume[0]) {
+        return false;
+    }
 	return true;
 }
 
 @Override
 void mouseDown(long id, long sel, long theEvent) {
-	if (!mouseEvent(id, sel, theEvent, SWT.MouseDown)) return;
+    if (!mouseEvent(id, sel, theEvent, SWT.MouseDown)) {
+        return;
+    }
 	boolean tracking = isEventView (id);
 	Display display = this.display;
-	if (tracking) display.trackingControl = this;
+    if (tracking) {
+        display.trackingControl = this;
+    }
 	super.mouseDown(id, sel, theEvent);
-	if (tracking) display.trackingControl = null;
+    if (tracking) {
+        display.trackingControl = null;
+    }
 }
 
 @Override
 void mouseUp(long id, long sel, long theEvent) {
-	if (!mouseEvent(id, sel, theEvent, SWT.MouseUp)) return;
+    if (!mouseEvent(id, sel, theEvent, SWT.MouseUp)) {
+        return;
+    }
 	super.mouseUp(id, sel, theEvent);
 }
 
 @Override
 void mouseDragged(long id, long sel, long theEvent) {
-	if (!mouseEvent(id, sel, theEvent, SWT.MouseMove)) return;
+    if (!mouseEvent(id, sel, theEvent, SWT.MouseMove)) {
+        return;
+    }
 	super.mouseDragged(id, sel, theEvent);
 }
 
 @Override
 void rightMouseDown(long id, long sel, long theEvent) {
-	if (!mouseEvent(id, sel, theEvent, SWT.MouseDown)) return;
+    if (!mouseEvent(id, sel, theEvent, SWT.MouseDown)) {
+        return;
+    }
 	super.rightMouseDown(id, sel, theEvent);
 }
 
 @Override
 void rightMouseUp(long id, long sel, long theEvent) {
-	if (!mouseEvent(id, sel, theEvent, SWT.MouseUp)) return;
+    if (!mouseEvent(id, sel, theEvent, SWT.MouseUp)) {
+        return;
+    }
 	super.rightMouseUp(id, sel, theEvent);
 }
 
 @Override
 void rightMouseDragged(long id, long sel, long theEvent) {
-	if (!mouseEvent(id, sel, theEvent, SWT.MouseMove)) return;
+    if (!mouseEvent(id, sel, theEvent, SWT.MouseMove)) {
+        return;
+    }
 	super.rightMouseDragged(id, sel, theEvent);
 }
 
 @Override
 void otherMouseDown(long id, long sel, long theEvent) {
-	if (!mouseEvent(id, sel, theEvent, SWT.MouseDown)) return;
+    if (!mouseEvent(id, sel, theEvent, SWT.MouseDown)) {
+        return;
+    }
 	super.otherMouseDown(id, sel, theEvent);
 }
 
 @Override
 void otherMouseUp(long id, long sel, long theEvent) {
-	if (!mouseEvent(id, sel, theEvent, SWT.MouseUp)) return;
+    if (!mouseEvent(id, sel, theEvent, SWT.MouseUp)) {
+        return;
+    }
 	super.otherMouseUp(id, sel, theEvent);
 }
 
 @Override
 void otherMouseDragged(long id, long sel, long theEvent) {
-	if (!mouseEvent(id, sel, theEvent, SWT.MouseMove)) return;
+    if (!mouseEvent(id, sel, theEvent, SWT.MouseMove)) {
+        return;
+    }
 	super.otherMouseDragged(id, sel, theEvent);
 }
 
@@ -2675,8 +2922,12 @@ void moved () {
 public void moveAbove (Control control) {
 	checkWidget();
 	if (control != null) {
-		if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (parent != control.parent) return;
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (parent != control.parent) {
+            return;
+        }
 	}
 	setZOrder (control, true);
 }
@@ -2704,8 +2955,12 @@ public void moveAbove (Control control) {
 public void moveBelow (Control control) {
 	checkWidget();
 	if (control != null) {
-		if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (parent != control.parent) return;
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (parent != control.parent) {
+            return;
+        }
 	}
 	setZOrder (control, false);
 }
@@ -2780,8 +3035,12 @@ NSView paintView () {
  */
 public boolean print (GC gc) {
 	checkWidget ();
-	if (gc == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
 	view.displayRectIgnoringOpacity (view.bounds (), gc.handle);
 	return true;
@@ -2922,7 +3181,9 @@ void release (boolean destroy) {
 		Control[] children = parent._getChildren ();
 		int index = 0;
 		while (index < children.length) {
-			if (children [index] == this) break;
+            if (children [index] == this) {
+                break;
+            }
 			index++;
 		}
 		if (0 < index && (index + 1) < children.length) {
@@ -2932,14 +3193,18 @@ void release (boolean destroy) {
 	}
 	super.release (destroy);
 	if (destroy) {
-		if (previous != null) previous.addRelation (next);
+        if (previous != null) {
+            previous.addRelation(next);
+        }
 	}
 }
 
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (view != null) view.release();
+    if (view != null) {
+        view.release();
+    }
 	view = null;
 	parent = null;
 }
@@ -2957,13 +3222,19 @@ void releaseWidget () {
 		display.currentControl = null;
 		display.timerExec(-1, display.hoverTimer);
 	}
-	if (display.trackingControl == this) display.trackingControl = null;
-	if (display.tooltipControl == this) display.tooltipControl = null;
+    if (display.trackingControl == this) {
+        display.trackingControl = null;
+    }
+    if (display.tooltipControl == this) {
+        display.tooltipControl = null;
+    }
 	if (menu != null && !menu.isDisposed ()) {
 		menu.dispose ();
 	}
 	menu = null;
-	if (visibleRgn != 0) OS.DisposeRgn (visibleRgn);
+    if (visibleRgn != 0) {
+        OS.DisposeRgn(visibleRgn);
+    }
 	visibleRgn = 0;
 	layoutData = null;
 	if (accessible != null) {
@@ -2971,7 +3242,9 @@ void releaseWidget () {
 	}
 	accessible = null;
 	region = null;
-	if (regionPath != null) regionPath.release();
+    if (regionPath != null) {
+        regionPath.release();
+    }
 	regionPath = null;
 }
 
@@ -2994,8 +3267,12 @@ void releaseWidget () {
  */
 public void removeControlListener (ControlListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Move, listener);
 	eventTable.unhook (SWT.Resize, listener);
 }
@@ -3021,8 +3298,12 @@ public void removeControlListener (ControlListener listener) {
  */
 public void removeDragDetectListener(DragDetectListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.DragDetect, listener);
 }
 
@@ -3045,8 +3326,12 @@ public void removeDragDetectListener(DragDetectListener listener) {
  */
 public void removeFocusListener(FocusListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.FocusIn, listener);
 	eventTable.unhook(SWT.FocusOut, listener);
 }
@@ -3072,8 +3357,12 @@ public void removeFocusListener(FocusListener listener) {
  */
 public void removeGestureListener (GestureListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Gesture, listener);
 }
 
@@ -3096,8 +3385,12 @@ public void removeGestureListener (GestureListener listener) {
  */
 public void removeHelpListener (HelpListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Help, listener);
 }
 
@@ -3120,8 +3413,12 @@ public void removeHelpListener (HelpListener listener) {
  */
 public void removeKeyListener(KeyListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.KeyUp, listener);
 	eventTable.unhook(SWT.KeyDown, listener);
 }
@@ -3148,8 +3445,12 @@ public void removeKeyListener(KeyListener listener) {
  */
 public void removeMenuDetectListener (MenuDetectListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MenuDetect, listener);
 }
 
@@ -3172,8 +3473,12 @@ public void removeMenuDetectListener (MenuDetectListener listener) {
  */
 public void removeMouseListener(MouseListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.MouseDown, listener);
 	eventTable.unhook(SWT.MouseUp, listener);
 	eventTable.unhook(SWT.MouseDoubleClick, listener);
@@ -3198,8 +3503,12 @@ public void removeMouseListener(MouseListener listener) {
  */
 public void removeMouseMoveListener(MouseMoveListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.MouseMove, listener);
 }
 
@@ -3222,8 +3531,12 @@ public void removeMouseMoveListener(MouseMoveListener listener) {
  */
 public void removeMouseTrackListener(MouseTrackListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MouseEnter, listener);
 	eventTable.unhook (SWT.MouseExit, listener);
 	eventTable.unhook (SWT.MouseHover, listener);
@@ -3250,8 +3563,12 @@ public void removeMouseTrackListener(MouseTrackListener listener) {
  */
 public void removeMouseWheelListener (MouseWheelListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MouseWheel, listener);
 }
 
@@ -3274,8 +3591,12 @@ public void removeMouseWheelListener (MouseWheelListener listener) {
  */
 public void removePaintListener(PaintListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Paint, listener);
 }
 
@@ -3283,11 +3604,15 @@ public void removePaintListener(PaintListener listener) {
  * Remove "Labeled by" relations from the receiver.
  */
 void removeRelation () {
-	if (!isDescribedByLabel()) return;
+    if (!isDescribedByLabel()) {
+        return;
+    }
 	NSObject accessibleElement = focusView();
 
 	if (accessibleElement instanceof NSControl viewAsControl) {
-		if (viewAsControl.cell() != null) accessibleElement = viewAsControl.cell();
+        if (viewAsControl.cell() != null) {
+            accessibleElement = viewAsControl.cell();
+        }
 	}
 
 	accessibleElement.accessibilitySetOverrideValue(accessibleElement, OS.NSAccessibilityTitleUIElementAttribute);
@@ -3315,8 +3640,12 @@ void removeRelation () {
  */
 public void removeTouchListener(TouchListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Touch, listener);
 }
 
@@ -3339,8 +3668,12 @@ public void removeTouchListener(TouchListener listener) {
  */
 public void removeTraverseListener(TraverseListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Traverse, listener);
 }
 
@@ -3356,13 +3689,17 @@ void resetVisibleRegion () {
 			GCData data = gcs [i];
 			if (data != null) {
 				if (data.view == view) {
-					if (visibleRgn == 0) visibleRgn = getVisibleRegion ();
+                    if (visibleRgn == 0) {
+                        visibleRgn = getVisibleRegion();
+                    }
 					data.state &= ~VISIBLE_REGION;
 					OS.CopyRgn (visibleRgn, data.visibleRgn);
 				}
 			}
 		}
-		if (visibleRgn != 0) OS.DisposeRgn (visibleRgn);
+        if (visibleRgn != 0) {
+            OS.DisposeRgn(visibleRgn);
+        }
 	}
 }
 
@@ -3372,7 +3709,9 @@ void resized () {
 
 @Override
 void rotateWithEvent(long id, long sel, long event) {
-	if (!gestureEvent(id, event, SWT.GESTURE_ROTATE)) return;
+    if (!gestureEvent(id, event, SWT.GESTURE_ROTATE)) {
+        return;
+    }
 	super.rotateWithEvent(id, sel, event);
 }
 
@@ -3448,7 +3787,9 @@ boolean sendMouseEvent (NSEvent nsEvent, int type, boolean send) {
 			break;
 		}
 	}
-	if (event.button != 0) event.count = display.clickCount;
+    if (event.button != 0) {
+        event.count = display.clickCount;
+    }
 	NSPoint windowPoint;
 	NSView view = eventView ();
 	if (nsEvent == null || nsEvent.type() == OS.NSMouseMoved) {
@@ -3466,11 +3807,15 @@ boolean sendMouseEvent (NSEvent nsEvent, int type, boolean send) {
 	setInputState (event, nsEvent, type);
 	if (send) {
 		sendEvent (type, event);
-		if (isDisposed ()) return false;
+        if (isDisposed()) {
+            return false;
+        }
 	} else {
 		postEvent (type, event);
 	}
-	if (shell != null) shell.setActiveControl(this, SWT.MouseDown);
+    if (shell != null) {
+        shell.setActiveControl(this, SWT.MouseDown);
+    }
 	return event.doit;
 }
 
@@ -3498,8 +3843,12 @@ Touch touchStateFromNSTouch(NSTouch touch) {
 	NSPoint normalizedPos = touch.normalizedPosition();
 	double normalizedX = normalizedPos.x;
 	double normalizedY = 1 - normalizedPos.y;
-	if (display.currentTouches().count() == 1) display.primaryIdentifier = identity;
-	if (display.primaryIdentifier == identity) primary = true;
+    if (display.currentTouches().count() == 1) {
+        display.primaryIdentifier = identity;
+    }
+    if (display.primaryIdentifier == identity) {
+        primary = true;
+    }
 	NSSize deviceSize = touch.deviceSize();
 	int deviceX = (int) (normalizedX * deviceSize.width);
 	int deviceY = (int) (normalizedY * deviceSize.height);
@@ -3512,7 +3861,9 @@ NSTouch findTouchWithId(NSArray touches, NSObject identity) {
 	for (long i = 0; i < count; i++) {
 		NSTouch aTouch = new NSTouch(touches.objectAtIndex(i).id);
 		NSObject currIdentity = new NSObject(OS.objc_msgSend(aTouch.id, OS.sel_identity));
-		if (currIdentity.isEqual(identity)) return aTouch;
+        if (currIdentity.isEqual(identity)) {
+            return aTouch;
+        }
 	}
 	return null;
 }
@@ -3538,9 +3889,13 @@ public boolean setAutoscalingMode(AutoscalingMode autoscalingMode) {
 }
 
 void setBackground () {
-	if (!drawsBackground()) return;
+    if (!drawsBackground()) {
+        return;
+    }
 	Control control = findBackgroundControl ();
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	if (control.backgroundImage != null) {
 		setBackgroundImage (control.backgroundImage.handle);
 	} else {
@@ -3580,11 +3935,15 @@ public void setBackground (Color color) {
 
 private void _setBackground (Color color) {
 	if (color != null) {
-		if (color.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	double [] background = color != null ? color.handle : null;
 	int alpha = color != null ? color.getAlpha() : 255;
-	if (equals (background, this.background) && alpha == this.backgroundAlpha) return;
+    if (equals(background, this.background) && alpha == this.backgroundAlpha) {
+        return;
+    }
 	this.background = background;
 	this.backgroundAlpha = alpha;
 	updateBackgroundColor ();
@@ -3618,8 +3977,12 @@ private void _setBackground (Color color) {
  */
 public void setBackgroundImage (Image image) {
 	checkWidget();
-	if (image != null && image.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-	if (image == backgroundImage && backgroundAlpha > 0) return;
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (image == backgroundImage && backgroundAlpha > 0) {
+        return;
+    }
 	backgroundAlpha = 255;
 	backgroundImage = image;
 	updateBackgroundImage();
@@ -3720,7 +4083,9 @@ void setBounds (int x, int y, int width, int height, boolean move, boolean resiz
  */
 public void setBounds (Rectangle rect) {
 	checkWidget ();
-	if (rect == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rect == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setBounds (rect.x, rect.y, Math.max (0, rect.width), Math.max (0, rect.height), true, true);
 }
 
@@ -3745,7 +4110,9 @@ public void setCapture (boolean capture) {
 void setClipRegion (NSView view) {
 	if (regionPath != null) {
 		NSView rgnView = topView ();
-		if (!rgnView.isFlipped ()) rgnView = eventView ();
+        if (!rgnView.isFlipped()) {
+            rgnView = eventView();
+        }
 		NSPoint pt = view.convertPoint_toView_(new NSPoint(), rgnView);
 		NSAffineTransform transform = NSAffineTransform.transform();
 		transform.translateXBy(-pt.x, -pt.y);
@@ -3778,10 +4145,16 @@ void setClipRegion (NSView view) {
  */
 public void setCursor (Cursor cursor) {
 	checkWidget();
-	if (cursor != null && cursor.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (cursor != null && cursor.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.cursor = cursor;
-	if (!isEnabled()) return;
-	if (!view.window().areCursorRectsEnabled()) return;
+    if (!isEnabled()) {
+        return;
+    }
+    if (!view.window().areCursorRectsEnabled()) {
+        return;
+    }
 	display.setCursor (display.currentControl);
 }
 
@@ -3830,7 +4203,9 @@ public void setDragDetect (boolean dragDetect) {
  */
 public void setEnabled (boolean enabled) {
 	checkWidget();
-	if (((state & DISABLED) == 0) == enabled) return;
+    if (((state & DISABLED) == 0) == enabled) {
+        return;
+    }
 	Control control = null;
 	boolean fixFocus = false;
 	if (!enabled) {
@@ -3845,7 +4220,9 @@ public void setEnabled (boolean enabled) {
 		state |= DISABLED;
 	}
 	enableWidget (enabled);
-	if (fixFocus) fixFocus (control);
+    if (fixFocus) {
+        fixFocus(control);
+    }
 }
 
 /**
@@ -3864,7 +4241,9 @@ public void setEnabled (boolean enabled) {
  */
 public boolean setFocus () {
 	checkWidget();
-	if ((style & SWT.NO_FOCUS) != 0) return false;
+    if ((style & SWT.NO_FOCUS) != 0) {
+        return false;
+    }
 	return forceFocus ();
 }
 
@@ -3886,7 +4265,9 @@ public boolean setFocus () {
 public void setFont (Font font) {
 	checkWidget();
 	if (font != null) {
-		if (font.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (font.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	this.font = font;
 	setFont (font != null ? font.handle : defaultFont().handle);
@@ -3918,10 +4299,14 @@ void setFont (NSFont font) {
 public void setForeground (Color color) {
 	checkWidget();
 	if (color != null) {
-		if (color.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	double [] foreground = color != null ? color.handle : null;
-	if (equals (foreground, this.foreground)) return;
+    if (equals(foreground, this.foreground)) {
+        return;
+    }
 	this.foreground = foreground;
 	setForeground (foreground);
 	redrawWidget (view, false);
@@ -3959,21 +4344,25 @@ void setFrameSize (long id, long sel, NSSize size) {
 		boolean oldResizing = (state & RESIZING) != 0;
 		state |= RESIZING;
 		resized ();
-		if (!oldResizing) state &= ~RESIZING;
+        if (!oldResizing) {
+            state &= ~RESIZING;
+        }
 	}
 }
 
 @Override
 void cacheDisplayInRect_toBitmapImageRep (long id, long sel, NSRect rect, long rep) {
-	/*
-	 * When a GC is created with a control as the Drawable and GC.copyArea() is
-	 * called, a SWT.Paint event will be sent, unexpectedly. This happens because
-	 * NSView.cacheDisplayInRect() calls drawRect() which causes a SWT.Paint event
-	 * to be sent. This leads to recursion if GC.copyArea() is called inside the PaintListener.
-	 *
-	 * The fix is to prevent recursive calls to cacheDisplayInRect_toBitmapImageRep.
-	 */
-	if (inCacheDisplayInRect) return;
+    /*
+     * When a GC is created with a control as the Drawable and GC.copyArea() is
+     * called, a SWT.Paint event will be sent, unexpectedly. This happens because
+     * NSView.cacheDisplayInRect() calls drawRect() which causes a SWT.Paint event
+     * to be sent. This leads to recursion if GC.copyArea() is called inside the PaintListener.
+     *
+     * The fix is to prevent recursive calls to cacheDisplayInRect_toBitmapImageRep.
+     */
+    if (inCacheDisplayInRect) {
+        return;
+    }
 	inCacheDisplayInRect = true;
 	super.cacheDisplayInRect_toBitmapImageRep(id, sel, rect, rep);
 	inCacheDisplayInRect = false;
@@ -4036,7 +4425,9 @@ public void setLocation (int x, int y) {
  */
 public void setLocation (Point location) {
 	checkWidget();
-	if (location == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (location == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setBounds (location.x, location.y, 0, 0, true, false);
 }
 
@@ -4068,7 +4459,9 @@ public void setLocation (Point location) {
 public void setMenu (Menu menu) {
 	checkWidget();
 	if (menu != null) {
-		if (menu.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (menu.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		if ((menu.style & SWT.POP_UP) == 0) {
 			error (SWT.ERROR_MENU_NOT_POP_UP);
 		}
@@ -4114,10 +4507,18 @@ public void setOrientation (int orientation) {
  */
 public boolean setParent (Composite parent) {
 	checkWidget();
-	if (parent == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (parent.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.parent == parent) return true;
-	if (!isReparentable ()) return false;
+    if (parent == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (parent.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.parent == parent) {
+        return true;
+    }
+    if (!isReparentable()) {
+        return false;
+    }
 	releaseParent ();
 	Shell newShell = parent.getShell (), oldShell = getShell ();
 	Decorations newDecorations = parent.menuShell (), oldDecorations = menuShell ();
@@ -4165,7 +4566,9 @@ public void setRedraw (boolean redraw) {
 			invalidateVisibleRegion ();
 			NSView topView = topView ();
 			redrawWidget(topView, true);
-			if (view.id != topView.id) redrawWidget(view, true);
+            if (view.id != topView.id) {
+                redrawWidget(view, true);
+            }
 		}
 	} else {
 		if (drawCount == 0) {
@@ -4194,15 +4597,21 @@ public void setRedraw (boolean redraw) {
  */
 public void setRegion (Region region) {
 	checkWidget ();
-	if (region != null && region.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (region != null && region.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.region = region;
-	if (regionPath != null) regionPath.release();
+    if (regionPath != null) {
+        regionPath.release();
+    }
 	regionPath = getPath(region);
 	redrawWidget(view, true);
 }
 
 void setRelations () {
-	if (parent == null) return;
+    if (parent == null) {
+        return;
+    }
 	Control [] children = parent._getChildren ();
 	int count = children.length;
 	if (count > 1) {
@@ -4272,20 +4681,26 @@ public void setSize (int width, int height) {
  */
 public void setSize (Point size) {
 	checkWidget ();
-	if (size == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setBounds (0, 0, Math.max (0, size.x), Math.max (0, size.y), false, true);
 }
 
 void setSmallSize () {
 	if (view instanceof NSControl) {
 		NSCell cell = ((NSControl)view).cell();
-		if (cell != null) cell.setControlSize (OS.NSControlSizeSmall);
+        if (cell != null) {
+            cell.setControlSize(OS.NSControlSizeSmall);
+        }
 	}
 }
 
 @Override
 boolean setTabItemFocus () {
-	if (!isShowing ()) return false;
+    if (!isShowing()) {
+        return false;
+    }
 	return forceFocus ();
 }
 
@@ -4395,10 +4810,14 @@ public void setTouchEnabled(boolean enabled) {
 public void setVisible (boolean visible) {
 	checkWidget();
 	if (visible) {
-		if ((state & HIDDEN) == 0) return;
+        if ((state & HIDDEN) == 0) {
+            return;
+        }
 		state &= ~HIDDEN;
 	} else {
-		if ((state & HIDDEN) != 0) return;
+        if ((state & HIDDEN) != 0) {
+            return;
+        }
 		state |= HIDDEN;
 	}
 	if (visible) {
@@ -4408,7 +4827,9 @@ public void setVisible (boolean visible) {
 		* event.  If this happens, just return.
 		*/
 		sendEvent (SWT.Show);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 	}
 
 	/*
@@ -4428,7 +4849,9 @@ public void setVisible (boolean visible) {
 		}
 	}
 	topView().setHidden(!visible);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	invalidateVisibleRegion();
 	if (!visible) {
 		/*
@@ -4437,9 +4860,13 @@ public void setVisible (boolean visible) {
 		* event.  If this happens, just return.
 		*/
 		sendEvent (SWT.Hide);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 	}
-	if (fixFocus) fixFocus (control);
+    if (fixFocus) {
+        fixFocus(control);
+    }
 }
 
 void setZOrder () {
@@ -4450,7 +4877,9 @@ void setZOrder () {
 @Override
 boolean shouldDelayWindowOrderingForEvent (long id, long sel, long theEvent) {
 	Shell shell = getShell ();
-	if ((shell.style & SWT.ON_TOP) != 0) return false;
+    if ((shell.style & SWT.ON_TOP) != 0) {
+        return false;
+    }
 	return super.shouldDelayWindowOrderingForEvent (id, sel, theEvent);
 }
 
@@ -4460,12 +4889,16 @@ void setZOrder (Control sibling, boolean above) {
 	/* determine the receiver's and sibling's indexes in the parent */
 	children = parent._getChildren ();
 	while (index < children.length) {
-		if (children [index] == this) break;
+        if (children [index] == this) {
+            break;
+        }
 		index++;
 	}
 	if (sibling != null) {
 		while (siblingIndex < children.length) {
-			if (children [siblingIndex] == sibling) break;
+            if (children [siblingIndex] == sibling) {
+                break;
+            }
 			siblingIndex++;
 		}
 	}
@@ -4517,7 +4950,9 @@ void setZOrder (Control sibling, boolean above) {
 		addRelation (children [index + 1]);
 	}
 	if (oldNextIndex != -1) {
-		if (oldNextIndex <= index) oldNextIndex--;
+        if (oldNextIndex <= index) {
+            oldNextIndex--;
+        }
 		/* the last two conditions below ensure that duplicate relations are not hooked */
 		if (0 < oldNextIndex && oldNextIndex != index && oldNextIndex != index + 1) {
 			children [oldNextIndex - 1].addRelation (children [oldNextIndex]);
@@ -4543,7 +4978,9 @@ void sort (int [] items) {
 
 @Override
 void swipeWithEvent(long id, long sel, long event) {
-	if (!gestureEvent(id, event, SWT.GESTURE_SWIPE)) return;
+    if (!gestureEvent(id, event, SWT.GESTURE_SWIPE)) {
+        return;
+    }
 	super.swipeWithEvent(id, sel, event);
 }
 
@@ -4606,7 +5043,9 @@ public Point toControl (int x, int y) {
  */
 public Point toControl (Point point) {
 	checkWidget();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return toControl (point.x, point.y);
 }
 
@@ -4657,7 +5096,9 @@ public Point toDisplay (int x, int y) {
  */
 public Point toDisplay (Point point) {
 	checkWidget();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return toDisplay (point.x, point.y);
 }
 
@@ -4666,11 +5107,19 @@ NSView topView () {
 }
 
 boolean touchEvent(long id, long sel, long eventPtr) {
-	if (!display.sendEvent) return true;
+    if (!display.sendEvent) {
+        return true;
+    }
 	display.sendEvent = false;
-	if (!(hooks(SWT.Touch) || filters(SWT.Touch))) return true;
-	if (!isEventView (id)) return true;
-	if (!touchEnabled) return true;
+    if (!(hooks(SWT.Touch) || filters(SWT.Touch))) {
+        return true;
+    }
+    if (!isEventView(id)) {
+        return true;
+    }
+    if (!touchEnabled) {
+        return true;
+    }
 	NSEvent nsEvent = new NSEvent(eventPtr);
 	NSMutableArray currentTouches = display.currentTouches();
 	Event event = new Event ();
@@ -4693,11 +5142,15 @@ boolean touchEvent(long id, long sel, long eventPtr) {
 		NSTouch touch = new NSTouch(endedTouches.objectAtIndex(i).id);
 		NSObject identity = new NSObject(OS.objc_msgSend(touch.id, OS.sel_identity));
 		NSTouch endedTouch = findTouchWithId(currentTouches, identity);
-		if (endedTouch != null) currentTouches.removeObject(endedTouch);
+        if (endedTouch != null) {
+            currentTouches.removeObject(endedTouch);
+        }
 		touches[currTouchIndex++] = touchStateFromNSTouch(touch);
 	}
 
-	if (currentTouches.count() == 0) display.touchCounter = 0;
+    if (currentTouches.count() == 0) {
+        display.touchCounter = 0;
+    }
 
 	// Process touches in progress or starting.
 	NSArray activeTouches = nsEvent.touchesMatchingPhase(OS.NSTouchPhaseBegan | OS.NSTouchPhaseMoved | OS.NSTouchPhaseStationary, null).allObjects();
@@ -4706,7 +5159,9 @@ boolean touchEvent(long id, long sel, long eventPtr) {
 		NSTouch touch = new NSTouch(activeTouches.objectAtIndex(i).id);
 		NSObject identity = new NSObject(OS.objc_msgSend(touch.id, OS.sel_identity));
 		NSTouch activeTouch = findTouchWithId(currentTouches, identity);
-		if (activeTouch == null) currentTouches.addObject(touch);
+        if (activeTouch == null) {
+            currentTouches.addObject(touch);
+        }
 		touches[currTouchIndex++] = touchStateFromNSTouch(touch);
 	}
 
@@ -4743,25 +5198,33 @@ boolean touchEvent(long id, long sel, long eventPtr) {
 
 @Override
 void touchesBeganWithEvent (long id, long sel, long event) {
-	if (!touchEvent(id, sel, event)) return;
+    if (!touchEvent(id, sel, event)) {
+        return;
+    }
 	super.touchesBeganWithEvent(id, sel, event);
 }
 
 @Override
 void touchesCancelledWithEvent (long id, long sel, long event) {
-	if (!touchEvent(id, sel, event)) return;
+    if (!touchEvent(id, sel, event)) {
+        return;
+    }
 	super.touchesCancelledWithEvent(id, sel, event);
 }
 
 @Override
 void touchesEndedWithEvent (long id, long sel, long event) {
-	if (!touchEvent(id, sel, event)) return;
+    if (!touchEvent(id, sel, event)) {
+        return;
+    }
 	super.touchesEndedWithEvent(id, sel, event);
 }
 
 @Override
 void touchesMovedWithEvent (long id, long sel, long event) {
-	if (!touchEvent(id, sel, event)) return;
+    if (!touchEvent(id, sel, event)) {
+        return;
+    }
 	super.touchesMovedWithEvent(id, sel, event);
 }
 
@@ -4799,7 +5262,9 @@ boolean translateTraversal (int key, NSEvent theEvent, boolean [] consume) {
 		case 121: /* Page down */ {
 			all = true;
 			long modifiers = theEvent.modifierFlags ();
-			if ((modifiers & OS.NSEventModifierFlagControl) == 0) return false;
+            if ((modifiers & OS.NSEventModifierFlagControl) == 0) {
+                return false;
+            }
 			detail = key == 121 /* Page down */ ? SWT.TRAVERSE_PAGE_NEXT : SWT.TRAVERSE_PAGE_PREVIOUS;
 			break;
 		}
@@ -4809,15 +5274,21 @@ boolean translateTraversal (int key, NSEvent theEvent, boolean [] consume) {
 	Event event = new Event ();
 	event.doit = consume [0] = (code & detail) != 0;
 	event.detail = detail;
-	if (!setKeyState (event, SWT.Traverse, theEvent)) return false;
+    if (!setKeyState(event, SWT.Traverse, theEvent)) {
+        return false;
+    }
 	Shell shell = getShell ();
 	Control control = this;
 	do {
-		if (control.traverse (event)) return true;
+        if (control.traverse(event)) {
+            return true;
+        }
 		if (!event.doit && control.hooks (SWT.Traverse)) {
 			return false;
 		}
-		if (control == shell) return false;
+        if (control == shell) {
+            return false;
+        }
 		control = control.parent;
 	} while (all && control != null);
 	return false;
@@ -4826,7 +5297,9 @@ boolean translateTraversal (int key, NSEvent theEvent, boolean [] consume) {
 int traversalCode (int key, NSEvent theEvent) {
 	int code = SWT.TRAVERSE_RETURN | SWT.TRAVERSE_TAB_NEXT | SWT.TRAVERSE_TAB_PREVIOUS | SWT.TRAVERSE_PAGE_NEXT | SWT.TRAVERSE_PAGE_PREVIOUS;
 	Shell shell = getShell ();
-	if (shell.parent != null) code |= SWT.TRAVERSE_ESCAPE;
+    if (shell.parent != null) {
+        code |= SWT.TRAVERSE_ESCAPE;
+    }
 	return code;
 }
 
@@ -4868,7 +5341,9 @@ boolean traverseMnemonic (char key) {
  */
 public boolean traverse (int traversal, Event event) {
 	checkWidget ();
-	if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (event == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return traverse (traversal, event.character, event.keyCode, event.keyLocation, event.stateMask, event.doit);
 }
 
@@ -4906,7 +5381,9 @@ public boolean traverse (int traversal, Event event) {
  */
 public boolean traverse (int traversal, KeyEvent event) {
 	checkWidget ();
-	if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (event == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return traverse (traversal, event.character, event.keyCode, event.keyLocation, event.stateMask, event.doit);
 }
 
@@ -4996,9 +5473,15 @@ boolean traverse (int traversal, char character, int keyCode, int keyLocation, i
 
 	Control control = this;
 	do {
-		if (control.traverse (event)) return true;
-		if (!event.doit && control.hooks (SWT.Traverse)) return false;
-		if (control == shell) return false;
+        if (control.traverse(event)) {
+            return true;
+        }
+        if (!event.doit && control.hooks(SWT.Traverse)) {
+            return false;
+        }
+        if (control == shell) {
+            return false;
+        }
 		control = control.parent;
 	} while (all && control != null);
 	return false;
@@ -5030,8 +5513,12 @@ public boolean traverse (int traversal) {
 
 boolean traverse (Event event) {
 	sendEvent (SWT.Traverse, event);
-	if (isDisposed ()) return true;
-	if (!event.doit) return false;
+    if (isDisposed()) {
+        return true;
+    }
+    if (!event.doit) {
+        return false;
+    }
 	switch (event.detail) {
 		case SWT.TRAVERSE_NONE:				return true;
 		case SWT.TRAVERSE_ESCAPE:			return traverseEscape ();
@@ -5058,16 +5545,20 @@ boolean traverseGroup (boolean next) {
 	int length = list.length;
 	int index = 0;
 	while (index < length) {
-		if (list [index] == group) break;
+        if (list [index] == group) {
+            break;
+        }
 		index++;
 	}
-	/*
-	* It is possible (but unlikely), that application
-	* code could have disposed the widget in focus in
-	* or out events.  Ensure that a disposed widget is
-	* not accessed.
-	*/
-	if (index == length) return false;
+    /*
+    * It is possible (but unlikely), that application
+    * code could have disposed the widget in focus in
+    * or out events.  Ensure that a disposed widget is
+    * not accessed.
+    */
+    if (index == length) {
+        return false;
+    }
 	int start = index, offset = (next) ? 1 : -1;
 	while ((index = ((index + offset + length) % length)) != start) {
 		Widget widget = list [index];
@@ -5075,7 +5566,9 @@ boolean traverseGroup (boolean next) {
 			return true;
 		}
 	}
-	if (group.isDisposed ()) return false;
+    if (group.isDisposed()) {
+        return false;
+    }
 	return group.setTabGroupFocus ();
 }
 
@@ -5084,21 +5577,27 @@ boolean traverseItem (boolean next) {
 	int length = children.length;
 	int index = 0;
 	while (index < length) {
-		if (children [index] == this) break;
+        if (children [index] == this) {
+            break;
+        }
 		index++;
 	}
-	/*
-	* It is possible (but unlikely), that application
-	* code could have disposed the widget in focus in
-	* or out events.  Ensure that a disposed widget is
-	* not accessed.
-	*/
-	if (index == length) return false;
+    /*
+    * It is possible (but unlikely), that application
+    * code could have disposed the widget in focus in
+    * or out events.  Ensure that a disposed widget is
+    * not accessed.
+    */
+    if (index == length) {
+        return false;
+    }
 	int start = index, offset = (next) ? 1 : -1;
 	while ((index = (index + offset + length) % length) != start) {
 		Control child = children [index];
 		if (!child.isDisposed () && child.isTabItem ()) {
-			if (child.setTabItemFocus ()) return true;
+            if (child.setTabItemFocus()) {
+                return true;
+            }
 		}
 	}
 	return false;
@@ -5174,12 +5673,18 @@ boolean update (boolean all) {
  	}
 //	checkWidget();
 	NSArray isPainting = display.isPainting;
-	if (isPainting.containsObject(view)) return false;
+    if (isPainting.containsObject(view)) {
+        return false;
+    }
 	for (int i = 0, length = (int)isPainting.count(); i < length; i++) {
 		NSView view = new NSView(isPainting.objectAtIndex(i));
-		if (view.isDescendantOf(this.view)) return false;
+        if (view.isDescendantOf(this.view)) {
+            return false;
+        }
 	}
-	if (isResizing()) return false;
+    if (isResizing()) {
+        return false;
+    }
 	Shell shell = getShell();
 	NSWindow window = shell.deferFlushing && shell.scrolling ? view.window() : null;
 	try {
@@ -5200,7 +5705,9 @@ boolean update (boolean all) {
 
 void updateBackgroundColor () {
 	Control control = findBackgroundControl ();
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	double [] color = control.background != null ? control.background : control.defaultBackground().handle;
 	NSColor nsColor = NSColor.colorWithDeviceRed(color[0], color[1], color[2], color[3]);
 	setBackgroundColor (nsColor);
@@ -5222,12 +5729,16 @@ void updateBackgroundMode () {
 
 @Override
 void resetCursorRects (long id, long sel) {
-	if (isEnabled ()) callSuper (id, sel);
+    if (isEnabled()) {
+        callSuper(id, sel);
+    }
 }
 
 @Override
 void updateTrackingAreas (long id, long sel) {
-	if (isEnabled ()) callSuper (id, sel);
+    if (isEnabled()) {
+        callSuper(id, sel);
+    }
 }
 
 void updateCursorRects (boolean enabled) {

@@ -113,7 +113,9 @@ public PrintDialog (Shell parent, int style) {
  * @since 3.4
  */
 public void setPrinterData(PrinterData data) {
-	if (data == null) data = new PrinterData();
+    if (data == null) {
+        data = new PrinterData();
+    }
 	this.printerData = data;
 }
 
@@ -151,8 +153,12 @@ private static int normalizeStyle(Shell parent, int style) {
 	style &= ~SWT.MIRRORED;
 	if ((style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT)) == 0) {
 		if (parent != null) {
-			if ((parent.getStyle () & SWT.LEFT_TO_RIGHT) != 0) style |= SWT.LEFT_TO_RIGHT;
-			if ((parent.getStyle () & SWT.RIGHT_TO_LEFT) != 0) style |= SWT.RIGHT_TO_LEFT;
+            if ((parent.getStyle() & SWT.LEFT_TO_RIGHT) != 0) {
+                style |= SWT.LEFT_TO_RIGHT;
+            }
+            if ((parent.getStyle() & SWT.RIGHT_TO_LEFT) != 0) {
+                style |= SWT.RIGHT_TO_LEFT;
+            }
 		}
 	}
 	return checkBits (style, SWT.LEFT_TO_RIGHT, SWT.RIGHT_TO_LEFT, 0, 0, 0, 0);

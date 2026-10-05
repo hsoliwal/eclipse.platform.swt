@@ -173,7 +173,9 @@ void decodePixels(ImageData image) throws IOException {
 			int nRows = rowsPerStrip;
 			if (i == length -1) {
 				int n = imageLength % rowsPerStrip;
-				if (n != 0) nRows = n;
+                if (n != 0) {
+                    nRows = n;
+                }
 			}
 			destIndex += codec.decode(data, imageData, destIndex, imageWidth, nRows);
 		}
@@ -218,7 +220,9 @@ PaletteData getGrayPalette() {
 	RGB[] rgbs = new RGB[numColors];
 	for (int i = 0; i < numColors; i++) {
 		int value = i * 0xFF / (numColors - 1);
-		if (photometricInterpretation == 0) value = 0xFF - value;
+        if (photometricInterpretation == 0) {
+            value = 0xFF - value;
+        }
 		rgbs[i] = new RGB(value, value, value);
 	}
 	return new PaletteData(rgbs);
@@ -288,7 +292,9 @@ int formatStrips(int rowByteSize, int nbrRows, byte[] data, int maxStripByteSize
 	}
 	/* The last strip may contain fewer rows */
 	int mod = data.length % stripByteSize;
-	if (mod != 0) counts[counts.length - 1] = mod;
+    if (mod != 0) {
+        counts[counts.length - 1] = mod;
+    }
 
 	strips[0] = offsets;
 	strips[1] = counts;
@@ -336,7 +342,9 @@ void parseEntries(byte[] buffer) throws IOException {
 				break;
 			}
 			case TAG_BitsPerSample: {
-				if (type != TYPE_SHORT) SWT.error(SWT.ERROR_INVALID_IMAGE);
+                if (type != TYPE_SHORT) {
+                    SWT.error(SWT.ERROR_INVALID_IMAGE);
+                }
 				bitsPerSample = new int[count];
 				getEntryValue(type, buffer, offset, bitsPerSample);
 				break;
@@ -358,7 +366,9 @@ void parseEntries(byte[] buffer) throws IOException {
 				break;
 			}
 			case TAG_StripOffsets: {
-				if (type != TYPE_LONG && type != TYPE_SHORT) SWT.error(SWT.ERROR_INVALID_IMAGE);
+                if (type != TYPE_LONG && type != TYPE_SHORT) {
+                    SWT.error(SWT.ERROR_INVALID_IMAGE);
+                }
 				stripOffsets = new int[count];
 				getEntryValue(type, buffer, offset, stripOffsets);
 				break;
@@ -368,10 +378,14 @@ void parseEntries(byte[] buffer) throws IOException {
 				break;
 			}
 			case TAG_SamplesPerPixel: {
-				if (type != TYPE_SHORT) SWT.error(SWT.ERROR_INVALID_IMAGE);
+                if (type != TYPE_SHORT) {
+                    SWT.error(SWT.ERROR_INVALID_IMAGE);
+                }
 				samplesPerPixel = getEntryValue(type, buffer, offset);
-				/* Only the basic 1 and 3 values are supported */
-				if (samplesPerPixel != 1 && samplesPerPixel != 3) SWT.error(SWT.ERROR_UNSUPPORTED_DEPTH);
+                /* Only the basic 1 and 3 values are supported */
+                if (samplesPerPixel != 1 && samplesPerPixel != 3) {
+                    SWT.error(SWT.ERROR_UNSUPPORTED_DEPTH);
+                }
 				break;
 			}
 			case TAG_RowsPerStrip: {
@@ -396,7 +410,9 @@ void parseEntries(byte[] buffer) throws IOException {
 				break;
 			}
 			case TAG_T4Options: {
-				if (type != TYPE_LONG) SWT.error(SWT.ERROR_INVALID_IMAGE);
+                if (type != TYPE_LONG) {
+                    SWT.error(SWT.ERROR_INVALID_IMAGE);
+                }
 				t4Options = getEntryValue(type, buffer, offset);
 				if ((t4Options & 0x1) == 1) {
 					/* 2-dimensional coding is not supported */
@@ -417,7 +433,9 @@ void parseEntries(byte[] buffer) throws IOException {
 				break;
 			}
 			case TAG_ColorMap: {
-				if (type != TYPE_SHORT) SWT.error(SWT.ERROR_INVALID_IMAGE);
+                if (type != TYPE_SHORT) {
+                    SWT.error(SWT.ERROR_INVALID_IMAGE);
+                }
 				/* Get the offset of the colorMap (use TYPE_LONG) */
 				colorMapOffset = getEntryValue(TYPE_LONG, buffer, offset);
 				break;
@@ -460,16 +478,20 @@ public ImageData read(int [] nextIFDOffset) throws IOException {
 			break;
 		}
 		case 2: {
-			/* RGB image */
-			if (colorMapOffset != NO_VALUE) SWT.error(SWT.ERROR_INVALID_IMAGE);
+            /* RGB image */
+            if (colorMapOffset != NO_VALUE) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 			/* SamplesPerPixel 3 is the only value supported */
 			palette = getRGBPalette(bitsPerSample[0], bitsPerSample[1], bitsPerSample[2]);
 			depth = bitsPerSample[0] + bitsPerSample[1] + bitsPerSample[2];
 			break;
 		}
 		case 3: {
-			/* Palette Color image */
-			if (colorMapOffset == NO_VALUE) SWT.error(SWT.ERROR_INVALID_IMAGE);
+            /* Palette Color image */
+            if (colorMapOffset == NO_VALUE) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 			palette = getColorMap();
 			depth = bitsPerSample[0];
 			break;
@@ -538,8 +560,10 @@ void write(int photometricInterpretation) throws IOException {
 		PaletteData palette = image.palette;
 		RGB[] rgbs = palette.getRGBs();
 		colorMap = formatColorMap(rgbs);
-		/* The number of entries of the Color Map must match the bitsPerSample field */
-		if (colorMap.length != 3 * 1 << image.depth) SWT.error(SWT.ERROR_UNSUPPORTED_FORMAT);
+        /* The number of entries of the Color Map must match the bitsPerSample field */
+        if (colorMap.length != 3 * 1 << image.depth) {
+            SWT.error(SWT.ERROR_UNSUPPORTED_FORMAT);
+        }
 		/* Extra space used by ColorMap values */
 		extraBytes += colorMap.length * 2;
 	}
@@ -583,37 +607,55 @@ void write(int photometricInterpretation) throws IOException {
 	out.writeShort(numberEntries);
 	writeEntry(TAG_ImageWidth, TYPE_LONG, 1, imageWidth);
 	writeEntry(TAG_ImageLength, TYPE_LONG, 1, imageLength);
-	if (isColorMap) writeEntry(TAG_BitsPerSample, TYPE_SHORT, 1, image.depth);
-	if (isRGB) writeEntry(TAG_BitsPerSample, TYPE_SHORT, 3, bitsPerSampleOffset);
+    if (isColorMap) {
+        writeEntry(TAG_BitsPerSample, TYPE_SHORT, 1, image.depth);
+    }
+    if (isRGB) {
+        writeEntry(TAG_BitsPerSample, TYPE_SHORT, 3, bitsPerSampleOffset);
+    }
 	writeEntry(TAG_Compression, TYPE_SHORT, 1, COMPRESSION_NONE);
 	writeEntry(TAG_PhotometricInterpretation, TYPE_SHORT, 1, photometricInterpretation);
 	writeEntry(TAG_StripOffsets, TYPE_LONG, cnt, cnt > 1 ? stripOffsetsOffset : stripOffsets[0]);
-	if (isRGB) writeEntry(TAG_SamplesPerPixel, TYPE_SHORT, 1, 3);
+    if (isRGB) {
+        writeEntry(TAG_SamplesPerPixel, TYPE_SHORT, 1, 3);
+    }
 	writeEntry(TAG_RowsPerStrip, TYPE_LONG, 1, nbrRowsPerStrip);
 	writeEntry(TAG_StripByteCounts, TYPE_LONG, cnt, cnt > 1 ? stripByteCountsOffset : stripByteCounts[0]);
 	writeEntry(TAG_XResolution, TYPE_RATIONAL, 1, xResolutionOffset);
 	writeEntry(TAG_YResolution, TYPE_RATIONAL, 1, yResolutionOffset);
-	if (isColorMap) writeEntry(TAG_ColorMap, TYPE_SHORT, colorMap.length, colorMapOffset);
+    if (isColorMap) {
+        writeEntry(TAG_ColorMap, TYPE_SHORT, colorMap.length, colorMapOffset);
+    }
 	/* Offset of next IFD (0 for last IFD) */
 	out.writeInt(0);
 
-	/* Values longer than 4 bytes Section */
+    /* Values longer than 4 bytes Section */
 
-	/* BitsPerSample 8,8,8 */
-	if (isRGB) for (int i = 0; i < 3; i++) out.writeShort(8);
+    /* BitsPerSample 8,8,8 */
+    if (isRGB) {
+        for (int i = 0; i < 3; i++) {
+            out.writeShort(8);
+        }
+    }
 	if (cnt > 1) {
-		for (int i = 0; i < cnt; i++) out.writeInt(stripOffsets[i]);
-		for (int i = 0; i < cnt; i++) out.writeInt(stripByteCounts[i]);
+        for (int i = 0; i < cnt; i++) {
+            out.writeInt(stripOffsets[i]);
+        }
+        for (int i = 0; i < cnt; i++) {
+            out.writeInt(stripByteCounts[i]);
+        }
 	}
 	/* XResolution and YResolution set to 300 dpi */
 	for (int i = 0; i < 2; i++) {
 		out.writeInt(300);
 		out.writeInt(1);
 	}
-	/* ColorMap */
-	if (isColorMap)
-		for (int element : colorMap)
-			out.writeShort(element);
+    /* ColorMap */
+    if (isColorMap) {
+        for (int element : colorMap) {
+            out.writeShort(element);
+        }
+    }
 
 	/* Image Data */
 	out.write(data);
@@ -644,14 +686,18 @@ void writeToStream(LEDataOutputStream byteStream) throws IOException {
 	out = byteStream;
 	int photometricInterpretation = -1;
 
-	/* Scanline pad must be 1 */
-	if (image.scanlinePad != 1) SWT.error(SWT.ERROR_UNSUPPORTED_FORMAT);
+    /* Scanline pad must be 1 */
+    if (image.scanlinePad != 1) {
+        SWT.error(SWT.ERROR_UNSUPPORTED_FORMAT);
+    }
 	switch (image.depth) {
 		case 1: {
 			/* Palette must be black and white or white and black */
 			PaletteData palette = image.palette;
 			RGB[] rgbs = palette.colors;
-			if (palette.isDirect || rgbs == null || rgbs.length != 2) SWT.error(SWT.ERROR_UNSUPPORTED_FORMAT);
+            if (palette.isDirect || rgbs == null || rgbs.length != 2) {
+                SWT.error(SWT.ERROR_UNSUPPORTED_FORMAT);
+            }
 			RGB rgb0 = rgbs[0];
 			RGB rgb1 = rgbs[1];
 			if (!(rgb0.red == rgb0.green && rgb0.green == rgb0.blue &&

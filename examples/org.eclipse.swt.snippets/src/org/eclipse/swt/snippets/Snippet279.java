@@ -51,8 +51,9 @@ public class Snippet279 {
 		shell.setSize (600, 400);
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ())
-				display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

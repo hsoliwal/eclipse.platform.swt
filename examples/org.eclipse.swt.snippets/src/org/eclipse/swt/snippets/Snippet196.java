@@ -54,9 +54,13 @@ public static void main(String[] args) {
 		boolean ignore;
 		@Override
 		public void handleEvent(Event e) {
-			if (ignore) return;
+            if (ignore) {
+                return;
+            }
 			e.doit = false;
-			if (e.start > 13 || e.end > 14) return;
+            if (e.start > 13 || e.end > 14) {
+                return;
+            }
 			StringBuilder buffer = new StringBuilder(e.text);
 
 			//handle backspace
@@ -94,8 +98,10 @@ public static void main(String[] args) {
 				ignore = true;
 				text.insert(buffer.toString());
 				ignore = false;
-				// move cursor backwards over separators
-				if (e.start == 5 || e.start == 9) e.start--;
+                // move cursor backwards over separators
+                if (e.start == 5 || e.start == 9) {
+                    e.start--;
+                }
 				text.setSelection(e.start, e.start);
 				return;
 			}
@@ -107,23 +113,33 @@ public static void main(String[] args) {
 				index++;
 				switch (index) {
 					case 0:
-						if (chars[i] == '(') continue;
+                        if (chars[i] == '(') {
+                            continue;
+                        }
 						index++;
 						break;
 					case 4:
-						if (chars[i] == ')') continue;
+                        if (chars[i] == ')') {
+                            continue;
+                        }
 						index++;
 						break;
 					case 8:
-						if (chars[i] == '-') continue;
+                        if (chars[i] == '-') {
+                            continue;
+                        }
 						index++;
 						break;
 				}
-				if (index >= newText.length()) return;
+                if (index >= newText.length()) {
+                    return;
+                }
 				newText.setCharAt(index, chars[i]);
 			}
-			// if text is selected, do not paste beyond range of selection
-			if (e.start < e.end && index + 1 != e.end) return;
+            // if text is selected, do not paste beyond range of selection
+            if (e.start < e.end && index + 1 != e.end) {
+                return;
+            }
 			Matcher matcher = pattern.matcher(newText);
 			if (matcher.lookingAt()) {
 				text.setSelection(e.start, index + 1);
@@ -137,8 +153,9 @@ public static void main(String[] args) {
 	shell.pack();
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	font.dispose();
 	display.dispose();

@@ -74,7 +74,9 @@ public void javaToNative (Object object, TransferData transferData){
 	String string = (String)object;
 	byte [] buffer = Converter.wcsToMbcs (string, true);
 	long pValue = OS.g_malloc(buffer.length);
-	if (pValue == 0) return;
+    if (pValue == 0) {
+        return;
+    }
 	C.memmove(pValue, buffer, buffer.length);
 	transferData.length = buffer.length - 1;
 	transferData.format = 8;
@@ -102,11 +104,17 @@ private void javaToNativeGTK4(Object object, TransferData transferData) {
  */
 @Override
 public Object nativeToJava(TransferData transferData){
-	if (GTK.GTK4) return nativeToJavaGTK4(transferData);
+    if (GTK.GTK4) {
+        return nativeToJavaGTK4(transferData);
+    }
 
-	if ( !isSupportedType(transferData) ||  transferData.pValue == 0 ) return null;
+    if (!isSupportedType(transferData) || transferData.pValue == 0) {
+        return null;
+    }
 	int size = transferData.format * transferData.length / 8;
-	if (size == 0) return null;
+    if (size == 0) {
+        return null;
+    }
 	byte[] buffer = new byte[size];
 	C.memmove(buffer, transferData.pValue, size);
 	char [] chars = Converter.mbcsToWcs (buffer);

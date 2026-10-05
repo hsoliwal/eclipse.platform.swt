@@ -84,8 +84,12 @@ public final class ViewportRuntime {
 		originY = y;
 
 		int dirty = 0;
-		if (horizontal) dirty |= BODY | HEADER | EDITOR | FEEDBACK | SCROLLBAR;
-		if (vertical) dirty |= BODY | FROZEN | EDITOR | FEEDBACK | SCROLLBAR;
+        if (horizontal) {
+            dirty |= BODY | HEADER | EDITOR | FEEDBACK | SCROLLBAR;
+        }
+        if (vertical) {
+            dirty |= BODY | FROZEN | EDITOR | FEEDBACK | SCROLLBAR;
+        }
 		return dirty;
 	}
 
@@ -133,7 +137,9 @@ public final class ViewportRuntime {
 			int bodyHeight = Math.max (0, outerHeight - (horizontal ? horizontalBarHeight : 0));
 			boolean nextHorizontal = policyVisible (horizontalPolicy, contentWidth > bodyWidth);
 			boolean nextVertical = policyVisible (verticalPolicy, contentHeight > bodyHeight);
-			if (horizontal == nextHorizontal && vertical == nextVertical) break;
+            if (horizontal == nextHorizontal && vertical == nextVertical) {
+                break;
+            }
 			horizontal = nextHorizontal;
 			vertical = nextVertical;
 		}
@@ -193,7 +199,9 @@ public final class ViewportRuntime {
 					horizontalPolicy, logicalContentWidth > bodyWidth);
 			int visibleRows = visibleRows (logicalRows, sampleRowHeight, bodyHeight);
 			boolean nextVertical = policyVisible (verticalPolicy, logicalRows > visibleRows);
-			if (horizontal == nextHorizontal && vertical == nextVertical) break;
+            if (horizontal == nextHorizontal && vertical == nextVertical) {
+                break;
+            }
 			horizontal = nextHorizontal;
 			vertical = nextVertical;
 		}
@@ -225,14 +233,20 @@ public final class ViewportRuntime {
 	}
 
 	private static int visibleRows (long logicalRows, int sampleRowHeight, int bodyHeight) {
-		if (logicalRows == 0 || bodyHeight == 0) return 0;
+        if (logicalRows == 0 || bodyHeight == 0) {
+            return 0;
+        }
 		long rows = ((long)bodyHeight + sampleRowHeight - 1L) / sampleRowHeight;
 		return (int)Math.min (logicalRows, Math.max (1L, rows));
 	}
 
 	private static long saturatedMultiply (long value, int multiplier) {
-		if (value == 0) return 0;
-		if (value > Long.MAX_VALUE / multiplier) return Long.MAX_VALUE;
+        if (value == 0) {
+            return 0;
+        }
+        if (value > Long.MAX_VALUE / multiplier) {
+            return Long.MAX_VALUE;
+        }
 		return value * multiplier;
 	}
 

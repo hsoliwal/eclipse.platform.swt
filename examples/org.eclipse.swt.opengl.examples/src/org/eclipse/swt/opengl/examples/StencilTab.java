@@ -112,7 +112,9 @@ class StencilTab extends OpenGLTab {
 	 * @see OpenGLTab#init()
 	 */
 	void init() {
-		if (!hasStencilSupport()) return;
+        if (!hasStencilSupport()) {
+            return;
+        }
 		
 		GL.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		GL.glClearDepth(1.0f);

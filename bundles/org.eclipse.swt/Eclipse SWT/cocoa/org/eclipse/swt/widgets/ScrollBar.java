@@ -428,8 +428,12 @@ public boolean isVisible () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Selection, listener);
 	eventTable.unhook(SWT.DefaultSelection,listener);
 }
@@ -443,15 +447,21 @@ void register () {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (view != null) view.release();
+    if (view != null) {
+        view.release();
+    }
 	view = null;
 }
 
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (parent.horizontalBar == this) parent.horizontalBar = null;
-	if (parent.verticalBar == this) parent.verticalBar = null;
+    if (parent.horizontalBar == this) {
+        parent.horizontalBar = null;
+    }
+    if (parent.verticalBar == this) {
+        parent.verticalBar = null;
+    }
 }
 
 @Override
@@ -463,7 +473,9 @@ void releaseWidget () {
 @Override
 void sendSelection () {
 	NSWindow window = view.window ();
-	if (target == null) parent.getShell().deferFlushing();
+    if (target == null) {
+        parent.getShell().deferFlushing();
+    }
 	int value = 0;
 	if (target != null) {
 		view.sendAction(actionSelector, target);
@@ -474,7 +486,9 @@ void sendSelection () {
 	NSEvent nsEvent = NSApplication.sharedApplication().currentEvent();
 	if (nsEvent != null) {
 		point = nsEvent.locationInWindow();
-		if (nsEvent.window() == null) point = window.convertScreenToBase(point);
+        if (nsEvent.window() == null) {
+            point = window.convertScreenToBase(point);
+        }
 	} else {
 		point = window.mouseLocationOutsideOfEventStream();
 	}
@@ -516,7 +530,9 @@ void sendSelection () {
  */
 public void setIncrement (int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	increment = value;
 }
 
@@ -541,10 +557,14 @@ void setClipRegion (NSView view) {
 public void setEnabled (boolean enabled) {
 	checkWidget();
 	if (enabled) {
-		if ((state & DISABLED) == 0) return;
+        if ((state & DISABLED) == 0) {
+            return;
+        }
 		state &= ~DISABLED;
 	} else {
-		if ((state & DISABLED) != 0) return;
+        if ((state & DISABLED) != 0) {
+            return;
+        }
 		state |= DISABLED;
 	}
 	enableWidget (enabled);
@@ -571,8 +591,12 @@ void enableWidget (boolean enabled) {
  */
 public void setMaximum (int value) {
 	checkWidget();
-	if (value < 0) return;
-	if (value <= minimum) return;
+    if (value < 0) {
+        return;
+    }
+    if (value <= minimum) {
+        return;
+    }
 	if (value - minimum < thumb) {
 		thumb = value - minimum;
 	}
@@ -596,8 +620,12 @@ public void setMaximum (int value) {
  */
 public void setMinimum (int value) {
 	checkWidget();
-	if (value < 0) return;
-	if (value >= maximum) return;
+    if (value < 0) {
+        return;
+    }
+    if (value >= maximum) {
+        return;
+    }
 	if (maximum - value < thumb) {
 		thumb = maximum - value;
 	}
@@ -621,7 +649,9 @@ public void setMinimum (int value) {
  */
 public void setPageIncrement (int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	pageIncrement = value;
 }
 
@@ -661,7 +691,9 @@ public void setSelection (int selection) {
  */
 public void setThumb (int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	value = Math.min (value, maximum - minimum);
 	updateBar(getSelection(), minimum, maximum, value);
 	this.thumb = value;
@@ -690,11 +722,21 @@ public void setThumb (int value) {
  */
 public void setValues (int selection, int minimum, int maximum, int thumb, int increment, int pageIncrement) {
 	checkWidget();
-	if (minimum < 0) return;
-	if (maximum < 0) return;
-	if (thumb < 1) return;
-	if (increment < 1) return;
-	if (pageIncrement < 1) return;
+    if (minimum < 0) {
+        return;
+    }
+    if (maximum < 0) {
+        return;
+    }
+    if (thumb < 1) {
+        return;
+    }
+    if (increment < 1) {
+        return;
+    }
+    if (pageIncrement < 1) {
+        return;
+    }
 	this.thumb = thumb = Math.min (thumb, maximum - minimum);
 	this.maximum = maximum;
 	this.minimum = minimum;

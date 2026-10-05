@@ -95,7 +95,9 @@ public class Bug508245_TableSelectionListener {
 		});
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

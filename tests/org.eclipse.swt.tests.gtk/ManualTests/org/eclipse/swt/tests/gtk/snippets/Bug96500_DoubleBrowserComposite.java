@@ -39,9 +39,11 @@ public class Bug96500_DoubleBrowserComposite {
 		button.setText("Button");
 		
 		shell.open();
-		while (!shell.isDisposed())
-			if (!display.readAndDispatch())
-				display.sleep();
+        while (!shell.isDisposed()) {
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
+        }
 		display.dispose();
 	}
 }

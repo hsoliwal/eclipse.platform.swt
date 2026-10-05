@@ -32,8 +32,12 @@ final class VirtualSelectionModel {
 	}
 
 	void setLogicalCount (int count) {
-		if (count < 0) throw new IllegalArgumentException ("negative logical count");
-		if (count == logicalCount) return;
+        if (count < 0) {
+            throw new IllegalArgumentException("negative logical count");
+        }
+        if (count == logicalCount) {
+            return;
+        }
 		if (count < logicalCount) {
 			remove (count, logicalCount - count);
 			return;
@@ -57,26 +61,40 @@ final class VirtualSelectionModel {
 
 	void setSelected (int index, boolean selected) {
 		checkIndex (index);
-		if (selected == isSelected (index)) return;
+        if (selected == isSelected(index)) {
+            return;
+        }
 		if (allSelected) {
-			if (selected) removeRange (index, index + 1);
-			else addRange (index, index + 1);
+            if (selected) {
+                removeRange(index, index + 1);
+            } else {
+                addRange(index, index + 1);
+            }
 		} else {
-			if (selected) addRange (index, index + 1);
-			else removeRange (index, index + 1);
+            if (selected) {
+                addRange(index, index + 1);
+            } else {
+                removeRange(index, index + 1);
+            }
 		}
 	}
 
 	void selectRange (int start, int endExclusive) {
 		checkRange (start, endExclusive);
-		if (allSelected) removeRange (start, endExclusive);
-		else addRange (start, endExclusive);
+        if (allSelected) {
+            removeRange(start, endExclusive);
+        } else {
+            addRange(start, endExclusive);
+        }
 	}
 
 	void deselectRange (int start, int endExclusive) {
 		checkRange (start, endExclusive);
-		if (allSelected) addRange (start, endExclusive);
-		else removeRange (start, endExclusive);
+        if (allSelected) {
+            addRange(start, endExclusive);
+        } else {
+            removeRange(start, endExclusive);
+        }
 	}
 
 	void clear () {
@@ -91,7 +109,9 @@ final class VirtualSelectionModel {
 
 	int selectedCount () {
 		long represented = 0;
-		for (int i = 0; i < rangeCount; i++) represented += ends [i] - starts [i];
+        for (int i = 0; i < rangeCount; i++) {
+            represented += ends [i] - starts [i];
+        }
 		long selected = allSelected ? (long) logicalCount - represented : represented;
 		return (int) selected;
 	}
@@ -102,22 +122,32 @@ final class VirtualSelectionModel {
 		int offset = 0;
 		if (!allSelected) {
 			for (int i = 0; i < rangeCount; i++) {
-				for (int value = starts [i]; value < ends [i]; value++) result [offset++] = value;
+                for (int value = starts [i]; value < ends [i]; value++) {
+                    result [offset++] = value;
+                }
 			}
 			return result;
 		}
 		int range = 0;
 		for (int value = 0; value < logicalCount; value++) {
-			while (range < rangeCount && ends [range] <= value) range++;
-			if (range < rangeCount && starts [range] <= value && value < ends [range]) continue;
+            while (range < rangeCount && ends [range] <= value) {
+                range++;
+            }
+            if (range < rangeCount && starts [range] <= value && value < ends [range]) {
+                continue;
+            }
 			result [offset++] = value;
 		}
 		return result;
 	}
 
 	void insert (int index, int count) {
-		if (count < 0 || index < 0 || index > logicalCount) throw new IllegalArgumentException ("invalid insert");
-		if (count == 0) return;
+        if (count < 0 || index < 0 || index > logicalCount) {
+            throw new IllegalArgumentException("invalid insert");
+        }
+        if (count == 0) {
+            return;
+        }
 		VirtualSelectionModel shifted = new VirtualSelectionModel ();
 		shifted.logicalCount = Math.addExact (logicalCount, count);
 		shifted.allSelected = allSelected;
@@ -132,20 +162,28 @@ final class VirtualSelectionModel {
 				shifted.addRange (index + count, end + count);
 			}
 		}
-		if (allSelected) shifted.addRange (index, index + count);
+        if (allSelected) {
+            shifted.addRange(index, index + count);
+        }
 		copyFrom (shifted);
 	}
 
 	void remove (int index, int count) {
-		if (count < 0 || index < 0 || index > logicalCount - count) throw new IllegalArgumentException ("invalid remove");
-		if (count == 0) return;
+        if (count < 0 || index < 0 || index > logicalCount - count) {
+            throw new IllegalArgumentException("invalid remove");
+        }
+        if (count == 0) {
+            return;
+        }
 		int endRemoved = index + count;
 		VirtualSelectionModel shifted = new VirtualSelectionModel ();
 		shifted.logicalCount = logicalCount - count;
 		shifted.allSelected = allSelected;
 		for (int i = 0; i < rangeCount; i++) {
 			int start = starts [i], end = ends [i];
-			if (start < index) shifted.addRange (start, Math.min (end, index));
+            if (start < index) {
+                shifted.addRange(start, Math.min(end, index));
+            }
 			if (end > endRemoved) {
 				shifted.addRange (Math.max (start, endRemoved) - count, end - count);
 			}
@@ -170,9 +208,13 @@ final class VirtualSelectionModel {
 	}
 
 	private void addRange (int start, int endExclusive) {
-		if (start >= endExclusive) return;
+        if (start >= endExclusive) {
+            return;
+        }
 		int first = 0;
-		while (first < rangeCount && ends [first] < start) first++;
+        while (first < rangeCount && ends [first] < start) {
+            first++;
+        }
 		int mergedStart = start, mergedEnd = endExclusive;
 		int last = first;
 		while (last < rangeCount && starts [last] <= mergedEnd) {
@@ -190,7 +232,9 @@ final class VirtualSelectionModel {
 	}
 
 	private void removeRange (int start, int endExclusive) {
-		if (start >= endExclusive || rangeCount == 0) return;
+        if (start >= endExclusive || rangeCount == 0) {
+            return;
+        }
 		int [] nextStarts = new int [Math.max (4, rangeCount * 2)];
 		int [] nextEnds = new int [nextStarts.length];
 		int nextCount = 0;
@@ -231,7 +275,9 @@ final class VirtualSelectionModel {
 	}
 
 	private void ensureCapacity (int required) {
-		if (required <= starts.length) return;
+        if (required <= starts.length) {
+            return;
+        }
 		int next = Math.max (required, Math.max (4, starts.length * 3 / 2));
 		starts = Arrays.copyOf (starts, next);
 		ends = Arrays.copyOf (ends, next);
@@ -246,7 +292,9 @@ final class VirtualSelectionModel {
 	}
 
 	private void checkIndex (int index) {
-		if (index < 0 || index >= logicalCount) throw new IllegalArgumentException ("index outside logical model");
+        if (index < 0 || index >= logicalCount) {
+            throw new IllegalArgumentException("index outside logical model");
+        }
 	}
 
 	private void checkRange (int start, int endExclusive) {

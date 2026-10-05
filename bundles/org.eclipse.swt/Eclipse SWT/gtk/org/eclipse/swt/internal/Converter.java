@@ -129,7 +129,9 @@ public final class Converter {
 public static char [] mbcsToWcs (byte [] buffer) {
 	long [] items_written = new long [1];
 	long ptr = OS.g_utf8_to_utf16 (buffer, buffer.length, null, items_written, null);
-	if (ptr == 0) return EmptyCharArray;
+    if (ptr == 0) {
+        return EmptyCharArray;
+    }
 	int length = (int)items_written [0];
 	char [] chars = new char [length];
 	C.memmove (chars, ptr, length * 2);
@@ -207,7 +209,9 @@ public static byte [] wcsToMbcs (char [] chars, boolean terminate) {
 	* when it finds the first NULL.
 	*/
 	long ptr = OS.g_utf16_to_utf8 (chars, chars.length, items_read, items_written, null);
-	if (ptr == 0) return terminate ? NullByteArray : EmptyByteArray;
+    if (ptr == 0) {
+        return terminate ? NullByteArray : EmptyByteArray;
+    }
 	int written = (int)items_written [0];
 	byte [] bytes = new byte [written + (terminate ? 1 : 0)];
 	C.memmove (bytes, ptr, written);
@@ -225,9 +229,13 @@ public static byte [] wcsToMbcs (char [] chars, boolean terminate) {
  */
 public static char wcsToMbcs (char ch) {
 	int key = ch & 0xFFFF;
-	if (key <= 0x7F) return ch;
+    if (key <= 0x7F) {
+        return ch;
+    }
 	byte [] buffer = wcsToMbcs (new char [] {ch}, false);
-	if (buffer.length == 1) return (char) buffer [0];
+    if (buffer.length == 1) {
+        return (char) buffer [0];
+    }
 	if (buffer.length == 2) {
 		return (char) (((buffer [0] & 0xFF) << 8) | (buffer [1] & 0xFF));
 	}
@@ -242,7 +250,9 @@ public static char wcsToMbcs (char ch) {
  */
 public static char mbcsToWcs (char ch) {
 	int key = ch & 0xFFFF;
-	if (key <= 0x7F) return ch;
+    if (key <= 0x7F) {
+        return ch;
+    }
 	byte [] buffer;
 	if (key <= 0xFF) {
 		buffer = new byte [1];
@@ -253,7 +263,9 @@ public static char mbcsToWcs (char ch) {
 		buffer [1] = (byte) (key & 0xFF);
 	}
 	char [] result = mbcsToWcs (buffer);
-	if (result.length == 0) return 0;
+    if (result.length == 0) {
+        return 0;
+    }
 	return result [0];
 }
 
@@ -312,8 +324,9 @@ public static String byteToStringViaHeuristic(byte [] bytes) {
 			double nullBytePercentageForUtf16 = 0.01;  // if more than this % null bytes, then it's probably utf-16.
 			int nullCount = 0;
 			for (byte b : bytes) {
-				if (b == 0)
-					nullCount++;
+                if (b == 0) {
+                    nullCount++;
+                }
 			}
 			double nullPercentage = (double) nullCount / (double) bytes.length;
 			if (nullPercentage > nullBytePercentageForUtf16) {

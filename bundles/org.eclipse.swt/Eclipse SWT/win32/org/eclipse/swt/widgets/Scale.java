@@ -136,7 +136,9 @@ public void addSelectionListener(SelectionListener listener) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	return OS.CallWindowProc (TrackBarProc, hwnd, msg, wParam, lParam);
 }
 
@@ -161,8 +163,12 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		width += (rect.left * 2) + scrollX + (scrollX / 3);
 		height += getSystemMetrics (OS.SM_CYVSCROLL) * 10;
 	}
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x + (border * 2);
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y + (border * 2);
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x + (border * 2);
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y + (border * 2);
+    }
 	return new Point (width, height);
 }
 
@@ -279,8 +285,12 @@ public int getSelection () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -356,10 +366,14 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean 
  */
 public void setIncrement (int increment) {
 	checkWidget ();
-	if (increment < 1) return;
+    if (increment < 1) {
+        return;
+    }
 	int minimum = (int)OS.SendMessage (handle, OS.TBM_GETRANGEMIN, 0, 0);
 	int maximum = (int)OS.SendMessage (handle, OS.TBM_GETRANGEMAX, 0, 0);
-	if (increment > maximum - minimum) return;
+    if (increment > maximum - minimum) {
+        return;
+    }
 	OS.SendMessage (handle, OS.TBM_SETLINESIZE, 0, increment);
 }
 
@@ -420,10 +434,14 @@ public void setMinimum (int value) {
  */
 public void setPageIncrement (int pageIncrement) {
 	checkWidget ();
-	if (pageIncrement < 1) return;
+    if (pageIncrement < 1) {
+        return;
+    }
 	int minimum = (int)OS.SendMessage (handle, OS.TBM_GETRANGEMIN, 0, 0);
 	int maximum = (int)OS.SendMessage (handle, OS.TBM_GETRANGEMAX, 0, 0);
-	if (pageIncrement > maximum - minimum) return;
+    if (pageIncrement > maximum - minimum) {
+        return;
+    }
 	OS.SendMessage (handle, OS.TBM_SETPAGESIZE, 0, pageIncrement);
 	OS.SendMessage (handle, OS.TBM_SETTICFREQ, pageIncrement, 0);
 }
@@ -447,7 +465,9 @@ public void setSelection (int value) {
 @Override
 int widgetStyle () {
 	int bits = super.widgetStyle () | OS.WS_TABSTOP | OS.TBS_BOTH | OS.TBS_AUTOTICKS;
-	if ((style & SWT.HORIZONTAL) != 0) return bits | OS.TBS_HORZ | OS.TBS_DOWNISLEFT;
+    if ((style & SWT.HORIZONTAL) != 0) {
+        return bits | OS.TBS_HORZ | OS.TBS_DOWNISLEFT;
+    }
 	return bits | OS.TBS_VERT;
 }
 
@@ -464,7 +484,9 @@ long windowProc () {
 @Override
 LRESULT WM_KEYDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_KEYDOWN (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	switch ((int)wParam) {
 		case OS.VK_LEFT:
 		case OS.VK_RIGHT:
@@ -488,7 +510,9 @@ LRESULT WM_KEYDOWN (long wParam, long lParam) {
 @Override
 LRESULT WM_MOUSEWHEEL (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSEWHEEL (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Bug in Windows.  When a track bar slider is changed
 	* from WM_MOUSEWHEEL, it does not always send either
@@ -516,7 +540,9 @@ LRESULT WM_MOUSEWHEEL (long wParam, long lParam) {
 
 @Override
 LRESULT WM_PAINT (long wParam, long lParam) {
-	if ((state & DISPOSE_SENT) != 0) return LRESULT.ZERO;
+    if ((state & DISPOSE_SENT) != 0) {
+        return LRESULT.ZERO;
+    }
 
 	/*
 	* Bug in Windows.  For some reason, when WM_CTLCOLORSTATIC
@@ -531,7 +557,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 	boolean fixPaint = findBackgroundControl () != null || findThemeControl () != null;
 	if (fixPaint) {
 		boolean redraw = getDrawing () && OS.IsWindowVisible (handle);
-		if (redraw) OS.SendMessage (handle, OS.WM_SETREDRAW, 0, 0);
+        if (redraw) {
+            OS.SendMessage(handle, OS.WM_SETREDRAW, 0, 0);
+        }
 		ignoreResize = true;
 		OS.SendMessage (handle, OS.WM_SIZE, 0, 0);
 		ignoreResize = false;
@@ -545,7 +573,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 
 @Override
 LRESULT WM_SIZE (long wParam, long lParam) {
-	if (ignoreResize) return null;
+    if (ignoreResize) {
+        return null;
+    }
 	return super.WM_SIZE (wParam, lParam);
 }
 

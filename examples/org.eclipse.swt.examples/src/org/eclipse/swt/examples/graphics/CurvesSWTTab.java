@@ -101,11 +101,13 @@ public boolean getDoubleBuffered() {
 
 @Override
 public void dispose() {
-	if (mouseListener != null)
-		example.canvas.removeMouseListener(mouseListener);
+    if (mouseListener != null) {
+        example.canvas.removeMouseListener(mouseListener);
+    }
 
-	if (mouseMoveListener != null)
-		example.canvas.removeMouseMoveListener(mouseMoveListener);
+    if (mouseMoveListener != null) {
+        example.canvas.removeMouseMoveListener(mouseMoveListener);
+    }
 
 	cursor = null;
 }
@@ -258,22 +260,30 @@ public void createControlPanel(Composite parent) {
 			} else {
 				example.canvas.setCursor(null);
 			}
-			if (sLeftPtMoved)
-				sLeftPtMoved = false;
-			if (sRightPtMoved)
-				sRightPtMoved = false;
-			if (wPt1Moved)
-				wPt1Moved = false;
-			if (wPt2Moved)
-				wPt2Moved = false;
-			if (tTopPt1Moved)
-				tTopPt1Moved = false;
-			if (tTopPt2Moved)
-				tTopPt2Moved = false;
-			if (tBotPt1Moved)
-				tBotPt1Moved = false;
-			if (tBotPt2Moved)
-				tBotPt2Moved = false;
+            if (sLeftPtMoved) {
+                sLeftPtMoved = false;
+            }
+            if (sRightPtMoved) {
+                sRightPtMoved = false;
+            }
+            if (wPt1Moved) {
+                wPt1Moved = false;
+            }
+            if (wPt2Moved) {
+                wPt2Moved = false;
+            }
+            if (tTopPt1Moved) {
+                tTopPt1Moved = false;
+            }
+            if (tTopPt2Moved) {
+                tTopPt2Moved = false;
+            }
+            if (tBotPt1Moved) {
+                tBotPt1Moved = false;
+            }
+            if (tBotPt2Moved) {
+                tBotPt2Moved = false;
+            }
 
 			example.redraw();
 		}
@@ -284,7 +294,9 @@ public void createControlPanel(Composite parent) {
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	Font font = new Font(device, getPlatformFont(), 16, SWT.ITALIC);

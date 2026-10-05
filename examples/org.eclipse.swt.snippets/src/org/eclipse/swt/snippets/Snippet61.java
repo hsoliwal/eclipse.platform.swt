@@ -45,14 +45,16 @@ public static void main (String [] args) {
 	}
 	tree.addListener (SWT.Selection, e -> {
 		String string = "";
-		for (TreeItem item : tree.getSelection ())
-			string += item + " ";
+        for (TreeItem item : tree.getSelection()) {
+            string += item + " ";
+        }
 		System.out.println ("Selection={" + string + "}");
 	});
 	tree.addListener (SWT.DefaultSelection, e -> {
 		String string = "";
-		for (TreeItem item : tree.getSelection ())
-			string += item + " ";
+        for (TreeItem item : tree.getSelection()) {
+            string += item + " ";
+        }
 		System.out.println ("DefaultSelection={" + string + "}");
 	});
 	tree.addListener (SWT.Expand, e -> System.out.println ("Expand={" + e.item + "}"));
@@ -61,7 +63,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

@@ -87,7 +87,9 @@ class WebKit extends WebBrowser {
 			NSURL url = NSURL.URLWithString (NSString.stringWith (CookieUrl));
 			NSArray cookies = storage.cookiesForURL (url);
 			int count = (int)cookies.count ();
-			if (count == 0) return;
+            if (count == 0) {
+                return;
+            }
 
 			NSString name = NSString.stringWith (CookieName);
 			for (int i = 0; i < count; i++) {
@@ -104,7 +106,9 @@ class WebKit extends WebBrowser {
 			NSMutableDictionary headers = NSMutableDictionary.dictionaryWithCapacity (1);
 			headers.setValue (NSString.stringWith (CookieValue), NSString.stringWith (HEADER_SETCOOKIE));
 			NSArray cookies = NSHTTPCookie.cookiesWithResponseHeaderFields (headers, url);
-			if (cookies.count () == 0) return;
+            if (cookies.count() == 0) {
+                return;
+            }
 			NSHTTPCookieStorage storage = NSHTTPCookieStorage.sharedHTTPCookieStorage ();
 			NSHTTPCookie cookie = new NSHTTPCookie (cookies.objectAtIndex (0));
 			storage.setCookie (cookie);
@@ -194,7 +198,9 @@ public void create (Composite parent, int style) {
 	browser.setData(WEBKIT_EVENTS_FIX_KEY);
 
 	WebView webView = (WebView)new WebView().alloc();
-	if (webView == null) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (webView == null) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	webView.initWithFrame(browser.view.frame(), null, null);
 	webView.setAutoresizingMask(OS.NSViewWidthSizable | OS.NSViewHeightSizable);
 	if (webView.respondsToSelector(OS.sel__setDashboardBehavior)) {
@@ -263,7 +269,9 @@ public void create (Composite parent, int style) {
 				}
 				functions = null;
 
-				if (preferences != null) preferences.release ();
+                if (preferences != null) {
+                    preferences.release();
+                }
 				preferences = null;
 				break;
 			}
@@ -303,9 +311,13 @@ static long browserProc(long id, long sel, long arg0) {
 	}
 
 	Display d = Display.getCurrent();
-	if (d == null || d.isDisposed()) return 0;
+    if (d == null || d.isDisposed()) {
+        return 0;
+    }
 	Widget widget = d.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	WebKit webKit = (WebKit)((Browser)widget).webBrowser;
 	if (sel == OS.sel_webViewShow_) {
 		webKit.webViewShow(arg0);
@@ -323,9 +335,13 @@ static long browserProc(long id, long sel, long arg0) {
 
 static long browserProc(long id, long sel, long arg0, long arg1) {
 	Display d = Display.getCurrent();
-	if (d == null || d.isDisposed()) return 0;
+    if (d == null || d.isDisposed()) {
+        return 0;
+    }
 	Widget widget = d.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	WebKit webKit = (WebKit)((Browser)widget).webBrowser;
 	if (sel == OS.sel_webView_didChangeLocationWithinPageForFrame_) {
 		webKit.webView_didChangeLocationWithinPageForFrame(arg0, arg1);
@@ -367,9 +383,13 @@ static long browserProc(long id, long sel, long arg0, long arg1) {
 
 static long browserProc(long id, long sel, long arg0, long arg1, long arg2) {
 	Display d = Display.getCurrent();
-	if (d == null || d.isDisposed()) return 0;
+    if (d == null || d.isDisposed()) {
+        return 0;
+    }
 	Widget widget = d.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	WebKit webKit = (WebKit)((Browser)widget).webBrowser;
 	if (sel == OS.sel_webView_didFailProvisionalLoadWithError_forFrame_) {
 		webKit.webView_didFailProvisionalLoadWithError_forFrame(arg0, arg1, arg2);
@@ -399,9 +419,13 @@ static long browserProc(long id, long sel, long arg0, long arg1, long arg2) {
 
 static long browserProc(long id, long sel, long arg0, long arg1, long arg2, long arg3) {
 	Display d = Display.getCurrent();
-	if (d == null || d.isDisposed()) return 0;
+    if (d == null || d.isDisposed()) {
+        return 0;
+    }
 	Widget widget = d.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	WebKit webKit = (WebKit)((Browser)widget).webBrowser;
 	if (sel == OS.sel_webView_resource_didFailLoadingWithError_fromDataSource_) {
 		webKit.webView_resource_didFailLoadingWithError_fromDataSource(arg0, arg1, arg2, arg3);
@@ -418,9 +442,13 @@ static long browserProc(long id, long sel, long arg0, long arg1, long arg2, long
 
 static long browserProc(long id, long sel, long arg0, long arg1, long arg2, long arg3, long arg4) {
 	Display d = Display.getCurrent();
-	if (d == null || d.isDisposed()) return 0;
+    if (d == null || d.isDisposed()) {
+        return 0;
+    }
 	Widget widget = d.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	WebKit webKit = (WebKit)((Browser)widget).webBrowser;
 	if (sel == OS.sel_webView_resource_willSendRequest_redirectResponse_fromDataSource_) {
 		return webKit.webView_resource_willSendRequest_redirectResponse_fromDataSource(arg0, arg1, arg2, arg3, arg4);
@@ -461,7 +489,9 @@ public boolean close () {
 }
 
 boolean close (boolean showPrompters) {
-	if (!jsEnabled) return true;
+    if (!jsEnabled) {
+        return true;
+    }
 
 	String functionName = EXECUTE_ID + "CLOSE"; // $NON-NLS-1$
 	StringBuilder buffer = new StringBuilder ("function "); // $NON-NLS-1$
@@ -481,7 +511,9 @@ boolean close (boolean showPrompters) {
 	execute (buffer.toString ());
 
 	Boolean result = (Boolean)evaluate ("return " + functionName +"(window);"); // $NON-NLS-1$ // $NON-NLS-2$
-	if (result == null) return false;
+    if (result == null) {
+        return false;
+    }
 	return result.booleanValue ();
 }
 
@@ -517,18 +549,26 @@ public String getBrowserType () {
 public String getText() {
 	WebFrame mainFrame = webView.mainFrame();
 	WebDataSource dataSource = mainFrame.dataSource();
-	if (dataSource == null) return "";	//$NON-NLS-1$
+    if (dataSource == null) {
+        return "";
+    }	//$NON-NLS-1$
 	WebDocumentRepresentation representation = dataSource.representation();
-	if (representation == null) return "";	//$NON-NLS-1$
+    if (representation == null) {
+        return "";
+    }	//$NON-NLS-1$
 	NSString source = representation.documentSource();
-	if (source == null) return "";	//$NON-NLS-1$
+    if (source == null) {
+        return "";
+    }	//$NON-NLS-1$
 	return source.getString();
 }
 
 @Override
 public String getUrl() {
-	/* WebKit auto-navigates to about:blank at startup */
-	if (url.length() == 0) return ABOUT_BLANK;
+    /* WebKit auto-navigates to about:blank at startup */
+    if (url.length() == 0) {
+        return ABOUT_BLANK;
+    }
 
 	return url;
 }
@@ -558,7 +598,9 @@ public boolean setText(String html, boolean trusted) {
 	boolean blankLoading = this.html != null;
 	this.html = html;
 	untrustedText = !trusted;
-	if (blankLoading) return true;
+    if (blankLoading) {
+        return true;
+    }
 
 	NSURL inURL = NSURL.URLWithString(NSString.stringWith (ABOUT_BLANK));
 	NSURLRequest request = NSURLRequest.requestWithURL(inURL);
@@ -641,7 +683,9 @@ void webView_didChangeLocationWithinPageForFrame(long sender, long frameID) {
 	NSURL url = request.URL();
 	NSString s = url.absoluteString();
 	int length = (int)s.length();
-	if (length == 0) return;
+    if (length == 0) {
+        return;
+    }
 	String url2 = s.getString();
 	/*
 	 * If the URI indicates that the page is being rendered from memory
@@ -698,13 +742,17 @@ void webView_didFailProvisionalLoadWithError_forFrame(long sender, long error, l
 
 	NSError nserror = new NSError(error);
 	long errorCode = nserror.code();
-	if (OS.NSURLErrorBadURL < errorCode) return;
+    if (OS.NSURLErrorBadURL < errorCode) {
+        return;
+    }
 
 	NSURL failingURL = null;
 	NSDictionary info = nserror.userInfo();
 	if (info != null) {
 		id id = info.valueForKey(NSString.stringWith("NSErrorFailingURLKey")); //$NON-NLS-1$
-		if (id != null) failingURL = new NSURL(id);
+        if (id != null) {
+            failingURL = new NSURL(id);
+        }
 	}
 
 	if (failingURL != null && OS.NSURLErrorServerCertificateNotYetValid <= errorCode && errorCode <= OS.NSURLErrorSecureConnectionFailed) {
@@ -734,10 +782,18 @@ void webView_didFailProvisionalLoadWithError_forFrame(long sender, long error, l
 				}
 			}
 
-			if (trustRef[0] != 0) OS.CFRelease(trustRef[0]);
-			if (policyRef[0] != 0) OS.CFRelease(policyRef[0]);
-			if (policySearch[0] != 0) OS.CFRelease(policySearch[0]);
-			if (success) return;
+            if (trustRef[0] != 0) {
+                OS.CFRelease(trustRef[0]);
+            }
+            if (policyRef[0] != 0) {
+                OS.CFRelease(policyRef[0]);
+            }
+            if (policySearch[0] != 0) {
+                OS.CFRelease(policySearch[0]);
+            }
+            if (success) {
+                return;
+            }
 		}
 	}
 
@@ -756,7 +812,9 @@ void webView_didFailProvisionalLoadWithError_forFrame(long sender, long error, l
 void createPanelDidEnd(long sheet, long returnCode, long contextInfo) {
 	NSURL failingURL = new NSURL(contextInfo);
 	failingURL.autorelease();
-	if (returnCode != OS.NSFileHandlingPanelOKButton) return;	/* nothing more to do */
+    if (returnCode != OS.NSFileHandlingPanelOKButton) {
+        return;
+    }	/* nothing more to do */
 
 	long method = OS.class_getClassMethod(OS.class_NSURLRequest, OS.sel_setAllowsAnyHTTPSCertificate);
 	if (method != 0) {
@@ -814,7 +872,9 @@ void webView_didFinishLoadForFrame(long sender, long frameID) {
 					for (int i = 0; i < titleListeners.length; i++) {
 						titleListeners[i].changed(newEvent);
 					}
-					if (browser.isDisposed()) return;
+                    if (browser.isDisposed()) {
+                        return;
+                    }
 				}
 			}
 
@@ -828,7 +888,9 @@ void webView_didFinishLoadForFrame(long sender, long frameID) {
 			}
 		}
 		loadingText = false;
-		if (browser.isDisposed()) return;
+        if (browser.isDisposed()) {
+            return;
+        }
 
 		/*
 		* Feature on WebKit.  The identifier is used here as a marker for the events
@@ -850,7 +912,9 @@ void webView_didFinishLoadForFrame(long sender, long frameID) {
 void hookDOMKeyListeners(long frameID) {
 	WebFrame frame = new WebFrame(frameID);
 	DOMDocument document = frame.DOMDocument();
-	if (document == null) return;
+    if (document == null) {
+        return;
+    }
 
 	NSString type = NSString.stringWith(DOMEVENT_KEYDOWN);
 	document.addEventListener(type, delegate, false);
@@ -862,7 +926,9 @@ void hookDOMKeyListeners(long frameID) {
 void hookDOMMouseListeners(long frameID) {
 	WebFrame frame = new WebFrame(frameID);
 	DOMDocument document = frame.DOMDocument();
-	if (document == null) return;
+    if (document == null) {
+        return;
+    }
 
 	NSString type = NSString.stringWith(DOMEVENT_MOUSEDOWN);
 	document.addEventListener(type, delegate, false);
@@ -911,7 +977,9 @@ void webView_didCommitLoadForFrame(long sender, long frameID) {
 	NSURL url = request.URL();
 	NSString s = url.absoluteString();
 	int length = (int)s.length();
-	if (length == 0) return;
+    if (length == 0) {
+        return;
+    }
 	String url2 = s.getString();
 	/*
 	 * If the URI indicates that the page is being rendered from memory
@@ -933,14 +1001,16 @@ void webView_didCommitLoadForFrame(long sender, long frameID) {
 		resourceCount = 0;
 		this.url = url2;
 
-		/*
-		* Each invocation of setText() causes webView_didCommitLoadForFrame to be invoked
-		* twice, once for the initial navigate to about:blank, and once for the auto-navigate
-		* to about:blank that WebKit does when loadHTMLString is invoked.  If this is the
-		* first webView_didCommitLoadForFrame callback received for a setText() invocation
-		* then do not send any events or re-install registered BrowserFunctions.
-		*/
-		if (url2.startsWith(ABOUT_BLANK) && html != null) return;
+        /*
+        * Each invocation of setText() causes webView_didCommitLoadForFrame to be invoked
+        * twice, once for the initial navigate to about:blank, and once for the auto-navigate
+        * to about:blank that WebKit does when loadHTMLString is invoked.  If this is the
+        * first webView_didCommitLoadForFrame callback received for a setText() invocation
+        * then do not send any events or re-install registered BrowserFunctions.
+        */
+        if (url2.startsWith(ABOUT_BLANK) && html != null) {
+            return;
+        }
 
 		/* re-install registered functions */
 		Iterator<BrowserFunction> elements = functions.values().iterator ();
@@ -957,7 +1027,9 @@ void webView_didCommitLoadForFrame(long sender, long frameID) {
 		for (int i = 0; i < progressListeners.length; i++) {
 			progressListeners[i].changed(progress);
 		}
-		if (browser.isDisposed()) return;
+        if (browser.isDisposed()) {
+            return;
+        }
 
 		StatusTextEvent statusText = new StatusTextEvent(browser);
 		statusText.display = display;
@@ -966,7 +1038,9 @@ void webView_didCommitLoadForFrame(long sender, long frameID) {
 		for (int i = 0; i < statusTextListeners.length; i++) {
 			statusTextListeners[i].changed(statusText);
 		}
-		if (browser.isDisposed()) return;
+        if (browser.isDisposed()) {
+            return;
+        }
 
 		hookDOMKeyListeners(frameID);
 	}
@@ -1115,7 +1189,9 @@ boolean showAuthenticationDialog (final String[] user, final String[] password, 
 	userLabel.setText (SWT.getMessage ("SWT_Username")); //$NON-NLS-1$
 
 	final Text userText = new Text (shell, SWT.BORDER);
-	if (user[0] != null) userText.setText (user[0]);
+    if (user[0] != null) {
+        userText.setText(user[0]);
+    }
 	data = new GridData ();
 	data.horizontalAlignment = GridData.FILL;
 	data.grabExcessHorizontalSpace = true;
@@ -1125,7 +1201,9 @@ boolean showAuthenticationDialog (final String[] user, final String[] password, 
 	passwordLabel.setText (SWT.getMessage ("SWT_Password")); //$NON-NLS-1$
 
 	final Text passwordText = new Text (shell, SWT.PASSWORD | SWT.BORDER);
-	if (password[0] != null) passwordText.setText (password[0]);
+    if (password[0] != null) {
+        passwordText.setText(password[0]);
+    }
 	data = new GridData ();
 	data.horizontalAlignment = GridData.FILL;
 	data.grabExcessHorizontalSpace = true;
@@ -1159,7 +1237,9 @@ boolean showAuthenticationDialog (final String[] user, final String[] password, 
 	shell.open ();
 	Display display = browser.getDisplay ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 
 	return result[0];
@@ -1174,13 +1254,17 @@ long webView_identifierForInitialRequest_fromDataSource(long sender, long reques
 	for (int i = 0; i < progressListeners.length; i++) {
 		progressListeners[i].changed(progress);
 	}
-	if (browser.isDisposed()) return 0;
+    if (browser.isDisposed()) {
+        return 0;
+    }
 
 	NSNumber identifier = NSNumber.numberWithInt(resourceCount++);
 	if (this.identifier == 0) {
 		WebDataSource dataSource = new WebDataSource(dataSourceID);
 		WebFrame frame = dataSource.webFrame();
-		if (frame.id == webView.mainFrame().id) this.identifier = identifier.id;
+        if (frame.id == webView.mainFrame().id) {
+            this.identifier = identifier.id;
+        }
 	}
 	return identifier.id;
 
@@ -1243,8 +1327,12 @@ void webViewShow(long sender) {
 	WindowEvent newEvent = new WindowEvent(browser);
 	newEvent.display = browser.getDisplay();
 	newEvent.widget = browser;
-	if (location != null) newEvent.location = location;
-	if (size != null) newEvent.size = size;
+    if (location != null) {
+        newEvent.location = location;
+    }
+    if (size != null) {
+        newEvent.size = size;
+    }
 	/*
 	* Feature in WebKit.  WebKit's tool bar contains
 	* the address bar.  The address bar is displayed
@@ -1337,7 +1425,9 @@ void webViewClose(long sender) {
 		closeWindowListeners[i].close(newEvent);
 	}
 	browser.dispose();
-	if (parent.isDisposed()) return;
+    if (parent.isDisposed()) {
+        return;
+    }
 	/*
 	* Feature on WebKit.  WebKit expects the application to
 	* create a new Window using the Objective C Cocoa API in response
@@ -1360,7 +1450,9 @@ long webView_contextMenuItemsForElement_defaultMenuItems(long sender, long eleme
 	event.y = pt.y;
 	browser.notifyListeners(SWT.MenuDetect, event);
 	Menu menu = browser.getMenu();
-	if (!event.doit) return 0;
+    if (!event.doit) {
+        return 0;
+    }
 	if (menu != null && !menu.isDisposed()) {
 		if (event.x != pt.x || event.y != pt.y) {
 			menu.setLocation(event.x, event.y);
@@ -1379,7 +1471,9 @@ void webView_setStatusBarVisible(long sender, boolean visible) {
 void webView_setStatusText(long sender, long textID) {
 	NSString text = new NSString(textID);
 	int length = (int)text.length();
-	if (length == 0) return;
+    if (length == 0) {
+        return;
+    }
 
 	StatusTextEvent statusText = new StatusTextEvent(browser);
 	statusText.display = browser.getDisplay();
@@ -1399,14 +1493,18 @@ void webView_setToolbarsVisible(long sender, boolean visible) {
 }
 
 void webView_mouseDidMoveOverElement_modifierFlags (long sender, long elementInformationID, long modifierFlags) {
-	if (elementInformationID == 0) return;
+    if (elementInformationID == 0) {
+        return;
+    }
 
 	NSString key = NSString.stringWith(WebElementLinkURLKey);
 	NSDictionary elementInformation = new NSDictionary(elementInformationID);
 	id value = elementInformation.valueForKey(key);
 	if (value == null) {
-		/* not currently over a link */
-		if (lastHoveredLinkURL == null) return;
+        /* not currently over a link */
+        if (lastHoveredLinkURL == null) {
+            return;
+        }
 		lastHoveredLinkURL = null;
 		StatusTextEvent statusText = new StatusTextEvent(browser);
 		statusText.display = browser.getDisplay();
@@ -1426,7 +1524,9 @@ void webView_mouseDidMoveOverElement_modifierFlags (long sender, long elementInf
 	} else {
 		urlString = url.getString();
 	}
-	if (urlString.equals(lastHoveredLinkURL)) return;
+    if (urlString.equals(lastHoveredLinkURL)) {
+        return;
+    }
 
 	lastHoveredLinkURL = urlString;
 	StatusTextEvent statusText = new StatusTextEvent(browser);
@@ -1447,7 +1547,9 @@ void webView_printFrameView (long sender, long frameViewID) {
 	}
 	NSPrintInfo info = NSPrintInfo.sharedPrintInfo();
 	NSPrintOperation operation = view.printOperationWithPrintInfo(info);
-	if (operation != null) operation.runOperation();
+    if (operation != null) {
+        operation.runOperation();
+    }
 }
 
 /* PolicyDelegate */
@@ -1679,12 +1781,14 @@ void handleEvent(long evtId) {
 			case 5: mouseEvent.stateMask |= SWT.BUTTON5; break;
 		}
 	} else if (DOMEVENT_MOUSEMOVE.equals (type)) {
-		/*
-		* Bug in WebKit.  Spurious and redundant mousemove events are received in
-		* various contexts, including following every MouseUp.  The workaround is
-		* to not fire MouseMove events whose x and y values match the last MouseMove
-		*/
-		if (mouseEvent.x == lastMouseMoveX && mouseEvent.y == lastMouseMoveY) return;
+        /*
+        * Bug in WebKit.  Spurious and redundant mousemove events are received in
+        * various contexts, including following every MouseUp.  The workaround is
+        * to not fire MouseMove events whose x and y values match the last MouseMove
+        */
+        if (mouseEvent.x == lastMouseMoveX && mouseEvent.y == lastMouseMoveY) {
+            return;
+        }
 		mouseEvent.type = SWT.MouseMove;
 		lastMouseMoveX = mouseEvent.x; lastMouseMoveY = mouseEvent.y;
 	}

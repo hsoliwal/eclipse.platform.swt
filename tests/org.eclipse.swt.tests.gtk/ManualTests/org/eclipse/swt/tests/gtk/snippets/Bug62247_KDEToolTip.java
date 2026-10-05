@@ -31,7 +31,9 @@ public static void main (String [] args) {
 	c.addListener(SWT.Paint, e -> System.out.println("Paint"));
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

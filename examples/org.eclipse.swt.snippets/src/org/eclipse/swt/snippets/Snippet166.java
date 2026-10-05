@@ -45,9 +45,15 @@ public static void main(String[] args) {
 	final Composite parent = new Composite(scrollComposite, SWT.NONE);
 	for(int i = 0; i <= 50; i++) {
 		Label label = new Label(parent, SWT.NONE);
-		if (i % 3 == 0) label.setImage(image1);
-		if (i % 3 == 1) label.setImage(image2);
-		if (i % 3 == 2) label.setImage(image3);
+        if (i % 3 == 0) {
+            label.setImage(image1);
+        }
+        if (i % 3 == 1) {
+            label.setImage(image2);
+        }
+        if (i % 3 == 2) {
+            label.setImage(image3);
+        }
 	}
 	RowLayout layout = new RowLayout(SWT.HORIZONTAL);
 	layout.wrap = true;

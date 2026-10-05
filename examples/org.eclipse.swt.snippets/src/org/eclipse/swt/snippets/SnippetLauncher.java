@@ -37,10 +37,14 @@ public class SnippetLauncher {
 		int count = 500;
 		if (hasSource) {
 			File [] files = sourceDir.listFiles();
-			if (files.length > 0) count = files.length;
+            if (files.length > 0) {
+                count = files.length;
+            }
 		}
 		for (int i = 1; i < count; i++) {
-			if (SnippetsConfig.isPrintingSnippet(i)) continue; // avoid printing to printer
+            if (SnippetsConfig.isPrintingSnippet(i)) {
+                continue;
+            } // avoid printing to printer
 			String className = "Snippet" + i;
 			Class<?> clazz = null;
 			try {

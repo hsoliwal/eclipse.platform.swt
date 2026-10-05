@@ -334,7 +334,9 @@ void createWidget (int index) {
 @Override
 void destroyWidget () {
 	long topHandle = topHandle ();
-	if (parent != null) parent.removeTooTip (this);
+    if (parent != null) {
+        parent.removeTooTip(this);
+    }
 	releaseHandle ();
 	if (topHandle != 0 && (state & HANDLE) != 0) {
 		if ((style & SWT.BALLOON) != 0) {
@@ -461,7 +463,9 @@ Point getSize (int maxWidth) {
 		messageHeight = h [0];
 	}
 	int height = 2 * BORDER + 2 * PADDING + messageHeight;
-	if (layoutText != 0) height += Math.max (IMAGE_SIZE, textHeight) + 2 * PADDING;
+    if (layoutText != 0) {
+        height += Math.max(IMAGE_SIZE, textHeight) + 2 * PADDING;
+    }
 	return new Point(width, height);
 }
 
@@ -500,7 +504,9 @@ public String getText () {
  */
 public boolean getVisible () {
 	checkWidget ();
-	if ((style & SWT.BALLOON) != 0) return GTK.gtk_widget_get_visible (handle);
+    if ((style & SWT.BALLOON) != 0) {
+        return GTK.gtk_widget_get_visible(handle);
+    }
 	return false;
 }
 
@@ -514,7 +520,9 @@ long gtk3_button_press_event (long widget, long event) {
 void drawTooltip (long cairo) {
 	int x = BORDER + PADDING;
 	int y = BORDER + PADDING;
-	if (cairo == 0) error (SWT.ERROR_NO_HANDLES);
+    if (cairo == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	int count = borderPolygon.length / 2;
 	if (count != 0) {
 		Cairo.cairo_set_line_width(cairo, 1);
@@ -525,7 +533,9 @@ void drawTooltip (long cairo) {
 		Cairo.cairo_close_path(cairo);
 		Cairo.cairo_stroke(cairo);
 	}
-	if (spikeAbove) y += TIP_HEIGHT;
+    if (spikeAbove) {
+        y += TIP_HEIGHT;
+    }
 	if (layoutText != 0) {
 		byte[] buffer = null;
 		int id = style & (SWT.ICON_ERROR | SWT.ICON_INFORMATION | SWT.ICON_WARNING);
@@ -568,7 +578,9 @@ void drawTooltip (long cairo) {
 
 @Override
 long gtk_draw (long widget, long cairo) {
-	if ((state & OBSCURED) != 0) return 0;
+    if ((state & OBSCURED) != 0) {
+        return 0;
+    }
 	drawTooltip (cairo);
 	return 0;
 }
@@ -587,8 +599,12 @@ long gtk_size_allocate (long widget, long allocation) {
 	GTK.gtk_widget_get_allocation (widget, widgetAllocation);
 	int w = widgetAllocation.width;
 	int h = widgetAllocation.height;
-	if (dest.height < y + h) y -= h;
-	if (dest.width < x + w) x -= w;
+    if (dest.height < y + h) {
+        y -= h;
+    }
+    if (dest.width < x + w) {
+        x -= w;
+    }
 	GTK3.gtk_window_move (widget, x, y);
 	return 0;
 }
@@ -633,11 +649,17 @@ public boolean isVisible () {
 void releaseWidget () {
 	super.releaseWidget ();
 	setVisible(false);
-	if (layoutText != 0) OS.g_object_unref (layoutText);
+    if (layoutText != 0) {
+        OS.g_object_unref(layoutText);
+    }
 	layoutText = 0;
-	if (layoutMessage != 0) OS.g_object_unref (layoutMessage);
+    if (layoutMessage != 0) {
+        OS.g_object_unref(layoutMessage);
+    }
 	layoutMessage = 0;
-	if (timerId != 0) OS.g_source_remove(timerId);
+    if (timerId != 0) {
+        OS.g_source_remove(timerId);
+    }
 	timerId = 0;
 	text = null;
 	message = null;
@@ -663,8 +685,12 @@ void releaseWidget () {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection, listener);
 }
@@ -711,7 +737,9 @@ public void setLocation (int x, int y) {
 	this.x = x;
 	this.y = y;
 	if ((style & SWT.BALLOON) != 0) {
-		if (GTK.gtk_widget_get_visible (handle)) configure ();
+        if (GTK.gtk_widget_get_visible(handle)) {
+            configure();
+        }
 	}
 }
 /**
@@ -738,7 +766,9 @@ public void setLocation (int x, int y) {
  */
 public void setLocation (Point location) {
 	checkWidget ();
-	if (location == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (location == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setLocation (location.x, location.y);
 }
 
@@ -757,10 +787,16 @@ public void setLocation (Point location) {
  */
 public void setMessage (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	message = string;
-	if ((style & SWT.BALLOON) == 0) return;
-	if (layoutMessage != 0) OS.g_object_unref (layoutMessage);
+    if ((style & SWT.BALLOON) == 0) {
+        return;
+    }
+    if (layoutMessage != 0) {
+        OS.g_object_unref(layoutMessage);
+    }
 	layoutMessage = 0;
 	if (message.length () != 0) {
 		byte [] buffer = Converter.wcsToMbcs (message, true);
@@ -768,7 +804,9 @@ public void setMessage (String string) {
 		OS.pango_layout_set_auto_dir (layoutMessage, false);
 		OS.pango_layout_set_wrap (layoutMessage, OS.PANGO_WRAP_WORD_CHAR);
 	}
-	if (GTK.gtk_widget_get_visible (handle)) configure ();
+    if (GTK.gtk_widget_get_visible(handle)) {
+        configure();
+    }
 }
 
 /**
@@ -786,10 +824,16 @@ public void setMessage (String string) {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	text = string;
-	if ((style & SWT.BALLOON) == 0) return;
-	if (layoutText != 0) OS.g_object_unref (layoutText);
+    if ((style & SWT.BALLOON) == 0) {
+        return;
+    }
+    if (layoutText != 0) {
+        OS.g_object_unref(layoutText);
+    }
 	layoutText = 0;
 	if (text.length () != 0) {
 		byte [] buffer = Converter.wcsToMbcs (text, true);
@@ -807,7 +851,9 @@ public void setText (String string) {
 		OS.pango_attr_list_unref (attrList);
 		OS.pango_layout_set_wrap (layoutText, OS.PANGO_WRAP_WORD_CHAR);
 	}
-	if (GTK.gtk_widget_get_visible (handle)) configure ();
+    if (GTK.gtk_widget_get_visible(handle)) {
+        configure();
+    }
 }
 
 /**
@@ -828,7 +874,9 @@ public void setText (String string) {
  */
 public void setVisible (boolean visible) {
 	checkWidget ();
-	if (timerId != 0) OS.g_source_remove(timerId);
+    if (timerId != 0) {
+        OS.g_source_remove(timerId);
+    }
 	timerId = 0;
 	if (visible) {
 		if ((style & SWT.BALLOON) != 0) {
@@ -837,7 +885,9 @@ public void setVisible (boolean visible) {
 		} else {
 			long vboxHandle = parent.vboxHandle;
 			StringBuilder string = new StringBuilder (text);
-			if (text.length () > 0) string.append ("\n\n");
+            if (text.length() > 0) {
+                string.append("\n\n");
+            }
 			string.append (message);
 			byte [] buffer = Converter.wcsToMbcs (string.toString(), true);
 			GTK.gtk_widget_set_tooltip_text(vboxHandle, buffer);

@@ -151,8 +151,12 @@ final class JPEGFrameHeader extends JPEGVariableSizeSegment {
 			reference[ofs] = (byte)(i + 1);
 			reference[ofs + 1] = (byte)(hi * 16 + vi);
 			reference[ofs + 2] = (byte)(compParam[0]);
-			if (hi > hmax) hmax = hi;
-			if (vi > vmax) vmax = vi;
+            if (hi > hmax) {
+                hmax = hi;
+            }
+            if (vi > vmax) {
+                vmax = vi;
+            }
 		}
 		int x = getSamplesPerLine();
 		int y = getNumberOfLines();

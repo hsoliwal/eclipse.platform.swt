@@ -420,8 +420,12 @@ public Image(Device device, Image srcImage, int flag) {
 	super(device);
 	device = this.device;
 	ImageHandle imageMetadata;
-	if (srcImage == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (srcImage.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (srcImage == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (srcImage.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.type = srcImage.type;
 	this.styleFlag = srcImage.styleFlag | flag;
 	this.imageProvider = srcImage.imageProvider.createCopy(this);
@@ -446,7 +450,9 @@ public Image(Device device, Image srcImage, int flag) {
 										OS.CreateCompatibleBitmap(hdcSource, rect.width,
 												bm.bmBits != 0 ? -rect.height : rect.height),
 										imageHandle.zoom(), imageHandle.transparentPixel()));
-						if (imageMetadata.handle() == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                        if (imageMetadata.handle() == 0) {
+                            SWT.error(SWT.ERROR_NO_HANDLES);
+                        }
 						long hOldDest = OS.SelectObject(hdcDest, imageMetadata.handle());
 						OS.BitBlt(hdcDest, 0, 0, rect.width, rect.height, hdcSource, 0, 0, OS.SRCCOPY);
 						OS.SelectObject(hdcSource, hOldSrc);
@@ -465,7 +471,9 @@ public Image(Device device, Image srcImage, int flag) {
 								() -> new DestroyableImageHandle(
 										OS.CopyImage(imageHandle.handle(), OS.IMAGE_ICON, rect.width, rect.height, 0),
 										imageHandle.zoom(), imageHandle.transparentPixel()));
-						if (imageMetadata.handle() == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                        if (imageMetadata.handle() == 0) {
+                            SWT.error(SWT.ERROR_NO_HANDLES);
+                        }
 					}
 					break;
 				default:
@@ -549,7 +557,9 @@ public Image(Device device, Image srcImage, int flag) {
 @Deprecated(since = "2025-06", forRemoval = true)
 public Image(Device device, Rectangle bounds) {
 	super(device);
-	if (bounds == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (bounds == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.imageProvider = new PlainImageProviderWrapper(bounds.width, bounds.height);
 	init();
 	this.device.registerResourceWithZoomSupport(this);
@@ -580,7 +590,9 @@ public Image(Device device, Rectangle bounds) {
  */
 public Image(Device device, ImageData data) {
 	super(device);
-	if (data == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (data == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.imageProvider = new PlainImageDataProviderWrapper(data);
 	init();
 	this.device.registerResourceWithZoomSupport(this);
@@ -588,7 +600,9 @@ public Image(Device device, ImageData data) {
 
 private Image(Device device, ImageData data, int zoom) {
 	super(device);
-	if (data == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (data == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.imageProvider = new PlainImageDataProviderWrapper(data, zoom);
 	init();
 	this.device.registerResourceWithZoomSupport(this);
@@ -626,8 +640,12 @@ private Image(Device device, ImageData data, int zoom) {
  */
 public Image(Device device, ImageData source, ImageData mask) {
 	super(device);
-	if (source == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (mask == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (source == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (mask == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (source.width != mask.width || source.height != mask.height) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
@@ -691,7 +709,9 @@ public Image(Device device, ImageData source, ImageData mask) {
  */
 public Image (Device device, InputStream stream) {
 	super(device);
-	if (stream == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (stream == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.imageProvider = new ImageDataLoaderStreamProviderWrapper(stream);
 	init();
 	this.device.registerResourceWithZoomSupport(this);
@@ -731,7 +751,9 @@ public Image (Device device, InputStream stream) {
  */
 public Image (Device device, String filename) {
 	super(device);
-	if (filename == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (filename == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.imageProvider = new ImageFileNameProviderWrapper(zoom -> {
 		if (zoom == 100) {
 			return filename;
@@ -888,14 +910,20 @@ private ImageData applyDisableImageData(ImageData data, int height, int width) {
 	newData.alphaData = data.alphaData;
 	newData.maskData = data.maskData;
 	newData.maskPad = data.maskPad;
-	if (data.transparentPixel != -1) newData.transparentPixel = 0;
+    if (data.transparentPixel != -1) {
+        newData.transparentPixel = 0;
+    }
 
 	/* Convert the pixels. */
 	int[] scanline = new int[width];
 	int[] maskScanline = null;
 	ImageData mask = null;
-	if (data.maskData != null) mask = data.getTransparencyMask();
-	if (mask != null) maskScanline = new int[width];
+    if (data.maskData != null) {
+        mask = data.getTransparencyMask();
+    }
+    if (mask != null) {
+        maskScanline = new int[width];
+    }
 	int redMask = palette.redMask;
 	int greenMask = palette.greenMask;
 	int blueMask = palette.blueMask;
@@ -904,7 +932,9 @@ private ImageData applyDisableImageData(ImageData data, int height, int width) {
 	int blueShift = palette.blueShift;
 	for (int y=0; y<height; y++) {
 		data.getPixels(0, y, width, scanline, 0);
-		if (mask != null) mask.getPixels(0, y, width, maskScanline, 0);
+        if (mask != null) {
+            mask.getPixels(0, y, width, maskScanline, 0);
+        }
 		for (int x=0; x<width; x++) {
 			int pixel = scanline[x];
 			if (!((data.transparentPixel != -1 && pixel == data.transparentPixel) || (mask != null && maskScanline[x] == 0))) {
@@ -958,7 +988,9 @@ private ImageData applyGrayImageData(ImageData data, int pHeight, int pWidth) {
 		newData.alphaData = data.alphaData;
 		newData.maskData = data.maskData;
 		newData.maskPad = data.maskPad;
-		if (data.transparentPixel != -1) newData.transparentPixel = 254;
+        if (data.transparentPixel != -1) {
+            newData.transparentPixel = 254;
+        }
 
 		/* Convert the pixels. */
 		int[] scanline = new int[pWidth];
@@ -981,7 +1013,9 @@ private ImageData applyGrayImageData(ImageData data, int pHeight, int pWidth) {
 					int blue = pixel & blueMask;
 					blue = (blueShift < 0) ? blue >>> -blueShift : blue << blueShift;
 					int intensity = (red+red+green+green+green+green+green+blue) >> 3;
-					if (newData.transparentPixel == intensity) intensity = 255;
+                    if (newData.transparentPixel == intensity) {
+                        intensity = 255;
+                    }
 					newData.data[offset] = (byte)intensity;
 				} else {
 					newData.data[offset] = (byte)254;
@@ -1085,16 +1119,24 @@ GdipImage createGdipImageFromHandle(ImageHandle imageHandle) {
 				long memHdc;
 				{
 					long hDC = device.internal_new_GC(null);
-					if (hDC == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                    if (hDC == 0) {
+                        SWT.error(SWT.ERROR_NO_HANDLES);
+                    }
 					srcHdc = OS.CreateCompatibleDC(hDC);
 					memHdc = OS.CreateCompatibleDC(hDC);
 					device.internal_dispose_GC(hDC, null);
 				}
-				if (srcHdc == 0) SWT.error(SWT.ERROR_NO_HANDLES);
-				if (memHdc == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                if (srcHdc == 0) {
+                    SWT.error(SWT.ERROR_NO_HANDLES);
+                }
+                if (memHdc == 0) {
+                    SWT.error(SWT.ERROR_NO_HANDLES);
+                }
 				long oldSrcBitmap = OS.SelectObject(srcHdc, handle);
 				long memDib = createDIB(imgWidth, imgHeight, 32);
-				if (memDib == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                if (memDib == 0) {
+                    SWT.error(SWT.ERROR_NO_HANDLES);
+                }
 				long oldMemBitmap = OS.SelectObject(memHdc, memDib);
 				BITMAP dibBM = new BITMAP();
 				OS.GetObject(memDib, BITMAP.sizeof, dibBM);
@@ -1102,7 +1144,9 @@ GdipImage createGdipImageFromHandle(ImageHandle imageHandle) {
 				OS.BitBlt(memHdc, 0, 0, imgWidth, imgHeight, srcHdc, 0, 0, OS.SRCCOPY);
 				long hHeap = OS.GetProcessHeap();
 				long pixels = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, sizeInBytes);
-				if (pixels == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                if (pixels == 0) {
+                    SWT.error(SWT.ERROR_NO_HANDLES);
+                }
 				byte red = 0, green = 0, blue = 0;
 				if (hasAlpha) {
 					OS.MoveMemory(pixels, bm.bmBits, sizeInBytes);
@@ -1175,7 +1219,9 @@ GdipImage createGdipImageFromHandle(ImageHandle imageHandle) {
 			ICONINFO iconInfo = new ICONINFO();
 			OS.GetIconInfo(handle, iconInfo);
 			long hBitmap = iconInfo.hbmColor;
-			if (hBitmap == 0) hBitmap = iconInfo.hbmMask;
+            if (hBitmap == 0) {
+                hBitmap = iconInfo.hbmMask;
+            }
 			BITMAP bm = new BITMAP();
 			OS.GetObject(hBitmap, BITMAP.sizeof, bm);
 			int imgWidth = bm.bmWidth;
@@ -1194,7 +1240,9 @@ GdipImage createGdipImageFromHandle(ImageHandle imageHandle) {
 				long oldSrcBitmap = OS.SelectObject(srcHdc, hBitmap);
 				long memHdc = OS.CreateCompatibleDC(hDC);
 				long memDib = createDIB(imgWidth, imgHeight, 32);
-				if (memDib == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                if (memDib == 0) {
+                    SWT.error(SWT.ERROR_NO_HANDLES);
+                }
 				long oldMemBitmap = OS.SelectObject(memHdc, memDib);
 				BITMAP dibBM = new BITMAP();
 				OS.GetObject(memDib, BITMAP.sizeof, dibBM);
@@ -1222,14 +1270,20 @@ GdipImage createGdipImageFromHandle(ImageHandle imageHandle) {
 				device.internal_dispose_GC(hDC, null);
 				long hHeap = OS.GetProcessHeap();
 				pixels = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, srcData.length);
-				if (pixels == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                if (pixels == 0) {
+                    SWT.error(SWT.ERROR_NO_HANDLES);
+                }
 				OS.MoveMemory(pixels, srcData, srcData.length);
 				img = Gdip.Bitmap_new(imgWidth, imgHeight, dibBM.bmWidthBytes, Gdip.PixelFormat32bppARGB, pixels);
 			} else {
 				img = Gdip.Bitmap_new(handle);
 			}
-			if (iconInfo.hbmColor != 0) OS.DeleteObject(iconInfo.hbmColor);
-			if (iconInfo.hbmMask != 0) OS.DeleteObject(iconInfo.hbmMask);
+            if (iconInfo.hbmColor != 0) {
+                OS.DeleteObject(iconInfo.hbmColor);
+            }
+            if (iconInfo.hbmMask != 0) {
+                OS.DeleteObject(iconInfo.hbmMask);
+            }
 			return new GdipImage(img, pixels);
 		}
 		default: SWT.error(SWT.ERROR_INVALID_IMAGE);
@@ -1263,7 +1317,9 @@ public void dispose() {
 @Override
 void destroy () {
 	device.deregisterResourceWithZoomSupport(this);
-	if (memGC != null) memGC.dispose();
+    if (memGC != null) {
+        memGC.dispose();
+    }
 	this.isDestroyed = true;
 	destroyHandles();
 	memGC = null;
@@ -1291,10 +1347,16 @@ void destroyHandlesExcept(Set<Integer> zoomLevels) {
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Image)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Image)) {
+        return false;
+    }
 	Image image = (Image) object;
-	if (device != image.device) return false;
+    if (device != image.device) {
+        return false;
+    }
 	return (styleFlag == image.styleFlag) && imageProvider.equals(image.imageProvider);
 }
 
@@ -1317,8 +1379,12 @@ public boolean equals (Object object) {
  * </ul>
  */
 public Color getBackground() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (this.getImageData().transparentPixel == -1) return null;
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (this.getImageData().transparentPixel == -1) {
+        return null;
+    }
 	if (backgroundColor != null) {
 		// if a background color was set explicitly, we use the cached color directly
 		return Color.win32_new(device, (backgroundColor.blue << 16) | (backgroundColor.green << 8) | backgroundColor.red);
@@ -1385,12 +1451,16 @@ public Color getBackground() {
  * </ul>
  */
 public Rectangle getBounds() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return getBounds (100);
 }
 
 Rectangle getBounds(int zoom) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return imageHandleManager.executeOnHandle(zoom, imageHandle -> {
 		if (imageHandle.get() != null) {
 			Rectangle rectangle = new Rectangle(0, 0, imageHandle.get().width(), imageHandle.get().height());
@@ -1436,7 +1506,9 @@ public Rectangle getBoundsInPixels() {
  * @see ImageData
  */
 public ImageData getImageData() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return getImageData(100);
 }
 
@@ -1470,7 +1542,9 @@ public ImageData getImageData() {
  * @since 3.106
  */
 public ImageData getImageData (int zoom) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return imageHandleManager.executeOnHandle(zoom, imageHandle -> {
 		if (imageHandle.get() != null) {
 			return imageHandle.get().getImageData();
@@ -1562,7 +1636,9 @@ private static ImageData indexToDirect(ImageData src, int newDepth, PaletteData 
 	byte[] srcBlues  = new byte[rgbs.length];
 	for (int j = 0; j < rgbs.length; j++) {
 		RGB rgb = rgbs[j];
-		if (rgb == null) continue;
+        if (rgb == null) {
+            continue;
+        }
 		srcReds[j] = (byte)rgb.red;
 		srcGreens[j] = (byte)rgb.green;
 		srcBlues[j] = (byte)rgb.blue;
@@ -1747,10 +1823,11 @@ private static HandleForImageDataContainer init(Device device, ImageData i) {
 	bmiHeader.biCompression = OS.BI_RGB;
 	bmiHeader.biClrUsed = rgbs == null ? 0 : rgbs.length;
 	byte[] bmi;
-	if (i.palette.isDirect)
-		bmi = new byte[BITMAPINFOHEADER.sizeof];
-	else
-		bmi = new byte[BITMAPINFOHEADER.sizeof + rgbs.length * 4];
+    if (i.palette.isDirect) {
+        bmi = new byte[BITMAPINFOHEADER.sizeof];
+    } else {
+        bmi = new byte[BITMAPINFOHEADER.sizeof + rgbs.length * 4];
+    }
 	OS.MoveMemory(bmi, bmiHeader, BITMAPINFOHEADER.sizeof);
 	/* Set the rgb colors into the bitmap info */
 	int offset = BITMAPINFOHEADER.sizeof;
@@ -1765,7 +1842,9 @@ private static HandleForImageDataContainer init(Device device, ImageData i) {
 	}
 	long[] pBits = new long[1];
 	long hDib = OS.CreateDIBSection(0, bmi, OS.DIB_RGB_COLORS, pBits, 0, 0);
-	if (hDib == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (hDib == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	/* In case of a scanline pad other than 4, do the work to convert it */
 	byte[] data = i.data;
 	if (i.scanlinePad != 4 && (i.bytesPerLine % 4 != 0)) {
@@ -1781,7 +1860,9 @@ private static HandleForImageDataContainer init(Device device, ImageData i) {
 		long hdcSrc = OS.CreateCompatibleDC(hDC);
 		OS.SelectObject(hdcSrc, hDib);
 		long hBitmap = OS.CreateCompatibleBitmap(hDC, i.width, i.height);
-		if (hBitmap == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (hBitmap == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		long hdcDest = OS.CreateCompatibleDC(hDC);
 		OS.SelectObject(hdcDest, hBitmap);
 		OS.BitBlt(hdcDest, 0, 0, i.width, i.height, hdcSrc, 0, 0, OS.SRCCOPY);
@@ -1792,7 +1873,9 @@ private static HandleForImageDataContainer init(Device device, ImageData i) {
 		/* Create the mask. Windows requires icon masks to have a scanline pad of 2. */
 		byte[] maskData = ImageData.convertPad(i.maskData, i.width, i.height, 1, i.maskPad, 2);
 		long hMask = OS.CreateBitmap(i.width, i.height, 1, 1, maskData);
-		if (hMask == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (hMask == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		OS.SelectObject(hdcSrc, hMask);
 		OS.PatBlt(hdcSrc, 0, 0, i.width, i.height, OS.DSTINVERT);
 		OS.DeleteDC(hdcSrc);
@@ -1818,7 +1901,9 @@ private DestroyableImageHandle initIconHandle(long[] handles, int zoom) {
 	info.hbmColor = handles[0];
 	info.hbmMask = handles[1];
 	long hIcon = OS.CreateIconIndirect(info);
-	if (hIcon == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (hIcon == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.DeleteObject(handles[0]);
 	OS.DeleteObject(handles[1]);
 	type = SWT.ICON;
@@ -1866,7 +1951,9 @@ private static ImageData applyMask(ImageData source, ImageData mask) {
 			imageData = new ImageData(source.width, source.height, source.depth, new PaletteData(rgbs));
 		} else {
 			while (blackIndex < rgbs.length) {
-				if (rgbs[blackIndex].equals(black)) break;
+                if (rgbs[blackIndex].equals(black)) {
+                    break;
+                }
 				blackIndex++;
 			}
 			if (blackIndex == rgbs.length) {
@@ -1899,7 +1986,9 @@ private static ImageData applyMask(ImageData source, ImageData mask) {
 			source.getPixels(0, y, imageData.width, imagePixels, 0);
 			mask.getPixels(0, y, mask.width, maskPixels, 0);
 			for (int i = 0; i < imagePixels.length; i++) {
-				if (maskPixels[i] == 0) imagePixels[i] = blackIndex;
+                if (maskPixels[i] == 0) {
+                    imagePixels[i] = blackIndex;
+                }
 			}
 			imageData.setPixels(0, y, source.width, imagePixels, 0);
 		}
@@ -1911,7 +2000,9 @@ private static ImageData applyMask(ImageData source, ImageData mask) {
 
 
 private DestroyableImageHandle init(ImageData i, int zoom) {
-	if (i == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (i == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	HandleForImageDataContainer imageDataHandle = init(device, i);
 	switch (imageDataHandle.type()) {
 		case SWT.ICON: {
@@ -1947,7 +2038,9 @@ public long internal_new_GC (GCData data) {
 }
 
 private long configureGC(GCData data, ZoomContext zoomContext) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	/*
 	* Create a new GC that can draw into the image.
 	* Only supported for bitmaps.
@@ -1963,7 +2056,9 @@ private long configureGC(GCData data, ZoomContext zoomContext) {
 	long hDC = device.internal_new_GC(null);
 	long imageDC = OS.CreateCompatibleDC(hDC);
 	device.internal_dispose_GC(hDC, null);
-	if (imageDC == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (imageDC == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (data != null) {
 		/* Set the GCData fields */
@@ -2064,9 +2159,15 @@ public boolean isDisposed() {
  * </ul>
  */
 public void setBackground(Color color) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (color == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (color == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	backgroundColor = color.getRGB();
 	imageHandleManager.getAllImageHandles().forEach(imageHandle -> imageHandle.setBackground(backgroundColor));
 }
@@ -2079,7 +2180,9 @@ public void setBackground(Color color) {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Image {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Image {*DISPOSED*}";
+    }
 	return "Image {" + imageHandleManager + "}";
 }
 
@@ -2521,7 +2624,9 @@ private class PlainImageProviderWrapper extends AbstractImageProviderWrapper {
 	}
 
 	private long initHandle(int zoom) {
-		if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+        if (isDisposed()) {
+            SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+        }
 		int scaledWidth = DPIUtil.pointToPixel (width, zoom);
 		int scaledHeight = DPIUtil.pointToPixel (height, zoom);
 		long hDC = device.internal_new_GC(null);
@@ -2535,8 +2640,12 @@ private class PlainImageProviderWrapper extends AbstractImageProviderWrapper {
 			int bits = OS.GetDeviceCaps(hDC, OS.BITSPIXEL);
 			int planes = OS.GetDeviceCaps(hDC, OS.PLANES);
 			int depth = bits * planes;
-			if (depth < 16) depth = 16;
-			if (depth > 24) depth = 24;
+            if (depth < 16) {
+                depth = 16;
+            }
+            if (depth > 24) {
+                depth = 24;
+            }
 			newHandle = createDIB(scaledWidth, scaledHeight, depth);
 		}
 		if (newHandle != 0) {
@@ -2563,8 +2672,12 @@ private abstract class DynamicImageProviderWrapper extends AbstractImageProvider
 	abstract Object getProvider();
 
 	protected void checkProvider(Object provider, Class<?> expectedClass) {
-		if (provider == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-		if (!expectedClass.isAssignableFrom(provider.getClass())) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (provider == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
+        if (!expectedClass.isAssignableFrom(provider.getClass())) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 
 	@Override
@@ -2694,26 +2807,34 @@ private class ImageFileNameProviderWrapper extends BaseImageProviderWrapper<Imag
 		int height = -1;
 		device.checkGDIP();
 		boolean gdip = true;
-		/*
-		* Bug in GDI+.  For some reason, Bitmap.LockBits() segment faults
-		* when loading GIF files in 64-bit Windows.  The fix is to not use
-		* GDI+ image loading in this case.
-		*/
-		if (gdip && C.PTR_SIZEOF == 8 && filename.toLowerCase().endsWith(".gif")) gdip = false;
-		/*
-		* Bug in GDI+. Bitmap.LockBits() fails to load GIF files in
-		* Windows 7 when the image has a position offset in the first frame.
-		* The fix is to not use GDI+ image loading in this case.
-		*/
-		if (filename.toLowerCase().endsWith(".gif")) gdip = false;
+        /*
+        * Bug in GDI+.  For some reason, Bitmap.LockBits() segment faults
+        * when loading GIF files in 64-bit Windows.  The fix is to not use
+        * GDI+ image loading in this case.
+        */
+        if (gdip && C.PTR_SIZEOF == 8 && filename.toLowerCase().endsWith(".gif")) {
+            gdip = false;
+        }
+        /*
+        * Bug in GDI+. Bitmap.LockBits() fails to load GIF files in
+        * Windows 7 when the image has a position offset in the first frame.
+        * The fix is to not use GDI+ image loading in this case.
+        */
+        if (filename.toLowerCase().endsWith(".gif")) {
+            gdip = false;
+        }
 
-		if(!gdip) return null;
+        if (!gdip) {
+            return null;
+        }
 
 		int length = filename.length();
 		char[] chars = new char[length+1];
 		filename.getChars(0, length, chars, 0);
 		long bitmap = Gdip.Bitmap_new(chars, false);
-		if (bitmap == 0) return null;
+        if (bitmap == 0) {
+            return null;
+        }
 
 		int error = SWT.ERROR_NO_HANDLES;
 		int status = Gdip.Image_GetLastStatus(bitmap);
@@ -2775,7 +2896,9 @@ private class ImageFileNameProviderWrapper extends BaseImageProviderWrapper<Imag
 										int paletteSize = Gdip.Image_GetPaletteSize(bitmap);
 										long hHeap = OS.GetProcessHeap();
 										long palette = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, paletteSize);
-										if (palette == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                                        if (palette == 0) {
+                                            SWT.error(SWT.ERROR_NO_HANDLES);
+                                        }
 										Gdip.Image_GetPalette(bitmap, palette, paletteSize);
 										ColorPalette colorPalette = new ColorPalette();
 										Gdip.MoveMemory(colorPalette, palette, ColorPalette.sizeof);
@@ -2832,8 +2955,12 @@ private class ImageFileNameProviderWrapper extends BaseImageProviderWrapper<Imag
 		}
 		Gdip.Bitmap_delete(bitmap);
 		if (status == 0) {
-			if (handle == 0) SWT.error(error);
-			if (imageMetadata == null) SWT.error(error);
+            if (handle == 0) {
+                SWT.error(error);
+            }
+            if (imageMetadata == null) {
+                SWT.error(error);
+            }
 		}
 
 		return imageMetadata;
@@ -3153,15 +3280,23 @@ private class DestroyableImageHandle implements InternalImageHandle {
 				SWT.error(SWT.ERROR_INVALID_IMAGE);
 			}
 			long hBitmap = info.hbmColor;
-			if (hBitmap == 0) hBitmap = info.hbmMask;
+            if (hBitmap == 0) {
+                hBitmap = info.hbmMask;
+            }
 			bm = new BITMAP();
 			int queriedBytes = OS.GetObject(hBitmap, BITMAP.sizeof, bm);
-			if (info.hbmColor != 0) OS.DeleteObject(info.hbmColor);
-			if (info.hbmMask != 0) OS.DeleteObject(info.hbmMask);
+            if (info.hbmColor != 0) {
+                OS.DeleteObject(info.hbmColor);
+            }
+            if (info.hbmMask != 0) {
+                OS.DeleteObject(info.hbmMask);
+            }
 			if (queriedBytes == 0) {
 				SWT.error(SWT.ERROR_INVALID_IMAGE);
 			}
-			if (hBitmap == info.hbmMask) bm.bmHeight /= 2;
+            if (hBitmap == info.hbmMask) {
+                bm.bmHeight /= 2;
+            }
 			return new Point(bm.bmWidth, bm.bmHeight);
 		default:
 			SWT.error(SWT.ERROR_INVALID_IMAGE);
@@ -3172,7 +3307,9 @@ private class DestroyableImageHandle implements InternalImageHandle {
 
 	@Override
 	public void setBackground(RGB color) {
-		if (transparentPixel() == -1) return;
+        if (transparentPixel() == -1) {
+            return;
+        }
 
 		/* Get the HDC for the device */
 		long hDC = device.internal_new_GC(null);
@@ -3202,7 +3339,9 @@ private class DestroyableImageHandle implements InternalImageHandle {
 
 	@Override
 	public ImageData getImageData() {
-		if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+        if (isDisposed()) {
+            SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+        }
 		BITMAP bm;
 		int depth, width, height;
 		switch (type) {
@@ -3213,19 +3352,29 @@ private class DestroyableImageHandle implements InternalImageHandle {
 				}
 				/* Get the basic BITMAP information */
 				long hBitmap = info.hbmColor;
-				if (hBitmap == 0) hBitmap = info.hbmMask;
+                if (hBitmap == 0) {
+                    hBitmap = info.hbmMask;
+                }
 				bm = new BITMAP();
 				if (OS.GetObject(hBitmap, BITMAP.sizeof, bm) == 0) {
-					if (info.hbmColor != 0) OS.DeleteObject(info.hbmColor);
-					if (info.hbmMask != 0) OS.DeleteObject(info.hbmMask);
+                    if (info.hbmColor != 0) {
+                        OS.DeleteObject(info.hbmColor);
+                    }
+                    if (info.hbmMask != 0) {
+                        OS.DeleteObject(info.hbmMask);
+                    }
 					SWT.error(SWT.ERROR_INVALID_IMAGE);
 				}
 				depth = bm.bmPlanes * bm.bmBitsPixel;
 				width = bm.bmWidth;
-				if (hBitmap == info.hbmMask) bm.bmHeight /= 2;
+                if (hBitmap == info.hbmMask) {
+                    bm.bmHeight /= 2;
+                }
 				height = bm.bmHeight;
 				int numColors = 0;
-				if (depth <= 8) numColors = 1 << depth;
+                if (depth <= 8) {
+                    numColors = 1 << depth;
+                }
 				/* Create the BITMAPINFO */
 				BITMAPINFOHEADER bmiHeader = new BITMAPINFOHEADER();
 				bmiHeader.biSize = BITMAPINFOHEADER.sizeof;
@@ -3314,7 +3463,9 @@ private class DestroyableImageHandle implements InternalImageHandle {
 					int bpl = imageSize / height;
 					for (maskPad = 1; maskPad < 128; maskPad++) {
 						int calcBpl = (((width + 7) / 8) + (maskPad - 1)) / maskPad * maskPad;
-						if (calcBpl == bpl) break;
+                        if (calcBpl == bpl) {
+                            break;
+                        }
 					}
 					maskData = ImageData.convertPad(maskData, width, height, 1, maskPad, 2);
 					// For missing mask data, see https://github.com/eclipse-platform/eclipse.platform.swt/issues/715
@@ -3342,8 +3493,12 @@ private class DestroyableImageHandle implements InternalImageHandle {
 				/* Release the HDC for the device */
 				device.internal_dispose_GC(hDC, null);
 
-				if (info.hbmColor != 0) OS.DeleteObject(info.hbmColor);
-				if (info.hbmMask != 0) OS.DeleteObject(info.hbmMask);
+                if (info.hbmColor != 0) {
+                    OS.DeleteObject(info.hbmColor);
+                }
+                if (info.hbmMask != 0) {
+                    OS.DeleteObject(info.hbmMask);
+                }
 				/* Construct and return the ImageData */
 				ImageData imageData = new ImageData(width, height, depth, palette, 4, data);
 				imageData.alphaData = alphaData;
@@ -3502,7 +3657,9 @@ private class DestroyableImageHandle implements InternalImageHandle {
 	}
 
 	void destroy() {
-		if (isDisposed) return;
+        if (isDisposed) {
+            return;
+        }
 		/*
 		 * Mark the handle as disposed before it is actually destroyed, so that it is
 		 * never reported as usable while it is already gone. The raw handle has to be

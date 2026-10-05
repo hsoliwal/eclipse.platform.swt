@@ -93,10 +93,11 @@ public void test_addFilterILorg_eclipse_swt_widgets_Listener() {
 	final boolean[] callbackReceived = new boolean[] {false, false};
 
 	Listener listener = e -> {
-		if (e.type == SWT.Close)
-			callbackReceived[CLOSE_CALLBACK] = true;
-		else if (e.type == SWT.Dispose)
-			callbackReceived[DISPOSE_CALLBACK] = true;
+        if (e.type == SWT.Close) {
+            callbackReceived[CLOSE_CALLBACK] = true;
+        } else if (e.type == SWT.Dispose) {
+            callbackReceived[DISPOSE_CALLBACK] = true;
+        }
 	};
 
 	Display display = new Display();
@@ -120,10 +121,11 @@ public void test_addListenerILorg_eclipse_swt_widgets_Listener() {
 	final boolean[] callbackReceived = new boolean[] {false, false};
 
 	Listener listener = e -> {
-		if (e.type == SWT.Close)
-			callbackReceived[CLOSE_CALLBACK] = true;
-		else if (e.type == SWT.Dispose)
-			callbackReceived[DISPOSE_CALLBACK] = true;
+        if (e.type == SWT.Close) {
+            callbackReceived[CLOSE_CALLBACK] = true;
+        } else if (e.type == SWT.Dispose) {
+            callbackReceived[DISPOSE_CALLBACK] = true;
+        }
 	};
 
 	Display display = new Display();
@@ -214,7 +216,9 @@ public void test_asyncExecLjava_lang_Runnable_dispose() {
 		});
 	} finally {
 		while (!disposeExecRan) {
-			if (!display.readAndDispatch()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 }
@@ -410,8 +414,9 @@ public void test_getMonitors() {
 	Monitor[] monitors = display.getMonitors();
 	assertNotNull(monitors);
 	assertTrue(monitors.length >= 1, "at least one monitor should be returned");
-	for (int i = 0; i < monitors.length; i++)
-		assertNotNull(monitors[i], "monitor at index "+i+" should not be null");
+    for (int i = 0; i < monitors.length; i++) {
+        assertNotNull(monitors[i], "monitor at index " + i + " should not be null");
+    }
 	display.dispose();
 }
 
@@ -484,7 +489,9 @@ public void test_getSyncThread() {
 		nonUIThread.start();
 
 		while (!threadRan[0]) {
-			if (!display.readAndDispatch()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	} finally {
 		display.dispose();
@@ -1152,10 +1159,11 @@ public void test_removeFilterILorg_eclipse_swt_widgets_Listener() {
 	final boolean[] callbackReceived = new boolean[] {false, false};
 
 	Listener listener = e -> {
-		if (e.type == SWT.Close)
-			callbackReceived[CLOSE_CALLBACK] = true;
-		else if (e.type == SWT.Dispose)
-			callbackReceived[DISPOSE_CALLBACK] = true;
+        if (e.type == SWT.Close) {
+            callbackReceived[CLOSE_CALLBACK] = true;
+        } else if (e.type == SWT.Dispose) {
+            callbackReceived[DISPOSE_CALLBACK] = true;
+        }
 	};
 
 	Display display = new Display();
@@ -1179,10 +1187,11 @@ public void test_removeListenerILorg_eclipse_swt_widgets_Listener() {
 	final boolean[] callbackReceived = new boolean[] {false, false};
 
 	Listener listener = e -> {
-		if (e.type == SWT.Close)
-			callbackReceived[CLOSE_CALLBACK] = true;
-		else if (e.type == SWT.Dispose)
-			callbackReceived[DISPOSE_CALLBACK] = true;
+        if (e.type == SWT.Close) {
+            callbackReceived[CLOSE_CALLBACK] = true;
+        } else if (e.type == SWT.Dispose) {
+            callbackReceived[DISPOSE_CALLBACK] = true;
+        }
 	};
 
 	Display display = new Display();
@@ -1522,9 +1531,11 @@ public void test_timerExecILjava_lang_Runnable() {
 			threadRan[0] = true;
 		});
 		while (!threadRan[0]) {
-			// The read and dispatch loop must be running in order
-			// for the runnable in the timer exec to be executed.
-			if (!display.readAndDispatch ()) display.sleep();
+            // The read and dispatch loop must be running in order
+            // for the runnable in the timer exec to be executed.
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		// Verify the timerExec with less than zero milliseconds didn't execute.

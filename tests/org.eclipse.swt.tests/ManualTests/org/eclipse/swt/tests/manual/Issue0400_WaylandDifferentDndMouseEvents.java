@@ -140,7 +140,9 @@ public final class Issue0400_WaylandDifferentDndMouseEvents {
 				isMouseDown[0] = true;
 			});
 			composite.addListener(SWT.MouseMove,  event -> {
-				if (!isMouseDown[0]) return;
+                if (!isMouseDown[0]) {
+                    return;
+                }
 				System.out.println("MouseMove with button down:             " + event);
 			});
 			composite.addListener(SWT.MouseUp,    event -> {
@@ -180,7 +182,9 @@ public final class Issue0400_WaylandDifferentDndMouseEvents {
 				isMouseDown[0] = true;
 			});
 			composite.addListener(SWT.MouseMove,  event -> {
-				if (!isMouseDown[0]) return;
+                if (!isMouseDown[0]) {
+                    return;
+                }
 				System.out.println("MouseMove with button down:             " + event);
 			});
 			composite.addListener(SWT.MouseUp,    event -> {

@@ -40,8 +40,12 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 
 	@AfterEach
 	public void tearDown () {
-		if (gc != null && !gc.isDisposed ()) gc.dispose ();
-		if (image != null && !image.isDisposed ()) image.dispose ();
+        if (gc != null && !gc.isDisposed()) {
+            gc.dispose();
+        }
+        if (image != null && !image.isDisposed()) {
+            image.dispose();
+        }
 	}
 
 
@@ -141,7 +145,9 @@ public class Test_org_eclipse_swt_internal_ViewportPaintGraph {
 		for (int py = 0; py < 64; py++) {
 			for (int px = 0; px < 64; px++) {
 				RGB expectedRgb = expected.palette.getRGB (expected.getPixel (px, py));
-				if (!expectedRgb.equals (white)) painted++;
+                if (!expectedRgb.equals(white)) {
+                    painted++;
+                }
 				assertEquals (
 						expectedRgb,
 						actual.palette.getRGB (actual.getPixel (px, py)),

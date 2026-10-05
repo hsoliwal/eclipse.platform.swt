@@ -75,7 +75,9 @@ public static void main(String [] args) {
 				}
 			}
 			gc.setAdvanced(true);
-			if (gc.getAdvanced()) gc.setAlpha(127);
+            if (gc.getAdvanced()) {
+                gc.setAlpha(127);
+            }
 			Rectangle rect = event.getBounds();
 			Color foreground = gc.getForeground();
 			Color background = gc.getBackground();
@@ -95,7 +97,9 @@ public static void main(String [] args) {
 	shell.setSize(500, 200);
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

@@ -77,9 +77,10 @@ public class Bug543747_JvmCrash_Msctf {
 		// .setFocus() causes it to start up.
 		text.setFocus();
 
-		// There are two slightly different crashes depending on focus
-		if (!focusEditOnClose)
-			button.setFocus();
+        // There are two slightly different crashes depending on focus
+        if (!focusEditOnClose) {
+            button.setFocus();
+        }
 
 		// Destroying the shell triggers the bug.
 		tempShell.dispose();
@@ -194,7 +195,9 @@ public class Bug543747_JvmCrash_Msctf {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		display.dispose ();

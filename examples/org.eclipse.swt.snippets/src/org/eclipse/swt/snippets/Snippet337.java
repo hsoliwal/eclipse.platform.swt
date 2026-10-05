@@ -75,7 +75,9 @@ public static void main(String args[]) {
 		}
 	}));
 	while (!display.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 }
 private static class CloseListener implements WindowListener {

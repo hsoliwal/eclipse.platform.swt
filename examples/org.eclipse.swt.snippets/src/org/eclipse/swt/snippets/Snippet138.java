@@ -60,8 +60,9 @@ public class Snippet138 {
 		shell.open();
 		shell2.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		small.dispose();
 		large.dispose();

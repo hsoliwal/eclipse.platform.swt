@@ -60,14 +60,18 @@ public class Snippet212 {
 
 		// use a verify listener to dispose the images
 		styledText.addVerifyListener(event -> {
-			if (event.start == event.end) return;
+            if (event.start == event.end) {
+                return;
+            }
 			String text = styledText.getText(event.start, event.end - 1);
 			int index = text.indexOf('\uFFFC');
 			while (index != -1) {
 				StyleRange style = styledText.getStyleRangeAtOffset(event.start + index);
 				if (style != null) {
 					Image image = (Image)style.data;
-					if (image != null) image.dispose();
+                    if (image != null) {
+                        image.dispose();
+                    }
 				}
 				index = text.indexOf('\uFFFC', index + 1);
 			}
@@ -87,7 +91,9 @@ public class Snippet212 {
 			for (StyleRange style : styles) {
 				if (style.data != null) {
 					Image image = (Image)style.data;
-					if (image != null) image.dispose();
+                    if (image != null) {
+                        image.dispose();
+                    }
 				}
 			}
 		});
@@ -111,8 +117,9 @@ public class Snippet212 {
 		shell.setSize(400, 400);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

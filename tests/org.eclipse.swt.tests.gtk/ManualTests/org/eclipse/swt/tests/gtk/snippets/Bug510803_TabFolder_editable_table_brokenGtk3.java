@@ -80,8 +80,9 @@ public class Bug510803_TabFolder_editable_table_brokenGtk3 {
 		shell.open();
 		shell.setSize(200, 300);
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

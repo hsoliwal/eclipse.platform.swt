@@ -75,8 +75,9 @@ public class Bug510803_TabFolder_TreeEditor_Regression {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}
@@ -112,7 +113,9 @@ public class Bug510803_TabFolder_TreeEditor_Regression {
 
 		table.addSelectionListener(widgetSelectedAdapter(e -> {
 				TableItem item = (TableItem) e.item;
-				if (item == null) return;
+            if (item == null) {
+                return;
+            }
 				tableEditorControl.setVisible(true);
 				tableEditorControl.setText(item.getText());
 				tableEditorControl.selectAll();

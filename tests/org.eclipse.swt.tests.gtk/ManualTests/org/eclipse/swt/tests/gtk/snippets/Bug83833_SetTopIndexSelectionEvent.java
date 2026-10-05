@@ -38,7 +38,9 @@ public class Bug83833_SetTopIndexSelectionEvent {
 		table.setTopIndex(20);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

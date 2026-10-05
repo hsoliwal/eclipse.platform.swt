@@ -138,8 +138,9 @@ public class JavadocBasher {
 	}
 
 	void bashJavaSourceTree(Path sourceDir, Path targetDir, Path outDir) throws IOException {
-		if (fVerbose)
-			System.out.println("Reading source javadoc from " + sourceDir);
+        if (fVerbose) {
+            System.out.println("Reading source javadoc from " + sourceDir);
+        }
 		if (!Files.exists(sourceDir)) {
 			System.out.println("Source: " + sourceDir + " was missing");
 			return;
@@ -151,8 +152,9 @@ public class JavadocBasher {
 		try (var list = Files.list(sourceDir)) {
 			for (Path source : list.toList()) {
 				String filename = source.getFileName().toString();
-				if (filename.equals("internal") || filename.equals("library"))
-					continue;
+                if (filename.equals("internal") || filename.equals("library")) {
+                    continue;
+                }
 				Path target = targetDir.resolve(filename);
 				Path out = outDir.resolve(filename);
 				if (!Files.exists(source)) {
@@ -361,7 +363,9 @@ public class JavadocBasher {
 				if (!entry.getValue().isEmpty()){
 					int i = 0;
 					for (i = 0; i < filter.length; i++) {
-						if (name.equals(filter[i])) break;
+                        if (name.equals(filter[i])) {
+                            break;
+                        }
 					}
 					if (i >= filter.length) {
 						System.err.println("***No target for " + name);

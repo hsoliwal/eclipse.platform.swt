@@ -50,8 +50,9 @@ public class Bug566545_GrayScaleImage {
 		shell.setText("Bug 566545");
 
 		RGB[] grayscale = new RGB[256];
-		for (int i = 0; i < grayscale.length; i++)
-			grayscale[i] = new RGB(i, i, i);
+        for (int i = 0; i < grayscale.length; i++) {
+            grayscale[i] = new RGB(i, i, i);
+        }
 		int margin = 10;
 		int width = 128;
 		int height = 128;
@@ -87,15 +88,18 @@ public class Bug566545_GrayScaleImage {
 		shell.setSize(size.width, size.height);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}
 
 	private static void fillImage(ImageData imageData) {
-		for (int x = 0; x < imageData.width; x++)
-			for (int y = 0; y < imageData.height; y++)
-				imageData.setPixel(x, y, (x + y) % 256);
+        for (int x = 0; x < imageData.width; x++) {
+            for (int y = 0; y < imageData.height; y++) {
+                imageData.setPixel(x, y, (x + y) % 256);
+            }
+        }
 	}
 }

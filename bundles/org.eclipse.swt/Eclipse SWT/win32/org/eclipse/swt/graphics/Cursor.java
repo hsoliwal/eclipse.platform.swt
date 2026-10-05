@@ -194,7 +194,9 @@ public Cursor(Device device, ImageData source, int hotspotX, int hotspotY) {
 }
 
 private static CursorHandle setupCursorFromImageData(Device device, ImageData source, ImageData mask, int hotspotX, int hotspotY) {
-	if (source == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (source == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	long hBitmap = 0;
 	long hMask = 0;
 	if (source.maskData == null && source.transparentPixel == -1 && (source.alpha != -1 || source.alphaData != null)) {
@@ -214,7 +216,9 @@ private static CursorHandle setupCursorFromImageData(Device device, ImageData so
 			byte[] srcBlues = new byte[length];
 			for (int i = 0; i < rgbs.length; i++) {
 				RGB rgb = rgbs[i];
-				if (rgb == null) continue;
+                if (rgb == null) {
+                    continue;
+                }
 				srcReds[i] = (byte)rgb.red;
 				srcGreens[i] = (byte)rgb.green;
 				srcBlues[i] = (byte)rgb.blue;
@@ -225,7 +229,9 @@ private static CursorHandle setupCursorFromImageData(Device device, ImageData so
 				   img.data,    img.depth,    img.bytesPerLine,    img.getByteOrder(), newPalette.redMask, newPalette.greenMask, newPalette.blueMask);
 		}
 		hBitmap = Image.createDIB(source.width, source.height, 32);
-		if (hBitmap == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (hBitmap == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		BITMAP dibBM = new BITMAP();
 		OS.GetObject(hBitmap, BITMAP.sizeof, dibBM);
 		byte[] srcData = img.data;
@@ -240,7 +246,9 @@ private static CursorHandle setupCursorFromImageData(Device device, ImageData so
 		}
 		OS.MoveMemory(dibBM.bmBits, srcData, srcData.length);
 		hMask = OS.CreateBitmap(source.width, source.height, 1, 1, new byte[(((source.width + 7) / 8) + 3) / 4 * 4 * source.height]);
-		if (hMask == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (hMask == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 	} else {
 		if (mask == null) {
 			mask = source.getTransparencyMask();
@@ -259,7 +267,9 @@ private static CursorHandle setupCursorFromImageData(Device device, ImageData so
 	long handle = OS.CreateIconIndirect(info);
 	OS.DeleteObject(hBitmap);
 	OS.DeleteObject(hMask);
-	if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 
 	return new IconCursorHandle(handle);
 }
@@ -295,7 +305,9 @@ private static CursorHandle setupCursorFromImageData(Device device, ImageData so
  */
 public Cursor(Device device, ImageDataProvider imageDataProvider, int hotspotX, int hotspotY) {
 	super(device);
-	if (imageDataProvider == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (imageDataProvider == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.cursorHandleProvider = new ImageDataProviderCursorHandleProvider(imageDataProvider, hotspotX, hotspotY);
 	init();
 	this.device.registerResourceWithZoomSupport(this);
@@ -377,8 +389,12 @@ void destroy () {
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Cursor cursor)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Cursor cursor)) {
+        return false;
+    }
 	return device == cursor.device && win32_getHandle(this, DEFAULT_ZOOM) == win32_getHandle(cursor, DEFAULT_ZOOM);
 }
 
@@ -420,7 +436,9 @@ public boolean isDisposed() {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Cursor {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Cursor {*DISPOSED*}";
+    }
 	return "Cursor {" + zoomLevelToHandle + "}";
 }
 
@@ -609,7 +627,9 @@ private static class ImageDataProviderCursorHandleProvider extends HotspotAwareC
 	public ImageDataProviderCursorHandleProvider(ImageDataProvider provider, int hotspotX, int hotspotY) {
 		super(hotspotX, hotspotY);
 		ImageData source = provider.getImageData(DEFAULT_ZOOM);
-		if (source == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (source == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		validateHotspotInsideImage(source, hotspotX, hotspotY);
 		this.provider = provider;
 	}
@@ -628,7 +648,9 @@ private static class ImageDataCursorHandleProvider extends HotspotAwareCursorHan
 
 	public ImageDataCursorHandleProvider(ImageData source, int hotspotX, int hotspotY) {
 		super(hotspotX, hotspotY);
-		if (source == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (source == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		validateHotspotInsideImage(source, hotspotX, hotspotY);
 		this.source = source;
 	}

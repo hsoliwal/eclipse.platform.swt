@@ -62,8 +62,12 @@ class ExpandBarTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
-		if (verticalButton.getSelection()) style |= SWT.V_SCROLL;
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.V_SCROLL;
+        }
 
 		/* Create the example widgets */
 		expandBar1 = new ExpandBar (expandBarGroup, style);

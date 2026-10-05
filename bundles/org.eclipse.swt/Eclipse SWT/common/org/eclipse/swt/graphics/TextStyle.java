@@ -169,9 +169,15 @@ public TextStyle () {
  * @param background the background color of the style, <code>null</code> if none
  */
 public TextStyle (Font font, Color foreground, Color background) {
-	if (font != null && font.isDisposed()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
-	if (foreground != null && foreground.isDisposed()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
-	if (background != null && background.isDisposed()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
+    if (font != null && font.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (foreground != null && foreground.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (background != null && background.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.font = font;
 	this.foreground = foreground;
 	this.background = background;
@@ -186,7 +192,9 @@ public TextStyle (Font font, Color foreground, Color background) {
  * @since 3.4
  */
 public TextStyle (TextStyle style) {
-	if (style == null) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
+    if (style == null) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	font = style.font;
 	foreground = style.foreground;
 	background = style.background;
@@ -214,39 +222,89 @@ public TextStyle (TextStyle style) {
  */
 @Override
 public boolean equals(Object object) {
-	if (object == this) return true;
-	if (object == null) return false;
-	if (!(object instanceof TextStyle style)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (object == null) {
+        return false;
+    }
+    if (!(object instanceof TextStyle style)) {
+        return false;
+    }
 	if (foreground != null) {
-		if (!foreground.equals(style.foreground)) return false;
-	} else if (style.foreground != null) return false;
+        if (!foreground.equals(style.foreground)) {
+            return false;
+        }
+	} else if (style.foreground != null) {
+        return false;
+    }
 	if (background != null) {
-		if (!background.equals(style.background)) return false;
-	} else if (style.background != null) return false;
+        if (!background.equals(style.background)) {
+            return false;
+        }
+	} else if (style.background != null) {
+        return false;
+    }
 	if (font != null) {
-		if (!font.equals(style.font)) return false;
-	} else if (style.font != null) return false;
+        if (!font.equals(style.font)) {
+            return false;
+        }
+	} else if (style.font != null) {
+        return false;
+    }
 	if (metrics != null) {
-		if (!metrics.equals(style.metrics)) return false;
-	} else if (style.metrics != null) return false;
-	if (underline != style.underline) return false;
-	if (underlineStyle != style.underlineStyle) return false;
-	if (borderStyle != style.borderStyle) return false;
-	if (strikeout != style.strikeout) return false;
-	if (rise != style.rise) return false;
+        if (!metrics.equals(style.metrics)) {
+            return false;
+        }
+	} else if (style.metrics != null) {
+        return false;
+    }
+    if (underline != style.underline) {
+        return false;
+    }
+    if (underlineStyle != style.underlineStyle) {
+        return false;
+    }
+    if (borderStyle != style.borderStyle) {
+        return false;
+    }
+    if (strikeout != style.strikeout) {
+        return false;
+    }
+    if (rise != style.rise) {
+        return false;
+    }
 	if (underlineColor != null) {
-		if (!underlineColor.equals(style.underlineColor)) return false;
-	} else if (style.underlineColor != null) return false;
+        if (!underlineColor.equals(style.underlineColor)) {
+            return false;
+        }
+	} else if (style.underlineColor != null) {
+        return false;
+    }
 	if (strikeoutColor != null) {
-		if (!strikeoutColor.equals(style.strikeoutColor)) return false;
-	} else if (style.strikeoutColor != null) return false;
-	if (underlineStyle != style.underlineStyle) return false;
+        if (!strikeoutColor.equals(style.strikeoutColor)) {
+            return false;
+        }
+	} else if (style.strikeoutColor != null) {
+        return false;
+    }
+    if (underlineStyle != style.underlineStyle) {
+        return false;
+    }
 	if (borderColor != null) {
-		if (!borderColor.equals(style.borderColor)) return false;
-	} else if (style.borderColor != null) return false;
+        if (!borderColor.equals(style.borderColor)) {
+            return false;
+        }
+	} else if (style.borderColor != null) {
+        return false;
+    }
 	if (data != null) {
-		if (!data.equals(style.data)) return false;
-	} else if (style.data != null) return false;
+        if (!data.equals(style.data)) {
+            return false;
+        }
+	} else if (style.data != null) {
+        return false;
+    }
 	return true;
 }
 
@@ -263,62 +321,124 @@ public boolean equals(Object object) {
 @Override
 public int hashCode() {
 	int hash = 0;
-	if (foreground != null) hash ^= foreground.hashCode();
-	if (background != null) hash ^= background.hashCode();
-	if (font != null) hash ^= font.hashCode();
-	if (metrics != null) hash ^= metrics.hashCode();
-	if (underline) hash ^= (hash << 1);
-	if (strikeout) hash ^= (hash << 2);
+    if (foreground != null) {
+        hash ^= foreground.hashCode();
+    }
+    if (background != null) {
+        hash ^= background.hashCode();
+    }
+    if (font != null) {
+        hash ^= font.hashCode();
+    }
+    if (metrics != null) {
+        hash ^= metrics.hashCode();
+    }
+    if (underline) {
+        hash ^= (hash << 1);
+    }
+    if (strikeout) {
+        hash ^= (hash << 2);
+    }
 	hash ^= rise;
-	if (underlineColor != null) hash ^= underlineColor.hashCode();
-	if (strikeoutColor != null) hash ^= strikeoutColor.hashCode();
-	if (borderColor != null) hash ^= borderColor.hashCode();
+    if (underlineColor != null) {
+        hash ^= underlineColor.hashCode();
+    }
+    if (strikeoutColor != null) {
+        hash ^= strikeoutColor.hashCode();
+    }
+    if (borderColor != null) {
+        hash ^= borderColor.hashCode();
+    }
 	hash ^= underlineStyle;
 	return hash;
 }
 
 boolean isAdherentBorder(TextStyle style) {
-	if (this == style) return true;
-	if (style == null) return false;
-	if (borderStyle != style.borderStyle) return false;
+    if (this == style) {
+        return true;
+    }
+    if (style == null) {
+        return false;
+    }
+    if (borderStyle != style.borderStyle) {
+        return false;
+    }
 	if (borderColor != null) {
-		if (!borderColor.equals(style.borderColor)) return false;
+        if (!borderColor.equals(style.borderColor)) {
+            return false;
+        }
 	} else {
-		if (style.borderColor != null) return false;
+        if (style.borderColor != null) {
+            return false;
+        }
 		if (foreground != null) {
-			if (!foreground.equals(style.foreground)) return false;
-		} else if (style.foreground != null) return false;
+            if (!foreground.equals(style.foreground)) {
+                return false;
+            }
+		} else if (style.foreground != null) {
+            return false;
+        }
 	}
 	return true;
 }
 
 boolean isAdherentUnderline(TextStyle style) {
-	if (this == style) return true;
-	if (style == null) return false;
-	if (underline != style.underline) return false;
-	if (underlineStyle != style.underlineStyle) return false;
+    if (this == style) {
+        return true;
+    }
+    if (style == null) {
+        return false;
+    }
+    if (underline != style.underline) {
+        return false;
+    }
+    if (underlineStyle != style.underlineStyle) {
+        return false;
+    }
 	if (underlineColor != null) {
-		if (!underlineColor.equals(style.underlineColor)) return false;
+        if (!underlineColor.equals(style.underlineColor)) {
+            return false;
+        }
 	} else {
-		if (style.underlineColor != null) return false;
+        if (style.underlineColor != null) {
+            return false;
+        }
 		if (foreground != null) {
-			if (!foreground.equals(style.foreground)) return false;
-		} else if (style.foreground != null) return false;
+            if (!foreground.equals(style.foreground)) {
+                return false;
+            }
+		} else if (style.foreground != null) {
+            return false;
+        }
 	}
 	return true;
 }
 
 boolean isAdherentStrikeout(TextStyle style) {
-	if (this == style) return true;
-	if (style == null) return false;
-	if (strikeout != style.strikeout) return false;
+    if (this == style) {
+        return true;
+    }
+    if (style == null) {
+        return false;
+    }
+    if (strikeout != style.strikeout) {
+        return false;
+    }
 	if (strikeoutColor != null) {
-		if (!strikeoutColor.equals(style.strikeoutColor)) return false;
+        if (!strikeoutColor.equals(style.strikeoutColor)) {
+            return false;
+        }
 	} else {
-		if (style.strikeoutColor != null) return false;
+        if (style.strikeoutColor != null) {
+            return false;
+        }
 		if (foreground != null) {
-			if (!foreground.equals(style.foreground)) return false;
-		} else if (style.foreground != null) return false;
+            if (!foreground.equals(style.foreground)) {
+                return false;
+            }
+		} else if (style.foreground != null) {
+            return false;
+        }
 	}
 	return true;
 }
@@ -334,22 +454,30 @@ public String toString () {
 	StringBuilder buffer = new StringBuilder("TextStyle {"); //$NON-NLS-1$
 	int startLength = buffer.length();
 	if (font != null) {
-		if (buffer.length() > startLength) buffer.append(", "); //$NON-NLS-1$
+        if (buffer.length() > startLength) {
+            buffer.append(", ");
+        } //$NON-NLS-1$
 		buffer.append("font="); //$NON-NLS-1$
 		buffer.append(font);
 	}
 	if (foreground != null) {
-		if (buffer.length() > startLength) buffer.append(", "); //$NON-NLS-1$
+        if (buffer.length() > startLength) {
+            buffer.append(", ");
+        } //$NON-NLS-1$
 		buffer.append("foreground="); //$NON-NLS-1$
 		buffer.append(foreground);
 	}
 	if (background != null) {
-		if (buffer.length() > startLength) buffer.append(", "); //$NON-NLS-1$
+        if (buffer.length() > startLength) {
+            buffer.append(", ");
+        } //$NON-NLS-1$
 		buffer.append("background="); //$NON-NLS-1$
 		buffer.append(background);
 	}
 	if (underline) {
-		if (buffer.length() > startLength) buffer.append(", "); //$NON-NLS-1$
+        if (buffer.length() > startLength) {
+            buffer.append(", ");
+        } //$NON-NLS-1$
 		buffer.append("underline="); //$NON-NLS-1$
 		switch (underlineStyle) {
 			case SWT.UNDERLINE_SINGLE: buffer.append("single"); break; //$NON-NLS-1$
@@ -364,7 +492,9 @@ public String toString () {
 		}
 	}
 	if (strikeout) {
-		if (buffer.length() > startLength) buffer.append(", "); //$NON-NLS-1$
+        if (buffer.length() > startLength) {
+            buffer.append(", ");
+        } //$NON-NLS-1$
 		buffer.append("striked out"); //$NON-NLS-1$
 		if (strikeoutColor != null) {
 			buffer.append(", strikeoutColor="); //$NON-NLS-1$
@@ -372,7 +502,9 @@ public String toString () {
 		}
 	}
 	if (borderStyle != SWT.NONE) {
-		if (buffer.length() > startLength) buffer.append(", "); //$NON-NLS-1$
+        if (buffer.length() > startLength) {
+            buffer.append(", ");
+        } //$NON-NLS-1$
 		buffer.append("border="); //$NON-NLS-1$
 		switch (borderStyle) {
 			case SWT.BORDER_SOLID:	buffer.append("solid"); break; //$NON-NLS-1$
@@ -385,12 +517,16 @@ public String toString () {
 		}
 	}
 	if (rise != 0) {
-		if (buffer.length() > startLength) buffer.append(", "); //$NON-NLS-1$
+        if (buffer.length() > startLength) {
+            buffer.append(", ");
+        } //$NON-NLS-1$
 		buffer.append("rise="); //$NON-NLS-1$
 		buffer.append(rise);
 	}
 	if (metrics != null) {
-		if (buffer.length() > startLength) buffer.append(", "); //$NON-NLS-1$
+        if (buffer.length() > startLength) {
+            buffer.append(", ");
+        } //$NON-NLS-1$
 		buffer.append("metrics="); //$NON-NLS-1$
 		buffer.append(metrics);
 	}

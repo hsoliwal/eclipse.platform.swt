@@ -227,17 +227,23 @@ public Menu (MenuItem parentItem) {
 }
 
 static Control checkNull (Control control) {
-	if (control == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (control == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return control;
 }
 
 static Menu checkNull (Menu menu) {
-	if (menu == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (menu == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return menu;
 }
 
 static MenuItem checkNull (MenuItem item) {
-	if (item == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return item;
 }
 
@@ -270,9 +276,13 @@ boolean ableToSetLocation() {
  * it into a scrollbar. Deferring via asyncExec lets that idle run first.
  */
 void popupGtk4Popover(boolean hasPointingTo, int pointX, int pointY) {
-	if (isDisposed()) return;
+    if (isDisposed()) {
+        return;
+    }
 	display.asyncExec(() -> {
-		if (isDisposed()) return;
+        if (isDisposed()) {
+            return;
+        }
 		if (hasPointingTo) {
 			GdkRectangle popoverPosition = new GdkRectangle();
 			popoverPosition.x = pointX;
@@ -306,7 +316,9 @@ static final int GTK4_POPOVER_FIT_MAX_ITERATIONS = 6;
 
 void scheduleGtk4PopoverFit(int pointX, int pointY, int iteration) {
 	display.asyncExec(() -> {
-		if (isDisposed()) return;
+        if (isDisposed()) {
+            return;
+        }
 		if (!GTK.gtk_widget_get_mapped(handle)) {
 			// Menu was dismissed before it settled; make sure it is not left
 			// permanently transparent for a future show.
@@ -341,12 +353,16 @@ void scheduleGtk4PopoverFit(int pointX, int pointY, int iteration) {
 }
 
 void revealGtk4Popover() {
-	if (isDisposed()) return;
+    if (isDisposed()) {
+        return;
+    }
 	GTK.gtk_widget_set_opacity(handle, 1.0);
 }
 
 void _setVisible (boolean visible) {
-	if (visible == GTK.gtk_widget_get_mapped (handle)) return;
+    if (visible == GTK.gtk_widget_get_mapped(handle)) {
+        return;
+    }
 	if (visible) {
 		/*
 		 * Feature in GTK. When a menu with no items is shown, GTK shows a
@@ -559,7 +575,9 @@ void createHandle (int index) {
 	if (GTK.GTK4) {
 		int bits = SWT.BAR | SWT.DROP_DOWN | SWT.POP_UP;
 		modelHandle = OS.g_menu_new();
-		if (modelHandle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (modelHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		items = new LinkedList<>();
 		sections = new LinkedList<>();
@@ -567,7 +585,9 @@ void createHandle (int index) {
 		switch (style & bits) {
 			case SWT.BAR:
 				handle = GTK4.gtk_popover_menu_bar_new_from_model(modelHandle);
-				if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+                if (handle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				GTK4.gtk_box_prepend(parent.vboxHandle, handle);
 				break;
@@ -582,12 +602,16 @@ void createHandle (int index) {
 				GTK.gtk_popover_set_position(handle, GTK.GTK_POS_BOTTOM);
 				GTK4.gtk_popover_set_has_arrow(handle, false);
 				GTK.gtk_widget_set_halign(handle, GTK.GTK_ALIGN_START);
-				if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+                if (handle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 		}
 
 		// Create first section
 		long firstSection = OS.g_menu_new();
-		if (firstSection == 0) error(SWT.ERROR_NO_HANDLES);
+        if (firstSection == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		sections.add(new Section(firstSection));
 
 		long defaultSection = OS.g_menu_item_new_section(null, firstSection);
@@ -595,21 +619,27 @@ void createHandle (int index) {
 		OS.g_object_unref(defaultSection);
 
 		actionGroup = OS.g_simple_action_group_new();
-		if (actionGroup == 0) error(SWT.ERROR_NO_HANDLES);
+        if (actionGroup == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		long shellHandle = parent.getShell().topHandle();
 		GTK.gtk_widget_insert_action_group(shellHandle, Converter.javaStringToCString(String.valueOf(this.hashCode())), actionGroup);
 	} else {
 		if ((style & SWT.BAR) != 0) {
 			handle = GTK3.gtk_menu_bar_new();
-			if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+            if (handle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 
 			long vboxHandle = parent.vboxHandle;
 			GTK3.gtk_container_add(vboxHandle, handle);
 			gtk_box_set_child_packing(vboxHandle, handle, false, true, 0, GTK.GTK_PACK_START);
 		} else {
 			handle = GTK3.gtk_menu_new();
-			if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+            if (handle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 			menuHandle = handle;
 			OS.g_object_ref_sink(menuHandle);
 		}
@@ -708,17 +738,25 @@ public MenuItem getItem(int index) {
 	checkWidget();
 
 	if (GTK.GTK4) {
-		if (index < 0 || index >= items.size()) error(SWT.ERROR_INVALID_RANGE);
+        if (index < 0 || index >= items.size()) {
+            error(SWT.ERROR_INVALID_RANGE);
+        }
 
 		return items.get(index);
 	} else {
 		long list = GTK3.gtk_container_get_children (handle);
-		if (list == 0) error (SWT.ERROR_CANNOT_GET_ITEM);
+        if (list == 0) {
+            error(SWT.ERROR_CANNOT_GET_ITEM);
+        }
 		int count = OS.g_list_length (list);
-		if (!(0 <= index && index < count)) error (SWT.ERROR_INVALID_RANGE);
+        if (!(0 <= index && index < count)) {
+            error(SWT.ERROR_INVALID_RANGE);
+        }
 		long data = OS.g_list_nth_data (list, index);
 		OS.g_list_free (list);
-		if (data == 0) error (SWT.ERROR_CANNOT_GET_ITEM);
+        if (data == 0) {
+            error(SWT.ERROR_CANNOT_GET_ITEM);
+        }
 		return (MenuItem) display.getWidget(data);
 	}
 }
@@ -741,7 +779,9 @@ public int getItemCount () {
 	} else {
 		int count = 0;
 		long list = GTK3.gtk_container_get_children (handle);
-		if (list == 0) return 0;
+        if (list == 0) {
+            return 0;
+        }
 		count = OS.g_list_length (list);
 		OS.g_list_free (list);
 		return Math.max(0, count);
@@ -771,7 +811,9 @@ public MenuItem [] getItems () {
 		return items.toArray(new MenuItem[items.size()]);
 	} else {
 		long list = GTK3.gtk_container_get_children (handle);
-		if (list == 0) return new MenuItem [0];
+        if (list == 0) {
+            return new MenuItem [0];
+        }
 		long originalList = list;
 		int count = OS.g_list_length (list);
 		MenuItem [] items = new MenuItem [count];
@@ -779,7 +821,9 @@ public MenuItem [] getItems () {
 		for (int i=0; i<count; i++) {
 			long data = OS.g_list_data (list);
 			MenuItem item = (MenuItem) display.getWidget (data);
-			if (item != null) items [index++] = item;
+            if (item != null) {
+                items [index++] = item;
+            }
 			list = OS.g_list_next (list);
 		}
 		OS.g_list_free (originalList);
@@ -870,7 +914,9 @@ public MenuItem getParentItem () {
  */
 public Menu getParentMenu () {
 	checkWidget();
-	if (cascade == null) return null;
+    if (cascade == null) {
+        return null;
+    }
 	return cascade.getParent ();
 }
 
@@ -918,7 +964,9 @@ public boolean getVisible () {
 		Menu [] popups = display.popups;
 		if (popups != null) {
 			for (int i=0; i<popups.length; i++) {
-				if (popups [i] == this) return true;
+                if (popups [i] == this) {
+                    return true;
+                }
 			}
 		}
 	}
@@ -957,7 +1005,9 @@ long gtk_map (long widget) {
  * {@link SWT#Show} event, making lazily-populated submenus appear empty.
  */
 private void reconnectDropDownMenuSignalsIfMapped() {
-	if (!GTK.GTK4) return;
+    if (!GTK.GTK4) {
+        return;
+    }
 	if ((style & SWT.BAR) != 0) {
 		if (handle != 0 && GTK.gtk_widget_get_mapped(handle)) {
 			connectDropDownMenuSignals();
@@ -995,7 +1045,9 @@ void hookItemsChanged(long model) {
  * {@link #hookItemsChanged(long)}); a cheap no-op if no ancestor is mapped.
  */
 void modelItemsChanged() {
-	if (!GTK.GTK4 || isDisposed()) return;
+    if (!GTK.GTK4 || isDisposed()) {
+        return;
+    }
 	Menu root = this;
 	while (root.cascade != null && root.cascade.parent != null && !root.cascade.parent.isDisposed()) {
 		root = root.cascade.parent;
@@ -1010,7 +1062,9 @@ void modelItemsChanged() {
  * rebuilt the widget after a model change), the stale handle is released first.
  */
 private void wireSubMenuPopover(Menu submenu, long popover) {
-	if (submenu.popoverHandle == popover) return;
+    if (submenu.popoverHandle == popover) {
+        return;
+    }
 	if (submenu.popoverHandle != 0) {
 		/*
 		 * Release the stale popover we previously cached (mirrors deregister()). Its
@@ -1031,9 +1085,13 @@ private void wireSubMenuPopover(Menu submenu, long popover) {
 }
 
 private void connectDropDownMenuSignals() {
-	if (items == null) return;
+    if (items == null) {
+        return;
+    }
 	for (MenuItem menuItem : items) {
-		if (menuItem.menu == null) continue;
+        if (menuItem.menu == null) {
+            continue;
+        }
 		/*
 		 * Locate the popover by its menu model, not positionally: this also runs
 		 * from "items-changed" mid create/dispose, when the item list and the
@@ -1061,7 +1119,9 @@ private void connectCascadeSubMenuSignals(Menu menu) {
  * pass triggered by MAP, SHOW or "items-changed" picks it up.
  */
 private void connectCascadeSubMenuSignals(Menu menu, long parentPopoverHandle) {
-	if (menu == null || parentPopoverHandle == 0 || menu.items == null) return;
+    if (menu == null || parentPopoverHandle == 0 || menu.items == null) {
+        return;
+    }
 	for (MenuItem item : menu.items) {
 		if ((item.style & SWT.CASCADE) != 0 && item.menu != null) {
 			/* Re-discover every pass: a rebuild can make GTK replace the widget,
@@ -1089,13 +1149,17 @@ void hideOpenSubmenus() {
 	// popoverHandle, which GTK may have rebuilt on a model change (a stale handle
 	// then hits GTK_IS_WIDGET).
 	long popover = (style & SWT.POP_UP) != 0 ? handle : popoverHandle;
-	if (popover != 0) hideVisibleSubmenus(popover, popover);
+    if (popover != 0) {
+        hideVisibleSubmenus(popover, popover);
+    }
 }
 
 private void hideVisibleSubmenus(long widget, long root) {
 	for (long child = GTK4.gtk_widget_get_first_child(widget); child != 0; child = GTK4.gtk_widget_get_next_sibling(child)) {
 		if (GTK4.GTK_IS_POPOVER_MENU(child)) {
-			if (child != root && GTK.gtk_widget_get_visible(child)) GTK.gtk_widget_set_visible(child, false);
+            if (child != root && GTK.gtk_widget_get_visible(child)) {
+                GTK.gtk_widget_set_visible(child, false);
+            }
 		} else {
 			hideVisibleSubmenus(child, root);
 		}
@@ -1144,8 +1208,10 @@ void gtk4_focus_leave_event(long controller, long event) {
 /* When a submenu closes, GtkWindow's focus fallback selects some row; sync once that settled. */
 private void syncRowSelectionLater(long popover) {
 	display.asyncExec(() -> {
-		/* The popover may have been rebuilt, and freed, meanwhile; see wireSubMenuPopover. */
-		if (!isDisposed() && popover == ((style & SWT.POP_UP) != 0 ? handle : popoverHandle)) syncRowSelection(popover);
+        /* The popover may have been rebuilt, and freed, meanwhile; see wireSubMenuPopover. */
+        if (!isDisposed() && popover == ((style & SWT.POP_UP) != 0 ? handle : popoverHandle)) {
+            syncRowSelection(popover);
+        }
 	});
 }
 
@@ -1155,29 +1221,43 @@ private void syncRowSelectionLater(long popover) {
  * events set on the row under the pointer regardless of the grab.
  */
 void syncRowSelection(long popover) {
-	/* Keyboard navigation selects rows through focus; leave those alone. */
-	if (System.nanoTime() - display.lastKeyEventTime < 500_000_000L) return;
+    /* Keyboard navigation selects rows through focus; leave those alone. */
+    if (System.nanoTime() - display.lastKeyEventTime < 500_000_000L) {
+        return;
+    }
 	/* The event may reach any popover of the menu (the grab holder); sync from the root down. */
 	for (long p = GTK.gtk_widget_get_parent(popover); p != 0; p = GTK.gtk_widget_get_parent(p)) {
-		if (GTK4.GTK_IS_POPOVER_MENU(p)) popover = p;
+        if (GTK4.GTK_IS_POPOVER_MENU(p)) {
+            popover = p;
+        }
 	}
-	/* With the pointer over no row there is nothing to follow; a tooltip elsewhere must not clear a keyboard selection. */
-	if (!hasPrelitRow(popover)) return;
+    /* With the pointer over no row there is nothing to follow; a tooltip elsewhere must not clear a keyboard selection. */
+    if (!hasPrelitRow(popover)) {
+        return;
+    }
 	syncRowSelectionRecursive(popover);
 }
 
 private boolean hasPrelitRow(long widget) {
-	if (GTK4.GTK_IS_POPOVER_MENU(widget) && !GTK.gtk_widget_get_visible(widget)) return false;
-	if (isMenuRow(widget) && (GTK.gtk_widget_get_state_flags(widget) & GTK.GTK_STATE_FLAG_PRELIGHT) != 0) return true;
+    if (GTK4.GTK_IS_POPOVER_MENU(widget) && !GTK.gtk_widget_get_visible(widget)) {
+        return false;
+    }
+    if (isMenuRow(widget) && (GTK.gtk_widget_get_state_flags(widget) & GTK.GTK_STATE_FLAG_PRELIGHT) != 0) {
+        return true;
+    }
 	for (long child = GTK4.gtk_widget_get_first_child(widget); child != 0; child = GTK4.gtk_widget_get_next_sibling(child)) {
-		if (hasPrelitRow(child)) return true;
+        if (hasPrelitRow(child)) {
+            return true;
+        }
 	}
 	return false;
 }
 
 private void syncRowSelectionRecursive(long widget) {
-	// Closed submenus stay instantiated; skipping them keeps this cheap on large menus.
-	if (GTK4.GTK_IS_POPOVER_MENU(widget) && !GTK.gtk_widget_get_visible(widget)) return;
+    // Closed submenus stay instantiated; skipping them keeps this cheap on large menus.
+    if (GTK4.GTK_IS_POPOVER_MENU(widget) && !GTK.gtk_widget_get_visible(widget)) {
+        return;
+    }
 	Widget item = display.getWidget(widget);
 	boolean custom = item instanceof MenuItem menuItem && menuItem.customWidgetHandle == widget;
 	if (custom || isModelButton(widget)) {
@@ -1204,7 +1284,9 @@ private void syncRowSelectionRecursive(long widget) {
 /** GTK4: drops the selection highlight of every row of {@code popover} but {@code row}, see MenuItem.gtk4_focus_enter_event. */
 void deselectOtherRows(long popover, long row) {
 	for (long child = GTK4.gtk_widget_get_first_child(popover); child != 0; child = GTK4.gtk_widget_get_next_sibling(child)) {
-		if (child == row || GTK4.GTK_IS_POPOVER_MENU(child)) continue; /* A submenu keeps its own selection. */
+        if (child == row || GTK4.GTK_IS_POPOVER_MENU(child)) {
+            continue;
+        } /* A submenu keeps its own selection. */
 		if (isMenuRow(child)) {
 			GTK.gtk_widget_unset_state_flags(child, GTK.GTK_STATE_FLAG_SELECTED);
 			GTK.gtk_widget_queue_draw(child);
@@ -1217,7 +1299,9 @@ void deselectOtherRows(long popover, long row) {
 /** GTK4: the showing submenu popover of {@code row}, or 0. */
 private static long visibleSubmenu(long row) {
 	for (long child = GTK4.gtk_widget_get_first_child(row); child != 0; child = GTK4.gtk_widget_get_next_sibling(child)) {
-		if (GTK4.GTK_IS_POPOVER_MENU(child) && GTK.gtk_widget_get_visible(child)) return child;
+        if (GTK4.GTK_IS_POPOVER_MENU(child) && GTK.gtk_widget_get_visible(child)) {
+            return child;
+        }
 	}
 	return 0;
 }
@@ -1228,7 +1312,9 @@ private static long visibleSubmenu(long row) {
  * is already attached.
  */
 void injectCustomMenuIcons() {
-	if (items == null || display.menuModelMutating) return;
+    if (items == null || display.menuModelMutating) {
+        return;
+    }
 	for (MenuItem item : items) {
 		if (item.customWidgetHandle != 0) {
 			item.injectCustomWidgetGTK4();
@@ -1245,33 +1331,49 @@ void injectCustomMenuIcons() {
  */
 void alignRowLabels() {
 	long popover = (style & SWT.POP_UP) != 0 ? handle : popoverHandle;
-	if (popover == 0) return;
+    if (popover == 0) {
+        return;
+    }
 	boolean hasCustom = false, hasCheckIcon = false;
 	for (MenuItem item : items) {
-		if (item.customLeadingBoxHandle != 0) hasCustom = true;
-		if (item.customIndicatorHandle != 0 && (item.style & SWT.CHECK) != 0) hasCheckIcon = true;
+        if (item.customLeadingBoxHandle != 0) {
+            hasCustom = true;
+        }
+        if (item.customIndicatorHandle != 0 && (item.style & SWT.CHECK) != 0) {
+            hasCheckIcon = true;
+        }
 	}
-	if (!hasCustom) return;
+    if (!hasCustom) {
+        return;
+    }
 	/* A CHECK row with an icon puts the check column in front of the icons; the other rows reserve it too. */
 	for (MenuItem item : items) {
 		if (item.customIndicatorHandle != 0 && (item.style & SWT.CHECK) == 0) {
 			GTK.gtk_widget_set_visible(item.customIndicatorHandle, hasCheckIcon);
 		}
 	}
-	if (sizeGroupHandle == 0) sizeGroupHandle = GTK4.gtk_size_group_new(GTK4.GTK_SIZE_GROUP_HORIZONTAL);
+    if (sizeGroupHandle == 0) {
+        sizeGroupHandle = GTK4.gtk_size_group_new(GTK4.GTK_SIZE_GROUP_HORIZONTAL);
+    }
 	for (MenuItem item : items) {
-		if (item.customLeadingBoxHandle != 0) GTK4.gtk_size_group_add_widget(sizeGroupHandle, item.customLeadingBoxHandle);
+        if (item.customLeadingBoxHandle != 0) {
+            GTK4.gtk_size_group_add_widget(sizeGroupHandle, item.customLeadingBoxHandle);
+        }
 	}
 	addNativeIndicatorBoxes(popover);
 }
 
 private void addNativeIndicatorBoxes(long widget) {
 	for (long child = GTK4.gtk_widget_get_first_child(widget); child != 0; child = GTK4.gtk_widget_get_next_sibling(child)) {
-		/* Nested submenu popovers are children of their cascade row and align their own rows. */
-		if (GTK4.GTK_IS_POPOVER_MENU(child)) continue;
+        /* Nested submenu popovers are children of their cascade row and align their own rows. */
+        if (GTK4.GTK_IS_POPOVER_MENU(child)) {
+            continue;
+        }
 		if (isModelButton(child)) {
 			long box = GTK4.gtk_widget_get_first_child(child);
-			if (box != 0 && GTK.GTK_IS_BOX(box)) GTK4.gtk_size_group_add_widget(sizeGroupHandle, box);
+            if (box != 0 && GTK.GTK_IS_BOX(box)) {
+                GTK4.gtk_size_group_add_widget(sizeGroupHandle, box);
+            }
 		} else {
 			addNativeIndicatorBoxes(child);
 		}
@@ -1288,7 +1390,9 @@ boolean moveFocus(long popover, int direction) {
 	long oldFocus = GTK.gtk_window_get_focus(shellHandle);
 	long root = popover;
 	for (long parent = GTK.gtk_widget_get_parent(popover); parent != 0; parent = GTK.gtk_widget_get_parent(parent)) {
-		if (GTK4.GTK_IS_POPOVER_MENU(parent)) root = parent;
+        if (GTK4.GTK_IS_POPOVER_MENU(parent)) {
+            root = parent;
+        }
 	}
 	boolean vertical = direction != GTK.GTK_DIR_LEFT && direction != GTK.GTK_DIR_RIGHT;
 	boolean backward = direction == GTK.GTK_DIR_UP || direction == GTK.GTK_DIR_TAB_BACKWARD;
@@ -1301,13 +1405,19 @@ boolean moveFocus(long popover, int direction) {
 	 * a submenu without a usable row like a leaf row and enters one with, as in GTK.
 	 */
 	long submenu = popover != root && (direction == GTK.GTK_DIR_LEFT || findRow(popover, false) == 0) ? popover : oldFocus != 0 ? visibleSubmenu(oldFocus) : 0;
-	if (direction == GTK.GTK_DIR_RIGHT && submenu != 0 && findRow(submenu, false) != 0) submenu = 0;
+    if (direction == GTK.GTK_DIR_RIGHT && submenu != 0 && findRow(submenu, false) != 0) {
+        submenu = 0;
+    }
 	if (submenu != 0) {
 		closeSubmenuFromKeyboard(submenu, root);
-		/* Or they may have rebuilt the rows: the old focus is gone with them. */
-		if (isDisposed() || display.getWidget(root) == null) return true;
+        /* Or they may have rebuilt the rows: the old focus is gone with them. */
+        if (isDisposed() || display.getWidget(root) == null) {
+            return true;
+        }
 		oldFocus = GTK.gtk_window_get_focus(shellHandle);
-		if (!isMenuRow(oldFocus)) return true;
+        if (!isMenuRow(oldFocus)) {
+            return true;
+        }
 		if (vertical) {
 			/* The focus is back on the row above the submenu: go on in that row's menu. */
 			for (popover = oldFocus; !GTK4.GTK_IS_POPOVER_MENU(popover); popover = GTK.gtk_widget_get_parent(popover)) {}
@@ -1350,7 +1460,9 @@ boolean moveFocus(long popover, int direction) {
 		 * does Right into a submenu without a usable row: leave that open, stay on its row.
 		 */
 		newFocus = vertical ? findRow(popover, backward) : oldFocus;
-		if (!isMenuRow(newFocus)) return true;
+        if (!isMenuRow(newFocus)) {
+            return true;
+        }
 		GTK.gtk_widget_grab_focus(newFocus);
 	}
 	selectRow(newFocus);
@@ -1376,7 +1488,9 @@ private void closeSubmenuFromKeyboard(long submenu, long root) {
 	OS.g_object_ref(row);
 	display.untargetableMenuRow = row;
 	GTK.gtk_widget_set_visible(submenu, false);
-	if (isDisposed()) return; /* Hidden, this menu's SWT.Hide listeners ran and may have disposed the menu. */
+    if (isDisposed()) {
+        return;
+    } /* Hidden, this menu's SWT.Hide listeners ran and may have disposed the menu. */
 	GTK.gtk_widget_grab_focus(root);
 	GTK.gtk_widget_grab_focus(row);
 	GTK.gtk_widget_child_focus(root, GTK.GTK_DIR_LEFT);
@@ -1396,10 +1510,14 @@ private static void selectRow(long row) {
 long findRow(long widget, boolean last) {
 	long found = 0;
 	for (long child = GTK4.gtk_widget_get_first_child(widget); child != 0; child = GTK4.gtk_widget_get_next_sibling(child)) {
-		if (GTK4.GTK_IS_POPOVER_MENU(child)) continue;
+        if (GTK4.GTK_IS_POPOVER_MENU(child)) {
+            continue;
+        }
 		long row = isMenuRow(child) ? (GTK.gtk_widget_get_sensitive(child) && GTK.gtk_widget_get_visible(child) ? child : 0) : findRow(child, last);
 		if (row != 0) {
-			if (!last) return row;
+            if (!last) {
+                return row;
+            }
 			found = row;
 		}
 	}
@@ -1408,8 +1526,12 @@ long findRow(long widget, boolean last) {
 
 /** GTK4: whether {@code widget} is a menu row, native or custom. */
 boolean isMenuRow(long widget) {
-	if (widget == 0) return false;
-	if (isModelButton(widget)) return true;
+    if (widget == 0) {
+        return false;
+    }
+    if (isModelButton(widget)) {
+        return true;
+    }
 	return display.getWidget(widget) instanceof MenuItem item && item.customWidgetHandle == widget;
 }
 
@@ -1424,11 +1546,17 @@ static boolean isModelButton(long widget) {
  * is not the first one when the SWT.Show listeners added rows in front of it.
  */
 private void selectFirstRowLater(long popover) {
-	if (System.nanoTime() - display.lastKeyEventTime >= 500_000_000L) return;
+    if (System.nanoTime() - display.lastKeyEventTime >= 500_000_000L) {
+        return;
+    }
 	display.asyncExec(() -> {
-		if (isDisposed() || popover != ((style & SWT.POP_UP) != 0 ? handle : popoverHandle) || !GTK.gtk_widget_get_mapped(popover)) return;
+        if (isDisposed() || popover != ((style & SWT.POP_UP) != 0 ? handle : popoverHandle) || !GTK.gtk_widget_get_mapped(popover)) {
+            return;
+        }
 		long first = findRow(popover, false);
-		if (first == 0) return;
+        if (first == 0) {
+            return;
+        }
 		GTK.gtk_widget_grab_focus(first);
 		selectRow(first);
 	});
@@ -1440,7 +1568,9 @@ private void selectFirstRowLater(long popover) {
  * handle or {@code 0} if it is not (yet) present.
  */
 private long findNestedPopoverForModel(long parentWidget, long targetModel) {
-	if (parentWidget == 0 || targetModel == 0) return 0;
+    if (parentWidget == 0 || targetModel == 0) {
+        return 0;
+    }
 	long child = GTK4.gtk_widget_get_first_child(parentWidget);
 	while (child != 0) {
 		if (GTK4.GTK_IS_POPOVER_MENU(child)) {
@@ -1450,7 +1580,9 @@ private long findNestedPopoverForModel(long parentWidget, long targetModel) {
 			}
 		}
 		long found = findNestedPopoverForModel(child, targetModel);
-		if (found != 0) return found;
+        if (found != 0) {
+            return found;
+        }
 		child = GTK4.gtk_widget_get_next_sibling(child);
 	}
 	return 0;
@@ -1469,15 +1601,21 @@ long gtk_hide (long widget) {
 		 */
 		Shell shell = getShell();
 		display.asyncExec(() -> {
-			if (shell.isDisposed()) return;
+            if (shell.isDisposed()) {
+                return;
+            }
 			long focus = GTK.gtk_window_get_focus(shell.shellHandle);
-			if (focus == 0 || !GTK.gtk_widget_get_mapped(focus) || parentMenu != null && GTK.gtk_widget_get_parent(focus) == parentMenu.handle) shell.restoreFocus();
+            if (focus == 0 || !GTK.gtk_widget_get_mapped(focus) || parentMenu != null && GTK.gtk_widget_get_parent(focus) == parentMenu.handle) {
+                shell.restoreFocus();
+            }
 		});
 	}
 	if ((style & SWT.POP_UP) != 0) {
 		if (display.activeShell != null) {
 			display.activeShell = getShell ();
-			if (display.activeShell.ignoreFocusOut) display.activeShell.ignoreFocusIn = true;
+            if (display.activeShell.ignoreFocusOut) {
+                display.activeShell.ignoreFocusIn = true;
+            }
 			display.activeShell.ignoreFocusOut = false;
 		}
 	}
@@ -1486,7 +1624,9 @@ long gtk_hide (long widget) {
 		MenuItem[] items = getItems();
 		for (int i=0; i<items.length; i++) {
 			MenuItem item = items [i];
-			if (item.updateAcceleratorText(false)) continue;
+            if (item.updateAcceleratorText(false)) {
+                continue;
+            }
 		}
 	}
 	return 0;
@@ -1499,7 +1639,9 @@ long gtk_show (long widget) {
 			display.activeShell = getShell ();
 			display.activeShell.ignoreFocusOut = true;
 		}
-		if (GTK.GTK4) selectFirstRowLater(handle);
+        if (GTK.GTK4) {
+            selectFirstRowLater(handle);
+        }
 		return 0;
 	}
 	sendEvent (SWT.Show);
@@ -1523,7 +1665,9 @@ long gtk_show (long widget) {
 		MenuItem[] items = getItems();
 		for (int i=0; i<items.length; i++) {
 			MenuItem item = items [i];
-			if (item.updateAcceleratorText(true)) continue;
+            if (item.updateAcceleratorText(true)) {
+                continue;
+            }
 		}
 	}
 	return 0;
@@ -1547,14 +1691,20 @@ long gtk_menu_popped_up (long widget, long flipped_rect, long final_rect, long f
 	boolean flippedX = flipped_x == 1;
 	boolean flippedY = flipped_y == 1;
 	System.out.println("SWT_MENU_LOCATION_DEBUGGING enabled, printing positioning info for " + widget);
-	if (OS.isWayland()) System.out.println("Note: SWT is running on Wayland, coordinates will be parent-relative");
+    if (OS.isWayland()) {
+        System.out.println("Note: SWT is running on Wayland, coordinates will be parent-relative");
+    }
 	if (hasLocation) {
 		System.out.println("hasLocation is true and set coordinates are Point {" + this.x + ", " + this.y + "}");
 	} else {
 		System.out.println("hasLocation is not set, this is most likely a right click menu");
 	}
-	if (flippedX) System.out.println("Menu is inverted along the X-axis");
-	if (flippedY) System.out.println("Menu is inverted along the Y-axis");
+    if (flippedX) {
+        System.out.println("Menu is inverted along the X-axis");
+    }
+    if (flippedY) {
+        System.out.println("Menu is inverted along the Y-axis");
+    }
 	System.out.println("Final menu position and size is Rectangle {" + finalRect.x + ", " + finalRect.y + ", " +
 			finalRect.width + ", " + finalRect.height + "}");
 	System.out.println("Flipped menu position and size is Rectangle {" + flippedRect.x + ", " + flippedRect.y + ", " +
@@ -1569,7 +1719,9 @@ void hookEvents() {
 
 	if (GTK.GTK4) {
 		shortcutController = GTK4.gtk_shortcut_controller_new();
-		if (shortcutController == 0) error(SWT.ERROR_NO_HANDLES);
+        if (shortcutController == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		GTK4.gtk_shortcut_controller_set_scope(shortcutController, GTK.GTK_SHORTCUT_SCOPE_GLOBAL);
 		GTK4.gtk_widget_add_controller(parent.handle, shortcutController);
 
@@ -1630,10 +1782,14 @@ void hookEvents() {
  */
 public int indexOf (MenuItem item) {
 	checkWidget();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	MenuItem [] items = getItems ();
 	for (int i=0; i<items.length; i++) {
-		if (items [i] == item) return i;
+        if (items [i] == item) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -1696,7 +1852,9 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (cascade != null) cascade.setMenu (null);
+    if (cascade != null) {
+        cascade.setMenu(null);
+    }
 	if ((style & SWT.BAR) != 0 && this == parent.menuBar) {
 		parent.setMenuBar (null);
 	}  else {
@@ -1709,10 +1867,14 @@ void releaseParent () {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (parent != null) parent.removeMenu (this);
+    if (parent != null) {
+        parent.removeMenu(this);
+    }
 	parent = null;
 	cascade = null;
-	if (imageList != null) imageList.dispose ();
+    if (imageList != null) {
+        imageList.dispose();
+    }
 	imageList = null;
 	if (sizeGroupHandle != 0) {
 		OS.g_object_unref(sizeGroupHandle);
@@ -1771,8 +1933,12 @@ void deregister() {
  */
 public void removeMenuListener (MenuListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Hide, listener);
 	eventTable.unhook (SWT.Show, listener);
 }
@@ -1804,8 +1970,12 @@ void removeAccelerators (long accelGroup) {
  */
 public void removeHelpListener (HelpListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Help, listener);
 }
 
@@ -1906,7 +2076,9 @@ public void setEnabled(boolean enabled) {
  */
 public void setLocation (int x, int y) {
 	checkWidget ();
-	if ((style & (SWT.BAR | SWT.DROP_DOWN)) != 0) return;
+    if ((style & (SWT.BAR | SWT.DROP_DOWN)) != 0) {
+        return;
+    }
 	this.x = x;
 	this.y = y;
 	hasLocation = true;
@@ -1938,7 +2110,9 @@ public void setLocation (int x, int y) {
  */
 public void setLocation (Point location) {
 	checkWidget ();
-	if (location == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (location == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setLocation (location.x, location.y);
 }
 
@@ -1957,13 +2131,17 @@ public void setLocation (Point location) {
  */
 public void setOrientation (int orientation) {
 	checkWidget ();
-	if ((style & (SWT.BAR | SWT.DROP_DOWN)) != 0) return;
+    if ((style & (SWT.BAR | SWT.DROP_DOWN)) != 0) {
+        return;
+    }
 	_setOrientation (orientation);
 }
 
 void _setOrientation (int orientation) {
 	int flags = SWT.RIGHT_TO_LEFT | SWT.LEFT_TO_RIGHT;
-	if ((orientation & flags) == 0 || (orientation & flags) == flags) return;
+    if ((orientation & flags) == 0 || (orientation & flags) == flags) {
+        return;
+    }
 	style &= ~flags;
 	style |= orientation & flags;
 	setOrientation (false);
@@ -1973,7 +2151,9 @@ void _setOrientation (int orientation) {
 void setOrientation (boolean create) {
 	if ((style & SWT.RIGHT_TO_LEFT) != 0 || !create) {
 		int dir = (style & SWT.RIGHT_TO_LEFT) != 0 ? GTK.GTK_TEXT_DIR_RTL : GTK.GTK_TEXT_DIR_LTR;
-		if (handle != 0) GTK.gtk_widget_set_direction (handle, dir);
+        if (handle != 0) {
+            GTK.gtk_widget_set_direction(handle, dir);
+        }
 		MenuItem [] items = getItems ();
 		for (int i = 0; i < items.length; i++) {
 			items [i].setOrientation (create);
@@ -2084,7 +2264,9 @@ void verifyMenuPosition (int itemCount) {
  */
 public void setVisible (boolean visible) {
 	checkWidget();
-	if ((style & (SWT.BAR | SWT.DROP_DOWN)) != 0) return;
+    if ((style & (SWT.BAR | SWT.DROP_DOWN)) != 0) {
+        return;
+    }
 	if (visible) {
 		display.addPopup (this);
 	} else {

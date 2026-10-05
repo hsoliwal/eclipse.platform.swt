@@ -43,12 +43,16 @@ public static void main (String [] args) {
 		Button button = new Button (shell, SWT.TOGGLE);
 		button.setText ("B" + i);
 		button.addListener (SWT.Selection, listener);
-		if (i == 0) button.setSelection (true);
+        if (i == 0) {
+            button.setSelection(true);
+        }
 	}
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

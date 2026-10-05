@@ -65,7 +65,9 @@ static native final void synthesizeWindowActivation (Frame frame, boolean doActi
 static native final void registerListeners (Frame frame);
 
 static synchronized void loadLibrary () {
-	if (loaded) return;
+    if (loaded) {
+        return;
+    }
 	loaded = true;
 	/*
 	* Note that the jawt library is loaded explicitly
@@ -80,7 +82,9 @@ static synchronized void loadLibrary () {
 }
 
 static synchronized void initializeSwing() {
-	if (swingInitialized) return;
+    if (swingInitialized) {
+        return;
+    }
 	swingInitialized = true;
 	/*
 	* Feature in GTK.  The default X error handler
@@ -98,7 +102,9 @@ static synchronized void initializeSwing() {
 		/* Initialize the default focus traversal policy */
 		Class<?> clazz = Class.forName("javax.swing.UIManager");
 		Method method = clazz.getMethod("getDefaults");
-		if (method != null) method.invoke(clazz);
+        if (method != null) {
+            method.invoke(clazz);
+        }
 	} catch (Throwable e) {}
 }
 
@@ -116,8 +122,12 @@ static synchronized void initializeSwing() {
  * @since 3.2
  */
 public static Frame getFrame (Composite parent) {
-	if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if ((parent.getStyle () & SWT.EMBEDDED) == 0) return null;
+    if (parent == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((parent.getStyle() & SWT.EMBEDDED) == 0) {
+        return null;
+    }
 	return (Frame)parent.getData(EMBEDDED_FRAME_KEY);
 }
 
@@ -145,7 +155,9 @@ public static Frame getFrame (Composite parent) {
  * @since 3.0
  */
 public static Frame new_Frame (final Composite parent) {
-	if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (parent == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if ((parent.getStyle () & SWT.EMBEDDED) == 0) {
 		SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 	}
@@ -185,10 +197,14 @@ public static Frame new_Frame (final Composite parent) {
 			final Window window = (Window) event.getSource();
 			if (window.getParent() == frame[0]) {
 				parent.getDisplay().asyncExec(() -> {
-					if (parent.isDisposed()) return;
+                    if (parent.isDisposed()) {
+                        return;
+                    }
 					Shell shell = parent.getShell();
 					long awtHandle = getAWTHandle(window);
-					if (awtHandle == 0) return;
+                    if (awtHandle == 0) {
+                        return;
+                    }
 
 					long xWindow;
 					if (GTK.GTK4) {
@@ -240,7 +256,9 @@ public static Frame new_Frame (final Composite parent) {
 	parent.addListener (SWT.Resize, listener);
 
 	parent.getDisplay().asyncExec(() -> {
-		if (parent.isDisposed()) return;
+        if (parent.isDisposed()) {
+            return;
+        }
 		final Rectangle clientArea = parent.getClientArea();
 		EventQueue.invokeLater(() -> {
 			frame[0].setSize (clientArea.width, clientArea.height);
@@ -267,8 +285,12 @@ public static Frame new_Frame (final Composite parent) {
  * @since 3.0
  */
 public static Shell new_Shell (final Display display, final Canvas parent) {
-	if (display == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (display == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (parent == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	long handle = 0;
 	try {
 		loadLibrary ();
@@ -276,14 +298,18 @@ public static Shell new_Shell (final Display display, final Canvas parent) {
 	} catch (Throwable e) {
 		SWT.error (SWT.ERROR_NOT_IMPLEMENTED, e);
 	}
-	if (handle == 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT, null, " [peer not created]");
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT, null, " [peer not created]");
+    }
 
 	final Shell shell = Shell.gtk_new (display, handle);
 	final ComponentListener listener = new ComponentAdapter () {
 		@Override
 		public void componentResized (ComponentEvent e) {
 			display.syncExec (() -> {
-				if (shell.isDisposed()) return;
+                if (shell.isDisposed()) {
+                    return;
+                }
 				Dimension dim = parent.getSize ();
 				shell.setSize (new Point(dim.width, dim.height));
 			});

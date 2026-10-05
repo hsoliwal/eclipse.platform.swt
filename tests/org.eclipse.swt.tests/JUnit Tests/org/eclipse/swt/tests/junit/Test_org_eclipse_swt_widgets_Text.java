@@ -63,8 +63,9 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 
 	int[] cases = {0, SWT.SINGLE, SWT.MULTI, SWT.MULTI | SWT.V_SCROLL, SWT.MULTI | SWT.H_SCROLL, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL,
 					SWT.WRAP};
-	for (int style : cases)
-		text = new Text(shell, style);
+    for (int style : cases) {
+        text = new Text(shell, style);
+    }
 }
 
 @Test
@@ -1392,12 +1393,15 @@ private void makeCleanEnvironment(boolean single) {
 
 private void makeCleanEnvironment(boolean single, boolean border) {
 // this method must be private or protected so the auto-gen tool keeps it
-	if ( text != null ) text.dispose();
+    if (text != null) {
+        text.dispose();
+    }
 
-	if ( single == true )
-		text = new Text(shell, SWT.SINGLE | (border ? SWT.BORDER : SWT.NULL));
-	else
-		text = new Text(shell, SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | (border ? SWT.BORDER : SWT.NULL));
+    if (single == true) {
+        text = new Text(shell, SWT.SINGLE | (border ? SWT.BORDER : SWT.NULL));
+    } else {
+        text = new Text(shell, SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | (border ? SWT.BORDER : SWT.NULL));
+    }
 	setWidget(text);
 	delimiterString = Text.DELIMITER;
 }

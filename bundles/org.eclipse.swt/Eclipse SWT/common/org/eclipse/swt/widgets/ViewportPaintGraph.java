@@ -47,7 +47,9 @@ final class ViewportPaintGraph {
 		if (layer == 0 || (layer & ~ViewportLayerState.ALL) != 0) {
 			throw new IllegalArgumentException ("invalid viewport layer");
 		}
-		if (width < 0 || height < 0) throw new IllegalArgumentException ("negative paint bounds");
+        if (width < 0 || height < 0) {
+            throw new IllegalArgumentException("negative paint bounds");
+        }
 		ensureNodeCapacity (nodeCount + 1);
 		int id = nodeCount++;
 		keys [id] = key;
@@ -65,12 +67,16 @@ final class ViewportPaintGraph {
 	void addDependency (int source, int dependant) {
 		checkNode (source);
 		checkNode (dependant);
-		if (source == dependant) throw new IllegalArgumentException ("self dependency");
-		/*
-		 * Requiring forward edges gives us a DAG by construction and matches
-		 * paint layering: base geometry is created before overlays that depend on it.
-		 */
-		if (source > dependant) throw new IllegalArgumentException ("dependency must point forward");
+        if (source == dependant) {
+            throw new IllegalArgumentException("self dependency");
+        }
+        /*
+         * Requiring forward edges gives us a DAG by construction and matches
+         * paint layering: base geometry is created before overlays that depend on it.
+         */
+        if (source > dependant) {
+            throw new IllegalArgumentException("dependency must point forward");
+        }
 		ensureEdgeCapacity (edgeCount + 1);
 		edgeTo [edgeCount] = dependant;
 		edgeNext [edgeCount] = firstOutgoing [source];
@@ -122,7 +128,9 @@ final class ViewportPaintGraph {
 			throw new IllegalArgumentException ("invalid viewport layer mask");
 		}
 		for (int node = 0; node < nodeCount; node++) {
-			if ((layers [node] & layerMask) != 0) queueDirty (node);
+            if ((layers [node] & layerMask) != 0) {
+                queueDirty(node);
+            }
 		}
 		propagateDirty ();
 	}
@@ -136,7 +144,9 @@ final class ViewportPaintGraph {
 			throw new IllegalArgumentException ("invalid viewport layer mask");
 		}
 		for (int node = 0; node < nodeCount; node++) {
-			if ((layers [node] & layerMask) == 0) continue;
+            if ((layers [node] & layerMask) == 0) {
+                continue;
+            }
 			if (intersects (
 					x [node], y [node], width [node], height [node],
 					dirtyX, dirtyY, dirtyWidth, dirtyHeight)) {
@@ -149,14 +159,20 @@ final class ViewportPaintGraph {
 	ViewportAffineTransform.Bounds deviceBounds (
 			int node, ViewportAffineTransform transform) {
 		checkNode (node);
-		if (transform == null) throw new IllegalArgumentException ("null transform");
+        if (transform == null) {
+            throw new IllegalArgumentException("null transform");
+        }
 		return transform.mapBounds (x [node], y [node], width [node], height [node]);
 	}
 
 	void forEachDirty (IntConsumer action) {
-		if (action == null) throw new IllegalArgumentException ("null action");
+        if (action == null) {
+            throw new IllegalArgumentException("null action");
+        }
 		for (int node = 0; node < nodeCount; node++) {
-			if (isDirty (node)) action.accept (node);
+            if (isDirty(node)) {
+                action.accept(node);
+            }
 		}
 	}
 
@@ -188,12 +204,17 @@ final class ViewportPaintGraph {
 	private void setDirty (int node, boolean value) {
 		long mask = 1L << (node & 63);
 		int word = node >>> 6;
-		if (value) dirtyWords [word] |= mask;
-		else dirtyWords [word] &= ~mask;
+        if (value) {
+            dirtyWords [word] |= mask;
+        } else {
+            dirtyWords [word] &= ~mask;
+        }
 	}
 
 	private void ensureNodeCapacity (int required) {
-		if (required <= keys.length) return;
+        if (required <= keys.length) {
+            return;
+        }
 		int next = Math.max (required, keys.length * 2);
 		keys = java.util.Arrays.copyOf (keys, next);
 		layers = java.util.Arrays.copyOf (layers, next);
@@ -207,7 +228,9 @@ final class ViewportPaintGraph {
 	}
 
 	private void ensureEdgeCapacity (int required) {
-		if (required <= edgeTo.length) return;
+        if (required <= edgeTo.length) {
+            return;
+        }
 		int next = Math.max (required, edgeTo.length * 2);
 		edgeTo = java.util.Arrays.copyOf (edgeTo, next);
 		int old = edgeNext.length;
@@ -224,13 +247,17 @@ final class ViewportPaintGraph {
 	}
 
 	private void checkNode (int node) {
-		if (node < 0 || node >= nodeCount) throw new IllegalArgumentException ("invalid paint node");
+        if (node < 0 || node >= nodeCount) {
+            throw new IllegalArgumentException("invalid paint node");
+        }
 	}
 
 	private static boolean intersects (
 			long ax, long ay, long aw, long ah,
 			long bx, long by, long bw, long bh) {
-		if (aw == 0 || ah == 0 || bw == 0 || bh == 0) return false;
+        if (aw == 0 || ah == 0 || bw == 0 || bh == 0) {
+            return false;
+        }
 		return ax < saturatedAdd (bx, bw)
 				&& bx < saturatedAdd (ax, aw)
 				&& ay < saturatedAdd (by, bh)
@@ -238,7 +265,9 @@ final class ViewportPaintGraph {
 	}
 
 	private static long saturatedAdd (long value, long delta) {
-		if (delta > 0 && value > Long.MAX_VALUE - delta) return Long.MAX_VALUE;
+        if (delta > 0 && value > Long.MAX_VALUE - delta) {
+            return Long.MAX_VALUE;
+        }
 		return value + delta;
 	}
 

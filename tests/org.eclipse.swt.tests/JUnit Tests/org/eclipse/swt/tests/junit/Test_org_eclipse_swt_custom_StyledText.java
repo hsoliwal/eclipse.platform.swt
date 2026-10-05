@@ -130,10 +130,16 @@ private StyleRange getStyle(int start, int length, Color fg, Color bg) {
 	StyleRange style = new StyleRange();
 	style.start = start;
 	style.length = length;
-	if (fg != null) style.foreground = fg;
-	else style.foreground = null;
-	if (bg != null) style.background = bg;
-	else style.background = null;
+    if (fg != null) {
+        style.foreground = fg;
+    } else {
+        style.foreground = null;
+    }
+    if (bg != null) {
+        style.background = bg;
+    } else {
+        style.background = null;
+    }
 	return style;
 }
 
@@ -2370,8 +2376,10 @@ public void test_paste(){
 
 @Test
 public void test_print() {
-	// if there aren't any printers, don't do this test
-	if (Printer.getDefaultPrinterData() == null) return;
+    // if there aren't any printers, don't do this test
+    if (Printer.getDefaultPrinterData() == null) {
+        return;
+    }
 
 	/* We don't really want to run this test, because it wastes paper.
 	 * Almost all of the print() method is tested in print(Printer), below.
@@ -2383,8 +2391,10 @@ public void test_print() {
 
 @Test
 public void test_printLorg_eclipse_swt_printing_Printer() {
-	// if there aren't any printers, don't do this test
-	if (Printer.getDefaultPrinterData() == null) return;
+    // if there aren't any printers, don't do this test
+    if (Printer.getDefaultPrinterData() == null) {
+        return;
+    }
 
 	assertThrows(IllegalArgumentException.class, () ->
 	text.print((Printer) null));

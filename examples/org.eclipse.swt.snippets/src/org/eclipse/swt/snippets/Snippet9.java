@@ -61,11 +61,15 @@ public static void main (String [] args) {
 		int vSelection = vBar.getSelection ();
 		Point location = composite.getLocation ();
 		if (hSelection >= hPage) {
-			if (hPage <= 0) hSelection = 0;
+            if (hPage <= 0) {
+                hSelection = 0;
+            }
 			location.x = -hSelection;
 		}
 		if (vSelection >= vPage) {
-			if (vPage <= 0) vSelection = 0;
+            if (vPage <= 0) {
+                vSelection = 0;
+            }
 			location.y = -vSelection;
 		}
 		composite.setLocation (location);
@@ -73,7 +77,9 @@ public static void main (String [] args) {
 	shell.setSize(600, 500);
 	shell.open ();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

@@ -125,7 +125,9 @@ public void createControlPanel(Composite parent) {
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	Pattern pattern = null;
@@ -142,9 +144,15 @@ public void paint(GC gc, int width, int height) {
 	// arc
 	Path path = new Path(device);
 	path.addArc((width-250)/2, (height-400)/2, 500, 400, 90, 180);
-	if (closeButton.getSelection()) path.close();
-	if (fillButton.getSelection()) gc.fillPath(path);
-	if (drawButton.getSelection()) gc.drawPath(path);
+    if (closeButton.getSelection()) {
+        path.close();
+    }
+    if (fillButton.getSelection()) {
+        gc.fillPath(path);
+    }
+    if (drawButton.getSelection()) {
+        gc.drawPath(path);
+    }
 	path.dispose();
 
 	// shape on left
@@ -154,9 +162,15 @@ public void paint(GC gc, int width, int height) {
 	transform.dispose();
 	path = new Path(device);
 	path.cubicTo(-150, 100, 150, 200, 0, 300);
-	if (closeButton.getSelection()) path.close();
-	if (fillButton.getSelection()) gc.fillPath(path);
-	if (drawButton.getSelection()) gc.drawPath(path);
+    if (closeButton.getSelection()) {
+        path.close();
+    }
+    if (fillButton.getSelection()) {
+        gc.fillPath(path);
+    }
+    if (drawButton.getSelection()) {
+        gc.drawPath(path);
+    }
 	path.dispose();
 	gc.setTransform(null);
 
@@ -167,12 +181,20 @@ public void paint(GC gc, int width, int height) {
 	path.lineTo(3*(width-250)/4 + 50 + 250, height/2 + 50);
 	path.lineTo(3*(width-250)/4 - 25 + 250, height/2 + 150);
 	path.lineTo(3*(width-250)/4 + 25 + 250, height/2 + 50);
-	if (closeButton.getSelection()) path.close();
-	if (fillButton.getSelection()) gc.fillPath(path);
-	if (drawButton.getSelection()) gc.drawPath(path);
+    if (closeButton.getSelection()) {
+        path.close();
+    }
+    if (fillButton.getSelection()) {
+        gc.fillPath(path);
+    }
+    if (drawButton.getSelection()) {
+        gc.drawPath(path);
+    }
 	path.dispose();
 
-	if (pattern != null) pattern.dispose();
+    if (pattern != null) {
+        pattern.dispose();
+    }
 }
 }
 

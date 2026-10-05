@@ -29,7 +29,9 @@ public class Bug497707_ShellAlpha {
 		System.out.println("Shell.getAlpha() returns: " + shell.getAlpha());
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

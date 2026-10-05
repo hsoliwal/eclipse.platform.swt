@@ -50,7 +50,9 @@ public class Bug160691_SWTAWTShell {
 		frame.setVisible(true);
 
 		while (!shell.isDisposed()) {
-				if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 }
 }

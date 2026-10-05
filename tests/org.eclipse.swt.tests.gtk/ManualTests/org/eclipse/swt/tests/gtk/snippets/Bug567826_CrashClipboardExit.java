@@ -47,13 +47,15 @@ public class Bug567826_CrashClipboardExit {
 		clipboard.setContents(data, types, DND.CLIPBOARD);
 
 		final String clipboardProxyID = "CLIPBOARD PROXY OBJECT";
-		if (null == display.getData(clipboardProxyID))
-			System.out.println("Unexpected: ClipboardProxy is not present");
+        if (null == display.getData(clipboardProxyID)) {
+            System.out.println("Unexpected: ClipboardProxy is not present");
+        }
 
 		display.addListener(SWT.Dispose, event -> {
 			System.out.println("SWT.Dispose for Display: waiting");
-			if (null != display.getData(clipboardProxyID))
-				System.out.println("ClipboardProxy is not disposed in SWT.Dispose. Shouldn't happen without the patch.");
+            if (null != display.getData(clipboardProxyID)) {
+                System.out.println("ClipboardProxy is not disposed in SWT.Dispose. Shouldn't happen without the patch.");
+            }
 
 			// Give time to switch to other window
 			try {
@@ -69,8 +71,9 @@ public class Bug567826_CrashClipboardExit {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ())
-				display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		display.dispose ();

@@ -77,7 +77,9 @@ public static void main (String [] args) {
 	shell.setSize(shell.computeSize(SWT.DEFAULT, SWT.DEFAULT).x, 300);
 	shell.open();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

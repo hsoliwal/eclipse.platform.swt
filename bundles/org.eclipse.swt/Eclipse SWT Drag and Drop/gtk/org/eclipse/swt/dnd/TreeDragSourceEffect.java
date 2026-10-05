@@ -57,7 +57,9 @@ public class TreeDragSourceEffect extends DragSourceEffect {
 	 */
 	@Override
 	public void dragFinished(DragSourceEvent event) {
-		if (dragSourceImage != null) dragSourceImage.dispose();
+        if (dragSourceImage != null) {
+            dragSourceImage.dispose();
+        }
 		dragSourceImage = null;
 	}
 
@@ -78,7 +80,9 @@ public class TreeDragSourceEffect extends DragSourceEffect {
 	}
 
 	Image getDragSourceImage(DragSourceEvent event) {
-		if (dragSourceImage != null) dragSourceImage.dispose();
+        if (dragSourceImage != null) {
+            dragSourceImage.dispose();
+        }
 		dragSourceImage = TreeTableCommon.getDragSourceImage(control);
 		return dragSourceImage;
 	}

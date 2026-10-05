@@ -149,7 +149,9 @@ public static int registerType(String formatName){
 		return ContentProviders.getInstance().registerType(formatName);
 	}
 
-	if (formatName == null) return GDK.GDK_NONE;
+    if (formatName == null) {
+        return GDK.GDK_NONE;
+    }
 	byte[] buffer = Converter.wcsToMbcs(formatName, true);
 	return (int)GDK.gdk_atom_intern(buffer, false);
 }

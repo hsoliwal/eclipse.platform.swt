@@ -77,8 +77,9 @@ public void test_getImage() {
 	for (Image image : cases) {
 		decorations.setImage(image);
 		assertEquals(decorations.getImage(), image);
-		if (image!=null)
-			image.dispose();
+        if (image != null) {
+            image.dispose();
+        }
 	}
 }
 
@@ -189,8 +190,9 @@ private List<Image> images = new ArrayList<>();
 
 @Override
 protected void setWidget(Widget w) {
-	if (decorations != null && !decorations.isDisposed())
-		decorations.dispose();
+    if (decorations != null && !decorations.isDisposed()) {
+        decorations.dispose();
+    }
 	decorations = (Decorations)w;
 	super.setWidget(w);
 }
@@ -210,7 +212,8 @@ private void loadImages() {
 
 // this method must be private or protected so the auto-gen tool keeps it
 private void freeImages() {
-	for (Image image : images)
-		image.dispose();
+    for (Image image : images) {
+        image.dispose();
+    }
 }
 }

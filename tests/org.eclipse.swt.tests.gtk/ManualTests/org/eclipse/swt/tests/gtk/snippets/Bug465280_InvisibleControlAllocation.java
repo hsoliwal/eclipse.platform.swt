@@ -40,7 +40,9 @@ public class Bug465280_InvisibleControlAllocation {
 		shell.open();
 		System.err.println(descriptionHint.getSize());
 		while (!shell.isDisposed ()) {
-				if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 }

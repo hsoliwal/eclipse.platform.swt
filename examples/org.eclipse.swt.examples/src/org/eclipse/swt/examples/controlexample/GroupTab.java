@@ -77,12 +77,24 @@ class GroupTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (shadowEtchedInButton.getSelection ()) style |= SWT.SHADOW_ETCHED_IN;
-		if (shadowEtchedOutButton.getSelection ()) style |= SWT.SHADOW_ETCHED_OUT;
-		if (shadowInButton.getSelection ()) style |= SWT.SHADOW_IN;
-		if (shadowOutButton.getSelection ()) style |= SWT.SHADOW_OUT;
-		if (shadowNoneButton.getSelection ()) style |= SWT.SHADOW_NONE;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
+        if (shadowEtchedInButton.getSelection()) {
+            style |= SWT.SHADOW_ETCHED_IN;
+        }
+        if (shadowEtchedOutButton.getSelection()) {
+            style |= SWT.SHADOW_ETCHED_OUT;
+        }
+        if (shadowInButton.getSelection()) {
+            style |= SWT.SHADOW_IN;
+        }
+        if (shadowOutButton.getSelection()) {
+            style |= SWT.SHADOW_OUT;
+        }
+        if (shadowNoneButton.getSelection()) {
+            style |= SWT.SHADOW_NONE;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
 
 		/* Create the example widgets */
 		group1 = new Group (groupGroup, style);
@@ -160,6 +172,8 @@ class GroupTab extends Tab {
 		shadowOutButton.setSelection ((group1.getStyle () & SWT.SHADOW_OUT) != 0);
 		shadowNoneButton.setSelection ((group1.getStyle () & SWT.SHADOW_NONE) != 0);
 		borderButton.setSelection ((group1.getStyle () & SWT.BORDER) != 0);
-		if (!instance.startup) setTitleText ();
+        if (!instance.startup) {
+            setTitleText();
+        }
 	}
 }

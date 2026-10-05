@@ -54,9 +54,13 @@ public static void main(String[] args) {
 	shell.setBounds(50, 50, 300, 200);
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
-	if (image != null) image.dispose();
+    if (image != null) {
+        image.dispose();
+    }
 	display.dispose();
 }
 }

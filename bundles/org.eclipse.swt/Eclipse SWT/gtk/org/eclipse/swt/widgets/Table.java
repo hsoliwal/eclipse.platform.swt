@@ -174,16 +174,22 @@ void _addListener (int eventType, Listener listener) {
 }
 
 TableItem _getItem (int index) {
-	if ((style & SWT.VIRTUAL) == 0) return items [index];
+    if ((style & SWT.VIRTUAL) == 0) {
+        return items [index];
+    }
 	TableItem item = virtualItems.get (index);
-	if (item != null) return item;
+    if (item != null) {
+        return item;
+    }
 	item = new TableItem (this, SWT.NONE, index, false);
 	virtualItems.put (index, item);
 	return item;
 }
 
 TableItem _getItem (int index, boolean create) {
-	if ((style & SWT.VIRTUAL) == 0) return items [index];
+    if ((style & SWT.VIRTUAL) == 0) {
+        return items [index];
+    }
 	TableItem item = virtualItems.get (index);
 	return item != null || !create ? item : _getItem (index);
 }
@@ -201,7 +207,9 @@ int materializedIndex (int position) {
 }
 
 void virtualItemChanged (TableItem item) {
-	if ((style & SWT.VIRTUAL) == 0 || handle == 0) return;
+    if ((style & SWT.VIRTUAL) == 0 || handle == 0) {
+        return;
+    }
 	if (!isVirtualPaintCandidate (item)) {
 		item.markVirtualDirty ();
 		return;
@@ -210,7 +218,9 @@ void virtualItemChanged (TableItem item) {
 }
 
 void updateVirtualViewport () {
-	if (virtualViewport == null) return;
+    if (virtualViewport == null) {
+        return;
+    }
 	Rectangle client = getClientAreaInPixels ();
 	int rowHeight = Math.max (1, getItemHeight ());
 	int chromeHeight = getHeaderVisible () ? getHeaderHeight () : 0;
@@ -220,7 +230,9 @@ void updateVirtualViewport () {
 }
 
 boolean isVirtualPaintCandidate (TableItem item) {
-	if (virtualViewport == null) return true;
+    if (virtualViewport == null) {
+        return true;
+    }
 	updateVirtualViewport ();
 	int index = virtualItems.indexOfIdentity (item);
 	return index >= 0 && virtualViewport.isPaintCandidate (index);
@@ -233,7 +245,9 @@ boolean usesVirtualNativeModel () {
 private int focusedIndex () {
 	long [] path = new long [1];
 	GTK.gtk_tree_view_get_cursor (handle, path, null);
-	if (path [0] == 0) return -1;
+    if (path [0] == 0) {
+        return -1;
+    }
 	int index = -1;
 	long indices = GTK.gtk_tree_path_get_indices (path [0]);
 	if (indices != 0) {
@@ -246,17 +260,25 @@ private int focusedIndex () {
 }
 
 private static int remapIndex (int index, int start, int removed, int inserted) {
-	if (index < 0 || index < start) return index;
-	if (index < start + removed) return -1;
+    if (index < 0 || index < start) {
+        return index;
+    }
+    if (index < start + removed) {
+        return -1;
+    }
 	return index - removed + inserted;
 }
 
 private void rebindVirtualItemHandles () {
-	if (!usesVirtualNativeModel ()) return;
+    if (!usesVirtualNativeModel()) {
+        return;
+    }
 	virtualItems.forEachIndexed ((index, item) -> {
 		if (item.handle == 0) {
 			item.handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-			if (item.handle == 0) error (SWT.ERROR_NO_HANDLES);
+            if (item.handle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 		}
 		if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, item.handle, 0, index)) {
 			throw new IllegalStateException ("virtual TableItem outside logical model: " + index);
@@ -267,7 +289,9 @@ private void rebindVirtualItemHandles () {
 private void restoreVirtualNativeState (int [] selected, int focus, int top) {
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+    if (iter == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	try {
 		if (focus >= 0 && focus < itemCount
 				&& GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, focus)) {
@@ -311,8 +335,12 @@ void resetVirtualNativeModel (int newCount, int start, int removed, int inserted
 	}
 	int focus = remapIndex (focusedIndex (), start, removed, inserted);
 	int top = remapIndex (itemCount == 0 ? -1 : getTopIndex (), start, removed, inserted);
-	if (focus < 0 && newCount > 0 && removed > 0) focus = Math.min (start, newCount - 1);
-	if (top < 0 && newCount > 0) top = Math.min (start, newCount - 1);
+    if (focus < 0 && newCount > 0 && removed > 0) {
+        focus = Math.min(start, newCount - 1);
+    }
+    if (top < 0 && newCount > 0) {
+        top = Math.min(start, newCount - 1);
+    }
 
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
@@ -334,9 +362,13 @@ static int checkStyle (int style) {
 
 @Override
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
-	if (cell == ignoreCell) return 0;
+    if (cell == ignoreCell) {
+        return 0;
+    }
 	long path = GTK.gtk_tree_model_get_path (tree_model, iter);
-	if (path == 0) return 0;
+    if (path == 0) {
+        return 0;
+    }
 	int [] index = new int [1];
 	long pathIndices = GTK.gtk_tree_path_get_indices (path);
 	if (pathIndices == 0) {
@@ -346,13 +378,17 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 	C.memmove (index, pathIndices, 4);
 	TableItem item = _getItem (index[0]);
 	GTK.gtk_tree_path_free (path);
-	if (item == null || item.isDisposed()) return 0;
+    if (item == null || item.isDisposed()) {
+        return 0;
+    }
 	OS.g_object_set_qdata (cell, Display.SWT_OBJECT_INDEX2, item.handle);
 
 	boolean isPixbuf = GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell);
 	boolean isText = GTK.GTK_IS_CELL_RENDERER_TEXT (cell);
 	boolean isToggle = GTK.GTK_IS_CELL_RENDERER_TOGGLE (cell);
-	if (isText) GTK.gtk_cell_renderer_set_fixed_size (cell, -1, -1);
+    if (isText) {
+        GTK.gtk_cell_renderer_set_fixed_size(cell, -1, -1);
+    }
 
 	int columnIndex = 0;
 	int modelIndex = -1;
@@ -370,15 +406,21 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 			}
 		}
 	}
-	if (modelIndex == -1) return 0;
+    if (modelIndex == -1) {
+        return 0;
+    }
 
 	boolean setData = false;
 	if ((style & SWT.VIRTUAL) != 0 && !item.isCachedState ()) {
 		lastIndexOf = index[0];
 		setData = checkData (item);
-		if (!setData || isDisposed () || item.isDisposed ()) return 0;
+        if (!setData || isDisposed() || item.isDisposed()) {
+            return 0;
+        }
 	}
-	if ((style & SWT.VIRTUAL) != 0) item.markVirtualPainted ();
+    if ((style & SWT.VIRTUAL) != 0) {
+        item.markVirtualPainted();
+    }
 
 	if ((style & SWT.VIRTUAL) != 0 && isToggle) {
 		OS.g_object_set (cell, OS.active, item.isCheckedState (), 0);
@@ -401,13 +443,19 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 					? item.virtualImages [columnIndex] : null;
 			long pixbuf = 0;
 			if (image != null) {
-				if (imageList == null) imageList = new ImageList ();
+                if (imageList == null) {
+                    imageList = new ImageList();
+                }
 				int imageIndex = imageList.indexOf (image);
-				if (imageIndex == -1) imageIndex = imageList.add (image);
+                if (imageIndex == -1) {
+                    imageIndex = imageList.add(image);
+                }
 				pixbuf = ImageList.createPixbuf (imageList.getSurface (imageIndex));
 			}
 			OS.g_object_set (cell, OS.pixbuf, pixbuf, 0);
-			if (pixbuf != 0) OS.g_object_unref (pixbuf);
+            if (pixbuf != 0) {
+                OS.g_object_unref(pixbuf);
+            }
 			return 0;
 		}
 		if (isText) {
@@ -433,14 +481,18 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 		return 0;
 	}
 
-	if (!(isPixbuf || isText)) return 0;
+    if (!(isPixbuf || isText)) {
+        return 0;
+    }
 	long [] ptr = new long [1];
 	if (setData) {
 		ptr [0] = 0;
 		if (isPixbuf) {
 			GTK.gtk_tree_model_get (tree_model, iter, modelIndex + CELL_PIXBUF, ptr, -1);
 			OS.g_object_set (cell, OS.gicon, ptr [0], 0);
-			if (ptr [0] != 0) OS.g_object_unref (ptr [0]);
+            if (ptr [0] != 0) {
+                OS.g_object_unref(ptr [0]);
+            }
 		} else {
 			GTK.gtk_tree_model_get (tree_model, iter, modelIndex + CELL_TEXT, ptr, -1);
 			if (ptr [0] != 0) {
@@ -482,7 +534,9 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 }
 
 boolean checkData (TableItem item) {
-	if (item.isCachedState ()) return true;
+    if (item.isCachedState()) {
+        return true;
+    }
 	if ((style & SWT.VIRTUAL) != 0) {
 		item.pinVirtualFacade ();
 		item.setCachedState (true);
@@ -498,16 +552,22 @@ boolean checkData (TableItem item) {
 		item.settingData = false;
 		//widget could be disposed at this point
 		currentItem = null;
-		if (isDisposed ()) return false;
+        if (isDisposed()) {
+            return false;
+        }
 		OS.g_signal_handlers_unblock_matched (modelHandle, mask, signal_id, 0, 0, 0, handle);
-		if (item.isDisposed ()) return false;
+        if (item.isDisposed()) {
+            return false;
+        }
 	}
 	return true;
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -560,7 +620,9 @@ int calculateWidth (long column, long iter) {
 
 	long textRenderer = getTextRenderer(column);
 	int[] xpad = new int[1];
-	if (textRenderer != 0) GTK.gtk_cell_renderer_get_padding(textRenderer, xpad, null);
+    if (textRenderer != 0) {
+        GTK.gtk_cell_renderer_get_padding(textRenderer, xpad, null);
+    }
 
 	return width[0] + xpad[0] * 2;
 }
@@ -588,9 +650,13 @@ int calculateWidth (long column, long iter) {
  */
 public void clear (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < itemCount)) error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	TableItem item = _getItem (index, false);
-	if (item != null) item.clear ();
+    if (item != null) {
+        item.clear();
+    }
 }
 /**
  * Removes the items from the receiver which are between the given
@@ -617,18 +683,26 @@ public void clear (int index) {
  */
 public void clear (int start, int end) {
 	checkWidget ();
-	if (start > end) return;
-	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (start > end) {
+        return;
+    }
+    if (!(0 <= start && start <= end && end < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (start == 0 && end == itemCount - 1) {
 		clearAll();
 	} else if ((style & SWT.VIRTUAL) != 0) {
 		virtualItems.forEachIndexed ((index, item) -> {
-			if (start <= index && index <= end) item.clear ();
+            if (start <= index && index <= end) {
+                item.clear();
+            }
 		});
 	} else {
 		for (int i=start; i<=end; i++) {
 			TableItem item = items [i];
-			if (item != null) item.clear();
+            if (item != null) {
+                item.clear();
+            }
 		}
 	}
 }
@@ -656,14 +730,22 @@ public void clear (int start, int end) {
  */
 public void clear (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (indices.length == 0) return;
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (indices.length == 0) {
+        return;
+    }
 	for (int i=0; i<indices.length; i++) {
-		if (!(0 <= indices [i] && indices [i] < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+        if (!(0 <= indices [i] && indices [i] < itemCount)) {
+            error(SWT.ERROR_INVALID_RANGE);
+        }
 	}
 	for (int i=0; i<indices.length; i++) {
 		TableItem item = _getItem (indices [i], false);
-		if (item != null) item.clear();
+        if (item != null) {
+            item.clear();
+        }
 	}
 }
 /**
@@ -686,15 +768,21 @@ public void clearAll () {
 	checkWidget ();
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null) item.clear();
+        if (item != null) {
+            item.clear();
+        }
 	}
 }
 
 @Override
 Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	checkWidget ();
-	if (wHint != SWT.DEFAULT && wHint < 0) wHint = 0;
-	if (hHint != SWT.DEFAULT && hHint < 0) hHint = 0;
+    if (wHint != SWT.DEFAULT && wHint < 0) {
+        wHint = 0;
+    }
+    if (hHint != SWT.DEFAULT && hHint < 0) {
+        hHint = 0;
+    }
 	/*
 	 * Set all the TableColumn buttons visible otherwise
 	 * gtk_widget_get_preferred_size() will not take their size
@@ -703,7 +791,9 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	if (firstCompute) {
 		for (int x = 0; x < columns.length; x++) {
 			TableColumn column = columns[x];
-			if (column != null) GTK.gtk_widget_set_visible(column.buttonHandle, true);
+            if (column != null) {
+                GTK.gtk_widget_set_visible(column.buttonHandle, true);
+            }
 		}
 		firstCompute = false;
 	}
@@ -751,7 +841,9 @@ void copyModel(long oldModel, int oldStart, long newModel, int newStart, int mod
 
 	for (int i=0; i<itemCount; i++) {
 		long newIterator = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-		if (newIterator == 0) error (SWT.ERROR_NO_HANDLES);
+        if (newIterator == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		GTK.gtk_list_store_append (newModel, newIterator);
 
 		TableItem item = _getItem (i, false);
@@ -798,17 +890,23 @@ void createColumn (TableColumn column, int index) {
 		boolean [] usedColumns = new boolean [modelLength];
 		for (int i=0; i<columnCount; i++) {
 			int columnIndex = columns [i].modelIndex;
-			for (int j = 0; j < CELL_TYPES; j++) usedColumns [columnIndex + j] = true;
+            for (int j = 0; j < CELL_TYPES; j++) {
+                usedColumns [columnIndex + j] = true;
+            }
 		}
 		while (modelIndex < modelLength) {
-			if (!usedColumns [modelIndex]) break;
+            if (!usedColumns [modelIndex]) {
+                break;
+            }
 			modelIndex++;
 		}
 		if (modelIndex == modelLength) {
 			long oldModel = modelHandle;
 			long [] types = getColumnTypes (columnCount + 4);
 			long newModel = GTK.gtk_list_store_newv (types.length, types);
-			if (newModel == 0) error (SWT.ERROR_NO_HANDLES);
+            if (newModel == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 			GTK.gtk_tree_view_set_model (handle, 0);
 			copyModel (oldModel, FIRST_COLUMN, newModel, FIRST_COLUMN, modelLength);
 			GTK.gtk_tree_view_set_model (handle, newModel);
@@ -816,7 +914,9 @@ void createColumn (TableColumn column, int index) {
 		}
 	}
 	long columnHandle = GTK.gtk_tree_view_column_new ();
-	if (columnHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (columnHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (index == 0 && columnCount > 0) {
 		TableColumn checkColumn = columns [0];
 		createRenderers (checkColumn.handle, checkColumn.modelIndex, false, checkColumn.style);
@@ -831,7 +931,9 @@ void createColumn (TableColumn column, int index) {
 	GTK.gtk_tree_view_column_set_clickable (columnHandle, true);
 	GTK.gtk_tree_view_column_set_min_width (columnHandle, 0);
 	GTK.gtk_tree_view_insert_column (handle, columnHandle, index);
-	if (columnCount != 0) GTK.gtk_tree_view_column_set_visible (columnHandle, false);
+    if (columnCount != 0) {
+        GTK.gtk_tree_view_column_set_visible(columnHandle, false);
+    }
 	if (column != null) {
 		column.handle = columnHandle;
 		column.modelIndex = modelIndex;
@@ -848,14 +950,18 @@ void createColumn (TableColumn column, int index) {
 void createHandle (int index) {
 	state |= HANDLE;
 	fixedHandle = OS.g_object_new (display.gtk_fixed_get_type (), 0);
-	if (fixedHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (fixedHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (GTK.GTK4) {
 		scrolledHandle = GTK4.gtk_scrolled_window_new();
 	} else {
 		GTK3.gtk_widget_set_has_window(fixedHandle, true);
 		scrolledHandle = GTK3.gtk_scrolled_window_new (0, 0);
 	}
-	if (scrolledHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (scrolledHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (usesVirtualNativeModel ()) {
 		long modelType = OS.content_providers_create_gtype ("SwtVirtualTableModel");
 		modelHandle = modelType != 0 ? OS.g_object_new (modelType, 0) : 0;
@@ -863,12 +969,18 @@ void createHandle (int index) {
 		long [] types = getColumnTypes (1);
 		modelHandle = GTK.gtk_list_store_newv (types.length, types);
 	}
-	if (modelHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (modelHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	handle = GTK.gtk_tree_view_new_with_model (modelHandle);
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if ((style & SWT.CHECK) != 0) {
 		checkRenderer = GTK.gtk_cell_renderer_toggle_new ();
-		if (checkRenderer == 0) error (SWT.ERROR_NO_HANDLES);
+        if (checkRenderer == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		OS.g_object_ref (checkRenderer);
 	}
 	createColumn (null, 0);
@@ -913,7 +1025,9 @@ void createHandle (int index) {
 }
 
 void createItem (TableColumn column, int index) {
-	if (!(0 <= index && index <= columnCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= columnCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (columnCount == 0) {
 		column.handle = GTK.gtk_tree_view_get_column (handle, 0);
 		GTK.gtk_tree_view_column_set_sizing (column.handle, GTK.GTK_TREE_VIEW_COLUMN_FIXED);
@@ -927,13 +1041,19 @@ void createItem (TableColumn column, int index) {
 	}
 
 	long boxHandle = gtk_box_new(GTK.GTK_ORIENTATION_HORIZONTAL, false, 3);
-	if (boxHandle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (boxHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	GTK.gtk_tree_view_column_set_widget (column.handle, boxHandle);
 
 	long labelHandle = GTK.gtk_label_new_with_mnemonic(null);
-	if (labelHandle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (labelHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	long imageHandle = GTK.gtk_image_new();
-	if (imageHandle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (imageHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK4) {
 		GTK4.gtk_box_append(boxHandle, imageHandle);
@@ -968,9 +1088,13 @@ void createItem (TableColumn column, int index) {
 	if (columnCount >= 1) {
 		for (int i=0; i<materializedItemCount (); i++) {
 			TableItem item = materializedItem (i);
-			if (item == null) continue;
+            if (item == null) {
+                continue;
+            }
 			if (usesVirtualNativeModel ()) {
-				if (columnCount > 1) item.insertVirtualColumn (index, columnCount);
+                if (columnCount > 1) {
+                    item.insertVirtualColumn(index, columnCount);
+                }
 				continue;
 			}
 			// Bug 545139: For consistency, do not wipe out content of first TableColumn created after TableItem
@@ -1009,7 +1133,9 @@ void createItem (TableColumn column, int index) {
 }
 
 void createItem (TableItem item, int index) {
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (usesVirtualNativeModel ()) {
 		int oldCount = itemCount;
 		virtualItems.insert (index, item);
@@ -1023,7 +1149,9 @@ void createItem (TableItem item, int index) {
 		items = newItems;
 	}
 	item.handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-	if (item.handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (item.handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (index == itemCount) {
 		GTK.gtk_list_store_append (modelHandle, item.handle);
 	} else {
@@ -1068,7 +1196,9 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
 	long textRenderer = ownerDraw
 			? OS.g_object_new (display.gtk_cell_renderer_text_get_type (), 0)
 			: GTK.gtk_cell_renderer_text_new ();
-	if (textRenderer == 0) error (SWT.ERROR_NO_HANDLES);
+    if (textRenderer == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (ownerDraw) {
 		OS.g_object_set_qdata (pixbufRenderer, Display.SWT_OBJECT_INDEX1, columnHandle);
 		OS.g_object_set_qdata (textRenderer, Display.SWT_OBJECT_INDEX1, columnHandle);
@@ -1155,7 +1285,9 @@ GdkRGBA defaultBackground () {
 void deregister () {
 	super.deregister ();
 	display.removeWidget (GTK.gtk_tree_view_get_selection (handle));
-	if (checkRenderer != 0) display.removeWidget (checkRenderer);
+    if (checkRenderer != 0) {
+        display.removeWidget(checkRenderer);
+    }
 	display.removeWidget (modelHandle);
 }
 
@@ -1173,21 +1305,28 @@ void deregister () {
  */
 public void deselect (int index) {
 	checkWidget();
-	if (index < 0 || index >= itemCount) return;
+    if (index < 0 || index >= itemCount) {
+        return;
+    }
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	if (usesVirtualNativeModel ()) {
 		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
-		if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
-			GTK.gtk_tree_selection_unselect_iter (selection, iter);
+        if (iter == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
+        if (GTK.gtk_tree_model_iter_nth_child(modelHandle, iter, 0, index)) {
+            GTK.gtk_tree_selection_unselect_iter(selection, iter);
+        }
 		OS.g_free (iter);
 	} else {
 		GTK.gtk_tree_selection_unselect_iter (selection, _getItem (index).handle);
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 /**
@@ -1211,22 +1350,31 @@ public void deselect (int start, int end) {
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	long iter = usesVirtualNativeModel () ? OS.g_malloc (GTK.GtkTreeIter_sizeof ()) : 0;
-	if (usesVirtualNativeModel () && iter == 0) error (SWT.ERROR_NO_HANDLES);
+    if (usesVirtualNativeModel() && iter == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	try {
 		for (int index=start; index<=end; index++) {
-			if (index < 0 || index >= itemCount) continue;
+            if (index < 0 || index >= itemCount) {
+                continue;
+            }
 			if (usesVirtualNativeModel ()) {
-				if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
-					GTK.gtk_tree_selection_unselect_iter (selection, iter);
+                if (GTK.gtk_tree_model_iter_nth_child(modelHandle, iter, 0, index)) {
+                    GTK.gtk_tree_selection_unselect_iter(selection, iter);
+                }
 			} else {
 				GTK.gtk_tree_selection_unselect_iter (selection, _getItem (index).handle);
 			}
 		}
 	} finally {
-		if (iter != 0) OS.g_free (iter);
+        if (iter != 0) {
+            OS.g_free(iter);
+        }
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 /**
@@ -1248,27 +1396,38 @@ public void deselect (int start, int end) {
  */
 public void deselect (int [] indices) {
 	checkWidget();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	long iter = usesVirtualNativeModel () ? OS.g_malloc (GTK.GtkTreeIter_sizeof ()) : 0;
-	if (usesVirtualNativeModel () && iter == 0) error (SWT.ERROR_NO_HANDLES);
+    if (usesVirtualNativeModel() && iter == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	try {
 		for (int index : indices) {
-			if (index < 0 || index >= itemCount) continue;
+            if (index < 0 || index >= itemCount) {
+                continue;
+            }
 			if (usesVirtualNativeModel ()) {
-				if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
-					GTK.gtk_tree_selection_unselect_iter (selection, iter);
+                if (GTK.gtk_tree_model_iter_nth_child(modelHandle, iter, 0, index)) {
+                    GTK.gtk_tree_selection_unselect_iter(selection, iter);
+                }
 			} else {
 				GTK.gtk_tree_selection_unselect_iter (selection, _getItem (index).handle);
 			}
 		}
 	} finally {
-		if (iter != 0) OS.g_free (iter);
+        if (iter != 0) {
+            OS.g_free(iter);
+        }
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 /**
@@ -1286,18 +1445,26 @@ public void deselectAll () {
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_tree_selection_unselect_all (selection);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 void destroyItem (TableColumn column) {
 	int index = 0;
 	while (index < columnCount) {
-		if (columns [index] == column) break;
+        if (columns [index] == column) {
+            break;
+        }
 		index++;
 	}
-	if (index == columnCount) return;
+    if (index == columnCount) {
+        return;
+    }
 	long columnHandle = column.handle;
-	if (columnCount == 1) firstCustomDraw = column.customDraw;
+    if (columnCount == 1) {
+        firstCustomDraw = column.customDraw;
+    }
 	System.arraycopy (columns, index + 1, columns, index, --columnCount - index);
 	columns [columnCount] = null;
 	GTK.gtk_tree_view_remove_column (handle, columnHandle);
@@ -1308,7 +1475,9 @@ void destroyItem (TableColumn column) {
 		} else {
 			for (int i=0; i<materializedItemCount (); i++) {
 				TableItem item = materializedItem (i);
-				if (item != null) item.removeVirtualColumn (index, columnCount);
+                if (item != null) {
+                    item.removeVirtualColumn(index, columnCount);
+                }
 			}
 			if (index == 0) {
 				TableColumn checkColumn = columns [0];
@@ -1319,7 +1488,9 @@ void destroyItem (TableColumn column) {
 		long oldModel = modelHandle;
 		long [] types = getColumnTypes (1);
 		long newModel = GTK.gtk_list_store_newv (types.length, types);
-		if (newModel == 0) error (SWT.ERROR_NO_HANDLES);
+        if (newModel == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		GTK.gtk_tree_view_set_model (handle, 0);
 		copyModel (oldModel, column.modelIndex, newModel, FIRST_COLUMN, FIRST_COLUMN + CELL_TYPES);
 		GTK.gtk_tree_view_set_model (handle, newModel);
@@ -1364,14 +1535,20 @@ void destroyItem (TableItem item) {
 		index = virtualItems.indexOfIdentity (item);
 	} else {
 		index = 0;
-		while (index < itemCount && items [index] != item) index++;
+        while (index < itemCount && items [index] != item) {
+            index++;
+        }
 	}
-	if (index == itemCount || index < 0) return;
+    if (index == itemCount || index < 0) {
+        return;
+    }
 	if (usesVirtualNativeModel ()) {
 		int oldCount = itemCount;
 		virtualItems.remove (index);
 		resetVirtualNativeModel (oldCount - 1, index, 1, 0);
-		if (itemCount == 0) resetCustomDraw ();
+        if (itemCount == 0) {
+            resetCustomDraw();
+        }
 		return;
 	}
 	long selection = GTK.gtk_tree_view_get_selection (handle);
@@ -1385,7 +1562,9 @@ void destroyItem (TableItem item) {
 		System.arraycopy (items, index + 1, items, index, --itemCount - index);
 		items [itemCount] = null;
 	}
-	if (itemCount == 0) resetCustomDraw ();
+    if (itemCount == 0) {
+        resetCustomDraw();
+    }
 }
 
 @Override
@@ -1397,7 +1576,9 @@ boolean dragDetect (int x, int y, boolean filter, boolean dragOnTimeout, boolean
 			if (GTK.gtk_tree_view_get_path_at_pos (handle, x, y, path, null, null, null)) {
 				if (path [0] != 0) {
 					long selection = GTK.gtk_tree_view_get_selection (handle);
-					if (GTK.gtk_tree_selection_path_is_selected (selection, path [0])) selected = true;
+                    if (GTK.gtk_tree_selection_path_is_selected(selection, path [0])) {
+                        selected = true;
+                    }
 					GTK.gtk_tree_path_free (path [0]);
 				}
 			} else {
@@ -1405,7 +1586,9 @@ boolean dragDetect (int x, int y, boolean filter, boolean dragOnTimeout, boolean
 			}
 		}
 		boolean dragDetect = super.dragDetect (x, y, filter, false, consume);
-		if (dragDetect && selected && consume != null) consume [0] = true;
+        if (dragDetect && selected && consume != null) {
+            consume [0] = true;
+        }
 		return dragDetect;
 	} else {
 		double [] startX = new double[1];
@@ -1418,7 +1601,9 @@ boolean dragDetect (int x, int y, boolean filter, boolean dragOnTimeout, boolean
 			if (GTK.gtk_tree_view_get_path_at_pos (handle, (int) startX[0], (int) startY[0], path, null, null, null)) {
 				if (path [0] != 0) {
 					boolean dragDetect = super.dragDetect (x, y, filter, false, consume);
-					if (dragDetect && selected && consume != null) consume [0] = true;
+                    if (dragDetect && selected && consume != null) {
+                        consume [0] = true;
+                    }
 					return dragDetect;
 				}
 			} else {
@@ -1514,7 +1699,9 @@ int getClientWidth () {
  */
 public TableColumn getColumn (int index) {
 	checkWidget();
-	if (!(0 <= index && index < columnCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < columnCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return columns [index];
 }
 
@@ -1587,9 +1774,13 @@ long [] getColumnTypes (int columnCount) {
  */
 public int [] getColumnOrder () {
 	checkWidget ();
-	if (columnCount == 0) return new int [0];
+    if (columnCount == 0) {
+        return new int [0];
+    }
 	long list = GTK.gtk_tree_view_get_columns (handle);
-	if (list == 0) return new int [0];
+    if (list == 0) {
+        return new int [0];
+    }
 	int  i = 0, count = OS.g_list_length (list);
 	int [] order = new int [count];
 	long temp = list;
@@ -1666,14 +1857,18 @@ GdkRGBA getContextColorGdkRGBA () {
 TableItem getFocusItem () {
 	long [] path = new long [1];
 	GTK.gtk_tree_view_get_cursor (handle, path, null);
-	if (path [0] == 0) return null;
+    if (path [0] == 0) {
+        return null;
+    }
 	TableItem item = null;
 	long indices = GTK.gtk_tree_path_get_indices (path [0]);
 	if (indices != 0) {
 		int [] index = new int []{-1};
 		C.memmove (index, indices, 4);
 		item = _getItem (index [0]);
-		if (item != null) item.pinVirtualFacade ();
+        if (item != null) {
+            item.pinVirtualFacade();
+        }
 	}
 	GTK.gtk_tree_path_free (path [0]);
 	return item;
@@ -1740,7 +1935,9 @@ public Color getHeaderForeground () {
  */
 public int getHeaderHeight () {
 	checkWidget ();
-	if (!GTK.gtk_tree_view_get_headers_visible(handle)) return 0;
+    if (!GTK.gtk_tree_view_get_headers_visible(handle)) {
+        return 0;
+    }
 
 	int height = 0;
 	if (columnCount > 0) {
@@ -1817,7 +2014,9 @@ public boolean getHeaderVisible () {
  */
 public TableItem getItem (int index) {
 	checkWidget();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	TableItem item = _getItem (index);
 	item.pinVirtualFacade ();
 	return item;
@@ -1848,7 +2047,9 @@ public TableItem getItem (int index) {
  */
 public TableItem getItem (Point point) {
 	checkWidget();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	long [] path = new long [1];
 	GTK.gtk_widget_realize (handle);
 	int y = point.y;
@@ -1860,16 +2061,24 @@ public TableItem getItem (Point point) {
 	if (getHeaderVisible() && GTK.GTK4) {
 		y -= getHeaderHeight();
 	}
-	if (!GTK.gtk_tree_view_get_path_at_pos (handle, point.x, y, path, null, null, null)) return null;
-	if (path [0] == 0) return null;
+    if (!GTK.gtk_tree_view_get_path_at_pos(handle, point.x, y, path, null, null, null)) {
+        return null;
+    }
+    if (path [0] == 0) {
+        return null;
+    }
 	long indices = GTK.gtk_tree_path_get_indices (path [0]);
 	TableItem item = null;
 	if (indices != 0) {
 		int [] index = new int [1];
 		C.memmove (index, indices, 4);
 		int logicalIndex = logicalIndexForNativeHit (index [0]);
-		if (logicalIndex >= 0) item = _getItem (logicalIndex);
-		if (item != null) item.pinVirtualFacade ();
+        if (logicalIndex >= 0) {
+            item = _getItem(logicalIndex);
+        }
+        if (item != null) {
+            item.pinVirtualFacade();
+        }
 	}
 	GTK.gtk_tree_path_free (path [0]);
 	return item;
@@ -1878,15 +2087,23 @@ public TableItem getItem (Point point) {
 /* Translate a native hit while GTK is still applying a programmatic virtual scroll.
  * Native hit testing continues to own columns, clipping and row geometry. */
 private int logicalIndexForNativeHit (int nativeIndex) {
-	if (!usesVirtualNativeModel ()) return nativeIndex;
+    if (!usesVirtualNativeModel()) {
+        return nativeIndex;
+    }
 	long adjustment = GTK.gtk_scrollable_get_vadjustment (handle);
-	if (GTK.gtk_adjustment_get_value (adjustment) != cachedAdjustment) return nativeIndex;
+    if (GTK.gtk_adjustment_get_value(adjustment) != cachedAdjustment) {
+        return nativeIndex;
+    }
 	long [] topPath = new long [1];
-	if (!GTK.gtk_tree_view_get_path_at_pos (handle, 1, 1, topPath, null, null, null)
-			|| topPath [0] == 0) return nativeIndex;
+    if (!GTK.gtk_tree_view_get_path_at_pos(handle, 1, 1, topPath, null, null, null)
+            || topPath [0] == 0) {
+        return nativeIndex;
+    }
 	try {
 		long indices = GTK.gtk_tree_path_get_indices (topPath [0]);
-		if (indices == 0) return nativeIndex;
+        if (indices == 0) {
+            return nativeIndex;
+        }
 		int [] nativeTop = new int [1];
 		C.memmove (nativeTop, indices, 4);
 		long logicalIndex = (long) nativeIndex + topIndex - nativeTop [0];
@@ -1938,7 +2155,9 @@ public int getItemHeight () {
 
 		height = h[0];
 		long textRenderer = getTextRenderer(column);
-		if (textRenderer != 0) GTK.gtk_cell_renderer_get_preferred_height_for_width(textRenderer, handle, 0, h, null);
+        if (textRenderer != 0) {
+            GTK.gtk_cell_renderer_get_preferred_height_for_width(textRenderer, handle, 0, h, null);
+        }
 		height += h[0];
 		ignoreSize = false;
 	} else {
@@ -1958,7 +2177,9 @@ public int getItemHeight () {
 
 			long textRenderer = getTextRenderer(column);
 			int[] ypad = new int[1];
-			if (textRenderer != 0) GTK.gtk_cell_renderer_get_padding(textRenderer, null, ypad);
+            if (textRenderer != 0) {
+                GTK.gtk_cell_renderer_get_padding(textRenderer, null, ypad);
+            }
 			height = Math.max(height, h[0] + ypad[0]);
 		}
 
@@ -2023,7 +2244,9 @@ public boolean getLinesVisible() {
 
 long getPixbufRenderer (long column) {
 	long list = GTK.gtk_cell_layout_get_cells(column);
-	if (list == 0) return 0;
+    if (list == 0) {
+        return 0;
+    }
 	long originalList = list;
 	long pixbufRenderer = 0;
 	while (list != 0) {
@@ -2228,7 +2451,9 @@ public int getSortDirection () {
 
 long getTextRenderer (long column) {
 	long list = GTK.gtk_cell_layout_get_cells(column);
-	if (list == 0) return 0;
+    if (list == 0) {
+        return 0;
+    }
 	long originalList = list;
 	long textRenderer = 0;
 	while (list != 0) {
@@ -2270,11 +2495,17 @@ public int getTopIndex () {
 	} else {
 		long [] path = new long [1];
 		GTK.gtk_widget_realize (handle);
-		if (!GTK.gtk_tree_view_get_path_at_pos (handle, 1, 1, path, null, null, null)) return 0;
-		if (path [0] == 0) return 0;
+        if (!GTK.gtk_tree_view_get_path_at_pos(handle, 1, 1, path, null, null, null)) {
+            return 0;
+        }
+        if (path [0] == 0) {
+            return 0;
+        }
 		long indices = GTK.gtk_tree_path_get_indices (path[0]);
 		int[] index = new int [1];
-		if (indices != 0) C.memmove (index, indices, 4);
+        if (indices != 0) {
+            C.memmove(index, indices, 4);
+        }
 		GTK.gtk_tree_path_free (path [0]);
 		return index [0];
 	}
@@ -2299,10 +2530,14 @@ long gtk3_button_press_event (long widget, long event) {
 
 
 	long eventGdkResource = GDK.gdk_event_get_window(event);
-	if (eventGdkResource != GTK3.gtk_tree_view_get_bin_window (handle)) return 0;
+    if (eventGdkResource != GTK3.gtk_tree_view_get_bin_window(handle)) {
+        return 0;
+    }
 
 	long result = super.gtk3_button_press_event (widget, event);
-	if (result != 0) return result;
+    if (result != 0) {
+        return result;
+    }
 	/*
 	 * Feature in GTK. In multi-select tree view there is a problem with using DnD operations while also selecting multiple items.
 	 * When doing a DnD, GTK de-selects all other items except for the widget being dragged from. By disabling the selection function
@@ -2353,7 +2588,9 @@ long gtk3_button_press_event (long widget, long event) {
 		if (GTK.gtk_tree_view_get_path_at_pos (handle, (int)eventX[0], (int)eventY[0], path, null, null, null)) {
 			if (path [0] != 0) {
 				long selection = GTK.gtk_tree_view_get_selection (handle);
-				if (GTK.gtk_tree_selection_path_is_selected (selection, path [0])) result = 1;
+                if (GTK.gtk_tree_selection_path_is_selected(selection, path [0])) {
+                    result = 1;
+                }
 				GTK.gtk_tree_path_free (path [0]);
 			}
 		}
@@ -2396,7 +2633,9 @@ long gtk3_button_press_event (long widget, long event) {
 
 @Override
 int gtk_gesture_press_event (long gesture, int n_press, double x, double y, long event) {
-	if (n_press == 1) return  GTK4.GTK_EVENT_SEQUENCE_NONE;
+    if (n_press == 1) {
+        return GTK4.GTK_EVENT_SEQUENCE_NONE;
+    }
 	int result = super.gtk_gesture_press_event(gesture, n_press, x, y, event);
 
 	// TODO: GTK4 replicate gtk_button_press_event functions
@@ -2469,8 +2708,9 @@ void sendTreeDefaultSelection() {
 
 	//Note, similar DefaultSelectionHandling in SWT List/Table/Tree
 	TableItem tableItem = getFocusItem ();
-	if (tableItem == null)
-		return;
+    if (tableItem == null) {
+        return;
+    }
 
 	Event event = new Event ();
 	event.item = tableItem;
@@ -2495,11 +2735,15 @@ long gtk3_button_release_event (long widget, long event) {
 	GDK.gdk_event_get_root_coords(event, eventRX, eventRY);
 
 	long eventGdkResource = GDK.gdk_event_get_window(event);
-	if (eventGdkResource != GTK3.gtk_tree_view_get_bin_window (handle)) return 0;
+    if (eventGdkResource != GTK3.gtk_tree_view_get_bin_window(handle)) {
+        return 0;
+    }
 	// Check region since super.gtk_button_release_event() isn't called
 	lastInput.x = (int) eventX[0];
 	lastInput.y = (int) eventY[0];
-	if (containedInRegion(lastInput.x, lastInput.y)) return 0;
+    if (containedInRegion(lastInput.x, lastInput.y)) {
+        return 0;
+    }
 	/*
 	 * Feature in GTK. In multi-select tree view there is a problem with using DnD operations while also selecting multiple items.
 	 * When doing a DnD, GTK de-selects all other items except for the widget being dragged from. By disabling the selection function
@@ -2574,7 +2818,9 @@ void drawInheritedBackground (long cairo) {
 long gtk_draw (long widget, long cairo) {
 	boolean haveBoundsChanged = boundsChangedSinceLastDraw;
 	boundsChangedSinceLastDraw = false;
-	if ((state & OBSCURED) != 0) return 0;
+    if ((state & OBSCURED) != 0) {
+        return 0;
+    }
 	/*
 	 * Bug 537960: JFace table viewers miss a repaint when resized by a SashForm
 	 *
@@ -2600,7 +2846,9 @@ long gtk_draw (long widget, long cairo) {
 @Override
 long gtk3_motion_notify_event (long widget, long event) {
 	long window = GDK.gdk_event_get_window (event);
-	if (window != GTK3.gtk_tree_view_get_bin_window (handle)) return 0;
+    if (window != GTK3.gtk_tree_view_get_bin_window(handle)) {
+        return 0;
+    }
 	return super.gtk3_motion_notify_event (widget, event);
 }
 
@@ -2620,7 +2868,9 @@ long gtk_scroll_event (long widget, long eventPtr) {
 	int dirtyLayers = viewportLayers.scrollTo (
 			horizontal != 0 ? GTK.gtk_adjustment_get_value (horizontal) : 0,
 			vertical != 0 ? GTK.gtk_adjustment_get_value (vertical) : 0);
-	if ((dirtyLayers & ViewportLayerState.HEADER) != 0) wasScrolled = true;
+    if ((dirtyLayers & ViewportLayerState.HEADER) != 0) {
+        wasScrolled = true;
+    }
 	return result;
 }
 
@@ -2635,7 +2885,9 @@ long gtk_start_interactive_search(long widget) {
 @Override
 long gtk_toggled (long renderer, long pathStr) {
 	long path = GTK.gtk_tree_path_new_from_string (pathStr);
-	if (path == 0) return 0;
+    if (path == 0) {
+        return 0;
+    }
 	long indices = GTK.gtk_tree_path_get_indices (path);
 	if (indices != 0) {
 		int [] index = new int [1];
@@ -2678,7 +2930,9 @@ void gtk_widget_get_preferred_size (long widget, GtkRequisition requisition) {
 	if (fixVisible) {
 		GTK.gtk_tree_view_column_set_visible (columnHandle, false);
 	}
-	if (columns != 0) OS.g_list_free (columns);
+    if (columns != 0) {
+        OS.g_list_free(columns);
+    }
 }
 
 void hideFirstColumn () {
@@ -2717,9 +2971,13 @@ void hookEvents () {
  */
 public int indexOf (TableColumn column) {
 	checkWidget();
-	if (column == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (column == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<columnCount; i++) {
-		if (columns [i] == column) return i;
+        if (columns [i] == column) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -2743,17 +3001,35 @@ public int indexOf (TableColumn column) {
  */
 public int indexOf (TableItem item) {
 	checkWidget();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.VIRTUAL) != 0) return virtualItems.indexOfIdentity (item);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.VIRTUAL) != 0) {
+        return virtualItems.indexOfIdentity(item);
+    }
 	if (1 <= lastIndexOf && lastIndexOf < itemCount - 1) {
-		if (items [lastIndexOf] == item) return lastIndexOf;
-		if (items [lastIndexOf + 1] == item) return ++lastIndexOf;
-		if (items [lastIndexOf - 1] == item) return --lastIndexOf;
+        if (items [lastIndexOf] == item) {
+            return lastIndexOf;
+        }
+        if (items [lastIndexOf + 1] == item) {
+            return ++lastIndexOf;
+        }
+        if (items [lastIndexOf - 1] == item) {
+            return --lastIndexOf;
+        }
 	}
 	if (lastIndexOf < itemCount / 2) {
-		for (int i=0; i<itemCount; i++) if (items [i] == item) return lastIndexOf = i;
+        for (int i = 0; i < itemCount; i++) {
+            if (items [i] == item) {
+                return lastIndexOf = i;
+            }
+        }
 	} else {
-		for (int i=itemCount - 1; i>=0; --i) if (items [i] == item) return lastIndexOf = i;
+        for (int i = itemCount - 1; i >= 0; --i) {
+            if (items [i] == item) {
+                return lastIndexOf = i;
+            }
+        }
 	}
 	return -1;
 }
@@ -2785,7 +3061,9 @@ public boolean isSelected (int index) {
 boolean mnemonicHit (char key) {
 	for (int i=0; i<columnCount; i++) {
 		long labelHandle = columns [i].labelHandle;
-		if (labelHandle != 0 && mnemonicHit (labelHandle, key)) return true;
+        if (labelHandle != 0 && mnemonicHit(labelHandle, key)) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -2794,7 +3072,9 @@ boolean mnemonicHit (char key) {
 boolean mnemonicMatch (char key) {
 	for (int i=0; i<columnCount; i++) {
 		long labelHandle = columns [i].labelHandle;
-		if (labelHandle != 0 && mnemonicMatch (labelHandle, key)) return true;
+        if (labelHandle != 0 && mnemonicMatch(labelHandle, key)) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -2832,7 +3112,9 @@ void recreateRenderers () {
 		OS.g_object_unref (checkRenderer);
 		long toggleType = display.gtk_cell_renderer_toggle_get_type ();
 		checkRenderer = ownerDraw && toggleType != 0 ? OS.g_object_new (toggleType, 0) : GTK.gtk_cell_renderer_toggle_new ();
-		if (checkRenderer == 0) error (SWT.ERROR_NO_HANDLES);
+        if (checkRenderer == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		OS.g_object_ref (checkRenderer);
 		display.addWidget (checkRenderer, this);
 		OS.g_signal_connect_closure (checkRenderer, OS.toggled, display.getClosure (TOGGLED), false);
@@ -2859,7 +3141,9 @@ void redrawBackgroundImage () {
 void register () {
 	super.register ();
 	display.addWidget (GTK.gtk_tree_view_get_selection (handle), this);
-	if (checkRenderer != 0) display.addWidget (checkRenderer, this);
+    if (checkRenderer != 0) {
+        display.addWidget(checkRenderer, this);
+    }
 	display.addWidget (modelHandle, this);
 }
 
@@ -2867,14 +3151,21 @@ void register () {
 void releaseChildren (boolean destroy) {
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null && !item.isDisposed ()) item.release (false);
+        if (item != null && !item.isDisposed()) {
+            item.release(false);
+        }
 	}
-	if (virtualItems != null) virtualItems.clear (ignored -> { });
+    if (virtualItems != null) {
+        virtualItems.clear(ignored -> {
+        });
+    }
 	items = null;
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
 			TableColumn column = columns [i];
-			if (column != null && !column.isDisposed ()) column.release (false);
+            if (column != null && !column.isDisposed()) {
+                column.release(false);
+            }
 		}
 		columns = null;
 	}
@@ -2884,12 +3175,20 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (modelHandle != 0) OS.g_object_unref (modelHandle);
+    if (modelHandle != 0) {
+        OS.g_object_unref(modelHandle);
+    }
 	modelHandle = 0;
-	if (checkRenderer != 0) OS.g_object_unref (checkRenderer);
+    if (checkRenderer != 0) {
+        OS.g_object_unref(checkRenderer);
+    }
 	checkRenderer = 0;
-	if (imageList != null) imageList.dispose ();
-	if (headerImageList != null) headerImageList.dispose ();
+    if (imageList != null) {
+        imageList.dispose();
+    }
+    if (headerImageList != null) {
+        headerImageList.dispose();
+    }
 	imageList = headerImageList = null;
 	currentItem = null;
 }
@@ -2910,11 +3209,15 @@ void releaseWidget () {
  */
 public void remove (int index) {
 	checkWidget();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_ITEM_NOT_REMOVED);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_ITEM_NOT_REMOVED);
+    }
 	if (usesVirtualNativeModel ()) {
 		int oldCount = itemCount;
 		TableItem item = _getItem (index, false);
-		if (item != null && !item.isDisposed ()) item.release (false);
+        if (item != null && !item.isDisposed()) {
+            item.release(false);
+        }
 		virtualItems.remove (index);
 		resetVirtualNativeModel (oldCount - 1, index, 1, 0);
 		return;
@@ -2965,8 +3268,12 @@ public void remove (int index) {
  */
 public void remove (int start, int end) {
 	checkWidget();
-	if (start > end) return;
-	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (start > end) {
+        return;
+    }
+    if (!(0 <= start && start <= end && end < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (start == 0 && end == itemCount - 1) {
 		removeAll();
 		return;
@@ -2976,18 +3283,26 @@ public void remove (int start, int end) {
 	if (usesVirtualNativeModel ()) {
 		int oldCount = itemCount;
 		virtualItems.removeRange (start, end + 1, item -> {
-			if (!item.isDisposed ()) item.release (false);
+            if (!item.isDisposed()) {
+                item.release(false);
+            }
 		});
 		resetVirtualNativeModel (oldCount - removed, start, removed, 0);
 		return;
 	}
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+    if (iter == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	for (int index = start; index <= end; index++) {
-		if (index == start) GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index);
+        if (index == start) {
+            GTK.gtk_tree_model_iter_nth_child(modelHandle, iter, 0, index);
+        }
 		TableItem item = _getItem (index, false);
-		if (item != null && !item.isDisposed ()) item.release (false);
+        if (item != null && !item.isDisposed()) {
+            item.release(false);
+        }
 		OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 		GTK.gtk_list_store_remove (modelHandle, iter);
 		OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
@@ -2997,7 +3312,9 @@ public void remove (int start, int end) {
 		virtualItems.removeRange (start, end + 1, ignored -> { });
 	} else {
 		System.arraycopy (items, end + 1, items, start, itemCount - end - 1);
-		for (int i=itemCount-removed; i<itemCount; i++) items [i] = null;
+        for (int i = itemCount - removed; i < itemCount; i++) {
+            items [i] = null;
+        }
 	}
 	itemCount -= removed;
 }
@@ -3019,21 +3336,31 @@ public void remove (int start, int end) {
  */
 public void remove (int [] indices) {
 	checkWidget();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (indices.length == 0) return;
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (indices.length == 0) {
+        return;
+    }
 	int [] newIndices = new int [indices.length];
 	System.arraycopy (indices, 0, newIndices, 0, indices.length);
 	sort (newIndices);
 	int start = newIndices [newIndices.length - 1], end = newIndices [0];
-	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= start && start <= end && end < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (usesVirtualNativeModel ()) {
 		int last = -1;
 		for (int i=0; i<newIndices.length; i++) {
 			int index = newIndices [i];
-			if (index == last) continue;
+            if (index == last) {
+                continue;
+            }
 			int oldCount = itemCount;
 			TableItem item = _getItem (index, false);
-			if (item != null && !item.isDisposed ()) item.release (false);
+            if (item != null && !item.isDisposed()) {
+                item.release(false);
+            }
 			virtualItems.remove (index);
 			resetVirtualNativeModel (oldCount - 1, index, 1, 0);
 			last = index;
@@ -3043,7 +3370,9 @@ public void remove (int [] indices) {
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	int last = -1;
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-	if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+    if (iter == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	for (int i=0; i<newIndices.length; i++) {
 		int index = newIndices [i];
 		if (index != last) {
@@ -3091,7 +3420,9 @@ public void removeAll () {
 		int oldCount = itemCount;
 		for (int i=0; i<materializedItemCount (); i++) {
 			TableItem item = materializedItem (i);
-			if (item != null && !item.isDisposed ()) item.release (false);
+            if (item != null && !item.isDisposed()) {
+                item.release(false);
+            }
 		}
 		virtualItems = new VirtualItemStorage<> ();
 		resetVirtualNativeModel (0, 0, oldCount, 0);
@@ -3100,10 +3431,14 @@ public void removeAll () {
 	}
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null && !item.isDisposed ()) item.release (false);
+        if (item != null && !item.isDisposed()) {
+            item.release(false);
+        }
 	}
 	items = new TableItem [4];
-	if (virtualItems != null) virtualItems = new VirtualItemStorage<> ();
+    if (virtualItems != null) {
+        virtualItems = new VirtualItemStorage<>();
+    }
 	itemCount = 0;
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
@@ -3114,12 +3449,18 @@ public void removeAll () {
 	 */
 	long selectionHandle = GTK.gtk_tree_view_get_selection(handle);
 	boolean changeMode = (style & SWT.MULTI) != 0;
-	if (changeMode) GTK.gtk_tree_selection_set_mode(selectionHandle, GTK.GTK_SELECTION_BROWSE);
+    if (changeMode) {
+        GTK.gtk_tree_selection_set_mode(selectionHandle, GTK.GTK_SELECTION_BROWSE);
+    }
 	GTK.gtk_list_store_clear (modelHandle);
-	if (changeMode) GTK.gtk_tree_selection_set_mode(selectionHandle, GTK.GTK_SELECTION_MULTIPLE);
+    if (changeMode) {
+        GTK.gtk_tree_selection_set_mode(selectionHandle, GTK.GTK_SELECTION_MULTIPLE);
+    }
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	resetCustomDraw ();
-	if (!searchEnabled ()) GTK.gtk_tree_view_set_search_column (handle, -1);
+    if (!searchEnabled()) {
+        GTK.gtk_tree_view_set_search_column(handle, -1);
+    }
 }
 
 /**
@@ -3141,8 +3482,12 @@ public void removeAll () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -3174,8 +3519,12 @@ void sendMeasureEvent (long cell, long width, long height) {
 				}
 			}
 			int [] contentWidth = new int [1], contentHeight = new int  [1];
-			if (width != 0) C.memmove (contentWidth, width, 4);
-			if (height != 0) C.memmove (contentHeight, height, 4);
+            if (width != 0) {
+                C.memmove(contentWidth, width, 4);
+            }
+            if (height != 0) {
+                C.memmove(contentHeight, height, 4);
+            }
 			GTK.gtk_cell_renderer_get_preferred_height_for_width (cell, handle, contentWidth[0], contentHeight, null);
 			Image image = item.getImage (columnIndex);
 			int imageWidth = 0;
@@ -3192,14 +3541,22 @@ void sendMeasureEvent (long cell, long width, long height) {
 			event.gc = gc;
 			Rectangle eventRect = new Rectangle (0, 0, contentWidth [0], contentHeight [0]);
 			event.setBounds (eventRect);
-			if (isSelected) event.detail = SWT.SELECTED;
+            if (isSelected) {
+                event.detail = SWT.SELECTED;
+            }
 			sendEvent (SWT.MeasureItem, event);
 			gc.dispose ();
 			Rectangle rect = event.getBounds ();
 			contentWidth [0] = rect.width - imageWidth;
-			if (contentHeight [0] < rect.height) contentHeight [0] = rect.height;
-			if (width != 0) C.memmove (width, contentWidth, 4);
-			if (height != 0) C.memmove (height, contentHeight, 4);
+            if (contentHeight [0] < rect.height) {
+                contentHeight [0] = rect.height;
+            }
+            if (width != 0) {
+                C.memmove(width, contentWidth, 4);
+            }
+            if (height != 0) {
+                C.memmove(height, contentHeight, 4);
+            }
 			GTK.gtk_cell_renderer_set_fixed_size (cell, -1, contentHeight [0]);
 		}
 	}
@@ -3308,9 +3665,13 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 					GDK.gdk_rgba_free (ptr [0]);
 				}
 			}
-			if ((flags & GTK.GTK_CELL_RENDERER_SELECTED) != 0) drawState |= SWT.SELECTED;
+            if ((flags & GTK.GTK_CELL_RENDERER_SELECTED) != 0) {
+                drawState |= SWT.SELECTED;
+            }
 			if ((flags & GTK.GTK_CELL_RENDERER_SELECTED) == 0) {
-				if ((flags & GTK.GTK_CELL_RENDERER_FOCUSED) != 0) drawState |= SWT.FOCUSED;
+                if ((flags & GTK.GTK_CELL_RENDERER_FOCUSED) != 0) {
+                    drawState |= SWT.FOCUSED;
+                }
 			}
 
 			Rectangle rect = columnRect.toRectangle ();
@@ -3331,7 +3692,9 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 
 			//send out measure before erase
 			long textRenderer =  getTextRenderer (columnHandle);
-			if (textRenderer != 0) gtk_cell_renderer_get_preferred_size (textRenderer, handle, null, null);
+            if (textRenderer != 0) {
+                gtk_cell_renderer_get_preferred_size(textRenderer, handle, null, null);
+            }
 
 
 			if (hooks (SWT.EraseItem)) {
@@ -3344,7 +3707,9 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 				wasSelected = (drawState & SWT.SELECTED) != 0;
 				if (wasSelected) {
 					Control control = findBackgroundControl ();
-					if (control == null) control = this;
+                    if (control == null) {
+                        control = this;
+                    }
 				}
 				GC gc = getGC(cr);
 				if ((drawState & SWT.SELECTED) != 0) {
@@ -3355,7 +3720,9 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 					gc.setForeground (item.getForeground (columnIndex));
 				}
 				gc.setFont (item.getFont (columnIndex));
-				if ((style & SWT.MIRRORED) != 0) rect.x = getClientWidth () - rect.width - rect.x;
+                if ((style & SWT.MIRRORED) != 0) {
+                    rect.x = getClientWidth() - rect.width - rect.x;
+                }
 				if (cr != 0) {
 					GdkRectangle r = new GdkRectangle();
 					GDK.gdk_cairo_get_clip_rectangle(cr, r);
@@ -3389,8 +3756,12 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 				drawForegroundRGBA = null;
 				drawState = event.doit ? event.detail : 0;
 				drawFlags &= ~(GTK.GTK_CELL_RENDERER_FOCUSED | GTK.GTK_CELL_RENDERER_SELECTED);
-				if ((drawState & SWT.SELECTED) != 0) drawFlags |= GTK.GTK_CELL_RENDERER_SELECTED;
-				if ((drawState & SWT.FOCUSED) != 0) drawFlags |= GTK.GTK_CELL_RENDERER_FOCUSED;
+                if ((drawState & SWT.SELECTED) != 0) {
+                    drawFlags |= GTK.GTK_CELL_RENDERER_SELECTED;
+                }
+                if ((drawState & SWT.FOCUSED) != 0) {
+                    drawFlags |= GTK.GTK_CELL_RENDERER_FOCUSED;
+                }
 				if ((drawState & SWT.SELECTED) != 0) {
 					Cairo.cairo_save (cr);
 					Cairo.cairo_reset_clip (cr);
@@ -3444,7 +3815,9 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 		long textCell = GTK.GTK4 && GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell) ? getTextRenderer (columnHandle) : cell;
 		if (GTK.GTK_IS_CELL_RENDERER_TEXT (textCell)) {
 			if (hooks (SWT.PaintItem)) {
-				if (wasSelected) drawState |= SWT.SELECTED;
+                if (wasSelected) {
+                    drawState |= SWT.SELECTED;
+                }
 				Rectangle rect = columnRect.toRectangle ();
 				ignoreSize = true;
 				int [] contentX = new int [1], contentWidth = new int [1];
@@ -3481,7 +3854,9 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 					gc.setForeground (foreground);
 				}
 				gc.setFont (item.getFont (columnIndex));
-				if ((style & SWT.MIRRORED) != 0) rect.x = getClientWidth () - rect.width - rect.x;
+                if ((style & SWT.MIRRORED) != 0) {
+                    rect.x = getClientWidth() - rect.width - rect.x;
+                }
 
 				gc.setClipping(rect.x, rect.y, rect.width, rect.height);
 
@@ -3521,7 +3896,9 @@ private GC getGC(long cr) {
 }
 
 void resetCustomDraw () {
-	if ((style & SWT.VIRTUAL) != 0 || ownerDraw) return;
+    if ((style & SWT.VIRTUAL) != 0 || ownerDraw) {
+        return;
+    }
 	int end = Math.max (1, columnCount);
 	for (int i=0; i<end; i++) {
 		boolean customDraw = columnCount != 0 ? columns [i].customDraw : firstCustomDraw;
@@ -3529,7 +3906,9 @@ void resetCustomDraw () {
 			long column = GTK.gtk_tree_view_get_column (handle, i);
 			long textRenderer = getTextRenderer (column);
 			GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, 0, 0, 0);
-			if (columnCount != 0) columns [i].customDraw = false;
+            if (columnCount != 0) {
+                columns [i].customDraw = false;
+            }
 		}
 	}
 	firstCustomDraw = false;
@@ -3539,12 +3918,16 @@ void resetCustomDraw () {
 void reskinChildren (int flags) {
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null) item.reskin (flags);
+        if (item != null) {
+            item.reskin(flags);
+        }
 	}
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
 			TableColumn column = columns [i];
-			if (!column.isDisposed ()) column.reskin (flags);
+            if (!column.isDisposed()) {
+                column.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -3552,8 +3935,10 @@ void reskinChildren (int flags) {
 
 
 boolean searchEnabled () {
-	/* Disable searching when using VIRTUAL or NO_SEARCH */
-	if ((style & SWT.VIRTUAL) != 0 || (style & SWT.NO_SEARCH) != 0) return false;
+    /* Disable searching when using VIRTUAL or NO_SEARCH */
+    if ((style & SWT.VIRTUAL) != 0 || (style & SWT.NO_SEARCH) != 0) {
+        return false;
+    }
 	return true;
 }
 
@@ -3571,21 +3956,28 @@ boolean searchEnabled () {
  */
 public void select (int index) {
 	checkWidget();
-	if (!(0 <= index && index < itemCount)) return;
+    if (!(0 <= index && index < itemCount)) {
+        return;
+    }
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	if (usesVirtualNativeModel ()) {
 		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
-		if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
-			GTK.gtk_tree_selection_select_iter (selection, iter);
+        if (iter == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
+        if (GTK.gtk_tree_model_iter_nth_child(modelHandle, iter, 0, index)) {
+            GTK.gtk_tree_selection_select_iter(selection, iter);
+        }
 		OS.g_free (iter);
 	} else {
 		GTK.gtk_tree_selection_select_iter (selection, _getItem (index).handle);
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 /**
@@ -3613,29 +4005,40 @@ public void select (int index) {
  */
 public void select (int start, int end) {
 	checkWidget ();
-	if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) return;
-	if (itemCount == 0 || start >= itemCount) return;
+    if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) {
+        return;
+    }
+    if (itemCount == 0 || start >= itemCount) {
+        return;
+    }
 	start = Math.max (0, start);
 	end = Math.min (end, itemCount - 1);
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	long iter = usesVirtualNativeModel () ? OS.g_malloc (GTK.GtkTreeIter_sizeof ()) : 0;
-	if (usesVirtualNativeModel () && iter == 0) error (SWT.ERROR_NO_HANDLES);
+    if (usesVirtualNativeModel() && iter == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	try {
 		for (int index=start; index<=end; index++) {
 			if (usesVirtualNativeModel ()) {
-				if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
-					GTK.gtk_tree_selection_select_iter (selection, iter);
+                if (GTK.gtk_tree_model_iter_nth_child(modelHandle, iter, 0, index)) {
+                    GTK.gtk_tree_selection_select_iter(selection, iter);
+                }
 			} else {
 				GTK.gtk_tree_selection_select_iter (selection, _getItem (index).handle);
 			}
 		}
 	} finally {
-		if (iter != 0) OS.g_free (iter);
+        if (iter != 0) {
+            OS.g_free(iter);
+        }
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 /**
@@ -3663,29 +4066,42 @@ public void select (int start, int end) {
  */
 public void select (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int length = indices.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	long iter = usesVirtualNativeModel () ? OS.g_malloc (GTK.GtkTreeIter_sizeof ()) : 0;
-	if (usesVirtualNativeModel () && iter == 0) error (SWT.ERROR_NO_HANDLES);
+    if (usesVirtualNativeModel() && iter == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	try {
 		for (int index : indices) {
-			if (!(0 <= index && index < itemCount)) continue;
+            if (!(0 <= index && index < itemCount)) {
+                continue;
+            }
 			if (usesVirtualNativeModel ()) {
-				if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index))
-					GTK.gtk_tree_selection_select_iter (selection, iter);
+                if (GTK.gtk_tree_model_iter_nth_child(modelHandle, iter, 0, index)) {
+                    GTK.gtk_tree_selection_select_iter(selection, iter);
+                }
 			} else {
 				GTK.gtk_tree_selection_select_iter (selection, _getItem (index).handle);
 			}
 		}
 	} finally {
-		if (iter != 0) OS.g_free (iter);
+        if (iter != 0) {
+            OS.g_free(iter);
+        }
 	}
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 /**
@@ -3701,26 +4117,34 @@ public void select (int [] indices) {
  */
 public void selectAll () {
 	checkWidget();
-	if ((style & SWT.SINGLE) != 0) return;
+    if ((style & SWT.SINGLE) != 0) {
+        return;
+    }
 	boolean fixColumn = showFirstColumn ();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_tree_selection_select_all (selection);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 void selectFocusIndex (int index) {
-	/*
-	 * Note that this method both selects and sets the focus to the specified
-	 * index, so any previous selection in the list will be lost.
-	 */
-	if (!(0 <= index && index < itemCount)) return;
+    /*
+     * Note that this method both selects and sets the focus to the specified
+     * index, so any previous selection in the list will be lost.
+     */
+    if (!(0 <= index && index < itemCount)) {
+        return;
+    }
 	long iter = 0;
 	long itemHandle;
 	if (usesVirtualNativeModel ()) {
 		iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+        if (iter == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index)) {
 			OS.g_free (iter);
 			return;
@@ -3735,7 +4159,9 @@ void selectFocusIndex (int index) {
 	GTK.gtk_tree_view_set_cursor (handle, path, 0, false);
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	GTK.gtk_tree_path_free (path);
-	if (iter != 0) OS.g_free (iter);
+    if (iter != 0) {
+        OS.g_free(iter);
+    }
 }
 
 @Override
@@ -3812,17 +4238,27 @@ int setBounds (int x, int y, int width, int height, boolean move, boolean resize
  */
 public void setColumnOrder (int [] order) {
 	checkWidget ();
-	if (order == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (order == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (columnCount == 0) {
-		if (order.length > 0) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (order.length > 0) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		return;
 	}
-	if (order.length != columnCount) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (order.length != columnCount) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	boolean [] seen = new boolean [columnCount];
 	for (int i = 0; i<order.length; i++) {
 		int index = order [i];
-		if (index < 0 || index >= columnCount) error (SWT.ERROR_INVALID_RANGE);
-		if (seen [index]) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (index < 0 || index >= columnCount) {
+            error(SWT.ERROR_INVALID_RANGE);
+        }
+        if (seen [index]) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		seen [index] = true;
 	}
 	for (int i=0; i<order.length; i++) {
@@ -3872,8 +4308,12 @@ void setForegroundGdkRGBA (GdkRGBA rgba) {
 public void setHeaderBackground(Color color) {
 	checkWidget();
 	if (color != null) {
-		if (color.isDisposed())	error(SWT.ERROR_INVALID_ARGUMENT);
-		if (color.equals(headerBackground)) return;
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (color.equals(headerBackground)) {
+            return;
+        }
 	}
 	headerBackground = color;
 
@@ -3939,8 +4379,12 @@ void updateHeaderCSS() {
 public void setHeaderForeground(Color color) {
 	checkWidget();
 	if (color != null) {
-		if (color.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-		if (color.equals(headerForeground)) return;
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (color.equals(headerForeground)) {
+            return;
+        }
 	}
 	headerForeground = color;
 
@@ -3985,13 +4429,17 @@ public void setHeaderVisible (boolean show) {
 public void setItemCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
-	if (count == itemCount) return;
+    if (count == itemCount) {
+        return;
+    }
 	boolean isVirtual = (style & SWT.VIRTUAL) != 0;
 	if (usesVirtualNativeModel ()) {
 		int oldCount = itemCount;
 		if (count < oldCount) {
 			virtualItems.truncate (count, item -> {
-				if (!item.isDisposed ()) item.release (false);
+                if (!item.isDisposed()) {
+                    item.release(false);
+                }
 			});
 			resetVirtualNativeModel (count, count, oldCount - count, 0);
 		} else {
@@ -3999,13 +4447,21 @@ public void setItemCount (int count) {
 		}
 		return;
 	}
-	if (!isVirtual) setRedraw (false);
-	if (count < itemCount) remove (count, itemCount - 1);
+    if (!isVirtual) {
+        setRedraw(false);
+    }
+    if (count < itemCount) {
+        remove(count, itemCount - 1);
+    }
 	if (isVirtual) {
 		if (count > itemCount) {
 			long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-			if (iter == 0) error (SWT.ERROR_NO_HANDLES);
-			for (int i=itemCount; i<count; i++) GTK.gtk_list_store_append (modelHandle, iter);
+            if (iter == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
+            for (int i = itemCount; i < count; i++) {
+                GTK.gtk_list_store_append(modelHandle, iter);
+            }
 			OS.g_free (iter);
 			itemCount = count;
 		}
@@ -4015,7 +4471,9 @@ public void setItemCount (int count) {
 			TableItem [] newItems = new TableItem [length];
 			System.arraycopy (items, 0, newItems, 0, itemCount);
 			items = newItems;
-			for (int i=itemCount; i<count; i++) new TableItem (this, SWT.NONE, i, true);
+            for (int i = itemCount; i < count; i++) {
+                new TableItem(this, SWT.NONE, i, true);
+            }
 		} else {
 			int length = Math.max (4, (count + 3) / 4 * 4);
 			TableItem [] newItems = new TableItem [length];
@@ -4023,7 +4481,9 @@ public void setItemCount (int count) {
 			items = newItems;
 		}
 	}
-	if (!isVirtual) setRedraw (true);
+    if (!isVirtual) {
+        setRedraw(true);
+    }
 }
 
 /**
@@ -4061,10 +4521,14 @@ void setOrientation (boolean create) {
 	super.setOrientation (create);
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null) item.setOrientation (create);
+        if (item != null) {
+            item.setOrientation(create);
+        }
 	}
 	for (int i=0; i<columnCount; i++) {
-		if (columns[i] != null) columns[i].setOrientation (create);
+        if (columns[i] != null) {
+            columns[i].setOrientation(create);
+        }
 	}
 }
 
@@ -4115,7 +4579,9 @@ public void setRedraw (boolean redraw) {
 }
 
 void setScrollWidth (long column, TableItem item) {
-	if (columnCount != 0 || currentItem == item) return;
+    if (columnCount != 0 || currentItem == item) {
+        return;
+    }
 	int width = GTK.gtk_tree_view_column_get_fixed_width (column);
 	int itemWidth = calculateWidth (column, item.handle);
 	if (width < itemWidth) {
@@ -4142,7 +4608,9 @@ void setScrollWidth (long column, TableItem item) {
  */
 public void setSortColumn (TableColumn column) {
 	checkWidget ();
-	if (column != null && column.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (column != null && column.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	if (sortColumn != null && !sortColumn.isDisposed()) {
 		GTK.gtk_tree_view_column_set_sort_indicator (sortColumn.handle, false);
 	}
@@ -4168,9 +4636,13 @@ public void setSortColumn (TableColumn column) {
  */
 public void setSortDirection  (int direction) {
 	checkWidget ();
-	if (direction != SWT.UP && direction != SWT.DOWN && direction != SWT.NONE) return;
+    if (direction != SWT.UP && direction != SWT.DOWN && direction != SWT.NONE) {
+        return;
+    }
 	sortDirection = direction;
-	if (sortColumn == null || sortColumn.isDisposed ()) return;
+    if (sortColumn == null || sortColumn.isDisposed()) {
+        return;
+    }
 	if (sortDirection == SWT.NONE) {
 		GTK.gtk_tree_view_column_set_sort_indicator (sortColumn.handle, false);
 	} else {
@@ -4200,7 +4672,9 @@ public void setSelection (int index) {
 	deselectAll ();
 	selectFocusIndex (index);
 	showSelection ();
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 /**
@@ -4229,8 +4703,12 @@ public void setSelection (int index) {
 public void setSelection (int start, int end) {
 	checkWidget ();
 	deselectAll();
-	if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) return;
-	if (itemCount == 0 || start >= itemCount) return;
+    if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) {
+        return;
+    }
+    if (itemCount == 0 || start >= itemCount) {
+        return;
+    }
 	boolean fixColumn = showFirstColumn ();
 	start = Math.max (0, start);
 	end = Math.min (end, itemCount - 1);
@@ -4239,7 +4717,9 @@ public void setSelection (int start, int end) {
 		select (start, end);
 	}
 	showSelection ();
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 /**
@@ -4267,17 +4747,23 @@ public void setSelection (int start, int end) {
  */
 public void setSelection (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	deselectAll ();
 	int length = indices.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	boolean fixColumn = showFirstColumn ();
 	selectFocusIndex (indices [0]);
 	if ((style & SWT.MULTI) != 0) {
 		select (indices);
 	}
 	showSelection ();
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 /**
@@ -4302,7 +4788,9 @@ public void setSelection (int [] indices) {
  * @since 3.2
  */
 public void setSelection (TableItem item) {
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setSelection (new TableItem [] {item});
 }
 
@@ -4334,7 +4822,9 @@ public void setSelection (TableItem item) {
  */
 public void setSelection (TableItem [] items) {
 	checkWidget ();
-	if (items == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (items == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	boolean fixColumn = showFirstColumn ();
 	deselectAll ();
 	int length = items.length;
@@ -4353,7 +4843,9 @@ public void setSelection (TableItem [] items) {
 		}
 		showSelection ();
 	}
-	if (fixColumn) hideFirstColumn ();
+    if (fixColumn) {
+        hideFirstColumn();
+    }
 }
 
 /**
@@ -4370,7 +4862,9 @@ public void setSelection (TableItem [] items) {
  */
 public void setTopIndex (int index) {
 	checkWidget();
-	if (!(0 <= index && index < itemCount)) return;
+    if (!(0 <= index && index < itemCount)) {
+        return;
+    }
 	long vAdjustment = GTK.gtk_scrollable_get_vadjustment(handle);
 	cachedAdjustment = GTK.gtk_adjustment_get_value(vAdjustment);
 	topIndex = index;
@@ -4378,7 +4872,9 @@ public void setTopIndex (int index) {
 	long itemHandle;
 	if (usesVirtualNativeModel ()) {
 		iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+        if (iter == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		if (!GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, index)) {
 			OS.g_free (iter);
 			return;
@@ -4390,7 +4886,9 @@ public void setTopIndex (int index) {
 	long path = GTK.gtk_tree_model_get_path (modelHandle, itemHandle);
 	GTK.gtk_tree_view_scroll_to_cell (handle, path, 0, true, 0f, 0f);
 	GTK.gtk_tree_path_free (path);
-	if (iter != 0) OS.g_free (iter);
+    if (iter != 0) {
+        OS.g_free(iter);
+    }
 }
 
 /**
@@ -4413,9 +4911,15 @@ public void setTopIndex (int index) {
  */
 public void showColumn (TableColumn column) {
 	checkWidget ();
-	if (column == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (column.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-	if (column.parent != this) return;
+    if (column == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (column.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (column.parent != this) {
+        return;
+    }
 
 	GTK.gtk_tree_view_scroll_to_cell (handle, 0, column.handle, false, 0, 0);
 }
@@ -4428,7 +4932,9 @@ boolean showFirstColumn () {
 	int columnCount = Math.max (1, this.columnCount);
 	for (int i=0; i<columnCount; i++) {
 		long column = GTK.gtk_tree_view_get_column (handle, i);
-		if (GTK.gtk_tree_view_column_get_visible (column)) return false;
+        if (GTK.gtk_tree_view_column_get_visible(column)) {
+            return false;
+        }
 	}
 	long firstColumn = GTK.gtk_tree_view_get_column (handle, 0);
 	GTK.gtk_tree_view_column_set_visible (firstColumn, true);
@@ -4455,9 +4961,15 @@ boolean showFirstColumn () {
  */
 public void showItem (TableItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (item.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (item.parent != this) return;
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (item.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (item.parent != this) {
+        return;
+    }
 	showItem (item.handle);
 }
 
@@ -4484,9 +4996,13 @@ public void showSelection () {
 	checkWidget();
 	if (usesVirtualNativeModel ()) {
 		int [] selection = getSelectionIndices ();
-		if (selection.length == 0) return;
+        if (selection.length == 0) {
+            return;
+        }
 		long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-		if (iter == 0) error (SWT.ERROR_NO_HANDLES);
+        if (iter == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		if (GTK.gtk_tree_model_iter_nth_child (modelHandle, iter, 0, selection [0])) {
 			showItem (iter);
 		}
@@ -4494,7 +5010,9 @@ public void showSelection () {
 		return;
 	}
 	TableItem [] selection = getSelection ();
-	if (selection.length == 0) return;
+    if (selection.length == 0) {
+        return;
+    }
 	showItem (selection [0].handle);
 }
 
@@ -4513,11 +5031,15 @@ void updateScrollBarValue (ScrollBar bar) {
 		*/
 		long parentHandle = parentingHandle ();
 		long list = GTK3.gtk_container_get_children (parentHandle);
-		if (list == 0) return;
+        if (list == 0) {
+            return;
+        }
 		long temp = list;
 		while (temp != 0) {
 			long widget = OS.g_list_data (temp);
-			if (widget != 0) GTK.gtk_widget_queue_resize  (widget);
+            if (widget != 0) {
+                GTK.gtk_widget_queue_resize(widget);
+            }
 			temp = OS.g_list_next (temp);
 		}
 		OS.g_list_free (list);
@@ -4634,20 +5156,28 @@ void checkSetDataInProcessBeforeRemoval(int start, int end) {
  * Fire the paint event explicitly, so the paint listener's drawing is not lost.
  */
 private void gtk3_paintEvent(long cairo) {
-	if ((state & OBSCURED) != 0) return;
+    if ((state & OBSCURED) != 0) {
+        return;
+    }
 	if (drawRegion) {
 		cairoClipRegion(cairo);
 	}
-	if (!hooksPaint()) return;
+    if (!hooksPaint()) {
+        return;
+    }
 	GdkRectangle rect = new GdkRectangle();
 	GDK.gdk_cairo_get_clip_rectangle(cairo, rect);
 	Event event = new Event();
 	event.count = 1;
 	Rectangle eventBounds = new Rectangle(rect.x, rect.y, rect.width, rect.height);
-	if ((style & SWT.MIRRORED) != 0) eventBounds.x = getClientWidth() - eventBounds.width - eventBounds.x;
+    if ((style & SWT.MIRRORED) != 0) {
+        eventBounds.x = getClientWidth() - eventBounds.width - eventBounds.x;
+    }
 	event.setBounds(eventBounds);
 	GCData data = new GCData();
-	if (drawRegion) data.regionSet = eventRegion;
+    if (drawRegion) {
+        data.regionSet = eventRegion;
+    }
 	data.cairo = cairo;
 	GC gc = event.gc = GC.gtk_new(this, data);
 	gc.setClipping(eventBounds.x, eventBounds.y, eventBounds.width, eventBounds.height);

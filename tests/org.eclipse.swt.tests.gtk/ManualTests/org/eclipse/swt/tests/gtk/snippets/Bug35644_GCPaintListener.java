@@ -27,14 +27,18 @@ public class Bug35644_GCPaintListener {
 		final Shell shell = new Shell(display);
 
 		shell.addListener(SWT.Paint, e -> {
-			if (e.x == 0) return;
+            if (e.x == 0) {
+                return;
+            }
 			GC gc1 = new GC(shell);
 			gc1.drawLine(0, 0, 2000, 2000);
 			gc1.dispose();
 		});
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

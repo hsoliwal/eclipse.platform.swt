@@ -42,13 +42,17 @@ public class Snippet292 {
 				TreeItem subItem = new TreeItem(treeItem, SWT.NONE);
 				subItem.setText("SubItem " + i + "-" + j);
 			}
-			if (i % 3 == 0) treeItem.setExpanded (true);
+            if (i % 3 == 0) {
+                treeItem.setExpanded(true);
+            }
 		}
 		new Button(group, SWT.PUSH).setText("Button");
 		final Label label = new Label (shell, SWT.NONE);
 		label.addListener (SWT.Dispose, e -> {
 			Image image = label.getImage ();
-			if (image != null) image.dispose ();
+            if (image != null) {
+                image.dispose();
+            }
 		});
 		Button button = new Button (shell, SWT.PUSH);
 		button.setText ("Snapshot");
@@ -78,7 +82,9 @@ public class Snippet292 {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

@@ -113,13 +113,17 @@ public ExpandItem (ExpandBar parent, int style, int index) {
 }
 
 static ExpandBar checkNull (ExpandBar control) {
-	if (control == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (control == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return control;
 }
 
 @Override
 public void dispose () {
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	//if (!isValidThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
 	parent.destroyItem (this);
 	super.dispose();
@@ -303,8 +307,12 @@ void setBounds (int x, int y, int width, int height, boolean move, boolean size)
 		redraw ();
 	}
 	if (control != null && !control.isDisposed ()) {
-		if (move) control.setLocation (x + BORDER, y + headerHeight);
-		if (size) control.setSize (Math.max (0, width - 2 * BORDER), Math.max (0, height - BORDER));
+        if (move) {
+            control.setLocation(x + BORDER, y + headerHeight);
+        }
+        if (size) {
+            control.setSize(Math.max(0, width - 2 * BORDER), Math.max(0, height - BORDER));
+        }
 	}
 }
 
@@ -325,8 +333,12 @@ void setBounds (int x, int y, int width, int height, boolean move, boolean size)
 public void setControl(Control control) {
 	checkWidget ();
 	if (control != null) {
-		if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (control.parent != parent) error (SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.parent != parent) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
 	this.control = control;
 	if (control != null) {
@@ -383,9 +395,13 @@ public void setImage (Image image) {
  */
 public void setHeight (int height) {
 	checkWidget ();
-	if (height < 0) return;
+    if (height < 0) {
+        return;
+    }
 	setBounds (0, 0, width, height, false, true);
-	if (expanded) parent.layoutItems (parent.indexOf (this) + 1, true);
+    if (expanded) {
+        parent.layoutItems(parent.indexOf(this) + 1, true);
+    }
 }
 
 @Override

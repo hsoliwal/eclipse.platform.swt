@@ -59,15 +59,21 @@ public class Snippet214 {
 			gc.fillGradientRectangle (rect.x, rect.y, rect.width, 1, false);
 			gc.dispose ();
 			shell.setBackgroundImage (newImage);
-			if (oldImage != null) oldImage.dispose ();
+            if (oldImage != null) {
+                oldImage.dispose();
+            }
 			oldImage = newImage;
 		});
 		shell.pack ();
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
-		if (oldImage != null) oldImage.dispose ();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		display.dispose ();
 	}
 }

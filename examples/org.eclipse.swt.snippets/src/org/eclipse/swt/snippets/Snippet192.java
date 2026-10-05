@@ -75,7 +75,9 @@ public static void main(String[] args) {
 		final int index = currentColumn == column1 ? 0 : 1;
 		final int direction = dir;
 		Arrays.sort(data, (a, b) -> {
-			if (a[index] == b[index]) return 0;
+            if (a[index] == b[index]) {
+                return 0;
+            }
 			if (direction == SWT.UP) {
 				return a[index] < b[index] ? -1 : 1;
 			}
@@ -92,8 +94,9 @@ public static void main(String[] args) {
 	shell.setSize(shell.computeSize(SWT.DEFAULT, SWT.DEFAULT).x, 300);
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

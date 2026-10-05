@@ -106,7 +106,9 @@ private Rectangle() {
  * </ul>
  */
 public void add (Rectangle rect) {
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int left = x < rect.x ? x : rect.x;
 	int top = y < rect.y ? y : rect.y;
 	int lhs = x + width;
@@ -144,7 +146,9 @@ public boolean contains (int x, int y) {
  * </ul>
  */
 public boolean contains (Point pt) {
-	if (pt == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (pt == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return contains(pt.x, pt.y);
 }
 
@@ -201,8 +205,12 @@ public int hashCode () {
  * since 3.0
  */
 public void intersect (Rectangle rect) {
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (this == rect) return;
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (this == rect) {
+        return;
+    }
 	int left = x > rect.x ? x : rect.x;
 	int top = y > rect.y ? y : rect.y;
 	int lhs = x + width;
@@ -233,8 +241,12 @@ public void intersect (Rectangle rect) {
  * </ul>
  */
 public Rectangle intersection (Rectangle rect) {
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (this == rect) return new Rectangle (x, y, width, height);
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (this == rect) {
+        return new Rectangle(x, y, width, height);
+    }
 	int left = x > rect.x ? x : rect.x;
 	int top = y > rect.y ? y : rect.y;
 	int lhs = x + width;
@@ -298,7 +310,9 @@ public boolean intersects (int x, int y, int width, int height) {
  * @see #isEmpty()
  */
 public boolean intersects (Rectangle rect) {
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return rect == this || intersects (rect.x, rect.y, rect.width, rect.height);
 }
 
@@ -348,7 +362,9 @@ public String toString () {
  * @see #add(Rectangle)
  */
 public Rectangle union (Rectangle rect) {
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int left = x < rect.x ? x : rect.x;
 	int top = y < rect.y ? y : rect.y;
 	int lhs = x + width;

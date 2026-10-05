@@ -40,7 +40,9 @@ public void generate() {
 public void generate(JNIField[] fields) {
 	sort(fields);	
 	for (JNIField field : fields) {
-		if ((field.getModifiers() & Modifier.FINAL) == 0) continue;
+        if ((field.getModifiers() & Modifier.FINAL) == 0) {
+            continue;
+        }
 		generate(field);
 	}
 }

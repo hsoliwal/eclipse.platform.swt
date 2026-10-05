@@ -64,9 +64,13 @@ public static void main(String[] args) {
 		@Override
 		public void handleEvent(OleEvent event) {
 			int[] htmlDocumentID = webBrowser.getIDsOfNames(new String[]{"Document"});
-			if (htmlDocumentID == null) return;
+            if (htmlDocumentID == null) {
+                return;
+            }
 			Variant pVarResult = webBrowser.getProperty(htmlDocumentID[0]);
-			if (pVarResult == null || pVarResult.getType() == 0) return;
+            if (pVarResult == null || pVarResult.getType() == 0) {
+                return;
+            }
 			//IHTMLDocument2
 			OleAutomation htmlDocument = pVarResult.getAutomation();
 
@@ -98,8 +102,9 @@ public static void main(String[] args) {
 	webBrowser.invoke(ids[0], rgvarg, rgdispidNamedArgs);
 
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	//Remember to release OleAutomation Object
 	webBrowser.dispose();
@@ -156,8 +161,9 @@ class EventDispatch {
 		};
 	}
 	private void disposeCOMInterfaces() {
-		if (iDispatch != null)
-			iDispatch.dispose();
+        if (iDispatch != null) {
+            iDispatch.dispose();
+        }
 		iDispatch = null;
 
 	}
@@ -188,7 +194,9 @@ class EventDispatch {
 		return COM.S_OK;
 	}
 	private int QueryInterface(long /*int*/ riid, long /*int*/ ppvObject) {
-		if (riid == 0 || ppvObject == 0) return COM.E_INVALIDARG;
+        if (riid == 0 || ppvObject == 0) {
+            return COM.E_INVALIDARG;
+        }
 		GUID guid = new GUID();
 		COM.MoveMemory(guid, riid, GUID.sizeof);
 

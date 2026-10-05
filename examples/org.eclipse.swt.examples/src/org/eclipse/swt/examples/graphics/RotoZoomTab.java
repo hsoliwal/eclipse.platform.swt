@@ -70,7 +70,9 @@ public class RotoZoomTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void next(int width, int height) {
-		if (tilePixels == null) return;
+        if (tilePixels == null) {
+            return;
+        }
 		drawTile(roto[path], roto[(path + 128) & 255], roto2[zpath]);
 		path = (path - 1) & 255;
 		zpath = (zpath + 1) & 255;
@@ -78,11 +80,15 @@ public class RotoZoomTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (tilePixels == null) {
 			Image loaded = example.loadImage(gc.getDevice(), "tux256256.png"); //$NON-NLS-1$
-			if (loaded == null) return;
+            if (loaded == null) {
+                return;
+            }
 			ImageData tile = loaded.getImageData();
 
 			tilePixels = new int[256 * 256];
@@ -106,7 +112,9 @@ public class RotoZoomTab extends AnimatedGraphicsTab {
 			drawTile(roto[path], roto[(path + 128) & 255], roto2[zpath]);
 		}
 
-		if (imageData == null) return;
+        if (imageData == null) {
+            return;
+        }
 
 		if (outputImage != null) {
 			outputImage.dispose();

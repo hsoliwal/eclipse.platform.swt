@@ -39,7 +39,9 @@ public static void main (String [] args) {
 	text.addTraverseListener(e -> {
 		switch (e.detail) {
 			case SWT.TRAVERSE_RETURN:
-				if ((e.stateMask & SWT.MOD1) != 0) e.doit = true;
+                if ((e.stateMask & SWT.MOD1) != 0) {
+                    e.doit = true;
+                }
 		}
 	});
 	Button button = new Button (shell, SWT.PUSH);
@@ -51,7 +53,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

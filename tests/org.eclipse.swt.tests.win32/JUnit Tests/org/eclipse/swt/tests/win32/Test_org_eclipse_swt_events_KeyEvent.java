@@ -381,9 +381,11 @@ public class Test_org_eclipse_swt_events_KeyEvent extends KeyboardLayoutTest {
 					final boolean isDigits  = isNumLock && !isShift;
 					final int expectState   = isNumLock ? (state & ~SWT.SHIFT) : state;
 
-					// Alt+NumPad: Enters unicode characters
-					// Alt+Shift+NumPad: Keyboard layout switching
-					if ((state == A___) || (state == A__S)) continue;
+                    // Alt+NumPad: Enters unicode characters
+                    // Alt+Shift+NumPad: Keyboard layout switching
+                    if ((state == A___) || (state == A__S)) {
+                        continue;
+                    }
 
 					if (isDigits) {
 						testScanCode(state, UsScan.Num7,   expectState, '7',  SWT.KEYPAD, SWT.KEYPAD_7);
@@ -931,10 +933,12 @@ public class Test_org_eclipse_swt_events_KeyEvent extends KeyboardLayoutTest {
 	public void testEnglishUs_unpairedKeyUp() {
 		runWithLayout(LAYOUT_ENGLISH_US, () -> {
 			for (int state : COMMON_STATES) {
-				// This test needs some state key to be pressed before releasing letter key
-				// Otherwise SWT doesn't report any events at all, this is covered in
-				// #testEnglishUs_multipleLetters
-				if (state == ____) continue;
+                // This test needs some state key to be pressed before releasing letter key
+                // Otherwise SWT doesn't report any events at all, this is covered in
+                // #testEnglishUs_multipleLetters
+                if (state == ____) {
+                    continue;
+                }
 
 				// The problem with unpaired keys is that SWT relies upon state variables in
 				// Display that are expected to be set up when key is pressed and are cleared

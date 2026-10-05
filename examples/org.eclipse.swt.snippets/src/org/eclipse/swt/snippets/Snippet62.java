@@ -28,10 +28,18 @@ public class Snippet62 {
 
 static String stateMask (int stateMask) {
 	String string = "";
-	if ((stateMask & SWT.CTRL) != 0) string += " CTRL";
-	if ((stateMask & SWT.ALT) != 0) string += " ALT";
-	if ((stateMask & SWT.SHIFT) != 0) string += " SHIFT";
-	if ((stateMask & SWT.COMMAND) != 0) string += " COMMAND";
+    if ((stateMask & SWT.CTRL) != 0) {
+        string += " CTRL";
+    }
+    if ((stateMask & SWT.ALT) != 0) {
+        string += " ALT";
+    }
+    if ((stateMask & SWT.SHIFT) != 0) {
+        string += " SHIFT";
+    }
+    if ((stateMask & SWT.COMMAND) != 0) {
+        string += " COMMAND";
+    }
 	return string;
 }
 
@@ -48,11 +56,21 @@ public static void main (String [] args) {
 		};
 		string +=": button: " + e.button + ", ";
 		string += "stateMask=0x" + Integer.toHexString (e.stateMask) + stateMask (e.stateMask) + ", x=" + e.x + ", y=" + e.y;
-		if ((e.stateMask & SWT.BUTTON1) != 0) string += " BUTTON1";
-		if ((e.stateMask & SWT.BUTTON2) != 0) string += " BUTTON2";
-		if ((e.stateMask & SWT.BUTTON3) != 0) string += " BUTTON3";
-		if ((e.stateMask & SWT.BUTTON4) != 0) string += " BUTTON4";
-		if ((e.stateMask & SWT.BUTTON5) != 0) string += " BUTTON5";
+        if ((e.stateMask & SWT.BUTTON1) != 0) {
+            string += " BUTTON1";
+        }
+        if ((e.stateMask & SWT.BUTTON2) != 0) {
+            string += " BUTTON2";
+        }
+        if ((e.stateMask & SWT.BUTTON3) != 0) {
+            string += " BUTTON3";
+        }
+        if ((e.stateMask & SWT.BUTTON4) != 0) {
+            string += " BUTTON4";
+        }
+        if ((e.stateMask & SWT.BUTTON5) != 0) {
+            string += " BUTTON5";
+        }
 		System.out.println (string);
 	};
 	shell.addListener (SWT.MouseDown, listener);
@@ -61,7 +79,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

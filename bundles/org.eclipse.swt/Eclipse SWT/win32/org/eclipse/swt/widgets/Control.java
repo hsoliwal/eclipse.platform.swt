@@ -514,7 +514,9 @@ int binarySearch (int [] indices, int start, int end, int index) {
 	int low = start, high = end - 1;
 	while (low <= high) {
 		int mid = (low + high) >>> 1;
-		if (indices [mid] == index) return mid;
+        if (indices [mid] == index) {
+            return mid;
+        }
 		if (indices [mid] < index) {
 			low = mid + 1;
 		} else {
@@ -530,7 +532,9 @@ long borderHandle () {
 
 void checkBackground () {
 	Shell shell = getShell ();
-	if (this == shell) return;
+    if (this == shell) {
+        return;
+    }
 	state &= ~PARENT_BACKGROUND;
 	Composite composite = parent;
 	do {
@@ -548,13 +552,17 @@ void checkBackground () {
 			state |= PARENT_BACKGROUND;
 			return;
 		}
-		if (composite == shell) break;
+        if (composite == shell) {
+            break;
+        }
 		composite = composite.parent;
 	} while (true);
 }
 
 void checkBorder () {
-	if (getBorderWidthInPixels () == 0) style &= ~SWT.BORDER;
+    if (getBorderWidthInPixels() == 0) {
+        style &= ~SWT.BORDER;
+    }
 }
 
 void checkBuffered () {
@@ -568,7 +576,9 @@ void checkComposited () {
 void checkMirrored () {
 	if ((style & SWT.RIGHT_TO_LEFT) != 0) {
 		int bits = OS.GetWindowLong (handle, OS.GWL_EXSTYLE);
-		if ((bits & OS.WS_EX_LAYOUTRTL) != 0) style |= SWT.MIRRORED;
+        if ((bits & OS.WS_EX_LAYOUTRTL) != 0) {
+            style |= SWT.MIRRORED;
+        }
 	}
 }
 
@@ -649,8 +659,12 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 	int width = DEFAULT_WIDTH;
 	int height = DEFAULT_HEIGHT;
 	Point hintInPixels = Win32DPIUtils.pointToPixelAsSufficientlyLargeSize(hintInPoints, zoom);
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x;
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y;
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x;
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y;
+    }
 	int border = getBorderWidthInPixels ();
 	width += border * 2;
 	height += border * 2;
@@ -658,7 +672,9 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 }
 
 Widget computeTabGroup () {
-	if (isTabGroup ()) return this;
+    if (isTabGroup()) {
+        return this;
+    }
 	return parent.computeTabGroup ();
 }
 
@@ -667,11 +683,15 @@ Control computeTabRoot () {
 	if (tabList != null) {
 		int index = 0;
 		while (index < tabList.length) {
-			if (tabList [index] == this) break;
+            if (tabList [index] == this) {
+                break;
+            }
 			index++;
 		}
 		if (index == tabList.length) {
-			if (isTabGroup ()) return this;
+            if (isTabGroup()) {
+                return this;
+            }
 		}
 	}
 	return parent.computeTabRoot ();
@@ -699,7 +719,9 @@ void createHandle () {
 		0,
 		OS.GetModuleHandle (null),
 		widgetCreateStruct ());
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
 	if ((bits & OS.WS_CHILD) != 0) {
 		OS.SetWindowLongPtr (handle, OS.GWLP_ID, handle);
@@ -807,7 +829,9 @@ void destroyWidget () {
  */
 public boolean dragDetect (Event event) {
 	checkWidget ();
-	if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (event == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	Point loc = event.getLocation();
 	int zoom = getAutoscalingZoom();
 	return dragDetect (event.button, event.count, event.stateMask, DPIUtil.pointToPixel(loc.x, zoom), DPIUtil.pointToPixel(loc.y, zoom));
@@ -851,16 +875,22 @@ public boolean dragDetect (Event event) {
  */
 public boolean dragDetect (MouseEvent event) {
 	checkWidget ();
-	if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (event == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int zoom = getAutoscalingZoom();
 	return dragDetect (event.button, event.count, event.stateMask, DPIUtil.pointToPixel(event.x, zoom), DPIUtil.pointToPixel(event.y, zoom)); // To Pixels
 }
 
 boolean dragDetect (int button, int count, int stateMask, int x, int y) {
-	if (button != 1 || count != 1) return false;
+    if (button != 1 || count != 1) {
+        return false;
+    }
 	boolean dragging = dragDetect (handle, x, y, false, null, null);
 	if (OS.GetKeyState (OS.VK_LBUTTON) < 0) {
-		if (OS.GetCapture () != handle) OS.SetCapture (handle);
+        if (OS.GetCapture() != handle) {
+            OS.SetCapture(handle);
+        }
 	}
 	if (!dragging) {
 		/*
@@ -885,14 +915,30 @@ boolean dragDetect (int button, int count, int stateMask, int x, int y) {
 		*/
 		if (button == 1 && OS.GetKeyState (OS.VK_ESCAPE) >= 0) {
 			int wParam = 0;
-			if ((stateMask & SWT.CTRL) != 0) wParam |= OS.MK_CONTROL;
-			if ((stateMask & SWT.SHIFT) != 0) wParam |= OS.MK_SHIFT;
-			if ((stateMask & SWT.ALT) != 0) wParam |= OS.MK_ALT;
-			if ((stateMask & SWT.BUTTON1) != 0) wParam |= OS.MK_LBUTTON;
-			if ((stateMask & SWT.BUTTON2) != 0) wParam |= OS.MK_MBUTTON;
-			if ((stateMask & SWT.BUTTON3) != 0) wParam |= OS.MK_RBUTTON;
-			if ((stateMask & SWT.BUTTON4) != 0) wParam |= OS.MK_XBUTTON1;
-			if ((stateMask & SWT.BUTTON5) != 0) wParam |= OS.MK_XBUTTON2;
+            if ((stateMask & SWT.CTRL) != 0) {
+                wParam |= OS.MK_CONTROL;
+            }
+            if ((stateMask & SWT.SHIFT) != 0) {
+                wParam |= OS.MK_SHIFT;
+            }
+            if ((stateMask & SWT.ALT) != 0) {
+                wParam |= OS.MK_ALT;
+            }
+            if ((stateMask & SWT.BUTTON1) != 0) {
+                wParam |= OS.MK_LBUTTON;
+            }
+            if ((stateMask & SWT.BUTTON2) != 0) {
+                wParam |= OS.MK_MBUTTON;
+            }
+            if ((stateMask & SWT.BUTTON3) != 0) {
+                wParam |= OS.MK_RBUTTON;
+            }
+            if ((stateMask & SWT.BUTTON4) != 0) {
+                wParam |= OS.MK_XBUTTON1;
+            }
+            if ((stateMask & SWT.BUTTON5) != 0) {
+                wParam |= OS.MK_XBUTTON2;
+            }
 			long lParam = OS.MAKELPARAM (x, y);
 			OS.SendMessage (handle, OS.WM_LBUTTONUP, wParam, lParam);
 		}
@@ -929,7 +975,9 @@ void drawBackground (long hDC, RECT rect, int pixel, int tx, int ty) {
 			}
 		}
 	}
-	if (pixel == -1) pixel = getBackgroundPixel ();
+    if (pixel == -1) {
+        pixel = getBackgroundPixel();
+    }
 	fillBackground (hDC, pixel, rect);
 }
 
@@ -964,12 +1012,16 @@ void enableWidget (boolean enabled) {
 }
 
 void fillBackground (long hDC, int pixel, RECT rect) {
-	if (rect.left > rect.right || rect.top > rect.bottom) return;
+    if (rect.left > rect.right || rect.top > rect.bottom) {
+        return;
+    }
 	OS.FillRect (hDC, rect, findBrush (pixel, OS.BS_SOLID));
 }
 
 void fillImageBackground (long hDC, Control control, RECT rect, int tx, int ty) {
-	if (rect.left > rect.right || rect.top > rect.bottom) return;
+    if (rect.left > rect.right || rect.top > rect.bottom) {
+        return;
+    }
 	if (control != null) {
 		Image image = control.backgroundImage;
 		if (image != null) {
@@ -979,14 +1031,18 @@ void fillImageBackground (long hDC, Control control, RECT rect, int tx, int ty) 
 }
 
 void fillThemeBackground (long hDC, Control control, RECT rect) {
-	if (rect.left > rect.right || rect.top > rect.bottom) return;
+    if (rect.left > rect.right || rect.top > rect.bottom) {
+        return;
+    }
 	if (control != null) {
 		control.drawThemeBackground (hDC, handle, rect);
 	}
 }
 
 Control findBackgroundControl () {
-	if ((background != -1 || backgroundImage != null) && backgroundAlpha > 0) return this;
+    if ((background != -1 || backgroundImage != null) && backgroundAlpha > 0) {
+        return this;
+    }
 	return (parent != null && (state & PARENT_BACKGROUND) != 0) ? parent.findBackgroundControl () : null;
 }
 
@@ -995,7 +1051,9 @@ long findBrush (long value, int lbStyle) {
 }
 
 Cursor findCursor () {
-	if (cursor != null) return cursor;
+    if (cursor != null) {
+        return cursor;
+    }
 	return parent.findCursor ();
 }
 
@@ -1009,7 +1067,9 @@ Control findThemeControl () {
 }
 
 Menu [] findMenus (Control control) {
-	if (menu != null && this != control) return new Menu [] {menu};
+    if (menu != null && this != control) {
+        return new Menu []{menu};
+    }
 	return new Menu [0];
 }
 
@@ -1017,9 +1077,15 @@ char findMnemonic (String string) {
 	int index = 0;
 	int length = string.length ();
 	do {
-		while (index < length && string.charAt (index) != '&') index++;
-		if (++index >= length) return '\0';
-		if (string.charAt (index) != '&') return string.charAt (index);
+        while (index < length && string.charAt(index) != '&') {
+            index++;
+        }
+        if (++index >= length) {
+            return '\0';
+        }
+        if (string.charAt(index) != '&') {
+            return string.charAt(index);
+        }
 		index++;
 	} while (index < length);
 	return '\0';
@@ -1034,7 +1100,9 @@ void fixFocus (Control focusControl) {
 	Shell shell = getShell ();
 	Control control = this;
 	while (control != shell && (control = control.parent) != null) {
-			if (control.setFocus ()) return;
+        if (control.setFocus()) {
+            return;
+        }
 	}
 	shell.setSavedFocus (focusControl);
 	OS.SetFocus (0);
@@ -1055,12 +1123,20 @@ void fixFocus (Control focusControl) {
  */
 public boolean forceFocus () {
 	checkWidget ();
-	if (display.focusEvent == SWT.FocusOut) return false;
+    if (display.focusEvent == SWT.FocusOut) {
+        return false;
+    }
 	Decorations shell = menuShell ();
 	shell.setSavedFocus (this);
-	if (!isEnabled () || !isVisible () || !isActive ()) return false;
-	if (display.getActiveShell() != shell && !Display.isActivateShellOnForceFocus()) return false;
-	if (isFocusControl ()) return true;
+    if (!isEnabled() || !isVisible() || !isActive()) {
+        return false;
+    }
+    if (display.getActiveShell() != shell && !Display.isActivateShellOnForceFocus()) {
+        return false;
+    }
+    if (isFocusControl()) {
+        return true;
+    }
 	shell.setSavedFocus (null);
 	/*
 	* This code is intentionally commented.
@@ -1078,15 +1154,21 @@ public boolean forceFocus () {
 	*/
 //	if (OS.GetFocus () != OS.SetFocus (handle)) return false;
 	OS.SetFocus (handle);
-	if (isDisposed ()) return false;
+    if (isDisposed()) {
+        return false;
+    }
 	shell.setSavedFocus (this);
 	return isFocusControl ();
 }
 
 void forceResize () {
-	if (parent == null) return;
+    if (parent == null) {
+        return;
+    }
 	WINDOWPOS [] lpwp = parent.lpwp;
-	if (lpwp == null) return;
+    if (lpwp == null) {
+        return;
+    }
 	for (int i=0; i<lpwp.length; i++) {
 		WINDOWPOS wp = lpwp [i];
 		if (wp != null && wp.hwnd == handle) {
@@ -1119,7 +1201,9 @@ void forceResize () {
  */
 public Accessible getAccessible () {
 	checkWidget ();
-	if (accessible == null) accessible = new_Accessible (this);
+    if (accessible == null) {
+        accessible = new_Accessible(this);
+    }
 	return accessible;
 }
 
@@ -1145,7 +1229,9 @@ public Color getBackground () {
 	}
 	else {
 		Control control = findBackgroundControl ();
-		if (control == null) control = this;
+        if (control == null) {
+            control = this;
+        }
 		return Color.win32_new (display, control.getBackgroundPixel (), backgroundAlpha);
 	}
 }
@@ -1165,7 +1251,9 @@ public Color getBackground () {
 public Image getBackgroundImage () {
 	checkWidget ();
 	Control control = findBackgroundControl ();
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	return control.backgroundImage;
 }
 
@@ -1191,18 +1279,23 @@ public int getBorderWidth () {
 int getBorderWidthInPixels () {
 	long borderHandle = borderHandle ();
 	int bits1 = OS.GetWindowLong (borderHandle, OS.GWL_EXSTYLE);
-	if ((bits1 & OS.WS_EX_CLIENTEDGE) != 0) return getSystemMetrics (OS.SM_CXEDGE);
-	if ((bits1 & OS.WS_EX_STATICEDGE) != 0) return getSystemMetrics (OS.SM_CXBORDER);
+    if ((bits1 & OS.WS_EX_CLIENTEDGE) != 0) {
+        return getSystemMetrics(OS.SM_CXEDGE);
+    }
+    if ((bits1 & OS.WS_EX_STATICEDGE) != 0) {
+        return getSystemMetrics(OS.SM_CXBORDER);
+    }
 	int bits2 = OS.GetWindowLong (borderHandle, OS.GWL_STYLE);
 
 	if ((bits2 & OS.WS_BORDER) != 0) {
-		/*
-		 * For compatibility reasons, isUseWsBorder() shall not change layout size
-		 * compared to previously used WS_EX_CLIENTEDGE. Removing this workaround
-		 * saves screen space, but could break some layouts.
-		 */
-		if (isUseWsBorder ())
-			return getSystemMetrics (OS.SM_CXEDGE);
+        /*
+         * For compatibility reasons, isUseWsBorder() shall not change layout size
+         * compared to previously used WS_EX_CLIENTEDGE. Removing this workaround
+         * saves screen space, but could break some layouts.
+         */
+        if (isUseWsBorder()) {
+            return getSystemMetrics(OS.SM_CXEDGE);
+        }
 
 		return getSystemMetrics (OS.SM_CXBORDER);
 	}
@@ -1370,9 +1463,13 @@ public boolean getEnabled () {
  */
 public Font getFont () {
 	checkWidget ();
-	if (font != null) return font;
+    if (font != null) {
+        return font;
+    }
 	long hFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-	if (hFont == 0) hFont = defaultFont ();
+    if (hFont == 0) {
+        hFont = defaultFont();
+    }
 	return SWTFontProvider.getFont(display, hFont, nativeZoom);
 }
 
@@ -1733,14 +1830,18 @@ public boolean getTouchEnabled () {
  */
 public boolean getVisible () {
 	checkWidget ();
-	if (!getDrawing()) return (state & HIDDEN) == 0;
+    if (!getDrawing()) {
+        return (state & HIDDEN) == 0;
+    }
 	int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
 	return (bits & OS.WS_VISIBLE) != 0;
 }
 
 boolean hasCursor () {
 	RECT rect = new RECT ();
-	if (!OS.GetClientRect (handle, rect)) return false;
+    if (!OS.GetClientRect(handle, rect)) {
+        return false;
+    }
 	OS.MapWindowPoints (handle, 0, rect, 2);
 	POINT pt = new POINT ();
 	return OS.GetCursorPos (pt) && OS.PtInRect (rect, pt);
@@ -1762,7 +1863,9 @@ boolean hasFocus () {
 	*/
 	long hwndFocus = OS.GetFocus ();
 	while (hwndFocus != 0) {
-		if (hwndFocus == handle) return true;
+        if (hwndFocus == handle) {
+            return true;
+        }
 		if (display.getControl (hwndFocus) != null) {
 			return false;
 		}
@@ -1790,15 +1893,21 @@ boolean hasFocus () {
 public long internal_new_GC (GCData data) {
 	checkWidget();
 	long hwnd = handle;
-	if (data != null && data.hwnd != 0) hwnd = data.hwnd;
-	if (data != null) data.hwnd = hwnd;
+    if (data != null && data.hwnd != 0) {
+        hwnd = data.hwnd;
+    }
+    if (data != null) {
+        data.hwnd = hwnd;
+    }
 	long hDC = 0;
 	if (data == null || data.ps == null) {
 		hDC = OS.GetDC (hwnd);
 	} else {
 		hDC = OS.BeginPaint (hwnd, data.ps);
 	}
-	if (hDC == 0) error(SWT.ERROR_NO_HANDLES);
+    if (hDC == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (data != null) {
 		int mask = SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
 		if ((data.style & mask) != 0) {
@@ -1814,11 +1923,17 @@ public long internal_new_GC (GCData data) {
 		data.device = display;
 		data.nativeZoom = nativeZoom;
 		int foreground = getForegroundPixel ();
-		if (foreground != OS.GetTextColor (hDC)) data.foreground = foreground;
+        if (foreground != OS.GetTextColor(hDC)) {
+            data.foreground = foreground;
+        }
 		Control control = findBackgroundControl ();
-		if (control == null) control = this;
+        if (control == null) {
+            control = this;
+        }
 		int background = control.getBackgroundPixel ();
-		if (background != OS.GetBkColor (hDC)) data.background = background;
+        if (background != OS.GetBkColor(hDC)) {
+            data.background = background;
+        }
 		if (font != null) {
 			data.font = font;
 		} else {
@@ -1863,7 +1978,9 @@ boolean isActive () {
 	if (dialog != null) {
 		Shell dialogShell = dialog.parent;
 		if (dialogShell != null && !dialogShell.isDisposed ()) {
-			if (dialogShell != getShell ()) return false;
+            if (dialogShell != getShell()) {
+                return false;
+            }
 		}
 	}
 	Shell shell = null;
@@ -1877,20 +1994,30 @@ boolean isActive () {
 				if ((modal.style & bits) != 0) {
 					Control control = this;
 					while (control != null) {
-						if (control == modal) break;
+                        if (control == modal) {
+                            break;
+                        }
 						control = control.parent;
 					}
-					if (control != modal) return false;
+                    if (control != modal) {
+                        return false;
+                    }
 					break;
 				}
 				if ((modal.style & SWT.PRIMARY_MODAL) != 0) {
-					if (shell == null) shell = getShell ();
-					if (modal.parent == shell) return false;
+                    if (shell == null) {
+                        shell = getShell();
+                    }
+                    if (modal.parent == shell) {
+                        return false;
+                    }
 				}
 			}
 		}
 	}
-	if (shell == null) shell = getShell ();
+    if (shell == null) {
+        shell = getShell();
+    }
 	return shell.getEnabled ();
 }
 
@@ -1959,11 +2086,13 @@ public boolean isReparentable () {
 }
 
 boolean isShowing () {
-	/*
-	* This is not complete.  Need to check if the
-	* widget is obscured by a parent or sibling.
-	*/
-	if (!isVisible ()) return false;
+    /*
+    * This is not complete.  Need to check if the
+    * widget is obscured by a parent or sibling.
+    */
+    if (!isVisible()) {
+        return false;
+    }
 	Control control = this;
 	while (control != null) {
 		Point size = control.getSizeInPixels ();
@@ -1988,7 +2117,9 @@ boolean isTabGroup () {
 	Control [] tabList = parent._getTabList ();
 	if (tabList != null) {
 		for (Control element : tabList) {
-			if (element == this) return true;
+            if (element == this) {
+                return true;
+            }
 		}
 	}
 	int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
@@ -1999,16 +2130,28 @@ boolean isTabItem () {
 	Control [] tabList = parent._getTabList ();
 	if (tabList != null) {
 		for (Control element : tabList) {
-			if (element == this) return false;
+            if (element == this) {
+                return false;
+            }
 		}
 	}
 	int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
-	if ((bits & OS.WS_TABSTOP) != 0) return false;
+    if ((bits & OS.WS_TABSTOP) != 0) {
+        return false;
+    }
 	long code = OS.SendMessage (handle, OS.WM_GETDLGCODE, 0, 0);
-	if ((code & OS.DLGC_STATIC) != 0) return false;
-	if ((code & OS.DLGC_WANTALLKEYS) != 0) return false;
-	if ((code & OS.DLGC_WANTARROWS) != 0) return false;
-	if ((code & OS.DLGC_WANTTAB) != 0) return false;
+    if ((code & OS.DLGC_STATIC) != 0) {
+        return false;
+    }
+    if ((code & OS.DLGC_WANTALLKEYS) != 0) {
+        return false;
+    }
+    if ((code & OS.DLGC_WANTARROWS) != 0) {
+        return false;
+    }
+    if ((code & OS.DLGC_WANTTAB) != 0) {
+        return false;
+    }
 	return true;
 }
 
@@ -2028,7 +2171,9 @@ boolean isTabItem () {
  */
 public boolean isVisible () {
 	checkWidget ();
-	if (OS.IsWindowVisible (handle)) return true;
+    if (OS.IsWindowVisible(handle)) {
+        return true;
+    }
 	return getVisible () && parent.isVisible ();
 }
 
@@ -2093,10 +2238,16 @@ public void moveAbove (Control control) {
 	checkWidget ();
 	long topHandle = topHandle (), hwndAbove = OS.HWND_TOP;
 	if (control != null) {
-		if (control.isDisposed ()) error(SWT.ERROR_INVALID_ARGUMENT);
-		if (parent != control.parent) return;
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (parent != control.parent) {
+            return;
+        }
 		long hwnd = control.topHandle ();
-		if (hwnd == 0 || hwnd == topHandle) return;
+        if (hwnd == 0 || hwnd == topHandle) {
+            return;
+        }
 		hwndAbove = OS.GetWindow (hwnd, OS.GW_HWNDPREV);
 		/*
 		* Bug in Windows.  For some reason, when GetWindow ()
@@ -2137,8 +2288,12 @@ public void moveBelow (Control control) {
 	checkWidget ();
 	long topHandle = topHandle (), hwndAbove = OS.HWND_BOTTOM;
 	if (control != null) {
-		if (control.isDisposed ()) error(SWT.ERROR_INVALID_ARGUMENT);
-		if (parent != control.parent) return;
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (parent != control.parent) {
+            return;
+        }
 		hwndAbove = control.topHandle ();
 	} else {
 		/*
@@ -2162,13 +2317,19 @@ public void moveBelow (Control control) {
 			long hwndParent = parent.handle, hwnd = hwndParent;
 			hwndAbove = OS.GetWindow (hwnd, OS.GW_HWNDPREV);
 			while (hwndAbove != 0 && hwndAbove != hwnd) {
-				if (OS.GetWindow (hwndAbove, OS.GW_OWNER) == hwndParent) break;
+                if (OS.GetWindow(hwndAbove, OS.GW_OWNER) == hwndParent) {
+                    break;
+                }
 				hwndAbove = OS.GetWindow (hwnd = hwndAbove, OS.GW_HWNDPREV);
 			}
-			if (hwndAbove == hwnd) return;
+            if (hwndAbove == hwnd) {
+                return;
+            }
 		}
 	}
-	if (hwndAbove == 0 || hwndAbove == topHandle) return;
+    if (hwndAbove == 0 || hwndAbove == topHandle) {
+        return;
+    }
 	int flags = OS.SWP_NOSIZE | OS.SWP_NOMOVE | OS.SWP_NOACTIVATE;
 	OS.SetWindowPos (topHandle, hwndAbove, 0, 0, 0, 0, flags);
 }
@@ -2248,8 +2409,12 @@ public void pack (boolean changed) {
  */
 public boolean print (GC gc) {
 	checkWidget ();
-	if (gc == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	long topHandle = topHandle ();
 	long hdc = gc.handle;
 	int state = 0;
@@ -2259,7 +2424,9 @@ public boolean print (GC gc) {
 		long clipRgn = 0;
 		Gdip.Graphics_SetPixelOffsetMode(gdipGraphics, Gdip.PixelOffsetModeNone);
 		long rgn = Gdip.Region_new();
-		if (rgn == 0) error(SWT.ERROR_NO_HANDLES);
+        if (rgn == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		Gdip.Graphics_GetClip(gdipGraphics, rgn);
 		if (!Gdip.Region_IsInfinite(rgn, gdipGraphics)) {
 			clipRgn = Gdip.Region_GetHRGN(rgn, gdipGraphics);
@@ -2268,7 +2435,9 @@ public boolean print (GC gc) {
 		Gdip.Graphics_SetPixelOffsetMode(gdipGraphics, Gdip.PixelOffsetModeHalf);
 		float[] lpXform = null;
 		long matrix = Gdip.Matrix_new(1, 0, 0, 1, 0, 0);
-		if (matrix == 0) error(SWT.ERROR_NO_HANDLES);
+        if (matrix == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		Gdip.Graphics_GetTransform(gdipGraphics, matrix);
 		Gdip.Matrix_Scale(matrix, scaleFactor, scaleFactor, Gdip.MatrixOrderPrepend);
 		if (!Gdip.Matrix_IsIdentity(matrix)) {
@@ -2325,7 +2494,9 @@ void printWidget (long hwnd, long hdc, GC gc, int printWindowFlags) {
 		long hwndParent = OS.GetParent (hwnd);
 		long hwndShell = hwndParent;
 		while (OS.GetParent (hwndShell) != 0) {
-			if (OS.GetWindow (hwndShell, OS.GW_OWNER) != 0) break;
+            if (OS.GetWindow(hwndShell, OS.GW_OWNER) != 0) {
+                break;
+            }
 			hwndShell = OS.GetParent (hwndShell);
 		}
 		RECT rect1 = new RECT ();
@@ -2514,7 +2685,9 @@ public void redraw () {
 public void redraw (int x, int y, int width, int height, boolean all) {
 	checkWidget ();
 	int zoom = getAutoscalingZoom();
-	if (width <= 0 || height <= 0) return;
+    if (width <= 0 || height <= 0) {
+        return;
+    }
 	Rectangle rectangle = Win32DPIUtils.pointToPixel(new Rectangle(x, y, width, height), zoom);
 
 	RECT rect = new RECT ();
@@ -2524,7 +2697,9 @@ public void redraw (int x, int y, int width, int height, boolean all) {
 }
 
 void redrawInPixels (RECT rect, boolean all) {
-	if (!OS.IsWindowVisible (handle)) return;
+    if (!OS.IsWindowVisible(handle)) {
+        return;
+    }
 	/*
 	 * For many years, it also used RDW_FRAME here for no apparent reason.
 	 * This caused Bug 565613, and also is a performance issue. Should the
@@ -2532,12 +2707,16 @@ void redrawInPixels (RECT rect, boolean all) {
 	 * use it where it is indeed necessary.
 	 */
 	int flags = OS.RDW_ERASE | OS.RDW_INVALIDATE;
-	if (all) flags |= OS.RDW_ALLCHILDREN;
+    if (all) {
+        flags |= OS.RDW_ALLCHILDREN;
+    }
 	OS.RedrawWindow (handle, rect, 0, flags);
 }
 
 boolean redrawChildren () {
-	if (!OS.IsWindowVisible (handle)) return false;
+    if (!OS.IsWindowVisible(handle)) {
+        return false;
+    }
 	Control control = findBackgroundControl ();
 	if (control == null) {
 		if ((state & THEME_BACKGROUND) != 0) {
@@ -2612,8 +2791,12 @@ void releaseWidget () {
  */
 public void removeControlListener (ControlListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Move, listener);
 	eventTable.unhook (SWT.Resize, listener);
 }
@@ -2639,8 +2822,12 @@ public void removeControlListener (ControlListener listener) {
  */
 public void removeDragDetectListener(DragDetectListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.DragDetect, listener);
 }
 
@@ -2663,8 +2850,12 @@ public void removeDragDetectListener(DragDetectListener listener) {
  */
 public void removeFocusListener(FocusListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.FocusIn, listener);
 	eventTable.unhook (SWT.FocusOut, listener);
 }
@@ -2690,8 +2881,12 @@ public void removeFocusListener(FocusListener listener) {
  */
 public void removeGestureListener (GestureListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Gesture, listener);
 }
 
@@ -2714,8 +2909,12 @@ public void removeGestureListener (GestureListener listener) {
  */
 public void removeHelpListener (HelpListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Help, listener);
 }
 
@@ -2738,8 +2937,12 @@ public void removeHelpListener (HelpListener listener) {
  */
 public void removeKeyListener(KeyListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.KeyUp, listener);
 	eventTable.unhook (SWT.KeyDown, listener);
 }
@@ -2766,8 +2969,12 @@ public void removeKeyListener(KeyListener listener) {
  */
 public void removeMenuDetectListener (MenuDetectListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MenuDetect, listener);
 }
 
@@ -2790,8 +2997,12 @@ public void removeMenuDetectListener (MenuDetectListener listener) {
  */
 public void removeMouseTrackListener(MouseTrackListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MouseEnter, listener);
 	eventTable.unhook (SWT.MouseExit, listener);
 	eventTable.unhook (SWT.MouseHover, listener);
@@ -2816,8 +3027,12 @@ public void removeMouseTrackListener(MouseTrackListener listener) {
  */
 public void removeMouseListener (MouseListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MouseDown, listener);
 	eventTable.unhook (SWT.MouseUp, listener);
 	eventTable.unhook (SWT.MouseDoubleClick, listener);
@@ -2842,8 +3057,12 @@ public void removeMouseListener (MouseListener listener) {
  */
 public void removeMouseMoveListener(MouseMoveListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MouseMove, listener);
 }
 
@@ -2868,8 +3087,12 @@ public void removeMouseMoveListener(MouseMoveListener listener) {
  */
 public void removeMouseWheelListener (MouseWheelListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MouseWheel, listener);
 }
 
@@ -2892,8 +3115,12 @@ public void removeMouseWheelListener (MouseWheelListener listener) {
  */
 public void removePaintListener(PaintListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Paint, listener);
 }
 
@@ -2918,8 +3145,12 @@ public void removePaintListener(PaintListener listener) {
  */
 public void removeTouchListener(TouchListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Touch, listener);
 }
 
@@ -2942,8 +3173,12 @@ public void removeTouchListener(TouchListener listener) {
  */
 public void removeTraverseListener(TraverseListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Traverse, listener);
 }
 
@@ -2958,7 +3193,9 @@ int resolveTextDirection() {
 void showWidget (boolean visible) {
 	long topHandle = topHandle ();
 	OS.ShowWindow (topHandle, visible ? OS.SW_SHOW : OS.SW_HIDE);
-	if (handle != topHandle) OS.ShowWindow (handle, visible ? OS.SW_SHOW : OS.SW_HIDE);
+    if (handle != topHandle) {
+        OS.ShowWindow(handle, visible ? OS.SW_SHOW : OS.SW_HIDE);
+    }
 }
 
 @Override
@@ -3005,11 +3242,13 @@ boolean sendFocusEvent (int type) {
 }
 
 boolean sendGestureEvent (GESTUREINFO gi) {
-	/**
-	 * Feature in Windows 7.  GID_BEGIN and GID_END events bubble up through the window
-	 * hierarchy for legacy support.  Ignore events not targeted for this control.
-	 */
-	if (gi.hwndTarget != handle) return true;
+    /**
+     * Feature in Windows 7.  GID_BEGIN and GID_END events bubble up through the window
+     * hierarchy for legacy support.  Ignore events not targeted for this control.
+     */
+    if (gi.hwndTarget != handle) {
+        return true;
+    }
 	Event event = new Event ();
 	int type = 0;
 	Point globalPt = new Point(gi.x, gi.y);
@@ -3028,12 +3267,16 @@ boolean sendGestureEvent (GESTUREINFO gi) {
 				event.detail = SWT.GESTURE_END;
 			}
 
-			/*
-			* The gi.ullArguments is the distance between the fingers.
-			* Scale factor is relative to that original value.
-			*/
-			if (fingerDistance == display.lastDistance && event.detail == SWT.GESTURE_MAGNIFY) return true;
-			if (fingerDistance != 0) event.magnification = fingerDistance / display.magStartDistance;
+            /*
+            * The gi.ullArguments is the distance between the fingers.
+            * Scale factor is relative to that original value.
+            */
+            if (fingerDistance == display.lastDistance && event.detail == SWT.GESTURE_MAGNIFY) {
+                return true;
+            }
+            if (fingerDistance != 0) {
+                event.magnification = fingerDistance / display.magStartDistance;
+            }
 			display.lastDistance = fingerDistance;
 			break;
 		case OS.GID_PAN:
@@ -3046,7 +3289,9 @@ boolean sendGestureEvent (GESTUREINFO gi) {
 			} else if ((gi.dwFlags & OS.GF_END) != 0) {
 				event.detail = SWT.GESTURE_END;
 			}
-			if (display.lastX == point.x && display.lastY == point.y && event.detail == SWT.GESTURE_PAN) return true;
+            if (display.lastX == point.x && display.lastY == point.y && event.detail == SWT.GESTURE_PAN) {
+                return true;
+            }
 			event.xDirection = point.x - display.lastX;
 			event.yDirection = point.y - display.lastY;
 			display.lastX = point.x;
@@ -3063,11 +3308,13 @@ boolean sendGestureEvent (GESTUREINFO gi) {
 				event.detail = SWT.GESTURE_END;
 			}
 
-			/*
-			* Feature in Win32. Rotation events are sent even when the fingers are at rest.
-			* If the current rotation is the same as the last one received don't send the event.
-			*/
-			if (display.rotationAngle == rotationInRadians && event.detail == SWT.GESTURE_ROTATE) return true;
+            /*
+            * Feature in Win32. Rotation events are sent even when the fingers are at rest.
+            * If the current rotation is the same as the last one received don't send the event.
+            */
+            if (display.rotationAngle == rotationInRadians && event.detail == SWT.GESTURE_ROTATE) {
+                return true;
+            }
 			event.rotation = rotationInRadians * 180.0 / Math.PI;
 			display.rotationAngle = rotationInRadians;
 			break;
@@ -3076,7 +3323,9 @@ boolean sendGestureEvent (GESTUREINFO gi) {
 			break;
 	}
 
-	if (type == 0) return true;
+    if (type == 0) {
+        return true;
+    }
 	setInputState (event, type);
 	sendEvent (type, event);
 	return event.doit;
@@ -3103,9 +3352,15 @@ void sendTouchEvent (TOUCHINPUT touchInput []) {
 		TOUCHINPUT ti = touchInput [i];
 		TouchSource inputSource = display.findTouchSource (ti.hSource, monitor);
 		int state = 0;
-		if ((ti.dwFlags & OS.TOUCHEVENTF_DOWN) != 0) state = SWT.TOUCHSTATE_DOWN;
-		if ((ti.dwFlags & OS.TOUCHEVENTF_UP) != 0) state = SWT.TOUCHSTATE_UP;
-		if ((ti.dwFlags & OS.TOUCHEVENTF_MOVE) != 0) state = SWT.TOUCHSTATE_MOVE;
+        if ((ti.dwFlags & OS.TOUCHEVENTF_DOWN) != 0) {
+            state = SWT.TOUCHSTATE_DOWN;
+        }
+        if ((ti.dwFlags & OS.TOUCHEVENTF_UP) != 0) {
+            state = SWT.TOUCHSTATE_UP;
+        }
+        if ((ti.dwFlags & OS.TOUCHEVENTF_MOVE) != 0) {
+            state = SWT.TOUCHSTATE_MOVE;
+        }
 		boolean primary = (ti.dwFlags & OS.TOUCHEVENTF_PRIMARY) != 0;
 		int x = OS.TOUCH_COORD_TO_PIXEL (ti.x);
 		int y = OS.TOUCH_COORD_TO_PIXEL (ti.y);
@@ -3118,7 +3373,9 @@ void sendTouchEvent (TOUCHINPUT touchInput []) {
 
 void setBackground () {
 	Control control = findBackgroundControl ();
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	if (control.backgroundImage != null) {
 		Shell shell = getShell ();
 		shell.releaseBrushes ();
@@ -3160,11 +3417,15 @@ private void _setBackground (Color color) {
 	int pixel = -1;
 	int alpha = 255;
 	if (color != null) {
-		if (color.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		pixel = color.handle;
 		alpha = color.getAlpha();
 	}
-	if (pixel == background && alpha == backgroundAlpha) return;
+    if (pixel == background && alpha == backgroundAlpha) {
+        return;
+    }
 	background = pixel;
 	backgroundAlpha = alpha;
 	updateBackgroundColor ();
@@ -3199,10 +3460,16 @@ private void _setBackground (Color color) {
 public void setBackgroundImage (Image image) {
 	checkWidget ();
 	if (image != null) {
-		if (image.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (image.type != SWT.BITMAP) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (image.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (image.type != SWT.BITMAP) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
-	if (backgroundImage == image && backgroundAlpha > 0) return;
+    if (backgroundImage == image && backgroundAlpha > 0) {
+        return;
+    }
 	backgroundAlpha = 255;
 	backgroundImage = image;
 	Shell shell = getShell ();
@@ -3263,10 +3530,14 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags) {
 
 void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean defer) {
 	if (findImageControl () != null) {
-		if (backgroundImage == null) flags |= OS.SWP_NOCOPYBITS;
+        if (backgroundImage == null) {
+            flags |= OS.SWP_NOCOPYBITS;
+        }
 	} else {
 		if (OS.GetWindow (handle, OS.GW_CHILD) == 0) {
-			if (findThemeControl () != null) flags |= OS.SWP_NOCOPYBITS;
+            if (findThemeControl() != null) {
+                flags |= OS.SWP_NOCOPYBITS;
+            }
 		}
 	}
 	long topHandle = topHandle ();
@@ -3276,7 +3547,9 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean 
 			int index = 0;
 			WINDOWPOS [] lpwp = parent.lpwp;
 			while (index < lpwp.length) {
-				if (lpwp [index] == null) break;
+                if (lpwp [index] == null) {
+                    break;
+                }
 				index ++;
 			}
 			if (index == lpwp.length) {
@@ -3323,7 +3596,9 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean 
  */
 public void setBounds (Rectangle rect) {
 	checkWidget ();
-	if (rect == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rect == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int zoom = computeBoundsZoom();
 	Rectangle boundsInPixels = Win32DPIUtils.pointToPixel(rect, zoom);
 	fitInParentBounds(boundsInPixels, zoom);
@@ -3464,20 +3739,28 @@ void setCursor () {
  */
 public void setCursor (Cursor cursor) {
 	checkWidget ();
-	if (cursor != null && cursor.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (cursor != null && cursor.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.cursor = cursor;
 	long hwndCursor = OS.GetCapture ();
 	if (hwndCursor == 0) {
 		POINT pt = new POINT ();
-		if (!OS.GetCursorPos (pt)) return;
+        if (!OS.GetCursorPos(pt)) {
+            return;
+        }
 		long hwnd = hwndCursor = OS.WindowFromPoint (pt);
 		while (hwnd != 0 && hwnd != handle) {
 			hwnd = OS.GetParent (hwnd);
 		}
-		if (hwnd == 0) return;
+        if (hwnd == 0) {
+            return;
+        }
 	}
 	Control control = display.getControl (hwndCursor);
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	control.setCursor ();
 }
 
@@ -3541,7 +3824,9 @@ public void setEnabled (boolean enabled) {
 		}
 	}
 	enableWidget (enabled);
-	if (fixFocus) fixFocus (control);
+    if (fixFocus) {
+        fixFocus(control);
+    }
 }
 
 /**
@@ -3560,7 +3845,9 @@ public void setEnabled (boolean enabled) {
  */
 public boolean setFocus () {
 	checkWidget ();
-	if ((style & SWT.NO_FOCUS) != 0) return false;
+    if ((style & SWT.NO_FOCUS) != 0) {
+        return false;
+    }
 	return forceFocus ();
 }
 
@@ -3583,16 +3870,22 @@ public void setFont (Font font) {
 	checkWidget ();
 	Font newFont = font;
 	if (newFont != null) {
-		if (newFont.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (newFont.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		newFont = Font.win32_new(newFont, nativeZoom);
 	}
 	long hFont = 0;
 	if (newFont != null) {
-		if (newFont.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (newFont.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		hFont = Font.win32_getHandle(newFont);
 	}
 	this.font = newFont;
-	if (hFont == 0) hFont = defaultFont ();
+    if (hFont == 0) {
+        hFont = defaultFont();
+    }
 	OS.SendMessage (handle, OS.WM_SETFONT, hFont, 1);
 }
 
@@ -3617,10 +3910,14 @@ public void setForeground (Color color) {
 	checkWidget ();
 	int pixel = -1;
 	if (color != null) {
-		if (color.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		pixel = color.handle;
 	}
-	if (pixel == foreground) return;
+    if (pixel == foreground) {
+        return;
+    }
 	foreground = pixel;
 	setForegroundPixel (pixel);
 }
@@ -3694,7 +3991,9 @@ void setLocationInPixels (int x, int y) {
  */
 public void setLocation (Point location) {
 	checkWidget ();
-	if (location == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (location == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	location = Win32DPIUtils.pointToPixelAsLocation(location, computeBoundsZoom());
 	setLocationInPixels(location.x, location.y);
 }
@@ -3727,7 +4026,9 @@ public void setLocation (Point location) {
 public void setMenu (Menu menu) {
 	checkWidget ();
 	if (menu != null) {
-		if (menu.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (menu.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		if ((menu.style & SWT.POP_UP) == 0) {
 			error (SWT.ERROR_MENU_NOT_POP_UP);
 		}
@@ -3754,7 +4055,9 @@ public void setMenu (Menu menu) {
 public void setOrientation (int orientation) {
 	checkWidget ();
 	int flags = SWT.RIGHT_TO_LEFT | SWT.LEFT_TO_RIGHT;
-	if ((orientation & flags) == 0 || (orientation & flags) == flags) return;
+    if ((orientation & flags) == 0 || (orientation & flags) == flags) {
+        return;
+    }
 	style &= ~SWT.MIRRORED;
 	style &= ~flags;
 	style |= orientation & flags;
@@ -3822,17 +4125,23 @@ public void setRedraw (boolean redraw) {
 	 */
 	if (drawCount == 0) {
 		int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
-		if ((bits & OS.WS_VISIBLE) == 0) state |= HIDDEN;
+        if ((bits & OS.WS_VISIBLE) == 0) {
+            state |= HIDDEN;
+        }
 	}
 	if (redraw) {
 		if (--drawCount == 0) {
 			long topHandle = topHandle ();
 			OS.SendMessage (topHandle, OS.WM_SETREDRAW, 1, 0);
-			if (handle != topHandle) OS.SendMessage (handle, OS.WM_SETREDRAW, 1, 0);
+            if (handle != topHandle) {
+                OS.SendMessage(handle, OS.WM_SETREDRAW, 1, 0);
+            }
 			if ((state & HIDDEN) != 0) {
 				state &= ~HIDDEN;
 				OS.ShowWindow (topHandle, OS.SW_HIDE);
-				if (handle != topHandle) OS.ShowWindow (handle, OS.SW_HIDE);
+                if (handle != topHandle) {
+                    OS.ShowWindow(handle, OS.SW_HIDE);
+                }
 			} else {
 				int flags = OS.RDW_ERASE | OS.RDW_FRAME | OS.RDW_INVALIDATE | OS.RDW_ALLCHILDREN;
 				OS.RedrawWindow (topHandle, null, 0, flags);
@@ -3842,7 +4151,9 @@ public void setRedraw (boolean redraw) {
 		if (drawCount++ == 0) {
 			long topHandle = topHandle ();
 			OS.SendMessage (topHandle, OS.WM_SETREDRAW, 0, 0);
-			if (handle != topHandle) OS.SendMessage (handle, OS.WM_SETREDRAW, 0, 0);
+            if (handle != topHandle) {
+                OS.SendMessage(handle, OS.WM_SETREDRAW, 0, 0);
+            }
 		}
 	}
 }
@@ -3888,7 +4199,9 @@ private boolean embedsWin32Control () {
  */
 public void setRegion (Region region) {
 	checkWidget ();
-	if (region != null && region.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (region != null && region.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	long hRegion = 0;
 	if (region != null) {
 		hRegion = OS.CreateRectRgn (0, 0, 0, 0);
@@ -3955,7 +4268,9 @@ void setSizeInPixels (int width, int height) {
  */
 public void setSize (Point size) {
 	checkWidget ();
-	if (size == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int zoom = computeBoundsZoom();
 	setSize(size, zoom);
 }
@@ -3972,7 +4287,9 @@ private void setSize(Point size, int zoom) {
 
 @Override
 boolean setTabItemFocus () {
-	if (!isShowing ()) return false;
+    if (!isShowing()) {
+        return false;
+    }
 	return forceFocus ();
 }
 
@@ -4096,14 +4413,20 @@ public void setTouchEnabled(boolean enabled) {
 public void setVisible (boolean visible) {
 	checkWidget ();
 	if (!getDrawing()) {
-		if (((state & HIDDEN) == 0) == visible) return;
+        if (((state & HIDDEN) == 0) == visible) {
+            return;
+        }
 	} else {
 		int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
-		if (((bits & OS.WS_VISIBLE) != 0) == visible) return;
+        if (((bits & OS.WS_VISIBLE) != 0) == visible) {
+            return;
+        }
 	}
 	if (visible) {
 		sendEvent (SWT.Show);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 	}
 
 	/*
@@ -4125,13 +4448,19 @@ public void setVisible (boolean visible) {
 		state = visible ? state & ~HIDDEN : state | HIDDEN;
 	} else {
 		showWidget (visible);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 	}
 	if (!visible) {
 		sendEvent (SWT.Hide);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 	}
-	if (fixFocus) fixFocus (control);
+    if (fixFocus) {
+        fixFocus(control);
+    }
 }
 
 void sort (int [] items) {
@@ -4153,7 +4482,9 @@ void sort (int [] items) {
 void subclass () {
 	long oldProc = windowProc ();
 	long newProc = display.windowProc;
-	if (oldProc == newProc) return;
+    if (oldProc == newProc) {
+        return;
+    }
 	OS.SetWindowLongPtr (handle, OS.GWLP_WNDPROC, newProc);
 }
 
@@ -4213,7 +4544,9 @@ Point toControlInPixels (int x, int y) {
  */
 public Point toControl (Point point) {
 	checkWidget ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return toControl(point.x, point.y);
 }
 
@@ -4273,7 +4606,9 @@ Point toDisplayInPixels (int x, int y) {
  */
 public Point toDisplay (Point point) {
 	checkWidget ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return toDisplay(point.x, point.y);
 }
 
@@ -4286,19 +4621,29 @@ boolean translateAccelerator (MSG msg) {
 }
 
 boolean translateMnemonic (Event event, Control control) {
-	if (control == this) return false;
-	if (!isVisible () || !isEnabled ()) return false;
+    if (control == this) {
+        return false;
+    }
+    if (!isVisible() || !isEnabled()) {
+        return false;
+    }
 	event.doit = mnemonicMatch (event.character);
 	return traverse (event);
 }
 
 boolean translateMnemonic (MSG msg) {
-	if (msg.wParam < 0x20) return false;
+    if (msg.wParam < 0x20) {
+        return false;
+    }
 	long hwnd = msg.hwnd;
 	if (OS.GetKeyState (OS.VK_MENU) >= 0) {
 		long code = OS.SendMessage (hwnd, OS.WM_GETDLGCODE, 0, 0);
-		if ((code & OS.DLGC_WANTALLKEYS) != 0) return false;
-		if ((code & OS.DLGC_BUTTON) == 0) return false;
+        if ((code & OS.DLGC_WANTALLKEYS) != 0) {
+            return false;
+        }
+        if ((code & OS.DLGC_BUTTON) == 0) {
+            return false;
+        }
 	}
 	Decorations shell = menuShell ();
 	if (shell.isVisible () && shell.isEnabled ()) {
@@ -4332,14 +4677,16 @@ boolean translateTraversal (MSG msg) {
 			lastAscii = 27;
 			long code = OS.SendMessage (hwnd, OS.WM_GETDLGCODE, 0, 0);
 			if ((code & OS.DLGC_WANTALLKEYS) != 0) {
-				/*
-				* Use DLGC_HASSETSEL to determine that the control
-				* is a text widget.  A text widget normally wants
-				* all keys except VK_ESCAPE.  If this bit is not
-				* set, then assume the control wants all keys,
-				* including VK_ESCAPE.
-				*/
-				if ((code & OS.DLGC_HASSETSEL) == 0) doit = false;
+                /*
+                * Use DLGC_HASSETSEL to determine that the control
+                * is a text widget.  A text widget normally wants
+                * all keys except VK_ESCAPE.  If this bit is not
+                * set, then assume the control wants all keys,
+                * including VK_ESCAPE.
+                */
+                if ((code & OS.DLGC_HASSETSEL) == 0) {
+                    doit = false;
+                }
 			}
 			detail = SWT.TRAVERSE_ESCAPE;
 			break;
@@ -4348,7 +4695,9 @@ boolean translateTraversal (MSG msg) {
 			all = true;
 			lastAscii = '\r';
 			long code = OS.SendMessage (hwnd, OS.WM_GETDLGCODE, 0, 0);
-			if ((code & OS.DLGC_WANTALLKEYS) != 0) doit = false;
+            if ((code & OS.DLGC_WANTALLKEYS) != 0) {
+                doit = false;
+            }
 			detail = SWT.TRAVERSE_RETURN;
 			break;
 		}
@@ -4382,10 +4731,14 @@ boolean translateTraversal (MSG msg) {
 		case OS.VK_RIGHT: {
 			lastVirtual = true;
 			long code = OS.SendMessage (hwnd, OS.WM_GETDLGCODE, 0, 0);
-			if ((code & (OS.DLGC_WANTARROWS /*| OS.DLGC_WANTALLKEYS*/)) != 0) doit = false;
+            if ((code & (OS.DLGC_WANTARROWS /*| OS.DLGC_WANTALLKEYS*/)) != 0) {
+                doit = false;
+            }
 			boolean next = key == OS.VK_DOWN || key == OS.VK_RIGHT;
 			if (parent != null && (parent.style & SWT.MIRRORED) != 0) {
-				if (key == OS.VK_LEFT || key == OS.VK_RIGHT) next = !next;
+                if (key == OS.VK_LEFT || key == OS.VK_RIGHT) {
+                    next = !next;
+                }
 			}
 			detail = next ? SWT.TRAVERSE_ARROW_NEXT : SWT.TRAVERSE_ARROW_PREVIOUS;
 			break;
@@ -4394,15 +4747,19 @@ boolean translateTraversal (MSG msg) {
 		case OS.VK_NEXT: {
 			all = true;
 			lastVirtual = true;
-			if (OS.GetKeyState (OS.VK_CONTROL) >= 0) return false;
+            if (OS.GetKeyState(OS.VK_CONTROL) >= 0) {
+                return false;
+            }
 			long code = OS.SendMessage (hwnd, OS.WM_GETDLGCODE, 0, 0);
 			if ((code & OS.DLGC_WANTALLKEYS) != 0) {
-				/*
-				* Use DLGC_HASSETSEL to determine that the control is a
-				* text widget.  If the control is a text widget, then
-				* Ctrl+PgUp and Ctrl+PgDn should traverse out of the widget.
-				*/
-				if ((code & OS.DLGC_HASSETSEL) == 0) doit = false;
+                /*
+                * Use DLGC_HASSETSEL to determine that the control is a
+                * text widget.  If the control is a text widget, then
+                * Ctrl+PgUp and Ctrl+PgDn should traverse out of the widget.
+                */
+                if ((code & OS.DLGC_HASSETSEL) == 0) {
+                    doit = false;
+                }
 			}
 			detail = key == OS.VK_PRIOR ? SWT.TRAVERSE_PAGE_PREVIOUS : SWT.TRAVERSE_PAGE_NEXT;
 			break;
@@ -4417,7 +4774,9 @@ boolean translateTraversal (MSG msg) {
 	display.lastAscii = lastAscii;
 	display.lastVirtual = lastVirtual;
 	display.lastDead = false;
-	if (!setKeyState (event, SWT.Traverse, msg.wParam, msg.lParam)) return false;
+    if (!setKeyState(event, SWT.Traverse, msg.wParam, msg.lParam)) {
+        return false;
+    }
 	Shell shell = getShell ();
 	Control control = this;
 	do {
@@ -4425,8 +4784,12 @@ boolean translateTraversal (MSG msg) {
 			OS.SendMessage (hwnd, OS.WM_CHANGEUISTATE, OS.UIS_INITIALIZE, 0);
 			return true;
 		}
-		if (!event.doit && control.hooks (SWT.Traverse)) return false;
-		if (control == shell) return false;
+        if (!event.doit && control.hooks(SWT.Traverse)) {
+            return false;
+        }
+        if (control == shell) {
+            return false;
+        }
 		control = control.parent;
 	} while (all && control != null);
 	return false;
@@ -4440,8 +4803,12 @@ boolean traverse (Event event) {
 	* event processing.
 	*/
 	sendEvent (SWT.Traverse, event);
-	if (isDisposed ()) return true;
-	if (!event.doit) return false;
+    if (isDisposed()) {
+        return true;
+    }
+    if (!event.doit) {
+        return false;
+    }
 	switch (event.detail) {
 		case SWT.TRAVERSE_NONE:			return true;
 		case SWT.TRAVERSE_ESCAPE:			return traverseEscape ();
@@ -4515,7 +4882,9 @@ public boolean traverse (int traversal) {
  */
 public boolean traverse (int traversal, Event event) {
 	checkWidget ();
-	if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (event == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return traverse (traversal, event.character, event.keyCode, event.keyLocation, event.stateMask, event.doit);
 }
 
@@ -4553,7 +4922,9 @@ public boolean traverse (int traversal, Event event) {
  */
 public boolean traverse (int traversal, KeyEvent event) {
 	checkWidget ();
-	if (event == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (event == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return traverse (traversal, event.character, event.keyCode, event.keyLocation, event.stateMask, event.doit);
 }
 
@@ -4651,8 +5022,12 @@ boolean traverse (int traversal, char character, int keyCode, int keyLocation, i
 			OS.SendMessage (handle, OS.WM_CHANGEUISTATE, OS.UIS_INITIALIZE, 0);
 			return true;
 		}
-		if (!event.doit && control.hooks (SWT.Traverse)) return false;
-		if (control == shell) return false;
+        if (!event.doit && control.hooks(SWT.Traverse)) {
+            return false;
+        }
+        if (control == shell) {
+            return false;
+        }
 		control = control.parent;
 	} while (all && control != null);
 	return false;
@@ -4669,16 +5044,20 @@ boolean traverseGroup (boolean next) {
 	int length = list.length;
 	int index = 0;
 	while (index < length) {
-		if (list [index] == group) break;
+        if (list [index] == group) {
+            break;
+        }
 		index++;
 	}
-	/*
-	* It is possible (but unlikely), that application
-	* code could have disposed the widget in focus in
-	* or out events.  Ensure that a disposed widget is
-	* not accessed.
-	*/
-	if (index == length) return false;
+    /*
+    * It is possible (but unlikely), that application
+    * code could have disposed the widget in focus in
+    * or out events.  Ensure that a disposed widget is
+    * not accessed.
+    */
+    if (index == length) {
+        return false;
+    }
 	int start = index, offset = (next) ? 1 : -1;
 	while ((index = ((index + offset + length) % length)) != start) {
 		Widget widget = list [index];
@@ -4686,7 +5065,9 @@ boolean traverseGroup (boolean next) {
 			return true;
 		}
 	}
-	if (group.isDisposed ()) return false;
+    if (group.isDisposed()) {
+        return false;
+    }
 	return group.setTabGroupFocus ();
 }
 
@@ -4695,21 +5076,27 @@ boolean traverseItem (boolean next) {
 	int length = children.length;
 	int index = 0;
 	while (index < length) {
-		if (children [index] == this) break;
+        if (children [index] == this) {
+            break;
+        }
 		index++;
 	}
-	/*
-	* It is possible (but unlikely), that application
-	* code could have disposed the widget in focus in
-	* or out events.  Ensure that a disposed widget is
-	* not accessed.
-	*/
-	if (index == length) return false;
+    /*
+    * It is possible (but unlikely), that application
+    * code could have disposed the widget in focus in
+    * or out events.  Ensure that a disposed widget is
+    * not accessed.
+    */
+    if (index == length) {
+        return false;
+    }
 	int start = index, offset = (next) ? 1 : -1;
 	while ((index = (index + offset + length) % length) != start) {
 		Control child = children [index];
 		if (!child.isDisposed () && child.isTabItem ()) {
-			if (child.setTabItemFocus ()) return true;
+            if (child.setTabItemFocus()) {
+                return true;
+            }
 		}
 	}
 	return false;
@@ -4734,7 +5121,9 @@ boolean traverseReturn () {
 void unsubclass () {
 	long newProc = windowProc ();
 	long oldProc = display.windowProc;
-	if (oldProc == newProc) return;
+    if (oldProc == newProc) {
+        return;
+    }
 	OS.SetWindowLongPtr (handle, OS.GWLP_WNDPROC, newProc);
 }
 
@@ -4768,13 +5157,17 @@ public void update () {
 void update (boolean all) {
 //	checkWidget ();
 	int flags = OS.RDW_UPDATENOW;
-	if (all) flags |= OS.RDW_ALLCHILDREN;
+    if (all) {
+        flags |= OS.RDW_ALLCHILDREN;
+    }
 	OS.RedrawWindow (handle, null, 0, flags);
 }
 
 void updateBackgroundColor () {
 	Control control = findBackgroundControl ();
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	setBackgroundPixel (control.background);
 }
 
@@ -4793,7 +5186,9 @@ void updateBackgroundMode () {
 }
 
 void updateFont (Font oldFont, Font newFont) {
-	if (getFont ().equals (oldFont)) setFont (newFont);
+    if (getFont().equals(oldFont)) {
+        setFont(newFont);
+    }
 }
 
 void updateLayout (boolean resize, boolean all) {
@@ -4819,7 +5214,9 @@ boolean updateTextDirection (int textDirection) {
 	} else {
 		state &= ~HAS_AUTO_DIRECTION;
 	}
-	if (textDirection == 0) return false;
+    if (textDirection == 0) {
+        return false;
+    }
 	int bits = OS.GetWindowLong (handle, OS.GWL_EXSTYLE);
 	/*
 	* OS.WS_EX_RTLREADING means that the text direction is opposite to the
@@ -4830,7 +5227,9 @@ boolean updateTextDirection (int textDirection) {
 	int flags = OS.WS_EX_LAYOUTRTL | OS.WS_EX_RTLREADING;
 	boolean oldRtl = ((bits & flags) != 0 && (bits & flags) != flags);
 	boolean newRtl = textDirection == SWT.RIGHT_TO_LEFT;
-	if (newRtl == oldRtl) return false;
+    if (newRtl == oldRtl) {
+        return false;
+    }
 	oldRtl = (bits & OS.WS_EX_LAYOUTRTL) != 0;
 	if (newRtl != oldRtl) {
 		bits |= OS.WS_EX_RTLREADING;
@@ -4852,12 +5251,18 @@ int widgetExtStyle () {
 	int bits = 0;
 
 	if (!isUseWsBorder ()) {
-		if ((style & SWT.BORDER) != 0) bits |= OS.WS_EX_CLIENTEDGE;
+        if ((style & SWT.BORDER) != 0) {
+            bits |= OS.WS_EX_CLIENTEDGE;
+        }
 	}
 
 	bits |= OS.WS_EX_NOINHERITLAYOUT;
-	if ((style & SWT.RIGHT_TO_LEFT) != 0) bits |= OS.WS_EX_LAYOUTRTL;
-	if ((style & SWT.FLIP_TEXT_DIRECTION) != 0) bits |= OS.WS_EX_RTLREADING;
+    if ((style & SWT.RIGHT_TO_LEFT) != 0) {
+        bits |= OS.WS_EX_LAYOUTRTL;
+    }
+    if ((style & SWT.FLIP_TEXT_DIRECTION) != 0) {
+        bits |= OS.WS_EX_RTLREADING;
+    }
 	return bits;
 }
 
@@ -4870,7 +5275,9 @@ int widgetStyle () {
 	int bits = OS.WS_CHILD | OS.WS_VISIBLE | OS.WS_CLIPSIBLINGS;
 
 	if (isUseWsBorder ()) {
-		if ((style & SWT.BORDER) != 0) bits |= OS.WS_BORDER;
+        if ((style & SWT.BORDER) != 0) {
+            bits |= OS.WS_BORDER;
+        }
 	}
 
 	return bits;
@@ -4894,10 +5301,18 @@ int widgetStyle () {
  */
 public boolean setParent (Composite parent) {
 	checkWidget ();
-	if (parent == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (parent.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.parent == parent) return true;
-	if (!isReparentable ()) return false;
+    if (parent == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (parent.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.parent == parent) {
+        return true;
+    }
+    if (!isReparentable()) {
+        return false;
+    }
 	releaseParent ();
 	Shell newShell = parent.getShell (), oldShell = getShell ();
 	Decorations newDecorations = parent.menuShell (), oldDecorations = menuShell ();
@@ -4906,7 +5321,9 @@ public boolean setParent (Composite parent) {
 		fixChildren (newShell, oldShell, newDecorations, oldDecorations, menus);
 	}
 	long topHandle = topHandle ();
-	if (OS.SetParent (topHandle, parent.handle) == 0) return false;
+    if (OS.SetParent(topHandle, parent.handle) == 0) {
+        return false;
+    }
 	this.parent = parent;
 	// If parent changed, zoom level might need to be adjusted
 	int newZoom = parent.nativeZoom;
@@ -5067,7 +5484,9 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 		case OS.WM_DPICHANGED:			result = WM_DPICHANGED (wParam, lParam); break;
 		case OS.WM_DISPLAYCHANGE:		result = WM_DISPLAYCHANGE(wParam, lParam); break;
 	}
-	if (result != null) return result.value;
+    if (result != null) {
+        return result.value;
+    }
 	// widget could be disposed at this point
 	display.sendPreExternalEventDispatchEvent ();
 	try {
@@ -5087,7 +5506,9 @@ LRESULT WM_CAPTURECHANGED (long wParam, long lParam) {
 }
 
 LRESULT WM_CHANGEUISTATE (long wParam, long lParam) {
-	if ((state & IGNORE_WM_CHANGEUISTATE) != 0) return LRESULT.ZERO;
+    if ((state & IGNORE_WM_CHANGEUISTATE) != 0) {
+        return LRESULT.ZERO;
+    }
 	return null;
 }
 
@@ -5120,7 +5541,9 @@ LRESULT WM_COMMAND (long wParam, long lParam) {
 		return null;
 	}
 	Control control = display.getControl (lParam);
-	if (control == null) return null;
+    if (control == null) {
+        return null;
+    }
 	return control.wmCommandChild (wParam, lParam);
 }
 
@@ -5130,7 +5553,9 @@ LRESULT WM_CONTEXTMENU (long wParam, long lParam) {
 
 LRESULT WM_CTLCOLOR (long wParam, long lParam) {
 	Control control = display.getControl (lParam);
-	if (control == null) return null;
+    if (control == null) {
+        return null;
+    }
 	return control.wmColorChild (wParam, lParam);
 }
 
@@ -5166,11 +5591,15 @@ LRESULT WM_DRAWITEM (long wParam, long lParam) {
 	OS.MoveMemory (struct, lParam, DRAWITEMSTRUCT.sizeof);
 	if (struct.CtlType == OS.ODT_MENU) {
 		MenuItem item = display.getMenuItem (struct.itemID);
-		if (item == null) return null;
+        if (item == null) {
+            return null;
+        }
 		return item.wmDrawChild (wParam, lParam);
 	}
 	Control control = display.getControl (struct.hwndItem);
-	if (control == null) return null;
+    if (control == null) {
+        return null;
+    }
 	return control.wmDrawChild (wParam, lParam);
 }
 
@@ -5194,10 +5623,14 @@ LRESULT WM_ENTERSIZEMOVE (long wParam, long lParam) {
 
 LRESULT WM_ERASEBKGND (long wParam, long lParam) {
 	if ((state & DRAW_BACKGROUND) != 0) {
-		if (findImageControl () != null) return LRESULT.ONE;
+        if (findImageControl() != null) {
+            return LRESULT.ONE;
+        }
 	}
 	if ((state & THEME_BACKGROUND) != 0) {
-		if (findThemeControl () != null) return LRESULT.ONE;
+        if (findThemeControl() != null) {
+            return LRESULT.ONE;
+        }
 	}
 	return null;
 }
@@ -5237,7 +5670,9 @@ LRESULT WM_GETFONT (long wParam, long lParam) {
 LRESULT WM_GETOBJECT (long wParam, long lParam) {
 	if (accessible != null) {
 		long result = accessible.internal_WM_GETOBJECT (wParam, lParam);
-		if (result != 0) return new LRESULT (result);
+        if (result != 0) {
+            return new LRESULT(result);
+        }
 	}
 	return null;
 }
@@ -5254,7 +5689,9 @@ LRESULT WM_HELP (long wParam, long lParam) {
 	HELPINFO lphi = new HELPINFO ();
 	OS.MoveMemory (lphi, lParam, HELPINFO.sizeof);
 	Decorations shell = menuShell ();
-	if (!shell.isEnabled ()) return null;
+    if (!shell.isEnabled()) {
+        return null;
+    }
 	if (lphi.iContextType == OS.HELPINFO_MENUITEM) {
 		MenuItem item = display.getMenuItem (lphi.iCtrlId);
 		if (item != null && item.isEnabled ()) {
@@ -5263,7 +5700,9 @@ LRESULT WM_HELP (long wParam, long lParam) {
 				widget = item;
 			} else {
 				Menu menu = item.parent;
-				if (menu.hooks (SWT.Help)) widget = menu;
+                if (menu.hooks(SWT.Help)) {
+                    widget = menu;
+                }
 			}
 			if (widget != null) {
 				long hwndShell = shell.handle;
@@ -5283,7 +5722,9 @@ LRESULT WM_HELP (long wParam, long lParam) {
 
 LRESULT WM_HSCROLL (long wParam, long lParam) {
 	Control control = display.getControl (lParam);
-	if (control == null) return null;
+    if (control == null) {
+        return null;
+    }
 	return control.wmScrollChild (wParam, lParam);
 }
 
@@ -5308,15 +5749,19 @@ LRESULT WM_UNINITMENUPOPUP (long wParam, long lParam) {
 	if (hiddenMenu != null) {
 		Shell shell = getShell ();
 		hiddenMenu.sendEvent (SWT.Hide);
-		if (hiddenMenu == shell.activeMenu) shell.activeMenu = null;
+        if (hiddenMenu == shell.activeMenu) {
+            shell.activeMenu = null;
+        }
 	}
 	return null;
 }
 
 LRESULT WM_INITMENUPOPUP (long wParam, long lParam) {
 
-	/* Ignore WM_INITMENUPOPUP for an accelerator */
-	if (display.accelKeyHit) return null;
+    /* Ignore WM_INITMENUPOPUP for an accelerator */
+    if (display.accelKeyHit) {
+        return null;
+    }
 
 	/*
 	* If the high order word of LPARAM is non-zero,
@@ -5327,7 +5772,9 @@ LRESULT WM_INITMENUPOPUP (long wParam, long lParam) {
 	Menu oldMenu = shell.activeMenu, newMenu = null;
 	if (OS.HIWORD (lParam) == 0) {
 		newMenu = menuShell ().findMenu (wParam);
-		if (newMenu != null) newMenu.update ();
+        if (newMenu != null) {
+            newMenu.update();
+        }
 	}
 	Menu menu = newMenu;
 	while (menu != null && menu != oldMenu) {
@@ -5344,22 +5791,28 @@ LRESULT WM_INITMENUPOPUP (long wParam, long lParam) {
 			* to follow.
 			*/
 			menu.sendEvent (SWT.Hide);
-			if (menu.isDisposed ()) break;
+            if (menu.isDisposed()) {
+                break;
+            }
 			menu = menu.getParentMenu ();
 			Menu ancestor = newMenu;
 			while (ancestor != null && ancestor != menu) {
 				ancestor = ancestor.getParentMenu ();
 			}
-			if (ancestor != null) break;
+            if (ancestor != null) {
+                break;
+            }
 		}
 	}
 
-	/*
-	* The shell and the new menu may be disposed because of
-	* sending the hide event to the ancestor menus but setting
-	* a field to null in a disposed shell is not harmful.
-	*/
-	if (newMenu != null && newMenu.isDisposed ()) newMenu = null;
+    /*
+    * The shell and the new menu may be disposed because of
+    * sending the hide event to the ancestor menus but setting
+    * a field to null in a disposed shell is not harmful.
+    */
+    if (newMenu != null && newMenu.isDisposed()) {
+        newMenu = null;
+    }
 	shell.activeMenu = newMenu;
 
 	/* Send the show event */
@@ -5384,12 +5837,14 @@ LRESULT WM_KEYUP (long wParam, long lParam) {
 }
 
 LRESULT WM_KILLFOCUS (long wParam, long lParam) {
-	/*
-	 * Feature in Windows. File and directory dialogs might reset focus
-	 * to NULL before they open. As a result, Shell is unable to save
-	 * focus control in WM_ACTIVATE. The fix is to save focus here.
-	 */
-	if (wParam == 0) menuShell().setSavedFocus(this);
+    /*
+     * Feature in Windows. File and directory dialogs might reset focus
+     * to NULL before they open. As a result, Shell is unable to save
+     * focus control in WM_ACTIVATE. The fix is to save focus here.
+     */
+    if (wParam == 0) {
+        menuShell().setSavedFocus(this);
+    }
 	return wmKillFocus (handle, wParam, lParam);
 }
 
@@ -5422,12 +5877,16 @@ LRESULT WM_MEASUREITEM (long wParam, long lParam) {
 	OS.MoveMemory (struct, lParam, MEASUREITEMSTRUCT.sizeof);
 	if (struct.CtlType == OS.ODT_MENU) {
 		MenuItem item = display.getMenuItem (struct.itemID);
-		if (item == null) return null;
+        if (item == null) {
+            return null;
+        }
 		return item.wmMeasureChild (wParam, lParam);
 	}
 	long hwnd = OS.GetDlgItem (handle, struct.CtlID);
 	Control control = display.getControl (hwnd);
-	if (control == null) return null;
+    if (control == null) {
+        return null;
+    }
 	return control.wmMeasureChild (wParam, lParam);
 }
 
@@ -5452,8 +5911,9 @@ LRESULT WM_MENUSELECT (long wParam, long lParam) {
 	int code = OS.HIWORD (wParam);
 	Shell shell = getShell ();
 	OS.KillTimer (this.handle, Menu.ID_TOOLTIP_TIMER);
-	if (activeMenu != null)
-		activeMenu.hideCurrentToolTip ();
+    if (activeMenu != null) {
+        activeMenu.hideCurrentToolTip();
+    }
 	if (code == 0xFFFF && lParam == 0) {
 		Menu menu = shell.activeMenu;
 		while (menu != null) {
@@ -5475,7 +5935,9 @@ LRESULT WM_MENUSELECT (long wParam, long lParam) {
 			* to follow.
 			*/
 			menu.sendEvent (SWT.Hide);
-			if (menu.isDisposed ()) break;
+            if (menu.isDisposed()) {
+                break;
+            }
 			menu = menu.getParentMenu ();
 		}
 		/*
@@ -5486,7 +5948,9 @@ LRESULT WM_MENUSELECT (long wParam, long lParam) {
 		shell.activeMenu = null;
 		return null;
 	}
-	if ((code & OS.MF_SYSMENU) != 0) return null;
+    if ((code & OS.MF_SYSMENU) != 0) {
+        return null;
+    }
 	if ((code & OS.MF_HILITE) != 0) {
 		MenuItem item = null;
 		Decorations menuShell = menuShell ();
@@ -5516,7 +5980,9 @@ LRESULT WM_MENUSELECT (long wParam, long lParam) {
 				OS.SetTimer (this.handle, Menu.ID_TOOLTIP_TIMER, OS.TTM_GETDELAYTIME, 0);
 			}
 		}
-		if (item != null) item.sendEvent (SWT.Arm);
+        if (item != null) {
+            item.sendEvent(SWT.Arm);
+        }
 	}
 	return null;
 }
@@ -5549,15 +6015,21 @@ LRESULT WM_MOUSEHWHEEL (long wParam, long lParam) {
 LRESULT WM_MOVE (long wParam, long lParam) {
 	state |= MOVE_OCCURRED;
 	if (findImageControl () != null) {
-		if (this != getShell ()) redrawChildren ();
+        if (this != getShell()) {
+            redrawChildren();
+        }
 	} else {
 		if ((state & THEME_BACKGROUND) != 0) {
 			if (OS.IsWindowVisible (handle)) {
-				if (findThemeControl () != null) redrawChildren ();
+                if (findThemeControl() != null) {
+                    redrawChildren();
+                }
 			}
 		}
 	}
-	if ((state & MOVE_DEFERRED) == 0) sendEvent (SWT.Move);
+    if ((state & MOVE_DEFERRED) == 0) {
+        sendEvent(SWT.Move);
+    }
 	// widget could be disposed at this point
 	return null;
 }
@@ -5571,8 +6043,12 @@ LRESULT WM_NCCALCSIZE (long wParam, long lParam) {
 }
 
 LRESULT WM_NCHITTEST (long wParam, long lParam) {
-	if (!OS.IsWindowEnabled (handle)) return null;
-	if (!isActive ()) return new LRESULT (OS.HTTRANSPARENT);
+    if (!OS.IsWindowEnabled(handle)) {
+        return null;
+    }
+    if (!isActive()) {
+        return new LRESULT(OS.HTTRANSPARENT);
+    }
 	return null;
 }
 
@@ -5591,7 +6067,9 @@ LRESULT WM_NOTIFY (long wParam, long lParam) {
 }
 
 LRESULT WM_PAINT (long wParam, long lParam) {
-	if ((state & DISPOSE_SENT) != 0) return LRESULT.ZERO;
+    if ((state & DISPOSE_SENT) != 0) {
+        return LRESULT.ZERO;
+    }
 	return wmPaint (handle, wParam, lParam);
 }
 
@@ -5635,7 +6113,9 @@ LRESULT WM_SETCURSOR (long wParam, long lParam) {
 	int hitTest = (short) OS.LOWORD (lParam);
 	if (hitTest == OS.HTCLIENT) {
 		Control control = display.getControl (wParam);
-		if (control == null) return null;
+        if (control == null) {
+            return null;
+        }
 		Cursor cursor = control.findCursor ();
 		if (cursor != null) {
 			OS.SetCursor (Cursor.win32_getHandle(cursor, DPIUtil.getZoomForAutoscaleProperty(getShellZoom())));
@@ -5667,7 +6147,9 @@ LRESULT WM_SHOWWINDOW (long wParam, long lParam) {
 
 LRESULT WM_SIZE (long wParam, long lParam) {
 	state |= RESIZE_OCCURRED;
-	if ((state & RESIZE_DEFERRED) == 0) sendEvent (SWT.Resize);
+    if ((state & RESIZE_DEFERRED) == 0) {
+        sendEvent(SWT.Resize);
+    }
 	// widget could be disposed at this point
 	return null;
 }
@@ -5693,7 +6175,9 @@ LRESULT WM_SYSCOMMAND (long wParam, long lParam) {
 		Decorations shell = menuShell ();
 		if (shell.isEnabled ()) {
 			MenuItem item = display.getMenuItem (OS.LOWORD (wParam));
-			if (item != null) item.wmCommandChild (wParam, lParam);
+            if (item != null) {
+                item.wmCommandChild(wParam, lParam);
+            }
 		}
 		return LRESULT.ZERO;
 	}
@@ -5797,7 +6281,9 @@ LRESULT WM_SYSKEYUP (long wParam, long lParam) {
 }
 
 LRESULT WM_TABLET_FLICK (long wParam, long lParam) {
-	if (!hooks (SWT.Gesture) && !filters (SWT.Gesture)) return null;
+    if (!hooks(SWT.Gesture) && !filters(SWT.Gesture)) {
+        return null;
+    }
 	Event event = new Event ();
 	FLICK_DATA fData = new FLICK_DATA ();
 	long [] source = new long [1];
@@ -5891,7 +6377,9 @@ LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 
 LRESULT WM_VSCROLL (long wParam, long lParam) {
 	Control control = display.getControl (lParam);
-	if (control == null) return null;
+    if (control == null) {
+        return null;
+    }
 	return control.wmScrollChild (wParam, lParam);
 }
 
@@ -5966,9 +6454,13 @@ LRESULT wmColorChild (long wParam, long lParam) {
 				return new LRESULT (OS.GetStockObject (OS.NULL_BRUSH));
 			}
 		}
-		if (foreground == -1) return null;
+        if (foreground == -1) {
+            return null;
+        }
 	}
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	int forePixel = getForegroundPixel ();
 	int backPixel = control.getBackgroundPixel ();
 	OS.SetTextColor (wParam, forePixel);
@@ -6017,7 +6509,9 @@ LRESULT wmMeasureChild (long wParam, long lParam) {
 
 LRESULT wmNotify (NMHDR hdr, long wParam, long lParam) {
 	Control control = display.getControl (hdr.hwndFrom);
-	if (control == null) return null;
+    if (control == null) {
+        return null;
+    }
 	return control.wmNotifyChild (hdr, wParam, lParam);
 }
 

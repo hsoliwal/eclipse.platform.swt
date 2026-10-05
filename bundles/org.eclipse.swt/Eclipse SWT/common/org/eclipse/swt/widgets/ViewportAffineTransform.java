@@ -47,7 +47,9 @@ final class ViewportAffineTransform {
 	}
 
 	static ViewportAffineTransform translation (double x, double y) {
-		if (x == 0 && y == 0) return IDENTITY;
+        if (x == 0 && y == 0) {
+            return IDENTITY;
+        }
 		return new ViewportAffineTransform (1, 0, 0, 1, x, y);
 	}
 
@@ -56,7 +58,9 @@ final class ViewportAffineTransform {
 	}
 
 	ViewportAffineTransform concatenate (ViewportAffineTransform after) {
-		if (after == null) throw new IllegalArgumentException ("null transform");
+        if (after == null) {
+            throw new IllegalArgumentException("null transform");
+        }
 		return new ViewportAffineTransform (
 				after.m00 * m00 + after.m01 * m10,
 				after.m10 * m00 + after.m11 * m10,
@@ -73,7 +77,9 @@ final class ViewportAffineTransform {
 	}
 
 	Bounds mapBounds (long x, long y, long width, long height) {
-		if (width < 0 || height < 0) throw new IllegalArgumentException ("negative bounds");
+        if (width < 0 || height < 0) {
+            throw new IllegalArgumentException("negative bounds");
+        }
 		Point p0 = map (x, y);
 		Point p1 = map ((double)x + width, y);
 		Point p2 = map (x, (double)y + height);

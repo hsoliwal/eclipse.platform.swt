@@ -122,8 +122,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 		width = (int)Math.ceil(thickness);
 		height = width * 10;
 	}
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	return new Point (width, height);
 }
 
@@ -135,7 +139,9 @@ void createHandle () {
 	widget.setMaxValue(100);
 	widget.setTarget(widget);
 	widget.setAction(OS.sel_sendSelection);
-	if ((style & SWT.VERTICAL) != 0) widget.setBoundsRotation(-90);
+    if ((style & SWT.VERTICAL) != 0) {
+        widget.setBoundsRotation(-90);
+    }
 	view = widget;
 }
 
@@ -255,8 +261,12 @@ void register() {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Selection, listener);
 	eventTable.unhook(SWT.DefaultSelection,listener);
 }
@@ -265,8 +275,9 @@ public void removeSelectionListener(SelectionListener listener) {
 void sendSelection () {
 	NSEvent currEvent = NSApplication.sharedApplication().currentEvent();
 
-	if (currEvent.type() != OS.NSLeftMouseUp)
-		sendSelectionEvent (SWT.Selection);
+    if (currEvent.type() != OS.NSLeftMouseUp) {
+        sendSelectionEvent(SWT.Selection);
+    }
 }
 
 /**
@@ -284,7 +295,9 @@ void sendSelection () {
  */
 public void setIncrement (int increment) {
 	checkWidget();
-	if (increment < 1) return;
+    if (increment < 1) {
+        return;
+    }
 	this.increment = increment;
 }
 
@@ -304,7 +317,9 @@ public void setIncrement (int increment) {
 public void setMaximum (int value) {
 	checkWidget();
 	int minimum = (int)((NSSlider)view).minValue();
-	if (value <= minimum) return;
+    if (value <= minimum) {
+        return;
+    }
 	((NSSlider)view).setMaxValue(value);
 }
 
@@ -324,7 +339,9 @@ public void setMaximum (int value) {
 public void setMinimum (int value) {
 	checkWidget();
 	int maximum = (int)((NSSlider)view).maxValue();
-	if (!(0 <= value && value < maximum)) return;
+    if (!(0 <= value && value < maximum)) {
+        return;
+    }
 	((NSSlider)view).setMinValue(value);
 }
 
@@ -343,7 +360,9 @@ public void setMinimum (int value) {
  */
 public void setPageIncrement (int pageIncrement) {
 	checkWidget();
-	if (pageIncrement < 1) return;
+    if (pageIncrement < 1) {
+        return;
+    }
 	this.pageIncrement = pageIncrement;
 }
 

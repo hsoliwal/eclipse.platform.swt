@@ -128,7 +128,9 @@ public CTabItem (CTabFolder parent, int style, int index) {
 
 @Override
 public void dispose() {
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	//if (!isValidThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
 	parent.destroyItem(this);
 	super.dispose();
@@ -203,7 +205,9 @@ public Image getDisabledImage(){
  */
 public Color getForeground () {
 	checkWidget ();
-	if (foreground != null) return foreground;
+    if (foreground != null) {
+        return foreground;
+    }
 	return parent.getForeground();
 }
 
@@ -220,7 +224,9 @@ public Color getForeground () {
  */
 public Color getSelectionForeground () {
 	checkWidget ();
-	if (selectionForeground != null) return selectionForeground;
+    if (selectionForeground != null) {
+        return selectionForeground;
+    }
 	return parent.getSelectionForeground();
 }
 
@@ -238,7 +244,9 @@ public Color getSelectionForeground () {
  */
 public Font getFont() {
 	checkWidget();
-	if (font != null) return font;
+    if (font != null) {
+        return font;
+    }
 	return parent.getFont();
 }
 /**
@@ -312,7 +320,9 @@ public String getToolTipText () {
 	checkWidget();
 	if (toolTipText == null && shortenedText != null) {
 		String text = getText();
-		if (!shortenedText.equals(text)) return text;
+        if (!shortenedText.equals(text)) {
+            return text;
+        }
 	}
 	return toolTipText;
 }
@@ -351,8 +361,12 @@ public boolean isShowing () {
 public void setControl (Control control) {
 	checkWidget();
 	if (control != null) {
-		if (control.isDisposed()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
-		if (control.getParent() != parent) SWT.error (SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.getParent() != parent) {
+            SWT.error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
 	if (this.control != null && !this.control.isDisposed()) {
 		this.control.setVisible(false);
@@ -421,8 +435,12 @@ public void setFont (Font font){
 	if (font != null && font.isDisposed ()) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (font == null && this.font == null) return;
-	if (font != null && font.equals(this.font)) return;
+    if (font == null && this.font == null) {
+        return;
+    }
+    if (font != null && font.equals(this.font)) {
+        return;
+    }
 	this.font = font;
 	parent.updateFolder(CTabFolder.UPDATE_TAB_HEIGHT | CTabFolder.REDRAW_TABS);
 }
@@ -446,9 +464,13 @@ public void setFont (Font font){
 public void setForeground (Color color) {
 	checkWidget ();
 	if (color != null) {
-		if (color.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
-	if (color == foreground) return;
+    if (color == foreground) {
+        return;
+    }
 	foreground = color;
 	parent.updateFolder(CTabFolder.REDRAW_TABS);
 }
@@ -472,9 +494,13 @@ public void setForeground (Color color) {
 public void setSelectionForeground (Color color) {
 	checkWidget ();
 	if (color != null) {
-		if (color.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
-	if (color == selectionForeground) return;
+    if (color == selectionForeground) {
+        return;
+    }
 	selectionForeground = color;
 	parent.updateFolder(CTabFolder.REDRAW_TABS);
 }
@@ -486,8 +512,12 @@ public void setImage (Image image) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
 	Image oldImage = getImage();
-	if (image == null && oldImage == null) return;
-	if (image != null && image.equals(oldImage)) return;
+    if (image == null && oldImage == null) {
+        return;
+    }
+    if (image != null && image.equals(oldImage)) {
+        return;
+    }
 	super.setImage(image);
 	parent.updateFolder(CTabFolder.UPDATE_TAB_HEIGHT | CTabFolder.REDRAW_TABS);
 }
@@ -507,7 +537,9 @@ public void setImage (Image image) {
  */
 public void setShowClose(boolean close) {
 	checkWidget();
-	if (showClose == close) return;
+    if (showClose == close) {
+        return;
+    }
 	showClose = close;
 	parent.updateFolder(CTabFolder.REDRAW_TABS);
 }
@@ -530,7 +562,9 @@ public void setShowClose(boolean close) {
  */
 public void setShowDirty(boolean dirty) {
 	checkWidget();
-	if (showDirty == dirty) return;
+    if (showDirty == dirty) {
+        return;
+    }
 	showDirty = dirty;
 	parent.updateFolder(CTabFolder.REDRAW_TABS);
 }
@@ -548,8 +582,12 @@ public void setShowDirty(boolean dirty) {
 @Override
 public void setText (String string) {
 	checkWidget();
-	if (string == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (string.equals(getText())) return;
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (string.equals(getText())) {
+        return;
+    }
 	super.setText(string);
 	shortenedText = null;
 	shortenedTextWidth = 0;

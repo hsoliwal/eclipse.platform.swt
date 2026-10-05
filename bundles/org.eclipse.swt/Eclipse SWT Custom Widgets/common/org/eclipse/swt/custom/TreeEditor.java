@@ -105,20 +105,28 @@ public TreeEditor (Tree tree) {
 	timer = this::layout;
 	treeListener = new TreeListener () {
 		final Runnable runnable = () -> {
-			if (editor == null || editor.isDisposed()) return;
-			if (TreeEditor.this.tree.isDisposed()) return;
+            if (editor == null || editor.isDisposed()) {
+                return;
+            }
+            if (TreeEditor.this.tree.isDisposed()) {
+                return;
+            }
 			layout();
 			editor.setVisible(true);
 		};
 		@Override
 		public void treeCollapsed(TreeEvent e) {
-			if (editor == null || editor.isDisposed ()) return;
+            if (editor == null || editor.isDisposed()) {
+                return;
+            }
 			editor.setVisible(false);
 			e.display.asyncExec(runnable);
 		}
 		@Override
 		public void treeExpanded(TreeEvent e) {
-			if (editor == null || editor.isDisposed ()) return;
+            if (editor == null || editor.isDisposed()) {
+                return;
+            }
 			editor.setVisible(false);
 			e.display.asyncExec(runnable);
 		}
@@ -131,7 +139,9 @@ public TreeEditor (Tree tree) {
 
 @Override
 Rectangle computeBounds () {
-	if (item == null || column == -1 || item.isDisposed()) return new Rectangle(0, 0, 0, 0);
+    if (item == null || column == -1 || item.isDisposed()) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	Rectangle cell = item.getBounds(column);
 	Rectangle rect = item.getImageBounds(column);
 	cell.x = rect.x + rect.width;
@@ -188,7 +198,9 @@ public void dispose () {
 			TreeColumn treeColumn = tree.getColumn(this.column);
 			treeColumn.removeControlListener(columnListener);
 		}
-		if (treeListener != null) tree.removeTreeListener(treeListener);
+        if (treeListener != null) {
+            tree.removeTreeListener(treeListener);
+        }
 	}
 	columnListener = null;
 	treeListener = null;
@@ -256,7 +268,9 @@ public void setColumn(int column) {
 		this.column = -1;
 	}
 
-	if (column < 0  || column >= tree.getColumnCount()) return;
+    if (column < 0 || column >= tree.getColumnCount()) {
+        return;
+    }
 
 	this.column = column;
 	TreeColumn treeColumn = tree.getColumn(this.column);
@@ -313,11 +327,19 @@ public void setEditor (Control editor, TreeItem item) {
 
 @Override
 public void layout () {
-	if (tree == null || tree.isDisposed()) return;
-	if (item == null || item.isDisposed()) return;
+    if (tree == null || tree.isDisposed()) {
+        return;
+    }
+    if (item == null || item.isDisposed()) {
+        return;
+    }
 	int columnCount = tree.getColumnCount();
-	if (columnCount == 0 && column != 0) return;
-	if (columnCount > 0 && (column < 0 || column >= columnCount)) return;
+    if (columnCount == 0 && column != 0) {
+        return;
+    }
+    if (columnCount > 0 && (column < 0 || column >= columnCount)) {
+        return;
+    }
 	super.layout();
 }
 }

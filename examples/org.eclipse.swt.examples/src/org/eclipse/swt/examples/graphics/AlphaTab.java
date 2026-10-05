@@ -101,7 +101,9 @@ public class AlphaTab extends AnimatedGraphicsTab {
 	 */
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 		Device device = gc.getDevice();
 
 		if (alphaImg1 == null) {

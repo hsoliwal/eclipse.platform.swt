@@ -27,7 +27,9 @@ public void generate(JNIField[] fields) {
 	sort(fields);
 	outputln("int main() {");
 	for (JNIField field : fields) {
-		if ((field.getModifiers() & Modifier.FINAL) == 0) continue;
+        if ((field.getModifiers() & Modifier.FINAL) == 0) {
+            continue;
+        }
 		generate(field);
 	}
 	outputln("}");
@@ -40,8 +42,11 @@ public void generate(JNIField field) {
 	output(" ");
 	output(field.getName());
 	output(" = ");
-	if (type.isType("java.lang.String") || type.isType("[B")) output("\"%s\"");
-	else output("0x%x");
+    if (type.isType("java.lang.String") || type.isType("[B")) {
+        output("\"%s\"");
+    } else {
+        output("0x%x");
+    }
 	output(";\\n\", ");
 	output(field.getName());
 	outputln(");");

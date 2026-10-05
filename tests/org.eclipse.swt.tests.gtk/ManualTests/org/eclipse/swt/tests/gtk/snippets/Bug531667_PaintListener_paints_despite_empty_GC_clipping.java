@@ -138,7 +138,9 @@ public class Bug531667_PaintListener_paints_despite_empty_GC_clipping {
 
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

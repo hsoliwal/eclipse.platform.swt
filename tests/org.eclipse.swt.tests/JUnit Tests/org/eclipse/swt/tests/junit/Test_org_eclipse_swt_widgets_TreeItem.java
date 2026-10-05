@@ -632,11 +632,13 @@ public void test_getImageBoundsI() {
 public void test_getItemI() {
 	int number = 15;
 	TreeItem[] items = new TreeItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TreeItem(treeItem, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TreeItem(treeItem, 0);
+    }
 
-	for (int i = 0; i < number; i++)
-		assertEquals(items[i], treeItem.getItem(i));
+    for (int i = 0; i < number; i++) {
+        assertEquals(items[i], treeItem.getItem(i));
+    }
 	assertThrows(IllegalArgumentException.class, () -> treeItem.getItem(number), "No exception thrown for illegal index argument");
 
 	assertThrows(IllegalArgumentException.class, () -> treeItem.getItem(number+1), "No exception thrown for illegal index argument");
@@ -1158,8 +1160,12 @@ Tree tree;
 
 // this method must be private or protected so the auto-gen tool keeps it
 private void makeCleanEnvironment() {
-	if ( treeItem != null ) treeItem.dispose();
-	if ( tree != null ) tree.dispose();
+    if (treeItem != null) {
+        treeItem.dispose();
+    }
+    if (tree != null) {
+        tree.dispose();
+    }
 	tree = new Tree(shell, 0);
 	treeItem = new TreeItem(tree, 0);
 	setWidget(treeItem);

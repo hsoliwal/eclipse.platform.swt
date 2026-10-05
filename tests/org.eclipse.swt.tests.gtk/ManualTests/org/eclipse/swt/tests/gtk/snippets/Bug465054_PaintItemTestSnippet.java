@@ -46,8 +46,9 @@ public class Bug465054_PaintItemTestSnippet {
 
 		while (!shellMain.isDisposed()) {
 			try {
-				if (!display.readAndDispatch())
-					display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}

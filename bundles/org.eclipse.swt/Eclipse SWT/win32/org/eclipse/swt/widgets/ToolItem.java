@@ -173,12 +173,16 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 void click (boolean dropDown) {
 	long hwnd = parent.handle;
-	if (OS.GetKeyState (OS.VK_LBUTTON) < 0) return;
+    if (OS.GetKeyState(OS.VK_LBUTTON) < 0) {
+        return;
+    }
 	int index = (int)OS.SendMessage (hwnd, OS.TB_COMMANDTOINDEX, id, 0);
 	RECT rect = new RECT ();
 	OS.SendMessage (hwnd, OS.TB_GETITEMRECT, index, rect);
@@ -207,7 +211,9 @@ Widget [] computeTabList () {
 	if (isTabGroup ()) {
 		if (getEnabled ()) {
 			if ((style & SWT.SEPARATOR) != 0) {
-				if (control != null) return control.computeTabList();
+                if (control != null) {
+                    return control.computeTabList();
+                }
 			} else {
 				return new Widget [] {this};
 			}
@@ -415,7 +421,9 @@ public ToolBar getParent () {
  */
 public boolean getSelection () {
 	checkWidget();
-	if ((style & (SWT.CHECK | SWT.RADIO)) == 0) return false;
+    if ((style & (SWT.CHECK | SWT.RADIO)) == 0) {
+        return false;
+    }
 	long hwnd = parent.handle;
 	long fsState = OS.SendMessage (hwnd, OS.TB_GETSTATE, id, 0);
 	return (fsState & OS.TBSTATE_CHECKED) != 0;
@@ -483,12 +491,18 @@ boolean isTabGroup () {
 	ToolItem [] tabList = parent._getTabItemList ();
 	if (tabList != null) {
 		for (ToolItem item : tabList) {
-			if (item == this) return true;
+            if (item == this) {
+                return true;
+            }
 		}
 	}
-	if ((style & SWT.SEPARATOR) != 0) return true;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return true;
+    }
 	int index = parent.indexOf (this);
-	if (index == 0) return true;
+    if (index == 0) {
+        return true;
+    }
 	ToolItem previous = parent.getItem (index - 1);
 	return (previous.getStyle () & SWT.SEPARATOR) != 0;
 }
@@ -507,7 +521,9 @@ void releaseWidget () {
 	control = null;
 	toolTipText = null;
 	disabledImage = hotImage = null;
-	if (disabledImage2 != null) disabledImage2.dispose ();
+    if (disabledImage2 != null) {
+        disabledImage2.dispose();
+    }
 	disabledImage2 = null;
 }
 
@@ -558,8 +574,12 @@ void releaseImages () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -586,11 +606,17 @@ void resizeControl () {
 void selectRadio () {
 	int index = 0;
 	ToolItem [] items = parent.getItems ();
-	while (index < items.length && items [index] != this) index++;
+    while (index < items.length && items [index] != this) {
+        index++;
+    }
 	int i = index - 1;
-	while (i >= 0 && items [i].setRadioSelection (false)) --i;
+    while (i >= 0 && items [i].setRadioSelection(false)) {
+        --i;
+    }
 	int j = index + 1;
-	while (j < items.length && items [j].setRadioSelection (false)) j++;
+    while (j < items.length && items [j].setRadioSelection(false)) {
+        j++;
+    }
 	setSelection (true);
 }
 
@@ -620,7 +646,9 @@ public void setBackground (Color color) {
 	}
 	parent.state |= CUSTOM_DRAW_ITEM;
 	int pixel = (color != null) ? color.handle : -1;
-	if (pixel == background) return;
+    if (pixel == background) {
+        return;
+    }
 	background = pixel;
 	redraw ();
 }
@@ -643,10 +671,16 @@ public void setBackground (Color color) {
 public void setControl (Control control) {
 	checkWidget();
 	if (control != null) {
-		if (control.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (control.parent != parent) error (SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.parent != parent) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
-	if ((style & SWT.SEPARATOR) == 0) return;
+    if ((style & SWT.SEPARATOR) == 0) {
+        return;
+    }
 	parent.layout(true);
 	this.control = control;
 	/*
@@ -730,13 +764,15 @@ public void setEnabled (boolean enabled) {
 	checkWidget();
 	long hwnd = parent.handle;
 	int fsState = (int)OS.SendMessage (hwnd, OS.TB_GETSTATE, id, 0);
-	/*
-	* Feature in Windows.  When TB_SETSTATE is used to set the
-	* state of a tool item, the item redraws even when the state
-	* has not changed.  The fix is to detect this case and avoid
-	* setting the state.
-	*/
-	if (((fsState & OS.TBSTATE_ENABLED) != 0) == enabled) return;
+    /*
+    * Feature in Windows.  When TB_SETSTATE is used to set the
+    * state of a tool item, the item redraws even when the state
+    * has not changed.  The fix is to detect this case and avoid
+    * setting the state.
+    */
+    if (((fsState & OS.TBSTATE_ENABLED) != 0) == enabled) {
+        return;
+    }
 	if (enabled) {
 		fsState |= OS.TBSTATE_ENABLED;
 		state &= ~DISABLED;
@@ -746,7 +782,9 @@ public void setEnabled (boolean enabled) {
 	}
 	OS.SendMessage (hwnd, OS.TB_SETSTATE, id, fsState);
 	if ((style & SWT.SEPARATOR) == 0) {
-		if (image != null) updateImages (enabled && parent.getEnabled ());
+        if (image != null) {
+            updateImages(enabled && parent.getEnabled());
+        }
 	}
 	if (!enabled && parent.lastFocusId == id) {
 		parent.lastFocusId = -1;
@@ -772,9 +810,15 @@ public void setEnabled (boolean enabled) {
  */
 public void setDisabledImage (Image image) {
 	checkWidget();
-	if (this.disabledImage == image) return;
-	if ((style & SWT.SEPARATOR) != 0) return;
-	if (image != null && image.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (this.disabledImage == image) {
+        return;
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	parent.layout(isImageSizeChanged(disabledImage, image));
 	disabledImage = image;
 	updateImages (getEnabled () && parent.getEnabled ());
@@ -806,7 +850,9 @@ public void setForeground (Color color) {
 	}
 	parent.state |= CUSTOM_DRAW_ITEM;
 	int pixel = (color != null) ? color.handle : -1;
-	if (pixel == foreground) return;
+    if (pixel == foreground) {
+        return;
+    }
 	foreground = pixel;
 	redraw ();
 }
@@ -830,9 +876,15 @@ public void setForeground (Color color) {
  */
 public void setHotImage (Image image) {
 	checkWidget();
-	if (this.hotImage == image) return;
-	if ((style & SWT.SEPARATOR) != 0) return;
-	if (image != null && image.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (this.hotImage == image) {
+        return;
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	parent.layout(isImageSizeChanged(hotImage, image));
 	hotImage = image;
 	updateImages (getEnabled () && parent.getEnabled ());
@@ -841,9 +893,15 @@ public void setHotImage (Image image) {
 @Override
 public void setImage (Image image) {
 	checkWidget();
-	if (this.image == image) return;
-	if ((style & SWT.SEPARATOR) != 0) return;
-	if (image != null && image.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (this.image == image) {
+        return;
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	parent.layout(isImageSizeChanged(super.image, image));
 	super.setImage (image);
 	updateImages (getEnabled () && parent.getEnabled ());
@@ -859,7 +917,9 @@ boolean isImageSizeChanged(Image oldImage, Image image) {
 }
 
 boolean setRadioSelection (boolean value) {
-	if ((style & SWT.RADIO) == 0) return false;
+    if ((style & SWT.RADIO) == 0) {
+        return false;
+    }
 	if (getSelection () != value) {
 		setSelection (value);
 		sendSelectionEvent (SWT.Selection);
@@ -884,16 +944,20 @@ boolean setRadioSelection (boolean value) {
  */
 public void setSelection (boolean selected) {
 	checkWidget();
-	if ((style & (SWT.CHECK | SWT.RADIO)) == 0) return;
+    if ((style & (SWT.CHECK | SWT.RADIO)) == 0) {
+        return;
+    }
 	long hwnd = parent.handle;
 	int fsState = (int)OS.SendMessage (hwnd, OS.TB_GETSTATE, id, 0);
-	/*
-	* Feature in Windows.  When TB_SETSTATE is used to set the
-	* state of a tool item, the item redraws even when the state
-	* has not changed.  The fix is to detect this case and avoid
-	* setting the state.
-	*/
-	if (((fsState & OS.TBSTATE_CHECKED) != 0) == selected) return;
+    /*
+    * Feature in Windows.  When TB_SETSTATE is used to set the
+    * state of a tool item, the item redraws even when the state
+    * has not changed.  The fix is to detect this case and avoid
+    * setting the state.
+    */
+    if (((fsState & OS.TBSTATE_CHECKED) != 0) == selected) {
+        return;
+    }
 	if (selected) {
 		fsState |= OS.TBSTATE_CHECKED;
 	} else {
@@ -955,7 +1019,9 @@ void _setText (String string) {
 		info.pszText = pszText;
 	}
 	OS.SendMessage (hwnd, OS.TB_SETBUTTONINFO, id, info);
-	if (pszText != 0) OS.HeapFree (hHeap, 0, pszText);
+    if (pszText != 0) {
+        OS.HeapFree(hHeap, 0, pszText);
+    }
 }
 
 /**
@@ -988,9 +1054,15 @@ void _setText (String string) {
 @Override
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.SEPARATOR) != 0) return;
-	if (string.equals (text)) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
+    if (string.equals(text)) {
+        return;
+    }
 	parent.layout(true);
 	super.setText (string);
 	if ((state & HAS_AUTO_DIRECTION) == 0 || !updateTextDirection (AUTO_TEXT_DIRECTION)) {
@@ -1075,8 +1147,12 @@ public void setWidth (int width) {
 }
 
 void setWidthInPixels (int width) {
-	if ((style & SWT.SEPARATOR) == 0) return;
-	if (width < 0) return;
+    if ((style & SWT.SEPARATOR) == 0) {
+        return;
+    }
+    if (width < 0) {
+        return;
+    }
 	long hwnd = parent.handle;
 	TBBUTTONINFO info = new TBBUTTONINFO ();
 	info.cbSize = TBBUTTONINFO.sizeof;
@@ -1087,17 +1163,23 @@ void setWidthInPixels (int width) {
 }
 
 void updateImages (boolean enabled) {
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	long hwnd = parent.handle;
 	TBBUTTONINFO info = new TBBUTTONINFO ();
 	info.cbSize = TBBUTTONINFO.sizeof;
 	info.dwMask = OS.TBIF_IMAGE;
 	OS.SendMessage (hwnd, OS.TB_GETBUTTONINFO, id, info);
-	if (info.iImage == OS.I_IMAGENONE && image == null) return;
+    if (info.iImage == OS.I_IMAGENONE && image == null) {
+        return;
+    }
 	if (info.iImage == OS.I_IMAGENONE) {
 		Image disabled = disabledImage;
 		if (disabledImage == null) {
-			if (disabledImage2 != null) disabledImage2.dispose ();
+            if (disabledImage2 != null) {
+                disabledImage2.dispose();
+            }
 			disabledImage2 = null;
 			disabled = image;
 			if (!enabled) {
@@ -1113,13 +1195,17 @@ void updateImages (boolean enabled) {
 		*/
 		Image image2 = image, hot = hotImage;
 		if ((style & (SWT.CHECK | SWT.RADIO)) != 0) {
-			if (!enabled) image2 = hot = disabled;
+            if (!enabled) {
+                image2 = hot = disabled;
+            }
 		}
 		info.iImage = parent.addImage(image.getBounds(), image2, hot != null ? hot : image2, disabled);
 	} else {
 		Image disabled = null;
 		if (image != null) {
-			if (disabledImage2 != null) disabledImage2.dispose ();
+            if (disabledImage2 != null) {
+                disabledImage2.dispose();
+            }
 			disabledImage2 = null;
 			disabled = disabledImage;
 			if (disabledImage == null) {
@@ -1138,7 +1224,9 @@ void updateImages (boolean enabled) {
 		*/
 		Image image2 = image, hot = hotImage;
 		if ((style & (SWT.CHECK | SWT.RADIO)) != 0) {
-			if (!enabled) image2 = hot = disabled;
+            if (!enabled) {
+                image2 = hot = disabled;
+            }
 		}
 
 		/*
@@ -1148,7 +1236,9 @@ void updateImages (boolean enabled) {
 		* for a later item that reuses this slot.
 		*/
 		parent.putImage(info.iImage, image2, image2 != null ? (hot != null ? hot : image2) : null, disabled);
-		if (image == null) info.iImage = OS.I_IMAGENONE;
+        if (image == null) {
+            info.iImage = OS.I_IMAGENONE;
+        }
 	}
 
 	/*
@@ -1166,17 +1256,27 @@ void updateImages (boolean enabled) {
 }
 
 int widgetStyle () {
-	if ((style & SWT.DROP_DOWN) != 0) return OS.BTNS_DROPDOWN;
-	if ((style & SWT.PUSH) != 0) return OS.BTNS_BUTTON;
-	if ((style & SWT.CHECK) != 0) return OS.BTNS_CHECK;
-	/*
-	* This code is intentionally commented.  In order to
-	* consistently support radio tool items across platforms,
-	* the platform radio behavior is not used.
-	*/
-//	if ((style & SWT.RADIO) != 0) return OS.BTNS_CHECKGROUP;
-	if ((style & SWT.RADIO) != 0) return OS.BTNS_CHECK;
-	if ((style & SWT.SEPARATOR) != 0) return OS.BTNS_SEP;
+    if ((style & SWT.DROP_DOWN) != 0) {
+        return OS.BTNS_DROPDOWN;
+    }
+    if ((style & SWT.PUSH) != 0) {
+        return OS.BTNS_BUTTON;
+    }
+    if ((style & SWT.CHECK) != 0) {
+        return OS.BTNS_CHECK;
+    }
+    /*
+    * This code is intentionally commented.  In order to
+    * consistently support radio tool items across platforms,
+    * the platform radio behavior is not used.
+    */
+    //	if ((style & SWT.RADIO) != 0) return OS.BTNS_CHECKGROUP;
+    if ((style & SWT.RADIO) != 0) {
+        return OS.BTNS_CHECK;
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return OS.BTNS_SEP;
+    }
 	return OS.BTNS_BUTTON;
 }
 

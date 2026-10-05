@@ -119,7 +119,9 @@ public void createControlPanel(Composite parent) {
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	gc.setLineWidth(20);
@@ -149,7 +151,9 @@ public void paint(GC gc, int width, int height) {
 	gc.drawPath(path);
 	path.dispose();
 
-	if (pattern != null) pattern.dispose();
+    if (pattern != null) {
+        pattern.dispose();
+    }
 }
 
 }

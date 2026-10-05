@@ -139,8 +139,12 @@ public Tracker (Composite parent, int style) {
  * @see SWT#RESIZE
  */
 public Tracker (Display display, int style) {
-	if (display == null) display = Display.getCurrent ();
-	if (display == null) display = Display.getDefault ();
+    if (display == null) {
+        display = Display.getCurrent();
+    }
+    if (display == null) {
+        display = Display.getDefault();
+    }
 	if (!display.isValidThread ()) {
 		error (SWT.ERROR_THREAD_INVALID_ACCESS);
 	}
@@ -196,7 +200,9 @@ public void addKeyListener(KeyListener listener) {
 }
 
 Point adjustMoveCursor () {
-	if (bounds == null) return null;
+    if (bounds == null) {
+        return null;
+    }
 	int newX = bounds.x + bounds.width / 2;
 	int newY = bounds.y;
 
@@ -218,7 +224,9 @@ Point adjustMoveCursor () {
 }
 
 Point adjustResizeCursor () {
-	if (bounds == null) return null;
+    if (bounds == null) {
+        return null;
+    }
 	int newX, newY;
 
 	if ((cursorOrientation & SWT.LEFT) != 0) {
@@ -279,19 +287,29 @@ static int checkStyle (int style) {
 }
 
 Rectangle computeBounds () {
-	if (rectangles.length == 0) return null;
+    if (rectangles.length == 0) {
+        return null;
+    }
 	int xMin = rectangles [0].x;
 	int yMin = rectangles [0].y;
 	int xMax = rectangles [0].x + rectangles [0].width;
 	int yMax = rectangles [0].y + rectangles [0].height;
 
 	for (int i = 1; i < rectangles.length; i++) {
-		if (rectangles [i].x < xMin) xMin = rectangles [i].x;
-		if (rectangles [i].y < yMin) yMin = rectangles [i].y;
+        if (rectangles [i].x < xMin) {
+            xMin = rectangles [i].x;
+        }
+        if (rectangles [i].y < yMin) {
+            yMin = rectangles [i].y;
+        }
 		int rectRight = rectangles [i].x + rectangles [i].width;
-		if (rectRight > xMax) xMax = rectRight;
+        if (rectRight > xMax) {
+            xMax = rectRight;
+        }
 		int rectBottom = rectangles [i].y + rectangles [i].height;
-		if (rectBottom > yMax) yMax = rectBottom;
+        if (rectBottom > yMax) {
+            yMax = rectBottom;
+        }
 	}
 
 	return new Rectangle (xMin, yMin, xMax - xMin, yMax - yMin);
@@ -330,7 +348,9 @@ Rectangle [] computeProportions (Rectangle [] rects) {
 void drawRectangles (Rectangle [] rects) {
 	long gdkResource = 0;
 	if (GTK.GTK4) {
-		if (parent != null) gdkResource = gtk_widget_get_surface(parent.handle);
+        if (parent != null) {
+            gdkResource = gtk_widget_get_surface(parent.handle);
+        }
 	} else {
 		gdkResource = GDK.gdk_get_default_root_window();
 	}
@@ -338,9 +358,13 @@ void drawRectangles (Rectangle [] rects) {
 		long paintHandle = parent.paintHandle();
 		gdkResource = GTK.GTK4 ? gtk_widget_get_surface(paintHandle) : gtk_widget_get_window (paintHandle);
 	}
-	if (gdkResource == 0) return;
+    if (gdkResource == 0) {
+        return;
+    }
 
-	if (overlay == 0) return;
+    if (overlay == 0) {
+        return;
+    }
 	GTK3.gtk_widget_shape_combine_region (overlay, 0);
 
 	// Bug 498217.
@@ -473,7 +497,9 @@ long gtk3_button_release_event (long widget, long event) {
 @Override
 long gtk3_key_press_event (long widget, long eventPtr) {
 	long result = super.gtk3_key_press_event (widget, eventPtr);
-	if (result != 0) return result;
+    if (result != 0) {
+        return result;
+    }
 
 	int [] state = new int [1];
 	int [] keyval = new int [1];
@@ -729,13 +755,27 @@ long gtk3_mouse (int eventType, long widget, long eventPtr) {
 }
 
 void moveRectangles (int xChange, int yChange) {
-	if (bounds == null) return;
-	if (xChange < 0 && ((style & SWT.LEFT) == 0)) xChange = 0;
-	if (xChange > 0 && ((style & SWT.RIGHT) == 0)) xChange = 0;
-	if (yChange < 0 && ((style & SWT.UP) == 0)) yChange = 0;
-	if (yChange > 0 && ((style & SWT.DOWN) == 0)) yChange = 0;
-	if (xChange == 0 && yChange == 0) return;
-	if (parent != null && (parent.style & SWT.MIRRORED) != 0) xChange *= -1;
+    if (bounds == null) {
+        return;
+    }
+    if (xChange < 0 && ((style & SWT.LEFT) == 0)) {
+        xChange = 0;
+    }
+    if (xChange > 0 && ((style & SWT.RIGHT) == 0)) {
+        xChange = 0;
+    }
+    if (yChange < 0 && ((style & SWT.UP) == 0)) {
+        yChange = 0;
+    }
+    if (yChange > 0 && ((style & SWT.DOWN) == 0)) {
+        yChange = 0;
+    }
+    if (xChange == 0 && yChange == 0) {
+        return;
+    }
+    if (parent != null && (parent.style & SWT.MIRRORED) != 0) {
+        xChange *= -1;
+    }
 	bounds.x += xChange; bounds.y += yChange;
 	for (int i = 0; i < rectangles.length; i++) {
 		rectangles [i].x += xChange;
@@ -757,11 +797,15 @@ void moveRectangles (int xChange, int yChange) {
  */
 public boolean open () {
 	checkWidget();
-	if (!GTK.GTK4) window = GDK.gdk_get_default_root_window();
+    if (!GTK.GTK4) {
+        window = GDK.gdk_get_default_root_window();
+    }
 	if (parent != null) {
 		window = gtk_widget_get_window (parent.paintHandle());
 	}
-	if (window == 0) return false;
+    if (window == 0) {
+        return false;
+    }
 	cancelled = false;
 	tracking = true;
 	int [] oldX = new int [1], oldY = new int [1], state = new int [1];
@@ -812,7 +856,9 @@ public boolean open () {
 	overlay = GTK3.gtk_window_new (GTK.GTK_WINDOW_POPUP);
 	GTK3.gtk_window_set_skip_taskbar_hint (overlay, true);
 	GTK.gtk_window_set_title (overlay, new byte [1]);
-	if (parent != null) GTK.gtk_window_set_transient_for(overlay, parent.topHandle());
+    if (parent != null) {
+        GTK.gtk_window_set_transient_for(overlay, parent.topHandle());
+    }
 	GTK.gtk_widget_realize (overlay);
 	if (!GTK.GTK4) {
 		long overlayWindow = GTK3.gtk_widget_get_window (overlay);
@@ -830,7 +876,9 @@ public boolean open () {
 	display.tracker = this;
 	try {
 		while (tracking) {
-			if (parent != null && parent.isDisposed ()) break;
+            if (parent != null && parent.isDisposed()) {
+                break;
+            }
 			display.runSkin ();
 			display.runDeferredLayouts ();
 			display.sendPreExternalEventDispatchEvent ();
@@ -950,8 +998,12 @@ void releaseWidget () {
  */
 public void removeControlListener (ControlListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Resize, listener);
 	eventTable.unhook (SWT.Move, listener);
 }
@@ -975,15 +1027,23 @@ public void removeControlListener (ControlListener listener) {
  */
 public void removeKeyListener(KeyListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.KeyUp, listener);
 	eventTable.unhook (SWT.KeyDown, listener);
 }
 
 void resizeRectangles (int xChange, int yChange) {
-	if (bounds == null) return;
-	if (parent != null && (parent.style & SWT.MIRRORED) != 0) xChange *= -1;
+    if (bounds == null) {
+        return;
+    }
+    if (parent != null && (parent.style & SWT.MIRRORED) != 0) {
+        xChange *= -1;
+    }
 	/*
 	* If the cursor orientation has not been set in the orientation of
 	* this change then try to set it here.
@@ -1009,7 +1069,9 @@ void resizeRectangles (int xChange, int yChange) {
 	 */
 	if ((cursorOrientation & SWT.LEFT) != 0) {
 		if (xChange > bounds.width) {
-			if ((style & SWT.RIGHT) == 0) return;
+            if ((style & SWT.RIGHT) == 0) {
+                return;
+            }
 			cursorOrientation |= SWT.RIGHT;
 			cursorOrientation &= ~SWT.LEFT;
 			bounds.x += bounds.width;
@@ -1024,7 +1086,9 @@ void resizeRectangles (int xChange, int yChange) {
 		}
 	} else if ((cursorOrientation & SWT.RIGHT) != 0) {
 		if (bounds.width < -xChange) {
-			if ((style & SWT.LEFT) == 0) return;
+            if ((style & SWT.LEFT) == 0) {
+                return;
+            }
 			cursorOrientation |= SWT.LEFT;
 			cursorOrientation &= ~SWT.RIGHT;
 			xChange += bounds.width;
@@ -1039,7 +1103,9 @@ void resizeRectangles (int xChange, int yChange) {
 	}
 	if ((cursorOrientation & SWT.UP) != 0) {
 		if (yChange > bounds.height) {
-			if ((style & SWT.DOWN) == 0) return;
+            if ((style & SWT.DOWN) == 0) {
+                return;
+            }
 			cursorOrientation |= SWT.DOWN;
 			cursorOrientation &= ~SWT.UP;
 			bounds.y += bounds.height;
@@ -1054,7 +1120,9 @@ void resizeRectangles (int xChange, int yChange) {
 		}
 	} else if ((cursorOrientation & SWT.DOWN) != 0) {
 		if (bounds.height < -yChange) {
-			if ((style & SWT.UP) == 0) return;
+            if ((style & SWT.UP) == 0) {
+                return;
+            }
 			cursorOrientation |= SWT.UP;
 			cursorOrientation &= ~SWT.DOWN;
 			yChange += bounds.height;
@@ -1126,12 +1194,16 @@ public void setCursor (Cursor newCursor) {
  */
 public void setRectangles (Rectangle [] rectangles) {
 	checkWidget();
-	if (rectangles == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rectangles == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int length = rectangles.length;
 	this.rectangles = new Rectangle [length];
 	for (int i = 0; i < length; i++) {
 		Rectangle current = rectangles [i];
-		if (current == null) error (SWT.ERROR_NULL_ARGUMENT);
+        if (current == null) {
+            error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		this.rectangles [i] = new Rectangle (current.x, current.y, current.width, current.height);
 	}
 	proportions = computeProportions (rectangles);
@@ -1153,12 +1225,16 @@ public void setStippled (boolean stippled) {
 }
 
 void ungrab () {
-	if (grabbed) gdk_pointer_ungrab (window, GDK.GDK_CURRENT_TIME);
+    if (grabbed) {
+        gdk_pointer_ungrab(window, GDK.GDK_CURRENT_TIME);
+    }
 }
 
 void update () {
 	if (parent != null) {
-		if (parent.isDisposed ()) return;
+        if (parent.isDisposed()) {
+            return;
+        }
 		parent.getShell ().update ();
 	} else {
 		display.update ();

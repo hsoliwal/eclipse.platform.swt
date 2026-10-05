@@ -122,8 +122,12 @@ public void addSelectionListener (SelectionListener listener) {
 @Override
 Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	checkWidget ();
-	if (wHint != SWT.DEFAULT && wHint < 0) wHint = 0;
-	if (hHint != SWT.DEFAULT && hHint < 0) hHint = 0;
+    if (wHint != SWT.DEFAULT && wHint < 0) {
+        wHint = 0;
+    }
+    if (hHint != SWT.DEFAULT && hHint < 0) {
+        hHint = 0;
+    }
 	int width, height;
 	int layoutWidth = layout.getWidth ();
 	//TEMPORARY CODE
@@ -139,8 +143,12 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 		height = rect.height;
 	}
 	layout.setWidth (layoutWidth);
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	int border = getBorderWidthInPixels ();
 	width += border * 2;
 	height += border * 2;
@@ -152,7 +160,9 @@ void createHandle(int index) {
 	state |= HANDLE | THEME_BACKGROUND;
 
 	handle = OS.g_object_new(display.gtk_fixed_get_type(), 0);
-	if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (GTK.GTK4) {
 		GTK4.gtk_widget_set_focusable(handle, true);
 	} else {
@@ -187,7 +197,9 @@ void drawWidget(GC gc) {
 	}
 	// temporary code to disable text selection
 	selStart = selEnd = -1;
-	if ((state & DISABLED) != 0) gc.setForeground (disabledColor);
+    if ((state & DISABLED) != 0) {
+        gc.setForeground(disabledColor);
+    }
 	layout.draw (gc, 0, 0, selStart, selEnd, null, null);
 	if (hasFocus () && focusIndex != -1) {
 		Rectangle [] rects = getRectanglesInPixels (focusIndex);
@@ -200,7 +212,9 @@ void drawWidget(GC gc) {
 @Override
 void enableWidget (boolean enabled) {
 	super.enableWidget (enabled);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	styleLinkParts();
 	redraw ();
 }
@@ -211,7 +225,9 @@ void fixStyle () {
 }
 
 void initAccessible () {
-	if (GTK.GTK4) return;
+    if (GTK.GTK4) {
+        return;
+    }
 
 	Accessible accessible = getAccessible ();
 	accessible.addAccessibleListener (new AccessibleAdapter () {
@@ -249,7 +265,9 @@ void initAccessible () {
 		@Override
 		public void getState (AccessibleControlEvent e) {
 			e.detail = ACC.STATE_FOCUSABLE;
-			if (hasFocus ()) e.detail |= ACC.STATE_FOCUSED;
+            if (hasFocus()) {
+                e.detail |= ACC.STATE_FOCUSED;
+            }
 		}
 
 		@Override
@@ -259,12 +277,16 @@ void initAccessible () {
 
 		@Override
 		public void getSelection (AccessibleControlEvent e) {
-			if (hasFocus ()) e.childID = ACC.CHILDID_SELF;
+            if (hasFocus()) {
+                e.childID = ACC.CHILDID_SELF;
+            }
 		}
 
 		@Override
 		public void getFocus (AccessibleControlEvent e) {
-			if (hasFocus ()) e.childID = ACC.CHILDID_SELF;
+            if (hasFocus()) {
+                e.childID = ACC.CHILDID_SELF;
+            }
 		}
 	});
 }
@@ -296,9 +318,13 @@ Rectangle [] getRectanglesInPixels (int linkIndex) {
 	int [] lineOffsets = layout.getLineOffsets ();
 	Point point = offsets [linkIndex];
 	int lineStart = 1;
-	while (point.x > lineOffsets [lineStart]) lineStart++;
+    while (point.x > lineOffsets [lineStart]) {
+        lineStart++;
+    }
 	int lineEnd = 1;
-	while (point.y > lineOffsets [lineEnd]) lineEnd++;
+    while (point.y > lineOffsets [lineEnd]) {
+        lineEnd++;
+    }
 	int index = 0;
 	if (lineStart == lineEnd) {
 		rects [index++] = layout.getBounds (point.x, point.y);
@@ -338,7 +364,9 @@ public String getText () {
 @Override
 long gtk3_button_press_event (long widget, long event) {
 	long result = super.gtk3_button_press_event (widget, event);
-	if (result != 0) return result;
+    if (result != 0) {
+        return result;
+    }
 
 	int eventType = GDK.gdk_event_get_event_type(event);
 
@@ -356,10 +384,12 @@ long gtk3_button_press_event (long widget, long event) {
 
 private void handlePress(int x, int y) {
 
-	if (focusIndex != -1)
-		setFocus();
-	if ((style & SWT.MIRRORED) != 0)
-		x = getClientWidth() - x;
+    if (focusIndex != -1) {
+        setFocus();
+    }
+    if ((style & SWT.MIRRORED) != 0) {
+        x = getClientWidth() - x;
+    }
 	int offset = layout.getOffset(x, y, null);
 	int oldSelectionX = selection.x;
 	int oldSelectionY = selection.y;
@@ -390,8 +420,12 @@ private void handlePress(int x, int y) {
 @Override
 long gtk3_button_release_event (long widget, long event) {
 	long result = super.gtk3_button_release_event (widget, event);
-	if (result != 0) return result;
-	if (focusIndex == -1) return result;
+    if (result != 0) {
+        return result;
+    }
+    if (focusIndex == -1) {
+        return result;
+    }
 
 	int [] eventButton = new int [1];
 	GDK.gdk_event_get_button(event, eventButton);
@@ -409,9 +443,13 @@ long gtk3_button_release_event (long widget, long event) {
 @Override
 int gtk_gesture_press_event(long gesture, int n_press, double x, double y, long event) {
 	int result = super.gtk_gesture_press_event(gesture, n_press, x, y, event);
-	if (result != GTK4.GTK_EVENT_SEQUENCE_NONE) return result;
+    if (result != GTK4.GTK_EVENT_SEQUENCE_NONE) {
+        return result;
+    }
 
-	if (GTK.gtk_gesture_single_get_current_button(gesture) != 1 || n_press != 1) return result;
+    if (GTK.gtk_gesture_single_get_current_button(gesture) != 1 || n_press != 1) {
+        return result;
+    }
 
 	handlePress((int) x, (int) y);
 	return result;
@@ -420,15 +458,21 @@ int gtk_gesture_press_event(long gesture, int n_press, double x, double y, long 
 @Override
 int gtk_gesture_release_event(long gesture, int n_press, double x, double y, long event) {
 	int result = super.gtk_gesture_release_event(gesture, n_press, x, y, event);
-	if (result != GTK4.GTK_EVENT_SEQUENCE_NONE) return result;
-	if (focusIndex == -1 || GTK.gtk_gesture_single_get_current_button(gesture) != 1) return result;
+    if (result != GTK4.GTK_EVENT_SEQUENCE_NONE) {
+        return result;
+    }
+    if (focusIndex == -1 || GTK.gtk_gesture_single_get_current_button(gesture) != 1) {
+        return result;
+    }
 
 	handleRelease((int) x, (int) y);
 	return result;
 }
 
 private void handleRelease(int hitX, int hitY) {
-	if ((style & SWT.MIRRORED) != 0) hitX = getClientWidth() - hitX;
+    if ((style & SWT.MIRRORED) != 0) {
+        hitX = getClientWidth() - hitX;
+    }
 	Rectangle [] rects = getRectanglesInPixels(focusIndex);
 	for (Rectangle rect : rects) {
 		if (rect.contains(hitX, hitY)) {
@@ -498,8 +542,12 @@ boolean gtk4_key_press_event(long controller, int keyval, int keycode, int state
 @Override
 long gtk3_key_press_event (long widget, long eventPtr) {
 	long result = super.gtk3_key_press_event (widget, eventPtr);
-	if (result != 0) return result;
-	if (focusIndex == -1) return result;
+    if (result != 0) {
+        return result;
+    }
+    if (focusIndex == -1) {
+        return result;
+    }
 
 	int [] key = new int [1];
 	GDK.gdk_event_get_keyval(eventPtr, key);
@@ -531,7 +579,9 @@ long gtk3_key_press_event (long widget, long eventPtr) {
 @Override
 long gtk3_motion_notify_event (long widget, long event) {
 	long result = super.gtk3_motion_notify_event (widget, event);
-	if (result != 0) return result;
+    if (result != 0) {
+        return result;
+    }
 
 	double [] eventX = new double [1];
 	double [] eventY = new double [1];
@@ -554,7 +604,9 @@ void gtk4_motion_event(long controller, double x, double y, long event) {
 }
 
 private void handleMotion(int mask, int x, int y) {
-	if ((style & SWT.MIRRORED) != 0) x = getClientWidth () - x;
+    if ((style & SWT.MIRRORED) != 0) {
+        x = getClientWidth() - x;
+    }
 	if ((mask & GDK.GDK_BUTTON1_MASK) != 0) {
 		int oldSelection = selection.y;
 		selection.y = layout.getOffset (x, y, null);
@@ -596,7 +648,9 @@ boolean mnemonicHit (char key) {
 		if (mnemonics[i] != -1) {
 			char mnemonic = parsedText.charAt(mnemonics[i]);
 			if (uckey == Character.toUpperCase (mnemonic)) {
-				if (!setFocus ()) return false;
+                if (!setFocus()) {
+                    return false;
+                }
 				focusIndex = i;
 				redraw ();
 				return  true;
@@ -625,7 +679,9 @@ boolean mnemonicMatch (char key) {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (layout != null)	layout.dispose ();
+    if (layout != null) {
+        layout.dispose();
+    }
 	layout = null;
 	linkColor = null;
 	disabledColor = null;
@@ -654,8 +710,12 @@ void releaseWidget () {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection, listener);
 }
@@ -689,7 +749,9 @@ String parse (String string) {
 				}
 				break;
 			case 1:
-				if (c == 'a') state++;
+                if (c == 'a') {
+                    state++;
+                }
 				break;
 			case 2:
 				switch (c) {
@@ -701,8 +763,11 @@ String parse (String string) {
 						state++;
 						break;
 					default:
-						if (Character.isWhitespace(c)) break;
-						else state = 13;
+                        if (Character.isWhitespace(c)) {
+                            break;
+                        } else {
+                            state = 13;
+                        }
 				}
 				break;
 			case 3:
@@ -770,7 +835,9 @@ String parse (String string) {
 				state = c == '"' ? state + 1 : 0;
 				break;
 			case 15:
-				if (c == '"') state = 2;
+                if (c == '"') {
+                    state = 2;
+                }
 				break;
 			default:
 				state = 0;
@@ -781,7 +848,9 @@ String parse (String string) {
 	if (start < length) {
 		int tmp = parseMnemonics (buffer.toString().toCharArray(), start, tagStart, result);
 		int mnemonic = parseMnemonics (buffer.toString().toCharArray(), Math.max (tagStart, linkStart), length, result);
-		if (mnemonic == -1) mnemonic = tmp;
+        if (mnemonic == -1) {
+            mnemonic = tmp;
+        }
 		mnemonics [linkIndex] = mnemonic;
 	} else {
 		mnemonics [linkIndex] = -1;
@@ -855,9 +924,15 @@ void setFontDescription (long font) {
 public void setLinkForeground (Color color) {
 	checkWidget();
 	if (color != null) {
-		if (color.isDisposed ()) error(SWT.ERROR_INVALID_ARGUMENT);
-		if (color.equals(linkColor)) return;
-	} else if (linkColor == null) return;
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (color.equals(linkColor)) {
+            return;
+        }
+	} else if (linkColor == null) {
+        return;
+    }
 	linkColor = color;
 	if (getEnabled()) {
 		styleLinkParts();
@@ -869,7 +944,9 @@ public void setLinkForeground (Color color) {
 void setOrientation (boolean create) {
 	super.setOrientation (create);
 	layout.setOrientation (style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT));
-	if (!create) redraw (true);
+    if (!create) {
+        redraw(true);
+    }
 }
 
 /**
@@ -912,8 +989,12 @@ void setOrientation (boolean create) {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (string.equals (text)) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (string.equals(text)) {
+        return;
+    }
 	text = string;
 	layout.setText (parse (string));
 	focusIndex = offsets.length > 0 ? 0 : -1;
@@ -955,7 +1036,9 @@ void styleLinkParts() {
 
 @Override
 int traversalCode(int key, long event) {
-	if (offsets.length == 0) return 0;
+    if (offsets.length == 0) {
+        return 0;
+    }
 	int bits = super.traversalCode (key, event);
 	if (key == GDK.GDK_Tab && focusIndex < offsets.length - 1) {
 		return bits & ~SWT.TRAVERSE_TAB_NEXT;

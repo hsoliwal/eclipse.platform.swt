@@ -57,7 +57,9 @@ public static void main (String [] args) {
 	button.setSize (60, 60);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	icon.dispose ();
 	image.dispose ();

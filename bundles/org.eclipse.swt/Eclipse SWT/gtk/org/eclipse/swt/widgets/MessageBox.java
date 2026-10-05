@@ -132,7 +132,9 @@ public String getMessage () {
  * </ul>
  */
 public void setMessage (String string) {
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	message = string;
 }
 
@@ -155,14 +157,22 @@ public int open() {
 		dialogFlags |= GTK.GTK_DIALOG_MODAL;
 	}
 	int messageType = GTK.GTK_MESSAGE_INFO;
-	if ((style & (SWT.ICON_WARNING)) != 0)  messageType = GTK.GTK_MESSAGE_WARNING;
-	if ((style & (SWT.ICON_QUESTION)) != 0) messageType = GTK.GTK_MESSAGE_QUESTION;
-	if ((style & (SWT.ICON_ERROR)) != 0)    messageType = GTK.GTK_MESSAGE_ERROR;
+    if ((style & (SWT.ICON_WARNING)) != 0) {
+        messageType = GTK.GTK_MESSAGE_WARNING;
+    }
+    if ((style & (SWT.ICON_QUESTION)) != 0) {
+        messageType = GTK.GTK_MESSAGE_QUESTION;
+    }
+    if ((style & (SWT.ICON_ERROR)) != 0) {
+        messageType = GTK.GTK_MESSAGE_ERROR;
+    }
 
 	byte[] format = Converter.wcsToMbcs("%s", true);
 	byte[] buffer = Converter.wcsToMbcs(title, true);
 	handle = GTK.gtk_message_dialog_new(parentHandle, dialogFlags, messageType, 0, format, buffer);
-	if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	// Copy parent's icon
 	if (parentHandle != 0) {
@@ -239,21 +249,49 @@ public int open() {
 
 private void createButtons (int alignment) {
 	if (alignment == SWT.LEFT) {
-		if ((style & SWT.OK) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.OK, "SWT_OK"), SWT.OK);
-		if ((style & SWT.ABORT) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.ABORT, "SWT_Abort"), SWT.ABORT);
-		if ((style & SWT.RETRY) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.RETRY, "SWT_Retry"), SWT.RETRY);
-		if ((style & SWT.YES) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.YES, "SWT_Yes"), SWT.YES);
-		if ((style & SWT.NO) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.NO, "SWT_No"), SWT.NO);
-		if ((style & SWT.IGNORE) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.IGNORE, "SWT_Ignore"), SWT.IGNORE);
-		if ((style & SWT.CANCEL) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.CANCEL, "SWT_Cancel"), SWT.CANCEL);
+        if ((style & SWT.OK) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.OK, "SWT_OK"), SWT.OK);
+        }
+        if ((style & SWT.ABORT) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.ABORT, "SWT_Abort"), SWT.ABORT);
+        }
+        if ((style & SWT.RETRY) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.RETRY, "SWT_Retry"), SWT.RETRY);
+        }
+        if ((style & SWT.YES) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.YES, "SWT_Yes"), SWT.YES);
+        }
+        if ((style & SWT.NO) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.NO, "SWT_No"), SWT.NO);
+        }
+        if ((style & SWT.IGNORE) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.IGNORE, "SWT_Ignore"), SWT.IGNORE);
+        }
+        if ((style & SWT.CANCEL) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.CANCEL, "SWT_Cancel"), SWT.CANCEL);
+        }
 	} else {
-		if ((style & SWT.CANCEL) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.CANCEL, "SWT_Cancel"), SWT.CANCEL);
-		if ((style & SWT.OK) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.OK, "SWT_OK"), SWT.OK);
-		if ((style & SWT.NO) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.NO, "SWT_No"), SWT.NO);
-		if ((style & SWT.YES) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.YES, "SWT_Yes"), SWT.YES);
-		if ((style & SWT.IGNORE) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.IGNORE, "SWT_Ignore"), SWT.IGNORE);
-		if ((style & SWT.RETRY) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.RETRY, "SWT_Retry"), SWT.RETRY);
-		if ((style & SWT.ABORT) != 0) GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.ABORT, "SWT_Abort"), SWT.ABORT);
+        if ((style & SWT.CANCEL) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.CANCEL, "SWT_Cancel"), SWT.CANCEL);
+        }
+        if ((style & SWT.OK) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.OK, "SWT_OK"), SWT.OK);
+        }
+        if ((style & SWT.NO) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.NO, "SWT_No"), SWT.NO);
+        }
+        if ((style & SWT.YES) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.YES, "SWT_Yes"), SWT.YES);
+        }
+        if ((style & SWT.IGNORE) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.IGNORE, "SWT_Ignore"), SWT.IGNORE);
+        }
+        if ((style & SWT.RETRY) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.RETRY, "SWT_Retry"), SWT.RETRY);
+        }
+        if ((style & SWT.ABORT) != 0) {
+            GTK.gtk_dialog_add_button(handle, getLabelForButton(SWT.ABORT, "SWT_Abort"), SWT.ABORT);
+        }
 	}
 }
 
@@ -287,7 +325,9 @@ private static int checkStyle (int style) {
  * @since 3.121
  */
 public void setButtonLabels(Map<Integer, String> labels) {
-	if (labels == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (labels == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.labels = labels;
 }
 }

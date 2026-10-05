@@ -117,14 +117,18 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
 void createHandle (int index) {
 	state |= HANDLE | THEME_BACKGROUND;
 	fixedHandle = OS.g_object_new (display.gtk_fixed_get_type (), 0);
-	if (fixedHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (fixedHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK4) {
 		handle = GTK.gtk_box_new(GTK.GTK_ORIENTATION_HORIZONTAL, 0);
@@ -134,7 +138,9 @@ void createHandle (int index) {
 		handle = GTK3.gtk_toolbar_new ();
 	}
 
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK4) {
 		OS.swt_fixed_add(fixedHandle, handle);
@@ -142,23 +148,27 @@ void createHandle (int index) {
 		GTK3.gtk_container_add (fixedHandle, handle);
 	}
 
-	/*
-	* Bug in GTK.  GTK will segment fault if gtk_widget_reparent() is called
-	* on a tool bar or on a widget hierarchy containing a tool bar when the icon
-	* size is not GTK_ICON_SIZE_LARGE_TOOLBAR.  The fix is to set the icon
-	* size to GTK_ICON_SIZE_LARGE_TOOLBAR.
-	*
-	* Note that the segmentation fault does not happen on GTK 3, but the
-	* tool bar preferred size is too big with GTK_ICON_SIZE_LARGE_TOOLBAR
-	* when the tool bar item has no image or text.
-	*/
-	if (!GTK.GTK4) GTK3.gtk_toolbar_set_icon_size (handle, GTK.GTK_ICON_SIZE_SMALL_TOOLBAR);
+    /*
+    * Bug in GTK.  GTK will segment fault if gtk_widget_reparent() is called
+    * on a tool bar or on a widget hierarchy containing a tool bar when the icon
+    * size is not GTK_ICON_SIZE_LARGE_TOOLBAR.  The fix is to set the icon
+    * size to GTK_ICON_SIZE_LARGE_TOOLBAR.
+    *
+    * Note that the segmentation fault does not happen on GTK 3, but the
+    * tool bar preferred size is too big with GTK_ICON_SIZE_LARGE_TOOLBAR
+    * when the tool bar item has no image or text.
+    */
+    if (!GTK.GTK4) {
+        GTK3.gtk_toolbar_set_icon_size(handle, GTK.GTK_ICON_SIZE_SMALL_TOOLBAR);
+    }
 
-	/*
-	* The GTK 3 overflow arrow enlarges the preferred size while the tool bar
-	* is allocated less than it needs, so a transient narrow layout sticks.
-	*/
-	if (!GTK.GTK4) OS.g_object_set (handle, Converter.javaStringToCString ("show-arrow"), false, 0);
+    /*
+    * The GTK 3 overflow arrow enlarges the preferred size while the tool bar
+    * is allocated less than it needs, so a transient narrow layout sticks.
+    */
+    if (!GTK.GTK4) {
+        OS.g_object_set(handle, Converter.javaStringToCString("show-arrow"), false, 0);
+    }
 
 	// In GTK 3 font description is inherited from parent widget which is not how SWT has always worked,
 	// reset to default font to get the usual behavior
@@ -173,8 +183,12 @@ int applyThemeBackground () {
 @Override
 Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	checkWidget ();
-	if (wHint != SWT.DEFAULT && wHint < 0) wHint = 0;
-	if (hHint != SWT.DEFAULT && hHint < 0) hHint = 0;
+    if (wHint != SWT.DEFAULT && wHint < 0) {
+        wHint = 0;
+    }
+    if (hHint != SWT.DEFAULT && hHint < 0) {
+        hHint = 0;
+    }
 
 	return computeNativeSize (handle, wHint, hHint, changed);
 }
@@ -184,14 +198,22 @@ Widget computeTabGroup () {
 	ToolItem [] items = _getItems ();
 	if (tabItemList == null) {
 		int i = 0;
-		while (i < items.length && items [i].control == null) i++;
-		if (i == items.length) return super.computeTabGroup ();
+        while (i < items.length && items [i].control == null) {
+            i++;
+        }
+        if (i == items.length) {
+            return super.computeTabGroup();
+        }
 	}
 	int index = indexOf(currentFocusItem);
-	if (index == -1) index = items.length - 1;
+    if (index == -1) {
+        index = items.length - 1;
+    }
 	while (index >= 0) {
 		ToolItem item = items [index];
-		if (item.isTabGroup ()) return item;
+        if (item.isTabGroup()) {
+            return item;
+        }
 		index--;
 	}
 	return super.computeTabGroup ();
@@ -202,11 +224,17 @@ Widget [] computeTabList () {
 	ToolItem [] items = _getItems ();
 	if (tabItemList == null) {
 		int i = 0;
-		while (i < items.length && items [i].control == null) i++;
-		if (i == items.length) return super.computeTabList ();
+        while (i < items.length && items [i].control == null) {
+            i++;
+        }
+        if (i == items.length) {
+            return super.computeTabList();
+        }
 	}
 	Widget result [] = {};
-	if (!isTabGroup () || !isEnabled () || !isVisible ()) return result;
+    if (!isTabGroup() || !isEnabled() || !isVisible()) {
+        return result;
+    }
 	ToolItem [] list = tabList != null ? _getTabItemList () : items;
 	for (int i=0; i<list.length; i++) {
 		ToolItem child = list [i];
@@ -218,7 +246,9 @@ Widget [] computeTabList () {
 			result = newResult;
 		}
 	}
-	if (result.length == 0) result = new Widget [] {this};
+    if (result.length == 0) {
+        result = new Widget []{this};
+    }
 	return result;
 }
 
@@ -235,14 +265,20 @@ long enterExitHandle() {
 @Override
 boolean forceFocus (long focusHandle) {
 	int dir = GTK.GTK_DIR_TAB_FORWARD;
-	if ((style & SWT.MIRRORED) != 0) dir = GTK.GTK_DIR_TAB_BACKWARD;
+    if ((style & SWT.MIRRORED) != 0) {
+        dir = GTK.GTK_DIR_TAB_BACKWARD;
+    }
 	long childHandle = handle;
-	if (currentFocusItem != null)  childHandle = currentFocusItem.handle;
-	/*
-	 * Feature in GTK. GtkToolBar takes care of navigating through
-	 * items by Up/Down arrow keys.
-	 */
-	if (GTK.gtk_widget_child_focus (childHandle, dir)) return true;
+    if (currentFocusItem != null) {
+        childHandle = currentFocusItem.handle;
+    }
+    /*
+     * Feature in GTK. GtkToolBar takes care of navigating through
+     * items by Up/Down arrow keys.
+     */
+    if (GTK.gtk_widget_child_focus(childHandle, dir)) {
+        return true;
+    }
 	return super.forceFocus (focusHandle);
 }
 
@@ -263,7 +299,9 @@ boolean forceFocus (long focusHandle) {
  */
 public ToolItem getItem (int index) {
 	checkWidget();
-	if (!(0 <= index && index < getItemCount())) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < getItemCount())) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return getItems()[index];
 }
 
@@ -285,10 +323,14 @@ public ToolItem getItem (int index) {
  */
 public ToolItem getItem (Point point) {
 	checkWidget();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	ToolItem[] items = getItems();
 	for (int i=0; i<items.length; i++) {
-		if (items[i].getBounds().contains(point)) return items[i];
+        if (items[i].getBounds().contains(point)) {
+            return items[i];
+        }
 	}
 	return null;
 }
@@ -311,11 +353,15 @@ public int getItemCount () {
 		/* Must match _getItems(): a Menu's GtkPopover is also parented here
 		 * as a native child and would otherwise count as a phantom item. */
 		for (long child = GTK4.gtk_widget_get_first_child(handle); child != 0; child = GTK4.gtk_widget_get_next_sibling(child)) {
-			if (display.getWidget(child) instanceof ToolItem) itemCount++;
+            if (display.getWidget(child) instanceof ToolItem) {
+                itemCount++;
+            }
 		}
 	} else {
 		long list = GTK3.gtk_container_get_children (handle);
-		if (list == 0) return 0;
+        if (list == 0) {
+            return 0;
+        }
 		itemCount = OS.g_list_length (list);
 		OS.g_list_free (list);
 	}
@@ -358,7 +404,9 @@ ToolItem[] _getItems () {
 		return childrenList.toArray(new ToolItem[childrenList.size()]);
 	} else {
 		long list = GTK3.gtk_container_get_children (handle);
-		if (list == 0) return new ToolItem [0];
+        if (list == 0) {
+            return new ToolItem [0];
+        }
 		int count = OS.g_list_length (list);
 		ToolItem [] items = new ToolItem [count];
 		long originalList = list;
@@ -366,7 +414,9 @@ ToolItem[] _getItems () {
 		for (int i=0; i<count; i++) {
 			long data = OS.g_list_data (list);
 			Widget widget = display.getWidget (data);
-			if (widget != null) items [index++] = (ToolItem) widget;
+            if (widget != null) {
+                items [index++] = (ToolItem) widget;
+            }
 			list = OS.g_list_next (list);
 		}
 		OS.g_list_free (originalList);
@@ -399,12 +449,18 @@ public int getRowCount () {
 }
 
 ToolItem [] _getTabItemList () {
-	if (tabItemList == null) return tabItemList;
+    if (tabItemList == null) {
+        return tabItemList;
+    }
 	int count = 0;
 	for (int i=0; i<tabItemList.length; i++) {
-		if (!tabItemList [i].isDisposed ()) count++;
+        if (!tabItemList [i].isDisposed()) {
+            count++;
+        }
 	}
-	if (count == tabItemList.length) return tabItemList;
+    if (count == tabItemList.length) {
+        return tabItemList;
+    }
 	ToolItem [] newList = new ToolItem [count];
 	int index = 0;
 	for (int i=0; i<tabItemList.length; i++) {
@@ -418,7 +474,9 @@ ToolItem [] _getTabItemList () {
 
 @Override
 long gtk3_key_press_event (long widget, long eventPtr) {
-	if (!hasFocus ()) return 0;
+    if (!hasFocus()) {
+        return 0;
+    }
 	long result = super.gtk3_key_press_event (widget, eventPtr);
 	return result;
 }
@@ -430,7 +488,9 @@ long gtk_focus (long widget, long directionType) {
 
 @Override
 boolean hasFocus () {
-	if (hasChildFocus) return true;
+    if (hasChildFocus) {
+        return true;
+    }
 	return super.hasFocus();
 }
 
@@ -454,10 +514,14 @@ boolean hasFocus () {
  */
 public int indexOf (ToolItem item) {
 	checkWidget();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	ToolItem [] items = getItems ();
 	for (int i=0; i<items.length; i++) {
-		if (item == items[i]) return i;
+        if (item == items[i]) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -486,11 +550,15 @@ long menuItemSelected (long widget, ToolItem item) {
 			GtkAllocation allocation = new GtkAllocation ();
 			GTK.gtk_widget_get_allocation (widget, allocation);
 			event.x = allocation.x;
-			if ((style & SWT.MIRRORED) != 0) event.x = getClientWidth () - allocation.width - event.x;
+            if ((style & SWT.MIRRORED) != 0) {
+                event.x = getClientWidth() - allocation.width - event.x;
+            }
 			event.y = allocation.y + allocation.height;
 			break;
 		case SWT.RADIO :
-			if ((style & SWT.NO_RADIO_GROUP) == 0)	item.selectRadio ();
+            if ((style & SWT.NO_RADIO_GROUP) == 0) {
+                item.selectRadio();
+            }
 			break;
 		case SWT.CHECK :
 			boolean currentSelection = item.getSelection();
@@ -505,7 +573,9 @@ boolean mnemonicHit (char key) {
 	ToolItem [] items = getItems ();
 	for (int i=0; i<items.length; i++) {
 		long labelHandle = items [i].labelHandle;
-		if (labelHandle != 0 && mnemonicHit (labelHandle, key)) return true;
+        if (labelHandle != 0 && mnemonicHit(labelHandle, key)) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -515,7 +585,9 @@ boolean mnemonicMatch (char key) {
 	ToolItem [] items = getItems ();
 	for (int i=0; i<items.length; i++) {
 		long labelHandle = items [i].labelHandle;
-		if (labelHandle != 0 && mnemonicMatch (labelHandle, key)) return true;
+        if (labelHandle != 0 && mnemonicMatch(labelHandle, key)) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -569,7 +641,9 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (imageList != null) imageList.dispose ();
+    if (imageList != null) {
+        imageList.dispose();
+    }
 	imageList = null;
 }
 
@@ -579,7 +653,9 @@ void removeControl (Control control) {
 	ToolItem [] items = getItems ();
 	for (int i=0; i<items.length; i++) {
 		ToolItem item = items [i];
-		if (item.control == control) item.setControl (null);
+        if (item.control == control) {
+            item.setControl(null);
+        }
 	}
 }
 
@@ -589,7 +665,9 @@ void reskinChildren (int flags) {
 	if (items != null) {
 		for (int i=0; i<items.length; i++) {
 			ToolItem item = items [i];
-			if (item != null) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -598,7 +676,9 @@ void reskinChildren (int flags) {
 @Override
 int setBounds (int x, int y, int width, int height, boolean move, boolean resize) {
 	int result = super.setBounds (x, y, width, height, move, resize);
-	if ((result & RESIZED) != 0) relayout ();
+    if ((result & RESIZED) != 0) {
+        relayout();
+    }
 
 	return result;
 }
@@ -685,9 +765,15 @@ void setOrientation (boolean create) {
 	if (tabList != null) {
 		for (int i=0; i<tabList.length; i++) {
 			ToolItem item = tabList [i];
-			if (item == null) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (item.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (item.parent != this) error (SWT.ERROR_INVALID_PARENT);
+            if (item == null) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (item.isDisposed()) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (item.parent != this) {
+                error(SWT.ERROR_INVALID_PARENT);
+            }
 		}
 		ToolItem [] newList = new ToolItem [tabList.length];
 		System.arraycopy (tabList, 0, newList, 0, tabList.length);

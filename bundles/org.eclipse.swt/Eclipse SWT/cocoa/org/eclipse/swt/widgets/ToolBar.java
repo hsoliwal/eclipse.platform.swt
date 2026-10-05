@@ -116,18 +116,20 @@ long accessibilityAttributeValue (long id, long sel, long arg0) {
 
 	if (id == accessibleHandle() && accessible != null) {
 		id returnObject = accessible.internal_accessibilityAttributeValue(nsAttributeName, ACC.CHILDID_SELF);
-		if (returnObject != null) return returnObject.id;
+        if (returnObject != null) {
+            return returnObject.id;
+        }
 	}
 
 	if (nsAttributeName.isEqualToString (OS.NSAccessibilityRoleAttribute) || nsAttributeName.isEqualToString (OS.NSAccessibilityRoleDescriptionAttribute)) {
 		NSString role = OS.NSAccessibilityToolbarRole;
 
-		if (nsAttributeName.isEqualToString (OS.NSAccessibilityRoleAttribute))
-			return role.id;
-		else {
-			long roleDescription = OS.NSAccessibilityRoleDescription(role.id, 0);
-			return roleDescription;
-		}
+        if (nsAttributeName.isEqualToString(OS.NSAccessibilityRoleAttribute)) {
+            return role.id;
+        } else {
+            long roleDescription = OS.NSAccessibilityRoleDescription(role.id, 0);
+            return roleDescription;
+        }
 	} else if (nsAttributeName.isEqualToString(OS.NSAccessibilityChildrenAttribute)) {
 		NSMutableArray returnValue = NSMutableArray.arrayWithCapacity(itemCount);
 
@@ -147,8 +149,10 @@ long accessibilityAttributeValue (long id, long sel, long arg0) {
 
 @Override
 boolean accessibilityIsIgnored(long id, long sel) {
-	// Toolbars aren't ignored.
-	if (id == view.id) return false;
+    // Toolbars aren't ignored.
+    if (id == view.id) {
+        return false;
+    }
 	return super.accessibilityIsIgnored(id, sel);
 }
 
@@ -180,7 +184,9 @@ private static int normalizeStyle(Composite parent, int style, boolean internal)
 	 */
 	if ((style & SWT.SMOOTH) != 0) {
 		if (parent instanceof Shell s) {
-			if (s.window.toolbar() != null) newStyle &= ~SWT.SMOOTH;
+            if (s.window.toolbar() != null) {
+                newStyle &= ~SWT.SMOOTH;
+            }
 		} else {
 			newStyle &= ~SWT.SMOOTH;
 		}
@@ -199,19 +205,29 @@ private static int normalizeStyle(Composite parent, int style, boolean internal)
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
 public Point computeSize (int wHint, int hHint, boolean changed) {
 	checkWidget();
 	int width = wHint, height = hHint;
-	if (wHint == SWT.DEFAULT) width = 0x7FFFFFFF;
-	if (hHint == SWT.DEFAULT) height = 0x7FFFFFFF;
+    if (wHint == SWT.DEFAULT) {
+        width = 0x7FFFFFFF;
+    }
+    if (hHint == SWT.DEFAULT) {
+        height = 0x7FFFFFFF;
+    }
 	int [] result = layout (width, height, false);
 	Point extent = new Point (result [1], result [2]);
-	if (wHint != SWT.DEFAULT) extent.x = wHint;
-	if (hHint != SWT.DEFAULT) extent.y = hHint;
+    if (wHint != SWT.DEFAULT) {
+        extent.x = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        extent.y = hHint;
+    }
 	Rectangle trim = computeTrim (0, 0, extent.x, extent.y);
 	return new Point (trim.width, trim.height);
 }
@@ -282,12 +298,16 @@ void createHandle () {
 		NSView widget = (NSView)new SWTView().alloc();
 		widget.init();
 		view = widget;
-		if (scrollView != null) view.setAutoresizingMask(OS.NSViewHeightSizable | OS.NSViewWidthSizable);
+        if (scrollView != null) {
+            view.setAutoresizingMask(OS.NSViewHeightSizable | OS.NSViewWidthSizable);
+        }
 	}
 }
 
 void createItem (ToolItem item, int index) {
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (itemCount == items.length) {
 		ToolItem [] newItems = new ToolItem [itemCount + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -319,17 +339,25 @@ NSFont defaultNSFont() {
 @Override
 void deregister () {
 	super.deregister ();
-	if (nsToolbar != null) display.removeWidget (nsToolbar);
+    if (nsToolbar != null) {
+        display.removeWidget(nsToolbar);
+    }
 }
 
 void destroyItem (ToolItem item) {
 	int index = 0;
 	while (index < itemCount) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	if (index == itemCount) return;
-	if (item == lastFocus) lastFocus = null;
+    if (index == itemCount) {
+        return;
+    }
+    if (item == lastFocus) {
+        lastFocus = null;
+    }
 	System.arraycopy (items, index + 1, items, index, --itemCount - index);
 	items [itemCount] = null;
 	if (nsToolbar != null) {
@@ -342,7 +370,9 @@ void destroyItem (ToolItem item) {
 
 @Override
 void drawBackground (long id, NSGraphicsContext context, NSRect rect) {
-	if (id != view.id) return;
+    if (id != view.id) {
+        return;
+    }
 	if (background != null) {
 		fillBackground (view, context, rect, -1);
 	}
@@ -364,14 +394,18 @@ Widget findTooltip (NSPoint pt) {
 	pt = view.convertPoint_fromView_ (pt, null);
 	for (int i = 0; i < itemCount; i++) {
 		ToolItem item = items [i];
-		if (OS.NSPointInRect(pt, item.view.frame())) return item;
+        if (OS.NSPointInRect(pt, item.view.frame())) {
+            return item;
+        }
 	}
 	return super.findTooltip (pt);
 }
 
 @Override
 void setZOrder() {
-	if (nsToolbar != null) return;
+    if (nsToolbar != null) {
+        return;
+    }
 	super.setZOrder();
 }
 
@@ -392,7 +426,9 @@ public Rectangle getBounds () {
 
 @Override
 boolean forceFocus (NSView focusView) {
-	if (lastFocus != null && lastFocus.setFocus ()) return true;
+    if (lastFocus != null && lastFocus.setFocus()) {
+        return true;
+    }
 	ToolItem [] items = getItems ();
 	for (int i = 0; i < items.length; i++) {
 		ToolItem item = items [i];
@@ -421,7 +457,9 @@ boolean forceFocus (NSView focusView) {
  */
 public ToolItem getItem (int index) {
 	checkWidget();
-	if (0 <= index && index < itemCount) return items [index];
+    if (0 <= index && index < itemCount) {
+        return items [index];
+    }
 	error (SWT.ERROR_INVALID_RANGE);
 	return null;
 }
@@ -444,10 +482,14 @@ public ToolItem getItem (int index) {
  */
 public ToolItem getItem (Point point) {
 	checkWidget();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<itemCount; i++) {
 		Rectangle rect = items [i].getBounds ();
-		if (rect.contains (point)) return items [i];
+        if (rect.contains(point)) {
+            return items [i];
+        }
 	}
 	return null;
 }
@@ -534,10 +576,16 @@ boolean hasKeyboardFocus(long inId) {
  */
 public int indexOf (ToolItem item) {
 	checkWidget();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (item.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (item.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	for (int i=0; i<itemCount; i++) {
-		if (items [i] == item) return i;
+        if (items [i] == item) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -597,7 +645,9 @@ int [] layoutUnified (int width, int height, boolean resize) {
 			containerRects [i].height = 0;
 		}
 
-		if (i == 0) x = (int) containerRects[0].x;
+        if (i == 0) {
+            x = (int) containerRects[0].x;
+        }
 		itemHeight = Math.max (itemHeight, size.y);
 	}
 	for (int i=0; i<itemCount; i++) {
@@ -668,11 +718,15 @@ int [] layout (int nWidth, int nHeight, boolean resize) {
 @Override
 void register() {
 	super.register();
-	if (nsToolbar != null) display.addWidget (nsToolbar, this);
+    if (nsToolbar != null) {
+        display.addWidget(nsToolbar, this);
+    }
 }
 
 void relayout () {
-	if (!getDrawing()) return;
+    if (!getDrawing()) {
+        return;
+    }
 	Rectangle rect = getClientArea ();
 	layout (rect.width, rect.height, true);
 }
@@ -701,7 +755,9 @@ void releaseHandle () {
 		nsToolbar = null;
 	}
 
-	if (accessibilityAttributes != null) accessibilityAttributes.release();
+    if (accessibilityAttributes != null) {
+        accessibilityAttributes.release();
+    }
 	accessibilityAttributes = null;
 }
 
@@ -710,7 +766,9 @@ void removeControl (Control control) {
 	super.removeControl (control);
 	for (int i=0; i<itemCount; i++) {
 		ToolItem item = items [i];
-		if (item.control == control) item.setControl (null);
+        if (item.control == control) {
+            item.setControl(null);
+        }
 	}
 }
 
@@ -725,7 +783,9 @@ void reskinChildren (int flags) {
 	if (items != null) {
 		for (int i=0; i<items.length; i++) {
 			ToolItem item = items [i];
-			if (item != null) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -750,7 +810,9 @@ boolean sendMouseEvent (NSEvent nsEvent, int type, boolean send) {
 				item.state &= ~Widget.HOT;
 			}
 
-			if (currState != item.state) item.updateImage(true);
+            if (currState != item.state) {
+                item.updateImage(true);
+            }
 		}
 		break;
 	case SWT.MouseExit:
@@ -758,7 +820,9 @@ boolean sendMouseEvent (NSEvent nsEvent, int type, boolean send) {
 			ToolItem item = items [i];
 			int currState = item.state;
 			item.state &= ~Widget.HOT;
-			if (currState != item.state) item.updateImage(true);
+            if (currState != item.state) {
+                item.updateImage(true);
+            }
 		}
 		break;
 	}
@@ -768,9 +832,11 @@ boolean sendMouseEvent (NSEvent nsEvent, int type, boolean send) {
 
 @Override
 void setBounds (int x, int y, int width, int height, boolean move, boolean resize) {
-	// In the unified toolbar case, the toolbar view size and position is completely controlled
-	// by the window, so don't change its bounds or location.
-	if (nsToolbar != null) return;
+    // In the unified toolbar case, the toolbar view size and position is completely controlled
+    // by the window, so don't change its bounds or location.
+    if (nsToolbar != null) {
+        return;
+    }
 	super.setBounds(x, y, width, height, move, resize);
 }
 
@@ -793,12 +859,16 @@ void setForeground (double [] color) {
 public void setRedraw (boolean redraw) {
 	checkWidget();
 	super.setRedraw (redraw);
-	if (redraw && drawCount == 0) relayout();
+    if (redraw && drawCount == 0) {
+        relayout();
+    }
 }
 
 @Override
 public void setVisible(boolean visible) {
-	if (nsToolbar != null) nsToolbar.setVisible(visible);
+    if (nsToolbar != null) {
+        nsToolbar.setVisible(visible);
+    }
 	super.setVisible(visible);
 }
 
@@ -843,7 +913,9 @@ long toolbarDefaultItemIdentifiers(long id, long sel, long toolbar) {
 long toolbarSelectableItemIdentifiers(long id, long sel, long toolbar) {
 	NSMutableArray array = NSMutableArray.arrayWithCapacity(itemCount);
 	for (int i = 0; i < itemCount; i++) {
-		if ((items[i].style & SWT.RADIO) != 0) array.addObject(items[i].nsItem.itemIdentifier());
+        if ((items[i].style & SWT.RADIO) != 0) {
+            array.addObject(items[i].nsItem.itemIdentifier());
+        }
 	}
 	return array.id;
 }
@@ -851,7 +923,9 @@ long toolbarSelectableItemIdentifiers(long id, long sel, long toolbar) {
 @Override
 boolean translateTraversal (int key, NSEvent theEvent, boolean[] consume) {
 	boolean result = super.translateTraversal (key, theEvent, consume);
-	if (result) return result;
+    if (result) {
+        return result;
+    }
 	boolean next = false;
 	boolean checkPopup = false;
 	switch (key) {
@@ -873,7 +947,9 @@ boolean translateTraversal (int key, NSEvent theEvent, boolean[] consume) {
 	consume [0] = true;
 
 	if (checkPopup && lastFocus != null) {
-		if (lastFocus.handleKeyDown()) return false;
+        if (lastFocus.handleKeyDown()) {
+            return false;
+        }
 	}
 
 	ToolItem[] items = getItems();
@@ -881,16 +957,20 @@ boolean translateTraversal (int key, NSEvent theEvent, boolean[] consume) {
 	int length = items.length;
 	int index = 0;
 	while (index < length) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	/*
-	 * It is possible (but unlikely), that application
-	 * code could have disposed the widget in focus in
-	 * or out events.  Ensure that a disposed widget is
-	 * not accessed.
-	 */
-	if (index == length) return false;
+    /*
+     * It is possible (but unlikely), that application
+     * code could have disposed the widget in focus in
+     * or out events.  Ensure that a disposed widget is
+     * not accessed.
+     */
+    if (index == length) {
+        return false;
+    }
 	int start = index, offset = (next) ? 1 : -1;
 	while ((index = (index + offset + length) % length) != start) {
 		ToolItem child = items [index];

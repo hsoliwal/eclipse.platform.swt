@@ -27,7 +27,9 @@ public class Test_org_eclipse_swt_widgets_ViewportPaintGraph {
 		Method inverse = type.getDeclaredMethod ("inverse");
 		Method mapBounds = type.getDeclaredMethod (
 				"mapBounds", long.class, long.class, long.class, long.class);
-		for (Method method : new Method[] {translation, map, inverse, mapBounds}) method.setAccessible (true);
+        for (Method method : new Method[]{translation, map, inverse, mapBounds}) {
+            method.setAccessible(true);
+        }
 
 		Object transform = translation.invoke (null, -5_000_000d, -8_000_000d);
 		Object point = map.invoke (transform, 5_000_010d, 8_000_020d);
@@ -176,17 +178,23 @@ public class Test_org_eclipse_swt_widgets_ViewportPaintGraph {
 			queue.add (seed);
 			while (!queue.isEmpty ()) {
 				int node = queue.remove ();
-				if (visited [node]) continue;
+                if (visited [node]) {
+                    continue;
+                }
 				visited [node] = true;
 				expected [node] = true;
 				for (int target = 0; target < count; target++) {
-					if (edges [node][target]) queue.add (target);
+                    if (edges [node][target]) {
+                        queue.add(target);
+                    }
 				}
 			}
 			int dirtyCount = 0;
 			for (int node = 0; node < count; node++) {
 				assertEquals (expected [node], fixture.dirty (node), "pass=" + pass + " node=" + node);
-				if (expected [node]) dirtyCount++;
+                if (expected [node]) {
+                    dirtyCount++;
+                }
 			}
 			assertEquals (dirtyCount, fixture.call ("dirtyCount", new Class<?>[0]));
 		}

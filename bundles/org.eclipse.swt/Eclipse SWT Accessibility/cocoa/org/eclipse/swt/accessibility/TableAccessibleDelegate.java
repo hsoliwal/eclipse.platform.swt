@@ -49,12 +49,16 @@ class TableAccessibleDelegate {
 				 * If there is a column header (i.e. if columns.length > 0) then add 1 "column header" child.
 				 */
 				e.detail = childColumnToIdMap.size() + childRowToIdMap.size();
-				if (childColumnToIdMap.size() > 1) e.detail++;
+                if (childColumnToIdMap.size() > 1) {
+                    e.detail++;
+                }
 			}
 			@Override
 			public void getChildren(AccessibleControlEvent e) {
 				int childCount = childColumnToIdMap.size() + childRowToIdMap.size();
-				if (childColumnToIdMap.size() > 1) childCount++;
+                if (childColumnToIdMap.size() > 1) {
+                    childCount++;
+                }
 				Accessible[] children = new Accessible[childCount];
 				int childIndex = 0;
 
@@ -65,7 +69,9 @@ class TableAccessibleDelegate {
 					children[childIndex++] = col;
 				}
 
-				if (childColumnToIdMap.size() > 1) children[childIndex] = headerAccessible();
+                if (childColumnToIdMap.size() > 1) {
+                    children[childIndex] = headerAccessible();
+                }
 
 				e.children = children;
 			}
@@ -131,7 +137,9 @@ class TableAccessibleDelegate {
 
 				for (int i = 0; i < tableAccessible.accessibleTableListeners.size(); i++) {
 					AccessibleTableListener listener = tableAccessible.accessibleTableListeners.get(i);
-					if (listener != this) listener.getColumnCount(event);
+                    if (listener != this) {
+                        listener.getColumnCount(event);
+                    }
 				}
 
 				e.count = event.count;
@@ -177,7 +185,9 @@ class TableAccessibleDelegate {
 
 				for (int i = 0; i < tableAccessible.accessibleTableListeners.size(); i++) {
 					AccessibleTableListener listener = tableAccessible.accessibleTableListeners.get(i);
-					if (listener != this) listener.getRowCount(event);
+                    if (listener != this) {
+                        listener.getRowCount(event);
+                    }
 				}
 
 				e.count = event.count;
@@ -250,7 +260,9 @@ class TableAccessibleDelegate {
 	}
 
 	AccessibleTableHeader headerAccessible() {
-		if (headerAccessible == null) headerAccessible = new AccessibleTableHeader(tableAccessible, ACC.CHILDID_SELF);
+        if (headerAccessible == null) {
+            headerAccessible = new AccessibleTableHeader(tableAccessible, ACC.CHILDID_SELF);
+        }
 		return headerAccessible;
 	}
 

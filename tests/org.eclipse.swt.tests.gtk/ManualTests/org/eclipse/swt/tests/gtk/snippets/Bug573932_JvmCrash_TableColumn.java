@@ -184,17 +184,21 @@ public class Bug573932_JvmCrash_TableColumn {
 			btnDelColumn.setLayoutData (gridData);
 			btnDelColumn.setText ("Del left column");
 			btnDelColumn.addListener (SWT.Selection, e2 -> {
-				if (0 != tableN.getColumnCount ())
-					tableN.getColumn (0).dispose ();
+                if (0 != tableN.getColumnCount()) {
+                    tableN.getColumn(0).dispose();
+                }
 
-				if (0 != tableV.getColumnCount ())
-					tableV.getColumn (0).dispose ();
+                if (0 != tableV.getColumnCount()) {
+                    tableV.getColumn(0).dispose();
+                }
 
-				if (0 != treeN.getColumnCount ())
-					treeN.getColumn (0).dispose ();
+                if (0 != treeN.getColumnCount()) {
+                    treeN.getColumn(0).dispose();
+                }
 
-				if (0 != treeV.getColumnCount ())
-					treeV.getColumn (0).dispose ();
+                if (0 != treeV.getColumnCount()) {
+                    treeV.getColumn(0).dispose();
+                }
 			});
 
 			shellTest.pack ();

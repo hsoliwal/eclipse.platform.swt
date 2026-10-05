@@ -270,8 +270,12 @@ public Image(Device device, int width, int height) {
  */
 public Image(Device device, Image srcImage, int flag) {
 	super(device);
-	if (srcImage == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (srcImage.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (srcImage == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (srcImage.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	switch (flag) {
 		case SWT.IMAGE_COPY:
 		case SWT.IMAGE_DISABLE:
@@ -288,7 +292,9 @@ public Image(Device device, Image srcImage, int flag) {
 	this.styleFlag = srcImage.styleFlag | flag;
 	this.currentDeviceZoom = srcImage.currentDeviceZoom;
 
-	if (flag != SWT.IMAGE_DISABLE) transparentPixel = srcImage.transparentPixel;
+    if (flag != SWT.IMAGE_DISABLE) {
+        transparentPixel = srcImage.transparentPixel;
+    }
 
 	long imageSurface = srcImage.surface;
 	this.width = srcImage.width;
@@ -298,13 +304,17 @@ public Image(Device device, Image srcImage, int flag) {
 	int dataWidth = DPIUtil.pointToPixel(this.width, DPIUtil.getDeviceZoom());
 	int dataHeight= DPIUtil.pointToPixel(this.height, DPIUtil.getDeviceZoom());
 	surface = Cairo.cairo_image_surface_create(format, dataWidth, dataHeight);
-	if (surface == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (surface == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	double[] scaleX = new double[1];
 	double[] scaleY = new double[1];
 	Cairo.cairo_surface_get_device_scale(imageSurface, scaleX, scaleY);
 	Cairo.cairo_surface_set_device_scale(surface, scaleX[0], scaleY[0]);
 	long cairo = Cairo.cairo_create(surface);
-	if (cairo == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (cairo == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Cairo.cairo_set_operator(cairo, Cairo.CAIRO_OPERATOR_SOURCE);
 	Cairo.cairo_set_source_surface (cairo, imageSurface, 0, 0);
 	Cairo.cairo_paint (cairo);
@@ -434,7 +444,9 @@ public Image(Device device, Image srcImage, int flag) {
 @Deprecated(since = "2025-06", forRemoval = true)
 public Image(Device device, Rectangle bounds) {
 	super(device);
-	if (bounds == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (bounds == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	init(bounds.width, bounds.height);
 	init();
 }
@@ -468,7 +480,9 @@ public Image(Device device, ImageData data) {
 
 private Image(Device device, ImageData data, int zoom) {
 	super(device);
-	if (data == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (data == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	currentDeviceZoom = zoom;
 	init(data, zoom);
 	init();
@@ -506,8 +520,12 @@ private Image(Device device, ImageData data, int zoom) {
  */
 public Image(Device device, ImageData source, ImageData mask) {
 	super(device);
-	if (source == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (mask == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (source == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (mask == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (source.width != mask.width || source.height != mask.height) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
@@ -624,7 +642,9 @@ public Image(Device device, InputStream stream) {
  */
 public Image(Device device, String filename) {
 	super(device);
-	if (filename == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (filename == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.imageFileNameProvider = zoom -> zoom == 100 ? filename : null;
 	currentDeviceZoom = DPIUtil.getDeviceZoom();
 	initFromFileNameProvider(currentDeviceZoom);
@@ -786,7 +806,9 @@ void initNative(String filename) {
 			try {
 				createFromPixbuf(SWT.BITMAP, pixbuf);
 			} finally {
-				if (pixbuf != 0) OS.g_object_unref(pixbuf);
+                if (pixbuf != 0) {
+                    OS.g_object_unref(pixbuf);
+                }
 			}
 		}
 	} catch (SWTException e) {}
@@ -856,7 +878,9 @@ void createFromPixbuf(int type, long pixbuf) {
 
 	// Initialize surface with dimensions received from the pixbuf and set device_scale appropriately
 	surface = Cairo.cairo_image_surface_create(format, pixbufWidth, pixbufHeight);
-	if (surface == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (surface == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Cairo.cairo_surface_set_device_scale(surface, scaleFactor, scaleFactor);
 
 	long data = Cairo.cairo_image_surface_get_data(surface);
@@ -951,16 +975,24 @@ void createMask() {
  * Destroy the receiver's mask if it exists.
  */
 void destroyMask() {
-	if (mask == 0) return;
+    if (mask == 0) {
+        return;
+    }
 	OS.g_object_unref(mask);
 	mask = 0;
 }
 
 @Override
 void destroy() {
-	if (memGC != null) memGC.dispose();
-	if (mask != 0) OS.g_object_unref(mask);
-	if (surface != 0) Cairo.cairo_surface_destroy(surface);
+    if (memGC != null) {
+        memGC.dispose();
+    }
+    if (mask != 0) {
+        OS.g_object_unref(mask);
+    }
+    if (surface != 0) {
+        Cairo.cairo_surface_destroy(surface);
+    }
 	surface = mask = 0;
 	memGC = null;
 	cachedImageAtSize.destroy();
@@ -1070,10 +1102,16 @@ void executeOnImageAtSize(Consumer<Image> imageAtBestFittingSizeConsumer, int de
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Image)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Image)) {
+        return false;
+    }
 	Image image = (Image)object;
-	if (device != image.device || transparentPixel != image.transparentPixel) return false;
+    if (device != image.device || transparentPixel != image.transparentPixel) {
+        return false;
+    }
 	if (imageDataProvider != null && image.imageDataProvider != null) {
 		return (styleFlag == image.styleFlag) && imageDataProvider.equals (image.imageDataProvider);
 	} else if (imageFileNameProvider != null && image.imageFileNameProvider != null) {
@@ -1105,8 +1143,12 @@ public boolean equals (Object object) {
  * </ul>
  */
 public Color getBackground() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (transparentPixel == -1) return null;
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (transparentPixel == -1) {
+        return null;
+    }
 	//NOT DONE
 	return null;
 }
@@ -1123,7 +1165,9 @@ public Color getBackground() {
  * </ul>
  */
 public Rectangle getBounds() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return getBoundsInPixels();
 }
 
@@ -1144,7 +1188,9 @@ public Rectangle getBounds() {
  */
 @Deprecated(since = "2025-09", forRemoval = true)
 public Rectangle getBoundsInPixels() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	if (width != -1 && height != -1) {
 		return new Rectangle(0, 0, width, height);
 	}
@@ -1168,7 +1214,9 @@ public Rectangle getBoundsInPixels() {
  * @see ImageData
  */
 public ImageData getImageData () {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return getImageData(100);
 
 }
@@ -1194,7 +1242,9 @@ public ImageData getImageData () {
  */
 @Deprecated(since = "2025-09", forRemoval = true)
 public ImageData getImageDataAtCurrentZoom () {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 
 	long surface = ImageList.convertSurface(this);
 	int format = Cairo.cairo_image_surface_get_format(surface);
@@ -1277,7 +1327,9 @@ public ImageData getImageDataAtCurrentZoom () {
  * @since 3.106
  */
 public ImageData getImageData (int zoom) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 
 	if (zoom == currentDeviceZoom) {
 		return getImageDataAtCurrentZoom();
@@ -1400,13 +1452,17 @@ void init(int width, int height) {
 	} else {
 		surface = GDK.gdk_window_create_similar_surface(GDK.gdk_get_default_root_window(), Cairo.CAIRO_CONTENT_COLOR, width, height);
 	}
-	if (surface == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (surface == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	// When we create a blank image we need to set it to 100 in GTK3 as we draw using 100% scale.
 	// Cairo will take care of scaling for us when image needs to be scaled.
 	currentDeviceZoom = 100;
 	Cairo.cairo_surface_set_device_scale(surface, 1f, 1f);
 	long cairo = Cairo.cairo_create(surface);
-	if (cairo == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (cairo == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Cairo.cairo_set_source_rgb(cairo, 1, 1, 1);
 	Cairo.cairo_rectangle(cairo, 0, 0, width, height);
 	Cairo.cairo_fill(cairo);
@@ -1420,7 +1476,9 @@ void init(ImageData image) {
 }
 
 private void init(ImageData image, int zoom) {
-	if (image == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (image == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	PaletteData palette = image.palette;
 	if (!(((image.depth == 1 || image.depth == 2 || image.depth == 4 || image.depth == 8) && !palette.isDirect) ||
@@ -1441,7 +1499,9 @@ private void init(ImageData image, int zoom) {
 
 	// Initialize surface with dimensions received from the ImageData and set device_scale appropriately
 	surface = Cairo.cairo_image_surface_create(format, imageDataWidth, imageDataHeight);
-	if (surface == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (surface == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Cairo.cairo_surface_set_device_scale(surface, scaleFactor, scaleFactor);
 
 	int stride = Cairo.cairo_image_surface_get_stride(surface);
@@ -1477,7 +1537,9 @@ private void init(ImageData image, int zoom) {
 			byte[] srcBlues = new byte[length];
 			for (int i = 0; i < rgbs.length; i++) {
 				RGB rgb = rgbs[i];
-				if (rgb == null) continue;
+                if (rgb == null) {
+                    continue;
+                }
 				srcReds[i] = (byte)rgb.red;
 				srcGreens[i] = (byte)rgb.green;
 				srcBlues[i] = (byte)rgb.blue;
@@ -1580,7 +1642,9 @@ private void init(ImageData image, int zoom) {
  */
 @Override
 public long internal_new_GC (GCData data) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	if (type != SWT.BITMAP || memGC != null) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
@@ -1673,10 +1737,18 @@ public boolean isDisposed() {
  * </ul>
  */
 public void setBackground(Color color) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (color == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (transparentPixel == -1) return;
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (color == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (transparentPixel == -1) {
+        return;
+    }
 	//NOT DONE
 }
 
@@ -1688,7 +1760,9 @@ public void setBackground(Color color) {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Image {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Image {*DISPOSED*}";
+    }
 
 	if (imageFileNameProvider != null) {
 		return "Image {" + imageFileNameProvider.getImagePath(100) + "}";

@@ -134,15 +134,21 @@ private void refreshCheckSize(int currentZoom) {
 }
 
 void _setImage (Image image) {
-	if ((style & SWT.COMMAND) != 0) return;
-	if (imageList != null) imageList.dispose ();
+    if ((style & SWT.COMMAND) != 0) {
+        return;
+    }
+    if (imageList != null) {
+        imageList.dispose();
+    }
 	imageList = null;
 	if (image != null) {
 		imageList = new ImageList (style & SWT.RIGHT_TO_LEFT, getAutoscalingZoom());
 		if (OS.IsWindowEnabled (handle)) {
 			imageList.add (image);
 		} else {
-			if (disabledImage != null) disabledImage.dispose ();
+            if (disabledImage != null) {
+                disabledImage.dispose();
+            }
 			disabledImage = new Image (display, image, SWT.IMAGE_DISABLE);
 			imageList.add (disabledImage);
 		}
@@ -150,13 +156,25 @@ void _setImage (Image image) {
 		buttonImageList.himl = imageList.getHandle(getAutoscalingZoom());
 		int oldBits = OS.GetWindowLong (handle, OS.GWL_STYLE), newBits = oldBits;
 		newBits &= ~(OS.BS_LEFT | OS.BS_CENTER | OS.BS_RIGHT);
-		if ((style & SWT.LEFT) != 0) newBits |= OS.BS_LEFT;
-		if ((style & SWT.CENTER) != 0) newBits |= OS.BS_CENTER;
-		if ((style & SWT.RIGHT) != 0) newBits |= OS.BS_RIGHT;
+        if ((style & SWT.LEFT) != 0) {
+            newBits |= OS.BS_LEFT;
+        }
+        if ((style & SWT.CENTER) != 0) {
+            newBits |= OS.BS_CENTER;
+        }
+        if ((style & SWT.RIGHT) != 0) {
+            newBits |= OS.BS_RIGHT;
+        }
 		if (text.length () == 0) {
-			if ((style & SWT.LEFT) != 0) buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_LEFT;
-			if ((style & SWT.CENTER) != 0) buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_CENTER;
-			if ((style & SWT.RIGHT) != 0) buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_RIGHT;
+            if ((style & SWT.LEFT) != 0) {
+                buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_LEFT;
+            }
+            if ((style & SWT.CENTER) != 0) {
+                buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_CENTER;
+            }
+            if ((style & SWT.RIGHT) != 0) {
+                buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_RIGHT;
+            }
 		} else {
 			buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_LEFT;
 			buttonImageList.margin_left = computeLeftMargin ();
@@ -183,16 +201,28 @@ void _setImage (Image image) {
 void _setText (String text) {
 	int oldBits = OS.GetWindowLong (handle, OS.GWL_STYLE), newBits = oldBits;
 	newBits &= ~(OS.BS_LEFT | OS.BS_CENTER | OS.BS_RIGHT);
-	if ((style & SWT.LEFT) != 0) newBits |= OS.BS_LEFT;
-	if ((style & SWT.CENTER) != 0) newBits |= OS.BS_CENTER;
-	if ((style & SWT.RIGHT) != 0) newBits |= OS.BS_RIGHT;
+    if ((style & SWT.LEFT) != 0) {
+        newBits |= OS.BS_LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        newBits |= OS.BS_CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        newBits |= OS.BS_RIGHT;
+    }
 	if (imageList != null) {
 		BUTTON_IMAGELIST buttonImageList = new BUTTON_IMAGELIST ();
 		buttonImageList.himl = imageList.getHandle(getAutoscalingZoom());
 		if (text.length () == 0) {
-			if ((style & SWT.LEFT) != 0) buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_LEFT;
-			if ((style & SWT.CENTER) != 0) buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_CENTER;
-			if ((style & SWT.RIGHT) != 0) buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_RIGHT;
+            if ((style & SWT.LEFT) != 0) {
+                buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_LEFT;
+            }
+            if ((style & SWT.CENTER) != 0) {
+                buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_CENTER;
+            }
+            if ((style & SWT.RIGHT) != 0) {
+                buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_RIGHT;
+            }
 		} else {
 			buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_LEFT;
 			buttonImageList.margin_left = computeLeftMargin ();
@@ -249,7 +279,9 @@ public void addSelectionListener (SelectionListener listener) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	return OS.CallWindowProc (ButtonProc, hwnd, msg, wParam, lParam);
 }
 
@@ -271,7 +303,9 @@ void click () {
 
 // TODO: this method ignores the style LEFT, CENTER or RIGHT
 int computeLeftMargin () {
-	if ((style & (SWT.PUSH | SWT.TOGGLE)) == 0) return MARGIN;
+    if ((style & (SWT.PUSH | SWT.TOGGLE)) == 0) {
+        return MARGIN;
+    }
 	int margin = 0;
 	if (image != null && text.length () != 0) {
 		Rectangle bounds = Win32DPIUtils.scaleBounds(image.getBounds(), this.getAutoscalingZoom(), 100);
@@ -279,13 +313,17 @@ int computeLeftMargin () {
 		long oldFont = 0;
 		long hDC = OS.GetDC (handle);
 		long newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-		if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+        if (newFont != 0) {
+            oldFont = OS.SelectObject(hDC, newFont);
+        }
 		char [] buffer = text.toCharArray ();
 		RECT rect = new RECT ();
 		int flags = OS.DT_CALCRECT | OS.DT_SINGLELINE;
 		OS.DrawText (hDC, buffer, buffer.length, rect, flags);
 		margin += rect.right - rect.left;
-		if (newFont != 0) OS.SelectObject (hDC, oldFont);
+        if (newFont != 0) {
+            OS.SelectObject(hDC, oldFont);
+        }
 		OS.ReleaseDC (handle, hDC);
 		OS.GetClientRect (handle, rect);
 		if ((style & SWT.LEFT) != 0) {
@@ -351,7 +389,9 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 				long oldFont = 0;
 				long hDC = OS.GetDC (handle);
 				long newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-				if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+                if (newFont != 0) {
+                    oldFont = OS.SelectObject(hDC, newFont);
+                }
 				TEXTMETRIC lptm = new TEXTMETRIC ();
 				OS.GetTextMetrics (hDC, lptm);
 				int length = text.length ();
@@ -375,7 +415,9 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 					width += rect.right - rect.left;
 					height = Math.max (height, rect.bottom - rect.top);
 				}
-				if (newFont != 0) OS.SelectObject (hDC, oldFont);
+                if (newFont != 0) {
+                    OS.SelectObject(hDC, oldFont);
+                }
 				OS.ReleaseDC (handle, hDC);
 			}
 			if (isRadioOrCheck()) {
@@ -387,8 +429,12 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 			}
 		}
 	}
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x;
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y;
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x;
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y;
+    }
 	width += border * 2;
 	height += border * 2;
 	return new Point (width, height);
@@ -496,20 +542,36 @@ void enableWidget (boolean enabled) {
 public int getAlignment () {
 	checkWidget ();
 	if ((style & SWT.ARROW) != 0) {
-		if ((style & SWT.UP) != 0) return SWT.UP;
-		if ((style & SWT.DOWN) != 0) return SWT.DOWN;
-		if ((style & SWT.LEFT) != 0) return SWT.LEFT;
-		if ((style & SWT.RIGHT) != 0) return SWT.RIGHT;
+        if ((style & SWT.UP) != 0) {
+            return SWT.UP;
+        }
+        if ((style & SWT.DOWN) != 0) {
+            return SWT.DOWN;
+        }
+        if ((style & SWT.LEFT) != 0) {
+            return SWT.LEFT;
+        }
+        if ((style & SWT.RIGHT) != 0) {
+            return SWT.RIGHT;
+        }
 		return SWT.UP;
 	}
-	if ((style & SWT.LEFT) != 0) return SWT.LEFT;
-	if ((style & SWT.CENTER) != 0) return SWT.CENTER;
-	if ((style & SWT.RIGHT) != 0) return SWT.RIGHT;
+    if ((style & SWT.LEFT) != 0) {
+        return SWT.LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        return SWT.CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        return SWT.RIGHT;
+    }
 	return SWT.LEFT;
 }
 
 boolean getDefault () {
-	if ((style & SWT.PUSH) == 0) return false;
+    if ((style & SWT.PUSH) == 0) {
+        return false;
+    }
 	int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
 	return (bits & OS.BS_DEFPUSHBUTTON) != 0;
 }
@@ -530,7 +592,9 @@ boolean getDefault () {
  */
 public boolean getGrayed () {
 	checkWidget();
-	if ((style & SWT.CHECK) == 0) return false;
+    if ((style & SWT.CHECK) == 0) {
+        return false;
+    }
 	return grayed;
 }
 
@@ -592,7 +656,9 @@ String getNameText () {
  */
 public boolean getSelection () {
 	checkWidget ();
-	if ((style & (SWT.CHECK | SWT.RADIO | SWT.TOGGLE)) == 0) return false;
+    if ((style & (SWT.CHECK | SWT.RADIO | SWT.TOGGLE)) == 0) {
+        return false;
+    }
 	return isChecked();
 }
 
@@ -610,7 +676,9 @@ public boolean getSelection () {
  */
 public String getText () {
 	checkWidget ();
-	if ((style & SWT.ARROW) != 0) return "";
+    if ((style & SWT.ARROW) != 0) {
+        return "";
+    }
 	return text;
 }
 
@@ -625,18 +693,22 @@ private boolean isRadioOrCheck() {
 
 @Override
 boolean isTabItem () {
-	if ((style & SWT.PUSH) != 0) return isTabGroup ();
+    if ((style & SWT.PUSH) != 0) {
+        return isTabGroup();
+    }
 	return super.isTabItem ();
 }
 
 @Override
 boolean mnemonicHit (char ch) {
-	/*
-	 * Feature in Windows. When a radio button gets focus, it selects the button in
-	 * WM_SETFOCUS. Workaround is to never set focus to an unselected radio button.
-	 * Therefore, don't try to set focus on radio buttons, click will set focus.
-	 */
-	if ((style & SWT.RADIO) == 0 && !setFocus ()) return false;
+    /*
+     * Feature in Windows. When a radio button gets focus, it selects the button in
+     * WM_SETFOCUS. Workaround is to never set focus to an unselected radio button.
+     * Therefore, don't try to set focus on radio buttons, click will set focus.
+     */
+    if ((style & SWT.RADIO) == 0 && !setFocus()) {
+        return false;
+    }
 	click();
 	return true;
 }
@@ -644,16 +716,22 @@ boolean mnemonicHit (char ch) {
 @Override
 boolean mnemonicMatch (char key) {
 	char mnemonic = findMnemonic (getText ());
-	if (mnemonic == '\0') return false;
+    if (mnemonic == '\0') {
+        return false;
+    }
 	return Character.toUpperCase (key) == Character.toUpperCase (mnemonic);
 }
 
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (imageList != null) imageList.dispose ();
+    if (imageList != null) {
+        imageList.dispose();
+    }
 	imageList = null;
-	if (disabledImage != null) disabledImage.dispose ();
+    if (disabledImage != null) {
+        disabledImage.dispose();
+    }
 	disabledImage = null;
 	text = null;
 	image = null;
@@ -678,8 +756,12 @@ void releaseWidget () {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -691,7 +773,9 @@ int resolveTextDirection() {
 
 void selectRadio () {
 	for (Control child : parent._getChildren ()) {
-		if (this != child) child.setRadioSelection (false);
+        if (this != child) {
+            child.setRadioSelection(false);
+        }
 	}
 	setSelection (true);
 }
@@ -715,27 +799,43 @@ void selectRadio () {
 public void setAlignment (int alignment) {
 	checkWidget ();
 	if ((style & SWT.ARROW) != 0) {
-		if ((style & (SWT.UP | SWT.DOWN | SWT.LEFT | SWT.RIGHT)) == 0) return;
+        if ((style & (SWT.UP | SWT.DOWN | SWT.LEFT | SWT.RIGHT)) == 0) {
+            return;
+        }
 		style &= ~(SWT.UP | SWT.DOWN | SWT.LEFT | SWT.RIGHT);
 		style |= alignment & (SWT.UP | SWT.DOWN | SWT.LEFT | SWT.RIGHT);
 		OS.InvalidateRect (handle, null, true);
 		return;
 	}
-	if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) return;
+    if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) {
+        return;
+    }
 	style &= ~(SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	style |= alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	int oldBits = OS.GetWindowLong (handle, OS.GWL_STYLE), newBits = oldBits;
 	newBits &= ~(OS.BS_LEFT | OS.BS_CENTER | OS.BS_RIGHT);
-	if ((style & SWT.LEFT) != 0) newBits |= OS.BS_LEFT;
-	if ((style & SWT.CENTER) != 0) newBits |= OS.BS_CENTER;
-	if ((style & SWT.RIGHT) != 0) newBits |= OS.BS_RIGHT;
+    if ((style & SWT.LEFT) != 0) {
+        newBits |= OS.BS_LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        newBits |= OS.BS_CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        newBits |= OS.BS_RIGHT;
+    }
 	if (imageList != null) {
 		BUTTON_IMAGELIST buttonImageList = new BUTTON_IMAGELIST ();
 		buttonImageList.himl = imageList.getHandle(getAutoscalingZoom());
 		if (text.length () == 0) {
-			if ((style & SWT.LEFT) != 0) buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_LEFT;
-			if ((style & SWT.CENTER) != 0) buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_CENTER;
-			if ((style & SWT.RIGHT) != 0) buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_RIGHT;
+            if ((style & SWT.LEFT) != 0) {
+                buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_LEFT;
+            }
+            if ((style & SWT.CENTER) != 0) {
+                buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_CENTER;
+            }
+            if ((style & SWT.RIGHT) != 0) {
+                buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_RIGHT;
+            }
 		} else {
 			buttonImageList.uAlign = OS.BUTTON_IMAGELIST_ALIGN_LEFT;
 			buttonImageList.margin_left = computeLeftMargin ();
@@ -778,7 +878,9 @@ public void setBackground (Color color) {
 }
 
 void setDefault (boolean value) {
-	if ((style & SWT.PUSH) == 0) return;
+    if ((style & SWT.PUSH) == 0) {
+        return;
+    }
 	long hwndShell = menuShell ().handle;
 	int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
 	if (value) {
@@ -794,12 +896,14 @@ void setDefault (boolean value) {
 @Override
 public boolean setFocus () {
 	checkWidget ();
-	/*
-	* Feature in Windows.  When a radio button gets focus,
-	* it selects the button in WM_SETFOCUS.  The fix is to
-	* not assign focus to an unselected radio button.
-	*/
-	if ((style & SWT.RADIO) != 0 && !isChecked ()) return false;
+    /*
+    * Feature in Windows.  When a radio button gets focus,
+    * it selects the button in WM_SETFOCUS.  The fix is to
+    * not assign focus to an unselected radio button.
+    */
+    if ((style & SWT.RADIO) != 0 && !isChecked()) {
+        return false;
+    }
 	return super.setFocus ();
 }
 
@@ -821,8 +925,12 @@ public boolean setFocus () {
  */
 public void setImage (Image image) {
 	checkWidget ();
-	if (image != null && image.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-	if ((style & SWT.ARROW) != 0) return;
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if ((style & SWT.ARROW) != 0) {
+        return;
+    }
 	this.image = image;
 	_setImage (image);
 }
@@ -843,13 +951,19 @@ public void setImage (Image image) {
  */
 public void setGrayed (boolean grayed) {
 	checkWidget ();
-	if ((style & SWT.CHECK) == 0) return;
+    if ((style & SWT.CHECK) == 0) {
+        return;
+    }
 	this.grayed = grayed;
 	long flags = OS.SendMessage (handle, OS.BM_GETCHECK, 0, 0);
 	if (grayed) {
-		if (flags == OS.BST_CHECKED) updateSelection (OS.BST_INDETERMINATE);
+        if (flags == OS.BST_CHECKED) {
+            updateSelection(OS.BST_INDETERMINATE);
+        }
 	} else {
-		if (flags == OS.BST_INDETERMINATE) updateSelection (OS.BST_CHECKED);
+        if (flags == OS.BST_INDETERMINATE) {
+            updateSelection(OS.BST_CHECKED);
+        }
 	}
 }
 
@@ -872,7 +986,9 @@ public void setGrayed (boolean grayed) {
  */
 /*public*/ void setMessage (String message) {
 	checkWidget ();
-	if (message == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (message == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.message = message;
 	if ((style & SWT.COMMAND) != 0) {
 		int length = message.length ();
@@ -884,13 +1000,17 @@ public void setGrayed (boolean grayed) {
 
 @Override
 boolean setRadioFocus (boolean tabbing) {
-	if ((style & SWT.RADIO) == 0 || !getSelection ()) return false;
+    if ((style & SWT.RADIO) == 0 || !getSelection()) {
+        return false;
+    }
 	return tabbing ? setTabItemFocus () : setFocus ();
 }
 
 @Override
 boolean setRadioSelection (boolean value) {
-	if ((style & SWT.RADIO) == 0) return false;
+    if ((style & SWT.RADIO) == 0) {
+        return false;
+    }
 	if (getSelection () != value) {
 		setSelection (value);
 		sendSelectionEvent (SWT.Selection);
@@ -916,10 +1036,14 @@ boolean setRadioSelection (boolean value) {
  */
 public void setSelection (boolean selected) {
 	checkWidget ();
-	if ((style & (SWT.CHECK | SWT.RADIO | SWT.TOGGLE)) == 0) return;
+    if ((style & (SWT.CHECK | SWT.RADIO | SWT.TOGGLE)) == 0) {
+        return;
+    }
 	int flags = selected ? OS.BST_CHECKED : OS.BST_UNCHECKED;
 	if ((style & SWT.CHECK) != 0) {
-		if (selected && grayed) flags = OS.BST_INDETERMINATE;
+        if (selected && grayed) {
+            flags = OS.BST_INDETERMINATE;
+        }
 	}
 	updateSelection (flags);
 }
@@ -960,8 +1084,12 @@ public void setSelection (boolean selected) {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.ARROW) != 0) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.ARROW) != 0) {
+        return;
+    }
 	text = string;
 	_setText (string);
 }
@@ -985,12 +1113,16 @@ void updateImageList () {
 	if (imageList != null) {
 		BUTTON_IMAGELIST buttonImageList = new BUTTON_IMAGELIST ();
 		OS.SendMessage (handle, OS.BCM_GETIMAGELIST, 0, buttonImageList);
-		if (imageList != null) imageList.dispose ();
+        if (imageList != null) {
+            imageList.dispose();
+        }
 		imageList = new ImageList (style & SWT.RIGHT_TO_LEFT, getAutoscalingZoom());
 		if (OS.IsWindowEnabled (handle)) {
 			imageList.add (image);
 		} else {
-			if (disabledImage != null) disabledImage.dispose ();
+            if (disabledImage != null) {
+                disabledImage.dispose();
+            }
 			disabledImage = new Image (display, image, SWT.IMAGE_DISABLE);
 			imageList.add (disabledImage);
 		}
@@ -1043,17 +1175,39 @@ void updateSelection (int flags) {
 @Override
 int widgetStyle () {
 	int bits = super.widgetStyle ();
-	if ((style & SWT.FLAT) != 0) bits |= OS.BS_FLAT;
-	if ((style & SWT.ARROW) != 0) return bits | OS.BS_OWNERDRAW;
-	if ((style & SWT.LEFT) != 0) bits |= OS.BS_LEFT;
-	if ((style & SWT.CENTER) != 0) bits |= OS.BS_CENTER;
-	if ((style & SWT.RIGHT) != 0) bits |= OS.BS_RIGHT;
-	if ((style & SWT.WRAP) != 0) bits |= OS.BS_MULTILINE;
-	if ((style & SWT.PUSH) != 0) return bits | OS.BS_PUSHBUTTON | OS.WS_TABSTOP;
-	if ((style & SWT.CHECK) != 0) return bits | OS.BS_CHECKBOX | OS.WS_TABSTOP;
-	if ((style & SWT.RADIO) != 0) return bits | OS.BS_RADIOBUTTON;
-	if ((style & SWT.TOGGLE) != 0) return bits | OS.BS_PUSHLIKE | OS.BS_CHECKBOX | OS.WS_TABSTOP;
-	if ((style & SWT.COMMAND) != 0) return bits | OS.BS_COMMANDLINK | OS.WS_TABSTOP;
+    if ((style & SWT.FLAT) != 0) {
+        bits |= OS.BS_FLAT;
+    }
+    if ((style & SWT.ARROW) != 0) {
+        return bits | OS.BS_OWNERDRAW;
+    }
+    if ((style & SWT.LEFT) != 0) {
+        bits |= OS.BS_LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        bits |= OS.BS_CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        bits |= OS.BS_RIGHT;
+    }
+    if ((style & SWT.WRAP) != 0) {
+        bits |= OS.BS_MULTILINE;
+    }
+    if ((style & SWT.PUSH) != 0) {
+        return bits | OS.BS_PUSHBUTTON | OS.WS_TABSTOP;
+    }
+    if ((style & SWT.CHECK) != 0) {
+        return bits | OS.BS_CHECKBOX | OS.WS_TABSTOP;
+    }
+    if ((style & SWT.RADIO) != 0) {
+        return bits | OS.BS_RADIOBUTTON;
+    }
+    if ((style & SWT.TOGGLE) != 0) {
+        return bits | OS.BS_PUSHLIKE | OS.BS_CHECKBOX | OS.WS_TABSTOP;
+    }
+    if ((style & SWT.COMMAND) != 0) {
+        return bits | OS.BS_COMMANDLINK | OS.WS_TABSTOP;
+    }
 	return bits | OS.BS_PUSHBUTTON | OS.WS_TABSTOP;
 }
 
@@ -1102,7 +1256,9 @@ LRESULT wmColorChild (long wParam, long lParam) {
 @Override
 LRESULT WM_GETDLGCODE (long wParam, long lParam) {
 	LRESULT result = super.WM_GETDLGCODE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if ((style & SWT.ARROW) != 0) {
 		return new LRESULT (OS.DLGC_STATIC);
 	}
@@ -1117,7 +1273,9 @@ LRESULT WM_GETOBJECT (long wParam, long lParam) {
 	* accessibility is implemented in the accessibility package.
 	*/
 	if ((style & SWT.RADIO) != 0) {
-		if (accessible == null) accessible = new_Accessible (this);
+        if (accessible == null) {
+            accessible = new_Accessible(this);
+        }
 	}
 	return super.WM_GETOBJECT (wParam, lParam);
 }
@@ -1133,13 +1291,17 @@ LRESULT WM_KILLFOCUS (long wParam, long lParam) {
 
 @Override
 LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
-	if (ignoreMouse) return null;
+    if (ignoreMouse) {
+        return null;
+    }
 	return super.WM_LBUTTONDOWN (wParam, lParam);
 }
 
 @Override
 LRESULT WM_LBUTTONUP (long wParam, long lParam) {
-	if (ignoreMouse) return null;
+    if (ignoreMouse) {
+        return null;
+    }
 	return super.WM_LBUTTONUP (wParam, lParam);
 }
 
@@ -1168,7 +1330,9 @@ LRESULT WM_SETFOCUS (long wParam, long lParam) {
 @Override
 LRESULT WM_SIZE (long wParam, long lParam) {
 	LRESULT result = super.WM_SIZE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if ((style & (SWT.PUSH | SWT.TOGGLE)) != 0) {
 		if (imageList != null && text.length () != 0) {
 			BUTTON_IMAGELIST buttonImageList = new BUTTON_IMAGELIST ();
@@ -1185,14 +1349,18 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 @Override
 LRESULT WM_SYSCOLORCHANGE (long wParam, long lParam) {
 	LRESULT result = super.WM_SYSCOLORCHANGE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	return result;
 }
 
 @Override
 LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 	LRESULT result = super.WM_UPDATEUISTATE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  When WM_UPDATEUISTATE is sent to
 	* a button, it sends WM_CTLCOLORBTN to get the foreground
@@ -1210,7 +1378,9 @@ LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 			if ((state & THEME_BACKGROUND) != 0) {
 				redraw = findThemeControl () != null;
 			}
-			if (!redraw) redraw = findBackgroundControl () != null;
+            if (!redraw) {
+                redraw = findBackgroundControl() != null;
+            }
 		}
 		if (redraw) {
 			OS.InvalidateRect (handle, null, false);
@@ -1480,7 +1650,9 @@ static int getThemeStateId(int style, boolean pressed, boolean enabled) {
 
 @Override
 LRESULT wmDrawChild (long wParam, long lParam) {
-	if ((style & SWT.ARROW) == 0) return super.wmDrawChild (wParam, lParam);
+    if ((style & SWT.ARROW) == 0) {
+        return super.wmDrawChild(wParam, lParam);
+    }
 	DRAWITEMSTRUCT struct = new DRAWITEMSTRUCT ();
 	OS.MoveMemory (struct, lParam, DRAWITEMSTRUCT.sizeof);
 	RECT rect = new RECT ();

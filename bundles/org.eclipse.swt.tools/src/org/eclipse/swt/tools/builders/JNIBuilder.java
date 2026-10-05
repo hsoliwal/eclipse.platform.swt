@@ -54,13 +54,19 @@ public class JNIBuilder extends IncrementalProjectBuilder {
 	@Override
 	protected IProject[] build(int kind, Map<String, String> args, final IProgressMonitor monitor) throws CoreException {
 		IResourceDelta delta = getDelta(getProject());
-		if (delta == null) return null;
+        if (delta == null) {
+            return null;
+        }
 		delta.accept(delta1 -> {
 			IPath ipath = delta1.getFullPath();
-			if (!"java".equals(ipath.getFileExtension())) return true;
+            if (!"java".equals(ipath.getFileExtension())) {
+                return true;
+            }
 			String path = ipath.toPortableString();
 			for (int i = 0; i < classes.length; i++) {
-				if (classes[i].build) continue;
+                if (classes[i].build) {
+                    continue;
+                }
 				if (path.startsWith(classes[i].sourceDir)) {
 					classes[i].build = true;
 				}

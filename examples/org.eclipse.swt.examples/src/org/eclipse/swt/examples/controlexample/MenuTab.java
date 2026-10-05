@@ -76,10 +76,16 @@ class MenuTab extends Tab {
 		}
 
 		int orientation = 0;
-		if (leftToRightButton.getSelection()) orientation |= SWT.LEFT_TO_RIGHT;
-		if (rightToLeftButton.getSelection()) orientation |= SWT.RIGHT_TO_LEFT;
+        if (leftToRightButton.getSelection()) {
+            orientation |= SWT.LEFT_TO_RIGHT;
+        }
+        if (rightToLeftButton.getSelection()) {
+            orientation |= SWT.RIGHT_TO_LEFT;
+        }
 		int radioBehavior = 0;
-		if (noRadioGroupButton.getSelection()) radioBehavior |= SWT.NO_RADIO_GROUP;
+        if (noRadioGroupButton.getSelection()) {
+            radioBehavior |= SWT.NO_RADIO_GROUP;
+        }
 
 		/* Create the shell and menu(s) */
 		Shell shell = new Shell (SWT.SHELL_TRIM | orientation);
@@ -94,8 +100,12 @@ class MenuTab extends Tab {
 				/* Create cascade button and drop-down menu in menu bar. */
 				MenuItem item = new MenuItem(menuBar, SWT.CASCADE);
 				item.setText(getMenuItemText("Cascade"));
-				if (imagesButton.getSelection()) item.setImage(instance.images[ControlExample.ciOpenFolder]);
-				if (tooltipButton.getSelection()) item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText() ));
+                if (imagesButton.getSelection()) {
+                    item.setImage(instance.images[ControlExample.ciOpenFolder]);
+                }
+                if (tooltipButton.getSelection()) {
+                    item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText()));
+                }
 				hookListeners(item);
 				Menu dropDownMenu = new Menu(shell, SWT.DROP_DOWN | radioBehavior);
 				item.setMenu(dropDownMenu);
@@ -240,44 +250,70 @@ class MenuTab extends Tab {
 		if (pushButton.getSelection()) {
 			item = new MenuItem(menu, SWT.PUSH);
 			item.setText(getMenuItemText("Push"));
-			if (acceleratorsButton.getSelection()) item.setAccelerator(SWT.MOD1 + SWT.MOD2 + 'P');
-			if (imagesButton.getSelection()) item.setImage(instance.images[ControlExample.ciClosedFolder]);
+            if (acceleratorsButton.getSelection()) {
+                item.setAccelerator(SWT.MOD1 + SWT.MOD2 + 'P');
+            }
+            if (imagesButton.getSelection()) {
+                item.setImage(instance.images[ControlExample.ciClosedFolder]);
+            }
 			item.setEnabled(enabledButton.getSelection());
-			if (tooltipButton.getSelection()) item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText() ));
+            if (tooltipButton.getSelection()) {
+                item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText()));
+            }
 			hookListeners(item);
 		}
 
 		if (separatorButton.getSelection()) {
 			item = new MenuItem(menu, SWT.SEPARATOR);
-			if (tooltipButton.getSelection()) item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText() ));
+            if (tooltipButton.getSelection()) {
+                item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText()));
+            }
 		}
 
 		if (checkButton.getSelection()) {
 			item = new MenuItem(menu, SWT.CHECK);
 			item.setText(getMenuItemText("Check"));
-			if (acceleratorsButton.getSelection()) item.setAccelerator(SWT.MOD1 + SWT.MOD2 + 'C');
-			if (imagesButton.getSelection()) item.setImage(instance.images[ControlExample.ciOpenFolder]);
+            if (acceleratorsButton.getSelection()) {
+                item.setAccelerator(SWT.MOD1 + SWT.MOD2 + 'C');
+            }
+            if (imagesButton.getSelection()) {
+                item.setImage(instance.images[ControlExample.ciOpenFolder]);
+            }
 			item.setEnabled(enabledButton.getSelection());
-			if (tooltipButton.getSelection()) item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText() ));
+            if (tooltipButton.getSelection()) {
+                item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText()));
+            }
 			hookListeners(item);
 		}
 
 		if (radioButton.getSelection()) {
 			item = new MenuItem(menu, SWT.RADIO);
 			item.setText(getMenuItemText("1Radio"));
-			if (acceleratorsButton.getSelection()) item.setAccelerator(SWT.MOD1 + SWT.MOD2 + '1');
-			if (imagesButton.getSelection()) item.setImage(instance.images[ControlExample.ciTarget]);
+            if (acceleratorsButton.getSelection()) {
+                item.setAccelerator(SWT.MOD1 + SWT.MOD2 + '1');
+            }
+            if (imagesButton.getSelection()) {
+                item.setImage(instance.images[ControlExample.ciTarget]);
+            }
 			item.setSelection(true);
 			item.setEnabled(enabledButton.getSelection());
-			if (tooltipButton.getSelection()) item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText() ));
+            if (tooltipButton.getSelection()) {
+                item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText()));
+            }
 			hookListeners(item);
 
 			item = new MenuItem(menu, SWT.RADIO);
 			item.setText(getMenuItemText("2Radio"));
-			if (acceleratorsButton.getSelection()) item.setAccelerator(SWT.MOD1 + SWT.MOD2 + '2');
-			if (imagesButton.getSelection()) item.setImage(instance.images[ControlExample.ciTarget]);
+            if (acceleratorsButton.getSelection()) {
+                item.setAccelerator(SWT.MOD1 + SWT.MOD2 + '2');
+            }
+            if (imagesButton.getSelection()) {
+                item.setImage(instance.images[ControlExample.ciTarget]);
+            }
 			item.setEnabled(enabledButton.getSelection());
-			if (tooltipButton.getSelection()) item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText()));
+            if (tooltipButton.getSelection()) {
+                item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText()));
+            }
 			hookListeners(item);
 		}
 
@@ -285,13 +321,17 @@ class MenuTab extends Tab {
 			/* Create cascade button and drop-down menu for the sub-menu. */
 			item = new MenuItem(menu, SWT.CASCADE);
 			item.setText(getMenuItemText("Cascade"));
-			if (imagesButton.getSelection()) item.setImage(instance.images[ControlExample.ciOpenFolder]);
+            if (imagesButton.getSelection()) {
+                item.setImage(instance.images[ControlExample.ciOpenFolder]);
+            }
 			hookListeners(item);
 			Menu subMenu = new Menu(menu.getShell(), SWT.DROP_DOWN);
 			item.setMenu(subMenu);
 			item.setEnabled(enabledButton.getSelection());
 			hookListeners(subMenu);
-			if (tooltipButton.getSelection()) item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText() ));
+            if (tooltipButton.getSelection()) {
+                item.setToolTipText(ControlExample.getResourceString("Tooltip", item.getText()));
+            }
 			createMenuItems(subMenu, createSubSubMenu, false);
 		}
 	}

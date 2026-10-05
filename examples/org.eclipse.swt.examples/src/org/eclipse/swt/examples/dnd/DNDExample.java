@@ -206,7 +206,9 @@ private void createDragOperations(Composite parent) {
 }
 
 private void createDragSource() {
-	if (dragSource != null) dragSource.dispose();
+    if (dragSource != null) {
+        dragSource.dispose();
+    }
 	dragSource = new DragSource(dragControl, dragOperation);
 	dragSource.setTransfer(dragTypes);
 	dragSource.addDragListener(new DragSourceListener() {
@@ -551,8 +553,9 @@ private void createDragWidget(Composite parent) {
 		dragControlType = c.getSelectionIndex();
 		dragControl = createWidget(dragControlType, dragParent, "Drag Source");
 		dragControl.setLayoutData(data);
-		if (dragEnabled)
-			createDragSource();
+        if (dragEnabled) {
+            createDragSource();
+        }
 		dragParent.layout();
 	}));
 
@@ -735,7 +738,9 @@ private void createDropOperations(Composite parent) {
 }
 
 private void createDropTarget() {
-	if (dropTarget != null) dropTarget.dispose();
+    if (dropTarget != null) {
+        dropTarget.dispose();
+    }
 	dropTarget = new DropTarget(dropControl, dropOperation);
 	dropTarget.setTransfer(dropTypes);
 	dropTarget.addDropListener(new DropTargetListener() {
@@ -807,7 +812,9 @@ private void createDropTarget() {
 						strings[index++] = string.substring(start, end);
 						start = end + 1;
 						end = string.indexOf("\n", start);
-						if (end == -1) end = string.length();
+                        if (end == -1) {
+                            end = string.length();
+                        }
 					}
 				}
 			}
@@ -1030,8 +1037,9 @@ private void createDropWidget(Composite parent) {
 		dropControlType = c.getSelectionIndex();
 		dropControl = createWidget(dropControlType, dropParent, "Drop Target");
 		dropControl.setLayoutData(data);
-		if (dropEnabled)
-			createDropTarget();
+        if (dropEnabled) {
+            createDropTarget();
+        }
 		dropParent.layout();
 	}));
 
@@ -1281,8 +1289,12 @@ public void open(Display display) {
 	));
 	dropConsole.setMenu(menu);
 
-	if (dragEnabled) createDragSource();
-	if (dropEnabled) createDropTarget();
+    if (dragEnabled) {
+        createDragSource();
+    }
+    if (dropEnabled) {
+        createDropTarget();
+    }
 
 	int height = 200;
 	FormData data = new FormData();
@@ -1333,19 +1345,24 @@ public void open(Display display) {
 	shell.open();
 
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	itemImage.dispose();
 }
 
 private void printEvent(DragSourceEvent e) {
-	if (!dragEventDetail) return;
+    if (!dragEventDetail) {
+        return;
+    }
 	dragConsole.append(e.toString() + "\n");
 }
 
 private void printEvent(DropTargetEvent e) {
-	if (!dropEventDetail) return;
+    if (!dropEventDetail) {
+        return;
+    }
 	dropConsole.append(e.toString() + "\n");
 }
 
@@ -1360,7 +1377,9 @@ private void removeDragTransfer(Transfer transfer){
 				break;
 			}
 		}
-		if (index == -1) return;
+        if (index == -1) {
+            return;
+        }
 		Transfer[] newTypes = new Transfer[dragTypes.length - 1];
 		System.arraycopy(dragTypes, 0, newTypes, 0, index);
 		System.arraycopy(dragTypes, index + 1, newTypes, index, dragTypes.length - index - 1);
@@ -1382,7 +1401,9 @@ private void removeDropTransfer(Transfer transfer){
 				break;
 			}
 		}
-		if (index == -1) return;
+        if (index == -1) {
+            return;
+        }
 		Transfer[] newTypes = new Transfer[dropTypes.length - 1];
 		System.arraycopy(dropTypes, 0, newTypes, 0, index);
 		System.arraycopy(dropTypes, index + 1, newTypes, index, dropTypes.length - index - 1);

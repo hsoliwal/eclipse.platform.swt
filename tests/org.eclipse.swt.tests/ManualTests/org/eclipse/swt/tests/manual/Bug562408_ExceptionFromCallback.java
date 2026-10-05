@@ -200,8 +200,9 @@ public class Bug562408_ExceptionFromCallback {
 		mainShell.open();
 		while (!mainShell.isDisposed()) {
 			try {
-				if (!display.readAndDispatch())
-					display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			} catch (Exception ex) {
 				System.out.format("Exception caught (with %d suppressed exceptions):%n", ex.getSuppressed().length);
 				ex.printStackTrace();

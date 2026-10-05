@@ -71,7 +71,9 @@ public class TunnelTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void next(int width, int height) {
-		if (texture == null) return;
+        if (texture == null) {
+            return;
+        }
 
 		int shiftX = (int) (TEX_WIDTH * 1.0 * animation);
 		int shiftY = (int) (TEX_HEIGHT * 0.25 * animation);
@@ -88,11 +90,15 @@ public class TunnelTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (texture == null) {
 			Image loaded = example.loadImage(gc.getDevice(), "tunnelstonetex.png"); //$NON-NLS-1$
-			if (loaded == null) return;
+            if (loaded == null) {
+                return;
+            }
 			ImageData tex = loaded.getImageData();
 
 			texture = new int[TEX_WIDTH * TEX_HEIGHT];
@@ -119,7 +125,9 @@ public class TunnelTab extends AnimatedGraphicsTab {
 			animation = 0f;
 		}
 
-		if (imageData == null) return;
+        if (imageData == null) {
+            return;
+        }
 
 		if (outputImage != null) {
 			outputImage.dispose();

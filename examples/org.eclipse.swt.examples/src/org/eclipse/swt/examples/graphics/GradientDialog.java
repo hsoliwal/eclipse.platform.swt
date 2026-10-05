@@ -101,7 +101,9 @@ public class GradientDialog extends Dialog {
 
 		Display display = getParent().getDisplay();
 		while (!dialog.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		if (menu1 != null) {
@@ -179,7 +181,9 @@ public class GradientDialog extends Dialog {
 		menu1 = colorMenu.createMenu(parent.getParent(), gb -> {
 			rgb1 = gb.getBgColor1().getRGB();
 			colorButton1.setImage(gb.getThumbNail());
-			if (canvas != null) canvas.redraw();
+            if (canvas != null) {
+                canvas.redraw();
+            }
 		});
 		colorButton1.addListener(SWT.Selection, event -> {
 			final Button button = (Button) event.widget;
@@ -200,7 +204,9 @@ public class GradientDialog extends Dialog {
 		menu2 = colorMenu.createMenu(parent.getParent(), gb -> {
 			rgb2 = gb.getBgColor1().getRGB();
 			colorButton2.setImage(gb.getThumbNail());
-			if (canvas != null) canvas.redraw();
+            if (canvas != null) {
+                canvas.redraw();
+            }
 		});
 		colorButton2.addListener(SWT.Selection, event -> {
 			final Button button = (Button) event.widget;

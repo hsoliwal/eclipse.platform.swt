@@ -48,12 +48,14 @@ public class Bug560316_DarkTextBorders {
 		Display display = new Display ();
 		Shell shell = new Shell (display);
 
-		// Theme setup
-		if (useWsBorderAll)
-			display.setData("org.eclipse.swt.internal.win32.all.use_WS_BORDER", true);
+        // Theme setup
+        if (useWsBorderAll) {
+            display.setData("org.eclipse.swt.internal.win32.all.use_WS_BORDER", true);
+        }
 
-		if (useWsBorderText)
-			display.setData("org.eclipse.swt.internal.win32.Text.use_WS_BORDER", true);
+        if (useWsBorderText) {
+            display.setData("org.eclipse.swt.internal.win32.Text.use_WS_BORDER", true);
+        }
 
 		// Create various controls.
 		// Nothing special here, really.
@@ -182,7 +184,9 @@ public class Bug560316_DarkTextBorders {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		display.dispose ();

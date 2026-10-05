@@ -69,7 +69,9 @@ public static void main (String[] args) {
 				case SWT.Dispose:
 				case SWT.KeyDown:
 				case SWT.MouseMove: {
-					if (tip == null) break;
+                    if (tip == null) {
+                        break;
+                    }
 					tip.dispose ();
 					tip = null;
 					label = null;
@@ -78,7 +80,9 @@ public static void main (String[] args) {
 				case SWT.MouseHover: {
 					TableItem item = table.getItem (new Point (event.x, event.y));
 					if (item != null) {
-						if (tip != null  && !tip.isDisposed ()) tip.dispose ();
+                        if (tip != null && !tip.isDisposed()) {
+                            tip.dispose();
+                        }
 						tip = new Shell (shell, SWT.ON_TOP | SWT.NO_FOCUS | SWT.TOOL);
 						tip.setBackground (display.getSystemColor (SWT.COLOR_INFO_BACKGROUND));
 						FillLayout layout = new FillLayout ();
@@ -108,8 +112,9 @@ public static void main (String[] args) {
 	shell.pack ();
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

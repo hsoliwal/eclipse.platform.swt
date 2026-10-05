@@ -149,7 +149,9 @@ public void createControlPanel(final Composite parent) {
  */
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	Image image = createImage(device, colorGB1.getBgColor1(), colorGB2.getBgColor1(), width, height);

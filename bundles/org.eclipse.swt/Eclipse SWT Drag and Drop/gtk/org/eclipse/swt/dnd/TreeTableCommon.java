@@ -32,7 +32,9 @@ class TreeTableCommon {
 		long selection = GTK.gtk_tree_view_get_selection (handle);
 		long [] model =  null;
 		long list = GTK.gtk_tree_selection_get_selected_rows (selection, model);
-		if (list == 0) return null;
+        if (list == 0) {
+            return null;
+        }
 		int count = Math.min(10, OS.g_list_length (list));
 		long originalList = list;
 
@@ -79,9 +81,13 @@ class TreeTableCommon {
 			surface = icons[0];
 		} else {
 			surface = Cairo.cairo_image_surface_create(Cairo.CAIRO_FORMAT_ARGB32, width, height);
-			if (surface == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (surface == 0) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 			long cairo = Cairo.cairo_create(surface);
-			if (cairo == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (cairo == 0) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 			Cairo.cairo_set_operator(cairo, Cairo.CAIRO_OPERATOR_SOURCE);
 			for (int i=0; i<count; i++) {
 				Cairo.cairo_set_source_surface (cairo, icons[i], 2, yy[i] - yy[0] + 2);

@@ -65,9 +65,13 @@ public class TableDropTargetEffect extends DropTargetEffect {
 	}
 
 	int checkEffect(int effect) {
-		// Some effects are mutually exclusive.  Make sure that only one of the mutually exclusive effects has been specified.
-		if ((effect & DND.FEEDBACK_SELECT) != 0) effect = effect & ~DND.FEEDBACK_INSERT_AFTER & ~DND.FEEDBACK_INSERT_BEFORE;
-		if ((effect & DND.FEEDBACK_INSERT_BEFORE) != 0) effect = effect & ~DND.FEEDBACK_INSERT_AFTER;
+        // Some effects are mutually exclusive.  Make sure that only one of the mutually exclusive effects has been specified.
+        if ((effect & DND.FEEDBACK_SELECT) != 0) {
+            effect = effect & ~DND.FEEDBACK_INSERT_AFTER & ~DND.FEEDBACK_INSERT_BEFORE;
+        }
+        if ((effect & DND.FEEDBACK_INSERT_BEFORE) != 0) {
+            effect = effect & ~DND.FEEDBACK_INSERT_AFTER;
+        }
 		return effect;
 	}
 
@@ -179,7 +183,9 @@ public class TableDropTargetEffect extends DropTargetEffect {
 							pt.y = itemRect.top;
 							if (OS.PtInRect (rect, pt)) {
 								pt.y = itemRect.bottom;
-								if (OS.PtInRect (rect, pt)) scroll = false;
+                                if (OS.PtInRect(rect, pt)) {
+                                    scroll = false;
+                                }
 							}
 						}
 					}

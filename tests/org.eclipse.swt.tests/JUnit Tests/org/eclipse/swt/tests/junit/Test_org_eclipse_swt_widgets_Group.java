@@ -42,8 +42,9 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 	assertThrows(IllegalArgumentException.class, () -> new Group(null, 0), "No exception thrown for parent == null");
 
 	int[] cases = {SWT.SHADOW_IN, SWT.SHADOW_OUT, SWT.SHADOW_ETCHED_IN, SWT.SHADOW_ETCHED_OUT};
-	for (int style : cases)
-		group = new Group(shell, style);
+    for (int style : cases) {
+        group = new Group(shell, style);
+    }
 }
 
 @Override

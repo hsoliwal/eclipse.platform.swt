@@ -36,8 +36,9 @@ public class Bug133037_TreeWarnings {
 		new TreeItem(tree, SWT.NONE);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

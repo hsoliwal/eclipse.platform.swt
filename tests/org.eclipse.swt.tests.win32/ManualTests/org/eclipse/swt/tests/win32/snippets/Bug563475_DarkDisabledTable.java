@@ -132,81 +132,86 @@ public class Bug563475_DarkDisabledTable {
 		final int numColumns = 3;
 
 		for (int iHasColumns = 0; iHasColumns < 2; iHasColumns++) {
-			if (iHasColumns == 0)
-				new Label(shell, SWT.NONE).setText("(1) No columns");
-			else
-				new Label(shell, SWT.NONE).setText("(2) With columns");
+            if (iHasColumns == 0) {
+                new Label(shell, SWT.NONE).setText("(1) No columns");
+            } else {
+                new Label(shell, SWT.NONE).setText("(2) With columns");
+            }
 
-			for (int iDisabled = 0; iDisabled < 2; iDisabled++)
-			for (int iStyledItem = 0; iStyledItem < 2; iStyledItem++) {
-				// SWT.CHECK is there to make sure that background behind it is also good
-				final Table table = new Table(shell, SWT.CHECK | SWT.BORDER | SWT.FULL_SELECTION);
-				table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+            for (int iDisabled = 0; iDisabled < 2; iDisabled++) {
+                for (int iStyledItem = 0; iStyledItem < 2; iStyledItem++) {
+                    // SWT.CHECK is there to make sure that background behind it is also good
+                    final Table table = new Table(shell, SWT.CHECK | SWT.BORDER | SWT.FULL_SELECTION);
+                    table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-				if (iHasColumns != 0) {
-					// Not important
-					table.setHeaderVisible(true);
+                    if (iHasColumns != 0) {
+                        // Not important
+                        table.setHeaderVisible(true);
 
-					// SWT code in `Table#CDDS_PREPAINT` significantly depends
-					// on whether there are columns in table.
-					for (int iColumn = 0; iColumn < numColumns; iColumn++) {
-						TableColumn tableColumn = new TableColumn(table, SWT.NONE);
-						tableColumn.setText("Col#" + iColumn);
+                        // SWT code in `Table#CDDS_PREPAINT` significantly depends
+                        // on whether there are columns in table.
+                        for (int iColumn = 0; iColumn < numColumns; iColumn++) {
+                            TableColumn tableColumn = new TableColumn(table, SWT.NONE);
+                            tableColumn.setText("Col#" + iColumn);
 
-						if (iColumn == 0)
-							tableColumn.setWidth(60);
-						else
-							tableColumn.setWidth(45);
-					}
+                            if (iColumn == 0) {
+                                tableColumn.setWidth(60);
+                            } else {
+                                tableColumn.setWidth(45);
+                            }
+                        }
 
-					// Test for Bug 547989, where sort column ignores
-					// `Table#setBackground`
-					{
-						table.addListener(SWT.PaintItem, event -> {});
+                        // Test for Bug 547989, where sort column ignores
+                        // `Table#setBackground`
+                        {
+                            table.addListener(SWT.PaintItem, event -> {
+                            });
 
-						table.setRedraw(false);
-						table.setSortColumn(table.getColumn(1));
-						table.setSortDirection(SWT.UP);
-						table.setRedraw(true);
-					}
-				}
+                            table.setRedraw(false);
+                            table.setSortColumn(table.getColumn(1));
+                            table.setSortDirection(SWT.UP);
+                            table.setRedraw(true);
+                        }
+                    }
 
-				if (iDisabled != 0) {
-					// Test for Bug 563475, where disabled Table has unfitting
-					// background in dark theme
-					table.setEnabled(false);
-				}
+                    if (iDisabled != 0) {
+                        // Test for Bug 563475, where disabled Table has unfitting
+                        // background in dark theme
+                        table.setEnabled(false);
+                    }
 
-				for (int iItem = 0; iItem < 4; iItem++) {
-					TableItem item = new TableItem(table, SWT.NONE);
+                    for (int iItem = 0; iItem < 4; iItem++) {
+                        TableItem item = new TableItem(table, SWT.NONE);
 
-					for (int iColumn = 0; iColumn < numColumns; iColumn++) {
-						item.setText(iColumn, iItem + ":" + iColumn);
+                        for (int iColumn = 0; iColumn < numColumns; iColumn++) {
+                            item.setText(iColumn, iItem + ":" + iColumn);
 
-						// Test for Bug 563475, where image background ignores Table background.
-						// Let's test both icons and images - just in case.
-						if (((iItem + iColumn) % 2) == 0)
-							item.setImage(iColumn, itemImage);
-						else
-							item.setImage(iColumn, itemIcon);
-					}
-				}
+                            // Test for Bug 563475, where image background ignores Table background.
+                            // Let's test both icons and images - just in case.
+                            if (((iItem + iColumn) % 2) == 0) {
+                                item.setImage(iColumn, itemImage);
+                            } else {
+                                item.setImage(iColumn, itemIcon);
+                            }
+                        }
+                    }
 
-				// Let's also test checks - just in case.
-				table.getItem(1).setChecked(true);
-				table.getItem(3).setChecked(true);
+                    // Let's also test checks - just in case.
+                    table.getItem(1).setChecked(true);
+                    table.getItem(3).setChecked(true);
 
-				// Test for Bug 536621, where TableItem's style was ignored.
-				if (iStyledItem != 0) {
-					table.getItem(2).setBackground(backColorItem);
-					table.getItem(2).setForeground(foreColorItem);
+                    // Test for Bug 536621, where TableItem's style was ignored.
+                    if (iStyledItem != 0) {
+                        table.getItem(2).setBackground(backColorItem);
+                        table.getItem(2).setForeground(foreColorItem);
 
-					for (int iColumn = 0; iColumn < numColumns; iColumn++) {
-						table.getItem(3).setBackground(iColumn, backColorItem);
-						table.getItem(3).setForeground(iColumn, foreColorItem);
-					}
-				}
-			}
+                        for (int iColumn = 0; iColumn < numColumns; iColumn++) {
+                            table.getItem(3).setBackground(iColumn, backColorItem);
+                            table.getItem(3).setForeground(iColumn, foreColorItem);
+                        }
+                    }
+                }
+            }
 		}
 
 		setColors(shell, backColor, foreColor);
@@ -215,7 +220,9 @@ public class Bug563475_DarkDisabledTable {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		display.dispose ();

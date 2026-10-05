@@ -176,7 +176,9 @@ public class KeyboardLayoutTest {
 		}
 
 		public String getName() {
-			if (this.name != null) return name;
+            if (this.name != null) {
+                return name;
+            }
 			return this.name();
 		}
 
@@ -290,11 +292,17 @@ public class KeyboardLayoutTest {
 
 		// Reset LEDs to let tests run in stable environment
 		final boolean wasCapsLock   = isLedEnabled(OS.VK_CAPITAL);
-		if           (wasCapsLock)       toggleLed(OS.VK_CAPITAL);
+        if (wasCapsLock) {
+            toggleLed(OS.VK_CAPITAL);
+        }
 		final boolean wasNumLock    = isLedEnabled(OS.VK_NUMLOCK);
-		if           (wasNumLock)        toggleLed(OS.VK_NUMLOCK);
+        if (wasNumLock) {
+            toggleLed(OS.VK_NUMLOCK);
+        }
 		final boolean wasScrollLock = isLedEnabled(OS.VK_SCROLL);
-		if           (wasScrollLock)     toggleLed(OS.VK_SCROLL);
+        if (wasScrollLock) {
+            toggleLed(OS.VK_SCROLL);
+        }
 
 		try {
 			collectKeyErrors = true;
@@ -322,10 +330,16 @@ public class KeyboardLayoutTest {
 				OS.UnloadKeyboardLayout(newLayout);
 			}
 
-			// Restore LED states
-			if (wasCapsLock   != isLedEnabled(OS.VK_CAPITAL)) toggleLed(OS.VK_CAPITAL);
-			if (wasNumLock    != isLedEnabled(OS.VK_NUMLOCK)) toggleLed(OS.VK_NUMLOCK);
-			if (wasScrollLock != isLedEnabled(OS.VK_SCROLL))  toggleLed(OS.VK_SCROLL);
+            // Restore LED states
+            if (wasCapsLock != isLedEnabled(OS.VK_CAPITAL)) {
+                toggleLed(OS.VK_CAPITAL);
+            }
+            if (wasNumLock != isLedEnabled(OS.VK_NUMLOCK)) {
+                toggleLed(OS.VK_NUMLOCK);
+            }
+            if (wasScrollLock != isLedEnabled(OS.VK_SCROLL)) {
+                toggleLed(OS.VK_SCROLL);
+            }
 
 			// Report errors
 			ArrayList<AssertionError> errors = keyErrors;
@@ -396,10 +410,18 @@ public class KeyboardLayoutTest {
 	}
 
 	protected void emulateState(int stateMask, boolean isUp) {
-		if ((stateMask & SWT.ALT) != 0)    emulateScanCode(UsScan.LAlt,   isUp);
-		if ((stateMask & SWT.ALT_GR) != 0) emulateScanCode(UsScan.RAltGr, isUp);
-		if ((stateMask & SWT.CTRL) != 0)   emulateScanCode(UsScan.LCtrl,  isUp);
-		if ((stateMask & SWT.SHIFT) != 0 ) emulateScanCode(UsScan.LShift, isUp);
+        if ((stateMask & SWT.ALT) != 0) {
+            emulateScanCode(UsScan.LAlt, isUp);
+        }
+        if ((stateMask & SWT.ALT_GR) != 0) {
+            emulateScanCode(UsScan.RAltGr, isUp);
+        }
+        if ((stateMask & SWT.CTRL) != 0) {
+            emulateScanCode(UsScan.LCtrl, isUp);
+        }
+        if ((stateMask & SWT.SHIFT) != 0) {
+            emulateScanCode(UsScan.LShift, isUp);
+        }
 	}
 
 	protected void emulateScanCode(int stateMask, UsScan... scanCodes) {
@@ -447,11 +469,21 @@ public class KeyboardLayoutTest {
 		assert(SWT.MODIFIER_MASK == (SWT.ALT | SWT.SHIFT | SWT.CTRL | SWT.COMMAND | SWT.ALT_GR));
 
 		StringBuilder sb = new StringBuilder();
-		if ((stateMask & SWT.ALT_GR) != 0)      sb.append("AltGr+");
-		if ((stateMask & SWT.ALT) != 0)         sb.append("Alt+");
-		if ((stateMask & SWT.COMMAND) != 0)     sb.append("Cmd+");
-		if ((stateMask & SWT.CTRL) != 0)        sb.append("Ctrl+");
-		if ((stateMask & SWT.SHIFT) != 0)       sb.append("Shift+");
+        if ((stateMask & SWT.ALT_GR) != 0) {
+            sb.append("AltGr+");
+        }
+        if ((stateMask & SWT.ALT) != 0) {
+            sb.append("Alt+");
+        }
+        if ((stateMask & SWT.COMMAND) != 0) {
+            sb.append("Cmd+");
+        }
+        if ((stateMask & SWT.CTRL) != 0) {
+            sb.append("Ctrl+");
+        }
+        if ((stateMask & SWT.SHIFT) != 0) {
+            sb.append("Shift+");
+        }
 
 		return sb.toString();
 	}
@@ -492,8 +524,9 @@ public class KeyboardLayoutTest {
 		if (!collectKeyErrors) {
 			throw error;
 		} else {
-			if (keyErrors == null)
-				keyErrors = new ArrayList<>();
+            if (keyErrors == null) {
+                keyErrors = new ArrayList<>();
+            }
 
 			System.out.println(testName + " : " + error.getMessage());
 			keyErrors.add(error);
@@ -631,9 +664,15 @@ public class KeyboardLayoutTest {
 		}
 
 		int mods = 0;
-		if ((stateMask & SWT.ALT)     != 0) mods |= OS.MOD_ALT;
-		if ((stateMask & SWT.CONTROL) != 0) mods |= OS.MOD_CONTROL;
-		if ((stateMask & SWT.SHIFT)   != 0) mods |= OS.MOD_SHIFT;
+        if ((stateMask & SWT.ALT) != 0) {
+            mods |= OS.MOD_ALT;
+        }
+        if ((stateMask & SWT.CONTROL) != 0) {
+            mods |= OS.MOD_CONTROL;
+        }
+        if ((stateMask & SWT.SHIFT) != 0) {
+            mods |= OS.MOD_SHIFT;
+        }
 
 		// Test by attempting to register it for ourselves.
 		final int id = 1000;

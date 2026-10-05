@@ -39,16 +39,22 @@ public class Snippet283 {
 		for (int i = 0; i < 8; i++) {
 			TableItem item = new TableItem(table, SWT.NONE);
 			item.setText ("Item " + i + " with long text that scrolls.");
-			if (i % 2 == 1) item.setImage (image);
+            if (i % 2 == 1) {
+                item.setImage(image);
+            }
 		}
 		table.addListener(SWT.MouseDown, event -> {
 			Rectangle rect = table.getClientArea ();
 			Point point = new Point (event.x, event.y);
-			if (table.getItem(point) != null) return;
+            if (table.getItem(point) != null) {
+                return;
+            }
 			for (int i=table.getTopIndex (); i<table.getItemCount(); i++) {
 				TableItem item = table.getItem (i);
 				Rectangle itemRect = item.getBounds ();
-				if (!itemRect.intersects (rect)) return;
+                if (!itemRect.intersects(rect)) {
+                    return;
+                }
 				itemRect.x = rect.x;
 				itemRect.width = rect.width;
 				if (itemRect.contains (point)) {
@@ -104,7 +110,9 @@ public class Snippet283 {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 }

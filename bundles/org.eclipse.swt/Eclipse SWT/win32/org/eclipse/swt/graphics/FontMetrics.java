@@ -63,8 +63,12 @@ FontMetrics() {
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof FontMetrics)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof FontMetrics)) {
+        return false;
+    }
 	TEXTMETRIC metric = ((FontMetrics)object).handle;
 	return handle.tmHeight == metric.tmHeight &&
 		handle.tmAscent == metric.tmAscent &&

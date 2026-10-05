@@ -62,11 +62,14 @@ public class Bug354351_MenuSizing {
 
 			buildUI();
 
-			if (!shell.isDisposed())
-				shell.open ();
+            if (!shell.isDisposed()) {
+                shell.open();
+            }
 
 			while (!shell.isDisposed ()) {
-				if (!display.readAndDispatch ()) display.sleep ();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 
 	}

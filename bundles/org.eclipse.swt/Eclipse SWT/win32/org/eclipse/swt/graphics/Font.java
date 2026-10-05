@@ -101,7 +101,9 @@ private Font(Device device, long handle, int zoom) {
  */
 public Font(Device device, FontData fd) {
 	super(device);
-	if (fd == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (fd == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.zoom = DPIUtil.getNativeDeviceZoom();
 	this.fontData = new FontData(fd);
 	this.fontHeight = fd.height;
@@ -110,7 +112,9 @@ public Font(Device device, FontData fd) {
 
 private Font(Device device, FontData fd, int zoom) {
 	super(device);
-	if (fd == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (fd == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.zoom = zoom;
 	this.fontData = new FontData(fd);
 	this.fontHeight = fd.height;
@@ -144,10 +148,16 @@ private Font(Device device, FontData fd, int zoom) {
  */
 public Font(Device device, FontData[] fds) {
 	super(device);
-	if (fds == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (fds.length == 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (fds == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (fds.length == 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	for (FontData fd : fds) {
-		if (fd == null) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (fd == null) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	this.zoom = DPIUtil.getNativeDeviceZoom();
 	FontData fd = fds[0];
@@ -182,7 +192,9 @@ public Font(Device device, FontData[] fds) {
  */
 public Font(Device device, String name, int height, int style) {
 	super(device);
-	if (name == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (name == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.zoom = DPIUtil.getNativeDeviceZoom();
 	this.fontData = new FontData (name, height, style);
 	this.fontHeight = height;
@@ -208,8 +220,12 @@ void destroy() {
  */
 @Override
 public boolean equals(Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Font)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Font)) {
+        return false;
+    }
 	Font font = (Font) object;
 	return device == font.device && win32_getHandle(this) == win32_getHandle(font);
 }
@@ -227,7 +243,9 @@ public boolean equals(Object object) {
  * </ul>
  */
 public FontData[] getFontData() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	LOGFONT logFont = fetchLogFontData();
 	return new FontData[] {FontData.win32_new(logFont, fontHeight)};
 }
@@ -254,13 +272,17 @@ public int hashCode () {
 }
 
 void init (FontData fd) {
-	if (fd == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (fd == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	LOGFONT logFont = fd.data;
 	int lfHeight = logFont.lfHeight;
 	logFont.lfHeight = device.computePixels(fd.height, zoom);
 	handle = OS.CreateFontIndirect(logFont);
 	logFont.lfHeight = lfHeight;
-	if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 }
 
 /**
@@ -286,7 +308,9 @@ public boolean isDisposed() {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Font {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Font {*DISPOSED*}";
+    }
 	return "Font {" + handle + "}";
 }
 

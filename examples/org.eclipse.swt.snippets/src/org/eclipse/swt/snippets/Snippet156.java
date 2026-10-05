@@ -183,10 +183,16 @@ public static void main(String[] args) {
 	frame.setVisible(true);
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
-	if (swtImage != null) swtImage.dispose();
-	if (swtImage2 != null) swtImage.dispose();
+    if (swtImage != null) {
+        swtImage.dispose();
+    }
+    if (swtImage2 != null) {
+        swtImage.dispose();
+    }
 	frame.dispose();
 	display.dispose();
 	/* Note: If you are using JDK 1.3.x, you need to use System.exit(0) at the end of your program to exit AWT.

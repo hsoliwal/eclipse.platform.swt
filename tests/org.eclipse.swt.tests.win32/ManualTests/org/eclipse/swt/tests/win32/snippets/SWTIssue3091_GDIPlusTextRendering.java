@@ -218,8 +218,12 @@ public class SWTIssue3091_GDIPlusTextRendering {
 		for (TextRow row : rows) {
 			FontData fontData = systemFont.getFontData()[0];
 			fontData.setStyle(row.fontStyle());
-			if (row.underline()) fontData.data.lfUnderline = 1;
-			if (row.strikeout()) fontData.data.lfStrikeOut = 1;
+            if (row.underline()) {
+                fontData.data.lfUnderline = 1;
+            }
+            if (row.strikeout()) {
+                fontData.data.lfStrikeOut = 1;
+            }
 			fonts.put(row, new Font(display, fontData));
 		}
 

@@ -137,9 +137,15 @@ protected void checkSubclass () {
  */
 protected void checkWidget () {
 	Display display = this.display;
-	if (display == null) DND.error (SWT.ERROR_WIDGET_DISPOSED);
-	if (display.getThread() != Thread.currentThread ()) DND.error (SWT.ERROR_THREAD_INVALID_ACCESS);
-	if (display.isDisposed()) DND.error(SWT.ERROR_WIDGET_DISPOSED);
+    if (display == null) {
+        DND.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (display.getThread() != Thread.currentThread()) {
+        DND.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
+    if (display.isDisposed()) {
+        DND.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 }
 
 /**
@@ -216,8 +222,12 @@ public void clearContents(int clipboards) {
  * </ul>
  */
 public void dispose () {
-	if (isDisposed()) return;
-	if (display.getThread() != Thread.currentThread()) DND.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    if (isDisposed()) {
+        return;
+    }
+    if (display.getThread() != Thread.currentThread()) {
+        DND.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
 	/* OleIsCurrentClipboard([in] pDataObject)
 	 * The argument pDataObject is owned by the caller so reference count does not
 	 * need to be incremented.
@@ -340,8 +350,12 @@ public Object getContents(Transfer transfer) {
  */
 public Object getContents(Transfer transfer, int clipboards) {
 	checkWidget();
-	if (transfer == null) DND.error(SWT.ERROR_NULL_ARGUMENT);
-	if ((clipboards & DND.CLIPBOARD) == 0) return null;
+    if (transfer == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((clipboards & DND.CLIPBOARD) == 0) {
+        return null;
+    }
 	/*
 	* Bug in Windows. When a new application takes control
 	* of the clipboard, other applications may open the
@@ -364,7 +378,9 @@ public Object getContents(Transfer transfer, int clipboards) {
 		OS.PeekMessage(msg, 0, 0, 0, OS.PM_NOREMOVE | OS.PM_NOYIELD);
 		result = COM.OleGetClipboard(ppv);
 	}
-	if (result != COM.S_OK) return null;
+    if (result != COM.S_OK) {
+        return null;
+    }
 	IDataObject dataObject = new IDataObject(ppv[0]);
 	try {
 		for (TransferData data : transfer.getSupportedTypes()) {
@@ -600,7 +616,9 @@ public void setContents(Object[] data, Transfer[] dataTypes, int clipboards) {
 			DND.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
 	}
-	if ((clipboards & DND.CLIPBOARD) == 0) return;
+    if ((clipboards & DND.CLIPBOARD) == 0) {
+        return;
+    }
 	this.data = data;
 	this.transferAgents = dataTypes;
 	/* OleSetClipboard([in] pDataObject)
@@ -658,8 +676,9 @@ private void createCOMInterfaces() {
 	};
 }
 private void disposeCOMInterfaces() {
-	if (iDataObject != null)
-		iDataObject.dispose();
+    if (iDataObject != null) {
+        iDataObject.dispose();
+    }
 	iDataObject = null;
 }
 /*
@@ -668,8 +687,10 @@ private void disposeCOMInterfaces() {
  * must be incremented before returning.  Caller is responsible for releasing ppenumFormatetc.
  */
 private int EnumFormatEtc(int dwDirection, long ppenumFormatetc) {
-	// only allow getting of data - SetData is not currently supported
-	if (dwDirection == COM.DATADIR_SET) return COM.E_NOTIMPL;
+    // only allow getting of data - SetData is not currently supported
+    if (dwDirection == COM.DATADIR_SET) {
+        return COM.E_NOTIMPL;
+    }
 	// what types have been registered?
 	TransferData[] allowedDataTypes = new TransferData[0];
 	for (Transfer transferAgent : transferAgents) {
@@ -697,13 +718,17 @@ private int EnumFormatEtc(int dwDirection, long ppenumFormatetc) {
 	return COM.S_OK;
 }
 private int GetData(long pFormatetc, long pmedium) {
-	/* Called by a data consumer to obtain data from a source data object.
-	   The GetData method renders the data described in the specified FORMATETC
-	   structure and transfers it through the specified STGMEDIUM structure.
-	   The caller then assumes responsibility for releasing the STGMEDIUM structure.
-	*/
-	if (pFormatetc == 0 || pmedium == 0) return COM.E_INVALIDARG;
-	if (QueryGetData(pFormatetc) != COM.S_OK) return COM.DV_E_FORMATETC;
+    /* Called by a data consumer to obtain data from a source data object.
+       The GetData method renders the data described in the specified FORMATETC
+       structure and transfers it through the specified STGMEDIUM structure.
+       The caller then assumes responsibility for releasing the STGMEDIUM structure.
+    */
+    if (pFormatetc == 0 || pmedium == 0) {
+        return COM.E_INVALIDARG;
+    }
+    if (QueryGetData(pFormatetc) != COM.S_OK) {
+        return COM.DV_E_FORMATETC;
+    }
 
 	TransferData transferData = new TransferData();
 	transferData.formatetc = new FORMATETC();
@@ -732,23 +757,30 @@ private int GetData(long pFormatetc, long pmedium) {
 			break;
 		}
 	}
-	if (transferIndex == -1) return COM.DV_E_FORMATETC;
+    if (transferIndex == -1) {
+        return COM.DV_E_FORMATETC;
+    }
 	transferAgents[transferIndex].javaToNative(data[transferIndex], transferData);
 	COM.MoveMemory(pmedium, transferData.stgmedium, STGMEDIUM.sizeof);
 	return transferData.result;
 }
 
 private int QueryGetData(long pFormatetc) {
-	if (transferAgents == null) return COM.E_FAIL;
+    if (transferAgents == null) {
+        return COM.E_FAIL;
+    }
 	TransferData transferData = new TransferData();
 	transferData.formatetc = new FORMATETC();
 	COM.MoveMemory(transferData.formatetc, pFormatetc, FORMATETC.sizeof);
 	transferData.type = transferData.formatetc.cfFormat;
-	if (transferData.type == CFSTR_PREFERREDDROPEFFECT) return COM.S_OK;
+    if (transferData.type == CFSTR_PREFERREDDROPEFFECT) {
+        return COM.S_OK;
+    }
 	// is this type supported by the transfer agent?
 	for (Transfer transferAgent : transferAgents) {
-		if (transferAgent.isSupportedType(transferData))
-			return COM.S_OK;
+        if (transferAgent.isSupportedType(transferData)) {
+            return COM.S_OK;
+        }
 	}
 
 	return COM.DV_E_FORMATETC;
@@ -758,7 +790,9 @@ private int QueryGetData(long pFormatetc) {
  * must be incremented before returning.  Caller is responsible for releasing ppvObject.
  */
 private int QueryInterface(long riid, long ppvObject) {
-	if (riid == 0 || ppvObject == 0) return COM.E_INVALIDARG;
+    if (riid == 0 || ppvObject == 0) {
+        return COM.E_INVALIDARG;
+    }
 	GUID guid = new GUID();
 	COM.MoveMemory(guid, riid, GUID.sizeof);
 	if (COM.IsEqualGUID(guid, COM.IIDIUnknown) || COM.IsEqualGUID(guid, COM.IIDIDataObject) ) {
@@ -826,7 +860,9 @@ public TransferData[] getAvailableTypes() {
  */
 public TransferData[] getAvailableTypes(int clipboards) {
 	checkWidget();
-	if ((clipboards & DND.CLIPBOARD) == 0) return new TransferData[0];
+    if ((clipboards & DND.CLIPBOARD) == 0) {
+        return new TransferData[0];
+    }
 	FORMATETC[] types = _getAvailableTypes();
 	TransferData[] data = new TransferData[types.length];
 	for (int i = 0; i < types.length; i++) {
@@ -892,10 +928,12 @@ public String[] getAvailableTypeNames() {
 private FORMATETC[] _getAvailableTypes() {
 	FORMATETC[] types = new FORMATETC[0];
 	long[] ppv = new long[1];
-	/* OleGetClipboard([out] ppDataObject).
-	 * AddRef has already been called on ppDataObject by the callee and must be released by the caller.
-	 */
-	if (COM.OleGetClipboard(ppv) != COM.S_OK) return types;
+    /* OleGetClipboard([out] ppDataObject).
+     * AddRef has already been called on ppDataObject by the callee and must be released by the caller.
+     */
+    if (COM.OleGetClipboard(ppv) != COM.S_OK) {
+        return types;
+    }
 	IDataObject dataObject = new IDataObject(ppv[0]);
 	long[] ppFormatetc = new long[1];
 	/* EnumFormatEtc([in] dwDirection, [out] ppenumFormatetc)
@@ -903,7 +941,9 @@ private FORMATETC[] _getAvailableTypes() {
 	 */
 	int rc = dataObject.EnumFormatEtc(COM.DATADIR_GET, ppFormatetc);
 	dataObject.Release();
-	if (rc != COM.S_OK)return types;
+    if (rc != COM.S_OK) {
+        return types;
+    }
 	IEnumFORMATETC enumFormatetc = new IEnumFORMATETC(ppFormatetc[0]);
 	// Loop over enumerator and save any types that match what we are looking for
 	long rgelt = OS.GlobalAlloc(OS.GMEM_FIXED | OS.GMEM_ZEROINIT, FORMATETC.sizeof);

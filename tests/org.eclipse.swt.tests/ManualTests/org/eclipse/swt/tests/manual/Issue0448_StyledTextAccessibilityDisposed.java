@@ -53,8 +53,9 @@ public final class Issue0448_StyledTextAccessibilityDisposed {
 			int numErrors = 0;
 			for (int iIteration = 1; ; iIteration++) {
 				try {
-					if (shell.isDisposed())
-						break;
+                    if (shell.isDisposed()) {
+                        break;
+                    }
 
 					Shell shell2 = new Shell(shell, SWT.SHELL_TRIM);
 					shell2.setLayout(new FillLayout());

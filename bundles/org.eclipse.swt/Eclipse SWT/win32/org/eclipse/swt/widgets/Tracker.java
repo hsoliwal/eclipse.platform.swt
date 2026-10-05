@@ -135,8 +135,12 @@ public Tracker (Composite parent, int style) {
  * @see SWT#RESIZE
  */
 public Tracker (Display display, int style) {
-	if (display == null) display = Display.getCurrent ();
-	if (display == null) display = Display.getDefault ();
+    if (display == null) {
+        display = Display.getCurrent();
+    }
+    if (display == null) {
+        display = Display.getDefault();
+    }
 	if (!display.isValidThread ()) {
 		error (SWT.ERROR_THREAD_INVALID_ACCESS);
 	}
@@ -193,7 +197,9 @@ public void addKeyListener (KeyListener listener) {
 }
 
 Point adjustMoveCursor () {
-	if (bounds == null) return null;
+    if (bounds == null) {
+        return null;
+    }
 	int newX = bounds.x + bounds.width / 2;
 	int newY = bounds.y;
 	POINT pt = new POINT ();
@@ -209,7 +215,9 @@ Point adjustMoveCursor () {
 }
 
 Point adjustResizeCursor () {
-	if (bounds == null) return null;
+    if (bounds == null) {
+        return null;
+    }
 	int newX, newY;
 
 	if ((cursorOrientation & SWT.LEFT) != 0) {
@@ -302,19 +310,29 @@ public void close () {
 }
 
 Rectangle computeBounds () {
-	if (rectangles.length == 0) return null;
+    if (rectangles.length == 0) {
+        return null;
+    }
 	int xMin = rectangles [0].x;
 	int yMin = rectangles [0].y;
 	int xMax = rectangles [0].x + rectangles [0].width;
 	int yMax = rectangles [0].y + rectangles [0].height;
 
 	for (int i = 1; i < rectangles.length; i++) {
-		if (rectangles [i].x < xMin) xMin = rectangles [i].x;
-		if (rectangles [i].y < yMin) yMin = rectangles [i].y;
+        if (rectangles [i].x < xMin) {
+            xMin = rectangles [i].x;
+        }
+        if (rectangles [i].y < yMin) {
+            yMin = rectangles [i].y;
+        }
 		int rectRight = rectangles [i].x + rectangles [i].width;
-		if (rectRight > xMax) xMax = rectRight;
+        if (rectRight > xMax) {
+            xMax = rectRight;
+        }
 		int rectBottom = rectangles [i].y + rectangles [i].height;
-		if (rectBottom > yMax) yMax = rectBottom;
+        if (rectBottom > yMax) {
+            yMax = rectBottom;
+        }
 	}
 
 	return new Rectangle (xMin, yMin, xMax - xMin, yMax - yMin);
@@ -432,12 +450,24 @@ public boolean getStippled () {
 }
 
 void moveRectangles (int xChange, int yChange) {
-	if (bounds == null) return;
-	if (xChange < 0 && ((style & SWT.LEFT) == 0)) xChange = 0;
-	if (xChange > 0 && ((style & SWT.RIGHT) == 0)) xChange = 0;
-	if (yChange < 0 && ((style & SWT.UP) == 0)) yChange = 0;
-	if (yChange > 0 && ((style & SWT.DOWN) == 0)) yChange = 0;
-	if (xChange == 0 && yChange == 0) return;
+    if (bounds == null) {
+        return;
+    }
+    if (xChange < 0 && ((style & SWT.LEFT) == 0)) {
+        xChange = 0;
+    }
+    if (xChange > 0 && ((style & SWT.RIGHT) == 0)) {
+        xChange = 0;
+    }
+    if (yChange < 0 && ((style & SWT.UP) == 0)) {
+        yChange = 0;
+    }
+    if (yChange > 0 && ((style & SWT.DOWN) == 0)) {
+        yChange = 0;
+    }
+    if (xChange == 0 && yChange == 0) {
+        return;
+    }
 	bounds.x += xChange; bounds.y += yChange;
 	for (Rectangle rectangle : rectangles) {
 		rectangle.x += xChange;
@@ -571,7 +601,9 @@ public boolean open () {
 		/* Tracker behaves like a Dialog with its own OS event loop. */
 		MSG msg = new MSG ();
 		while (tracking && !cancelled) {
-			if (parent != null && parent.isDisposed ()) break;
+            if (parent != null && parent.isDisposed()) {
+                break;
+            }
 			display.runSkin ();
 			display.runDeferredLayouts ();
 			display.sendPreExternalEventDispatchEvent ();
@@ -591,8 +623,12 @@ public boolean open () {
 				case OS.WM_SYSKEYDOWN: wmSysKeyDown (msg.hwnd, msg.wParam, msg.lParam); break;
 				case OS.WM_SYSKEYUP: wmSysKeyUp (msg.hwnd, msg.wParam, msg.lParam); break;
 			}
-			if (OS.WM_KEYFIRST <= msg.message && msg.message <= OS.WM_KEYLAST) continue;
-			if (OS.WM_MOUSEFIRST <= msg.message && msg.message <= OS.WM_MOUSELAST) continue;
+            if (OS.WM_KEYFIRST <= msg.message && msg.message <= OS.WM_KEYLAST) {
+                continue;
+            }
+            if (OS.WM_MOUSEFIRST <= msg.message && msg.message <= OS.WM_MOUSELAST) {
+                continue;
+            }
 			if (hwndOpaque == 0) {
 				if (msg.message == OS.WM_PAINT) {
 					update ();
@@ -607,7 +643,9 @@ public boolean open () {
 			}
 			display.runAsyncMessages (false);
 		}
-		if (mouseDown) OS.ReleaseCapture ();
+        if (mouseDown) {
+            OS.ReleaseCapture();
+        }
 		if (!isDisposed()) {
 			update ();
 			drawRectangles (rectangles, stippled);
@@ -666,8 +704,12 @@ void releaseWidget () {
  */
 public void removeControlListener (ControlListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Resize, listener);
 	eventTable.unhook (SWT.Move, listener);
 }
@@ -691,14 +733,20 @@ public void removeControlListener (ControlListener listener) {
  */
 public void removeKeyListener(KeyListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.KeyUp, listener);
 	eventTable.unhook (SWT.KeyDown, listener);
 }
 
 void resizeRectangles (int xChange, int yChange) {
-	if (bounds == null) return;
+    if (bounds == null) {
+        return;
+    }
 	/*
 	* If the cursor orientation has not been set in the orientation of
 	* this change then try to set it here.
@@ -724,7 +772,9 @@ void resizeRectangles (int xChange, int yChange) {
 	 */
 	if ((cursorOrientation & SWT.LEFT) != 0) {
 		if (xChange > bounds.width) {
-			if ((style & SWT.RIGHT) == 0) return;
+            if ((style & SWT.RIGHT) == 0) {
+                return;
+            }
 			cursorOrientation |= SWT.RIGHT;
 			cursorOrientation &= ~SWT.LEFT;
 			bounds.x += bounds.width;
@@ -738,7 +788,9 @@ void resizeRectangles (int xChange, int yChange) {
 		}
 	} else if ((cursorOrientation & SWT.RIGHT) != 0) {
 		if (bounds.width < -xChange) {
-			if ((style & SWT.LEFT) == 0) return;
+            if ((style & SWT.LEFT) == 0) {
+                return;
+            }
 			cursorOrientation |= SWT.LEFT;
 			cursorOrientation &= ~SWT.RIGHT;
 			xChange += bounds.width;
@@ -752,7 +804,9 @@ void resizeRectangles (int xChange, int yChange) {
 	}
 	if ((cursorOrientation & SWT.UP) != 0) {
 		if (yChange > bounds.height) {
-			if ((style & SWT.DOWN) == 0) return;
+            if ((style & SWT.DOWN) == 0) {
+                return;
+            }
 			cursorOrientation |= SWT.DOWN;
 			cursorOrientation &= ~SWT.UP;
 			bounds.y += bounds.height;
@@ -766,7 +820,9 @@ void resizeRectangles (int xChange, int yChange) {
 		}
 	} else if ((cursorOrientation & SWT.DOWN) != 0) {
 		if (bounds.height < -yChange) {
-			if ((style & SWT.UP) == 0) return;
+            if ((style & SWT.UP) == 0) {
+                return;
+            }
 			cursorOrientation |= SWT.UP;
 			cursorOrientation &= ~SWT.DOWN;
 			yChange += bounds.height;
@@ -820,7 +876,9 @@ public void setCursor(Cursor newCursor) {
 	checkWidget();
 	clientCursor = newCursor;
 	if (newCursor != null) {
-		if (inEvent) OS.SetCursor (Cursor.win32_getHandle(clientCursor, DPIUtil.getZoomForAutoscaleProperty(parent != null ? parent.getShellZoom() : nativeZoom)));
+        if (inEvent) {
+            OS.SetCursor(Cursor.win32_getHandle(clientCursor, DPIUtil.getZoomForAutoscaleProperty(parent != null ? parent.getShellZoom() : nativeZoom)));
+        }
 	}
 }
 
@@ -840,7 +898,9 @@ public void setCursor(Cursor newCursor) {
  */
 public void setRectangles (Rectangle [] rectangles) {
 	checkWidget ();
-	if (rectangles == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rectangles == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	Rectangle [] rectanglesInPixels = new Rectangle [rectangles.length];
 	for (int i = 0; i < rectangles.length; i++) {
 		if (parent != null) {
@@ -856,7 +916,9 @@ void setRectanglesInPixels (Rectangle [] rectangles) {
 	this.rectangles = new Rectangle [rectangles.length];
 	for (int i = 0; i < rectangles.length; i++) {
 		Rectangle current = rectangles [i];
-		if (current == null) error (SWT.ERROR_NULL_ARGUMENT);
+        if (current == null) {
+            error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		this.rectangles [i] = new Rectangle (current.x, current.y, current.width, current.height);
 	}
 	proportions = computeProportions (rectangles);
@@ -889,7 +951,9 @@ long transparentProc (long hwnd, long msg, long wParam, long lParam) {
 		* the client.
 		*/
 		case OS.WM_NCHITTEST:
-			if (inEvent) return OS.HTTRANSPARENT;
+            if (inEvent) {
+                return OS.HTTRANSPARENT;
+            }
 			break;
 		case OS.WM_SETCURSOR:
 			if (clientCursor != null) {
@@ -953,9 +1017,13 @@ long transparentProc (long hwnd, long msg, long wParam, long lParam) {
 }
 
 void update () {
-	if (hwndOpaque != 0) return;
+    if (hwndOpaque != 0) {
+        return;
+    }
 	if (parent != null) {
-		if (parent.isDisposed ()) return;
+        if (parent.isDisposed()) {
+            return;
+        }
 		Shell shell = parent.getShell ();
 		shell.update (true);
 	} else {
@@ -966,7 +1034,9 @@ void update () {
 @Override
 LRESULT wmKeyDown (long hwnd, long wParam, long lParam) {
 	LRESULT result = super.wmKeyDown (hwnd, wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	boolean isMirrored = parent != null && (parent.style & SWT.MIRRORED) != 0;
 	int stepSize = OS.GetKeyState (OS.VK_CONTROL) < 0 ? STEPSIZE_SMALL : STEPSIZE_LARGE;
 	int xChange = 0, yChange = 0;
@@ -1101,7 +1171,9 @@ LRESULT wmKeyDown (long hwnd, long wParam, long lParam) {
 @Override
 LRESULT wmSysKeyDown (long hwnd, long wParam, long lParam) {
 	LRESULT result = super.wmSysKeyDown (hwnd, wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	cancelled = true;
 	tracking = false;
 	return result;

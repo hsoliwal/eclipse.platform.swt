@@ -31,8 +31,12 @@ public TIFFRandomFileAccess(LEDataInputStream stream) {
 }
 
 void seek(int pos) throws IOException {
-	if (pos == current) return;
-	if (pos < start) throw new IOException();
+    if (pos == current) {
+        return;
+    }
+    if (pos < start) {
+        throw new IOException();
+    }
 	current = pos;
 	if (current > next) {
 		int n = current - next;
@@ -45,7 +49,9 @@ void seek(int pos) throws IOException {
 				buffers = new byte[Math.max(index + 1, oldBuffers.length + LIST_SIZE)][];
 				System.arraycopy(oldBuffers, 0, buffers, 0, oldBuffers.length);
 			}
-			if (buffers[index] == null) buffers[index] = new byte[CHUNK_SIZE];
+            if (buffers[index] == null) {
+                buffers[index] = new byte[CHUNK_SIZE];
+            }
 			int cnt = inputStream.read(buffers[index], offset, Math.min(n, CHUNK_SIZE - offset));
 			n -= cnt;
 			next += cnt;
@@ -83,7 +89,9 @@ void read(byte b[]) throws IOException {
 				buffers = new byte[Math.max(index, oldBuffers.length + LIST_SIZE)][];
 				System.arraycopy(oldBuffers, 0, buffers, 0, oldBuffers.length);
 			}
-			if (buffers[index] == null) buffers[index] = new byte[CHUNK_SIZE];
+            if (buffers[index] == null) {
+                buffers[index] = new byte[CHUNK_SIZE];
+            }
 			int cnt = inputStream.read(buffers[index], offset, Math.min(nMissing, CHUNK_SIZE - offset));
 			System.arraycopy(buffers[index], offset, b, destNext, cnt);
 			nMissing -= cnt;

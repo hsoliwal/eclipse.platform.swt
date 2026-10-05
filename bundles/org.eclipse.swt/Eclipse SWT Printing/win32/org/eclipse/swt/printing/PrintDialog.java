@@ -111,8 +111,12 @@ private static int m3NormalizeStyle(Shell parent, int style) {
 	style &= ~SWT.MIRRORED;
 	if ((style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT)) == 0) {
 		if (parent != null) {
-			if ((parent.getStyle () & SWT.LEFT_TO_RIGHT) != 0) style |= SWT.LEFT_TO_RIGHT;
-			if ((parent.getStyle () & SWT.RIGHT_TO_LEFT) != 0) style |= SWT.RIGHT_TO_LEFT;
+            if ((parent.getStyle() & SWT.LEFT_TO_RIGHT) != 0) {
+                style |= SWT.LEFT_TO_RIGHT;
+            }
+            if ((parent.getStyle() & SWT.RIGHT_TO_LEFT) != 0) {
+                style |= SWT.RIGHT_TO_LEFT;
+            }
 		}
 	}
 	return checkBits (style, SWT.LEFT_TO_RIGHT, SWT.RIGHT_TO_LEFT, 0, 0, 0, 0);
@@ -131,7 +135,9 @@ private static int m3NormalizeStyle(Shell parent, int style) {
  * @since 3.4
  */
 public void setPrinterData(PrinterData data) {
-	if (data == null) data = new PrinterData();
+    if (data == null) {
+        data = new PrinterData();
+    }
 	this.printerData = data;
 }
 
@@ -300,7 +306,9 @@ public PrinterData open() {
 	int parentOrientation = parent.getStyle() & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT);
 	if (dialogOrientation != parentOrientation) {
 		int exStyle = OS.WS_EX_NOINHERITLAYOUT;
-		if (dialogOrientation == SWT.RIGHT_TO_LEFT) exStyle |= OS.WS_EX_LAYOUTRTL;
+        if (dialogOrientation == SWT.RIGHT_TO_LEFT) {
+            exStyle |= OS.WS_EX_LAYOUTRTL;
+        }
 		hwndOwner = OS.CreateWindowEx (
 			exStyle,
 			DialogClass,
@@ -312,7 +320,9 @@ public PrinterData open() {
 			OS.GetModuleHandle (null),
 			null);
 		enabled = OS.IsWindowEnabled (hwndParent);
-		if (enabled) OS.EnableWindow (hwndParent, false);
+        if (enabled) {
+            OS.EnableWindow(hwndParent, false);
+        }
 	}
 
 	PrinterData data = null;
@@ -373,7 +383,9 @@ public PrinterData open() {
 			long ptr = OS.GlobalLock(hMem);
 			OS.MoveMemory(ptr, devmodeData, devmodeData.length);
 			OS.GlobalUnlock(hMem);
-			if (pd.hDevMode != 0) OS.GlobalFree(pd.hDevMode);
+            if (pd.hDevMode != 0) {
+                OS.GlobalFree(pd.hDevMode);
+            }
 			pd.hDevMode = hMem;
 		}
 
@@ -415,7 +427,9 @@ public PrinterData open() {
 		OS.GlobalUnlock(hMem);
 
 		pd.Flags = OS.PD_USEDEVMODECOPIESANDCOLLATE;
-		if (printerData.printToFile) pd.Flags |= OS.PD_PRINTTOFILE;
+        if (printerData.printToFile) {
+            pd.Flags |= OS.PD_PRINTTOFILE;
+        }
 		switch (printerData.scope) {
 			case PrinterData.PAGE_RANGE: pd.Flags |= OS.PD_PAGENUMS; break;
 			case PrinterData.SELECTION: pd.Flags |= OS.PD_SELECTION; break;
@@ -468,7 +482,9 @@ public PrinterData open() {
 			int driverOffset = offsets[0];
 			int i = 0;
 			while (driverOffset + i < size) {
-				if (buffer [driverOffset + i] == 0) break;
+                if (buffer [driverOffset + i] == 0) {
+                    break;
+                }
 				i++;
 			}
 			String driver = new String(buffer, driverOffset, i);
@@ -476,7 +492,9 @@ public PrinterData open() {
 			int deviceOffset = offsets[1];
 			i = 0;
 			while (deviceOffset + i < size) {
-				if (buffer [deviceOffset + i] == 0) break;
+                if (buffer [deviceOffset + i] == 0) {
+                    break;
+                }
 				i++;
 			}
 			String device = new String(buffer, deviceOffset, i);
@@ -491,7 +509,9 @@ public PrinterData open() {
 				data.scope = PrinterData.SELECTION;
 			}
 			data.printToFile = (pd.Flags & OS.PD_PRINTTOFILE) != 0;
-			if (data.printToFile) data.fileName = printerData.fileName;
+            if (data.printToFile) {
+                data.fileName = printerData.fileName;
+            }
 			data.copyCount = pd.nCopies;
 			data.collate = (pd.Flags & OS.PD_COLLATE) != 0;
 
@@ -528,7 +548,9 @@ public PrinterData open() {
 	}
 	/* Destroy the BIDI orientation window */
 	if (hwndParent != hwndOwner) {
-		if (enabled) OS.EnableWindow (hwndParent, true);
+        if (enabled) {
+            OS.EnableWindow(hwndParent, true);
+        }
 		OS.SetActiveWindow (hwndParent);
 		OS.DestroyWindow (hwndOwner);
 	}

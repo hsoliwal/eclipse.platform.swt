@@ -208,16 +208,22 @@ public void addSelectionListener (SelectionListener listener) {
 }
 
 TableItem _getItem (int index) {
-	if ((style & SWT.VIRTUAL) == 0) return items [index];
+    if ((style & SWT.VIRTUAL) == 0) {
+        return items [index];
+    }
 	TableItem item = virtualItems.get (index);
-	if (item != null) return item;
+    if (item != null) {
+        return item;
+    }
 	item = new TableItem (this, SWT.NULL, -1, false);
 	virtualItems.put (index, item);
 	return item;
 }
 
 TableItem _getItem (int index, boolean create) {
-	if ((style & SWT.VIRTUAL) == 0) return items [index];
+    if ((style & SWT.VIRTUAL) == 0) {
+        return items [index];
+    }
 	TableItem item = virtualItems.get (index);
 	return item != null || !create ? item : _getItem (index);
 }
@@ -235,12 +241,16 @@ int materializedIndex (int position) {
 }
 
 void syncVirtualSelectionFromNative () {
-	if (virtualViewport == null) return;
+    if (virtualViewport == null) {
+        return;
+    }
 	VirtualSelectionModel selectionModel = virtualViewport.selection ();
 	selectionModel.clear ();
 	NSTableView widget = (NSTableView)view;
 	long count = widget.numberOfSelectedRows ();
-	if (count == 0) return;
+    if (count == 0) {
+        return;
+    }
 	if (count == itemCount && (style & SWT.SINGLE) == 0) {
 		selectionModel.selectAll ();
 		return;
@@ -249,12 +259,16 @@ void syncVirtualSelectionFromNative () {
 	long [] indices = new long [(int)count];
 	selected.getIndexes (indices, count, 0);
 	for (long index : indices) {
-		if (0 <= index && index < itemCount) selectionModel.setSelected ((int)index, true);
+        if (0 <= index && index < itemCount) {
+            selectionModel.setSelected((int) index, true);
+        }
 	}
 }
 
 void updateVirtualViewport () {
-	if (virtualViewport == null) return;
+    if (virtualViewport == null) {
+        return;
+    }
 	if (itemCount == 0) {
 		virtualViewport.setViewport (0, 0);
 		return;
@@ -264,9 +278,13 @@ void updateVirtualViewport () {
 	point.x = rect.x;
 	point.y = rect.y;
 	NSTableHeaderView tableHeader = ((NSTableView)view).headerView ();
-	if (tableHeader != null) point.y += tableHeader.bounds ().height;
+    if (tableHeader != null) {
+        point.y += tableHeader.bounds().height;
+    }
 	int first = (int)((NSTableView)view).rowAtPoint (point);
-	if (first < 0) first = 0;
+    if (first < 0) {
+        first = 0;
+    }
 	int rowHeight = Math.max (1, getItemHeight ());
 	int visible = Math.min (itemCount - first,
 			Math.max (1, (int)Math.ceil (rect.height / rowHeight) + 1));
@@ -274,7 +292,9 @@ void updateVirtualViewport () {
 }
 
 boolean isVirtualPaintCandidate (TableItem item) {
-	if (virtualViewport == null) return true;
+    if (virtualViewport == null) {
+        return true;
+    }
 	updateVirtualViewport ();
 	int index = virtualItems.indexOfIdentity (item);
 	return index >= 0 && virtualViewport.isPaintCandidate (index);
@@ -296,7 +316,9 @@ NSSize cellSize (long id, long sel) {
 	NSSize size = super.cellSize(id, sel);
 	NSCell cell = new NSCell(id);
 	NSImage image = cell.image();
-	if (image != null) size.width += imageBounds.width + IMAGE_GAP;
+    if (image != null) {
+        size.width += imageBounds.width + IMAGE_GAP;
+    }
 	if (hooks(SWT.MeasureItem)) {
 		long [] outValue = new long [1];
 		OS.object_getInstanceVariable(id, Display.SWT_ROW, outValue);
@@ -318,7 +340,9 @@ NSSize cellSize (long id, long sel) {
 
 @Override
 boolean canDragRowsWithIndexes_atPoint(long id, long sel, long rowIndexes, NSPoint mouseDownPoint) {
-	if (!super.canDragRowsWithIndexes_atPoint(id, sel, rowIndexes, mouseDownPoint)) return false;
+    if (!super.canDragRowsWithIndexes_atPoint(id, sel, rowIndexes, mouseDownPoint)) {
+        return false;
+    }
 
 	// If the current row is not selected and the user is not attempting to modify the selection, select the row first.
 	NSTableView widget = (NSTableView)view;
@@ -344,7 +368,9 @@ boolean checkData (TableItem item) {
 }
 
 boolean checkData (TableItem item, int index) {
-	if (item.isCachedState ()) return true;
+    if (item.isCachedState()) {
+        return true;
+    }
 	if ((style & SWT.VIRTUAL) != 0) {
 		item.pinVirtualFacade ();
 		item.setCachedState (true);
@@ -355,8 +381,12 @@ boolean checkData (TableItem item, int index) {
 		sendEvent (SWT.SetData, event);
 		//widget could be disposed at this point
 		currentItem = null;
-		if (isDisposed () || item.isDisposed ()) return false;
-		if (!setScrollWidth (item)) item.redraw (-1);
+        if (isDisposed() || item.isDisposed()) {
+            return false;
+        }
+        if (!setScrollWidth(item)) {
+            item.redraw(-1);
+        }
 	}
 	return true;
 }
@@ -367,7 +397,9 @@ static int checkStyle (int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -393,11 +425,17 @@ protected void checkSubclass () {
  */
 public void clear (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	TableItem item = _getItem (index, false);
 	if (item != null) {
-		if (currentItem != item) item.clear ();
-		if (currentItem == null) item.redraw (-1);
+        if (currentItem != item) {
+            item.clear();
+        }
+        if (currentItem == null) {
+            item.redraw(-1);
+        }
 		setScrollWidth (item);
 	}
 }
@@ -426,7 +464,9 @@ public void clear (int index) {
  */
 public void clear (int start, int end) {
 	checkWidget ();
-	if (start > end) return;
+    if (start > end) {
+        return;
+    }
 	if (!(0 <= start && start <= end && end < itemCount)) {
 		error (SWT.ERROR_INVALID_RANGE);
 	}
@@ -434,12 +474,18 @@ public void clear (int start, int end) {
 		clearAll ();
 	} else if ((style & SWT.VIRTUAL) != 0) {
 		virtualItems.forEachIndexed ((index, item) -> {
-			if (start <= index && index <= end && currentItem != item) item.clear ();
+            if (start <= index && index <= end && currentItem != item) {
+                item.clear();
+            }
 		});
-		if (currentItem == null && isDrawing ()) view.setNeedsDisplay (true);
+        if (currentItem == null && isDrawing()) {
+            view.setNeedsDisplay(true);
+        }
 		setScrollWidth (items, true);
 	} else {
-		for (int i=start; i<=end; i++) clear (i);
+        for (int i = start; i <= end; i++) {
+            clear(i);
+        }
 	}
 }
 /**
@@ -466,14 +512,20 @@ public void clear (int start, int end) {
  */
 public void clear (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (indices.length == 0) return;
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (indices.length == 0) {
+        return;
+    }
 	for (int i=0; i<indices.length; i++) {
 		if (!(0 <= indices [i] && indices [i] < itemCount)) {
 			error (SWT.ERROR_INVALID_RANGE);
 		}
 	}
-	for (int i=0; i<indices.length; i++) clear (indices [i]);
+    for (int i = 0; i < indices.length; i++) {
+        clear(indices [i]);
+    }
 }
 /**
  * Clears all the items in the receiver. The text, icon and other
@@ -495,23 +547,31 @@ public void clearAll () {
 	checkWidget ();
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null) item.clear ();
+        if (item != null) {
+            item.clear();
+        }
 	}
-	if (currentItem == null && isDrawing ()) view.setNeedsDisplay (true);
+    if (currentItem == null && isDrawing()) {
+        view.setNeedsDisplay(true);
+    }
 	setScrollWidth (items, true);
 }
 
 void clearCachedWidth () {
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null) item.width = -1;
+        if (item != null) {
+            item.width = -1;
+        }
 	}
 }
 
 @Override
 long columnAtPoint(long id, long sel, NSPoint point) {
 	if ((style & SWT.CHECK) != 0) {
-		if (point.x <= getCheckColumnWidth() && point.y < headerView.frame().height) return 1;
+        if (point.x <= getCheckColumnWidth() && point.y < headerView.frame().height) {
+            return 1;
+        }
 	}
 
 	return super.columnAtPoint(id, sel, point);
@@ -531,18 +591,24 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 			width += calculateWidth (0, gc) + CELL_GAP;
 			gc.dispose ();
 		}
-		if ((style & SWT.CHECK) != 0) width += getCheckColumnWidth ();
+        if ((style & SWT.CHECK) != 0) {
+            width += getCheckColumnWidth();
+        }
 	} else {
 		width = wHint;
 	}
-	if (width <= 0) width = DEFAULT_WIDTH;
+    if (width <= 0) {
+        width = DEFAULT_WIDTH;
+    }
 	int height = 0;
 	if (hHint == SWT.DEFAULT) {
 		height = itemCount * getItemHeight () + getHeaderHeight();
 	} else {
 		height = hHint;
 	}
-	if (height <= 0) height = DEFAULT_HEIGHT;
+    if (height <= 0) {
+        height = DEFAULT_HEIGHT;
+    }
 	Rectangle rect = computeTrim (0, 0, width, height);
 	return new Point (rect.width, rect.height);
 }
@@ -556,7 +622,9 @@ void createColumn (TableItem item, int index) {
 		temp [index] = "";
 		item.strings = temp;
 	}
-	if (index == 0) item.text = "";
+    if (index == 0) {
+        item.text = "";
+    }
 	Image [] images = item.images;
 	if (images != null) {
 		Image [] temp = new Image [columnCount];
@@ -564,7 +632,9 @@ void createColumn (TableItem item, int index) {
 		System.arraycopy (images, index, temp, index+1, columnCount-index-1);
 		item.images = temp;
 	}
-	if (index == 0) item.image = null;
+    if (index == 0) {
+        item.image = null;
+    }
 	Color [] cellBackground = item.cellBackground;
 	if (cellBackground != null) {
 		Color [] temp = new Color [columnCount];
@@ -671,7 +741,9 @@ void createHandle () {
 }
 
 void createItem (TableColumn column, int index) {
-	if (!(0 <= index && index <= columnCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= columnCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (columnCount == columns.length) {
 		TableColumn [] newColumns = new TableColumn [columnCount + 4];
 		System.arraycopy (columns, 0, newColumns, 0, columns.length);
@@ -699,7 +771,9 @@ void createItem (TableColumn column, int index) {
 	}
 	column.createJNIRef ();
 	NSTableHeaderCell headerCell = (NSTableHeaderCell)new SWTTableHeaderCell ().alloc ().init ();
-	if (font != null) headerCell.setFont(font.handle);
+    if (font != null) {
+        headerCell.setFont(font.handle);
+    }
 	nsColumn.setHeaderCell (headerCell);
 	display.addWidget (headerCell, column);
 	column.nsColumn = nsColumn;
@@ -708,17 +782,23 @@ void createItem (TableColumn column, int index) {
 	columns [index] = column;
 	for (int i = 0; i < materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null && columnCount > 1) createColumn (item, index);
+        if (item != null && columnCount > 1) {
+            createColumn(item, index);
+        }
 	}
 }
 
 void createItem (TableItem item, int index) {
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if ((style & SWT.VIRTUAL) != 0) {
 		virtualItems.insert (index, item);
 		itemCount++;
 		updateRowCount ();
-		if (index != itemCount) fixSelection (index, true);
+        if (index != itemCount) {
+            fixSelection(index, true);
+        }
 		virtualViewport.setLogicalCount (itemCount);
 		syncVirtualSelectionFromNative ();
 		updateVirtualViewport ();
@@ -734,7 +814,9 @@ void createItem (TableItem item, int index) {
 	System.arraycopy (items, index, items, index + 1, itemCount++ - index);
 	items [index] = item;
 	updateRowCount();
-	if (index != itemCount) fixSelection (index, true);
+    if (index != itemCount) {
+        fixSelection(index, true);
+    }
 }
 
 @Override
@@ -768,23 +850,33 @@ void deregister () {
 	super.deregister ();
 	display.removeWidget (headerView);
 	display.removeWidget (dataCell);
-	if (buttonCell != null) display.removeWidget (buttonCell);
+    if (buttonCell != null) {
+        display.removeWidget(buttonCell);
+    }
 }
 
 @Override
 void deselectAll(long id, long sel, long sender) {
-	if (preventSelect && !ignoreSelect) return;
+    if (preventSelect && !ignoreSelect) {
+        return;
+    }
 	if ((style & SWT.SINGLE) != 0 && !ignoreSelect) {
-		if ( ((NSTableView)view).selectedRow() != -1) return;
+        if (((NSTableView) view).selectedRow() != -1) {
+            return;
+        }
 	}
 	super.deselectAll (id, sel, sender);
 }
 
 @Override
 void deselectRow (long id, long sel, long index) {
-	if (preventSelect && !ignoreSelect) return;
+    if (preventSelect && !ignoreSelect) {
+        return;
+    }
 	if ((style & SWT.SINGLE) != 0 && !ignoreSelect) {
-		if ( ((NSTableView)view).selectedRow() == index) return;
+        if (((NSTableView) view).selectedRow() == index) {
+            return;
+        }
 	}
 	super.deselectRow (id, sel, index);
 }
@@ -828,8 +920,12 @@ public void deselect (int index) {
  */
 public void deselect (int start, int end) {
 	checkWidget();
-	if (start > end) return;
-	if (end < 0 || start >= itemCount) return;
+    if (start > end) {
+        return;
+    }
+    if (end < 0 || start >= itemCount) {
+        return;
+    }
 	start = Math.max (0, start);
 	end = Math.min (itemCount - 1, end);
 	if (start == 0 && end == itemCount - 1) {
@@ -863,7 +959,9 @@ public void deselect (int start, int end) {
  */
 public void deselect (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSTableView widget = (NSTableView)view;
 	ignoreSelect = true;
 	for (int i=0; i<indices.length; i++) {
@@ -891,7 +989,9 @@ public void deselectAll () {
 void destroyItem (TableColumn column) {
 	int index = 0;
 	while (index < columnCount) {
-		if (columns [index] == column) break;
+        if (columns [index] == column) {
+            break;
+        }
 		index++;
 	}
 	for (int i=0; i<materializedItemCount (); i++) {
@@ -906,7 +1006,9 @@ void destroyItem (TableColumn column) {
 			} else {
 				if (item.strings != null) {
 					String [] strings = item.strings;
-					if (index == 0) item.text = strings [1] != null ? strings [1] : "";
+                    if (index == 0) {
+                        item.text = strings [1] != null ? strings [1] : "";
+                    }
 					String [] temp = new String [columnCount - 1];
 					System.arraycopy (strings, 0, temp, 0, index);
 					System.arraycopy (strings, index + 1, temp, index, columnCount - 1 - index);
@@ -916,7 +1018,9 @@ void destroyItem (TableColumn column) {
 				}
 				if (item.images != null) {
 					Image [] images = item.images;
-					if (index == 0) item.image = images [1];
+                    if (index == 0) {
+                        item.image = images [1];
+                    }
 					Image [] temp = new Image [columnCount - 1];
 					System.arraycopy (images, 0, temp, 0, index);
 					System.arraycopy (images, index + 1, temp, index, columnCount - 1 - index);
@@ -975,27 +1079,39 @@ void destroyItem (TableColumn column) {
 void destroyItem (TableItem item) {
 	if ((style & SWT.VIRTUAL) != 0) {
 		int index = virtualItems.indexOfIdentity (item);
-		if (index < 0) return;
-		if (index != itemCount - 1) fixSelection (index, false);
+        if (index < 0) {
+            return;
+        }
+        if (index != itemCount - 1) {
+            fixSelection(index, false);
+        }
 		virtualItems.remove (index);
 		itemCount--;
 		updateRowCount ();
 		virtualViewport.setLogicalCount (itemCount);
 		syncVirtualSelectionFromNative ();
 		updateVirtualViewport ();
-		if (itemCount == 0) setTableEmpty ();
+        if (itemCount == 0) {
+            setTableEmpty();
+        }
 		return;
 	}
 	int index = 0;
 	while (index < itemCount) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	if (index != itemCount - 1) fixSelection (index, false);
+    if (index != itemCount - 1) {
+        fixSelection(index, false);
+    }
 	System.arraycopy (items, index + 1, items, index, --itemCount - index);
 	items [itemCount] = null;
 	updateRowCount();
-	if (itemCount == 0) setTableEmpty ();
+    if (itemCount == 0) {
+        setTableEmpty();
+    }
 }
 
 @Override
@@ -1007,7 +1123,9 @@ boolean dragDetect(int x, int y, boolean filter, boolean[] consume) {
 @Override
 void drawBackgroundInClipRect(long id, long sel, NSRect rect) {
 	super.drawViewBackgroundInRect(id, sel, rect);
-	if (id != view.id) return;
+    if (id != view.id) {
+        return;
+    }
 	fillBackground (view, NSGraphicsContext.currentContext(), rect, -1);
 }
 
@@ -1037,7 +1155,9 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect rect, long view) {
 	}
 
 	Color background = item.cellBackground != null ? item.cellBackground [columnIndex] : null;
-	if (background == null) background = item.background;
+    if (background == null) {
+        background = item.background;
+    }
 	boolean drawBackground = background != null;
 	boolean drawForeground = true;
 	boolean isSelected = cell.isHighlighted();
@@ -1052,7 +1172,9 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect rect, long view) {
 
 	NSSize contentSize = super.cellSize(id, OS.sel_cellSize);
 	NSImage image = cell.image();
-	if (image != null) contentSize.width += imageBounds.width + IMAGE_GAP;
+    if (image != null) {
+        contentSize.width += imageBounds.width + IMAGE_GAP;
+    }
 	int contentWidth = (int)Math.ceil (contentSize.width);
 	NSSize spacing = widget.intercellSpacing();
 	int itemHeight = (int)Math.ceil (widget.rowHeight() + spacing.height);
@@ -1109,8 +1231,12 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect rect, long view) {
 		event.gc = gc;
 		event.index = columnIndex;
 		event.detail = SWT.FOREGROUND;
-		if (drawBackground) event.detail |= SWT.BACKGROUND;
-		if (isSelected && ((style & SWT.HIDE_SELECTION) == 0 || hasFocus)) event.detail |= SWT.SELECTED;
+        if (drawBackground) {
+            event.detail |= SWT.BACKGROUND;
+        }
+        if (isSelected && ((style & SWT.HIDE_SELECTION) == 0 || hasFocus)) {
+            event.detail |= SWT.SELECTED;
+        }
 		event.x = (int)cellRect.x;
 		event.y = (int)cellRect.y;
 		event.width = (int)cellRect.width;
@@ -1203,7 +1329,9 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect rect, long view) {
 				switch (alignment) {
 					case SWT.CENTER: newRect.width -= TEXT_GAP / 2.0f + 1; break;
 					case SWT.RIGHT: {
-						if (rect.width > size.width) newRect.width -= TEXT_GAP;
+                        if (rect.width > size.width) {
+                            newRect.width -= TEXT_GAP;
+                        }
 						break;
 					}
 				}
@@ -1262,9 +1390,15 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect rect, long view) {
 		event.item = item;
 		event.gc = gc;
 		event.index = columnIndex;
-		if (drawForeground) event.detail |= SWT.FOREGROUND;
-		if (drawBackground) event.detail |= SWT.BACKGROUND;
-		if (isSelected) event.detail |= SWT.SELECTED;
+        if (drawForeground) {
+            event.detail |= SWT.FOREGROUND;
+        }
+        if (drawBackground) {
+            event.detail |= SWT.BACKGROUND;
+        }
+        if (isSelected) {
+            event.detail |= SWT.SELECTED;
+        }
 		event.x = itemX;
 		event.y = itemY;
 		event.width = contentWidth;
@@ -1287,10 +1421,14 @@ void drawWithExpansionFrame_inView (long id, long sel, NSRect cellFrame, long vi
 void drawRect(long id, long sel, NSRect rect) {
 	fixScrollWidth = false;
 	super.drawRect(id, sel, rect);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	if (fixScrollWidth) {
 		fixScrollWidth = false;
-		if (setScrollWidth (items, true)) view.setNeedsDisplay(true);
+        if (setScrollWidth(items, true)) {
+            view.setNeedsDisplay(true);
+        }
 	}
 }
 
@@ -1361,7 +1499,9 @@ Widget findTooltip (NSPoint pt) {
 
 void fixSelection (int index, boolean add) {
 	int [] selection = getSelectionIndices ();
-	if (selection.length == 0) return;
+    if (selection.length == 0) {
+        return;
+    }
 	int newCount = 0;
 	boolean fix = false;
 	for (int i = 0; i < selection.length; i++) {
@@ -1376,7 +1516,9 @@ void fixSelection (int index, boolean add) {
 			}
 		}
 	}
-	if (fix) select (selection, newCount, true);
+    if (fix) {
+        select(selection, newCount, true);
+    }
 }
 
 int getCheckColumnWidth () {
@@ -1433,7 +1575,9 @@ TableColumn getColumn (id id) {
  */
 public TableColumn getColumn (int index) {
 	checkWidget ();
-	if (!(0 <=index && index < columnCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < columnCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return columns [index];
 }
 
@@ -1490,7 +1634,9 @@ public int [] getColumnOrder () {
 	for (int i = 0; i < columnCount; i++) {
 		TableColumn column = columns [i];
 		int index = indexOf (column.nsColumn);
-		if ((style & SWT.CHECK) != 0) index -= 1;
+        if ((style & SWT.CHECK) != 0) {
+            index -= 1;
+        }
 		order [index] = i;
 	}
 	return order;
@@ -1600,7 +1746,9 @@ Color getHeaderForegroundColor () {
 public int getHeaderHeight () {
 	checkWidget ();
 	NSTableHeaderView headerView = ((NSTableView)view).headerView();
-	if (headerView == null) return 0;
+    if (headerView == null) {
+        return 0;
+    }
 	return (int)headerView.bounds().height;
 }
 
@@ -1643,7 +1791,9 @@ public boolean getHeaderVisible () {
  */
 public TableItem getItem (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	TableItem item = _getItem (index);
 	item.pinVirtualFacade ();
 	return item;
@@ -1679,7 +1829,9 @@ public TableItem getItem (Point point) {
 	pt.x = point.x;
 	pt.y = point.y;
 	int row = (int)widget.rowAtPoint(pt);
-	if (row == -1) return null;
+    if (row == -1) {
+        return null;
+    }
 	TableItem item = _getItem (row);
 	item.pinVirtualFacade ();
 	return item;
@@ -1952,7 +2104,9 @@ public int getTopIndex () {
 	}
 	int rowAtPoint = (int)((NSTableView)view).rowAtPoint(point);
 	if (rowAtPoint == -1) {
-		if (virtualViewport != null) virtualViewport.setViewport (0, 0);
+        if (virtualViewport != null) {
+            virtualViewport.setViewport(0, 0);
+        }
 		return 0; /* Empty table */
 	}
 	if (virtualViewport != null) {
@@ -1965,7 +2119,9 @@ public int getTopIndex () {
 
 @Override
 NSRect headerRectOfColumn (long id, long sel, long column) {
-	if ((style & SWT.CHECK) == 0) return callSuperRect(id, sel, column);
+    if ((style & SWT.CHECK) == 0) {
+        return callSuperRect(id, sel, column);
+    }
 
 	if (column == 0) {
 		NSRect returnValue = callSuperRect(id, sel, column);
@@ -1984,8 +2140,12 @@ NSRect headerRectOfColumn (long id, long sel, long column) {
 
 @Override
 void highlightSelectionInClipRect(long id, long sel, long rect) {
-	if (hooks (SWT.EraseItem)) return;
-	if ((style & SWT.HIDE_SELECTION) != 0 && !hasFocus()) return;
+    if (hooks(SWT.EraseItem)) {
+        return;
+    }
+    if ((style & SWT.HIDE_SELECTION) != 0 && !hasFocus()) {
+        return;
+    }
 	NSRect clipRect = new NSRect ();
 	OS.memmove (clipRect, rect, NSRect.sizeof);
 	callSuper (id, sel, clipRect);
@@ -2041,9 +2201,13 @@ int indexOf (NSTableColumn column) {
  */
 public int indexOf (TableColumn column) {
 	checkWidget ();
-	if (column == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (column == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<columnCount; i++) {
-		if (columns [i] == column) return i;
+        if (columns [i] == column) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -2067,17 +2231,35 @@ public int indexOf (TableColumn column) {
  */
 public int indexOf (TableItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.VIRTUAL) != 0) return virtualItems.indexOfIdentity (item);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.VIRTUAL) != 0) {
+        return virtualItems.indexOfIdentity(item);
+    }
 	if (1 <= lastIndexOf && lastIndexOf < itemCount - 1) {
-		if (items [lastIndexOf] == item) return lastIndexOf;
-		if (items [lastIndexOf + 1] == item) return ++lastIndexOf;
-		if (items [lastIndexOf - 1] == item) return --lastIndexOf;
+        if (items [lastIndexOf] == item) {
+            return lastIndexOf;
+        }
+        if (items [lastIndexOf + 1] == item) {
+            return ++lastIndexOf;
+        }
+        if (items [lastIndexOf - 1] == item) {
+            return --lastIndexOf;
+        }
 	}
 	if (lastIndexOf < itemCount / 2) {
-		for (int i=0; i<itemCount; i++) if (items [i] == item) return lastIndexOf = i;
+        for (int i = 0; i < itemCount; i++) {
+            if (items [i] == item) {
+                return lastIndexOf = i;
+            }
+        }
 	} else {
-		for (int i=itemCount - 1; i>=0; --i) if (items [i] == item) return lastIndexOf = i;
+        for (int i = itemCount - 1; i >= 0; --i) {
+            if (items [i] == item) {
+                return lastIndexOf = i;
+            }
+        }
 	}
 	return -1;
 }
@@ -2097,7 +2279,9 @@ public int indexOf (TableItem item) {
  */
 public boolean isSelected (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < itemCount)) return false;
+    if (!(0 <= index && index < itemCount)) {
+        return false;
+    }
 	if (virtualViewport != null) {
 		syncVirtualSelectionFromNative ();
 		return virtualViewport.selection ().isSelected (index);
@@ -2120,13 +2304,17 @@ void keyDown(long id, long sel, long theEvent) {
 
 @Override
 boolean isTrim (NSView view) {
-	if (super.isTrim (view)) return true;
+    if (super.isTrim(view)) {
+        return true;
+    }
 	return view.id == headerView.id;
 }
 
 @Override
 long menuForEvent(long id, long sel, long theEvent) {
-	if (display.lastHandledMenuForEventId == theEvent) return 0;
+    if (display.lastHandledMenuForEventId == theEvent) {
+        return 0;
+    }
 	if (id != headerView.id) {
 		/*
 		 * Feature in Cocoa: Table views do not change the selection when the user
@@ -2163,7 +2351,9 @@ void mouseDown (long id, long sel, long theEvent) {
 		// which is interpreted as a single click that clears the selection.  Fix is to ignore control-click if the
 		// view has a context menu.
 		NSEvent event = new NSEvent(theEvent);
-		if ((event.modifierFlags() & OS.NSEventModifierFlagControl) != 0) return;
+        if ((event.modifierFlags() & OS.NSEventModifierFlagControl) != 0) {
+            return;
+        }
 	}
 	super.mouseDown(id, sel, theEvent);
 }
@@ -2213,7 +2403,9 @@ boolean needsPanelToBecomeKey (long id, long sel) {
 long nextState (long id, long sel) {
 	NSTableView tableView = (NSTableView)view;
 	int index = (int)tableView.clickedRow();
-	if (index == -1) index = (int)tableView.selectedRow ();
+    if (index == -1) {
+        index = (int) tableView.selectedRow();
+    }
 	TableItem item = _getItem (index);
 	if (item.isGrayedState ()) {
 		return item.isCheckedState () ? OS.NSControlStateValueOff : OS.NSControlStateValueMixed;
@@ -2231,21 +2423,30 @@ void register () {
 	super.register ();
 	display.addWidget (headerView, this);
 	display.addWidget (dataCell, this);
-	if (buttonCell != null) display.addWidget (buttonCell, this);
+    if (buttonCell != null) {
+        display.addWidget(buttonCell, this);
+    }
 }
 
 @Override
 void releaseChildren (boolean destroy) {
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null && !item.isDisposed ()) item.release (false);
+        if (item != null && !item.isDisposed()) {
+            item.release(false);
+        }
 	}
-	if (virtualItems != null) virtualItems.clear (ignored -> { });
+    if (virtualItems != null) {
+        virtualItems.clear(ignored -> {
+        });
+    }
 	items = null;
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
 			TableColumn column = columns [i];
-			if (column != null && !column.isDisposed ()) column.release (false);
+            if (column != null && !column.isDisposed()) {
+                column.release(false);
+            }
 		}
 		columns = null;
 	}
@@ -2255,15 +2456,25 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (headerView != null) headerView.release();
+    if (headerView != null) {
+        headerView.release();
+    }
 	headerView = null;
-	if (firstColumn != null) firstColumn.release();
+    if (firstColumn != null) {
+        firstColumn.release();
+    }
 	firstColumn = null;
-	if (checkColumn != null) checkColumn.release();
+    if (checkColumn != null) {
+        checkColumn.release();
+    }
 	checkColumn = null;
-	if (dataCell != null) dataCell.release();
+    if (dataCell != null) {
+        dataCell.release();
+    }
 	dataCell = null;
-	if (buttonCell != null) buttonCell.release();
+    if (buttonCell != null) {
+        buttonCell.release();
+    }
 	buttonCell = null;
 }
 
@@ -2290,10 +2501,16 @@ void releaseWidget () {
  */
 public void remove (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	TableItem item = _getItem (index, false);
-	if (item != null) item.release (false);
-	if (index != itemCount - 1) fixSelection (index, false);
+    if (item != null) {
+        item.release(false);
+    }
+    if (index != itemCount - 1) {
+        fixSelection(index, false);
+    }
 	if ((style & SWT.VIRTUAL) != 0) {
 		virtualItems.remove (index);
 		itemCount--;
@@ -2307,7 +2524,9 @@ public void remove (int index) {
 		syncVirtualSelectionFromNative ();
 		updateVirtualViewport ();
 	}
-	if (itemCount == 0) setTableEmpty ();
+    if (itemCount == 0) {
+        setTableEmpty();
+    }
 }
 
 /**
@@ -2328,8 +2547,12 @@ public void remove (int index) {
  */
 public void remove (int start, int end) {
 	checkWidget ();
-	if (start > end) return;
-	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (start > end) {
+        return;
+    }
+    if (!(0 <= start && start <= end && end < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (start == 0 && end == itemCount - 1) {
 		removeAll ();
 		return;
@@ -2351,19 +2574,27 @@ public void remove (int start, int end) {
 				}
 			}
 		}
-		if (fix) select (selection, newCount, true);
+        if (fix) {
+            select(selection, newCount, true);
+        }
 	}
 	if ((style & SWT.VIRTUAL) != 0) {
 		virtualItems.removeRange (start, end + 1, item -> {
-			if (!item.isDisposed ()) item.release (false);
+            if (!item.isDisposed()) {
+                item.release(false);
+            }
 		});
 	} else {
 		for (int i=start; i<=end; i++) {
 			TableItem item = items [i];
-			if (item != null) item.release (false);
+            if (item != null) {
+                item.release(false);
+            }
 		}
 		System.arraycopy (items, start + numOfItemsRemoved, items, start, itemCount - (start + numOfItemsRemoved));
-		for (int i = itemCount - numOfItemsRemoved; i < itemCount; i++) items [i] = null;
+        for (int i = itemCount - numOfItemsRemoved; i < itemCount; i++) {
+            items [i] = null;
+        }
 	}
 	itemCount -= numOfItemsRemoved;
 	updateRowCount();
@@ -2372,7 +2603,9 @@ public void remove (int start, int end) {
 		syncVirtualSelectionFromNative ();
 		updateVirtualViewport ();
 	}
-	if (itemCount == 0) setTableEmpty ();
+    if (itemCount == 0) {
+        setTableEmpty();
+    }
 }
 
 /**
@@ -2392,20 +2625,32 @@ public void remove (int start, int end) {
  */
 public void remove (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (indices.length == 0) return;
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (indices.length == 0) {
+        return;
+    }
 	int [] newIndices = new int [indices.length];
 	System.arraycopy (indices, 0, newIndices, 0, indices.length);
 	sort (newIndices);
 	int start = newIndices [newIndices.length - 1], end = newIndices [0];
-	if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= start && start <= end && end < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	int last = -1;
 	for (int i=0; i<newIndices.length; i++) {
 		int index = newIndices [i];
-		if (index == last) continue;
+        if (index == last) {
+            continue;
+        }
 		TableItem item = _getItem (index, false);
-		if (item != null) item.release (false);
-		if (index != itemCount - 1) fixSelection (index, false);
+        if (item != null) {
+            item.release(false);
+        }
+        if (index != itemCount - 1) {
+            fixSelection(index, false);
+        }
 		if ((style & SWT.VIRTUAL) != 0) {
 			virtualItems.remove (index);
 			itemCount--;
@@ -2421,7 +2666,9 @@ public void remove (int [] indices) {
 		syncVirtualSelectionFromNative ();
 		updateVirtualViewport ();
 	}
-	if (itemCount == 0) setTableEmpty ();
+    if (itemCount == 0) {
+        setTableEmpty();
+    }
 }
 
 /**
@@ -2436,7 +2683,9 @@ public void removeAll () {
 	checkWidget ();
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null && !item.isDisposed ()) item.release (false);
+        if (item != null && !item.isDisposed()) {
+            item.release(false);
+        }
 	}
 	setTableEmpty ();
 	updateRowCount();
@@ -2461,8 +2710,12 @@ public void removeAll () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -2471,12 +2724,16 @@ public void removeSelectionListener(SelectionListener listener) {
 void reskinChildren (int flags) {
 	for (int i=0; i<materializedItemCount (); i++) {
 		TableItem item = materializedItem (i);
-		if (item != null) item.reskin (flags);
+        if (item != null) {
+            item.reskin(flags);
+        }
 	}
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
 			TableColumn column = columns [i];
-			if (!column.isDisposed ()) column.reskin (flags);
+            if (!column.isDisposed()) {
+                column.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -2549,8 +2806,12 @@ public void select (int index) {
  */
 public void select (int start, int end) {
 	checkWidget ();
-	if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) return;
-	if (itemCount == 0 || start >= itemCount) return;
+    if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) {
+        return;
+    }
+    if (itemCount == 0 || start >= itemCount) {
+        return;
+    }
 	if (start == 0 && end == itemCount - 1) {
 		selectAll ();
 	} else {
@@ -2594,9 +2855,13 @@ public void select (int start, int end) {
  */
 public void select (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int length = indices.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	int count = 0;
 	NSMutableIndexSet set = (NSMutableIndexSet)new NSMutableIndexSet().alloc().init();
 	for (int i=0; i<length; i++) {
@@ -2617,7 +2882,9 @@ public void select (int [] indices) {
 
 void select (int [] indices, int count, boolean clear) {
 	NSMutableIndexSet set = (NSMutableIndexSet)new NSMutableIndexSet().alloc().init();
-	for (int i=0; i<count; i++) set.addIndex (indices [i]);
+    for (int i = 0; i < count; i++) {
+        set.addIndex(indices [i]);
+    }
 	NSTableView widget = (NSTableView)view;
 	ignoreSelect = true;
 	widget.selectRowIndexes(set, !clear);
@@ -2638,7 +2905,9 @@ void select (int [] indices, int count, boolean clear) {
  */
 public void selectAll () {
 	checkWidget ();
-	if ((style & SWT.SINGLE) != 0) return;
+    if ((style & SWT.SINGLE) != 0) {
+        return;
+    }
 	NSTableView widget = (NSTableView)view;
 	ignoreSelect = true;
 	widget.selectAll(null);
@@ -2676,21 +2945,33 @@ void setBackgroundColor(NSColor nsColor) {
  */
 public void setColumnOrder (int [] order) {
 	checkWidget ();
-	if (order == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (order == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (columnCount == 0) {
-		if (order.length != 0) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (order.length != 0) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		return;
 	}
-	if (order.length != columnCount) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (order.length != columnCount) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int [] oldOrder = getColumnOrder ();
 	boolean reorder = false;
 	boolean [] seen = new boolean [columnCount];
 	for (int i=0; i<order.length; i++) {
 		int index = order [i];
-		if (index < 0 || index >= columnCount) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (seen [index]) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (index < 0 || index >= columnCount) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (seen [index]) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		seen [index] = true;
-		if (order [i] != oldOrder [i]) reorder = true;
+        if (order [i] != oldOrder [i]) {
+            reorder = true;
+        }
 	}
 	if (reorder) {
 		NSTableView tableView = (NSTableView)view;
@@ -2738,16 +3019,17 @@ void setFont (NSFont font) {
 void setFrameSize (long id, long sel, NSSize size) {
 	super.setFrameSize(id, sel, size);
 
-	/*
-	 * Bug 577767: Since macOS 10.15, NSTableView has 'autoresizingMask'
-	 * set to follow resizes of its NSClipView. This sometimes causes
-	 * Table/Tree to have wrong scroll range (note that size of NSClipView
-	 * is what you see and size of NSTableView is the size of entire
-	 * content, this defines scroll range). The workaround is to recalc
-	 * layout after resizing.
-	 */
-	if ((scrollView != null) && (id == scrollView.id))
-		((NSTableView)view).tile();
+    /*
+     * Bug 577767: Since macOS 10.15, NSTableView has 'autoresizingMask'
+     * set to follow resizes of its NSClipView. This sometimes causes
+     * Table/Tree to have wrong scroll range (note that size of NSClipView
+     * is what you see and size of NSTableView is the size of entire
+     * content, this defines scroll range). The workaround is to recalc
+     * layout after resizing.
+     */
+    if ((scrollView != null) && (id == scrollView.id)) {
+        ((NSTableView) view).tile();
+    }
 }
 
 /**
@@ -2772,10 +3054,14 @@ void setFrameSize (long id, long sel, NSSize size) {
 public void setHeaderBackground (Color color) {
 	checkWidget ();
 	if (color != null) {
-		if (color.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	double [] headerBackground = color != null ? color.handle : null;
-	if (equals (headerBackground, this.headerBackground)) return;
+    if (equals(headerBackground, this.headerBackground)) {
+        return;
+    }
 	this.headerBackground = headerBackground;
 	if (getHeaderVisible()) {
 		redrawWidget (view, false);
@@ -2804,10 +3090,14 @@ public void setHeaderBackground (Color color) {
 public void setHeaderForeground (Color color) {
 	checkWidget ();
 	if (color != null) {
-		if (color.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	double [] headerForeground = color != null ? color.handle : null;
-	if (equals (headerForeground, this.headerForeground)) return;
+    if (equals(headerForeground, this.headerForeground)) {
+        return;
+    }
 	this.headerForeground = headerForeground;
 	if (getHeaderVisible()) {
 		redrawWidget (view, false);
@@ -2856,11 +3146,15 @@ void setImage (long id, long sel, long arg0) {
 public void setItemCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
-	if (count == itemCount) return;
+    if (count == itemCount) {
+        return;
+    }
 	if ((style & SWT.VIRTUAL) != 0) {
 		if (count < itemCount) {
 			virtualItems.truncate (count, item -> {
-				if (!item.isDisposed ()) item.release (false);
+                if (!item.isDisposed()) {
+                    item.release(false);
+                }
 			});
 		}
 		itemCount = count;
@@ -2873,11 +3167,15 @@ public void setItemCount (int count) {
 	if (count < itemCount) {
 		for (int index = count; index < itemCount; index ++) {
 			TableItem item = items [index];
-			if (item != null && !item.isDisposed()) item.release (false);
+            if (item != null && !item.isDisposed()) {
+                item.release(false);
+            }
 		}
 	}
 	if (count > itemCount) {
-		for (int i=itemCount; i<count; i++) new TableItem (this, SWT.NONE, i, true);
+        for (int i = itemCount; i < count; i++) {
+            new TableItem(this, SWT.NONE, i, true);
+        }
 		return;
 	}
 	int length = Math.max (4, (count + 3) / 4 * 4);
@@ -2890,7 +3188,9 @@ public void setItemCount (int count) {
 
 /*public*/ void setItemHeight (int itemHeight) {
 	checkWidget ();
-	if (itemHeight < -1) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (itemHeight < -1) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	if (itemHeight == -1) {
 		//TODO - reset item height, ensure other API's such as setFont don't do this
 	} else {
@@ -2899,7 +3199,9 @@ public void setItemCount (int count) {
 }
 
 void setItemHeight (Image image, NSFont font, boolean set) {
-	if (font == null) font = getFont ().handle;
+    if (font == null) {
+        font = getFont().handle;
+    }
 	double ascent = font.ascender ();
 	double descent = -font.descender () + font.leading ();
 	int height = (int)Math.ceil (ascent + descent) + 1;
@@ -2968,10 +3270,16 @@ boolean setScrollWidth () {
 }
 
 boolean setScrollWidth (TableItem item) {
-	if (columnCount != 0) return false;
-	if (!getDrawing()) return false;
+    if (columnCount != 0) {
+        return false;
+    }
+    if (!getDrawing()) {
+        return false;
+    }
 	if (currentItem != null) {
-		if (currentItem != item) fixScrollWidth = true;
+        if (currentItem != item) {
+            fixScrollWidth = true;
+        }
 		return false;
 	}
 	GC gc = new GC (this);
@@ -2980,16 +3288,24 @@ boolean setScrollWidth (TableItem item) {
 	int oldWidth = (int)firstColumn.width ();
 	if (oldWidth < newWidth) {
 		firstColumn.setWidth (newWidth);
-		if (horizontalBar != null && horizontalBar.view != null) redrawWidget (horizontalBar.view, false);
+        if (horizontalBar != null && horizontalBar.view != null) {
+            redrawWidget(horizontalBar.view, false);
+        }
 		return true;
 	}
 	return false;
 }
 
 boolean setScrollWidth (TableItem [] items, boolean set) {
-	if (items == null) return false;
-	if (columnCount != 0) return false;
-	if (!getDrawing()) return false;
+    if (items == null) {
+        return false;
+    }
+    if (columnCount != 0) {
+        return false;
+    }
+    if (!getDrawing()) {
+        return false;
+    }
 	if (currentItem != null) {
 		fixScrollWidth = true;
 		return false;
@@ -3006,10 +3322,14 @@ boolean setScrollWidth (TableItem [] items, boolean set) {
 	gc.dispose ();
 	if (!set) {
 		int oldWidth = (int)firstColumn.width ();
-		if (oldWidth >= newWidth) return false;
+        if (oldWidth >= newWidth) {
+            return false;
+        }
 	}
 	firstColumn.setWidth (newWidth);
-	if (horizontalBar != null && horizontalBar.view != null) redrawWidget (horizontalBar.view, false);
+    if (horizontalBar != null && horizontalBar.view != null) {
+        redrawWidget(horizontalBar.view, false);
+    }
 	return true;
 }
 
@@ -3065,8 +3385,12 @@ public void setSelection (int start, int end) {
 	checkWidget ();
 	//TODO - optimize to use expand flag
 	deselectAll ();
-	if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) return;
-	if (itemCount == 0 || start >= itemCount) return;
+    if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) {
+        return;
+    }
+    if (itemCount == 0 || start >= itemCount) {
+        return;
+    }
 	start = Math.max (0, start);
 	end = Math.min (end, itemCount - 1);
 	select (start, end);
@@ -3098,11 +3422,15 @@ public void setSelection (int start, int end) {
  */
 public void setSelection (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	//TODO - optimize to use expand flag
 	deselectAll ();
 	int length = indices.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	select (indices);
 	showIndex (indices [0]);
 }
@@ -3130,7 +3458,9 @@ public void setSelection (int [] indices) {
  */
 public void setSelection (TableItem  item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setSelection (new TableItem [] {item});
 }
 
@@ -3161,11 +3491,15 @@ public void setSelection (TableItem  item) {
  */
 public void setSelection (TableItem [] items) {
 	checkWidget ();
-	if (items == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (items == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	//TODO - optimize to use expand flag
 	deselectAll ();
 	int length = items.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	int [] indices = new int [length];
 	int count = 0;
 	for (int i=0; i<length; i++) {
@@ -3204,8 +3538,12 @@ void setShouldScrollClipView(long id, long sel, boolean shouldScroll) {
  */
 public void setSortColumn (TableColumn column) {
 	checkWidget ();
-	if (column != null && column.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (column == sortColumn) return;
+    if (column != null && column.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (column == sortColumn) {
+        return;
+    }
 	setSort(column, sortDirection);
 }
 
@@ -3224,8 +3562,12 @@ public void setSortColumn (TableColumn column) {
  */
 public void setSortDirection  (int direction) {
 	checkWidget ();
-	if (direction != SWT.UP && direction != SWT.DOWN && direction != SWT.NONE) return;
-	if (direction == sortDirection) return;
+    if (direction != SWT.UP && direction != SWT.DOWN && direction != SWT.NONE) {
+        return;
+    }
+    if (direction == sortDirection) {
+        return;
+    }
 	setSort(sortColumn, direction);
 }
 
@@ -3234,8 +3576,12 @@ void setSort (TableColumn column, int direction) {
 	NSTableColumn nsColumn = null;
 	if (column != null) {
 		nsColumn = column.nsColumn;
-		if (direction == SWT.DOWN) image = NSImage.imageNamed(NSString.stringWith("NSDescendingSortIndicator"));
-		if (direction == SWT.UP) image = NSImage.imageNamed(NSString.stringWith("NSAscendingSortIndicator"));
+        if (direction == SWT.DOWN) {
+            image = NSImage.imageNamed(NSString.stringWith("NSDescendingSortIndicator"));
+        }
+        if (direction == SWT.UP) {
+            image = NSImage.imageNamed(NSString.stringWith("NSAscendingSortIndicator"));
+        }
 	}
 	NSTableView widget = (NSTableView)view;
 	if (sortColumn != null && sortColumn != column) {
@@ -3307,12 +3653,22 @@ public void setTopIndex (int index) {
  */
 public void showColumn (TableColumn column) {
 	checkWidget ();
-	if (column == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (column.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-	if (column.parent != this) return;
-	if (columnCount <= 1) return;
+    if (column == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (column.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (column.parent != this) {
+        return;
+    }
+    if (columnCount <= 1) {
+        return;
+    }
 	int index = indexOf (column.nsColumn);
-	if (!(0 <= index && index < columnCount + ((style & SWT.CHECK) != 0 ? 1 : 0))) return;
+    if (!(0 <= index && index < columnCount + ((style & SWT.CHECK) != 0 ? 1 : 0))) {
+        return;
+    }
 	((NSTableView)view).scrollColumnToVisible (index);
 }
 
@@ -3365,10 +3721,16 @@ void showIndex (int index) {
  */
 public void showItem (TableItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (item.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (item.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int index = indexOf (item);
-	if (index != -1) showIndex (index);
+    if (index != -1) {
+        showIndex(index);
+    }
 }
 
 /**
@@ -3394,10 +3756,14 @@ public void showSelection () {
 
 @Override
 void selectRowIndexes_byExtendingSelection (long id, long sel, long indexes, boolean extend) {
-	if (preventSelect && !ignoreSelect) return;
+    if (preventSelect && !ignoreSelect) {
+        return;
+    }
 	if ((style & SWT.SINGLE) != 0 && !ignoreSelect) {
 		NSIndexSet set = new NSIndexSet(indexes);
-		if (set.count() == 0) return;
+        if (set.count() == 0) {
+            return;
+        }
 	}
 	super.selectRowIndexes_byExtendingSelection (id, sel, indexes, extend);
 }
@@ -3406,14 +3772,18 @@ void selectRowIndexes_byExtendingSelection (long id, long sel, long indexes, boo
 void sendDoubleSelection() {
 	NSTableView tableView = (NSTableView)view;
 	int rowIndex = (int)tableView.clickedRow ();
-	if (rowIndex == -1) rowIndex = (int)tableView.selectedRow();
+    if (rowIndex == -1) {
+        rowIndex = (int) tableView.selectedRow();
+    }
 	if (rowIndex != -1) {
 		if ((style & SWT.CHECK) != 0) {
 			NSArray columns = tableView.tableColumns ();
 			int columnIndex = (int)tableView.clickedColumn ();
 			if (columnIndex != -1) {
 				id column = columns.objectAtIndex (columnIndex);
-				if (column.id == checkColumn.id) return;
+                if (column.id == checkColumn.id) {
+                    return;
+                }
 			}
 		}
 		Event event = new Event ();
@@ -3425,8 +3795,12 @@ void sendDoubleSelection() {
 @Override
 boolean sendKeyEvent (NSEvent nsEvent, int type) {
 	boolean result = super.sendKeyEvent (nsEvent, type);
-	if (!result) return result;
-	if (type != SWT.KeyDown) return result;
+    if (!result) {
+        return result;
+    }
+    if (type != SWT.KeyDown) {
+        return result;
+    }
 	short keyCode = nsEvent.keyCode ();
 	switch (keyCode) {
 		case 76: /* KP Enter */
@@ -3453,7 +3827,9 @@ void sendMeasureItem (TableItem item, int columnIndex, NSSize size, boolean isSe
 	event.index = columnIndex;
 	event.width = contentWidth;
 	event.height = itemHeight;
-	if (isSelected && ((style & SWT.HIDE_SELECTION) == 0 || hasFocus())) event.detail |= SWT.SELECTED;
+    if (isSelected && ((style & SWT.HIDE_SELECTION) == 0 || hasFocus())) {
+        event.detail |= SWT.SELECTED;
+    }
 	sendEvent (SWT.MeasureItem, event);
 	gc.dispose ();
 	if (!isDisposed () && !item.isDisposed ()) {
@@ -3496,7 +3872,9 @@ void tableViewColumnDidMove (long id, long sel, long aNotification) {
 		TableColumn column = getColumn (columnId);
 		if (column != null) {
 			column.sendEvent (SWT.Move);
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 		}
 	}
 	headerView.setNeedsDisplay(true);
@@ -3511,14 +3889,20 @@ void tableViewColumnDidResize (long id, long sel, long aNotification) {
 	id columnId = userInfo.valueForKey (nsstring);
 	nsstring.release();
 	TableColumn column = getColumn (columnId);
-	if (column == null) return; /* either CHECK column or firstColumn in 0-column Table */
+    if (column == null) {
+        return;
+    } /* either CHECK column or firstColumn in 0-column Table */
 
 	column.sendEvent (SWT.Resize);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 
 	NSTableView tableView = (NSTableView)view;
 	int index = indexOf (column.nsColumn);
-	if (index == -1) return; /* column was disposed in Resize callback */
+    if (index == -1) {
+        return;
+    } /* column was disposed in Resize callback */
 
 	NSArray nsColumns = tableView.tableColumns ();
 	int columnCount = (int)tableView.numberOfColumns ();
@@ -3527,39 +3911,47 @@ void tableViewColumnDidResize (long id, long sel, long aNotification) {
 		column = getColumn (columnId);
 		if (column != null) {
 			column.sendEvent (SWT.Move);
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 		}
 	}
 }
 
 @Override
 void sendSelection () {
-	if (ignoreSelect) return;
+    if (ignoreSelect) {
+        return;
+    }
 	syncVirtualSelectionFromNative ();
 	NSTableView widget = (NSTableView) view;
 	int row = (int)widget.selectedRow ();
-	if(row == -1)
-		sendSelectionEvent (SWT.Selection);
-	else {
-		TableItem item = _getItem (row);
-		Event event = new Event ();
-		event.item = item;
-		event.index = row;
-		sendSelectionEvent (SWT.Selection, event, false);
-	}
+    if (row == -1) {
+        sendSelectionEvent(SWT.Selection);
+    } else {
+        TableItem item = _getItem(row);
+        Event event = new Event();
+        event.item = item;
+        event.index = row;
+        sendSelectionEvent(SWT.Selection, event, false);
+    }
 }
 
 @Override
 void tableViewSelectionDidChange (long id, long sel, long aNotification) {
-	if (didSelect) return;
+    if (didSelect) {
+        return;
+    }
 	sendSelection();
 }
 
 @Override
 void tableViewSelectionIsChanging (long id, long sel, long aNotification) {
-	// tableViewSelectionIsChanging is called when pressing ARROW_DOWN, ARROW_UP key
-	// don't run sendSelection because it would then gather the "old" incorrect selected row
-	if (keyDown) return;
+    // tableViewSelectionIsChanging is called when pressing ARROW_DOWN, ARROW_UP key
+    // don't run sendSelection because it would then gather the "old" incorrect selected row
+    if (keyDown) {
+        return;
+    }
 	didSelect = true;
 	sendSelection();
 }
@@ -3567,7 +3959,9 @@ void tableViewSelectionIsChanging (long id, long sel, long aNotification) {
 @Override
 void tableView_didClickTableColumn (long id, long sel, long tableView, long tableColumn) {
 	TableColumn column = getColumn (new id (tableColumn));
-	if (column == null) return; /* either CHECK column or firstColumn in 0-column Table */
+    if (column == null) {
+        return;
+    } /* either CHECK column or firstColumn in 0-column Table */
 	column.sendSelectionEvent (SWT.Selection);
 }
 
@@ -3597,8 +3991,12 @@ long tableView_objectValueForTableColumn_row (long id, long sel, long aTableView
 boolean tableView_shouldReorderColumn_toColumn(long id, long sel, long aTableView, long currentColIndex, long newColIndex) {
 	// Check column should never move and no column can be dragged to the left of it, if present.
 	if ((style & SWT.CHECK) != 0) {
-		if (currentColIndex == 0) return false;
-		if (newColIndex == 0) return false;
+        if (currentColIndex == 0) {
+            return false;
+        }
+        if (newColIndex == 0) {
+            return false;
+        }
 	}
 
 	NSTableView widget = new NSTableView(aTableView);
@@ -3615,7 +4013,9 @@ boolean tableView_shouldReorderColumn_toColumn(long id, long sel, long aTableVie
 @Override
 boolean tableView_shouldTrackCell_forTableColumn_row(long id, long sel, long table, long cell, /*long*/ long tableColumn, long rowIndex) {
 	if ((style & SWT.CHECK) != 0) {
-		if (new NSCell(cell).isKindOfClass(OS.class_NSButtonCell)) return true;
+        if (new NSCell(cell).isKindOfClass(OS.class_NSButtonCell)) {
+            return true;
+        }
 	}
 	NSTableView widget = (NSTableView)view;
 	return widget.isRowSelected(rowIndex);
@@ -3654,7 +4054,9 @@ private void toggleCheckedItem (TableItem item, long rowIndex) {
 
 @Override
 void tableView_willDisplayCell_forTableColumn_row (long id, long sel, long aTableView, long cell, long tableColumn, long rowIndex) {
-	if (checkColumn != null && tableColumn == checkColumn.id) return;
+    if (checkColumn != null && tableColumn == checkColumn.id) {
+        return;
+    }
 	TableItem item = _getItem ((int)rowIndex);
 	item.markVirtualPainted ();
 	int index = 0;
@@ -3675,8 +4077,12 @@ void tableView_willDisplayCell_forTableColumn_row (long id, long sel, long aTabl
 			color = NSColor.selectedControlTextColor();
 		} else {
 			Color foreground = item.cellForeground != null ? item.cellForeground [index] : null;
-			if (foreground == null) foreground = item.foreground;
-			if (foreground == null) foreground = getForegroundColor();
+            if (foreground == null) {
+                foreground = item.foreground;
+            }
+            if (foreground == null) {
+                foreground = getForegroundColor();
+            }
 			color = NSColor.colorWithDeviceRed (foreground.handle [0], foreground.handle [1], foreground.handle [2], 1);
 		}
 	} else {
@@ -3693,9 +4099,15 @@ void tableView_willDisplayCell_forTableColumn_row (long id, long sel, long aTabl
 		}
 	}
 	Font font = item.cellFont != null ? item.cellFont [index] : null;
-	if (font == null) font = item.font;
-	if (font == null) font = this.font;
-	if (font == null) font = defaultFont ();
+    if (font == null) {
+        font = item.font;
+    }
+    if (font == null) {
+        font = this.font;
+    }
+    if (font == null) {
+        font = defaultFont();
+    }
 	if (font.extraTraits != 0) {
 		NSMutableDictionary dict = ((NSMutableDictionary)new NSMutableDictionary().alloc()).initWithCapacity(5);
 		dict.setObject (color, OS.NSForegroundColorAttributeName);
@@ -3743,8 +4155,12 @@ void handleClickSelected() {
 	int clickedRow = selectedRowIndex;
 	selectedRowIndex = -1;
 
-	if (clickedRow == -1) return;
-	if (dragDetected) return;
+    if (clickedRow == -1) {
+        return;
+    }
+    if (dragDetected) {
+        return;
+    }
 
 	// Deselect all items except the clicked one
 	NSTableView widget = (NSTableView)view;
@@ -3753,21 +4169,25 @@ void handleClickSelected() {
 	long [] indexBuffer = new long [count];
 	selectedRows.getIndexes(indexBuffer, count, 0);
 	for (int i = 0; i < count; i++) {
-		if (indexBuffer[i] == clickedRow) continue;
+        if (indexBuffer[i] == clickedRow) {
+            continue;
+        }
 		ignoreSelect = true;
 		widget.deselectRow (indexBuffer[i]);
 		ignoreSelect = false;
 	}
 
-	// Bug 456602: It's possible that item is removed between mouse
-	// down (where 'selectedRowIndex' was cached) and mouse up (current
-	// code). In such case, all other items are still deselected, because
-	// 1) without workaround, selection should have happened in mouse down,
-	//    where item still existed
-	// 2) clicking empty space deselects all items on macOS
-	// If item is deleted, then pending selection is canceled by macOS, so
-	// there's no need to ignore the next selection event.
-	if (clickedRow >= itemCount) return;
+    // Bug 456602: It's possible that item is removed between mouse
+    // down (where 'selectedRowIndex' was cached) and mouse up (current
+    // code). In such case, all other items are still deselected, because
+    // 1) without workaround, selection should have happened in mouse down,
+    //    where item still existed
+    // 2) clicking empty space deselects all items on macOS
+    // If item is deleted, then pending selection is canceled by macOS, so
+    // there's no need to ignore the next selection event.
+    if (clickedRow >= itemCount) {
+        return;
+    }
 
 	// Emulate SWT.Selection
 	Event event = new Event ();
@@ -3804,7 +4224,9 @@ NSRect titleRectForBounds (long id, long sel, NSRect cellFrame) {
 @Override
 void updateCursorRects (boolean enabled) {
 	super.updateCursorRects (enabled);
-	if (headerView == null) return;
+    if (headerView == null) {
+        return;
+    }
 	updateCursorRects (enabled, headerView);
 }
 

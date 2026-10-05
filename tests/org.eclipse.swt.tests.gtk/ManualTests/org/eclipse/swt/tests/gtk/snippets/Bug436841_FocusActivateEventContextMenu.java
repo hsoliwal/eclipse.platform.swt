@@ -69,8 +69,9 @@ public class Bug436841_FocusActivateEventContextMenu {
 		shell.setSize(400, 100);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

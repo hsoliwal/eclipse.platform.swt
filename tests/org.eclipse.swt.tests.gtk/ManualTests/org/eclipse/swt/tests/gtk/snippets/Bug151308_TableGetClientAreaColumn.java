@@ -38,7 +38,9 @@ public class Bug151308_TableGetClientAreaColumn {
 		System.out.println("col0 width: " + col0.getWidth()); // <--- !!!
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

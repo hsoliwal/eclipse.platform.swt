@@ -240,11 +240,15 @@ public TextLayout (Device device) {
 	} else {
 		context = GDK.gdk_pango_context_get();
 	}
-	if (context == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (context == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.pango_context_set_language(context, GTK.gtk_get_default_language());
 	OS.pango_context_set_base_dir(context, OS.PANGO_DIRECTION_LTR);
 	layout = OS.pango_layout_new(context);
-	if (layout == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (layout == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.pango_layout_set_font_description(layout, device.systemFont.handle);
 	OS.pango_layout_set_wrap(layout, OS.PANGO_WRAP_WORD_CHAR);
 	OS.pango_layout_set_tabs(layout, device.emptyTab);
@@ -259,11 +263,15 @@ public TextLayout (Device device) {
 }
 
 void checkLayout() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 }
 
 void computeRuns () {
-	if (attrList != 0) return;
+    if (attrList != 0) {
+        return;
+    }
 	String segmentsText = getSegmentsText();
 	byte[] buffer = Converter.wcsToMbcs(segmentsText, false);
 	OS.pango_layout_set_text (layout, buffer, buffer.length);
@@ -296,7 +304,9 @@ void computeRuns () {
 	boolean useMinAscentDescent = !metricsAdapter.isFixedMetrics() && (ascentInPoints != -1 || descentInPoints != -1);
 	if (useMinAscentDescent && segementsLength > 0) {
 		PangoRectangle rect = new PangoRectangle();
-		if (ascentInPoints != -1) rect.y =  -(ascentInPoints * OS.PANGO_SCALE);
+        if (ascentInPoints != -1) {
+            rect.y = -(ascentInPoints * OS.PANGO_SCALE);
+        }
 		rect.height = (Math.max(0, ascentInPoints) + Math.max(0, descentInPoints)) * OS.PANGO_SCALE;
 		int lineCount = OS.pango_layout_get_line_count(layout);
 		chars = new char[segementsLength + lineCount * 2];
@@ -362,7 +372,9 @@ void computeRuns () {
 	for (int i = 0; i < stylesCount - 1; i++) {
 		StyleItem styleItem = styles[i];
 		TextStyle style = styleItem.style;
-		if (style == null) continue;
+        if (style == null) {
+            continue;
+        }
 		int start = translateOffset(styleItem.start);
 		int end = translateOffset(styles[i+1].start - 1);
 		int byteStart = (int)(OS.g_utf16_offset_to_pointer(ptr, start) - ptr);
@@ -514,7 +526,9 @@ int[] computePolyline(int left, int top, int right, int bottom) {
 		peaks = 1;
 	}
 	int length = ((2 * peaks) + 1) * 2;
-	if (length < 0) return new int[0];
+    if (length < 0) {
+        return new int[0];
+    }
 
 	int[] coordinates = new int[length];
 	for (int i = 0; i < peaks; i++) {
@@ -537,9 +551,13 @@ void destroy() {
 	freeRuns();
 	segments = null;
 	segmentsChars = null;
-	if (layout != 0) OS.g_object_unref(layout);
+    if (layout != 0) {
+        OS.g_object_unref(layout);
+    }
 	layout = 0;
-	if (context != 0) OS.g_object_unref(context);
+    if (context != 0) {
+        OS.g_object_unref(context);
+    }
 	context = 0;
 }
 
@@ -620,10 +638,18 @@ public void draw(GC gc, int x, int y, int selectionStart, int selectionEnd, Colo
 void drawInPixels(GC gc, int x, int y, int selectionStart, int selectionEnd, Color selectionForeground, Color selectionBackground, int flags) {
 	checkLayout ();
 	computeRuns();
-	if (gc == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (selectionForeground != null && selectionForeground.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (selectionBackground != null && selectionBackground.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (selectionForeground != null && selectionForeground.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (selectionBackground != null && selectionBackground.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	gc.checkGC(GC.FOREGROUND);
 	int length = text.length();
 	x += Math.min (indent, wrapIndent);
@@ -640,7 +666,9 @@ void drawInPixels(GC gc, int x, int y, int selectionStart, int selectionEnd, Col
 		int lineCount = OS.pango_layout_get_line_count(layout);
 		long ptr = OS.pango_layout_get_text(layout);
 		long iter = OS.pango_layout_get_iter(layout);
-		if (selectionBackground == null) selectionBackground = device.getSystemColor(SWT.COLOR_LIST_SELECTION);
+        if (selectionBackground == null) {
+            selectionBackground = device.getSystemColor(SWT.COLOR_LIST_SELECTION);
+        }
 		Cairo.cairo_save(cairo);
 		GdkRGBA rgba = selectionBackground.handle;
 		Cairo.cairo_set_source_rgba(cairo, rgba.red, rgba.green, rgba.blue, rgba.alpha);
@@ -657,10 +685,14 @@ void drawInPixels(GC gc, int x, int y, int selectionStart, int selectionEnd, Col
 			if (lineIndex == lineCount - 1 && (flags & SWT.LAST_LINE_SELECTION) != 0) {
 				extent = true;
 			} else {
-				if (attrs[0] == 0) OS.pango_layout_get_log_attrs(layout, attrs, nAttrs);
+                if (attrs[0] == 0) {
+                    OS.pango_layout_get_log_attrs(layout, attrs, nAttrs);
+                }
 				OS.memmove(logAttr, attrs[0] + lineEnd * PangoLogAttr.sizeof, PangoLogAttr.sizeof);
 				if (!logAttr.is_line_break) {
-					if (selectionStart <= lineEnd && lineEnd <= selectionEnd) extent = true;
+                    if (selectionStart <= lineEnd && lineEnd <= selectionEnd) {
+                        extent = true;
+                    }
 				} else {
 					if (selectionStart <= lineEnd && lineEnd < selectionEnd && (flags & SWT.FULL_SELECTION) != 0) {
 						extent = true;
@@ -682,10 +714,14 @@ void drawInPixels(GC gc, int x, int y, int selectionStart, int selectionEnd, Col
 			lineIndex++;
 		} while (lineIndex < lineCount);
 		OS.pango_layout_iter_free(iter);
-		if (attrs[0] != 0) OS.g_free(attrs[0]);
+        if (attrs[0] != 0) {
+            OS.g_free(attrs[0]);
+        }
 		Cairo.cairo_restore(cairo);
 	}
-	if (length == 0) return;
+    if (length == 0) {
+        return;
+    }
 	if (!hasSelection) {
 		if ((data.style & SWT.MIRRORED) != 0) {
 			Cairo.cairo_save(cairo);
@@ -703,8 +739,12 @@ void drawInPixels(GC gc, int x, int y, int selectionStart, int selectionEnd, Col
 		length = (int)OS.g_utf16_strlen(OS.pango_layout_get_text(layout), -1);
 		selectionStart = translateOffset(selectionStart);
 		selectionEnd = translateOffset(selectionEnd);
-		if (selectionForeground == null) selectionForeground = device.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT);
-		if (selectionBackground == null) selectionBackground = device.getSystemColor(SWT.COLOR_LIST_SELECTION);
+        if (selectionForeground == null) {
+            selectionForeground = device.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT);
+        }
+        if (selectionBackground == null) {
+            selectionBackground = device.getSystemColor(SWT.COLOR_LIST_SELECTION);
+        }
 		int yExtent = extent ? OS.PANGO_PIXELS(OS.pango_layout_get_spacing(layout)) : 0;
 		boolean fullSelection = selectionStart == 0 && selectionEnd == length - 1;
 		if (fullSelection) {
@@ -781,7 +821,9 @@ void drawBorder(GC gc, int x, int y, GdkRGBA selectionColor) {
 	Cairo.cairo_save(cairo);
 	for (int i = 0; i < stylesCount - 1; i++) {
 		TextStyle style = styles[i].style;
-		if (style == null) continue;
+        if (style == null) {
+            continue;
+        }
 
 		boolean drawBorder = style.borderStyle != SWT.NONE;
 		if (drawBorder && !style.isAdherentBorder(styles[i+1].style)) {
@@ -801,10 +843,18 @@ void drawBorder(GC gc, int x, int y, GdkRGBA selectionColor) {
 				Region.cairo_region_get_rectangles(rgn, rects, nRects);
 				cairo_rectangle_int_t rect = new cairo_rectangle_int_t();
 				GdkRGBA colorRGBA = null;
-				if (colorRGBA == null && style.borderColor != null) colorRGBA = style.borderColor.handle;
-				if (colorRGBA == null && selectionColor != null) colorRGBA = selectionColor;
-				if (colorRGBA == null && style.foreground != null) colorRGBA = style.foreground.handle;
-				if (colorRGBA == null) colorRGBA = data.foregroundRGBA;
+                if (colorRGBA == null && style.borderColor != null) {
+                    colorRGBA = style.borderColor.handle;
+                }
+                if (colorRGBA == null && selectionColor != null) {
+                    colorRGBA = selectionColor;
+                }
+                if (colorRGBA == null && style.foreground != null) {
+                    colorRGBA = style.foreground.handle;
+                }
+                if (colorRGBA == null) {
+                    colorRGBA = data.foregroundRGBA;
+                }
 				int width = 1;
 				float[] dashes = null;
 				switch (style.borderStyle) {
@@ -828,7 +878,9 @@ void drawBorder(GC gc, int x, int y, GdkRGBA selectionColor) {
 					Cairo.cairo_rectangle(cairo, rect.x + 0.5, rect.y + 0.5, rect.width - 1, rect.height - 1);
 				}
 				Cairo.cairo_stroke(cairo);
-				if (rects[0] != 0) OS.g_free(rects[0]);
+                if (rects[0] != 0) {
+                    OS.g_free(rects[0]);
+                }
 				Cairo.cairo_region_destroy(rgn);
 			}
 		}
@@ -837,7 +889,9 @@ void drawBorder(GC gc, int x, int y, GdkRGBA selectionColor) {
 }
 
 void freeRuns() {
-	if (attrList == 0) return;
+    if (attrList == 0) {
+        return;
+    }
 	OS.pango_layout_set_attributes(layout, 0);
 	OS.pango_attr_list_unref(attrList);
 	attrList = 0;
@@ -938,8 +992,12 @@ public Rectangle getBounds(int start, int end) {
 	checkLayout();
 	computeRuns();
 	int length = text.length();
-	if (length == 0) return new Rectangle(0, 0, 0, 0);
-	if (start > end) return new Rectangle(0, 0, 0, 0);
+    if (length == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
+    if (start > end) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	start = Math.min(Math.max(0, start), length - 1);
 	end = Math.min(Math.max(0, end), length - 1);
 	start = translateOffset(start);
@@ -952,7 +1010,9 @@ public Rectangle getBounds(int start, int end) {
 	byteEnd = Math.min(byteEnd, strlen);
 	int[] ranges = new int[]{byteStart, byteEnd};
 	long clipRegion = metricsAdapter.gdk_pango_layout_get_clip_region(layout, 0, 0, ranges, 1);
-	if (clipRegion == 0) return new Rectangle(0, 0, 0, 0);
+    if (clipRegion == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	cairo_rectangle_int_t rect = new cairo_rectangle_int_t();
 
 	/*
@@ -962,9 +1022,13 @@ public Rectangle getBounds(int start, int end) {
 	*/
 	PangoRectangle pangoRect = new PangoRectangle();
 	long iter = OS.pango_layout_get_iter(layout);
-	if (iter == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (iter == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	long linesRegion = Cairo.cairo_region_create();
-	if (linesRegion == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (linesRegion == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	int lineEnd = 0;
 	do {
 		metricsAdapter.pango_layout_iter_get_line_extents(iter, null, pangoRect);
@@ -973,7 +1037,9 @@ public Rectangle getBounds(int start, int end) {
 		} else {
 			lineEnd = strlen;
 		}
-		if (byteStart > lineEnd) continue;
+        if (byteStart > lineEnd) {
+            continue;
+        }
 		rect.x = OS.PANGO_PIXELS(pangoRect.x);
 		rect.y = OS.PANGO_PIXELS(pangoRect.y);
 		rect.width = OS.PANGO_PIXELS(pangoRect.width);
@@ -1074,10 +1140,14 @@ public int getLevel(int offset) {
 	checkLayout();
 	computeRuns();
 	int length = text.length();
-	if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= offset && offset <= length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	offset = translateOffset(offset);
 	long iter = OS.pango_layout_get_iter(layout);
-	if (iter == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (iter == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	int level = 0;
 	PangoItem item = new PangoItem();
 	PangoLayoutRun run = new PangoLayoutRun();
@@ -1117,7 +1187,9 @@ public Rectangle getLineBounds(int lineIndex) {
 	checkLayout();
 	computeRuns();
 	int lineCount = OS.pango_layout_get_line_count(layout);
-	if (!(0 <= lineIndex && lineIndex < lineCount)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= lineIndex && lineIndex < lineCount)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	long iter = OS.pango_layout_get_iter(layout);
 	for (int i = 0; i < lineIndex; i++) {
 		OS.pango_layout_iter_next_line(iter);
@@ -1128,7 +1200,9 @@ public Rectangle getLineBounds(int lineIndex) {
 }
 
 private Rectangle getLineBoundsInPixels(int lineIndex, long iter) {
-	if (iter == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (iter == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	PangoRectangle rect = new PangoRectangle();
 	metricsAdapter.pango_layout_iter_get_line_extents(iter, null, rect);
 	int x = OS.PANGO_PIXELS(rect.x);
@@ -1176,7 +1250,9 @@ public int getLineIndex(int offset) {
 	checkLayout ();
 	computeRuns();
 	int length = text.length();
-	if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (!(0 <= offset && offset <= length)) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	offset = translateOffset(offset);
 	int line = 0;
 	long ptr = OS.pango_layout_get_text(layout);
@@ -1184,9 +1260,13 @@ public int getLineIndex(int offset) {
 	int strlen = C.strlen(ptr);
 	byteOffset = Math.min(byteOffset, strlen);
 	long iter = OS.pango_layout_get_iter(layout);
-	if (iter == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (iter == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	while (OS.pango_layout_iter_next_line(iter)) {
-		if (OS.pango_layout_iter_get_index(iter) > byteOffset) break;
+        if (OS.pango_layout_iter_get_index(iter) > byteOffset) {
+            break;
+        }
 		line++;
 	}
 	OS.pango_layout_iter_free(iter);
@@ -1214,7 +1294,9 @@ public FontMetrics getLineMetrics (int lineIndex) {
 	checkLayout ();
 	computeRuns();
 	int lineCount = OS.pango_layout_get_line_count(layout);
-	if (!(0 <= lineIndex && lineIndex < lineCount)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= lineIndex && lineIndex < lineCount)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	PangoLayoutLine line = new PangoLayoutLine();
 	OS.memmove(line, OS.pango_layout_get_line(layout, lineIndex), PangoLayoutLine.sizeof);
 	int heightInPoints;
@@ -1292,7 +1374,9 @@ public Point getLocation(int offset, boolean trailing) {
 	checkLayout();
 	computeRuns();
 	int length = text.length();
-	if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= offset && offset <= length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	offset = translateOffset(offset);
 	long ptr = OS.pango_layout_get_text(layout);
 	int byteOffset = (int)(OS.g_utf16_offset_to_pointer(ptr, offset) - ptr);
@@ -1337,18 +1421,28 @@ int _getOffset (int offset, int movement, boolean forward) {
 	checkLayout();
 	computeRuns();
 	int length = text.length();
-	if (!(0 <= offset && offset <= length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= offset && offset <= length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (forward) {
-		if (offset == length) return length;
+        if (offset == length) {
+            return length;
+        }
 	} else {
-		if (offset == 0) return 0;
+        if (offset == 0) {
+            return 0;
+        }
 	}
 	int step = forward ? 1 : -1;
-	if ((movement & SWT.MOVEMENT_CHAR) != 0) return offset + step;
+    if ((movement & SWT.MOVEMENT_CHAR) != 0) {
+        return offset + step;
+    }
 	long [] attrs = new long [1];
 	int[] nAttrs = new int[1];
 	OS.pango_layout_get_log_attrs(layout, attrs, nAttrs);
-	if (attrs[0] == 0) return offset + step;
+    if (attrs[0] == 0) {
+        return offset + step;
+    }
 
 	long ptr = OS.pango_layout_get_text(layout);
 	int utf8Offset = (int)OS.g_utf16_offset_to_utf8_offset (ptr, translateOffset(offset));
@@ -1358,26 +1452,44 @@ int _getOffset (int offset, int movement, boolean forward) {
 	while (0 <= utf8Offset && utf8Offset <= utf8Length) {
 		OS.memmove(logAttr, attrs[0] + utf8Offset * PangoLogAttr.sizeof, PangoLogAttr.sizeof);
 		boolean found = false, limit = false;
-		if (((movement & SWT.MOVEMENT_CLUSTER) != 0) && logAttr.is_cursor_position) found = true;
+        if (((movement & SWT.MOVEMENT_CLUSTER) != 0) && logAttr.is_cursor_position) {
+            found = true;
+        }
 		if ((movement & SWT.MOVEMENT_WORD) != 0) {
 			if (forward) {
-				if (logAttr.is_word_end) found = true;
+                if (logAttr.is_word_end) {
+                    found = true;
+                }
 			} else {
-				if (logAttr.is_word_start) found = true;
+                if (logAttr.is_word_start) {
+                    found = true;
+                }
 			}
 		}
 		if ((movement & SWT.MOVEMENT_WORD_START) != 0) {
-			if (logAttr.is_word_start) found = true;
-			if (logAttr.is_sentence_end) found = true;
+            if (logAttr.is_word_start) {
+                found = true;
+            }
+            if (logAttr.is_sentence_end) {
+                found = true;
+            }
 		}
 		if ((movement & SWT.MOVEMENT_WORD_END) != 0) {
-			if (logAttr.is_word_end) found = true;
-			if (logAttr.is_sentence_start) found = true;
+            if (logAttr.is_word_end) {
+                found = true;
+            }
+            if (logAttr.is_sentence_start) {
+                found = true;
+            }
 		}
 		if (forward) {
-			if (utf8Offset == utf8Length) limit = true;
+            if (utf8Offset == utf8Length) {
+                limit = true;
+            }
 		} else {
-			if (utf8Offset == 0) limit = true;
+            if (utf8Offset == 0) {
+                limit = true;
+            }
 		}
 		if (found || limit) {
 			int testOffset = (int)OS.g_utf8_offset_to_utf16_offset (ptr, utf8Offset);
@@ -1453,7 +1565,9 @@ public int getOffset(Point point, int[] trailing) {
 public int getOffset(int x, int y, int[] trailing) {
 	checkLayout();
 	computeRuns();
-	if (trailing != null && trailing.length < 1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (trailing != null && trailing.length < 1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	x -= Math.min (indent, wrapIndent);
 	if (OS.pango_context_get_base_dir(context) == OS.PANGO_DIRECTION_RTL) {
 		x = width() - x;
@@ -1467,7 +1581,9 @@ public int getOffset(int x, int y, int[] trailing) {
 	* line bounds.
 	*/
 	long iter = OS.pango_layout_get_iter(layout);
-	if (iter == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (iter == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	PangoRectangle rect = new PangoRectangle();
 	do {
 		metricsAdapter.pango_layout_iter_get_line_extents(iter, null, rect);
@@ -1476,8 +1592,12 @@ public int getOffset(int x, int y, int[] trailing) {
 		if (rect.y <= y && y < rect.y + rect.height) {
 			rect.x = OS.PANGO_PIXELS(rect.x);
 			rect.width = OS.PANGO_PIXELS(rect.width);
-			if (x >= rect.x + rect.width) x = rect.x + rect.width - 1;
-			if (x < rect.x) x = rect.x;
+            if (x >= rect.x + rect.width) {
+                x = rect.x + rect.width - 1;
+            }
+            if (x < rect.x) {
+                x = rect.x;
+            }
 			break;
 		}
 	} while (OS.pango_layout_iter_next_line(iter));
@@ -1599,14 +1719,24 @@ public char[] getSegmentsChars () {
 
 String getSegmentsText() {
 	int length = text.length();
-	if (length == 0) return text;
-	if (segments == null) return text;
+    if (length == 0) {
+        return text;
+    }
+    if (segments == null) {
+        return text;
+    }
 	int nSegments = segments.length;
-	if (nSegments == 0) return text;
+    if (nSegments == 0) {
+        return text;
+    }
 	if (segmentsChars == null) {
-		if (nSegments == 1) return text;
+        if (nSegments == 1) {
+            return text;
+        }
 		if (nSegments == 2) {
-			if (segments[0] == 0 && segments[1] == length) return text;
+            if (segments[0] == 0 && segments[1] == length) {
+                return text;
+            }
 		}
 	}
 	char[] oldChars = new char[length];
@@ -1688,7 +1818,9 @@ private int getScaledVerticalIndent() {
 public TextStyle getStyle (int offset) {
 	checkLayout();
 	int length = text.length();
-	if (!(0 <= offset && offset < length)) SWT.error(SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= offset && offset < length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	for (int i=1; i<stylesCount; i++) {
 		StyleItem item = styles[i];
 		if (item.start > offset) {
@@ -1843,9 +1975,15 @@ public void setAlignment (int alignment) {
 	checkLayout();
 	int mask = SWT.LEFT | SWT.CENTER | SWT.RIGHT;
 	alignment &= mask;
-	if (alignment == 0) return;
-	if ((alignment & SWT.LEFT) != 0) alignment = SWT.LEFT;
-	if ((alignment & SWT.RIGHT) != 0) alignment = SWT.RIGHT;
+    if (alignment == 0) {
+        return;
+    }
+    if ((alignment & SWT.LEFT) != 0) {
+        alignment = SWT.LEFT;
+    }
+    if ((alignment & SWT.RIGHT) != 0) {
+        alignment = SWT.RIGHT;
+    }
 	boolean rtl = OS.pango_context_get_base_dir(context) == OS.PANGO_DIRECTION_RTL;
 	int align = OS.PANGO_ALIGN_CENTER;
 	switch (alignment) {
@@ -1879,8 +2017,12 @@ public void setAlignment (int alignment) {
  */
 public void setAscent (int ascent) {
 	checkLayout();
-	if (ascent < -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.ascentInPoints == ascent) return;
+    if (ascent < -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.ascentInPoints == ascent) {
+        return;
+    }
 	freeRuns();
 	this.ascentInPoints = ascent;
 }
@@ -1905,8 +2047,12 @@ public void setAscent (int ascent) {
  */
 public void setDescent (int descent) {
 	checkLayout();
-	if (descent < -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.descentInPoints == descent) return;
+    if (descent < -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.descentInPoints == descent) {
+        return;
+    }
 	freeRuns();
 	this.descentInPoints = descent;
 }
@@ -1962,12 +2108,18 @@ public void setFixedLineMetrics (FontMetrics metrics) {
  */
 public void setFont (Font font) {
 	checkLayout ();
-	if (font != null && font.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (font != null && font.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Font oldFont = this.font;
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	freeRuns();
 	this.font = font;
-	if (oldFont != null && oldFont.equals(font)) return;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
 	OS.pango_layout_set_font_description(layout, font != null ? font.handle : device.systemFont.handle);
 }
 
@@ -1987,11 +2139,17 @@ public void setFont (Font font) {
  */
 public void setIndent (int indent) {
 	checkLayout ();
-	if (indent < 0) return;
-	if (this.indent == indent) return;
+    if (indent < 0) {
+        return;
+    }
+    if (this.indent == indent) {
+        return;
+    }
 	this.indent = indent;
 	OS.pango_layout_set_indent(layout, (indent - wrapIndent) * OS.PANGO_SCALE);
-	if (wrapWidth != -1) setWidth();
+    if (wrapWidth != -1) {
+        setWidth();
+    }
 }
 
 /**
@@ -2025,10 +2183,16 @@ public void setOrientation(int orientation) {
 	checkLayout();
 	int mask = SWT.RIGHT_TO_LEFT | SWT.LEFT_TO_RIGHT;
 	orientation &= mask;
-	if (orientation == 0) return;
-	if ((orientation & SWT.LEFT_TO_RIGHT) != 0) orientation = SWT.LEFT_TO_RIGHT;
+    if (orientation == 0) {
+        return;
+    }
+    if ((orientation & SWT.LEFT_TO_RIGHT) != 0) {
+        orientation = SWT.LEFT_TO_RIGHT;
+    }
 	int baseDir = orientation == SWT.RIGHT_TO_LEFT ? OS.PANGO_DIRECTION_RTL : OS.PANGO_DIRECTION_LTR;
-	if (OS.pango_context_get_base_dir(context) == baseDir) return;
+    if (OS.pango_context_get_base_dir(context) == baseDir) {
+        return;
+    }
 	freeRuns();
 	OS.pango_context_set_base_dir(context, baseDir);
 	OS.pango_layout_context_changed(layout);
@@ -2054,7 +2218,9 @@ public void setOrientation(int orientation) {
  */
 public void setSpacing (int spacing) {
 	checkLayout();
-	if (spacing < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (spacing < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	OS.pango_layout_set_spacing(layout, spacing * OS.PANGO_SCALE);
 }
 
@@ -2074,8 +2240,12 @@ public void setSpacing (int spacing) {
  */
 public void setVerticalIndent (int verticalIndent) {
 	checkLayout();
-	if (verticalIndent < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (this.verticalIndentInPoints == verticalIndent) return;
+    if (verticalIndent < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (this.verticalIndentInPoints == verticalIndent) {
+        return;
+    }
 	this.verticalIndentInPoints = verticalIndent;
 }
 
@@ -2105,14 +2275,20 @@ public void setVerticalIndent (int verticalIndent) {
  */
 public void setSegments(int[] segments) {
 	checkLayout();
-	if (this.segments == null && segments == null) return;
+    if (this.segments == null && segments == null) {
+        return;
+    }
 	if (this.segments != null && segments !=null) {
 		if (this.segments.length == segments.length) {
 			int i;
 			for (i = 0; i <segments.length; i++) {
-				if (this.segments[i] != segments[i]) break;
+                if (this.segments[i] != segments[i]) {
+                    break;
+                }
 			}
-			if (i == segments.length) return;
+            if (i == segments.length) {
+                return;
+            }
 		}
 	}
 	freeRuns();
@@ -2138,14 +2314,20 @@ public void setSegments(int[] segments) {
  */
 public void setSegmentsChars(char[] segmentsChars) {
 	checkLayout();
-	if (this.segmentsChars == null && segmentsChars == null) return;
+    if (this.segmentsChars == null && segmentsChars == null) {
+        return;
+    }
 	if (this.segmentsChars != null && segmentsChars != null) {
 		if (this.segmentsChars.length == segmentsChars.length) {
 			int i;
 			for (i = 0; i <segmentsChars.length; i++) {
-				if (this.segmentsChars[i] != segmentsChars[i]) break;
+                if (this.segmentsChars[i] != segmentsChars[i]) {
+                    break;
+                }
 			}
-			if (i == segmentsChars.length) return;
+            if (i == segmentsChars.length) {
+                return;
+            }
 		}
 	}
 	freeRuns();
@@ -2168,8 +2350,12 @@ public void setSegmentsChars(char[] segmentsChars) {
 public void setStyle (TextStyle style, int start, int end) {
 	checkLayout();
 	int length = text.length();
-	if (length == 0) return;
-	if (start > end) return;
+    if (length == 0) {
+        return;
+    }
+    if (start > end) {
+        return;
+    }
 	start = Math.min(Math.max(0, start), length - 1);
 	end = Math.min(Math.max(0, end), length - 1);
 
@@ -2201,9 +2387,13 @@ public void setStyle (TextStyle style, int start, int end) {
 		StyleItem item = styles[high];
 		if (item.start == start && styles[high + 1].start - 1 == end) {
 			if (style == null) {
-				if (item.style == null) return;
+                if (item.style == null) {
+                    return;
+                }
 			} else {
-				if (style.equals(item.style)) return;
+                if (style.equals(item.style)) {
+                    return;
+                }
 			}
 		}
 	}
@@ -2211,7 +2401,9 @@ public void setStyle (TextStyle style, int start, int end) {
 	int modifyStart = high;
 	int modifyEnd = modifyStart;
 	while (modifyEnd < stylesCount) {
-		if (styles[modifyEnd + 1].start > end) break;
+        if (styles[modifyEnd + 1].start > end) {
+            break;
+        }
 		modifyEnd++;
 	}
 	if (modifyStart == modifyEnd) {
@@ -2242,8 +2434,12 @@ public void setStyle (TextStyle style, int start, int end) {
 			return;
 		}
 	}
-	if (start == styles[modifyStart].start) modifyStart--;
-	if (end == styles[modifyEnd + 1].start - 1) modifyEnd++;
+    if (start == styles[modifyStart].start) {
+        modifyStart--;
+    }
+    if (end == styles[modifyEnd + 1].start - 1) {
+        modifyEnd++;
+    }
 	int newLength = stylesCount + 1 - (modifyEnd - modifyStart - 1);
 	if (newLength > styles.length) {
 		int newSize = Math.min(newLength + 1024, Math.max(64, newLength * 2));
@@ -2273,8 +2469,12 @@ public void setStyle (TextStyle style, int start, int end) {
  */
 public void setTabs(int[] tabs) {
 	checkLayout();
-	if (this.tabs == null && tabs == null) return;
-	if (Arrays.equals (this.tabs, tabs)) return;
+    if (this.tabs == null && tabs == null) {
+        return;
+    }
+    if (Arrays.equals(this.tabs, tabs)) {
+        return;
+    }
 	this.tabs = tabs;
 	if (tabs == null) {
 		OS.pango_layout_set_tabs(layout, device.emptyTab);
@@ -2315,8 +2515,12 @@ public void setTabs(int[] tabs) {
  */
 public void setText (String text) {
 	checkLayout ();
-	if (text == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (text.equals(this.text)) return;
+    if (text == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (text.equals(this.text)) {
+        return;
+    }
 	freeRuns();
 	this.text = text;
 	styles = new StyleItem[2];
@@ -2365,8 +2569,12 @@ public void setTextDirection (int textDirection) {
  */
 public void setWidth (int width) {
 	checkLayout ();
-	if (width < -1 || width == 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (wrapWidth == width) return;
+    if (width < -1 || width == 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (wrapWidth == width) {
+        return;
+    }
 	freeRuns();
 	wrapWidth = width;
 	setWidth();
@@ -2399,11 +2607,17 @@ void setWidth () {
  */
 public void setWrapIndent (int wrapIndent) {
 	checkLayout();
-	if (wrapIndent < 0) return;
-	if (this.wrapIndent == wrapIndent) return;
+    if (wrapIndent < 0) {
+        return;
+    }
+    if (this.wrapIndent == wrapIndent) {
+        return;
+    }
 	this.wrapIndent = wrapIndent;
 	OS.pango_layout_set_indent(layout, (indent - wrapIndent) * OS.PANGO_SCALE);
-	if (wrapWidth != -1) setWidth();
+    if (wrapWidth != -1) {
+        setWidth();
+    }
 }
 
 static final boolean isLam(int ch) {
@@ -2435,7 +2649,9 @@ static final boolean isAlef(int ch) {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "TextLayout {*DISPOSED*}";
+    if (isDisposed()) {
+        return "TextLayout {*DISPOSED*}";
+    }
 	return "TextLayout {" + layout + "}";
 }
 
@@ -2444,10 +2660,16 @@ public String toString () {
  */
 int translateOffset(int offset) {
 	int length = text.length();
-	if (length == 0) return offset;
-	if (invalidOffsets == null) return offset;
+    if (length == 0) {
+        return offset;
+    }
+    if (invalidOffsets == null) {
+        return offset;
+    }
 	for (int i = 0; i < invalidOffsets.length; i++) {
-		if (offset < invalidOffsets[i]) break;
+        if (offset < invalidOffsets[i]) {
+            break;
+        }
 		offset++;
 	}
 	return offset;
@@ -2458,8 +2680,12 @@ int translateOffset(int offset) {
  */
 int untranslateOffset(int offset) {
 	int length = text.length();
-	if (length == 0) return offset;
-	if (invalidOffsets == null) return offset;
+    if (length == 0) {
+        return offset;
+    }
+    if (invalidOffsets == null) {
+        return offset;
+    }
 	int i = 0;
 	while (i < invalidOffsets.length && offset > invalidOffsets[i]) {
 		i++;
@@ -2469,7 +2695,9 @@ int untranslateOffset(int offset) {
 
 int width () {
 	int wrapWidth = OS.pango_layout_get_width(layout);
-	if (wrapWidth != -1) return OS.PANGO_PIXELS(wrapWidth);
+    if (wrapWidth != -1) {
+        return OS.PANGO_PIXELS(wrapWidth);
+    }
 	int[] w = new int[1], h = new int[1];
 	OS.pango_layout_get_pixel_size(layout, w, h);
 	return w[0];

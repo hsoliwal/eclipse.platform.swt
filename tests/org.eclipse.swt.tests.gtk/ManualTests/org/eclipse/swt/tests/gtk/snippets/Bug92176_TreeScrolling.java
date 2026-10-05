@@ -52,8 +52,9 @@ public class Bug92176_TreeScrolling {
 
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}		
 	}
 }

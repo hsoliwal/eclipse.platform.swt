@@ -64,7 +64,9 @@ public static void main(String[] args) {
 	while (!shell.isDisposed()) {
 		boolean readAndDispatch = display.readAndDispatch();
 		System.out.println("readAndDispatch: "+ readAndDispatch);
-		if (!readAndDispatch) display.sleep();
+        if (!readAndDispatch) {
+            display.sleep();
+        }
 	}
 
 

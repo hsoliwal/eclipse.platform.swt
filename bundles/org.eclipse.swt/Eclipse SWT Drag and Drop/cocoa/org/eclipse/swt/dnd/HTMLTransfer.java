@@ -76,7 +76,9 @@ public void javaToNative (Object object, TransferData transferData){
  */
 @Override
 public Object nativeToJava(TransferData transferData){
-	if (!isSupportedType(transferData) || transferData.data == null) return null;
+    if (!isSupportedType(transferData) || transferData.data == null) {
+        return null;
+    }
 	NSString string = (NSString) transferData.data;
 	return string.getString();
 }

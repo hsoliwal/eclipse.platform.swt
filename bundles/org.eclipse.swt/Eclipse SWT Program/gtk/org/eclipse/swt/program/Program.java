@@ -72,7 +72,9 @@ static String[] parseCommand(String cmd) {
 				 * This code currently does not handle escaped characters (e.g., " a\"b").
 				 */
 				eIndex = sIndex + 1;
-				while (eIndex < cmd.length() && cmd.charAt(eIndex) != cmd.charAt(sIndex)) eIndex++;
+                while (eIndex < cmd.length() && cmd.charAt(eIndex) != cmd.charAt(sIndex)) {
+                    eIndex++;
+                }
 				if (eIndex >= cmd.length()) {
 					/* The terminating quote was not found
 					 * Add the argument as is with only one initial quote.
@@ -87,7 +89,9 @@ static String[] parseCommand(String cmd) {
 			else {
 				/* Use white space for the delimiters. */
 				eIndex = sIndex;
-				while (eIndex < cmd.length() && !Character.isWhitespace(cmd.charAt(eIndex))) eIndex++;
+                while (eIndex < cmd.length() && !Character.isWhitespace(cmd.charAt(eIndex))) {
+                    eIndex++;
+                }
 				args.add(cmd.substring(sIndex, eIndex));
 				sIndex = eIndex + 1;
 			}
@@ -111,11 +115,19 @@ static String[] parseCommand(String cmd) {
  *	</ul>
  */
 public static Program findProgram(String extension) {
-	if (extension == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (extension.length() == 0) return null;
-	if (extension.charAt(0) != '.') extension = "." + extension;
+    if (extension == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (extension.length() == 0) {
+        return null;
+    }
+    if (extension.charAt(0) != '.') {
+        extension = "." + extension;
+    }
 	String mimeType = gio_getMimeType(extension);
-	if (mimeType == null) return null;
+    if (mimeType == null) {
+        return null;
+    }
 	return gio_getProgram(mimeType);
 }
 
@@ -144,7 +156,9 @@ public ImageData getImageData() {
  * @since 3.125
  */
 public ImageData getImageData(int zoom) {
-	if (iconPath == null) return null;
+    if (iconPath == null) {
+        return null;
+    }
 	ImageData data = null;
 
 	// Icons are 16 points at 100%; the theme lookup wants the size in pixels.
@@ -356,20 +370,28 @@ public static Program[] getPrograms() {
 			//TODO: Should the list be filtered or not?
 //			if (OS.g_app_info_should_show(application)) {
 				program = gio_getProgram(application);
-				if (program != null) programs.add(program);
+            if (program != null) {
+                programs.add(program);
+            }
 //			}
 				OS.g_object_unref(application);
 		}
 		list = OS.g_list_next(list);
 	}
-	if (applicationList != 0) OS.g_list_free(applicationList);
+    if (applicationList != 0) {
+        OS.g_list_free(applicationList);
+    }
 	return programs.toArray(new Program[programs.size()]);
 }
 
 static boolean isExecutable(String fileName) {
 	byte[] fileNameBuffer = Converter.wcsToMbcs (fileName, true);
-	if (OS.g_file_test(fileNameBuffer, OS.G_FILE_TEST_IS_DIR)) return false;
-	if (!OS.g_file_test(fileNameBuffer, OS.G_FILE_TEST_IS_EXECUTABLE)) return false;
+    if (OS.g_file_test(fileNameBuffer, OS.G_FILE_TEST_IS_DIR)) {
+        return false;
+    }
+    if (!OS.g_file_test(fileNameBuffer, OS.G_FILE_TEST_IS_EXECUTABLE)) {
+        return false;
+    }
 	long file = OS.g_file_new_for_path (fileNameBuffer);
 	boolean result = false;
 	if (file != 0) {
@@ -430,7 +452,9 @@ boolean gio_execute(String fileName) {
 			}
 		}
 		long list = 0;
-		if (file != 0) list = OS.g_list_append (0, file);
+        if (file != 0) {
+            list = OS.g_list_append(0, file);
+        }
 		result = OS.g_app_info_launch (application, list, 0, 0);
 		if (list != 0) {
 			OS.g_list_free (list);
@@ -450,7 +474,9 @@ boolean gio_execute(String fileName) {
  */
 public static String[] getExtensions() {
 	Map<String, List<String>> mimeInfo = gio_getMimeInfo();
-	if (mimeInfo == null) return new String[0];
+    if (mimeInfo == null) {
+        return new String[0];
+    }
 	/* Create a unique set of the file extensions. */
 	List<String> extensions = new ArrayList<>(mimeInfo.keySet());
 	/* Return the list of extensions. */
@@ -494,7 +520,9 @@ public static boolean launch(String fileName) {
  * @since 3.6
  */
 public static boolean launch (String fileName, String workingDir) {
-	if (fileName == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (fileName == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (workingDir != null && isExecutable(fileName)) {
 		try {
 			Compatibility.exec (new String [] {fileName}, null, workingDir);
@@ -503,12 +531,16 @@ public static boolean launch (String fileName, String workingDir) {
 			return false;
 		}
 	}
-	if (gio_launch (fileName)) return true;
+    if (gio_launch(fileName)) {
+        return true;
+    }
 	int index = fileName.lastIndexOf ('.');
 	if (index != -1) {
 		String extension = fileName.substring (index);
 		Program program = Program.findProgram (extension);
-		if (program != null && program.execute (fileName)) return true;
+        if (program != null && program.execute(fileName)) {
+            return true;
+        }
 	}
 	String lowercaseName = fileName.toLowerCase ();
 	if (lowercaseName.startsWith (PREFIX_HTTP) || lowercaseName.startsWith (PREFIX_HTTPS)) {
@@ -516,7 +548,9 @@ public static boolean launch (String fileName, String workingDir) {
 		if (program == null) {
 			program = Program.findProgram (".htm"); //$NON-NLS-1$
 		}
-		if (program != null && program.execute (fileName)) return true;
+        if (program != null && program.execute(fileName)) {
+            return true;
+        }
 	}
 	/* If the above launch attempts didn't launch the file, then try with exec().*/
 	try {
@@ -539,8 +573,12 @@ public static boolean launch (String fileName, String workingDir) {
  */
 @Override
 public boolean equals(Object other) {
-	if (this == other) return true;
-	if (!(other instanceof Program)) return false;
+    if (this == other) {
+        return true;
+    }
+    if (!(other instanceof Program)) {
+        return false;
+    }
 	Program program = (Program)other;
 	return name.equals(program.name) && command.equals(program.command)
 			&& gioExpectUri == program.gioExpectUri;
@@ -560,7 +598,9 @@ public boolean equals(Object other) {
  * </ul>
  */
 public boolean execute(String fileName) {
-	if (fileName == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (fileName == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return gio_execute(fileName);
 }
 

@@ -63,20 +63,30 @@ static {
 
 static String arch() {
 	String osArch = System.getProperty("os.arch"); //$NON-NLS-1$
-	if (osArch.equals ("amd64")) return "x86_64"; //$NON-NLS-1$ $NON-NLS-2$
+    if (osArch.equals("amd64")) {
+        return "x86_64";
+    } //$NON-NLS-1$ $NON-NLS-2$
 	return osArch;
 }
 
 static String os() {
 	String osName = System.getProperty("os.name"); //$NON-NLS-1$
-	if (osName.equals ("Linux")) return "linux"; //$NON-NLS-1$ $NON-NLS-2$
-	if (osName.equals ("Mac OS X")) return "macosx"; //$NON-NLS-1$ $NON-NLS-2$
-	if (osName.startsWith ("Win")) return "win32"; //$NON-NLS-1$ $NON-NLS-2$
+    if (osName.equals("Linux")) {
+        return "linux";
+    } //$NON-NLS-1$ $NON-NLS-2$
+    if (osName.equals("Mac OS X")) {
+        return "macosx";
+    } //$NON-NLS-1$ $NON-NLS-2$
+    if (osName.startsWith("Win")) {
+        return "win32";
+    } //$NON-NLS-1$ $NON-NLS-2$
 	return osName;
 }
 
 static void chmod(String permision, String path) {
-	if (os().equals ("win32")) return; //$NON-NLS-1$
+    if (os().equals("win32")) {
+        return;
+    } //$NON-NLS-1$
 	try {
 		Runtime.getRuntime ().exec (new String []{"chmod", permision, path}).waitFor(); //$NON-NLS-1$
 	} catch (Throwable e) {
@@ -93,22 +103,36 @@ static long longConst() {
 }
 
 static int parseVersion(String version) {
-	if (version == null) return 0;
+    if (version == null) {
+        return 0;
+    }
 	int major = 0, minor = 0, micro = 0;
 	int length = version.length(), index = 0, start = 0;
-	while (index < length && Character.isDigit(version.charAt(index))) index++;
+    while (index < length && Character.isDigit(version.charAt(index))) {
+        index++;
+    }
 	try {
-		if (start < length) major = Integer.parseInt(version.substring(start, index));
+        if (start < length) {
+            major = Integer.parseInt(version.substring(start, index));
+        }
 	} catch (NumberFormatException e) {}
 	start = ++index;
-	while (index < length && Character.isDigit(version.charAt(index))) index++;
+    while (index < length && Character.isDigit(version.charAt(index))) {
+        index++;
+    }
 	try {
-		if (start < length) minor = Integer.parseInt(version.substring(start, index));
+        if (start < length) {
+            minor = Integer.parseInt(version.substring(start, index));
+        }
 	} catch (NumberFormatException e) {}
 	start = ++index;
-	while (index < length && Character.isDigit(version.charAt(index))) index++;
+    while (index < length && Character.isDigit(version.charAt(index))) {
+        index++;
+    }
 	try {
-		if (start < length) micro = Integer.parseInt(version.substring(start, index));
+        if (start < length) {
+            micro = Integer.parseInt(version.substring(start, index));
+        }
 	} catch (NumberFormatException e) {}
 	return JAVA_VERSION(major, minor, micro);
 }
@@ -133,7 +157,9 @@ public static int SWT_VERSION (int major, int minor) {
 
 private static boolean extractResource(String resourceName, File outFile) {
 	try (InputStream inputStream = Library.class.getResourceAsStream (resourceName)) {
-		if (inputStream == null) return false;
+        if (inputStream == null) {
+            return false;
+        }
 		Files.copy(inputStream, outFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 	} catch (Throwable e) {
 		return false;
@@ -153,7 +179,9 @@ private static boolean extractResource(String resourceName, File outFile) {
  */
 static boolean extract (String extractToFilePath, String mappedName) {
 	File file = new File(extractToFilePath);
-	if (file.exists ()) return true;
+    if (file.exists()) {
+        return true;
+    }
 
 	// Write to temp file first, so that other processes don't see
 	// partially written library on disk
@@ -233,7 +261,9 @@ static boolean load (String libName, StringBuilder message) {
 		}
 		return true;
 	} catch (UnsatisfiedLinkError e) {
-		if (message.length() == 0) message.append(DELIMITER);
+        if (message.length() == 0) {
+            message.append(DELIMITER);
+        }
 		message.append('\t');
 		message.append(e.getMessage());
 		message.append(DELIMITER);
@@ -270,7 +300,9 @@ public static void loadLibrary (String name) {
  */
 public static void loadLibrary (String name, boolean mapName) {
 	String prop = System.getProperty ("sun.arch.data.model"); //$NON-NLS-1$
-	if (prop == null) prop = System.getProperty ("com.ibm.vm.bitmode"); //$NON-NLS-1$
+    if (prop == null) {
+        prop = System.getProperty("com.ibm.vm.bitmode");
+    } //$NON-NLS-1$
 	if (prop != null) {
 		if ("32".equals (prop)) { //$NON-NLS-1$
 			throw new UnsatisfiedLinkError ("Cannot load 64-bit SWT libraries on 32-bit JVM"); //$NON-NLS-1$
@@ -301,13 +333,17 @@ public static void loadLibrary (String name, boolean mapName) {
 	if (path != null) {
 		path = new File (path).getAbsolutePath ();
 		for (int i = 0; i < candidates; i++) {
-			if ((i == 0 || mapName) && load (path + SEPARATOR + mappedNames[i], message)) return;
+            if ((i == 0 || mapName) && load(path + SEPARATOR + mappedNames[i], message)) {
+                return;
+            }
 		}
 	}
 
 	/* Try loading library from java library path */
 	for (int i = 0; i < candidates; i++) {
-		if ((i == 0 || mapName) && load (libNames[i], message)) return;
+        if ((i == 0 || mapName) && load(libNames[i], message)) {
+            return;
+        }
 	}
 
 	/* Try loading library from the tmp directory if swt library path is not specified.
@@ -330,7 +366,9 @@ public static void loadLibrary (String name, boolean mapName) {
 			}
 		}
 		for (int i = 0; i < candidates; i++) {
-			if ((i == 0 || mapName) && load (path + SEPARATOR + fileNames[i], message)) return;
+            if ((i == 0 || mapName) && load(path + SEPARATOR + fileNames[i], message)) {
+                return;
+            }
 		}
 	}
 
@@ -338,7 +376,9 @@ public static void loadLibrary (String name, boolean mapName) {
 	if (path != null) {
 		for (int i = 0; i < candidates; i++) {
 			if ((i == 0 || mapName) && extract (path + SEPARATOR + fileNames[i], mappedNames[i])) {
-				if (load(path + SEPARATOR + fileNames[i], message)) return;
+                if (load(path + SEPARATOR + fileNames[i], message)) {
+                    return;
+                }
 			}
 		}
 	}
@@ -372,7 +412,9 @@ public static String getVersionString () {
 		if (MINOR_VERSION < 10) {
 			version += "00"; //$NON-NLS-1$
 		} else {
-			if (MINOR_VERSION < 100) version += "0"; //$NON-NLS-1$
+            if (MINOR_VERSION < 100) {
+                version += "0";
+            } //$NON-NLS-1$
 		}
 		version += MINOR_VERSION;
 		/* "r" followed by respective revision version starting with zero(0) */

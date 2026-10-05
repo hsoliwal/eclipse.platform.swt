@@ -135,7 +135,9 @@ public CTableColumn (CTable parent, int style) {
  */
 public CTableColumn (CTable parent, int style, int index) {
 	super (parent, checkStyle (style), index);
-	if (!(0 <= index && index <= parent.columns.length)) SWT.error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= parent.columns.length)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	this.parent = parent;
 	this.style = super.getStyle ();
 	parent.createItem (this, index);
@@ -190,7 +192,9 @@ public void addSelectionListener (SelectionListener listener) {
 	addTypedListener(listener, SWT.Selection, SWT.DefaultSelection);
 }
 static CTable checkNull (CTable table) {
-	if (table == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (table == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return table;
 }
 static int checkStyle (int style) {
@@ -255,7 +259,9 @@ void computeDisplayText (GC gc) {
 }
 @Override
 public void dispose () {
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	Rectangle parentBounds = parent.clientArea;
 	int x = getX ();
 	int index = getIndex ();
@@ -292,7 +298,9 @@ public void dispose () {
 }
 void dispose (boolean notifyParent) {
 	super.dispose ();	/* super is intentional here */
-	if (notifyParent) parent.destroyItem (this);
+    if (notifyParent) {
+        parent.destroyItem(this);
+    }
 	if (accessible != null) {
 		accessible.dispose();
 		accessible = null;
@@ -313,8 +321,12 @@ void dispose (boolean notifyParent) {
  */
 public int getAlignment () {
 	checkWidget ();
-	if ((getStyle () & SWT.CENTER) != 0) return SWT.CENTER;
-	if ((getStyle () & SWT.RIGHT) != 0) return SWT.RIGHT;
+    if ((getStyle() & SWT.CENTER) != 0) {
+        return SWT.CENTER;
+    }
+    if ((getStyle() & SWT.RIGHT) != 0) {
+        return SWT.RIGHT;
+    }
 	return SWT.LEFT;
 }
 /*
@@ -329,7 +341,9 @@ int getContentWidth (GC gc, boolean useDisplayText) {
 	}
 	if (super.getImage () != null) {
 		contentWidth += super.getImage ().getBounds ().width;
-		if (text.length () > 0) contentWidth += CTable.MARGIN_IMAGE;
+        if (text.length() > 0) {
+            contentWidth += CTable.MARGIN_IMAGE;
+        }
 	}
 	if (sort != SWT.NONE) {
 		contentWidth += parent.arrowBounds.width;
@@ -342,7 +356,9 @@ int getContentWidth (GC gc, boolean useDisplayText) {
 int getIndex () {
 	CTableColumn[] columns = parent.columns;
 	for (int i = 0; i < columns.length; i++) {
-		if (columns [i] == this) return i;
+        if (columns [i] == this) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -372,9 +388,13 @@ public boolean getMoveable () {
 }
 int getOrderIndex () {
 	CTableColumn[] orderedColumns = parent.orderedColumns;
-	if (orderedColumns == null) return getIndex ();
+    if (orderedColumns == null) {
+        return getIndex();
+    }
 	for (int i = 0; i < orderedColumns.length; i++) {
-		if (orderedColumns [i] == this) return i;
+        if (orderedColumns [i] == this) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -393,7 +413,9 @@ public CTable getParent () {
 	return parent;
 }
 int getPreferredWidth () {
-	if (!parent.getHeaderVisible ()) return 0;
+    if (!parent.getHeaderVisible()) {
+        return 0;
+    }
 	GC gc = new GC (parent);
 	int result = getContentWidth (gc, false);
 	gc.dispose ();
@@ -472,13 +494,17 @@ public void pack () {
 	int newWidth = getPreferredWidth ();
 	for (int i = 0; i < parent.itemsCount; i++) {
 		int width = items [i].getPreferredWidth (index);
-		/* ensure that receiver and parent were not disposed in a callback */
-		if (parent.isDisposed () || isDisposed ()) return;
+        /* ensure that receiver and parent were not disposed in a callback */
+        if (parent.isDisposed() || isDisposed()) {
+            return;
+        }
 		if (!items [i].isDisposed ()) {
 			newWidth = Math.max (newWidth, width);
 		}
 	}
-	if (newWidth != width) parent.updateColumnWidth (this, newWidth);
+    if (newWidth != width) {
+        parent.updateColumnWidth(this, newWidth);
+    }
 }
 void paint (GC gc) {
 	int padding = parent.getHeaderPadding ();
@@ -542,7 +568,9 @@ void paint (GC gc) {
  */
 public void removeControlListener (ControlListener listener) {
 	checkWidget ();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(SWT.Move, listener);
 	removeTypedListener(SWT.Resize, listener);
 }
@@ -565,7 +593,9 @@ public void removeControlListener (ControlListener listener) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(SWT.Selection, listener);
 	removeTypedListener(SWT.DefaultSelection, listener);
 }
@@ -586,12 +616,18 @@ public void removeSelectionListener (SelectionListener listener) {
  */
 public void setAlignment (int alignment) {
 	checkWidget ();
-	if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) return;
+    if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) {
+        return;
+    }
 	int index = getIndex ();
-	if (index == -1 || index == 0) return;	/* column 0 can only have left-alignment */
+    if (index == -1 || index == 0) {
+        return;
+    }	/* column 0 can only have left-alignment */
 	alignment = CTable.checkBits (alignment, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
 	int style = getStyle ();
-	if ((style & alignment) != 0) return;	/* same value */
+    if ((style & alignment) != 0) {
+        return;
+    }	/* same value */
 	style &= ~(SWT.LEFT | SWT.CENTER | SWT.RIGHT);
 	style |= alignment;
 	setStyle (style);
@@ -614,8 +650,12 @@ void setStyle (int newStyle) {
 @Override
 public void setImage (Image value) {
 	checkWidget ();
-	if (value == super.getImage ()) return;
-	if (value != null && value.equals (super.getImage ())) return;	/* same value */
+    if (value == super.getImage()) {
+        return;
+    }
+    if (value != null && value.equals(super.getImage())) {
+        return;
+    }	/* same value */
 	super.setImage (value);
 
 	/* An image width change may affect the space available for the column's displayText. */
@@ -689,7 +729,9 @@ public void setResizable (boolean value) {
 	resizable = value;
 }
 void setSortDirection (int value) {
-	if (value == sort) return;
+    if (value == sort) {
+        return;
+    }
 	boolean widthChange = value == SWT.NONE || sort == SWT.NONE;
 	sort = value;
 	if (widthChange) {
@@ -709,8 +751,12 @@ void setSortDirection (int value) {
 @Override
 public void setText (String value) {
 	checkWidget ();
-	if (value == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (value.equals (super.getText ())) return;					/* same value */
+    if (value == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (value.equals(super.getText())) {
+        return;
+    }					/* same value */
 	super.setText (value);
 	GC gc = new GC (parent);
 	computeDisplayText (gc);
@@ -744,11 +790,19 @@ public void setText (String value) {
  */
 public void setToolTipText (String string) {
 	checkWidget ();
-	if (toolTipText == string) return;
-	if (toolTipText != null && toolTipText.equals (string)) return;
+    if (toolTipText == string) {
+        return;
+    }
+    if (toolTipText != null && toolTipText.equals(string)) {
+        return;
+    }
 	toolTipText = string;
-	if (parent.toolTipShell == null) return; /* tooltip not currently showing */
-	if (((Integer) parent.toolTipShell.getData ()).intValue () != getIndex ()) return;	/* tooltip showing for different column */
+    if (parent.toolTipShell == null) {
+        return;
+    } /* tooltip not currently showing */
+    if (((Integer) parent.toolTipShell.getData()).intValue() != getIndex()) {
+        return;
+    }	/* tooltip showing for different column */
 	parent.headerUpdateToolTip (getX () + (width / 2));	/* update the tooltip text */
 }
 /**
@@ -763,8 +817,12 @@ public void setToolTipText (String string) {
  */
 public void setWidth (int value) {
 	checkWidget ();
-	if (value < 0) return;
-	if (width == value) return;							/* same value */
+    if (value < 0) {
+        return;
+    }
+    if (width == value) {
+        return;
+    }							/* same value */
 	parent.updateColumnWidth (this, value);
 }
 void updateFont (GC gc) {

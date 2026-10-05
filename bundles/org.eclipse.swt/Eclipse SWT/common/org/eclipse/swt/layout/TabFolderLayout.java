@@ -30,8 +30,9 @@ public class TabFolderLayout extends Layout {
 
 	@Override
 	protected Point computeSize (Composite composite, int wHint, int hHint, boolean flushCache) {
-		if (wHint != SWT.DEFAULT && hHint != SWT.DEFAULT)
-			return new Point(wHint, hHint);
+        if (wHint != SWT.DEFAULT && hHint != SWT.DEFAULT) {
+            return new Point(wHint, hHint);
+        }
 
 		Control [] children = composite.getChildren ();
 		int count = children.length;
@@ -43,10 +44,12 @@ public class TabFolderLayout extends Layout {
 			maxHeight = Math.max (maxHeight, pt.y);
 		}
 
-		if (wHint != SWT.DEFAULT)
-			maxWidth= wHint;
-		if (hHint != SWT.DEFAULT)
-			maxHeight= hHint;
+        if (wHint != SWT.DEFAULT) {
+            maxWidth = wHint;
+        }
+        if (hHint != SWT.DEFAULT) {
+            maxHeight = hHint;
+        }
 
 		return new Point(maxWidth, maxHeight);
 

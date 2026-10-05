@@ -139,18 +139,24 @@ public void addSelectionListener(SelectionListener listener) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
 void createHandle () {
 	NSStatusBar statusBar = NSStatusBar.systemStatusBar();
 	item = statusBar.statusItemWithLength(0);
-	if (item == null) error (SWT.ERROR_NO_HANDLES);
+    if (item == null) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	item.retain();
 	item.setHighlightMode(true);
 	view = (NSImageView)new SWTImageView().alloc();
-	if (view == null) error (SWT.ERROR_NO_HANDLES);
+    if (view == null) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	view.init ();
 	item.setView(view);
 }
@@ -274,8 +280,12 @@ void register () {
 void releaseHandle () {
 	super.releaseHandle ();
 	parent = null;
-	if (item != null) item.release();
-	if (view != null) view.release();
+    if (item != null) {
+        item.release();
+    }
+    if (view != null) {
+        view.release();
+    }
 	item = null;
 	view = null;
 }
@@ -285,7 +295,9 @@ void releaseWidget () {
 	super.releaseWidget ();
 	NSStatusBar statusBar = NSStatusBar.systemStatusBar();
 	statusBar.removeStatusItem(item);
-	if (toolTip != null) toolTip.item = null;
+    if (toolTip != null) {
+        toolTip.item = null;
+    }
 	toolTip = null;
 	toolTipText = null;
 	highlightImage = null;
@@ -313,8 +325,12 @@ void releaseWidget () {
  */
 public void removeMenuDetectListener (MenuDetectListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MenuDetect, listener);
 }
 
@@ -337,8 +353,12 @@ public void removeMenuDetectListener (MenuDetectListener listener) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -359,7 +379,9 @@ public void removeSelectionListener (SelectionListener listener) {
 @Override
 public void setImage (Image image) {
 	checkWidget ();
-	if (image != null && image.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	super.setImage (image);
 	updateImage ();
 }
@@ -381,7 +403,9 @@ public void setImage (Image image) {
  */
 public void setHighlightImage (Image image) {
 	checkWidget ();
-	if (image != null && image.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	highlightImage = image;
 	updateImage ();
 }
@@ -402,9 +426,13 @@ public void setHighlightImage (Image image) {
 public void setToolTip (ToolTip toolTip) {
 	checkWidget ();
 	ToolTip oldTip = this.toolTip, newTip = toolTip;
-	if (oldTip != null) oldTip.item = null;
+    if (oldTip != null) {
+        oldTip.item = null;
+    }
 	this.toolTip = newTip;
-	if (newTip != null) newTip.item = this;
+    if (newTip != null) {
+        newTip.item = this;
+    }
 }
 
 /**
@@ -463,14 +491,20 @@ void _setToolTipText (String string) {
  */
 public void setVisible (boolean visible) {
 	checkWidget ();
-	if (this.visible == visible) return;
+    if (this.visible == visible) {
+        return;
+    }
 	if (visible) {
 		sendEvent (SWT.Show);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 	}
 	this.visible = visible;
 	updateImage ();
-	if (!visible) sendEvent (SWT.Hide);
+    if (!visible) {
+        sendEvent(SWT.Hide);
+    }
 }
 
 void showMenu (Menu menu) {
@@ -483,9 +517,13 @@ void showMenu () {
 	Display display = this.display;
 	display.currentTrayItem = this;
 	sendEvent (SWT.MenuDetect);
-	if (!isDisposed ()) display.runPopups();
+    if (!isDisposed()) {
+        display.runPopups();
+    }
 	display.currentTrayItem = null;
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	_setToolTipText (toolTipText);
 }
 
@@ -503,7 +541,9 @@ void displayMenu () {
 }
 
 boolean shouldShowMenu (NSEvent event) {
-	if (!hooks(SWT.MenuDetect)) return false;
+    if (!hooks(SWT.MenuDetect)) {
+        return false;
+    }
 	switch ((int)event.type()) {
 		case OS.NSRightMouseDown: return true;
 		case OS.NSLeftMouseDown:
@@ -586,7 +626,9 @@ void drawRect(long id, long sel, NSRect rect) {
 void updateImage () {
 	double width = 0;
 	Image image = this.image;
-	if (highlight && highlightImage != null) image = highlightImage;
+    if (highlight && highlightImage != null) {
+        image = highlightImage;
+    }
 	if (image == null) {
 		view.setImage (null);
 	} else {

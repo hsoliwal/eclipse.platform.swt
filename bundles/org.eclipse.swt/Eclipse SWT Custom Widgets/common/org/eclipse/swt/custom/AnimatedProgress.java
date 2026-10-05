@@ -105,7 +105,9 @@ private static int checkStyle (int style) {
 @Deprecated
 public synchronized void clear(){
 	checkWidget();
-	if (active) stop();
+    if (active) {
+        stop();
+    }
 	showStripes = false;
 	redraw();
 }
@@ -119,8 +121,12 @@ public Point computeSize(int wHint, int hHint, boolean changed) {
 	} else {
 		size = new Point(DEFAULT_HEIGHT, DEFAULT_WIDTH);
 	}
-	if (wHint != SWT.DEFAULT) size.x = wHint;
-	if (hHint != SWT.DEFAULT) size.y = hHint;
+    if (wHint != SWT.DEFAULT) {
+        size.x = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        size.y = hHint;
+    }
 
 	return size;
 }
@@ -151,7 +157,9 @@ void paint(PaintEvent event) {
 @Deprecated
 void paintStripes(GC gc) {
 
-	if (!showStripes) return;
+    if (!showStripes) {
+        return;
+    }
 
 	Rectangle rect= getClientArea();
 	// Subtracted border painted by paint.
@@ -199,7 +207,9 @@ void paintStripes(GC gc) {
 @Deprecated
 public synchronized void start() {
 	checkWidget();
-	if (active) return;
+    if (active) {
+        return;
+    }
 
 	active = true;
 	showStripes = true;
@@ -207,7 +217,9 @@ public synchronized void start() {
 	final Display display = getDisplay();
 	final Runnable [] timer = new Runnable [1];
 	timer [0] = () -> {
-		if (!active) return;
+        if (!active) {
+            return;
+        }
 		GC gc = new GC(AnimatedProgress.this);
 		paintStripes(gc);
 		gc.dispose();

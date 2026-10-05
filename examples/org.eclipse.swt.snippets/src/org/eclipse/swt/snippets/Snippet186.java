@@ -104,7 +104,9 @@ public static void main (String [] args) {
 
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }
@@ -151,7 +153,9 @@ static String readSafeArray(Variant variantByRef) {
 			OS.MoveMemory(safeArray, pSafearray[0], SAFEARRAY.sizeof);
 			for (int i = 0; i < safeArray.cDims; i++) {
 				int cchWideChar = OS.MultiByteToWideChar (CodePage, OS.MB_PRECOMPOSED,  safeArray.pvData, -1, null, 0);
-				if (cchWideChar == 0) return null;
+                if (cchWideChar == 0) {
+                    return null;
+                }
 				char[] lpWideCharStr = new char [cchWideChar - 1];
 				OS.MultiByteToWideChar (CodePage, OS.MB_PRECOMPOSED,  safeArray.pvData, -1, lpWideCharStr, lpWideCharStr.length);
 				result = new String(lpWideCharStr);
@@ -176,7 +180,9 @@ static Variant writeSafeArray (String string) {
 	char[] chars = new char[count + 1];
 	string.getChars(0, count, chars, 0);
 	int cchMultiByte = OS.WideCharToMultiByte(CodePage, 0, chars, -1, null, 0, null, null);
-	if (cchMultiByte == 0) return null;
+    if (cchMultiByte == 0) {
+        return null;
+    }
 	long /*int*/ pvData = OS.GlobalAlloc(OS.GMEM_FIXED | OS.GMEM_ZEROINIT, cchMultiByte);
 	OS.WideCharToMultiByte(CodePage, 0, chars, -1, pvData, cchMultiByte, null, null);
 	int cElements1 = cchMultiByte;

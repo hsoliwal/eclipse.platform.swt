@@ -71,7 +71,9 @@ public class Snippet141 {
 								/* Create the first image and draw it on the off-screen image. */
 								int imageDataIndex = 0;
 								ImageData imageData = imageDataArray[imageDataIndex];
-								if (image != null && !image.isDisposed()) image.dispose();
+                                if (image != null && !image.isDisposed()) {
+                                    image.dispose();
+                                }
 								image = new Image(display, imageData);
 								offScreenImageGC.drawImage(
 									image,
@@ -114,21 +116,33 @@ public class Snippet141 {
 									/* Sleep for the specified delay time (adding commonly-used slow-down fudge factors). */
 									try {
 										int ms = imageData.delayTime * 10;
-										if (ms < 20) ms += 30;
-										if (ms < 30) ms += 10;
+                                        if (ms < 20) {
+                                            ms += 30;
+                                        }
+                                        if (ms < 30) {
+                                            ms += 10;
+                                        }
 										Thread.sleep(ms);
 									} catch (InterruptedException e) {
 									}
 
-									/* If we have just drawn the last image, decrement the repeat count and start again. */
-									if (imageDataIndex == imageDataArray.length - 1) repeatCount--;
+                                    /* If we have just drawn the last image, decrement the repeat count and start again. */
+                                    if (imageDataIndex == imageDataArray.length - 1) {
+                                        repeatCount--;
+                                    }
 								}
 							} catch (SWTException ex) {
 								System.out.println("There was an error animating the GIF");
 							} finally {
-								if (offScreenImage != null && !offScreenImage.isDisposed()) offScreenImage.dispose();
-								if (offScreenImageGC != null && !offScreenImageGC.isDisposed()) offScreenImageGC.dispose();
-								if (image != null && !image.isDisposed()) image.dispose();
+                                if (offScreenImage != null && !offScreenImage.isDisposed()) {
+                                    offScreenImage.dispose();
+                                }
+                                if (offScreenImageGC != null && !offScreenImageGC.isDisposed()) {
+                                    offScreenImageGC.dispose();
+                                }
+                                if (image != null && !image.isDisposed()) {
+                                    image.dispose();
+                                }
 							}
 						}
 					};
@@ -141,7 +155,9 @@ public class Snippet141 {
 		}
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		stopAnimation.set(true);
 		display.dispose();

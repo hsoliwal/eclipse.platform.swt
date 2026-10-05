@@ -150,8 +150,12 @@ public class EditorTab {
 		
 		Listener listener = e -> {
 			Widget w = e.widget;
-			if (w == htmlButton) browser.setText(htmlText.getText());
-			if (w == scriptButton) browser.execute(scriptText.getText());
+            if (w == htmlButton) {
+                browser.setText(htmlText.getText());
+            }
+            if (w == scriptButton) {
+                browser.execute(scriptText.getText());
+            }
 		};
 		
 		htmlButton.addListener(SWT.Selection, listener);

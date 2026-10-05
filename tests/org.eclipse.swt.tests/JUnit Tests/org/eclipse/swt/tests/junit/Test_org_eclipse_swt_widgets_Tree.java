@@ -149,7 +149,9 @@ public void test_virtualTreeEditorTracksPinnedItemAcrossViewportAndCollapse() {
 
 	virtualTree.setTopItem(edited);
 	ScrollBar vertical = virtualTree.getVerticalBar();
-	if (vertical != null) vertical.notifyListeners(SWT.Selection, new Event());
+    if (vertical != null) {
+        vertical.notifyListeners(SWT.Selection, new Event());
+    }
 	cellEditor.layout();
 
 	assertSame(edited, cellEditor.getItem());
@@ -166,7 +168,9 @@ public void test_virtualTreeEditorTracksPinnedItemAcrossViewportAndCollapse() {
 
 	root.setExpanded(true);
 	virtualTree.setTopItem(edited);
-	if (vertical != null) vertical.notifyListeners(SWT.Selection, new Event());
+    if (vertical != null) {
+        vertical.notifyListeners(SWT.Selection, new Event());
+    }
 	cellEditor.layout();
 	assertSame(edited, root.getItem(128),
 			"re-expansion must restore the same editor-bound TreeItem facade");
@@ -326,7 +330,9 @@ public void test_virtualTreeVisibleProjectionSkipsColdLogicalRanges() throws Exc
 	Method rowChild = rowType.getDeclaredMethod("childIndex");
 	Method rowId = rowType.getDeclaredMethod("materializedId");
 	Method rowDepth = rowType.getDeclaredMethod("depth");
-	for (Method method : new Method[] {rowParent, rowChild, rowId, rowDepth}) method.setAccessible(true);
+    for (Method method : new Method[]{rowParent, rowChild, rowId, rowDepth}) {
+        method.setAccessible(true);
+    }
 
 	assertEquals(root, ((Integer) rowParent.invoke(rootFive)).intValue());
 	assertEquals(5, ((Integer) rowChild.invoke(rootFive)).intValue());
@@ -372,7 +378,9 @@ public void test_virtualTreeVisibleProjectionSkipsColdLogicalRanges() throws Exc
 @Test
 public void test_virtualGtkAndWin32VisibleProjectionTracksExpansionIndependentlyOfResidency() throws Exception {
 	String platform = SWT.getPlatform();
-	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
+    if (!("gtk".equals(platform) || "win32".equals(platform))) {
+        return;
+    }
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(100);
@@ -625,7 +633,9 @@ public void test_virtualTreeViewportUsesLogicalRowsAndBoundedOverscan() throws E
 @Test
 public void test_virtualGtkAndWin32SetTopItemMirrorsLogicalTopRow() throws Exception {
 	String platform = SWT.getPlatform();
-	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
+    if (!("gtk".equals(platform) || "win32".equals(platform))) {
+        return;
+    }
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(200);
@@ -649,7 +659,9 @@ public void test_virtualGtkAndWin32SetTopItemMirrorsLogicalTopRow() throws Excep
 @Test
 public void test_virtualGtkAndWin32TopologyStaysSparseAndTracksCoordinates() throws Exception {
 	String platform = SWT.getPlatform();
-	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
+    if (!("gtk".equals(platform) || "win32".equals(platform))) {
+        return;
+    }
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(64);
@@ -667,8 +679,12 @@ public void test_virtualGtkAndWin32TopologyStaysSparseAndTracksCoordinates() thr
 	TreeItem[] materialized = (TreeItem[]) treeItemsField.get(virtualTree);
 	int rootId = -1, childId = -1;
 	for (int id = 0; id < materialized.length; id++) {
-		if (materialized[id] == root) rootId = id;
-		if (materialized[id] == child) childId = id;
+        if (materialized[id] == root) {
+            rootId = id;
+        }
+        if (materialized[id] == child) {
+            childId = id;
+        }
 	}
 	assertTrue(rootId >= 0);
 	assertTrue(childId >= 0);
@@ -723,7 +739,9 @@ public void test_virtualGtkAndWin32TopologyStaysSparseAndTracksCoordinates() thr
 
 @Test
 public void test_virtualGtkInsertAndAppendUseLogicalCountBeyondResidentPrefix() {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+    if (!"gtk".equals(SWT.getPlatform())) {
+        return;
+    }
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(2_000);
 	TreeItem inserted = new TreeItem(virtualTree, SWT.NONE, 1_000);
@@ -739,7 +757,9 @@ public void test_virtualGtkInsertAndAppendUseLogicalCountBeyondResidentPrefix() 
 
 @Test
 public void test_virtualGtkQueuedFrontierRespectsShrunkLogicalCount() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+    if (!"gtk".equals(SWT.getPlatform())) {
+        return;
+    }
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(10_000);
 	TreeItem edge = virtualTree.getItem(250);
@@ -756,7 +776,9 @@ public void test_virtualGtkQueuedFrontierRespectsShrunkLogicalCount() throws Exc
 
 @Test
 public void test_virtualGtkQueuedFrontierDoesNotRegrowCollapsedBranch() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+    if (!"gtk".equals(SWT.getPlatform())) {
+        return;
+    }
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(1);
 	TreeItem root = virtualTree.getItem(0);
@@ -778,7 +800,9 @@ public void test_virtualGtkQueuedFrontierDoesNotRegrowCollapsedBranch() throws E
 
 @Test
 public void test_gtkSetItemCountZeroRestoresRedraw() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+    if (!"gtk".equals(SWT.getPlatform())) {
+        return;
+    }
 	Tree regular = new Tree(shell, SWT.NONE);
 	regular.setItemCount(2);
 	regular.setItemCount(0);
@@ -790,7 +814,9 @@ public void test_gtkSetItemCountZeroRestoresRedraw() throws Exception {
 
 @Test
 public void test_virtualGtkNativeFrontierIsBoundedAndGrowsOnDemand() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+    if (!"gtk".equals(SWT.getPlatform())) {
+        return;
+    }
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(100_000);
@@ -824,7 +850,9 @@ public void test_virtualGtkNativeFrontierIsBoundedAndGrowsOnDemand() throws Exce
 
 @Test
 public void test_virtualGtkCollapsedChildStartsAtSentinelAndExpansionStaysBounded() throws Exception {
-	if (!"gtk".equals(SWT.getPlatform())) return;
+    if (!"gtk".equals(SWT.getPlatform())) {
+        return;
+    }
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(1);
@@ -858,7 +886,9 @@ public void test_virtualGtkCollapsedChildStartsAtSentinelAndExpansionStaysBounde
 @Test
 public void test_virtualGtkAndWin32CollapseCompactsNativeTailAndRestoresOnExpand() throws Exception {
 	String platform = SWT.getPlatform();
-	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
+    if (!("gtk".equals(platform) || "win32".equals(platform))) {
+        return;
+    }
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(1);
@@ -921,7 +951,9 @@ public void test_virtualGtkAndWin32CollapseCompactsNativeTailAndRestoresOnExpand
 @Test
 public void test_virtualGtkAndWin32CollapseKeepsOneSentinelWhenNoChildFacadeEscapes() throws Exception {
 	String platform = SWT.getPlatform();
-	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
+    if (!("gtk".equals(platform) || "win32".equals(platform))) {
+        return;
+    }
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(1);
@@ -947,7 +979,9 @@ public void test_virtualGtkAndWin32CollapseKeepsOneSentinelWhenNoChildFacadeEsca
 
 @Test
 public void test_virtualWin32IndexedInsertRestoresOnlyRequiredCollapsedPrefix() throws Exception {
-	if (!"win32".equals(SWT.getPlatform())) return;
+    if (!"win32".equals(SWT.getPlatform())) {
+        return;
+    }
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
 	virtualTree.setItemCount(1);
@@ -977,7 +1011,9 @@ public void test_virtualWin32IndexedInsertRestoresOnlyRequiredCollapsedPrefix() 
 @Test
 public void test_virtualGtkAndWin32PackedStateLivesInTopologyAndSurvivesCoordinateShift() throws Exception {
 	String platform = SWT.getPlatform();
-	if (!("gtk".equals(platform) || "win32".equals(platform))) return;
+    if (!("gtk".equals(platform) || "win32".equals(platform))) {
+        return;
+    }
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.CHECK);
 	virtualTree.setItemCount(32);
@@ -1054,7 +1090,9 @@ public void test_virtualGtkAndWin32PackedStateLivesInTopologyAndSurvivesCoordina
 
 @Test
 public void test_virtualPackedStateFollowsLogicalInsertAndRemoveOnCocoa() throws Exception {
-	if (!"cocoa".equals(SWT.getPlatform())) return;
+    if (!"cocoa".equals(SWT.getPlatform())) {
+        return;
+    }
 
 	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.CHECK);
 	virtualTree.setItemCount(32);
@@ -1128,8 +1166,9 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 	assertThrows(IllegalArgumentException.class, () -> new Tree(null, 0), "No exception thrown for parent == null");
 
 	int[] cases = {0, SWT.BORDER};
-	for (int style : cases)
-		tree = new Tree(shell, style);
+    for (int style : cases) {
+        tree = new Tree(shell, style);
+    }
 
 	cases = new int[]{0, 10, 100};
 	for (int count : cases) {
@@ -1150,8 +1189,9 @@ public void test_computeSizeIIZ() {
 public void test_deselectAll() {
 	int number = 15;
 	TreeItem[] items = new TreeItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TreeItem(tree, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TreeItem(tree, 0);
+    }
 
 	assertEquals(0, tree.getSelectionCount());
 	tree.setSelection(new TreeItem[] {items[2], items[4], items[5], items[10]});
@@ -1254,11 +1294,13 @@ public void test_getItemHeight() {
 public void test_getItemI() {
 	int number = 15;
 	TreeItem[] items = new TreeItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TreeItem(tree, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TreeItem(tree, 0);
+    }
 
-	for (int i = 0; i < number; i++)
-		assertEquals(items[i], tree.getItem(i));
+    for (int i = 0; i < number; i++) {
+        assertEquals(items[i], tree.getItem(i));
+    }
 	assertThrows(IllegalArgumentException.class, () -> tree.getItem(number), "No exception thrown for illegal index argument");
 
 	assertThrows(IllegalArgumentException.class, () -> tree.getItem(number+1), "No exception thrown for illegal index argument");
@@ -1308,8 +1350,9 @@ public void test_getParentItem() {
 public void test_getSelectionCount() {
 	int number = 15;
 	TreeItem[] items = new TreeItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TreeItem(tree, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TreeItem(tree, 0);
+    }
 
 	assertEquals(0, tree.getSelectionCount());
 
@@ -1335,8 +1378,9 @@ public void test_getSelectionCount() {
 	makeCleanEnvironment(true); // use single-selection tree.
 
 	items = new TreeItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TreeItem(tree, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TreeItem(tree, 0);
+    }
 
 	assertEquals(0, tree.getSelectionCount());
 
@@ -1379,8 +1423,9 @@ public void test_removeAll() {
 public void test_selectAll() {
 	int number = 5;
 	TreeItem[] items = new TreeItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TreeItem(tree, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TreeItem(tree, 0);
+    }
 
 	assertEquals(0, tree.getSelectionCount());
 	tree.selectAll();
@@ -1389,8 +1434,9 @@ public void test_selectAll() {
 	makeCleanEnvironment(true); // single-selection tree
 
 	items = new TreeItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TreeItem(tree, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TreeItem(tree, 0);
+    }
 
 	assertEquals(0, tree.getSelectionCount());
 	tree.selectAll();
@@ -1558,8 +1604,9 @@ public void test_setSelection$Lorg_eclipse_swt_widgets_TreeItem() {
 	makeCleanEnvironment(true); // single-selection tree
 
 	items = new TreeItem[number];
-	for (int i = 0; i < number; i++)
-		items[i] = new TreeItem(tree, 0);
+    for (int i = 0; i < number; i++) {
+        items[i] = new TreeItem(tree, 0);
+    }
 
 	assertArrayEquals(new TreeItem[] {}, tree.getSelection());
 
@@ -1652,7 +1699,9 @@ public void test_setSelection$Lorg_eclipse_swt_widgets_TreeItem_nested() {
 	// Other platforms only reveal the first item, so expand all parents
 	for (TreeItem root : roots) {
 		root.setExpanded(true);
-		for (TreeItem child : root.getItems()) child.setExpanded(true);
+        for (TreeItem child : root.getItems()) {
+            child.setExpanded(true);
+        }
 	}
 
 	TreeItem[] selection = {items[2][1][3], roots[0], items[0][4][1], items[0][4][2], items[0][1][0]};
@@ -1706,8 +1755,9 @@ public void test_showItemLorg_eclipse_swt_widgets_TreeItem() {
 	for (int i = 0; i < number; i++) {
 		items[i] = new TreeItem(tree, 0);
 	}
-	for(int i=0; i<number; i++)
-		tree.showItem(items[i]);
+    for (int i = 0; i < number; i++) {
+        tree.showItem(items[i]);
+    }
 
 	tree.removeAll();
 
@@ -1725,8 +1775,9 @@ public void test_showItemLorg_eclipse_swt_widgets_TreeItem() {
 		items2[i] = new TreeItem(tree2, 0);
 	}
 
-	for(int i=0; i<number; i++)
-		tree.showItem(items2[i]);
+    for (int i = 0; i < number; i++) {
+        tree.showItem(items2[i]);
+    }
 
 	tree.removeAll();
 }
@@ -1797,7 +1848,9 @@ public void test_showSelection() {
  */
 private void makeCleanEnvironment(boolean single) {
 // this method must be private or protected so the auto-gen tool keeps it
-	if (tree != null) tree.dispose();
+    if (tree != null) {
+        tree.dispose();
+    }
 	tree = new Tree(shell, single?SWT.SINGLE:SWT.MULTI);
 	setWidget(tree);
 }
@@ -1842,8 +1895,9 @@ public void test_consistency_KeyExpand() {
 	List<String> events = new ArrayList<>();
 	createTree(events);
 	int code=SWT.ARROW_RIGHT;
-	if(SwtTestUtil.isGTK)
-		code = SWT.KEYPAD_ADD;
+    if (SwtTestUtil.isGTK) {
+        code = SWT.KEYPAD_ADD;
+    }
 	consistencyEvent(0, code, 0, 0, ConsistencyUtility.KEY_PRESS, events);
 }
 

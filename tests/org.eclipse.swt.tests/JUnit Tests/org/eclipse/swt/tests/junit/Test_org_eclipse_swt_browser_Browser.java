@@ -514,8 +514,12 @@ public void test_CloseWindowListener_removeWithNullArg() {
 @Test
 public void test_CloseWindowListener_addAndRemove () {
 	CloseWindowListener listener = event -> {};
-	for (int i = 0; i < 100; i++) browser.addCloseWindowListener(listener);
-	for (int i = 0; i < 100; i++) browser.removeCloseWindowListener(listener);
+    for (int i = 0; i < 100; i++) {
+        browser.addCloseWindowListener(listener);
+    }
+    for (int i = 0; i < 100; i++) {
+        browser.removeCloseWindowListener(listener);
+    }
 }
 
 @Test
@@ -561,8 +565,12 @@ public void test_LocationListener_addAndRemove() {
 		public void changing(LocationEvent event) {
 		}
 	};
-	for (int i = 0; i < 100; i++) browser.addLocationListener(listener);
-	for (int i = 0; i < 100; i++) browser.removeLocationListener(listener);
+    for (int i = 0; i < 100; i++) {
+        browser.addLocationListener(listener);
+    }
+    for (int i = 0; i < 100; i++) {
+        browser.removeLocationListener(listener);
+    }
 }
 
 @Test
@@ -616,8 +624,9 @@ public void test_LocationListener_changingAndOnlyThenChanged() {
 		}
 		@Override
 		public void changed(LocationEvent event) {
-			if (!changingFired.get())
-				changedFiredTooEarly.set(true);
+            if (!changingFired.get()) {
+                changedFiredTooEarly.set(true);
+            }
 
 			changedFired.set(true);
 			finished.set(true);
@@ -632,14 +641,14 @@ public void test_LocationListener_changingAndOnlyThenChanged() {
 	} else if (!finished.get()) {
 		fail("Test timed out. 'changed()' never fired");
 	} else {
-		if (changedFiredTooEarly.get())
-			fail("changed() was fired before changing(). Wrong signal order");
-		else if (!changingFired.get())
-			fail("changing() was never fired");
-		else  {
-			fail("LocationListener test failed. changing():" + changingFired.get()
-			+ "  changed():" + changedFired.get() + " changedFiredTooEarly:" + changedFiredTooEarly.get());
-		}
+        if (changedFiredTooEarly.get()) {
+            fail("changed() was fired before changing(). Wrong signal order");
+        } else if (!changingFired.get()) {
+            fail("changing() was never fired");
+        } else {
+            fail("LocationListener test failed. changing():" + changingFired.get()
+                    + "  changed():" + changedFired.get() + " changedFiredTooEarly:" + changedFiredTooEarly.get());
+        }
 	}
 }
 
@@ -814,8 +823,12 @@ public void test_OpenWindowListener_removeWithNullArg() {
 @Test
 public void test_OpenWindowListener_addAndRemove() {
 	OpenWindowListener listener = event -> {};
-	for (int i = 0; i < 100; i++) browser.addOpenWindowListener(listener);
-	for (int i = 0; i < 100; i++) browser.removeOpenWindowListener(listener);
+    for (int i = 0; i < 100; i++) {
+        browser.addOpenWindowListener(listener);
+    }
+    for (int i = 0; i < 100; i++) {
+        browser.removeOpenWindowListener(listener);
+    }
 }
 
 @Tag("gtk4-todo")
@@ -980,8 +993,12 @@ public void test_ProgressListener_addAndRemove() {
 		public void completed(ProgressEvent event) {
 		}
 	};
-	for (int i = 0; i < 100; i++) browser.addProgressListener(listener);
-	for (int i = 0; i < 100; i++) browser.removeProgressListener(listener);
+    for (int i = 0; i < 100; i++) {
+        browser.addProgressListener(listener);
+    }
+    for (int i = 0; i < 100; i++) {
+        browser.removeProgressListener(listener);
+    }
 }
 
 @Test
@@ -1023,8 +1040,12 @@ public void test_StatusTextListener_removeWithNullArg() {
 public void test_StatusTextListener_addAndRemove() {
 	StatusTextListener listener = event -> {
 	};
-	for (int i = 0; i < 100; i++) browser.addStatusTextListener(listener);
-	for (int i = 0; i < 100; i++) browser.removeStatusTextListener(listener);
+    for (int i = 0; i < 100; i++) {
+        browser.addStatusTextListener(listener);
+    }
+    for (int i = 0; i < 100; i++) {
+        browser.removeStatusTextListener(listener);
+    }
 }
 
 /**
@@ -1114,8 +1135,12 @@ public void test_TitleListener_removeWithNullArg() {
 @Test
 public void test_TitleListener_addAndRemove() {
 	TitleListener listener = event -> {};
-	for (int i = 0; i < 100; i++) browser.addTitleListener(listener);
-	for (int i = 0; i < 100; i++) browser.removeTitleListener(listener);
+    for (int i = 0; i < 100; i++) {
+        browser.addTitleListener(listener);
+    }
+    for (int i = 0; i < 100; i++) {
+        browser.removeTitleListener(listener);
+    }
 }
 
 @Test
@@ -1484,8 +1509,12 @@ public void test_VisibilityWindowListener_addAndRemove() {
 		public void show(WindowEvent event) {
 		}
 	};
-	for (int i = 0; i < 100; i++) browser.addVisibilityWindowListener(listener);
-	for (int i = 0; i < 100; i++) browser.removeVisibilityWindowListener(listener);
+    for (int i = 0; i < 100; i++) {
+        browser.addVisibilityWindowListener(listener);
+    }
+    for (int i = 0; i < 100; i++) {
+        browser.removeVisibilityWindowListener(listener);
+    }
 }
 
 /** Verify that if multiple child shells are open, no duplicate visibility events are sent. */
@@ -1591,8 +1620,9 @@ public void test_VisibilityWindowListener_eventSize() {
 	if (!SwtTestUtil.isWindows) {
 		// On Cocoa, event height/width aren't respected if declared by javascript.
 		passed = finishedWithoutTimeout && result.get().x != 0 && result.get().y != 0;
-	} else
-		passed = finishedWithoutTimeout && result.get().x == 300 && result.get().y == 200;
+	} else {
+        passed = finishedWithoutTimeout && result.get().x == 300 && result.get().y == 200;
+    }
 
 	String errMsg = finishedWithoutTimeout ?
 			"Incorrect size received:"
@@ -1762,8 +1792,9 @@ public void test_LocationListener_evaluateInCallback() {
 	// Wait till both listeners were fired.
 	if (SwtTestUtil.isWindows) {
 		waitForPassCondition(changingFinished::get); // Windows doesn't reach changedFinished.get();
-	} else
-		waitForPassCondition(() -> (changingFinished.get() && changedFinished.get()));
+	} else {
+        waitForPassCondition(() -> (changingFinished.get() && changedFinished.get()));
+    }
 
 	// Inspect if evaluate() was executed correctly.
 	Boolean changed = false;
@@ -1972,8 +2003,9 @@ private void getText_helper(String testString, String expectedOutput) {
 	browser.setText(testString);
 	browser.addProgressListener(completedAdapter(event -> {
 		returnString.set(browser.getText());
-		if (debug_verbose_output)
-			System.out.println(returnString.get());
+        if (debug_verbose_output) {
+            System.out.println(returnString.get());
+        }
 		finished.set(true);
 	}));
 	shell.open();
@@ -2069,8 +2101,9 @@ public void test_execute_and_closeListener () {
 
 	shell.open();
 	boolean passed = waitForPassCondition(hasClosed::get);
-	if (passed)
-		disposedIntentionally = true;
+    if (passed) {
+        disposedIntentionally = true;
+    }
 	String message = "Either browser.execute() did not work (if you still see the html page) or closeListener Was not triggered if "
 			+ "browser looks disposed, but test still fails.";
 	assertTrue(passed, message);
@@ -2088,8 +2121,9 @@ public void test_evaluate_string() {
 		String evalResult = (String) browser
 				.evaluate("return document.getElementById('myid').childNodes[0].nodeValue;");
 		returnValue.set(evalResult);
-		if (debug_verbose_output)
-			System.out.println("Node value: " + evalResult);
+        if (debug_verbose_output) {
+            System.out.println("Node value: " + evalResult);
+        }
 	}));
 
 	browser.setText("<html><body><p id='myid'>HelloWorld</p></body></html>");
@@ -2148,8 +2182,9 @@ boolean evaluate_number_helper(Double testNum) {
 	browser.addProgressListener(completedAdapter(event -> {
 		Double evalResult = (Double) browser.evaluate("return " + testNum.toString());
 		returnValue.set(evalResult);
-		if (debug_verbose_output)
-			System.out.println("Node value: " + evalResult);
+        if (debug_verbose_output) {
+            System.out.println("Node value: " + evalResult);
+        }
 	}));
 
 	browser.setText("<html><body>HelloWorld</body></html>");
@@ -2168,8 +2203,9 @@ public void test_evaluate_boolean() {
 	browser.addProgressListener(completedAdapter(event -> {
 		Boolean evalResult = (Boolean) browser.evaluate("return true");
 		atomicBoolean.set(evalResult);
-		if (debug_verbose_output)
-			System.out.println("Node value: " + evalResult);
+        if (debug_verbose_output) {
+            System.out.println("Node value: " + evalResult);
+        }
 	}));
 
 	browser.setText("<html><body>HelloWorld</body></html>");
@@ -2190,8 +2226,9 @@ public void test_evaluate_null() {
 		returnValue.set(false);
 		Object evalResult = browser.evaluate("return null");
 		returnValue.set(evalResult);
-		if (debug_verbose_output)
-			System.out.println("Node value: " + evalResult);
+        if (debug_verbose_output) {
+            System.out.println("Node value: " + evalResult);
+        }
 	}));
 
 	browser.setText("<html><body>HelloWorld</body></html>");
@@ -2344,8 +2381,9 @@ public void test_evaluate_array_numbers() {
 		atomicIntArray.set(0, ((Double) evalResult[0]).intValue());
 		atomicIntArray.set(1, ((Double) evalResult[1]).intValue());
 		atomicIntArray.set(2, ((Double) evalResult[2]).intValue());
-		if (debug_verbose_output)
-			System.out.println("Node value: " + evalResult);
+        if (debug_verbose_output) {
+            System.out.println("Node value: " + evalResult);
+        }
 	}));
 
 	browser.setText("<html><body><p id='myid'>HelloWorld</p></body></html>");
@@ -2380,8 +2418,9 @@ public void test_evaluate_array_strings () {
 		atomicStringArray.set(0, (String) evalResult[0]);
 		atomicStringArray.set(1, (String) evalResult[1]);
 		atomicStringArray.set(2, (String) evalResult[2]);
-		if (debug_verbose_output)
-			System.out.println("Node value: " + evalResult);
+        if (debug_verbose_output) {
+            System.out.println("Node value: " + evalResult);
+        }
 	}));
 
 	browser.setText("<html><body><p id='myid'>HelloWorld</p></body></html>");
@@ -2393,8 +2432,9 @@ public void test_evaluate_array_strings () {
 					&& atomicStringArray.get(1).equals("str2")
 					&& atomicStringArray.get(2).equals("str3")) {
 				return true;
-			} else
-				additionalErrorInfo.set("Resulting strings in array are not as expected");
+			} else {
+                additionalErrorInfo.set("Resulting strings in array are not as expected");
+            }
 		}
 		return false;
 	});
@@ -2418,8 +2458,9 @@ public void test_evaluate_array_mixedTypes () {
 		atomicArray.set(2, evalResult[2]);
 		atomicArray.set(1, evalResult[1]);
 		atomicArray.set(0, evalResult[0]); // should be set last. to avoid loop below ending & failing to early.
-		if (debug_verbose_output)
-			System.out.println("Node value: " + evalResult);
+        if (debug_verbose_output) {
+            System.out.println("Node value: " + evalResult);
+        }
 	}));
 
 
@@ -2432,8 +2473,9 @@ public void test_evaluate_array_mixedTypes () {
 					&& ((Double) atomicArray.get(1)) == 2
 					&& ((Boolean) atomicArray.get(2))) {
 				return true;
-			} else
-				additionalErrorInfo.set("Resulting String are not as exected");
+			} else {
+                additionalErrorInfo.set("Resulting String are not as exected");
+            }
 		}
 		return false;
 	});
@@ -3407,8 +3449,12 @@ private boolean waitForPassCondition(final Supplier<Boolean> passTest, int milli
 
 	while (Instant.now().isBefore(timeOut)) {
 		if (passed.get()) { // Logic to show browser window for longer if enabled.
-			if (!debug_show_browser) break;
-			if (Instant.now().isAfter(debug_showBrowserTimeout)) break;
+            if (!debug_show_browser) {
+                break;
+            }
+            if (Instant.now().isAfter(debug_showBrowserTimeout)) {
+                break;
+            }
 		}
 
 		if (!shell.isDisposed()) {

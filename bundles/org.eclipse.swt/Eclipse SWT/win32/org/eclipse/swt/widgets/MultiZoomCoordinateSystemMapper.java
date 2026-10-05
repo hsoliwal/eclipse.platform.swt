@@ -151,8 +151,9 @@ class MultiZoomCoordinateSystemMapper implements CoordinateSystemMapper {
 	}
 
 	private Rectangle translateRectangleInPixelsToPoints(int x, int y, int widthInPixels, int heightInPixels, Monitor monitor) {
-		if (monitor == null)
-			monitor = getContainingMonitorForPixels(x, y, widthInPixels, heightInPixels);
+        if (monitor == null) {
+            monitor = getContainingMonitorForPixels(x, y, widthInPixels, heightInPixels);
+        }
 		int zoom = getApplicableMonitorZoom(monitor);
 		Point topLeft = getPointFromPixels(monitor, x, y);
 		int width = DPIUtil.pixelToPoint(widthInPixels, zoom);

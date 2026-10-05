@@ -38,8 +38,9 @@ public class Bug525946_DownloadFunction {
 		browser.setUrl("https://download.eclipse.org/tools/orbit/downloads/drops/R20170516192513/orbit-buildrepo-R20170516192513.zip"); // 400mb
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		shell.dispose();
 		display.dispose();

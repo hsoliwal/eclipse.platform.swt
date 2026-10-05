@@ -817,8 +817,12 @@ TableItem tableItem;
 
 // this method must be private or protected so the auto-gen tool keeps it
 private void makeCleanEnvironment() {
-	if ( tableItem != null ) tableItem.dispose();
-	if ( table != null ) table.dispose();
+    if (tableItem != null) {
+        tableItem.dispose();
+    }
+    if (table != null) {
+        table.dispose();
+    }
 	table = new Table(shell, 0);
 	tableItem = new TableItem(table, 0);
 	setWidget(tableItem);

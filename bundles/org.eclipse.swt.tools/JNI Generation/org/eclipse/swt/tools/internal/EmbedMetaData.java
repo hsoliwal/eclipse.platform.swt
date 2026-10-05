@@ -31,7 +31,9 @@ public void generate(JNIClass clazz) {
 	generate(fields);
 	JNIMethod[] methods = clazz.getDeclaredMethods();
 	generate(methods);
-	if (inserts.size() == 0) return;
+    if (inserts.size() == 0) {
+        return;
+    }
 	String sourcePath = ((ASTClass)clazz).sourcePath;
 	String source = JNIGenerator.loadFile(sourcePath);
 	Set<Integer> set = inserts.keySet();
@@ -54,9 +56,15 @@ public void generate(JNIClass clazz) {
 public void generate(JNIField[] fields) {
 	for (JNIField field : fields) {
 		int mods = field.getModifiers();
-		if ((mods & Modifier.PUBLIC) == 0) continue;
-		if ((mods & Modifier.FINAL) != 0) continue;
-		if ((mods & Modifier.STATIC) != 0) continue;
+        if ((mods & Modifier.PUBLIC) == 0) {
+            continue;
+        }
+        if ((mods & Modifier.FINAL) != 0) {
+            continue;
+        }
+        if ((mods & Modifier.STATIC) != 0) {
+            continue;
+        }
 		generate(field);
 	}
 }
@@ -73,7 +81,9 @@ public void generate(JNIField field) {
 
 public void generate(JNIMethod[] methods) {
 	for (JNIMethod method : methods) {
-		if ((method.getModifiers() & Modifier.NATIVE) == 0) continue;
+        if ((method.getModifiers() & Modifier.NATIVE) == 0) {
+            continue;
+        }
 		generate(method);
 	}
 }
@@ -93,7 +103,9 @@ public void generate(JNIMethod method) {
 			tags.add("@param " + param.getName() + " " + data);
 		}
 	}
-	if (tags.size() == 0) return;
+    if (tags.size() == 0) {
+        return;
+    }
 	if (tags.size() == 1) {
 		String doc = "/** " + tags.get(0) + " */" + delimiter;
 		inserts.put(Integer.valueOf(((ASTMethod)method).start), doc);

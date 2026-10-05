@@ -59,15 +59,33 @@ class DateTimeTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (dateButton.getSelection ()) style |= SWT.DATE;
-		if (timeButton.getSelection ()) style |= SWT.TIME;
-		if (calendarButton.getSelection ()) style |= SWT.CALENDAR;
-		if (shortButton.getSelection ()) style |= SWT.SHORT;
-		if (mediumButton.getSelection ()) style |= SWT.MEDIUM;
-		if (longButton.getSelection ()) style |= SWT.LONG;
-		if (dropDownButton.getSelection ()) style |= SWT.DROP_DOWN;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
-		if (weekNumbersButton.getSelection ()) style |= SWT.CALENDAR_WEEKNUMBERS;
+        if (dateButton.getSelection()) {
+            style |= SWT.DATE;
+        }
+        if (timeButton.getSelection()) {
+            style |= SWT.TIME;
+        }
+        if (calendarButton.getSelection()) {
+            style |= SWT.CALENDAR;
+        }
+        if (shortButton.getSelection()) {
+            style |= SWT.SHORT;
+        }
+        if (mediumButton.getSelection()) {
+            style |= SWT.MEDIUM;
+        }
+        if (longButton.getSelection()) {
+            style |= SWT.LONG;
+        }
+        if (dropDownButton.getSelection()) {
+            style |= SWT.DROP_DOWN;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (weekNumbersButton.getSelection()) {
+            style |= SWT.CALENDAR_WEEKNUMBERS;
+        }
 
 		/* Create the example widgets */
 		dateTime1 = new DateTime (dateTimeGroup, style);

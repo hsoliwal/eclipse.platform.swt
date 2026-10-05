@@ -85,8 +85,9 @@ class ToolBarWin32Tests {
 			assertTrue(waitUntilIconsRenderOwnColor(display, () -> iconsRenderOwnColor(bar, itemsToCheck, colors),
 					TIMEOUT_MILLIS), "every tool item must render its own icon color after a zoom change");
 		} finally {
-			for (Image icon : icons)
-				icon.dispose();
+            for (Image icon : icons) {
+                icon.dispose();
+            }
 			display.dispose();
 		}
 	}
@@ -330,8 +331,9 @@ class ToolBarWin32Tests {
 						best = c;
 					}
 				}
-				if (best >= 0)
-					votes[best]++;
+                if (best >= 0) {
+                    votes[best]++;
+                }
 			}
 		}
 		int winner = -1, most = 0;

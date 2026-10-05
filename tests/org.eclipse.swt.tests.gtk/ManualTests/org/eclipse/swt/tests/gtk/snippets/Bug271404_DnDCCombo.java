@@ -82,9 +82,11 @@ public class Bug271404_DnDCCombo
 		shell.pack( );
 		shell.open( );
 		Display display = Display.getDefault( );
-		while ( !shell.isDisposed( ) )
-			if ( !display.readAndDispatch( ) )
-				display.sleep( );
+        while (!shell.isDisposed()) {
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
+        }
 		display.dispose( );
 	}
 

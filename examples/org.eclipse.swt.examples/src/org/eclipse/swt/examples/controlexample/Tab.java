@@ -323,7 +323,9 @@ abstract class Tab {
 		 */
 		SelectionListener selectionListener = widgetSelectedAdapter(event -> {
 			if ((event.widget.getStyle () & SWT.RADIO) != 0) {
-				if (!((Button) event.widget).getSelection ()) return;
+                if (!((Button) event.widget).getSelection()) {
+                    return;
+                }
 			}
 			if (!handleTextDirection (event.widget)) {
 				recreateExampleWidgets ();
@@ -431,7 +433,9 @@ abstract class Tab {
 		changeButton.addSelectionListener(widgetSelectedAdapter(event -> changeFontOrColor (colorAndFontTable.getSelectionIndex())));
 		defaultsButton.addSelectionListener(widgetSelectedAdapter(e -> resetColorsAndFonts ()));
 		shell.addDisposeListener(event -> {
-			if (font != null) font.dispose();
+            if (font != null) {
+                font.dispose();
+            }
 			foregroundColor = null;
 			backgroundColor = null;
 			font = null;
@@ -439,7 +443,9 @@ abstract class Tab {
 				TableItem [] items = colorAndFontTable.getItems();
 				for (TableItem currentItem : items) {
 					Image image = currentItem.getImage();
-					if (image != null) image.dispose();
+                    if (image != null) {
+                        image.dispose();
+                    }
 				}
 			}
 		});
@@ -451,11 +457,17 @@ abstract class Tab {
 				Color oldColor = foregroundColor;
 				if (oldColor == null) {
 					Control [] controls = getExampleControls ();
-					if (controls.length > 0) oldColor = controls [0].getForeground ();
+                    if (controls.length > 0) {
+                        oldColor = controls [0].getForeground();
+                    }
 				}
-				if (oldColor != null) colorDialog.setRGB(oldColor.getRGB()); // seed dialog with current color
+                if (oldColor != null) {
+                    colorDialog.setRGB(oldColor.getRGB());
+                } // seed dialog with current color
 				RGB rgb = colorDialog.open();
-				if (rgb == null) return;
+                if (rgb == null) {
+                    return;
+                }
 				foregroundColor = new Color (rgb);
 				setExampleWidgetForeground ();
 			}
@@ -464,11 +476,17 @@ abstract class Tab {
 				Color oldColor = backgroundColor;
 				if (oldColor == null) {
 					Control [] controls = getExampleControls ();
-					if (controls.length > 0) oldColor = controls [0].getBackground (); // seed dialog with current color
+                    if (controls.length > 0) {
+                        oldColor = controls [0].getBackground();
+                    } // seed dialog with current color
 				}
-				if (oldColor != null) colorDialog.setRGB(oldColor.getRGB());
+                if (oldColor != null) {
+                    colorDialog.setRGB(oldColor.getRGB());
+                }
 				RGB rgb = colorDialog.open();
-				if (rgb == null) return;
+                if (rgb == null) {
+                    return;
+                }
 				backgroundColor = new Color (rgb);
 				setExampleWidgetBackground ();
 			}
@@ -477,16 +495,24 @@ abstract class Tab {
 				Font oldFont = font;
 				if (oldFont == null) {
 					Control [] controls = getExampleControls ();
-					if (controls.length > 0) oldFont = controls [0].getFont ();
+                    if (controls.length > 0) {
+                        oldFont = controls [0].getFont();
+                    }
 				}
-				if (oldFont != null) fontDialog.setFontList(oldFont.getFontData()); // seed dialog with current font
+                if (oldFont != null) {
+                    fontDialog.setFontList(oldFont.getFontData());
+                } // seed dialog with current font
 				FontData fontData = fontDialog.open ();
-				if (fontData == null) return;
+                if (fontData == null) {
+                    return;
+                }
 				oldFont = font; // dispose old font when done
 				font = new Font (display, fontData);
 				setExampleWidgetFont ();
 				setExampleWidgetSize ();
-				if (oldFont != null) oldFont.dispose ();
+                if (oldFont != null) {
+                    oldFont.dispose();
+                }
 			}
 			break;
 		}
@@ -575,7 +601,9 @@ abstract class Tab {
 			new Label (group, SWT.NONE).setText ("doit");
 			final Combo doitCombo = new Combo (group, SWT.READ_ONLY);
 			doitCombo.setItems ("", "true", "false");
-			if ((setFieldsMask & DOIT) != 0) doitCombo.setText(Boolean.toString(setFieldsEvent.doit));
+            if ((setFieldsMask & DOIT) != 0) {
+                doitCombo.setText(Boolean.toString(setFieldsEvent.doit));
+            }
 			doitCombo.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 			doitCombo.addSelectionListener(widgetSelectedAdapter(e -> {
 				String newValue = doitCombo.getText();
@@ -596,7 +624,9 @@ abstract class Tab {
 			detailCombo.setItems (DETAIL_CONSTANTS[detailType]);
 			detailCombo.add ("", 0);
 			detailCombo.setVisibleItemCount(detailCombo.getItemCount());
-			if ((setFieldsMask & DETAIL) != 0) detailCombo.setText (DETAIL_CONSTANTS[detailType][setFieldsEvent.detail]);
+            if ((setFieldsMask & DETAIL) != 0) {
+                detailCombo.setText(DETAIL_CONSTANTS[detailType][setFieldsEvent.detail]);
+            }
 			detailCombo.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 			detailCombo.addSelectionListener(widgetSelectedAdapter(e -> {
 				String newValue = detailCombo.getText();
@@ -618,7 +648,9 @@ abstract class Tab {
 		if ((fields & TEXT) != 0) {
 			new Label (group, SWT.NONE).setText ("text");
 			final Text textText = new Text (group, SWT.BORDER);
-			if ((setFieldsMask & TEXT) != 0) textText.setText(setFieldsEvent.text);
+            if ((setFieldsMask & TEXT) != 0) {
+                textText.setText(setFieldsEvent.text);
+            }
 			textText.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 			textText.addModifyListener(e -> {
 				String newValue = textText.getText();
@@ -635,7 +667,9 @@ abstract class Tab {
 		if ((fields & X) != 0) {
 			new Label (group, SWT.NONE).setText ("x");
 			final Text xText = new Text (group, SWT.BORDER);
-			if ((setFieldsMask & X) != 0) xText.setText(Integer.toString(setFieldsEvent.x));
+            if ((setFieldsMask & X) != 0) {
+                xText.setText(Integer.toString(setFieldsEvent.x));
+            }
 			xText.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 			xText.addModifyListener(e -> {
 				String newValue = xText.getText ();
@@ -653,7 +687,9 @@ abstract class Tab {
 		if ((fields & Y) != 0) {
 			new Label (group, SWT.NONE).setText ("y");
 			final Text yText = new Text (group, SWT.BORDER);
-			if ((setFieldsMask & Y) != 0) yText.setText(Integer.toString(setFieldsEvent.y));
+            if ((setFieldsMask & Y) != 0) {
+                yText.setText(Integer.toString(setFieldsEvent.y));
+            }
 			yText.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 			yText.addModifyListener(e -> {
 				String newValue = yText.getText ();
@@ -671,7 +707,9 @@ abstract class Tab {
 		if ((fields & WIDTH) != 0) {
 			new Label (group, SWT.NONE).setText ("width");
 			final Text widthText = new Text (group, SWT.BORDER);
-			if ((setFieldsMask & WIDTH) != 0) widthText.setText(Integer.toString(setFieldsEvent.width));
+            if ((setFieldsMask & WIDTH) != 0) {
+                widthText.setText(Integer.toString(setFieldsEvent.width));
+            }
 			widthText.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 			widthText.addModifyListener(e -> {
 				String newValue = widthText.getText ();
@@ -689,7 +727,9 @@ abstract class Tab {
 		if ((fields & HEIGHT) != 0) {
 			new Label (group, SWT.NONE).setText ("height");
 			final Text heightText = new Text (group, SWT.BORDER);
-			if ((setFieldsMask & HEIGHT) != 0) heightText.setText(Integer.toString(setFieldsEvent.height));
+            if ((setFieldsMask & HEIGHT) != 0) {
+                heightText.setText(Integer.toString(setFieldsEvent.height));
+            }
 			heightText.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 			heightText.addModifyListener(e -> {
 				String newValue = heightText.getText ();
@@ -872,7 +912,9 @@ abstract class Tab {
 		dialog.setLocation(bounds.x, clientArea.y);
 		dialog.open ();
 		while (! dialog.isDisposed()) {
-			if (! display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 
@@ -1016,7 +1058,9 @@ abstract class Tab {
 		}
 		String typeNameString = typeName;
 		int index = typeName.lastIndexOf('.');
-		if (index != -1 && index+1 < typeName.length()) typeNameString = typeName.substring(index+1);
+        if (index != -1 && index + 1 < typeName.length()) {
+            typeNameString = typeName.substring(index + 1);
+        }
 		String info = ControlExample.getResourceString("Info_" + typeNameString + (isArray ? "A" : ""));
 		if (isArray) {
 			typeNameString += "[]";
@@ -1126,8 +1170,12 @@ abstract class Tab {
 				Throwable cause = e.getCause();
 				String message = e.getMessage();
 				getText.setText(e.toString());
-				if (cause != null) getText.append(", cause=\n" + cause.toString());
-				if (message != null) getText.append(", message=\n" + message);
+                if (cause != null) {
+                    getText.append(", cause=\n" + cause.toString());
+                }
+                if (message != null) {
+                    getText.append(", message=\n" + message);
+                }
 			}
 		}
 	}
@@ -1538,7 +1586,9 @@ abstract class Tab {
 	void log(Event event) {
 		int i = 0;
 		while (i < EVENT_INFO.length) {
-			if (EVENT_INFO[i].type == event.type) break;
+            if (EVENT_INFO[i].type == event.type) {
+                break;
+            }
 			i++;
 		}
 		String toString = EVENT_INFO[i].name + " [" + event.type + "]: ";
@@ -1592,13 +1642,27 @@ abstract class Tab {
 		int mask = EVENT_INFO[i].setFields;
 		if (!ignore && mask != 0) {
 			Event setFieldsEvent = EVENT_INFO[i].event;
-			if ((mask & DOIT) != 0) event.doit = setFieldsEvent.doit;
-			if ((mask & DETAIL) != 0) event.detail = setFieldsEvent.detail;
-			if ((mask & TEXT) != 0) event.text = setFieldsEvent.text;
-			if ((mask & X) != 0) event.x = setFieldsEvent.x;
-			if ((mask & Y) != 0) event.y = setFieldsEvent.y;
-			if ((mask & WIDTH) != 0) event.width = setFieldsEvent.width;
-			if ((mask & HEIGHT) != 0) event.height = setFieldsEvent.height;
+            if ((mask & DOIT) != 0) {
+                event.doit = setFieldsEvent.doit;
+            }
+            if ((mask & DETAIL) != 0) {
+                event.detail = setFieldsEvent.detail;
+            }
+            if ((mask & TEXT) != 0) {
+                event.text = setFieldsEvent.text;
+            }
+            if ((mask & X) != 0) {
+                event.x = setFieldsEvent.x;
+            }
+            if ((mask & Y) != 0) {
+                event.y = setFieldsEvent.y;
+            }
+            if ((mask & WIDTH) != 0) {
+                event.width = setFieldsEvent.width;
+            }
+            if ((mask & HEIGHT) != 0) {
+                event.height = setFieldsEvent.height;
+            }
 			eventConsole.append (ControlExample.getResourceString("Returning"));
 			ignore = true;
 			log (event);
@@ -1648,7 +1712,9 @@ abstract class Tab {
 		font = null;
 		setExampleWidgetFont ();
 		setExampleWidgetSize ();
-		if (oldFont != null) oldFont.dispose();
+        if (oldFont != null) {
+            oldFont.dispose();
+        }
 	}
 
 	boolean rtlSupport() {
@@ -1659,14 +1725,18 @@ abstract class Tab {
 	 * Sets the background color of the "Example" widgets' parent.
 	 */
 	void setExampleGroupBackgroundColor () {
-		if (backgroundModeGroup == null) return;
+        if (backgroundModeGroup == null) {
+            return;
+        }
 		exampleGroup.setBackground (backgroundModeColorButton.getSelection () ? display.getSystemColor(SWT.COLOR_BLUE) : null);
 	}
 	/**
 	 * Sets the background image of the "Example" widgets' parent.
 	 */
 	void setExampleGroupBackgroundImage () {
-		if (backgroundModeGroup == null) return;
+        if (backgroundModeGroup == null) {
+            return;
+        }
 		exampleGroup.setBackgroundImage (backgroundModeImageButton.getSelection () ? instance.images[ControlExample.ciParentBackground] : null);
 	}
 
@@ -1674,11 +1744,17 @@ abstract class Tab {
 	 * Sets the background mode of the "Example" widgets' parent.
 	 */
 	void setExampleGroupBackgroundMode () {
-		if (backgroundModeGroup == null) return;
+        if (backgroundModeGroup == null) {
+            return;
+        }
 		String modeString = backgroundModeCombo.getText ();
 		int mode = SWT.INHERIT_NONE;
-		if (modeString.equals("SWT.INHERIT_DEFAULT")) mode = SWT.INHERIT_DEFAULT;
-		if (modeString.equals("SWT.INHERIT_FORCE")) mode = SWT.INHERIT_FORCE;
+        if (modeString.equals("SWT.INHERIT_DEFAULT")) {
+            mode = SWT.INHERIT_DEFAULT;
+        }
+        if (modeString.equals("SWT.INHERIT_FORCE")) {
+            mode = SWT.INHERIT_FORCE;
+        }
 		exampleGroup.setBackgroundMode (mode);
 	}
 
@@ -1686,7 +1762,9 @@ abstract class Tab {
 	 * Sets the background color of the "Example" widgets.
 	 */
 	void setExampleWidgetBackground () {
-		if (colorAndFontTable == null) return; // user cannot change color/font on this tab
+        if (colorAndFontTable == null) {
+            return;
+        } // user cannot change color/font on this tab
 		Control [] controls = getExampleControls ();
 		if (!instance.startup) {
 			for (Control control : controls) {
@@ -1695,11 +1773,17 @@ abstract class Tab {
 		}
 		// Set the background color item's image to match the background color of the example widget(s).
 		Color color = backgroundColor;
-		if (controls.length == 0) return;
-		if (color == null) color = controls [0].getBackground ();
+        if (controls.length == 0) {
+            return;
+        }
+        if (color == null) {
+            color = controls [0].getBackground();
+        }
 		TableItem item = colorAndFontTable.getItem(BACKGROUND_COLOR);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (colorImage (color));
 	}
 
@@ -1717,7 +1801,9 @@ abstract class Tab {
 	 * Sets the font of the "Example" widgets.
 	 */
 	void setExampleWidgetFont () {
-		if (colorAndFontTable == null) return; // user cannot change color/font on this tab
+        if (colorAndFontTable == null) {
+            return;
+        } // user cannot change color/font on this tab
 		Control [] controls = getExampleControls ();
 		if (!instance.startup) {
 			for (Control control : controls) {
@@ -1726,11 +1812,17 @@ abstract class Tab {
 		}
 		/* Set the font item's image and font to match the font of the example widget(s). */
 		Font ft = font;
-		if (controls.length == 0) return;
-		if (ft == null) ft = controls [0].getFont ();
+        if (controls.length == 0) {
+            return;
+        }
+        if (ft == null) {
+            ft = controls [0].getFont();
+        }
 		TableItem item = colorAndFontTable.getItem(FONT);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (fontImage (ft));
 		item.setFont(ft);
 		colorAndFontTable.layout ();
@@ -1740,7 +1832,9 @@ abstract class Tab {
 	 * Sets the foreground color of the "Example" widgets.
 	 */
 	void setExampleWidgetForeground () {
-		if (colorAndFontTable == null) return; // user cannot change color/font on this tab
+        if (colorAndFontTable == null) {
+            return;
+        } // user cannot change color/font on this tab
 		Control [] controls = getExampleControls ();
 		if (!instance.startup) {
 			for (Control control : controls) {
@@ -1749,11 +1843,17 @@ abstract class Tab {
 		}
 		/* Set the foreground color item's image to match the foreground color of the example widget(s). */
 		Color color = foregroundColor;
-		if (controls.length == 0) return;
-		if (color == null) color = controls [0].getForeground ();
+        if (controls.length == 0) {
+            return;
+        }
+        if (color == null) {
+            color = controls [0].getForeground();
+        }
 		TableItem item = colorAndFontTable.getItem(FOREGROUND_COLOR);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (colorImage(color));
 	}
 
@@ -1762,11 +1862,21 @@ abstract class Tab {
 	 */
 	void setExampleWidgetSize () {
 		int size = SWT.DEFAULT;
-		if (preferredButton == null) return;
-		if (preferredButton.getSelection()) size = SWT.DEFAULT;
-		if (tooSmallButton.getSelection()) size = TOO_SMALL_SIZE;
-		if (smallButton.getSelection()) size = SMALL_SIZE;
-		if (largeButton.getSelection()) size = LARGE_SIZE;
+        if (preferredButton == null) {
+            return;
+        }
+        if (preferredButton.getSelection()) {
+            size = SWT.DEFAULT;
+        }
+        if (tooSmallButton.getSelection()) {
+            size = TOO_SMALL_SIZE;
+        }
+        if (smallButton.getSelection()) {
+            size = SMALL_SIZE;
+        }
+        if (largeButton.getSelection()) {
+            size = LARGE_SIZE;
+        }
 		Control [] controls = getExampleControls ();
 		for (Control control : controls) {
 			GridData gridData = new GridData(size, size);
@@ -1822,7 +1932,9 @@ abstract class Tab {
 	 * Sets the background image of the "Example" widgets.
 	 */
 	void setExampleWidgetBackgroundImage () {
-		if (backgroundImageButton != null && backgroundImageButton.isDisposed()) return;
+        if (backgroundImageButton != null && backgroundImageButton.isDisposed()) {
+            return;
+        }
 		Control [] controls = getExampleControls ();
 		for (Control control : controls) {
 			control.setBackgroundImage (backgroundImageButton.getSelection () ? instance.images[ControlExample.ciBackground] : null);
@@ -1841,7 +1953,9 @@ abstract class Tab {
 		int length = string.length();
 		while (start < length) {
 			int end = string.indexOf(ch, start);
-			if (end == -1) end = length;
+            if (end == -1) {
+                end = length;
+            }
 			String substr = string.substring(start, end);
 			String [] newResult = new String[result.length + 1];
 			System.arraycopy(result, 0, newResult, 0, result.length);

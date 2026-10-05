@@ -102,7 +102,9 @@ long defaultFont () {
 	if (hFont == 0) {
 		hFont = OS.SendMessage (hwnd, OS.WM_GETFONT, 0, 0);
 	}
-	if (hFont == 0) return parent.defaultFont ();
+    if (hFont == 0) {
+        return parent.defaultFont();
+    }
 	return hFont;
 }
 
@@ -313,14 +315,20 @@ void killFocus () {
 void move () {
 	moved = false;
 	setCurrentCaret(this);
-	if (!OS.SetCaretPos (getXInPixels(), getYInPixels())) return;
+    if (!OS.SetCaretPos(getXInPixels(), getYInPixels())) {
+        return;
+    }
 	resizeIME ();
 }
 
 void resizeIME () {
-	if (!OS.IsDBLocale) return;
+    if (!OS.IsDBLocale) {
+        return;
+    }
 	POINT ptCurrentPos = new POINT ();
-	if (!OS.GetCaretPos (ptCurrentPos)) return;
+    if (!OS.GetCaretPos(ptCurrentPos)) {
+        return;
+    }
 	long hwnd = parent.handle;
 	long hIMC = OS.ImmGetContext (hwnd);
 	IME ime = parent.getIME ();
@@ -352,8 +360,11 @@ void resizeIME () {
 void releaseParent () {
 	super.releaseParent ();
 	if (parent != null && this == parent.caret) {
-		if (!parent.isDisposed()) parent.setCaret (null);
-		else parent.caret = null;
+        if (!parent.isDisposed()) {
+            parent.setCaret(null);
+        } else {
+            parent.caret = null;
+        }
 	}
 }
 
@@ -388,8 +399,12 @@ void resize () {
 }
 
 void restoreIMEFont () {
-	if (!OS.IsDBLocale) return;
-	if (oldFont == null) return;
+    if (!OS.IsDBLocale) {
+        return;
+    }
+    if (oldFont == null) {
+        return;
+    }
 	long hwnd = parent.handle;
 	long hIMC = OS.ImmGetContext (hwnd);
 	OS.ImmSetCompositionFont (hIMC, oldFont);
@@ -417,17 +432,23 @@ public void setBounds (int x, int y, int width, int height) {
 	checkWidget();
 	boolean samePosition = this.x == x && this.y == y;
 	boolean sameExtent = this.width == width && this.height == height;
-	if (samePosition && sameExtent && isCurrentCaret()) return;
+    if (samePosition && sameExtent && isCurrentCaret()) {
+        return;
+    }
 	this.x = x;
 	this.y = y;
 	this.width = width;
 	this.height = height;
 	if (sameExtent) {
 		moved = true;
-		if (isVisible && hasFocus ()) move ();
+        if (isVisible && hasFocus()) {
+            move();
+        }
 	} else {
 		resized = true;
-		if (isVisible && hasFocus ()) resize ();
+        if (isVisible && hasFocus()) {
+            resize();
+        }
 	}
 }
 
@@ -445,14 +466,18 @@ public void setBounds (int x, int y, int width, int height) {
  * </ul>
  */
 public void setBounds (Rectangle rect) {
-	if (rect == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rect == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setBounds(rect.x, rect.y, rect.width, rect.height);
 }
 
 void setFocus () {
 	long hwnd = parent.handle;
 	long hBitmap = 0;
-	if (image != null) hBitmap = Image.win32_getHandle(image, getAutoscalingZoom());
+    if (image != null) {
+        hBitmap = Image.win32_getHandle(image, getAutoscalingZoom());
+    }
 	int widthInPixels = this.getWidthInPixels();
 	if (image == null && widthInPixels == 0) {
 		OptionalInt systemCaretWidthInPixelsForCurrentMonitor = getSystemCaretWidthInPixelsForCurrentMonitor();
@@ -463,7 +488,9 @@ void setFocus () {
 	OS.CreateCaret (hwnd, hBitmap, widthInPixels, getHeightInPixels());
 	move ();
 	setIMEFont ();
-	if (isVisible) OS.ShowCaret (hwnd);
+    if (isVisible) {
+        OS.ShowCaret(hwnd);
+    }
 }
 
 /**
@@ -487,7 +514,9 @@ public void setFont (Font font) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	this.font = font == null ? null : Font.win32_new(font, nativeZoom);
-	if (hasFocus ()) setIMEFont ();
+    if (hasFocus()) {
+        setIMEFont();
+    }
 }
 
 /**
@@ -511,20 +540,30 @@ public void setImage (Image image) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	this.image = image;
-	if (isVisible && hasFocus ()) resize ();
+    if (isVisible && hasFocus()) {
+        resize();
+    }
 }
 
 void setIMEFont () {
-	if (!OS.IsDBLocale) return;
+    if (!OS.IsDBLocale) {
+        return;
+    }
 	long hFont = 0;
-	if (font != null) hFont = SWTFontProvider.getFontHandle(font, nativeZoom);
-	if (hFont == 0) hFont = defaultFont ();
+    if (font != null) {
+        hFont = SWTFontProvider.getFontHandle(font, nativeZoom);
+    }
+    if (hFont == 0) {
+        hFont = defaultFont();
+    }
 	long hwnd = parent.handle;
 	long hIMC = OS.ImmGetContext (hwnd);
 	/* Save the current IME font */
 	if (oldFont == null) {
 		oldFont = new LOGFONT ();
-		if (!OS.ImmGetCompositionFont (hIMC, oldFont)) oldFont = null;
+        if (!OS.ImmGetCompositionFont(hIMC, oldFont)) {
+            oldFont = null;
+        }
 	}
 	/* Set new IME font */
 	LOGFONT logFont = new LOGFONT ();
@@ -549,10 +588,14 @@ void setIMEFont () {
  */
 public void setLocation (int x, int y) {
 	checkWidget();
-	if (this.x == x && this.y == y && isCurrentCaret())  return;
+    if (this.x == x && this.y == y && isCurrentCaret()) {
+        return;
+    }
 	this.x = x;  this.y = y;
 	moved = true;
-	if (isVisible && hasFocus ()) move ();
+    if (isVisible && hasFocus()) {
+        move();
+    }
 }
 
 private boolean isCurrentCaret() {
@@ -577,7 +620,9 @@ private void setCurrentCaret(Caret caret) {
  */
 public void setLocation (Point location) {
 	checkWidget();
-	if (location == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (location == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setLocation(location.x, location.y);
 }
 
@@ -594,11 +639,15 @@ public void setLocation (Point location) {
  */
 public void setSize (int width, int height) {
 	checkWidget();
-	if (this.width == width && this.height == height && isCurrentCaret()) return;
+    if (this.width == width && this.height == height && isCurrentCaret()) {
+        return;
+    }
 	this.width = width;
 	this.height = height;
 	resized = true;
-	if (isVisible && hasFocus ()) resize ();
+    if (isVisible && hasFocus()) {
+        resize();
+    }
 }
 
 /**
@@ -616,7 +665,9 @@ public void setSize (int width, int height) {
  */
 public void setSize (Point size) {
 	checkWidget();
-	if (size == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setSize(size.x, size.y);
 }
 
@@ -638,17 +689,23 @@ public void setSize (Point size) {
  */
 public void setVisible (boolean visible) {
 	checkWidget();
-	if (visible == isVisible) return;
+    if (visible == isVisible) {
+        return;
+    }
 	isVisible = visible;
 	long hwnd = parent.handle;
-	if (OS.GetFocus () != hwnd) return;
+    if (OS.GetFocus() != hwnd) {
+        return;
+    }
 	if (!isVisible) {
 		OS.HideCaret (hwnd);
 	} else {
 		if (resized) {
 			resize ();
 		} else {
-			if (moved) move ();
+            if (moved) {
+                move();
+            }
 		}
 		OS.ShowCaret (hwnd);
 	}

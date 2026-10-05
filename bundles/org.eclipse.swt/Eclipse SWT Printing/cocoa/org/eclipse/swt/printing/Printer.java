@@ -59,7 +59,9 @@ public final class Printer extends Device {
  */
 public static PrinterData[] getPrinterList() {
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSArray printers = NSPrinter.printerNames();
 		int count = (int)printers.count();
@@ -70,7 +72,9 @@ public static PrinterData[] getPrinterList() {
 		}
 		return result;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -85,14 +89,20 @@ public static PrinterData[] getPrinterList() {
  */
 public static PrinterData getDefaultPrinterData() {
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSPrinter printer = NSPrintInfo.defaultPrinter();
-		if (printer == null) return null;
+        if (printer == null) {
+            return null;
+        }
 		NSString str = printer.name();
 		return new PrinterData(DRIVER, str.getString());
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 
 }
@@ -174,7 +184,9 @@ public Printer(PrinterData data) {
 public Rectangle computeTrim(int x, int y, int width, int height) {
 	checkDevice();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSSize paperSize = printInfo.paperSize();
 		NSRect bounds = printInfo.imageablePageBounds();
@@ -186,7 +198,9 @@ public Rectangle computeTrim(int x, int y, int width, int height) {
 		height += ((paperSize.height - bounds.height) * dpi.y / screenDPI.y) / scaling;
 		return new Rectangle(x, y, width, height);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -199,7 +213,9 @@ public Rectangle computeTrim(int x, int y, int width, int height) {
 @Override
 protected void create(DeviceData deviceData) {
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSApplication.sharedApplication();
 		data = (PrinterData)deviceData;
@@ -225,12 +241,18 @@ protected void create(DeviceData deviceData) {
 		/* Updating printInfo from PMPrintSettings overrides values in the printInfo dictionary. */
 		printInfo.updateFromPMPrintSettings();
 		NSMutableDictionary dict = printInfo.dictionary();
-		if (data.collate) dict.setValue(NSNumber.numberWithBool(data.collate), OS.NSPrintMustCollate);
-		if (data.copyCount != 1) dict.setValue(NSNumber.numberWithInt(data.copyCount), OS.NSPrintCopies);
+        if (data.collate) {
+            dict.setValue(NSNumber.numberWithBool(data.collate), OS.NSPrintMustCollate);
+        }
+        if (data.copyCount != 1) {
+            dict.setValue(NSNumber.numberWithInt(data.copyCount), OS.NSPrintCopies);
+        }
 		dict.setValue(NSNumber.numberWithInt(data.orientation == PrinterData.LANDSCAPE ? OS.NSLandscapeOrientation : OS.NSPortraitOrientation), OS.NSPrintOrientation);
 		if (data.printToFile) {
 			dict.setValue(OS.NSPrintSaveJob, OS.NSPrintJobDisposition);
-			if (data.fileName != null) dict.setValue(NSString.stringWith(data.fileName), OS.NSPrintSavePath);
+            if (data.fileName != null) {
+                dict.setValue(NSString.stringWith(data.fileName), OS.NSPrintSavePath);
+            }
 		}
 		/*
 		* Bug in Cocoa.  For some reason, the output still goes to the printer when
@@ -257,7 +279,9 @@ protected void create(DeviceData deviceData) {
 		operation.setShowsPrintPanel(false);
 		operation.setShowsProgressPanel(false);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -269,20 +293,34 @@ protected void create(DeviceData deviceData) {
 @Override
 protected void destroy() {
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
-		if (printer != null) printer.release();
-		if (printInfo != null) printInfo.release();
-		if (view != null) view.release();
-		if (window != null) window.release();
-		if (operation != null) operation.release();
+        if (printer != null) {
+            printer.release();
+        }
+        if (printInfo != null) {
+            printInfo.release();
+        }
+        if (view != null) {
+            view.release();
+        }
+        if (window != null) {
+            window.release();
+        }
+        if (operation != null) {
+            operation.release();
+        }
 		printer = null;
 		printInfo = null;
 		view = null;
 		window = null;
 		operation = null;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -303,12 +341,18 @@ protected void destroy() {
  */
 @Override
 public long internal_new_GC(GCData data) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		if (data != null) {
-			if (isGCCreated) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            if (isGCCreated) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 			data.device = this;
 			data.background = getSystemColor(SWT.COLOR_WHITE).handle;
 			data.foreground = getSystemColor(SWT.COLOR_BLACK).handle;
@@ -324,7 +368,9 @@ public long internal_new_GC(GCData data) {
 		createContext();
 		return operation.context().id;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -343,11 +389,15 @@ public long internal_new_GC(GCData data) {
 @Override
 protected void init () {
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		super.init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -368,7 +418,9 @@ protected void init () {
  */
 @Override
 public void internal_dispose_GC(long hDC, GCData data) {
-	if (data != null) isGCCreated = false;
+    if (data != null) {
+        isGCCreated = false;
+    }
 }
 
 /**
@@ -418,7 +470,9 @@ float scalingFactor() {
 public boolean startJob(String jobName) {
 	checkDevice();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		if (jobName != null && jobName.length() != 0) {
 			operation.setJobTitle(NSString.stringWith(jobName));
@@ -430,12 +484,16 @@ public boolean startJob(String jobName) {
 		}
 		return false;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
 boolean createContext () {
-	if (operation.context() != null) return true;
+    if (operation.context() != null) {
+        return true;
+    }
 	printInfo.setUpPrintOperationDefaultValues();
 	NSPrintOperation.setCurrentOperation(operation);
 	return operation.createContext() != null;
@@ -455,14 +513,18 @@ boolean createContext () {
 public void endJob() {
 	checkDevice();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		view.endDocument();
 		operation.deliverResult();
 		operation.destroyContext();
 		operation.cleanUpOperation();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -476,20 +538,28 @@ public void endJob() {
 public void cancelJob() {
 	checkDevice();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		operation.destroyContext();
 		operation.cleanUpOperation();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
 static DeviceData checkNull (PrinterData data) {
-	if (data == null) data = new PrinterData();
+    if (data == null) {
+        data = new PrinterData();
+    }
 	if (data.driver == null || data.name == null) {
 		PrinterData defaultPrinter = getDefaultPrinterData();
-		if (defaultPrinter == null) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (defaultPrinter == null) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		data.driver = defaultPrinter.driver;
 		data.name = defaultPrinter.name;
 	}
@@ -517,7 +587,9 @@ static DeviceData checkNull (PrinterData data) {
 public boolean startPage() {
 	checkDevice();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		float scaling = scalingFactor();
 		NSSize paperSize = printInfo.paperSize();
@@ -541,7 +613,9 @@ public boolean startPage() {
 		operation.context().saveGraphicsState();
 		return true;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -559,12 +633,16 @@ public boolean startPage() {
 public void endPage() {
 	checkDevice();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		operation.context().restoreGraphicsState();
 		view.endPage();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -583,7 +661,9 @@ public void endPage() {
 public Point getDPI() {
 	checkDevice();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		long pmPrintSession = printInfo.PMPrintSession();
 		long printer[] = new long [1];
@@ -619,7 +699,9 @@ public Point getDPI() {
 
 		return getIndependentDPI();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -646,14 +728,18 @@ Point getIndependentDPI() {
 public Rectangle getBounds() {
 	checkDevice();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSSize size = printInfo.paperSize();
 		float scaling = scalingFactor();
 		Point dpi = getDPI (), screenDPI = getIndependentDPI();
 		return new Rectangle (0, 0, (int)((size.width * dpi.x / screenDPI.x) / scaling), (int)((size.height * dpi.y / screenDPI.y)  / scaling));
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -678,14 +764,18 @@ public Rectangle getBounds() {
 public Rectangle getClientArea() {
 	checkDevice();
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		float scaling = scalingFactor();
 		NSRect rect = printInfo.imageablePageBounds();
 		Point dpi = getDPI (), screenDPI = getIndependentDPI();
 		return new Rectangle(0, 0, (int)((rect.width * dpi.x / screenDPI.x) / scaling), (int)((rect.height * dpi.y / screenDPI.y) / scaling));
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 

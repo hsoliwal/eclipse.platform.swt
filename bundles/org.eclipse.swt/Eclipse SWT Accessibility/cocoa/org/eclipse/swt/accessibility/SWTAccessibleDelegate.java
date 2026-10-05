@@ -92,14 +92,17 @@ class SWTAccessibleDelegate extends NSObject {
 		this.childID = childID;
 		alloc().init();
 		delegateJniRef = OS.NewGlobalRef(this);
-		if (delegateJniRef == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (delegateJniRef == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		OS.object_setInstanceVariable(this.id, SWT_OBJECT, delegateJniRef);
 	}
 
 	NSArray accessibilityActionNames() {
 
-		if (actionNames != null)
-			return retainedAutoreleased(actionNames);
+        if (actionNames != null) {
+            return retainedAutoreleased(actionNames);
+        }
 
 		actionNames = accessible.internal_accessibilityActionNames(childID);
 		actionNames.retain();
@@ -108,11 +111,14 @@ class SWTAccessibleDelegate extends NSObject {
 
 	NSArray accessibilityAttributeNames() {
 
-		if (attributeNames != null)
-			return retainedAutoreleased(attributeNames);
+        if (attributeNames != null) {
+            return retainedAutoreleased(attributeNames);
+        }
 
 		attributeNames = accessible.internal_accessibilityAttributeNames(childID);
-		if (attributeNames == null) return null;
+        if (attributeNames == null) {
+            return null;
+        }
 		attributeNames.retain();
 		return retainedAutoreleased(attributeNames);
 	}
@@ -124,8 +130,9 @@ class SWTAccessibleDelegate extends NSObject {
 	// parameterized attribute methods
 	NSArray accessibilityParameterizedAttributeNames() {
 
-		if (parameterizedAttributeNames != null)
-			return retainedAutoreleased(parameterizedAttributeNames);
+        if (parameterizedAttributeNames != null) {
+            return retainedAutoreleased(parameterizedAttributeNames);
+        }
 
 		parameterizedAttributeNames = accessible.internal_accessibilityParameterizedAttributeNames(childID);
 		parameterizedAttributeNames.retain();
@@ -175,7 +182,9 @@ class SWTAccessibleDelegate extends NSObject {
 
 	static long accessibleProc(long id, long sel) {
 		SWTAccessibleDelegate swtAcc = getAccessibleDelegate(id);
-		if (swtAcc == null) return 0;
+        if (swtAcc == null) {
+            return 0;
+        }
 
 		if (sel == OS.sel_accessibilityAttributeNames) {
 			NSArray retObject = swtAcc.accessibilityAttributeNames();
@@ -199,7 +208,9 @@ class SWTAccessibleDelegate extends NSObject {
 
 	static long accessibleProc(long id, long sel, long arg0) {
 		SWTAccessibleDelegate swtAcc = getAccessibleDelegate(id);
-		if (swtAcc == null) return 0;
+        if (swtAcc == null) {
+            return 0;
+        }
 
 		if (sel == OS.sel_accessibilityAttributeValue_) {
 			NSString attribute = new NSString(arg0);
@@ -227,7 +238,9 @@ class SWTAccessibleDelegate extends NSObject {
 
 	static long accessibleProc(long id, long sel, long arg0, long arg1) {
 		SWTAccessibleDelegate swtAcc = getAccessibleDelegate(id);
-		if (swtAcc == null) return 0;
+        if (swtAcc == null) {
+            return 0;
+        }
 
 		if (sel == OS.sel_accessibilityAttributeValue_forParameter_) {
 			NSString attribute = new NSString(arg0);
@@ -244,22 +257,34 @@ class SWTAccessibleDelegate extends NSObject {
 	}
 
 	static SWTAccessibleDelegate getAccessibleDelegate(long id) {
-		if (id == 0) return null;
+        if (id == 0) {
+            return null;
+        }
 		long [] jniRef = new long [1];
 		OS.object_getInstanceVariable(id, SWT_OBJECT, jniRef);
-		if (jniRef[0] == 0) return null;
+        if (jniRef[0] == 0) {
+            return null;
+        }
 		return (SWTAccessibleDelegate)OS.JNIGetObject(jniRef[0]);
 	}
 
 	public void internal_dispose_SWTAccessibleDelegate() {
-		if (actionNames != null) actionNames.release();
+        if (actionNames != null) {
+            actionNames.release();
+        }
 		actionNames = null;
-		if (attributeNames != null) attributeNames.release();
+        if (attributeNames != null) {
+            attributeNames.release();
+        }
 		attributeNames = null;
-		if (parameterizedAttributeNames != null) parameterizedAttributeNames.release();
+        if (parameterizedAttributeNames != null) {
+            parameterizedAttributeNames.release();
+        }
 		parameterizedAttributeNames = null;
 
-		if (delegateJniRef != 0) OS.DeleteGlobalRef(delegateJniRef);
+        if (delegateJniRef != 0) {
+            OS.DeleteGlobalRef(delegateJniRef);
+        }
 		delegateJniRef = 0;
 		OS.object_setInstanceVariable(this.id, SWT_OBJECT, 0);
 	}

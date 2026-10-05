@@ -209,7 +209,9 @@ void accessibilitySetValue_forAttribute(long id, long sel, long arg0, long arg1)
 
 String getClipboardText () {
 	NSPasteboard pasteboard = NSPasteboard.generalPasteboard ();
-	if (pasteboard == null) return "";
+    if (pasteboard == null) {
+        return "";
+    }
 	NSString string = pasteboard.stringForType (OS.NSPasteboardTypeString);
 	return string != null ? string.getString () : null;
 }
@@ -424,7 +426,9 @@ void becomeKeyWindow (long id, long sel) {
 public void reskin (int flags) {
 	checkWidget ();
 	reskinWidget ();
-	if ((flags & SWT.ALL) != 0) reskinChildren (flags);
+    if ((flags & SWT.ALL) != 0) {
+        reskinChildren(flags);
+    }
 }
 
 void reskinChildren (int flags) {
@@ -465,7 +469,9 @@ boolean resignFirstResponder (long id, long sel) {
  */
 public void addListener (int eventType, Listener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	_addListener (eventType, listener);
 }
 
@@ -508,7 +514,9 @@ protected void addTypedListener (EventListener listener, int... eventTypes) {
 }
 
 void _addListener (int eventType, Listener listener) {
-	if (eventTable == null) eventTable = new EventTable ();
+    if (eventTable == null) {
+        eventTable = new EventTable();
+    }
 	eventTable.hook (eventType, listener);
 }
 
@@ -551,16 +559,24 @@ void checkOrientation (Widget parent) {
 	style &= ~SWT.MIRRORED;
 	if ((style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT)) == 0) {
 		if (parent != null) {
-			if ((parent.style & SWT.LEFT_TO_RIGHT) != 0) style |= SWT.LEFT_TO_RIGHT;
-			if ((parent.style & SWT.RIGHT_TO_LEFT) != 0) style |= SWT.RIGHT_TO_LEFT;
+            if ((parent.style & SWT.LEFT_TO_RIGHT) != 0) {
+                style |= SWT.LEFT_TO_RIGHT;
+            }
+            if ((parent.style & SWT.RIGHT_TO_LEFT) != 0) {
+                style |= SWT.RIGHT_TO_LEFT;
+            }
 		}
 	}
 	style = checkBits (style, SWT.LEFT_TO_RIGHT, SWT.RIGHT_TO_LEFT, 0, 0, 0, 0);
 }
 
 void checkParent (Widget parent) {
-	if (parent == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (parent.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (parent == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (parent.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	parent.checkWidget ();
 	parent.checkOpen ();
 }
@@ -595,7 +611,9 @@ void checkParent (Widget parent) {
  * </ul>
  */
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -622,9 +640,15 @@ protected void checkSubclass () {
  */
 protected void checkWidget () {
 	Display display = this.display;
-	if (display == null) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (display.thread != Thread.currentThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
-	if ((state & DISPOSED) != 0) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (display == null) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (display.thread != Thread.currentThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
+    if ((state & DISPOSED) != 0) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 }
 
 void clearDeferFlushing (long id, long sel) {
@@ -642,9 +666,13 @@ void collapseItem_collapseChildren (long id, long sel, long item, boolean childr
 }
 
 void copyToClipboard (char [] buffer) {
-	if (buffer.length == 0) return;
+    if (buffer.length == 0) {
+        return;
+    }
 	NSPasteboard pasteboard = NSPasteboard.generalPasteboard ();
-	if (pasteboard == null) return;
+    if (pasteboard == null) {
+        return;
+    }
 	pasteboard.declareTypes (NSArray.arrayWithObject (OS.NSPasteboardTypeString), null);
 	pasteboard.setString (NSString.stringWithCharacters (buffer, buffer.length), OS.NSPasteboardTypeString);
 }
@@ -654,7 +682,9 @@ void createHandle () {
 
 void createJNIRef () {
 	jniRef = OS.NewGlobalRef(this);
-	if (jniRef == 0) error (SWT.ERROR_NO_HANDLES);
+    if (jniRef == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 }
 
 void createWidget () {
@@ -681,7 +711,9 @@ void deregister () {
 }
 
 void destroyJNIRef () {
-	if (jniRef != 0) OS.DeleteGlobalRef (jniRef);
+    if (jniRef != 0) {
+        OS.DeleteGlobalRef(jniRef);
+    }
 	jniRef = 0;
 }
 
@@ -714,12 +746,16 @@ void destroyWidget () {
  * @see #checkWidget
  */
 public void dispose () {
-	/*
-	* Note:  It is valid to attempt to dispose a widget
-	* more than once.  If this happens, fail silently.
-	*/
-	if (isDisposed ()) return;
-	if (!isValidThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
+    /*
+    * Note:  It is valid to attempt to dispose a widget
+    * more than once.  If this happens, fail silently.
+    */
+    if (isDisposed()) {
+        return;
+    }
+    if (!isValidThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
 	release (true);
 }
 
@@ -784,7 +820,9 @@ void drawWithExpansionFrame_inView (long id, long sel, NSRect cellFrame, long vi
 }
 
 void drawRect (long id, long sel, NSRect rect) {
-	if (!isDrawing()) return;
+    if (!isDrawing()) {
+        return;
+    }
 	Display display = this.display;
 	NSView view = new NSView(id);
 
@@ -939,12 +977,18 @@ public Object getData () {
  */
 public Object getData (String key) {
 	checkWidget();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (key.equals(IS_ACTIVE)) return Boolean.valueOf(isActive());
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (key.equals(IS_ACTIVE)) {
+        return Boolean.valueOf(isActive());
+    }
 	if ((state & KEYED_DATA) != 0) {
 		Object [] table = (Object []) data;
 		for (int i=1; i<table.length; i+=2) {
-			if (key.equals (table [i])) return table [i+1];
+            if (key.equals(table [i])) {
+                return table [i + 1];
+            }
 		}
 	}
 	return null;
@@ -967,7 +1011,9 @@ public Object getData (String key) {
  */
 public Display getDisplay () {
 	Display display = this.display;
-	if (display == null) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (display == null) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return display;
 }
 
@@ -996,7 +1042,9 @@ boolean getDrawing () {
  */
 public Listener[] getListeners (int eventType) {
 	checkWidget();
-	if (eventTable == null) return new Listener[0];
+    if (eventTable == null) {
+        return new Listener[0];
+    }
 	return eventTable.getListeners(eventType);
 }
 
@@ -1031,7 +1079,9 @@ public <L extends EventListener> Stream<L> getTypedListeners (int eventType, Cla
 String getName () {
 	String string = getClass ().getName ();
 	int index = string.lastIndexOf ('.');
-	if (index == -1) return string;
+    if (index == -1) {
+        return string;
+    }
 	return string.substring (index + 1, string.length ());
 }
 
@@ -1090,7 +1140,9 @@ long hitTestForEvent (long id, long sel, long event, NSRect rect, long controlVi
 }
 
 boolean hooks (int eventType) {
-	if (eventTable == null) return false;
+    if (eventTable == null) {
+        return false;
+    }
 	return eventTable.hooks (eventType);
 }
 
@@ -1382,7 +1434,9 @@ boolean outlineView_writeItems_toPasteboard(long id, long sel, long arg0, long a
  */
 public void notifyListeners (int eventType, Event event) {
 	checkWidget();
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	sendEvent (eventType, event);
 }
 
@@ -1456,7 +1510,9 @@ void releaseParent () {
 
 void releaseWidget () {
 	deregister ();
-	if (display.tooltipTarget == this) display.tooltipTarget = null;
+    if (display.tooltipTarget == this) {
+        display.tooltipTarget = null;
+    }
 	eventTable = null;
 	data = null;
 }
@@ -1485,8 +1541,12 @@ void releaseWidget () {
  */
 public void removeListener (int eventType, Listener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (eventType, listener);
 }
 
@@ -1583,8 +1643,12 @@ protected void removeListener (int eventType, EventListener listener) {
  */
 protected void removeTypedListener (int eventType, EventListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (eventType, listener);
 }
 
@@ -1607,8 +1671,12 @@ protected void removeTypedListener (int eventType, EventListener listener) {
  */
 public void removeDisposeListener (DisposeListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Dispose, listener);
 }
 
@@ -1661,7 +1729,9 @@ void sendEvent (int eventType, Event event, boolean send) {
 	if (eventTable == null && !display.filters (eventType)) {
 		return;
 	}
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	event.type = eventType;
 	event.display = display;
 	event.widget = this;
@@ -1676,23 +1746,29 @@ void sendEvent (int eventType, Event event, boolean send) {
 }
 
 boolean sendKeyEvent (NSEvent nsEvent, int type) {
-	if ((state & WEBKIT_EVENTS_FIX) != 0) return true;
+    if ((state & WEBKIT_EVENTS_FIX) != 0) {
+        return true;
+    }
 	Event event = new Event ();
-	if (!setKeyState (event, type, nsEvent)) return true;
+    if (!setKeyState(event, type, nsEvent)) {
+        return true;
+    }
 	return sendKeyEvent (type, event);
 }
 
 boolean sendKeyEvent (int type, Event event) {
 	sendEvent (type, event);
-	// widget could be disposed at this point
+    // widget could be disposed at this point
 
-	/*
-	* It is possible (but unlikely), that application
-	* code could have disposed the widget in the key
-	* events.  If this happens, end the processing of
-	* the key by returning false.
-	*/
-	if (isDisposed ()) return false;
+    /*
+    * It is possible (but unlikely), that application
+    * code could have disposed the widget in the key
+    * events.  If this happens, end the processing of
+    * the key by returning false.
+    */
+    if (isDisposed()) {
+        return false;
+    }
 	return event.doit;
 }
 
@@ -1716,9 +1792,13 @@ void sendSelectionEvent (int eventType, Event event, boolean send) {
 	if (eventTable == null && !display.filters (eventType)) {
 		return;
 	}
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	NSEvent nsEvent = NSApplication.sharedApplication ().currentEvent ();
-	if (nsEvent != null) setInputState (event, nsEvent, 0);
+    if (nsEvent != null) {
+        setInputState(event, nsEvent, 0);
+    }
 	sendEvent(eventType, event, send);
 }
 
@@ -1793,7 +1873,9 @@ void setIsStyledText() {
  */
 public void setData (String key, Object value) {
 	checkWidget();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (GLCONTEXT_KEY.equals (key)) {
 		setOpenGLContext(value);
 		return;
@@ -1803,7 +1885,9 @@ public void setData (String key, Object value) {
 	if ((state & KEYED_DATA) != 0) {
 		table = (Object []) data;
 		while (index < table.length) {
-			if (key.equals (table [index])) break;
+            if (key.equals(table [index])) {
+                break;
+            }
 			index += 2;
 		}
 	}
@@ -1838,7 +1922,9 @@ public void setData (String key, Object value) {
 			}
 		}
 	}
-	if (key.equals(SWT.SKIN_CLASS) || key.equals(SWT.SKIN_ID)) this.reskin(SWT.ALL);
+    if (key.equals(SWT.SKIN_CLASS) || key.equals(SWT.SKIN_ID)) {
+        this.reskin(SWT.ALL);
+    }
 }
 
 void setOpenGLContext(Object value) {
@@ -1867,49 +1953,105 @@ void setImage (long id, long sel, long arg0) {
 boolean setInputState (Event event, NSEvent nsEvent, int type) {
 	if (nsEvent == null) {
 		nsEvent = NSApplication.sharedApplication().currentEvent();
-		if (nsEvent == null) return true;
+        if (nsEvent == null) {
+            return true;
+        }
 	}
 	long modifierFlags = nsEvent.modifierFlags();
-	if ((modifierFlags & OS.NSAlternateKeyMask) != 0) event.stateMask |= SWT.ALT;
-	if ((modifierFlags & OS.NSEventModifierFlagShift) != 0) event.stateMask |= SWT.SHIFT;
-	if ((modifierFlags & OS.NSEventModifierFlagControl) != 0) event.stateMask |= SWT.CONTROL;
-	if ((modifierFlags & OS.NSEventModifierFlagCommand) != 0) event.stateMask |= SWT.COMMAND;
+    if ((modifierFlags & OS.NSAlternateKeyMask) != 0) {
+        event.stateMask |= SWT.ALT;
+    }
+    if ((modifierFlags & OS.NSEventModifierFlagShift) != 0) {
+        event.stateMask |= SWT.SHIFT;
+    }
+    if ((modifierFlags & OS.NSEventModifierFlagControl) != 0) {
+        event.stateMask |= SWT.CONTROL;
+    }
+    if ((modifierFlags & OS.NSEventModifierFlagCommand) != 0) {
+        event.stateMask |= SWT.COMMAND;
+    }
 
 	long state = NSEvent.pressedMouseButtons();
-	if ((state & 0x1) != 0) event.stateMask |= SWT.BUTTON1;
-	if ((state & 0x2) != 0) event.stateMask |= SWT.BUTTON3;
-	if ((state & 0x4) != 0) event.stateMask |= SWT.BUTTON2;
-	if ((state & 0x8) != 0) event.stateMask |= SWT.BUTTON4;
-	if ((state & 0x10) != 0) event.stateMask |= SWT.BUTTON5;
+    if ((state & 0x1) != 0) {
+        event.stateMask |= SWT.BUTTON1;
+    }
+    if ((state & 0x2) != 0) {
+        event.stateMask |= SWT.BUTTON3;
+    }
+    if ((state & 0x4) != 0) {
+        event.stateMask |= SWT.BUTTON2;
+    }
+    if ((state & 0x8) != 0) {
+        event.stateMask |= SWT.BUTTON4;
+    }
+    if ((state & 0x10) != 0) {
+        event.stateMask |= SWT.BUTTON5;
+    }
 
 	switch (type) {
 		case SWT.MouseDown:
 		case SWT.MouseDoubleClick:
-			if (event.button == 1) event.stateMask &= ~SWT.BUTTON1;
-			if (event.button == 2) event.stateMask &= ~SWT.BUTTON2;
-			if (event.button == 3) event.stateMask &= ~SWT.BUTTON3;
-			if (event.button == 4) event.stateMask &= ~SWT.BUTTON4;
-			if (event.button == 5) event.stateMask &= ~SWT.BUTTON5;
+            if (event.button == 1) {
+                event.stateMask &= ~SWT.BUTTON1;
+            }
+            if (event.button == 2) {
+                event.stateMask &= ~SWT.BUTTON2;
+            }
+            if (event.button == 3) {
+                event.stateMask &= ~SWT.BUTTON3;
+            }
+            if (event.button == 4) {
+                event.stateMask &= ~SWT.BUTTON4;
+            }
+            if (event.button == 5) {
+                event.stateMask &= ~SWT.BUTTON5;
+            }
 			break;
 		case SWT.MouseUp:
-			if (event.button == 1) event.stateMask |= SWT.BUTTON1;
-			if (event.button == 2) event.stateMask |= SWT.BUTTON2;
-			if (event.button == 3) event.stateMask |= SWT.BUTTON3;
-			if (event.button == 4) event.stateMask |= SWT.BUTTON4;
-			if (event.button == 5) event.stateMask |= SWT.BUTTON5;
+            if (event.button == 1) {
+                event.stateMask |= SWT.BUTTON1;
+            }
+            if (event.button == 2) {
+                event.stateMask |= SWT.BUTTON2;
+            }
+            if (event.button == 3) {
+                event.stateMask |= SWT.BUTTON3;
+            }
+            if (event.button == 4) {
+                event.stateMask |= SWT.BUTTON4;
+            }
+            if (event.button == 5) {
+                event.stateMask |= SWT.BUTTON5;
+            }
 			break;
 		case SWT.KeyDown:
 		case SWT.Traverse:
-			if (event.keyCode == SWT.ALT) event.stateMask &= ~SWT.ALT;
-			if (event.keyCode == SWT.SHIFT) event.stateMask &= ~SWT.SHIFT;
-			if (event.keyCode == SWT.CONTROL) event.stateMask &= ~SWT.CONTROL;
-			if (event.keyCode == SWT.COMMAND) event.stateMask &= ~SWT.COMMAND;
+            if (event.keyCode == SWT.ALT) {
+                event.stateMask &= ~SWT.ALT;
+            }
+            if (event.keyCode == SWT.SHIFT) {
+                event.stateMask &= ~SWT.SHIFT;
+            }
+            if (event.keyCode == SWT.CONTROL) {
+                event.stateMask &= ~SWT.CONTROL;
+            }
+            if (event.keyCode == SWT.COMMAND) {
+                event.stateMask &= ~SWT.COMMAND;
+            }
 			break;
 		case SWT.KeyUp:
-			if (event.keyCode == SWT.ALT) event.stateMask |= SWT.ALT;
-			if (event.keyCode == SWT.SHIFT) event.stateMask |= SWT.SHIFT;
-			if (event.keyCode == SWT.CONTROL) event.stateMask |= SWT.CONTROL;
-			if (event.keyCode == SWT.COMMAND) event.stateMask |= SWT.COMMAND;
+            if (event.keyCode == SWT.ALT) {
+                event.stateMask |= SWT.ALT;
+            }
+            if (event.keyCode == SWT.SHIFT) {
+                event.stateMask |= SWT.SHIFT;
+            }
+            if (event.keyCode == SWT.CONTROL) {
+                event.stateMask |= SWT.CONTROL;
+            }
+            if (event.keyCode == SWT.COMMAND) {
+                event.stateMask |= SWT.COMMAND;
+            }
 			break;
 	}
 	return true;
@@ -1926,7 +2068,9 @@ private int calculateKeycode(Event event, NSEvent nsEvent) {
 		// KCHR keyboard layouts are no longer supported, so fall back to the basic but flawed
 		// method of determining which key was pressed.
 		NSString unmodifiedChars = nsEvent.charactersIgnoringModifiers ().lowercaseString();
-		if (unmodifiedChars.length() == 0) return 0;
+        if (unmodifiedChars.length() == 0) {
+            return 0;
+        }
 		return unmodifiedChars.characterAtIndex(0);
 	}
 
@@ -1965,8 +2109,10 @@ private int calculateKeycode(Event event, NSEvent nsEvent) {
 		}
 	}
 
-	// If nothing worked, return values from the last tested modifiers
-	if (actualStringLength[0] < 1) return 0;
+    // If nothing worked, return values from the last tested modifiers
+    if (actualStringLength[0] < 1) {
+        return 0;
+    }
 	return unicodeString[0];
 }
 
@@ -2071,14 +2217,18 @@ boolean setKeyState (Event event, int type, NSEvent nsEvent) {
 		default:
 			if (event.keyCode == 0 || (SWT.KEYPAD_MULTIPLY <= event.keyCode && event.keyCode <= SWT.KEYPAD_CR)) {
 				NSString chars = nsEvent.characters ();
-				if (chars != null && chars.length() > 0) event.character = (char)chars.characterAtIndex (0);
+                if (chars != null && chars.length() > 0) {
+                    event.character = (char) chars.characterAtIndex(0);
+                }
 			}
 			if (event.keyCode == 0) {
 				event.keyCode = calculateKeycode(event, nsEvent);
 			}
 	}
 	if (event.keyCode == 0 && event.character == 0) {
-		if (!isNull) return false;
+        if (!isNull) {
+            return false;
+        }
 	}
 	setLocationMask (event, nsEvent);
 	setInputState (event, nsEvent, type);
@@ -2126,7 +2276,9 @@ boolean setMarkedText_selectedRange (long id, long sel, long string, long range)
 }
 
 void setNeedsDisplay (long id, long sel, boolean flag) {
-	if (flag && !isDrawing()) return;
+    if (flag && !isDrawing()) {
+        return;
+    }
 	NSView view = new NSView(id);
 	/*
 	* Since macOS 14 the clipsToBounds property of NSView has to be set to true
@@ -2149,7 +2301,9 @@ void setNeedsDisplay (long id, long sel, boolean flag) {
 }
 
 void setNeedsDisplayInRect (long id, long sel, long arg0) {
-	if (!isDrawing()) return;
+    if (!isDrawing()) {
+        return;
+    }
 	NSRect rect = new NSRect();
 	OS.memmove(rect, arg0, NSRect.sizeof);
 	NSView view = new NSView(id);
@@ -2308,7 +2462,9 @@ public String toString () {
 	String string = "*Disposed*";
 	if (!isDisposed ()) {
 		string = "*Wrong Thread*";
-		if (isValidThread ()) string = getNameText ();
+        if (isValidThread()) {
+            string = getNameText();
+        }
 	}
 	return getName () + " {" + string + "}";
 }

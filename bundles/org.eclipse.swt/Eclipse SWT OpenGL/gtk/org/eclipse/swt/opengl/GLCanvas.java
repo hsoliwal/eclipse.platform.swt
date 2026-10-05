@@ -52,12 +52,18 @@ public class GLCanvas extends Canvas {
  */
 public GLCanvas (Composite parent, int style, GLData data) {
 	super (parent, style);
-	if (data == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (data == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int glxAttrib [] = new int [MAX_ATTRIBUTES];
 	int pos = 0;
 	glxAttrib [pos++] = GLX.GLX_RGBA;
-	if (data.doubleBuffer) glxAttrib [pos++] = GLX.GLX_DOUBLEBUFFER;
-	if (data.stereo) glxAttrib [pos++] = GLX.GLX_STEREO;
+    if (data.doubleBuffer) {
+        glxAttrib [pos++] = GLX.GLX_DOUBLEBUFFER;
+    }
+    if (data.stereo) {
+        glxAttrib [pos++] = GLX.GLX_STEREO;
+    }
 	if (data.redSize > 0) {
 		glxAttrib [pos++] = GLX.GLX_RED_SIZE;
 		glxAttrib [pos++] = data.redSize;
@@ -123,7 +129,9 @@ public GLCanvas (Composite parent, int style, GLData data) {
 	long gdkvisual = GDK.gdk_x11_screen_lookup_visual (screen, vinfo.visualid);
 	long share = data.shareContext != null ? data.shareContext.context : 0;
 	context = GLX.glXCreateContext (xDisplay, vinfo, share, true);
-	if (context == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (context == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	GdkWindowAttr attrs = new GdkWindowAttr ();
 	attrs.width = 1;
 	attrs.height = 1;
@@ -262,7 +270,9 @@ public boolean isCurrent () {
  */
 public void setCurrent () {
 	checkWidget ();
-	if (GLX.glXGetCurrentContext () == context) return;
+    if (GLX.glXGetCurrentContext() == context) {
+        return;
+    }
 	long window = GTK3.gtk_widget_get_window (handle);
 	long xDisplay = gdk_x11_display_get_xdisplay (window);
 	GLX.glXMakeCurrent (xDisplay, xWindow, context);

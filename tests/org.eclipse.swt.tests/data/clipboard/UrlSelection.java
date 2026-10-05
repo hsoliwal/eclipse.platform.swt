@@ -60,8 +60,9 @@ class UrlSelection implements Transferable {
 
 	@Override
 	public Object getTransferData(DataFlavor f) throws UnsupportedFlavorException {
-		if (f.equals(flavor))
-			return new ByteArrayInputStream(url);
+        if (f.equals(flavor)) {
+            return new ByteArrayInputStream(url);
+        }
 		throw new UnsupportedFlavorException(f);
 	}
 

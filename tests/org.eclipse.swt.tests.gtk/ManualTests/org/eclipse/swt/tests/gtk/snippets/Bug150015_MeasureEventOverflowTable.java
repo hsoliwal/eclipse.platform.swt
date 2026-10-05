@@ -32,7 +32,9 @@ public class Bug150015_MeasureEventOverflowTable {
 		});
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

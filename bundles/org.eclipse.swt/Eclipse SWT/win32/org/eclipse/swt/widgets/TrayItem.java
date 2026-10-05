@@ -139,7 +139,9 @@ public void addMenuDetectListener (MenuDetectListener listener) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 void createUpdateWidget (boolean newIcon) {
@@ -286,8 +288,10 @@ long messageProc (long hwnd, int msg, long wParam, long lParam) {
 			if (hooks (SWT.MenuDetect)) {
 				OS.SetForegroundWindow (hwnd);
 				sendEvent (SWT.MenuDetect);
-				// widget could be disposed at this point
-				if (isDisposed()) return 0;
+                // widget could be disposed at this point
+                if (isDisposed()) {
+                    return 0;
+                }
 			}
 			break;
 		}
@@ -297,8 +301,10 @@ long messageProc (long hwnd, int msg, long wParam, long lParam) {
 				if (toolTip.hooks (SWT.Show)) {
 					OS.SetForegroundWindow (hwnd);
 					toolTip.sendEvent (SWT.Show);
-					// widget could be disposed at this point
-					if (isDisposed()) return 0;
+                    // widget could be disposed at this point
+                    if (isDisposed()) {
+                        return 0;
+                    }
 				}
 			}
 			break;
@@ -311,16 +317,20 @@ long messageProc (long hwnd, int msg, long wParam, long lParam) {
 					if (toolTip.hooks (SWT.Hide)) {
 						OS.SetForegroundWindow (hwnd);
 						toolTip.sendEvent (SWT.Hide);
-						// widget could be disposed at this point
-						if (isDisposed()) return 0;
+                        // widget could be disposed at this point
+                        if (isDisposed()) {
+                            return 0;
+                        }
 					}
 				}
 				if (lParam == OS.NIN_BALLOONUSERCLICK) {
 					if (toolTip.hooks (SWT.Selection)) {
 						OS.SetForegroundWindow (hwnd);
 						toolTip.sendSelectionEvent (SWT.Selection);
-						// widget could be disposed at this point
-						if (isDisposed()) return 0;
+                        // widget could be disposed at this point
+                        if (isDisposed()) {
+                            return 0;
+                        }
 					}
 				}
 			}
@@ -332,10 +342,18 @@ long messageProc (long hwnd, int msg, long wParam, long lParam) {
 
 void recreate () {
 	createUpdateWidget (false);
-	if (!visible) setVisible (false);
-	if (text.length () != 0) setText (text);
-	if (image != null) setImage (image);
-	if (toolTipText != null) setToolTipText (toolTipText);
+    if (!visible) {
+        setVisible(false);
+    }
+    if (text.length() != 0) {
+        setText(text);
+    }
+    if (image != null) {
+        setImage(image);
+    }
+    if (toolTipText != null) {
+        setToolTipText(toolTipText);
+    }
 }
 
 @Override
@@ -347,9 +365,13 @@ void releaseHandle () {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (toolTip != null) toolTip.item = null;
+    if (toolTip != null) {
+        toolTip.item = null;
+    }
 	toolTip = null;
-	if (image2 != null) image2.dispose ();
+    if (image2 != null) {
+        image2.dispose();
+    }
 	image2 = null;
 	highlightImage = null;
 	toolTipText = null;
@@ -379,8 +401,12 @@ void releaseWidget () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -407,8 +433,12 @@ public void removeSelectionListener(SelectionListener listener) {
  */
 public void removeMenuDetectListener (MenuDetectListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.MenuDetect, listener);
 }
 
@@ -429,7 +459,9 @@ public void removeMenuDetectListener (MenuDetectListener listener) {
  */
 public void setHighlightImage (Image image) {
 	checkWidget ();
-	if (image != null && image.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	highlightImage = image;
 }
 
@@ -449,9 +481,13 @@ public void setHighlightImage (Image image) {
 @Override
 public void setImage (Image image) {
 	checkWidget ();
-	if (image != null && image.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	super.setImage (image);
-	if (image2 != null) image2.dispose ();
+    if (image2 != null) {
+        image2.dispose();
+    }
 	image2 = null;
 	long hIcon = 0;
 	Image icon = image;
@@ -491,9 +527,13 @@ public void setImage (Image image) {
 public void setToolTip (ToolTip toolTip) {
 	checkWidget ();
 	ToolTip oldTip = this.toolTip, newTip = toolTip;
-	if (oldTip != null) oldTip.item = null;
+    if (oldTip != null) {
+        oldTip.item = null;
+    }
 	this.toolTip = newTip;
-	if (newTip != null) newTip.item = this;
+    if (newTip != null) {
+        newTip.item = this;
+    }
 }
 
 /**
@@ -550,7 +590,9 @@ public void setToolTipText (String string) {
  */
 public void setVisible (boolean visible) {
 	checkWidget ();
-	if (this.visible == visible) return;
+    if (this.visible == visible) {
+        return;
+    }
 	if (visible) {
 		/*
 		* It is possible (but unlikely), that application
@@ -558,7 +600,9 @@ public void setVisible (boolean visible) {
 		* event.  If this happens, just return.
 		*/
 		sendEvent (SWT.Show);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 	}
 	this.visible = visible;
 	NOTIFYICONDATA iconData = new NOTIFYICONDATA ();
@@ -569,7 +613,9 @@ public void setVisible (boolean visible) {
 	iconData.dwState = visible ? 0 : OS.NIS_HIDDEN;
 	iconData.dwStateMask = OS.NIS_HIDDEN;
 	OS.Shell_NotifyIcon (OS.NIM_MODIFY, iconData);
-	if (!visible) sendEvent (SWT.Hide);
+    if (!visible) {
+        sendEvent(SWT.Hide);
+    }
 }
 
 }

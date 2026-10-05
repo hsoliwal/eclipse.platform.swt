@@ -257,7 +257,9 @@ public class ColorMenu {
 	 */
 	private Image loadImage(Display display, String name, List<Image> resources) {
 		Image image = GraphicsExample.loadImage(display, GraphicsExample.class, name);
-		if (image != null) resources.add(image);
+        if (image != null) {
+            resources.add(image);
+        }
 		return image;
 	}
 
@@ -311,11 +313,19 @@ public class ColorMenu {
 						dialog.setRGB(customColor.getRGB());
 					}
 					RGB rgb = dialog.open();
-					if (rgb == null) return;
+                    if (rgb == null) {
+                        return;
+                    }
 					customColor = new Color(rgb);
-					if (customPatternMI != null) customPatternMI.setImage(null);
-					if (customGradientMI != null) customGradientMI.setImage(null);
-					if (customImage != null) customImage.dispose();
+                    if (customPatternMI != null) {
+                        customPatternMI.setImage(null);
+                    }
+                    if (customGradientMI != null) {
+                        customGradientMI.setImage(null);
+                    }
+                    if (customImage != null) {
+                        customImage.dispose();
+                    }
 					customImage = GraphicsExample.createImage(display, customColor);
 					GraphicsBackground gb = new GraphicsBackground();
 					gb.setBgImage(customImage);
@@ -328,11 +338,21 @@ public class ColorMenu {
 					FileDialog dialog = new FileDialog(parent.getShell());
 					dialog.setFilterExtensions(new String[] { "*.jpg", "*.gif",	"*.*" });
 					String name = dialog.open();
-					if (name == null) return;
-					if (customColorMI != null) customColorMI.setImage(null);
-					if (customGradientMI != null) customGradientMI.setImage(null);
-					if (customImage != null) customImage.dispose();
-					if (customImageThumb != null) customImageThumb.dispose();
+                    if (name == null) {
+                        return;
+                    }
+                    if (customColorMI != null) {
+                        customColorMI.setImage(null);
+                    }
+                    if (customGradientMI != null) {
+                        customGradientMI.setImage(null);
+                    }
+                    if (customImage != null) {
+                        customImage.dispose();
+                    }
+                    if (customImageThumb != null) {
+                        customImageThumb.dispose();
+                    }
 					customImage = new Image(display, name);
 					customImageThumb = GraphicsExample.createThumbnail(display, name);
 					GraphicsBackground gb = new GraphicsBackground();
@@ -344,18 +364,30 @@ public class ColorMenu {
 				} else if (customGradientMI == item) {
 					GradientDialog dialog = new GradientDialog(parent.getShell());
 					if (background != null) {
-						if (background.getBgColor1() != null)
-							dialog.setFirstRGB(background.getBgColor1().getRGB());
-						if (background.getBgColor2() != null)
-							dialog.setSecondRGB(background.getBgColor2().getRGB());
+                        if (background.getBgColor1() != null) {
+                            dialog.setFirstRGB(background.getBgColor1().getRGB());
+                        }
+                        if (background.getBgColor2() != null) {
+                            dialog.setSecondRGB(background.getBgColor2().getRGB());
+                        }
 					}
-					if (dialog.open() != SWT.OK) return;
+                    if (dialog.open() != SWT.OK) {
+                        return;
+                    }
 					Color colorA = new Color(dialog.getFirstRGB());
 					Color colorB = new Color(dialog.getSecondRGB());
-					if (colorA == null || colorB == null) return;
-					if (customColorMI != null) customColorMI.setImage(null);
-					if (customPatternMI != null) customPatternMI.setImage(null);
-					if (customImage != null) customImage.dispose();
+                    if (colorA == null || colorB == null) {
+                        return;
+                    }
+                    if (customColorMI != null) {
+                        customColorMI.setImage(null);
+                    }
+                    if (customPatternMI != null) {
+                        customPatternMI.setImage(null);
+                    }
+                    if (customImage != null) {
+                        customImage.dispose();
+                    }
 					customImage = GraphicsExample.createImage(display, colorA,
 							colorB, 16, 16);
 					GraphicsBackground gb = new GraphicsBackground();
@@ -367,9 +399,15 @@ public class ColorMenu {
 					item.setImage(customImage);
 					resourceImages.add(customImage);
 				} else {
-					if (customColorMI != null) customColorMI.setImage(null);
-					if (customPatternMI != null) customPatternMI.setImage(null);
-					if (customGradientMI != null) customGradientMI.setImage(null);
+                    if (customColorMI != null) {
+                        customColorMI.setImage(null);
+                    }
+                    if (customPatternMI != null) {
+                        customPatternMI.setImage(null);
+                    }
+                    if (customGradientMI != null) {
+                        customGradientMI.setImage(null);
+                    }
 				}
 				background = (GraphicsBackground) item.getData();
 				colorListener.setColor(background);

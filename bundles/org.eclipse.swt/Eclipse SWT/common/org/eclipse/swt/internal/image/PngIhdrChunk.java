@@ -68,7 +68,9 @@ PngIhdrChunk(int width, int height, byte bitDepth, byte colorType, byte compress
  */
 PngIhdrChunk(byte[] reference) {
 	super(reference);
-	if (reference.length <= IHDR_DATA_LENGTH) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (reference.length <= IHDR_DATA_LENGTH) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	width = getInt32(WIDTH_DATA_OFFSET);
 	height = getInt32(HEIGHT_DATA_OFFSET);
 	bitDepth = reference[BIT_DEPTH_OFFSET];
@@ -215,8 +217,12 @@ void validate(PngFileReadState readState, PngIhdrChunk headerChunk) {
 
 	super.validate(readState, headerChunk);
 
-	if (length != IHDR_DATA_LENGTH) SWT.error(SWT.ERROR_INVALID_IMAGE);
-	if (compressionMethod != 0) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (length != IHDR_DATA_LENGTH) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
+    if (compressionMethod != 0) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	if (interlaceMethod != INTERLACE_METHOD_NONE &&
 		interlaceMethod != INTERLACE_METHOD_ADAM7) {
 			SWT.error(SWT.ERROR_INVALID_IMAGE);
@@ -229,7 +235,9 @@ void validate(PngFileReadState readState, PngIhdrChunk headerChunk) {
 			break;
 		}
 	}
-	if (!colorTypeIsValid) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (!colorTypeIsValid) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 
 	boolean bitDepthIsValid = false;
 	for (byte validBitDepth : ValidBitDepths) {
@@ -238,7 +246,9 @@ void validate(PngFileReadState readState, PngIhdrChunk headerChunk) {
 			break;
 		}
 	}
-	if (!bitDepthIsValid) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (!bitDepthIsValid) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 
 	if ((colorType == COLOR_TYPE_RGB
 		|| colorType == COLOR_TYPE_RGB_WITH_ALPHA
@@ -343,7 +353,9 @@ int getSwtBitsPerPixel() {
 }
 
 int getFilterByteOffset() {
-	if (bitDepth < 8) return 1;
+    if (bitDepth < 8) {
+        return 1;
+    }
 	return getBitsPerPixel() / 8;
 }
 

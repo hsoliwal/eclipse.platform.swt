@@ -52,7 +52,9 @@ public class DragSourceEffect extends DragSourceAdapter {
 	 * </ul>
 	 */
 	public DragSourceEffect(Control control) {
-		if (control == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (control == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		this.control = control;
 	}
 

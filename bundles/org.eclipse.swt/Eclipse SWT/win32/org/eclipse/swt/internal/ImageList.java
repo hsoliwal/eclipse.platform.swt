@@ -36,7 +36,9 @@ public ImageList (int style, int zoom) {
 public ImageList (int style, int width, int height, int zoom) {
 	this.style = style;
 	int listFlags = OS.ILC_MASK | OS.ILC_COLOR32;
-	if ((style & SWT.RIGHT_TO_LEFT) != 0) listFlags |= OS.ILC_MIRROR;
+    if ((style & SWT.RIGHT_TO_LEFT) != 0) {
+        listFlags |= OS.ILC_MIRROR;
+    }
 	this.flags = listFlags;
 	this.height = height;
 	this.width = width;
@@ -52,7 +54,9 @@ public int add (Image image) {
 	int index = 0;
 	while (index < count) {
 		Image imageAtIndex = getOrClearIfDisposed(index);
-		if (imageAtIndex == null) break;
+        if (imageAtIndex == null) {
+            break;
+        }
 		index++;
 	}
 	put (index, image);
@@ -159,7 +163,9 @@ long copyWithAlpha (long hBitmap, int background, byte[] alphaData, int destWidt
 	OS.MoveMemory (bmi, bmiHeader, BITMAPINFOHEADER.sizeof);
 	long [] pBits = new long [1];
 	long memDib = OS.CreateDIBSection (0, bmi, OS.DIB_RGB_COLORS, pBits, 0, 0);
-	if (memDib == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+    if (memDib == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	long oldMemBitmap = OS.SelectObject (memHdc, memDib);
 
 	BITMAP dibBM = new BITMAP ();
@@ -315,8 +321,10 @@ long createMask (long hBitmap, int destWidth, int destHeight, int background, in
 		}
 		OS.DeleteDC (hdc2);
 
-		/* Put back the original palette */
-		if (originalColors != null) OS.SetDIBColorTable(hdc1, 0, 1 << bm.bmBitsPixel, originalColors);
+        /* Put back the original palette */
+        if (originalColors != null) {
+            OS.SetDIBColorTable(hdc1, 0, 1 << bm.bmBitsPixel, originalColors);
+        }
 	} else {
 		long hOldBitmap = OS.SelectObject (hdc1, hMask);
 		OS.PatBlt (hdc1, 0, 0, destWidth, destHeight, OS.BLACKNESS);
@@ -359,9 +367,13 @@ public long getHandle(int targetZoom) {
 
 private void addPlaceholderImageToImageList(long imageListHandle, int bitmapWidth, int bitmapHeight) {
 	long hDC = OS.GetDC (0);
-	if (hDC == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (hDC == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	long placeholderBitmapHandle = OS.CreateCompatibleBitmap(hDC, bitmapWidth, bitmapHeight);
-	if (placeholderBitmapHandle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (placeholderBitmapHandle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.ImageList_Add(imageListHandle, placeholderBitmapHandle, placeholderBitmapHandle);
 	OS.DeleteObject(placeholderBitmapHandle);
 	OS.ReleaseDC(0, hDC);
@@ -397,14 +409,20 @@ public int indexOf (Image image) {
  * outside the list's current size.
  */
 public void put (int index, Image image) {
-	if ((0 <= index && index < images.length) && (images [index] == image)) return;
+    if ((0 <= index && index < images.length) && (images [index] == image)) {
+        return;
+    }
 	int count = OS.ImageList_GetImageCount (handle);
 	if (index == count && image != null) {
 		append (index, image, count);
 		return;
 	}
-	if (!(0 <= index && index < count)) return;
-	if (image != null) setForAllHandles(index, image, count);
+    if (!(0 <= index && index < count)) {
+        return;
+    }
+    if (image != null) {
+        setForAllHandles(index, image, count);
+    }
 	images [index] = image;
 }
 
@@ -459,14 +477,18 @@ void set (int index, Image image, int count, long listHandle, int zoom) {
 				case SWT.TRANSPARENCY_PIXEL:
 					int background = -1;
 					Color color = image.getBackground ();
-					if (color != null) background = color.handle;
+                    if (color != null) {
+                        background = color.handle;
+                    }
 					hBitmap = copyBitmap (hImage, cx [0], cy [0]);
 					hMask = createMask (hImage, cx [0], cy [0], background, data.transparentPixel);
 					break;
 				case SWT.TRANSPARENCY_NONE:
 				default:
 					hBitmap = copyBitmap (hImage, cx [0], cy [0]);
-					if (index != count) hMask = createMask (hImage, cx [0], cy [0], -1, -1);
+                    if (index != count) {
+                        hMask = createMask(hImage, cx [0], cy [0], -1, -1);
+                    }
 					break;
 			}
 			if (index == count) {
@@ -475,8 +497,12 @@ void set (int index, Image image, int count, long listHandle, int zoom) {
 				/* Note that the mask must always be replaced even for TRANSPARENCY_NONE */
 				OS.ImageList_Replace (listHandle, index, hBitmap, hMask);
 			}
-			if (hMask != 0) OS.DeleteObject (hMask);
-			if (hBitmap != hImage) OS.DeleteObject (hBitmap);
+            if (hMask != 0) {
+                OS.DeleteObject(hMask);
+            }
+            if (hBitmap != hImage) {
+                OS.DeleteObject(hBitmap);
+            }
 			break;
 		}
 		case SWT.ICON: {

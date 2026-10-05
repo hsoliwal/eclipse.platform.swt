@@ -106,8 +106,12 @@ static int checkStyle (int style) {
 
 @Override
 void addRelation (Control control) {
-	if (!control.isDescribedByLabel ()) return;
-	if (labelHandle == 0) return;
+    if (!control.isDescribedByLabel()) {
+        return;
+    }
+    if (labelHandle == 0) {
+        return;
+    }
 	control._getAccessible().addRelation(ACC.RELATION_LABELLED_BY, _getAccessible());
 	control.labelRelation = this;
 }
@@ -136,13 +140,21 @@ Point computeNativeSize (long h, int wHint, int hHint, boolean changed) {
 @Override
 Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	checkWidget ();
-	if (wHint != SWT.DEFAULT && wHint < 0) wHint = 0;
-	if (hHint != SWT.DEFAULT && hHint < 0) hHint = 0;
+    if (wHint != SWT.DEFAULT && wHint < 0) {
+        wHint = 0;
+    }
+    if (hHint != SWT.DEFAULT && hHint < 0) {
+        hHint = 0;
+    }
 	if ((style & SWT.SEPARATOR) != 0) {
 		if ((style & SWT.HORIZONTAL) != 0) {
-			if (wHint == SWT.DEFAULT) wHint = DEFAULT_WIDTH;
+            if (wHint == SWT.DEFAULT) {
+                wHint = DEFAULT_WIDTH;
+            }
 		} else {
-			if (hHint == SWT.DEFAULT) hHint = DEFAULT_HEIGHT;
+            if (hHint == SWT.DEFAULT) {
+                hHint = DEFAULT_HEIGHT;
+            }
 		}
 	}
 	Point size;
@@ -152,7 +164,9 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	* to calculate its preferred size.
 	*/
 	boolean fixWrap = labelHandle != 0 && (style & SWT.WRAP) != 0 && GTK.gtk_widget_get_visible (labelHandle);
-	if (fixWrap || frameHandle != 0) forceResize ();
+    if (fixWrap || frameHandle != 0) {
+        forceResize();
+    }
 	if (fixWrap) {
 		long labelLayout = GTK.gtk_label_get_layout (labelHandle);
 		int pangoWidth = OS.pango_layout_get_width (labelLayout);
@@ -227,8 +241,12 @@ void createHandle (int index) {
 	state |= HANDLE | THEME_BACKGROUND;
 
 	fixedHandle = OS.g_object_new(display.gtk_fixed_get_type(), 0);
-	if (fixedHandle == 0) error(SWT.ERROR_NO_HANDLES);
-	if (!GTK.GTK4) GTK3.gtk_widget_set_has_window(fixedHandle, true);
+    if (fixedHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
+    if (!GTK.GTK4) {
+        GTK3.gtk_widget_set_has_window(fixedHandle, true);
+    }
 
 	if ((style & SWT.SEPARATOR) != 0) {
 		if ((style & SWT.HORIZONTAL)!= 0) {
@@ -242,17 +260,25 @@ void createHandle (int index) {
 				GTK.gtk_widget_set_halign(handle, GTK.GTK_ALIGN_CENTER);
 			}
 		}
-		if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+        if (handle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 	} else {
 		if (GTK.GTK4) {
 			handle = gtk_box_new(GTK.GTK_ORIENTATION_HORIZONTAL, false, 0);
-			if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+            if (handle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 
 			labelHandle = GTK.gtk_label_new_with_mnemonic(null);
-			if (labelHandle == 0) error(SWT.ERROR_NO_HANDLES);
+            if (labelHandle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 
 			imageHandle = GTK4.gtk_picture_new();
-			if (imageHandle == 0) error(SWT.ERROR_NO_HANDLES);
+            if (imageHandle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 
 			GTK4.gtk_box_append(handle, labelHandle);
 			GTK4.gtk_box_append(handle, imageHandle);
@@ -260,16 +286,24 @@ void createHandle (int index) {
 			gtk_box_set_child_packing(handle, imageHandle, true, true, 0, GTK.GTK_PACK_START);
 		} else {
 			handle = GTK3.gtk_event_box_new();
-			if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+            if (handle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 
 			boxHandle = gtk_box_new(GTK.GTK_ORIENTATION_HORIZONTAL, false, 0);
-			if (boxHandle == 0) error(SWT.ERROR_NO_HANDLES);
+            if (boxHandle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 
 			labelHandle = GTK.gtk_label_new_with_mnemonic(null);
-			if (labelHandle == 0) error(SWT.ERROR_NO_HANDLES);
+            if (labelHandle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 
 			imageHandle = GTK.gtk_image_new();
-			if (imageHandle == 0) error(SWT.ERROR_NO_HANDLES);
+            if (imageHandle == 0) {
+                error(SWT.ERROR_NO_HANDLES);
+            }
 
 			GTK3.gtk_container_add(handle, boxHandle);
 			GTK3.gtk_container_add(boxHandle, labelHandle);
@@ -280,7 +314,9 @@ void createHandle (int index) {
 	}
 	if ((style & SWT.BORDER) != 0) {
 		frameHandle = GTK.gtk_frame_new (null);
-		if (frameHandle == 0) error (SWT.ERROR_NO_HANDLES);
+        if (frameHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		if (GTK.GTK4) {
 			OS.swt_fixed_add(fixedHandle, frameHandle);
 			GTK4.gtk_frame_set_child(frameHandle, handle);
@@ -296,7 +332,9 @@ void createHandle (int index) {
 			GTK3.gtk_container_add (fixedHandle, handle);
 		}
 	}
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	if ((style & SWT.WRAP) != 0) {
 		if (GTK.GTK4) {
 			GTK4.gtk_label_set_wrap(labelHandle, true);
@@ -321,10 +359,18 @@ void createWidget (int index) {
 @Override
 void deregister () {
 	super.deregister ();
-	if (frameHandle != 0) display.removeWidget (frameHandle);
-	if (labelHandle != 0) display.removeWidget (labelHandle);
-	if (imageHandle != 0) display.removeWidget (imageHandle);
-	if (boxHandle != 0) display.removeWidget (boxHandle);
+    if (frameHandle != 0) {
+        display.removeWidget(frameHandle);
+    }
+    if (labelHandle != 0) {
+        display.removeWidget(labelHandle);
+    }
+    if (imageHandle != 0) {
+        display.removeWidget(imageHandle);
+    }
+    if (boxHandle != 0) {
+        display.removeWidget(boxHandle);
+    }
 }
 
 @Override
@@ -356,10 +402,18 @@ long cssHandle () {
  */
 public int getAlignment () {
 	checkWidget ();
-	if ((style & SWT.SEPARATOR) != 0) return 0;
-	if ((style & SWT.LEFT) != 0) return SWT.LEFT;
-	if ((style & SWT.CENTER) != 0) return SWT.CENTER;
-	if ((style & SWT.RIGHT) != 0) return SWT.RIGHT;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return 0;
+    }
+    if ((style & SWT.LEFT) != 0) {
+        return SWT.LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        return SWT.CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        return SWT.RIGHT;
+    }
 	return SWT.LEFT;
 }
 
@@ -407,7 +461,9 @@ String getNameText () {
  */
 public String getText () {
 	checkWidget ();
-	if ((style & SWT.SEPARATOR) != 0) return "";
+    if ((style & SWT.SEPARATOR) != 0) {
+        return "";
+    }
 	return text;
 }
 
@@ -426,7 +482,9 @@ boolean isDescribedByLabel () {
 
 @Override
 boolean mnemonicHit (char key) {
-	if (labelHandle == 0) return false;
+    if (labelHandle == 0) {
+        return false;
+    }
 	boolean result = super.mnemonicHit (labelHandle, key);
 	if (result) {
 		Control control = this;
@@ -434,12 +492,16 @@ boolean mnemonicHit (char key) {
 			Control [] children = control.parent._getChildren ();
 			int index = 0;
 			while (index < children.length) {
-				if (children [index] == control) break;
+                if (children [index] == control) {
+                    break;
+                }
 				index++;
 			}
 			index++;
 			if (index < children.length) {
-				if (children [index].setFocus ()) return result;
+                if (children [index].setFocus()) {
+                    return result;
+                }
 			}
 			control = control.parent;
 		}
@@ -449,17 +511,27 @@ boolean mnemonicHit (char key) {
 
 @Override
 boolean mnemonicMatch (char key) {
-	if (labelHandle == 0) return false;
+    if (labelHandle == 0) {
+        return false;
+    }
 	return mnemonicMatch (labelHandle, key);
 }
 
 @Override
 void register () {
 	super.register ();
-	if (boxHandle != 0) display.addWidget (boxHandle, this);
-	if (frameHandle != 0) display.addWidget (frameHandle, this);
-	if (labelHandle != 0) display.addWidget (labelHandle, this);
-	if (imageHandle != 0) display.addWidget (imageHandle, this);
+    if (boxHandle != 0) {
+        display.addWidget(boxHandle, this);
+    }
+    if (frameHandle != 0) {
+        display.addWidget(frameHandle, this);
+    }
+    if (labelHandle != 0) {
+        display.addWidget(labelHandle, this);
+    }
+    if (imageHandle != 0) {
+        display.addWidget(imageHandle, this);
+    }
 }
 
 @Override
@@ -500,8 +572,12 @@ void resizeHandle (int width, int height) {
  */
 public void setAlignment (int alignment) {
 	checkWidget ();
-	if ((style & SWT.SEPARATOR) != 0) return;
-	if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) return;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
+    if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) {
+        return;
+    }
 	style &= ~(SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	style |= alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	setAlignment ();
@@ -552,7 +628,9 @@ int setBounds (int x, int y, int width, int height, boolean move, boolean resize
 	* won't draw properly.
 	*/
 	boolean fixWrap = resize && labelHandle != 0 && (style & SWT.WRAP) != 0;
-	if (fixWrap) GTK.gtk_widget_set_size_request (labelHandle, -1, -1);
+    if (fixWrap) {
+        GTK.gtk_widget_set_size_request(labelHandle, -1, -1);
+    }
 	int result = super.setBounds (x, y, width, height, move, resize);
 	/*
 	* Bug in GTK.  For some reason, when the label is
@@ -588,7 +666,9 @@ int setBounds (int x, int y, int width, int height, boolean move, boolean resize
 @Override
 void setFontDescription (long font) {
 	super.setFontDescription (font);
-	if (labelHandle != 0) setFontDescription (labelHandle, font);
+    if (labelHandle != 0) {
+        setFontDescription(labelHandle, font);
+    }
 
 	if (labelHandle != 0) {
 		// Bug 445801: Work around for computeSize not returning a different value after
@@ -605,8 +685,12 @@ void setFontDescription (long font) {
 void setForegroundGdkRGBA (GdkRGBA rgba) {
 	super.setForegroundGdkRGBA (rgba);
 	setForegroundGdkRGBA (fixedHandle, rgba);
-	if (labelHandle != 0) setForegroundGdkRGBA (labelHandle, rgba);
-	if (imageHandle != 0) setForegroundGdkRGBA (imageHandle, rgba);
+    if (labelHandle != 0) {
+        setForegroundGdkRGBA(labelHandle, rgba);
+    }
+    if (imageHandle != 0) {
+        setForegroundGdkRGBA(imageHandle, rgba);
+    }
 }
 
 @Override
@@ -614,8 +698,12 @@ void setOrientation (boolean create) {
 	super.setOrientation (create);
 	if ((style & SWT.RIGHT_TO_LEFT) != 0 || !create) {
 		int dir = (style & SWT.RIGHT_TO_LEFT) != 0 ? GTK.GTK_TEXT_DIR_RTL : GTK.GTK_TEXT_DIR_LTR;
-		if (labelHandle != 0) GTK.gtk_widget_set_direction (labelHandle, dir);
-		if (imageHandle != 0) GTK.gtk_widget_set_direction (imageHandle, dir);
+        if (labelHandle != 0) {
+            GTK.gtk_widget_set_direction(labelHandle, dir);
+        }
+        if (imageHandle != 0) {
+            GTK.gtk_widget_set_direction(imageHandle, dir);
+        }
 	}
 }
 
@@ -638,7 +726,9 @@ public void setImage (Image image) {
 	if (image != null && image.isDisposed ()) {
 		error(SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	this.image = image;
 	if (image != null) {
 		if (GTK.GTK4) {
@@ -699,8 +789,12 @@ public void setImage (Image image) {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	text = string;
 	char [] chars = fixMnemonic (string);
 	byte [] buffer = Converter.wcsToMbcs (chars, true);
@@ -718,9 +812,15 @@ void setWidgetBackground  () {
 @Override
 void showWidget () {
 	super.showWidget ();
-	if (frameHandle != 0) gtk_widget_show (frameHandle);
-	if (labelHandle != 0) gtk_widget_show (labelHandle);
-	if (boxHandle != 0) gtk_widget_show (boxHandle);
+    if (frameHandle != 0) {
+        gtk_widget_show(frameHandle);
+    }
+    if (labelHandle != 0) {
+        gtk_widget_show(labelHandle);
+    }
+    if (boxHandle != 0) {
+        gtk_widget_show(boxHandle);
+    }
 }
 
 @Override
