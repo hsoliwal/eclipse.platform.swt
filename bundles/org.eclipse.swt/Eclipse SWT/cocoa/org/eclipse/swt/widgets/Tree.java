@@ -2013,6 +2013,12 @@ public TreeItem getItem (Point point) {
 	NSPoint pt = new NSPoint();
 	pt.x = point.x;
 	pt.y = point.y;
+	NSTableHeaderView tableHeader = widget.headerView ();
+	if (tableHeader != null) {
+		double headerHeight = tableHeader.bounds ().height;
+		if (pt.y < headerHeight) return null;
+		pt.y -= headerHeight;
+	}
 	NSView clipView = scrollView.contentView ();
 	if (clipView != null) {
 		pt = widget.convertPoint_fromView_ (pt, clipView);
