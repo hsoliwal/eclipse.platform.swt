@@ -1791,8 +1791,8 @@ public void setItems (String [] items) {
 	checkWidget ();
 	list.setItems (items);
     if (!text.getEditable()) {
-        text.setText("");
-    } //$NON-NLS-1$
+        text.setText(""); //$NON-NLS-1$
+    }
 }
 /**
  * Sets the layout which is associated with the receiver to be

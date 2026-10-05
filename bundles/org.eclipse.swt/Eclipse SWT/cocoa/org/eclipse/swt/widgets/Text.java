@@ -1339,16 +1339,16 @@ public String getText () {
 public String getText (int start, int end) {
 	checkWidget ();
     if (!(start <= end && 0 <= end)) {
-        return "";
-    } //$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	if ((style & SWT.SINGLE) != 0) {
 		return new String (getEditText (start, end));
 	}
 	NSTextStorage storage = ((NSTextView) view).textStorage ();
 	end = Math.min (end, (int)storage.length () - 1);
     if (start > end) {
-        return "";
-    } //$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	start = Math.max (0, start);
 	NSRange range = new NSRange ();
 	range.location = start;

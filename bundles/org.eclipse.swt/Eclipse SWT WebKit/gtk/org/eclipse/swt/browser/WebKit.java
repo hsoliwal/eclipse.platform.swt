@@ -3002,8 +3002,8 @@ static Object gtk4_convertToJava(long jsc_value) {
 	} else if (WebKitGTK.jsc_value_is_string(jsc_value)) {
 		long string = WebKitGTK.jsc_value_to_string(jsc_value);
         if (string == 0) {
-            return "";
-        } //$NON-NLS-1$
+            return ""; //$NON-NLS-1$
+        }
 		return Converter.cCharPtrToJavaString(string, true);
 	} else if (WebKitGTK.jsc_value_is_null(jsc_value) || WebKitGTK.jsc_value_is_undefined(jsc_value)) {
 		return null;
@@ -3040,8 +3040,8 @@ static Object gtk3_convertToJava (long ctx, long value) {
 		case WebKitGTK.kJSTypeString: {
 			long string = WebKitGTK.JSValueToStringCopy (ctx, value, null);
             if (string == 0) {
-                return "";
-            } //$NON-NLS-1$
+                return ""; //$NON-NLS-1$
+            }
 			long length = WebKitGTK.JSStringGetMaximumUTF8CStringSize (string);
 			byte[] bytes = new byte[(int)length];
 			length = WebKitGTK.JSStringGetUTF8CString (string, bytes, length);

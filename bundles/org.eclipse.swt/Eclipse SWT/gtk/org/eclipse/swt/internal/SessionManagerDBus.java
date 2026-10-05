@@ -511,8 +511,8 @@ public class SessionManagerDBus {
 		// Still, I decided to make it customizable for those who love identity.
 		String appID = System.getProperty("org.eclipse.swt.internal.SessionManagerDBus.appID");	//$NON-NLS-1$
         if (appID == null) {
-            appID = "org.eclipse.swt.Application";
-        }	//$NON-NLS-1$
+            appID = "org.eclipse.swt.Application"; //$NON-NLS-1$
+        }
 
 		// Applications are expected to register using value of
 		// 'DESKTOP_AUTOSTART_ID' environment if it's present.

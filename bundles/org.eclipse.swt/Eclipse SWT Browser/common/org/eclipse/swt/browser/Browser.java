@@ -192,8 +192,8 @@ private class WebViewUnavailableDialog {
 static Composite checkParent (Composite parent) {
 	String platform = SWT.getPlatform ();
     if (!"gtk".equals(platform)) {
-        return parent;
-    } //$NON-NLS-1$
+        return parent; //$NON-NLS-1$
+    }
 
 	/*
 	* Note.  Mozilla provides all IM support needed for text input in web pages.

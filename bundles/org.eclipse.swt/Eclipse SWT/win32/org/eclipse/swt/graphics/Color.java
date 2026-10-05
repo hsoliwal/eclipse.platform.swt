@@ -524,8 +524,8 @@ public boolean isDisposed() {
 @Override
 public String toString () {
     if (isDisposed()) {
-        return "Color {*DISPOSED*}";
-    } //$NON-NLS-1$
+        return "Color {*DISPOSED*}"; //$NON-NLS-1$
+    }
 	return "Color {" + getRed() + ", " + getGreen() + ", " + getBlue() + ", " + getAlpha() + "}"; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 }
 

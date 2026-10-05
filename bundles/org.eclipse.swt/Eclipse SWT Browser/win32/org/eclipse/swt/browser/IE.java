@@ -1342,8 +1342,8 @@ String _getUrl() {
 	int[] rgdispid = auto.getIDsOfNames(new String[] { "LocationURL" }); //$NON-NLS-1$
 	Variant pVarResult = auto.getProperty(rgdispid[0]);
     if (pVarResult == null || pVarResult.getType() != OLE.VT_BSTR) {
-        return "";
-    } //$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	String result = pVarResult.getString();
 	pVarResult.dispose();
 	return result;

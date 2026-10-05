@@ -1059,8 +1059,8 @@ static void checkDisplay (Thread thread, boolean multiple) {
 		for (int i=0; i<Displays.length; i++) {
 			if (Displays [i] != null) {
                 if (!multiple) {
-                    SWT.error(SWT.ERROR_NOT_IMPLEMENTED, null, " [multiple displays]");
-                } //$NON-NLS-1$
+                    SWT.error(SWT.ERROR_NOT_IMPLEMENTED, null, " [multiple displays]"); //$NON-NLS-1$
+                }
                 if (Displays [i].thread == thread) {
                     SWT.error(SWT.ERROR_THREAD_INVALID_ACCESS);
                 }
@@ -1284,8 +1284,8 @@ void createDisplay (DeviceData data) {
 		init = GTK3.gtk_init_check(new long[]{0}, null);
 	}
     if (!init) {
-        SWT.error(SWT.ERROR_NO_HANDLES, null, " [gtk_init_check() failed]");
-    } //$NON-NLS-1$
+        SWT.error(SWT.ERROR_NO_HANDLES, null, " [gtk_init_check() failed]"); //$NON-NLS-1$
+    }
 	checkIMModule();
 	//set GTK+ Theme name as property for introspection purposes
 	themeName = OS.GTK_THEME_SET ? OS.GTK_THEME_SET_NAME : OS.getThemeName();

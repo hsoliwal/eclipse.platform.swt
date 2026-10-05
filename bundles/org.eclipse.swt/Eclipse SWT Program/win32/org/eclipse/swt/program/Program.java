@@ -91,8 +91,8 @@ public static Program findProgram (String extension) {
         return null;
     }
     if (extension.charAt(0) != '.') {
-        extension = "." + extension;
-    } //$NON-NLS-1$
+        extension = "." + extension; //$NON-NLS-1$
+    }
 	TCHAR key = new TCHAR (extension, true);
 	Program program = null;
 	String command = assocQueryString (OS.ASSOCSTR_COMMAND, key, true);
@@ -211,8 +211,8 @@ static Program getProgram (String key, String extension) {
 	String DEFAULT_COMMAND = "\\shell"; //$NON-NLS-1$
 	String defaultCommand = getKeyValue (key + DEFAULT_COMMAND, true);
     if (defaultCommand == null || defaultCommand.length() == 0) {
-        defaultCommand = "open";
-    } //$NON-NLS-1$
+        defaultCommand = "open"; //$NON-NLS-1$
+    }
 	String COMMAND = "\\shell\\" + defaultCommand + "\\command"; //$NON-NLS-1$
 	String command = getKeyValue (key + COMMAND, true);
     if (command == null || command.length() == 0) {
@@ -223,8 +223,8 @@ static Program getProgram (String key, String extension) {
 	String DEFAULT_ICON = "\\DefaultIcon"; //$NON-NLS-1$
 	String iconName = getKeyValue (key + DEFAULT_ICON, true);
     if (iconName == null) {
-        iconName = "";
-    } //$NON-NLS-1$
+        iconName = ""; //$NON-NLS-1$
+    }
 
 	/* Program */
 	Program program = new Program ();

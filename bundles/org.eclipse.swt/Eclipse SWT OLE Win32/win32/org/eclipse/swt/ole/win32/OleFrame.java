@@ -245,8 +245,8 @@ static long getMsgProc(long code, long wParam, long lParam) {
                         }
 						String value = (String)frame.getData(CONSUME_KEY);
                         if (value != null) {
-                            consumed = value.equals("true");
-                        } //$NON-NLS-1$
+                            consumed = value.equals("true"); //$NON-NLS-1$
+                        }
 						frame.setData(CONSUME_KEY, null);
 					}
 					boolean accentKey = false;

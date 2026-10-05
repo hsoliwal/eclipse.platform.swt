@@ -1274,8 +1274,8 @@ String toolTipText (NMTTDISPINFO hdr) {
     * provide the string, causing no tool tip to be displayed.
     */
     if (!hasCursor()) {
-        return "";
-    } //$NON-NLS-1$
+        return ""; //$NON-NLS-1$
+    }
 	int index = (int)hdr.idFrom;
 	long hwndToolTip = OS.SendMessage (handle, OS.TB_GETTOOLTIPS, 0, 0);
 	if (hwndToolTip == hdr.hwndFrom) {
@@ -1297,8 +1297,8 @@ String toolTipText (NMTTDISPINFO hdr) {
 			hdr.uFlags &= ~OS.TTF_RTLREADING;
 		}
         if (toolTipText != null) {
-            return "";
-        } //$NON-NLS-1$
+            return ""; //$NON-NLS-1$
+        }
 		if (0 <= index && index < items.length) {
 			ToolItem item = items [index];
 			if (item != null) {

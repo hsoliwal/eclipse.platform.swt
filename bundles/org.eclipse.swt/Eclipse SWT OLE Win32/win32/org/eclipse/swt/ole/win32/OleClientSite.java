@@ -392,11 +392,11 @@ void OleCreate(GUID appClsid, GUID fileClsid, char[] fileName, File file) {
 			String streamName = "CONTENTS"; //$NON-NLS-1$
 			GUID wordGUID = getClassID(WORDPROGID);
             if (wordGUID != null && COM.IsEqualGUID(appClsid, wordGUID)) {
-                streamName = "WordDocument";
-            } //$NON-NLS-1$
+                streamName = "WordDocument"; //$NON-NLS-1$
+            }
             if (isOffice2007) {
-                streamName = "Package";
-            } //$NON-NLS-1$
+                streamName = "Package"; //$NON-NLS-1$
+            }
 			address = new long[1];
 			result = storage.CreateStream(streamName, mode, 0, 0, address); // Increments ref count if successful
 			if (result != COM.S_OK) {
@@ -1007,14 +1007,14 @@ private boolean isOffice2007(boolean program) {
 		}
 	}
     if (programID.equals("Word.Document.12")) {
-        return true;
-    } //$NON-NLS-1$
+        return true; //$NON-NLS-1$
+    }
     if (programID.equals("Excel.Sheet.12")) {
-        return true;
-    } //$NON-NLS-1$
+        return true; //$NON-NLS-1$
+    }
     if (programID.equals("PowerPoint.Show.12")) {
-        return true;
-    } //$NON-NLS-1$
+        return true; //$NON-NLS-1$
+    }
 	return false;
 }
 private int OnClose() {

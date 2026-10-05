@@ -64,29 +64,29 @@ static {
 static String arch() {
 	String osArch = System.getProperty("os.arch"); //$NON-NLS-1$
     if (osArch.equals("amd64")) {
-        return "x86_64";
-    } //$NON-NLS-1$ $NON-NLS-2$
+        return "x86_64"; //$NON-NLS-1$ $NON-NLS-2$
+    }
 	return osArch;
 }
 
 static String os() {
 	String osName = System.getProperty("os.name"); //$NON-NLS-1$
     if (osName.equals("Linux")) {
-        return "linux";
-    } //$NON-NLS-1$ $NON-NLS-2$
+        return "linux"; //$NON-NLS-1$ $NON-NLS-2$
+    }
     if (osName.equals("Mac OS X")) {
-        return "macosx";
-    } //$NON-NLS-1$ $NON-NLS-2$
+        return "macosx"; //$NON-NLS-1$ $NON-NLS-2$
+    }
     if (osName.startsWith("Win")) {
-        return "win32";
-    } //$NON-NLS-1$ $NON-NLS-2$
+        return "win32"; //$NON-NLS-1$ $NON-NLS-2$
+    }
 	return osName;
 }
 
 static void chmod(String permision, String path) {
     if (os().equals("win32")) {
-        return;
-    } //$NON-NLS-1$
+        return; //$NON-NLS-1$
+    }
 	try {
 		Runtime.getRuntime ().exec (new String []{"chmod", permision, path}).waitFor(); //$NON-NLS-1$
 	} catch (Throwable e) {
@@ -301,8 +301,8 @@ public static void loadLibrary (String name) {
 public static void loadLibrary (String name, boolean mapName) {
 	String prop = System.getProperty ("sun.arch.data.model"); //$NON-NLS-1$
     if (prop == null) {
-        prop = System.getProperty("com.ibm.vm.bitmode");
-    } //$NON-NLS-1$
+        prop = System.getProperty("com.ibm.vm.bitmode"); //$NON-NLS-1$
+    }
 	if (prop != null) {
 		if ("32".equals (prop)) { //$NON-NLS-1$
 			throw new UnsatisfiedLinkError ("Cannot load 64-bit SWT libraries on 32-bit JVM"); //$NON-NLS-1$
@@ -413,8 +413,8 @@ public static String getVersionString () {
 			version += "00"; //$NON-NLS-1$
 		} else {
             if (MINOR_VERSION < 100) {
-                version += "0";
-            } //$NON-NLS-1$
+                version += "0"; //$NON-NLS-1$
+            }
 		}
 		version += MINOR_VERSION;
 		/* "r" followed by respective revision version starting with zero(0) */
