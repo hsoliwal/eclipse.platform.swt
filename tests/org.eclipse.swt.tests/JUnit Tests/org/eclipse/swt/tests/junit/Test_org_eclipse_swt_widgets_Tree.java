@@ -1017,6 +1017,7 @@ public void test_virtualGtkPresentationStateSurvivesDynamicColumns() {
 	virtualTree.setItemCount(2);
 
 	TreeItem item = virtualTree.getItem(0);
+	Display display = virtualTree.getDisplay();
 	Image image = new Image(display, 4, 4);
 	try {
 		Color rowBackground = display.getSystemColor(SWT.COLOR_RED);
@@ -1059,7 +1060,7 @@ public void test_virtualGtkPresentationStateSurvivesDynamicColumns() {
 		assertSame(cellBackground, item.getBackground(1));
 		assertSame(cellForeground, item.getForeground(1));
 
-		item.clear();
+		virtualTree.clear(0, false);
 		assertEquals("", item.getText(0));
 		assertEquals("", item.getText(1));
 		assertNull(item.getImage(1));

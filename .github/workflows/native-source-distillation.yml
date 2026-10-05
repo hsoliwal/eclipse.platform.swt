@@ -2,32 +2,38 @@ name: SWT Native Source Distillation
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '**/*.c'
+      - '**/*.h'
+      - '**/*.cc'
+      - '**/*.cpp'
+      - '**/*.cxx'
+      - '**/*.hpp'
+      - '**/*.m'
+      - '**/*.mm'
+      - '.m3/analysis-pom.xml'
+      - '.m3/native-source-distillation-20261005/**'
+      - '.github/workflows/native-source-distillation.yml'
   push:
     branches:
+      - master
       - m3/swt-native-source-distillation-20261005
     paths:
-      - 'bundles/**/*.c'
-      - 'bundles/**/*.h'
-      - 'bundles/**/*.cc'
-      - 'bundles/**/*.cpp'
-      - 'bundles/**/*.cxx'
-      - 'bundles/**/*.hpp'
-      - 'bundles/**/*.m'
-      - 'bundles/**/*.mm'
-      - 'tests/**/*.c'
-      - 'tests/**/*.h'
-      - 'tests/**/*.cc'
-      - 'tests/**/*.cpp'
-      - 'tests/**/*.cxx'
-      - 'tests/**/*.hpp'
-      - 'tests/**/*.m'
-      - 'tests/**/*.mm'
+      - '**/*.c'
+      - '**/*.h'
+      - '**/*.cc'
+      - '**/*.cpp'
+      - '**/*.cxx'
+      - '**/*.hpp'
+      - '**/*.m'
+      - '**/*.mm'
       - '.m3/analysis-pom.xml'
       - '.m3/native-source-distillation-20261005/**'
       - '.github/workflows/native-source-distillation.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: swt-native-source-distillation-${{ github.ref }}
@@ -35,20 +41,25 @@ concurrency:
 
 jobs:
   distill:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout SWT
         uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           lfs: false
 
-      - name: Checkout canonical Synexia native atomizer
+      - name: Checkout qualified canonical native atomizer
         uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
         with:
           repository: hsoliwal/com.synexia
-          ref: 946ec6e94dca725ee5dba06556e2aeaacef8dae7
+          ref: b280abde3cca3f74ed61a4a02a109bbee3273d14
           path: target/m3-synexia
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3NativeSourceAtomizer.java
+            synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3NativeSourceReceiptWriter.java
+            synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3NativeSourceReceiptCli.java
           fetch-depth: 1
           lfs: false
 
@@ -58,7 +69,7 @@ jobs:
           java-version: '21'
           distribution: temurin
 
-      - name: Compile pure-JDK native receipt runner
+      - name: Compile canonical receipt runner
         shell: bash
         run: |
           mkdir -p target/native-receipt-classes
@@ -67,33 +78,13 @@ jobs:
             target/m3-synexia/synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3NativeSourceReceiptWriter.java \
             target/m3-synexia/synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3NativeSourceReceiptCli.java
 
-      - name: Generate native source receipt
-        shell: bash
-        run: |
-          java -cp target/native-receipt-classes \
-            com.synexia.rewrite.M3NativeSourceReceiptCli "$GITHUB_WORKSPACE"
-          grep -q '^FILES=124$' .m3/native-source-distillation-20261005/COMPLETE.properties
-          grep -q '^LOSSLESS_RECOMPOSITION=true$' .m3/native-source-distillation-20261005/COMPLETE.properties
-          grep -q '^RECIPE_FIXED_POINT=true$' .m3/native-source-distillation-20261005/COMPLETE.properties
-          grep -q '^NATIVE_SOURCE_MUTATION=false$' .m3/native-source-distillation-20261005/COMPLETE.properties
-
-      - name: Verify second pass is fixed point
+      - name: Verify committed atom payloads and fixed-point receipts
         shell: bash
         run: |
           java -cp target/native-receipt-classes \
             com.synexia.rewrite.M3NativeSourceReceiptCli "$GITHUB_WORKSPACE" --check
-
-      - name: Commit generated receipt
-        shell: bash
-        run: |
-          git config user.name "m3-native-distillation"
-          git config user.email "actions@users.noreply.github.com"
-          git add \
-            .m3/native-source-distillation-20261005/native-files.tsv \
-            .m3/native-source-distillation-20261005/COMPLETE.properties
-          if git diff --cached --quiet; then
-            echo "Native source receipt already at fixed point."
-          else
-            git commit -m "m3: seal native source distillation receipt"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
+          grep -q '^FILES=124$' .m3/native-source-distillation-20261005/COMPLETE.properties
+          grep -q '^LOSSLESS_RECOMPOSITION=true$' .m3/native-source-distillation-20261005/COMPLETE.properties
+          grep -q '^RECIPE_FIXED_POINT=true$' .m3/native-source-distillation-20261005/COMPLETE.properties
+          grep -q '^NATIVE_SOURCE_MUTATION=false$' .m3/native-source-distillation-20261005/COMPLETE.properties
+          git diff --exit-code
