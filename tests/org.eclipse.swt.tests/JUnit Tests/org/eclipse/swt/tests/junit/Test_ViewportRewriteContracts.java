@@ -359,4 +359,97 @@ public class Test_ViewportRewriteContracts {
 	}
 
 
+	@Test
+	public void sharedViewportRowWindowOwnsFlatAndTreeVisibleOverscanMath() throws Exception {
+		Class<?> type = Class.forName("org.eclipse.swt.internal.ViewportRuntime$RowWindow");
+		Object window = type.getDeclaredConstructor().newInstance();
+
+		Method setLogicalCount = type.getMethod("setLogicalCount", long.class);
+		Method setViewport = type.getMethod("setViewport", long.class, int.class);
+		Method setOverscanRows = type.getMethod("setOverscanRows", int.class);
+		Method insert = type.getMethod("insert", long.class, long.class);
+		Method remove = type.getMethod("remove", long.class, long.class);
+		Method ensureVisible = type.getMethod("ensureVisible", long.class);
+		Method isVisible = type.getMethod("isVisible", long.class);
+		Method isPaintCandidate = type.getMethod("isPaintCandidate", long.class);
+
+		setLogicalCount.invoke(window, 10_000_000_000L);
+		setViewport.invoke(window, 5_000_000_000L, 40);
+		setOverscanRows.invoke(window, 8);
+
+		assertEquals(5_000_000_000L, call(window, "firstVisible"));
+		assertEquals(40, call(window, "visibleCount"));
+		assertEquals(4_999_999_992L, call(window, "paintStart"));
+		assertEquals(5_000_000_048L, call(window, "paintEndExclusive"));
+		assertEquals(56, call(window, "paintCount"));
+		assertEquals(true, isVisible.invoke(window, 5_000_000_039L));
+		assertEquals(false, isVisible.invoke(window, 5_000_000_040L));
+		assertEquals(true, isPaintCandidate.invoke(window, 4_999_999_992L));
+		assertEquals(false, isPaintCandidate.invoke(window, 4_999_999_991L));
+
+		insert.invoke(window, 0L, 7L);
+		assertEquals(5_000_000_007L, call(window, "firstVisible"));
+		remove.invoke(window, 0L, 3L);
+		assertEquals(5_000_000_004L, call(window, "firstVisible"));
+
+		ensureVisible.invoke(window, 7_000_000_000L);
+		assertEquals(6_999_999_961L, call(window, "firstVisible"));
+		assertEquals(true, isVisible.invoke(window, 7_000_000_000L));
+
+		setLogicalCount.invoke(window, Long.MAX_VALUE);
+		setViewport.invoke(window, Long.MAX_VALUE - 4, 40);
+		assertEquals(Long.MAX_VALUE - 4, call(window, "firstVisible"));
+		assertEquals(4, call(window, "visibleCount"));
+		assertEquals(Long.MAX_VALUE, call(window, "paintEndExclusive"));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> call(window, "setLogicalCount", -1L));
+		assertThrows(IllegalArgumentException.class,
+				() -> call(window, "setOverscanRows", -1));
+	}
+
+
+	@Test
+	public void sharedViewportSelectionKeepsSparseAndComplementStateAcrossShifts() throws Exception {
+		Class<?> type = Class.forName("org.eclipse.swt.internal.ViewportRuntime$Selection");
+		Object selection = type.getDeclaredConstructor().newInstance();
+
+		call(selection, "setLogicalCount", 1_000_000);
+		call(selection, "setSelected", 10, true);
+		call(selection, "selectRange", 100, 110);
+		assertEquals(11, call(selection, "selectedCount"));
+		assertEquals(2, call(selection, "rangeCount"));
+		assertEquals(false, call(selection, "complementMode"));
+
+		call(selection, "insert", 5, 3);
+		assertEquals(true, call(selection, "isSelected", 13));
+		assertEquals(true, call(selection, "isSelected", 103));
+		assertEquals(1_000_003, call(selection, "logicalCount"));
+
+		call(selection, "remove", 0, 2);
+		assertEquals(true, call(selection, "isSelected", 11));
+		assertEquals(true, call(selection, "isSelected", 101));
+		assertEquals(1_000_001, call(selection, "logicalCount"));
+
+		call(selection, "selectAll");
+		assertEquals(true, call(selection, "complementMode"));
+		assertEquals(1_000_001, call(selection, "selectedCount"));
+		call(selection, "deselectRange", 500_000, 900_000);
+		assertEquals(600_001, call(selection, "selectedCount"));
+		assertEquals(1, call(selection, "rangeCount"));
+		assertEquals(500_000, call(selection, "rangeStart", 0));
+		assertEquals(900_000, call(selection, "rangeEndExclusive", 0));
+
+		call(selection, "insert", 700_000, 5);
+		assertEquals(600_001, call(selection, "selectedCount"),
+				"inserted coordinates must remain unselected in complement mode");
+		assertEquals(false, call(selection, "isSelected", 700_000));
+		call(selection, "remove", 700_000, 5);
+		assertEquals(600_001, call(selection, "selectedCount"));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> call(selection, "setSelected", 1_000_001, true));
+	}
+
+
 }
