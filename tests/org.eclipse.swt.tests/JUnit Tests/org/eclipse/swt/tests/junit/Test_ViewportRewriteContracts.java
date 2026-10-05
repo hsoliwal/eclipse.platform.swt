@@ -409,6 +409,58 @@ public class Test_ViewportRewriteContracts {
 	}
 
 
+
+	@Test
+	public void sharedViewportRowWindowRetainsRequestedCapacityAcrossClippingAndEmptyModels() throws Exception {
+		Class<?> type = Class.forName("org.eclipse.swt.internal.ViewportRuntime$RowWindow");
+		Object window = type.getDeclaredConstructor().newInstance();
+
+		call(window, "setLogicalCount", 100L);
+		call(window, "setViewport", 95L, 40);
+		assertEquals(95L, call(window, "firstVisible"));
+		assertEquals(5, call(window, "visibleCount"),
+				"actual coverage clips at the short logical tail");
+
+		call(window, "ensureVisible", 50L);
+		assertEquals(50L, call(window, "firstVisible"));
+		assertEquals(40, call(window, "visibleCount"),
+				"tail clipping must not erase requested viewport capacity");
+
+		call(window, "setLogicalCount", 0L);
+		assertEquals(0L, call(window, "firstVisible"));
+		assertEquals(0, call(window, "visibleCount"));
+
+		call(window, "setLogicalCount", 100L);
+		call(window, "ensureVisible", 99L);
+		assertEquals(60L, call(window, "firstVisible"),
+				"empty-model clamping must retain the prior 40-row viewport capacity");
+		assertEquals(40, call(window, "visibleCount"));
+		assertEquals(true, call(window, "isVisible", 99L));
+	}
+
+	@Test
+	public void sharedViewportRowWindowRejectsOverflowAtomically() throws Exception {
+		Class<?> type = Class.forName("org.eclipse.swt.internal.ViewportRuntime$RowWindow");
+		Object window = type.getDeclaredConstructor().newInstance();
+
+		call(window, "setLogicalCount", Long.MAX_VALUE - 2L);
+		call(window, "setViewport", 100L, 20);
+		long beforeCount = (long)call(window, "logicalCount");
+		long beforeFirst = (long)call(window, "firstVisible");
+		int beforeVisible = (int)call(window, "visibleCount");
+		long beforeGeneration = (long)call(window, "generation");
+
+		assertThrows(ArithmeticException.class,
+				() -> call(window, "insert", 0L, 3L));
+
+		assertEquals(beforeCount, call(window, "logicalCount"));
+		assertEquals(beforeFirst, call(window, "firstVisible"),
+				"rejected overflow must not shift the viewport origin");
+		assertEquals(beforeVisible, call(window, "visibleCount"));
+		assertEquals(beforeGeneration, call(window, "generation"),
+				"rejected overflow must be observationally atomic");
+	}
+
 	@Test
 	public void sharedViewportSelectionKeepsSparseAndComplementStateAcrossShifts() throws Exception {
 		Class<?> type = Class.forName("org.eclipse.swt.internal.ViewportRuntime$Selection");
