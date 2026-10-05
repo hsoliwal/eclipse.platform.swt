@@ -602,66 +602,115 @@ static int checkStyle (int style) {
 
 @Override
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
-    if (cell == ignoreCell) {
-        return 0;
-    }
+	if (cell == ignoreCell) return 0;
 	TreeItem item = _getItem (iter);
-	if (item == null || item.isDisposed()) {
-		return 0;
-	}
-    if (item != null) {
-        OS.g_object_set_qdata(cell, Display.SWT_OBJECT_INDEX2, item.handle);
-    }
+	if (item == null || item.isDisposed()) return 0;
+	OS.g_object_set_qdata (cell, Display.SWT_OBJECT_INDEX2, item.handle);
+
 	boolean isPixbuf = GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell);
 	boolean isText = GTK.GTK_IS_CELL_RENDERER_TEXT (cell);
-	if (isText) {
-		GTK.gtk_cell_renderer_set_fixed_size (cell, -1, -1);
-	}
-    if (!(isPixbuf || isText)) {
-        return 0;
-    }
+	boolean isToggle = GTK.GTK_IS_CELL_RENDERER_TOGGLE (cell);
+	if (isText) GTK.gtk_cell_renderer_set_fixed_size (cell, -1, -1);
+	if (!(isPixbuf || isText || isToggle)) return 0;
+
+	int columnIndex = 0;
 	int modelIndex = -1;
 	boolean customDraw = false;
 	if (columnCount == 0) {
 		modelIndex = Tree.FIRST_COLUMN;
 		customDraw = firstCustomDraw;
 	} else {
-		TreeColumn column = (TreeColumn) display.getWidget (tree_column);
-		if (column != null) {
-			modelIndex = column.modelIndex;
-			customDraw = column.customDraw;
+		for (int i = 0; i < columnCount; i++) {
+			TreeColumn column = columns [i];
+			if (column != null && column.handle == tree_column) {
+				columnIndex = i;
+				modelIndex = column.modelIndex;
+				customDraw = column.customDraw;
+				break;
+			}
 		}
 	}
-    if (modelIndex == -1) {
-        return 0;
-    }
+	if (modelIndex == -1) return 0;
+
 	boolean setData = false;
 	boolean updated = false;
 	if ((style & SWT.VIRTUAL) != 0) {
-		if (!item.isCachedState ()) {
-			//lastIndexOf = index [0];
-			setData = checkData (item);
-		}
+		if (!item.isCachedState ()) setData = checkData (item);
+		if (!setData && (isDisposed () || item.isDisposed ())) return 0;
 		if (item.updated) {
 			updated = true;
 			item.updated = false;
 		}
+		virtualFlag (item, VirtualItemState.DIRTY, false);
+		virtualFlag (item, VirtualItemState.PAINT_RESIDENT, true);
+
+		if (isToggle) {
+			OS.g_object_set (cell, OS.active, item.isCheckedState (), 0);
+			OS.g_object_set (cell, OS.inconsistent,
+					item.isCheckedState () && item.isGrayedState (), 0);
+			requestVirtualFrontier (item);
+			return 0;
+		}
+
+		Color itemBackground = item.virtualBackground;
+		Color cellBackground = item.virtualCellBackground != null
+				&& columnIndex < item.virtualCellBackground.length
+				? item.virtualCellBackground [columnIndex] : null;
+		GdkRGBA backgroundRGBA = cellBackground != null ? cellBackground.handle
+				: itemBackground != null ? itemBackground.handle : null;
+		OS.g_object_set (cell, OS.cell_background_rgba, backgroundRGBA, 0);
+
+		if (isPixbuf) {
+			Image image = item.virtualImages != null && columnIndex < item.virtualImages.length
+					? item.virtualImages [columnIndex] : null;
+			long pixbuf = 0;
+			if (image != null) {
+				if (imageList == null) imageList = new ImageList ();
+				int imageIndex = imageList.indexOf (image);
+				if (imageIndex == -1) imageIndex = imageList.add (image);
+				pixbuf = ImageList.createPixbuf (imageList.getSurface (imageIndex));
+			}
+			OS.g_object_set (cell, OS.pixbuf, pixbuf, 0);
+			if (pixbuf != 0) OS.g_object_unref (pixbuf);
+			requestVirtualFrontier (item);
+			return 0;
+		}
+
+		byte [] text = Converter.wcsToMbcs (item.virtualDisplayText (columnIndex), true);
+		OS.g_object_set (cell, OS.text, text, 0);
+		Color itemForeground = item.virtualForeground;
+		Color cellForeground = item.virtualCellForeground != null
+				&& columnIndex < item.virtualCellForeground.length
+				? item.virtualCellForeground [columnIndex] : null;
+		GdkRGBA foregroundRGBA = cellForeground != null ? cellForeground.handle
+				: itemForeground != null ? itemForeground.handle : null;
+		OS.g_object_set (cell, OS.foreground_rgba, foregroundRGBA, 0);
+		Font cellFont = item.cellFont != null && columnIndex < item.cellFont.length
+				? item.cellFont [columnIndex] : null;
+		Font renderFont = cellFont != null ? cellFont : item.font;
+		OS.g_object_set (cell, OS.font_desc, renderFont != null ? renderFont.handle : 0, 0);
+		if (setData || updated) {
+			ignoreCell = cell;
+			setScrollWidth (tree_column, item);
+			ignoreCell = 0;
+		}
+		requestVirtualFrontier (item);
+		return 0;
 	}
+
 	long [] ptr = new long [1];
 	if (setData) {
 		if (isPixbuf) {
 			ptr [0] = 0;
 			GTK.gtk_tree_model_get (tree_model, iter, modelIndex + CELL_PIXBUF, ptr, -1);
 			OS.g_object_set (cell, OS.gicon, ptr [0], 0);
-            if (ptr [0] != 0) {
-                OS.g_object_unref(ptr [0]);
-            }
+			if (ptr [0] != 0) OS.g_object_unref (ptr [0]);
 		} else {
 			ptr [0] = 0;
 			GTK.gtk_tree_model_get (tree_model, iter, modelIndex + CELL_TEXT, ptr, -1);
 			if (ptr [0] != 0) {
-				OS.g_object_set (cell, OS.text, ptr[0], 0);
-				OS.g_free (ptr[0]);
+				OS.g_object_set (cell, OS.text, ptr [0], 0);
+				OS.g_free (ptr [0]);
 			}
 		}
 	}
@@ -670,8 +719,8 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 			ptr [0] = 0;
 			GTK.gtk_tree_model_get (tree_model, iter, modelIndex + CELL_BACKGROUND, ptr, -1);
 			if (ptr [0] != 0) {
-				OS.g_object_set (cell, OS.cell_background_rgba, ptr[0], 0);
-				GDK.gdk_rgba_free(ptr [0]);
+				OS.g_object_set (cell, OS.cell_background_rgba, ptr [0], 0);
+				GDK.gdk_rgba_free (ptr [0]);
 			}
 		}
 		if (!isPixbuf) {
@@ -684,7 +733,7 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 			ptr [0] = 0;
 			GTK.gtk_tree_model_get (tree_model, iter, modelIndex + CELL_FONT, ptr, -1);
 			if (ptr [0] != 0) {
-				OS.g_object_set (cell, OS.font_desc, ptr[0], 0);
+				OS.g_object_set (cell, OS.font_desc, ptr [0], 0);
 				OS.pango_font_description_free (ptr [0]);
 			}
 		}
@@ -694,9 +743,6 @@ long cellDataProc (long tree_column, long cell, long tree_model, long iter, long
 		setScrollWidth (tree_column, item);
 		ignoreCell = 0;
 	}
-    if ((style & SWT.VIRTUAL) != 0) {
-        requestVirtualFrontier(item);
-    }
 	return 0;
 }
 
@@ -1652,7 +1698,7 @@ void createRenderers (long columnHandle, int modelIndex, boolean check, int colu
         if (!isOwnerDrawn) {
             GTK.gtk_tree_view_column_add_attribute(columnHandle, checkRenderer, OS.cell_background_rgba, BACKGROUND_COLUMN);
         }
-		if (isOwnerDrawn) {
+		if ((style & SWT.VIRTUAL) != 0 || isOwnerDrawn) {
 			GTK.gtk_tree_view_column_set_cell_data_func (columnHandle, checkRenderer, display.cellDataProc, handle, 0);
 			OS.g_object_set_qdata (checkRenderer, Display.SWT_OBJECT_INDEX1, columnHandle);
 		}
