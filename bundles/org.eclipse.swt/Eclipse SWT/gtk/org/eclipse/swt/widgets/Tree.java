@@ -2077,27 +2077,31 @@ void destroyItem (TreeColumn column) {
 	columns [columnCount] = null;
 	GTK.gtk_tree_view_remove_column (handle, columnHandle);
 	if (columnCount == 0) {
-		long oldModel = modelHandle;
-		long [] types = getColumnTypes (1);
-		long newModel = GTK.gtk_tree_store_newv (types.length, types);
-        if (newModel == 0) {
-            error(SWT.ERROR_NO_HANDLES);
-        }
-		copyModel(oldModel, column.modelIndex, newModel, FIRST_COLUMN, (long )0, (long )0, FIRST_COLUMN + CELL_TYPES);
-		GTK.gtk_tree_view_set_model (handle, newModel);
-		setModel (newModel);
-		createColumn (null, 0);
+		if (usesVirtualNativeModel ()) {
+			createColumn (null, 0);
+		} else {
+			long oldModel = modelHandle;
+			long [] types = getColumnTypes (1);
+			long newModel = GTK.gtk_tree_store_newv (types.length, types);
+			if (newModel == 0) error (SWT.ERROR_NO_HANDLES);
+			copyModel(oldModel, column.modelIndex, newModel, FIRST_COLUMN, (long )0, (long )0, FIRST_COLUMN + CELL_TYPES);
+			GTK.gtk_tree_view_set_model (handle, newModel);
+			setModel (newModel);
+			createColumn (null, 0);
+		}
 	} else {
 		for (int i=0; i<items.length; i++) {
 			TreeItem item = items [i];
 			if (item != null) {
-				long iter = item.handle;
-				int modelIndex = column.modelIndex;
-				GTK.gtk_tree_store_set (modelHandle, iter, modelIndex + CELL_PIXBUF, (long )0, -1);
-				GTK.gtk_tree_store_set (modelHandle, iter, modelIndex + CELL_TEXT, (long )0, -1);
-				GTK.gtk_tree_store_set (modelHandle, iter, modelIndex + CELL_FOREGROUND, (long )0, -1);
-				GTK.gtk_tree_store_set (modelHandle, iter, modelIndex + CELL_BACKGROUND, (long )0, -1);
-				GTK.gtk_tree_store_set (modelHandle, iter, modelIndex + CELL_FONT, (long )0, -1);
+				if (!usesVirtualNativeModel ()) {
+					long iter = item.handle;
+					int modelIndex = column.modelIndex;
+					GTK.gtk_tree_store_set (modelHandle, iter, modelIndex + CELL_PIXBUF, (long )0, -1);
+					GTK.gtk_tree_store_set (modelHandle, iter, modelIndex + CELL_TEXT, (long )0, -1);
+					GTK.gtk_tree_store_set (modelHandle, iter, modelIndex + CELL_FOREGROUND, (long )0, -1);
+					GTK.gtk_tree_store_set (modelHandle, iter, modelIndex + CELL_BACKGROUND, (long )0, -1);
+					GTK.gtk_tree_store_set (modelHandle, iter, modelIndex + CELL_FONT, (long )0, -1);
+				}
 
 				if ((style & SWT.VIRTUAL) != 0) {
 					item.removeVirtualColumn (index, columnCount);
@@ -4044,6 +4048,27 @@ void remove (long parentIter, int start, int end) {
     if (start > end) {
         return;
     }
+	if (usesVirtualNativeModel ()) {
+		int parentId = virtualParentId (parentIter);
+		int itemCount = virtualTopology.childCount (parentId);
+		if (!(0 <= start && start <= end && end < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+		VirtualNativeViewState state = captureVirtualNativeViewState ();
+		for (int i = start; i <= end; i++) {
+			int id = virtualTopology.materializedChildId (parentId, start);
+			if (id >= 0 && id < items.length) {
+				TreeItem item = items [id];
+				if (item != null && !item.isDisposed ()) {
+					if (item.settingData) throwCannotRemoveItem (start);
+					releaseItems (item.handle);
+					releaseItem (item, true);
+				}
+			}
+			virtualTopology.removeCoordinate (parentId, start);
+		}
+		modelChanged = true;
+		finishVirtualNativeMutation (state);
+		return;
+	}
 	int itemCount = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
 	if (!(0 <= start && start <= end && end < itemCount)) {
 		error (SWT.ERROR_INVALID_RANGE);
@@ -4091,6 +4116,18 @@ void remove (long parentIter, int start, int end) {
 public void removeAll () {
 	checkWidget ();
 	checkSetDataInProcessBeforeRemoval();
+
+	if (usesVirtualNativeModel ()) {
+		for (TreeItem item : items) {
+			if (item != null && !item.isDisposed ()) item.release (false);
+		}
+		items = new TreeItem [4];
+		virtualTopology.clear ();
+		virtualTopology.setChildCount (VirtualTreeTopology.ROOT, 0);
+		modelChanged = true;
+		finishVirtualNativeMutation (null);
+		return;
+	}
 
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
