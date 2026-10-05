@@ -12,6 +12,8 @@ public final class GtkVirtualTreeSparseBulkCandidate {
             "bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/Tree.java";
     public static final String PREIMAGE_SHA256 =
             "4759f0e133e0e58799b9ec2c6572af8233d9460ae22264e49c7facbbc9781b25";
+    public static final String POSTIMAGE_SHA256 =
+            "926b4e3bde0f1dea2e1032ca26baa81663cc49afbdadfbe58d85781f6b3d9b4d";
 
     static final String BEFORE =
             "TreeItem [] modelChildren (TreeItem parentItem, boolean materialize) {\n"
@@ -63,9 +65,15 @@ public final class GtkVirtualTreeSparseBulkCandidate {
 
     static String propose(Path sourcePath, String source, boolean enforceHash) {
         if (!normalized(sourcePath).endsWith(TARGET)) return source;
-        if (source.contains(AFTER)) return source;
         if (source.length() > 512 * 1024) throw new IllegalStateException("M3_GTK_TREE_SOURCE_BUDGET");
-        if (enforceHash && !PREIMAGE_SHA256.equals(sha256(source))) {
+        String hash = enforceHash ? sha256(source) : "";
+        if (source.contains(AFTER)) {
+            if (enforceHash && !POSTIMAGE_SHA256.equals(hash)) {
+                throw new IllegalStateException("M3_GTK_TREE_POSTIMAGE_DRIFT:" + sourcePath);
+            }
+            return source;
+        }
+        if (enforceHash && !PREIMAGE_SHA256.equals(hash)) {
             throw new IllegalStateException("M3_GTK_TREE_PREIMAGE_DRIFT:" + sourcePath);
         }
         if (!source.contains(BEFORE)) {
