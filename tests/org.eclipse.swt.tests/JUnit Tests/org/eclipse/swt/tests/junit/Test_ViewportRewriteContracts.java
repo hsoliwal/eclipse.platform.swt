@@ -359,4 +359,54 @@ public class Test_ViewportRewriteContracts {
 	}
 
 
+	@Test
+	public void sharedViewportRowWindowOwnsFlatAndTreeVisibleOverscanMath() throws Exception {
+		Class<?> type = Class.forName("org.eclipse.swt.internal.ViewportRuntime$RowWindow");
+		Object window = type.getDeclaredConstructor().newInstance();
+
+		Method setLogicalCount = type.getMethod("setLogicalCount", long.class);
+		Method setViewport = type.getMethod("setViewport", long.class, int.class);
+		Method setOverscanRows = type.getMethod("setOverscanRows", int.class);
+		Method insert = type.getMethod("insert", long.class, long.class);
+		Method remove = type.getMethod("remove", long.class, long.class);
+		Method ensureVisible = type.getMethod("ensureVisible", long.class);
+		Method isVisible = type.getMethod("isVisible", long.class);
+		Method isPaintCandidate = type.getMethod("isPaintCandidate", long.class);
+
+		setLogicalCount.invoke(window, 10_000_000_000L);
+		setViewport.invoke(window, 5_000_000_000L, 40);
+		setOverscanRows.invoke(window, 8);
+
+		assertEquals(5_000_000_000L, call(window, "firstVisible"));
+		assertEquals(40, call(window, "visibleCount"));
+		assertEquals(4_999_999_992L, call(window, "paintStart"));
+		assertEquals(5_000_000_048L, call(window, "paintEndExclusive"));
+		assertEquals(56, call(window, "paintCount"));
+		assertEquals(true, isVisible.invoke(window, 5_000_000_039L));
+		assertEquals(false, isVisible.invoke(window, 5_000_000_040L));
+		assertEquals(true, isPaintCandidate.invoke(window, 4_999_999_992L));
+		assertEquals(false, isPaintCandidate.invoke(window, 4_999_999_991L));
+
+		insert.invoke(window, 0L, 7L);
+		assertEquals(5_000_000_007L, call(window, "firstVisible"));
+		remove.invoke(window, 0L, 3L);
+		assertEquals(5_000_000_004L, call(window, "firstVisible"));
+
+		ensureVisible.invoke(window, 7_000_000_000L);
+		assertEquals(6_999_999_961L, call(window, "firstVisible"));
+		assertEquals(true, isVisible.invoke(window, 7_000_000_000L));
+
+		setLogicalCount.invoke(window, Long.MAX_VALUE);
+		setViewport.invoke(window, Long.MAX_VALUE - 4, 40);
+		assertEquals(Long.MAX_VALUE - 4, call(window, "firstVisible"));
+		assertEquals(4, call(window, "visibleCount"));
+		assertEquals(Long.MAX_VALUE, call(window, "paintEndExclusive"));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> setLogicalCount.invoke(window, -1L));
+		assertThrows(IllegalArgumentException.class,
+				() -> setOverscanRows.invoke(window, -1));
+	}
+
+
 }
