@@ -4109,9 +4109,7 @@ public int[] getLineTabStops(int index) {
     if (tabs == null) {
         return new int []{renderer.tabWidth};
     }
-	int[] result = new int[tabs.length];
-	System.arraycopy(tabs, 0, result, 0, tabs.length);
-	return result;
+	return tabs.clone();
 }
 /**
  * Returns the wrap indentation of the line at the given <code>index</code>.
@@ -5014,9 +5012,7 @@ public int[] getTabStops() {
     if (tabs == null) {
         return new int []{renderer.tabWidth};
     }
-	int[] result = new int[tabs.length];
-	System.arraycopy(tabs, 0, result, 0, tabs.length);
-	return result;
+	return tabs.clone();
 }
 
 /**
