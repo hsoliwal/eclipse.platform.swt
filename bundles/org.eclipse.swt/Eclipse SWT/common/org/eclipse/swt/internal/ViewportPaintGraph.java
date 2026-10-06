@@ -134,16 +134,32 @@ public final class ViewportPaintGraph {
 		}
 
 		public static Affine translation (float x, float y) {
+			if (x == 0f && y == 0f) return IDENTITY;
 			return new Affine (1, 0, 0, 1, x, y);
 		}
 
 		public static Affine scale (float x, float y) {
+			if (x == 1f && y == 1f) return IDENTITY;
 			return new Affine (x, 0, 0, y, 0, 0);
+		}
+
+		public static Affine rotation (float radians) {
+			if (radians == 0f) return IDENTITY;
+			float sin = (float)Math.sin (radians);
+			float cos = (float)Math.cos (radians);
+			return new Affine (cos, sin, -sin, cos, 0, 0);
+		}
+
+		public static Affine shear (float x, float y) {
+			if (x == 0f && y == 0f) return IDENTITY;
+			return new Affine (1, y, x, 1, 0, 0);
 		}
 
 		/** Returns {@code this * local}; {@code local} is applied first. */
 		public Affine compose (Affine local) {
 			Objects.requireNonNull (local, "local");
+			if (local.isIdentity ()) return this;
+			if (isIdentity ()) return local;
 			return new Affine (
 					m11 * local.m11 + m21 * local.m12,
 					m12 * local.m11 + m22 * local.m12,
@@ -153,28 +169,56 @@ public final class ViewportPaintGraph {
 					m12 * local.dx + m22 * local.dy + dy);
 		}
 
-		public boolean isIntegralTranslation () {
-			return same (m11, 1) && same (m12, 0)
+		public float determinant () {
+			return m11 * m22 - m21 * m12;
+		}
+
+		public Affine inverse () {
+			float determinant = determinant ();
+			if (!Float.isFinite (determinant) || determinant == 0f) {
+				throw new IllegalStateException ("non-invertible affine transform");
+			}
+			float inverseDeterminant = 1f / determinant;
+			float i11 = m22 * inverseDeterminant;
+			float i12 = -m12 * inverseDeterminant;
+			float i21 = -m21 * inverseDeterminant;
+			float i22 = m11 * inverseDeterminant;
+			float idx = -(i11 * dx + i21 * dy);
+			float idy = -(i12 * dx + i22 * dy);
+			return new Affine (i11, i12, i21, i22, idx, idy);
+		}
+
+		public boolean isIdentity () {
+			return this == IDENTITY
+					|| (same (m11, 1) && same (m12, 0)
 					&& same (m21, 0) && same (m22, 1)
+					&& same (dx, 0) && same (dy, 0));
+		}
+
+		public boolean isTranslationOnly () {
+			return same (m11, 1) && same (m12, 0)
+					&& same (m21, 0) && same (m22, 1);
+		}
+
+		public boolean isIntegralTranslation () {
+			return isTranslationOnly ()
 					&& dx == Math.rint (dx) && dy == Math.rint (dy);
 		}
 
 		public void map (float x, float y, float [] out) {
-            if (out == null || out.length < 2) {
-                throw new IllegalArgumentException("affine output too small");
-            }
+			if (out == null || out.length < 2) {
+				throw new IllegalArgumentException ("affine output too small");
+			}
 			out [0] = m11 * x + m21 * y + dx;
 			out [1] = m12 * x + m22 * y + dy;
 		}
 
 		public boolean inverseMap (float x, float y, float [] out) {
-            if (out == null || out.length < 2) {
-                throw new IllegalArgumentException("affine output too small");
-            }
-			float determinant = m11 * m22 - m21 * m12;
-            if (determinant == 0) {
-                return false;
-            }
+			if (out == null || out.length < 2) {
+				throw new IllegalArgumentException ("affine output too small");
+			}
+			float determinant = determinant ();
+			if (determinant == 0f) return false;
 			float px = x - dx;
 			float py = y - dy;
 			out [0] = (m22 * px - m21 * py) / determinant;
