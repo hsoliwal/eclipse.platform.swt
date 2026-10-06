@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.swt.custom;
 
+import java.util.Arrays;
+
 import org.eclipse.swt.*;
 
 /**
@@ -131,12 +133,9 @@ void addIndices (int startLine, int lineCount) {
 	}
 }
 int indexOf (int lineIndex) {
-	for (int i = 0; i < count; i++) {
-        if (linesIndices[i] == lineIndex) {
-            return i;
-        }
-	}
-	return -1;
+	if (count == 0) return -1;
+	int index = Arrays.binarySearch(linesIndices, 0, count, lineIndex);
+	return index >= 0 ? index : -1;
 }
 @Override
 public int hashCode() {
