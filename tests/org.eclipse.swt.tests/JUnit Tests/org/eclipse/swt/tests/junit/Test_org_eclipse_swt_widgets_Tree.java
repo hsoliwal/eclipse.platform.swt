@@ -122,6 +122,7 @@ public void test_virtualGtk3LogicalNativeModelKeepsDistantAccessSparseAndStable(
 
 	distant.setChecked(true);
 	distant.setGrayed(true);
+	Display display = virtualTree.getDisplay();
 	distant.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
 	distant.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
 	assertTrue(distant.getChecked());
