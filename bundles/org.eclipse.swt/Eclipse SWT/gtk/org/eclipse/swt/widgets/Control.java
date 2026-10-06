@@ -62,7 +62,7 @@ public abstract class Control extends Widget implements Drawable {
 	double pointerX, pointerY;
 	long redrawWindow, enableWindow, provider;
 	int drawCount, backgroundAlpha = 255;
-	long dragGesture, zoomGesture, rotateGesture, panGesture;
+	long dragGesture, zoomGesture, rotateGesture;
 	Composite parent;
 	Cursor cursor;
 	Menu menu;
@@ -351,10 +351,6 @@ long focusHandle () {
 }
 
 long fontHandle () {
-	return handle;
-}
-
-long gestureHandle () {
 	return handle;
 }
 
@@ -3246,10 +3242,6 @@ GdkRGBA getBgGdkRGBA () {
 	return getContextBackgroundGdkRGBA ();
 }
 
-GdkRGBA getBaseGdkRGBA () {
-	return getContextBackgroundGdkRGBA ();
-}
-
 /**
  * Returns the receiver's border width in points.
  *
@@ -4181,8 +4173,12 @@ long gtk_draw (long widget, long cairo) {
     if ((state & OBSCURED) != 0) {
         return 0;
     }
-	GdkRectangle rect = new GdkRectangle ();
-	GDK.gdk_cairo_get_clip_rectangle (cairo, rect);
+	boolean hooksPaint = hooksPaint ();
+	GdkRectangle rect = null;
+	if (hooksPaint) {
+		rect = new GdkRectangle ();
+		GDK.gdk_cairo_get_clip_rectangle (cairo, rect);
+	}
 	/*
 	 * Modify the drawing of the widget with cairo_clip.
 	 * Doesn't modify input handling at this time.
@@ -4191,7 +4187,7 @@ long gtk_draw (long widget, long cairo) {
 	if (drawRegion) {
 		cairoClipRegion(cairo);
 	}
-    if (!hooksPaint()) {
+    if (!hooksPaint) {
         return 0;
     }
 	Event event = new Event ();
@@ -5253,7 +5249,7 @@ void flushQueueOnDnd() {
 }
 
 boolean sendDragEvent (int button, int stateMask, int x, int y, boolean isStateMask) {
-	if (OS.isWayland() && dragDetectionQueue != null) {
+	if (dragDetectionQueue != null && OS.isWayland()) {
 		// Flush events used to detect drag&drop just before sending `DragDetect` event.
 		// This is to maintain the same order of events as on other platforms.
 		flushQueueOnDnd();
@@ -5419,7 +5415,7 @@ boolean sendMouseEvent (int type, int button, int count, int detail, boolean sen
 		 * event, similar to the way the caching logic does it when receiving a
 		 * MouseMove event. See bug 529126.
 		 */
-		if (OS.isWayland() && dragDetectionQueue != null) {
+		if (dragDetectionQueue != null && OS.isWayland()) {
 			/*
 			 * The first event in the queue will always be a MouseDown, as
 			 * the queue is only ever created if a MouseDown event is being cached.
@@ -5439,9 +5435,9 @@ boolean sendMouseEvent (int type, int button, int count, int detail, boolean sen
 		 * hook these events. Without them queued a control with only a DragSource never detects
 		 * the drag (issue #1145).
 		 */
-		boolean waylandDragDetect = OS.isWayland()
-				&& ((type == SWT.MouseDown && button == 1 && (this.state & DRAG_DETECT) != 0 && wantDragDropDetection ())
-						|| dragDetectionQueue != null);
+		boolean waylandDragDetect = ((type == SWT.MouseDown && button == 1 && (this.state & DRAG_DETECT) != 0 && wantDragDropDetection ())
+				|| dragDetectionQueue != null)
+				&& OS.isWayland();
         if (!waylandDragDetect) {
             return true;
         }
@@ -6107,10 +6103,6 @@ private void setDragGesture() {
 	OS.g_signal_connect(dragGesture, OS.end, gestureEnd.getAddress(), this.handle);
 	return;
 }
-
-//private void setPanGesture () {
-///* TODO: Panning gesture requires a GtkOrientation object. Need to discuss what orientation should be default. */
-//}
 
 private void setRotateGesture() {
 	if (GTK.GTK4) {
@@ -6831,21 +6823,26 @@ boolean showMenu (int x, int y, int detail) {
 	if (event.doit) {
 		if (menu != null && !menu.isDisposed ()) {
 			if (GTK.GTK4) {
-
+				/*
+				 * Parent the popover to the top handle. The location is relative to the
+				 * event handle, so translate when the two differ.
+				 */
+				long menuParent = topHandle ();
+				long eventHandle = eventHandle ();
+				double [] menuX = new double [] {x}, menuY = new double [] {y};
+				if (menuParent != eventHandle) {
+					GTK4.gtk_widget_translate_coordinates (eventHandle, menuParent, x, y, menuX, menuY);
+				}
 				long temp = 0;
 				if (GTK.gtk_widget_get_parent(menu.handle) != 0) {
 					temp = OS.g_object_ref(menu.handle);
 					GTK.gtk_widget_unparent(menu.handle);
 				}
-				GTK.gtk_widget_set_parent(menu.handle, this.handle);
-                if (temp != 0) {
-                    OS.g_object_unref(temp);
-                }
+				GTK.gtk_widget_set_parent(menu.handle, menuParent);
+				if (temp != 0) OS.g_object_unref(temp);
 
-
-				menu.setLocation(x, y);
+				menu.setLocation((int) menuX [0], (int) menuY [0]);
 				menu.setVisible(true);
-
 				return true;
 			} else {
 				Rectangle rect = event.getBounds ();
@@ -6886,18 +6883,11 @@ void showWidget () {
 }
 
 void sort (int [] items) {
-	/* Shell Sort from K&R, pg 108 */
-	int length = items.length;
-	for (int gap=length/2; gap>0; gap/=2) {
-		for (int i=gap; i<length; i++) {
-			for (int j=i-gap; j>=0; j-=gap) {
-				if (items [j] <= items [j + gap]) {
-					int swap = items [j];
-					items [j] = items [j + gap];
-					items [j + gap] = swap;
-				}
-			}
-		}
+	java.util.Arrays.sort (items);
+	for (int i = 0, j = items.length - 1; i < j; i++, j--) {
+		int swap = items [i];
+		items [i] = items [j];
+		items [j] = swap;
 	}
 }
 
