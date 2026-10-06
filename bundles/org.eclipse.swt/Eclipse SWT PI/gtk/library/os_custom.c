@@ -1007,6 +1007,7 @@ static const gchar *swt_fixed_accessible_get_name (AtkObject *obj);
 static AtkObject *swt_fixed_accessible_get_parent (AtkObject *obj);
 static AtkRole swt_fixed_accessible_get_role (AtkObject *obj);
 static AtkObject *swt_fixed_accessible_ref_child (AtkObject *obj, gint i);
+static AtkRelationSet *swt_fixed_accessible_ref_relation_set (AtkObject *obj);
 static AtkStateSet *swt_fixed_accesssible_ref_state_set (AtkObject *accessible);
 static void swt_fixed_accessible_action_iface_init (AtkActionIface *iface);
 static void swt_fixed_accessible_component_iface_init (AtkComponentIface *iface);
@@ -1036,6 +1037,31 @@ G_DEFINE_TYPE_WITH_CODE (SwtFixedAccessible, swt_fixed_accessible, GTK_TYPE_CONT
 			 G_IMPLEMENT_INTERFACE (ATK_TYPE_TEXT, swt_fixed_accessible_text_iface_init)
 			 G_IMPLEMENT_INTERFACE (ATK_TYPE_VALUE, swt_fixed_accessible_value_iface_init)
 			 G_ADD_PRIVATE (SwtFixedAccessible))
+
+#if ATK_CHECK_VERSION(2, 12, 0)
+/* Only demand-created logical cells advertise AtkTableCell. Classic SwtFixed
+ * accessibles and logical table roots keep their existing native type. */
+typedef struct _SwtLogicalTableCellAccessible {
+	SwtFixedAccessible parent_instance;
+} SwtLogicalTableCellAccessible;
+
+typedef struct _SwtLogicalTableCellAccessibleClass {
+	SwtFixedAccessibleClass parent_class;
+} SwtLogicalTableCellAccessibleClass;
+
+static void swt_logical_table_cell_accessible_table_cell_iface_init (AtkTableCellIface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (SwtLogicalTableCellAccessible, swt_logical_table_cell_accessible, SWT_TYPE_FIXED_ACCESSIBLE,
+	G_IMPLEMENT_INTERFACE (ATK_TYPE_TABLE_CELL, swt_logical_table_cell_accessible_table_cell_iface_init))
+
+static void swt_logical_table_cell_accessible_class_init (SwtLogicalTableCellAccessibleClass *klass) {
+	(void)klass;
+}
+
+static void swt_logical_table_cell_accessible_init (SwtLogicalTableCellAccessible *accessible) {
+	(void)accessible;
+}
+#endif
 
 // Fully qualified Java class name for the Java implementation of ATK functions
 const char *ACCESSIBILITY_CLASS_NAME = "org/eclipse/swt/accessibility/AccessibleObject";
@@ -1079,6 +1105,7 @@ static void swt_fixed_accessible_class_init (SwtFixedAccessibleClass *klass) {
 	atk_class->get_parent = swt_fixed_accessible_get_parent;
 	atk_class->get_role = swt_fixed_accessible_get_role;
 	atk_class->ref_child = swt_fixed_accessible_ref_child;
+	atk_class->ref_relation_set = swt_fixed_accessible_ref_relation_set;
 	atk_class->ref_state_set = swt_fixed_accesssible_ref_state_set;
 
 }
@@ -2032,7 +2059,174 @@ static gboolean swt_fixed_accessible_value_set_current_value (AtkValue *obj, con
 	return ((gint) returned_value == 1) ? TRUE : FALSE;
 }
 
+static AtkRelationSet *swt_fixed_accessible_ref_relation_set (AtkObject *obj) {
+	AtkObjectClass *parent = ATK_OBJECT_CLASS(swt_fixed_accessible_parent_class);
+	AtkRelationSet *relations = parent->ref_relation_set ? parent->ref_relation_set(obj) : atk_relation_set_new();
+	SwtFixedAccessiblePrivate *private = SWT_FIXED_ACCESSIBLE(obj)->priv;
+	if (!private->has_accessible) return relations;
+	jlong target = call_accessible_object_function("atkObject_ref_node_parent", "(J)J", (jlong)obj);
+	if (target < 0) return relations;
+	if (relations == NULL) relations = atk_relation_set_new();
+	AtkRelation *previous = atk_relation_set_get_relation_by_type(relations, ATK_RELATION_NODE_CHILD_OF);
+	if (previous != NULL) atk_relation_set_remove(relations, previous);
+	if (target != 0) {
+		AtkObject *node_parent = (AtkObject *)(guintptr)target;
+		AtkRelation *relation = atk_relation_new(&node_parent, 1, ATK_RELATION_NODE_CHILD_OF);
+		/* AtkRelation itself keeps weak target pointers. Keep this one demand
+		 * reference alive for the relation's lifetime, then release it. */
+		g_object_set_data_full(G_OBJECT(relation), "swt-logical-node-parent", node_parent, g_object_unref);
+		atk_relation_set_add(relations, relation);
+		g_object_unref(relation);
+	}
+	return relations;
+}
+
+#if ATK_CHECK_VERSION(2, 12, 0)
+static gint swt_logical_table_cell_accessible_get_column_span (AtkTableCell *cell) {
+	if (!SWT_FIXED_ACCESSIBLE(cell)->priv->has_accessible) return 0;
+	return (gint)call_accessible_object_function("atkTableCell_get_column_span", "(J)J", (jlong)cell);
+}
+
+static gint swt_logical_table_cell_accessible_get_row_span (AtkTableCell *cell) {
+	if (!SWT_FIXED_ACCESSIBLE(cell)->priv->has_accessible) return 0;
+	return (gint)call_accessible_object_function("atkTableCell_get_row_span", "(J)J", (jlong)cell);
+}
+
+static gboolean swt_logical_table_cell_accessible_get_position (AtkTableCell *cell, gint *row, gint *column) {
+	if (row) *row = -1;
+	if (column) *column = -1;
+	if (!SWT_FIXED_ACCESSIBLE(cell)->priv->has_accessible) return FALSE;
+	return call_accessible_object_function("atkTableCell_get_position", "(JJJ)J",
+		(jlong)cell, (jlong)row, (jlong)column) == 1;
+}
+
+static gboolean swt_logical_table_cell_accessible_get_row_column_span (AtkTableCell *cell,
+		gint *row, gint *column, gint *row_span, gint *column_span) {
+	if (row) *row = -1;
+	if (column) *column = -1;
+	if (row_span) *row_span = 0;
+	if (column_span) *column_span = 0;
+	if (!SWT_FIXED_ACCESSIBLE(cell)->priv->has_accessible) return FALSE;
+	return call_accessible_object_function("atkTableCell_get_row_column_span", "(JJJJJ)J",
+		(jlong)cell, (jlong)row, (jlong)column, (jlong)row_span, (jlong)column_span) == 1;
+}
+
+static AtkObject *swt_logical_table_cell_accessible_get_table (AtkTableCell *cell) {
+	if (!SWT_FIXED_ACCESSIBLE(cell)->priv->has_accessible) return NULL;
+	return (AtkObject *)(guintptr)call_accessible_object_function("atkTableCell_get_table", "(J)J", (jlong)cell);
+}
+
+static GPtrArray *swt_logical_table_cell_accessible_get_header_cells (AtkTableCell *cell, gboolean column) {
+	if (!SWT_FIXED_ACCESSIBLE(cell)->priv->has_accessible) return NULL;
+	const char *method = column ? "atkTableCell_get_column_header_cells" : "atkTableCell_get_row_header_cells";
+	jlong *snapshot = (jlong *)(guintptr)call_accessible_object_function(method, "(J)J", (jlong)cell);
+	if (snapshot == NULL) return NULL;
+	GPtrArray *headers = g_ptr_array_new_with_free_func(g_object_unref);
+	for (jlong i = 0; i < snapshot[0]; i++) {
+		if (snapshot[i + 1] != 0) g_ptr_array_add(headers, (gpointer)(guintptr)snapshot[i + 1]);
+	}
+	g_free(snapshot);
+	return headers;
+}
+
+static GPtrArray *swt_logical_table_cell_accessible_get_column_header_cells (AtkTableCell *cell) {
+	return swt_logical_table_cell_accessible_get_header_cells(cell, TRUE);
+}
+
+static GPtrArray *swt_logical_table_cell_accessible_get_row_header_cells (AtkTableCell *cell) {
+	return swt_logical_table_cell_accessible_get_header_cells(cell, FALSE);
+}
+
+static void swt_logical_table_cell_accessible_table_cell_iface_init (AtkTableCellIface *iface) {
+	iface->get_column_span = swt_logical_table_cell_accessible_get_column_span;
+	iface->get_column_header_cells = swt_logical_table_cell_accessible_get_column_header_cells;
+	iface->get_position = swt_logical_table_cell_accessible_get_position;
+	iface->get_row_span = swt_logical_table_cell_accessible_get_row_span;
+	iface->get_row_header_cells = swt_logical_table_cell_accessible_get_row_header_cells;
+	iface->get_row_column_span = swt_logical_table_cell_accessible_get_row_column_span;
+	iface->get_table = swt_logical_table_cell_accessible_get_table;
+}
+#endif
+
+#if ATK_CHECK_VERSION(2, 30, 0)
+static gboolean swt_fixed_accessible_component_scroll_to (AtkComponent *component, AtkScrollType type) {
+	SwtFixedAccessiblePrivate *private = SWT_FIXED_ACCESSIBLE(component)->priv;
+	if (private->has_accessible) {
+		jlong result = call_accessible_object_function("atkComponent_scroll_to", "(JJ)J", (jlong)component, (jlong)type);
+		if (result >= 0) return result == 1;
+	}
+	AtkComponentIface *parent = g_type_interface_peek_parent(ATK_COMPONENT_GET_IFACE(component));
+	return parent && parent->scroll_to ? parent->scroll_to(component, type) : FALSE;
+}
+
+static gboolean swt_fixed_accessible_component_scroll_to_point (AtkComponent *component,
+		AtkCoordType coordinates, gint x, gint y) {
+	SwtFixedAccessiblePrivate *private = SWT_FIXED_ACCESSIBLE(component)->priv;
+	if (private->has_accessible) {
+		jlong result = call_accessible_object_function("atkComponent_scroll_to_point", "(JJJJ)J",
+			(jlong)component, (jlong)coordinates, (jlong)x, (jlong)y);
+		if (result >= 0) return result == 1;
+	}
+	AtkComponentIface *parent = g_type_interface_peek_parent(ATK_COMPONENT_GET_IFACE(component));
+	return parent && parent->scroll_to_point ? parent->scroll_to_point(component, coordinates, x, y) : FALSE;
+}
+#endif
+
 // Interfaces initializers and implementations
+static gboolean swt_fixed_accessible_component_grab_focus (AtkComponent *component) {
+	SwtFixedAccessiblePrivate *private = SWT_FIXED_ACCESSIBLE(component)->priv;
+	if (private->has_accessible) {
+		return call_accessible_object_function("atkComponent_grab_focus", "(J)J", (jlong)component) == 1;
+	}
+	AtkComponentIface *parent = g_type_interface_peek_parent(ATK_COMPONENT_GET_IFACE(component));
+	return parent && parent->grab_focus ? parent->grab_focus(component) : FALSE;
+}
+
+static gint swt_fixed_accessible_selection_get_selection_count (AtkSelection *selection) {
+	SwtFixedAccessiblePrivate *private = SWT_FIXED_ACCESSIBLE(selection)->priv;
+	if (private->has_accessible) {
+		return (gint)call_accessible_object_function("atkSelection_get_selection_count", "(J)J", (jlong)selection);
+	}
+	AtkSelectionIface *parent = g_type_interface_peek_parent(ATK_SELECTION_GET_IFACE(selection));
+	return parent && parent->get_selection_count ? parent->get_selection_count(selection) : 0;
+}
+
+static gboolean swt_fixed_accessible_selection_add_selection (AtkSelection *selection, gint index) {
+	SwtFixedAccessiblePrivate *private = SWT_FIXED_ACCESSIBLE(selection)->priv;
+	if (private->has_accessible) {
+		return call_accessible_object_function("atkSelection_add_selection", "(JJ)J", (jlong)selection, (jlong)index) == 1;
+	}
+	AtkSelectionIface *parent = g_type_interface_peek_parent(ATK_SELECTION_GET_IFACE(selection));
+	return parent && parent->add_selection ? parent->add_selection(selection, index) : FALSE;
+}
+
+static gboolean swt_fixed_accessible_selection_remove_selection (AtkSelection *selection, gint index) {
+	SwtFixedAccessiblePrivate *private = SWT_FIXED_ACCESSIBLE(selection)->priv;
+	if (private->has_accessible) {
+		return call_accessible_object_function("atkSelection_remove_selection", "(JJ)J", (jlong)selection, (jlong)index) == 1;
+	}
+	AtkSelectionIface *parent = g_type_interface_peek_parent(ATK_SELECTION_GET_IFACE(selection));
+	return parent && parent->remove_selection ? parent->remove_selection(selection, index) : FALSE;
+}
+
+static gboolean swt_fixed_accessible_selection_clear_selection (AtkSelection *selection) {
+	SwtFixedAccessiblePrivate *private = SWT_FIXED_ACCESSIBLE(selection)->priv;
+	if (private->has_accessible) {
+		return call_accessible_object_function("atkSelection_clear_selection", "(J)J", (jlong)selection) == 1;
+	}
+	AtkSelectionIface *parent = g_type_interface_peek_parent(ATK_SELECTION_GET_IFACE(selection));
+	return parent && parent->clear_selection ? parent->clear_selection(selection) : FALSE;
+}
+
+static gboolean swt_fixed_accessible_selection_select_all_selection (AtkSelection *selection) {
+	SwtFixedAccessiblePrivate *private = SWT_FIXED_ACCESSIBLE(selection)->priv;
+	if (private->has_accessible) {
+		return call_accessible_object_function("atkSelection_select_all_selection", "(J)J", (jlong)selection) == 1;
+	}
+	AtkSelectionIface *parent = g_type_interface_peek_parent(ATK_SELECTION_GET_IFACE(selection));
+	return parent && parent->select_all_selection ? parent->select_all_selection(selection) : FALSE;
+}
+
 static void swt_fixed_accessible_action_iface_init (AtkActionIface *iface) {
 	iface->do_action = swt_fixed_accessible_action_do_action;
 	iface->get_description = swt_fixed_accessible_action_get_description;
@@ -2044,6 +2238,11 @@ static void swt_fixed_accessible_action_iface_init (AtkActionIface *iface) {
 static void swt_fixed_accessible_component_iface_init (AtkComponentIface *iface) {
 	iface->get_extents = swt_fixed_accessible_component_get_extents;
 	iface->ref_accessible_at_point = swt_fixed_accessible_component_ref_accessible_at_point;
+	iface->grab_focus = swt_fixed_accessible_component_grab_focus;
+#if ATK_CHECK_VERSION(2, 30, 0)
+	iface->scroll_to = swt_fixed_accessible_component_scroll_to;
+	iface->scroll_to_point = swt_fixed_accessible_component_scroll_to_point;
+#endif
 }
 
 static void swt_fixed_accessible_editable_text_iface_init (AtkEditableTextIface *iface) {
@@ -2065,6 +2264,11 @@ static void swt_fixed_accessible_hypertext_iface_init (AtkHypertextIface *iface)
 static void swt_fixed_accessible_selection_iface_init (AtkSelectionIface *iface) {
 	iface->is_child_selected = swt_fixed_accessible_selection_is_child_selected;
 	iface->ref_selection = swt_fixed_accessible_selection_ref_selection;
+	iface->get_selection_count = swt_fixed_accessible_selection_get_selection_count;
+	iface->add_selection = swt_fixed_accessible_selection_add_selection;
+	iface->remove_selection = swt_fixed_accessible_selection_remove_selection;
+	iface->clear_selection = swt_fixed_accessible_selection_clear_selection;
+	iface->select_all_selection = swt_fixed_accessible_selection_select_all_selection;
 }
 
 static void swt_fixed_accessible_table_iface_init (AtkTableIface *iface) {
@@ -2439,6 +2643,12 @@ static void swt_virtual_table_model_init(SwtVirtualTableModel *self) {
  * The model owns only a rebuildable primitive snapshot of VirtualTreeTopology.
  * Cold logical siblings are represented by (parent-id, child-index) in GtkTreeIter;
  * they do not require GtkTreeStore nodes. Java remains the semantic owner.
+ *
+ * A separate swt-residency packet uses dense physical entry ids and child
+ * counts for an attached view. Its fourth lane translates entries to SWT
+ * facade ids. Full logical sibling counts must not be attached to GtkTreeView.
+ * Snapshot replacement is a detached-view operation: callers must suppress
+ * callbacks, detach the view, replace the packet and restore the view/state.
  */
 #define SWT_VIRTUAL_TREE_ROOT (-1)
 #define SWT_VIRTUAL_TREE_ABSENT G_MININT
@@ -2450,6 +2660,7 @@ typedef struct _SwtVirtualTreeModel {
 	gint capacity;
 	gint root_count;
 	gint *snapshot;
+	gboolean residency;
 } SwtVirtualTreeModel;
 
 typedef struct _SwtVirtualTreeModelClass {
@@ -2464,10 +2675,21 @@ G_DEFINE_TYPE_WITH_CODE(SwtVirtualTreeModel, swt_virtual_tree_model, G_TYPE_OBJE
 enum {
 	SWT_VIRTUAL_TREE_MODEL_PROP_0,
 	SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY,
+	SWT_VIRTUAL_TREE_MODEL_PROP_RESIDENCY,
+	SWT_VIRTUAL_TREE_MODEL_PROP_FACADE,
 	SWT_VIRTUAL_TREE_MODEL_N_PROPERTIES
 };
 
 static GParamSpec *swt_virtual_tree_model_properties[SWT_VIRTUAL_TREE_MODEL_N_PROPERTIES];
+
+/* Separate semantic/view models must never accept one another's iterators. */
+static gint swt_virtual_tree_model_stamp_counter = 1;
+
+static gint swt_virtual_tree_model_next_stamp(void) {
+	guint stamp = (guint)g_atomic_int_add(&swt_virtual_tree_model_stamp_counter, 1);
+	if (stamp == 0) stamp = (guint)g_atomic_int_add(&swt_virtual_tree_model_stamp_counter, 1);
+	return (gint)stamp;
+}
 
 static gint *swt_virtual_tree_model_parents(SwtVirtualTreeModel *self) {
 	return self->snapshot == NULL ? NULL : self->snapshot + 2;
@@ -2479,6 +2701,43 @@ static gint *swt_virtual_tree_model_indices(SwtVirtualTreeModel *self) {
 
 static gint *swt_virtual_tree_model_counts(SwtVirtualTreeModel *self) {
 	return self->snapshot == NULL ? NULL : self->snapshot + 2 + self->capacity * 2;
+}
+
+/* Only the bounded packet has a fourth facade-id lane. */
+static gint swt_virtual_tree_model_facade_id(SwtVirtualTreeModel *self, gint entry) {
+	if (entry < 0) return -1;
+	if (!self->residency) return entry;
+	return self->snapshot[2 + self->capacity * 3 + entry];
+}
+
+/* Reject holes, invalid parents and advertised counts outside the actual packet. */
+static gboolean swt_virtual_tree_model_residency_valid(const gint *snapshot, gint capacity) {
+	gint root_count = snapshot[1];
+	if (root_count > capacity) return FALSE;
+	const gint *parents = snapshot + 2;
+	const gint *indices = parents + capacity;
+	const gint *counts = indices + capacity;
+	const gint *facades = counts + capacity;
+	gint *actual_counts = g_new0(gint, capacity);
+	gint actual_roots = 0;
+	gboolean valid = TRUE;
+	for (gint entry = 0; entry < capacity && valid; entry++) {
+		gint parent = parents[entry];
+		if (parent < SWT_VIRTUAL_TREE_ROOT || parent >= entry
+				|| counts[entry] < 0 || counts[entry] > capacity || facades[entry] < -2) {
+			valid = FALSE;
+			break;
+		}
+		gint index = parent == SWT_VIRTUAL_TREE_ROOT
+			? actual_roots++ : actual_counts[parent]++;
+		if (indices[entry] != index) valid = FALSE;
+	}
+	if (actual_roots != root_count) valid = FALSE;
+	for (gint entry = 0; entry < capacity && valid; entry++) {
+		if (counts[entry] != actual_counts[entry]) valid = FALSE;
+	}
+	g_free(actual_counts);
+	return valid;
 }
 
 static gboolean swt_virtual_tree_model_present(SwtVirtualTreeModel *self, gint id) {
@@ -2594,7 +2853,8 @@ static void swt_virtual_tree_model_get_value(
 	GtkTreeModel *tree_model, GtkTreeIter *iter, gint column, GValue *value) {
 	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)tree_model;
 	g_value_init(value, G_TYPE_INT);
-	g_value_set_int(value, column == 0 ? swt_virtual_tree_model_iter_id(self, iter) : -1);
+	g_value_set_int(value, column == 0
+		? swt_virtual_tree_model_facade_id(self, swt_virtual_tree_model_iter_id(self, iter)) : -1);
 }
 
 static gboolean swt_virtual_tree_model_iter_next(GtkTreeModel *tree_model, GtkTreeIter *iter) {
@@ -2679,25 +2939,47 @@ static void swt_virtual_tree_model_set_property(
 	GObject *object, guint property_id, const GValue *value, GParamSpec *pspec) {
 	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)object;
 	switch (property_id) {
-		case SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY: {
+		case SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY:
+		case SWT_VIRTUAL_TREE_MODEL_PROP_RESIDENCY: {
 			const gint *snapshot = (const gint *)g_value_get_pointer(value);
-			g_free(self->snapshot);
-			self->snapshot = NULL;
-			self->capacity = 0;
-			self->root_count = 0;
+			gboolean residency = property_id == SWT_VIRTUAL_TREE_MODEL_PROP_RESIDENCY;
+			gint lanes = residency ? 4 : 3;
+			gint capacity = 0, root_count = 0;
+			gint *replacement = NULL;
 			if (snapshot != NULL) {
-				gint capacity = snapshot[0];
-				gint root_count = snapshot[1];
-				if (capacity >= 0 && capacity <= (G_MAXINT - 2) / 3 && root_count >= 0) {
-					gsize length = (gsize)(2 + capacity * 3);
-					self->snapshot = g_new(gint, length);
-					memcpy(self->snapshot, snapshot, length * sizeof(gint));
-					self->capacity = capacity;
-					self->root_count = root_count;
+				capacity = snapshot[0];
+				root_count = snapshot[1];
+				if (capacity < 0 || capacity > (G_MAXINT - 2) / lanes || root_count < 0
+						|| (residency && !swt_virtual_tree_model_residency_valid(snapshot, capacity))) {
+					g_warning("Invalid SWT virtual Tree snapshot");
+					return;
 				}
+				gsize length = (gsize)(2 + capacity * lanes);
+				replacement = g_new(gint, length);
+				memcpy(replacement, snapshot, length * sizeof(gint));
 			}
-			self->stamp++;
-			if (self->stamp == 0) self->stamp = 1;
+			/* Copy before releasing: even a getter/setter round trip may alias the old packet. */
+			g_free(self->snapshot);
+			self->snapshot = replacement;
+			self->capacity = capacity;
+			self->root_count = root_count;
+			self->residency = residency;
+			self->stamp = swt_virtual_tree_model_next_stamp();
+			break;
+		}
+		case SWT_VIRTUAL_TREE_MODEL_PROP_FACADE: {
+			/* Only this value lane may change while attached. Shape/stamp stay
+			 * stable during renderer/SetData callbacks. */
+			const gint *binding = (const gint *)g_value_get_pointer(value);
+			if (!self->residency || self->snapshot == NULL || binding == NULL
+					|| binding[0] < 0 || binding[0] >= self->capacity || binding[1] < 0) return;
+			gint *facades = self->snapshot + 2 + self->capacity * 3;
+			if (facades[binding[0]] == -2) return;
+			if (facades[binding[0]] >= 0 && facades[binding[0]] != binding[1]) {
+				g_warning("Cannot rebind a resident SWT Tree facade");
+				return;
+			}
+			facades[binding[0]] = binding[1];
 			break;
 		}
 		default:
@@ -2711,7 +2993,10 @@ static void swt_virtual_tree_model_get_property(
 	SwtVirtualTreeModel *self = (SwtVirtualTreeModel *)object;
 	switch (property_id) {
 		case SWT_VIRTUAL_TREE_MODEL_PROP_TOPOLOGY:
-			g_value_set_pointer(value, self->snapshot);
+			g_value_set_pointer(value, self->residency ? NULL : self->snapshot);
+			break;
+		case SWT_VIRTUAL_TREE_MODEL_PROP_RESIDENCY:
+			g_value_set_pointer(value, self->residency ? self->snapshot : NULL);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -2735,16 +3020,24 @@ static void swt_virtual_tree_model_class_init(SwtVirtualTreeModelClass *klass) {
 		g_param_spec_pointer("swt-topology", "SWT topology",
 			"Primitive SWT virtual Tree topology snapshot",
 			G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	swt_virtual_tree_model_properties[SWT_VIRTUAL_TREE_MODEL_PROP_RESIDENCY] =
+		g_param_spec_pointer("swt-residency", "SWT native residency",
+			"Bounded physical Tree projection with SWT facade-id translation",
+			G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	swt_virtual_tree_model_properties[SWT_VIRTUAL_TREE_MODEL_PROP_FACADE] =
+		g_param_spec_pointer("swt-facade", "SWT facade binding",
+			"Bind a resident value lane without invalidating physical iterators",
+			G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS);
 	g_object_class_install_properties(object_class, SWT_VIRTUAL_TREE_MODEL_N_PROPERTIES,
 		swt_virtual_tree_model_properties);
 }
 
 static void swt_virtual_tree_model_init(SwtVirtualTreeModel *self) {
-	self->stamp = (gint)g_random_int();
-	if (self->stamp == 0) self->stamp = 1;
+	self->stamp = swt_virtual_tree_model_next_stamp();
 	self->capacity = 0;
 	self->root_count = 0;
 	self->snapshot = NULL;
+	self->residency = FALSE;
 }
 
 #endif
@@ -2764,7 +3057,13 @@ JNIEXPORT jlong JNICALL OS_NATIVE(content_1providers_1create_1gtype)
 	OS_NATIVE_ENTER(env, that, content_1providers_1create_1gtype_FUNC)
 	if (name) lpname= (const char *) (*env)->GetStringUTFChars(env, name, NULL);
 #if !defined(GTK4)
-	if (lpname && strcmp(lpname, "SwtVirtualTableModel") == 0) {
+	if (lpname && strcmp(lpname, "SwtLogicalTableCellAccessible") == 0) {
+#if ATK_CHECK_VERSION(2, 12, 0)
+		rc = swt_logical_table_cell_accessible_get_type();
+#else
+		rc = swt_fixed_accessible_get_type();
+#endif
+	} else if (lpname && strcmp(lpname, "SwtVirtualTableModel") == 0) {
 		rc = swt_virtual_table_model_get_type();
 	} else if (lpname && strcmp(lpname, "SwtVirtualTreeModel") == 0) {
 		rc = swt_virtual_tree_model_get_type();

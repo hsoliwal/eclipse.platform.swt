@@ -37,6 +37,7 @@ final class VirtualTreeTopology {
 	private int rootFirstChildId = -1;
 	private long rootVisibleExtraRows;
 	private int materializedCount;
+	private long generation;
 
 	VirtualTreeTopology () {
 		Arrays.fill (parentIds, ABSENT);
@@ -91,6 +92,7 @@ final class VirtualTreeTopology {
 		childIndices [id] = childIndex;
 		nextSiblingIds [id] = -1;
 		linkSorted (id);
+		generation++;
         if (visibleContribution != 0) {
             propagateVisibleContribution(parentId, visibleContribution);
         }
@@ -140,10 +142,20 @@ final class VirtualTreeTopology {
 		rootFirstChildId = -1;
 		rootVisibleExtraRows = 0;
 		materializedCount = 0;
+		generation++;
+	}
+
+	/** Revision of coordinates, child counts and expansion; presentation flags are independent. */
+	long generation () {
+		return generation;
 	}
 
 	boolean contains (int id) {
 		return id >= 0 && id < parentIds.length && parentIds [id] != ABSENT;
+	}
+
+	int idCapacity () {
+		return parentIds.length;
 	}
 
 	int materializedCount () {
@@ -196,11 +208,13 @@ final class VirtualTreeTopology {
         }
 		if (parentId == ROOT) {
 			pruneCoordinatesPast (ROOT, count);
+			if (rootChildCount != count) generation++;
 			rootChildCount = count;
 			return;
 		}
 		requirePresent (parentId);
 		pruneCoordinatesPast (parentId, count);
+		if (childCounts [parentId] != count) generation++;
 		childCounts [parentId] = count;
 		long state = stateMasks [parentId] | VirtualItemState.CHILDREN_KNOWN
 				| VirtualItemState.CHILDREN_COMPLETE;
@@ -253,6 +267,7 @@ final class VirtualTreeTopology {
 		boolean expansionChanged = ((stateMasks [id] ^ state) & VirtualItemState.EXPANDED) != 0;
 		stateMasks [id] = state;
         if (expansionChanged) {
+            generation++;
             refreshVisibleExtra(id);
         }
 	}
@@ -274,6 +289,7 @@ final class VirtualTreeTopology {
             stateMasks [id] &= ~flag;
         }
         if ((flag & VirtualItemState.EXPANDED) != 0) {
+            generation++;
             refreshVisibleExtra(id);
         }
 	}
@@ -379,6 +395,7 @@ final class VirtualTreeTopology {
 			visibleExtraRows [current] = 0;
 			childVisibleExtraSums [current] = 0;
 			materializedCount--;
+			generation++;
 			if (current == id) {
 				return;
 			}
@@ -390,11 +407,13 @@ final class VirtualTreeTopology {
 		if (parentId == ROOT) {
             if (rootChildCount != UNKNOWN_CHILD_COUNT) {
                 rootChildCount = Math.max(0, rootChildCount + delta);
+                generation++;
             }
 			return;
 		}
 		if (contains (parentId) && childCounts [parentId] != UNKNOWN_CHILD_COUNT) {
 			childCounts [parentId] = Math.max (0, childCounts [parentId] + delta);
+			generation++;
             if (childCounts [parentId] == 0) {
                 stateMasks [parentId] &= ~VirtualItemState.HAS_CHILDREN;
             } else {
@@ -440,9 +459,14 @@ final class VirtualTreeTopology {
         if (delta == 0) {
             return;
         }
+		boolean changed = false;
 		for (int id = 0; id < parentIds.length; id++) {
 			if (parentIds [id] == parentId && childIndices [id] >= fromInclusive) {
 				childIndices [id] = Math.addExact (childIndices [id], delta);
+				if (!changed) {
+					generation++;
+					changed = true;
+				}
 			}
 		}
 	}

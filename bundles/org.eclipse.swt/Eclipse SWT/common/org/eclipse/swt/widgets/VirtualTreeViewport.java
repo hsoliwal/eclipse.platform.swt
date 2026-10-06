@@ -41,10 +41,13 @@ final class VirtualTreeViewport {
 
 	void configureGeometry (int sampleRowExtent, int viewportExtent) {
 		long beforeTop = topRow ();
+		int beforeRowExtent = scrollMetrics.sampleRowExtent ();
+		int beforeViewportExtent = scrollMetrics.viewportExtent ();
 		scrollMetrics.configure (projection.visibleRowCount (), sampleRowExtent, viewportExtent);
 		long top = scrollMetrics.clampTopRow (beforeTop);
 		syncWindow (top);
-		if (beforeTop != top) generation++;
+		if (beforeTop != top || beforeRowExtent != sampleRowExtent
+				|| beforeViewportExtent != viewportExtent) generation++;
 	}
 
 	void refreshLogicalRange () {
@@ -121,6 +124,11 @@ final class VirtualTreeViewport {
 		return projection.window (firstPaintRow (), paintRowCount ());
 	}
 
+	/** Reuses caller-owned primitive storage for the current paint window and its ancestors. */
+	void paintResidency (VirtualTreeVisibleProjection.Residency target) {
+		projection.residencyWindow (firstPaintRow (), paintRowCount (), target);
+	}
+
 	void ensureVisible (long row) {
 		long total = visibleRowCount ();
 		if (row < 0 || row >= total) {
@@ -140,7 +148,7 @@ final class VirtualTreeViewport {
 	}
 
 	long generation () {
-		return generation;
+		return generation + window.generation () + projection.generation ();
 	}
 
 	private void syncWindow (long top) {

@@ -41,6 +41,8 @@ import org.eclipse.swt.internal.gtk3.*;
  */
 public class TreeItem extends Item {
 	Tree parent;
+	/** Stable semantic slot; a native iterator is only a rendering projection. */
+	int virtualId = -1;
 	Font font;
 	Font[] cellFont;
 	String [] strings;
@@ -636,15 +638,15 @@ public Rectangle getBounds (int index) {
     if (column == 0) {
         return new Rectangle(0, 0, 0, 0);
     }
-	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
+	long path = parent.viewPath (handle);
 	GTK.gtk_widget_realize (parentHandle);
 	GdkRectangle rect = new GdkRectangle ();
-	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
+	parent.virtualCellArea (this, path, column, rect);
     if ((parent.getStyle() & SWT.MIRRORED) != 0) {
         rect.x = parent.getClientWidth() - rect.width - rect.x;
     }
 
-	GTK.gtk_tree_path_free (path);
+	if (path != 0) GTK.gtk_tree_path_free (path);
 
 	if (index == 0 && (parent.style & SWT.CHECK) != 0) {
 		int [] x = new int [1], w = new int [1];
@@ -686,15 +688,15 @@ public Rectangle getBounds () {
         return new Rectangle(0, 0, 0, 0);
     }
 
-	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
+	long path = parent.viewPath (handle);
 	GTK.gtk_widget_realize (parentHandle);
 
 	boolean isExpander = GTK.gtk_tree_model_iter_n_children (parent.modelHandle, handle) > 0;
-	boolean isExpanded = GTK.gtk_tree_view_row_expanded (parentHandle, path);
+	boolean isExpanded = parent.usesBoundedVirtualView () ? isExpandedState () : GTK.gtk_tree_view_row_expanded (parentHandle, path);
 	GTK.gtk_tree_view_column_cell_set_cell_data (column, parent.modelHandle, handle, isExpander, isExpanded);
 
 	GdkRectangle rect = new GdkRectangle ();
-	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
+	parent.virtualCellArea (this, path, column, rect);
     if ((parent.getStyle() & SWT.MIRRORED) != 0) {
         rect.x = parent.getClientWidth() - rect.width - rect.x;
     }
@@ -706,7 +708,7 @@ public Rectangle getBounds () {
 	parent.ignoreSize = false;
 	rect.width = w [0];
 	int [] buffer = new int [1];
-	GTK.gtk_tree_path_free (path);
+	if (path != 0) GTK.gtk_tree_path_free (path);
 
 	int horizontalSeparator;
 	if (GTK.GTK4) {
@@ -950,13 +952,13 @@ public Rectangle getImageBounds (int index) {
         return new Rectangle(0, 0, 0, 0);
     }
 	GdkRectangle rect = new GdkRectangle ();
-	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
+	long path = parent.viewPath (handle);
 	GTK.gtk_widget_realize (parentHandle);
-	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
+	parent.virtualCellArea (this, path, column, rect);
     if ((parent.getStyle() & SWT.MIRRORED) != 0) {
         rect.x = parent.getClientWidth() - rect.width - rect.x;
     }
-	GTK.gtk_tree_path_free (path);
+	if (path != 0) GTK.gtk_tree_path_free (path);
 	/*
 	 * Feature in GTK. When a pixbufRenderer has size of 0x0, gtk_tree_view_column_cell_get_position
 	 * returns a position of 0 as well. This causes offset issues meaning that images/widgets/etc.
@@ -1118,6 +1120,12 @@ public Tree getParent () {
  */
 public TreeItem getParentItem () {
 	checkWidget();
+	if (parent.virtualTopology != null) {
+		int parentId = parent.virtualTopology.parentId (parent.virtualItemId (this));
+		if (parentId == VirtualTreeTopology.ROOT) return null;
+		TreeItem item = parent.items [parentId];
+		if (item != null) return parent.exposeVirtualItem (item);
+	}
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 	TreeItem item = null;
 	if (GTK.gtk_tree_model_iter_parent (parent.modelHandle, iter, handle)) {
@@ -1206,15 +1214,15 @@ public Rectangle getTextBounds (int index) {
         return new Rectangle(0, 0, 0, 0);
     }
 
-	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
+	long path = parent.viewPath (handle);
 	GTK.gtk_widget_realize (parentHandle);
 
 	boolean isExpander = GTK.gtk_tree_model_iter_n_children (parent.modelHandle, handle) > 0;
-	boolean isExpanded = GTK.gtk_tree_view_row_expanded (parentHandle, path);
+	boolean isExpanded = parent.usesBoundedVirtualView () ? isExpandedState () : GTK.gtk_tree_view_row_expanded (parentHandle, path);
 	GTK.gtk_tree_view_column_cell_set_cell_data (column, parent.modelHandle, handle, isExpander, isExpanded);
 
 	GdkRectangle rect = new GdkRectangle ();
-	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
+	parent.virtualCellArea (this, path, column, rect);
     if ((parent.getStyle() & SWT.MIRRORED) != 0) {
         rect.x = parent.getClientWidth() - rect.width - rect.x;
     }
@@ -1225,7 +1233,7 @@ public Rectangle getTextBounds (int index) {
 	gtk_cell_renderer_get_preferred_size (textRenderer, parentHandle, w, null);
 	parent.ignoreSize = false;
 	int [] buffer = new int [1];
-	GTK.gtk_tree_path_free (path);
+	if (path != 0) GTK.gtk_tree_path_free (path);
 
 	int horizontalSeparator;
 	if (GTK.GTK4) {
@@ -1290,6 +1298,12 @@ public int indexOf (TreeItem item) {
     if (item.isDisposed()) {
         error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	if (parent.virtualTopology != null) {
+		if (item.parent != parent) return -1;
+		int id = parent.virtualItemId (item);
+		return parent.virtualTopology.parentId (id) == parent.virtualItemId (this)
+				? parent.virtualTopology.childIndex (id) : -1;
+	}
 	int index = -1;
 	boolean isParent = false;
 	long currentPath = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
@@ -1332,12 +1346,14 @@ void releaseHandle () {
         OS.g_free(handle);
     }
 	handle = 0;
+	virtualId = -1;
 	super.releaseHandle ();
 	parent = null;
 }
 
 @Override
 void releaseWidget () {
+	parent.releaseVirtualAccessibleItem (this);
 	super.releaseWidget ();
 	font = null;
 	cellFont = null;
@@ -1553,6 +1569,12 @@ public void setChecked (boolean checked) {
  */
 public void setExpanded (boolean expanded) {
 	checkWidget();
+	if (parent.usesBoundedVirtualView ()) {
+		if (parent.virtualChildCount (this) == 0) return;
+		setExpandedState (expanded);
+		parent.reconcileVirtualResidency ();
+		return;
+	}
     if (expanded) {
         parent.restoreVirtualChildren(this);
     }

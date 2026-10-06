@@ -77,6 +77,7 @@ public class ATK extends OS {
 	public static final int ATK_ROLE_TOOL_BAR = 62;
 	public static final int ATK_ROLE_TOOL_TIP = 63;
 	public static final int ATK_ROLE_TREE = 64;
+	public static final int ATK_ROLE_TREE_TABLE = 65;
 	public static final int ATK_ROLE_HEADER = 69;
 	public static final int ATK_ROLE_FOOTER = 70;
 	public static final int ATK_ROLE_PARAGRAPH = 71;
@@ -95,6 +96,7 @@ public class ATK extends OS {
 	public static final int ATK_STATE_DEFUNCT = 5;
 	public static final int ATK_STATE_EDITABLE = 6;
 	public static final int ATK_STATE_ENABLED = 7;
+	public static final int ATK_STATE_EXPANDABLE = 8;
 	public static final int ATK_STATE_EXPANDED = 9;
 	public static final int ATK_STATE_FOCUSABLE = 10;
 	public static final int ATK_STATE_FOCUSED = 11;
@@ -104,6 +106,7 @@ public class ATK extends OS {
 	public static final int ATK_STATE_RESIZABLE = 19;
 	public static final int ATK_STATE_SELECTABLE = 20;
 	public static final int ATK_STATE_SELECTED = 21;
+	public static final int ATK_STATE_SENSITIVE = 22;
 	public static final int ATK_STATE_SHOWING = 23;
 	public static final int ATK_STATE_SINGLE_LINE = 24;
 	public static final int ATK_STATE_TRANSIENT = 26;
@@ -111,6 +114,9 @@ public class ATK extends OS {
 	public static final int ATK_STATE_INVALID_ENTRY = 33;
 	public static final int ATK_STATE_SUPPORTS_AUTOCOMPLETION = 34;
 	public static final int ATK_STATE_VISIBLE = 28;
+	public static final int ATK_STATE_MANAGES_DESCENDANTS = 29;
+	public static final int ATK_STATE_INDETERMINATE = 30;
+	public static final int ATK_STATE_CHECKABLE = 39;
 	public static final int ATK_TEXT_BOUNDARY_CHAR = 0;
 	public static final int ATK_TEXT_BOUNDARY_WORD_START = 1;
 	public static final int ATK_TEXT_BOUNDARY_WORD_END = 2;
@@ -157,10 +163,20 @@ public class ATK extends OS {
 	public static final int ATK_TEXT_ATTR_STRETCH = 25;
 	public static final int ATK_TEXT_ATTR_VARIANT = 26;
 	public static final int ATK_TEXT_ATTR_STYLE = 27;
+	public static final int ATK_XY_SCREEN = 0;
 	public static final int ATK_XY_WINDOW = 1;
+	public static final int ATK_XY_PARENT = 2;
+	public static final int ATK_SCROLL_TOP_LEFT = 0;
+	public static final int ATK_SCROLL_BOTTOM_RIGHT = 1;
+	public static final int ATK_SCROLL_TOP_EDGE = 2;
+	public static final int ATK_SCROLL_BOTTOM_EDGE = 3;
+	public static final int ATK_SCROLL_LEFT_EDGE = 4;
+	public static final int ATK_SCROLL_RIGHT_EDGE = 5;
+	public static final int ATK_SCROLL_ANYWHERE = 6;
 
 	/** Signals */
 	public static final byte[] selection_changed = OS.ascii ("selection_changed");
+	public static final byte[] active_descendant_changed = OS.ascii ("active-descendant-changed");
 	public static final byte[] text_changed_insert = OS.ascii ("text_changed::insert");
 	public static final byte[] text_changed_delete = OS.ascii ("text_changed::delete");
 	public static final byte[] text_caret_moved = OS.ascii ("text_caret_moved");
