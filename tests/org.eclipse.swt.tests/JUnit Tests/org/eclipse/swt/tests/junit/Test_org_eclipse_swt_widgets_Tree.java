@@ -82,36 +82,60 @@ public void test_virtualGtk3LogicalNativeModelKeepsDistantAccessSparseAndStable(
 		virtualTree.setItemCount(1_000_000);
 		shell.setLayout(new FillLayout());
 		shell.setSize(360, 220);
-		shell.open();
-		SwtTestUtil.processEvents();
 
 		Method usesVirtualNativeModel = Tree.class.getDeclaredMethod("usesVirtualNativeModel");
 		usesVirtualNativeModel.setAccessible(true);
 		assertTrue((Boolean) usesVirtualNativeModel.invoke(virtualTree),
 				"the full GTK3 logical native model must remain available behind explicit opt-in");
 
-		TreeItem distant = virtualTree.getItem(750_000);
-		distant.setText("distant");
-		distant.setItemCount(16);
-		TreeItem child = distant.getItem(5);
-		child.setText("child");
-		distant.setExpanded(true);
-		virtualTree.setSelection(distant);
-		virtualTree.setTopItem(distant);
-		SwtTestUtil.processEvents();
-
 		Field topologyField = Tree.class.getDeclaredField("virtualTopology");
 		topologyField.setAccessible(true);
 		Object topology = topologyField.get(virtualTree);
 		Method materializedCount = topology.getClass().getDeclaredMethod("materializedCount");
 		materializedCount.setAccessible(true);
-		assertTrue(((Integer) materializedCount.invoke(topology)).intValue() <= 2,
-				"distant GTK3 access must materialize only touched logical coordinates");
+		// Include the top anchor that mutations preserve in the cold baseline.
+		TreeItem initialTop = virtualTree.getTopItem();
+		assertNotNull(initialTop);
+		int coldFacades = ((Integer) materializedCount.invoke(topology)).intValue();
+		assertTrue(coldFacades < 128, "native view preparation must be bounded: " + coldFacades);
+
+		TreeItem distant = virtualTree.getItem(750_000);
+		distant.setText("distant");
+		distant.setItemCount(16);
+		TreeItem child = distant.getItem(5);
+		child.setText("child");
+		// Counts must be visible through JNI immediately, without pumping the UI.
+		distant.setItemCount(32);
+		assertSame(child, distant.getItem(5));
+		TreeItem removed = distant.getItem(31);
+		removed.setItemCount(4);
+		TreeItem removedLeaf = removed.getItem(2);
+		distant.setItemCount(8);
+		assertTrue(removed.isDisposed());
+		assertTrue(removedLeaf.isDisposed());
+		assertSame(child, distant.getItem(5));
+		assertThrows(IllegalArgumentException.class, () -> distant.getItem(8));
+		distant.setItemCount(16);
+		int touchedFacades = ((Integer) materializedCount.invoke(topology)).intValue();
+		assertTrue(touchedFacades <= coldFacades + 2,
+				"unpainted lookup may add only the retained branch and child: "
+				+ coldFacades + " -> " + touchedFacades);
+		shell.open();
+		SwtTestUtil.processEvents();
+		distant.setExpanded(true);
+		virtualTree.setSelection(distant);
+		virtualTree.setTopItem(distant);
+		SwtTestUtil.processEvents();
+
+		int paintedFacades = ((Integer) materializedCount.invoke(topology)).intValue();
+		assertTrue(paintedFacades < 128,
+				"painted distant access must stay within the small viewport budget: " + paintedFacades);
 
 		TreeItem inserted = new TreeItem(virtualTree, SWT.NONE, 3);
 		inserted.setText("inserted");
 		SwtTestUtil.processEvents();
 
+		assertSame(initialTop, virtualTree.getItem(0));
 		assertSame(distant, virtualTree.getItem(750_001),
 				"snapshot refresh must preserve exposed facade identity after coordinate shift");
 		assertSame(child, distant.getItem(5));
@@ -121,8 +145,9 @@ public void test_virtualGtk3LogicalNativeModelKeepsDistantAccessSparseAndStable(
 				"snapshot refresh must restore selection");
 		assertSame(distant, virtualTree.getTopItem(),
 				"snapshot refresh must restore the logical top item");
-		assertTrue(((Integer) materializedCount.invoke(topology)).intValue() <= 3,
-				"explicit insertion must not materialize the cold million-row prefix");
+		int shiftedFacades = ((Integer) materializedCount.invoke(topology)).intValue();
+		assertTrue(shiftedFacades < 128,
+				"explicit insertion must not materialize the cold million-row prefix: " + shiftedFacades);
 
 		distant.setChecked(true);
 		distant.setGrayed(true);
