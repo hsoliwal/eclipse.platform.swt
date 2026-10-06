@@ -14,6 +14,7 @@
 package org.eclipse.swt.internal.image;
 
 import java.io.*;
+import java.util.Arrays;
 
 final class TIFFRandomFileAccess {
 
@@ -45,9 +46,7 @@ void seek(int pos) throws IOException {
 		int offset = next % CHUNK_SIZE;
 		while (n > 0) {
 			if (index >= buffers.length) {
-				byte[][] oldBuffers = buffers;
-				buffers = new byte[Math.max(index + 1, oldBuffers.length + LIST_SIZE)][];
-				System.arraycopy(oldBuffers, 0, buffers, 0, oldBuffers.length);
+				buffers = Arrays.copyOf(buffers, Math.max(index + 1, buffers.length + LIST_SIZE));
 			}
             if (buffers[index] == null) {
                 buffers[index] = new byte[CHUNK_SIZE];
@@ -85,9 +84,7 @@ void read(byte b[]) throws IOException {
 		int offset = next % CHUNK_SIZE;
 		while (nMissing > 0) {
 			if (index >= buffers.length) {
-				byte[][] oldBuffers = buffers;
-				buffers = new byte[Math.max(index, oldBuffers.length + LIST_SIZE)][];
-				System.arraycopy(oldBuffers, 0, buffers, 0, oldBuffers.length);
+				buffers = Arrays.copyOf(buffers, Math.max(index, buffers.length + LIST_SIZE));
 			}
             if (buffers[index] == null) {
                 buffers[index] = new byte[CHUNK_SIZE];
