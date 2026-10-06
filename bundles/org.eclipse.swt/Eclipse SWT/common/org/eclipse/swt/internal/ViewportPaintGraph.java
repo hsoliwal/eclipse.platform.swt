@@ -765,7 +765,7 @@ public final class ViewportPaintGraph {
 							continue;
 						}
 						boolean pathCommand = kinds [node] == DRAW_PATH || kinds [node] == FILL_PATH;
-						boolean directPath = pathCommand && transform.equals (Affine.IDENTITY);
+						boolean directPath = pathCommand && transform.isIdentity ();
 						boolean fast = transform.isIntegralTranslation () && !pathCommand;
 						if (directPath) {
 							if (transformedGc) {
@@ -1027,7 +1027,7 @@ public final class ViewportPaintGraph {
 	}
 
 	private int transformId (Affine transform) {
-		return transform.equals (Affine.IDENTITY) ? 0 : storeTransform (transform);
+		return transform.isIdentity () ? 0 : storeTransform (transform);
 	}
 
 	private int storeTransform (Affine transform) {
