@@ -95,21 +95,6 @@ public final class ViewportGcProxy implements AutoCloseable {
 		return this;
 	}
 
-	public ViewportGcProxy clip (Region region) {
-		checkOpen ();
-		if (region == null) throw new IllegalArgumentException ("null clip");
-		if (region.isDisposed ()) throw new IllegalArgumentException ("disposed clip");
-		Region next = new Region (gc.getDevice ());
-		try {
-			next.add (region);
-			next.intersect (originalClipping);
-			gc.setClipping (next);
-		} finally {
-			next.dispose ();
-		}
-		return this;
-	}
-
 	public ViewportGcProxy transform (ViewportPaintGraph.Affine affine) {
 		checkOpen ();
 		if (affine == null) throw new IllegalArgumentException ("null affine");
