@@ -4,7 +4,7 @@
 `ViewportResourceRegressionTest` measures Java heap, whole-process resident memory (RSS)
 and process CPU separately. Counting Java TreeItem facades cannot establish native-memory bounds.
 The dedicated GTK3/X11 CI job enables `-Dswt.viewport.resourceRegression=true` and requires
-all five tests to execute without skips on JDK 21 and 25. Other platforms do not silently inherit
+all ten tests to execute without skips on JDK 21 and 25. Other platforms do not silently inherit
 Linux evidence.
 
 ## Frozen workload and budgets
@@ -26,21 +26,44 @@ wall-clock timeout is 60 seconds; elapsed time is reported but never substituted
 Each measured interactive step must receive an actual paint event and reach its requested top
 item within two seconds. Draining an empty event queue alone does not settle GTK frame-clock work.
 The tests also preserve item identity, text/check state, logical counts, scroll position and
-bounded SetData callbacks. They check native resident row counts in addition to process memory.
+bounded SetData callbacks. They check the peak row count in the model actually attached to GtkTreeView via JNI,
+including expanded and collapsed states, independently of Java facade counts and process memory.
+The GTK object reference and iterator allocations used for sampling are always released.
+Primitive method handles avoid per-row reflective argument-array and boxing overhead.
 
-Two executed negative controls establish that the budget assertions detect resource growth:
+Three executed negative controls establish that the budget assertions detect resource growth:
 a touched, retained 64 MiB direct buffer must fail the memory validator while Java heap stays
 below 8 MiB growth; two seconds of additional process CPU must fail the one-second CPU validator.
+A third control requests default-model row 4096 and must exceed the 512-row native-view
+budget; the validator must reject it. This control is not a passing bounded workload.
 Reports and child logs are archived under `target/viewport-resources/`.
+
+## Explicit logical model qualification
+
+Four additional three-trial scenarios explicitly set
+`org.eclipse.swt.internal.gtk.virtualTreeLogicalNativeModel=true` in fresh JVMs:
+
+| Scenario | Workload | Median process CPU |
+| --- | --- | ---: |
+| `logical-cold` | Root count 64 -> 1,000,000 | 1 second |
+| `logical-far` | Unpainted, identity-preserving access at 100,000 and 900,000 | 1 second |
+| `logical-scroll` | 96 painted scrolls alternating 100,000 and 900,000 after 16 warm steps | 8 seconds |
+| `logical-collapse` | 96 painted million-child expand/collapse cycles after 16 warm cycles | 8 seconds |
+
+Each retains the original 24 MiB RSS / 8 MiB heap / 150 ms median maximum-step CPU budgets.
+Every positive scenario requires at most 512 rows in the attached native view, sampled after
+count/access changes and during expanded/collapsed/painted states. `residentRows` retains its
+historical facade/frontier diagnostic meaning; `peakNativeViewRows` is the independent JNI view
+measurement. Schema version 2 adds this distinction. The tests require 24 fresh child reports.
 
 ## Scope and unresolved work
 
-This gate qualifies cold logical count growth and repeated use of the visited near viewport.
+The default-model gate qualifies cold count growth and repeated use of the visited near viewport.
 It does **not** establish constant memory for arbitrary distant access: the current default
 GTK3 frontier can build a native prefix when `getItem(100000)` is requested. The standalone
 `far-diagnostic` scenario records that cost with an explicitly unqualified scope. It is not
-counted as a passing bounded-memory test. `logical-cold` is a separate opt-in model diagnostic.
-Neither diagnostic changes the default model.
+counted as a passing bounded-memory test. The four explicit logical-model workloads additionally qualify a bounded cold/distant visited
+window. They do not change the default model or prove bounded memory over arbitrary visited history.
 
 These bounded workloads do not prove leak freedom, universal latency, screenshot parity or
 cross-platform correctness. Existing screenshot, widget, topology, API and platform gates remain
@@ -58,7 +81,8 @@ SWT_GTK4=0 GDK_BACKEND=x11 xvfb-run -a mvn -B \
 ```
 
 The source recipe and exact pre/postimage seals live in Synexia's
-`synexia-openrewrite-recipes/recipe-crates/viewport-resource-gates-20261006`.
+`synexia-openrewrite-recipes/recipe-crates/viewport-resource-gates-20261006` (original) and
+`synexia-openrewrite-recipes/recipe-crates/viewport-distant-resource-gates-20261006`.
 The newly authored resource test, this document and Synexia recipe tooling are Apache-2.0.
 Existing SWT files retain their upstream notices; running a recipe does not change their license.
 See `docs/licenses/synexia-viewport-Apache-2.0.txt` for the license and

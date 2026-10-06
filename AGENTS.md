@@ -234,3 +234,8 @@ Use compiler/behavior, fixed-point/refusal and native/platform evidence before p
 viewport/resource work include measured CPU, Java heap and native/process memory; row/facade
 counts alone are insufficient. Report partial coverage and pending gates explicitly. The canonical
 policy is [Synexia's convergence model](https://github.com/hsoliwal/com.synexia/blob/develop/SYNEXIA_CONVERGENCE_MODEL.md).
+
+For virtual Tree resource qualification, sample the model actually attached to GtkTreeView via
+JNI, including expanded and collapsed states. Report peak native-view rows separately from Java
+facade counts. Preserve CPU/RSS/heap budgets and negative controls. Qualifying the explicit logical
+model does not qualify or change the default model; distinguish both in evidence and release claims.

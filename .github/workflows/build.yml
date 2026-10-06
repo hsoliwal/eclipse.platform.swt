@@ -173,10 +173,10 @@ jobs:
         report = pathlib.Path('target/surefire-reports/TEST-org.eclipse.swt.tests.junit.ViewportResourceRegressionTest.xml')
         suite = ET.parse(report).getroot()
         counts = {key: int(suite.get(key, '0')) for key in ('tests', 'failures', 'errors', 'skipped')}
-        assert counts == {'tests': 5, 'failures': 0, 'errors': 0, 'skipped': 0}, counts
+        assert counts == {'tests': 10, 'failures': 0, 'errors': 0, 'skipped': 0}, counts
         evidence = pathlib.Path('target/viewport-resources')
-        expected = [f'{scenario}-{trial}.properties' for scenario in ('cold', 'scroll', 'collapse') for trial in range(3)]
-        expected += ['native-control-0.properties', 'cpu-control-0.properties']
+        expected = [f'{scenario}-{trial}.properties' for scenario in ('cold', 'scroll', 'collapse', 'logical-cold', 'logical-far', 'logical-scroll', 'logical-collapse') for trial in range(3)]
+        expected += ['native-control-0.properties', 'cpu-control-0.properties', 'native-prefix-control-0.properties']
         assert all((evidence / name).is_file() for name in expected), expected
         PYTHON
 
