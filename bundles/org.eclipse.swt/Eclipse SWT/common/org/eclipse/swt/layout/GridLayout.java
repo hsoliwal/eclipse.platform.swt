@@ -256,7 +256,7 @@ Point layout (Composite composite, boolean move, int x, int y, int width, int he
 
 	/* Build the grid */
 	int row = 0, column = 0, rowCount = 0, columnCount = numColumns;
-	Control [][] grid = new Control [4] [columnCount];
+	Control [][] grid = new Control [4] [];
 	for (int i=0; i<count; i++) {
 		Control child = children [i];
 		GridData data = (GridData) child.getLayoutData ();
@@ -265,7 +265,7 @@ Point layout (Composite composite, boolean move, int x, int y, int width, int he
 		while (true) {
 			int lastRow = row + vSpan;
 			if (lastRow >= grid.length) {
-				Control [][] newGrid = new Control [lastRow + 4] [columnCount];
+				Control [][] newGrid = new Control [Math.max (lastRow + 4, grid.length * 2)] [];
 				System.arraycopy (grid, 0, newGrid, 0, grid.length);
 				grid = newGrid;
 			}
