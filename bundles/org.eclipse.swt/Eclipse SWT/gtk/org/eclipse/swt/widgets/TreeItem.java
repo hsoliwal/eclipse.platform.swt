@@ -50,6 +50,8 @@ public class TreeItem extends Item {
 	Color [] virtualCellBackground, virtualCellForeground;
 	Image [] virtualImages;
 	boolean cached, grayed, isExpanded, updated, settingData;
+	private int cachedChildCount = -1;
+	private int cachedChildCountStamp = -1;
 	static final int EXPANDER_EXTRA_PADDING = 4;
 
 /**
@@ -682,8 +684,8 @@ public Rectangle getBounds () {
     if (column == 0) {
         return new Rectangle(0, 0, 0, 0);
     }
-	long textRenderer = parent.getTextRenderer (column);
-	long pixbufRenderer = parent.getPixbufRenderer (column);
+	long textRenderer = CellRenderers.getTextRenderer (column);
+	long pixbufRenderer = CellRenderers.getPixbufRenderer (column);
     if (textRenderer == 0 || pixbufRenderer == 0) {
         return new Rectangle(0, 0, 0, 0);
     }
@@ -947,7 +949,7 @@ public Rectangle getImageBounds (int index) {
     if (column == 0) {
         return new Rectangle(0, 0, 0, 0);
     }
-	long pixbufRenderer = parent.getPixbufRenderer (column);
+	long pixbufRenderer = CellRenderers.getPixbufRenderer (column);
     if (pixbufRenderer == 0) {
         return new Rectangle(0, 0, 0, 0);
     }
@@ -978,7 +980,7 @@ public Rectangle getImageBounds (int index) {
 		 * position of the textRenderer, to ensure images/widgets/etc. aren't placed over the TreeItem's
 		 * text.
 		 */
-		long textRenderer = parent.getTextRenderer (column);
+		long textRenderer = CellRenderers.getTextRenderer (column);
         if (textRenderer == 0) {
             return new Rectangle(0, 0, 0, 0);
         }
@@ -1013,10 +1015,12 @@ public Rectangle getImageBounds (int index) {
  */
 public int getItemCount () {
 	checkWidget();
-    if (!parent.checkData(this)) {
-        error(SWT.ERROR_WIDGET_DISPOSED);
-    }
-	return parent.virtualChildCount (this);
+	if (!parent.checkData(this)) error(SWT.ERROR_WIDGET_DISPOSED);
+	if (parent.virtualTopology != null) return parent.virtualChildCount (this);
+	if (cachedChildCountStamp == parent.structureModCount) return cachedChildCount;
+	cachedChildCount = GTK.gtk_tree_model_iter_n_children (parent.modelHandle, handle);
+	cachedChildCountStamp = parent.structureModCount;
+	return cachedChildCount;
 }
 
 /**
@@ -1208,8 +1212,8 @@ public Rectangle getTextBounds (int index) {
     if (column == 0) {
         return new Rectangle(0, 0, 0, 0);
     }
-	long textRenderer = parent.getTextRenderer (column);
-	long pixbufRenderer = parent.getPixbufRenderer (column);
+	long textRenderer = CellRenderers.getTextRenderer (column);
+	long pixbufRenderer = CellRenderers.getPixbufRenderer (column);
     if (textRenderer == 0 || pixbufRenderer == 0) {
         return new Rectangle(0, 0, 0, 0);
     }
@@ -1367,7 +1371,7 @@ void releaseWidget () {
 public void dispose () {
 	// Workaround to Bug489751, avoid selecting next node when selected node is disposed.
 	Tree tmpParent = null;
-	if (parent != null && parent.getItemCount() > 0 && parent.getSelectionCount() == 0) {
+	if (parent != null && parent.getSelectionCount() == 0) {
 		tmpParent = parent;
 	}
 	super.dispose();
@@ -1423,6 +1427,8 @@ public void removeAll () {
 		}
 	}
 	OS.g_free (iter);
+	// unmaterialized virtual children may be removed without destroyItem().
+	parent.structureChanged ();
 }
 
 /**
@@ -1510,8 +1516,8 @@ public void setBackground (int index, Color color) {
                 if (column == 0) {
                     return;
                 }
-				long textRenderer = parent.getTextRenderer (column);
-				long imageRenderer = parent.getPixbufRenderer (column);
+				long textRenderer = CellRenderers.getTextRenderer (column);
+				long imageRenderer = CellRenderers.getPixbufRenderer (column);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, display.cellDataProc, parentHandle, 0);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, imageRenderer, display.cellDataProc, parentHandle, 0);
 			}
@@ -1700,8 +1706,8 @@ public void setFont (int index, Font font) {
                 if (column == 0) {
                     return;
                 }
-				long textRenderer = parent.getTextRenderer (column);
-				long imageRenderer = parent.getPixbufRenderer (column);
+				long textRenderer = CellRenderers.getTextRenderer (column);
+				long imageRenderer = CellRenderers.getPixbufRenderer (column);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, display.cellDataProc, parentHandle, 0);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, imageRenderer, display.cellDataProc, parentHandle, 0);
 			}
@@ -1799,8 +1805,8 @@ public void setForeground (int index, Color color){
                 if (column == 0) {
                     return;
                 }
-				long textRenderer = parent.getTextRenderer (column);
-				long imageRenderer = parent.getPixbufRenderer (column);
+				long textRenderer = CellRenderers.getTextRenderer (column);
+				long imageRenderer = CellRenderers.getPixbufRenderer (column);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, display.cellDataProc, parentHandle, 0);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, imageRenderer, display.cellDataProc, parentHandle, 0);
 			}
@@ -1898,7 +1904,7 @@ public void setImage(int index, Image image) {
 	int modelIndex = parent.columnCount == 0 ? Tree.FIRST_COLUMN : parent.columns [index].modelIndex;
 	long parentHandle = parent.handle;
 	long column = GTK.gtk_tree_view_get_column (parentHandle, index);
-	long pixbufRenderer = parent.getPixbufRenderer (column);
+	long pixbufRenderer = CellRenderers.getPixbufRenderer (column);
 	int [] currentWidth = new int [1];
 	int [] currentHeight= new int [1];
 	GTK.gtk_cell_renderer_get_fixed_size (pixbufRenderer, currentWidth, currentHeight);
