@@ -137,6 +137,11 @@ public final class ViewportGcProxy implements AutoCloseable {
 	public void close () {
 		if (closed) return;
 		closed = true;
+		if (gc.isDisposed ()) {
+			originalTransform.dispose ();
+			originalClipping.dispose ();
+			return;
+		}
 		try {
 			gc.setLineAttributes (originalLineAttributes);
 			if (originalAdvanced) {
