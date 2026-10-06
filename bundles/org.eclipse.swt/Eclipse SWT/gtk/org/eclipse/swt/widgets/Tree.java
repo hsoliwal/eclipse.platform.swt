@@ -5435,7 +5435,7 @@ void register () {
 
 void releaseItem (TreeItem item, boolean release) {
 	if (usesVirtualNativeModel ()) {
-		int id = virtualMaterializedId (item.handle);
+		int id = virtualItemId (item);
 		if (id < 0) return;
 		if (release) {
 			item.release (false);
@@ -5450,20 +5450,24 @@ void releaseItem (TreeItem item, boolean release) {
 	items [index [0]] = null;
 }
 
+// Bulk mutations may shift Java coordinates before the native snapshot is published.
+// Release descendants by stable topology IDs, never by stale native iterators.
+private void releaseVirtualItems (int parentId) {
+	int child = virtualTopology.firstMaterializedChildId (parentId);
+	while (child >= 0) {
+		int next = virtualTopology.nextMaterializedSiblingId (child);
+		releaseVirtualItems (child);
+		TreeItem item = child < items.length ? items [child] : null;
+		if (item != null && !item.isDisposed ()) releaseItem (item, true);
+		child = next;
+	}
+}
+
 void releaseItems (long parentIter) {
 	if (usesVirtualNativeModel ()) {
 		int parentId = parentIter == 0 ? VirtualTreeTopology.ROOT : virtualMaterializedId (parentIter);
-		if (parentId < VirtualTreeTopology.ROOT) return;
-		int child = virtualTopology.firstMaterializedChildId (parentId);
-		while (child >= 0) {
-			int next = virtualTopology.nextMaterializedSiblingId (child);
-			TreeItem item = child < items.length ? items [child] : null;
-			if (item != null && !item.isDisposed ()) {
-				releaseItems (item.handle);
-				releaseItem (item, true);
-			}
-			child = next;
-		}
+		if (parentIter != 0 && parentId < 0) return;
+		releaseVirtualItems (parentId);
 		return;
 	}
 	int[] index = new int [1];
@@ -5554,7 +5558,7 @@ void remove (long parentIter, int start, int end) {
 				TreeItem item = items [id];
 				if (item != null && !item.isDisposed ()) {
 					if (item.settingData) throwCannotRemoveItem (start);
-					releaseItems (item.handle);
+					releaseVirtualItems (id);
 					releaseItem (item, true);
 				}
 			}
@@ -6239,6 +6243,7 @@ void setItemCount (long parentIter, int count) {
         return;
     }
 
+	VirtualNativeViewState nativeState = usesVirtualNativeModel () ? captureVirtualNativeViewState () : null;
     if (!isVirtual) {
         setRedraw(false);
     }
@@ -6270,6 +6275,8 @@ void setItemCount (long parentIter, int count) {
 			}
 		}
 		modelChanged = true;
+		// Publish changed child counts before an immediate TreeItem.getItem() query.
+		finishVirtualNativeMutation (nativeState);
 	} finally {
         if (!isVirtual && !isDisposed()) {
             setRedraw(true);
