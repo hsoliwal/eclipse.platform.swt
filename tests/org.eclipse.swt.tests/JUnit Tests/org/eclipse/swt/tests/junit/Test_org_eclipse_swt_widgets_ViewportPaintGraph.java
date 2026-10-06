@@ -115,15 +115,19 @@ public class Test_org_eclipse_swt_widgets_ViewportPaintGraph {
 		int frozen = constant (layerType, "FROZEN");
 		int header = constant (layerType, "HEADER");
 		int scrollbar = constant (layerType, "SCROLLBAR");
+		int editor = constant (layerType, "EDITOR");
+		int feedback = constant (layerType, "FEEDBACK");
 
 		initialize.invoke (state, 0d, 0d);
 		int verticalDirty = (Integer)scrollTo.invoke (state, 0d, 400d);
-		assertEquals (body | frozen | scrollbar, verticalDirty);
+		// Match the shared ViewportRuntime contract: editor/feedback overlays track the body.
+		assertEquals (body | frozen | editor | scrollbar | feedback, verticalDirty);
 		assertEquals (0, verticalDirty & header,
 				"vertical body scrolling must not repaint the stationary header plane");
 
 		int horizontalDirty = (Integer)scrollTo.invoke (state, 120d, 400d);
-		assertEquals (body | header | scrollbar, horizontalDirty);
+		assertEquals (body | header | editor | scrollbar | feedback, horizontalDirty);
+		assertEquals (0, scrollTo.invoke (state, 120d, 400d), "unchanged origin must not dirty layers");
 	}
 
 	private static int constant (Class<?> type, String name) throws Exception {

@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assumptions.*;
 
 import java.io.*;
 import java.lang.management.*;
+import java.lang.invoke.*;
 import java.lang.reflect.*;
 import java.nio.*;
 import java.nio.file.*;
@@ -61,6 +62,34 @@ public class ViewportResourceRegressionTest {
 	}
 
 	@Test
+	void logicalColdMillionRowsStayWithinBudgets () throws Exception {
+		qualify ("logical-cold", 1_000_000_000L);
+	}
+
+	@Test
+	void logicalDistantAccessDoesNotAllocateNativePrefix () throws Exception {
+		qualify ("logical-far", 1_000_000_000L);
+	}
+
+	@Test
+	void logicalDistantPaintedScrollingStaysWithinBudgets () throws Exception {
+		qualify ("logical-scroll", 8_000_000_000L);
+	}
+
+	@Test
+	void logicalCollapseExpansionStaysWithinBudgets () throws Exception {
+		qualify ("logical-collapse", 8_000_000_000L);
+	}
+
+	@Test
+	void legacyDistantPrefixIsDetectedByNativeViewBudget () throws Exception {
+		Properties p = probe ("native-prefix-control", 0);
+		assertEquals ("default", p.getProperty ("model"));
+		assertTrue (number (p, "peakNativeViewRows") >= 4097, p.toString ());
+		assertThrows (AssertionError.class, () -> nativeViewBudget (p));
+	}
+
+	@Test
 	void touchedNativeAllocationIsDetectedIndependentlyOfJavaHeap () throws Exception {
 		Properties p = probe ("native-control", 0);
 		assertTrue (number (p, "rssDeltaBytes") > 24 * MIB, p.toString ());
@@ -81,12 +110,13 @@ public class ViewportResourceRegressionTest {
 		for (int trial = 0; trial < cpu.length; trial++) {
 			Properties p = probe (scenario, trial);
 			memoryBudget (p);
+			nativeViewBudget (p);
 			cpu [trial] = number (p, "cpuNanos");
 			stepCpu [trial] = number (p, "maxStepCpuNanos");
 			assertEquals (1_000_000, number (p, "logicalRows"));
-			assertTrue (number (p, "residentRows") <= (scenario.equals ("collapse") ? 11 : 512), p.toString ());
+			assertTrue (number (p, "residentRows") <= (scenario.endsWith ("collapse") ? 11 : 512), p.toString ());
 			assertTrue (number (p, "setDataCalls") <= 512, "Work must follow the visited window: " + p);
-			if (!scenario.equals ("cold")) {
+			if (scenario.endsWith ("scroll") || scenario.endsWith ("collapse")) {
 				assertTrue (number (p, "paintEvents") >= STEPS, "Every measured step must be painted: " + p);
 			}
 		}
@@ -99,6 +129,11 @@ public class ViewportResourceRegressionTest {
 	private static void memoryBudget (Properties p) {
 		assertTrue (number (p, "rssDeltaBytes") <= 24 * MIB, "Process RSS growth exceeded 24 MiB: " + p);
 		assertTrue (number (p, "heapDeltaBytes") <= 8 * MIB, "Retained Java heap growth exceeded 8 MiB: " + p);
+	}
+
+	private static void nativeViewBudget (Properties p) {
+		assertTrue (number (p, "peakNativeViewRows") <= 512,
+				"Attached GTK model exceeded 512 resident rows: " + p);
 	}
 
 	private static void cpuBudget (long actual, long limit) {
@@ -185,6 +220,55 @@ public class ViewportResourceRegressionTest {
 		return ((Number)method.invoke (tree, parent)).intValue ();
 	}
 
+	/** Counts the model actually attached to GtkTreeView, independently of Java facade storage. */
+	private static final class NativeViewProbe {
+		private final Field handle;
+		private final Method getModel, unref;
+		private final MethodHandle childCount, nthChild, malloc, free;
+		private final int iterSize;
+		private int peak;
+
+		NativeViewProbe () throws Exception {
+			handle = Widget.class.getDeclaredField ("handle"); handle.setAccessible (true);
+			Class<?> gtk = Class.forName ("org.eclipse.swt.internal.gtk.GTK");
+			Class<?> os = Class.forName ("org.eclipse.swt.internal.gtk.OS");
+			getModel = os.getMethod ("g_object_get", long.class, byte[].class, long[].class, long.class);
+			unref = os.getMethod ("g_object_unref", long.class);
+			childCount = MethodHandles.publicLookup ().unreflect (gtk.getMethod ("gtk_tree_model_iter_n_children", long.class, long.class));
+			nthChild = MethodHandles.publicLookup ().unreflect (gtk.getMethod ("gtk_tree_model_iter_nth_child", long.class, long.class, long.class, int.class));
+			malloc = MethodHandles.publicLookup ().unreflect (os.getMethod ("g_malloc", long.class));
+			free = MethodHandles.publicLookup ().unreflect (os.getMethod ("g_free", long.class));
+			iterSize = ((Number)gtk.getMethod ("GtkTreeIter_sizeof").invoke (null)).intValue ();
+		}
+
+		void sample (Tree tree) throws Exception {
+			long [] model = {0};
+			getModel.invoke (null, handle.getLong (tree), new byte [] {109, 111, 100, 101, 108, 0}, model, 0L);
+			require (model [0] != 0, "GTK view must have an attached model");
+			try { peak = Math.max (peak, rows (model [0], 0, 512)); }
+			catch (Throwable failure) { throw new AssertionError ("Native view sampling failed", failure); }
+			finally { unref.invoke (null, model [0]); }
+		}
+
+		private int rows (long model, long parent, int remaining) throws Throwable {
+			int count = (int)childCount.invokeExact (model, parent);
+			require (count >= 0, "Invalid GTK child count");
+			// Stop traversal as soon as the bound fails; never enumerate a million-row control.
+			if (count == 0 || count > remaining) return count;
+			long iter = (long)malloc.invokeExact ((long)iterSize);
+			require (iter != 0, "GTK iterator allocation failed");
+			try {
+				int total = count;
+				for (int child = 0; child < count; child++) {
+					require ((boolean)nthChild.invokeExact (model, iter, parent, child), "GTK child iterator missing");
+					total += rows (model, iter, remaining - total);
+					if (total > remaining) return total;
+				}
+				return total;
+			} finally { free.invokeExact (iter); }
+		}
+	}
+
 	private static void require (boolean condition, String message) {
 		if (!condition) throw new AssertionError (message);
 	}
@@ -192,7 +276,7 @@ public class ViewportResourceRegressionTest {
 	/** Standalone child entry point also supports an explicitly unqualified far-index diagnostic. */
 	public static void main (String [] args) throws Exception {
 		String scenario = args [0];
-		boolean logical = scenario.equals ("logical-cold");
+		boolean logical = scenario.startsWith ("logical-");
 		System.clearProperty (LOGICAL_MODEL);
 		if (logical) System.setProperty (LOGICAL_MODEL, "true");
 		Display display = new Display ();
@@ -225,37 +309,48 @@ public class ViewportResourceRegressionTest {
 				TreeItem parent = null;
 				TreeItem pinned = first;
 				TreeItem [] positions = null;
-				boolean scrolling = scenario.equals ("scroll"), collapsing = scenario.equals ("collapse");
+				boolean scrolling = scenario.endsWith ("scroll"), collapsing = scenario.endsWith ("collapse");
+				NativeViewProbe nativeView = new NativeViewProbe ();
 				if (scrolling || collapsing) {
 					if (collapsing) {
 						tree.setItemCount (1); parent = first; parent.setItemCount (1_000_000);
 						pinned = parent.getItem (10); pinned.setText ("retained"); pinned.setChecked (true);
 					} else {
 						tree.setItemCount (1_000_000);
-						positions = new TreeItem [] {tree.getItem (32), tree.getItem (96)};
+						positions = logical
+								? new TreeItem [] {tree.getItem (100_000), tree.getItem (900_000)}
+								: new TreeItem [] {tree.getItem (32), tree.getItem (96)};
 					}
 					shell.setSize (480, 320); shell.open (); settle (display);
 					for (int warm = 0; warm < 16; warm++) {
-						if (collapsing) { parent.setExpanded (true); paint (tree, null, paints); parent.setExpanded (false); }
+						if (collapsing) { parent.setExpanded (true); paint (tree, null, paints); nativeView.sample (tree); parent.setExpanded (false); }
 						else tree.setTopItem (positions [warm & 1]);
 						paint (tree, scrolling ? positions [warm & 1] : null, paints);
 					}
 				}
+				nativeView.sample (tree);
 				long heapBefore = collectedHeap (display), rssBefore = rss (), cpuBefore = processCpu (), wallBefore = System.nanoTime ();
 				long maxStepCpu = 0;
 				int paintBefore = paints [0];
 				if (scrolling || collapsing) {
 					for (int step = 0; step < STEPS; step++) {
 						long stepCpu = processCpu ();
-						if (collapsing) { parent.setExpanded (true); paint (tree, null, paints); parent.setExpanded (false); }
+						if (collapsing) { parent.setExpanded (true); paint (tree, null, paints); nativeView.sample (tree); parent.setExpanded (false); }
 						else tree.setTopItem (positions [step & 1]);
 						paint (tree, scrolling ? positions [step & 1] : null, paints);
 						if (scrolling) require (tree.getTopItem () == positions [step & 1], "Scroll target changed");
+						nativeView.sample (tree);
 						maxStepCpu = Math.max (maxStepCpu, processCpu () - stepCpu);
 					}
 				} else {
 					tree.setItemCount (1_000_000);
 					if (scenario.equals ("far-diagnostic")) tree.getItem (100_000).setText ("far");
+					if (scenario.equals ("native-prefix-control")) tree.getItem (4096).setText ("prefix control");
+					if (scenario.equals ("logical-far")) {
+						TreeItem near = tree.getItem (100_000), far = tree.getItem (900_000);
+						near.setText ("near"); far.setText ("far");
+						require (tree.getItem (100_000) == near && tree.getItem (900_000) == far, "Distant identity changed");
+					}
 					if (scenario.equals ("native-control")) {
 						retainedNativeControl = ByteBuffer.allocateDirect (64 * 1024 * 1024);
 						for (int page = 0; page < retainedNativeControl.capacity (); page += 4096) retainedNativeControl.put (page, (byte)1);
@@ -265,17 +360,18 @@ public class ViewportResourceRegressionTest {
 						while (processCpu () < until) for (int i = 0; i < 4096; i++) cpuControl = cpuControl * 31 + i;
 					}
 				}
+				nativeView.sample (tree);
 				long cpu = processCpu () - cpuBefore, elapsed = System.nanoTime () - wallBefore;
 				long heapAfter = collectedHeap (display), rssAfter = rss ();
 				require (pinned.getChecked () && pinned.getText ().equals ("retained"), "Pinned state changed");
 				require (collapsing ? parent.getItem (10) == pinned : tree.getItem (0) == pinned, "Pinned identity changed");
 				Properties result = new Properties ();
-				result.setProperty ("schema", "swt-viewport-resources/1");
+				result.setProperty ("schema", "swt-viewport-resources/2");
 				result.setProperty ("scenario", scenario);
 				result.setProperty ("java", System.getProperty ("java.runtime.version"));
 				result.setProperty ("platform", SWT.getPlatform ());
 				result.setProperty ("model", logical ? "explicit-logical-opt-in" : "default");
-				result.setProperty ("scope", scenario.equals ("far-diagnostic") ? "unqualified-native-prefix-diagnostic" : "bounded-cold-or-visited-window");
+				result.setProperty ("scope", scenario.equals ("far-diagnostic") ? "unqualified-native-prefix-diagnostic" : logical ? "explicit-logical-cold-or-distant-window" : "bounded-cold-or-visited-window");
 				result.setProperty ("steps", Integer.toString (scrolling || collapsing ? STEPS : 1));
 				result.setProperty ("heapDeltaBytes", Long.toString (Math.max (0, heapAfter - heapBefore)));
 				result.setProperty ("rssDeltaBytes", Long.toString (Math.max (0, rssAfter - rssBefore)));
@@ -289,6 +385,7 @@ public class ViewportResourceRegressionTest {
 				result.setProperty ("setDataCalls", Integer.toString (callbacks [0]));
 				result.setProperty ("paintEvents", Integer.toString (paints [0] - paintBefore));
 				result.setProperty ("logicalRows", Integer.toString (parent == null ? tree.getItemCount () : parent.getItemCount ()));
+				result.setProperty ("peakNativeViewRows", Integer.toString (nativeView.peak));
 				result.setProperty ("residentRows", Integer.toString (resident (tree, parent)));
 				try (Writer writer = Files.newBufferedWriter (Path.of (args [1]))) { result.store (writer, "Measured in an isolated warmed JVM; GC excluded from CPU sample"); }
 			} finally { shell.dispose (); }
