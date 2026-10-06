@@ -216,3 +216,21 @@ display.asyncExec(() -> button.setText("Updated"));
 - Use snippets in `examples/org.eclipse.swt.snippets/` as reference
 - Test cross-platform compatibility
 - Check MANIFEST.MF for OSGi dependencies
+
+## Synexia donor-convergence and recipe invariant
+
+For Synexia-origin work, `hsoliwal/com.synexia` owns convergence and the reusable Maven/OpenRewrite
+recipe crate, fixtures, pre/postimage seals, provenance and proof receipts. Apply the qualified
+recipe to generate SWT changes. Keep the canonical recipe/evidence in Synexia; any target-local
+mirror is revision/hash/license pinned. Send target improvements back as new convergence evidence.
+
+SWT may freely reuse eligible Synexia-owned Apache-2.0 code **and recipes**, with their license,
+NOTICE, attribution and modification notices. The recipe's license does not relicense existing
+SWT/Eclipse code, donor-derived payloads, generated postimages or image assets. Preserve their
+original notices. SWT owns API/JNI compatibility, rendering, widget lifetime and platform testing;
+no Synexia runtime service dependency is required to reuse the source.
+
+Use compiler/behavior, fixed-point/refusal and native/platform evidence before promotion. For
+viewport/resource work include measured CPU, Java heap and native/process memory; row/facade
+counts alone are insufficient. Report partial coverage and pending gates explicitly. The canonical
+policy is [Synexia's convergence model](https://github.com/hsoliwal/com.synexia/blob/develop/SYNEXIA_CONVERGENCE_MODEL.md).
