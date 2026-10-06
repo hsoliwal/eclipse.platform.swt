@@ -1,4 +1,4 @@
-name: Viewport Screenshot Regression
+name: Viewport Screenshot and Resource Regression
 
 concurrency:
   group: viewport-screenshots-${{ github.ref }}
@@ -19,10 +19,14 @@ permissions:
 
 jobs:
   gtk3-x11:
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['21', '25']
     uses: ./.github/workflows/build.yml
     with:
       runner: ubuntu-latest
-      java: '25'
+      java: '${{ matrix.java }}'
       native: gtk.linux.x86_64
       gtk: gtk3
       gdk_backend: x11
@@ -30,3 +34,4 @@ jobs:
       runtodotests: false
       api_check: false
       viewport_screenshots: true
+      viewport_resources: true

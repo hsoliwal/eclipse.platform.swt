@@ -24,6 +24,7 @@ import org.junit.platform.suite.api.Suite;
 @SelectClasses({
 	Test_VirtualTreeTopology.class,
 	Test_VirtualTreeWindow.class,
+	ViewportResourceRegressionTest.class,
 	AllNonBrowserTests.class,
 	AllBrowserTests.class
 })
