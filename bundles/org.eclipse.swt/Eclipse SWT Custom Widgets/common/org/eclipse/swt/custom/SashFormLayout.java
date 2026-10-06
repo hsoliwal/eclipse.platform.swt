@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.swt.custom;
 
+import java.util.Arrays;
+
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
@@ -127,8 +129,7 @@ protected void layout(Composite composite, boolean flushCache) {
 
 	// keep just the right number of sashes
 	if (sashForm.sashes.length < controls.length - 1) {
-		Sash[] newSashes = new Sash[controls.length - 1];
-		System.arraycopy(sashForm.sashes, 0, newSashes, 0, sashForm.sashes.length);
+		Sash[] newSashes = Arrays.copyOf(sashForm.sashes, controls.length - 1);
 		for (int i = sashForm.sashes.length; i < newSashes.length; i++) {
 			newSashes[i] = sashForm.createSash();
 		}
