@@ -16,6 +16,7 @@ import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.*;
 import org.eclipse.swt.internal.ViewportPaintGraph.Affine;
+import org.eclipse.swt.widgets.Display;
 import org.junit.jupiter.api.*;
 
 @SuppressWarnings("restriction")
