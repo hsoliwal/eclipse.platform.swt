@@ -122,8 +122,8 @@ public void test_virtualGtk3LogicalNativeModelKeepsDistantAccessSparseAndStable(
 
 	distant.setChecked(true);
 	distant.setGrayed(true);
-	distant.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
-	distant.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+	distant.setBackground(shell.getDisplay().getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+	distant.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_INFO_FOREGROUND));
 	assertTrue(distant.getChecked());
 	assertTrue(distant.getGrayed());
 
