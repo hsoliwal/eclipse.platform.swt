@@ -114,6 +114,7 @@ public class Tree extends Composite {
 	VirtualTreeViewport virtualViewport;
 	VirtualNativeViewState pendingVirtualNativeViewState;
 	boolean virtualNativeViewResetScheduled;
+	Boolean virtualLogicalNativeModel;
 	int nextId;
 	TreeColumn [] columns;
 	TreeColumn sortColumn;
@@ -157,6 +158,8 @@ public class Tree extends Composite {
 	static final int VIRTUAL_BACKSLASH_KEY = 0x5c; // GDK printable keyval
 	static final int VIRTUAL_FRONTIER_CHUNK = 256;
 	static final int VIRTUAL_FRONTIER_TRIGGER = 32;
+	static final String VIRTUAL_LOGICAL_NATIVE_MODEL_PROPERTY =
+			"org.eclipse.swt.internal.gtk.virtualTreeLogicalNativeModel";
 	static final byte [] VIRTUAL_MODEL_RESIDENCY = Converter.wcsToMbcs ("swt-residency", true);
 	static final byte [] VIRTUAL_MODEL_FACADE = Converter.wcsToMbcs ("swt-facade", true);
 	static final byte [] VIRTUAL_MODEL_TOPOLOGY =
@@ -1886,7 +1889,11 @@ void revealVirtualItem (TreeItem item, boolean top) {
 
 
 boolean usesVirtualNativeModel () {
-	return (style & SWT.VIRTUAL) != 0 && !GTK.GTK4;
+	if ((style & SWT.VIRTUAL) == 0 || GTK.GTK4) return false;
+	if (virtualLogicalNativeModel == null) {
+		virtualLogicalNativeModel = Boolean.getBoolean (VIRTUAL_LOGICAL_NATIVE_MODEL_PROPERTY);
+	}
+	return virtualLogicalNativeModel.booleanValue ();
 }
 
 long virtualPath (int id) {

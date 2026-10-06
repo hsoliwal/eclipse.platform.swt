@@ -74,75 +74,84 @@ public void test_virtualGtk3LogicalNativeModelKeepsDistantAccessSparseAndStable(
 	gtk4Field.setAccessible(true);
 	if (gtk4Field.getBoolean(null)) return;
 
-	Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL | SWT.CHECK);
-	virtualTree.setItemCount(1_000_000);
-	shell.setLayout(new FillLayout());
-	shell.setSize(360, 220);
-	shell.open();
-	SwtTestUtil.processEvents();
+	String property = "org.eclipse.swt.internal.gtk.virtualTreeLogicalNativeModel";
+	String previous = System.getProperty(property);
+	System.setProperty(property, "true");
+	try {
+		Tree virtualTree = new Tree(shell, SWT.VIRTUAL | SWT.MULTI | SWT.V_SCROLL | SWT.CHECK);
+		virtualTree.setItemCount(1_000_000);
+		shell.setLayout(new FillLayout());
+		shell.setSize(360, 220);
+		shell.open();
+		SwtTestUtil.processEvents();
 
-	Method usesVirtualNativeModel = Tree.class.getDeclaredMethod("usesVirtualNativeModel");
-	usesVirtualNativeModel.setAccessible(true);
-	assertTrue((Boolean) usesVirtualNativeModel.invoke(virtualTree),
-			"GTK3 SWT.VIRTUAL Tree must use the sparse logical native model");
+		Method usesVirtualNativeModel = Tree.class.getDeclaredMethod("usesVirtualNativeModel");
+		usesVirtualNativeModel.setAccessible(true);
+		assertTrue((Boolean) usesVirtualNativeModel.invoke(virtualTree),
+				"the full GTK3 logical native model must remain available behind explicit opt-in");
 
-	TreeItem distant = virtualTree.getItem(750_000);
-	distant.setText("distant");
-	distant.setItemCount(16);
-	TreeItem child = distant.getItem(5);
-	child.setText("child");
-	distant.setExpanded(true);
-	virtualTree.setSelection(distant);
-	virtualTree.setTopItem(distant);
-	SwtTestUtil.processEvents();
+		TreeItem distant = virtualTree.getItem(750_000);
+		distant.setText("distant");
+		distant.setItemCount(16);
+		TreeItem child = distant.getItem(5);
+		child.setText("child");
+		distant.setExpanded(true);
+		virtualTree.setSelection(distant);
+		virtualTree.setTopItem(distant);
+		SwtTestUtil.processEvents();
 
-	Field topologyField = Tree.class.getDeclaredField("virtualTopology");
-	topologyField.setAccessible(true);
-	Object topology = topologyField.get(virtualTree);
-	Method materializedCount = topology.getClass().getDeclaredMethod("materializedCount");
-	materializedCount.setAccessible(true);
-	assertTrue(((Integer) materializedCount.invoke(topology)).intValue() <= 2,
-			"distant GTK3 access must materialize only touched logical coordinates");
+		Field topologyField = Tree.class.getDeclaredField("virtualTopology");
+		topologyField.setAccessible(true);
+		Object topology = topologyField.get(virtualTree);
+		Method materializedCount = topology.getClass().getDeclaredMethod("materializedCount");
+		materializedCount.setAccessible(true);
+		assertTrue(((Integer) materializedCount.invoke(topology)).intValue() <= 2,
+				"distant GTK3 access must materialize only touched logical coordinates");
 
-	TreeItem inserted = new TreeItem(virtualTree, SWT.NONE, 3);
-	inserted.setText("inserted");
-	SwtTestUtil.processEvents();
+		TreeItem inserted = new TreeItem(virtualTree, SWT.NONE, 3);
+		inserted.setText("inserted");
+		SwtTestUtil.processEvents();
 
-	assertSame(distant, virtualTree.getItem(750_001),
-			"snapshot refresh must preserve exposed facade identity after coordinate shift");
-	assertSame(child, distant.getItem(5));
-	assertTrue(distant.getExpanded(),
-			"snapshot refresh must restore expansion state");
-	assertArrayEquals(new TreeItem[] {distant}, virtualTree.getSelection(),
-			"snapshot refresh must restore selection");
-	assertSame(distant, virtualTree.getTopItem(),
-			"snapshot refresh must restore the logical top item");
-	assertTrue(((Integer) materializedCount.invoke(topology)).intValue() <= 3,
-			"explicit insertion must not materialize the cold million-row prefix");
+		assertSame(distant, virtualTree.getItem(750_001),
+				"snapshot refresh must preserve exposed facade identity after coordinate shift");
+		assertSame(child, distant.getItem(5));
+		assertTrue(distant.getExpanded(),
+				"snapshot refresh must restore expansion state");
+		assertArrayEquals(new TreeItem[] {distant}, virtualTree.getSelection(),
+				"snapshot refresh must restore selection");
+		assertSame(distant, virtualTree.getTopItem(),
+				"snapshot refresh must restore the logical top item");
+		assertTrue(((Integer) materializedCount.invoke(topology)).intValue() <= 3,
+				"explicit insertion must not materialize the cold million-row prefix");
 
-	distant.setChecked(true);
-	distant.setGrayed(true);
-	Display display = virtualTree.getDisplay();
-	distant.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
-	distant.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-	assertTrue(distant.getChecked());
-	assertTrue(distant.getGrayed());
+		distant.setChecked(true);
+		distant.setGrayed(true);
+		Display display = virtualTree.getDisplay();
+		distant.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+		distant.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+		assertTrue(distant.getChecked());
+		assertTrue(distant.getGrayed());
 
-	TreeColumn firstColumn = new TreeColumn(virtualTree, SWT.NONE);
-	firstColumn.setText("logical");
-	TreeColumn secondColumn = new TreeColumn(virtualTree, SWT.NONE);
-	secondColumn.setText("temporary");
-	secondColumn.dispose();
-	assertEquals(1, virtualTree.getColumnCount(),
-			"column mutation must not replace the logical native model");
+		TreeColumn firstColumn = new TreeColumn(virtualTree, SWT.NONE);
+		firstColumn.setText("logical");
+		TreeColumn secondColumn = new TreeColumn(virtualTree, SWT.NONE);
+		secondColumn.setText("temporary");
+		secondColumn.dispose();
+		assertEquals(1, virtualTree.getColumnCount(),
+				"column mutation must not replace the logical native model");
 
-	distant.removeAll();
-	assertEquals(0, distant.getItemCount(),
-			"TreeItem.removeAll must mutate topology without GtkTreeStore");
-	virtualTree.removeAll();
-	assertEquals(0, virtualTree.getItemCount());
-	assertEquals(0, ((Integer) materializedCount.invoke(topology)).intValue());
+		distant.removeAll();
+		assertEquals(0, distant.getItemCount(),
+				"TreeItem.removeAll must mutate topology without GtkTreeStore");
+		virtualTree.removeAll();
+		assertEquals(0, virtualTree.getItemCount());
+		assertEquals(0, ((Integer) materializedCount.invoke(topology)).intValue());
+	} finally {
+		if (previous == null) System.clearProperty(property);
+		else System.setProperty(property, previous);
+	}
 }
+
 
 @Test
 public void test_virtualDndProjectionPinsSparseTreeFacade() throws Exception {
@@ -965,39 +974,55 @@ public void test_gtkSetItemCountZeroRestoresRedraw() throws Exception {
 
 @Test
 public void test_virtualGtkNativeFrontierIsBoundedAndGrowsOnDemand() throws Exception {
-    if (!"gtk".equals(SWT.getPlatform())) {
-        return;
-    }
+	if (!"gtk".equals(SWT.getPlatform())) return;
+	Class<?> gtk = Class.forName("org.eclipse.swt.internal.gtk.GTK");
+	Field gtk4Field = gtk.getDeclaredField("GTK4");
+	gtk4Field.setAccessible(true);
+	if (gtk4Field.getBoolean(null)) return;
 
-	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
-	virtualTree.setItemCount(100_000);
-	assertEquals(100_000, virtualTree.getItemCount(),
-			"logical root count must not be reduced to the native resident prefix");
+	String property = "org.eclipse.swt.internal.gtk.virtualTreeLogicalNativeModel";
+	String previous = System.getProperty(property);
+	System.clearProperty(property);
+	try {
+		Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+		virtualTree.setItemCount(1_000_000);
+		assertEquals(1_000_000, virtualTree.getItemCount(),
+				"logical root count must not be reduced to the native resident prefix");
 
-	Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", long.class);
-	Method requestFrontier = Tree.class.getDeclaredMethod("requestVirtualFrontier", TreeItem.class);
-	residentCount.setAccessible(true);
-	requestFrontier.setAccessible(true);
+		Method usesVirtualNativeModel = Tree.class.getDeclaredMethod("usesVirtualNativeModel");
+		usesVirtualNativeModel.setAccessible(true);
+		assertFalse((Boolean) usesVirtualNativeModel.invoke(virtualTree),
+				"bounded GtkTreeStore frontier must be the default GTK3 virtual Tree mode");
 
-	assertEquals(256, residentCount.invoke(virtualTree, 0L),
-			"recovered frontier must cap initial GTK root residency");
+		Method residentCount = Tree.class.getDeclaredMethod("virtualResidentChildCount", long.class);
+		Method requestFrontier = Tree.class.getDeclaredMethod("requestVirtualFrontier", TreeItem.class);
+		residentCount.setAccessible(true);
+		requestFrontier.setAccessible(true);
 
-	TreeItem nearEdge = virtualTree.getItem(250);
-	assertSame(nearEdge, virtualTree.getItem(250));
-	assertEquals(256, residentCount.invoke(virtualTree, 0L));
+		assertEquals(256, residentCount.invoke(virtualTree, 0L),
+				"one million logical roots must start with one bounded native frontier");
 
-	requestFrontier.invoke(virtualTree, nearEdge);
-	SwtTestUtil.processEvents();
-	assertEquals(512, residentCount.invoke(virtualTree, 0L),
-			"near-edge demand must reveal exactly one additional native chunk");
-	assertEquals(100_000, virtualTree.getItemCount());
+		TreeItem nearEdge = virtualTree.getItem(250);
+		assertSame(nearEdge, virtualTree.getItem(250));
+		assertEquals(256, residentCount.invoke(virtualTree, 0L));
 
-	TreeItem distant = virtualTree.getItem(1_023);
-	assertSame(distant, virtualTree.getItem(1_023));
-	assertEquals(1_024, residentCount.invoke(virtualTree, 0L),
-			"explicit indexed access may synchronously reconstruct only through its coordinate");
-	assertEquals(100_000, virtualTree.getItemCount());
+		requestFrontier.invoke(virtualTree, nearEdge);
+		SwtTestUtil.processEvents();
+		assertEquals(512, residentCount.invoke(virtualTree, 0L),
+				"near-edge demand must reveal exactly one additional native chunk");
+		assertEquals(1_000_000, virtualTree.getItemCount());
+
+		TreeItem distant = virtualTree.getItem(1_023);
+		assertSame(distant, virtualTree.getItem(1_023));
+		assertEquals(1_024, residentCount.invoke(virtualTree, 0L),
+				"explicit indexed access may synchronously reconstruct only through its coordinate");
+		assertEquals(1_000_000, virtualTree.getItemCount());
+	} finally {
+		if (previous == null) System.clearProperty(property);
+		else System.setProperty(property, previous);
+	}
 }
+
 
 @Test
 public void test_virtualGtkFrontierGrowthPreservesExposedPrefixAndDemandIndices() throws Exception {
