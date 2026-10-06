@@ -1,0 +1,2 @@
+schema	canonical_repository	canonical_recipe_package	local_repository	local_role	authoritative_recipe_implementation_allowed	product_promotion_authority
+M3_CANONICAL_RECIPE_HOME_V1	hsoliwal/com.synexia	com.synexia.rewrite	hsoliwal/eclipse.platform.swt	ADAPTER_FIXTURE_PROOF	false	true
