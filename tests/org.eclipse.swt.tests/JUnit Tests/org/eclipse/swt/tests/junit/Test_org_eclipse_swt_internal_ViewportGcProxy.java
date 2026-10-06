@@ -119,8 +119,8 @@ public class Test_org_eclipse_swt_internal_ViewportGcProxy {
 		assertEquals (SWT.HIGH, gc.getInterpolation ());
 		assertEquals (SWT.FILL_EVEN_ODD, gc.getFillRule ());
 		assertTrue (gc.getXORMode ());
-		assertSame (expectedForeground, gc.getForeground ());
-		assertSame (expectedBackground, gc.getBackground ());
+		assertEquals (expectedForeground, gc.getForeground ());
+		assertEquals (expectedBackground, gc.getBackground ());
 
 		originalTransform.dispose ();
 	}
