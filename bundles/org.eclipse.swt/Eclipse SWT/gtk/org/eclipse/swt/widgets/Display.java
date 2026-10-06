@@ -128,7 +128,6 @@ public class Display extends Device implements Executor {
 	long fds;
 	int allocated_nfds;
 	boolean wake;
-	boolean windowSizeSet;
 	int [] max_priority = new int [1], timeout = new int [1];
 	Callback eventCallback;
 	long eventProc, windowProc2, windowProc3, windowProc4, windowProc5, windowProc6;
@@ -199,7 +198,7 @@ public class Display extends Device implements Executor {
 	Control focusControl;
 	Shell activeShell;
 	boolean activePending;
-	boolean ignoreActivate, ignoreFocus;
+	boolean ignoreFocus;
 
 	Tracker tracker;
 
@@ -348,9 +347,6 @@ public class Display extends Device implements Executor {
 	/* Initialize color list */
 	ArrayList<String> colorList;
 
-	/* Placeholder color ints since SWT system colors is missing them */
-	final int SWT_COLOR_LIST_SELECTION_TEXT_INACTIVE = 38;
-	final int SWT_COLOR_LIST_SELECTION_INACTIVE = 39;
 
 	/* Theme related */
 	/** The name of the current theme, including the theme named by GTK_THEME. */
@@ -366,8 +362,6 @@ public class Display extends Device implements Executor {
 	/* Click count*/
 	int clickCount = 1;
 
-	/* Entry inner border */
-	static final int INNER_BORDER = 2;
 
 	/* Timestamp of the Last Received Events */
 	int lastEventTime, lastUserEventTime;
@@ -524,14 +518,6 @@ public class Display extends Device implements Executor {
 
 	/* Package name */
 	static final String PACKAGE_PREFIX = "org.eclipse.swt.widgets."; //$NON-NLS-1$
-	/* This code is intentionally commented.
-	 * ".class" can not be used on CLDC.
-	 */
-//	static {
-//		String name = Display.class.getName ();
-//		int index = name.lastIndexOf ('.');
-//		PACKAGE_NAME = name.substring (0, index + 1);
-//	}
 
 	/* Minimum GTK version requirement */
 	static final int GTK3_MAJOR = 3;
@@ -593,8 +579,6 @@ public class Display extends Device implements Executor {
 
 	boolean ignoreTrim;
 
-	/* Window Manager */
-	String windowManager;
 
 	/*
 	* TEMPORARY CODE.  Install the runnable that
@@ -1277,7 +1261,6 @@ void createDisplay (DeviceData data) {
 		GDK.gdk_threads_enter ();
 	}
 	boolean init;
-	windowSizeSet = false;
 	if (GTK.GTK4) {
 		init = GTK4.gtk_init_check();
 	} else {
@@ -2019,13 +2002,13 @@ int getCaretBlinkTime () {
 }
 
 long getClosure (int id) {
-    if (closures [id] != 0) {
-        OS.g_closure_unref(closures [id]);
-    }
-	closures [id] = OS.g_cclosure_new (closuresProc [id], id, 0);
-	OS.g_closure_ref (closures [id]);
-	OS.g_closure_sink (closures [id]);
-	closuresCount [id] = 0;
+	if (closures [id] == 0 || ++closuresCount [id] >= 255) {
+		if (closures [id] != 0) OS.g_closure_unref (closures [id]);
+		closures [id] = OS.g_cclosure_new (closuresProc [id], id, 0);
+		OS.g_closure_ref (closures [id]);
+		OS.g_closure_sink (closures [id]);
+		closuresCount [id] = 0;
+	}
 	return closures [id];
 }
 
@@ -3634,9 +3617,9 @@ public TaskBar getSystemTaskBar () {
  */
 public Tray getSystemTray () {
 	checkDevice ();
-    if (tray != null) {
-        return tray;
-    }
+	/* GTK4 removed GtkStatusIcon, which TrayItem is built on. */
+	if (GTK.GTK4) return null;
+	if (tray != null) return tray;
 	return tray = new Tray (this, SWT.NONE);
 }
 
@@ -5216,23 +5199,6 @@ public void removeFilter (int eventType, Listener listener) {
     if (filterTable.size() == 0) {
         filterTable = null;
     }
-}
-
-long removeGdkEvent () {
-    if (gdkEventCount == 0) {
-        return 0;
-    }
-	long event = gdkEvents [0];
-	--gdkEventCount;
-	System.arraycopy (gdkEvents, 1, gdkEvents, 0, gdkEventCount);
-	System.arraycopy (gdkEventWidgets, 1, gdkEventWidgets, 0, gdkEventCount);
-	gdkEvents [gdkEventCount] = 0;
-	gdkEventWidgets [gdkEventCount] = null;
-	if (gdkEventCount == 0) {
-		gdkEvents = null;
-		gdkEventWidgets = null;
-	}
-	return event;
 }
 
 void removeIdleProc () {
