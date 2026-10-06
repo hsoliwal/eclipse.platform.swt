@@ -14,6 +14,8 @@
 package org.eclipse.swt.custom;
 
 
+import java.util.Arrays;
+
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
@@ -195,17 +197,10 @@ public int[] getWeights() {
 Control[] getControls(boolean onlyVisible) {
 	Control[] result = new Control[0];
 	for (Control element : getChildren()) {
-        if (element instanceof Sash) {
-            continue;
-        }
-        if (onlyVisible && !element.getVisible()) {
-            continue;
-        }
-
-		Control[] newResult = new Control[result.length + 1];
-		System.arraycopy(result, 0, newResult, 0, result.length);
-		newResult[result.length] = element;
-		result = newResult;
+		if (element instanceof Sash) continue;
+		if (onlyVisible && !element.getVisible()) continue;
+		result = Arrays.copyOf(result, result.length + 1);
+		result[result.length - 1] = element;
 	}
 	return result;
 }
