@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.swt.custom;
 
+import java.util.Arrays;
+
 import org.eclipse.swt.*;
 import org.eclipse.swt.accessibility.*;
 import org.eclipse.swt.events.*;
@@ -2650,14 +2652,8 @@ public void setBackground(Color[] colors, int[] percents, boolean vertical) {
 		gradientVertical = false;
 		setBackground((Color)null);
 	} else {
-		gradientColors = new Color[colors.length];
-		for (int i = 0; i < colors.length; ++i) {
-			gradientColors[i] = colors[i];
-		}
-		gradientPercents = new int[percents.length];
-		for (int i = 0; i < percents.length; ++i) {
-			gradientPercents[i] = percents[i];
-		}
+		gradientColors = colors.clone();
+		gradientPercents = percents.clone();
 		gradientVertical = vertical;
 		super.setBackground(gradientColors[gradientColors.length-1]);
 		updateBkImages(true);
@@ -3752,14 +3748,8 @@ public void setSelectionBackground(Color[] colors, int[] percents, boolean verti
 		selectionGradientVertical = false;
 		setSelectionBackground((Color)null);
 	} else {
-		selectionGradientColors = new Color[colorsLength];
-		for (int i = 0; i < colorsLength; ++i) {
-			selectionGradientColors[i] = colors[i];
-		}
-		selectionGradientPercents = new int[percents.length];
-		for (int i = 0; i < percents.length; ++i) {
-			selectionGradientPercents[i] = percents[i];
-		}
+		selectionGradientColors = Arrays.copyOf(colors, colorsLength);
+		selectionGradientPercents = percents.clone();
 		selectionGradientVertical = vertical;
 		setSelectionBackground(selectionGradientColors[selectionGradientColors.length-1]);
 	}
