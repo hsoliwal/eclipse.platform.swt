@@ -100,7 +100,7 @@ public class Table extends Composite {
 	int headerHeight;
 	boolean boundsChangedSinceLastDraw, headerVisible, wasScrolled;
 	ViewportLayerState viewportLayers;
-	boolean rowActivated;
+	boolean defaultSelectionPending;
 
 	private long headerCSSProvider;
 
@@ -619,7 +619,7 @@ int calculateWidth (long column, long iter) {
 		GTK3.gtk_tree_view_column_cell_get_size(column, null, null, null, width, null);
 	}
 
-	long textRenderer = getTextRenderer(column);
+	long textRenderer = CellRenderers.getTextRenderer(column);
 	int[] xpad = new int[1];
     if (textRenderer != 0) {
         GTK.gtk_cell_renderer_get_padding(textRenderer, xpad, null);
@@ -2166,7 +2166,7 @@ public int getItemHeight () {
 		}
 
 		height = h[0];
-		long textRenderer = getTextRenderer(column);
+		long textRenderer = CellRenderers.getTextRenderer(column);
         if (textRenderer != 0) {
             GTK.gtk_cell_renderer_get_preferred_height_for_width(textRenderer, handle, 0, h, null);
         }
@@ -2187,7 +2187,7 @@ public int getItemHeight () {
 				GTK3.gtk_tree_view_column_cell_get_size (column, null, null, null, null, h);
 			}
 
-			long textRenderer = getTextRenderer(column);
+			long textRenderer = CellRenderers.getTextRenderer(column);
 			int[] ypad = new int[1];
             if (textRenderer != 0) {
                 GTK.gtk_cell_renderer_get_padding(textRenderer, null, ypad);
@@ -2254,24 +2254,7 @@ public boolean getLinesVisible() {
 	return GTK.gtk_tree_view_get_grid_lines(handle) > GTK.GTK_TREE_VIEW_GRID_LINES_NONE;
 }
 
-long getPixbufRenderer (long column) {
-	long list = GTK.gtk_cell_layout_get_cells(column);
-    if (list == 0) {
-        return 0;
-    }
-	long originalList = list;
-	long pixbufRenderer = 0;
-	while (list != 0) {
-		long renderer = OS.g_list_data (list);
-		if (GTK.GTK_IS_CELL_RENDERER_PIXBUF (renderer)) {
-			pixbufRenderer = renderer;
-			break;
-		}
-		list = OS.g_list_next (list);
-	}
-	OS.g_list_free (originalList);
-	return pixbufRenderer;
-}
+
 
 /**
  * Returns an array of <code>TableItem</code>s that are currently
@@ -2461,24 +2444,7 @@ public int getSortDirection () {
 	return sortDirection;
 }
 
-long getTextRenderer (long column) {
-	long list = GTK.gtk_cell_layout_get_cells(column);
-    if (list == 0) {
-        return 0;
-    }
-	long originalList = list;
-	long textRenderer = 0;
-	while (list != 0) {
-		long renderer = OS.g_list_data (list);
-		if (GTK.GTK_IS_CELL_RENDERER_TEXT (renderer)) {
-			textRenderer = renderer;
-			break;
-		}
-		list = OS.g_list_next (list);
-	}
-	OS.g_list_free (originalList);
-	return textRenderer;
-}
+
 
 /**
  * Returns the zero-relative index of the item which is currently
@@ -2618,14 +2584,14 @@ long gtk3_button_press_event (long widget, long event) {
 
 	/*
 	 * Bug 312568: If mouse double-click pressed, manually send a DefaultSelection.
-	 * Bug 518414: Added rowActivated guard flag to only send a DefaultSelection when the
+	 * Bug 518414: Added defaultSelectionPending guard flag to only send a DefaultSelection when the
 	 * double-click triggers a 'row-activated' signal. Note that this relies on the fact
 	 * that 'row-activated' signal comes before double-click event. This prevents
 	 * opening of the current highlighted item when double clicking on any expander arrow.
 	 */
-	if (eventType == GDK.GDK_2BUTTON_PRESS && rowActivated) {
+	if (eventType == GDK.GDK_2BUTTON_PRESS && defaultSelectionPending) {
 		sendTreeDefaultSelection ();
-		rowActivated = false;
+		defaultSelectionPending = false;
 	}
 
 	return result;
@@ -2633,27 +2599,47 @@ long gtk3_button_press_event (long widget, long event) {
 
 @Override
 int gtk_gesture_press_event (long gesture, int n_press, double x, double y, long event) {
-    if (n_press == 1) {
-        return GTK4.GTK_EVENT_SEQUENCE_NONE;
-    }
-	int result = super.gtk_gesture_press_event(gesture, n_press, x, y, event);
+	/*
+	 * GtkTreeView activates the row for a double-click in its own click gesture, which runs
+	 * after this one: send the DefaultSelection from gtk_row_activated.
+	 */
+	defaultSelectionPending = n_press == 2;
 
-	// TODO: GTK4 replicate gtk_button_press_event functions
+	return super.gtk_gesture_press_event(gesture, n_press, x, y, event);
+}
 
-	if (n_press == 2 && rowActivated) {
-		sendTreeDefaultSelection ();
-		rowActivated = false;
+@Override
+boolean gtk4_key_press_event (long controller, int keyval, int keycode, int state, long event) {
+	/* Space and Enter activate the row too, see gtk_gesture_press_event. */
+	defaultSelectionPending = false;
+	switch (keyval) {
+		case GDK.GDK_Return:
+		case GDK.GDK_KP_Enter:
+			if ((state & (GDK.GDK_SUPER_MASK | GDK.GDK_META_MASK | GDK.GDK_HYPER_MASK | GDK.GDK_MOD1_MASK)) == 0) {
+				sendTreeDefaultSelection ();
+				if (isDisposed ()) return true;
+			}
+			break;
 	}
-
-	return result;
+	return super.gtk4_key_press_event(controller, keyval, keycode, state, event);
 }
 
 @Override
 long gtk_row_activated (long tree, long path, long column) {
-	rowActivated = true;
+	if (GTK.GTK4) {
+		if (defaultSelectionPending) sendTreeDefaultSelection ();
+		defaultSelectionPending = false;
+		return 0;
+	}
+	defaultSelectionPending = false;
+	long eventPtr = GTK3.gtk_get_current_event ();
+	if (eventPtr != 0) {
+		int eventType = GDK.gdk_event_get_event_type (eventPtr);
+		defaultSelectionPending = eventType == GDK.GDK_BUTTON_PRESS || eventType == GDK.GDK_2BUTTON_PRESS;
+		GDK.gdk_event_free (eventPtr);
+	}
 	return 0;
 }
-
 
 @Override
 long gtk3_key_press_event (long widget, long event) {
@@ -3692,7 +3678,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 			}
 
 			//send out measure before erase
-			long textRenderer =  getTextRenderer (columnHandle);
+			long textRenderer =  CellRenderers.getTextRenderer (columnHandle);
             if (textRenderer != 0) {
                 gtk_cell_renderer_get_preferred_size(textRenderer, handle, null, null);
             }
@@ -3724,14 +3710,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
                 if ((style & SWT.MIRRORED) != 0) {
                     rect.x = getClientWidth() - rect.width - rect.x;
                 }
-				if (cr != 0) {
-					GdkRectangle r = new GdkRectangle();
-					GDK.gdk_cairo_get_clip_rectangle(cr, r);
-					gc.setClipping(rect.x, rect.y, rect.width, rect.height);
-				} else {
-					gc.setClipping(rect.x, rect.y, rect.width, rect.height);
-
-				}
+				gc.setClipping(rect.x, rect.y, rect.width, rect.height);
 
 				// SWT.PaintItem/SWT.EraseItem often expect that event.y matches
 				// what 'event.item.getBounds()' returns. The workaround is to
@@ -3813,7 +3792,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 		 * GTK4 clips each renderer to its own cell, so the image cell gets the PaintItem of the
 		 * text cell too, and each cell shows its part of what the listener draws.
 		 */
-		long textCell = GTK.GTK4 && GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell) ? getTextRenderer (columnHandle) : cell;
+		long textCell = GTK.GTK4 && GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell) ? CellRenderers.getTextRenderer (columnHandle) : cell;
 		if (GTK.GTK_IS_CELL_RENDERER_TEXT (textCell)) {
 			if (hooks (SWT.PaintItem)) {
                 if (wasSelected) {
@@ -3905,7 +3884,7 @@ void resetCustomDraw () {
 		boolean customDraw = columnCount != 0 ? columns [i].customDraw : firstCustomDraw;
 		if (customDraw) {
 			long column = GTK.gtk_tree_view_get_column (handle, i);
-			long textRenderer = getTextRenderer (column);
+			long textRenderer = CellRenderers.getTextRenderer (column);
 			GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, 0, 0, 0);
             if (columnCount != 0) {
                 columns [i].customDraw = false;
@@ -3936,11 +3915,18 @@ void reskinChildren (int flags) {
 
 
 boolean searchEnabled () {
-    /* Disable searching when using VIRTUAL or NO_SEARCH */
-    if ((style & SWT.VIRTUAL) != 0 || (style & SWT.NO_SEARCH) != 0) {
-        return false;
-    }
-	return true;
+	/* Disable searching when using VIRTUAL or NO_SEARCH */
+	return (style & (SWT.VIRTUAL | SWT.NO_SEARCH)) == 0;
+}
+
+private void updateSearchColumn () {
+	if (!searchEnabled ()) {
+		GTK.gtk_tree_view_set_search_column (handle, -1);
+	} else {
+		/* Set the search column whenever the model changes */
+		int firstColumn = columnCount == 0 ? FIRST_COLUMN : columns [0].modelIndex;
+		GTK.gtk_tree_view_set_search_column (handle, firstColumn + CELL_TEXT);
+	}
 }
 
 /**
