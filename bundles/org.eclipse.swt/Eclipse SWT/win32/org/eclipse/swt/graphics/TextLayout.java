@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2022 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -53,6 +53,7 @@ public final class TextLayout extends Resource {
 	int wrapIndent;
 	boolean justify;
 	int[] tabs;
+	int defaultTabLength;
 	int[] segments;
 	char[] segmentsChars;
 	StyleItem[] styles;
@@ -391,48 +392,62 @@ void computeRuns (GC gc) {
 	}
 	SCRIPT_LOGATTR logAttr = new SCRIPT_LOGATTR();
 	SCRIPT_PROPERTIES properties = new SCRIPT_PROPERTIES();
-	int wrapIndentInPixels = DPIUtil.pointToPixel(wrapIndent, getZoom(gc));
-	int indentInPixels = DPIUtil.pointToPixel(indent, getZoom(gc));
-	int wrapWidthInPixels = DPIUtil.pointToPixel(wrapWidth, getZoom(gc));
-	int[] tabsInPixels = Win32DPIUtils.pointToPixel(tabs, getZoom(gc));
+	int zoom = getZoom(gc);
+	int wrapIndentInPixels = DPIUtil.pointToPixel(wrapIndent, zoom);
+	int indentInPixels = DPIUtil.pointToPixel(indent, zoom);
+	int wrapWidthInPixels = DPIUtil.pointToPixel(wrapWidth, zoom);
+	int defaultTabWidthInPixels = getDefaultTabWidthInPixels(gc, srcHdc);
 	int lineWidth = indentInPixels, lineStart = 0, lineCount = 1;
 	for (int i=0; i<allRuns.length - 1; i++) {
 		StyleItem run = allRuns[i];
-		if (tabsInPixels != null && run.tab) {
-			int tabsLength = tabsInPixels.length, j;
-			for (j = 0; j < tabsLength; j++) {
-				if (tabsInPixels[j] > lineWidth) {
-					run.width = tabsInPixels[j] - lineWidth;
-					break;
-				}
-			}
-			if (j == tabsLength) {
-				int tabX = tabsInPixels[tabsLength-1];
-				int lastTabWidth = tabsLength > 1 ? tabsInPixels[tabsLength-1] - tabsInPixels[tabsLength-2] : tabsInPixels[0];
-				if (lastTabWidth > 0) {
-                    while (tabX <= lineWidth) {
-                        tabX += lastTabWidth;
-                    }
-					run.width = tabX - lineWidth;
-				}
-			}
-
-			/*
-			 * This block adjusts the indentation after merged tabs stops.
-			 * The extra tabs are removed in merge.
-			 */
-			int length = run.length;
-			if (length > 1) {
-				int stop = j + length - 1;
-				if (stop < tabsLength) {
-					run.width += tabsInPixels[stop] - tabsInPixels[j];
-				} else {
-					if (j < tabsLength) {
-						run.width += tabsInPixels[tabsLength-1] - tabsInPixels[j];
-						length -= (tabsLength - 1) - j;
+		if (tabs != null && run.tab) {
+			if (defaultTabWidthInPixels > 0) {
+				// Exact space grid, see getDefaultTabWidthInPixels(); merged tabs add one width each.
+				int tabX = defaultTabWidthInPixels;
+				while (tabX <= lineWidth) tabX += defaultTabWidthInPixels;
+				run.width = tabX - lineWidth + defaultTabWidthInPixels * (run.length - 1);
+			} else {
+				/*
+				 * Resolve stops entirely in points, the unit setTabs() defines, and convert only
+				 * the resulting position. Accumulating in pixels rounds each step and drifts at
+				 * fractional zoom.
+				 */
+				int lineWidthInPoints = DPIUtil.pixelToPoint(lineWidth, zoom);
+				int widthInPoints = 0;
+				boolean stopFound = false;
+				int tabsLength = tabs.length, j;
+				for (j = 0; j < tabsLength; j++) {
+					if (tabs[j] > lineWidthInPoints) {
+						widthInPoints = tabs[j] - lineWidthInPoints;
+						stopFound = true;
+						break;
 					}
-					int lastTabWidth = tabsLength > 1 ? tabsInPixels[tabsLength-1] - tabsInPixels[tabsLength-2] : tabsInPixels[0];
-					run.width += lastTabWidth * (length - 1);
+				}
+				if (j == tabsLength && tabsLength > 0) {
+					int tabX = tabs[tabsLength - 1];
+					int lastTabWidth = tabsLength > 1 ? tabs[tabsLength - 1] - tabs[tabsLength - 2] : tabs[0];
+					if (lastTabWidth > 0) {
+						while (tabX <= lineWidthInPoints) tabX += lastTabWidth;
+						widthInPoints = tabX - lineWidthInPoints;
+						stopFound = true;
+					}
+				}
+				int length = run.length;
+				if (length > 1 && stopFound) {
+					int stop = j + length - 1;
+					if (stop < tabsLength) {
+						widthInPoints += tabs[stop] - tabs[j];
+					} else {
+						if (j < tabsLength) {
+							widthInPoints += tabs[tabsLength - 1] - tabs[j];
+							length -= (tabsLength - 1) - j;
+						}
+						int lastTabWidth = tabsLength > 1 ? tabs[tabsLength - 1] - tabs[tabsLength - 2] : tabs[0];
+						widthInPoints += lastTabWidth * (length - 1);
+					}
+				}
+				if (stopFound) {
+					run.width = DPIUtil.pointToPixel(lineWidthInPoints + widthInPoints, zoom) - lineWidth;
 				}
 			}
 		}
@@ -4401,6 +4416,24 @@ int untranslateOffset(int offset) {
  * @since 3.107
  */
 public void setDefaultTabWidth(int tabLength) {
-	// unused in win32
+	if (tabLength < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+	checkLayout();
+	if (defaultTabLength == tabLength) return;
+	freeRuns();
+	defaultTabLength = tabLength;
+}
+
+int getDefaultTabWidthInPixels(GC gc, long hdc) {
+	if (defaultTabLength <= 0 || tabs == null || tabs.length != 1) return 0;
+	int nativeZoom = getNativeZoom(gc);
+	long hFont = font != null ? SWTFontProvider.getFontHandle(font, nativeZoom)
+			: SWTFontProvider.getSystemFontHandle(device, nativeZoom);
+	long oldFont = OS.SelectObject(hdc, hFont);
+	char[] spaces = new char[defaultTabLength];
+	Arrays.fill(spaces, ' ');
+	SIZE size = new SIZE();
+	OS.GetTextExtentPoint32(hdc, spaces, spaces.length, size);
+	OS.SelectObject(hdc, oldFont);
+	return DPIUtil.pixelToPoint(size.cx, getZoom(gc)) == tabs[0] ? size.cx : 0;
 }
 }
