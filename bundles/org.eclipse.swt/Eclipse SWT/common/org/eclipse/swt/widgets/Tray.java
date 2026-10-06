@@ -14,6 +14,8 @@
 package org.eclipse.swt.widgets;
 
 
+import java.util.Arrays;
+
 import org.eclipse.swt.*;
 
 /**
@@ -47,14 +49,8 @@ Tray (Display display, int style) {
 }
 
 void createItem (TrayItem item, int index) {
-    if (!(0 <= index && index <= itemCount)) {
-        error(SWT.ERROR_INVALID_RANGE);
-    }
-	if (itemCount == items.length) {
-		TrayItem [] newItems = new TrayItem [items.length + 4];
-		System.arraycopy (items, 0, newItems, 0, items.length);
-		items = newItems;
-	}
+	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+	if (itemCount == items.length) items = Arrays.copyOf (items, items.length + 4);
 	System.arraycopy (items, index, items, index + 1, itemCount++ - index);
 	items [index] = item;
 }
