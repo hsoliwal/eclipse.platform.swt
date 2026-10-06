@@ -124,6 +124,10 @@ public class Tree extends Composite {
 	boolean firstCompute = true;
 	boolean modelChanged;
 	boolean expandAll;
+	/** Dense/native child-count cache generation; virtual counts remain topology-owned. */
+	int structureModCount;
+	private int cachedRootCount = -1;
+	private int cachedRootCountStamp = -1;
 	int drawState, drawFlags;
 	GdkRGBA background, foreground, drawForegroundRGBA;
 	/** The owner of the widget is responsible for drawing */
@@ -136,7 +140,7 @@ public class Tree extends Composite {
 	Color headerBackground, headerForeground;
 	boolean boundsChangedSinceLastDraw, wasScrolled;
 	ViewportLayerState viewportLayers;
-	boolean rowActivated;
+	boolean defaultSelectionPending;
 
 	private long headerCSSProvider;
 
@@ -2819,6 +2823,11 @@ void copyModel (long oldModel, int oldStart, long newModel, int newStart, long o
 
 	OS.g_free (value);
 	OS.g_free (iter);
+	structureChanged ();
+}
+
+void structureChanged () {
+	structureModCount++;
 }
 
 void createColumn (TreeColumn column, int index) {
@@ -2889,13 +2898,7 @@ void createColumn (TreeColumn column, int index) {
 		column.handle = columnHandle;
 		column.modelIndex = modelIndex;
 	}
-	if (!searchEnabled () || usesVirtualNativeModel ()) {
-		GTK.gtk_tree_view_set_search_column (handle, -1);
-	} else {
-		/* Set the search column whenever the model changes */
-		int firstColumn = columnCount == 0 ? FIRST_COLUMN : columns [0].modelIndex;
-		GTK.gtk_tree_view_set_search_column (handle, firstColumn + CELL_TEXT);
-	}
+	updateSearchColumn ();
 }
 
 @Override
@@ -3157,6 +3160,7 @@ void createItem (TreeItem item, long parentIter, int index) {
 		items [id] = item;
 		virtualTopology.flag (id, VirtualItemState.PINNED, true);
 		modelChanged = true;
+		structureChanged ();
 		finishVirtualNativeMutation (state);
 		if (topologyParentId == VirtualTreeTopology.ROOT && oldRootCount == 0) {
 			Event event = new Event ();
@@ -3196,6 +3200,7 @@ void createItem (TreeItem item, long parentIter, int index) {
 		pinVirtualFacade (item);
 	}
 	modelChanged = true;
+	structureChanged ();
 	if (parentIter == 0 && GTK.gtk_tree_model_iter_n_children (modelHandle, 0) == 1) {
 		Event event = new Event ();
 		event.detail = 0;
@@ -3487,13 +3492,7 @@ void destroyItem (TreeColumn column) {
 			createRenderers (firstColumn.handle, firstColumn.modelIndex, true, firstColumn.style);
 		}
 	}
-	if (!searchEnabled () || usesVirtualNativeModel ()) {
-		GTK.gtk_tree_view_set_search_column (handle, -1);
-	} else {
-		/* Set the search column whenever the model changes */
-		int firstColumn = columnCount == 0 ? FIRST_COLUMN : columns [0].modelIndex;
-		GTK.gtk_tree_view_set_search_column (handle, firstColumn + CELL_TEXT);
-	}
+	updateSearchColumn ();
 }
 
 
@@ -3509,6 +3508,7 @@ void destroyItem (TreeItem item) {
 		if (usesBoundedVirtualView () && virtualSelections.containsKey (parentId)) virtualSelections.get (parentId).remove (childIndex, 1);
 		if (topologyId < items.length) items [topologyId] = null;
 		modelChanged = true;
+		structureChanged ();
 		finishVirtualNativeMutation (state);
 		if (lastRoot) {
 			Event event = new Event ();
@@ -3528,6 +3528,7 @@ void destroyItem (TreeItem item) {
 	OS.g_signal_handlers_unblock_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
 	if (virtualTopology != null && topologyId >= 0) virtualTopology.releaseSubtree (topologyId);
 	modelChanged = true;
+	structureChanged ();
 	if (GTK.gtk_tree_model_iter_n_children (modelHandle, 0) == 0) {
 		Event event = new Event ();
 		event.detail = 1;
@@ -4093,7 +4094,11 @@ public TreeItem getItem (Point point) {
  */
 public int getItemCount () {
 	checkWidget ();
-	return virtualChildCount (0);
+	if (virtualTopology != null) return virtualChildCount (0);
+	if (cachedRootCountStamp == structureModCount) return cachedRootCount;
+	cachedRootCount = GTK.gtk_tree_model_iter_n_children (modelHandle, 0);
+	cachedRootCountStamp = structureModCount;
+	return cachedRootCount;
 }
 
 /**
@@ -4124,7 +4129,7 @@ public int getItemHeight () {
 		}
 
 		height = h[0];
-		long textRenderer = getTextRenderer(column);
+		long textRenderer = CellRenderers.getTextRenderer(column);
         if (textRenderer != 0) {
             GTK.gtk_cell_renderer_get_preferred_height_for_width(textRenderer, handle, 0, h, null);
         }
@@ -4145,7 +4150,7 @@ public int getItemHeight () {
 				GTK3.gtk_tree_view_column_cell_get_size (column, null, null, null, null, h);
 			}
 
-			long textRenderer = getTextRenderer(column);
+			long textRenderer = CellRenderers.getTextRenderer(column);
 			int[] ypad = new int[1];
             if (textRenderer != 0) {
                 GTK.gtk_cell_renderer_get_padding(textRenderer, null, ypad);
@@ -4241,24 +4246,7 @@ public TreeItem getParentItem () {
 	return null;
 }
 
-long getPixbufRenderer (long column) {
-	long list = GTK.gtk_cell_layout_get_cells(column);
-    if (list == 0) {
-        return 0;
-    }
-	long originalList = list;
-	long pixbufRenderer = 0;
-	while (list != 0) {
-		long renderer = OS.g_list_data (list);
-		if (GTK.GTK_IS_CELL_RENDERER_PIXBUF (renderer)) {
-			pixbufRenderer = renderer;
-			break;
-		}
-		list = OS.g_list_next (list);
-	}
-	OS.g_list_free (originalList);
-	return pixbufRenderer;
-}
+
 
 /**
  * Returns an array of <code>TreeItem</code>s that are currently
@@ -4396,24 +4384,7 @@ public int getSortDirection () {
 	return sortDirection;
 }
 
-long getTextRenderer (long column) {
-	long list = GTK.gtk_cell_layout_get_cells(column);
-    if (list == 0) {
-        return 0;
-    }
-	long originalList = list;
-	long textRenderer = 0;
-	while (list != 0) {
-		long renderer = OS.g_list_data (list);
-		if (GTK.GTK_IS_CELL_RENDERER_TEXT (renderer)) {
-			textRenderer = renderer;
-			break;
-		}
-		list = OS.g_list_next (list);
-	}
-	OS.g_list_free (originalList);
-	return textRenderer;
-}
+
 
 /**
  * Returns the item which is currently at the top of the receiver.
@@ -4620,14 +4591,11 @@ long gtk3_button_press_event (long widget, long event) {
 
 	/*
 	 * Bug 312568: If mouse double-click pressed, manually send a DefaultSelection.
-	 * Bug 518414: Added rowActivated guard flag to only send a DefaultSelection when the
-	 * double-click triggers a 'row-activated' signal. Note that this relies on the fact
-	 * that 'row-activated' signal comes before double-click event. This prevents
-	 * opening of the current highlighted item when double clicking on any expander arrow.
+	 * Bug 518414: send only when row activation confirms that the double-click was on a row.
 	 */
-	if (eventType == GDK.GDK_2BUTTON_PRESS && rowActivated) {
+	if (eventType == GDK.GDK_2BUTTON_PRESS && defaultSelectionPending) {
 		sendTreeDefaultSelection ();
-		rowActivated = false;
+		defaultSelectionPending = false;
 	}
 
 	return result;
@@ -4635,19 +4603,43 @@ long gtk3_button_press_event (long widget, long event) {
 
 @Override
 int gtk_gesture_press_event (long gesture, int n_press, double x, double y, long event) {
-	int result = super.gtk_gesture_press_event(gesture, n_press, x, y, event);
+	/*
+	 * GtkTreeView activates a row after this gesture for a real row double-click.
+	 * Keep the decision pending until gtk_row_activated so expander double-clicks stay silent.
+	 */
+	defaultSelectionPending = n_press == 2;
+	return super.gtk_gesture_press_event(gesture, n_press, x, y, event);
+}
 
-	if (n_press == 2 && rowActivated) {
-		sendTreeDefaultSelection ();
-		rowActivated = false;
+@Override
+boolean gtk4_key_press_event (long controller, int keyval, int keycode, int state, long event) {
+	defaultSelectionPending = false;
+	switch (keyval) {
+		case GDK.GDK_Return:
+		case GDK.GDK_KP_Enter:
+			if ((state & (GDK.GDK_SUPER_MASK | GDK.GDK_META_MASK | GDK.GDK_HYPER_MASK | GDK.GDK_MOD1_MASK)) == 0) {
+				sendTreeDefaultSelection ();
+				if (isDisposed ()) return true;
+			}
+			break;
 	}
-
-	return result;
+	return super.gtk4_key_press_event(controller, keyval, keycode, state, event);
 }
 
 @Override
 long gtk_row_activated (long tree, long path, long column) {
-	rowActivated = true;
+	if (GTK.GTK4) {
+		if (defaultSelectionPending) sendTreeDefaultSelection ();
+		defaultSelectionPending = false;
+		return 0;
+	}
+	defaultSelectionPending = false;
+	long eventPtr = GTK3.gtk_get_current_event ();
+	if (eventPtr != 0) {
+		int eventType = GDK.gdk_event_get_event_type (eventPtr);
+		defaultSelectionPending = eventType == GDK.GDK_BUTTON_PRESS || eventType == GDK.GDK_2BUTTON_PRESS;
+		GDK.gdk_event_free (eventPtr);
+	}
 	return 0;
 }
 
@@ -5555,6 +5547,7 @@ void remove (long parentIter, int start, int end) {
 			if (usesBoundedVirtualView () && virtualSelections.containsKey (parentId)) virtualSelections.get (parentId).remove (start, 1);
 		}
 		modelChanged = true;
+		structureChanged ();
 		finishVirtualNativeMutation (state);
 		return;
 	}
@@ -5592,6 +5585,7 @@ void remove (long parentIter, int start, int end) {
 	} finally {
 		OS.g_free (iter);
 	}
+	structureChanged ();
 }
 
 /**
@@ -5614,6 +5608,7 @@ public void removeAll () {
 		virtualTopology.clear ();
 		virtualTopology.setChildCount (VirtualTreeTopology.ROOT, 0);
 		modelChanged = true;
+		structureChanged ();
 		finishVirtualNativeMutation (null);
 		return;
 	}
@@ -5644,14 +5639,9 @@ public void removeAll () {
 		virtualTopology.clear ();
 		virtualTopology.setChildCount (VirtualTreeTopology.ROOT, 0);
 	}
+	structureChanged ();
 
-	if (!searchEnabled () || usesVirtualNativeModel ()) {
-		GTK.gtk_tree_view_set_search_column (handle, -1);
-	} else {
-		/* Set the search column whenever the model changes */
-		int firstColumn = columnCount == 0 ? FIRST_COLUMN : columns [0].modelIndex;
-		GTK.gtk_tree_view_set_search_column (handle, firstColumn + CELL_TEXT);
-	}
+	updateSearchColumn ();
 }
 
 /**
@@ -5925,7 +5915,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 			}
 
 			//send out measure before erase
-			long textRenderer =  getTextRenderer (columnHandle);
+			long textRenderer =  CellRenderers.getTextRenderer (columnHandle);
             if (textRenderer != 0) {
                 gtk_cell_renderer_get_preferred_size(textRenderer, handle, null, null);
             }
@@ -6036,7 +6026,7 @@ void rendererRender (long cell, long cr, long snapshot, long widget, long backgr
 		 * GTK4 clips each renderer to its own cell, so the image cell gets the PaintItem of the
 		 * text cell too, and each cell shows its part of what the listener draws.
 		 */
-		long textCell = GTK.GTK4 && GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell) ? getTextRenderer (columnHandle) : cell;
+		long textCell = GTK.GTK4 && GTK.GTK_IS_CELL_RENDERER_PIXBUF (cell) ? CellRenderers.getTextRenderer (columnHandle) : cell;
 		if (GTK.GTK_IS_CELL_RENDERER_TEXT (textCell)) {
 			if (hooks (SWT.PaintItem)) {
                 if (wasSelected) {
@@ -6140,7 +6130,7 @@ void resetCustomDraw () {
 		boolean customDraw = columnCount != 0 ? columns [i].customDraw : firstCustomDraw;
 		if (customDraw) {
 			long column = GTK.gtk_tree_view_get_column (handle, i);
-			long textRenderer = getTextRenderer (column);
+			long textRenderer = CellRenderers.getTextRenderer (column);
 			GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, 0, 0, 0);
             if (columnCount != 0) {
                 columns [i].customDraw = false;
@@ -6171,11 +6161,18 @@ void reskinChildren (int flags) {
 	super.reskinChildren (flags);
 }
 boolean searchEnabled () {
-    /* Disable searching when using VIRTUAL or NO_SEARCH */
-    if ((style & SWT.VIRTUAL) != 0 || (style & SWT.NO_SEARCH) != 0) {
-        return false;
-    }
-	return true;
+	/* Disable searching when using VIRTUAL or NO_SEARCH */
+	return (style & (SWT.VIRTUAL | SWT.NO_SEARCH)) == 0;
+}
+
+private void updateSearchColumn () {
+	if (!searchEnabled () || usesVirtualNativeModel ()) {
+		GTK.gtk_tree_view_set_search_column (handle, -1);
+	} else {
+		/* Set the search column whenever the model changes */
+		int firstColumn = columnCount == 0 ? FIRST_COLUMN : columns [0].modelIndex;
+		GTK.gtk_tree_view_set_search_column (handle, firstColumn + CELL_TEXT);
+	}
 }
 /**
  * Display a mark indicating the point at which an item will be inserted.
@@ -6263,6 +6260,7 @@ void setItemCount (long parentIter, int count) {
 			}
 		}
 		modelChanged = true;
+		structureChanged ();
 	} finally {
         if (!isVirtual && !isDisposed()) {
             setRedraw(true);
