@@ -2013,12 +2013,6 @@ public TreeItem getItem (Point point) {
 	NSPoint pt = new NSPoint();
 	pt.x = point.x;
 	pt.y = point.y;
-	NSTableHeaderView tableHeader = widget.headerView ();
-	if (tableHeader != null) {
-		double headerHeight = tableHeader.bounds ().height;
-		if (pt.y < headerHeight) return null;
-		pt.y -= headerHeight;
-	}
 	NSView clipView = scrollView.contentView ();
 	if (clipView != null) {
 		pt = widget.convertPoint_fromView_ (pt, clipView);
@@ -3558,35 +3552,33 @@ void setItemCount (TreeItem parentItem, int count) {
 	NSOutlineView widget = (NSOutlineView) view;
 	boolean expanded = parentItem == null || parentItem.getExpanded();
 	if ((style & SWT.VIRTUAL) != 0) {
-		TreeItem[] selectedItems = getSelection ();
+		boolean publishNative = isShowing ();
+		TreeItem[] selectedItems = publishNative ? getSelection () : null;
         if (parentItem != null) {
             parentItem.setVirtualChildTopologyKnown(count);
         }
+        if (parentItem == null) {
+            itemCount = count;
+        } else {
+            parentItem.itemCount = count;
+        }
 		if (count < oldCount) {
-            if (parentItem == null) {
-                itemCount = count;
-            } else {
-                parentItem.itemCount = count;
-            }
-			widget.reloadItem (parentItem != null ? parentItem.handle : null, expanded);
 			virtualStorage (parentItem).truncate (count, item -> {
                 if (!item.isDisposed()) {
                     item.release(false);
                 }
 			});
-		} else {
-            if (parentItem == null) {
-                itemCount = count;
-            } else {
-                parentItem.itemCount = count;
-            }
-			widget.reloadItem (parentItem != null ? parentItem.handle : null, expanded);
 		}
-		selectItems (selectedItems, true);
-		if (parentItem != null && oldCount == 0 && parentItem.isExpandedState ()) {
-			ignoreExpand = true;
-			widget.expandItem (parentItem.handle);
-			ignoreExpand = false;
+		if (publishNative) {
+			widget.reloadItem (parentItem != null ? parentItem.handle : null, expanded);
+			selectItems (selectedItems, true);
+			if (parentItem != null && oldCount == 0 && parentItem.isExpandedState ()) {
+				ignoreExpand = true;
+				widget.expandItem (parentItem.handle);
+				ignoreExpand = false;
+			}
+		} else {
+			reloadPending = true;
 		}
 		return;
 	}
