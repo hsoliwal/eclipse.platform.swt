@@ -145,6 +145,22 @@ public final class ViewportPaintGraph {
 
 		public static Affine rotation (float radians) {
 			if (radians == 0f) return IDENTITY;
+			/*
+			 * Preserve exact integer geometry for canonical float quadrant angles.
+			 * Tiny residual cosine/sine values at +/-PI/2 and PI otherwise expand
+			 * conservative bounds and can incorrectly retain or cull edge strokes.
+			 * Adjacent representable angles keep their ordinary trig result.
+			 */
+			double quadrant = Math.rint (radians / (Math.PI / 2d));
+			if (Math.abs (quadrant) <= 4d
+					&& radians == (float)(quadrant * (Math.PI / 2d))) {
+				return switch ((int)quadrant & 3) {
+					case 0 -> IDENTITY;
+					case 1 -> new Affine (0, 1, -1, 0, 0, 0);
+					case 2 -> new Affine (-1, 0, 0, -1, 0, 0);
+					default -> new Affine (0, -1, 1, 0, 0, 0);
+				};
+			}
 			float sin = (float)Math.sin (radians);
 			float cos = (float)Math.cos (radians);
 			return new Affine (cos, sin, -sin, cos, 0, 0);

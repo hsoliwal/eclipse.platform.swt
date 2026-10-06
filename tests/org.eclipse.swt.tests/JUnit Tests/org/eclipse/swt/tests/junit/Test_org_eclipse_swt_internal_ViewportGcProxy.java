@@ -47,8 +47,15 @@ public class Test_org_eclipse_swt_internal_ViewportGcProxy {
 		assertSame (Affine.IDENTITY, Affine.shear (0, 0));
 
 		Affine quarterTurn = Affine.rotation ((float)(Math.PI / 2d));
+		assertEquals (0f, quarterTurn.m11 ());
+		assertEquals (1f, quarterTurn.m12 ());
+		assertEquals (-1f, quarterTurn.m21 ());
+		assertEquals (0f, quarterTurn.m22 ());
 		assertEquals (1f, quarterTurn.determinant (), 0.0001f);
 		assertFalse (quarterTurn.isTranslationOnly ());
+		float adjacent = Math.nextUp ((float)(Math.PI / 2d));
+		assertNotEquals (0f, Affine.rotation (adjacent).m11 (),
+				"only the canonical float quadrant angle may snap to exact integer geometry");
 		assertTrue (Affine.translation (4, -7).isTranslationOnly ());
 		assertFalse (Affine.shear (1, 0).isTranslationOnly ());
 
@@ -124,6 +131,83 @@ public class Test_org_eclipse_swt_internal_ViewportGcProxy {
 		assertEquals (expectedBackground, gc.getBackground ());
 
 		originalTransform.dispose ();
+	}
+
+	@Test
+	public void test_gcScopeRestoresPatternsFontAndExactNonRectangularClip () {
+		gc.setAdvanced (true);
+		if (!gc.getAdvanced ()) return; // Advanced graphics are optional.
+
+		Region original = new Region (display);
+		Region restored = new Region (display);
+		Pattern initialForegroundPattern = null;
+		Pattern initialBackgroundPattern = null;
+		Pattern temporaryForegroundPattern = null;
+		Pattern temporaryBackgroundPattern = null;
+		Font changedFont = null;
+		try {
+			original.add (new Rectangle (2, 2, 8, 8));
+			original.add (new Rectangle (30, 30, 8, 8));
+			gc.setClipping (original);
+
+			initialForegroundPattern = new Pattern (
+					display, 0, 0, 16, 16,
+					display.getSystemColor (SWT.COLOR_BLUE),
+					display.getSystemColor (SWT.COLOR_CYAN));
+			initialBackgroundPattern = new Pattern (
+					display, 0, 0, 16, 16,
+					display.getSystemColor (SWT.COLOR_WHITE),
+					display.getSystemColor (SWT.COLOR_GRAY));
+			gc.setForegroundPattern (initialForegroundPattern);
+			gc.setBackgroundPattern (initialBackgroundPattern);
+			Pattern expectedForegroundPattern = gc.getForegroundPattern ();
+			Pattern expectedBackgroundPattern = gc.getBackgroundPattern ();
+			Font expectedFont = gc.getFont ();
+
+			try (ViewportGcProxy proxy = ViewportGcProxy.wrap (gc)) {
+				GC scoped = proxy.gc ();
+				scoped.setClipping (new Rectangle (0, 0, 96, 96));
+				temporaryForegroundPattern = new Pattern (
+						display, 0, 0, 16, 16,
+						display.getSystemColor (SWT.COLOR_RED),
+						display.getSystemColor (SWT.COLOR_GREEN));
+				temporaryBackgroundPattern = new Pattern (
+						display, 0, 0, 16, 16,
+						display.getSystemColor (SWT.COLOR_BLACK),
+						display.getSystemColor (SWT.COLOR_YELLOW));
+				scoped.setForegroundPattern (temporaryForegroundPattern);
+				scoped.setBackgroundPattern (temporaryBackgroundPattern);
+				changedFont = new Font (
+						display,
+						expectedFont.getFontData () [0].getName (),
+						Math.max (1, expectedFont.getFontData () [0].getHeight () + 1),
+						SWT.BOLD);
+				scoped.setFont (changedFont);
+			}
+
+			gc.getClipping (restored);
+			assertTrue (restored.contains (4, 4));
+			assertTrue (restored.contains (32, 32));
+			assertFalse (restored.contains (20, 20));
+			assertSame (expectedForegroundPattern, gc.getForegroundPattern ());
+			assertSame (expectedBackgroundPattern, gc.getBackgroundPattern ());
+			assertEquals (expectedFont, gc.getFont ());
+		} finally {
+			if (changedFont != null) changedFont.dispose ();
+			if (temporaryForegroundPattern != null) temporaryForegroundPattern.dispose ();
+			if (temporaryBackgroundPattern != null) temporaryBackgroundPattern.dispose ();
+			if (initialForegroundPattern != null) initialForegroundPattern.dispose ();
+			if (initialBackgroundPattern != null) initialBackgroundPattern.dispose ();
+			restored.dispose ();
+			original.dispose ();
+		}
+	}
+
+	@Test
+	public void test_gcScopeReleasesSnapshotsWhenCallerDisposesGc () {
+		ViewportGcProxy proxy = ViewportGcProxy.wrap (gc);
+		gc.dispose ();
+		assertDoesNotThrow (proxy::close);
 	}
 
 	@Test
