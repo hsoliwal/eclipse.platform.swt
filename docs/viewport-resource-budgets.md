@@ -116,3 +116,13 @@ positive controls verify that the observer detects retained Image and GC resourc
 is `target/capture-qualification/graphics-lifetime.properties` and is checked by the OpenCV step.
 SWT tracking is an ownership oracle, not a claim about all native allocations; retain the separate
 24-process-report CPU/RSS/heap gate. No manual QA is required.
+
+### GTK clipping-region coordinate parity
+
+`GC.getClipping(Region)` must report the same user-coordinate space as `GC.getClipping()`.
+The GTK receiver now reuses the existing clipping-transform atom for both overloads, preserving
+nonrectangular holes and releasing its temporary Cairo region. The JUnit regression enumerates
+81 pairs of incoming/current translations, including null, unchanged, replaced and removed
+transforms. Nebula's complete mutable-GC-state restoration test is the cross-project reproducer.
+No public signature or JNI ABI changes. Actual GTK JNI and viewport/resource checks remain required;
+this does not qualify other platforms, general arbitrary affine rasterization or the whole reactor.
