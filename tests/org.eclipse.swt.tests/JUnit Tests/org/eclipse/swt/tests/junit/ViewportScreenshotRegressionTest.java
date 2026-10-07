@@ -39,6 +39,7 @@ import org.junit.jupiter.api.*;
 public class ViewportScreenshotRegressionTest {
 	private static final String ENABLED = "swt.viewport.screenshotRegression";
 	private static final String OUTPUT = "swt.viewport.screenshots";
+	private static final String NATIVE_CAPTURE = "swt.viewport.screenshots.native";
 	private static final int TABLE_ROWS = 2_000_000;
 	private static final int TREE_CHILDREN = 2_000;
 
@@ -479,44 +480,39 @@ public class ViewportScreenshotRegressionTest {
 		target.update ();
 		drainEvents (80);
 
-		Point size = target.getSize ();
-		assertTrue (size.x > 0 && size.y > 0);
-		Image image = new Image (target.getDisplay (), size.x, size.y);
-		try {
-			GC gc = new GC (image);
-			try {
-				if (!target.print (gc)) {
-					gc.dispose ();
-					gc = new GC (target);
-					try {
-						gc.copyArea (image, 0, 0);
-					} finally {
-						gc.dispose ();
-					}
-					gc = null;
-				}
-			} finally {
-                if (gc != null && !gc.isDisposed()) {
-                    gc.dispose();
-                }
-			}
-			Path png = output.resolve (name + ".png");
-			ImageLoader loader = new ImageLoader ();
-			loader.data = new ImageData[] {image.getImageData ()};
-			loader.save (png.toString (), SWT.IMAGE_PNG);
-			String text = "scenario=" + name + "\n"
-					+ "platform=" + SWT.getPlatform () + "\n"
-					+ "bounds=" + target.getBounds () + "\n"
-					+ "client=" + target.getClientArea () + "\n"
-					+ "screenshot.sha256=" + sha256 (png) + "\n"
-					+ sidecar;
-			Files.writeString (
-					output.resolve (name + ".txt"), text, StandardCharsets.UTF_8);
-		} finally {
-			image.dispose ();
-		}
-	}
+		Path png = output.resolve (name + ".png");
+		SwtScreenshotCapture.Result capture = SwtScreenshotCapture.captureControl (target, png);
 
+		StringBuilder text = new StringBuilder (512);
+		text.append ("scenario=").append (name).append ('\n');
+		text.append ("platform=").append (SWT.getPlatform ()).append ('\n');
+		text.append ("bounds=").append (target.getBounds ()).append ('\n');
+		text.append ("client=").append (target.getClientArea ()).append ('\n');
+		text.append ("screenshot=").append (png.getFileName ()).append ('\n');
+		text.append ("screenshot.captureMethod=").append (capture.method ()).append ('\n');
+		text.append ("screenshot.sha256=").append (capture.sha256 ()).append ('\n');
+
+		if (Boolean.getBoolean (NATIVE_CAPTURE)) {
+			Path nativePng = output.resolve (name + "-native.png");
+			try {
+				SwtScreenshotCapture.Result nativeCapture =
+						SwtScreenshotCapture.captureNativeShell (target, nativePng);
+				text.append ("nativeScreenshot=").append (nativePng.getFileName ()).append ('\n');
+				text.append ("nativeScreenshot.captureMethod=")
+						.append (nativeCapture.method ()).append ('\n');
+				text.append ("nativeScreenshot.sha256=")
+						.append (nativeCapture.sha256 ()).append ('\n');
+			} catch (RuntimeException | IOException unavailable) {
+				text.append ("nativeScreenshot.error=")
+						.append (unavailable.getClass ().getName ())
+						.append (": ").append (String.valueOf (unavailable.getMessage ()))
+						.append ('\n');
+			}
+		}
+		text.append (sidecar);
+		Files.writeString (
+				output.resolve (name + ".txt"), text, StandardCharsets.UTF_8);
+	}
 	private void drainEvents (long millis) throws InterruptedException {
 		Display display = shell.getDisplay ();
 		long deadline = System.currentTimeMillis () + millis;
