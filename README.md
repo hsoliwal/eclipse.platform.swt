@@ -1,3 +1,21 @@
+## M3 direction in this fork
+
+M3 is based on the idea that shared immutable structure and indexed metadata can
+provide a basis for reusable computation. The programme starts with M3 String,
+regex, and precompute in M3JDK21, then collections and SWT/Eclipse integration.
+
+This SWT fork is a target for exploring qualified runtime and collection improvements at the desktop toolkit boundary, with widget behavior, native integration, and responsiveness remaining central.
+
+**Explore the idea:** [M3 technical design paper](https://github.com/hsoliwal/M3jdk21/blob/master/m3/papers/M3_SHARED_STRUCTURE_AND_REUSABLE_COMPUTATION.md) ·
+[Programme goals and roadmap](https://github.com/hsoliwal/M3jdk21#project-goals-and-plan).
+The paper explains the proposed architecture, cost tradeoffs, and evaluation plan.
+Readers are invited to examine the work and contribute representative workloads.
+
+This section describes the direction of the hsoliwal fork. Upstream documentation
+follows below; upstream authorship, licenses, and project identity remain intact.
+
+---
+
 [![SWT Matrix Build](https://github.com/eclipse-platform/eclipse.platform.swt/actions/workflows/maven.yml/badge.svg)](https://github.com/eclipse-platform/eclipse.platform.swt/actions/workflows/maven.yml)
 [![Publish Unit Test Results](https://github.com/eclipse-platform/eclipse.platform.swt/actions/workflows/junit.yml/badge.svg)](https://github.com/eclipse-platform/eclipse.platform.swt/actions/workflows/junit.yml)
 [![License](https://img.shields.io/github/license/eclipse-platform/eclipse.platform)](https://github.com/eclipse-platform/eclipse.platform.swt/blob/master/LICENSE)
