@@ -17,7 +17,6 @@ import java.lang.reflect.*;
 import java.nio.charset.*;
 import java.nio.file.*;
 import java.nio.file.Path;
-import java.security.*;
 import java.util.*;
 
 import org.eclipse.swt.*;
@@ -574,12 +573,4 @@ public class ViewportScreenshotRegressionTest {
 		return result;
 	}
 
-	private static String sha256 (Path path) throws IOException {
-		try {
-			return HexFormat.of ().formatHex (
-					MessageDigest.getInstance ("SHA-256").digest (Files.readAllBytes (path)));
-		} catch (NoSuchAlgorithmException impossible) {
-			throw new AssertionError (impossible);
-		}
-	}
 }
