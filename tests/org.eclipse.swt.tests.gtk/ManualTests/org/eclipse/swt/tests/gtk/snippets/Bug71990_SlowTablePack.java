@@ -84,8 +84,9 @@ public class Bug71990_SlowTablePack {
 
 		System.out.println("Finish: " + (System.currentTimeMillis() - start));
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}
@@ -134,8 +135,9 @@ public class Bug71990_SlowTablePack {
 		System.out.println("Time add Items: " + (time1 - time0));
 
 		if (pack) {
-			for (int i = 0; i < table.getColumnCount(); i++)
-				table.getColumn(i).pack();
+            for (int i = 0; i < table.getColumnCount(); i++) {
+                table.getColumn(i).pack();
+            }
 			long time2 = System.currentTimeMillis();
 			System.out.println("Time column pack: " + (time2 - time1));
 		}

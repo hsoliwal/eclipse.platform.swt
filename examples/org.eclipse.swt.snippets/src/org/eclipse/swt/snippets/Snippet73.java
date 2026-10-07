@@ -45,7 +45,9 @@ public static void main (String [] args) {
 			String text = menuItem.getText ();
 			int index = 0;
 			while (index<treeItems.length) {
-				if (treeItems [index].getText ().equals (text)) break;
+                if (treeItems [index].getText().equals(text)) {
+                    break;
+                }
 				index++;
 			}
 			menuItem.setEnabled (index != treeItems.length);
@@ -56,7 +58,9 @@ public static void main (String [] args) {
 	shell.setSize (300, 300);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

@@ -76,6 +76,7 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_events_TreeEvent.class, //
 			Test_org_eclipse_swt_events_TypedEvent.class, //
 			Test_org_eclipse_swt_events_VerifyEvent.class, //
+			Test_org_eclipse_swt_internal_ViewportGcProxy.class, //
 			Test_org_eclipse_swt_internal_SVGRasterizer.class, //
 			Test_org_eclipse_swt_layout_BorderLayout.class, //
 			Test_org_eclipse_swt_layout_FormAttachment.class, //

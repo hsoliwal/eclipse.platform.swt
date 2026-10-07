@@ -41,14 +41,16 @@ class ClipboardProxyGTK4 {
 			throw new UnsupportedOperationException("Illegal attempt to use GTK4 ClipboardProxy on GTK3");
 		}
 		ClipboardProxyGTK4 proxy = (ClipboardProxyGTK4) display.getData(ID);
-		if (proxy != null)
-			return proxy;
+        if (proxy != null) {
+            return proxy;
+        }
 		proxy = new ClipboardProxyGTK4(display);
 		display.setData(ID, proxy);
 		display.disposeExec(() -> {
 			ClipboardProxyGTK4 clipbordProxy = (ClipboardProxyGTK4) display.getData(ID);
-			if (clipbordProxy == null)
-				return;
+            if (clipbordProxy == null) {
+                return;
+            }
 			display.setData(ID, null);
 			clipbordProxy.dispose();
 		});

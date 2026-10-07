@@ -66,8 +66,9 @@ public final class Bug395296_ToolBarWidth {
 		shell.setSize(600, 300);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

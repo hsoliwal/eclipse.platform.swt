@@ -50,7 +50,9 @@ public static void main(String [] args) {
 	for (int i = 0; i < 4; i++) {
 		TreeItem newItem = new TreeItem(item, SWT.NONE);
 		newItem.setText("descendent " + i);
-		if (i % 2 == 0) newItem.setData(xImage);
+        if (i % 2 == 0) {
+            newItem.setData(xImage);
+        }
 		item.setExpanded(true);
 		item = newItem;
 	}
@@ -80,7 +82,9 @@ public static void main(String [] args) {
 
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	xImage.dispose();
 	display.dispose();

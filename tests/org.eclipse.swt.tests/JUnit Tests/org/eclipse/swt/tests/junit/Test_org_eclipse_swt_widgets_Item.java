@@ -97,8 +97,9 @@ protected void setWidget(Widget widget) {
 
 private void freeImages() {
 	for (Image image : images) {
-		if (image != null)
-			image.dispose();
+        if (image != null) {
+            image.dispose();
+        }
 	}
 }
 }

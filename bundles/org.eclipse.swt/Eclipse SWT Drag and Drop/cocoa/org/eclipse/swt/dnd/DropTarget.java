@@ -124,7 +124,9 @@ public class DropTarget extends Widget {
 	 * @param c the Control whose hierarchy needs to be iterated to check for label with imageView
 	 */
 void handleLabels(Control c) {
-	if (labelDragHandlersAdded) return;
+    if (labelDragHandlersAdded) {
+        return;
+    }
 	if (c instanceof Label) {
 		long labelViewClass = OS.object_getClass(c.view.id);
 		// adding the handlers to label class
@@ -167,7 +169,9 @@ void addDragHandlers() {
 void addDragHandlers (long cls) {
 	// If we already added it, no need to do it again.
 	long procPtr = OS.class_getMethodImplementation(cls, OS.sel_draggingEntered_);
-	if (procPtr == proc3Args) return;
+    if (procPtr == proc3Args) {
+        return;
+    }
 	// Add the NSDraggingDestination callbacks
 	OS.class_addMethod(cls, OS.sel_draggingEntered_, proc3Args, "@:@");
 	OS.class_addMethod(cls, OS.sel_draggingUpdated_, proc3Args, "@:@");
@@ -218,7 +222,9 @@ void addDragHandlers (long cls) {
  * @see DropTargetEvent
  */
 public void addDropListener(DropTargetListener listener) {
-	if (listener == null) DND.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	DNDListener typedListener = new DNDListener (listener);
 	typedListener.dndWidget = this;
 	addListener (DND.DragEnter, typedListener);
@@ -237,8 +243,7 @@ long dndCallSuper (long id, long sel, long arg0) {
 }
 
 static int checkStyle (int style) {
-	if (style == SWT.NONE) return DND.DROP_MOVE;
-	return style;
+	return StylePolicy.normalize(style);
 }
 
 @Override
@@ -251,7 +256,9 @@ protected void checkSubclass () {
 }
 
 int draggingEntered(long id, long sel, NSObject sender) {
-	if (sender == null) return OS.NSDragOperationNone;
+    if (sender == null) {
+        return OS.NSDragOperationNone;
+    }
 
 	DNDEvent event = new DNDEvent();
 	if (!setEventData(sender, event)) {
@@ -303,7 +310,9 @@ int draggingEntered(long id, long sel, NSObject sender) {
 
 void draggingExited(long id, long sel, NSObject sender) {
 	clearDropNotAllowed();
-	if (keyOperation == -1) return;
+    if (keyOperation == -1) {
+        return;
+    }
 	keyOperation = -1;
 
 	DNDEvent event = new DNDEvent();
@@ -318,7 +327,9 @@ void draggingExited(long id, long sel, NSObject sender) {
 }
 
 int draggingUpdated(long id, long sel, NSObject sender) {
-	if (sender == null) return OS.NSDragOperationNone;
+    if (sender == null) {
+        return OS.NSDragOperationNone;
+    }
 	int oldKeyOperation = keyOperation;
 
 	DNDEvent event = new DNDEvent();
@@ -442,11 +453,17 @@ public DropTarget(Control control, int style) {
 
 static long dropTargetProc(long id, long sel) {
 	Display display = Display.findDisplay(Thread.currentThread());
-	if (display == null || display.isDisposed()) return 0;
+    if (display == null || display.isDisposed()) {
+        return 0;
+    }
 	Widget widget = display.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	DropTarget dt = (DropTarget)widget.getData(DND.DROP_TARGET_KEY);
-	if (dt == null) return 0;
+    if (dt == null) {
+        return 0;
+    }
 
 	if (sel == OS.sel_wantsPeriodicDraggingUpdates) {
 		return dt.wantsPeriodicDraggingUpdates(id, sel) ? 1 : 0;
@@ -457,9 +474,13 @@ static long dropTargetProc(long id, long sel) {
 
 static long dropTargetProc(long id, long sel, long arg0) {
 	Display display = Display.findDisplay(Thread.currentThread());
-	if (display == null || display.isDisposed()) return 0;
+    if (display == null || display.isDisposed()) {
+        return 0;
+    }
 	Widget widget = display.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	Widget tempWidget = widget;
 	DropTarget dt = (DropTarget) tempWidget.getData(DND.DROP_TARGET_KEY);
 	if (dt == null && tempWidget instanceof Label) {
@@ -471,11 +492,14 @@ static long dropTargetProc(long id, long sel, long arg0) {
 		    if (tempWidget instanceof Control) {
 		        Composite widgetParent = ((Control) tempWidget).getParent();
 		        tempWidget = widgetParent;
-		    }
-		    else break;
+		    } else {
+                break;
+            }
 		}
 	}
-	if (dt == null) return 0;
+    if (dt == null) {
+        return 0;
+    }
 
 	// arg0 is _always_ the sender, and implements NSDraggingInfo.
 	// Looks like an NSObject for our purposes, though.
@@ -496,11 +520,17 @@ static long dropTargetProc(long id, long sel, long arg0) {
 
 static long dropTargetProc(long id, long sel, long arg0, long arg1, long arg2, long arg3) {
 	Display display = Display.findDisplay(Thread.currentThread());
-	if (display == null || display.isDisposed()) return 0;
+    if (display == null || display.isDisposed()) {
+        return 0;
+    }
 	Widget widget = display.findWidget(id);
-	if (widget == null) return 0;
+    if (widget == null) {
+        return 0;
+    }
 	DropTarget dt = (DropTarget)widget.getData(DND.DROP_TARGET_KEY);
-	if (dt == null) return 0;
+    if (dt == null) {
+        return 0;
+    }
 
 	if (sel == OS.sel_outlineView_acceptDrop_item_childIndex_) {
 		return dt.outlineView_acceptDrop_item_childIndex(id, sel, arg0, arg1, arg2, arg3) ? 1 : 0;
@@ -576,9 +606,15 @@ int getOperationFromKeyState() {
 		long modifiers = currEvent.modifierFlags();
 		boolean option = (modifiers & OS.NSAlternateKeyMask) == OS.NSAlternateKeyMask;
 		boolean control = (modifiers & OS.NSEventModifierFlagControl) == OS.NSEventModifierFlagControl;
-		if (control && option) return DND.DROP_DEFAULT;
-		if (control) return DND.DROP_LINK;
-		if (option) return DND.DROP_COPY;
+        if (control && option) {
+            return DND.DROP_DEFAULT;
+        }
+        if (control) {
+            return DND.DROP_LINK;
+        }
+        if (option) {
+            return DND.DROP_COPY;
+        }
 	}
 	return DND.DROP_DEFAULT;
 }
@@ -593,10 +629,12 @@ public Transfer[] getTransfer() {
 }
 
 void onDispose () {
-	if (control == null)
-		return;
-	if (controlListener != null)
-		control.removeListener(SWT.Dispose, controlListener);
+    if (control == null) {
+        return;
+    }
+    if (controlListener != null) {
+        control.removeListener(SWT.Dispose, controlListener);
+    }
 	controlListener = null;
 	control.setData(DND.DROP_TARGET_KEY, null);
 	transferAgents = null;
@@ -823,7 +861,9 @@ long outlineView_validateDrop_proposedItem_proposedChildIndex(long id, long sel,
  * @see #getDropListeners
  */
 public void removeDropListener(DropTargetListener listener) {
-	if (listener == null) DND.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(DND.DragEnter, listener);
 	removeTypedListener(DND.DragLeave, listener);
 	removeTypedListener(DND.DragOver, listener);
@@ -846,13 +886,17 @@ public void setDropTargetEffect(DropTargetEffect effect) {
 }
 
 boolean setEventData(NSObject draggingState, DNDEvent event) {
-	if (draggingState == null) return false;
+    if (draggingState == null) {
+        return false;
+    }
 
 	// get allowed operations
 	int style = getStyle();
 	long allowedActions = draggingState.draggingSourceOperationMask();
 	int operations = osOpToOp(allowedActions) & style;
-	if (operations == DND.DROP_NONE) return false;
+    if (operations == DND.DROP_NONE) {
+        return false;
+    }
 
 	// get current operation
 	int operation = getOperationFromKeyState();
@@ -862,14 +906,18 @@ boolean setEventData(NSObject draggingState, DNDEvent event) {
 			operation = (operations & DND.DROP_MOVE) != 0 ? DND.DROP_MOVE : DND.DROP_NONE;
 		}
 	} else {
-		if ((operation & operations) == 0) operation = DND.DROP_NONE;
+        if ((operation & operations) == 0) {
+            operation = DND.DROP_NONE;
+        }
 	}
 
 
 	// get allowed transfer types
 	NSPasteboard dragPBoard = draggingState.draggingPasteboard();
 	NSArray draggedTypes = dragPBoard.types();
-	if (draggedTypes == null) return false;
+    if (draggedTypes == null) {
+        return false;
+    }
 
 	long draggedTypeCount = draggedTypes.count();
 
@@ -889,7 +937,9 @@ boolean setEventData(NSObject draggingState, DNDEvent event) {
 			}
 		}
 	}
-	if (index == -1) return false;
+    if (index == -1) {
+        return false;
+    }
 
 	if (index < dataTypes.length - 1) {
 		TransferData[] temp = new TransferData[index + 1];
@@ -901,7 +951,9 @@ boolean setEventData(NSObject draggingState, DNDEvent event) {
 	NSPoint mouse = draggingState.draggingLocation();
 	NSPoint globalMouse = draggingState.draggingDestinationWindow().convertBaseToScreen(mouse);
 	NSArray screens = NSScreen.screens();
-	if (screens == null) return false;
+    if (screens == null) {
+        return false;
+    }
 
 	NSRect screenRect = new NSScreen(screens.objectAtIndex(0)).frame();
 	globalMouse.y = screenRect.height - globalMouse.y;
@@ -936,7 +988,9 @@ boolean setEventData(NSObject draggingState, DNDEvent event) {
  * </ul>
  */
 public void setTransfer(Transfer... transferAgents){
-	if (transferAgents == null) DND.error(SWT.ERROR_NULL_ARGUMENT);
+    if (transferAgents == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.transferAgents = transferAgents;
 
 

@@ -43,8 +43,9 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 	assertThrows(IllegalArgumentException.class, () -> new Sash(null, 0), "No exception thrown");
 
 	int[] cases = {0, SWT.HORIZONTAL, SWT.VERTICAL};
-	for (int style : cases)
-		sash = new Sash(shell, style);
+    for (int style : cases) {
+        sash = new Sash(shell, style);
+    }
 }
 
 @Override

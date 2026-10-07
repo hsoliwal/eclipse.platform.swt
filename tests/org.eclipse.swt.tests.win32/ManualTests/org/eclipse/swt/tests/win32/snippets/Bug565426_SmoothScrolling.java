@@ -32,10 +32,11 @@ public class Bug565426_SmoothScrolling {
 	static void simulateScroll(Scrollable control, boolean vertical, int wheelDelta) {
 		long wParam = wheelDelta << 16;
 
-		if (vertical)
-			OS.SendMessage(control.handle, OS.WM_MOUSEWHEEL,  wParam, 0);
-		else
-			OS.SendMessage(control.handle, OS.WM_MOUSEHWHEEL, wParam, 0);
+        if (vertical) {
+            OS.SendMessage(control.handle, OS.WM_MOUSEWHEEL, wParam, 0);
+        } else {
+            OS.SendMessage(control.handle, OS.WM_MOUSEHWHEEL, wParam, 0);
+        }
 	}
 
 	public static void main(String[] args) {

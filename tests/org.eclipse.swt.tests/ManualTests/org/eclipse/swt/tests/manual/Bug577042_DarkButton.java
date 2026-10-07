@@ -99,47 +99,49 @@ public class Bug577042_DarkButton {
 
 			Composite[] parents = new Composite[] {parent1, parent2};
 
-			for (Composite parent : parents)
-			for (Themes theme : Themes.values())
-			for (Colors color : Colors.values())
-			{
-				display.setData("org.eclipse.swt.internal.win32.useDarkModeExplorerTheme", theme == Themes.Dark);
+            for (Composite parent : parents) {
+                for (Themes theme : Themes.values()) {
+                    for (Colors color : Colors.values())
+                    {
+                        display.setData("org.eclipse.swt.internal.win32.useDarkModeExplorerTheme", theme == Themes.Dark);
 
-				Label label1 = new Label(parent, 0);
-				label1.setText("Theme:" + theme.name());
-				coloredControls.add(label1);
+                        Label label1 = new Label(parent, 0);
+                        label1.setText("Theme:" + theme.name());
+                        coloredControls.add(label1);
 
-				Label label2 = new Label(parent, 0);
-				label2.setText("Color:" + color.name());
-				coloredControls.add(label2);
+                        Label label2 = new Label(parent, 0);
+                        label2.setText("Color:" + color.name());
+                        coloredControls.add(label2);
 
-				Button button;
-				button = new Button(parent, SWT.PUSH);
-				button.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-				button.setText("&Push");
-				final Button defaultButton = button;
-				button.addListener(SWT.Selection, e -> shell.setDefaultButton(defaultButton));
-				otherControls.add(button);
-				setColors(button, color);
+                        Button button;
+                        button = new Button(parent, SWT.PUSH);
+                        button.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+                        button.setText("&Push");
+                        final Button defaultButton = button;
+                        button.addListener(SWT.Selection, e -> shell.setDefaultButton(defaultButton));
+                        otherControls.add(button);
+                        setColors(button, color);
 
-				button = new Button(parent, SWT.TOGGLE);
-				button.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-				button.setText("&Toggle");
-				otherControls.add(button);
-				setColors(button, color);
+                        button = new Button(parent, SWT.TOGGLE);
+                        button.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+                        button.setText("&Toggle");
+                        otherControls.add(button);
+                        setColors(button, color);
 
-				button = new Button(parent, SWT.CHECK);
-				button.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-				button.setText("&Check");
-				otherControls.add(button);
-				setColors(button, color);
+                        button = new Button(parent, SWT.CHECK);
+                        button.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+                        button.setText("&Check");
+                        otherControls.add(button);
+                        setColors(button, color);
 
-				button = new Button(parent, SWT.RADIO);
-				button.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-				button.setText("&Radio");
-				otherControls.add(button);
-				setColors(button, color);
-			}
+                        button = new Button(parent, SWT.RADIO);
+                        button.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+                        button.setText("&Radio");
+                        otherControls.add(button);
+                        setColors(button, color);
+                    }
+                }
+            }
 		}
 
 		// Color selector
@@ -151,8 +153,9 @@ public class Bug577042_DarkButton {
 
 			Listener listener = event -> {
 				Button button = (Button)event.widget;
-				if (!button.getSelection())
-					return;
+                if (!button.getSelection()) {
+                    return;
+                }
 
 				Colors color = (Colors)button.getData();
 

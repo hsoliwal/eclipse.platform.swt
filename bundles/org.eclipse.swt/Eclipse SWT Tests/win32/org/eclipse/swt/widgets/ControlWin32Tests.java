@@ -15,7 +15,6 @@ package org.eclipse.swt.widgets;
 
 import static org.eclipse.swt.internal.DPIUtil.setMonitorSpecificScaling;
 import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;

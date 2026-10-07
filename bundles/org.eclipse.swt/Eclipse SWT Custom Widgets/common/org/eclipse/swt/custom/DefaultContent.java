@@ -103,7 +103,9 @@ int[][] addLineIndex(int start, int length, int[][] linesArray, int count) {
  */
 @Override
 public void addTextChangeListener(TextChangeListener listener) {
-	if (listener == null) error(SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	StyledTextListener typedListener = new StyledTextListener(listener);
 	textListeners.add(typedListener);
 }
@@ -119,13 +121,15 @@ void adjustGap(int position, int sizeHint, int line) {
 	if (position == gapStart) {
 		// text is being inserted at the gap position
 		int size = (gapEnd - gapStart) - sizeHint;
-		if (lowWatermark <= size && size <= highWatermark)
-			return;
+        if (lowWatermark <= size && size <= highWatermark) {
+            return;
+        }
 	} else if ((position + sizeHint == gapStart) && (sizeHint < 0)) {
 		// text is being deleted at the gap position
 		int size = (gapEnd - gapStart) - sizeHint;
-		if (lowWatermark <= size && size <= highWatermark)
-			return;
+        if (lowWatermark <= size && size <= highWatermark) {
+            return;
+        }
 	}
 	moveAndResizeGap(position, sizeHint, line);
 }
@@ -166,28 +170,41 @@ void indexLines(){
  * @return true if ch is a delimiter, false otherwise
  */
 boolean isDelimiter(char ch) {
-	if (ch == SWT.CR) return true;
-	if (ch == SWT.LF) return true;
+    if (ch == SWT.CR) {
+        return true;
+    }
+    if (ch == SWT.LF) {
+        return true;
+    }
 	return false;
 }
 
 private boolean isInsideCRLF(int pos) {
-	if (pos == 0) return false;
-	if (pos == getCharCount()) return false;
+    if (pos == 0) {
+        return false;
+    }
+    if (pos == getCharCount()) {
+        return false;
+    }
 
 	char charBefore = getTextRange(pos - 1, 1).charAt(0);
-	if (charBefore != '\r') return false;
+    if (charBefore != '\r') {
+        return false;
+    }
 
 	char charAfter = getTextRange(pos, 1).charAt(0);
-	if (charAfter != '\n') return false;
+    if (charAfter != '\n') {
+        return false;
+    }
 
-	/*
-	 * Bug 568033: in case of this.setText("\rxxx\n")
-	 * \r and \n are already parsed as separate line endings, so it
-	 * shouldn't be wrong to delete 'xxx' and type something there.
-	 */
-	if (getLineAtOffset(pos - 1) != getLineAtOffset(pos))
-		return false;
+    /*
+     * Bug 568033: in case of this.setText("\rxxx\n")
+     * \r and \n are already parsed as separate line endings, so it
+     * shouldn't be wrong to delete 'xxx' and type something there.
+     */
+    if (getLineAtOffset(pos - 1) != getLineAtOffset(pos)) {
+        return false;
+    }
 
 	return true;
 }
@@ -275,7 +292,9 @@ int[][] indexLines(int offset, int length, int numLines){
  * @param text the text to insert
  */
 void insert(int position, String text) {
-	if (text.length() == 0) return;
+    if (text.length() == 0) {
+        return;
+    }
 
 	int startLine = getLineAtOffset(position);
 	int change = text.length();
@@ -492,7 +511,9 @@ public int getCharCount() {
  */
 @Override
 public String getLine(int index) {
-	if ((index >= lineCount) || (index < 0)) error(SWT.ERROR_INVALID_ARGUMENT);
+    if ((index >= lineCount) || (index < 0)) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int start = lines[index][0];
 	int length = lines[index][1];
 	int end = start + length - 1;
@@ -529,6 +550,28 @@ public String getLineDelimiter() {
 	return LineDelimiter;
 }
 /**
+ * Returns the line at the given index with delimiters.
+ * <p>
+ * @param index	the index of the line to return
+ * @return the logical line text (i.e., without the gap) with delimiters
+ */
+String getFullLine(int index) {
+	int start = lines[index][0];
+	int length = lines[index][1];
+	int end = start + length - 1;
+	if (!gapExists() || (end < gapStart) || (start >= gapEnd)) {
+		// line is before or after the gap
+		return new String(textStore, start, length);
+	} else {
+		// gap is in the specified range, strip out the gap
+		StringBuilder buffer = new StringBuilder();
+		int gapLength = gapEnd - gapStart;
+		buffer.append(textStore, start, gapStart - start);
+		buffer.append(textStore, gapEnd, length - gapLength - (gapStart - start));
+		return buffer.toString();
+	}
+}
+/**
  * Returns the physical line at the given index (i.e., with delimiters and the gap).
  * <p>
  *
@@ -559,7 +602,10 @@ public int getLineCount(){
  */
 @Override
 public int getLineAtOffset(int charPosition){
-	int charCount = getCharCount();	if ((charPosition > charCount) || (charPosition < 0)) SWT.error(SWT.ERROR_INVALID_ARGUMENT, null, ". charPosition=" + charPosition + " charCount=" + charCount);
+	int charCount = getCharCount();
+    if ((charPosition > charCount) || (charPosition < 0)) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT, null, ". charPosition=" + charPosition + " charCount=" + charCount);
+    }
 	int position;
 	if (charPosition < gapStart) {
 		// position is before the gap
@@ -574,8 +620,9 @@ public int getLineAtOffset(int charPosition){
 	// last character) - for inserting
 	if (lineCount > 0) {
 		int lastLine = lineCount - 1;
-		if (position == lines[lastLine][0] + lines[lastLine][1])
-			return lastLine;
+        if (position == lines[lastLine][0] + lines[lastLine][1]) {
+            return lastLine;
+        }
 	}
 
 	int high = lineCount;
@@ -635,8 +682,12 @@ int getLineAtPhysicalOffset(int position){
  */
 @Override
 public int getOffsetAtLine(int lineIndex) {
-	if (lineIndex == 0) return 0;
-	if ((lineIndex >= lineCount) || (lineIndex < 0)) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (lineIndex == 0) {
+        return 0;
+    }
+    if ((lineIndex >= lineCount) || (lineIndex < 0)) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int start = lines[lineIndex][0];
 	if (start > gapEnd) {
 		return start - (gapEnd - gapStart);
@@ -700,13 +751,16 @@ String getPhysicalText(int start, int length) {
  */
 @Override
 public String getTextRange(int start, int length) {
-	if (textStore == null)
-		return "";
-	if (length == 0)
-		return "";
+    if (textStore == null) {
+        return "";
+    }
+    if (length == 0) {
+        return "";
+    }
 	int end= start + length;
-	if (!gapExists() || (end < gapStart))
-		return new String(textStore, start, length);
+    if (!gapExists() || (end < gapStart)) {
+        return new String(textStore, start, length);
+    }
 	if (gapStart < start) {
 		int gapLength= gapEnd - gapStart;
 		return new String(textStore, start + gapLength , length);
@@ -729,7 +783,9 @@ public String getTextRange(int start, int length) {
 @Override
 @SuppressWarnings("removal")
 public void removeTextChangeListener(TextChangeListener listener){
-	if (listener == null) error(SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i = 0; i < textListeners.size(); i++) {
 		TypedListener typedListener = textListeners.get(i);
 		if (typedListener.getEventListener () == listener) {
@@ -825,7 +881,9 @@ public void setText (String text){
  * @param numLines the number of lines that are being deleted
  */
 void delete(int position, int length, int numLines) {
-	if (length == 0) return;
+    if (length == 0) {
+        return;
+    }
 
 	int startLine = getLineAtOffset(position);
 	int startLineOffset = getOffsetAtLine(startLine);
@@ -873,7 +931,9 @@ void delete(int position, int length, int numLines) {
 	lines[startLine][1] = (position - startLineOffset) + (j - position);
 	// figure out the number of lines that have been deleted
 	int numOldLines = oldLines.length - 1;
-	if (splittingDelimiter) numOldLines -= 1;
+    if (splittingDelimiter) {
+        numOldLines -= 1;
+    }
 	// shift up the lines after the last deleted line, no need to update
 	// the offset or length of the lines
 	for (int i = endLine + 1; i < lineCount; i++) {

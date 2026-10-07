@@ -84,8 +84,12 @@ protected Point computeSize(Composite composite, int wHint, int hHint, boolean f
 		height +=  CBanner.BORDER_TOP + CBanner.BORDER_BOTTOM + 2*CBanner.BORDER_STRIPE;
 	}
 
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 
 	return new Point(width, height);
 }
@@ -107,7 +111,9 @@ int computeTrim(Control c) {
 @Override
 protected boolean flushCache(Control control) {
 	Object data = control.getLayoutData();
-	if (data instanceof CLayoutData) ((CLayoutData)data).flushCache();
+    if (data instanceof CLayoutData) {
+        ((CLayoutData) data).flushCache();
+    }
 	return true;
 }
 @Override
@@ -129,7 +135,9 @@ protected void layout(Composite composite, boolean flushCache) {
 		bottomSize = computeChildSize(bottom, w, SWT.DEFAULT, flushCache);
 		height -= bottomSize.y + CBanner.BORDER_STRIPE + 2;
 	}
-	if (showCurve) height -=  CBanner.BORDER_TOP + CBanner.BORDER_BOTTOM + 2*CBanner.BORDER_STRIPE;
+    if (showCurve) {
+        height -= CBanner.BORDER_TOP + CBanner.BORDER_BOTTOM + 2 * CBanner.BORDER_STRIPE;
+    }
 	height = Math.max(0, height);
 	Point rightSize = new Point(0,0);
 	if (right != null) {
@@ -161,7 +169,9 @@ protected void layout(Composite composite, boolean flushCache) {
 	if (bottom != null) {
 		bottomRect = new Rectangle(x, y+size.y-bottomSize.y, bottomSize.x, bottomSize.y);
 	}
-	if (showCurve) y += CBanner.BORDER_TOP + CBanner.BORDER_STRIPE;
+    if (showCurve) {
+        y += CBanner.BORDER_TOP + CBanner.BORDER_STRIPE;
+    }
 	if(left != null) {
 		leftRect = new Rectangle(x, y, leftSize.x, leftSize.y);
 		banner.curveStart = x + leftSize.x - banner.curve_indent;
@@ -187,8 +197,14 @@ protected void layout(Composite composite, boolean flushCache) {
 	 */
 	banner.update();
 	banner.curveRect = new Rectangle(banner.curveStart, 0, banner.curve_width, size.y);
-	if (bottomRect != null) bottom.setBounds(bottomRect);
-	if (rightRect != null) right.setBounds(rightRect);
-	if (leftRect != null) left.setBounds(leftRect);
+    if (bottomRect != null) {
+        bottom.setBounds(bottomRect);
+    }
+    if (rightRect != null) {
+        right.setBounds(rightRect);
+    }
+    if (leftRect != null) {
+        left.setBounds(leftRect);
+    }
 }
 }

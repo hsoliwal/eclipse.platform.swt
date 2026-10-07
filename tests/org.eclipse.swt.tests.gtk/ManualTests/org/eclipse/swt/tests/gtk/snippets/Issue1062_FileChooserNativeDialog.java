@@ -58,8 +58,9 @@ public class Issue1062_FileChooserNativeDialog {
 		shell.setSize(400, 200);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

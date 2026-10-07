@@ -56,7 +56,9 @@ public class Bug497705_BrowserDragDetect {
 		shell.setSize (200, 200);
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}
@@ -80,8 +82,9 @@ public class Bug497705_BrowserDragDetect {
 			}
 			@Override
 			public void dragFinished(DragSourceEvent event) {
-				if (event.detail == DND.DROP_MOVE)
-					browser.setText ("");
+                if (event.detail == DND.DROP_MOVE) {
+                    browser.setText("");
+                }
 			}
 		});
 	}

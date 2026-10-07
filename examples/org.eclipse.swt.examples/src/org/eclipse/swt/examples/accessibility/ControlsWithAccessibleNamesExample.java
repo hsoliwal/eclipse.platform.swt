@@ -370,7 +370,9 @@ public class ControlsWithAccessibleNamesExample {
 				ToolItem item = new ToolItem(coolItemToolBar, SWT.PUSH);
 				item.setText("I" + i + j);
 				item.setToolTipText("ToolItem ToolTip" + i + j);
-				if (item.getWidth() > toolItemWidth) toolItemWidth = item.getWidth();
+                if (item.getWidth() > toolItemWidth) {
+                    toolItemWidth = item.getWidth();
+                }
 			}
 			coolItem.setControl(coolItemToolBar);
 			Point size = coolItemToolBar.computeSize(SWT.DEFAULT, SWT.DEFAULT);
@@ -389,7 +391,9 @@ public class ControlsWithAccessibleNamesExample {
 				ToolItem item = new ToolItem(coolItemToolBar, SWT.PUSH);
 				item.setText("I" + i + j);
 				item.setToolTipText("ToolItem ToolTip" + i + j);
-				if (item.getWidth() > toolItemWidth) toolItemWidth = item.getWidth();
+                if (item.getWidth() > toolItemWidth) {
+                    toolItemWidth = item.getWidth();
+                }
 			}
 			coolItem.setControl(coolItemToolBar);
 			Point size = coolItemToolBar.computeSize(SWT.DEFAULT, SWT.DEFAULT);
@@ -624,7 +628,9 @@ public class ControlsWithAccessibleNamesExample {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		largeImage.dispose();
 		smallImage.dispose();

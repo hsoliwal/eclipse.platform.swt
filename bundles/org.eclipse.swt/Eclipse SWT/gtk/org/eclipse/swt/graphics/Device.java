@@ -38,6 +38,11 @@ public abstract class Device implements Drawable {
 	 * @since 3.105
 	 */
 	protected static final int CHANGE_SCALEFACTOR = 1;
+	/* Settings callbacks */
+	long gsettingsProc;
+	Callback gsettingsCallback;
+	boolean isConnected = false;
+	long displaySettings; //gsettings Dictionary
 
 	/**
 	 * the handle to the X Display
@@ -145,7 +150,9 @@ public abstract class Device implements Drawable {
 * TEMPORARY CODE.
 */
 static synchronized Device getDevice () {
-	if (DeviceFinder != null) DeviceFinder.run();
+    if (DeviceFinder != null) {
+        DeviceFinder.run();
+    }
 	Device device = CurrentDevice;
 	CurrentDevice = null;
 	return device;
@@ -258,7 +265,9 @@ private void stopTracking() {
  * </ul>
  */
 protected void checkDevice () {
-	if (disposed) SWT.error(SWT.ERROR_DEVICE_DISPOSED);
+    if (disposed) {
+        SWT.error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 }
 
 /**
@@ -292,7 +301,9 @@ protected void create (DeviceData data) {
 public void dispose () {
 	synchronized (Device.class) {
 		try (ExceptionStash exceptions = new ExceptionStash ()) {
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 			checkDevice ();
 
 			try {
@@ -337,7 +348,9 @@ static synchronized Device findDevice (long xDisplay) {
 
 synchronized static void deregister (Device device) {
 	for (int i=0; i<Devices.length; i++) {
-		if (device == Devices [i]) Devices [i] = null;
+        if (device == Devices [i]) {
+            Devices [i] = null;
+        }
 	}
 }
 
@@ -394,7 +407,9 @@ public DeviceData getDeviceData () {
 		synchronized (trackingLock) {
 			int count = 0, length = objects.length;
 			for (int i=0; i<length; i++) {
-				if (objects [i] != null) count++;
+                if (objects [i] != null) {
+                    count++;
+                }
 			}
 			int index = 0;
 			data.objects = new Object [count];
@@ -489,7 +504,9 @@ public Point getDPI () {
  */
 public FontData[] getFontList (String faceName, boolean scalable) {
 	checkDevice ();
-	if (!scalable) return new FontData[0];
+    if (!scalable) {
+        return new FontData[0];
+    }
 	long [] family = new long [1];
 	long [] face = new long [1];
 	long [] families = new long [1];
@@ -533,12 +550,16 @@ public FontData[] getFontList (String faceName, boolean scalable) {
 				OS.pango_font_description_free(fontDesc);
 			}
 			OS.g_free(faces[0]);
-			if (faceName != null) break;
+            if (faceName != null) {
+                break;
+            }
 		}
 	}
 	OS.g_free(families[0]);
 	OS.g_object_unref(context);
-	if (nFds == fds.length) return fds;
+    if (nFds == fds.length) {
+        return fds;
+    }
 	FontData[] result = new FontData[nFds];
 	System.arraycopy(fds, 0, result, 0, nFds);
 	return result;
@@ -661,7 +682,9 @@ protected void init () {
 			synchronized (clazz) {
 				int index = 0;
 				while (index < Devices.length) {
-					if (Devices [index] != null) break;
+                    if (Devices [index] != null) {
+                        break;
+                    }
 					index++;
 				}
 				if (index == Devices.length) {
@@ -673,7 +696,9 @@ protected void init () {
 					XIOErrorProc = OS.XSetIOErrorHandler (XNullIOErrorProc);
 				}
 			}
-			if (debug) OS.XSynchronize (xDisplay, true);
+            if (debug) {
+                OS.XSynchronize(xDisplay, true);
+            }
 		}
 	}
 
@@ -699,7 +724,9 @@ protected void init () {
 	}
 
 	emptyTab = OS.pango_tab_array_new(1, false);
-	if (emptyTab == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (emptyTab == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.pango_tab_array_set_tab(emptyTab, 0, OS.PANGO_TAB_LEFT, 1);
 
 	if (GTK.GTK4) {
@@ -707,7 +734,9 @@ protected void init () {
 	} else {
 		shellHandle = GTK3.gtk_window_new (GTK.GTK_WINDOW_TOPLEVEL);
 	}
-	if (shellHandle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (shellHandle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	GTK.gtk_widget_realize(shellHandle);
 
 	this.dpi = getDPI();
@@ -910,7 +939,9 @@ public boolean isDisposed () {
  */
 public boolean loadFont (String path) {
 	checkDevice();
-	if (path == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (path == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	byte [] buffer = Converter.wcsToMbcs (path, true);
 	return OS.FcConfigAppFontAddFile (0, buffer);
 }
@@ -1004,11 +1035,15 @@ protected void release () {
 	}
 	shellHandle = 0;
 
-	/* Dispose the default font */
-	if (systemFont != null) systemFont.dispose ();
+    /* Dispose the default font */
+    if (systemFont != null) {
+        systemFont.dispose();
+    }
 	systemFont = null;
 
-	if (emptyTab != 0) OS.pango_tab_array_free(emptyTab);
+    if (emptyTab != 0) {
+        OS.pango_tab_array_free(emptyTab);
+    }
 	emptyTab = 0;
 
 	/* Free the GTK error and warning handler */
@@ -1024,6 +1059,13 @@ protected void release () {
 		handler_ids = null;  log_domains = null;
 		logProc = 0;
 	}
+	/* Dispose the settings callback */
+	if (gsettingsCallback != null) {
+		gsettingsCallback.dispose();
+		gsettingsCallback = null;
+	}
+	gsettingsProc = 0;
+
 
 }
 
@@ -1043,7 +1085,9 @@ public void setWarnings (boolean warnings) {
 	checkDevice ();
 	if (warnings) {
 		if (--warningLevel == 0) {
-			if (debug) return;
+            if (debug) {
+                return;
+            }
 			if (logProc != 0) {
 				for (int i=0; i<handler_ids.length; i++) {
 					if (handler_ids [i] != 0) {
@@ -1056,7 +1100,9 @@ public void setWarnings (boolean warnings) {
 		}
 	} else {
 		if (warningLevel++ == 0) {
-			if (debug) return;
+            if (debug) {
+                return;
+            }
 			if (logProc != 0) {
 				int flags = OS.G_LOG_LEVEL_MASK | OS.G_LOG_FLAG_FATAL | OS.G_LOG_FLAG_RECURSION;
 				for (int i=0; i<log_domains.length; i++) {
@@ -1078,7 +1124,9 @@ static long XErrorProc (long xDisplay, long xErrorEvent) {
 			OS.Call (XErrorProc, xDisplay, xErrorEvent);
 		}
 	} else {
-		if (DEBUG) new SWTError ().printStackTrace ();
+        if (DEBUG) {
+            new SWTError().printStackTrace();
+        }
 		OS.Call (XErrorProc, xDisplay, xErrorEvent);
 	}
 	return 0;
@@ -1091,7 +1139,9 @@ static long XIOErrorProc (long xDisplay) {
 			new SWTError ().printStackTrace ();
 		}
 	} else {
-		if (DEBUG) new SWTError ().printStackTrace ();
+        if (DEBUG) {
+            new SWTError().printStackTrace();
+        }
 	}
 	OS.Call (XIOErrorProc, xDisplay, 0);
 	return 0;

@@ -92,7 +92,9 @@ void generateSTATS_C(JNIClass[] classes) {
 		String fileName = outputDir + gen.getFileName();
 		gen.setDelimiter(JNIGenerator.getDelimiter(fileName));
 		gen.generate();
-		if (out.size() > 0) JNIGenerator.output(out.toByteArray(), fileName);
+        if (out.size() > 0) {
+            JNIGenerator.output(out.toByteArray(), fileName);
+        }
 	} catch (Exception e) {
 		System.out.println("Problem");
 		e.printStackTrace(System.out);
@@ -111,7 +113,9 @@ void generateSTATS_H(JNIClass[] classes) {
 		String fileName = outputDir + gen.getFileName();
 		gen.setDelimiter(JNIGenerator.getDelimiter(fileName));
 		gen.generate();
-		if (out.size() > 0) JNIGenerator.output(out.toByteArray(), fileName);
+        if (out.size() > 0) {
+            JNIGenerator.output(out.toByteArray(), fileName);
+        }
 	} catch (Exception e) {
 		System.out.println("Problem");
 		e.printStackTrace(System.out);
@@ -130,7 +134,9 @@ void generateSTRUCTS_H(JNIClass[] classes) {
 		String fileName = outputDir + gen.getFileName();
 		gen.setDelimiter(JNIGenerator.getDelimiter(fileName));
 		gen.generate();
-		if (out.size() > 0) JNIGenerator.output(out.toByteArray(), fileName);
+        if (out.size() > 0) {
+            JNIGenerator.output(out.toByteArray(), fileName);
+        }
 	} catch (Exception e) {
 		System.out.println("Problem");
 		e.printStackTrace(System.out);
@@ -149,7 +155,9 @@ void generateSTRUCTS_C(JNIClass[] classes) {
 		String fileName = outputDir + gen.getFileName();
 		gen.setDelimiter(JNIGenerator.getDelimiter(fileName));
 		gen.generate();
-		if (out.size() > 0) JNIGenerator.output(out.toByteArray(), fileName);
+        if (out.size() > 0) {
+            JNIGenerator.output(out.toByteArray(), fileName);
+        }
 	} catch (Exception e) {
 		System.out.println("Problem");
 		e.printStackTrace(System.out);
@@ -169,7 +177,9 @@ void generateSWT_C(JNIClass[] classes) {
 		String fileName = outputDir + gen.getFileName();
 		gen.setDelimiter(JNIGenerator.getDelimiter(fileName));
 		gen.generate();
-		if (out.size() > 0) JNIGenerator.output(out.toByteArray(), fileName);
+        if (out.size() > 0) {
+            JNIGenerator.output(out.toByteArray(), fileName);
+        }
 	} catch (Exception e) {
 		System.out.println("Problem");
 		e.printStackTrace(System.out);
@@ -194,7 +204,9 @@ void generateMetaData(JNIClass[] classes) {
 				System.out.println("Warning: Meta data output dir does not exist");
 				return;
 			}
-			if (out.size() > 0) JNIGenerator.output(out.toByteArray(), fileName);
+            if (out.size() > 0) {
+                JNIGenerator.output(out.toByteArray(), fileName);
+            }
 		}
 	} catch (Exception e) {
 		System.out.println("Problem");
@@ -221,8 +233,12 @@ public void generate() {
 }
 
 public void generate(ProgressMonitor progress) {
-	if (mainClass == null) return;
-	if (progress != null) progress.setMessage("Initializing...");
+    if (mainClass == null) {
+        return;
+    }
+    if (progress != null) {
+        progress.setMessage("Initializing...");
+    }
 	JNIClass[] classes = getClasses();
 	JNIClass[] natives = getNativesClasses(classes);
 	JNIClass[] structs = getStructureClasses(classes);
@@ -231,7 +247,9 @@ public void generate(ProgressMonitor progress) {
 		int nativeCount = 0;
 		for (JNIClass clazz : natives) {
 			for (JNIMethod method : clazz.getDeclaredMethods()) {
-				if ((method.getModifiers() & Modifier.NATIVE) == 0) continue;
+                if ((method.getModifiers() & Modifier.NATIVE) == 0) {
+                    continue;
+                }
 				nativeCount++;
 			}
 		}
@@ -243,32 +261,48 @@ public void generate(ProgressMonitor progress) {
 		progress.setMessage("Generating structs.h ...");
 	}
 	generateSTRUCTS_H(structs);
-	if (progress != null) progress.setMessage("Generating structs.c ...");
+    if (progress != null) {
+        progress.setMessage("Generating structs.c ...");
+    }
 	generateSTRUCTS_C(structs);
-	if (progress != null) progress.setMessage("Generating natives ...");
+    if (progress != null) {
+        progress.setMessage("Generating natives ...");
+    }
 	generateSWT_C(natives);
-	if (progress != null) progress.setMessage("Generating stats.h ...");
+    if (progress != null) {
+        progress.setMessage("Generating stats.h ...");
+    }
 	generateSTATS_H(natives);
-	if (progress != null) progress.setMessage("Generating stats.c ...");
+    if (progress != null) {
+        progress.setMessage("Generating stats.c ...");
+    }
 	generateSTATS_C(natives);
-	if (progress != null) progress.setMessage("Generating meta data ...");
+    if (progress != null) {
+        progress.setMessage("Generating meta data ...");
+    }
 	generateMetaData(classes);
 //	if (progress != null) progress.setMessage("Generating embeded meta data ...");
 //	generateEmbededMetaData(classes);
-	if (progress != null) progress.setMessage("Done.");
+    if (progress != null) {
+        progress.setMessage("Done.");
+    }
 	this.progress = null;
 }
 
 String getPackageName() {
 	int dot = mainClassName.lastIndexOf('.');
-	if (dot == -1) return "";
+    if (dot == -1) {
+        return "";
+    }
 	return mainClassName.substring(0, dot);
 }
 
 String[] getClassNames() {
 	String pkgName = getPackageName();
 	String classpath = getClasspath();
-	if (classpath == null) classpath = System.getProperty("java.class.path");
+    if (classpath == null) {
+        classpath = System.getProperty("java.class.path");
+    }
 	String pkgPath = pkgName.replace('.', File.separatorChar);
 	String pkgZipPath = pkgName.replace('.', '/');
 	List<String> classes = new ArrayList<>();	
@@ -276,7 +310,9 @@ String[] getClassNames() {
 	int index = 0;
 	while (index < classpath.length()) {
 		index = classpath.indexOf(File.pathSeparatorChar, start);
-		if (index == -1) index = classpath.length();
+        if (index == -1) {
+            index = classpath.length();
+        }
 		String path = classpath.substring(start, index);
 		if (path.toLowerCase().endsWith(".jar")) {
 			try (ZipFile zipFile = new ZipFile(path)){
@@ -316,9 +352,15 @@ String[] getClassNames() {
 }
 
 public JNIClass[] getClasses() {
-	if (classes != null) return classes;
-	if (mainClassName == null) return new JNIClass[0];
-	if (USE_AST) return getASTClasses();
+    if (classes != null) {
+        return classes;
+    }
+    if (mainClassName == null) {
+        return new JNIClass[0];
+    }
+    if (USE_AST) {
+        return getASTClasses();
+    }
 	String[] classNames = getClassNames();
 	Arrays.sort(classNames);
 	String packageName = getPackageName();
@@ -342,8 +384,12 @@ public JNIClass[] getClasses() {
 }
 
 JNIClass[] getASTClasses() {
-	if (classes != null) return classes;
-	if (mainClassName == null) return new JNIClass[0];
+    if (classes != null) {
+        return classes;
+    }
+    if (mainClassName == null) {
+        return new JNIClass[0];
+    }
 	String root = classesDir != null ? classesDir : new File(outputDir).getParent() + "/";
 	String mainPath = new File(root + mainClassName.replace('.', '/') + ".java").getAbsolutePath();
 	List<JNIClass> classes = new ArrayList<>();
@@ -379,7 +425,9 @@ JNIClass[] getASTClasses() {
 }
 
 public JNIClass[] getNativesClasses(JNIClass[] classes) {
-	if (mainClass == null) return new JNIClass[0];
+    if (mainClass == null) {
+        return new JNIClass[0];
+    }
 	List<JNIClass> result = new ArrayList<>();
 	for (JNIClass clazz : classes) {
 		for (JNIMethod method : clazz.getDeclaredMethods()) {
@@ -394,13 +442,17 @@ public JNIClass[] getNativesClasses(JNIClass[] classes) {
 }
 
 public JNIClass[] getStructureClasses(JNIClass[] classes) {
-	if (mainClass == null) return new JNIClass[0];
+    if (mainClass == null) {
+        return new JNIClass[0];
+    }
 	List<JNIClass> result = new ArrayList<>();
 	outer:
 	for (JNIClass clazz : classes) {
 		for (JNIMethod method : clazz.getDeclaredMethods()) {
 			int mods = method.getModifiers();
-			if ((mods & Modifier.NATIVE) != 0) continue outer;
+            if ((mods & Modifier.NATIVE) != 0) {
+                continue outer;
+            }
 		}
 		boolean hasPublicFields = false;
 		for (JNIField field : clazz.getDeclaredFields()) {
@@ -410,7 +462,9 @@ public JNIClass[] getStructureClasses(JNIClass[] classes) {
 				break;
 			}
 		}
-		if (!hasPublicFields) continue;
+        if (!hasPublicFields) {
+            continue;
+        }
 		result.add(clazz);
 	}
 	return result.toArray(new JNIClass[result.size()]);
@@ -516,8 +570,12 @@ public static void main(String[] args) {
 	}
 	if (args.length > 0) {
 		gen.setMainClassName(args[0]);
-		if (args.length > 1) gen.setOutputDir(args[1]);
-		if (args.length > 2) gen.setClasspath(args[2]);
+        if (args.length > 1) {
+            gen.setOutputDir(args[1]);
+        }
+        if (args.length > 2) {
+            gen.setClasspath(args[2]);
+        }
 	} else {
 		gen.setMainClassName(getDefaultMainClass());
 	}

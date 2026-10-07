@@ -42,8 +42,9 @@ final class LEDataInputStream extends InputStream {
 		if (bufferSize > 0) {
 			buf = new byte[bufferSize];
 			pos = bufferSize;
-		}
-		else throw new IllegalArgumentException();
+		} else {
+            throw new IllegalArgumentException();
+        }
 	}
 
 	@Override
@@ -67,7 +68,9 @@ final class LEDataInputStream extends InputStream {
 	 */
 	@Override
 	public int available() throws IOException {
-		if (buf == null) throw new IOException();
+        if (buf == null) {
+            throw new IOException();
+        }
 		return (buf.length - pos) + in.available();
 	}
 
@@ -76,13 +79,17 @@ final class LEDataInputStream extends InputStream {
 	 */
 	@Override
 	public int read() throws IOException {
-		if (buf == null) throw new IOException();
+        if (buf == null) {
+            throw new IOException();
+        }
 		if (pos < buf.length) {
 			position++;
 			return (buf[pos++] & 0xFF);
 		}
 		int c = in.read();
-		if (c != -1) position++;
+        if (c != -1) {
+            position++;
+        }
 		return c;
 	}
 
@@ -98,7 +105,9 @@ final class LEDataInputStream extends InputStream {
 			read += count;
 		}
 		position += read;
-		if (read == 0 && read != len) return -1;
+        if (read == 0 && read != len) {
+            return -1;
+        }
 		return read;
 	}
 
@@ -120,7 +129,9 @@ final class LEDataInputStream extends InputStream {
 	 * @exception java.io.IOException if an IOException occurs.
 	 */
 	private int readData(byte[] buffer, int offset, int length) throws IOException {
-		if (buf == null) throw new IOException();
+        if (buf == null) {
+            throw new IOException();
+        }
 		if (offset < 0 || offset > buffer.length ||
 			length < 0 || (length > buffer.length - offset)) {
 			throw new ArrayIndexOutOfBoundsException();
@@ -138,13 +149,19 @@ final class LEDataInputStream extends InputStream {
 			pos += cacheCopied;
 		}
 
-		// Have we copied enough?
-		if (cacheCopied == length) return length;
+        // Have we copied enough?
+        if (cacheCopied == length) {
+            return length;
+        }
 
 		int inCopied = in.read(buffer, newOffset, length - cacheCopied);
 
-		if (inCopied > 0) return inCopied + cacheCopied;
-		if (cacheCopied == 0) return inCopied;
+        if (inCopied > 0) {
+            return inCopied + cacheCopied;
+        }
+        if (cacheCopied == 0) {
+            return inCopied;
+        }
 		return cacheCopied;
 	}
 
@@ -185,7 +202,9 @@ final class LEDataInputStream extends InputStream {
 	 */
 	public void unread(byte[] b) throws IOException {
 		int length = b.length;
-		if (length > pos) throw new IOException();
+        if (length > pos) {
+            throw new IOException();
+        }
 		position -= length;
 		pos -= length;
 		System.arraycopy(b, 0, buf, pos, length);

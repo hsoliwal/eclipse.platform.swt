@@ -94,8 +94,9 @@ public class Bug299045_TableLines {
 		shell.setSize(500, 500);
 		shell.open();
 		while(!shell.isDisposed()) {
-			if(!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		// this is incorrect, the graphics.image wasn't allocated by the user!

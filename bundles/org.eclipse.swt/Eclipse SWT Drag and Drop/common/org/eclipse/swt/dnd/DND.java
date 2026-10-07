@@ -272,22 +272,30 @@ public static void error (int code, int hresult) {
 		/* OS Failure/Limit (fatal, may occur only on some platforms) */
 		case DND.ERROR_CANNOT_INIT_DRAG:{
 			String msg = DND.INIT_DRAG_MESSAGE;
-			if (hresult != 0) msg += " result = "+hresult; //$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTError (code, msg);
 		}
 		case DND.ERROR_CANNOT_INIT_DROP:{
 			String msg = DND.INIT_DROP_MESSAGE;
-			if (hresult != 0) msg += " result = "+hresult; //$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTError (code, msg);
 		}
 		case DND.ERROR_CANNOT_SET_CLIPBOARD:{
 			String msg = DND.CANNOT_SET_CLIPBOARD_MESSAGE;
-			if (hresult != 0) msg += " result = "+hresult; //$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTError (code, msg);
 		}
 		case DND.ERROR_INVALID_DATA:{
 			String msg = DND.INVALID_DATA_MESSAGE;
-			if (hresult != 0) msg += " result = "+hresult; //$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 	}

@@ -64,8 +64,9 @@ public class Bug541427_TreeNoHeader {
 					column.setWidth(70);
 				}
 
-				if (PACK_BEFORE_SIZE)
-					tree.pack();
+                if (PACK_BEFORE_SIZE) {
+                    tree.pack();
+                }
 
 				tree.setBounds(0, 0, 220, treeH);
 			}
@@ -75,8 +76,9 @@ public class Bug541427_TreeNoHeader {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

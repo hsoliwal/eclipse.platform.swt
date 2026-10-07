@@ -46,8 +46,9 @@ public class Bug223864_ToolTipToolbarButton {
 		parent.setActive();
 		
 		while (!parent.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

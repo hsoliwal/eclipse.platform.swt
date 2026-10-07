@@ -172,7 +172,9 @@ Optional<String> openNativeChooserDialog () {
 	} else {
 		handle = GTK.gtk_file_chooser_native_new(titleBytes, shellHandle, GTK.GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER, null, null);
 	}
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (filterPath != null && filterPath.length () > 0) {
 		StringBuilder stringBuilder = new StringBuilder ();
@@ -258,8 +260,12 @@ Optional<String> openNativeChooserDialog () {
 
 		if (path != 0) {
 			long utf8Ptr = OS.g_filename_to_utf8 (path, -1, null, null, null);
-			if (utf8Ptr == 0) utf8Ptr = OS.g_filename_display_name (path);
-			if (path != utf8Ptr) OS.g_free (path);
+            if (utf8Ptr == 0) {
+                utf8Ptr = OS.g_filename_display_name(path);
+            }
+            if (path != utf8Ptr) {
+                OS.g_free(path);
+            }
 			if (utf8Ptr != 0) {
 				long [] items_written = new long [1];
 				long utf16Ptr = OS.g_utf8_to_utf16 (utf8Ptr, -1, null, items_written, null);
@@ -296,14 +302,20 @@ Optional<String> openNativeChooserDialog () {
  * be no message displayed in the file chooser dialog.
  */
 void GTK3setNativeDialogMessage(long handle, String message) {
-	if (GTK.GTK4) return;
+    if (GTK.GTK4) {
+        return;
+    }
 
 	if (message.length () > 0) {
 		byte[] buffer = Converter.wcsToMbcs(message, true);
 		long box = GTK.gtk_box_new(GTK.GTK_ORIENTATION_HORIZONTAL, 0);
-		if (box == 0) error(SWT.ERROR_NO_HANDLES);
+        if (box == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		long label = GTK.gtk_label_new (buffer);
-		if (label == 0) error(SWT.ERROR_NO_HANDLES);
+        if (label == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		GTK3.gtk_container_add(box, label);
 		GTK3.gtk_widget_show(label);
@@ -348,7 +360,9 @@ public void setFilterPath (String string) {
  * </ul>
  */
 public void setMessage (String string) {
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	message = string;
 }
 }

@@ -51,7 +51,9 @@ public class Bug562463_BusyIndicatorIssue {
         shell.pack();
         shell.open ();
         while (!shell.isDisposed ()) {
-            if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
         }
         shell.dispose();
         display.dispose ();
@@ -60,8 +62,9 @@ public class Bug562463_BusyIndicatorIssue {
     // start copy-past from BussyIndicator class
 
     public static void showWhile(Display display, Runnable runnable) {
-		if (runnable == null)
-			SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (runnable == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (display == null) {
 			display = Display.getCurrent();
 			if (display == null) {

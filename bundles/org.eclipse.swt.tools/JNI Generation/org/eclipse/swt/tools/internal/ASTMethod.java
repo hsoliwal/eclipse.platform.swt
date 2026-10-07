@@ -93,7 +93,9 @@ public String getName() {
 
 @Override
 public boolean isNativeUnique() {
-	if (unique != null) return unique.booleanValue();
+    if (unique != null) {
+        return unique.booleanValue();
+    }
 	boolean result = true;
 	String name = getName();
 	for (JNIMethod mth : declaringClass.getDeclaredMethods()) {
@@ -136,7 +138,9 @@ public String getExclude() {
 
 @Override
 public String getMetaData() {
-	if (data != null) return data;
+    if (data != null) {
+        return data;
+    }
 	String className = getDeclaringClass().getSimpleName();
 	String key = className + "_" + JNIGenerator.getFunctionName(this);
 	MetaData metaData = declaringClass.metaData;
@@ -156,7 +160,9 @@ public String getMetaData() {
 			value = metaData.getMetaData(key, null);
 		}
 	}
-	if (value == null) value = "";	
+    if (value == null) {
+        value = "";
+    }	
 	return value;
 }
 

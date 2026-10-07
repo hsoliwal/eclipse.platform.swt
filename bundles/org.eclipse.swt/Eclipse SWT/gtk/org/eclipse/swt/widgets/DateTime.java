@@ -213,18 +213,7 @@ DateFormat getFormat(Locale locale, int style) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
-
-	style = checkBits (style, SWT.DATE, SWT.TIME, SWT.CALENDAR, 0, 0, 0);
-	if ((style & SWT.DATE) == 0) style &=~ SWT.DROP_DOWN;
-	return checkBits (style, SWT.MEDIUM, SWT.SHORT, SWT.LONG, 0, 0, 0);
+	return WidgetStylePolicy.DATE_TIME_GTK.applyAsInt(style);
 }
 
 /**
@@ -257,7 +246,9 @@ public void addSelectionListener (SelectionListener listener) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -338,10 +329,18 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 			}
 		}
 	}
-	if (width == 0) width = DEFAULT_WIDTH;
-	if (height == 0) height = DEFAULT_HEIGHT;
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (width == 0) {
+        width = DEFAULT_WIDTH;
+    }
+    if (height == 0) {
+        height = DEFAULT_HEIGHT;
+    }
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	int borderWidth = getBorderWidthInPixels ();
 
 	if (prefferedSize == null && isDateWithDropDownButton ()) {
@@ -407,14 +406,20 @@ void createHandle(int index) {
 
 private void createSWTFixedHandle() {
 	fixedHandle = OS.g_object_new(display.gtk_fixed_get_type(), 0);
-	if (fixedHandle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (fixedHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
-	if (!GTK.GTK4) GTK3.gtk_widget_set_has_window(fixedHandle, true);
+    if (!GTK.GTK4) {
+        GTK3.gtk_widget_set_has_window(fixedHandle, true);
+    }
 }
 
 private void createHandleForCalendar() {
 	handle = GTK.gtk_calendar_new();
-	if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	//Calendar becomes container in this case.
 	calendarHandle = handle;
@@ -440,12 +445,16 @@ private void createHandleForCalendar() {
 
 private void createHandleForDateWithDropDown () {
 	handle = gtk_box_new(GTK.GTK_ORIENTATION_HORIZONTAL, false, 0);
-	if (handle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	containerHandle = handle;
 
 	if (GTK.GTK4) {
 		editableHandle = GTK.gtk_entry_new();
-		if (editableHandle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (editableHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		textEntryHandle = GTK4.gtk_editable_get_delegate(editableHandle);
 
@@ -453,7 +462,9 @@ private void createHandleForDateWithDropDown () {
 		GTK4.gtk_box_append(handle, editableHandle);
 	} else {
 		textEntryHandle = GTK.gtk_entry_new();
-		if (textEntryHandle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (textEntryHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		GTK3.gtk_container_add(fixedHandle, handle);
 		GTK3.gtk_container_add(handle, textEntryHandle);
@@ -479,7 +490,9 @@ private void createHandleForDateTime() {
 		textEntryHandle = handle;
 		containerHandle = textEntryHandle;
 	}
-	if (textEntryHandle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (textEntryHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK4) {
 		OS.swt_fixed_add(fixedHandle, handle);
@@ -514,7 +527,9 @@ void createDropDownButton () {
 		}
 		if (event.widget == getShell ()) {
 			getDisplay ().asyncExec (() -> {
-				if (isDisposed ()) return;
+                if (isDisposed()) {
+                    return;
+                }
 				handleFocus (SWT.FocusOut);
 			});
 		}
@@ -534,15 +549,22 @@ void createPopupShell (int year, int month, int day) {
 		popupStyle |= SWT.CALENDAR_WEEKNUMBERS;
 	}
 	popupCalendar = new DateTime (popupShell, popupStyle);
-	if (font != null) popupCalendar.setFont (font);
-	if (fg != null) popupCalendar.setForeground (fg);
-	if (bg != null) popupCalendar.setBackground (bg);
+    if (font != null) {
+        popupCalendar.setFont(font);
+    }
+    if (fg != null) {
+        popupCalendar.setForeground(fg);
+    }
+    if (bg != null) {
+        popupCalendar.setBackground(bg);
+    }
 
 	mouseEventListener = event -> {
 		if (event.widget instanceof Control) {
 			Control c = (Control)event.widget;
-			if (c != down && c.getShell () != popupShell)
-				dropDownCalendar (false);
+            if (c != down && c.getShell() != popupShell) {
+                dropDownCalendar(false);
+            }
 		}
 	};
 
@@ -555,7 +577,9 @@ void createPopupShell (int year, int month, int day) {
 		popupCalendar.addListener (listeners [i], popupListener);
 	}
 	addListener (SWT.Dispose, popupListener);
-	if (year != -1) popupCalendar.setDate (year, month, day);
+    if (year != -1) {
+        popupCalendar.setDate(year, month, day);
+    }
 }
 
 @Override
@@ -599,7 +623,9 @@ void onDispose (Event event) {
  * @param drop true if the calendar is suppose to drop down.
  */
 void dropDownCalendar (boolean drop) {
-	if (drop == isDropped ()) return;
+    if (drop == isDropped()) {
+        return;
+    }
 
 	if (!drop) {
 		hideDropDownCalendar ();
@@ -938,7 +964,9 @@ private long dateTimeHandle () {
 	if (isCalendar () && calendarHandle != 0) {
 		return calendarHandle;
 	} else if ((isDate () || isTime ())) {
-		if (textEntryHandle != 0) return textEntryHandle;
+        if (textEntryHandle != 0) {
+            return textEntryHandle;
+        }
 		return super.focusHandle ();
 	} else {
 		return super.focusHandle ();
@@ -1096,17 +1124,23 @@ void initAccessible () {
 		@Override
 		public void getState (AccessibleControlEvent e) {
 			e.detail = ACC.STATE_FOCUSABLE;
-			if (hasFocus ()) e.detail |= ACC.STATE_FOCUSED;
+            if (hasFocus()) {
+                e.detail |= ACC.STATE_FOCUSED;
+            }
 		}
 
 		@Override
 		public void getSelection (AccessibleControlEvent e) {
-			if (hasFocus ()) e.childID = ACC.CHILDID_SELF;
+            if (hasFocus()) {
+                e.childID = ACC.CHILDID_SELF;
+            }
 		}
 
 		@Override
 		public void getFocus (AccessibleControlEvent e) {
-			if (hasFocus ()) e.childID = ACC.CHILDID_SELF;
+            if (hasFocus()) {
+                e.childID = ACC.CHILDID_SELF;
+            }
 		}
 	});
 }
@@ -1124,7 +1158,9 @@ boolean isValidTime (int fieldName, int value) {
 }
 
 boolean isValidDate (int year, int month, int day) {
-	if (year < MIN_YEAR || year > MAX_YEAR) return false;
+    if (year < MIN_YEAR || year > MAX_YEAR) {
+        return false;
+    }
 	Calendar valid = Calendar.getInstance ();
 	valid.set (year, month, day);
 	return valid.get (Calendar.YEAR) == year
@@ -1149,13 +1185,17 @@ void popupCalendarEvent (Event event) {
 			break;
 		}
 		case SWT.MouseDown: {
-			if (event.button != 1) return;
+            if (event.button != 1) {
+                return;
+            }
 			mdYear = getYear();
 			mdMonth = getMonth();
 			break;
 		}
 		case SWT.MouseUp: {
-			if (event.button != 1) return;
+            if (event.button != 1) {
+                return;
+            }
 			/*
 			* The drop-down should stay visible when
 			* either the year or month is changed.
@@ -1190,7 +1230,9 @@ void popupCalendarEvent (Event event) {
 				case SWT.TRAVERSE_TAB_PREVIOUS:
 //					event.doit = text.traverse (event.detail);
 					event.detail = SWT.TRAVERSE_NONE;
-					if (event.doit) dropDownCalendar (false);
+                    if (event.doit) {
+                        dropDownCalendar(false);
+                    }
 					return;
 				case SWT.TRAVERSE_PAGE_NEXT:
 				case SWT.TRAVERSE_PAGE_PREVIOUS:
@@ -1230,9 +1272,11 @@ void popupCalendarEvent (Event event) {
 			if (event.keyCode == SWT.SPACE) {
 				dropDownCalendar (false);
 			}
-			/* At this point the widget may have been disposed.
-			 * If so, do not continue. */
-			if (isDisposed ()) break;
+            /* At this point the widget may have been disposed.
+             * If so, do not continue. */
+            if (isDisposed()) {
+                break;
+            }
 			Event e = new Event ();
 			e.time = event.time;
 			e.character = event.character;
@@ -1245,10 +1289,14 @@ void popupCalendarEvent (Event event) {
 }
 
 void handleFocus (int type) {
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	switch (type) {
 		case SWT.FocusIn: {
-			if (hasFocus) return;
+            if (hasFocus) {
+                return;
+            }
 			selectAll ();
 			hasFocus = true;
 			Shell shell = getShell ();
@@ -1261,9 +1309,13 @@ void handleFocus (int type) {
 			break;
 		}
 		case SWT.FocusOut: {
-			if (!hasFocus) return;
+            if (!hasFocus) {
+                return;
+            }
 			Control focusControl = getDisplay ().getFocusControl ();
-			if (focusControl == down || focusControl == popupCalendar ) return;
+            if (focusControl == down || focusControl == popupCalendar) {
+                return;
+            }
 			hasFocus = false;
 			Shell shell = getShell ();
 			shell.removeListener (SWT.Deactivate, popupListener);
@@ -1307,8 +1359,12 @@ void popupShellEvent (Event event) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection, listener);
 }
@@ -1393,7 +1449,9 @@ void sendSelectionEvent () {
 public void setBackground (Color color) {
 	super.setBackground (color);
 	bg = color;
-	if (popupCalendar != null) popupCalendar.setBackground (color);
+    if (popupCalendar != null) {
+        popupCalendar.setBackground(color);
+    }
 }
 
 @Override
@@ -1427,15 +1485,18 @@ void setBackgroundGdkRGBA (long context, long handle, GdkRGBA rgba) {
 @Override
 public void setEnabled (boolean enabled){
 	super.setEnabled (enabled);
-	if (isDateWithDropDownButton ())
-		down.setEnabled (enabled);
+    if (isDateWithDropDownButton()) {
+        down.setEnabled(enabled);
+    }
 }
 
 @Override
 public void setFont (Font font) {
 	super.setFont (font);
 	this.font = font;
-	if (popupCalendar != null) popupCalendar.setFont (font);
+    if (popupCalendar != null) {
+        popupCalendar.setFont(font);
+    }
 	redraw ();
 }
 
@@ -1448,13 +1509,16 @@ void setForegroundGdkRGBA (GdkRGBA rgba) {
 public void setForeground (Color color) {
 	super.setForeground (color);
 	fg = color;
-	if (popupCalendar != null) popupCalendar.setForeground (color);
+    if (popupCalendar != null) {
+        popupCalendar.setForeground(color);
+    }
 }
 
 void setFieldOfInternalDataStructure(FieldPosition field, int value) {
 	int calendarField = getCalendarField(field);
-	if (calendar.get(calendarField) == value)
-		return;
+    if (calendar.get(calendarField) == value) {
+        return;
+    }
 	if (calendarField == Calendar.AM_PM && hasAmPm()) {
 		calendar.roll(Calendar.HOUR_OF_DAY, 12);
 	}
@@ -1491,7 +1555,9 @@ void setFieldOfInternalDataStructure(FieldPosition field, int value) {
  */
 public void setDate (int year, int month, int day) {
 	checkWidget ();
-	if (!isValidDate (year, month, day)) return;
+    if (!isValidDate(year, month, day)) {
+        return;
+    }
 	if (isCalendar ()) {
 		this.year = year;
 		this.month = month;
@@ -1533,7 +1599,9 @@ public void setDate (int year, int month, int day) {
  */
 public void setDay (int day) {
 	checkWidget ();
-	if (!isValidDate (getYear (), getMonth (), day)) return;
+    if (!isValidDate(getYear(), getMonth(), day)) {
+        return;
+    }
 	if (isCalendar ()) {
 		this.day = day;
 
@@ -1564,7 +1632,9 @@ public void setDay (int day) {
  */
 public void setHours (int hours) {
 	checkWidget ();
-	if (!isValidTime (Calendar.HOUR_OF_DAY, hours)) return;
+    if (!isValidTime(Calendar.HOUR_OF_DAY, hours)) {
+        return;
+    }
 	if (isCalendar ()) {
 		this.hours = hours;
 	} else {
@@ -1576,7 +1646,9 @@ public void setHours (int hours) {
 @Override
 public void setMenu (Menu menu) {
 	super.setMenu (menu);
-	if (down != null) down.setMenu (menu);
+    if (down != null) {
+        down.setMenu(menu);
+    }
 }
 
 /**
@@ -1594,7 +1666,9 @@ public void setMenu (Menu menu) {
  */
 public void setMinutes (int minutes) {
 	checkWidget ();
-	if (!isValidTime (Calendar.MINUTE, minutes)) return;
+    if (!isValidTime(Calendar.MINUTE, minutes)) {
+        return;
+    }
 	if (isCalendar ()) {
 		this.minutes = minutes;
 	} else {
@@ -1621,7 +1695,9 @@ public void setMinutes (int minutes) {
  */
 public void setMonth (int month) {
 	checkWidget ();
-	if (!isValidDate (getYear (), month, getDay ())) return;
+    if (!isValidDate(getYear(), month, getDay())) {
+        return;
+    }
 	if (isCalendar ()) {
 		this.month = month;
 
@@ -1653,7 +1729,9 @@ public void setMonth (int month) {
  */
 public void setSeconds (int seconds) {
 	checkWidget ();
-	if (!isValidTime (Calendar.SECOND, seconds)) return;
+    if (!isValidTime(Calendar.SECOND, seconds)) {
+        return;
+    }
 	if (isCalendar ()) {
 		this.seconds = seconds;
 	} else {
@@ -1678,9 +1756,15 @@ public void setSeconds (int seconds) {
  */
 public void setTime (int hours, int minutes, int seconds) {
 	checkWidget ();
-	if (!isValidTime (Calendar.HOUR_OF_DAY, hours)) return;
-	if (!isValidTime (Calendar.MINUTE, minutes)) return;
-	if (!isValidTime (Calendar.SECOND, seconds)) return;
+    if (!isValidTime(Calendar.HOUR_OF_DAY, hours)) {
+        return;
+    }
+    if (!isValidTime(Calendar.MINUTE, minutes)) {
+        return;
+    }
+    if (!isValidTime(Calendar.SECOND, seconds)) {
+        return;
+    }
 	if (isCalendar ()) {
 		this.hours = hours;
 		this.minutes = minutes;
@@ -1711,7 +1795,9 @@ public void setTime (int hours, int minutes, int seconds) {
  */
 public void setYear (int year) {
 	checkWidget ();
-	if (!isValidDate (year, getMonth (), getDay ())) return;
+    if (!isValidDate(year, getMonth(), getDay())) {
+        return;
+    }
 	if (isCalendar ()) {
 		this.year = year;
 
@@ -1878,9 +1964,15 @@ void updateControl() {
 @Override
 void register() {
 	super.register();
-	if (handle != 0 && display.getWidget(handle) == null) display.addWidget(handle, this);
-	if (containerHandle != 0 && containerHandle != handle) display.addWidget (containerHandle, this);
-	if (textEntryHandle != 0 && textEntryHandle != containerHandle) display.addWidget (textEntryHandle, this);
+    if (handle != 0 && display.getWidget(handle) == null) {
+        display.addWidget(handle, this);
+    }
+    if (containerHandle != 0 && containerHandle != handle) {
+        display.addWidget(containerHandle, this);
+    }
+    if (textEntryHandle != 0 && textEntryHandle != containerHandle) {
+        display.addWidget(textEntryHandle, this);
+    }
 }
 
 @Override
@@ -1891,9 +1983,15 @@ GdkRGBA defaultBackground () {
 @Override
 void deregister () {
 	super.deregister ();
-	if (handle != 0 && display.getWidget(handle) != null) display.removeWidget(handle);
-	if (containerHandle != 0 && containerHandle != handle) display.removeWidget (containerHandle);
-	if (textEntryHandle != 0 && textEntryHandle != containerHandle) display.removeWidget (textEntryHandle);
+    if (handle != 0 && display.getWidget(handle) != null) {
+        display.removeWidget(handle);
+    }
+    if (containerHandle != 0 && containerHandle != handle) {
+        display.removeWidget(containerHandle);
+    }
+    if (textEntryHandle != 0 && textEntryHandle != containerHandle) {
+        display.removeWidget(textEntryHandle);
+    }
 }
 
 int getArrow(long widget) {
@@ -1927,15 +2025,18 @@ int getArrow(long widget) {
 			if (getHours() > 12) {
 				new_value = getHours() - 12;
 			}
-			if (new_value == 0)
-				new_value = 12;
+            if (new_value == 0) {
+                new_value = 12;
+            }
 		}
 	}
-	if (adj_value == 0 && firstTime)
-		return 0;
+    if (adj_value == 0 && firstTime) {
+        return 0;
+    }
 	firstTime = false;
-	if (adj_value == new_value)
-		return 0;
+    if (adj_value == new_value) {
+        return 0;
+    }
 	return adj_value > new_value ? SWT.ARROW_UP : SWT.ARROW_DOWN;
 }
 
@@ -2109,7 +2210,9 @@ String getText() {
 		} else {
 			stringPtr = GTK3.gtk_entry_get_text(textEntryHandle);
 		}
-		if (stringPtr == 0) return "";
+        if (stringPtr == 0) {
+            return "";
+        }
 
 		int length = C.strlen(stringPtr);
 		byte[] buffer = new byte[length];
@@ -2131,11 +2234,15 @@ String getText() {
  */
 String getText(String str, int start, int end) {
 	checkWidget ();
-	if (!(start <= end && 0 <= end)) return "";
+    if (!(start <= end && 0 <= end)) {
+        return "";
+    }
 
 	int length = str.length();
 	end = Math.min(end, length - 1);
-	if (start > end) return "";
+    if (start > end) {
+        return "";
+    }
 	start = Math.max(0, start);
 
 	/*
@@ -2209,11 +2316,18 @@ private int validateValueBounds(FieldPosition field, int value) {
 		/* Special case: convert 1 or 2-digit years into reasonable 4-digit years. */
 		int currentYear = Calendar.getInstance ().get (Calendar.YEAR);
 		int currentCentury = (currentYear / 100) * 100;
-		if (value < (currentYear + 30) % 100) value += currentCentury;
-		else if (value < 100) value += currentCentury - 100;
+        if (value < (currentYear + 30) % 100) {
+            value += currentCentury;
+        } else if (value < 100) {
+            value += currentCentury - 100;
+        }
 	}
-	if (value > max) value = min; // wrap
-	if (value < min) value = max; // wrap
+    if (value > max) {
+        value = min;
+    } // wrap
+    if (value < min) {
+        value = max;
+    } // wrap
 	return value;
 }
 
@@ -2270,7 +2384,9 @@ long gtk_output (long widget) {
 
 void replaceCurrentlySelectedTextRegion (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	byte [] buffer = Converter.wcsToMbcs (string, false);
 	int [] start = new int [1], end = new int [1];
 	GTK.gtk_editable_get_selection_bounds (textEntryHandle, start, end);
@@ -2312,11 +2428,15 @@ void onTextMouseClick() {
 
 String getText (int start, int end) {
 	checkWidget ();
-	if (!(start <= end && 0 <= end)) return "";
+    if (!(start <= end && 0 <= end)) {
+        return "";
+    }
 	String str = getText ();
 	int length = str.length ();
 	end = Math.min (end, length - 1);
-	if (start > end) return "";
+    if (start > end) {
+        return "";
+    }
 	start = Math.max (0, start);
 	/*
 	* NOTE: The current implementation uses substring ()
@@ -2328,8 +2448,9 @@ String getText (int start, int end) {
 
 void selectAll () {
 	checkWidget ();
-	if (textEntryHandle != 0)
-		GTK.gtk_editable_select_region (textEntryHandle, 0, -1);
+    if (textEntryHandle != 0) {
+        GTK.gtk_editable_select_region(textEntryHandle, 0, -1);
+    }
 }
 
 
@@ -2342,8 +2463,9 @@ void hideDateTime () {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (fixedHandle != 0)
-		hideDateTime ();
+    if (fixedHandle != 0) {
+        hideDateTime();
+    }
 }
 
 /**

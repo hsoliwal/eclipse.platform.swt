@@ -71,8 +71,9 @@ public class Bug490713_MaximizedShellTest {
 		shell.open();
 		shell2.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

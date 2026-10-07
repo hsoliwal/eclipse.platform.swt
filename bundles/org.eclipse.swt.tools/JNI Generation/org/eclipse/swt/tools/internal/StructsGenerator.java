@@ -57,7 +57,9 @@ public void generate(JNIClass clazz) {
 			break;
 		}
 	}
-	if (j == fields.length) return;
+    if (j == fields.length) {
+        return;
+    }
 	if (header) {
 		generateHeaderFile(clazz);
 	} else {
@@ -196,8 +198,12 @@ void generateFIDsStructure(JNIClass clazz) {
 	output("\tjfieldID ");
 	boolean first = true;
 	for (JNIField field : clazz.getDeclaredFields()) {
-		if (ignoreField(field)) continue;
-		if (!first) output(", ");
+        if (ignoreField(field)) {
+            continue;
+        }
+        if (!first) {
+            output(", ");
+        }
 		output(field.getName());
 		first = false;
 	}
@@ -241,7 +247,9 @@ void generateCacheFunction(JNIClass clazz) {
 	}
 	outputln();
 	for (JNIField field : clazz.getDeclaredFields()) {
-		if (ignoreField(field)) continue;
+        if (ignoreField(field)) {
+            continue;
+        }
 		output("\t");
 		output(clazzName);
 		output("Fc.");
@@ -284,7 +292,9 @@ void generateGetFields(JNIClass clazz) {
 		}
 	}
 	for (JNIField field : clazz.getDeclaredFields()) {
-		if (ignoreField(field)) continue;
+        if (ignoreField(field)) {
+            continue;
+        }
 		String exclude = field.getExclude();
 		if (exclude.length() != 0) {
 			outputln(exclude);
@@ -296,7 +306,9 @@ void generateGetFields(JNIClass clazz) {
 		JNIType type = field.getType();
 		String typeName = type.getSimpleName();
 		String accessor = field.getAccessor();
-		if (accessor == null || accessor.length() == 0) accessor = field.getName();
+        if (accessor == null || accessor.length() == 0) {
+            accessor = field.getName();
+        }
 		boolean isCPP = getCPP();
 		if (type.isPrimitive()) {
 			output("\tlpStruct->");
@@ -436,7 +448,9 @@ void generateSetFields(JNIClass clazz) {
 		}
 	}
 	for (JNIField field : clazz.getDeclaredFields()) {
-		if (ignoreField(field)) continue;
+        if (ignoreField(field)) {
+            continue;
+        }
 		String exclude = field.getExclude();
 		if (exclude.length() != 0) {
 			outputln(exclude);
@@ -448,7 +462,9 @@ void generateSetFields(JNIClass clazz) {
 		JNIType type = field.getType();
 		String typeName = type.getSimpleName();
 		String accessor = field.getAccessor();
-		if (accessor == null || accessor.length() == 0) accessor = field.getName();
+        if (accessor == null || accessor.length() == 0) {
+            accessor = field.getName();
+        }
 		boolean isCPP = getCPP();
 		if (type.isPrimitive()) {
 			if (isCPP) {

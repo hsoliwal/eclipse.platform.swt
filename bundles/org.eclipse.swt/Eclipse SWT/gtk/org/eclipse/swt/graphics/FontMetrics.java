@@ -41,8 +41,12 @@ FontMetrics() {
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof FontMetrics)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof FontMetrics)) {
+        return false;
+    }
 	FontMetrics metrics = (FontMetrics)object;
 	return ascentInPoints == metrics.ascentInPoints && descentInPoints == metrics.descentInPoints &&
 		averageCharWidthInPoints == metrics.averageCharWidthInPoints;

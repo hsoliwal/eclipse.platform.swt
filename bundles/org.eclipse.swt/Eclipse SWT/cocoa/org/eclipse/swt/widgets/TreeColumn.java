@@ -180,12 +180,14 @@ public void addSelectionListener (SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
+	return WidgetStylePolicy.COLUMN_ALIGNMENT.applyAsInt(style);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -249,7 +251,9 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect cellRect, long view
 		attrString = parent.createString(displayText, font, parent.getHeaderForegroundColor().handle, SWT.LEFT, false, (parent.state & DISABLED) == 0, false);
 		stringSize = attrString.size ();
 		contentWidth += Math.ceil (stringSize.width);
-		if (image != null) contentWidth += MARGIN; /* space between image and text */
+        if (image != null) {
+            contentWidth += MARGIN;
+        } /* space between image and text */
 	}
 
 	if (parent.headerBackground != null) {
@@ -370,12 +374,16 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect cellRect, long view
 		sourceRect.width = destRect.width;
 		sourceRect.height = destRect.height;
 		image.handle.drawInRect (destRect, sourceRect, OS.NSCompositingOperationSourceOver, 1f);
-		if (isFlipped) context.restoreGraphicsState ();
+        if (isFlipped) {
+            context.restoreGraphicsState();
+        }
 		drawX += destRect.width;
 	}
 
 	if (displayText != null && displayText.length () > 0) {
-		if (image != null) drawX += MARGIN; /* space between image and text */
+        if (image != null) {
+            drawX += MARGIN;
+        } /* space between image and text */
 		NSRect destRect = new NSRect ();
 		destRect.x = drawX;
 		destRect.y = cellRect.y;
@@ -383,7 +391,9 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect cellRect, long view
 		destRect.height = Math.min (stringSize.height, cellRect.height);
 		attrString.drawInRect (destRect);
 	}
-	if (attrString != null) attrString.release ();
+    if (attrString != null) {
+        attrString.release();
+    }
 
 	context.restoreGraphicsState ();
 }
@@ -402,9 +412,15 @@ void drawInteriorWithFrame_inView (long id, long sel, NSRect cellRect, long view
  */
 public int getAlignment () {
 	checkWidget ();
-	if ((style & SWT.LEFT) != 0) return SWT.LEFT;
-	if ((style & SWT.CENTER) != 0) return SWT.CENTER;
-	if ((style & SWT.RIGHT) != 0) return SWT.RIGHT;
+    if ((style & SWT.LEFT) != 0) {
+        return SWT.LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        return SWT.CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        return SWT.RIGHT;
+    }
 	return SWT.LEFT;
 }
 
@@ -501,8 +517,10 @@ public String getToolTipText () {
 public int getWidth () {
 	checkWidget ();
 	int width = (int)nsColumn.width();
-	// TODO how to differentiate 0 and 1 cases?
-	if (width > 0) width += Tree.CELL_GAP;
+    // TODO how to differentiate 0 and 1 cases?
+    if (width > 0) {
+        width += Tree.CELL_GAP;
+    }
 	return width;
 }
 
@@ -536,7 +554,7 @@ public void pack () {
 
 	/* compute item widths down column */
 	GC gc = new GC (parent);
-	width = Math.max(width, parent.calculateWidth(parent.items, parent.indexOf (this), gc, true));
+	width = Math.max(width, parent.calculateWidth(null, parent.indexOf (this), gc, true));
 	gc.dispose ();
 	setWidth (width);
 }
@@ -579,8 +597,12 @@ void releaseWidget () {
  */
 public void removeControlListener (ControlListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Move, listener);
 	eventTable.unhook (SWT.Resize, listener);
 }
@@ -604,8 +626,12 @@ public void removeControlListener (ControlListener listener) {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -627,14 +653,20 @@ public void removeSelectionListener(SelectionListener listener) {
  */
 public void setAlignment (int alignment) {
 	checkWidget ();
-	if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) return;
+    if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) {
+        return;
+    }
 	int index = parent.indexOf (this);
-	if (index == -1 || index == 0) return;
+    if (index == -1 || index == 0) {
+        return;
+    }
 	style &= ~(SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	style |= alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	NSOutlineView outlineView = ((NSOutlineView) parent.view);
 	NSTableHeaderView headerView = outlineView.headerView ();
-	if (headerView == null) return;
+    if (headerView == null) {
+        return;
+    }
 	index = parent.indexOf (nsColumn);
 	NSRect rect = headerView.headerRectOfColumn (index);
 	headerView.setNeedsDisplayInRect (rect);
@@ -650,7 +682,9 @@ public void setImage (Image image) {
 	}
 	super.setImage (image);
 	NSTableHeaderView headerView = ((NSOutlineView) parent.view).headerView ();
-	if (headerView == null) return;
+    if (headerView == null) {
+        return;
+    }
 	int index = parent.indexOf (nsColumn);
 	NSRect rect = headerView.headerRectOfColumn (index);
 	headerView.setNeedsDisplayInRect (rect);
@@ -702,7 +736,9 @@ public void setResizable (boolean resizable) {
 @Override
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	super.setText (string);
 	char [] buffer = new char [text.length ()];
 	text.getChars (0, buffer.length, buffer, 0);
@@ -711,7 +747,9 @@ public void setText (String string) {
 	NSString title = NSString.stringWith (displayText);
 	nsColumn.headerCell ().setTitle (title);
 	NSTableHeaderView headerView = ((NSOutlineView) parent.view).headerView ();
-	if (headerView == null) return;
+    if (headerView == null) {
+        return;
+    }
 	int index = parent.indexOf (nsColumn);
 	NSRect rect = headerView.headerRectOfColumn (index);
 	headerView.setNeedsDisplayInRect (rect);
@@ -762,7 +800,9 @@ public void setToolTipText (String string) {
  */
 public void setWidth (int width) {
 	checkWidget ();
-	if (width < 0) return;
+    if (width < 0) {
+        return;
+    }
 	// TODO how to differentiate 0 and 1 cases?
 	width = Math.max (0, width - Tree.CELL_GAP);
 	nsColumn.setWidth (width);

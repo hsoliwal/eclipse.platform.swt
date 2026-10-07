@@ -61,7 +61,9 @@ public class TableDragSourceEffect extends DragSourceEffect {
 	 */
 	@Override
 	public void dragFinished(DragSourceEvent event) {
-		if (dragSourceImage != null) dragSourceImage.dispose();
+        if (dragSourceImage != null) {
+            dragSourceImage.dispose();
+        }
 		dragSourceImage = null;
 	}
 
@@ -82,7 +84,9 @@ public class TableDragSourceEffect extends DragSourceEffect {
 	}
 
 	Image getDragSourceImage(DragSourceEvent event) {
-		if (dragSourceImage != null) dragSourceImage.dispose();
+        if (dragSourceImage != null) {
+            dragSourceImage.dispose();
+        }
 		dragSourceImage = null;
 		SHDRAGIMAGE shdi = new SHDRAGIMAGE();
 		int DI_GETDRAGIMAGE = OS.RegisterWindowMessage (new TCHAR ("ShellGetDragImage", true)); //$NON-NLS-1$
@@ -116,7 +120,9 @@ public class TableDragSourceEffect extends DragSourceEffect {
 				OS.MoveMemory (bmi, bmiHeader, BITMAPINFOHEADER.sizeof);
 				long [] pBits = new long [1];
 				long memDib = OS.CreateDIBSection (0, bmi, OS.DIB_RGB_COLORS, pBits, 0, 0);
-				if (memDib == 0) SWT.error (SWT.ERROR_NO_HANDLES);
+                if (memDib == 0) {
+                    SWT.error(SWT.ERROR_NO_HANDLES);
+                }
 				long oldMemBitmap = OS.SelectObject (memHdc, memDib);
 
 				BITMAP dibBM = new BITMAP ();

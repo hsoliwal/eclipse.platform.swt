@@ -35,7 +35,9 @@ public static void main (String [] args) {
 	for (int i=0; i<8; i++) {
 		Button button = new Button (shell, SWT.RADIO);
 		button.setText ("B" + i);
-		if (i == 0) button.setSelection (true);
+        if (i == 0) {
+            button.setSelection(true);
+        }
 	}
 	Button button = new Button (shell, SWT.PUSH);
 	button.setText ("Set Selection to B4");
@@ -52,7 +54,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

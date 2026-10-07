@@ -32,7 +32,9 @@ public static void main (String [] args) {
 	caret.setBounds (10, 10, 2, 32);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

@@ -129,7 +129,9 @@ public FontData getFontData () {
  * @since 2.1.1
  */
 public FontData [] getFontList () {
-	if (fontData == null) return null;
+    if (fontData == null) {
+        return null;
+    }
 	FontData [] result = new FontData [1];
 	result [0] = fontData;
 	return result;
@@ -170,7 +172,9 @@ public FontData open () {
 	panel.setPanelFont(font.handle, false);
 	SWTPanelDelegate delegate = (SWTPanelDelegate)new SWTPanelDelegate().alloc().init();
 	long jniRef = OS.NewGlobalRef(this);
-	if (jniRef == 0) error(SWT.ERROR_NO_HANDLES);
+    if (jniRef == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.object_setInstanceVariable(delegate.id, Display.SWT_OBJECT, jniRef);
 	panel.setDelegate(delegate);
 	fontData = null;
@@ -188,7 +192,9 @@ public FontData open () {
 	panel.setDelegate(null);
 	delegate.release();
 	OS.DeleteGlobalRef(jniRef);
-	if (create) font.dispose();
+    if (create) {
+        font.dispose();
+    }
 	return fontData;
 }
 

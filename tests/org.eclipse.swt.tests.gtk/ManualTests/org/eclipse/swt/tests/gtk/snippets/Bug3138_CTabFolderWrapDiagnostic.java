@@ -64,8 +64,9 @@ public class Bug3138_CTabFolderWrapDiagnostic {
 		});
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}
@@ -111,7 +112,9 @@ public class Bug3138_CTabFolderWrapDiagnostic {
 
 		// Diagnostic logging
 		parent.getDisplay().asyncExec(() -> {
-			if (topRight.isDisposed()) return;
+            if (topRight.isDisposed()) {
+                return;
+            }
 
 			Point topRightSize = topRight.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 			Point toolbarSize = toolbar.computeSize(SWT.DEFAULT, SWT.DEFAULT);

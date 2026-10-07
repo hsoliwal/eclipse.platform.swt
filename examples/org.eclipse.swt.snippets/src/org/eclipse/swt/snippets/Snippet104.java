@@ -75,7 +75,9 @@ public static void main(String[] args) {
 		}
 	});
 	while (count [0] != 0) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

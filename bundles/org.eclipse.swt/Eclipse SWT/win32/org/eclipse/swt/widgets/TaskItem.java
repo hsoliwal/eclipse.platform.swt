@@ -85,7 +85,9 @@ TaskItem (TaskBar parent, int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -222,8 +224,12 @@ void updateImageAndText () {
 
 void updateAll () {
 	updateImageAndText ();
-	if (progress != 0) updateProgress ();
-	if (progressState != SWT.DEFAULT) updateProgressState ();
+    if (progress != 0) {
+        updateProgress();
+    }
+    if (progressState != SWT.DEFAULT) {
+        updateProgressState();
+    }
 }
 
 void onTaskbarButtonCreated () {
@@ -278,12 +284,16 @@ void releaseWidget () {
 public void setMenu (Menu menu) {
 	checkWidget ();
 	if (menu != null) {
-		if (menu.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (menu.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		if ((menu.style & SWT.POP_UP) == 0) {
 			error (SWT.ERROR_MENU_NOT_POP_UP);
 		}
 	}
-	if (shell != null) return;
+    if (shell != null) {
+        return;
+    }
 	this.menu = menu;
 	parent.setMenu (menu);
 }
@@ -317,15 +327,21 @@ public void setMenu (Menu menu) {
  */
 public void setOverlayImage (Image overlayImage) {
 	checkWidget ();
-	if (overlayImage != null && overlayImage.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (shell == null) return;
+    if (overlayImage != null && overlayImage.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (shell == null) {
+        return;
+    }
 	this.overlayImage = overlayImage;
 	this.showingText = (this.overlayImage == null);
 
-	// MSDN for 'ITaskbarList3' says:
-	// TaskbarButtonCreated ... message must be received by your application before it calls any ITaskbarList3 method
-	// #updateAll() will be called later when message is received.
-	if (!hasTaskbarButton) return;
+    // MSDN for 'ITaskbarList3' says:
+    // TaskbarButtonCreated ... message must be received by your application before it calls any ITaskbarList3 method
+    // #updateAll() will be called later when message is received.
+    if (!hasTaskbarButton) {
+        return;
+    }
 
 	updateImageAndText ();
 }
@@ -358,15 +374,21 @@ public void setOverlayImage (Image overlayImage) {
  */
 public void setOverlayText (String overlayText) {
 	checkWidget ();
-	if (overlayText == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (shell == null) return;
+    if (overlayText == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (shell == null) {
+        return;
+    }
 	this.overlayText = overlayText;
 	this.showingText = (this.overlayText.length() != 0);
 
-	// MSDN for 'ITaskbarList3' says:
-	// TaskbarButtonCreated ... message must be received by your application before it calls any ITaskbarList3 method
-	// #updateAll() will be called later when message is received.
-	if (!hasTaskbarButton) return;
+    // MSDN for 'ITaskbarList3' says:
+    // TaskbarButtonCreated ... message must be received by your application before it calls any ITaskbarList3 method
+    // #updateAll() will be called later when message is received.
+    if (!hasTaskbarButton) {
+        return;
+    }
 
 	updateImageAndText ();
 }
@@ -398,15 +420,21 @@ public void setOverlayText (String overlayText) {
  */
 public void setProgress (int progress) {
 	checkWidget ();
-	if (shell == null) return;
+    if (shell == null) {
+        return;
+    }
 	progress = Math.max (0, Math.min (progress, PROGRESS_MAX));
-	if (this.progress == progress) return;
+    if (this.progress == progress) {
+        return;
+    }
 	this.progress = progress;
 
-	// MSDN for 'ITaskbarList3' says:
-	// TaskbarButtonCreated ... message must be received by your application before it calls any ITaskbarList3 method
-	// #updateAll() will be called later when message is received.
-	if (!hasTaskbarButton) return;
+    // MSDN for 'ITaskbarList3' says:
+    // TaskbarButtonCreated ... message must be received by your application before it calls any ITaskbarList3 method
+    // #updateAll() will be called later when message is received.
+    if (!hasTaskbarButton) {
+        return;
+    }
 
 	updateProgress ();
 }
@@ -448,14 +476,20 @@ public void setProgress (int progress) {
  */
 public void setProgressState (int progressState) {
 	checkWidget ();
-	if (shell == null) return;
-	if (this.progressState == progressState) return;
+    if (shell == null) {
+        return;
+    }
+    if (this.progressState == progressState) {
+        return;
+    }
 	this.progressState = progressState;
 
-	// MSDN for 'ITaskbarList3' says:
-	// TaskbarButtonCreated ... message must be received by your application before it calls any ITaskbarList3 method
-	// #updateAll() will be called later when message is received.
-	if (!hasTaskbarButton) return;
+    // MSDN for 'ITaskbarList3' says:
+    // TaskbarButtonCreated ... message must be received by your application before it calls any ITaskbarList3 method
+    // #updateAll() will be called later when message is received.
+    if (!hasTaskbarButton) {
+        return;
+    }
 
 	updateProgressState ();
 }
@@ -463,7 +497,9 @@ public void setProgressState (int progressState) {
 void setShell (Shell shell) {
 	this.shell = shell;
 	shell.addListener (SWT.Dispose, event -> {
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 		dispose ();
 	});
 }
@@ -481,12 +517,18 @@ void updateImage () {
 			break;
 	}
 	parent.mTaskbarList3.SetOverlayIcon(shell.handle, hIcon, 0);
-	if (image2 != null) image2.dispose ();
+    if (image2 != null) {
+        image2.dispose();
+    }
 }
 
 void updateProgress () {
-	if (progressState == SWT.INDETERMINATE) return;
-	if (progressState == SWT.DEFAULT) return;
+    if (progressState == SWT.INDETERMINATE) {
+        return;
+    }
+    if (progressState == SWT.DEFAULT) {
+        return;
+    }
 	parent.mTaskbarList3.SetProgressValue(shell.handle, progress, PROGRESS_MAX);
 }
 
@@ -517,11 +559,15 @@ long renderTextIcon () {
 	OS.MoveMemory (bmi, bmiHeader, BITMAPINFOHEADER.sizeof);
 	long [] pBits = new long [1];
 	long hBitmap = OS.CreateDIBSection (0, bmi, OS.DIB_RGB_COLORS, pBits, 0, 0);
-	if (hBitmap == 0) error (SWT.ERROR_NO_HANDLES);
+    if (hBitmap == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	long dstHdc = OS.CreateCompatibleDC (hdc);
 	long oldBitmap = OS.SelectObject (dstHdc, hBitmap);
 	long hMask = OS.CreateBitmap (width, height, 1, 1, null);
-	if (hMask == 0) error (SWT.ERROR_NO_HANDLES);
+    if (hMask == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	long maskHdc = OS.CreateCompatibleDC (hdc);
 	long oldMask = OS.SelectObject (maskHdc, hMask);
 
@@ -581,7 +627,9 @@ long renderTextIcon () {
 	iconInfo.hbmColor = hBitmap;
 	iconInfo.hbmMask = hMask;
 	long hIcon = OS.CreateIconIndirect (iconInfo);
-	if (hIcon == 0) error (SWT.ERROR_NO_HANDLES);
+    if (hIcon == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.DeleteObject (hBitmap);
 	OS.DeleteObject (hMask);
 

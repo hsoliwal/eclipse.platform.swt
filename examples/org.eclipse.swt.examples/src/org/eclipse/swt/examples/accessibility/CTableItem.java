@@ -145,7 +145,9 @@ public CTableItem (CTable parent, int style, int index) {
 CTableItem (CTable parent, int style, int index, boolean notifyParent) {
 	super (parent, style);
 	int validItemIndex = parent.itemsCount;
-	if (!(0 <= index && index <= validItemIndex)) SWT.error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= validItemIndex)) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	this.parent = parent;
 	this.index = index;
 	this.display = parent.getDisplay ();
@@ -159,7 +161,9 @@ CTableItem (CTable parent, int style, int index, boolean notifyParent) {
 			images = new Image [columnCount];
 		}
 	}
-	if (notifyParent) parent.createItem (this);
+    if (notifyParent) {
+        parent.createItem(this);
+    }
 }
 /*
  * Updates internal structures in the receiver and its child items to handle the creation of a new column.
@@ -259,7 +263,9 @@ void addColumn (CTableColumn column) {
 	}
 }
 static CTable checkNull (CTable table) {
-	if (table == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (table == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return table;
 }
 void clear () {
@@ -291,7 +297,9 @@ void clear () {
 	}
 }
 void computeDisplayText (int columnIndex, GC gc) {
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0 && !cached) return;	/* nothing to do */
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0 && !cached) {
+        return;
+    }	/* nothing to do */
 
 	int columnCount = parent.columns.length;
 	if (columnCount == 0) {
@@ -304,7 +312,9 @@ void computeDisplayText (int columnIndex, GC gc) {
 	int availableWidth = column.width - 2 * parent.getCellPadding () - 2 * MARGIN_TEXT;
 	if (columnIndex == 0) {
 		availableWidth -= parent.col0ImageWidth;
-		if (parent.col0ImageWidth > 0) availableWidth -= CTable.MARGIN_IMAGE;
+        if (parent.col0ImageWidth > 0) {
+            availableWidth -= CTable.MARGIN_IMAGE;
+        }
 		if ((parent.getStyle () & SWT.CHECK) != 0) {
 			availableWidth -= parent.checkboxBounds.width;
 			availableWidth -= CTable.MARGIN_IMAGE;
@@ -373,10 +383,14 @@ void computeDisplayText (int columnIndex, GC gc) {
 	textWidths [columnIndex] = previousWidth + ellipsisWidth;
 }
 void computeDisplayTexts (GC gc) {
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0 && !cached) return;	/* nothing to do */
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0 && !cached) {
+        return;
+    }	/* nothing to do */
 
 	int columnCount = parent.columns.length;
-	if (columnCount == 0) return;
+    if (columnCount == 0) {
+        return;
+    }
 
 	for (int i = 0; i < columnCount; i++) {
 		gc.setFont (getFont (i, false));
@@ -387,7 +401,9 @@ void computeDisplayTexts (GC gc) {
  * Computes the cached text widths.
  */
 void computeTextWidths (GC gc) {
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0 && !cached) return;	/* nothing to do */
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0 && !cached) {
+        return;
+    }	/* nothing to do */
 
 	int validColumnCount = Math.max (1, parent.columns.length);
 	textWidths = new int [validColumnCount];
@@ -401,7 +417,9 @@ void computeTextWidths (GC gc) {
 }
 @Override
 public void dispose () {
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	CTable parent = this.parent;
 	int startIndex = index;
 	int endIndex = parent.itemsCount - 1;
@@ -409,8 +427,12 @@ public void dispose () {
 	parent.redrawItems (startIndex, endIndex, false);
 }
 void dispose (boolean notifyParent) {
-	if (isDisposed ()) return;
-	if (notifyParent) parent.destroyItem (this);
+    if (isDisposed()) {
+        return;
+    }
+    if (notifyParent) {
+        parent.destroyItem(this);
+    }
 	super.dispose ();	/* super is intentional here */
 	background = foreground = null;
 	cellBackgrounds = cellForegrounds = null;
@@ -546,8 +568,12 @@ Accessible getAccessible(final Accessible accessibleTable, final int columnIndex
  */
 public Color getBackground () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
-	if (background != null) return background;
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (background != null) {
+        return background;
+    }
 	return parent.getBackground ();
 }
 /**
@@ -565,10 +591,16 @@ public Color getBackground () {
  */
 public Color getBackground (int columnIndex) {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int validColumnCount = Math.max (1, parent.columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return getBackground ();
-	if (cellBackgrounds == null || cellBackgrounds [columnIndex] == null) return getBackground ();
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return getBackground();
+    }
+    if (cellBackgrounds == null || cellBackgrounds [columnIndex] == null) {
+        return getBackground();
+    }
 	return cellBackgrounds [columnIndex];
 }
 /**
@@ -589,7 +621,9 @@ public Rectangle getBounds () {
 	return getBounds (true);
 }
 Rectangle getBounds (boolean checkData) {
-	if (checkData && !parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (checkData && !parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int x = getTextX (0);
 	int width = textWidths [0] + 2 * MARGIN_TEXT;
 	if (parent.columns.length > 0) {
@@ -615,7 +649,9 @@ Rectangle getBounds (boolean checkData) {
  */
 public Rectangle getBounds (int columnIndex) {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	CTableColumn[] columns = parent.columns;
 	int columnCount = columns.length;
 	int validColumnCount = Math.max (1, columnCount);
@@ -673,7 +709,9 @@ Rectangle getCellBounds (int columnIndex) {
  * include SWT.CHECK.
  */
 Rectangle getCheckboxBounds () {
-	if ((parent.getStyle () & SWT.CHECK) == 0) return null;
+    if ((parent.getStyle() & SWT.CHECK) == 0) {
+        return null;
+    }
 	Rectangle result = parent.checkboxBounds;
 	if (parent.columns.length == 0) {
 		result.x = parent.getCellPadding () - parent.horizontalOffset;
@@ -697,14 +735,18 @@ Rectangle getCheckboxBounds () {
  */
 public boolean getChecked () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return checked;
 }
 int getContentWidth (int columnIndex) {
 	int width = textWidths [columnIndex] + 2 * MARGIN_TEXT;
 	if (columnIndex == 0) {
 		width += parent.col0ImageWidth;
-		if (parent.col0ImageWidth > 0) width += CTable.MARGIN_IMAGE;
+        if (parent.col0ImageWidth > 0) {
+            width += CTable.MARGIN_IMAGE;
+        }
 	} else {
 		Image image = getImage (columnIndex, false);
 		if (image != null) {
@@ -726,11 +768,15 @@ int getContentX (int columnIndex) {
 		}
 	}
 
-	if (parent.columns.length == 0) return minX - parent.horizontalOffset;	/* free first column */
+    if (parent.columns.length == 0) {
+        return minX - parent.horizontalOffset;
+    }	/* free first column */
 
 	CTableColumn column = parent.columns [columnIndex];
 	int columnX = column.getX ();
-	if ((column.getStyle () & SWT.LEFT) != 0) return columnX + minX;
+    if ((column.getStyle() & SWT.LEFT) != 0) {
+        return columnX + minX;
+    }
 
 	/* column is not left-aligned */
 	int contentWidth = getContentWidth (columnIndex);
@@ -743,7 +789,9 @@ int getContentX (int columnIndex) {
 	return Math.max (columnX + minX, columnX + contentX);
 }
 String getDisplayText (int columnIndex) {
-	if (parent.columns.length == 0) return getText (0, false);
+    if (parent.columns.length == 0) {
+        return getText(0, false);
+    }
 	String result = displayTexts [columnIndex];
 	return result != null ? result : "";	//$NON-NLS-1$
 }
@@ -810,8 +858,12 @@ public Font getFont () {
 	return getFont (true);
 }
 Font getFont (boolean checkData) {
-	if (checkData && !parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
-	if (font != null) return font;
+    if (checkData && !parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (font != null) {
+        return font;
+    }
 	return parent.getFont ();
 }
 /**
@@ -833,18 +885,28 @@ public Font getFont (int columnIndex) {
 	return getFont (columnIndex, true);
 }
 Font getFont (int columnIndex, boolean checkData) {
-	if (checkData && !parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (checkData && !parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int validColumnCount = Math.max (1, parent.columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return getFont (checkData);
-	if (cellFonts == null || cellFonts [columnIndex] == null) return getFont (checkData);
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return getFont(checkData);
+    }
+    if (cellFonts == null || cellFonts [columnIndex] == null) {
+        return getFont(checkData);
+    }
 	return cellFonts [columnIndex];
 }
 int getFontHeight () {
-	if (fontHeight != 0) return fontHeight;
+    if (fontHeight != 0) {
+        return fontHeight;
+    }
 	return parent.fontHeight;
 }
 int getFontHeight (int columnIndex) {
-	if (fontHeights == null || fontHeights [columnIndex] == 0) return getFontHeight ();
+    if (fontHeights == null || fontHeights [columnIndex] == 0) {
+        return getFontHeight();
+    }
 	return fontHeights [columnIndex];
 }
 /**
@@ -861,8 +923,12 @@ int getFontHeight (int columnIndex) {
  */
 public Color getForeground () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
-	if (foreground != null) return foreground;
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (foreground != null) {
+        return foreground;
+    }
 	return parent.getForeground ();
 }
 /**
@@ -881,10 +947,16 @@ public Color getForeground () {
  */
 public Color getForeground (int columnIndex) {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int validColumnCount = Math.max (1, parent.columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return getForeground ();
-	if (cellForegrounds == null || cellForegrounds [columnIndex] == null) return getForeground ();
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return getForeground();
+    }
+    if (cellForegrounds == null || cellForegrounds [columnIndex] == null) {
+        return getForeground();
+    }
 	return cellForegrounds [columnIndex];
 }
 /**
@@ -901,7 +973,9 @@ public Color getForeground (int columnIndex) {
  */
 public boolean getGrayed () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return grayed;
 }
 /*
@@ -943,7 +1017,9 @@ Rectangle getHitBounds () {
 @Override
 public Image getImage () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return super.getImage ();
 }
 /**
@@ -963,10 +1039,16 @@ public Image getImage (int columnIndex) {
 	return getImage (columnIndex, true);
 }
 Image getImage (int columnIndex, boolean checkData) {
-	if (checkData && !parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (checkData && !parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int validColumnCount = Math.max (1, parent.columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return null;
-	if (columnIndex == 0) return super.getImage ();		/* super is intentional here */
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return null;
+    }
+    if (columnIndex == 0) {
+        return super.getImage();
+    }		/* super is intentional here */
 	return images [columnIndex];
 }
 /**
@@ -985,9 +1067,13 @@ Image getImage (int columnIndex, boolean checkData) {
  */
 public Rectangle getImageBounds (int columnIndex) {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int validColumnCount = Math.max (1, parent.columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return new Rectangle (0,0,0,0);
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
 	int padding = parent.getCellPadding ();
 	int startX = getContentX (columnIndex);
@@ -1000,7 +1086,9 @@ public Rectangle getImageBounds (int columnIndex) {
 		/* for column 0 all images have the same width */
 		drawWidth = parent.col0ImageWidth;
 	} else {
-		if (image != null) drawWidth = image.getBounds ().width;
+        if (image != null) {
+            drawWidth = image.getBounds().width;
+        }
 	}
 	return new Rectangle (startX, y + padding, drawWidth, imageSpaceY);
 }
@@ -1016,7 +1104,9 @@ public Rectangle getImageBounds (int columnIndex) {
  */
 public int getImageIndent () {
 	checkWidget();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return imageIndent;	// TODO
 }
 @Override
@@ -1074,7 +1164,9 @@ int getPreferredWidth (int columnIndex) {
 		if (parent.itemHeight != event.height) {
 			parent.customHeightSet = true;
 			boolean update = parent.setItemHeight (event.height + 2 * parent.getCellPadding ());
-			if (update) parent.redraw ();
+            if (update) {
+                parent.redraw();
+            }
 		}
 		width = event.width;
 	}
@@ -1089,7 +1181,9 @@ int getPreferredWidth (int columnIndex) {
 @Override
 public String getText () {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return super.getText ();
 }
 /**
@@ -1109,11 +1203,19 @@ public String getText (int columnIndex) {
 	return getText (columnIndex, true);
 }
 String getText (int columnIndex, boolean checkData) {
-	if (checkData && !parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (checkData && !parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int validColumnCount = Math.max (1, parent.columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return "";	//$NON-NLS-1$
-	if (columnIndex == 0) return super.getText (); /* super is intentional here */
-	if (texts [columnIndex] == null) return "";	//$NON-NLS-1$
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return ""; //$NON-NLS-1$
+    }
+    if (columnIndex == 0) {
+        return super.getText();
+    } /* super is intentional here */
+    if (texts [columnIndex] == null) {
+        return ""; //$NON-NLS-1$
+    }
 	return texts [columnIndex];
 }
 /**
@@ -1134,7 +1236,9 @@ String getText (int columnIndex, boolean checkData) {
  */
 public Rectangle getTextBounds (int columnIndex) {
 	checkWidget ();
-	if (!parent.checkData (this, true)) SWT.error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this, true)) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	CTableColumn[] columns = parent.columns;
 	int columnCount = columns.length;
 	int validColumnCount = Math.max (1, columnCount);
@@ -1181,7 +1285,9 @@ int getTextX (int columnIndex) {
 	int textX = getContentX (columnIndex);
 	if (columnIndex == 0) {
 		textX += parent.col0ImageWidth;
-		if (parent.col0ImageWidth > 0) textX += CTable.MARGIN_IMAGE;
+        if (parent.col0ImageWidth > 0) {
+            textX += CTable.MARGIN_IMAGE;
+        }
 	} else {
 		Image image = getImage (columnIndex, false);
 		if (image != null) {
@@ -1196,7 +1302,9 @@ int getTextX (int columnIndex) {
  */
 boolean isInViewport () {
 	int topIndex = parent.topIndex;
-	if (index < topIndex) return false;
+    if (index < topIndex) {
+        return false;
+    }
 	int visibleCount = parent.clientArea.height / parent.itemHeight;
 	return index <= topIndex + visibleCount;
 }
@@ -1211,7 +1319,9 @@ boolean isSelected () {
  * If the receiver is not the current focus item then this value is irrelevant.
  */
 boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
-	if (!parent.checkData (this, true)) return false;
+    if (!parent.checkData(this, true)) {
+        return false;
+    }
 	int columnIndex = 0, x = 0;
 	if (column != null) {
 		columnIndex = column.getIndex ();
@@ -1245,7 +1355,9 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 		event.height = parent.itemHeight;
 		parent.notifyListeners (SWT.MeasureItem, event);
 		event.gc = null;
-		if (gc.isDisposed ()) return false;
+        if (gc.isDisposed()) {
+            return false;
+        }
 		gc.setAlpha (oldAlpha);
 		gc.setAntialias (oldAntialias);
 		gc.setBackgroundPattern (oldBackgroundPattern);
@@ -1253,15 +1365,21 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 		gc.setInterpolation (oldInterpolation);
 		gc.setTextAntialias (oldTextAntialias);
 		gc.setAdvanced (oldAdvanced);
-		if (isDisposed ()) return false;
+        if (isDisposed()) {
+            return false;
+        }
 		if (parent.itemHeight != event.height) {
 			parent.customHeightSet = true;
 			boolean update = parent.setItemHeight (event.height + 2 * parent.getCellPadding ());
-			if (update) parent.redraw ();
+            if (update) {
+                parent.redraw();
+            }
 		}
 		if (parent.columns.length == 0) {
 			int change = event.width - (customWidth != -1 ? customWidth : contentWidth);
-			if (event.width != contentWidth || customWidth != -1) customWidth = event.width;
+            if (event.width != contentWidth || customWidth != -1) {
+                customWidth = event.width;
+            }
 			if (change != 0) {	/* scrollbar may be affected since no columns */
 				parent.updateHorizontalBar (contentX + event.width, change);
 				// TODO what if clip is too small now?
@@ -1271,7 +1389,9 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 
 	/* if this cell is completely to the right of the client area then there's no need to paint it */
 	Rectangle clientArea = parent.clientArea;
-	if (clientArea.x + clientArea.width < x) return false;
+    if (clientArea.x + clientArea.width < x) {
+        return false;
+    }
 
 	Rectangle cellBounds = getCellBounds (columnIndex);
 	if (parent.linesVisible) {
@@ -1297,7 +1417,9 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 		//parent.drawBackground (gc, 0, y, clientArea.width, itemHeight);
 	} else {
 		int fillWidth = cellBounds.width;
-		if (parent.linesVisible) fillWidth--;
+        if (parent.linesVisible) {
+            fillWidth--;
+        }
 		gc.fillRectangle (cellBounds.x, cellBounds.y, fillWidth, cellBounds.height);
 		//parent.drawBackground (gc, cellBounds.x, cellBounds.y, fillWidth, cellBounds.height);
 	}
@@ -1324,9 +1446,15 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 		event.index = columnIndex;
 		event.doit = true;
 		event.detail = SWT.FOREGROUND;
-		if (drawBackground) event.detail |= SWT.BACKGROUND;
-		if (isSelected) event.detail |= SWT.SELECTED;
-		if (isFocusItem) event.detail |= SWT.FOCUSED;
+        if (drawBackground) {
+            event.detail |= SWT.BACKGROUND;
+        }
+        if (isSelected) {
+            event.detail |= SWT.SELECTED;
+        }
+        if (isFocusItem) {
+            event.detail |= SWT.FOCUSED;
+        }
 		event.x = cellBounds.x;
 		event.y = cellBounds.y;
 		event.width = cellBounds.width;
@@ -1334,7 +1462,9 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 		gc.setClipping (cellBounds);
 		parent.notifyListeners (SWT.EraseItem, event);
 		event.gc = null;
-		if (gc.isDisposed ()) return false;
+        if (gc.isDisposed()) {
+            return false;
+        }
 		gc.setAlpha (oldAlpha);
 		gc.setAntialias (oldAntialias);
 		gc.setBackgroundPattern (oldBackgroundPattern);
@@ -1343,7 +1473,9 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 		gc.setInterpolation (oldInterpolation);
 		gc.setTextAntialias (oldTextAntialias);
 		gc.setAdvanced (oldAdvanced);
-		if (isDisposed ()) return false;
+        if (isDisposed()) {
+            return false;
+        }
 		if (!event.doit) {
 			drawBackground = drawForeground = drawSelection = drawFocus = false;
 		} else {
@@ -1364,7 +1496,9 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 				fillWidth = focusBounds.width;
 			} else {
 				fillWidth = column.width - focusBounds.x;
-				if (parent.linesVisible) fillWidth--;
+                if (parent.linesVisible) {
+                    fillWidth--;
+                }
 			}
 			gc.fillRectangle (focusBounds.x, focusBounds.y, fillWidth, focusBounds.height);
 		} else {
@@ -1415,7 +1549,9 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 		}
 	}
 
-	if (backgroundOnly) return false;
+    if (backgroundOnly) {
+        return false;
+    }
 
 	/* Draw checkbox if drawing column 0 and parent has style SWT.CHECK */
 	if (columnIndex == 0 && (parent.getStyle () & SWT.CHECK) != 0) {
@@ -1485,8 +1621,12 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 		event.item = this;
 		event.gc = gc;
 		event.index = columnIndex;
-		if (isSelected) event.detail |= SWT.SELECTED;
-		if (drawFocus) event.detail |= SWT.FOCUSED;
+        if (isSelected) {
+            event.detail |= SWT.SELECTED;
+        }
+        if (drawFocus) {
+            event.detail |= SWT.FOCUSED;
+        }
 		event.x = contentX;
 		event.y = cellBounds.y;
 		event.width = contentWidth;
@@ -1494,7 +1634,9 @@ boolean paint (GC gc, CTableColumn column, boolean backgroundOnly) {
 		gc.setClipping (cellBounds);
 		parent.notifyListeners (SWT.PaintItem, event);
 		event.gc = null;
-		if (gc.isDisposed ()) return false;
+        if (gc.isDisposed()) {
+            return false;
+        }
 		gc.setAlpha (oldAlpha);
 		gc.setAntialias (oldAntialias);
 		gc.setBackgroundPattern (oldBackgroundPattern);
@@ -1637,10 +1779,16 @@ public void setBackground (Color color) {
 		SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	Color oldColor = background;
-	if (oldColor == color) return;
+    if (oldColor == color) {
+        return;
+    }
 	background = color;
-	if (oldColor != null && oldColor.equals (color)) return;
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if (oldColor != null && oldColor.equals(color)) {
+        return;
+    }
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 	redrawItem ();
 }
 /**
@@ -1667,16 +1815,26 @@ public void setBackground (int columnIndex, Color color) {
 		SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	int validColumnCount = Math.max (1, parent.columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return;
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return;
+    }
 	if (cellBackgrounds == null) {
-		if (color == null) return;
+        if (color == null) {
+            return;
+        }
 		cellBackgrounds = new Color [validColumnCount];
 	}
 	Color oldColor = cellBackgrounds [columnIndex];
-	if (oldColor == color) return;
+    if (oldColor == color) {
+        return;
+    }
 	cellBackgrounds [columnIndex] = color;
-	if (oldColor != null && oldColor.equals (color)) return;
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if (oldColor != null && oldColor.equals(color)) {
+        return;
+    }
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 
 	if (isInViewport ()) {
 		Rectangle bounds = getCellBounds (columnIndex);
@@ -1696,10 +1854,16 @@ public void setBackground (int columnIndex, Color color) {
  */
 public void setChecked (boolean value) {
 	checkWidget ();
-	if ((parent.getStyle () & SWT.CHECK) == 0) return;
-	if (checked == value) return;
+    if ((parent.getStyle() & SWT.CHECK) == 0) {
+        return;
+    }
+    if (checked == value) {
+        return;
+    }
 	checked = value;
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 
 	if (isInViewport ()) {
 		if (parent.isListening (SWT.EraseItem) || parent.isListening (SWT.PaintItem)) {
@@ -1733,13 +1897,19 @@ public void setFont (Font font) {
 		SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	Font oldFont = this.font;
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	this.font = font;
-	if (oldFont != null && oldFont.equals (font)) return;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
 
 	Rectangle bounds = getBounds (false);
 	int oldRightX = bounds.x + bounds.width;
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 
 	/* recompute cached values for string measurements */
 	GC gc = new GC (parent);
@@ -1783,21 +1953,33 @@ public void setFont (int columnIndex, Font font) {
 	}
 
 	int validColumnCount = Math.max (1, parent.columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return;
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return;
+    }
 	if (cellFonts == null) {
-		if (font == null) return;
+        if (font == null) {
+            return;
+        }
 		cellFonts = new Font [validColumnCount];
 	}
 	Font oldFont = cellFonts [columnIndex];
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	cellFonts [columnIndex] = font;
-	if (oldFont != null && oldFont.equals (font)) return;
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 
 	/* recompute cached values for string measurements */
 	GC gc = new GC (parent);
 	gc.setFont (getFont (columnIndex, false));
-	if (fontHeights == null) fontHeights = new int [validColumnCount];
+    if (fontHeights == null) {
+        fontHeights = new int [validColumnCount];
+    }
 	fontHeights [columnIndex] = gc.getFontMetrics ().getHeight ();
 	computeDisplayText (columnIndex, gc);
 	gc.dispose ();
@@ -1830,10 +2012,16 @@ public void setForeground (Color color) {
 		SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	Color oldColor = foreground;
-	if (oldColor == color) return;
+    if (oldColor == color) {
+        return;
+    }
 	foreground = color;
-	if (oldColor != null && oldColor.equals (color)) return;
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if (oldColor != null && oldColor.equals(color)) {
+        return;
+    }
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 	redrawItem ();
 }
 /**
@@ -1860,16 +2048,26 @@ public void setForeground (int columnIndex, Color color) {
 		SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	int validColumnCount = Math.max (1, parent.columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return;
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return;
+    }
 	if (cellForegrounds == null) {
-		if (color == null) return;
+        if (color == null) {
+            return;
+        }
 		cellForegrounds = new Color [validColumnCount];
 	}
 	Color oldColor = cellForegrounds [columnIndex];
-	if (oldColor == color) return;
+    if (oldColor == color) {
+        return;
+    }
 	cellForegrounds [columnIndex] = color;
-	if (oldColor != null && oldColor.equals (color)) return;
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if (oldColor != null && oldColor.equals(color)) {
+        return;
+    }
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 
 	if (isInViewport ()) {
 		redraw (
@@ -1893,10 +2091,16 @@ public void setForeground (int columnIndex, Color color) {
  */
 public void setGrayed (boolean value) {
 	checkWidget ();
-	if ((parent.getStyle () & SWT.CHECK) == 0) return;
-	if (grayed == value) return;
+    if ((parent.getStyle() & SWT.CHECK) == 0) {
+        return;
+    }
+    if (grayed == value) {
+        return;
+    }
 	grayed = value;
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 
 	if (isInViewport ()) {
 		Rectangle bounds = getCheckboxBounds ();
@@ -1924,11 +2128,15 @@ public void setImage (Image value) {
  */
 public void setImage (Image[] value) {
 	checkWidget ();
-	if (value == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (value == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	// TODO make a smarter implementation of this
 	for (int i = 0; i < value.length; i++) {
-		if (value [i] != null) setImage (i, value [i]);
+        if (value [i] != null) {
+            setImage(i, value [i]);
+        }
 	}
 }
 /**
@@ -1947,20 +2155,30 @@ public void setImage (Image[] value) {
  */
 public void setImage (int columnIndex, Image value) {
 	checkWidget ();
-	if (value != null && value.isDisposed ()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
+    if (value != null && value.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
 	CTableColumn[] columns = parent.columns;
 	int validColumnCount = Math.max (1, columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return;
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return;
+    }
 	Image image = getImage (columnIndex, false);
-	if (value == image) return;
-	if (value != null && value.equals (image)) return;
+    if (value == image) {
+        return;
+    }
+    if (value != null && value.equals(image)) {
+        return;
+    }
 	if (columnIndex == 0) {
 		super.setImage (value);
 	} else {
 		images [columnIndex] = value;
 	}
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 
 	/*
 	 * An image width change may affect the space available for the item text, so
@@ -2051,10 +2269,16 @@ public void setImage (int columnIndex, Image value) {
 @Deprecated
 public void setImageIndent (int indent) {
 	checkWidget();
-	if (indent < 0) return;
-	if (imageIndent == indent) return;
+    if (indent < 0) {
+        return;
+    }
+    if (imageIndent == indent) {
+        return;
+    }
 	imageIndent = indent;
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 }
 /**
  * Sets the receiver's text at a column
@@ -2072,16 +2296,24 @@ public void setImageIndent (int indent) {
  */
 public void setText (int columnIndex, String value) {
 	checkWidget ();
-	if (value == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (value == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int validColumnCount = Math.max (1, parent.columns.length);
-	if (!(0 <= columnIndex && columnIndex < validColumnCount)) return;
-	if (value.equals (getText (columnIndex, false))) return;
+    if (!(0 <= columnIndex && columnIndex < validColumnCount)) {
+        return;
+    }
+    if (value.equals(getText(columnIndex, false))) {
+        return;
+    }
 	if (columnIndex == 0) {
 		super.setText (value);
 	} else {
 		texts [columnIndex] = value;
 	}
-	if ((parent.getStyle () & SWT.VIRTUAL) != 0) cached = true;
+    if ((parent.getStyle() & SWT.VIRTUAL) != 0) {
+        cached = true;
+    }
 
 	int oldWidth = textWidths [columnIndex];
 	GC gc = new GC (parent);
@@ -2131,12 +2363,16 @@ public void setText (String value) {
  */
 public void setText (String[] value) {
 	checkWidget ();
-	if (value == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (value == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	Rectangle bounds = getBounds (false);
 	int oldRightX = bounds.x + bounds.width;
 	// TODO make a smarter implementation of this
 	for (int i = 0; i < value.length; i++) {
-		if (value [i] != null) setText (i, value [i]);
+        if (value [i] != null) {
+            setText(i, value [i]);
+        }
 	}
 	/* horizontal bar could be affected if table has no columns */
 	if (parent.columns.length == 0) {

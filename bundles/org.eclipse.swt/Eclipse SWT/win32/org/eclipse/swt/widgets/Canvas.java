@@ -168,8 +168,12 @@ void releaseChildren (boolean destroy) {
 
 @Override
 void reskinChildren (int flags) {
-	if (caret != null) caret.reskin (flags);
-	if (ime != null)  ime.reskin (flags);
+    if (caret != null) {
+        caret.reskin(flags);
+    }
+    if (ime != null) {
+        ime.reskin(flags);
+    }
 	super.reskinChildren (flags);
 }
 
@@ -207,7 +211,9 @@ public void scroll (int destX, int destY, int x, int y, int width, int height, b
 void scrollInPixels (int destX, int destY, int x, int y, int width, int height, boolean all) {
 	forceResize ();
 	boolean isFocus = caret != null && caret.isFocusCaret ();
-	if (isFocus) caret.killFocus ();
+    if (isFocus) {
+        caret.killFocus();
+    }
 	RECT sourceRect = new RECT ();
 	OS.SetRect (sourceRect, x, y, x + width, y + height);
 	RECT clientRect = new RECT ();
@@ -219,7 +225,9 @@ void scrollInPixels (int destX, int destY, int x, int y, int width, int height, 
 	int deltaX = destX - x, deltaY = destY - y;
 	if (findImageControl () != null) {
 		int flags = OS.RDW_ERASE | OS.RDW_FRAME | OS.RDW_INVALIDATE;
-		if (all) flags |= OS.RDW_ALLCHILDREN;
+        if (all) {
+            flags |= OS.RDW_ALLCHILDREN;
+        }
 		OS.RedrawWindow (handle, sourceRect, 0, flags);
 		OS.OffsetRect (sourceRect, deltaX, deltaY);
 		OS.RedrawWindow (handle, sourceRect, 0, flags);
@@ -251,7 +259,9 @@ void scrollInPixels (int destX, int destY, int x, int y, int width, int height, 
 			}
 		}
 	}
-	if (isFocus) caret.setFocus ();
+    if (isFocus) {
+        caret.setFocus();
+    }
 }
 
 /**
@@ -280,9 +290,13 @@ public void setCaret (Caret caret) {
 	Caret oldCaret = this.caret;
 	this.caret = newCaret;
 	if (hasFocus ()) {
-		if (oldCaret != null) oldCaret.killFocus ();
+        if (oldCaret != null) {
+            oldCaret.killFocus();
+        }
 		if (newCaret != null) {
-			if (newCaret.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+            if (newCaret.isDisposed()) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 			newCaret.setFocus ();
 		}
 	}
@@ -291,7 +305,9 @@ public void setCaret (Caret caret) {
 @Override
 public void setFont (Font font) {
 	checkWidget ();
-	if (caret != null) caret.setFont (font);
+    if (caret != null) {
+        caret.setFont(font);
+    }
 	super.setFont (font);
 }
 
@@ -312,13 +328,17 @@ public void setFont (Font font) {
  */
 public void setIME (IME ime) {
 	checkWidget ();
-	if (ime != null && ime.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (ime != null && ime.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.ime = ime;
 }
 
 @Override
 TCHAR windowClass () {
-	if (display.useOwnDC) return display.windowOwnDCClass;
+    if (display.useOwnDC) {
+        return display.windowOwnDCClass;
+    }
 	return super.windowClass ();
 }
 
@@ -339,7 +359,9 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 @Override
 LRESULT WM_CHAR (long wParam, long lParam) {
 	LRESULT result = super.WM_CHAR (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if (caret != null) {
 		switch ((int)wParam) {
 			case SWT.DEL:
@@ -350,7 +372,9 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 				if (OS.GetKeyState (OS.VK_CONTROL) >= 0) {
 					int [] value = new int [1];
 					if (OS.SystemParametersInfo (OS.SPI_GETMOUSEVANISH, 0, value, 0)) {
-						if (value [0] != 0) OS.SetCursor (0);
+                        if (value [0] != 0) {
+                            OS.SetCursor(0);
+                        }
 					}
 				}
 			}
@@ -363,7 +387,9 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 LRESULT WM_IME_COMPOSITION (long wParam, long lParam) {
 	if (ime != null) {
 		LRESULT result = ime.WM_IME_COMPOSITION (wParam, lParam);
-		if (result != null) return result;
+        if (result != null) {
+            return result;
+        }
 	}
 	return super.WM_IME_COMPOSITION (wParam, lParam);
 }
@@ -372,7 +398,9 @@ LRESULT WM_IME_COMPOSITION (long wParam, long lParam) {
 LRESULT WM_IME_COMPOSITION_START (long wParam, long lParam) {
 	if (ime != null) {
 		LRESULT result = ime.WM_IME_COMPOSITION_START (wParam, lParam);
-		if (result != null) return result;
+        if (result != null) {
+            return result;
+        }
 	}
 	return super.WM_IME_COMPOSITION_START (wParam, lParam);
 }
@@ -381,7 +409,9 @@ LRESULT WM_IME_COMPOSITION_START (long wParam, long lParam) {
 LRESULT WM_IME_ENDCOMPOSITION (long wParam, long lParam) {
 	if (ime != null) {
 		LRESULT result = ime.WM_IME_ENDCOMPOSITION (wParam, lParam);
-		if (result != null) return result;
+        if (result != null) {
+            return result;
+        }
 	}
 	return super.WM_IME_ENDCOMPOSITION (wParam, lParam);
 }
@@ -400,7 +430,9 @@ LRESULT WM_INPUTLANGCHANGE (long wParam, long lParam) {
 @Override
 LRESULT WM_KEYDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_KEYDOWN (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if (ime != null) {
 		ime.WM_KEYDOWN (wParam, lParam);
 	}
@@ -411,11 +443,15 @@ LRESULT WM_KEYDOWN (long wParam, long lParam) {
 LRESULT WM_KILLFOCUS (long wParam, long lParam) {
 	if (ime != null) {
 		LRESULT result = ime.WM_KILLFOCUS (wParam, lParam);
-		if (result != null) return result;
+        if (result != null) {
+            return result;
+        }
 	}
 	Caret caret = this.caret;
 	LRESULT result  = super.WM_KILLFOCUS (wParam, lParam);
-	if (caret != null) caret.killFocus ();
+    if (caret != null) {
+        caret.killFocus();
+    }
 	return result;
 }
 
@@ -423,7 +459,9 @@ LRESULT WM_KILLFOCUS (long wParam, long lParam) {
 LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 	if (ime != null) {
 		LRESULT result = ime.WM_LBUTTONDOWN (wParam, lParam);
-		if (result != null) return result;
+        if (result != null) {
+            return result;
+        }
 	}
 	return super.WM_LBUTTONDOWN (wParam, lParam);
 }
@@ -431,14 +469,18 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 @Override
 LRESULT WM_SETFOCUS (long wParam, long lParam) {
 	LRESULT result  = super.WM_SETFOCUS (wParam, lParam);
-	if (caret != null && caret.isFocusCaret ()) caret.setFocus ();
+    if (caret != null && caret.isFocusCaret()) {
+        caret.setFocus();
+    }
 	return result;
 }
 
 @Override
 LRESULT WM_SIZE (long wParam, long lParam) {
 	LRESULT result  = super.WM_SIZE (wParam, lParam);
-	if (caret != null && caret.isFocusCaret ()) caret.resizeIME ();
+    if (caret != null && caret.isFocusCaret()) {
+        caret.resizeIME();
+    }
 	return result;
 }
 
@@ -454,14 +496,18 @@ LRESULT WM_WINDOWPOSCHANGED (long wParam, long lParam) {
 	* show the caret in WM_WINDOWPOSCHANGED.
 	*/
 	boolean isFocus = (style & SWT.RIGHT_TO_LEFT) != 0 && caret != null && caret.isFocusCaret ();
-	if (isFocus) caret.setFocus ();
+    if (isFocus) {
+        caret.setFocus();
+    }
 	return result;
 }
 
 @Override
 LRESULT WM_WINDOWPOSCHANGING (long wParam, long lParam) {
 	LRESULT result  = super.WM_WINDOWPOSCHANGING (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Bug in Windows.  When a window with style WS_EX_LAYOUTRTL
 	* that contains a caret is resized, Windows does not move the
@@ -470,7 +516,9 @@ LRESULT WM_WINDOWPOSCHANGING (long wParam, long lParam) {
 	* show the caret in WM_WINDOWPOSCHANGED.
 	*/
 	boolean isFocus = (style & SWT.RIGHT_TO_LEFT) != 0 && caret != null && caret.isFocusCaret ();
-	if (isFocus) caret.killFocus ();
+    if (isFocus) {
+        caret.killFocus();
+    }
 	return result;
 }
 

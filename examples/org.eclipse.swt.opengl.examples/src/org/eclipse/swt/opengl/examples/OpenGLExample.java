@@ -72,7 +72,9 @@ public class OpenGLExample {
 		
 		Runnable timer = new Runnable() {
 			public void run() {
-				if (tabFolder.isDisposed()) return;
+                if (tabFolder.isDisposed()) {
+                    return;
+                }
 				display();
 				tabFolder.getDisplay().timerExec(sleep, this);
 			}
@@ -130,7 +132,9 @@ public class OpenGLExample {
 		shell.setText(getResourceString("window.title"));
 		shell.open();
 		while (! shell.isDisposed()) {
-			if (! display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		instance.dispose();
 	}

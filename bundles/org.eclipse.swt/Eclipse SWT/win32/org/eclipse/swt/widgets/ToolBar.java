@@ -124,20 +124,22 @@ public ToolBar (Composite parent, int style) {
 	if ((style & SWT.VERTICAL) != 0) {
 		this.style |= SWT.VERTICAL;
 		int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
-		/*
-		* Feature in Windows.  When a tool bar has the style
-		* TBSTYLE_LIST and has a drop down item, Window leaves
-		* too much padding around the button.  This affects
-		* every button in the tool bar and makes the preferred
-		* height too big.  The fix is to set the TBSTYLE_LIST
-		* when the tool bar contains both text and images.
-		*
-		* NOTE: Tool bars with CCS_VERT must have TBSTYLE_LIST
-		* set before any item is added or the tool bar does
-		* not lay out properly.  The work around does not run
-		* in this case.
-		*/
-		if ((style & SWT.RIGHT) != 0) bits |= OS.TBSTYLE_LIST;
+        /*
+        * Feature in Windows.  When a tool bar has the style
+        * TBSTYLE_LIST and has a drop down item, Window leaves
+        * too much padding around the button.  This affects
+        * every button in the tool bar and makes the preferred
+        * height too big.  The fix is to set the TBSTYLE_LIST
+        * when the tool bar contains both text and images.
+        *
+        * NOTE: Tool bars with CCS_VERT must have TBSTYLE_LIST
+        * set before any item is added or the tool bar does
+        * not lay out properly.  The work around does not run
+        * in this case.
+        */
+        if ((style & SWT.RIGHT) != 0) {
+            bits |= OS.TBSTYLE_LIST;
+        }
 		OS.SetWindowLong (handle, OS.GWL_STYLE, bits | OS.CCS_VERT);
 	} else {
 		this.style |= SWT.HORIZONTAL;
@@ -161,7 +163,9 @@ int addImage(Rectangle imageBounds, Image image, Image hotImage, Image disabledI
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	/*
 	* Bug in Windows.  For some reason, during the processing
 	* of WM_SYSCHAR, the tool bar window proc does not call the
@@ -176,25 +180,7 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* On Windows, only flat tool bars can be traversed.
-	*/
-	if ((style & SWT.FLAT) == 0) style |= SWT.NO_FOCUS;
-
-	/*
-	* A vertical tool bar cannot wrap because TB_SETROWS
-	* fails when the toolbar has TBSTYLE_WRAPABLE.
-	*/
-	if ((style & SWT.VERTICAL) != 0) style &= ~SWT.WRAP;
-
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	return style & ~(SWT.H_SCROLL | SWT.V_SCROLL);
+	return WidgetStylePolicy.TOOLBAR_WINDOWS.applyAsInt(style);
 }
 
 @Override
@@ -205,7 +191,9 @@ void checkBuffered () {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -277,7 +265,9 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		int newHeight = hintInPoints.y == SWT.DEFAULT ? 0x3FFF : hintInPixels.y + border * 2;
 		boolean redraw = getDrawing () && OS.IsWindowVisible (handle);
 		ignoreResize = true;
-		if (redraw) OS.UpdateWindow (handle);
+        if (redraw) {
+            OS.UpdateWindow(handle);
+        }
 		int flags = OS.SWP_NOACTIVATE | OS.SWP_NOMOVE | OS.SWP_NOREDRAW | OS.SWP_NOZORDER;
 		OS.SetWindowPos (handle, 0, 0, 0, newWidth, newHeight, flags);
 		if (count != 0) {
@@ -287,21 +277,31 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 			height = Math.max (height, rect.bottom);
 		}
 		OS.SetWindowPos (handle, 0, 0, 0, oldWidth, oldHeight, flags);
-		if (redraw) OS.ValidateRect (handle, null);
+        if (redraw) {
+            OS.ValidateRect(handle, null);
+        }
 		ignoreResize = false;
 	}
 
-	/*
-	* From the Windows SDK for TB_SETBUTTONSIZE:
-	*
-	*   "If an application does not explicitly
-	*	set the button size, the size defaults
-	*	to 24 by 22 pixels".
-	*/
-	if (width == 0) width = DEFAULT_WIDTH;
-	if (height == 0) height = DEFAULT_HEIGHT;
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x;
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y;
+    /*
+    * From the Windows SDK for TB_SETBUTTONSIZE:
+    *
+    *   "If an application does not explicitly
+    *	set the button size, the size defaults
+    *	to 24 by 22 pixels".
+    */
+    if (width == 0) {
+        width = DEFAULT_WIDTH;
+    }
+    if (height == 0) {
+        height = DEFAULT_HEIGHT;
+    }
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x;
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y;
+    }
 	Rectangle trim = computeTrimInPixels (0, 0, width, height);
 	width = trim.width;  height = trim.height;
 	/*
@@ -316,7 +316,9 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 @Override Rectangle computeTrimInPixels (int x, int y, int width, int height) {
 	Rectangle trim = super.computeTrimInPixels (x, y, width, height);
 	int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
-	if ((bits & OS.CCS_NODIVIDER) == 0) trim.height += 2;
+    if ((bits & OS.CCS_NODIVIDER) == 0) {
+        trim.height += 2;
+    }
 	return trim;
 }
 
@@ -325,14 +327,22 @@ Widget computeTabGroup () {
 	ToolItem [] items = _getItems ();
 	if (tabItemList == null) {
 		int i = 0;
-		while (i < items.length && items [i].control == null) i++;
-		if (i == items.length) return super.computeTabGroup ();
+        while (i < items.length && items [i].control == null) {
+            i++;
+        }
+        if (i == items.length) {
+            return super.computeTabGroup();
+        }
 	}
 	int index = (int)OS.SendMessage (handle, OS.TB_GETHOTITEM, 0, 0);
-	if (index == -1) index = lastHotId;
+    if (index == -1) {
+        index = lastHotId;
+    }
 	while (index >= 0) {
 		ToolItem item = items [index];
-		if (item.isTabGroup ()) return item;
+        if (item.isTabGroup()) {
+            return item;
+        }
 		index--;
 	}
 	return super.computeTabGroup ();
@@ -343,11 +353,17 @@ Widget [] computeTabList () {
 	ToolItem [] items = _getItems ();
 	if (tabItemList == null) {
 		int i = 0;
-		while (i < items.length && items [i].control == null) i++;
-		if (i == items.length) return super.computeTabList ();
+        while (i < items.length && items [i].control == null) {
+            i++;
+        }
+        if (i == items.length) {
+            return super.computeTabList();
+        }
 	}
 	Widget result [] = {};
-	if (!isTabGroup () || !isEnabled () || !isVisible ()) return result;
+    if (!isTabGroup() || !isEnabled() || !isVisible()) {
+        return result;
+    }
 	ToolItem [] list = tabList != null ? _getTabItemList () : items;
 	for (ToolItem child : list) {
 		Widget  [] childList = child.computeTabList ();
@@ -358,7 +374,9 @@ Widget [] computeTabList () {
 			result = newResult;
 		}
 	}
-	if (result.length == 0) result = new Widget [] {this};
+    if (result.length == 0) {
+        result = new Widget []{this};
+    }
 	return result;
 }
 
@@ -413,9 +431,13 @@ private ToolBarImageLists createImageLists(int width, int height) {
 
 void createItem (ToolItem item, int index) {
 	int count = (int)OS.SendMessage (handle, OS.TB_BUTTONCOUNT, 0, 0);
-	if (!(0 <= index && index <= count)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= count)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	int id = 0;
-	while (id < items.length && items [id] != null) id++;
+    while (id < items.length && items [id] != null) {
+        id++;
+    }
 	if (id == items.length) {
 		ToolItem [] newItems = new ToolItem [items.length + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -427,24 +449,28 @@ void createItem (ToolItem item, int index) {
 	lpButton.fsStyle = (byte) bits;
 	lpButton.fsState = (byte) OS.TBSTATE_ENABLED;
 
-	/*
-	* Bug in Windows.  Despite the fact that the image list
-	* index has never been set for the item, Windows always
-	* assumes that the image index for the item is valid.
-	* When an item is inserted, the image index is zero.
-	* Therefore, when the first image is inserted and is
-	* assigned image index zero, every item draws with this
-	* image.  The fix is to set the image index to none
-	* when the item is created.  This is not necessary in
-	* the case when the item has the BTNS_SEP style because
-	* separators cannot show images.
-	*/
-	if ((bits & OS.BTNS_SEP) == 0) lpButton.iBitmap = OS.I_IMAGENONE;
+    /*
+    * Bug in Windows.  Despite the fact that the image list
+    * index has never been set for the item, Windows always
+    * assumes that the image index for the item is valid.
+    * When an item is inserted, the image index is zero.
+    * Therefore, when the first image is inserted and is
+    * assigned image index zero, every item draws with this
+    * image.  The fix is to set the image index to none
+    * when the item is created.  This is not necessary in
+    * the case when the item has the BTNS_SEP style because
+    * separators cannot show images.
+    */
+    if ((bits & OS.BTNS_SEP) == 0) {
+        lpButton.iBitmap = OS.I_IMAGENONE;
+    }
 	if (OS.SendMessage (handle, OS.TB_INSERTBUTTON, index, lpButton) == 0) {
 		error (SWT.ERROR_ITEM_NOT_ADDED);
 	}
 	items [item.id = id] = item;
-	if ((style & SWT.VERTICAL) != 0) setRowCount (count + 1);
+    if ((style & SWT.VERTICAL) != 0) {
+        setRowCount(count + 1);
+    }
 	layoutItems ();
 }
 
@@ -481,9 +507,15 @@ void destroyItem (ToolItem item) {
 		}
 	}
 	OS.SendMessage (handle, OS.TB_DELETEBUTTON, index, 0);
-	if (item.id == lastFocusId) lastFocusId = -1;
-	if (item.id == lastArrowId) lastArrowId = -1;
-	if (item.id == lastHotId) lastHotId = -1;
+    if (item.id == lastFocusId) {
+        lastFocusId = -1;
+    }
+    if (item.id == lastArrowId) {
+        lastArrowId = -1;
+    }
+    if (item.id == lastHotId) {
+        lastHotId = -1;
+    }
 	items [item.id] = null;
 	item.id = -1;
 	int count = (int)OS.SendMessage (handle, OS.TB_BUTTONCOUNT, 0, 0);
@@ -491,7 +523,9 @@ void destroyItem (ToolItem item) {
 		clearAndReleaseImageLists();
 		items = new ToolItem [4];
 	}
-	if ((style & SWT.VERTICAL) != 0) setRowCount (count - 1);
+    if ((style & SWT.VERTICAL) != 0) {
+        setRowCount(count - 1);
+    }
 	layoutItems ();
 }
 
@@ -537,10 +571,14 @@ void enableWidget (boolean enabled) {
 public ToolItem getItem (int index) {
 	checkWidget ();
 	int count = (int)OS.SendMessage (handle, OS.TB_BUTTONCOUNT, 0, 0);
-	if (!(0 <= index && index < count)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < count)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	TBBUTTON lpButton = new TBBUTTON ();
 	long result = OS.SendMessage (handle, OS.TB_GETBUTTON, index, lpButton);
-	if (result == 0) error (SWT.ERROR_CANNOT_GET_ITEM);
+    if (result == 0) {
+        error(SWT.ERROR_CANNOT_GET_ITEM);
+    }
 	return items [lpButton.idCommand];
 }
 
@@ -562,14 +600,18 @@ public ToolItem getItem (int index) {
  */
 public ToolItem getItem (Point point) {
 	checkWidget ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return getItemInPixels(Win32DPIUtils.pointToPixelAsLocation(point, getAutoscalingZoom()));
 }
 
 ToolItem getItemInPixels (Point point) {
 	for (ToolItem item : getItems ()) {
 		Rectangle rect = item.getBoundsInPixels ();
-		if (rect.contains (point)) return item;
+        if (rect.contains(point)) {
+            return item;
+        }
 	}
 	return null;
 }
@@ -643,12 +685,18 @@ public int getRowCount () {
 }
 
 ToolItem [] _getTabItemList () {
-	if (tabItemList == null) return tabItemList;
+    if (tabItemList == null) {
+        return tabItemList;
+    }
 	int count = 0;
 	for (ToolItem item : tabItemList) {
-		if (!item.isDisposed ()) count++;
+        if (!item.isDisposed()) {
+            count++;
+        }
 	}
-	if (count == tabItemList.length) return tabItemList;
+    if (count == tabItemList.length) {
+        return tabItemList;
+    }
 	ToolItem [] newList = new ToolItem [count];
 	int index = 0;
 	for (ToolItem item : tabItemList) {
@@ -680,8 +728,12 @@ ToolItem [] _getTabItemList () {
  */
 public int indexOf (ToolItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (item.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (item.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	return (int)OS.SendMessage (handle, OS.TB_COMMANDTOINDEX, item.id, 0);
 }
 
@@ -704,9 +756,15 @@ void layoutItems () {
 		boolean hasText = false, hasImage = false;
 		for (ToolItem item : items) {
 			if (item != null) {
-				if (!hasText) hasText = item.text.length () != 0;
-				if (!hasImage) hasImage = item.image != null;
-				if (hasText && hasImage) break;
+                if (!hasText) {
+                    hasText = item.text.length() != 0;
+                }
+                if (!hasImage) {
+                    hasImage = item.image != null;
+                }
+                if (hasText && hasImage) {
+                    break;
+                }
 			}
 		}
 		int oldBits = OS.GetWindowLong (handle, OS.GWL_STYLE), newBits = oldBits;
@@ -846,7 +904,9 @@ void layoutItems () {
 	}
 
 	for (ToolItem item : items) {
-		if (item != null) item.resizeControl ();
+        if (item != null) {
+            item.resizeControl();
+        }
 	}
 }
 
@@ -856,9 +916,13 @@ boolean mnemonicHit (char ch) {
 	if (OS.SendMessage (handle, OS.TB_MAPACCELERATOR, ch, id) == 0) {
 		return false;
 	}
-	if ((style & SWT.FLAT) != 0 && !setTabGroupFocus ()) return false;
+    if ((style & SWT.FLAT) != 0 && !setTabGroupFocus()) {
+        return false;
+    }
 	int index = (int)OS.SendMessage (handle, OS.TB_COMMANDTOINDEX, id [0], 0);
-	if (index == -1) return false;
+    if (index == -1) {
+        return false;
+    }
 	OS.SendMessage (handle, OS.TB_SETHOTITEM, index, 0);
 	items [id [0]].click (false);
 	return true;
@@ -877,7 +941,9 @@ boolean mnemonicMatch (char ch) {
 	* contains a mnemonic when TB_MAPACCELERATOR returns true.
 	*/
 	int index = (int)OS.SendMessage (handle, OS.TB_COMMANDTOINDEX, id [0], 0);
-	if (index == -1) return false;
+    if (index == -1) {
+        return false;
+    }
 	return findMnemonic (items [id [0]].text) != '\0';
 }
 
@@ -957,7 +1023,9 @@ void removeControl (Control control) {
 void reskinChildren (int flags) {
 	if (items != null) {
 		for (ToolItem item : items) {
-			if (item != null) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -1020,9 +1088,15 @@ void setDropDownItems (boolean set) {
 	boolean hasText = false, hasImage = false;
 	for (ToolItem item : items) {
 		if (item != null) {
-			if (!hasText) hasText = item.text.length () != 0;
-			if (!hasImage) hasImage = item.image != null;
-			if (hasText && hasImage) break;
+            if (!hasText) {
+                hasText = item.text.length() != 0;
+            }
+            if (!hasImage) {
+                hasImage = item.image != null;
+            }
+            if (hasText && hasImage) {
+                break;
+            }
 		}
 	}
 	if (hasImage && !hasText) {
@@ -1059,7 +1133,9 @@ public void setFont (Font font) {
 	int mask = SWT.PUSH | SWT.CHECK | SWT.RADIO | SWT.DROP_DOWN;
 	while (index < items.length) {
 		ToolItem item = items [index];
-		if (item != null && (item.style & mask) != 0) break;
+        if (item != null && (item.style & mask) != 0) {
+            break;
+        }
 		index++;
 	}
 	if (index == items.length) {
@@ -1072,7 +1148,9 @@ public void setFont (Font font) {
 @Override
 public boolean setParent (Composite parent) {
 	checkWidget ();
-	if (!super.setParent (parent)) return false;
+    if (!super.setParent(parent)) {
+        return false;
+    }
 	long hwndParent = parent.handle;
 	OS.SendMessage (handle, OS.TB_SETPARENT, hwndParent, 0);
 	/*
@@ -1135,9 +1213,15 @@ void setRowCount (int count) {
 	checkWidget ();
 	if (tabList != null) {
 		for (ToolItem item : tabList) {
-			if (item == null) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (item.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (item.parent != this) error (SWT.ERROR_INVALID_PARENT);
+            if (item == null) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (item.isDisposed()) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (item.parent != this) {
+                error(SWT.ERROR_INVALID_PARENT);
+            }
 		}
 		ToolItem [] newList = new ToolItem [tabList.length];
 		System.arraycopy (tabList, 0, newList, 0, tabList.length);
@@ -1152,11 +1236,15 @@ boolean setTabItemFocus () {
 	while (index < items.length) {
 		ToolItem item = items [index];
 		if (item != null && (item.style & SWT.SEPARATOR) == 0) {
-			if (item.getEnabled ()) break;
+            if (item.getEnabled()) {
+                break;
+            }
 		}
 		index++;
 	}
-	if (index == items.length) return false;
+    if (index == items.length) {
+        return false;
+    }
 	return super.setTabItemFocus ();
 }
 
@@ -1178,14 +1266,16 @@ String toolTipText (NMTTDISPINFO hdr) {
 	if ((hdr.uFlags & OS.TTF_IDISHWND) != 0) {
 		return null;
 	}
-	/*
-	* Bug in Windows.  On Windows XP, when TB_SETHOTITEM is
-	* used to set the hot item, the tool bar control attempts
-	* to display the tool tip, even when the cursor is not in
-	* the hot item.  The fix is to detect this case and fail to
-	* provide the string, causing no tool tip to be displayed.
-	*/
-	if (!hasCursor ()) return ""; //$NON-NLS-1$
+    /*
+    * Bug in Windows.  On Windows XP, when TB_SETHOTITEM is
+    * used to set the hot item, the tool bar control attempts
+    * to display the tool tip, even when the cursor is not in
+    * the hot item.  The fix is to detect this case and fail to
+    * provide the string, causing no tool tip to be displayed.
+    */
+    if (!hasCursor()) {
+        return ""; //$NON-NLS-1$
+    }
 	int index = (int)hdr.idFrom;
 	long hwndToolTip = OS.SendMessage (handle, OS.TB_GETTOOLTIPS, 0, 0);
 	if (hwndToolTip == hdr.hwndFrom) {
@@ -1206,18 +1296,22 @@ String toolTipText (NMTTDISPINFO hdr) {
 		} else {
 			hdr.uFlags &= ~OS.TTF_RTLREADING;
 		}
-		if (toolTipText != null) return ""; //$NON-NLS-1$
+        if (toolTipText != null) {
+            return ""; //$NON-NLS-1$
+        }
 		if (0 <= index && index < items.length) {
 			ToolItem item = items [index];
 			if (item != null) {
-				/*
-				* Bug in Windows.  When the  arrow keys are used to change
-				* the hot item, for some reason, Windows displays the tool
-				* tip for the hot item in at (0, 0) on the screen rather
-				* than next to the current hot item.  This fix is to disallow
-				* tool tips while the user is traversing with the arrow keys.
-				*/
-				if (lastArrowId != -1) return "";
+                /*
+                * Bug in Windows.  When the  arrow keys are used to change
+                * the hot item, for some reason, Windows displays the tool
+                * tip for the hot item in at (0, 0) on the screen rather
+                * than next to the current hot item.  This fix is to disallow
+                * tool tips while the user is traversing with the arrow keys.
+                */
+                if (lastArrowId != -1) {
+                    return "";
+                }
 				return item.toolTipText;
 			}
 		}
@@ -1238,8 +1332,12 @@ void updateOrientation () {
 		int count = (int)OS.SendMessage (handle, OS.TB_BUTTONCOUNT, 0, 0);
 		for (int i=0; i<count; i++) {
 			ToolItem item = items [i];
-			if ((item.style & SWT.SEPARATOR) != 0) continue;
-			if (item.image == null) continue;
+            if ((item.style & SWT.SEPARATOR) != 0) {
+                continue;
+            }
+            if (item.image == null) {
+                continue;
+            }
 			OS.SendMessage (handle, OS.TB_GETBUTTONINFO, item.id, info);
 			if (info.iImage != OS.I_IMAGENONE) {
 				info.iImage = imageLists.moveFrom(oldImageLists, info.iImage);
@@ -1255,9 +1353,15 @@ void updateOrientation () {
 @Override
 int widgetStyle () {
 	int bits = super.widgetStyle () | OS.CCS_NORESIZE | OS.TBSTYLE_TOOLTIPS | OS.TBSTYLE_CUSTOMERASE | OS.TBSTYLE_TRANSPARENT;
-	if ((style & SWT.SHADOW_OUT) == 0) bits |= OS.CCS_NODIVIDER;
-	if ((style & SWT.WRAP) != 0) bits |= OS.TBSTYLE_WRAPABLE;
-	if ((style & SWT.FLAT) != 0) bits |= OS.TBSTYLE_FLAT;
+    if ((style & SWT.SHADOW_OUT) == 0) {
+        bits |= OS.CCS_NODIVIDER;
+    }
+    if ((style & SWT.WRAP) != 0) {
+        bits |= OS.TBSTYLE_WRAPABLE;
+    }
+    if ((style & SWT.FLAT) != 0) {
+        bits |= OS.TBSTYLE_FLAT;
+    }
 	return bits;
 }
 
@@ -1274,7 +1378,9 @@ long windowProc () {
 @Override
 LRESULT WM_CAPTURECHANGED (long wParam, long lParam) {
 	LRESULT result = super.WM_CAPTURECHANGED (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Bug in Windows.  When the tool bar loses capture while an
 	* item is pressed, the item remains pressed.  The fix is
@@ -1295,7 +1401,9 @@ LRESULT WM_CAPTURECHANGED (long wParam, long lParam) {
 @Override
 LRESULT WM_CHAR (long wParam, long lParam) {
 	LRESULT result = super.WM_CHAR (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	switch ((int)wParam) {
 		case ' ':
 			int index = (int)OS.SendMessage (handle, OS.TB_GETHOTITEM, 0, 0);
@@ -1332,26 +1440,32 @@ LRESULT WM_COMMAND (long wParam, long lParam) {
 	* for this control.
 	*/
 	LRESULT result = super.WM_COMMAND (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	return LRESULT.ZERO;
 }
 
 @Override
 LRESULT WM_GETDLGCODE (long wParam, long lParam) {
 	LRESULT result = super.WM_GETDLGCODE (wParam, lParam);
-	/*
-	* Return DLGC_BUTTON so that mnemonics will be
-	* processed without needing to press the ALT key
-	* when the widget has focus.
-	*/
-	if (result != null) return result;
+    /*
+    * Return DLGC_BUTTON so that mnemonics will be
+    * processed without needing to press the ALT key
+    * when the widget has focus.
+    */
+    if (result != null) {
+        return result;
+    }
 	return new LRESULT (OS.DLGC_BUTTON | OS.DLGC_WANTARROWS);
 }
 
 @Override
 LRESULT WM_KEYDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_KEYDOWN (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	switch ((int)wParam) {
 		case OS.VK_SPACE:
 			/*
@@ -1369,26 +1483,34 @@ LRESULT WM_KILLFOCUS (long wParam, long lParam) {
 	int index = (int)OS.SendMessage (handle, OS.TB_GETHOTITEM, 0, 0);
 	TBBUTTON lpButton = new TBBUTTON ();
 	long code = OS.SendMessage (handle, OS.TB_GETBUTTON, index, lpButton);
-	if (code != 0) lastFocusId = lpButton.idCommand;
+    if (code != 0) {
+        lastFocusId = lpButton.idCommand;
+    }
 	return super.WM_KILLFOCUS (wParam, lParam);
 }
 
 @Override
 LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
-	if (ignoreMouse) return null;
+    if (ignoreMouse) {
+        return null;
+    }
 	return super.WM_LBUTTONDOWN (wParam, lParam);
 }
 
 @Override
 LRESULT WM_LBUTTONUP (long wParam, long lParam) {
-	if (ignoreMouse) return null;
+    if (ignoreMouse) {
+        return null;
+    }
 	return super.WM_LBUTTONUP (wParam, lParam);
 }
 
 @Override
 LRESULT WM_MOUSELEAVE (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSELEAVE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Bug in Windows.  On XP, when a tooltip is
 	* hidden due to a time out or mouse press,
@@ -1414,7 +1536,9 @@ LRESULT WM_MOUSELEAVE (long wParam, long lParam) {
 
 @Override
 LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
-	if (OS.GetMessagePos () != display.lastMouse) lastArrowId = -1;
+    if (OS.GetMessagePos() != display.lastMouse) {
+        lastArrowId = -1;
+    }
 	return super.WM_MOUSEMOVE (wParam, lParam);
 }
 
@@ -1439,7 +1563,9 @@ LRESULT WM_NOTIFY (long wParam, long lParam) {
 	* for this control.
 	*/
 	LRESULT result = super.WM_NOTIFY (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	return LRESULT.ZERO;
 }
 
@@ -1457,11 +1583,15 @@ LRESULT WM_SETFOCUS (long wParam, long lParam) {
 LRESULT WM_SIZE (long wParam, long lParam) {
 	if (ignoreResize) {
 		long code = callWindowProc (handle, OS.WM_SIZE, wParam, lParam);
-		if (code == 0) return LRESULT.ZERO;
+        if (code == 0) {
+            return LRESULT.ZERO;
+        }
 		return new LRESULT (code);
 	}
 	LRESULT result = super.WM_SIZE (wParam, lParam);
-	if (isDisposed ()) return result;
+    if (isDisposed()) {
+        return result;
+    }
 	/*
 	* Bug in Windows.  The code in Windows that determines
 	* when tool items should wrap seems to use the window
@@ -1481,7 +1611,9 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 		while (index < count) {
 			OS.SendMessage (handle, OS.TB_GETITEMRECT, index, rect);
 			OS.MapWindowPoints (handle, 0, rect, 2);
-			if (rect.right > windowRect.right - border * 2) break;
+            if (rect.right > windowRect.right - border * 2) {
+                break;
+            }
 			index++;
 		}
 		int bits = (int)OS.SendMessage (handle, OS.TB_GETEXTENDEDSTYLE, 0, 0);
@@ -1499,22 +1631,32 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 @Override
 LRESULT WM_WINDOWPOSCHANGING (long wParam, long lParam) {
 	LRESULT result = super.WM_WINDOWPOSCHANGING (wParam, lParam);
-	if (result != null) return result;
-	if (ignoreResize) return result;
-	/*
-	* Bug in Windows.  When a flat tool bar is wrapped,
-	* Windows draws a horizontal separator between the
-	* rows.  The tool bar does not draw the first or
-	* the last two pixels of this separator.  When the
-	* toolbar is resized to be bigger, only the new
-	* area is drawn and the last two pixels, which are
-	* blank are drawn over by separator.  This leaves
-	* garbage on the screen.  The fix is to damage the
-	* pixels.
-	*/
-	if (!getDrawing ()) return result;
-	if ((style & SWT.WRAP) == 0) return result;
-	if (!OS.IsWindowVisible (handle)) return result;
+    if (result != null) {
+        return result;
+    }
+    if (ignoreResize) {
+        return result;
+    }
+    /*
+    * Bug in Windows.  When a flat tool bar is wrapped,
+    * Windows draws a horizontal separator between the
+    * rows.  The tool bar does not draw the first or
+    * the last two pixels of this separator.  When the
+    * toolbar is resized to be bigger, only the new
+    * area is drawn and the last two pixels, which are
+    * blank are drawn over by separator.  This leaves
+    * garbage on the screen.  The fix is to damage the
+    * pixels.
+    */
+    if (!getDrawing()) {
+        return result;
+    }
+    if ((style & SWT.WRAP) == 0) {
+        return result;
+    }
+    if (!OS.IsWindowVisible(handle)) {
+        return result;
+    }
 	if (OS.SendMessage (handle, OS.TB_GETROWS, 0, 0) == 1) {
 		return result;
 	}
@@ -1542,7 +1684,9 @@ LRESULT WM_WINDOWPOSCHANGING (long wParam, long lParam) {
 @Override
 LRESULT wmCommandChild (long wParam, long lParam) {
 	ToolItem child = items [OS.LOWORD (wParam)];
-	if (child == null) return null;
+    if (child == null) {
+        return null;
+    }
 	return child.wmCommandChild (wParam, lParam);
 }
 
@@ -1648,16 +1792,18 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			OS.MoveMemory (lpnmhi, lParam, NMTBHOTITEM.sizeof);
 			switch (lpnmhi.dwFlags) {
 				case OS.HICF_MOUSE: {
-					/*
-					* Bug in Windows.  When the tool bar has focus, a mouse is
-					* in an item and hover help for that item is displayed and
-					* then the arrow keys are used to change the hot item,
-					* for some reason, Windows snaps the hot item back to the
-					* one that is under the mouse.  The fix is to disallow
-					* hot item changes when the user is traversing using the
-					* arrow keys.
-					*/
-					if (lastArrowId != -1) return LRESULT.ONE;
+                    /*
+                    * Bug in Windows.  When the tool bar has focus, a mouse is
+                    * in an item and hover help for that item is displayed and
+                    * then the arrow keys are used to change the hot item,
+                    * for some reason, Windows snaps the hot item back to the
+                    * one that is under the mouse.  The fix is to disallow
+                    * hot item changes when the user is traversing using the
+                    * arrow keys.
+                    */
+                    if (lastArrowId != -1) {
+                        return LRESULT.ONE;
+                    }
 					break;
 				}
 				case OS.HICF_ARROWKEYS:	{

@@ -95,7 +95,9 @@ public class RippleTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void next(int width, int height) {
-		if (texture == null) return;
+        if (texture == null) {
+            return;
+        }
 		// Automatic rain: drop a ripple every ~15 frames at a random location,
 		// plus occasional extra drops so the effect is obvious without user
 		// interaction. Mouse movement still adds further disturbances.
@@ -111,11 +113,15 @@ public class RippleTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 		
 		if (sourceImage == null) {
 			sourceImage = example.loadImage(gc.getDevice(), "ocean.jpg");
-			if (sourceImage == null) return;
+            if (sourceImage == null) {
+                return;
+            }
 			
 			ImageData imgData = sourceImage.getImageData();
 			this.width = imgData.width;
@@ -142,7 +148,9 @@ public class RippleTab extends AnimatedGraphicsTab {
 
 		offImageData.setPixels(0, 0, this.width * this.height, ripple, 0);
 
-		if (outputImage != null) outputImage.dispose();
+        if (outputImage != null) {
+            outputImage.dispose();
+        }
 		outputImage = new Image(gc.getDevice(), offImageData);
 
 		int dw = this.width * DISPLAY_SCALE;
@@ -210,7 +218,9 @@ public class RippleTab extends AnimatedGraphicsTab {
 	}
 
 	private void disturb(int dx, int dy, int canvasWidth, int canvasHeight) {
-		if (texture == null) return;
+        if (texture == null) {
+            return;
+        }
 
 		// Adjust dx, dy based on center alignment and display scale in paint()
 		int dw = width * DISPLAY_SCALE;

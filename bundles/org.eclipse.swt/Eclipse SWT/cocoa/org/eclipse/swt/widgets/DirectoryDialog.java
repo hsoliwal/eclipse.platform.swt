@@ -92,7 +92,9 @@ public DirectoryDialog (Shell parent) {
 public DirectoryDialog (Shell parent, int style) {
 	super (parent, checkStyle (parent, style));
 	if (Display.getSheetEnabled ()) {
-		if (parent != null && (style & SWT.SHEET) != 0) this.style |= SWT.SHEET;
+        if (parent != null && (style & SWT.SHEET) != 0) {
+            this.style |= SWT.SHEET;
+        }
 	}
 	checkSubclass ();
 }
@@ -242,7 +244,9 @@ void releaseHandles () {
 	if (method_performKeyEquivalent != 0) {
 		OS.method_setImplementation(method_performKeyEquivalent, methodImpl_performKeyEquivalent);
 	}
-	if (callback_performKeyEquivalent != null) callback_performKeyEquivalent.dispose();
+    if (callback_performKeyEquivalent != null) {
+        callback_performKeyEquivalent.dispose();
+    }
 	callback_performKeyEquivalent = null;
 
 	if (completion_handler_callback != null) {
@@ -269,7 +273,9 @@ void releaseHandles () {
  * </ul>
  */
 public void setMessage (String string) {
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	message = string;
 }
 

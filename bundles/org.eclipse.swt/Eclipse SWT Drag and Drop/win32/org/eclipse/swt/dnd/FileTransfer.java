@@ -119,7 +119,9 @@ public void javaToNative(Object object, TransferData transferData) {
  */
 @Override
 public Object nativeToJava(TransferData transferData) {
-	if (!isSupportedType(transferData) || transferData.pIDataObject == 0)  return null;
+    if (!isSupportedType(transferData) || transferData.pIDataObject == 0) {
+        return null;
+    }
 
 	// get file names from IDataObject
 	IDataObject dataObject = new IDataObject(transferData.pIDataObject);
@@ -134,7 +136,9 @@ public Object nativeToJava(TransferData transferData) {
 	stgmedium.tymed = COM.TYMED_HGLOBAL;
 	transferData.result = getData(dataObject, formatetc, stgmedium);
 	dataObject.Release();
-	if (transferData.result != COM.S_OK) return null;
+    if (transferData.result != COM.S_OK) {
+        return null;
+    }
 	// How many files are there?
 	int count = OS.DragQueryFile(stgmedium.unionField, 0xFFFFFFFF, null, 0);
 	String[] fileNames = new String[count];
@@ -230,9 +234,13 @@ protected String[] getTypeNames(){
 	return new String[] {CF_HDROP, CFSTR_SHELLIDLIST};
 }
 boolean checkFile(Object object) {
-	if (object == null || !(object instanceof String[]) || ((String[])object).length == 0) return false;
+    if (object == null || !(object instanceof String[]) || ((String[]) object).length == 0) {
+        return false;
+    }
 	for (String string : (String[])object) {
-		if (string == null || string.length() == 0) return false;
+        if (string == null || string.length() == 0) {
+            return false;
+        }
 	}
 	return true;
 }

@@ -55,15 +55,18 @@ int compressRLE4Data(byte[] src, int srcOffset, int numBytes, byte[] dest, boole
 	while (sp < end) {
 		/* find two consecutive bytes that are the same in the next 128 */
 		left = end - sp - 1;
-		if (left > 127)
-			left = 127;
+        if (left > 127) {
+            left = 127;
+        }
 		for (n = 0; n < left; n++) {
-			if (src[sp + n] == src[sp + n + 1])
-				break;
+            if (src[sp + n] == src[sp + n + 1]) {
+                break;
+            }
 		}
-		/* if there is only one more byte in the scan line, include it */
-		if (n < 127 && n == left)
-			n++;
+        /* if there is only one more byte in the scan line, include it */
+        if (n < 127 && n == left) {
+            n++;
+        }
 		/* store the intervening data */
 		switch (n) {
 			case 0:
@@ -92,12 +95,14 @@ int compressRLE4Data(byte[] src, int srcOffset, int numBytes, byte[] dest, boole
 		/* find the length of the next run (up to 127) and store it */
 		left = end - sp;
 		if (left > 0) {
-			if (left > 127)
-				left = 127;
+            if (left > 127) {
+                left = 127;
+            }
 			theByte = src[sp];
 			for (n = 1; n < left; n++) {
-				if (src[sp + n] != theByte)
-					break;
+                if (src[sp + n] != theByte) {
+                    break;
+                }
 			}
 			dest[dp] = (byte)(n + n); dp++; /* n bytes = n*2 pixels */
 			dest[dp] = theByte; dp++;
@@ -124,15 +129,18 @@ int compressRLE8Data(byte[] src, int srcOffset, int numBytes, byte[] dest, boole
 	while (sp < end) {
 		/* find two consecutive bytes that are the same in the next 256 */
 		left = end - sp - 1;
-		if (left > 254)
-			left = 254;
+        if (left > 254) {
+            left = 254;
+        }
 		for (n = 0; n < left; n++) {
-			if (src[sp + n] == src[sp + n + 1])
-				break;
+            if (src[sp + n] == src[sp + n + 1]) {
+                break;
+            }
 		}
-		/* if there is only one more byte in the scan line, include it */
-		if (n == left)
-			n++;
+        /* if there is only one more byte in the scan line, include it */
+        if (n == left) {
+            n++;
+        }
 		/* store the intervening data */
 		switch (n) {
 			case 0:
@@ -167,12 +175,14 @@ int compressRLE8Data(byte[] src, int srcOffset, int numBytes, byte[] dest, boole
 		/* find the length of the next run (up to 255) and store it */
 		left = end - sp;
 		if (left > 0) {
-			if (left > 255)
-				left = 255;
+            if (left > 255) {
+                left = 255;
+            }
 			theByte = src[sp];
 			for (n = 1; n < left; n++) {
-				if (src[sp + n] != theByte)
-					break;
+                if (src[sp + n] != theByte) {
+                    break;
+                }
 			}
 			dest[dp] = (byte)n; dp++;
 			dest[dp] = theByte; dp++;
@@ -264,7 +274,9 @@ void convertPixelsToBGR(ImageData image, byte[] dest) {
 				dest[index + 2] = (byte) ((palette.redShift < 0) ? r >>> -palette.redShift
 						: r << palette.redShift);
 
-				if (numOfBytes == 4) dest[index + 3] = 0;
+                if (numOfBytes == 4) {
+                    dest[index + 3] = 0;
+                }
 			}
 
 			srcX++;
@@ -280,13 +292,15 @@ void convertPixelsToBGR(ImageData image, byte[] dest) {
 }
 void decompressData(byte[] src, byte[] dest, int stride, int cmp) {
 	if (cmp == BI_RLE8) {
-		if (decompressRLE8Data(src, src.length, stride, dest, dest.length) <= 0)
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (decompressRLE8Data(src, src.length, stride, dest, dest.length) <= 0) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		return;
 	}
 	if (cmp == BI_RLE4) {
-		if (decompressRLE4Data(src, src.length, stride, dest, dest.length) <= 0)
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (decompressRLE4Data(src, src.length, stride, dest, dest.length) <= 0) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		return;
 	}
 	SWT.error(SWT.ERROR_INVALID_IMAGE);
@@ -308,8 +322,9 @@ int decompressRLE4Data(byte[] src, int numBytes, int stride, byte[] dest, int de
 					y++;
 					x = 0;
 					dp = y * stride;
-					if (dp > de)
-						return -1;
+                    if (dp > de) {
+                        return -1;
+                    }
 					break;
 				case 1: /* end of bitmap */
 					return 1;
@@ -319,36 +334,43 @@ int decompressRLE4Data(byte[] src, int numBytes, int stride, byte[] dest, int de
 					y += src[sp] & 0xFF;
 					sp++;
 					dp = y * stride + x / 2;
-					if (dp > de)
-						return -1;
+                    if (dp > de) {
+                        return -1;
+                    }
 					break;
 				default: /* absolute mode run */
-					if ((len & 1) != 0) /* odd run lengths not currently supported */
-						return -1;
+                    if ((len & 1) != 0) { /* odd run lengths not currently supported */
+                        return -1;
+                    }
 					x += len;
 					len = len / 2;
-					if (len > (se - sp))
-						return -1;
-					if (len > (de - dp))
-						return -1;
+                    if (len > (se - sp)) {
+                        return -1;
+                    }
+                    if (len > (de - dp)) {
+                        return -1;
+                    }
 					for (int i = 0; i < len; i++) {
 						dest[dp] = src[sp];
 						dp++;
 						sp++;
 					}
-					if ((sp & 1) != 0)
-						sp++; /* word align sp? */
+                    if ((sp & 1) != 0) {
+                        sp++;
+                    } /* word align sp? */
 					break;
 			}
 		} else {
-			if ((len & 1) != 0)
-				return -1;
+            if ((len & 1) != 0) {
+                return -1;
+            }
 			x += len;
 			len = len / 2;
 			byte theByte = src[sp];
 			sp++;
-			if (len > (de - dp))
-				return -1;
+            if (len > (de - dp)) {
+                return -1;
+            }
 			for (int i = 0; i < len; i++) {
 				dest[dp] = theByte;
 				dp++;
@@ -374,8 +396,9 @@ int decompressRLE8Data(byte[] src, int numBytes, int stride, byte[] dest, int de
 					y++;
 					x = 0;
 					dp = y * stride;
-					if (dp > de)
-						return -1;
+                    if (dp > de) {
+                        return -1;
+                    }
 					break;
 				case 1: /* end of bitmap */
 					return 1;
@@ -385,29 +408,34 @@ int decompressRLE8Data(byte[] src, int numBytes, int stride, byte[] dest, int de
 					y += src[sp] & 0xFF;
 					sp++;
 					dp = y * stride + x;
-					if (dp > de)
-						return -1;
+                    if (dp > de) {
+                        return -1;
+                    }
 					break;
 				default: /* absolute mode run */
-					if (len > (se - sp))
-						return -1;
-					if (len > (de - dp))
-						return -1;
+                    if (len > (se - sp)) {
+                        return -1;
+                    }
+                    if (len > (de - dp)) {
+                        return -1;
+                    }
 					for (int i = 0; i < len; i++) {
 						dest[dp] = src[sp];
 						dp++;
 						sp++;
 					}
-					if ((sp & 1) != 0)
-						sp++; /* word align sp? */
+                    if ((sp & 1) != 0) {
+                        sp++;
+                    } /* word align sp? */
 					x += len;
 					break;
 			}
 		} else {
 			byte theByte = src[sp];
 			sp++;
-			if (len > (de - dp))
-				return -1;
+            if (len > (de - dp)) {
+                return -1;
+            }
 			for (int i = 0; i < len; i++) {
 				dest[dp] = theByte;
 				dp++;
@@ -430,13 +458,19 @@ int decompressRLE8Data(byte[] src, int numBytes, int stride, byte[] dest, int de
 boolean isPaletteBMP(PaletteData pal, int depth) {
 	switch(depth) {
 		case 32:
-			if ((pal.redMask == 0xFF00) && (pal.greenMask == 0xFF0000) && (pal.blueMask == 0xFF000000)) return true;
+            if ((pal.redMask == 0xFF00) && (pal.greenMask == 0xFF0000) && (pal.blueMask == 0xFF000000)) {
+                return true;
+            }
 			return false;
 		case 24:
-			if ((pal.redMask == 0xFF) && (pal.greenMask == 0xFF00) && (pal.blueMask == 0xFF0000)) return true;
+            if ((pal.redMask == 0xFF) && (pal.greenMask == 0xFF00) && (pal.blueMask == 0xFF0000)) {
+                return true;
+            }
 			return false;
 		case 16:
-			if ((pal.redMask == 0x7C00) && (pal.greenMask == 0x3E0) && (pal.blueMask == 0x1F)) return true;
+            if ((pal.redMask == 0x7C00) && (pal.greenMask == 0x3E0) && (pal.blueMask == 0x1F)) {
+                return true;
+            }
 			return false;
 		default:
 			return true;
@@ -454,14 +488,17 @@ byte[] loadData(byte[] infoHeader) {
 }
 byte[] loadData(byte[] infoHeader, int stride) {
 	int height = (infoHeader[8] & 0xFF) | ((infoHeader[9] & 0xFF) << 8) | ((infoHeader[10] & 0xFF) << 16) | ((infoHeader[11] & 0xFF) << 24);
-	if (height < 0) height = -height;
+    if (height < 0) {
+        height = -height;
+    }
 	int dataSize = height * stride;
 	byte[] data = new byte[dataSize];
 	int cmp = (infoHeader[16] & 0xFF) | ((infoHeader[17] & 0xFF) << 8) | ((infoHeader[18] & 0xFF) << 16) | ((infoHeader[19] & 0xFF) << 24);
 	if (cmp == BI_RGB || cmp == BI_BITFIELDS) {
 		try {
-			if (inputStream.read(data) != dataSize)
-				SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (inputStream.read(data) != dataSize) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 		} catch (IOException e) {
 			SWT.error(SWT.ERROR_IO, e);
 		}
@@ -469,8 +506,9 @@ byte[] loadData(byte[] infoHeader, int stride) {
 		int compressedSize = (infoHeader[20] & 0xFF) | ((infoHeader[21] & 0xFF) << 8) | ((infoHeader[22] & 0xFF) << 16) | ((infoHeader[23] & 0xFF) << 24);
 		byte[] compressed = new byte[compressedSize];
 		try {
-			if (inputStream.read(compressed) != compressedSize)
-				SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (inputStream.read(compressed) != compressedSize) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 		} catch (IOException e) {
 			SWT.error(SWT.ERROR_IO, e);
 		}
@@ -489,8 +527,9 @@ int[] loadFileHeader() {
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
-	if (header[0] != 0x4D42)
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (header[0] != 0x4D42) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	return header;
 }
 @Override
@@ -504,7 +543,9 @@ ImageData[] loadFromByteStream() {
 	}
 	int width = (infoHeader[4] & 0xFF) | ((infoHeader[5] & 0xFF) << 8) | ((infoHeader[6] & 0xFF) << 16) | ((infoHeader[7] & 0xFF) << 24);
 	int height = (infoHeader[8] & 0xFF) | ((infoHeader[9] & 0xFF) << 8) | ((infoHeader[10] & 0xFF) << 16) | ((infoHeader[11] & 0xFF) << 24);
-	if (height < 0) height = -height;
+    if (height < 0) {
+        height = -height;
+    }
 	int bitCount = (infoHeader[14] & 0xFF) | ((infoHeader[15] & 0xFF) << 8);
 	this.compression = (infoHeader[16] & 0xFF) | ((infoHeader[17] & 0xFF) << 8) | ((infoHeader[18] & 0xFF) << 16) | ((infoHeader[19] & 0xFF) << 24);
 	PaletteData palette = loadPalette(infoHeader);
@@ -549,13 +590,15 @@ PaletteData loadPalette(byte[] infoHeader) {
 		if (numColors == 0) {
 			numColors = 1 << depth;
 		} else {
-			if (numColors > 256)
-				numColors = 256;
+            if (numColors > 256) {
+                numColors = 256;
+            }
 		}
 		byte[] buf = new byte[numColors * 4];
 		try {
-			if (inputStream.read(buf) != buf.length)
-				SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (inputStream.read(buf) != buf.length) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 		} catch (IOException e) {
 			SWT.error(SWT.ERROR_IO, e);
 		}
@@ -571,7 +614,9 @@ PaletteData loadPalette(byte[] infoHeader) {
 		}
 		return new PaletteData(0x7C00, 0x3E0, 0x1F);
 	}
-	if (depth == 24) return new PaletteData(0xFF, 0xFF00, 0xFF0000);
+    if (depth == 24) {
+        return new PaletteData(0xFF, 0xFF00, 0xFF0000);
+    }
 	if (this.compression == BI_BITFIELDS) {
 		try {
 			/*
@@ -627,15 +672,18 @@ static byte[] paletteToBytes(PaletteData pal) {
 int unloadData(ImageData image, byte[] data, OutputStream out, int comp) {
 	int totalSize = 0;
 	try {
-		if (comp == 0)
-			return unloadDataNoCompression(image, data, out);
+        if (comp == 0) {
+            return unloadDataNoCompression(image, data, out);
+        }
 		int bpl = (image.width * image.depth + 7) / 8;
 		int bmpBpl = (bpl + 3) / 4 * 4; // BMP pads scanlines to multiples of 4 bytes
 		int imageBpl = image.bytesPerLine;
 		// Compression can actually take twice as much space, in worst case
 		byte[] buf = new byte[bmpBpl * 2];
 		int srcOffset = imageBpl * (image.height - 1); // Start at last line
-		if (data == null) data = image.data;
+        if (data == null) {
+            data = image.data;
+        }
 		totalSize = 0;
 		byte[] buf2 = new byte[32768];
 		int buf2Offset = 0;
@@ -650,8 +698,9 @@ int unloadData(ImageData image, byte[] data, OutputStream out, int comp) {
 			totalSize += lineSize;
 			srcOffset -= imageBpl;
 		}
-		if (buf2Offset > 0)
-			out.write(buf2, 0, buf2Offset);
+        if (buf2Offset > 0) {
+            out.write(buf2, 0, buf2Offset);
+        }
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
@@ -670,13 +719,17 @@ int unloadDataNoCompression(ImageData image, byte[] data, OutputStream out) {
 		bmpBpl = (bpl + 3) / 4 * 4; // BMP pads scanlines to multiples of 4 bytes
 		int linesPerBuf = 32678 / bmpBpl;
 		byte[] buf = new byte[linesPerBuf * bmpBpl];
-		if (data == null) data = image.data;
+        if (data == null) {
+            data = image.data;
+        }
 		int imageBpl = image.bytesPerLine;
 		int dataIndex = imageBpl * (image.height - 1); // Start at last line
 		if (image.depth == 16) {
 			for (int y = 0; y < image.height; y += linesPerBuf) {
 				int count = image.height - y;
-				if (linesPerBuf < count) count = linesPerBuf;
+                if (linesPerBuf < count) {
+                    count = linesPerBuf;
+                }
 				int bufOffset = 0;
 				for (int i = 0; i < count; i++) {
 					for (int wIndex = 0; wIndex < bpl; wIndex += 2) {
@@ -715,22 +768,26 @@ void unloadIntoByteStream(ImageLoader loader) {
 	ImageData image = loader.data[0];
 	byte[] rgbs;
 	int numCols;
-	if (!((image.depth == 1) || (image.depth == 4) || (image.depth == 8) ||
-		  (image.depth == 16) || (image.depth == 24) || (image.depth == 32)))
-			SWT.error(SWT.ERROR_UNSUPPORTED_DEPTH);
+    if (!((image.depth == 1) || (image.depth == 4) || (image.depth == 8) ||
+            (image.depth == 16) || (image.depth == 24) || (image.depth == 32))) {
+        SWT.error(SWT.ERROR_UNSUPPORTED_DEPTH);
+    }
 	int comp = this.compression;
-	if (!((comp == 0) || ((comp == 1) && (image.depth == 8)) ||
-		  ((comp == 2) && (image.depth == 4))))
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (!((comp == 0) || ((comp == 1) && (image.depth == 8)) ||
+            ((comp == 2) && (image.depth == 4)))) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	PaletteData pal = image.palette;
 	if ((image.depth == 16) || (image.depth == 24) || (image.depth == 32)) {
-		if (!pal.isDirect)
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (!pal.isDirect) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		numCols = 0;
 		rgbs = null;
 	} else {
-		if (pal.isDirect)
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (pal.isDirect) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		numCols = pal.colors.length;
 		rgbs = paletteToBytes(pal);
 	}

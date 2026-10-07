@@ -49,7 +49,9 @@ public static void main (String [] args) {
 		if (item != null && item == lastItem [0]) {
 			boolean showBorder = true;
 			final Composite composite = new Composite (tree, SWT.NONE);
-			if (showBorder) composite.setBackground (black);
+            if (showBorder) {
+                composite.setBackground(black);
+            }
 			final Text text = new Text (composite, SWT.NONE);
 			final int inset = showBorder ? 1 : 0;
 			composite.addListener (SWT.Resize, e1 -> {
@@ -103,7 +105,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

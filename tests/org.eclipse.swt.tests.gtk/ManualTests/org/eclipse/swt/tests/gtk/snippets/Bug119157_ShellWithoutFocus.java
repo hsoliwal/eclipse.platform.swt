@@ -53,7 +53,9 @@ public class Bug119157_ShellWithoutFocus {
 		main.setSize(200, 200);
 		main.open();
 		while (!main.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

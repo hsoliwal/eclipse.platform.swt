@@ -84,7 +84,9 @@ public void javaToNative (Object object, TransferData transferData){
  */
 @Override
 public Object nativeToJava(TransferData transferData){
-	if (!isSupportedType(transferData) || transferData.data == null) return null;
+    if (!isSupportedType(transferData) || transferData.data == null) {
+        return null;
+    }
 	NSURL nsUrl = (NSURL) transferData.data;
 	NSString nsString = nsUrl.absoluteString();
 	nsString = nsString.stringByReplacingPercentEscapesUsingEncoding(OS.NSUTF8StringEncoding);

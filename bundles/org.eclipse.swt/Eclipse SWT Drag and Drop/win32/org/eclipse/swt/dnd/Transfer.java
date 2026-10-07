@@ -44,7 +44,9 @@ private static final int RETRY_LIMIT = 10;
  * message sends.
  */
 int getData(IDataObject dataObject, FORMATETC pFormatetc, STGMEDIUM pmedium) {
-	if (dataObject.GetData(pFormatetc, pmedium) == COM.S_OK) return COM.S_OK;
+    if (dataObject.GetData(pFormatetc, pmedium) == COM.S_OK) {
+        return COM.S_OK;
+    }
 	try {Thread.sleep(50);} catch (Throwable t) {}
 	int result = dataObject.GetData(pFormatetc, pmedium);
 	int retryCount = 0;

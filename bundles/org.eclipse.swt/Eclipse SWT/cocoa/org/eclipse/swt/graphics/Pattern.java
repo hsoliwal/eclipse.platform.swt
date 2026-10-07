@@ -73,17 +73,25 @@ public class Pattern extends Resource {
  */
 public Pattern(Device device, Image image) {
 	super(device);
-	if (image == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (image == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (image.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		this.image = image;
 		color = NSColor.colorWithPatternImage(image.handle);
 		color.retain();
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -166,12 +174,22 @@ public Pattern(Device device, float x1, float y1, float x2, float y2, Color colo
  */
 public Pattern(Device device, float x1, float y1, float x2, float y2, Color color1, int alpha1, Color color2, int alpha2) {
 	super(device);
-	if (color1 == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color1.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (color2 == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color2.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (color1 == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color1.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (color2 == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color2.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		pt1 = new NSPoint();
 		pt2 = new NSPoint();
@@ -188,15 +206,21 @@ public Pattern(Device device, float x1, float y1, float x2, float y2, Color colo
 		gradient = ((NSGradient)new NSGradient().alloc()).initWithStartingColor(start, end);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
 @Override
 void destroy() {
-	if (color != null) color.release();
+    if (color != null) {
+        color.release();
+    }
 	color = null;
-	if (gradient != null) gradient.release();
+    if (gradient != null) {
+        gradient.release();
+    }
 	gradient = null;
 	image = null;
 	color1 = color2 = null;
@@ -225,7 +249,9 @@ public boolean isDisposed() {
  */
 @Override
 public String toString() {
-	if (isDisposed()) return "Pattern {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Pattern {*DISPOSED*}";
+    }
 	return "Pattern {" + (color != null ? color.id : gradient.id) + "}";
 }
 

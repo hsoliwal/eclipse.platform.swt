@@ -407,8 +407,12 @@ class GCWin32Tests {
 		Display display = Display.getDefault();
 		FontData decoratedFontData = display.getSystemFont().getFontData()[0];
 		decoratedFontData.setStyle(styleBits);
-		if (underline) decoratedFontData.data.lfUnderline = 1;
-		if (strikeout) decoratedFontData.data.lfStrikeOut = 1;
+        if (underline) {
+            decoratedFontData.data.lfUnderline = 1;
+        }
+        if (strikeout) {
+            decoratedFontData.data.lfStrikeOut = 1;
+        }
 		Font decoratedFont = new Font(display, decoratedFontData);
 		FontData plainFontData = display.getSystemFont().getFontData()[0];
 		plainFontData.setStyle(styleBits);
@@ -659,7 +663,9 @@ class GCWin32Tests {
 				}
 			}
 		}
-		if (maxX < 0) return null;
+        if (maxX < 0) {
+            return null;
+        }
 		return new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
 	}
 }

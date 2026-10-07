@@ -15,6 +15,7 @@ package org.eclipse.swt.custom;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
@@ -118,6 +119,7 @@ public class ScrolledComposite extends Composite {
 	boolean alwaysShowScroll = false;
 	boolean showFocusedControl = false;
 	boolean showNextFocusedControl = true;
+	final ViewportRuntime viewportRuntime = new ViewportRuntime ();
 
 /**
  * Constructs a new instance of this class given its parent
@@ -148,6 +150,7 @@ public class ScrolledComposite extends Composite {
  */
 public ScrolledComposite(Composite parent, int style) {
 	super(parent, checkStyle(style));
+	viewportRuntime.initializeOrigin (0, 0);
 	super.setLayout(new ScrolledCompositeLayout());
 	ScrollBar hBar = getHorizontalBar ();
 	if (hBar != null) {
@@ -162,7 +165,9 @@ public ScrolledComposite(Composite parent, int style) {
 	}
 
 	contentListener = e -> {
-		if (e.type != SWT.Resize) return;
+        if (e.type != SWT.Resize) {
+            return;
+        }
 		layout(false);
 	};
 
@@ -171,7 +176,9 @@ public ScrolledComposite(Composite parent, int style) {
 			if (!showNextFocusedControl) {
 				showNextFocusedControl = true;
 			} else if (event.widget instanceof Control control) {
-				if (contains(control)) showControl(control);
+                if (contains(control)) {
+                    showControl(control);
+                }
 			}
 		} else {
 			Widget w = event.widget;
@@ -188,16 +195,19 @@ public ScrolledComposite(Composite parent, int style) {
 }
 
 static int checkStyle (int style) {
-	int mask = SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
-	return style & mask;
+	return StylePolicy.SCROLLED.applyAsInt(style);
 }
 
 boolean contains(Control control) {
-	if (control == null || control.isDisposed()) return false;
+    if (control == null || control.isDisposed()) {
+        return false;
+    }
 
 	Composite parent = control.getParent();
 	while (parent != null && !(parent instanceof Shell)) {
-		if (this == parent) return true;
+        if (this == parent) {
+            return true;
+        }
 		parent = parent.getParent();
 	}
 	return false;
@@ -324,39 +334,111 @@ public boolean getShowFocusedControl() {
 }
 
 void hScroll() {
-	if (content == null) return;
-	Point location = content.getLocation ();
+    if (content == null) {
+        return;
+    }
+	Point origin = syncViewportOriginFromContent ();
 	ScrollBar hBar = getHorizontalBar ();
-	int hSelection = hBar.getSelection ();
-	content.setLocation (-hSelection, location.y);
+	int hSelection = hBar != null ? hBar.getSelection () : 0;
+	applyViewportOrigin (hSelection, origin.y);
+}
+
+Point syncViewportOriginFromContent () {
+	if (content == null || content.isDisposed ()) {
+		viewportRuntime.scrollTo (0, 0);
+		return new Point (0, 0);
+	}
+	Point location = content.getLocation ();
+	int x = -location.x;
+	int y = -location.y;
+	viewportRuntime.scrollTo (x, y);
+	return new Point (x, y);
+}
+
+void applyViewportOrigin (int x, int y) {
+	if (content == null || content.isDisposed ()) {
+		viewportRuntime.scrollTo (0, 0);
+		return;
+	}
+	x = Math.max (0, x);
+	y = Math.max (0, y);
+	viewportRuntime.scrollTo (x, y);
+	Point location = content.getLocation ();
+	int targetX = -x;
+	int targetY = -y;
+	if (location.x != targetX || location.y != targetY) {
+		content.setLocation (targetX, targetY);
+	}
+}
+
+ViewportRuntime.PixelLayout solveViewportLayout (Rectangle contentRect) {
+	ScrollBar hBar = getHorizontalBar ();
+	ScrollBar vBar = getVerticalBar ();
+	Point size = getSize ();
+	int border = getBorderWidth ();
+	int outerWidth = Math.max (0, size.x - 2 * border);
+	int outerHeight = Math.max (0, size.y - 2 * border);
+	long logicalWidth = expandHorizontal ? minWidth : Math.max (0, contentRect.width);
+	long logicalHeight = expandVertical ? minHeight : Math.max (0, contentRect.height);
+	int horizontalPolicy = hBar == null
+			? ViewportRuntime.NEVER
+			: alwaysShowScroll ? ViewportRuntime.ALWAYS : ViewportRuntime.AUTO;
+	int verticalPolicy = vBar == null
+			? ViewportRuntime.NEVER
+			: alwaysShowScroll ? ViewportRuntime.ALWAYS : ViewportRuntime.AUTO;
+	return ViewportRuntime.solvePixels (
+			outerWidth,
+			outerHeight,
+			logicalWidth,
+			logicalHeight,
+			hBar == null ? 0 : hBar.getSize ().y,
+			vBar == null ? 0 : vBar.getSize ().x,
+			horizontalPolicy,
+			verticalPolicy);
 }
 boolean needHScroll(Rectangle contentRect, boolean vVisible) {
 	ScrollBar hBar = getHorizontalBar();
-	if (hBar == null) return false;
+    if (hBar == null) {
+        return false;
+    }
 
 	Rectangle hostRect = getBounds();
 	int border = getBorderWidth();
 	hostRect.width -= 2*border;
 	ScrollBar vBar = getVerticalBar();
-	if (vVisible && vBar != null) hostRect.width -= vBar.getSize().x;
+    if (vVisible && vBar != null) {
+        hostRect.width -= vBar.getSize().x;
+    }
 
-	if (!expandHorizontal && contentRect.width > hostRect.width) return true;
-	if (expandHorizontal && minWidth > hostRect.width) return true;
+    if (!expandHorizontal && contentRect.width > hostRect.width) {
+        return true;
+    }
+    if (expandHorizontal && minWidth > hostRect.width) {
+        return true;
+    }
 	return false;
 }
 
 boolean needVScroll(Rectangle contentRect, boolean hVisible) {
 	ScrollBar vBar = getVerticalBar();
-	if (vBar == null) return false;
+    if (vBar == null) {
+        return false;
+    }
 
 	Rectangle hostRect = getBounds();
 	int border = getBorderWidth();
 	hostRect.height -= 2*border;
 	ScrollBar hBar = getHorizontalBar();
-	if (hVisible && hBar != null) hostRect.height -= hBar.getSize().y;
+    if (hVisible && hBar != null) {
+        hostRect.height -= hBar.getSize().y;
+    }
 
-	if (!expandVertical && contentRect.height > hostRect.height) return true;
-	if (expandVertical && minHeight > hostRect.height) return true;
+    if (!expandVertical && contentRect.height > hostRect.height) {
+        return true;
+    }
+    if (expandVertical && minHeight > hostRect.height) {
+        return true;
+    }
 	return false;
 }
 
@@ -377,9 +459,7 @@ boolean needVScroll(Rectangle contentRect, boolean hVisible) {
  */
 public Point getOrigin() {
 	checkWidget();
-	if (content == null) return new Point(0, 0);
-	Point location = content.getLocation();
-	return new Point(-location.x, -location.y);
+	return syncViewportOriginFromContent ();
 }
 /**
  * Scrolls the content so that the specified point in the content is in the top
@@ -420,22 +500,24 @@ public void setOrigin(Point origin) {
  */
 public void setOrigin(int x, int y) {
 	checkWidget();
-	if (content == null) return;
+    if (content == null) {
+        return;
+    }
 	ScrollBar hBar = getHorizontalBar ();
 	if (hBar != null) {
-		hBar.setSelection(x);
-		x = -hBar.getSelection ();
+		hBar.setSelection (x);
+		x = hBar.getSelection ();
 	} else {
 		x = 0;
 	}
 	ScrollBar vBar = getVerticalBar ();
 	if (vBar != null) {
-		vBar.setSelection(y);
-		y = -vBar.getSelection ();
+		vBar.setSelection (y);
+		y = vBar.getSelection ();
 	} else {
 		y = 0;
 	}
-	content.setLocation(x, y);
+	applyViewportOrigin (x, y);
 }
 /**
  * Set the Always Show Scrollbars flag.  True if the scrollbars are
@@ -453,12 +535,18 @@ public void setOrigin(int x, int y) {
  */
 public void setAlwaysShowScrollBars(boolean show) {
 	checkWidget();
-	if (show == alwaysShowScroll) return;
+    if (show == alwaysShowScroll) {
+        return;
+    }
 	alwaysShowScroll = show;
 	ScrollBar hBar = getHorizontalBar ();
-	if (hBar != null && alwaysShowScroll) hBar.setVisible(true);
+    if (hBar != null && alwaysShowScroll) {
+        hBar.setVisible(true);
+    }
 	ScrollBar vBar = getVerticalBar ();
-	if (vBar != null && alwaysShowScroll) vBar.setVisible(true);
+    if (vBar != null && alwaysShowScroll) {
+        vBar.setVisible(true);
+    }
 	layout(false);
 }
 
@@ -493,12 +581,17 @@ public void setContent(Control content) {
 			hBar.setThumb (0);
 			hBar.setSelection(0);
 		}
+		viewportRuntime.scrollTo (0, 0);
 		content.setLocation(0, 0);
 		layout(false);
 		this.content.addListener(SWT.Resize, contentListener);
 	} else {
-		if (hBar != null) hBar.setVisible(alwaysShowScroll);
-		if (vBar != null) vBar.setVisible(alwaysShowScroll);
+        if (hBar != null) {
+            hBar.setVisible(alwaysShowScroll);
+        }
+        if (vBar != null) {
+            vBar.setVisible(alwaysShowScroll);
+        }
 	}
 }
 /**
@@ -518,7 +611,9 @@ public void setContent(Control content) {
  */
 public void setExpandHorizontal(boolean expand) {
 	checkWidget();
-	if (expand == expandHorizontal) return;
+    if (expand == expandHorizontal) {
+        return;
+    }
 	expandHorizontal = expand;
 	layout(false);
 }
@@ -539,7 +634,9 @@ public void setExpandHorizontal(boolean expand) {
  */
 public void setExpandVertical(boolean expand) {
 	checkWidget();
-	if (expand == expandVertical) return;
+    if (expand == expandVertical) {
+        return;
+    }
 	expandVertical = expand;
 	layout(false);
 }
@@ -612,7 +709,9 @@ public void setMinSize(Point size) {
  */
 public void setMinSize(int width, int height) {
 	checkWidget();
-	if (width == minWidth && height == minHeight) return;
+    if (width == minWidth && height == minHeight) {
+        return;
+    }
 	minWidth = Math.max(0, width);
 	minHeight = Math.max(0, height);
 	layout(false);
@@ -651,16 +750,22 @@ public void setMinWidth(int width) {
  */
 public void setShowFocusedControl(boolean show) {
 	checkWidget();
-	if (showFocusedControl == show) return;
+    if (showFocusedControl == show) {
+        return;
+    }
 	Display display = getDisplay();
 	display.removeFilter(SWT.FocusIn, filter);
 	display.removeFilter(SWT.FocusOut, filter);
 	showFocusedControl = show;
-	if (!showFocusedControl) return;
+    if (!showFocusedControl) {
+        return;
+    }
 	display.addFilter(SWT.FocusIn, filter);
 	display.addFilter(SWT.FocusOut, filter);
 	Control control = display.getFocusControl();
-	if (contains(control)) showControl(control);
+    if (contains(control)) {
+        showControl(control);
+    }
 }
 
 /**
@@ -681,9 +786,15 @@ public void setShowFocusedControl(boolean show) {
  */
 public void showControl(Control control) {
 	checkWidget ();
-	if (control == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (control.isDisposed ()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (!contains(control)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (control == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (control.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (!contains(control)) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
 	Rectangle itemRect = getDisplay().map(control.getParent(), this, control.getBounds());
 	Rectangle area = getClientArea();
@@ -691,21 +802,27 @@ public void showControl(Control control) {
 	if (itemRect.x < 0) {
 		origin.x = Math.max(0, origin.x + itemRect.x);
 	} else {
-		if (area.width < itemRect.x + itemRect.width) origin.x = Math.max(0, origin.x + itemRect.x + Math.min(itemRect.width, area.width) - area.width);
+        if (area.width < itemRect.x + itemRect.width) {
+            origin.x = Math.max(0, origin.x + itemRect.x + Math.min(itemRect.width, area.width) - area.width);
+        }
 	}
 	if (itemRect.y < 0) {
 		origin.y = Math.max(0, origin.y + itemRect.y);
 	} else {
-		if (area.height < itemRect.y + itemRect.height) origin.y = Math.max(0, origin.y + itemRect.y + Math.min(itemRect.height, area.height) - area.height);
+        if (area.height < itemRect.y + itemRect.height) {
+            origin.y = Math.max(0, origin.y + itemRect.y + Math.min(itemRect.height, area.height) - area.height);
+        }
 	}
 	setOrigin(origin);
 }
 
 void vScroll() {
-	if (content == null) return;
-	Point location = content.getLocation ();
+    if (content == null) {
+        return;
+    }
+	Point origin = syncViewportOriginFromContent ();
 	ScrollBar vBar = getVerticalBar ();
-	int vSelection = vBar.getSelection ();
-	content.setLocation (location.x, -vSelection);
+	int vSelection = vBar != null ? vBar.getSelection () : 0;
+	applyViewportOrigin (origin.x, vSelection);
 }
 }

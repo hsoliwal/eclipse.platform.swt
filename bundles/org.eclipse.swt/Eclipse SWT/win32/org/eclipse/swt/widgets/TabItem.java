@@ -130,9 +130,13 @@ void _setText (int index, String string) {
 			string.getChars ( 0, length, text, 0);
 			int i = 0, j = 0;
 			for (i=0; i<length; i++) {
-				if (text[i] != '&') text [j++] = text [i];
+                if (text[i] != '&') {
+                    text [j++] = text [i];
+                }
 			}
-			if (j < i) string = new String (text, 0, j);
+            if (j < i) {
+                string = new String(text, 0, j);
+            }
 		}
 	}
 	long hwnd = parent.handle;
@@ -150,7 +154,9 @@ void _setText (int index, String string) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -196,7 +202,9 @@ public Rectangle getBounds () {
 
 Rectangle getBoundsInPixels() {
 	int index = parent.indexOf(this);
-	if (index == -1) return new Rectangle (0, 0, 0, 0);
+    if (index == -1) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	RECT itemRect = new RECT ();
 	OS.SendMessage (parent.handle, OS.TCM_GETITEMRECT, index, itemRect);
 	return new Rectangle(itemRect.left, itemRect.top, itemRect.right - itemRect.left, itemRect.bottom - itemRect.top);
@@ -244,7 +252,9 @@ void releaseParent () {
 	super.releaseParent ();
 	int index = parent.indexOf (this);
 	if (index == parent.getSelectionIndex ()) {
-		if (control != null) control.setVisible (false);
+        if (control != null) {
+            control.setVisible(false);
+        }
 	}
 }
 
@@ -272,8 +282,12 @@ void releaseWidget () {
 public void setControl (Control control) {
 	checkWidget();
 	if (control != null) {
-		if (control.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (control.parent != parent) error (SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.parent != parent) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
 	if (this.control != null && this.control.isDisposed ()) {
 		this.control = null;
@@ -285,7 +299,9 @@ public void setControl (Control control) {
 		if (newControl != null) {
 			if (selectionIndex != -1) {
 				Control selectedControl = parent.getItem(selectionIndex).getControl();
-				if (selectedControl == newControl) return;
+                if (selectedControl == newControl) {
+                    return;
+                }
 			}
 			newControl.setVisible(false);
 			return;
@@ -295,25 +311,30 @@ public void setControl (Control control) {
 		newControl.setBounds (parent.getClientAreaInPixels ());
 		newControl.setVisible (true);
 	}
-	if (oldControl != null && newControl != null && oldControl != newControl)
-		oldControl.setVisible (false);
+    if (oldControl != null && newControl != null && oldControl != newControl) {
+        oldControl.setVisible(false);
+    }
 }
 
 @Override
 public void setImage (Image image) {
 	checkWidget();
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	super.setImage (image);
-	/*
-	* Bug in Windows.  In version 6.00 of COMCTL32.DLL, tab
-	* items with an image and a label that includes '&' cause
-	* the tab to draw incorrectly (even when doubled '&&').
-	* The image overlaps the label.  The fix is to remove
-	* all '&' characters from the string and set the text
-	* whenever the image or text is changed.
-	*/
-	if (text.indexOf ('&') != -1) _setText (index, text);
+    /*
+    * Bug in Windows.  In version 6.00 of COMCTL32.DLL, tab
+    * items with an image and a label that includes '&' cause
+    * the tab to draw incorrectly (even when doubled '&&').
+    * The image overlaps the label.  The fix is to remove
+    * all '&' characters from the string and set the text
+    * whenever the image or text is changed.
+    */
+    if (text.indexOf('&') != -1) {
+        _setText(index, text);
+    }
 	long hwnd = parent.handle;
 	TCITEM tcItem = new TCITEM ();
 	tcItem.mask = OS.TCIF_IMAGE;
@@ -347,10 +368,16 @@ public void setImage (Image image) {
 @Override
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (string.equals (text)) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (string.equals(text)) {
+        return;
+    }
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	super.setText (string);
 	/*
 	 * Need to update direction since it is set via UCC which the new text

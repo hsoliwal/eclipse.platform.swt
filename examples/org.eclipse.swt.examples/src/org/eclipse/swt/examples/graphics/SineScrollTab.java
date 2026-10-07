@@ -79,7 +79,9 @@ public class SineScrollTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void next(int width, int height) {
-		if (scrPix == null) return;
+        if (scrPix == null) {
+            return;
+        }
 
 		int sco = scrollOffset;
 		int scp = scrollPos;
@@ -100,7 +102,9 @@ public class SineScrollTab extends AnimatedGraphicsTab {
 
 		for (int i = 0; i < stars.length; i++) {
 			Star s = stars[i];
-			while (s.x >= RENDER_WIDTH) s.x -= RENDER_WIDTH;
+            while (s.x >= RENDER_WIDTH) {
+                s.x -= RENDER_WIDTH;
+            }
 			if ((scrPix[s.y * RENDER_WIDTH + s.x] & 0xFFFFFF) == BG_COLOR) {
 				scrPix[s.y * RENDER_WIDTH + s.x] = s.color;
 			}
@@ -109,18 +113,24 @@ public class SineScrollTab extends AnimatedGraphicsTab {
 
 		for (int x = 0; x < RENDER_WIDTH; x++) {
 			int ypos = sine[sp++];
-			if (sp >= sine.length) sp = 0;
+            if (sp >= sine.length) {
+                sp = 0;
+            }
 
 			short data = font[(scrollText[scp] & 0xFF) * 16 + sco];
 			if (++sco >= 16) {
 				sco = 0;
-				if (++scp >= scrollText.length) scp = 0;
+                if (++scp >= scrollText.length) {
+                    scp = 0;
+                }
 			}
 
 			for (int y = 0; y < 16; y++) {
 				if ((data & 1 << y) != 0) {
 					int py = y + ypos;
-					if (py < 0 || py >= RENDER_HEIGHT) continue;
+                    if (py < 0 || py >= RENDER_HEIGHT) {
+                        continue;
+                    }
 					scrPix[py * RENDER_WIDTH + x] = rasters[py];
 					if (py + 2 < RENDER_HEIGHT && x + 2 < RENDER_WIDTH) {
 						scrPix[(py + 2) * RENDER_WIDTH + x + 2] = 0x000000;
@@ -134,11 +144,15 @@ public class SineScrollTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (scrPix == null) {
 			Image fontImg = example.loadImage(gc.getDevice(), "font_classic_16x16.gif"); //$NON-NLS-1$
-			if (fontImg == null) return;
+            if (fontImg == null) {
+                return;
+            }
 			loadFont(fontImg.getImageData());
 			initScrollText(SCROLL_TEXT);
 			initRasters();
@@ -154,7 +168,9 @@ public class SineScrollTab extends AnimatedGraphicsTab {
 					new PaletteData(0xFF0000, 0xFF00, 0xFF));
 		}
 
-		if (imageData == null) return;
+        if (imageData == null) {
+            return;
+        }
 
 		if (outputImage != null) {
 			outputImage.dispose();

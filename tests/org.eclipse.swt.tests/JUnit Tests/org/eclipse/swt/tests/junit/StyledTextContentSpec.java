@@ -58,10 +58,11 @@ public StyledTextContentSpec() {
 }
 public void assertTrue(String message, boolean condition) {
 	System.out.print("\t" + currentMethod.getName() + " " + message);
-	if (!condition)
-		fail(message);
-	else
-		System.out.println(" passed");
+    if (!condition) {
+        fail(message);
+    } else {
+        System.out.println(" passed");
+    }
 }
 public void fail(String message) {
 	failed = true;
@@ -1036,8 +1037,9 @@ protected void setUp()  {
 	shell.open ();
 }
 protected void tearDown()  {
-	if (shell != null && !shell.isDisposed ())
-		shell.dispose ();
+    if (shell != null && !shell.isDisposed()) {
+        shell.dispose();
+    }
 	shell = null;
 
 }

@@ -42,9 +42,13 @@ public IntroTab(GraphicsExample example) {
 
 @Override
 public void dispose() {
-	if (image != null) image.dispose();
+    if (image != null) {
+        image.dispose();
+    }
 	image = null;
-	if (font != null) font.dispose();
+    if (font != null) {
+        font.dispose();
+    }
 	font = null;
 }
 
@@ -88,7 +92,9 @@ public void next(int width, int height) {
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 	if (image == null) {
 		image = example.loadImage(device, "irmaos.jpg");

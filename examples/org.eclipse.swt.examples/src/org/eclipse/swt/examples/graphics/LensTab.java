@@ -89,11 +89,15 @@ public class LensTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 
 		if (backing == null) {
 			Image sourceImage = example.loadImage(gc.getDevice(), "tuxblackbg.png"); //$NON-NLS-1$
-			if (sourceImage == null) return;
+            if (sourceImage == null) {
+                return;
+            }
 			backing = sourceImage.getImageData();
 			imgWidth = backing.width;
 			imgHeight = backing.height;

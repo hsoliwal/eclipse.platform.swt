@@ -98,11 +98,15 @@ public Composite (Composite parent, int style) {
 
 Control [] _getChildren () {
 	NSView nsClipView = contentView();
-	if (nsClipView == null) return new Control [0];
+    if (nsClipView == null) {
+        return new Control [0];
+    }
 	NSArray views = nsClipView.subviews();
 	int count = (int)views.count();
 	Control [] children = new Control [count];
-	if (count == 0) return children;
+    if (count == 0) {
+        return children;
+    }
 	int j = 0;
 	for (int i=0; i<count; i++){
 		Widget widget = display.getWidget (views.objectAtIndex (count - i - 1).id);
@@ -110,19 +114,27 @@ Control [] _getChildren () {
 			children [j++] = (Control) widget;
 		}
 	}
-	if (j == count) return children;
+    if (j == count) {
+        return children;
+    }
 	Control [] newChildren = new Control [j];
 	System.arraycopy (children, 0, newChildren, 0, j);
 	return newChildren;
 }
 
 Control [] _getTabList () {
-	if (tabList == null) return null;
+    if (tabList == null) {
+        return null;
+    }
 	int count = 0;
 	for (int i=0; i<tabList.length; i++) {
-		if (!tabList [i].isDisposed ()) count++;
+        if (!tabList [i].isDisposed()) {
+            count++;
+        }
 	}
-	if (count == tabList.length) return tabList;
+    if (count == tabList.length) {
+        return tabList;
+    }
 	Control [] newList = new Control [count];
 	int index = 0;
 	for (int i=0; i<tabList.length; i++) {
@@ -146,7 +158,9 @@ boolean acceptsFirstMouse (long id, long sel, long theEvent) {
 boolean acceptsFirstResponder (long id, long sel) {
 	if ((state & CANVAS) != 0) {
 		if ((style & SWT.NO_FOCUS) == 0 && hooksKeys ()) {
-			if (contentView().subviews().count() == 0) return true;
+            if (contentView().subviews().count() == 0) {
+                return true;
+            }
 		}
 		return false;
 	}
@@ -166,7 +180,9 @@ long accessibilityAttributeValue (long id, long sel, long arg0) {
 			if (nsAttributeName.isEqualToString (OS.NSAccessibilityRoleAttribute)) {
 				if (superValue != 0) {
 					NSString role = new NSString(superValue);
-					if (!role.isEqualToString(OS.NSAccessibilityUnknownRole)) return superValue;
+                    if (!role.isEqualToString(OS.NSAccessibilityUnknownRole)) {
+                        return superValue;
+                    }
 				}
 
 				NSString role = NSString.stringWith("SWTComposite");
@@ -174,7 +190,9 @@ long accessibilityAttributeValue (long id, long sel, long arg0) {
 			} else if (nsAttributeName.isEqualToString (OS.NSAccessibilityRoleDescriptionAttribute)) {
 				if (superValue != 0) {
 					NSString role = new NSString(superValue);
-					if (!role.isEqualToString(OS.NSAccessibilityUnknownSubrole)) return superValue;
+                    if (!role.isEqualToString(OS.NSAccessibilityUnknownSubrole)) {
+                        return superValue;
+                    }
 				}
 
 				NSString roleDescription = NSString.stringWith("generic container view");
@@ -190,8 +208,10 @@ long accessibilityAttributeValue (long id, long sel, long arg0) {
 @Override
 boolean accessibilityIsIgnored(long id, long sel) {
 	if (id == accessibleHandle()) {
-		// If a Composite or subclass has an Accessible it should not be ignored.
-		if (accessible != null) return accessible.internal_accessibilityIsIgnored(ACC.CHILDID_SELF);
+        // If a Composite or subclass has an Accessible it should not be ignored.
+        if (accessible != null) {
+            return accessible.internal_accessibilityIsIgnored(ACC.CHILDID_SELF);
+        }
 	}
 
 	return super.accessibilityIsIgnored(id, sel);
@@ -236,11 +256,19 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 		}
 	} else {
 		size = minimumSize (wHint, hHint, changed);
-		if (size.x == 0) size.x = DEFAULT_WIDTH;
-		if (size.y == 0) size.y = DEFAULT_HEIGHT;
+        if (size.x == 0) {
+            size.x = DEFAULT_WIDTH;
+        }
+        if (size.y == 0) {
+            size.y = DEFAULT_HEIGHT;
+        }
 	}
-	if (wHint != SWT.DEFAULT) size.x = wHint;
-	if (hHint != SWT.DEFAULT) size.y = hHint;
+    if (wHint != SWT.DEFAULT) {
+        size.x = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        size.y = hHint;
+    }
 	Rectangle trim = computeTrim (0, 0, size.x, size.y);
 	return new Point (trim.width, trim.height);
 }
@@ -253,7 +281,9 @@ protected void checkSubclass () {
 @Override
 Widget [] computeTabList () {
 	Widget result [] = super.computeTabList ();
-	if (result.length == 0) return result;
+    if (result.length == 0) {
+        return result;
+    }
 	Control [] list = tabList != null ? _getTabList () : _getChildren ();
 	for (int i=0; i<list.length; i++) {
 		Control child = list [i];
@@ -272,14 +302,20 @@ Widget [] computeTabList () {
 void createHandle () {
 	state |= CANVAS;
 	boolean scrolled = (style & (SWT.V_SCROLL | SWT.H_SCROLL)) != 0;
-	if (!scrolled)  state |= THEME_BACKGROUND;
+    if (!scrolled) {
+        state |= THEME_BACKGROUND;
+    }
 	NSRect rect = new NSRect();
 	if (scrolled || hasBorder ()) {
 		NSScrollView scrollWidget = (NSScrollView)new SWTScrollView().alloc();
 		scrollWidget.initWithFrame (rect);
 		scrollWidget.setDrawsBackground(false);
-		if ((style & SWT.H_SCROLL) != 0) scrollWidget.setHasHorizontalScroller(true);
-		if ((style & SWT.V_SCROLL) != 0) scrollWidget.setHasVerticalScroller(true);
+        if ((style & SWT.H_SCROLL) != 0) {
+            scrollWidget.setHasHorizontalScroller(true);
+        }
+        if ((style & SWT.V_SCROLL) != 0) {
+            scrollWidget.setHasVerticalScroller(true);
+        }
 		scrollWidget.setBorderType(hasBorder() ? OS.NSBezelBorder : OS.NSNoBorder);
 		scrollView = scrollWidget;
 	}
@@ -323,8 +359,12 @@ void createHandle () {
  */
 public void drawBackground(GC gc, int x, int y, int width, int height, int offsetX, int offsetY) {
 	checkWidget ();
-	if (gc == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	Control control = findBackgroundControl ();
 	if (control != null) {
 		NSRect rect = new NSRect();
@@ -334,7 +374,9 @@ public void drawBackground(GC gc, int x, int y, int width, int height, int offse
 		rect.height = height;
 		int imgHeight = -1;
 		GCData data = gc.getGCData();
-		if (data.image != null) imgHeight =  data.image.getBounds().height;
+        if (data.image != null) {
+            imgHeight = data.image.getBounds().height;
+        }
 		NSGraphicsContext context = gc.handle;
 		if (data.flippedContext != null) {
 			NSGraphicsContext.static_saveGraphicsState();
@@ -351,7 +393,9 @@ public void drawBackground(GC gc, int x, int y, int width, int height, int offse
 
 @Override
 void drawBackground (long id, NSGraphicsContext context, NSRect rect) {
-	if (id != view.id) return;
+    if (id != view.id) {
+        return;
+    }
 	if ((state & CANVAS) != 0) {
 		if ((style & SWT.NO_BACKGROUND) == 0) {
 			fillBackground (view, context, rect, -1);
@@ -365,7 +409,9 @@ Composite findDeferredControl () {
 
 @Override
 Menu [] findMenus (Control control) {
-	if (control == this) return new Menu [0];
+    if (control == this) {
+        return new Menu [0];
+    }
 	Menu result [] = super.findMenus (control);
 	Control [] children = _getChildren ();
 	for (int i=0; i<children.length; i++) {
@@ -391,12 +437,18 @@ void fixChildren (Shell newShell, Shell oldShell, Decorations newDecorations, De
 }
 
 void fixTabList (Control control) {
-	if (tabList == null) return;
+    if (tabList == null) {
+        return;
+    }
 	int count = 0;
 	for (int i=0; i<tabList.length; i++) {
-		if (tabList [i] == control) count++;
+        if (tabList [i] == control) {
+            count++;
+        }
 	}
-	if (count == 0) return;
+    if (count == 0) {
+        return;
+    }
 	Control [] newList = null;
 	int length = tabList.length - count;
 	if (length != 0) {
@@ -516,7 +568,9 @@ public Control [] getTabList () {
 		int count = 0;
 		Control [] list =_getChildren ();
 		for (int i=0; i<list.length; i++) {
-			if (list [i].isTabGroup ()) count++;
+            if (list [i].isTabGroup()) {
+                count++;
+            }
 		}
 		tabList = new Control [count];
 		int index = 0;
@@ -592,7 +646,9 @@ boolean isOpaque() {
 
 @Override
 boolean isTabGroup () {
-	if ((state & CANVAS) != 0) return true;
+    if ((state & CANVAS) != 0) {
+        return true;
+    }
 	return super.isTabGroup ();
 }
 
@@ -605,14 +661,24 @@ void keyDown (long id, long sel, long theEvent) {
 			NSArray array = NSArray.arrayWithObject (new NSEvent (theEvent));
 			s.keyInputHappened = false;
 			view.interpretKeyEvents (array);
-			if (imeInComposition ()) return;
+            if (imeInComposition()) {
+                return;
+            }
 			if (!s.keyInputHappened) {
 				NSEvent nsEvent = new NSEvent (theEvent);
 				boolean [] consume = new boolean [1];
-				if (translateTraversal (nsEvent.keyCode (), nsEvent, consume)) return;
-				if (isDisposed ()) return;
-				if (!sendKeyEvent (nsEvent, SWT.KeyDown)) return;
-				if (consume [0]) return;
+                if (translateTraversal(nsEvent.keyCode(), nsEvent, consume)) {
+                    return;
+                }
+                if (isDisposed()) {
+                    return;
+                }
+                if (!sendKeyEvent(nsEvent, SWT.KeyDown)) {
+                    return;
+                }
+                if (consume [0]) {
+                    return;
+                }
 			}
 			return;
 		}
@@ -692,7 +758,9 @@ public void layout () {
  */
 public void layout (boolean changed) {
 	checkWidget ();
-	if (layout == null) return;
+    if (layout == null) {
+        return;
+    }
 	layout (changed, false);
 }
 
@@ -739,7 +807,9 @@ public void layout (boolean changed) {
  */
 public void layout (boolean changed, boolean all) {
 	checkWidget ();
-	if (layout == null && !all) return;
+    if (layout == null && !all) {
+        return;
+    }
 	markLayout (changed, all);
 	updateLayout (all);
 }
@@ -781,7 +851,9 @@ public void layout (boolean changed, boolean all) {
  */
 public void layout (Control [] changed) {
 	checkWidget ();
-	if (changed == null) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (changed == null) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	layout (changed, SWT.NONE);
 }
 
@@ -848,16 +920,24 @@ public void layout (Control [] changed, int flags) {
 	if (changed != null) {
 		for (int i=0; i<changed.length; i++) {
 			Control control = changed [i];
-			if (control == null) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+            if (control == null) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (control.isDisposed()) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 			boolean ancestor = false;
 			Composite composite = control.parent;
 			while (composite != null) {
 				ancestor = composite == this;
-				if (ancestor) break;
+                if (ancestor) {
+                    break;
+                }
 				composite = composite.parent;
 			}
-			if (!ancestor) error (SWT.ERROR_INVALID_PARENT);
+            if (!ancestor) {
+                error(SWT.ERROR_INVALID_PARENT);
+            }
 		}
 		int updateCount = 0;
 		Composite [] update = new Composite [16];
@@ -891,7 +971,9 @@ public void layout (Control [] changed, int flags) {
 			update [i].updateLayout (false);
 		}
 	} else {
-		if (layout == null && (flags & SWT.ALL) == 0) return;
+        if (layout == null && (flags & SWT.ALL) == 0) {
+            return;
+        }
 		markLayout ((flags & SWT.CHANGED) != 0, (flags & SWT.ALL) != 0);
 		if ((flags & SWT.DEFER) != 0) {
 			setLayoutDeferred (true);
@@ -905,7 +987,9 @@ public void layout (Control [] changed, int flags) {
 void markLayout (boolean changed, boolean all) {
 	if (layout != null) {
 		state |= LAYOUT_NEEDED;
-		if (changed) state |= LAYOUT_CHANGED;
+        if (changed) {
+            state |= LAYOUT_CHANGED;
+        }
 	}
 	if (all) {
 		Control [] children = _getChildren ();
@@ -935,13 +1019,17 @@ boolean mouseEvent (long id, long sel, long theEvent, int type) {
 
 @Override
 void pageDown(long id, long sel, long sender) {
-	if ((state & CANVAS) != 0) return;
+    if ((state & CANVAS) != 0) {
+        return;
+    }
 	super.pageDown(id, sel, sender);
 }
 
 @Override
 void pageUp(long id, long sel, long sender) {
-	if ((state & CANVAS) != 0) return;
+    if ((state & CANVAS) != 0) {
+        return;
+    }
 	super.pageUp(id, sel, sender);
 }
 
@@ -979,7 +1067,9 @@ public void redraw(int x, int y, int width, int height, boolean all) {
 
 @Override
 void reflectScrolledClipView (long id, long sel, long aClipView) {
-	if ((state & CANVAS) != 0) return;
+    if ((state & CANVAS) != 0) {
+        return;
+    }
 	super.reflectScrolledClipView (id, sel, aClipView);
 }
 
@@ -987,8 +1077,9 @@ void reflectScrolledClipView (long id, long sel, long aClipView) {
 void releaseChildren (boolean destroy) {
 	try (ExceptionStash exceptions = new ExceptionStash ()) {
 		for (Control child : _getChildren ()) {
-			if (child == null || child.isDisposed ())
-				continue;
+            if (child == null || child.isDisposed()) {
+                continue;
+            }
 
 			try {
 				child.release (false);
@@ -1008,7 +1099,9 @@ void releaseWidget () {
 }
 
 void removeControl (Control control) {
-	if (control.hasFocus()) redrawWidget(view, true);
+    if (control.hasFocus()) {
+        redrawWidget(view, true);
+    }
 	fixTabList (control);
 }
 
@@ -1018,7 +1111,9 @@ void reskinChildren (int flags) {
 	Control [] children = _getChildren ();
 	for (int i=0; i<children.length; i++) {
 		Control child = children [i];
-		if (child != null) child.reskin (flags);
+        if (child != null) {
+            child.reskin(flags);
+        }
 	}
 }
 
@@ -1054,8 +1149,12 @@ void scrollWheel (long id, long sel, long theEvent) {
 					}
 					ScrollBar bar = verticalBar;
 					if (doit && bar != null && bar.getEnabled ()) {
-						if (-1 < deltaY && deltaY < 0) deltaY = -1;
-						if (0 < deltaY && deltaY < 1) deltaY = 1;
+                        if (-1 < deltaY && deltaY < 0) {
+                            deltaY = -1;
+                        }
+                        if (0 < deltaY && deltaY < 1) {
+                            deltaY = 1;
+                        }
 						int selection = Math.max (0, (int)(0.5f + bar.getSelection () - bar.getIncrement () * deltaY));
 						bar.setSelection (selection);
 						Event event = new Event ();
@@ -1063,7 +1162,9 @@ void scrollWheel (long id, long sel, long theEvent) {
 						bar.sendSelectionEvent (SWT.Selection, event, true);
 						handled = true;
 					}
-					if (!doit) handled = true;
+                    if (!doit) {
+                        handled = true;
+                    }
 				}
 				if (deltaX != 0) {
 					boolean doit = true;
@@ -1072,8 +1173,12 @@ void scrollWheel (long id, long sel, long theEvent) {
 					}
 					ScrollBar bar = horizontalBar;
 					if (doit && bar != null && bar.getEnabled ()) {
-						if (-1 < deltaX && deltaX < 0) deltaX = -1;
-						if (0 < deltaX && deltaX < 1) deltaX = 1;
+                        if (-1 < deltaX && deltaX < 0) {
+                            deltaX = -1;
+                        }
+                        if (0 < deltaX && deltaX < 1) {
+                            deltaX = 1;
+                        }
 						int selection = Math.max (0, (int)(0.5f + bar.getSelection () - bar.getIncrement () * deltaX));
 						bar.setSelection (selection);
 						Event event = new Event ();
@@ -1081,9 +1186,13 @@ void scrollWheel (long id, long sel, long theEvent) {
 						bar.sendSelectionEvent (SWT.Selection, event, true);
 						handled = true;
 					}
-					if (!doit) handled = true;
+                    if (!doit) {
+                        handled = true;
+                    }
 				}
-				if (!handled) view.superview().scrollWheel(nsEvent);
+                if (!handled) {
+                    view.superview().scrollWheel(nsEvent);
+                }
 			}
 			return;
 		}
@@ -1124,7 +1233,9 @@ public boolean setFocus () {
 	checkWidget ();
 	Control [] children = _getChildren ();
 	for (int i= 0; i < children.length; i++) {
-		if (children [i].getVisible() && children [i].setFocus ()) return true;
+        if (children [i].getVisible() && children [i].setFocus()) {
+            return true;
+        }
 	}
 	return super.setFocus ();
 }
@@ -1197,18 +1308,26 @@ boolean setScrollBarVisible (ScrollBar bar, boolean visible) {
 
 @Override
 boolean setTabGroupFocus () {
-	if (isTabItem ()) return setTabItemFocus ();
+    if (isTabItem()) {
+        return setTabItemFocus();
+    }
 	boolean takeFocus = (style & SWT.NO_FOCUS) == 0;
-	if ((state & CANVAS) != 0) takeFocus = hooksKeys ();
-	if (takeFocus && setTabItemFocus ()) return true;
+    if ((state & CANVAS) != 0) {
+        takeFocus = hooksKeys();
+    }
+    if (takeFocus && setTabItemFocus()) {
+        return true;
+    }
 	Control [] children = _getChildren ();
 	for (int i=0; i<children.length; i++) {
 		Control child = children [i];
-		/*
-		 * It is unlikely but possible that a child is disposed at this point, for more
-		 * details refer bug 381668.
-		 */
-		if (!child.isDisposed() && child.isTabItem () && child.setTabItemFocus ()) return true;
+        /*
+         * It is unlikely but possible that a child is disposed at this point, for more
+         * details refer bug 381668.
+         */
+        if (!child.isDisposed() && child.isTabItem() && child.setTabItemFocus()) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -1233,9 +1352,15 @@ public void setTabList (Control [] tabList) {
 	if (tabList != null) {
 		for (int i=0; i<tabList.length; i++) {
 			Control control = tabList [i];
-			if (control == null) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (control.parent != this) error (SWT.ERROR_INVALID_PARENT);
+            if (control == null) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (control.isDisposed()) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (control.parent != this) {
+                error(SWT.ERROR_INVALID_PARENT);
+            }
 		}
 		Control [] newList = new Control [tabList.length];
 		System.arraycopy (tabList, 0, newList, 0, tabList.length);
@@ -1247,8 +1372,12 @@ public void setTabList (Control [] tabList) {
 @Override
 int traversalCode (int key, NSEvent theEvent) {
 	if ((state & CANVAS) != 0) {
-		if ((style & SWT.NO_FOCUS) != 0) return 0;
-		if (hooksKeys ()) return 0;
+        if ((style & SWT.NO_FOCUS) != 0) {
+            return 0;
+        }
+        if (hooksKeys()) {
+            return 0;
+        }
 	}
 	return super.traversalCode (key, theEvent);
 }

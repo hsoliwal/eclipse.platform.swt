@@ -14,8 +14,6 @@
 package org.eclipse.swt.custom;
 
 
-import java.util.Arrays;
-
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
@@ -86,13 +84,16 @@ public SashForm(Composite parent, int style) {
 	super(parent, checkStyle(style));
 	super.setLayout(new SashFormLayout());
 	sashStyle = ((style & SWT.VERTICAL) != 0) ? SWT.HORIZONTAL : SWT.VERTICAL;
-	if ((style & SWT.BORDER) != 0) sashStyle |= SWT.BORDER;
-	if ((style & SWT.SMOOTH) != 0) sashStyle |= SWT.SMOOTH;
+    if ((style & SWT.BORDER) != 0) {
+        sashStyle |= SWT.BORDER;
+    }
+    if ((style & SWT.SMOOTH) != 0) {
+        sashStyle |= SWT.SMOOTH;
+    }
 	sashListener = this::onDragSash;
 }
 static int checkStyle (int style) {
-	int mask = SWT.BORDER | SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
-	return style & mask;
+	return StylePolicy.SASH_FORM.applyAsInt(style);
 }
 Sash createSash() {
 	Sash sash = new Sash(this, sashStyle);
@@ -143,7 +144,9 @@ public int getSashWidth() {
 public int getStyle() {
 	int style = super.getStyle();
 	style |= getOrientation() == SWT.VERTICAL ? SWT.VERTICAL : SWT.HORIZONTAL;
-	if ((sashStyle & SWT.SMOOTH) != 0) style |= SWT.SMOOTH;
+    if ((sashStyle & SWT.SMOOTH) != 0) {
+        style |= SWT.SMOOTH;
+    }
 	return style;
 }
 /**
@@ -192,11 +195,17 @@ public int[] getWeights() {
 Control[] getControls(boolean onlyVisible) {
 	Control[] result = new Control[0];
 	for (Control element : getChildren()) {
-		if (element instanceof Sash) continue;
-		if (onlyVisible && !element.getVisible()) continue;
+        if (element instanceof Sash) {
+            continue;
+        }
+        if (onlyVisible && !element.getVisible()) {
+            continue;
+        }
 
-		result = Arrays.copyOf(result, result.length + 1);
-		result[result.length - 1] = element;
+		Control[] newResult = new Control[result.length + 1];
+		System.arraycopy(result, 0, newResult, 0, result.length);
+		newResult[result.length] = element;
+		result = newResult;
 	}
 	return result;
 }
@@ -209,7 +218,9 @@ void onDragSash(Event event) {
 			break;
 		}
 	}
-	if (sashIndex == -1) return;
+    if (sashIndex == -1) {
+        return;
+    }
 
 	Control c1 = controls[sashIndex];
 	Control c2 = controls[sashIndex + 1];
@@ -319,7 +330,9 @@ public void setOrientation(int orientation) {
 		super.setOrientation(orientation);
 		return;
 	}
-	if (getOrientation() == orientation) return;
+    if (getOrientation() == orientation) {
+        return;
+    }
 	if (orientation != SWT.HORIZONTAL && orientation != SWT.VERTICAL) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
@@ -416,7 +429,9 @@ public void setMaximizedControl(Control control){
  */
 public void setSashWidth(int width) {
 	checkWidget();
-	if (SASH_WIDTH == width) return;
+    if (SASH_WIDTH == width) {
+        return;
+    }
 	SASH_WIDTH = width;
 	layout(false);
 }

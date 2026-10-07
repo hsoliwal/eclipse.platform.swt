@@ -103,10 +103,11 @@ public class Bug574618_macOS_SlowTableScrolling {
 				for (int iCol = 0; iCol < numCols; iCol++) {
 					String text = "Test string " + iRow + ":" + iCol;
 
-					if (!USE_ITEM_TEXT)
-						itemTexts[iCol] = text;
-					else
-						item.setText (iCol, text);
+                    if (!USE_ITEM_TEXT) {
+                        itemTexts[iCol] = text;
+                    } else {
+                        item.setText(iCol, text);
+                    }
 				}
 			}
 
@@ -117,11 +118,13 @@ public class Bug574618_macOS_SlowTableScrolling {
 			table.addListener (SWT.MeasureItem, tester);
 			table.addListener (SWT.Selection, tester);
 
-			if (USE_PAINTITEM)
-				table.addListener (SWT.PaintItem, tester);
+            if (USE_PAINTITEM) {
+                table.addListener(SWT.PaintItem, tester);
+            }
 
-			if (USE_ERASEITEM)
-				table.addListener (SWT.EraseItem, tester);
+            if (USE_ERASEITEM) {
+                table.addListener(SWT.EraseItem, tester);
+            }
 
 			shell.setSize (1000, 800);
 			shell.open ();
@@ -242,8 +245,9 @@ public class Bug574618_macOS_SlowTableScrolling {
 
 		public String composeList () {
 			cells.sort ((lhs, rhs) -> {
-				if (lhs.y != rhs.y)
-					return (lhs.y - rhs.y);
+                if (lhs.y != rhs.y) {
+                    return (lhs.y - rhs.y);
+                }
 
 				return (lhs.x - rhs.x);
 			});
@@ -252,8 +256,9 @@ public class Bug574618_macOS_SlowTableScrolling {
 		}
 
 		public static String composeList (ArrayList<Point> a_cells) {
-			if (0 == a_cells.size ())
-				return "";
+            if (0 == a_cells.size()) {
+                return "";
+            }
 
 			// Move away duplicates
 			ArrayList<Point> cells = new ArrayList<>();
@@ -265,14 +270,16 @@ public class Bug574618_macOS_SlowTableScrolling {
 					Point prevCell = a_cells.get(i-1);
 					Point currCell = a_cells.get(i);
 
-					if ((currCell.x == prevCell.x) && (currCell.y == prevCell.y))
-						duplicateCells.add (currCell);
-					else
-						cells.add (currCell);
+                    if ((currCell.x == prevCell.x) && (currCell.y == prevCell.y)) {
+                        duplicateCells.add(currCell);
+                    } else {
+                        cells.add(currCell);
+                    }
 				}
 
-				if (duplicateCells.size() != 0)
-					duplicatesList = composeList (duplicateCells);
+                if (duplicateCells.size() != 0) {
+                    duplicatesList = composeList(duplicateCells);
+                }
 			}
 
 			// Compress columns
@@ -302,8 +309,9 @@ public class Bug574618_macOS_SlowTableScrolling {
 			ArrayList<Range> ranges2 = new ArrayList<>();
 			{
 				ranges1.sort ((lhs, rhs) -> {
-					if (lhs.colBeg != rhs.colBeg)
-						return (lhs.colBeg - rhs.colBeg);
+                    if (lhs.colBeg != rhs.colBeg) {
+                        return (lhs.colBeg - rhs.colBeg);
+                    }
 
 					return (lhs.rowBeg - rhs.rowBeg);
 				});
@@ -334,8 +342,9 @@ public class Bug574618_macOS_SlowTableScrolling {
 			StringBuilder sb = new StringBuilder ();
 			{
 				ranges2.sort ((lhs, rhs) -> {
-					if (lhs.rowBeg != rhs.rowBeg)
-						return (lhs.rowBeg - rhs.rowBeg);
+                    if (lhs.rowBeg != rhs.rowBeg) {
+                        return (lhs.rowBeg - rhs.rowBeg);
+                    }
 
 					return (lhs.colBeg - rhs.colBeg);
 				});
@@ -438,8 +447,9 @@ public class Bug574618_macOS_SlowTableScrolling {
 			final long currNanoTime = System.nanoTime ();
 			final double result = (currNanoTime - lastNanoTime) / 1_000_000_000d;
 
-			if (restart)
-				lastNanoTime = currNanoTime;
+            if (restart) {
+                lastNanoTime = currNanoTime;
+            }
 
 			return result;
 		}
@@ -457,8 +467,9 @@ public class Bug574618_macOS_SlowTableScrolling {
 
 		void push (double value) {
 			count++;
-			if (getCount () <= 0)
-				return;
+            if (getCount() <= 0) {
+                return;
+            }
 
 			sum += value;
 		}
@@ -470,16 +481,18 @@ public class Bug574618_macOS_SlowTableScrolling {
 
 		double getAvg () {
 			int count = getCount ();
-			if (count <= 0)
-				return 0;
+            if (count <= 0) {
+                return 0;
+            }
 
 			return (sum / count);
 		}
 
 		int getCount () {
 			int result = count - WARMUP_VALUES;
-			if (result < 0)
-				return 0;
+            if (result < 0) {
+                return 0;
+            }
 
 			return result;
 		}

@@ -80,8 +80,7 @@ public ProgressBar(Composite parent, int style) {
 }
 
 static int checkStyle(int style) {
-	style |= SWT.NO_FOCUS;
-	return checkBits(style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+	return WidgetStylePolicy.PROGRESS.applyAsInt(style);
 }
 
 @Override
@@ -89,10 +88,14 @@ void createHandle(int index) {
 	state |= HANDLE;
 
 	fixedHandle = OS.g_object_new(display.gtk_fixed_get_type(), 0);
-	if (fixedHandle == 0) error(SWT.ERROR_NO_HANDLES);
+    if (fixedHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	handle = GTK.gtk_progress_bar_new();
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK4) {
 		OS.swt_fixed_add(fixedHandle, handle);
@@ -194,7 +197,9 @@ public int getState() {
 @Override
 long gtk_realize(long widget) {
 	long result = super.gtk_realize(widget);
-	if (result != 0) return result;
+    if (result != 0) {
+        return result;
+    }
 	/*
 	* Bug in GTK.  When a progress bar has been unrealized after being
 	* realized at least once, gtk_progress_bar_set_fraction() GP's.  The
@@ -220,7 +225,9 @@ Point resizeCalculationsGTK3(long widget, int width, int height) {
 @Override
 void releaseWidget() {
 	super.releaseWidget();
-	if (timerId != 0) OS.g_source_remove(timerId);
+    if (timerId != 0) {
+        OS.g_source_remove(timerId);
+    }
 	timerId = 0;
 }
 
@@ -249,7 +256,9 @@ void setParentBackground() {
  */
 public void setMaximum(int value) {
 	checkWidget();
-	if (value <= minimum) return;
+    if (value <= minimum) {
+        return;
+    }
 
 	maximum = value;
 	selection = Math.min(selection, maximum);
@@ -271,7 +280,9 @@ public void setMaximum(int value) {
  */
 public void setMinimum(int value) {
 	checkWidget();
-	if (value < 0 || value >= maximum) return;
+    if (value < 0 || value >= maximum) {
+        return;
+    }
 
 	minimum = value;
 	selection = Math.max(selection, minimum);
@@ -325,18 +336,22 @@ public void setState(int state) {
 
 @Override
 long timerProc(long widget) {
-	if (isVisible()) GTK.gtk_progress_bar_pulse(handle);
+    if (isVisible()) {
+        GTK.gtk_progress_bar_pulse(handle);
+    }
 	return 1;
 }
 
 void updateBar() {
-	/*
-	* Bug in GTK.  When a progress bar has been unrealized after being
-	* realized at least once, gtk_progress_bar_set_fraction() GP's.  The
-	* fix is to update the progress bar state only when realized and restore
-	* the state when the progress bar becomes realized.
-	*/
-	if (!GTK.gtk_widget_get_realized(handle)) return;
+    /*
+    * Bug in GTK.  When a progress bar has been unrealized after being
+    * realized at least once, gtk_progress_bar_set_fraction() GP's.  The
+    * fix is to update the progress bar state only when realized and restore
+    * the state when the progress bar becomes realized.
+    */
+    if (!GTK.gtk_widget_get_realized(handle)) {
+        return;
+    }
 
 	double fraction = minimum == maximum ? 1 : (double)(selection - minimum) / (maximum - minimum);
 	GTK.gtk_progress_bar_set_fraction(handle, fraction);

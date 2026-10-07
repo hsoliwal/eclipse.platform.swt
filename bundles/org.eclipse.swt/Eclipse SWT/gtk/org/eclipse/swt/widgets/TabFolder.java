@@ -117,20 +117,14 @@ public TabFolder (Composite parent, int style) {
 }
 
 static int checkStyle (int style) {
-	style = checkBits (style, SWT.TOP, SWT.BOTTOM, 0, 0, 0, 0);
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	return style & ~(SWT.H_SCROLL | SWT.V_SCROLL);
+	return WidgetStylePolicy.TAB_FOLDER.applyAsInt(style);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -174,8 +168,12 @@ long clientHandle () {
 Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	checkWidget ();
 	Point size = super.computeSizeInPixels (wHint, hHint, changed);
-	if (wHint != SWT.DEFAULT && wHint < 0) wHint = 0;
-	if (hHint != SWT.DEFAULT && hHint < 0) hHint = 0;
+    if (wHint != SWT.DEFAULT && wHint < 0) {
+        wHint = 0;
+    }
+    if (hHint != SWT.DEFAULT && hHint < 0) {
+        hHint = 0;
+    }
 	boolean scrollable = GTK.gtk_notebook_get_scrollable (handle);
 	GTK.gtk_notebook_set_scrollable (handle, false);
 	Point notebookSize = computeNativeSize (handle, wHint, hHint, changed);
@@ -239,9 +237,13 @@ Rectangle getClientAreaInPixels () {
 void createHandle (int index) {
 	state |= HANDLE;
 	fixedHandle = OS.g_object_new (display.gtk_fixed_get_type (), 0);
-	if (fixedHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (fixedHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	handle = GTK.gtk_notebook_new ();
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK4) {
 		OS.swt_fixed_add(fixedHandle, handle);
@@ -276,18 +278,26 @@ void createItem (TabItem item, int index) {
 		}
 	}
 
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (itemCount == items.length) {
 		TabItem [] newItems = new TabItem [items.length + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
 		items = newItems;
 	}
 	long boxHandle = gtk_box_new (GTK.GTK_ORIENTATION_HORIZONTAL, false, 0);
-	if (boxHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (boxHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	long labelHandle = GTK.gtk_label_new_with_mnemonic (null);
-	if (labelHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (labelHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	long imageHandle = GTK.gtk_image_new ();
-	if (imageHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (imageHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK4) {
 		GTK4.gtk_box_append(boxHandle, imageHandle);
@@ -298,7 +308,9 @@ void createItem (TabItem item, int index) {
 	}
 
 	long pageHandle = OS.g_object_new (display.gtk_fixed_get_type (), 0);
-	if (pageHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (pageHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, SWITCH_PAGE);
 	GTK.gtk_notebook_insert_page (handle, pageHandle, boxHandle, index);
 	OS.g_signal_handlers_unblock_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, SWITCH_PAGE);
@@ -341,10 +353,14 @@ void destroyItem (TabItem item) {
 	int index = 0;
 	int itemCount = getItemCount();
 	while (index < itemCount) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	if (index == itemCount) error (SWT.ERROR_ITEM_NOT_REMOVED);
+    if (index == itemCount) {
+        error(SWT.ERROR_ITEM_NOT_REMOVED);
+    }
 	int oldIndex = GTK.gtk_notebook_get_current_page (handle);
 	OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, SWITCH_PAGE);
 	GTK.gtk_notebook_remove_page (handle, index);
@@ -443,17 +459,25 @@ Control[] _getChildren() {
  */
 public TabItem getItem (int index) {
 	checkWidget();
-	if (!(0 <= index && index < getItemCount())) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < getItemCount())) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 
 	if (GTK.GTK4) {
 		long child = GTK4.gtk_widget_get_first_child(handle);
-		if (child == 0) error(SWT.ERROR_CANNOT_GET_ITEM);
+        if (child == 0) {
+            error(SWT.ERROR_CANNOT_GET_ITEM);
+        }
 	} else {
 		long list = GTK3.gtk_container_get_children (handle);
-		if (list == 0) error (SWT.ERROR_CANNOT_GET_ITEM);
+        if (list == 0) {
+            error(SWT.ERROR_CANNOT_GET_ITEM);
+        }
 		int itemCount = OS.g_list_length (list);
 		OS.g_list_free (list);
-		if (!(0 <= index && index < itemCount)) error (SWT.ERROR_CANNOT_GET_ITEM);
+        if (!(0 <= index && index < itemCount)) {
+            error(SWT.ERROR_CANNOT_GET_ITEM);
+        }
 	}
 
 	return items [index];
@@ -479,12 +503,16 @@ public TabItem getItem (int index) {
  */
 public TabItem getItem(Point point) {
 	checkWidget();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int itemCount = getItemCount();
 	for (int i = 0; i < itemCount; i++) {
 		TabItem item = items[i];
 		Rectangle rect = item.getBounds();
-		if (rect.contains(point)) return item;
+        if (rect.contains(point)) {
+            return item;
+        }
 	}
 	return null;
 }
@@ -507,7 +535,9 @@ public int getItemCount () {
 		itemCount = GTK.gtk_notebook_get_n_pages(handle);
 	} else {
 		long list = GTK3.gtk_container_get_children (handle);
-		if (list == 0) return 0;
+        if (list == 0) {
+            return 0;
+        }
 		itemCount = OS.g_list_length (list);
 		OS.g_list_free (list);
 	}
@@ -558,7 +588,9 @@ public TabItem [] getItems () {
 public TabItem [] getSelection () {
 	checkWidget();
 	int index = GTK.gtk_notebook_get_current_page (handle);
-	if (index == -1) return new TabItem [0];
+    if (index == -1) {
+        return new TabItem [0];
+    }
 	return new TabItem [] {items [index]};
 }
 
@@ -643,7 +675,9 @@ void hookEvents () {
  */
 public int indexOf (TabItem item) {
 	checkWidget();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	int index = -1;
 	int count = getItemCount();
@@ -665,7 +699,9 @@ Point minimumSize (int wHint, int hHint, boolean flushCache) {
 		int index = 0;
 		int count = getItemCount();
 		while (index < count) {
-			if (items [index].control == child) break;
+            if (items [index].control == child) {
+                break;
+            }
 			index++;
 		}
 		if (index == count) {
@@ -690,7 +726,9 @@ boolean mnemonicHit (char key) {
 	int itemCount = getItemCount ();
 	for (int i=0; i<itemCount; i++) {
 		long labelHandle = items [i].labelHandle;
-		if (labelHandle != 0 && mnemonicHit (labelHandle, key)) return true;
+        if (labelHandle != 0 && mnemonicHit(labelHandle, key)) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -700,7 +738,9 @@ boolean mnemonicMatch (char key) {
 	int itemCount = getItemCount ();
 	for (int i=0; i<itemCount; i++) {
 		long labelHandle = items [i].labelHandle;
-		if (labelHandle != 0 && mnemonicHit (labelHandle, key)) return true;
+        if (labelHandle != 0 && mnemonicHit(labelHandle, key)) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -722,7 +762,9 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (imageList != null) imageList.dispose ();
+    if (imageList != null) {
+        imageList.dispose();
+    }
 	imageList = null;
 }
 
@@ -732,7 +774,9 @@ void removeControl (Control control) {
 	int count = getItemCount ();
 	for (int i=0; i<count; i++) {
 		TabItem item = items [i];
-		if (item.control == control) item.setControl (null);
+        if (item.control == control) {
+            item.setControl(null);
+        }
 	}
 }
 
@@ -755,8 +799,12 @@ void removeControl (Control control) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -768,7 +816,9 @@ void reskinChildren (int flags) {
 
 		for (int i = 0; i < count; i++) {
 			TabItem item = items [i];
-			if (item != null) item.reskin(flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -830,7 +880,9 @@ void setOrientation (boolean create) {
 	super.setOrientation (create);
 	if (items != null) {
 		for (int i=0; i<items.length; i++) {
-			if (items[i] != null) items[i].setOrientation (create);
+            if (items[i] != null) {
+                items[i].setOrientation(create);
+            }
 		}
 	}
 }
@@ -850,14 +902,20 @@ void setOrientation (boolean create) {
  */
 public void setSelection (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < getItemCount ())) return;
+    if (!(0 <= index && index < getItemCount())) {
+        return;
+    }
 	setSelection (index, false);
 }
 
 void setSelection (int index, boolean notify) {
-	if (index < 0) return;
+    if (index < 0) {
+        return;
+    }
 	int oldIndex = GTK.gtk_notebook_get_current_page (handle);
-	if (oldIndex == index) return;
+    if (oldIndex == index) {
+        return;
+    }
 	if (oldIndex != -1) {
 		TabItem item = items [oldIndex];
 		Control control = item.control;
@@ -902,7 +960,9 @@ void setSelection (int index, boolean notify) {
  * @since 3.2
  */
 public void setSelection (TabItem item) {
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setSelection (new TabItem [] {item});
 }
 
@@ -923,13 +983,17 @@ public void setSelection (TabItem item) {
  */
 public void setSelection (TabItem [] items) {
 	checkWidget();
-	if (items == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (items == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (items.length == 0) {
 		setSelection (-1, false);
 	} else {
 		for (int i=items.length-1; i>=0; --i) {
 			int index = indexOf (items [i]);
-			if (index != -1) setSelection (index, false);
+            if (index != -1) {
+                setSelection(index, false);
+            }
 		}
 	}
 }

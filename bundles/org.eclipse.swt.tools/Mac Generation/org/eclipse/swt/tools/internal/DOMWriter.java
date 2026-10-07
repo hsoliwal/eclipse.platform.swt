@@ -36,20 +36,28 @@ public class DOMWriter {
 	}
 	
 	boolean filter(Attr attr) {
-		if (attributeFilter == null) return false;
+        if (attributeFilter == null) {
+            return false;
+        }
 		String name = attr.getNodeName();
 		for (String filteredName : attributeFilter) {
-			if (name.matches(filteredName)) return false;
+            if (name.matches(filteredName)) {
+                return false;
+            }
 		}
 		return true;
 	}
 	
 	Node getIDAttribute(Node node) {
 		NamedNodeMap attributes = node.getAttributes();
-		if (attributes == null) return null;
+        if (attributes == null) {
+            return null;
+        }
 		for (String name : idAttributes) {
 			Node nameAttrib = attributes.getNamedItem(name);
-			if (nameAttrib != null) return nameAttrib;
+            if (nameAttrib != null) {
+                return nameAttrib;
+            }
 		}
 		return null;
 	}
@@ -66,8 +74,9 @@ public class DOMWriter {
 	}
 	
 	public void print(Node node, int level) {
-		if (node == null)
-			return;
+        if (node == null) {
+            return;
+        }
 		int type = node.getNodeType();
 		switch (type) {
 			case Node.DOCUMENT_NODE: {
@@ -85,15 +94,25 @@ public class DOMWriter {
 				boolean gen = isArg || name.equals("retval");
 				for (int i = 0; i < attrs.length && !gen; i++) {
 					Attr attr = attrs[i];
-					if (nodeName(attr).startsWith(nodeFilter)) gen = true;
+                    if (nodeName(attr).startsWith(nodeFilter)) {
+                        gen = true;
+                    }
 				}
-				if (!gen) break;
-				for (int i = 0; i < level; i++) print("\t");
+                if (!gen) {
+                    break;
+                }
+                for (int i = 0; i < level; i++) {
+                    print("\t");
+                }
 				print("<");
 				print(name);
 				for (Attr attr : attrs) {
-					if (isArg && "name".equals(attr.getNodeName())) continue;
-					if (filter(attr)) continue;
+                    if (isArg && "name".equals(attr.getNodeName())) {
+                        continue;
+                    }
+                    if (filter(attr)) {
+                        continue;
+                    }
 					print(" ");
 					print(nodeName(attr));
 					print("=\"");
@@ -107,7 +126,9 @@ public class DOMWriter {
 					List<Node> nodes = new ArrayList<>();
 					for (int i = 0; i < len; i++) {
 						Node child = children.item(i);
-						if (child.getNodeType() == Node.ELEMENT_NODE) nodes.add(child);
+                        if (child.getNodeType() == Node.ELEMENT_NODE) {
+                            nodes.add(child);
+                        }
 					}
 					int count = nodes.size();
 					nodes.sort((a, b) -> {
@@ -120,18 +141,23 @@ public class DOMWriter {
 						if (result == 0) {
 							Node idA = getIDAttribute(a);
 							Node idB = getIDAttribute(b);
-							if (idA == null || idB == null)
-								return 0;
+                            if (idA == null || idB == null) {
+                                return 0;
+                            }
 							return idA.getNodeValue().compareTo(idB.getNodeValue());
 						}
 						return result;
 					});
-					if (count > 0) println();
+                    if (count > 0) {
+                        println();
+                    }
 					for (int i = 0; i < count; i++) {
 						print(nodes.get(i), level + 1);
 					}
 					if (count > 0) {
-						for (int i = 0; i < level; i++) print("\t");
+                        for (int i = 0; i < level; i++) {
+                            print("\t");
+                        }
 					}
 				}
 				print("</");
@@ -145,8 +171,9 @@ public class DOMWriter {
 	}
 
 	Attr[] sort(NamedNodeMap attrs) {
-		if (attrs == null)
-			return new Attr[0];
+        if (attrs == null) {
+            return new Attr[0];
+        }
 		Attr result[] = new Attr[attrs.getLength()];
 		for (int i = 0; i < result.length; i++) {
 			result[i] = (Attr) attrs.item(i);
@@ -156,7 +183,9 @@ public class DOMWriter {
 	}
 
 	String normalize(String s) {
-		if (s == null) return "";
+        if (s == null) {
+            return "";
+        }
 		StringBuilder str = new StringBuilder();
 		for (int i = 0, length = s.length(); i < length; i++) {
 			char ch = s.charAt(i);

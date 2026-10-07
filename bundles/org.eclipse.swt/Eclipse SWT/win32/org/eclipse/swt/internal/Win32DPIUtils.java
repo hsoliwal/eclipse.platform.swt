@@ -108,7 +108,9 @@ public class Win32DPIUtils {
 	}
 
 	public static float[] pixelToPoint(float size[], int zoom) {
-		if (zoom == 100 || size == null) return size;
+        if (zoom == 100 || size == null) {
+            return size;
+        }
 		float scaleFactor = DPIUtil.getScalingFactor (zoom);
 		float scaledSize[] = new float[size.length];
 		for (int i = 0; i < scaledSize.length; i++) {
@@ -118,32 +120,44 @@ public class Win32DPIUtils {
 	}
 
 	public static float[] pixelToPoint(Drawable drawable, float size[], int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return size;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return size;
+        }
 		return pixelToPoint(size, zoom);
 	}
 
 	public static int pixelToPoint(Drawable drawable, int size, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return size;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return size;
+        }
 		return DPIUtil.pixelToPoint (size, zoom);
 	}
 
 	public static float pixelToPoint(Drawable drawable, float size, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return size;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return size;
+        }
 		return DPIUtil.pixelToPoint (size, zoom);
 	}
 
 	public static Point pixelToPointAsSize(Drawable drawable, Point point, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return point;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return point;
+        }
 		return pixelToPointAsSize (point, zoom);
 	}
 
 	public static Point pixelToPointAsSufficientlyLargeSize(Drawable drawable, Point point, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return point;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return point;
+        }
 		return pixelToPointAsSufficientlyLargeSize (point, zoom);
 	}
 
 	public static Point pixelToPointAsLocation(Drawable drawable, Point point, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return point;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return point;
+        }
 		return pixelToPointAsLocation (point, zoom);
 	}
 
@@ -160,7 +174,9 @@ public class Win32DPIUtils {
 	}
 
 	private static Point pixelToPoint(Point point, int zoom, RoundingMode mode) {
-		if (zoom == 100 || point == null) return point;
+        if (zoom == 100 || point == null) {
+            return point;
+        }
 		Point.OfFloat floatPoint = Point.OfFloat.from(point);
 		return pixelToPoint(new Point.OfFloat(floatPoint.getX(), floatPoint.getY(), mode), zoom);
 	}
@@ -182,7 +198,9 @@ public class Win32DPIUtils {
 	}
 
 	private static Rectangle pixelToPoint(Rectangle rect, int zoom, RoundingMode sizeRounding) {
-		if (zoom == 100 || rect == null) return rect;
+        if (zoom == 100 || rect == null) {
+            return rect;
+        }
 		if (rect instanceof Rectangle.OfFloat) {
 			return scaleBounds(rect, 100, zoom);
 		}
@@ -197,7 +215,9 @@ public class Win32DPIUtils {
 	}
 
 	public static Rectangle pixelToPoint(Drawable drawable, Rectangle rect, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return rect;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return rect;
+        }
 		return pixelToPoint (rect, zoom);
 	}
 
@@ -205,8 +225,12 @@ public class Win32DPIUtils {
 	 * Returns a new rectangle as per the scaleFactor.
 	 */
 	public static Rectangle scaleBounds (Rectangle rect, int targetZoom, int currentZoom) {
-		if (rect == null || targetZoom == currentZoom) return rect;
-		if (rect instanceof Rectangle.OfFloat rectOfFloat) return scaleBounds(rectOfFloat, targetZoom, currentZoom);
+        if (rect == null || targetZoom == currentZoom) {
+            return rect;
+        }
+        if (rect instanceof Rectangle.OfFloat rectOfFloat) {
+            return scaleBounds(rectOfFloat, targetZoom, currentZoom);
+        }
 		float scaleFactor = ((float)targetZoom) / (float)currentZoom;
 		Rectangle returnRect = new Rectangle.OfFloat (0,0,0,0);
 		returnRect.x = Math.round (rect.x * scaleFactor);
@@ -220,7 +244,9 @@ public class Win32DPIUtils {
 	 * Returns a new rectangle as per the scaleFactor.
 	 */
 	private static Rectangle scaleBounds (Rectangle.OfFloat rect, int targetZoom, int currentZoom) {
-		if (rect == null || targetZoom == currentZoom) return rect;
+        if (rect == null || targetZoom == currentZoom) {
+            return rect;
+        }
 		Rectangle.OfFloat fRect = Rectangle.OfFloat.from(rect);
 		float scaleFactor = DPIUtil.getScalingFactor(targetZoom, currentZoom);
 		float scaledX = fRect.getX() * scaleFactor;
@@ -231,7 +257,9 @@ public class Win32DPIUtils {
 	}
 
 	public static int[] pointToPixel(int[] pointArray, int zoom) {
-		if (zoom == 100 || pointArray == null) return pointArray;
+        if (zoom == 100 || pointArray == null) {
+            return pointArray;
+        }
 		float scaleFactor = DPIUtil.getScalingFactor(zoom);
 		int[] returnArray = new int[pointArray.length];
 		for (int i = 0; i < pointArray.length; i++) {
@@ -256,28 +284,38 @@ public class Win32DPIUtils {
 	}
 
 	public static int[] pointToPixel(Drawable drawable, int[] pointArray, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return pointArray;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return pointArray;
+        }
 		return pointToPixel (pointArray, zoom);
 	}
 
 	public static int pointToPixel(Drawable drawable, int size, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return size;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return size;
+        }
 		return DPIUtil.pointToPixel (size, zoom);
 	}
 
 	public static float pointToPixel(float size, int zoom) {
-		if (zoom == 100 || size == SWT.DEFAULT) return size;
+        if (zoom == 100 || size == SWT.DEFAULT) {
+            return size;
+        }
 		float scaleFactor = DPIUtil.getScalingFactor(zoom);
 		return (size * scaleFactor);
 	}
 
 	public static float pointToPixel(Drawable drawable, float size, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return size;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return size;
+        }
 		return pointToPixel (size, zoom);
 	}
 
 	private static Point pointToPixel(Point point, int zoom, RoundingMode mode) {
-		if (zoom == 100 || point == null) return point;
+        if (zoom == 100 || point == null) {
+            return point;
+        }
 		Point.OfFloat floatPoint = Point.OfFloat.from(point);
 		return pointToPixel(new Point.OfFloat(floatPoint.getX(), floatPoint.getY(), mode), zoom);
 	}
@@ -296,12 +334,16 @@ public class Win32DPIUtils {
 	}
 
 	public static Point pointToPixelAsSize(Drawable drawable, Point point, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return point;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return point;
+        }
 		return pointToPixelAsSize(point, zoom);
 	}
 
 	public static Point pointToPixelAsLocation(Drawable drawable, Point point, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return point;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return point;
+        }
 		return pointToPixelAsLocation(point, zoom);
 	}
 
@@ -326,7 +368,9 @@ public class Win32DPIUtils {
 	}
 
 	private static Rectangle pointToPixel(Rectangle rect, int zoom, RoundingMode sizeRounding) {
-		if (zoom == 100 || rect == null) return rect;
+        if (zoom == 100 || rect == null) {
+            return rect;
+        }
 		if (rect instanceof Rectangle.OfFloat) {
 			return scaleBounds(rect, zoom, 100);
 		}
@@ -342,7 +386,9 @@ public class Win32DPIUtils {
 	}
 
 	public static Rectangle pointToPixel(Drawable drawable, Rectangle rect, int zoom) {
-		if (drawable != null && !drawable.isAutoScalable()) return rect;
+        if (drawable != null && !drawable.isAutoScalable()) {
+            return rect;
+        }
 		return pointToPixel (rect, zoom);
 	}
 

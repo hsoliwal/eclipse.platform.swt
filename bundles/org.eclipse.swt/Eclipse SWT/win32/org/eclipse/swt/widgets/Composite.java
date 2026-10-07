@@ -102,7 +102,9 @@ public Composite (Composite parent, int style) {
 Control [] _getChildren () {
 	int count = 0;
 	long hwndChild = OS.GetWindow (handle, OS.GW_CHILD);
-	if (hwndChild == 0) return new Control [0];
+    if (hwndChild == 0) {
+        return new Control [0];
+    }
 	while (hwndChild != 0) {
 		count++;
 		hwndChild = OS.GetWindow (hwndChild, OS.GW_HWNDNEXT);
@@ -117,19 +119,27 @@ Control [] _getChildren () {
 		}
 		hwndChild = OS.GetWindow (hwndChild, OS.GW_HWNDNEXT);
 	}
-	if (count == index) return children;
+    if (count == index) {
+        return children;
+    }
 	Control [] newChildren = new Control [index];
 	System.arraycopy (children, 0, newChildren, 0, index);
 	return newChildren;
 }
 
 Control [] _getTabList () {
-	if (tabList == null) return tabList;
+    if (tabList == null) {
+        return tabList;
+    }
 	int count = 0;
 	for (Control element : tabList) {
-		if (!element.isDisposed ()) count++;
+        if (!element.isDisposed()) {
+            count++;
+        }
 	}
-	if (count == tabList.length) return tabList;
+    if (count == tabList.length) {
+        return tabList;
+    }
 	Control [] newList = new Control [count];
 	int index = 0;
 	for (Control element : tabList) {
@@ -192,7 +202,9 @@ protected void checkSubclass () {
 @Override
 Widget [] computeTabList () {
 	Widget result [] = super.computeTabList ();
-	if (result.length == 0) return result;
+    if (result.length == 0) {
+        return result;
+    }
 	Control [] list = tabList != null ? _getTabList () : _getChildren ();
 	for (Control child : list) {
 		Widget  [] childList = child.computeTabList ();
@@ -220,11 +232,19 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		}
 	} else {
 		sizeInPoints = minimumSize (hintInPoints, changed);
-		if (sizeInPoints.x == 0) sizeInPoints.x = DEFAULT_WIDTH;
-		if (sizeInPoints.y == 0) sizeInPoints.y = DEFAULT_HEIGHT;
+        if (sizeInPoints.x == 0) {
+            sizeInPoints.x = DEFAULT_WIDTH;
+        }
+        if (sizeInPoints.y == 0) {
+            sizeInPoints.y = DEFAULT_HEIGHT;
+        }
 	}
-	if (hintInPoints.x != SWT.DEFAULT) sizeInPoints.x = hintInPoints.x;
-	if (hintInPoints.y != SWT.DEFAULT) sizeInPoints.y = hintInPoints.y;
+    if (hintInPoints.x != SWT.DEFAULT) {
+        sizeInPoints.x = hintInPoints.x;
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        sizeInPoints.y = hintInPoints.y;
+    }
 	/*
 	 * Since computeTrim can be overridden by subclasses, we cannot
 	 * call computeTrimInPixels directly.
@@ -254,8 +274,12 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
  */
 /*public*/ void copyArea (GC gc, int x, int y, int width, int height) {
 	checkWidget ();
-	if (gc == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
 	//XP only, no GDI+
 	//#define PW_CLIENTONLY 0x00000001
@@ -357,8 +381,12 @@ public void drawBackground (GC gc, int x, int y, int width, int height, int offs
 }
 
 void drawBackgroundInPixels(GC gc, int x, int y, int width, int height, int offsetX, int offsetY) {
-	if (gc == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	RECT rect = new RECT ();
 	OS.SetRect (rect, x, y, x + width, y + height);
 	long hDC = gc.handle;
@@ -372,7 +400,9 @@ Composite findDeferredControl () {
 
 @Override
 Menu [] findMenus (Control control) {
-	if (control == this) return new Menu [0];
+    if (control == this) {
+        return new Menu [0];
+    }
 	Menu result [] = super.findMenus (control);
 	for (Control child : _getChildren ()) {
 		Menu [] menuList = child.findMenus (control);
@@ -395,12 +425,18 @@ void fixChildren (Shell newShell, Shell oldShell, Decorations newDecorations, De
 }
 
 void fixTabList (Control control) {
-	if (tabList == null) return;
+    if (tabList == null) {
+        return;
+    }
 	int count = 0;
 	for (Control element : tabList) {
-		if (element == control) count++;
+        if (element == control) {
+            count++;
+        }
 	}
-	if (count == 0) return;
+    if (count == 0) {
+        return;
+    }
 	Control [] newList = null;
 	int length = tabList.length - count;
 	if (length != 0) {
@@ -513,7 +549,9 @@ public Control [] getTabList () {
 		int count = 0;
 		Control [] list =_getChildren ();
 		for (Control element : list) {
-			if (element.isTabGroup ()) count++;
+            if (element.isTabGroup()) {
+                count++;
+            }
 		}
 		tabList = new Control [count];
 		int index = 0;
@@ -646,7 +684,9 @@ public void layout () {
  */
 public void layout (boolean changed) {
 	checkWidget ();
-	if (layout == null) return;
+    if (layout == null) {
+        return;
+    }
 	layout (changed, false);
 }
 
@@ -693,7 +733,9 @@ public void layout (boolean changed) {
  */
 public void layout (boolean changed, boolean all) {
 	checkWidget ();
-	if (layout == null && !all) return;
+    if (layout == null && !all) {
+        return;
+    }
 	markLayout (changed, all);
 	updateLayout (all);
 }
@@ -735,7 +777,9 @@ public void layout (boolean changed, boolean all) {
  */
 public void layout (Control [] changed) {
 	checkWidget ();
-	if (changed == null) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (changed == null) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	layout (changed, SWT.NONE);
 }
 
@@ -801,16 +845,24 @@ public void layout (Control [] changed, int flags) {
 	checkWidget ();
 	if (changed != null) {
 		for (Control control : changed) {
-			if (control == null) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+            if (control == null) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (control.isDisposed()) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
 			boolean ancestor = false;
 			Composite composite = control.parent;
 			while (composite != null) {
 				ancestor = composite == this;
-				if (ancestor) break;
+                if (ancestor) {
+                    break;
+                }
 				composite = composite.parent;
 			}
-			if (!ancestor) error (SWT.ERROR_INVALID_PARENT);
+            if (!ancestor) {
+                error(SWT.ERROR_INVALID_PARENT);
+            }
 		}
 		int updateCount = 0;
 		Composite [] update = new Composite [16];
@@ -844,7 +896,9 @@ public void layout (Control [] changed, int flags) {
 			update [i].updateLayout (false);
 		}
 	} else {
-		if (layout == null && (flags & SWT.ALL) == 0) return;
+        if (layout == null && (flags & SWT.ALL) == 0) {
+            return;
+        }
 		markLayout ((flags & SWT.CHANGED) != 0, (flags & SWT.ALL) != 0);
 		if (!display.externalEventLoop && (flags & SWT.DEFER) != 0) {
 			setLayoutDeferred (true);
@@ -858,7 +912,9 @@ public void layout (Control [] changed, int flags) {
 void markLayout (boolean changed, boolean all) {
 	if (layout != null) {
 		state |= LAYOUT_NEEDED;
-		if (changed) state |= LAYOUT_CHANGED;
+        if (changed) {
+            state |= LAYOUT_CHANGED;
+        }
 	}
 	if (all) {
 		for (Control element : _getChildren ()) {
@@ -884,7 +940,9 @@ Point minimumSize (Point hintInPoints, boolean changed) {
 
 @Override
 boolean redrawChildren () {
-	if (!super.redrawChildren ()) return false;
+    if (!super.redrawChildren()) {
+        return false;
+    }
 	for (Control element : _getChildren ()) {
 		element.redrawChildren ();
 	}
@@ -901,7 +959,9 @@ void releaseParent () {
 			while (hwndChild != 0) {
 				if (hwndChild != handle) {
 					int bits = OS.GetWindowLong (hwndParent, OS.GWL_EXSTYLE);
-					if ((bits & OS.WS_EX_TRANSPARENT) != 0) return;
+                    if ((bits & OS.WS_EX_TRANSPARENT) != 0) {
+                        return;
+                    }
 				}
 				hwndChild = OS.GetWindow (hwndChild, OS.GW_HWNDNEXT);
 			}
@@ -916,8 +976,9 @@ void releaseParent () {
 void releaseChildren (boolean destroy) {
 	try (ExceptionStash exceptions = new ExceptionStash ()) {
 		for (Control child : _getChildren ()) {
-			if (child == null || child.isDisposed ())
-				continue;
+            if (child == null || child.isDisposed()) {
+                continue;
+            }
 
 			try {
 				child.release (false);
@@ -956,12 +1017,16 @@ void removeControl (Control control) {
 void reskinChildren (int flags) {
 	super.reskinChildren (flags);
 	for (Control child : _getChildren ()) {
-		if (child != null) child.reskin (flags);
+        if (child != null) {
+            child.reskin(flags);
+        }
 	}
 }
 
 void resizeChildren () {
-	if (lpwp == null) return;
+    if (lpwp == null) {
+        return;
+    }
 	do {
 		WINDOWPOS [] currentLpwp = lpwp;
 		lpwp = null;
@@ -972,28 +1037,38 @@ void resizeChildren () {
 }
 
 boolean resizeChildren (boolean defer, WINDOWPOS [] pwp) {
-	if (pwp == null) return true;
+    if (pwp == null) {
+        return true;
+    }
 	long hdwp = 0;
 	if (defer) {
 		hdwp = OS.BeginDeferWindowPos (pwp.length);
-		if (hdwp == 0) return false;
+        if (hdwp == 0) {
+            return false;
+        }
 	}
 	for (WINDOWPOS wp : pwp) {
 		if (wp != null) {
 			if (defer) {
 				hdwp = OS.DeferWindowPos (hdwp, wp.hwnd, 0, wp.x, wp.y, wp.cx, wp.cy, wp.flags);
-				if (hdwp == 0) return false;
+                if (hdwp == 0) {
+                    return false;
+                }
 			} else {
 				OS.SetWindowPos (wp.hwnd, 0, wp.x, wp.y, wp.cx, wp.cy, wp.flags);
 			}
 		}
 	}
-	if (defer) return OS.EndDeferWindowPos (hdwp);
+    if (defer) {
+        return OS.EndDeferWindowPos(hdwp);
+    }
 	return true;
 }
 
 void resizeEmbeddedHandle(long embeddedHandle, int width, int height) {
-	if (embeddedHandle == 0) return;
+    if (embeddedHandle == 0) {
+        return;
+    }
 	int [] processID = new int [1];
 	int threadId = OS.GetWindowThreadProcessId (embeddedHandle, processID);
 	if (threadId != OS.GetCurrentThreadId ()) {
@@ -1014,7 +1089,9 @@ void resizeEmbeddedHandle(long embeddedHandle, int width, int height) {
 void sendResize () {
 	setResizeChildren (false);
 	super.sendResize ();
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	if (layout != null) {
 		markLayout (false, false);
 		updateLayout (false, false);
@@ -1061,8 +1138,12 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean 
 		boolean wasMoved = (state & MOVE_OCCURRED) != 0;
 		boolean wasResized = (state & RESIZE_OCCURRED) != 0;
 		state &= ~(RESIZE_DEFERRED | MOVE_DEFERRED);
-		if (wasMoved && !isDisposed ()) sendMove ();
-		if (wasResized && !isDisposed ()) sendResize ();
+        if (wasMoved && !isDisposed()) {
+            sendMove();
+        }
+        if (wasResized && !isDisposed()) {
+            sendResize();
+        }
 	}
 }
 
@@ -1071,10 +1152,14 @@ public boolean setFocus () {
 	checkWidget ();
 	Control [] children = _getChildren ();
 	for (Control child : children) {
-		if (child.getVisible() && child.setRadioFocus (false)) return true;
+        if (child.getVisible() && child.setRadioFocus(false)) {
+            return true;
+        }
 	}
 	for (Control child : children) {
-		if (child.getVisible() && child.setFocus ()) return true;
+        if (child.getVisible() && child.setFocus()) {
+            return true;
+        }
 	}
 	return super.setFocus ();
 }
@@ -1148,9 +1233,15 @@ public void setTabList (Control [] tabList) {
 	checkWidget ();
 	if (tabList != null) {
 		for (Control control : tabList) {
-			if (control == null) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-			if (control.parent != this) error (SWT.ERROR_INVALID_PARENT);
+            if (control == null) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (control.isDisposed()) {
+                error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (control.parent != this) {
+                error(SWT.ERROR_INVALID_PARENT);
+            }
 		}
 		Control [] newList = new Control [tabList.length];
 		System.arraycopy (tabList, 0, newList, 0, tabList.length);
@@ -1175,20 +1266,28 @@ void setResizeChildren (boolean resize) {
 
 @Override
 boolean setTabGroupFocus () {
-	if (isTabItem ()) return setTabItemFocus ();
+    if (isTabItem()) {
+        return setTabItemFocus();
+    }
 	boolean takeFocus = (style & SWT.NO_FOCUS) == 0;
 	if ((state & CANVAS) != 0) {
 		takeFocus = hooksKeys ();
-		if ((style & SWT.EMBEDDED) != 0) takeFocus = true;
+        if ((style & SWT.EMBEDDED) != 0) {
+            takeFocus = true;
+        }
 	}
-	if (takeFocus && setTabItemFocus ()) return true;
+    if (takeFocus && setTabItemFocus()) {
+        return true;
+    }
 	Control [] children = _getChildren ();
 	for (Control child : children) {
-		/*
-		 * It is unlikely but possible that a child is disposed at this point, for more
-		 * details refer bug 381668.
-		 */
-		if (!child.isDisposed() && child.isTabItem() && child.setRadioFocus (true)) return true;
+        /*
+         * It is unlikely but possible that a child is disposed at this point, for more
+         * details refer bug 381668.
+         */
+        if (!child.isDisposed() && child.isTabItem() && child.setRadioFocus(true)) {
+            return true;
+        }
 	}
 	for (Control child : children) {
 		if (!child.isDisposed() && child.isTabItem () && !child.isTabGroup () && child.setTabItemFocus ()) {
@@ -1227,7 +1326,9 @@ String toolTipText (NMTTDISPINFO hdr) {
 		ToolTip toolTip = shell.findToolTip ((int)hdr.idFrom);
 		if (toolTip != null) {
 			string = toolTip.message;
-			if (string == null || string.length () == 0) string = " ";
+            if (string == null || string.length() == 0) {
+                string = " ";
+            }
 			/*
 			* Bug in Windows.  On Windows 7, tool tips hang when displaying large
 			* unwrapped strings. The fix is to wrap the string ourselves.
@@ -1246,10 +1347,14 @@ String toolTipText (NMTTDISPINFO hdr) {
 
 @Override
 boolean translateMnemonic (Event event, Control control) {
-	if (super.translateMnemonic (event, control)) return true;
+    if (super.translateMnemonic(event, control)) {
+        return true;
+    }
 	if (control != null) {
 		for (Control child : _getChildren ()) {
-			if (child.translateMnemonic (event, control)) return true;
+            if (child.translateMnemonic(event, control)) {
+                return true;
+            }
 		}
 	}
 	return false;
@@ -1258,7 +1363,9 @@ boolean translateMnemonic (Event event, Control control) {
 @Override
 boolean translateTraversal (MSG msg) {
 	if ((state & CANVAS) != 0 ) {
-		if ((style & SWT.EMBEDDED) != 0) return false;
+        if ((style & SWT.EMBEDDED) != 0) {
+            return false;
+        }
 		switch ((int)msg.wParam) {
 			case OS.VK_UP:
 			case OS.VK_LEFT:
@@ -1329,9 +1436,13 @@ void updateLayout (boolean resize, boolean all) {
 		boolean changed = (state & LAYOUT_CHANGED) != 0;
 		state &= ~(LAYOUT_NEEDED | LAYOUT_CHANGED);
 		display.runSkin();
-		if (resize) setResizeChildren (false);
+        if (resize) {
+            setResizeChildren(false);
+        }
 		layout.layout (this, changed);
-		if (resize) setResizeChildren (true);
+        if (resize) {
+            setResizeChildren(true);
+        }
 	}
 	if (all) {
 		state &= ~LAYOUT_CHILD;
@@ -1380,7 +1491,9 @@ int widgetStyle () {
 @Override
 LRESULT WM_ERASEBKGND (long wParam, long lParam) {
 	LRESULT result = super.WM_ERASEBKGND (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if ((state & CANVAS) != 0) {
 		/* Return zero to indicate that the background was not erased */
 		if ((style & (SWT.NO_BACKGROUND | SWT.TRANSPARENT)) != 0) {
@@ -1393,15 +1506,23 @@ LRESULT WM_ERASEBKGND (long wParam, long lParam) {
 @Override
 LRESULT WM_GETDLGCODE (long wParam, long lParam) {
 	LRESULT result = super.WM_GETDLGCODE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if ((state & CANVAS) != 0) {
 		int flags = 0;
 		if (hooksKeys ()) {
 			flags |= OS.DLGC_WANTALLKEYS | OS.DLGC_WANTARROWS | OS.DLGC_WANTTAB;
 		}
-		if ((style & SWT.NO_FOCUS) != 0) flags |= OS.DLGC_STATIC;
-		if (OS.GetWindow (handle, OS.GW_CHILD) != 0) flags |= OS.DLGC_STATIC;
-		if (flags != 0) return new LRESULT (flags);
+        if ((style & SWT.NO_FOCUS) != 0) {
+            flags |= OS.DLGC_STATIC;
+        }
+        if (OS.GetWindow(handle, OS.GW_CHILD) != 0) {
+            flags |= OS.DLGC_STATIC;
+        }
+        if (flags != 0) {
+            return new LRESULT(flags);
+        }
 	}
 	return result;
 }
@@ -1409,21 +1530,29 @@ LRESULT WM_GETDLGCODE (long wParam, long lParam) {
 @Override
 LRESULT WM_GETFONT (long wParam, long lParam) {
 	LRESULT result = super.WM_GETFONT (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	long code = callWindowProc (handle, OS.WM_GETFONT, wParam, lParam);
-	if (code != 0) return new LRESULT (code);
+    if (code != 0) {
+        return new LRESULT(code);
+    }
 	return new LRESULT (font != null ? SWTFontProvider.getFontHandle(font, nativeZoom) : defaultFont ());
 }
 
 @Override
 LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_LBUTTONDOWN (wParam, lParam);
-	if (result == LRESULT.ZERO) return result;
+    if (result == LRESULT.ZERO) {
+        return result;
+    }
 
 	/* Set focus for a canvas with no children */
 	if ((state & CANVAS) != 0) {
 		if ((style & SWT.NO_FOCUS) == 0 && hooksKeys ()) {
-			if (OS.GetWindow (handle, OS.GW_CHILD) == 0) setFocus ();
+            if (OS.GetWindow(handle, OS.GW_CHILD) == 0) {
+                setFocus();
+            }
 		}
 	}
 	return result;
@@ -1432,7 +1561,9 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 @Override
 LRESULT WM_NCHITTEST (long wParam, long lParam) {
 	LRESULT result = super.WM_NCHITTEST (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Bug in Windows.  For some reason, under circumstances
 	* that are not understood, when one scrolled window is
@@ -1478,7 +1609,9 @@ LRESULT WM_PARENTNOTIFY (long wParam, long lParam) {
 
 @Override
 LRESULT WM_PAINT (long wParam, long lParam) {
-	if ((state & DISPOSE_SENT) != 0) return LRESULT.ZERO;
+    if ((state & DISPOSE_SENT) != 0) {
+        return LRESULT.ZERO;
+    }
 	if ((state & CANVAS) == 0 || (state & FOREIGN_HANDLE) != 0) {
 		return super.WM_PAINT (wParam, lParam);
 	}
@@ -1486,7 +1619,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 	/* Set the clipping bits */
 	int oldBits = OS.GetWindowLong (handle, OS.GWL_STYLE);
 	int newBits = oldBits | OS.WS_CLIPSIBLINGS | OS.WS_CLIPCHILDREN;
-	if (newBits != oldBits) OS.SetWindowLong (handle, OS.GWL_STYLE, newBits);
+    if (newBits != oldBits) {
+        OS.SetWindowLong(handle, OS.GWL_STYLE, newBits);
+    }
 
 	/* Paint the control and the background */
 	PAINTSTRUCT ps = new PAINTSTRUCT ();
@@ -1514,7 +1649,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 					data.device = display;
 					data.foreground = getForegroundPixel ();
 					Control control = findBackgroundControl ();
-					if (control == null) control = this;
+                    if (control == null) {
+                        control = this;
+                    }
 					data.background = control.getBackgroundPixel ();
 					data.font = SWTFontProvider.getFont(display, OS.SendMessage (handle, OS.WM_GETFONT, 0, 0), nativeZoom);
 					data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
@@ -1532,7 +1669,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 					event.gc = gc;
 					event.setBounds(Win32DPIUtils.pixelToPoint(new Rectangle.OfFloat(ps.left, ps.top, width, height), getAutoscalingZoom()));
 					sendEvent (SWT.Paint, event);
-					if (data.focusDrawn && !isDisposed ()) updateUIState ();
+                    if (data.focusDrawn && !isDisposed()) {
+                        updateUIState();
+                    }
 					gc.dispose ();
 					OS.EndBufferedPaint (hBufferedPaint, true);
 				}
@@ -1619,7 +1758,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 					}
 				} else {
 					if ((style & (SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.TRANSPARENT)) == 0) {
-						if (rect == null) rect = new RECT ();
+                        if (rect == null) {
+                            rect = new RECT();
+                        }
 						OS.SetRect (rect, ps.left, ps.top, ps.right, ps.bottom);
 						drawBackground (gc.handle, rect);
 					}
@@ -1631,7 +1772,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 				if ((style & (SWT.DOUBLE_BUFFERED | SWT.TRANSPARENT)) != 0) {
 					if (!gc.isDisposed ()) {
 						GCData gcData = gc.getGCData ();
-						if (gcData.focusDrawn && !isDisposed ()) updateUIState ();
+                        if (gcData.focusDrawn && !isDisposed()) {
+                            updateUIState();
+                        }
 					}
 					if (!isDisposed ()) {
 						paintGC.drawImage (image, DPIUtil.pixelToPoint(ps.left, zoom), DPIUtil.pixelToPoint(ps.top, zoom));
@@ -1640,8 +1783,12 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 					gc = paintGC;
 				}
 			}
-			if (sysRgn != 0) OS.DeleteObject (sysRgn);
-			if (data.focusDrawn && !isDisposed ()) updateUIState ();
+            if (sysRgn != 0) {
+                OS.DeleteObject(sysRgn);
+            }
+            if (data.focusDrawn && !isDisposed()) {
+                updateUIState();
+            }
 
 			/* Dispose the paint GC */
 			gc.dispose ();
@@ -1676,7 +1823,9 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 @Override
 LRESULT WM_PRINTCLIENT (long wParam, long lParam) {
 	LRESULT result = super.WM_PRINTCLIENT (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if ((state & CANVAS) != 0) {
 		forceResize ();
 		int nSavedDC = OS.SaveDC (wParam);
@@ -1690,7 +1839,9 @@ LRESULT WM_PRINTCLIENT (long wParam, long lParam) {
 			data.device = display;
 			data.foreground = getForegroundPixel ();
 			Control control = findBackgroundControl ();
-			if (control == null) control = this;
+            if (control == null) {
+                control = this;
+            }
 			data.background = control.getBackgroundPixel ();
 			data.font = Font.win32_new(display, OS.SendMessage (handle, OS.WM_GETFONT, 0, 0));
 			data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
@@ -1709,7 +1860,9 @@ LRESULT WM_PRINTCLIENT (long wParam, long lParam) {
 
 @Override
 LRESULT WM_SETFONT (long wParam, long lParam) {
-	if (lParam != 0) OS.InvalidateRect (handle, null, true);
+    if (lParam != 0) {
+        OS.InvalidateRect(handle, null, true);
+    }
 	return super.WM_SETFONT (wParam, lParam);
 }
 
@@ -1724,14 +1877,16 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 
 		/* Resize and Layout */
 		result = super.WM_SIZE (wParam, lParam);
-		/*
-		* It is possible (but unlikely), that application
-		* code could have disposed the widget in the resize
-		* event.  If this happens, end the processing of the
-		* Windows message by returning the result of the
-		* WM_SIZE message.
-		*/
-		if (isDisposed ()) return result;
+        /*
+        * It is possible (but unlikely), that application
+        * code could have disposed the widget in the resize
+        * event.  If this happens, end the processing of the
+        * Windows message by returning the result of the
+        * WM_SIZE message.
+        */
+        if (isDisposed()) {
+            return result;
+        }
 		if (layout != null) {
 			markLayout (false, false);
 			updateLayout (false, false);
@@ -1750,7 +1905,9 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 				}
 			}
 		}
-		if (findThemeControl () != null) redrawChildren ();
+        if (findThemeControl() != null) {
+            redrawChildren();
+        }
 	}
 
 	/* Resize the embedded window */
@@ -1763,7 +1920,9 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 @Override
 LRESULT WM_SYSCOLORCHANGE (long wParam, long lParam) {
 	LRESULT result = super.WM_SYSCOLORCHANGE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	long hwndChild = OS.GetWindow (handle, OS.GW_CHILD);
 	while (hwndChild != 0) {
 		OS.SendMessage (hwndChild, OS.WM_SYSCOLORCHANGE, 0, 0);
@@ -1775,15 +1934,19 @@ LRESULT WM_SYSCOLORCHANGE (long wParam, long lParam) {
 @Override
 LRESULT WM_SYSCOMMAND (long wParam, long lParam) {
 	LRESULT result = super.WM_SYSCOMMAND (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 
-	/*
-	* Check to see if the command is a system command or
-	* a user menu item that was added to the system menu.
-	*
-	* NOTE: This is undocumented.
-	*/
-	if ((wParam & 0xF000) == 0) return result;
+    /*
+    * Check to see if the command is a system command or
+    * a user menu item that was added to the system menu.
+    *
+    * NOTE: This is undocumented.
+    */
+    if ((wParam & 0xF000) == 0) {
+        return result;
+    }
 
 	/*
 	* Bug in Windows.  When a vertical or horizontal scroll bar is
@@ -1804,7 +1967,9 @@ LRESULT WM_SYSCOMMAND (long wParam, long lParam) {
 					int flags = OS.RDW_FRAME | OS.RDW_INVALIDATE | OS.RDW_UPDATENOW;
 					OS.RedrawWindow (handle, null, 0, flags);
 				}
-			if (code == 0) return LRESULT.ZERO;
+            if (code == 0) {
+                return LRESULT.ZERO;
+            }
 			return new LRESULT (code);
 	}
 
@@ -1815,7 +1980,9 @@ LRESULT WM_SYSCOMMAND (long wParam, long lParam) {
 @Override
 LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 	LRESULT result = super.WM_UPDATEUISTATE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if ((state & CANVAS) != 0 && hooks (SWT.Paint)) {
 		OS.InvalidateRect (handle, null, true);
 	}
@@ -1825,7 +1992,9 @@ LRESULT WM_UPDATEUISTATE (long wParam, long lParam) {
 @Override
 LRESULT wmNCPaint (long hwnd, long wParam, long lParam) {
 	LRESULT result = super.wmNCPaint (hwnd, wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	long borderHandle = borderHandle ();
 	if ((state & CANVAS) != 0 || (hwnd == borderHandle && handle != borderHandle)) {
 		int bits1 = OS.GetWindowLong (hwnd, OS.GWL_EXSTYLE);
@@ -1880,22 +2049,30 @@ LRESULT wmNotify (NMHDR hdr, long wParam, long lParam) {
 			long hwndParent = hdr.hwndFrom;
 			do {
 				hwndParent = OS.GetParent (hwndParent);
-				if (hwndParent == 0) break;
+                if (hwndParent == 0) {
+                    break;
+                }
 				int bits = OS.GetWindowLong (hwndParent, OS.GWL_EXSTYLE);
-				if ((bits & OS.WS_EX_TOPMOST) != 0) break;
+                if ((bits & OS.WS_EX_TOPMOST) != 0) {
+                    break;
+                }
 			} while (true);
-			if (hwndParent != 0) break;
-			/*
-			 * Bug in Windows.  TTN_SHOW is sent for inactive shells.  When
-			 * SetWindowPos is called as a reaction, inactive shells can
-			 * wrongly end up on top.  The fix is to swallow such requests.
-			 *
-			 * A visible effect is that spurious tool tips can show up and
-			 * disappear in a split second.  This is a mostly harmless
-			 * feature that can also be observed in the Windows Explorer.
-			 * See bug 491627 for more details.
-			 */
-			if (display.getActiveShell () == null) return LRESULT.ONE;
+            if (hwndParent != 0) {
+                break;
+            }
+            /*
+             * Bug in Windows.  TTN_SHOW is sent for inactive shells.  When
+             * SetWindowPos is called as a reaction, inactive shells can
+             * wrongly end up on top.  The fix is to swallow such requests.
+             *
+             * A visible effect is that spurious tool tips can show up and
+             * disappear in a split second.  This is a mostly harmless
+             * feature that can also be observed in the Windows Explorer.
+             * See bug 491627 for more details.
+             */
+            if (display.getActiveShell() == null) {
+                return LRESULT.ONE;
+            }
 
 			display.lockActiveWindow = true;
 			int flags = OS.SWP_NOACTIVATE | OS.SWP_NOMOVE | OS.SWP_NOSIZE;

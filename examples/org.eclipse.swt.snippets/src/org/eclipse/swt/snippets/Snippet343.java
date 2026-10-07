@@ -58,11 +58,13 @@ public static void main(String[] args) {
 		}
 	});
 	expandBar.addListener(SWT.Resize, event -> display.asyncExec(() -> {
-		/*
-		 * The following is done asynchronously to allow the Text's width
-		 * to be changed before re-calculating its preferred height.
-		 */
-		if (text.isDisposed()) return;
+        /*
+         * The following is done asynchronously to allow the Text's width
+         * to be changed before re-calculating its preferred height.
+         */
+        if (text.isDisposed()) {
+            return;
+        }
 		Point size = text.computeSize(text.getSize().x - trimWidth, SWT.DEFAULT);
 		if (expandItem1.getHeight() != size.y) {
 			expandItem1.setHeight(size.y);
@@ -76,7 +78,9 @@ public static void main(String[] args) {
 	expandItem1.setExpanded(true);
 
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

@@ -49,8 +49,10 @@ public static void main (String [] args) {
 		ToolItem item = new ToolItem(toolBar, SWT.PUSH);
 		item.setText("B" + j);
 		width = item.getWidth();
-		/* find the width of the widest tool */
-		if (width > minWidth) minWidth = width;
+        /* find the width of the widest tool */
+        if (width > minWidth) {
+            minWidth = width;
+        }
 	}
 	CoolItem coolItem = new CoolItem(coolBar, SWT.DROP_DOWN);
 	coolItem.setControl(toolBar);
@@ -83,22 +85,24 @@ public static void main (String [] args) {
 					 */
 					Rectangle intersection = itemBounds.intersection(toolBounds);
 
-					/*
-					 * If the tool is not completely within the cool item
-					 * bounds, then it is partially hidden, and all remaining
-					 * tools are completely hidden.
-					 */
-					if (!intersection.equals(toolBounds))
-						break;
+                    /*
+                     * If the tool is not completely within the cool item
+                     * bounds, then it is partially hidden, and all remaining
+                     * tools are completely hidden.
+                     */
+                    if (!intersection.equals(toolBounds)) {
+                        break;
+                    }
 					i++;
 				}
 
-				/*
-				 * Create a menu with items for each of the completely hidden
-				 * buttons.
-				 */
-				if (chevronMenu != null)
-					chevronMenu.dispose();
+                /*
+                 * Create a menu with items for each of the completely hidden
+                 * buttons.
+                 */
+                if (chevronMenu != null) {
+                    chevronMenu.dispose();
+                }
 				chevronMenu = new Menu(coolBar);
 				for (int j = i; j < tools.length; j++) {
 					MenuItem menuItem = new MenuItem(chevronMenu, SWT.PUSH);
@@ -118,7 +122,9 @@ public static void main (String [] args) {
 	shell.pack();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

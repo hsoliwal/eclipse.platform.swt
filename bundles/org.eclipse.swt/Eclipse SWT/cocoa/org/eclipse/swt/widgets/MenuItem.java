@@ -217,11 +217,13 @@ public void addSelectionListener (SelectionListener listener) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.PUSH, SWT.CHECK, SWT.RADIO, SWT.SEPARATOR, SWT.CASCADE, 0);
+	return WidgetStylePolicy.MENU_ITEM.applyAsInt(style);
 }
 
 NSMenu createEmptyMenu () {
@@ -320,7 +322,9 @@ public Menu getMenu () {
 
 @Override
 String getNameText () {
-	if ((style & SWT.SEPARATOR) != 0) return "|";
+    if ((style & SWT.SEPARATOR) != 0) {
+        return "|";
+    }
 	return super.getNameText ();
 }
 
@@ -355,7 +359,9 @@ public Menu getParent () {
  */
 public boolean getSelection () {
 	checkWidget ();
-	if ((style & (SWT.CHECK | SWT.RADIO)) == 0) return false;
+    if ((style & (SWT.CHECK | SWT.RADIO)) == 0) {
+        return false;
+    }
 	return nsItem.state() == OS.NSControlStateValueOn;
 }
 
@@ -454,7 +460,9 @@ void register () {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (nsItem != null) nsItem.release();
+    if (nsItem != null) {
+        nsItem.release();
+    }
 	nsItem = null;
 	parent = null;
 }
@@ -472,7 +480,9 @@ void releaseChildren (boolean destroy) {
 void releaseWidget () {
 	super.releaseWidget ();
 	accelerator = 0;
-	if (this == parent.defaultItem) parent.defaultItem = null;
+    if (this == parent.defaultItem) {
+        parent.defaultItem = null;
+    }
 }
 
 /**
@@ -494,8 +504,12 @@ void releaseWidget () {
  */
 public void removeArmListener (ArmListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Arm, listener);
 }
 
@@ -518,8 +532,12 @@ public void removeArmListener (ArmListener listener) {
  */
 public void removeHelpListener (HelpListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Help, listener);
 }
 
@@ -542,8 +560,12 @@ public void removeHelpListener (HelpListener listener) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -559,11 +581,17 @@ void reskinChildren (int flags) {
 void selectRadio () {
 	int index = 0;
 	MenuItem [] items = parent.getItems ();
-	while (index < items.length && items [index] != this) index++;
+    while (index < items.length && items [index] != this) {
+        index++;
+    }
 	int i = index - 1;
-	while (i >= 0 && items [i].setRadioSelection (false)) --i;
+    while (i >= 0 && items [i].setRadioSelection(false)) {
+        --i;
+    }
 	int j = index + 1;
-	while (j < items.length && items [j].setRadioSelection (false)) j++;
+    while (j < items.length && items [j].setRadioSelection(false)) {
+        j++;
+    }
 	setSelection (true);
 }
 
@@ -583,8 +611,10 @@ void sendSelection () {
 
 	Event event = new Event ();
 	sendSelectionEvent (SWT.Selection, event, nsItemAction != 0);
-	// Widget may be disposed at this point
-	if (isDisposed()) return;
+    // Widget may be disposed at this point
+    if (isDisposed()) {
+        return;
+    }
 	if (nsItemAction != 0) {
 		if (event.doit) {
 			NSApplication app = NSApplication.sharedApplication();
@@ -610,7 +640,9 @@ void sendSelection () {
  */
 public void setAccelerator (int accelerator) {
 	checkWidget ();
-	if (this.accelerator == accelerator) return;
+    if (this.accelerator == accelerator) {
+        return;
+    }
 	this.accelerator = accelerator;
 	int key = accelerator & SWT.KEY_MASK;
 	if (key == SWT.ESC && /* no masks */key == accelerator && !display.escAsAcceleratorPresent) {
@@ -623,10 +655,18 @@ public void setAccelerator (int accelerator) {
 	nsItem.setKeyEquivalent (nsstring.lowercaseString());
 	nsstring.release();
 	int mask = 0;
-	if ((accelerator & SWT.SHIFT) != 0) mask |= OS.NSEventModifierFlagShift;
-	if ((accelerator & SWT.CONTROL) != 0) mask |= OS.NSEventModifierFlagControl;
-	if ((accelerator & SWT.COMMAND) != 0) mask |= OS.NSEventModifierFlagCommand;
-	if ((accelerator & SWT.ALT) != 0) mask |= OS.NSAlternateKeyMask;
+    if ((accelerator & SWT.SHIFT) != 0) {
+        mask |= OS.NSEventModifierFlagShift;
+    }
+    if ((accelerator & SWT.CONTROL) != 0) {
+        mask |= OS.NSEventModifierFlagControl;
+    }
+    if ((accelerator & SWT.COMMAND) != 0) {
+        mask |= OS.NSEventModifierFlagCommand;
+    }
+    if ((accelerator & SWT.ALT) != 0) {
+        mask |= OS.NSAlternateKeyMask;
+    }
 	nsItem.setKeyEquivalentModifierMask (mask);
 }
 
@@ -668,7 +708,9 @@ public void setEnabled (boolean enabled) {
  */
 public void setID (int id) {
 	checkWidget();
-	if (id < 0) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (id < 0) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	nsItem.setTag(id);
 }
 
@@ -691,8 +733,12 @@ public void setID (int id) {
 @Override
 public void setImage (Image image) {
 	checkWidget ();
-	if (this.image == image) return;
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if (this.image == image) {
+        return;
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	super.setImage (image);
 	nsItem.setImage(image != null? image.handle : null);
 }
@@ -730,7 +776,9 @@ public void setMenu (Menu menu) {
 		error (SWT.ERROR_MENUITEM_NOT_CASCADE);
 	}
 	if (menu != null) {
-		if (menu.isDisposed() || (menu == parent)) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (menu.isDisposed() || (menu == parent)) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		if ((menu.style & SWT.DROP_DOWN) == 0) {
 			error (SWT.ERROR_MENU_NOT_DROP_DOWN);
 		}
@@ -740,8 +788,12 @@ public void setMenu (Menu menu) {
 	}
 	/* Assign the new menu */
 	Menu oldMenu = this.menu;
-	if (oldMenu == menu) return;
-	if (oldMenu != null) oldMenu.cascade = null;
+    if (oldMenu == menu) {
+        return;
+    }
+    if (oldMenu != null) {
+        oldMenu.cascade = null;
+    }
 	this.menu = menu;
 
 	/* Update the menu in the OS */
@@ -769,7 +821,9 @@ public void setMenu (Menu menu) {
 }
 
 boolean setRadioSelection (boolean value) {
-	if ((style & SWT.RADIO) == 0) return false;
+    if ((style & SWT.RADIO) == 0) {
+        return false;
+    }
 	if (getSelection () != value) {
 		setSelection (value);
 		sendSelectionEvent (SWT.Selection);
@@ -792,7 +846,9 @@ boolean setRadioSelection (boolean value) {
  */
 public void setSelection (boolean selected) {
 	checkWidget ();
-	if ((style & (SWT.CHECK | SWT.RADIO)) == 0) return;
+    if ((style & (SWT.CHECK | SWT.RADIO)) == 0) {
+        return;
+    }
 	nsItem.setState(selected ? OS.NSControlStateValueOn : OS.NSControlStateValueOff);
 }
 
@@ -836,9 +892,15 @@ public void setSelection (boolean selected) {
 @Override
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.SEPARATOR) != 0) return;
-	if (text.equals (string)) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
+    if (text.equals(string)) {
+        return;
+    }
 	super.setText (string);
 	updateText ();
 }
@@ -880,7 +942,9 @@ public void setToolTipText (String toolTip) {
 		toolTipText = null;
 		nsItem.setToolTip (null);
 	}
-	if (toolTip == null || toolTip.trim().length() == 0 || toolTip.equals(toolTipText)) return;
+    if (toolTip == null || toolTip.trim().length() == 0 || toolTip.equals(toolTipText)) {
+        return;
+    }
 
 	toolTipText = toolTip;
 
@@ -891,12 +955,16 @@ public void setToolTipText (String toolTip) {
 }
 
 void updateText () {
-	if (isDisposed() || parent.isDisposed()) return;
+    if (isDisposed() || parent.isDisposed()) {
+        return;
+    }
 	char [] buffer = new char [text.length ()];
 	text.getChars (0, buffer.length, buffer, 0);
 	int i=0, j=0;
 	while (i < buffer.length) {
-		if (buffer [i] == '\t') break;
+        if (buffer [i] == '\t') {
+            break;
+        }
 		if ((buffer [j++] = buffer [i++]) == '&') {
 			if (i == buffer.length) {continue;}
 			if (buffer [i] == '&') {i++; continue;}
@@ -921,27 +989,33 @@ void updateText () {
 		NSAttributedString attribStr = ((NSAttributedString) new NSAttributedString ().alloc ()).initWithString (label, dict);
 		dict.release();
 		nsItem.setAttributedTitle(attribStr);
-		/*
-		 * Feature in Cocoa.  Setting the attributed title on an NSMenuItem
-		 * also sets the title, but clearing the attributed title does not
-		 * clear the title.  The fix is to explicitly set the title to an
-		 * empty string in this case.
-		 */
-		if (text.length() == 0) nsItem.setTitle(NSString.string());
+        /*
+         * Feature in Cocoa.  Setting the attributed title on an NSMenuItem
+         * also sets the title, but clearing the attributed title does not
+         * clear the title.  The fix is to explicitly set the title to an
+         * empty string in this case.
+         */
+        if (text.length() == 0) {
+            nsItem.setTitle(NSString.string());
+        }
 		attribStr.release();
 	}
 	label.release();
 }
 
 boolean updateAccelerator (boolean show) {
-	if (accelerator != 0) return false;
+    if (accelerator != 0) {
+        return false;
+    }
 	int mask = 0, key = 0;
 	if (show) {
 		char [] buffer = new char [text.length ()];
 		text.getChars (0, buffer.length, buffer, 0);
 		int i=0, j=0;
 		while (i < buffer.length) {
-			if (buffer [i] == '\t') break;
+            if (buffer [i] == '\t') {
+                break;
+            }
 			if ((buffer [j++] = buffer [i++]) == '&') {
 				if (i == buffer.length) {continue;}
 				if (buffer [i] == '&') {i++; continue;}
@@ -963,7 +1037,9 @@ boolean updateAccelerator (boolean show) {
 			switch (buffer.length - i - 1) {
 				case 1:
 					key = buffer [i + 1];
-					if (key == 0x2423) key = ' ';
+                    if (key == 0x2423) {
+                        key = ' ';
+                    }
 					break;
 				case 2:
 					if (buffer [i + 1] == 'F') {

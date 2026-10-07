@@ -82,8 +82,9 @@ public class Issue644_CompleteTableEditor {
 						visible = true;
 					}
 				}
-				if (!visible)
-					return;
+                if (!visible) {
+                    return;
+                }
 				rowNum++;
 			}
 		});
@@ -103,8 +104,9 @@ public class Issue644_CompleteTableEditor {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

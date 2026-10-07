@@ -66,8 +66,9 @@ class StackLayoutTab extends Tab {
 		table.addMouseListener(MouseListener.mouseDownAdapter(e -> {
 			resetEditors();
 			index = table.getSelectionIndex();
-			if (index == -1)
-				return;
+            if (index == -1) {
+                return;
+            }
 			// set top layer of stack to the selected item
 			setTopControl(index);
 
@@ -228,7 +229,9 @@ class StackLayoutTab extends Tab {
 			for (int i = 0 ; i < TOTAL_COLS; i++) {
 				oldItem.setText (i, data.get (row) [i]);
 			}
-			if (!tab) disposeEditors ();
+            if (!tab) {
+                disposeEditors();
+            }
 		}
 		setLayoutState ();
 		refreshLayoutComposite ();

@@ -52,10 +52,11 @@ public final class Bug577767_macOS_TableScrollsPastContent {
 
 		table.setItemCount (20);
 
-		// VIRTUAL is a bit more resilient for some reason; but TableItem.getBounds()
-		// triggers the bug
-		if (isVirtual)
-			table.getItem (0).getBounds ();
+        // VIRTUAL is a bit more resilient for some reason; but TableItem.getBounds()
+        // triggers the bug
+        if (isVirtual) {
+            table.getItem(0).getBounds();
+        }
 
 		// A way to get rid of popup for convenience of testing
 		table.addListener (SWT.MouseDown, e -> popup.dispose ());
@@ -89,10 +90,11 @@ public final class Bug577767_macOS_TableScrollsPastContent {
 
 		tree.setItemCount (20);
 
-		// Needed for problem to occur in VIRTUAL Tree.
-		// Regular Tree doesn't have the problem for some reason.
-		if (isVirtual)
-			tree.getItem (0).getBounds ();
+        // Needed for problem to occur in VIRTUAL Tree.
+        // Regular Tree doesn't have the problem for some reason.
+        if (isVirtual) {
+            tree.getItem(0).getBounds();
+        }
 
 		// A way to get rid of popup for convenience of testing
 		tree.addListener (SWT.MouseDown, e -> popup.dispose ());

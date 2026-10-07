@@ -95,9 +95,13 @@ public class Snippet133 {
 
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
-		if (font != null) font.dispose();
+        if (font != null) {
+            font.dispose();
+        }
 		display.dispose();
 	}
 
@@ -106,8 +110,9 @@ public class Snippet133 {
 		FileDialog dialog = new FileDialog(shell, SWT.OPEN);
 		dialog.setFilterExtensions(new String[] { "*.java", "*.*" });
 		String name = dialog.open();
-		if ((name == null) || (name.length() == 0))
-			return;
+        if ((name == null) || (name.length() == 0)) {
+            return;
+        }
 
 		File file = new File(name);
 		try {
@@ -132,7 +137,9 @@ public class Snippet133 {
 		fontDialog.setFontList(text.getFont().getFontData());
 		FontData fontData = fontDialog.open();
 		if (fontData != null) {
-			if (font != null) font.dispose();
+            if (font != null) {
+                font.dispose();
+            }
 			font = new Font(display, fontData);
 			text.setFont(font);
 		}
@@ -161,7 +168,9 @@ public class Snippet133 {
 	void menuPrint() {
 		PrintDialog dialog = new PrintDialog(shell, SWT.NONE);
 		PrinterData data = dialog.open();
-		if (data == null) return;
+        if (data == null) {
+            return;
+        }
 		if (data.printToFile) {
 			data.fileName = "print.out"; // you probably want to ask the user for a filename
 		}
@@ -199,7 +208,9 @@ public class Snippet133 {
 			/* Create a buffer for computing tab width. */
 			int tabSize = 4; // is tab width a user setting in your UI?
 			StringBuilder tabBuffer = new StringBuilder(tabSize);
-			for (int i = 0; i < tabSize; i++) tabBuffer.append(' ');
+            for (int i = 0; i < tabSize; i++) {
+                tabBuffer.append(' ');
+            }
 			tabs = tabBuffer.toString();
 
 			/* Create printer GC, and create and set the printer font & foreground color. */

@@ -42,27 +42,31 @@ public class Bug560358_DarkMenuBar {
 	static void setMenuItemName(MenuItem item) {
 		StringBuilder itemText = new StringBuilder();
 
-		if      ((item.getStyle() & SWT.SEPARATOR) != 0)
-			return;
-		else if ((item.getStyle() & SWT.CASCADE) != 0)
-			itemText.append("SWT.CASCADE");
-		else if ((item.getStyle() & SWT.PUSH) != 0)
-			itemText.append("SWT.PUSH");
-		else if ((item.getStyle() & SWT.CHECK) != 0)
-			itemText.append("SWT.CHECK");
-		else if ((item.getStyle() & SWT.RADIO) != 0)
-			itemText.append("SWT.RADIO");
-		else
-			throw new RuntimeException();
+        if ((item.getStyle() & SWT.SEPARATOR) != 0) {
+            return;
+        } else if ((item.getStyle() & SWT.CASCADE) != 0) {
+            itemText.append("SWT.CASCADE");
+        } else if ((item.getStyle() & SWT.PUSH) != 0) {
+            itemText.append("SWT.PUSH");
+        } else if ((item.getStyle() & SWT.CHECK) != 0) {
+            itemText.append("SWT.CHECK");
+        } else if ((item.getStyle() & SWT.RADIO) != 0) {
+            itemText.append("SWT.RADIO");
+        } else {
+            throw new RuntimeException();
+        }
 
-		if (!item.getEnabled())
-			itemText.append(" + disabled");
+        if (!item.getEnabled()) {
+            itemText.append(" + disabled");
+        }
 
-		if (item.getImage() != null)
-			itemText.append(" + image");
+        if (item.getImage() != null) {
+            itemText.append(" + image");
+        }
 
-		if (item.getSelection())
-			itemText.append(" + selection");
+        if (item.getSelection()) {
+            itemText.append(" + selection");
+        }
 
 		itemText.append("\tCtrl+A");
 
@@ -186,7 +190,9 @@ public class Bug560358_DarkMenuBar {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		display.dispose ();

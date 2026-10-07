@@ -104,15 +104,17 @@ public void test_addLjava_lang_StringI() {
 	combo.removeAll();
 
 	int number = 3;
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
 	combo.add("fred", number);
 	assertArrayEquals(new String[]{"fred0", "fred1", "fred2", "fred"}, combo.getItems());
 
 	combo.removeAll();
 	number = 3;
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
 	combo.add("fred", 1);
 	assertArrayEquals(new String[]{"fred0", "fred", "fred1", "fred2"}, combo.getItems());
 	combo.add("fred", 0);
@@ -203,8 +205,9 @@ public void test_addSelectionListenerWidgetSelectedAdapterLorg_eclipse_swt_event
 @Test
 public void test_clearSelection() {
 	int number = 5;
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
 	combo.clearSelection();
 	assertEquals(new Point(0, 0), combo.getSelection());
 	combo.setSelection(new Point(0, 5));
@@ -286,8 +289,9 @@ public void test_deselectI() {
 	combo.deselect(2);
 
 	int number = 10;
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
 	for (int i = 0; i < number; i++) {
 		combo.select(i);
 		assertEquals(i, combo.getSelectionIndex());
@@ -332,8 +336,9 @@ public void test_getItemI() {
 	for (int i = 0; i < number; i++) {
 		combo.add("fred" + i);
 	}
-	for (int i = 0; i < number; i++)
-		assertEquals("fred" + i, combo.getItem(i));
+    for (int i = 0; i < number; i++) {
+        assertEquals("fred" + i, combo.getItem(i));
+    }
 }
 
 @Test
@@ -438,35 +443,45 @@ public void test_indexOfLjava_lang_String() {
 	combo.removeAll();
 
 	int number = 5;
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
-	for (int i = 0; i < number; i++)
-		assertEquals(i, combo.indexOf("fred" + i));
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
+    for (int i = 0; i < number; i++) {
+        assertEquals(i, combo.indexOf("fred" + i));
+    }
 
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
 	combo.removeAll();
-	for (int i = 0; i < number; i++)
-		assertEquals(-1, combo.indexOf("fred" + i));
+    for (int i = 0; i < number; i++) {
+        assertEquals(-1, combo.indexOf("fred" + i));
+    }
 
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
 	combo.remove("fred3");
-	for (int i = 0; i < 3; i++)
-		assertEquals(i, combo.indexOf("fred" + i));
+    for (int i = 0; i < 3; i++) {
+        assertEquals(i, combo.indexOf("fred" + i));
+    }
 	assertEquals(-1, combo.indexOf("fred3"));
-	for (int i = 4; i < number; i++)
-		assertEquals(i - 1, combo.indexOf("fred" + i));
+    for (int i = 4; i < number; i++) {
+        assertEquals(i - 1, combo.indexOf("fred" + i));
+    }
 
 	combo.removeAll();
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
 	combo.remove(2);
-	for (int i = 0; i < 2; i++)
-		assertEquals(i, combo.indexOf("fred" + i));
+    for (int i = 0; i < 2; i++) {
+        assertEquals(i, combo.indexOf("fred" + i));
+    }
 	assertEquals(-1, combo.indexOf("fred2"));
-	for (int i = 3; i < number; i++)
-		assertEquals(i - 1, combo.indexOf("fred" + i));
+    for (int i = 3; i < number; i++) {
+        assertEquals(i - 1, combo.indexOf("fred" + i));
+    }
 }
 
 @Test
@@ -477,21 +492,28 @@ public void test_indexOfLjava_lang_StringI() {
 	combo.removeAll();
 
 	int number = 5;
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
-	for (int i = 0; i < number; i++)
-		assertEquals(i, combo.indexOf("fred" + i, 0));
-	for (int i = 0; i < number; i++)
-		assertEquals(-1, combo.indexOf("fred" + i, i + 1));
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
+    for (int i = 0; i < number; i++) {
+        assertEquals(i, combo.indexOf("fred" + i, 0));
+    }
+    for (int i = 0; i < number; i++) {
+        assertEquals(-1, combo.indexOf("fred" + i, i + 1));
+    }
 
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
-	for (int i = 0; i < 3; i++)
-		assertEquals(i, combo.indexOf("fred" + i, 0));
-	for (int i = 3; i < number; i++)
-		assertEquals(i, combo.indexOf("fred" + i, 3));
-	for (int i = 0; i < number; i++)
-		assertEquals(i, combo.indexOf("fred" + i, i));
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
+    for (int i = 0; i < 3; i++) {
+        assertEquals(i, combo.indexOf("fred" + i, 0));
+    }
+    for (int i = 3; i < number; i++) {
+        assertEquals(i, combo.indexOf("fred" + i, 3));
+    }
+    for (int i = 0; i < number; i++) {
+        assertEquals(i, combo.indexOf("fred" + i, i));
+    }
 }
 
 @Tag("clipboard")
@@ -578,8 +600,9 @@ public void test_removeI() {
 		}
 	}
 
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i); // different items
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    } // different items
 	for (int i = 0; i < number; i++) {
 		assertEquals(number - i, combo.getItemCount());
 		combo.remove(number-i-1);
@@ -651,28 +674,32 @@ public void test_removeII() {
 @Test
 public void test_removeLjava_lang_String() {
 	int number = 5;
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
 	for (int i = 0; i < number; i++) {
 		assertEquals(number - i, combo.getItemCount());
 		combo.remove("fred" + i);
 	}
 
-	for (int i = 0; i < number; i++)
-		combo.add("fred");
+    for (int i = 0; i < number; i++) {
+        combo.add("fred");
+    }
 	for (int i = 0; i < number; i++) {
 		assertEquals(number - i, combo.getItemCount());
 		combo.remove("fred");
 	}
 
-	for (int i = 0; i < number; i++)
-		combo.add("fred");
+    for (int i = 0; i < number; i++) {
+        combo.add("fred");
+    }
 	assertThrows(IllegalArgumentException.class,
 			() ->	combo.remove(null));
 
 	combo.removeAll();
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
 	assertThrows(IllegalArgumentException.class,
 			() -> combo.remove("fred"));
 
@@ -867,10 +894,12 @@ public void test_setItemILjava_lang_String() {
 
 	combo.removeAll();
 	int number = 5;
-	for (int i = 0; i < number; i++)
-		combo.add("fred");
-	for (int i = 0; i < number; i++)
-		combo.setItem(i, "fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred");
+    }
+    for (int i = 0; i < number; i++) {
+        combo.setItem(i, "fred" + i);
+    }
 	assertArrayEquals(new String[]{"fred0", "fred1", "fred2", "fred3", "fred4"}, combo.getItems());
 }
 
@@ -902,8 +931,9 @@ public void test_setSelectionLorg_eclipse_swt_graphics_Point() {
 		combo.setSelection(null));
 
 	int number = 5;
-	for (int i = 0; i < number; i++)
-		combo.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        combo.add("fred" + i);
+    }
 	combo.setSelection(new Point(0, 5));
 	assertEquals(new Point(0, 0), combo.getSelection());
 	combo.setText("some text");

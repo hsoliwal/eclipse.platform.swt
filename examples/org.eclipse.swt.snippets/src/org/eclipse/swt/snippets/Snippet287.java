@@ -66,7 +66,9 @@ public static void main(String[] args) {
 	});
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }
@@ -96,14 +98,18 @@ public static boolean find (TreeItem item, String searchString) {
 		}
 	}
 
-	if (!item.getExpanded ()) return false; /* don't check child items */
+    if (!item.getExpanded()) {
+        return false;
+    } /* don't check child items */
 
 	/* check child items */
 	int childCount = item.getItemCount ();
 	for (int i = 0; i < childCount; i++) {
 		TreeItem child = item.getItem (i);
 		boolean success = find (child, searchString);
-		if (success) return true;
+        if (success) {
+            return true;
+        }
 	}
 
 	return false;

@@ -76,9 +76,10 @@ import org.eclipse.swt.internal.win32.*;
  */
 public class Table extends Composite {
 	TableItem [] items;
-	int [] keys;
+	VirtualItemStorage<TableItem> virtualItems;
+	VirtualViewportPlanner virtualViewport;
 	TableColumn [] columns;
-	int columnCount, customCount, keyCount;
+	int columnCount, customCount;
 	ImageList imageList, headerImageList;
 	TableItem currentItem;
 	TableColumn sortColumn;
@@ -102,7 +103,6 @@ public class Table extends Composite {
 	static final int H_SCROLL_LIMIT = 32;
 	static final int V_SCROLL_LIMIT = 16;
 	static final int DRAG_IMAGE_SIZE = 301;
-	static boolean COMPRESS_ITEMS = true;
 	static final long TableProc;
 	static final TCHAR TableClass = new TCHAR (OS.WC_LISTVIEW, true);
 	static final TCHAR HeaderClass = new TCHAR (OS.WC_HEADER, true);
@@ -166,100 +166,56 @@ void _addListener (int eventType, Listener listener) {
 }
 
 boolean _checkGrow (int count) {
-	//TODO - code could be shared but it would mix keyed and non-keyed logic
-	if (keys == null) {
-		if (count == items.length) {
-			/*
-			* Grow the array faster when redraw is off or the
-			* table is not visible.  When the table is painted,
-			* the items array is resized to be smaller to reduce
-			* memory usage.
-			*/
-			boolean small = getDrawing () && OS.IsWindowVisible (handle);
-			int length = small ? items.length + 4 : Math.max (4, items.length * 3 / 2);
-			TableItem [] newItems = new TableItem [length];
-			System.arraycopy (items, 0, newItems, 0, items.length);
-			items = newItems;
-		}
-	} else {
-		//TODO - don't shrink when count is very small (ie. 2 or 4 elements)?
-		//TODO - why? if setItemCount(1000000) is used after a shrink, then we won't compress
-		//TODO - get rid of ignoreShrink?
-		if (!ignoreShrink && keyCount > count / 2) {
-			boolean small = getDrawing () && OS.IsWindowVisible (handle);
-			int length = small ? count + 4 : Math.max (4, count * 3 / 2);
-			TableItem [] newItems = new TableItem [length];
-			for (int i=0; i<keyCount; i++) {
-				newItems [keys [i]] = items [i];
-			}
-			items = newItems;
-			keys = null;
-			keyCount = 0;
-			return true;
-		} else {
-			//TODO - grow by page size or screen height?
-			//TODO - experiment to determine an optimal growth rate for keys
-			if (keyCount == keys.length) {
-				boolean small = getDrawing () && OS.IsWindowVisible (handle);
-				int length = small ? keys.length + 4 : Math.max (4, keys.length * 3 / 2);
-				int [] newKeys = new int [length];
-				System.arraycopy (keys, 0, newKeys, 0, keys.length);
-				keys = newKeys;
-				TableItem [] newItems = new TableItem [length];
-				System.arraycopy (items, 0, newItems, 0, items.length);
-				items = newItems;
-			}
-		}
+    if ((style & SWT.VIRTUAL) != 0) {
+        return false;
+    }
+	if (count == items.length) {
+		/*
+		* Grow the array faster when redraw is off or the
+		* table is not visible.  When the table is painted,
+		* the items array is resized to be smaller to reduce
+		* memory usage.
+		*/
+		boolean small = getDrawing () && OS.IsWindowVisible (handle);
+		int length = small ? items.length + 4 : Math.max (4, items.length * 3 / 2);
+		TableItem [] newItems = new TableItem [length];
+		System.arraycopy (items, 0, newItems, 0, items.length);
+		items = newItems;
 	}
 	return false;
 }
 
 void _checkShrink () {
-	//TODO - code could be shared but it would mix keyed and non-keyed logic
-	//TODO - move ignoreShrink test back to the caller
-	if (keys == null) {
-		if (!ignoreShrink) {
-			/* Resize the item array to match the item count */
-			int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
+    if ((style & SWT.VIRTUAL) != 0 || ignoreShrink) {
+        return;
+    }
+	/* Resize the item array to match the item count */
+	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 
-			/*
-			* Bug in Windows. Call to OS.LVM_GETITEMCOUNT unexpectedly returns zero,
-			* leading to a possible "ArrayIndexOutOfBoundsException: 4" in SWT table.
-			* So, double check for any existing living items in the table and fixing
-			* the count value. Refer bug 292199.
-			*/
-			if (count == 0 && items.length > 4) {
-				while (count<items.length && items[count] != null && !items[count].isDisposed()) {
-					count++;
-				}
-			}
+	/*
+	* Bug in Windows. Call to OS.LVM_GETITEMCOUNT unexpectedly returns zero,
+	* leading to a possible "ArrayIndexOutOfBoundsException: 4" in SWT table.
+	* So, double check for any existing living items in the table and fixing
+	* the count value. Refer bug 292199.
+	*/
+	if (count == 0 && items.length > 4) {
+		while (count < items.length && items[count] != null && !items[count].isDisposed()) {
+			count++;
+		}
+	}
 
-			if (items.length > 4 && items.length - count > 3) {
-				int length = Math.max (4, (count + 3) / 4 * 4);
-				TableItem [] newItems = new TableItem [length];
-				System.arraycopy (items, 0, newItems, 0, count);
-				items = newItems;
-			}
-		}
-	} else {
-		if (!ignoreShrink) {
-			if (keys.length > 4 && keys.length - keyCount > 3) {
-				int length = Math.max (4, (keyCount + 3) / 4 * 4);
-				int [] newKeys = new int [length];
-				System.arraycopy (keys, 0, newKeys, 0, keyCount);
-				keys = newKeys;
-				TableItem [] newItems = new TableItem [length];
-				System.arraycopy (items, 0, newItems, 0, keyCount);
-				items = newItems;
-			}
-		}
+	if (items.length > 4 && items.length - count > 3) {
+		int length = Math.max (4, (count + 3) / 4 * 4);
+		TableItem [] newItems = new TableItem [length];
+		System.arraycopy (items, 0, newItems, 0, count);
+		items = newItems;
 	}
 }
 
 void _clearItems () {
 	items = null;
-	keys = null;
-	keyCount = 0;
+	virtualItems = null;
+	virtualViewport = null;
 }
 
 TableItem _getItem (int index) {
@@ -272,145 +228,96 @@ TableItem _getItem (int index, boolean create) {
 }
 
 TableItem _getItem (int index, boolean create, int count) {
-	//TODO - code could be shared but it would mix keyed and non-keyed logic
-	if (keys == null) {
-		if (index >= items.length) return null;
-		if ((style & SWT.VIRTUAL) == 0 || !create) return items [index];
-		if (items [index] != null) return items [index];
-		return items [index] = new TableItem (this, SWT.NONE, -1, false);
-	} else {
-		if ((style & SWT.VIRTUAL) == 0 || !create) {
-			if (keyCount == 0) return null;
-			if (index > keys [keyCount - 1]) return null;
-		}
-		int keyIndex = binarySearch (keys, 0, keyCount, index);
-		if ((style & SWT.VIRTUAL) == 0 || !create) {
-			return keyIndex < 0 ? null : items [keyIndex];
-		}
-		if (keyIndex < 0) {
-			if (count == -1) {
-				count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-			}
-			//TODO - _checkGrow() doesn't return a value, check keys == null instead
-			if (_checkGrow (count)) {
-				if (items [index] != null) return items [index];
-				return items [index] = new TableItem (this, SWT.NONE, -1, false);
-			}
-			keyIndex = -keyIndex - 1;
-			if (keyIndex < keyCount) {
-				System.arraycopy(keys, keyIndex, keys, keyIndex + 1, keyCount - keyIndex);
-				System.arraycopy(items, keyIndex, items, keyIndex + 1, keyCount - keyIndex);
-			}
-			keyCount++;
-			keys [keyIndex] = index;
-		} else {
-			if (items [keyIndex] != null) return items [keyIndex];
-		}
-		return items [keyIndex] = new TableItem (this, SWT.NONE, -1, false);
+	if ((style & SWT.VIRTUAL) != 0) {
+		TableItem item = virtualItems.get (index);
+        if (item != null || !create) {
+            return item;
+        }
+		item = new TableItem (this, SWT.NONE, -1, false);
+		virtualItems.put (index, item);
+		return item;
 	}
+    if (index >= items.length) {
+        return null;
+    }
+	return items [index];
 }
 
 void _getItems (TableItem [] result, int count) {
-	if (keys == null) {
-		System.arraycopy (items, 0, result, 0, count);
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.forEachIndexed ((index, item) -> {
+            if (index < count) {
+                result [index] = item;
+            }
+		});
 	} else {
-		/* NOTE: Null items will be in the array when keyCount != count */
-		for (int i=0; i<keyCount; i++) {
-			if (keys [i] >= count) break;
-			result [keys [i]] = items [keys [i]];
-		}
+		System.arraycopy (items, 0, result, 0, count);
 	}
 }
 
 boolean _hasItems () {
-	return items != null;
+	return (style & SWT.VIRTUAL) != 0 ? virtualItems != null : items != null;
 }
 
 void _initItems () {
-	items = new TableItem [4];
-	if (COMPRESS_ITEMS) {
-		if ((style & SWT.VIRTUAL) != 0) {
-			keyCount = 0;
-			keys = new int [4];
-		}
+	if ((style & SWT.VIRTUAL) != 0) {
+		items = null;
+		virtualItems = new VirtualItemStorage<> ();
+		virtualViewport = new VirtualViewportPlanner ();
+	} else {
+		items = new TableItem [4];
+		virtualItems = null;
+		virtualViewport = null;
 	}
 }
 
 /* NOTE: The array has already been grown to have space for the new item */
 void _insertItem (int index, TableItem item, int count) {
-	if (keys == null) {
-		System.arraycopy (items, index, items, index + 1, count - index);
-		items [index] = item;
-	} else {
-		int keyIndex = binarySearch (keys, 0, keyCount, index);
-		if (keyIndex < 0) keyIndex = -keyIndex - 1;
-		System.arraycopy(keys, keyIndex, keys, keyIndex + 1, keyCount - keyIndex);
-		keys [keyIndex] = index;
-		System.arraycopy(items, keyIndex, items, keyIndex + 1, keyCount - keyIndex);
-		items [keyIndex] = item;
-		keyCount++;
-		for (int i=keyIndex + 1; i<keyCount; i++) keys[i]++;
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.insert (index, item);
+		virtualViewport.insert (index, 1);
+		return;
 	}
+	System.arraycopy (items, index, items, index + 1, count - index);
+	items [index] = item;
 }
 
 void _removeItem (int index, int count) {
-	if (keys == null) {
-		System.arraycopy (items, index + 1, items, index, --count - index);
-		items [count] = null;
-	} else {
-		int keyIndex = binarySearch (keys, 0, keyCount, index);
-		if (keyIndex < 0) {
-			keyIndex = -keyIndex - 1;
-		} else {
-			--keyCount;
-			System.arraycopy (keys, keyIndex + 1, keys, keyIndex, keyCount - keyIndex);
-			keys [keyCount] = 0;
-			System.arraycopy (items, keyIndex + 1, items, keyIndex, keyCount - keyIndex);
-			items [keyCount] = null;
-		}
-		for (int i=keyIndex; i<keyCount; i++) --keys[i];
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.remove (index);
+		virtualViewport.remove (index, 1);
+		return;
 	}
+	System.arraycopy (items, index + 1, items, index, --count - index);
+	items [count] = null;
 }
 
 /* NOTE: Removes from start to index - 1 */
 void _removeItems (int start, int index, int count) {
-	if (keys == null) {
-		System.arraycopy (items, index, items, start, count - index);
-		for (int i=count-(index-start); i<count; i++) items [i] = null;
-	} else {
-		int end = index;
-		int left = binarySearch (keys, 0, keyCount, start);
-		if (left < 0) left = -left - 1;
-		int right = binarySearch (keys, left, keyCount, end);
-		if (right < 0) right = -right - 1;
-		//TODO - optimize when left and right are the same
-		System.arraycopy (keys, right, keys, left, keyCount - right);
-		for (int i=keyCount-(right-left); i<keyCount; i++) keys [i] = 0;
-		System.arraycopy (items, right, items, left, keyCount - right);
-		for (int i=keyCount-(right-left); i<keyCount; i++) items [i] = null;
-		keyCount -= (right - left);
-		for (int i=left; i<keyCount; i++) keys[i] -= (right - left);
+	if ((style & SWT.VIRTUAL) != 0) {
+		virtualItems.removeRange (start, index, item -> {});
+		virtualViewport.remove (start, index - start);
+		return;
 	}
+	System.arraycopy (items, index, items, start, count - index);
+    for (int i = count - (index - start); i < count; i++) {
+        items [i] = null;
+    }
 }
 
 void _setItemCount (int count, int itemCount) {
-	if (keys == null) {
-		int length = Math.max (4, (count + 3) / 4 * 4);
-		TableItem [] newItems = new TableItem [length];
-		System.arraycopy (items, 0, newItems, 0, Math.min (count, itemCount));
-		items = newItems;
-	} else {
-		int index = Math.min (count, itemCount);
-		keyCount = binarySearch (keys, 0, keyCount, index);
-		if (keyCount < 0) keyCount = -keyCount - 1;
-		int length = Math.max (4, (keyCount + 3) / 4 * 4);
-		int [] newKeys = new int [length];
-		System.arraycopy (keys, 0, newKeys, 0, keyCount);
-		keys = newKeys;
-		TableItem [] newItems = new TableItem [length];
-		System.arraycopy (items, 0, newItems, 0, keyCount);
-		items = newItems;
+	if ((style & SWT.VIRTUAL) != 0) {
+        if (count < itemCount) {
+            virtualItems.truncate(count, item -> {
+            });
+        }
+		virtualViewport.setLogicalCount (count);
+		return;
 	}
+	int length = Math.max (4, (count + 3) / 4 * 4);
+	TableItem [] newItems = new TableItem [length];
+	System.arraycopy (items, 0, newItems, 0, Math.min (count, itemCount));
+	items = newItems;
 }
 
 /**
@@ -450,7 +357,9 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 }
 
 long callWindowProc (long hwnd, int msg, long wParam, long lParam, boolean forceSelect) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	if (hwndHeader != 0 && hwnd == hwndHeader) {
 		return OS.CallWindowProc (HeaderProc, hwnd, msg, wParam, lParam);
 	}
@@ -525,8 +434,12 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam, boolean force
 		}
 	}
 	boolean oldSelected = wasSelected;
-	if (checkSelection) wasSelected = false;
-	if (checkActivate) ignoreActivate = true;
+    if (checkSelection) {
+        wasSelected = false;
+    }
+    if (checkActivate) {
+        ignoreActivate = true;
+    }
 
 	/*
 	* Bug in Windows.  For some reason, when the WS_EX_COMPOSITED
@@ -547,7 +460,9 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam, boolean force
 					break;
 				}
 				hwndOwner = OS.GetWindow (hwndParent, OS.GW_OWNER);
-				if (hwndOwner != 0) break;
+                if (hwndOwner != 0) {
+                    break;
+                }
 				hwndParent = OS.GetParent (hwndParent);
 			}
 		}
@@ -569,7 +484,9 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam, boolean force
 					fixScroll = true;
 					bits &= ~OS.WS_VSCROLL;
 				}
-				if (fixScroll) OS.SetWindowLong (handle, OS.GWL_STYLE, bits);
+                if (fixScroll) {
+                    OS.SetWindowLong(handle, OS.GWL_STYLE, bits);
+                }
 			}
 		}
 	}
@@ -587,12 +504,16 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam, boolean force
 		OS.RedrawWindow (handle, null, 0, flags);
 	}
 
-	if (checkActivate) ignoreActivate = false;
+    if (checkActivate) {
+        ignoreActivate = false;
+    }
 	if (checkSelection) {
 		if (wasSelected || forceSelect) {
 			Event event = new Event ();
 			int index = (int)OS.SendMessage (handle, OS.LVM_GETNEXTITEM, -1, OS.LVNI_FOCUSED);
-			if (index != -1) event.item = _getItem (index);
+            if (index != -1) {
+                event.item = _getItem(index);
+            }
 			sendSelectionEvent (SWT.Selection, event, false);
 		}
 		wasSelected = oldSelected;
@@ -620,7 +541,9 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam, boolean force
 				OS.DefWindowProc (handle, OS.WM_SETREDRAW, 1, 0);
 				OS.InvalidateRect (handle, null, true);
 				long hwndHeader = OS.SendMessage (handle, OS.LVM_GETHEADER, 0, 0);
-				if (hwndHeader != 0) OS.InvalidateRect (hwndHeader, null, true);
+                if (hwndHeader != 0) {
+                    OS.InvalidateRect(hwndHeader, null, true);
+                }
 			}
 			//FALL THROUGH
 
@@ -662,19 +585,7 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam, boolean force
 }
 
 static int checkStyle (int style) {
-	/*
-	* Feature in Windows.  Even when WS_HSCROLL or
-	* WS_VSCROLL is not specified, Windows creates
-	* trees and tables with scroll bars.  The fix
-	* is to set H_SCROLL and V_SCROLL.
-	*
-	* NOTE: This code appears on all platforms so that
-	* applications have consistent scroll bar behavior.
-	*/
-	if ((style & SWT.NO_SCROLL) == 0) {
-		style |= SWT.H_SCROLL | SWT.V_SCROLL;
-	}
-	return checkBits (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
+	return WidgetStylePolicy.TABLE_WINDOWS.applyAsInt(style);
 }
 
 LRESULT CDDS_ITEMPOSTPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
@@ -779,7 +690,9 @@ LRESULT CDDS_ITEMPREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 }
 
 LRESULT CDDS_POSTPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
-	if (ignoreCustomDraw) return null;
+    if (ignoreCustomDraw) {
+        return null;
+    }
 	/*
 	* Bug in Windows.  When the table has the extended style
 	* LVS_EX_FULLROWSELECT and LVM_SETBKCOLOR is used with
@@ -805,7 +718,9 @@ LRESULT CDDS_POSTPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 					int result = OS.GetUpdateRgn (handle, rgn, true);
 					OS.SendMessage (handle, OS.LVM_SETEXTENDEDLISTVIEWSTYLE, bits, bits);
 					OS.ValidateRect (handle, null);
-					if (result != OS.NULLREGION) OS.InvalidateRgn (handle, rgn, true);
+                    if (result != OS.NULLREGION) {
+                        OS.InvalidateRgn(handle, rgn, true);
+                    }
 					OS.DeleteObject (rgn);
 					/*
 					* Bug in Windows.  Despite the documentation, LVM_SETTOOLTIPS
@@ -849,7 +764,9 @@ LRESULT CDDS_PREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 					int result = OS.GetUpdateRgn (handle, rgn, true);
 					OS.SendMessage (handle, OS.LVM_SETEXTENDEDLISTVIEWSTYLE, bits, 0);
 					OS.ValidateRect (handle, null);
-					if (result != OS.NULLREGION) OS.InvalidateRgn (handle, rgn, true);
+                    if (result != OS.NULLREGION) {
+                        OS.InvalidateRgn(handle, rgn, true);
+                    }
 					OS.DeleteObject (rgn);
 					/*
 					* Bug in Windows.  Despite the documentation, LVM_SETTOOLTIPS
@@ -884,7 +801,9 @@ LRESULT CDDS_PREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 			} else {
 				final boolean enabled = OS.IsWindowEnabled (handle);
 				if (enabled && (int)OS.SendMessage (handle, OS.LVM_GETBKCOLOR, 0, 0) == OS.CLR_NONE || !enabled && hasCustomBackground()) {
-					if (control == null) control = this;
+                    if (control == null) {
+                        control = this;
+                    }
 					fillBackground (nmcd.hdc, control.getBackgroundPixel (), rect);
 					if (sortColumn != null && sortDirection != SWT.NONE) {
 						int index = indexOf (sortColumn);
@@ -912,10 +831,16 @@ LRESULT CDDS_PREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 }
 
 LRESULT CDDS_SUBITEMPOSTPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
-	if (ignoreCustomDraw) return null;
-	if (nmcd.left == nmcd.right) return new LRESULT (OS.CDRF_DODEFAULT);
+    if (ignoreCustomDraw) {
+        return null;
+    }
+    if (nmcd.left == nmcd.right) {
+        return new LRESULT(OS.CDRF_DODEFAULT);
+    }
 	long hDC = nmcd.hdc;
-	if (ignoreDrawForeground) OS.RestoreDC (hDC, -1);
+    if (ignoreDrawForeground) {
+        OS.RestoreDC(hDC, -1);
+    }
 	if (OS.IsWindowVisible (handle)) {
 		/*
 		* Feature in Windows.  When there is a sort column, the sort column
@@ -936,7 +861,9 @@ LRESULT CDDS_SUBITEMPOSTPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 						int result = OS.GetUpdateRgn (handle, rgn, true);
 						OS.SendMessage (handle, OS.LVM_SETSELECTEDCOLUMN, newColumn, 0);
 						OS.ValidateRect (handle, null);
-						if (result != OS.NULLREGION) OS.InvalidateRgn (handle, rgn, true);
+                        if (result != OS.NULLREGION) {
+                            OS.InvalidateRgn(handle, rgn, true);
+                        }
 						OS.DeleteObject (rgn);
 					}
 				}
@@ -973,9 +900,13 @@ LRESULT CDDS_SUBITEMPREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 	* NOTE: Force the item to be created if it does not exist.
 	*/
 	TableItem item = _getItem ((int)nmcd.dwItemSpec);
-	if (item == null || item.isDisposed ()) return null;
+    if (item == null || item.isDisposed()) {
+        return null;
+    }
 	long hFont = item.fontHandle (nmcd.iSubItem);
-	if (hFont != -1) OS.SelectObject (hDC, hFont);
+    if (hFont != -1) {
+        OS.SelectObject(hDC, hFont);
+    }
 	if (ignoreCustomDraw || (nmcd.left == nmcd.right)) {
 		return new LRESULT (hFont == -1 ? OS.CDRF_DODEFAULT : OS.CDRF_NEWFONT);
 	}
@@ -986,20 +917,32 @@ LRESULT CDDS_SUBITEMPREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 		Event measureEvent = null;
 		if (hooks (SWT.MeasureItem)) {
 			measureEvent = sendMeasureItemEvent (item, (int)nmcd.dwItemSpec, nmcd.iSubItem, nmcd.hdc);
-			if (isDisposed () || item.isDisposed ()) return null;
+            if (isDisposed() || item.isDisposed()) {
+                return null;
+            }
 		}
 		if (hooks (SWT.EraseItem)) {
 			sendEraseItemEvent (item, nmcd, lParam, measureEvent);
-			if (isDisposed () || item.isDisposed ()) return null;
+            if (isDisposed() || item.isDisposed()) {
+                return null;
+            }
 			code |= OS.CDRF_NOTIFYPOSTPAINT;
 		}
-		if (ignoreDrawForeground || hooks (SWT.PaintItem)) code |= OS.CDRF_NOTIFYPOSTPAINT;
+        if (ignoreDrawForeground || hooks(SWT.PaintItem)) {
+            code |= OS.CDRF_NOTIFYPOSTPAINT;
+        }
 	}
 	int clrText = item.cellForeground != null ? item.cellForeground [nmcd.iSubItem] : -1;
-	if (clrText == -1) clrText = item.foreground;
+    if (clrText == -1) {
+        clrText = item.foreground;
+    }
 	int clrTextBk = item.cellBackground != null ? item.cellBackground [nmcd.iSubItem] : -1;
-	if (clrTextBk == -1) clrTextBk = item.background;
-	if (selectionForeground != -1) clrText = selectionForeground;
+    if (clrTextBk == -1) {
+        clrTextBk = item.background;
+    }
+    if (selectionForeground != -1) {
+        clrText = selectionForeground;
+    }
 	/*
 	* Bug in Windows.  When the table has the extended style
 	* LVS_EX_FULLROWSELECT and LVM_SETBKCOLOR is used with
@@ -1063,11 +1006,15 @@ LRESULT CDDS_SUBITEMPREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 		if (hFont == -1 && clrText == -1 && clrTextBk == -1) {
 			if (item.cellForeground == null && item.cellBackground == null && item.cellFont == null) {
 				int count = (int)OS.SendMessage (hwndHeader, OS.HDM_GETITEMCOUNT, 0, 0);
-				if (count == 1) hasAttributes = false;
+                if (count == 1) {
+                    hasAttributes = false;
+                }
 			}
 		}
 		if (hasAttributes) {
-			if (hFont == -1) hFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
+            if (hFont == -1) {
+                hFont = OS.SendMessage(handle, OS.WM_GETFONT, 0, 0);
+            }
 			OS.SelectObject (hDC, hFont);
 			if (enabled) {
 				nmcd.clrText = clrText == -1 ? getForegroundPixel () : clrText;
@@ -1075,7 +1022,9 @@ LRESULT CDDS_SUBITEMPREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 					nmcd.clrTextBk = OS.CLR_NONE;
 					if (selectionForeground == -1) {
 						Control control = findBackgroundControl ();
-						if (control == null) control = this;
+                        if (control == null) {
+                            control = this;
+                        }
 						if (control.backgroundImage == null) {
 							if ((int)OS.SendMessage (handle, OS.LVM_GETBKCOLOR, 0, 0) != OS.CLR_NONE) {
 								nmcd.clrTextBk = control.getBackgroundPixel ();
@@ -1106,7 +1055,9 @@ LRESULT CDDS_SUBITEMPREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 			int result = OS.GetUpdateRgn (handle, rgn, true);
 			OS.SendMessage (handle, OS.LVM_SETSELECTEDCOLUMN, -1, 0);
 			OS.ValidateRect (handle, null);
-			if (result != OS.NULLREGION) OS.InvalidateRgn (handle, rgn, true);
+            if (result != OS.NULLREGION) {
+                OS.InvalidateRgn(handle, rgn, true);
+            }
 			OS.DeleteObject (rgn);
 			code |= OS.CDRF_NOTIFYPOSTPAINT;
 		}
@@ -1135,14 +1086,19 @@ void checkBuffered () {
 }
 
 boolean checkData (TableItem item, boolean redraw) {
-	if ((style & SWT.VIRTUAL) == 0) return true;
+    if ((style & SWT.VIRTUAL) == 0) {
+        return true;
+    }
 	return checkData (item, indexOf (item), redraw);
 }
 
 boolean checkData (TableItem item, int index, boolean redraw) {
-	if ((style & SWT.VIRTUAL) == 0) return true;
-	if (!item.cached) {
-		item.cached = true;
+    if ((style & SWT.VIRTUAL) == 0) {
+        return true;
+    }
+	if (!item.isCachedState ()) {
+		item.pinVirtualFacade ();
+		item.setCachedState (true);
 		Event event = new Event ();
 		event.item = item;
 		event.index = index;
@@ -1150,7 +1106,9 @@ boolean checkData (TableItem item, int index, boolean redraw) {
 		sendEvent (SWT.SetData, event);
 		//widget could be disposed at this point
 		currentItem = null;
-		if (isDisposed () || item.isDisposed ()) return false;
+        if (isDisposed() || item.isDisposed()) {
+            return false;
+        }
 		if (redraw) {
 			if (!setScrollWidth (item, false)) {
 				item.redraw ();
@@ -1162,7 +1120,9 @@ boolean checkData (TableItem item, int index, boolean redraw) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -1189,10 +1149,14 @@ protected void checkSubclass () {
 public void clear (int index) {
 	checkWidget ();
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-	if (!(0 <= index && index < count)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < count)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	TableItem item = _getItem (index, false);
 	if (item != null) {
-		if (item != currentItem) item.clear ();
+        if (item != currentItem) {
+            item.clear();
+        }
 		/*
 		* Bug in Windows.  Despite the fact that every item in the
 		* table always has LPSTR_TEXTCALLBACK, Windows caches the
@@ -1244,7 +1208,9 @@ public void clear (int index) {
  */
 public void clear (int start, int end) {
 	checkWidget ();
-	if (start > end) return;
+    if (start > end) {
+        return;
+    }
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 	if (!(0 <= start && start <= end && end < count)) {
 		error (SWT.ERROR_INVALID_RANGE);
@@ -1318,8 +1284,12 @@ public void clear (int start, int end) {
  */
 public void clear (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (indices.length == 0) return;
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (indices.length == 0) {
+        return;
+    }
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 	for (int i=0; i<indices.length; i++) {
 		if (!(0 <= indices [i] && indices [i] < count)) {
@@ -1362,7 +1332,9 @@ public void clear (int [] indices) {
 			}
 		}
 	}
-	if (cleared) setScrollWidth (null, false);
+    if (cleared) {
+        setScrollWidth(null, false);
+    }
 }
 
 /**
@@ -1427,7 +1399,9 @@ public void clearAll () {
 @Override
 Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 	Point hintInPixels = Win32DPIUtils.pointToPixelAsSufficientlyLargeSize(hintInPoints, zoom);
-	if (fixScrollWidth) setScrollWidth (null, true);
+    if (fixScrollWidth) {
+        setScrollWidth(null, true);
+    }
 	//This code is intentionally commented
 //	if (itemHeight == -1 && hooks (SWT.MeasureItem)) {
 //		int i = 0;
@@ -1470,10 +1444,18 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 	long oneItem = OS.SendMessage (handle, OS.LVM_APPROXIMATEVIEWRECT, 1, 0);
 	int itemHeight = OS.HIWORD (oneItem) - OS.HIWORD (empty);
 	height += (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0) * itemHeight;
-	if (width == 0) width = DEFAULT_WIDTH;
-	if (height == 0) height = DEFAULT_HEIGHT;
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x;
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y;
+    if (width == 0) {
+        width = DEFAULT_WIDTH;
+    }
+    if (height == 0) {
+        height = DEFAULT_HEIGHT;
+    }
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x;
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y;
+    }
 	int border = getBorderWidthInPixels ();
 	width += border * 2;  height += border * 2;
 	if ((style & SWT.V_SCROLL) != 0) {
@@ -1539,7 +1521,9 @@ void createHandle () {
 
 	/* Set the extended style bits */
 	int bits1 = OS.LVS_EX_LABELTIP | OS.LVS_EX_DOUBLEBUFFER;
-	if ((style & SWT.FULL_SELECTION) != 0) bits1 |= OS.LVS_EX_FULLROWSELECT;
+    if ((style & SWT.FULL_SELECTION) != 0) {
+        bits1 |= OS.LVS_EX_FULLROWSELECT;
+    }
 	OS.SendMessage (handle, OS.LVM_SETEXTENDEDLISTVIEWSTYLE, bits1, bits1);
 
 	/*
@@ -1569,9 +1553,13 @@ int applyThemeBackground () {
 }
 
 void createHeaderToolTips () {
-	if (headerToolTipHandle != 0) return;
+    if (headerToolTipHandle != 0) {
+        return;
+    }
 	int bits = 0;
-	if ((style & SWT.RIGHT_TO_LEFT) != 0) bits |= OS.WS_EX_LAYOUTRTL;
+    if ((style & SWT.RIGHT_TO_LEFT) != 0) {
+        bits |= OS.WS_EX_LAYOUTRTL;
+    }
 	headerToolTipHandle = OS.CreateWindowEx (
 		bits,
 		new TCHAR (OS.TOOLTIPS_CLASS, true),
@@ -1582,7 +1570,9 @@ void createHeaderToolTips () {
 		0,
 		OS.GetModuleHandle (null),
 		null);
-	if (headerToolTipHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (headerToolTipHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	maybeEnableDarkSystemTheme(headerToolTipHandle);
 	/*
 	* Feature in Windows.  Despite the fact that the
@@ -1595,7 +1585,9 @@ void createHeaderToolTips () {
 }
 
 void createItem (TableColumn column, int index) {
-	if (!(0 <= index && index <= columnCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= columnCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	int oldColumn = (int)OS.SendMessage (handle, OS.LVM_GETSELECTEDCOLUMN, 0, 0);
 	if (oldColumn >= index) {
 		OS.SendMessage (handle, OS.LVM_SETSELECTEDCOLUMN, oldColumn + 1, 0);
@@ -1702,7 +1694,9 @@ void createItem (TableColumn column, int index) {
 			lvColumn.mask = OS.LVCF_FMT;
 			lvColumn.fmt = OS.LVCFMT_LEFT;
 			OS.SendMessage (handle, OS.LVM_SETCOLUMN, 0, lvColumn);
-			if (pszText != 0) OS.HeapFree (hHeap, 0, pszText);
+            if (pszText != 0) {
+                OS.HeapFree(hHeap, 0, pszText);
+            }
 		} else {
 			OS.SendMessage (handle, OS.LVM_SETCOLUMNWIDTH, 0, 0);
 		}
@@ -1729,8 +1723,12 @@ void createItem (TableColumn column, int index) {
 		}
 	} else {
 		int fmt = OS.LVCFMT_LEFT;
-		if ((column.style & SWT.CENTER) == SWT.CENTER) fmt = OS.LVCFMT_CENTER;
-		if ((column.style & SWT.RIGHT) == SWT.RIGHT) fmt = OS.LVCFMT_RIGHT;
+        if ((column.style & SWT.CENTER) == SWT.CENTER) {
+            fmt = OS.LVCFMT_CENTER;
+        }
+        if ((column.style & SWT.RIGHT) == SWT.RIGHT) {
+            fmt = OS.LVCFMT_RIGHT;
+        }
 		LVCOLUMN lvColumn = new LVCOLUMN ();
 		lvColumn.mask = OS.LVCF_WIDTH | OS.LVCF_FMT;
 		lvColumn.fmt = fmt;
@@ -1759,7 +1757,9 @@ void createItem (TableColumn column, int index) {
 
 void createItem (TableItem item, int index) {
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-	if (!(0 <= index && index <= count)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= count)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	_checkGrow (count);
 	LVITEM lvItem = new LVITEM ();
 	lvItem.mask = OS.LVIF_TEXT | OS.LVIF_IMAGE;
@@ -1782,12 +1782,16 @@ void createItem (TableItem item, int index) {
 	ignoreSelect = ignoreShrink = true;
 	int result = (int)OS.SendMessage (handle, OS.LVM_INSERTITEM, 0, lvItem);
 	ignoreSelect = ignoreShrink = false;
-	if (result == -1) error (SWT.ERROR_ITEM_NOT_ADDED);
+    if (result == -1) {
+        error(SWT.ERROR_ITEM_NOT_ADDED);
+    }
 	_insertItem (index, item, count);
 	setDeferResize (false);
 
-	/* Resize to show the first item */
-	if (count == 0) setScrollWidth (item, false);
+    /* Resize to show the first item */
+    if (count == 0) {
+        setScrollWidth(item, false);
+    }
 }
 
 @Override
@@ -1810,7 +1814,9 @@ int defaultBackground () {
 @Override
 void deregister () {
 	super.deregister ();
-	if (hwndHeader != 0) display.removeControl (hwndHeader);
+    if (hwndHeader != 0) {
+        display.removeControl(hwndHeader);
+    }
 }
 
 /**
@@ -1832,8 +1838,12 @@ void deregister () {
  */
 public void deselect (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (indices.length == 0) return;
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (indices.length == 0) {
+        return;
+    }
 	LVITEM lvItem = new LVITEM ();
 	lvItem.stateMask = OS.LVIS_SELECTED;
 	for (int index : indices) {
@@ -1863,11 +1873,13 @@ public void deselect (int [] indices) {
  */
 public void deselect (int index) {
 	checkWidget ();
-	/*
-	* An index of -1 will apply the change to all
-	* items.  Ensure that index is greater than -1.
-	*/
-	if (index < 0) return;
+    /*
+    * An index of -1 will apply the change to all
+    * items.  Ensure that index is greater than -1.
+    */
+    if (index < 0) {
+        return;
+    }
 	LVITEM lvItem = new LVITEM ();
 	lvItem.stateMask = OS.LVIS_SELECTED;
 	ignoreSelect = true;
@@ -1932,7 +1944,9 @@ public void deselectAll () {
 void destroyItem (TableColumn column) {
 	int index = 0;
 	while (index < columnCount) {
-		if (columns [index] == column) break;
+        if (columns [index] == column) {
+            break;
+        }
 		index++;
 	}
 	int oldColumn = (int)OS.SendMessage (handle, OS.LVM_GETSELECTEDCOLUMN, 0, 0);
@@ -1947,7 +1961,9 @@ void destroyItem (TableColumn column) {
 	int [] oldOrder = new int [columnCount];
 	OS.SendMessage (handle, OS.LVM_GETCOLUMNORDERARRAY, columnCount, oldOrder);
 	while (orderIndex < columnCount) {
-		if (oldOrder [orderIndex] == index) break;
+        if (oldOrder [orderIndex] == index) {
+            break;
+        }
 		orderIndex++;
 	}
 	ignoreColumnResize = true;
@@ -1976,7 +1992,9 @@ void destroyItem (TableColumn column) {
 			lvColumn.fmt &= ~(OS.LVCFMT_CENTER | OS.LVCFMT_RIGHT);
 			lvColumn.fmt |= OS.LVCFMT_LEFT;
 			OS.SendMessage (handle, OS.LVM_SETCOLUMN, 0, lvColumn);
-			if (pszText != 0) OS.HeapFree (hHeap, 0, pszText);
+            if (pszText != 0) {
+                OS.HeapFree(hHeap, 0, pszText);
+            }
 		} else {
 			long hHeap = OS.GetProcessHeap ();
 			long pszText = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, TCHAR.sizeof);
@@ -1986,7 +2004,9 @@ void destroyItem (TableColumn column) {
 			lvColumn.iImage = OS.I_IMAGENONE;
 			lvColumn.fmt = OS.LVCFMT_LEFT;
 			OS.SendMessage (handle, OS.LVM_SETCOLUMN, 0, lvColumn);
-			if (pszText != 0) OS.HeapFree (hHeap, 0, pszText);
+            if (pszText != 0) {
+                OS.HeapFree(hHeap, 0, pszText);
+            }
 			HDITEM hdItem = new HDITEM ();
 			hdItem.mask = OS.HDI_FORMAT;
 			hdItem.fmt = OS.HDF_LEFT;
@@ -2022,7 +2042,9 @@ void destroyItem (TableColumn column) {
 			error (SWT.ERROR_ITEM_NOT_REMOVED);
 		}
 	}
-	if (first) index = 0;
+    if (first) {
+        index = 0;
+    }
 	System.arraycopy (columns, index + 1, columns, index, --columnCount - index);
 	columns [columnCount] = null;
 	int itemCount = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
@@ -2046,17 +2068,23 @@ void destroyItem (TableColumn column) {
 					System.arraycopy (strings, index + 1, temp, index, columnCount - index);
 					item.strings = temp;
 				} else {
-					if (index == 0) item.text = ""; //$NON-NLS-1$
+                    if (index == 0) {
+                        item.text = ""; //$NON-NLS-1$
+                    }
 				}
 				if (item.images != null) {
 					Image [] images = item.images;
-					if (index == 0) item.image = images [1];
+                    if (index == 0) {
+                        item.image = images [1];
+                    }
 					Image [] temp = new Image [columnCount];
 					System.arraycopy (images, 0, temp, 0, index);
 					System.arraycopy (images, index + 1, temp, index, columnCount - index);
 					item.images = temp;
 				} else {
-					if (index == 0) item.image = null;
+                    if (index == 0) {
+                        item.image = null;
+                    }
 				}
 				if (item.cellBackground != null) {
 					int [] cellBackground = item.cellBackground;
@@ -2082,7 +2110,9 @@ void destroyItem (TableColumn column) {
 			}
 		}
 	}
-	if (columnCount == 0) setScrollWidth (null, true);
+    if (columnCount == 0) {
+        setScrollWidth(null, true);
+    }
 	updateMoveable ();
 	ignoreColumnResize = false;
 	if (columnCount != 0) {
@@ -2109,7 +2139,9 @@ void destroyItem (TableColumn column) {
 		OS.SendMessage (handle, OS.LVM_GETCOLUMNORDERARRAY, columnCount, oldOrder);
 		int j = 0;
 		while (j < newOrder.length) {
-			if (oldOrder [j] != newOrder [j]) break;
+            if (oldOrder [j] != newOrder [j]) {
+                break;
+            }
 			j++;
 		}
 		if (j != newOrder.length) {
@@ -2147,45 +2179,65 @@ void destroyItem (TableItem item) {
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 	int index = 0;
 	while (index < count) {
-		if (_getItem (index, false) == item) break;
+        if (_getItem(index, false) == item) {
+            break;
+        }
 		index++;
 	}
-	if (index == count) return;
+    if (index == count) {
+        return;
+    }
 	setDeferResize (true);
 	ignoreSelect = ignoreShrink = true;
 	long code = OS.SendMessage (handle, OS.LVM_DELETEITEM, index, 0);
 	ignoreSelect = ignoreShrink = false;
-	if (code == 0) error (SWT.ERROR_ITEM_NOT_REMOVED);
+    if (code == 0) {
+        error(SWT.ERROR_ITEM_NOT_REMOVED);
+    }
 	_removeItem (index, count);
 	--count;
-	if (count == 0) setTableEmpty ();
+    if (count == 0) {
+        setTableEmpty();
+    }
 	setDeferResize (false);
 }
 
 void fixCheckboxImageList (boolean fixScroll) {
-	/*
-	* Bug in Windows.  When the state image list is larger than the
-	* image list, Windows incorrectly positions the state images.  When
-	* the table is scrolled, Windows draws garbage.  The fix is to force
-	* the state image list to be the same size as the image list.
-	*/
-	if ((style & SWT.CHECK) == 0) return;
+    /*
+    * Bug in Windows.  When the state image list is larger than the
+    * image list, Windows incorrectly positions the state images.  When
+    * the table is scrolled, Windows draws garbage.  The fix is to force
+    * the state image list to be the same size as the image list.
+    */
+    if ((style & SWT.CHECK) == 0) {
+        return;
+    }
 	long hImageList = OS.SendMessage (handle, OS.LVM_GETIMAGELIST, OS.LVSIL_SMALL, 0);
-	if (hImageList == 0) return;
+    if (hImageList == 0) {
+        return;
+    }
 	int [] cx = new int [1], cy = new int [1];
 	OS.ImageList_GetIconSize (hImageList, cx, cy);
 	long hStateList = OS.SendMessage (handle, OS.LVM_GETIMAGELIST, OS.LVSIL_STATE, 0);
-	if (hStateList == 0) return;
+    if (hStateList == 0) {
+        return;
+    }
 	int [] stateCx = new int [1], stateCy = new int [1];
 	OS.ImageList_GetIconSize (hStateList, stateCx, stateCy);
-	if (cx [0] == stateCx [0] && cy [0] == stateCy [0]) return;
+    if (cx [0] == stateCx [0] && cy [0] == stateCy [0]) {
+        return;
+    }
 	setCheckboxImageList (cx [0], cy [0], fixScroll);
 }
 
 void fixCheckboxImageListColor (boolean fixScroll) {
-	if ((style & SWT.CHECK) == 0) return;
+    if ((style & SWT.CHECK) == 0) {
+        return;
+    }
 	long hStateList = OS.SendMessage (handle, OS.LVM_GETIMAGELIST, OS.LVSIL_STATE, 0);
-	if (hStateList == 0) return;
+    if (hStateList == 0) {
+        return;
+    }
 	int [] cx = new int [1], cy = new int [1];
 	OS.ImageList_GetIconSize (hStateList, cx, cy);
 	setCheckboxImageList (cx [0], cy [0], fixScroll);
@@ -2220,7 +2272,9 @@ void fixCheckboxImageListColor (boolean fixScroll) {
  */
 public TableColumn getColumn (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < columnCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < columnCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return columns [index];
 }
 
@@ -2273,7 +2327,9 @@ public int getColumnCount () {
  */
 public int[] getColumnOrder () {
 	checkWidget ();
-	if (columnCount == 0) return new int [0];
+    if (columnCount == 0) {
+        return new int [0];
+    }
 	int [] order = new int [columnCount];
 	OS.SendMessage (handle, OS.LVM_GETCOLUMNORDERARRAY, columnCount, order);
 	return order;
@@ -2395,7 +2451,9 @@ public int getHeaderHeight () {
 }
 
 int getHeaderHeightInPixels () {
-	if (hwndHeader == 0) return 0;
+    if (hwndHeader == 0) {
+        return 0;
+    }
 	RECT rect = new RECT ();
 	OS.GetWindowRect (hwndHeader, rect);
 	return rect.bottom - rect.top;
@@ -2442,8 +2500,12 @@ public boolean getHeaderVisible () {
 public TableItem getItem (int index) {
 	checkWidget ();
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-	if (!(0 <= index && index < count)) error (SWT.ERROR_INVALID_RANGE);
-	return _getItem (index);
+    if (!(0 <= index && index < count)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
+	TableItem item = _getItem (index);
+	item.pinVirtualFacade ();
+	return item;
 }
 
 /**
@@ -2471,13 +2533,17 @@ public TableItem getItem (int index) {
  */
 public TableItem getItem (Point point) {
 	checkWidget ();
-	if (point == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (point == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return getItemInPixels (Win32DPIUtils.pointToPixelAsLocation(point, getAutoscalingZoom()));
 }
 
 TableItem getItemInPixels (Point point) {
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-	if (count == 0) return null;
+    if (count == 0) {
+        return null;
+    }
 	LVHITTESTINFO pinfo = new LVHITTESTINFO ();
 	pinfo.x = point.x;
 	pinfo.y = point.y;
@@ -2504,12 +2570,16 @@ TableItem getItemInPixels (Point point) {
 					*  The fix is to consider any value that is negative a failure.
 					*/
 					OS.SendMessage (handle, OS.LVM_SUBITEMHITTEST, 0, pinfo);
-					if (pinfo.iItem < 0) pinfo.iItem = -1;
+                    if (pinfo.iItem < 0) {
+                        pinfo.iItem = -1;
+                    }
 				}
 			}
 			if (pinfo.iItem != -1 && pinfo.iSubItem == 0) {
 				if (hitTestSelection (pinfo.iItem, pinfo.x, pinfo.y)) {
-					return _getItem (pinfo.iItem);
+					TableItem item = _getItem (pinfo.iItem);
+					item.pinVirtualFacade ();
+					return item;
 				}
 			}
 			return null;
@@ -2535,11 +2605,15 @@ TableItem getItemInPixels (Point point) {
 					pt.x = pinfo.x;
 					pt.y = pinfo.y;
 					OS.MapWindowPoints (handle, 0, pt, 1);
-					if (OS.PtInRect (rect, pt)) return null;
+                    if (OS.PtInRect(rect, pt)) {
+                        return null;
+                    }
 				}
 			}
 		}
-		return _getItem (pinfo.iItem);
+		TableItem item = _getItem (pinfo.iItem);
+		item.pinVirtualFacade ();
+		return item;
 	}
 	return null;
 }
@@ -2576,7 +2650,9 @@ public int getItemHeight () {
 }
 
 int getItemHeightInPixels () {
-	if (!painted && hooks (SWT.MeasureItem)) hitTestSelection (0, 0, 0);
+    if (!painted && hooks(SWT.MeasureItem)) {
+        hitTestSelection(0, 0, 0);
+    }
 	long empty = OS.SendMessage (handle, OS.LVM_APPROXIMATEVIEWRECT, 0, 0);
 	long oneItem = OS.SendMessage (handle, OS.LVM_APPROXIMATEVIEWRECT, 1, 0);
 	return OS.HIWORD (oneItem) - OS.HIWORD (empty);
@@ -2605,6 +2681,7 @@ public TableItem [] getItems () {
 	if ((style & SWT.VIRTUAL) != 0) {
 		for (int i=0; i<count; i++) {
 			result [i] = _getItem (i);
+			result [i].pinVirtualFacade ();
 		}
 	} else {
 		_getItems (result, count);
@@ -2661,7 +2738,9 @@ public TableItem [] getSelection () {
 	int i = -1, j = 0, count = (int)OS.SendMessage (handle, OS.LVM_GETSELECTEDCOUNT, 0, 0);
 	TableItem [] result = new TableItem [count];
 	while ((i = (int)OS.SendMessage (handle, OS.LVM_GETNEXTITEM, i, OS.LVNI_SELECTED)) != -1) {
-		result [j++] = _getItem (i);
+		TableItem item = _getItem (i);
+		item.pinVirtualFacade ();
+		result [j++] = item;
 	}
 	return result;
 }
@@ -2696,10 +2775,14 @@ public int getSelectionIndex () {
 	checkWidget ();
 	int focusIndex = (int)OS.SendMessage (handle, OS.LVM_GETNEXTITEM, -1, OS.LVNI_FOCUSED);
 	int selectedIndex = (int)OS.SendMessage (handle, OS.LVM_GETNEXTITEM, -1, OS.LVNI_SELECTED);
-	if (focusIndex == selectedIndex) return selectedIndex;
+    if (focusIndex == selectedIndex) {
+        return selectedIndex;
+    }
 	int i = -1;
 	while ((i = (int)OS.SendMessage (handle, OS.LVM_GETNEXTITEM, i, OS.LVNI_SELECTED)) != -1) {
-		if (i == focusIndex) return i;
+        if (i == focusIndex) {
+            return i;
+        }
 	}
 	return selectedIndex;
 }
@@ -2803,13 +2886,52 @@ public int getTopIndex () {
 	* is displaying blank lines at the top of the controls.  The
 	* fix is to check for a negative number and return zero instead.
 	*/
-	return Math.max (0, (int)OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0));
+	int top = Math.max (0, (int)OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0));
+    if (virtualViewport != null) {
+        updateVirtualViewport(top);
+    }
+	return top;
+}
+
+void updateVirtualViewport () {
+    if (virtualViewport == null) {
+        return;
+    }
+	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
+	int top = count == 0 ? 0 : Math.max (0, (int)OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0));
+	updateVirtualViewport (top);
+}
+
+void updateVirtualViewport (int top) {
+    if (virtualViewport == null) {
+        return;
+    }
+	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
+	virtualViewport.setLogicalCount (count);
+	if (count == 0) {
+		virtualViewport.setViewport (0, 0);
+		return;
+	}
+	top = Math.min (Math.max (0, top), count - 1);
+	int perPage = Math.max (1, (int)OS.SendMessage (handle, OS.LVM_GETCOUNTPERPAGE, 0, 0));
+	int visible = Math.min (count - top, perPage + 1);
+	virtualViewport.setViewport (top, visible);
+}
+
+boolean isVirtualPaintCandidate (int index) {
+    if (virtualViewport == null) {
+        return true;
+    }
+	updateVirtualViewport ();
+	return virtualViewport.isPaintCandidate (index);
 }
 
 boolean hasChildren () {
 	long hwndChild = OS.GetWindow (handle, OS.GW_CHILD);
 	while (hwndChild != 0) {
-		if (hwndChild != hwndHeader) return true;
+        if (hwndChild != hwndHeader) {
+            return true;
+        }
 		hwndChild = OS.GetWindow (hwndChild, OS.GW_HWNDNEXT);
 	}
 	return false;
@@ -2817,20 +2939,34 @@ boolean hasChildren () {
 
 boolean hitTestSelection (int index, int x, int y) {
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-	if (count == 0) return false;
-	if (!hooks (SWT.MeasureItem)) return false;
+    if (count == 0) {
+        return false;
+    }
+    if (!hooks(SWT.MeasureItem)) {
+        return false;
+    }
 	boolean result = false;
 	if (0 <= index && index < count) {
 		TableItem item = _getItem (index);
 		long hDC = OS.GetDC (handle);
 		long oldFont = 0, newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-		if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+        if (newFont != 0) {
+            oldFont = OS.SelectObject(hDC, newFont);
+        }
 		long hFont = item.fontHandle (0);
-		if (hFont != -1) hFont = OS.SelectObject (hDC, hFont);
+        if (hFont != -1) {
+            hFont = OS.SelectObject(hDC, hFont);
+        }
 		Event event = sendMeasureItemEvent (item, index, 0, hDC);
-		if (Win32DPIUtils.pointToPixel(event.getBounds(), getAutoscalingZoom()).contains (x, y)) result = true;
-		if (hFont != -1) hFont = OS.SelectObject (hDC, hFont);
-		if (newFont != 0) OS.SelectObject (hDC, oldFont);
+        if (Win32DPIUtils.pointToPixel(event.getBounds(), getAutoscalingZoom()).contains(x, y)) {
+            result = true;
+        }
+        if (hFont != -1) {
+            hFont = OS.SelectObject(hDC, hFont);
+        }
+        if (newFont != 0) {
+            OS.SelectObject(hDC, oldFont);
+        }
 		OS.ReleaseDC (handle, hDC);
 //		if (isDisposed () || item.isDisposed ()) return false;
 	}
@@ -2838,7 +2974,9 @@ boolean hitTestSelection (int index, int x, int y) {
 }
 
 int imageIndex (Image image, int column) {
-	if (image == null) return OS.I_IMAGENONE;
+    if (image == null) {
+        return OS.I_IMAGENONE;
+    }
 	if (column == 0) {
 		firstColumnImage = true;
 	} else {
@@ -2848,7 +2986,9 @@ int imageIndex (Image image, int column) {
 		Rectangle boundsInPoints = image.getBounds();
 		imageList = display.getImageList (style & SWT.RIGHT_TO_LEFT, boundsInPoints.width, boundsInPoints.height, getAutoscalingZoom());
 		int index = imageList.indexOf (image);
-		if (index == -1) index = imageList.add (image);
+        if (index == -1) {
+            index = imageList.add(image);
+        }
 		long hImageList = imageList.getHandle(getAutoscalingZoom());
 		/*
 		* Bug in Windows.  Making any change to an item that
@@ -2878,23 +3018,31 @@ int imageIndex (Image image, int column) {
 		return index;
 	}
 	int index = imageList.indexOf (image);
-	if (index != -1) return index;
+    if (index != -1) {
+        return index;
+    }
 	return imageList.add (image);
 }
 
 int imageIndexHeader (Image image) {
-	if (image == null) return OS.I_IMAGENONE;
+    if (image == null) {
+        return OS.I_IMAGENONE;
+    }
 	if (headerImageList == null) {
 		Rectangle boundsInPoints = image.getBounds();
 		headerImageList = display.getImageList (style & SWT.RIGHT_TO_LEFT, boundsInPoints.width, boundsInPoints.height, getAutoscalingZoom());
 		int index = headerImageList.indexOf (image);
-		if (index == -1) index = headerImageList.add (image);
+        if (index == -1) {
+            index = headerImageList.add(image);
+        }
 		long hImageList = headerImageList.getHandle(getAutoscalingZoom());
 		OS.SendMessage (hwndHeader, OS.HDM_SETIMAGELIST, 0, hImageList);
 		return index;
 	}
 	int index = headerImageList.indexOf (image);
-	if (index != -1) return index;
+    if (index != -1) {
+        return index;
+    }
 	return headerImageList.add (image);
 }
 
@@ -2917,9 +3065,13 @@ int imageIndexHeader (Image image) {
  */
 public int indexOf (TableColumn column) {
 	checkWidget ();
-	if (column == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (column == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<columnCount; i++) {
-		if (columns [i] == column) return i;
+        if (columns [i] == column) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -2943,27 +3095,36 @@ public int indexOf (TableColumn column) {
  */
 public int indexOf (TableItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.VIRTUAL) != 0) {
+        return virtualItems.indexOfIdentity(item);
+    }
 	//TODO - find other loops that can be optimized
-	if (keys == null) {
-		int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-		if (1 <= lastIndexOf && lastIndexOf < count - 1) {
-			if (_getItem (lastIndexOf, false) == item) return lastIndexOf;
-			if (_getItem (lastIndexOf + 1, false) == item) return ++lastIndexOf;
-			if (_getItem (lastIndexOf - 1, false) == item) return --lastIndexOf;
-		}
-		if (lastIndexOf < count / 2) {
-			for (int i=0; i<count; i++) {
-				if (_getItem (i, false) == item) return lastIndexOf = i;
-			}
-		} else {
-			for (int i=count - 1; i>=0; --i) {
-				if (_getItem (i, false) == item) return lastIndexOf = i;
-			}
+	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
+	if (1 <= lastIndexOf && lastIndexOf < count - 1) {
+        if (_getItem(lastIndexOf, false) == item) {
+            return lastIndexOf;
+        }
+        if (_getItem(lastIndexOf + 1, false) == item) {
+            return ++lastIndexOf;
+        }
+        if (_getItem(lastIndexOf - 1, false) == item) {
+            return --lastIndexOf;
+        }
+	}
+	if (lastIndexOf < count / 2) {
+		for (int i=0; i<count; i++) {
+            if (_getItem(i, false) == item) {
+                return lastIndexOf = i;
+            }
 		}
 	} else {
-		for (int i=0; i<keyCount; i++) {
-			if (items [i] == item) return keys [i];
+		for (int i=count - 1; i>=0; --i) {
+            if (_getItem(i, false) == item) {
+                return lastIndexOf = i;
+            }
 		}
 	}
 	return -1;
@@ -2974,7 +3135,9 @@ boolean isCustomToolTip () {
 }
 
 boolean isOptimizedRedraw () {
-	if ((style & SWT.H_SCROLL) == 0 || (style & SWT.V_SCROLL) == 0) return false;
+    if ((style & SWT.H_SCROLL) == 0 || (style & SWT.V_SCROLL) == 0) {
+        return false;
+    }
 	return !hasChildren () && !hooks (SWT.Paint) && !filters (SWT.Paint) && !customHeaderDrawing();
 }
 
@@ -3009,22 +3172,27 @@ boolean isUseWsBorder () {
 @Override
 void register () {
 	super.register ();
-	if (hwndHeader != 0) display.addControl (hwndHeader, this);
+    if (hwndHeader != 0) {
+        display.addControl(hwndHeader, this);
+    }
 }
 
 @Override
 void releaseChildren (boolean destroy) {
 	if (_hasItems ()) {
-		int itemCount = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-		if (keys == null) {
+		if ((style & SWT.VIRTUAL) != 0) {
+			virtualItems.forEach (item -> {
+                if (item != null && !item.isDisposed()) {
+                    item.release(false);
+                }
+			});
+		} else {
+			int itemCount = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 			for (int i=0; i<itemCount; i++) {
 				TableItem item = _getItem (i, false);
-				if (item != null && !item.isDisposed ()) item.release (false);
-			}
-		} else {
-			for (int i=0; i<keyCount; i++) {
-				TableItem item = items [i];
-				if (item != null && !item.isDisposed ()) item.release (false);
+                if (item != null && !item.isDisposed()) {
+                    item.release(false);
+                }
 			}
 		}
 		_clearItems ();
@@ -3032,7 +3200,9 @@ void releaseChildren (boolean destroy) {
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
 			TableColumn column = columns [i];
-			if (!column.isDisposed ()) column.release (false);
+            if (!column.isDisposed()) {
+                column.release(false);
+            }
 		}
 		columns = null;
 	}
@@ -3055,8 +3225,12 @@ void releaseWidget () {
 	imageList = headerImageList = null;
 	long hStateList = OS.SendMessage (handle, OS.LVM_GETIMAGELIST, OS.LVSIL_STATE, 0);
 	OS.SendMessage (handle, OS.LVM_SETIMAGELIST, OS.LVSIL_STATE, 0);
-	if (hStateList != 0) OS.ImageList_Destroy (hStateList);
-	if (headerToolTipHandle != 0) OS.DestroyWindow (headerToolTipHandle);
+    if (hStateList != 0) {
+        OS.ImageList_Destroy(hStateList);
+    }
+    if (headerToolTipHandle != 0) {
+        OS.DestroyWindow(headerToolTipHandle);
+    }
 	headerToolTipHandle = 0;
 }
 
@@ -3077,8 +3251,12 @@ void releaseWidget () {
  */
 public void remove (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (indices.length == 0) return;
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (indices.length == 0) {
+        return;
+    }
 	int [] newIndices = new int [indices.length];
 	System.arraycopy (indices, 0, newIndices, 0, indices.length);
 	sort (newIndices);
@@ -3092,17 +3270,23 @@ public void remove (int [] indices) {
 	for (int index : newIndices) {
 		if (index != last) {
 			TableItem item = _getItem (index, false);
-			if (item != null && !item.isDisposed ()) item.release (false);
+            if (item != null && !item.isDisposed()) {
+                item.release(false);
+            }
 			ignoreSelect = ignoreShrink = true;
 			long code = OS.SendMessage (handle, OS.LVM_DELETEITEM, index, 0);
 			ignoreSelect = ignoreShrink = false;
-			if (code == 0) error (SWT.ERROR_ITEM_NOT_REMOVED);
+            if (code == 0) {
+                error(SWT.ERROR_ITEM_NOT_REMOVED);
+            }
 			_removeItem(index, count);
 			--count;
 			last = index;
 		}
 	}
-	if (count == 0) setTableEmpty ();
+    if (count == 0) {
+        setTableEmpty();
+    }
 	setDeferResize (false);
 }
 
@@ -3123,17 +3307,25 @@ public void remove (int [] indices) {
 public void remove (int index) {
 	checkWidget ();
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-	if (!(0 <= index && index < count)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < count)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	TableItem item = _getItem (index, false);
-	if (item != null && !item.isDisposed ()) item.release (false);
+    if (item != null && !item.isDisposed()) {
+        item.release(false);
+    }
 	setDeferResize (true);
 	ignoreSelect = ignoreShrink = true;
 	long code = OS.SendMessage (handle, OS.LVM_DELETEITEM, index, 0);
 	ignoreSelect = ignoreShrink = false;
-	if (code == 0) error (SWT.ERROR_ITEM_NOT_REMOVED);
+    if (code == 0) {
+        error(SWT.ERROR_ITEM_NOT_REMOVED);
+    }
 	_removeItem (index, count);
 	--count;
-	if (count == 0) setTableEmpty ();
+    if (count == 0) {
+        setTableEmpty();
+    }
 	setDeferResize (false);
 }
 
@@ -3155,7 +3347,9 @@ public void remove (int index) {
  */
 public void remove (int start, int end) {
 	checkWidget ();
-	if (start > end) return;
+    if (start > end) {
+        return;
+    }
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 	if (!(0 <= start && start <= end && end < count)) {
 		error (SWT.ERROR_INVALID_RANGE);
@@ -3167,15 +3361,21 @@ public void remove (int start, int end) {
 		int index = start;
 		while (index <= end) {
 			TableItem item = _getItem (index, false);
-			if (item != null && !item.isDisposed ()) item.release (false);
+            if (item != null && !item.isDisposed()) {
+                item.release(false);
+            }
 			ignoreSelect = ignoreShrink = true;
 			long code = OS.SendMessage (handle, OS.LVM_DELETEITEM, start, 0);
 			ignoreSelect = ignoreShrink = false;
-			if (code == 0) break;
+            if (code == 0) {
+                break;
+            }
 			index++;
 		}
 		_removeItems (start, index, count);
-		if (index <= end) error (SWT.ERROR_ITEM_NOT_REMOVED);
+        if (index <= end) {
+            error(SWT.ERROR_ITEM_NOT_REMOVED);
+        }
 		/*
 		* This code is intentionally commented.  It is not necessary
 		* to check for an empty table because removeAll() was called
@@ -3199,13 +3399,17 @@ public void removeAll () {
 	int itemCount = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 	for (int i=0; i<itemCount; i++) {
 		TableItem item = _getItem (i, false);
-		if (item != null && !item.isDisposed ()) item.release (false);
+        if (item != null && !item.isDisposed()) {
+            item.release(false);
+        }
 	}
 	setDeferResize (true);
 	ignoreSelect = ignoreShrink = true;
 	long code = OS.SendMessage (handle, OS.LVM_DELETEALLITEMS, 0, 0);
 	ignoreSelect = ignoreShrink = false;
-	if (code == 0) error (SWT.ERROR_ITEM_NOT_REMOVED);
+    if (code == 0) {
+        error(SWT.ERROR_ITEM_NOT_REMOVED);
+    }
 	setTableEmpty ();
 	setDeferResize (false);
 }
@@ -3229,8 +3433,12 @@ public void removeAll () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -3260,9 +3468,13 @@ public void removeSelectionListener(SelectionListener listener) {
  */
 public void select (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int length = indices.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	LVITEM lvItem = new LVITEM ();
 	lvItem.state = OS.LVIS_SELECTED;
 	lvItem.stateMask = OS.LVIS_SELECTED;
@@ -3285,13 +3497,17 @@ void reskinChildren (int flags) {
 		int itemCount = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
 		for (int i=0; i<itemCount; i++) {
 			TableItem item = _getItem (i, false);
-			if (item != null) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	if (columns != null) {
 		for (int i=0; i<columnCount; i++) {
 			TableColumn column = columns [i];
-			if (!column.isDisposed ()) column.reskin (flags);
+            if (!column.isDisposed()) {
+                column.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -3311,11 +3527,13 @@ void reskinChildren (int flags) {
  */
 public void select (int index) {
 	checkWidget ();
-	/*
-	* An index of -1 will apply the change to all
-	* items.  Ensure that index is greater than -1.
-	*/
-	if (index < 0) return;
+    /*
+    * An index of -1 will apply the change to all
+    * items.  Ensure that index is greater than -1.
+    */
+    if (index < 0) {
+        return;
+    }
 	LVITEM lvItem = new LVITEM ();
 	lvItem.state = OS.LVIS_SELECTED;
 	lvItem.stateMask = OS.LVIS_SELECTED;
@@ -3349,9 +3567,13 @@ public void select (int index) {
  */
 public void select (int start, int end) {
 	checkWidget ();
-	if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) return;
+    if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) {
+        return;
+    }
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-	if (count == 0 || start >= count) return;
+    if (count == 0 || start >= count) {
+        return;
+    }
 	start = Math.max (0, start);
 	end = Math.min (end, count - 1);
 	if (start == 0 && end == count - 1) {
@@ -3385,7 +3607,9 @@ public void select (int start, int end) {
  */
 public void selectAll () {
 	checkWidget ();
-	if ((style & SWT.SINGLE) != 0) return;
+    if ((style & SWT.SINGLE) != 0) {
+        return;
+    }
 	LVITEM lvItem = new LVITEM ();
 	lvItem.mask = OS.LVIF_STATE;
 	lvItem.state = OS.LVIS_SELECTED;
@@ -3396,11 +3620,16 @@ public void selectAll () {
 }
 
 void sendEraseItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd, long lParam, Event measureEvent) {
+	item.pinVirtualFacade ();
 	long hDC = nmcd.hdc;
 	int clrText = item.cellForeground != null ? item.cellForeground [nmcd.iSubItem] : -1;
-	if (clrText == -1) clrText = item.foreground;
+    if (clrText == -1) {
+        clrText = item.foreground;
+    }
 	int clrTextBk = item.cellBackground != null ? item.cellBackground [nmcd.iSubItem] : -1;
-	if (clrTextBk == -1) clrTextBk = item.background;
+    if (clrTextBk == -1) {
+        clrTextBk = item.background;
+    }
 	/*
 	* Bug in Windows.  For some reason, CDIS_SELECTED always set,
 	* even for items that are not selected.  The fix is to get
@@ -3445,9 +3674,15 @@ void sendEraseItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd, long lParam, Event
 			*/
 			if (clrText == -1 || clrTextBk == -1) {
 				Control control = findBackgroundControl ();
-				if (control == null) control = this;
-				if (clrText == -1) clrText = control.getForegroundPixel ();
-				if (clrTextBk == -1) clrTextBk = control.getBackgroundPixel ();
+                if (control == null) {
+                    control = this;
+                }
+                if (clrText == -1) {
+                    clrText = control.getForegroundPixel();
+                }
+                if (clrTextBk == -1) {
+                    clrTextBk = control.getBackgroundPixel();
+                }
 			}
 			data.foreground = clrText != -1 ? clrText : OS.GetTextColor (hDC);
 			data.background = clrTextBk != -1 ? clrTextBk : OS.GetBkColor (hDC);
@@ -3455,7 +3690,9 @@ void sendEraseItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd, long lParam, Event
 	} else {
 		data.foreground = OS.GetSysColor (OS.COLOR_GRAYTEXT);
 		data.background = OS.GetSysColor (OS.COLOR_3DFACE);
-		if (selected) clrSelectionBk = data.background;
+        if (selected) {
+            clrSelectionBk = data.background;
+        }
 	}
 	data.font = item.getFont (nmcd.iSubItem);
 	data.uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
@@ -3472,14 +3709,22 @@ void sendEraseItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd, long lParam, Event
 		if (nmcd.iSubItem == 0 || (style & SWT.FULL_SELECTION) != 0) {
 			if (handle == OS.GetFocus ()) {
 				int uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
-				if ((uiState & OS.UISF_HIDEFOCUS) == 0) event.detail |= SWT.FOCUSED;
+                if ((uiState & OS.UISF_HIDEFOCUS) == 0) {
+                    event.detail |= SWT.FOCUSED;
+                }
 			}
 		}
 	}
 	boolean focused = (event.detail & SWT.FOCUSED) != 0;
-	if (drawHot) event.detail |= SWT.HOT;
-	if (drawSelected) event.detail |= SWT.SELECTED;
-	if (drawBackground) event.detail |= SWT.BACKGROUND;
+    if (drawHot) {
+        event.detail |= SWT.HOT;
+    }
+    if (drawSelected) {
+        event.detail |= SWT.SELECTED;
+    }
+    if (drawBackground) {
+        event.detail |= SWT.BACKGROUND;
+    }
 	Rectangle bounds = Win32DPIUtils.pixelToPoint(new Rectangle (cellRect.left, cellRect.top, cellRect.right - cellRect.left, cellRect.bottom - cellRect.top), getAutoscalingZoom());
 	event.setBounds (bounds);
 	gc.setClipping (bounds);
@@ -3488,7 +3733,9 @@ void sendEraseItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd, long lParam, Event
 	int clrSelectionText = data.foreground;
 	gc.dispose ();
 	OS.RestoreDC (hDC, nSavedDC);
-	if (isDisposed () || item.isDisposed ()) return;
+    if (isDisposed() || item.isDisposed()) {
+        return;
+    }
 	if (event.doit) {
 		ignoreDrawForeground = (event.detail & SWT.FOREGROUND) == 0;
 		ignoreDrawBackground = (event.detail & SWT.BACKGROUND) == 0;
@@ -3565,13 +3812,19 @@ void sendEraseItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd, long lParam, Event
 				}
 				long hTheme = OS.OpenThemeData (handle, Display.TREEVIEW, getAutoscalingZoom());
 				int iStateId = selected ? OS.LISS_SELECTED : OS.LISS_HOT;
-				if (OS.GetFocus () != handle && selected && !drawHot) iStateId = OS.LISS_SELECTEDNOTFOCUS;
-				if (drawDrophilited) iStateId = OS.LISS_SELECTED;
+                if (OS.GetFocus() != handle && selected && !drawHot) {
+                    iStateId = OS.LISS_SELECTEDNOTFOCUS;
+                }
+                if (drawDrophilited) {
+                    iStateId = OS.LISS_SELECTED;
+                }
 				OS.DrawThemeBackground (hTheme, hDC, OS.LVP_LISTITEM, iStateId, rect, pClipRect);
 				OS.CloseThemeData (hTheme);
 			}
 		} else {
-			if (!ignoreDrawSelection && clrSelectionBk != -1) fillBackground (hDC, clrSelectionBk, textRect);
+            if (!ignoreDrawSelection && clrSelectionBk != -1) {
+                fillBackground(hDC, clrSelectionBk, textRect);
+            }
 		}
 	}
 	if (focused && ignoreDrawFocus) {
@@ -3587,6 +3840,7 @@ void sendEraseItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd, long lParam, Event
 }
 
 Event sendEraseItemEvent (TableItem item, NMTTCUSTOMDRAW nmcd, int column, RECT cellRect) {
+	item.pinVirtualFacade ();
 	int nSavedDC = OS.SaveDC (nmcd.hdc);
 	RECT insetRect = toolTipInset (cellRect);
 	OS.SetWindowOrgEx (nmcd.hdc, insetRect.left, insetRect.top, null);
@@ -3613,6 +3867,7 @@ Event sendEraseItemEvent (TableItem item, NMTTCUSTOMDRAW nmcd, int column, RECT 
 }
 
 Event sendMeasureItemEvent (TableItem item, int row, int column, long hDC) {
+	item.pinVirtualFacade ();
 	GCData data = new GCData ();
 	data.device = display;
 	data.font = item.getFont (column);
@@ -3640,7 +3895,9 @@ Event sendMeasureItemEvent (TableItem item, int row, int column, long hDC) {
 			}
 		}
 	}
-	if (drawSelected) event.detail |= SWT.SELECTED;
+    if (drawSelected) {
+        event.detail |= SWT.SELECTED;
+    }
 	sendEvent (SWT.MeasureItem, event);
 	event.gc = null;
 	gc.dispose ();
@@ -3649,7 +3906,9 @@ Event sendMeasureItemEvent (TableItem item, int row, int column, long hDC) {
 		Rectangle boundsInPixels = Win32DPIUtils.pointToPixel(event.getBounds(), getAutoscalingZoom());
 		if (columnCount == 0) {
 			int width = (int)OS.SendMessage (handle, OS.LVM_GETCOLUMNWIDTH, 0, 0);
-			if (boundsInPixels.x + boundsInPixels.width > width) setScrollWidth (boundsInPixels.x + boundsInPixels.width);
+            if (boundsInPixels.x + boundsInPixels.width > width) {
+                setScrollWidth(boundsInPixels.x + boundsInPixels.width);
+            }
 		}
 		long empty = OS.SendMessage (handle, OS.LVM_APPROXIMATEVIEWRECT, 0, 0);
 		long oneItem = OS.SendMessage (handle, OS.LVM_APPROXIMATEVIEWRECT, 1, 0);
@@ -3673,7 +3932,9 @@ LRESULT sendMouseDownEvent (int type, int button, int msg, long wParam, long lPa
 	display.captureChanged = false;
 	if (!sendMouseEvent (type, button, handle, lParam)) {
 		if (!display.captureChanged && !isDisposed ()) {
-			if (OS.GetCapture () != handle) OS.SetCapture (handle);
+            if (OS.GetCapture() != handle) {
+                OS.SetCapture(handle);
+            }
 		}
 		return LRESULT.ZERO;
 	}
@@ -3719,12 +3980,16 @@ LRESULT sendMouseDownEvent (int type, int button, int msg, long wParam, long lPa
 						*  The fix is to consider any value that is negative a failure.
 						*/
 						OS.SendMessage (handle, OS.LVM_SUBITEMHITTEST, 0, pinfo);
-						if (pinfo.iItem < 0) pinfo.iItem = -1;
+                        if (pinfo.iItem < 0) {
+                            pinfo.iItem = -1;
+                        }
 						pinfo.flags &= ~(OS.LVHT_ONITEMICON | OS.LVHT_ONITEMLABEL);
 					}
 				}
 			} else {
-				if (pinfo.iSubItem != 0) pinfo.iItem = -1;
+                if (pinfo.iSubItem != 0) {
+                    pinfo.iItem = -1;
+                }
 			}
 		}
 	}
@@ -3739,7 +4004,9 @@ LRESULT sendMouseDownEvent (int type, int button, int msg, long wParam, long lPa
 	if ((style & SWT.SINGLE) != 0 || hooks (SWT.MouseDown) || hooks (SWT.MouseUp)) {
 		if (pinfo.iItem == -1) {
 			if (!display.captureChanged && !isDisposed ()) {
-				if (OS.GetCapture () != handle) OS.SetCapture (handle);
+                if (OS.GetCapture() != handle) {
+                    OS.SetCapture(handle);
+                }
 			}
 			/* We're skipping default processing, but at least set focus to control */
 			OS.SetFocus (handle);
@@ -3777,7 +4044,9 @@ LRESULT sendMouseDownEvent (int type, int button, int msg, long wParam, long lPa
 				fullRowSelect = hitTestSelection (pinfo.iItem, pinfo.x, pinfo.y);
 				if (fullRowSelect) {
 					int flags = OS.LVHT_ONITEMICON | OS.LVHT_ONITEMLABEL;
-					if ((pinfo.flags & flags) != 0) fullRowSelect = false;
+                    if ((pinfo.flags & flags) != 0) {
+                        fullRowSelect = false;
+                    }
 				}
 			}
 		}
@@ -3795,7 +4064,9 @@ LRESULT sendMouseDownEvent (int type, int button, int msg, long wParam, long lPa
 	if (!dragDetect) {
 		int flags = OS.LVHT_ONITEMICON | OS.LVHT_ONITEMLABEL;
 		dragDetect = pinfo.iItem == -1 || (pinfo.flags & flags) == 0;
-		if (fullRowSelect) dragDetect = true;
+        if (fullRowSelect) {
+            dragDetect = true;
+        }
 	}
 
 	/*
@@ -3810,9 +4081,13 @@ LRESULT sendMouseDownEvent (int type, int button, int msg, long wParam, long lPa
 	}
 	dragStarted = false;
 	display.dragCancelled = false;
-	if (!dragDetect) display.runDragDrop = false;
+    if (!dragDetect) {
+        display.runDragDrop = false;
+    }
 	long code = callWindowProc (handle, msg, wParam, lParam, forceSelect);
-	if (!dragDetect) display.runDragDrop = true;
+    if (!dragDetect) {
+        display.runDragDrop = true;
+    }
 	if (fullRowSelect) {
 		fullRowSelect = false;
 		OS.DefWindowProc (handle, OS.WM_SETREDRAW, 1, 0);
@@ -3821,7 +4096,9 @@ LRESULT sendMouseDownEvent (int type, int button, int msg, long wParam, long lPa
 
 	if (dragStarted || display.dragCancelled) {
 		if (!display.captureChanged && !isDisposed ()) {
-			if (OS.GetCapture () != handle) OS.SetCapture (handle);
+            if (OS.GetCapture() != handle) {
+                OS.SetCapture(handle);
+            }
 		}
 	} else {
 		int flags = OS.LVHT_ONITEMLABEL | OS.LVHT_ONITEMICON;
@@ -3837,6 +4114,7 @@ LRESULT sendMouseDownEvent (int type, int button, int msg, long wParam, long lPa
 }
 
 void sendPaintItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd) {
+	item.pinVirtualFacade ();
 	long hDC = nmcd.hdc;
 	GCData data = new GCData ();
 	data.device = display;
@@ -3873,14 +4151,20 @@ void sendPaintItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd) {
 			}
 			if (explorerTheme && selectionForeground == -1) {
 				int clrText = item.cellForeground != null ? item.cellForeground [nmcd.iSubItem] : -1;
-				if (clrText == -1) clrText = item.foreground;
+                if (clrText == -1) {
+                    clrText = item.foreground;
+                }
 				data.foreground = clrText != -1 ? clrText : getForegroundPixel ();
 			}
 		} else {
 			int clrText = item.cellForeground != null ? item.cellForeground [nmcd.iSubItem] : -1;
-			if (clrText == -1) clrText = item.foreground;
+            if (clrText == -1) {
+                clrText = item.foreground;
+            }
 			int clrTextBk = item.cellBackground != null ? item.cellBackground [nmcd.iSubItem] : -1;
-			if (clrTextBk == -1) clrTextBk = item.background;
+            if (clrTextBk == -1) {
+                clrTextBk = item.background;
+            }
 			drawBackground = clrTextBk != -1;
 			/*
 			* Bug in Windows.  When LVM_SETTEXTBKCOLOR, LVM_SETBKCOLOR
@@ -3891,9 +4175,15 @@ void sendPaintItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd) {
 			*/
 			if (clrText == -1 || clrTextBk == -1) {
 				Control control = findBackgroundControl ();
-				if (control == null) control = this;
-				if (clrText == -1) clrText = control.getForegroundPixel ();
-				if (clrTextBk == -1) clrTextBk = control.getBackgroundPixel ();
+                if (control == null) {
+                    control = this;
+                }
+                if (clrText == -1) {
+                    clrText = control.getForegroundPixel();
+                }
+                if (clrTextBk == -1) {
+                    clrTextBk = control.getBackgroundPixel();
+                }
 			}
 			data.foreground = clrText != -1 ? clrText : OS.GetTextColor (hDC);
 			data.background = clrTextBk != -1 ? clrTextBk : OS.GetBkColor (hDC);
@@ -3916,26 +4206,37 @@ void sendPaintItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd) {
 		if (nmcd.iSubItem == 0 || (style & SWT.FULL_SELECTION) != 0) {
 			if (handle == OS.GetFocus ()) {
 				int uiState = (int)OS.SendMessage (handle, OS.WM_QUERYUISTATE, 0, 0);
-				if ((uiState & OS.UISF_HIDEFOCUS) == 0) event.detail |= SWT.FOCUSED;
+                if ((uiState & OS.UISF_HIDEFOCUS) == 0) {
+                    event.detail |= SWT.FOCUSED;
+                }
 			}
 		}
 	}
-	if (drawHot) event.detail |= SWT.HOT;
-	if (drawSelected) event.detail |= SWT.SELECTED;
-	if (drawBackground) event.detail |= SWT.BACKGROUND;
+    if (drawHot) {
+        event.detail |= SWT.HOT;
+    }
+    if (drawSelected) {
+        event.detail |= SWT.SELECTED;
+    }
+    if (drawBackground) {
+        event.detail |= SWT.BACKGROUND;
+    }
 	event.setBounds(Win32DPIUtils.pixelToPoint(new Rectangle(itemRect.left, itemRect.top, itemRect.right - itemRect.left, itemRect.bottom - itemRect.top), getAutoscalingZoom()));
 	RECT cellRect = item.getBounds ((int)nmcd.dwItemSpec, nmcd.iSubItem, true, true, true, true, hDC);
 	int cellWidth = cellRect.right - cellRect.left;
 	int cellHeight = cellRect.bottom - cellRect.top;
 	gc.setClipping (Win32DPIUtils.pixelToPoint(new Rectangle (cellRect.left, cellRect.top, cellWidth, cellHeight), getAutoscalingZoom()));
 	sendEvent (SWT.PaintItem, event);
-	if (data.focusDrawn) focusRect = null;
+    if (data.focusDrawn) {
+        focusRect = null;
+    }
 	event.gc = null;
 	gc.dispose ();
 	OS.RestoreDC (hDC, nSavedDC);
 }
 
 Event sendPaintItemEvent (TableItem item, NMTTCUSTOMDRAW nmcd, int column, RECT itemRect) {
+	item.pinVirtualFacade ();
 	int nSavedDC = OS.SaveDC (nmcd.hdc);
 	RECT insetRect = toolTipInset (itemRect);
 	OS.SetWindowOrgEx (nmcd.hdc, insetRect.left, insetRect.top, null);
@@ -3976,12 +4277,18 @@ void setBackgroundImage (long hBitmap) {
 void setBackgroundPixel (int newPixel) {
 	int oldPixel = (int)OS.SendMessage (handle, OS.LVM_GETBKCOLOR, 0, 0);
 	if (oldPixel != OS.CLR_NONE) {
-		if (findImageControl () != null) return;
-		if (newPixel == -1) newPixel = defaultBackground ();
+        if (findImageControl() != null) {
+            return;
+        }
+        if (newPixel == -1) {
+            newPixel = defaultBackground();
+        }
 		if (oldPixel != newPixel) {
 			OS.SendMessage (handle, OS.LVM_SETBKCOLOR, 0, newPixel);
 			OS.SendMessage (handle, OS.LVM_SETTEXTBKCOLOR, 0, newPixel);
-			if ((style & SWT.CHECK) != 0) fixCheckboxImageListColor (true);
+            if ((style & SWT.CHECK) != 0) {
+                fixCheckboxImageListColor(true);
+            }
 		}
 	}
 	/*
@@ -4041,12 +4348,16 @@ void setBackgroundTransparent (boolean transparent) {
 	} else {
 		if (oldPixel == OS.CLR_NONE) {
 			Control control = findBackgroundControl ();
-			if (control == null) control = this;
+            if (control == null) {
+                control = this;
+            }
 			if (control.backgroundImage == null) {
 				int newPixel = control.getBackgroundPixel ();
 				OS.SendMessage (handle, OS.LVM_SETBKCOLOR, 0, newPixel);
 				OS.SendMessage (handle, OS.LVM_SETTEXTBKCOLOR, 0, newPixel);
-				if ((style & SWT.CHECK) != 0) fixCheckboxImageListColor (true);
+                if ((style & SWT.CHECK) != 0) {
+                    fixCheckboxImageListColor(true);
+                }
 				OS.InvalidateRect (handle, null, true);
 			}
 
@@ -4125,22 +4436,34 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean 
  */
 public void setColumnOrder (int [] order) {
 	checkWidget ();
-	if (order == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (order == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (columnCount == 0) {
-		if (order.length != 0) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (order.length != 0) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		return;
 	}
-	if (order.length != columnCount) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (order.length != columnCount) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int [] oldOrder = new int [columnCount];
 	OS.SendMessage (handle, OS.LVM_GETCOLUMNORDERARRAY, columnCount, oldOrder);
 	boolean reorder = false;
 	boolean [] seen = new boolean [columnCount];
 	for (int i=0; i<order.length; i++) {
 		int index = order [i];
-		if (index < 0 || index >= columnCount) error (SWT.ERROR_INVALID_RANGE);
-		if (seen [index]) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (index < 0 || index >= columnCount) {
+            error(SWT.ERROR_INVALID_RANGE);
+        }
+        if (seen [index]) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		seen [index] = true;
-		if (index != oldOrder [i]) reorder = true;
+        if (index != oldOrder [i]) {
+            reorder = true;
+        }
 	}
 	if (reorder) {
 		RECT [] oldRects = new RECT [columnCount];
@@ -4172,7 +4495,9 @@ public void setColumnOrder (int [] order) {
 }
 
 void setCustomDraw (boolean customDraw) {
-	if (this.customDraw == customDraw) return;
+    if (this.customDraw == customDraw) {
+        return;
+    }
 	if (!this.customDraw && customDraw && currentItem != null) {
 		OS.InvalidateRect (handle, null, true);
 	}
@@ -4210,7 +4535,9 @@ void setDeferResize (boolean defer) {
 				wasResized = false;
 				setResizeChildren (false);
 				sendEvent (SWT.Resize);
-				if (isDisposed ()) return;
+                if (isDisposed()) {
+                    return;
+                }
 				if (layout != null) {
 					markLayout (false, false);
 					updateLayout (false, false);
@@ -4222,9 +4549,13 @@ void setDeferResize (boolean defer) {
 }
 
 void setCheckboxImageList (int width, int height, boolean fixScroll) {
-	if ((style & SWT.CHECK) == 0) return;
+    if ((style & SWT.CHECK) == 0) {
+        return;
+    }
 	int count = 8, flags = OS.ILC_COLOR32;
-	if ((style & SWT.RIGHT_TO_LEFT) != 0) flags |= OS.ILC_MIRROR;
+    if ((style & SWT.RIGHT_TO_LEFT) != 0) {
+        flags |= OS.ILC_MIRROR;
+    }
 	long hStateList = OS.ImageList_Create (width, height, flags, count, count);
 	long hDC = OS.GetDC (handle);
 	long memDC = OS.CreateCompatibleDC (hDC);
@@ -4233,7 +4564,9 @@ void setCheckboxImageList (int width, int height, boolean fixScroll) {
 	RECT rect = new RECT ();
 	OS.SetRect (rect, 0, 0, width * count, height);
 	Control control = findBackgroundControl ();
-	if (control == null) control = this;
+    if (control == null) {
+        control = this;
+    }
 	int clrBackground = control.getBackgroundPixel ();
 	long hBrush = OS.CreateSolidBrush (clrBackground);
 	OS.FillRect (memDC, rect, hBrush);
@@ -4292,7 +4625,9 @@ void setCheckboxImageList (int width, int height, boolean fixScroll) {
 	}
 	long hOldStateList = OS.SendMessage (handle, OS.LVM_GETIMAGELIST, OS.LVSIL_STATE, 0);
 	OS.SendMessage (handle, OS.LVM_SETIMAGELIST, OS.LVSIL_STATE, hStateList);
-	if (hOldStateList != 0) OS.ImageList_Destroy (hOldStateList);
+    if (hOldStateList != 0) {
+        OS.ImageList_Destroy(hOldStateList);
+    }
 	/*
 	* Bug in Windows.  Setting the LVSIL_STATE state image list
 	* when the table already has a LVSIL_SMALL image list causes
@@ -4309,11 +4644,13 @@ void setCheckboxImageList (int width, int height, boolean fixScroll) {
 
 void setFocusIndex (int index) {
 //	checkWidget ();
-	/*
-	* An index of -1 will apply the change to all
-	* items.  Ensure that index is greater than -1.
-	*/
-	if (index < 0) return;
+    /*
+    * An index of -1 will apply the change to all
+    * items.  Ensure that index is greater than -1.
+    */
+    if (index < 0) {
+        return;
+    }
 	LVITEM lvItem = new LVITEM ();
 	lvItem.state = OS.LVIS_FOCUSED;
 	lvItem.stateMask = OS.LVIS_FOCUSED;
@@ -4365,12 +4702,14 @@ public void setFont (Font font) {
 
 @Override
 void setForegroundPixel (int pixel) {
-	/*
-	* The Windows table control uses CLR_DEFAULT to indicate
-	* that it is using the default foreground color.  This
-	* is undocumented.
-	*/
-	if (pixel == -1) pixel = OS.CLR_DEFAULT;
+    /*
+    * The Windows table control uses CLR_DEFAULT to indicate
+    * that it is using the default foreground color.  This
+    * is undocumented.
+    */
+    if (pixel == -1) {
+        pixel = OS.CLR_DEFAULT;
+    }
 	OS.SendMessage (handle, OS.LVM_SETTEXTCOLOR, 0, pixel);
 
 	/*
@@ -4405,10 +4744,14 @@ public void setHeaderBackground (Color color) {
 	checkWidget ();
 	int pixel = -1;
 	if (color != null) {
-		if (color.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		pixel = color.handle;
 	}
-	if (pixel == headerBackground) return;
+    if (pixel == headerBackground) {
+        return;
+    }
 	headerBackground = pixel;
 	if (getHeaderVisible()) {
 		OS.InvalidateRect (hwndHeader, null, true);
@@ -4438,10 +4781,14 @@ public void setHeaderForeground (Color color) {
 	checkWidget ();
 	int pixel = -1;
 	if (color != null) {
-		if (color.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		pixel = color.handle;
 	}
-	if (pixel == headerForeground) return;
+    if (pixel == headerForeground) {
+        return;
+    }
 	headerForeground = pixel;
 	if (getHeaderVisible()) {
 		OS.InvalidateRect (hwndHeader, null, true);
@@ -4468,7 +4815,9 @@ public void setHeaderVisible (boolean show) {
 	checkWidget ();
 	int newBits = OS.GetWindowLong (handle, OS.GWL_STYLE);
 	newBits &= ~OS.LVS_NOCOLUMNHEADER;
-	if (!show) newBits |= OS.LVS_NOCOLUMNHEADER;
+    if (!show) {
+        newBits |= OS.LVS_NOCOLUMNHEADER;
+    }
 	/*
 	* Feature in Windows.  Setting or clearing LVS_NOCOLUMNHEADER
 	* causes the table to scroll to the beginning.  The fix is to
@@ -4515,23 +4864,33 @@ public void setItemCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
 	int itemCount = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-	if (count == itemCount) return;
+    if (count == itemCount) {
+        return;
+    }
 	setDeferResize (true);
 	boolean isVirtual = (style & SWT.VIRTUAL) != 0;
-	if (!isVirtual) setRedraw (false);
+    if (!isVirtual) {
+        setRedraw(false);
+    }
 	int index = count;
 	while (index < itemCount) {
 		TableItem item = _getItem (index, false);
-		if (item != null && !item.isDisposed ()) item.release (false);
+        if (item != null && !item.isDisposed()) {
+            item.release(false);
+        }
 		if (!isVirtual) {
 			ignoreSelect = ignoreShrink = true;
 			long code = OS.SendMessage (handle, OS.LVM_DELETEITEM, count, 0);
 			ignoreSelect = ignoreShrink = false;
-			if (code == 0) break;
+            if (code == 0) {
+                break;
+            }
 		}
 		index++;
 	}
-	if (index < itemCount) error (SWT.ERROR_ITEM_NOT_REMOVED);
+    if (index < itemCount) {
+        error(SWT.ERROR_ITEM_NOT_REMOVED);
+    }
 	_setItemCount (count, itemCount);
 	if (isVirtual) {
 		int flags = OS.LVSICF_NOINVALIDATEALL | OS.LVSICF_NOSCROLL;
@@ -4551,8 +4910,12 @@ public void setItemCount (int count) {
 			new TableItem (this, SWT.NONE, i, true);
 		}
 	}
-	if (!isVirtual) setRedraw (true);
-	if (itemCount == 0) setScrollWidth (null, false);
+    if (!isVirtual) {
+        setRedraw(true);
+    }
+    if (itemCount == 0) {
+        setScrollWidth(null, false);
+    }
 	setDeferResize (false);
 }
 
@@ -4621,7 +4984,9 @@ void setItemHeight (boolean fixScroll) {
  */
 /*public*/ void setItemHeight (int itemHeight) {
 	checkWidget ();
-	if (itemHeight < -1) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (itemHeight < -1) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.itemHeight = itemHeight;
 	setItemHeight (true);
 	setScrollWidth (null, true);
@@ -4665,7 +5030,9 @@ public void setRedraw (boolean redraw) {
 	 */
 	if (drawCount == 0) {
 		int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
-		if ((bits & OS.WS_VISIBLE) == 0) state |= HIDDEN;
+        if ((bits & OS.WS_VISIBLE) == 0) {
+            state |= HIDDEN;
+        }
 	}
 	if (redraw) {
 		if (--drawCount == 0) {
@@ -4697,7 +5064,9 @@ public void setRedraw (boolean redraw) {
 			*/
 			setDeferResize (true);
 			OS.SendMessage (handle, OS.WM_SETREDRAW, 1, 0);
-			if (hwndHeader != 0) OS.SendMessage (hwndHeader, OS.WM_SETREDRAW, 1, 0);
+            if (hwndHeader != 0) {
+                OS.SendMessage(hwndHeader, OS.WM_SETREDRAW, 1, 0);
+            }
 			if ((state & HIDDEN) != 0) {
 				state &= ~HIDDEN;
 				OS.ShowWindow (handle, OS.SW_HIDE);
@@ -4710,7 +5079,9 @@ public void setRedraw (boolean redraw) {
 	} else {
 		if (drawCount++ == 0) {
 			OS.SendMessage (handle, OS.WM_SETREDRAW, 0, 0);
-			if (hwndHeader != 0) OS.SendMessage (hwndHeader, OS.WM_SETREDRAW, 0, 0);
+            if (hwndHeader != 0) {
+                OS.SendMessage(hwndHeader, OS.WM_SETREDRAW, 0, 0);
+            }
 
 			/*
 			* When many items are added to a table, it is faster to
@@ -4744,7 +5115,9 @@ void setScrollWidth (int width) {
 		if (hooks (SWT.MeasureItem)) {
 			redraw = getDrawing () && OS.IsWindowVisible (handle);
 		}
-		if (redraw) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);
+        if (redraw) {
+            OS.DefWindowProc(handle, OS.WM_SETREDRAW, 0, 0);
+        }
 		OS.SendMessage (handle, OS.LVM_SETCOLUMNWIDTH, 0, width);
 		if (redraw) {
 			OS.DefWindowProc (handle, OS.WM_SETREDRAW, 1, 0);
@@ -4756,7 +5129,9 @@ void setScrollWidth (int width) {
 
 boolean setScrollWidth (TableItem item, boolean force) {
 	if (currentItem != null) {
-		if (currentItem != item) fixScrollWidth = true;
+        if (currentItem != item) {
+            fixScrollWidth = true;
+        }
 		return false;
 	}
 	if (!force && (!getDrawing () || !OS.IsWindowVisible (handle))) {
@@ -4803,7 +5178,9 @@ boolean setScrollWidth (TableItem item, boolean force) {
 					newWidth = Math.max (newWidth, (int)OS.SendMessage (handle, OS.LVM_GETSTRINGWIDTH, 0, buffer));
 				}
 			}
-			if (item != null) break;
+            if (item != null) {
+                break;
+            }
 			index++;
 		}
 		/*
@@ -4879,13 +5256,19 @@ boolean setScrollWidth (TableItem item, boolean force) {
  */
 public void setSelection (int [] indices) {
 	checkWidget ();
-	if (indices == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (indices == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	deselectAll ();
 	int length = indices.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	select (indices);
 	int focusIndex = indices [0];
-	if (focusIndex != -1) setFocusIndex (focusIndex);
+    if (focusIndex != -1) {
+        setFocusIndex(focusIndex);
+    }
 	showSelection ();
 }
 
@@ -4912,7 +5295,9 @@ public void setSelection (int [] indices) {
  */
 public void setSelection (TableItem  item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setSelection (new TableItem [] {item});
 }
 
@@ -4943,10 +5328,14 @@ public void setSelection (TableItem  item) {
  */
 public void setSelection (TableItem [] items) {
 	checkWidget ();
-	if (items == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (items == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	deselectAll ();
 	int length = items.length;
-	if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) return;
+    if (length == 0 || ((style & SWT.SINGLE) != 0 && length > 1)) {
+        return;
+    }
 	int focusIndex = -1;
 	for (int i=length-1; i>=0; --i) {
 		int index = indexOf (items [i]);
@@ -4954,7 +5343,9 @@ public void setSelection (TableItem [] items) {
 			select (focusIndex = index);
 		}
 	}
-	if (focusIndex != -1) setFocusIndex (focusIndex);
+    if (focusIndex != -1) {
+        setFocusIndex(focusIndex);
+    }
 	showSelection ();
 }
 
@@ -4977,7 +5368,9 @@ public void setSelection (int index) {
 	checkWidget ();
 	deselectAll ();
 	select (index);
-	if (index != -1) setFocusIndex (index);
+    if (index != -1) {
+        setFocusIndex(index);
+    }
 	showSelection ();
 }
 
@@ -5007,9 +5400,13 @@ public void setSelection (int index) {
 public void setSelection (int start, int end) {
 	checkWidget ();
 	deselectAll ();
-	if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) return;
+    if (end < 0 || start > end || ((style & SWT.SINGLE) != 0 && start != end)) {
+        return;
+    }
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-	if (count == 0 || start >= count) return;
+    if (count == 0 || start >= count) {
+        return;
+    }
 	start = Math.max (0, start);
 	end = Math.min (end, count - 1);
 	select (start, end);
@@ -5036,7 +5433,9 @@ public void setSelection (int start, int end) {
  */
 public void setSortColumn (TableColumn column) {
 	checkWidget ();
-	if (column != null && column.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (column != null && column.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	if (sortColumn != null && !sortColumn.isDisposed ()) {
 		sortColumn.setSortDirection (SWT.NONE);
 	}
@@ -5061,7 +5460,9 @@ public void setSortColumn (TableColumn column) {
  */
 public void setSortDirection (int direction) {
 	checkWidget ();
-	if ((direction & (SWT.UP | SWT.DOWN)) == 0 && direction != SWT.NONE) return;
+    if ((direction & (SWT.UP | SWT.DOWN)) == 0 && direction != SWT.NONE) {
+        return;
+    }
 	sortDirection = direction;
 	if (sortColumn != null && !sortColumn.isDisposed ()) {
 		sortColumn.setSortDirection (direction);
@@ -5070,7 +5471,9 @@ public void setSortDirection (int direction) {
 
 void setSubImagesVisible (boolean visible) {
 	int dwExStyle = (int)OS.SendMessage (handle, OS.LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
-	if ((dwExStyle & OS.LVS_EX_SUBITEMIMAGES) != 0 == visible) return;
+    if ((dwExStyle & OS.LVS_EX_SUBITEMIMAGES) != 0 == visible) {
+        return;
+    }
 	int bits = visible ? OS.LVS_EX_SUBITEMIMAGES : 0;
 	OS.SendMessage (handle, OS.LVM_SETEXTENDEDLISTVIEWSTYLE, OS.LVS_EX_SUBITEMIMAGES, bits);
 }
@@ -5097,11 +5500,15 @@ void setTableEmpty () {
 		OS.ImageList_Destroy (hImageList);
 		display.releaseImageList (imageList);
 		imageList = null;
-		if (itemHeight != -1) setItemHeight (false);
+        if (itemHeight != -1) {
+            setItemHeight(false);
+        }
 	}
 	if (!hooks (SWT.MeasureItem) && !hooks (SWT.EraseItem) && !hooks (SWT.PaintItem)) {
 		Control control = findBackgroundControl ();
-		if (control == null) control = this;
+        if (control == null) {
+            control = this;
+        }
 		if (control.backgroundImage == null) {
 			setCustomDraw (false);
 			setBackgroundTransparent (false);
@@ -5129,8 +5536,12 @@ void setTableEmpty () {
 public void setTopIndex (int index) {
 	checkWidget ();
 	int topIndex = (int)OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0);
-	if (index == topIndex) return;
-	if (!painted && hooks (SWT.MeasureItem)) hitTestSelection (index, 0, 0);
+    if (index == topIndex) {
+        return;
+    }
+    if (!painted && hooks(SWT.MeasureItem)) {
+        hitTestSelection(index, 0, 0);
+    }
 
 	/*
 	* Bug in Windows.  For some reason, LVM_SCROLL refuses to
@@ -5168,6 +5579,7 @@ public void setTopIndex (int index) {
 		if (index != OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0)) {
 			OS.SendMessage (handle, OS.LVM_ENSUREVISIBLE, index, 1);
 		}
+		updateVirtualViewport ();
 		return;
 	}
 
@@ -5179,6 +5591,7 @@ public void setTopIndex (int index) {
 	ignoreCustomDraw = false;
 	int dy = (index - topIndex) * (rect.bottom - rect.top);
 	OS.SendMessage (handle, OS.LVM_SCROLL, 0, dy);
+	updateVirtualViewport ();
 }
 
 /**
@@ -5201,11 +5614,19 @@ public void setTopIndex (int index) {
  */
 public void showColumn (TableColumn column) {
 	checkWidget ();
-	if (column == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (column.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-	if (column.parent != this) return;
+    if (column == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (column.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (column.parent != this) {
+        return;
+    }
 	int index = indexOf (column);
-	if (!(0 <= index && index < columnCount)) return;
+    if (!(0 <= index && index < columnCount)) {
+        return;
+    }
 	/*
 	* Feature in Windows.  Calling LVM_GETSUBITEMRECT with -1 for the
 	* row number gives the bounds of the item that would be above the
@@ -5279,7 +5700,9 @@ public void showColumn (TableColumn column) {
 }
 
 void showItem (int index) {
-	if (!painted && hooks (SWT.MeasureItem)) hitTestSelection (index, 0, 0);
+    if (!painted && hooks(SWT.MeasureItem)) {
+        hitTestSelection(index, 0, 0);
+    }
 	/*
 	* Bug in Windows.  For some reason, when there is insufficient space
 	* to show an item, LVM_ENSUREVISIBLE causes blank lines to be
@@ -5337,10 +5760,16 @@ void showItem (int index) {
  */
 public void showItem (TableItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (item.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (item.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int index = indexOf (item);
-	if (index != -1) showItem (index);
+    if (index != -1) {
+        showItem(index);
+    }
 }
 
 /**
@@ -5420,11 +5849,15 @@ RECT toolTipRect (RECT rect) {
 @Override
 String toolTipText (NMTTDISPINFO hdr) {
 	long hwndToolTip = OS.SendMessage (handle, OS.LVM_GETTOOLTIPS, 0, 0);
-	if (hwndToolTip == hdr.hwndFrom && toolTipText != null) return ""; //$NON-NLS-1$
+    if (hwndToolTip == hdr.hwndFrom && toolTipText != null) {
+        return ""; //$NON-NLS-1$
+    }
 	if (headerToolTipHandle == hdr.hwndFrom) {
 		for (int i=0; i<columnCount; i++) {
 			TableColumn column = columns [i];
-			if (column.id == hdr.idFrom) return column.toolTipText;
+            if (column.id == hdr.idFrom) {
+                return column.toolTipText;
+            }
 		}
 	}
 	return super.toolTipText (hdr);
@@ -5466,7 +5899,9 @@ void update (boolean all) {
 }
 
 void updateHeaderToolTips () {
-	if (headerToolTipHandle == 0) return;
+    if (headerToolTipHandle == 0) {
+        return;
+    }
 	long hwndHeader = OS.SendMessage (handle, OS.LVM_GETHEADER, 0, 0);
 	RECT rect = new RECT ();
 	TOOLINFO lpti = new TOOLINFO ();
@@ -5511,7 +5946,9 @@ void updateMenuLocation (Event event) {
 void updateMoveable () {
 	int index = 0;
 	while (index < columnCount) {
-		if (columns [index].moveable) break;
+        if (columns [index].moveable) {
+            break;
+        }
 		index++;
 	}
 	int newBits = index < columnCount ? OS.LVS_EX_HEADERDRAGDROP : 0;
@@ -5538,7 +5975,9 @@ void updateOrientation () {
 		OS.SetWindowPos (handle, 0, 0, 0, width - 1, height - 1, OS.SWP_NOMOVE | OS.SWP_NOZORDER);
 		OS.SetWindowPos (handle, 0, 0, 0, width, height, OS.SWP_NOMOVE | OS.SWP_NOZORDER);
 	}
-	if ((style & SWT.CHECK) != 0) fixCheckboxImageListColor (false);
+    if ((style & SWT.CHECK) != 0) {
+        fixCheckboxImageListColor(false);
+    }
 	if (imageList != null) {
 		Point sizeInPoints = imageList.getImageSize();
 		display.releaseImageList (imageList);
@@ -5550,7 +5989,9 @@ void updateOrientation () {
 				Image image = item.image;
 				if (image != null) {
 					int index = imageList.indexOf (image);
-					if (index == -1) imageList.add (image);
+                    if (index == -1) {
+                        imageList.add(image);
+                    }
 				}
 			}
 		}
@@ -5573,7 +6014,9 @@ void updateOrientation () {
 							OS.SendMessage (hwndHeader, OS.LVM_GETCOLUMN, i, lvColumn);
 							if ((lvColumn.fmt & OS.LVCFMT_IMAGE) != 0) {
 								int index = headerImageList.indexOf (image);
-								if (index == -1) headerImageList.add (image);
+                                if (index == -1) {
+                                    headerImageList.add(image);
+                                }
 								lvColumn.iImage = index;
 								lvColumn.mask = OS.LVCF_IMAGE;
 								OS.SendMessage (hwndHeader, OS.LVM_SETCOLUMN, i, lvColumn);
@@ -5592,9 +6035,14 @@ void updateOrientation () {
 boolean updateTextDirection(int textDirection) {
 	if (super.updateTextDirection(textDirection)) {
 		if (textDirection == AUTO_TEXT_DIRECTION || (state & HAS_AUTO_DIRECTION) != 0) {
-			for (TableItem item : items) {
-				if (item != null) {
-					item.updateTextDirection(textDirection == AUTO_TEXT_DIRECTION ? AUTO_TEXT_DIRECTION : style & SWT.FLIP_TEXT_DIRECTION);
+			int direction = textDirection == AUTO_TEXT_DIRECTION ? AUTO_TEXT_DIRECTION : style & SWT.FLIP_TEXT_DIRECTION;
+			if ((style & SWT.VIRTUAL) != 0) {
+				virtualItems.forEach (item -> item.updateTextDirection (direction));
+			} else {
+				for (TableItem item : items) {
+                    if (item != null) {
+                        item.updateTextDirection(direction);
+                    }
 				}
 			}
 		}
@@ -5607,8 +6055,12 @@ boolean updateTextDirection(int textDirection) {
 @Override
 int widgetStyle () {
 	int bits = super.widgetStyle () | OS.LVS_SHAREIMAGELISTS;
-	if ((style & SWT.HIDE_SELECTION) == 0) bits |= OS.LVS_SHOWSELALWAYS;
-	if ((style & SWT.SINGLE) != 0) bits |= OS.LVS_SINGLESEL;
+    if ((style & SWT.HIDE_SELECTION) == 0) {
+        bits |= OS.LVS_SHOWSELALWAYS;
+    }
+    if ((style & SWT.SINGLE) != 0) {
+        bits |= OS.LVS_SINGLESEL;
+    }
 	/*
 	* This code is intentionally commented.  In the future,
 	* the FLAT bit may be used to make the header flat and
@@ -5616,7 +6068,9 @@ int widgetStyle () {
 	*/
 //	if ((style & SWT.FLAT) != 0) bits |= OS.LVS_NOSORTHEADER;
 	bits |= OS.LVS_REPORT | OS.LVS_NOCOLUMNHEADER;
-	if ((style & SWT.VIRTUAL) != 0) bits |= OS.LVS_OWNERDATA;
+    if ((style & SWT.VIRTUAL) != 0) {
+        bits |= OS.LVS_OWNERDATA;
+    }
 	return bits;
 }
 
@@ -5632,12 +6086,16 @@ long windowProc () {
 
 @Override
 long windowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	if (hwnd != handle) {
 		switch (msg) {
 			case OS.WM_CONTEXTMENU: {
 				LRESULT result = wmContextMenu (hwnd, wParam, lParam);
-				if (result != null) return result.value;
+                if (result != null) {
+                    return result.value;
+                }
 				break;
 			}
 			case OS.WM_MOUSELEAVE: {
@@ -5701,7 +6159,9 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 		*/
 		int topIndex = (int)OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0);
 		int selection = (int)OS.SendMessage (handle, OS.LVM_GETNEXTITEM, topIndex - 1, OS.LVNI_SELECTED);
-		if (selection == -1) return 0;
+        if (selection == -1) {
+            return 0;
+        }
 		POINT mousePos = new POINT ();
 		OS.POINTSTOPOINT (mousePos, OS.GetMessagePos ());
 		OS.MapWindowPoints(0, handle, mousePos, 1);
@@ -5722,8 +6182,12 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 		}
 		long hRgn = OS.CreateRectRgn (rect.left, rect.top, rect.right, rect.bottom);
 		while ((selection = (int)OS.SendMessage (handle, OS.LVM_GETNEXTITEM, selection, OS.LVNI_SELECTED)) != -1) {
-			if (rect.bottom - rect.top > dragImageSizeInPixel) break;
-			if (rect.bottom > clientRect.bottom) break;
+            if (rect.bottom - rect.top > dragImageSizeInPixel) {
+                break;
+            }
+            if (rect.bottom > clientRect.bottom) {
+                break;
+            }
 			RECT itemRect = item.getBounds (selection, 0, true, true, true);
 			long rectRgn = OS.CreateRectRgn (rect.left, itemRect.top, rect.right, itemRect.bottom);
 			OS.CombineRgn (hRgn, hRgn, rectRgn, OS.RGN_OR);
@@ -5746,7 +6210,9 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 		OS.MoveMemory (bmi, bmiHeader, BITMAPINFOHEADER.sizeof);
 		long [] pBits = new long [1];
 		long memDib = OS.CreateDIBSection (0, bmi, OS.DIB_RGB_COLORS, pBits, 0, 0);
-		if (memDib == 0) error (SWT.ERROR_NO_HANDLES);
+        if (memDib == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		long oldMemBitmap = OS.SelectObject (memHdc, memDib);
 		int colorKey = 0x0000FD;
 		POINT pt = new POINT();
@@ -5780,7 +6246,9 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 @Override
 LRESULT WM_CHAR (long wParam, long lParam) {
 	LRESULT result = super.WM_CHAR (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	switch ((int)wParam) {
 		case ' ':
 			if ((style & SWT.CHECK) != 0) {
@@ -5820,26 +6288,30 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 
 @Override
 LRESULT WM_CONTEXTMENU (long wParam, long lParam) {
-	/*
-	* Feature in Windows.  For some reason, when the right
-	* mouse button is pressed over an item, Windows sends
-	* a WM_CONTEXTMENU from WM_RBUTTONDOWN, instead of from
-	* WM_RBUTTONUP.  This causes two context menus requests
-	* to be sent.  The fix is to ignore WM_CONTEXTMENU on
-	* mouse down.
-	*
-	* NOTE: This only happens when dragging is disabled.
-	* When the table is detecting drag, the WM_CONTEXTMENU
-	* is not sent WM_RBUTTONUP.
-	*/
-	if (!display.runDragDrop) return LRESULT.ZERO;
+    /*
+    * Feature in Windows.  For some reason, when the right
+    * mouse button is pressed over an item, Windows sends
+    * a WM_CONTEXTMENU from WM_RBUTTONDOWN, instead of from
+    * WM_RBUTTONUP.  This causes two context menus requests
+    * to be sent.  The fix is to ignore WM_CONTEXTMENU on
+    * mouse down.
+    *
+    * NOTE: This only happens when dragging is disabled.
+    * When the table is detecting drag, the WM_CONTEXTMENU
+    * is not sent WM_RBUTTONUP.
+    */
+    if (!display.runDragDrop) {
+        return LRESULT.ZERO;
+    }
 	return super.WM_CONTEXTMENU (wParam, lParam);
 }
 
 @Override
 LRESULT WM_ERASEBKGND (long wParam, long lParam) {
 	LRESULT result = super.WM_ERASEBKGND (wParam, lParam);
-	if (findImageControl () != null) return LRESULT.ONE;
+    if (findImageControl() != null) {
+        return LRESULT.ONE;
+    }
 	return result;
 }
 
@@ -5851,7 +6323,9 @@ LRESULT WM_GETOBJECT (long wParam, long lParam) {
 	* temporarily implemented in the accessibility package.
 	*/
 	if ((style & SWT.CHECK) != 0) {
-		if (accessible == null) accessible = new_Accessible (this);
+        if (accessible == null) {
+            accessible = new_Accessible(this);
+        }
 	}
 	return super.WM_GETOBJECT (wParam, lParam);
 }
@@ -5859,7 +6333,9 @@ LRESULT WM_GETOBJECT (long wParam, long lParam) {
 @Override
 LRESULT WM_KEYDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_KEYDOWN (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	switch ((int)wParam) {
 		case OS.VK_SPACE:
 			/*
@@ -5873,7 +6349,9 @@ LRESULT WM_KEYDOWN (long wParam, long lParam) {
 			if (OS.GetKeyState (OS.VK_CONTROL) < 0) {
 				int index = 0;
 				while (index < columnCount) {
-					if (!columns [index].getResizable ()) break;
+                    if (!columns [index].getResizable()) {
+                        break;
+                    }
 					index++;
 				}
 				if (index != columnCount || hooks (SWT.MeasureItem)) {
@@ -5958,13 +6436,19 @@ LRESULT WM_LBUTTONDBLCLK (long wParam, long lParam) {
 	sendMouseEvent (SWT.MouseDown, 1, handle, lParam);
 	if (!sendMouseEvent (SWT.MouseDoubleClick, 1, handle, lParam)) {
 		if (!display.captureChanged && !isDisposed ()) {
-			if (OS.GetCapture () != handle) OS.SetCapture (handle);
+            if (OS.GetCapture() != handle) {
+                OS.SetCapture(handle);
+            }
 		}
 		return LRESULT.ZERO;
 	}
-	if (pinfo.iItem != -1) callWindowProc (handle, OS.WM_LBUTTONDBLCLK, wParam, lParam);
+    if (pinfo.iItem != -1) {
+        callWindowProc(handle, OS.WM_LBUTTONDBLCLK, wParam, lParam);
+    }
 	if (!display.captureChanged && !isDisposed ()) {
-		if (OS.GetCapture () != handle) OS.SetCapture (handle);
+        if (OS.GetCapture() != handle) {
+            OS.SetCapture(handle);
+        }
 	}
 
 	/* Look for check/uncheck */
@@ -5998,7 +6482,9 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 	* mouse capture.
 	*/
 	LRESULT result = sendMouseDownEvent (SWT.MouseDown, 1, OS.WM_LBUTTONDOWN, wParam, lParam);
-	if (result == LRESULT.ZERO) return result;
+    if (result == LRESULT.ZERO) {
+        return result;
+    }
 
 	/* Look for check/uncheck */
 	if ((style & SWT.CHECK) != 0) {
@@ -6037,16 +6523,22 @@ LRESULT WM_MOUSEHOVER (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSEHOVER (wParam, lParam);
 	int bits = (int)OS.SendMessage (handle, OS.LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
 	int mask = OS.LVS_EX_ONECLICKACTIVATE | OS.LVS_EX_TRACKSELECT | OS.LVS_EX_TWOCLICKACTIVATE;
-	if ((bits & mask) != 0) return result;
+    if ((bits & mask) != 0) {
+        return result;
+    }
 	return LRESULT.ZERO;
 }
 
 @Override
 LRESULT WM_PAINT (long wParam, long lParam) {
-	if ((state & DISPOSE_SENT) != 0) return LRESULT.ZERO;
+    if ((state & DISPOSE_SENT) != 0) {
+        return LRESULT.ZERO;
+    }
 
 	_checkShrink();
-	if (fixScrollWidth) setScrollWidth (null, true);
+    if (fixScrollWidth) {
+        setScrollWidth(null, true);
+    }
 	return super.WM_PAINT (wParam, lParam);
 }
 
@@ -6067,10 +6559,14 @@ LRESULT WM_RBUTTONDBLCLK (long wParam, long lParam) {
 	display.captureChanged = false;
 	sendMouseEvent (SWT.MouseDown, 3, handle, lParam);
 	if (sendMouseEvent (SWT.MouseDoubleClick, 3, handle, lParam)) {
-		if (pinfo.iItem != -1) callWindowProc (handle, OS.WM_RBUTTONDBLCLK, wParam, lParam);
+        if (pinfo.iItem != -1) {
+            callWindowProc(handle, OS.WM_RBUTTONDBLCLK, wParam, lParam);
+        }
 	}
 	if (!display.captureChanged && !isDisposed ()) {
-		if (OS.GetCapture () != handle) OS.SetCapture (handle);
+        if (OS.GetCapture() != handle) {
+            OS.SetCapture(handle);
+        }
 	}
 	return LRESULT.ZERO;
 }
@@ -6110,7 +6606,9 @@ LRESULT WM_SETFOCUS (long wParam, long lParam) {
 	* be the focus item.
 	*/
 	int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-	if (count == 0) return result;
+    if (count == 0) {
+        return result;
+    }
 	int index = (int)OS.SendMessage (handle, OS.LVM_GETNEXTITEM, -1, OS.LVNI_FOCUSED);
 	if (index == -1) {
 		LVITEM lvItem = new LVITEM ();
@@ -6126,7 +6624,9 @@ LRESULT WM_SETFOCUS (long wParam, long lParam) {
 @Override
 LRESULT WM_SETFONT (long wParam, long lParam) {
 	LRESULT result = super.WM_SETFONT (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 
 	/*
 	* Bug in Windows.  When a header has a sort indicator
@@ -6150,7 +6650,9 @@ LRESULT WM_SETFONT (long wParam, long lParam) {
 @Override
 LRESULT WM_SETREDRAW (long wParam, long lParam) {
 	LRESULT result = super.WM_SETREDRAW (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  When LVM_SETBKCOLOR is used with CLR_NONE
 	* to make the background of the table transparent, drawing becomes
@@ -6182,7 +6684,9 @@ LRESULT WM_SETREDRAW (long wParam, long lParam) {
 
 @Override
 LRESULT WM_SIZE (long wParam, long lParam) {
-	if (ignoreResize) return null;
+    if (ignoreResize) {
+        return null;
+    }
 	if (hooks (SWT.EraseItem) || hooks (SWT.PaintItem)) {
 		OS.InvalidateRect (handle, null, true);
 	}
@@ -6196,14 +6700,18 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 @Override
 LRESULT WM_SYSCOLORCHANGE (long wParam, long lParam) {
 	LRESULT result = super.WM_SYSCOLORCHANGE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if (findBackgroundControl () == null) {
 		setBackgroundPixel (defaultBackground ());
 	} else {
 		int oldPixel = (int)OS.SendMessage (handle, OS.LVM_GETBKCOLOR, 0, 0);
 		if (oldPixel != OS.CLR_NONE) {
 			if (findImageControl () == null) {
-				if ((style & SWT.CHECK) != 0) fixCheckboxImageListColor (true);
+                if ((style & SWT.CHECK) != 0) {
+                    fixCheckboxImageListColor(true);
+                }
 			}
 		}
 	}
@@ -6260,10 +6768,14 @@ LRESULT WM_HSCROLL (long wParam, long lParam) {
 	if (OS.LOWORD (wParam) != OS.SB_ENDSCROLL) {
 		if (columnCount > H_SCROLL_LIMIT) {
 			int rowCount = (int)OS.SendMessage (handle, OS.LVM_GETCOUNTPERPAGE, 0, 0);
-			if (rowCount > V_SCROLL_LIMIT) fixScroll = getDrawing () && OS.IsWindowVisible (handle);
+            if (rowCount > V_SCROLL_LIMIT) {
+                fixScroll = getDrawing() && OS.IsWindowVisible(handle);
+            }
 		}
 	}
-	if (fixScroll) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);
+    if (fixScroll) {
+        OS.DefWindowProc(handle, OS.WM_SETREDRAW, 0, 0);
+    }
 	LRESULT result = super.WM_HSCROLL (wParam, lParam);
 	if (fixScroll) {
 		OS.DefWindowProc (handle, OS.WM_SETREDRAW, 1, 0);
@@ -6358,10 +6870,14 @@ LRESULT WM_VSCROLL (long wParam, long lParam) {
 	if (OS.LOWORD (wParam) != OS.SB_ENDSCROLL) {
 		if (columnCount > H_SCROLL_LIMIT) {
 			int rowCount = (int)OS.SendMessage (handle, OS.LVM_GETCOUNTPERPAGE, 0, 0);
-			if (rowCount > V_SCROLL_LIMIT) fixScroll = getDrawing () && OS.IsWindowVisible (handle);
+            if (rowCount > V_SCROLL_LIMIT) {
+                fixScroll = getDrawing() && OS.IsWindowVisible(handle);
+            }
 		}
 	}
-	if (fixScroll) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);
+    if (fixScroll) {
+        OS.DefWindowProc(handle, OS.WM_SETREDRAW, 0, 0);
+    }
 	LRESULT result = super.WM_VSCROLL (wParam, lParam);
 	if (fixScroll) {
 		OS.DefWindowProc (handle, OS.WM_SETREDRAW, 1, 0);
@@ -6465,11 +6981,15 @@ LRESULT wmNotify (NMHDR hdr, long wParam, long lParam) {
 			itemToolTipHandle = hdr.hwndFrom;
 		}
 		LRESULT result = wmNotifyToolTip (hdr, wParam, lParam);
-		if (result != null) return result;
+        if (result != null) {
+            return result;
+        }
 	}
 	if (hdr.hwndFrom == hwndHeader) {
 		LRESULT result = wmNotifyHeader (hdr, wParam, lParam);
-		if (result != null) return result;
+        if (result != null) {
+            return result;
+        }
 	}
 	return super.wmNotify (hdr, wParam, lParam);
 }
@@ -6478,7 +6998,9 @@ LRESULT wmNotify (NMHDR hdr, long wParam, long lParam) {
 LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 	switch (hdr.code) {
 		case OS.LVN_ODFINDITEM: {
-			if ((style & SWT.VIRTUAL) != 0) return new LRESULT (-1);
+            if ((style & SWT.VIRTUAL) != 0) {
+                return new LRESULT(-1);
+            }
 			break;
 		}
 		case OS.LVN_ODSTATECHANGED: {
@@ -6488,7 +7010,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 					OS.MoveMemory (lpStateChange, lParam, NMLVODSTATECHANGE.sizeof);
 					boolean oldSelected = (lpStateChange.uOldState & OS.LVIS_SELECTED) != 0;
 					boolean newSelected = (lpStateChange.uNewState & OS.LVIS_SELECTED) != 0;
-					if (oldSelected != newSelected) wasSelected = true;
+                    if (oldSelected != newSelected) {
+                        wasSelected = true;
+                    }
 				}
 			}
 			break;
@@ -6513,7 +7037,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			* NOTE: Force the item to be created if it does not exist.
 			*/
 			TableItem item = _getItem (plvfi.iItem);
-			if (item == null) break;
+            if (item == null) {
+                break;
+            }
 
 			/*
 			* Feature in Windows. On Vista, the list view expects the item array
@@ -6540,7 +7066,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				ignoreCustomDraw = true;
 				long code = OS.SendMessage (handle, OS. LVM_GETITEMRECT, plvfi.iItem, rect);
 				ignoreCustomDraw = false;
-				if (code != 0) OS.InvalidateRect (handle, rect, true);
+                if (code != 0) {
+                    OS.InvalidateRect(handle, rect, true);
+                }
 				break;
 			}
 
@@ -6549,24 +7077,31 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			* tables to indicate that Windows has asked at least once
 			* for a table item.
 			*/
-			if (!item.cached) {
+			if (!item.isCachedState ()) {
 				if ((style & SWT.VIRTUAL) != 0) {
 					lastIndexOf = plvfi.iItem;
-					if (!checkData (item, lastIndexOf, false)) break;
+                    if (!checkData(item, lastIndexOf, false)) {
+                        break;
+                    }
 					TableItem newItem = fixScrollWidth ? null : item;
 					if (setScrollWidth (newItem, true)) {
 						OS.InvalidateRect (handle, null, true);
 					}
 				}
-				item.cached = true;
+				item.setCachedState (true);
 			}
+            if ((style & SWT.VIRTUAL) != 0) {
+                item.markVirtualPainted();
+            }
 			if ((plvfi.mask & OS.LVIF_TEXT) != 0) {
 				String string = null;
 				if (plvfi.iSubItem == 0) {
 					string = item.text;
 				} else {
 					String [] strings  = item.strings;
-					if (strings != null && plvfi.iSubItem < strings.length) string = strings [plvfi.iSubItem];
+                    if (strings != null && plvfi.iSubItem < strings.length) {
+                        string = strings [plvfi.iSubItem];
+                    }
 				}
 				if (string != null) {
 					/*
@@ -6621,7 +7156,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 									shift++;
 									break;
 								default:
-									if (shift != 0) buffer [i - shift] = buffer [i];
+                                    if (shift != 0) {
+                                        buffer [i - shift] = buffer [i];
+                                    }
 							}
 						}
 						length -= shift;
@@ -6637,7 +7174,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 					image = item.image;
 				} else {
 					Image [] images = item.images;
-					if (images != null && plvfi.iSubItem < images.length) image = images [plvfi.iSubItem];
+                    if (images != null && plvfi.iSubItem < images.length) {
+                        image = images [plvfi.iSubItem];
+                    }
 				}
 				if (image != null) {
 					plvfi.iImage = imageIndex (image, plvfi.iSubItem);
@@ -6647,9 +7186,15 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			if ((plvfi.mask & OS.LVIF_STATE) != 0) {
 				if (plvfi.iSubItem == 0) {
 					int state = 1;
-					if (item.checked) state++;
-					if (item.grayed) state +=2;
-					if (!OS.IsWindowEnabled (handle)) state += 4;
+                    if (item.isCheckedState()) {
+                        state++;
+                    }
+                    if (item.isGrayedState()) {
+                        state += 2;
+                    }
+                    if (!OS.IsWindowEnabled(handle)) {
+                        state += 4;
+                    }
 					plvfi.state = state << 12;
 					plvfi.stateMask = OS.LVIS_STATEIMAGEMASK;
 					move = true;
@@ -6661,12 +7206,16 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 					move = true;
 				}
 			}
-			if (move) OS.MoveMemory (lParam, plvfi, NMLVDISPINFO.sizeof);
+            if (move) {
+                OS.MoveMemory(lParam, plvfi, NMLVDISPINFO.sizeof);
+            }
 			break;
 		}
 		case OS.NM_CUSTOMDRAW: {
 			long hwndHeader = OS.SendMessage (handle, OS.LVM_GETHEADER, 0, 0);
-			if (hdr.hwndFrom == hwndHeader) break;
+            if (hdr.hwndFrom == hwndHeader) {
+                break;
+            }
 			if (!customDraw && findImageControl () == null) {
 				/*
 				* Feature in Windows.  When the table is disabled, it draws
@@ -6674,13 +7223,15 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 				* is to explicitly gray the text using Custom Draw.
 				*/
 				if (OS.IsWindowEnabled (handle)) {
-					/*
-					* Feature in Windows.  On Vista using the explorer theme,
-					* Windows draws a vertical line to separate columns.  When
-					* there is only a single column, the line looks strange.
-					* The fix is to draw the background using custom draw.
-					*/
-					if (!explorerTheme || columnCount != 0) break;
+                    /*
+                    * Feature in Windows.  On Vista using the explorer theme,
+                    * Windows draws a vertical line to separate columns.  When
+                    * there is only a single column, the line looks strange.
+                    * The fix is to draw the background using custom draw.
+                    */
+                    if (!explorerTheme || columnCount != 0) {
+                        break;
+                    }
 				}
 			}
 			NMLVCUSTOMDRAW nmcd = new NMLVCUSTOMDRAW ();
@@ -6696,18 +7247,24 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			break;
 		}
 		case OS.LVN_MARQUEEBEGIN: {
-			if ((style & SWT.SINGLE) != 0) return LRESULT.ONE;
+            if ((style & SWT.SINGLE) != 0) {
+                return LRESULT.ONE;
+            }
 			if (hooks (SWT.MouseDown) || hooks (SWT.MouseUp)) {
 				return LRESULT.ONE;
 			}
 			if ((style & SWT.RIGHT_TO_LEFT) != 0) {
-				if (findImageControl () != null) return LRESULT.ONE;
+                if (findImageControl() != null) {
+                    return LRESULT.ONE;
+                }
 			}
 			break;
 		}
 		case OS.LVN_BEGINDRAG:
 		case OS.LVN_BEGINRDRAG: {
-			if (OS.GetKeyState (OS.VK_LBUTTON) >= 0) break;
+            if (OS.GetKeyState(OS.VK_LBUTTON) >= 0) {
+                break;
+            }
 			dragStarted = true;
 			if (hdr.code == OS.LVN_BEGINDRAG) {
 				int pos = OS.GetMessagePos ();
@@ -6728,12 +7285,16 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			break;
 		}
 		case OS.LVN_ITEMACTIVATE: {
-			if (ignoreActivate) break;
+            if (ignoreActivate) {
+                break;
+            }
 			NMLISTVIEW pnmlv = new NMLISTVIEW ();
 			OS.MoveMemory(pnmlv, lParam, NMLISTVIEW.sizeof);
 			if (pnmlv.iItem != -1) {
 				Event event = new Event ();
-				event.item = _getItem (pnmlv.iItem);
+				TableItem item = _getItem (pnmlv.iItem);
+				item.pinVirtualFacade ();
+				event.item = item;
 				sendSelectionEvent (SWT.DefaultSelection, event, false);
 			}
 			break;
@@ -6753,7 +7314,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 					} else {
 						boolean oldSelected = (pnmlv.uOldState & OS.LVIS_SELECTED) != 0;
 						boolean newSelected = (pnmlv.uNewState & OS.LVIS_SELECTED) != 0;
-						if (oldSelected != newSelected) wasSelected = true;
+                        if (oldSelected != newSelected) {
+                            wasSelected = true;
+                        }
 					}
 				}
 			}
@@ -6807,7 +7370,9 @@ LRESULT wmNotifyHeader (NMHDR hdr, long wParam, long lParam) {
 	switch (hdr.code) {
 		case OS.HDN_BEGINTRACK:
 		case OS.HDN_DIVIDERDBLCLICK: {
-			if (columnCount == 0) return LRESULT.ONE;
+            if (columnCount == 0) {
+                return LRESULT.ONE;
+            }
 			NMHEADER phdn = new NMHEADER ();
 			OS.MoveMemory (phdn, lParam, NMHEADER.sizeof);
 			TableColumn column = columns [phdn.iItem];
@@ -6912,8 +7477,10 @@ LRESULT wmNotifyHeader (NMHDR hdr, long wParam, long lParam) {
 						long oldPen = OS.SelectObject (nmcd.hdc, pen);
 						/* To differentiate headers, always draw header column separator. */
 						OS.Polyline(nmcd.hdc, new int[] {rects[i].right - alignmentCorrection, rects[i].top, rects[i].right - alignmentCorrection, rects[i].bottom}, 2);
-						/* To differentiate header & content area, always draw the line separator between header & first row. */
-						if (i == 0) OS.Polyline(nmcd.hdc, new int[] {nmcd.left, nmcd.bottom-1, nmcd.right+1, nmcd.bottom-1}, 2);
+                        /* To differentiate header & content area, always draw the line separator between header & first row. */
+                        if (i == 0) {
+                            OS.Polyline(nmcd.hdc, new int[]{nmcd.left, nmcd.bottom - 1, nmcd.right + 1, nmcd.bottom - 1}, 2);
+                        }
 						OS.SelectObject (nmcd.hdc, oldPen);
 						OS.DeleteObject (pen);
 
@@ -6940,8 +7507,12 @@ LRESULT wmNotifyHeader (NMHDR hdr, long wParam, long lParam) {
 
 						if (columns[i].text != null) {
 							int flags = OS.DT_NOPREFIX | OS.DT_SINGLELINE | OS.DT_VCENTER;
-							if ((columns[i].style & SWT.CENTER) != 0) flags |= OS.DT_CENTER;
-							if ((columns[i].style & SWT.RIGHT) != 0) flags |= OS.DT_RIGHT;
+                            if ((columns[i].style & SWT.CENTER) != 0) {
+                                flags |= OS.DT_CENTER;
+                            }
+                            if ((columns[i].style & SWT.RIGHT) != 0) {
+                                flags |= OS.DT_RIGHT;
+                            }
 							char [] buffer = columns[i].text.toCharArray ();
 							OS.SetBkMode(nmcd.hdc, OS.TRANSPARENT);
 							OS.SetTextColor(nmcd.hdc, getHeaderForegroundPixel());
@@ -6989,10 +7560,14 @@ LRESULT wmNotifyHeader (NMHDR hdr, long wParam, long lParam) {
 			break;
 		}
 		case OS.HDN_BEGINDRAG: {
-			if (ignoreColumnMove) return LRESULT.ONE;
+            if (ignoreColumnMove) {
+                return LRESULT.ONE;
+            }
 			int bits = (int)OS.SendMessage (handle, OS.LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
 			if ((bits & OS.LVS_EX_HEADERDRAGDROP) != 0) {
-				if (columnCount == 0) return LRESULT.ONE;
+                if (columnCount == 0) {
+                    return LRESULT.ONE;
+                }
 				NMHEADER phdn = new NMHEADER ();
 				OS.MoveMemory (phdn, lParam, NMHEADER.sizeof);
 				if (phdn.iItem != -1) {
@@ -7009,23 +7584,33 @@ LRESULT wmNotifyHeader (NMHDR hdr, long wParam, long lParam) {
 		case OS.HDN_ENDDRAG: {
 			headerItemDragging = false;
 			int bits = (int)OS.SendMessage (handle, OS.LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
-			if ((bits & OS.LVS_EX_HEADERDRAGDROP) == 0) break;
+            if ((bits & OS.LVS_EX_HEADERDRAGDROP) == 0) {
+                break;
+            }
 			NMHEADER phdn = new NMHEADER ();
 			OS.MoveMemory (phdn, lParam, NMHEADER.sizeof);
 			if (phdn.iItem != -1 && phdn.pitem != 0) {
 				HDITEM pitem = new HDITEM ();
 				OS.MoveMemory (pitem, phdn.pitem, HDITEM.sizeof);
 				if ((pitem.mask & OS.HDI_ORDER) != 0 && pitem.iOrder != -1) {
-					if (columnCount == 0) break;
+                    if (columnCount == 0) {
+                        break;
+                    }
 					int [] order = new int [columnCount];
 					OS.SendMessage (handle, OS.LVM_GETCOLUMNORDERARRAY, columnCount, order);
 					int index = 0;
 					while (index < order.length) {
-						if (order [index] == phdn.iItem) break;
+                        if (order [index] == phdn.iItem) {
+                            break;
+                        }
 						index++;
 					}
-					if (index == order.length) index = 0;
-					if (index == pitem.iOrder) break;
+                    if (index == order.length) {
+                        index = 0;
+                    }
+                    if (index == pitem.iOrder) {
+                        break;
+                    }
 					int start = Math.min (index, pitem.iOrder);
 					int end = Math.max (index, pitem.iOrder);
 					ignoreColumnMove = false;
@@ -7069,7 +7654,9 @@ LRESULT wmNotifyHeader (NMHDR hdr, long wParam, long lParam) {
 						if (column != null) {
 							column.updateToolTip (phdn.iItem);
 							column.sendEvent (SWT.Resize);
-							if (isDisposed ()) return LRESULT.ZERO;
+                            if (isDisposed()) {
+                                return LRESULT.ZERO;
+                            }
 							/*
 							* It is possible (but unlikely), that application
 							* code could have disposed the column in the move
@@ -7087,7 +7674,9 @@ LRESULT wmNotifyHeader (NMHDR hdr, long wParam, long lParam) {
 									nextColumn.updateToolTip (order [i]);
 									nextColumn.sendEvent (SWT.Move);
 								}
-								if (nextColumn == column) moved = true;
+                                if (nextColumn == column) {
+                                    moved = true;
+                                }
 							}
 						}
 					}
@@ -7111,7 +7700,9 @@ LRESULT wmNotifyHeader (NMHDR hdr, long wParam, long lParam) {
 LRESULT wmNotifyToolTip (NMHDR hdr, long wParam, long lParam) {
 	switch (hdr.code) {
 		case OS.NM_CUSTOMDRAW: {
-			if (toolTipText != null) break;
+            if (toolTipText != null) {
+                break;
+            }
 			if (isCustomToolTip ()) {
 				NMTTCUSTOMDRAW nmcd = new NMTTCUSTOMDRAW ();
 				OS.MoveMemory (nmcd, lParam, NMTTCUSTOMDRAW.sizeof);
@@ -7122,8 +7713,12 @@ LRESULT wmNotifyToolTip (NMHDR hdr, long wParam, long lParam) {
 		case OS.TTN_GETDISPINFO:
 		case OS.TTN_SHOW: {
 			LRESULT result = super.wmNotify (hdr, wParam, lParam);
-			if (result != null) return result;
-			if (toolTipText != null) break;
+            if (result != null) {
+                return result;
+            }
+            if (toolTipText != null) {
+                break;
+            }
 			return positionTooltip(hdr, lParam) ? LRESULT.ONE : null;
 		}
 	}
@@ -7148,9 +7743,13 @@ private boolean positionTooltip(NMHDR hdr, long lParam) {
 		TableItem item = _getItem (pinfo.iItem);
 		long hDC = OS.GetDC (handle);
 		long oldFont = 0, newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
-		if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+        if (newFont != 0) {
+            oldFont = OS.SelectObject(hDC, newFont);
+        }
 		long hFont = item.fontHandle (pinfo.iSubItem);
-		if (hFont != -1) hFont = OS.SelectObject (hDC, hFont);
+        if (hFont != -1) {
+            hFont = OS.SelectObject(hDC, hFont);
+        }
 		if (!isDisposed() && !item.isDisposed()) {
 			if (hdr.code == OS.TTN_SHOW) {
 				RECT itemRect = getItemBounds(pinfo, item, hDC);
@@ -7187,8 +7786,12 @@ private boolean positionTooltip(NMHDR hdr, long lParam) {
 				}
 			}
 		}
-		if (hFont != -1) hFont = OS.SelectObject (hDC, hFont);
-		if (newFont != 0) OS.SelectObject (hDC, oldFont);
+        if (hFont != -1) {
+            hFont = OS.SelectObject(hDC, hFont);
+        }
+        if (newFont != 0) {
+            OS.SelectObject(hDC, oldFont);
+        }
 		OS.ReleaseDC (handle, hDC);
 	}
 	return false;
@@ -7232,13 +7835,17 @@ LRESULT wmNotifyToolTip (NMTTCUSTOMDRAW nmcd, long lParam) {
 				TableItem item = _getItem (pinfo.iItem);
 				long hDC = OS.GetDC (handle);
 				long hFont = item.fontHandle (pinfo.iSubItem);
-				if (hFont == -1) hFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0);
+                if (hFont == -1) {
+                    hFont = OS.SendMessage(handle, OS.WM_GETFONT, 0, 0);
+                }
 				long oldFont = OS.SelectObject (hDC, hFont);
 				boolean drawForeground = true;
 				RECT cellRect = item.getBounds (pinfo.iItem, pinfo.iSubItem, true, true, false, false, hDC);
 				if (hooks (SWT.EraseItem)) {
 					Event event = sendEraseItemEvent (item, nmcd, pinfo.iSubItem, cellRect);
-					if (isDisposed () || item.isDisposed ()) break;
+                    if (isDisposed() || item.isDisposed()) {
+                        break;
+                    }
 					if (event.doit) {
 						drawForeground = (event.detail & SWT.FOREGROUND) != 0;
 					} else {
@@ -7257,7 +7864,9 @@ LRESULT wmNotifyToolTip (NMTTCUSTOMDRAW nmcd, long lParam) {
 					data.font = Font.win32_new (display, hFont);
 					GC gc = createNewGC(nmcd.hdc, data);
 					int x = cellRect.left;
-					if (pinfo.iSubItem != 0) x -= gridWidth;
+                    if (pinfo.iSubItem != 0) {
+                        x -= gridWidth;
+                    }
 					Image image = item.getImage (pinfo.iSubItem);
 					if (image != null) {
 						Rectangle rect = Win32DPIUtils.pointToPixel(image.getBounds(), getAutoscalingZoom());
@@ -7275,8 +7884,12 @@ LRESULT wmNotifyToolTip (NMTTCUSTOMDRAW nmcd, long lParam) {
 						int flags = OS.DT_NOPREFIX | OS.DT_SINGLELINE | OS.DT_VCENTER;
 						TableColumn column = columns != null ? columns [pinfo.iSubItem] : null;
 						if (column != null) {
-							if ((column.style & SWT.CENTER) != 0) flags |= OS.DT_CENTER;
-							if ((column.style & SWT.RIGHT) != 0) flags |= OS.DT_RIGHT;
+                            if ((column.style & SWT.CENTER) != 0) {
+                                flags |= OS.DT_CENTER;
+                            }
+                            if ((column.style & SWT.RIGHT) != 0) {
+                                flags |= OS.DT_RIGHT;
+                            }
 						}
 						char [] buffer = string.toCharArray ();
 						RECT textRect = new RECT ();

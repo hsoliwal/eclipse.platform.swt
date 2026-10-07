@@ -79,15 +79,25 @@ public class MacGeneratorView {
 		Path rootPath = new Path("Eclipse SWT PI/cocoa");
 		root = swtProject.findMember(rootPath);
 		listener = event -> {
-			if (job != null) return;
-			if (event.getType() != IResourceChangeEvent.POST_CHANGE) return;
+            if (job != null) {
+                return;
+            }
+            if (event.getType() != IResourceChangeEvent.POST_CHANGE) {
+                return;
+            }
 			IResourceDelta rootDelta = event.getDelta();
 			IResourceDelta piDelta = rootDelta.findMember(root.getFullPath());
-			if (piDelta == null) return;
+            if (piDelta == null) {
+                return;
+            }
 			final ArrayList<IResource> changed = new ArrayList<>();
 			IResourceDeltaVisitor visitor = delta -> {
-				if (delta.getKind() != IResourceDelta.CHANGED) return true;
-				if ((delta.getFlags() & IResourceDelta.CONTENT) == 0) return true;
+                if (delta.getKind() != IResourceDelta.CHANGED) {
+                    return true;
+                }
+                if ((delta.getFlags() & IResourceDelta.CONTENT) == 0) {
+                    return true;
+                }
 				IResource resource = delta.getResource();
 				if (resource.getType() == IResource.FILE && "extras".equalsIgnoreCase(resource.getFileExtension())) {
 					changed.add(resource);
@@ -101,7 +111,9 @@ public class MacGeneratorView {
 				ui.refresh();
 			}
 		};
-		if (root != null) workspace.addResourceChangeListener(listener);
+        if (root != null) {
+            workspace.addResourceChangeListener(listener);
+        }
 	}
 
 	/**
@@ -149,10 +161,14 @@ public class MacGeneratorView {
 		}
 		// The items are persisted with the workbench model, the object is not
 		for (MToolBarElement element : toolBar.getChildren()) {
-			if (element instanceof MDirectToolItem item) item.setObject(this);
+            if (element instanceof MDirectToolItem item) {
+                item.setObject(this);
+            }
 		}
 		for (MMenuElement element : menu.getChildren()) {
-			if (element instanceof MDirectMenuItem item) item.setObject(this);
+            if (element instanceof MDirectMenuItem item) {
+                item.setObject(this);
+            }
 		}
 	}
 	
@@ -172,7 +188,9 @@ public class MacGeneratorView {
 	
 	@Execute
 	void generate() {
-		if (job != null) return;
+        if (job != null) {
+            return;
+        }
 		job = new GenJob();
 		job.schedule();
 	}
@@ -182,6 +200,8 @@ public class MacGeneratorView {
 	 */
 	@Focus
 	public void setFocus() {
-		if (ui != null) ui.setFocus();
+        if (ui != null) {
+            ui.setFocus();
+        }
 	}
 }

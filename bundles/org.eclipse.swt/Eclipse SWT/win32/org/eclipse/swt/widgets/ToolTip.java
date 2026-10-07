@@ -90,9 +90,7 @@ public ToolTip (Shell parent, int style) {
 }
 
 static int checkStyle (int style) {
-	int mask = SWT.ICON_ERROR | SWT.ICON_INFORMATION | SWT.ICON_WARNING;
-	if ((style & mask) == 0) return style;
-	return checkBits (style, SWT.ICON_INFORMATION, SWT.ICON_WARNING, SWT.ICON_ERROR, 0, 0, 0);
+	return WidgetStylePolicy.TOOLTIP.applyAsInt(style);
 }
 
 /**
@@ -125,7 +123,9 @@ public void addSelectionListener (SelectionListener listener) {
 
 @Override
 void destroyWidget () {
-	if (parent != null) parent.destroyToolTip (this);
+    if (parent != null) {
+        parent.destroyToolTip(this);
+    }
 	releaseHandle ();
 }
 
@@ -211,7 +211,9 @@ public String getText () {
  */
 public boolean getVisible () {
 	checkWidget();
-	if (item != null) return visible;
+    if (item != null) {
+        return visible;
+    }
 	long hwndToolTip = hwndToolTip ();
 	if (OS.SendMessage (hwndToolTip, OS.TTM_GETCURRENTTOOL, 0, 0) != 0) {
 		TOOLINFO lpti = new TOOLINFO ();
@@ -253,7 +255,9 @@ long hwndToolTip () {
  */
 public boolean isVisible () {
 	checkWidget ();
-	if (item != null) return getVisible () && item.getVisible ();
+    if (item != null) {
+        return getVisible() && item.getVisible();
+    }
 	return getVisible ();
 }
 
@@ -312,8 +316,12 @@ void releaseWidget () {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -392,7 +400,9 @@ void setLocationInPixels (int x, int y) {
  */
 public void setLocation (Point location) {
 	checkWidget ();
-	if (location == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (location == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	location = Win32DPIUtils.pointToPixelAsLocation(location, getAutoscalingZoom());
 	setLocationInPixels(location.x, location.y);
 }
@@ -412,7 +422,9 @@ public void setLocation (Point location) {
  */
 public void setMessage (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	message = string;
 
 	if (getVisible ()) {
@@ -435,7 +447,9 @@ public void setMessage (String string) {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	text = string;
 	//TODO - update when visible
 	//TODO - support text direction (?)
@@ -459,7 +473,9 @@ public void setText (String string) {
  */
 public void setVisible (boolean visible) {
 	checkWidget ();
-	if (visible == getVisible ()) return;
+    if (visible == getVisible()) {
+        return;
+    }
 	if (item == null) {
 		long hwnd = parent.handle;
 		TOOLINFO lpti = new TOOLINFO ();
@@ -470,9 +486,15 @@ public void setVisible (boolean visible) {
 		Shell shell = parent.getShell ();
 		if (text.length () != 0) {
 			int icon = OS.TTI_NONE;
-			if ((style & SWT.ICON_INFORMATION) != 0) icon = OS.TTI_INFO;
-			if ((style & SWT.ICON_WARNING) != 0) icon = OS.TTI_WARNING;
-			if ((style & SWT.ICON_ERROR) != 0) icon = OS.TTI_ERROR;
+            if ((style & SWT.ICON_INFORMATION) != 0) {
+                icon = OS.TTI_INFO;
+            }
+            if ((style & SWT.ICON_WARNING) != 0) {
+                icon = OS.TTI_WARNING;
+            }
+            if ((style & SWT.ICON_ERROR) != 0) {
+                icon = OS.TTI_ERROR;
+            }
 			shell.setToolTipTitle (hwndToolTip, text, icon);
 		} else {
 			shell.setToolTipTitle (hwndToolTip, null, 0);
@@ -541,9 +563,15 @@ public void setVisible (boolean visible) {
 			iconData.uID = item.id;
 			iconData.hWnd = display.hwndMessage;
 			iconData.uFlags = OS.NIF_INFO;
-			if ((style & SWT.ICON_INFORMATION) != 0) iconData.dwInfoFlags = OS.NIIF_INFO;
-			if ((style & SWT.ICON_WARNING) != 0) iconData.dwInfoFlags = OS.NIIF_WARNING;
-			if ((style & SWT.ICON_ERROR) != 0) iconData.dwInfoFlags = OS.NIIF_ERROR;
+            if ((style & SWT.ICON_INFORMATION) != 0) {
+                iconData.dwInfoFlags = OS.NIIF_INFO;
+            }
+            if ((style & SWT.ICON_WARNING) != 0) {
+                iconData.dwInfoFlags = OS.NIIF_WARNING;
+            }
+            if ((style & SWT.ICON_ERROR) != 0) {
+                iconData.dwInfoFlags = OS.NIIF_ERROR;
+            }
 			sendEvent (SWT.Show);
 			this.visible = OS.Shell_NotifyIcon (OS.NIM_MODIFY, iconData);
 		} else {

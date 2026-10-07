@@ -68,7 +68,9 @@ class PngChunk extends Object {
 PngChunk(byte[] reference) {
 	super();
 	setReference(reference);
-	if (reference.length < LENGTH_OFFSET + LENGTH_FIELD_LENGTH) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (reference.length < LENGTH_OFFSET + LENGTH_FIELD_LENGTH) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	length = getInt32(LENGTH_OFFSET);
 }
 
@@ -263,11 +265,21 @@ boolean isCritical() {
 }
 
 int getChunkType() {
-	if (typeMatchesArray(TYPE_IHDR)) return CHUNK_IHDR;
-	if (typeMatchesArray(TYPE_PLTE)) return CHUNK_PLTE;
-	if (typeMatchesArray(TYPE_IDAT)) return CHUNK_IDAT;
-	if (typeMatchesArray(TYPE_IEND)) return CHUNK_IEND;
-	if (typeMatchesArray(TYPE_tRNS)) return CHUNK_tRNS;
+    if (typeMatchesArray(TYPE_IHDR)) {
+        return CHUNK_IHDR;
+    }
+    if (typeMatchesArray(TYPE_PLTE)) {
+        return CHUNK_PLTE;
+    }
+    if (typeMatchesArray(TYPE_IDAT)) {
+        return CHUNK_IDAT;
+    }
+    if (typeMatchesArray(TYPE_IEND)) {
+        return CHUNK_IEND;
+    }
+    if (typeMatchesArray(TYPE_tRNS)) {
+        return CHUNK_tRNS;
+    }
 	return CHUNK_UNKNOWN;
 }
 
@@ -281,14 +293,18 @@ static PngChunk readNextFromStream(LEDataInputStream stream) {
 		byte[] headerBytes = new byte[headerLength];
 		int result = stream.read(headerBytes, 0, headerLength);
 		stream.unread(headerBytes);
-		if (result != headerLength) return null;
+        if (result != headerLength) {
+            return null;
+        }
 
 		PngChunk tempChunk = new PngChunk(headerBytes);
 
 		int chunkLength = tempChunk.getSize();
 		byte[] chunk = new byte[chunkLength];
 		result = stream.read(chunk, 0, chunkLength);
-		if (result != chunkLength) return null;
+        if (result != chunkLength) {
+            return null;
+        }
 
 		return switch (tempChunk.getChunkType()) {
 		case CHUNK_IHDR -> new PngIhdrChunk(chunk);
@@ -307,13 +323,17 @@ static PngChunk readNextFromStream(LEDataInputStream stream) {
  * Answer whether the chunk is a valid PNG chunk.
  */
 void validate(PngFileReadState readState, PngIhdrChunk headerChunk) {
-	if (reference.length < MIN_LENGTH) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (reference.length < MIN_LENGTH) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 
 	byte[] type = getTypeBytes();
 
 	// The third character MUST be upper case.
 	char c = (char) type[2];
-	if (!('A' <= c && c <= 'Z')) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (!('A' <= c && c <= 'Z')) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 
 	// All characters must be letters.
 	for (int i = 0; i < TYPE_FIELD_LENGTH; i++) {
@@ -323,8 +343,10 @@ void validate(PngFileReadState readState, PngIhdrChunk headerChunk) {
 		}
 	}
 
-	// The stored CRC must match the data's computed CRC.
-	if (!checkCRC()) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    // The stored CRC must match the data's computed CRC.
+    if (!checkCRC()) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 }
 
 /**

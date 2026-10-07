@@ -121,9 +121,15 @@ protected void checkSubclass () {
  */
 protected void checkWidget () {
 	Display display = this.display;
-	if (display == null) DND.error (SWT.ERROR_WIDGET_DISPOSED);
-	if (display.getThread() != Thread.currentThread ()) DND.error (SWT.ERROR_THREAD_INVALID_ACCESS);
-	if (display.isDisposed()) DND.error(SWT.ERROR_WIDGET_DISPOSED);
+    if (display == null) {
+        DND.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (display.getThread() != Thread.currentThread()) {
+        DND.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
+    if (display.isDisposed()) {
+        DND.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 }
 
 /**
@@ -172,9 +178,13 @@ public void clearContents() {
  */
 public void clearContents(int clipboards) {
 	checkWidget();
-	if ((clipboards & DND.CLIPBOARD) == 0) return;
+    if ((clipboards & DND.CLIPBOARD) == 0) {
+        return;
+    }
 	NSPasteboard pasteboard = NSPasteboard.generalPasteboard();
-	if (pasteboard != null) pasteboard.declareTypes(NSMutableArray.arrayWithCapacity(0), null);
+    if (pasteboard != null) {
+        pasteboard.declareTypes(NSMutableArray.arrayWithCapacity(0), null);
+    }
 }
 
 /**
@@ -190,8 +200,12 @@ public void clearContents(int clipboards) {
  * </ul>
  */
 public void dispose () {
-	if (isDisposed()) return;
-	if (display.getThread() != Thread.currentThread()) DND.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    if (isDisposed()) {
+        return;
+    }
+    if (display.getThread() != Thread.currentThread()) {
+        DND.error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
 	display = null;
 }
 
@@ -286,10 +300,16 @@ public Object getContents(Transfer transfer) {
  */
 public Object getContents(Transfer transfer, int clipboards) {
 	checkWidget();
-	if (transfer == null) DND.error(SWT.ERROR_NULL_ARGUMENT);
-	if ((clipboards & DND.CLIPBOARD) == 0) return null;
+    if (transfer == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((clipboards & DND.CLIPBOARD) == 0) {
+        return null;
+    }
 	NSPasteboard pasteboard = NSPasteboard.generalPasteboard();
-	if (pasteboard == null) return null;
+    if (pasteboard == null) {
+        return null;
+    }
 	String[] typeNames = transfer.getTypeNames();
 	NSMutableArray types = NSMutableArray.arrayWithCapacity(typeNames.length);
 	for (int i = 0; i < typeNames.length; i++) {
@@ -305,7 +325,9 @@ public Object getContents(Transfer transfer, int clipboards) {
 			tdata.data = pasteboard.stringForType(type);
 		} else if (type.isEqual(OS.NSFilenamesPboardType) || type.isEqual(OS.kUTTypeFileURL)) {
 			id propertyList = pasteboard.propertyListForType(OS.NSFilenamesPboardType);
-			if (propertyList == null) return null;
+            if (propertyList == null) {
+                return null;
+            }
 			tdata.data = new NSArray(propertyList.id);
 		} else if (type.isEqual(OS.NSURLPboardType) || type.isEqual(OS.kUTTypeURL)) {
 			tdata.data = NSURL.URLFromPasteboard(pasteboard);
@@ -540,7 +562,9 @@ public void setContents(Object[] data, Transfer[] dataTypes, int clipboards) {
 			DND.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
 	}
-	if ((clipboards & DND.CLIPBOARD) == 0) return;
+    if ((clipboards & DND.CLIPBOARD) == 0) {
+        return;
+    }
 	NSPasteboard pasteboard = NSPasteboard.generalPasteboard();
 	if (pasteboard == null) {
 		DND.error(DND.ERROR_CANNOT_SET_CLIPBOARD);
@@ -615,11 +639,17 @@ public TransferData[] getAvailableTypes() {
  */
 public TransferData[] getAvailableTypes(int clipboards) {
 	checkWidget();
-	if ((clipboards & DND.CLIPBOARD) == 0) return new TransferData[0];
+    if ((clipboards & DND.CLIPBOARD) == 0) {
+        return new TransferData[0];
+    }
 	NSPasteboard pasteboard = NSPasteboard.generalPasteboard();
-	if (pasteboard == null) return new TransferData[0];
+    if (pasteboard == null) {
+        return new TransferData[0];
+    }
 	NSArray types = pasteboard.types();
-	if (types == null) return new TransferData[0];
+    if (types == null) {
+        return new TransferData[0];
+    }
 	int count = (int)types.count();
 	TransferData[] result = new TransferData[count];
 	for (int i = 0; i < count; i++) {
@@ -648,9 +678,13 @@ public TransferData[] getAvailableTypes(int clipboards) {
 public String[] getAvailableTypeNames() {
 	checkWidget();
 	NSPasteboard pasteboard = NSPasteboard.generalPasteboard();
-	if (pasteboard == null) return new String[0];
+    if (pasteboard == null) {
+        return new String[0];
+    }
 	NSArray types = pasteboard.types();
-	if (types == null) return new String[0];
+    if (types == null) {
+        return new String[0];
+    }
 	int count = (int)types.count();
 	String[] result = new String[count];
 	for (int i = 0; i < count; i++) {

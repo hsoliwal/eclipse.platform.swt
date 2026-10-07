@@ -83,7 +83,9 @@ public class Bug379271_ComboCaretLocationOffset {
 		System.err.println("Map (0, 0) to combo: " + display.map(combo, null, 0, 0, width, height));
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 

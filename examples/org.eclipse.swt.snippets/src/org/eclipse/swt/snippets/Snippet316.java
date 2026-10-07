@@ -46,7 +46,9 @@ public class Snippet316 {
 		shell.setSize(500, 300);
 		shell.open ();
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		font.dispose();
 		display.dispose ();

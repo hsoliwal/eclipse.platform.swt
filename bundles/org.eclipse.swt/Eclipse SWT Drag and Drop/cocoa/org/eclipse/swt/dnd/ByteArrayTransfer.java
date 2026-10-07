@@ -138,10 +138,14 @@ public TransferData[] getSupportedTypes() {
 
 @Override
 public boolean isSupportedType(TransferData transferData){
-	if (transferData == null) return false;
+    if (transferData == null) {
+        return false;
+    }
 	int[] types = getTypeIds();
 	for (int i = 0; i < types.length; i++) {
-		if (transferData.type == types[i]) return true;
+        if (transferData.type == types[i]) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -178,10 +182,16 @@ protected void javaToNative (Object object, TransferData transferData) {
  */
 @Override
 protected Object nativeToJava(TransferData transferData) {
-	if (!isSupportedType(transferData) || transferData.data == null) return null;
-	if (transferData.data == null) return null;
+    if (!isSupportedType(transferData) || transferData.data == null) {
+        return null;
+    }
+    if (transferData.data == null) {
+        return null;
+    }
 	NSData data = (NSData) transferData.data;
-	if (data.length() == 0) return null;
+    if (data.length() == 0) {
+        return null;
+    }
 	byte[] bytes = new byte[(int)data.length()];
 	data.getBytes(bytes);
 	return bytes;

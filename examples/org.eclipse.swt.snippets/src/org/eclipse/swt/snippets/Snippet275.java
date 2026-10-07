@@ -48,7 +48,9 @@ public static void main (String[] args) {
 	display.timerExec (INTERVAL, new Runnable () {
 		@Override
 		public void run () {
-			if (canvas.isDisposed ()) return;
+            if (canvas.isDisposed()) {
+                return;
+            }
 			// canvas.redraw (); // <-- bad, damages more than is needed
 			GC gc = new GC (canvas);
 			Point extent = gc.stringExtent (value + '0');
@@ -59,7 +61,9 @@ public static void main (String[] args) {
 	});
 	shell.open ();
 	while (!shell.isDisposed ()){
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	image.dispose ();
 	display.dispose ();

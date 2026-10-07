@@ -77,7 +77,9 @@ public class IconExe {
 				}
 			}
 			int nMissing = unloadIcons(args[0], data);
-			if (nMissing != 0) System.err.println("Error - "+nMissing+" icon(s) not replaced in "+args[0]+" using "+args[1]);
+            if (nMissing != 0) {
+                System.err.println("Error - " + nMissing + " icon(s) not replaced in " + args[0] + " using " + args[1]);
+            }
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -104,7 +106,9 @@ public class IconExe {
 			IconExe iconExe = new IconExe();
 			IconResInfo[] iconInfo = iconExe.getIcons(raf);
 			ImageData[] data = new ImageData[iconInfo.length];
-			for (int i = 0; i < data.length; i++) data[i] = iconInfo[i].data;
+            for (int i = 0; i < data.length; i++) {
+                data[i] = iconInfo[i].data;
+            }
 			return data;
 		}
 	}
@@ -145,14 +149,15 @@ public class IconExe {
 			IconResInfo[] iconInfo = iconExe.getIcons(raf);
 			int cnt = 0;
 			for (IconResInfo element : iconInfo) {
-				for (ImageData icon : icons)
-					if (element.data.width == icon.width && 
-					element.data.height == icon.height && 
-					element.data.depth == icon.depth) {
-						raf.seek(element.offset);
-						unloadIcon(raf, icon);
-						cnt++;
-					}
+                for (ImageData icon : icons) {
+                    if (element.data.width == icon.width &&
+                            element.data.height == icon.height &&
+                            element.data.depth == icon.depth) {
+                        raf.seek(element.offset);
+                        unloadIcon(raf, icon);
+                        cnt++;
+                    }
+                }
 			}
 			return iconInfo.length - cnt;
 		}
@@ -175,17 +180,25 @@ public class IconExe {
 		iconCnt = 0;
 		IMAGE_DOS_HEADER imageDosHeader = new IMAGE_DOS_HEADER();
 		read(raf, imageDosHeader);
-		if (imageDosHeader.e_magic != IMAGE_DOS_SIGNATURE) return null;
+        if (imageDosHeader.e_magic != IMAGE_DOS_SIGNATURE) {
+            return null;
+        }
 		int imageNtHeadersOffset = imageDosHeader.e_lfanew;
 		raf.seek(imageNtHeadersOffset);
 		IMAGE_NT_HEADERS imageNtHeaders = new IMAGE_NT_HEADERS();
 		read(raf, imageNtHeaders);
-		if (imageNtHeaders.Signature != IMAGE_NT_SIGNATURE) return null;
+        if (imageNtHeaders.Signature != IMAGE_NT_SIGNATURE) {
+            return null;
+        }
 		
 		// DumpResources
 		int resourcesRVA = imageNtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
-		if (resourcesRVA == 0) return null;
-		if (DEBUG) System.out.println("* Resources (RVA= "+resourcesRVA+")");
+        if (resourcesRVA == 0) {
+            return null;
+        }
+        if (DEBUG) {
+            System.out.println("* Resources (RVA= " + resourcesRVA + ")");
+        }
 		IMAGE_SECTION_HEADER imageSectionHeader = new IMAGE_SECTION_HEADER();
 		int firstSectionOffset = imageNtHeadersOffset + IMAGE_NT_HEADERS.FIELD_OFFSET_OptionalHeader + imageNtHeaders.FileHeader.SizeOfOptionalHeader;
 		raf.seek(firstSectionOffset);
@@ -198,7 +211,9 @@ public class IconExe {
 				break;
 			}
 		}
-		if (!found) return null;
+        if (!found) {
+            return null;
+        }
 		int delta = imageSectionHeader.VirtualAddress - imageSectionHeader.PointerToRawData;
 		int imageResourceDirectoryOffset = resourcesRVA - delta;
 		dumpResourceDirectory(raf, imageResourceDirectoryOffset, imageResourceDirectoryOffset, delta, 0, 0, false);
@@ -211,7 +226,9 @@ public class IconExe {
 	}
 
 void dumpResourceDirectory(RandomAccessFile raf, int imageResourceDirectoryOffset, int resourceBase, int delta, int type, int level, boolean rt_icon_root) throws IOException {
-	if (DEBUG) System.out.println("** LEVEL "+level);
+    if (DEBUG) {
+        System.out.println("** LEVEL " + level);
+    }
 
 	IMAGE_RESOURCE_DIRECTORY imageResourceDirectory = new IMAGE_RESOURCE_DIRECTORY();
 	raf.seek(imageResourceDirectoryOffset);
@@ -222,8 +239,12 @@ void dumpResourceDirectory(RandomAccessFile raf, int imageResourceDirectoryOffse
 		// level 1 resources are resource types
 		if (level == 1) {
 			System.out.println("___________________________");
-			if (type == RT_ICON) sType = "RT_ICON";
-			if (type == RT_GROUP_ICON) sType = "RT_GROUP_ICON";
+            if (type == RT_ICON) {
+                sType = "RT_ICON";
+            }
+            if (type == RT_GROUP_ICON) {
+                sType = "RT_GROUP_ICON";
+            }
 		}
 		System.out.println("Resource Directory ["+sType+"]"+" (Named "+imageResourceDirectory.NumberOfNamedEntries+", ID "+imageResourceDirectory.NumberOfIdEntries+")");
 	}
@@ -240,9 +261,13 @@ void dumpResourceDirectory(RandomAccessFile raf, int imageResourceDirectoryOffse
 			IMAGE_RESOURCE_DATA_ENTRY data = new IMAGE_RESOURCE_DATA_ENTRY();
 			raf.seek(irde.OffsetToData + resourceBase);
 			read(raf, data);
-			if (DEBUG) System.out.println("Resource Id "+irde.Id+" Data Offset RVA "+data.OffsetToData+", Size "+data.Size);
+            if (DEBUG) {
+                System.out.println("Resource Id " + irde.Id + " Data Offset RVA " + data.OffsetToData + ", Size " + data.Size);
+            }
 			if (rt_icon_root) {
-				if (DEBUG) System.out.println("iconcnt "+iconCnt+" |"+iconInfo.length);
+                if (DEBUG) {
+                    System.out.println("iconcnt " + iconCnt + " |" + iconInfo.length);
+                }
 				iconInfo[iconCnt] = new IconResInfo();
 				iconInfo[iconCnt].data = parseIcon(raf, data.OffsetToData - delta);
 				iconInfo[iconCnt].offset = data.OffsetToData - delta;
@@ -301,7 +326,9 @@ static byte[] bitInvertData(byte[] data, int startIndex, int endIndex) {
 }
 
 static final byte[] convertPad(byte[] data, int width, int height, int depth, int pad, int newPad) {
-	if (pad == newPad) return data;
+    if (pad == newPad) {
+        return data;
+    }
 	int stride = (width * depth + 7) / 8;
 	int bpl = (stride + (pad - 1)) / pad * pad;
 	int newBpl = (stride + (newPad - 1)) / newPad * newPad;
@@ -321,15 +348,20 @@ static PaletteData loadPalette(BITMAPINFOHEADER bih, RandomAccessFile raf) throw
 		if (numColors == 0) {
 			numColors = 1 << depth;
 		} else {
-			if (numColors > 256)
-				numColors = 256;
+            if (numColors > 256) {
+                numColors = 256;
+            }
 		}
 		byte[] buf = new byte[numColors * 4];
 		raf.read(buf);
 		return paletteFromBytes(buf, numColors);
 	}
-	if (depth == 16) return new PaletteData(0x7C00, 0x3E0, 0x1F);
-	if (depth == 24) return new PaletteData(0xFF, 0xFF00, 0xFF0000);
+    if (depth == 16) {
+        return new PaletteData(0x7C00, 0x3E0, 0x1F);
+    }
+    if (depth == 24) {
+        return new PaletteData(0xFF, 0xFF00, 0xFF0000);
+    }
 	return new PaletteData(0xFF00, 0xFF0000, 0xFF000000);
 }
 static PaletteData paletteFromBytes(byte[] bytes, int numColors) {
@@ -370,7 +402,9 @@ static byte[] loadData(BITMAPINFOHEADER bih, RandomAccessFile raf, int stride) t
 	if (cmp == 0) { // BMP_NO_COMPRESSION
 		raf.read(data);
 	} else {
-		if (DEBUG) System.out.println("ICO cannot be compressed?");
+        if (DEBUG) {
+            System.out.println("ICO cannot be compressed?");
+        }
 	}
 	return data;
 }
@@ -450,7 +484,9 @@ static boolean readIconGroup(RandomAccessFile raf, int offset) throws IOExceptio
 	raf.seek(offset);
 	NEWHEADER newHeader = new NEWHEADER();
 	read(raf, newHeader);
-	if (newHeader.ResType != RES_ICON) return false;
+    if (newHeader.ResType != RES_ICON) {
+        return false;
+    }
 	RESDIR[] resDir = new RESDIR[newHeader.ResCount];
 	for (int i = 0; i < newHeader.ResCount; i++) {
 		resDir[i] = new RESDIR();
@@ -464,8 +500,9 @@ static void copyFile(String src, String dst) throws FileNotFoundException, IOExc
 	File dstFile = new File(dst);
 	try (FileInputStream in = new FileInputStream(srcFile); FileOutputStream out = new FileOutputStream(dstFile)) {
 		int c;
-		while ((c = in.read()) != -1)
-			out.write(c);
+        while ((c = in.read()) != -1) {
+            out.write(c);
+        }
 	}
 }
 
@@ -703,10 +740,14 @@ static void read(RandomAccessFile raf, IMAGE_DOS_HEADER idh) throws IOException 
 	idh.e_cs = readU2(raf);
 	idh.e_lfarlc = readU2(raf);
 	idh.e_ovno = readU2(raf);
-	for (int i = 0; i < idh.e_res.length; i++) idh.e_res[i] = readU2(raf);
+    for (int i = 0; i < idh.e_res.length; i++) {
+        idh.e_res[i] = readU2(raf);
+    }
 	idh.e_oemid = readU2(raf);
 	idh.e_oeminfo = readU2(raf);
-	for (int i = 0; i < idh.e_res2.length; i++) idh.e_res2[i] = readU2(raf);
+    for (int i = 0; i < idh.e_res2.length; i++) {
+        idh.e_res2[i] = readU2(raf);
+    }
 	idh.e_lfanew = read4(raf);
 }
 static void read(RandomAccessFile raf, IMAGE_FILE_HEADER ifh) throws IOException {
@@ -764,7 +805,9 @@ static void read(RandomAccessFile raf, IMAGE_NT_HEADERS inh) throws IOException 
 	read(raf, inh.OptionalHeader);
 }
 static void read(RandomAccessFile raf, IMAGE_SECTION_HEADER ish) throws IOException {
-	for (int i = 0 ; i < ish.Name.length; i++) ish.Name[i] = raf.read();
+    for (int i = 0; i < ish.Name.length; i++) {
+        ish.Name[i] = raf.read();
+    }
 	ish.Misc_VirtualSize = read4(raf);
 	ish.VirtualAddress = read4(raf);
 	ish.SizeOfRawData = read4(raf);
@@ -861,10 +904,11 @@ static class RGB {
  * </ul>
  */
 public RGB(int red, int green, int blue) {
-	if ((red > 255) || (red < 0) ||
-		(green > 255) || (green < 0) ||
-		(blue > 255) || (blue < 0))
-			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if ((red > 255) || (red < 0) ||
+            (green > 255) || (green < 0) ||
+            (blue > 255) || (blue < 0)) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.red = red;
 	this.green = green;
 	this.blue = blue;
@@ -882,8 +926,12 @@ public RGB(int red, int green, int blue) {
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof RGB)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof RGB)) {
+        return false;
+    }
 	RGB rgb = (RGB)object;
 	return (rgb.red == this.red) && (rgb.green == this.green) && (rgb.blue == this.blue);
 }
@@ -971,7 +1019,9 @@ static class PaletteData {
  * </ul>
  */
 public PaletteData(RGB[] colors) {
-	if (colors == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (colors == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.colors = colors;
 	this.isDirect = false;
 }
@@ -1005,7 +1055,9 @@ public PaletteData(int redMask, int greenMask, int blueMask) {
  * </ul>
  */
 public int getPixel(RGB rgb) {
-	if (rgb == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rgb == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (isDirect) {
 		int pixel = 0;
 		pixel |= (redShift < 0 ? rgb.red << -redShift : rgb.red >>> redShift) & redMask;
@@ -1014,7 +1066,9 @@ public int getPixel(RGB rgb) {
 		return pixel;
 	} 
 	for (int i = 0; i < colors.length; i++) {
-		if (colors[i].equals(rgb)) return i;
+        if (colors[i].equals(rgb)) {
+            return i;
+        }
 	}
 	/* The RGB did not exist in the palette */
 	SWT.error(SWT.ERROR_INVALID_ARGUMENT);
@@ -1067,8 +1121,10 @@ public RGB[] getRGBs() {
  * @see PaletteData
  */
 int shiftForMask(int mask) {
-	for (int i = 31; i >= 0; i--) { 
-		if (((mask >> i) & 0x1) != 0) return 7 - i;
+	for (int i = 31; i >= 0; i--) {
+        if (((mask >> i) & 0x1) != 0) {
+            return 7 - i;
+        }
 	}
 	return 32;
 }
@@ -1149,7 +1205,9 @@ void reset() {
  * </ul>
  */
 public ImageData[] load(InputStream stream) {
-	if (stream == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (stream == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	reset();
 	data = FileFormat.load(stream, this);
 	return data;
@@ -1174,7 +1232,9 @@ public ImageData[] load(InputStream stream) {
  * </ul>
  */
 public ImageData[] load(String filename) {
-	if (filename == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (filename == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	try (InputStream stream = new FileInputStream(filename)) {
 		return load(stream);
 	} catch (IOException e) {
@@ -1363,10 +1423,16 @@ static class ImageData {
 	static {
 		for (int b = 0; b < 9; ++b) {
 			byte[] data = ANY_TO_EIGHT[b] = new byte[1 << b];
-			if (b == 0) continue;
+            if (b == 0) {
+                continue;
+            }
 			int inc = 0;
-			for (int bit = 0x10000; (bit >>= b) != 0;) inc |= bit;
-			for (int v = 0, p = 0; v < 0x10000; v+= inc) data[p++] = (byte)(v >> 8);
+            for (int bit = 0x10000; (bit >>= b) != 0; ) {
+                inc |= bit;
+            }
+            for (int v = 0, p = 0; v < 0x10000; v += inc) {
+                data[p++] = (byte) (v >> 8);
+            }
 		}
 	}
 	static final byte[] ONE_TO_ONE_MAPPING = ANY_TO_EIGHT[8];
@@ -1457,7 +1523,9 @@ public ImageData(int width, int height, int depth, PaletteData palette, int scan
  */
 public ImageData(String filename) {
 	ImageData[] data = new ImageLoader().load(filename);
-	if (data.length < 1) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (data.length < 1) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	ImageData i = data[0];
 	setAllFields(
 		i.width,
@@ -1498,7 +1566,9 @@ ImageData(
 	int x, int y, int disposalMethod, int delayTime)
 {
 
-	if (palette == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (palette == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (!(depth == 1 || depth == 2 || depth == 4 || depth == 8
 		|| depth == 16 || depth == 24 || depth == 32)) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
@@ -1506,7 +1576,9 @@ ImageData(
 	if (width <= 0 || height <= 0) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (scanlinePad == 0) SWT.error (SWT.ERROR_CANNOT_BE_ZERO);
+    if (scanlinePad == 0) {
+        SWT.error(SWT.ERROR_CANNOT_BE_ZERO);
+    }
 
 	int bytesPerLine = (((width * depth + 7) / 8) + (scanlinePad - 1))
 		/ scanlinePad * scanlinePad;
@@ -1608,7 +1680,9 @@ ImageData colorMaskImage(int pixel) {
 }
 
 static byte[] checkData(byte [] data) {
-	if (data == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (data == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return data;
 }
 
@@ -1635,11 +1709,17 @@ static byte[] checkData(byte [] data) {
  * </ul>
  */
 public void getPixels(int x, int y, int getWidth, byte[] pixels, int startIndex) {
-	if (pixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (getWidth < 0 || x >= width || y >= height || x < 0 || y < 0) SWT.error
+    if (pixels == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (getWidth < 0 || x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error
 
-(SWT.ERROR_INVALID_ARGUMENT);
-	if (getWidth == 0) return;
+                (SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (getWidth == 0) {
+        return;
+    }
 	int index;
 	int theByte;
 	int mask = 0;
@@ -1662,12 +1742,16 @@ public void getPixels(int x, int y, int getWidth, byte[] pixels, int startIndex)
 			if (srcX >= width) {
 				srcY++;
 				index = srcY * bytesPerLine;
-				if (n > 0) theByte = data[index] & 0xFF;
+                if (n > 0) {
+                    theByte = data[index] & 0xFF;
+                }
 				srcX = 0;
 			} else {
 				if (mask == 1) {
 					index++;
-					if (n > 0) theByte = data[index] & 0xFF;
+                    if (n > 0) {
+                        theByte = data[index] & 0xFF;
+                    }
 				}
 			}
 		}
@@ -1687,7 +1771,9 @@ public void getPixels(int x, int y, int getWidth, byte[] pixels, int startIndex)
 			if (srcX >= width) {
 				srcY++;
 				index = srcY * bytesPerLine;
-				if (n > 0) theByte = data[index] & 0xFF;
+                if (n > 0) {
+                    theByte = data[index] & 0xFF;
+                }
 				srcX = 0;
 			} else {
 				if (offset == 0) {
@@ -1785,11 +1871,17 @@ public void getPixels(int x, int y, int getWidth, byte[] pixels, int startIndex)
  * </ul>
  */
 public void getPixels(int x, int y, int getWidth, int[] pixels, int startIndex) {
-	if (pixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (getWidth < 0 || x >= width || y >= height || x < 0 || y < 0) SWT.error
+    if (pixels == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (getWidth < 0 || x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error
 
-(SWT.ERROR_INVALID_ARGUMENT);
-	if (getWidth == 0) return;
+                (SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (getWidth == 0) {
+        return;
+    }
 	int index;
 	int theByte;
 	int mask;
@@ -1812,12 +1904,16 @@ public void getPixels(int x, int y, int getWidth, int[] pixels, int startIndex) 
 			if (srcX >= width) {
 				srcY++;
 				index = srcY * bytesPerLine;
-				if (n > 0) theByte = data[index] & 0xFF;
+                if (n > 0) {
+                    theByte = data[index] & 0xFF;
+                }
 				srcX = 0;
 			} else {
 				if (mask == 1) {
 					index++;
-					if (n > 0) theByte = data[index] & 0xFF;
+                    if (n > 0) {
+                        theByte = data[index] & 0xFF;
+                    }
 				}
 			}
 		}
@@ -1837,7 +1933,9 @@ public void getPixels(int x, int y, int getWidth, int[] pixels, int startIndex) 
 			if (srcX >= width) {
 				srcY++;
 				index = srcY * bytesPerLine;
-				if (n > 0) theByte = data[index] & 0xFF;
+                if (n > 0) {
+                    theByte = data[index] & 0xFF;
+                }
 				srcX = 0;
 			} else {
 				if (offset == 0) {
@@ -1997,9 +2095,15 @@ public ImageData getTransparencyMask() {
  * @return the receiver's transparency type
  */
 public int getTransparencyType() {
-	if (maskData != null) return SWT.TRANSPARENCY_MASK;
-	if (transparentPixel != -1) return SWT.TRANSPARENCY_PIXEL;
-	if (alphaData != null) return SWT.TRANSPARENCY_ALPHA;
+    if (maskData != null) {
+        return SWT.TRANSPARENCY_MASK;
+    }
+    if (transparentPixel != -1) {
+        return SWT.TRANSPARENCY_PIXEL;
+    }
+    if (alphaData != null) {
+        return SWT.TRANSPARENCY_ALPHA;
+    }
 	return SWT.TRANSPARENCY_NONE;
 }
 
@@ -2036,9 +2140,15 @@ int getByteOrder() {
  * </ul>
  */
 public void setPixels(int x, int y, int putWidth, byte[] pixels, int startIndex) {
-	if (pixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (putWidth < 0 || x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (putWidth == 0) return;
+    if (pixels == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (putWidth < 0 || x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (putWidth == 0) {
+        return;
+    }
 	int index;
 	int theByte;
 	int mask;
@@ -2114,7 +2224,9 @@ public void setPixels(int x, int y, int putWidth, byte[] pixels, int startIndex)
 				high = true;
 				srcX = 0;
 			} else {
-				if (!high) index++;
+                if (!high) {
+                    index++;
+                }
 				high = !high;
 			}
 		}
@@ -2162,9 +2274,15 @@ public void setPixels(int x, int y, int putWidth, byte[] pixels, int startIndex)
  * </ul>
  */
 public void setPixels(int x, int y, int putWidth, int[] pixels, int startIndex) {
-	if (pixels == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (putWidth < 0 || x >= width || y >= height || x < 0 || y < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (putWidth == 0) return;
+    if (pixels == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (putWidth < 0 || x >= width || y >= height || x < 0 || y < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (putWidth == 0) {
+        return;
+    }
 	int index;
 	int theByte;
 	int mask;
@@ -2241,7 +2359,9 @@ public void setPixels(int x, int y, int putWidth, int[] pixels, int startIndex) 
 				high = true;
 				srcX = 0;
 			} else {
-				if (!high) index++;
+                if (!high) {
+                    index++;
+                }
 				high = !high;
 			}
 		}
@@ -2337,7 +2457,9 @@ static PaletteData bwPalette() {
  */
 static int getMSBOffset(int mask) {
 	for (int i = 31; i >= 0; i--) {
-		if (((mask >> i) & 0x1) != 0) return i + 1;
+        if (((mask >> i) & 0x1) != 0) {
+            return i + 1;
+        }
 	}
 	return 0;
 }
@@ -2365,7 +2487,9 @@ static int closestMatch(int depth, byte red, byte green, byte blue, int redMask,
 		int distance = r*r + g*g + b*b;
 		if (distance < minDistance) {
 			nearestPixel = j;
-			if (distance == 0) break;
+            if (distance == 0) {
+                break;
+            }
 			minDistance = distance;
 		}
 	}
@@ -2373,7 +2497,9 @@ static int closestMatch(int depth, byte red, byte green, byte blue, int redMask,
 }
 
 static final ImageData convertMask(ImageData mask) {
-	if (mask.depth == 1) return mask;
+    if (mask.depth == 1) {
+        return mask;
+    }
 	PaletteData palette = new PaletteData(new RGB[] {new RGB(0, 0, 0), new RGB(255,255,255)});
 	ImageData newMask = new ImageData(mask.width, mask.height, 1, palette);
 	/* Find index of black in mask palette */
@@ -2381,7 +2507,9 @@ static final ImageData convertMask(ImageData mask) {
 	RGB[] rgbs = mask.getRGBs();
 	if (rgbs != null) {
 		while (blackIndex < rgbs.length) {
-			if (rgbs[blackIndex].equals(palette.colors[0])) break;
+            if (rgbs[blackIndex].equals(palette.colors[0])) {
+                break;
+            }
 			blackIndex++;
 		}
 	}
@@ -2401,7 +2529,9 @@ static final ImageData convertMask(ImageData mask) {
 }
 
 static final byte[] convertPad(byte[] data, int width, int height, int depth, int pad, int newPad) {
-	if (pad == newPad) return data;
+    if (pad == newPad) {
+        return data;
+    }
 	int stride = (width * depth + 7) / 8;
 	int bpl = (stride + (pad - 1)) / pad * pad;	
 	int newBpl = (stride + (newPad - 1)) / newPad * newPad;
@@ -2464,7 +2594,9 @@ static final int MSB_FIRST = 1;
  * Computes the required channel shift from a mask.
  */
 static int getChannelShift(int mask) {
-	if (mask == 0) return 0;
+    if (mask == 0) {
+        return 0;
+    }
 	int i;
 	for (i = 0; ((mask & 1) == 0) && (i < 32); ++i) {
 		mask >>>= 1;
@@ -2476,7 +2608,9 @@ static int getChannelShift(int mask) {
  * Computes the required channel width (depth) from a mask.
  */
 static int getChannelWidth(int mask, int shift) {
-	if (mask == 0) return 0;
+    if (mask == 0) {
+        return 0;
+    }
 	int i;
 	mask >>>= shift;
 	for (i = shift; ((mask & 1) != 0) && (i < 32); ++i) {
@@ -2507,8 +2641,11 @@ static final void buildDitheredGradientChannel(int from, int to, int steps,
 			for (int dx = 0, dptr = dp; dx < bandWidth; ++dx, dptr += 4) {
 				final int thresh = DITHER_MATRIX[dy & 7][dx] >>> bits;
 				int temp = val + thresh;
-				if (temp > 0xffffff) bitmapData[dptr] = -1;
-				else bitmapData[dptr] = (byte)((temp >>> 16) & mask);
+                if (temp > 0xffffff) {
+                    bitmapData[dptr] = -1;
+                } else {
+                    bitmapData[dptr] = (byte) ((temp >>> 16) & mask);
+                }
 			}
 			val += inc;
 		}
@@ -2517,8 +2654,11 @@ static final void buildDitheredGradientChannel(int from, int to, int steps,
 			for (int dy = 0, dptr = dp; dy < bandHeight; ++dy, dptr += bytesPerLine) {
 				final int thresh = DITHER_MATRIX[dy][dx & 7] >>> bits;
 				int temp = val + thresh;
-				if (temp > 0xffffff) bitmapData[dptr] = -1;
-				else bitmapData[dptr] = (byte)((temp >>> 16) & mask);
+                if (temp > 0xffffff) {
+                    bitmapData[dptr] = -1;
+                } else {
+                    bitmapData[dptr] = (byte) ((temp >>> 16) & mask);
+                }
 			}
 			val += inc;
 		}
@@ -2552,8 +2692,9 @@ static class LEDataInputStream extends InputStream {
 		if (bufferSize > 0) {
 			buf = new byte[bufferSize];
 			pos = bufferSize;
-		} 
-		else throw new IllegalArgumentException();
+		} else {
+            throw new IllegalArgumentException();
+        }
 	}
 	
 	@Override
@@ -2577,7 +2718,9 @@ static class LEDataInputStream extends InputStream {
 	 */
 	@Override
 	public int available() throws IOException {
-		if (buf == null) throw new IOException();
+        if (buf == null) {
+            throw new IOException();
+        }
 		return (buf.length - pos) + in.available();
 	}
 	
@@ -2586,9 +2729,13 @@ static class LEDataInputStream extends InputStream {
 	 */
 	@Override
 	public int read() throws IOException {
-		if (buf == null) throw new IOException();
+        if (buf == null) {
+            throw new IOException();
+        }
 		position++;
-		if (pos < buf.length) return (buf[pos++] & 0xFF);
+        if (pos < buf.length) {
+            return (buf[pos++] & 0xFF);
+        }
 		return in.read();
 	}
 	
@@ -2602,9 +2749,13 @@ static class LEDataInputStream extends InputStream {
 		int left = len;
 		result = readData(b, off, len);
 		while (true) {
-			if (result == -1) return -1;
+            if (result == -1) {
+                return -1;
+            }
 			position += result;
-			if (result == left) return len;
+            if (result == left) {
+                return len;
+            }
 			left -= result;
 			off += result;
 			result = readData(b, off, left);
@@ -2629,7 +2780,9 @@ static class LEDataInputStream extends InputStream {
 	 * @exception java.io.IOException if an IOException occurs.
 	 */
 	private int readData(byte[] buffer, int offset, int length) throws IOException {
-		if (buf == null) throw new IOException();
+        if (buf == null) {
+            throw new IOException();
+        }
 		if (offset < 0 || offset > buffer.length ||
 				length < 0 || (length > buffer.length - offset)) {
 			throw new ArrayIndexOutOfBoundsException();
@@ -2646,14 +2799,20 @@ static class LEDataInputStream extends InputStream {
 			newOffset += cacheCopied;
 			pos += cacheCopied;
 		}
-	
-		// Have we copied enough?
-		if (cacheCopied == length) return length;
+
+        // Have we copied enough?
+        if (cacheCopied == length) {
+            return length;
+        }
 
 		int inCopied = in.read(buffer, newOffset, length - cacheCopied);
 
-		if (inCopied > 0) return inCopied + cacheCopied;
-		if (cacheCopied == 0) return inCopied;
+        if (inCopied > 0) {
+            return inCopied + cacheCopied;
+        }
+        if (cacheCopied == 0) {
+            return inCopied;
+        }
 		return cacheCopied;
 	}
 	
@@ -2694,7 +2853,9 @@ static class LEDataInputStream extends InputStream {
 	 */
 	public void unread(byte[] b) throws IOException {
 		int length = b.length;
-		if (length > pos) throw new IOException();
+        if (length > pos) {
+            throw new IOException();
+        }
 		position -= length;
 		pos -= length;
 		System.arraycopy(b, 0, buf, pos, length);
@@ -2735,12 +2896,17 @@ public static ImageData[] load(InputStream is, ImageLoader loader) {
 	LEDataInputStream stream = new LEDataInputStream(is);
 	boolean isSupported = false;	
 	FileFormat fileFormat = new WinICOFileFormat();
-	if (fileFormat.isFileFormat(stream)) isSupported = true;
-	else {
-		fileFormat = new WinBMPFileFormat();
-		if (fileFormat.isFileFormat(stream)) isSupported = true;
-	}
-	if (!isSupported) SWT.error(SWT.ERROR_UNSUPPORTED_FORMAT);
+    if (fileFormat.isFileFormat(stream)) {
+        isSupported = true;
+    } else {
+        fileFormat = new WinBMPFileFormat();
+        if (fileFormat.isFileFormat(stream)) {
+            isSupported = true;
+        }
+    }
+    if (!isSupported) {
+        SWT.error(SWT.ERROR_UNSUPPORTED_FORMAT);
+    }
 	fileFormat.loader = loader;
 	return fileFormat.loadFromStream(stream);
 }
@@ -2752,13 +2918,15 @@ static class WinBMPFileFormat extends FileFormat {
 
 void decompressData(byte[] src, byte[] dest, int stride, int cmp) {
 	if (cmp == 1) { // BMP_RLE8_COMPRESSION
-		if (decompressRLE8Data(src, src.length, stride, dest, dest.length) <= 0)
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (decompressRLE8Data(src, src.length, stride, dest, dest.length) <= 0) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		return;
 	}
 	if (cmp == 2) { // BMP_RLE4_COMPRESSION
-		if (decompressRLE4Data(src, src.length, stride, dest, dest.length) <= 0)
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (decompressRLE4Data(src, src.length, stride, dest, dest.length) <= 0) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		return;
 	}
 	SWT.error(SWT.ERROR_INVALID_IMAGE);
@@ -2789,36 +2957,43 @@ int decompressRLE4Data(byte[] src, int numBytes, int stride, byte[] dest, int de
 					y += src[sp] & 0xFF;
 					sp++;
 					dp = y * stride + x / 2;
-					if (dp >= de)
-						return -1;
+                    if (dp >= de) {
+                        return -1;
+                    }
 					break;
 				default: /* absolute mode run */
-					if ((len & 1) != 0) /* odd run lengths not currently supported */
-						return -1;
+                    if ((len & 1) != 0) { /* odd run lengths not currently supported */
+                        return -1;
+                    }
 					x += len;
 					len = len / 2;
-					if (len > (se - sp))
-						return -1;
-					if (len > (de - dp))
-						return -1;
+                    if (len > (se - sp)) {
+                        return -1;
+                    }
+                    if (len > (de - dp)) {
+                        return -1;
+                    }
 					for (int i = 0; i < len; i++) {
 						dest[dp] = src[sp];
 						dp++;
 						sp++;
 					}
-					if ((sp & 1) != 0)
-						sp++; /* word align sp? */
+                    if ((sp & 1) != 0) {
+                        sp++;
+                    } /* word align sp? */
 					break;
 			}
 		} else {
-			if ((len & 1) != 0)
-				return -1;
+            if ((len & 1) != 0) {
+                return -1;
+            }
 			x += len;
 			len = len / 2;
 			byte theByte = src[sp];
 			sp++;
-			if (len > (de - dp))
-				return -1;
+            if (len > (de - dp)) {
+                return -1;
+            }
 			for (int i = 0; i < len; i++) {
 				dest[dp] = theByte;
 				dp++;
@@ -2853,29 +3028,34 @@ int decompressRLE8Data(byte[] src, int numBytes, int stride, byte[] dest, int de
 					y += src[sp] & 0xFF;
 					sp++;
 					dp = y * stride + x;
-					if (dp >= de)
-						return -1;
+                    if (dp >= de) {
+                        return -1;
+                    }
 					break;
 				default: /* absolute mode run */
-					if (len > (se - sp))
-						return -1;
-					if (len > (de - dp))
-						return -1;
+                    if (len > (se - sp)) {
+                        return -1;
+                    }
+                    if (len > (de - dp)) {
+                        return -1;
+                    }
 					for (int i = 0; i < len; i++) {
 						dest[dp] = src[sp];
 						dp++;
 						sp++;
 					}
-					if ((sp & 1) != 0)
-						sp++; /* word align sp? */
+                    if ((sp & 1) != 0) {
+                        sp++;
+                    } /* word align sp? */
 					x += len;
 					break;
 			}
 		} else {
 			byte theByte = src[sp];
 			sp++;
-			if (len > (de - dp))
-				return -1;
+            if (len > (de - dp)) {
+                return -1;
+            }
 			for (int i = 0; i < len; i++) {
 				dest[dp] = theByte;
 				dp++;
@@ -2914,8 +3094,9 @@ byte[] loadData(byte[] infoHeader, int stride) {
 	int cmp = (infoHeader[16] & 0xFF) | ((infoHeader[17] & 0xFF) << 8) | ((infoHeader[18] & 0xFF) << 16) | ((infoHeader[19] & 0xFF) << 24);
 	if (cmp == 0) { // BMP_NO_COMPRESSION
 		try {
-			if (inputStream.read(data) != dataSize)
-				SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (inputStream.read(data) != dataSize) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 		} catch (IOException e) {
 			SWT.error(SWT.ERROR_IO, e);
 		}
@@ -2923,8 +3104,9 @@ byte[] loadData(byte[] infoHeader, int stride) {
 		int compressedSize = (infoHeader[20] & 0xFF) | ((infoHeader[21] & 0xFF) << 8) | ((infoHeader[22] & 0xFF) << 16) | ((infoHeader[23] & 0xFF) << 24);
 		byte[] compressed = new byte[compressedSize];
 		try {
-			if (inputStream.read(compressed) != compressedSize)
-				SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (inputStream.read(compressed) != compressedSize) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 		} catch (IOException e) {
 			SWT.error(SWT.ERROR_IO, e);
 		}
@@ -2943,8 +3125,9 @@ int[] loadFileHeader() {
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
-	if (header[0] != 0x4D42)
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (header[0] != 0x4D42) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	return header;
 }
 @Override
@@ -3003,20 +3186,26 @@ PaletteData loadPalette(byte[] infoHeader) {
 		if (numColors == 0) {
 			numColors = 1 << depth;
 		} else {
-			if (numColors > 256)
-				numColors = 256;
+            if (numColors > 256) {
+                numColors = 256;
+            }
 		}
 		byte[] buf = new byte[numColors * 4];
 		try {
-			if (inputStream.read(buf) != buf.length)
-				SWT.error(SWT.ERROR_INVALID_IMAGE);
+            if (inputStream.read(buf) != buf.length) {
+                SWT.error(SWT.ERROR_INVALID_IMAGE);
+            }
 		} catch (IOException e) {
 			SWT.error(SWT.ERROR_IO, e);
 		}
 		return paletteFromBytes(buf, numColors);
 	}
-	if (depth == 16) return new PaletteData(0x7C00, 0x3E0, 0x1F);
-	if (depth == 24) return new PaletteData(0xFF, 0xFF00, 0xFF0000);
+    if (depth == 16) {
+        return new PaletteData(0x7C00, 0x3E0, 0x1F);
+    }
+    if (depth == 24) {
+        return new PaletteData(0xFF, 0xFF00, 0xFF0000);
+    }
 	return new PaletteData(0xFF00, 0xFF0000, 0xFF000000);
 }
 PaletteData paletteFromBytes(byte[] bytes, int numColors) {
@@ -3067,7 +3256,9 @@ void flipScanLines(byte[] data, int stride, int height) {
 static class WinICOFileFormat extends FileFormat {
 	
 static final byte[] convertPad(byte[] data, int width, int height, int depth, int pad, int newPad) {
-	if (pad == newPad) return data;
+    if (pad == newPad) {
+        return data;
+    }
 	int stride = (width * depth + 7) / 8;
 	int bpl = (stride + (pad - 1)) / pad * pad;
 	int newBpl = (stride + (newPad - 1)) / newPad * newPad;
@@ -3107,7 +3298,9 @@ boolean isValidIcon(ImageData i) {
 		case 1:
 		case 4:
 		case 8:
-			if (i.palette.isDirect) return false;
+            if (i.palette.isDirect) {
+                return false;
+            }
 			int size = i.palette.colors.length;
 			return size == 2 || size == 16 || size == 32 || size == 256;
 		case 24:
@@ -3125,11 +3318,13 @@ int loadFileHeader(LEDataInputStream byteStream) {
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
-	if ((fileHeader[0] != 0) || (fileHeader[1] != 1))
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if ((fileHeader[0] != 0) || (fileHeader[1] != 1)) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	int numIcons = fileHeader[2];
-	if (numIcons <= 0)
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (numIcons <= 0) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	return numIcons;
 }
 int loadFileHeader(LEDataInputStream byteStream, boolean hasHeader) {
@@ -3146,11 +3341,13 @@ int loadFileHeader(LEDataInputStream byteStream, boolean hasHeader) {
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
-	if ((fileHeader[0] != 0) || (fileHeader[1] != 1))
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if ((fileHeader[0] != 0) || (fileHeader[1] != 1)) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	int numIcons = fileHeader[2];
-	if (numIcons <= 0)
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (numIcons <= 0) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	return numIcons;
 }
 @Override
@@ -3219,10 +3416,13 @@ byte[] loadInfoHeader(int[] iconHeader) {
 	int width = iconHeader[0];
 	int height = iconHeader[1];
 	int numColors = iconHeader[2]; // the number of colors is in the low byte, but the high byte must be 0
-	if (numColors == 0) numColors = 256; // this is specified: '00' represents '256' (0x100) colors
-	if ((numColors != 2) && (numColors != 8) && (numColors != 16) &&
-		(numColors != 32) && (numColors != 256))
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (numColors == 0) {
+        numColors = 256;
+    } // this is specified: '00' represents '256' (0x100) colors
+    if ((numColors != 2) && (numColors != 8) && (numColors != 16) &&
+            (numColors != 32) && (numColors != 256)) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	if (inputStream.getPosition() < iconHeader[6]) {
 		// Seek to the specified offset
 		try {
@@ -3238,15 +3438,19 @@ byte[] loadInfoHeader(int[] iconHeader) {
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
-	if (((infoHeader[12] & 0xFF) | ((infoHeader[13] & 0xFF) << 8)) != 1)
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (((infoHeader[12] & 0xFF) | ((infoHeader[13] & 0xFF) << 8)) != 1) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	int infoWidth = (infoHeader[4] & 0xFF) | ((infoHeader[5] & 0xFF) << 8) | ((infoHeader[6] & 0xFF) << 16) | ((infoHeader[7] & 0xFF) << 24);
 	int infoHeight = (infoHeader[8] & 0xFF) | ((infoHeader[9] & 0xFF) << 8) | ((infoHeader[10] & 0xFF) << 16) | ((infoHeader[11] & 0xFF) << 24);
 	int bitCount = (infoHeader[14] & 0xFF) | ((infoHeader[15] & 0xFF) << 8);
-	if (height == infoHeight && bitCount == 1) height /= 2;
-	if (!((width == infoWidth) && (height * 2 == infoHeight) &&
-		(bitCount == 1 || bitCount == 4 || bitCount == 8 || bitCount == 24 || bitCount == 32)))
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (height == infoHeight && bitCount == 1) {
+        height /= 2;
+    }
+    if (!((width == infoWidth) && (height * 2 == infoHeight) &&
+            (bitCount == 1 || bitCount == 4 || bitCount == 8 || bitCount == 24 || bitCount == 32))) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	infoHeader[8] = (byte)(height & 0xFF);
 	infoHeader[9] = (byte)((height >> 8) & 0xFF);
 	infoHeader[10] = (byte)((height >> 16) & 0xFF);

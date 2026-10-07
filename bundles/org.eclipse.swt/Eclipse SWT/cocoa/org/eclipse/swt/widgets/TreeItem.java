@@ -37,9 +37,15 @@ import org.eclipse.swt.internal.cocoa.*;
  * @noextend This class is not intended to be subclassed by clients.
  */
 public class TreeItem extends Item {
+	/*
+	 * Virtual TreeItem state lives in the parent's sparse columnar store.  This keeps
+	 * logical state independent of the Java/native Item shell and lets index shifts
+	 * move state with the logical coordinate without a dense object graph.
+	 */
 	Tree parent;
 	TreeItem parentItem;
 	TreeItem[] items;
+	VirtualItemStorage<TreeItem> virtualItems;
 	int itemCount;
 	String [] strings;
 	Image [] images;
@@ -188,31 +194,156 @@ TreeItem (Tree parent, TreeItem parentItem, int style, int index, boolean create
 		createJNIRef ();
 		register ();
 		items = new TreeItem[4];
+        if ((parent.style & SWT.VIRTUAL) != 0) {
+            virtualItems = new VirtualItemStorage<>();
+        }
 	}
 }
 
 static TreeItem checkNull (TreeItem item) {
-	if (item == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return item;
 }
 
 static Tree checkNull (Tree parent) {
-	if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (parent == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return parent;
 }
 
 static int checkIndex (int index) {
-	if (index < 0) SWT.error (SWT.ERROR_INVALID_RANGE);
+    if (index < 0) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	return index;
 }
 
+boolean isCachedState () {
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return cached;
+    }
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.CACHED);
+}
+
+void setCachedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		cached = value;
+		return;
+	}
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.CACHED, value);
+}
+
+boolean isCheckedState () {
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return checked;
+    }
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.CHECKED);
+}
+
+void setCheckedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		checked = value;
+		return;
+	}
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.CHECKED, value);
+}
+
+boolean isGrayedState () {
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return grayed;
+    }
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.GRAYED);
+}
+
+void setGrayedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		grayed = value;
+		return;
+	}
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.GRAYED, value);
+}
+
+boolean isExpandedState () {
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return expanded;
+    }
+	return parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.EXPANDED);
+}
+
+void setExpandedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		expanded = value;
+		return;
+	}
+	parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.EXPANDED, value);
+}
+
+void pinVirtualFacade () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.PINNED, true);
+	}
+}
+
+void setVirtualChildTopologyKnown (int count) {
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return;
+    }
+	VirtualItemStorage<TreeItem> storage = parent.virtualStorage (parentItem);
+	long state = storage.stateOfIdentity (this);
+	state |= VirtualItemState.CHILDREN_KNOWN | VirtualItemState.CHILDREN_COMPLETE;
+	state &= ~(VirtualItemState.CHILDREN_LOADING | VirtualItemState.CHILDREN_PARTIAL);
+    if (count == 0) {
+        state &= ~VirtualItemState.HAS_CHILDREN;
+    } else {
+        state |= VirtualItemState.HAS_CHILDREN;
+    }
+	storage.state (parent.indexOfChild (parentItem, this), state);
+}
+
+boolean isVirtualFacadePinned () {
+	return (parent.style & SWT.VIRTUAL) != 0
+			&& parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.PINNED);
+}
+
+void markVirtualDirty () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.DIRTY, true);
+	}
+}
+
+void markVirtualPainted () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.DIRTY, false);
+		parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.PAINT_RESIDENT, true);
+	}
+}
+
+void clearVirtualPaintResidency () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualStorage (parentItem).flagOfIdentity (this, VirtualItemState.PAINT_RESIDENT, false);
+	}
+}
+
 int calculateWidth (int index, GC gc) {
-	if (index == 0 && width != -1) return width;
+    if (index == 0 && width != -1) {
+        return width;
+    }
 	Font font = null;
-	if (cellFont != null) font = cellFont[index];
-	if (font == null) font = this.font;
-	if (font == null) font = parent.font;
-	if (font == null) font = parent.defaultFont();
+    if (cellFont != null) {
+        font = cellFont[index];
+    }
+    if (font == null) {
+        font = this.font;
+    }
+    if (font == null) {
+        font = parent.font;
+    }
+    if (font == null) {
+        font = parent.defaultFont();
+    }
 	String text = index == 0 ? this.text : (strings == null ? "" : strings [index]);
 	if ((text != null) && (text.length() > TEXT_LIMIT)) {
 		text = text.substring(0, TEXT_LIMIT - ELLIPSIS.length()) + ELLIPSIS;
@@ -237,7 +368,9 @@ int calculateWidth (int index, GC gc) {
 	super_struct.super_class = OS.objc_msgSend(cell.id, OS.sel_superclass);
 	NSSize size = new NSSize();
 	OS.objc_msgSendSuper_stret(size, super_struct, OS.sel_cellSize);
-	if (image != null) size.width += parent.imageBounds.width + Tree.IMAGE_GAP;
+    if (image != null) {
+        size.width += parent.imageBounds.width + Tree.IMAGE_GAP;
+    }
 //	cell.setImage (image != null ? image.handle : null);
 //	NSSize size = cell.cellSize ();
 
@@ -245,7 +378,7 @@ int calculateWidth (int index, GC gc) {
 	width += Tree.TEXT_GAP; // To fix truncation
 	boolean sendMeasure = true;
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		sendMeasure = cached;
+		sendMeasure = isCachedState ();
 	}
 	if (sendMeasure && parent.hooks (SWT.MeasureItem)) {
 		gc.setFont (font);
@@ -275,16 +408,19 @@ int calculateWidth (int index, GC gc) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 void clear () {
-	cached = false;
+	setCachedState (false);
 	text = "";
 	image = null;
 	strings = null;
 	images = null;
-	checked = grayed = false;
+	setCheckedState (false);
+	setGrayedState (false);
 	foreground = background = null;
 	cellForeground = cellBackground = null;
 	font = null;
@@ -318,8 +454,9 @@ void clear () {
 public void clear (int index, boolean all) {
 	checkWidget ();
 	int count = getItemCount ();
-	if (index < 0 || index >= count)
-		error (SWT.ERROR_INVALID_RANGE);
+    if (index < 0 || index >= count) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	parent.clear (this, index, all);
 }
 
@@ -395,7 +532,9 @@ void destroyWidget () {
  */
 public Color getBackground () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return background != null ? background : parent.getBackground ();
 }
 
@@ -414,10 +553,16 @@ public Color getBackground () {
  */
 public Color getBackground (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count -1) return getBackground ();
-	if (cellBackground == null || cellBackground [index] == null) return getBackground ();
+    if (0 > index || index > count - 1) {
+        return getBackground();
+    }
+    if (cellBackground == null || cellBackground [index] == null) {
+        return getBackground();
+    }
 	return cellBackground [index];
 }
 
@@ -434,12 +579,16 @@ public Color getBackground (int index) {
  */
 public Rectangle getBounds () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	parent.checkItems ();
 
 	NSOutlineView widget = (NSOutlineView) parent.view;
 	int rowIndex = (int)widget.rowForItem (handle);
-	if (rowIndex == -1) return new Rectangle (0, 0, 0, 0);
+    if (rowIndex == -1) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
 	NSTableColumn column = parent.columnCount == 0 ? parent.firstColumn : parent.columns [0].nsColumn;
 	int columnIndex = parent.indexOf (column);
@@ -448,10 +597,18 @@ public Rectangle getBounds () {
 		titleRect.x += parent.imageBounds.width + Tree.IMAGE_GAP;
 	}
 	Font font = null;
-	if (cellFont != null) font = cellFont[columnIndex];
-	if (font == null) font = this.font;
-	if (font == null) font = parent.font;
-	if (font == null) font = parent.defaultFont ();
+    if (cellFont != null) {
+        font = cellFont[columnIndex];
+    }
+    if (font == null) {
+        font = this.font;
+    }
+    if (font == null) {
+        font = parent.font;
+    }
+    if (font == null) {
+        font = parent.defaultFont();
+    }
 	NSCell cell = parent.dataCell;
 	cell.setImage (null);
 	if (font.extraTraits != 0) {
@@ -494,8 +651,12 @@ public Rectangle getBounds () {
  */
 public Rectangle getBounds (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (!(0 <= index && index < Math.max (1, parent.columnCount))) return new Rectangle (0, 0, 0, 0);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (!(0 <= index && index < Math.max(1, parent.columnCount))) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
 	parent.checkItems ();
 	NSOutlineView outlineView = (NSOutlineView) parent.view;
@@ -523,9 +684,13 @@ public Rectangle getBounds (int index) {
  */
 public boolean getChecked () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if ((parent.style & SWT.CHECK) == 0) return false;
-	return checked;
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if ((parent.style & SWT.CHECK) == 0) {
+        return false;
+    }
+	return isCheckedState ();
 }
 
 /**
@@ -541,7 +706,7 @@ public boolean getChecked () {
  */
 public boolean getExpanded () {
 	checkWidget ();
-	return expanded;
+	return isExpandedState ();
 }
 
 /**
@@ -558,7 +723,9 @@ public boolean getExpanded () {
  */
 public Font getFont () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return font != null ? font : parent.getFont ();
 }
 
@@ -578,10 +745,16 @@ public Font getFont () {
  */
 public Font getFont (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count -1) return getFont ();
-	if (cellFont == null || cellFont [index] == null) return getFont ();
+    if (0 > index || index > count - 1) {
+        return getFont();
+    }
+    if (cellFont == null || cellFont [index] == null) {
+        return getFont();
+    }
 	return cellFont [index];
 }
 
@@ -599,7 +772,9 @@ public Font getFont (int index) {
  */
 public Color getForeground () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return foreground != null ? foreground : parent.getForeground ();
 }
 
@@ -619,10 +794,16 @@ public Color getForeground () {
  */
 public Color getForeground (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count -1) return getForeground ();
-	if (cellForeground == null || cellForeground [index] == null) return getForeground ();
+    if (0 > index || index > count - 1) {
+        return getForeground();
+    }
+    if (cellForeground == null || cellForeground [index] == null) {
+        return getForeground();
+    }
 	return cellForeground [index];
 }
 
@@ -640,15 +821,21 @@ public Color getForeground (int index) {
  */
 public boolean getGrayed () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if ((parent.style & SWT.CHECK) == 0) return false;
-	return grayed;
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if ((parent.style & SWT.CHECK) == 0) {
+        return false;
+    }
+	return isGrayedState ();
 }
 
 @Override
 public Image getImage () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return super.getImage ();
 }
 
@@ -668,10 +855,16 @@ public Image getImage () {
  */
 public Image getImage (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (index == 0) return getImage ();
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (index == 0) {
+        return getImage();
+    }
 	if (images != null) {
-		if (0 <= index && index < images.length) return images [index];
+        if (0 <= index && index < images.length) {
+            return images [index];
+        }
 	}
 	return null;
 }
@@ -693,8 +886,12 @@ public Image getImage (int index) {
  */
 public Rectangle getImageBounds (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (!(0 <= index && index < Math.max (1, parent.columnCount))) return new Rectangle (0, 0, 0, 0);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (!(0 <= index && index < Math.max(1, parent.columnCount))) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
 	parent.checkItems ();
 	NSOutlineView outlineView = (NSOutlineView) parent.view;
@@ -734,10 +931,18 @@ public Rectangle getImageBounds (int index) {
  */
 public TreeItem getItem (int index) {
 	checkWidget ();
-	if (index < 0) error (SWT.ERROR_INVALID_RANGE);
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (index >= itemCount) error (SWT.ERROR_INVALID_RANGE);
-	return parent._getItem (this, index, true);
+    if (index < 0) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (index >= itemCount) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
+	TreeItem item = parent._getItem (this, index, true);
+	item.pinVirtualFacade ();
+	return item;
 }
 
 /**
@@ -753,7 +958,9 @@ public TreeItem getItem (int index) {
  */
 public int getItemCount () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return itemCount;
 }
 
@@ -775,10 +982,13 @@ public int getItemCount () {
  */
 public TreeItem [] getItems () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	TreeItem [] result = new TreeItem [itemCount];
 	for (int i=0; i<itemCount; i++) {
 		result [i] = parent._getItem (this, i, true);
+		result [i].pinVirtualFacade ();
 	}
 	return result;
 }
@@ -786,7 +996,9 @@ public TreeItem [] getItems () {
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (!cached) return "*virtual*"; //$NON-NLS-1$
+        if (!isCachedState()) {
+            return "*virtual*"; //$NON-NLS-1$
+        }
 	}
 	return super.getNameText ();
 }
@@ -820,13 +1032,18 @@ public Tree getParent () {
  */
 public TreeItem getParentItem () {
 	checkWidget ();
+    if (parentItem != null) {
+        parentItem.pinVirtualFacade();
+    }
 	return parentItem;
 }
 
 @Override
 public String getText () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return super.getText ();
 }
 
@@ -846,8 +1063,12 @@ public String getText () {
  */
 public String getText (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (index == 0) return getText ();
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (index == 0) {
+        return getText();
+    }
 	if (strings != null) {
 		if (0 <= index && index < strings.length) {
 			String string = strings [index];
@@ -874,8 +1095,12 @@ public String getText (int index) {
  */
 public Rectangle getTextBounds (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (!(0 <= index && index < Math.max (1, parent.columnCount))) return new Rectangle (0, 0, 0, 0);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (!(0 <= index && index < Math.max(1, parent.columnCount))) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
 	parent.checkItems ();
 	NSOutlineView outlineView = (NSOutlineView) parent.view;
@@ -919,13 +1144,16 @@ public Rectangle getTextBounds (int index) {
  */
 public int indexOf (TreeItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (item.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (item.parentItem != this) return -1;
-	for (int i = 0; i < itemCount; i++) {
-		if (item == items [i]) return i;
-	}
-	return -1;
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (item.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (item.parentItem != this) {
+        return -1;
+    }
+	return parent.indexOfChild (this, item);
 }
 
 @Override
@@ -934,7 +1162,13 @@ boolean isDrawing () {
 }
 
 void redraw (int columnIndex) {
-	if (parent.ignoreRedraw || !isDrawing()) return;
+    if (parent.ignoreRedraw || !isDrawing()) {
+        return;
+    }
+	if ((parent.style & SWT.VIRTUAL) != 0 && !parent.isVirtualPaintCandidate (this)) {
+		markVirtualDirty ();
+		return;
+	}
 	/* redraw the full item if columnIndex == -1 */
 	NSOutlineView outlineView = (NSOutlineView) parent.view;
 	NSRect rect;
@@ -967,20 +1201,28 @@ void release(boolean destroy) {
 	TreeItem[] selectedItems = null;
 	Tree parent = this.parent;
 	if (destroy) {
-		if (getDrawing()) selectedItems = parent.getSelection ();
+        if (getDrawing()) {
+            selectedItems = parent.getSelection();
+        }
 	}
 	super.release(destroy);
-	if (selectedItems != null) parent.selectItems (selectedItems, true);
+    if (selectedItems != null) {
+        parent.selectItems(selectedItems, true);
+    }
 }
 
 @Override
 void releaseChildren (boolean destroy) {
-	for (int i=0; i<items.length; i++) {
-		TreeItem item = items [i];
-		if (item != null && !item.isDisposed ()) {
-			item.release (false);
-		}
+	for (int i=0; i<parent.materializedItemCount (this); i++) {
+		TreeItem item = parent.materializedItem (this, i);
+        if (item != null && !item.isDisposed()) {
+            item.release(false);
+        }
 	}
+    if (virtualItems != null) {
+        virtualItems.clear(ignored -> {
+        });
+    }
 	items = null;
 	itemCount = 0;
 	super.releaseChildren (destroy);
@@ -989,7 +1231,9 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (handle != null) handle.autorelease ();
+    if (handle != null) {
+        handle.autorelease();
+    }
 	handle = null;
 	parentItem = null;
 	parent = null;
@@ -1022,17 +1266,24 @@ public void removeAll () {
 }
 
 void sendExpand (boolean expand, boolean recurse) {
-	if (itemCount == 0) return;
-	if (expanded != expand) {
+    if (itemCount == 0) {
+        return;
+    }
+	if (isExpandedState () != expand) {
 		Event event = new Event ();
 		event.item = this;
 		parent.sendEvent (expand ? SWT.Expand : SWT.Collapse, event);
-		if (isDisposed ()) return;
-		expanded = expand;
+        if (isDisposed()) {
+            return;
+        }
+		setExpandedState (expand);
 	}
 	if (recurse) {
-		for (int i = 0; i < itemCount; i++) {
-			if (items[i] != null) items[i].sendExpand (expand, recurse);
+		for (int i = 0; i < parent.materializedItemCount (this); i++) {
+			TreeItem item = parent.materializedItem (this, i);
+            if (item != null) {
+                item.sendExpand(expand, true);
+            }
 		}
 	}
 }
@@ -1060,10 +1311,14 @@ public void setBackground (Color color) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	Color oldColor = background;
-	if (oldColor == color) return;
+    if (oldColor == color) {
+        return;
+    }
 	background = color;
-	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+    if (oldColor != null && oldColor.equals(color)) {
+        return;
+    }
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -1091,16 +1346,24 @@ public void setBackground (int index, Color color) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	if (cellBackground == null) {
-		if (color == null) return;
+        if (color == null) {
+            return;
+        }
 		cellBackground = new Color [count];
 	}
 	Color oldColor = cellBackground [index];
-	if (oldColor == color) return;
+    if (oldColor == color) {
+        return;
+    }
 	cellBackground [index] = color;
-	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+    if (oldColor != null && oldColor.equals(color)) {
+        return;
+    }
+	setCachedState (true);
 	redraw (index);
 }
 
@@ -1116,10 +1379,14 @@ public void setBackground (int index, Color color) {
  */
 public void setChecked (boolean checked) {
 	checkWidget ();
-	if ((parent.style & SWT.CHECK) == 0) return;
-	if (this.checked == checked) return;
-	this.checked = checked;
-	cached = true;
+    if ((parent.style & SWT.CHECK) == 0) {
+        return;
+    }
+    if (isCheckedState() == checked) {
+        return;
+    }
+	setCheckedState (checked);
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -1136,19 +1403,21 @@ public void setChecked (boolean checked) {
 public void setExpanded (boolean expanded) {
 	checkWidget ();
 
-	/* Do nothing when the item is a leaf or already expanded */
-	if (itemCount == 0 || expanded == getExpanded ()) return;
+    /* Do nothing when the item is a leaf or already expanded */
+    if (itemCount == 0 || expanded == getExpanded()) {
+        return;
+    }
 
 	parent.checkItems ();
 	parent.ignoreExpand = true;
-	this.expanded = expanded;
+	setExpandedState (expanded);
 	if (expanded) {
 		((NSOutlineView) parent.view).expandItem (handle);
 	} else {
 		((NSOutlineView) parent.view).collapseItem (handle);
 	}
 	parent.ignoreExpand = false;
-	cached = true;
+	setCachedState (true);
 	if (!expanded) {
 		parent.setScrollWidth ();
 	}
@@ -1177,11 +1446,15 @@ public void setFont (Font font) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	Font oldFont = this.font;
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	this.font = font;
-	if (oldFont != null && oldFont.equals (font)) return;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
 	width = -1;
-	cached = true;
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -1210,17 +1483,25 @@ public void setFont (int index, Font font) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	if (cellFont == null) {
-		if (font == null) return;
+        if (font == null) {
+            return;
+        }
 		cellFont = new Font [count];
 	}
 	Font oldFont = cellFont [index];
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	cellFont [index] = font;
-	if (oldFont != null && oldFont.equals (font)) return;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
 	width = -1;
-	cached = true;
+	setCachedState (true);
 	redraw (index);
 }
 
@@ -1247,10 +1528,14 @@ public void setForeground (Color color) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	Color oldColor = foreground;
-	if (oldColor == color) return;
+    if (oldColor == color) {
+        return;
+    }
 	foreground = color;
-	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+    if (oldColor != null && oldColor.equals(color)) {
+        return;
+    }
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -1278,16 +1563,24 @@ public void setForeground (int index, Color color){
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	if (cellForeground == null) {
-		if (color == null) return;
+        if (color == null) {
+            return;
+        }
 		cellForeground = new Color [count];
 	}
 	Color oldColor = cellForeground [index];
-	if (oldColor == color) return;
+    if (oldColor == color) {
+        return;
+    }
 	cellForeground [index] = color;
-	if (oldColor != null && oldColor.equals (color)) return;
-	cached = true;
+    if (oldColor != null && oldColor.equals(color)) {
+        return;
+    }
+	setCachedState (true);
 	redraw (index);
 }
 
@@ -1304,10 +1597,14 @@ public void setForeground (int index, Color color){
  */
 public void setGrayed (boolean grayed) {
 	checkWidget ();
-	if ((parent.style & SWT.CHECK) == 0) return;
-	if (this.grayed == grayed) return;
-	this.grayed = grayed;
-	cached = true;
+    if ((parent.style & SWT.CHECK) == 0) {
+        return;
+    }
+    if (isGrayedState() == grayed) {
+        return;
+    }
+	setGrayedState (grayed);
+	setCachedState (true);
 	redraw (-1);
 }
 
@@ -1329,7 +1626,9 @@ public void setGrayed (boolean grayed) {
  */
 public void setImage (Image [] images) {
 	checkWidget ();
-	if (images == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (images == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<images.length; i++) {
 		setImage (i, images [i]);
 	}
@@ -1361,22 +1660,32 @@ public void setImage (int index, Image image) {
 	}
 	if (index == 0)  {
 		if (image != null && image.type == SWT.ICON) {
-			if (image.equals (this.image)) return;
+            if (image.equals(this.image)) {
+                return;
+            }
 		}
 		width = -1;
 		super.setImage (image);
 	}
 	int count = Math.max (1, parent.columnCount);
 	if (0 <= index && index < count) {
-		if (images == null) images = new Image [count];
+        if (images == null) {
+            images = new Image [count];
+        }
 		if (image != null && image.type == SWT.ICON) {
-			if (image.equals (images [index])) return;
+            if (image.equals(images [index])) {
+                return;
+            }
 		}
 		images [index] = image;
 	}
-	cached = true;
-	if (index == 0) parent.setScrollWidth (this);
-	if (0 <= index && index < count) redraw (index);
+	setCachedState (true);
+    if (index == 0) {
+        parent.setScrollWidth(this);
+    }
+    if (0 <= index && index < count) {
+        redraw(index);
+    }
 }
 
 @Override
@@ -1429,10 +1738,14 @@ public void setItemCount (int count) {
  */
 public void setText (String [] strings) {
 	checkWidget ();
-	if (strings == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (strings == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<strings.length; i++) {
 		String string = strings [i];
-		if (string != null) setText (i, string);
+        if (string != null) {
+            setText(i, string);
+        }
 	}
 }
 
@@ -1457,21 +1770,33 @@ public void setText (String [] strings) {
  */
 public void setText (int index, String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (index == 0) {
-		if (string.equals (text)) return;
+        if (string.equals(text)) {
+            return;
+        }
 		width = -1;
 		super.setText (string);
 	}
 	int count = Math.max (1, parent.columnCount);
 	if (0 <= index && index < count) {
-		if (strings == null) strings = new String [count];
-		if (string.equals (strings [index])) return;
+        if (strings == null) {
+            strings = new String [count];
+        }
+        if (string.equals(strings [index])) {
+            return;
+        }
 		strings [index] = string;
 	}
-	cached = true;
-	if (index == 0) parent.setScrollWidth (this);
-	if (0 <= index && index < count) redraw (index);
+	setCachedState (true);
+    if (index == 0) {
+        parent.setScrollWidth(this);
+    }
+    if (0 <= index && index < count) {
+        redraw(index);
+    }
 }
 
 @Override
@@ -1481,17 +1806,24 @@ public void setText (String string) {
 }
 
 void updateExpanded () {
-	if (itemCount == 0) return;
+    if (itemCount == 0) {
+        return;
+    }
 	NSOutlineView outlineView = (NSOutlineView)parent.view;
-	if (expanded != outlineView.isItemExpanded (handle)) {
-		if (expanded) {
-			outlineView.expandItem (handle);
-		} else {
-			outlineView.collapseItem (handle);
-		}
+	boolean expandedState = isExpandedState ();
+	if (expandedState != outlineView.isItemExpanded (handle)) {
+        if (expandedState) {
+            outlineView.expandItem(handle);
+        } else {
+            outlineView.collapseItem(handle);
+        }
 	}
-	for (int i = 0; i < itemCount; i++) {
-		if (items[i] != null) items[i].updateExpanded ();
+	for (int i = 0; i < parent.materializedItemCount (this); i++) {
+		TreeItem item = parent.materializedItem (this, i);
+        if (item != null) {
+            item.updateExpanded();
+        }
 	}
 }
+
 }

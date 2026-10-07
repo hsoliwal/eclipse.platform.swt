@@ -47,7 +47,9 @@ public class Snippet351 {
 		shell.open();
 		browser.setUrl("http://webkit.org");
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

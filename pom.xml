@@ -163,6 +163,82 @@
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <!--
+        Opt-in M3 distillation lane. The ordinary SWT/Tycho build is unchanged.
+        Install/deploy com.synexia:synexia-openrewrite-recipes:1.0.0-SNAPSHOT first,
+        then run:
+          mvn -Pm3-distillation rewrite:dryRun
+        The active recipe is read-only and exports atom/structure/semantic datatables.
+      -->
+      <id>m3-distillation</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.openrewrite.maven</groupId>
+            <artifactId>rewrite-maven-plugin</artifactId>
+            <version>5.23.1</version>
+            <configuration>
+              <failOnInvalidActiveRecipes>true</failOnInvalidActiveRecipes>
+              <failOnDryRunResults>false</failOnDryRunResults>
+              <exportDatatables>true</exportDatatables>
+              <activeRecipes>
+                <recipe>com.synexia.rewrite.M3SwtDistillationInventoryRecipe</recipe>
+              </activeRecipes>
+            </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>com.synexia</groupId>
+                <artifactId>synexia-openrewrite-recipes</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <!--
+        Second M3 distillation stage: atomize/patternize the live SWT Maven/Tycho
+        source model without mutating it. This consumes the canonical Synexia
+        recipe pack and exports declaration atoms, framework/pattern evidence,
+        semantic relationships and donor-shape candidates.
+
+        Install/deploy com.synexia:synexia-openrewrite-recipes:1.0.0-SNAPSHOT first,
+        then run:
+          mvn -Pm3-atomize-patternize rewrite:dryRunNoFork
+
+        Review the exported datatables before selecting a bounded cohort for a
+        separate source-sealed mutation recipe.
+      -->
+      <id>m3-atomize-patternize</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.openrewrite.maven</groupId>
+            <artifactId>rewrite-maven-plugin</artifactId>
+            <version>5.23.1</version>
+            <configuration>
+              <failOnInvalidActiveRecipes>true</failOnInvalidActiveRecipes>
+              <failOnDryRunResults>false</failOnDryRunResults>
+              <exportDatatables>true</exportDatatables>
+              <activeRecipes>
+                <recipe>com.synexia.rewrite.M3SwtAtomizePatternizeRecipe</recipe>
+              </activeRecipes>
+            </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>com.synexia</groupId>
+                <artifactId>synexia-openrewrite-recipes</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <build>

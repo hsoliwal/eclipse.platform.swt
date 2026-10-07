@@ -189,7 +189,9 @@ class StyledTextRenderer {
 	}
 
 	static int cap (TextLayout layout, int offset) {
-		if (layout == null) return offset;
+        if (layout == null) {
+            return offset;
+        }
 		return Math.min (layout.getText().length() -1, Math.max (0, offset));
 	}
 
@@ -255,7 +257,9 @@ int addMerge(int[] mergeRanges, StyleRange[] mergeStyles, int mergeCount, int mo
 int addMerge(StyleRange[] mergeStyles, int mergeCount, int modifyStart, int modifyEnd) {
 	int grow = mergeCount - (modifyEnd - modifyStart);
 	StyleRange endStyle = null;
-	if (modifyEnd < styleCount) endStyle = styles[modifyEnd];
+    if (modifyEnd < styleCount) {
+        endStyle = styles[modifyEnd];
+    }
 	if (styleCount + grow >= styles.length) {
 		StyleRange[] tmpStyles = new StyleRange[styles.length + grow + GROW];
 		System.arraycopy(styles, 0, tmpStyles, 0, modifyStart);
@@ -338,18 +342,24 @@ void calculateClientArea () {
 	}
 }
 void calculateIdle () {
-	if (idleRunning) return;
+    if (idleRunning) {
+        return;
+    }
 	Runnable runnable = new Runnable() {
 		@Override
 		public void run() {
-			if (styledText == null) return;
+            if (styledText == null) {
+                return;
+            }
 			int i;
 			long start = System.currentTimeMillis();
 			for (i = 0; i < lineCount; i++) {
 				LineSizeInfo line = getLineSize(i);
 				if (line.needsRecalculateSize()) {
 					calculate(i, 1);
-					if (System.currentTimeMillis() - start > IDLE_TIME) break;
+                    if (System.currentTimeMillis() - start > IDLE_TIME) {
+                        break;
+                    }
 				}
 			}
 			if (i < lineCount) {
@@ -370,23 +380,31 @@ void calculateIdle () {
 	idleRunning = true;
 }
 void clearLineBackground(int startLine, int count) {
-	if (lines == null) return;
+    if (lines == null) {
+        return;
+    }
 	for (int i = startLine; i < startLine + count; i++) {
 		LineInfo info = lines[i];
 		if (info != null) {
 			info.flags &= ~BACKGROUND;
 			info.background = null;
-			if (info.flags == 0) lines[i] = null;
+            if (info.flags == 0) {
+                lines[i] = null;
+            }
 		}
 	}
 }
 void clearLineStyle(int startLine, int count) {
-	if (lines == null) return;
+    if (lines == null) {
+        return;
+    }
 	for (int i = startLine; i < startLine + count; i++) {
 		LineInfo info = lines[i];
 		if (info != null) {
 			info.flags &= ~(ALIGNMENT | INDENT | VERTICAL_INDENT | WRAP_INDENT | JUSTIFY | TABSTOPS);
-			if (info.flags == 0) lines[i] = null;
+            if (info.flags == 0) {
+                lines[i] = null;
+            }
 		}
 	}
 }
@@ -411,9 +429,15 @@ void copyInto(StyledTextRenderer renderer) {
 	}
 }
 void dispose() {
-	if (boldFont != null) boldFont.dispose();
-	if (italicFont != null) italicFont.dispose();
-	if (boldItalicFont != null) boldItalicFont.dispose();
+    if (boldFont != null) {
+        boldFont.dispose();
+    }
+    if (italicFont != null) {
+        italicFont.dispose();
+    }
+    if (boldItalicFont != null) {
+        boldItalicFont.dispose();
+    }
 	boldFont = italicFont = boldItalicFont = null;
 	reset();
 	content = null;
@@ -423,7 +447,9 @@ void dispose() {
 void disposeTextLayout (TextLayout layout) {
 	if (layouts != null) {
 		for (TextLayout l : layouts) {
-			if (l == layout) return;
+            if (l == layout) {
+                return;
+            }
 		}
 	}
 	layout.dispose();
@@ -432,9 +458,13 @@ void drawBullet(Bullet bullet, GC gc, int paintX, int paintY, int index, int lin
 	StyleRange style = bullet.style;
 	GlyphMetrics metrics = style.metrics;
 	Color color = style.foreground;
-	if (color != null) gc.setForeground(color);
+    if (color != null) {
+        gc.setForeground(color);
+    }
 	Font font = style.font;
-	if (font != null) gc.setFont(font);
+    if (font != null) {
+        gc.setFont(font);
+    }
 	String string = "";
 	int type = bullet.type & (ST.BULLET_DOT|ST.BULLET_NUMBER|ST.BULLET_LETTER_LOWER|ST.BULLET_LETTER_UPPER);
 	switch (type) {
@@ -443,7 +473,9 @@ void drawBullet(Bullet bullet, GC gc, int paintX, int paintY, int index, int lin
 		case ST.BULLET_LETTER_LOWER: string = String.valueOf((char) (index % 26 + 97)); break;
 		case ST.BULLET_LETTER_UPPER: string = String.valueOf((char) (index % 26 + 65)); break;
 	}
-	if ((bullet.type & ST.BULLET_TEXT) != 0) string += bullet.text;
+    if ((bullet.type & ST.BULLET_TEXT) != 0) {
+        string += bullet.text;
+    }
 	Display display = styledText.getDisplay();
 	TextLayout layout = new TextLayout(display);
 	layout.setText(string);
@@ -451,7 +483,9 @@ void drawBullet(Bullet bullet, GC gc, int paintX, int paintY, int index, int lin
 	layout.setDescent(lineDescent);
 	style = (StyleRange)style.clone();
 	style.metrics = null;
-	if (style.font == null) style.font = getFont(style.fontStyle);
+    if (style.font == null) {
+        style.font = getFont(style.fontStyle);
+    }
 	layout.setStyle(style, 0, string.length());
 	int x = paintX + Math.max(0, metrics.width - layout.getBounds().width - BULLET_MARGIN);
 	layout.draw(gc, x, paintY);
@@ -531,7 +565,9 @@ private void drawLineBackground(LineDrawInfo lineInfo, int paintY, GC gc, Color 
 	Rectangle client = styledText.getClientArea();
 	Color lineBackground = getLineBackground(lineInfo.index, null);
 	StyledTextEvent event = styledText.getLineBackgroundData(lineInfo.offset, lineInfo.text);
-	if (event != null && event.lineBackground != null) lineBackground = event.lineBackground;
+    if (event != null && event.lineBackground != null) {
+        lineBackground = event.lineBackground;
+    }
 	int verticalIndent = lineInfo.layout.getVerticalIndent();
 
 	if (lineBackground != null) {
@@ -588,7 +624,9 @@ private void drawLineForeground(LineDrawInfo lineInfo, int paintX, int paintY, G
 			for (Bullet b : bullets) {
 				bullet = b;
 				bulletIndex = bullet.indexOf(lineInfo.index);
-				if (bulletIndex != -1) break;
+                if (bulletIndex != -1) {
+                    break;
+                }
 			}
 		}
 	}
@@ -606,7 +644,9 @@ private void drawLineForeground(LineDrawInfo lineInfo, int paintX, int paintY, G
 	int[] ranges = null;
 	for (int i = 0; i < styles.length; i++) {
 		if (styles[i].metrics != null) {
-			if (ranges == null) ranges = lineInfo.layout.getRanges();
+            if (ranges == null) {
+                ranges = lineInfo.layout.getRanges();
+            }
 			int start = ranges[i << 1];
 			int length = ranges[(i << 1) + 1] - start + 1;
 			Point point = lineInfo.layout.getLocation(start, false);
@@ -643,13 +683,19 @@ int getCachedLineHeight(int lineIndex) {
 Font getFont(int style) {
 	switch (style) {
 		case SWT.BOLD:
-			if (boldFont != null) return boldFont;
+            if (boldFont != null) {
+                return boldFont;
+            }
 			return boldFont = new Font(device, getFontData(style));
 		case SWT.ITALIC:
-			if (italicFont != null) return italicFont;
+            if (italicFont != null) {
+                return italicFont;
+            }
 			return italicFont = new Font(device, getFontData(style));
 		case SWT.BOLD | SWT.ITALIC:
-			if (boldItalicFont != null) return boldItalicFont;
+            if (boldItalicFont != null) {
+                return boldItalicFont;
+            }
 			return boldItalicFont = new Font(device, getFontData(style));
 		default:
 			return regularFont;
@@ -685,7 +731,9 @@ int getHeight () {
 	return totalHeight + styledText.topMargin + styledText.bottomMargin;
 }
 boolean hasLink(int offset) {
-	if (offset == -1) return false;
+    if (offset == -1) {
+        return false;
+    }
 	int lineIndex = content.getLineAtOffset(offset);
 	int lineOffset = content.getOffsetAtLine(lineIndex);
 	String line = content.getLine(lineIndex);
@@ -712,7 +760,9 @@ boolean hasLink(int offset) {
 		if (ranges != null) {
 			int rangeCount = styleCount << 1;
 			int index = getRangeIndex(offset, -1, rangeCount);
-			if (index >= rangeCount) return false;
+            if (index >= rangeCount) {
+                return false;
+            }
 			int rangeStart = ranges[index];
 			int rangeLength = ranges[index + 1];
 			StyleRange rangeStyle = styles[index >> 1];
@@ -724,7 +774,9 @@ boolean hasLink(int offset) {
 	return false;
 }
 int getLineAlignment(int index, int defaultAlignment) {
-	if (lines == null) return defaultAlignment;
+    if (lines == null) {
+        return defaultAlignment;
+    }
 	LineInfo info = lines[index];
 	if (info != null && (info.flags & ALIGNMENT) != 0) {
 		return info.alignment;
@@ -732,7 +784,9 @@ int getLineAlignment(int index, int defaultAlignment) {
 	return defaultAlignment;
 }
 Color getLineBackground(int index, Color defaultBackground) {
-	if (lines == null) return defaultBackground;
+    if (lines == null) {
+        return defaultBackground;
+    }
 	LineInfo info = lines[index];
 	if (info != null && (info.flags & BACKGROUND) != 0) {
 		return info.background;
@@ -740,10 +794,16 @@ Color getLineBackground(int index, Color defaultBackground) {
 	return defaultBackground;
 }
 Bullet getLineBullet (int index, Bullet defaultBullet) {
-	if (bullets == null) return defaultBullet;
-	if (bulletsIndices != null) return defaultBullet;
+    if (bullets == null) {
+        return defaultBullet;
+    }
+    if (bulletsIndices != null) {
+        return defaultBullet;
+    }
 	for (Bullet bullet : bullets) {
-		if (bullet.indexOf(index) != -1) return bullet;
+        if (bullet.indexOf(index) != -1) {
+            return bullet;
+        }
 	}
 	return defaultBullet;
 }
@@ -828,7 +888,9 @@ private StyleRange[] getStylesForLine(int lineIndex) {
 	return getStyleRanges(start, length, false);
 }
 int getLineIndent(int index, int defaultIndent) {
-	if (lines == null) return defaultIndent;
+    if (lines == null) {
+        return defaultIndent;
+    }
 	LineInfo info = lines[index];
 	if (info != null && (info.flags & INDENT) != 0) {
 		return info.indent;
@@ -836,7 +898,9 @@ int getLineIndent(int index, int defaultIndent) {
 	return defaultIndent;
 }
 int getLineVerticalIndent(int index) {
-	if (lines == null) return 0;
+    if (lines == null) {
+        return 0;
+    }
 	LineInfo info = lines[index];
 	if (info != null && (info.flags & VERTICAL_INDENT) != 0) {
 		return info.verticalIndent;
@@ -844,7 +908,9 @@ int getLineVerticalIndent(int index) {
 	return 0;
 }
 int getLineWrapIndent(int index, int defaultWrapIndent) {
-	if (lines == null) return defaultWrapIndent;
+    if (lines == null) {
+        return defaultWrapIndent;
+    }
 	LineInfo info = lines[index];
 	if (info != null && (info.flags & WRAP_INDENT) != 0) {
 		return info.wrapIndent;
@@ -852,7 +918,9 @@ int getLineWrapIndent(int index, int defaultWrapIndent) {
 	return defaultWrapIndent;
 }
 boolean getLineJustify(int index, boolean defaultJustify) {
-	if (lines == null) return defaultJustify;
+    if (lines == null) {
+        return defaultJustify;
+    }
 	LineInfo info = lines[index];
 	if (info != null && (info.flags & JUSTIFY) != 0) {
 		return info.justify;
@@ -860,7 +928,9 @@ boolean getLineJustify(int index, boolean defaultJustify) {
 	return defaultJustify;
 }
 int[] getLineTabStops(int index, int[] defaultTabStops) {
-	if (lines == null) return defaultTabStops;
+    if (lines == null) {
+        return defaultTabStops;
+    }
 	LineInfo info = lines[index];
 	if (info != null && (info.flags & TABSTOPS) != 0) {
 		return info.tabStops;
@@ -871,7 +941,9 @@ StyledTextLineSpacingProvider getLineSpacingProvider() {
 	return lineSpacingProvider;
 }
 int getRangeIndex(int offset, int low, int high) {
-	if (styleCount == 0) return 0;
+    if (styleCount == 0) {
+        return 0;
+    }
 	if (ranges != null)  {
 		while (high - low > 2) {
 			int index = ((high + low) / 2) / 2 * 2;
@@ -896,24 +968,38 @@ int getRangeIndex(int offset, int low, int high) {
 	return high;
 }
 int[] getRanges(int start, int length) {
-	if (length == 0) return null;
+    if (length == 0) {
+        return null;
+    }
 	int[] newRanges;
 	int end = start + length - 1;
 	if (ranges != null) {
 		int rangeCount = styleCount << 1;
 		int rangeStart = getRangeIndex(start, -1, rangeCount);
-		if (rangeStart >= rangeCount) return null;
-		if (ranges[rangeStart] > end) return null;
+        if (rangeStart >= rangeCount) {
+            return null;
+        }
+        if (ranges[rangeStart] > end) {
+            return null;
+        }
 		int rangeEnd = Math.min(rangeCount - 2, getRangeIndex(end, rangeStart - 1, rangeCount));
-		if (ranges[rangeEnd] > end) rangeEnd = Math.max(rangeStart, rangeEnd - 2);
+        if (ranges[rangeEnd] > end) {
+            rangeEnd = Math.max(rangeStart, rangeEnd - 2);
+        }
 		newRanges = new int[rangeEnd - rangeStart + 2];
 		System.arraycopy(ranges, rangeStart, newRanges, 0, newRanges.length);
 	} else {
 		int rangeStart = getRangeIndex(start, -1, styleCount);
-		if (rangeStart >= styleCount) return null;
-		if (styles[rangeStart].start > end) return null;
+        if (rangeStart >= styleCount) {
+            return null;
+        }
+        if (styles[rangeStart].start > end) {
+            return null;
+        }
 		int rangeEnd = Math.min(styleCount - 1, getRangeIndex(end, rangeStart - 1, styleCount));
-		if (styles[rangeEnd].start > end) rangeEnd = Math.max(rangeStart, rangeEnd - 1);
+        if (styles[rangeEnd].start > end) {
+            rangeEnd = Math.max(rangeStart, rangeEnd - 1);
+        }
 		newRanges = new int[(rangeEnd - rangeStart + 1) << 1];
 		for (int i = rangeStart, j = 0; i <= rangeEnd; i++, j += 2) {
 			StyleRange style = styles[i];
@@ -931,16 +1017,24 @@ int[] getRanges(int start, int length) {
 	return newRanges;
 }
 StyleRange[] getStyleRanges(int start, int length, boolean includeRanges) {
-	if (length == 0) return null;
+    if (length == 0) {
+        return null;
+    }
 	StyleRange[] newStyles;
 	int end = start + length - 1;
 	if (ranges != null) {
 		int rangeCount = styleCount << 1;
 		int rangeStart = getRangeIndex(start, -1, rangeCount);
-		if (rangeStart >= rangeCount) return null;
-		if (ranges[rangeStart] > end) return null;
+        if (rangeStart >= rangeCount) {
+            return null;
+        }
+        if (ranges[rangeStart] > end) {
+            return null;
+        }
 		int rangeEnd = Math.min(rangeCount - 2, getRangeIndex(end, rangeStart - 1, rangeCount));
-		if (ranges[rangeEnd] > end) rangeEnd = Math.max(rangeStart, rangeEnd - 2);
+        if (ranges[rangeEnd] > end) {
+            rangeEnd = Math.max(rangeStart, rangeEnd - 2);
+        }
 		newStyles = new StyleRange[((rangeEnd - rangeStart) >> 1) + 1];
 		if (includeRanges) {
 			for (int i = rangeStart, j = 0; i <= rangeEnd; i += 2, j++) {
@@ -953,10 +1047,16 @@ StyleRange[] getStyleRanges(int start, int length, boolean includeRanges) {
 		}
 	} else {
 		int rangeStart = getRangeIndex(start, -1, styleCount);
-		if (rangeStart >= styleCount) return null;
-		if (styles[rangeStart].start > end) return null;
+        if (rangeStart >= styleCount) {
+            return null;
+        }
+        if (styles[rangeStart].start > end) {
+            return null;
+        }
 		int rangeEnd = Math.min(styleCount - 1, getRangeIndex(end, rangeStart - 1, styleCount));
-		if (styles[rangeEnd].start > end) rangeEnd = Math.max(rangeStart, rangeEnd - 1);
+        if (styles[rangeEnd].start > end) {
+            rangeEnd = Math.max(rangeStart, rangeEnd - 1);
+        }
 		newStyles = new StyleRange[rangeEnd - rangeStart + 1];
 		System.arraycopy(styles, rangeStart, newStyles, 0, newStyles.length);
 	}
@@ -976,12 +1076,18 @@ StyleRange[] getStyleRanges(int start, int length, boolean includeRanges) {
 	return newStyles;
 }
 StyleRange getStyleRange(StyleRange style) {
-	if (style.underline && style.underlineStyle == SWT.UNDERLINE_LINK) hasLinks = true;
-	if (style.start == 0 && style.length == 0 && style.fontStyle == SWT.NORMAL) return style;
+    if (style.underline && style.underlineStyle == SWT.UNDERLINE_LINK) {
+        hasLinks = true;
+    }
+    if (style.start == 0 && style.length == 0 && style.fontStyle == SWT.NORMAL) {
+        return style;
+    }
 	StyleRange clone = (StyleRange)style.clone();
 	clone.start = clone.length = 0;
 	clone.fontStyle = SWT.NORMAL;
-	if (clone.font == null) clone.font = getFont(style.fontStyle);
+    if (clone.font == null) {
+        clone.font = getFont(style.fontStyle);
+    }
 	return clone;
 }
 TextLayout getTextLayout(int lineIndex) {
@@ -1071,14 +1177,18 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 						System.arraycopy(bulletsIndices, delta, bulletsIndices, 0, bulletsIndices.length - delta);
 					}
 					int startIndex = Math.max(0, bullets.length - delta);
-					for (int i = startIndex; i < bullets.length; i++) bullets[i] = null;
+                    for (int i = startIndex; i < bullets.length; i++) {
+                        bullets[i] = null;
+                    }
 				} else {
 					if (-delta < bullets.length) {
 						System.arraycopy(bullets, 0, bullets, -delta, bullets.length + delta);
 						System.arraycopy(bulletsIndices, 0, bulletsIndices, -delta, bulletsIndices.length + delta);
 					}
 					int endIndex = Math.min(bullets.length, -delta);
-					for (int i = 0; i < endIndex; i++) bullets[i] = null;
+                    for (int i = 0; i < endIndex; i++) {
+                        bullets[i] = null;
+                    }
 				}
 			}
 			this.topIndex = topIndex;
@@ -1099,7 +1209,9 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 			}
 		}
 	}
-	if (layout == null) layout = new TextLayout(device);
+    if (layout == null) {
+        layout = new TextLayout(device);
+    }
 	String line = content.getLine(lineIndex);
 	int lineOffset = content.getOffsetAtLine(lineIndex);
 	int[] segments = null;
@@ -1132,7 +1244,9 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 			textDirection = orientation == SWT.RIGHT_TO_LEFT ? SWT.LEFT_TO_RIGHT : SWT.RIGHT_TO_LEFT;
 		}
 		justify = styledText.justify;
-		if (styledText.tabs != null) tabs = styledText.tabs;
+        if (styledText.tabs != null) {
+            tabs = styledText.tabs;
+        }
 	}
 	if (event != null) {
 		indent = event.indent;
@@ -1143,7 +1257,9 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 		bullet = event.bullet;
 		ranges = event.ranges;
 		styles = event.styles;
-		if (event.tabStops != null) tabs = event.tabStops;
+        if (event.tabStops != null) {
+            tabs = event.tabStops;
+        }
 		if (styles != null) {
 			styleCount = styles.length;
 			if (styledText.isFixedLineHeight()) {
@@ -1170,14 +1286,30 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 		if (lines != null) {
 			LineInfo info = lines[lineIndex];
 			if (info != null) {
-				if ((info.flags & INDENT) != 0) indent = info.indent;
-				if ((info.flags & VERTICAL_INDENT) != 0) verticalIndent = info.verticalIndent;
-				if ((info.flags & WRAP_INDENT) != 0) wrapIndent = info.wrapIndent;
-				if ((info.flags & ALIGNMENT) != 0) alignment = info.alignment;
-				if ((info.flags & JUSTIFY) != 0) justify = info.justify;
-				if ((info.flags & SEGMENTS) != 0) segments = info.segments;
-				if ((info.flags & SEGMENT_CHARS) != 0) segmentChars = info.segmentsChars;
-				if ((info.flags & TABSTOPS) != 0) tabs = info.tabStops;
+                if ((info.flags & INDENT) != 0) {
+                    indent = info.indent;
+                }
+                if ((info.flags & VERTICAL_INDENT) != 0) {
+                    verticalIndent = info.verticalIndent;
+                }
+                if ((info.flags & WRAP_INDENT) != 0) {
+                    wrapIndent = info.wrapIndent;
+                }
+                if ((info.flags & ALIGNMENT) != 0) {
+                    alignment = info.alignment;
+                }
+                if ((info.flags & JUSTIFY) != 0) {
+                    justify = info.justify;
+                }
+                if ((info.flags & SEGMENTS) != 0) {
+                    segments = info.segments;
+                }
+                if ((info.flags & SEGMENT_CHARS) != 0) {
+                    segmentChars = info.segmentsChars;
+                }
+                if ((info.flags & TABSTOPS) != 0) {
+                    tabs = info.tabStops;
+                }
 			}
 		}
 		if (bulletsIndices != null) {
@@ -1227,7 +1359,9 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 					start = ranges[i] - lineOffset;
 					end = Math.min(length, start + ranges[i + 1]);
 				}
-				if (start >= length) break;
+                if (start >= length) {
+                    break;
+                }
 				if (lastOffset < start) {
 					styleEntries.add(new StyleEntry(null, lastOffset, start - 1));
 				}
@@ -1252,7 +1386,9 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 					start = styles[i].start - lineOffset;
 					end = Math.min(length, start + styles[i].length);
 				}
-				if (start >= length) break;
+                if (start >= length) {
+                    break;
+                }
 				if (lastOffset < start) {
 					styleEntries.add(new StyleEntry(null, lastOffset, start - 1));
 				}
@@ -1269,7 +1405,9 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 			}
 		}
 	}
-	if (lastOffset < length) styleEntries.add(new StyleEntry(null, lastOffset, length));
+    if (lastOffset < length) {
+        styleEntries.add(new StyleEntry(null, lastOffset, length));
+    }
 
 	layout.setFont(regularFont);
 	layout.setAscent(ascent);
@@ -1311,17 +1449,29 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 							int end = imeRanges[i*2+1] - lineOffset;
 							TextStyle imeStyle = imeStyles[i], userStyle;
 							for (int j = start; j <= end; j++) {
-								if (!(0 <= j && j < length)) break;
+                                if (!(0 <= j && j < length)) {
+                                    break;
+                                }
 								userStyle = layout.getStyle(cap(layout, j));
-								if (userStyle == null && j > 0) userStyle = layout.getStyle(cap(layout, j - 1));
-								if (userStyle == null && j + 1 < length) userStyle = layout.getStyle(cap(layout, j + 1));
+                                if (userStyle == null && j > 0) {
+                                    userStyle = layout.getStyle(cap(layout, j - 1));
+                                }
+                                if (userStyle == null && j + 1 < length) {
+                                    userStyle = layout.getStyle(cap(layout, j + 1));
+                                }
 								if (userStyle == null) {
 									layout.setStyle(imeStyle, j, j);
 								} else {
 									TextStyle newStyle = new TextStyle(imeStyle);
-									if (newStyle.font == null) newStyle.font = userStyle.font;
-									if (newStyle.foreground == null) newStyle.foreground = userStyle.foreground;
-									if (newStyle.background == null) newStyle.background = userStyle.background;
+                                    if (newStyle.font == null) {
+                                        newStyle.font = userStyle.font;
+                                    }
+                                    if (newStyle.foreground == null) {
+                                        newStyle.foreground = userStyle.foreground;
+                                    }
+                                    if (newStyle.background == null) {
+                                        newStyle.background = userStyle.background;
+                                    }
 									layout.setStyle(newStyle, j, j);
 								}
 							}
@@ -1331,8 +1481,12 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 						int end = start + compositionLength - 1;
 						TextStyle userStyle = layout.getStyle(cap(layout, start));
 						if (userStyle == null) {
-							if (start > 0) userStyle = layout.getStyle(cap(layout, start - 1));
-							if (userStyle == null && end + 1 < length) userStyle = layout.getStyle(cap(layout, end + 1));
+                            if (start > 0) {
+                                userStyle = layout.getStyle(cap(layout, start - 1));
+                            }
+                            if (userStyle == null && end + 1 < length) {
+                                userStyle = layout.getStyle(cap(layout, end + 1));
+                            }
 							if (userStyle != null) {
 								TextStyle newStyle = new TextStyle();
 								newStyle.font = userStyle.font;
@@ -1383,7 +1537,9 @@ TextLayout getTextLayout(int lineIndex, int orientation, int width, int lineSpac
 				}
 				styledText.scrollVertical(newVerticalScrollOffset - styledText.verticalScrollOffset, true);
 			}
-			if (styledText.isBidiCaret()) styledText.createCaretBitmaps();
+            if (styledText.isBidiCaret()) {
+                styledText.createCaretBitmaps();
+            }
 			styledText.caretDirection = SWT.NULL;
 			styledText.setCaretLocations();
 			styledText.redraw();
@@ -1397,7 +1553,9 @@ int getWidth() {
 void reset() {
 	if (layouts != null) {
 		for (TextLayout layout : layouts) {
-			if (layout != null) layout.dispose();
+            if (layout != null) {
+                layout.dispose();
+            }
 		}
 		layouts = null;
 	}
@@ -1415,34 +1573,33 @@ void reset() {
 }
 void reset(int startLine, int lineCount) {
 	int endLine = startLine + lineCount;
-	if (startLine < 0 || endLine > lineSizes.length) return;
-	if (lineCount <= 0) return;
-	int resetLineCount = 0;
-	for (int i = startLine; i < endLine && i < this.lineCount; i++) {
-		resetLineCount++;
-		getLineSize(i).resetSize();
+    if (startLine < 0 || endLine > lineSizes.length) {
+        return;
+    }
+	SortedSet<Integer> lines = new TreeSet<>();
+	for (int i = startLine; i < endLine; i++) {
+		lines.add(Integer.valueOf(i));
 	}
-	resetLines(resetLineCount, startLine <= maxWidthLineIndex && maxWidthLineIndex < endLine);
+	reset(lines);
 }
 void reset(Set<Integer> lines) {
-	if (lines == null || lines.isEmpty()) return;
+    if (lines == null || lines.isEmpty()) {
+        return;
+    }
 	int resetLineCount = 0;
 	for (Integer line : lines) {
-		if (line >= 0 && line < lineCount) {
+		if (line >= 0 || line < lineCount) {
 			resetLineCount++;
 			getLineSize(line.intValue()).resetSize();
 		}
 	}
-	resetLines(resetLineCount, lines.contains(Integer.valueOf(maxWidthLineIndex)));
-}
-private void resetLines(int resetLineCount, boolean maxWidthLineReset) {
 	if (linesInAverageLineHeight > resetLineCount) {
 		linesInAverageLineHeight -= resetLineCount;
 	} else {
 		linesInAverageLineHeight = 0;
 		averageLineHeight = 0.0f;
 	}
-	if (maxWidthLineReset) {
+	if (lines.contains(Integer.valueOf(maxWidthLineIndex))) {
 		maxWidth = 0;
 		maxWidthLineIndex = -1;
 		if (resetLineCount != this.lineCount) {
@@ -1480,9 +1637,15 @@ void setFont(Font font, int tabs) {
 	layout.setFont(regularFont);
 	tabLength = tabs;
 	if (font != null) {
-		if (boldFont != null) boldFont.dispose();
-		if (italicFont != null) italicFont.dispose();
-		if (boldItalicFont != null) boldItalicFont.dispose();
+        if (boldFont != null) {
+            boldFont.dispose();
+        }
+        if (italicFont != null) {
+            italicFont.dispose();
+        }
+        if (boldItalicFont != null) {
+            boldItalicFont.dispose();
+        }
 		boldFont = italicFont = boldItalicFont = null;
 		regularFont = font;
 		layout.setText("    ");
@@ -1517,7 +1680,9 @@ void setFont(Font font, int tabs) {
 	}
 }
 void setLineAlignment(int startLine, int count, int alignment) {
-	if (lines == null) lines = new LineInfo[lineCount];
+    if (lines == null) {
+        lines = new LineInfo[lineCount];
+    }
 	for (int i = startLine; i < startLine + count; i++) {
 		if (lines[i] == null) {
 			lines[i] = new LineInfo();
@@ -1527,7 +1692,9 @@ void setLineAlignment(int startLine, int count, int alignment) {
 	}
 }
 void setLineBackground(int startLine, int count, Color background) {
-	if (lines == null) lines = new LineInfo[lineCount];
+    if (lines == null) {
+        lines = new LineInfo[lineCount];
+    }
 	for (int i = startLine; i < startLine + count; i++) {
 		if (lines[i] == null) {
 			lines[i] = new LineInfo();
@@ -1542,19 +1709,25 @@ void setLineBullet(int startLine, int count, Bullet bullet) {
 		bullets = null;
 	}
 	if (bullets == null) {
-		if (bullet == null) return;
+        if (bullet == null) {
+            return;
+        }
 		bullets = new Bullet[1];
 		bullets[0] = bullet;
 	}
 	int index = 0;
 	while (index < bullets.length) {
-		if (bullet == bullets[index]) break;
+        if (bullet == bullets[index]) {
+            break;
+        }
 		index++;
 	}
 	if (bullet != null) {
 		if (index == bullets.length) {
-			bullets = Arrays.copyOf(bullets, bullets.length + 1);
-			bullets[index] = bullet;
+			Bullet[] newBulletsList = new Bullet[bullets.length + 1];
+			System.arraycopy(bullets, 0, newBulletsList, 0, bullets.length);
+			newBulletsList[index] = bullet;
+			bullets = newBulletsList;
 		}
 		bullet.addIndices(startLine, count);
 	} else {
@@ -1564,7 +1737,9 @@ void setLineBullet(int startLine, int count, Bullet bullet) {
 	}
 }
 void setLineIndent(int startLine, int count, int indent) {
-	if (lines == null) lines = new LineInfo[lineCount];
+    if (lines == null) {
+        lines = new LineInfo[lineCount];
+    }
 	for (int i = startLine; i < startLine + count; i++) {
 		if (lines[i] == null) {
 			lines[i] = new LineInfo();
@@ -1574,8 +1749,9 @@ void setLineIndent(int startLine, int count, int indent) {
 	}
 }
 void setLineVerticalIndent(int lineIndex, int verticalLineIndent) {
-	if (lines == null)
-		lines = new LineInfo[lineCount];
+    if (lines == null) {
+        lines = new LineInfo[lineCount];
+    }
 	if (lines[lineIndex] == null) {
 		lines[lineIndex] = new LineInfo();
 	}
@@ -1588,7 +1764,9 @@ void setLineVerticalIndent(int lineIndex, int verticalLineIndent) {
 	}
 }
 void setLineWrapIndent(int startLine, int count, int wrapIndent) {
-	if (lines == null) lines = new LineInfo[lineCount];
+    if (lines == null) {
+        lines = new LineInfo[lineCount];
+    }
 	for (int i = startLine; i < startLine + count; i++) {
 		if (lines[i] == null) {
 			lines[i] = new LineInfo();
@@ -1598,7 +1776,9 @@ void setLineWrapIndent(int startLine, int count, int wrapIndent) {
 	}
 }
 void setLineJustify(int startLine, int count, boolean justify) {
-	if (lines == null) lines = new LineInfo[lineCount];
+    if (lines == null) {
+        lines = new LineInfo[lineCount];
+    }
 	for (int i = startLine; i < startLine + count; i++) {
 		if (lines[i] == null) {
 			lines[i] = new LineInfo();
@@ -1608,7 +1788,9 @@ void setLineJustify(int startLine, int count, boolean justify) {
 	}
 }
 void setLineSegments(int startLine, int count, int[] segments) {
-	if (lines == null) lines = new LineInfo[lineCount];
+    if (lines == null) {
+        lines = new LineInfo[lineCount];
+    }
 	for (int i = startLine; i < startLine + count; i++) {
 		if (lines[i] == null) {
 			lines[i] = new LineInfo();
@@ -1618,7 +1800,9 @@ void setLineSegments(int startLine, int count, int[] segments) {
 	}
 }
 void setLineSegmentChars(int startLine, int count, char[] segmentChars) {
-	if (lines == null) lines = new LineInfo[lineCount];
+    if (lines == null) {
+        lines = new LineInfo[lineCount];
+    }
 	for (int i = startLine; i < startLine + count; i++) {
 		if (lines[i] == null) {
 			lines[i] = new LineInfo();
@@ -1628,7 +1812,9 @@ void setLineSegmentChars(int startLine, int count, char[] segmentChars) {
 	}
 }
 void setLineTabStops(int startLine, int count, int[] tabStops) {
-	if (lines == null) lines = new LineInfo[lineCount];
+    if (lines == null) {
+        lines = new LineInfo[lineCount];
+    }
 	for (int i = startLine; i < startLine + count; i++) {
 		if (lines[i] == null) {
 			lines[i] = new LineInfo();
@@ -1652,19 +1838,25 @@ void setStyleRanges (int[] newRanges, StyleRange[] newStyles) {
 	if (newRanges == null && COMPACT_STYLES) {
 		newRanges = new int[newStyles.length << 1];
 		StyleRange[] tmpStyles = new StyleRange[newStyles.length];
-		if (stylesSet == null) stylesSet = new StyleRange[4];
+        if (stylesSet == null) {
+            stylesSet = new StyleRange[4];
+        }
 		for (int i = 0, j = 0; i < newStyles.length; i++) {
 			StyleRange newStyle = newStyles[i];
 			newRanges[j++] = newStyle.start;
 			newRanges[j++] = newStyle.length;
 			int index = 0;
 			while (index < stylesSetCount) {
-				if (stylesSet[index].similarTo(newStyle)) break;
+                if (stylesSet[index].similarTo(newStyle)) {
+                    break;
+                }
 				index++;
 			}
 			if (index == stylesSetCount) {
 				if (stylesSetCount == stylesSet.length) {
-					stylesSet = Arrays.copyOf(stylesSet, stylesSetCount + 4);
+					StyleRange[] tmpStylesSet = new StyleRange[stylesSetCount + 4];
+					System.arraycopy(stylesSet, 0, tmpStylesSet, 0, stylesSetCount);
+					stylesSet = tmpStylesSet;
 				}
 				stylesSet[stylesSetCount++] = newStyle;
 			}
@@ -1717,11 +1909,17 @@ void setStyleRanges (int[] newRanges, StyleRange[] newStyles) {
 		for (int i = 0; i < newRanges.length; i += 2) {
 			int newStart = newRanges[i];
 			int newEnd = newStart + newRanges[i + 1];
-			if (newStart == newEnd) continue;
+            if (newStart == newEnd) {
+                continue;
+            }
 			int modifyLast = 0, mergeCount = 0;
 			while (modifyEnd < rangeCount) {
-				if (newStart >= ranges[modifyStart] + ranges[modifyStart + 1]) modifyStart += 2;
-				if (ranges[modifyEnd] + ranges[modifyEnd + 1] > newEnd) break;
+                if (newStart >= ranges[modifyStart] + ranges[modifyStart + 1]) {
+                    modifyStart += 2;
+                }
+                if (ranges[modifyEnd] + ranges[modifyEnd + 1] > newEnd) {
+                    break;
+                }
 				modifyEnd += 2;
 			}
 			if (ranges[modifyStart] < newStart && newStart < ranges[modifyStart] + ranges[modifyStart + 1]) {
@@ -1764,11 +1962,17 @@ void setStyleRanges (int[] newRanges, StyleRange[] newStyles) {
 			StyleRange style;
 			int newStart = newStyle.start;
 			int newEnd = newStart + newStyle.length;
-			if (newStart == newEnd) continue;
+            if (newStart == newEnd) {
+                continue;
+            }
 			int modifyLast = 0, mergeCount = 0;
 			while (modifyEnd < styleCount) {
-				if (newStart >= styles[modifyStart].start + styles[modifyStart].length) modifyStart++;
-				if (styles[modifyEnd].start + styles[modifyEnd].length > newEnd) break;
+                if (newStart >= styles[modifyStart].start + styles[modifyStart].length) {
+                    modifyStart++;
+                }
+                if (styles[modifyEnd].start + styles[modifyEnd].length > newEnd) {
+                    break;
+                }
 				modifyEnd++;
 			}
 			style = styles[modifyStart];
@@ -1791,24 +1995,6 @@ void setStyleRanges (int[] newRanges, StyleRange[] newStyles) {
 		}
 	}
 }
-private void shiftLayout(int i, int delta) {
-	if (0 <= i && i < layouts.length) {
-		int endIndex = i + delta;
-		if (0 <= endIndex && endIndex < layouts.length) {
-			layouts[endIndex] = layouts[i];
-			layouts[i] = null;
-			if (bullets != null && bulletsIndices != null) {
-				bullets[endIndex] = bullets[i];
-				bulletsIndices[endIndex] = bulletsIndices[i];
-				bullets[i] = null;
-			}
-		} else {
-			if (layouts[i] != null) layouts[i].dispose();
-			layouts[i] = null;
-			if (bullets != null && bulletsIndices != null) bullets[i] = null;
-		}
-	}
-}
 void textChanging(TextChangingEvent event) {
 	int start = event.start;
 	int newCharCount = event.newCharCount, replaceCharCount = event.replaceCharCount;
@@ -1817,7 +2003,9 @@ void textChanging(TextChangingEvent event) {
 	updateRanges(start, replaceCharCount, newCharCount);
 
 	int startLine = content.getLineAtOffset(start);
-	if (replaceCharCount == content.getCharCount()) lines = null;
+    if (replaceCharCount == content.getCharCount()) {
+        lines = null;
+    }
 	if (replaceLineCount == lineCount) {
 		lineCount = newLineCount;
 		lineSizes = new LineSizeInfo[lineCount];
@@ -1856,24 +2044,68 @@ void textChanging(TextChangingEvent event) {
 			int layoutEndLine = layoutStartLine + replaceLineCount + 1;
 			for (int i = layoutStartLine; i < layoutEndLine; i++) {
 				if (0 <= i && i < layouts.length) {
-					if (layouts[i] != null) layouts[i].dispose();
+                    if (layouts[i] != null) {
+                        layouts[i].dispose();
+                    }
 					layouts[i] = null;
-					if (bullets != null && bulletsIndices != null) bullets[i] = null;
+                    if (bullets != null && bulletsIndices != null) {
+                        bullets[i] = null;
+                    }
 				}
 			}
 			if (delta > 0) {
 				for (int i = layouts.length - 1; i >= layoutEndLine; i--) {
-					shiftLayout(i, delta);
+					if (0 <= i && i < layouts.length) {
+						endIndex = i + delta;
+						if (0 <= endIndex && endIndex < layouts.length) {
+							layouts[endIndex] = layouts[i];
+							layouts[i] = null;
+							if (bullets != null && bulletsIndices != null) {
+								bullets[endIndex] = bullets[i];
+								bulletsIndices[endIndex] = bulletsIndices[i];
+								bullets[i] = null;
+							}
+						} else {
+                            if (layouts[i] != null) {
+                                layouts[i].dispose();
+                            }
+							layouts[i] = null;
+                            if (bullets != null && bulletsIndices != null) {
+                                bullets[i] = null;
+                            }
+						}
+					}
 				}
 			} else if (delta < 0) {
 				for (int i = layoutEndLine; i < layouts.length; i++) {
-					shiftLayout(i, delta);
+					if (0 <= i && i < layouts.length) {
+						endIndex = i + delta;
+						if (0 <= endIndex && endIndex < layouts.length) {
+							layouts[endIndex] = layouts[i];
+							layouts[i] = null;
+							if (bullets != null && bulletsIndices != null) {
+								bullets[endIndex] = bullets[i];
+								bulletsIndices[endIndex] = bulletsIndices[i];
+								bullets[i] = null;
+							}
+						} else {
+                            if (layouts[i] != null) {
+                                layouts[i].dispose();
+                            }
+							layouts[i] = null;
+                            if (bullets != null && bulletsIndices != null) {
+                                bullets[i] = null;
+                            }
+						}
+					}
 				}
 			}
 		}
 		if (replaceLineCount != 0 || newLineCount != 0) {
 			int startLineOffset = content.getOffsetAtLine(startLine);
-			if (startLineOffset != start) startLine++;
+            if (startLineOffset != start) {
+                startLine++;
+            }
 			updateBullets(startLine, replaceLineCount, newLineCount, true);
 			if (lines != null) {
 				startIndex = startLine + replaceLineCount;
@@ -1902,8 +2134,12 @@ void textChanging(TextChangingEvent event) {
 	}
 }
 void updateBullets(int startLine, int replaceLineCount, int newLineCount, boolean update) {
-	if (bullets == null) return;
-	if (bulletsIndices != null) return;
+    if (bullets == null) {
+        return;
+    }
+    if (bulletsIndices != null) {
+        return;
+    }
 	for (Bullet bullet : bullets) {
 		int[] lines = bullet.removeIndices(startLine, replaceLineCount, newLineCount, update);
 		if (lines != null) {
@@ -1919,7 +2155,9 @@ void updateBullets(int startLine, int replaceLineCount, int newLineCount, boolea
 	}
 	int removed = 0;
 	for (Bullet bullet : bullets) {
-		if (bullet.size() == 0) removed++;
+        if (bullet.size() == 0) {
+            removed++;
+        }
 	}
 	if (removed > 0) {
 		if (removed == bullets.length) {
@@ -1928,18 +2166,24 @@ void updateBullets(int startLine, int replaceLineCount, int newLineCount, boolea
 			Bullet[] newBulletsList = new Bullet[bullets.length - removed];
 			for (int i = 0, j = 0; i < bullets.length; i++) {
 				Bullet bullet = bullets[i];
-				if (bullet.size() > 0) newBulletsList[j++] = bullet;
+                if (bullet.size() > 0) {
+                    newBulletsList[j++] = bullet;
+                }
 			}
 			bullets = newBulletsList;
 		}
 	}
 }
 void updateRanges(int start, int replaceCharCount, int newCharCount) {
-	if (styleCount == 0 || (replaceCharCount == 0 && newCharCount == 0)) return;
+    if (styleCount == 0 || (replaceCharCount == 0 && newCharCount == 0)) {
+        return;
+    }
 	if (ranges != null) {
 		int rangeCount = styleCount << 1;
 		int modifyStart = getRangeIndex(start, -1, rangeCount);
-		if (modifyStart == rangeCount) return;
+        if (modifyStart == rangeCount) {
+            return;
+        }
 		int end = start + replaceCharCount;
 		int modifyEnd = getRangeIndex(end, modifyStart - 1, rangeCount);
 		int offset = newCharCount - replaceCharCount;
@@ -1991,7 +2235,9 @@ void updateRanges(int start, int replaceCharCount, int newCharCount) {
 		}
 	} else {
 		int modifyStart = getRangeIndex(start, -1, styleCount);
-		if (modifyStart == styleCount) return;
+        if (modifyStart == styleCount) {
+            return;
+        }
 		int end = start + replaceCharCount;
 		int modifyEnd = getRangeIndex(end, modifyStart - 1, styleCount);
 		int offset = newCharCount - replaceCharCount;

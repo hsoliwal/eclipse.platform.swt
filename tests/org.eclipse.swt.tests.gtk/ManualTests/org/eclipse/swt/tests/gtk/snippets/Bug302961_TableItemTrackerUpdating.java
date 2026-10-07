@@ -47,7 +47,9 @@ public class Bug302961_TableItemTrackerUpdating {
 			tracker.open();
 		});
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

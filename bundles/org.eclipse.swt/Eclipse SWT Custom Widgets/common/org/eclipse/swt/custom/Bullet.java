@@ -13,8 +13,6 @@
  *******************************************************************************/
 package org.eclipse.swt.custom;
 
-import java.util.Arrays;
-
 import org.eclipse.swt.*;
 
 /**
@@ -88,8 +86,12 @@ public Bullet(StyleRange style) {
  * </ul>
  */
 public Bullet(int type, StyleRange style) {
-	if (style == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (style.metrics == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (style == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (style.metrics == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.type = type;
 	this.style = style;
 }
@@ -97,16 +99,22 @@ void addIndices (int startLine, int lineCount) {
 	if (linesIndices == null) {
 		linesIndices = new int[lineCount];
 		count = lineCount;
-		for (int i = 0; i < lineCount; i++) linesIndices[i] = startLine + i;
+        for (int i = 0; i < lineCount; i++) {
+            linesIndices[i] = startLine + i;
+        }
 	} else {
 		int modifyStart = 0;
 		while (modifyStart < count) {
-			if (startLine <= linesIndices[modifyStart]) break;
+            if (startLine <= linesIndices[modifyStart]) {
+                break;
+            }
 			modifyStart++;
 		}
 		int modifyEnd = modifyStart;
 		while (modifyEnd < count) {
-			if (startLine + lineCount <= linesIndices[modifyEnd]) break;
+            if (startLine + lineCount <= linesIndices[modifyEnd]) {
+                break;
+            }
 			modifyEnd++;
 		}
 		int newSize = modifyStart + lineCount + count - modifyEnd;
@@ -116,22 +124,31 @@ void addIndices (int startLine, int lineCount) {
 			linesIndices = newLinesIndices;
 		}
 		System.arraycopy(linesIndices, modifyEnd, linesIndices, modifyStart + lineCount, count - modifyEnd);
-		for (int i = 0; i < lineCount; i++) linesIndices[modifyStart + i] = startLine + i;
+        for (int i = 0; i < lineCount; i++) {
+            linesIndices[modifyStart + i] = startLine + i;
+        }
 		count = newSize;
 	}
 }
 int indexOf (int lineIndex) {
-	if (count == 0) return -1;
-	int index = Arrays.binarySearch(linesIndices, 0, count, lineIndex);
-	return index >= 0 ? index : -1;
+	for (int i = 0; i < count; i++) {
+        if (linesIndices[i] == lineIndex) {
+            return i;
+        }
+	}
+	return -1;
 }
 @Override
 public int hashCode() {
 	return style.hashCode() ^ type;
 }
 int[] removeIndices (int startLine, int replaceLineCount, int newLineCount, boolean update) {
-	if (count == 0) return null;
-	if (startLine > linesIndices[count - 1]) return null;
+    if (count == 0) {
+        return null;
+    }
+    if (startLine > linesIndices[count - 1]) {
+        return null;
+    }
 	int endLine = startLine + replaceLineCount;
 	int delta = newLineCount - replaceLineCount;
 	for (int i = 0; i < count; i++) {
@@ -139,11 +156,15 @@ int[] removeIndices (int startLine, int replaceLineCount, int newLineCount, bool
 		if (startLine <= index) {
 			int j = i;
 			while (j < count) {
-				if (linesIndices[j] >= endLine) break;
+                if (linesIndices[j] >= endLine) {
+                    break;
+                }
 				j++;
 			}
 			if (update) {
-				for (int k = j; k < count; k++) linesIndices[k] += delta;
+                for (int k = j; k < count; k++) {
+                    linesIndices[k] += delta;
+                }
 			}
 			int[] redrawLines = new int[count - j];
 			System.arraycopy(linesIndices, j, redrawLines, 0, count - j);
@@ -152,7 +173,9 @@ int[] removeIndices (int startLine, int replaceLineCount, int newLineCount, bool
 			return redrawLines;
 		}
 	}
-	for (int i = 0; i < count; i++) linesIndices[i] += delta;
+    for (int i = 0; i < count; i++) {
+        linesIndices[i] += delta;
+    }
 	return null;
 }
 int size() {

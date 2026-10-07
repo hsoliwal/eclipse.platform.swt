@@ -37,8 +37,9 @@ public class Bug221955_BackgroundModeQT {
 		shell.pack();
 		shell.open();
 		while( !shell.isDisposed() ) {
-			if( !display.readAndDispatch() )
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

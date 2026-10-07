@@ -46,7 +46,9 @@ public static void main (String [] args) {
 	toolBar.pack ();
 	shell.open ();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	image.dispose ();
 	display.dispose ();

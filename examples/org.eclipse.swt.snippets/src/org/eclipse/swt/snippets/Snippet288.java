@@ -68,7 +68,9 @@ public class Snippet288 {
 			startAnimationThreads();
 
 			while (!shell.isDisposed()) {
-				if (!display.readAndDispatch ()) display.sleep ();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 
 			for (int i = 0; i < numToolBarItems; i++) {
@@ -146,8 +148,9 @@ public class Snippet288 {
 							imageDataIndex = (imageDataIndex + 1) % imageDataArray[i].length;
 							if (!display.isDisposed()) {
 								display.asyncExec(() -> {
-									if (!item[i].isDisposed())
-										item[i].setImage(image[i][imageDataIndex]);
+                                    if (!item[i].isDisposed()) {
+                                        item[i].setImage(image[i][imageDataIndex]);
+                                    }
 								});
 							} else {
 								break;
@@ -156,14 +159,20 @@ public class Snippet288 {
 							/* Sleep for the specified delay time (adding commonly-used slow-down fudge factors). */
 							try {
 								int ms = imageDataArray[i][imageDataIndex].delayTime * 10;
-								if (ms < 20) ms += 30;
-								if (ms < 30) ms += 10;
+                                if (ms < 20) {
+                                    ms += 30;
+                                }
+                                if (ms < 30) {
+                                    ms += 10;
+                                }
 								Thread.sleep(ms);
 							} catch (InterruptedException e) {
 							}
 
-							/* If we have just drawn the last image, decrement the repeat count and start again. */
-							if (imageDataIndex == imageDataArray[i].length - 1) repeatCount--;
+                            /* If we have just drawn the last image, decrement the repeat count and start again. */
+                            if (imageDataIndex == imageDataArray[i].length - 1) {
+                                repeatCount--;
+                            }
 						}
 					} catch (SWTException ex) {
 						System.out.println("There was an error animating the GIF");

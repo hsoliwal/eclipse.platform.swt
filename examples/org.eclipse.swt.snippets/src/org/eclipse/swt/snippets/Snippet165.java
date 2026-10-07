@@ -80,7 +80,9 @@ public static void main (String [] args) {
 	shell.setSize(300, 300);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	image.dispose();
 	display.dispose ();

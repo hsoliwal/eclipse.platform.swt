@@ -100,14 +100,16 @@ void validate(PngFileReadState readState, PngIhdrChunk headerChunk) {
 
 	super.validate(readState, headerChunk);
 
-	// Palettes cannot be included in grayscale images.
-	//
-	// Note: just ignore the palette.
+    // Palettes cannot be included in grayscale images.
+    //
+    // Note: just ignore the palette.
 //	if (!headerChunk.getCanHavePalette()) SWT.error(SWT.ERROR_INVALID_IMAGE);
 
-	// Palette chunks' data fields must be event multiples
-	// of 3. Each 3-byte group represents an RGB value.
-	if (getLength() % 3 != 0) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    // Palette chunks' data fields must be event multiples
+    // of 3. Each 3-byte group represents an RGB value.
+    if (getLength() % 3 != 0) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 
 	// Palettes cannot have more entries than 2^bitDepth
 	// where bitDepth is the bit depth of the image given
@@ -116,8 +118,10 @@ void validate(PngFileReadState readState, PngIhdrChunk headerChunk) {
 		SWT.error(SWT.ERROR_INVALID_IMAGE);
 	}
 
-	// Palettes cannot have more than 256 entries.
-	if (256 < paletteSize) SWT.error(SWT.ERROR_INVALID_IMAGE);
+    // Palettes cannot have more than 256 entries.
+    if (256 < paletteSize) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 }
 
 @Override

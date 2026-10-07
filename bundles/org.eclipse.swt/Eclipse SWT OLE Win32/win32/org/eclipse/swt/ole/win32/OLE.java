@@ -295,59 +295,81 @@ public static void error (int code, int hresult) {
 		/* SWT Errors (non-fatal) */
 		case ERROR_CANNOT_CREATE_FILE : {
 			String msg = ERROR_CANNOT_CREATE_FILE_MSG;
-			if (hresult != 0) msg += " result = "+hresult;//$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_CANNOT_CREATE_OBJECT : {
 			String msg = ERROR_CANNOT_CREATE_OBJECT_MSG;
-			if (hresult != 0) msg += " result = "+hresult;//$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_CANNOT_OPEN_FILE : {
 			String msg = ERROR_CANNOT_OPEN_FILE_MSG;
-			if (hresult != 0) msg += " result = "+hresult;//$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_INTERFACE_NOT_FOUND : {
 			String msg = ERROR_INTERFACE_NOT_FOUND_MSG;
-			if (hresult != 0) msg += " result = "+hresult;//$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_INVALID_CLASSID : {
 			String msg = ERROR_INVALID_CLASSID_MSG;
-			if (hresult != 0) msg += " result = "+hresult;//$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_CANNOT_ACCESS_CLASSFACTORY : {
 			String msg = ERROR_CANNOT_ACCESS_CLASSFACTORY_MSG;
-			if (hresult != 0) msg += " result = "+hresult;//$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_CANNOT_CREATE_LICENSED_OBJECT : {
 			String msg = ERROR_CANNOT_CREATE_LICENSED_OBJECT_MSG;
-			if (hresult != 0) msg += " result = "+hresult;//$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_CANNOT_CHANGE_VARIANT_TYPE : {
 			String msg = ERROR_CANNOT_CHANGE_VARIANT_TYPE_MSG;
-			if (hresult != 0) msg += " result = "+hresult;//$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_APPLICATION_NOT_FOUND : {
 			String msg = ERROR_APPLICATION_NOT_FOUND_MSG;
-			if (hresult != 0) msg += " result = "+hresult;//$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 		case ERROR_ACTION_NOT_PERFORMED : {
 			String msg = ERROR_ACTION_NOT_PERFORMED_MSG;
-			if (hresult != 0) msg += " result = "+hresult;//$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTException (code, msg);
 		}
 
 		/* OS Failure/Limit (fatal, may occur only on some platforms) */
 		case ERROR_OUT_OF_MEMORY : {
 			String msg = ERROR_ACTION_NOT_PERFORMED_MSG;
-			if (hresult != 0) msg += " result = "+hresult; //$NON-NLS-1$
+            if (hresult != 0) {
+                msg += " result = " + hresult; //$NON-NLS-1$
+            }
 			throw new SWTError (code, msg);
 		}
 	}
@@ -369,23 +391,35 @@ public static void error (int code, int hresult) {
  *	</ul>
  */
 public static String findProgramID (String extension) {
-	if (extension == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (extension.length () == 0) return ""; //$NON-NLS-1$
+    if (extension == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (extension.length() == 0) {
+        return ""; //$NON-NLS-1$
+    }
 
-	if (extension.charAt (0) != '.') extension = "." + extension; //$NON-NLS-1$
+    if (extension.charAt(0) != '.') {
+        extension = "." + extension; //$NON-NLS-1$
+    }
 
 	TCHAR extensionKey = new TCHAR(extension, true);
 	String result = getKeyValue(extensionKey);
 	if (result != null) {
 		// look for "<programID>\NotInsertable"
 		TCHAR notInsertableKey = new TCHAR(result+"\\NotInsertable", true); //$NON-NLS-1$
-		if (getKeyExists(notInsertableKey)) return ""; //$NON-NLS-1$
+        if (getKeyExists(notInsertableKey)) {
+            return ""; //$NON-NLS-1$
+        }
 		// look for "<programID>\Insertable"
 		TCHAR insertableKey = new TCHAR(result+"\\Insertable", true); //$NON-NLS-1$
-		if (getKeyExists(insertableKey)) return result;
+        if (getKeyExists(insertableKey)) {
+            return result;
+        }
 		// look for "<programID>\protocol\StdFileEditing\server"
 		TCHAR serverKey = new TCHAR(result+"\\protocol\\StdFileEditing\\server", true); //$NON-NLS-1$
-		if (getKeyExists(serverKey)) return result;
+        if (getKeyExists(serverKey)) {
+            return result;
+        }
 	}
 
 	return ""; //$NON-NLS-1$
@@ -409,7 +443,9 @@ static String getKeyValue (TCHAR key) {
 			}
 		}
 	}
-	if (phkResult [0] != 0) OS.RegCloseKey (phkResult [0]);
+    if (phkResult [0] != 0) {
+        OS.RegCloseKey(phkResult [0]);
+    }
 	return result;
 }
 private static boolean getKeyExists (TCHAR key) {
@@ -417,7 +453,9 @@ private static boolean getKeyExists (TCHAR key) {
 	if (OS.RegOpenKeyEx (OS.HKEY_CLASSES_ROOT, key, 0, OS.KEY_READ, phkResult) != 0) {
 		return false;
 	}
-	if (phkResult [0] != 0) OS.RegCloseKey (phkResult [0]);
+    if (phkResult [0] != 0) {
+        OS.RegCloseKey(phkResult [0]);
+    }
 	return true;
 }
 /**
@@ -430,8 +468,9 @@ private static boolean getKeyExists (TCHAR key) {
  * @return true if this file has an OLE Storage format
  */
 public static boolean isOleFile(File file) {
-	if (file == null || !file.exists() || file.isDirectory())
-		return false;
+    if (file == null || !file.exists() || file.isDirectory()) {
+        return false;
+    }
 
 	return (COM.StgIsStorageFile((file.getAbsolutePath()+"\0").toCharArray()) == COM.S_OK);
 }

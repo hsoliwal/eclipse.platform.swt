@@ -126,15 +126,21 @@ String computeResultChooserDialog (long file) {
 		}
 
 		int listLength;
-		if(GTK.GTK4) listLength = OS.g_list_model_get_n_items(list);
-		else listLength = OS.g_slist_length (list);
+        if (GTK.GTK4) {
+            listLength = OS.g_list_model_get_n_items(list);
+        } else {
+            listLength = OS.g_slist_length(list);
+        }
 		fileNames = new String [listLength];
 		long current = list;
 		int writePos = 0;
 		for (int i = 0; i < listLength; i++) {
 			long name;
-			if(GTK.GTK4) name = OS.g_list_model_get_item(list, i);
-			else name = OS.g_slist_data (current);
+            if (GTK.GTK4) {
+                name = OS.g_list_model_get_item(list, i);
+            } else {
+                name = OS.g_slist_data(current);
+            }
 			long utf8Ptr = 0;
 			if (uriMode) {
 				if (GTK.GTK4) {
@@ -147,9 +153,13 @@ String computeResultChooserDialog (long file) {
 					name = OS.g_file_get_path(name);
 				}
 				utf8Ptr = OS.g_filename_to_utf8 (name, -1, null, null, null);
-				if (utf8Ptr == 0) utf8Ptr = OS.g_filename_display_name (name);
+                if (utf8Ptr == 0) {
+                    utf8Ptr = OS.g_filename_display_name(name);
+                }
 			}
-			if (name != utf8Ptr) OS.g_free (name);
+            if (name != utf8Ptr) {
+                OS.g_free(name);
+            }
 			if (utf8Ptr != 0) {
 				long [] items_written = new long [1];
 				long utf16Ptr = OS.g_utf8_to_utf16 (utf8Ptr, -1, null, items_written, null);
@@ -163,15 +173,20 @@ String computeResultChooserDialog (long file) {
 					fileNames [writePos++] = fullPath.substring (fullPath.lastIndexOf (SEPARATOR) + 1);
 				}
 			}
-			if(!GTK.GTK4) current = OS.g_slist_next (current);
+            if (!GTK.GTK4) {
+                current = OS.g_slist_next(current);
+            }
 		}
 		if (writePos != 0 && writePos != listLength) {
 			String [] validFileNames = new String [writePos];
 			System.arraycopy (fileNames, 0, validFileNames, 0, writePos);
 			fileNames = validFileNames;
 		}
-		if(GTK.GTK4) OS.g_object_unref(list);
-		else OS.g_slist_free (list);
+        if (GTK.GTK4) {
+            OS.g_object_unref(list);
+        } else {
+            OS.g_slist_free(list);
+        }
 	} else {
 		long utf8Ptr = 0;
 		if (uriMode) {
@@ -196,8 +211,12 @@ String computeResultChooserDialog (long file) {
 
 			if (path != 0) {
 				utf8Ptr = OS.g_filename_to_utf8 (path, -1, null, null, null);
-				if (utf8Ptr == 0) utf8Ptr = OS.g_filename_display_name (path);
-				if (path != utf8Ptr) OS.g_free (path);
+                if (utf8Ptr == 0) {
+                    utf8Ptr = OS.g_filename_display_name(path);
+                }
+                if (path != utf8Ptr) {
+                    OS.g_free(path);
+                }
 			}
 		}
 		if (utf8Ptr != 0) {
@@ -394,7 +413,9 @@ Optional<String> openNativeChooserDialog () {
 	} else {
 		handle = GTK.gtk_file_chooser_native_new(titleBytes, shellHandle, action, null, null);
 	}
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (GTK.GTK_VERSION >= OS.VERSION(4, 10, 0)) {
 		GTK4.gtk_file_dialog_set_title(handle, titleBytes);
 	}
@@ -488,8 +509,12 @@ void presetChooserDialog () {
 	if ((GTK.GTK_VERSION < OS.VERSION(4, 10, 0)) && (style & (SWT.SAVE | SWT.MULTI)) == SWT.MULTI) {
 		GTK.gtk_file_chooser_set_select_multiple (handle, true);
 	}
-	if (filterPath == null) filterPath = "";
-	if (fileName == null) fileName = "";
+    if (filterPath == null) {
+        filterPath = "";
+    }
+    if (fileName == null) {
+        fileName = "";
+    }
 	if ((style & SWT.SAVE) != 0) {
 		if (fileName.equals ("")) {
 			fileName = "Untitled";
@@ -636,9 +661,13 @@ void presetChooserDialog () {
 		}
 	}
 
-	/* Set the extension filters */
-	if (filterNames == null) filterNames = new String [0];
-	if (filterExtensions == null) filterExtensions = new String [0];
+    /* Set the extension filters */
+    if (filterNames == null) {
+        filterNames = new String [0];
+    }
+    if (filterExtensions == null) {
+        filterExtensions = new String [0];
+    }
 	long initialFilter = 0;
 	long fileFilters = 0;
 	if (GTK.GTK_VERSION >= OS.VERSION(4, 10, 0)) {

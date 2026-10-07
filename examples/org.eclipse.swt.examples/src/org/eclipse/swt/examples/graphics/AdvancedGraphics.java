@@ -43,8 +43,9 @@ public class AdvancedGraphics {
 
 	static Image loadImage(Device device, Class<AdvancedGraphics> clazz, String string) {
 		try (InputStream stream = clazz.getResourceAsStream(string)) {
-			if (stream == null)
-				return null;
+            if (stream == null) {
+                return null;
+            }
 			Image image = new Image(device, stream);
 			return image;
 		} catch (SWTException ex) {
@@ -93,7 +94,9 @@ public class AdvancedGraphics {
 		shell.setSize(shell.computeSize(rect.width, rect.height));
 		shell.open();
 		shell.addListener(SWT.Dispose, event -> {
-			if (image != null) image.dispose();
+            if (image != null) {
+                image.dispose();
+            }
 			font.dispose();
 		});
 		return shell;
@@ -103,8 +106,9 @@ public class AdvancedGraphics {
 		Display display = new Display();
 		Shell shell = new AdvancedGraphics().open(display);
 		while (shell != null && !shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

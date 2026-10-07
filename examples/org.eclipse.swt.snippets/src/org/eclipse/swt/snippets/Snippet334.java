@@ -103,7 +103,9 @@ public static void main(String[] arg) {
 			@Override
 			public void getState (AccessibleControlEvent e) {
 				e.detail = ACC.STATE_NORMAL | ACC.STATE_FOCUSABLE;
-				if (canvas.isFocusControl()) e.detail |= ACC.STATE_FOCUSED | ACC.STATE_SELECTABLE;
+                if (canvas.isFocusControl()) {
+                    e.detail |= ACC.STATE_FOCUSED | ACC.STATE_SELECTABLE;
+                }
 			}
 		});
 		acc.addAccessibleTextListener(new AccessibleTextExtendedAdapter() {
@@ -153,7 +155,9 @@ public static void main(String[] arg) {
 						while(index != -1) {
 							lineCount ++;
 							index = text.indexOf("\n", index);
-							if (index != -1) index++;
+                            if (index != -1) {
+                                index++;
+                            }
 						}
 						e.count = e.count < 0 ? Math.max(e.count, -lineCount) : Math.min(e.count, lineCount);
 						index = 0;
@@ -216,8 +220,9 @@ public static void main(String[] arg) {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 }

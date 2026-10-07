@@ -499,7 +499,9 @@ public void test_getMonitor() {
 	int i;
 	/* monitor must be listed in Display.getMonitors */
 	for (i = 0; i < monitors.length; i++) {
-		if (monitor.equals(monitors[i])) break;
+        if (monitor.equals(monitors[i])) {
+            break;
+        }
 	}
 	if (i == monitors.length) {
 		fail("Control.getMonitor does not return a monitor listed in Display.getMonitors");
@@ -982,8 +984,9 @@ protected void consistencyEvent(final int paramA, final int paramB,
 								final int method, List<String> events, boolean focus) {
 	if(SwtTestUtil.fTestConsistency) {
 		final Display display = shell.getDisplay();
-		if(events == null)
-			events = new ArrayList<>();
+        if (events == null) {
+            events = new ArrayList<>();
+        }
 		final String test = getTestName();
 
 		shell.setLayout(new org.eclipse.swt.layout.FillLayout());
@@ -996,8 +999,9 @@ protected void consistencyEvent(final int paramA, final int paramB,
 			((Shell)control).open();
 		}
 		final Point[] pt = determineLocations(paramA, paramB, paramC, paramD, method);
-		if(focus && !control.setFocus())
-			control.forceFocus();
+        if (focus && !control.setFocus()) {
+            control.forceFocus();
+        }
 		String[] expectedEvents = hookExpectedEvents(test, events);
 		new Thread() {
 			@Override
@@ -1040,8 +1044,9 @@ protected void consistencyEvent(final int paramA, final int paramB,
 							ConsistencyUtility.postShellIconify(display, pt[1], paramA));
 						if(control instanceof Shell) {
 							display.syncExec(() -> ((Shell)control).setMinimized(false));
-						} else
-							fail("Iconifying a non shell control");
+						} else {
+                            fail("Iconifying a non shell control");
+                        }
 						break;
 				}
 				display.asyncExec(() -> shell.dispose());
@@ -1049,7 +1054,9 @@ protected void consistencyEvent(final int paramA, final int paramB,
 		}.start();
 
 		while(!shell.isDisposed()) {
-			if(!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		setUp();
 		String[] results = new String[events.size()];
@@ -1084,16 +1091,18 @@ protected void consistencyPrePackShell(Shell shell) {
 protected Point[] determineLocations(int paramA, int paramB,
 									 int paramC, int paramD, int method) {
 	Point[] array = new Point[2];
-	if(method >= ConsistencyUtility.MOUSE_CLICK)
-		array[0] = control.toDisplay(paramA, paramB);
-	if(method >= ConsistencyUtility.MOUSE_DRAG)
-		array[1] = control.toDisplay(paramC, paramD);
-	if(method == ConsistencyUtility.MOUSE_CLICK && paramD == ConsistencyUtility.ESCAPE_MENU)
-		array[1] = shell.toDisplay(25, -10);
-	else if(method == ConsistencyUtility.SHELL_ICONIFY) {
-		array[0] = control.toDisplay(0,0);
-		array[1] = control.toDisplay(control.getSize().x -20, 0);
-	}
+    if (method >= ConsistencyUtility.MOUSE_CLICK) {
+        array[0] = control.toDisplay(paramA, paramB);
+    }
+    if (method >= ConsistencyUtility.MOUSE_DRAG) {
+        array[1] = control.toDisplay(paramC, paramD);
+    }
+    if (method == ConsistencyUtility.MOUSE_CLICK && paramD == ConsistencyUtility.ESCAPE_MENU) {
+        array[1] = shell.toDisplay(25, -10);
+    } else if (method == ConsistencyUtility.SHELL_ICONIFY) {
+        array[0] = control.toDisplay(0, 0);
+        array[1] = control.toDisplay(control.getSize().x - 20, 0);
+    }
 	return array;
 }
 

@@ -116,36 +116,50 @@ public ExpandItem (ExpandBar parent, int style, int index) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
 void createHandle (int index) {
 	state |= HANDLE;
 	handle = GTK.gtk_expander_new (null);
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	clientHandle = OS.g_object_new (display.gtk_fixed_get_type (), 0);
-	if (clientHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (clientHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (GTK.GTK4) {
 		GTK4.gtk_expander_set_child(handle, clientHandle);
 	} else {
 		GTK3.gtk_container_add (handle, clientHandle);
 	}
 	boxHandle = gtk_box_new (GTK.GTK_ORIENTATION_HORIZONTAL, false, 4);
-	if (boxHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (boxHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	labelHandle = GTK.gtk_label_new (null);
-	if (labelHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (labelHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK4) {
 		imageHandle = GTK4.gtk_picture_new();
-		if (imageHandle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (imageHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		GTK4.gtk_picture_set_can_shrink(imageHandle, false);
 
 		GTK4.gtk_box_append(boxHandle, imageHandle);
 		GTK4.gtk_box_append(boxHandle, labelHandle);
 	} else {
 		imageHandle = GTK.gtk_image_new();
-		if (imageHandle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (imageHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 
 		GTK3.gtk_container_add(boxHandle, imageHandle);
 		GTK3.gtk_container_add(boxHandle, labelHandle);
@@ -353,7 +367,9 @@ void releaseHandle () {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (parent.lastFocus == this) parent.lastFocus = null;
+    if (parent.lastFocus == this) {
+        parent.lastFocus = null;
+    }
 	control = null;
 }
 
@@ -402,14 +418,16 @@ void resizeControl () {
 				width = allocation.width - parent.vScrollBarWidth () - 2 * parent.spacing;
 			}
 		}
-		// Bug 479242: Bound calculation is correct without needing to use yScroll in GTK3
-		/*
-		 * Bug 538114: ExpandBar has no content until resized or collapsed/expanded.
-		 * When widget is first created inside ExpandItem's control, the size is allocated
-		 * to be zero, and the widget is never shown during a layout operation, similar to
-		 * Bug 487757. The fix is to show the control before setting any bounds.
-		 */
-		if (visible) gtk_widget_show(control.topHandle ());
+        // Bug 479242: Bound calculation is correct without needing to use yScroll in GTK3
+        /*
+         * Bug 538114: ExpandBar has no content until resized or collapsed/expanded.
+         * When widget is first created inside ExpandItem's control, the size is allocated
+         * to be zero, and the widget is never shown during a layout operation, similar to
+         * Bug 487757. The fix is to show the control before setting any bounds.
+         */
+        if (visible) {
+            gtk_widget_show(control.topHandle());
+        }
 		control.setBounds (x, y, width, Math.max (0, height), true, true);
 
 		control.setVisible (visible);
@@ -433,10 +451,16 @@ void resizeControl () {
 public void setControl (Control control) {
 	checkWidget ();
 	if (control != null) {
-		if (control.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (control.parent != parent) error (SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.parent != parent) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
-	if (this.control == control) return;
+    if (this.control == control) {
+        return;
+    }
 
 	this.control = control;
 	if (control != null) {
@@ -468,25 +492,37 @@ public void setExpanded(boolean expanded) {
 }
 
 boolean setFocus () {
-	if (!GTK.gtk_widget_get_child_visible (handle)) return false;
+    if (!GTK.gtk_widget_get_child_visible(handle)) {
+        return false;
+    }
 	GTK.gtk_widget_set_can_focus (handle, true);
 	GTK.gtk_widget_grab_focus (handle);
-	// widget could be disposed at this point
-	if (isDisposed ()) return false;
+    // widget could be disposed at this point
+    if (isDisposed()) {
+        return false;
+    }
 	boolean result = GTK.gtk_widget_is_focus (handle);
-	if (!result) GTK.gtk_widget_set_can_focus (handle, false);
+    if (!result) {
+        GTK.gtk_widget_set_can_focus(handle, false);
+    }
 	return result;
 }
 
 void setFontDescription (long font) {
 	setFontDescription (handle, font);
-	if (labelHandle != 0) setFontDescription (labelHandle, font);
+    if (labelHandle != 0) {
+        setFontDescription(labelHandle, font);
+    }
 }
 
 void setForegroundRGBA (GdkRGBA rgba) {
 	parent.setForegroundGdkRGBA (handle, rgba);
-	if (labelHandle != 0) parent.setForegroundGdkRGBA (labelHandle, rgba);
-	if (imageHandle != 0) parent.setForegroundGdkRGBA (imageHandle, rgba);
+    if (labelHandle != 0) {
+        parent.setForegroundGdkRGBA(labelHandle, rgba);
+    }
+    if (imageHandle != 0) {
+        parent.setForegroundGdkRGBA(imageHandle, rgba);
+    }
 }
 
 /**
@@ -502,7 +538,9 @@ void setForegroundRGBA (GdkRGBA rgba) {
  */
 public void setHeight (int height) {
 	checkWidget ();
-	if (height < 0) return;
+    if (height < 0) {
+        return;
+    }
 	this.height = height;
 	GTK.gtk_widget_set_size_request (clientHandle, -1, height);
 	parent.layoutItems();
@@ -513,7 +551,9 @@ public void setImage (Image image) {
 	super.setImage (image);
 
 	if (image != null) {
-		if (image.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (image.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		if (GTK.GTK4) {
 			long pixbuf = ImageList.createPixbuf(image);
 			long texture = GDK.gdk_texture_new_for_pixbuf(pixbuf);
@@ -526,7 +566,9 @@ public void setImage (Image image) {
 		} else {
 			GTK3.gtk_image_set_from_surface(imageHandle, image.surface);
 		}
-		if (text.length () == 0) gtk_widget_hide (labelHandle);
+        if (text.length() == 0) {
+            gtk_widget_hide(labelHandle);
+        }
 		gtk_widget_show(imageHandle);
 	} else {
 		if (GTK.GTK4) {
@@ -563,10 +605,12 @@ void showWidget (int index) {
 	} else {
 		gtk_widget_show (handle);
 		gtk_widget_show (clientHandle);
-		if (labelHandle != 0)
-			gtk_widget_show (labelHandle);
-		if (boxHandle != 0)
-			gtk_widget_show (boxHandle);
+        if (labelHandle != 0) {
+            gtk_widget_show(labelHandle);
+        }
+        if (boxHandle != 0) {
+            gtk_widget_show(boxHandle);
+        }
 		GTK3.gtk_container_add (parent.handle, handle);
 		gtk_box_set_child_packing (parent.handle, handle, false, false, 0, GTK.GTK_PACK_START);
 	}

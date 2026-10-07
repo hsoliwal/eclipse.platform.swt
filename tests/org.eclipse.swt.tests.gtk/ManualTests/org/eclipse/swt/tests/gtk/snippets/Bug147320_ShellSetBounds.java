@@ -33,16 +33,18 @@ public class Bug147320_ShellSetBounds {
 		button.setText("Push");
 		button.addListener(SWT.Selection, event -> {
 			Rectangle bounds = DIMENSIONS[counter++];
-			if (counter == 4)
-				counter = 0;
+            if (counter == 4) {
+                counter = 0;
+            }
 			System.out.println("setting to: " + bounds);
 			shell.setBounds(bounds);
 		});
 		shell.setBounds(DIMENSIONS[counter++]);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

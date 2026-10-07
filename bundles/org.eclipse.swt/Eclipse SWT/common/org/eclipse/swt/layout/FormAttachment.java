@@ -183,7 +183,9 @@ public FormAttachment (int numerator, int offset) {
  * @param offset the offset of the side from the position
  */
 public FormAttachment (int numerator, int denominator, int offset) {
-	if (denominator == 0) SWT.error (SWT.ERROR_CANNOT_BE_ZERO);
+    if (denominator == 0) {
+        SWT.error(SWT.ERROR_CANNOT_BE_ZERO);
+    }
 	this.numerator = numerator;
 	this.denominator = denominator;
 	this.offset = offset;
@@ -296,12 +298,16 @@ FormAttachment plus (int value) {
 }
 
 int solveX (int value) {
-	if (denominator == 0) SWT.error (SWT.ERROR_CANNOT_BE_ZERO);
+    if (denominator == 0) {
+        SWT.error(SWT.ERROR_CANNOT_BE_ZERO);
+    }
 	return ((numerator * value) / denominator) + offset;
 }
 
 int solveY (int value) {
-	if (numerator == 0) SWT.error (SWT.ERROR_CANNOT_BE_ZERO);
+    if (numerator == 0) {
+        SWT.error(SWT.ERROR_CANNOT_BE_ZERO);
+    }
 	return (value - offset) * denominator / numerator;
 }
 

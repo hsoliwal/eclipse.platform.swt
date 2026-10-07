@@ -328,7 +328,9 @@ class SystemTab extends Tab {
 
 		SelectionListener selectionListener = widgetSelectedAdapter(event -> {
 			if ((event.widget.getStyle () & SWT.RADIO) != 0) {
-				if (!((Button) event.widget).getSelection ()) return;
+                if (!((Button) event.widget).getSelection()) {
+                    return;
+                }
 			}
 			if (!handleTextDirection (event.widget)) {
 				recreateExampleWidgets ();

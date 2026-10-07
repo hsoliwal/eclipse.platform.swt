@@ -177,8 +177,7 @@ public ViewForm(Composite parent, int style) {
 }
 
 static int checkStyle (int style) {
-	int mask = SWT.FLAT | SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
-	return style & mask | SWT.NO_REDRAW_RESIZE;
+	return StylePolicy.VIEW_FORM.applyAsInt(style);
 }
 
 //protected void checkSubclass () {
@@ -371,8 +370,12 @@ public void setLayout (Layout layout) {
 }
 void setSelectionBackground (Color color) {
 	checkWidget();
-	if (selectionBackground == color) return;
-	if (color == null) color = getDisplay().getSystemColor(SELECTION_BACKGROUND);
+    if (selectionBackground == color) {
+        return;
+    }
+    if (color == null) {
+        color = getDisplay().getSystemColor(SELECTION_BACKGROUND);
+    }
 	selectionBackground = color;
 	redraw();
 }
@@ -466,12 +469,16 @@ public void setTopRight(Control c) {
 */
 public void setBorderVisible(boolean show) {
 	checkWidget();
-	if (showBorder == show) return;
+    if (showBorder == show) {
+        return;
+    }
 
 	showBorder = show;
 	if (showBorder) {
 		borderLeft = borderTop = borderRight = borderBottom = 1;
-		if ((getStyle() & SWT.FLAT)== 0) highlight = 2;
+        if ((getStyle() & SWT.FLAT) == 0) {
+            highlight = 2;
+        }
 	} else {
 		borderBottom = borderTop = borderLeft = borderRight = 0;
 		highlight = 0;

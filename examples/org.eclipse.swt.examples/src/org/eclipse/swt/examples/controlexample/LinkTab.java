@@ -64,7 +64,9 @@ class LinkTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
 
 		/* Create the example widgets */
 		link1 = new Link (linkGroup, style);
@@ -98,10 +100,14 @@ class LinkTab extends Tab {
 		switch (index) {
 			case LINK_FOREGROUND_COLOR: {
 				Color oldColor = linkForegroundColor;
-				if (oldColor == null) oldColor = link1.getLinkForeground();
+                if (oldColor == null) {
+                    oldColor = link1.getLinkForeground();
+                }
 				colorDialog.setRGB(oldColor.getRGB());
 				RGB rgb = colorDialog.open();
-				if (rgb == null) return;
+                if (rgb == null) {
+                    return;
+                }
 				linkForegroundColor = new Color (rgb);
 				setLinkForeground ();
 			}
@@ -116,10 +122,14 @@ class LinkTab extends Tab {
 			link1.setLinkForeground(linkForegroundColor);
 		}
 		Color color = linkForegroundColor;
-		if (color == null) color = link1.getLinkForeground ();
+        if (color == null) {
+            color = link1.getLinkForeground();
+        }
 		TableItem item = colorAndFontTable.getItem(LINK_FOREGROUND_COLOR);
 		Image oldImage = item.getImage();
-		if (oldImage != null) oldImage.dispose();
+        if (oldImage != null) {
+            oldImage.dispose();
+        }
 		item.setImage (colorImage(color));
 	}
 

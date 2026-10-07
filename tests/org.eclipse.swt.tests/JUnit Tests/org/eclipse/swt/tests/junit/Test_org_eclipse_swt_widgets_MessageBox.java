@@ -62,8 +62,9 @@ public void test_ConstructorLorg_eclipse_swt_widgets_Shell(){
  */
 @Test
 public void test_open(){
-	if (SwtTestUtil.fTestDialogOpen)
-		messageBox.open();
+    if (SwtTestUtil.fTestDialogOpen) {
+        messageBox.open();
+    }
 }
 
 /**

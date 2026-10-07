@@ -52,11 +52,13 @@ public MyList (Composite parent, int style) {
 		while (index < items.length) {
 			Point pt = gc.stringExtent(items[index]);
 			Rectangle item = new Rectangle(x, y, pt.x, pt.y);
-			if (item.contains(event.x, event.y))
-				break;
+            if (item.contains(event.x, event.y)) {
+                break;
+            }
 			y += pt.y;
-			if (!client.contains(x, y))
-				return;
+            if (!client.contains(x, y)) {
+                return;
+            }
 			index++;
 		}
 		gc.dispose();
@@ -113,7 +115,9 @@ public String [] getItems () {
 
 public void setItems (String [] items) {
 	checkWidget ();
-	if (items == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (items == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.items = items;
 	redraw ();
 }
@@ -133,7 +137,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

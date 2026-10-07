@@ -325,7 +325,9 @@ class AreaTab extends OpenGLTab {
 	 * @see OpenGLTab#init()
 	 */
 	void init() {
-		if (!hasStencilSupport()) return;
+        if (!hasStencilSupport()) {
+            return;
+        }
 		
 		GL.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		float[] lightPos = { 0.0f, 5.0f, -10.0f, 1.0f };

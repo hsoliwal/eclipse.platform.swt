@@ -53,8 +53,9 @@ public class Bug121220_AlphaTransparencyWithPatterns {
 
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!disp.readAndDispatch())
-				disp.sleep();
+            if (!disp.readAndDispatch()) {
+                disp.sleep();
+            }
 		}
 		image.dispose();
 		pat.dispose();

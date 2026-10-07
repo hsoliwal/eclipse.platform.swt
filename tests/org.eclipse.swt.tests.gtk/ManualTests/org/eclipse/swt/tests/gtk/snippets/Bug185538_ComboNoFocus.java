@@ -33,8 +33,9 @@ public class Bug185538_ComboNoFocus {
 		Point size = combo.computeSize(-1, -1);
 		combo.setBounds(5, 5, size.x, size.y);
 		combo.addListener(SWT.Selection, event -> {
-			if (combo.getSelectionIndex() == 1)
-				combo.dispose();
+            if (combo.getSelectionIndex() == 1) {
+                combo.dispose();
+            }
 		});
 		Listener listener = event -> {
 			String type = event.type == SWT.FocusIn ? "FocusIn" : "FocusOut";
@@ -50,8 +51,9 @@ public class Bug185538_ComboNoFocus {
 
 		while (!shell.isDisposed()) {
 			boolean dispatch = display.readAndDispatch();
-			if (!dispatch)
-				display.sleep();
+            if (!dispatch) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

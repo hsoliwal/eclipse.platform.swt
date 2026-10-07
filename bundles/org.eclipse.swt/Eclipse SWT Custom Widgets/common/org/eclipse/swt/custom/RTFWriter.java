@@ -223,7 +223,9 @@ class RTFWriter extends StyledTextWriterBase {
 	 *  or "defaultIndex" if "color" is null.
 	 */
 	private int getColorIndex(Color color, int defaultIndex) {
-		if (color == null) return defaultIndex;
+        if (color == null) {
+            return defaultIndex;
+        }
 		int index = colorTable.indexOf(color);
 		if (index == -1) {
 			index = colorTable.size();

@@ -87,9 +87,13 @@ public void javaToNative(Object object, TransferData transferData) {
  */
 @Override
 public Object nativeToJava(TransferData transferData) {
-	if (!isSupportedType(transferData) || transferData.data == null) return null;
+    if (!isSupportedType(transferData) || transferData.data == null) {
+        return null;
+    }
 	NSData data = (NSData) transferData.data;
-	if (data.length() == 0) return null;
+    if (data.length() == 0) {
+        return null;
+    }
 	NSImage nsImage = (NSImage) new NSImage().alloc();
 	nsImage.initWithData(data);
 
@@ -127,7 +131,9 @@ protected String[] getTypeNames() {
 }
 
 boolean checkImage(Object object) {
-	if (object == null || !(object instanceof ImageData)) return false;
+    if (object == null || !(object instanceof ImageData)) {
+        return false;
+    }
 	return true;
 }
 

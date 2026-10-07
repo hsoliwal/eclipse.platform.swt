@@ -258,14 +258,18 @@ public class DragSource extends Widget {
 		}
 
 		private int GetData(long pFormatetc, long pmedium) {
-			/* Called by a data consumer to obtain data from a source data object.
-			   The GetData method renders the data described in the specified FORMATETC
-			   structure and transfers it through the specified STGMEDIUM structure.
-			   The caller then assumes responsibility for releasing the STGMEDIUM structure.
-			*/
-			if (pFormatetc == 0 || pmedium == 0) return COM.E_INVALIDARG;
+            /* Called by a data consumer to obtain data from a source data object.
+               The GetData method renders the data described in the specified FORMATETC
+               structure and transfers it through the specified STGMEDIUM structure.
+               The caller then assumes responsibility for releasing the STGMEDIUM structure.
+            */
+            if (pFormatetc == 0 || pmedium == 0) {
+                return COM.E_INVALIDARG;
+            }
 
-			if (QueryGetData(transferAgents, pFormatetc) != COM.S_OK) return COM.DV_E_FORMATETC;
+            if (QueryGetData(transferAgents, pFormatetc) != COM.S_OK) {
+                return COM.DV_E_FORMATETC;
+            }
 
 			TransferData transferData = new TransferData();
 			transferData.formatetc = new FORMATETC();
@@ -282,7 +286,9 @@ public class DragSource extends Widget {
 				event.dataType = transferData;
 				notifyListeners(DND.DragSetData,event);
 
-				if (!event.doit) return COM.E_FAIL;
+                if (!event.doit) {
+                    return COM.E_FAIL;
+                }
 
 				lastData = event.data;
 				data = event.data;
@@ -302,15 +308,21 @@ public class DragSource extends Widget {
 				}
 			}
 
-			if (transfer == null) return COM.DV_E_FORMATETC;
+            if (transfer == null) {
+                return COM.DV_E_FORMATETC;
+            }
 			transfer.javaToNative(data, transferData);
-			if (transferData.result != COM.S_OK) return transferData.result;
+            if (transferData.result != COM.S_OK) {
+                return transferData.result;
+            }
 			COM.MoveMemory(pmedium, transferData.stgmedium, STGMEDIUM.sizeof);
 			return transferData.result;
 		}
 
 		private int SetData(long pFormatetc, long pmedium, int fRelease) {
-			if (pFormatetc == 0 || pmedium == 0) return COM.E_INVALIDARG;
+            if (pFormatetc == 0 || pmedium == 0) {
+                return COM.E_INVALIDARG;
+            }
 			FORMATETC formatetc = new FORMATETC();
 			COM.MoveMemory(formatetc, pFormatetc, FORMATETC.sizeof);
 			if (formatetc.cfFormat == CFSTR_PERFORMEDDROPEFFECT && formatetc.tymed == COM.TYMED_HGLOBAL) {
@@ -403,8 +415,7 @@ public DragSource(Control control, int style) {
 }
 
 static int checkStyle(int style) {
-	if (style == SWT.NONE) return DND.DROP_MOVE;
-	return style;
+	return StylePolicy.normalize(style);
 }
 
 /**
@@ -438,7 +449,9 @@ static int checkStyle(int style) {
  * @see DragSourceEvent
  */
 public void addDragListener(DragSourceListener listener) {
-	if (listener == null) DND.error(SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	DNDListener typedListener = new DNDListener(listener);
 	typedListener.dndWidget = this;
 	addListener(DND.DragStart, typedListener);
@@ -462,17 +475,21 @@ protected void checkSubclass() {
 }
 
 private void releaseCOMInterfaces() {
-	if (iDropSource != null)
-		iDropSource.Release();
+    if (iDropSource != null) {
+        iDropSource.Release();
+    }
 	iDropSource = null;
 
-	if (iDataObject != null)
-		iDataObject.Release();
+    if (iDataObject != null) {
+        iDataObject.Release();
+    }
 	iDataObject = null;
 }
 
 boolean canBeginDrag() {
-	if (transferAgents == null || transferAgents.length == 0) return false;
+    if (transferAgents == null || transferAgents.length == 0) {
+        return false;
+    }
 	return true;
 }
 
@@ -484,7 +501,9 @@ private void drag(Event dragEvent) {
 	event.time = OS.GetMessageTime();
 	event.doit = true;
 	notifyListeners(DND.DragStart,event);
-	if (!event.doit || !canBeginDrag()) return;
+    if (!event.doit || !canBeginDrag()) {
+        return;
+    }
 
 	int[] pdwEffect = new int[1];
 	int operations = opToOs(getStyle());
@@ -558,7 +577,9 @@ private void drag(Event dragEvent) {
 			OS.ImageList_DragLeave(hwndDrag);
 			OS.ImageList_EndDrag();
 			imagelist.dispose();
-			if (hwndDrag != topControl.handle) OS.DestroyWindow(hwndDrag);
+            if (hwndDrag != topControl.handle) {
+                OS.DestroyWindow(hwndDrag);
+            }
 			hwndDrag = 0;
 			topControl = null;
 		}
@@ -588,8 +609,10 @@ private void drag(Event dragEvent) {
  * must be incremented before returning.  Caller is responsible for releasing ppenumFormatetc.
  */
 private static int EnumFormatEtc(Transfer[] transferAgents, int dwDirection, long ppenumFormatetc) {
-	// only allow getting of data - SetData is not currently supported
-	if (dwDirection == COM.DATADIR_SET) return COM.E_NOTIMPL;
+    // only allow getting of data - SetData is not currently supported
+    if (dwDirection == COM.DATADIR_SET) {
+        return COM.E_NOTIMPL;
+    }
 
 	// what types have been registered?
 	TransferData[] allowedDataTypes = new TransferData[0];
@@ -675,9 +698,13 @@ private int GiveFeedback(int dwEffect) {
 }
 
 private int QueryContinueDrag(int fEscapePressed, int grfKeyState) {
-	if (topControl != null && topControl.isDisposed()) return COM.DRAGDROP_S_CANCEL;
+    if (topControl != null && topControl.isDisposed()) {
+        return COM.DRAGDROP_S_CANCEL;
+    }
 	if (fEscapePressed != 0){
-		if (hwndDrag != 0) OS.ImageList_DragLeave(hwndDrag);
+        if (hwndDrag != 0) {
+            OS.ImageList_DragLeave(hwndDrag);
+        }
 		return COM.DRAGDROP_S_CANCEL;
 	}
 	/*
@@ -689,7 +716,9 @@ private int QueryContinueDrag(int fEscapePressed, int grfKeyState) {
 	int mask = OS.MK_LBUTTON | OS.MK_MBUTTON | OS.MK_RBUTTON;
 //	if (display.xMouse) mask |= OS.MK_XBUTTON1 | OS.MK_XBUTTON2;
 	if ((grfKeyState & mask) == 0) {
-		if (hwndDrag != 0) OS.ImageList_DragLeave(hwndDrag);
+        if (hwndDrag != 0) {
+            OS.ImageList_DragLeave(hwndDrag);
+        }
 		return COM.DRAGDROP_S_DROP;
 	}
 
@@ -704,7 +733,9 @@ private int QueryContinueDrag(int fEscapePressed, int grfKeyState) {
 }
 
 private void onDispose() {
-	if (control == null) return;
+    if (control == null) {
+        return;
+    }
 	releaseCOMInterfaces();
 	if (controlListener != null){
 		control.removeListener(SWT.Dispose, controlListener);
@@ -745,7 +776,9 @@ private int osToOp(int osOperation){
 }
 
 private static int QueryGetData(Transfer[] transferAgents, long pFormatetc) {
-	if (transferAgents == null) return COM.E_FAIL;
+    if (transferAgents == null) {
+        return COM.E_FAIL;
+    }
 	TransferData transferData = new TransferData();
 	transferData.formatetc = new FORMATETC();
 	COM.MoveMemory(transferData.formatetc, pFormatetc, FORMATETC.sizeof);
@@ -753,8 +786,9 @@ private static int QueryGetData(Transfer[] transferAgents, long pFormatetc) {
 
 	// is this type supported by the transfer agent?
 	for (Transfer transferAgent : transferAgents) {
-		if (transferAgent != null && transferAgent.isSupportedType(transferData))
-			return COM.S_OK;
+        if (transferAgent != null && transferAgent.isSupportedType(transferData)) {
+            return COM.S_OK;
+        }
 	}
 
 	return COM.DV_E_FORMATETC;
@@ -765,8 +799,9 @@ private static int QueryGetData(Transfer[] transferAgents, long pFormatetc) {
  * must be incremented before returning.  Caller is responsible for releasing ppvObject.
  */
 private static int QueryInterface(COMObject comObject, long riid, long ppvObject) {
-	if (riid == 0 || ppvObject == 0)
-		return COM.E_INVALIDARG;
+    if (riid == 0 || ppvObject == 0) {
+        return COM.E_INVALIDARG;
+    }
 	GUID guid = new GUID();
 	COM.MoveMemory(guid, riid, GUID.sizeof);
 
@@ -801,7 +836,9 @@ private static int QueryInterface(COMObject comObject, long riid, long ppvObject
  * @see #getDragListeners
  */
 public void removeDragListener(DragSourceListener listener) {
-	if (listener == null) DND.error(SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(DND.DragStart, listener);
 	removeTypedListener(DND.DragSetData, listener);
 	removeTypedListener(DND.DragEnd, listener);

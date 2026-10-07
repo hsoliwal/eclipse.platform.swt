@@ -150,7 +150,9 @@ public void test_notifyListenersILorg_eclipse_swt_widgets_Event() {
 		gc = event.gc = new GC((Control)widget);
 	}
 	widget.notifyListeners(SWT.Paint, event);
-	if (gc != null) gc.dispose();
+    if (gc != null) {
+        gc.dispose();
+    }
 }
 @Test
 public void test_removeListenerILorg_eclipse_swt_widgets_Listener() {
@@ -214,10 +216,11 @@ protected void hookExpectedEvents(Widget w, String[] types, final java.util.List
 	hookListeners(w, ConsistencyUtility.convertEventNames(types),
 			e -> {
 				String temp = ConsistencyUtility.eventNames[e.type];
-				if(e.type == SWT.Traverse)
-					temp += ":"+ConsistencyUtility.getTraversalType(e.detail);
-				else if(e.type == SWT.Selection)
-					temp += ":"+ConsistencyUtility.getSelectionType(e.detail);
+                if (e.type == SWT.Traverse) {
+                    temp += ":" + ConsistencyUtility.getTraversalType(e.detail);
+                } else if (e.type == SWT.Selection) {
+                    temp += ":" + ConsistencyUtility.getSelectionType(e.detail);
+                }
 				events.add(temp);
 				System.out.println(temp + e.widget);
 			});
@@ -228,23 +231,26 @@ protected String getTestName() {
 	assertTrue(testMethod.isPresent());
 	String test = testMethod.get().getName();
 	int index = test.lastIndexOf('_');
-	if(index != -1)
-		test = test.substring(index+1);
+    if (index != -1) {
+        test = test.substring(index + 1);
+    }
 	String clss = getClassName();
-	if((!test.equals("MenuDetect") || clss.equals("Table") || test.startsWith("Chevron")) &&
-		(!test.equals("DragDetect") || clss.equals("Tree") || test.startsWith("Chevron")) &&
-		(!test.equals("DoubleClick") || clss.equals("List")) &&
-		(!test.equals("KeySelection") || clss.equals("Slider") || clss.equals("Combo") || clss.equals("CCombo") || clss.equals("CTabFolder")) &&
-		(!test.equals("EnterSelection") || clss.equals("Button") || clss.equals("ToolBar") || clss.equals("CCombo") || clss.equals("ExpandBar")))
-		test = clss + test;
+    if ((!test.equals("MenuDetect") || clss.equals("Table") || test.startsWith("Chevron")) &&
+            (!test.equals("DragDetect") || clss.equals("Tree") || test.startsWith("Chevron")) &&
+            (!test.equals("DoubleClick") || clss.equals("List")) &&
+            (!test.equals("KeySelection") || clss.equals("Slider") || clss.equals("Combo") || clss.equals("CCombo") || clss.equals("CTabFolder")) &&
+            (!test.equals("EnterSelection") || clss.equals("Button") || clss.equals("ToolBar") || clss.equals("CCombo") || clss.equals("ExpandBar"))) {
+        test = clss + test;
+    }
 	return test;
 }
 
 protected String getClassName() {
 	String clazz = getClass().getName();
 	int index = clazz.lastIndexOf('_');
-	if(index != -1)
-		clazz = clazz.substring(index+1);
+    if (index != -1) {
+        clazz = clazz.substring(index + 1);
+    }
 	return clazz;
 }
 

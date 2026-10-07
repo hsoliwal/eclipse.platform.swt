@@ -112,7 +112,9 @@ public void addSelectionListener (SelectionListener listener) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	return OS.DefWindowProc (hwnd, msg, wParam, lParam);
 }
 
@@ -123,7 +125,7 @@ void createHandle () {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+	return WidgetStylePolicy.ORIENTATION.applyAsInt(style);
 }
 
 @Override
@@ -137,13 +139,19 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 	} else {
 		width += 3; height += DEFAULT_HEIGHT;
 	}
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x + (border * 2);
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y + (border * 2);
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x + (border * 2);
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y + (border * 2);
+    }
 	return new Point (width, height);
 }
 
 void drawBand (int x, int y, int width, int height) {
-	if ((style & SWT.SMOOTH) != 0) return;
+    if ((style & SWT.SMOOTH) != 0) {
+        return;
+    }
 	long hwndTrack = parent.handle;
 	byte [] bits = {-86, 0, 85, 0, -86, 0, 85, 0, -86, 0, 85, 0, -86, 0, 85, 0};
 	long stippleBitmap = OS.CreateBitmap (8, 8, 1, 1, bits);
@@ -176,8 +184,12 @@ void drawBand (int x, int y, int width, int height) {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -202,23 +214,37 @@ LRESULT WM_ERASEBKGND (long wParam, long lParam) {
 @Override
 LRESULT WM_KEYDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_KEYDOWN (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	switch ((int)wParam) {
 		case OS.VK_LEFT:
 		case OS.VK_RIGHT:
 		case OS.VK_UP:
 		case OS.VK_DOWN:
 
-			/* Calculate the new x or y position */
-			if (OS.GetKeyState (OS.VK_LBUTTON) < 0) return result;
+            /* Calculate the new x or y position */
+            if (OS.GetKeyState(OS.VK_LBUTTON) < 0) {
+                return result;
+            }
 			int step = OS.GetKeyState (OS.VK_CONTROL) < 0 ? INCREMENT : PAGE_INCREMENT;
 			if ((style & SWT.VERTICAL) != 0) {
-				if (wParam == OS.VK_UP || wParam == OS.VK_DOWN) break;
-				if (wParam == OS.VK_LEFT) step = -step;
-				if ((parent.style & SWT.MIRRORED) != 0) step = -step;
+                if (wParam == OS.VK_UP || wParam == OS.VK_DOWN) {
+                    break;
+                }
+                if (wParam == OS.VK_LEFT) {
+                    step = -step;
+                }
+                if ((parent.style & SWT.MIRRORED) != 0) {
+                    step = -step;
+                }
 			} else {
-				if (wParam == OS.VK_LEFT || wParam == OS.VK_RIGHT) break;
-				if (wParam == OS.VK_UP) step = -step;
+                if (wParam == OS.VK_LEFT || wParam == OS.VK_RIGHT) {
+                    break;
+                }
+                if (wParam == OS.VK_UP) {
+                    step = -step;
+                }
 			}
 			RECT rect = new RECT ();
 			OS.GetWindowRect (handle, rect);
@@ -239,7 +265,9 @@ LRESULT WM_KEYDOWN (long wParam, long lParam) {
 				cursorPt.x = rect.left + width / 2;
 				cursorPt.y = newY = Math.min (Math.max (clientRect.top, newY + step), clientHeight - height);
 			}
-			if (newX == rect.left && newY == rect.top) return result;
+            if (newX == rect.left && newY == rect.top) {
+                return result;
+            }
 
 			/* Update the pointer position */
 			OS.ClientToScreen (hwndTrack, cursorPt);
@@ -248,7 +276,9 @@ LRESULT WM_KEYDOWN (long wParam, long lParam) {
 			Event event = new Event ();
 			event.setBounds(Win32DPIUtils.pixelToPoint(new Rectangle(newX, newY, width, height), getAutoscalingZoom()));
 			sendSelectionEvent  (SWT.Selection, event, true);
-			if (isDisposed ()) return LRESULT.ZERO;
+            if (isDisposed()) {
+                return LRESULT.ZERO;
+            }
 			if (event.doit) {
 				if ((style & SWT.SMOOTH) != 0) {
 					setBounds (event.getBounds());
@@ -267,7 +297,9 @@ LRESULT WM_GETDLGCODE (long wParam, long lParam) {
 @Override
 LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_LBUTTONDOWN (wParam, lParam);
-	if (result == LRESULT.ZERO) return result;
+    if (result == LRESULT.ZERO) {
+        return result;
+    }
 
 	/* Compute the banding rectangle */
 	long hwndTrack = parent.handle;
@@ -291,7 +323,9 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 		event.detail = SWT.DRAG;
 	}
 	sendSelectionEvent (SWT.Selection, event, true);
-	if (isDisposed ()) return LRESULT.ZERO;
+    if (isDisposed()) {
+        return LRESULT.ZERO;
+    }
 
 	/* Draw the banding rectangle */
 	Rectangle boundsInPixels = Win32DPIUtils.pointToPixel(event.getBounds(), getAutoscalingZoom());
@@ -300,7 +334,9 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 		lastX = boundsInPixels.x;
 		lastY = boundsInPixels.y;
 		menuShell ().bringToTop ();
-		if (isDisposed ()) return LRESULT.ZERO;
+        if (isDisposed()) {
+            return LRESULT.ZERO;
+        }
 		int flags = OS.RDW_UPDATENOW | OS.RDW_ALLCHILDREN;
 		OS.RedrawWindow (hwndTrack, null, 0, flags);
 		drawBand (boundsInPixels.x, boundsInPixels.y, width, height);
@@ -315,10 +351,14 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 @Override
 LRESULT WM_LBUTTONUP (long wParam, long lParam) {
 	LRESULT result = super.WM_LBUTTONUP (wParam, lParam);
-	if (result == LRESULT.ZERO) return result;
+    if (result == LRESULT.ZERO) {
+        return result;
+    }
 
-	/* Compute the banding rectangle */
-	if (!dragging) return result;
+    /* Compute the banding rectangle */
+    if (!dragging) {
+        return result;
+    }
 	dragging = false;
 	RECT rect = new RECT ();
 	OS.GetWindowRect (handle, rect);
@@ -330,7 +370,9 @@ LRESULT WM_LBUTTONUP (long wParam, long lParam) {
 	event.setBounds(Win32DPIUtils.pixelToPoint(new Rectangle(lastX, lastY, widthInPixels, heightInPixels), getAutoscalingZoom()));
 	drawBand (lastX, lastY, widthInPixels, heightInPixels);
 	sendSelectionEvent (SWT.Selection, event, true);
-	if (isDisposed ()) return result;
+    if (isDisposed()) {
+        return result;
+    }
 	Rectangle bounds = event.getBounds();
 	if (event.doit) {
 		if ((style & SWT.SMOOTH) != 0) {
@@ -346,8 +388,12 @@ LRESULT WM_LBUTTONUP (long wParam, long lParam) {
 @Override
 LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSEMOVE (wParam, lParam);
-	if (result != null) return result;
-	if (!dragging || (wParam & OS.MK_LBUTTON) == 0) return result;
+    if (result != null) {
+        return result;
+    }
+    if (!dragging || (wParam & OS.MK_LBUTTON) == 0) {
+        return result;
+    }
 
 	/* Compute the banding rectangle */
 	POINT pt = new POINT ();
@@ -367,7 +413,9 @@ LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
 		int clientHeight = clientRect.bottom - clientRect.top;
 		newY = Math.min (Math.max (0, pt.y - startY), clientHeight - height);
 	}
-	if (newX == lastX && newY == lastY) return result;
+    if (newX == lastX && newY == lastY) {
+        return result;
+    }
 	drawBand (lastX, lastY, width, height);
 
 	int zoom = getAutoscalingZoom();
@@ -378,7 +426,9 @@ LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
 		event.detail = SWT.DRAG;
 	}
 	sendSelectionEvent (SWT.Selection, event, true);
-	if (isDisposed ()) return LRESULT.ZERO;
+    if (isDisposed()) {
+        return LRESULT.ZERO;
+    }
 	if (event.doit) {
 		Rectangle bounds = event.getBounds();
 		lastX = DPIUtil.pointToPixel(bounds.x, zoom);
@@ -397,7 +447,9 @@ LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
 @Override
 LRESULT WM_SETCURSOR (long wParam, long lParam) {
 	LRESULT result = super.WM_SETCURSOR (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	int hitTest = (short) OS.LOWORD (lParam);
 	if (hitTest == OS.HTCLIENT) {
 		long hCursor = 0;

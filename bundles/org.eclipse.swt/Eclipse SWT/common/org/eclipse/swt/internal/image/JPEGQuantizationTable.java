@@ -13,7 +13,6 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.image;
 
-import java.util.Arrays;
 
 final class JPEGQuantizationTable extends JPEGVariableSizeSegment {
 	public static byte[] DefaultLuminanceQTable = {
@@ -48,11 +47,15 @@ public JPEGQuantizationTable(LEDataInputStream byteStream) {
 }
 
 public static JPEGQuantizationTable defaultChrominanceTable() {
-	return new JPEGQuantizationTable(DefaultChrominanceQTable.clone());
+	byte[] data = new byte[DefaultChrominanceQTable.length];
+	System.arraycopy(DefaultChrominanceQTable, 0, data, 0, data.length);
+	return new JPEGQuantizationTable(data);
 }
 
 public static JPEGQuantizationTable defaultLuminanceTable() {
-	return new JPEGQuantizationTable(DefaultLuminanceQTable.clone());
+	byte[] data = new byte[DefaultLuminanceQTable.length];
+	System.arraycopy(DefaultLuminanceQTable, 0, data, 0, data.length);
+	return new JPEGQuantizationTable(data);
 }
 
 public int[] getQuantizationTablesKeys() {
@@ -71,7 +74,9 @@ public int[] getQuantizationTablesKeys() {
 			totalLength -= 129;
 		}
 		if (keysIndex >= keys.length) {
-			keys = Arrays.copyOf(keys, keys.length + 4);
+			int[] newKeys = new int[keys.length + 4];
+			System.arraycopy(keys, 0, newKeys, 0, keys.length);
+			keys = newKeys;
 		}
 		keys[keysIndex] = tq;
 		keysIndex++;
@@ -104,7 +109,9 @@ public int[][] getQuantizationTablesValues() {
 			totalLength -= 129;
 		}
 		if (valuesIndex >= values.length) {
-			values = Arrays.copyOf(values, values.length + 4);
+			int[][] newValues = new int[values.length + 4][];
+			System.arraycopy(values, 0, newValues, 0, values.length);
+			values = newValues;
 		}
 		values[valuesIndex] = qk;
 		valuesIndex++;
@@ -135,8 +142,12 @@ public void scaleBy(int qualityFactor) {
 		if (pq == 0) {
 			for (int i = ofs + 1; i <= ofs + 64; i++) {
 				int temp = ((reference[i] & 0xFF) * qFactor + 50) / 100;
-				if (temp <= 0) temp = 1;
-				if (temp > 255) temp = 255;
+                if (temp <= 0) {
+                    temp = 1;
+                }
+                if (temp > 255) {
+                    temp = 255;
+                }
 				reference[i] = (byte)temp;
 			}
 			ofs += 65;
@@ -144,8 +155,12 @@ public void scaleBy(int qualityFactor) {
 		} else {
 			for (int i = ofs + 1; i <= ofs + 128; i += 2) {
 				int temp = (((reference[i] & 0xFF) * 256 + (reference[i + 1] & 0xFF)) * qFactor + 50) / 100;
-				if (temp <= 0) temp = 1;
-				if (temp > 32767) temp = 32767;
+                if (temp <= 0) {
+                    temp = 1;
+                }
+                if (temp > 32767) {
+                    temp = 32767;
+                }
 				reference[i] = (byte)(temp >> 8);
 				reference[i + 1] = (byte)(temp & 0xFF);
 			}

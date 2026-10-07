@@ -164,7 +164,9 @@ public class FileViewer {
 		FileViewer application = new FileViewer();
 		Shell shell = application.open(display);
 		while (! shell.isDisposed()) {
-			if (! display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		application.close();
 		display.dispose();
@@ -382,7 +384,9 @@ public class FileViewer {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				final File[] roots = (File[]) combo.getData(COMBODATA_ROOTS);
-				if (roots == null) return;
+                if (roots == null) {
+                    return;
+                }
 				int selection = combo.getSelectionIndex();
 				if (selection >= 0 && selection < roots.length) {
 					notifySelectedDirectory(roots[selection]);
@@ -392,8 +396,12 @@ public class FileViewer {
 			public void widgetDefaultSelected(SelectionEvent e) {
 				final String lastText = (String) combo.getData(COMBODATA_LASTTEXT);
 				String text = combo.getText();
-				if (text == null) return;
-				if (lastText != null && lastText.equals(text)) return;
+                if (text == null) {
+                    return;
+                }
+                if (lastText != null && lastText.equals(text)) {
+                    return;
+                }
 				combo.setData(COMBODATA_LASTTEXT, text);
 				notifySelectedDirectory(new File(text));
 			}
@@ -446,14 +454,18 @@ public class FileViewer {
 			public void treeExpanded(TreeEvent event) {
 				final TreeItem item = (TreeItem) event.item;
 				final Image image = (Image) item.getData(TREEITEMDATA_IMAGEEXPANDED);
-				if (image != null) item.setImage(image);
+                if (image != null) {
+                    item.setImage(image);
+                }
 				treeExpandItem(item);
 			}
 			@Override
 			public void treeCollapsed(TreeEvent event) {
 				final TreeItem item = (TreeItem) event.item;
 				final Image image = (Image) item.getData(TREEITEMDATA_IMAGECOLLAPSED);
-				if (image != null) item.setImage(image);
+                if (image != null) {
+                    item.setImage(image);
+                }
 			}
 		});
 		createTreeDragSource(tree);
@@ -490,8 +502,12 @@ public class FileViewer {
 			}
 			@Override
 			public void dragSetData(DragSourceEvent event){
-				if (dndSelection == null || dndSelection.length == 0) return;
-				if (! FileTransfer.getInstance().isSupportedType(event.dataType)) return;
+                if (dndSelection == null || dndSelection.length == 0) {
+                    return;
+                }
+                if (!FileTransfer.getInstance().isSupportedType(event.dataType)) {
+                    return;
+                }
 
 				sourceNames  = new String[dndSelection.length];
 				for (int i = 0; i < dndSelection.length; i++) {
@@ -530,8 +546,9 @@ public class FileViewer {
 			@Override
 			public void drop(DropTargetEvent event) {
 				File targetFile = getTargetFile(event);
-				if (dropTargetValidate(event, targetFile))
-					dropTargetHandleDrop(event, targetFile);
+                if (dropTargetValidate(event, targetFile)) {
+                    dropTargetHandleDrop(event, targetFile);
+                }
 			}
 			private File getTargetFile(DropTargetEvent event) {
 				// Determine the target File for the drop
@@ -555,7 +572,9 @@ public class FileViewer {
 	private void treeExpandItem(TreeItem item) {
 		shell.setCursor(iconCache.stockCursors[iconCache.cursorWait]);
 		final Object stub = item.getData(TREEITEMDATA_STUB);
-		if (stub == null) treeRefreshItem(item, true);
+        if (stub == null) {
+            treeRefreshItem(item, true);
+        }
 		shell.setCursor(iconCache.stockCursors[iconCache.cursorDefault]);
 	}
 
@@ -643,7 +662,9 @@ public class FileViewer {
 		for (int i = 0; i < items.length; ++i) {
 			while ((masterFile == null) && (masterIndex < masterFiles.length)) {
 				masterFile = masterFiles[masterIndex++];
-				if (! masterFile.isDirectory()) masterFile = null;
+                if (!masterFile.isDirectory()) {
+                    masterFile = null;
+                }
 			}
 
 			final TreeItem item = items[i];
@@ -677,10 +698,14 @@ public class FileViewer {
 				TreeItem newItem = new TreeItem(dirItem, SWT.NONE);
 				treeInitFolder(newItem, masterFile);
 				new TreeItem(newItem, SWT.NONE); // add a placeholder child item so we get the "expand" button
-				if (masterIndex == masterFiles.length) break;
+                if (masterIndex == masterFiles.length) {
+                    break;
+                }
 			}
 			masterFile = masterFiles[masterIndex++];
-			if (! masterFile.isDirectory()) masterFile = null;
+            if (!masterFile.isDirectory()) {
+                masterFile = null;
+            }
 		}
 	}
 
@@ -799,8 +824,12 @@ public class FileViewer {
 			}
 			@Override
 			public void dragSetData(DragSourceEvent event){
-				if (dndSelection == null || dndSelection.length == 0) return;
-				if (! FileTransfer.getInstance().isSupportedType(event.dataType)) return;
+                if (dndSelection == null || dndSelection.length == 0) {
+                    return;
+                }
+                if (!FileTransfer.getInstance().isSupportedType(event.dataType)) {
+                    return;
+                }
 
 				sourceNames  = new String[dndSelection.length];
 				for (int i = 0; i < dndSelection.length; i++) {
@@ -839,8 +868,9 @@ public class FileViewer {
 			@Override
 			public void drop(DropTargetEvent event) {
 				File targetFile = getTargetFile(event);
-				if (dropTargetValidate(event, targetFile))
-					dropTargetHandleDrop(event, targetFile);
+                if (dropTargetValidate(event, targetFile)) {
+                    dropTargetHandleDrop(event, targetFile);
+                }
 			}
 			private File getTargetFile(DropTargetEvent event) {
 				// Determine the target File for the drop
@@ -868,8 +898,12 @@ public class FileViewer {
 	 * @param dir the directory that was selected, null is ignored
 	 */
 	void notifySelectedDirectory(File dir) {
-		if (dir == null) return;
-		if (currentDirectory != null && dir.equals(currentDirectory)) return;
+        if (dir == null) {
+            return;
+        }
+        if (currentDirectory != null && dir.equals(currentDirectory)) {
+            return;
+        }
 		currentDirectory = dir;
 		notifySelectedFiles(null);
 
@@ -896,8 +930,11 @@ public class FileViewer {
 				}
 			}
 		}
-		if (comboEntry == -1) combo.setText(dir.getPath());
-		else combo.select(comboEntry);
+        if (comboEntry == -1) {
+            combo.setText(dir.getPath());
+        } else {
+            combo.select(comboEntry);
+        }
 
 		/* Tree view:
 		 * If not already expanded, recursively expands the parents of the specified
@@ -921,11 +958,17 @@ public class FileViewer {
 			TreeItem item = null;
 			for (TreeItem currentItem : items) {
 				item = currentItem;
-				if (item.isDisposed()) continue;
+                if (item.isDisposed()) {
+                    continue;
+                }
 				final File itemFile = (File) item.getData(TREEITEMDATA_FILE);
-				if (itemFile != null && itemFile.equals(pathElement)) break;
+                if (itemFile != null && itemFile.equals(pathElement)) {
+                    break;
+                }
 			}
-			if (item == null) break;
+            if (item == null) {
+                break;
+            }
 			lastItem = item;
 			if (i != 0 && !item.getExpanded()) {
 				treeExpandItem(item);
@@ -973,7 +1016,9 @@ public class FileViewer {
 	 * @param files the files that need refreshing, empty array is a no-op, null refreshes all
 	 */
 	void notifyRefreshFiles(File[] files) {
-		if (files != null && files.length == 0) return;
+        if (files != null && files.length == 0) {
+            return;
+        }
 
 		if ((deferredRefreshRequested) && (deferredRefreshFiles != null) && (files != null)) {
 			// merge requests
@@ -992,7 +1037,9 @@ public class FileViewer {
 	 * Handles deferred Refresh notifications (due to Drag & Drop)
 	 */
 	void handleDeferredRefresh() {
-		if (isDragging || isDropping || ! deferredRefreshRequested) return;
+        if (isDragging || isDropping || !deferredRefreshRequested) {
+            return;
+        }
 		if (progressDialog != null) {
 			progressDialog.close();
 			progressDialog = null;
@@ -1020,8 +1067,12 @@ public class FileViewer {
 					break;
 				}
 			}
-		} else refreshTable = true;
-		if (refreshTable) workerUpdate(currentDirectory, true);
+		} else {
+            refreshTable = true;
+        }
+        if (refreshTable) {
+            workerUpdate(currentDirectory, true);
+        }
 
 		/* Combo view:
 		 * Refreshes the list of roots
@@ -1039,7 +1090,9 @@ public class FileViewer {
 						break;
 					}
 				}
-			} else refreshCombo = true;
+			} else {
+                refreshCombo = true;
+            }
 
 			if (refreshCombo) {
 				combo.removeAll();
@@ -1069,8 +1122,10 @@ public class FileViewer {
 	 * @param files the array of files to process
 	 */
 	void doDefaultFileAction(File[] files) {
-		// only uses the 1st file (for now)
-		if (files.length == 0) return;
+        // only uses the 1st file (for now)
+        if (files.length == 0) {
+            return;
+        }
 		final File file = files[0];
 
 		if (file.isDirectory()) {
@@ -1090,7 +1145,9 @@ public class FileViewer {
 	 * Navigates to the parent directory
 	 */
 	void doParent() {
-		if (currentDirectory == null) return;
+        if (currentDirectory == null) {
+            return;
+        }
 		File parentDirectory = currentDirectory.getParentFile();
 		notifySelectedDirectory(parentDirectory);
 	}
@@ -1134,11 +1191,17 @@ public class FileViewer {
 	 *        under inspection, or null if none
 	 */
 	private void dropTargetHandleDrop(DropTargetEvent event, File targetFile) {
-		// Get dropped data (an array of filenames)
-		if (! dropTargetValidate(event, targetFile)) return;
+        // Get dropped data (an array of filenames)
+        if (!dropTargetValidate(event, targetFile)) {
+            return;
+        }
 		final String[] sourceNames = (String[]) event.data;
-		if (sourceNames == null) event.detail = DND.DROP_NONE;
-		if (event.detail == DND.DROP_NONE) return;
+        if (sourceNames == null) {
+            event.detail = DND.DROP_NONE;
+        }
+        if (event.detail == DND.DROP_NONE) {
+            return;
+        }
 
 		// Open progress dialog
 		progressDialog = new ProgressDialog(shell,
@@ -1151,7 +1214,9 @@ public class FileViewer {
 		for (int i = 0; (i < sourceNames.length) && (! progressDialog.isCancelled()); i++){
 			final File source = new File(sourceNames[i]);
 			final File dest = new File(targetFile, source.getName());
-			if (source.equals(dest)) continue; // ignore if in same location
+            if (source.equals(dest)) {
+                continue;
+            } // ignore if in same location
 
 			progressDialog.setDetailFile(source, ProgressDialog.COPY);
 			while (! progressDialog.isCancelled()) {
@@ -1183,8 +1248,12 @@ public class FileViewer {
 						box.setMessage(getResourceString("dialog.FailedCopy.description",
 							new Object[] { source, dest }));
 						int button = box.open();
-						if (button == SWT.ABORT) i = sourceNames.length;
-						if (button != SWT.RETRY) break;
+                        if (button == SWT.ABORT) {
+                            i = sourceNames.length;
+                        }
+                        if (button != SWT.RETRY) {
+                            break;
+                        }
 					}
 				}
 				progressDialog.addProgress(1);
@@ -1209,8 +1278,12 @@ public class FileViewer {
 	 * @param sourceNames the names of the files that were dragged (event.data is invalid)
 	 */
 	private void dragSourceHandleDragFinished(DragSourceEvent event, String[] sourceNames) {
-		if (sourceNames == null) return;
-		if (event.detail != DND.DROP_MOVE) return;
+        if (sourceNames == null) {
+            return;
+        }
+        if (event.detail != DND.DROP_MOVE) {
+            return;
+        }
 
 		// Get array of files that were actually transferred
 		final File[] sourceFiles;
@@ -1218,11 +1291,13 @@ public class FileViewer {
 			sourceFiles = processedDropFiles;
 		} else {
 			sourceFiles = new File[sourceNames.length];
-			for (int i = 0; i < sourceNames.length; ++i)
-				sourceFiles[i] = new File(sourceNames[i]);
+            for (int i = 0; i < sourceNames.length; ++i) {
+                sourceFiles[i] = new File(sourceNames[i]);
+            }
 		}
-		if (progressDialog == null)
-			progressDialog = new ProgressDialog(shell, ProgressDialog.MOVE);
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(shell, ProgressDialog.MOVE);
+        }
 		progressDialog.setTotalWorkUnits(sourceFiles.length);
 		progressDialog.setProgress(0);
 		progressDialog.open();
@@ -1240,8 +1315,12 @@ public class FileViewer {
 					box.setMessage(getResourceString("dialog.FailedDelete.description",
 						new Object[] { source }));
 					int button = box.open();
-					if (button == SWT.ABORT) i = sourceNames.length;
-					if (button == SWT.RETRY) break;
+                    if (button == SWT.ABORT) {
+                        i = sourceNames.length;
+                    }
+                    if (button == SWT.RETRY) {
+                        break;
+                    }
 				}
 			}
 			progressDialog.addProgress(1);
@@ -1301,7 +1380,9 @@ public class FileViewer {
 	 */
 	static File[] getDirectoryList(File file) {
 		File[] list = file.listFiles();
-		if (list == null) return new File[0];
+        if (list == null) {
+            return new File[0];
+        }
 		sortFiles(list);
 		return list;
 	}
@@ -1314,12 +1395,16 @@ public class FileViewer {
 	 * @return true iff the operation succeeds without errors
 	 */
 	boolean copyFileStructure(File oldFile, File newFile) {
-		if (oldFile == null || newFile == null) return false;
+        if (oldFile == null || newFile == null) {
+            return false;
+        }
 
 		// ensure that newFile is not a child of oldFile or a dupe
 		File searchFile = newFile;
 		do {
-			if (oldFile.equals(searchFile)) return false;
+            if (oldFile.equals(searchFile)) {
+                return false;
+            }
 			searchFile = searchFile.getParentFile();
 		} while (searchFile != null);
 
@@ -1334,7 +1419,9 @@ public class FileViewer {
 				//System.out.println(getResourceString("simulate.DirectoriesCreated.text",
 				//	new Object[] { newFile.getPath() }));
 			} else {
-				if (! newFile.mkdirs()) return false;
+                if (!newFile.mkdirs()) {
+                    return false;
+                }
 			}
 			File[] subFiles = oldFile.listFiles();
 			if (subFiles != null) {
@@ -1344,10 +1431,14 @@ public class FileViewer {
 				for (File subFile : subFiles) {
 					File oldSubFile = subFile;
 					File newSubFile = new File(newFile, oldSubFile.getName());
-					if (! copyFileStructure(oldSubFile, newSubFile)) return false;
+                    if (!copyFileStructure(oldSubFile, newSubFile)) {
+                        return false;
+                    }
 					if (progressDialog != null) {
 						progressDialog.addProgress(1);
-						if (progressDialog.isCancelled()) return false;
+                        if (progressDialog.isCancelled()) {
+                            return false;
+                        }
 					}
 				}
 			}
@@ -1362,7 +1453,9 @@ public class FileViewer {
 				try (FileReader in = new FileReader(oldFile);
 						FileWriter out = new FileWriter(newFile);){
 					int count;
-					while ((count = in.read()) != -1) out.write(count);
+                    while ((count = in.read()) != -1) {
+                        out.write(count);
+                    }
 				} catch (IOException e) {
 					return false;
 				}
@@ -1378,7 +1471,9 @@ public class FileViewer {
 	 * @return true iff the operation succeeds without errors
 	 */
 	boolean deleteFileStructure(File oldFile) {
-		if (oldFile == null) return false;
+        if (oldFile == null) {
+            return false;
+        }
 		if (oldFile.isDirectory()) {
 			/*
 			 * Delete a directory
@@ -1393,10 +1488,14 @@ public class FileViewer {
 				}
 				for (File subFile : subFiles) {
 					File oldSubFile = subFile;
-					if (! deleteFileStructure(oldSubFile)) return false;
+                    if (!deleteFileStructure(oldSubFile)) {
+                        return false;
+                    }
 					if (progressDialog != null) {
 						progressDialog.addProgress(1);
-						if (progressDialog.isCancelled()) return false;
+                        if (progressDialog.isCancelled()) {
+                            return false;
+                        }
 					}
 				}
 			}
@@ -1444,7 +1543,9 @@ public class FileViewer {
 				mergeTemp[i] = files[x++];
 			}
 		}
-		for (int i = 0; i < length; ++i) files[i + start] = mergeTemp[i];
+        for (int i = 0; i < length; ++i) {
+            files[i + start] = mergeTemp[i];
+        }
 	}
 	private static int compareFiles(File a, File b) {
 //		boolean aIsDir = a.isDirectory();
@@ -1454,7 +1555,9 @@ public class FileViewer {
 
 		// sort case-sensitive files in a case-insensitive manner
 		int compare = a.getName().compareToIgnoreCase(b.getName());
-		if (compare == 0) compare = a.getName().compareTo(b.getName());
+        if (compare == 0) {
+            compare = a.getName().compareTo(b.getName());
+        }
 		return compare;
 	}
 
@@ -1475,14 +1578,18 @@ public class FileViewer {
 	 * Stops the worker and waits for it to terminate.
 	 */
 	void workerStop() {
-		if (workerThread == null) return;
+        if (workerThread == null) {
+            return;
+        }
 		synchronized(workerLock) {
 			workerCancelled = true;
 			workerStopped = true;
 			workerLock.notifyAll();
 		}
 		while (workerThread != null) {
-			if (! display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 
@@ -1494,8 +1601,12 @@ public class FileViewer {
 	 * @param force if true causes a refresh even if the data is the same
 	 */
 	void workerUpdate(File dir, boolean force) {
-		if (dir == null) return;
-		if ((!force) && (workerNextDir != null) && (workerNextDir.equals(dir))) return;
+        if (dir == null) {
+            return;
+        }
+        if ((!force) && (workerNextDir != null) && (workerNextDir.equals(dir))) {
+            return;
+        }
 
 		synchronized(workerLock) {
 			workerNextDir = dir;
@@ -1521,7 +1632,9 @@ public class FileViewer {
 			workerExecute();
 			synchronized(workerLock) {
 				try {
-					if ((!workerCancelled) && (workerStateDir == workerNextDir)) workerLock.wait();
+                    if ((!workerCancelled) && (workerStateDir == workerNextDir)) {
+                        workerLock.wait();
+                    }
 				} catch (InterruptedException e) {
 				}
 			}
@@ -1589,8 +1702,10 @@ public class FileViewer {
 		final String[] strings = new String[] { nameString, sizeString, typeString, dateString };
 
 		display.syncExec(() -> {
-			// guard against the shell being closed before this runs
-			if (shell.isDisposed()) return;
+            // guard against the shell being closed before this runs
+            if (shell.isDisposed()) {
+                return;
+            }
 			TableItem tableItem = new TableItem(table, 0);
 			tableItem.setText(strings);
 			tableItem.setImage(iconImage);

@@ -88,8 +88,12 @@ public static FontMetrics cocoa_new (int ascent, int descent, double averageChar
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof FontMetrics metrics)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof FontMetrics metrics)) {
+        return false;
+    }
 	return ascent == metrics.ascent && descent == metrics.descent && leading == metrics.leading &&
 		height == metrics.height && (Double.compare (averageCharWidth, metrics.averageCharWidth) == 0);
 }
@@ -185,7 +189,9 @@ public int hashCode() {
 String getName () {
 	String string = getClass ().getName ();
 	int index = string.lastIndexOf ('.');
-	if (index == -1) return string;
+    if (index == -1) {
+        return string;
+    }
 	return string.substring (index + 1, string.length ());
 }
 

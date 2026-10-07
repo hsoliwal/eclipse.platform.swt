@@ -30,7 +30,9 @@ public static void main (String [] args) {
 	Display display = new Display ();
 	Shell shell = new Shell (display);
 	final List list = new List (shell, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
-	for (int i=0; i<128; i++) list.add ("Item " + i);
+    for (int i = 0; i < 128; i++) {
+        list.add("Item " + i);
+    }
 	list.setTopIndex(40);
 	System.out.println(list.getTopIndex());
 	Rectangle clientArea = shell.getClientArea ();
@@ -57,7 +59,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

@@ -177,12 +177,18 @@ public GC(Drawable drawable) {
  * @since 2.1.2
  */
 public GC(Drawable drawable, int style) {
-	if (drawable == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (drawable == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	GCData data = new GCData();
 	data.style = checkStyle(style);
 	Device device = data.device;
-	if (device == null) device = Device.getDevice();
-	if (device == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (device == null) {
+        device = Device.getDevice();
+    }
+    if (device == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.device = data.device = device;
 
 	long gdkGC = drawable.internal_new_GC(data);
@@ -209,14 +215,18 @@ private float calculateTransformationScale() {
  * @return If only one style is specified, it is return unmodified. If both styles are specified, returns LEFT_TO_RIGHT
  */
 int checkStyle(int style) {
-	if ((style & SWT.LEFT_TO_RIGHT) != 0) style &= ~SWT.RIGHT_TO_LEFT;
+    if ((style & SWT.LEFT_TO_RIGHT) != 0) {
+        style &= ~SWT.RIGHT_TO_LEFT;
+    }
 	return style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT);
 }
 
 static void addCairoString(long cairo, String string, float x, float y, Font font) {
 	byte[] buffer = Converter.wcsToMbcs(string, true);
 	long layout = OS.pango_cairo_create_layout(cairo);
-	if (layout == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (layout == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.pango_layout_set_text(layout, buffer, -1);
 	OS.pango_layout_set_font_description(layout, font.handle);
 	double[] currentX = new double[1], currentY = new double[1];
@@ -234,7 +244,9 @@ static void addCairoString(long cairo, String string, float x, float y, Font fon
  * @param cairo the cairo context to apply the region to
  */
 void cairoClipRegion (long cairo) {
-	if (cairo == 0) return;
+    if (cairo == 0) {
+        return;
+    }
 	GdkRectangle rect = new GdkRectangle ();
 	GDK.gdk_cairo_get_clip_rectangle (cairo, rect);
 	cairo_rectangle_int_t cairoRect = new cairo_rectangle_int_t ();
@@ -298,7 +310,9 @@ public static GC gtk_new(Drawable drawable, GCData data) {
 
 void checkGC (int mask) {
 	int state = data.state;
-	if ((state & mask) == mask) return;
+    if ((state & mask) == mask) {
+        return;
+    }
 	state = (state ^ mask) & mask;
 	data.state |= mask;
 	long cairo = data.cairo;
@@ -317,7 +331,9 @@ void checkGC (int mask) {
 		if  (pattern != null) {
 			if ((data.style & SWT.MIRRORED) != 0 && pattern.surface != 0) {
 				long newPattern = Cairo.cairo_pattern_create_for_surface(pattern.surface);
-				if (newPattern == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+                if (newPattern == 0) {
+                    SWT.error(SWT.ERROR_NO_HANDLES);
+                }
 				Cairo.cairo_pattern_set_extend(newPattern, Cairo.CAIRO_EXTEND_REPEAT);
 				double[] matrix = {-1, 0, 0, 1, 0, 0};
 				Cairo.cairo_pattern_set_matrix(newPattern, matrix);
@@ -455,7 +471,9 @@ long convertRgn(long rgn, double[] matrix) {
 		Cairo.cairo_region_union(newRgn, polyRgn);
 		Cairo.cairo_region_destroy(polyRgn);
 	}
-	if (rects[0] != 0) OS.g_free(rects[0]);
+    if (rects[0] != 0) {
+        OS.g_free(rects[0]);
+    }
 	return newRgn;
 }
 
@@ -476,17 +494,27 @@ long convertRgn(long rgn, double[] matrix) {
  * </ul>
  */
 public void copyArea(Image image, int x, int y) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (image == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (image.type != SWT.BITMAP || image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (image == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (image.type != SWT.BITMAP || image.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	long cairo = Cairo.cairo_create(image.surface);
-	if (cairo == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (cairo == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Cairo.cairo_translate(cairo, -x, -y);
 	Cairo.cairo_push_group(cairo);
 	if (data.image != null) {
 		Cairo.cairo_set_source_surface(cairo, data.image.surface, 0, 0);
 	} else if (data.drawable != 0) {
-		if (!GTK.GTK4) GDK.gdk_cairo_set_source_window(cairo, data.drawable, 0, 0);
+        if (!GTK.GTK4) {
+            GDK.gdk_cairo_set_source_window(cairo, data.drawable, 0, 0);
+        }
 	} else {
 		Cairo.cairo_destroy(cairo);
 		return;
@@ -536,10 +564,16 @@ public void copyArea(int srcX, int srcY, int width, int height, int destX, int d
  * @since 3.1
  */
 public void copyArea(int srcX, int srcY, int width, int height, int destX, int destY, boolean paint) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (width <= 0 || height <= 0) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (width <= 0 || height <= 0) {
+        return;
+    }
 	int deltaX = destX - srcX, deltaY = destY - srcY;
-	if (deltaX == 0 && deltaY == 0) return;
+    if (deltaX == 0 && deltaY == 0) {
+        return;
+    }
 	long drawable = data.drawable;
 	if (data.image != null) {
 		Cairo.cairo_set_source_surface(handle, data.image.surface, deltaX, deltaY);
@@ -559,7 +593,9 @@ public void copyArea(int srcX, int srcY, int width, int height, int destX, int d
 		Cairo.cairo_translate(handle, deltaX, deltaY);
 		Cairo.cairo_set_operator(handle, Cairo.CAIRO_OPERATOR_SOURCE);
 		Cairo.cairo_push_group(handle);
-		if (!GTK.GTK4) GDK.gdk_cairo_set_source_window(handle, drawable, 0, 0);
+        if (!GTK.GTK4) {
+            GDK.gdk_cairo_set_source_window(handle, drawable, 0, 0);
+        }
 		Cairo.cairo_paint(handle);
 		Cairo.cairo_pop_group_to_source(handle);
 		Cairo.cairo_rectangle(handle, destX - deltaX, destY - deltaY, width, height);
@@ -606,7 +642,9 @@ public void copyArea(int srcX, int srcY, int width, int height, int destX, int d
 		} else {
 			if (deltaX != 0) {
 				int newX = destX - deltaX;
-				if (deltaX < 0) newX = destX + width;
+                if (deltaX < 0) {
+                    newX = destX + width;
+                }
 				rect.x = newX;
 				rect.y = srcY;
 				rect.width = Math.abs(deltaX);
@@ -620,7 +658,9 @@ public void copyArea(int srcX, int srcY, int width, int height, int destX, int d
 			}
 			if (deltaY != 0) {
 				int newY = destY - deltaY;
-				if (deltaY < 0) newY = destY + height;
+                if (deltaY < 0) {
+                    newY = destY + height;
+                }
 				rect.x = srcX;
 				rect.y = newY;
 				rect.width = Math.max (0, width);
@@ -644,10 +684,14 @@ void createLayout() {
 	} else {
 		context = GDK.gdk_pango_context_get();
 	}
-	if (context == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (context == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	data.context = context;
 	long layout = OS.pango_layout_new(context);
-	if (layout == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (layout == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	data.layout = layout;
 	OS.pango_context_set_language(context, GTK.gtk_get_default_language());
 	OS.pango_context_set_base_dir(context, (data.style & SWT.MIRRORED) != 0 ? OS.PANGO_DIRECTION_RTL : OS.PANGO_DIRECTION_LTR);
@@ -656,8 +700,12 @@ void createLayout() {
 
 void disposeLayout() {
 	data.string = null;
-	if (data.context != 0) OS.g_object_unref(data.context);
-	if (data.layout != 0) OS.g_object_unref(data.layout);
+    if (data.context != 0) {
+        OS.g_object_unref(data.context);
+    }
+    if (data.layout != 0) {
+        OS.g_object_unref(data.layout);
+    }
 	data.layout = data.context = 0;
 }
 
@@ -671,11 +719,15 @@ void destroy() {
 
 	/* Free resources */
 	long clipRgn = data.clipRgn;
-	if (clipRgn != 0) Cairo.cairo_region_destroy(clipRgn);
+    if (clipRgn != 0) {
+        Cairo.cairo_region_destroy(clipRgn);
+    }
 	Image image = data.image;
 	if (image != null) {
 		image.memGC = null;
-		if (image.transparentPixel != -1) image.createMask();
+        if (image.transparentPixel != -1) {
+            image.createMask();
+        }
 	}
 
 	disposeLayout();
@@ -722,7 +774,9 @@ void destroy() {
  * </ul>
  */
 public void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	checkGC(DRAW);
 	if (width < 0) {
 		x = x + width;
@@ -732,7 +786,9 @@ public void drawArc(int x, int y, int width, int height, int startAngle, int arc
 		y = y + height;
 		height = -height;
 	}
-	if (width == 0 || height == 0 || arcAngle == 0) return;
+    if (width == 0 || height == 0 || arcAngle == 0) {
+        return;
+    }
 	long cairo = data.cairo;
 	double xOffset = data.cairoXoffset, yOffset = data.cairoYoffset;
 	if (width == height) {
@@ -773,7 +829,9 @@ public void drawArc(int x, int y, int width, int height, int startAngle, int arc
  * @see #drawRectangle(int, int, int, int)
  */
 public void drawFocus(int x, int y, int width, int height) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	long cairo = data.cairo;
 	checkGC(FOREGROUND);
 	long  context = GTK.gtk_widget_get_style_context(data.device.shellHandle);
@@ -800,9 +858,15 @@ public void drawFocus(int x, int y, int width, int height) {
  * </ul>
  */
 public void drawImage(Image image, int x, int y) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (image == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (image == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (image.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	if (currentTransform != null && !isIdentity(currentTransform)) {
 		Rectangle imageBounds = image.getBounds();
 		drawImage(image, x, y, imageBounds.width, imageBounds.height);
@@ -844,13 +908,21 @@ public void drawImage(Image image, int x, int y) {
  * </ul>
  */
 public void drawImage(Image image, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY, int destWidth, int destHeight) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (srcWidth == 0 || srcHeight == 0 || destWidth == 0 || destHeight == 0) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (srcWidth == 0 || srcHeight == 0 || destWidth == 0 || destHeight == 0) {
+        return;
+    }
 	if (srcX < 0 || srcY < 0 || srcWidth < 0 || srcHeight < 0 || destWidth < 0 || destHeight < 0) {
 		SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (image == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (image.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (image == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (image.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	drawImage(image, srcX, srcY, srcWidth, srcHeight, destX, destY, destWidth, destHeight, false);
 }
 
@@ -961,7 +1033,9 @@ void drawImage(Image srcImage, int srcX, int srcY, int srcWidth, int srcHeight, 
 			case SWT.HIGH: filter = Cairo.CAIRO_FILTER_BEST; break;
 		}
 		long pattern = Cairo.cairo_pattern_create_for_surface(srcImage.surface);
-		if (pattern == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (pattern == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		if (srcWidth != destWidth || srcHeight != destHeight) {
 			Cairo.cairo_pattern_set_extend(pattern, Cairo.CAIRO_EXTEND_PAD);
 		}
@@ -991,7 +1065,9 @@ void drawImage(Image srcImage, int srcX, int srcY, int srcWidth, int srcHeight, 
  * </ul>
  */
 public void drawLine(int x1, int y1, int x2, int y2) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	checkGC(DRAW);
 	long cairo = data.cairo;
 	double xOffset = data.cairoXoffset, yOffset = data.cairoYoffset;
@@ -1025,7 +1101,9 @@ public void drawLine(int x1, int y1, int x2, int y2) {
  * </ul>
  */
 public void drawOval(int x, int y, int width, int height) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	checkGC(DRAW);
 	if (width < 0) {
 		x = x + width;
@@ -1073,9 +1151,15 @@ public void drawOval(int x, int y, int width, int height) {
  * @since 3.1
  */
 public void drawPath(Path path) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (path == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (path.handle == 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (path == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (path.handle == 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	initCairo();
 	checkGC(DRAW);
 	long cairo = data.cairo;
@@ -1083,7 +1167,9 @@ public void drawPath(Path path) {
 	double xOffset = data.cairoXoffset, yOffset = data.cairoYoffset;
 	Cairo.cairo_translate(cairo, xOffset, yOffset);
 	long copy = Cairo.cairo_copy_path(path.handle);
-	if (copy == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (copy == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Cairo.cairo_append_path(cairo, copy);
 	Cairo.cairo_path_destroy(copy);
 	Cairo.cairo_stroke(cairo);
@@ -1108,7 +1194,9 @@ public void drawPath(Path path) {
  * @since 3.0
  */
 public void drawPoint (int x, int y) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	checkGC(DRAW);
 	long cairo = data.cairo;
 	Cairo.cairo_rectangle(cairo, x, y, 1, 1);
@@ -1133,8 +1221,12 @@ public void drawPoint (int x, int y) {
  * </ul>
  */
 public void drawPolygon(int[] pointArray) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (pointArray == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (pointArray == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	checkGC(DRAW);
 	long cairo = data.cairo;
 	drawPolyline(cairo, pointArray, data.cairoXoffset, data.cairoYoffset, true);
@@ -1159,8 +1251,12 @@ public void drawPolygon(int[] pointArray) {
  * </ul>
  */
 public void drawPolyline(int[] pointArray) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (pointArray == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (pointArray == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	checkGC(DRAW);
 	long cairo = data.cairo;
 	drawPolyline(cairo, pointArray, data.cairoXoffset, data.cairoYoffset, false);
@@ -1169,12 +1265,16 @@ public void drawPolyline(int[] pointArray) {
 
 void drawPolyline(long cairo, int[] pointArray, double xOffset, double yOffset, boolean close) {
 	int count = pointArray.length / 2;
-	if (count == 0) return;
+    if (count == 0) {
+        return;
+    }
 	Cairo.cairo_move_to(cairo, pointArray[0] + xOffset, pointArray[1] + yOffset);
 	for (int i = 1, j=2; i < count; i++, j += 2) {
 		Cairo.cairo_line_to(cairo, pointArray[j] + xOffset, pointArray[j + 1] + yOffset);
 	}
-	if (close) Cairo.cairo_close_path(cairo);
+    if (close) {
+        Cairo.cairo_close_path(cairo);
+    }
 }
 
 /**
@@ -1193,7 +1293,9 @@ void drawPolyline(long cairo, int[] pointArray, double xOffset, double yOffset, 
  * </ul>
  */
 public void drawRectangle(int x, int y, int width, int height) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	checkGC(DRAW);
 	if (width < 0) {
 		x = x + width;
@@ -1226,7 +1328,9 @@ public void drawRectangle(int x, int y, int width, int height) {
  * </ul>
  */
 public void drawRectangle(Rectangle rect) {
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	drawRectangle(rect.x, rect.y, rect.width, rect.height);
 }
 /**
@@ -1251,7 +1355,9 @@ public void drawRectangle(Rectangle rect) {
  * </ul>
  */
 public void drawRoundRectangle(int x, int y, int width, int height, int arcWidth, int arcHeight) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	checkGC(DRAW);
 	int nx = x;
 	int ny = y;
@@ -1267,8 +1373,12 @@ public void drawRoundRectangle(int x, int y, int width, int height, int arcWidth
 		nh = 0 - nh;
 		ny = ny -nh;
 	}
-	if (naw < 0) naw = 0 - naw;
-	if (nah < 0) nah = 0 - nah;
+    if (naw < 0) {
+        naw = 0 - naw;
+    }
+    if (nah < 0) {
+        nah = 0 - nah;
+    }
 	long cairo = data.cairo;
 	double xOffset = data.cairoXoffset, yOffset = data.cairoYoffset;
 	if (naw == 0 || nah == 0) {
@@ -1315,8 +1425,12 @@ public void drawRoundRectangle(int x, int y, int width, int height, int arcWidth
  * </ul>
  */
 public void drawString (String string, int x, int y) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (string == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	drawString (string, x, y, false);
 }
 
@@ -1403,7 +1517,9 @@ public void drawText(String string, int x, int y) {
  */
 public void drawText(String string, int x, int y, boolean isTransparent) {
 	int flags = SWT.DRAW_DELIMITER | SWT.DRAW_TAB;
-	if (isTransparent) flags |= SWT.DRAW_TRANSPARENT;
+    if (isTransparent) {
+        flags |= SWT.DRAW_TRANSPARENT;
+    }
 	drawText(string, x, y, flags);
 }
 
@@ -1447,9 +1563,15 @@ public void drawText(String string, int x, int y, boolean isTransparent) {
  * </ul>
  */
 public void drawText (String string, int x, int y, int flags) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (string == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (string.length() == 0) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (string.length() == 0) {
+        return;
+    }
 	long cairo = data.cairo;
 	setString(string, flags);
 	checkGC(FONT);
@@ -1490,8 +1612,12 @@ public void drawText (String string, int x, int y, int flags) {
  */
 @Override
 public boolean equals(Object object) {
-	if (object == this) return true;
-	if (!(object instanceof GC)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof GC)) {
+        return false;
+    }
 	return handle == ((GC)object).handle;
 }
 
@@ -1528,7 +1654,9 @@ public boolean equals(Object object) {
  * @see #drawArc
  */
 public void fillArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	checkGC(FILL);
 	if (width < 0) {
 		x = x + width;
@@ -1538,7 +1666,9 @@ public void fillArc(int x, int y, int width, int height, int startAngle, int arc
 		y = y + height;
 		height = -height;
 	}
-	if (width == 0 || height == 0 || arcAngle == 0) return;
+    if (width == 0 || height == 0 || arcAngle == 0) {
+        return;
+    }
 	long cairo = data.cairo;
 	if (width == height) {
 		if (arcAngle >= 0) {
@@ -1583,8 +1713,12 @@ public void fillArc(int x, int y, int width, int height, int startAngle, int arc
  * @see #drawRectangle(int, int, int, int)
  */
 public void fillGradientRectangle(int x, int y, int width, int height, boolean vertical) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if ((width == 0) || (height == 0)) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if ((width == 0) || (height == 0)) {
+        return;
+    }
 
 	/* Rewrite this to use GdkPixbuf */
 
@@ -1598,11 +1732,15 @@ public void fillGradientRectangle(int x, int y, int width, int height, boolean v
 	boolean swapColors = false;
 	if (width < 0) {
 		x += width; width = -width;
-		if (! vertical) swapColors = true;
+        if (!vertical) {
+            swapColors = true;
+        }
 	}
 	if (height < 0) {
 		y += height; height = -height;
-		if (vertical) swapColors = true;
+        if (vertical) {
+            swapColors = true;
+        }
 	}
 	if (swapColors) {
 		fromRGB = backgroundRGB;
@@ -1626,8 +1764,10 @@ public void fillGradientRectangle(int x, int y, int width, int height, boolean v
 	try {
 		fillGradientRectangleInCairo(cairo, x, y, width, height, vertical, fromRGB, toRGB);
 	} finally {
-		// the surface outlives this call, later drawing must not inherit the scale
-		if (surface != 0) Cairo.cairo_surface_set_device_scale(surface, oldScaleX[0], oldScaleY[0]);
+        // the surface outlives this call, later drawing must not inherit the scale
+        if (surface != 0) {
+            Cairo.cairo_surface_set_device_scale(surface, oldScaleX[0], oldScaleY[0]);
+        }
 	}
 }
 
@@ -1672,7 +1812,9 @@ private void fillGradientRectangleInCairo(long cairo, int x, int y, int width, i
  * @see #drawOval
  */
 public void fillOval(int x, int y, int width, int height) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	checkGC(FILL);
 	if (width < 0) {
 		x = x + width;
@@ -1719,14 +1861,22 @@ public void fillOval(int x, int y, int width, int height) {
  * @since 3.1
  */
 public void fillPath (Path path) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (path == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (path.handle == 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (path == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (path.handle == 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	initCairo();
 	checkGC(FILL);
 	long cairo = data.cairo;
 	long copy = Cairo.cairo_copy_path(path.handle);
-	if (copy == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (copy == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	Cairo.cairo_append_path(cairo, copy);
 	Cairo.cairo_path_destroy(copy);
 	Cairo.cairo_fill(cairo);
@@ -1752,8 +1902,12 @@ public void fillPath (Path path) {
  * @see #drawPolygon
  */
 public void fillPolygon(int[] pointArray) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (pointArray == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (pointArray == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	checkGC(FILL);
 	long cairo = data.cairo;
 	drawPolyline(cairo, pointArray, 0, 0, true);
@@ -1776,7 +1930,9 @@ public void fillPolygon(int[] pointArray) {
  * @see #drawRectangle(int, int, int, int)
  */
 public void fillRectangle(int x, int y, int width, int height) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	checkGC(FILL);
 	if (width < 0) {
 		x = x + width;
@@ -1811,7 +1967,9 @@ public void fillRectangle(int x, int y, int width, int height) {
  * @see #drawRectangle(int, int, int, int)
  */
 public void fillRectangle(Rectangle rect) {
-	if (rect == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rect == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	fillRectangle(rect.x, rect.y, rect.width, rect.height);
 }
 
@@ -1833,7 +1991,9 @@ public void fillRectangle(Rectangle rect) {
  * @see #drawRoundRectangle
  */
 public void fillRoundRectangle(int x, int y, int width, int height, int arcWidth, int arcHeight) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	checkGC(FILL);
 	int nx = x;
 	int ny = y;
@@ -1849,8 +2009,12 @@ public void fillRoundRectangle(int x, int y, int width, int height, int arcWidth
 		nh = 0 - nh;
 		ny = ny -nh;
 	}
-	if (naw < 0) naw = 0 - naw;
-	if (nah < 0) nah = 0 - nah;
+    if (naw < 0) {
+        naw = 0 - naw;
+    }
+    if (nah < 0) {
+        nah = 0 - nah;
+    }
 	long cairo = data.cairo;
 	if (naw == 0 || nah == 0) {
 		Cairo.cairo_rectangle(cairo, x, y, width, height);
@@ -1880,11 +2044,15 @@ int fixMnemonic (char [] buffer) {
 		if ((buffer [j++] = buffer [i++]) == '&') {
 			if (i == buffer.length) {continue;}
 			if (buffer [i] == '&') {i++; continue;}
-			if (mnemonic == -1) mnemonic = j;
+            if (mnemonic == -1) {
+                mnemonic = j;
+            }
 			j--;
 		}
 	}
-	while (j < buffer.length) buffer [j++] = 0;
+    while (j < buffer.length) {
+        buffer [j++] = 0;
+    }
 	return mnemonic;
 }
 
@@ -1904,7 +2072,9 @@ int fixMnemonic (char [] buffer) {
  * </ul>
  */
 public int getAdvanceWidth(char ch) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	//BOGUS
 	return textExtentInPixels(new String(new char[]{ch}), 0).x;
 }
@@ -1935,7 +2105,9 @@ public int getAdvanceWidth(char ch) {
  * @since 3.1
  */
 public boolean getAdvanced() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.cairo != 0;
 }
 
@@ -1952,7 +2124,9 @@ public boolean getAdvanced() {
  * @since 3.1
  */
 public int getAlpha() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.alpha;
 }
 
@@ -1973,8 +2147,12 @@ public int getAlpha() {
  * @since 3.1
  */
 public int getAntialias() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.cairo == 0) return SWT.DEFAULT;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.cairo == 0) {
+        return SWT.DEFAULT;
+    }
 	int antialias = Cairo.cairo_get_antialias(data.cairo);
 	switch (antialias) {
 		case Cairo.CAIRO_ANTIALIAS_DEFAULT: return SWT.DEFAULT;
@@ -1995,7 +2173,9 @@ public int getAntialias() {
  * </ul>
  */
 public Color getBackground() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return Color.gtk_new(data.device, data.backgroundRGBA);
 }
 
@@ -2014,7 +2194,9 @@ public Color getBackground() {
  * @since 3.1
  */
 public Pattern getBackgroundPattern() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.backgroundPattern;
 }
 
@@ -2035,7 +2217,9 @@ public Pattern getBackgroundPattern() {
  * </ul>
  */
 public int getCharWidth(char ch) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	//BOGUS
 	return textExtentInPixels(new String(new char[]{ch}), 0).x;
 }
@@ -2053,7 +2237,9 @@ public int getCharWidth(char ch) {
  * </ul>
  */
 public Rectangle getClipping() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	/* Calculate visible bounds in device space */
 	int x = 0, y = 0, width = 0, height = 0;
 	int[] w = new int[1], h = new int[1];
@@ -2151,9 +2337,15 @@ public Rectangle getClipping() {
  * </ul>
  */
 public void getClipping(Region region) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (region == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (region.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (region == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (region.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	long clipping = region.handle;
 	Cairo.cairo_region_subtract(clipping, clipping);
 	long clipRgn = data.clipRgn;
@@ -2185,9 +2377,13 @@ public void getClipping(Region region) {
  * @since 3.1
  */
 public int getFillRule() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	long cairo = data.cairo;
-	if (cairo == 0) return SWT.FILL_EVEN_ODD;
+    if (cairo == 0) {
+        return SWT.FILL_EVEN_ODD;
+    }
 	return Cairo.cairo_get_fill_rule(cairo) == Cairo.CAIRO_FILL_RULE_WINDING ? SWT.FILL_WINDING : SWT.FILL_EVEN_ODD;
 }
 
@@ -2202,7 +2398,9 @@ public int getFillRule() {
  * </ul>
  */
 public Font getFont() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.font;
 }
 
@@ -2218,8 +2416,12 @@ public Font getFont() {
  * </ul>
  */
 public FontMetrics getFontMetrics() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.context == 0) createLayout();
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.context == 0) {
+        createLayout();
+    }
 	checkGC(FONT);
 	Font font = data.font;
 	long context = data.context;
@@ -2247,7 +2449,9 @@ public FontMetrics getFontMetrics() {
  * </ul>
  */
 public Color getForeground() {
-	if (handle == 0) SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return Color.gtk_new(data.device, data.foregroundRGBA);
 }
 
@@ -2266,7 +2470,9 @@ public Color getForeground() {
  * @since 3.1
  */
 public Pattern getForegroundPattern() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.foregroundPattern;
 }
 
@@ -2293,7 +2499,9 @@ public Pattern getForegroundPattern() {
  * @since 3.2
  */
 public GCData getGCData() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data;
 }
 
@@ -2311,7 +2519,9 @@ public GCData getGCData() {
  * @since 3.1
  */
 public int getInterpolation() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.interpolation;
 }
 
@@ -2327,7 +2537,9 @@ public int getInterpolation() {
  * @since 3.3
  */
 public LineAttributes getLineAttributes() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	float[] dashes = null;
 	if (data.lineDashes != null) {
 		dashes = new float[data.lineDashes.length];
@@ -2350,7 +2562,9 @@ public LineAttributes getLineAttributes() {
  * @since 3.1
  */
 public int getLineCap() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.lineCap;
 }
 
@@ -2367,8 +2581,12 @@ public int getLineCap() {
  * @since 3.1
  */
 public int[] getLineDash() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.lineDashes == null) return null;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.lineDashes == null) {
+        return null;
+    }
 	int[] lineDashes = new int[data.lineDashes.length];
 	for (int i = 0; i < lineDashes.length; i++) {
 		lineDashes[i] = (int)data.lineDashes[i];
@@ -2390,7 +2608,9 @@ public int[] getLineDash() {
  * @since 3.1
  */
 public int getLineJoin() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.lineJoin;
 }
 
@@ -2407,7 +2627,9 @@ public int getLineJoin() {
  * </ul>
  */
 public int getLineStyle() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.lineStyle;
 }
 
@@ -2424,7 +2646,9 @@ public int getLineStyle() {
  * </ul>
  */
 public int getLineWidth() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return (int)data.lineWidth;
 }
 
@@ -2447,7 +2671,9 @@ public int getLineWidth() {
  * @since 2.1.2
  */
 public int getStyle () {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.style;
 }
 
@@ -2497,12 +2723,18 @@ void getSize(int[] width, int[] height) {
  * @since 3.1
  */
 public int getTextAntialias() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.cairo == 0) return SWT.DEFAULT;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.cairo == 0) {
+        return SWT.DEFAULT;
+    }
 	int antialias = Cairo.CAIRO_ANTIALIAS_DEFAULT;
 	if (data.context != 0) {
 		long options = OS.pango_cairo_context_get_font_options(data.context);
-		if (options != 0) antialias = Cairo.cairo_font_options_get_antialias(options);
+        if (options != 0) {
+            antialias = Cairo.cairo_font_options_get_antialias(options);
+        }
 	}
 	switch (antialias) {
 		case Cairo.CAIRO_ANTIALIAS_DEFAULT: return SWT.DEFAULT;
@@ -2532,9 +2764,15 @@ public int getTextAntialias() {
  * @since 3.1
  */
 public void getTransform(Transform transform) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (transform == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (transform.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (transform == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (transform.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	long cairo = data.cairo;
 	if (cairo != 0) {
 		/*
@@ -2567,7 +2805,9 @@ public void getTransform(Transform transform) {
  * </ul>
  */
 public boolean getXORMode() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.xorMode;
 }
 
@@ -2606,18 +2846,26 @@ double[] identity() {
 }
 
 void init(Drawable drawable, GCData data, long gdkGC) {
-	if (data.foregroundRGBA != null) data.state &= ~FOREGROUND;
-	if (data.backgroundRGBA != null) data.state &= ~(BACKGROUND | BACKGROUND_BG);
-	if (data.font != null) data.state &= ~FONT;
+    if (data.foregroundRGBA != null) {
+        data.state &= ~FOREGROUND;
+    }
+    if (data.backgroundRGBA != null) {
+        data.state &= ~(BACKGROUND | BACKGROUND_BG);
+    }
+    if (data.font != null) {
+        data.state &= ~FONT;
+    }
 	Image image = data.image;
 	if (image != null) {
 		image.memGC = this;
-		/*
-		 * The transparent pixel mask might change when drawing on
-		 * the image.  Destroy it so that it is regenerated when
-		 * necessary.
-		 */
-		if (image.transparentPixel != -1) image.destroyMask();
+        /*
+         * The transparent pixel mask might change when drawing on
+         * the image.  Destroy it so that it is regenerated when
+         * necessary.
+         */
+        if (image.transparentPixel != -1) {
+            image.destroyMask();
+        }
 	}
 	this.drawable = drawable;
 	this.data = data;
@@ -2634,21 +2882,27 @@ void init(Drawable drawable, GCData data, long gdkGC) {
 		Cairo.cairo_translate(cairo, w[0], 0);
 		Cairo.cairo_scale(cairo, -1.0, 1.0);
 	}
-	if (cairoTransformationMatrix == null) cairoTransformationMatrix = new double[6];
+    if (cairoTransformationMatrix == null) {
+        cairoTransformationMatrix = new double[6];
+    }
 	Cairo.cairo_get_matrix(data.cairo, cairoTransformationMatrix);
 	clipping = getClipping();
 }
 
 void initCairo() {
 	long cairo = data.cairo;
-	if (cairo != 0) return;
+    if (cairo != 0) {
+        return;
+    }
 	if (GTK.GTK4) {
 		long surface = Cairo.cairo_image_surface_create(Cairo.CAIRO_FORMAT_A8, data.width, data.height);
 		data.cairo = cairo = Cairo.cairo_create(surface);
 	} else {
 		data.cairo = cairo = Cairo.cairo_create(data.drawable);
 	}
-	if (cairo == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (cairo == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	data.disposeCairo = true;
 	Cairo.cairo_set_fill_rule(cairo, Cairo.CAIRO_FILL_RULE_EVEN_ODD);
 	data.state &= ~(BACKGROUND | FOREGROUND | FONT | LINE_WIDTH | LINE_CAP | LINE_JOIN | LINE_STYLE | DRAW_OFFSET);
@@ -2677,7 +2931,9 @@ void computeStringSize() {
  * </ul>
  */
 public boolean isClipped() {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return data.clipRgn != 0;
 }
 
@@ -2697,7 +2953,9 @@ public boolean isDisposed() {
 }
 
 boolean isIdentity(double[] matrix) {
-	if (matrix == null) return true;
+    if (matrix == null) {
+        return true;
+    }
 	return matrix[0] == 1 && matrix[1] == 0 && matrix[2] == 0 && matrix[3] == 1 && matrix[4] == 0 && matrix[5] == 0;
 }
 
@@ -2744,7 +3002,9 @@ boolean isIdentity(double[] matrix) {
  * @since 3.1
  */
 public void setAdvanced(boolean advanced) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	if (!advanced) {
 		setAlpha(0xFF);
 		setAntialias(SWT.DEFAULT);
@@ -2778,8 +3038,12 @@ public void setAdvanced(boolean advanced) {
  * @since 3.1
  */
 public void setAlpha(int alpha) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.cairo == 0 && (alpha & 0xff) == 0xff) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.cairo == 0 && (alpha & 0xff) == 0xff) {
+        return;
+    }
 	initCairo();
 	data.alpha = alpha & 0xff;
 	data.state &= ~(BACKGROUND | FOREGROUND | BACKGROUND_BG);
@@ -2814,8 +3078,12 @@ public void setAlpha(int alpha) {
  * @since 3.1
  */
 public void setAntialias(int antialias) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.cairo == 0 && antialias == SWT.DEFAULT) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.cairo == 0 && antialias == SWT.DEFAULT) {
+        return;
+    }
 	int mode = 0;
 	switch (antialias) {
 		case SWT.DEFAULT: mode = Cairo.CAIRO_ANTIALIAS_DEFAULT; break;
@@ -2846,9 +3114,15 @@ public void setAntialias(int antialias) {
  * </ul>
  */
 public void setBackground(Color color) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (color == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (color == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	data.backgroundRGBA = color.handle;
 	data.backgroundPattern = null;
 	data.state &= ~(BACKGROUND | BACKGROUND_BG);
@@ -2879,17 +3153,27 @@ public void setBackground(Color color) {
  * @since 3.1
  */
 public void setBackgroundPattern(Pattern pattern) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (pattern != null && pattern.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (data.cairo == 0 && pattern == null) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (pattern != null && pattern.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (data.cairo == 0 && pattern == null) {
+        return;
+    }
 	initCairo();
-	if (data.backgroundPattern == pattern) return;
+    if (data.backgroundPattern == pattern) {
+        return;
+    }
 	data.backgroundPattern = pattern;
 	data.state &= ~BACKGROUND;
 }
 
 static void setCairoFont(long cairo, Font font) {
-	if (font == null || font.isDisposed()) return;
+    if (font == null || font.isDisposed()) {
+        return;
+    }
 	setCairoFont(cairo, font.handle);
 }
 
@@ -2903,10 +3187,16 @@ static void setCairoFont(long cairo, long font) {
 	int pangoStyle = OS.pango_font_description_get_style(font);
 	int pangoWeight = OS.pango_font_description_get_weight(font);
 	int slant = Cairo.CAIRO_FONT_SLANT_NORMAL;
-	if (pangoStyle == OS.PANGO_STYLE_ITALIC) slant = Cairo.CAIRO_FONT_SLANT_ITALIC;
-	if (pangoStyle == OS.PANGO_STYLE_OBLIQUE) slant = Cairo.CAIRO_FONT_SLANT_OBLIQUE;
+    if (pangoStyle == OS.PANGO_STYLE_ITALIC) {
+        slant = Cairo.CAIRO_FONT_SLANT_ITALIC;
+    }
+    if (pangoStyle == OS.PANGO_STYLE_OBLIQUE) {
+        slant = Cairo.CAIRO_FONT_SLANT_OBLIQUE;
+    }
 	int weight = Cairo.CAIRO_FONT_WEIGHT_NORMAL;
-	if (pangoWeight == OS.PANGO_WEIGHT_BOLD) weight = Cairo.CAIRO_FONT_WEIGHT_BOLD;
+    if (pangoWeight == OS.PANGO_WEIGHT_BOLD) {
+        weight = Cairo.CAIRO_FONT_WEIGHT_BOLD;
+    }
 	Cairo.cairo_select_font_face(cairo, buffer, slant, weight);
 	Cairo.cairo_set_font_size(cairo, height);
 }
@@ -3052,7 +3342,9 @@ void setClipping(long clipRgn) {
 		data.clippingTransform = null;
 		setCairoClip(data.damageRgn, 0);
 	} else {
-		if (data.clipRgn == 0) data.clipRgn = Cairo.cairo_region_create();
+        if (data.clipRgn == 0) {
+            data.clipRgn = Cairo.cairo_region_create();
+        }
 		Cairo.cairo_region_subtract(data.clipRgn, data.clipRgn);
 		Cairo.cairo_region_union(data.clipRgn, clipRgn);
 		if (currentTransform != null) {
@@ -3080,7 +3372,9 @@ void setClipping(long clipRgn) {
  * </ul>
  */
 public void setClipping(int x, int y, int width, int height) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	if (width < 0) {
 		x = x + width;
 		width = -width;
@@ -3127,8 +3421,12 @@ public void setClipping(int x, int y, int width, int height) {
  * @since 3.1
  */
 public void setClipping(Path path) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (path != null && path.isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (path != null && path.isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 
 	Transform t = null;
 	if (currentTransform != null) {
@@ -3146,7 +3444,9 @@ public void setClipping(Path path) {
 		initCairo();
 		long cairo = data.cairo;
 		long copy = Cairo.cairo_copy_path(path.handle);
-		if (copy == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (copy == 0) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		Cairo.cairo_append_path(cairo, copy);
 		Cairo.cairo_path_destroy(copy);
 		Cairo.cairo_clip(cairo);
@@ -3167,7 +3467,9 @@ public void setClipping(Path path) {
  * </ul>
  */
 public void setClipping(Rectangle rect) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	if (rect == null) {
 		resetClipping();
 	} else {
@@ -3202,8 +3504,12 @@ private void resetClipping() {
  * </ul>
  */
 public void setClipping(Region region) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (region != null && region.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (region != null && region.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	if (region != null) {
 		setClipping(region.handle);
 	} else {
@@ -3227,8 +3533,12 @@ public void setClipping(Region region) {
  * </ul>
  */
 public void setFont(Font font) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (font != null && font.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (font != null && font.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	data.font = font != null ? font : data.device.systemFont;
 	data.state &= ~FONT;
 	data.stringWidth = data.stringHeight = -1;
@@ -3251,7 +3561,9 @@ public void setFont(Font font) {
  * @since 3.1
  */
 public void setFillRule(int rule) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	int cairo_mode = Cairo.CAIRO_FILL_RULE_EVEN_ODD;
 	switch (rule) {
 		case SWT.FILL_WINDING:
@@ -3280,9 +3592,15 @@ public void setFillRule(int rule) {
  * </ul>
  */
 public void setForeground(Color color) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (color == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (color == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	data.foregroundRGBA = color.handle;
 	data.foregroundPattern = null;
 	data.state &= ~FOREGROUND;
@@ -3312,11 +3630,19 @@ public void setForeground(Color color) {
  * @since 3.1
  */
 public void setForegroundPattern(Pattern pattern) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (pattern != null && pattern.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (data.cairo == 0 && pattern == null) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (pattern != null && pattern.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (data.cairo == 0 && pattern == null) {
+        return;
+    }
 	initCairo();
-	if (data.foregroundPattern == pattern) return;
+    if (data.foregroundPattern == pattern) {
+        return;
+    }
 	data.foregroundPattern = pattern;
 	data.state &= ~FOREGROUND;
 }
@@ -3348,8 +3674,12 @@ public void setForegroundPattern(Pattern pattern) {
  * @since 3.1
  */
 public void setInterpolation(int interpolation) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.cairo == 0 && interpolation == SWT.DEFAULT) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.cairo == 0 && interpolation == SWT.DEFAULT) {
+        return;
+    }
 	switch (interpolation) {
 		case SWT.DEFAULT:
 		case SWT.NONE:
@@ -3388,8 +3718,12 @@ public void setInterpolation(int interpolation) {
  * @since 3.3
  */
 public void setLineAttributes(LineAttributes attributes) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (attributes == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (attributes == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int mask = 0;
 	float lineWidth = attributes.width;
 	if (lineWidth != data.lineWidth) {
@@ -3406,7 +3740,9 @@ public void setLineAttributes(LineAttributes attributes) {
 			case SWT.LINE_DASHDOTDOT:
 				break;
 			case SWT.LINE_CUSTOM:
-				if (attributes.dash == null) lineStyle = SWT.LINE_SOLID;
+                if (attributes.dash == null) {
+                    lineStyle = SWT.LINE_SOLID;
+                }
 				break;
 			default:
 				SWT.error(SWT.ERROR_INVALID_ARGUMENT);
@@ -3442,8 +3778,12 @@ public void setLineAttributes(LineAttributes attributes) {
 		boolean changed = lineDashes == null || lineDashes.length != dashes.length;
 		for (int i = 0; i < dashes.length; i++) {
 			float dash = dashes[i];
-			if (dash <= 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-			if (!changed && lineDashes[i] != dash) changed = true;
+            if (dash <= 0) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (!changed && lineDashes[i] != dash) {
+                changed = true;
+            }
 		}
 		if (changed) {
 			float[] newDashes = new float[dashes.length];
@@ -3469,7 +3809,9 @@ public void setLineAttributes(LineAttributes attributes) {
 		mask |= LINE_MITERLIMIT;
 	}
 	initCairo();
-	if (mask == 0) return;
+    if (mask == 0) {
+        return;
+    }
 	data.lineWidth = lineWidth;
 	data.lineStyle = lineStyle;
 	data.lineCap = cap;
@@ -3497,8 +3839,12 @@ public void setLineAttributes(LineAttributes attributes) {
  * @since 3.1
  */
 public void setLineCap(int cap) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.lineCap == cap) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.lineCap == cap) {
+        return;
+    }
 	switch (cap) {
 		case SWT.CAP_ROUND:
 		case SWT.CAP_FLAT:
@@ -3529,23 +3875,33 @@ public void setLineCap(int cap) {
  * @since 3.1
  */
 public void setLineDash(int[] dashes) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	float[] lineDashes = data.lineDashes;
 	if (dashes != null && dashes.length > 0) {
 		boolean changed = data.lineStyle != SWT.LINE_CUSTOM || lineDashes == null || lineDashes.length != dashes.length;
 		for (int i = 0; i < dashes.length; i++) {
 			int dash = dashes[i];
-			if (dash <= 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-			if (!changed && lineDashes[i] != dash) changed = true;
+            if (dash <= 0) {
+                SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+            }
+            if (!changed && lineDashes[i] != dash) {
+                changed = true;
+            }
 		}
-		if (!changed) return;
+        if (!changed) {
+            return;
+        }
 		data.lineDashes = new float[dashes.length];
 		for (int i = 0; i < dashes.length; i++) {
 			data.lineDashes[i] = dashes[i];
 		}
 		data.lineStyle = SWT.LINE_CUSTOM;
 	} else {
-		if (data.lineStyle == SWT.LINE_SOLID && (lineDashes == null || lineDashes.length == 0)) return;
+        if (data.lineStyle == SWT.LINE_SOLID && (lineDashes == null || lineDashes.length == 0)) {
+            return;
+        }
 		data.lineDashes = null;
 		data.lineStyle = SWT.LINE_SOLID;
 	}
@@ -3569,8 +3925,12 @@ public void setLineDash(int[] dashes) {
  * @since 3.1
  */
 public void setLineJoin(int join) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.lineJoin == join) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.lineJoin == join) {
+        return;
+    }
 	switch (join) {
 		case SWT.JOIN_MITER:
 		case SWT.JOIN_ROUND:
@@ -3599,8 +3959,12 @@ public void setLineJoin(int join) {
  * </ul>
  */
 public void setLineStyle(int lineStyle) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.lineStyle == lineStyle) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.lineStyle == lineStyle) {
+        return;
+    }
 	switch (lineStyle) {
 		case SWT.LINE_SOLID:
 		case SWT.LINE_DASH:
@@ -3609,7 +3973,9 @@ public void setLineStyle(int lineStyle) {
 		case SWT.LINE_DASHDOTDOT:
 			break;
 		case SWT.LINE_CUSTOM:
-			if (data.lineDashes == null) lineStyle = SWT.LINE_SOLID;
+            if (data.lineDashes == null) {
+                lineStyle = SWT.LINE_SOLID;
+            }
 			break;
 		default:
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
@@ -3639,14 +4005,20 @@ public void setLineStyle(int lineStyle) {
  * </ul>
  */
 public void setLineWidth(int lineWidth) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.lineWidth == lineWidth) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.lineWidth == lineWidth) {
+        return;
+    }
 	data.lineWidth = lineWidth;
 	data.state &= ~(LINE_WIDTH | DRAW_OFFSET);
 }
 
 void setString(String string, int flags) {
-	if (data.layout == 0) createLayout();
+    if (data.layout == 0) {
+        createLayout();
+    }
 	if (string == data.string && (flags & ~SWT.DRAW_TRANSPARENT) == (data.drawFlags  & ~SWT.DRAW_TRANSPARENT)) {
 		return;
 	}
@@ -3716,8 +4088,12 @@ void setString(String string, int flags) {
  * @since 3.1
  */
 public void setTextAntialias(int antialias) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (data.cairo == 0 && antialias == SWT.DEFAULT) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (data.cairo == 0 && antialias == SWT.DEFAULT) {
+        return;
+    }
 	int mode = 0;
 	switch (antialias) {
 		case SWT.DEFAULT: mode = Cairo.CAIRO_ANTIALIAS_DEFAULT; break;
@@ -3730,7 +4106,9 @@ public void setTextAntialias(int antialias) {
 	initCairo();
 	long options = Cairo.cairo_font_options_create();
 	Cairo.cairo_font_options_set_antialias(options, mode);
-	if (data.context == 0) createLayout();
+    if (data.context == 0) {
+        createLayout();
+    }
 	OS.pango_cairo_context_set_font_options(data.context, options);
 	Cairo.cairo_font_options_destroy(options);
 }
@@ -3762,9 +4140,15 @@ public void setTextAntialias(int antialias) {
  * @since 3.1
  */
 public void setTransform(Transform transform) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (transform != null && transform.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-	if (data.cairo == 0 && transform == null) return;
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (transform != null && transform.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (data.cairo == 0 && transform == null) {
+        return;
+    }
 	initCairo();
 	long cairo = data.cairo;
 	// Re-set the original Cairo transformation matrix: it contains a translation relative to the parent widget.
@@ -3805,7 +4189,9 @@ public void setTransform(Transform transform) {
  * </ul>
  */
 public void setXORMode(boolean xor) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	Cairo.cairo_set_operator(handle, xor ? Cairo.CAIRO_OPERATOR_DIFFERENCE : Cairo.CAIRO_OPERATOR_OVER);
 	data.xorMode = xor;
 }
@@ -3829,7 +4215,9 @@ public void setXORMode(boolean xor) {
  * </ul>
  */
 public Point stringExtent(String string) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return textExtentInPixels(string, 0);
 }
 
@@ -3853,7 +4241,9 @@ public Point stringExtent(String string) {
  * </ul>
  */
 public Point textExtent(String string) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return textExtentInPixels(string, SWT.DRAW_DELIMITER | SWT.DRAW_TAB);
 }
 
@@ -3889,8 +4279,12 @@ public Point textExtent(String string) {
  * </ul>
  */
 public Point textExtent(String string, int flags) {
-	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (string == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return textExtentInPixels(string, flags);
 }
 Point textExtentInPixels(String string, int flags) {
@@ -3910,7 +4304,9 @@ Point textExtentInPixels(String string, int flags) {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "GC {*DISPOSED*}";
+    if (isDisposed()) {
+        return "GC {*DISPOSED*}";
+    }
 	return "GC {" + handle + "}";
 }
 

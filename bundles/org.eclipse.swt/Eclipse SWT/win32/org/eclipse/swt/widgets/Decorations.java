@@ -162,16 +162,24 @@ public Decorations (Composite parent, int style) {
 
 void _setMaximized (boolean maximized) {
 	swFlags = maximized ? OS.SW_SHOWMAXIMIZED : OS.SW_RESTORE;
-	if (!OS.IsWindowVisible (handle)) return;
-	if (maximized == OS.IsZoomed (handle)) return;
+    if (!OS.IsWindowVisible(handle)) {
+        return;
+    }
+    if (maximized == OS.IsZoomed(handle)) {
+        return;
+    }
 	OS.ShowWindow (handle, swFlags);
 	OS.UpdateWindow (handle);
 }
 
 void _setMinimized (boolean minimized) {
 	swFlags = minimized ? OS.SW_SHOWMINNOACTIVE : OS.SW_RESTORE;
-	if (!OS.IsWindowVisible (handle)) return;
-	if (minimized == OS.IsIconic (handle)) return;
+    if (!OS.IsWindowVisible(handle)) {
+        return;
+    }
+    if (minimized == OS.IsIconic(handle)) {
+        return;
+    }
 	int flags = swFlags;
 	if (flags == OS.SW_SHOWMINNOACTIVE && handle == OS.GetActiveWindow ()) {
 		flags = OS.SW_MINIMIZE;
@@ -181,7 +189,9 @@ void _setMinimized (boolean minimized) {
 }
 
 void addMenu (Menu menu) {
-	if (menus == null) menus = new Menu [4];
+    if (menus == null) {
+        menus = new Menu [4];
+    }
 	for (int i=0; i<menus.length; i++) {
 		if (menus [i] == null) {
 			menus [i] = menu;
@@ -213,29 +223,7 @@ void bringToTop () {
 }
 
 static int checkStyle (int style) {
-	if ((style & SWT.NO_TRIM) != 0) {
-		style &= ~(SWT.CLOSE | SWT.TITLE | SWT.MIN | SWT.MAX | SWT.RESIZE | SWT.BORDER);
-	} else if ((style & SWT.NO_MOVE) != 0) {
-		style |= SWT.TITLE;
-	}
-	if ((style & (SWT.MENU | SWT.MIN | SWT.MAX | SWT.CLOSE)) != 0) {
-		style |= SWT.TITLE;
-	}
-
-	/*
-	* If either WS_MINIMIZEBOX or WS_MAXIMIZEBOX are set,
-	* we must also set WS_SYSMENU or the buttons will not
-	* appear.
-	*/
-	if ((style & (SWT.MIN | SWT.MAX)) != 0) style |= SWT.CLOSE;
-
-	/*
-	* Both WS_SYSMENU and WS_CAPTION must be set in order
-	* to for the system menu to appear.
-	*/
-	if ((style & SWT.CLOSE) != 0) style |= SWT.TITLE;
-
-	return style;
+	return WidgetStylePolicy.DECORATIONS_WINDOWS.applyAsInt(style);
 }
 
 @Override
@@ -249,24 +237,32 @@ void checkComposited (Composite parent) {
 
 @Override
 void checkOpened () {
-	if (!opened) resized = false;
+    if (!opened) {
+        resized = false;
+    }
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	return OS.DefMDIChildProc (hwnd, msg, wParam, lParam);
 }
 
 void closeWidget () {
 	Event event = new Event ();
 	sendEvent (SWT.Close, event);
-	if (event.doit && !isDisposed ()) dispose ();
+    if (event.doit && !isDisposed()) {
+        dispose();
+    }
 }
 
 @Override
@@ -290,9 +286,13 @@ Control computeTabRoot () {
 	boolean hasMenu = OS.GetMenu (handle) != 0;
 	adjustWindowRectEx(rect, bits1, hasMenu, bits2);
 
-	/* Get the size of the scroll bars */
-	if (horizontalBar != null) rect.bottom += getSystemMetrics (OS.SM_CYHSCROLL);
-	if (verticalBar != null) rect.right += getSystemMetrics (OS.SM_CXVSCROLL);
+    /* Get the size of the scroll bars */
+    if (horizontalBar != null) {
+        rect.bottom += getSystemMetrics(OS.SM_CYHSCROLL);
+    }
+    if (verticalBar != null) {
+        rect.right += getSystemMetrics(OS.SM_CXVSCROLL);
+    }
 
 	/* Compute the height of the menu bar */
 	if (hasMenu) {
@@ -300,7 +300,9 @@ Control computeTabRoot () {
 		OS.SetRect (testRect, 0, 0, rect.right - rect.left, rect.bottom - rect.top);
 		OS.SendMessage (handle, OS.WM_NCCALCSIZE, 0, testRect);
 		while ((testRect.bottom - testRect.top) < height) {
-			if (testRect.bottom - testRect.top == 0) break;
+            if (testRect.bottom - testRect.top == 0) {
+                break;
+            }
 			rect.top -= getSystemMetrics (OS.SM_CYMENU) - getSystemMetrics (OS.SM_CYBORDER);
 			OS.SetRect (testRect, 0, 0, rect.right - rect.left, rect.bottom - rect.top);
 			OS.SendMessage (handle, OS.WM_NCCALCSIZE, 0, testRect);
@@ -333,7 +335,9 @@ void createAccelerators () {
 			}
 		}
 	}
-	if (nAccel != 0) hAccel = OS.CreateAcceleratorTable (buffer2, nAccel);
+    if (nAccel != 0) {
+        hAccel = OS.CreateAcceleratorTable(buffer2, nAccel);
+    }
 }
 
 @Override
@@ -353,14 +357,20 @@ void createWidget () {
 }
 
 void destroyAccelerators () {
-	if (hAccel != 0 && hAccel != -1) OS.DestroyAcceleratorTable (hAccel);
+    if (hAccel != 0 && hAccel != -1) {
+        OS.DestroyAcceleratorTable(hAccel);
+    }
 	hAccel = -1;
 }
 
 @Override
 public void dispose () {
-	if (isDisposed()) return;
-	if (!isValidThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
+    if (isDisposed()) {
+        return;
+    }
+    if (!isValidThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
 	if (!(this instanceof Shell)) {
 		if (!traverseDecorations (true)) {
 			Shell shell = getShell ();
@@ -372,19 +382,33 @@ public void dispose () {
 }
 
 Menu findMenu (long hMenu) {
-	if (menus == null) return null;
+    if (menus == null) {
+        return null;
+    }
 	for (Menu menu : menus) {
-		if (menu != null && hMenu == menu.handle) return menu;
+        if (menu != null && hMenu == menu.handle) {
+            return menu;
+        }
 	}
 	return null;
 }
 
 void fixDecorations (Decorations newDecorations, Control control, Menu [] menus) {
-	if (this == newDecorations) return;
-	if (control == savedFocus) savedFocus = null;
-	if (control == defaultButton) defaultButton = null;
-	if (control == saveDefault) saveDefault = null;
-	if (menus == null) return;
+    if (this == newDecorations) {
+        return;
+    }
+    if (control == savedFocus) {
+        savedFocus = null;
+    }
+    if (control == defaultButton) {
+        defaultButton = null;
+    }
+    if (control == saveDefault) {
+        saveDefault = null;
+    }
+    if (menus == null) {
+        return;
+    }
 	Menu menu = control.menu;
 	if (menu != null) {
 		int index = 0;
@@ -430,19 +454,23 @@ void fixDecorations (Decorations newDecorations, Control control, Menu [] menus)
 		}
 		int width = lpwndpl.right - lpwndpl.left;
 		int height = lpwndpl.bottom - lpwndpl.top;
-		/*
-		* Feature in Windows.  For some reason WM_NCCALCSIZE does
-		* not compute the client area when the window is minimized.
-		* The fix is to compute it using AdjustWindowRectEx() and
-		* GetSystemMetrics().
-		*
-		* NOTE: This code fails to compute the correct client area
-		* for a minimized window where the menu bar would wrap were
-		* the window restored.  There is no fix for this problem at
-		* this time.
-		*/
-		if (horizontalBar != null) width -= getSystemMetrics (OS.SM_CYHSCROLL);
-		if (verticalBar != null) height -= getSystemMetrics (OS.SM_CXVSCROLL);
+        /*
+        * Feature in Windows.  For some reason WM_NCCALCSIZE does
+        * not compute the client area when the window is minimized.
+        * The fix is to compute it using AdjustWindowRectEx() and
+        * GetSystemMetrics().
+        *
+        * NOTE: This code fails to compute the correct client area
+        * for a minimized window where the menu bar would wrap were
+        * the window restored.  There is no fix for this problem at
+        * this time.
+        */
+        if (horizontalBar != null) {
+            width -= getSystemMetrics(OS.SM_CYHSCROLL);
+        }
+        if (verticalBar != null) {
+            height -= getSystemMetrics(OS.SM_CXVSCROLL);
+        }
 		RECT rect = new RECT ();
 		int bits1 = OS.GetWindowLong (handle, OS.GWL_STYLE);
 		int bits2 = OS.GetWindowLong (handle, OS.GWL_EXSTYLE);
@@ -470,7 +498,9 @@ void fixDecorations (Decorations newDecorations, Control control, Menu [] menus)
  */
 public Button getDefaultButton () {
 	checkWidget ();
-	if (defaultButton != null && defaultButton.isDisposed ()) return null;
+    if (defaultButton != null && defaultButton.isDisposed()) {
+        return null;
+    }
 	return defaultButton;
 }
 
@@ -529,7 +559,9 @@ public Image getImage () {
  */
 public Image [] getImages () {
 	checkWidget ();
-	if (images == null) return new Image [0];
+    if (images == null) {
+        return new Image [0];
+    }
 	Image [] result = new Image [images.length];
 	System.arraycopy (images, 0, result, 0, images.length);
 	return result;
@@ -564,7 +596,9 @@ public Image [] getImages () {
  */
 public boolean getMaximized () {
 	checkWidget ();
-	if (OS.IsWindowVisible (handle)) return OS.IsZoomed (handle);
+    if (OS.IsWindowVisible(handle)) {
+        return OS.IsZoomed(handle);
+    }
 	return swFlags == OS.SW_SHOWMAXIMIZED;
 }
 
@@ -599,7 +633,9 @@ public Menu getMenuBar () {
  */
 public boolean getMinimized () {
 	checkWidget ();
-	if (OS.IsWindowVisible (handle)) return OS.IsIconic (handle);
+    if (OS.IsWindowVisible(handle)) {
+        return OS.IsIconic(handle);
+    }
 	return swFlags == OS.SW_SHOWMINNOACTIVE;
 }
 
@@ -642,7 +678,9 @@ String getNameText () {
 public String getText () {
 	checkWidget ();
 	int length = OS.GetWindowTextLength (handle);
-	if (length == 0) return "";
+    if (length == 0) {
+        return "";
+    }
 	char [] buffer = new char [length + 1];
 	OS.GetWindowText (handle, buffer, length + 1);
 	return new String (buffer, 0, length);
@@ -701,18 +739,26 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (smallImage != null) smallImage.dispose ();
-	if (largeImage != null) largeImage.dispose ();
+    if (smallImage != null) {
+        smallImage.dispose();
+    }
+    if (largeImage != null) {
+        largeImage.dispose();
+    }
 	smallImage = largeImage = image = null;
 	images = null;
 	savedFocus = null;
 	defaultButton = saveDefault = null;
-	if (hAccel != 0 && hAccel != -1) OS.DestroyAcceleratorTable (hAccel);
+    if (hAccel != 0 && hAccel != -1) {
+        OS.DestroyAcceleratorTable(hAccel);
+    }
 	hAccel = -1;
 }
 
 void removeMenu (Menu menu) {
-	if (menus == null) return;
+    if (menus == null) {
+        return;
+    }
 	for (int i=0; i<menus.length; i++) {
 		if (menus [i] == menu) {
 			menus [i] = null;
@@ -723,19 +769,29 @@ void removeMenu (Menu menu) {
 
 @Override
 void reskinChildren (int flags) {
-	if (menuBar != null) menuBar.reskin (flags);
+    if (menuBar != null) {
+        menuBar.reskin(flags);
+    }
 	if (menus != null) {
 		for (Menu menu : menus) {
-			if (menu != null) menu.reskin (flags);
+            if (menu != null) {
+                menu.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
 }
 
 boolean restoreFocus () {
-	if (display.ignoreRestoreFocus) return true;
-	if (savedFocus != null && savedFocus.isDisposed ()) savedFocus = null;
-	if (savedFocus != null && savedFocus.setFocus ()) return true;
+    if (display.ignoreRestoreFocus) {
+        return true;
+    }
+    if (savedFocus != null && savedFocus.isDisposed()) {
+        savedFocus = null;
+    }
+    if (savedFocus != null && savedFocus.setFocus()) {
+        return true;
+    }
 	return false;
 }
 
@@ -759,15 +815,21 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean 
 	boolean sameOrigin = true;
 	if ((OS.SWP_NOMOVE & flags) == 0) {
 		sameOrigin = rect.left == x && rect.top == y;
-		if (!sameOrigin) moved = true;
+        if (!sameOrigin) {
+            moved = true;
+        }
 	}
 	boolean sameExtent = true;
 	if ((OS.SWP_NOSIZE & flags) == 0) {
 		sameExtent = rect.right - rect.left == width && rect.bottom - rect.top == height;
-		if (!sameExtent) resized = true;
+        if (!sameExtent) {
+            resized = true;
+        }
 	}
 	if (OS.IsZoomed (handle)) {
-		if (sameOrigin && sameExtent) return;
+        if (sameOrigin && sameExtent) {
+            return;
+        }
 		setPlacement (x, y, width, height, flags);
 		_setMaximized (false);
 		return;
@@ -803,8 +865,12 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean 
 public void setDefaultButton (Button button) {
 	checkWidget ();
 	if (button != null) {
-		if (button.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (button.menuShell () != this) error(SWT.ERROR_INVALID_PARENT);
+        if (button.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (button.menuShell() != this) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
 	setDefaultButton (button, true);
 }
@@ -812,25 +878,41 @@ public void setDefaultButton (Button button) {
 void setDefaultButton (Button button, boolean save) {
 	if (button == null) {
 		if (defaultButton == saveDefault) {
-			if (save) saveDefault = null;
+            if (save) {
+                saveDefault = null;
+            }
 			return;
 		}
 	} else {
-		if ((button.style & SWT.PUSH) == 0) return;
+        if ((button.style & SWT.PUSH) == 0) {
+            return;
+        }
 		if (button == defaultButton) {
-			if (save) saveDefault = defaultButton;
+            if (save) {
+                saveDefault = defaultButton;
+            }
 			return;
 		}
 	}
 	if (defaultButton != null) {
-		if (!defaultButton.isDisposed ()) defaultButton.setDefault (false);
+        if (!defaultButton.isDisposed()) {
+            defaultButton.setDefault(false);
+        }
 	}
-	if ((defaultButton = button) == null) defaultButton = saveDefault;
+    if ((defaultButton = button) == null) {
+        defaultButton = saveDefault;
+    }
 	if (defaultButton != null) {
-		if (!defaultButton.isDisposed ()) defaultButton.setDefault (true);
+        if (!defaultButton.isDisposed()) {
+            defaultButton.setDefault(true);
+        }
 	}
-	if (save) saveDefault = defaultButton;
-	if (saveDefault != null && saveDefault.isDisposed ()) saveDefault = null;
+    if (save) {
+        saveDefault = defaultButton;
+    }
+    if (saveDefault != null && saveDefault.isDisposed()) {
+        saveDefault = null;
+    }
 }
 
 /**
@@ -852,14 +934,20 @@ void setDefaultButton (Button button, boolean save) {
  */
 public void setImage (Image image) {
 	checkWidget ();
-	if (image != null && image.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.image = image;
 	setImages (image, null);
 }
 
 private void setImages (Image image, Image [] images) {
-	if (smallImage != null) smallImage.dispose ();
-	if (largeImage != null) largeImage.dispose ();
+    if (smallImage != null) {
+        smallImage.dispose();
+    }
+    if (largeImage != null) {
+        largeImage.dispose();
+    }
 	smallImage = largeImage = null;
 	long hSmallIcon = 0, hLargeIcon = 0;
 	Image smallIcon = null, largeIcon = null;
@@ -963,26 +1051,33 @@ private static boolean isCloserThan(ImageData dataToTest, ImageData referenceDat
 	// If they have the same transparency then the bigger the pixel depth (without
 	// surpassing the target depth) the better
 	if (transparencyToTest == referenceTransparency) {
-		if (dataToTest.depth == referenceData.depth)
-			return false;
+        if (dataToTest.depth == referenceData.depth) {
+            return false;
+        }
 
 		return dataToTest.depth > referenceData.depth && dataToTest.depth <= targetDepth;
 	}
 
-	// If they have different transparency, favor (in this order): the one with
-	// an alpha channel, the one with a mask, the one with a transparency pixel
-	if (transparencyToTest == SWT.TRANSPARENCY_ALPHA)
-		return true;
-	if (referenceTransparency == SWT.TRANSPARENCY_ALPHA)
-		return false;
-	if (transparencyToTest == SWT.TRANSPARENCY_MASK)
-		return true;
-	if (referenceTransparency == SWT.TRANSPARENCY_MASK)
-		return false;
-	if (transparencyToTest == SWT.TRANSPARENCY_PIXEL)
-		return true;
-	if (referenceTransparency == SWT.TRANSPARENCY_PIXEL)
-		return false;
+    // If they have different transparency, favor (in this order): the one with
+    // an alpha channel, the one with a mask, the one with a transparency pixel
+    if (transparencyToTest == SWT.TRANSPARENCY_ALPHA) {
+        return true;
+    }
+    if (referenceTransparency == SWT.TRANSPARENCY_ALPHA) {
+        return false;
+    }
+    if (transparencyToTest == SWT.TRANSPARENCY_MASK) {
+        return true;
+    }
+    if (referenceTransparency == SWT.TRANSPARENCY_MASK) {
+        return false;
+    }
+    if (transparencyToTest == SWT.TRANSPARENCY_PIXEL) {
+        return true;
+    }
+    if (referenceTransparency == SWT.TRANSPARENCY_PIXEL) {
+        return false;
+    }
 	return false;
 }
 
@@ -1012,9 +1107,13 @@ private static boolean isCloserThan(ImageData dataToTest, ImageData referenceDat
  */
 public void setImages (Image [] images) {
 	checkWidget ();
-	if (images == null) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (images == null) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	for (Image image : images) {
-		if (image == null || image.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (image == null || image.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	this.images = images;
 	setImages (null, images);
@@ -1066,13 +1165,23 @@ public void setMaximized (boolean maximized) {
  */
 public void setMenuBar (Menu menu) {
 	checkWidget ();
-	if (menuBar == menu) return;
+    if (menuBar == menu) {
+        return;
+    }
 	if (menu != null) {
-		if (menu.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-		if ((menu.style & SWT.BAR) == 0) error (SWT.ERROR_MENU_NOT_BAR);
-		if (menu.parent != this) error (SWT.ERROR_INVALID_PARENT);
+        if (menu.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if ((menu.style & SWT.BAR) == 0) {
+            error(SWT.ERROR_MENU_NOT_BAR);
+        }
+        if (menu.parent != this) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
-	if (menu != null) display.removeBar (menu);
+    if (menu != null) {
+        display.removeBar(menu);
+    }
 	menuBar = menu;
 	long hMenu = menuBar != null ? menuBar.handle: 0;
 	OS.SetMenu (handle, hMenu);
@@ -1178,7 +1287,9 @@ void setPlacement (int x, int y, int width, int height, int flags) {
 			oldX = location.x;
 			oldY = location.y;
 			sendEvent (SWT.Move);
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 		}
 		if (sameExtent) {
 			resized = true;
@@ -1186,7 +1297,9 @@ void setPlacement (int x, int y, int width, int height, int flags) {
 			oldWidth = rect.width;
 			oldHeight = rect.height;
 			sendEvent (SWT.Resize);
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 			if (layout != null) {
 				markLayout (false, false);
 				updateLayout (true, false);
@@ -1201,7 +1314,9 @@ void setSavedFocus (Control control) {
 
 void setSystemMenu () {
 	long hMenu = OS.GetSystemMenu (handle, false);
-	if (hMenu == 0) return;
+    if (hMenu == 0) {
+        return;
+    }
 	int oldCount = OS.GetMenuItemCount (hMenu);
 	if ((style & SWT.RESIZE) == 0) {
 		OS.DeleteMenu (hMenu, OS.SC_SIZE, OS.MF_BYCOMMAND);
@@ -1224,7 +1339,9 @@ void setSystemMenu () {
 		int index = 0;
 		while (index < newCount) {
 			if (OS.GetMenuItemInfo (hMenu, index, true, info)) {
-				if (info.wID == OS.SC_CLOSE) break;
+                if (info.wID == OS.SC_CLOSE) {
+                    break;
+                }
 			}
 			index++;
 		}
@@ -1258,7 +1375,9 @@ void setSystemMenu () {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	TCHAR buffer = new TCHAR (string, true);
 	/* Ensure that the title appears in the task bar.*/
 	if ((state & FOREIGN_HANDLE) != 0) {
@@ -1267,7 +1386,9 @@ public void setText (String string) {
 		long pszText = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
 		OS.MoveMemory (pszText, buffer, byteCount);
 		OS.DefWindowProc (handle, OS.WM_SETTEXT, 0, pszText);
-		if (pszText != 0) OS.HeapFree (hHeap, 0, pszText);
+        if (pszText != 0) {
+            OS.HeapFree(hHeap, 0, pszText);
+        }
 	} else {
 		OS.SetWindowText (handle, buffer);
 	}
@@ -1280,9 +1401,13 @@ public void setText (String string) {
 public void setVisible (boolean visible) {
 	checkWidget ();
 	if (!getDrawing()) {
-		if (((state & HIDDEN) == 0) == visible) return;
+        if (((state & HIDDEN) == 0) == visible) {
+            return;
+        }
 	} else {
-		if (visible == OS.IsWindowVisible (handle)) return;
+        if (visible == OS.IsWindowVisible(handle)) {
+            return;
+        }
 	}
 	if (visible) {
 		/*
@@ -1291,7 +1416,9 @@ public void setVisible (boolean visible) {
 		* event.  If this happens, just return.
 		*/
 		sendEvent (SWT.Show);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 		if (!getDrawing()) {
 			state &= ~HIDDEN;
 		} else {
@@ -1305,7 +1432,9 @@ public void setVisible (boolean visible) {
 			} else {
 				OS.ShowWindow (handle, swFlags);
 			}
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 			opened = true;
 			if (!moved) {
 				moved = true;
@@ -1336,22 +1465,32 @@ public void setVisible (boolean visible) {
 		} else {
 			OS.ShowWindow (handle, OS.SW_HIDE);
 		}
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 		sendEvent (SWT.Hide);
 	}
 }
 
 @Override
 boolean translateAccelerator (MSG msg) {
-	if (!isEnabled () || !isActive ()) return false;
-	if (menuBar != null && !menuBar.isEnabled ()) return false;
-	if (translateMDIAccelerator (msg) || translateMenuAccelerator (msg)) return true;
+    if (!isEnabled() || !isActive()) {
+        return false;
+    }
+    if (menuBar != null && !menuBar.isEnabled()) {
+        return false;
+    }
+    if (translateMDIAccelerator(msg) || translateMenuAccelerator(msg)) {
+        return true;
+    }
 	Decorations decorations = parent.menuShell ();
 	return decorations.translateAccelerator (msg);
 }
 
 boolean translateMenuAccelerator (MSG msg) {
-	if (hAccel == -1) createAccelerators ();
+    if (hAccel == -1) {
+        createAccelerators();
+    }
 	return hAccel != 0 && OS.TranslateAccelerator (handle, hAccel, msg) != 0;
 }
 
@@ -1363,13 +1502,17 @@ boolean translateMDIAccelerator (MSG msg) {
 			return true;
 		}
 		if (msg.message == OS.WM_KEYDOWN) {
-			if (OS.GetKeyState (OS.VK_CONTROL) >= 0) return false;
+            if (OS.GetKeyState(OS.VK_CONTROL) >= 0) {
+                return false;
+            }
 			switch ((int)(msg.wParam)) {
 				case OS.VK_F4:
 					OS.PostMessage (handle, OS.WM_CLOSE, 0, 0);
 					return true;
 				case OS.VK_F6:
-					if (traverseDecorations (true)) return true;
+                    if (traverseDecorations(true)) {
+                        return true;
+                    }
 			}
 			return false;
 		}
@@ -1390,7 +1533,9 @@ boolean traverseDecorations (boolean next) {
 	int length = children.length;
 	int index = 0;
 	while (index < length) {
-		if (children [index] == this) break;
+        if (children [index] == this) {
+            break;
+        }
 		index++;
 	}
 	/*
@@ -1403,7 +1548,9 @@ boolean traverseDecorations (boolean next) {
 	while ((index = (index + offset + length) % length) != start) {
 		Control child = children [index];
 		if (!child.isDisposed () && child instanceof Decorations) {
-			if (child.setFocus ()) return true;
+            if (child.setFocus()) {
+                return true;
+            }
 		}
 	}
 	return false;
@@ -1416,8 +1563,12 @@ boolean traverseItem (boolean next) {
 
 @Override
 boolean traverseReturn () {
-	if (defaultButton == null || defaultButton.isDisposed ()) return false;
-	if (!defaultButton.isVisible () || !defaultButton.isEnabled ()) return false;
+    if (defaultButton == null || defaultButton.isDisposed()) {
+        return false;
+    }
+    if (!defaultButton.isVisible() || !defaultButton.isEnabled()) {
+        return false;
+    }
 	defaultButton.click ();
 	return true;
 }
@@ -1431,9 +1582,15 @@ CREATESTRUCT widgetCreateStruct () {
 int widgetExtStyle () {
 	int bits = super.widgetExtStyle () | OS.WS_EX_MDICHILD;
 	bits &= ~OS.WS_EX_CLIENTEDGE;
-	if ((style & SWT.NO_TRIM) != 0) return bits;
-	if ((style & SWT.RESIZE) != 0) return bits;
-	if ((style & SWT.BORDER) != 0) bits |= OS.WS_EX_DLGMODALFRAME;
+    if ((style & SWT.NO_TRIM) != 0) {
+        return bits;
+    }
+    if ((style & SWT.RESIZE) != 0) {
+        return bits;
+    }
+    if ((style & SWT.BORDER) != 0) {
+        bits |= OS.WS_EX_DLGMODALFRAME;
+    }
 	return bits;
 }
 
@@ -1460,11 +1617,17 @@ int widgetStyle () {
 		}
 		return bits;
 	}
-	if ((style & SWT.TITLE) != 0) bits |= OS.WS_CAPTION;
+    if ((style & SWT.TITLE) != 0) {
+        bits |= OS.WS_CAPTION;
+    }
 
-	/* Set the min and max button bits */
-	if ((style & SWT.MIN) != 0) bits |= OS.WS_MINIMIZEBOX;
-	if ((style & SWT.MAX) != 0) bits |= OS.WS_MAXIMIZEBOX;
+    /* Set the min and max button bits */
+    if ((style & SWT.MIN) != 0) {
+        bits |= OS.WS_MINIMIZEBOX;
+    }
+    if ((style & SWT.MAX) != 0) {
+        bits |= OS.WS_MAXIMIZEBOX;
+    }
 
 	/* Set the resize, dialog border or border bits */
 	if ((style & SWT.RESIZE) != 0) {
@@ -1473,8 +1636,10 @@ int widgetStyle () {
 		bits |= OS.WS_BORDER;
 	}
 
-	/* Set the system menu and close box bits */
-	if ((style & SWT.CLOSE) != 0) bits |= OS.WS_SYSMENU;
+    /* Set the system menu and close box bits */
+    if ((style & SWT.CLOSE) != 0) {
+        bits |= OS.WS_SYSMENU;
+    }
 
 	return bits;
 }
@@ -1484,7 +1649,9 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 	switch (msg) {
 		case Display.SWT_GETACCEL:
 		case Display.SWT_GETACCELCOUNT:
-			if (hAccel == -1) createAccelerators ();
+            if (hAccel == -1) {
+                createAccelerators();
+            }
 			return msg == Display.SWT_GETACCELCOUNT ? nAccel : hAccel;
 	}
 	return super.windowProc (hwnd, msg, wParam, lParam);
@@ -1493,7 +1660,9 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 @Override
 LRESULT WM_ACTIVATE (long wParam, long lParam) {
 	LRESULT result = super.WM_ACTIVATE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in AWT.  When an AWT Window is activated,
 	* for some reason, it seems to forward the WM_ACTIVATE
@@ -1516,27 +1685,35 @@ LRESULT WM_ACTIVATE (long wParam, long lParam) {
 	}
 	int loWord = OS.LOWORD (wParam);
 	if (loWord != 0) {
-		/*
-		* When the high word of wParam is non-zero, the activation
-		* state of the window is being changed while the window is
-		* minimized. If this is the case, do not report activation
-		* events or restore the focus.
-		*/
-		if (OS.HIWORD (wParam) != 0) return result;
+        /*
+        * When the high word of wParam is non-zero, the activation
+        * state of the window is being changed while the window is
+        * minimized. If this is the case, do not report activation
+        * events or restore the focus.
+        */
+        if (OS.HIWORD(wParam) != 0) {
+            return result;
+        }
 		Control control = display.findControl (lParam);
 		if (control == null || control instanceof Shell) {
 			if (this instanceof Shell) {
 				Event event = new Event ();
 				event.detail = loWord == OS.WA_CLICKACTIVE ? SWT.MouseDown : SWT.None;
 				sendEvent (SWT.Activate, event);
-				if (isDisposed ()) return LRESULT.ZERO;
+                if (isDisposed()) {
+                    return LRESULT.ZERO;
+                }
 			}
 		}
-		if (restoreFocus ()) return LRESULT.ZERO;
+        if (restoreFocus()) {
+            return LRESULT.ZERO;
+        }
 	} else {
 		Display display = this.display;
 		boolean lockWindow = display.isXMouseActive ();
-		if (lockWindow) display.lockActiveWindow = true;
+        if (lockWindow) {
+            display.lockActiveWindow = true;
+        }
 		Control control = display.findControl (lParam);
 		if (control == null || control instanceof Shell) {
 			if (this instanceof Shell) {
@@ -1548,8 +1725,12 @@ LRESULT WM_ACTIVATE (long wParam, long lParam) {
 				}
 			}
 		}
-		if (lockWindow) display.lockActiveWindow = false;
-		if (isDisposed ()) return LRESULT.ZERO;
+        if (lockWindow) {
+            display.lockActiveWindow = false;
+        }
+        if (isDisposed()) {
+            return LRESULT.ZERO;
+        }
 		saveFocus ();
 	}
 	return result;
@@ -1558,8 +1739,12 @@ LRESULT WM_ACTIVATE (long wParam, long lParam) {
 @Override
 LRESULT WM_CLOSE (long wParam, long lParam) {
 	LRESULT result = super.WM_CLOSE (wParam, lParam);
-	if (result != null) return result;
-	if (isEnabled () && isActive ()) closeWidget ();
+    if (result != null) {
+        return result;
+    }
+    if (isEnabled() && isActive()) {
+        closeWidget();
+    }
 	return LRESULT.ZERO;
 }
 
@@ -1586,15 +1771,21 @@ LRESULT WM_MOVE (long wParam, long lParam) {
 @Override
 LRESULT WM_NCACTIVATE (long wParam, long lParam) {
 	LRESULT result = super.WM_NCACTIVATE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if (wParam == 0) {
-		if (display.lockActiveWindow) return LRESULT.ZERO;
+        if (display.lockActiveWindow) {
+            return LRESULT.ZERO;
+        }
 		Control control = display.findControl (lParam);
 		if (control != null) {
 			Shell shell = getShell ();
 			Decorations decorations = control.menuShell ();
 			if (decorations.getShell () == shell) {
-				if (this instanceof Shell) return LRESULT.ONE;
+                if (this instanceof Shell) {
+                    return LRESULT.ONE;
+                }
 				if (display.ignoreRestoreFocus) {
 					if (display.lastHittest != OS.HTCLIENT) {
 						result = LRESULT.ONE;
@@ -1613,7 +1804,9 @@ LRESULT WM_NCACTIVATE (long wParam, long lParam) {
 @Override
 LRESULT WM_QUERYOPEN (long wParam, long lParam) {
 	LRESULT result = super.WM_QUERYOPEN (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	sendEvent (SWT.Deiconify);
 	// widget could be disposed at this point
 	return result;
@@ -1622,8 +1815,12 @@ LRESULT WM_QUERYOPEN (long wParam, long lParam) {
 @Override
 LRESULT WM_SETFOCUS (long wParam, long lParam) {
 	LRESULT result = super.WM_SETFOCUS (wParam, lParam);
-	if (isDisposed ()) return result;
-	if (savedFocus != this) restoreFocus ();
+    if (isDisposed()) {
+        return result;
+    }
+    if (savedFocus != this) {
+        restoreFocus();
+    }
 	return result;
 }
 
@@ -1654,7 +1851,9 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 	}
 	if (changed) {
 		result = super.WM_SIZE (wParam, lParam);
-		if (isDisposed ()) return result;
+        if (isDisposed()) {
+            return result;
+        }
 	}
 	if (wParam == OS.SIZE_MINIMIZED) {
 		sendEvent (SWT.Iconify);
@@ -1666,7 +1865,9 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 @Override
 LRESULT WM_SYSCOMMAND (long wParam, long lParam) {
 	LRESULT result = super.WM_SYSCOMMAND (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if (!(this instanceof Shell)) {
 		int cmd = (int)wParam & 0xFFF0;
 		switch (cmd) {
@@ -1686,7 +1887,9 @@ LRESULT WM_SYSCOMMAND (long wParam, long lParam) {
 @Override
 LRESULT WM_WINDOWPOSCHANGING (long wParam, long lParam) {
 	LRESULT result = super.WM_WINDOWPOSCHANGING (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if (display.lockActiveWindow) {
 		WINDOWPOS lpwp = new WINDOWPOS ();
 		OS.MoveMemory (lpwp, lParam, WINDOWPOS.sizeof);

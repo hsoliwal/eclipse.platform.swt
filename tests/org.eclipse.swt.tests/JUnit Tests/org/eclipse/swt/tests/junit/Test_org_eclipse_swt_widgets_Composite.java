@@ -58,8 +58,9 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 	assertThrows(IllegalArgumentException.class, () -> new Composite(null, 0), "No exception thrown for parent == null");
 
 	int[] cases = {SWT.H_SCROLL, SWT.V_SCROLL, SWT.H_SCROLL | SWT.V_SCROLL};
-	for (int style : cases)
-		composite = new Composite(shell, style);
+    for (int style : cases) {
+        composite = new Composite(shell, style);
+    }
 }
 
 @Test
@@ -78,8 +79,9 @@ public void test_getChildren() {
 	assertArrayEquals(new Control[]{c1, c3}, composite.getChildren());
 
 	Control[] children = composite.getChildren();
-	for (Control element : children)
-		element.dispose();
+    for (Control element : children) {
+        element.dispose();
+    }
 
 	assertArrayEquals(new Control[]{}, composite.getChildren());
 }
@@ -215,8 +217,9 @@ protected Composite getElementExpectedToHaveFocusAfterSetFocusOnParent(Composite
 /* custom */
 @Override
 protected void setWidget(Widget w) {
-	if (composite != null)
-		composite.dispose();
+    if (composite != null) {
+        composite.dispose();
+    }
 	composite = (Composite)w;
 	super.setWidget(w);
 }

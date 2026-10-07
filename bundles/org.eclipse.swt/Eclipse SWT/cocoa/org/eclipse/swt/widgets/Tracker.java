@@ -132,8 +132,12 @@ public Tracker (Composite parent, int style) {
  * @see SWT#RESIZE
  */
 public Tracker (Display display, int style) {
-	if (display == null) display = Display.getCurrent ();
-	if (display == null) display = Display.getDefault ();
+    if (display == null) {
+        display = Display.getCurrent();
+    }
+    if (display == null) {
+        display = Display.getDefault();
+    }
 	if (!display.isValidThread ()) {
 		error (SWT.ERROR_THREAD_INVALID_ACCESS);
 	}
@@ -189,7 +193,9 @@ public void addKeyListener(KeyListener listener) {
 }
 
 Point adjustMoveCursor () {
-	if (bounds == null) return null;
+    if (bounds == null) {
+        return null;
+    }
 	int newX = bounds.x + bounds.width / 2;
 	int newY = bounds.y;
 	/*
@@ -205,7 +211,9 @@ Point adjustMoveCursor () {
 }
 
 Point adjustResizeCursor (boolean movePointer) {
-	if (bounds == null) return null;
+    if (bounds == null) {
+        return null;
+    }
 	int newX, newY;
 
 	if ((cursorOrientation & SWT.LEFT) != 0) {
@@ -262,10 +270,7 @@ Point adjustResizeCursor (boolean movePointer) {
 }
 
 static int checkStyle (int style) {
-	if ((style & (SWT.LEFT | SWT.RIGHT | SWT.UP | SWT.DOWN)) == 0) {
-		style |= SWT.LEFT | SWT.RIGHT | SWT.UP | SWT.DOWN;
-	}
-	return style;
+	return WidgetStylePolicy.TRACKER.applyAsInt(style);
 }
 
 /**
@@ -282,19 +287,29 @@ public void close () {
 	tracking = false;
 }
 Rectangle computeBounds () {
-	if (rectangles.length == 0) return null;
+    if (rectangles.length == 0) {
+        return null;
+    }
 	int xMin = rectangles [0].x;
 	int yMin = rectangles [0].y;
 	int xMax = rectangles [0].x + rectangles [0].width;
 	int yMax = rectangles [0].y + rectangles [0].height;
 
 	for (int i = 1; i < rectangles.length; i++) {
-		if (rectangles [i].x < xMin) xMin = rectangles [i].x;
-		if (rectangles [i].y < yMin) yMin = rectangles [i].y;
+        if (rectangles [i].x < xMin) {
+            xMin = rectangles [i].x;
+        }
+        if (rectangles [i].y < yMin) {
+            yMin = rectangles [i].y;
+        }
 		int rectRight = rectangles [i].x + rectangles [i].width;
-		if (rectRight > xMax) xMax = rectRight;
+        if (rectRight > xMax) {
+            xMax = rectRight;
+        }
 		int rectBottom = rectangles [i].y + rectangles [i].height;
-		if (rectBottom > yMax) yMax = rectBottom;
+        if (rectBottom > yMax) {
+            yMax = rectBottom;
+        }
 	}
 
 	return new Rectangle (xMin, yMin, xMax - xMin, yMax - yMin);
@@ -370,7 +385,9 @@ void drawRectangles (NSWindow window, Rectangle [] rects, boolean erase) {
 			NSBezierPath.strokeRect(rectFrame);
 		}
 	}
-	if (!erase) context.flushGraphics();
+    if (!erase) {
+        context.flushGraphics();
+    }
 	context.restoreGraphicsState();
 	NSGraphicsContext.static_restoreGraphicsState();
 }
@@ -551,8 +568,12 @@ void key (NSEvent nsEvent) {
 			Event event = new Event();
 			event.keyCode = keyCode;
 			int type = nsType == OS.NSKeyDown ? SWT.KeyDown : SWT.KeyUp;
-			if (!setKeyState (event, type, nsEvent)) break;
-			if (!sendKeyEvent (type, event)) return;
+            if (!setKeyState(event, type, nsEvent)) {
+                break;
+            }
+            if (!sendKeyEvent(type, event)) {
+                return;
+            }
 			break;
 		}
 		case OS.NSFlagsChanged: {
@@ -577,7 +598,9 @@ void key (NSEvent nsEvent) {
 				event.keyCode = keyCode;
 				setLocationMask(event, nsEvent);
 				setInputState (event, nsEvent, type);
-				if (!sendKeyEvent (type, event)) return;
+                if (!sendKeyEvent(type, event)) {
+                    return;
+                }
 			}
 			break;
 		}
@@ -721,12 +744,24 @@ void key (NSEvent nsEvent) {
 }
 
 void moveRectangles (int xChange, int yChange) {
-	if (bounds == null) return;
-	if (xChange < 0 && ((style & SWT.LEFT) == 0)) xChange = 0;
-	if (xChange > 0 && ((style & SWT.RIGHT) == 0)) xChange = 0;
-	if (yChange < 0 && ((style & SWT.UP) == 0)) yChange = 0;
-	if (yChange > 0 && ((style & SWT.DOWN) == 0)) yChange = 0;
-	if (xChange == 0 && yChange == 0) return;
+    if (bounds == null) {
+        return;
+    }
+    if (xChange < 0 && ((style & SWT.LEFT) == 0)) {
+        xChange = 0;
+    }
+    if (xChange > 0 && ((style & SWT.RIGHT) == 0)) {
+        xChange = 0;
+    }
+    if (yChange < 0 && ((style & SWT.UP) == 0)) {
+        yChange = 0;
+    }
+    if (yChange > 0 && ((style & SWT.DOWN) == 0)) {
+        yChange = 0;
+    }
+    if (xChange == 0 && yChange == 0) {
+        return;
+    }
 	bounds.x += xChange; bounds.y += yChange;
 	for (int i = 0; i < rectangles.length; i++) {
 		rectangles [i].x += xChange;
@@ -842,11 +877,15 @@ public boolean open () {
 	while (tracking && !cancelled) {
 		display.addPool();
 		try {
-			if (parent != null && parent.isDisposed ()) break;
+            if (parent != null && parent.isDisposed()) {
+                break;
+            }
 			display.runSkin ();
 			display.runDeferredLayouts ();
 			NSEvent event = application.nextEventMatchingMask(OS.NSAnyEventMask, NSDate.distantFuture(), OS.NSDefaultRunLoopMode, true);
-			if (event == null) continue;
+            if (event == null) {
+                continue;
+            }
 			int type = (int)event.type();
 			switch (type) {
 				case OS.NSLeftMouseUp:
@@ -883,7 +922,9 @@ public boolean open () {
 				case OS.NSFlagsChanged:
 					dispatch = false;
 			}
-			if (dispatch) application.sendEvent(event);
+            if (dispatch) {
+                application.sendEvent(event);
+            }
 			if (clientCursor != null && resizeCursor == null) {
 				display.lockCursor = false;
 				clientCursor.handle.set();
@@ -895,11 +936,13 @@ public boolean open () {
 		}
 	}
 
-	/*
-	* Cleanup: If this tracker was resizing then the last cursor that it created
-	* needs to be destroyed.
-	*/
-	if (resizeCursor != null) resizeCursor.dispose();
+    /*
+    * Cleanup: If this tracker was resizing then the last cursor that it created
+    * needs to be destroyed.
+    */
+    if (resizeCursor != null) {
+        resizeCursor.dispose();
+    }
 	resizeCursor = null;
 
 	if (oldTrackingControl != null && !oldTrackingControl.isDisposed()) {
@@ -949,8 +992,12 @@ void releaseWidget () {
  */
 public void removeControlListener (ControlListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Resize, listener);
 	eventTable.unhook (SWT.Move, listener);
 }
@@ -974,8 +1021,12 @@ public void removeControlListener (ControlListener listener) {
  */
 public void removeKeyListener(KeyListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.KeyUp, listener);
 	eventTable.unhook(SWT.KeyDown, listener);
 }
@@ -985,7 +1036,9 @@ public void removeKeyListener(KeyListener listener) {
  * and false otherwise.
  */
 boolean resizeRectangles (int xChange, int yChange) {
-	if (bounds == null) return false;
+    if (bounds == null) {
+        return false;
+    }
 	boolean orientationInit = false;
 	/*
 	* If the cursor orientation has not been set in the orientation of
@@ -1024,7 +1077,9 @@ boolean resizeRectangles (int xChange, int yChange) {
 	 */
 	if ((cursorOrientation & SWT.LEFT) != 0) {
 		if (xChange > bounds.width) {
-			if ((style & SWT.RIGHT) == 0) return orientationInit;
+            if ((style & SWT.RIGHT) == 0) {
+                return orientationInit;
+            }
 			cursorOrientation |= SWT.RIGHT;
 			cursorOrientation &= ~SWT.LEFT;
 			bounds.x += bounds.width;
@@ -1039,7 +1094,9 @@ boolean resizeRectangles (int xChange, int yChange) {
 		}
 	} else if ((cursorOrientation & SWT.RIGHT) != 0) {
 		if (bounds.width < -xChange) {
-			if ((style & SWT.LEFT) == 0) return orientationInit;
+            if ((style & SWT.LEFT) == 0) {
+                return orientationInit;
+            }
 			cursorOrientation |= SWT.LEFT;
 			cursorOrientation &= ~SWT.RIGHT;
 			xChange += bounds.width;
@@ -1054,7 +1111,9 @@ boolean resizeRectangles (int xChange, int yChange) {
 	}
 	if ((cursorOrientation & SWT.UP) != 0) {
 		if (yChange > bounds.height) {
-			if ((style & SWT.DOWN) == 0) return orientationInit;
+            if ((style & SWT.DOWN) == 0) {
+                return orientationInit;
+            }
 			cursorOrientation |= SWT.DOWN;
 			cursorOrientation &= ~SWT.UP;
 			bounds.y += bounds.height;
@@ -1069,7 +1128,9 @@ boolean resizeRectangles (int xChange, int yChange) {
 		}
 	} else if ((cursorOrientation & SWT.DOWN) != 0) {
 		if (bounds.height < -yChange) {
-			if ((style & SWT.UP) == 0) return orientationInit;
+            if ((style & SWT.UP) == 0) {
+                return orientationInit;
+            }
 			cursorOrientation |= SWT.UP;
 			cursorOrientation &= ~SWT.DOWN;
 			yChange += bounds.height;
@@ -1126,7 +1187,9 @@ public void setCursor (Cursor newCursor) {
 	clientCursor = newCursor;
 	if (newCursor != null) {
 		display.lockCursor = false;
-		if (inEvent) newCursor.handle.set();
+        if (inEvent) {
+            newCursor.handle.set();
+        }
 		display.lockCursor = true;
 	}
 }
@@ -1147,12 +1210,16 @@ public void setCursor (Cursor newCursor) {
  */
 public void setRectangles (Rectangle [] rectangles) {
 	checkWidget ();
-	if (rectangles == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rectangles == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int length = rectangles.length;
 	this.rectangles = new Rectangle [length];
 	for (int i = 0; i < length; i++) {
 		Rectangle current = rectangles [i];
-		if (current == null) error (SWT.ERROR_NULL_ARGUMENT);
+        if (current == null) {
+            error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		this.rectangles [i] = new Rectangle (current.x, current.y, current.width, current.height);
 	}
 	proportions = computeProportions (rectangles);

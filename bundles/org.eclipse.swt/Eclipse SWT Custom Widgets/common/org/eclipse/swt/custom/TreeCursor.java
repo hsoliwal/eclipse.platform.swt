@@ -235,7 +235,9 @@ public TreeCursor(Tree parent, int style) {
 	getAccessible().addAccessibleListener(new AccessibleAdapter() {
 		@Override
 		public void getName(AccessibleEvent e) {
-			if (row == null) return;
+            if (row == null) {
+                return;
+            }
 			int columnIndex = column == null ? 0 : tree.indexOf(column);
 			e.result = row.getText(columnIndex);
 		}
@@ -273,9 +275,15 @@ public void addSelectionListener(SelectionListener listener) {
 
 int countSubTreePages(TreeItem root) {
 	int pages = 1;
-	if (root == null) return 0;
-	if (root.getItemCount() == 0) return 1;
-	if (!root.getExpanded()) return 1;
+    if (root == null) {
+        return 0;
+    }
+    if (root.getItemCount() == 0) {
+        return 1;
+    }
+    if (!root.getExpanded()) {
+        return 1;
+    }
 	for (TreeItem item : root.getItems()) {
 		pages += countSubTreePages(item);
 	}
@@ -283,15 +291,21 @@ int countSubTreePages(TreeItem root) {
 }
 
 int findIndex(TreeItem[] items, TreeItem treeItem) {
-	if (items == null || treeItem == null) return -1;
+    if (items == null || treeItem == null) {
+        return -1;
+    }
 	Rectangle rect = treeItem.getBounds();
 	int index = 0;
 	for (int i = 0; i < items.length; i++) {
 		TreeItem previousItem = null;
 		TreeItem currentItem = items[i];
-		if (i > 0) previousItem = items[i - 1];
+        if (i > 0) {
+            previousItem = items[i - 1];
+        }
 		Rectangle rect1 = currentItem.getBounds();
-		if (rect.y == rect1.y) return index;
+        if (rect.y == rect1.y) {
+            return index;
+        }
 		if (rect.y < rect1.y) {
 			return index - 1 + findIndex(previousItem.getItems(), treeItem);
 		}
@@ -325,7 +339,9 @@ TreeItem findItem(TreeItem[] items, Point pt) {
 	Rectangle endBounds = items[end].getBounds();
 	if (endBounds.y < pt.y) {
 		if (endBounds.y + endBounds.height < pt.y) {
-			if (!items[end].getExpanded()) return null;
+            if (!items[end].getExpanded()) {
+                return null;
+            }
 			return findItem(items[end].getItems(), pt);
 		}
 		int[] columnOrder = tree.getColumnOrder();
@@ -402,7 +418,9 @@ public Color getForeground() {
 }
 
 TreeItem getLastVisibleItem(TreeItem[] items) {
-	if (items == null) return null;
+    if (items == null) {
+        return null;
+    }
 	TreeItem last = items[items.length - 1];
 	if (last.getExpanded() && last.getItemCount() > 0) {
 		return getLastVisibleItem(last.getItems());
@@ -411,7 +429,9 @@ TreeItem getLastVisibleItem(TreeItem[] items) {
 }
 
 TreeItem getNextItem(TreeItem item) {
-	if (item == null) return null;
+    if (item == null) {
+        return null;
+    }
 	if (item.getExpanded() && item.getItemCount() > 0) {
 		return item.getItem(0);
 	}
@@ -419,7 +439,9 @@ TreeItem getNextItem(TreeItem item) {
 	TreeItem parentItem = item.getParentItem();
 	while (parentItem != null) {
 		int index = parentItem.indexOf(item);
-		if (index == -1) return null;
+        if (index == -1) {
+            return null;
+        }
 		if (index < parentItem.getItemCount() - 1) {
 			return parentItem.getItem(index + 1);
 		}
@@ -427,17 +449,25 @@ TreeItem getNextItem(TreeItem item) {
 		parentItem = item.getParentItem();
 	}
 	int index = tree.indexOf(item);
-	if (index == -1) return null;
-	if (index == tree.getItemCount() - 1) return null;
+    if (index == -1) {
+        return null;
+    }
+    if (index == tree.getItemCount() - 1) {
+        return null;
+    }
 	return tree.getItem(index + 1);
 }
 
 TreeItem getPreviousItem(TreeItem item) {
-	if (item == null) return null;
+    if (item == null) {
+        return null;
+    }
 	TreeItem parentItem = item.getParentItem();
 	if (parentItem == null) {
 		int index = tree.indexOf(item);
-		if (index == -1 || index == 0) return null;
+        if (index == -1 || index == 0) {
+            return null;
+        }
 		item = tree.getItem(index - 1);
 		if (item.getExpanded() && item.getItemCount() > 0) {
 			return getLastVisibleItem(item.getItems());
@@ -445,8 +475,12 @@ TreeItem getPreviousItem(TreeItem item) {
 		return item;
 	}
 	int index = parentItem.indexOf(item);
-	if (index == -1) return null;
-	if (index == 0) return parentItem;
+    if (index == -1) {
+        return null;
+    }
+    if (index == 0) {
+        return parentItem;
+    }
 	item = parentItem.getItem(index - 1);
 	if (item.getExpanded() && item.getItemCount() > 0) {
 		return getLastVisibleItem(item.getItems());
@@ -470,7 +504,9 @@ public TreeItem getRow() {
 }
 
 void keyDown(Event event) {
-	if (row == null) return;
+    if (row == null) {
+        return;
+    }
 	switch (event.character) {
 		case SWT.CR:
 			notifyListeners(SWT.DefaultSelection, new Event());
@@ -496,15 +532,21 @@ void keyDown(Event event) {
 				break;
 			}
 			int columnCount = tree.getColumnCount();
-			if (columnCount == 0) break;
+            if (columnCount == 0) {
+                break;
+            }
 			int columnIndex = column == null ? 0 : tree.indexOf(column);
 			int[] columnOrder = tree.getColumnOrder();
 			int index = 0;
 			while (index < columnOrder.length) {
-				if (columnOrder[index] == columnIndex) break;
+                if (columnOrder[index] == columnIndex) {
+                    break;
+                }
 				index++;
 			}
-			if (index == columnOrder.length) index = 0;
+            if (index == columnOrder.length) {
+                index = 0;
+            }
 			int leadKey = (getStyle() & SWT.RIGHT_TO_LEFT) != 0 ? SWT.ARROW_RIGHT : SWT.ARROW_LEFT;
 			TreeItem parentRow = row.getParentItem();
 			int rowIndex = tree.indexOf(row);
@@ -595,7 +637,9 @@ void onDispose(Event event) {
 }
 
 void paint(Event event) {
-	if (row == null) return;
+    if (row == null) {
+        return;
+    }
 	int columnIndex = column == null ? 0 : tree.indexOf(column);
 	int orderedIndex = columnIndex;
 	int[] columnOrder = tree.getColumnOrder();
@@ -699,7 +743,9 @@ void paint(Event event) {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(SWT.Selection, listener);
 	removeTypedListener(SWT.DefaultSelection, listener);
 }
@@ -802,7 +848,9 @@ void setRowColumn(TreeItem row, TreeColumn column, boolean notify) {
 		int columnIndex = column == null ? 0 : tree.indexOf(column);
 		setBounds(row.getBounds(columnIndex));
 		redraw();
-		if (notify) notifyListeners(SWT.Selection, new Event());
+        if (notify) {
+            notifyListeners(SWT.Selection, new Event());
+        }
 	}
 }
 
@@ -859,7 +907,9 @@ public void setVisible(boolean visible) {
 }
 
 void treeCollapse(Event event) {
-	if (row == null) return;
+    if (row == null) {
+        return;
+    }
 	TreeItem root = (TreeItem)event.item;
 	TreeItem parentItem = row.getParentItem();
 	while (parentItem != null) {
@@ -871,27 +921,35 @@ void treeCollapse(Event event) {
 	}
 
 	getDisplay().asyncExec(() -> {
-		if (isDisposed()) return;
+        if (isDisposed()) {
+            return;
+        }
 		setRowColumn(row, column, true);
 	});
 }
 
 void treeExpand(Event event) {
 	getDisplay().asyncExec(() -> {
-		if (isDisposed()) return;
+        if (isDisposed()) {
+            return;
+        }
 		setRowColumn(row, column, true);
 	});
 }
 
 void treeFocusIn(Event event) {
 	if (isVisible()) {
-		if (row == null && column == null) return;
+        if (row == null && column == null) {
+            return;
+        }
 		setFocus();
 	}
 }
 
 void treeMouseDown(Event event) {
-	if (tree.getItemCount() == 0) return;
+    if (tree.getItemCount() == 0) {
+        return;
+    }
 	Point pt = new Point(event.x, event.y);
 	TreeItem item = tree.getItem(pt);
 	if (item == null && (tree.getStyle() & SWT.FULL_SELECTION) == 0) {
@@ -909,7 +967,9 @@ void treeMouseDown(Event event) {
 		System.arraycopy(allItems, start, items, 0, end - start + 1);
 		item = findItem(items, pt);
 	}
-	if (item == null) return;
+    if (item == null) {
+        return;
+    }
 
 	TreeColumn newColumn = null;
 	int lineWidth = tree.getLinesVisible() ? tree.getGridLineWidth() : 0;

@@ -64,9 +64,13 @@ public class Snippet258 {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
-		if (image != null) image.dispose();
+        if (image != null) {
+            image.dispose();
+        }
 		display.dispose();
 	}
 }

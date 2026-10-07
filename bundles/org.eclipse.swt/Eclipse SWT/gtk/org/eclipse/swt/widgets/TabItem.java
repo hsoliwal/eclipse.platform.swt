@@ -121,7 +121,9 @@ public TabItem (TabFolder parent, int style, int index) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -136,7 +138,9 @@ void createWidget (int index) {
 @Override
 void deregister() {
 	super.deregister ();
-	if (labelHandle != 0) display.removeWidget (labelHandle);
+    if (labelHandle != 0) {
+        display.removeWidget(labelHandle);
+    }
 }
 
 @Override
@@ -166,7 +170,9 @@ public Rectangle getBounds () {
 	int y = allocation.y;
 	int width = (state & ZERO_WIDTH) != 0 ? 0 : allocation.width;
 	int height = (state & ZERO_HEIGHT) != 0 ? 0 : allocation.height;
-	if ((parent.style & SWT.MIRRORED) != 0) x = parent.getClientWidth () - width - x;
+    if ((parent.style & SWT.MIRRORED) != 0) {
+        x = parent.getClientWidth() - width - x;
+    }
 	return new Rectangle (x, y, width, height);
 }
 
@@ -232,7 +238,9 @@ long gtk_mnemonic_activate (long widget, long arg1) {
 @Override
 void hookEvents () {
 	super.hookEvents ();
-	if (labelHandle != 0) OS.g_signal_connect_closure_by_id (labelHandle, display.signalIds [MNEMONIC_ACTIVATE], 0, display.getClosure (MNEMONIC_ACTIVATE), false);
+    if (labelHandle != 0) {
+        OS.g_signal_connect_closure_by_id(labelHandle, display.signalIds [MNEMONIC_ACTIVATE], 0, display.getClosure(MNEMONIC_ACTIVATE), false);
+    }
 	if (GTK.GTK4) {
 		long motionController = GTK4.gtk_event_controller_motion_new();
 		GTK4.gtk_widget_add_controller(handle, motionController);
@@ -248,7 +256,9 @@ void hookEvents () {
 @Override
 void register () {
 	super.register ();
-	if (labelHandle != 0) display.addWidget (labelHandle, this);
+    if (labelHandle != 0) {
+        display.addWidget(labelHandle, this);
+    }
 }
 
 
@@ -275,7 +285,9 @@ void releaseParent () {
 	super.releaseParent ();
 	int index = parent.indexOf (this);
 	if (index == parent.getSelectionIndex ()) {
-		if (control != null) control.setVisible (false);
+        if (control != null) {
+            control.setVisible(false);
+        }
 	}
 }
 
@@ -297,8 +309,12 @@ void releaseParent () {
 public void setControl(Control control) {
 	checkWidget();
 	if (control != null) {
-		if (control.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
-		if (control.parent != parent) error(SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.parent != parent) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
 
 	if (GTK.GTK4) {
@@ -327,7 +343,9 @@ public void setControl(Control control) {
 			if (newControl != null) {
 				if (selectionIndex != -1) {
 					Control selectedControl = parent.getItem(selectionIndex).getControl();
-					if (selectedControl == newControl) return;
+                    if (selectedControl == newControl) {
+                        return;
+                    }
 				}
 				newControl.setVisible(false);
 				return;
@@ -397,7 +415,9 @@ public void setImage (Image image) {
 	super.setImage (image);
 	if (image != null) {
 		ImageList imageList = parent.imageList;
-		if (imageList == null) imageList = parent.imageList = new ImageList ();
+        if (imageList == null) {
+            imageList = parent.imageList = new ImageList();
+        }
 		int imageIndex = imageList.indexOf (image);
 		if (imageIndex == -1) {
 			imageIndex = imageList.add (image);
@@ -428,10 +448,18 @@ public void setImage (Image image) {
 void setOrientation (boolean create) {
 	if ((parent.style & SWT.RIGHT_TO_LEFT) != 0 || !create) {
 		int dir = (parent.style & SWT.RIGHT_TO_LEFT) != 0 ? GTK.GTK_TEXT_DIR_RTL : GTK.GTK_TEXT_DIR_LTR;
-		if (handle != 0) GTK.gtk_widget_set_direction (handle, dir);
-		if (labelHandle != 0) GTK.gtk_widget_set_direction (labelHandle, dir);
-		if (imageHandle != 0) GTK.gtk_widget_set_direction (imageHandle, dir);
-		if (pageHandle != 0) GTK.gtk_widget_set_direction (pageHandle, dir);
+        if (handle != 0) {
+            GTK.gtk_widget_set_direction(handle, dir);
+        }
+        if (labelHandle != 0) {
+            GTK.gtk_widget_set_direction(labelHandle, dir);
+        }
+        if (imageHandle != 0) {
+            GTK.gtk_widget_set_direction(imageHandle, dir);
+        }
+        if (pageHandle != 0) {
+            GTK.gtk_widget_set_direction(pageHandle, dir);
+        }
 	}
 }
 
@@ -462,7 +490,9 @@ void setOrientation (boolean create) {
 @Override
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	super.setText (string);
 	char [] chars = fixMnemonic (string);
 	byte [] buffer = Converter.wcsToMbcs (chars, true);

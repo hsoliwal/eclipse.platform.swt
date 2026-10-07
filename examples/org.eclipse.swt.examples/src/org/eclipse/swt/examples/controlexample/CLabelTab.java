@@ -58,12 +58,24 @@ class CLabelTab extends AlignableTab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (shadowInButton.getSelection ()) style |= SWT.SHADOW_IN;
-		if (shadowNoneButton.getSelection ()) style |= SWT.SHADOW_NONE;
-		if (shadowOutButton.getSelection ()) style |= SWT.SHADOW_OUT;
-		if (leftButton.getSelection ()) style |= SWT.LEFT;
-		if (centerButton.getSelection ()) style |= SWT.CENTER;
-		if (rightButton.getSelection ()) style |= SWT.RIGHT;
+        if (shadowInButton.getSelection()) {
+            style |= SWT.SHADOW_IN;
+        }
+        if (shadowNoneButton.getSelection()) {
+            style |= SWT.SHADOW_NONE;
+        }
+        if (shadowOutButton.getSelection()) {
+            style |= SWT.SHADOW_OUT;
+        }
+        if (leftButton.getSelection()) {
+            style |= SWT.LEFT;
+        }
+        if (centerButton.getSelection()) {
+            style |= SWT.CENTER;
+        }
+        if (rightButton.getSelection()) {
+            style |= SWT.RIGHT;
+        }
 
 		/* Create the example widgets */
 		label1 = new CLabel (textLabelGroup, style);
@@ -122,9 +134,15 @@ class CLabelTab extends AlignableTab {
 	@Override
 	void setExampleWidgetAlignment () {
 		int alignment = 0;
-		if (leftButton.getSelection ()) alignment = SWT.LEFT;
-		if (centerButton.getSelection ()) alignment = SWT.CENTER;
-		if (rightButton.getSelection ()) alignment = SWT.RIGHT;
+        if (leftButton.getSelection()) {
+            alignment = SWT.LEFT;
+        }
+        if (centerButton.getSelection()) {
+            alignment = SWT.CENTER;
+        }
+        if (rightButton.getSelection()) {
+            alignment = SWT.RIGHT;
+        }
 		label1.setAlignment (alignment);
 		label2.setAlignment (alignment);
 		label3.setAlignment (alignment);

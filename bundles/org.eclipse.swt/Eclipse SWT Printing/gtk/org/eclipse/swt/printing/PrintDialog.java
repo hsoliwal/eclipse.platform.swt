@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2026 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -113,7 +113,9 @@ public PrintDialog (Shell parent, int style) {
  * @since 3.4
  */
 public void setPrinterData(PrinterData data) {
-	if (data == null) data = new PrinterData();
+    if (data == null) {
+        data = new PrinterData();
+    }
 	this.printerData = data;
 }
 
@@ -130,18 +132,14 @@ public PrinterData getPrinterData() {
 }
 
 static int checkBits (int style, int int0, int int1, int int2, int int3, int int4, int int5) {
-	int mask = int0 | int1 | int2 | int3 | int4 | int5;
-	if ((style & mask) == 0) style |= int0;
-	if ((style & int0) != 0) style = (style & ~mask) | int0;
-	if ((style & int1) != 0) style = (style & ~mask) | int1;
-	if ((style & int2) != 0) style = (style & ~mask) | int2;
-	if ((style & int3) != 0) style = (style & ~mask) | int3;
-	if ((style & int4) != 0) style = (style & ~mask) | int4;
-	if ((style & int5) != 0) style = (style & ~mask) | int5;
-	return style;
+	return StyleBits.normalize(style, int0, int1, int2, int3, int4, int5);
 }
 
 static int checkStyleBit (Shell parent, int style) {
+	return PrintDialog.normalizeStyle(parent, style);
+}
+
+private static int normalizeStyle(Shell parent, int style) {
 	int mask = SWT.PRIMARY_MODAL | SWT.APPLICATION_MODAL | SWT.SYSTEM_MODAL;
 	if ((style & SWT.SHEET) != 0) {
 		style &= ~SWT.SHEET;
@@ -155,8 +153,12 @@ static int checkStyleBit (Shell parent, int style) {
 	style &= ~SWT.MIRRORED;
 	if ((style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT)) == 0) {
 		if (parent != null) {
-			if ((parent.getStyle () & SWT.LEFT_TO_RIGHT) != 0) style |= SWT.LEFT_TO_RIGHT;
-			if ((parent.getStyle () & SWT.RIGHT_TO_LEFT) != 0) style |= SWT.RIGHT_TO_LEFT;
+            if ((parent.getStyle() & SWT.LEFT_TO_RIGHT) != 0) {
+                style |= SWT.LEFT_TO_RIGHT;
+            }
+            if ((parent.getStyle() & SWT.RIGHT_TO_LEFT) != 0) {
+                style |= SWT.RIGHT_TO_LEFT;
+            }
 		}
 	}
 	return checkBits (style, SWT.LEFT_TO_RIGHT, SWT.RIGHT_TO_LEFT, 0, 0, 0, 0);
@@ -316,13 +318,9 @@ public PrinterData open() {
 
 	/* Set values of print_settings and page_setup from PrinterData. */
 	String printerName = printerData.name;
-	if (printerName == null) {
-		/*
-		 * Find the printer name corresponding to the file backend, or the
-		 * default printer. Without a default printer, select the file backend
-		 * so that the dialog does not start without a printer.
-		 */
-		long printer = printerData.printToFile ? Printer.gtkPrinterFromPrinterData(printerData) : Printer.gtkDefaultOrFilePrinter();
+	if (printerName == null && printerData.printToFile) {
+		/* Find the printer name corresponding to the file backend. */
+		long printer = Printer.gtkPrinterFromPrinterData(printerData);
 		if (printer != 0) {
 			PrinterData data = Printer.printerDataFromGtkPrinter(printer);
 			printerName = data.name;
@@ -346,7 +344,8 @@ public PrinterData open() {
 			GTK.gtk_print_settings_set_page_ranges(settings, pageRange, 1);
 			break;
 	}
-	if ((printerData.printToFile || Printer.isFileBackend(printerData.driver)) && printerData.fileName != null) {
+	if ((printerData.printToFile || Printer.GTK_FILE_BACKEND.equals(printerData.driver)) && printerData.fileName != null) {
+		// TODO: GTK_FILE_BACKEND is not GTK API (see gtk bug 345590)
 		byte [] uri = Printer.uriFromFilename(printerData.fileName);
 		if (uri != null) {
 			GTK.gtk_print_settings_set(settings, GTK.GTK_PRINT_SETTINGS_OUTPUT_URI, uri);
@@ -395,17 +394,12 @@ public PrinterData open() {
 		oldModal = display.getData (GET_MODAL_DIALOG);
 		display.setData (SET_MODAL_DIALOG, this);
 	}
-	int response;
-	if (GTK.GTK4) {
-		response = SyncDialogUtil.run (display, handle, false);
-	} else {
-		String key = "org.eclipse.swt.internal.gtk.externalEventLoop"; //$NON-NLS-1$
-		display.setData (key, Boolean.TRUE);
-		display.sendPreExternalEventDispatchEvent ();
-		response = GTK3.gtk_dialog_run (handle);
-		display.setData (key, Boolean.FALSE);
-		display.sendPostExternalEventDispatchEvent ();
-	}
+	String key = "org.eclipse.swt.internal.gtk.externalEventLoop"; //$NON-NLS-1$
+	display.setData (key, Boolean.TRUE);
+	display.sendPreExternalEventDispatchEvent ();
+	int response = GTK3.gtk_dialog_run (handle);
+	display.setData (key, Boolean.FALSE);
+	display.sendPostExternalEventDispatchEvent ();
 	if (GTK.gtk_window_get_modal (handle)) {
 		display.setData (SET_MODAL_DIALOG, oldModal);
 	}
@@ -449,15 +443,13 @@ public PrinterData open() {
 					break;
 			}
 
-			data.printToFile = Printer.isFileBackend(data.driver);
+			data.printToFile = Printer.GTK_FILE_BACKEND.equals(data.driver); // TODO: GTK_FILE_BACKEND is not GTK API (see gtk bug 345590)
 			if (data.printToFile) {
 				long address = GTK.gtk_print_settings_get(settings, GTK.GTK_PRINT_SETTINGS_OUTPUT_URI);
-				if (address != 0) {
-					int length = C.strlen (address);
-					byte [] buffer = new byte [length];
-					C.memmove (buffer, address, length);
-					data.fileName = new String (Converter.mbcsToWcs (buffer));
-				}
+				int length = C.strlen (address);
+				byte [] buffer = new byte [length];
+				C.memmove (buffer, address, length);
+				data.fileName = new String (Converter.mbcsToWcs (buffer));
 			}
 
 			data.copyCount = GTK.gtk_print_settings_get_n_copies(settings);
@@ -530,21 +522,9 @@ void store(String key, boolean value) {
 }
 
 void storeBytes(String key, long value) {
-	byte [] valueBuffer;
-	if (value == 0) {
-		/*
-		 * gtk_paper_size_get_ppd_name() returns NULL for custom sizes that are
-		 * not backed by a PPD entry. Keep the key and an empty value so the
-		 * following width, height, and custom fields stay aligned. Do not call
-		 * C.strlen or C.memmove on the NULL pointer.
-		 * See https://github.com/eclipse-platform/eclipse.platform.swt/issues/847
-		 */
-		valueBuffer = new byte [0];
-	} else {
-		int length = C.strlen (value);
-		valueBuffer = new byte [length];
-		C.memmove (valueBuffer, value, length);
-	}
+	int length = C.strlen (value);
+	byte [] valueBuffer = new byte [length];
+	C.memmove (valueBuffer, value, length);
 	store(key.getBytes(), valueBuffer);
 }
 

@@ -52,9 +52,11 @@ public class Bug221611_RadioButtonAccessibility {
 
 		shell.pack();
 		shell.open();
-		while (!shell.isDisposed())
-			if (!display.readAndDispatch())
-				display.sleep();
+        while (!shell.isDisposed()) {
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
+        }
 		display.dispose();
 	}
 }

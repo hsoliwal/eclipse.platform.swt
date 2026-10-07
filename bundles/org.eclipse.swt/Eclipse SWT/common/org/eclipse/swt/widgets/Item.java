@@ -177,8 +177,12 @@ void releaseWidget () {
  */
 public void setImage (Image image) {
 	checkWidget ();
-	if (this.image == image) return;
-	if (image != null && image.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (this.image == image) {
+        return;
+    }
+    if (image != null && image.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.image = image;
 }
 
@@ -200,7 +204,9 @@ public void setImage (Image image) {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	text = string;
 	if ((state & HAS_AUTO_DIRECTION) != 0) {
 		updateTextDirection (AUTO_TEXT_DIRECTION);

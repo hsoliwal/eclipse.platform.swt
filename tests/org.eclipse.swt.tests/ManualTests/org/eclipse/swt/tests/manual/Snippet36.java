@@ -39,15 +39,18 @@ public static void main (String [] args) {
 	for (int i=0; i<12; i++) {
 		int style = SWT.PUSH;
 		ToolItem item = new ToolItem (toolBar, style);
-		if (i%2 == 0)
-			item.setImage (image2);
-		else
-			item.setImage (image1);
+        if (i % 2 == 0) {
+            item.setImage(image2);
+        } else {
+            item.setImage(image1);
+        }
 	}
 	toolBar.pack ();
 	shell.open ();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	image1.dispose ();
 	display.dispose ();

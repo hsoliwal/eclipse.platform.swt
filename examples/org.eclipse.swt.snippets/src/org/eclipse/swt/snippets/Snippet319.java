@@ -128,7 +128,9 @@ public void go() {
 
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }
@@ -164,13 +166,17 @@ public void javaToNative(Object object, TransferData transferData) {
 
 @Override
 public Object nativeToJava(TransferData transferData) {
-	if (!isSupportedType(transferData)) return null;
+    if (!isSupportedType(transferData)) {
+        return null;
+    }
 	byte[] bytes = (byte[])super.nativeToJava(transferData);
 	return bytes == null ? null : restoreFromByteArray(bytes);
 }
 
 boolean checkMyType(Object object) {
-	if (object == null) return false;
+    if (object == null) {
+        return false;
+    }
 	MyType myType = (MyType)object;
 	return myType != null && myType.name != null && myType.name.length() > 0 && myType.time > 0;
 }

@@ -197,7 +197,9 @@ void addAccelerator (long accelGroup) {
 
 void addAccelerators (long accelGroup) {
 	addAccelerator(accelGroup);
-	if (menu != null) menu.addAccelerators(accelGroup);
+    if (menu != null) {
+        menu.addAccelerators(accelGroup);
+    }
 }
 
 /**
@@ -281,12 +283,14 @@ public void addSelectionListener (SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.PUSH, SWT.CHECK, SWT.RADIO, SWT.SEPARATOR, SWT.CASCADE, 0);
+	return WidgetStylePolicy.MENU_ITEM.applyAsInt(style);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -386,12 +390,14 @@ void createHandle(int index) {
 					section.sectionItems.add(removedItem);
 
 					OS.g_menu_remove(selectedSection.getSectionHandle(), sectionRelativeIndex);
-					/*
-					 * The moved row is rebuilt from scratch; give it a fresh id. A stale one
-					 * can still match the destroyed slot in GtkMenuSectionBox's id table
-					 * ("Duplicate custom ID"), leaving the new row without a slot.
-					 */
-					if (removedItem.customWidgetHandle != 0) removedItem.reassignCustomId();
+                    /*
+                     * The moved row is rebuilt from scratch; give it a fresh id. A stale one
+                     * can still match the destroyed slot in GtkMenuSectionBox's id table
+                     * ("Duplicate custom ID"), leaving the new row without a slot.
+                     */
+                    if (removedItem.customWidgetHandle != 0) {
+                        removedItem.reassignCustomId();
+                    }
 					OS.g_menu_insert_item(modelHandle, section.sectionItems.indexOf(removedItem), removedItem.handle);
 					removedItem.section = section;
 				}
@@ -417,7 +423,9 @@ void createHandle(int index) {
 		switch (style & bits) {
 			case SWT.SEPARATOR:
 				handle = GTK3.gtk_separator_menu_item_new ();
-				if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (handle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 				break;
 			case SWT.RADIO:
 				/*
@@ -432,36 +440,54 @@ void createHandle(int index) {
 				* unselected.
 				*/
 				groupHandle = GTK3.gtk_radio_menu_item_new (0);
-				if (groupHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (groupHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 				OS.g_object_ref_sink (groupHandle);
 				long group = GTK3.gtk_radio_menu_item_get_group (groupHandle);
 				handle = GTK3.gtk_radio_menu_item_new (group);
-				if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (handle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				labelHandle = GTK3.gtk_accel_label_new (buffer);
-				if (labelHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (labelHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				boxHandle = gtk_box_new (GTK.GTK_ORIENTATION_HORIZONTAL, false, 6);
-				if (boxHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (boxHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				if (OS.SWT_PADDED_MENU_ITEMS) {
 					imageHandle = GTK.gtk_image_new ();
-					if (imageHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                    if (imageHandle == 0) {
+                        error(SWT.ERROR_NO_HANDLES);
+                    }
 				}
 				break;
 			case SWT.CHECK:
 				handle = GTK3.gtk_check_menu_item_new ();
-				if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (handle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				labelHandle = GTK3.gtk_accel_label_new (buffer);
-				if (labelHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (labelHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				boxHandle = gtk_box_new (GTK.GTK_ORIENTATION_HORIZONTAL, false, 6);
-				if (boxHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (boxHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				if (OS.SWT_PADDED_MENU_ITEMS) {
 					imageHandle = GTK.gtk_image_new ();
-					if (imageHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                    if (imageHandle == 0) {
+                        error(SWT.ERROR_NO_HANDLES);
+                    }
 				}
 				break;
 			// This case now needs to be handled due to double padding. When double padded
@@ -469,35 +495,51 @@ void createHandle(int index) {
 			// not be padded. We only care about this in Gtk3.
 			case SWT.CASCADE:
 				handle = GTK3.gtk_menu_item_new ();
-				if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (handle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				labelHandle = GTK3.gtk_accel_label_new (buffer);
-				if (labelHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (labelHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				boxHandle = gtk_box_new (GTK.GTK_ORIENTATION_HORIZONTAL, false, 6);
-				if (boxHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (boxHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 				if ((parent.style & bits) == SWT.BAR) {
 					break;
 				}
 				if (OS.SWT_PADDED_MENU_ITEMS) {
 					imageHandle = GTK.gtk_image_new ();
-					if (imageHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                    if (imageHandle == 0) {
+                        error(SWT.ERROR_NO_HANDLES);
+                    }
 				}
 				break;
 			case SWT.PUSH:
 			default:
 				handle = GTK3.gtk_menu_item_new ();
-				if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (handle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				labelHandle = GTK3.gtk_accel_label_new (buffer);
-				if (labelHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (labelHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				boxHandle = gtk_box_new (GTK.GTK_ORIENTATION_HORIZONTAL, false, 6);
-				if (boxHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (boxHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				if (OS.SWT_PADDED_MENU_ITEMS) {
 					imageHandle = GTK.gtk_image_new ();
-					if (imageHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                    if (imageHandle == 0) {
+                        error(SWT.ERROR_NO_HANDLES);
+                    }
 				}
 				break;
 		}
@@ -532,15 +574,21 @@ void createHandle(int index) {
 
 		long parentHandle = parent.handle;
 		boolean enabled = GTK.gtk_widget_get_sensitive (parentHandle);
-		if (!enabled) GTK.gtk_widget_set_sensitive (parentHandle, true);
+        if (!enabled) {
+            GTK.gtk_widget_set_sensitive(parentHandle, true);
+        }
 		GTK3.gtk_menu_shell_insert (parentHandle, handle, index);
-		if (!enabled) GTK.gtk_widget_set_sensitive (parentHandle, false);
+        if (!enabled) {
+            GTK.gtk_widget_set_sensitive(parentHandle, false);
+        }
 		gtk_widget_show (handle);
 	}
 }
 
 void fixMenus (Decorations newParent) {
-	if (menu != null && !menu.isDisposed() && !newParent.isDisposed()) menu.fixMenus (newParent);
+    if (menu != null && !menu.isDisposed() && !newParent.isDisposed()) {
+        menu.fixMenus(newParent);
+    }
 }
 
 /**
@@ -567,9 +615,13 @@ long getAccelGroup () {
 	while (menu != null && menu.cascade != null) {
 		menu = menu.cascade.parent;
 	}
-	if (menu == null) return 0;
+    if (menu == null) {
+        return 0;
+    }
 	Decorations shell = menu.parent;
-	if (shell == null) return 0;
+    if (shell == null) {
+        return 0;
+    }
 	return shell.menuBar == menu ? shell.accelGroup : 0;
 }
 
@@ -636,7 +688,9 @@ public Menu getMenu () {
 
 @Override
 String getNameText () {
-	if ((style & SWT.SEPARATOR) != 0) return "|";
+    if ((style & SWT.SEPARATOR) != 0) {
+        return "|";
+    }
 	return super.getNameText ();
 }
 
@@ -671,7 +725,9 @@ public Menu getParent () {
  */
 public boolean getSelection () {
 	checkWidget();
-	if ((style & (SWT.CHECK | SWT.RADIO)) == 0) return false;
+    if ((style & (SWT.CHECK | SWT.RADIO)) == 0) {
+        return false;
+    }
 
 	if (GTK.GTK4) {
 		long gVariantState = OS.g_action_get_state(actionHandle);
@@ -705,17 +761,21 @@ public String getToolTipText () {
 
 @Override
 long gtk_activate (long widget) {
-	if ((style & SWT.CASCADE) != 0 && menu != null) return 0;
+    if ((style & SWT.CASCADE) != 0 && menu != null) {
+        return 0;
+    }
 
 	if (!GTK.GTK4) {
-		/*
-		* Bug in GTK.  When an ancestor menu is disabled and
-		* the user types an accelerator key, GTK delivers the
-		* the activate signal even though the menu item cannot
-		* be invoked using the mouse.  The fix is to ignore
-		* activate signals when an ancestor menu is disabled.
-		*/
-		if (!isEnabled()) return 0;
+        /*
+        * Bug in GTK.  When an ancestor menu is disabled and
+        * the user types an accelerator key, GTK delivers the
+        * the activate signal even though the menu item cannot
+        * be invoked using the mouse.  The fix is to ignore
+        * activate signals when an ancestor menu is disabled.
+        */
+        if (!isEnabled()) {
+            return 0;
+        }
 	}
 
 	if ((style & SWT.RADIO) != 0) {
@@ -802,7 +862,9 @@ void releaseParent() {
 	super.releaseParent();
 
 	if (menu != null) {
-		if (menu.selectedItem == this) menu.selectedItem = null;
+        if (menu.selectedItem == this) {
+            menu.selectedItem = null;
+        }
 		menu.dispose();
 
 		menu = null;
@@ -814,18 +876,26 @@ void releaseWidget() {
 	super.releaseWidget();
 
 	if (GTK.GTK4) {
-		/*
-		 * Remove by actionId, not actionName: GActionMap keys actions by their own
-		 * name, so passing the prefixed detailed name silently removes nothing and
-		 * leaks the action for the lifetime of the parent's action group.
-		 */
-		if (parent.actionGroup != 0 && actionId != null) OS.g_action_map_remove_action(parent.actionGroup, Converter.javaStringToCString(actionId));
-		if (customWidgetHandle != 0) destroyCustomMenuWidget();
+        /*
+         * Remove by actionId, not actionName: GActionMap keys actions by their own
+         * name, so passing the prefixed detailed name silently removes nothing and
+         * leaks the action for the lifetime of the parent's action group.
+         */
+        if (parent.actionGroup != 0 && actionId != null) {
+            OS.g_action_map_remove_action(parent.actionGroup, Converter.javaStringToCString(actionId));
+        }
+        if (customWidgetHandle != 0) {
+            destroyCustomMenuWidget();
+        }
 	} else {
 		long accelGroup = getAccelGroup();
-		if (accelGroup != 0) removeAccelerator(accelGroup);
+        if (accelGroup != 0) {
+            removeAccelerator(accelGroup);
+        }
 
-		if (groupHandle != 0) OS.g_object_unref(groupHandle);
+        if (groupHandle != 0) {
+            OS.g_object_unref(groupHandle);
+        }
 		groupHandle = 0;
 		parent = null;
 	}
@@ -855,8 +925,10 @@ void destroyWidget() {
 
 				for (MenuItem item : section.sectionItems) {
 					item.section = aboveSection;
-					/* Fresh id for the rebuilt row, see the SEPARATOR split in createHandle. */
-					if (item.customWidgetHandle != 0) item.reassignCustomId();
+                    /* Fresh id for the rebuilt row, see the SEPARATOR split in createHandle. */
+                    if (item.customWidgetHandle != 0) {
+                        item.reassignCustomId();
+                    }
 					OS.g_menu_insert_item(aboveSection.getSectionHandle(), aboveSection.sectionItems.indexOf(item), item.handle);
 				}
 
@@ -874,7 +946,9 @@ void destroyWidget() {
 		parent.items.remove(this);
 		parent = null;
 
-		if (modelHandle != 0) OS.g_object_unref(modelHandle);
+        if (modelHandle != 0) {
+            OS.g_object_unref(modelHandle);
+        }
 		OS.g_object_unref(handle);
 
 		releaseHandle();
@@ -889,7 +963,9 @@ void removeAccelerator (long accelGroup) {
 
 void removeAccelerators (long accelGroup) {
 	removeAccelerator (accelGroup);
-	if (menu != null) menu.removeAccelerators (accelGroup);
+    if (menu != null) {
+        menu.removeAccelerators(accelGroup);
+    }
 }
 
 /**
@@ -911,8 +987,12 @@ void removeAccelerators (long accelGroup) {
  */
 public void removeArmListener (ArmListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Arm, listener);
 }
 
@@ -935,8 +1015,12 @@ public void removeArmListener (ArmListener listener) {
  */
 public void removeHelpListener (HelpListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Help, listener);
 }
 
@@ -959,8 +1043,12 @@ public void removeHelpListener (HelpListener listener) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -974,11 +1062,17 @@ void reskinChildren (int flags) {
 void selectRadio () {
 	int index = 0;
 	MenuItem [] items = parent.getItems ();
-	while (index < items.length && items [index] != this) index++;
+    while (index < items.length && items [index] != this) {
+        index++;
+    }
 	int i = index - 1;
-	while (i >= 0 && items [i].setRadioSelection (false)) --i;
+    while (i >= 0 && items [i].setRadioSelection(false)) {
+        --i;
+    }
 	int j = index + 1;
-	while (j < items.length && items [j].setRadioSelection (false)) j++;
+    while (j < items.length && items [j].setRadioSelection(false)) {
+        j++;
+    }
 	setSelection (true);
 }
 /**
@@ -998,7 +1092,9 @@ void selectRadio () {
  */
 public void setAccelerator (int accelerator) {
 	checkWidget();
-	if (this.accelerator == accelerator) return;
+    if (this.accelerator == accelerator) {
+        return;
+    }
 
 	if (GTK.GTK4) {
 		if (shortcutHandle != 0) {
@@ -1010,20 +1106,34 @@ public void setAccelerator (int accelerator) {
 		addShortcut(accelerator);
 	} else {
 		long accelGroup = getAccelGroup();
-		if (accelGroup != 0) removeAccelerator(accelGroup);
+        if (accelGroup != 0) {
+            removeAccelerator(accelGroup);
+        }
 		this.accelerator = accelerator;
-		if (accelGroup != 0) addAccelerator(accelGroup);
+        if (accelGroup != 0) {
+            addAccelerator(accelGroup);
+        }
 	}
 }
 
 void addShortcut(int accelerator) {
-	if (accelerator == 0 || !getEnabled()) return;
-	if ((accelerator & SWT.COMMAND) != 0) return;
+    if (accelerator == 0 || !getEnabled()) {
+        return;
+    }
+    if ((accelerator & SWT.COMMAND) != 0) {
+        return;
+    }
 
 	int mask = 0;
-	if ((accelerator & SWT.ALT) != 0) mask |= GDK.GDK_MOD1_MASK;
-	if ((accelerator & SWT.SHIFT) != 0) mask |= GDK.GDK_SHIFT_MASK;
-	if ((accelerator & SWT.CONTROL) != 0) mask |= GDK.GDK_CONTROL_MASK;
+    if ((accelerator & SWT.ALT) != 0) {
+        mask |= GDK.GDK_MOD1_MASK;
+    }
+    if ((accelerator & SWT.SHIFT) != 0) {
+        mask |= GDK.GDK_SHIFT_MASK;
+    }
+    if ((accelerator & SWT.CONTROL) != 0) {
+        mask |= GDK.GDK_CONTROL_MASK;
+    }
 
 	int keyval = accelerator & SWT.KEY_MASK;
 	int newKey = Display.untranslateKey (keyval);
@@ -1041,7 +1151,9 @@ void addShortcut(int accelerator) {
 				GTK4.gtk_keyval_trigger_new(keyval, mask),
 				GTK4.gtk_named_action_new(Converter.javaStringToCString(actionName))
 			);
-		if (shortcutHandle == 0) error(SWT.ERROR_NO_HANDLES);
+        if (shortcutHandle == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		GTK4.gtk_shortcut_controller_add_shortcut(parent.shortcutController, shortcutHandle);
 	}
 }
@@ -1063,16 +1175,26 @@ public void setEnabled (boolean enabled) {
 	checkWidget();
 
 	if (GTK.GTK4) {
-		if (actionHandle != 0) OS.g_simple_action_set_enabled(actionHandle, enabled);
+        if (actionHandle != 0) {
+            OS.g_simple_action_set_enabled(actionHandle, enabled);
+        }
 	} else {
-		if (GTK.gtk_widget_get_sensitive(handle) == enabled) return;
+        if (GTK.gtk_widget_get_sensitive(handle) == enabled) {
+            return;
+        }
 		long accelGroup = getAccelGroup();
-		if (accelGroup != 0) removeAccelerator(accelGroup);
+        if (accelGroup != 0) {
+            removeAccelerator(accelGroup);
+        }
 		GTK.gtk_widget_set_sensitive(handle, enabled);
-		if (accelGroup != 0) addAccelerator(accelGroup);
+        if (accelGroup != 0) {
+            addAccelerator(accelGroup);
+        }
 	}
 
-	if (this.enabled == enabled) return;
+    if (this.enabled == enabled) {
+        return;
+    }
 	this.enabled = enabled;
 
 	_setEnabledOrDisabledImage();
@@ -1104,7 +1226,9 @@ private void _setEnabledOrDisabledImage() {
  */
 public void setID (int id) {
 	checkWidget();
-	if (id < 0) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (id < 0) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	userId = id;
 }
 
@@ -1127,8 +1251,12 @@ public void setID (int id) {
 @Override
 public void setImage (Image image) {
 	checkWidget();
-	if (this.image == image) return;
-	if ((style & SWT.SEPARATOR) != 0) return;
+    if (this.image == image) {
+        return;
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
 	disposeDefaultDisabledImage();
 	super.setImage (image);
 
@@ -1142,7 +1270,9 @@ private void _setImage (Image image) {
 	}
 	if (image != null) {
 		ImageList imageList = parent.imageList;
-		if (imageList == null) imageList = parent.imageList = new ImageList ();
+        if (imageList == null) {
+            imageList = parent.imageList = new ImageList();
+        }
 		int imageIndex = imageList.indexOf (image);
 		long surface = 0;
 		if (imageIndex == -1) {
@@ -1153,13 +1283,17 @@ private void _setImage (Image image) {
 			surface = imageList.getSurface (imageIndex);
 		}
 
-		if (!GTK3.GTK_IS_MENU_ITEM (handle)) return;
+        if (!GTK3.GTK_IS_MENU_ITEM(handle)) {
+            return;
+        }
 		if (OS.SWT_PADDED_MENU_ITEMS && imageHandle != 0) {
 			GTK3.gtk_image_set_from_surface(imageHandle, surface);
 		} else {
 			if (imageHandle == 0) {
 				imageHandle = GTK3.gtk_image_new_from_surface(surface);
-				if (imageHandle == 0) error(SWT.ERROR_NO_HANDLES);
+                if (imageHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 
 				GTK3.gtk_container_add(boxHandle, imageHandle);
 				GTK3.gtk_box_reorder_child(boxHandle, imageHandle, 0);
@@ -1173,7 +1307,9 @@ private void _setImage (Image image) {
 			if (OS.SWT_PADDED_MENU_ITEMS) {
 				GTK3.gtk_container_remove(boxHandle, imageHandle);
 				imageHandle = GTK.gtk_image_new ();
-				if (imageHandle == 0) error (SWT.ERROR_NO_HANDLES);
+                if (imageHandle == 0) {
+                    error(SWT.ERROR_NO_HANDLES);
+                }
 				GTK.gtk_image_set_pixel_size (imageHandle, 16);
 				GTK3.gtk_container_add (boxHandle, imageHandle);
 				gtk_widget_show (imageHandle);
@@ -1329,9 +1465,15 @@ private void createCustomMenuWidget() {
  */
 @Override
 boolean gtk4_key_press_event(long controller, int keyval, int keycode, int state, long event) {
-	if (keyval != GDK.GDK_space && keyval != GDK.GDK_KP_Space) return false;
-	if ((state & (GDK.GDK_SHIFT_MASK | GDK.GDK_CONTROL_MASK | GDK.GDK_MOD1_MASK)) != 0) return false;
-	if (actionName != null) GTK4.gtk_widget_activate_action(customWidgetHandle, Converter.javaStringToCString(actionName), null);
+    if (keyval != GDK.GDK_space && keyval != GDK.GDK_KP_Space) {
+        return false;
+    }
+    if ((state & (GDK.GDK_SHIFT_MASK | GDK.GDK_CONTROL_MASK | GDK.GDK_MOD1_MASK)) != 0) {
+        return false;
+    }
+    if (actionName != null) {
+        GTK4.gtk_widget_activate_action(customWidgetHandle, Converter.javaStringToCString(actionName), null);
+    }
 	return true;
 }
 
@@ -1339,7 +1481,9 @@ boolean gtk4_key_press_event(long controller, int keyval, int keycode, int state
 long gtk_clicked (long widget) {
 	/* Only ever connected on the custom menu row (GTK4), see createCustomMenuWidget. */
 	long popover = getParentPopoverHandle();
-	if (popover != 0) GTK.gtk_popover_popdown(popover);
+    if (popover != 0) {
+        GTK.gtk_popover_popdown(popover);
+    }
 	return 0;
 }
 
@@ -1365,19 +1509,25 @@ void gtk4_motion_event(long controller, double x, double y, long event) {
 private void armSubmenuCloseTimer() {
 	int serial = ++hoverSerial;
 	display.timerExec(SUBMENU_CLOSE_DELAY, () -> {
-		if (serial != hoverSerial || !customRowHovered || isDisposed()) return;
+        if (serial != hoverSerial || !customRowHovered || isDisposed()) {
+            return;
+        }
 		parent.hideOpenSubmenus();
 		/* Hiding the submenu hands the focus back and may leave a stray row selected. */
 		long popover = getParentPopoverHandle();
-		if (popover != 0) parent.syncRowSelection(popover);
+        if (popover != 0) {
+            parent.syncRowSelection(popover);
+        }
 	});
 }
 
 @Override
 void gtk4_leave_event(long controller, long event) {
 	customRowHovered = false;
-	/* Drop the highlight unless the row still holds the keyboard focus. */
-	if (!customRowFocused) setCustomRowSelected(false);
+    /* Drop the highlight unless the row still holds the keyboard focus. */
+    if (!customRowFocused) {
+        setCustomRowSelected(false);
+    }
 }
 
 @Override
@@ -1386,20 +1536,26 @@ void gtk4_focus_enter_event(long controller, long event) {
 	// a submenu hides) is swept by Menu.syncRowSelection. GTK focuses the first row as
 	// it shows a menu; like a native row, that shows only when a key put it there.
 	customRowFocused = true;
-	if (System.nanoTime() - display.lastKeyEventTime < 500_000_000L) setCustomRowSelected(true);
+    if (System.nanoTime() - display.lastKeyEventTime < 500_000_000L) {
+        setCustomRowSelected(true);
+    }
 	/*
 	 * GtkPopoverMenu drops the previous row's highlight only when a GtkModelButton
 	 * takes the focus (its focus handler makes it the active item); do it here.
 	 */
 	long popover = getParentPopoverHandle();
-	if (popover != 0) parent.deselectOtherRows(popover, customWidgetHandle);
+    if (popover != 0) {
+        parent.deselectOtherRows(popover, customWidgetHandle);
+    }
 }
 
 @Override
 void gtk4_focus_leave_event(long controller, long event) {
 	customRowFocused = false;
-	/* Keep the highlight if the pointer is still over the row. */
-	if (!customRowHovered) setCustomRowSelected(false);
+    /* Keep the highlight if the pointer is still over the row. */
+    if (!customRowHovered) {
+        setCustomRowSelected(false);
+    }
 }
 
 /**
@@ -1407,8 +1563,12 @@ void gtk4_focus_leave_event(long controller, long event) {
  * "selected" state, which the theme paints on a modelbutton like on a native row.
  */
 void setCustomRowSelected(boolean selected) {
-	if (customWidgetHandle == 0) return;
-	if (((GTK.gtk_widget_get_state_flags(customWidgetHandle) & GTK.GTK_STATE_FLAG_SELECTED) != 0) == selected) return;
+    if (customWidgetHandle == 0) {
+        return;
+    }
+    if (((GTK.gtk_widget_get_state_flags(customWidgetHandle) & GTK.GTK_STATE_FLAG_SELECTED) != 0) == selected) {
+        return;
+    }
 	if (selected) {
 		GTK.gtk_widget_set_state_flags(customWidgetHandle, GTK.GTK_STATE_FLAG_SELECTED, false);
 	} else {
@@ -1426,7 +1586,9 @@ void setCustomRowSelected(boolean selected) {
  * must render it explicitly in a trailing, right-aligned label.
  */
 private void updateCustomWidgetLabels() {
-	if (customLabelHandle == 0) return;
+    if (customLabelHandle == 0) {
+        return;
+    }
 	String full = text != null ? text : "";
 	String label = full;
 	String accel = "";
@@ -1462,8 +1624,10 @@ private void destroyCustomMenuWidget() {
 	customRowHovered = false;
 	customRowFocused = false;
 	hoverSerial++;
-	/* A CHECK row leaving takes the check column with it. */
-	if (parent != null && !parent.isDisposed()) parent.alignRowLabels();
+    /* A CHECK row leaving takes the check column with it. */
+    if (parent != null && !parent.isDisposed()) {
+        parent.alignRowLabels();
+    }
 }
 
 /**
@@ -1473,8 +1637,12 @@ private void destroyCustomMenuWidget() {
  * pointing at freed memory.
  */
 private void detachCustomMenuWidget() {
-	if (customWidgetHandle == 0) return;
-	if (GTK.gtk_widget_get_parent(customWidgetHandle) == 0) return;
+    if (customWidgetHandle == 0) {
+        return;
+    }
+    if (GTK.gtk_widget_get_parent(customWidgetHandle) == 0) {
+        return;
+    }
 	/* Walk up from the widget itself; the cached popover handle can be stale after a rebuild. */
 	long popover = GTK.gtk_widget_get_parent(customWidgetHandle);
 	while (popover != 0 && !GTK4.GTK_IS_POPOVER_MENU(popover)) {
@@ -1518,12 +1686,20 @@ void refreshMenuModelGTK4() {
  * the model so a new placeholder materialises, then embed.
  */
 void injectCustomWidgetGTK4() {
-	if (customWidgetHandle == 0 || customId == null) return;
-	if (display.menuModelMutating) return;
+    if (customWidgetHandle == 0 || customId == null) {
+        return;
+    }
+    if (display.menuModelMutating) {
+        return;
+    }
 	long popoverHandle = getParentPopoverHandle();
-	if (popoverHandle == 0) return;
-	// Already embedded in a live slot: nothing to do.
-	if (GTK.gtk_widget_get_parent(customWidgetHandle) != 0) return;
+    if (popoverHandle == 0) {
+        return;
+    }
+    // Already embedded in a live slot: nothing to do.
+    if (GTK.gtk_widget_get_parent(customWidgetHandle) != 0) {
+        return;
+    }
 	// Fresh id and a new placeholder; the previous id is burned in GTK's custom_slots.
 	reassignCustomId();
 	refreshMenuModelGTK4();
@@ -1607,7 +1783,9 @@ public void setMenu (Menu menu) {
 
 	/* Assign the new menu */
 	Menu oldMenu = this.menu;
-	if (oldMenu == menu) return;
+    if (oldMenu == menu) {
+        return;
+    }
 
 	if (GTK.GTK4) {
 		this.menu = menu;
@@ -1634,7 +1812,9 @@ public void setMenu (Menu menu) {
 		}
 	} else {
 		long accelGroup = getAccelGroup ();
-		if (accelGroup != 0) removeAccelerators (accelGroup);
+        if (accelGroup != 0) {
+            removeAccelerators(accelGroup);
+        }
 		if (oldMenu != null) {
 			oldMenu.cascade = null;
 			/*
@@ -1648,7 +1828,9 @@ public void setMenu (Menu menu) {
 			menu.cascade = this;
 			GTK3.gtk_menu_item_set_submenu (handle, menu.handle);
 		}
-		if (accelGroup != 0) addAccelerators (accelGroup);
+        if (accelGroup != 0) {
+            addAccelerators(accelGroup);
+        }
 	}
 }
 
@@ -1659,12 +1841,16 @@ void setOrientation (boolean create) {
 		int dir = (parent.style & SWT.RIGHT_TO_LEFT) != 0 ? GTK.GTK_TEXT_DIR_RTL : GTK.GTK_TEXT_DIR_LTR;
 		GTK.gtk_widget_set_direction (handle, dir);
 		GTK3.gtk_container_forall (handle, display.setDirectionProc, dir);
-		if (menu != null) menu._setOrientation (parent.style & (SWT.RIGHT_TO_LEFT | SWT.LEFT_TO_RIGHT));
+        if (menu != null) {
+            menu._setOrientation(parent.style & (SWT.RIGHT_TO_LEFT | SWT.LEFT_TO_RIGHT));
+        }
 	}
 }
 
 boolean setRadioSelection (boolean value) {
-	if ((style & SWT.RADIO) == 0) return false;
+    if ((style & SWT.RADIO) == 0) {
+        return false;
+    }
 	if (getSelection () != value) {
 		setSelection (value);
 		sendSelectionEvent (SWT.Selection);
@@ -1687,7 +1873,9 @@ boolean setRadioSelection (boolean value) {
  */
 public void setSelection (boolean selected) {
 	checkWidget();
-	if ((style & (SWT.CHECK | SWT.RADIO)) == 0) return;
+    if ((style & (SWT.CHECK | SWT.RADIO)) == 0) {
+        return;
+    }
 
 	if (GTK.GTK4) {
 		if ((style & SWT.CHECK) != 0) {
@@ -1698,7 +1886,9 @@ public void setSelection (boolean selected) {
 	} else {
 		OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, ACTIVATE);
 		GTK3.gtk_check_menu_item_set_active (handle, selected);
-		if ((style & SWT.RADIO) != 0) GTK3.gtk_check_menu_item_set_active (groupHandle, !selected);
+        if ((style & SWT.RADIO) != 0) {
+            GTK3.gtk_check_menu_item_set_active(groupHandle, !selected);
+        }
 		OS.g_signal_handlers_unblock_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, ACTIVATE);
 	}
 }
@@ -1743,9 +1933,15 @@ public void setSelection (boolean selected) {
 @Override
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error(SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.SEPARATOR) != 0) return;
-	if (text.equals(string)) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.SEPARATOR) != 0) {
+        return;
+    }
+    if (text.equals(string)) {
+        return;
+    }
 	super.setText(string);
 
 	int index = string.indexOf('\t');
@@ -1820,21 +2016,35 @@ public void setText (String string) {
  */
 public void setToolTipText(String toolTip) {
 	checkWidget();
-	if (GTK.GTK4) return; // GTK4 does not support tooltips within menus
+    if (GTK.GTK4) {
+        return;
+    } // GTK4 does not support tooltips within menus
 
-	if (toolTip != null && (toolTip.trim().length() == 0 || toolTip.equals(toolTipText))) return;
+    if (toolTip != null && (toolTip.trim().length() == 0 || toolTip.equals(toolTipText))) {
+        return;
+    }
 
 	toolTipText = toolTip;
 	setToolTipText(handle, toolTip);
 }
 
 void updateAccelerator (long accelGroup, boolean add) {
-	if (accelerator == 0 || !getEnabled ()) return;
-	if ((accelerator & SWT.COMMAND) != 0) return;
+    if (accelerator == 0 || !getEnabled()) {
+        return;
+    }
+    if ((accelerator & SWT.COMMAND) != 0) {
+        return;
+    }
 	int mask = 0;
-	if ((accelerator & SWT.ALT) != 0) mask |= GDK.GDK_MOD1_MASK;
-	if ((accelerator & SWT.SHIFT) != 0) mask |= GDK.GDK_SHIFT_MASK;
-	if ((accelerator & SWT.CONTROL) != 0) mask |= GDK.GDK_CONTROL_MASK;
+    if ((accelerator & SWT.ALT) != 0) {
+        mask |= GDK.GDK_MOD1_MASK;
+    }
+    if ((accelerator & SWT.SHIFT) != 0) {
+        mask |= GDK.GDK_SHIFT_MASK;
+    }
+    if ((accelerator & SWT.CONTROL) != 0) {
+        mask |= GDK.GDK_CONTROL_MASK;
+    }
 	int keysym = accelerator & SWT.KEY_MASK;
 	int newKey = Display.untranslateKey (keysym);
 	if (newKey != 0) {
@@ -1861,10 +2071,14 @@ private static class MaskKeysym {
 }
 
 private MaskKeysym getMaskKeysym() {
-	if (text == null) return null;
+    if (text == null) {
+        return null;
+    }
 	MaskKeysym maskKeysym = new MaskKeysym();
 	int accelIndex = text.indexOf ('\t');
-	if (accelIndex == -1) return null;
+    if (accelIndex == -1) {
+        return null;
+    }
 	int start = accelIndex + 1;
 	while (true) {
 		int plusIndex = text.indexOf('+', start);
@@ -1873,9 +2087,15 @@ private MaskKeysym getMaskKeysym() {
 		}
 
 		String maskStr = text.substring(start, plusIndex);
-		if (maskStr.equals("Ctrl")) maskKeysym.mask |= GDK.GDK_CONTROL_MASK;
-		if (maskStr.equals("Shift")) maskKeysym.mask |= GDK.GDK_SHIFT_MASK;
-		if (maskStr.equals("Alt")) maskKeysym.mask |= GDK.GDK_MOD1_MASK;
+        if (maskStr.equals("Ctrl")) {
+            maskKeysym.mask |= GDK.GDK_CONTROL_MASK;
+        }
+        if (maskStr.equals("Shift")) {
+            maskKeysym.mask |= GDK.GDK_SHIFT_MASK;
+        }
+        if (maskStr.equals("Alt")) {
+            maskKeysym.mask |= GDK.GDK_MOD1_MASK;
+        }
 		start = plusIndex + 1;
 	}
 	final String word = text.substring(start);
@@ -1925,12 +2145,16 @@ private MaskKeysym getMaskKeysym() {
 }
 
 boolean updateAcceleratorText (boolean show) {
-	if (accelerator != 0) return false;
+    if (accelerator != 0) {
+        return false;
+    }
 	MaskKeysym maskKeysym = null;
 	if (show) {
 		maskKeysym = getMaskKeysym();
 	}
-	if (maskKeysym == null) return true;
+    if (maskKeysym == null) {
+        return true;
+    }
 	if (maskKeysym.keysym != 0) {
 		long accelGroup = getAccelGroup ();
 		if (show) {

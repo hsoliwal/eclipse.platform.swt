@@ -173,7 +173,9 @@ public int getCompositionOffset () {
  */
 public int [] getRanges () {
 	checkWidget ();
-	if (ranges == null) return new int [0];
+    if (ranges == null) {
+        return new int [0];
+    }
 	int [] result = new int [ranges.length];
 	for (int i = 0; i < result.length; i++) {
 		result [i] = ranges [i] + startOffset;
@@ -201,7 +203,9 @@ public int [] getRanges () {
  */
 public TextStyle [] getStyles () {
 	checkWidget ();
-	if (styles == null) return new TextStyle [0];
+    if (styles == null) {
+        return new TextStyle [0];
+    }
 	TextStyle [] result = new TextStyle [styles.length];
 	System.arraycopy (styles, 0, result, 0, styles.length);
 	return result;
@@ -248,15 +252,21 @@ public boolean getWideCaret () {
 
 @Override
 long gtk3_button_press_event (long widget, long event) {
-	if (!isInlineEnabled ()) return 0;
+    if (!isInlineEnabled()) {
+        return 0;
+    }
 	long imHandle = imHandle ();
-	if (imHandle != 0) GTK.gtk_im_context_reset (imHandle);
+    if (imHandle != 0) {
+        GTK.gtk_im_context_reset(imHandle);
+    }
 	return 0;
 }
 
 @Override
 long gtk_commit (long imcontext, long textPtr) {
-	if (!isInlineEnabled ()) return 0;
+    if (!isInlineEnabled()) {
+        return 0;
+    }
 	boolean doit = true;
 	ranges = null;
 	styles = null;
@@ -286,7 +296,9 @@ long gtk_commit (long imcontext, long textPtr) {
 
 @Override
 long gtk_preedit_changed (long imcontext) {
-	if (!isInlineEnabled ()) return 0;
+    if (!isInlineEnabled()) {
+        return 0;
+    }
 	ranges = null;
 	styles = null;
 	commitCount = 0;
@@ -318,7 +330,9 @@ long gtk_preedit_changed (long imcontext) {
 		if (pangoAttrs [0] != 0) {
 			int count = 0;
 			long iterator = OS.pango_attr_list_get_iterator (pangoAttrs [0]);
-			while (OS.pango_attr_iterator_next (iterator)) count++;
+            while (OS.pango_attr_iterator_next(iterator)) {
+                count++;
+            }
 			OS.pango_attr_iterator_destroy (iterator);
 			ranges = new int [count * 2];
 			styles = new TextStyle [count];
@@ -392,16 +406,18 @@ long gtk_preedit_changed (long imcontext) {
 	}
 	if (chars != null) {
 		if (text.length() == 0) {
-			/*
-			* Bug in GTK. In Solaris, the IME sends multiple
-			* preedit_changed signals with an empty text.
-			* This behavior is not correct for SWT and can
-			* cause the editor to replace its current selection
-			* with an empty string. The fix is to ignore any
-			* preedit_changed signals with an empty text when
-			* the preedit buffer is already empty.
-			*/
-			if (chars.length == 0) return 0;
+            /*
+            * Bug in GTK. In Solaris, the IME sends multiple
+            * preedit_changed signals with an empty text.
+            * This behavior is not correct for SWT and can
+            * cause the editor to replace its current selection
+            * with an empty string. The fix is to ignore any
+            * preedit_changed signals with an empty text when
+            * the preedit buffer is already empty.
+            */
+            if (chars.length == 0) {
+                return 0;
+            }
 			startOffset = -1;
 		}
 		int end = startOffset + text.length();
@@ -434,7 +450,9 @@ boolean isInlineEnabled () {
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (this == parent.getIME ()) parent.setIME (null);
+    if (this == parent.getIME()) {
+        parent.setIME(null);
+    }
 }
 
 @Override
@@ -464,7 +482,9 @@ void releaseWidget () {
  */
 public void setCompositionOffset (int offset) {
 	checkWidget ();
-	if (offset < 0) return;
+    if (offset < 0) {
+        return;
+    }
 	if (startOffset != -1) {
 		startOffset = offset;
 	}

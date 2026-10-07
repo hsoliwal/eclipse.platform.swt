@@ -14,8 +14,6 @@
 package org.eclipse.swt.widgets;
 
 
-import java.util.Arrays;
-
 import org.eclipse.swt.*;
 
 /**
@@ -49,9 +47,13 @@ Tray (Display display, int style) {
 }
 
 void createItem (TrayItem item, int index) {
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (itemCount == items.length) {
-		items = Arrays.copyOf (items, items.length + 4);
+		TrayItem [] newItems = new TrayItem [items.length + 4];
+		System.arraycopy (items, 0, newItems, 0, items.length);
+		items = newItems;
 	}
 	System.arraycopy (items, index, items, index + 1, itemCount++ - index);
 	items [index] = item;
@@ -60,10 +62,14 @@ void createItem (TrayItem item, int index) {
 void destroyItem (TrayItem item) {
 	int index = 0;
 	while (index < itemCount) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	if (index == itemCount) return;
+    if (index == itemCount) {
+        return;
+    }
 	System.arraycopy (items, index + 1, items, index, --itemCount - index);
 	items [itemCount] = null;
 }
@@ -85,7 +91,9 @@ void destroyItem (TrayItem item) {
  */
 public TrayItem getItem (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return items [index];
 }
 
@@ -143,14 +151,18 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (display.tray == this) display.tray = null;
+    if (display.tray == this) {
+        display.tray = null;
+    }
 }
 
 @Override
 void reskinChildren (int flags) {
 	if (items != null) {
 		for (TrayItem item : items) {
-			if (item != null) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);

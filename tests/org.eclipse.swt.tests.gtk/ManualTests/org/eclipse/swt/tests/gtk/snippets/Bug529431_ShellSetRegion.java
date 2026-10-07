@@ -60,8 +60,9 @@ public class Bug529431_ShellSetRegion {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		region.dispose();
 		display.dispose();

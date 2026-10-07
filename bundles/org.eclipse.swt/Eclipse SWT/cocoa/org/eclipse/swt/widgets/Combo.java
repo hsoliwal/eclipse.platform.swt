@@ -139,7 +139,9 @@ public Combo (Composite parent, int style) {
  */
 public void add (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSAttributedString str = createString(string);
 	if ((style & SWT.READ_ONLY) != 0) {
 		NSPopUpButton widget = (NSPopUpButton)view;
@@ -151,7 +153,9 @@ public void add (String string) {
 		nsItem.setAttributedTitle(str);
 		nsMenu.addItem(nsItem);
 		nsItem.release();
-		if (selection == -1) widget.selectItemAtIndex(-1);
+        if (selection == -1) {
+            widget.selectItemAtIndex(-1);
+        }
 	} else {
 		((NSComboBox)view).addItemWithObjectValue(str);
 	}
@@ -185,9 +189,13 @@ public void add (String string) {
  */
 public void add (String string, int index) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int count = getItemCount ();
-	if (0 > index || index > count) error (SWT.ERROR_INVALID_RANGE);
+    if (0 > index || index > count) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	NSAttributedString str = createString(string);
 	if ((style & SWT.READ_ONLY) != 0) {
 		NSPopUpButton widget = (NSPopUpButton)view;
@@ -199,7 +207,9 @@ public void add (String string, int index) {
 		nsItem.setAttributedTitle(str);
 		nsMenu.insertItem(nsItem, index);
 		nsItem.release();
-		if (selection == -1) widget.selectItemAtIndex(-1);
+        if (selection == -1) {
+            widget.selectItemAtIndex(-1);
+        }
 	} else {
 		((NSComboBox)view).insertItemWithObjectValue(str, index);
 	}
@@ -328,36 +338,14 @@ boolean becomeFirstResponder (long id, long sel) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* Feature in Windows.  It is not possible to create
-	* a combo box that has a border using Windows style
-	* bits.  All combo boxes draw their own border and
-	* do not use the standard Windows border styles.
-	* Therefore, no matter what style bits are specified,
-	* clear the BORDER bits so that the SWT style will
-	* match the Windows widget.
-	*
-	* The Windows behavior is currently implemented on
-	* all platforms.
-	*/
-	style &= ~SWT.BORDER;
-
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
-	style = checkBits (style, SWT.DROP_DOWN, SWT.SIMPLE, 0, 0, 0, 0);
-	if ((style & SWT.SIMPLE) != 0) return style & ~SWT.READ_ONLY;
-	return style;
+	return WidgetStylePolicy.COMBO.applyAsInt(style);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -398,8 +386,12 @@ void comboBoxSelectionDidChange(long id, long sel, long notification) {
 	widget.selectItemAtIndex(tableSelection);
 	NSAttributedString attStr = new NSAttributedString (widget.itemObjectValueAtIndex(tableSelection));
 	NSString nsString = attStr.string();
-	if (nsString != null) setText(nsString.getString(), true);
-	if (!ignoreSelection) sendSelectionEvent (SWT.Selection, null, display.trackingControl != this);
+    if (nsString != null) {
+        setText(nsString.getString(), true);
+    }
+    if (!ignoreSelection) {
+        sendSelectionEvent(SWT.Selection, null, display.trackingControl != this);
+    }
 }
 
 @Override
@@ -467,9 +459,13 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 	* required to display their text, even if a larger hHint is specified.
 	*/
 	if (hHint != SWT.DEFAULT) {
-		if ((style & SWT.READ_ONLY) != 0 || hHint < height) height = hHint;
+        if ((style & SWT.READ_ONLY) != 0 || hHint < height) {
+            height = hHint;
+        }
 	}
-	if (wHint != SWT.DEFAULT) width = wHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
 	return new Point (width, height);
 }
 
@@ -488,7 +484,9 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 public void copy () {
 	checkWidget ();
 	Point selection = getSelection ();
-	if (selection.x == selection.y) return;
+    if (selection.x == selection.y) {
+        return;
+    }
 	copyToClipboard (getText (selection.x, selection.y));
 }
 
@@ -561,9 +559,13 @@ void comboBoxWillPopUp(long id, long sel, long notification) {
  */
 public void cut () {
 	checkWidget ();
-	if ((style & SWT.READ_ONLY) != 0) return;
+    if ((style & SWT.READ_ONLY) != 0) {
+        return;
+    }
 	Point selection = getSelection ();
-	if (selection.x == selection.y) return;
+    if (selection.x == selection.y) {
+        return;
+    }
 	int start = selection.x, end = selection.y;
 	String text = getText ();
 	String leftText = text.substring (0, start);
@@ -572,7 +574,9 @@ public void cut () {
 	String newText = "";
 	if (hooks (SWT.Verify) || filters (SWT.Verify)) {
 		newText = verifyText (newText, start, end, null);
-		if (newText == null) return;
+        if (newText == null) {
+            return;
+        }
 	}
 	char [] buffer = new char [oldText.length ()];
 	oldText.getChars (0, buffer.length, buffer, 0);
@@ -590,7 +594,9 @@ Color defaultBackground () {
 
 @Override
 NSFont defaultNSFont() {
-	if ((style & SWT.READ_ONLY) != 0) return display.popUpButtonFont;
+    if ((style & SWT.READ_ONLY) != 0) {
+        return display.popUpButtonFont;
+    }
 	return display.comboBoxFont;
 }
 
@@ -619,7 +625,9 @@ void deregister() {
  */
 public void deselect (int index) {
 	checkWidget ();
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	if (index == getSelectionIndex ()) {
 		if ((style & SWT.READ_ONLY) != 0) {
 			((NSPopUpButton)view).selectItem(null);
@@ -652,7 +660,9 @@ public void deselectAll () {
 	} else {
 		NSComboBox widget = (NSComboBox)view;
 		long index = widget.indexOfSelectedItem();
-		if (index != -1) widget.deselectItemAtIndex(index);
+        if (index != -1) {
+            widget.deselectItemAtIndex(index);
+        }
 	}
 }
 
@@ -670,7 +680,9 @@ boolean dragDetect(int x, int y, boolean filter, boolean[] consume) {
 				long charPosition = feAsTextView.characterIndexForInsertionAtPoint(textViewMouse);
 				if (charPosition != OS.NSNotFound() && charPosition >= selectedRange.location && charPosition < (selectedRange.location + selectedRange.length)) {
 					if (super.dragDetect(x, y, filter, consume)) {
-						if (consume != null) consume[0] = true;
+                        if (consume != null) {
+                            consume[0] = true;
+                        }
 						return true;
 					}
 				}
@@ -726,14 +738,18 @@ public Point getCaretLocation() {
 	if (this.hasFocus()) {
 		widget = new NSTextView(view.window().fieldEditor(true, view));
 	}
-	if (widget == null) return new Point (0, 0);
+    if (widget == null) {
+        return new Point(0, 0);
+    }
 	NSLayoutManager layoutManager = widget.layoutManager();
 	NSTextContainer container = widget.textContainer();
 	NSRange range = widget.selectedRange();
 	long [] rectCount = new long [1];
 	long pArray = layoutManager.rectArrayForCharacterRange(range, range, container, rectCount);
 	NSRect rect = new NSRect();
-	if (rectCount[0] > 0) OS.memmove(rect, pArray, NSRect.sizeof);
+    if (rectCount[0] > 0) {
+        OS.memmove(rect, pArray, NSRect.sizeof);
+    }
 	NSPoint pt = new NSPoint();
 	pt.x = (int)rect.x;
 	pt.y = (int)rect.y;
@@ -748,7 +764,9 @@ int getCharCount() {
 	} else {
 		str = new NSCell(((NSComboBox)view).cell()).title();
 	}
-	if (str == null) return 0;
+    if (str == null) {
+        return 0;
+    }
 	return (int)str.length();
 }
 
@@ -771,15 +789,21 @@ int getCharCount() {
 public String getItem (int index) {
 	checkWidget ();
 	int count = getItemCount ();
-	if (0 > index || index >= count) error (SWT.ERROR_INVALID_RANGE);
+    if (0 > index || index >= count) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	NSString str = null;
 	if ((style & SWT.READ_ONLY) != 0) {
 		str = ((NSPopUpButton)view).itemTitleAtIndex(index);
 	} else {
 		NSAttributedString attString = new NSAttributedString(((NSComboBox)view).itemObjectValueAtIndex(index));
-		if (attString != null) str = attString.string();
+        if (attString != null) {
+            str = attString.string();
+        }
 	}
-	if (str == null) error(SWT.ERROR_CANNOT_GET_ITEM);
+    if (str == null) {
+        error(SWT.ERROR_CANNOT_GET_ITEM);
+    }
 	return str.getString();
 }
 
@@ -839,7 +863,9 @@ public String [] getItems () {
 	checkWidget ();
 	int count = getItemCount ();
 	String [] result = new String [count];
-	for (int i=0; i<count; i++) result [i] = getItem (i);
+    for (int i = 0; i < count; i++) {
+        result [i] = getItem(i);
+    }
 	return result;
 }
 
@@ -971,7 +997,9 @@ char [] getText (int start, int end) {
 	} else {
 		str = new NSCell(((NSComboBox)view).cell()).title();
 	}
-	if (str == null) return new char[0];
+    if (str == null) {
+        return new char[0];
+    }
 	NSRange range = new NSRange ();
 	range.location = start;
 	if (end == -1) {
@@ -1094,9 +1122,13 @@ public int indexOf (String string) {
  */
 public int indexOf (String string, int start) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int count = getItemCount ();
-	if (!(0 <= start && start < count)) return -1;
+    if (!(0 <= start && start < count)) {
+        return -1;
+    }
 	for (int i=start; i<count; i++) {
 		if (string.equals (getItem (i))) {
 			return i;
@@ -1159,17 +1191,23 @@ void mouseDown(long id, long sel, long theEvent) {
  */
 public void paste () {
 	checkWidget ();
-	if ((style & SWT.READ_ONLY) != 0) return;
+    if ((style & SWT.READ_ONLY) != 0) {
+        return;
+    }
 	Point selection = getSelection ();
 	int start = selection.x, end = selection.y;
 	String text = getText ();
 	String leftText = text.substring (0, start);
 	String rightText = text.substring (end, text.length ());
 	String newText = getClipboardText ();
-	if (newText == null) return;
+    if (newText == null) {
+        return;
+    }
 	if (hooks (SWT.Verify) || filters (SWT.Verify)) {
 		newText = verifyText (newText, start, end, null);
-		if (newText == null) return;
+        if (newText == null) {
+            return;
+        }
 	}
 	if (textLimit != LIMIT) {
 		int charCount = text.length ();
@@ -1218,9 +1256,13 @@ void releaseWidget () {
  */
 public void remove (int index) {
 	checkWidget ();
-	if (index == -1) error (SWT.ERROR_INVALID_RANGE);
+    if (index == -1) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	int count = getItemCount ();
-	if (0 > index || index >= count) error (SWT.ERROR_INVALID_RANGE);
+    if (0 > index || index >= count) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if ((style & SWT.READ_ONLY) != 0) {
 		((NSPopUpButton)view).removeItemAtIndex(index);
 	} else {
@@ -1246,7 +1288,9 @@ public void remove (int index) {
  */
 public void remove (int start, int end) {
 	checkWidget();
-	if (start > end) return;
+    if (start > end) {
+        return;
+    }
 	int count = getItemCount ();
 	if (!(0 <= start && start <= end && end < count)) {
 		error (SWT.ERROR_INVALID_RANGE);
@@ -1275,9 +1319,13 @@ public void remove (int start, int end) {
  */
 public void remove (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int index = indexOf (string, 0);
-	if (index == -1) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (index == -1) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	remove (index);
 }
 
@@ -1320,8 +1368,12 @@ public void removeAll () {
  */
 public void removeModifyListener (ModifyListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Modify, listener);
 }
 
@@ -1347,7 +1399,9 @@ public void removeModifyListener (ModifyListener listener) {
  */
 public void removeSegmentListener (SegmentListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	eventTable.unhook (SWT.Segments, listener);
 }
 
@@ -1370,8 +1424,12 @@ public void removeSegmentListener (SegmentListener listener) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -1397,8 +1455,12 @@ public void removeSelectionListener (SelectionListener listener) {
  */
 public void removeVerifyListener (VerifyListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Verify, listener);
 }
 
@@ -1418,7 +1480,9 @@ public void select (int index) {
 	checkWidget ();
 	int count = getItemCount ();
 	if (0 <= index && index < count) {
-		if (index == getSelectionIndex()) return;
+        if (index == getSelectionIndex()) {
+            return;
+        }
 		ignoreSelection = true;
 		if ((style & SWT.READ_ONLY) != 0) {
 			((NSPopUpButton)view).selectItemAtIndex(index);
@@ -1435,20 +1499,34 @@ public void select (int index) {
 @Override
 void sendSelection () {
 	sendEvent(SWT.Modify);
-	if (!ignoreSelection) sendSelectionEvent(SWT.Selection);
+    if (!ignoreSelection) {
+        sendSelectionEvent(SWT.Selection);
+    }
 }
 
 @Override
 boolean sendKeyEvent (NSEvent nsEvent, int type) {
 	boolean result = super.sendKeyEvent (nsEvent, type);
-	if (!result) return result;
+    if (!result) {
+        return result;
+    }
 	int stateMask = 0;
 	long modifierFlags = nsEvent.modifierFlags();
-	if ((modifierFlags & OS.NSAlternateKeyMask) != 0) stateMask |= SWT.ALT;
-	if ((modifierFlags & OS.NSEventModifierFlagShift) != 0) stateMask |= SWT.SHIFT;
-	if ((modifierFlags & OS.NSEventModifierFlagControl) != 0) stateMask |= SWT.CONTROL;
-	if ((modifierFlags & OS.NSEventModifierFlagCommand) != 0) stateMask |= SWT.COMMAND;
-	if (type != SWT.KeyDown)  return result;
+    if ((modifierFlags & OS.NSAlternateKeyMask) != 0) {
+        stateMask |= SWT.ALT;
+    }
+    if ((modifierFlags & OS.NSEventModifierFlagShift) != 0) {
+        stateMask |= SWT.SHIFT;
+    }
+    if ((modifierFlags & OS.NSEventModifierFlagControl) != 0) {
+        stateMask |= SWT.CONTROL;
+    }
+    if ((modifierFlags & OS.NSEventModifierFlagCommand) != 0) {
+        stateMask |= SWT.COMMAND;
+    }
+    if (type != SWT.KeyDown) {
+        return result;
+    }
 	short keyCode = nsEvent.keyCode ();
 	if (stateMask == SWT.COMMAND) {
 		switch (keyCode) {
@@ -1581,28 +1659,36 @@ void setForeground (double [] color) {
  */
 public void setItem (int index, String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int count = getItemCount ();
-	if (0 > index || index >= count) error (SWT.ERROR_INVALID_RANGE);
+    if (0 > index || index >= count) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	int selection = getSelectionIndex();
 	NSAttributedString str = createString(string);
 	ignoreSelection = true;
 	if ((style & SWT.READ_ONLY) != 0) {
 		NSMenuItem nsItem = ((NSPopUpButton)view).itemAtIndex(index);
 		nsItem.setAttributedTitle(str);
-		/*
-		 * Feature in Cocoa.  Setting the attributed title on an NSMenuItem
-		 * also sets the title, but clearing the attributed title does not
-		 * clear the title.  The fix is to explicitly set the title to an
-		 * empty string in this case.
-		 */
-		if (string.length() == 0) nsItem.setTitle(NSString.string());
+        /*
+         * Feature in Cocoa.  Setting the attributed title on an NSMenuItem
+         * also sets the title, but clearing the attributed title does not
+         * clear the title.  The fix is to explicitly set the title to an
+         * empty string in this case.
+         */
+        if (string.length() == 0) {
+            nsItem.setTitle(NSString.string());
+        }
 	} else {
 		NSComboBox widget = (NSComboBox)view;
 		widget.insertItemWithObjectValue(str, index);
 		widget.removeItemAtIndex(index + 1);
 	}
-	if (selection != -1) select (selection);
+    if (selection != -1) {
+        select(selection);
+    }
 	ignoreSelection = false;
 }
 
@@ -1622,12 +1708,18 @@ public void setItem (int index, String string) {
  */
 public void setItems (String... items) {
 	checkWidget();
-	if (items == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (items == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<items.length; i++) {
-		if (items [i] == null) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (items [i] == null) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	}
 	removeAll();
-	if (items.length == 0) return;
+    if (items.length == 0) {
+        return;
+    }
 	ignoreSelection = true;
 	for (int i= 0; i < items.length; i++) {
 		NSAttributedString str = createString(items[i]);
@@ -1716,7 +1808,9 @@ void setOrientation () {
  */
 public void setSelection (Point selection) {
 	checkWidget ();
-	if (selection == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (selection == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if ((style & SWT.READ_ONLY) == 0) {
 		NSComboBox widget = (NSComboBox)view;
 		NSString str = new NSCell(widget.cell()).title();
@@ -1727,7 +1821,9 @@ public void setSelection (Point selection) {
 		selectionRange.location = start;
 		selectionRange.length = end - start;
 		NSText fieldEditor = widget.currentEditor();
-		if (fieldEditor != null) fieldEditor.setSelectedRange(selectionRange);
+        if (fieldEditor != null) {
+            fieldEditor.setSelectedRange(selectionRange);
+        }
 	}
 }
 
@@ -1761,7 +1857,9 @@ public void setSelection (Point selection) {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setText (string, true);
 }
 
@@ -1769,7 +1867,9 @@ void setText (String string, boolean notify) {
 	if (notify) {
 		if (hooks (SWT.Verify) || filters (SWT.Verify)) {
 			string = verifyText (string, 0, getCharCount (), null);
-			if (string == null) return;
+            if (string == null) {
+                return;
+            }
 		}
 	}
 	if ((style & SWT.READ_ONLY) != 0) {
@@ -1782,7 +1882,9 @@ void setText (String string, boolean notify) {
 		string.getChars (0, buffer.length, buffer, 0);
 		text = new String (buffer,0, buffer.length);
 		((NSComboBox)view).cell().setAttributedStringValue(createString(text));
-		if (notify) sendEvent (SWT.Modify);
+        if (notify) {
+            sendEvent(SWT.Modify);
+        }
 	}
 	selectionRange = null;
 }
@@ -1809,7 +1911,9 @@ void setText (String string, boolean notify) {
  */
 public void setTextLimit (int limit) {
 	checkWidget ();
-	if (limit == 0) error (SWT.ERROR_CANNOT_BE_ZERO);
+    if (limit == 0) {
+        error(SWT.ERROR_CANNOT_BE_ZERO);
+    }
 	textLimit = limit;
 }
 
@@ -1832,7 +1936,9 @@ public void setTextLimit (int limit) {
  */
 public void setVisibleItemCount (int count) {
 	checkWidget ();
-	if (count < 0) return;
+    if (count < 0) {
+        return;
+    }
 	if ((style & SWT.READ_ONLY) != 0) {
 		//TODO
 	} else {
@@ -1849,9 +1955,13 @@ boolean shouldChangeTextInRange_replacementString(long id, long sel, long affect
 		String string = new NSString(replacementString).getString();
 		NSEvent currentEvent = display.application.currentEvent();
 		long type = currentEvent.type();
-		if (type != OS.NSKeyDown && type != OS.NSKeyUp) currentEvent = null;
+        if (type != OS.NSKeyDown && type != OS.NSKeyUp) {
+            currentEvent = null;
+        }
 		String newText = verifyText(string, (int)range.location, (int)(range.location+range.length), currentEvent);
-		if (newText == null) return false;
+        if (newText == null) {
+            return false;
+        }
 		if (!string.equals(newText)) {
 			int length = newText.length();
 			Point selection = getSelection();
@@ -1897,12 +2007,14 @@ void textDidChange (long id, long sel, long aNotification) {
 
 @Override
 NSRange textView_willChangeSelectionFromCharacterRange_toCharacterRange(long id, long sel, long aTextView, long oldSelectedCharRange, long newSelectedCharRange) {
-	/*
-	* If the selection is changing as a result of the receiver getting focus
-	* then return the receiver's last selection range, otherwise the full
-	* text will be automatically selected.
-	*/
-	if (receivingFocus && selectionRange != null) return selectionRange;
+    /*
+    * If the selection is changing as a result of the receiver getting focus
+    * then return the receiver's last selection range, otherwise the full
+    * text will be automatically selected.
+    */
+    if (receivingFocus && selectionRange != null) {
+        return selectionRange;
+    }
 
 	/* allow the selection change to proceed */
 	NSRange result = new NSRange();
@@ -1935,7 +2047,9 @@ void updateItems () {
 
 String verifyText (String string, int start, int end, NSEvent keyEvent) {
 	Event event = new Event ();
-	if (keyEvent != null) setKeyState(event, SWT.MouseDown, keyEvent);
+    if (keyEvent != null) {
+        setKeyState(event, SWT.MouseDown, keyEvent);
+    }
 	event.text = string;
 	event.start = start;
 	event.end = end;
@@ -1946,7 +2060,9 @@ String verifyText (String string, int start, int end, NSEvent keyEvent) {
 	 * the operation.
 	 */
 	sendEvent (SWT.Verify, event);
-	if (!event.doit || isDisposed ()) return null;
+    if (!event.doit || isDisposed()) {
+        return null;
+    }
 	return event.text;
 }
 

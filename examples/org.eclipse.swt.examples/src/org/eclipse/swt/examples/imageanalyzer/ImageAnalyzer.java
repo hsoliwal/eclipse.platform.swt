@@ -183,7 +183,9 @@ public class ImageAnalyzer {
 			dialog.pack();
 			dialog.open();
 			while (!dialog.isDisposed()) {
-				if (!display.readAndDispatch()) display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 			return result;
 		}
@@ -194,8 +196,11 @@ public class ImageAnalyzer {
 		ImageAnalyzer imageAnalyzer = new ImageAnalyzer();
 		Shell shell = imageAnalyzer.open(display);
 
-		while (!shell.isDisposed())
-			if (!display.readAndDispatch()) display.sleep();
+        while (!shell.isDisposed()) {
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
+        }
 		display.dispose();
 	}
 
@@ -212,16 +217,18 @@ public class ImageAnalyzer {
 			if (animateThread != null) {
 				// wait for the thread to die before disposing the shell.
 				while (animateThread.isAlive()) {
-					if (!display.readAndDispatch())
-						display.sleep();
+                    if (!display.readAndDispatch()) {
+                        display.sleep();
+                    }
 				}
 			}
 			e.doit = true;
 		}));
 		shell.addDisposeListener(e -> {
-			// Clean up.
-			if (image != null)
-				image.dispose();
+            // Clean up.
+            if (image != null) {
+                image.dispose();
+            }
 			fixedWidthFont.dispose();
 		});
 
@@ -296,7 +303,9 @@ public class ImageAnalyzer {
 			case 0:
 				compressionCombo.setEnabled(true);
 				compressionRatioLabel.setEnabled(true);
-				if (compressionCombo.getItemCount() == 100) break;
+                if (compressionCombo.getItemCount() == 100) {
+                    break;
+                }
 				compressionCombo.removeAll();
 				for (int i = 0; i < 100; i++) {
 					compressionCombo.add(String.valueOf(i + 1));
@@ -306,7 +315,9 @@ public class ImageAnalyzer {
 			case 1:
 				compressionCombo.setEnabled(true);
 				compressionRatioLabel.setEnabled(true);
-				if (compressionCombo.getItemCount() == 10) break;
+                if (compressionCombo.getItemCount() == 10) {
+                    break;
+                }
 				compressionCombo.removeAll();
 				for (int i = 0; i < 4; i++) {
 					compressionCombo.add(String.valueOf(i));
@@ -548,8 +559,9 @@ public class ImageAnalyzer {
 		gridData.heightHint = 16 * 11; // show at least 16 colors
 		paletteCanvas.setLayoutData(gridData);
 		paletteCanvas.addPaintListener(event -> {
-			if (image != null)
-				paintPalette(event);
+            if (image != null) {
+                paintPalette(event);
+            }
 		});
 
 		// Set up the palette canvas scroll bar.
@@ -732,7 +744,9 @@ public class ImageAnalyzer {
 	}
 
 	void menuComposeAlpha(int alpha_op) {
-		if (image == null) return;
+        if (image == null) {
+            return;
+        }
 		animate = false; // stop any animation in progress
 		Cursor waitCursor = display.getSystemCursor(SWT.CURSOR_WAIT);
 		shell.setCursor(waitCursor);
@@ -773,14 +787,16 @@ public class ImageAnalyzer {
 
 		// Get the user to choose an image file.
 		FileDialog fileChooser = new FileDialog(shell, SWT.OPEN);
-		if (lastPath != null)
-			fileChooser.setFilterPath(lastPath);
+        if (lastPath != null) {
+            fileChooser.setFilterPath(lastPath);
+        }
 		fileChooser.setFilterExtensions(OPEN_FILTER_EXTENSIONS);
 		fileChooser.setFilterNames(OPEN_FILTER_NAMES);
 		String filename = fileChooser.open();
 		lastPath = fileChooser.getFilterPath();
-		if (filename == null)
-			return;
+        if (filename == null) {
+            return;
+        }
 
 		Cursor waitCursor = display.getSystemCursor(SWT.CURSOR_WAIT);
 		shell.setCursor(waitCursor);
@@ -817,14 +833,16 @@ public class ImageAnalyzer {
 
 		// Get the user to choose an image file.
 		FileDialog fileChooser = new FileDialog(shell, SWT.OPEN);
-		if (lastPath != null)
-			fileChooser.setFilterPath(lastPath);
+        if (lastPath != null) {
+            fileChooser.setFilterPath(lastPath);
+        }
 		fileChooser.setFilterExtensions(OPEN_FILTER_EXTENSIONS);
 		fileChooser.setFilterNames(OPEN_FILTER_NAMES);
 		String filename = fileChooser.open();
 		lastPath = fileChooser.getFilterPath();
-		if (filename == null)
-			return;
+        if (filename == null) {
+            return;
+        }
 		showFileType(filename);
 		Cursor waitCursor = display.getSystemCursor(SWT.CURSOR_WAIT);
 		shell.setCursor(waitCursor);
@@ -873,7 +891,9 @@ public class ImageAnalyzer {
 		textPrompter.setText(bundle.getString("OpenURLDialog"));
 		textPrompter.setMessage(bundle.getString("EnterURL"));
 		String urlname = textPrompter.open();
-		if (urlname == null) return;
+        if (urlname == null) {
+            return;
+        }
 
 		Cursor waitCursor = display.getSystemCursor(SWT.CURSOR_WAIT);
 		shell.setCursor(waitCursor);
@@ -932,7 +952,9 @@ public class ImageAnalyzer {
 						if (incrementalEvents != null) {
 							if (!incrementalEvents.isEmpty()) {
 								ImageLoaderEvent event = incrementalEvents.remove(0);
-								if (image != null) image.dispose();
+                                if (image != null) {
+                                    image.dispose();
+                                }
 								image = new Image(display, event.imageData);
 								imageData = event.imageData;
 								imageCanvasGC.drawImage(
@@ -967,7 +989,9 @@ public class ImageAnalyzer {
 	}
 
 	void menuSave() {
-		if (image == null) return;
+        if (image == null) {
+            return;
+        }
 		animate = false; // stop any animation in progress
 
 		// If the image file type is unknown, we can't 'Save',
@@ -983,8 +1007,12 @@ public class ImageAnalyzer {
 		try {
 			// Save the current image to the current file.
 			loader.data = new ImageData[] {imageData};
-			if (imageData.type == SWT.IMAGE_JPEG) loader.compression = compressionCombo.indexOf(compressionCombo.getText()) + 1;
-			if (imageData.type == SWT.IMAGE_PNG) loader.compression = compressionCombo.indexOf(compressionCombo.getText());
+            if (imageData.type == SWT.IMAGE_JPEG) {
+                loader.compression = compressionCombo.indexOf(compressionCombo.getText()) + 1;
+            }
+            if (imageData.type == SWT.IMAGE_PNG) {
+                loader.compression = compressionCombo.indexOf(compressionCombo.getText());
+            }
 			loader.save(fileName, imageData.type);
 		} catch (SWTException | SWTError e) {
 			showErrorDialog(bundle.getString("Saving_lc"), fileName, e);
@@ -995,7 +1023,9 @@ public class ImageAnalyzer {
 	}
 
 	void menuSaveAs() {
-		if (image == null) return;
+        if (image == null) {
+            return;
+        }
 		animate = false; // stop any animation in progress
 
 		// Get the user to choose a file name and type to save.
@@ -1033,8 +1063,9 @@ public class ImageAnalyzer {
 		}
 		String filename = fileChooser.open();
 		lastPath = fileChooser.getFilterPath();
-		if (filename == null)
-			return;
+        if (filename == null) {
+            return;
+        }
 
 		// Figure out what file type the user wants saved.
 		int filetype = fileChooser.getFilterIndex();
@@ -1055,8 +1086,9 @@ public class ImageAnalyzer {
 		if (new java.io.File(filename).exists()) {
 			MessageBox box = new MessageBox(shell, SWT.ICON_QUESTION | SWT.OK | SWT.CANCEL);
 			box.setMessage(createMsg(bundle.getString("Overwrite"), filename));
-			if (box.open() == SWT.CANCEL)
-				return;
+            if (box.open() == SWT.CANCEL) {
+                return;
+            }
 		}
 
 		Cursor waitCursor = display.getSystemCursor(SWT.CURSOR_WAIT);
@@ -1069,8 +1101,12 @@ public class ImageAnalyzer {
 				MessageBox box = new MessageBox(shell, SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
 				box.setMessage(createMsg(bundle.getString("Save_all"), Integer.valueOf(loader.data.length)));
 				int result = box.open();
-				if (result == SWT.CANCEL) return;
-				if (result == SWT.YES) multi = true;
+                if (result == SWT.CANCEL) {
+                    return;
+                }
+                if (result == SWT.YES) {
+                    multi = true;
+                }
 			}
 			/* If the image has transparency but the user has transparency turned off,
 			 * turn it off in the saved image. */
@@ -1079,7 +1115,9 @@ public class ImageAnalyzer {
 				imageData.transparentPixel = -1;
 			}
 
-			if (!multi) loader.data = new ImageData[] {imageData};
+            if (!multi) {
+                loader.data = new ImageData[]{imageData};
+            }
 			loader.compression = compressionCombo.indexOf(compressionCombo.getText());
 			loader.save(filename, filetype);
 
@@ -1103,20 +1141,27 @@ public class ImageAnalyzer {
 	}
 
 	void menuSaveMaskAs() {
-		if (image == null || !showMask) return;
-		if (imageData.getTransparencyType() == SWT.TRANSPARENCY_NONE) return;
+        if (image == null || !showMask) {
+            return;
+        }
+        if (imageData.getTransparencyType() == SWT.TRANSPARENCY_NONE) {
+            return;
+        }
 		animate = false; // stop any animation in progress
 
 		// Get the user to choose a file name and type to save.
 		FileDialog fileChooser = new FileDialog(shell, SWT.SAVE);
 		fileChooser.setFilterPath(lastPath);
-		if (fileName != null) fileChooser.setFileName(fileName);
+        if (fileName != null) {
+            fileChooser.setFileName(fileName);
+        }
 		fileChooser.setFilterExtensions(SAVE_FILTER_EXTENSIONS);
 		fileChooser.setFilterNames(SAVE_FILTER_NAMES);
 		String filename = fileChooser.open();
 		lastPath = fileChooser.getFilterPath();
-		if (filename == null)
-			return;
+        if (filename == null) {
+            return;
+        }
 
 		// Figure out what file type the user wants saved.
 		int filetype = fileChooser.getFilterIndex();
@@ -1137,8 +1182,9 @@ public class ImageAnalyzer {
 		if (new java.io.File(filename).exists()) {
 			MessageBox box = new MessageBox(shell, SWT.ICON_QUESTION | SWT.OK | SWT.CANCEL);
 			box.setMessage(createMsg(bundle.getString("Overwrite"), filename));
-			if (box.open() == SWT.CANCEL)
-				return;
+            if (box.open() == SWT.CANCEL) {
+                return;
+            }
 		}
 
 		Cursor waitCursor = display.getSystemCursor(SWT.CURSOR_WAIT);
@@ -1159,15 +1205,21 @@ public class ImageAnalyzer {
 	}
 
 	void menuPrint() {
-		if (image == null) return;
+        if (image == null) {
+            return;
+        }
 
 		try {
 			final int DOTS_PER_INCH = 96;
 			// Ask the user to specify the printer.
 			PrintDialog dialog = new PrintDialog(shell, SWT.NONE);
-			if (printerData != null) dialog.setPrinterData(printerData);
+            if (printerData != null) {
+                dialog.setPrinterData(printerData);
+            }
 			printerData = dialog.open();
-			if (printerData == null) return;
+            if (printerData == null) {
+                return;
+            }
 
 			Printer printer = new Printer(printerData);
 			Point printerDPI = printer.getDPI();
@@ -1209,7 +1261,9 @@ public class ImageAnalyzer {
 	}
 
 	void menuReopen() {
-		if (currentName == null) return;
+        if (currentName == null) {
+            return;
+        }
 		animate = false; // stop any animation in progress
 		Cursor waitCursor = display.getSystemCursor(SWT.CURSOR_WAIT);
 		shell.setCursor(waitCursor);
@@ -1331,19 +1385,37 @@ public class ImageAnalyzer {
 		int x = -1;
 		int depth = imageData.depth;
 		if (depth == 1) { // 8 pixels per byte (can only show 3 of 8)
-			if (where == 0) x = xByte * 8;
-			if (where == 1) x = xByte * 8 + 3;
-			if (where == 2) x = xByte * 8 + 7;
+            if (where == 0) {
+                x = xByte * 8;
+            }
+            if (where == 1) {
+                x = xByte * 8 + 3;
+            }
+            if (where == 2) {
+                x = xByte * 8 + 7;
+            }
 		}
 		if (depth == 2) { // 4 pixels per byte (can only show 3 of 4)
-			if (where == 0) x = xByte * 4;
-			if (where == 1) x = xByte * 4 + 1;
-			if (where == 2) x = xByte * 4 + 3;
+            if (where == 0) {
+                x = xByte * 4;
+            }
+            if (where == 1) {
+                x = xByte * 4 + 1;
+            }
+            if (where == 2) {
+                x = xByte * 4 + 3;
+            }
 		}
 		if (depth == 4) { // 2 pixels per byte
-			if (where == 0) x = xByte * 2;
-			if (where == 1) x = xByte * 2;
-			if (where == 2) x = xByte * 2 + 1;
+            if (where == 0) {
+                x = xByte * 2;
+            }
+            if (where == 1) {
+                x = xByte * 2;
+            }
+            if (where == 2) {
+                x = xByte * 2 + 1;
+            }
 		}
 		if (depth == 8) { // 1 byte per pixel
 			x = xByte;
@@ -1506,9 +1578,11 @@ public class ImageAnalyzer {
 				} catch (InterruptedException e) {
 				}
 
-				// If we have just drawn the last image in the set,
-				// then decrement the repeat count.
-				if (imageDataIndex == imageDataArray.length - 1) repeatCount--;
+                // If we have just drawn the last image in the set,
+                // then decrement the repeat count.
+                if (imageDataIndex == imageDataArray.length - 1) {
+                    repeatCount--;
+                }
 			}
 		} finally {
 			offScreenImage.dispose();
@@ -1608,12 +1682,16 @@ public class ImageAnalyzer {
 
 			// Wait until the incremental thread is done.
 			while (incrementalThread.isAlive()) {
-				if (!display.readAndDispatch()) display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 		}
 
-		// Dispose of the old image, if there was one.
-		if (image != null) image.dispose();
+        // Dispose of the old image, if there was one.
+        if (image != null) {
+            image.dispose();
+        }
 
 		try {
 			// Cache the new image and imageData.
@@ -1715,7 +1793,9 @@ public class ImageAnalyzer {
 			}
 			ranges.add(new StyleRange(start, length, dataText.getForeground(), dataText.getBackground(), SWT.BOLD));
 		}
-		if(!ranges.isEmpty()) dataText.setStyleRanges(ranges.toArray(new StyleRange[0]));
+        if (!ranges.isEmpty()) {
+            dataText.setStyleRanges(ranges.toArray(new StyleRange[0]));
+        }
 
 		statusLabel.setText("");
 
@@ -1748,9 +1828,13 @@ public class ImageAnalyzer {
 			/* If there is any transparency at all, fill the whole background. */
 			gc.fillRectangle(0, 0, bounds.width, bounds.height);
 		} else {
-			/* Otherwise, just fill in the backwards L. */
-			if (ix + w < bounds.width) gc.fillRectangle(ix + w, 0, bounds.width - (ix + w), bounds.height);
-			if (iy + h < bounds.height) gc.fillRectangle(0, iy + h, ix + w, bounds.height - (iy + h));
+            /* Otherwise, just fill in the backwards L. */
+            if (ix + w < bounds.width) {
+                gc.fillRectangle(ix + w, 0, bounds.width - (ix + w), bounds.height);
+            }
+            if (iy + h < bounds.height) {
+                gc.fillRectangle(0, iy + h, ix + w, bounds.height - (iy + h));
+            }
 		}
 
 		/* Draw the image */
@@ -1818,8 +1902,9 @@ public class ImageAnalyzer {
 	}
 
 	void resizeShell(ControlEvent event) {
-		if (image == null || shell.isDisposed())
-			return;
+        if (image == null || shell.isDisposed()) {
+            return;
+        }
 		resizeScrollBars();
 	}
 
@@ -1832,7 +1917,9 @@ public class ImageAnalyzer {
 
 	// Reset the scroll bars to 0.
 	void resetScrollBars() {
-		if (image == null) return;
+        if (image == null) {
+            return;
+        }
 		ix = 0; iy = 0; py = 0;
 		resizeScrollBars();
 		imageCanvas.getHorizontalBar().setSelection(0);
@@ -1896,7 +1983,9 @@ public class ImageAnalyzer {
 	 * Called when the image canvas' horizontal scrollbar is selected.
 	 */
 	void scrollHorizontally(ScrollBar scrollBar) {
-		if (image == null) return;
+        if (image == null) {
+            return;
+        }
 		Rectangle canvasBounds = imageCanvas.getClientArea();
 		int width = Math.round(imageData.width * xscale);
 		int height = Math.round(imageData.height * yscale);
@@ -1916,7 +2005,9 @@ public class ImageAnalyzer {
 	 * Called when the image canvas' vertical scrollbar is selected.
 	 */
 	void scrollVertically(ScrollBar scrollBar) {
-		if (image == null) return;
+        if (image == null) {
+            return;
+        }
 		Rectangle canvasBounds = imageCanvas.getClientArea();
 		int width = Math.round(imageData.width * xscale);
 		int height = Math.round(imageData.height * yscale);
@@ -1936,7 +2027,9 @@ public class ImageAnalyzer {
 	 * Called when the palette canvas' vertical scrollbar is selected.
 	 */
 	void scrollPalette(ScrollBar scrollBar) {
-		if (image == null) return;
+        if (image == null) {
+            return;
+        }
 		Rectangle canvasBounds = paletteCanvas.getClientArea();
 		int paletteHeight = imageData.palette.getRGBs().length * 10 + 20;
 		if (paletteHeight > canvasBounds.height) {
@@ -1958,7 +2051,9 @@ public class ImageAnalyzer {
 	 */
 	String dataHexDump(String lineDelimiter) {
 		final int MAX_DUMP = 1024 * 1024;
-		if (image == null) return "";
+        if (image == null) {
+            return "";
+        }
 		boolean truncated = false;
 		char[] dump = null;
 		byte[] alphas = imageData.alphaData;
@@ -2038,7 +2133,9 @@ public class ImageAnalyzer {
 			result = new String(dump, 0, MAX_DUMP);
 			truncated = true;
 		}
-		if (truncated) result += "\n ...data dump truncated at " + MAX_DUMP + "bytes...";
+        if (truncated) {
+            result += "\n ...data dump truncated at " + MAX_DUMP + "bytes...";
+        }
 		return result;
 	}
 
@@ -2076,7 +2173,9 @@ public class ImageAnalyzer {
 		bmpType[0] = SWT.IMAGE_BMP;
 		SelectionListener radioSelected = widgetSelectedAdapter(event -> {
 			Button radio = (Button) event.widget;
-			if (radio.getSelection()) bmpType[0] = ((Integer)radio.getData()).intValue();
+            if (radio.getSelection()) {
+                bmpType[0] = ((Integer) radio.getData()).intValue();
+            }
 		});
 		// need to externalize strings
 		final Shell dialog = new Shell(shell, SWT.DIALOG_TRIM);
@@ -2117,7 +2216,9 @@ public class ImageAnalyzer {
 		dialog.pack();
 		dialog.open();
 		while (!dialog.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		return bmpType[0];
 	}
@@ -2162,8 +2263,12 @@ public class ImageAnalyzer {
 	 * to see a visual change, then return a higher number.
 	 */
 	static int visibleDelay(int ms) {
-		if (ms < 20) return ms + 30;
-		if (ms < 30) return ms + 10;
+        if (ms < 20) {
+            return ms + 30;
+        }
+        if (ms < 30) {
+            return ms + 10;
+        }
 		return ms;
 	}
 
@@ -2172,8 +2277,9 @@ public class ImageAnalyzer {
 	 * preserving leading 0's.
 	 */
 	static String toHexByteString(int i) {
-		if (i <= 0x0f)
-			return "0" + Integer.toHexString(i);
+        if (i <= 0x0f) {
+            return "0" + Integer.toHexString(i);
+        }
 		return Integer.toHexString(i & 0xff);
 	}
 
@@ -2184,20 +2290,27 @@ public class ImageAnalyzer {
 	 */
 	static String toHex4ByteString(int i) {
 		String hex = Integer.toHexString(i);
-		if (hex.length() == 1)
-			return "0000000" + hex;
-		if (hex.length() == 2)
-			return "000000" + hex;
-		if (hex.length() == 3)
-			return "00000" + hex;
-		if (hex.length() == 4)
-			return "0000" + hex;
-		if (hex.length() == 5)
-			return "000" + hex;
-		if (hex.length() == 6)
-			return "00" + hex;
-		if (hex.length() == 7)
-			return "0" + hex;
+        if (hex.length() == 1) {
+            return "0000000" + hex;
+        }
+        if (hex.length() == 2) {
+            return "000000" + hex;
+        }
+        if (hex.length() == 3) {
+            return "00000" + hex;
+        }
+        if (hex.length() == 4) {
+            return "0000" + hex;
+        }
+        if (hex.length() == 5) {
+            return "000" + hex;
+        }
+        if (hex.length() == 6) {
+            return "00" + hex;
+        }
+        if (hex.length() == 7) {
+            return "0" + hex;
+        }
 		return hex;
 	}
 
@@ -2228,22 +2341,30 @@ public class ImageAnalyzer {
 	 * Return a String describing the specified image file type.
 	 */
 	String fileTypeString(int filetype) {
-		if (filetype == SWT.IMAGE_BMP)
-			return "BMP";
-		if (filetype == SWT.IMAGE_BMP_RLE)
-			return "RLE" + imageData.depth + " BMP";
-		if (filetype == SWT.IMAGE_OS2_BMP)
-			return "OS/2 BMP";
-		if (filetype == SWT.IMAGE_GIF)
-			return "GIF";
-		if (filetype == SWT.IMAGE_ICO)
-			return "ICO";
-		if (filetype == SWT.IMAGE_JPEG)
-			return "JPEG";
-		if (filetype == SWT.IMAGE_PNG)
-			return "PNG";
-		if (filetype == SWT.IMAGE_TIFF)
-			return "TIFF";
+        if (filetype == SWT.IMAGE_BMP) {
+            return "BMP";
+        }
+        if (filetype == SWT.IMAGE_BMP_RLE) {
+            return "RLE" + imageData.depth + " BMP";
+        }
+        if (filetype == SWT.IMAGE_OS2_BMP) {
+            return "OS/2 BMP";
+        }
+        if (filetype == SWT.IMAGE_GIF) {
+            return "GIF";
+        }
+        if (filetype == SWT.IMAGE_ICO) {
+            return "ICO";
+        }
+        if (filetype == SWT.IMAGE_JPEG) {
+            return "JPEG";
+        }
+        if (filetype == SWT.IMAGE_PNG) {
+            return "PNG";
+        }
+        if (filetype == SWT.IMAGE_TIFF) {
+            return "TIFF";
+        }
 		return bundle.getString("Unknown_ac");
 	}
 
@@ -2257,16 +2378,21 @@ public class ImageAnalyzer {
 		if (ext.equalsIgnoreCase("bmp")) {
 			return showBMPDialog();
 		}
-		if (ext.equalsIgnoreCase("gif"))
-			return SWT.IMAGE_GIF;
-		if (ext.equalsIgnoreCase("ico"))
-			return SWT.IMAGE_ICO;
-		if (ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("jfif"))
-			return SWT.IMAGE_JPEG;
-		if (ext.equalsIgnoreCase("png"))
-			return SWT.IMAGE_PNG;
-		if (ext.equalsIgnoreCase("tif") || ext.equalsIgnoreCase("tiff"))
-			return SWT.IMAGE_TIFF;
+        if (ext.equalsIgnoreCase("gif")) {
+            return SWT.IMAGE_GIF;
+        }
+        if (ext.equalsIgnoreCase("ico")) {
+            return SWT.IMAGE_ICO;
+        }
+        if (ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("jfif")) {
+            return SWT.IMAGE_JPEG;
+        }
+        if (ext.equalsIgnoreCase("png")) {
+            return SWT.IMAGE_PNG;
+        }
+        if (ext.equalsIgnoreCase("tif") || ext.equalsIgnoreCase("tiff")) {
+            return SWT.IMAGE_TIFF;
+        }
 		return SWT.IMAGE_UNDEFINED;
 	}
 
@@ -2276,7 +2402,9 @@ public class ImageAnalyzer {
 			imageTypeCombo.select(0);
 			compressionCombo.setEnabled(true);
 			compressionRatioLabel.setEnabled(true);
-			if (compressionCombo.getItemCount() == 100) return;
+            if (compressionCombo.getItemCount() == 100) {
+                return;
+            }
 			compressionCombo.removeAll();
 			for (int i = 0; i < 100; i++) {
 				compressionCombo.add(String.valueOf(i + 1));
@@ -2288,7 +2416,9 @@ public class ImageAnalyzer {
 			imageTypeCombo.select(1);
 			compressionCombo.setEnabled(true);
 			compressionRatioLabel.setEnabled(true);
-			if (compressionCombo.getItemCount() == 10) return;
+            if (compressionCombo.getItemCount() == 10) {
+                return;
+            }
 			compressionCombo.removeAll();
 			for (int i = 0; i < 4; i++) {
 				compressionCombo.add(String.valueOf(i));

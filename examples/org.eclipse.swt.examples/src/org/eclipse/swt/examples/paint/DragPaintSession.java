@@ -82,8 +82,12 @@ public abstract class DragPaintSession extends BasicPaintSession {
 	 */
 	@Override
 	public void mouseDown(MouseEvent event) {
-		if (event.button != 1) return;
-		if (dragInProgress) return; // spurious event
+        if (event.button != 1) {
+            return;
+        }
+        if (dragInProgress) {
+            return;
+        } // spurious event
 		dragInProgress = true;
 
 		anchorPosition.x = event.x;
@@ -110,9 +114,13 @@ public abstract class DragPaintSession extends BasicPaintSession {
 			resetSession(); // abort if right or middle mouse button pressed
 			return;
 		}
-		if (! dragInProgress) return; // spurious event
+        if (!dragInProgress) {
+            return;
+        } // spurious event
 		dragInProgress = false;
-		if (anchorPosition.x == -1) return; // spurious event
+        if (anchorPosition.x == -1) {
+            return;
+        } // spurious event
 
 		getPaintSurface().commitRubberbandSelection();
 	}

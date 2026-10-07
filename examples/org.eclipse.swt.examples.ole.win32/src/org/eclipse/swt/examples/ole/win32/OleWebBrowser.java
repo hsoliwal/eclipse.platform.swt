@@ -88,7 +88,9 @@ class OleWebBrowser {
 	 * Disposes of the Web browser control.
 	 */
 	public void dispose() {
-		if (oleAutomation != null) oleAutomation.dispose();
+        if (oleAutomation != null) {
+            oleAutomation.dispose();
+        }
 		oleAutomation = null;
 	}
 	
@@ -110,7 +112,9 @@ class OleWebBrowser {
 		int[] rgdispid = oleAutomation.getIDsOfNames(new String[]{"LocationName"}); 
 		int dispIdMember = rgdispid[0];
 		Variant pVarResult = oleAutomation.getProperty(dispIdMember);
-		if (pVarResult == null || pVarResult.getType() != OLE.VT_BSTR) return null;
+        if (pVarResult == null || pVarResult.getType() != OLE.VT_BSTR) {
+            return null;
+        }
 		return pVarResult.getString();
 	}
 	
@@ -125,7 +129,9 @@ class OleWebBrowser {
 		int dispIdMember = rgdispid[0];
 		
 		Variant pVarResult = oleAutomation.getProperty(dispIdMember);
-		if (pVarResult == null || pVarResult.getType() != OLE.VT_BSTR) return null;
+        if (pVarResult == null || pVarResult.getType() != OLE.VT_BSTR) {
+            return null;
+        }
 		return pVarResult.getString();
 	}
 	
@@ -145,7 +151,9 @@ class OleWebBrowser {
 		int dispIdMember = rgdispid[0];
 		
 		Variant pVarResult = oleAutomation.getProperty(dispIdMember);
-		if (pVarResult == null || pVarResult.getType() != OLE.VT_I4) return -1;
+        if (pVarResult == null || pVarResult.getType() != OLE.VT_I4) {
+            return -1;
+        }
 		return pVarResult.getInt();
 	}
 	

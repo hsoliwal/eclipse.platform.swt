@@ -134,7 +134,9 @@ public Callback (Object object, String method, int argCount, boolean isArrayBase
 
 	/* Bind the address */
 	address = bind (this, object, method, signature, argCount, isStatic, isArrayBased, errorResult);
-	if (address == 0) SWT.error (SWT.ERROR_NO_MORE_CALLBACKS);
+    if (address == 0) {
+        SWT.error(SWT.ERROR_NO_MORE_CALLBACKS);
+    }
 }
 
 
@@ -234,7 +236,9 @@ public Callback (Object object, String method, Type returnType, Type [] argument
 
 	/* Bind the address */
 	address = bind (this, this.object, this.method, this.signature, this.argCount, this.isStatic, this.isArrayBased, this.errorResult);
-	if (address == 0) SWT.error (SWT.ERROR_NO_MORE_CALLBACKS);
+    if (address == 0) {
+        SWT.error(SWT.ERROR_NO_MORE_CALLBACKS);
+    }
 }
 
 /**
@@ -260,7 +264,9 @@ static native synchronized long bind (Callback callback, Object object, String m
  * from accidentally holding onto extraneous garbage.
  */
 public void dispose () {
-	if (object == null) return;
+    if (object == null) {
+        return;
+    }
 	unbind (this);
 	object = method = signature = null;
 	address = 0;
@@ -298,7 +304,9 @@ public static native int getEntryCount ();
 
 static String getSignature(int argCount) {
 	String signature = "("; //$NON-NLS-1$
-	for (int i = 0; i < argCount; i++) signature += PTR_SIGNATURE;
+    for (int i = 0; i < argCount; i++) {
+        signature += PTR_SIGNATURE;
+    }
 	signature += ")" + PTR_SIGNATURE; //$NON-NLS-1$
 	return signature;
 }

@@ -352,10 +352,11 @@ public class JPEGDecoder {
 			if (cinfo.comps_in_scan > 1) {
 				coef.MCU_rows_per_iMCU_row = 1;
 			} else {
-				if (cinfo.input_iMCU_row < (cinfo.total_iMCU_rows-1))
-					coef.MCU_rows_per_iMCU_row = cinfo.cur_comp_info[0].v_samp_factor;
-				else
-					coef.MCU_rows_per_iMCU_row = cinfo.cur_comp_info[0].last_row_height;
+                if (cinfo.input_iMCU_row < (cinfo.total_iMCU_rows - 1)) {
+                    coef.MCU_rows_per_iMCU_row = cinfo.cur_comp_info[0].v_samp_factor;
+                } else {
+                    coef.MCU_rows_per_iMCU_row = cinfo.cur_comp_info[0].last_row_height;
+                }
 			}
 
 			coef.MCU_ctr = 0;
@@ -415,9 +416,11 @@ public class JPEGDecoder {
 
 				/* Process restart marker if needed; may have to suspend */
 			if (cinfo.restart_interval != 0) {
-				if (entropy.restarts_to_go == 0)
-					if (! process_restart(cinfo))
-						return false;
+                if (entropy.restarts_to_go == 0) {
+                    if (!process_restart(cinfo)) {
+                        return false;
+                    }
+                }
 			}
 
 			/* If we've run out of data, just leave the MCU set to zeroes.
@@ -578,8 +581,9 @@ public class JPEGDecoder {
 								 */
 								block[jpeg_natural_order[k]] = (short) s;
 							} else {
-								if (r != 15)
-									break;
+                                if (r != 15) {
+                                    break;
+                                }
 								k += 15;
 							}
 						}
@@ -640,8 +644,9 @@ public class JPEGDecoder {
 //								DROP_BITS(s);
 								bits_left -= s;
 							} else {
-								if (r != 15)
-									break;
+                                if (r != 15) {
+                                    break;
+                                }
 								k += 15;
 							}
 						}
@@ -729,24 +734,27 @@ public class JPEGDecoder {
 			cinfo.marker.discarded_bytes += entropy.bitstate.bits_left / 8;
 			entropy.bitstate.bits_left = 0;
 
-			/* Advance past the RSTn marker */
-			if (! read_restart_marker (cinfo))
-				return false;
+            /* Advance past the RSTn marker */
+            if (!read_restart_marker(cinfo)) {
+                return false;
+            }
 
-			/* Re-initialize DC predictions to 0 */
-			for (ci = 0; ci < cinfo.comps_in_scan; ci++)
-				entropy.saved.last_dc_val[ci] = 0;
+            /* Re-initialize DC predictions to 0 */
+            for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
+                entropy.saved.last_dc_val[ci] = 0;
+            }
 
 			/* Reset restart counter */
 			entropy.restarts_to_go = cinfo.restart_interval;
 
-			/* Reset out-of-data flag, unless read_restart_marker left us smack up
-			 * against a marker.	In that case we will end up treating the next data
-			 * segment as empty, and we can avoid producing bogus output pixels by
-			 * leaving the flag set.
-			 */
-			if (cinfo.unread_marker == 0)
-				entropy.insufficient_data = false;
+            /* Reset out-of-data flag, unless read_restart_marker left us smack up
+             * against a marker.	In that case we will end up treating the next data
+             * segment as empty, and we can avoid producing bogus output pixels by
+             * leaving the flag set.
+             */
+            if (cinfo.unread_marker == 0) {
+                entropy.insufficient_data = false;
+            }
 
 			return true;
 		}
@@ -779,15 +787,17 @@ public class JPEGDecoder {
 		boolean decode_mcu (jpeg_decompress_struct cinfo, short[][] MCU_data) {
 			boolean is_DC_band = (cinfo.Ss == 0);
 			if (cinfo.Ah == 0) {
-				if (is_DC_band)
-					return decode_mcu_DC_first(cinfo, MCU_data);
-				else
-					return decode_mcu_AC_first(cinfo, MCU_data);
+                if (is_DC_band) {
+                    return decode_mcu_DC_first(cinfo, MCU_data);
+                } else {
+                    return decode_mcu_AC_first(cinfo, MCU_data);
+                }
 			} else {
-				if (is_DC_band)
-					return decode_mcu_DC_refine(cinfo, MCU_data);
-				else
-					return decode_mcu_AC_refine(cinfo, MCU_data);
+                if (is_DC_band) {
+                    return decode_mcu_DC_refine(cinfo, MCU_data);
+                } else {
+                    return decode_mcu_AC_refine(cinfo, MCU_data);
+                }
 			}
 		}
 
@@ -804,9 +814,11 @@ public class JPEGDecoder {
 
 			/* Process restart marker if needed; may have to suspend */
 			if (cinfo.restart_interval != 0) {
-				if (entropy.restarts_to_go == 0)
-					if (! process_restart(cinfo))
-						return false;
+                if (entropy.restarts_to_go == 0) {
+                    if (!process_restart(cinfo)) {
+                        return false;
+                    }
+                }
 			}
 
 			/* Not worth the cycles to check insufficient_data here,
@@ -838,8 +850,9 @@ public class JPEGDecoder {
 				}
 				}
 //				if (GET_BITS(1))
-				if ((( (get_buffer >> (bits_left -= (1)))) & ((1<<(1))-1)) != 0)
-					block[0] |= p1;
+                if ((( (get_buffer >> (bits_left -= (1)))) & ((1 << (1)) - 1)) != 0) {
+                    block[0] |= p1;
+                }
 					/* Note: since we use |=, repeating the assignment later is safe */
 			}
 
@@ -879,9 +892,11 @@ public class JPEGDecoder {
 
 				/* Process restart marker if needed; may have to suspend */
 			if (cinfo.restart_interval != 0) {
-				if (entropy.restarts_to_go == 0)
-					if (! process_restart(cinfo))
-						return false;
+                if (entropy.restarts_to_go == 0) {
+                    if (!process_restart(cinfo)) {
+                        return false;
+                    }
+                }
 			}
 
 			/* If we've run out of data, don't modify the MCU.
@@ -922,8 +937,9 @@ public class JPEGDecoder {
 						if (bits_left < HUFF_LOOKAHEAD) {
 							if (! jpeg_fill_bit_buffer(br_state,get_buffer,bits_left, 0)) {
 //								failaction;
-								while (num_newnz > 0)
-									block[newnz_pos[--num_newnz]] = 0;
+                                while (num_newnz > 0) {
+                                    block[newnz_pos[--num_newnz]] = 0;
+                                }
 
 								return false;
 							}
@@ -933,8 +949,9 @@ public class JPEGDecoder {
 //								goto slowlabel;
 								if ((s=jpeg_huff_decode(br_state,get_buffer,bits_left,tbl,nb)) < 0) {
 //									failaction;
-									while (num_newnz > 0)
-										block[newnz_pos[--num_newnz]] = 0;
+                                    while (num_newnz > 0) {
+                                        block[newnz_pos[--num_newnz]] = 0;
+                                    }
 
 									return false;
 								}
@@ -953,8 +970,9 @@ public class JPEGDecoder {
 //								slowlabel:
 								if ((s=jpeg_huff_decode(br_state,get_buffer,bits_left,tbl,nb)) < 0) {
 //									failaction;
-									while (num_newnz > 0)
-										block[newnz_pos[--num_newnz]] = 0;
+                                    while (num_newnz > 0) {
+                                        block[newnz_pos[--num_newnz]] = 0;
+                                    }
 
 									return false;
 								}
@@ -973,8 +991,9 @@ public class JPEGDecoder {
 							if (bits_left < (1)) {
 								if (! jpeg_fill_bit_buffer(br_state,get_buffer,bits_left,1)) {
 //									failaction;
-									while (num_newnz > 0)
-										block[newnz_pos[--num_newnz]] = 0;
+                                    while (num_newnz > 0) {
+                                        block[newnz_pos[--num_newnz]] = 0;
+                                    }
 
 									return false;
 								}
@@ -982,10 +1001,12 @@ public class JPEGDecoder {
 								}
 							}
 //							if (GET_BITS(1))
-							if ((( (get_buffer >> (bits_left -= (1)))) & ((1<<(1))-1)) != 0)
-								s = p1;		/* newly nonzero coef is positive */
-							else
-								s = m1;		/* newly nonzero coef is negative */
+                            if ((( (get_buffer >> (bits_left -= (1)))) & ((1 << (1)) - 1)) != 0) {
+                                s = p1;
+                            }		/* newly nonzero coef is positive */
+                            else {
+                                s = m1;
+                            }		/* newly nonzero coef is negative */
 						} else {
 							if (r != 15) {
 								EOBRUN = 1 << r;	/* EOBr, run length is 2^r + appended bits */
@@ -995,8 +1016,9 @@ public class JPEGDecoder {
 									if (bits_left < (r)) {
 										if (!jpeg_fill_bit_buffer(br_state,get_buffer,bits_left,r)) {
 //											failaction;
-											while (num_newnz > 0)
-												block[newnz_pos[--num_newnz]] = 0;
+                                            while (num_newnz > 0) {
+                                                block[newnz_pos[--num_newnz]] = 0;
+                                            }
 
 											return false;
 										}
@@ -1024,8 +1046,9 @@ public class JPEGDecoder {
 								if (bits_left < (1)) {
 									if (!jpeg_fill_bit_buffer(br_state,get_buffer,bits_left,1)) {
 //										failaction;
-										while (num_newnz > 0)
-											block[newnz_pos[--num_newnz]] = 0;
+                                        while (num_newnz > 0) {
+                                            block[newnz_pos[--num_newnz]] = 0;
+                                        }
 
 										return false;
 									}
@@ -1035,15 +1058,17 @@ public class JPEGDecoder {
 //								if (GET_BITS(1)) {
 								if ((( (get_buffer >> (bits_left -= (1)))) & ((1<<(1))-1)) != 0) {
 									if ((thiscoef[thiscoef_offset] & p1) == 0) { /* do nothing if already set it */
-										if (thiscoef[thiscoef_offset] >= 0)
-											thiscoef[thiscoef_offset] += p1;
-										else
-											thiscoef[thiscoef_offset] += m1;
+                                        if (thiscoef[thiscoef_offset] >= 0) {
+                                            thiscoef[thiscoef_offset] += p1;
+                                        } else {
+                                            thiscoef[thiscoef_offset] += m1;
+                                        }
 									}
 								}
 							} else {
-								if (--r < 0)
-									break;		/* reached target zero coefficient */
+                                if (--r < 0) {
+                                    break;
+                                }		/* reached target zero coefficient */
 							}
 							k++;
 						} while (k <= Se);
@@ -1072,8 +1097,9 @@ public class JPEGDecoder {
 							if (bits_left < (1)) {
 								if (! jpeg_fill_bit_buffer(br_state,get_buffer,bits_left,1)) {
 //									failaction;
-									while (num_newnz > 0)
-										block[newnz_pos[--num_newnz]] = 0;
+                                    while (num_newnz > 0) {
+                                        block[newnz_pos[--num_newnz]] = 0;
+                                    }
 
 									return false;
 								}
@@ -1083,10 +1109,11 @@ public class JPEGDecoder {
 //							if (GET_BITS(1)) {
 							if ((( (get_buffer >> (bits_left -= (1)))) & ((1<<(1))-1)) != 0) {
 								if ((thiscoef[thiscoef_offset] & p1) == 0) { /* do nothing if already changed it */
-									if (thiscoef[thiscoef_offset] >= 0)
-										thiscoef[thiscoef_offset] += p1;
-									else
-										thiscoef[thiscoef_offset] += m1;
+                                    if (thiscoef[thiscoef_offset] >= 0) {
+                                        thiscoef[thiscoef_offset] += p1;
+                                    } else {
+                                        thiscoef[thiscoef_offset] += m1;
+                                    }
 								}
 							}
 						}
@@ -1137,9 +1164,11 @@ public class JPEGDecoder {
 
 			/* Process restart marker if needed; may have to suspend */
 			if (cinfo.restart_interval != 0) {
-				if (entropy.restarts_to_go == 0)
-					if (! process_restart(cinfo))
-						return false;
+                if (entropy.restarts_to_go == 0) {
+                    if (!process_restart(cinfo)) {
+                        return false;
+                    }
+                }
 			}
 
 			/* If we've run out of data, just leave the MCU set to zeroes.
@@ -1152,109 +1181,115 @@ public class JPEGDecoder {
 				 */
 				EOBRUN = entropy.saved.EOBRUN;	/* only part of saved state we need */
 
-				/* There is always only one block per MCU */
+                /* There is always only one block per MCU */
 
-				if (EOBRUN > 0)		/* if it's a band of zeroes... */
-					EOBRUN--;			/* ...process it now (we do nothing) */
-				else {
+                if (EOBRUN > 0) {		/* if it's a band of zeroes... */
+                    EOBRUN--;
+                }			/* ...process it now (we do nothing) */
+                else {
 //					BITREAD_LOAD_STATE(cinfo,entropy.bitstate);
-					br_state.cinfo = cinfo;
-					br_state.buffer = cinfo.buffer;
-					br_state.bytes_in_buffer = cinfo.bytes_in_buffer;
-					br_state.bytes_offset = cinfo.bytes_offset;
-					get_buffer = entropy.bitstate.get_buffer;
-					bits_left = entropy.bitstate.bits_left;
+                    br_state.cinfo = cinfo;
+                    br_state.buffer = cinfo.buffer;
+                    br_state.bytes_in_buffer = cinfo.bytes_in_buffer;
+                    br_state.bytes_offset = cinfo.bytes_offset;
+                    get_buffer = entropy.bitstate.get_buffer;
+                    bits_left = entropy.bitstate.bits_left;
 
-					block = MCU_data[0];
-					tbl = entropy.ac_derived_tbl;
+                    block = MCU_data[0];
+                    tbl = entropy.ac_derived_tbl;
 
-					for (k = cinfo.Ss; k <= Se; k++) {
+                    for (k = cinfo.Ss; k <= Se; k++) {
 //						HUFF_DECODE(s, br_state, tbl, return FALSE, label2);
-						{
-						int nb = 0, look;
-						if (bits_left < HUFF_LOOKAHEAD) {
-							if (! jpeg_fill_bit_buffer(br_state,get_buffer,bits_left, 0)) {
-								return false;
-							}
-							get_buffer = br_state.get_buffer; bits_left = br_state.bits_left;
-							if (bits_left < HUFF_LOOKAHEAD) {
-								nb = 1;
+                        {
+                            int nb = 0, look;
+                            if (bits_left < HUFF_LOOKAHEAD) {
+                                if (!jpeg_fill_bit_buffer(br_state, get_buffer, bits_left, 0)) {
+                                    return false;
+                                }
+                                get_buffer = br_state.get_buffer;
+                                bits_left = br_state.bits_left;
+                                if (bits_left < HUFF_LOOKAHEAD) {
+                                    nb = 1;
 //								goto slowlabel;
-								if ((s=jpeg_huff_decode(br_state,get_buffer,bits_left,tbl,nb)) < 0) {
-									return false;
-								}
-								get_buffer = br_state.get_buffer; bits_left = br_state.bits_left;
-							}
-						}
-						if (nb != 1) {
+                                    if ((s = jpeg_huff_decode(br_state, get_buffer, bits_left, tbl, nb)) < 0) {
+                                        return false;
+                                    }
+                                    get_buffer = br_state.get_buffer;
+                                    bits_left = br_state.bits_left;
+                                }
+                            }
+                            if (nb != 1) {
 //							look = PEEK_BITS(HUFF_LOOKAHEAD);
-							look = (( (get_buffer >> (bits_left -	(HUFF_LOOKAHEAD)))) & ((1<<(HUFF_LOOKAHEAD))-1));
+                                look = (( (get_buffer >> (bits_left - (HUFF_LOOKAHEAD)))) & ((1 << (HUFF_LOOKAHEAD)) - 1));
 
-							if ((nb = tbl.look_nbits[look]) != 0) {
+                                if ((nb = tbl.look_nbits[look]) != 0) {
 //								DROP_BITS(nb);
-								bits_left -= nb;
-								s = tbl.look_sym[look] & 0xFF;
-							} else {
-								nb = HUFF_LOOKAHEAD+1;
+                                    bits_left -= nb;
+                                    s = tbl.look_sym[look] & 0xFF;
+                                } else {
+                                    nb = HUFF_LOOKAHEAD + 1;
 //								slowlabel:
-								if ((s=jpeg_huff_decode(br_state,get_buffer,bits_left,tbl,nb)) < 0) {
-									return false;
-								}
-								get_buffer = br_state.get_buffer; bits_left = br_state.bits_left;
-							}
-						}
-						}
-						r = s >> 4;
-						s &= 15;
-						if (s != 0) {
-							k += r;
+                                    if ((s = jpeg_huff_decode(br_state, get_buffer, bits_left, tbl, nb)) < 0) {
+                                        return false;
+                                    }
+                                    get_buffer = br_state.get_buffer;
+                                    bits_left = br_state.bits_left;
+                                }
+                            }
+                        }
+                        r = s >> 4;
+                        s &= 15;
+                        if (s != 0) {
+                            k += r;
 //							CHECK_BIT_BUFFER(br_state, s, return FALSE);
-							{
-							if (bits_left < (s)) {
-								if (! jpeg_fill_bit_buffer(br_state,get_buffer,bits_left,s)) {
-									return false;
-								}
-								get_buffer = (br_state).get_buffer; bits_left = (br_state).bits_left;
-							}
-							}
+                            {
+                                if (bits_left < (s)) {
+                                    if (!jpeg_fill_bit_buffer(br_state, get_buffer, bits_left, s)) {
+                                        return false;
+                                    }
+                                    get_buffer = (br_state).get_buffer;
+                                    bits_left = (br_state).bits_left;
+                                }
+                            }
 //							r = GET_BITS(s);
-							r = (( (get_buffer >> (bits_left -= (s)))) & ((1<<(s))-1));
+                            r = (( (get_buffer >> (bits_left -= (s)))) & ((1 << (s)) - 1));
 //							s = HUFF_EXTEND(r, s);
-							s = ((r) < extend_test[s] ? (r) + extend_offset[s] : (r));
-							/* Scale and output coefficient in natural (dezigzagged) order */
-							block[jpeg_natural_order[k]] = (short) (s << Al);
-						} else {
-							if (r == 15) {	/* ZRL */
-								k += 15;		/* skip 15 zeroes in band */
-							} else {		/* EOBr, run length is 2^r + appended bits */
-								EOBRUN = 1 << r;
-								if (r != 0) {		/* EOBr, r > 0 */
-//									CHECK_BIT_BUFFER(br_state, r, return FALSE);
-									{
-									if (bits_left < (r)) {
-										if (! jpeg_fill_bit_buffer(br_state,get_buffer,bits_left,r)) {
-											return false;
-										}
-										get_buffer = (br_state).get_buffer; bits_left = (br_state).bits_left;
-									}
-									}
+                            s = ((r) < extend_test[s] ? (r) + extend_offset[s] : (r));
+                            /* Scale and output coefficient in natural (dezigzagged) order */
+                            block[jpeg_natural_order[k]] = (short) (s << Al);
+                        } else {
+                            if (r == 15) {	/* ZRL */
+                                k += 15;		/* skip 15 zeroes in band */
+                            } else {		/* EOBr, run length is 2^r + appended bits */
+                                EOBRUN = 1 << r;
+                                if (r != 0) {		/* EOBr, r > 0 */
+                                    //									CHECK_BIT_BUFFER(br_state, r, return FALSE);
+                                    {
+                                        if (bits_left < (r)) {
+                                            if (!jpeg_fill_bit_buffer(br_state, get_buffer, bits_left, r)) {
+                                                return false;
+                                            }
+                                            get_buffer = (br_state).get_buffer;
+                                            bits_left = (br_state).bits_left;
+                                        }
+                                    }
 //									r = GET_BITS(r);
-									r = (( (get_buffer >> (bits_left -= (r)))) & ((1<<(r))-1));
-									EOBRUN += r;
-								}
-								EOBRUN--;		/* this band is processed at this moment */
-								break;		/* force end-of-band */
-							}
-						}
-					}
+                                    r = (( (get_buffer >> (bits_left -= (r)))) & ((1 << (r)) - 1));
+                                    EOBRUN += r;
+                                }
+                                EOBRUN--;		/* this band is processed at this moment */
+                                break;		/* force end-of-band */
+                            }
+                        }
+                    }
 
 //					BITREAD_SAVE_STATE(cinfo,entropy.bitstate);
-					cinfo.buffer = br_state.buffer;
-					cinfo.bytes_in_buffer = br_state.bytes_in_buffer;
-					cinfo.bytes_offset = br_state.bytes_offset;
-					entropy.bitstate.get_buffer = get_buffer;
-					entropy.bitstate.bits_left = bits_left;
-				}
+                    cinfo.buffer = br_state.buffer;
+                    cinfo.bytes_in_buffer = br_state.bytes_in_buffer;
+                    cinfo.bytes_offset = br_state.bytes_offset;
+                    entropy.bitstate.get_buffer = get_buffer;
+                    entropy.bitstate.bits_left = bits_left;
+                }
 
 				/* Completed MCU, so update state */
 				entropy.saved.EOBRUN = EOBRUN;	/* only part of saved state we need */
@@ -1285,9 +1320,11 @@ public class JPEGDecoder {
 
 			/* Process restart marker if needed; may have to suspend */
 			if (cinfo.restart_interval != 0) {
-				if (entropy.restarts_to_go == 0)
-					if (! process_restart(cinfo))
-						return false;
+                if (entropy.restarts_to_go == 0) {
+                    if (!process_restart(cinfo)) {
+                        return false;
+                    }
+                }
 			}
 
 			/* If we've run out of data, just leave the MCU set to zeroes.
@@ -1410,26 +1447,29 @@ public class JPEGDecoder {
 			cinfo.marker.discarded_bytes += entropy.bitstate.bits_left / 8;
 			entropy.bitstate.bits_left = 0;
 
-			/* Advance past the RSTn marker */
-			if (! read_restart_marker (cinfo))
-				return false;
+            /* Advance past the RSTn marker */
+            if (!read_restart_marker(cinfo)) {
+                return false;
+            }
 
-			/* Re-initialize DC predictions to 0 */
-			for (ci = 0; ci < cinfo.comps_in_scan; ci++)
-				entropy.saved.last_dc_val[ci] = 0;
+            /* Re-initialize DC predictions to 0 */
+            for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
+                entropy.saved.last_dc_val[ci] = 0;
+            }
 				/* Re-init EOB run count, too */
 			entropy.saved.EOBRUN = 0;
 
 			/* Reset restart counter */
 			entropy.restarts_to_go = cinfo.restart_interval;
 
-			/* Reset out-of-data flag, unless read_restart_marker left us smack up
-			 * against a marker.	In that case we will end up treating the next data
-			 * segment as empty, and we can avoid producing bogus output pixels by
-			 * leaving the flag set.
-			 */
-			if (cinfo.unread_marker == 0)
-				entropy.insufficient_data = false;
+            /* Reset out-of-data flag, unless read_restart_marker left us smack up
+             * against a marker.	In that case we will end up treating the next data
+             * segment as empty, and we can avoid producing bogus output pixels by
+             * leaving the flag set.
+             */
+            if (cinfo.unread_marker == 0) {
+                entropy.insufficient_data = false;
+            }
 
 			return true;
 		}
@@ -1446,31 +1486,37 @@ public class JPEGDecoder {
 			/* Validate scan parameters */
 			bad = false;
 			if (is_DC_band) {
-				if (cinfo.Se != 0)
-					bad = true;
+                if (cinfo.Se != 0) {
+                    bad = true;
+                }
 			} else {
-				/* need not check Ss/Se < 0 since they came from unsigned bytes */
-				if (cinfo.Ss > cinfo.Se || cinfo.Se >= DCTSIZE2)
-					bad = true;
-				/* AC scans may have only one component */
-				if (cinfo.comps_in_scan != 1)
-					bad = true;
+                /* need not check Ss/Se < 0 since they came from unsigned bytes */
+                if (cinfo.Ss > cinfo.Se || cinfo.Se >= DCTSIZE2) {
+                    bad = true;
+                }
+                /* AC scans may have only one component */
+                if (cinfo.comps_in_scan != 1) {
+                    bad = true;
+                }
 			}
 			if (cinfo.Ah != 0) {
-				/* Successive approximation refinement scan: must have Al = Ah-1. */
-				if (cinfo.Al != cinfo.Ah-1)
-					bad = true;
+                /* Successive approximation refinement scan: must have Al = Ah-1. */
+                if (cinfo.Al != cinfo.Ah - 1) {
+                    bad = true;
+                }
 			}
-			if (cinfo.Al > 13)		/* need not check for < 0 */
-				bad = true;
-			/* Arguably the maximum Al value should be less than 13 for 8-bit precision,
-			 * but the spec doesn't say so, and we try to be liberal about what we
-			 * accept.	Note: large Al values could result in out-of-range DC
-			 * coefficients during early scans, leading to bizarre displays due to
-			 * overflows in the IDCT math.	But we won't crash.
-			 */
-			if (bad)
-				error();
+            if (cinfo.Al > 13) {		/* need not check for < 0 */
+                bad = true;
+            }
+            /* Arguably the maximum Al value should be less than 13 for 8-bit precision,
+             * but the spec doesn't say so, and we try to be liberal about what we
+             * accept.	Note: large Al values could result in out-of-range DC
+             * coefficients during early scans, leading to bizarre displays due to
+             * overflows in the IDCT math.	But we won't crash.
+             */
+            if (bad) {
+                error();
+            }
 //				ERREXIT4(cinfo, JERR_BAD_PROGRESSION, cinfo.Ss, cinfo.Se, cinfo.Ah, cinfo.Al);
 			/* Update progression status, and verify that scan order is legal.
 			 * Note that inter-scan inconsistencies are treated as warnings
@@ -1849,18 +1895,20 @@ public class JPEGDecoder {
 						break;
 					}
 //					idct.inverse_DCT[ci] = method_ptr;
-					/* Create multiplier table from quant table.
-					 * However, we can skip this if the component is uninteresting
-					 * or if we already built the table.	Also, if no quant table
-					 * has yet been saved for the component, we leave the
-					 * multiplier table all-zero; we'll be reading zeroes from the
-					 * coefficient controller's buffer anyway.
-					 */
-					if (! compptr.component_needed || idct.cur_method[ci] == method)
-						continue;
+                /* Create multiplier table from quant table.
+                 * However, we can skip this if the component is uninteresting
+                 * or if we already built the table.	Also, if no quant table
+                 * has yet been saved for the component, we leave the
+                 * multiplier table all-zero; we'll be reading zeroes from the
+                 * coefficient controller's buffer anyway.
+                 */
+                if (!compptr.component_needed || idct.cur_method[ci] == method) {
+                    continue;
+                }
 					qtbl = compptr.quant_table;
-					if (qtbl == null)		/* happens if no data yet for component */
-						continue;
+                if (qtbl == null) {		/* happens if no data yet for component */
+                    continue;
+                }
 					idct.cur_method[ci] = method;
 					switch (method) {
 //						#ifdef PROVIDE_ISLOW_TABLES
@@ -2349,10 +2397,11 @@ static void start_output_pass (jpeg_decompress_struct cinfo) {
 
 	/* If multipass, check to see whether to use block smoothing on this pass */
 	if (coef.coef_arrays != null) {
-		if (cinfo.do_block_smoothing && smoothing_ok(cinfo))
-			coef.decompress_data = DECOMPRESS_SMOOTH_DATA;
-		else
-			coef.decompress_data = DECOMPRESS_DATA;
+        if (cinfo.do_block_smoothing && smoothing_ok(cinfo)) {
+            coef.decompress_data = DECOMPRESS_SMOOTH_DATA;
+        } else {
+            coef.decompress_data = DECOMPRESS_DATA;
+        }
 	}
 //#endif
 	cinfo.output_iMCU_row = 0;
@@ -2383,9 +2432,10 @@ static void jpeg_calc_output_dimensions (jpeg_decompress_struct cinfo)
 //	jpeg_component_info compptr;
 //#endif
 
-	/* Prevent application from calling me at wrong times */
-	if (cinfo.global_state != DSTATE_READY)
-		error();
+    /* Prevent application from calling me at wrong times */
+    if (cinfo.global_state != DSTATE_READY) {
+        error();
+    }
 //		ERREXIT1(cinfo, JERR_BAD_STATE, cinfo.global_state);
 
 //#ifdef IDCT_SCALING_SUPPORTED
@@ -2471,36 +2521,41 @@ static void jpeg_calc_output_dimensions (jpeg_decompress_struct cinfo)
 	};
 	cinfo.output_components = (cinfo.quantize_colors ? 1 : cinfo.out_color_components);
 
-	/* See if upsampler will want to emit more than one row at a time */
-	if (use_merged_upsample(cinfo))
-		cinfo.rec_outbuf_height = cinfo.max_v_samp_factor;
-	else
-		cinfo.rec_outbuf_height = 1;
+    /* See if upsampler will want to emit more than one row at a time */
+    if (use_merged_upsample(cinfo)) {
+        cinfo.rec_outbuf_height = cinfo.max_v_samp_factor;
+    } else {
+        cinfo.rec_outbuf_height = 1;
+    }
 }
 
 static boolean use_merged_upsample (jpeg_decompress_struct cinfo) {
 //#ifdef UPSAMPLE_MERGING_SUPPORTED
-	/* Merging is the equivalent of plain box-filter upsampling */
-	if (cinfo.do_fancy_upsampling || cinfo.CCIR601_sampling)
-		return false;
-	/* jdmerge.c only supports YCC=>RGB color conversion */
-	if (cinfo.jpeg_color_space != JCS_YCbCr || cinfo.num_components != 3 ||
-			cinfo.out_color_space != JCS_RGB ||
-			cinfo.out_color_components != RGB_PIXELSIZE)
-		return false;
-	/* and it only handles 2h1v or 2h2v sampling ratios */
-	if (cinfo.comp_info[0].h_samp_factor != 2 ||
-			cinfo.comp_info[1].h_samp_factor != 1 ||
-			cinfo.comp_info[2].h_samp_factor != 1 ||
-			cinfo.comp_info[0].v_samp_factor >	2 ||
-			cinfo.comp_info[1].v_samp_factor != 1 ||
-			cinfo.comp_info[2].v_samp_factor != 1)
-		return false;
-	/* furthermore, it doesn't work if we've scaled the IDCTs differently */
-	if (cinfo.comp_info[0].DCT_scaled_size != cinfo.min_DCT_scaled_size ||
-			cinfo.comp_info[1].DCT_scaled_size != cinfo.min_DCT_scaled_size ||
-			cinfo.comp_info[2].DCT_scaled_size != cinfo.min_DCT_scaled_size)
-		return false;
+    /* Merging is the equivalent of plain box-filter upsampling */
+    if (cinfo.do_fancy_upsampling || cinfo.CCIR601_sampling) {
+        return false;
+    }
+    /* jdmerge.c only supports YCC=>RGB color conversion */
+    if (cinfo.jpeg_color_space != JCS_YCbCr || cinfo.num_components != 3 ||
+            cinfo.out_color_space != JCS_RGB ||
+            cinfo.out_color_components != RGB_PIXELSIZE) {
+        return false;
+    }
+    /* and it only handles 2h1v or 2h2v sampling ratios */
+    if (cinfo.comp_info[0].h_samp_factor != 2 ||
+            cinfo.comp_info[1].h_samp_factor != 1 ||
+            cinfo.comp_info[2].h_samp_factor != 1 ||
+            cinfo.comp_info[0].v_samp_factor > 2 ||
+            cinfo.comp_info[1].v_samp_factor != 1 ||
+            cinfo.comp_info[2].v_samp_factor != 1) {
+        return false;
+    }
+    /* furthermore, it doesn't work if we've scaled the IDCTs differently */
+    if (cinfo.comp_info[0].DCT_scaled_size != cinfo.min_DCT_scaled_size ||
+            cinfo.comp_info[1].DCT_scaled_size != cinfo.min_DCT_scaled_size ||
+            cinfo.comp_info[2].DCT_scaled_size != cinfo.min_DCT_scaled_size) {
+        return false;
+    }
 	/* ??? also need to test for upsample-time rescaling, when & if supported */
 	return true;			/* by golly, it'll work... */
 //#else
@@ -2518,14 +2573,16 @@ static void prepare_range_limit_table (jpeg_decompress_struct cinfo)
 	int offset = (MAXJSAMPLE+1);	/* allow negative subscripts of simple table */
 	cinfo.sample_range_limit_offset = offset;
 	cinfo.sample_range_limit = table;
-	/* First segment of "simple" table: limit[x] = 0 for x < 0 */
-	/* Main part of "simple" table: limit[x] = x */
-	for (i = 0; i <= MAXJSAMPLE; i++)
-		table[i + offset] = (byte)i;
+    /* First segment of "simple" table: limit[x] = 0 for x < 0 */
+    /* Main part of "simple" table: limit[x] = x */
+    for (i = 0; i <= MAXJSAMPLE; i++) {
+        table[i + offset] = (byte) i;
+    }
 	offset += CENTERJSAMPLE;	/* Point to where post-IDCT table starts */
-	/* End of simple table, rest of first half of post-IDCT table */
-	for (i = CENTERJSAMPLE; i < 2*(MAXJSAMPLE+1); i++)
-		table[i+offset] = (byte)MAXJSAMPLE;
+    /* End of simple table, rest of first half of post-IDCT table */
+    for (i = CENTERJSAMPLE; i < 2 * (MAXJSAMPLE + 1); i++) {
+        table[i + offset] = (byte) MAXJSAMPLE;
+    }
 	/* Second half of post-IDCT table */
 	System.arraycopy(cinfo.sample_range_limit, cinfo.sample_range_limit_offset, table, offset + (4 * (MAXJSAMPLE+1) - CENTERJSAMPLE), CENTERJSAMPLE);
 }
@@ -2563,28 +2620,32 @@ static void jinit_color_deconverter (jpeg_decompress_struct cinfo) {
 	/* Make sure num_components agrees with jpeg_color_space */
 	switch (cinfo.jpeg_color_space) {
 		case JCS_GRAYSCALE:
-			if (cinfo.num_components != 1)
-				error();
+            if (cinfo.num_components != 1) {
+                error();
+            }
 //				ERREXIT(cinfo, JERR_BAD_J_COLORSPACE);
 			break;
 
 		case JCS_RGB:
 		case JCS_YCbCr:
-			if (cinfo.num_components != 3)
-				error();
+            if (cinfo.num_components != 3) {
+                error();
+            }
 //				ERREXIT(cinfo, JERR_BAD_J_COLORSPACE);
 			break;
 
 		case JCS_CMYK:
 		case JCS_YCCK:
-			if (cinfo.num_components != 4)
-				error();
+            if (cinfo.num_components != 4) {
+                error();
+            }
 //				ERREXIT(cinfo, JERR_BAD_J_COLORSPACE);
 			break;
 
 		default:			/* JCS_UNKNOWN can be anything */
-			if (cinfo.num_components < 1)
-				error();
+            if (cinfo.num_components < 1) {
+                error();
+            }
 //				ERREXIT(cinfo, JERR_BAD_J_COLORSPACE);
 			break;
 	}
@@ -2600,11 +2661,13 @@ static void jinit_color_deconverter (jpeg_decompress_struct cinfo) {
 			cinfo.out_color_components = 1;
 			if (cinfo.jpeg_color_space == JCS_GRAYSCALE || cinfo.jpeg_color_space == JCS_YCbCr) {
 				cconvert.color_convert = GRAYSCALE_CONVERT;
-				/* For color.grayscale conversion, only the Y (0) component is needed */
-				for (ci = 1; ci < cinfo.num_components; ci++)
-					cinfo.comp_info[ci].component_needed = false;
-			} else
-				error();
+                /* For color.grayscale conversion, only the Y (0) component is needed */
+                for (ci = 1; ci < cinfo.num_components; ci++) {
+                    cinfo.comp_info[ci].component_needed = false;
+                }
+			} else {
+                error();
+            }
 //				ERREXIT(cinfo, JERR_CONVERSION_NOTIMPL);
 			break;
 
@@ -2617,8 +2680,9 @@ static void jinit_color_deconverter (jpeg_decompress_struct cinfo) {
 				cconvert.color_convert = GRAY_RGB_CONVERT;
 			} else if (cinfo.jpeg_color_space == JCS_RGB) {
 				cconvert.color_convert = NULL_CONVERT;
-			} else
-				error();
+			} else {
+                error();
+            }
 //				ERREXIT(cinfo, JERR_CONVERSION_NOTIMPL);
 				break;
 
@@ -2629,8 +2693,9 @@ static void jinit_color_deconverter (jpeg_decompress_struct cinfo) {
 				build_ycc_rgb_table(cinfo);
 			} else if (cinfo.jpeg_color_space == JCS_CMYK) {
 				cconvert.color_convert = NULL_CONVERT;
-			} else
-				error();
+			} else {
+                error();
+            }
 //				ERREXIT(cinfo, JERR_CONVERSION_NOTIMPL);
 			break;
 
@@ -2639,16 +2704,19 @@ static void jinit_color_deconverter (jpeg_decompress_struct cinfo) {
 			if (cinfo.out_color_space == cinfo.jpeg_color_space) {
 				cinfo.out_color_components = cinfo.num_components;
 				cconvert.color_convert = NULL_CONVERT;
-			} else	/* unsupported non-null conversion */
-				error();
+			} else {	/* unsupported non-null conversion */
+                error();
+            }
 //				ERREXIT(cinfo, JERR_CONVERSION_NOTIMPL);
 			break;
 	}
 
-	if (cinfo.quantize_colors)
-		cinfo.output_components = 1; /* single colormapped output component */
-	else
-		cinfo.output_components = cinfo.out_color_components;
+    if (cinfo.quantize_colors) {
+        cinfo.output_components = 1;
+    } /* single colormapped output component */
+    else {
+        cinfo.output_components = cinfo.out_color_components;
+    }
 }
 
 static void jinit_d_post_controller (jpeg_decompress_struct cinfo, boolean need_full_buffer) {
@@ -2774,16 +2842,18 @@ static void jinit_d_main_controller (jpeg_decompress_struct cinfo, boolean need_
 	jpeg_d_main_controller main = cinfo.main = new jpeg_d_main_controller();
 //	main.pub.start_pass = start_pass_main;
 
-	if (need_full_buffer)		/* shouldn't happen */
-		error();
+    if (need_full_buffer) {		/* shouldn't happen */
+        error();
+    }
 //		ERREXIT(cinfo, JERR_BAD_BUFFER_MODE);
 
 	/* Allocate the workspace.
 	 * ngroups is the number of row groups we need.
 	 */
 	if (cinfo.upsample.need_context_rows) {
-		if (cinfo.min_DCT_scaled_size < 2) /* unsupported, see comments above */
-			error();
+        if (cinfo.min_DCT_scaled_size < 2) { /* unsupported, see comments above */
+            error();
+        }
 //			ERREXIT(cinfo, JERR_NOTIMPL);
 		alloc_funny_pointers(cinfo); /* Alloc space for xbuffer[] lists */
 		ngroups = cinfo.min_DCT_scaled_size + 2;
@@ -2818,8 +2888,9 @@ static void jinit_upsampler (jpeg_decompress_struct cinfo) {
 //	upsample.upsample = sep_upsample;
 	upsample.need_context_rows = false; /* until we find out differently */
 
-	if (cinfo.CCIR601_sampling)	/* this isn't supported */
-		error();
+    if (cinfo.CCIR601_sampling) {	/* this isn't supported */
+        error();
+    }
 //		ERREXIT(cinfo, JERR_CCIR601_NOTIMPL);
 
 	/* jdmainct.c doesn't support context rows when min_DCT_scaled_size = 1,
@@ -2852,25 +2923,28 @@ static void jinit_upsampler (jpeg_decompress_struct cinfo) {
 			upsample.methods[ci] = FULLSIZE_UPSAMPLE;
 			need_buffer = false;
 		} else if (h_in_group * 2 == h_out_group && v_in_group == v_out_group) {
-			/* Special cases for 2h1v upsampling */
-			if (do_fancy && compptr.downsampled_width > 2)
-				upsample.methods[ci] = H2V1_FANCY_UPSAMPLE;
-			else
-				upsample.methods[ci] = H2V1_UPSAMPLE;
+            /* Special cases for 2h1v upsampling */
+            if (do_fancy && compptr.downsampled_width > 2) {
+                upsample.methods[ci] = H2V1_FANCY_UPSAMPLE;
+            } else {
+                upsample.methods[ci] = H2V1_UPSAMPLE;
+            }
 		} else if (h_in_group * 2 == h_out_group && v_in_group * 2 == v_out_group) {
 			/* Special cases for 2h2v upsampling */
 			if (do_fancy && compptr.downsampled_width > 2) {
 				upsample.methods[ci] = H2V2_FANCY_UPSAMPLE;
 				upsample.need_context_rows = true;
-			} else
-				upsample.methods[ci] = H2V2_UPSAMPLE;
+			} else {
+                upsample.methods[ci] = H2V2_UPSAMPLE;
+            }
 		} else if ((h_out_group % h_in_group) == 0 && (v_out_group % v_in_group) == 0) {
 			/* Generic integral-factors upsampling method */
 			upsample.methods[ci] = INT_UPSAMPLE;
 			upsample.h_expand[ci] = (byte) (h_out_group / h_in_group);
 			upsample.v_expand[ci] = (byte) (v_out_group / v_in_group);
-		} else
-			error();
+		} else {
+            error();
+        }
 //			ERREXIT(cinfo, JERR_FRACT_SAMPLE_NOTIMPL);
 		if (need_buffer) {
 			upsample.color_buf[ci] = new byte[cinfo.max_v_samp_factor]
@@ -2889,9 +2963,11 @@ static void jinit_phuff_decoder (jpeg_decompress_struct cinfo) {
 	/* Create progression status table */
 	cinfo.coef_bits = new int[cinfo.num_components][DCTSIZE2];
 	coef_bit_ptr = cinfo.coef_bits;
-	for (ci = 0; ci < cinfo.num_components; ci++)
-		for (i = 0; i < DCTSIZE2; i++)
-			coef_bit_ptr[ci][i] = -1;
+    for (ci = 0; ci < cinfo.num_components; ci++) {
+        for (i = 0; i < DCTSIZE2; i++) {
+            coef_bit_ptr[ci][i] = -1;
+        }
+    }
 }
 
 
@@ -3193,37 +3269,43 @@ static boolean smoothing_ok (jpeg_decompress_struct cinfo) {
 	int[] coef_bits;
 	int[] coef_bits_latch;
 
-	if (! cinfo.progressive_mode || cinfo.coef_bits == null)
-		return false;
+    if (!cinfo.progressive_mode || cinfo.coef_bits == null) {
+        return false;
+    }
 
-	/* Allocate latch area if not already done */
-	if (coef.coef_bits_latch == null)
-		coef.coef_bits_latch = new int[cinfo.num_components * SAVED_COEFS];
+    /* Allocate latch area if not already done */
+    if (coef.coef_bits_latch == null) {
+        coef.coef_bits_latch = new int[cinfo.num_components * SAVED_COEFS];
+    }
 	coef_bits_latch = coef.coef_bits_latch;
 	int coef_bits_latch_offset = 0;
 
 	for (ci = 0; ci < cinfo.num_components; ci++) {
 		compptr = cinfo.comp_info[ci];
-		/* All components' quantization values must already be latched. */
-		if ((qtable = compptr.quant_table) == null)
-			return false;
-		/* Verify DC & first 5 AC quantizers are nonzero to avoid zero-divide. */
-		if (qtable.quantval[0] == 0 ||
-			qtable.quantval[Q01_POS] == 0 ||
-			qtable.quantval[Q10_POS] == 0 ||
-			qtable.quantval[Q20_POS] == 0 ||
-			qtable.quantval[Q11_POS] == 0 ||
-			qtable.quantval[Q02_POS] == 0)
-				return false;
+        /* All components' quantization values must already be latched. */
+        if ((qtable = compptr.quant_table) == null) {
+            return false;
+        }
+        /* Verify DC & first 5 AC quantizers are nonzero to avoid zero-divide. */
+        if (qtable.quantval[0] == 0 ||
+                qtable.quantval[Q01_POS] == 0 ||
+                qtable.quantval[Q10_POS] == 0 ||
+                qtable.quantval[Q20_POS] == 0 ||
+                qtable.quantval[Q11_POS] == 0 ||
+                qtable.quantval[Q02_POS] == 0) {
+            return false;
+        }
 		/* DC values must be at least partly known for all components. */
 		coef_bits = cinfo.coef_bits[ci];
-		if (coef_bits[0] < 0)
-			return false;
+        if (coef_bits[0] < 0) {
+            return false;
+        }
 		/* Block smoothing is helpful if some AC coefficients remain inaccurate. */
 		for (coefi = 1; coefi <= 5; coefi++) {
 			coef_bits_latch[coefi+coef_bits_latch_offset] = coef_bits[coefi];
-			if (coef_bits[coefi] != 0)
-				smoothing_useful = true;
+            if (coef_bits[coefi] != 0) {
+                smoothing_useful = true;
+            }
 		}
 		coef_bits_latch_offset += SAVED_COEFS;
 	}
@@ -3244,8 +3326,9 @@ static void master_selection (jpeg_decompress_struct cinfo) {
 	/* Width of an output scanline must be representable as JDIMENSION. */
 	samplesperrow = (long) cinfo.output_width * (long) cinfo.out_color_components;
 	jd_samplesperrow = (int) samplesperrow;
-	if ( jd_samplesperrow != samplesperrow)
-		error();
+    if (jd_samplesperrow != samplesperrow) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_WIDTH_OVERFLOW);
 
 	/* Initialize my private state */
@@ -3330,16 +3413,18 @@ static void master_selection (jpeg_decompress_struct cinfo) {
 //#else
 //			ERREXIT(cinfo, JERR_NOT_COMPILED);
 //#endif
-		} else
-			jinit_huff_decoder(cinfo);
+		} else {
+            jinit_huff_decoder(cinfo);
+        }
 	}
 
 	/* Initialize principal buffer controllers. */
 	use_c_buffer = cinfo.inputctl.has_multiple_scans || cinfo.buffered_image;
 	jinit_d_coef_controller(cinfo, use_c_buffer);
 
-	if (! cinfo.raw_data_out)
-		jinit_d_main_controller(cinfo, false /* never need full buffer here */);
+    if (!cinfo.raw_data_out) {
+        jinit_d_main_controller(cinfo, false /* never need full buffer here */);
+    }
 
 	/* Initialize input side of decompressor to consume first scan. */
 	start_input_pass (cinfo);
@@ -3427,10 +3512,12 @@ static boolean jpeg_start_decompress (jpeg_decompress_struct cinfo) {
 //					(*cinfo.progress.progress_monitor) ((j_common_ptr) cinfo);
 				/* Absorb some more input */
 				retcode = consume_input (cinfo);
-				if (retcode == JPEG_SUSPENDED)
-					return false;
-				if (retcode == JPEG_REACHED_EOI)
-					break;
+                if (retcode == JPEG_SUSPENDED) {
+                    return false;
+                }
+                if (retcode == JPEG_REACHED_EOI) {
+                    break;
+                }
 				/* Advance progress counter if appropriate */
 //				if (cinfo.progress != null && (retcode == JPEG_ROW_COMPLETED || retcode == JPEG_REACHED_SOS)) {
 //					if (++cinfo.progress.pass_counter >= cinfo.progress.pass_limit) {
@@ -3444,8 +3531,9 @@ static boolean jpeg_start_decompress (jpeg_decompress_struct cinfo) {
 //#endif /* D_MULTISCAN_FILES_SUPPORTED */
 		}
 		cinfo.output_scan_number = cinfo.input_scan_number;
-	} else if (cinfo.global_state != DSTATE_PRESCAN)
-		error();
+	} else if (cinfo.global_state != DSTATE_PRESCAN) {
+        error();
+    }
 //		ERREXIT1(cinfo, JERR_BAD_STATE, cinfo.global_state);
 	/* Perform any dummy output passes, and set up for the final pass */
 	return output_pass_setup(cinfo);
@@ -3481,11 +3569,13 @@ static void prepare_for_output_pass (jpeg_decompress_struct cinfo) {
 		cinfo.idct.start_pass (cinfo);
 		start_output_pass (cinfo);
 		if (! cinfo.raw_data_out) {
-			if (! master.using_merged_upsample)
-				cinfo.cconvert.start_pass (cinfo);
+            if (!master.using_merged_upsample) {
+                cinfo.cconvert.start_pass(cinfo);
+            }
 			cinfo.upsample.start_pass (cinfo);
-			if (cinfo.quantize_colors)
-				cinfo.cquantize.start_pass (cinfo, master.is_dummy_pass);
+            if (cinfo.quantize_colors) {
+                cinfo.cquantize.start_pass(cinfo, master.is_dummy_pass);
+            }
 			cinfo.post.start_pass (cinfo, (master.is_dummy_pass ? JBUF_SAVE_AND_PASS : JBUF_PASS_THRU));
 			cinfo.main.start_pass (cinfo, JBUF_PASS_THRU);
 		}
@@ -3515,18 +3605,23 @@ static boolean jpeg_resync_to_restart (jpeg_decompress_struct cinfo, int desired
 
 	/* Outer loop handles repeated decision after scanning forward. */
 	for (;;) {
-		if (marker < M_SOF0)
-			action = 2;		/* invalid marker */
-		else if (marker < M_RST0 || marker > M_RST7)
-			action = 3;		/* valid non-restart marker */
-		else {
-			if (marker == (M_RST0 + ((desired+1) & 7)) || marker == ( M_RST0 + ((desired+2) & 7)))
-				action = 3;		/* one of the next two expected restarts */
-			else if (marker == (M_RST0 + ((desired-1) & 7)) || marker == ( M_RST0 + ((desired-2) & 7)))
-				action = 2;		/* a prior restart, so advance */
-			else
-				action = 1;		/* desired restart or too far away */
-		}
+        if (marker < M_SOF0) {
+            action = 2;
+        }		/* invalid marker */
+        else if (marker < M_RST0 || marker > M_RST7) {
+            action = 3;
+        }		/* valid non-restart marker */
+        else {
+            if (marker == (M_RST0 + ((desired + 1) & 7)) || marker == (M_RST0 + ((desired + 2) & 7))) {
+                action = 3;
+            }		/* one of the next two expected restarts */
+            else if (marker == (M_RST0 + ((desired - 1) & 7)) || marker == (M_RST0 + ((desired - 2) & 7))) {
+                action = 2;
+            }		/* a prior restart, so advance */
+            else {
+                action = 1;
+            }		/* desired restart or too far away */
+        }
 //		TRACEMS2(cinfo, 4, JTRC_RECOVERY_ACTION, marker, action);
 		switch (action) {
 			case 1:
@@ -3534,9 +3629,10 @@ static boolean jpeg_resync_to_restart (jpeg_decompress_struct cinfo, int desired
 				cinfo.unread_marker = 0;
 				return true;
 			case 2:
-				/* Scan to the next marker, and repeat the decision loop. */
-				if (! next_marker(cinfo))
-					return false;
+                /* Scan to the next marker, and repeat the decision loop. */
+                if (!next_marker(cinfo)) {
+                    return false;
+                }
 				marker = cinfo.unread_marker;
 				break;
 			case 3:
@@ -3551,8 +3647,9 @@ static boolean read_restart_marker (jpeg_decompress_struct cinfo) {
 	/* Obtain a marker unless we already did. */
 	/* Note that next_marker will complain if it skips any data. */
 	if (cinfo.unread_marker == 0) {
-		if (! next_marker(cinfo))
-			return false;
+        if (!next_marker(cinfo)) {
+            return false;
+        }
 	}
 
 	if (cinfo.unread_marker == (M_RST0 + cinfo.marker.next_restart_num)) {
@@ -3560,10 +3657,11 @@ static boolean read_restart_marker (jpeg_decompress_struct cinfo) {
 //		TRACEMS1(cinfo, 3, JTRC_RST, cinfo.marker.next_restart_num);
 		cinfo.unread_marker = 0;
 	} else {
-		/* Uh-oh, the restart markers have been messed up. */
-		/* Let the data source manager determine how to resync. */
-		if (! jpeg_resync_to_restart (cinfo, cinfo.marker.next_restart_num))
-			return false;
+        /* Uh-oh, the restart markers have been messed up. */
+        /* Let the data source manager determine how to resync. */
+        if (!jpeg_resync_to_restart(cinfo, cinfo.marker.next_restart_num)) {
+            return false;
+        }
 	}
 
 	/* Update next-restart state */
@@ -3591,8 +3689,9 @@ static boolean jpeg_fill_bit_buffer (bitread_working_state state, int get_buffer
 
 			/* Attempt to read a byte */
 			if (bytes_offset == bytes_in_buffer) {
-				if (! fill_input_buffer (cinfo))
-					return false;
+                if (!fill_input_buffer(cinfo)) {
+                    return false;
+                }
 				buffer = cinfo.buffer;
 				bytes_in_buffer = cinfo.bytes_in_buffer;
 				bytes_offset = cinfo.bytes_offset;
@@ -3608,8 +3707,9 @@ static boolean jpeg_fill_bit_buffer (bitread_working_state state, int get_buffer
 				 */
 				do {
 					if (bytes_offset == bytes_in_buffer) {
-						if (! fill_input_buffer (cinfo))
-							return false;
+                        if (!fill_input_buffer(cinfo)) {
+                            return false;
+                        }
 						buffer = cinfo.buffer;
 						bytes_in_buffer = cinfo.bytes_in_buffer;
 						bytes_offset = cinfo.bytes_offset;
@@ -3832,7 +3932,9 @@ static int decompress_smooth_data (jpeg_decompress_struct cinfo, byte[][][] outp
 //	inverse_DCT_method_ptr inverse_DCT;
 	boolean first_row, last_row;
 	short[] workspace = coef.workspace;
-	if (workspace == null) workspace = coef.workspace = new short[DCTSIZE2];
+    if (workspace == null) {
+        workspace = coef.workspace = new short[DCTSIZE2];
+    }
 	int[] coef_bits;
 	JQUANT_TBL quanttbl;
 	int Q00,Q01,Q02,Q10,Q11,Q20, num;
@@ -3848,19 +3950,22 @@ static int decompress_smooth_data (jpeg_decompress_struct cinfo, byte[][][] outp
 			 * values are up to date.
 			 */
 			int delta = (cinfo.Ss == 0) ? 1 : 0;
-			if (cinfo.input_iMCU_row > cinfo.output_iMCU_row+delta)
-				break;
+            if (cinfo.input_iMCU_row > cinfo.output_iMCU_row + delta) {
+                break;
+            }
 		}
-		if (consume_input(cinfo) == JPEG_SUSPENDED)
-			return JPEG_SUSPENDED;
+        if (consume_input(cinfo) == JPEG_SUSPENDED) {
+            return JPEG_SUSPENDED;
+        }
 	}
 
 	/* OK, output from the virtual arrays. */
 	for (ci = 0; ci < cinfo.num_components; ci++) {
 		compptr = cinfo.comp_info[ci];
-		/* Don't bother to IDCT an uninteresting component. */
-		if (! compptr.component_needed)
-			continue;
+        /* Don't bother to IDCT an uninteresting component. */
+        if (!compptr.component_needed) {
+            continue;
+        }
 		/* Count non-dummy DCT block rows in this iMCU row. */
 		if (cinfo.output_iMCU_row < last_iMCU_row) {
 			block_rows = compptr.v_samp_factor;
@@ -3869,7 +3974,9 @@ static int decompress_smooth_data (jpeg_decompress_struct cinfo, byte[][][] outp
 		} else {
 			/* NB: can't use last_row_height here; it is input-side-dependent! */
 			block_rows = (compptr.height_in_blocks % compptr.v_samp_factor);
-			if (block_rows == 0) block_rows = compptr.v_samp_factor;
+            if (block_rows == 0) {
+                block_rows = compptr.v_samp_factor;
+            }
 			//access_rows = block_rows; /* this iMCU row only */
 			last_row = true;
 		}
@@ -3944,12 +4051,14 @@ static int decompress_smooth_data (jpeg_decompress_struct cinfo, byte[][][] outp
 					num = 36 * Q00 * (DC4 - DC6);
 					if (num >= 0) {
 						pred = (((Q01<<7) + num) / (Q01<<8));
-						if (Al > 0 && pred >= (1<<Al))
-							pred = (1<<Al)-1;
+                        if (Al > 0 && pred >= (1 << Al)) {
+                            pred = (1 << Al) - 1;
+                        }
 					} else {
 						pred = (((Q01<<7) - num) / (Q01<<8));
-						if (Al > 0 && pred >= (1<<Al))
-							pred = (1<<Al)-1;
+                        if (Al > 0 && pred >= (1 << Al)) {
+                            pred = (1 << Al) - 1;
+                        }
 						pred = -pred;
 					}
 					workspace[1] = (short) pred;
@@ -3959,12 +4068,14 @@ static int decompress_smooth_data (jpeg_decompress_struct cinfo, byte[][][] outp
 					num = 36 * Q00 * (DC2 - DC8);
 					if (num >= 0) {
 						pred = (((Q10<<7) + num) / (Q10<<8));
-						if (Al > 0 && pred >= (1<<Al))
-							pred = (1<<Al)-1;
+                        if (Al > 0 && pred >= (1 << Al)) {
+                            pred = (1 << Al) - 1;
+                        }
 					} else {
 						pred = (((Q10<<7) - num) / (Q10<<8));
-						if (Al > 0 && pred >= (1<<Al))
-							pred = (1<<Al)-1;
+                        if (Al > 0 && pred >= (1 << Al)) {
+                            pred = (1 << Al) - 1;
+                        }
 						pred = -pred;
 					}
 					workspace[8] = (short) pred;
@@ -3974,12 +4085,14 @@ static int decompress_smooth_data (jpeg_decompress_struct cinfo, byte[][][] outp
 					num = 9 * Q00 * (DC2 + DC8 - 2*DC5);
 					if (num >= 0) {
 						pred = (((Q20<<7) + num) / (Q20<<8));
-						if (Al > 0 && pred >= (1<<Al))
-							pred = (1<<Al)-1;
+                        if (Al > 0 && pred >= (1 << Al)) {
+                            pred = (1 << Al) - 1;
+                        }
 					} else {
 						pred = (((Q20<<7) - num) / (Q20<<8));
-						if (Al > 0 && pred >= (1<<Al))
-							pred = (1<<Al)-1;
+                        if (Al > 0 && pred >= (1 << Al)) {
+                            pred = (1 << Al) - 1;
+                        }
 						pred = -pred;
 					}
 					workspace[16] = (short) pred;
@@ -3989,12 +4102,14 @@ static int decompress_smooth_data (jpeg_decompress_struct cinfo, byte[][][] outp
 					num = 5 * Q00 * (DC1 - DC3 - DC7 + DC9);
 					if (num >= 0) {
 						pred = (((Q11<<7) + num) / (Q11<<8));
-						if (Al > 0 && pred >= (1<<Al))
-							pred = (1<<Al)-1;
+                        if (Al > 0 && pred >= (1 << Al)) {
+                            pred = (1 << Al) - 1;
+                        }
 					} else {
 						pred = (((Q11<<7) - num) / (Q11<<8));
-						if (Al > 0 && pred >= (1<<Al))
-							pred = (1<<Al)-1;
+                        if (Al > 0 && pred >= (1 << Al)) {
+                            pred = (1 << Al) - 1;
+                        }
 						pred = -pred;
 					}
 					workspace[9] = (short) pred;
@@ -4004,12 +4119,14 @@ static int decompress_smooth_data (jpeg_decompress_struct cinfo, byte[][][] outp
 					num = 9 * Q00 * (DC4 + DC6 - 2*DC5);
 					if (num >= 0) {
 						pred = (((Q02<<7) + num) / (Q02<<8));
-						if (Al > 0 && pred >= (1<<Al))
-							pred = (1<<Al)-1;
+                        if (Al > 0 && pred >= (1 << Al)) {
+                            pred = (1 << Al) - 1;
+                        }
 					} else {
 						pred = (((Q02<<7) - num) / (Q02<<8));
-						if (Al > 0 && pred >= (1<<Al))
-							pred = (1<<Al)-1;
+                        if (Al > 0 && pred >= (1 << Al)) {
+                            pred = (1 << Al) - 1;
+                        }
 						pred = -pred;
 					}
 					workspace[2] = (short) pred;
@@ -4027,8 +4144,9 @@ static int decompress_smooth_data (jpeg_decompress_struct cinfo, byte[][][] outp
 		}
 	}
 
-	if (++(cinfo.output_iMCU_row) < cinfo.total_iMCU_rows)
-		return JPEG_ROW_COMPLETED;
+    if (++(cinfo.output_iMCU_row) < cinfo.total_iMCU_rows) {
+        return JPEG_ROW_COMPLETED;
+    }
 	return JPEG_SCAN_COMPLETED;
 }
 
@@ -4049,27 +4167,31 @@ static int decompress_data (jpeg_decompress_struct cinfo, byte[][][] output_buf,
 	 (cinfo.input_scan_number == cinfo.output_scan_number &&
 		cinfo.input_iMCU_row <= cinfo.output_iMCU_row))
 	{
-		if (consume_input(cinfo) == JPEG_SUSPENDED)
-			return JPEG_SUSPENDED;
+        if (consume_input(cinfo) == JPEG_SUSPENDED) {
+            return JPEG_SUSPENDED;
+        }
 	}
 
 	/* OK, output from the virtual arrays. */
 	for (ci = 0; ci < cinfo.num_components; ci++) {
 		compptr = cinfo.comp_info[ci];
-		/* Don't bother to IDCT an uninteresting component. */
-		if (! compptr.component_needed)
-			continue;
+        /* Don't bother to IDCT an uninteresting component. */
+        if (!compptr.component_needed) {
+            continue;
+        }
 		/* Align the virtual buffer for this component. */
 		buffer = coef.whole_image[ci];
 		int buffer_offset = cinfo.output_iMCU_row * compptr.v_samp_factor;
-		/* Count non-dummy DCT block rows in this iMCU row. */
-		if (cinfo.output_iMCU_row < last_iMCU_row)
-			block_rows = compptr.v_samp_factor;
-		else {
-			/* NB: can't use last_row_height here; it is input-side-dependent! */
-			block_rows = (compptr.height_in_blocks % compptr.v_samp_factor);
-			if (block_rows == 0) block_rows = compptr.v_samp_factor;
-		}
+        /* Count non-dummy DCT block rows in this iMCU row. */
+        if (cinfo.output_iMCU_row < last_iMCU_row) {
+            block_rows = compptr.v_samp_factor;
+        } else {
+            /* NB: can't use last_row_height here; it is input-side-dependent! */
+            block_rows = (compptr.height_in_blocks % compptr.v_samp_factor);
+            if (block_rows == 0) {
+                block_rows = compptr.v_samp_factor;
+            }
+        }
 //		inverse_DCT = cinfo.idct.inverse_DCT[ci];
 		output_ptr = output_buf[ci];
 		int output_ptr_offset = output_buf_offset[ci];
@@ -4088,8 +4210,9 @@ static int decompress_data (jpeg_decompress_struct cinfo, byte[][][] output_buf,
 		}
 	}
 
-	if (++(cinfo.output_iMCU_row) < cinfo.total_iMCU_rows)
-		return JPEG_ROW_COMPLETED;
+    if (++(cinfo.output_iMCU_row) < cinfo.total_iMCU_rows) {
+        return JPEG_ROW_COMPLETED;
+    }
 	return JPEG_SCAN_COMPLETED;
 }
 
@@ -4120,7 +4243,9 @@ static void set_bottom_pointers (jpeg_decompress_struct cinfo)
 		rgroup = iMCUheight / cinfo.min_DCT_scaled_size;
 		/* Count nondummy sample rows remaining for this component */
 		rows_left = (compptr.downsampled_height % iMCUheight);
-		if (rows_left == 0) rows_left = iMCUheight;
+        if (rows_left == 0) {
+            rows_left = iMCUheight;
+        }
 		/* Count nondummy row groups.	Should get same answer for each component,
 		 * so we need only do it once.
 		 */
@@ -4186,8 +4311,9 @@ static void process_data_context_main (jpeg_decompress_struct cinfo,
 		case DECOMPRESS_ONEPASS -> decompress_onepass(cinfo, main.xbuffer[main.whichptr], main.xbuffer_offset[main.whichptr]);
 		default -> 0;
 		};
-		if (result == 0)
-			return;			/* suspension forced, can do nothing more */
+        if (result == 0) {
+            return;
+        }			/* suspension forced, can do nothing more */
 		main.buffer_full = true;	/* OK, we have an iMCU row to work with */
 		main.iMCU_row_ctr++;	/* count rows received */
 	}
@@ -4201,31 +4327,36 @@ static void process_data_context_main (jpeg_decompress_struct cinfo,
 		case CTX_POSTPONED_ROW:
 			/* Call postprocessor using previously set pointers for postponed row */
 			post_process_data (cinfo, main.xbuffer[main.whichptr], main.xbuffer_offset[main.whichptr], main.rowgroup_ctr, main.rowgroups_avail, output_buf, out_row_ctr, out_rows_avail);
-			if (main.rowgroup_ctr[0] < main.rowgroups_avail)
-				return;			/* Need to suspend */
+            if (main.rowgroup_ctr[0] < main.rowgroups_avail) {
+                return;
+            }			/* Need to suspend */
 			main.context_state = CTX_PREPARE_FOR_IMCU;
-			if (out_row_ctr[0] >= out_rows_avail)
-				return;			/* Postprocessor exactly filled output buf */
+            if (out_row_ctr[0] >= out_rows_avail) {
+                return;
+            }			/* Postprocessor exactly filled output buf */
 			/*FALLTHROUGH*/
 		case CTX_PREPARE_FOR_IMCU:
 			/* Prepare to process first M-1 row groups of this iMCU row */
 			main.rowgroup_ctr[0] = 0;
 			main.rowgroups_avail = (cinfo.min_DCT_scaled_size - 1);
-			/* Check for bottom of image: if so, tweak pointers to "duplicate"
-			 * the last sample row, and adjust rowgroups_avail to ignore padding rows.
-			 */
-			if (main.iMCU_row_ctr == cinfo.total_iMCU_rows)
-				set_bottom_pointers(cinfo);
+            /* Check for bottom of image: if so, tweak pointers to "duplicate"
+             * the last sample row, and adjust rowgroups_avail to ignore padding rows.
+             */
+            if (main.iMCU_row_ctr == cinfo.total_iMCU_rows) {
+                set_bottom_pointers(cinfo);
+            }
 			main.context_state = CTX_PROCESS_IMCU;
 			/*FALLTHROUGH*/
 		case CTX_PROCESS_IMCU:
 			/* Call postprocessor using previously set pointers */
 			post_process_data (cinfo, main.xbuffer[main.whichptr], main.xbuffer_offset[main.whichptr], main.rowgroup_ctr, main.rowgroups_avail, output_buf, out_row_ctr, out_rows_avail);
-			if (main.rowgroup_ctr[0] < main.rowgroups_avail)
-				return;			/* Need to suspend */
-			/* After the first iMCU, change wraparound pointers to normal state */
-			if (main.iMCU_row_ctr == 1)
-				set_wraparound_pointers(cinfo);
+            if (main.rowgroup_ctr[0] < main.rowgroups_avail) {
+                return;
+            }			/* Need to suspend */
+            /* After the first iMCU, change wraparound pointers to normal state */
+            if (main.iMCU_row_ctr == 1) {
+                set_wraparound_pointers(cinfo);
+            }
 			/* Prepare to load new iMCU row using other xbuffer list */
 			main.whichptr ^= 1;	/* 0=>1 or 1=>0 */
 			main.buffer_full = false;
@@ -4249,8 +4380,9 @@ static void process_data_simple_main (jpeg_decompress_struct cinfo, byte[][] out
 		case DECOMPRESS_ONEPASS -> decompress_onepass(cinfo, main.buffer, main.buffer_offset);
 		default -> 0;
 		};
-		if (result == 0)
-			return;			/* suspension forced, can do nothing more */
+        if (result == 0) {
+            return;
+        }			/* suspension forced, can do nothing more */
 		main.buffer_full = true;	/* OK, we have an iMCU row to work with */
 	}
 
@@ -4273,8 +4405,9 @@ static void process_data_simple_main (jpeg_decompress_struct cinfo, byte[][] out
 
 static int jpeg_read_scanlines (jpeg_decompress_struct cinfo, byte[][] scanlines, int max_lines) {
 
-	if (cinfo.global_state != DSTATE_SCANNING)
-		error();
+    if (cinfo.global_state != DSTATE_SCANNING) {
+        error();
+    }
 //		ERREXIT1(cinfo, JERR_BAD_STATE, cinfo.global_state);
 	if (cinfo.output_scanline >= cinfo.output_height) {
 //		WARNMS(cinfo, JWRN_TOO_MUCH_DATA);
@@ -4358,14 +4491,20 @@ static boolean get_dht (jpeg_decompress_struct cinfo)
 	int i, index, count;
 	JHUFF_TBL htblptr;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 	length -= 2;
 
 	while (length > 16) {
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 		index = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
 //		TRACEMS1(cinfo, 1, JTRC_DHT, index);
@@ -4373,7 +4512,9 @@ static boolean get_dht (jpeg_decompress_struct cinfo)
 		bits[0] = 0;
 		count = 0;
 		for (i = 1; i <= 16; i++) {
-			if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+            if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+                fill_input_buffer(cinfo);
+            }
 		bits[i] = cinfo.buffer[cinfo.bytes_offset++];
 			count += bits[i] & 0xFF;
 		}
@@ -4387,15 +4528,18 @@ static boolean get_dht (jpeg_decompress_struct cinfo)
 //			 bits[9], bits[10], bits[11], bits[12],
 //			 bits[13], bits[14], bits[15], bits[16]);
 
-		/* Here we just do minimal validation of the counts to avoid walking
-		 * off the end of our table space.	jdhuff.c will check more carefully.
-		 */
-		if (count > 256 || (count) > length)
-			error();
+        /* Here we just do minimal validation of the counts to avoid walking
+         * off the end of our table space.	jdhuff.c will check more carefully.
+         */
+        if (count > 256 || (count) > length) {
+            error();
+        }
 //			ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
 
 		for (i = 0; i < count; i++) {
-			if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+            if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+                fill_input_buffer(cinfo);
+            }
 			huffval[i] = cinfo.buffer[cinfo.bytes_offset++];
 		}
 
@@ -4408,16 +4552,18 @@ static boolean get_dht (jpeg_decompress_struct cinfo)
 			htblptr = cinfo.dc_huff_tbl_ptrs[index] = new JHUFF_TBL();
 		}
 
-		if (index < 0 || index >= NUM_HUFF_TBLS)
-			error();
+        if (index < 0 || index >= NUM_HUFF_TBLS) {
+            error();
+        }
 //			ERREXIT1(cinfo, JERR_DHT_INDEX, index);
 
 		System.arraycopy(bits, 0, htblptr.bits, 0, bits.length);
 		System.arraycopy(huffval, 0, htblptr.huffval, 0, huffval.length);
 	}
 
-	if (length != 0)
-		error();
+    if (length != 0) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_BAD_LENGTH);
 
 	return true;
@@ -4432,36 +4578,50 @@ static boolean get_dqt (jpeg_decompress_struct cinfo)
 	int tmp;
 	JQUANT_TBL quant_ptr;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 	length -= 2;
 
 	while (length > 0) {
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 	n = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 		prec = n >> 4;
 		n &= 0x0F;
 
 //		TRACEMS2(cinfo, 1, JTRC_DQT, n, prec);
 
-		if (n >= NUM_QUANT_TBLS)
-			error();
+        if (n >= NUM_QUANT_TBLS) {
+            error();
+        }
 //			ERREXIT1(cinfo, JERR_DQT_INDEX, n);
 
-		if (cinfo.quant_tbl_ptrs[n] == null)
-			cinfo.quant_tbl_ptrs[n] = new JQUANT_TBL();
+        if (cinfo.quant_tbl_ptrs[n] == null) {
+            cinfo.quant_tbl_ptrs[n] = new JQUANT_TBL();
+        }
 		quant_ptr = cinfo.quant_tbl_ptrs[n];
 
 		for (i = 0; i < DCTSIZE2; i++) {
 			if (prec != 0) {
-				if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+                if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+                    fill_input_buffer(cinfo);
+                }
 				tmp = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-				if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+                if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+                    fill_input_buffer(cinfo);
+                }
 				tmp |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 			} else {
-					if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+                if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+                    fill_input_buffer(cinfo);
+                }
 				tmp = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 			}
 			/* We convert the zigzag-order table to natural array order. */
@@ -4479,11 +4639,14 @@ static boolean get_dqt (jpeg_decompress_struct cinfo)
 //		}
 
 		length -= (DCTSIZE2+1);
-		if (prec != 0) length -= DCTSIZE2;
+        if (prec != 0) {
+            length -= DCTSIZE2;
+        }
 	}
 
-	if (length != 0)
-		error();
+    if (length != 0) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_BAD_LENGTH);
 
 	return true;
@@ -4495,18 +4658,27 @@ static boolean get_dri (jpeg_decompress_struct cinfo)
 	int length;
 	int tmp;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
-	if (length != 4)
-	error();
+    if (length != 4) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_BAD_LENGTH);
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	tmp = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	tmp |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
 //	TRACEMS1(cinfo, 1, JTRC_DRI, tmp);
@@ -4521,24 +4693,33 @@ static boolean get_dac (jpeg_decompress_struct cinfo)
 {
 	int length;
 	int index, val;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 	length -= 2;
 
 	while (length > 0) {
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 		index = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 		val = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
 		length -= 2;
 
 //		TRACEMS2(cinfo, 1, JTRC_DAC, index, val);
 
-		if (index < 0 || index >= (2*NUM_ARITH_TBLS))
-			error();
+        if (index < 0 || index >= (2 * NUM_ARITH_TBLS)) {
+            error();
+        }
 //			ERREXIT1(cinfo, JERR_DAC_INDEX, index);
 
 		if (index >= NUM_ARITH_TBLS) { /* define AC table */
@@ -4546,14 +4727,16 @@ static boolean get_dac (jpeg_decompress_struct cinfo)
 		} else {			/* define DC table */
 			cinfo.arith_dc_L[index] = (byte) (val & 0x0F);
 			cinfo.arith_dc_U[index] = (byte) (val >> 4);
-			if (cinfo.arith_dc_L[index] > cinfo.arith_dc_U[index])
-				error();
+            if (cinfo.arith_dc_L[index] > cinfo.arith_dc_U[index]) {
+                error();
+            }
 //	ERREXIT1(cinfo, JERR_DAC_VALUE, val);
 		}
 	}
 
-	if (length != 0)
-		error();
+    if (length != 0) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_BAD_LENGTH);
 
 	return true;
@@ -4567,22 +4750,30 @@ static boolean get_sos (jpeg_decompress_struct cinfo)
 	int i, ci, n, c, cc;
 	jpeg_component_info compptr = null;
 
-	if (! cinfo.marker.saw_SOF)
-		error();
+    if (!cinfo.marker.saw_SOF) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_SOS_NO_SOF);
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	n = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
 //	TRACEMS1(cinfo, 1, JTRC_SOS, n);
 
-	if (length != (n * 2 + 6) || n < 1 || n > MAX_COMPS_IN_SCAN)
-		error();
+    if (length != (n * 2 + 6) || n < 1 || n > MAX_COMPS_IN_SCAN) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_BAD_LENGTH);
 
 	cinfo.comps_in_scan = n;
@@ -4590,19 +4781,25 @@ static boolean get_sos (jpeg_decompress_struct cinfo)
 	/* Collect the component-spec parameters */
 
 	for (i = 0; i < n; i++) {
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 		cc = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 		c = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
 		for (ci = 0; ci < cinfo.num_components; ci++) {
 			compptr = cinfo.comp_info[ci];
-			if (cc == compptr.component_id)
-				break;
+            if (cc == compptr.component_id) {
+                break;
+            }
 		}
 
-		if (ci == cinfo.num_components)
-			error();
+        if (ci == cinfo.num_components) {
+            error();
+        }
 //			ERREXIT1(cinfo, JERR_BAD_COMPONENT_ID, cc);
 
 		cinfo.cur_comp_info[i] = compptr;
@@ -4612,14 +4809,20 @@ static boolean get_sos (jpeg_decompress_struct cinfo)
 //		TRACEMS3(cinfo, 1, JTRC_SOS_COMPONENT, cc, compptr.dc_tbl_no, compptr.ac_tbl_no);
 	}
 
-	/* Collect the additional scan parameters Ss, Se, Ah/Al. */
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    /* Collect the additional scan parameters Ss, Se, Ah/Al. */
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	c = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 	cinfo.Ss = c;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	c = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 	cinfo.Se = c;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	c = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 	cinfo.Ah = (c >> 4) & 15;
 	cinfo.Al = (c		 ) & 15;
@@ -4642,25 +4845,41 @@ static boolean get_sof (jpeg_decompress_struct cinfo, boolean is_prog, boolean i
 	cinfo.progressive_mode = is_prog;
 	cinfo.arith_code = is_arith;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	cinfo.data_precision = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	cinfo.image_height = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	cinfo.image_height |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	cinfo.image_width = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	cinfo.image_width |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	cinfo.num_components = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
 	length -= 8;
@@ -4669,34 +4888,44 @@ static boolean get_sof (jpeg_decompress_struct cinfo, boolean is_prog, boolean i
 //		 (int) cinfo.image_width, (int) cinfo.image_height,
 //		 cinfo.num_components);
 
-	if (cinfo.marker.saw_SOF)
-		error();
+    if (cinfo.marker.saw_SOF) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_SOF_DUPLICATE);
 
-	/* We don't support files in which the image height is initially specified */
-	/* as 0 and is later redefined by DNL.	As long as we have to check that,	*/
-	/* might as well have a general sanity check. */
-	if (cinfo.image_height <= 0 || cinfo.image_width <= 0 || cinfo.num_components <= 0)
-		error();
+    /* We don't support files in which the image height is initially specified */
+    /* as 0 and is later redefined by DNL.	As long as we have to check that,	*/
+    /* might as well have a general sanity check. */
+    if (cinfo.image_height <= 0 || cinfo.image_width <= 0 || cinfo.num_components <= 0) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_EMPTY_IMAGE);
 
-	if (length != (cinfo.num_components * 3))
-		error();
+    if (length != (cinfo.num_components * 3)) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_BAD_LENGTH);
 
-	if (cinfo.comp_info == null)	/* do only once, even if suspend */
-		cinfo.comp_info = new jpeg_component_info[cinfo.num_components];
+    if (cinfo.comp_info == null) {	/* do only once, even if suspend */
+        cinfo.comp_info = new jpeg_component_info[cinfo.num_components];
+    }
 
 	for (ci = 0; ci < cinfo.num_components; ci++) {
 		jpeg_component_info compptr = cinfo.comp_info[ci] = new jpeg_component_info();
 		compptr.component_index = ci;
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 		compptr.component_id = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 		c = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 		compptr.h_samp_factor = (c >> 4) & 15;
 		compptr.v_samp_factor = (c		 ) & 15;
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 		compptr.quant_tbl_no = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
 //		TRACEMS4(cinfo, 1, JTRC_SOF_COMPONENT,
@@ -4743,15 +4972,17 @@ static void sep_upsample (jpeg_decompress_struct cinfo, byte[][][] input_buf, in
 
 	/* How many we have in the buffer: */
 	num_rows =	(cinfo.max_v_samp_factor - upsample.next_row_out);
-	/* Not more than the distance to the end of the image.	Need this test
-	 * in case the image height is not a multiple of max_v_samp_factor:
-	 */
-	if (num_rows > upsample.rows_to_go)
-		num_rows = upsample.rows_to_go;
+    /* Not more than the distance to the end of the image.	Need this test
+     * in case the image height is not a multiple of max_v_samp_factor:
+     */
+    if (num_rows > upsample.rows_to_go) {
+        num_rows = upsample.rows_to_go;
+    }
 	/* And not more than what the client can accept: */
 	out_rows_avail -= out_row_ctr[0];
-	if (num_rows > out_rows_avail)
-		num_rows = out_rows_avail;
+    if (num_rows > out_rows_avail) {
+        num_rows = out_rows_avail;
+    }
 
 	switch (cinfo.cconvert.color_convert) {
 		case NULL_CONVERT: null_convert (cinfo, upsample.color_buf, upsample.color_buf_offset, upsample.next_row_out, output_buf, out_row_ctr[0], num_rows); break;
@@ -4882,10 +5113,11 @@ static void h2v2_fancy_upsample (jpeg_decompress_struct cinfo, jpeg_component_in
 		for (v = 0; v < 2; v++) {
 			/* inptr0 points to nearest input row, inptr1 points to next nearest */
 			inptr0 = input_data[inrow+input_data_offset];
-			if (v == 0)		/* next nearest is row above */
-				inptr1 = input_data[inrow-1+input_data_offset];
-			else			/* next nearest is row below */
-				inptr1 = input_data[inrow+1+input_data_offset];
+            if (v == 0) {		/* next nearest is row above */
+                inptr1 = input_data[inrow - 1 + input_data_offset];
+            } else {			/* next nearest is row below */
+                inptr1 = input_data[inrow + 1 + input_data_offset];
+            }
 			outptr = output_data[outrow++];
 
 			int inptr0_offset = 0, inptr1_offset = 0, outptr_offset = 0;
@@ -5067,7 +5299,9 @@ static void skip_input_data (jpeg_decompress_struct cinfo, int num_bytes) {
 	if (num_bytes > 0) {
 		while (num_bytes > cinfo.bytes_in_buffer - cinfo.bytes_offset) {
 			num_bytes -= cinfo.bytes_in_buffer - cinfo.bytes_offset;
-			if (!fill_input_buffer(cinfo)) error();
+            if (!fill_input_buffer(cinfo)) {
+                error();
+            }
 			/* note we assume that fill_input_buffer will never return FALSE,
 			 * so suspension need not be handled.
 			 */
@@ -5081,9 +5315,13 @@ static boolean skip_variable (jpeg_decompress_struct cinfo)
 {
 	int length;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 
 	length -= 2;
@@ -5104,21 +5342,28 @@ static boolean get_interesting_appn (jpeg_decompress_struct cinfo)
 	byte[] b = new byte[APPN_DATA_LEN];
 	int i, numtoread;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length = (cinfo.buffer[cinfo.bytes_offset++] & 0xFF) << 8;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	length |= cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 	length -= 2;
 
-	/* get the interesting part of the marker data */
-	if (length >= APPN_DATA_LEN)
-		numtoread = APPN_DATA_LEN;
-	else if (length > 0)
-		numtoread = length;
-	else
-		numtoread = 0;
+    /* get the interesting part of the marker data */
+    if (length >= APPN_DATA_LEN) {
+        numtoread = APPN_DATA_LEN;
+    } else if (length > 0) {
+        numtoread = length;
+    } else {
+        numtoread = 0;
+    }
 	for (i = 0; i < numtoread; i++) {
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 		b[i] = cinfo.buffer[cinfo.bytes_offset++];
 	}
 	length -= numtoread;
@@ -5138,9 +5383,10 @@ static boolean get_interesting_appn (jpeg_decompress_struct cinfo)
 			break;
 	}
 
-	/* skip any remaining data -- could be lots */
-	if (length > 0)
-		skip_input_data (cinfo, length);
+    /* skip any remaining data -- could be lots */
+    if (length > 0) {
+        skip_input_data(cinfo, length);
+    }
 
 	return true;
 }
@@ -5255,8 +5501,9 @@ static boolean get_soi (jpeg_decompress_struct cinfo) /* Process an SOI marker *
 
 //	TRACEMS(cinfo, 1, JTRC_SOI);
 
-	if (cinfo.marker.saw_SOI)
-		error();
+    if (cinfo.marker.saw_SOI) {
+        error();
+    }
 //		ERREXIT(cinfo, JERR_SOI_DUPLICATE);
 
 	/* Reset all parameters that are defined to be reset by SOI */
@@ -5346,22 +5593,26 @@ static void jpeg_destroy_decompress (jpeg_decompress_struct cinfo) {
 }
 
 static boolean jpeg_input_complete (jpeg_decompress_struct cinfo) {
-	/* Check for valid jpeg object */
-	if (cinfo.global_state < DSTATE_START || cinfo.global_state > DSTATE_STOPPING)
-		error();
+    /* Check for valid jpeg object */
+    if (cinfo.global_state < DSTATE_START || cinfo.global_state > DSTATE_STOPPING) {
+        error();
+    }
 //		ERREXIT1(cinfo, JERR_BAD_STATE, cinfo.global_state);
 	return cinfo.inputctl.eoi_reached;
 }
 
 static boolean jpeg_start_output (jpeg_decompress_struct cinfo, int scan_number) {
-	if (cinfo.global_state != DSTATE_BUFIMAGE && cinfo.global_state != DSTATE_PRESCAN)
-		error();
+    if (cinfo.global_state != DSTATE_BUFIMAGE && cinfo.global_state != DSTATE_PRESCAN) {
+        error();
+    }
 //		ERREXIT1(cinfo, JERR_BAD_STATE, cinfo.global_state);
-	/* Limit scan number to valid range */
-	if (scan_number <= 0)
-		scan_number = 1;
-	if (cinfo.inputctl.eoi_reached && scan_number > cinfo.input_scan_number)
-		scan_number = cinfo.input_scan_number;
+    /* Limit scan number to valid range */
+    if (scan_number <= 0) {
+        scan_number = 1;
+    }
+    if (cinfo.inputctl.eoi_reached && scan_number > cinfo.input_scan_number) {
+        scan_number = cinfo.input_scan_number;
+    }
 	cinfo.output_scan_number = scan_number;
 	/* Perform any dummy output passes, and set up for the real pass */
 	return output_pass_setup(cinfo);
@@ -5380,8 +5631,9 @@ static boolean jpeg_finish_output (jpeg_decompress_struct cinfo) {
 	}
 	/* Read markers looking for SOS or EOI */
 	while (cinfo.input_scan_number <= cinfo.output_scan_number && !cinfo.inputctl.eoi_reached) {
-		if (consume_input (cinfo) == JPEG_SUSPENDED)
-			return false;		/* Suspend, come back later */
+        if (consume_input(cinfo) == JPEG_SUSPENDED) {
+            return false;
+        }		/* Suspend, come back later */
 	}
 	cinfo.global_state = DSTATE_BUFIMAGE;
 	return true;
@@ -5389,9 +5641,10 @@ static boolean jpeg_finish_output (jpeg_decompress_struct cinfo) {
 
 static boolean jpeg_finish_decompress (jpeg_decompress_struct cinfo) {
 	if ((cinfo.global_state == DSTATE_SCANNING || cinfo.global_state == DSTATE_RAW_OK) && ! cinfo.buffered_image) {
-		/* Terminate final pass of non-buffered mode */
-		if (cinfo.output_scanline < cinfo.output_height)
-			error();
+        /* Terminate final pass of non-buffered mode */
+        if (cinfo.output_scanline < cinfo.output_height) {
+            error();
+        }
 //			ERREXIT(cinfo, JERR_TOO_LITTLE_DATA);
 		finish_output_pass (cinfo);
 		cinfo.global_state = DSTATE_STOPPING;
@@ -5405,8 +5658,9 @@ static boolean jpeg_finish_decompress (jpeg_decompress_struct cinfo) {
 	}
 	/* Read until EOI */
 	while (! cinfo.inputctl.eoi_reached) {
-		if (consume_input (cinfo) == JPEG_SUSPENDED)
-			return false;		/* Suspend, come back later */
+        if (consume_input(cinfo) == JPEG_SUSPENDED) {
+            return false;
+        }		/* Suspend, come back later */
 	}
 	/* Do final cleanup */
 //	(*cinfo.src.term_source) (cinfo);
@@ -5419,8 +5673,9 @@ static boolean jpeg_finish_decompress (jpeg_decompress_struct cinfo) {
 static int jpeg_read_header (jpeg_decompress_struct cinfo, boolean require_image) {
 	int retcode;
 
-	if (cinfo.global_state != DSTATE_START && cinfo.global_state != DSTATE_INHEADER)
-		error();
+    if (cinfo.global_state != DSTATE_START && cinfo.global_state != DSTATE_INHEADER) {
+        error();
+    }
 //		ERREXIT1(cinfo, JERR_BAD_STATE, cinfo.global_state);
 
 	retcode = jpeg_consume_input(cinfo);
@@ -5430,8 +5685,9 @@ static int jpeg_read_header (jpeg_decompress_struct cinfo, boolean require_image
 			retcode = JPEG_HEADER_OK;
 			break;
 		case JPEG_REACHED_EOI:
-			if (require_image)		/* Complain if application wanted an image */
-				error();
+            if (require_image) {		/* Complain if application wanted an image */
+                error();
+            }
 //				ERREXIT(cinfo, JERR_NO_IMAGE);
 			/* Reset to start state; it would be safer to require the application to
 			 * call jpeg_abort, but we can't change it now for compatibility reasons.
@@ -5531,8 +5787,9 @@ static boolean fill_input_buffer(jpeg_decompress_struct cinfo) {
 		InputStream inputStream = cinfo.inputStream;
 		int nbytes = inputStream.read(cinfo.buffer);
 		if (nbytes <= 0) {
-			if (cinfo.start_of_file)	/* Treat empty input file as fatal error */
-				error();
+            if (cinfo.start_of_file) {	/* Treat empty input file as fatal error */
+                error();
+            }
 //				ERREXIT(cinfo, JERR_INPUT_EMPTY);
 //			WARNMS(cinfo, JWRN_JPEG_EOF);
 			/* Insert a fake EOI marker */
@@ -5559,12 +5816,17 @@ static boolean first_marker (jpeg_decompress_struct cinfo) {
 	 */
 	int c, c2;
 
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	c = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
-	if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+    if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+        fill_input_buffer(cinfo);
+    }
 	c2 = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
-	if (c != 0xFF || c2 != M_SOI)
-		error();
+    if (c != 0xFF || c2 != M_SOI) {
+        error();
+    }
 //		ERREXIT2(cinfo, JERR_NO_SOI, c, c2);
 
 	cinfo.unread_marker = c2;
@@ -5576,7 +5838,9 @@ static boolean next_marker (jpeg_decompress_struct cinfo) {
 	int c;
 
 	for (;;) {
-		if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+        if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+            fill_input_buffer(cinfo);
+        }
 		c = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 		/* Skip any non-FF bytes.
 		 * This may look a bit inefficient, but it will not occur in a valid file.
@@ -5585,7 +5849,9 @@ static boolean next_marker (jpeg_decompress_struct cinfo) {
 		 */
 		while (c != 0xFF) {
 			cinfo.marker.discarded_bytes++;
-			if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+            if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+                fill_input_buffer(cinfo);
+            }
 			c = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 		}
 		/* This loop swallows any duplicate FF bytes.	Extra FFs are legal as
@@ -5594,11 +5860,14 @@ static boolean next_marker (jpeg_decompress_struct cinfo) {
 		 * data source's input buffer.
 		 */
 		do {
-			if (cinfo.bytes_offset == cinfo.bytes_in_buffer) fill_input_buffer(cinfo);
+            if (cinfo.bytes_offset == cinfo.bytes_in_buffer) {
+                fill_input_buffer(cinfo);
+            }
 				c = cinfo.buffer[cinfo.bytes_offset++] & 0xFF;
 		} while (c == 0xFF);
-		if (c != 0)
-			break;			/* found a valid marker, exit loop */
+        if (c != 0) {
+            break;
+        }			/* found a valid marker, exit loop */
 		/* Reach here if we found a stuffed-zero data sequence (FF/00).
 		 * Discard it and loop back to try again.
 		 */
@@ -5622,11 +5891,13 @@ static int read_markers (jpeg_decompress_struct cinfo) {
 		/* NB: first_marker() enforces the requirement that SOI appear first. */
 		if (cinfo.unread_marker == 0) {
 			if (! cinfo.marker.saw_SOI) {
-				if (! first_marker(cinfo))
-					return JPEG_SUSPENDED;
+                if (!first_marker(cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				} else {
-					if (! next_marker(cinfo))
-						return JPEG_SUSPENDED;
+                if (!next_marker(cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				}
 		}
 		/* At this point cinfo.unread_marker contains the marker code and the
@@ -5635,29 +5906,34 @@ static int read_markers (jpeg_decompress_struct cinfo) {
 		 */
 		switch (cinfo.unread_marker) {
 			case M_SOI:
-				if (! get_soi(cinfo))
-					return JPEG_SUSPENDED;
+                if (!get_soi(cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			case M_SOF0:		/* Baseline */
 			case M_SOF1:		/* Extended sequential, Huffman */
-				if (! get_sof(cinfo, false, false))
-					return JPEG_SUSPENDED;
+                if (!get_sof(cinfo, false, false)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			case M_SOF2:		/* Progressive, Huffman */
-				if (! get_sof(cinfo, true, false))
-					return JPEG_SUSPENDED;
+                if (!get_sof(cinfo, true, false)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			case M_SOF9:		/* Extended sequential, arithmetic */
-				if (! get_sof(cinfo, false, true))
-					return JPEG_SUSPENDED;
+                if (!get_sof(cinfo, false, true)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			case M_SOF10:		/* Progressive, arithmetic */
-				if (! get_sof(cinfo, true, true))
-					return JPEG_SUSPENDED;
+                if (!get_sof(cinfo, true, true)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			/* Currently unsupported SOFn types */
@@ -5675,8 +5951,9 @@ static int read_markers (jpeg_decompress_struct cinfo) {
 				break;
 
 			case M_SOS:
-				if (! get_sos(cinfo))
-					return JPEG_SUSPENDED;
+                if (!get_sos(cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				cinfo.unread_marker = 0;	/* processed the marker */
 				return JPEG_REACHED_SOS;
 
@@ -5686,23 +5963,27 @@ static int read_markers (jpeg_decompress_struct cinfo) {
 				return JPEG_REACHED_EOI;
 
 			case M_DAC:
-				if (! get_dac(cinfo))
-					return JPEG_SUSPENDED;
+                if (!get_dac(cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			case M_DHT:
-				if (! get_dht(cinfo))
-					return JPEG_SUSPENDED;
+                if (!get_dht(cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			case M_DQT:
-				if (! get_dqt(cinfo))
-					return JPEG_SUSPENDED;
+                if (!get_dqt(cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			case M_DRI:
-				if (! get_dri(cinfo))
-					return JPEG_SUSPENDED;
+                if (!get_dri(cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			case M_APP0:
@@ -5721,13 +6002,15 @@ static int read_markers (jpeg_decompress_struct cinfo) {
 			case M_APP13:
 			case M_APP14:
 			case M_APP15:
-				if (! process_APPn(cinfo.unread_marker - M_APP0, cinfo))
-					return JPEG_SUSPENDED;
+                if (!process_APPn(cinfo.unread_marker - M_APP0, cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			case M_COM:
-				if (! process_COM(cinfo))
-					return JPEG_SUSPENDED;
+                if (!process_COM(cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			case M_RST0:		/* these are all parameterless */
@@ -5743,8 +6026,9 @@ static int read_markers (jpeg_decompress_struct cinfo) {
 				break;
 
 			case M_DNL:			/* Ignore DNL ... perhaps the wrong thing */
-				if (! skip_variable(cinfo))
-					return JPEG_SUSPENDED;
+                if (!skip_variable(cinfo)) {
+                    return JPEG_SUSPENDED;
+                }
 				break;
 
 			default:			/* must be DHP, EXP, JPGn, or RESn */
@@ -5775,19 +6059,22 @@ static void initial_setup (jpeg_decompress_struct cinfo)
 	int ci;
 	jpeg_component_info compptr;
 
-	/* Make sure image isn't bigger than I can handle */
-	if (cinfo.image_height >	JPEG_MAX_DIMENSION || cinfo.image_width > JPEG_MAX_DIMENSION)
-		error();
+    /* Make sure image isn't bigger than I can handle */
+    if (cinfo.image_height > JPEG_MAX_DIMENSION || cinfo.image_width > JPEG_MAX_DIMENSION) {
+        error();
+    }
 //		ERREXIT1(cinfo, JERR_IMAGE_TOO_BIG, (unsigned int) JPEG_MAX_DIMENSION);
 
-	/* For now, precision must match compiled-in value... */
-	if (cinfo.data_precision != BITS_IN_JSAMPLE)
-		error(" [data precision=" + cinfo.data_precision + "]");
+    /* For now, precision must match compiled-in value... */
+    if (cinfo.data_precision != BITS_IN_JSAMPLE) {
+        error(" [data precision=" + cinfo.data_precision + "]");
+    }
 //		ERREXIT1(cinfo, JERR_BAD_PRECISION, cinfo.data_precision);
 
-	/* Check that number of components won't exceed internal array sizes */
-	if (cinfo.num_components > MAX_COMPONENTS)
-		error();
+    /* Check that number of components won't exceed internal array sizes */
+    if (cinfo.num_components > MAX_COMPONENTS) {
+        error();
+    }
 //		ERREXIT2(cinfo, JERR_COMPONENT_COUNT, cinfo.num_components, MAX_COMPONENTS);
 
 	/* Compute maximum sampling factors; check factor validity */
@@ -5795,8 +6082,9 @@ static void initial_setup (jpeg_decompress_struct cinfo)
 	cinfo.max_v_samp_factor = 1;
 	for (ci = 0; ci < cinfo.num_components; ci++) {
 		compptr = cinfo.comp_info[ci];
-		if (compptr.h_samp_factor<=0 || compptr.h_samp_factor>MAX_SAMP_FACTOR || compptr.v_samp_factor<=0 || compptr.v_samp_factor>MAX_SAMP_FACTOR)
-			error();
+        if (compptr.h_samp_factor <= 0 || compptr.h_samp_factor > MAX_SAMP_FACTOR || compptr.v_samp_factor <= 0 || compptr.v_samp_factor > MAX_SAMP_FACTOR) {
+            error();
+        }
 //			ERREXIT(cinfo, JERR_BAD_SAMPLING);
 		cinfo.max_h_samp_factor = Math.max(cinfo.max_h_samp_factor, compptr.h_samp_factor);
 		cinfo.max_v_samp_factor = Math.max(cinfo.max_v_samp_factor, compptr.v_samp_factor);
@@ -5831,11 +6119,12 @@ static void initial_setup (jpeg_decompress_struct cinfo)
 	/* Compute number of fully interleaved MCU rows. */
 	cinfo.total_iMCU_rows = (int)jdiv_round_up( cinfo.image_height, (cinfo.max_v_samp_factor*DCTSIZE));
 
-	/* Decide whether file contains multiple scans */
-	if (cinfo.comps_in_scan < cinfo.num_components || cinfo.progressive_mode)
-		cinfo.inputctl.has_multiple_scans = true;
-	else
-		cinfo.inputctl.has_multiple_scans = false;
+    /* Decide whether file contains multiple scans */
+    if (cinfo.comps_in_scan < cinfo.num_components || cinfo.progressive_mode) {
+        cinfo.inputctl.has_multiple_scans = true;
+    } else {
+        cinfo.inputctl.has_multiple_scans = false;
+    }
 }
 
 
@@ -5865,7 +6154,9 @@ static void per_scan_setup (jpeg_decompress_struct cinfo)
 		 * as the number of block rows present in the last iMCU row.
 		 */
 		tmp = (compptr.height_in_blocks % compptr.v_samp_factor);
-		if (tmp == 0) tmp = compptr.v_samp_factor;
+        if (tmp == 0) {
+            tmp = compptr.v_samp_factor;
+        }
 		compptr.last_row_height = tmp;
 
 		/* Prepare array describing MCU composition */
@@ -5874,9 +6165,10 @@ static void per_scan_setup (jpeg_decompress_struct cinfo)
 
 	} else {
 
-		/* Interleaved (multi-component) scan */
-		if (cinfo.comps_in_scan <= 0 || cinfo.comps_in_scan > MAX_COMPS_IN_SCAN)
-			error();
+        /* Interleaved (multi-component) scan */
+        if (cinfo.comps_in_scan <= 0 || cinfo.comps_in_scan > MAX_COMPS_IN_SCAN) {
+            error();
+        }
 //			ERREXIT2(cinfo, JERR_COMPONENT_COUNT, cinfo.comps_in_scan, MAX_COMPS_IN_SCAN);
 
 		/* Overall image size in MCUs */
@@ -5894,15 +6186,20 @@ static void per_scan_setup (jpeg_decompress_struct cinfo)
 			compptr.MCU_sample_width = compptr.MCU_width * compptr.DCT_scaled_size;
 			/* Figure number of non-dummy blocks in last MCU column & row */
 			tmp = (compptr.width_in_blocks % compptr.MCU_width);
-			if (tmp == 0) tmp = compptr.MCU_width;
+            if (tmp == 0) {
+                tmp = compptr.MCU_width;
+            }
 			compptr.last_col_width = tmp;
 			tmp = (compptr.height_in_blocks % compptr.MCU_height);
-			if (tmp == 0) tmp = compptr.MCU_height;
+            if (tmp == 0) {
+                tmp = compptr.MCU_height;
+            }
 			compptr.last_row_height = tmp;
 			/* Prepare array describing MCU composition */
 			mcublks = compptr.MCU_blocks;
-			if (cinfo.blocks_in_MCU + mcublks > D_MAX_BLOCKS_IN_MCU)
-				error();
+            if (cinfo.blocks_in_MCU + mcublks > D_MAX_BLOCKS_IN_MCU) {
+                error();
+            }
 //	ERREXIT(cinfo, JERR_BAD_MCU_SIZE);
 			while (mcublks-- > 0) {
 				cinfo.MCU_membership[cinfo.blocks_in_MCU++] = ci;
@@ -5919,13 +6216,15 @@ static void latch_quant_tables (jpeg_decompress_struct cinfo) {
 
 	for (ci = 0; ci < cinfo.comps_in_scan; ci++) {
 		compptr = cinfo.cur_comp_info[ci];
-		/* No work if we already saved Q-table for this component */
-		if (compptr.quant_table != null)
-			continue;
+        /* No work if we already saved Q-table for this component */
+        if (compptr.quant_table != null) {
+            continue;
+        }
 		/* Make sure specified quantization table is present */
 		qtblno = compptr.quant_tbl_no;
-		if (qtblno < 0 || qtblno >= NUM_QUANT_TBLS || cinfo.quant_tbl_ptrs[qtblno] == null)
-			error();
+        if (qtblno < 0 || qtblno >= NUM_QUANT_TBLS || cinfo.quant_tbl_ptrs[qtblno] == null) {
+            error();
+        }
 //			ERREXIT1(cinfo, JERR_NO_QUANT_TABLE, qtblno);
 		/* OK, save away the quantization table */
 		qtbl = new JQUANT_TBL();
@@ -5943,17 +6242,19 @@ static void jpeg_make_d_derived_tbl (jpeg_decompress_struct cinfo, boolean isDC,
 	int[] huffcode = new int[257];
 	int code;
 
-	/* Note that huffsize[] and huffcode[] are filled in code-length order,
-	 * paralleling the order of the symbols themselves in htbl.huffval[].
-	 */
+    /* Note that huffsize[] and huffcode[] are filled in code-length order,
+     * paralleling the order of the symbols themselves in htbl.huffval[].
+     */
 
-	/* Find the input Huffman table */
-	if (tblno < 0 || tblno >= NUM_HUFF_TBLS)
-		error();
+    /* Find the input Huffman table */
+    if (tblno < 0 || tblno >= NUM_HUFF_TBLS) {
+        error();
+    }
 //		ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, tblno);
 	htbl = isDC ? cinfo.dc_huff_tbl_ptrs[tblno] : cinfo.ac_huff_tbl_ptrs[tblno];
-	if (htbl == null)
-		error();
+    if (htbl == null) {
+        error();
+    }
 //		ERREXIT1(cinfo, JERR_NO_HUFF_TABLE, tblno);
 
 	/* Allocate a workspace if we haven't already done so. */
@@ -5964,11 +6265,13 @@ static void jpeg_make_d_derived_tbl (jpeg_decompress_struct cinfo, boolean isDC,
 	p = 0;
 	for (l = 1; l <= 16; l++) {
 		i = htbl.bits[l] & 0xFF;
-		if (i < 0 || p + i > 256)	/* protect against table overrun */
-			error();
+        if (i < 0 || p + i > 256) {	/* protect against table overrun */
+            error();
+        }
 //			ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
-		while (i-- != 0)
-			huffsize[p++] = (byte) l;
+        while (i-- != 0) {
+            huffsize[p++] = (byte) l;
+        }
 	}
 	huffsize[p] = 0;
 	numsymbols = p;
@@ -5984,11 +6287,12 @@ static void jpeg_make_d_derived_tbl (jpeg_decompress_struct cinfo, boolean isDC,
 			huffcode[p++] = code;
 			code++;
 		}
-		/* code is now 1 more than the last code used for codelength si; but
-		 * it must still fit in si bits, since no code is allowed to be all ones.
-		 */
-		if (( code) >= (( 1) << si))
-			error();
+        /* code is now 1 more than the last code used for codelength si; but
+         * it must still fit in si bits, since no code is allowed to be all ones.
+         */
+        if (( code) >= (( 1) << si)) {
+            error();
+        }
 //			ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
 		code <<= 1;
 		si++;
@@ -6045,8 +6349,9 @@ static void jpeg_make_d_derived_tbl (jpeg_decompress_struct cinfo, boolean isDC,
 	if (isDC) {
 		for (i = 0; i < numsymbols; i++) {
 			int sym = htbl.huffval[i] & 0xFF;
-			if (sym < 0 || sym > 15)
-				error();
+            if (sym < 0 || sym > 15) {
+                error();
+            }
 //				ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
 		}
 	}
@@ -6068,8 +6373,9 @@ static int consume_markers (jpeg_decompress_struct cinfo) {
 	jpeg_input_controller inputctl = cinfo.inputctl;
 	int val;
 
-	if (inputctl.eoi_reached) /* After hitting EOI, read no further */
-		return JPEG_REACHED_EOI;
+    if (inputctl.eoi_reached) { /* After hitting EOI, read no further */
+        return JPEG_REACHED_EOI;
+    }
 
 	val = read_markers (cinfo);
 
@@ -6083,8 +6389,9 @@ static int consume_markers (jpeg_decompress_struct cinfo) {
 			 * responsible for enforcing this sequencing.
 			 */
 		} else {			/* 2nd or later SOS marker */
-			if (! inputctl.has_multiple_scans)
-				error();
+            if (!inputctl.has_multiple_scans) {
+                error();
+            }
 //				ERREXIT(cinfo, JERR_EOI_EXPECTED); /* Oops, I wasn't expecting this! */
 			start_input_pass(cinfo);
 		}
@@ -6092,15 +6399,17 @@ static int consume_markers (jpeg_decompress_struct cinfo) {
 	case JPEG_REACHED_EOI:	/* Found EOI */
 		inputctl.eoi_reached = true;
 		if (inputctl.inheaders) {	/* Tables-only datastream, apparently */
-			if (cinfo.marker.saw_SOF)
-				error();
+            if (cinfo.marker.saw_SOF) {
+                error();
+            }
 //				ERREXIT(cinfo, JERR_SOF_NO_SOS);
 		} else {
-			/* Prevent infinite loop in coef ctlr's decompress_data routine
-			 * if user set output_scan_number larger than number of scans.
-			 */
-			if (cinfo.output_scan_number > cinfo.input_scan_number)
-				cinfo.output_scan_number = cinfo.input_scan_number;
+            /* Prevent infinite loop in coef ctlr's decompress_data routine
+             * if user set output_scan_number larger than number of scans.
+             */
+            if (cinfo.output_scan_number > cinfo.input_scan_number) {
+                cinfo.output_scan_number = cinfo.input_scan_number;
+            }
 		}
 		break;
 	case JPEG_SUSPENDED:
@@ -6135,14 +6444,16 @@ static void default_decompress_parms (jpeg_decompress_struct cinfo) {
 				int cid1 = cinfo.comp_info[1].component_id;
 				int cid2 = cinfo.comp_info[2].component_id;
 
-				if (cid0 == 1 && cid1 == 2 && cid2 == 3)
-					cinfo.jpeg_color_space = JCS_YCbCr; /* assume JFIF w/out marker */
-				else if (cid0 == 82 && cid1 == 71 && cid2 == 66)
-					cinfo.jpeg_color_space = JCS_RGB; /* ASCII 'R', 'G', 'B' */
-				else {
+                if (cid0 == 1 && cid1 == 2 && cid2 == 3) {
+                    cinfo.jpeg_color_space = JCS_YCbCr;
+                } /* assume JFIF w/out marker */
+                else if (cid0 == 82 && cid1 == 71 && cid2 == 66) {
+                    cinfo.jpeg_color_space = JCS_RGB;
+                } /* ASCII 'R', 'G', 'B' */
+                else {
 //					TRACEMS3(cinfo, 1, JTRC_UNKNOWN_IDS, cid0, cid1, cid2);
-					cinfo.jpeg_color_space = JCS_YCbCr; /* assume it's YCbCr */
-				}
+                    cinfo.jpeg_color_space = JCS_YCbCr; /* assume it's YCbCr */
+                }
 			}
 			/* Always guess RGB is proper output colorspace. */
 			cinfo.out_color_space = JCS_RGB;

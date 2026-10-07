@@ -132,7 +132,9 @@ public class PaintExample {
 		setShellSize(display, shell);
 		shell.open();
 		while (! shell.isDisposed()) {
-			if (! display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		instance.dispose();
 	}
@@ -151,7 +153,9 @@ public class PaintExample {
 			}
 			group = tool.group;
 			ToolItem item = addToolItem(toolbar, tool);
-			if (i == Default_tool || i == Default_fill || i == Default_linestyle) item.setSelection(true);
+            if (i == Default_tool || i == Default_fill || i == Default_linestyle) {
+                item.setSelection(true);
+            }
 		}
 	}
 
@@ -276,18 +280,25 @@ public class PaintExample {
 				Rectangle bounds = paletteCanvas.getClientArea();
 				Color color = getColorAt(bounds, e.x, e.y);
 
-				if (e.button == 1) setForegroundColor(color);
-				else setBackgroundColor(color);
+                if (e.button == 1) {
+                    setForegroundColor(color);
+                } else {
+                    setBackgroundColor(color);
+                }
 			}
 			private Color getColorAt(Rectangle bounds, int x, int y) {
-				if (bounds.height <= 1 && bounds.width <= 1) return paintColorWhite;
+                if (bounds.height <= 1 && bounds.width <= 1) {
+                    return paintColorWhite;
+                }
 				final int row = (y - bounds.y) * numPaletteRows / bounds.height;
 				final int col = (x - bounds.x) * numPaletteCols / bounds.width;
 				return paintColors[Math.min(Math.max(row * numPaletteCols + col, 0), paintColors.length - 1)];
 			}
 		});
 		Listener refreshListener = e -> {
-			if (e.gc == null) return;
+            if (e.gc == null) {
+                return;
+            }
 			Rectangle bounds = paletteCanvas.getClientArea();
 			for (int row = 0; row < numPaletteRows; ++row) {
 				for (int col = 0; col < numPaletteCols; ++col) {
@@ -343,7 +354,9 @@ public class PaintExample {
 	 * instance of the PaintExample.
 	 */
 	public void dispose() {
-		if (paintSurface != null) paintSurface.dispose();
+        if (paintSurface != null) {
+            paintSurface.dispose();
+        }
 		paintDefaultFont = null;
 		paintColors = null;
 		paintSurface = null;
@@ -356,7 +369,9 @@ public class PaintExample {
 	public void freeResources() {
 		for (Tool tool : tools) {
 			final Image image = tool.image;
-			if (image != null) image.dispose();
+            if (image != null) {
+                image.dispose();
+            }
 			tool.image = null;
 		}
 	}
@@ -503,8 +518,9 @@ public class PaintExample {
 	 * @param color the new color to use
 	 */
 	public void setForegroundColor(Color color) {
-		if (activeForegroundColorCanvas != null)
-			activeForegroundColorCanvas.setBackground(color);
+        if (activeForegroundColorCanvas != null) {
+            activeForegroundColorCanvas.setBackground(color);
+        }
 		toolSettings.commonForegroundColor = color;
 		updateToolSettings();
 	}
@@ -515,8 +531,9 @@ public class PaintExample {
 	 * @param color the new color to use
 	 */
 	public void setBackgroundColor(Color color) {
-		if (activeBackgroundColorCanvas != null)
-			activeBackgroundColorCanvas.setBackground(color);
+        if (activeBackgroundColorCanvas != null) {
+            activeBackgroundColorCanvas.setBackground(color);
+        }
 		toolSettings.commonBackgroundColor = color;
 		updateToolSettings();
 	}
@@ -556,8 +573,12 @@ public class PaintExample {
 	private static void setShellSize (Display display, Shell shell) {
 		Rectangle bounds = display.getBounds();
 		Point size = shell.computeSize (SWT.DEFAULT, SWT.DEFAULT);
-		if (size.x > bounds.width) size.x = bounds.width * 9 / 10;
-		if (size.y > bounds.height) size.y = bounds.height * 9 / 10;
+        if (size.x > bounds.width) {
+            size.x = bounds.width * 9 / 10;
+        }
+        if (size.y > bounds.height) {
+            size.y = bounds.height * 9 / 10;
+        }
 		shell.setSize (size);
 	}
 
@@ -566,7 +587,9 @@ public class PaintExample {
 	 */
 	private void updateToolSettings() {
 		final PaintTool activePaintTool = paintSurface.getPaintTool();
-		if (activePaintTool == null) return;
+        if (activePaintTool == null) {
+            return;
+        }
 
 		activePaintTool.endSession();
 		activePaintTool.set(toolSettings);

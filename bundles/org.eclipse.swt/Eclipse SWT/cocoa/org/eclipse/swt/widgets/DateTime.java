@@ -99,23 +99,14 @@ public DateTime (Composite parent, int style) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
-	style = checkBits (style, SWT.DATE, SWT.TIME, SWT.CALENDAR, 0, 0, 0);
-	style = checkBits (style, SWT.MEDIUM, SWT.SHORT, SWT.LONG, 0, 0, 0);
-	if ((style & SWT.DATE) == 0) style &=~ SWT.DROP_DOWN;
-	return style;
+	return WidgetStylePolicy.DATE_TIME.applyAsInt(style);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -159,10 +150,18 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 		width += (int)Math.ceil (size.width) - getBezelSize() * 2;
 		height = Math.max(height, (int)Math.ceil (size.height));
 	}
-	if (width == 0) width = DEFAULT_WIDTH;
-	if (height == 0) height = DEFAULT_HEIGHT;
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (width == 0) {
+        width = DEFAULT_WIDTH;
+    }
+    if (height == 0) {
+        height = DEFAULT_HEIGHT;
+    }
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	int border = getBorderWidth ();
 	width += border * 2; height += border * 2;
 	return new Point (width, height);
@@ -220,7 +219,9 @@ void createPopupShell(int year, int month, int day) {
 	popupShell.isPopup = true;
 	popupShell.window.setHasShadow(true);
 	popupCalendar = new DateTime (popupShell, SWT.CALENDAR);
-	if (font != null) popupCalendar.setFont (font);
+    if (font != null) {
+        popupCalendar.setFont(font);
+    }
 
 	if (clickListener == null) {
 		clickListener = event -> {
@@ -252,7 +253,9 @@ void createPopupShell(int year, int month, int day) {
 		hideCalendar();
 		display.removeFilter(SWT.MouseDown, clickListener);
 	});
-	if (year != -1) popupCalendar.setDate(year, month, day);
+    if (year != -1) {
+        popupCalendar.setDate(year, month, day);
+    }
 }
 
 @Override
@@ -278,12 +281,16 @@ void disposePopupShell() {
 
 @Override
 void drawBackground (long id, NSGraphicsContext context, NSRect rect) {
-	if (id != view.id) return;
+    if (id != view.id) {
+        return;
+    }
 	fillBackground (view, context, rect, -1);
 }
 
 void showCalendar() {
-	if (isDropped ()) return;
+    if (isDropped()) {
+        return;
+    }
 	savedYear = getYear ();
 	savedMonth = getMonth ();
 	savedDay = getDay ();
@@ -301,16 +308,24 @@ void showCalendar() {
 	int height = calendarSize.y + 2;
 	int x = parentRect.x;
 	int y = parentRect.y + dateBounds.y;
-	if (y + height > displayRect.y + displayRect.height) y = parentRect.y - height;
-	if (x + width > displayRect.x + displayRect.width) x = displayRect.x + displayRect.width - calendarSize.x;
+    if (y + height > displayRect.y + displayRect.height) {
+        y = parentRect.y - height;
+    }
+    if (x + width > displayRect.x + displayRect.width) {
+        x = displayRect.x + displayRect.width - calendarSize.x;
+    }
 	popupShell.setBounds (x, y, width, height);
 	popupShell.setVisible (true);
-	if (isFocusControl()) popupCalendar.setFocus ();
+    if (isFocusControl()) {
+        popupCalendar.setFocus();
+    }
 	display.addFilter(SWT.MouseDown, clickListener);
 }
 
 void hideCalendar() {
-	if (!isDropped ()) return;
+    if (!isDropped()) {
+        return;
+    }
 	popupShell.setVisible (false);
 	if (!isDisposed () && isFocusControl()) {
 		setFocus();
@@ -464,7 +479,9 @@ boolean isEventView (long id) {
 
 @Override
 boolean isFlipped (long id, long sel) {
-	if ((style & SWT.CALENDAR) != 0) return super.isFlipped (id, sel);
+    if ((style & SWT.CALENDAR) != 0) {
+        return super.isFlipped(id, sel);
+    }
 	return true;
 }
 
@@ -513,7 +530,9 @@ void register () {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (buttonView != null) buttonView.release();
+    if (buttonView != null) {
+        buttonView.release();
+    }
 	buttonView = null;
 }
 
@@ -536,8 +555,12 @@ void releaseHandle () {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection, listener);
 }
@@ -545,7 +568,9 @@ public void removeSelectionListener (SelectionListener listener) {
 @Override
 void resized () {
 	super.resized ();
-	if (buttonView == null) return;
+    if (buttonView == null) {
+        return;
+    }
 	NSSize buttonSize = buttonView.cell ().cellSize ();
 	NSRect rect = view.bounds();
 	rect.x = rect.width - buttonSize.width + getBezelSize();
@@ -558,8 +583,12 @@ void resized () {
 @Override
 boolean sendKeyEvent (NSEvent nsEvent, int type) {
 	boolean result = super.sendKeyEvent (nsEvent, type);
-	if (!result) return result;
-	if (type != SWT.KeyDown) return result;
+    if (!result) {
+        return result;
+    }
+    if (type != SWT.KeyDown) {
+        return result;
+    }
 	if ((style & SWT.CALENDAR) == 0) {
 		short keyCode = nsEvent.keyCode ();
 		switch (keyCode) {
@@ -601,12 +630,14 @@ void sendVerticalSelection () {
 
 @Override
 void setBackgroundColor(NSColor nsColor) {
-	/*
-	 * Bug in Cocoa: NSDatePicker background turns black when a nsColor
-	 * with full transparency (alpha = 0) is set as its background color.
-	 * Hence, don't set the background color in that case.
-	 */
-	if (nsColor != null && nsColor.alphaComponent () == 0) return;
+    /*
+     * Bug in Cocoa: NSDatePicker background turns black when a nsColor
+     * with full transparency (alpha = 0) is set as its background color.
+     * Hence, don't set the background color in that case.
+     */
+    if (nsColor != null && nsColor.alphaComponent() == 0) {
+        return;
+    }
 	((NSDatePicker)view).setBackgroundColor(nsColor);
 }
 
@@ -635,7 +666,9 @@ void setBackgroundImage(NSImage image) {
  */
 public void setDate (int year, int month, int day) {
 	checkWidget ();
-	if (year < MIN_YEAR || year > MAX_YEAR) return;
+    if (year < MIN_YEAR || year > MAX_YEAR) {
+        return;
+    }
 	NSCalendarDate date = getCalendarDate();
 	NSCalendarDate newDate = NSCalendarDate.dateWithYear(year, month + 1, day,
 			date.hourOfDay(), date.minuteOfHour(), date.secondOfMinute(), date.timeZone());
@@ -700,7 +733,9 @@ void setForeground (double [] color) {
  */
 public void setHours (int hours) {
 	checkWidget ();
-	if (hours < 0 || hours > 23) return;
+    if (hours < 0 || hours > 23) {
+        return;
+    }
 	NSCalendarDate date = getCalendarDate();
 	NSCalendarDate newDate = NSCalendarDate.dateWithYear(date.yearOfCommonEra(), date.monthOfYear(), date.dayOfMonth(),
 			hours, date.minuteOfHour(), date.secondOfMinute(), date.timeZone());
@@ -722,7 +757,9 @@ public void setHours (int hours) {
  */
 public void setMinutes (int minutes) {
 	checkWidget ();
-	if (minutes < 0 || minutes > 59) return;
+    if (minutes < 0 || minutes > 59) {
+        return;
+    }
 	NSCalendarDate date = getCalendarDate();
 	NSCalendarDate newDate = NSCalendarDate.dateWithYear(date.yearOfCommonEra(), date.monthOfYear(), date.dayOfMonth(),
 			date.hourOfDay(), minutes, date.secondOfMinute(), date.timeZone());
@@ -770,7 +807,9 @@ public void setMonth (int month) {
  */
 public void setSeconds (int seconds) {
 	checkWidget ();
-	if (seconds < 0 || seconds > 59) return;
+    if (seconds < 0 || seconds > 59) {
+        return;
+    }
 	NSCalendarDate date = getCalendarDate();
 	NSCalendarDate newDate = NSCalendarDate.dateWithYear(date.yearOfCommonEra(), date.monthOfYear(), date.dayOfMonth(),
 			date.hourOfDay(), date.minuteOfHour(), seconds, date.timeZone());
@@ -779,7 +818,9 @@ public void setSeconds (int seconds) {
 
 @Override
 void setSmallSize () {
-	if (buttonView != null) buttonView.cell ().setControlSize (OS.NSControlSizeMini);
+    if (buttonView != null) {
+        buttonView.cell().setControlSize(OS.NSControlSizeMini);
+    }
 }
 
 /**
@@ -798,7 +839,9 @@ void setSmallSize () {
  */
 public void setTime (int hours, int minutes, int seconds) {
 	checkWidget ();
-	if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) return;
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+        return;
+    }
 	NSCalendarDate date = getCalendarDate();
 	NSCalendarDate newDate = NSCalendarDate.dateWithYear(date.yearOfCommonEra(), date.monthOfYear(), date.dayOfMonth(),
 			hours, minutes, seconds, date.timeZone());
@@ -823,7 +866,9 @@ public void setTime (int hours, int minutes, int seconds) {
  */
 public void setYear (int year) {
 	checkWidget ();
-	if (year < MIN_YEAR || year > MAX_YEAR) return;
+    if (year < MIN_YEAR || year > MAX_YEAR) {
+        return;
+    }
 	NSCalendarDate date = getCalendarDate();
 	NSCalendarDate newDate = NSCalendarDate.dateWithYear(year, date.monthOfYear(), date.dayOfMonth(),
 			date.hourOfDay(), date.minuteOfHour(), date.secondOfMinute(), date.timeZone());

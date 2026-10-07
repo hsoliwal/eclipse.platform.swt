@@ -146,8 +146,12 @@ public class CTabFolderRenderer {
 	 * @see Widget#getStyle
 	 */
 	protected CTabFolderRenderer(CTabFolder parent) {
-		if (parent == null) return;
-		if (parent.isDisposed ()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
+        if (parent == null) {
+            return;
+        }
+        if (parent.isDisposed()) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		this.parent = parent;
 	}
 
@@ -225,7 +229,9 @@ public class CTabFolderRenderer {
 			default:
 				if (0 <= part && part < parent.getItemCount()) {
 					CTabItem item = parent.items[part];
-					if (item.isDisposed()) return new Point(0,0);
+                    if (item.isDisposed()) {
+                        return new Point(0, 0);
+                    }
 					Image image = item.getImage();
 					if (image != null && !image.isDisposed()) {
 						Rectangle bounds = image.getBounds();
@@ -242,13 +248,17 @@ public class CTabFolderRenderer {
 						if (text != null && text.length() > minChars) {
 							int end = minChars < ELLIPSIS.length() + 1 ? minChars : minChars - ELLIPSIS.length();
 							text = text.substring(0, end);
-							if (minChars > ELLIPSIS.length() + 1) text += ELLIPSIS;
+                            if (minChars > ELLIPSIS.length() + 1) {
+                                text += ELLIPSIS;
+                            }
 						}
 					} else {
 						text = item.getText();
 					}
 					if (text != null) {
-						if (width > 0) width += INTERNAL_SPACING;
+                        if (width > 0) {
+                            width += INTERNAL_SPACING;
+                        }
 						if (item.font == null) {
 							Point size = gc.textExtent(text, FLAGS);
 							width += size.x;
@@ -266,7 +276,9 @@ public class CTabFolderRenderer {
 					if (shouldApplyLargeTextPadding(parent)) {
 						width += getLargeTextPadding(item) * 2;
 					} else if (shouldAllocateCloseRect(item)) {
-						if (width > 0) width += INTERNAL_SPACING;
+                        if (width > 0) {
+                            width += INTERNAL_SPACING;
+                        }
 						width += computeSize(PART_CLOSE_BUTTON, SWT.NONE, gc, SWT.DEFAULT, SWT.DEFAULT).x;
 					}
 				}
@@ -463,7 +475,9 @@ public class CTabFolderRenderer {
 				break;
 			default:
 				if (0 <= part && part < parent.getItemCount()) {
-					if (bounds.width == 0 || bounds.height == 0) return;
+                    if (bounds.width == 0 || bounds.height == 0) {
+                        return;
+                    }
 					if ((state & SWT.SELECTED) != 0 ) {
 						drawSelected(part, gc, bounds, state);
 					} else {
@@ -538,11 +552,15 @@ public class CTabFolderRenderer {
 							gc.fillRectangle(x, y, width, pos);
 						}
 						Color lastColor = colors[colors.length-1];
-						if (lastColor == null) lastColor = defaultBackground;
+                        if (lastColor == null) {
+                            lastColor = defaultBackground;
+                        }
 						for (int i = percents.length-1; i >= 0; i--) {
 							gc.setForeground(lastColor);
 							lastColor = colors[i];
-							if (lastColor == null) lastColor = defaultBackground;
+                            if (lastColor == null) {
+                                lastColor = defaultBackground;
+                            }
 							gc.setBackground(lastColor);
 							int percentage = i > 0 ? percents[i] - percents[i-1] : percents[i];
 							int gradientHeight = percentage * height / 100;
@@ -551,12 +569,16 @@ public class CTabFolderRenderer {
 						}
 					} else {
 						Color lastColor = colors[0];
-						if (lastColor == null) lastColor = defaultBackground;
+                        if (lastColor == null) {
+                            lastColor = defaultBackground;
+                        }
 						int pos = 0;
 						for (int i = 0; i < percents.length; i++) {
 							gc.setForeground(lastColor);
 							lastColor = colors[i + 1];
-							if (lastColor == null) lastColor = defaultBackground;
+                            if (lastColor == null) {
+                                lastColor = defaultBackground;
+                            }
 							gc.setBackground(lastColor);
 							int percentage = i > 0 ? percents[i] - percents[i-1] : percents[i];
 							int gradientHeight = percentage * height / 100;
@@ -572,12 +594,16 @@ public class CTabFolderRenderer {
 					y = 0;
 					height = parent.getSize().y;
 					Color lastColor = colors[0];
-					if (lastColor == null) lastColor = defaultBackground;
+                    if (lastColor == null) {
+                        lastColor = defaultBackground;
+                    }
 					int pos = 0;
 					for (int i = 0; i < percents.length; ++i) {
 						gc.setForeground(lastColor);
 						lastColor = colors[i + 1];
-						if (lastColor == null) lastColor = defaultBackground;
+                        if (lastColor == null) {
+                            lastColor = defaultBackground;
+                        }
 						gc.setBackground(lastColor);
 						int gradientWidth = (percents[i] * width / 100) - pos;
 						gc.fillGradientRectangle(x+pos, y, gradientWidth, height, false);
@@ -696,7 +722,9 @@ public class CTabFolderRenderer {
 	}
 
 	void drawClose(GC gc, Rectangle closeRect, int closeImageState, boolean showDirtyIndicator, boolean selected) {
-		if (closeRect.width == 0 || closeRect.height == 0) return;
+        if (closeRect.width == 0 || closeRect.height == 0) {
+            return;
+        }
 
 		// When dirty and not hovered/pressed, draw bullet instead of X
 		if (showDirtyIndicator) {
@@ -780,7 +808,9 @@ public class CTabFolderRenderer {
 	}
 
 	void drawChevron(GC gc, Rectangle chevronRect, int chevronImageState) {
-		if (chevronRect.width == 0 || chevronRect.height == 0) return;
+        if (chevronRect.width == 0 || chevronRect.height == 0) {
+            return;
+        }
 		// draw chevron (10x7)
 		Display display = parent.getDisplay();
 		Font font = getChevronFont(display);
@@ -851,7 +881,9 @@ public class CTabFolderRenderer {
 	}
 
 	void drawMaximize(GC gc, Rectangle maxRect, int maxImageState) {
-		if (maxRect.width == 0 || maxRect.height == 0) return;
+        if (maxRect.width == 0 || maxRect.height == 0) {
+            return;
+        }
 		// 5x4 or 7x9
 		int x = maxRect.x + (maxRect.width - 10)/2;
 		int y = maxRect.y + 3;
@@ -900,7 +932,9 @@ public class CTabFolderRenderer {
 		}
 	}
 	void drawMinimize(GC gc, Rectangle minRect, int minImageState) {
-		if (minRect.width == 0 || minRect.height == 0) return;
+        if (minRect.width == 0 || minRect.height == 0) {
+            return;
+        }
 		// 5x4 or 9x3
 		int x = minRect.x + (minRect.width - 10)/2;
 		int y = minRect.y + 3;
@@ -996,7 +1030,9 @@ public class CTabFolderRenderer {
 			}
 
 			if (parent.single) {
-				if (!item.showing) return;
+                if (!item.showing) {
+                    return;
+                }
 			} else {
 				// if selected tab scrolled out of view or partially out of view
 				// just draw bottom line
@@ -1052,7 +1088,9 @@ public class CTabFolderRenderer {
 				Rectangle clipping = gc.getClipping();
 				Rectangle clipBounds = item.getBounds();
 				clipBounds.height += 1;
-				if (parent.onBottom) clipBounds.y -= 1;
+                if (parent.onBottom) {
+                    clipBounds.y -= 1;
+                }
 				boolean tabInPaint = clipping.intersects(clipBounds);
 
 				if (tabInPaint) {
@@ -1101,13 +1139,17 @@ public class CTabFolderRenderer {
 				}
 				shape[shape.length - 2] = size.x - borderRight + 1;
 				for (int i = 0; i < shape.length/2; i++) {
-					if (shape[2*i + 1] == y + height + 1) shape[2*i + 1] -= 1;
+                    if (shape[2 * i + 1] == y + height + 1) {
+                        shape[2 * i + 1] -= 1;
+                    }
 				}
 				Color borderColor = parent.getDisplay().getSystemColor(BORDER1_COLOR);
 				gc.setForeground(borderColor);
 				gc.drawPolyline(shape);
 
-				if (!tabInPaint) return;
+                if (!tabInPaint) {
+                    return;
+                }
 			}
 		}
 
@@ -1115,13 +1157,17 @@ public class CTabFolderRenderer {
 			// draw Image
 			Rectangle trim = computeTrim(itemIndex, SWT.NONE, 0, 0, 0, 0);
 			int xDraw = x - trim.x;
-			if (parent.single && shouldAllocateCloseRect(item)) xDraw += item.closeRect.width;
+            if (parent.single && shouldAllocateCloseRect(item)) {
+                xDraw += item.closeRect.width;
+            }
 			Image image = item.getImage();
 			if (image != null && !image.isDisposed() && parent.showSelectedImage) {
 				Rectangle imageBounds = image.getBounds();
 				// only draw image if it won't overlap with close button
 				int maxImageWidth = rightEdge - xDraw - (trim.width + trim.x);
-				if (!parent.single && item.closeRect.width > 0) maxImageWidth -= item.closeRect.width + INTERNAL_SPACING;
+                if (!parent.single && item.closeRect.width > 0) {
+                    maxImageWidth -= item.closeRect.width + INTERNAL_SPACING;
+                }
 				if (imageBounds.width < maxImageWidth) {
 					int imageX = xDraw;
 					int imageY = y + (height - imageBounds.height) / 2;
@@ -1134,7 +1180,9 @@ public class CTabFolderRenderer {
 			// draw Text
 			xDraw += getLeftTextMargin(item);
 			int textWidth = rightEdge - xDraw - (trim.width + trim.x);
-			if (!parent.single && item.closeRect.width > 0) textWidth -= item.closeRect.width + INTERNAL_SPACING;
+            if (!parent.single && item.closeRect.width > 0) {
+                textWidth -= item.closeRect.width + INTERNAL_SPACING;
+            }
 			if (textWidth > 0) {
 				Font gcFont = gc.getFont();
 				gc.setFont(item.font == null ? parent.getFont() : item.font);
@@ -1194,12 +1242,16 @@ public class CTabFolderRenderer {
 		int selectedIndex = parent.selectedIndex;
 		int highlight_header = (style & SWT.FLAT) != 0 ? 1 : 3;
 		if (tabHeight == 0) {
-			if ((style & SWT.FLAT) != 0 && (style & SWT.BORDER) == 0) return;
+            if ((style & SWT.FLAT) != 0 && (style & SWT.BORDER) == 0) {
+                return;
+            }
 			int x1 = borderLeft - 1;
 			int x2 = size.x - borderRight;
 			int y1 = parent.onBottom ? size.y - borderBottom - highlight_header - 1 : borderTop + highlight_header;
 			int y2 = parent.onBottom ? size.y - borderBottom : borderTop;
-			if (borderLeft > 0 && parent.onBottom) y2 -= 1;
+            if (borderLeft > 0 && parent.onBottom) {
+                y2 -= 1;
+            }
 
 			int[] shape = new int[] {x1, y1, x1,y2, x2,y2, x2,y1};
 
@@ -1233,12 +1285,14 @@ public class CTabFolderRenderer {
 			shape[index++] = y - highlight_header;
 			shape[index++] = x;
 			shape[index++] = y + height;
-			if (borderLeft == 0)
-				shape[index - 1] += 1;
+            if (borderLeft == 0) {
+                shape[index - 1] += 1;
+            }
 			shape[index++] = x + width;
 			shape[index++] = y + height;
-			if (borderLeft == 0)
-				shape[index - 1] += 1;
+            if (borderLeft == 0) {
+                shape[index - 1] += 1;
+            }
 			shape[index++] = x + width;
 			shape[index++] = y - highlight_header;
 		} else {
@@ -1281,18 +1335,24 @@ public class CTabFolderRenderer {
 		int height = bounds.height;
 		int width = bounds.width;
 
-		// Do not draw partial items
-		if (!item.showing) return;
+        // Do not draw partial items
+        if (!item.showing) {
+            return;
+        }
 
 		Rectangle clipping = gc.getClipping();
-		if (!clipping.intersects(bounds)) return;
+        if (!clipping.intersects(bounds)) {
+            return;
+        }
 
 		if ((state & SWT.BACKGROUND) != 0) {
-			if (index > 0 && index < parent.selectedIndex)
-				drawLeftUnselectedBorder(gc, bounds, state);
-			// If it is the last one then draw a line
-			if (index > parent.selectedIndex)
-				drawRightUnselectedBorder(gc, bounds, state);
+            if (index > 0 && index < parent.selectedIndex) {
+                drawLeftUnselectedBorder(gc, bounds, state);
+            }
+            // If it is the last one then draw a line
+            if (index > parent.selectedIndex) {
+                drawRightUnselectedBorder(gc, bounds, state);
+            }
 		}
 
 		if ((state & SWT.FOREGROUND) != 0) {
@@ -1375,7 +1435,9 @@ public class CTabFolderRenderer {
 	}
 
 	String shortenText(GC gc, String text, int width, String ellipses) {
-		if (gc.textExtent(text, FLAGS).x <= width) return text;
+        if (gc.textExtent(text, FLAGS).x <= width) {
+            return text;
+        }
 		int ellipseWidth = gc.textExtent(ellipses, FLAGS).x;
 		int length = text.length();
 		TextLayout layout = new TextLayout(parent.getDisplay());

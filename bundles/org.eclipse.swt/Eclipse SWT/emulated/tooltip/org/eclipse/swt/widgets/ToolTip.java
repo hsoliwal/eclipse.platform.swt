@@ -115,9 +115,7 @@ public ToolTip (Shell parent, int style) {
 }
 
 static int checkStyle (int style) {
-	int mask = SWT.ICON_ERROR | SWT.ICON_INFORMATION | SWT.ICON_WARNING;
-	if ((style & mask) == 0) return style;
-	return checkBits (style, SWT.ICON_INFORMATION, SWT.ICON_WARNING, SWT.ICON_ERROR, 0, 0, 0);
+	return WidgetStylePolicy.TOOLTIP.applyAsInt(style);
 }
 
 /**
@@ -242,7 +240,9 @@ void configure () {
 		}
 	}
 	if ((style & SWT.BALLOON) != 0) {
-		if (region != null) region.dispose ();
+        if (region != null) {
+            region.dispose();
+        }
 		region = new Region (display);
 		region.add (polyline);
 		tip.setRegion (region);
@@ -289,7 +289,9 @@ Point getSize (int maxWidth) {
 		messageHeight = layoutMessage.getBounds ().height;
 	}
 	int height = 2 * BORDER + 2 * PADDING + messageHeight;
-	if (layoutText != null) height += Math.max (IMAGE_SIZE, textHeight) + 2 * PADDING;
+    if (layoutText != null) {
+        height += Math.max(IMAGE_SIZE, textHeight) + 2 * PADDING;
+    }
 	return new Point (width, height);
 }
 
@@ -395,13 +397,21 @@ void onDispose (Event event) {
 	runnable = null;
 	tip.dispose ();
 	tip = null;
-	if (region != null) region.dispose ();
+    if (region != null) {
+        region.dispose();
+    }
 	region = null;
-	if (layoutText != null) layoutText.dispose ();
+    if (layoutText != null) {
+        layoutText.dispose();
+    }
 	layoutText = null;
-	if (layoutMessage != null) layoutMessage.dispose ();
+    if (layoutMessage != null) {
+        layoutMessage.dispose();
+    }
 	layoutMessage = null;
-	if (boldFont != null) boldFont.dispose ();
+    if (boldFont != null) {
+        boldFont.dispose();
+    }
 	boldFont = null;
 	borderPolygon = null;
 }
@@ -416,7 +426,9 @@ void onPaint (Event event) {
 	int x = BORDER + PADDING;
 	int y = BORDER + PADDING;
 	if ((style & SWT.BALLOON) != 0) {
-		if (spikeAbove) y += TIP_HEIGHT;
+        if (spikeAbove) {
+            y += TIP_HEIGHT;
+        }
 		gc.drawPolygon (borderPolygon);
 	} else {
 		Rectangle rect = tip.getClientArea ();
@@ -460,8 +472,12 @@ void onPaint (Event event) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -505,10 +521,14 @@ public void setAutoHide (boolean autoHide) {
  */
 public void setLocation (int x, int y) {
 	checkWidget ();
-	if (this.x == x && this.y == y) return;
+    if (this.x == x && this.y == y) {
+        return;
+    }
 	this.x = x;
 	this.y = y;
-	if (tip.getVisible ()) configure ();
+    if (tip.getVisible()) {
+        configure();
+    }
 }
 
 /**
@@ -535,7 +555,9 @@ public void setLocation (int x, int y) {
  */
 public void setLocation (Point location) {
 	checkWidget ();
-	if (location == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (location == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setLocation (location.x, location.y);
 }
 
@@ -554,15 +576,21 @@ public void setLocation (Point location) {
  */
 public void setMessage (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (layoutMessage != null) layoutMessage.dispose();
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (layoutMessage != null) {
+        layoutMessage.dispose();
+    }
 	layoutMessage = null;
 	if (string.length () != 0) {
 		Display display = getDisplay ();
 		layoutMessage = new TextLayout (display);
 		layoutMessage.setText (string);
 	}
-	if (tip.getVisible ()) configure ();
+    if (tip.getVisible()) {
+        configure();
+    }
 }
 
 /**
@@ -580,10 +608,16 @@ public void setMessage (String string) {
  */
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (layoutText != null) layoutText.dispose ();
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (layoutText != null) {
+        layoutText.dispose();
+    }
 	layoutText = null;
-	if (boldFont != null) boldFont.dispose ();
+    if (boldFont != null) {
+        boldFont.dispose();
+    }
 	boldFont = null;
 	if (string.length () != 0) {
 		Display display = getDisplay ();
@@ -595,7 +629,9 @@ public void setText (String string) {
 		TextStyle style = new TextStyle (boldFont, null, null);
 		layoutText.setStyle (style, 0, string.length ());
 	}
-	if (tip.getVisible ()) configure ();
+    if (tip.getVisible()) {
+        configure();
+    }
 }
 
 /**
@@ -616,14 +652,20 @@ public void setText (String string) {
  */
 public void setVisible (boolean visible) {
 	checkWidget ();
-	if (visible) configure ();
+    if (visible) {
+        configure();
+    }
 	tip.setVisible (visible);
 	Display display = getDisplay ();
-	if (runnable != null) display.timerExec (-1, runnable);
+    if (runnable != null) {
+        display.timerExec(-1, runnable);
+    }
 	runnable = null;
 	if (autohide && visible) {
 		runnable = () -> {
-			if (!isDisposed ()) setVisible (false);
+            if (!isDisposed()) {
+                setVisible(false);
+            }
 		};
 		display.timerExec(DELAY, runnable);
 	}

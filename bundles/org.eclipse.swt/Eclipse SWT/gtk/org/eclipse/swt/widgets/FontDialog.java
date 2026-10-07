@@ -124,7 +124,9 @@ public FontData getFontData () {
  * @since 2.1.1
  */
 public FontData [] getFontList () {
-	if (fontData == null) return null;
+    if (fontData == null) {
+        return null;
+    }
 	FontData [] result = new FontData [1];
 	result [0] = fontData;
 	return result;
@@ -165,7 +167,9 @@ public FontData open () {
 	} else {
 		handle = GTK.gtk_font_chooser_dialog_new (titleBytes, 0);
 	}
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK_VERSION >= OS.VERSION(4, 10, 0)) {
 		GTK4.gtk_font_dialog_set_modal(handle, true);

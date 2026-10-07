@@ -81,7 +81,9 @@ public static void main (String [] args) {
 	shell.setSize(900, 300);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }
@@ -112,13 +114,15 @@ public static void setDropTargetForLabel (final Label control) {
 		@Override
 		public void dragEnter(DropTargetEvent e) {
 			System.out.println("dragEnter="+control.getText());
-			if (e.detail == DND.DROP_NONE)
-				e.detail = DND.DROP_LINK;
+            if (e.detail == DND.DROP_NONE) {
+                e.detail = DND.DROP_LINK;
+            }
 		}
 		@Override
 		public void dragOperationChanged(DropTargetEvent e) {
-			if (e.detail == DND.DROP_NONE)
-				e.detail = DND.DROP_LINK;
+            if (e.detail == DND.DROP_NONE) {
+                e.detail = DND.DROP_LINK;
+            }
 		}
 		@Override
 		public void drop(DropTargetEvent event) {
@@ -146,13 +150,15 @@ public static void setDropTarget (final Control control) {
 		public void dragEnter(DropTargetEvent e) {
 			System.out.println("dragEnter=composite");
 
-			if (e.detail == DND.DROP_NONE)
-				e.detail = DND.DROP_LINK;
+            if (e.detail == DND.DROP_NONE) {
+                e.detail = DND.DROP_LINK;
+            }
 		}
 		@Override
 		public void dragOperationChanged(DropTargetEvent e) {
-			if (e.detail == DND.DROP_NONE)
-				e.detail = DND.DROP_LINK;
+            if (e.detail == DND.DROP_NONE) {
+                e.detail = DND.DROP_LINK;
+            }
 		}
 		@Override
 		public void drop(DropTargetEvent event) {

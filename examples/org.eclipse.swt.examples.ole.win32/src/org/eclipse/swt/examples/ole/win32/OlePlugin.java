@@ -156,11 +156,15 @@ public class OlePlugin extends AbstractUIPlugin {
 	public static void freeResources() {
 		if (images != null) {
 			for (final Image image : images) {
-				if (image != null) image.dispose();
+                if (image != null) {
+                    image.dispose();
+                }
 			}
 			images = null;
 		}
-		if (browserFont != null) browserFont.dispose ();
+        if (browserFont != null) {
+            browserFont.dispose();
+        }
 		browserFont = null;
 	}
 	

@@ -119,25 +119,21 @@ public CoolBar (Composite parent, int style) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	return OS.CallWindowProc (ReBarProc, hwnd, msg, wParam, lParam);
 }
 
 static int checkStyle (int style) {
-	style |= SWT.NO_FOCUS;
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	return style & ~(SWT.H_SCROLL | SWT.V_SCROLL);
+	return WidgetStylePolicy.NO_FOCUS_WITHOUT_SCROLLBARS.applyAsInt(style);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -184,15 +180,23 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		}
 		ignoreResize = false;
 	}
-	if (width == 0) width = DEFAULT_COOLBAR_WIDTH;
-	if (height == 0) height = DEFAULT_COOLBAR_HEIGHT;
+    if (width == 0) {
+        width = DEFAULT_COOLBAR_WIDTH;
+    }
+    if (height == 0) {
+        height = DEFAULT_COOLBAR_HEIGHT;
+    }
 	if ((style & SWT.VERTICAL) != 0) {
 		int tmp = width;
 		width = height;
 		height = tmp;
 	}
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x;
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y;
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x;
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y;
+    }
 	height += border * 2;
 	width += border * 2;
 	return new Point (width, height);
@@ -221,9 +225,13 @@ void createHandle () {
 
 void createItem (CoolItem item, int index) {
 	int count = (int)OS.SendMessage (handle, OS.RB_GETBANDCOUNT, 0, 0);
-	if (!(0 <= index && index <= count)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= count)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	int id = 0;
-	while (id < items.length && items [id] != null) id++;
+    while (id < items.length && items [id] != null) {
+        id++;
+    }
 	if (id == items.length) {
 		CoolItem [] newItems = new CoolItem [items.length + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -345,12 +353,16 @@ void destroyItem (CoolItem item) {
 		ignoreResize = false;
 	}
 
-	/* Restore the visible state of the control */
-	if (wasVisible) control.setVisible (true);
+    /* Restore the visible state of the control */
+    if (wasVisible) {
+        control.setVisible(true);
+    }
 
 	index = 0;
 	while (index < originalItems.length) {
-		if (originalItems [index] == item) break;
+        if (originalItems [index] == item) {
+            break;
+        }
 		index++;
 	}
 	int length = originalItems.length - 1;
@@ -380,7 +392,9 @@ void drawThemeBackground (long hDC, long hwnd, RECT rect) {
 
 @Override
 Control findThemeControl () {
-	if ((style & SWT.FLAT) != 0) return this;
+    if ((style & SWT.FLAT) != 0) {
+        return this;
+    }
 	return background == -1 && backgroundImage == null ? this : super.findThemeControl ();
 }
 
@@ -436,7 +450,9 @@ int getMargin (int index) {
 public CoolItem getItem (int index) {
 	checkWidget ();
 	int count = (int)OS.SendMessage (handle, OS.RB_GETBANDCOUNT, 0, 0);
-	if (!(0 <= index && index < count)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < count)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	REBARBANDINFO rbBand = new REBARBANDINFO ();
 	rbBand.cbSize = REBARBANDINFO.sizeof;
 	rbBand.fMask = OS.RBBIM_ID;
@@ -492,10 +508,14 @@ public int [] getItemOrder () {
 		CoolItem item = items [rbBand.wID];
 		int index = 0;
 		while (index<originalItems.length) {
-			if (originalItems [index] == item) break;
+            if (originalItems [index] == item) {
+                break;
+            }
 			index++;
 		}
-		if (index == originalItems.length) error (SWT.ERROR_CANNOT_GET_ITEM);
+        if (index == originalItems.length) {
+            error(SWT.ERROR_CANNOT_GET_ITEM);
+        }
 		indices [i] = index;
 	}
 	return indices;
@@ -569,7 +589,9 @@ Point [] getItemSizesInPixels () {
 		OS.SendMessage (handle, OS.RB_GETBANDMARGINS, 0, margins);
 		rect.left -= margins.cxLeftWidth;
 		rect.right += margins.cxRightWidth;
-		if (!isLastItemOfRow(i)) rect.right += separator;
+        if (!isLastItemOfRow(i)) {
+            rect.right += separator;
+        }
 		if ((style & SWT.VERTICAL) != 0) {
 			sizes [i] = new Point (rbBand.cyChild, rect.right - rect.left);
 		} else {
@@ -581,7 +603,9 @@ Point [] getItemSizesInPixels () {
 
 int getLastIndexOfRow (int index) {
 	int count = (int)OS.SendMessage (handle, OS.RB_GETBANDCOUNT, 0, 0);
-	if (count == 0) return -1;
+    if (count == 0) {
+        return -1;
+    }
 	REBARBANDINFO rbBand = new REBARBANDINFO ();
 	rbBand.cbSize = REBARBANDINFO.sizeof;
 	rbBand.fMask = OS.RBBIM_STYLE;
@@ -596,7 +620,9 @@ int getLastIndexOfRow (int index) {
 
 boolean isLastItemOfRow (int index) {
 	int count = (int)OS.SendMessage (handle, OS.RB_GETBANDCOUNT, 0, 0);
-	if (index + 1 == count) return true;
+    if (index + 1 == count) {
+        return true;
+    }
 	REBARBANDINFO rbBand = new REBARBANDINFO ();
 	rbBand.cbSize = REBARBANDINFO.sizeof;
 	rbBand.fMask = OS.RBBIM_STYLE;
@@ -641,7 +667,9 @@ public int [] getWrapIndices () {
 	int [] indices = new int [items.length];
 	int count = 0;
 	for (int i=0; i<items.length; i++) {
-		if (items [i].getWrap ()) indices [count++] = i;
+        if (items [i].getWrap()) {
+            indices [count++] = i;
+        }
 	}
 	int [] result = new int [count];
 	System.arraycopy (indices, 0, result, 0, count);
@@ -668,8 +696,12 @@ public int [] getWrapIndices () {
  */
 public int indexOf (CoolItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (item.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (item.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	return (int)OS.SendMessage (handle, OS.RB_IDTOINDEX, item.id, 0);
 }
 
@@ -688,7 +720,9 @@ void resizeToPreferredWidth (int index) {
 		RECT rect = new RECT ();
 		OS.SendMessage (handle, OS.RB_GETBANDBORDERS, index, rect);
 		rbBand.cx = rbBand.cxIdeal + rect.left;
-		if ((style & SWT.FLAT) == 0) rbBand.cx += rect.right;
+        if ((style & SWT.FLAT) == 0) {
+            rbBand.cx += rect.right;
+        }
 		rbBand.fMask = OS.RBBIM_SIZE;
 		OS.SendMessage (handle, OS.RB_SETBANDINFO, index, rbBand);
 	}
@@ -729,7 +763,9 @@ void removeControl (Control control) {
 void reskinChildren (int flags) {
 	if (items != null) {
 		for (CoolItem item : items) {
-			if (item != null) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -737,23 +773,29 @@ void reskinChildren (int flags) {
 
 @Override
 void setBackgroundPixel (int pixel) {
-	if (pixel == -1) pixel = defaultBackground ();
+    if (pixel == -1) {
+        pixel = defaultBackground();
+    }
 	OS.SendMessage (handle, OS.RB_SETBKCOLOR, 0, pixel);
 	setItemColors ((int)OS.SendMessage (handle, OS.RB_GETTEXTCOLOR, 0, 0), pixel);
-	/*
-	* Feature in Windows.  For some reason, Windows
-	* does not fully erase the coolbar area and coolbar
-	* items when you set the background.  The fix is
-	* to invalidate the coolbar area.
-	*/
-	if (!OS.IsWindowVisible (handle)) return;
+    /*
+    * Feature in Windows.  For some reason, Windows
+    * does not fully erase the coolbar area and coolbar
+    * items when you set the background.  The fix is
+    * to invalidate the coolbar area.
+    */
+    if (!OS.IsWindowVisible(handle)) {
+        return;
+    }
 	int flags = OS.RDW_ERASE | OS.RDW_FRAME | OS.RDW_INVALIDATE | OS.RDW_ALLCHILDREN;
 	OS.RedrawWindow (handle, null, 0, flags);
 }
 
 @Override
 void setForegroundPixel (int pixel) {
-	if (pixel == -1) pixel = defaultForeground ();
+    if (pixel == -1) {
+        pixel = defaultForeground();
+    }
 	OS.SendMessage (handle, OS.RB_SETTEXTCOLOR, 0, pixel);
 	setItemColors (pixel, (int)OS.SendMessage (handle, OS.RB_GETBKCOLOR, 0, 0));
 }
@@ -805,7 +847,9 @@ void setItemColors (int foreColor, int backColor) {
  */
 public void setItemLayout (int [] itemOrder, int [] wrapIndices, Point [] sizes) {
 	checkWidget ();
-	if (sizes == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (sizes == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	Point [] sizesInPoints = new Point [sizes.length];
 	for (int i = 0; i < sizes.length; i++) {
 		sizesInPoints[i] = Win32DPIUtils.pointToPixelAsSize(sizes[i], getAutoscalingZoom());
@@ -839,15 +883,23 @@ void setItemLayoutInPixels (int [] itemOrder, int [] wrapIndices, Point [] sizes
  * </ul>
  */
 void setItemOrder (int [] itemOrder) {
-	if (itemOrder == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (itemOrder == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int itemCount = (int)OS.SendMessage (handle, OS.RB_GETBANDCOUNT, 0, 0);
-	if (itemOrder.length != itemCount) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (itemOrder.length != itemCount) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
 	/* Ensure that itemOrder does not contain any duplicates. */
 	boolean [] set = new boolean [itemCount];
 	for (int index : itemOrder) {
-		if (index < 0 || index >= itemCount) error (SWT.ERROR_INVALID_RANGE);
-		if (set [index]) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (index < 0 || index >= itemCount) {
+            error(SWT.ERROR_INVALID_RANGE);
+        }
+        if (set [index]) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		set [index] = true;
 	}
 
@@ -897,9 +949,13 @@ void setItemOrder (int [] itemOrder) {
  * </ul>
  */
 void setItemSizes (Point [] sizes) {
-	if (sizes == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (sizes == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int count = (int)OS.SendMessage (handle, OS.RB_GETBANDCOUNT, 0, 0);
-	if (sizes.length != count) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (sizes.length != count) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	REBARBANDINFO rbBand = new REBARBANDINFO ();
 	rbBand.cbSize = REBARBANDINFO.sizeof;
 	rbBand.fMask = OS.RBBIM_ID;
@@ -957,7 +1013,9 @@ public void setLocked (boolean locked) {
  */
 public void setWrapIndices (int [] indices) {
 	checkWidget ();
-	if (indices == null) indices = new int [0];
+    if (indices == null) {
+        indices = new int [0];
+    }
 	int count = getItemCount ();
 	for (int index : indices) {
 		if (index < 0 || index >= count) {
@@ -988,7 +1046,9 @@ public void setWrapIndices (int [] indices) {
 int widgetStyle () {
 	int bits = super.widgetStyle () | OS.CCS_NODIVIDER | OS.CCS_NORESIZE;
 	bits |= OS.RBS_VARHEIGHT | OS.RBS_DBLCLKTOGGLE;
-	if ((style & SWT.FLAT) == 0) bits |= OS.RBS_BANDBORDERS;
+    if ((style & SWT.FLAT) == 0) {
+        bits |= OS.RBS_BANDBORDERS;
+    }
 	return bits;
 }
 
@@ -1023,7 +1083,9 @@ LRESULT WM_COMMAND (long wParam, long lParam) {
 	* for this control.
 	*/
 	LRESULT result = super.WM_COMMAND (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	return LRESULT.ZERO;
 }
 
@@ -1048,14 +1110,18 @@ LRESULT WM_NOTIFY (long wParam, long lParam) {
 	* for this control.
 	*/
 	LRESULT result = super.WM_NOTIFY (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	return LRESULT.ZERO;
 }
 
 @Override
 LRESULT WM_SETREDRAW (long wParam, long lParam) {
 	LRESULT result = super.WM_SETREDRAW (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  When redraw is turned off, the rebar
 	* control does not call the default window proc.  This means
@@ -1082,7 +1148,9 @@ LRESULT WM_SETREDRAW (long wParam, long lParam) {
 LRESULT WM_SIZE (long wParam, long lParam) {
 	if (ignoreResize) {
 		long code = callWindowProc (handle, OS.WM_SIZE, wParam, lParam);
-		if (code == 0) return LRESULT.ZERO;
+        if (code == 0) {
+            return LRESULT.ZERO;
+        }
 		return new LRESULT (code);
 	}
 
@@ -1098,7 +1166,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			OS.POINTSTOPOINT (pt, pos);
 			OS.ScreenToClient (handle, pt);
 			int button = display.lastButton != 0 ? display.lastButton : 1;
-			if (!sendDragEvent (button, pt.x, pt.y)) return LRESULT.ONE;
+            if (!sendDragEvent(button, pt.x, pt.y)) {
+                return LRESULT.ONE;
+            }
 			break;
 		}
 		case OS.RBN_CHILDSIZE: {

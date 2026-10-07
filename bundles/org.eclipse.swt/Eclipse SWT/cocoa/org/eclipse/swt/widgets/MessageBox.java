@@ -105,19 +105,15 @@ public MessageBox (Shell parent) {
 public MessageBox (Shell parent, int style) {
 	super (parent, checkStyle (parent, checkStyle (style)));
 	if (Display.getSheetEnabled ()) {
-		if (parent != null && (style & SWT.SHEET) != 0) this.style |= SWT.SHEET;
+        if (parent != null && (style & SWT.SHEET) != 0) {
+            this.style |= SWT.SHEET;
+        }
 	}
 	checkSubclass ();
 }
 
 static int checkStyle (int style) {
-	int mask = (SWT.YES | SWT.NO | SWT.OK | SWT.CANCEL | SWT.ABORT | SWT.RETRY | SWT.IGNORE);
-	int bits = style & mask;
-	if (bits == SWT.OK || bits == SWT.CANCEL || bits == (SWT.OK | SWT.CANCEL)) return style;
-	if (bits == SWT.YES || bits == SWT.NO || bits == (SWT.YES | SWT.NO) || bits == (SWT.YES | SWT.NO | SWT.CANCEL)) return style;
-	if (bits == (SWT.RETRY | SWT.CANCEL) || bits == (SWT.ABORT | SWT.RETRY | SWT.IGNORE)) return style;
-	style = (style & ~mask) | SWT.OK;
-	return style;
+	return WidgetStylePolicy.MESSAGE_BOX.applyAsInt(style);
 }
 
 private int getBits () {
@@ -232,7 +228,9 @@ public int open () {
 	if ((style & SWT.SHEET) != 0) {
 		delegate = (SWTPanelDelegate)new SWTPanelDelegate().alloc().init();
 		jniRef = OS.NewGlobalRef(this);
-		if (jniRef == 0) error(SWT.ERROR_NO_HANDLES);
+        if (jniRef == 0) {
+            error(SWT.ERROR_NO_HANDLES);
+        }
 		OS.object_setInstanceVariable(delegate.id, Display.SWT_OBJECT, jniRef);
 		display.setModalDialog(this, panel);
 		callback_completion_handler = new Callback(this, "_completionHandler", 1);
@@ -244,7 +242,9 @@ public int open () {
 		} else {
 			NSWindow window = alert.window();
 			while (window.isVisible()) {
-				if (!display.readAndDispatch()) display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 		}
 	} else {
@@ -253,8 +253,12 @@ public int open () {
 		userResponse = handleResponse(bits, response);
 	}
 	display.setModalDialog(null);
-	if (delegate != null) delegate.release();
-	if (jniRef != 0) OS.DeleteGlobalRef(jniRef);
+    if (delegate != null) {
+        delegate.release();
+    }
+    if (jniRef != 0) {
+        OS.DeleteGlobalRef(jniRef);
+    }
 	alert.release();
 	releaseHandler();
 	return userResponse;
@@ -366,7 +370,9 @@ void releaseHandler () {
  * </ul>
  */
 public void setMessage (String string) {
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	message = string;
 }
 
@@ -389,7 +395,9 @@ public void setMessage (String string) {
  * @since 3.121
  */
 public void setButtonLabels(Map<Integer, String> labels) {
-	if (labels == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (labels == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.labels = labels;
 }
 

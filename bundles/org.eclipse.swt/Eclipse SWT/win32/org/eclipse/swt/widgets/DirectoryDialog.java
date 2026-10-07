@@ -164,7 +164,9 @@ public Optional<String> openDialog () {
 			fileDialog.SetOptions(options[0]);
 		}
 
-		if (title == null) title = "";
+        if (title == null) {
+            title = "";
+        }
 		if (title.length() > 0) {
 			char[] buffer = new char[title.length() + 1];
 			title.getChars(0, title.length(), buffer, 0);
@@ -254,7 +256,9 @@ public void setFilterPath (String string) {
  * </ul>
  */
 public void setMessage (String string) {
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	message = string;
 }
 

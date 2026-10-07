@@ -253,7 +253,9 @@ private static GUID IIDFromString(String lpsz) {
 	char[] buffer = new char[length + 1];
 	lpsz.getChars(0, length, buffer, 0);
 	GUID lpiid = new GUID();
-	if (COM.IIDFromString(buffer, lpiid) == COM.S_OK) return lpiid;
+    if (COM.IIDFromString(buffer, lpiid) == COM.S_OK) {
+        return lpiid;
+    }
 	return null;
 }
 

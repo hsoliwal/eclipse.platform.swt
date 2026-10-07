@@ -15,7 +15,6 @@ package org.eclipse.swt.internal.image;
 
 
 import java.io.*;
-import java.util.Arrays;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
@@ -32,7 +31,9 @@ public final class TIFFFileFormat extends StaticImageFileFormat {
 		byte[] header = new byte[4];
 		stream.read(header);
 		stream.unread(header);
-		if (header[0] != header[1]) return false;
+        if (header[0] != header[1]) {
+            return false;
+        }
 		if (!(header[0] == 0x49 && header[2] == 42 && header[3] == 0) &&
 			!(header[0] == 0x4d && header[2] == 0 && header[3] == 42)) {
 			return false;
@@ -48,7 +49,9 @@ ImageData[] loadFromByteStream() {
 	TIFFRandomFileAccess file = new TIFFRandomFileAccess(inputStream);
 	try {
 		file.read(header);
-		if (header[0] != header[1]) SWT.error(SWT.ERROR_INVALID_IMAGE);
+        if (header[0] != header[1]) {
+            SWT.error(SWT.ERROR_INVALID_IMAGE);
+        }
 		if (!(header[0] == 0x49 && header[2] == 42 && header[3] == 0) &&
 			!(header[0] == 0x4d && header[2] == 0 && header[3] == 42)) {
 			SWT.error(SWT.ERROR_INVALID_IMAGE);
@@ -63,7 +66,9 @@ ImageData[] loadFromByteStream() {
 			int [] nextIFDOffset = new int[1];
 			ImageData image = directory.read(nextIFDOffset);
 			offset = nextIFDOffset[0];
-			images = Arrays.copyOf(images, images.length + 1);
+			ImageData[] oldImages = images;
+			images = new ImageData[oldImages.length + 1];
+			System.arraycopy(oldImages, 0, images, 0, oldImages.length);
 			images[images.length - 1] = image;
 		}
 	} catch (IOException e) {

@@ -45,14 +45,20 @@ public void setUp() {
 public void test_equalsLjava_lang_Object() {
 	int i;
 	for (i = 0; i < monitors.length; i++) {
-		if (primary.equals(monitors[i])) break;
+        if (primary.equals(monitors[i])) {
+            break;
+        }
 	}
-	if (i == monitors.length) fail();
+    if (i == monitors.length) {
+        fail();
+    }
 	for (i = 0; i  < monitors.length; i++) {
 		Monitor test = monitors[i];
 		for (int j = 0; j < monitors.length; j++) {
 			if (test.equals(monitors[j])) {
-				if (i != j) fail("Monitors "+i+" and "+j+" should not be equal");
+                if (i != j) {
+                    fail("Monitors " + i + " and " + j + " should not be equal");
+                }
 			}
 		}
 	}

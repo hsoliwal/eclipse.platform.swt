@@ -69,7 +69,9 @@ public void javaToNative (Object object, TransferData transferData){
 	byte[] utf8 = Converter.wcsToMbcs(string, true);
 	int byteCount = utf8.length;
 	long pValue = OS.g_malloc(byteCount);
-	if (pValue == 0) return;
+    if (pValue == 0) {
+        return;
+    }
 	C.memmove(pValue, utf8, byteCount);
 	transferData.length = byteCount;
 	transferData.format = 8;
@@ -89,12 +91,18 @@ public void javaToNative (Object object, TransferData transferData){
  */
 @Override
 public Object nativeToJava(TransferData transferData){
-	if ( !isSupportedType(transferData) ||  transferData.pValue == 0 ) return null;
+    if (!isSupportedType(transferData) || transferData.pValue == 0) {
+        return null;
+    }
 
 	int size = (transferData.format * transferData.length / 8);
-	if (size <= 0) return null;
+    if (size <= 0) {
+        return null;
+    }
 	char[] bom = new char[1]; // look for a Byte Order Mark
-	if (size > 1) C.memmove (bom, transferData.pValue, 2);
+    if (size > 1) {
+        C.memmove(bom, transferData.pValue, 2);
+    }
 	String string;
 	if (bom[0] == '\ufeff' || bom[0] == '\ufffe') {
 		// XXX Follow up to Bugs 376589 384381 this is almost

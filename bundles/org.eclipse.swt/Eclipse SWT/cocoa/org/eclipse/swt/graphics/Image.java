@@ -239,8 +239,12 @@ public final class Image extends Resource implements Drawable {
 				int transparentOffset = -1, i = 0;
 				for (i = 0; i < alphaData.length; i++) {
 					int alpha = alphaData[i];
-					if (transparentOffset == -1 && alpha == 0) transparentOffset = i;
-					if (!(alpha == 0 || alpha == -1)) break;
+                    if (transparentOffset == -1 && alpha == 0) {
+                        transparentOffset = i;
+                    }
+                    if (!(alpha == 0 || alpha == -1)) {
+                        break;
+                    }
 				}
 				this.alpha = -1;
 				if (i == alphaData.length && transparentOffset != -1) {
@@ -264,7 +268,9 @@ public final class Image extends Resource implements Drawable {
 						}
 					}
 				}
-				if (this.transparentPixel == -1) this.alphaData = alphaData;
+                if (this.transparentPixel == -1) {
+                    this.alphaData = alphaData;
+                }
 			}
 		}
 	}
@@ -323,12 +329,16 @@ Image(Device device) {
 public Image(Device device, int width, int height) {
 	super(device);
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		init(width, height);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -370,8 +380,12 @@ public Image(Device device, int width, int height) {
  */
 public Image(Device device, Image srcImage, int flag) {
 	super(device);
-	if (srcImage == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (srcImage.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (srcImage == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (srcImage.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	switch (flag) {
 		case SWT.IMAGE_COPY:
 		case SWT.IMAGE_DISABLE:
@@ -382,7 +396,9 @@ public Image(Device device, Image srcImage, int flag) {
 	}
 
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		this.type = srcImage.type;
 		/* Get source image size */
@@ -413,11 +429,15 @@ public Image(Device device, Image srcImage, int flag) {
 		if (imageFileNameProvider != null || imageDataProvider != null || imageGcDrawer != null) {
 			/* If source image has 200% representation then create the 200% representation for the new image & apply flag */
 			NSBitmapImageRep rep200 = srcImage.getRepresentation (200);
-			if (rep200 != null) createRepFromSourceAndApplyFlag(rep200, srcWidth * 2, srcHeight * 2, flag);
+            if (rep200 != null) {
+                createRepFromSourceAndApplyFlag(rep200, srcWidth * 2, srcHeight * 2, flag);
+            }
 		}
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -558,14 +578,20 @@ private void createRepFromSourceAndApplyFlag(NSBitmapImageRep srcRep, int srcWid
 @Deprecated(since = "2025-06", forRemoval = true)
 public Image(Device device, Rectangle bounds) {
 	super(device);
-	if (bounds == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (bounds == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		init(bounds.width, bounds.height);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -595,12 +621,16 @@ public Image(Device device, Rectangle bounds) {
 public Image(Device device, ImageData data) {
 	super(device);
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		init(data, 100);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -636,13 +666,19 @@ public Image(Device device, ImageData data) {
  */
 public Image(Device device, ImageData source, ImageData mask) {
 	super(device);
-	if (source == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (mask == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (source == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (mask == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (source.width != mask.width || source.height != mask.height) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		mask = ImageData.convertMask(mask);
 		ImageData image = new ImageData(source.width, source.height, source.depth, source.palette, source.scanlinePad, source.data);
@@ -650,7 +686,9 @@ public Image(Device device, ImageData source, ImageData mask) {
 		image.maskData = mask.data;
 		init(image, 100);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -713,7 +751,9 @@ public Image(Device device, InputStream stream) {
 		SWT.error(SWT.ERROR_NULL_ARGUMENT);
 	}
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		ImageDataProvider imageDataProvider = createImageDataProvider(stream);
 		initUsingImageDataProvider(imageDataProvider);
@@ -721,7 +761,9 @@ public Image(Device device, InputStream stream) {
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -760,13 +802,19 @@ public Image(Device device, InputStream stream) {
 public Image(Device device, String filename) {
 	super(device);
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
-		if (filename == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (filename == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		initUsingFileNameProvider(zoom -> zoom == 100 ? filename : null);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -801,14 +849,20 @@ public Image(Device device, String filename) {
  */
 public Image(Device device, ImageFileNameProvider imageFileNameProvider) {
 	super(device);
-	if (imageFileNameProvider == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (imageFileNameProvider == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		initUsingFileNameProvider(imageFileNameProvider);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -869,9 +923,13 @@ private void initUsingFileNameProvider(ImageFileNameProvider imageFileNameProvid
  */
 public Image(Device device, ImageDataProvider imageDataProvider) {
 	super(device);
-	if (imageDataProvider == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (imageDataProvider == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		initUsingImageDataProvider(imageDataProvider);
 		init ();
@@ -879,7 +937,9 @@ public Image(Device device, ImageDataProvider imageDataProvider) {
 			DPIUtil.validateLinearScaling(imageDataProvider);
 		});
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -903,19 +963,27 @@ public Image(Device device, ImageDataProvider imageDataProvider) {
  */
 public Image(Device device, ImageGcDrawer imageGcDrawer, int width, int height) {
 	super(device);
-	if (imageGcDrawer == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (imageGcDrawer == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.imageGcDrawer = imageGcDrawer;
 	this.width = width;
 	this.height = height;
 	ImageData data = drawWithImageGcDrawer(imageGcDrawer, width, height, DPIUtil.getDeviceZoom());
-	if (data == null) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (data == null) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		init (data, DPIUtil.getDeviceZoom());
 		init ();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -946,7 +1014,9 @@ private AlphaInfo _getAlphaInfoAtCurrentZoom (NSBitmapImageRep rep) {
 	int deviceZoom = DPIUtil.getDeviceZoom();
 	if (deviceZoom != 100 && (imageFileNameProvider != null || imageDataProvider != null)) {
 		if (alphaInfo_100.alphaData != null && alphaInfo_200 != null) {
-			if (alphaInfo_200.alphaData == null) initAlpha_200(rep);
+            if (alphaInfo_200.alphaData == null) {
+                initAlpha_200(rep);
+            }
 			return alphaInfo_200;
 		}
 	}
@@ -1042,9 +1112,13 @@ public static Image cocoa_new(Device device, int type, NSImage nsImage) {
 
 void createAlpha () {
 	AlphaInfo info = alphaInfo_100;
-	if (info.transparentPixel == -1 && info.alpha == -1 && info.alphaData == null) return;
+    if (info.transparentPixel == -1 && info.alpha == -1 && info.alphaData == null) {
+        return;
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSBitmapImageRep imageRep = getRepresentation();
 		long height = imageRep.pixelsHigh();
@@ -1088,7 +1162,9 @@ void createAlpha () {
 
 		C.memmove(bitmapData, srcData, dataSize);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1096,9 +1172,10 @@ private NSBitmapImageRep createRepresentation(ImageData imageData, AlphaInfo alp
 	NSBitmapImageRep rep = (NSBitmapImageRep)new NSBitmapImageRep().alloc();
 
 	PaletteData palette = imageData.palette;
-	if (!(((imageData.depth == 1 || imageData.depth == 2 || imageData.depth == 4 || imageData.depth == 8 || imageData.depth == 16) && !palette.isDirect) ||
-			((imageData.depth == 8) || (imageData.depth == 16 || imageData.depth == 24 || imageData.depth == 32) && palette.isDirect)))
-				SWT.error(SWT.ERROR_UNSUPPORTED_DEPTH);
+    if (!(((imageData.depth == 1 || imageData.depth == 2 || imageData.depth == 4 || imageData.depth == 8 || imageData.depth == 16) && !palette.isDirect) ||
+            ((imageData.depth == 8) || (imageData.depth == 16 || imageData.depth == 24 || imageData.depth == 32) && palette.isDirect))) {
+        SWT.error(SWT.ERROR_UNSUPPORTED_DEPTH);
+    }
 
 	/* Create the image */
 	int dataSize = imageData.width * imageData.height * 4;
@@ -1119,7 +1196,9 @@ private NSBitmapImageRep createRepresentation(ImageData imageData, AlphaInfo alp
 		byte[] srcBlues = new byte[length];
 		for (int i = 0; i < rgbs.length; i++) {
 			RGB rgb = rgbs[i];
-			if (rgb == null) continue;
+            if (rgb == null) {
+                continue;
+            }
 			srcReds[i] = (byte)rgb.red;
 			srcGreens[i] = (byte)rgb.green;
 			srcBlues[i] = (byte)rgb.blue;
@@ -1196,7 +1275,9 @@ private NSBitmapImageRep createRepresentation(ImageData imageData, AlphaInfo alp
 @Override
 void destroy() {
 	cachedImageAtSize.destroy();
-	if (memGC != null) memGC.dispose();
+    if (memGC != null) {
+        memGC.dispose();
+    }
 	handle.release();
 	handle = null;
 	memGC = null;
@@ -1214,9 +1295,15 @@ void destroy() {
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Image image)) return false;
-	if (device != image.device || alphaInfo_100.transparentPixel != image.alphaInfo_100.transparentPixel) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Image image)) {
+        return false;
+    }
+    if (device != image.device || alphaInfo_100.transparentPixel != image.alphaInfo_100.transparentPixel) {
+        return false;
+    }
 	if (imageDataProvider != null && image.imageDataProvider != null) {
 		return styleFlag == image.styleFlag && imageDataProvider.equals (image.imageDataProvider);
 	} else if (imageFileNameProvider != null && image.imageFileNameProvider != null) {
@@ -1292,10 +1379,14 @@ private NSSize getTargetSize(int scaleFactor) {
  * </ul>
  */
 public Color getBackground() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSBitmapImageRep imageRep = getRepresentation();
 	AlphaInfo alphaInfo = _getAlphaInfoAtCurrentZoom(imageRep);
-	if (alphaInfo.transparentPixel == -1) return null;
+    if (alphaInfo.transparentPixel == -1) {
+        return null;
+    }
 	int red = (alphaInfo.transparentPixel >> 16) & 0xFF;
 	int green = (alphaInfo.transparentPixel >> 8) & 0xFF;
 	int blue = (alphaInfo.transparentPixel >> 0) & 0xFF;
@@ -1315,9 +1406,13 @@ public Color getBackground() {
  * </ul>
  */
 public Rectangle getBounds() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		if (width != -1 && height != -1) {
 			return new Rectangle(0, 0, width, height);
@@ -1325,7 +1420,9 @@ public Rectangle getBounds() {
 		NSSize size = handle.size();
 		return new Rectangle(0, 0, width = (int)size.width, height = (int)size.height);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1426,9 +1523,13 @@ public ImageData getImageDataAtCurrentZoom() {
  * @since 3.106
  */
 public ImageData getImageData(int zoom) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		if (zoom == 100) {
 			NSBitmapImageRep imageRep;
@@ -1438,7 +1539,9 @@ public ImageData getImageData(int zoom) {
 		if (zoom == 200) {
 			NSBitmapImageRep imageRep200 = getOrCreateRepresentation (200);
 			if (alphaInfo_100.alphaData != null && alphaInfo_200 != null) {
-				if (alphaInfo_200.alphaData == null) initAlpha_200(imageRep200);
+                if (alphaInfo_200.alphaData == null) {
+                    initAlpha_200(imageRep200);
+                }
 			}
 			if (alphaInfo_200 == null) {
 				initAlpha_200(imageRep200);
@@ -1446,7 +1549,9 @@ public ImageData getImageData(int zoom) {
 			return _getImageData(imageRep200, alphaInfo_200);
 		}
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 	return DPIUtil.scaleImageData (device, getImageData(100), zoom, 100);
 }
@@ -1502,13 +1607,19 @@ void init(int width, int height) {
 	handle.addRepresentation(rep);
 	rep.release();
 	handle.setCacheMode(OS.NSImageCacheNever);
-	if (alphaInfo_100 == null) alphaInfo_100 = new AlphaInfo();
+    if (alphaInfo_100 == null) {
+        alphaInfo_100 = new AlphaInfo();
+    }
 }
 
 void init(ImageData image, int imageZoom) {
-	if (image == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (image == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
-	if (handle != null) handle.release();
+    if (handle != null) {
+        handle.release();
+    }
 
 	handle = (NSImage)new NSImage().alloc();
 	NSSize size = new NSSize();
@@ -1517,7 +1628,9 @@ void init(ImageData image, int imageZoom) {
 	handle = handle.initWithSize(size);
 	this.width = image.width * 100 / imageZoom;
 	this.height = image.height * 100 / imageZoom;
-	if (alphaInfo_100 == null) alphaInfo_100 = new AlphaInfo();
+    if (alphaInfo_100 == null) {
+        alphaInfo_100 = new AlphaInfo();
+    }
 	NSBitmapImageRep rep = createRepresentation(image, alphaInfo_100);
 	handle.addRepresentation(rep);
 	rep.release();
@@ -1567,7 +1680,9 @@ private static ImageDataProvider createImageDataProvider(InputStream stream) thr
 
 void initAlpha_200(NSBitmapImageRep nativeRep) {
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		int width = (int)nativeRep.pixelsWide();
 		int height = (int)nativeRep.pixelsHigh();
@@ -1577,18 +1692,24 @@ void initAlpha_200(NSBitmapImageRep nativeRep) {
 		NSBitmapImageRep rep = (NSBitmapImageRep)new NSBitmapImageRep().alloc();
 		rep = rep.initWithBitmapDataPlanes(0, width, height, 8, hasAlpha ? 4 : 3, hasAlpha, false, OS.NSDeviceRGBColorSpace, OS.NSAlphaFirstBitmapFormat | OS.NSAlphaNonpremultipliedBitmapFormat, bpr, 32);
 
-		if (alphaInfo_200 == null) alphaInfo_200 = new AlphaInfo();
+        if (alphaInfo_200 == null) {
+            alphaInfo_200 = new AlphaInfo();
+        }
 		alphaInfo_200.init(nativeRep, rep);
 		rep.release();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 
 }
 
 void initAlpha_100(NSBitmapImageRep nativeRep) {
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		int width = (int)nativeRep.pixelsWide();
 		int height = (int)nativeRep.pixelsHigh();
@@ -1598,11 +1719,15 @@ void initAlpha_100(NSBitmapImageRep nativeRep) {
 		NSBitmapImageRep rep = (NSBitmapImageRep)new NSBitmapImageRep().alloc();
 		rep = rep.initWithBitmapDataPlanes(0, width, height, 8, hasAlpha ? 4 : 3, hasAlpha, false, OS.NSDeviceRGBColorSpace, OS.NSAlphaFirstBitmapFormat | OS.NSAlphaNonpremultipliedBitmapFormat, bpr, 32);
 
-		if (alphaInfo_100 == null) alphaInfo_100 = new AlphaInfo();
+        if (alphaInfo_100 == null) {
+            alphaInfo_100 = new AlphaInfo();
+        }
 		alphaInfo_100.init(nativeRep, rep);
 		rep.release();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 
 }
@@ -1611,7 +1736,9 @@ void initNative(String filename) {
 	NSAutoreleasePool pool = null;
 	NSImage nativeImage = null;
 
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		nativeImage = new NSImage();
 		nativeImage.alloc();
@@ -1646,7 +1773,9 @@ void initNative(String filename) {
 		rep.release();
 		handle.setCacheMode(OS.NSImageCacheNever);
 
-		if (alphaInfo_100 == null) alphaInfo_100 = new AlphaInfo();
+        if (alphaInfo_100 == null) {
+            alphaInfo_100 = new AlphaInfo();
+        }
 		alphaInfo_100.init(nativeRep, rep);
 
 		// For compatibility, images created from .ico files are treated as SWT.ICON format, even though
@@ -1657,8 +1786,12 @@ void initNative(String filename) {
 			this.type = SWT.BITMAP;
 		}
 	} finally {
-		if (nativeImage != null) nativeImage.release();
-		if (pool != null) pool.release();
+        if (nativeImage != null) {
+            nativeImage.release();
+        }
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1679,12 +1812,16 @@ void initNative(String filename) {
  */
 @Override
 public long internal_new_GC (GCData data) {
-	if (handle == null) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (handle == null) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	if (type != SWT.BITMAP || memGC != null) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		int scaleFactor = DPIUtil.getDeviceZoom() / 100;
 		NSBitmapImageRep imageRep = getRepresentation();
@@ -1697,7 +1834,9 @@ public long internal_new_GC (GCData data) {
 		NSGraphicsContext flippedContext = NSGraphicsContext.graphicsContextWithGraphicsPort(context.graphicsPort(), true);
 		context = flippedContext;
 		context.retain();
-		if (data != null) data.flippedContext = flippedContext;
+        if (data != null) {
+            data.flippedContext = flippedContext;
+        }
 		NSGraphicsContext.static_saveGraphicsState();
 		NSGraphicsContext.setCurrentContext(context);
 		NSAffineTransform transform = NSAffineTransform.transform();
@@ -1719,7 +1858,9 @@ public long internal_new_GC (GCData data) {
 		}
 		return context.id;
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1742,7 +1883,9 @@ public long internal_new_GC (GCData data) {
 public void internal_dispose_GC (long hDC, GCData data) {
 	long context = hDC;
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		if (context != 0) {
 			/*
@@ -1758,7 +1901,9 @@ public void internal_dispose_GC (long hDC, GCData data) {
 		}
 //		handle.setCacheMode(OS.NSImageCacheDefault);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1812,15 +1957,25 @@ public boolean isDisposed() {
  * </ul>
  */
 public void setBackground(Color color) {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-	if (color == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if (color.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
+    if (color == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (color.isDisposed()) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		NSBitmapImageRep imageRep = getRepresentation();
 		AlphaInfo alphaInfo = _getAlphaInfoAtCurrentZoom(imageRep);
-		if (alphaInfo.transparentPixel == -1) return;
+        if (alphaInfo.transparentPixel == -1) {
+            return;
+        }
 		byte red = (byte)((alphaInfo.transparentPixel >> 16) & 0xFF);
 		byte green = (byte)((alphaInfo.transparentPixel >> 8) & 0xFF);
 		byte blue = (byte)((alphaInfo.transparentPixel >> 0) & 0xFF);
@@ -1856,7 +2011,9 @@ public void setBackground(Color color) {
 		}
 		alphaInfo.transparentPixel = (newRed & 0xFF) << 16 | (newGreen & 0xFF) << 8 | (newBlue & 0xFF);
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -1868,7 +2025,9 @@ public void setBackground(Color color) {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Image {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Image {*DISPOSED*}";
+    }
 	return "Image {" + handle + "}";
 }
 

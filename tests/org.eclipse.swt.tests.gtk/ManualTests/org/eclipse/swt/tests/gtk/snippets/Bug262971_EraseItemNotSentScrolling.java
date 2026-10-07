@@ -67,8 +67,9 @@ public class Bug262971_EraseItemNotSentScrolling {
 		//Listeners
 
 		table.addListener(SWT.EraseItem, event -> {
-			if (event.index ==1)
-			System.out.println("x = " + event.y + "\t" + "y = " + event.y);
+            if (event.index == 1) {
+                System.out.println("x = " + event.y + "\t" + "y = " + event.y);
+            }
 		});
 
 		table.getHorizontalBar().addSelectionListener(
@@ -77,8 +78,9 @@ public class Bug262971_EraseItemNotSentScrolling {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

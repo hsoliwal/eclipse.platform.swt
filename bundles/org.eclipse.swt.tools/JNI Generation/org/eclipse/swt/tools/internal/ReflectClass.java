@@ -36,7 +36,9 @@ public ReflectClass(Class<?> clazz, MetaData data, String sourcePath) {
 }
 
 void checkMembers() {
-	if (fields != null) return;
+    if (fields != null) {
+        return;
+    }
 	String source = null;
 	source = JNIGenerator.loadFile(sourcePath);
 	ASTParser parser = ASTParser.newParser(AST.getJLSLatest());
@@ -62,7 +64,9 @@ public int hashCode() {
 
 @Override
 public boolean equals(Object obj) {
-	if (!(obj instanceof ReflectClass)) return false;
+    if (!(obj instanceof ReflectClass)) {
+        return false;
+    }
 	return ((ReflectClass)obj).clazz.equals(clazz);
 }
 

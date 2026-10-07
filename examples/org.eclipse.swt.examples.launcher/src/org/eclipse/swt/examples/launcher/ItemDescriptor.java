@@ -62,7 +62,9 @@ class ItemDescriptor {
 	 * @return an instance of the extension's specified type or <code>null</code>
 	 */
 	public Object createItemInstance() throws CoreException {
-		if (element == null) return null;
+        if (element == null) {
+            return null;
+        }
 		return element.createExecutableExtension(LauncherPlugin.LAUNCH_ITEMS_XML_PROGRAM_CLASS);
 	}
 

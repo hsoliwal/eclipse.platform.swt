@@ -39,7 +39,9 @@ public static void main(String[] args) {
 	int stringLength = combo.getText ().length ();
 	combo.setSelection (new Point (stringLength, stringLength));
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

@@ -32,7 +32,9 @@ public static void main (String [] args) {
 	display.timerExec (5000, () -> System.out.println ("5000"));
 	display.timerExec (2000, () -> System.out.println ("2000"));
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

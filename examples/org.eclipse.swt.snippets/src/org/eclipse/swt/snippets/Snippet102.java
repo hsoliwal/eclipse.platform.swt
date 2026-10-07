@@ -39,12 +39,16 @@ public static void main (String [] args) {
 	TreeItem item = new TreeItem (tree, SWT.NONE, 1);
 	TreeItem [] items = tree.getItems ();
 	int index = 0;
-	while (index < items.length && items [index] != item) index++;
+    while (index < items.length && items [index] != item) {
+        index++;
+    }
 	item.setText ("*** New Item " + index + " ***");
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

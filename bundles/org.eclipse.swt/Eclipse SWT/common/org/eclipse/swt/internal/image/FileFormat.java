@@ -78,7 +78,9 @@ public abstract class FileFormat {
 	 */
 	public static boolean isDynamicallySizableFormat(InputStream is) {
 		boolean rewind = is.markSupported();
-		if (rewind) is.mark(MAX_SIGNATURE_BYTES);
+        if (rewind) {
+            is.mark(MAX_SIGNATURE_BYTES);
+        }
 		Optional<FileFormat> format = determineFileFormat(new LEDataInputStream(is, MAX_SIGNATURE_BYTES));
 		if (rewind) {
 			try {
@@ -192,7 +194,9 @@ public static void save(OutputStream os, int format, ImageLoader loader) {
 	if (format < 0 || format >= FORMAT_FACTORIES.size()) {
 		SWT.error(SWT.ERROR_UNSUPPORTED_FORMAT);
 	}
-	if (loader.data == null || loader.data.length < 1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (loader.data == null || loader.data.length < 1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 
 	LEDataOutputStream stream = new LEDataOutputStream(os);
 	FileFormat fileFormat = FORMAT_FACTORIES.get(format).get();

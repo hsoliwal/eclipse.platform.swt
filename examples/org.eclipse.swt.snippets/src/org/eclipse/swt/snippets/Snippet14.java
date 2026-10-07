@@ -34,7 +34,9 @@ public static void main (String [] args) {
 	shell.addListener (SWT.MouseHover, e -> System.out.println ("HOVER"));
 	shell.open ();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

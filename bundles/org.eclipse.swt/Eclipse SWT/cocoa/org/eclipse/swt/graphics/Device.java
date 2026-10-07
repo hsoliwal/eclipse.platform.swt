@@ -73,7 +73,9 @@ public abstract class Device implements Drawable {
 * TEMPORARY CODE.
 */
 static synchronized Device getDevice () {
-	if (DeviceFinder != null) DeviceFinder.run();
+    if (DeviceFinder != null) {
+        DeviceFinder.run();
+    }
 	Device device = CurrentDevice;
 	CurrentDevice = null;
 	return device;
@@ -200,7 +202,9 @@ private void stopTracking() {
  * </ul>
  */
 protected void checkDevice () {
-	if (disposed) SWT.error(SWT.ERROR_DEVICE_DISPOSED);
+    if (disposed) {
+        SWT.error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 }
 
 /**
@@ -234,7 +238,9 @@ protected void create (DeviceData data) {
 public void dispose () {
 	synchronized (Device.class) {
 		try (ExceptionStash exceptions = new ExceptionStash ()) {
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 			checkDevice ();
 
 			try {
@@ -298,7 +304,9 @@ protected void destroy () {
 public Rectangle getBounds () {
 	checkDevice ();
 	NSScreen primaryScreen = getPrimaryScreen();
-	if (primaryScreen == null) return new Rectangle(0, 0, 0, 0);
+    if (primaryScreen == null) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	NSRect frame = primaryScreen.frame();
 	return new Rectangle((int)frame.x, (int)frame.y, (int)frame.width, (int)frame.height);
 }
@@ -325,7 +333,9 @@ public DeviceData getDeviceData () {
 		synchronized (trackingLock) {
 			int count = 0, length = objects.length;
 			for (int i=0; i<length; i++) {
-				if (objects [i] != null) count++;
+                if (objects [i] != null) {
+                    count++;
+                }
 			}
 			int index = 0;
 			data.objects = new Object [count];
@@ -377,7 +387,9 @@ public Rectangle getClientArea () {
 public int getDepth () {
 	checkDevice ();
 	NSScreen primaryScreen = getPrimaryScreen();
-	if (primaryScreen == null) return 0;
+    if (primaryScreen == null) {
+        return 0;
+    }
 	return (int)OS.NSBitsPerPixelFromDepth(primaryScreen.depth());
 }
 
@@ -428,7 +440,9 @@ NSScreen getPrimaryScreen () {
  */
 public FontData[] getFontList (String faceName, boolean scalable) {
 	checkDevice ();
-	if (!scalable) return new FontData[0];
+    if (!scalable) {
+        return new FontData[0];
+    }
 	String systemFontName = systemFont.getFontData()[0].getName();
 	boolean systemFontIncluded = false;
 	int count = 0;
@@ -449,8 +463,12 @@ public FontData[] getFontList (String faceName, boolean scalable) {
 					long weight = new NSNumber(fontDetails.objectAtIndex(2)).integerValue();
 					long traits = new NSNumber(fontDetails.objectAtIndex(3)).integerValue();
 					int style = SWT.NORMAL;
-					if ((traits & OS.NSItalicFontMask) != 0) style |= SWT.ITALIC;
-					if (weight == 9) style |= SWT.BOLD;
+                    if ((traits & OS.NSItalicFontMask) != 0) {
+                        style |= SWT.ITALIC;
+                    }
+                    if (weight == 9) {
+                        style |= SWT.BOLD;
+                    }
 					if (faceName == null || faceName.equalsIgnoreCase(name)) {
 						FontData data = new FontData(name, 0, style);
 						data.nsName = nsName;
@@ -480,7 +498,9 @@ public FontData[] getFontList (String faceName, boolean scalable) {
 		}
 		fds[count++] = systemFont.getFontData()[0];
 	}
-	if (count == fds.length) return fds;
+    if (count == fds.length) {
+        return fds;
+    }
 	FontData[] result = new FontData[count];
 	System.arraycopy(fds, 0, result, 0, count);
 	return result;
@@ -488,7 +508,9 @@ public FontData[] getFontList (String faceName, boolean scalable) {
 
 Point getScreenDPI () {
 	NSScreen screen = getPrimaryScreen();
-	if (screen == null) return new Point(0, 0);
+    if (screen == null) {
+        return new Point(0, 0);
+    }
 
 	NSDictionary dictionary = screen.deviceDescription();
 	NSValue value = new NSValue(dictionary.objectForKey(new id(OS.NSDeviceResolution())).id);
@@ -696,10 +718,14 @@ public boolean isDisposed () {
  */
 public boolean loadFont (String path) {
 	checkDevice();
-	if (path == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (path == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	NSString nsPath = NSString.stringWith(path);
 	NSURL nsUrl = NSURL.fileURLWithPath(nsPath);
-	if (nsUrl == null) return false;
+    if (nsUrl == null) {
+        return false;
+    }
 	return OS.CTFontManagerRegisterFontsForURL(nsUrl.id, OS.kCTFontManagerScopeProcess, 0);
 }
 
@@ -724,10 +750,14 @@ void new_Object (Object object) {
 }
 
 void printErrors () {
-	if (!DEBUG) return;
+    if (!DEBUG) {
+        return;
+    }
 	if (tracking) {
 		synchronized (trackingLock) {
-			if (objects == null || errors == null) return;
+            if (objects == null || errors == null) {
+                return;
+            }
 			int objectCount = 0;
 			int colors = 0, cursors = 0, fonts = 0, gcs = 0, images = 0;
 			int paths = 0, patterns = 0, regions = 0, textLayouts = 0, transforms = 0;
@@ -735,36 +765,78 @@ void printErrors () {
 				Object object = objects [i];
 				if (object != null) {
 					objectCount++;
-					if (object instanceof Color) colors++;
-					if (object instanceof Cursor) cursors++;
-					if (object instanceof Font) fonts++;
-					if (object instanceof GC) gcs++;
-					if (object instanceof Image) images++;
-					if (object instanceof Path) paths++;
-					if (object instanceof Pattern) patterns++;
-					if (object instanceof Region) regions++;
-					if (object instanceof TextLayout) textLayouts++;
-					if (object instanceof Transform) transforms++;
+                    if (object instanceof Color) {
+                        colors++;
+                    }
+                    if (object instanceof Cursor) {
+                        cursors++;
+                    }
+                    if (object instanceof Font) {
+                        fonts++;
+                    }
+                    if (object instanceof GC) {
+                        gcs++;
+                    }
+                    if (object instanceof Image) {
+                        images++;
+                    }
+                    if (object instanceof Path) {
+                        paths++;
+                    }
+                    if (object instanceof Pattern) {
+                        patterns++;
+                    }
+                    if (object instanceof Region) {
+                        regions++;
+                    }
+                    if (object instanceof TextLayout) {
+                        textLayouts++;
+                    }
+                    if (object instanceof Transform) {
+                        transforms++;
+                    }
 				}
 			}
 			if (objectCount != 0) {
 				String string = "Summary: ";
-				if (colors != 0) string += colors + " Color(s), ";
-				if (cursors != 0) string += cursors + " Cursor(s), ";
-				if (fonts != 0) string += fonts + " Font(s), ";
-				if (gcs != 0) string += gcs + " GC(s), ";
-				if (images != 0) string += images + " Image(s), ";
-				if (paths != 0) string += paths + " Path(s), ";
-				if (patterns != 0) string += patterns + " Pattern(s), ";
-				if (regions != 0) string += regions + " Region(s), ";
-				if (textLayouts != 0) string += textLayouts + " TextLayout(s), ";
-				if (transforms != 0) string += transforms + " Transforms(s), ";
+                if (colors != 0) {
+                    string += colors + " Color(s), ";
+                }
+                if (cursors != 0) {
+                    string += cursors + " Cursor(s), ";
+                }
+                if (fonts != 0) {
+                    string += fonts + " Font(s), ";
+                }
+                if (gcs != 0) {
+                    string += gcs + " GC(s), ";
+                }
+                if (images != 0) {
+                    string += images + " Image(s), ";
+                }
+                if (paths != 0) {
+                    string += paths + " Path(s), ";
+                }
+                if (patterns != 0) {
+                    string += patterns + " Pattern(s), ";
+                }
+                if (regions != 0) {
+                    string += regions + " Region(s), ";
+                }
+                if (textLayouts != 0) {
+                    string += textLayouts + " TextLayout(s), ";
+                }
+                if (transforms != 0) {
+                    string += transforms + " Transforms(s), ";
+                }
 				if (string.length () != 0) {
 					string = string.substring (0, string.length () - 2);
 					System.out.println (string);
 				}
 				for (int i=0; i<errors.length; i++) {
-					if (errors [i] != null) errors [i].printStackTrace (System.out);
+                    if (errors [i] != null) {
+                        errors [i].printStackTrace(System.out);
+                    }
 				}
 			}
 		}
@@ -795,10 +867,14 @@ void printErrors () {
  * @see #destroy
  */
 protected void release () {
-	if (paragraphStyle != null) paragraphStyle.release();
+    if (paragraphStyle != null) {
+        paragraphStyle.release();
+    }
 	paragraphStyle = null;
 
-	if (systemFont != null) systemFont.dispose();
+    if (systemFont != null) {
+        systemFont.dispose();
+    }
 	systemFont = null;
 
 	COLOR_BLACK = COLOR_DARK_RED = COLOR_DARK_GREEN = COLOR_DARK_YELLOW = COLOR_DARK_BLUE =
