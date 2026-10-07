@@ -237,7 +237,11 @@ jobs:
             report = Path('target/surefire-reports/TEST-org.eclipse.swt.tests.junit.ViewportScreenshotRegressionTest.xml')
             suite = ET.parse(report).getroot()
             counts = {key: int(suite.get(key, '0')) for key in ('tests', 'failures', 'errors', 'skipped')}
-            require(counts == {'tests': 2, 'failures': 0, 'errors': 0, 'skipped': 0}, str(counts))
+            require(counts == {'tests': 4, 'failures': 0, 'errors': 0, 'skipped': 0}, str(counts))
+            lifetime = dict(line.split('=', 1) for line in Path('target/capture-qualification/graphics-lifetime.properties').read_text().splitlines())
+            for key, expected in {'capturePaths': '3', 'successfulCaptures': '48', 'writeFailures': '3',
+                                  'positiveLeakControls': '2', 'retainedGraphicsDelta': '0'}.items():
+                require(lifetime[key] == expected, 'Graphics resource qualification: ' + key)
             output = Path('target/screenshots/viewport')
             scenes = ('table-checked-selection', 'tree-pinned-expanded', 'tree-pinned-collapsed',
                       'tree-pinned-restored', 'viewport-vertical-scroll', 'viewport-horizontal-scroll',
@@ -273,7 +277,7 @@ jobs:
             receipt = {'status': 'PASS', 'opencv': cv2.__version__, 'numpy': np.__version__,
                        'junit': counts, 'sceneArtifacts': metrics, 'canary': canary,
                        'scrollChangedPixels': scroll_delta, 'negativeControlsRejected': rejected,
-                       'manualQaRequired': False, 'scope': 'GTK3/X11 controlled geometry and scene sanity; no cross-platform golden approval'}
+                       'graphicsLifetime': lifetime, 'manualQaRequired': False, 'scope': 'GTK3/X11 controlled geometry and scene sanity; no cross-platform golden approval'}
             (output / 'opencv-validation.json').write_text(json.dumps(receipt, indent=2) + '\n')
             print(json.dumps(receipt, sort_keys=True))
 
@@ -335,6 +339,7 @@ jobs:
           ${{ github.workspace }}/**/target/screenshots/**/*.txt
           ${{ github.workspace }}/**/target/screenshots/**/*.json
           ${{ github.workspace }}/**/target/viewport-resources/*.properties
+          ${{ github.workspace }}/**/target/capture-qualification/*.properties
           ${{ github.workspace }}/**/*.log
           ${{ github.workspace }}/**/*.dump
           ${{ github.workspace }}/**/*.dumpstream

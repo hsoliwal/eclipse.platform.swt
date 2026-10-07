@@ -62,10 +62,7 @@ public class ViewportScreenshotRegressionTest {
 
 	@Test
 	public void test_viewportScreenshotRegression () throws Exception {
-		Assumptions.assumeTrue (Boolean.getBoolean (ENABLED), "viewport screenshot lane disabled");
-		Assumptions.assumeTrue (SwtTestUtil.isGTK, "initial deterministic screenshot lane is GTK");
-		assertNotEquals ("1", System.getenv ("SWT_GTK4"), "Screen capture lane requires GTK3");
-		assertEquals ("x11", System.getenv ("GDK_BACKEND"), "Screen capture lane requires X11");
+		requireScreenCaptureLane ();
 
 		Path output = Path.of (System.getProperty (OUTPUT, "target/screenshots/viewport"));
 		Files.createDirectories (output);
@@ -528,10 +525,7 @@ public class ViewportScreenshotRegressionTest {
 	}
 	@Test
 	public void test_swtScreenCaptureTracksVisiblePixels () throws Exception {
-		Assumptions.assumeTrue (Boolean.getBoolean (ENABLED), "viewport screenshot lane disabled");
-		Assumptions.assumeTrue (SwtTestUtil.isGTK, "initial deterministic screenshot lane is GTK");
-		assertNotEquals ("1", System.getenv ("SWT_GTK4"), "Screen capture lane requires GTK3");
-		assertEquals ("x11", System.getenv ("GDK_BACKEND"), "Screen capture lane requires X11");
+		requireScreenCaptureLane ();
 		Path output = Path.of (System.getProperty (OUTPUT, "target/screenshots/viewport"));
 		Files.createDirectories (output);
 		Display display = shell.getDisplay ();
@@ -585,6 +579,127 @@ public class ViewportScreenshotRegressionTest {
 		int pixelY = y * data.height / logicalSize.y;
 		assertEquals (expected, data.palette.getRGB (data.getPixel (pixelX, pixelY)),
 				"SWT screen capture must contain the current visible pixel at " + x + "," + y);
+	}
+
+	@Test
+	public void test_screenCaptureRejectsInvalidTargets () throws Exception {
+		requireScreenCaptureLane ();
+		shell.setBounds (50, 50, 480, 300);
+		Composite parent = new Composite (shell, SWT.NONE);
+		parent.setBounds (20, 20, 100, 100);
+		Canvas target = new Canvas (parent, SWT.NONE);
+		target.setBounds (10, 10, 40, 30);
+		TabFolder tabs = new TabFolder (shell, SWT.NONE);
+		TabItem tab = new TabItem (tabs, SWT.NONE);
+		tab.setText ("Origin");
+		Canvas content = new Canvas (tabs, SWT.NONE);
+		content.setBackground (shell.getDisplay ().getSystemColor (SWT.COLOR_MAGENTA));
+		tab.setControl (content);
+		tabs.setBounds (130, 10, 180, 160);
+		shell.open ();
+		drainEvents (80);
+		assertEquals (40, SwtScreenshotCapture.screenBounds (target).width);
+		// A child may be inside the display but clipped by any of its ancestors.
+		int [][] invalid = {{-1, 10, 40, 30}, {61, 10, 40, 30},
+				{10, -1, 40, 30}, {10, 71, 40, 30}, {10, 10, 0, 30}, {-80, 10, 40, 30}};
+		for (int [] rectangle : invalid) {
+			target.setBounds (rectangle [0], rectangle [1], rectangle [2], rectangle [3]);
+			assertThrows (IllegalArgumentException.class, () -> SwtScreenshotCapture.screenBounds (target));
+		}
+		// Edge touching is fully contained; it must not be confused with an overrun.
+		target.setBounds (60, 70, 40, 30);
+		assertEquals (40, SwtScreenshotCapture.screenBounds (target).width);
+		parent.setVisible (false);
+		assertThrows (IllegalArgumentException.class, () -> SwtScreenshotCapture.screenBounds (target));
+		parent.setVisible (true);
+		parent.setLocation (-80, 20);
+		assertThrows (IllegalArgumentException.class, () -> SwtScreenshotCapture.screenBounds (target));
+		parent.setLocation (20, 20);
+		java.util.concurrent.CompletableFuture<Throwable> wrongThread =
+				java.util.concurrent.CompletableFuture.supplyAsync (() -> {
+					try { SwtScreenshotCapture.screenBounds (target); return null; }
+					catch (Throwable failure) { return failure; }
+				});
+		SWTException threadFailure = assertInstanceOf (SWTException.class,
+				wrongThread.get (5, java.util.concurrent.TimeUnit.SECONDS));
+		assertEquals (SWT.ERROR_THREAD_INVALID_ACCESS, threadFailure.code);
+		assertThrows (NullPointerException.class, () -> SwtScreenshotCapture.screenBounds (null));
+		assertThrows (NullPointerException.class, () -> SwtScreenshotCapture.captureScreenControl (target, null));
+		drainEvents (80);
+		Path contentPng = Path.of ("target", "capture-qualification", "tab-content.png");
+		assertTrue (content.getSize ().x > 20 && content.getSize ().y > 20, "Tab content must be allocated");
+		SwtScreenshotCapture.captureScreenControl (content, contentPng);
+		assertScreenPixel (new ImageData (contentPng.toString ()), content.getSize (), 10, 10,
+				shell.getDisplay ().getSystemColor (SWT.COLOR_MAGENTA).getRGB ());
+		target.dispose ();
+		assertThrows (IllegalArgumentException.class, () -> SwtScreenshotCapture.screenBounds (target));
+	}
+
+	@Test
+	public void test_capturePathsReleaseGraphicsOnSuccessAndFailure () throws Exception {
+		requireScreenCaptureLane ();
+		Display display = shell.getDisplay ();
+		shell.setBounds (50, 50, 180, 140);
+		Canvas target = new Canvas (shell, SWT.NONE);
+		target.setBounds (10, 10, 64, 48);
+		target.setBackground (display.getSystemColor (SWT.COLOR_RED));
+		shell.open ();
+		drainEvents (80);
+		Path output = Path.of ("target", "capture-qualification");
+		Files.createDirectories (output);
+		Path png = output.resolve ("repeated.png");
+		for (int mode = 0; mode < 3; mode++) captureUsing (mode, target, png);
+		boolean wasTracking = display.isTracking ();
+		display.setTracking (true);
+		try {
+			Set<Object> baseline = trackedGraphics (display);
+			// Positive controls prove this observer detects both native-resource wrappers.
+			Image retained = new Image (display, 4, 4);
+			try {
+				assertEquals (baseline.size () + 1, trackedGraphics (display).size ());
+				GC retainedGc = new GC (retained);
+				try { assertEquals (baseline.size () + 2, trackedGraphics (display).size ()); }
+				finally { retainedGc.dispose (); }
+			} finally { retained.dispose (); }
+			assertEquals (baseline, trackedGraphics (display));
+			for (int mode = 0; mode < 3; mode++) {
+				for (int iteration = 0; iteration < 16; iteration++) {
+					captureUsing (mode, target, png);
+					assertEquals (baseline, trackedGraphics (display), "Capture retained GC/Image resources");
+				}
+				final int failingMode = mode;
+				// A directory is a deterministic invalid file destination on every host.
+				assertThrows (SWTException.class, () -> captureUsing (failingMode, target, output));
+				assertEquals (baseline, trackedGraphics (display), "PNG-write failure leaked GC/Image resources");
+			}
+			Files.writeString (output.resolve ("graphics-lifetime.properties"),
+					"capturePaths=3\nsuccessfulCaptures=48\nwriteFailures=3\n"
+					+ "positiveLeakControls=2\nretainedGraphicsDelta=0\n"
+					+ "scope=SWT GC/Image ownership; separate RSS/heap/CPU gate still required\n");
+		} finally { display.setTracking (wasTracking); }
+	}
+
+	private static void captureUsing (int mode, Control target, Path output) throws IOException {
+		switch (mode) {
+			case 0 -> SwtScreenshotCapture.captureScreenControl (target, output);
+			case 1 -> SwtScreenshotCapture.captureControl (target, output);
+			case 2 -> SwtScreenshotCapture.captureNativeShell (target, output);
+			default -> throw new IllegalArgumentException ("Unknown capture path");
+		}
+	}
+
+	private static Set<Object> trackedGraphics (Display display) {
+		Set<Object> resources = Collections.newSetFromMap (new IdentityHashMap<> ());
+		Arrays.stream (display.getDeviceData ().objects)
+				.filter (object -> object instanceof GC || object instanceof Image).forEach (resources::add);
+		return resources;
+	}
+
+	private static void requireScreenCaptureLane () {
+		Assumptions.assumeTrue (Boolean.getBoolean (ENABLED), "viewport screenshot lane disabled");
+		Assumptions.assumeTrue (SwtTestUtil.isGTK, "initial deterministic screenshot lane is GTK");
+		assertNotEquals ("1", System.getenv ("SWT_GTK4"), "Screen capture lane requires GTK3");
+		assertEquals ("x11", System.getenv ("GDK_BACKEND"), "Screen capture lane requires X11");
 	}
 
 	private void drainEvents (long millis) throws InterruptedException {

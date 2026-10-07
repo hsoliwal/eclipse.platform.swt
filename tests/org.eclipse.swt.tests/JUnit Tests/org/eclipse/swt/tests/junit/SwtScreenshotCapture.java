@@ -106,7 +106,7 @@ final class SwtScreenshotCapture {
 		return new Result (path, Method.DISPLAY_COPY_AREA, sha256 (path));
 	}
 
-	/** Visible control bounds in display coordinates, including the control trim. */
+	/** Visible outer bounds in display coordinates; reject partially clipped targets. */
 	static Rectangle screenBounds (Control control) {
 		Objects.requireNonNull (control, "control");
 		if (control.isDisposed () || !control.isVisible ()) {
@@ -116,14 +116,41 @@ final class SwtScreenshotCapture {
 		if (Display.getCurrent () != display) {
 			throw new IllegalStateException ("screen capture requires the SWT UI thread");
 		}
-		Rectangle bounds = control.getBounds ();
-		Point origin = control instanceof Shell ? new Point (bounds.x, bounds.y)
-				: control.getParent ().toDisplay (bounds.x, bounds.y);
-		Rectangle screen = new Rectangle (origin.x, origin.y, bounds.width, bounds.height);
+		Rectangle screen = outerDisplayBounds (control);
 		if (screen.width <= 0 || screen.height <= 0 || !screen.equals (screen.intersection (display.getBounds ()))) {
 			throw new IllegalArgumentException ("screen capture must be fully on the display");
 		}
+		for (Composite ancestor = control instanceof Shell ? null : control.getParent ();
+				ancestor != null; ancestor = ancestor.getParent ()) {
+			Rectangle client = ancestor.getClientArea ();
+			Point origin = clientToDisplay (ancestor, client.x, client.y);
+			Rectangle visible = new Rectangle (origin.x, origin.y, client.width, client.height);
+			if (!screen.equals (screen.intersection (visible))) {
+				throw new IllegalArgumentException ("screen capture is clipped by "
+						+ ancestor.getClass ().getSimpleName () + ": " + screen + " outside " + visible);
+			}
+		}
 		return screen;
+	}
+
+	private static Rectangle outerDisplayBounds (Control control) {
+		Rectangle bounds = control.getBounds ();
+		Point origin = control instanceof Shell ? new Point (bounds.x, bounds.y)
+				: clientToDisplay (control.getParent (), bounds.x, bounds.y);
+		return new Rectangle (origin.x, origin.y, bounds.width, bounds.height);
+	}
+
+	private static Point clientToDisplay (Composite parent, int x, int y) {
+		Point origin = parent.toDisplay (x, y);
+		// GTK3 TabFolder normalizes client x/y although its event window includes tab trim.
+		if (parent instanceof TabFolder && "gtk".equals (SWT.getPlatform ())
+				&& !"1".equals (System.getenv ("SWT_GTK4"))) {
+			Rectangle client = parent.getClientArea ();
+			Rectangle trim = parent.computeTrim (0, 0, client.width, client.height);
+			origin.x -= trim.x;
+			origin.y -= trim.y;
+		}
+		return origin;
 	}
 
 	/** Capture actual visible pixels; there is deliberately no offscreen rendering fallback. */

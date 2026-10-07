@@ -105,3 +105,14 @@ screenshot work runs in the separate screenshot phase. Recipe ownership remains 
 `synexia-openrewrite-recipes/recipe-crates/viewport-swt-screen-capture-20261007`.
 
 OpenCV 4.12.0.88 and NumPy 2.2.6 independently decode the PNGs and verify exact canary geometry, overlap, clip bounds and repaint area. Six negative controls must fail. Scene checks reject blank captures and stale scroll/resize frames; they do not establish cross-theme golden equivalence. JUnit supplies behavior checks; heap/RSS/CPU gates run separately. Acceptance is fully automated, with no manual QA sign-off.
+
+### Capture contracts and graphics lifetime
+
+The automated screenshot lane now requires four JUnit tests. The added boundary test checks
+ancestor clipping, zero size, edge-touching containment, visibility, disposal, null input and
+wrong-thread access. The graphics-lifetime test performs 48 captures through the three existing
+paths and three deterministic PNG-write failures, with no retained GC/Image wrappers. Two
+positive controls verify that the observer detects retained Image and GC resources. The receipt
+is `target/capture-qualification/graphics-lifetime.properties` and is checked by the OpenCV step.
+SWT tracking is an ownership oracle, not a claim about all native allocations; retain the separate
+24-process-report CPU/RSS/heap gate. No manual QA is required.

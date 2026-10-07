@@ -250,3 +250,10 @@ platform gate; a blank or stale screenshot is not a pass. Keep capture work outs
 measurement intervals and preserve the existing resource budgets.
 
 SWT-VIEWPORT-AUTOMATED-VISION-1: Acceptance is automated; no manual QA or screenshot sign-off is required. Combine SWT native capture, JUnit behavior/pixel assertions, OpenCV persisted-image geometry/repaint/overlap/clip checks and independent heap/RSS/CPU gates. OpenCV must reject blank, stale, shifted, cropped, missing-overlap and clip-leak controls. PNGs are diagnostic evidence, not a substitute for assertions.
+
+Capture-contract qualification must reject hidden/disposed/empty, off-display and ancestor-clipped
+targets and invalid thread access. Edge-touching contained bounds remain valid. Exercise all
+existing capture paths and deterministic output failures while tracking SWT GC/Image ownership;
+prove the observer detects retained Image/GC controls. This complements, and does not replace,
+the independent process RSS/heap/CPU qualification. Reuse existing SWT geometry and OpenCV
+operators; record algorithm donor-category comparisons without importing unlicensed solutions.
