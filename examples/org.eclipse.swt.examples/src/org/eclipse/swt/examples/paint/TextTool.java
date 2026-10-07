@@ -134,7 +134,9 @@ public class TextTool extends BasicPaintSession implements PaintTool {
 			dialog.open();
 			Display display = dialog.getDisplay();
 			while (! shell.isDisposed() && ! dialog.isDisposed()) {
-				if (! display.readAndDispatch()) display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 		}
 	}

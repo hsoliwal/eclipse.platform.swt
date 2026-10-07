@@ -166,18 +166,14 @@ void setButtonText (long wParam, int style, int id) {
  * @since 3.121
  */
 public void setButtonLabels (Map<Integer, String> labels) {
-	if (labels == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (labels == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.labels = labels;
 }
 
 static int checkStyle (int style) {
-	int mask = (SWT.YES | SWT.NO | SWT.OK | SWT.CANCEL | SWT.ABORT | SWT.RETRY | SWT.IGNORE);
-	int bits = style & mask;
-	if (bits == SWT.OK || bits == SWT.CANCEL || bits == (SWT.OK | SWT.CANCEL)) return style;
-	if (bits == SWT.YES || bits == SWT.NO || bits == (SWT.YES | SWT.NO) || bits == (SWT.YES | SWT.NO | SWT.CANCEL)) return style;
-	if (bits == (SWT.RETRY | SWT.CANCEL) || bits == (SWT.ABORT | SWT.RETRY | SWT.IGNORE)) return style;
-	style = (style & ~mask) | SWT.OK;
-	return style;
+	return WidgetStylePolicy.MESSAGE_BOX.applyAsInt(style);
 }
 
 /**
@@ -207,28 +203,60 @@ public int open () {
 
 	/* Compute the MessageBox style */
 	int buttonBits = 0;
-	if ((style & SWT.OK) == SWT.OK) buttonBits = OS.MB_OK;
-	if ((style & (SWT.OK | SWT.CANCEL)) == (SWT.OK | SWT.CANCEL)) buttonBits = OS.MB_OKCANCEL;
-	if ((style & (SWT.YES | SWT.NO)) == (SWT.YES | SWT.NO)) buttonBits = OS.MB_YESNO;
-	if ((style & (SWT.YES | SWT.NO | SWT.CANCEL)) == (SWT.YES | SWT.NO | SWT.CANCEL)) buttonBits = OS.MB_YESNOCANCEL;
-	if ((style & (SWT.RETRY | SWT.CANCEL)) == (SWT.RETRY | SWT.CANCEL)) buttonBits = OS.MB_RETRYCANCEL;
-	if ((style & (SWT.ABORT | SWT.RETRY | SWT.IGNORE)) == (SWT.ABORT | SWT.RETRY | SWT.IGNORE)) buttonBits = OS.MB_ABORTRETRYIGNORE;
-	if (buttonBits == 0) buttonBits = OS.MB_OK;
+    if ((style & SWT.OK) == SWT.OK) {
+        buttonBits = OS.MB_OK;
+    }
+    if ((style & (SWT.OK | SWT.CANCEL)) == (SWT.OK | SWT.CANCEL)) {
+        buttonBits = OS.MB_OKCANCEL;
+    }
+    if ((style & (SWT.YES | SWT.NO)) == (SWT.YES | SWT.NO)) {
+        buttonBits = OS.MB_YESNO;
+    }
+    if ((style & (SWT.YES | SWT.NO | SWT.CANCEL)) == (SWT.YES | SWT.NO | SWT.CANCEL)) {
+        buttonBits = OS.MB_YESNOCANCEL;
+    }
+    if ((style & (SWT.RETRY | SWT.CANCEL)) == (SWT.RETRY | SWT.CANCEL)) {
+        buttonBits = OS.MB_RETRYCANCEL;
+    }
+    if ((style & (SWT.ABORT | SWT.RETRY | SWT.IGNORE)) == (SWT.ABORT | SWT.RETRY | SWT.IGNORE)) {
+        buttonBits = OS.MB_ABORTRETRYIGNORE;
+    }
+    if (buttonBits == 0) {
+        buttonBits = OS.MB_OK;
+    }
 
 	int iconBits = 0;
-	if ((style & SWT.ICON_ERROR) != 0) iconBits = OS.MB_ICONERROR;
-	if ((style & SWT.ICON_INFORMATION) != 0) iconBits = OS.MB_ICONINFORMATION;
-	if ((style & SWT.ICON_QUESTION) != 0) iconBits = OS.MB_ICONQUESTION;
-	if ((style & SWT.ICON_WARNING) != 0) iconBits = OS.MB_ICONWARNING;
-	if ((style & SWT.ICON_WORKING) != 0) iconBits = OS.MB_ICONINFORMATION;
+    if ((style & SWT.ICON_ERROR) != 0) {
+        iconBits = OS.MB_ICONERROR;
+    }
+    if ((style & SWT.ICON_INFORMATION) != 0) {
+        iconBits = OS.MB_ICONINFORMATION;
+    }
+    if ((style & SWT.ICON_QUESTION) != 0) {
+        iconBits = OS.MB_ICONQUESTION;
+    }
+    if ((style & SWT.ICON_WARNING) != 0) {
+        iconBits = OS.MB_ICONWARNING;
+    }
+    if ((style & SWT.ICON_WORKING) != 0) {
+        iconBits = OS.MB_ICONINFORMATION;
+    }
 
 	int modalBits = 0;
-	if ((style & SWT.PRIMARY_MODAL) != 0) modalBits = OS.MB_APPLMODAL;
-	if ((style & SWT.APPLICATION_MODAL) != 0) modalBits = OS.MB_TASKMODAL;
-	if ((style & SWT.SYSTEM_MODAL) != 0) modalBits = OS.MB_SYSTEMMODAL;
+    if ((style & SWT.PRIMARY_MODAL) != 0) {
+        modalBits = OS.MB_APPLMODAL;
+    }
+    if ((style & SWT.APPLICATION_MODAL) != 0) {
+        modalBits = OS.MB_TASKMODAL;
+    }
+    if ((style & SWT.SYSTEM_MODAL) != 0) {
+        modalBits = OS.MB_SYSTEMMODAL;
+    }
 
 	int bits = buttonBits | iconBits | modalBits;
-	if ((style & SWT.RIGHT_TO_LEFT) != 0) bits |= OS.MB_RTLREADING | OS.MB_RIGHT;
+    if ((style & SWT.RIGHT_TO_LEFT) != 0) {
+        bits |= OS.MB_RTLREADING | OS.MB_RIGHT;
+    }
 	if ((style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT)) == 0) {
 		if (parent != null && (parent.style & SWT.MIRRORED) != 0) {
 			bits |= OS.MB_RTLREADING | OS.MB_RIGHT;
@@ -275,9 +303,13 @@ public int open () {
 		cbtHook = OS.SetWindowsHookEx (OS.WH_CBT, cbtCallback.getAddress (), 0, OS.GetCurrentThreadId ());
 	}
 	int code = OS.MessageBox (hwndOwner, buffer1, buffer2, bits);
-	if (cbtHook != 0) OS.UnhookWindowsHookEx (cbtHook);
+    if (cbtHook != 0) {
+        OS.UnhookWindowsHookEx(cbtHook);
+    }
 	cbtHook = 0;
-	if (cbtCallback != null) cbtCallback.dispose();
+    if (cbtCallback != null) {
+        cbtCallback.dispose();
+    }
 
 	display.externalEventLoop = false;
 	display.sendPostExternalEventDispatchEvent ();
@@ -290,7 +322,9 @@ public int open () {
 	/* Compute and return the result */
 	if (code != 0) {
 		int type = bits & 0x0F;
-		if (type == OS.MB_OK) return SWT.OK;
+        if (type == OS.MB_OK) {
+            return SWT.OK;
+        }
 		if (type == OS.MB_OKCANCEL) {
 			return (code == OS.IDOK) ? SWT.OK : SWT.CANCEL;
 		}
@@ -298,16 +332,24 @@ public int open () {
 			return (code == OS.IDYES) ? SWT.YES : SWT.NO;
 		}
 		if (type == OS.MB_YESNOCANCEL) {
-			if (code == OS.IDYES) return SWT.YES;
-			if (code == OS.IDNO) return SWT.NO;
+            if (code == OS.IDYES) {
+                return SWT.YES;
+            }
+            if (code == OS.IDNO) {
+                return SWT.NO;
+            }
 			return SWT.CANCEL;
 		}
 		if (type == OS.MB_RETRYCANCEL) {
 			return (code == OS.IDRETRY) ? SWT.RETRY : SWT.CANCEL;
 		}
 		if (type == OS.MB_ABORTRETRYIGNORE) {
-			if (code == OS.IDRETRY) return SWT.RETRY;
-			if (code == OS.IDABORT) return SWT.ABORT;
+            if (code == OS.IDRETRY) {
+                return SWT.RETRY;
+            }
+            if (code == OS.IDABORT) {
+                return SWT.ABORT;
+            }
 			return SWT.IGNORE;
 		}
 	}
@@ -326,7 +368,9 @@ public int open () {
  * </ul>
  */
 public void setMessage (String string) {
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	message = string;
 }
 

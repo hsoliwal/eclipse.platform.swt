@@ -33,7 +33,9 @@ public class Snippet372 {
 		int maximumHeight= 2000;
 
 		String html = "<HTML><HEAD><TITLE>HTML Test</TITLE></HEAD><BODY>";
-		for (int i = 0; i < 15; i++) html += "<P>This is line "+i+"</P>";
+        for (int i = 0; i < 15; i++) {
+            html += "<P>This is line " + i + "</P>";
+        }
 		html += "</BODY></HTML>";
 
 		Display display = new Display();
@@ -66,8 +68,9 @@ public class Snippet372 {
 		shell.open();
 		while (!shell.isDisposed()) {
 			shell.layout();
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

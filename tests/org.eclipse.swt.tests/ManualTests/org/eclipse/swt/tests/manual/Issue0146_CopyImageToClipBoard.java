@@ -66,7 +66,9 @@ public class Issue0146_CopyImageToClipBoard {
         shell.open();
 
         while(!shell.isDisposed()) {
-            if(!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
         }
 
         image.dispose();

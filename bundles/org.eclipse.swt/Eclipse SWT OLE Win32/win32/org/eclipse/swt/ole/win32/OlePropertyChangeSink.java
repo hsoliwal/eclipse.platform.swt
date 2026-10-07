@@ -39,8 +39,12 @@ OlePropertyChangeSink(OleControlSite controlSite) {
 	createCOMInterfaces();
 }
 void addListener(int propertyID, OleListener listener) {
-	if (listener == null) OLE.error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) eventTable = new OleEventTable ();
+    if (listener == null) {
+        OLE.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        eventTable = new OleEventTable();
+    }
 	eventTable.hook(propertyID, listener);
 }
 int AddRef() {
@@ -97,7 +101,9 @@ void disconnect(IUnknown objIUnknown) {
 	}
 }
 private void disposeCOMInterfaces() {
-	if (iPropertyNotifySink != null) iPropertyNotifySink.dispose();
+    if (iPropertyNotifySink != null) {
+        iPropertyNotifySink.dispose();
+    }
 	iPropertyNotifySink = null;
 }
 /**
@@ -118,21 +124,29 @@ private void disposeCOMInterfaces() {
 *	</ul>
 */
 private void notifyListener (int eventType, OleEvent event) {
-	if (event == null) OLE.error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (event == null) {
+        OLE.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	event.type = eventType;
 	event.widget = controlSite;
 	eventTable.sendEvent (event);
 }
 private int OnChanged(int dispID) {
-	if (eventTable == null || !eventTable.hooks(dispID)) return COM.S_OK;
+    if (eventTable == null || !eventTable.hooks(dispID)) {
+        return COM.S_OK;
+    }
 	OleEvent event = new OleEvent();
 	event.detail = OLE.PROPERTY_CHANGED;
 	notifyListener(dispID,event);
 	return COM.S_OK;
 }
 private int OnRequestEdit(int dispID) {
-	if (eventTable == null || !eventTable.hooks(dispID)) return COM.S_OK;
+    if (eventTable == null || !eventTable.hooks(dispID)) {
+        return COM.S_OK;
+    }
 	OleEvent event = new OleEvent();
 	event.doit = true;
 	event.detail = OLE.PROPERTY_CHANGING;
@@ -140,8 +154,9 @@ private int OnRequestEdit(int dispID) {
 	return (event.doit) ? COM.S_OK : COM.S_FALSE;
 }
 private int QueryInterface(long riid, long ppvObject) {
-	if (riid == 0 || ppvObject == 0)
-		return COM.E_INVALIDARG;
+    if (riid == 0 || ppvObject == 0) {
+        return COM.E_INVALIDARG;
+    }
 	GUID guid = new GUID();
 	COM.MoveMemory(guid, riid, GUID.sizeof);
 	if (COM.IsEqualGUID(guid, COM.IIDIUnknown) || COM.IsEqualGUID(guid, COM.IIDIPropertyNotifySink)) {
@@ -160,8 +175,12 @@ int Release() {
 	return refCount;
 }
 void removeListener(int propertyID, OleListener listener) {
-	if (listener == null) OLE.error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        OLE.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (propertyID, listener);
 }
 }

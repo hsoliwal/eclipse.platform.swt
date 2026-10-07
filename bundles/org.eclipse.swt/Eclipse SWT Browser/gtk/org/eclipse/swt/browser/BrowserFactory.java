@@ -19,7 +19,9 @@ class BrowserFactory {
 
 WebBrowser createWebBrowser (int style) {
 	boolean webkitInstalled = WebKit.IsInstalled ();
-	if (!webkitInstalled) return null;
+    if (!webkitInstalled) {
+        return null;
+    }
 
 	WebKit webKit = new WebKit ();
 	webKit.enableSearch = (style & SWT.SEARCH) == SWT.SEARCH;

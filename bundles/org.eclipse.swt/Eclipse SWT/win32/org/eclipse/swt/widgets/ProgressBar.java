@@ -110,13 +110,14 @@ public ProgressBar (Composite parent, int style) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	return OS.CallWindowProc (ProgressBarProc, hwnd, msg, wParam, lParam);
 }
 
 static int checkStyle (int style) {
-	style |= SWT.NO_FOCUS;
-	return checkBits (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+	return WidgetStylePolicy.PROGRESS.applyAsInt(style);
 }
 
 @Override
@@ -132,8 +133,12 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		width += getSystemMetrics (OS.SM_CXVSCROLL);
 		height += getSystemMetrics (OS.SM_CYVSCROLL) * 10;
 	}
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x + (border * 2);
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y + (border * 2);
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x + (border * 2);
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y + (border * 2);
+    }
 	return new Point (width, height);
 }
 
@@ -257,13 +262,17 @@ void stopTimer () {
 
 @Override
 void setBackgroundPixel (int pixel) {
-	if (pixel == -1) pixel = OS.CLR_DEFAULT;
+    if (pixel == -1) {
+        pixel = OS.CLR_DEFAULT;
+    }
 	OS.SendMessage (handle, OS.PBM_SETBKCOLOR, 0, pixel);
 }
 
 @Override
 void setForegroundPixel (int pixel) {
-	if (pixel == -1) pixel = OS.CLR_DEFAULT;
+    if (pixel == -1) {
+        pixel = OS.CLR_DEFAULT;
+    }
 	OS.SendMessage (handle, OS.PBM_SETBARCOLOR, 0, pixel);
 }
 
@@ -376,9 +385,15 @@ public void setState (int state) {
 @Override
 int widgetStyle () {
 	int bits = super.widgetStyle ();
-	if ((style & SWT.SMOOTH) != 0) bits |= OS.PBS_SMOOTH;
-	if ((style & SWT.VERTICAL) != 0) bits |= OS.PBS_VERTICAL;
-	if ((style & SWT.INDETERMINATE) != 0) bits |= OS.PBS_MARQUEE;
+    if ((style & SWT.SMOOTH) != 0) {
+        bits |= OS.PBS_SMOOTH;
+    }
+    if ((style & SWT.VERTICAL) != 0) {
+        bits |= OS.PBS_VERTICAL;
+    }
+    if ((style & SWT.INDETERMINATE) != 0) {
+        bits |= OS.PBS_MARQUEE;
+    }
 	return bits;
 }
 
@@ -395,7 +410,9 @@ long windowProc () {
 @Override
 LRESULT WM_GETDLGCODE (long wParam, long lParam) {
 	LRESULT result = super.WM_GETDLGCODE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  The progress bar does
 	* not implement WM_GETDLGCODE.  As a result,
@@ -411,14 +428,18 @@ LRESULT WM_GETDLGCODE (long wParam, long lParam) {
 @Override
 LRESULT WM_SIZE (long wParam, long lParam) {
 	LRESULT result = super.WM_SIZE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	return result;
 }
 
 @Override
 LRESULT WM_TIMER (long wParam, long lParam) {
 	LRESULT result = super.WM_TIMER (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if ((style & SWT.INDETERMINATE) != 0) {
 		int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
 		if ((bits & OS.PBS_MARQUEE) == 0) {

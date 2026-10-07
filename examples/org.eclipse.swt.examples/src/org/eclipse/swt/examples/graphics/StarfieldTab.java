@@ -59,7 +59,9 @@ public class StarfieldTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void next(int width, int height) {
-		if (stars == null) return;
+        if (stars == null) {
+            return;
+        }
 
 		for (int i = 0; i < NUMBER_OF_STARS; i++) {
 			stars[i].zpos -= stars[i].speed;

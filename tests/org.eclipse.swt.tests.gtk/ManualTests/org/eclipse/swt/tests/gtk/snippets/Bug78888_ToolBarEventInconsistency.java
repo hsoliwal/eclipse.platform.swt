@@ -58,7 +58,9 @@ public class Bug78888_ToolBarEventInconsistency {
 		shell.open();
 		bar.setFocus();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

@@ -67,7 +67,9 @@ public void javaToNative(Object object, TransferData transferData) {
 		DND.error(DND.ERROR_INVALID_DATA);
 	}
 	ImageData imgData = (ImageData)object;
-	if (imgData == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (imgData == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	int imageSize = imgData.data.length;
 	int imageHeight = imgData.height;
@@ -137,7 +139,9 @@ public void javaToNative(Object object, TransferData transferData) {
  */
 @Override
 public Object nativeToJava(TransferData transferData) {
-	if (!isSupportedType(transferData) || transferData.pIDataObject == 0) return null;
+    if (!isSupportedType(transferData) || transferData.pIDataObject == 0) {
+        return null;
+    }
 	IDataObject dataObject = new IDataObject(transferData.pIDataObject);
 	dataObject.AddRef();
 	FORMATETC formatetc = new FORMATETC();
@@ -150,18 +154,24 @@ public Object nativeToJava(TransferData transferData) {
 	stgmedium.tymed = COM.TYMED_HGLOBAL;
 	transferData.result = getData(dataObject, formatetc, stgmedium);
 
-	if (transferData.result != COM.S_OK) return null;
+    if (transferData.result != COM.S_OK) {
+        return null;
+    }
 	long hMem = stgmedium.unionField;
 	dataObject.Release();
 	try {
 		long ptr = OS.GlobalLock(hMem);
-		if (ptr == 0) return null;
+        if (ptr == 0) {
+            return null;
+        }
 		try {
 			BITMAPINFOHEADER bmiHeader = new BITMAPINFOHEADER();
 			OS.MoveMemory(bmiHeader, ptr, BITMAPINFOHEADER.sizeof);
 			long[] pBits = new long[1];
 			long memDib = OS.CreateDIBSection(0, ptr, OS.DIB_RGB_COLORS, pBits, 0, 0);
-			if (memDib == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+            if (memDib == 0) {
+                SWT.error(SWT.ERROR_NO_HANDLES);
+            }
 			long bits = ptr + bmiHeader.biSize;
 			if (bmiHeader.biBitCount <= 8) {
 				bits += (bmiHeader.biClrUsed == 0 ? (1 << bmiHeader.biBitCount) : bmiHeader.biClrUsed) * 4;
@@ -207,7 +217,9 @@ protected String[] getTypeNames(){
 	return new String[] {CF_DIB};
 }
 boolean checkImage(Object object) {
-	if (object == null || !(object instanceof ImageData))  return false;
+    if (object == null || !(object instanceof ImageData)) {
+        return false;
+    }
 	return true;
 }
 

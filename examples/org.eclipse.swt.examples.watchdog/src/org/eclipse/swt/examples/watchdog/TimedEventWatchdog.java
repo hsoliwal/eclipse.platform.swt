@@ -210,7 +210,9 @@ class TimedEventWatchdog implements Listener {
 	 * should be as fast as possible.
 	 */
 	public void endEvent() {
-		if (recursiveDepth == 0) return;
+        if (recursiveDepth == 0) {
+            return;
+        }
 		int depth = --recursiveDepth;
 
 		// If a subscriber is added during an asyncExec event (the typical way to subscribe),

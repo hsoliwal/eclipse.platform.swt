@@ -46,8 +46,9 @@ public class Bug563555_IsReadyPopup {
 				System.out.format("%s was activated\n", shellName);
 			});
 
-			if (level < 1)
-				createShells(shell, x + cx, shellY, cx, shellCy, level + 1, shellName);
+            if (level < 1) {
+                createShells(shell, x + cx, shellY, cx, shellCy, level + 1, shellName);
+            }
 		}
 	}
 
@@ -89,7 +90,9 @@ public class Bug563555_IsReadyPopup {
 		createShells(shell, x + cx, y, 200, cy, 0, "Shell#");
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		display.dispose ();

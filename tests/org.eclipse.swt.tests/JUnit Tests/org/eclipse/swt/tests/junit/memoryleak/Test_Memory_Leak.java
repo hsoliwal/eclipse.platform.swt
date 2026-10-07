@@ -55,8 +55,12 @@ public class Test_Memory_Leak {
 				// This loop is needed because some disposal is delayed and done asynchronously in main loop.
 				// This loop typically performs ~12 iterations.
 			}
-			if (i != count) browser.dispose();
-			if (i % (COUNT_PRINT_PER_ROW) == 0) System.out.println();
+            if (i != count) {
+                browser.dispose();
+            }
+            if (i % (COUNT_PRINT_PER_ROW) == 0) {
+                System.out.println();
+            }
 			System.out.print(i+ " ");
 		}
 		System.out.println();

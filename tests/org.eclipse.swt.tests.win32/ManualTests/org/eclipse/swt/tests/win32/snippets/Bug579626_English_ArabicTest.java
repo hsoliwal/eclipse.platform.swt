@@ -110,7 +110,9 @@ class Bug579626_English_ArabicTest {
         shell.open();
 
         while(!shell.isDisposed()) {
-            if(!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
         }
     }
 }

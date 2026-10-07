@@ -60,14 +60,16 @@ public class Snippet130 {
 			text.append("\nStart long running task " + id);
 			BusyIndicator.execute(() -> {
 				for (int i = 0; i < 20; i++) {
-					if (display.isDisposed())
-						return;
+                    if (display.isDisposed()) {
+                        return;
+                    }
 					TimeUnit.MILLISECONDS.sleep(500);
 					System.out.println("do task that takes a long time in a separate thread [id=" + id+"] iteration "+i);
 				}
 			}).thenRunAsync(() -> {
-				if (text.isDisposed())
-					return;
+                if (text.isDisposed()) {
+                    return;
+                }
 				text.append("\nCompleted long running task " + id);
 			}, display);
 
@@ -85,8 +87,9 @@ public class Snippet130 {
 		shell.setSize(500, 300);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

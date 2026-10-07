@@ -38,9 +38,13 @@ public MacGenerator() {
 }
 
 static void list(File path, ArrayList<String> list) {
-	if (path == null) return;
+    if (path == null) {
+        return;
+    }
 	File[] frameworks = path.listFiles();
-	if (frameworks == null) return;
+    if (frameworks == null) {
+        return;
+    }
 	for (File file : frameworks) {
 		String name = file.getName();
 		int index = name.lastIndexOf(".");
@@ -78,7 +82,9 @@ int getLevel(Node node) {
 }
 
 void merge(Document document, Document extraDocument) {
-	if (extraDocument == null) return;
+    if (extraDocument == null) {
+        return;
+    }
 
 	/* Build a lookup table for extraDocument */
 	HashMap<String, Node> extras = new HashMap<>();
@@ -104,7 +110,9 @@ void merge(Document document, Document extraDocument) {
 	for (Node node : sortedNodes) {
 		String name = node.getNodeName();
 		if ("arg".equals(name) || "retval".equals(name)) {
-			if (!sortedNodes.contains(node.getParentNode())) continue;
+            if (!sortedNodes.contains(node.getParentNode())) {
+                continue;
+            }
 		}
 		Node parent = lookup.get(getKey(node.getParentNode()));
 		Element element = document.createElement(node.getNodeName());
@@ -173,7 +181,9 @@ void generateCSource() {
 }
 
 String fixDelimiter(String str) {
-	if (delimiter.equals("\n")) return str;
+    if (delimiter.equals("\n")) {
+        return str;
+    }
 	int index = 0, length = str.length();
 	StringBuilder buffer = new StringBuilder();
 	while (index != -1) {
@@ -198,7 +208,9 @@ String getParamName(Node param, int i) {
 		paramName = swtName.getNodeValue();
 	} else {
 		Node node = paramAttributes.getNamedItem("name");
-		if (node != null) paramName = node.getNodeValue();
+        if (node != null) {
+            paramName = node.getNodeValue();
+        }
 	}
 	if (paramName.length() == 0) {
 		Node node = paramAttributes.getNamedItem("index");
@@ -210,7 +222,9 @@ String getParamName(Node param, int i) {
 		}
 		paramName = "arg" + index;
 	}
-	if (paramName.equals("boolean")) paramName = "b";
+    if (paramName.equals("boolean")) {
+        paramName = "b";
+    }
 	return paramName;
 }
 
@@ -267,7 +281,9 @@ void generateToString(String className, ArrayList<Node> fields) {
 
 private String getDeclaredType(NamedNodeMap map, Node location) {
 	Node declaredType = map.getNamedItem("declared_type64");
-	if (declaredType == null) declaredType = map.getNamedItem("declared_type");
+    if (declaredType == null) {
+        declaredType = map.getNamedItem("declared_type");
+    }
 	if (declaredType == null) {
 		System.err.printf("Unable to detect declared_type. Check bridge file! It might have been removed, inheritance changed, etc. It could also be an issue with gen_bridge_metadata. Location: %s %n", toDebugLocation(location));
 		return "nodeclaredtype";
@@ -301,11 +317,15 @@ void generateMethods(String className, ArrayList<Node> methods) {
 		NamedNodeMap mthAttributes = method.getAttributes();
 		String sel = mthAttributes.getNamedItem("selector").getNodeValue();
 		if ("NSObject".equals(className)) {
-			if ("alloc".equals(sel) || "dealloc".equals(sel)) continue;
+            if ("alloc".equals(sel) || "dealloc".equals(sel)) {
+                continue;
+            }
 		}
 		out("public ");
 		boolean isStatic = isStatic(method);
-		if (isStatic) out("static ");
+        if (isStatic) {
+            out("static ");
+        }
 		Node returnNode = getReturnNode(method);
 		String returnType = getJavaType(returnNode);
 		// convert "instancetype" to class name
@@ -317,11 +337,15 @@ void generateMethods(String className, ArrayList<Node> methods) {
 		String methodName = sel;
 		if (isUnique(method, methods)) {
 			int index = methodName.indexOf(':');
-			if (index != -1) methodName = methodName.substring(0, index);
+            if (index != -1) {
+                methodName = methodName.substring(0, index);
+            }
 		} else {
 			//TODO improve this selector
 			methodName = methodName.replaceAll(":", "_");
-			if (isStatic) methodName = "static_" + methodName;
+            if (isStatic) {
+                methodName = "static_" + methodName;
+            }
 		}
 		out(methodName);
 		out("(");
@@ -331,7 +355,9 @@ void generateMethods(String className, ArrayList<Node> methods) {
 		for (int k = 0; k < params.getLength(); k++) {
 			Node param = params.item(k);
 			if ("arg".equals(param.getNodeName())) {
-				if (!first) out(", ");
+                if (!first) {
+                    out(", ");
+                }
 				first = false;
 				out(getJavaType(param));
 				out(" ");
@@ -380,7 +406,9 @@ void generateMethods(String className, ArrayList<Node> methods) {
 		for (int k = 0; k < params.getLength(); k++) {
 			Node param = params.item(k);
 			if ("arg".equals(param.getNodeName())) {
-				if (!first) out(", ");
+                if (!first) {
+                    out(", ");
+                }
 				first = false;
 				String paramName = getParamName(param, argIndex++);
 				if (isObject(param)) {
@@ -519,7 +547,9 @@ TreeMap<String, Object[]> getGeneratedClasses() {
 	TreeMap<String, Object[]> classes = new TreeMap<>();
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -550,7 +580,9 @@ TreeMap<String, Object[]> getGeneratedStructs() {
 	TreeMap<String, Object[]> structs = new TreeMap<>();
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -704,7 +736,9 @@ void generateExtraAttributes() {
 	Document[] documents = getDocuments();
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null || !getGen(document.getDocumentElement())) continue;
+        if (document == null || !getGen(document.getDocumentElement())) {
+            continue;
+        }
 		saveExtraAttributes(xmls[x], document);
 	}
 }
@@ -840,7 +874,9 @@ public Document[] getDocuments() {
 		for (int i = 0; i < xmls.length; i++) {
 			String xmlPath = xmls[i];
 			Document document = documents[i] = getDocument(xmlPath);
-			if (document == null) continue;
+            if (document == null) {
+                continue;
+            }
 			if (mainClassName != null && outputDir != null) {
 				String packageName = getPackageName();
 				String folder = extrasDir != null ? extrasDir : outputDir + packageName.replace('.', '/');
@@ -862,7 +898,7 @@ public String[] getXmls() {
 		} else {
 			String packageName = getPackageName();
 			File folder = new File(extrasDir != null ? extrasDir : outputDir + packageName.replace('.', '/'));
-			File[] files = folder.listFiles((FilenameFilter) (_, name) -> name.endsWith("Full.bridgesupport"));
+			File[] files = folder.listFiles((FilenameFilter) (ignoredDirectory, name) -> name.endsWith("Full.bridgesupport"));
 			if(files == null) {
 				files = new File[0];
 			}
@@ -892,7 +928,9 @@ void saveExtraAttributes(String xmlPath, Document document) {
 		writer.setAttributeFilter(filter);
 		writer.setNodeFilter("swt_");
 		writer.print(document);
-		if (out.size() > 0) JNIGenerator.output(out.toByteArray(), fileName);
+        if (out.size() > 0) {
+            JNIGenerator.output(out.toByteArray(), fileName);
+        }
 	} catch (Exception e) {
 		System.out.println("Problem");
 		e.printStackTrace(System.out);
@@ -1013,7 +1051,9 @@ int indexOfNode(Node node) {
 String getKey (Node node) {
 	StringBuilder buffer = new StringBuilder();
 	while (node != null) {
-		if (buffer.length() > 0) buffer.append("_");
+        if (buffer.length() > 0) {
+            buffer.append("_");
+        }
 		String name = node.getNodeName();
 		StringBuilder key = new StringBuilder(name);
 		if ("arg".equals(name)) {
@@ -1029,7 +1069,9 @@ String getKey (Node node) {
 		NamedNodeMap attributes = node.getAttributes();
 		if (attributes != null) {
 			boolean isStatic = attributes.getNamedItem("class_method") != null;
-			if (isStatic) key.append("-static");
+            if (isStatic) {
+                key.append("-static");
+            }
 		}
 		buffer.append(key.reverse());
 		node = node.getParentNode();
@@ -1040,10 +1082,14 @@ String getKey (Node node) {
 
 public Node getIDAttribute(Node node) {
 	NamedNodeMap attributes = node.getAttributes();
-	if (attributes == null) return null;
+    if (attributes == null) {
+        return null;
+    }
 	for (String name : getIDAttributeNames()) {
 		Node nameAttrib = attributes.getNamedItem(name);
-		if (nameAttrib != null) return nameAttrib;
+        if (nameAttrib != null) {
+            return nameAttrib;
+        }
 	}
 	return null;
 }
@@ -1095,7 +1141,9 @@ void outln() {
 void generateConstants() {
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -1133,7 +1181,9 @@ void generateConstants() {
 void generateEnums() {
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -1141,7 +1191,9 @@ void generateEnums() {
 				if (getGen(node)) {
 					NamedNodeMap attributes = node.getAttributes();
 					Node valueNode = attributes.getNamedItem("value64");
-					if (valueNode == null) valueNode = attributes.getNamedItem("value");
+                    if (valueNode == null) {
+                        valueNode = attributes.getNamedItem("value");
+                    }
 					if (valueNode != null) {
 						String value = valueNode.getNodeValue();
 						out("public static final ");
@@ -1171,15 +1223,21 @@ void generateEnums() {
 						if (aarch64ValueNode != null) {
 							out("IS_X86_64 ? ");
 							out(value);
-							if (isLong && !value.endsWith("L")) out("L");
+                            if (isLong && !value.endsWith("L")) {
+                                out("L");
+                            }
 							out(" : ");
 							String aarch64Value = aarch64ValueNode.getNodeValue();
 							aarch64Value = isUint32Max(aarch64Value) ? "-1" : isUint64Max(aarch64Value) ? "-1L" : aarch64Value;
 							out(aarch64Value);
-							if (isLong && !aarch64Value.endsWith("L")) out("L");
+                            if (isLong && !aarch64Value.endsWith("L")) {
+                                out("L");
+                            }
 						} else {
 							out(value);
-							if (isLong && !value.endsWith("L")) out("L");
+                            if (isLong && !value.endsWith("L")) {
+                                out("L");
+                            }
 						}
 						out(";");
 						outln();
@@ -1205,35 +1263,45 @@ private boolean isUint64Max(String value) {
 
 boolean getGen(Node node) {
 	NamedNodeMap attributes = node.getAttributes();
-	if (attributes == null) return false;
+    if (attributes == null) {
+        return false;
+    }
 	Node gen = attributes.getNamedItem("swt_gen");
 	return gen != null && !gen.getNodeValue().equals("false");
 }
 
 boolean getGenSuper(Node node) {
 	NamedNodeMap attributes = node.getAttributes();
-	if (attributes == null) return false;
+    if (attributes == null) {
+        return false;
+    }
 	Node gen = attributes.getNamedItem("swt_gen_super_msgSend");
 	return gen != null && !gen.getNodeValue().equals("false");
 }
 
 boolean getGenCallback(Node node) {
 	NamedNodeMap attributes = node.getAttributes();
-	if (attributes == null) return false;
+    if (attributes == null) {
+        return false;
+    }
 	Node gen = attributes.getNamedItem("swt_gen_custom_callback");
 	return gen != null && !gen.getNodeValue().equals("false");
 }
 
 boolean getGenMemmove(Node node) {
 	NamedNodeMap attributes = node.getAttributes();
-	if (attributes == null) return false;
+    if (attributes == null) {
+        return false;
+    }
 	Node gen = attributes.getNamedItem("swt_gen_memmove");
 	return gen != null && !gen.getNodeValue().equals("false");
 }
 
 boolean getGenToString(Node node) {
 	NamedNodeMap attributes = node.getAttributes();
-	if (attributes == null) return false;
+    if (attributes == null) {
+        return false;
+    }
 	Node gen = attributes.getNamedItem("swt_gen_tostring");
 	return gen != null && !gen.getNodeValue().equals("false");
 }
@@ -1262,7 +1330,9 @@ void buildLookup(Node node, HashMap<String, Node> table) {
 		Node childNode = list.item(i);
 		if (childNode.getNodeType() == Node.ELEMENT_NODE) {
 			String key = getKey(childNode);
-			if (table.get(key) == null) table.put(key, childNode);
+            if (table.get(key) == null) {
+                table.put(key, childNode);
+            }
 			buildLookup(childNode, table);
 		}
 	}
@@ -1279,15 +1349,21 @@ boolean isUnique(Node method, ArrayList<Node> methods) {
 		}
 	}
 	int index = methodName.indexOf(':');
-	if (index != -1) methodName = methodName.substring(0, index);
+    if (index != -1) {
+        methodName = methodName.substring(0, index);
+    }
 	for (Node other : methods) {
 		NamedNodeMap attributes = other.getAttributes();
 		Node otherSel = null;
-		if (attributes != null) otherSel = attributes.getNamedItem("selector");
+        if (attributes != null) {
+            otherSel = attributes.getNamedItem("selector");
+        }
 		if (other != method && otherSel != null) {
 			String otherName = otherSel.getNodeValue();
 			index = otherName.indexOf(':');
-			if (index != -1) otherName = otherName.substring(0, index);
+            if (index != -1) {
+                otherName = otherName.substring(0, index);
+            }
 			if (methodName.equals(otherName)) {
 				NodeList otherParams = other.getChildNodes();
 				String otherSignature = "";
@@ -1310,7 +1386,9 @@ void generateSelectorsConst() {
 	TreeSet<String> set = new TreeSet<>();
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -1357,7 +1435,9 @@ void generateSelectorsEnumLiteral() {
 	TreeSet<String> set = new TreeSet<>();
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -1392,7 +1472,9 @@ void generateStructNatives() {
 	TreeSet<String> memmoveSet = new TreeSet<>();
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -1490,7 +1572,9 @@ String buildSend(Node method, boolean superCall) {
 	for (int k = 0; k < params.getLength(); k++) {
 		Node param = params.item(k);
 		if ("arg".equals(param.getNodeName())) {
-			if (!first) buffer.append(", ");
+            if (!first) {
+                buffer.append(", ");
+            }
 			first = false;
 			buffer.append(getType(param));
 			buffer.append(" arg");
@@ -1535,7 +1619,9 @@ void generateCustomCallbacks() {
 	TreeMap<String, Node> set = new TreeMap<>();
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -1557,7 +1643,9 @@ void generateCustomCallbacks() {
 		Node method = entry.getValue();
 		if ("informal_protocol".equals(method.getParentNode().getNodeName())) {
 			method = findNSObjectMethod(method);
-			if (method == null) continue;
+            if (method == null) {
+                continue;
+            }
 		}
 		String nativeMth = key.replaceAll(":", "_");
 		out("/** @method callback_types=");
@@ -1595,7 +1683,9 @@ void generateSends(boolean superCall) {
 	TreeMap<String, Node> set = new TreeMap<>();
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -1634,7 +1724,9 @@ void generateSends(boolean superCall) {
 			out(" *");
 		}
 		out(" @method flags=cast");
-		if (tags.size() > 0) outln();
+        if (tags.size() > 0) {
+            outln();
+        }
 		for (String tag : tags) {
 			out(tag);
 			outln();
@@ -1654,7 +1746,9 @@ void generateClassesConst() {
 	TreeSet<String> set = new TreeSet<>();
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -1683,7 +1777,9 @@ void generateProtocolsConst() {
 	TreeSet<String> set = new TreeSet<>();
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -1710,13 +1806,17 @@ void generateProtocolsConst() {
 
 String getPackageName() {
 	int dot = mainClassName.lastIndexOf('.');
-	if (dot == -1) return "";
+    if (dot == -1) {
+        return "";
+    }
 	return mainClassName.substring(0, dot);
 }
 
 String getClassName() {
 	int dot = mainClassName.lastIndexOf('.');
-	if (dot == -1) return mainClassName;
+    if (dot == -1) {
+        return mainClassName;
+    }
 	return mainClassName.substring(dot + 1);
 }
 
@@ -1743,11 +1843,19 @@ String getJavaType(Node node) {
 char getTypeCode(Node node) {
 	NamedNodeMap attributes = node.getAttributes();
 	Node type = attributes.getNamedItem("type64");
-	if (type == null) type = attributes.getNamedItem("type");
-	if (type == null) return '?';
+    if (type == null) {
+        type = attributes.getNamedItem("type");
+    }
+    if (type == null) {
+        return '?';
+    }
 	String code = type.getNodeValue();
-	if (code.startsWith("V")) code = code.substring(1);
-	if (code.isEmpty()) return '?';
+    if (code.startsWith("V")) {
+        code = code.substring(1);
+    }
+    if (code.isEmpty()) {
+        return '?';
+    }
 	return code.charAt(0);
 }
 
@@ -1786,12 +1894,18 @@ private String getNodeInfo(Node location) {
 
 String getType(Node node, boolean withObjects) {
 	char typeCode = getTypeCode(node);
-	if (typeCode == '@' && !withObjects) return "long";
+    if (typeCode == '@' && !withObjects) {
+        return "long";
+    }
 
 	NamedNodeMap attributes = node.getAttributes();
 	Node javaType = attributes.getNamedItem("swt_java_type64");
-	if (javaType == null) javaType = attributes.getNamedItem("swt_java_type");
-	if (javaType != null) return javaType.getNodeValue();
+    if (javaType == null) {
+        javaType = attributes.getNamedItem("swt_java_type");
+    }
+    if (javaType != null) {
+        return javaType.getNodeValue();
+    }
 
 	switch (typeCode) {
 	case 'v': return "void";
@@ -1816,9 +1930,13 @@ String getType(Node node, boolean withObjects) {
 	case '@': {
 		String type = getDeclaredType(attributes, node);
 		int index = type.indexOf('*');
-		if (index != -1) type = type.substring(0, index);
+        if (index != -1) {
+            type = type.substring(0, index);
+        }
 		index = type.indexOf('<');
-		if (index != -1) type = type.substring(0, index);
+        if (index != -1) {
+            type = type.substring(0, index);
+        }
 		type = type.trim();
 		return knownConstTypes.contains(type) ? "NSString" : type;
 	}
@@ -1829,7 +1947,9 @@ String getType(Node node, boolean withObjects) {
 void generateFunctions() {
 	for (int x = 0; x < xmls.length; x++) {
 		Document document = documents[x];
-		if (document == null) continue;
+        if (document == null) {
+            continue;
+        }
 		NodeList list = document.getDocumentElement().getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			Node node = list.item(i);
@@ -1862,9 +1982,13 @@ void generateFunctions() {
 								NamedNodeMap paramAttributes = param.getAttributes();
 								Node swtCast = paramAttributes.getNamedItem("swt_param_cast");
 								String cast = swtCast != null ? swtCast.getNodeValue(): getDeclaredType(paramAttributes, param);
-								if (!cast.startsWith("(")) out("(");
+                                if (!cast.startsWith("(")) {
+                                    out("(");
+                                }
 								out(cast);
-								if (!cast.endsWith(")")) out(")");
+                                if (!cast.endsWith(")")) {
+                                    out(")");
+                                }
 							}
 							outln();
 						}
@@ -1885,7 +2009,9 @@ void generateFunctions() {
 					for (int j = 0; j < params.getLength(); j++) {
 						Node param = params.item(j);
 						if ("arg".equals(param.getNodeName())) {
-							if (!first) out(", ");
+                            if (!first) {
+                                out(", ");
+                            }
 							first = false;
 							out(getType(param));
 							out(" ");

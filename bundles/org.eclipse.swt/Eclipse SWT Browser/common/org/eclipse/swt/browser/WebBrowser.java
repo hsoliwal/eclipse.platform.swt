@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2026 IBM Corporation and others.
+ * Copyright (c) 2003, 2018 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -262,12 +262,16 @@ public void addVisibilityWindowListener (VisibilityWindowListener listener) {
 public abstract boolean back ();
 
 public static void clearSessions () {
-	if (NativeClearSessions != null) NativeClearSessions.run ();
+    if (NativeClearSessions != null) {
+        NativeClearSessions.run();
+    }
 }
 
 public static String GetCookie (String name, String url) {
 	CookieName = name; CookieUrl = url; CookieValue = null;
-	if (NativeGetCookie != null) NativeGetCookie.run ();
+    if (NativeGetCookie != null) {
+        NativeGetCookie.run();
+    }
 	String result = CookieValue;
 	CookieName = CookieValue = CookieUrl = null;
 	return result;
@@ -452,7 +456,9 @@ public Object evaluate (String script) throws SWTException {
 
 	Object result = evaluateResult;
 	evaluateResult = null;
-	if (result instanceof SWTException) throw (SWTException)result;
+    if (result instanceof SWTException) {
+        throw (SWTException) result;
+    }
 	return result;
 }
 
@@ -491,7 +497,9 @@ void registerFunction (BrowserFunction function) {
 }
 
 public void removeAuthenticationListener (AuthenticationListener listener) {
-	if (authenticationListeners.length == 0) return;
+    if (authenticationListeners.length == 0) {
+        return;
+    }
 	int index = -1;
 	for (int i = 0; i < authenticationListeners.length; i++) {
 		if (listener == authenticationListeners[i]) {
@@ -499,7 +507,9 @@ public void removeAuthenticationListener (AuthenticationListener listener) {
 			break;
 		}
 	}
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	if (authenticationListeners.length == 1) {
 		authenticationListeners = new AuthenticationListener[0];
 		return;
@@ -511,7 +521,9 @@ public void removeAuthenticationListener (AuthenticationListener listener) {
 }
 
 public void removeCloseWindowListener (CloseWindowListener listener) {
-	if (closeWindowListeners.length == 0) return;
+    if (closeWindowListeners.length == 0) {
+        return;
+    }
 	int index = -1;
 	for (int i = 0; i < closeWindowListeners.length; i++) {
 		if (listener == closeWindowListeners[i]){
@@ -519,7 +531,9 @@ public void removeCloseWindowListener (CloseWindowListener listener) {
 			break;
 		}
 	}
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	if (closeWindowListeners.length == 1) {
 		closeWindowListeners = new CloseWindowListener[0];
 		return;
@@ -531,7 +545,9 @@ public void removeCloseWindowListener (CloseWindowListener listener) {
 }
 
 public void removeLocationListener (LocationListener listener) {
-	if (locationListeners.length == 0) return;
+    if (locationListeners.length == 0) {
+        return;
+    }
 	int index = -1;
 	for (int i = 0; i < locationListeners.length; i++) {
 		if (listener == locationListeners[i]){
@@ -539,7 +555,9 @@ public void removeLocationListener (LocationListener listener) {
 			break;
 		}
 	}
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	if (locationListeners.length == 1) {
 		locationListeners = new LocationListener[0];
 		return;
@@ -551,7 +569,9 @@ public void removeLocationListener (LocationListener listener) {
 }
 
 public void removeOpenWindowListener (OpenWindowListener listener) {
-	if (openWindowListeners.length == 0) return;
+    if (openWindowListeners.length == 0) {
+        return;
+    }
 	int index = -1;
 	for (int i = 0; i < openWindowListeners.length; i++) {
 		if (listener == openWindowListeners[i]){
@@ -559,7 +579,9 @@ public void removeOpenWindowListener (OpenWindowListener listener) {
 			break;
 		}
 	}
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	if (openWindowListeners.length == 1) {
 		openWindowListeners = new OpenWindowListener[0];
 		return;
@@ -571,7 +593,9 @@ public void removeOpenWindowListener (OpenWindowListener listener) {
 }
 
 public void removeProgressListener (ProgressListener listener) {
-	if (progressListeners.length == 0) return;
+    if (progressListeners.length == 0) {
+        return;
+    }
 	int index = -1;
 	for (int i = 0; i < progressListeners.length; i++) {
 		if (listener == progressListeners[i]){
@@ -579,7 +603,9 @@ public void removeProgressListener (ProgressListener listener) {
 			break;
 		}
 	}
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	if (progressListeners.length == 1) {
 		progressListeners = new ProgressListener[0];
 		return;
@@ -591,7 +617,9 @@ public void removeProgressListener (ProgressListener listener) {
 }
 
 public void removeStatusTextListener (StatusTextListener listener) {
-	if (statusTextListeners.length == 0) return;
+    if (statusTextListeners.length == 0) {
+        return;
+    }
 	int index = -1;
 	for (int i = 0; i < statusTextListeners.length; i++) {
 		if (listener == statusTextListeners[i]){
@@ -599,7 +627,9 @@ public void removeStatusTextListener (StatusTextListener listener) {
 			break;
 		}
 	}
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	if (statusTextListeners.length == 1) {
 		statusTextListeners = new StatusTextListener[0];
 		return;
@@ -611,7 +641,9 @@ public void removeStatusTextListener (StatusTextListener listener) {
 }
 
 public void removeTitleListener (TitleListener listener) {
-	if (titleListeners.length == 0) return;
+    if (titleListeners.length == 0) {
+        return;
+    }
 	int index = -1;
 	for (int i = 0; i < titleListeners.length; i++) {
 		if (listener == titleListeners[i]){
@@ -619,7 +651,9 @@ public void removeTitleListener (TitleListener listener) {
 			break;
 		}
 	}
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	if (titleListeners.length == 1) {
 		titleListeners = new TitleListener[0];
 		return;
@@ -631,7 +665,9 @@ public void removeTitleListener (TitleListener listener) {
 }
 
 public void removeVisibilityWindowListener (VisibilityWindowListener listener) {
-	if (visibilityWindowListeners.length == 0) return;
+    if (visibilityWindowListeners.length == 0) {
+        return;
+    }
 	int index = -1;
 	for (int i = 0; i < visibilityWindowListeners.length; i++) {
 		if (listener == visibilityWindowListeners[i]){
@@ -639,7 +675,9 @@ public void removeVisibilityWindowListener (VisibilityWindowListener listener) {
 			break;
 		}
 	}
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	if (visibilityWindowListeners.length == 1) {
 		visibilityWindowListeners = new VisibilityWindowListener[0];
 		return;
@@ -659,8 +697,7 @@ boolean sendKeyEvent (Event event) {
 			traverseDoit = true;
 			break;
 		}
-		case SWT.CR:
-		case SWT.KEYPAD_CR: {
+		case SWT.CR: {
 			traversal = SWT.TRAVERSE_RETURN;
 			traverseDoit = false;
 			break;
@@ -733,7 +770,9 @@ public abstract void stop ();
 
 int translateKey (int key) {
 	for (int[] element : KeyTable) {
-		if (element[0] == key) return element[1];
+        if (element[0] == key) {
+            return element[1];
+        }
 	}
 	return 0;
 }

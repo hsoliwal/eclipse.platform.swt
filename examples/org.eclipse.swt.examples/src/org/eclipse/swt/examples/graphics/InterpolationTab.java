@@ -79,7 +79,9 @@ public void createControlPanel(Composite parent) {
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	float scaleX = 10f;
@@ -186,7 +188,9 @@ public void paint(GC gc, int width, int height) {
 	gc.drawImage(image, 3*bounds.width, 0);
 
 	font.dispose();
-	if (image != null) image.dispose();
+    if (image != null) {
+        image.dispose();
+    }
 }
 
 /**

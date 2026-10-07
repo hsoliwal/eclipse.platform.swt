@@ -53,8 +53,9 @@ public class BusyIndicator {
 	 */
 
 	public static void showWhile(Display display, Runnable runnable) {
-		if (runnable == null)
-			SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        if (runnable == null) {
+            SWT.error(SWT.ERROR_NULL_ARGUMENT);
+        }
 		if (display == null) {
 			display = Display.getCurrent();
 			if (display == null) {

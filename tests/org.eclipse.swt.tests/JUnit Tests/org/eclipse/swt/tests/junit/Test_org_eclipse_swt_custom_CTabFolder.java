@@ -740,23 +740,27 @@ private void checkElementOverlap(CTabFolder tabFolder) {
 	for (int i = 0; i < subControls.size(); i++) {
 		Rectangle boundsA = null;
 		if (subControls.get(i) instanceof Control c) {
-			if (!c.isVisible())
-				continue;
+            if (!c.isVisible()) {
+                continue;
+            }
 			boundsA = c.getBounds();
 		} else if (subControls.get(i) instanceof CTabItem cTab) {
-			if (!cTab.isShowing())
-				continue;
+            if (!cTab.isShowing()) {
+                continue;
+            }
 			boundsA = cTab.getBounds();
 		}
 		for (int j = i + 1; j < subControls.size(); j++) {
 			Rectangle boundsB = null;
 			if (subControls.get(j) instanceof Control c) {
-				if (!c.isVisible())
-					continue;
+                if (!c.isVisible()) {
+                    continue;
+                }
 				boundsB = c.getBounds();
 			} else if (subControls.get(j) instanceof CTabItem cTab) {
-				if (!cTab.isShowing())
-					continue;
+                if (!cTab.isShowing()) {
+                    continue;
+                }
 				boundsB = cTab.getBounds();
 			}
 			assertFalse(boundsA.intersects(boundsB));

@@ -64,13 +64,15 @@ public static void main(String[] args) {
 				System.err.println("STARTING UP THE EDITOR");
 				// Clean up any previous editor control
 				Control oldEditor = editor.getEditor();
-				if (oldEditor != null)
-					oldEditor.dispose();
+                if (oldEditor != null) {
+                    oldEditor.dispose();
+                }
 
 				// Identify the selected row
 				TableItem item = table.getItem(new Point(e.x, e.y));
-				if (item == null)
-					return;
+                if (item == null) {
+                    return;
+                }
 
 				// The control that will be the editor must be a child of the Table
 				Text newEditor = new Text(table, SWT.NONE);
@@ -85,8 +87,9 @@ public static void main(String[] args) {
 				newEditor.addFocusListener(FocusListener.focusLostAdapter(e1 -> {
 					System.err.println("LOOSING FOCUS");
 					Control oldEditor1 = editor.getEditor();
-					if (oldEditor1 != null)
-						oldEditor1.dispose();
+                    if (oldEditor1 != null) {
+                        oldEditor1.dispose();
+                    }
 				}));
 			}
 		}));
@@ -95,8 +98,9 @@ public static void main(String[] args) {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-				if (!display.readAndDispatch())
-						display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 }

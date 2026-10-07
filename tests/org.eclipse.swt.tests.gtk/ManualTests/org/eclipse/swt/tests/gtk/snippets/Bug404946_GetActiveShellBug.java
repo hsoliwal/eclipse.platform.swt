@@ -26,7 +26,9 @@ public class Bug404946_GetActiveShellBug {
 		shell.open();
 		System.out.println(display.getActiveShell() == shell);
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose ();
 	}

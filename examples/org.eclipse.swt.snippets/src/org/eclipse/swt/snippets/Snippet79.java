@@ -73,7 +73,9 @@ public void javaToNative (Object object, TransferData transferData) {
 public Object nativeToJava (TransferData transferData) {
 	if (isSupportedType (transferData)) {
 		byte [] buffer = (byte []) super.nativeToJava (transferData);
-		if (buffer == null) return null;
+        if (buffer == null) {
+            return null;
+        }
 
 		MyType [] myData = new MyType [0];
 		try (ByteArrayInputStream in = new ByteArrayInputStream (buffer);
@@ -195,7 +197,9 @@ public static void main (String [] args) {
 	shell.setSize (200, 200);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

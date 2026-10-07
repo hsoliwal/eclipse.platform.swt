@@ -53,7 +53,9 @@ public class Bug114003_MaximizedShellLocation
 		shell.open();
 		while (!shell.isDisposed())
 		{
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 		System.err.println("ended");

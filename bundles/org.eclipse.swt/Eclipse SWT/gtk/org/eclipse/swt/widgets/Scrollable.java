@@ -121,8 +121,12 @@ public Rectangle computeTrim (int x, int y, int width, int height) {
 Rectangle computeTrimInPixels (int x, int y, int width, int height) {
 	checkWidget();
 	int border = 0;
-	if (fixedHandle != 0) border += gtk_container_get_border_width_or_margin (fixedHandle);
-	if (scrolledHandle != 0) border += gtk_container_get_border_width_or_margin (scrolledHandle);
+    if (fixedHandle != 0) {
+        border += gtk_container_get_border_width_or_margin(fixedHandle);
+    }
+    if (scrolledHandle != 0) {
+        border += gtk_container_get_border_width_or_margin(scrolledHandle);
+    }
 	int trimX = x - border, trimY = y - border;
 	int trimWidth = width + (border * 2), trimHeight = height + (border * 2);
 	trimHeight += hScrollBarWidth ();
@@ -149,7 +153,9 @@ Rectangle computeTrimInPixels (int x, int y, int width, int height) {
 }
 
 ScrollBar createScrollBar (int style) {
-	if (scrolledHandle == 0) return null;
+    if (scrolledHandle == 0) {
+        return null;
+    }
 	ScrollBar bar = new ScrollBar ();
 	bar.parent = this;
 	bar.style = style;
@@ -171,8 +177,12 @@ ScrollBar createScrollBar (int style) {
 @Override
 void createWidget (int index) {
 	super.createWidget (index);
-	if ((style & SWT.H_SCROLL) != 0) horizontalBar = createScrollBar (SWT.H_SCROLL);
-	if ((style & SWT.V_SCROLL) != 0) verticalBar = createScrollBar (SWT.V_SCROLL);
+    if ((style & SWT.H_SCROLL) != 0) {
+        horizontalBar = createScrollBar(SWT.H_SCROLL);
+    }
+    if ((style & SWT.V_SCROLL) != 0) {
+        verticalBar = createScrollBar(SWT.V_SCROLL);
+    }
 }
 
 @Override
@@ -199,7 +209,9 @@ int applyThemeBackground () {
 @Override
 void deregister () {
 	super.deregister ();
-	if (scrolledHandle != 0) display.removeWidget (scrolledHandle);
+    if (scrolledHandle != 0) {
+        display.removeWidget(scrolledHandle);
+    }
 }
 
 void destroyScrollBar (ScrollBar bar) {
@@ -212,7 +224,9 @@ void destroyScrollBar (ScrollBar bar) {
 int getBorderWidthInPixels () {
 	checkWidget();
 	int border = 0;
-	if (fixedHandle != 0) border += gtk_container_get_border_width_or_margin (fixedHandle);
+    if (fixedHandle != 0) {
+        border += gtk_container_get_border_width_or_margin(fixedHandle);
+    }
 	if (scrolledHandle != 0) {
 		border += gtk_container_get_border_width_or_margin (scrolledHandle);
 
@@ -449,8 +463,9 @@ long gtk_scroll_event (long widget, long eventPtr) {
 				gtk_adjustment_get (scrollBar.adjustmentHandle, adjustment);
 				/* Calculate wheel delta to match GTK+ 2.4 and higher */
 				int wheel_delta = (int) Math.pow(adjustment.page_size, 2.0 / 3.0);
-				if (direction[0] == GDK.GDK_SCROLL_UP || direction[0] == GDK.GDK_SCROLL_LEFT)
-					wheel_delta = -wheel_delta;
+                if (direction[0] == GDK.GDK_SCROLL_UP || direction[0] == GDK.GDK_SCROLL_LEFT) {
+                    wheel_delta = -wheel_delta;
+                }
 				int value = (int) Math.max(adjustment.lower,
 						Math.min(adjustment.upper - adjustment.page_size, adjustment.value + wheel_delta));
 				GTK.gtk_adjustment_set_value (scrollBar.adjustmentHandle, value);
@@ -468,8 +483,12 @@ int hScrollBarWidth() {
 
 @Override
 void reskinChildren (int flags) {
-	if (horizontalBar != null) horizontalBar.reskin (flags);
-	if (verticalBar != null) verticalBar.reskin (flags);
+    if (horizontalBar != null) {
+        horizontalBar.reskin(flags);
+    }
+    if (verticalBar != null) {
+        verticalBar.reskin(flags);
+    }
 	super.reskinChildren (flags);
 }
 
@@ -487,12 +506,18 @@ void setOrientation (boolean create) {
 			GTK.gtk_widget_set_direction (scrolledHandle, dir);
 		}
 	}
-	if (horizontalBar != null) horizontalBar.setOrientation (create);
-	if (verticalBar != null) verticalBar.setOrientation (create);
+    if (horizontalBar != null) {
+        horizontalBar.setOrientation(create);
+    }
+    if (verticalBar != null) {
+        verticalBar.setOrientation(create);
+    }
 }
 
 boolean setScrollBarVisible (ScrollBar bar, boolean visible) {
-	if (scrolledHandle == 0) return false;
+    if (scrolledHandle == 0) {
+        return false;
+    }
 	int [] hsp = new int [1], vsp = new int [1];
 	GTK.gtk_scrolled_window_get_policy (scrolledHandle, hsp, vsp);
 	int policy = visible ? GTK.GTK_POLICY_ALWAYS : GTK.GTK_POLICY_NEVER;
@@ -500,10 +525,14 @@ boolean setScrollBarVisible (ScrollBar bar, boolean visible) {
 		policy = GTK.GTK_POLICY_EXTERNAL;
 	}
 	if ((bar.style & SWT.HORIZONTAL) != 0) {
-		if (hsp [0] == policy) return false;
+        if (hsp [0] == policy) {
+            return false;
+        }
 		hsp [0] = policy;
 	} else {
-		if (vsp [0] == policy) return false;
+        if (vsp [0] == policy) {
+            return false;
+        }
 		vsp [0] = policy;
 	}
 	GTK.gtk_scrolled_window_set_policy (scrolledHandle, hsp [0], vsp [0]);
@@ -516,10 +545,16 @@ void redrawBackgroundImage () {
 @Override
 void redrawWidget (int x, int y, int width, int height, boolean redrawAll, boolean all, boolean trim) {
 	super.redrawWidget (x, y, width, height, redrawAll, all, trim);
-	if (!GTK.gtk_widget_get_realized (handle)) return;
-	if (!trim) return;
+    if (!GTK.gtk_widget_get_realized(handle)) {
+        return;
+    }
+    if (!trim) {
+        return;
+    }
 	long topHandle = topHandle (), paintHandle = paintHandle ();
-	if (topHandle == paintHandle) return;
+    if (topHandle == paintHandle) {
+        return;
+    }
 	GdkRectangle rect = new GdkRectangle ();
 	if (redrawAll) {
 		GtkAllocation allocation = new GtkAllocation ();
@@ -555,7 +590,9 @@ void redrawWidget (int x, int y, int width, int height, boolean redrawAll, boole
 @Override
 void register () {
 	super.register ();
-	if (scrolledHandle != 0) display.addWidget (scrolledHandle, this);
+    if (scrolledHandle != 0) {
+        display.addWidget(scrolledHandle, this);
+    }
 }
 
 @Override
@@ -592,13 +629,19 @@ void resizeHandle (int width, int height) {
 @Override
 void showWidget () {
 	super.showWidget ();
-	if (scrolledHandle != 0) gtk_widget_show (scrolledHandle);
+    if (scrolledHandle != 0) {
+        gtk_widget_show(scrolledHandle);
+    }
 }
 
 @Override
 long topHandle () {
-	if (fixedHandle != 0) return fixedHandle;
-	if (scrolledHandle != 0) return scrolledHandle;
+    if (fixedHandle != 0) {
+        return fixedHandle;
+    }
+    if (scrolledHandle != 0) {
+        return scrolledHandle;
+    }
 	return super.topHandle ();
 }
 
@@ -612,19 +655,25 @@ int vScrollBarWidth() {
 }
 
 private Point hScrollbarSize() {
-	if (horizontalBar == null) return new Point(0, 0);
+    if (horizontalBar == null) {
+        return new Point(0, 0);
+    }
 	long vBarHandle = GTK.gtk_scrolled_window_get_hscrollbar (scrolledHandle);
 	return scrollBarSize(vBarHandle);
 }
 
 private Point vScrollBarSize() {
-	if (verticalBar == null) return new Point(0, 0);
+    if (verticalBar == null) {
+        return new Point(0, 0);
+    }
 	long vBarHandle = GTK.gtk_scrolled_window_get_vscrollbar (scrolledHandle);
 	return scrollBarSize(vBarHandle);
 }
 
 private Point scrollBarSize(long scrollBarHandle) {
-	if (scrollBarHandle == 0) return new Point(0, 0);
+    if (scrollBarHandle == 0) {
+        return new Point(0, 0);
+    }
 	GtkRequisition requisition = new GtkRequisition();
 	/*
 	 * Feature in GTK3: sometimes the size reported lags on GTK3.20+.
@@ -634,8 +683,10 @@ private Point scrollBarSize(long scrollBarHandle) {
 	GTK.gtk_widget_queue_resize (scrollBarHandle);
 	gtk_widget_get_preferred_size (scrollBarHandle, requisition);
 	int [] padding = new int [1];
-	// Only GTK3 needs this, GTK4 has the size built-in via gtk_widget_get_preferred_size()
-	if (!GTK.GTK4) GTK3.gtk_widget_style_get(scrolledHandle, OS.scrollbar_spacing, padding, 0);
+    // Only GTK3 needs this, GTK4 has the size built-in via gtk_widget_get_preferred_size()
+    if (!GTK.GTK4) {
+        GTK3.gtk_widget_style_get(scrolledHandle, OS.scrollbar_spacing, padding, 0);
+    }
 	int spacing = padding[0];
 	return new Point(requisition.width + spacing, requisition.height + spacing);
 }

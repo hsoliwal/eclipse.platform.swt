@@ -55,8 +55,9 @@ public static void main(String[] args) {
 	table.addListener(SWT.MouseDown, event -> {
 		Point pt = new Point(event.x, event.y);
 		TableItem item = table.getItem(pt);
-		if (item == null)
-			return;
+        if (item == null) {
+            return;
+        }
 		for (int i = 0; i < columnCount; i++) {
 			Rectangle rect = item.getBounds(i);
 			if (rect.contains(pt)) {
@@ -67,8 +68,9 @@ public static void main(String[] args) {
 	});
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

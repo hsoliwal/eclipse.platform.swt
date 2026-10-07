@@ -111,7 +111,9 @@ long attributedSubstringFromRange (long id, long sel, long rangePtr) {
 
 @Override
 long characterIndexForPoint (long id, long sel, long point) {
-	if (!isInlineEnabled ()) return OS.NSNotFound();
+    if (!isInlineEnabled()) {
+        return OS.NSNotFound();
+    }
 	NSPoint pt = new NSPoint ();
 	OS.memmove (pt, point, NSPoint.sizeof);
 	NSView view = parent.view;
@@ -229,7 +231,9 @@ public int getCompositionOffset () {
  */
 public int [] getRanges () {
 	checkWidget ();
-	if (ranges == null) return new int [0];
+    if (ranges == null) {
+        return new int [0];
+    }
 	int [] result = new int [ranges.length];
 	for (int i = 0; i < result.length; i++) {
 		result [i] = ranges [i] + startOffset;
@@ -257,7 +261,9 @@ public int [] getRanges () {
  */
 public TextStyle [] getStyles () {
 	checkWidget ();
-	if (styles == null) return new TextStyle [0];
+    if (styles == null) {
+        return new TextStyle [0];
+    }
 	TextStyle [] result = new TextStyle [styles.length];
 	System.arraycopy (styles, 0, result, 0, styles.length);
 	return result;
@@ -346,7 +352,9 @@ boolean hasMarkedText (long id, long sel) {
 
 @Override
 boolean insertText (long id, long sel, long string) {
-	if (startOffset == -1) return true;
+    if (startOffset == -1) {
+        return true;
+    }
 	NSString str = new NSString (string);
 	if (str.isKindOfClass (OS.class_NSAttributedString)) {
 		str = new NSAttributedString (string).string ();
@@ -388,7 +396,9 @@ void resetStyles () {
 		for (int i = 0; i < styles.length; i++) {
 			TextStyle style = styles [i];
 			Font font = style.font;
-			if (font != null) font.handle.release ();
+            if (font != null) {
+                font.handle.release();
+            }
 		}
 	}
 	styles = null;
@@ -398,7 +408,9 @@ void resetStyles () {
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (this == parent.getIME ()) parent.setIME (null);
+    if (this == parent.getIME()) {
+        parent.setIME(null);
+    }
 }
 
 @Override
@@ -438,7 +450,9 @@ NSRange selectedRange (long id, long sel) {
  */
 public void setCompositionOffset (int offset) {
 	checkWidget ();
-	if (offset < 0) return;
+    if (offset < 0) {
+        return;
+    }
 	if (startOffset != -1) {
 		startOffset = offset;
 	}
@@ -446,7 +460,9 @@ public void setCompositionOffset (int offset) {
 
 @Override
 boolean setMarkedText_selectedRange (long id, long sel, long string, long selRange) {
-	if (!isInlineEnabled ()) return true;
+    if (!isInlineEnabled()) {
+        return true;
+    }
 	resetStyles ();
 	caretOffset = commitCount = 0;
 	int end = startOffset + text.length ();
@@ -511,7 +527,9 @@ boolean setMarkedText_selectedRange (long id, long sel, long string, long selRan
 	event.end = end;
 	event.text = text = str.getString();
 	sendEvent (SWT.ImeComposition, event);
-	if (isDisposed ()) return false;
+    if (isDisposed()) {
+        return false;
+    }
 	if (text.length () == 0) {
 		Shell s = parent.getShell ();
 		s.keyInputHappened = true;

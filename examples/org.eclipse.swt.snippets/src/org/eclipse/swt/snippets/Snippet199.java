@@ -87,7 +87,9 @@ public class Snippet199 {
 	controlSite.addEventListener(application, IID_AppEvents, eventID, listener);
 
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	application.dispose();
 	display.dispose ();

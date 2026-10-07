@@ -57,7 +57,9 @@ public static void main(String [] args) {
 	System.out.println(shell.getDisplay().getFocusControl());
 
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

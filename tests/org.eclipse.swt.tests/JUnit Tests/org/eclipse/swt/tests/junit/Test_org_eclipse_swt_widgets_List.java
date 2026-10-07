@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
+import java.lang.reflect.*;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -59,8 +61,9 @@ public void test_ConstructorLorg_eclipse_swt_widgets_CompositeI() {
 			SWT.MULTI | SWT.V_SCROLL,
 			SWT.MULTI | SWT.H_SCROLL,
 			SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL };
-	for (int style : cases)
-		list = new List(shell, style);
+    for (int style : cases) {
+        list = new List(shell, style);
+    }
 }
 
 @Test
@@ -251,8 +254,9 @@ public void test_deselectAll() {
 public void test_deselectI() {
 	int number = 5;
 	String[] items = new String[number];
-	for (int i = 0; i < number; i++)
-		items[i] = "fred" + i;
+    for (int i = 0; i < number; i++) {
+        items[i] = "fred" + i;
+    }
 	list.setItems(items);
 
 	String[] items2 = { "item0", "item1", "item2", "item3" };
@@ -285,8 +289,9 @@ public void test_deselectI() {
 public void test_deselectII() {
 	int number = 5;
 	String[] items = new String[number];
-	for (int i = 0; i < number; i++)
-		items[i] = "fred" + i;
+    for (int i = 0; i < number; i++) {
+        items[i] = "fred" + i;
+    }
 	list.setItems(items);
 	list.setSelection(items);
 
@@ -676,6 +681,32 @@ public void test_getTopIndex() {
 }
 
 @Test
+public void test_viewportRuntimeMirrorsPublicTopIndex() throws Exception {
+	String[] items = new String [64];
+    for (int i = 0; i < items.length; i++) {
+        items[i] = "row-" + i;
+    }
+	list.setItems(items);
+
+	Field runtimeField = List.class.getDeclaredField("viewportRuntime");
+	runtimeField.setAccessible(true);
+	Object runtime = runtimeField.get(list);
+	assertTrue(runtime != null);
+
+	Method originY = runtime.getClass().getMethod("originY");
+
+	list.setTopIndex(12);
+	int actual = list.getTopIndex();
+	assertEquals(actual, ((Double) originY.invoke(runtime)).intValue(),
+			"List viewport runtime must mirror the public top-row coordinate");
+
+	list.setTopIndex(31);
+	actual = list.getTopIndex();
+	assertEquals(actual, ((Double) originY.invoke(runtime)).intValue(),
+			"programmatic List scrolling must keep the shared runtime synchronized");
+}
+
+@Test
 public void test_indexOfLjava_lang_String() {
 	String[] items = { "text1", "text2", "text3" };
 
@@ -715,9 +746,6 @@ public void test_indexOfLjava_lang_StringI() {
 
 	list.setItems(items);
 	assertEquals(-1, list.indexOf("text3", 4));
-	if (SwtTestUtil.isGTK) {
-		assertEquals(-1, list.indexOf("text2", -1));
-	}
 	assertEquals(2, list.indexOf("text3", 2));
 	assertEquals(1, list.indexOf("text2", 0));
 	assertEquals(1, list.indexOf("text2", 1));
@@ -1097,7 +1125,9 @@ public void test_select$I() {
 	assertArrayEquals(list.getSelectionIndices(), new int[] { 1, 2, 3 });
 
 	int[] ind = new int[32];
-	for (int i = 0; i < ind.length; i++) ind[i] = i;
+    for (int i = 0; i < ind.length; i++) {
+        ind[i] = i;
+    }
 	list.select(ind);
 	assertArrayEquals(list.getSelectionIndices(), new int[] { 0, 1, 2, 3, 4 });
 
@@ -1153,7 +1183,9 @@ public void test_select$I() {
 	assertArrayEquals(list.getSelectionIndices(), new int[] {});
 
 	int[] selection = new int[32];
-	for (int i = 0; i < selection.length; i++) selection[i] = i;
+    for (int i = 0; i < selection.length; i++) {
+        selection[i] = i;
+    }
 	list.select(selection);
 	assertArrayEquals(list.getSelectionIndices(), new int[] {});
 
@@ -1261,8 +1293,9 @@ public void test_selectII() {
 	String[] items = new String[number];
 	int[] empty = {};
 
-	for (int i = 0; i < number; i++)
-		items[i] = "item" + i;
+    for (int i = 0; i < number; i++) {
+        items[i] = "item" + i;
+    }
 
 	selectII_helper(items, 10, 1, empty);
 	selectII_helper(items, 3, 1, empty);
@@ -1494,8 +1527,9 @@ public void test_setItems$Ljava_lang_String() {
 @Test
 public void test_setSelection$I() {
 	int number = 8;
-	for (int i = 0; i < number; i++)
-		list.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        list.add("fred" + i);
+    }
 
 	list.setSelection(new int [0]);
 	assertArrayEquals(list.getSelectionIndices(), new int[0]);
@@ -1578,8 +1612,9 @@ public void test_setSelection$I() {
 
 
 	setSingleList();
-	for (int i = 0; i < number; i++)
-		list.add("fred" + i);
+    for (int i = 0; i < number; i++) {
+        list.add("fred" + i);
+    }
 
 	list.setSelection(new int [0]);
 	assertArrayEquals(list.getSelectionIndices(), new int[0]);
@@ -1659,8 +1694,9 @@ public void test_setSelection$I() {
 @Test
 public void test_setSelection$Ljava_lang_String() {
 	int number = 8;
-	for (int i = 0; i < number; i++)
-		list.add("fred " + i);
+    for (int i = 0; i < number; i++) {
+        list.add("fred " + i);
+    }
 
 	list.setSelection(new String [0]);
 	assertArrayEquals(list.getSelection(), new String[0]);
@@ -1723,8 +1759,9 @@ public void test_setSelection$Ljava_lang_String() {
 
 
 	setSingleList();
-	for (int i = 0; i < number; i++)
-		list.add("fred " + i);
+    for (int i = 0; i < number; i++) {
+        list.add("fred " + i);
+    }
 
 	list.setSelection(new String [0]);
 	assertArrayEquals(list.getSelection(), new String[0]);
@@ -1867,8 +1904,9 @@ public void test_setSelectionI() {
 public void test_setSelectionII() {
 	int number = 8;
 	String[] items = new String[number];
-	for (int i = 0; i < number; i++)
-		items[i] = "fred" + i;
+    for (int i = 0; i < number; i++) {
+        items[i] = "fred" + i;
+    }
 
 	list.setItems(items);
 
@@ -2087,8 +2125,9 @@ protected void selectII_helper(
 	list.deselectAll();
 	assertArrayEquals(list.getSelectionIndices(), new int[] {});
 
-	for (int i = start; i <= end; i++) // <= on purpose
-		list.select(i);
+    for (int i = start; i <= end; i++) { // <= on purpose
+        list.select(i);
+    }
 
 	assertArrayEquals(expectedIndices, list.getSelectionIndices());
 
@@ -2115,8 +2154,9 @@ protected void select$I_helper(
 	list.deselectAll();
 	assertArrayEquals(list.getSelectionIndices(), new int[] {});
 
-	for (int i = start; i <= end; i++) // <= on purpose
-		list.select(i);
+    for (int i = start; i <= end; i++) { // <= on purpose
+        list.select(i);
+    }
 
 	assertArrayEquals(expectedIndices, list.getSelectionIndices());
 

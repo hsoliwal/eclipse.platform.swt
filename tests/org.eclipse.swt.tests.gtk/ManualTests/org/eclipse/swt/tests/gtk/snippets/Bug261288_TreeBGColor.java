@@ -37,8 +37,9 @@ public class Bug261288_TreeBGColor {
 	shell.setSize( 400, 300 );
 	shell.open();
 	while( !shell.isDisposed() ) {
-		if( !display.readAndDispatch() )
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 		}
 		display.dispose();
 	}

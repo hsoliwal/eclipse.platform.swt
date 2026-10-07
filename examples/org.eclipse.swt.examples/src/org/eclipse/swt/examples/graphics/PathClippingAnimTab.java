@@ -130,7 +130,9 @@ public class PathClippingAnimTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 		Device device = gc.getDevice();
 
 		// top triangle
@@ -204,8 +206,9 @@ public class PathClippingAnimTab extends AnimatedGraphicsTab {
 		gc.fillRectangle((width-rectWidth)/2, (height-rectHeight)/2, rectWidth, rectHeight);
 		gc.drawPath(path);
 
-		if (pattern != null)
-			pattern.dispose();
+        if (pattern != null) {
+            pattern.dispose();
+        }
 
 		path9.dispose();
 		path8.dispose();

@@ -68,9 +68,15 @@ class SliderTab extends RangeTab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (horizontalButton.getSelection ()) style |= SWT.HORIZONTAL;
-		if (verticalButton.getSelection ()) style |= SWT.VERTICAL;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
+        if (horizontalButton.getSelection()) {
+            style |= SWT.HORIZONTAL;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.VERTICAL;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
 
 		/* Create the example widgets */
 		slider1 = new Slider(sliderGroup, style);

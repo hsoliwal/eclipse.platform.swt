@@ -14,8 +14,6 @@
 package org.eclipse.swt.internal.image;
 
 
-import java.util.Arrays;
-
 import org.eclipse.swt.*;
 
 final class JPEGFrameHeader extends JPEGVariableSizeSegment {
@@ -108,7 +106,9 @@ final class JPEGFrameHeader extends JPEGVariableSizeSegment {
 			compParam[1] = hi;
 			compParam[2] = vi;
 			if (compSpecParams.length <= ci) {
-				compSpecParams = Arrays.copyOf(compSpecParams, ci + 1);
+				int[][] newParams = new int[ci + 1][];
+				System.arraycopy(compSpecParams, 0, newParams, 0, compSpecParams.length);
+				compSpecParams = newParams;
 			}
 			compSpecParams[ci] = compParam;
 		}
@@ -151,8 +151,12 @@ final class JPEGFrameHeader extends JPEGVariableSizeSegment {
 			reference[ofs] = (byte)(i + 1);
 			reference[ofs + 1] = (byte)(hi * 16 + vi);
 			reference[ofs + 2] = (byte)(compParam[0]);
-			if (hi > hmax) hmax = hi;
-			if (vi > vmax) vmax = vi;
+            if (hi > hmax) {
+                hmax = hi;
+            }
+            if (vi > vmax) {
+                vmax = vi;
+            }
 		}
 		int x = getSamplesPerLine();
 		int y = getNumberOfLines();

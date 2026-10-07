@@ -48,15 +48,21 @@ public class GLCanvas extends Canvas {
 public GLCanvas (Composite parent, int style, GLData data) {
 	super (parent, checkStyle (parent, style));
 	parent.getDisplay ().setData (USE_OWNDC_KEY, false);
-	if (data == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (data == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	PIXELFORMATDESCRIPTOR pfd = new PIXELFORMATDESCRIPTOR ();
 	pfd.nSize = (short) PIXELFORMATDESCRIPTOR.sizeof;
 	pfd.nVersion = 1;
 	pfd.dwFlags = WGL.PFD_DRAW_TO_WINDOW | WGL.PFD_SUPPORT_OPENGL;
 	pfd.dwLayerMask = WGL.PFD_MAIN_PLANE;
 	pfd.iPixelType = (byte) WGL.PFD_TYPE_RGBA;
-	if (data.doubleBuffer) pfd.dwFlags |= WGL.PFD_DOUBLEBUFFER;
-	if (data.stereo) pfd.dwFlags |= WGL.PFD_STEREO;
+    if (data.doubleBuffer) {
+        pfd.dwFlags |= WGL.PFD_DOUBLEBUFFER;
+    }
+    if (data.stereo) {
+        pfd.dwFlags |= WGL.PFD_STEREO;
+    }
 	pfd.cRedBits = (byte) data.redSize;
 	pfd.cGreenBits = (byte) data.greenSize;
 	pfd.cBlueBits = (byte) data.blueSize;
@@ -107,6 +113,10 @@ public GLCanvas (Composite parent, int style, GLData data) {
 }
 
 static int checkStyle(Composite parent, int style) {
+	return GLCanvas.m3NormalizeStyle(parent, style);
+}
+
+private static int m3NormalizeStyle(Composite parent, int style) {
 	if (parent != null) {
 		parent.getDisplay ().setData (USE_OWNDC_KEY, true);
 	}
@@ -171,7 +181,9 @@ public boolean isCurrent () {
  */
 public void setCurrent () {
 	checkWidget ();
-	if (WGL.wglGetCurrentContext () == context) return;
+    if (WGL.wglGetCurrentContext() == context) {
+        return;
+    }
 	long hDC = OS.GetDC (handle);
 	WGL.wglMakeCurrent (hDC, context);
 	OS.ReleaseDC (handle, hDC);

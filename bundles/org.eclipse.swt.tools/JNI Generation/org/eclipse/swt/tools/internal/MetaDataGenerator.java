@@ -38,9 +38,15 @@ public void generate(JNIClass clazz) {
 public void generate(JNIField[] fields) {
 	for (JNIField field : fields) {
 		int mods = field.getModifiers();
-		if ((mods & Modifier.PUBLIC) == 0) continue;
-		if ((mods & Modifier.FINAL) != 0) continue;
-		if ((mods & Modifier.STATIC) != 0) continue;
+        if ((mods & Modifier.PUBLIC) == 0) {
+            continue;
+        }
+        if ((mods & Modifier.FINAL) != 0) {
+            continue;
+        }
+        if ((mods & Modifier.STATIC) != 0) {
+            continue;
+        }
 		generate(field);
 		outputln();
 	}
@@ -57,10 +63,14 @@ public void generate(JNIField field) {
 public void generate(JNIMethod[] methods) {
 	sort(methods);
 	for (JNIMethod method : methods) {
-		if ((method.getModifiers() & Modifier.NATIVE) == 0) continue;
+        if ((method.getModifiers() & Modifier.NATIVE) == 0) {
+            continue;
+        }
 		generate(method);
 		outputln();
-		if (progress != null) progress.step();
+        if (progress != null) {
+            progress.step();
+        }
 	}
 }
 

@@ -158,7 +158,9 @@ public Color(int red, int green, int blue, int alpha) {
  */
 public Color(Device device, RGB rgb) {
 	super(device);
-	if (rgb == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rgb == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	init(rgb.red, rgb.green, rgb.blue, 255);
 	init();
 }
@@ -177,7 +179,9 @@ public Color(Device device, RGB rgb) {
  */
 public Color(RGB rgb) {
 	super();
-	if (rgb == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rgb == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	init(rgb.red, rgb.green, rgb.blue, 255);
 }
 
@@ -200,7 +204,9 @@ public Color(RGB rgb) {
  */
 public Color(Device device, RGBA rgba) {
 	super(device);
-	if (rgba == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rgba == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	init(rgba.rgb.red, rgba.rgb.green, rgba.rgb.blue, rgba.alpha);
 	init();
 }
@@ -220,7 +226,9 @@ public Color(Device device, RGBA rgba) {
  */
 public Color(RGBA rgba) {
 	super();
-	if (rgba == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rgba == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	init(rgba.rgb.red, rgba.rgb.green, rgba.rgb.blue, rgba.alpha);
 }
 
@@ -245,7 +253,9 @@ public Color(RGBA rgba) {
  */
 public Color(Device device, RGB rgb, int alpha) {
 	super(device);
-	if (rgb == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rgb == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	init(rgb.red, rgb.green, rgb.blue, alpha);
 	init();
 }
@@ -267,7 +277,9 @@ public Color(Device device, RGB rgb, int alpha) {
  */
 public Color(RGB rgb, int alpha) {
 	super();
-	if (rgb == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rgb == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	init(rgb.red, rgb.green, rgb.blue, alpha);
 }
 
@@ -305,9 +317,11 @@ public void dispose() {
  */
 @Override
 public Device getDevice() {
-	// Fall back on Device.getDevice only if we haven't been disposed
-	// already.
-	if (this.device == null && this.handle != null) return Device.getDevice();
+    // Fall back on Device.getDevice only if we haven't been disposed
+    // already.
+    if (this.device == null && this.handle != null) {
+        return Device.getDevice();
+    }
 	return super.getDevice();
 }
 
@@ -323,11 +337,19 @@ public Device getDevice() {
  */
 @Override
 public boolean equals(Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Color color)) return false;
-	if (isDisposed() || color.isDisposed()) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Color color)) {
+        return false;
+    }
+    if (isDisposed() || color.isDisposed()) {
+        return false;
+    }
 	double [] rgbColor = color.handle;
-	if (handle == rgbColor) return true;
+    if (handle == rgbColor) {
+        return true;
+    }
 	return
 		(int)(handle[0] * 255) == (int)(rgbColor[0] * 255) &&
 		(int)(handle[1] * 255) == (int)(rgbColor[1] * 255) &&
@@ -347,7 +369,9 @@ public boolean equals(Object object) {
  * @since 3.104
  */
 public int getAlpha() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return (int)(handle[3] * 255);
 }
 
@@ -361,7 +385,9 @@ public int getAlpha() {
  * </ul>
  */
 public int getBlue() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return (int)(handle[2] * 255);
 }
 
@@ -375,7 +401,9 @@ public int getBlue() {
  * </ul>
  */
 public int getGreen() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return (int)(handle[1] * 255);
 }
 
@@ -389,7 +417,9 @@ public int getGreen() {
  * </ul>
  */
 public int getRed() {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return (int)(handle[0] * 255);
 }
 
@@ -405,7 +435,9 @@ public int getRed() {
  */
 @Override
 public int hashCode() {
-	if (isDisposed()) return 0;
+    if (isDisposed()) {
+        return 0;
+    }
 	return (int)(handle[0] * 255) ^ (int)(handle[1] * 255) ^ (int)(handle[2] * 255) ^ (int)(handle[3] * 255);
 }
 
@@ -419,7 +451,9 @@ public int hashCode() {
  * </ul>
  */
 public RGB getRGB () {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return new RGB(getRed(), getGreen(), getBlue());
 }
 
@@ -434,7 +468,9 @@ public RGB getRGB () {
  * @since 3.104
  */
 public RGBA getRGBA () {
-	if (isDisposed()) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    if (isDisposed()) {
+        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+    }
 	return new RGBA(getRed(), getGreen(), getBlue(), getAlpha());
 }
 
@@ -544,7 +580,9 @@ public boolean isDisposed() {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Color {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Color {*DISPOSED*}";
+    }
 	return "Color {" + getRed() + ", " + getGreen() + ", " + getBlue() + ", " + getAlpha() + "}";
 }
 

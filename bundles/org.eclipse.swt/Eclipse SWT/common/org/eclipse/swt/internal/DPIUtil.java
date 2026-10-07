@@ -185,20 +185,26 @@ public static boolean isMonitorSpecificScalingActive() {
 }
 
 public static int pixelToPoint(int size, int zoom) {
-	if (zoom == 100 || size == SWT.DEFAULT) return size;
+    if (zoom == 100 || size == SWT.DEFAULT) {
+        return size;
+    }
 	float scaleFactor = getScalingFactor (zoom);
 	return Math.round (size / scaleFactor);
 }
 
 
 public static float pixelToPoint(float size, int zoom) {
-	if (zoom == 100 || size == SWT.DEFAULT) return size;
+    if (zoom == 100 || size == SWT.DEFAULT) {
+        return size;
+    }
 	float scaleFactor = getScalingFactor (zoom);
 	return (size / scaleFactor);
 }
 
 public static double pixelToPoint(double size, int zoom) {
-	if (zoom == 100 || size == SWT.DEFAULT) return size;
+    if (zoom == 100 || size == SWT.DEFAULT) {
+        return size;
+    }
 	double scaleFactor = getScalingFactor (zoom, 100);
 	return size / scaleFactor;
 }
@@ -208,7 +214,9 @@ public static double pixelToPoint(double size, int zoom) {
  * Auto-scale image with ImageData
  */
 public static ImageData scaleImageData (Device device, final ImageData imageData, int targetZoom, int currentZoom) {
-	if (imageData == null || targetZoom == currentZoom || (device != null && !device.isAutoScalable())) return imageData;
+    if (imageData == null || targetZoom == currentZoom || (device != null && !device.isAutoScalable())) {
+        return imageData;
+    }
 	float scaleFactor = (float) targetZoom / (float) currentZoom;
 	return autoScaleImageData(device, imageData, scaleFactor);
 }
@@ -271,7 +279,9 @@ public static boolean isSmoothScalingEnabled() {
  * Auto-scale ImageData to device zoom that are at given zoom factor.
  */
 public static ImageData autoScaleImageData (Device device, final ImageData imageData, int imageDataZoomFactor) {
-	if (deviceZoom == imageDataZoomFactor || imageData == null || (device != null && !device.isAutoScalable())) return imageData;
+    if (deviceZoom == imageDataZoomFactor || imageData == null || (device != null && !device.isAutoScalable())) {
+        return imageData;
+    }
 	float scaleFactor = (float) deviceZoom / imageDataZoomFactor;
 	return autoScaleImageData(device, imageData, scaleFactor);
 }
@@ -336,7 +346,9 @@ public static void validateLinearScaling(ImageDataProvider provider) {
 }
 
 public static int pointToPixel(int size, int zoom) {
-	if (zoom == 100 || size == SWT.DEFAULT) return size;
+    if (zoom == 100 || size == SWT.DEFAULT) {
+        return size;
+    }
 	float scaleFactor = getScalingFactor(zoom);
 	return Math.round (size * scaleFactor);
 }

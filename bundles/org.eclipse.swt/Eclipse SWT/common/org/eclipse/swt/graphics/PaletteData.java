@@ -111,7 +111,9 @@ public final class PaletteData {
  * </ul>
  */
 public PaletteData(RGB... colors) {
-	if (colors == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (colors == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.colors = colors;
 	this.isDirect = false;
 }
@@ -145,7 +147,9 @@ public PaletteData(int redMask, int greenMask, int blueMask) {
  * </ul>
  */
 public int getPixel(RGB rgb) {
-	if (rgb == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (rgb == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (isDirect) {
 		int pixel = 0;
 		pixel |= (redShift < 0 ? rgb.red << -redShift : rgb.red >>> redShift) & redMask;
@@ -154,7 +158,9 @@ public int getPixel(RGB rgb) {
 		return pixel;
 	} else {
 		for (int i = 0; i < colors.length; i++) {
-			if (colors[i].equals(rgb)) return i;
+            if (colors[i].equals(rgb)) {
+                return i;
+            }
 		}
 		/* The RGB did not exist in the palette */
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
@@ -210,7 +216,9 @@ public RGB[] getRGBs() {
  */
 int shiftForMask(int mask) {
 	for (int i = 31; i >= 0; i--) {
-		if (((mask >> i) & 0x1) != 0) return 7 - i;
+        if (((mask >> i) & 0x1) != 0) {
+            return 7 - i;
+        }
 	}
 	return 32;
 }

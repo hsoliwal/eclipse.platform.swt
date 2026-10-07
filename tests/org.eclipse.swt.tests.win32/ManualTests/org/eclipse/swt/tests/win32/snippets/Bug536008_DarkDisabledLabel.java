@@ -58,7 +58,9 @@ public class Bug536008_DarkDisabledLabel {
 		};
 
 		button.addListener(SWT.Selection, e -> {
-			if (!((Button)e.widget).getSelection ()) return;
+            if (!((Button) e.widget).getSelection()) {
+                return;
+            }
 			runnable.run();
 		});
 
@@ -105,58 +107,60 @@ public class Bug536008_DarkDisabledLabel {
 			{
 				int nCol = 0;
 
-				for (int test1 = 0; test1 < 5; test1++)
-				for (int test2 = 0; test2 < 2; test2++)
-				for (int test3 = 0; test3 < 2; test3++)
-				{
-					Label label = new Label(labelComposite, SWT.BORDER | style);
+                for (int test1 = 0; test1 < 5; test1++) {
+                    for (int test2 = 0; test2 < 2; test2++) {
+                        for (int test3 = 0; test3 < 2; test3++)
+                        {
+                            Label label = new Label(labelComposite, SWT.BORDER | style);
 
-					switch (test1) {
-						case 0:
-							label.setText("&Label");
-							break;
-						case 1:
-							label.setText("&Mul-\nlabel");
-							break;
-						case 2:
-							label.setImage(image);
-							break;
-						case 3:
-							label.setText("L&abel");
-							label.setImage(image);
-							break;
-						case 4:
-							label.setImage(image);
-							label.setText("La&bel");
-							break;
-						default:
-							throw new RuntimeException("Unknown test");
-					}
+                            switch (test1) {
+                                case 0:
+                                    label.setText("&Label");
+                                    break;
+                                case 1:
+                                    label.setText("&Mul-\nlabel");
+                                    break;
+                                case 2:
+                                    label.setImage(image);
+                                    break;
+                                case 3:
+                                    label.setText("L&abel");
+                                    label.setImage(image);
+                                    break;
+                                case 4:
+                                    label.setImage(image);
+                                    label.setText("La&bel");
+                                    break;
+                                default:
+                                    throw new RuntimeException("Unknown test");
+                            }
 
-					switch (test2) {
-						case 0:
-							label.setEnabled(false);
-							break;
-						case 1:
-							break;
-						default:
-							throw new RuntimeException("Unknown test");
-					}
+                            switch (test2) {
+                                case 0:
+                                    label.setEnabled(false);
+                                    break;
+                                case 1:
+                                    break;
+                                default:
+                                    throw new RuntimeException("Unknown test");
+                            }
 
-					switch (test3) {
-						case 0:
-							label.setSize(cx, cy);
-							break;
-						case 1:
-							label.setSize(label.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-							break;
-						default:
-							throw new RuntimeException("Unknown test");
-					}
+                            switch (test3) {
+                                case 0:
+                                    label.setSize(cx, cy);
+                                    break;
+                                case 1:
+                                    label.setSize(label.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+                                    break;
+                                default:
+                                    throw new RuntimeException("Unknown test");
+                            }
 
-					moveControl(label, new Point(nCol*(cx+margin), nRow*(cy+margin)));
-					nCol++;
-				}
+                            moveControl(label, new Point(nCol * (cx + margin), nRow * (cy + margin)));
+                            nCol++;
+                        }
+                    }
+                }
 
 				nRow++;
 			}
@@ -251,7 +255,9 @@ public class Bug536008_DarkDisabledLabel {
 		shell.open();
 
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		display.dispose ();

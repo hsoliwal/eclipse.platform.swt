@@ -63,8 +63,9 @@ public class Bug482457_JVMCrashMainContextIteration {
 
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 

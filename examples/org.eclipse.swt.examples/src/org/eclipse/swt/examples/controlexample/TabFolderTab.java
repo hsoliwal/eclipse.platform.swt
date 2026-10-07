@@ -66,9 +66,15 @@ class TabFolderTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (topButton.getSelection ()) style |= SWT.TOP;
-		if (bottomButton.getSelection ()) style |= SWT.BOTTOM;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
+        if (topButton.getSelection()) {
+            style |= SWT.TOP;
+        }
+        if (bottomButton.getSelection()) {
+            style |= SWT.BOTTOM;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
 
 		/* Create the example widgets */
 		tabFolder1 = new TabFolder (tabFolderGroup, style);
@@ -134,10 +140,14 @@ class TabFolderTab extends Tab {
 
 	@Override
 	Object[] parameterForType(String typeName, String value, Widget widget) {
-		if (value.isEmpty()) return new Object[] {new TabItem[0]};
+        if (value.isEmpty()) {
+            return new Object[]{new TabItem[0]};
+        }
 		if (typeName.equals("org.eclipse.swt.widgets.TabItem")) {
 			TabItem item = findItem(value, ((TabFolder) widget).getItems());
-			if (item != null) return new Object[] {item};
+            if (item != null) {
+                return new Object[]{item};
+            }
 		}
 		if (typeName.equals("[Lorg.eclipse.swt.widgets.TabItem;")) {
 			String[] values = split(value, ',');
@@ -152,7 +162,9 @@ class TabFolderTab extends Tab {
 
 	TabItem findItem(String value, TabItem[] items) {
 		for (TabItem item : items) {
-			if (item.getText().equals(value)) return item;
+            if (item.getText().equals(value)) {
+                return item;
+            }
 		}
 		return null;
 	}

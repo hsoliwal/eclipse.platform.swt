@@ -59,12 +59,14 @@ public class RoundedRectangleTool extends DragPaintSession implements PaintTool 
 	@Override
 	protected Figure createFigure(Point a, Point b) {
 		ContainerFigure container = new ContainerFigure();
-		if (settings.commonFillType != ToolSettings.ftNone)
-			container.add(new SolidRoundedRectangleFigure(settings.commonBackgroundColor,
-				a.x, a.y, b.x, b.y, settings.roundedRectangleCornerDiameter));
-		if (settings.commonFillType != ToolSettings.ftSolid)
-			container.add(new RoundedRectangleFigure(settings.commonForegroundColor, settings.commonBackgroundColor,
-				settings.commonLineStyle, a.x, a.y, b.x, b.y, settings.roundedRectangleCornerDiameter));
+        if (settings.commonFillType != ToolSettings.ftNone) {
+            container.add(new SolidRoundedRectangleFigure(settings.commonBackgroundColor,
+                    a.x, a.y, b.x, b.y, settings.roundedRectangleCornerDiameter));
+        }
+        if (settings.commonFillType != ToolSettings.ftSolid) {
+            container.add(new RoundedRectangleFigure(settings.commonForegroundColor, settings.commonBackgroundColor,
+                    settings.commonLineStyle, a.x, a.y, b.x, b.y, settings.roundedRectangleCornerDiameter));
+        }
 		return container;
 	}
 }

@@ -34,7 +34,9 @@ public class ASTClass extends ASTItem implements JNIClass {
 	TypeResolver resolver = new TypeResolver() {
 		@Override
 		public String findPath(String simpleName) {
-			if (simpleName.equals(ASTClass.this.simpleName)) return sourcePath;
+            if (simpleName.equals(ASTClass.this.simpleName)) {
+                return sourcePath;
+            }
 			String basePath = sourcePath.substring(0, sourcePath.length() - name.length() - ".java".length());
 			File file = new File(basePath + packageName.replace('.', '/') + "/" + simpleName + ".java");
 			if (file.exists()) {
@@ -50,7 +52,9 @@ public class ASTClass extends ASTItem implements JNIClass {
 		}
 		@Override
 		public String resolve(String simpleName) {
-			if (simpleName.equals(ASTClass.this.simpleName)) return packageName + "." + simpleName;
+            if (simpleName.equals(ASTClass.this.simpleName)) {
+                return packageName + "." + simpleName;
+            }
 			String basePath = sourcePath.substring(0, sourcePath.length() - name.length() - ".java".length());
 			File file = new File(basePath + packageName.replace('.', '/') + "/" + simpleName + ".java");
 			if (file.exists()) {
@@ -108,7 +112,9 @@ public ASTClass(String sourcePath, MetaData metaData) {
 	this.fields = fid.toArray(new ASTField[fid.size()]);
 	List<ASTMethod> mid = new ArrayList<>();
 	for (MethodDeclaration method : type.getMethods()) {
-		if (method.getReturnType2() == null) continue;
+        if (method.getReturnType2() == null) {
+            continue;
+        }
 		mid.add(new ASTMethod(this, method));
 	}
 	this.methods = mid.toArray(new ASTMethod[mid.size()]);
@@ -121,8 +127,12 @@ public int hashCode() {
 
 @Override
 public boolean equals(Object obj) {
-	if (this == obj) return true;
-	if (!(obj instanceof ASTClass)) return false;
+    if (this == obj) {
+        return true;
+    }
+    if (!(obj instanceof ASTClass)) {
+        return false;
+    }
 	return ((ASTClass)obj).getName().equals(getName());
 }
 
@@ -147,8 +157,12 @@ public String getName() {
 
 @Override
 public JNIClass getSuperclass() {
-	if (superclassName == null) return new ReflectClass(Object.class);
-	if (superclass != null) return superclass;
+    if (superclassName == null) {
+        return new ReflectClass(Object.class);
+    }
+    if (superclass != null) {
+        return superclass;
+    }
 	String sourcePath = resolver.findPath(superclassName);
 	return superclass = new ASTClass(sourcePath, metaData);
 }
@@ -165,7 +179,9 @@ public String getExclude() {
 
 @Override
 public String getMetaData() {
-	if (data != null) return data;
+    if (data != null) {
+        return data;
+    }
 	String key = JNIGenerator.toC(getName());
 	return metaData.getMetaData(key, "");
 }

@@ -374,14 +374,16 @@ public class MJ_Table extends MJ_root {
 			int c1w = (int)(width * 0.9);
 			column1.setWidth(c1w);
 			int c1wPost = column1.getWidth();
-			if (c1w != c1wPost)
-				System.err.println("COL_SIZE_ERROR 1 Expected:" + c1w + " actual:" + c1wPost);
+            if (c1w != c1wPost) {
+                System.err.println("COL_SIZE_ERROR 1 Expected:" + c1w + " actual:" + c1wPost);
+            }
 
 			int c2w = width - column1.getWidth();
 			column2.setWidth(c2w);
 			int c2wPost = column2.getWidth();
-			if (c2w != c2wPost)
-				System.err.println("COL_SIZE_ERROR 2 Expected:" + c2w + " actual:" + column2.getWidth());
+            if (c2w != c2wPost) {
+                System.err.println("COL_SIZE_ERROR 2 Expected:" + c2w + " actual:" + column2.getWidth());
+            }
 		};
 
 		comp.addControlListener(ControlListener.controlResizedAdapter(e -> {
@@ -481,7 +483,9 @@ public class MJ_Table extends MJ_root {
 		shell.setSize (SWIDTH, SHEIGHT);
 		shell.open();
 		shell.addDisposeListener(e -> {
-			if(image != null) image.dispose();
+            if (image != null) {
+                image.dispose();
+            }
 		});
 		mainLoop(shell);
 	}
@@ -773,7 +777,9 @@ public class MJ_Table extends MJ_root {
 				item.setText (j, "Item " + i);
 			}
 		}
-		for (int i=0; i<columns.length; i++) columns [i].pack ();
+        for (int i = 0; i < columns.length; i++) {
+            columns [i].pack();
+        }
 		Button button = new Button (shell, SWT.PUSH);
 		final int index = 1;
 		button.setText ("Insert Column " + index + "a");
@@ -1118,7 +1124,9 @@ public class MJ_Table extends MJ_root {
 			final int index = currentColumn == column1 ? 0 : 1;
 			final int direction = dir;
 			Arrays.sort(data, (a, b) -> {
-				if (a[index] == b[index]) return 0;
+                if (a[index] == b[index]) {
+                    return 0;
+                }
 				if (direction == SWT.UP) {
 					return a[index] < b[index] ? -1 : 1;
 				}
@@ -1434,7 +1442,9 @@ public class MJ_Table extends MJ_root {
 						visible = true;
 					}
 				}
-				if (!visible) return;
+                if (!visible) {
+                    return;
+                }
 				index++;
 			}
 		});

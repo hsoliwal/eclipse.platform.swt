@@ -73,7 +73,9 @@ public class Bug476441_TreeIconTest {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		xImage.dispose();
 		display.dispose();

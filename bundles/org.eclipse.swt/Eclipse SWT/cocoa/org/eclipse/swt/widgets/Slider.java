@@ -149,7 +149,7 @@ public void addSelectionListener(SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+	return WidgetStylePolicy.ORIENTATION.applyAsInt(style);
 }
 
 @Override
@@ -163,8 +163,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 		width = (int)NSScroller.scrollerWidthForControlSize(((NSScroller)view).controlSize());
 		height = width * 10;
 	}
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	return new Point (width, height);
 }
 
@@ -202,7 +206,9 @@ void enableWidget(boolean enabled) {
 	super.enableWidget(enabled);
 	if (enabled) {
 		int range = maximum - thumb - minimum;
-		if (range <= 0) ((NSScroller)view).setEnabled(false);
+        if (range <= 0) {
+            ((NSScroller) view).setEnabled(false);
+        }
 	}
 };
 
@@ -321,8 +327,12 @@ public int getThumb () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Selection, listener);
 	eventTable.unhook(SWT.DefaultSelection,listener);
 }
@@ -366,7 +376,9 @@ void sendSelection () {
  */
 public void setIncrement (int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	increment = value;
 }
 
@@ -385,8 +397,12 @@ public void setIncrement (int value) {
  */
 public void setMaximum (int value) {
 	checkWidget();
-	if (value < 0) return;
-	if (value <= minimum) return;
+    if (value < 0) {
+        return;
+    }
+    if (value <= minimum) {
+        return;
+    }
 	if (value - minimum < thumb) {
 		thumb = value - minimum;
 	}
@@ -410,8 +426,12 @@ public void setMaximum (int value) {
  */
 public void setMinimum (int value) {
 	checkWidget();
-	if (value < 0) return;
-	if (value >= maximum) return;
+    if (value < 0) {
+        return;
+    }
+    if (value >= maximum) {
+        return;
+    }
 	if (maximum - value < thumb) {
 		thumb = maximum - value;
 	}
@@ -435,7 +455,9 @@ public void setMinimum (int value) {
  */
 public void setPageIncrement (int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	pageIncrement = value;
 }
 
@@ -492,7 +514,9 @@ void updateBar (int selection, int minimum, int maximum, int thumb) {
  */
 public void setThumb (int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	value = Math.min (value, maximum - minimum);
 	updateBar(getSelection(), minimum, maximum, value);
 	this.thumb = value;
@@ -521,11 +545,21 @@ public void setThumb (int value) {
  */
 public void setValues (int selection, int minimum, int maximum, int thumb, int increment, int pageIncrement) {
 	checkWidget();
-	if (minimum < 0) return;
-	if (maximum < 0) return;
-	if (thumb < 1) return;
-	if (increment < 1) return;
-	if (pageIncrement < 1) return;
+    if (minimum < 0) {
+        return;
+    }
+    if (maximum < 0) {
+        return;
+    }
+    if (thumb < 1) {
+        return;
+    }
+    if (increment < 1) {
+        return;
+    }
+    if (pageIncrement < 1) {
+        return;
+    }
 	thumb = Math.min (thumb, maximum - minimum);
 	this.thumb = thumb;
 	this.maximum = maximum;

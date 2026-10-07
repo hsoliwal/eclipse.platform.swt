@@ -161,7 +161,9 @@ class IE extends WebBrowser {
 				/* original cookieData size was not large enough */
 				size[0] /= TCHAR.sizeof;
 				cookieData = new TCHAR (size[0]);
-				if (!OS.InternetGetCookie (url, null, cookieData, size)) return;
+                if (!OS.InternetGetCookie(url, null, cookieData, size)) {
+                    return;
+                }
 			}
 			String allCookies = cookieData.toString (0, size[0]);
 			StringTokenizer tokenizer = new StringTokenizer (allCookies, ";"); //$NON-NLS-1$
@@ -381,12 +383,14 @@ public void create(Composite parent, int style) {
 					locationListeners = oldLocationListeners;
 				}
 
-				/*
-				* It is possible for the Browser's OLE frame to have been disposed
-				* by a Dispose listener that was invoked by notifyListeners above,
-				* so check for this before unhooking its DOM listeners.
-				*/
-				if (!frame.isDisposed ()) unhookDOMListeners(documents);
+                /*
+                * It is possible for the Browser's OLE frame to have been disposed
+                * by a Dispose listener that was invoked by notifyListeners above,
+                * so check for this before unhooking its DOM listeners.
+                */
+                if (!frame.isDisposed()) {
+                    unhookDOMListeners(documents);
+                }
 
 				for (OleAutomation document : documents) {
 					document.dispose();
@@ -401,7 +405,9 @@ public void create(Composite parent, int style) {
 
 				lastNavigateURL = uncRedirect = null;
 				domListener = null;
-				if (auto != null) auto.dispose();
+                if (auto != null) {
+                    auto.dispose();
+                }
 				auto = null;
 				break;
 			}
@@ -458,8 +464,10 @@ public void create(Composite parent, int style) {
 			switch (event.type) {
 				case BeforeNavigate2: {
 
-					/* don't send client events if the initial navigate to about:blank has not completed */
-					if (performingInitialNavigate) break;
+                    /* don't send client events if the initial navigate to about:blank has not completed */
+                    if (performingInitialNavigate) {
+                        break;
+                    }
 
 					Variant varResult1 = event.arguments[1];
 					String url1 = varResult1.getString();
@@ -593,7 +601,9 @@ public void create(Composite parent, int style) {
 						if (delaySetText) {
 							delaySetText = false;
 							browser.getDisplay().asyncExec(() -> {
-								if (browser.isDisposed() || html == null) return;
+                                if (browser.isDisposed() || html == null) {
+                                    return;
+                                }
 								setHTML(html);
 								html = null;
 							});
@@ -612,7 +622,9 @@ public void create(Composite parent, int style) {
 						for (LocationListener locationListener : locationListeners) {
 							locationListener.changed(locationEvent);
 						}
-						if (browser.isDisposed()) return;
+                        if (browser.isDisposed()) {
+                            return;
+                        }
 
 						/*
 						* With the IBM 64-bit JVM an unexpected document complete event occurs before
@@ -673,7 +685,9 @@ public void create(Composite parent, int style) {
 						execute (function2.functionString);
 					}
 
-					if (!isRefresh) break;
+                    if (!isRefresh) {
+                        break;
+                    }
 					isRefresh = false;
 
 					/*
@@ -753,7 +767,9 @@ public void create(Composite parent, int style) {
 
 					varResult4 = event.arguments[0];
 					IDispatch dispatch4 = varResult4.getDispatch();
-					if (globalDispatch == 0) globalDispatch = dispatch4.getAddress();
+                    if (globalDispatch == 0) {
+                        globalDispatch = dispatch4.getAddress();
+                    }
 
 					OleAutomation webBrowser = varResult4.getAutomation();
 					Variant variant4 = new Variant(auto); /* does not need to be disposed */
@@ -804,7 +820,9 @@ public void create(Composite parent, int style) {
 									OS.MoveMemory(pCancel4, new short[] {OS.VARIANT_TRUE}, 2);
 								}
 								browser.getDisplay().asyncExec(() -> {
-									if (browser.isDisposed()) return;
+                                    if (browser.isDisposed()) {
+                                        return;
+                                    }
 									/*
 									* Feature of IE.  When a UNC path ends with a '\' character IE
 									* drops this character when providing the path as an argument
@@ -851,7 +869,9 @@ public void create(Composite parent, int style) {
 						IDispatch iDispatch = variant5.getDispatch();
 						Variant ppDisp = event.arguments[0];
 						long byref = ppDisp.getByRef();
-						if (byref != 0) OS.MoveMemory(byref, new long[] {iDispatch.getAddress()}, C.PTR_SIZEOF);
+                        if (byref != 0) {
+                            OS.MoveMemory(byref, new long[]{iDispatch.getAddress()}, C.PTR_SIZEOF);
+                        }
 					}
 					if (newEvent2.required) {
 						OS.MoveMemory(pCancel5, new short[]{doit2 ? OS.VARIANT_FALSE : OS.VARIANT_TRUE}, 2);
@@ -927,8 +947,10 @@ public void create(Composite parent, int style) {
 					break;
 				}
 				case ProgressChange: {
-					/* don't send client events if the initial navigate to about:blank has not completed */
-					if (performingInitialNavigate) break;
+                    /* don't send client events if the initial navigate to about:blank has not completed */
+                    if (performingInitialNavigate) {
+                        break;
+                    }
 
 					Variant arg12 = event.arguments[0];
 					int nProgress = arg12.getType() != OLE.VT_I4 ? 0 : arg12.getInt(); // may be -1
@@ -947,8 +969,10 @@ public void create(Composite parent, int style) {
 					break;
 				}
 				case StatusTextChange: {
-					/* don't send client events if the initial navigate to about:blank has not completed */
-					if (performingInitialNavigate) break;
+                    /* don't send client events if the initial navigate to about:blank has not completed */
+                    if (performingInitialNavigate) {
+                        break;
+                    }
 
 					Variant arg13 = event.arguments[0];
 					if (arg13.getType() == OLE.VT_BSTR) {
@@ -964,8 +988,10 @@ public void create(Composite parent, int style) {
 					break;
 				}
 				case TitleChange: {
-					/* don't send client events if the initial navigate to about:blank has not completed */
-					if (performingInitialNavigate) break;
+                    /* don't send client events if the initial navigate to about:blank has not completed */
+                    if (performingInitialNavigate) {
+                        break;
+                    }
 
 					Variant arg14 = event.arguments[0];
 					if (arg14.getType() == OLE.VT_BSTR) {
@@ -987,7 +1013,9 @@ public void create(Composite parent, int style) {
 					* the Close event and dispose the Browser in an async block.
 					*/
 					browser.getDisplay().asyncExec(() -> {
-						if (browser.isDisposed()) return;
+                        if (browser.isDisposed()) {
+                            return;
+                        }
 						WindowEvent newEvent = new WindowEvent(browser);
 						newEvent.display = browser.getDisplay();
 						newEvent.widget = browser;
@@ -1004,25 +1032,33 @@ public void create(Composite parent, int style) {
 					break;
 				}
 				case WindowSetHeight: {
-					if (size == null) size = new Point(0, 0);
+                    if (size == null) {
+                        size = new Point(0, 0);
+                    }
 					Variant arg16 = event.arguments[0];
 					size.y = arg16.getInt();
 					break;
 				}
 				case WindowSetLeft: {
-					if (location == null) location = new Point(0, 0);
+                    if (location == null) {
+                        location = new Point(0, 0);
+                    }
 					Variant arg17 = event.arguments[0];
 					location.x = arg17.getInt();
 					break;
 				}
 				case WindowSetTop: {
-					if (location == null) location = new Point(0, 0);
+                    if (location == null) {
+                        location = new Point(0, 0);
+                    }
 					Variant arg18 = event.arguments[0];
 					location.y = arg18.getInt();
 					break;
 				}
 				case WindowSetWidth: {
-					if (size == null) size = new Point(0, 0);
+                    if (size == null) {
+                        size = new Point(0, 0);
+                    }
 					Variant arg19 = event.arguments[0];
 					size.x = arg19.getInt();
 					break;
@@ -1056,13 +1092,17 @@ public void create(Composite parent, int style) {
 
 	variant = new Variant(false);
 	int[] rgdispid = auto.getIDsOfNames(new String[] {"RegisterAsDropTarget"}); //$NON-NLS-1$
-	if (rgdispid != null) auto.setProperty(rgdispid[0], variant);
+    if (rgdispid != null) {
+        auto.setProperty(rgdispid[0], variant);
+    }
 	variant.dispose();
 }
 
 @Override
 public boolean back() {
-	if (!back) return false;
+    if (!back) {
+        return false;
+    }
 	int[] rgdispid = auto.getIDsOfNames(new String[] { "GoBack" }); //$NON-NLS-1$
 	Variant pVarResult = auto.invoke(rgdispid[0]);
 	return pVarResult != null && pVarResult.getType() == OLE.VT_EMPTY;
@@ -1075,7 +1115,9 @@ public boolean close() {
 	int dispIdMember = rgdispid[0];
 	Variant pVarResult = auto.getProperty(dispIdMember);
 	if (pVarResult == null || pVarResult.getType() == COM.VT_EMPTY) {
-		if (pVarResult != null) pVarResult.dispose();
+        if (pVarResult != null) {
+            pVarResult.dispose();
+        }
 	} else {
 		OleAutomation document = pVarResult.getAutomation();
 		pVarResult.dispose();
@@ -1085,7 +1127,9 @@ public boolean close() {
 			dispIdMember = rgdispid[0];
 			pVarResult = document.getProperty(dispIdMember);
 			if (pVarResult == null || pVarResult.getType() == COM.VT_EMPTY) {
-				if (pVarResult != null) pVarResult.dispose();
+                if (pVarResult != null) {
+                    pVarResult.dispose();
+                }
 			} else {
 				OleAutomation window = pVarResult.getAutomation();
 				pVarResult.dispose();
@@ -1093,7 +1137,9 @@ public boolean close() {
 				dispIdMember = rgdispid[0];
 				pVarResult = window.getProperty(dispIdMember);
 				if (pVarResult == null || pVarResult.getType() == COM.VT_EMPTY) {
-					if (pVarResult != null) pVarResult.dispose();
+                    if (pVarResult != null) {
+                        pVarResult.dispose();
+                    }
 				} else {
 					OleAutomation location = pVarResult.getAutomation();
 					pVarResult.dispose();
@@ -1166,7 +1212,9 @@ public boolean execute(String script) {
 	int dispIdMember = rgdispid[0];
 	Variant pVarResult = auto.getProperty(dispIdMember);
 	if (pVarResult == null || pVarResult.getType() == COM.VT_EMPTY) {
-		if (pVarResult != null) pVarResult.dispose ();
+        if (pVarResult != null) {
+            pVarResult.dispose();
+        }
 		return false;
 	}
 	OleAutomation document = pVarResult.getAutomation();
@@ -1182,7 +1230,9 @@ public boolean execute(String script) {
 	dispIdMember = rgdispid[0];
 	pVarResult = document.getProperty(dispIdMember);
 	if (pVarResult == null || pVarResult.getType() == COM.VT_EMPTY) {
-		if (pVarResult != null) pVarResult.dispose ();
+        if (pVarResult != null) {
+            pVarResult.dispose();
+        }
 		document.dispose();
 		return false;
 	}
@@ -1202,14 +1252,18 @@ public boolean execute(String script) {
 	pVarResult = ihtmlWindow2.invoke(rgdispid[0], rgvarg, rgdispidNamedArgs);
 	rgvarg[0].dispose();
 	ihtmlWindow2.dispose();
-	if (pVarResult == null) return false;
+    if (pVarResult == null) {
+        return false;
+    }
 	pVarResult.dispose();
 	return true;
 }
 
 @Override
 public boolean forward() {
-	if (!forward) return false;
+    if (!forward) {
+        return false;
+    }
 	int[] rgdispid = auto.getIDsOfNames(new String[] { "GoForward" }); //$NON-NLS-1$
 	Variant pVarResult = auto.invoke(rgdispid[0]);
 	return pVarResult != null && pVarResult.getType() == OLE.VT_EMPTY;
@@ -1231,7 +1285,9 @@ public String getText() {
 	int[] rgdispid = auto.getIDsOfNames(new String[] {PROPERTY_DOCUMENT});
 	Variant pVarResult = auto.getProperty(rgdispid[0]);
 	if (pVarResult == null || pVarResult.getType() == COM.VT_EMPTY) {
-		if (pVarResult != null) pVarResult.dispose ();
+        if (pVarResult != null) {
+            pVarResult.dispose();
+        }
 		return ""; //$NON-NLS-1$
 	}
 	OleAutomation document = pVarResult.getAutomation();
@@ -1247,7 +1303,9 @@ public String getText() {
 	pVarResult = document.getProperty(rgdispid[0]);
 	document.dispose();
 	if (pVarResult == null || pVarResult.getType() == COM.VT_EMPTY || pVarResult.getType() == COM.VT_NULL) {
-		if (pVarResult != null) pVarResult.dispose ();
+        if (pVarResult != null) {
+            pVarResult.dispose();
+        }
 		return ""; //$NON-NLS-1$
 	}
 	OleAutomation element = pVarResult.getAutomation();
@@ -1258,7 +1316,9 @@ public String getText() {
 	pVarResult = element.getProperty(rgdispid[0]);
 	element.dispose();
 	if (pVarResult == null || pVarResult.getType() == COM.VT_EMPTY) {
-		if (pVarResult != null) pVarResult.dispose ();
+        if (pVarResult != null) {
+            pVarResult.dispose();
+        }
 		return ""; //$NON-NLS-1$
 	}
 	String result = pVarResult.getString();
@@ -1281,7 +1341,9 @@ public String getUrl() {
 String _getUrl() {
 	int[] rgdispid = auto.getIDsOfNames(new String[] { "LocationURL" }); //$NON-NLS-1$
 	Variant pVarResult = auto.getProperty(rgdispid[0]);
-	if (pVarResult == null || pVarResult.getType() != OLE.VT_BSTR) return ""; //$NON-NLS-1$
+    if (pVarResult == null || pVarResult.getType() != OLE.VT_BSTR) {
+        return ""; //$NON-NLS-1$
+    }
 	String result = pVarResult.getString();
 	pVarResult.dispose();
 	return result;
@@ -1304,8 +1366,12 @@ public boolean isFocusControl () {
 
 boolean navigate(String url, String postData, String headers[], boolean silent) {
 	int count = 1;
-	if (postData != null) count++;
-	if (headers != null) count++;
+    if (postData != null) {
+        count++;
+    }
+    if (headers != null) {
+        count++;
+    }
 	Variant[] rgvarg = new Variant[count];
 	int[] rgdispidNamedArgs = new int[count];
 	int[] rgdispid = auto.getIDsOfNames(new String[] { "Navigate", "URL", "PostData", "Headers" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -1349,7 +1415,9 @@ boolean navigate(String url, String postData, String headers[], boolean silent) 
 	for (int i = 0; i < count; i++) {
 		rgvarg[i].dispose();
 	}
-	if (pVarResult == null) return false;
+    if (pVarResult == null) {
+        return false;
+    }
 	boolean result = pVarResult.getType() == OLE.VT_EMPTY;
 	pVarResult.dispose();
 	return result;
@@ -1466,7 +1534,9 @@ public boolean setText(final String html, boolean trusted) {
 	boolean blankLoading = this.html != null;
 	this.html = html;
 	setUntrustedText(!trusted);
-	if (blankLoading) return true;
+    if (blankLoading) {
+        return true;
+    }
 
 	/*
 	* Navigate to the blank page and insert the given html when
@@ -1496,7 +1566,9 @@ public boolean setText(final String html, boolean trusted) {
 	if (_getUrl().length() != 0) {
 		int[] rgdispid = auto.getIDsOfNames(new String[] { "ReadyState" }); //$NON-NLS-1$
 		Variant pVarResult = auto.getProperty(rgdispid[0]);
-		if (pVarResult == null) return false;
+        if (pVarResult == null) {
+            return false;
+        }
 		delaySetText = pVarResult.getInt() != READYSTATE_COMPLETE;
 		pVarResult.dispose();
 		rgdispid = auto.getIDsOfNames(new String[] { "Stop" }); //$NON-NLS-1$
@@ -1519,7 +1591,9 @@ public boolean setText(final String html, boolean trusted) {
 		OS.CoInternetSetFeatureEnabled(OS.FEATURE_DISABLE_NAVIGATION_SOUNDS, OS.SET_FEATURE_ON_PROCESS, oldValue);
 	}
 	rgvarg[0].dispose();
-	if (pVarResult == null) return false;
+    if (pVarResult == null) {
+        return false;
+    }
 	boolean result = pVarResult.getType() == OLE.VT_EMPTY;
 	pVarResult.dispose();
 	return result;
@@ -1569,12 +1643,14 @@ public void stop() {
 		return;
 	}
 
-	/*
-	* Feature of IE.  Invoking Stop in IE before any content has been shown
-	* displays a Navigation Cancelled error page.  The workaround is to not
-	* invoke Stop if no content has been shown yet.
-	*/
-	if (_getUrl().length() == 0) return;
+    /*
+    * Feature of IE.  Invoking Stop in IE before any content has been shown
+    * displays a Navigation Cancelled error page.  The workaround is to not
+    * invoke Stop if no content has been shown yet.
+    */
+    if (_getUrl().length() == 0) {
+        return;
+    }
 
 	/*
 	* Ensure that isAboutBlank is set accurately since Stop can be issued at
@@ -1593,7 +1669,9 @@ boolean translateMnemonics () {
 }
 
 void handleDOMEvent (OleEvent e) {
-	if (e.arguments == null || e.arguments.length == 0) return; /* for IE5 */
+    if (e.arguments == null || e.arguments.length == 0) {
+        return;
+    } /* for IE5 */
 
 	Variant arg = e.arguments[0];
 	OleAutomation event = arg.getAutomation();
@@ -1647,19 +1725,25 @@ void handleDOMEvent (OleEvent e) {
 		rgdispid = event.getIDsOfNames(new String[] { PROPERTY_ALTKEY });
 		dispIdMember = rgdispid[0];
 		pVarResult = event.getProperty(dispIdMember);
-		if (pVarResult.getBoolean()) mask |= SWT.ALT;
+        if (pVarResult.getBoolean()) {
+            mask |= SWT.ALT;
+        }
 		pVarResult.dispose();
 
 		rgdispid = event.getIDsOfNames(new String[] { PROPERTY_CTRLKEY });
 		dispIdMember = rgdispid[0];
 		pVarResult = event.getProperty(dispIdMember);
-		if (pVarResult.getBoolean()) mask |= SWT.CTRL;
+        if (pVarResult.getBoolean()) {
+            mask |= SWT.CTRL;
+        }
 		pVarResult.dispose();
 
 		rgdispid = event.getIDsOfNames(new String[] { PROPERTY_SHIFTKEY });
 		dispIdMember = rgdispid[0];
 		pVarResult = event.getProperty(dispIdMember);
-		if (pVarResult.getBoolean()) mask |= SWT.SHIFT;
+        if (pVarResult.getBoolean()) {
+            mask |= SWT.SHIFT;
+        }
 		pVarResult.dispose();
 
 		Event keyEvent = new Event ();
@@ -1689,12 +1773,14 @@ void handleDOMEvent (OleEvent e) {
 			pVarFalse.dispose();
 		}
 
-		/*
-		* Pressing F5 refreshes the current page.  If this is about to happen
-		* then set isRefresh to true so that received IE events will be treated
-		* accordingly.
-		*/
-		if (lastKeyCode == SWT.F5) isRefresh = true;
+        /*
+        * Pressing F5 refreshes the current page.  If this is about to happen
+        * then set isRefresh to true so that received IE events will be treated
+        * accordingly.
+        */
+        if (lastKeyCode == SWT.F5) {
+            isRefresh = true;
+        }
 
 		event.dispose();
 		return;
@@ -1705,19 +1791,25 @@ void handleDOMEvent (OleEvent e) {
 		rgdispid = event.getIDsOfNames(new String[] { PROPERTY_CTRLKEY });
 		dispIdMember = rgdispid[0];
 		pVarResult = event.getProperty(dispIdMember);
-		if (pVarResult.getBoolean()) mask |= SWT.CTRL;
+        if (pVarResult.getBoolean()) {
+            mask |= SWT.CTRL;
+        }
 		pVarResult.dispose();
 
 		rgdispid = event.getIDsOfNames(new String[] { PROPERTY_SHIFTKEY });
 		dispIdMember = rgdispid[0];
 		pVarResult = event.getProperty(dispIdMember);
-		if (pVarResult.getBoolean()) mask |= SWT.SHIFT;
+        if (pVarResult.getBoolean()) {
+            mask |= SWT.SHIFT;
+        }
 		pVarResult.dispose();
 
 		rgdispid = event.getIDsOfNames(new String[] { PROPERTY_ALTKEY });
 		dispIdMember = rgdispid[0];
 		pVarResult = event.getProperty(dispIdMember);
-		if (pVarResult.getBoolean()) mask |= SWT.ALT;
+        if (pVarResult.getBoolean()) {
+            mask |= SWT.ALT;
+        }
 		pVarResult.dispose();
 
 		/* in the keypress event the keyCode actually corresponds to the character code */
@@ -1785,19 +1877,25 @@ void handleDOMEvent (OleEvent e) {
 		rgdispid = event.getIDsOfNames(new String[] { PROPERTY_CTRLKEY });
 		dispIdMember = rgdispid[0];
 		pVarResult = event.getProperty(dispIdMember);
-		if (pVarResult.getBoolean()) mask |= SWT.CTRL;
+        if (pVarResult.getBoolean()) {
+            mask |= SWT.CTRL;
+        }
 		pVarResult.dispose();
 
 		rgdispid = event.getIDsOfNames(new String[] { PROPERTY_ALTKEY });
 		dispIdMember = rgdispid[0];
 		pVarResult = event.getProperty(dispIdMember);
-		if (pVarResult.getBoolean()) mask |= SWT.ALT;
+        if (pVarResult.getBoolean()) {
+            mask |= SWT.ALT;
+        }
 		pVarResult.dispose();
 
 		rgdispid = event.getIDsOfNames(new String[] { PROPERTY_SHIFTKEY });
 		dispIdMember = rgdispid[0];
 		pVarResult = event.getProperty(dispIdMember);
-		if (pVarResult.getBoolean()) mask |= SWT.SHIFT;
+        if (pVarResult.getBoolean()) {
+            mask |= SWT.SHIFT;
+        }
 		pVarResult.dispose();
 
 		Event keyEvent = new Event ();
@@ -1887,19 +1985,25 @@ void handleDOMEvent (OleEvent e) {
 	rgdispid = event.getIDsOfNames(new String[] { PROPERTY_CTRLKEY });
 	dispIdMember = rgdispid[0];
 	pVarResult = event.getProperty(dispIdMember);
-	if (pVarResult.getBoolean()) mask |= SWT.CTRL;
+    if (pVarResult.getBoolean()) {
+        mask |= SWT.CTRL;
+    }
 	pVarResult.dispose();
 
 	rgdispid = event.getIDsOfNames(new String[] { PROPERTY_ALTKEY });
 	dispIdMember = rgdispid[0];
 	pVarResult = event.getProperty(dispIdMember);
-	if (pVarResult.getBoolean()) mask |= SWT.ALT;
+    if (pVarResult.getBoolean()) {
+        mask |= SWT.ALT;
+    }
 	pVarResult.dispose();
 
 	rgdispid = event.getIDsOfNames(new String[] { PROPERTY_SHIFTKEY });
 	dispIdMember = rgdispid[0];
 	pVarResult = event.getProperty(dispIdMember);
-	if (pVarResult.getBoolean()) mask |= SWT.SHIFT;
+    if (pVarResult.getBoolean()) {
+        mask |= SWT.SHIFT;
+    }
 	pVarResult.dispose();
 
 	newEvent.stateMask = mask;
@@ -1978,7 +2082,9 @@ void hookDOMListeners(OleAutomation webBrowser, final boolean isTop) {
 	int[] rgdispid = webBrowser.getIDsOfNames(new String[] { PROPERTY_DOCUMENT });
 	int dispIdMember = rgdispid[0];
 	Variant pVarResult = webBrowser.getProperty(dispIdMember);
-	if (pVarResult == null) return;
+    if (pVarResult == null) {
+        return;
+    }
 	if (pVarResult.getType() == COM.VT_EMPTY) {
 		pVarResult.dispose();
 		return;

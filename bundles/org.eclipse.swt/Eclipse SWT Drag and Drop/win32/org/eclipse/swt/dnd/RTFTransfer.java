@@ -96,7 +96,9 @@ public void javaToNative (Object object, TransferData transferData){
  */
 @Override
 public Object nativeToJava(TransferData transferData){
-	if (!isSupportedType(transferData) || transferData.pIDataObject == 0) return null;
+    if (!isSupportedType(transferData) || transferData.pIDataObject == 0) {
+        return null;
+    }
 	IDataObject data = new IDataObject(transferData.pIDataObject);
 	data.AddRef();
 	STGMEDIUM stgmedium = new STGMEDIUM();
@@ -104,15 +106,21 @@ public Object nativeToJava(TransferData transferData){
 	stgmedium.tymed = COM.TYMED_HGLOBAL;
 	transferData.result = getData(data, formatetc, stgmedium);
 	data.Release();
-	if (transferData.result != COM.S_OK) return null;
+    if (transferData.result != COM.S_OK) {
+        return null;
+    }
 	long hMem = stgmedium.unionField;
 	try {
 		long lpMultiByteStr = OS.GlobalLock(hMem);
-		if (lpMultiByteStr == 0) return null;
+        if (lpMultiByteStr == 0) {
+            return null;
+        }
 		try {
 			int codePage = OS.GetACP();
 			int cchWideChar  = OS.MultiByteToWideChar (codePage, OS.MB_PRECOMPOSED, lpMultiByteStr, -1, null, 0);
-			if (cchWideChar == 0) return null;
+            if (cchWideChar == 0) {
+                return null;
+            }
 			char[] lpWideCharStr = new char [cchWideChar - 1];
 			OS.MultiByteToWideChar (codePage, OS.MB_PRECOMPOSED, lpMultiByteStr, -1, lpWideCharStr, lpWideCharStr.length);
 			return new String(lpWideCharStr);

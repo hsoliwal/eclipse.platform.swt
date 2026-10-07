@@ -134,7 +134,9 @@ public void javaToNative (Object object, TransferData transferData){
  */
 @Override
 public Object nativeToJava(TransferData transferData){
-	if (!isSupportedType(transferData) || transferData.pIDataObject == 0) return null;
+    if (!isSupportedType(transferData) || transferData.pIDataObject == 0) {
+        return null;
+    }
 	IDataObject data = new IDataObject(transferData.pIDataObject);
 	data.AddRef();
 	STGMEDIUM stgmedium = new STGMEDIUM();
@@ -142,18 +144,24 @@ public Object nativeToJava(TransferData transferData){
 	stgmedium.tymed = COM.TYMED_HGLOBAL;
 	transferData.result = getData(data, formatetc, stgmedium);
 	data.Release();
-	if (transferData.result != COM.S_OK) return null;
+    if (transferData.result != COM.S_OK) {
+        return null;
+    }
 	long hMem = stgmedium.unionField;
 
 	try {
 		long lpMultiByteStr = OS.GlobalLock(hMem);
-		if (lpMultiByteStr == 0) return null;
+        if (lpMultiByteStr == 0) {
+            return null;
+        }
 		try {
 			/* NOTE: CF_HTML uses UTF-8 encoding.
 			 * The MSDN documentation for MultiByteToWideChar states that dwFlags must be set to 0 for UTF-8.
 			 * Otherwise, the function fails with ERROR_INVALID_FLAGS. */
 			int cchWideChar  = OS.MultiByteToWideChar (OS.CP_UTF8, 0, lpMultiByteStr, -1, null, 0);
-			if (cchWideChar == 0) return null;
+            if (cchWideChar == 0) {
+                return null;
+            }
 			char[] lpWideCharStr = new char [cchWideChar - 1];
 			OS.MultiByteToWideChar (OS.CP_UTF8, 0, lpMultiByteStr, -1, lpWideCharStr, lpWideCharStr.length);
 			String string = new String(lpWideCharStr);
@@ -180,9 +188,13 @@ public Object nativeToJava(TransferData transferData){
 					break;
 				}
 			}
-			if (fragmentEnd <= fragmentStart || fragmentEnd > C.strlen(lpMultiByteStr)) return null;
+            if (fragmentEnd <= fragmentStart || fragmentEnd > C.strlen(lpMultiByteStr)) {
+                return null;
+            }
 			cchWideChar = OS.MultiByteToWideChar (OS.CP_UTF8, 0, lpMultiByteStr+fragmentStart, fragmentEnd - fragmentStart, lpWideCharStr, lpWideCharStr.length);
-			if (cchWideChar == 0) return null;
+            if (cchWideChar == 0) {
+                return null;
+            }
 			String s = new String(lpWideCharStr, 0, cchWideChar);
 			/*
 			 * Firefox includes <!--StartFragment --> in the fragment, so remove it.

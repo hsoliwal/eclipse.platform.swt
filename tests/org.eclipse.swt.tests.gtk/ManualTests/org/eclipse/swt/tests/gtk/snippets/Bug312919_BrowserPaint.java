@@ -48,8 +48,9 @@ public class Bug312919_BrowserPaint {
 			shell2.open();
 		});
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		region.dispose();
 		shell.dispose();

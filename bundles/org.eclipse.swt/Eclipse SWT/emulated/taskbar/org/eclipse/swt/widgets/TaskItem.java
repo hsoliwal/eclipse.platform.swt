@@ -80,7 +80,9 @@ TaskItem (TaskBar parent, int style) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -229,7 +231,9 @@ void releaseWidget () {
 public void setMenu (Menu menu) {
 	checkWidget ();
 	if (menu != null) {
-		if (menu.isDisposed()) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (menu.isDisposed()) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		if ((menu.style & SWT.POP_UP) == 0) {
 			error (SWT.ERROR_MENU_NOT_POP_UP);
 		}
@@ -266,7 +270,9 @@ public void setMenu (Menu menu) {
  */
 public void setOverlayImage (Image overlayImage) {
 	checkWidget ();
-	if (overlayImage != null && overlayImage.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (overlayImage != null && overlayImage.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.overlayImage = overlayImage;
 }
 
@@ -298,7 +304,9 @@ public void setOverlayImage (Image overlayImage) {
  */
 public void setOverlayText (String overlayText) {
 	checkWidget ();
-	if (overlayText == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (overlayText == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.overlayText = overlayText;
 }
 
@@ -339,7 +347,9 @@ public void setOverlayText (String overlayText) {
  */
 public void setProgressState (int progressState) {
 	checkWidget ();
-	if (this.progressState == progressState) return;
+    if (this.progressState == progressState) {
+        return;
+    }
 	this.progressState = progressState;
 }
 
@@ -371,7 +381,9 @@ public void setProgressState (int progressState) {
 public void setProgress (int progress) {
 	checkWidget ();
 	progress = Math.max(0, Math.min(progress, PROGRESS_MAX));
-	if (this.progress == progress) return;
+    if (this.progress == progress) {
+        return;
+    }
 	this.progress = progress;
 }
 

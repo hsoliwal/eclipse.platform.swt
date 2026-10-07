@@ -66,8 +66,12 @@ public class OS extends C {
 		/* Initialize the OS flags and locale constants */
 		String osName = System.getProperty ("os.name");
 		boolean isLinux = false, isWin32 = false;
-		if (osName.equals ("Linux")) isLinux = true;
-		if (osName.startsWith("Windows")) isWin32 = true;
+        if (osName.equals("Linux")) {
+            isLinux = true;
+        }
+        if (osName.startsWith("Windows")) {
+            isWin32 = true;
+        }
 		IsLinux = isLinux;  IsWin32 = isWin32;
 
 		byte[] buffer = new byte[4];

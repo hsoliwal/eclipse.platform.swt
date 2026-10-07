@@ -33,12 +33,18 @@ class EventTable {
 	static final int GROW_SIZE = 4;
 
 public Listener [] getListeners (int eventType) {
-	if (types == null) return new Listener [0];
+    if (types == null) {
+        return new Listener [0];
+    }
 	int count = 0;
 	for (int type : types) {
-		if (type == eventType) count++;
+        if (type == eventType) {
+            count++;
+        }
 	}
-	if (count == 0) return new Listener [0];
+    if (count == 0) {
+        return new Listener [0];
+    }
 	Listener [] result = new Listener [count];
 	count = 0;
 	for (int i=0; i<types.length; i++) {
@@ -50,36 +56,54 @@ public Listener [] getListeners (int eventType) {
 }
 
 public void hook (int eventType, Listener listener) {
-	if (types == null) types = new int [GROW_SIZE];
-	if (listeners == null) listeners = new Listener [GROW_SIZE];
+    if (types == null) {
+        types = new int [GROW_SIZE];
+    }
+    if (listeners == null) {
+        listeners = new Listener [GROW_SIZE];
+    }
 	int length = types.length, index = length - 1;
 	while (index >= 0) {
-		if (types [index] != 0) break;
+        if (types [index] != 0) {
+            break;
+        }
 		--index;
 	}
 	index++;
 	if (index == length) {
-		types = Arrays.copyOf (types, length + GROW_SIZE);
-		listeners = Arrays.copyOf (listeners, length + GROW_SIZE);
+		int [] newTypes = new int [length + GROW_SIZE];
+		System.arraycopy (types, 0, newTypes, 0, length);
+		types = newTypes;
+		Listener [] newListeners = new Listener [length + GROW_SIZE];
+		System.arraycopy (listeners, 0, newListeners, 0, length);
+		listeners = newListeners;
 	}
 	types [index] = eventType;
 	listeners [index] = listener;
 }
 
 public boolean hooks (int eventType) {
-	if (types == null) return false;
+    if (types == null) {
+        return false;
+    }
 	for (int type : types) {
-		if (type == eventType) return true;
+        if (type == eventType) {
+            return true;
+        }
 	}
 	return false;
 }
 
 public void sendEvent (Event event) {
-	if (types == null) return;
+    if (types == null) {
+        return;
+    }
 	level += level >= 0 ? 1 : -1;
 	try (ExceptionStash exceptions = new ExceptionStash ()) {
 		for (int i=0; i<types.length; i++) {
-			if (event.type == SWT.None) return;
+            if (event.type == SWT.None) {
+                return;
+            }
 			if (types [i] == event.type) {
 				Listener listener = listeners [i];
 				if (listener != null) {
@@ -112,10 +136,14 @@ public void sendEvent (Event event) {
 }
 
 public int size () {
-	if (types == null) return 0;
+    if (types == null) {
+        return 0;
+    }
 	int count = 0;
 	for (int type : types) {
-		if (type != 0) count++;
+        if (type != 0) {
+            count++;
+        }
 	}
 	return count;
 }
@@ -127,14 +155,18 @@ void remove (int index) {
 		System.arraycopy (listeners, index + 1, listeners, index, end - index);
 		index = end;
 	} else {
-		if (level > 0) level = -level;
+        if (level > 0) {
+            level = -level;
+        }
 	}
 	types [index] = 0;
 	listeners [index] = null;
 }
 
 public void unhook (int eventType, Listener listener) {
-	if (types == null) return;
+    if (types == null) {
+        return;
+    }
 	for (int i=0; i<types.length; i++) {
 		if (types [i] == eventType && listeners [i] == listener) {
 			remove (i);
@@ -145,7 +177,9 @@ public void unhook (int eventType, Listener listener) {
 
 @SuppressWarnings("removal")
 public void unhook (int eventType, EventListener listener) {
-	if (types == null) return;
+    if (types == null) {
+        return;
+    }
 	for (int i=0; i<types.length; i++) {
 		if (types [i] == eventType) {
 			if (listeners [i] instanceof TypedListener typedListener) {

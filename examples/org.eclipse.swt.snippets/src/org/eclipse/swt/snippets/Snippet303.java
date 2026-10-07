@@ -56,7 +56,9 @@ public static void main(String [] args) {
 	browser.setUrl("eclipse.org");
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

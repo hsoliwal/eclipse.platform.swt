@@ -129,19 +129,25 @@ public ControlEditor (Composite parent) {
 
 	scrollbarListener = this::scroll;
 	ScrollBar hBar = parent.getHorizontalBar ();
-	if (hBar != null) hBar.addListener (SWT.Selection, scrollbarListener);
+    if (hBar != null) {
+        hBar.addListener(SWT.Selection, scrollbarListener);
+    }
 	ScrollBar vBar = parent.getVerticalBar ();
-	if (vBar != null) vBar.addListener (SWT.Selection, scrollbarListener);
+    if (vBar != null) {
+        vBar.addListener(SWT.Selection, scrollbarListener);
+    }
 }
 Rectangle computeBounds () {
 	Rectangle clientArea = parent.getClientArea();
 	Rectangle editorRect = new Rectangle(clientArea.x, clientArea.y, minimumWidth, minimumHeight);
 
-	if (grabHorizontal)
-		editorRect.width = Math.max(clientArea.width, minimumWidth);
+    if (grabHorizontal) {
+        editorRect.width = Math.max(clientArea.width, minimumWidth);
+    }
 
-	if (grabVertical)
-		editorRect.height = Math.max(clientArea.height, minimumHeight);
+    if (grabVertical) {
+        editorRect.height = Math.max(clientArea.height, minimumHeight);
+    }
 
 	switch (horizontalAlignment) {
 		case SWT.RIGHT:
@@ -181,9 +187,13 @@ public void dispose () {
 			parent.removeListener (event, controlListener);
 		}
 		ScrollBar hBar = parent.getHorizontalBar ();
-		if (hBar != null) hBar.removeListener (SWT.Selection, scrollbarListener);
+        if (hBar != null) {
+            hBar.removeListener(SWT.Selection, scrollbarListener);
+        }
 		ScrollBar vBar = parent.getVerticalBar ();
-		if (vBar != null) vBar.removeListener (SWT.Selection, scrollbarListener);
+        if (vBar != null) {
+            vBar.removeListener(SWT.Selection, scrollbarListener);
+        }
 	}
 
 	parent = null;
@@ -208,7 +218,9 @@ public Control getEditor () {
  * @since 2.1
  */
 public void layout () {
-	if (editor == null || editor.isDisposed()) return;
+    if (editor == null || editor.isDisposed()) {
+        return;
+    }
 	if (editor.getVisible ()) {
 		hadFocus = editor.isFocusControl();
 	} // this doesn't work because
@@ -216,12 +228,16 @@ public void layout () {
 	// before we get here
 	editor.setBounds (computeBounds ());
 	if (hadFocus) {
-		if (editor == null || editor.isDisposed()) return;
+        if (editor == null || editor.isDisposed()) {
+            return;
+        }
 		editor.setFocus ();
 	}
 }
 void scroll (Event e) {
-	if (editor == null || editor.isDisposed()) return;
+    if (editor == null || editor.isDisposed()) {
+        return;
+    }
 	layout();
 }
 /**
@@ -243,7 +259,9 @@ public void setEditor (Control editor) {
 
 	this.editor = editor;
 	layout();
-	if (this.editor == null || this.editor.isDisposed()) return;
+    if (this.editor == null || this.editor.isDisposed()) {
+        return;
+    }
 	editor.setVisible(true);
 }
 }

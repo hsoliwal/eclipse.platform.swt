@@ -43,6 +43,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_graphics_Region.class, //
 		Test_org_eclipse_swt_graphics_TextLayout.class, //
 		Test_org_eclipse_swt_graphics_Transform.class, //
+		Test_org_eclipse_swt_internal_ViewportPaintGraph.class, //
 })
 public class AllGraphicsTests {
 }

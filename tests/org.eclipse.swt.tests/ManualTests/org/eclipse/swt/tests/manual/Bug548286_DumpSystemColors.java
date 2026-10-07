@@ -63,10 +63,11 @@ public class Bug548286_DumpSystemColors {
 			String name = entry.getValue();
 			Color color = display.getSystemColor(id);
 
-			if (printIDs)
-				System.out.format("%02d - ARGB:%02X%02X%02X%02X%n", id, color.getAlpha(), color.getRed(), color.getGreen(), color.getBlue());
-			else
-				System.out.format("%40s - ARGB:%02X%02X%02X%02X%n", name, color.getAlpha(), color.getRed(), color.getGreen(), color.getBlue());
+            if (printIDs) {
+                System.out.format("%02d - ARGB:%02X%02X%02X%02X%n", id, color.getAlpha(), color.getRed(), color.getGreen(), color.getBlue());
+            } else {
+                System.out.format("%40s - ARGB:%02X%02X%02X%02X%n", name, color.getAlpha(), color.getRed(), color.getGreen(), color.getBlue());
+            }
 		}
 	}
 

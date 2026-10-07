@@ -62,7 +62,9 @@ public class Bug215268_ShellSetVisibleFront {
 
 		while (!shell.isDisposed ()) {
 
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 
 		}
 

@@ -135,21 +135,43 @@ public LineAttributes(float width, int cap, int join, int style, float[] dash, f
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof LineAttributes p)) return false;
-	if (p.width != width) return false;
-	if (p.cap != cap) return false;
-	if (p.join != join) return false;
-	if (p.style != style) return false;
-	if (p.dashOffset != dashOffset) return false;
-	if (p.miterLimit != miterLimit) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof LineAttributes p)) {
+        return false;
+    }
+    if (p.width != width) {
+        return false;
+    }
+    if (p.cap != cap) {
+        return false;
+    }
+    if (p.join != join) {
+        return false;
+    }
+    if (p.style != style) {
+        return false;
+    }
+    if (p.dashOffset != dashOffset) {
+        return false;
+    }
+    if (p.miterLimit != miterLimit) {
+        return false;
+    }
 	if (p.dash != null && dash != null) {
-		if (p.dash.length != dash.length) return false;
+        if (p.dash.length != dash.length) {
+            return false;
+        }
 		for (int i = 0; i < dash.length; i++) {
-			if (p.dash[i] != dash[i]) return false;
+            if (p.dash[i] != dash[i]) {
+                return false;
+            }
 		}
 	} else {
-		if (p.dash != null || dash != null) return false;
+        if (p.dash != null || dash != null) {
+            return false;
+        }
 	}
 	return true;
 }

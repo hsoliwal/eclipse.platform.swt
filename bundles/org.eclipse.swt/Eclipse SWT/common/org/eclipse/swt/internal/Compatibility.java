@@ -85,11 +85,11 @@ public static int round(int p, int q) {
  * </ul>
  */
 public static int pow2(int n) {
-	if (n >= 1 && n <= 30)
-		return 2 << (n - 1);
-	else if (n != 0) {
-		SWT.error(SWT.ERROR_INVALID_RANGE);
-	}
+    if (n >= 1 && n <= 30) {
+        return 2 << (n - 1);
+    } else if (n != 0) {
+        SWT.error(SWT.ERROR_INVALID_RANGE);
+    }
 	return 1;
 }
 

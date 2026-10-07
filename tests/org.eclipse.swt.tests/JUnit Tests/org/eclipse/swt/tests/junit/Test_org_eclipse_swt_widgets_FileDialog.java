@@ -82,8 +82,9 @@ public void test_getFileNames() {
 
 @Test
 public void test_open() {
-	if (SwtTestUtil.fTestDialogOpen)
-		fileDialog.open();
+    if (SwtTestUtil.fTestDialogOpen) {
+        fileDialog.open();
+    }
 }
 
 @Test

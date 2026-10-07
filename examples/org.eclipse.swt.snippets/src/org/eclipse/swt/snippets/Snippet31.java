@@ -42,7 +42,9 @@ public static void main (String [] args) {
 					point = new Point (event.x, event.y);
 					break;
 				case SWT.MouseMove:
-					if (point == null) return;
+                    if (point == null) {
+                        return;
+                    }
 					int deltaX = point.x - event.x, deltaY = point.y - event.y;
 					if (Math.abs (deltaX) < JITTER && Math.abs (deltaY) < JITTER) {
 						return;
@@ -68,7 +70,9 @@ public static void main (String [] args) {
 	shell.addListener (SWT.MouseMove, listener);
 	shell.addListener (SWT.MouseUp, listener);
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

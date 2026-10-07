@@ -54,9 +54,15 @@ static class Reader {
 
 	int nextHexDigit() {
 		char c = nextChar();
-		if ('0' <= c && c <= '9') return c - '0';
-		if ('a' <= c && c <= 'f') return c - 'a' + 10;
-		if ('A' <= c && c <= 'F') return c - 'A' + 10;
+        if ('0' <= c && c <= '9') {
+            return c - '0';
+        }
+        if ('a' <= c && c <= 'f') {
+            return c - 'a' + 10;
+        }
+        if ('A' <= c && c <= 'F') {
+            return c - 'A' + 10;
+        }
 		error();
 		return 0;
 	}
@@ -86,9 +92,13 @@ static class Reader {
 		int start = pos;
 		do {
 			c = nextChar();
-			if (c < 0x20) error();
+            if (c < 0x20) {
+                error();
+            }
 			if (c == '\\') {
-				if (sb == null) sb = new StringBuilder();
+                if (sb == null) {
+                    sb = new StringBuilder();
+                }
 				sb.append(input, start, pos - start - 1);
 				sb.append(readEscape());
 				start = pos;
@@ -170,16 +180,26 @@ static class Reader {
 
 	Object readArray() {
 		Object item = readAny();
-		if (item == Control.ARRAY_END) return new Object[0];
-		if (item instanceof Control) error();
+        if (item == Control.ARRAY_END) {
+            return new Object[0];
+        }
+        if (item instanceof Control) {
+            error();
+        }
 		List<Object> items = new ArrayList<>();
 		items.add(item);
 		while (true) {
 			Object sep = readAny();
-			if (sep == Control.ARRAY_END) break;
-			if (sep != Control.COMMA) error();
+            if (sep == Control.ARRAY_END) {
+                break;
+            }
+            if (sep != Control.COMMA) {
+                error();
+            }
 			item = readAny();
-			if (item instanceof Control) error();
+            if (item instanceof Control) {
+                error();
+            }
 			items.add(item);
 		}
 		return items.toArray();
@@ -187,8 +207,12 @@ static class Reader {
 
 	Object readTop() {
 		Object item = readAny();
-		if (item instanceof Control) error();
-		if (readAny() != Control.END) error();
+        if (item instanceof Control) {
+            error();
+        }
+        if (readAny() != Control.END) {
+            error();
+        }
 		return item;
 	}
 }
@@ -259,7 +283,9 @@ static class Writer {
 		sb.append('[');
 		boolean first = true;
 		for (Object item : array) {
-			if (!first) sb.append(',');
+            if (!first) {
+                sb.append(',');
+            }
 			writeAny(item);
 			first = false;
 		}

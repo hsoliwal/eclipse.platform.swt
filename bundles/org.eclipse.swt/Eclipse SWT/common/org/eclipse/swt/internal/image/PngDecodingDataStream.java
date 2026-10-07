@@ -98,7 +98,9 @@ public int read() throws IOException {
 public int read(byte[] buffer, int off, int len) throws IOException {
 	for (int i = 0; i < len; i++) {
 		int b = read();
-		if (b == -1) return i;
+        if (b == -1) {
+            return i;
+        }
 		buffer[off + i] = (byte)b;
 	}
 	return len;
@@ -113,18 +115,26 @@ private void readCompressedDataHeader() throws IOException {
 	byte headerByte2 = getNextIdatByte();
 
 	int number = ((headerByte1 & 0xFF) << 8) | (headerByte2 & 0xFF);
-	if (number % 31 != 0) error();
+    if (number % 31 != 0) {
+        error();
+    }
 
 	int compressionMethod = headerByte1 & 0x0F;
-	if (compressionMethod != 8) error();
+    if (compressionMethod != 8) {
+        error();
+    }
 
 	int windowSizeHint = (headerByte1 & 0xF0) >> 4;
-	if (windowSizeHint > 7) error();
+    if (windowSizeHint > 7) {
+        error();
+    }
 	int windowSize = (1 << (windowSizeHint + 8));
 	lzBlockReader.setWindowSize(windowSize);
 
 	int dictionary = (headerByte2 & (1 << 5));
-	if (dictionary != 0) error();
+    if (dictionary != 0) {
+        error();
+    }
 
 //	int compressionLevel = (headerByte2 & 0xC0) >> 6;
 }
@@ -134,7 +144,9 @@ void checkAdler() throws IOException {
 		| ((getNextIdatByte() & 0xFF) << 16)
 		| ((getNextIdatByte() & 0xFF) << 8)
 		| (getNextIdatByte() & 0xFF);
-	if (storedAdler != adlerValue) error();
+    if (storedAdler != adlerValue) {
+        error();
+    }
 }
 
 }

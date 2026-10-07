@@ -38,8 +38,12 @@ public static void main (String [] args) {
 	final Table table = new Table(shell, SWT.BORDER);
 	for (int i = 0; i < 4; i++) {
 		TableItem item = new TableItem(table, SWT.NONE);
-		if (i % 2 == 0) item.setText("Drop a file");
-		if (i % 2 == 1) item.setText("Drop text");
+        if (i % 2 == 0) {
+            item.setText("Drop a file");
+        }
+        if (i % 2 == 1) {
+            item.setText("Drop text");
+        }
 	}
 	DragSource dragSource = new DragSource(label1, DND.DROP_COPY);
 	dragSource.setTransfer(TextTransfer.getInstance(), FileTransfer.getInstance());
@@ -62,22 +66,30 @@ public static void main (String [] args) {
 		TextTransfer textTransfer = TextTransfer.getInstance();
 		@Override
 		public void dragEnter(DropTargetEvent event) {
-			if (event.detail == DND.DROP_DEFAULT) event.detail = DND.DROP_COPY;
+            if (event.detail == DND.DROP_DEFAULT) {
+                event.detail = DND.DROP_COPY;
+            }
 		}
 		@Override
 		public void dragOperationChanged(DropTargetEvent event) {
-			if (event.detail == DND.DROP_DEFAULT) event.detail = DND.DROP_COPY;
+            if (event.detail == DND.DROP_DEFAULT) {
+                event.detail = DND.DROP_COPY;
+            }
 		}
 		@Override
 		public void dragOver(DropTargetEvent event) {
 			event.detail = DND.DROP_NONE;
 			TableItem item = (TableItem)event.item;
-			if (item == null) return;
+            if (item == null) {
+                return;
+            }
 			int itemIndex = table.indexOf(item);
 			if (itemIndex % 2 == 0) {
 				int index = 0;
 				while (index < event.dataTypes.length) {
-					if (fileTransfer.isSupportedType(event.dataTypes[index])) break;
+                    if (fileTransfer.isSupportedType(event.dataTypes[index])) {
+                        break;
+                    }
 					index++;
 				}
 				if (index < event.dataTypes.length) {
@@ -88,7 +100,9 @@ public static void main (String [] args) {
 			} else {
 				int index = 0;
 				while (index < event.dataTypes.length) {
-					if (textTransfer.isSupportedType(event.dataTypes[index])) break;
+                    if (textTransfer.isSupportedType(event.dataTypes[index])) {
+                        break;
+                    }
 					index++;
 				}
 				if (index < event.dataTypes.length) {
@@ -124,7 +138,9 @@ public static void main (String [] args) {
 	shell.setSize(300, 150);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

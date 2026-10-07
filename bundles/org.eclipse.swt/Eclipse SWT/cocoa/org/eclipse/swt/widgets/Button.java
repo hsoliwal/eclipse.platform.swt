@@ -154,7 +154,9 @@ NSSize cellSizeForBounds (long id, long sel, NSRect cellFrame) {
 	if (((style & (SWT.PUSH|SWT.TOGGLE)) !=0) && (style & (SWT.FLAT|SWT.WRAP)) == 0) {
 		if (image != null) {
 			NSCell cell = new NSCell(id);
-			if (cell.controlSize() == OS.NSControlSizeSmall) size.height += EXTRA_HEIGHT;
+            if (cell.controlSize() == OS.NSControlSizeSmall) {
+                size.height += EXTRA_HEIGHT;
+            }
 		}
 		// TODO: Why is this necessary?
 		size.width += EXTRA_WIDTH;
@@ -182,18 +184,7 @@ NSSize cellSizeForBounds (long id, long sel, NSRect cellFrame) {
 }
 
 static int checkStyle (int style) {
-	style = checkBits (style, SWT.PUSH, SWT.ARROW, SWT.CHECK, SWT.RADIO, SWT.TOGGLE, 0);
-	if ((style & (SWT.PUSH | SWT.TOGGLE)) != 0) {
-		return checkBits (style, SWT.CENTER, SWT.LEFT, SWT.RIGHT, 0, 0, 0);
-	}
-	if ((style & (SWT.CHECK | SWT.RADIO)) != 0) {
-		return checkBits (style, SWT.LEFT, SWT.RIGHT, SWT.CENTER, 0, 0, 0);
-	}
-	if ((style & SWT.ARROW) != 0) {
-		style |= SWT.NO_FOCUS;
-		return checkBits (style, SWT.UP, SWT.DOWN, SWT.LEFT, SWT.RIGHT, 0, 0);
-	}
-	return style;
+	return WidgetStylePolicy.BUTTON.applyAsInt(style);
 }
 
 void click () {
@@ -221,8 +212,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 	}
 	int width = (int)Math.ceil (size.width);
 	int height = (int)Math.ceil (size.height);
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	return new Point (width, height);
 }
 
@@ -234,7 +229,9 @@ NSAttributedString createString() {
 
 @Override
 void createHandle () {
-	if ((style & SWT.PUSH) == 0) state |= THEME_BACKGROUND;
+    if ((style & SWT.PUSH) == 0) {
+        state |= THEME_BACKGROUND;
+    }
 	NSButton widget = (NSButton)new SWTButton().alloc();
 	widget.init();
 	NSButtonCell cell = (NSButtonCell)new SWTButtonCell ().alloc ().init ();
@@ -302,7 +299,9 @@ NSFont defaultNSFont() {
 void deregister () {
 	super.deregister ();
 	display.removeWidget(((NSControl)view).cell());
-	if (radioParent != null) display.removeWidget(radioParent);
+    if (radioParent != null) {
+        display.removeWidget(radioParent);
+    }
 }
 
 @Override
@@ -568,15 +567,29 @@ NSRect focusRingMaskBoundsForFrame (long id, long sel, NSRect cellFrame, long vi
 public int getAlignment () {
 	checkWidget ();
 	if ((style & SWT.ARROW) != 0) {
-		if ((style & SWT.UP) != 0) return SWT.UP;
-		if ((style & SWT.DOWN) != 0) return SWT.DOWN;
-		if ((style & SWT.LEFT) != 0) return SWT.LEFT;
-		if ((style & SWT.RIGHT) != 0) return SWT.RIGHT;
+        if ((style & SWT.UP) != 0) {
+            return SWT.UP;
+        }
+        if ((style & SWT.DOWN) != 0) {
+            return SWT.DOWN;
+        }
+        if ((style & SWT.LEFT) != 0) {
+            return SWT.LEFT;
+        }
+        if ((style & SWT.RIGHT) != 0) {
+            return SWT.RIGHT;
+        }
 		return SWT.UP;
 	}
-	if ((style & SWT.LEFT) != 0) return SWT.LEFT;
-	if ((style & SWT.CENTER) != 0) return SWT.CENTER;
-	if ((style & SWT.RIGHT) != 0) return SWT.RIGHT;
+    if ((style & SWT.LEFT) != 0) {
+        return SWT.LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        return SWT.CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        return SWT.RIGHT;
+    }
 	return SWT.LEFT;
 }
 
@@ -596,7 +609,9 @@ public int getAlignment () {
  */
 public boolean getGrayed() {
 	checkWidget ();
-	if ((style & SWT.CHECK) == 0) return false;
+    if ((style & SWT.CHECK) == 0) {
+        return false;
+    }
 	return grayed;
 }
 
@@ -639,8 +654,12 @@ String getNameText () {
  */
 public boolean getSelection () {
 	checkWidget ();
-	if ((style & (SWT.CHECK | SWT.RADIO | SWT.TOGGLE)) == 0) return false;
-	if ((style & SWT.CHECK) != 0 && grayed) return ((NSButton)view).state() == OS.NSControlStateValueMixed;
+    if ((style & (SWT.CHECK | SWT.RADIO | SWT.TOGGLE)) == 0) {
+        return false;
+    }
+    if ((style & SWT.CHECK) != 0 && grayed) {
+        return ((NSButton) view).state() == OS.NSControlStateValueMixed;
+    }
 	return ((NSButton)view).state() == OS.NSControlStateValueOn;
 }
 
@@ -684,7 +703,9 @@ long nextState(long id, long sel) {
 void register() {
 	super.register();
 	display.addWidget(((NSControl)view).cell(), this);
-	if (radioParent != null) display.addWidget(radioParent, this);
+    if (radioParent != null) {
+        display.addWidget(radioParent, this);
+    }
 }
 
 @Override
@@ -713,8 +734,12 @@ void releaseWidget () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Selection, listener);
 	eventTable.unhook(SWT.DefaultSelection,listener);
 }
@@ -739,7 +764,9 @@ void selectRadio () {
 	Control [] children = parent._getChildren ();
 	for (int i=0; i<children.length; i++) {
 		Control child = children [i];
-		if (this != child) child.setRadioSelection (false);
+        if (this != child) {
+            child.setRadioSelection(false);
+        }
 	}
 	setSelection (true);
 }
@@ -787,12 +814,16 @@ public void setAlignment (int alignment) {
 
 void _setAlignment (int alignment) {
 	if ((style & SWT.ARROW) != 0) {
-		if ((style & (SWT.UP | SWT.DOWN | SWT.LEFT | SWT.RIGHT)) == 0) return;
+        if ((style & (SWT.UP | SWT.DOWN | SWT.LEFT | SWT.RIGHT)) == 0) {
+            return;
+        }
 		style &= ~(SWT.UP | SWT.DOWN | SWT.LEFT | SWT.RIGHT);
 		style |= alignment & (SWT.UP | SWT.DOWN | SWT.LEFT | SWT.RIGHT);
 		return;
 	}
-	if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) return;
+    if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) {
+        return;
+    }
 	style &= ~(SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	style |= alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	/* text is still null when this is called from createHandle() */
@@ -880,7 +911,9 @@ void setForeground (double [] color) {
  */
 public void setGrayed(boolean grayed) {
 	checkWidget ();
-	if ((style & SWT.CHECK) == 0) return;
+    if ((style & SWT.CHECK) == 0) {
+        return;
+    }
 	boolean checked = getSelection ();
 	this.grayed = grayed;
 	((NSButton) view).setAllowsMixedState(grayed);
@@ -915,7 +948,9 @@ public void setImage (Image image) {
 	if (image != null && image.isDisposed ()) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if ((style & SWT.ARROW) != 0) return;
+    if ((style & SWT.ARROW) != 0) {
+        return;
+    }
 	this.image = image;
 	if ((style & (SWT.RADIO|SWT.CHECK)) == 0) {
 		/*
@@ -950,7 +985,9 @@ public void setImage (Image image) {
 
 @Override
 boolean setRadioSelection (boolean value){
-	if ((style & SWT.RADIO) == 0) return false;
+    if ((style & SWT.RADIO) == 0) {
+        return false;
+    }
 	if (getSelection() != value) {
 		setSelection (value);
 		sendSelectionEvent (SWT.Selection);
@@ -976,7 +1013,9 @@ boolean setRadioSelection (boolean value){
  */
 public void setSelection (boolean selected) {
 	checkWidget();
-	if ((style & (SWT.CHECK | SWT.RADIO | SWT.TOGGLE)) == 0) return;
+    if ((style & (SWT.CHECK | SWT.RADIO | SWT.TOGGLE)) == 0) {
+        return;
+    }
 	if (grayed) {
 		((NSButton)view).setState (selected ? OS.NSControlStateValueMixed : OS.NSControlStateValueOff);
 	} else {
@@ -1020,8 +1059,12 @@ public void setSelection (boolean selected) {
  */
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if ((style & SWT.ARROW) != 0) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((style & SWT.ARROW) != 0) {
+        return;
+    }
 	text = string;
 	((NSButton)view).setAttributedTitle(createString());
 	updateAlignment ();
@@ -1042,8 +1085,12 @@ NSRect titleRectForBounds (long id, long sel, NSRect cellFrame) {
 @Override
 int traversalCode (int key, NSEvent theEvent) {
 	int code = super.traversalCode (key, theEvent);
-	if ((style & SWT.ARROW) != 0) code &= ~(SWT.TRAVERSE_TAB_NEXT | SWT.TRAVERSE_TAB_PREVIOUS);
-	if ((style & SWT.RADIO) != 0) code |= SWT.TRAVERSE_ARROW_NEXT | SWT.TRAVERSE_ARROW_PREVIOUS;
+    if ((style & SWT.ARROW) != 0) {
+        code &= ~(SWT.TRAVERSE_TAB_NEXT | SWT.TRAVERSE_TAB_PREVIOUS);
+    }
+    if ((style & SWT.RADIO) != 0) {
+        code |= SWT.TRAVERSE_ARROW_NEXT | SWT.TRAVERSE_ARROW_PREVIOUS;
+    }
 	return code;
 }
 
@@ -1060,13 +1107,17 @@ void updateAlignment () {
 
 @Override
 NSView topView() {
-	if (radioParent != null) return radioParent;
+    if (radioParent != null) {
+        return radioParent;
+    }
 	return super.topView();
 }
 
 @Override
 void setZOrder() {
 	super.setZOrder();
-	if (radioParent != null) radioParent.addSubview(view);
+    if (radioParent != null) {
+        radioParent.addSubview(view);
+    }
 }
 }

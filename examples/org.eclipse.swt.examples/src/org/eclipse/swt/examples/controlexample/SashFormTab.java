@@ -69,9 +69,15 @@ class SashFormTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (horizontalButton.getSelection ()) style |= SWT.H_SCROLL;
-		if (verticalButton.getSelection ()) style |= SWT.V_SCROLL;
-		if (smoothButton.getSelection ()) style |= SWT.SMOOTH;
+        if (horizontalButton.getSelection()) {
+            style |= SWT.H_SCROLL;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.V_SCROLL;
+        }
+        if (smoothButton.getSelection()) {
+            style |= SWT.SMOOTH;
+        }
 
 		/* Create the example widgets */
 		form = new SashForm (sashFormGroup, style);

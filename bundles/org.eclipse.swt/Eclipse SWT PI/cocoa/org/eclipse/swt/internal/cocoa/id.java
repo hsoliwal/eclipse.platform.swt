@@ -44,7 +44,9 @@ public boolean equals(Object other) {
 public long objc_getClass() {
 	String name = getClass().getName();
 	int index = name.lastIndexOf('.');
-	if (index != -1) name = name.substring(index + 1);
+    if (index != -1) {
+        name = name.substring(index + 1);
+    }
 	return OS.objc_getClass(name);
 }
 

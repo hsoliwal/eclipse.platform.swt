@@ -165,11 +165,17 @@ protected void checkSubclass () {
  * </ul>
  */
 void checkParent (Shell parent) {
-	if (parent == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (parent == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	parent.checkWidget ();
 }
 
 static int checkStyle (Shell parent, int style) {
+	return Dialog.normalizeStyle(parent, style);
+}
+
+private static int normalizeStyle(Shell parent, int style) {
 	int mask = SWT.PRIMARY_MODAL | SWT.APPLICATION_MODAL | SWT.SYSTEM_MODAL;
 	if ((style & SWT.SHEET) != 0) {
 		style &= ~SWT.SHEET;
@@ -183,8 +189,12 @@ static int checkStyle (Shell parent, int style) {
 	style &= ~SWT.MIRRORED;
 	if ((style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT)) == 0) {
 		if (parent != null) {
-			if ((parent.style & SWT.LEFT_TO_RIGHT) != 0) style |= SWT.LEFT_TO_RIGHT;
-			if ((parent.style & SWT.RIGHT_TO_LEFT) != 0) style |= SWT.RIGHT_TO_LEFT;
+            if ((parent.style & SWT.LEFT_TO_RIGHT) != 0) {
+                style |= SWT.LEFT_TO_RIGHT;
+            }
+            if ((parent.style & SWT.RIGHT_TO_LEFT) != 0) {
+                style |= SWT.RIGHT_TO_LEFT;
+            }
 		}
 	}
 	return Widget.checkBits (style, SWT.LEFT_TO_RIGHT, SWT.RIGHT_TO_LEFT, 0, 0, 0, 0);
@@ -269,7 +279,9 @@ public String getText () {
  * </ul>
  */
 public void setText (String string) {
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	title = string;
 }
 

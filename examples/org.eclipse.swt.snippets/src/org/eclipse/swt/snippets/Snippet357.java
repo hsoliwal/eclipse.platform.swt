@@ -48,13 +48,25 @@ public class Snippet357 {
 				if (textStyle != null) {
 					/* Copy all of the TextStyle fields into the new StyleRange. */
 					StyleRange style = new StyleRange(textStyle);
-					/* Create new graphics resources because the old ones are only valid during the event. */
-					if (textStyle.font != null) style.font = new Font(display, textStyle.font.getFontData());
-					if (textStyle.foreground != null) style.foreground = new Color(textStyle.foreground.getRGB());
-					if (textStyle.background != null) style.background = new Color(textStyle.background.getRGB());
-					if (textStyle.underlineColor != null) style.underlineColor = new Color(textStyle.underlineColor.getRGB());
-					if (textStyle.strikeoutColor != null) style.strikeoutColor = new Color(textStyle.strikeoutColor.getRGB());
-					if (textStyle.borderColor != null) style.borderColor = new Color(textStyle.borderColor.getRGB());
+                    /* Create new graphics resources because the old ones are only valid during the event. */
+                    if (textStyle.font != null) {
+                        style.font = new Font(display, textStyle.font.getFontData());
+                    }
+                    if (textStyle.foreground != null) {
+                        style.foreground = new Color(textStyle.foreground.getRGB());
+                    }
+                    if (textStyle.background != null) {
+                        style.background = new Color(textStyle.background.getRGB());
+                    }
+                    if (textStyle.underlineColor != null) {
+                        style.underlineColor = new Color(textStyle.underlineColor.getRGB());
+                    }
+                    if (textStyle.strikeoutColor != null) {
+                        style.strikeoutColor = new Color(textStyle.strikeoutColor.getRGB());
+                    }
+                    if (textStyle.borderColor != null) {
+                        style.borderColor = new Color(textStyle.borderColor.getRGB());
+                    }
 					/* Set the StyleRange into the StyledText. */
 					style.start = e.start;
 					style.length = e.end - e.start;
@@ -69,7 +81,9 @@ public class Snippet357 {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 }

@@ -222,8 +222,9 @@ public class Bug562233_DisposeExceptions {
 			// A display loop without Shell based exit condition, to be broken by disposing Display
 			while (!display.isDisposed()) {
 				try {
-					if (!display.readAndDispatch())
-						display.sleep();
+                    if (!display.readAndDispatch()) {
+                        display.sleep();
+                    }
 				} catch (Throwable ex) {
 					System.out.println("Exception during readAndDispatch(): " + ex.getMessage());
 				}
@@ -279,8 +280,9 @@ public class Bug562233_DisposeExceptions {
 		mainShell.open();
 		while (!mainShell.isDisposed()) {
 			try {
-				if (!display.readAndDispatch())
-					display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			} catch (Throwable ex) {
 				System.out.println("Exception during readAndDispatch(): " + ex.getMessage());
 			}

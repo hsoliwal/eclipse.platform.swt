@@ -41,7 +41,9 @@ public static void main (String [] args) {
 	final Runnable timer = new Runnable () {
 		@Override
 		public void run () {
-			if (label.isDisposed ()) return;
+            if (label.isDisposed()) {
+                return;
+            }
 			Color color = label.getBackground ().equals (red) ? blue : red;
 			label.setBackground (color);
 			display.timerExec (time, this);
@@ -54,7 +56,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

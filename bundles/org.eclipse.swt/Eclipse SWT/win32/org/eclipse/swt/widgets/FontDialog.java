@@ -123,7 +123,9 @@ public FontData getFontData () {
  * @since 2.1.1
  */
 public FontData [] getFontList () {
-	if (fontData == null) return null;
+    if (fontData == null) {
+        return null;
+    }
 	FontData [] result = new FontData [1];
 	result [0] = fontData;
 	return result;
@@ -171,7 +173,9 @@ public FontData open () {
 	int parentOrientation = parent.style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT);
 	if (dialogOrientation != parentOrientation) {
 		int exStyle = OS.WS_EX_NOINHERITLAYOUT;
-		if (dialogOrientation == SWT.RIGHT_TO_LEFT) exStyle |= OS.WS_EX_LAYOUTRTL;
+        if (dialogOrientation == SWT.RIGHT_TO_LEFT) {
+            exStyle |= OS.WS_EX_LAYOUTRTL;
+        }
 		hwndOwner = OS.CreateWindowEx (
 			exStyle,
 			Shell.DialogClass,
@@ -183,7 +187,9 @@ public FontData open () {
 			OS.GetModuleHandle (null),
 			null);
 		enabled = OS.IsWindowEnabled (hwndParent);
-		if (enabled) OS.EnableWindow (hwndParent, false);
+        if (enabled) {
+            OS.EnableWindow(hwndParent, false);
+        }
 	}
 
 	/* Open the dialog */
@@ -262,16 +268,22 @@ public FontData open () {
 		if (display.isRescalingAtRuntime()) {
 			OS.SetThreadDpiAwarenessContext(currentDpiAwarenessContext);
 		}
-		/* Free the OS memory */
-		if (lpLogFont != 0) OS.HeapFree (hHeap, 0, lpLogFont);
+        /* Free the OS memory */
+        if (lpLogFont != 0) {
+            OS.HeapFree(hHeap, 0, lpLogFont);
+        }
 
 		/* Destroy the BIDI orientation window */
 		if (hwndParent != hwndOwner) {
-			if (enabled) OS.EnableWindow (hwndParent, true);
+            if (enabled) {
+                OS.EnableWindow(hwndParent, true);
+            }
 			OS.SetActiveWindow (hwndParent);
 			OS.DestroyWindow (hwndOwner);
 		}
-		if (!success) return null;
+        if (!success) {
+            return null;
+        }
 	}
 
 	return fontData;

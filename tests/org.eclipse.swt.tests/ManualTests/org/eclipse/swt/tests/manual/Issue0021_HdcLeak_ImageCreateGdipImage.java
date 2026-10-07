@@ -81,7 +81,9 @@ public class Issue0021_HdcLeak_ImageCreateGdipImage {
 		Runnable runnable = new Runnable() {
 			@Override
 			public void run() {
-				if (canvas.isDisposed()) return;
+                if (canvas.isDisposed()) {
+                    return;
+                }
 				canvas.redraw();
 				display.timerExec(30, this);
 			}

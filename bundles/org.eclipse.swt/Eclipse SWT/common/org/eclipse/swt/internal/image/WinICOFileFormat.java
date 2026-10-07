@@ -31,7 +31,9 @@ byte[] bitInvertData(byte[] data, int startIndex, int endIndex) {
 }
 
 static byte[] convertPad(byte[] data, int width, int height, int depth, int pad, int newPad) {
-	if (pad == newPad) return data;
+    if (pad == newPad) {
+        return data;
+    }
 	int stride = (width * depth + 7) / 8;
 	int bpl = (stride + (pad - 1)) / pad * pad;
 	int newBpl = (stride + (newPad - 1)) / newPad * newPad;
@@ -69,7 +71,9 @@ boolean isValidIcon(ImageData i) {
 		case 1:
 		case 4:
 		case 8:
-			if (i.palette.isDirect) return false;
+            if (i.palette.isDirect) {
+                return false;
+            }
 			int size = i.palette.colors.length;
 			return size == 2 || size == 16 || size == 32 || size == 256;
 		case 24:
@@ -87,11 +91,13 @@ int loadFileHeader(LEDataInputStream byteStream) {
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
-	if ((fileHeader[0] != 0) || (fileHeader[1] != 1))
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if ((fileHeader[0] != 0) || (fileHeader[1] != 1)) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	int numIcons = fileHeader[2];
-	if (numIcons <= 0)
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (numIcons <= 0) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	return numIcons;
 }
 int loadFileHeader(LEDataInputStream byteStream, boolean hasHeader) {
@@ -108,11 +114,13 @@ int loadFileHeader(LEDataInputStream byteStream, boolean hasHeader) {
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
-	if ((fileHeader[0] != 0) || (fileHeader[1] != 1))
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if ((fileHeader[0] != 0) || (fileHeader[1] != 1)) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	int numIcons = fileHeader[2];
-	if (numIcons <= 0)
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (numIcons <= 0) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	return numIcons;
 }
 @Override
@@ -144,7 +152,9 @@ ImageData loadIcon(int[] iconHeader) {
 	byte[] shapeData = bmpFormat.loadData(infoHeader);
 	int width = (infoHeader[4] & 0xFF) | ((infoHeader[5] & 0xFF) << 8) | ((infoHeader[6] & 0xFF) << 16) | ((infoHeader[7] & 0xFF) << 24);
 	int height = (infoHeader[8] & 0xFF) | ((infoHeader[9] & 0xFF) << 8) | ((infoHeader[10] & 0xFF) << 16) | ((infoHeader[11] & 0xFF) << 24);
-	if (height < 0) height = -height;
+    if (height < 0) {
+        height = -height;
+    }
 	int depth = (infoHeader[14] & 0xFF) | ((infoHeader[15] & 0xFF) << 8);
 	infoHeader[14] = 1;
 	infoHeader[15] = 0;
@@ -190,10 +200,13 @@ byte[] loadInfoHeader(int[] iconHeader) {
 	int width = iconHeader[0];
 	int height = iconHeader[1];
 	int numColors = iconHeader[2]; // the number of colors is in the low byte, but the high byte must be 0
-	if (numColors == 0) numColors = 256; // this is specified: '00' represents '256' (0x100) colors
-	if ((numColors != 2) && (numColors != 8) && (numColors != 16) &&
-		(numColors != 32) && (numColors != 256))
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (numColors == 0) {
+        numColors = 256;
+    } // this is specified: '00' represents '256' (0x100) colors
+    if ((numColors != 2) && (numColors != 8) && (numColors != 16) &&
+            (numColors != 32) && (numColors != 256)) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	if (inputStream.getPosition() < iconHeader[6]) {
 		// Seek to the specified offset
 		try {
@@ -209,22 +222,30 @@ byte[] loadInfoHeader(int[] iconHeader) {
 	} catch (IOException e) {
 		SWT.error(SWT.ERROR_IO, e);
 	}
-	if (((infoHeader[12] & 0xFF) | ((infoHeader[13] & 0xFF) << 8)) != 1)
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (((infoHeader[12] & 0xFF) | ((infoHeader[13] & 0xFF) << 8)) != 1) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	int infoWidth = (infoHeader[4] & 0xFF) | ((infoHeader[5] & 0xFF) << 8) | ((infoHeader[6] & 0xFF) << 16) | ((infoHeader[7] & 0xFF) << 24);
 	int infoHeight = (infoHeader[8] & 0xFF) | ((infoHeader[9] & 0xFF) << 8) | ((infoHeader[10] & 0xFF) << 16) | ((infoHeader[11] & 0xFF) << 24);
 	int bitCount = (infoHeader[14] & 0xFF) | ((infoHeader[15] & 0xFF) << 8);
-	/*
-	 * Feature in the ico spec. The spec says that a width/height of 0 represents 256, however, newer images can be created with even larger sizes.
-	 * Images with a width/height >= 256 will have their width/height set to 0 in the icon header; the fix for this case is to read the width/height
-	 * directly from the image header.
-	 */
-	if (width == 0) width = infoWidth;
-	if (height == 0) height = infoHeight / 2;
-	if (height == infoHeight && bitCount == 1) height /= 2;
-	if (!((width == infoWidth) && (height * 2 == infoHeight) &&
-		(bitCount == 1 || bitCount == 4 || bitCount == 8 || bitCount == 24 || bitCount == 32)))
-			SWT.error(SWT.ERROR_INVALID_IMAGE);
+    /*
+     * Feature in the ico spec. The spec says that a width/height of 0 represents 256, however, newer images can be created with even larger sizes.
+     * Images with a width/height >= 256 will have their width/height set to 0 in the icon header; the fix for this case is to read the width/height
+     * directly from the image header.
+     */
+    if (width == 0) {
+        width = infoWidth;
+    }
+    if (height == 0) {
+        height = infoHeight / 2;
+    }
+    if (height == infoHeight && bitCount == 1) {
+        height /= 2;
+    }
+    if (!((width == infoWidth) && (height * 2 == infoHeight) &&
+            (bitCount == 1 || bitCount == 4 || bitCount == 8 || bitCount == 24 || bitCount == 32))) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	infoHeader[8] = (byte)(height & 0xFF);
 	infoHeader[9] = (byte)((height >> 8) & 0xFF);
 	infoHeader[10] = (byte)((height >> 16) & 0xFF);
@@ -286,8 +307,9 @@ void unloadIntoByteStream(ImageLoader loader) {
 	/* We do not currently support writing multi-image ico,
 	 * so we use the first image data in the loader's array. */
 	ImageData image = loader.data[0];
-	if (!isValidIcon(image))
-		SWT.error(SWT.ERROR_INVALID_IMAGE);
+    if (!isValidIcon(image)) {
+        SWT.error(SWT.ERROR_INVALID_IMAGE);
+    }
 	try {
 		outputStream.writeShort(0);
 		outputStream.writeShort(1);

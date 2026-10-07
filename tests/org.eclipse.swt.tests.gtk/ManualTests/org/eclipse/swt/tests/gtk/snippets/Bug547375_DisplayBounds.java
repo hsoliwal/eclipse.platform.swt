@@ -28,8 +28,9 @@ public class Bug547375_DisplayBounds {
 		System.out.println("Display bounds are " + display.getBounds());
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 }

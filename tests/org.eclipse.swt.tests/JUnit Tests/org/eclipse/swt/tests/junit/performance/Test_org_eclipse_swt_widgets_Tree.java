@@ -111,8 +111,9 @@ public abstract class Test_org_eclipse_swt_widgets_Tree {
 					tree.addListener(SWT.SetData, event -> {
 						TreeItem item = (TreeItem) event.item;
 						initializeItem.accept(item);
-						if (item.getParentItem() == null)
-							item.setItemCount(size - 1);
+                        if (item.getParentItem() == null) {
+                            item.setItemCount(size - 1);
+                        }
 					});
 					tree.setItemCount(1);
 				} else {

@@ -172,7 +172,9 @@ public void createControlPanel(Composite parent) {
 
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	String fontFace = fontNames.get(fontFaceCb.getSelectionIndex());
@@ -198,7 +200,9 @@ public void paint(GC gc, int width, int height) {
 	gc.drawString(text, (width-textWidth)/2, (height-textHeight)/2, true);
 
 	font.dispose();
-	if (pattern != null) pattern.dispose();
+    if (pattern != null) {
+        pattern.dispose();
+    }
 }
 
 }

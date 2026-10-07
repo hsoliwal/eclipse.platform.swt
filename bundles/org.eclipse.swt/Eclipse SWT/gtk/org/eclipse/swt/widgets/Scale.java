@@ -105,19 +105,27 @@ public void addSelectionListener (SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+	return WidgetStylePolicy.ORIENTATION.applyAsInt(style);
 }
 
 @Override
 Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 	checkWidget();
-	if (wHint != SWT.DEFAULT && wHint < 0) wHint = 0;
-	if (hHint != SWT.DEFAULT && hHint < 0) hHint = 0;
+    if (wHint != SWT.DEFAULT && wHint < 0) {
+        wHint = 0;
+    }
+    if (hHint != SWT.DEFAULT && hHint < 0) {
+        hHint = 0;
+    }
 	Point size = computeNativeSize(handle, wHint, hHint, changed);
 	if ((style & SWT.HORIZONTAL) != 0) {
-		if (wHint == SWT.DEFAULT) size.x = 2 * size.x;
+        if (wHint == SWT.DEFAULT) {
+            size.x = 2 * size.x;
+        }
 	} else {
-		if (hHint == SWT.DEFAULT) size.y = 2 * size.y;
+        if (hHint == SWT.DEFAULT) {
+            size.y = 2 * size.y;
+        }
 	}
 	return size;
 }
@@ -126,15 +134,21 @@ Point computeSizeInPixels (int wHint, int hHint, boolean changed) {
 void createHandle (int index) {
 	state |= HANDLE | THEME_BACKGROUND;
 	fixedHandle = OS.g_object_new (display.gtk_fixed_get_type (), 0);
-	if (fixedHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (fixedHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	long hAdjustment = GTK.gtk_adjustment_new (0, 0, 100, 1, 10, 0);
-	if (hAdjustment == 0) error (SWT.ERROR_NO_HANDLES);
+    if (hAdjustment == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if ((style & SWT.HORIZONTAL) != 0) {
 		handle = GTK.gtk_scale_new (GTK.GTK_ORIENTATION_HORIZONTAL, hAdjustment);
 	} else {
 		handle = GTK.gtk_scale_new (GTK.GTK_ORIENTATION_VERTICAL, hAdjustment);
 	}
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 
 	if (GTK.GTK4) {
 		OS.swt_fixed_add(fixedHandle, handle);
@@ -262,8 +276,12 @@ long gtk_value_changed(long range) {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -283,7 +301,9 @@ public void removeSelectionListener (SelectionListener listener) {
  */
 public void setIncrement (int increment) {
 	checkWidget ();
-	if (increment < 1) return;
+    if (increment < 1) {
+        return;
+    }
 	OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
 	GTK.gtk_range_set_increments (handle, increment, getPageIncrement ());
 	OS.g_signal_handlers_unblock_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
@@ -305,7 +325,9 @@ public void setIncrement (int increment) {
 public void setMaximum (int value) {
 	checkWidget ();
 	int minimum = getMinimum();
-	if (value <= minimum) return;
+    if (value <= minimum) {
+        return;
+    }
 	OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
 	GTK.gtk_range_set_range (handle, minimum, value);
 	OS.g_signal_handlers_unblock_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
@@ -326,9 +348,13 @@ public void setMaximum (int value) {
  */
 public void setMinimum (int value) {
 	checkWidget ();
-	if (value < 0) return;
+    if (value < 0) {
+        return;
+    }
 	int maximum = getMaximum ();
-	if (value >= maximum) return;
+    if (value >= maximum) {
+        return;
+    }
 	OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
 	GTK.gtk_range_set_range (handle, value, maximum);
 	OS.g_signal_handlers_unblock_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
@@ -349,7 +375,9 @@ public void setMinimum (int value) {
  */
 public void setPageIncrement (int pageIncrement) {
 	checkWidget ();
-	if (pageIncrement < 1) return;
+    if (pageIncrement < 1) {
+        return;
+    }
 	OS.g_signal_handlers_block_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);
 	GTK.gtk_range_set_increments (handle, getIncrement (), pageIncrement);
 	OS.g_signal_handlers_unblock_matched (handle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, VALUE_CHANGED);

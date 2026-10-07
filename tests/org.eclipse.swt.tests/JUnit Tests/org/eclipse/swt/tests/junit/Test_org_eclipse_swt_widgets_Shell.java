@@ -483,8 +483,9 @@ public void test_isEnabled() {
 	assertTrue(shell.isEnabled());
 	shell.setEnabled(false);
 	assertTrue(!shell.isEnabled());
-	if (SwtTestUtil.fCheckBogusTestCases)
-		assertTrue(!testShell.isEnabled());
+    if (SwtTestUtil.fCheckBogusTestCases) {
+        assertTrue(!testShell.isEnabled());
+    }
 	shell.setEnabled(true);
 	assertTrue(shell.isEnabled());
 	assertTrue(testShell.isEnabled());
@@ -599,8 +600,9 @@ public void test_isVisible() {
 	assertTrue(shell.isVisible());
 	shell.setVisible(false);
 	assertTrue(!shell.isVisible());
-	if (SwtTestUtil.fCheckBogusTestCases)
-		assertTrue(!testShell.isVisible());
+    if (SwtTestUtil.fCheckBogusTestCases) {
+        assertTrue(!testShell.isVisible());
+    }
 }
 
 @Override
@@ -895,7 +897,9 @@ public void test_consistency_Open() {
 		}}.start();
 
 		while(!shell.isDisposed()) {
-			if(!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		setUp();
 		String[] results = events.toArray(new String[events.size()]);
@@ -1033,11 +1037,13 @@ public void test_Issue450_NoShellActivateOnSetFocus() {
 		SwtTestUtil.waitShellActivate(
 			() -> {
 				shell1.dispose();
-				// on macOS, disposing a Shell sometimes doesn't activate the other Shell.
-				// Not reproducible on my machine. Not reproducible on GitHub builder.
-				// Only seems to occur on Eclipse builder, not sure what's different there.
-				// Anyways, this is out of scope of this test, so just ask to activate.
-				if (SwtTestUtil.isCocoa) shell2.forceActive();
+                // on macOS, disposing a Shell sometimes doesn't activate the other Shell.
+                // Not reproducible on my machine. Not reproducible on GitHub builder.
+                // Only seems to occur on Eclipse builder, not sure what's different there.
+                // Anyways, this is out of scope of this test, so just ask to activate.
+                if (SwtTestUtil.isCocoa) {
+                    shell2.forceActive();
+                }
 			},
 			shell2
 		);

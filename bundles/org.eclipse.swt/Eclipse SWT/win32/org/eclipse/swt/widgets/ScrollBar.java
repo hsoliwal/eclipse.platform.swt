@@ -163,7 +163,7 @@ public void addSelectionListener (SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+	return WidgetStylePolicy.ORIENTATION.applyAsInt(style);
 }
 
 void createWidget () {
@@ -393,7 +393,9 @@ public int getThumb () {
 	long hwnd = hwndScrollBar ();
 	int type = scrollBarType ();
 	OS.GetScrollInfo (hwnd, type, info);
-	if (info.nPage != 0) --info.nPage;
+    if (info.nPage != 0) {
+        --info.nPage;
+    }
 	return info.nPage;
 }
 
@@ -580,8 +582,12 @@ void releaseHandle () {
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (parent.horizontalBar == this) parent.horizontalBar = null;
-	if (parent.verticalBar == this) parent.verticalBar = null;
+    if (parent.horizontalBar == this) {
+        parent.horizontalBar = null;
+    }
+    if (parent.verticalBar == this) {
+        parent.verticalBar = null;
+    }
 }
 
 /**
@@ -603,8 +609,12 @@ void releaseParent () {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -654,7 +664,9 @@ public void setEnabled (boolean enabled) {
  */
 public void setIncrement (int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	increment = value;
 }
 
@@ -673,14 +685,18 @@ public void setIncrement (int value) {
  */
 public void setMaximum (int value) {
 	checkWidget();
-	if (value < 0) return;
+    if (value < 0) {
+        return;
+    }
 	SCROLLINFO info = new SCROLLINFO ();
 	info.cbSize = SCROLLINFO.sizeof;
 	long hwnd = hwndScrollBar ();
 	int type = scrollBarType ();
 	info.fMask = OS.SIF_RANGE | OS.SIF_DISABLENOSCROLL;
 	OS.GetScrollInfo (hwnd, type, info);
-	if (value - info.nMin - info.nPage < 1) return;
+    if (value - info.nMin - info.nPage < 1) {
+        return;
+    }
 	info.nMax = value;
 	SetScrollInfo (hwnd, type, info, true);
 }
@@ -700,14 +716,18 @@ public void setMaximum (int value) {
  */
 public void setMinimum (int value) {
 	checkWidget();
-	if (value < 0) return;
+    if (value < 0) {
+        return;
+    }
 	SCROLLINFO info = new SCROLLINFO ();
 	info.cbSize = SCROLLINFO.sizeof;
 	long hwnd = hwndScrollBar ();
 	int type = scrollBarType ();
 	info.fMask = OS.SIF_RANGE | OS.SIF_DISABLENOSCROLL;
 	OS.GetScrollInfo (hwnd, type, info);
-	if (info.nMax - value - info.nPage < 1) return;
+    if (info.nMax - value - info.nPage < 1) {
+        return;
+    }
 	info.nMin = value;
 	SetScrollInfo (hwnd, type, info, true);
 }
@@ -727,7 +747,9 @@ public void setMinimum (int value) {
  */
 public void setPageIncrement (int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	pageIncrement = value;
 }
 
@@ -753,7 +775,9 @@ boolean SetScrollInfo (long hwnd, int flags, SCROLLINFO info, boolean fRedraw) {
 			break;
 	}
 	barVisible = bar != null && bar.getVisible ();
-	if (!visible || (state & DISABLED) != 0) fRedraw = false;
+    if (!visible || (state & DISABLED) != 0) {
+        fRedraw = false;
+    }
 	boolean result = OS.SetScrollInfo (hwnd, flags, info, fRedraw);
 
 	/*
@@ -840,7 +864,9 @@ public void setSelection (int selection) {
  */
 public void setThumb (int value) {
 	checkWidget();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	SCROLLINFO info = new SCROLLINFO ();
 	info.cbSize = SCROLLINFO.sizeof;
 	long hwnd = hwndScrollBar ();
@@ -848,7 +874,9 @@ public void setThumb (int value) {
 	info.fMask = OS.SIF_PAGE | OS.SIF_RANGE | OS.SIF_DISABLENOSCROLL;
 	OS.GetScrollInfo (hwnd, type, info);
 	info.nPage = value;
-	if (info.nPage != 0) info.nPage++;
+    if (info.nPage != 0) {
+        info.nPage++;
+    }
 	SetScrollInfo (hwnd, type, info, true);
 }
 
@@ -875,11 +903,21 @@ public void setThumb (int value) {
  */
 public void setValues (int selection, int minimum, int maximum, int thumb, int increment, int pageIncrement) {
 	checkWidget();
-	if (minimum < 0) return;
-	if (maximum < 0) return;
-	if (thumb < 1) return;
-	if (increment < 1) return;
-	if (pageIncrement < 1) return;
+    if (minimum < 0) {
+        return;
+    }
+    if (maximum < 0) {
+        return;
+    }
+    if (thumb < 1) {
+        return;
+    }
+    if (increment < 1) {
+        return;
+    }
+    if (pageIncrement < 1) {
+        return;
+    }
 	this.increment = increment;
 	this.pageIncrement = pageIncrement;
 	SCROLLINFO info = new SCROLLINFO ();
@@ -889,7 +927,9 @@ public void setValues (int selection, int minimum, int maximum, int thumb, int i
 	info.nMin = minimum;
 	info.nMax = maximum;
 	info.nPage = thumb;
-	if (info.nPage != 0) info.nPage++;
+    if (info.nPage != 0) {
+        info.nPage++;
+    }
 	long hwnd = hwndScrollBar ();
 	int type = scrollBarType ();
 	SetScrollInfo (hwnd, type, info, true);
@@ -913,7 +953,9 @@ public void setValues (int selection, int minimum, int maximum, int thumb, int i
  */
 public void setVisible (boolean visible) {
 	checkWidget();
-	if (visible == getVisible ()) return;
+    if (visible == getVisible()) {
+        return;
+    }
 	/*
 	* Set the state bits before calling ShowScrollBar ()
 	* because hiding and showing the scroll bar can cause
@@ -973,7 +1015,9 @@ LRESULT wmScrollChild (long wParam, long lParam) {
 
 	/* Do nothing when scrolling is ending */
 	int code = OS.LOWORD (wParam);
-	if (code == OS.SB_ENDSCROLL) return null;
+    if (code == OS.SB_ENDSCROLL) {
+        return null;
+    }
 
 	/*
 	* Send the event because WM_HSCROLL and

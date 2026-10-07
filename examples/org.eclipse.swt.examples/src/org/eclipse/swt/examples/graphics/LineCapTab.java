@@ -141,7 +141,9 @@ public void paint(GC gc, int width, int height) {
 	gc.setLineCap(SWT.CAP_ROUND);
 	gc.drawLine(3*width/16, 4*height/6, 13*width/16, 4*height/6);
 
-	if (pattern != null) pattern.dispose();
+    if (pattern != null) {
+        pattern.dispose();
+    }
 }
 
 /**

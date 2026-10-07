@@ -112,18 +112,21 @@ public void addExpandListener (ExpandListener listener) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	return OS.DefWindowProc (hwnd, msg, wParam, lParam);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 static int checkStyle (int style) {
-	style &= ~SWT.H_SCROLL;
-	return style | SWT.NO_BACKGROUND;
+	return WidgetStylePolicy.EXPAND_BAR_WINDOWS.applyAsInt(style);
 }
 
 @Override
@@ -157,21 +160,33 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 			for (int i = 0; i < itemCount; i++) {
 				ExpandItem item = items [i];
 				height += item.getHeaderHeightInPixels ();
-				if (item.expanded) height += item.height;
+                if (item.expanded) {
+                    height += item.height;
+                }
 				height += spacing;
 				width = Math.max (width, item.getPreferredWidth (hTheme, hDC));
 			}
 			if (hCurrentFont != 0) {
 				OS.SelectObject (hDC, oldFont);
-				if (hCurrentFont != hFont) OS.DeleteObject (hCurrentFont);
+                if (hCurrentFont != hFont) {
+                    OS.DeleteObject(hCurrentFont);
+                }
 			}
 			OS.ReleaseDC (handle, hDC);
 		}
 	}
-	if (width == 0) width = DEFAULT_WIDTH;
-	if (height == 0) height = DEFAULT_HEIGHT;
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x;
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y;
+    if (width == 0) {
+        width = DEFAULT_WIDTH;
+    }
+    if (height == 0) {
+        height = DEFAULT_HEIGHT;
+    }
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x;
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y;
+    }
 	Rectangle trim = computeTrimInPixels (0, 0, width, height);
 	return new Point (trim.width, trim.height);
 }
@@ -184,7 +199,9 @@ void createHandle () {
 }
 
 void createItem (ExpandItem item, int style, int index) {
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	if (itemCount == items.length) {
 		ExpandItem [] newItems = new ExpandItem [itemCount + 4];
 		System.arraycopy (items, 0, newItems, 0, items.length);
@@ -193,7 +210,9 @@ void createItem (ExpandItem item, int style, int index) {
 	System.arraycopy (items, index, items, index + 1, itemCount - index);
 	items [index] = item;
 	itemCount++;
-	if (focusItem == null) focusItem = item;
+    if (focusItem == null) {
+        focusItem = item;
+    }
 
 	RECT rect = new RECT ();
 	OS.GetWindowRect (handle, rect);
@@ -221,10 +240,14 @@ int defaultBackground() {
 void destroyItem (ExpandItem item) {
 	int index = 0;
 	while (index < itemCount) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	if (index == itemCount) return;
+    if (index == itemCount) {
+        return;
+    }
 	if (item == focusItem) {
 		int focusIndex = index > 0 ? index - 1 : 1;
 		if (focusIndex < itemCount) {
@@ -290,7 +313,9 @@ void drawWidget (GC gc, RECT clipRect) {
 	}
 	if (hCurrentFont != 0) {
 		OS.SelectObject (gc.handle, oldFont);
-		if (hCurrentFont != hFont) OS.DeleteObject (hCurrentFont);
+        if (hCurrentFont != hFont) {
+            OS.DeleteObject(hCurrentFont);
+        }
 	}
 }
 
@@ -298,7 +323,9 @@ void drawWidget (GC gc, RECT clipRect) {
 Control findBackgroundControl () {
 	Control control = super.findBackgroundControl ();
 	if (!isAppThemed ()) {
-		if (control == null) control = this;
+        if (control == null) {
+            control = this;
+        }
 	}
 	return control;
 }
@@ -335,7 +362,9 @@ int getBandHeight () {
  */
 public ExpandItem getItem (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return items [index];
 }
 
@@ -416,17 +445,27 @@ int getSpacingInPixels () {
  */
 public int indexOf (ExpandItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i = 0; i < itemCount; i++) {
-		if (items [i] == item) return i;
+        if (items [i] == item) {
+            return i;
+        }
 	}
 	return -1;
 }
 
 boolean isAppThemed () {
-	if (background != -1) return false;
-	if (foreground != -1) return false;
-	if (hFont != 0) return false;
+    if (background != -1) {
+        return false;
+    }
+    if (foreground != -1) {
+        return false;
+    }
+    if (hFont != 0) {
+        return false;
+    }
 	return true;
 }
 
@@ -435,17 +474,23 @@ void layoutItems (int index, boolean setScrollbar) {
 		int y = spacing - yCurrentScroll;
 		for (int i = 0; i < index; i++) {
 			ExpandItem item = items [i];
-			if (item.expanded) y += item.height;
+            if (item.expanded) {
+                y += item.height;
+            }
 			y += item.getHeaderHeightInPixels () + spacing;
 		}
 		for (int i = index; i < itemCount; i++) {
 			ExpandItem item = items [i];
 			item.setBoundsInPixels (spacing, y, 0, 0, true, false);
-			if (item.expanded) y += item.height;
+            if (item.expanded) {
+                y += item.height;
+            }
 			y += item.getHeaderHeightInPixels () + spacing;
 		}
 	}
-	if (setScrollbar) setScrollbar ();
+    if (setScrollbar) {
+        setScrollbar();
+    }
 }
 
 @Override
@@ -481,8 +526,12 @@ void releaseChildren (boolean destroy) {
  */
 public void removeExpandListener (ExpandListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Expand, listener);
 	eventTable.unhook (SWT.Collapse, listener);
 }
@@ -491,7 +540,9 @@ public void removeExpandListener (ExpandListener listener) {
 void reskinChildren (int flags) {
 	if (items != null) {
 		for (ExpandItem item : items) {
-			if (item != null ) item.reskin (flags);
+            if (item != null) {
+                item.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -519,14 +570,20 @@ void setForegroundPixel (int pixel) {
 }
 
 void setScrollbar () {
-	if (itemCount == 0) return;
-	if ((style & SWT.V_SCROLL) == 0) return;
+    if (itemCount == 0) {
+        return;
+    }
+    if ((style & SWT.V_SCROLL) == 0) {
+        return;
+    }
 	RECT rect = new RECT();
 	OS.GetClientRect (handle, rect);
 	int height = rect.bottom - rect.top;
 	ExpandItem item = items [itemCount - 1];
 	int maxHeight = item.y + getBandHeight () + spacing;
-	if (item.expanded) maxHeight += item.height;
+    if (item.expanded) {
+        maxHeight += item.height;
+    }
 
 	//claim bottom free space
 	if (yCurrentScroll > 0 && height > maxHeight) {
@@ -542,7 +599,9 @@ void setScrollbar () {
 	info.nMax = maxHeight;
 	info.nPage = height;
 	info.nPos = Math.min (yCurrentScroll, info.nMax);
-	if (info.nPage != 0) info.nPage++;
+    if (info.nPage != 0) {
+        info.nPage++;
+    }
 	OS.SetScrollInfo (handle, OS.SB_VERT, info, true);
 }
 
@@ -563,15 +622,21 @@ public void setSpacing (int spacing) {
 }
 
 void setSpacingInPixels (int spacing) {
-	if (spacing < 0) return;
-	if (spacing == this.spacing) return;
+    if (spacing < 0) {
+        return;
+    }
+    if (spacing == this.spacing) {
+        return;
+    }
 	this.spacing = spacing;
 	RECT rect = new RECT ();
 	OS.GetClientRect (handle, rect);
 	int width = Math.max (0, (rect.right - rect.left) - spacing * 2);
 	for (int i = 0; i < itemCount; i++) {
 		ExpandItem item = items[i];
-		if (item.width != width) item.setBoundsInPixels (0, 0, width, item.height, false, true);
+        if (item.width != width) {
+            item.setBoundsInPixels(0, 0, width, item.height, false, true);
+        }
 	}
 	layoutItems (0, true);
 	OS.InvalidateRect (handle, null, true);
@@ -649,8 +714,12 @@ long windowProc () {
 @Override
 LRESULT WM_KEYDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_KEYDOWN (wParam, lParam);
-	if (result != null) return result;
-	if (focusItem == null) return result;
+    if (result != null) {
+        return result;
+    }
+    if (focusItem == null) {
+        return result;
+    }
 	switch ((int)wParam) {
 		case OS.VK_SPACE:
 		case OS.VK_RETURN:
@@ -689,14 +758,18 @@ LRESULT WM_KEYDOWN (long wParam, long lParam) {
 @Override
 LRESULT WM_KILLFOCUS (long wParam, long lParam) {
 	LRESULT result = super.WM_KILLFOCUS (wParam, lParam);
-	if (focusItem != null) focusItem.redraw (true);
+    if (focusItem != null) {
+        focusItem.redraw(true);
+    }
 	return result;
 }
 
 @Override
 LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_LBUTTONDOWN (wParam, lParam);
-	if (result == LRESULT.ZERO) return result;
+    if (result == LRESULT.ZERO) {
+        return result;
+    }
 	int x = OS.GET_X_LPARAM (lParam);
 	int y = OS.GET_Y_LPARAM (lParam);
 	for (int i = 0; i < itemCount; i++) {
@@ -716,8 +789,12 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 @Override
 LRESULT WM_LBUTTONUP (long wParam, long lParam) {
 	LRESULT result = super.WM_LBUTTONUP (wParam, lParam);
-	if (result == LRESULT.ZERO) return result;
-	if (focusItem == null) return result;
+    if (result == LRESULT.ZERO) {
+        return result;
+    }
+    if (focusItem == null) {
+        return result;
+    }
 	int x = OS.GET_X_LPARAM (lParam);
 	int y = OS.GET_Y_LPARAM (lParam);
 	boolean hover = focusItem.isHover (x, y);
@@ -734,7 +811,9 @@ LRESULT WM_LBUTTONUP (long wParam, long lParam) {
 @Override
 LRESULT WM_MOUSELEAVE (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSELEAVE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	for (int i = 0; i < itemCount; i++) {
 		ExpandItem item = items [i];
 		if (item.hover) {
@@ -749,7 +828,9 @@ LRESULT WM_MOUSELEAVE (long wParam, long lParam) {
 @Override
 LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSEMOVE (wParam, lParam);
-	if (result == LRESULT.ZERO) return result;
+    if (result == LRESULT.ZERO) {
+        return result;
+    }
 	int x = OS.GET_X_LPARAM (lParam);
 	int y = OS.GET_Y_LPARAM (lParam);
 	for (int i = 0; i < itemCount; i++) {
@@ -770,7 +851,9 @@ LRESULT WM_MOUSEWHEEL (long wParam, long lParam) {
 
 @Override
 LRESULT WM_PAINT (long wParam, long lParam) {
-	if ((state & DISPOSE_SENT) != 0) return LRESULT.ZERO;
+    if ((state & DISPOSE_SENT) != 0) {
+        return LRESULT.ZERO;
+    }
 
 	PAINTSTRUCT ps = new PAINTSTRUCT ();
 	GCData data = new GCData ();
@@ -814,7 +897,9 @@ LRESULT WM_PRINTCLIENT (long wParam, long lParam) {
 @Override
 LRESULT WM_SETCURSOR (long wParam, long lParam) {
 	LRESULT result = super.WM_SETCURSOR (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	int hitTest = (short) OS.LOWORD (lParam);
 	if (hitTest == OS.HTCLIENT) {
 		for (int i = 0; i < itemCount; i++) {
@@ -832,7 +917,9 @@ LRESULT WM_SETCURSOR (long wParam, long lParam) {
 @Override
 LRESULT WM_SETFOCUS (long wParam, long lParam) {
 	LRESULT result = super.WM_SETFOCUS (wParam, lParam);
-	if (focusItem != null) focusItem.redraw (true);
+    if (focusItem != null) {
+        focusItem.redraw(true);
+    }
 	return result;
 }
 
@@ -844,7 +931,9 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 	int width = Math.max (0, (rect.right - rect.left) - spacing * 2);
 	for (int i = 0; i < itemCount; i++) {
 		ExpandItem item = items[i];
-		if (item.width != width) item.setBoundsInPixels (0, 0, width, item.height, false, true);
+        if (item.width != width) {
+            item.setBoundsInPixels(0, 0, width, item.height, false, true);
+        }
 	}
 	setScrollbar ();
 	OS.InvalidateRect (handle, null, true);

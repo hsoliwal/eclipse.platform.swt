@@ -153,7 +153,9 @@ Cursor(Device device) {
 public Cursor(Device device, int style) {
 	super(device);
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	boolean shouldCreateCursor = false;
 	try {
 		switch (style) {
@@ -161,7 +163,9 @@ public Cursor(Device device, int style) {
 			case SWT.CURSOR_ARROW:			handle = NSCursor.arrowCursor(); break;
 			case SWT.CURSOR_WAIT:			{
 												handle = busyButClickableCursor();
-												if (handle == null) shouldCreateCursor = true; // create when handle was not retrieved
+                if (handle == null) {
+                    shouldCreateCursor = true;
+                } // create when handle was not retrieved
 												break;
 											}
 			case SWT.CURSOR_CROSS:			handle = NSCursor.crosshairCursor(); break;
@@ -209,7 +213,9 @@ public Cursor(Device device, int style) {
 		handle.setOnMouseEntered(true);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -251,7 +257,9 @@ public Cursor(Device device, int style) {
 @Deprecated
 public Cursor(Device device, ImageData source, ImageData mask, int hotspotX, int hotspotY) {
 	super(device);
-	if (source == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (source == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (mask == null) {
 		if (source.getTransparencyType() != SWT.TRANSPARENCY_MASK) {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
@@ -293,12 +301,16 @@ public Cursor(Device device, ImageData source, ImageData mask, int hotspotX, int
 		}
 	}
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		createNSCursor(hotspotX, hotspotY, data, source.width, source.height, true);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -358,7 +370,9 @@ public Cursor(Device device, ImageData source, int hotspotX, int hotspotY) {
 }
 
 private void setupCursorFromImageData(ImageData source, int hotspotX, int hotspotY) {
-	if (source == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (source == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (hotspotX >= source.width || hotspotX < 0 ||
 		hotspotY >= source.height || hotspotY < 0) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
@@ -378,7 +392,9 @@ private void setupCursorFromImageData(ImageData source, int hotspotX, int hotspo
 		byte[] srcBlues = new byte[length];
 		for (int i = 0; i < rgbs.length; i++) {
 			RGB rgb = rgbs[i];
-			if (rgb == null) continue;
+            if (rgb == null) {
+                continue;
+            }
 			srcReds[i] = (byte)rgb.red;
 			srcGreens[i] = (byte)rgb.green;
 			srcBlues[i] = (byte)rgb.blue;
@@ -415,12 +431,16 @@ private void setupCursorFromImageData(ImageData source, int hotspotX, int hotspo
 		hasAlpha = false;
 	}
 	NSAutoreleasePool pool = null;
-	if (!NSThread.isMainThread()) pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    if (!NSThread.isMainThread()) {
+        pool = (NSAutoreleasePool) new NSAutoreleasePool().alloc().init();
+    }
 	try {
 		createNSCursor(hotspotX, hotspotY, data, source.width, source.height, hasAlpha);
 		init();
 	} finally {
-		if (pool != null) pool.release();
+        if (pool != null) {
+            pool.release();
+        }
 	}
 }
 
@@ -455,7 +475,9 @@ private void setupCursorFromImageData(ImageData source, int hotspotX, int hotspo
  */
 public Cursor(Device device, ImageDataProvider imageDataProvider, int hotspotX, int hotspotY) {
 	super(device);
-	if (imageDataProvider == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (imageDataProvider == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setupCursorFromImageData(imageDataProvider.getImageData(100), hotspotX, hotspotY);
 }
 
@@ -477,8 +499,12 @@ void destroy() {
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Cursor cursor)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Cursor cursor)) {
+        return false;
+    }
 	return device == cursor.device && handle == cursor.handle;
 }
 
@@ -520,7 +546,9 @@ public boolean isDisposed() {
  */
 @Override
 public String toString () {
-	if (isDisposed()) return "Cursor {*DISPOSED*}";
+    if (isDisposed()) {
+        return "Cursor {*DISPOSED*}";
+    }
 	return "Cursor {" + handle + "}";
 }
 

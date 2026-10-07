@@ -130,25 +130,35 @@ public FontData () {
  * @see #toString
  */
 public FontData(String string) {
-	if (string == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	int start = 0;
 	int end = string.indexOf('|');
-	if (end == -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (end == -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	String version1 = string.substring(start, end);
 	try {
-		if (Integer.parseInt(version1) != 1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (Integer.parseInt(version1) != 1) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 	} catch (NumberFormatException e) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
 
 	start = end + 1;
 	end = string.indexOf('|', start);
-	if (end == -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (end == -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	String name = string.substring(start, end);
 
 	start = end + 1;
 	end = string.indexOf('|', start);
-	if (end == -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (end == -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	float height = 0;
 	try {
 		height = Float.parseFloat(string.substring(start, end));
@@ -158,7 +168,9 @@ public FontData(String string) {
 
 	start = end + 1;
 	end = string.indexOf('|', start);
-	if (end == -1) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (end == -1) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	int style = 0;
 	try {
 		style = Integer.parseInt(string.substring(start, end));
@@ -171,12 +183,16 @@ public FontData(String string) {
 	setName(name);
 	setHeight(height);
 	setStyle(style);
-	if (end == -1) return;
+    if (end == -1) {
+        return;
+    }
 	String platform = string.substring(start, end);
 
 	start = end + 1;
 	end = string.indexOf('|', start);
-	if (end == -1) return;
+    if (end == -1) {
+        return;
+    }
 	String version2 = string.substring(start, end);
 
 	if (platform.equals("GTK") && version2.equals("1")) {
@@ -251,8 +267,12 @@ public FontData(String name, int height, int style) {
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof FontData)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof FontData)) {
+        return false;
+    }
 	FontData data = (FontData)object;
 	return name.equals(data.name) && height == data.height && style == data.style;
 }
@@ -369,13 +389,17 @@ public int hashCode () {
  * @see #getHeight
  */
 public void setHeight(int height) {
-	if (height < 0) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (height < 0) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.height = height;
 	this.string = null;
 }
 
 /*public*/ void setHeight(float height) {
-	if (height < 0 || Float.isNaN(height) || Float.isInfinite(height)) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (height < 0 || Float.isNaN(height) || Float.isInfinite(height)) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	this.height = height;
 	this.string = null;
 }
@@ -409,11 +433,19 @@ public void setLocale(String locale) {
 			firstSep = secondSep = length;
 		} else {
 			secondSep = locale.indexOf(sep, firstSep + 1);
-			if (secondSep == -1) secondSep = length;
+            if (secondSep == -1) {
+                secondSep = length;
+            }
 		}
-		if (firstSep > 0) lang = locale.substring(0, firstSep);
-		if (secondSep > firstSep + 1) country = locale.substring(firstSep + 1, secondSep);
-		if (length > secondSep + 1) variant = locale.substring(secondSep + 1);
+        if (firstSep > 0) {
+            lang = locale.substring(0, firstSep);
+        }
+        if (secondSep > firstSep + 1) {
+            country = locale.substring(firstSep + 1, secondSep);
+        }
+        if (length > secondSep + 1) {
+            variant = locale.substring(secondSep + 1);
+        }
 	}
 }
 
@@ -444,7 +476,9 @@ public void setLocale(String locale) {
  * @see #getName
  */
 public void setName(String name) {
-	if (name == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (name == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	this.name = name;
 	this.string = null;
 }

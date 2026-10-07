@@ -49,37 +49,57 @@ protected Point computeSize(Composite composite, int wHint, int hHint, boolean f
 	if (form.separateTopCenter ||
 		(wHint != SWT.DEFAULT &&  leftSize.x + centerSize.x + rightSize.x > wHint)) {
 		size.x = leftSize.x + rightSize.x;
-		if (leftSize.x > 0 && rightSize.x > 0) size.x += form.horizontalSpacing;
+        if (leftSize.x > 0 && rightSize.x > 0) {
+            size.x += form.horizontalSpacing;
+        }
 		size.x = Math.max(centerSize.x, size.x);
 		size.y = Math.max(leftSize.y, rightSize.y);
 		if (center != null){
 			size.y += centerSize.y;
-			if (left != null ||right != null)size.y += form.verticalSpacing;
+            if (left != null || right != null) {
+                size.y += form.verticalSpacing;
+            }
 		}
 	} else {
 		size.x = leftSize.x + centerSize.x + rightSize.x;
 		int count = -1;
-		if (leftSize.x > 0) count++;
-		if (centerSize.x > 0) count++;
-		if (rightSize.x > 0) count++;
-		if (count > 0) size.x += count * form.horizontalSpacing;
+        if (leftSize.x > 0) {
+            count++;
+        }
+        if (centerSize.x > 0) {
+            count++;
+        }
+        if (rightSize.x > 0) {
+            count++;
+        }
+        if (count > 0) {
+            size.x += count * form.horizontalSpacing;
+        }
 		size.y = Math.max(leftSize.y, Math.max(centerSize.y, rightSize.y));
 	}
 
 	if (content != null) {
-		if (left != null || right != null || center != null) size.y += 1; // allow space for a vertical separator
+        if (left != null || right != null || center != null) {
+            size.y += 1;
+        } // allow space for a vertical separator
 		Point contentSize = new Point(0, 0);
 		contentSize = computeChildSize(content, SWT.DEFAULT, SWT.DEFAULT, flushCache);
 		size.x = Math.max (size.x, contentSize.x);
 		size.y += contentSize.y;
-		if (size.y > contentSize.y) size.y += form.verticalSpacing;
+        if (size.y > contentSize.y) {
+            size.y += form.verticalSpacing;
+        }
 	}
 
 	size.x += 2*form.marginWidth;
 	size.y += 2*form.marginHeight;
 
-	if (wHint != SWT.DEFAULT) size.x  = wHint;
-	if (hHint != SWT.DEFAULT) size.y = hHint;
+    if (wHint != SWT.DEFAULT) {
+        size.x = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        size.y = hHint;
+    }
 
 	return size;
 }
@@ -104,7 +124,9 @@ int computeTrim(Control c) {
 @Override
 protected boolean flushCache(Control control) {
 	Object data = control.getLayoutData();
-	if (data instanceof CLayoutData) ((CLayoutData)data).flushCache();
+    if (data instanceof CLayoutData) {
+        ((CLayoutData) data).flushCache();
+    }
 	return true;
 }
 
@@ -133,10 +155,18 @@ protected void layout(Composite composite, boolean flushCache) {
 
 	int minTopWidth = leftSize.x + centerSize.x + rightSize.x + 2*form.marginWidth + 2*form.highlight;
 	int count = -1;
-	if (leftSize.x > 0) count++;
-	if (centerSize.x > 0) count++;
-	if (rightSize.x > 0) count++;
-	if (count > 0) minTopWidth += count * form.horizontalSpacing;
+    if (leftSize.x > 0) {
+        count++;
+    }
+    if (centerSize.x > 0) {
+        count++;
+    }
+    if (rightSize.x > 0) {
+        count++;
+    }
+    if (count > 0) {
+        minTopWidth += count * form.horizontalSpacing;
+    }
 
 	int x = rect.x + rect.width - form.marginWidth - form.highlight;
 	int y = rect.y + form.marginHeight + form.highlight;
@@ -157,7 +187,9 @@ protected void layout(Composite composite, boolean flushCache) {
 			leftSize = computeChildSize(left, leftW, SWT.DEFAULT, false);
 			left.setBounds(rect.x + form.marginWidth + form.highlight, y, leftSize.x, topHeight);
 		}
-		if (top) y += topHeight + form.verticalSpacing;
+        if (top) {
+            y += topHeight + form.verticalSpacing;
+        }
 		if (center != null && !center.isDisposed()) {
 			top = true;
 			int trim = computeTrim(center);
@@ -191,7 +223,9 @@ protected void layout(Composite composite, boolean flushCache) {
 			leftSize = computeChildSize(left, w, h, false);
 			left.setBounds(rect.x + form.marginWidth + form.highlight, y, leftSize.x, topHeight);
 		}
-		if (top)y += topHeight + form.verticalSpacing;
+        if (top) {
+            y += topHeight + form.verticalSpacing;
+        }
 	}
 	int oldSeperator = form.separator;
 	form.separator = -1;

@@ -114,7 +114,9 @@ public FormData (int width, int height) {
 }
 
 void computeSize (Control control, int wHint, int hHint, boolean flushCache) {
-	if (cacheWidth != -1 && cacheHeight != -1) return;
+    if (cacheWidth != -1 && cacheHeight != -1) {
+        return;
+    }
 	if (wHint == this.width && hHint == this.height) {
 		if (defaultWidth == -1 || defaultHeight == -1 || wHint != defaultWhint || hHint != defaultHhint) {
 			Point size =  control.computeSize (wHint, hHint, flushCache);
@@ -156,10 +158,16 @@ int getHeight (Control control, boolean flushCache) {
 }
 
 FormAttachment getBottomAttachment (Control control, int spacing, boolean flushCache) {
-	if (cacheBottom != null) return cacheBottom;
-	if (isVisited) return cacheBottom = new FormAttachment (0, getHeight (control, flushCache));
+    if (cacheBottom != null) {
+        return cacheBottom;
+    }
+    if (isVisited) {
+        return cacheBottom = new FormAttachment(0, getHeight(control, flushCache));
+    }
 	if (bottom == null) {
-		if (top == null) return cacheBottom = new FormAttachment (0, getHeight (control, flushCache));
+        if (top == null) {
+            return cacheBottom = new FormAttachment(0, getHeight(control, flushCache));
+        }
 		return cacheBottom = getTopAttachment (control, spacing, flushCache).plus (getHeight (control, flushCache));
 	}
 	Control bottomControl = bottom.control;
@@ -172,7 +180,9 @@ FormAttachment getBottomAttachment (Control control, int spacing, boolean flushC
 			}
 		}
 	}
-	if (bottomControl == null) return cacheBottom = bottom;
+    if (bottomControl == null) {
+        return cacheBottom = bottom;
+    }
 	isVisited = true;
 	FormData bottomData = (FormData) bottomControl.getLayoutData ();
 	FormAttachment bottomAttachment = bottomData.getBottomAttachment (bottomControl, spacing, flushCache);
@@ -197,10 +207,16 @@ FormAttachment getBottomAttachment (Control control, int spacing, boolean flushC
 }
 
 FormAttachment getLeftAttachment (Control control, int spacing, boolean flushCache) {
-	if (cacheLeft != null) return cacheLeft;
-	if (isVisited) return cacheLeft = new FormAttachment (0, 0);
+    if (cacheLeft != null) {
+        return cacheLeft;
+    }
+    if (isVisited) {
+        return cacheLeft = new FormAttachment(0, 0);
+    }
 	if (left == null) {
-		if (right == null) return cacheLeft = new FormAttachment (0, 0);
+        if (right == null) {
+            return cacheLeft = new FormAttachment(0, 0);
+        }
 		return cacheLeft = getRightAttachment (control, spacing, flushCache).minus (getWidth (control, flushCache));
 	}
 	Control leftControl = left.control;
@@ -213,7 +229,9 @@ FormAttachment getLeftAttachment (Control control, int spacing, boolean flushCac
 			}
 		}
 	}
-	if (leftControl == null) return cacheLeft = left;
+    if (leftControl == null) {
+        return cacheLeft = left;
+    }
 	isVisited = true;
 	FormData leftData = (FormData) leftControl.getLayoutData ();
 	FormAttachment leftAttachment = leftData.getLeftAttachment (leftControl, spacing, flushCache);
@@ -239,15 +257,23 @@ FormAttachment getLeftAttachment (Control control, int spacing, boolean flushCac
 String getName () {
 	String string = getClass ().getName ();
 	int index = string.lastIndexOf ('.');
-	if (index == -1) return string;
+    if (index == -1) {
+        return string;
+    }
 	return string.substring (index + 1, string.length ());
 }
 
 FormAttachment getRightAttachment (Control control, int spacing, boolean flushCache) {
-	if (cacheRight != null) return cacheRight;
-	if (isVisited) return cacheRight = new FormAttachment (0, getWidth (control, flushCache));
+    if (cacheRight != null) {
+        return cacheRight;
+    }
+    if (isVisited) {
+        return cacheRight = new FormAttachment(0, getWidth(control, flushCache));
+    }
 	if (right == null) {
-		if (left == null) return cacheRight = new FormAttachment (0, getWidth (control, flushCache));
+        if (left == null) {
+            return cacheRight = new FormAttachment(0, getWidth(control, flushCache));
+        }
 		return cacheRight = getLeftAttachment (control, spacing, flushCache).plus (getWidth (control, flushCache));
 	}
 	Control rightControl = right.control;
@@ -260,7 +286,9 @@ FormAttachment getRightAttachment (Control control, int spacing, boolean flushCa
 			}
 		}
 	}
-	if (rightControl == null) return cacheRight = right;
+    if (rightControl == null) {
+        return cacheRight = right;
+    }
 	isVisited = true;
 	FormData rightData = (FormData) rightControl.getLayoutData ();
 	FormAttachment rightAttachment = rightData.getRightAttachment (rightControl, spacing, flushCache);
@@ -285,10 +313,16 @@ FormAttachment getRightAttachment (Control control, int spacing, boolean flushCa
 }
 
 FormAttachment getTopAttachment (Control control, int spacing, boolean flushCache) {
-	if (cacheTop != null) return cacheTop;
-	if (isVisited) return cacheTop = new FormAttachment (0, 0);
+    if (cacheTop != null) {
+        return cacheTop;
+    }
+    if (isVisited) {
+        return cacheTop = new FormAttachment(0, 0);
+    }
 	if (top == null) {
-		if (bottom == null) return cacheTop = new FormAttachment (0, 0);
+        if (bottom == null) {
+            return cacheTop = new FormAttachment(0, 0);
+        }
 		return cacheTop = getBottomAttachment (control, spacing, flushCache).minus (getHeight (control, flushCache));
 	}
 	Control topControl = top.control;
@@ -301,7 +335,9 @@ FormAttachment getTopAttachment (Control control, int spacing, boolean flushCach
 			}
 		}
 	}
-	if (topControl == null) return cacheTop = top;
+    if (topControl == null) {
+        return cacheTop = top;
+    }
 	isVisited = true;
 	FormData topData = (FormData) topControl.getLayoutData ();
 	FormAttachment topAttachment = topData.getTopAttachment (topControl, spacing, flushCache);
@@ -334,12 +370,24 @@ FormAttachment getTopAttachment (Control control, int spacing, boolean flushCach
 @Override
 public String toString () {
 	String string = getName()+" {";
-	if (width != SWT.DEFAULT) string += "width="+width+" ";
-	if (height != SWT.DEFAULT) string += "height="+height+" ";
-	if (left != null) string += "left="+left+" ";
-	if (right != null) string += "right="+right+" ";
-	if (top != null) string += "top="+top+" ";
-	if (bottom != null) string += "bottom="+bottom+" ";
+    if (width != SWT.DEFAULT) {
+        string += "width=" + width + " ";
+    }
+    if (height != SWT.DEFAULT) {
+        string += "height=" + height + " ";
+    }
+    if (left != null) {
+        string += "left=" + left + " ";
+    }
+    if (right != null) {
+        string += "right=" + right + " ";
+    }
+    if (top != null) {
+        string += "top=" + top + " ";
+    }
+    if (bottom != null) {
+        string += "bottom=" + bottom + " ";
+    }
 	string = string.trim();
 	string += "}";
 	return string;

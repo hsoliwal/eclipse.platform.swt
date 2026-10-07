@@ -255,8 +255,9 @@ public void test_indexOfLorg_eclipse_swt_widgets_MenuItem() {
 	}
 	for (int i = 0; i<number ; i++){
 		assertEquals(menu.indexOf(mis[i]), i);
-		if (i>1)
-			assertTrue(menu.indexOf(mis[i-1]) != i);
+        if (i > 1) {
+            assertTrue(menu.indexOf(mis[i - 1]) != i);
+        }
 	}
 }
 

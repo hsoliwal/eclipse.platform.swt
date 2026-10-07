@@ -96,8 +96,9 @@ public class Snippet365 {
 			};
 			Image newImage = new Image(display, imageGcDrawer, Math.max(1, rect.width), 1);
 			shell.setBackgroundImage(newImage);
-			if (oldImage != null)
-				oldImage.dispose();
+            if (oldImage != null) {
+                oldImage.dispose();
+            }
 			oldImage = newImage;
 		});
 
@@ -449,8 +450,9 @@ public class Snippet365 {
 		shell.open();
 		shell.pack();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

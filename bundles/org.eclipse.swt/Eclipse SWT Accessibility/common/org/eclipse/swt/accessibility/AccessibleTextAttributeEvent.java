@@ -103,7 +103,9 @@ public String toString () {
 }
 
 String toAttributeString(String [] attributes) {
-	if (attributes == null || attributes.length == 0) return "" + attributes;   //$NON-NLS-1$
+    if (attributes == null || attributes.length == 0) {
+        return "" + attributes; //$NON-NLS-1$
+    }
 	StringBuilder attributeString = new StringBuilder();
 	for (int i = 0; i < attributes.length; i++) {
 		attributeString.append(attributes[i]);

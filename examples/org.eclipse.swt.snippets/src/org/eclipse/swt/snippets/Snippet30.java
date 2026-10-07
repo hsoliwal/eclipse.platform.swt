@@ -27,7 +27,9 @@ public class Snippet30 {
 public static void main (String [] args) {
 	Display display = new Display ();
 	Program p = Program.findProgram (".txt");
-	if (p != null) p.execute ("newfile");
+    if (p != null) {
+        p.execute("newfile");
+    }
 	display.dispose ();
 }
 

@@ -89,7 +89,9 @@ public void javaToNative (Object object, TransferData transferData) {
 		long [] ctext = new long [1];
 		int[] length = new int[1];
 		boolean result = GDK.gdk_x11_display_utf8_to_compound_text (GDK.gdk_display_get_default(), utf8, encoding, format, ctext, length);
-		if (!result) return;
+        if (!result) {
+            return;
+        }
 		transferData.type = encoding[0];
 		transferData.format = format[0];
 		transferData.length = length[0];
@@ -98,7 +100,9 @@ public void javaToNative (Object object, TransferData transferData) {
 	}
 	if (transferData.type == UTF8_STRING_ID || transferData.type == TEXT_PLAIN_UTF8_ID) {
 		long pValue = OS.g_malloc(utf8.length);
-		if (pValue ==  0) return;
+        if (pValue == 0) {
+            return;
+        }
 		C.memmove(pValue, utf8, utf8.length);
 		transferData.format = 8;
 		transferData.length = utf8.length - 1;
@@ -107,7 +111,9 @@ public void javaToNative (Object object, TransferData transferData) {
 	}
 	if (transferData.type == STRING_ID) {
 		long string_target = GDK.gdk_utf8_to_string_target(utf8);
-		if (string_target ==  0) return;
+        if (string_target == 0) {
+            return;
+        }
 		transferData.type = STRING_ID;
 		transferData.format = 8;
 		transferData.length = C.strlen(string_target);
@@ -135,12 +141,18 @@ private void javaToNativeGTK4(Object object, TransferData transferData) {
  */
 @Override
 public Object nativeToJava(TransferData transferData){
-	if (GTK.GTK4) return nativeToJavaGTK4(transferData);
+    if (GTK.GTK4) {
+        return nativeToJavaGTK4(transferData);
+    }
 
-	if (!isSupportedType(transferData) ||  transferData.pValue == 0) return null;
+    if (!isSupportedType(transferData) || transferData.pValue == 0) {
+        return null;
+    }
 	long [] list = new long [1];
 	int count = GDK.gdk_text_property_to_utf8_list_for_display(GDK.gdk_display_get_default(), transferData.type, transferData.format, transferData.pValue, transferData.length, list);
-	if (count == 0) return null;
+    if (count == 0) {
+        return null;
+    }
 	long [] ptr = new long [1];
 	C.memmove(ptr, list[0], C.PTR_SIZEOF);
 	int length = C.strlen(ptr[0]);

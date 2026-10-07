@@ -37,7 +37,9 @@ public static void main (String [] args) {
 		menu.setLocation (event.x, event.y);
 		menu.setVisible (true);
 		while (!menu.isDisposed () && menu.isVisible ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		while (display.readAndDispatch()) { // needed, to get the selection event, which is fired AFTER the menu is hidden
 		}
@@ -46,7 +48,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

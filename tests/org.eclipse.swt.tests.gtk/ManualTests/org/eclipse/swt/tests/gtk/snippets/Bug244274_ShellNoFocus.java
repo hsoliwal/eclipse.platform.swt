@@ -37,8 +37,9 @@ public class Bug244274_ShellNoFocus {
 		thisClass.sShell.open();
 
 		while (!thisClass.sShell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

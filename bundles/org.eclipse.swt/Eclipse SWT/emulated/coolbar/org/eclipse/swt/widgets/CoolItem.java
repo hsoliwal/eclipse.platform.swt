@@ -164,7 +164,9 @@ public void addSelectionListener(SelectionListener listener) {
 }
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 /*
  * Find the trim size of the Toolbar widget in the current platform.
@@ -212,8 +214,12 @@ void calculateChevronTrim () {
 public Point computeSize (int wHint, int hHint) {
 	checkWidget();
 	int width = wHint, height = hHint;
-	if (wHint == SWT.DEFAULT) width = 32;
-	if (hHint == SWT.DEFAULT) height = 32;
+    if (wHint == SWT.DEFAULT) {
+        width = 32;
+    }
+    if (hHint == SWT.DEFAULT) {
+        height = 32;
+    }
 	if ((parent.style & SWT.VERTICAL) != 0) {
 		height += MINIMUM_WIDTH;
 	} else {
@@ -223,7 +229,9 @@ public Point computeSize (int wHint, int hHint) {
 }
 @Override
 public void dispose () {
-	if (isDisposed()) return;
+    if (isDisposed()) {
+        return;
+    }
 
 	/*
 	 * Must call parent.destroyItem() before super.dispose(), since it needs to
@@ -234,13 +242,17 @@ public void dispose () {
 	parent = null;
 	control = null;
 
-	/*
-	 * Although the parent for the chevron is the CoolBar (CoolItem can not be the parent)
-	 * it has to be disposed with the item
-	 */
-	if (chevron != null && !chevron.isDisposed()) chevron.dispose();
+    /*
+     * Although the parent for the chevron is the CoolBar (CoolItem can not be the parent)
+     * it has to be disposed with the item
+     */
+    if (chevron != null && !chevron.isDisposed()) {
+        chevron.dispose();
+    }
 	chevron = null;
-	if (arrowImage != null && !arrowImage.isDisposed()) arrowImage.dispose();
+    if (arrowImage != null && !arrowImage.isDisposed()) {
+        arrowImage.dispose();
+    }
 	arrowImage = null;
 }
 
@@ -423,8 +435,12 @@ void onSelection (Event ev) {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -464,8 +480,12 @@ void setBounds (int x, int y, int width, int height) {
 public void setControl (Control control) {
 	checkWidget();
 	if (control != null) {
-		if (control.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (control.parent != parent) error (SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.parent != parent) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
 	this.control = control;
 	if (control != null) {
@@ -514,7 +534,9 @@ public void setMinimumSize (int width, int height) {
  */
 public void setMinimumSize (Point size) {
 	checkWidget ();
-	if (size == null) error(SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setMinimumSize(size.x, size.y);
 }
 /**
@@ -550,7 +572,9 @@ public void setPreferredSize (int width, int height) {
  */
 public void setPreferredSize (Point size) {
 	checkWidget();
-	if (size == null) error(SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setPreferredSize(size.x, size.y);
 }
 /**
@@ -610,7 +634,9 @@ public void setSize (int width, int height) {
  */
 public void setSize (Point size) {
 	checkWidget();
-	if (size == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setSize (size.x, size.y);
 }
 void updateChevron() {
@@ -625,17 +651,23 @@ void updateChevron() {
 			int controlHeight, currentImageHeight = 0;
 			if ((parent.style & SWT.VERTICAL) != 0) {
 				controlHeight = control.getSize ().x;
-				if (arrowImage != null) currentImageHeight = arrowImage.getBounds().width;
+                if (arrowImage != null) {
+                    currentImageHeight = arrowImage.getBounds().width;
+                }
 			} else {
 				controlHeight = control.getSize ().y;
-				if (arrowImage != null) currentImageHeight = arrowImage.getBounds().height;
+                if (arrowImage != null) {
+                    currentImageHeight = arrowImage.getBounds().height;
+                }
 			}
 			int height = Math.min (controlHeight, itemBounds.height);
 			int imageHeight = Math.max(1, height - CHEVRON_VERTICAL_TRIM);
 			if (currentImageHeight != imageHeight) {
 				Image image = createArrowImage (CHEVRON_IMAGE_WIDTH, imageHeight);
 				chevron.getItem (0).setImage (image);
-				if (arrowImage != null) arrowImage.dispose ();
+                if (arrowImage != null) {
+                    arrowImage.dispose();
+                }
 				arrowImage = image;
 			}
 			chevron.setBackground (parent.getBackground());

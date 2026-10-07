@@ -124,7 +124,9 @@ public Menu (Decorations parent, int style) {
 		display = parent.display;
 	} else {
 		display = Display.getCurrent ();
-		if (display == null) display = Display.getDefault ();
+        if (display == null) {
+            display = Display.getDefault();
+        }
 		if (!display.isValidThread ()) {
 			error (SWT.ERROR_THREAD_INVALID_ACCESS);
 		}
@@ -191,8 +193,12 @@ public Menu (MenuItem parentItem) {
 }
 
 Menu (Display display) {
-	if (display == null) display = Display.getCurrent ();
-	if (display == null) display = Display.getDefault ();
+    if (display == null) {
+        display = Display.getCurrent();
+    }
+    if (display == null) {
+        display = Display.getDefault();
+    }
 	if (!display.isValidThread ()) {
 		error (SWT.ERROR_THREAD_INVALID_ACCESS);
 	}
@@ -211,37 +217,49 @@ Menu (Display display, NSMenu nativeMenu) {
 }
 
 static Control checkNull (Control control) {
-	if (control == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (control == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return control;
 }
 
 static Menu checkNull (Menu menu) {
-	if (menu == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (menu == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return menu;
 }
 
 static MenuItem checkNull (MenuItem item) {
-	if (item == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return item;
 }
 
 @Override
 void checkParent (Widget parent) {
-	// A null parent is okay when the app menu bar is in use.
-	if (parent == null && Display.getDefault().appMenuBar == null) error (SWT.ERROR_NULL_ARGUMENT);
+    // A null parent is okay when the app menu bar is in use.
+    if (parent == null && Display.getDefault().appMenuBar == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (parent != null) {
-		if (parent.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+        if (parent.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		parent.checkWidget ();
 		parent.checkOpen ();
 	}
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.POP_UP, SWT.BAR, SWT.DROP_DOWN, 0, 0, 0);
+	return WidgetStylePolicy.MENU.applyAsInt(style);
 }
 
 void _setVisible (boolean visible) {
-	if ((style & (SWT.BAR | SWT.DROP_DOWN)) != 0) return;
+    if ((style & (SWT.BAR | SWT.DROP_DOWN)) != 0) {
+        return;
+    }
 	TrayItem trayItem = display.currentTrayItem;
 	if (trayItem != null && visible) {
 		trayItem.showMenu (this);
@@ -345,7 +363,9 @@ void createHandle () {
 }
 
 void createItem (MenuItem item, int index) {
-	if (!(0 <= index && index <= itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index <= itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	boolean add = true;
 	NSMenuItem nsItem = item.nsItem;
 	if (nsItem == null) {
@@ -374,8 +394,12 @@ void createItem (MenuItem item, int index) {
 
 		// Sync native item type to Item's style.
 		int type = SWT.PUSH;
-		if (nsItem.isSeparatorItem()) type = SWT.SEPARATOR;
-		if (nsItem.submenu() != null) type = SWT.CASCADE;
+        if (nsItem.isSeparatorItem()) {
+            type = SWT.SEPARATOR;
+        }
+        if (nsItem.submenu() != null) {
+            type = SWT.CASCADE;
+        }
 		item.style |= type;
 
 		// Sync native item text to Item's text.
@@ -389,8 +413,12 @@ void createItem (MenuItem item, int index) {
 		long keyEquiv = 0;
 		if (keyEquivString != null) {
 			keyEquiv = keyEquivString.characterAtIndex(0);
-			if ((keyMask & OS.NSEventModifierFlagCommand) != 0) keyEquiv |= SWT.COMMAND;
-			if ((keyMask & OS.NSAlternateKeyMask) != 0) keyEquiv |= SWT.ALT;
+            if ((keyMask & OS.NSEventModifierFlagCommand) != 0) {
+                keyEquiv |= SWT.COMMAND;
+            }
+            if ((keyMask & OS.NSAlternateKeyMask) != 0) {
+                keyEquiv |= SWT.ALT;
+            }
 			item.accelerator = (int) keyEquiv;
 		}
 		add = false;
@@ -422,8 +450,10 @@ void createItem (MenuItem item, int index) {
 			}
 		}
 	}
-	//TODO - find a way to disable the menu instead of each item
-	if (!getEnabled ()) nsItem.setEnabled (false);
+    //TODO - find a way to disable the menu instead of each item
+    if (!getEnabled()) {
+        nsItem.setEnabled(false);
+    }
 }
 
 @Override
@@ -442,13 +472,19 @@ void deregister () {
 void destroyItem (MenuItem item) {
 	int index = 0;
 	while (index < itemCount) {
-		if (items [index] == item) break;
+        if (items [index] == item) {
+            break;
+        }
 		index++;
 	}
-	if (index == itemCount) return;
+    if (index == itemCount) {
+        return;
+    }
 	System.arraycopy (items, index + 1, items, index, --itemCount - index);
 	items [itemCount] = null;
-	if (itemCount == 0) items = new MenuItem [4];
+    if (itemCount == 0) {
+        items = new MenuItem [4];
+    }
 	nsMenu.removeItem (item.nsItem);
 	if (display.menuBar == this) {
 		NSApplication application = display.application;
@@ -517,7 +553,9 @@ public boolean getEnabled () {
  */
 public MenuItem getItem (int index) {
 	checkWidget ();
-	if (!(0 <= index && index < itemCount)) error (SWT.ERROR_INVALID_RANGE);
+    if (!(0 <= index && index < itemCount)) {
+        error(SWT.ERROR_INVALID_RANGE);
+    }
 	return items [index];
 }
 
@@ -650,7 +688,9 @@ public MenuItem getParentItem () {
  */
 public Menu getParentMenu () {
 	checkWidget ();
-	if (cascade != null) return cascade.parent;
+    if (cascade != null) {
+        return cascade.parent;
+    }
 	return null;
 }
 
@@ -672,8 +712,10 @@ public Menu getParentMenu () {
  */
 public Shell getShell () {
 	checkWidget ();
-	/* parent is null when application menubar is in use. */
-	if (parent != null) return parent.getShell ();
+    /* parent is null when application menubar is in use. */
+    if (parent != null) {
+        return parent.getShell();
+    }
 	return null;
 }
 
@@ -697,16 +739,21 @@ public Shell getShell () {
 public boolean getVisible () {
 	checkWidget ();
 	if ((style & SWT.BAR) != 0) {
-		if (this == display.appMenuBar)
-			return display.application.isActive();
-		else
-			return this == parent.menuShell ().menuBar;
+        if (this == display.appMenuBar) {
+            return display.application.isActive();
+        } else {
+            return this == parent.menuShell().menuBar;
+        }
 	}
 	if ((style & SWT.POP_UP) != 0) {
 		Menu [] popups = display.popups;
-		if (popups == null) return false;
+        if (popups == null) {
+            return false;
+        }
 		for (int i=0; i<popups.length; i++) {
-			if (popups [i] == this) return true;
+            if (popups [i] == this) {
+                return true;
+            }
 		}
 	}
 	return visible;
@@ -731,9 +778,13 @@ public boolean getVisible () {
  */
 public int indexOf (MenuItem item) {
 	checkWidget ();
-	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (item == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<itemCount; i++) {
-		if (items [i] == item) return i;
+        if (items [i] == item) {
+            return i;
+        }
 	}
 	return -1;
 }
@@ -755,8 +806,12 @@ public int indexOf (MenuItem item) {
  */
 public boolean isEnabled () {
 	checkWidget ();
-	if (this == display.appMenuBar) return getEnabled();
-	if (this == display.appMenu) return getEnabled();
+    if (this == display.appMenuBar) {
+        return getEnabled();
+    }
+    if (this == display.appMenu) {
+        return getEnabled();
+    }
 	Menu parentMenu = getParentMenu ();
 	if (parentMenu == null) {
 		return getEnabled () && parent.isEnabled ();
@@ -801,7 +856,9 @@ void menuNeedsUpdate(long id, long sel, long menu) {
 void menuWillOpen(long id, long sel, long menu) {
 	visible = true;
 	sendEvent (SWT.Show);
-	if (isDisposed()) return;
+    if (isDisposed()) {
+        return;
+    }
 	double width = 0;
 	NSAttributedString[] strs = new NSAttributedString[itemCount];
 	for (int i=0; i<itemCount; i++) {
@@ -816,12 +873,18 @@ void menuWillOpen(long id, long sel, long menu) {
 		if (nsImage != null) {
 			w += (nsImage.size().width + GAP);
 		}
-		if (strs[i] != null) width = Math.max(width, w);
+        if (strs[i] != null) {
+            width = Math.max(width, w);
+        }
 	}
 	for (int i=0; i<itemCount; i++) {
 		MenuItem item = items [i];
-		if (item.updateAccelerator(true)) continue;
-		if (item.accelerator != 0 || strs[i] == null || (style & SWT.BAR) != 0 || (item.style & SWT.CASCADE) != 0) continue;
+        if (item.updateAccelerator(true)) {
+            continue;
+        }
+        if (item.accelerator != 0 || strs[i] == null || (style & SWT.BAR) != 0 || (item.style & SWT.CASCADE) != 0) {
+            continue;
+        }
 		int accelIndex = item.text.indexOf ('\t');
 		if (accelIndex != -1) {
 			String accelText = item.text.substring (accelIndex);
@@ -868,12 +931,16 @@ void menuWillOpen(long id, long sel, long menu) {
 @Override
 void menuDidClose(long id, long sel, long menu) {
 	sendEvent (SWT.Hide);
-	if (isDisposed()) return;
+    if (isDisposed()) {
+        return;
+    }
 	visible = false;
 	for (int i=0; i<itemCount; i++) {
 		MenuItem item = items [i];
 		item.updateAccelerator(false);
-		if ((item.style & SWT.SEPARATOR) != 0) continue;
+        if ((item.style & SWT.SEPARATOR) != 0) {
+            continue;
+        }
 		item.updateText();
 	}
 }
@@ -901,14 +968,18 @@ void releaseChildren (boolean destroy) {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (nsMenu != null) nsMenu.release();
+    if (nsMenu != null) {
+        nsMenu.release();
+    }
 	nsMenu = null;
 }
 
 @Override
 void releaseParent () {
 	super.releaseParent ();
-	if (cascade != null) cascade.setMenu (null);
+    if (cascade != null) {
+        cascade.setMenu(null);
+    }
 	if ((style & SWT.BAR) != 0 && parent != null && this == parent.menuBar) {
 		parent.setMenuBar (null);
 	}
@@ -941,8 +1012,12 @@ void releaseWidget () {
  */
 public void removeHelpListener (HelpListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Help, listener);
 }
 
@@ -965,8 +1040,12 @@ public void removeHelpListener (HelpListener listener) {
  */
 public void removeMenuListener (MenuListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Hide, listener);
 	eventTable.unhook (SWT.Show, listener);
 }
@@ -997,7 +1076,9 @@ void reskinChildren (int flags) {
  */
 public void setDefaultItem (MenuItem item) {
 	checkWidget();
-	if (item != null && item.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+    if (item != null && item.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	defaultItem = item;
 }
 
@@ -1092,7 +1173,9 @@ public void setLocation (int x, int y) {
  */
 public void setLocation (Point location) {
 	checkWidget ();
-	if (location == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (location == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setLocation (location.x, location.y);
 }
 
@@ -1131,7 +1214,9 @@ public void setOrientation (int orientation) {
  */
 public void setVisible (boolean visible) {
 	checkWidget ();
-	if ((style & (SWT.BAR | SWT.DROP_DOWN)) != 0) return;
+    if ((style & (SWT.BAR | SWT.DROP_DOWN)) != 0) {
+        return;
+    }
 	if (visible) {
 		display.addPopup (this);
 	} else {

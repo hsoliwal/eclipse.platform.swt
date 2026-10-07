@@ -151,7 +151,7 @@ static int[] bezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int 
 	return polygon;
 }
 static int checkStyle (int style) {
-	return SWT.NONE;
+	return StylePolicy.NONE.applyAsInt(style);
 }
 /*
 * This class was not intended to be subclassed but this restriction
@@ -238,7 +238,9 @@ public Point getRightMinimumSize() {
  */
 public int getRightWidth() {
 	checkWidget();
-	if (right == null) return 0;
+    if (right == null) {
+        return 0;
+    }
 	if (rightWidth == SWT.DEFAULT) {
 		Point size = right.computeSize(SWT.DEFAULT, SWT.DEFAULT, false);
 		return size.x;
@@ -274,12 +276,16 @@ void onMouseDown (int x, int y) {
 	}
 }
 void onMouseExit() {
-	if (!dragging) setCursor(null);
+    if (!dragging) {
+        setCursor(null);
+    }
 }
 void onMouseMove(int x, int y) {
 	if (dragging) {
 		Point size = getSize();
-		if (!(0 < x && x < size.x)) return;
+        if (!(0 < x && x < size.x)) {
+            return;
+        }
 		rightWidth = Math.max(0, size.x - x - rightDragDisplacement);
 		if (rightMinWidth == SWT.DEFAULT) {
 			Point minSize = right.computeSize(rightMinWidth, rightMinHeight);
@@ -306,7 +312,9 @@ void onPaint(GC gc) {
 //	gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_GREEN));
 //	gc.fillRectangle(-10, -10, size.x+20, size.y+20);
 //	}
-	if (left == null && right == null) return;
+    if (left == null && right == null) {
+        return;
+    }
 	Point size = getSize();
 	Color border1 = getDisplay().getSystemColor(BORDER1);
 	if (bottom != null) {
@@ -314,7 +322,9 @@ void onPaint(GC gc) {
 		gc.setForeground(border1);
 		gc.drawLine(0, y, size.x, y);
 	}
-	if (left == null || right == null) return;
+    if (left == null || right == null) {
+        return;
+    }
 	int[] line1 = new int[curve.length+6];
 	int index = 0;
 	int x = curveStart;
@@ -492,7 +502,9 @@ public void setRight(Control control) {
  */
 public void setRightMinimumSize(Point size) {
 	checkWidget();
-	if (size == null || size.x < SWT.DEFAULT || size.y < SWT.DEFAULT) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (size == null || size.x < SWT.DEFAULT || size.y < SWT.DEFAULT) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	rightMinWidth = size.x;
 	rightMinHeight = size.y;
 	layout(false);
@@ -512,7 +524,9 @@ public void setRightMinimumSize(Point size) {
  */
 public void setRightWidth(int width) {
 	checkWidget();
-	if (width < SWT.DEFAULT) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (width < SWT.DEFAULT) {
+        SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	rightWidth = width;
 	layout(false);
 }

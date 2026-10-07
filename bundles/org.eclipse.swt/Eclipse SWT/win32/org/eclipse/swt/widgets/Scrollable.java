@@ -87,7 +87,9 @@ public Scrollable (Composite parent, int style) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	return OS.DefWindowProc (hwnd, msg, wParam, lParam);
 }
 
@@ -132,8 +134,12 @@ Rectangle computeTrimInPixels (int x, int y, int width, int height) {
 	int bits1 = OS.GetWindowLong (scrolledHandle, OS.GWL_STYLE);
 	int bits2 = OS.GetWindowLong (scrolledHandle, OS.GWL_EXSTYLE);
 	adjustWindowRectEx(rect, bits1, false, bits2);
-	if (horizontalBar != null) rect.bottom += getSystemMetrics (OS.SM_CYHSCROLL);
-	if (verticalBar != null) rect.right += getSystemMetrics (OS.SM_CXVSCROLL);
+    if (horizontalBar != null) {
+        rect.bottom += getSystemMetrics(OS.SM_CYHSCROLL);
+    }
+    if (verticalBar != null) {
+        rect.right += getSystemMetrics(OS.SM_CXVSCROLL);
+    }
 	int nWidth = rect.right - rect.left, nHeight = rect.bottom - rect.top;
 	return new Rectangle (rect.left, rect.top, nWidth, nHeight);
 }
@@ -156,8 +162,12 @@ ScrollBar createScrollBar (int type) {
 @Override
 void createWidget () {
 	super.createWidget ();
-	if ((style & SWT.H_SCROLL) != 0) horizontalBar = createScrollBar (SWT.H_SCROLL);
-	if ((style & SWT.V_SCROLL) != 0) verticalBar = createScrollBar (SWT.V_SCROLL);
+    if ((style & SWT.H_SCROLL) != 0) {
+        horizontalBar = createScrollBar(SWT.H_SCROLL);
+    }
+    if ((style & SWT.V_SCROLL) != 0) {
+        verticalBar = createScrollBar(SWT.V_SCROLL);
+    }
 }
 
 @Override
@@ -330,8 +340,12 @@ void releaseChildren (boolean destroy) {
 
 @Override
 void reskinChildren (int flags) {
-	if (horizontalBar != null) horizontalBar.reskin (flags);
-	if (verticalBar != null) verticalBar.reskin (flags);
+    if (horizontalBar != null) {
+        horizontalBar.reskin(flags);
+    }
+    if (verticalBar != null) {
+        verticalBar.reskin(flags);
+    }
 	super.reskinChildren (flags);
 }
 
@@ -342,8 +356,12 @@ long scrolledHandle () {
 @Override
 int widgetStyle () {
 	int bits = super.widgetStyle () | OS.WS_TABSTOP;
-	if ((style & SWT.H_SCROLL) != 0) bits |= OS.WS_HSCROLL;
-	if ((style & SWT.V_SCROLL) != 0) bits |= OS.WS_VSCROLL;
+    if ((style & SWT.H_SCROLL) != 0) {
+        bits |= OS.WS_HSCROLL;
+    }
+    if ((style & SWT.V_SCROLL) != 0) {
+        bits |= OS.WS_VSCROLL;
+    }
 	return bits;
 }
 
@@ -360,7 +378,9 @@ long windowProc () {
 @Override
 LRESULT WM_HSCROLL (long wParam, long lParam) {
 	LRESULT result = super.WM_HSCROLL (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if (horizontalBar != null && lParam == 0) {
 		return wmScroll (horizontalBar, (state & CANVAS) != 0, handle, OS.WM_HSCROLL, wParam, lParam);
 	}
@@ -381,15 +401,19 @@ LRESULT WM_MOUSEHWHEEL (long wParam, long lParam) {
 LRESULT WM_SIZE (long wParam, long lParam) {
 	long code = callWindowProc (handle, OS.WM_SIZE, wParam, lParam);
 	super.WM_SIZE (wParam, lParam);
-	// widget may be disposed at this point
-	if (code == 0) return LRESULT.ZERO;
+    // widget may be disposed at this point
+    if (code == 0) {
+        return LRESULT.ZERO;
+    }
 	return new LRESULT (code);
 }
 
 @Override
 LRESULT WM_VSCROLL (long wParam, long lParam) {
 	LRESULT result = super.WM_VSCROLL (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if (verticalBar != null && lParam == 0) {
 		return wmScroll (verticalBar, (state & CANVAS) != 0, handle, OS.WM_VSCROLL, wParam, lParam);
 	}
@@ -398,7 +422,9 @@ LRESULT WM_VSCROLL (long wParam, long lParam) {
 
 LRESULT wmScrollWheel (boolean update, long wParam, long lParam, boolean horzWheel) {
 	LRESULT result = horzWheel ? super.WM_MOUSEHWHEEL(wParam, lParam) : super.WM_MOUSEWHEEL(wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Translate WM_MOUSEWHEEL and WM_MOUSEHWHEEL to WM_VSCROLL or WM_HSCROLL.
 	*/
@@ -422,7 +448,9 @@ LRESULT wmScrollWheel (boolean update, long wParam, long lParam, boolean horzWhe
 		ScrollBar bar = vertical ? verticalBar : horizontalBar;
 		MouseWheelData wheelData = new MouseWheelData(vertical, bar, wParam, display.scrollRemainderBar);
 
-		if (wheelData.count == 0) return null;
+        if (wheelData.count == 0) {
+            return null;
+        }
 
 		SCROLLINFO info = new SCROLLINFO ();
 		info.cbSize = SCROLLINFO.sizeof;

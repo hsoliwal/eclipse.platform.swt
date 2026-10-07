@@ -48,7 +48,9 @@ public class Bug549376_JvmCrashMenuRadio {
 		shell.open();
 
 		while (!shell.isDisposed ()) {
-			if (!display.readAndDispatch ()) display.sleep ();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 
 		display.dispose ();

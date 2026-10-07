@@ -146,8 +146,12 @@ public class PawnTab {
 			if (e.location.contains(ACTION_START_1_PLAYER) || e.location.contains(ACTION_START_2_PLAYERS)) {
 				computer = e.location.contains(ACTION_START_1_PLAYER);
 				game = new byte[8][8];
-				if (computer) ttr = new Pawns();
-				for (int i = 0; i < 5; i++) game[(int)(Math.random()*game.length)][(int)(Math.random()*game[0].length)] = WALL;
+                if (computer) {
+                    ttr = new Pawns();
+                }
+                for (int i = 0; i < 5; i++) {
+                    game[(int) (Math.random() * game.length)][(int) (Math.random() * game[0].length)] = WALL;
+                }
 				e.display.asyncExec(() -> browser.setText(getHtml(TYPE_BOARD)));
 				e.doit = false;
 				return;
@@ -162,8 +166,11 @@ public class PawnTab {
 				return;
 			}
 			byte player = EMPTY;
-			if (e.location.contains(ACTION_WHITE)) player = WHITE;
-			else if (e.location.contains(ACTION_BLACK)) player = BLACK;
+                if (e.location.contains(ACTION_WHITE)) {
+                    player = WHITE;
+                } else if (e.location.contains(ACTION_BLACK)) {
+                    player = BLACK;
+                }
 			if (player != EMPTY) {
 				int index = e.location.indexOf("xx") + 2;
 				int x = Integer.parseInt(e.location.substring(index, index + 1));
@@ -172,7 +179,9 @@ public class PawnTab {
 				boolean hasMore = add(x, y, player);
 				isWhite = player != WHITE;
 				browser.setText(getHtml(hasMore ? TYPE_BOARD : TYPE_BOARD_OVER));
-				if (computer && hasMore && !isWhite) play(e.display, browser, 5000);
+                if (computer && hasMore && !isWhite) {
+                    play(e.display, browser, 5000);
+                }
 				e.doit = false;
 			}
 			}catch (Exception e1 ) {
@@ -186,63 +195,142 @@ public class PawnTab {
 		int cnt = Math.min(x, y), n = 0;
 		int other_color = color == WHITE ? BLACK : WHITE;
 		for (int d = 1; d <= cnt; d++) {
-			if (game[x-d][y-d] == other_color) n++;
-			else if (game[x-d][y-d] != color) break;
-			else { if (n > 0) for (d = 1; d <= n; d++) game[x-d][y-d] = color; break; }
+            if (game[x - d][y - d] == other_color) {
+                n++;
+            } else if (game[x - d][y - d] != color) {
+                break;
+            } else {
+                if (n > 0) {
+                    for (d = 1; d <= n; d++) {
+                        game[x - d][y - d] = color;
+                    }
+                }
+                break;
+            }
 		}
 		cnt = Math.min(game.length - 1 - x, game[0].length - 1 - y); n = 0;
 		for (int d = 1; d <= cnt; d++) {
-			if (game[x+d][y+d] == other_color) n++;
-			else if (game[x+d][y+d] != color) break;
-			else { if (n > 0) for (d = 1; d <= n; d++) game[x+d][y+d] = color; break; }
+            if (game[x + d][y + d] == other_color) {
+                n++;
+            } else if (game[x + d][y + d] != color) {
+                break;
+            } else {
+                if (n > 0) {
+                    for (d = 1; d <= n; d++) {
+                        game[x + d][y + d] = color;
+                    }
+                }
+                break;
+            }
 		}
 		cnt = Math.min(game.length - 1 - x, y); n = 0;
 		for (int d = 1; d <= cnt; d++) {
-			if (game[x+d][y-d] == other_color) n++;
-			else if (game[x+d][y-d] != color) break;
-			else { if (n > 0) for (d = 1; d <= n; d++) game[x+d][y-d] = color; break; }
+            if (game[x + d][y - d] == other_color) {
+                n++;
+            } else if (game[x + d][y - d] != color) {
+                break;
+            } else {
+                if (n > 0) {
+                    for (d = 1; d <= n; d++) {
+                        game[x + d][y - d] = color;
+                    }
+                }
+                break;
+            }
 		}
 		cnt = Math.min(x, game[0].length - 1 - y); n = 0;
 		for (int d = 1; d <= cnt; d++) {
-			if (game[x-d][y+d] == other_color) n++;
-			else if (game[x-d][y+d] != color) break;
-			else { if (n > 0) for (d = 1; d <= n; d++) game[x-d][y+d] = color; break; }
+            if (game[x - d][y + d] == other_color) {
+                n++;
+            } else if (game[x - d][y + d] != color) {
+                break;
+            } else {
+                if (n > 0) {
+                    for (d = 1; d <= n; d++) {
+                        game[x - d][y + d] = color;
+                    }
+                }
+                break;
+            }
 		}
 		cnt = y; n = 0;
 		for (int d = 1; d <= cnt; d++) {
-			if (game[x][y-d] == other_color) n++;
-			else if (game[x][y-d] != color) break;
-			else { if (n > 0) for (d = 1; d <= n; d++) game[x][y-d] = color; break; }
+            if (game[x][y - d] == other_color) {
+                n++;
+            } else if (game[x][y - d] != color) {
+                break;
+            } else {
+                if (n > 0) {
+                    for (d = 1; d <= n; d++) {
+                        game[x][y - d] = color;
+                    }
+                }
+                break;
+            }
 		}
 		cnt = game[0].length - 1 - y; n = 0;
 		for (int d = 1; d <= cnt; d++) {
-			if (game[x][y+d] == other_color) n++;
-			else if (game[x][y+d] != color) break;
-			else { if (n > 0) for (d = 1; d <= n; d++) game[x][y+d] = color; break; }
+            if (game[x][y + d] == other_color) {
+                n++;
+            } else if (game[x][y + d] != color) {
+                break;
+            } else {
+                if (n > 0) {
+                    for (d = 1; d <= n; d++) {
+                        game[x][y + d] = color;
+                    }
+                }
+                break;
+            }
 		}
 		cnt = x; n = 0;
 		for (int d = 1; d <= cnt; d++) {
-			if (game[x-d][y] == other_color) n++;
-			else if (game[x-d][y] != color) break;
-			else { if (n > 0) for (d = 1; d <= n; d++) game[x-d][y] = color; break; }
+            if (game[x - d][y] == other_color) {
+                n++;
+            } else if (game[x - d][y] != color) {
+                break;
+            } else {
+                if (n > 0) {
+                    for (d = 1; d <= n; d++) {
+                        game[x - d][y] = color;
+                    }
+                }
+                break;
+            }
 		}
 		cnt = game.length - 1 - x; n = 0;
 		for (int d = 1; d <= cnt; d++) {
-			if (game[x+d][y] == other_color) n++;
-			else if (game[x+d][y] != color) break;
-			else { if (n > 0) for (d = 1; d <= n; d++) game[x+d][y] = color; break; }
+            if (game[x + d][y] == other_color) {
+                n++;
+            } else if (game[x + d][y] != color) {
+                break;
+            } else {
+                if (n > 0) {
+                    for (d = 1; d <= n; d++) {
+                        game[x + d][y] = color;
+                    }
+                }
+                break;
+            }
 		}
 
 		boolean hasMore = false;
 		cntWhite = 0; cntBlack = 0;
-		for (byte[] element : game)
-			for (int j = 0; j < game[0].length; j++) {
-				switch (element[j]) {
-					case EMPTY: hasMore = true; break;
-					case WHITE: cntWhite++; break;
-					case BLACK: cntBlack++; break;
-				}
-			}
+        for (byte[] element : game) {
+            for (int j = 0; j < game[0].length; j++) {
+                switch (element[j]) {
+                    case EMPTY:
+                        hasMore = true;
+                        break;
+                    case WHITE:
+                        cntWhite++;
+                        break;
+                    case BLACK:
+                        cntBlack++;
+                        break;
+                }
+            }
+        }
 		return hasMore;
 	}
 	

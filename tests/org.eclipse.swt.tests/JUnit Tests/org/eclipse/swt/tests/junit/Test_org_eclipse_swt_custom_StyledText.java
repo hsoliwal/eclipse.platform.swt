@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.function.BooleanSupplier;
@@ -129,10 +130,16 @@ private StyleRange getStyle(int start, int length, Color fg, Color bg) {
 	StyleRange style = new StyleRange();
 	style.start = start;
 	style.length = length;
-	if (fg != null) style.foreground = fg;
-	else style.foreground = null;
-	if (bg != null) style.background = bg;
-	else style.background = null;
+    if (fg != null) {
+        style.foreground = fg;
+    } else {
+        style.foreground = null;
+    }
+    if (bg != null) {
+        style.background = bg;
+    } else {
+        style.background = null;
+    }
 	return style;
 }
 
@@ -2369,8 +2376,10 @@ public void test_paste(){
 
 @Test
 public void test_print() {
-	// if there aren't any printers, don't do this test
-	if (Printer.getDefaultPrinterData() == null) return;
+    // if there aren't any printers, don't do this test
+    if (Printer.getDefaultPrinterData() == null) {
+        return;
+    }
 
 	/* We don't really want to run this test, because it wastes paper.
 	 * Almost all of the print() method is tested in print(Printer), below.
@@ -2382,8 +2391,10 @@ public void test_print() {
 
 @Test
 public void test_printLorg_eclipse_swt_printing_Printer() {
-	// if there aren't any printers, don't do this test
-	if (Printer.getDefaultPrinterData() == null) return;
+    // if there aren't any printers, don't do this test
+    if (Printer.getDefaultPrinterData() == null) {
+        return;
+    }
 
 	assertThrows(IllegalArgumentException.class, () ->
 	text.print((Printer) null));
@@ -3354,6 +3365,39 @@ public void test_setHorizontalIndexI(){
 	text.setText("Line0");
 	text.setHorizontalIndex(1);
 	assertEquals(1 , text.getHorizontalIndex());
+}
+
+@Test
+public void test_viewportRuntimeMirrorsStyledTextScrollState() throws Exception {
+	text.setSize(100, 40);
+	text.setText(IntStream.range(0, 40)
+			.mapToObj(i -> "line-" + i + "-abcdefghijklmnopqrstuvwxyz")
+			.collect(Collectors.joining("\n")));
+
+	text.setHorizontalPixel(23);
+	text.setTopPixel(text.getLineHeight() * 7 + 3);
+
+	Field runtimeField = StyledText.class.getDeclaredField("viewportRuntime");
+	runtimeField.setAccessible(true);
+	Object runtime = runtimeField.get(text);
+	Method originX = runtime.getClass().getMethod("originX");
+	Method originY = runtime.getClass().getMethod("originY");
+
+	assertEquals((double)text.getHorizontalPixel(), (double)originX.invoke(runtime), 0.0,
+			"StyledText horizontal public state must be mirrored into the shared viewport runtime");
+	assertEquals((double)text.getTopPixel(), (double)originY.invoke(runtime), 0.0,
+			"StyledText vertical public state must be mirrored into the shared viewport runtime");
+
+	text.setWordWrap(true);
+	assertEquals(0, text.getHorizontalPixel());
+	assertEquals(0.0, (double)originX.invoke(runtime), 0.0,
+			"word-wrap reset must update the shared viewport origin");
+
+	text.setText("");
+	assertEquals(0, text.getHorizontalPixel());
+	assertEquals(0, text.getTopPixel());
+	assertEquals(0.0, (double)originX.invoke(runtime), 0.0);
+	assertEquals(0.0, (double)originY.invoke(runtime), 0.0);
 }
 
 @Test

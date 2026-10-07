@@ -92,9 +92,15 @@ public Caret (Canvas parent, int style) {
 }
 
 boolean blinkCaret () {
-	if (!isVisible) return true;
-	if (!isShowing) return showCaret ();
-	if (blinkRate == 0) return true;
+    if (!isVisible) {
+        return true;
+    }
+    if (!isShowing) {
+        return showCaret();
+    }
+    if (blinkRate == 0) {
+        return true;
+    }
 	return hideCaret ();
 }
 
@@ -109,8 +115,12 @@ void createWidget (int index) {
 }
 
 boolean drawCaret () {
-	if (parent == null) return false;
-	if (parent.isDisposed ()) return false;
+    if (parent == null) {
+        return false;
+    }
+    if (parent.isDisposed()) {
+        return false;
+    }
 	if (embeddedInto != null && !embeddedInto.isDisposed() && isFocusCaret()) {
 		// Draw differently if we are in the embedded cell editor
 		// See Table.setParentGdkResource() and Tree.setParentGdkResource()
@@ -165,7 +175,9 @@ public Rectangle getBounds () {
  */
 public Font getFont () {
 	checkWidget();
-	if (font != null) return font;
+    if (font != null) {
+        return font;
+    }
 	return parent.getFont ();
 }
 
@@ -261,7 +273,9 @@ public boolean getVisible () {
 }
 
 boolean hideCaret () {
-	if (!isShowing) return true;
+    if (!isShowing) {
+        return true;
+    }
 	isShowing = false;
 	return drawCaret ();
 }
@@ -290,17 +304,24 @@ boolean isFocusCaret () {
 }
 
 void killFocus () {
-	if (display.currentCaret != this) return;
+    if (display.currentCaret != this) {
+        return;
+    }
 	display.setCurrentCaret (null);
-	if (isVisible) hideCaret ();
+    if (isVisible) {
+        hideCaret();
+    }
 }
 
 @Override
 void releaseParent () {
 	super.releaseParent ();
 	if (parent != null && this == parent.caret) {
-		if (!parent.isDisposed()) parent.setCaret (null);
-		else parent.caret = null;
+        if (!parent.isDisposed()) {
+            parent.setCaret(null);
+        } else {
+            parent.caret = null;
+        }
 	}
 }
 
@@ -334,13 +355,19 @@ void releaseWidget () {
  */
 public void setBounds (int x, int y, int width, int height) {
 	checkWidget();
-	if (this.x == x && this.y == y && this.width == width && this.height == height) return;
+    if (this.x == x && this.y == y && this.width == width && this.height == height) {
+        return;
+    }
 	boolean isFocus = isFocusCaret ();
-	if (isFocus && isVisible) hideCaret ();
+    if (isFocus && isVisible) {
+        hideCaret();
+    }
 	this.x = x; this.y = y;
 	this.width = width; this.height = height;
 	parent.updateCaret ();
-	if (isFocus && isVisible) showCaret ();
+    if (isFocus && isVisible) {
+        showCaret();
+    }
 }
 
 /**
@@ -358,14 +385,20 @@ public void setBounds (int x, int y, int width, int height) {
  */
 public void setBounds (Rectangle rect) {
 	checkWidget();
-	if (rect == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rect == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setBounds (rect.x, rect.y, rect.width, rect.height);
 }
 
 void setFocus () {
-	if (display.currentCaret == this) return;
+    if (display.currentCaret == this) {
+        return;
+    }
 	display.setCurrentCaret (this);
-	if (isVisible) showCaret ();
+    if (isVisible) {
+        showCaret();
+    }
 }
 
 /**
@@ -412,9 +445,13 @@ public void setImage (Image image) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	boolean isFocus = isFocusCaret ();
-	if (isFocus && isVisible) hideCaret ();
+    if (isFocus && isVisible) {
+        hideCaret();
+    }
 	this.image = image;
-	if (isFocus && isVisible) showCaret ();
+    if (isFocus && isVisible) {
+        showCaret();
+    }
 }
 
 /**
@@ -449,7 +486,9 @@ public void setLocation (int x, int y) {
  */
 public void setLocation (Point location) {
 	checkWidget();
-	if (location == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (location == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setLocation (location.x, location.y);
 }
 
@@ -484,7 +523,9 @@ public void setSize (int width, int height) {
  */
 public void setSize (Point size) {
 	checkWidget();
-	if (size == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setSize (size.x, size.y);
 }
 
@@ -510,9 +551,13 @@ public void setVisible (boolean visible) {
 	canvas.blink = true;
 	canvas.drawFlag = visible;
 	display.resetCaretTiming();
-	if (visible == isVisible) return;
+    if (visible == isVisible) {
+        return;
+    }
 	isVisible = visible;
-	if (!isFocusCaret ()) return;
+    if (!isFocusCaret()) {
+        return;
+    }
 	if (isVisible) {
 		showCaret ();
 	} else {
@@ -521,7 +566,9 @@ public void setVisible (boolean visible) {
 }
 
 boolean showCaret () {
-	if (isShowing) return true;
+    if (isShowing) {
+        return true;
+    }
 	isShowing = true;
 	return drawCaret ();
 }

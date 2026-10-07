@@ -58,7 +58,9 @@ public static void main(String[] args) {
 	new Runnable() {
 		@Override
 		public void run() {
-			if (canvas.isDisposed()) return;
+            if (canvas.isDisposed()) {
+                return;
+            }
 			render();
 			canvas.swapBuffers();
 			canvas.getDisplay().timerExec(50, this);
@@ -66,7 +68,9 @@ public static void main(String[] args) {
 	}.run();
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch()) display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

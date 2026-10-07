@@ -73,9 +73,15 @@ class ComboTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (dropDownButton.getSelection ()) style |= SWT.DROP_DOWN;
-		if (readOnlyButton.getSelection ()) style |= SWT.READ_ONLY;
-		if (simpleButton.getSelection ()) style |= SWT.SIMPLE;
+        if (dropDownButton.getSelection()) {
+            style |= SWT.DROP_DOWN;
+        }
+        if (readOnlyButton.getSelection()) {
+            style |= SWT.READ_ONLY;
+        }
+        if (simpleButton.getSelection()) {
+            style |= SWT.SIMPLE;
+        }
 
 		/* Create the example widgets */
 		combo1 = new Combo (comboGroup, style);

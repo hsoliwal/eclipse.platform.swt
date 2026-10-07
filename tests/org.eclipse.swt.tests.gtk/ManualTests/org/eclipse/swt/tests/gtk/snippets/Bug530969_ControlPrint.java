@@ -102,7 +102,9 @@ public class Bug530969_ControlPrint {
 		properShell.setSize(400, 400);
 		properShell.open();
 		while (!properShell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 		canvas.dispose();

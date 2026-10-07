@@ -181,12 +181,14 @@ public void addSelectionListener (SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
+	return WidgetStylePolicy.COLUMN_ALIGNMENT.applyAsInt(style);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -202,8 +204,12 @@ void createWidget (int index) {
 void deregister() {
 	super.deregister ();
 	display.removeWidget (handle);
-	if (buttonHandle != 0) display.removeWidget (buttonHandle);
-	if (labelHandle != 0) display.removeWidget (labelHandle);
+    if (buttonHandle != 0) {
+        display.removeWidget(buttonHandle);
+    }
+    if (labelHandle != 0) {
+        display.removeWidget(labelHandle);
+    }
 }
 
 @Override
@@ -226,9 +232,15 @@ void destroyWidget () {
  */
 public int getAlignment () {
 	checkWidget();
-	if ((style & SWT.LEFT) != 0) return SWT.LEFT;
-	if ((style & SWT.CENTER) != 0) return SWT.CENTER;
-	if ((style & SWT.RIGHT) != 0) return SWT.RIGHT;
+    if ((style & SWT.LEFT) != 0) {
+        return SWT.LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        return SWT.CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        return SWT.RIGHT;
+    }
 	return SWT.LEFT;
 }
 
@@ -322,7 +334,9 @@ public int getWidth () {
 	if (!GTK.gtk_tree_view_column_get_visible (handle)) {
 		return 0;
 	}
-	if (useFixedWidth) return GTK.gtk_tree_view_column_get_fixed_width (handle);
+    if (useFixedWidth) {
+        return GTK.gtk_tree_view_column_get_fixed_width(handle);
+    }
 	return GTK.gtk_tree_view_column_get_width (handle);
 }
 
@@ -366,7 +380,9 @@ long gtk_clicked (long widget) {
 		}
 		gdk_event_free (eventPtr);
 	}
-	if (postEvent) sendSelectionEvent (doubleClick ? SWT.DefaultSelection : SWT.Selection);
+    if (postEvent) {
+        sendSelectionEvent(doubleClick ? SWT.DefaultSelection : SWT.Selection);
+    }
 	return 0;
 }
 
@@ -438,7 +454,9 @@ void hookEvents () {
 			OS.g_signal_connect_closure_by_id (buttonHandle, display.signalIds [EVENT_AFTER], 0, display.getClosure (EVENT_AFTER), false);
 		}
 	}
-	if (labelHandle != 0) OS.g_signal_connect_closure_by_id (labelHandle, display.signalIds [MNEMONIC_ACTIVATE], 0, display.getClosure (MNEMONIC_ACTIVATE), false);
+    if (labelHandle != 0) {
+        OS.g_signal_connect_closure_by_id(labelHandle, display.signalIds [MNEMONIC_ACTIVATE], 0, display.getClosure(MNEMONIC_ACTIVATE), false);
+    }
 }
 
 /**
@@ -476,7 +494,9 @@ public void pack () {
 		}
 		for (int i=0; i<parent.items.length; i++) {
 			TableItem item = parent.items [i];
-			if (itemBounds == null && item != null) itemBounds = item.getBounds();
+            if (itemBounds == null && item != null) {
+                itemBounds = item.getBounds();
+            }
 			boolean isVisible = false;
 			if (!calcWidth && itemBounds != null) {
 				int itemTopBound = itemBounds.y + itemBounds.height * i + i;
@@ -503,8 +523,12 @@ public void pack () {
 void register () {
 	super.register ();
 	display.addWidget (handle, this);
-	if (buttonHandle != 0) display.addWidget (buttonHandle, this);
-	if (labelHandle != 0) display.addWidget (labelHandle, this);
+    if (buttonHandle != 0) {
+        display.addWidget(buttonHandle, this);
+    }
+    if (labelHandle != 0) {
+        display.addWidget(labelHandle, this);
+    }
 }
 
 @Override
@@ -542,8 +566,12 @@ void releaseParent () {
  */
 public void removeControlListener (ControlListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Move, listener);
 	eventTable.unhook (SWT.Resize, listener);
 }
@@ -567,8 +595,12 @@ public void removeControlListener (ControlListener listener) {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -590,9 +622,13 @@ public void removeSelectionListener(SelectionListener listener) {
  */
 public void setAlignment (int alignment) {
 	checkWidget();
-	if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) return;
+    if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) {
+        return;
+    }
 	int index = parent.indexOf (this);
-	if (index == -1 || index == 0) return;
+    if (index == -1 || index == 0) {
+        return;
+    }
 	style &= ~(SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	style |= alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	parent.createRenderers (handle, modelIndex, index == 0, style);
@@ -612,7 +648,9 @@ public void setImage (Image image) {
 			headerImageList = parent.headerImageList = new ImageList ();
 		}
 		int imageIndex = headerImageList.indexOf (image);
-		if (imageIndex == -1) imageIndex = headerImageList.add (image);
+        if (imageIndex == -1) {
+            imageIndex = headerImageList.add(image);
+        }
 		if (GTK.GTK4) {
 			long pixbuf = ImageList.createPixbuf(image);
 			long texture = GDK.gdk_texture_new_for_pixbuf(pixbuf);
@@ -691,7 +729,9 @@ void setOrientation (boolean create) {
 @Override
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	super.setText (string);
 	char [] chars = fixMnemonic (string);
 	byte [] buffer = Converter.wcsToMbcs (chars, true);
@@ -749,18 +789,24 @@ public void setToolTipText(String string) {
  */
 public void setWidth (int width) {
 	checkWidget ();
-	if (width < 0) return;
-	if (width == lastWidth) return;
+    if (width < 0) {
+        return;
+    }
+    if (width == lastWidth) {
+        return;
+    }
 	if (width > 0) {
 		useFixedWidth = true;
 		GTK.gtk_tree_view_column_set_fixed_width (handle, width);
 	}
-	/*
-	 * Bug in GTK.  For some reason, calling gtk_tree_view_column_set_visible()
-	 * when the parent is not realized fails to show the column. The fix is to
-	 * ensure that the table has been realized.
-	 */
-	if (width != 0) GTK.gtk_widget_realize (parent.handle);
+    /*
+     * Bug in GTK.  For some reason, calling gtk_tree_view_column_set_visible()
+     * when the parent is not realized fails to show the column. The fix is to
+     * ensure that the table has been realized.
+     */
+    if (width != 0) {
+        GTK.gtk_widget_realize(parent.handle);
+    }
 	GTK.gtk_tree_view_column_set_visible (handle, width != 0);
 	lastWidth = width;
 	/*

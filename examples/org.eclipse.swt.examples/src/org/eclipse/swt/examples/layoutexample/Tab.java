@@ -226,7 +226,9 @@ abstract class Tab {
 			shell.setLayout(new FillLayout());
 			final Text text = new Text(shell, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL);
 			String layoutCode = generateCode().toString ();
-			if (layoutCode.length() == 0) return;
+            if (layoutCode.length() == 0) {
+                return;
+            }
 			text.setText(layoutCode);
 
 			Menu bar = new Menu(shell, SWT.BAR);
@@ -250,8 +252,11 @@ abstract class Tab {
 			shell.pack();
 			shell.setSize(500, 600);
 			shell.open();
-			while(!shell.isDisposed())
-				if (!display.readAndDispatch()) display.sleep();
+            while (!shell.isDisposed()) {
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
+            }
 		}));
 
 		createChildWidgets();
@@ -280,9 +285,13 @@ abstract class Tab {
 		for (int i = 0; i < columnHeaders.length; i++) {
 			TableColumn column = new TableColumn(table, SWT.NONE);
 			column.setText (columnHeaders [i]);
-			if (i == 0) column.setWidth (100);
-			else if (i == 1) column.setWidth (90);
-			else column.pack ();
+            if (i == 0) {
+                column.setWidth(100);
+            } else if (i == 1) {
+                column.setWidth(90);
+            } else {
+                column.pack();
+            }
 		}
 	}
 
@@ -472,8 +481,12 @@ abstract class Tab {
 		code.append ("import org.eclipse.swt.*;\n");
 		code.append ("import org.eclipse.swt.layout.*;\n");
 		code.append ("import org.eclipse.swt.widgets.*;\n");
-		if (needsCustom ()) code.append ("import org.eclipse.swt.custom.*;\n");
-		if (needsGraphics ()) code.append ("import org.eclipse.swt.graphics.*;\n");
+        if (needsCustom()) {
+            code.append("import org.eclipse.swt.custom.*;\n");
+        }
+        if (needsGraphics()) {
+            code.append("import org.eclipse.swt.graphics.*;\n");
+        }
 		code.append ("\n");
 		code.append ("public class MyLayout {\n");
 		code.append ("\tpublic static void main (String [] args) {\n");
@@ -527,7 +540,9 @@ abstract class Tab {
 					controlType.equals ("ToolBar") || controlType.equals ("Tree") ||
 					controlType.equals ("List") || controlType.equals ("Text")) {
 			styleString = "SWT.BORDER";
-		} else styleString = "SWT.NONE";
+		} else {
+            styleString = "SWT.NONE";
+        }
 		/* Write out the control being declared */
 		code.append ("\n\t\t" + controlType + " " + names [i] +
 					 " = new " + controlType + " (shell, " + styleString + ");\n");

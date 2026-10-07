@@ -120,10 +120,18 @@ public static void main(String[] args) {
 	tree.addKeyListener(new KeyListener() {
 		@Override
 		public void keyReleased(KeyEvent e) {
-			if (e.keyCode == SWT.MOD1 && (e.stateMask & SWT.MOD2) != 0) return;
-			if (e.keyCode == SWT.MOD2 && (e.stateMask & SWT.MOD1) != 0) return;
-			if (e.keyCode != SWT.MOD1 && (e.stateMask & SWT.MOD1) != 0) return;
-			if (e.keyCode != SWT.MOD2 && (e.stateMask & SWT.MOD2) != 0) return;
+            if (e.keyCode == SWT.MOD1 && (e.stateMask & SWT.MOD2) != 0) {
+                return;
+            }
+            if (e.keyCode == SWT.MOD2 && (e.stateMask & SWT.MOD1) != 0) {
+                return;
+            }
+            if (e.keyCode != SWT.MOD1 && (e.stateMask & SWT.MOD1) != 0) {
+                return;
+            }
+            if (e.keyCode != SWT.MOD2 && (e.stateMask & SWT.MOD2) != 0) {
+                return;
+            }
 
 			TreeItem[] selection = tree.getSelection();
 			TreeItem row = (selection.length == 0) ? tree.getItem(tree.indexOf(tree.getTopItem())) : selection[0];
@@ -152,8 +160,9 @@ public static void main(String[] args) {
 	shell.pack();
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

@@ -137,7 +137,9 @@ public RGB open () {
 	} else {
 		handle = GTK.gtk_color_chooser_dialog_new(buffer, parent.topHandle());
 	}
-	if (handle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (GTK.GTK_VERSION >= OS.VERSION(4, 10, 0)) {
 		GTK4.gtk_color_dialog_set_modal(handle, true);
 		GTK4.gtk_color_dialog_set_title(handle, buffer);

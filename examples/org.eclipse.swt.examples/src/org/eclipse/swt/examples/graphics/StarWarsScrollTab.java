@@ -99,7 +99,9 @@ public class StarWarsScrollTab extends AnimatedGraphicsTab {
 
 	@Override
 	public void paint(GC gc, int width, int height) {
-		if (!example.checkAdvancedGraphics()) return;
+        if (!example.checkAdvancedGraphics()) {
+            return;
+        }
 		if (y < 0 || width != lastWidth || height != lastHeight) {
 			reset(width, height);
 		}
@@ -117,18 +119,28 @@ public class StarWarsScrollTab extends AnimatedGraphicsTab {
 		int baseY = height;
 		for (int row = 0; row < height; row++) {
 			int srcRow = row - y;
-			if (srcRow < 0 || srcRow >= textHeight) continue;
+            if (srcRow < 0 || srcRow >= textHeight) {
+                continue;
+            }
 
 			double t = (double) (row - vanishingY) / (baseY - vanishingY);
-			if (t < 0.01) t = 0.01;
+            if (t < 0.01) {
+                t = 0.01;
+            }
 			int rowWidth = (int) (width * t);
-			if (rowWidth <= 0) continue;
+            if (rowWidth <= 0) {
+                continue;
+            }
 			int offsetX = (width - rowWidth) / 2;
 
 			for (int dx = 0; dx < rowWidth; dx++) {
 				int sx = (int) ((double) dx * srcData.width / rowWidth);
-				if (sx < 0) sx = 0;
-				if (sx >= srcData.width) sx = srcData.width - 1;
+                if (sx < 0) {
+                    sx = 0;
+                }
+                if (sx >= srcData.width) {
+                    sx = srcData.width - 1;
+                }
 				outData.setPixel(offsetX + dx, row, srcData.getPixel(sx, srcRow));
 			}
 		}

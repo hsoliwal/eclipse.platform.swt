@@ -70,9 +70,11 @@ public class Bug326117_EmbeddedBrowser{
 
 		frm.setSize(800, 600);
 		frm.setVisible(true);
-		while (frm.isDisplayable())
-			if (!display.readAndDispatch())
-				display.sleep();
+        while (frm.isDisplayable()) {
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
+        }
 //       display.dispose();
 	}
 

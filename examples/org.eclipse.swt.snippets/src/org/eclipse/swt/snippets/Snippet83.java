@@ -49,9 +49,15 @@ public static void main(String[] args) {
 		@Override
 		public void dragEnter(DropTargetEvent event) {
 			String ops = "";
-			if ((event.operations & DND.DROP_COPY) != 0) ops += "Copy;";
-			if ((event.operations & DND.DROP_MOVE) != 0) ops += "Move;";
-			if ((event.operations & DND.DROP_LINK) != 0) ops += "Link;";
+            if ((event.operations & DND.DROP_COPY) != 0) {
+                ops += "Copy;";
+            }
+            if ((event.operations & DND.DROP_MOVE) != 0) {
+                ops += "Move;";
+            }
+            if ((event.operations & DND.DROP_LINK) != 0) {
+                ops += "Link;";
+            }
 			control.removeAll();
 			TableItem item1 = new TableItem(control,SWT.NONE);
 			item1.setText("Allowed Operations are "+ops);
@@ -78,8 +84,9 @@ public static void main(String[] args) {
 	shell.setSize(400, 400);
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose();
 }

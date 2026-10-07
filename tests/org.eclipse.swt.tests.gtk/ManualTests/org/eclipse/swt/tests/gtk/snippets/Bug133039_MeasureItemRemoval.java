@@ -46,7 +46,9 @@ public class Bug133039_MeasureItemRemoval {
 		shell.open();
 		new TreeItem(tree, SWT.NONE).setText("item 0");
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

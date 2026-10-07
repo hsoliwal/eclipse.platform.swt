@@ -37,8 +37,9 @@ public class Bug481485_ButtonLabelPaintListener {
 		shell.setSize(300, 300);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

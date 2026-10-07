@@ -108,9 +108,15 @@ class CoolBarTab extends Tab {
 			toolBarStyle |= SWT.VERTICAL;
 			vertical = true;
 		}
-		if (borderButton.getSelection()) style |= SWT.BORDER;
-		if (flatButton.getSelection()) style |= SWT.FLAT;
-		if (dropDownButton.getSelection()) itemStyle |= SWT.DROP_DOWN;
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (flatButton.getSelection()) {
+            style |= SWT.FLAT;
+        }
+        if (dropDownButton.getSelection()) {
+            itemStyle |= SWT.DROP_DOWN;
+        }
 
 		/*
 		* Create the example widgets.
@@ -323,7 +329,9 @@ class CoolBarTab extends Tab {
 		flatButton.setSelection ((coolBar.getStyle () & SWT.FLAT) != 0);
 		dropDownButton.setSelection ((coolBar.getItem(0).getStyle () & SWT.DROP_DOWN) != 0);
 		lockedButton.setSelection(coolBar.getLocked());
-		if (!instance.startup) setWidgetLocked ();
+        if (!instance.startup) {
+            setWidgetLocked();
+        }
 	}
 
 	/**
@@ -448,7 +456,9 @@ class CoolBarTab extends Tab {
 					toolBounds.x = pt.x;
 					toolBounds.y = pt.y;
 					Rectangle intersection = itemBounds.intersection (toolBounds);
-					if (!intersection.equals (toolBounds)) break;
+                    if (!intersection.equals(toolBounds)) {
+                        break;
+                    }
 					i++;
 				}
 
@@ -464,7 +474,9 @@ class CoolBarTab extends Tab {
 							MenuItem menuItem = new MenuItem (menu, SWT.CASCADE);
 							menuItem.setImage(image);
 							String text = tool.getToolTipText();
-							if (text != null) menuItem.setText(text);
+                            if (text != null) {
+                                menuItem.setText(text);
+                            }
 							Menu m = new Menu(menu);
 							menuItem.setMenu(m);
 							for (int k = 0; k < 9; ++k) {
@@ -481,7 +493,9 @@ class CoolBarTab extends Tab {
 							MenuItem menuItem = new MenuItem (menu, SWT.NONE);
 							menuItem.setImage(image);
 							String text = tool.getToolTipText();
-							if (text != null) menuItem.setText(text);
+                            if (text != null) {
+                                menuItem.setText(text);
+                            }
 						}
 						/* Application code to perform the action for the menu item would go here. */
 					}
@@ -494,7 +508,9 @@ class CoolBarTab extends Tab {
 				menu.setLocation (pt.x, pt.y);
 				menu.setVisible (true);
 				while (menu != null && !menu.isDisposed() && menu.isVisible ()) {
-					if (!display.readAndDispatch ()) display.sleep ();
+                    if (!display.readAndDispatch()) {
+                        display.sleep();
+                    }
 				}
 				if (menu != null) {
 					menu.dispose ();

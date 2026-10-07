@@ -35,7 +35,9 @@ public class Bug197690_CVSWizard {
 		}));
 		shell1.open();
 		while (!shell1.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

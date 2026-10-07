@@ -153,7 +153,9 @@ public void addSelectionListener(SelectionListener listener) {
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -192,10 +194,16 @@ Point computeSizeInPixels (Point sizeHintInPoints) {
 	int zoom = getAutoscalingZoom();
 	Point sizeHintInPixels = Win32DPIUtils.pointToPixelAsSufficientlyLargeSize(sizeHintInPoints, zoom);
 	int index = parent.indexOf (this);
-	if (index == -1) return new Point (0, 0);
+    if (index == -1) {
+        return new Point(0, 0);
+    }
 	int width = sizeHintInPixels.x, height = sizeHintInPixels.y;
-	if (sizeHintInPoints.x == SWT.DEFAULT) width = 32;
-	if (sizeHintInPoints.y == SWT.DEFAULT) height = 32;
+    if (sizeHintInPoints.x == SWT.DEFAULT) {
+        width = 32;
+    }
+    if (sizeHintInPoints.y == SWT.DEFAULT) {
+        height = 32;
+    }
 	if ((parent.style & SWT.VERTICAL) != 0) {
 		height += parent.getMargin (index);
 	} else {
@@ -228,7 +236,9 @@ public Rectangle getBounds () {
 
 Rectangle getBoundsInPixels () {
 	int index = parent.indexOf (this);
-	if (index == -1) return new Rectangle (0, 0, 0, 0);
+    if (index == -1) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	long hwnd = parent.handle;
 	RECT rect = new RECT ();
 	OS.SendMessage (hwnd, OS.RB_GETRECT, index, rect);
@@ -250,7 +260,9 @@ Rectangle getBoundsInPixels () {
 Rectangle getClientArea () {
 	checkWidget ();
 	int index = parent.indexOf (this);
-	if (index == -1) return new Rectangle (0, 0, 0, 0);
+    if (index == -1) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	long hwnd = parent.handle;
 	RECT insetRect = new RECT ();
 	OS.SendMessage (hwnd, OS.RB_GETBANDBORDERS, index, insetRect);
@@ -331,11 +343,17 @@ void releaseHandle () {
 public void setControl (Control control) {
 	checkWidget ();
 	if (control != null) {
-		if (control.isDisposed()) error (SWT.ERROR_INVALID_ARGUMENT);
-		if (control.parent != parent) error (SWT.ERROR_INVALID_PARENT);
+        if (control.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (control.parent != parent) {
+            error(SWT.ERROR_INVALID_PARENT);
+        }
 	}
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	if (this.control != null && this.control.isDisposed ()) {
 		this.control = null;
 	}
@@ -361,8 +379,12 @@ public void setControl (Control control) {
 	boolean hideNew = newControl != null && !newControl.getVisible ();
 	boolean showOld = oldControl != null && oldControl.getVisible ();
 	OS.SendMessage (hwnd, OS.RB_SETBANDINFO, index, rbBand);
-	if (hideNew) newControl.setVisible (false);
-	if (showOld) oldControl.setVisible (true);
+    if (hideNew) {
+        newControl.setVisible(false);
+    }
+    if (showOld) {
+        oldControl.setVisible(true);
+    }
 	if (hwndAbove != 0 && hwndAbove != hwndChild) {
 		int flags = OS.SWP_NOSIZE | OS.SWP_NOMOVE | OS.SWP_NOACTIVATE;
 		OS.SetWindowPos (hwndChild, hwndAbove, 0, 0, 0, 0, flags);
@@ -388,7 +410,9 @@ public Point getPreferredSize () {
 
 Point getPreferredSizeInPixels () {
 	int index = parent.indexOf (this);
-	if (index == -1) return new Point (0, 0);
+    if (index == -1) {
+        return new Point(0, 0);
+    }
 	long hwnd = parent.handle;
 	REBARBANDINFO rbBand = new REBARBANDINFO ();
 	rbBand.cbSize = REBARBANDINFO.sizeof;
@@ -420,7 +444,9 @@ public void setPreferredSize (int width, int height) {
 
 void setPreferredSizeInPixels (int width, int height) {
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	width = Math.max (0, width);
 	height = Math.max (0, height);
 	ideal = true;
@@ -444,7 +470,9 @@ void setPreferredSizeInPixels (int width, int height) {
 	rbBand.fMask = OS.RBBIM_CHILDSIZE | OS.RBBIM_IDEALSIZE;
 	rbBand.cxIdeal = cxIdeal;
 	rbBand.cyMaxChild = cyMaxChild;
-	if (!minimum) rbBand.cyMinChild = cyMaxChild;
+    if (!minimum) {
+        rbBand.cyMinChild = cyMaxChild;
+    }
 	OS.SendMessage (hwnd, OS.RB_SETBANDINFO, index, rbBand);
 }
 
@@ -463,7 +491,9 @@ void setPreferredSizeInPixels (int width, int height) {
  */
 public void setPreferredSize (Point size) {
 	checkWidget ();
-	if (size == null) error(SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	size = Win32DPIUtils.pointToPixelAsSize(size, getAutoscalingZoom());
 	setPreferredSizeInPixels(size.x, size.y);
 }
@@ -488,7 +518,9 @@ public Point getSize () {
 
 Point getSizeInPixels() {
 	int index = parent.indexOf (this);
-	if (index == -1) return new Point (0, 0);
+    if (index == -1) {
+        return new Point(0, 0);
+    }
 	long hwnd = parent.handle;
 	RECT rect = new RECT ();
 	OS.SendMessage (hwnd, OS.RB_GETRECT, index, rect);
@@ -531,7 +563,9 @@ public void setSize (int width, int height) {
 
 void setSizeInPixels (int width, int height) {
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	width = Math.max (0, width);
 	height = Math.max (0, height);
 	long hwnd = parent.handle;
@@ -552,9 +586,13 @@ void setSizeInPixels (int width, int height) {
 	rbBand.fMask = OS.RBBIM_CHILDSIZE | OS.RBBIM_IDEALSIZE;
 	OS.SendMessage (hwnd, OS.RB_GETBANDINFO, index, rbBand);
 
-	/* Set the size fields we are currently modifying. */
-	if (!ideal) rbBand.cxIdeal = cxIdeal;
-	if (!minimum) rbBand.cyMinChild = cyChild;
+    /* Set the size fields we are currently modifying. */
+    if (!ideal) {
+        rbBand.cxIdeal = cxIdeal;
+    }
+    if (!minimum) {
+        rbBand.cyMinChild = cyChild;
+    }
 	rbBand.cyChild = cyChild;
 
 	/*
@@ -591,7 +629,9 @@ void setSizeInPixels (int width, int height) {
  */
 public void setSize (Point size) {
 	checkWidget ();
-	if (size == null) error(SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	size = Win32DPIUtils.pointToPixelAsSize(size, getAutoscalingZoom());
 	setSizeInPixels(size.x, size.y);
 }
@@ -616,7 +656,9 @@ public Point getMinimumSize () {
 
 Point getMinimumSizeInPixels () {
 	int index = parent.indexOf (this);
-	if (index == -1) return new Point (0, 0);
+    if (index == -1) {
+        return new Point(0, 0);
+    }
 	long hwnd = parent.handle;
 	REBARBANDINFO rbBand = new REBARBANDINFO ();
 	rbBand.cbSize = REBARBANDINFO.sizeof;
@@ -650,7 +692,9 @@ public void setMinimumSize (int width, int height) {
 
 void setMinimumSizeInPixels (int width, int height) {
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	width = Math.max (0, width);
 	height = Math.max (0, height);
 	minimum = true;
@@ -694,7 +738,9 @@ void setMinimumSizeInPixels (int width, int height) {
  */
 public void setMinimumSize (Point size) {
 	checkWidget ();
-	if (size == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	size = Win32DPIUtils.pointToPixelAsSize(size, getAutoscalingZoom());
 	setMinimumSizeInPixels(size.x, size.y);
 }
@@ -745,8 +791,12 @@ void setWrap(boolean wrap) {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }

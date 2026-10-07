@@ -89,7 +89,9 @@ public static PrinterData[] getPrinterList() {
 	TCHAR buf = new TCHAR(length);
 	TCHAR nullBuf = new TCHAR(1);
 	int n = OS.GetProfileString(profile, null, nullBuf, buf, length);
-	if (n == 0) return new PrinterData[0];
+    if (n == 0) {
+        return new PrinterData[0];
+    }
 	String[] deviceNames = new String[5];
 	int nameCount = 0;
 	int index = 0;
@@ -111,7 +113,9 @@ public static PrinterData[] getPrinterList() {
 		String driver = ""; //$NON-NLS-1$
 		if (OS.GetProfileString(profile, new TCHAR(device, true), nullBuf, buf, length) > 0) {
 			int commaIndex = 0;
-			while (buf.tcharAt(commaIndex) != ',' && commaIndex < length) commaIndex++;
+            while (buf.tcharAt(commaIndex) != ',' && commaIndex < length) {
+                commaIndex++;
+            }
 			if (commaIndex < length) {
 				driver = buf.toString(0, commaIndex);
 			}
@@ -136,17 +140,25 @@ public static PrinterData getDefaultPrinterData() {
 	TCHAR buf = new TCHAR(length);
 	TCHAR nullBuf = new TCHAR(1);
 	int n = OS.GetProfileString(appName, keyName, nullBuf, buf, length);
-	if (n == 0) return null;
+    if (n == 0) {
+        return null;
+    }
 	int commaIndex = 0;
-	while(buf.tcharAt(commaIndex) != ',' && commaIndex < length) commaIndex++;
+    while (buf.tcharAt(commaIndex) != ',' && commaIndex < length) {
+        commaIndex++;
+    }
 	if (commaIndex < length) {
 		deviceName = buf.toString(0, commaIndex);
 	}
-	if (deviceName == null) return null;
+    if (deviceName == null) {
+        return null;
+    }
 	String driver = ""; //$NON-NLS-1$
 	if (OS.GetProfileString(profile, new TCHAR(deviceName, true), nullBuf, buf, length) > 0) {
 		commaIndex = 0;
-		while (buf.tcharAt(commaIndex) != ',' && commaIndex < length) commaIndex++;
+        while (buf.tcharAt(commaIndex) != ',' && commaIndex < length) {
+            commaIndex++;
+        }
 		if (commaIndex < length) {
 			driver = buf.toString(0, commaIndex);
 		}
@@ -155,10 +167,14 @@ public static PrinterData getDefaultPrinterData() {
 }
 
 static DeviceData checkNull (PrinterData data) {
-	if (data == null) data = new PrinterData();
+    if (data == null) {
+        data = new PrinterData();
+    }
 	if (data.driver == null || data.name == null) {
 		PrinterData defaultPrinter = getDefaultPrinterData();
-		if (defaultPrinter == null) SWT.error(SWT.ERROR_NO_HANDLES);
+        if (defaultPrinter == null) {
+            SWT.error(SWT.ERROR_NO_HANDLES);
+        }
 		data.driver = defaultPrinter.driver;
 		data.name = defaultPrinter.name;
 	}
@@ -264,8 +280,12 @@ protected void create(DeviceData deviceData) {
 		OS.MoveMemory(lpInitData, devmode, DEVMODE.sizeof);
 	}
 	handle = OS.CreateDC(driver, device, 0, lpInitData);
-	if (lpInitData != 0) OS.HeapFree(hHeap, 0, lpInitData);
-	if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (lpInitData != 0) {
+        OS.HeapFree(hHeap, 0, lpInitData);
+    }
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 }
 
 @Override
@@ -291,9 +311,13 @@ protected int getDeviceZoom() {
  */
 @Override
 public long internal_new_GC(GCData data) {
-	if (handle == 0) SWT.error(SWT.ERROR_NO_HANDLES);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_NO_HANDLES);
+    }
 	if (data != null) {
-		if (isGCCreated) SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (isGCCreated) {
+            SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		int mask = SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT;
 		if ((data.style & mask) != 0) {
 			data.layout = (data.style & SWT.RIGHT_TO_LEFT) != 0 ? OS.LAYOUT_RTL : 0;
@@ -325,7 +349,9 @@ public long internal_new_GC(GCData data) {
  */
 @Override
 public void internal_dispose_GC(long hDC, GCData data) {
-	if (data != null) isGCCreated = false;
+    if (data != null) {
+        isGCCreated = false;
+    }
 }
 
 /**
@@ -383,8 +409,12 @@ public boolean startJob(String jobName) {
 		di.lpszOutput = lpszOutput;
 	}
 	int rc = OS.StartDoc(handle, di);
-	if (lpszDocName != 0) OS.HeapFree(hHeap, 0, lpszDocName);
-	if (lpszOutput != 0) OS.HeapFree(hHeap, 0, lpszOutput);
+    if (lpszDocName != 0) {
+        OS.HeapFree(hHeap, 0, lpszDocName);
+    }
+    if (lpszOutput != 0) {
+        OS.HeapFree(hHeap, 0, lpszOutput);
+    }
 	return rc > 0;
 }
 
@@ -437,7 +467,9 @@ public void cancelJob() {
 public boolean startPage() {
 	checkDevice();
 	int rc = OS.StartPage(handle);
-	if (rc <= 0) OS.AbortDoc(handle);
+    if (rc <= 0) {
+        OS.AbortDoc(handle);
+    }
 	return rc > 0;
 }
 
@@ -591,7 +623,9 @@ public PrinterData getPrinterData() {
  */
 @Override
 protected void checkDevice() {
-	if (handle == 0) SWT.error(SWT.ERROR_DEVICE_DISPOSED);
+    if (handle == 0) {
+        SWT.error(SWT.ERROR_DEVICE_DISPOSED);
+    }
 }
 
 /**
@@ -612,7 +646,9 @@ protected void release() {
  */
 @Override
 protected void destroy() {
-	if (handle != 0) OS.DeleteDC(handle);
+    if (handle != 0) {
+        OS.DeleteDC(handle);
+    }
 	handle = 0;
 }
 

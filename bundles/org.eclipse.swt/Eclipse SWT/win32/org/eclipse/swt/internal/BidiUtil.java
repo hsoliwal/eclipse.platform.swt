@@ -33,16 +33,52 @@ public class BidiUtil {
 	// bidi flag
 	static int isBidiPlatform = -1;
 
+	// getRenderInfo flag values
+	public static final int CLASSIN = 1;
+	public static final int LINKBEFORE = 2;
+	public static final int LINKAFTER = 4;
+
 	// variables used for providing a listener mechanism for keyboard language
 	// switching
 	static Map<LONG, Runnable> languageMap = new HashMap<> ();
 	static Map<LONG, LONG> oldProcMap = new HashMap<> ();
 	static Callback callback = new Callback (BidiUtil.class, "windowProc", 4); //$NON-NLS-1$
 
+	// GetCharacterPlacement constants
+	static final int GCP_REORDER = 0x0002;
+	static final int GCP_GLYPHSHAPE = 0x0010;
+	static final int GCP_LIGATE = 0x0020;
+	static final int GCP_CLASSIN = 0x00080000;
+	static final byte GCPCLASS_ARABIC = 2;
+	static final byte GCPCLASS_HEBREW = 2;
+	static final byte GCPCLASS_LOCALNUMBER = 4;
+	static final byte GCPCLASS_LATINNUMBER = 5;
+	static final int GCPGLYPH_LINKBEFORE = 0x8000;
+	static final int GCPGLYPH_LINKAFTER = 0x4000;
+	// ExtTextOut constants
+	static final int ETO_CLIPPED = 0x4;
+	static final int ETO_GLYPH_INDEX = 0x0010;
 	// Windows primary language identifiers
 	static final int LANG_ARABIC = 0x01;
 	static final int LANG_HEBREW = 0x0d;
 	static final int LANG_FARSI = 0x29;
+	// ActivateKeyboard constants
+	static final int HKL_NEXT = 1;
+	static final int HKL_PREV = 0;
+
+	/*
+	 * Public character class constants are the same as Windows
+	 * platform constants.
+	 * Saves conversion of class array in getRenderInfo to arbitrary
+	 * constants for now.
+	 */
+	public static final int CLASS_HEBREW = GCPCLASS_ARABIC;
+	public static final int CLASS_ARABIC = GCPCLASS_HEBREW;
+	public static final int CLASS_LOCALNUMBER = GCPCLASS_LOCALNUMBER;
+	public static final int CLASS_LATINNUMBER = GCPCLASS_LATINNUMBER;
+	public static final int REORDER = GCP_REORDER;
+	public static final int LIGATE = GCP_LIGATE;
+	public static final int GLYPHSHAPE = GCP_GLYPHSHAPE;
 
 /**
  * Adds a language listener. The listener will get notified when the language of
@@ -114,19 +150,23 @@ private static boolean isBidiLang(long lang) {
  * 	false on Windows CE.
  */
 public static boolean isBidiPlatform() {
-	if (isBidiPlatform != -1) return isBidiPlatform == 1; // already set
+    if (isBidiPlatform != -1) {
+        return isBidiPlatform == 1;
+    } // already set
 
 	isBidiPlatform = 0;
 
-	// The following test is a workaround for bug report 27629. On WinXP,
-	// both bidi and complex script (e.g., Thai) languages must be installed
-	// at the same time.  Since the bidi platform calls do not support
-	// double byte characters, there is no way to run Eclipse using the
-	// complex script languages on XP, so constrain this test to answer true
-	// only if a bidi input language is defined.  Doing so will allow complex
-	// script languages to work (e.g., one can install bidi and complex script
-	// languages, but only install the Thai keyboard).
-	if (!isKeyboardBidi()) return false;
+    // The following test is a workaround for bug report 27629. On WinXP,
+    // both bidi and complex script (e.g., Thai) languages must be installed
+    // at the same time.  Since the bidi platform calls do not support
+    // double byte characters, there is no way to run Eclipse using the
+    // complex script languages on XP, so constrain this test to answer true
+    // only if a bidi input language is defined.  Doing so will allow complex
+    // script languages to work (e.g., one can install bidi and complex script
+    // languages, but only install the Thai keyboard).
+    if (!isKeyboardBidi()) {
+        return false;
+    }
 
 	Callback callback = new Callback (BidiUtil.class, "EnumSystemLanguageGroupsProc", 5); //$NON-NLS-1$
 	OS.EnumSystemLanguageGroups(callback.getAddress (), OS.LGRPID_INSTALLED, 0);
@@ -172,8 +212,9 @@ public static void removeLanguageListener (Control control) {
  * @since 3.105
  */
 public static int resolveTextDirection(String text) {
-	if (text == null)
-		return SWT.NONE;
+    if (text == null) {
+        return SWT.NONE;
+    }
 	int textDirection = SWT.NONE;
 	for (int i = 0; i < text.length(); i++) {
 		char c = text.charAt(i);
@@ -238,7 +279,9 @@ private static int getStrongDirection(byte directionality) {
  * 	KEYBOARD_BIDI, KEYBOARD_NON_BIDI.
  */
 public static void setKeyboardLanguage(int language) {
-	if (language == getKeyboardLanguage()) return;
+    if (language == getKeyboardLanguage()) {
+        return;
+    }
 	boolean bidi = language == KEYBOARD_BIDI;
 	for (long element : getKeyboardLanguageList()) {
 		if (bidi == isBidiLang(element)) {
@@ -271,7 +314,9 @@ private static void unsubclass(long hwnd) {
 	LONG key = new LONG(hwnd);
 	if (languageMap.get(key) == null) {
 		LONG proc = oldProcMap.remove(key);
-		if (proc == null) return;
+        if (proc == null) {
+            return;
+        }
 		OS.SetWindowLongPtr(hwnd, OS.GWLP_WNDPROC, proc.value);
 	}
 }
@@ -289,7 +334,9 @@ static long windowProc (long hwnd, long msg, long wParam, long lParam) {
 	switch ((int)msg) {
 		case OS.WM_INPUTLANGCHANGE:
 			Runnable runnable = languageMap.get (key);
-			if (runnable != null) runnable.run ();
+            if (runnable != null) {
+                runnable.run();
+            }
 			break;
 		}
 	LONG oldProc = oldProcMap.get(key);

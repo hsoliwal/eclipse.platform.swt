@@ -288,8 +288,12 @@ public Shell (Display display, int style) {
 Shell (Display display, Shell parent, int style, long handle, boolean embedded) {
 	super ();
 	checkSubclass ();
-	if (display == null) display = Display.getCurrent ();
-	if (display == null) display = Display.getDefault ();
+    if (display == null) {
+        display = Display.getCurrent();
+    }
+    if (display == null) {
+        display = Display.getDefault();
+    }
 	if (!display.isValidThread ()) {
 		error (SWT.ERROR_THREAD_INVALID_ACCESS);
 	}
@@ -434,6 +438,10 @@ public static Shell internal_new (Display display, long handle) {
 }
 
 static int checkStyle (Shell parent, int style) {
+	return Shell.normalizeStyle(parent, style);
+}
+
+private static int normalizeStyle(Shell parent, int style) {
 	style = Decorations.checkStyle (style);
 	style &= ~SWT.TRANSPARENT;
 	int mask = SWT.SYSTEM_MODAL | SWT.APPLICATION_MODAL | SWT.PRIMARY_MODAL;
@@ -445,9 +453,15 @@ static int checkStyle (Shell parent, int style) {
 		}
 	}
 	int bits = style & ~mask;
-	if ((style & SWT.SYSTEM_MODAL) != 0) return bits | SWT.SYSTEM_MODAL;
-	if ((style & SWT.APPLICATION_MODAL) != 0) return bits | SWT.APPLICATION_MODAL;
-	if ((style & SWT.PRIMARY_MODAL) != 0) return bits | SWT.PRIMARY_MODAL;
+    if ((style & SWT.SYSTEM_MODAL) != 0) {
+        return bits | SWT.SYSTEM_MODAL;
+    }
+    if ((style & SWT.APPLICATION_MODAL) != 0) {
+        return bits | SWT.APPLICATION_MODAL;
+    }
+    if ((style & SWT.PRIMARY_MODAL) != 0) {
+        return bits | SWT.PRIMARY_MODAL;
+    }
 	return bits;
 }
 
@@ -475,13 +489,17 @@ public void addShellListener (ShellListener listener) {
 }
 
 long balloonTipHandle () {
-	if (balloonTipHandle == 0) createBalloonTipHandle ();
+    if (balloonTipHandle == 0) {
+        createBalloonTipHandle();
+    }
 	return balloonTipHandle;
 }
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	if (hwnd == toolTipHandle || hwnd == balloonTipHandle || hwnd == menuItemToolTipHandle) {
 		return OS.CallWindowProc (ToolTipProc, hwnd, msg, wParam, lParam);
 	}
@@ -493,7 +511,9 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 	}
 	if ((style & SWT.TOOL) != 0) {
 		int trim = SWT.TITLE | SWT.CLOSE | SWT.MIN | SWT.MAX | SWT.BORDER | SWT.RESIZE;
-		if ((style & trim) == 0) return OS.DefWindowProc (hwnd, msg, wParam, lParam);
+        if ((style & trim) == 0) {
+            return OS.DefWindowProc(hwnd, msg, wParam, lParam);
+        }
 	}
 	if ((style & SWT.NO_MOVE) != 0) {
 		setItemEnabled (OS.SC_MOVE, false);
@@ -510,7 +530,9 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 }
 
 void center () {
-	if (parent == null) return;
+    if (parent == null) {
+        return;
+    }
 	Rectangle rect = getBoundsInPixels ();
 	Rectangle parentRect = display.mapInPixels (parent, null, parent.getClientAreaInPixels());
 	int x = Math.max (parentRect.x, parentRect.x + (parentRect.width - rect.width) / 2);
@@ -560,7 +582,9 @@ void createBalloonTipHandle () {
 		0,
 		OS.GetModuleHandle (null),
 		null);
-	if (balloonTipHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (balloonTipHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (ToolTipProc == 0) {
 		ToolTipProc = OS.GetWindowLongPtr (balloonTipHandle, OS.GWLP_WNDPROC);
 	}
@@ -647,9 +671,13 @@ void createHandle () {
 		int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
 		bits &= ~(OS.WS_OVERLAPPED | OS.WS_CAPTION);
 		bits |= OS.WS_POPUP;
-		if ((style & SWT.TITLE) != 0) bits |= OS.WS_CAPTION;
+        if ((style & SWT.TITLE) != 0) {
+            bits |= OS.WS_CAPTION;
+        }
 		if ((style & SWT.NO_TRIM) == 0) {
-			if ((style & (SWT.BORDER | SWT.RESIZE)) == 0) bits |= OS.WS_BORDER;
+            if ((style & (SWT.BORDER | SWT.RESIZE)) == 0) {
+                bits |= OS.WS_BORDER;
+            }
 		}
 		/*
 		* Bug in Windows.  When the WS_CAPTION bits are cleared using
@@ -682,8 +710,12 @@ void createMenuItemToolTipHandle() {
 
 void createToolTip (ToolTip toolTip) {
 	int id = 0;
-	if (toolTips == null) toolTips = new ToolTip [4];
-	while (id < toolTips.length && toolTips [id] != null) id++;
+    if (toolTips == null) {
+        toolTips = new ToolTip [4];
+    }
+    while (id < toolTips.length && toolTips [id] != null) {
+        id++;
+    }
 	if (id == toolTips.length) {
 		ToolTip [] newToolTips = new ToolTip [toolTips.length + 4];
 		System.arraycopy (toolTips, 0, newToolTips, 0, toolTips.length);
@@ -715,7 +747,9 @@ long createToolTipHandle (long parent) {
 		0,
 		OS.GetModuleHandle (null),
 		null);
-	if (toolTipHandle == 0) error (SWT.ERROR_NO_HANDLES);
+    if (toolTipHandle == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	if (ToolTipProc == 0) {
 		ToolTipProc = OS.GetWindowLongPtr (toolTipHandle, OS.GWLP_WNDPROC);
 	}
@@ -735,13 +769,21 @@ long createToolTipHandle (long parent) {
 @Override
 void deregister () {
 	super.deregister ();
-	if (toolTipHandle != 0) display.removeControl (toolTipHandle);
-	if (balloonTipHandle != 0) display.removeControl (balloonTipHandle);
-	if (menuItemToolTipHandle != 0) display.removeControl (menuItemToolTipHandle);
+    if (toolTipHandle != 0) {
+        display.removeControl(toolTipHandle);
+    }
+    if (balloonTipHandle != 0) {
+        display.removeControl(balloonTipHandle);
+    }
+    if (menuItemToolTipHandle != 0) {
+        display.removeControl(menuItemToolTipHandle);
+    }
 }
 
 void destroyToolTip (ToolTip toolTip) {
-	if (toolTips == null) return;
+    if (toolTips == null) {
+        return;
+    }
 	toolTips [toolTip.id - Display.ID_START] = null;
 	if (balloonTipHandle != 0) {
 		TOOLINFO lpti = new TOOLINFO ();
@@ -766,7 +808,13 @@ void enableWidget (boolean enabled) {
 	} else {
 		state |= DISABLED;
 	}
-	OS.EnableWindow (handle, enabled);
+	if (Display.TrimEnabled) {
+        if (isActive()) {
+            setItemEnabled(OS.SC_CLOSE, enabled);
+        }
+	} else {
+		OS.EnableWindow (handle, enabled);
+	}
 }
 
 @Override
@@ -778,27 +826,37 @@ long findBrush (long value, int lbStyle) {
 			}
 		}
 	}
-	if (brushes == null) brushes = new long [BRUSHES_SIZE];
+    if (brushes == null) {
+        brushes = new long [BRUSHES_SIZE];
+    }
 	LOGBRUSH logBrush = new LOGBRUSH ();
 	for (long hBrush : brushes) {
-		if (hBrush == 0) break;
+        if (hBrush == 0) {
+            break;
+        }
 		OS.GetObject (hBrush, LOGBRUSH.sizeof, logBrush);
 		switch (logBrush.lbStyle) {
 			case OS.BS_SOLID:
 				if (lbStyle == OS.BS_SOLID) {
-					if (logBrush.lbColor == value) return hBrush;
+                    if (logBrush.lbColor == value) {
+                        return hBrush;
+                    }
 				}
 				break;
 			case OS.BS_PATTERN:
 				if (lbStyle == OS.BS_PATTERN) {
-					if (logBrush.lbHatch == value) return hBrush;
+                    if (logBrush.lbHatch == value) {
+                        return hBrush;
+                    }
 				}
 				break;
 		}
 	}
 	int length = brushes.length;
 	long hBrush = brushes [--length];
-	if (hBrush != 0) OS.DeleteObject (hBrush);
+    if (hBrush != 0) {
+        OS.DeleteObject(hBrush);
+    }
 	System.arraycopy (brushes, 0, brushes, 1, length);
 	switch (lbStyle) {
 		case OS.BS_SOLID:
@@ -827,7 +885,9 @@ Control findThemeControl () {
 }
 
 ToolTip findToolTip (int id) {
-	if (toolTips == null) return null;
+    if (toolTips == null) {
+        return null;
+    }
 	id = id - Display.ID_START;
 	return 0 <= id && id < toolTips.length ? toolTips [id] : null;
 }
@@ -851,8 +911,12 @@ void fixActiveShell () {
 }
 
 void fixShell (Shell newShell, Control control) {
-	if (this == newShell) return;
-	if (control == lastActive) setActiveControl (null);
+    if (this == newShell) {
+        return;
+    }
+    if (control == lastActive) {
+        setActiveControl(null);
+    }
 	String toolTipText = control.toolTipText;
 	if (toolTipText != null) {
 		control.setToolTipText (this, null);
@@ -861,18 +925,20 @@ void fixShell (Shell newShell, Control control) {
 }
 
 void fixToolTip () {
-	/*
-	* Bug in Windows.  On XP, when a tooltip is
-	* hidden due to a time out or mouse press,
-	* the tooltip remains active although no
-	* longer visible and won't show again until
-	* another tooltip becomes active.  If there
-	* is only one tooltip in the window,  it will
-	* never show again.  The fix is to remove the
-	* current tooltip and add it again every time
-	* the mouse leaves the control.
-	*/
-	if (toolTipHandle == 0) return;
+    /*
+    * Bug in Windows.  On XP, when a tooltip is
+    * hidden due to a time out or mouse press,
+    * the tooltip remains active although no
+    * longer visible and won't show again until
+    * another tooltip becomes active.  If there
+    * is only one tooltip in the window,  it will
+    * never show again.  The fix is to remove the
+    * current tooltip and add it again every time
+    * the mouse leaves the control.
+    */
+    if (toolTipHandle == 0) {
+        return;
+    }
 	TOOLINFO lpti = new TOOLINFO ();
 	lpti.cbSize = TOOLINFO.sizeof;
 	if (OS.SendMessage (toolTipHandle, OS.TTM_GETCURRENTTOOL, 0, lpti) != 0) {
@@ -914,7 +980,9 @@ void fixToolTip () {
  */
 public void forceActive () {
 	checkWidget ();
-	if(!isVisible()) return;
+    if (!isVisible()) {
+        return;
+    }
 	OS.SetForegroundWindow (handle);
 }
 
@@ -946,7 +1014,9 @@ public int getAlpha () {
 }
 
 @Override Rectangle getBoundsInPixels () {
-	if (OS.IsIconic (handle)) return super.getBoundsInPixels ();
+    if (OS.IsIconic(handle)) {
+        return super.getBoundsInPixels();
+    }
 	RECT rect = new RECT ();
 	OS.GetWindowRect (handle, rect);
 	int width = rect.right - rect.left;
@@ -957,26 +1027,36 @@ public int getAlpha () {
 ToolTip getCurrentToolTip () {
 	if (toolTipHandle != 0) {
 		ToolTip tip = getCurrentToolTip (toolTipHandle);
-		if (tip != null) return tip;
+        if (tip != null) {
+            return tip;
+        }
 	}
 	if (balloonTipHandle != 0) {
 		ToolTip tip = getCurrentToolTip (balloonTipHandle);
-		if (tip != null) return tip;
+        if (tip != null) {
+            return tip;
+        }
 	}
 	if (menuItemToolTipHandle != 0) {
 		ToolTip tip = getCurrentToolTip (menuItemToolTipHandle);
-		if (tip != null) return tip;
+        if (tip != null) {
+            return tip;
+        }
 	}
 	return null;
 }
 
 ToolTip getCurrentToolTip (long hwndToolTip) {
-	if (hwndToolTip == 0) return null;
+    if (hwndToolTip == 0) {
+        return null;
+    }
 	if (OS.SendMessage (hwndToolTip, OS.TTM_GETCURRENTTOOL, 0, 0) != 0) {
 		TOOLINFO lpti = new TOOLINFO ();
 		lpti.cbSize = TOOLINFO.sizeof;
 		if (OS.SendMessage (hwndToolTip, OS.TTM_GETCURRENTTOOL, 0, lpti) != 0) {
-			if ((lpti.uFlags & OS.TTF_IDISHWND) == 0) return findToolTip ((int)lpti.uId);
+            if ((lpti.uFlags & OS.TTF_IDISHWND) == 0) {
+                return findToolTip((int) lpti.uId);
+            }
 		}
 	}
 	return null;
@@ -1025,23 +1105,39 @@ public boolean getFullScreen () {
  */
 public int getImeInputMode () {
 	checkWidget ();
-	if (!OS.IsDBLocale) return 0;
+    if (!OS.IsDBLocale) {
+        return 0;
+    }
 	long hIMC = OS.ImmGetContext (handle);
 	int [] lpfdwConversion = new int [1], lpfdwSentence = new int [1];
 	boolean open = OS.ImmGetOpenStatus (hIMC);
-	if (open) open = OS.ImmGetConversionStatus (hIMC, lpfdwConversion, lpfdwSentence);
+    if (open) {
+        open = OS.ImmGetConversionStatus(hIMC, lpfdwConversion, lpfdwSentence);
+    }
 	OS.ImmReleaseContext (handle, hIMC);
-	if (!open) return SWT.NONE;
+    if (!open) {
+        return SWT.NONE;
+    }
 	int result = 0;
-	if ((lpfdwConversion [0] & OS.IME_CMODE_ROMAN) != 0) result |= SWT.ROMAN;
-	if ((lpfdwConversion [0] & OS.IME_CMODE_FULLSHAPE) != 0) result |= SWT.DBCS;
-	if ((lpfdwConversion [0] & OS.IME_CMODE_KATAKANA) != 0) return result | SWT.PHONETIC;
-	if ((lpfdwConversion [0] & OS.IME_CMODE_NATIVE) != 0) return result | SWT.NATIVE;
+    if ((lpfdwConversion [0] & OS.IME_CMODE_ROMAN) != 0) {
+        result |= SWT.ROMAN;
+    }
+    if ((lpfdwConversion [0] & OS.IME_CMODE_FULLSHAPE) != 0) {
+        result |= SWT.DBCS;
+    }
+    if ((lpfdwConversion [0] & OS.IME_CMODE_KATAKANA) != 0) {
+        return result | SWT.PHONETIC;
+    }
+    if ((lpfdwConversion [0] & OS.IME_CMODE_NATIVE) != 0) {
+        return result | SWT.NATIVE;
+    }
 	return result | SWT.ALPHA;
 }
 
 @Override Point getLocationInPixels () {
-	if (OS.IsIconic (handle)) return super.getLocationInPixels ();
+    if (OS.IsIconic(handle)) {
+        return super.getLocationInPixels();
+    }
 	RECT rect = new RECT ();
 	OS.GetWindowRect (handle, rect);
 	return new Point.WithMonitor (rect.left, rect.top, getMonitor());
@@ -1179,7 +1275,9 @@ public Shell getShell () {
 }
 
 @Override Point getSizeInPixels () {
-	if (OS.IsIconic (handle)) return super.getSizeInPixels ();
+    if (OS.IsIconic(handle)) {
+        return super.getSizeInPixels();
+    }
 	RECT rect = new RECT ();
 	OS.GetWindowRect (handle, rect);
 	int width = rect.right - rect.left;
@@ -1207,7 +1305,9 @@ public Shell [] getShells () {
 		do {
 			shell = shell.getParent ();
 		} while (shell != null && shell != this);
-		if (shell == this) count++;
+        if (shell == this) {
+            count++;
+        }
 	}
 	int index = 0;
 	Shell [] result = new Shell [count];
@@ -1294,7 +1394,9 @@ long hwndMDIClient () {
 }
 
 long menuItemToolTipHandle () {
-	if (menuItemToolTipHandle == 0) createMenuItemToolTipHandle ();
+    if (menuItemToolTipHandle == 0) {
+        createMenuItemToolTipHandle();
+    }
 	return menuItemToolTipHandle;
 }
 
@@ -1324,11 +1426,15 @@ public void open () {
 	STARTUPINFO lpStartUpInfo = Display.lpStartupInfo;
 	if (lpStartUpInfo == null || (lpStartUpInfo.dwFlags & OS.STARTF_USESHOWWINDOW) == 0) {
 		bringToTop ();
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 	}
 	OS.SendMessage (handle, OS.WM_CHANGEUISTATE, OS.UIS_INITIALIZE, 0);
 	setVisible (true);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	/*
 	* Bug in Windows XP.  Despite the fact that an icon has been
 	* set for a window, the task bar displays the wrong icon the
@@ -1373,8 +1479,12 @@ public void open () {
 @Override
 public boolean print (GC gc) {
 	checkWidget ();
-	if (gc == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	// Print only the client area (children) without shell decorations
 	forceResize ();
 	Control [] children = _getChildren ();
@@ -1403,15 +1513,23 @@ public boolean print (GC gc) {
 @Override
 void register () {
 	super.register ();
-	if (toolTipHandle != 0) display.addControl (toolTipHandle, this);
-	if (balloonTipHandle != 0) display.addControl (balloonTipHandle, this);
-	if (menuItemToolTipHandle != 0) display.addControl (menuItemToolTipHandle, this);
+    if (toolTipHandle != 0) {
+        display.addControl(toolTipHandle, this);
+    }
+    if (balloonTipHandle != 0) {
+        display.addControl(balloonTipHandle, this);
+    }
+    if (menuItemToolTipHandle != 0) {
+        display.addControl(menuItemToolTipHandle, this);
+    }
 }
 
 void releaseBrushes () {
 	if (brushes != null) {
 		for (long brush : brushes) {
-			if (brush != 0) OS.DeleteObject (brush);
+            if (brush != 0) {
+                OS.DeleteObject(brush);
+            }
 		}
 	}
 	brushes = null;
@@ -1465,7 +1583,9 @@ void releaseWidget () {
 @Override
 void removeMenu (Menu menu) {
 	super.removeMenu (menu);
-	if (menu == activeMenu) activeMenu = null;
+    if (menu == activeMenu) {
+        activeMenu = null;
+    }
 }
 
 /**
@@ -1487,8 +1607,12 @@ void removeMenu (Menu menu) {
  */
 public void removeShellListener (ShellListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Close, listener);
 	eventTable.unhook (SWT.Iconify,listener);
 	eventTable.unhook (SWT.Deiconify,listener);
@@ -1504,11 +1628,15 @@ public void requestLayout () {
 @Override
 void reskinChildren (int flags) {
 	for (Shell shell : getShells ()) {
-		if (shell != null) shell.reskin (flags);
+        if (shell != null) {
+            shell.reskin(flags);
+        }
 	}
 	if (toolTips != null) {
 		for (ToolTip toolTip : toolTips) {
-			if (toolTip != null) toolTip.reskin (flags);
+            if (toolTip != null) {
+                toolTip.reskin(flags);
+            }
 		}
 	}
 	super.reskinChildren (flags);
@@ -1516,7 +1644,9 @@ void reskinChildren (int flags) {
 
 @Override
 boolean sendKeyEvent (int type, int msg, long wParam, long lParam, Event event) {
-	if (!isEnabled () || !isActive ()) return false;
+    if (!isEnabled() || !isActive()) {
+        return false;
+    }
 	return super.sendKeyEvent (type, msg, wParam, lParam, event);
 }
 
@@ -1543,7 +1673,9 @@ boolean sendKeyEvent (int type, int msg, long wParam, long lParam, Event event) 
  */
 public void setActive () {
 	checkWidget ();
-	if (!isVisible ()) return;
+    if (!isVisible()) {
+        return;
+    }
 	bringToTop ();
 	// widget could be disposed at this point
 }
@@ -1553,9 +1685,15 @@ void setActiveControl (Control control) {
 }
 
 void setActiveControl (Control control, int type) {
-	if (control != null && control.isDisposed ()) control = null;
-	if (lastActive != null && lastActive.isDisposed ()) lastActive = null;
-	if (lastActive == control) return;
+    if (control != null && control.isDisposed()) {
+        control = null;
+    }
+    if (lastActive != null && lastActive.isDisposed()) {
+        lastActive = null;
+    }
+    if (lastActive == control) {
+        return;
+    }
 
 	/*
 	* Compute the list of controls to be activated and
@@ -1567,7 +1705,9 @@ void setActiveControl (Control control, int type) {
 	lastActive = control;
 	int index = 0, length = Math.min (activate.length, deactivate.length);
 	while (index < length) {
-		if (activate [index] != deactivate [index]) break;
+        if (activate [index] != deactivate [index]) {
+            break;
+        }
 		index++;
 	}
 
@@ -1636,7 +1776,9 @@ public Point getLocation() {
 
 @Override
 public void setLocation(Point location) {
-	if (location == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (location == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	checkWidget ();
 	Point locationInPixels = getDisplay().translateToDisplayCoordinates(location);
 	setLocationInPixels(locationInPixels.x, locationInPixels.y);
@@ -1649,7 +1791,9 @@ public void setLocation(int x, int y) {
 
 @Override
 public void setBounds(Rectangle rect) {
-	if (rect == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (rect == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	checkWidget ();
 	Rectangle boundsInPixels = getDisplay().translateToDisplayCoordinates(rect);
 	// The scaling of the width and height in case of a monitor change is handled by
@@ -1667,7 +1811,9 @@ public void setBounds(int x, int y, int width, int height) {
 
 @Override
 void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean defer) {
-	if (fullScreen) setFullScreen (false);
+    if (fullScreen) {
+        setFullScreen(false);
+    }
 	/*
 	* Bug in Windows.  When a window has alpha and
 	* SetWindowPos() is called with SWP_DRAWFRAME,
@@ -1686,10 +1832,14 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean 
 @Override
 public void setEnabled (boolean enabled) {
 	checkWidget ();
-	if (((state & DISABLED) == 0) == enabled) return;
+    if (((state & DISABLED) == 0) == enabled) {
+        return;
+    }
 	super.setEnabled (enabled);
 	if (enabled && handle == OS.GetActiveWindow ()) {
-		if (!restoreFocus ()) traverseGroup (true);
+        if (!restoreFocus()) {
+            traverseGroup(true);
+        }
 	}
 }
 
@@ -1719,7 +1869,9 @@ public void setEnabled (boolean enabled) {
  */
 public void setFullScreen (boolean fullScreen) {
 	checkWidget();
-	if (this.fullScreen == fullScreen) return;
+    if (this.fullScreen == fullScreen) {
+        return;
+    }
 	int stateFlags = fullScreen ? OS.SW_SHOWMAXIMIZED : OS.SW_RESTORE;
 	int styleFlags = OS.GetWindowLong (handle, OS.GWL_STYLE);
 	int mask = SWT.TITLE | SWT.CLOSE | SWT.MIN | SWT.MAX;
@@ -1728,12 +1880,20 @@ public void setFullScreen (boolean fullScreen) {
 			styleFlags &= ~(OS.WS_CAPTION | OS.WS_MAXIMIZEBOX | OS.WS_MINIMIZEBOX | OS.WS_THICKFRAME);
 		} else {
 			styleFlags |= OS.WS_CAPTION;
-			if ((style & SWT.MAX) != 0) styleFlags |= OS.WS_MAXIMIZEBOX;
-			if ((style & SWT.MIN) != 0) styleFlags |= OS.WS_MINIMIZEBOX;
-			if ((style & SWT.RESIZE) != 0) styleFlags |= OS.WS_THICKFRAME;
+            if ((style & SWT.MAX) != 0) {
+                styleFlags |= OS.WS_MAXIMIZEBOX;
+            }
+            if ((style & SWT.MIN) != 0) {
+                styleFlags |= OS.WS_MINIMIZEBOX;
+            }
+            if ((style & SWT.RESIZE) != 0) {
+                styleFlags |= OS.WS_THICKFRAME;
+            }
 		}
 	}
-	if (fullScreen) wasMaximized = getMaximized ();
+    if (fullScreen) {
+        wasMaximized = getMaximized();
+    }
 	boolean visible = isVisible ();
 	if (!visible && !wasMaximized) {
 		swFlags = stateFlags;
@@ -1743,7 +1903,9 @@ public void setFullScreen (boolean fullScreen) {
 		OS.ShowWindow (handle, OS.SW_HIDE);
 		stateFlags = OS.SW_SHOWMAXIMIZED;
 	}
-	if (visible) OS.ShowWindow (handle, stateFlags);
+    if (visible) {
+        OS.ShowWindow(handle, stateFlags);
+    }
 	OS.UpdateWindow (handle);
 	this.fullScreen = fullScreen;
 }
@@ -1766,7 +1928,9 @@ public void setFullScreen (boolean fullScreen) {
  */
 public void setImeInputMode (int mode) {
 	checkWidget ();
-	if (!OS.IsDBLocale) return;
+    if (!OS.IsDBLocale) {
+        return;
+    }
 	boolean imeOn = mode != SWT.NONE;
 	long hIMC = OS.ImmGetContext (handle);
 	OS.ImmSetOpenStatus (hIMC, imeOn);
@@ -1860,7 +2024,9 @@ public void setMaximumSize (int width, int height) {
  */
 public void setMaximumSize (Point size) {
 	checkWidget ();
-	if (size == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	size = Win32DPIUtils.pointToPixelAsSize(size, getAutoscalingZoom());
 	setMaximumSizeInPixels(size.x, size.y);
 }
@@ -1885,9 +2051,15 @@ void setMaximumSizeInPixels (int width, int height) {
 	Point size = getSizeInPixels ();
 	int newWidth = Math.min (size.x, maxWidth);
 	int newHeight = Math.min (size.y, maxHeight);
-	if (maxWidth >= widthLimit) maxWidth = SWT.DEFAULT;
-	if (maxHeight >= heightLimit) maxHeight = SWT.DEFAULT;
-	if (newWidth != size.x || newHeight != size.y) setSizeInPixels (newWidth, newHeight);
+    if (maxWidth >= widthLimit) {
+        maxWidth = SWT.DEFAULT;
+    }
+    if (maxHeight >= heightLimit) {
+        maxHeight = SWT.DEFAULT;
+    }
+    if (newWidth != size.x || newHeight != size.y) {
+        setSizeInPixels(newWidth, newHeight);
+    }
 }
 
 /**
@@ -1931,9 +2103,15 @@ void setMinimumSizeInPixels (int width, int height) {
 	Point size = getSizeInPixels ();
 	int newWidth = Math.max (size.x, minWidth);
 	int newHeight = Math.max (size.y, minHeight);
-	if (minWidth <= widthLimit) minWidth = SWT.DEFAULT;
-	if (minHeight <= heightLimit) minHeight = SWT.DEFAULT;
-	if (newWidth != size.x || newHeight != size.y) setSizeInPixels (newWidth, newHeight);
+    if (minWidth <= widthLimit) {
+        minWidth = SWT.DEFAULT;
+    }
+    if (minHeight <= heightLimit) {
+        minHeight = SWT.DEFAULT;
+    }
+    if (newWidth != size.x || newHeight != size.y) {
+        setSizeInPixels(newWidth, newHeight);
+    }
 }
 
 /**
@@ -1955,7 +2133,9 @@ void setMinimumSizeInPixels (int width, int height) {
  */
 public void setMinimumSize (Point size) {
 	checkWidget ();
-	if (size == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	size = Win32DPIUtils.pointToPixelAsSize(size, getAutoscalingZoom());
 	setMinimumSizeInPixels(size.x, size.y);
 }
@@ -1979,9 +2159,13 @@ public void setModified (boolean modified) {
 
 void setItemEnabled (int cmd, boolean enabled) {
 	long hMenu = OS.GetSystemMenu (handle, false);
-	if (hMenu == 0) return;
+    if (hMenu == 0) {
+        return;
+    }
 	int flags = OS.MF_ENABLED;
-	if (!enabled) flags = OS.MF_DISABLED | OS.MF_GRAYED;
+    if (!enabled) {
+        flags = OS.MF_DISABLED | OS.MF_GRAYED;
+    }
 	OS.EnableMenuItem (hMenu, cmd, OS.MF_BYCOMMAND | flags);
 }
 
@@ -2017,7 +2201,9 @@ void setParent () {
 @Override
 public void setRegion (Region region) {
 	checkWidget ();
-	if ((style & SWT.NO_TRIM) == 0) return;
+    if ((style & SWT.NO_TRIM) == 0) {
+        return;
+    }
 	if (region != null) {
 		Rectangle bounds = region.getBounds ();
 		setSize (bounds.x + bounds.width, bounds.y + bounds.height);
@@ -2068,15 +2254,19 @@ void setToolTipText (long hwnd, String text) {
 }
 
 void setToolTipText (NMTTDISPINFO lpnmtdi, char [] buffer) {
-	/*
-	* Ensure that the current position of the mouse
-	* is inside the client area of the shell.  This
-	* prevents tool tips from popping up over the
-	* shell trimmings.
-	*/
-	if (!hasCursor ()) return;
+    /*
+    * Ensure that the current position of the mouse
+    * is inside the client area of the shell.  This
+    * prevents tool tips from popping up over the
+    * shell trimmings.
+    */
+    if (!hasCursor()) {
+        return;
+    }
 	long hHeap = OS.GetProcessHeap ();
-	if (lpstrTip != 0) OS.HeapFree (hHeap, 0, lpstrTip);
+    if (lpstrTip != 0) {
+        OS.HeapFree(hHeap, 0, lpstrTip);
+    }
 	int byteCount = buffer.length * 2;
 	lpstrTip = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
 	OS.MoveMemory (lpstrTip, buffer, byteCount);
@@ -2105,26 +2295,32 @@ void setToolTipTitle (long hwndToolTip, String text, int icon) {
 	}
 	if (hwndToolTip == toolTipHandle || hwndToolTip == menuItemToolTipHandle) {
 		if (text == toolTitle || (toolTitle != null && toolTitle.equals (text))) {
-			if (icon == toolIcon) return;
+            if (icon == toolIcon) {
+                return;
+            }
 		}
 		toolTitle = text;
 		toolIcon = icon;
 	} else {
 		if (hwndToolTip == balloonTipHandle) {
 			if (text == balloonTitle || (balloonTitle != null && balloonTitle.equals (text))) {
-				if (icon == toolIcon) return;
+                if (icon == toolIcon) {
+                    return;
+                }
 			}
 			balloonTitle = text;
 			balloonIcon = icon;
 		}
 	}
 	if (text != null) {
-		/*
-		* Feature in Windows. The text point to by pszTitle
-		* must not exceed 100 characters in length, including
-		* the null terminator.
-		*/
-		if (text.length () > 99) text = text.substring (0, 99);
+        /*
+        * Feature in Windows. The text point to by pszTitle
+        * must not exceed 100 characters in length, including
+        * the null terminator.
+        */
+        if (text.length() > 99) {
+            text = text.substring(0, 99);
+        }
 		TCHAR pszTitle = new TCHAR (text, true);
 		OS.SendMessage (hwndToolTip, OS.TTM_SETTITLE, icon, pszTitle);
 	} else {
@@ -2154,11 +2350,15 @@ public void setVisible (boolean visible) {
 			Control control = display._getFocusControl ();
 			if (control != null && !control.isActive ()) {
 				bringToTop ();
-				if (isDisposed ()) return;
+                if (isDisposed()) {
+                    return;
+                }
 			}
 			long hwndShell = OS.GetActiveWindow ();
 			if (hwndShell == 0) {
-				if (parent != null) hwndShell = parent.handle;
+                if (parent != null) {
+                    hwndShell = parent.handle;
+                }
 			}
 			if (hwndShell != 0) {
 				OS.SendMessage (hwndShell, OS.WM_CANCELMODE, 0, 0);
@@ -2180,13 +2380,19 @@ public void setVisible (boolean visible) {
 	if (showWithParent && !visible) {
 		OS.ShowOwnedPopups (handle, false);
 	}
-	if (!visible) fixActiveShell ();
+    if (!visible) {
+        fixActiveShell();
+    }
 	if (visible && center && !moved) {
 		center ();
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 	}
 	super.setVisible (visible);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	if (showWithParent != visible) {
 		showWithParent = visible;
 		if (visible) {
@@ -2231,21 +2437,31 @@ void subclass () {
 }
 
 long toolTipHandle () {
-	if (toolTipHandle == 0) createToolTipHandle ();
+    if (toolTipHandle == 0) {
+        createToolTipHandle();
+    }
 	return toolTipHandle;
 }
 
 @Override
 boolean translateAccelerator (MSG msg) {
-	if (!isEnabled () || !isActive ()) return false;
-	if (menuBar != null && !menuBar.isEnabled ()) return false;
+    if (!isEnabled() || !isActive()) {
+        return false;
+    }
+    if (menuBar != null && !menuBar.isEnabled()) {
+        return false;
+    }
 	return translateMDIAccelerator (msg) || translateMenuAccelerator (msg);
 }
 
 @Override
 boolean traverseEscape () {
-	if (parent == null) return false;
-	if (!isVisible () || !isEnabled ()) return false;
+    if (parent == null) {
+        return false;
+    }
+    if (!isVisible() || !isEnabled()) {
+        return false;
+    }
 	close ();
 	return true;
 }
@@ -2267,7 +2483,11 @@ void unsubclass () {
 }
 
 void updateModal () {
-	OS.EnableWindow (handle, isActive ());
+	if (Display.TrimEnabled) {
+		setItemEnabled (OS.SC_CLOSE, isActive ());
+	} else {
+		OS.EnableWindow (handle, isActive ());
+	}
 }
 
 @Override
@@ -2277,14 +2497,18 @@ CREATESTRUCT widgetCreateStruct () {
 
 @Override
 long widgetParent () {
-	if (handle != 0) return handle;
+    if (handle != 0) {
+        return handle;
+    }
 	return parent != null ? parent.handle : 0;
 }
 
 @Override
 int widgetExtStyle () {
 	int bits = super.widgetExtStyle () & ~OS.WS_EX_MDICHILD;
-	if ((style & SWT.TOOL) != 0) bits |= OS.WS_EX_TOOLWINDOW;
+    if ((style & SWT.TOOL) != 0) {
+        bits |= OS.WS_EX_TOOLWINDOW;
+    }
 
 	/*
 	* Feature in Windows.  When a window that does not have a parent
@@ -2301,7 +2525,9 @@ int widgetExtStyle () {
 		}
 	}
 
-	if ((style & SWT.ON_TOP) != 0) bits |= OS.WS_EX_TOPMOST;
+    if ((style & SWT.ON_TOP) != 0) {
+        bits |= OS.WS_EX_TOPMOST;
+    }
 	return bits;
 }
 
@@ -2309,17 +2535,23 @@ int widgetExtStyle () {
 TCHAR windowClass () {
 	if ((style & SWT.TOOL) != 0) {
 		int trim = SWT.TITLE | SWT.CLOSE | SWT.MIN | SWT.MAX | SWT.BORDER | SWT.RESIZE;
-		if ((style & trim) == 0) return display.windowShadowClass;
+        if ((style & trim) == 0) {
+            return display.windowShadowClass;
+        }
 	}
 	return parent != null ? DialogClass : super.windowClass ();
 }
 
 @Override
 long windowProc () {
-	if (windowProc != 0) return windowProc;
+    if (windowProc != 0) {
+        return windowProc;
+    }
 	if ((style & SWT.TOOL) != 0) {
 		int trim = SWT.TITLE | SWT.CLOSE | SWT.MIN | SWT.MAX | SWT.BORDER | SWT.RESIZE;
-		if ((style & trim) == 0) return super.windowProc ();
+        if ((style & trim) == 0) {
+            return super.windowProc();
+        }
 	}
 	return parent != null ? DialogProc : super.windowProc ();
 }
@@ -2344,7 +2576,9 @@ Rectangle getClientRectInWindow () {
 }
 
 void overpaintMenuBorder () {
-	if ((menuBar == null) || (display.menuBarBorderPen == 0)) return;
+    if ((menuBar == null) || (display.menuBarBorderPen == 0)) {
+        return;
+    }
 
 	Rectangle clientArea = getClientRectInWindow();
 	long dc = OS.GetWindowDC (handle);
@@ -2360,7 +2594,9 @@ void overpaintMenuBorder () {
  * inside the shell window.
  */
 private void fillUnpaintedRegionInShellWindow() {
-	if (menuBar == null) return;
+    if (menuBar == null) {
+        return;
+    }
 	Rectangle clientArea = getClientRectInWindow();
 	Rectangle menuArea = menuBar.getBounds();
 	Rectangle windowBounds = getBoundsInPixels();
@@ -2388,12 +2624,18 @@ private void fillUnpaintedRegionInShellWindow() {
 
 @Override
 long windowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
-	if((style & SWT.NO_MOVE) != 0 && msg == OS.WM_NCLBUTTONDOWN && wParam == OS.HTCAPTION) return 0;
+    if (handle == 0) {
+        return 0;
+    }
+    if ((style & SWT.NO_MOVE) != 0 && msg == OS.WM_NCLBUTTONDOWN && wParam == OS.HTCAPTION) {
+        return 0;
+    }
 	if (hwnd == toolTipHandle || hwnd == balloonTipHandle || hwnd == menuItemToolTipHandle) {
 		switch (msg) {
 			case OS.WM_TIMER: {
-				if (wParam != ToolTip.TIMER_ID) break;
+                if (wParam != ToolTip.TIMER_ID) {
+                    break;
+                }
 				ToolTip tip = getCurrentToolTip (hwnd);
 				if (tip != null && tip.autoHide) {
 					tip.setVisible (false);
@@ -2441,7 +2683,9 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 @Override
 int widgetStyle () {
 	int bits = super.widgetStyle ();
-	if (handle != 0) return bits | OS.WS_CHILD;
+    if (handle != 0) {
+        return bits | OS.WS_CHILD;
+    }
 	bits &= ~OS.WS_CHILD;
 
 	/*
@@ -2467,7 +2711,9 @@ LRESULT WM_ACTIVATE (long wParam, long lParam) {
 		if (lParam == 0 || (lParam != toolTipHandle && lParam != balloonTipHandle
 				&& lParam != menuItemToolTipHandle)) {
 			ToolTip tip = getCurrentToolTip ();
-			if (tip != null) tip.setVisible (false);
+            if (tip != null) {
+                tip.setVisible(false);
+            }
 		}
 	}
 	return parent != null ? LRESULT.ZERO : result;
@@ -2549,24 +2795,38 @@ void handleMonitorSpecificDpiChange(int newNativeZoom, Rectangle newBoundsInPixe
 @Override
 LRESULT WM_ENTERIDLE (long wParam, long lParam) {
 	LRESULT result = super.WM_ENTERIDLE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	Display display = this.display;
-	if (display.runAsyncMessages (false)) display.wakeThread ();
+    if (display.runAsyncMessages(false)) {
+        display.wakeThread();
+    }
 	return result;
 }
 
 @Override
 LRESULT WM_GETMINMAXINFO (long wParam, long lParam) {
 	LRESULT result = super.WM_GETMINMAXINFO (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	if (minWidth != SWT.DEFAULT || minHeight != SWT.DEFAULT
 			|| maxWidth != SWT.DEFAULT || maxHeight != SWT.DEFAULT) {
 		MINMAXINFO info = new MINMAXINFO ();
 		OS.MoveMemory (info, lParam, MINMAXINFO.sizeof);
-		if (minWidth != SWT.DEFAULT) info.ptMinTrackSize_x = minWidth;
-		if (minHeight != SWT.DEFAULT) info.ptMinTrackSize_y = minHeight;
-		if (maxWidth != SWT.DEFAULT) info.ptMaxTrackSize_x = maxWidth;
-		if (maxHeight != SWT.DEFAULT) info.ptMaxTrackSize_y = maxHeight;
+        if (minWidth != SWT.DEFAULT) {
+            info.ptMinTrackSize_x = minWidth;
+        }
+        if (minHeight != SWT.DEFAULT) {
+            info.ptMinTrackSize_y = minHeight;
+        }
+        if (maxWidth != SWT.DEFAULT) {
+            info.ptMaxTrackSize_x = maxWidth;
+        }
+        if (maxHeight != SWT.DEFAULT) {
+            info.ptMaxTrackSize_y = maxHeight;
+        }
 		OS.MoveMemory (lParam, info, MINMAXINFO.sizeof);
 		return LRESULT.ZERO;
 	}
@@ -2576,7 +2836,9 @@ LRESULT WM_GETMINMAXINFO (long wParam, long lParam) {
 @Override
 LRESULT WM_MOUSEACTIVATE (long wParam, long lParam) {
 	LRESULT result = super.WM_MOUSEACTIVATE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 
 	/*
 	* Check for WM_MOUSEACTIVATE when an MDI shell is active
@@ -2606,7 +2868,9 @@ LRESULT WM_MOUSEACTIVATE (long wParam, long lParam) {
 			}
 		}
 	}
-	if (hittest == OS.HTMENU) return null;
+    if (hittest == OS.HTMENU) {
+        return null;
+    }
 
 	/*
 	* Get the current location of the cursor,
@@ -2626,7 +2890,9 @@ LRESULT WM_MOUSEACTIVATE (long wParam, long lParam) {
 		OS.POINTSTOPOINT (pt, pos);
 	}
 	long hwnd = OS.WindowFromPoint (pt);
-	if (hwnd == 0) return null;
+    if (hwnd == 0) {
+        return null;
+    }
 	Control control = display.findControl (hwnd);
 
 	/*
@@ -2654,19 +2920,36 @@ LRESULT WM_MOUSEACTIVATE (long wParam, long lParam) {
 @Override
 LRESULT WM_MOVE (long wParam, long lParam) {
 	LRESULT result = super.WM_MOVE (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	ToolTip tip = getCurrentToolTip ();
-	if (tip != null) tip.setVisible (false);
+    if (tip != null) {
+        tip.setVisible(false);
+    }
 	return result;
 }
 
 @Override
 LRESULT WM_NCHITTEST (long wParam, long lParam) {
-	if (!OS.IsWindowEnabled (handle)) return null;
-	if (!isEnabled () || !isActive ()) return new LRESULT (OS.HTNOWHERE);
+    if (!OS.IsWindowEnabled(handle)) {
+        return null;
+    }
+	if (!isEnabled () || !isActive ()) {
+        if (!Display.TrimEnabled) {
+            return new LRESULT(OS.HTNOWHERE);
+        }
+		long hittest = callWindowProc (handle, OS.WM_NCHITTEST, wParam, lParam);
+        if (hittest == OS.HTCLIENT || hittest == OS.HTMENU) {
+            hittest = OS.HTBORDER;
+        }
+		return new LRESULT (hittest);
+	}
 	if (menuBar != null && !menuBar.getEnabled ()) {
 		long hittest = callWindowProc (handle, OS.WM_NCHITTEST, wParam, lParam);
-		if (hittest == OS.HTMENU) hittest = OS.HTBORDER;
+        if (hittest == OS.HTMENU) {
+            hittest = OS.HTBORDER;
+        }
 		return new LRESULT (hittest);
 	}
 	/*
@@ -2685,15 +2968,19 @@ LRESULT WM_NCHITTEST (long wParam, long lParam) {
 @Override
 LRESULT WM_NCLBUTTONDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_NCLBUTTONDOWN (wParam, lParam);
-	if (result != null) return result;
-	/*
-	* When the normal activation was interrupted in WM_MOUSEACTIVATE
-	* because the active shell was an MDI shell, set the active window
-	* to the top level shell but lock the active window and stop focus
-	* changes.  This allows the user to interact the top level shell
-	* in the normal manner.
-	*/
-	if (!display.ignoreRestoreFocus) return result;
+    if (result != null) {
+        return result;
+    }
+    /*
+    * When the normal activation was interrupted in WM_MOUSEACTIVATE
+    * because the active shell was an MDI shell, set the active window
+    * to the top level shell but lock the active window and stop focus
+    * changes.  This allows the user to interact the top level shell
+    * in the normal manner.
+    */
+    if (!display.ignoreRestoreFocus) {
+        return result;
+    }
 	Display display = this.display;
 	display.lockActiveWindow = true;
 	long code = callWindowProc (handle, OS.WM_NCLBUTTONDOWN, wParam, lParam);
@@ -2719,11 +3006,13 @@ LRESULT WM_SETCURSOR (long wParam, long lParam) {
 	*/
 	int msg = OS.HIWORD (lParam);
 	if (msg == OS.WM_LBUTTONDOWN) {
-		Shell modalShell = display.getModalShell ();
-		if (modalShell != null && !isActive ()) {
-			long hwndModal = modalShell.handle;
-			if (OS.IsWindowEnabled (hwndModal)) {
-				OS.SetActiveWindow (hwndModal);
+		if (!Display.TrimEnabled) {
+			Shell modalShell = display.getModalShell ();
+			if (modalShell != null && !isActive ()) {
+				long hwndModal = modalShell.handle;
+				if (OS.IsWindowEnabled (hwndModal)) {
+					OS.SetActiveWindow (hwndModal);
+				}
 			}
 		}
 		if (!OS.IsWindowEnabled (handle)) {
@@ -2779,7 +3068,9 @@ LRESULT WM_SETCURSOR (long wParam, long lParam) {
 @Override
 LRESULT WM_SHOWWINDOW (long wParam, long lParam) {
 	LRESULT result = super.WM_SHOWWINDOW (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Bug in Windows.  If the shell is hidden while the parent
 	* is iconic,  Windows shows the shell when the parent is
@@ -2792,7 +3083,9 @@ LRESULT WM_SHOWWINDOW (long wParam, long lParam) {
 		Control control = this;
 		while (control != null) {
 			Shell shell = control.getShell ();
-			if (!shell.showWithParent) return LRESULT.ZERO;
+            if (!shell.showWithParent) {
+                return LRESULT.ZERO;
+            }
 			control = control.parent;
 		}
 	}
@@ -2802,7 +3095,9 @@ LRESULT WM_SHOWWINDOW (long wParam, long lParam) {
 @Override
 LRESULT WM_WINDOWPOSCHANGING (long wParam, long lParam) {
 	LRESULT result = super.WM_WINDOWPOSCHANGING (wParam,lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	WINDOWPOS lpwp = new WINDOWPOS ();
 	OS.MoveMemory (lpwp, lParam, WINDOWPOS.sizeof);
 	if ((lpwp.flags & OS.SWP_NOSIZE) == 0) {

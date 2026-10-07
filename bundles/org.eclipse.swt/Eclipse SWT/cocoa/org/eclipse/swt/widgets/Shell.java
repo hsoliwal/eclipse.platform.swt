@@ -274,8 +274,12 @@ public Shell (Display display, int style) {
 Shell (Display display, Shell parent, int style, long handle, boolean embedded) {
 	super ();
 	checkSubclass ();
-	if (display == null) display = Display.getCurrent ();
-	if (display == null) display = Display.getDefault ();
+    if (display == null) {
+        display = Display.getCurrent();
+    }
+    if (display == null) {
+        display = Display.getDefault();
+    }
 	if (!display.isValidThread ()) {
 		error (SWT.ERROR_THREAD_INVALID_ACCESS);
 	}
@@ -427,6 +431,10 @@ public static Shell cocoa_new (Display display, long handle) {
 }
 
 static int checkStyle (Shell parent, int style) {
+	return Shell.normalizeStyle(parent, style);
+}
+
+private static int normalizeStyle(Shell parent, int style) {
 	style = Decorations.checkStyle (style);
 	style &= ~SWT.TRANSPARENT;
 	int mask = SWT.SYSTEM_MODAL | SWT.APPLICATION_MODAL | SWT.PRIMARY_MODAL;
@@ -446,16 +454,24 @@ static int checkStyle (Shell parent, int style) {
 		}
 	}
 	int bits = style & ~mask;
-	if ((style & SWT.SYSTEM_MODAL) != 0) return bits | SWT.SYSTEM_MODAL;
-	if ((style & SWT.APPLICATION_MODAL) != 0) return bits | SWT.APPLICATION_MODAL;
-	if ((style & SWT.PRIMARY_MODAL) != 0) return bits | SWT.PRIMARY_MODAL;
+    if ((style & SWT.SYSTEM_MODAL) != 0) {
+        return bits | SWT.SYSTEM_MODAL;
+    }
+    if ((style & SWT.APPLICATION_MODAL) != 0) {
+        return bits | SWT.APPLICATION_MODAL;
+    }
+    if ((style & SWT.PRIMARY_MODAL) != 0) {
+        return bits | SWT.PRIMARY_MODAL;
+    }
 	return bits;
 }
 
 @Override
 boolean accessibilityIsIgnored(long id, long sel) {
-	// The content view of a shell is always ignored.
-	if (id == view.id) return true;
+    // The content view of a shell is always ignored.
+    if (id == view.id) {
+        return true;
+    }
 	return super.accessibilityIsIgnored(id, sel);
 }
 
@@ -483,10 +499,14 @@ public void addShellListener(ShellListener listener) {
 }
 
 void attachObserversToWindow(NSWindow newWindow) {
-	if (newWindow == null || newWindow.id == 0) return;
+    if (newWindow == null || newWindow.id == 0) {
+        return;
+    }
 	long newHostWindowClass = OS.object_getClass(newWindow.id);
 	long sendEventImpl = OS.class_getMethodImplementation(newHostWindowClass, OS.sel_sendEvent_);
-	if (sendEventImpl == Display.windowCallback3.getAddress()) return;
+    if (sendEventImpl == Display.windowCallback3.getAddress()) {
+        return;
+    }
 	hostWindow = newWindow;
 	hostWindow.retain();
 	long embeddedSubclass = display.createWindowSubclass(newHostWindowClass, "SWTAWTWindow", true);
@@ -494,7 +514,9 @@ void attachObserversToWindow(NSWindow newWindow) {
 	display.addWidget (hostWindow, this);
 	hostWindowClass = newHostWindowClass;
 
-	if (windowEmbedCounts == null) windowEmbedCounts = new HashMap<>();
+    if (windowEmbedCounts == null) {
+        windowEmbedCounts = new HashMap<>();
+    }
 	Integer embedCount = windowEmbedCounts.get(hostWindow);
 	if (embedCount == null) {
 		embedCount = Integer.valueOf(0);
@@ -530,7 +552,9 @@ void becomeKeyWindow (long id, long sel) {
 
 @Override
 void bringToTop (boolean force) {
-	if (getMinimized ()) return;
+    if (getMinimized()) {
+        return;
+    }
 	if (force) {
 		forceActive ();
 	} else {
@@ -540,7 +564,9 @@ void bringToTop (boolean force) {
 
 @Override
 boolean canBecomeKeyWindow (long id, long sel) {
-	if (isPopup) return false;
+    if (isPopup) {
+        return false;
+    }
 	// Only answer if SWT created the window.
 	if (window != null) {
 		if ((style & SWT.NO_FOCUS) != 0) {
@@ -549,23 +575,31 @@ boolean canBecomeKeyWindow (long id, long sel) {
 				NSView contentView = window.contentView();
 				if (contentView != null) {
 					NSView view = contentView.hitTest(nsEvent.locationInWindow());
-					if (view == contentView) return false;
+                    if (view == contentView) {
+                        return false;
+                    }
 				}
 			}
 		}
 		long styleMask = window.styleMask();
-		if (styleMask == OS.NSWindowStyleMaskBorderless || (styleMask & (OS.NSWindowStyleMaskNonactivatingPanel | OS.NSWindowStyleMaskDocModalWindow | OS.NSWindowStyleMaskResizable)) != 0) return true;
+        if (styleMask == OS.NSWindowStyleMaskBorderless || (styleMask & (OS.NSWindowStyleMaskNonactivatingPanel | OS.NSWindowStyleMaskDocModalWindow | OS.NSWindowStyleMaskResizable)) != 0) {
+            return true;
+        }
 	}
 	return super.canBecomeKeyWindow (id, sel);
 }
 
 @Override
 void checkOpen () {
-	if (!opened) resized = false;
+    if (!opened) {
+        resized = false;
+    }
 }
 
 void center () {
-	if (parent == null) return;
+    if (parent == null) {
+        return;
+    }
 	Rectangle rect = getBounds ();
 	Rectangle parentRect = display.map (parent, null, parent.getClientArea());
 	int x = Math.max (parentRect.x, parentRect.x + (parentRect.width - rect.width) / 2);
@@ -588,7 +622,9 @@ void center () {
 void clearDeferFlushing (long id, long sel) {
 	deferFlushing = false;
 	scrolling = false;
-	if (window != null) window.flushWindowIfNeeded();
+    if (window != null) {
+        window.flushWindowIfNeeded();
+    }
 }
 
 /**
@@ -612,10 +648,14 @@ public void close () {
 }
 
 void closeWidget (boolean force) {
-	if (display.isDisposed()) return;
+    if (display.isDisposed()) {
+        return;
+    }
 	Event event = new Event ();
 	sendEvent (SWT.Close, event);
-	if ((force || event.doit) && !isDisposed ()) dispose ();
+    if ((force || event.doit) && !isDisposed()) {
+        dispose();
+    }
 }
 
 @Override
@@ -665,16 +705,30 @@ void createHandle () {
 			window = (NSWindow) new SWTWindow().alloc ();
 		}
 		if ((style & SWT.NO_TRIM) == 0) {
-			if ((style & SWT.TITLE) != 0) styleMask |= OS.NSWindowStyleMaskTitled;
-			if ((style & SWT.CLOSE) != 0) styleMask |= OS.NSWindowStyleMaskClosable;
-			if ((style & SWT.MIN) != 0) styleMask |= OS.NSWindowStyleMaskMiniaturizable;
-			if ((style & SWT.MAX) != 0) styleMask |= OS.NSWindowStyleMaskResizable;
-			if ((style & SWT.RESIZE) != 0) styleMask |= OS.NSWindowStyleMaskResizable;
+            if ((style & SWT.TITLE) != 0) {
+                styleMask |= OS.NSWindowStyleMaskTitled;
+            }
+            if ((style & SWT.CLOSE) != 0) {
+                styleMask |= OS.NSWindowStyleMaskClosable;
+            }
+            if ((style & SWT.MIN) != 0) {
+                styleMask |= OS.NSWindowStyleMaskMiniaturizable;
+            }
+            if ((style & SWT.MAX) != 0) {
+                styleMask |= OS.NSWindowStyleMaskResizable;
+            }
+            if ((style & SWT.RESIZE) != 0) {
+                styleMask |= OS.NSWindowStyleMaskResizable;
+            }
 		}
 		NSScreen screen = null;
 		NSScreen primaryScreen = new NSScreen(NSScreen.screens().objectAtIndex(0));
-		if (parent != null) screen = parentWindow ().screen();
-		if (screen == null) screen = primaryScreen;
+        if (parent != null) {
+            screen = parentWindow().screen();
+        }
+        if (screen == null) {
+            screen = primaryScreen;
+        }
 		window = window.initWithContentRect(new NSRect(), styleMask, OS.NSBackingStoreBuffered, (style & SWT.ON_TOP) != 0, screen);
 		if ((style & (SWT.NO_TRIM | SWT.BORDER | SWT.SHELL_TRIM)) == 0 || (style & (SWT.TOOL | SWT.SHEET)) != 0) {
 			window.setHasShadow (true);
@@ -769,7 +823,9 @@ void createHandle () {
 	}
 
 	NSWindow fieldEditorWindow = window;
-	if (fieldEditorWindow == null) fieldEditorWindow = view.window();
+    if (fieldEditorWindow == null) {
+        fieldEditorWindow = view.window();
+    }
 	id id = fieldEditorWindow.fieldEditor (true, null);
 	if (id != null) {
 		OS.object_setClass (id.id, OS.objc_getClass ("SWTEditorView"));
@@ -786,17 +842,25 @@ void deferFlushing () {
 @Override
 void deregister () {
 	super.deregister ();
-	if (window != null) display.removeWidget (window);
-	if (windowDelegate != null) display.removeWidget (windowDelegate);
+    if (window != null) {
+        display.removeWidget(window);
+    }
+    if (windowDelegate != null) {
+        display.removeWidget(windowDelegate);
+    }
 }
 
 @Override
 void destroyWidget () {
 	NSWindow window = this.window;
-	if (window != null) window.retain();
+    if (window != null) {
+        window.retain();
+    }
 	Display display = this.display;
 	NSView view = topView();
-	if (view != null) view.retain();
+    if (view != null) {
+        view.retain();
+    }
 
 	boolean sheet = (style & (SWT.SHEET)) != 0;
 	releaseHandle ();
@@ -809,7 +873,9 @@ void destroyWidget () {
 	} else if (view != null) {
 		view.removeFromSuperview();
 	}
-	if (view != null) view.release();
+    if (view != null) {
+        view.release();
+    }
 
 	// If another shell is not going to become active, clear the menu bar.
 	// Don't modify the menu bar if we are an embedded Shell, though.
@@ -823,7 +889,9 @@ void destroyWidget () {
 
 @Override
 void drawBackground (long id, NSGraphicsContext context, NSRect rect) {
-	if (id != view.id) return;
+    if (id != view.id) {
+        return;
+    }
 	if (regionPath != null && background == null) {
 		context.saveGraphicsState();
 		NSColor.windowBackgroundColor().setFill();
@@ -850,14 +918,16 @@ Cursor findCursor () {
 }
 
 boolean fixResize () {
-	/*
-	* Feature in Cocoa.  It is not possible to have a resizable window
-	* without the title bar.  The fix is to resize the content view on
-	* top of the title bar.
-	*
-	* Never do this when the shell is embedded, because the window belongs to the AWT.
-	*/
-	if (window == null) return false;
+    /*
+    * Feature in Cocoa.  It is not possible to have a resizable window
+    * without the title bar.  The fix is to resize the content view on
+    * top of the title bar.
+    *
+    * Never do this when the shell is embedded, because the window belongs to the AWT.
+    */
+    if (window == null) {
+        return false;
+    }
 	if ((style & SWT.NO_TRIM) == 0) {
 		if ((style & SWT.RESIZE) != 0 && (style & (SWT.SHEET | SWT.TITLE | SWT.CLOSE | SWT.MIN | SWT.MAX)) == 0) {
 			return true;
@@ -867,8 +937,12 @@ boolean fixResize () {
 }
 
 void fixShell (Shell newShell, Control control) {
-	if (this == newShell) return;
-	if (control == lastActive) setActiveControl (null);
+    if (this == newShell) {
+        return;
+    }
+    if (control == lastActive) {
+        setActiveControl(null);
+    }
 }
 
 /**
@@ -894,8 +968,12 @@ void fixShell (Shell newShell, Control control) {
  */
 public void forceActive () {
 	checkWidget ();
-	if (!isVisible()) return;
-	if (window == null) return;
+    if (!isVisible()) {
+        return;
+    }
+    if (window == null) {
+        return;
+    }
 	makeKeyAndOrderFront ();
 	NSApplication application = NSApplication.sharedApplication ();
 	application.activateIgnoringOtherApps (true);
@@ -916,7 +994,9 @@ public void forceActive () {
  */
 public int getAlpha () {
 	checkWidget ();
-	if (window == null) return 255;
+    if (window == null) {
+        return 255;
+    }
 	return (int)(window.alphaValue() * 255);
 }
 
@@ -1039,7 +1119,9 @@ public Point getLocation () {
 @Override
 public boolean getMaximized () {
 	checkWidget();
-	if (window == null) return false;
+    if (window == null) {
+        return false;
+    }
 	return !_getFullScreen() && window.isZoomed();
 }
 
@@ -1055,15 +1137,23 @@ Shell getModalShell () {
 				if ((modal.style & bits) != 0) {
 					Control control = this;
 					while (control != null) {
-						if (control == modal) break;
+                        if (control == modal) {
+                            break;
+                        }
 						control = control.parent;
 					}
-					if (control != modal) return modal;
+                    if (control != modal) {
+                        return modal;
+                    }
 					break;
 				}
 				if ((modal.style & SWT.PRIMARY_MODAL) != 0) {
-					if (shell == null) shell = getShell ();
-					if (modal.parent == shell) return modal;
+                    if (shell == null) {
+                        shell = getShell();
+                    }
+                    if (modal.parent == shell) {
+                        return modal;
+                    }
 				}
 			}
 		}
@@ -1091,8 +1181,12 @@ public boolean getModified () {
 @Override
 public boolean getMinimized () {
 	checkWidget();
-	if (!getVisible ()) return super.getMinimized ();
-	if (window == null) return false;
+    if (!getVisible()) {
+        return super.getMinimized();
+    }
+    if (window == null) {
+        return false;
+    }
 	return window.isMiniaturized();
 }
 
@@ -1113,7 +1207,9 @@ public boolean getMinimized () {
  */
 public Point getMaximumSize () {
 	checkWidget();
-	if (window == null) return new Point(0, 0);
+    if (window == null) {
+        return new Point(0, 0);
+    }
 	NSSize size = window.maxSize();
 	return new Point((int)size.width, (int)size.height);
 }
@@ -1135,7 +1231,9 @@ public Point getMaximumSize () {
  */
 public Point getMinimumSize () {
 	checkWidget();
-	if (window == null) return new Point(0, 0);
+    if (window == null) {
+        return new Point(0, 0);
+    }
 	NSSize size = window.minSize();
 	return new Point((int)size.width, (int)size.height);
 }
@@ -1186,7 +1284,9 @@ public Shell [] getShells () {
 		do {
 			shell = shell.getParent ();
 		} while (shell != null && shell != this);
-		if (shell == this) count++;
+        if (shell == this) {
+            count++;
+        }
 	}
 	int index = 0;
 	Shell [] result = new Shell [count];
@@ -1232,7 +1332,9 @@ float getThemeAlpha () {
 public ToolBar getToolBar() {
 	checkWidget();
 	if ((style & SWT.NO_TRIM) == 0) {
-		if (toolBar == null) toolBar = new ToolBar(this, SWT.HORIZONTAL | SWT.SMOOTH, true);
+        if (toolBar == null) {
+            toolBar = new ToolBar(this, SWT.HORIZONTAL | SWT.SMOOTH, true);
+        }
 	}
 	return toolBar;
 }
@@ -1262,7 +1364,9 @@ void helpRequested(long id, long sel, long theEvent) {
 @Override
 void invalidateVisibleRegion () {
 	resetVisibleRegion ();
-	if (toolBar != null) toolBar.resetVisibleRegion();
+    if (toolBar != null) {
+        toolBar.resetVisibleRegion();
+    }
 	invalidateChildrenVisibleRegion ();
 }
 
@@ -1302,7 +1406,9 @@ public boolean isVisible () {
 boolean makeFirstResponder (long id, long sel, long responder) {
 	Display display = this.display;
 	boolean result = super.makeFirstResponder(id, sel, responder);
-	if (!display.isDisposed()) display.checkFocus();
+    if (!display.isDisposed()) {
+        display.checkFocus();
+    }
 	return result;
 }
 
@@ -1318,7 +1424,9 @@ void makeKeyAndOrderFront() {
 	*/
 	if (parent != null) {
 		NSWindow parentWindow = parentWindow ();
-		if (parentWindow.isMiniaturized()) parentWindow.deminiaturize(null);
+        if (parentWindow.isMiniaturized()) {
+            parentWindow.deminiaturize(null);
+        }
 	}
 	window.makeKeyAndOrderFront (null);
 }
@@ -1341,13 +1449,15 @@ void mouseMoved(long id, long sel, long theEvent) {
 
 @Override
 void noResponderFor(long id, long sel, long selector) {
-	/**
-	 * Feature in Cocoa.  If the selector is keyDown and nothing has handled the event
-	 * a system beep is generated.  There's no need to beep, as many keystrokes in the SWT
-	 * are listened for and acted upon but not explicitly handled in a keyDown handler.  Fix is to
-	 * not call the default implementation when a keyDown: is being handled.
-	 */
-	if (selector != OS.sel_keyDown_) super.noResponderFor(id, sel, selector);
+    /**
+     * Feature in Cocoa.  If the selector is keyDown and nothing has handled the event
+     * a system beep is generated.  There's no need to beep, as many keystrokes in the SWT
+     * are listened for and acted upon but not explicitly handled in a keyDown handler.  Fix is to
+     * not call the default implementation when a keyDown: is being handled.
+     */
+    if (selector != OS.sel_keyDown_) {
+        super.noResponderFor(id, sel, selector);
+    }
 }
 
 /**
@@ -1381,7 +1491,9 @@ public void open () {
 	}
 	bringToTop (false);
 	setWindowVisible (true, true);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	if (!restoreFocus () && !traverseGroup (true)) {
 		// if the parent shell is minimized, setting focus will cause it
 		// to become unminimized.
@@ -1392,15 +1504,21 @@ public void open () {
 }
 
 NSWindow parentWindow () {
-	if (parent == null) return null;
+    if (parent == null) {
+        return null;
+    }
 	return parent.view.window();
 }
 
 @Override
 public boolean print (GC gc) {
 	checkWidget ();
-	if (gc == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (gc.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (gc == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (gc.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	// Print only the client area (children) without shell decorations
 	Control [] children = _getChildren ();
 	for (Control child : children) {
@@ -1428,8 +1546,12 @@ void register () {
 	 * all of the NSWindow overrides operate on the entire window.
 	 */
 	super.register ();
-	if (window != null) display.addWidget (window, this);
-	if (windowDelegate != null) display.addWidget (windowDelegate, this);
+    if (window != null) {
+        display.addWidget(window, this);
+    }
+    if (windowDelegate != null) {
+        display.addWidget(windowDelegate, this);
+    }
 }
 
 @Override
@@ -1446,9 +1568,13 @@ void releaseChildren (boolean destroy) {
 
 @Override
 void releaseHandle () {
-	if (window != null) window.setDelegate(null);
+    if (window != null) {
+        window.setDelegate(null);
+    }
 	removeObserversFromWindow();
-	if (windowDelegate != null) windowDelegate.release();
+    if (windowDelegate != null) {
+        windowDelegate.release();
+    }
 	windowDelegate = null;
 
 	super.releaseHandle ();
@@ -1490,7 +1616,9 @@ void removeObserversFromWindow () {
 
 		if (embedCount.intValue() <= 0) {
 			windowEmbedCounts.remove(hostWindow);
-			if (hostWindowClass != 0) OS.object_setClass(hostWindow.id, hostWindowClass);
+            if (hostWindowClass != 0) {
+                OS.object_setClass(hostWindow.id, hostWindowClass);
+            }
 			display.removeWidget(hostWindow);
 			hostWindow.release();
 			hostWindow = null;
@@ -1519,8 +1647,12 @@ void removeObserversFromWindow () {
  */
 public void removeShellListener(ShellListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Activate, listener);
 	eventTable.unhook(SWT.Close, listener);
 	eventTable.unhook(SWT.Deactivate, listener);
@@ -1535,17 +1667,23 @@ public void requestLayout () {
 
 @Override
 void reskinChildren (int flags) {
-	if (toolBar != null) toolBar.reskin(flags);
+    if (toolBar != null) {
+        toolBar.reskin(flags);
+    }
 	Shell [] shells = getShells ();
 	for (int i=0; i<shells.length; i++) {
 		Shell shell = shells [i];
-		if (shell != null) shell.reskin (flags);
+        if (shell != null) {
+            shell.reskin(flags);
+        }
 	}
 	super.reskinChildren (flags);
 }
 
 void sendToolTipEvent (boolean enter) {
-	if (!isVisible()) return;
+    if (!isVisible()) {
+        return;
+    }
 	NSWindow eventWindow = view.window();
 	if (tooltipTag == 0) {
 		NSView view = eventWindow.contentView();
@@ -1553,7 +1691,9 @@ void sendToolTipEvent (boolean enter) {
 		if (tooltipTag != 0) {
 			NSTrackingArea trackingArea = new NSTrackingArea(tooltipTag);
 			id owner = trackingArea.owner();
-			if (owner != null) tooltipOwner = owner.id;
+            if (owner != null) {
+                tooltipOwner = owner.id;
+            }
 			id userInfo = trackingArea.userInfo();
 			if (userInfo != null) {
 				tooltipUserData = userInfo.id;
@@ -1564,7 +1704,9 @@ void sendToolTipEvent (boolean enter) {
 			}
 		}
 	}
-	if (tooltipTag == 0 || tooltipOwner == 0 || tooltipUserData == 0) return;
+    if (tooltipTag == 0 || tooltipOwner == 0 || tooltipUserData == 0) {
+        return;
+    }
 	NSPoint pt = eventWindow.convertScreenToBase(NSEvent.mouseLocation());
 	NSEvent event = NSEvent.enterExitEventWithType(enter ? OS.NSMouseEntered : OS.NSMouseExited, pt, 0, 0, eventWindow.windowNumber(), null, 0, tooltipTag, tooltipUserData);
 	OS.objc_msgSend(tooltipOwner, enter ? OS.sel_mouseEntered_ : OS.sel_mouseExited_, event.id);
@@ -1592,9 +1734,13 @@ void sendToolTipEvent (boolean enter) {
  * @see Shell#setActive
  */
 public void setActive () {
-	if (window == null) return;
+    if (window == null) {
+        return;
+    }
 	checkWidget ();
-	if (!isVisible()) return;
+    if (!isVisible()) {
+        return;
+    }
 	makeKeyAndOrderFront ();
 }
 
@@ -1603,9 +1749,15 @@ void setActiveControl (Control control) {
 }
 
 void setActiveControl (Control control, int type) {
-	if (control != null && control.isDisposed ()) control = null;
-	if (lastActive != null && lastActive.isDisposed ()) lastActive = null;
-	if (lastActive == control) return;
+    if (control != null && control.isDisposed()) {
+        control = null;
+    }
+    if (lastActive != null && lastActive.isDisposed()) {
+        lastActive = null;
+    }
+    if (lastActive == control) {
+        return;
+    }
 
 	/*
 	* Compute the list of controls to be activated and
@@ -1617,7 +1769,9 @@ void setActiveControl (Control control, int type) {
 	lastActive = control;
 	int index = 0, length = Math.min (activate.length, deactivate.length);
 	while (index < length) {
-		if (activate [index] != deactivate [index]) break;
+        if (activate [index] != deactivate [index]) {
+            break;
+        }
 		index++;
 	}
 
@@ -1659,7 +1813,9 @@ void setActiveControl (Control control, int type) {
  * @since 3.4
  */
 public void setAlpha (int alpha) {
-	if (window == null) return;
+    if (window == null) {
+        return;
+    }
 	checkWidget ();
 	alpha &= 0xFF;
 	window.setAlphaValue (alpha / 255f);
@@ -1668,8 +1824,10 @@ public void setAlpha (int alpha) {
 @Override
 void setBounds (int x, int y, int width, int height, boolean move, boolean resize) {
 	if (window == null) {
-		// Embedded shells aren't movable.
-		if (move) return;
+        // Embedded shells aren't movable.
+        if (move) {
+            return;
+        }
 		if (resize) {
 			NSSize frameSize = new NSSize();
 			frameSize.width = width;
@@ -1678,9 +1836,13 @@ void setBounds (int x, int y, int width, int height, boolean move, boolean resiz
 			return;
 		}
 	}
-	if (_getFullScreen ()) setFullScreen (false);
+    if (_getFullScreen()) {
+        setFullScreen(false);
+    }
 	boolean sheet = window.isSheet();
-	if (sheet && move && !resize) return;
+    if (sheet && move && !resize) {
+        return;
+    }
 	int screenHeight = (int) display.getPrimaryFrame().height;
 	NSRect frame = window.frame();
 	if (!move) {
@@ -1716,7 +1878,9 @@ void setBounds (int x, int y, int width, int height, boolean move, boolean resiz
 void setClipRegion (NSView view) {
 	if (regionPath != null) {
 		NSView rgnView = topView ();
-		if (!rgnView.isFlipped()) rgnView = eventView ();
+        if (!rgnView.isFlipped()) {
+            rgnView = eventView();
+        }
 		NSPoint pt = view.convertPoint_toView_(new NSPoint(), rgnView);
 		NSAffineTransform transform = NSAffineTransform.transform();
 		transform.translateXBy(-pt.x, -pt.y);
@@ -1730,10 +1894,14 @@ void setClipRegion (NSView view) {
 @Override
 public void setEnabled (boolean enabled) {
 	checkWidget();
-	if (((state & DISABLED) == 0) == enabled) return;
+    if (((state & DISABLED) == 0) == enabled) {
+        return;
+    }
 	super.setEnabled (enabled);
 	if (enabled && window != null && window.isMainWindow()) {
-		if (!restoreFocus ()) traverseGroup (false);
+        if (!restoreFocus()) {
+            traverseGroup(false);
+        }
 	}
 }
 
@@ -1763,8 +1931,12 @@ public void setEnabled (boolean enabled) {
  */
 public void setFullScreen (boolean fullScreen) {
 	checkWidget ();
-	if (window == null) return;
-	if (_getFullScreen () == fullScreen) return;
+    if (window == null) {
+        return;
+    }
+    if (_getFullScreen() == fullScreen) {
+        return;
+    }
 
 	if ((window.collectionBehavior() & OS.NSWindowCollectionBehaviorFullScreenPrimary) != 0) {
 		window.toggleFullScreen(Display.applicationDelegate);
@@ -1838,8 +2010,12 @@ public void setImeInputMode (int mode) {
 public void setMaximized (boolean maximized) {
 	checkWidget();
 	super.setMaximized (maximized);
-	if (window == null) return;
-	if (window.isZoomed () == maximized) return;
+    if (window == null) {
+        return;
+    }
+    if (window.isZoomed() == maximized) {
+        return;
+    }
 	window.zoom (null);
 }
 
@@ -1865,7 +2041,9 @@ public void setMaximized (boolean maximized) {
  */
 public void setMaximumSize (int width, int height) {
 	checkWidget();
-	if (window == null) return;
+    if (window == null) {
+        return;
+    }
 	NSSize size = new NSSize();
 	size.width = width;
 	size.height = height;
@@ -1902,7 +2080,9 @@ public void setMaximumSize (int width, int height) {
  */
 public void setMaximumSize (Point size) {
 	checkWidget();
-	if (size == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setMaximumSize (size.x, size.y);
 }
 
@@ -1910,8 +2090,12 @@ public void setMaximumSize (Point size) {
 public void setMinimized (boolean minimized) {
 	checkWidget();
 	super.setMinimized (minimized);
-	if (window == null) return;
-	if (!getVisible()) return;
+    if (window == null) {
+        return;
+    }
+    if (!getVisible()) {
+        return;
+    }
 	if (minimized) {
 		window.miniaturize (null);
 	} else {
@@ -1936,7 +2120,9 @@ public void setMinimized (boolean minimized) {
  */
 public void setMinimumSize (int width, int height) {
 	checkWidget();
-	if (window == null) return;
+    if (window == null) {
+        return;
+    }
 	NSSize size = new NSSize();
 	size.width = width;
 	size.height = height;
@@ -1968,7 +2154,9 @@ public void setMinimumSize (int width, int height) {
  */
 public void setMinimumSize (Point size) {
 	checkWidget();
-	if (size == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (size == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	setMinimumSize (size.x, size.y);
 }
 
@@ -2031,15 +2219,23 @@ public int getZoom() {
 @Override
 public void setRegion (Region region) {
 	checkWidget ();
-	if ((style & SWT.NO_TRIM) == 0) return;
-	if (window == null) return;
+    if ((style & SWT.NO_TRIM) == 0) {
+        return;
+    }
+    if (window == null) {
+        return;
+    }
 	if (region != null) {
-		if (region.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+        if (region.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		Rectangle bounds = region.getBounds();
 		setSize(bounds.x + bounds.width, bounds.y + bounds.height);
 	}
 	this.region = region;
-	if (regionPath != null) regionPath.release();
+    if (regionPath != null) {
+        regionPath.release();
+    }
 	regionPath = getPath(region);
 	if (region != null) {
 		window.setBackgroundColor(NSColor.clearColor());
@@ -2070,7 +2266,9 @@ void setScrolling () {
  */
 public void setDarkThemePreferred(boolean preferred) {
 	checkWidget();
-	if (window == null) return;
+    if (window == null) {
+        return;
+    }
 	String appearanceName = preferred ? "NSAppearanceNameDarkAqua" : "NSAppearanceNameAqua";
 	NSAppearance appearance = NSAppearance.appearanceNamed (NSString.stringWith (appearanceName));
 	if (appearance != null) {
@@ -2081,8 +2279,12 @@ public void setDarkThemePreferred(boolean preferred) {
 @Override
 public void setText (String string) {
 	checkWidget();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (window == null) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (window == null) {
+        return;
+    }
 	super.setText (string);
 	NSString str = NSString.stringWith(string);
 	window.setTitle(str);
@@ -2129,21 +2331,31 @@ void preventShellActivateJvmCrash () {
 
 void setWindowVisible (boolean visible, boolean key) {
 	if (visible) {
-		if ((state & HIDDEN) == 0) return;
+        if ((state & HIDDEN) == 0) {
+            return;
+        }
 		state &= ~HIDDEN;
 	} else {
-		if ((state & HIDDEN) != 0) return;
+        if ((state & HIDDEN) != 0) {
+            return;
+        }
 		state |= HIDDEN;
 	}
-	if (window != null && (window.isVisible() == visible)) return;
+    if (window != null && (window.isVisible() == visible)) {
+        return;
+    }
 	if (visible) {
 		display.clearPool ();
 		if (center && !moved) {
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 			center ();
 		}
 		sendEvent (SWT.Show);
-		if (isDisposed ()) return;
+        if (isDisposed()) {
+            return;
+        }
 		topView ().setHidden (false);
 		invalidateVisibleRegion();
 		if (window != null) {
@@ -2162,7 +2374,9 @@ void setWindowVisible (boolean visible, boolean key) {
 					} else {
 						window.orderFront (null);
 					}
-					if (isDisposed()) return;
+                    if (isDisposed()) {
+                        return;
+                    }
 					if (minimized != window.isMiniaturized()) {
 						if (minimized) {
 							window.miniaturize (null);
@@ -2173,18 +2387,24 @@ void setWindowVisible (boolean visible, boolean key) {
 				}
 			}
 		}
-		if (isDisposed()) return;
+        if (isDisposed()) {
+            return;
+        }
 		updateParent (visible);
 		opened = true;
 		if (!moved) {
 			moved = true;
 			sendEvent (SWT.Move);
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 		}
 		if (!resized) {
 			resized = true;
 			sendEvent (SWT.Resize);
-			if (isDisposed ()) return;
+            if (isDisposed()) {
+                return;
+            }
 			if (layout != null) {
 				markLayout (false, false);
 				updateLayout (false);
@@ -2199,28 +2419,42 @@ void setWindowVisible (boolean visible, boolean key) {
 			}
 			window.orderOut (null);
 		}
-		if (isDisposed()) return;
+        if (isDisposed()) {
+            return;
+        }
 		topView ().setHidden (true);
 		invalidateVisibleRegion();
 		sendEvent (SWT.Hide);
 	}
 
-	if (isDisposed()) return;
+    if (isDisposed()) {
+        return;
+    }
 	display.updateQuitMenu();
 
-	if (isDisposed()) return;
+    if (isDisposed()) {
+        return;
+    }
 	NSView[] hitView = new NSView[1];
 	Control control = display.findControl (false, hitView);
-	if (control != null && (!control.isActive() || !control.isEnabled())) control = null;
+    if (control != null && (!control.isActive() || !control.isEnabled())) {
+        control = null;
+    }
 	Control trimControl = control;
-	if (trimControl != null && trimControl.isTrim (hitView[0])) trimControl = null;
+    if (trimControl != null && trimControl.isTrim(hitView[0])) {
+        trimControl = null;
+    }
 	display.checkEnterExit (trimControl, null, false);
 }
 
 @Override
 void setZOrder () {
-	if (scrollView != null) scrollView.setDocumentView (view);
-	if (window == null) return;
+    if (scrollView != null) {
+        scrollView.setDocumentView(view);
+    }
+    if (window == null) {
+        return;
+    }
 	window.setContentView (scrollView != null ? scrollView : view);
 	if (fixResize ()) {
 		NSRect rect = window.frame();
@@ -2231,8 +2465,12 @@ void setZOrder () {
 
 @Override
 void setZOrder (Control control, boolean above) {
-	if (window == null) return;
-	if (!getVisible ()) return;
+    if (window == null) {
+        return;
+    }
+    if (!getVisible()) {
+        return;
+    }
 	if (control == null) {
 		if (above) {
 			window.orderFront(null);
@@ -2247,8 +2485,12 @@ void setZOrder (Control control, boolean above) {
 
 @Override
 boolean traverseEscape () {
-	if (parent == null) return false;
-	if (!isVisible () || !isEnabled ()) return false;
+    if (parent == null) {
+        return false;
+    }
+    if (!isVisible() || !isEnabled()) {
+        return false;
+    }
 	close ();
 	return true;
 }
@@ -2256,7 +2498,9 @@ boolean traverseEscape () {
 @Override
 void updateCursorRects(boolean enabled) {
 	super.updateCursorRects(enabled);
-	if (toolBar != null) toolBar.updateCursorRects(enabled);
+    if (toolBar != null) {
+        toolBar.updateCursorRects(enabled);
+    }
 };
 
 void updateModal () {
@@ -2264,7 +2508,9 @@ void updateModal () {
 }
 
 void updateOpaque () {
-	if (window == null) return;
+    if (window == null) {
+        return;
+    }
 	window.setOpaque (region == null && glContextCount == 0);
 }
 
@@ -2301,7 +2547,9 @@ void updateParent (boolean visible) {
 			}
 		} else {
 			NSWindow parentWindow = window.parentWindow ();
-			if (parentWindow != null) parentWindow.removeChildWindow (window);
+            if (parentWindow != null) {
+                parentWindow.removeChildWindow(window);
+            }
 		}
 	}
 	Shell [] shells = getShells ();
@@ -2314,8 +2562,12 @@ void updateParent (boolean visible) {
 }
 
 void updateSystemUIMode () {
-	if ((window.collectionBehavior() & OS.NSWindowCollectionBehaviorFullScreenPrimary) != 0) return;
-	if (!getMonitor ().equals (display.getPrimaryMonitor ())) return;
+    if ((window.collectionBehavior() & OS.NSWindowCollectionBehaviorFullScreenPrimary) != 0) {
+        return;
+    }
+    if (!getMonitor().equals(display.getPrimaryMonitor())) {
+        return;
+    }
 	int mode = display.systemUIMode, options = display.systemUIOptions;
 	if (fullScreen) {
 		mode = OS.kUIModeAllHidden;
@@ -2326,8 +2578,12 @@ void updateSystemUIMode () {
 	}
 	int[] uiMode = new int[1], uiOptions = new int[1];
 	OS.GetSystemUIMode(uiMode, uiOptions);
-	if (uiMode[0] != mode || uiOptions[0] != options) OS.SetSystemUIMode (mode, options);
-	if (fullScreen)	window.setFrame(fullScreenFrame, true);
+    if (uiMode[0] != mode || uiOptions[0] != options) {
+        OS.SetSystemUIMode(mode, options);
+    }
+    if (fullScreen) {
+        window.setFrame(fullScreenFrame, true);
+    }
 }
 
 @Override
@@ -2335,10 +2591,14 @@ long view_stringForToolTip_point_userData (long id, long sel, long view, long ta
 	NSPoint pt = new NSPoint();
 	OS.memmove (pt, point, NSPoint.sizeof);
 	Control control = display.findControl (false);
-	if (control == null) return 0;
+    if (control == null) {
+        return 0;
+    }
 	Widget target = control.findTooltip (new NSView (view).convertPoint_toView_ (pt, null));
 	String string = target.tooltipText ();
-	if (string == null) return 0;
+    if (string == null) {
+        return 0;
+    }
 	char[] chars = new char [string.length ()];
 	string.getChars (0, chars.length, chars, 0);
 	int length = fixMnemonic (chars);
@@ -2365,9 +2625,15 @@ void windowDidBecomeKey(long id, long sel, long notification) {
 		display.setMenuBar (menuBar);
 	}
 	sendEvent (SWT.Activate);
-	if (isDisposed ()) return;
-	if (!restoreFocus () && !traverseGroup (true)) setFocus ();
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
+    if (!restoreFocus() && !traverseGroup(true)) {
+        setFocus();
+    }
+    if (isDisposed()) {
+        return;
+    }
 	if ((window.collectionBehavior() & OS.NSWindowCollectionBehaviorFullScreenPrimary) == 0) {
 		Shell parentShell = this;
 		while (parentShell.parent != null) {
@@ -2418,7 +2684,9 @@ void windowDidResize(long id, long sel, long notification) {
 	}
 	resized = true;
 	sendEvent (SWT.Resize);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	if (layout != null) {
 		markLayout (false, false);
 		updateLayout (false);
@@ -2427,11 +2695,17 @@ void windowDidResize(long id, long sel, long notification) {
 
 @Override
 void windowDidResignKey(long id, long sel, long notification) {
-	if (display.isDisposed()) return;
+    if (display.isDisposed()) {
+        return;
+    }
 	sendEvent (SWT.Deactivate);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	setActiveControl (null);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	saveFocus();
 }
 
@@ -2452,14 +2726,22 @@ void windowSendEvent (long id, long sel, long event) {
 		case OS.NSMouseMoved:
 			NSView[] hitView = new NSView[1];
 			Control control = display.findControl (false, hitView);
-			if (control != null && (!control.isActive() || !control.isEnabled())) control = null;
+            if (control != null && (!control.isActive() || !control.isEnabled())) {
+                control = null;
+            }
 			if (type == OS.NSMouseMoved) {
 				Control trimControl = control;
-				if (trimControl != null && trimControl.isTrim (hitView[0])) trimControl = null;
+                if (trimControl != null && trimControl.isTrim(hitView[0])) {
+                    trimControl = null;
+                }
 				display.checkEnterExit (trimControl, nsEvent, false);
-				// Browser will send MouseMoved in response to a DOM event, so don't send it here.
-				if (trimControl != null && (trimControl.state & WEBKIT_EVENTS_FIX) != 0) trimControl = null;
-				if (trimControl != null) trimControl.sendMouseEvent (nsEvent, type, false);
+                // Browser will send MouseMoved in response to a DOM event, so don't send it here.
+                if (trimControl != null && (trimControl.state & WEBKIT_EVENTS_FIX) != 0) {
+                    trimControl = null;
+                }
+                if (trimControl != null) {
+                    trimControl.sendMouseEvent(nsEvent, type, false);
+                }
 			}
 
 			// Tooltip updating: Find the widget under the cursor. If it changed, clear the tooltip from
@@ -2484,8 +2766,12 @@ void windowSendEvent (long id, long sel, long event) {
 				Control oldControl = display.tooltipControl;
 				Shell oldShell = oldControl != null && !oldControl.isDisposed() ? oldControl.getShell() : null;
 				Shell shell = control != null && !control.isDisposed() ? control.getShell() : null;
-				if (oldShell != null) oldShell.sendToolTipEvent (false);
-				if (shell != null) shell.sendToolTipEvent (true);
+                if (oldShell != null) {
+                    oldShell.sendToolTipEvent(false);
+                }
+                if (shell != null) {
+                    shell.sendToolTipEvent(true);
+                }
 			}
 			display.tooltipControl = control;
 			display.tooltipTarget = target;
@@ -2535,8 +2821,10 @@ void windowSendEvent (long id, long sel, long event) {
 			break;
 	}
 
-	// Window may have been disposed at this point.
-	if (isDisposed()) return;
+    // Window may have been disposed at this point.
+    if (isDisposed()) {
+        return;
+    }
 	super.windowSendEvent (id, sel, event);
 }
 
@@ -2549,9 +2837,13 @@ private void updateEscMenuItem() {
 }
 
 private boolean searchForEscMenuItem(Menu menu) {
-	if (menu == null || menu.isDisposed()) return false;
+    if (menu == null || menu.isDisposed()) {
+        return false;
+    }
 	MenuItem[] items = menu.getItems();
-	if (items == null) return false;
+    if (items == null) {
+        return false;
+    }
 	for (MenuItem item:items) {
 		if (item == null || item.isDisposed()) {
 			continue;
@@ -2560,7 +2852,9 @@ private boolean searchForEscMenuItem(Menu menu) {
 			return true;
 		} else if ((item.getStyle() & SWT.CASCADE) != 0) {
 			Menu subMenu = item.getMenu();
-			if (searchForEscMenuItem(subMenu)) return true;
+            if (searchForEscMenuItem(subMenu)) {
+                return true;
+            }
 		}
 	}
 	return false;
@@ -2568,7 +2862,9 @@ private boolean searchForEscMenuItem(Menu menu) {
 
 @Override
 boolean windowShouldClose(long id, long sel, long window) {
-	if (isEnabled()) closeWidget (false);
+    if (isEnabled()) {
+        closeWidget(false);
+    }
 	return false;
 }
 

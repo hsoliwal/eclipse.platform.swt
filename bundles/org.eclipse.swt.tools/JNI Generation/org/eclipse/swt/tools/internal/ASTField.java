@@ -50,8 +50,12 @@ public int hashCode() {
 
 @Override
 public boolean equals(Object obj) {
-	if (this == obj) return true;
-	if (!(obj instanceof ASTField)) return false;
+    if (this == obj) {
+        return true;
+    }
+    if (!(obj instanceof ASTField)) {
+        return false;
+    }
 	return ((ASTField)obj).getName().equals(getName());
 }
 
@@ -84,8 +88,12 @@ public String getAccessor() {
 public String getCast() {
 	String cast = ((String)getParam("cast")).trim();
 	if (cast.length() > 0) {
-		if (!cast.startsWith("(")) cast = "(" + cast;
-		if (!cast.endsWith(")")) cast = cast + ")";
+        if (!cast.startsWith("(")) {
+            cast = "(" + cast;
+        }
+        if (!cast.endsWith(")")) {
+            cast = cast + ")";
+        }
 	}
 	return cast;
 }
@@ -97,7 +105,9 @@ public String getExclude() {
 
 @Override
 public String getMetaData() {
-	if (data != null) return data;
+    if (data != null) {
+        return data;
+    }
 	String className = getDeclaringClass().getSimpleName();
 	String key = className + "_" + getName();
 	return declaringClass.metaData.getMetaData(key, "");

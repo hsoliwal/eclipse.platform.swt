@@ -112,14 +112,30 @@ class CanvasTab extends Tab {
 
 		/* Compute the widget style */
 		int style = getDefaultStyle();
-		if (horizontalButton.getSelection ()) style |= SWT.H_SCROLL;
-		if (verticalButton.getSelection ()) style |= SWT.V_SCROLL;
-		if (borderButton.getSelection ()) style |= SWT.BORDER;
-		if (noBackgroundButton.getSelection ()) style |= SWT.NO_BACKGROUND;
-		if (noFocusButton.getSelection ()) style |= SWT.NO_FOCUS;
-		if (noMergePaintsButton.getSelection ()) style |= SWT.NO_MERGE_PAINTS;
-		if (noRedrawResizeButton.getSelection ()) style |= SWT.NO_REDRAW_RESIZE;
-		if (doubleBufferedButton.getSelection ()) style |= SWT.DOUBLE_BUFFERED;
+        if (horizontalButton.getSelection()) {
+            style |= SWT.H_SCROLL;
+        }
+        if (verticalButton.getSelection()) {
+            style |= SWT.V_SCROLL;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (noBackgroundButton.getSelection()) {
+            style |= SWT.NO_BACKGROUND;
+        }
+        if (noFocusButton.getSelection()) {
+            style |= SWT.NO_FOCUS;
+        }
+        if (noMergePaintsButton.getSelection()) {
+            style |= SWT.NO_MERGE_PAINTS;
+        }
+        if (noRedrawResizeButton.getSelection()) {
+            style |= SWT.NO_REDRAW_RESIZE;
+        }
+        if (doubleBufferedButton.getSelection()) {
+            style |= SWT.DOUBLE_BUFFERED;
+        }
 
 		/* Create the example widgets */
 		paintCount = 0; cx = 0; cy = 0;
@@ -293,7 +309,9 @@ class CanvasTab extends Tab {
 		} else {
 			canvas.setCaret (null);
 		}
-		if (oldCaret != null) oldCaret.dispose ();
+        if (oldCaret != null) {
+            oldCaret.dispose();
+        }
 	}
 
 	/**
@@ -310,6 +328,8 @@ class CanvasTab extends Tab {
 		noMergePaintsButton.setSelection ((canvas.getStyle () & SWT.NO_MERGE_PAINTS) != 0);
 		noRedrawResizeButton.setSelection ((canvas.getStyle () & SWT.NO_REDRAW_RESIZE) != 0);
 		doubleBufferedButton.setSelection ((canvas.getStyle () & SWT.DOUBLE_BUFFERED) != 0);
-		if (!instance.startup) setCaret ();
+        if (!instance.startup) {
+            setCaret();
+        }
 	}
 }

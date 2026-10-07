@@ -42,8 +42,9 @@ public static void main(String[] args) {
 	text.setFont(newFont);
 	shell.open();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch())
-			display.sleep();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	newFont.dispose();
 	display.dispose();

@@ -194,28 +194,21 @@ public void addSelectionListener (SelectionListener listener) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	return OS.CallWindowProc (windowProc (), hwnd, msg, wParam, lParam);
 }
 
 static int checkStyle (int style) {
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	style &= ~(SWT.H_SCROLL | SWT.V_SCROLL);
-	style = checkBits (style, SWT.DATE, SWT.TIME, SWT.CALENDAR, 0, 0, 0);
-	style = checkBits (style, SWT.MEDIUM, SWT.SHORT, SWT.LONG, 0, 0, 0);
-	if ((style & SWT.DATE) == 0) style &=~ SWT.DROP_DOWN;
-	return style;
+	return WidgetStylePolicy.DATE_TIME.applyAsInt(style);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -245,10 +238,18 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 			height = Math.max (height, upDownHeight);
 		}
 	}
-	if (width == 0) width = DEFAULT_WIDTH;
-	if (height == 0) height = DEFAULT_HEIGHT;
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x;
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y;
+    if (width == 0) {
+        width = DEFAULT_WIDTH;
+    }
+    if (height == 0) {
+        height = DEFAULT_HEIGHT;
+    }
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x;
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y;
+    }
 	int border = getBorderWidthInPixels ();
 	width += border * 2;
 	height += border * 2;
@@ -285,18 +286,25 @@ String getCustomShortTimeFormat () {
 	int start = 0, end = 0;
 	while (start < length) {
 		char ch = buffer.charAt (start);
-		if (ch == SINGLE_QUOTE) inQuotes = !inQuotes;
-		else if (ch == SECONDS_FORMAT_CONSTANT && !inQuotes) {
-			end = start + 1;
-			while (end < length && buffer.charAt (end) == SECONDS_FORMAT_CONSTANT) end++;
-			// skip the preceding separator
-			while (start > 0 && buffer.charAt (start) != MINUTES_FORMAT_CONSTANT) start--;
-			start++;
-			break;
-		}
+        if (ch == SINGLE_QUOTE) {
+            inQuotes = !inQuotes;
+        } else if (ch == SECONDS_FORMAT_CONSTANT && !inQuotes) {
+            end = start + 1;
+            while (end < length && buffer.charAt(end) == SECONDS_FORMAT_CONSTANT) {
+                end++;
+            }
+            // skip the preceding separator
+            while (start > 0 && buffer.charAt(start) != MINUTES_FORMAT_CONSTANT) {
+                start--;
+            }
+            start++;
+            break;
+        }
 		start++;
 	}
-	if (start < end) buffer.delete (start, end);
+    if (start < end) {
+        buffer.delete(start, end);
+    }
 	return buffer.toString ();
 }
 
@@ -342,7 +350,9 @@ public int getDay () {
  */
 public int getHours () {
 	checkWidget ();
-	if ((style & SWT.CALENDAR) != 0) return time.wHour;
+    if ((style & SWT.CALENDAR) != 0) {
+        return time.wHour;
+    }
 	SYSTEMTIME systime = new SYSTEMTIME ();
 	int msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_GETCURSEL : OS.DTM_GETSYSTEMTIME;
 	OS.SendMessage (handle, msg, 0, systime);
@@ -364,7 +374,9 @@ public int getHours () {
  */
 public int getMinutes () {
 	checkWidget ();
-	if ((style & SWT.CALENDAR) != 0) return time.wMinute;
+    if ((style & SWT.CALENDAR) != 0) {
+        return time.wMinute;
+    }
 	SYSTEMTIME systime = new SYSTEMTIME ();
 	int msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_GETCURSEL : OS.DTM_GETSYSTEMTIME;
 	OS.SendMessage (handle, msg, 0, systime);
@@ -413,7 +425,9 @@ String getNameText() {
  */
 public int getSeconds () {
 	checkWidget ();
-	if ((style & SWT.CALENDAR) != 0) return time.wSecond;
+    if ((style & SWT.CALENDAR) != 0) {
+        return time.wSecond;
+    }
 	SYSTEMTIME systime = new SYSTEMTIME ();
 	int msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_GETCURSEL : OS.DTM_GETSYSTEMTIME;
 	OS.SendMessage (handle, msg, 0, systime);
@@ -466,8 +480,12 @@ void releaseWidget () {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection, listener);
 }
@@ -492,7 +510,9 @@ public void removeSelectionListener (SelectionListener listener) {
  */
 public void setDate (int year, int month, int day) {
 	checkWidget ();
-	if (year < MIN_YEAR || year > MAX_YEAR) return;
+    if (year < MIN_YEAR || year > MAX_YEAR) {
+        return;
+    }
 	SYSTEMTIME systime = new SYSTEMTIME ();
 	int msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_GETCURSEL : OS.DTM_GETSYSTEMTIME;
 	OS.SendMessage (handle, msg, 0, systime);
@@ -546,14 +566,18 @@ public void setDay (int day) {
  */
 public void setHours (int hours) {
 	checkWidget ();
-	if (hours < 0 || hours > 23) return;
+    if (hours < 0 || hours > 23) {
+        return;
+    }
 	SYSTEMTIME systime = new SYSTEMTIME ();
 	int msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_GETCURSEL : OS.DTM_GETSYSTEMTIME;
 	OS.SendMessage (handle, msg, 0, systime);
 	msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_SETCURSEL : OS.DTM_SETSYSTEMTIME;
 	systime.wHour = (short)hours;
 	OS.SendMessage (handle, msg, 0, systime);
-	if ((style & SWT.CALENDAR) != 0 && hours >= 0 && hours <= 23) time.wHour = (short)hours;
+    if ((style & SWT.CALENDAR) != 0 && hours >= 0 && hours <= 23) {
+        time.wHour = (short) hours;
+    }
 }
 
 /**
@@ -571,14 +595,18 @@ public void setHours (int hours) {
  */
 public void setMinutes (int minutes) {
 	checkWidget ();
-	if (minutes < 0 || minutes > 59) return;
+    if (minutes < 0 || minutes > 59) {
+        return;
+    }
 	SYSTEMTIME systime = new SYSTEMTIME ();
 	int msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_GETCURSEL : OS.DTM_GETSYSTEMTIME;
 	OS.SendMessage (handle, msg, 0, systime);
 	msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_SETCURSEL : OS.DTM_SETSYSTEMTIME;
 	systime.wMinute = (short)minutes;
 	OS.SendMessage (handle, msg, 0, systime);
-	if ((style & SWT.CALENDAR) != 0 && minutes >= 0 && minutes <= 59) time.wMinute = (short)minutes;
+    if ((style & SWT.CALENDAR) != 0 && minutes >= 0 && minutes <= 59) {
+        time.wMinute = (short) minutes;
+    }
 }
 
 /**
@@ -610,8 +638,10 @@ public void setMonth (int month) {
 
 @Override
 public void setOrientation (int orientation) {
-	/* Currently supported only for CALENDAR style. */
-	if ((style & SWT.CALENDAR) != 0) super.setOrientation (orientation);
+    /* Currently supported only for CALENDAR style. */
+    if ((style & SWT.CALENDAR) != 0) {
+        super.setOrientation(orientation);
+    }
 }
 /**
  * Sets the receiver's seconds.
@@ -628,14 +658,18 @@ public void setOrientation (int orientation) {
  */
 public void setSeconds (int seconds) {
 	checkWidget ();
-	if (seconds < 0 || seconds > 59) return;
+    if (seconds < 0 || seconds > 59) {
+        return;
+    }
 	SYSTEMTIME systime = new SYSTEMTIME ();
 	int msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_GETCURSEL : OS.DTM_GETSYSTEMTIME;
 	OS.SendMessage (handle, msg, 0, systime);
 	msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_SETCURSEL : OS.DTM_SETSYSTEMTIME;
 	systime.wSecond = (short)seconds;
 	OS.SendMessage (handle, msg, 0, systime);
-	if ((style & SWT.CALENDAR) != 0 && seconds >= 0 && seconds <= 59) time.wSecond = (short)seconds;
+    if ((style & SWT.CALENDAR) != 0 && seconds >= 0 && seconds <= 59) {
+        time.wSecond = (short) seconds;
+    }
 }
 
 /**
@@ -654,7 +688,9 @@ public void setSeconds (int seconds) {
  */
 public void setTime (int hours, int minutes, int seconds) {
 	checkWidget ();
-	if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) return;
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+        return;
+    }
 	SYSTEMTIME systime = new SYSTEMTIME ();
 	int msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_GETCURSEL : OS.DTM_GETSYSTEMTIME;
 	OS.SendMessage (handle, msg, 0, systime);
@@ -691,7 +727,9 @@ public void setTime (int hours, int minutes, int seconds) {
  */
 public void setYear (int year) {
 	checkWidget ();
-	if (year < MIN_YEAR || year > MAX_YEAR) return;
+    if (year < MIN_YEAR || year > MAX_YEAR) {
+        return;
+    }
 	SYSTEMTIME systime = new SYSTEMTIME ();
 	int msg = (style & SWT.CALENDAR) != 0 ? OS.MCM_GETCURSEL : OS.DTM_GETSYSTEMTIME;
 	OS.SendMessage (handle, msg, 0, systime);
@@ -707,17 +745,23 @@ int widgetStyle () {
 	if ((style & SWT.CALENDAR_WEEKNUMBERS) != 0) {
 		bits |= OS.MCS_WEEKNUMBERS;
 	}
-	if ((style & SWT.CALENDAR) != 0) return bits | OS.MCS_NOTODAY;
+    if ((style & SWT.CALENDAR) != 0) {
+        return bits | OS.MCS_NOTODAY;
+    }
 	/*
 	* Bug in Windows: When WS_CLIPCHILDREN is set in a
 	* Date and Time Picker, the widget draws on top of
 	* the updown control. The fix is to clear the bits.
 	*/
 	bits &= ~OS.WS_CLIPCHILDREN;
-	if ((style & SWT.TIME) != 0) bits |= OS.DTS_TIMEFORMAT;
+    if ((style & SWT.TIME) != 0) {
+        bits |= OS.DTS_TIMEFORMAT;
+    }
 	if ((style & SWT.DATE) != 0) {
 		bits |= ((style & SWT.MEDIUM) != 0 ? OS.DTS_SHORTDATECENTURYFORMAT : OS.DTS_LONGDATEFORMAT);
-		if ((style & SWT.DROP_DOWN) == 0) bits |= OS.DTS_UPDOWN;
+        if ((style & SWT.DROP_DOWN) == 0) {
+            bits |= OS.DTS_UPDOWN;
+        }
 	}
 	return bits;
 }
@@ -749,7 +793,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			break;
 		}
 		case OS.MCN_SELCHANGE: {
-			if (ignoreSelection) break;
+            if (ignoreSelection) {
+                break;
+            }
 			SYSTEMTIME systime = new SYSTEMTIME ();
 			OS.SendMessage (handle, OS.MCM_GETCURSEL, 0, systime);
 			sendSelectionEvent (SWT.Selection);
@@ -760,7 +806,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			OS.SendMessage (handle, OS.DTM_GETSYSTEMTIME, 0, systime);
 			if (lastSystemTime == null || systime.wDay != lastSystemTime.wDay || systime.wMonth != lastSystemTime.wMonth || systime.wYear != lastSystemTime.wYear) {
 				sendSelectionEvent (SWT.Selection);
-				if ((style & SWT.TIME) == 0) lastSystemTime = systime;
+                if ((style & SWT.TIME) == 0) {
+                    lastSystemTime = systime;
+                }
 			}
 			break;
 		}
@@ -771,7 +819,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 @Override
 LRESULT WM_CHAR (long wParam, long lParam) {
 	LRESULT result = super.WM_CHAR (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  For some reason, when the
 	* user presses tab, return or escape, Windows beeps.
@@ -791,7 +841,9 @@ LRESULT WM_CHAR (long wParam, long lParam) {
 @Override
 LRESULT WM_LBUTTONDBLCLK (long wParam, long lParam) {
 	LRESULT result = super.WM_LBUTTONDBLCLK (wParam, lParam);
-	if (isDisposed ()) return LRESULT.ZERO;
+    if (isDisposed()) {
+        return LRESULT.ZERO;
+    }
 	if ((style & SWT.CALENDAR) != 0) {
 		MCHITTESTINFO pMCHitTest = new MCHITTESTINFO ();
 		pMCHitTest.cbSize = MCHITTESTINFO.sizeof;
@@ -800,7 +852,9 @@ LRESULT WM_LBUTTONDBLCLK (long wParam, long lParam) {
 		pt.y = OS.GET_Y_LPARAM (lParam);
 		pMCHitTest.pt = pt;
 		long code = OS.SendMessage (handle, OS.MCM_HITTEST, 0, pMCHitTest);
-		if ((code & OS.MCHT_CALENDARDATE) == OS.MCHT_CALENDARDATE) doubleClick = true;
+        if ((code & OS.MCHT_CALENDARDATE) == OS.MCHT_CALENDARDATE) {
+            doubleClick = true;
+        }
 	}
 	return result;
 }
@@ -808,7 +862,9 @@ LRESULT WM_LBUTTONDBLCLK (long wParam, long lParam) {
 @Override
 LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_LBUTTONDOWN (wParam, lParam);
-	if (result == LRESULT.ZERO) return result;
+    if (result == LRESULT.ZERO) {
+        return result;
+    }
 	doubleClick = false;
 	/*
 	* Feature in Windows. For some reason, the calendar control
@@ -816,7 +872,9 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 	* explicitly set focus.
 	*/
 	if ((style & SWT.CALENDAR) != 0) {
-		if ((style & SWT.NO_FOCUS) == 0) OS.SetFocus (handle);
+        if ((style & SWT.NO_FOCUS) == 0) {
+            OS.SetFocus(handle);
+        }
 	}
 	return result;
 }
@@ -824,8 +882,12 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 @Override
 LRESULT WM_LBUTTONUP (long wParam, long lParam) {
 	LRESULT result = super.WM_LBUTTONUP (wParam, lParam);
-	if (isDisposed ()) return LRESULT.ZERO;
-	if (doubleClick) sendSelectionEvent (SWT.DefaultSelection);
+    if (isDisposed()) {
+        return LRESULT.ZERO;
+    }
+    if (doubleClick) {
+        sendSelectionEvent(SWT.DefaultSelection);
+    }
 	doubleClick = false;
 	return result;
 }
@@ -833,7 +895,9 @@ LRESULT WM_LBUTTONUP (long wParam, long lParam) {
 @Override
 LRESULT WM_TIMER (long wParam, long lParam) {
 	LRESULT result = super.WM_TIMER (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows. For some reason, Windows sends WM_NOTIFY with
 	* MCN_SELCHANGE at regular intervals. This is unexpected. The fix is

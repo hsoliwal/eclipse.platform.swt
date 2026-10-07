@@ -50,8 +50,9 @@ public class Bug217324_ActivateEventDialog
 
 		while (!shell.isDisposed())
 		{
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

@@ -236,33 +236,40 @@ public DragSource(Control control, int style) {
 		}
 	};
 	control.addListener (SWT.Dispose, controlListener);
-	// On GTK4 the drag is started by the GtkDragSource controller, not by SWT.DragDetect.
-	if (!GTK.GTK4) control.addListener (SWT.DragDetect, controlListener);
+    // On GTK4 the drag is started by the GtkDragSource controller, not by SWT.DragDetect.
+    if (!GTK.GTK4) {
+        control.addListener(SWT.DragDetect, controlListener);
+    }
 
 	this.addListener(SWT.Dispose, e -> onDispose());
 }
 
 static int checkStyle (int style) {
-	if (style == SWT.NONE) return DND.DROP_MOVE;
-	return style;
+	return StylePolicy.normalize(style);
 }
 
 static long dragPrepareProc(long source, double x, double y) {
 	long widgetHandle = GTK.gtk_event_controller_get_widget(source);
 	DragSource dragSource = FindDragSource(widgetHandle);
-	if (dragSource == null) return 0;
+    if (dragSource == null) {
+        return 0;
+    }
 
 	return dragSource.dragPrepare(source);
 }
 
 long dragPrepare(long source) {
-	if (transferAgents == null || transferAgents.length == 0) return 0;
+    if (transferAgents == null || transferAgents.length == 0) {
+        return 0;
+    }
 
 	DNDEvent startEvent = new DNDEvent();
 	startEvent.widget = this;
 	startEvent.doit = true;
 	notifyListeners(DND.DragStart, startEvent);
-	if (!startEvent.doit) return 0;
+    if (!startEvent.doit) {
+        return 0;
+    }
 
 	// If specified, setup drag icon
 	Image dragIcon = startEvent.image;
@@ -278,22 +285,30 @@ long dragPrepare(long source) {
 	Transfer[] transfers = new Transfer[transferAgents.length];
 	int count = 0;
 	for (Transfer transfer : transferAgents) {
-		if (transfer == null) continue;
+        if (transfer == null) {
+            continue;
+        }
 		TransferData[] supportedTypes = transfer.getSupportedTypes();
-		if (supportedTypes == null || supportedTypes.length == 0) continue;
+        if (supportedTypes == null || supportedTypes.length == 0) {
+            continue;
+        }
 
 		DNDEvent event = new DNDEvent();
 		event.widget = this;
 		event.dataType = supportedTypes[0];
 		event.doit = true;
 		notifyListeners(DND.DragSetData, event);
-		if (!event.doit || event.data == null) continue;
+        if (!event.doit || event.data == null) {
+            continue;
+        }
 
 		transfers[count] = transfer;
 		data[count] = event.data;
 		count++;
 	}
-	if (count == 0) return 0;
+    if (count == 0) {
+        return 0;
+    }
 	if (count < transferAgents.length) {
 		Object[] trimmedData = new Object[count];
 		Transfer[] trimmedTransfers = new Transfer[count];
@@ -305,7 +320,9 @@ long dragPrepare(long source) {
 
 	long providers = ContentProviders.getInstance().createContentProviders(data, transfers,
 			ContentProviders.CLIPBOARD_DATA.DRAG);
-	if (providers == 0) return 0;
+    if (providers == 0) {
+        return 0;
+    }
 
 	// The "prepare" return is transfer-full and unref'd when the drag ends, but
 	// ContentProviders keeps its own reference (unref'd on the next drag). Add a
@@ -320,37 +337,49 @@ static void dragEndProc(long source, long drag, boolean delete_data) {
 
 static long DragBegin(long widget, long context){
 	DragSource source = FindDragSource(widget);
-	if (source == null) return 0;
+    if (source == null) {
+        return 0;
+    }
 	source.dragBegin(widget, context);
 	return 0;
 }
 
 static long DragDataDelete(long widget, long context){
 	DragSource source = FindDragSource(widget);
-	if (source == null) return 0;
+    if (source == null) {
+        return 0;
+    }
 	source.dragDataDelete(widget, context);
 	return 0;
 }
 
 static long DragEnd(long widget, long context){
 	DragSource source = FindDragSource(widget);
-	if (source == null) return 0;
+    if (source == null) {
+        return 0;
+    }
 	source.dragEnd(widget, context);
 	return 0;
 }
 
 static long DragGetData(long widget, long context, long selection_data,  long info, long time){
 	DragSource source = FindDragSource(widget);
-	if (source == null) return 0;
+    if (source == null) {
+        return 0;
+    }
 	source.dragGetData(widget, context, selection_data, (int)info, (int)time);
 	return 0;
 }
 
 static DragSource FindDragSource(long handle) {
 	Display display = Display.findDisplay(Thread.currentThread());
-	if (display == null || display.isDisposed()) return null;
+    if (display == null || display.isDisposed()) {
+        return null;
+    }
 	Widget widget = display.findWidget(handle);
-	if (widget == null) return null;
+    if (widget == null) {
+        return null;
+    }
 	return (DragSource)widget.getData(DND.DRAG_SOURCE_KEY);
 }
 
@@ -385,7 +414,9 @@ static DragSource FindDragSource(long handle) {
  * @see DragSourceEvent
  */
 public void addDragListener(DragSourceListener listener) {
-	if (listener == null) DND.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	DNDListener typedListener = new DNDListener (listener);
 	typedListener.dndWidget = this;
 	addListener (DND.DragStart, typedListener);
@@ -403,8 +434,12 @@ protected void checkSubclass () {
 }
 
 boolean canBeginDrag() {
-	if (transferAgents == null || transferAgents.length == 0) return false;
-	if (targetList == 0) return false;
+    if (transferAgents == null || transferAgents.length == 0) {
+        return false;
+    }
+    if (targetList == 0) {
+        return false;
+    }
 	return true;
 }
 
@@ -417,7 +452,9 @@ void drag(Event dragEvent) {
 	event.time = dragEvent.time;
 	event.doit = true;
 	notifyListeners(DND.DragStart, event);
-	if (!event.doit || !canBeginDrag()) return;
+    if (!event.doit || !canBeginDrag()) {
+        return;
+    }
 
 	int actions = opToOsOp(getStyle());
 	Image image = event.image;
@@ -443,8 +480,12 @@ void dragBegin(long widget, long context) {
 		event.x = loc.x;
 		event.y = loc.y;
 		notifyListeners(DND.DragStart, event);
-		if (!event.doit || transferAgents == null || transferAgents.length == 0) return;
-		if (targetList == 0) return;
+        if (!event.doit || transferAgents == null || transferAgents.length == 0) {
+            return;
+        }
+        if (targetList == 0) {
+            return;
+        }
 		Image image = event.image;
 		if (context != 0 && image != null) {
 			GTK3.gtk_drag_set_icon_surface(context, image.surface);
@@ -501,7 +542,9 @@ void dragEnd(long widget, long context){
 				operation = DND.DROP_MOVE;
 			} else {
 				operation = osOpToOp(action);
-				if (operation == DND.DROP_MOVE) operation = DND.DROP_NONE;
+                if (operation == DND.DROP_MOVE) {
+                    operation = DND.DROP_NONE;
+                }
 			}
 		}
 	}
@@ -530,12 +573,16 @@ void dragEnd(long widget, long context){
 }
 
 void dragGetData(long widget, long context, long selection_data,  int info, int time){
-	if (selection_data == 0) return;
+    if (selection_data == 0) {
+        return;
+    }
 	int length = GTK3.gtk_selection_data_get_length(selection_data);
 	int format = GTK3.gtk_selection_data_get_format(selection_data);
 	long data = GTK3.gtk_selection_data_get_data(selection_data);
 	long target = GTK3.gtk_selection_data_get_target(selection_data);
-	if (target == 0) return;
+    if (target == 0) {
+        return;
+    }
 
 	TransferData transferData = new TransferData();
 	transferData.type = target;
@@ -548,7 +595,9 @@ void dragGetData(long widget, long context, long selection_data,  int info, int 
 	event.time = time;
 	event.dataType = transferData;
 	notifyListeners(DND.DragSetData, event);
-	if (!event.doit) return;
+    if (!event.doit) {
+        return;
+    }
 	Transfer transfer = null;
 	for (int i = 0; i < transferAgents.length; i++) {
 		Transfer transferAgent = transferAgents[i];
@@ -557,9 +606,13 @@ void dragGetData(long widget, long context, long selection_data,  int info, int 
 			break;
 		}
 	}
-	if (transfer == null) return;
+    if (transfer == null) {
+        return;
+    }
 	transfer.javaToNative(event.data, transferData);
-	if (transferData.result != 1) return;
+    if (transferData.result != 1) {
+        return;
+    }
 	GTK3.gtk_selection_data_set(selection_data, transferData.type, transferData.format, transferData.pValue, transferData.length);
 	OS.g_free(transferData.pValue);
 	return;
@@ -625,7 +678,9 @@ public Transfer[] getTransfer(){
 }
 
 void onDispose() {
-	if (control == null) return;
+    if (control == null) {
+        return;
+    }
 	if (GTK.GTK4) {
 		if (dragSourceController != 0) {
 			GTK4.gtk_widget_remove_controller(control.handle, dragSourceController);
@@ -652,12 +707,15 @@ int opToOsOp(int operation){
 	int move = GTK.GTK4 ? GTK4.GDK_ACTION_MOVE : GDK.GDK_ACTION_MOVE;
 	int link = GTK.GTK4 ? GTK4.GDK_ACTION_LINK : GDK.GDK_ACTION_LINK;
 
-	if ((operation & DND.DROP_COPY) == DND.DROP_COPY)
-		osOperation |= copy;
-	if ((operation & DND.DROP_MOVE) == DND.DROP_MOVE)
-		osOperation |= move;
-	if ((operation & DND.DROP_LINK) == DND.DROP_LINK)
-		osOperation |= link;
+    if ((operation & DND.DROP_COPY) == DND.DROP_COPY) {
+        osOperation |= copy;
+    }
+    if ((operation & DND.DROP_MOVE) == DND.DROP_MOVE) {
+        osOperation |= move;
+    }
+    if ((operation & DND.DROP_LINK) == DND.DROP_LINK) {
+        osOperation |= link;
+    }
 
 	return osOperation;
 }
@@ -669,12 +727,15 @@ int osOpToOp(int osOperation){
 	int move = GTK.GTK4 ? GTK4.GDK_ACTION_MOVE : GDK.GDK_ACTION_MOVE;
 	int link = GTK.GTK4 ? GTK4.GDK_ACTION_LINK : GDK.GDK_ACTION_LINK;
 
-	if ((osOperation & copy) == copy)
-		operation |= DND.DROP_COPY;
-	if ((osOperation & move) == move)
-		operation |= DND.DROP_MOVE;
-	if ((osOperation & link) == link)
-		operation |= DND.DROP_LINK;
+    if ((osOperation & copy) == copy) {
+        operation |= DND.DROP_COPY;
+    }
+    if ((osOperation & move) == move) {
+        operation |= DND.DROP_MOVE;
+    }
+    if ((osOperation & link) == link) {
+        operation |= DND.DROP_LINK;
+    }
 
 	return operation;
 }
@@ -698,7 +759,9 @@ int osOpToOp(int osOperation){
  * @see #getDragListeners
  */
 public void removeDragListener(DragSourceListener listener) {
-	if (listener == null) DND.error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        DND.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	removeTypedListener(DND.DragStart, listener);
 	removeTypedListener(DND.DragSetData, listener);
 	removeTypedListener(DND.DragEnd, listener);
@@ -733,7 +796,9 @@ public void setTransfer(Transfer... transferAgents){
 			targetList = 0;
 		}
 		this.transferAgents = transferAgents;
-		if (transferAgents == null || transferAgents.length == 0) return;
+        if (transferAgents == null || transferAgents.length == 0) {
+            return;
+        }
 
 		GtkTargetEntry[] targets = new GtkTargetEntry[0];
 		for (int i = 0; i < transferAgents.length; i++) {

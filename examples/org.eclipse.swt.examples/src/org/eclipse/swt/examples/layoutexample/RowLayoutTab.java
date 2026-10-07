@@ -78,8 +78,9 @@ class RowLayoutTab extends Tab {
 			index = table.getSelectionIndex();
 			Point pt = new Point(e.x, e.y);
 			newItem = table.getItem(pt);
-			if (newItem == null)
-				return;
+            if (newItem == null) {
+                return;
+            }
 			TableItem oldItem = comboEditor.getItem();
 			if (newItem == oldItem || newItem != lastSelected) {
 				lastSelected = newItem;
@@ -388,7 +389,9 @@ class RowLayoutTab extends Tab {
 			for (int i = 0 ; i < TOTAL_COLS; i++) {
 				oldItem.setText (i, data.get (row) [i]);
 			}
-			if (!tab) disposeEditors ();
+            if (!tab) {
+                disposeEditors();
+            }
 		}
 		setLayoutState ();
 		refreshLayoutComposite ();

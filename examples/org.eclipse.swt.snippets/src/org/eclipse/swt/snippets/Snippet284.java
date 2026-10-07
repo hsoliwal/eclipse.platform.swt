@@ -40,7 +40,9 @@ public static void main (String [] args) {
 	shell.setSize(600, 300);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }
@@ -69,13 +71,15 @@ public static void setDropTarget (final Label label) {
 	target.addDropListener (new DropTargetAdapter() {
 		@Override
 		public void dragEnter(DropTargetEvent e) {
-			if (e.detail == DND.DROP_NONE)
-				e.detail = DND.DROP_LINK;
+            if (e.detail == DND.DROP_NONE) {
+                e.detail = DND.DROP_LINK;
+            }
 		}
 		@Override
 		public void dragOperationChanged(DropTargetEvent e) {
-			if (e.detail == DND.DROP_NONE)
-				e.detail = DND.DROP_LINK;
+            if (e.detail == DND.DROP_NONE) {
+                e.detail = DND.DROP_LINK;
+            }
 		}
 		@Override
 		public void drop(DropTargetEvent event) {

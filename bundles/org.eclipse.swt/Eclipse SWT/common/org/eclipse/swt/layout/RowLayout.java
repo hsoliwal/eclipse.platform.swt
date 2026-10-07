@@ -208,8 +208,12 @@ protected Point computeSize (Composite composite, int wHint, int hHint, boolean 
 	} else {
 		extent = layoutVertical (composite, false, (hHint != SWT.DEFAULT) && wrap, hHint, flushCache);
 	}
-	if (wHint != SWT.DEFAULT) extent.x = wHint;
-	if (hHint != SWT.DEFAULT) extent.y = hHint;
+    if (wHint != SWT.DEFAULT) {
+        extent.x = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        extent.y = hHint;
+    }
 	return extent;
 }
 
@@ -231,7 +235,9 @@ protected boolean flushCache (Control control) {
 String getName () {
 	String string = getClass ().getName ();
 	int index = string.lastIndexOf ('.');
-	if (index == -1) return string;
+    if (index == -1) {
+        return string;
+    }
 	return string.substring (index + 1, string.length ());
 }
 
@@ -297,10 +303,14 @@ Point layoutHorizontal (Composite composite, boolean move, boolean wrap, int wid
 		}
 		if (wrap && (i != 0) && (x + childWidth > width)) {
 			wrapped = true;
-			if (move && (justify || fill || center)) wraps [i - 1] = maxHeight;
+            if (move && (justify || fill || center)) {
+                wraps [i - 1] = maxHeight;
+            }
 			x = marginLeft + marginWidth;
 			y += spacing + maxHeight;
-			if (pack) maxHeight = 0;
+            if (pack) {
+                maxHeight = 0;
+            }
 		}
 		if (pack || fill || center) {
 			maxHeight = Math.max (maxHeight, childHeight);
@@ -317,7 +327,9 @@ Point layoutHorizontal (Composite composite, boolean move, boolean wrap, int wid
 		maxX = Math.max (maxX, x);
 	}
 	maxX = Math.max (clientX + marginLeft + marginWidth, maxX - spacing);
-	if (!wrapped) maxX += marginRight + marginWidth;
+    if (!wrapped) {
+        maxX += marginRight + marginWidth;
+    }
 	if (move && (justify || fill || center)) {
 		int space = 0, margin = 0;
 		if (!wrapped) {
@@ -326,7 +338,9 @@ Point layoutHorizontal (Composite composite, boolean move, boolean wrap, int wid
 		} else {
 			if (fill || justify || center) {
 				int last = 0;
-				if (count > 0) wraps [count - 1] = maxHeight;
+                if (count > 0) {
+                    wraps [count - 1] = maxHeight;
+                }
 				for (int i=0; i<count; i++) {
 					if (wraps [i] != 0) {
 						int wrapCount = i - last + 1;
@@ -339,7 +353,9 @@ Point layoutHorizontal (Composite composite, boolean move, boolean wrap, int wid
 							margin = Math.max (0, ((width - wrapX) % (wrapCount + 1)) / 2);
 						}
 						for (int j=last; j<=i; j++) {
-							if (justify) bounds [j].x += (space * (j - last + 1)) + margin;
+                            if (justify) {
+                                bounds [j].x += (space * (j - last + 1)) + margin;
+                            }
 							if (fill) {
 								bounds [j].height = wraps [i];
 							} else {
@@ -355,7 +371,9 @@ Point layoutHorizontal (Composite composite, boolean move, boolean wrap, int wid
 		}
 		for (int i=0; i<count; i++) {
 			if (!wrapped) {
-				if (justify) bounds [i].x += (space * (i + 1)) + margin;
+                if (justify) {
+                    bounds [i].x += (space * (i + 1)) + margin;
+                }
 				if (fill) {
 					bounds [i].height = maxHeight;
 				} else {
@@ -388,8 +406,9 @@ Point layoutVertical (Composite composite, boolean move, boolean wrap, int heigh
 		for (int i=0; i<count; i++) {
 			Control child = children [i];
 			Point size = computeSize (child, flushCache);
-			if(height>SWT.DEFAULT && height<size.y && wrap)
-				size=child.computeSize(child.getLayoutData()==null?SWT.DEFAULT:((RowData)child.getLayoutData()).width,height,flushCache);
+            if (height > SWT.DEFAULT && height < size.y && wrap) {
+                size = child.computeSize(child.getLayoutData() == null ? SWT.DEFAULT : ((RowData) child.getLayoutData()).width, height, flushCache);
+            }
 			childWidth = Math.max (childWidth, size.x);
 			childHeight = Math.max (childHeight, size.y);
 		}
@@ -413,17 +432,22 @@ Point layoutVertical (Composite composite, boolean move, boolean wrap, int heigh
 		Control child = children [i];
 		if (pack) {
 			Point size = computeSize (child, flushCache);
-			if(height>SWT.DEFAULT && height<size.y && wrap)
-				size=child.computeSize(child.getLayoutData()==null?SWT.DEFAULT:((RowData)child.getLayoutData()).width,height,flushCache);
+            if (height > SWT.DEFAULT && height < size.y && wrap) {
+                size = child.computeSize(child.getLayoutData() == null ? SWT.DEFAULT : ((RowData) child.getLayoutData()).width, height, flushCache);
+            }
 			childWidth = size.x;
 			childHeight = size.y;
 		}
 		if (wrap && (i != 0) && (y + childHeight > height)) {
 			wrapped = true;
-			if (move && (justify || fill || center)) wraps [i - 1] = maxWidth;
+            if (move && (justify || fill || center)) {
+                wraps [i - 1] = maxWidth;
+            }
 			x += spacing + maxWidth;
 			y = marginTop + marginHeight;
-			if (pack) maxWidth = 0;
+            if (pack) {
+                maxWidth = 0;
+            }
 		}
 		if (pack || fill || center) {
 			maxWidth = Math.max (maxWidth, childWidth);
@@ -440,7 +464,9 @@ Point layoutVertical (Composite composite, boolean move, boolean wrap, int heigh
 		maxY = Math.max (maxY, y);
 	}
 	maxY = Math.max (clientY + marginTop + marginHeight, maxY - spacing);
-	if (!wrapped) maxY += marginBottom + marginHeight;
+    if (!wrapped) {
+        maxY += marginBottom + marginHeight;
+    }
 	if (move && (justify || fill || center)) {
 		int space = 0, margin = 0;
 		if (!wrapped) {
@@ -449,7 +475,9 @@ Point layoutVertical (Composite composite, boolean move, boolean wrap, int heigh
 		} else {
 			if (fill || justify || center) {
 				int last = 0;
-				if (count > 0) wraps [count - 1] = maxWidth;
+                if (count > 0) {
+                    wraps [count - 1] = maxWidth;
+                }
 				for (int i=0; i<count; i++) {
 					if (wraps [i] != 0) {
 						int wrapCount = i - last + 1;
@@ -462,7 +490,9 @@ Point layoutVertical (Composite composite, boolean move, boolean wrap, int heigh
 							margin = Math.max (0, ((height - wrapY) % (wrapCount + 1)) / 2);
 						}
 						for (int j=last; j<=i; j++) {
-							if (justify) bounds [j].y += (space * (j - last + 1)) + margin;
+                            if (justify) {
+                                bounds [j].y += (space * (j - last + 1)) + margin;
+                            }
 							if (fill) {
 								bounds [j].width = wraps [i];
 							} else {
@@ -478,7 +508,9 @@ Point layoutVertical (Composite composite, boolean move, boolean wrap, int heigh
 		}
 		for (int i=0; i<count; i++) {
 			if (!wrapped) {
-				if (justify) bounds [i].y += (space * (i + 1)) + margin;
+                if (justify) {
+                    bounds [i].y += (space * (i + 1)) + margin;
+                }
 				if (fill) {
 					bounds [i].width = maxWidth;
 				} else {
@@ -504,13 +536,27 @@ Point layoutVertical (Composite composite, boolean move, boolean wrap, int heigh
 public String toString () {
 	String string = getName ()+" {";
 	string += "type="+((type != SWT.HORIZONTAL) ? "SWT.VERTICAL" : "SWT.HORIZONTAL")+" ";
-	if (marginWidth != 0) string += "marginWidth="+marginWidth+" ";
-	if (marginHeight != 0) string += "marginHeight="+marginHeight+" ";
-	if (marginLeft != 0) string += "marginLeft="+marginLeft+" ";
-	if (marginTop != 0) string += "marginTop="+marginTop+" ";
-	if (marginRight != 0) string += "marginRight="+marginRight+" ";
-	if (marginBottom != 0) string += "marginBottom="+marginBottom+" ";
-	if (spacing != 0) string += "spacing="+spacing+" ";
+    if (marginWidth != 0) {
+        string += "marginWidth=" + marginWidth + " ";
+    }
+    if (marginHeight != 0) {
+        string += "marginHeight=" + marginHeight + " ";
+    }
+    if (marginLeft != 0) {
+        string += "marginLeft=" + marginLeft + " ";
+    }
+    if (marginTop != 0) {
+        string += "marginTop=" + marginTop + " ";
+    }
+    if (marginRight != 0) {
+        string += "marginRight=" + marginRight + " ";
+    }
+    if (marginBottom != 0) {
+        string += "marginBottom=" + marginBottom + " ";
+    }
+    if (spacing != 0) {
+        string += "spacing=" + spacing + " ";
+    }
 	string += "wrap="+wrap+" ";
 	string += "pack="+pack+" ";
 	string += "fill="+fill+" ";

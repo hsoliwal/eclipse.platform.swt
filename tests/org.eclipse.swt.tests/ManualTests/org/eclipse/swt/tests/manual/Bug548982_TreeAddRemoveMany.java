@@ -65,10 +65,11 @@ public final class Bug548982_TreeAddRemoveMany {
 			for (int i = 0; i < NUM_ITEMS; i++) {
 				TreeItem child;
 
-				if (CREATE_CTOR_2PARAM)
-					child = new TreeItem(rootItem, SWT.NONE);
-				else
-					child = new TreeItem(rootItem, SWT.NONE, i);
+                if (CREATE_CTOR_2PARAM) {
+                    child = new TreeItem(rootItem, SWT.NONE);
+                } else {
+                    child = new TreeItem(rootItem, SWT.NONE, i);
+                }
 
 				child.setText("Item:" + iteration + ":" + i);
 			}

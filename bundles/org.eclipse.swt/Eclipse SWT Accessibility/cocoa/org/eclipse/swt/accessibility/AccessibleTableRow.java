@@ -84,13 +84,17 @@ class AccessibleTableRow extends Accessible {
 				for (int j = 0; j < children.length; j++) {
 					NSValue sizeObj = (NSValue)children[j].getSizeAttribute(ACC.CHILDID_SELF);
 					NSSize size = sizeObj.sizeValue();
-					if (size.height > height) height = (int) size.height;
+                    if (size.height > height) {
+                        height = (int) size.height;
+                    }
 					width += size.width;
 				}
 				e.x = (int) position.x;
 				// Flip y coordinate for Cocoa.
 				NSArray screens = NSScreen.screens();
-				if (screens == null) return;
+                if (screens == null) {
+                    return;
+                }
 
 				NSScreen screen = new NSScreen(screens.objectAtIndex(0));
 				NSRect frame = screen.frame();

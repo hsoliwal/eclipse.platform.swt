@@ -73,14 +73,18 @@ public class Snippet217 {
 
 		// use a verify listener to dispose the controls
 		styledText.addVerifyListener(event -> {
-			if (event.start == event.end) return;
+            if (event.start == event.end) {
+                return;
+            }
 			String text = styledText.getText(event.start, event.end - 1);
 			int index = text.indexOf('\uFFFC');
 			while (index != -1) {
 				StyleRange style = styledText.getStyleRangeAtOffset(event.start + index);
 				if (style != null) {
 					Control control = (Control)style.data;
-					if (control != null) control.dispose();
+                    if (control != null) {
+                        control.dispose();
+                    }
 				}
 				index = text.indexOf('\uFFFC', index + 1);
 			}
@@ -98,8 +102,9 @@ public class Snippet217 {
 		shell.setSize(400, 400);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		font.dispose();
 		display.dispose();

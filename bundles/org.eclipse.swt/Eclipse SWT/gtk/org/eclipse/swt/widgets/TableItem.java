@@ -44,6 +44,9 @@ public class TableItem extends Item {
 	Font font;
 	Font[] cellFont;
 	String [] strings;
+	Color virtualBackground, virtualForeground;
+	Color [] virtualCellBackground, virtualCellForeground;
+	Image [] virtualImages;
 	boolean cached, grayed, settingData;
 
 /**
@@ -122,6 +125,7 @@ TableItem (Table parent, int style, int index, boolean create) {
 	this.parent = parent;
 	if (create) {
 		parent.createItem (this, index);
+		pinVirtualFacade ();
 	} else {
 		handle = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
 		GTK.gtk_tree_model_iter_nth_child (parent.modelHandle, handle, 0, index);
@@ -129,14 +133,85 @@ TableItem (Table parent, int style, int index, boolean create) {
 }
 
 static Table checkNull (Table control) {
-	if (control == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (control == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	return control;
 }
 
+boolean isCachedState () {
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return cached;
+    }
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.CACHED);
+}
+
+void setCachedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		cached = value;
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.CACHED, value);
+}
+
+boolean isCheckedState () {
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return _getChecked();
+    }
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.CHECKED);
+}
+
+void setCheckedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		GTK.gtk_list_store_set (parent.modelHandle, handle, Table.CHECKED_COLUMN, value, -1);
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.CHECKED, value);
+}
+
+boolean isGrayedState () {
+    if ((parent.style & SWT.VIRTUAL) == 0) {
+        return grayed;
+    }
+	return parent.virtualItems.flagOfIdentity (this, VirtualItemState.GRAYED);
+}
+
+void setGrayedState (boolean value) {
+	if ((parent.style & SWT.VIRTUAL) == 0) {
+		grayed = value;
+		return;
+	}
+	parent.virtualItems.flagOfIdentity (this, VirtualItemState.GRAYED, value);
+}
+
+void pinVirtualFacade () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.PINNED, true);
+	}
+}
+
+void markVirtualDirty () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.DIRTY, true);
+	}
+}
+
+void markVirtualPainted () {
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.DIRTY, false);
+		parent.virtualItems.flagOfIdentity (this, VirtualItemState.PAINT_RESIDENT, true);
+	}
+}
+
 Color _getBackground () {
+	if (parent.usesVirtualNativeModel ()) {
+		return virtualBackground != null ? virtualBackground : parent.getBackground ();
+	}
 	long [] ptr = new long [1];
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, Table.BACKGROUND_COLUMN, ptr, -1);
-	if (ptr [0] == 0) return parent.getBackground ();
+    if (ptr [0] == 0) {
+        return parent.getBackground();
+    }
 	GdkRGBA gdkRGBA = new GdkRGBA ();
 	OS.memmove(gdkRGBA, ptr [0], GdkRGBA.sizeof);
 	GDK.gdk_rgba_free (ptr [0]);
@@ -144,12 +219,25 @@ Color _getBackground () {
 }
 
 Color _getBackground (int index) {
+	if (parent.usesVirtualNativeModel ()) {
+		int count = Math.max (1, parent.columnCount);
+        if (index < 0 || index >= count) {
+            return _getBackground();
+        }
+		Color color = virtualCellBackground != null && index < virtualCellBackground.length
+				? virtualCellBackground [index] : null;
+		return color != null ? color : _getBackground ();
+	}
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count - 1) return _getBackground ();
+    if (0 > index || index > count - 1) {
+        return _getBackground();
+    }
 	long [] ptr = new long [1];
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, modelIndex + Table.CELL_BACKGROUND, ptr, -1);
-	if (ptr [0] == 0) return _getBackground ();
+    if (ptr [0] == 0) {
+        return _getBackground();
+    }
 	GdkRGBA gdkRGBA = new GdkRGBA ();
 	OS.memmove(gdkRGBA, ptr [0], GdkRGBA.sizeof);
 	GDK.gdk_rgba_free (ptr [0]);
@@ -157,15 +245,23 @@ Color _getBackground (int index) {
 }
 
 boolean _getChecked () {
+    if ((parent.style & SWT.VIRTUAL) != 0) {
+        return isCheckedState();
+    }
 	int [] ptr = new int [1];
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, Table.CHECKED_COLUMN, ptr, -1);
 	return ptr [0] != 0;
 }
 
 Color _getForeground () {
+	if (parent.usesVirtualNativeModel ()) {
+		return virtualForeground != null ? virtualForeground : parent.getForeground ();
+	}
 	long [] ptr = new long [1];
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, Table.FOREGROUND_COLUMN, ptr, -1);
-	if (ptr [0] == 0) return parent.getForeground ();
+    if (ptr [0] == 0) {
+        return parent.getForeground();
+    }
 	GdkRGBA gdkRGBA = new GdkRGBA ();
 	OS.memmove(gdkRGBA, ptr [0], GdkRGBA.sizeof);
 	GDK.gdk_rgba_free (ptr [0]);
@@ -173,12 +269,25 @@ Color _getForeground () {
 }
 
 Color _getForeground (int index) {
+	if (parent.usesVirtualNativeModel ()) {
+		int count = Math.max (1, parent.columnCount);
+        if (index < 0 || index >= count) {
+            return _getForeground();
+        }
+		Color color = virtualCellForeground != null && index < virtualCellForeground.length
+				? virtualCellForeground [index] : null;
+		return color != null ? color : _getForeground ();
+	}
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count - 1) return _getForeground ();
+    if (0 > index || index > count - 1) {
+        return _getForeground();
+    }
 	long [] ptr = new long [1];
 	int modelIndex =  parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, modelIndex + Table.CELL_FOREGROUND, ptr, -1);
-	if (ptr [0] == 0) return _getForeground ();
+    if (ptr [0] == 0) {
+        return _getForeground();
+    }
 	GdkRGBA gdkRGBA = new GdkRGBA ();
 	OS.memmove(gdkRGBA, ptr [0], GdkRGBA.sizeof);
 	GDK.gdk_rgba_free (ptr [0]);
@@ -186,13 +295,24 @@ Color _getForeground (int index) {
 }
 
 Image _getImage(int index) {
+	if (parent.usesVirtualNativeModel ()) {
+		int count = Math.max (1, parent.getColumnCount ());
+        if (index < 0 || index >= count || virtualImages == null || index >= virtualImages.length) {
+            return null;
+        }
+		return virtualImages [index];
+	}
 	int count = Math.max(1, parent.getColumnCount());
-	if (0 > index || index > count - 1) return null;
+    if (0 > index || index > count - 1) {
+        return null;
+    }
 
 	long[] surfaceHandle = new long[1];
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, modelIndex + Table.CELL_SURFACE, surfaceHandle, -1);
-	if (surfaceHandle[0] == 0) return null;
+    if (surfaceHandle[0] == 0) {
+        return null;
+    }
 
 	int imageIndex = parent.imageList.indexOf(surfaceHandle[0]);
 	if (imageIndex == -1) {
@@ -203,12 +323,24 @@ Image _getImage(int index) {
 }
 
 String _getText (int index) {
+	if (parent.usesVirtualNativeModel ()) {
+		int count = Math.max (1, parent.getColumnCount ());
+        if (index < 0 || index >= count || strings == null || index >= strings.length) {
+            return "";
+        }
+		String value = strings [index];
+		return value != null ? value : "";
+	}
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return "";
+    if (0 > index || index > count - 1) {
+        return "";
+    }
 	long [] ptr = new long [1];
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, modelIndex + Table.CELL_TEXT, ptr, -1);
-	if (ptr [0] == 0) return "";
+    if (ptr [0] == 0) {
+        return "";
+    }
 	int length = C.strlen (ptr [0]);
 	byte[] buffer = new byte [length];
 	C.memmove (buffer, ptr [0], length);
@@ -216,14 +348,117 @@ String _getText (int index) {
 	return new String (Converter.mbcsToWcs (buffer));
 }
 
+String virtualDisplayText (int index) {
+	String value = _getText (index);
+	if (value.length () > TEXT_LIMIT) {
+		return value.substring (0, TEXT_LIMIT - ELLIPSIS.length ()) + ELLIPSIS;
+	}
+	return value;
+}
+
+
+void insertVirtualColumn (int index, int newCount) {
+    if (!parent.usesVirtualNativeModel()) {
+        return;
+    }
+	if (cellFont != null) {
+		Font [] next = new Font [newCount];
+		System.arraycopy (cellFont, 0, next, 0, index);
+		System.arraycopy (cellFont, index, next, index + 1, newCount - index - 1);
+		cellFont = next;
+	}
+	if (strings != null) {
+		String [] next = new String [newCount];
+		System.arraycopy (strings, 0, next, 0, index);
+		System.arraycopy (strings, index, next, index + 1, newCount - index - 1);
+		next [index] = "";
+		strings = next;
+	}
+	if (virtualImages != null) {
+		Image [] next = new Image [newCount];
+		System.arraycopy (virtualImages, 0, next, 0, index);
+		System.arraycopy (virtualImages, index, next, index + 1, newCount - index - 1);
+		virtualImages = next;
+	}
+	if (virtualCellBackground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellBackground, 0, next, 0, index);
+		System.arraycopy (virtualCellBackground, index, next, index + 1, newCount - index - 1);
+		virtualCellBackground = next;
+	}
+	if (virtualCellForeground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellForeground, 0, next, 0, index);
+		System.arraycopy (virtualCellForeground, index, next, index + 1, newCount - index - 1);
+		virtualCellForeground = next;
+	}
+}
+
+void removeVirtualColumn (int index, int newCount) {
+    if (!parent.usesVirtualNativeModel()) {
+        return;
+    }
+	if (cellFont != null) {
+		Font [] next = new Font [newCount];
+		System.arraycopy (cellFont, 0, next, 0, index);
+		System.arraycopy (cellFont, index + 1, next, index, newCount - index);
+		cellFont = next;
+	}
+	if (strings != null) {
+		String [] next = new String [newCount];
+		System.arraycopy (strings, 0, next, 0, index);
+		System.arraycopy (strings, index + 1, next, index, newCount - index);
+		strings = next;
+	}
+	if (virtualImages != null) {
+		Image [] next = new Image [newCount];
+		System.arraycopy (virtualImages, 0, next, 0, index);
+		System.arraycopy (virtualImages, index + 1, next, index, newCount - index);
+		virtualImages = next;
+	}
+	if (virtualCellBackground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellBackground, 0, next, 0, index);
+		System.arraycopy (virtualCellBackground, index + 1, next, index, newCount - index);
+		virtualCellBackground = next;
+	}
+	if (virtualCellForeground != null) {
+		Color [] next = new Color [newCount];
+		System.arraycopy (virtualCellForeground, 0, next, 0, index);
+		System.arraycopy (virtualCellForeground, index + 1, next, index, newCount - index);
+		virtualCellForeground = next;
+	}
+}
+
+
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 void clear () {
-	if (parent.currentItem == this) return;
-	if (cached || (parent.style & SWT.VIRTUAL) == 0) {
+	if (parent.usesVirtualNativeModel ()) {
+        if (parent.currentItem == this) {
+            return;
+        }
+		setCachedState (false);
+		font = null;
+		cellFont = null;
+		strings = null;
+		virtualBackground = virtualForeground = null;
+		virtualCellBackground = virtualCellForeground = null;
+		virtualImages = null;
+		setCheckedState (false);
+		setGrayedState (false);
+		parent.virtualItemChanged (this);
+		return;
+	}
+    if (parent.currentItem == this) {
+        return;
+    }
+	if (isCachedState () || (parent.style & SWT.VIRTUAL) == 0) {
 		int columnCount = GTK.gtk_tree_model_get_n_columns (parent.modelHandle);
 		/* the columns before FOREGROUND_COLUMN contain int values, subsequent columns contain pointers */
 		for (int i=Table.CHECKED_COLUMN; i<Table.FOREGROUND_COLUMN; i++) {
@@ -233,10 +468,13 @@ void clear () {
 			GTK.gtk_list_store_set (parent.modelHandle, handle, i, (long )0, -1);
 		}
 	}
-	cached = false;
+	setCachedState (false);
 	font = null;
 	cellFont = null;
 	strings = null;
+	virtualBackground = virtualForeground = null;
+	virtualCellBackground = virtualCellForeground = null;
+	virtualImages = null;
 }
 
 @Override
@@ -253,7 +491,9 @@ public void dispose () {
 		tmpParent = parent;
 	}
 	super.dispose();
-	if (tmpParent != null && !tmpParent.isDisposed()) tmpParent.deselectAll();
+    if (tmpParent != null && !tmpParent.isDisposed()) {
+        tmpParent.deselectAll();
+    }
 }
 
 /**
@@ -270,7 +510,9 @@ public void dispose () {
  */
 public Color getBackground () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return _getBackground ();
 }
 
@@ -308,13 +550,19 @@ Rectangle getBoundsinPixels () {
 	// TODO fully test on early and later versions of GTK
 	// shifted a bit too far right on later versions of GTK - however, old Tree also had this problem
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	long parentHandle = parent.handle;
 	long column = GTK.gtk_tree_view_get_column (parentHandle, 0);
-	if (column == 0) return new Rectangle (0, 0, 0, 0);
-	long textRenderer = CellRenderers.getTextRenderer (column);
-	long pixbufRenderer = CellRenderers.getPixbufRenderer (column);
-	if (textRenderer == 0 || pixbufRenderer == 0)  return new Rectangle (0, 0, 0, 0);
+    if (column == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
+	long textRenderer = parent.getTextRenderer (column);
+	long pixbufRenderer = parent.getPixbufRenderer (column);
+    if (textRenderer == 0 || pixbufRenderer == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	GTK.gtk_widget_realize (parentHandle);
@@ -326,7 +574,9 @@ Rectangle getBoundsinPixels () {
 	GdkRectangle rect = new GdkRectangle ();
 	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
 	GTK.gtk_tree_path_free (path);
-	if ((parent.getStyle () & SWT.MIRRORED) != 0) rect.x = parent.getClientWidth () - rect.width - rect.x;
+    if ((parent.getStyle() & SWT.MIRRORED) != 0) {
+        rect.x = parent.getClientWidth() - rect.width - rect.x;
+    }
 	int right = rect.x + rect.width;
 
 	int [] x = new int [1], w = new int [1];
@@ -373,7 +623,9 @@ Rectangle getBoundsinPixels () {
  */
 public Color getBackground (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return _getBackground (index);
 }
 
@@ -391,7 +643,9 @@ public Color getBackground (int index) {
  */
 public Rectangle getBounds (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	long parentHandle = parent.handle;
 	long column = 0;
 	if (index >= 0 && index < parent.columnCount) {
@@ -399,7 +653,9 @@ public Rectangle getBounds (int index) {
 	} else {
 		column = GTK.gtk_tree_view_get_column (parentHandle, index);
 	}
-	if (column == 0) return new Rectangle (0, 0, 0, 0);
+    if (column == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	GTK.gtk_widget_realize (parentHandle);
 	GTK.gtk_tree_view_column_cell_set_cell_data (column, parent.modelHandle, handle, false, false);
@@ -415,7 +671,9 @@ public Rectangle getBounds (int index) {
 	}
 	parent.ignoreSize = false;
 	rect.height = columnHeight [0];
-	if ((parent.getStyle () & SWT.MIRRORED) != 0) rect.x = parent.getClientWidth () - rect.width - rect.x;
+    if ((parent.getStyle() & SWT.MIRRORED) != 0) {
+        rect.x = parent.getClientWidth() - rect.width - rect.x;
+    }
 
 	if (index == 0 && (parent.style & SWT.CHECK) != 0) {
 		int [] x = new int [1], w = new int [1];
@@ -450,8 +708,12 @@ public Rectangle getBounds (int index) {
  */
 public boolean getChecked () {
 	checkWidget();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if ((parent.style & SWT.CHECK) == 0) return false;
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if ((parent.style & SWT.CHECK) == 0) {
+        return false;
+    }
 	return _getChecked ();
 }
 
@@ -469,7 +731,9 @@ public boolean getChecked () {
  */
 public Font getFont () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return font != null ? font : parent.getFont ();
 }
 
@@ -489,10 +753,16 @@ public Font getFont () {
  */
 public Font getFont (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int count = Math.max (1, parent.columnCount);
-	if (0 > index || index > count - 1) return getFont ();
-	if (cellFont == null || cellFont [index] == null) return getFont ();
+    if (0 > index || index > count - 1) {
+        return getFont();
+    }
+    if (cellFont == null || cellFont [index] == null) {
+        return getFont();
+    }
 	return cellFont [index];
 }
 
@@ -510,7 +780,9 @@ public Font getFont (int index) {
  */
 public Color getForeground () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return _getForeground ();
 }
 
@@ -530,7 +802,9 @@ public Color getForeground () {
  */
 public Color getForeground (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return _getForeground (index);
 }
 
@@ -548,15 +822,21 @@ public Color getForeground (int index) {
  */
 public boolean getGrayed () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
-	if ((parent.style & SWT.CHECK) == 0) return false;
-	return grayed;
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if ((parent.style & SWT.CHECK) == 0) {
+        return false;
+    }
+	return isGrayedState ();
 }
 
 @Override
 public Image getImage () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return getImage (0);
 }
 
@@ -574,7 +854,9 @@ public Image getImage () {
  */
 public Image getImage (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return _getImage (index);
 }
 
@@ -594,7 +876,9 @@ public Image getImage (int index) {
  */
 public Rectangle getImageBounds (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	long parentHandle = parent.handle;
 	long column = 0;
 	if (index >= 0 && index < parent.columnCount) {
@@ -602,15 +886,21 @@ public Rectangle getImageBounds (int index) {
 	} else {
 		column = GTK.gtk_tree_view_get_column (parentHandle, index);
 	}
-	if (column == 0) return new Rectangle (0, 0, 0, 0);
-	long pixbufRenderer = CellRenderers.getPixbufRenderer (column);
-	if (pixbufRenderer == 0)  return new Rectangle (0, 0, 0, 0);
+    if (column == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
+	long pixbufRenderer = parent.getPixbufRenderer (column);
+    if (pixbufRenderer == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	GdkRectangle rect = new GdkRectangle ();
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	GTK.gtk_widget_realize (parentHandle);
 	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
 	GTK.gtk_tree_path_free (path);
-	if ((parent.getStyle () & SWT.MIRRORED) != 0) rect.x = parent.getClientWidth () - rect.width - rect.x;
+    if ((parent.getStyle() & SWT.MIRRORED) != 0) {
+        rect.x = parent.getClientWidth() - rect.width - rect.x;
+    }
 	int [] x = new int [1], w = new int[1];
 	gtk_tree_view_column_cell_get_position (column, pixbufRenderer, x, w);
 	/*
@@ -630,8 +920,10 @@ public Rectangle getImageBounds (int index) {
 		 * position of the textRenderer, to ensure images/widgets/etc. aren't placed over the TableItem's
 		 * text.
 		 */
-		long textRenderer = CellRenderers.getTextRenderer (column);
-		if (textRenderer == 0)  return new Rectangle (0, 0, 0, 0);
+		long textRenderer = parent.getTextRenderer (column);
+        if (textRenderer == 0) {
+            return new Rectangle(0, 0, 0, 0);
+        }
 		int [] xText = new int [1], wText = new int [1];
 		gtk_tree_view_column_cell_get_position (column, textRenderer, xText, wText);
 		rect.x += xText [0];
@@ -653,7 +945,9 @@ public Rectangle getImageBounds (int index) {
  */
 public int getImageIndent () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	/* Image indent is not supported on GTK */
 	return 0;
 }
@@ -661,7 +955,9 @@ public int getImageIndent () {
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {
-		if (!cached) return "*virtual*"; //$NON-NLS-1$
+        if (!isCachedState()) {
+            return "*virtual*"; //$NON-NLS-1$
+        }
 	}
 	return super.getNameText ();
 }
@@ -684,7 +980,9 @@ public Table getParent () {
 @Override
 public String getText () {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return getText (0);
 }
 
@@ -702,7 +1000,9 @@ public String getText () {
  */
 public String getText (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	if (strings != null) {
 		if (0 <= index && index < strings.length) {
 			String string = strings [index];
@@ -730,9 +1030,13 @@ public String getText (int index) {
  */
 public Rectangle getTextBounds (int index) {
 	checkWidget ();
-	if (!parent.checkData (this)) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (!parent.checkData(this)) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return new Rectangle (0, 0, 0, 0);
+    if (0 > index || index > count - 1) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 	// TODO fully test on early and later versions of GTK
 	// shifted a bit too far right on later versions of GTK - however, old Tree also had this problem
 	long parentHandle = parent.handle;
@@ -742,10 +1046,14 @@ public Rectangle getTextBounds (int index) {
 	} else {
 		column = GTK.gtk_tree_view_get_column (parentHandle, index);
 	}
-	if (column == 0) return new Rectangle (0, 0, 0, 0);
-	long textRenderer = CellRenderers.getTextRenderer (column);
-	long pixbufRenderer = CellRenderers.getPixbufRenderer (column);
-	if (textRenderer == 0 || pixbufRenderer == 0)  return new Rectangle (0, 0, 0, 0);
+    if (column == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
+	long textRenderer = parent.getTextRenderer (column);
+	long pixbufRenderer = parent.getPixbufRenderer (column);
+    if (textRenderer == 0 || pixbufRenderer == 0) {
+        return new Rectangle(0, 0, 0, 0);
+    }
 
 	long path = GTK.gtk_tree_model_get_path (parent.modelHandle, handle);
 	GTK.gtk_widget_realize (parentHandle);
@@ -757,7 +1065,9 @@ public Rectangle getTextBounds (int index) {
 	GdkRectangle rect = new GdkRectangle ();
 	GTK.gtk_tree_view_get_cell_area (parentHandle, path, column, rect);
 	GTK.gtk_tree_path_free (path);
-	if ((parent.getStyle () & SWT.MIRRORED) != 0) rect.x = parent.getClientWidth () - rect.width - rect.x;
+    if ((parent.getStyle() & SWT.MIRRORED) != 0) {
+        rect.x = parent.getClientWidth() - rect.width - rect.x;
+    }
 	int right = rect.x + rect.width;
 
 	int [] x = new int [1], w = new int [1];
@@ -804,7 +1114,9 @@ public Rectangle getTextBounds (int index) {
 
 @Override
 void releaseHandle () {
-	if (handle != 0) OS.g_free (handle);
+    if (handle != 0) {
+        OS.g_free(handle);
+    }
 	handle = 0;
 	super.releaseHandle ();
 	parent = null;
@@ -837,13 +1149,27 @@ void releaseWidget () {
  */
 public void setBackground (Color color) {
 	checkWidget ();
+	if (parent.usesVirtualNativeModel ()) {
+        if (color != null && color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (virtualBackground == color || virtualBackground != null && virtualBackground.equals(color)) {
+            return;
+        }
+		virtualBackground = color;
+		setCachedState (true);
+		parent.virtualItemChanged (this);
+		return;
+	}
 	if (color != null && color.isDisposed ()) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (_getBackground ().equals (color)) return;
+    if (_getBackground().equals(color)) {
+        return;
+    }
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.BACKGROUND_COLUMN, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -866,16 +1192,40 @@ public void setBackground (Color color) {
  */
 public void setBackground (int index, Color color) {
 	checkWidget ();
+	if (parent.usesVirtualNativeModel ()) {
+        if (color != null && color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+		int count = Math.max (1, parent.getColumnCount ());
+        if (index < 0 || index >= count) {
+            return;
+        }
+        if (virtualCellBackground == null) {
+            virtualCellBackground = new Color [count];
+        }
+		Color old = virtualCellBackground [index];
+        if (old == color || old != null && old.equals(color)) {
+            return;
+        }
+		virtualCellBackground [index] = color;
+		setCachedState (true);
+		parent.virtualItemChanged (this);
+		return;
+	}
 	if (color != null && color.isDisposed ()) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (_getBackground (index).equals (color)) return;
+    if (_getBackground(index).equals(color)) {
+        return;
+    }
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_BACKGROUND, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 
 	if (color != null) {
 		boolean customDraw = (parent.columnCount == 0)  ? parent.firstCustomDraw : parent.columns [index].customDraw;
@@ -888,9 +1238,11 @@ public void setBackground (int index, Color color) {
 				} else {
 					column = GTK.gtk_tree_view_get_column (parentHandle, index);
 				}
-				if (column == 0) return;
-				long textRenderer = CellRenderers.getTextRenderer (column);
-				long imageRenderer = CellRenderers.getPixbufRenderer (column);
+                if (column == 0) {
+                    return;
+                }
+				long textRenderer = parent.getTextRenderer (column);
+				long imageRenderer = parent.getPixbufRenderer (column);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, display.cellDataProc, parentHandle, 0);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, imageRenderer, display.cellDataProc, parentHandle, 0);
 			}
@@ -916,8 +1268,21 @@ public void setBackground (int index, Color color) {
  */
 public void setChecked (boolean checked) {
 	checkWidget();
-	if ((parent.style & SWT.CHECK) == 0) return;
-	if (_getChecked () == checked) return;
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+        if ((parent.style & SWT.CHECK) == 0 || isCheckedState() == checked) {
+            return;
+        }
+		setCheckedState (checked);
+		setCachedState (true);
+		parent.virtualItemChanged (this);
+		return;
+	}
+    if ((parent.style & SWT.CHECK) == 0) {
+        return;
+    }
+    if (_getChecked() == checked) {
+        return;
+    }
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.CHECKED_COLUMN, checked, -1);
 	/*
 	* GTK+'s "inconsistent" state does not match SWT's concept of grayed.  To
@@ -925,7 +1290,7 @@ public void setChecked (boolean checked) {
 	* grayed state on check and uncheck.
 	*/
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.GRAYED_COLUMN, !checked ? false : grayed, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -951,12 +1316,21 @@ public void setFont (Font font){
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	Font oldFont = this.font;
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	this.font = font;
-	if (oldFont != null && oldFont.equals (font)) return;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
+	if (parent.usesVirtualNativeModel ()) {
+		setCachedState (true);
+		parent.virtualItemChanged (this);
+		return;
+	}
 	long fontHandle = font != null ? font.handle : 0;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.FONT_COLUMN, fontHandle, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -984,20 +1358,33 @@ public void setFont (int index, Font font) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	if (cellFont == null) {
-		if (font == null) return;
+        if (font == null) {
+            return;
+        }
 		cellFont = new Font [count];
 	}
 	Font oldFont = cellFont [index];
-	if (oldFont == font) return;
+    if (oldFont == font) {
+        return;
+    }
 	cellFont [index] = font;
-	if (oldFont != null && oldFont.equals (font)) return;
+    if (oldFont != null && oldFont.equals(font)) {
+        return;
+    }
 
+	if (parent.usesVirtualNativeModel ()) {
+		setCachedState (true);
+		parent.virtualItemChanged (this);
+		return;
+	}
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	long fontHandle  = font != null ? font.handle : 0;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_FONT, fontHandle, -1);
-	cached = true;
+	setCachedState (true);
 
 	if (font != null) {
 		boolean customDraw = (parent.columnCount == 0)  ? parent.firstCustomDraw : parent.columns [index].customDraw;
@@ -1010,9 +1397,11 @@ public void setFont (int index, Font font) {
 				} else {
 					column = GTK.gtk_tree_view_get_column (parentHandle, index);
 				}
-				if (column == 0) return;
-				long textRenderer = CellRenderers.getTextRenderer (column);
-				long imageRenderer = CellRenderers.getPixbufRenderer (column);
+                if (column == 0) {
+                    return;
+                }
+				long textRenderer = parent.getTextRenderer (column);
+				long imageRenderer = parent.getPixbufRenderer (column);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, display.cellDataProc, parentHandle, 0);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, imageRenderer, display.cellDataProc, parentHandle, 0);
 			}
@@ -1044,13 +1433,27 @@ public void setFont (int index, Font font) {
  */
 public void setForeground (Color color){
 	checkWidget ();
+	if (parent.usesVirtualNativeModel ()) {
+        if (color != null && color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+        if (virtualForeground == color || virtualForeground != null && virtualForeground.equals(color)) {
+            return;
+        }
+		virtualForeground = color;
+		setCachedState (true);
+		parent.virtualItemChanged (this);
+		return;
+	}
 	if (color != null && color.isDisposed ()) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (_getForeground ().equals (color)) return;
+    if (_getForeground().equals(color)) {
+        return;
+    }
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.FOREGROUND_COLUMN, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1073,16 +1476,40 @@ public void setForeground (Color color){
  */
 public void setForeground (int index, Color color){
 	checkWidget ();
+	if (parent.usesVirtualNativeModel ()) {
+        if (color != null && color.isDisposed()) {
+            error(SWT.ERROR_INVALID_ARGUMENT);
+        }
+		int count = Math.max (1, parent.getColumnCount ());
+        if (index < 0 || index >= count) {
+            return;
+        }
+        if (virtualCellForeground == null) {
+            virtualCellForeground = new Color [count];
+        }
+		Color old = virtualCellForeground [index];
+        if (old == color || old != null && old.equals(color)) {
+            return;
+        }
+		virtualCellForeground [index] = color;
+		setCachedState (true);
+		parent.virtualItemChanged (this);
+		return;
+	}
 	if (color != null && color.isDisposed ()) {
 		error (SWT.ERROR_INVALID_ARGUMENT);
 	}
-	if (_getForeground (index).equals (color)) return;
+    if (_getForeground(index).equals(color)) {
+        return;
+    }
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GdkRGBA gdkRGBA = color != null ? color.handle : null;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_FOREGROUND, gdkRGBA, -1);
-	cached = true;
+	setCachedState (true);
 
 	if (color != null) {
 		boolean customDraw = (parent.columnCount == 0)  ? parent.firstCustomDraw : parent.columns [index].customDraw;
@@ -1095,9 +1522,11 @@ public void setForeground (int index, Color color){
 				} else {
 					column = GTK.gtk_tree_view_get_column (parentHandle, index);
 				}
-				if (column == 0) return;
-				long textRenderer = CellRenderers.getTextRenderer (column);
-				long imageRenderer = CellRenderers.getPixbufRenderer (column);
+                if (column == 0) {
+                    return;
+                }
+				long textRenderer = parent.getTextRenderer (column);
+				long imageRenderer = parent.getPixbufRenderer (column);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, textRenderer, display.cellDataProc, parentHandle, 0);
 				GTK.gtk_tree_view_column_set_cell_data_func (column, imageRenderer, display.cellDataProc, parentHandle, 0);
 			}
@@ -1123,8 +1552,21 @@ public void setForeground (int index, Color color){
  */
 public void setGrayed (boolean grayed) {
 	checkWidget();
-	if ((parent.style & SWT.CHECK) == 0) return;
-	if (this.grayed == grayed) return;
+	if ((parent.style & SWT.VIRTUAL) != 0) {
+        if ((parent.style & SWT.CHECK) == 0 || isGrayedState() == grayed) {
+            return;
+        }
+		setGrayedState (grayed);
+		setCachedState (true);
+		parent.virtualItemChanged (this);
+		return;
+	}
+    if ((parent.style & SWT.CHECK) == 0) {
+        return;
+    }
+    if (this.grayed == grayed) {
+        return;
+    }
 	this.grayed = grayed;
 	/*
 	* GTK+'s "inconsistent" state does not match SWT's concept of grayed.
@@ -1133,7 +1575,7 @@ public void setGrayed (boolean grayed) {
 	int [] ptr = new int [1];
 	GTK.gtk_tree_model_get (parent.modelHandle, handle, Table.CHECKED_COLUMN, ptr, -1);
 	GTK.gtk_list_store_set (parent.modelHandle, handle, Table.GRAYED_COLUMN, ptr [0] == 0 ? false : grayed, -1);
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1156,15 +1598,27 @@ public void setImage(int index, Image image) {
 		error(SWT.ERROR_INVALID_ARGUMENT);
 	}
 	if (image != null && image.type == SWT.ICON) {
-		if (image.equals(_getImage(index))) return;
+        if (image.equals(_getImage(index))) {
+            return;
+        }
 	}
 	int count = Math.max(1, parent.getColumnCount());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
+	if (parent.usesVirtualNativeModel ()) {
+        if (virtualImages == null) {
+            virtualImages = new Image [count];
+        }
+		virtualImages [index] = image;
+	}
 
 	long pixbuf = 0, surface = 0;
 	if (image != null) {
 		ImageList imageList = parent.imageList;
-		if (imageList == null) imageList = parent.imageList = new ImageList();
+        if (imageList == null) {
+            imageList = parent.imageList = new ImageList();
+        }
 		int imageIndex = imageList.indexOf(image);
 		// When we create a blank image surface gets created with dimensions 0, 0.
         // This call recreates the surface with correct dimensions
@@ -1179,7 +1633,7 @@ public void setImage(int index, Image image) {
 
 	long parentHandle = parent.handle;
 	long column = GTK.gtk_tree_view_get_column (parentHandle, index);
-	long pixbufRenderer = CellRenderers.getPixbufRenderer (column);
+	long pixbufRenderer = parent.getPixbufRenderer (column);
 	int [] currentWidth = new int [1];
 	int [] currentHeight= new int [1];
 	GTK.gtk_cell_renderer_get_fixed_size (pixbufRenderer, currentWidth, currentHeight);
@@ -1205,6 +1659,18 @@ public void setImage(int index, Image image) {
 			GTK.gtk_cell_renderer_set_fixed_size (pixbufRenderer, parent.pixbufWidth, parent.pixbufHeight);
 		}
 	}
+	if (parent.usesVirtualNativeModel ()) {
+        if (pixbuf != 0) {
+            OS.g_object_unref(pixbuf);
+        }
+		setCachedState (true);
+		parent.virtualItemChanged (this);
+		if (parent.columnCount == 0) {
+			column = GTK.gtk_tree_view_get_column (parent.handle, index);
+			parent.maxWidth = Math.max(parent.maxWidth, parent.calculateWidth(column, this.handle));
+		}
+		return;
+	}
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_PIXBUF, pixbuf, -1);
 	/*
@@ -1215,7 +1681,7 @@ public void setImage(int index, Image image) {
 		OS.g_object_unref(pixbuf);
 	}
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_SURFACE, surface, -1);
-	cached = true;
+	setCachedState (true);
 	/*
 	 * Bug 465056: single column Tables have a very small initial width.
 	 * Fix: when text or an image is set for a Table, compute its
@@ -1249,7 +1715,9 @@ public void setImage (Image image) {
  */
 public void setImage (Image [] images) {
 	checkWidget ();
-	if (images == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (images == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<images.length; i++) {
 		setImage (i, images [i]);
 	}
@@ -1270,9 +1738,11 @@ public void setImage (Image [] images) {
 @Deprecated
 public void setImageIndent (int indent) {
 	checkWidget ();
-	if (indent < 0) return;
+    if (indent < 0) {
+        return;
+    }
 	/* Image indent is not supported on GTK */
-	cached = true;
+	setCachedState (true);
 }
 
 /**
@@ -1294,26 +1764,48 @@ public void setImageIndent (int indent) {
  */
 public void setText (int index, String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (strings == null) {
-		if (_getText (index).equals (string)) return;
+        if (_getText(index).equals(string)) {
+            return;
+        }
 	}
-	else if ( getText (index).equals (string)) return;
+	else if (getText(index).equals(string)) {
+        return;
+    }
 
 	int count = Math.max (1, parent.getColumnCount ());
-	if (0 > index || index > count - 1) return;
+    if (0 > index || index > count - 1) {
+        return;
+    }
 	if (0 <= index && index < count) {
-		if (strings == null) strings = new String [count];
-		if (string.equals (strings [index])) return;
+        if (strings == null) {
+            strings = new String [count];
+        }
+        if (string.equals(strings [index])) {
+            return;
+        }
 		strings [index] = string;
 	}
 	if ((string != null) && (string.length() > TEXT_LIMIT)) {
 		string = string.substring(0, TEXT_LIMIT - ELLIPSIS.length()) + ELLIPSIS;
 	}
+	if (parent.usesVirtualNativeModel ()) {
+		setCachedState (true);
+		parent.virtualItemChanged (this);
+		long column;
+		if (parent.columnCount == 0) {
+			column = GTK.gtk_tree_view_get_column (parent.handle, index);
+			parent.maxWidth = Math.max(parent.maxWidth, parent.calculateWidth(column, this.handle));
+		}
+		return;
+	}
 	byte[] buffer = Converter.wcsToMbcs (string, true);
 	int modelIndex = parent.columnCount == 0 ? Table.FIRST_COLUMN : parent.columns [index].modelIndex;
 	GTK.gtk_list_store_set (parent.modelHandle, handle, modelIndex + Table.CELL_TEXT, buffer, -1);
-	cached = true;
+	setCachedState (true);
 	/*
 	 * Bug 465056: single column Tables have a very small initial width.
 	 * Fix: when text or an image is set for a Table, compute its
@@ -1350,10 +1842,14 @@ public void setText (String string) {
  */
 public void setText (String [] strings) {
 	checkWidget ();
-	if (strings == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (strings == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	for (int i=0; i<strings.length; i++) {
 		String string = strings [i];
-		if (string != null) setText (i, string);
+        if (string != null) {
+            setText(i, string);
+        }
 	}
 }
 }

@@ -70,20 +70,26 @@ public class SWT_AWT {
 	static native final void synthesizeWindowActivation (Frame frame, boolean doActivate);
 
 	static synchronized void loadLibrary () {
-		if (loaded) return;
+        if (loaded) {
+            return;
+        }
 		loaded = true;
 		Toolkit.getDefaultToolkit();
 		Library.loadLibrary("swt-awt");
 	}
 
 	static synchronized void initializeSwing() {
-		if (swingInitialized) return;
+        if (swingInitialized) {
+            return;
+        }
 		swingInitialized = true;
 		try {
 			/* Initialize the default focus traversal policy */
 			Class<?> clazz = Class.forName("javax.swing.UIManager");
 			Method method = clazz.getMethod("getDefaults");
-			if (method != null) method.invoke(clazz);
+            if (method != null) {
+                method.invoke(clazz);
+            }
 		} catch (Throwable e) {}
 	}
 
@@ -101,8 +107,12 @@ public class SWT_AWT {
  * @since 3.2
  */
 public static Frame getFrame(Composite parent) {
-	if (parent == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
-	if ((parent.getStyle() & SWT.EMBEDDED) == 0) return null;
+    if (parent == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if ((parent.getStyle() & SWT.EMBEDDED) == 0) {
+        return null;
+    }
 	return (Frame) parent.getData(EMBEDDED_FRAME_KEY);
 }
 
@@ -130,7 +140,9 @@ public static Frame getFrame(Composite parent) {
  * @since 3.0
  */
 public static Frame new_Frame(final Composite parent) {
-	if (parent == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    if (parent == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if ((parent.getStyle() & SWT.EMBEDDED) == 0) {
 		SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 	}
@@ -156,7 +168,9 @@ public static Frame new_Frame(final Composite parent) {
 		boolean run;
 		@Override
 		public void run() {
-			if (run) return;
+            if (run) {
+                return;
+            }
 			run = true;
 				Object obj = initFrame(handle, className);
 				if (obj == null || !(obj instanceof Frame)) {
@@ -249,17 +263,23 @@ public static Frame new_Frame(final Composite parent) {
 					});
 					break;
 				case SWT.Activate:
-					if (!parent.isFocusControl()) return;
+                    if (!parent.isFocusControl()) {
+                        return;
+                    }
 				case SWT.FocusIn:
 					EventQueue.invokeLater(() -> {
-						if (frame.isActive()) return;
+                        if (frame.isActive()) {
+                            return;
+                        }
 						synchronizedExecution(() -> parent != null && !parent.isDisposed() && parent.isFocusControl(),() -> { synthesizeWindowActivation (frame, Boolean.TRUE);}  );
 					});
 					break;
 				case SWT.Deactivate:
 				case SWT.FocusOut:
 					EventQueue.invokeLater(() -> {
-						if (!frame.isActive()) return;
+                        if (!frame.isActive()) {
+                            return;
+                        }
 						synchronizedExecution(() -> parent == null || parent.isDisposed() || !parent.isFocusControl(),() -> { synthesizeWindowActivation (frame, Boolean.FALSE);}  );
 					});
 					break;
@@ -320,7 +340,9 @@ public static Frame new_Frame(final Composite parent) {
 	parent.addListener (SWT.Dispose, listener);
 
 	display.asyncExec(() -> {
-		if (parent.isDisposed()) return;
+        if (parent.isDisposed()) {
+            return;
+        }
 		final Rectangle clientArea = parent.getClientArea();
 		try {
 			validateWithBounds(frame, Integer.valueOf(clientArea.x), Integer.valueOf(clientArea.y), Integer.valueOf(clientArea.width), Integer.valueOf(clientArea.height));
@@ -347,8 +369,12 @@ public static Frame new_Frame(final Composite parent) {
  * @since 3.0
  */
 public static Shell new_Shell(final Display display, final Canvas parent) {
-	if (display == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-	if (parent == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+    if (display == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (parent == null) {
+        SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	// Since Java 7, AWT widgets don't have a backing NSView, making embedding impossible
 	SWT.error(SWT.ERROR_NOT_IMPLEMENTED, null, "[Embedding SWT in AWT isn't supported on macOS]");
 	return null;

@@ -53,6 +53,16 @@ on:
         type: string
         required: false
         default: ""
+      viewport_screenshots:
+        description: "Run the property-gated viewport screenshot regression after the build."
+        type: boolean
+        required: false
+        default: false
+      viewport_resources:
+        description: "Run isolated GTK3 viewport RSS, heap and CPU regression gates."
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   build:
@@ -126,6 +136,50 @@ jobs:
         ${{ (inputs.runtodotests == false && inputs.gtk =='gtk4' && inputs.gdk_backend == 'x11')     && '-DexcludedGroups=gtk4-todo' || '' }}
         ${{ (inputs.runtodotests == false && inputs.gtk =='gtk3' && inputs.gdk_backend == 'wayland') && '-DexcludedGroups=gtk3-wayland-todo' || '' }}
         clean install
+    - name: Viewport screenshot regression
+      if: ${{ inputs.viewport_screenshots && inputs.native == 'gtk.linux.x86_64' }}
+      env:
+        SWT_GTK4: "${{ inputs.gtk == 'gtk4' && '1' || '0' }}"
+        GDK_BACKEND: "${{ inputs.gdk_backend }}"
+      working-directory: tests/org.eclipse.swt.tests
+      run: >-
+        ${{ inputs.gdk_backend == 'x11' && 'dbus-run-session -- xvfb-run -a -s "-screen 0 1200x800x24 -noreset"' || '' }}
+        ${{ inputs.gdk_backend == 'wayland' && 'XDG_RUNTIME_DIR="$(mktemp -p $(pwd) -d xdg-runtime-XXXXXX)" dbus-run-session -- mutter --headless --wayland --no-x11 --virtual-monitor 1200x800 --  ' || '' }}
+        mvn --batch-mode -V -U -e
+        -DforkCount=1
+        '-Dnative=${{ inputs.native }}'
+        -DskipNativeTests=true
+        -DfailIfNoTests=true
+        -Dtest=ViewportScreenshotRegressionTest
+        -Dswt.viewport.screenshotRegression=true
+        -Dswt.viewport.screenshots=target/screenshots/viewport
+        integration-test
+
+    - name: Viewport memory and CPU regression
+      if: ${{ inputs.viewport_resources && inputs.native == 'gtk.linux.x86_64' }}
+      env:
+        SWT_GTK4: "0"
+        GDK_BACKEND: x11
+      working-directory: tests/org.eclipse.swt.tests
+      shell: bash
+      run: |
+        dbus-run-session -- xvfb-run -a -s "-screen 0 1200x800x24 -noreset" \
+          mvn --batch-mode -V -e -DforkCount=1 \
+          '-Dnative=${{ inputs.native }}' -DskipNativeTests=true \
+          -DfailIfNoTests=true -Dtest=ViewportResourceRegressionTest \
+          -Dswt.viewport.resourceRegression=true integration-test
+        python3 - <<'PYTHON'
+        import pathlib, xml.etree.ElementTree as ET
+        report = pathlib.Path('target/surefire-reports/TEST-org.eclipse.swt.tests.junit.ViewportResourceRegressionTest.xml')
+        suite = ET.parse(report).getroot()
+        counts = {key: int(suite.get(key, '0')) for key in ('tests', 'failures', 'errors', 'skipped')}
+        assert counts == {'tests': 10, 'failures': 0, 'errors': 0, 'skipped': 0}, counts
+        evidence = pathlib.Path('target/viewport-resources')
+        expected = [f'{scenario}-{trial}.properties' for scenario in ('cold', 'scroll', 'collapse', 'logical-cold', 'logical-far', 'logical-scroll', 'logical-collapse') for trial in range(3)]
+        expected += ['native-control-0.properties', 'cpu-control-0.properties', 'native-prefix-control-0.properties']
+        assert all((evidence / name).is_file() for name in expected), expected
+        PYTHON
+
     - name: Performance tests
       if: ${{ inputs.performance }}
       env:
@@ -150,7 +204,9 @@ jobs:
         if-no-files-found: warn
         path: |
           ${{ github.workspace }}/**/target/surefire-reports/*.xml
-          ${{ github.workspace }}/**/target/screenshots/*.png
+          ${{ github.workspace }}/**/target/screenshots/**/*.png
+          ${{ github.workspace }}/**/target/screenshots/**/*.txt
+          ${{ github.workspace }}/**/target/viewport-resources/*.properties
           ${{ github.workspace }}/**/*.log
           ${{ github.workspace }}/**/*.dump
           ${{ github.workspace }}/**/*.dumpstream

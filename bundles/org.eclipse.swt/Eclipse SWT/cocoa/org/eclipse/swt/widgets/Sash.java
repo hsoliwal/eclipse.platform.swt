@@ -136,10 +136,14 @@ long accessibilityAttributeValue(long id, long sel, long arg0) {
 	if (accessible != null) {
 		id returnObject = accessible.internal_accessibilityAttributeValue(attributeName, ACC.CHILDID_SELF);
 
-		if (returnObject != null) returnValue = returnObject.id;
+        if (returnObject != null) {
+            returnValue = returnObject.id;
+        }
 	}
 
-	if (returnValue != 0) return returnValue;
+    if (returnValue != 0) {
+        return returnValue;
+    }
 
 	if (attributeName.isEqualToString (OS.NSAccessibilityRoleAttribute) || attributeName.isEqualToString (OS.NSAccessibilityRoleDescriptionAttribute)) {
 		NSString roleText = OS.NSAccessibilitySplitterRole;
@@ -178,10 +182,11 @@ long accessibilityAttributeValue(long id, long sel, long arg0) {
 			}
 		}
 
-		if (nextView != null)
-			return NSArray.arrayWithObject(nextView.view).id;
-		else
-			return NSArray.array().id;
+        if (nextView != null) {
+            return NSArray.arrayWithObject(nextView.view).id;
+        } else {
+            return NSArray.array().id;
+        }
 	} else if (attributeName.isEqualToString (OS.NSAccessibilityPreviousContentsAttribute)) {
 		Control[] children =  parent._getChildren();
 		Control nextView = null;
@@ -194,10 +199,11 @@ long accessibilityAttributeValue(long id, long sel, long arg0) {
 			}
 		}
 
-		if (nextView != null)
-			return NSArray.arrayWithObject(nextView.view).id;
-		else
-			return NSArray.array().id;
+        if (nextView != null) {
+            return NSArray.arrayWithObject(nextView.view).id;
+        } else {
+            return NSArray.array().id;
+        }
 	}
 
 	return super.accessibilityAttributeValue(id, sel, arg0);
@@ -238,11 +244,7 @@ public void addSelectionListener(SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* Macintosh only supports smooth dragging.
-	*/
-	style |= SWT.SMOOTH;
-	return checkBits (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+	return WidgetStylePolicy.SMOOTH_SASH.applyAsInt(style);
 }
 
 @Override
@@ -263,8 +265,12 @@ public Point computeSize (int wHint, int hHint, boolean changed) {
 	} else {
 		width += 5; height += DEFAULT_HEIGHT;
 	}
-	if (wHint != SWT.DEFAULT) width = wHint;
-	if (hHint != SWT.DEFAULT) height = hHint;
+    if (wHint != SWT.DEFAULT) {
+        width = wHint;
+    }
+    if (hHint != SWT.DEFAULT) {
+        height = hHint;
+    }
 	return new Point (width, height);
 }
 
@@ -278,7 +284,9 @@ void createHandle () {
 
 @Override
 void drawBackground (long id, NSGraphicsContext context, NSRect rect) {
-	if (id != view.id) return;
+    if (id != view.id) {
+        return;
+    }
 	fillBackground (view, context, rect, -1);
 }
 
@@ -305,12 +313,18 @@ boolean sendKeyEvent(NSEvent nsEvent, int type) {
 				int xChange = 0, yChange = 0;
 				int stepSize = PAGE_INCREMENT;
 				long modifiers = nsEvent.modifierFlags();
-				if ((modifiers & OS.NSEventModifierFlagControl) != 0) stepSize = INCREMENT;
+                if ((modifiers & OS.NSEventModifierFlagControl) != 0) {
+                    stepSize = INCREMENT;
+                }
 				if ((style & SWT.VERTICAL) != 0) {
-					if (keyCode == 126 || keyCode == 125) break;
+                    if (keyCode == 126 || keyCode == 125) {
+                        break;
+                    }
 					xChange = keyCode == 123 ? -stepSize : stepSize;
 				} else {
-					if (keyCode == 123 || keyCode  == 124) break;
+                    if (keyCode == 123 || keyCode == 124) {
+                        break;
+                    }
 					yChange = keyCode == 126 ? -stepSize : stepSize;
 				}
 
@@ -325,20 +339,28 @@ boolean sendKeyEvent(NSEvent nsEvent, int type) {
 				} else {
 					newY = Math.min (Math.max (0, lastY + yChange), parentHeight - height);
 				}
-				if (newX == lastX && newY == lastY) return true;
+                if (newX == lastX && newY == lastY) {
+                    return true;
+                }
 				Event event = new Event ();
 				event.x = newX;
 				event.y = newY;
 				event.width = width;
 				event.height = height;
 				sendSelectionEvent (SWT.Selection, event, true);
-				if (isDisposed ()) break;
+                if (isDisposed()) {
+                    break;
+                }
 				if (event.doit) {
 					setBounds (event.x, event.y, width, height);
-					if (isDisposed ()) break;
+                    if (isDisposed()) {
+                        break;
+                    }
 					lastX = event.x;
 					lastY = event.y;
-					if (isDisposed ()) return false;
+                    if (isDisposed()) {
+                        return false;
+                    }
 					int cursorX = event.x, cursorY = event.y;
 					if ((style & SWT.VERTICAL) != 0) {
 						cursorY += height / 2;
@@ -358,9 +380,13 @@ boolean sendKeyEvent(NSEvent nsEvent, int type) {
 void mouseDown(long id, long sel, long theEvent) {
 	//TODO use sendMouseEvent
 	super.mouseDown(id, sel, theEvent);
-	if (isDisposed()) return;
+    if (isDisposed()) {
+        return;
+    }
 	NSEvent nsEvent = new NSEvent(theEvent);
-	if (nsEvent.clickCount() != 1) return;
+    if (nsEvent.clickCount() != 1) {
+        return;
+    }
 	NSPoint location = nsEvent.locationInWindow();
 	NSPoint point = view.convertPoint_fromView_(location, null);
 	startX = (int)point.x;
@@ -372,7 +398,9 @@ void mouseDown(long id, long sel, long theEvent) {
 	event.width = (int)frame.width;
 	event.height = (int)frame.height;
 	sendSelectionEvent (SWT.Selection, event, true);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	if (event.doit) {
 		lastX = event.x;
 		lastY = event.y;
@@ -391,8 +419,12 @@ boolean mouseEvent (long id, long sel, long theEvent, int type) {
 void mouseDragged(long id, long sel, long theEvent) {
 	//TODO use sendMouseEvent
 	super.mouseDragged(id, sel, theEvent);
-	if (isDisposed()) return;
-	if (!dragging) return;
+    if (isDisposed()) {
+        return;
+    }
+    if (!dragging) {
+        return;
+    }
 	NSEvent nsEvent = new NSEvent(theEvent);
 	NSPoint location = nsEvent.locationInWindow();
 	NSPoint point = view.convertPoint_fromView_(location, null);
@@ -404,14 +436,18 @@ void mouseDragged(long id, long sel, long theEvent) {
 	} else {
 		newY = Math.min (Math.max (0, (int)(point.y + frame.y - startY)), (int)(parentFrame.height - frame.height));
 	}
-	if (newX == lastX && newY == lastY) return;
+    if (newX == lastX && newY == lastY) {
+        return;
+    }
 	Event event = new Event ();
 	event.x = newX;
 	event.y = newY;
 	event.width = (int)frame.width;
 	event.height = (int)frame.height;
 	sendSelectionEvent (SWT.Selection, event, true);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	if (event.doit) {
 		lastX = event.x;
 		lastY = event.y;
@@ -423,8 +459,12 @@ void mouseDragged(long id, long sel, long theEvent) {
 void mouseUp(long id, long sel, long theEvent) {
 	//TODO use sendMouseEvent
 	super.mouseUp(id, sel, theEvent);
-	if (isDisposed()) return;
-	if (!dragging) return;
+    if (isDisposed()) {
+        return;
+    }
+    if (!dragging) {
+        return;
+    }
 	dragging = false;
 	NSRect frame = view.frame();
 	Event event = new Event ();
@@ -433,7 +473,9 @@ void mouseUp(long id, long sel, long theEvent) {
 	event.width = (int)frame.width;
 	event.height = (int)frame.height;
 	sendSelectionEvent (SWT.Selection, event, true);
-	if (isDisposed ()) return;
+    if (isDisposed()) {
+        return;
+    }
 	if (event.doit) {
 		setBounds (event.x, event.y, (int)frame.width, (int)frame.height);
 	}
@@ -442,14 +484,18 @@ void mouseUp(long id, long sel, long theEvent) {
 @Override
 void releaseHandle () {
 	super.releaseHandle ();
-	if (accessibilityAttributes != null) accessibilityAttributes.release();
+    if (accessibilityAttributes != null) {
+        accessibilityAttributes.release();
+    }
 	accessibilityAttributes = null;
 }
 
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
-	if (sizeCursor != null) sizeCursor.dispose ();
+    if (sizeCursor != null) {
+        sizeCursor.dispose();
+    }
 	sizeCursor = null;
 }
 
@@ -472,8 +518,12 @@ void releaseWidget () {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook(SWT.Selection, listener);
 	eventTable.unhook(SWT.DefaultSelection,listener);
 }

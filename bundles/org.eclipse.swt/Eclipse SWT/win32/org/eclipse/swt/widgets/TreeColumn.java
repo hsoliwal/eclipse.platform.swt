@@ -181,12 +181,14 @@ public void addSelectionListener (SelectionListener listener) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.LEFT, SWT.CENTER, SWT.RIGHT, 0, 0, 0);
+	return WidgetStylePolicy.COLUMN_ALIGNMENT.applyAsInt(style);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -209,9 +211,15 @@ void destroyWidget () {
  */
 public int getAlignment () {
 	checkWidget ();
-	if ((style & SWT.LEFT) != 0) return SWT.LEFT;
-	if ((style & SWT.CENTER) != 0) return SWT.CENTER;
-	if ((style & SWT.RIGHT) != 0) return SWT.RIGHT;
+    if ((style & SWT.LEFT) != 0) {
+        return SWT.LEFT;
+    }
+    if ((style & SWT.CENTER) != 0) {
+        return SWT.CENTER;
+    }
+    if ((style & SWT.RIGHT) != 0) {
+        return SWT.RIGHT;
+    }
 	return SWT.LEFT;
 }
 
@@ -312,9 +320,13 @@ public int getWidth () {
 
 int getWidthInPixels () {
 	int index = parent.indexOf (this);
-	if (index == -1) return 0;
+    if (index == -1) {
+        return 0;
+    }
 	long hwndHeader = parent.hwndHeader;
-	if (hwndHeader == 0) return 0;
+    if (hwndHeader == 0) {
+        return 0;
+    }
 	HDITEM hdItem = new HDITEM ();
 	hdItem.mask = OS.HDI_WIDTH;
 	OS.SendMessage (hwndHeader, OS.HDM_GETITEM, index, hdItem);
@@ -334,14 +346,18 @@ int getWidthInPixels () {
 public void pack () {
 	checkWidget ();
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	int columnWidth = 0;
 	long hwnd = parent.handle, hwndHeader = parent.hwndHeader;
 	RECT headerRect = new RECT ();
 	OS.SendMessage (hwndHeader, OS.HDM_GETITEMRECT, index, headerRect);
 	long hDC = OS.GetDC (hwnd);
 	long oldFont = 0, newFont = OS.SendMessage (hwnd, OS.WM_GETFONT, 0, 0);
-	if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+    if (newFont != 0) {
+        oldFont = OS.SelectObject(hDC, newFont);
+    }
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM | OS.TVIF_STATE;
 	tvItem.hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_ROOT, 0);
@@ -353,14 +369,20 @@ public void pack () {
 			if (parent.hooks (SWT.MeasureItem)) {
 				int detail = (tvItem.state & OS.TVIS_SELECTED) != 0 ? SWT.SELECTED : 0;
 				Event event = parent.sendMeasureItemEvent (item, index, hDC, detail);
-				if (isDisposed () || parent.isDisposed ()) break;
+                if (isDisposed() || parent.isDisposed()) {
+                    break;
+                }
 				Rectangle bounds = event.getBounds();
 				itemRight = DPIUtil.pointToPixel(bounds.x + bounds.width, getAutoscalingZoom());
 			} else {
 				long hFont = item.fontHandle (index);
-				if (hFont != -1) hFont = OS.SelectObject (hDC, hFont);
+                if (hFont != -1) {
+                    hFont = OS.SelectObject(hDC, hFont);
+                }
 				RECT itemRect = item.getBounds (index, true, true, false, false, false, hDC);
-				if (hFont != -1) OS.SelectObject (hDC, hFont);
+                if (hFont != -1) {
+                    OS.SelectObject(hDC, hFont);
+                }
 				itemRight = itemRect.right;
 			}
 			columnWidth = Math.max (columnWidth, itemRight - headerRect.left);
@@ -383,7 +405,9 @@ public void pack () {
 		}
 		headerWidth += margin * 2;
 	}
-	if (newFont != 0) OS.SelectObject (hDC, oldFont);
+    if (newFont != 0) {
+        OS.SelectObject(hDC, oldFont);
+    }
 	OS.ReleaseDC (hwnd, hDC);
 	int gridWidth = parent.linesVisible ? parent.getGridLineWidthInPixels() : 0;
 	setWidthInPixels (Math.max (headerWidth, columnWidth + gridWidth));
@@ -422,8 +446,12 @@ void releaseParent () {
  */
 public void removeControlListener (ControlListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Move, listener);
 	eventTable.unhook (SWT.Resize, listener);
 }
@@ -447,8 +475,12 @@ public void removeControlListener (ControlListener listener) {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -470,20 +502,32 @@ public void removeSelectionListener(SelectionListener listener) {
  */
 public void setAlignment (int alignment) {
 	checkWidget ();
-	if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) return;
+    if ((alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER)) == 0) {
+        return;
+    }
 	int index = parent.indexOf (this);
-	if (index == -1 || index == 0) return;
+    if (index == -1 || index == 0) {
+        return;
+    }
 	style &= ~(SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	style |= alignment & (SWT.LEFT | SWT.RIGHT | SWT.CENTER);
 	long hwndHeader = parent.hwndHeader;
-	if (hwndHeader == 0) return;
+    if (hwndHeader == 0) {
+        return;
+    }
 	HDITEM hdItem = new HDITEM ();
 	hdItem.mask = OS.HDI_FORMAT;
 	OS.SendMessage (hwndHeader, OS.HDM_GETITEM, index, hdItem);
 	hdItem.fmt &= ~OS.HDF_JUSTIFYMASK;
-	if ((style & SWT.LEFT) == SWT.LEFT) hdItem.fmt |= OS.HDF_LEFT;
-	if ((style & SWT.CENTER) == SWT.CENTER) hdItem.fmt |= OS.HDF_CENTER;
-	if ((style & SWT.RIGHT) == SWT.RIGHT) hdItem.fmt |= OS.HDF_RIGHT;
+    if ((style & SWT.LEFT) == SWT.LEFT) {
+        hdItem.fmt |= OS.HDF_LEFT;
+    }
+    if ((style & SWT.CENTER) == SWT.CENTER) {
+        hdItem.fmt |= OS.HDF_CENTER;
+    }
+    if ((style & SWT.RIGHT) == SWT.RIGHT) {
+        hdItem.fmt |= OS.HDF_RIGHT;
+    }
 	OS.SendMessage (hwndHeader, OS.HDM_SETITEM, index, hdItem);
 	if (index != 0) {
 		long hwnd = parent.handle;
@@ -511,9 +555,13 @@ public void setImage (Image image) {
 
 void setImage (Image image, boolean sort, boolean right) {
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	long hwndHeader = parent.hwndHeader;
-	if (hwndHeader == 0) return;
+    if (hwndHeader == 0) {
+        return;
+    }
 	HDITEM hdItem = new HDITEM ();
 	hdItem.mask = OS.HDI_FORMAT | OS.HDI_IMAGE | OS.HDI_BITMAP;
 	OS.SendMessage (hwndHeader, OS.HDM_GETITEM, index, hdItem);
@@ -530,7 +578,9 @@ void setImage (Image image, boolean sort, boolean right) {
 			hdItem.fmt |= OS.HDF_IMAGE;
 			hdItem.iImage = parent.imageIndexHeader (image);
 		}
-		if (right) hdItem.fmt |= OS.HDF_BITMAP_ON_RIGHT;
+        if (right) {
+            hdItem.fmt |= OS.HDF_BITMAP_ON_RIGHT;
+        }
 	} else {
 		hdItem.mask &= ~(OS.HDI_IMAGE | OS.HDI_BITMAP);
 		hdItem.fmt &= ~(OS.HDF_IMAGE | OS.HDF_BITMAP);
@@ -585,7 +635,9 @@ void setSortDirection (int direction) {
 	long hwndHeader = parent.hwndHeader;
 	if (hwndHeader != 0) {
 		int index = parent.indexOf (this);
-		if (index == -1) return;
+        if (index == -1) {
+            return;
+        }
 		HDITEM hdItem = new HDITEM ();
 		hdItem.mask = OS.HDI_FORMAT | OS.HDI_IMAGE;
 		OS.SendMessage (hwndHeader, OS.HDM_GETITEM, index, hdItem);
@@ -593,12 +645,16 @@ void setSortDirection (int direction) {
 			case SWT.UP:
 				hdItem.fmt &= ~(OS.HDF_IMAGE | OS.HDF_SORTDOWN);
 				hdItem.fmt |= OS.HDF_SORTUP;
-				if (image == null) hdItem.mask &= ~OS.HDI_IMAGE;
+                if (image == null) {
+                    hdItem.mask &= ~OS.HDI_IMAGE;
+                }
 				break;
 			case SWT.DOWN:
 				hdItem.fmt &= ~(OS.HDF_IMAGE | OS.HDF_SORTUP);
 				hdItem.fmt |= OS.HDF_SORTDOWN;
-				if (image == null) hdItem.mask &= ~OS.HDI_IMAGE;
+                if (image == null) {
+                    hdItem.mask &= ~OS.HDI_IMAGE;
+                }
 				break;
 			case SWT.NONE:
 				hdItem.fmt &= ~(OS.HDF_SORTUP | OS.HDF_SORTDOWN);
@@ -626,10 +682,16 @@ void setSortDirection (int direction) {
 @Override
 public void setText (String string) {
 	checkWidget ();
-	if (string == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (string.equals (text)) return;
+    if (string == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (string.equals(text)) {
+        return;
+    }
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	super.setText (string);
 	/*
 	* Bug in Windows.  When a column header contains a
@@ -644,13 +706,19 @@ public void setText (String string) {
 	long pszText = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
 	OS.MoveMemory (pszText, buffer, byteCount);
 	long hwndHeader = parent.hwndHeader;
-	if (hwndHeader == 0) return;
+    if (hwndHeader == 0) {
+        return;
+    }
 	HDITEM hdItem = new HDITEM ();
 	hdItem.mask = OS.HDI_TEXT;
 	hdItem.pszText = pszText;
 	long result = OS.SendMessage (hwndHeader, OS.HDM_SETITEM, index, hdItem);
-	if (pszText != 0) OS.HeapFree (hHeap, 0, pszText);
-	if (result == 0) error (SWT.ERROR_CANNOT_SET_TEXT);
+    if (pszText != 0) {
+        OS.HeapFree(hHeap, 0, pszText);
+    }
+    if (result == 0) {
+        error(SWT.ERROR_CANNOT_SET_TEXT);
+    }
 }
 
 /**
@@ -706,11 +774,17 @@ public void setWidth (int width) {
 }
 
 void setWidthInPixels (int width) {
-	if (width < 0) return;
+    if (width < 0) {
+        return;
+    }
 	int index = parent.indexOf (this);
-	if (index == -1) return;
+    if (index == -1) {
+        return;
+    }
 	long hwndHeader = parent.hwndHeader;
-	if (hwndHeader == 0) return;
+    if (hwndHeader == 0) {
+        return;
+    }
 	HDITEM hdItem = new HDITEM ();
 	hdItem.mask = OS.HDI_WIDTH;
 	hdItem.cxy = width;

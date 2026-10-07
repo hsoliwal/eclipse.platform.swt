@@ -156,7 +156,9 @@ public void addSelectionListener (SelectionListener listener) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	/*
 	* Feature in Windows.  Windows runs a modal message
 	* loop when the user drags a scroll bar.  This means
@@ -174,7 +176,7 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 }
 
 static int checkStyle (int style) {
-	return checkBits (style, SWT.HORIZONTAL, SWT.VERTICAL, 0, 0, 0, 0);
+	return WidgetStylePolicy.ORIENTATION.applyAsInt(style);
 }
 
 @Override
@@ -190,8 +192,12 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		width += getSystemMetrics (OS.SM_CXVSCROLL);
 		height += getSystemMetrics (OS.SM_CYVSCROLL) * 10;
 	}
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x + (border * 2);
-	if (hintInPoints.y != SWT.DEFAULT) height = hintInPixels.y + (border * 2);
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x + (border * 2);
+    }
+    if (hintInPoints.y != SWT.DEFAULT) {
+        height = hintInPixels.y + (border * 2);
+    }
 	return new Point (width, height);
 }
 
@@ -355,7 +361,9 @@ public int getThumb () {
 	info.cbSize = SCROLLINFO.sizeof;
 	info.fMask = OS.SIF_PAGE;
 	OS.GetScrollInfo (handle, OS.SB_CTL, info);
-	if (info.nPage != 0) --info.nPage;
+    if (info.nPage != 0) {
+        --info.nPage;
+    }
 	return info.nPage;
 }
 
@@ -378,8 +386,12 @@ public int getThumb () {
  */
 public void removeSelectionListener (SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -415,7 +427,9 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags) {
  */
 public void setIncrement (int value) {
 	checkWidget ();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	increment = value;
 }
 
@@ -434,12 +448,16 @@ public void setIncrement (int value) {
  */
 public void setMaximum (int value) {
 	checkWidget ();
-	if (value < 0) return;
+    if (value < 0) {
+        return;
+    }
 	SCROLLINFO info = new SCROLLINFO ();
 	info.cbSize = SCROLLINFO.sizeof;
 	info.fMask = OS.SIF_RANGE | OS.SIF_DISABLENOSCROLL;
 	OS.GetScrollInfo (handle, OS.SB_CTL, info);
-	if (value - info.nMin - info.nPage < 1) return;
+    if (value - info.nMin - info.nPage < 1) {
+        return;
+    }
 	info.nMax = value;
 	SetScrollInfo (handle, OS.SB_CTL, info, true);
 }
@@ -459,12 +477,16 @@ public void setMaximum (int value) {
  */
 public void setMinimum (int value) {
 	checkWidget ();
-	if (value < 0) return;
+    if (value < 0) {
+        return;
+    }
 	SCROLLINFO info = new SCROLLINFO ();
 	info.cbSize = SCROLLINFO.sizeof;
 	info.fMask = OS.SIF_RANGE | OS.SIF_DISABLENOSCROLL;
 	OS.GetScrollInfo (handle, OS.SB_CTL, info);
-	if (info.nMax - value - info.nPage < 1) return;
+    if (info.nMax - value - info.nPage < 1) {
+        return;
+    }
 	info.nMin = value;
 	SetScrollInfo (handle, OS.SB_CTL, info, true);
 }
@@ -484,20 +506,24 @@ public void setMinimum (int value) {
  */
 public void setPageIncrement (int value) {
 	checkWidget ();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	pageIncrement = value;
 }
 
 boolean SetScrollInfo (long hwnd, int flags, SCROLLINFO info, boolean fRedraw) {
-	/*
-	* Feature in Windows.  Using SIF_DISABLENOSCROLL,
-	* SetScrollInfo () can change enabled and disabled
-	* state of the scroll bar causing a scroll bar that
-	* was disabled by the application to become enabled.
-	* The fix is to disable the scroll bar (again) when
-	* the application has disabled the scroll bar.
-	*/
-	if ((state & DISABLED) != 0) fRedraw = false;
+    /*
+    * Feature in Windows.  Using SIF_DISABLENOSCROLL,
+    * SetScrollInfo () can change enabled and disabled
+    * state of the scroll bar causing a scroll bar that
+    * was disabled by the application to become enabled.
+    * The fix is to disable the scroll bar (again) when
+    * the application has disabled the scroll bar.
+    */
+    if ((state & DISABLED) != 0) {
+        fRedraw = false;
+    }
 	boolean result = OS.SetScrollInfo (hwnd, flags, info, fRedraw);
 	if ((state & DISABLED) != 0) {
 		OS.EnableWindow (handle, false);
@@ -559,13 +585,17 @@ public void setSelection (int value) {
  */
 public void setThumb (int value) {
 	checkWidget ();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	SCROLLINFO info = new SCROLLINFO ();
 	info.cbSize = SCROLLINFO.sizeof;
 	info.fMask = OS.SIF_PAGE | OS.SIF_RANGE | OS.SIF_DISABLENOSCROLL;
 	OS.GetScrollInfo (handle, OS.SB_CTL, info);
 	info.nPage = value;
-	if (info.nPage != 0) info.nPage++;
+    if (info.nPage != 0) {
+        info.nPage++;
+    }
 	SetScrollInfo (handle, OS.SB_CTL, info, true);
 }
 
@@ -592,11 +622,21 @@ public void setThumb (int value) {
  */
 public void setValues (int selection, int minimum, int maximum, int thumb, int increment, int pageIncrement) {
 	checkWidget ();
-	if (minimum < 0) return;
-	if (maximum < 0) return;
-	if (thumb < 1) return;
-	if (increment < 1) return;
-	if (pageIncrement < 1) return;
+    if (minimum < 0) {
+        return;
+    }
+    if (maximum < 0) {
+        return;
+    }
+    if (thumb < 1) {
+        return;
+    }
+    if (increment < 1) {
+        return;
+    }
+    if (pageIncrement < 1) {
+        return;
+    }
 	this.increment = increment;
 	this.pageIncrement = pageIncrement;
 	SCROLLINFO info = new SCROLLINFO ();
@@ -606,7 +646,9 @@ public void setValues (int selection, int minimum, int maximum, int thumb, int i
 	info.nMin = minimum;
 	info.nMax = maximum;
 	info.nPage = thumb;
-	if (info.nPage != 0) info.nPage++;
+    if (info.nPage != 0) {
+        info.nPage++;
+    }
 	SetScrollInfo (handle, OS.SB_CTL, info, true);
 }
 
@@ -619,20 +661,26 @@ int widgetExtStyle () {
 	* all scroll bars.
 	*/
 	int bits = super.widgetExtStyle ();
-	if ((style & SWT.BORDER) != 0) bits &= ~OS.WS_EX_CLIENTEDGE;
+    if ((style & SWT.BORDER) != 0) {
+        bits &= ~OS.WS_EX_CLIENTEDGE;
+    }
 	return bits;
 }
 
 @Override
 int widgetStyle () {
 	int bits = super.widgetStyle () | OS.WS_TABSTOP;
-	/*
-	* Bug in Windows.  If a scroll bar control is given a border,
-	* dragging the scroll bar thumb eats away parts of the border
-	* while the thumb is dragged.  The fix is to clear WS_BORDER.
-	*/
-	if ((style & SWT.BORDER) != 0) bits &= ~OS.WS_BORDER;
-	if ((style & SWT.HORIZONTAL) != 0) return bits | OS.SBS_HORZ;
+    /*
+    * Bug in Windows.  If a scroll bar control is given a border,
+    * dragging the scroll bar thumb eats away parts of the border
+    * while the thumb is dragged.  The fix is to clear WS_BORDER.
+    */
+    if ((style & SWT.BORDER) != 0) {
+        bits &= ~OS.WS_BORDER;
+    }
+    if ((style & SWT.HORIZONTAL) != 0) {
+        return bits | OS.SBS_HORZ;
+    }
 	return bits | OS.SBS_VERT;
 }
 
@@ -649,8 +697,12 @@ long windowProc () {
 @Override
 LRESULT WM_KEYDOWN (long wParam, long lParam) {
 	LRESULT result = super.WM_KEYDOWN (wParam, lParam);
-	if (result != null) return result;
-	if ((style & SWT.VERTICAL) != 0) return result;
+    if (result != null) {
+        return result;
+    }
+    if ((style & SWT.VERTICAL) != 0) {
+        return result;
+    }
 	/*
 	* Bug in Windows.  When a horizontal scroll bar is mirrored,
 	* the native control does not correctly swap the arrow keys.
@@ -687,18 +739,24 @@ LRESULT WM_LBUTTONDBLCLK (long wParam, long lParam) {
 	int newBits = oldBits & ~OS.WS_TABSTOP;
 	OS.SetWindowLong (handle, OS.GWL_STYLE, newBits);
 	LRESULT result = super.WM_LBUTTONDBLCLK (wParam, lParam);
-	if (isDisposed ()) return LRESULT.ZERO;
+    if (isDisposed()) {
+        return LRESULT.ZERO;
+    }
 	OS.SetWindowLong (handle, OS.GWL_STYLE, oldBits);
-	if (result == LRESULT.ZERO) return result;
+    if (result == LRESULT.ZERO) {
+        return result;
+    }
 
-	/*
-	* Feature in Windows.  Windows runs a modal message loop
-	* when the user drags a scroll bar that terminates when
-	* it sees an WM_LBUTTONUP.  Unfortunately the WM_LBUTTONUP
-	* is consumed.  The fix is to send a fake mouse up and
-	* release the automatic capture.
-	*/
-	if (OS.GetCapture () == handle) OS.ReleaseCapture ();
+    /*
+    * Feature in Windows.  Windows runs a modal message loop
+    * when the user drags a scroll bar that terminates when
+    * it sees an WM_LBUTTONUP.  Unfortunately the WM_LBUTTONUP
+    * is consumed.  The fix is to send a fake mouse up and
+    * release the automatic capture.
+    */
+    if (OS.GetCapture() == handle) {
+        OS.ReleaseCapture();
+    }
 	if (!sendMouseEvent (SWT.MouseUp, 1, handle, lParam)) {
 		return LRESULT.ZERO;
 	}
@@ -719,18 +777,24 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 	int newBits = oldBits & ~OS.WS_TABSTOP;
 	OS.SetWindowLong (handle, OS.GWL_STYLE, newBits);
 	LRESULT result = super.WM_LBUTTONDOWN (wParam, lParam);
-	if (isDisposed ()) return LRESULT.ZERO;
+    if (isDisposed()) {
+        return LRESULT.ZERO;
+    }
 	OS.SetWindowLong (handle, OS.GWL_STYLE, oldBits);
-	if (result == LRESULT.ZERO) return result;
+    if (result == LRESULT.ZERO) {
+        return result;
+    }
 
-	/*
-	* Feature in Windows.  Windows runs a modal message loop
-	* when the user drags a scroll bar that terminates when
-	* it sees an WM_LBUTTONUP.  Unfortunately the WM_LBUTTONUP
-	* is consumed.  The fix is to send a fake mouse up and
-	* release the automatic capture.
-	*/
-	if (OS.GetCapture () == handle) OS.ReleaseCapture ();
+    /*
+    * Feature in Windows.  Windows runs a modal message loop
+    * when the user drags a scroll bar that terminates when
+    * it sees an WM_LBUTTONUP.  Unfortunately the WM_LBUTTONUP
+    * is consumed.  The fix is to send a fake mouse up and
+    * release the automatic capture.
+    */
+    if (OS.GetCapture() == handle) {
+        OS.ReleaseCapture();
+    }
 	if (!sendMouseEvent (SWT.MouseUp, 1, handle, lParam)) {
 		return LRESULT.ONE;
 	}
@@ -739,7 +803,9 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
 
 @Override
 LRESULT WM_SETFOCUS (long wParam, long lParam) {
-	if (ignoreFocus) return null;
+    if (ignoreFocus) {
+        return null;
+    }
 	return super.WM_SETFOCUS (wParam, lParam);
 }
 
@@ -748,7 +814,9 @@ LRESULT wmScrollChild (long wParam, long lParam) {
 
 	/* Do nothing when scrolling is ending */
 	int code = OS.LOWORD (wParam);
-	if (code == OS.SB_ENDSCROLL) return null;
+    if (code == OS.SB_ENDSCROLL) {
+        return null;
+    }
 
 	/* Move the thumb */
 	Event event = new Event ();

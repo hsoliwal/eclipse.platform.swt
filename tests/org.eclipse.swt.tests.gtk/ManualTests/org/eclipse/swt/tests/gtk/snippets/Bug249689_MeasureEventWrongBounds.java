@@ -39,7 +39,9 @@ public class Bug249689_MeasureEventWrongBounds {
 		});
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		image.dispose();
 		display.dispose();

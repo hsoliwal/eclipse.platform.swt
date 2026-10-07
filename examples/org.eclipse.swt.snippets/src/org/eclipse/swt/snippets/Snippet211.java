@@ -77,8 +77,9 @@ public class Snippet211 {
 		shell.setSize(300, 300);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		font1.dispose();
 		font2.dispose();

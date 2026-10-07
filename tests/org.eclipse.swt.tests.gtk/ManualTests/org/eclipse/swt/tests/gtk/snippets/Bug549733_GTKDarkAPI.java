@@ -29,8 +29,9 @@ public class Bug549733_GTKDarkAPI {
 		System.out.println("Theme name set in SWT: " + System.getProperty("org.eclipse.swt.internal.gtk.theme"));
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 }

@@ -55,8 +55,12 @@ final class LegacySWTFontRegistry implements SWTFontRegistry {
 		if (OS.SystemParametersInfo (OS.SPI_GETNONCLIENTMETRICS, 0, info, 0)) {
 			hFont = OS.CreateFontIndirect (info.lfMessageFont);
 		}
-		if (hFont == 0) hFont = OS.GetStockObject (OS.DEFAULT_GUI_FONT);
-		if (hFont == 0) hFont = OS.GetStockObject (OS.SYSTEM_FONT);
+        if (hFont == 0) {
+            hFont = OS.GetStockObject(OS.DEFAULT_GUI_FONT);
+        }
+        if (hFont == 0) {
+            hFont = OS.GetStockObject(OS.SYSTEM_FONT);
+        }
 		Font font = Font.win32_new(device, hFont, zoom);
 		registerFont(KEY_SYSTEM_FONTS, font);
 		registerFont(font.getFontData()[0], font);

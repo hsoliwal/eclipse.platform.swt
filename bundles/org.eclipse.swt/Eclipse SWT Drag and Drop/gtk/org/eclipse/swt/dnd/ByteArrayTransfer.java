@@ -138,10 +138,14 @@ public TransferData[] getSupportedTypes() {
 
 @Override
 public boolean isSupportedType(TransferData transferData){
-	if (transferData == null) return false;
+    if (transferData == null) {
+        return false;
+    }
 	int[] types = getTypeIds();
 	for (int i = 0; i < types.length; i++) {
-		if (transferData.type == types[i]) return true;
+        if (transferData.type == types[i]) {
+            return true;
+        }
 	}
 	return false;
 }
@@ -163,9 +167,13 @@ protected void javaToNative (Object object, TransferData transferData) {
 		DND.error(DND.ERROR_INVALID_DATA);
 	}
 	byte[] buffer = (byte[])object;
-	if (buffer.length == 0) return;
+    if (buffer.length == 0) {
+        return;
+    }
 	long pValue = OS.g_malloc(buffer.length);
-	if (pValue == 0) return;
+    if (pValue == 0) {
+        return;
+    }
 	C.memmove(pValue, buffer, buffer.length);
 	transferData.length = buffer.length;
 	transferData.format = 8;
@@ -185,9 +193,13 @@ protected void javaToNative (Object object, TransferData transferData) {
  */
 @Override
 protected Object nativeToJava(TransferData transferData) {
-	if ( !isSupportedType(transferData) || transferData.pValue == 0) return null;
+    if (!isSupportedType(transferData) || transferData.pValue == 0) {
+        return null;
+    }
 	int size = transferData.format * transferData.length / 8;
-	if (size == 0) return null;
+    if (size == 0) {
+        return null;
+    }
 	byte[] buffer = new byte[size];
 	C.memmove(buffer, transferData.pValue, size);
 	return buffer;

@@ -104,8 +104,9 @@ public class Bug66356_DND_move_reported_to_drag_source_even_though_cancelled {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		display.dispose();
 	}

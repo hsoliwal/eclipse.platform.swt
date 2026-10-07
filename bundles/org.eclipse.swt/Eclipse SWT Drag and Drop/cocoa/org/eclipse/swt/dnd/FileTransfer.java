@@ -95,9 +95,13 @@ public void javaToNative(Object object, TransferData transferData) {
  */
 @Override
 public Object nativeToJava(TransferData transferData) {
-	if (!isSupportedType(transferData) || transferData.data == null) return null;
+    if (!isSupportedType(transferData) || transferData.data == null) {
+        return null;
+    }
 	NSArray array = (NSArray) transferData.data;
-	if (array.count() == 0) return null;
+    if (array.count() == 0) {
+        return null;
+    }
 	int count = (int)array.count();
 	String[] fileNames = new String[count];
 	for (int i=0; i<count; i++) {
@@ -118,9 +122,13 @@ protected String[] getTypeNames(){
 }
 
 boolean checkFile(Object object) {
-	if (object == null || !(object instanceof String[] strings) || ((String[])object).length == 0) return false;
+    if (object == null || !(object instanceof String[] strings) || ((String[]) object).length == 0) {
+        return false;
+    }
 	for (int i = 0; i < strings.length; i++) {
-		if (strings[i] == null || strings[i].length() == 0) return false;
+        if (strings[i] == null || strings[i].length() == 0) {
+            return false;
+        }
 	}
 	return true;
 }

@@ -48,8 +48,9 @@ public class Bug495008_GCsetClippingGTK {
 		shell.setSize(350, 550);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		image.dispose();
 		display.dispose();

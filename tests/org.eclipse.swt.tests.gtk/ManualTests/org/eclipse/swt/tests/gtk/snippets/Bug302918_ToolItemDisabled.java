@@ -75,8 +75,9 @@ public class Bug302918_ToolItemDisabled {
 		bar.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		nav.dispose();
 		nav_dis.dispose();

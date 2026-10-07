@@ -113,7 +113,9 @@ public Spinner (Composite parent, int style) {
 
 @Override
 long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
-	if (handle == 0) return 0;
+    if (handle == 0) {
+        return 0;
+    }
 	if (hwnd == hwndText) {
 		return OS.CallWindowProc (EditProc, hwnd, msg, wParam, lParam);
 	}
@@ -124,19 +126,14 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 }
 
 static int checkStyle (int style) {
-	/*
-	* Even though it is legal to create this widget
-	* with scroll bars, they serve no useful purpose
-	* because they do not automatically scroll the
-	* widget's client area.  The fix is to clear
-	* the SWT style.
-	*/
-	return style & ~(SWT.H_SCROLL | SWT.V_SCROLL);
+	return WidgetStylePolicy.WITHOUT_SCROLLBARS.applyAsInt(style);
 }
 
 @Override
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 @Override
@@ -146,8 +143,12 @@ void createHandle () {
 	long hInstance = OS.GetModuleHandle (null);
 	int textExStyle = 0;
 	int textStyle = OS.WS_CHILD | OS.WS_VISIBLE | OS.ES_AUTOHSCROLL | OS.WS_CLIPSIBLINGS;
-	if ((style & SWT.READ_ONLY) != 0) textStyle |= OS.ES_READONLY;
-	if ((style & SWT.RIGHT_TO_LEFT) != 0) textExStyle |= OS.WS_EX_LAYOUTRTL;
+    if ((style & SWT.READ_ONLY) != 0) {
+        textStyle |= OS.ES_READONLY;
+    }
+    if ((style & SWT.RIGHT_TO_LEFT) != 0) {
+        textExStyle |= OS.WS_EX_LAYOUTRTL;
+    }
 	hwndText = OS.CreateWindowEx (
 		textExStyle,
 		EditClass,
@@ -158,10 +159,14 @@ void createHandle () {
 		0,
 		hInstance,
 		null);
-	if (hwndText == 0) error (SWT.ERROR_NO_HANDLES);
+    if (hwndText == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	OS.SetWindowLongPtr (hwndText, OS.GWLP_ID, hwndText);
 	int upDownStyle = OS.WS_CHILD | OS.WS_VISIBLE | OS.UDS_AUTOBUDDY;
-	if ((style & SWT.WRAP) != 0) upDownStyle |= OS.UDS_WRAP;
+    if ((style & SWT.WRAP) != 0) {
+        upDownStyle |= OS.UDS_WRAP;
+    }
 	hwndUpDown = OS.CreateWindowEx (
 		0,
 		UpDownClass,
@@ -172,7 +177,9 @@ void createHandle () {
 		0,
 		hInstance,
 		null);
-	if (hwndUpDown == 0) error (SWT.ERROR_NO_HANDLES);
+    if (hwndUpDown == 0) {
+        error(SWT.ERROR_NO_HANDLES);
+    }
 	int flags = OS.SWP_NOSIZE | OS.SWP_NOMOVE | OS.SWP_NOACTIVATE;
 	OS.SetWindowPos (hwndText, hwndUpDown, 0, 0, 0, 0, flags);
 	OS.SetWindowLongPtr (hwndUpDown, OS.GWLP_ID, hwndUpDown);
@@ -266,7 +273,9 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		long newFont, oldFont = 0;
 		long hDC = OS.GetDC (hwndText);
 		newFont = OS.SendMessage (hwndText, OS.WM_GETFONT, 0, 0);
-		if (newFont != 0) oldFont = OS.SelectObject (hDC, newFont);
+        if (newFont != 0) {
+            oldFont = OS.SelectObject(hDC, newFont);
+        }
 		TEXTMETRIC tm = new TEXTMETRIC ();
 		OS.GetTextMetrics (hDC, tm);
 		height = tm.tmHeight;
@@ -289,12 +298,20 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 		int flags = OS.DT_CALCRECT | OS.DT_EDITCONTROL | OS.DT_NOPREFIX;
 		OS.DrawText (hDC, buffer, buffer.length, rect, flags);
 		width = rect.right - rect.left;
-		if (newFont != 0) OS.SelectObject (hDC, oldFont);
+        if (newFont != 0) {
+            OS.SelectObject(hDC, oldFont);
+        }
 		OS.ReleaseDC (hwndText, hDC);
 	}
-	if (width == 0) width = DEFAULT_WIDTH;
-	if (height == 0) height = DEFAULT_HEIGHT;
-	if (hintInPoints.x != SWT.DEFAULT) width = hintInPixels.x;
+    if (width == 0) {
+        width = DEFAULT_WIDTH;
+    }
+    if (height == 0) {
+        height = DEFAULT_HEIGHT;
+    }
+    if (hintInPoints.x != SWT.DEFAULT) {
+        width = hintInPixels.x;
+    }
 	if (hintInPoints.y != SWT.DEFAULT) {
 		height = hintInPixels.y;
 	} else {
@@ -376,7 +393,9 @@ public void copy () {
  */
 public void cut () {
 	checkWidget ();
-	if ((style & SWT.READ_ONLY) != 0) return;
+    if ((style & SWT.READ_ONLY) != 0) {
+        return;
+    }
 	OS.SendMessage (hwndText, OS.WM_CUT, 0, 0);
 }
 
@@ -402,9 +421,15 @@ void deregister () {
 @Override
 boolean hasFocus () {
 	long hwndFocus = OS.GetFocus ();
-	if (hwndFocus == handle) return true;
-	if (hwndFocus == hwndText) return true;
-	if (hwndFocus == hwndUpDown) return true;
+    if (hwndFocus == handle) {
+        return true;
+    }
+    if (hwndFocus == hwndText) {
+        return true;
+    }
+    if (hwndFocus == hwndUpDown) {
+        return true;
+    }
 	return false;
 }
 
@@ -536,19 +561,27 @@ int getSelectionText (boolean [] parseFail) {
 				}
 				int wholeValue = Integer.parseInt (wholePart);
 				int decimalValue = Integer.parseInt (decimalPart);
-				for (int i = 0; i < digits; i++) wholeValue *= 10;
+                for (int i = 0; i < digits; i++) {
+                    wholeValue *= 10;
+                }
 				value = wholeValue + decimalValue;
-				if (string.startsWith ("-")) value = -value;
+                if (string.startsWith("-")) {
+                    value = -value;
+                }
 			} else {
 				value = Integer.parseInt (string);
-				for (int i = 0; i < digits; i++) value *= 10;
+                for (int i = 0; i < digits; i++) {
+                    value *= 10;
+                }
 			}
 		} else {
 			value = Integer.parseInt (string);
 		}
 		int [] max = new int [1], min = new int [1];
 		OS.SendMessage (hwndUpDown , OS.UDM_GETRANGE32, min, max);
-		if (min [0] <= value && value <= max [0]) return value;
+        if (min [0] <= value && value <= max [0]) {
+            return value;
+        }
 	} catch (NumberFormatException e) {
 	}
 	parseFail [0] = true;
@@ -572,7 +605,9 @@ int getSelectionText (boolean [] parseFail) {
 public String getText () {
 	checkWidget ();
 	int length = OS.GetWindowTextLength (hwndText);
-	if (length == 0) return "";
+    if (length == 0) {
+        return "";
+    }
 	char [] buffer = new char [length + 1];
 	OS.GetWindowText (hwndText, buffer, length + 1);
 	return new String (buffer, 0, length);
@@ -619,7 +654,9 @@ boolean isUseWsBorder () {
  */
 public void paste () {
 	checkWidget ();
-	if ((style & SWT.READ_ONLY) != 0) return;
+    if ((style & SWT.READ_ONLY) != 0) {
+        return;
+    }
 	OS.SendMessage (hwndText, OS.WM_PASTE, 0, 0);
 }
 
@@ -655,8 +692,12 @@ void releaseHandle () {
  */
 public void removeModifyListener (ModifyListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Modify, listener);
 }
 
@@ -679,8 +720,12 @@ public void removeModifyListener (ModifyListener listener) {
  */
 public void removeSelectionListener(SelectionListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Selection, listener);
 	eventTable.unhook (SWT.DefaultSelection,listener);
 }
@@ -704,8 +749,12 @@ public void removeSelectionListener(SelectionListener listener) {
  */
 void removeVerifyListener (VerifyListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Verify, listener);
 }
 
@@ -714,12 +763,18 @@ boolean sendKeyEvent (int type, int msg, long wParam, long lParam, Event event) 
 	if (!super.sendKeyEvent (type, msg, wParam, lParam, event)) {
 		return false;
 	}
-	if ((style & SWT.READ_ONLY) != 0) return true;
-	if (type != SWT.KeyDown) return true;
+    if ((style & SWT.READ_ONLY) != 0) {
+        return true;
+    }
+    if (type != SWT.KeyDown) {
+        return true;
+    }
 	if (msg != OS.WM_CHAR && msg != OS.WM_KEYDOWN && msg != OS.WM_IME_CHAR) {
 		return true;
 	}
-	if (event.character == 0) return true;
+    if (event.character == 0) {
+        return true;
+    }
 //	if (!hooks (SWT.Verify) && !filters (SWT.Verify)) return true;
 	char key = event.character;
 	int stateMask = event.stateMask;
@@ -731,10 +786,14 @@ boolean sendKeyEvent (int type, int msg, long wParam, long lParam, Event event) 
 	*/
 	switch (msg) {
 		case OS.WM_CHAR:
-			if (key != 0x08 && key != 0x7F && key != '\r' && key != '\t' && key != '\n') break;
+            if (key != 0x08 && key != 0x7F && key != '\r' && key != '\t' && key != '\n') {
+                break;
+            }
 			// FALL THROUGH
 		case OS.WM_KEYDOWN:
-			if ((stateMask & (SWT.ALT | SWT.SHIFT | SWT.CONTROL)) != 0) return false;
+            if ((stateMask & (SWT.ALT | SWT.SHIFT | SWT.CONTROL)) != 0) {
+                return false;
+            }
 			break;
 	}
 
@@ -752,7 +811,9 @@ boolean sendKeyEvent (int type, int msg, long wParam, long lParam, Event event) 
 	switch (key) {
 		case 0x08:	/* Bs */
 			if (start [0] == end [0]) {
-				if (start [0] == 0) return true;
+                if (start [0] == 0) {
+                    return true;
+                }
 				start [0] = start [0] - 1;
 				start [0] = Math.max (start [0], 0);
 			}
@@ -760,7 +821,9 @@ boolean sendKeyEvent (int type, int msg, long wParam, long lParam, Event event) 
 		case 0x7F:	/* Del */
 			if (start [0] == end [0]) {
 				int length = OS.GetWindowTextLength (hwndText);
-				if (start [0] == length) return true;
+                if (start [0] == length) {
+                    return true;
+                }
 				end [0] = end [0] + 1;
 				end [0] = Math.min (end [0], length);
 			}
@@ -768,13 +831,19 @@ boolean sendKeyEvent (int type, int msg, long wParam, long lParam, Event event) 
 		case '\r':	/* Return */
 			return true;
 		default:	/* Tab and other characters */
-			if (key != '\t' && key < 0x20) return true;
+            if (key != '\t' && key < 0x20) {
+                return true;
+            }
 			oldText = new String (new char [] {key});
 			break;
 	}
 	String newText = verifyText (oldText, start [0], end [0], event);
-	if (newText == null) return false;
-	if (newText == oldText) return true;
+    if (newText == null) {
+        return false;
+    }
+    if (newText == oldText) {
+        return true;
+    }
 	TCHAR buffer = new TCHAR (newText, true);
 	OS.SendMessage (hwndText, OS.EM_SETSEL, start [0], end [0]);
 	OS.SendMessage (hwndText, OS.EM_REPLACESEL, 0, buffer);
@@ -815,8 +884,12 @@ void setBackgroundPixel (int pixel) {
  */
 public void setDigits (int value) {
 	checkWidget ();
-	if (value < 0) error (SWT.ERROR_INVALID_ARGUMENT);
-	if (value == this.digits) return;
+    if (value < 0) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
+    if (value == this.digits) {
+        return;
+    }
 	this.digits = value;
 	int pos = (int)OS.SendMessage (hwndUpDown, OS.UDM_GETPOS32, 0, 0);
 	setSelection (pos, false, true, false);
@@ -842,7 +915,9 @@ void setForegroundPixel (int pixel) {
  */
 public void setIncrement (int value) {
 	checkWidget ();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	long hHeap = OS.GetProcessHeap ();
 	int count = (int)OS.SendMessage (hwndUpDown, OS.UDM_GETACCEL, 0, (UDACCEL)null);
 	long udaccels = OS.HeapAlloc (hHeap, OS.HEAP_ZERO_MEMORY, UDACCEL.sizeof * count);
@@ -852,7 +927,9 @@ public void setIncrement (int value) {
 	for (int i = 0; i < count; i++) {
 		long offset = udaccels + (i * UDACCEL.sizeof);
 		OS.MoveMemory (udaccel, offset, UDACCEL.sizeof);
-		if (first == -1) first = udaccel.nInc;
+        if (first == -1) {
+            first = udaccel.nInc;
+        }
 		udaccel.nInc  = udaccel.nInc / first * value;
 		OS.MoveMemory (offset, udaccel, UDACCEL.sizeof);
 	}
@@ -877,10 +954,14 @@ public void setMaximum (int value) {
 	checkWidget ();
 	int [] min = new int [1];
 	OS.SendMessage (hwndUpDown , OS.UDM_GETRANGE32, min, null);
-	if (value < min [0]) return;
+    if (value < min [0]) {
+        return;
+    }
 	int pos = (int)OS.SendMessage (hwndUpDown, OS.UDM_GETPOS32, 0, 0);
 	OS.SendMessage (hwndUpDown , OS.UDM_SETRANGE32, min [0], value);
-	if (pos > value) setSelection (value, true, true, false);
+    if (pos > value) {
+        setSelection(value, true, true, false);
+    }
 }
 
 /**
@@ -900,10 +981,14 @@ public void setMinimum (int value) {
 	checkWidget ();
 	int [] max = new int [1];
 	OS.SendMessage (hwndUpDown , OS.UDM_GETRANGE32, null, max);
-	if (value > max [0]) return;
+    if (value > max [0]) {
+        return;
+    }
 	int pos = (int)OS.SendMessage (hwndUpDown, OS.UDM_GETPOS32, 0, 0);
 	OS.SendMessage (hwndUpDown , OS.UDM_SETRANGE32, value, max [0]);
-	if (pos < value) setSelection (value, true, true, false);
+    if (pos < value) {
+        setSelection(value, true, true, false);
+    }
 }
 
 /**
@@ -920,7 +1005,9 @@ public void setMinimum (int value) {
  */
 public void setPageIncrement (int value) {
 	checkWidget ();
-	if (value < 1) return;
+    if (value < 1) {
+        return;
+    }
 	pageIncrement = value;
 }
 
@@ -958,7 +1045,9 @@ void setSelection (int value, boolean setPos, boolean setText, boolean notify) {
 			String decimalSeparator = getDecimalSeparator ();
 			int index = string.length () - digits;
 			StringBuilder buffer = new StringBuilder ();
-			if (value < 0) buffer.append ("-");
+            if (value < 0) {
+                buffer.append("-");
+            }
 			if (index > 0) {
 				buffer.append (string.substring (0, index));
 				buffer.append (decimalSeparator);
@@ -966,7 +1055,9 @@ void setSelection (int value, boolean setPos, boolean setText, boolean notify) {
 			} else {
 				buffer.append ("0");
 				buffer.append (decimalSeparator);
-				while (index++ < 0) buffer.append ("0");
+                while (index++ < 0) {
+                    buffer.append("0");
+                }
 				buffer.append (string);
 			}
 			string = buffer.toString ();
@@ -974,14 +1065,18 @@ void setSelection (int value, boolean setPos, boolean setText, boolean notify) {
 		if (hooks (SWT.Verify) || filters (SWT.Verify)) {
 			int length = OS.GetWindowTextLength (hwndText);
 			string = verifyText (string, 0, length, null);
-			if (string == null) return;
+            if (string == null) {
+                return;
+            }
 		}
 		TCHAR buffer = new TCHAR (string, true);
 		OS.SetWindowText (hwndText, buffer);
 		OS.SendMessage (hwndText, OS.EM_SETSEL, 0, -1);
 		OS.NotifyWinEvent (OS.EVENT_OBJECT_FOCUS, hwndText, OS.OBJID_CLIENT, 0);
 	}
-	if (notify) sendSelectionEvent (SWT.Selection);
+    if (notify) {
+        sendSelectionEvent(SWT.Selection);
+    }
 }
 
 /**
@@ -1008,7 +1103,9 @@ void setSelection (int value, boolean setPos, boolean setText, boolean notify) {
  */
 public void setTextLimit (int limit) {
 	checkWidget ();
-	if (limit == 0) error (SWT.ERROR_CANNOT_BE_ZERO);
+    if (limit == 0) {
+        error(SWT.ERROR_CANNOT_BE_ZERO);
+    }
 	OS.SendMessage (hwndText, OS.EM_SETLIMITTEXT, limit, 0);
 }
 
@@ -1043,10 +1140,18 @@ void setToolTipText (Shell shell, String string) {
  */
 public void setValues (int selection, int minimum, int maximum, int digits, int increment, int pageIncrement) {
 	checkWidget ();
-	if (maximum < minimum) return;
-	if (digits < 0) return;
-	if (increment < 1) return;
-	if (pageIncrement < 1) return;
+    if (maximum < minimum) {
+        return;
+    }
+    if (digits < 0) {
+        return;
+    }
+    if (increment < 1) {
+        return;
+    }
+    if (pageIncrement < 1) {
+        return;
+    }
 	selection = Math.min (Math.max (minimum, selection), maximum);
 	setIncrement (increment);
 	this.pageIncrement = pageIncrement;
@@ -1114,15 +1219,21 @@ String verifyText (String string, int start, int end, Event keyEvent) {
 	if (string.length() > 0) {
 		int [] min = new int [1];
 		OS.SendMessage (hwndUpDown , OS.UDM_GETRANGE32, min, null);
-		if (min [0] < 0 && string.charAt (0) == '-') index++;
+        if (min [0] < 0 && string.charAt(0) == '-') {
+            index++;
+        }
 	}
 	while (index < string.length ()) {
-		if (!Character.isDigit (string.charAt (index))) break;
+        if (!Character.isDigit(string.charAt(index))) {
+            break;
+        }
 		index++;
 	}
 	event.doit = index == string.length ();
 	sendEvent (SWT.Verify, event);
-	if (!event.doit || isDisposed ()) return null;
+    if (!event.doit || isDisposed()) {
+        return null;
+    }
 	return event.text;
 }
 
@@ -1181,7 +1292,9 @@ long windowProc (long hwnd, int msg, long wParam, long lParam) {
 				}
 				break;
 		}
-		if (result != null) return result.value;
+        if (result != null) {
+            return result.value;
+        }
 		return callWindowProc (hwnd, msg, wParam, lParam);
 	}
 	return super.windowProc (hwnd, msg, wParam, lParam);
@@ -1209,7 +1322,9 @@ LRESULT WM_SETFOCUS (long wParam, long lParam) {
 @Override
 LRESULT WM_SETFONT (long wParam, long lParam) {
 	LRESULT result = super.WM_SETFONT (wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	OS.SendMessage (hwndText, OS.WM_SETFONT, wParam, lParam);
 	return result;
 }
@@ -1217,7 +1332,9 @@ LRESULT WM_SETFONT (long wParam, long lParam) {
 @Override
 LRESULT WM_SIZE (long wParam, long lParam) {
 	LRESULT result = super.WM_SIZE (wParam, lParam);
-	if (isDisposed ()) return result;
+    if (isDisposed()) {
+        return result;
+    }
 	int width = OS.LOWORD (lParam), height = OS.HIWORD (lParam);
 	int upDownWidth = getSystemMetrics (OS.SM_CXVSCROLL) - 1;
 	int textWidth = width - upDownWidth;
@@ -1277,9 +1394,13 @@ LRESULT wmIMEChar(long hwnd, long wParam, long lParam) {
 
 @Override
 LRESULT wmChar (long hwnd, long wParam, long lParam) {
-	if (ignoreCharacter) return null;
+    if (ignoreCharacter) {
+        return null;
+    }
 	LRESULT result = super.wmChar (hwnd, wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 	/*
 	* Feature in Windows.  For some reason, when the
 	* widget is a single line text widget, when the
@@ -1298,7 +1419,9 @@ LRESULT wmChar (long hwnd, long wParam, long lParam) {
 }
 
 LRESULT wmClipboard (long hwndText, int msg, long wParam, long lParam) {
-	if ((style & SWT.READ_ONLY) != 0) return null;
+    if ((style & SWT.READ_ONLY) != 0) {
+        return null;
+    }
 //	if (!hooks (SWT.Verify) && !filters (SWT.Verify)) return null;
 	boolean call = false;
 	int [] start = new int [1], end = new int [1];
@@ -1340,7 +1463,9 @@ LRESULT wmClipboard (long hwndText, int msg, long wParam, long lParam) {
 	if (newText != null) {
 		String oldText = newText;
 		newText = verifyText (newText, start [0], end [0], null);
-		if (newText == null) return LRESULT.ZERO;
+        if (newText == null) {
+            return LRESULT.ZERO;
+        }
 		if (!newText.equals (oldText)) {
 			if (call) {
 				OS.CallWindowProc (EditProc, hwndText, msg, wParam, lParam);
@@ -1368,15 +1493,21 @@ LRESULT wmCommandChild (long wParam, long lParam) {
 	int code = OS.HIWORD (wParam);
 	switch (code) {
 		case OS.EN_CHANGE:
-			if (ignoreModify) break;
+            if (ignoreModify) {
+                break;
+            }
 			boolean [] parseFail = new boolean [1];
 			int value = getSelectionText (parseFail);
 			if (!parseFail [0]) {
 				int pos = (int)OS.SendMessage (hwndUpDown, OS.UDM_GETPOS32, 0, 0);
-				if (pos != value) setSelection (value, true, false, true);
+                if (pos != value) {
+                    setSelection(value, true, false, true);
+                }
 			}
 			sendEvent (SWT.Modify);
-			if (isDisposed ()) return LRESULT.ZERO;
+            if (isDisposed()) {
+                return LRESULT.ZERO;
+            }
 			break;
 	}
 	return super.wmCommandChild (wParam, lParam);
@@ -1384,9 +1515,13 @@ LRESULT wmCommandChild (long wParam, long lParam) {
 
 @Override
 LRESULT wmKeyDown (long hwnd, long wParam, long lParam) {
-	if (ignoreCharacter) return null;
+    if (ignoreCharacter) {
+        return null;
+    }
 	LRESULT result = super.wmKeyDown (hwnd, wParam, lParam);
-	if (result != null) return result;
+    if (result != null) {
+        return result;
+    }
 
 	/* Increment the value */
 	UDACCEL udaccel = new UDACCEL ();
@@ -1408,11 +1543,17 @@ LRESULT wmKeyDown (long hwnd, long wParam, long lParam) {
 		int [] max = new int [1], min = new int [1];
 		OS.SendMessage (hwndUpDown , OS.UDM_GETRANGE32, min, max);
 		if ((style & SWT.WRAP) != 0) {
-			if (newValue < min [0]) newValue = max [0];
-			if (newValue > max [0]) newValue = min [0];
+            if (newValue < min [0]) {
+                newValue = max [0];
+            }
+            if (newValue > max [0]) {
+                newValue = min [0];
+            }
 		}
 		newValue = Math.min (Math.max (min [0], newValue), max [0]);
-		if (value != newValue) setSelection (newValue, true, true, true);
+        if (value != newValue) {
+            setSelection(newValue, true, true, true);
+        }
 	}
 
 	/*  Stop the edit control from moving the caret */
@@ -1445,8 +1586,12 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 			int [] max = new int [1], min = new int [1];
 			OS.SendMessage (hwndUpDown , OS.UDM_GETRANGE32, min, max);
 			if ((style & SWT.WRAP) != 0) {
-				if (value < min [0]) value = max [0];
-				if (value > max [0]) value = min [0];
+                if (value < min [0]) {
+                    value = max [0];
+                }
+                if (value > max [0]) {
+                    value = min [0];
+                }
 			}
 			/*
 			* The SWT.Modify event is sent after the widget has been

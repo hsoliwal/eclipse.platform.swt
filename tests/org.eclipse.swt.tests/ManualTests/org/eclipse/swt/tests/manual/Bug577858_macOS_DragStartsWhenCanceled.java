@@ -74,22 +74,25 @@ public final class Bug577858_macOS_DragStartsWhenCanceled {
 
 				@Override
 				public void dragStart(DragSourceEvent event) {
-					if (isCancel ())
-						event.doit = false;
+                    if (isCancel()) {
+                        event.doit = false;
+                    }
 				}
 
 				@Override
 				public void dragSetData(DragSourceEvent event) {
-					if (isCancel ())
-						System.out.println ("ERROR: Unexpected DND.DragSetData event!");
+                    if (isCancel()) {
+                        System.out.println("ERROR: Unexpected DND.DragSetData event!");
+                    }
 
 					event.data = getSelectedItem ().getText ();
 				}
 
 				@Override
 				public void dragFinished(DragSourceEvent event) {
-					if (isCancel ())
-						System.out.println ("ERROR: Unexpected DND.DragEnd event!");
+                    if (isCancel()) {
+                        System.out.println("ERROR: Unexpected DND.DragEnd event!");
+                    }
 				}
 			});
 		}
@@ -114,22 +117,25 @@ public final class Bug577858_macOS_DragStartsWhenCanceled {
 
 				@Override
 				public void dragStart(DragSourceEvent event) {
-					if (isCancel ())
-						event.doit = false;
+                    if (isCancel()) {
+                        event.doit = false;
+                    }
 				}
 
 				@Override
 				public void dragSetData(DragSourceEvent event) {
-					if (isCancel ())
-						System.out.println ("ERROR: Unexpected DND.DragSetData event!");
+                    if (isCancel()) {
+                        System.out.println("ERROR: Unexpected DND.DragSetData event!");
+                    }
 
 					event.data = getSelectedItem ().getText ();
 				}
 
 				@Override
 				public void dragFinished(DragSourceEvent event) {
-					if (isCancel ())
-						System.out.println ("ERROR: Unexpected DND.DragEnd event!");
+                    if (isCancel()) {
+                        System.out.println("ERROR: Unexpected DND.DragEnd event!");
+                    }
 				}
 			});
 		}

@@ -42,10 +42,14 @@ public static void main (String [] args) {
 		@Override
 		public void run () {
 			for (int i=0; i<20000; i++) {
-				if (table.isDisposed ()) return;
+                if (table.isDisposed()) {
+                    return;
+                }
 				final int [] index = new int [] {i};
 				display.syncExec (() -> {
-					if (table.isDisposed ()) return;
+                    if (table.isDisposed()) {
+                        return;
+                    }
 					TableItem item = new TableItem (table, SWT.NONE);
 					item.setText ("Table Item " + index [0]);
 					item.setImage (image);
@@ -57,7 +61,9 @@ public static void main (String [] args) {
 	shell.setSize (200, 200);
 	shell.open ();
 	while (!shell.isDisposed ()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	image.dispose ();
 	display.dispose ();

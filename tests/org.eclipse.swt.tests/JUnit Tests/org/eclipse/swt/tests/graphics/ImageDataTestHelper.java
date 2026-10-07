@@ -65,7 +65,9 @@ public class ImageDataTestHelper {
 				paletteB = new byte[rgbs.length];
 				for (int i = 0; i < rgbs.length; i++) {
 					RGB rgb = rgbs[i];
-					if (rgb == null) continue;
+                    if (rgb == null) {
+                        continue;
+                    }
 					paletteR[i] = (byte) rgb.red;
 					paletteG[i] = (byte) rgb.green;
 					paletteB[i] = (byte) rgb.blue;

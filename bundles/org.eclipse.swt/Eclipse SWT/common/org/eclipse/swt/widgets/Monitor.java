@@ -48,8 +48,12 @@ Monitor () {
  */
 @Override
 public boolean equals (Object object) {
-	if (object == this) return true;
-	if (!(object instanceof Monitor monitor)) return false;
+    if (object == this) {
+        return true;
+    }
+    if (!(object instanceof Monitor monitor)) {
+        return false;
+    }
 	return handle == monitor.handle;
 }
 

@@ -40,7 +40,9 @@ public static void main (String [] args) {
 			Control [] children = composite.getChildren ();
 			for (Control child : children) {
 				if (child instanceof Button button1) {
-					if ((button1.getStyle () & SWT.RADIO) != 0) button1.setSelection (false);
+                    if ((button1.getStyle() & SWT.RADIO) != 0) {
+                        button1.setSelection(false);
+                    }
 				}
 			}
 		}
@@ -60,7 +62,9 @@ public static void main (String [] args) {
 	shell.pack ();
 	shell.open ();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

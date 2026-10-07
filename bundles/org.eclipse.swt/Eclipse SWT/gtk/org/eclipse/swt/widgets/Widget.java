@@ -20,7 +20,6 @@ import org.eclipse.swt.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.*;
-import org.eclipse.swt.internal.cairo.*;
 import org.eclipse.swt.internal.gtk.*;
 import org.eclipse.swt.internal.gtk3.*;
 import org.eclipse.swt.internal.gtk4.*;
@@ -299,7 +298,9 @@ public Widget (Widget parent, int style) {
 }
 
 void _addListener (int eventType, Listener listener) {
-	if (eventTable == null) eventTable = new EventTable ();
+    if (eventTable == null) {
+        eventTable = new EventTable();
+    }
 	eventTable.hook (eventType, listener);
 }
 
@@ -327,7 +328,9 @@ void _addListener (int eventType, Listener listener) {
  */
 public void addListener (int eventType, Listener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	_addListener (eventType, listener);
 }
 
@@ -405,15 +408,7 @@ long cssHandle() {
 }
 
 static int checkBits (int style, int int0, int int1, int int2, int int3, int int4, int int5) {
-	int mask = int0 | int1 | int2 | int3 | int4 | int5;
-	if ((style & mask) == 0) style |= int0;
-	if ((style & int0) != 0) style = (style & ~mask) | int0;
-	if ((style & int1) != 0) style = (style & ~mask) | int1;
-	if ((style & int2) != 0) style = (style & ~mask) | int2;
-	if ((style & int3) != 0) style = (style & ~mask) | int3;
-	if ((style & int4) != 0) style = (style & ~mask) | int4;
-	if ((style & int5) != 0) style = (style & ~mask) | int5;
-	return style;
+	return StyleBits.normalize (style, int0, int1, int2, int3, int4, int5);
 }
 
 long cellDataProc (long tree_column, long cell, long tree_model, long iter, long data) {
@@ -428,8 +423,12 @@ void checkOrientation (Widget parent) {
 	style &= ~SWT.MIRRORED;
 	if ((style & (SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT)) == 0) {
 		if (parent != null) {
-			if ((parent.style & SWT.LEFT_TO_RIGHT) != 0) style |= SWT.LEFT_TO_RIGHT;
-			if ((parent.style & SWT.RIGHT_TO_LEFT) != 0) style |= SWT.RIGHT_TO_LEFT;
+            if ((parent.style & SWT.LEFT_TO_RIGHT) != 0) {
+                style |= SWT.LEFT_TO_RIGHT;
+            }
+            if ((parent.style & SWT.RIGHT_TO_LEFT) != 0) {
+                style |= SWT.RIGHT_TO_LEFT;
+            }
 		}
 	}
 	style = checkBits (style, SWT.LEFT_TO_RIGHT, SWT.RIGHT_TO_LEFT, 0, 0, 0, 0);
@@ -448,8 +447,12 @@ void checkOrientation (Widget parent) {
  * </ul>
  */
 void checkParent (Widget parent) {
-	if (parent == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (parent.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+    if (parent == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (parent.isDisposed()) {
+        error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	parent.checkWidget ();
 	parent.checkOpen ();
 }
@@ -484,7 +487,9 @@ void checkParent (Widget parent) {
  * </ul>
  */
 protected void checkSubclass () {
-	if (!isValidSubclass ()) error (SWT.ERROR_INVALID_SUBCLASS);
+    if (!isValidSubclass()) {
+        error(SWT.ERROR_INVALID_SUBCLASS);
+    }
 }
 
 /**
@@ -511,9 +516,15 @@ protected void checkSubclass () {
  */
 protected void checkWidget () {
 	Display display = this.display;
-	if (display == null) error (SWT.ERROR_WIDGET_DISPOSED);
-	if (display.thread != Thread.currentThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
-	if ((state & DISPOSED) != 0) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (display == null) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
+    if (display.thread != Thread.currentThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
+    if ((state & DISPOSED) != 0) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 }
 
 void createHandle (int index) {
@@ -527,8 +538,12 @@ void createWidget (int index) {
 }
 
 void deregister () {
-	if (handle == 0) return;
-	if ((state & HANDLE) != 0) display.removeWidget (handle);
+    if (handle == 0) {
+        return;
+    }
+    if ((state & HANDLE) != 0) {
+        display.removeWidget(handle);
+    }
 }
 
 void destroyWidget () {
@@ -568,12 +583,16 @@ void destroyWidget () {
  * @see #checkWidget
  */
 public void dispose () {
-	/*
-	* Note:  It is valid to attempt to dispose a widget
-	* more than once.  If this happens, fail silently.
-	*/
-	if (isDisposed ()) return;
-	if (!isValidThread ()) error (SWT.ERROR_THREAD_INVALID_ACCESS);
+    /*
+    * Note:  It is valid to attempt to dispose a widget
+    * more than once.  If this happens, fail silently.
+    */
+    if (isDisposed()) {
+        return;
+    }
+    if (!isValidThread()) {
+        error(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
 	release (true);
 }
 
@@ -651,15 +670,21 @@ public Object getData () {
  */
 public Object getData (String key) {
 	checkWidget();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 	if (key.equals (KEY_CHECK_SUBWINDOW)) {
 		return (state & CHECK_SUBWINDOW) != 0;
 	}
-	if (key.equals(IS_ACTIVE)) return isActive ();
+    if (key.equals(IS_ACTIVE)) {
+        return isActive();
+    }
 	if ((state & KEYED_DATA) != 0) {
 		Object [] table = (Object []) data;
 		for (int i=1; i<table.length; i+=2) {
-			if (key.equals (table [i])) return table [i+1];
+            if (key.equals(table [i])) {
+                return table [i + 1];
+            }
 		}
 	}
 	return null;
@@ -682,7 +707,9 @@ public Object getData (String key) {
  */
 public Display getDisplay () {
 	Display display = this.display;
-	if (display == null) error (SWT.ERROR_WIDGET_DISPOSED);
+    if (display == null) {
+        error(SWT.ERROR_WIDGET_DISPOSED);
+    }
 	return display;
 }
 
@@ -707,7 +734,9 @@ public Display getDisplay () {
  */
 public Listener[] getListeners (int eventType) {
 	checkWidget();
-	if (eventTable == null) return new Listener[0];
+    if (eventTable == null) {
+        return new Listener[0];
+    }
 	return eventTable.getListeners(eventType);
 }
 
@@ -864,8 +893,11 @@ void gtk4_focus_enter_event(long controller, long event) {}
  * @param event the type of event, should be FocusIn or FocusOut
  */
 void gtk4_focus_window_event(long handle, long event) {
-	if(event == SWT.FocusIn) gtk_focus_in_event (handle, event);
-	else gtk_focus_out_event(handle, event);
+    if (event == SWT.FocusIn) {
+        gtk_focus_in_event(handle, event);
+    } else {
+        gtk_focus_out_event(handle, event);
+    }
 }
 
 /**
@@ -1144,6 +1176,10 @@ long gtk_text_buffer_insert_text (long widget, long iter, long text, long length
 	return 0;
 }
 
+long gtk_timer () {
+	return 0;
+}
+
 long gtk_toggled (long renderer, long pathStr) {
 	return 0;
 }
@@ -1218,7 +1254,9 @@ char [] fixMnemonic (String string, boolean replace, boolean removeAppended) {
 				if (i + 1 < length && text [i + 1] == '&') {
 					result [j++] = text [i++];
 				} else {
-					if (replace) result [j++] = '_';
+                    if (replace) {
+                        result [j++] = '_';
+                    }
 				}
 				i++;
 				break;
@@ -1230,7 +1268,9 @@ char [] fixMnemonic (String string, boolean replace, boolean removeAppended) {
 				 */
 			case '(':
 				if (removeAppended && i + 4 == string.length () && text [i + 1] == '&' && text [i + 3] == ')') {
-					if (replace) result [j++] = ' ';
+                    if (replace) {
+                        result [j++] = ' ';
+                    }
 					i += 4;
 					break; // break switch case only if we are removing the mnemonic
 				}
@@ -1240,7 +1280,9 @@ char [] fixMnemonic (String string, boolean replace, boolean removeAppended) {
 					break;
 				}
 			case '_':
-				if (replace) result [j++] = '_';
+                if (replace) {
+                    result [j++] = '_';
+                }
 				//FALL THROUGH
 			default:
 				result [j++] = text [i++];
@@ -1331,7 +1373,9 @@ void hookEvents () {
  * @see #isListening
  */
 boolean hooks (int eventType) {
-	if (eventTable == null) return false;
+    if (eventTable == null) {
+        return false;
+    }
 	return eventTable.hooks (eventType);
 }
 
@@ -1340,7 +1384,9 @@ long hoverProc (long widget) {
 }
 
 boolean mnemonicHit (long mnemonicHandle, char key) {
-	if (!mnemonicMatch (mnemonicHandle, key)) return false;
+    if (!mnemonicMatch(mnemonicHandle, key)) {
+        return false;
+    }
 	OS.g_signal_handlers_block_matched (mnemonicHandle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, MNEMONIC_ACTIVATE);
 	boolean result = GTK.gtk_widget_mnemonic_activate (mnemonicHandle, false);
 	OS.g_signal_handlers_unblock_matched (mnemonicHandle, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, MNEMONIC_ACTIVATE);
@@ -1375,7 +1421,9 @@ boolean mnemonicMatch (long mnemonicHandle, char key) {
  */
 public void notifyListeners (int eventType, Event event) {
 	checkWidget();
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	sendEvent (eventType, event);
 }
 
@@ -1388,8 +1436,12 @@ void postEvent (int eventType, Event event) {
 }
 
 void register () {
-	if (handle == 0) return;
-	if ((state & HANDLE) != 0) display.addWidget (handle, this);
+    if (handle == 0) {
+        return;
+    }
+    if ((state & HANDLE) != 0) {
+        display.addWidget(handle, this);
+    }
 }
 
 void release (boolean destroy) {
@@ -1467,8 +1519,12 @@ void releaseWidget () {
  */
 public void removeListener (int eventType, Listener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (eventType, listener);
 }
 
@@ -1565,8 +1621,12 @@ protected void removeListener (int eventType, EventListener listener) {
  */
 protected void removeTypedListener (int eventType, EventListener listener) {
 	checkWidget();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (eventType, listener);
 }
 
@@ -1613,7 +1673,9 @@ long rendererSnapshotProc (long cell, long snapshot, long handle, long backgroun
 public void reskin (int flags) {
 	checkWidget ();
 	reskinWidget ();
-	if ((flags & SWT.ALL) != 0) reskinChildren (flags);
+    if ((flags & SWT.ALL) != 0) {
+        reskinChildren(flags);
+    }
 }
 
 void reskinChildren (int flags) {
@@ -1645,15 +1707,21 @@ void reskinWidget() {
  */
 public void removeDisposeListener (DisposeListener listener) {
 	checkWidget ();
-	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
-	if (eventTable == null) return;
+    if (listener == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
+    if (eventTable == null) {
+        return;
+    }
 	eventTable.unhook (SWT.Dispose, listener);
 }
 
 void sendEvent (Event event) {
 	Display display = event.display;
 	if (!display.filterEvent (event)) {
-		if (eventTable != null) display.sendEvent(eventTable, event);
+        if (eventTable != null) {
+            display.sendEvent(eventTable, event);
+        }
 	}
 }
 
@@ -1700,17 +1768,21 @@ boolean sendKeyEvent (int type, long event) {
 	if (string == 0 || OS.g_utf16_strlen (string, length) <= 1) {
 		Event javaEvent = new Event ();
 		javaEvent.time = GDK.gdk_event_get_time(event);
-		if (!setKeyState (javaEvent, event)) return true;
+        if (!setKeyState(javaEvent, event)) {
+            return true;
+        }
 		sendEvent (type, javaEvent);
-		// widget could be disposed at this point
+        // widget could be disposed at this point
 
-		/*
-		* It is possible (but unlikely), that application
-		* code could have disposed the widget in the key
-		* events.  If this happens, end the processing of
-		* the key by returning false.
-		*/
-		if (isDisposed ()) return false;
+        /*
+        * It is possible (but unlikely), that application
+        * code could have disposed the widget in the key
+        * events.  If this happens, end the processing of
+        * the key by returning false.
+        */
+        if (isDisposed()) {
+            return false;
+        }
 		return javaEvent.doit;
 	}
 	byte [] buffer = new byte [length];
@@ -1771,14 +1843,22 @@ char [] sendIMKeyEvent (int type, long event, char [] chars) {
 		* the key by returning null.
 		*/
 		if (isDisposed ()) {
-			if (ptr != 0 && ptr != event && !GTK.GTK4) gdk_event_free (ptr);
+            if (ptr != 0 && ptr != event && !GTK.GTK4) {
+                gdk_event_free(ptr);
+            }
 			return null;
 		}
-		if (javaEvent.doit) chars [count++] = chars [index];
+        if (javaEvent.doit) {
+            chars [count++] = chars [index];
+        }
 		index++;
 	}
-	if (ptr != 0 && ptr != event && !GTK.GTK4) gdk_event_free (ptr);
-	if (count == 0) return null;
+    if (ptr != 0 && ptr != event && !GTK.GTK4) {
+        gdk_event_free(ptr);
+    }
+    if (count == 0) {
+        return null;
+    }
 	if (index != count) {
 		char [] result = new char [count];
 		System.arraycopy (chars, 0, result, 0, count);
@@ -1795,7 +1875,9 @@ void sendSelectionEvent (int eventType, Event event, boolean send) {
 	if (eventTable == null && !display.filters (eventType)) {
 		return;
 	}
-	if (event == null) event = new Event ();
+    if (event == null) {
+        event = new Event();
+    }
 	long ptr = GTK.GTK4 ? 0 : GTK3.gtk_get_current_event ();
 	if (ptr != 0) {
 		int currentEventType = GDK.gdk_event_get_event_type(ptr);
@@ -1887,7 +1969,9 @@ public void setData (Object data) {
  */
 public void setData (String key, Object value) {
 	checkWidget();
-	if (key == null) error (SWT.ERROR_NULL_ARGUMENT);
+    if (key == null) {
+        error(SWT.ERROR_NULL_ARGUMENT);
+    }
 
 	if (key.equals (KEY_CHECK_SUBWINDOW)) {
 		if (value != null && value instanceof Boolean) {
@@ -1905,7 +1989,9 @@ public void setData (String key, Object value) {
 	if ((state & KEYED_DATA) != 0) {
 		table = (Object []) data;
 		while (index < table.length) {
-			if (key.equals (table [index])) break;
+            if (key.equals(table [index])) {
+                break;
+            }
 			index += 2;
 		}
 	}
@@ -1940,7 +2026,9 @@ public void setData (String key, Object value) {
 			}
 		}
 	}
-	if (key.equals(SWT.SKIN_CLASS) || key.equals(SWT.SKIN_ID)) this.reskin(SWT.ALL);
+    if (key.equals(SWT.SKIN_CLASS) || key.equals(SWT.SKIN_ID)) {
+        this.reskin(SWT.ALL);
+    }
 	if (key.equals(KEY_GTK_CSS) && value instanceof String) {
 		long context = GTK.gtk_widget_get_style_context (cssHandle());
 		long provider = GTK.gtk_css_provider_new();
@@ -2036,12 +2124,24 @@ void setButtonState (Event event, int eventButton) {
 }
 
 boolean setInputState (Event event, int state) {
-	if ((state & GDK.GDK_MOD1_MASK) != 0) event.stateMask |= SWT.ALT;
-	if ((state & GDK.GDK_SHIFT_MASK) != 0) event.stateMask |= SWT.SHIFT;
-	if ((state & GDK.GDK_CONTROL_MASK) != 0) event.stateMask |= SWT.CONTROL;
-	if ((state & GDK.GDK_BUTTON1_MASK) != 0) event.stateMask |= SWT.BUTTON1;
-	if ((state & GDK.GDK_BUTTON2_MASK) != 0) event.stateMask |= SWT.BUTTON2;
-	if ((state & GDK.GDK_BUTTON3_MASK) != 0) event.stateMask |= SWT.BUTTON3;
+    if ((state & GDK.GDK_MOD1_MASK) != 0) {
+        event.stateMask |= SWT.ALT;
+    }
+    if ((state & GDK.GDK_SHIFT_MASK) != 0) {
+        event.stateMask |= SWT.SHIFT;
+    }
+    if ((state & GDK.GDK_CONTROL_MASK) != 0) {
+        event.stateMask |= SWT.CONTROL;
+    }
+    if ((state & GDK.GDK_BUTTON1_MASK) != 0) {
+        event.stateMask |= SWT.BUTTON1;
+    }
+    if ((state & GDK.GDK_BUTTON2_MASK) != 0) {
+        event.stateMask |= SWT.BUTTON2;
+    }
+    if ((state & GDK.GDK_BUTTON3_MASK) != 0) {
+        event.stateMask |= SWT.BUTTON3;
+    }
 	return true;
 }
 
@@ -2143,7 +2243,9 @@ boolean setKeyState (Event javaEvent, long event) {
 		group = gdkEvent.group;
 	}
 
-	if (string != 0 && OS.g_utf16_strlen (string, length) > 1) return false;
+    if (string != 0 && OS.g_utf16_strlen(string, length) > 1) {
+        return false;
+    }
 	boolean isNull = false;
 	javaEvent.keyCode = Display.translateKey (eventKeyval[0]);
 	switch (eventKeyval[0]) {
@@ -2188,8 +2290,12 @@ boolean setKeyState (Event javaEvent, long event) {
 			}
 			int key = eventKeyval[0];
 			if ((eventState[0] & GDK.GDK_CONTROL_MASK) != 0 && (0 <= key && key <= 0x7F)) {
-				if ('a'  <= key && key <= 'z') key -= 'a' - 'A';
-				if (64 <= key && key <= 95) key -= 64;
+                if ('a' <= key && key <= 'z') {
+                    key -= 'a' - 'A';
+                }
+                if (64 <= key && key <= 95) {
+                    key -= 64;
+                }
 				javaEvent.character = (char) key;
 				isNull = eventKeyval[0] == '@' && key == 0;
 			} else {
@@ -2199,7 +2305,9 @@ boolean setKeyState (Event javaEvent, long event) {
 	}
 	setLocationState (javaEvent, event);
 	if (javaEvent.keyCode == 0 && javaEvent.character == 0) {
-		if (!isNull) return false;
+        if (!isNull) {
+            return false;
+        }
 	}
 	return setInputState (javaEvent, eventState[0]);
 }
@@ -2302,15 +2410,12 @@ void snapshotPaint (long handle, long snapshot) {
 	Graphene.graphene_rect_init(rect, 0, 0, allocation.width, allocation.height);
 
 	long cairo = GTK4.gtk_snapshot_append_cairo(snapshot, rect);
-	try {
-		if (cairo != 0) {
-			Rectangle bounds = new Rectangle(0, 0, allocation.width, allocation.height);
-			gtk4_draw(handle, cairo, bounds);
-		}
-	} finally {
-		if (cairo != 0) Cairo.cairo_destroy(cairo);
-		Graphene.graphene_rect_free(rect);
+	if (cairo != 0) {
+		Rectangle bounds = new Rectangle(0, 0, allocation.width, allocation.height);
+		gtk4_draw(handle, cairo, bounds);
 	}
+
+	Graphene.graphene_rect_free(rect);
 }
 
 /**
@@ -2354,7 +2459,9 @@ void gdk_surface_get_size (long surface, int[] width, int[] height) {
  * @param event the event to be freed
  */
 void gdk_event_free (long event) {
-	if (event == 0) return;
+    if (event == 0) {
+        return;
+    }
 	if (GTK.GTK4) {
 		GDK.gdk_event_unref(event);
 	} else {
@@ -2370,7 +2477,9 @@ void gdk_event_free (long event) {
  * @return the GdkWindow or GdkSurface associated with the event
  */
 long gdk_event_get_surface_or_window(long event) {
-	if (event == 0) return 0;
+    if (event == 0) {
+        return 0;
+    }
 	if (GTK.GTK4) {
 		return GDK.gdk_event_get_surface(event);
 	} else {
@@ -2474,7 +2583,9 @@ public String toString () {
 	String string = "*Disposed*";
 	if (!isDisposed ()) {
 		string = "*Wrong Thread*";
-		if (isValidThread ()) string = getNameText ();
+        if (isValidThread()) {
+            string = getNameText();
+        }
 	}
 	return getName () + " {" + string + "}";
 }
@@ -2708,8 +2819,12 @@ long windowProc (long handle, long arg0, long arg1, long arg2, long arg3, long u
 void gtk_cell_renderer_get_preferred_size (long cell, long widget,  int[] width, int[] height) {
 	GtkRequisition minimum_size = new GtkRequisition ();
 	GTK.gtk_cell_renderer_get_preferred_size (cell, widget, minimum_size, null);
-	if (width != null) width [0] = minimum_size.width;
-	if (height != null) height[0] = minimum_size.height;
+    if (width != null) {
+        width [0] = minimum_size.width;
+    }
+    if (height != null) {
+        height[0] = minimum_size.height;
+    }
 }
 
 void gtk_widget_get_preferred_size (long widget, GtkRequisition requisition){
@@ -2778,13 +2893,19 @@ void notifyDisposalTracker() {
 }
 
 void gtk_widget_hide(long widget) {
-	if (GTK.GTK4) GTK.gtk_widget_set_visible(widget, false);
-	else GTK3.gtk_widget_hide(widget);
+    if (GTK.GTK4) {
+        GTK.gtk_widget_set_visible(widget, false);
+    } else {
+        GTK3.gtk_widget_hide(widget);
+    }
 }
 
 void gtk_widget_show(long widget) {
-	if (GTK.GTK4) GTK.gtk_widget_set_visible(widget, true);
-	else GTK3.gtk_widget_show(widget);
+    if (GTK.GTK4) {
+        GTK.gtk_widget_set_visible(widget, true);
+    } else {
+        GTK3.gtk_widget_show(widget);
+    }
 }
 
 }

@@ -43,7 +43,9 @@ public int hashCode() {
 
 @Override
 public boolean equals(Object obj) {
-	if (!(obj instanceof ReflectMethod)) return false;
+    if (!(obj instanceof ReflectMethod)) {
+        return false;
+    }
 	return ((ReflectMethod)obj).method.equals(method);
 }
 
@@ -64,7 +66,9 @@ public String getName() {
 
 @Override
 public boolean isNativeUnique() {
-	if (unique != null) return unique.booleanValue();
+    if (unique != null) {
+        return unique.booleanValue();
+    }
 	boolean result = true;
 	String name = getName();
 	for (JNIMethod mth : declaringClass.getDeclaredMethods()) {
@@ -148,7 +152,9 @@ public String getMetaData() {
 			value = metaData.getMetaData(key, null);
 		}
 	}
-	if (value == null) value = "";	
+    if (value == null) {
+        value = "";
+    }	
 	return value;
 }
 

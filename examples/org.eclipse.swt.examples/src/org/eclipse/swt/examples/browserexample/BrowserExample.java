@@ -85,7 +85,9 @@ public class BrowserExample {
 		browser.setData("org.eclipse.swt.examples.browserexample.BrowserApplication", this);
 		browser.addOpenWindowListener(event -> {
 			Shell shell = new Shell(display);
-			if (icon != null) shell.setImage(icon);
+            if (icon != null) {
+                shell.setImage(icon);
+            }
 			shell.setLayout(new FillLayout());
 			BrowserExample app = new BrowserExample(shell, false);
 			app.setShellDecoration(icon, true);
@@ -144,8 +146,12 @@ public class BrowserExample {
 	void show(boolean owned, Point location, Point size, boolean addressBar, boolean menuBar, boolean statusBar, boolean toolBar) {
 		final Shell shell = browser.getShell();
 		if (owned) {
-			if (location != null) shell.setLocation(location);
-			if (size != null) shell.setSize(shell.computeSize(size.x, size.y));
+            if (location != null) {
+                shell.setLocation(location);
+            }
+            if (size != null) {
+                shell.setSize(shell.computeSize(size.x, size.y));
+            }
 		}
 		FormData data = null;
 		if (toolBar) {
@@ -168,11 +174,17 @@ public class BrowserExample {
 			itemForward.setEnabled(browser.isForwardEnabled());
 			Listener listener = event -> {
 				ToolItem item = (ToolItem)event.widget;
-				if (item == itemBack) browser.back();
-				else if (item == itemForward) browser.forward();
-				else if (item == itemStop) browser.stop();
-				else if (item == itemRefresh) browser.refresh();
-				else if (item == itemGo) browser.setUrl(locationBar.getText());
+                if (item == itemBack) {
+                    browser.back();
+                } else if (item == itemForward) {
+                    browser.forward();
+                } else if (item == itemStop) {
+                    browser.stop();
+                } else if (item == itemRefresh) {
+                    browser.refresh();
+                } else if (item == itemGo) {
+                    browser.setUrl(locationBar.getText());
+                }
 			};
 			itemBack.addListener(SWT.Selection, listener);
 			itemForward.addListener(SWT.Selection, listener);
@@ -198,10 +210,14 @@ public class BrowserExample {
 			display.asyncExec(new Runnable() {
 				@Override
 				public void run() {
-					if (canvas.isDisposed()) return;
+                    if (canvas.isDisposed()) {
+                        return;
+                    }
 					if (busy) {
 						index++;
-						if (index == images.length) index = 0;
+                        if (index == images.length) {
+                            index = 0;
+                        }
 						canvas.redraw();
 					}
 					display.timerExec(150, this);
@@ -254,18 +270,26 @@ public class BrowserExample {
 			browser.addProgressListener(new ProgressListener() {
 				@Override
 				public void changed(ProgressEvent event) {
-					if (event.total == 0) return;
+                    if (event.total == 0) {
+                        return;
+                    }
 					int ratio = event.current * 100 / event.total;
-					if (progressBar != null) progressBar.setSelection(ratio);
+                    if (progressBar != null) {
+                        progressBar.setSelection(ratio);
+                    }
 					busy = event.current != event.total;
 					if (!busy) {
 						index = 0;
-						if (canvas != null) canvas.redraw();
+                        if (canvas != null) {
+                            canvas.redraw();
+                        }
 					}
 				}
 				@Override
 				public void completed(ProgressEvent event) {
-					if (progressBar != null) progressBar.setSelection(0);
+                    if (progressBar != null) {
+                        progressBar.setSelection(0);
+                    }
 					busy = false;
 					index = 0;
 					if (canvas != null) {
@@ -279,7 +303,9 @@ public class BrowserExample {
 		if (addressBar || statusBar || toolBar) {
 			browser.addLocationListener(LocationListener.changedAdapter(event -> {
 					busy = true;
-					if (event.top && locationBar != null) locationBar.setText(event.location);
+                if (event.top && locationBar != null) {
+                    locationBar.setText(event.location);
+                }
 				}
 			));
 		}
@@ -287,16 +313,22 @@ public class BrowserExample {
 			browser.addTitleListener(event -> shell.setText(event.title+" - "+getResourceString("window.title")));
 		}
 		parent.layout(true);
-		if (owned) shell.open();
+        if (owned) {
+            shell.open();
+        }
 	}
 
 	/**
 	 * Grabs input focus
 	 */
 	public void focus() {
-		if (locationBar != null) locationBar.setFocus();
-		else if (browser != null) browser.setFocus();
-		else parent.setFocus();
+        if (locationBar != null) {
+            locationBar.setFocus();
+        } else if (browser != null) {
+            browser.setFocus();
+        } else {
+            parent.setFocus();
+        }
 	}
 
 	/**
@@ -305,7 +337,9 @@ public class BrowserExample {
 	void freeResources() {
 		if (images != null) {
 			for (final Image image : images) {
-				if (image != null) image.dispose();
+                if (image != null) {
+                    image.dispose();
+                }
 			}
 			images = null;
 		}
@@ -351,8 +385,9 @@ public class BrowserExample {
 		app.setShellDecoration(icon, true);
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 		icon.dispose();
 		app.dispose();

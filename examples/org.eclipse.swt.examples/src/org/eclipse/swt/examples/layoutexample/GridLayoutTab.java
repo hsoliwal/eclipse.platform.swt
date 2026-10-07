@@ -77,10 +77,12 @@ class GridLayoutTab extends Tab {
 	void createChildWidgets () {
 		/* Create the TraverseListener */
 		final TraverseListener traverseListener = e -> {
-			if (e.detail == SWT.TRAVERSE_RETURN || e.detail == SWT.TRAVERSE_TAB_NEXT)
-				resetEditors ();
-			if (e.detail == SWT.TRAVERSE_ESCAPE)
-				disposeEditors ();
+            if (e.detail == SWT.TRAVERSE_RETURN || e.detail == SWT.TRAVERSE_TAB_NEXT) {
+                resetEditors();
+            }
+            if (e.detail == SWT.TRAVERSE_ESCAPE) {
+                disposeEditors();
+            }
 		};
 
 		/* Add common controls */
@@ -119,8 +121,9 @@ class GridLayoutTab extends Tab {
 			index = table.getSelectionIndex();
 			Point pt = new Point(e.x, e.y);
 			newItem = table.getItem(pt);
-			if (newItem == null)
-				return;
+            if (newItem == null) {
+                return;
+            }
 			TableItem oldItem = comboEditor.getItem();
 			if (newItem == oldItem || newItem != lastSelected) {
 				lastSelected = newItem;
@@ -479,9 +482,15 @@ class GridLayoutTab extends Tab {
 	}
 
 	String alignmentString(int alignment) {
-		if (alignment == SWT.BEGINNING) return "SWT.BEGINNING";
-		if (alignment == SWT.CENTER) return "SWT.CENTER";
-		if (alignment == SWT.END) return "SWT.END";
+        if (alignment == SWT.BEGINNING) {
+            return "SWT.BEGINNING";
+        }
+        if (alignment == SWT.CENTER) {
+            return "SWT.CENTER";
+        }
+        if (alignment == SWT.END) {
+            return "SWT.END";
+        }
 		return "SWT.FILL";
 	}
 
@@ -592,7 +601,9 @@ class GridLayoutTab extends Tab {
 			for (int i = 0; i < TOTAL_COLS; i++) {
 				oldItem.setText (i, data.get (row) [i]);
 			}
-			if (!tab) disposeEditors ();
+            if (!tab) {
+                disposeEditors();
+            }
 		}
 		setLayoutState ();
 		refreshLayoutComposite ();

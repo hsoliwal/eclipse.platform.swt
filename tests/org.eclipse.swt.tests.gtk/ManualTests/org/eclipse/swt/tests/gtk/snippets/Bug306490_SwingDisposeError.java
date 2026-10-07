@@ -55,9 +55,11 @@ public class Bug306490_SwingDisposeError {
 		Shell shell = new Shell(display, SWT.TITLE);
 		shell.setBounds(0, 200, 600, 100);
 		shell.open();
-		while (!shell.isDisposed())
-			if (!display.readAndDispatch())
-					display.sleep();
+        while (!shell.isDisposed()) {
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
+        }
 
 		display.dispose();
 		System.out.println("SWT: disposed");

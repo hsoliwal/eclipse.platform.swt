@@ -164,8 +164,9 @@ public class Bug164015_G2DDrawImage extends JPanel {
 
 		try {
 			while (!shell.isDisposed()) {
-				if (!display.readAndDispatch())
-					display.sleep();
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
 			}
 
 		} finally {

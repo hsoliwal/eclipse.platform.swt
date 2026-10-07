@@ -79,21 +79,51 @@ class ShellTab extends Tab {
 
 		/* Compute the shell style */
 		int style = SWT.NONE;
-		if (noTrimButton.getSelection()) style |= SWT.NO_TRIM;
-		if (noMoveButton.getSelection()) style |= SWT.NO_MOVE;
-		if (closeButton.getSelection()) style |= SWT.CLOSE;
-		if (titleButton.getSelection()) style |= SWT.TITLE;
-		if (minButton.getSelection()) style |= SWT.MIN;
-		if (maxButton.getSelection()) style |= SWT.MAX;
-		if (borderButton.getSelection()) style |= SWT.BORDER;
-		if (resizeButton.getSelection()) style |= SWT.RESIZE;
-		if (onTopButton.getSelection()) style |= SWT.ON_TOP;
-		if (toolButton.getSelection()) style |= SWT.TOOL;
-		if (sheetButton.getSelection()) style |= SWT.SHEET;
-		if (modelessButton.getSelection()) style |= SWT.MODELESS;
-		if (primaryModalButton.getSelection()) style |= SWT.PRIMARY_MODAL;
-		if (applicationModalButton.getSelection()) style |= SWT.APPLICATION_MODAL;
-		if (systemModalButton.getSelection()) style |= SWT.SYSTEM_MODAL;
+        if (noTrimButton.getSelection()) {
+            style |= SWT.NO_TRIM;
+        }
+        if (noMoveButton.getSelection()) {
+            style |= SWT.NO_MOVE;
+        }
+        if (closeButton.getSelection()) {
+            style |= SWT.CLOSE;
+        }
+        if (titleButton.getSelection()) {
+            style |= SWT.TITLE;
+        }
+        if (minButton.getSelection()) {
+            style |= SWT.MIN;
+        }
+        if (maxButton.getSelection()) {
+            style |= SWT.MAX;
+        }
+        if (borderButton.getSelection()) {
+            style |= SWT.BORDER;
+        }
+        if (resizeButton.getSelection()) {
+            style |= SWT.RESIZE;
+        }
+        if (onTopButton.getSelection()) {
+            style |= SWT.ON_TOP;
+        }
+        if (toolButton.getSelection()) {
+            style |= SWT.TOOL;
+        }
+        if (sheetButton.getSelection()) {
+            style |= SWT.SHEET;
+        }
+        if (modelessButton.getSelection()) {
+            style |= SWT.MODELESS;
+        }
+        if (primaryModalButton.getSelection()) {
+            style |= SWT.PRIMARY_MODAL;
+        }
+        if (applicationModalButton.getSelection()) {
+            style |= SWT.APPLICATION_MODAL;
+        }
+        if (systemModalButton.getSelection()) {
+            style |= SWT.SYSTEM_MODAL;
+        }
 
 		/* Create the shell with or without a parent */
 		if (noParentButton.getSelection ()) {
@@ -115,8 +145,12 @@ class ShellTab extends Tab {
 		/* Set the size, title, and image, and open the shell */
 		currentShell.setSize (300, 100);
 		currentShell.setText (ControlExample.getResourceString("Title") + shellCount);
-		if (imageButton.getSelection()) currentShell.setImage(instance.images[ControlExample.ciTarget]);
-		if (backgroundImageButton.getSelection()) currentShell.setBackgroundImage(instance.images[ControlExample.ciBackground]);
+        if (imageButton.getSelection()) {
+            currentShell.setImage(instance.images[ControlExample.ciTarget]);
+        }
+        if (backgroundImageButton.getSelection()) {
+            currentShell.setBackgroundImage(instance.images[ControlExample.ciBackground]);
+        }
 		hookListeners (currentShell);
 		currentShell.open ();
 		shellCount++;

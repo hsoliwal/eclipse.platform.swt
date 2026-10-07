@@ -32,7 +32,9 @@ public static void main (String [] args) {
 	Runnable timer = new Runnable () {
 		@Override
 		public void run () {
-			if (shell.isDisposed()) return;
+            if (shell.isDisposed()) {
+                return;
+            }
 			Point point = display.getCursorLocation ();
 			Rectangle rect = shell.getBounds ();
 			if (rect.contains (point)) {
@@ -47,7 +49,9 @@ public static void main (String [] args) {
 	shell.setSize (200, 200);
 	shell.open ();
 	while (!shell.isDisposed()) {
-		if (!display.readAndDispatch ()) display.sleep ();
+        if (!display.readAndDispatch()) {
+            display.sleep();
+        }
 	}
 	display.dispose ();
 }

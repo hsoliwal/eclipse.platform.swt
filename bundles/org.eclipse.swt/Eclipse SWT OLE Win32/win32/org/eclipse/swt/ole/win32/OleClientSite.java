@@ -121,7 +121,9 @@ protected OleClientSite(Composite parent, int style) {
 		}
 		parent = parent.getParent();
 	}
-	if (frame == null) OLE.error(SWT.ERROR_INVALID_ARGUMENT);
+    if (frame == null) {
+        OLE.error(SWT.ERROR_INVALID_ARGUMENT);
+    }
 	frame.AddRef();
 
 	aspect   = COM.DVASPECT_CONTENT;
@@ -141,19 +143,21 @@ protected OleClientSite(Composite parent, int style) {
 				boolean hasFocus = isFocusControl();
 				onFocusIn(e);
 				nestedFocusEvents--;
-				/*
-				 * Added additional check below to avoid calling OleFrame#onFocusIn() twice,
-				 * which other wise lead to Main Menu refresh problem as seen in bug 527268
-				 */
-				if (nestedFocusEvents == 0 && hasFocus == isFocusControl())
-					frame.onFocusIn(e);
+                /*
+                 * Added additional check below to avoid calling OleFrame#onFocusIn() twice,
+                 * which other wise lead to Main Menu refresh problem as seen in bug 527268
+                 */
+                if (nestedFocusEvents == 0 && hasFocus == isFocusControl()) {
+                    frame.onFocusIn(e);
+                }
 				break;
 			case SWT.FocusOut:
 				nestedFocusEvents++;
 				onFocusOut(e);
 				nestedFocusEvents--;
-				if (nestedFocusEvents == 0)
-					frame.onFocusOut(e);
+                if (nestedFocusEvents == 0) {
+                    frame.onFocusOut(e);
+                }
 				break;
 			case SWT.Paint:    onPaint(e); break;
 			case SWT.Traverse: onTraverse(e); break;
@@ -202,17 +206,22 @@ public OleClientSite(Composite parent, int style, File file) {
 	this(parent, style);
 	try {
 
-		if (file == null || file.isDirectory() || !file.exists())
-			OLE.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (file == null || file.isDirectory() || !file.exists()) {
+            OLE.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 
 		// Is there an associated CLSID?
 		GUID fileClsid = new GUID();
 		char[] fileName = (file.getAbsolutePath()+"\0").toCharArray();
 		int result = COM.GetClassFile(fileName, fileClsid);
-		if (result != COM.S_OK)	OLE.error(OLE.ERROR_INVALID_CLASSID, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_INVALID_CLASSID, result);
+        }
 		// associated CLSID may not be installed on this machine
 		String progID = getProgID(fileClsid);
-		if (progID == null)	OLE.error(OLE.ERROR_INVALID_CLASSID, result);
+        if (progID == null) {
+            OLE.error(OLE.ERROR_INVALID_CLASSID, result);
+        }
 
 		appClsid = fileClsid;
 		OleCreate(appClsid, fileClsid, fileName, file);
@@ -248,8 +257,9 @@ public OleClientSite(Composite parent, int style, String progId) {
 	this(parent, style);
 	try {
 		appClsid = getClassID(progId);
-		if (appClsid == null)
-			OLE.error(OLE.ERROR_INVALID_CLASSID);
+        if (appClsid == null) {
+            OLE.error(OLE.ERROR_INVALID_CLASSID);
+        }
 
 		// Open a temporary storage object
 		tempStorage = createTempStorage();
@@ -264,15 +274,18 @@ public OleClientSite(Composite parent, int style, String progId) {
 		*/
 		long clientSite = isICAClient() ? 0 : iOleClientSite.getAddress();
 		int result = COM.OleCreate(appClsid, COM.IIDIUnknown, COM.OLERENDER_DRAW, null, clientSite, tempStorage.getAddress(), address);
-		if (result != COM.S_OK)
-			OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        }
 
 		objIUnknown = new IUnknown(address[0]);
 
 		// Init sinks
 		addObjectReferences();
 
-		if (COM.OleRun(objIUnknown.getAddress()) == OLE.S_OK) state = STATE_RUNNING;
+        if (COM.OleRun(objIUnknown.getAddress()) == OLE.S_OK) {
+            state = STATE_RUNNING;
+        }
 
 	} catch (SWTException e) {
 		dispose();
@@ -313,9 +326,13 @@ public OleClientSite(Composite parent, int style, String progId) {
 public OleClientSite(Composite parent, int style, String progId, File file) {
 	this(parent, style);
 	try {
-		if (file == null || file.isDirectory() || !file.exists()) OLE.error(SWT.ERROR_INVALID_ARGUMENT);
+        if (file == null || file.isDirectory() || !file.exists()) {
+            OLE.error(SWT.ERROR_INVALID_ARGUMENT);
+        }
 		appClsid = getClassID(progId);
-		if (appClsid == null) OLE.error(OLE.ERROR_INVALID_CLASSID);
+        if (appClsid == null) {
+            OLE.error(OLE.ERROR_INVALID_CLASSID);
+        }
 
 		// Are we opening this file with the preferred OLE object?
 		char[] fileName = (file.getAbsolutePath()+"\0").toCharArray();
@@ -345,7 +362,9 @@ void OleCreate(GUID appClsid, GUID fileClsid, char[] fileName, File file) {
 		// Create ole object with storage object
 		long[] address = new long[1];
 		int result = COM.OleCreateFromFile(appClsid, fileName, COM.IIDIUnknown, COM.OLERENDER_DRAW, null, iOleClientSite.getAddress(), tempStorage.getAddress(), address);
-		if (result != COM.S_OK) OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        }
 		objIUnknown = new IUnknown(address[0]);
 	} else {
 		// Not using the same application that created file, therefore, copy from original file to a new storage file
@@ -354,22 +373,30 @@ void OleCreate(GUID appClsid, GUID fileClsid, char[] fileName, File file) {
 			long[] address = new long[1];
 			int mode = COM.STGM_READ | COM.STGM_TRANSACTED | COM.STGM_SHARE_EXCLUSIVE;
 			int result = COM.StgOpenStorage(fileName, 0, mode, 0, 0, address); //Does an AddRef if successful
-			if (result != COM.S_OK) OLE.error(OLE.ERROR_CANNOT_OPEN_FILE, result);
+            if (result != COM.S_OK) {
+                OLE.error(OLE.ERROR_CANNOT_OPEN_FILE, result);
+            }
 			storage = new IStorage(address[0]);
 		} else {
 			// Original file is not a Storage file so copy contents to a stream in a new storage file
 			long[] address = new long[1];
 			int mode = COM.STGM_READWRITE | COM.STGM_DIRECT | COM.STGM_SHARE_EXCLUSIVE | COM.STGM_CREATE;
 			int result = COM.StgCreateDocfile(null, mode | COM.STGM_DELETEONRELEASE, 0, address); // Increments ref count if successful
-			if (result != COM.S_OK) OLE.error(OLE.ERROR_CANNOT_OPEN_FILE, result);
+            if (result != COM.S_OK) {
+                OLE.error(OLE.ERROR_CANNOT_OPEN_FILE, result);
+            }
 			storage = new IStorage(address[0]);
 			// Create a stream on the storage object.
 			// Word does not follow the standard and does not use "CONTENTS" as the name of
 			// its primary stream
 			String streamName = "CONTENTS"; //$NON-NLS-1$
 			GUID wordGUID = getClassID(WORDPROGID);
-			if (wordGUID != null && COM.IsEqualGUID(appClsid, wordGUID)) streamName = "WordDocument"; //$NON-NLS-1$
-			if (isOffice2007) streamName = "Package"; //$NON-NLS-1$
+            if (wordGUID != null && COM.IsEqualGUID(appClsid, wordGUID)) {
+                streamName = "WordDocument"; //$NON-NLS-1$
+            }
+            if (isOffice2007) {
+                streamName = "Package"; //$NON-NLS-1$
+            }
 			address = new long[1];
 			result = storage.CreateStream(streamName, mode, 0, 0, address); // Increments ref count if successful
 			if (result != COM.S_OK) {
@@ -408,28 +435,38 @@ void OleCreate(GUID appClsid, GUID fileClsid, char[] fileName, File file) {
 		// Copy over contents of file
 		int result = storage.CopyTo(0, null, null, tempStorage.getAddress());
 		storage.Release();
-		if (result != COM.S_OK) OLE.error(OLE.ERROR_CANNOT_OPEN_FILE, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_OPEN_FILE, result);
+        }
 
 		// create ole client
 		long[] ppv = new long[1];
 		result = COM.CoCreateInstance(appClsid, 0, COM.CLSCTX_INPROC_HANDLER | COM.CLSCTX_INPROC_SERVER, COM.IIDIUnknown, ppv);
-		if (result != COM.S_OK) OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        }
 		objIUnknown = new IUnknown(ppv[0]);
 		// get the persistent storage of the ole client
 		ppv = new long[1];
 		result = objIUnknown.QueryInterface(COM.IIDIPersistStorage, ppv);
-		if (result != COM.S_OK) OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        }
 		IPersistStorage iPersistStorage = new IPersistStorage(ppv[0]);
 		// load the contents of the file into the ole client site
 		result = iPersistStorage.Load(tempStorage.getAddress());
 		iPersistStorage.Release();
-		if (result != COM.S_OK)OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        if (result != COM.S_OK) {
+            OLE.error(OLE.ERROR_CANNOT_CREATE_OBJECT, result);
+        }
 	}
 
 	// Init sinks
 	addObjectReferences();
 
-	if (COM.OleRun(objIUnknown.getAddress()) == OLE.S_OK) state = STATE_RUNNING;
+    if (COM.OleRun(objIUnknown.getAddress()) == OLE.S_OK) {
+        state = STATE_RUNNING;
+    }
 }
 protected void addObjectReferences() {
 	//
@@ -437,24 +474,27 @@ protected void addObjectReferences() {
 	if (objIUnknown.QueryInterface(COM.IIDIPersist, ppvObject) == COM.S_OK) {
 		IPersist objIPersist = new IPersist(ppvObject[0]);
 		GUID tempid = new GUID();
-		if (objIPersist.GetClassID(tempid) == COM.S_OK)
-			objClsid = tempid;
+        if (objIPersist.GetClassID(tempid) == COM.S_OK) {
+            objClsid = tempid;
+        }
 		objIPersist.Release();
 	}
 
 	//
 	ppvObject = new long[1];
 	int result = objIUnknown.QueryInterface(COM.IIDIViewObject2, ppvObject);
-	if (result != COM.S_OK)
-		OLE.error(OLE.ERROR_INTERFACE_NOT_FOUND, result);
+    if (result != COM.S_OK) {
+        OLE.error(OLE.ERROR_INTERFACE_NOT_FOUND, result);
+    }
 	objIViewObject2 = new IViewObject2(ppvObject[0]);
 	objIViewObject2.SetAdvise(aspect, 0, iAdviseSink.getAddress());
 
 	//
 	ppvObject = new long[1];
 	result = objIUnknown.QueryInterface(COM.IIDIOleObject, ppvObject);
-	if (result != COM.S_OK)
-		OLE.error(OLE.ERROR_INTERFACE_NOT_FOUND, result);
+    if (result != COM.S_OK) {
+        OLE.error(OLE.ERROR_INTERFACE_NOT_FOUND, result);
+    }
 	objIOleObject = new IOleObject(ppvObject[0]);
 	/*
 	 * Feature in Windows. Despite the fact that the clientSite was provided during the
@@ -497,8 +537,9 @@ protected int AddRef() {
 	return refCount;
 }
 private int CanInPlaceActivate() {
-	if (aspect == COM.DVASPECT_CONTENT && type == COM.OLEEMBEDDED)
-		return COM.S_OK;
+    if (aspect == COM.DVASPECT_CONTENT && type == COM.OLEEMBEDDED) {
+        return COM.S_OK;
+    }
 
 	return COM.S_FALSE;
 }
@@ -595,7 +636,9 @@ protected IStorage createTempStorage() {
 	long[] tempStorage = new long[1];
 	int grfMode = COM.STGM_READWRITE | COM.STGM_SHARE_EXCLUSIVE | COM.STGM_DELETEONRELEASE;
 	int result = COM.StgCreateDocfile(null, grfMode, 0, tempStorage);
-	if (result != COM.S_OK) OLE.error(OLE.ERROR_CANNOT_CREATE_FILE, result);
+    if (result != COM.S_OK) {
+        OLE.error(OLE.ERROR_CANNOT_CREATE_FILE, result);
+    }
 	return new IStorage(tempStorage[0]);
 }
 /**
@@ -614,20 +657,24 @@ private void deleteTempStorage() {
 	tempStorage = null;
 }
 protected void disposeCOMInterfaces() {
-	if (iOleClientSite != null)
-		iOleClientSite.dispose();
+    if (iOleClientSite != null) {
+        iOleClientSite.dispose();
+    }
 	iOleClientSite = null;
 
-	if (iAdviseSink != null)
-		iAdviseSink.dispose();
+    if (iAdviseSink != null) {
+        iAdviseSink.dispose();
+    }
 	iAdviseSink = null;
 
-	if (iOleInPlaceSite != null)
-		iOleInPlaceSite.dispose();
+    if (iOleInPlaceSite != null) {
+        iOleInPlaceSite.dispose();
+    }
 	iOleInPlaceSite = null;
 
-	if (iOleDocumentSite != null)
-		iOleDocumentSite.dispose();
+    if (iOleDocumentSite != null) {
+        iOleDocumentSite.dispose();
+    }
 	iOleDocumentSite = null;
 }
 /**
@@ -643,10 +690,13 @@ public int doVerb(int verb) {
 	// Not all OLE clients (for example PowerPoint) can be set into the running state in the constructor.
 	// The fix is to ensure that the client is in the running state before invoking any verb on it.
 	if (state == STATE_NONE) {
-		if (COM.OleRun(objIUnknown.getAddress()) == OLE.S_OK) state = STATE_RUNNING;
+        if (COM.OleRun(objIUnknown.getAddress()) == OLE.S_OK) {
+            state = STATE_RUNNING;
+        }
 	}
-	if (state == STATE_NONE || isStatic)
-		return COM.E_FAIL;
+    if (state == STATE_NONE || isStatic) {
+        return COM.E_FAIL;
+    }
 
 	// See PR: 1FV9RZW
 	RECT rect = new RECT();
@@ -678,8 +728,9 @@ public int exec(int cmdID, int options, Variant in, Variant out) {
 
 	if (objIOleCommandTarget == null) {
 		long[] address = new long[1];
-		if (objIUnknown.QueryInterface(COM.IIDIOleCommandTarget, address) != COM.S_OK)
-			return OLE.ERROR_INTERFACE_NOT_FOUND;
+        if (objIUnknown.QueryInterface(COM.IIDIOleCommandTarget, address) != COM.S_OK) {
+            return OLE.ERROR_INTERFACE_NOT_FOUND;
+        }
 		objIOleCommandTarget = new IOleCommandTarget(address[0]);
 	}
 
@@ -710,8 +761,9 @@ public int exec(int cmdID, int options, Variant in, Variant out) {
 }
 IDispatch getAutomationObject() {
 	long[] ppvObject = new long[1];
-	if (objIUnknown.QueryInterface(COM.IIDIDispatch, ppvObject) != COM.S_OK)
-		return null;
+    if (objIUnknown.QueryInterface(COM.IIDIDispatch, ppvObject) != COM.S_OK) {
+        return null;
+    }
 	return new IDispatch(ppvObject[0]);
 }
 /**
@@ -731,17 +783,20 @@ protected GUID getClassID(String clientName) {
 	}
 	if (COM.CLSIDFromProgID(buffer, guid) != COM.S_OK){
 		int result = COM.CLSIDFromString(buffer, guid);
-		if (result != COM.S_OK) return null;
+        if (result != COM.S_OK) {
+            return null;
+        }
 	}
 	return guid;
 }
 private int GetContainer(long ppContainer) {
-	/* Simple containers that do not support links to their embedded
-	 * objects probably do not need to implement this method. Instead,
-	 * they can return E_NOINTERFACE and set ppContainer to NULL.
-	 */
-	if (ppContainer != 0)
-		OS.MoveMemory(ppContainer, new long[]{0}, C.PTR_SIZEOF);
+    /* Simple containers that do not support links to their embedded
+     * objects probably do not need to implement this method. Instead,
+     * they can return E_NOINTERFACE and set ppContainer to NULL.
+     */
+    if (ppContainer != 0) {
+        OS.MoveMemory(ppContainer, new long[]{0}, C.PTR_SIZEOF);
+    }
 	return COM.E_NOINTERFACE;
 }
 private SIZE getExtent() {
@@ -798,9 +853,13 @@ String getProgID(GUID clsid) {
 int ActivateMe(long pViewToActivate) {
 	if (pViewToActivate == 0) {
 		long[] ppvObject = new long[1];
-		if (objIUnknown.QueryInterface(COM.IIDIOleDocument, ppvObject) != COM.S_OK) return COM.E_FAIL;
+        if (objIUnknown.QueryInterface(COM.IIDIOleDocument, ppvObject) != COM.S_OK) {
+            return COM.E_FAIL;
+        }
 		IOleDocument objOleDocument = new IOleDocument(ppvObject[0]);
-		if (objOleDocument.CreateView(iOleInPlaceSite.getAddress(), 0, 0, ppvObject) != COM.S_OK) return COM.E_FAIL;
+        if (objOleDocument.CreateView(iOleInPlaceSite.getAddress(), 0, 0, ppvObject) != COM.S_OK) {
+            return COM.E_FAIL;
+        }
 		objOleDocument.Release();
 		objDocumentView = new IOleDocumentView(ppvObject[0]);
 	} else {
@@ -815,8 +874,9 @@ int ActivateMe(long pViewToActivate) {
 	return COM.S_OK;
 }
 protected int GetWindow(long phwnd) {
-	if (phwnd == 0)
-		return COM.E_INVALIDARG;
+    if (phwnd == 0) {
+        return COM.E_INVALIDARG;
+    }
 	if (frame == null) {
 		OS.MoveMemory(phwnd, new long[] {0}, C.PTR_SIZEOF);
 		return COM.E_NOTIMPL;
@@ -836,21 +896,28 @@ RECT getRect() {
 	return rect;
 }
 private int GetWindowContext(long ppFrame, long ppDoc, long lprcPosRect, long lprcClipRect, long lpFrameInfo) {
-	if (frame == null || ppFrame == 0)
-		return COM.E_NOTIMPL;
+    if (frame == null || ppFrame == 0) {
+        return COM.E_NOTIMPL;
+    }
 
 	// fill in frame handle
 	long iOleInPlaceFrame = frame.getIOleInPlaceFrame();
 	OS.MoveMemory(ppFrame, new long[] {iOleInPlaceFrame}, C.PTR_SIZEOF);
 	frame.AddRef();
 
-	// null out document handle
-	if (ppDoc != 0) OS.MoveMemory(ppDoc, new long[] {0}, C.PTR_SIZEOF);
+    // null out document handle
+    if (ppDoc != 0) {
+        OS.MoveMemory(ppDoc, new long[]{0}, C.PTR_SIZEOF);
+    }
 
 	// fill in position and clipping info
 	RECT rect = getRect();
-	if (lprcPosRect != 0) OS.MoveMemory(lprcPosRect, rect, RECT.sizeof);
-	if (lprcClipRect != 0) OS.MoveMemory(lprcClipRect, rect, RECT.sizeof);
+    if (lprcPosRect != 0) {
+        OS.MoveMemory(lprcPosRect, rect, RECT.sizeof);
+    }
+    if (lprcClipRect != 0) {
+        OS.MoveMemory(lprcClipRect, rect, RECT.sizeof);
+    }
 
 	// get frame info
 	OLEINPLACEFRAMEINFO frameInfo = new OLEINPLACEFRAMEINFO();
@@ -894,43 +961,60 @@ public boolean isDirty() {
 
 	// Get access to the persistent storage mechanism
 	long[] address = new long[1];
-	if (objIOleObject.QueryInterface(COM.IIDIPersistFile, address) != COM.S_OK)
-		return true;
+    if (objIOleObject.QueryInterface(COM.IIDIPersistFile, address) != COM.S_OK) {
+        return true;
+    }
 	IPersistFile permStorage = new IPersistFile(address[0]);
 	// Are the contents of the permanent storage different from the file?
 	int result = permStorage.IsDirty();
 	permStorage.Release();
-	if (result == COM.S_FALSE) return false;
+    if (result == COM.S_FALSE) {
+        return false;
+    }
 	return true;
 }
 @Override
 public boolean isFocusControl () {
 	checkWidget ();
 	long focusHwnd = OS.GetFocus();
-	if (objIOleInPlaceObject == null) return (handle == focusHwnd);
+    if (objIOleInPlaceObject == null) {
+        return (handle == focusHwnd);
+    }
 	long[] phwnd = new long[1];
 	objIOleInPlaceObject.GetWindow(phwnd);
 	while (focusHwnd != 0) {
-		if (phwnd[0] == focusHwnd) return true;
+        if (phwnd[0] == focusHwnd) {
+            return true;
+        }
 		focusHwnd = OS.GetParent(focusHwnd);
 	}
 	return false;
 }
 private boolean isOffice2007(boolean program) {
 	String programID = getProgramID();
-	if (programID == null) return false;
+    if (programID == null) {
+        return false;
+    }
 	if (program) {
 		int lastDot = programID.lastIndexOf('.');
 		if (lastDot != -1) {
 			programID = programID.substring(0, lastDot);
 			GUID guid = getClassID(programID);
 			programID = getProgID(guid);
-			if (programID == null) return false;
+            if (programID == null) {
+                return false;
+            }
 		}
 	}
-	if (programID.equals("Word.Document.12")) return true; //$NON-NLS-1$
-	if (programID.equals("Excel.Sheet.12")) return true; //$NON-NLS-1$
-	if (programID.equals("PowerPoint.Show.12")) return true; //$NON-NLS-1$
+    if (programID.equals("Word.Document.12")) {
+        return true; //$NON-NLS-1$
+    }
+    if (programID.equals("Excel.Sheet.12")) {
+        return true; //$NON-NLS-1$
+    }
+    if (programID.equals("PowerPoint.Show.12")) {
+        return true; //$NON-NLS-1$
+    }
 	return false;
 }
 private int OnClose() {
@@ -950,8 +1034,9 @@ private void onDispose(Event e) {
 	removeListener(SWT.Traverse, listener);
 	removeListener(SWT.KeyDown, listener);
 
-	if (state != STATE_NONE)
-		doVerb(OLE.OLEIVERB_DISCARDUNDOSTATE);
+    if (state != STATE_NONE) {
+        doVerb(OLE.OLEIVERB_DISCARDUNDOSTATE);
+    }
 	deactivateInPlaceClient();
 	releaseObjectInterfaces(); // Note, must release object interfaces before releasing frame
 	deleteTempStorage();
@@ -963,7 +1048,9 @@ private void onDispose(Event e) {
 	frame = null;
 }
 void onFocusIn(Event e) {
-	if (inDispose) return;
+    if (inDispose) {
+        return;
+    }
 	if (state != STATE_UIACTIVE) {
 		long[] ppvObject = new long[1];
 		if (objIUnknown.QueryInterface(COM.IIDIOleInPlaceObject, ppvObject) == COM.S_OK) {
@@ -972,11 +1059,17 @@ void onFocusIn(Event e) {
 			doVerb(OLE.OLEIVERB_SHOW);
 		}
 	}
-	if (objIOleInPlaceObject == null) return;
-	if (isFocusControl()) return;
+    if (objIOleInPlaceObject == null) {
+        return;
+    }
+    if (isFocusControl()) {
+        return;
+    }
 	long[] phwnd = new long[1];
 	objIOleInPlaceObject.GetWindow(phwnd);
-	if (phwnd[0] == 0) return;
+    if (phwnd[0] == 0) {
+        return;
+    }
 	OS.SetFocus(phwnd[0]);
 }
 void onFocusOut(Event e) {
@@ -984,8 +1077,9 @@ void onFocusOut(Event e) {
 private int OnInPlaceActivate() {
 	state = STATE_INPLACEACTIVE;
 	frame.setCurrentDocument(this);
-	if (objIOleObject == null)
-		return COM.S_OK;
+    if (objIOleObject == null) {
+        return COM.S_OK;
+    }
 	long[] ppvObject = new long[1];
 	if (objIOleObject.QueryInterface(COM.IIDIOleInPlaceObject, ppvObject) == COM.S_OK) {
 		objIOleInPlaceObject = new IOleInPlaceObject(ppvObject[0]);
@@ -993,7 +1087,9 @@ private int OnInPlaceActivate() {
 	return COM.S_OK;
 }
 private int OnInPlaceDeactivate() {
-	if (objIOleInPlaceObject != null) objIOleInPlaceObject.Release();
+    if (objIOleInPlaceObject != null) {
+        objIOleInPlaceObject.Release();
+    }
 	objIOleInPlaceObject = null;
 	state = STATE_RUNNING;
 	redraw();
@@ -1036,7 +1132,9 @@ private int OnShowWindow(int fShow) {
 	return COM.S_OK;
 }
 private int OnUIActivate() {
-	if (objIOleInPlaceObject == null) return COM.E_FAIL;
+    if (objIOleInPlaceObject == null) {
+        return COM.E_FAIL;
+    }
 	state = STATE_UIACTIVE;
 	long[] phwnd = new long[1];
 	if (objIOleInPlaceObject.GetWindow(phwnd) == COM.S_OK) {
@@ -1045,8 +1143,10 @@ private int OnUIActivate() {
 	return COM.S_OK;
 }
 int OnUIDeactivate(int fUndoable) {
-	// currently, we are ignoring the fUndoable flag
-	if (frame == null || frame.isDisposed()) return COM.S_OK;
+    // currently, we are ignoring the fUndoable flag
+    if (frame == null || frame.isDisposed()) {
+        return COM.S_OK;
+    }
 	state = STATE_INPLACEACTIVE;
 	frame.SetActiveObject(0,0);
 	redraw();
@@ -1055,8 +1155,9 @@ int OnUIDeactivate(int fUndoable) {
 		shell.traverse(SWT.TRAVERSE_TAB_NEXT);
 	}
 	Menu menubar = shell.getMenuBar();
-	if (menubar == null || menubar.isDisposed())
-		return COM.S_OK;
+    if (menubar == null || menubar.isDisposed()) {
+        return COM.S_OK;
+    }
 
 	long shellHandle = shell.handle;
 	OS.SetMenu(shellHandle, menubar.handle);
@@ -1080,8 +1181,9 @@ private int OnViewChange(int dwAspect, int lindex) {
 }
 protected int QueryInterface(long riid, long ppvObject) {
 
-	if (riid == 0 || ppvObject == 0)
-		return COM.E_NOINTERFACE;
+    if (riid == 0 || ppvObject == 0) {
+        return COM.E_NOINTERFACE;
+    }
 	GUID guid = new GUID();
 	COM.MoveMemory(guid, riid, GUID.sizeof);
 
@@ -1127,8 +1229,9 @@ public int queryStatus(int cmd) {
 
 	if (objIOleCommandTarget == null) {
 		long[] address = new long[1];
-		if (objIUnknown.QueryInterface(COM.IIDIOleCommandTarget, address) != COM.S_OK)
-			return 0;
+        if (objIUnknown.QueryInterface(COM.IIDIOleCommandTarget, address) != COM.S_OK) {
+            return 0;
+        }
 		objIOleCommandTarget = new IOleCommandTarget(address[0]);
 	}
 
@@ -1137,7 +1240,9 @@ public int queryStatus(int cmd) {
 
 	int result = objIOleCommandTarget.QueryStatus(null, 1, olecmd, 0);
 
-	if (result != COM.S_OK) return 0;
+    if (result != COM.S_OK) {
+        return 0;
+    }
 
 	return olecmd.cmdf;
 }
@@ -1151,8 +1256,9 @@ protected int Release() {
 }
 protected void releaseObjectInterfaces() {
 
-	if (objIOleInPlaceObject!= null)
-		objIOleInPlaceObject.Release();
+    if (objIOleInPlaceObject != null) {
+        objIOleInPlaceObject.Release();
+    }
 	objIOleInPlaceObject = null;
 
 	if (objIOleObject != null) {
@@ -1172,8 +1278,9 @@ protected void releaseObjectInterfaces() {
 	}
 	objIViewObject2 = null;
 
-	if (objIOleCommandTarget != null)
-		objIOleCommandTarget.Release();
+    if (objIOleCommandTarget != null) {
+        objIOleCommandTarget.Release();
+    }
 	objIOleCommandTarget = null;
 
 	if (objIUnknown != null){
@@ -1205,8 +1312,9 @@ public boolean save(File file, boolean includeOleInfo) {
 	if (isOffice2007(false)) {
 		return saveOffice2007(file);
 	}
-	if (includeOleInfo)
-		return saveToStorageFile(file);
+    if (includeOleInfo) {
+        return saveToStorageFile(file);
+    }
 	return saveToTraditionalFile(file);
 }
 private boolean saveFromContents(long address, File file) {
@@ -1277,8 +1385,12 @@ private int SaveObject() {
 	return COM.S_OK;
 }
 private boolean saveOffice2007(File file) {
-	if (file == null || file.isDirectory()) return false;
-	if (!updateStorage()) return false;
+    if (file == null || file.isDirectory()) {
+        return false;
+    }
+    if (!updateStorage()) {
+        return false;
+    }
 	boolean result = false;
 
 	/* Excel fails to open the package stream when the PersistStorage is not in hands off mode */
@@ -1312,26 +1424,34 @@ private boolean saveOffice2007(File file) {
  * @return true if the save was successful
  */
 private boolean saveToStorageFile(File file) {
-	// The file will be saved using the formating of the current application - this
-	// may not be the format of the application that was originally used to create the file
-	// e.g. if an Excel file is opened in Word, the Word application will save the file in the
-	// Word format
-	// Note: if the file already exists, some applications will not overwrite the file
-	// In these cases, you should delete the file first (probably save the contents of the file in case the
-	// save fails)
-	if (file == null || file.isDirectory()) return false;
-	if (!updateStorage()) return false;
+    // The file will be saved using the formating of the current application - this
+    // may not be the format of the application that was originally used to create the file
+    // e.g. if an Excel file is opened in Word, the Word application will save the file in the
+    // Word format
+    // Note: if the file already exists, some applications will not overwrite the file
+    // In these cases, you should delete the file first (probably save the contents of the file in case the
+    // save fails)
+    if (file == null || file.isDirectory()) {
+        return false;
+    }
+    if (!updateStorage()) {
+        return false;
+    }
 
 	// get access to the persistent storage mechanism
 	long[] address = new long[1];
-	if (objIOleObject.QueryInterface(COM.IIDIPersistStorage, address) != COM.S_OK) return false;
+    if (objIOleObject.QueryInterface(COM.IIDIPersistStorage, address) != COM.S_OK) {
+        return false;
+    }
 	IPersistStorage permStorage = new IPersistStorage(address[0]);
 	try {
 		address = new long[1];
 		char[] path = (file.getAbsolutePath()+"\0").toCharArray();
 		int mode = COM.STGM_TRANSACTED | COM.STGM_READWRITE | COM.STGM_SHARE_EXCLUSIVE | COM.STGM_CREATE;
 		int result = COM.StgCreateDocfile(path, mode, 0, address); //Does an AddRef if successful
-		if (result != COM.S_OK) return false;
+        if (result != COM.S_OK) {
+            return false;
+        }
 		IStorage storage =  new IStorage(address[0]);
 		try {
 			if (COM.OleSave(permStorage.getAddress(), storage.getAddress(), false) == COM.S_OK) {
@@ -1358,22 +1478,26 @@ private boolean saveToStorageFile(File file) {
  * @return true if the save was successful
  */
 private boolean saveToTraditionalFile(File file) {
-	// Note: if the file already exists, some applications will not overwrite the file
-	// In these cases, you should delete the file first (probably save the contents of the file in case the
-	// save fails)
-	if (file == null || file.isDirectory())
-		return false;
-	if (!updateStorage())
-		return false;
+    // Note: if the file already exists, some applications will not overwrite the file
+    // In these cases, you should delete the file first (probably save the contents of the file in case the
+    // save fails)
+    if (file == null || file.isDirectory()) {
+        return false;
+    }
+    if (!updateStorage()) {
+        return false;
+    }
 
 	long[] address = new long[1];
-	// Look for a CONTENTS stream
-	if (tempStorage.OpenStream("CONTENTS", 0, COM.STGM_DIRECT | COM.STGM_READ | COM.STGM_SHARE_EXCLUSIVE, 0, address) == COM.S_OK) //$NON-NLS-1$
-		return saveFromContents(address[0], file);
+    // Look for a CONTENTS stream
+    if (tempStorage.OpenStream("CONTENTS", 0, COM.STGM_DIRECT | COM.STGM_READ | COM.STGM_SHARE_EXCLUSIVE, 0, address) == COM.S_OK) { //$NON-NLS-1$
+        return saveFromContents(address[0], file);
+    }
 
-	// Look for Ole 1.0 object stream
-	if (tempStorage.OpenStream("\1Ole10Native", 0, COM.STGM_DIRECT | COM.STGM_READ | COM.STGM_SHARE_EXCLUSIVE, 0, address) == COM.S_OK) //$NON-NLS-1$
-		return saveFromOle10Native(address[0], file);
+    // Look for Ole 1.0 object stream
+    if (tempStorage.OpenStream("\1Ole10Native", 0, COM.STGM_DIRECT | COM.STGM_READ | COM.STGM_SHARE_EXCLUSIVE, 0, address) == COM.S_OK) { //$NON-NLS-1$
+        return saveFromOle10Native(address[0], file);
+    }
 
 	return false;
 }
@@ -1395,12 +1519,16 @@ void setBounds() {
 	setObjectRects();
 }
 private void setExtent(int width, int height){
-	// Resize the width and height of the embedded/linked OLENatives object
-	// to the specified values.
+    // Resize the width and height of the embedded/linked OLENatives object
+    // to the specified values.
 
-	if (objIOleObject == null || isStatic || inUpdate) return;
+    if (objIOleObject == null || isStatic || inUpdate) {
+        return;
+    }
 	SIZE currentExtent = getExtent();
-	if (width == currentExtent.cx && height == currentExtent.cy) return;
+    if (width == currentExtent.cx && height == currentExtent.cy) {
+        return;
+    }
 
 	SIZE newExtent = new SIZE();
 	newExtent.cx = width; newExtent.cy = height;
@@ -1408,16 +1536,18 @@ private void setExtent(int width, int height){
 
 	// Get the server running first, then do a SetExtent, then show it
 	boolean alreadyRunning = COM.OleIsRunning(objIOleObject.getAddress());
-	if (!alreadyRunning)
-		COM.OleRun(objIOleObject.getAddress());
+    if (!alreadyRunning) {
+        COM.OleRun(objIOleObject.getAddress());
+    }
 
 	if (objIOleObject.SetExtent(aspect, newExtent) == COM.S_OK){
 		inUpdate = true;
 		objIOleObject.Update();
 		inUpdate = false;
-		if (!alreadyRunning)
-			// Close server if it wasn't already running upon entering this method.
-			objIOleObject.Close(COM.OLECLOSE_SAVEIFDIRTY);
+        if (!alreadyRunning) {
+            // Close server if it wasn't already running upon entering this method.
+            objIOleObject.Close(COM.OLECLOSE_SAVEIFDIRTY);
+        }
 	}
 }
 /**
@@ -1433,7 +1563,9 @@ public void setIndent(Rectangle newIndent) {
 	indent.bottom = newIndent.height;
 }
 private void setObjectRects() {
-	if (objIOleInPlaceObject == null) return;
+    if (objIOleInPlaceObject == null) {
+        return;
+    }
 	// size the object to fill the available space
 	// leave a border
 	RECT rect = getRect();
@@ -1458,12 +1590,16 @@ public void showProperties(String title) {
 
 	// Get the Property Page information from the OLE Object
 	long[] ppvObject = new long[1];
-	if (objIUnknown.QueryInterface(COM.IIDISpecifyPropertyPages, ppvObject) != COM.S_OK) return;
+    if (objIUnknown.QueryInterface(COM.IIDISpecifyPropertyPages, ppvObject) != COM.S_OK) {
+        return;
+    }
 	ISpecifyPropertyPages objISPP = new ISpecifyPropertyPages(ppvObject[0]);
 	CAUUID caGUID = new CAUUID();
 	int result = objISPP.GetPages(caGUID);
 	objISPP.Release();
-	if (result != COM.S_OK) return;
+    if (result != COM.S_OK) {
+        return;
+    }
 
 	// create a frame in which to display the pages
 	char[] chTitle = null;
@@ -1478,10 +1614,14 @@ public void showProperties(String title) {
 }
 private boolean updateStorage() {
 
-	if (tempStorage == null) return false;
+    if (tempStorage == null) {
+        return false;
+    }
 
 	long[] ppv = new long[1];
-	if (objIUnknown.QueryInterface(COM.IIDIPersistStorage, ppv) != COM.S_OK) return false;
+    if (objIUnknown.QueryInterface(COM.IIDIPersistStorage, ppv) != COM.S_OK) {
+        return false;
+    }
 	IPersistStorage iPersistStorage = new IPersistStorage(ppv[0]);
 
 	int result = COM.OleSave(iPersistStorage.getAddress(), tempStorage.getAddress(), true);

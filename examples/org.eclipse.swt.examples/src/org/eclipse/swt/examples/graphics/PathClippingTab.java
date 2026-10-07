@@ -121,7 +121,9 @@ public void createControlPanel(Composite parent) {
 }
 @Override
 public void paint(GC gc, int width, int height) {
-	if (!example.checkAdvancedGraphics()) return;
+    if (!example.checkAdvancedGraphics()) {
+        return;
+    }
 	Device device = gc.getDevice();
 
 	int clipping = clippingCb.getSelectionIndex();
@@ -250,6 +252,8 @@ public void paint(GC gc, int width, int height) {
 		gc.setBackgroundPattern(pattern);
 	}
 	gc.fillRectangle(0, 0, width, height);
-	if (pattern != null) pattern.dispose();
+    if (pattern != null) {
+        pattern.dispose();
+    }
 }
 }

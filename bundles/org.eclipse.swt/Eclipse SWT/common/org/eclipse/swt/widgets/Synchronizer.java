@@ -75,7 +75,9 @@ void moveAllEventsTo (Synchronizer toReceiveTheEvents) {
 
 void addLast (RunnableLock lock) {
 	messages.add(lock);
-	if (messages.peek() == lock) display.wakeThread ();
+    if (messages.peek() == lock) {
+        display.wakeThread();
+    }
 }
 
 /**
@@ -122,7 +124,9 @@ boolean runAsyncMessages (boolean all) {
 	boolean run = false;
 	do {
 		RunnableLock lock = removeFirst ();
-		if (lock == null) return run;
+        if (lock == null) {
+            return run;
+        }
 		run = true;
 		synchronized (lock) {
 			syncThread = lock.thread;
@@ -161,7 +165,9 @@ boolean runAsyncMessages (boolean all) {
 protected void syncExec (Runnable runnable) {
 	RunnableLock lock = null;
 	synchronized (Device.class) {
-		if (display == null || display.isDisposed ()) SWT.error (SWT.ERROR_DEVICE_DISPOSED);
+        if (display == null || display.isDisposed()) {
+            SWT.error(SWT.ERROR_DEVICE_DISPOSED);
+        }
 		if (!display.isValidThread ()) {
 			if (runnable == null) {
 				display.wake ();

@@ -130,7 +130,9 @@ public OleFrame(Composite parent, int style) {
 	initMsgHook(display);
 }
 private static void initCheckFocus (final Display display) {
-	if (display.getData(CHECK_FOCUS) != null) return;
+    if (display.getData(CHECK_FOCUS) != null) {
+        return;
+    }
 	display.setData(CHECK_FOCUS, CHECK_FOCUS);
 	final int time = 50;
 	final Runnable[] timer = new Runnable[1];
@@ -170,7 +172,9 @@ private static void initCheckFocus (final Display display) {
 	display.timerExec(time, timer[0]);
 }
 private static void initMsgHook(Display display) {
-	if (display.getData(HHOOK) != null) return;
+    if (display.getData(HHOOK) != null) {
+        return;
+    }
 	final Callback callback = new Callback(OleFrame.class, "getMsgProc", 3); //$NON-NLS-1$
 	long address = callback.getAddress();
 	int threadId = OS.GetCurrentThreadId();
@@ -182,15 +186,23 @@ private static void initMsgHook(Display display) {
 	display.setData(HHOOK, new LONG(hHook));
 	display.setData(HHOOKMSG, new MSG());
 	display.disposeExec(() -> {
-		if (hHook != 0) OS.UnhookWindowsHookEx(hHook);
-		if (callback != null) callback.dispose();
+        if (hHook != 0) {
+            OS.UnhookWindowsHookEx(hHook);
+        }
+        if (callback != null) {
+            callback.dispose();
+        }
 	});
 }
 static long getMsgProc(long code, long wParam, long lParam) {
 	Display display = Display.getCurrent();
-	if (display == null) return 0;
+    if (display == null) {
+        return 0;
+    }
 	LONG hHook = (LONG)display.getData(HHOOK);
-	if (hHook == null) return 0;
+    if (hHook == null) {
+        return 0;
+    }
 	if (code < 0 || (wParam & OS.PM_REMOVE) == 0) {
 		return OS.CallNextHookEx(hHook.value, (int)code, wParam, lParam);
 	}
@@ -203,7 +215,9 @@ static long getMsgProc(long code, long wParam, long lParam) {
 			long hwnd = msg.hwnd;
 			while (hwnd != 0) {
 				widget = display.findWidget (hwnd);
-				if (widget != null) break;
+                if (widget != null) {
+                    break;
+                }
 				hwnd = OS.GetParent (hwnd);
 			}
 			if (widget instanceof OleClientSite) {
@@ -221,12 +235,18 @@ static long getMsgProc(long code, long wParam, long lParam) {
 						frame.setData(CONSUME_KEY, null);
 						display.setData(ACCEL_KEY_HIT, Boolean.TRUE);
 						consumed = frame.translateOleAccelerator(msg);
-						/* translateOleAccelerator() may send client events, ensure that the frame and display are still valid */
-						if (display.isDisposed()) return 0;
+                        /* translateOleAccelerator() may send client events, ensure that the frame and display are still valid */
+                        if (display.isDisposed()) {
+                            return 0;
+                        }
 						display.setData(ACCEL_KEY_HIT, Boolean.FALSE);
-						if (frame.isDisposed()) return 0;
+                        if (frame.isDisposed()) {
+                            return 0;
+                        }
 						String value = (String)frame.getData(CONSUME_KEY);
-						if (value != null) consumed = value.equals("true"); //$NON-NLS-1$
+                        if (value != null) {
+                            consumed = value.equals("true"); //$NON-NLS-1$
+                        }
 						frame.setData(CONSUME_KEY, null);
 					}
 					boolean accentKey = false;
@@ -253,7 +273,9 @@ static long getMsgProc(long code, long wParam, long lParam) {
 													if ((OS.GetKeyState (OS.VK_SHIFT) < 0) == ((state & 0x1) != 0) &&
 														(OS.GetKeyState (OS.VK_CONTROL) < 0) == ((state & 0x2) != 0) &&
 														(OS.GetKeyState (OS.VK_MENU) < 0) == ((state & 0x4) != 0)) {
-															if ((state & 0x7) != 0) accentKey = true;
+                                                        if ((state & 0x7) != 0) {
+                                                            accentKey = true;
+                                                        }
 															break;
 													}
 												}
@@ -351,17 +373,20 @@ private void createCOMInterfaces() {
 	};
 }
 private void disposeCOMInterfaces () {
-	if (iOleInPlaceFrame != null)
-		iOleInPlaceFrame.dispose();
+    if (iOleInPlaceFrame != null) {
+        iOleInPlaceFrame.dispose();
+    }
 	iOleInPlaceFrame = null;
 }
 private int GetBorder(long lprectBorder) {
-	/*
-	The IOleInPlaceUIWindow::GetBorder function, when called on a document or frame window
-	object, returns the outer rectangle (relative to the window) where the object can put
-	toolbars or similar controls.
-	*/
-	if (lprectBorder == 0) return COM.E_INVALIDARG;
+    /*
+    The IOleInPlaceUIWindow::GetBorder function, when called on a document or frame window
+    object, returns the outer rectangle (relative to the window) where the object can put
+    toolbars or similar controls.
+    */
+    if (lprectBorder == 0) {
+        return COM.E_INVALIDARG;
+    }
 	RECT rectBorder = new RECT();
 	// Coordinates must be relative to the window
 	OS.GetClientRect(handle, rectBorder);
@@ -535,9 +560,10 @@ private int InsertMenus(long hmenuShared, long lpMenuWidths) {
 	// copy the menu item count information to the pointer
 	OS.MoveMemory(lpMenuWidths + 16, new int[] {windowMenuCount}, 4);
 
-	// free resources used in querying the OS
-	if (pszText != 0)
-		OS.HeapFree(hHeap, 0, pszText);
+    // free resources used in querying the OS
+    if (pszText != 0) {
+        OS.HeapFree(hHeap, 0, pszText);
+    }
 	return COM.S_OK;
 }
 void onActivate(Event e) {
@@ -572,8 +598,9 @@ void onFocusIn(Event e) {
 }
 void onFocusOut(Event e) {
 	Control control = getDisplay().getFocusControl();
-	if (OS.GetMenu(shellHandle) != oldMenuHandle && control != null && control.handle != shellHandle)
-		OS.SetMenu(shellHandle, oldMenuHandle);
+    if (OS.GetMenu(shellHandle) != oldMenuHandle && control != null && control.handle != shellHandle) {
+        OS.SetMenu(shellHandle, oldMenuHandle);
+    }
 }
 private void onResize(Event e) {
 	if (objIOleInPlaceActiveObject != null) {
@@ -584,8 +611,9 @@ private void onResize(Event e) {
 }
 private int QueryInterface(long riid, long ppvObject) {
 //	implements IUnknown, IOleInPlaceFrame, IOleContainer, IOleInPlaceUIWindow
-	if (riid == 0 || ppvObject == 0)
-		return COM.E_INVALIDARG;
+    if (riid == 0 || ppvObject == 0) {
+        return COM.E_INVALIDARG;
+    }
 	GUID guid = new GUID();
 	COM.MoveMemory(guid, riid, GUID.sizeof);
 	if (COM.IsEqualGUID(guid, COM.IIDIUnknown) || COM.IsEqualGUID(guid, COM.IIDIOleInPlaceFrame) ) {
@@ -621,7 +649,9 @@ private void releaseObjectInterfaces() {
 private int RemoveMenus(long hmenuShared) {
 
 	Menu menubar = getShell().getMenuBar();
-	if (menubar == null || menubar.isDisposed()) return COM.S_FALSE;
+    if (menubar == null || menubar.isDisposed()) {
+        return COM.S_FALSE;
+    }
 
 	long hMenu = menubar.handle;
 
@@ -679,15 +709,19 @@ int SetActiveObject(long pActiveObject, long pszObjName) {
 	return COM.S_OK;
 }
 private int SetBorderSpace(long pborderwidths) {
-	// A Control/Document can :
-	// Use its own toolbars, requesting border space of a specific size, or,
-	// Use no toolbars, but force the container to remove its toolbars by passing a
-	//   valid BORDERWIDTHS structure containing nothing but zeros in the pborderwidths parameter, or,
-	// Use no toolbars but allow the in-place container to leave its toolbars up by
-	//   passing NULL as the pborderwidths parameter.
-	if (objIOleInPlaceActiveObject == null) return COM.S_OK;
+    // A Control/Document can :
+    // Use its own toolbars, requesting border space of a specific size, or,
+    // Use no toolbars, but force the container to remove its toolbars by passing a
+    //   valid BORDERWIDTHS structure containing nothing but zeros in the pborderwidths parameter, or,
+    // Use no toolbars but allow the in-place container to leave its toolbars up by
+    //   passing NULL as the pborderwidths parameter.
+    if (objIOleInPlaceActiveObject == null) {
+        return COM.S_OK;
+    }
 	RECT borderwidth = new RECT();
-	if (pborderwidths == 0 || currentdoc == null ) return COM.S_OK;
+    if (pborderwidths == 0 || currentdoc == null) {
+        return COM.S_OK;
+    }
 
 	COM.MoveMemory(borderwidth, pborderwidths, RECT.sizeof);
 	currentdoc.setBorderSpace(borderwidth);
@@ -748,8 +782,9 @@ public void setFileMenus(MenuItem[] fileMenus){
 }
 private int SetMenu(long hmenuShared, long holemenu, long hwndActiveObject) {
 	long inPlaceActiveObject = 0;
-	if (objIOleInPlaceActiveObject != null)
-		inPlaceActiveObject = objIOleInPlaceActiveObject.getAddress();
+    if (objIOleInPlaceActiveObject != null) {
+        inPlaceActiveObject = objIOleInPlaceActiveObject.getAddress();
+    }
 
 	Menu menubar = getShell().getMenuBar();
 	if (menubar == null || menubar.isDisposed()){
@@ -762,7 +797,9 @@ private int SetMenu(long hmenuShared, long holemenu, long hwndActiveObject) {
 		// re-instate the original menu - this occurs on deactivation
 		hmenuShared = menubar.handle;
 	}
-	if (hmenuShared == 0) return COM.E_FAIL;
+    if (hmenuShared == 0) {
+        return COM.E_FAIL;
+    }
 
 	shellHandle = handle;
 	oldMenuHandle = menubar.handle;
@@ -792,19 +829,27 @@ public void setWindowMenus(MenuItem[] windowMenus){
 	windowMenuItems = windowMenus;
 }
 private boolean translateOleAccelerator(MSG msg) {
-	if (objIOleInPlaceActiveObject == null) return false;
+    if (objIOleInPlaceActiveObject == null) {
+        return false;
+    }
 	int result = objIOleInPlaceActiveObject.TranslateAccelerator(msg);
 	return (result != COM.S_FALSE && result != COM.E_NOTIMPL);
 }
 private int TranslateAccelerator(long lpmsg, int wID){
 	Menu menubar = getShell().getMenuBar();
-	if (menubar == null || menubar.isDisposed() || !menubar.isEnabled()) return COM.S_FALSE;
-	if (wID < 0) return COM.S_FALSE;
+    if (menubar == null || menubar.isDisposed() || !menubar.isEnabled()) {
+        return COM.S_FALSE;
+    }
+    if (wID < 0) {
+        return COM.S_FALSE;
+    }
 
 	Shell shell = menubar.getShell();
 	long hwnd = shell.handle;
 	long hAccel = OS.SendMessage(hwnd, OS.WM_APP+1, 0, 0);
-	if (hAccel == 0) return COM.S_FALSE;
+    if (hAccel == 0) {
+        return COM.S_FALSE;
+    }
 
 	MSG msg = new MSG();
 	OS.MoveMemory(msg, lpmsg, MSG.sizeof);

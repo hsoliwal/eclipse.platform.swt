@@ -86,7 +86,9 @@ public class OleBrowserView extends ViewPart {
 			webControlSite.deactivateInPlaceClient();
 			activated = false;
 		}
-		if (webBrowser != null) webBrowser.dispose();
+        if (webBrowser != null) {
+            webBrowser.dispose();
+        }
 		webBrowser = null;
 		super.dispose();
 	}
@@ -118,7 +120,9 @@ public class OleBrowserView extends ViewPart {
 		webCommandBackward.setImage(OlePlugin.images[OlePlugin.biBack]);
 		webCommandBackward.setEnabled(false);
 		webCommandBackward.addListener(SWT.Selection, e -> {
-			if (webBrowser == null) return;
+            if (webBrowser == null) {
+                return;
+            }
 			webBrowser.GoBack();
 		});
 	
@@ -129,7 +133,9 @@ public class OleBrowserView extends ViewPart {
 		webCommandForward.setImage(OlePlugin.images[OlePlugin.biForward]);
 		webCommandForward.setEnabled(false);
 		webCommandForward.addListener(SWT.Selection, e -> {
-			if (webBrowser == null) return;
+            if (webBrowser == null) {
+                return;
+            }
 			webBrowser.GoForward();
 		});
 
@@ -143,7 +149,9 @@ public class OleBrowserView extends ViewPart {
 		webCommandHome.setImage(OlePlugin.images[OlePlugin.biHome]);
 		webCommandHome.setEnabled(false);
 		webCommandHome.addListener(SWT.Selection, e -> {
-			if (webBrowser == null) return;
+            if (webBrowser == null) {
+                return;
+            }
 			webBrowser.GoHome();
 		});
 
@@ -154,7 +162,9 @@ public class OleBrowserView extends ViewPart {
 		webCommandStop.setImage(OlePlugin.images[OlePlugin.biStop]);
 		webCommandStop.setEnabled(false);
 		webCommandStop.addListener(SWT.Selection, e -> {
-			if (webBrowser == null) return;
+            if (webBrowser == null) {
+                return;
+            }
 			webBrowser.Stop();
 		});
 
@@ -165,7 +175,9 @@ public class OleBrowserView extends ViewPart {
 		webCommandRefresh.setImage(OlePlugin.images[OlePlugin.biRefresh]);
 		webCommandRefresh.setEnabled(false);
 		webCommandRefresh.addListener(SWT.Selection, e -> {
-			if (webBrowser == null) return;
+            if (webBrowser == null) {
+                return;
+            }
 			webBrowser.Refresh();
 		});
 
@@ -179,7 +191,9 @@ public class OleBrowserView extends ViewPart {
 		webCommandSearch.setImage(OlePlugin.images[OlePlugin.biSearch]);
 		webCommandSearch.setEnabled(false);
 		webCommandSearch.addListener(SWT.Selection, e -> {
-			if (webBrowser == null) return;
+            if (webBrowser == null) {
+                return;
+            }
 			webBrowser.GoSearch();
 		});
 
@@ -212,7 +226,9 @@ public class OleBrowserView extends ViewPart {
 		webNavigateButton.setText(OlePlugin.getResourceString("browser.Go.text"));
 		webNavigateButton.setFont(OlePlugin.browserFont);
 		webNavigateButton.addListener(SWT.Selection, event -> {
-			if (webBrowser == null) return;
+            if (webBrowser == null) {
+                return;
+            }
 			webBrowser.Navigate(webUrl.getText());
 		});
 	}
@@ -270,8 +286,9 @@ public class OleBrowserView extends ViewPart {
 		webControlSite.addEventListener(OleWebBrowser.ProgressChange, event -> {
 			Variant progress = event.arguments[0];
 			Variant maxProgress = event.arguments[1];
-			if (progress == null || maxProgress == null)
-				return;
+            if (progress == null || maxProgress == null) {
+                return;
+            }
 			webProgress.setMaximum(maxProgress.getInt());
 			webProgress.setSelection(progress.getInt());
 		});
@@ -279,15 +296,20 @@ public class OleBrowserView extends ViewPart {
 		// Respond to StatusTextChange events by updating the Status Text label
 		webControlSite.addEventListener(OleWebBrowser.StatusTextChange, event -> {
 			Variant statusText = event.arguments[0];
-			if (statusText == null)	return;
+            if (statusText == null) {
+                return;
+            }
 			String text = statusText.getString();
-			if (text != null)
-				webStatus.setText(text);
+            if (text != null) {
+                webStatus.setText(text);
+            }
 		});
 		
 		// Listen for changes to the ready state and print out the current state 
 		webControlSite.addPropertyListener(OleWebBrowser.DISPID_READYSTATE, event -> {
-			if (event.detail == OLE.PROPERTY_CHANGING) return;
+            if (event.detail == OLE.PROPERTY_CHANGING) {
+                return;
+            }
 			int state = webBrowser.getReadyState();
 			switch (state) {
 				case OleWebBrowser.READYSTATE_UNINITIALIZED:
@@ -328,7 +350,9 @@ public class OleBrowserView extends ViewPart {
 
 		// Listen for changes to the active command states
 		webControlSite.addEventListener(OleWebBrowser.CommandStateChange, event -> {
-			if (event.type != OleWebBrowser.CommandStateChange) return;
+            if (event.type != OleWebBrowser.CommandStateChange) {
+                return;
+            }
 			final int commandID =
 				(event.arguments[0] != null) ? event.arguments[0].getInt() : 0;
 			final boolean commandEnabled =
@@ -346,6 +370,8 @@ public class OleBrowserView extends ViewPart {
 
 		// in place activate the ActiveX control		
 		activated = (webControlSite.doVerb(OLE.OLEIVERB_INPLACEACTIVATE) == OLE.S_OK);
-		if (activated) webBrowser.GoHome();
+        if (activated) {
+            webBrowser.GoHome();
+        }
 	}
 }

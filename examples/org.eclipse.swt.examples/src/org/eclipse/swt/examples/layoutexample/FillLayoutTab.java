@@ -62,8 +62,9 @@ class FillLayoutTab extends Tab {
 		table.addMouseListener(MouseListener.mouseDownAdapter(e -> {
 			resetEditors();
 			index = table.getSelectionIndex();
-			if (index == -1)
-				return;
+            if (index == -1) {
+                return;
+            }
 			TableItem oldItem = comboEditor.getItem();
 			newItem = table.getItem(index);
 			if (newItem == oldItem || newItem != lastSelected) {
@@ -215,7 +216,9 @@ class FillLayoutTab extends Tab {
 			for (int i = 0 ; i < TOTAL_COLS; i++) {
 				oldItem.setText (i, data.get (row) [i]);
 			}
-			if (!tab) disposeEditors ();
+            if (!tab) {
+                disposeEditors();
+            }
 		}
 		setLayoutState ();
 		refreshLayoutComposite ();
