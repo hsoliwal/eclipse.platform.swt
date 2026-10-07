@@ -64,6 +64,8 @@ public class ViewportScreenshotRegressionTest {
 	public void test_viewportScreenshotRegression () throws Exception {
 		Assumptions.assumeTrue (Boolean.getBoolean (ENABLED), "viewport screenshot lane disabled");
 		Assumptions.assumeTrue (SwtTestUtil.isGTK, "initial deterministic screenshot lane is GTK");
+		assertNotEquals ("1", System.getenv ("SWT_GTK4"), "Screen capture lane requires GTK3");
+		assertEquals ("x11", System.getenv ("GDK_BACKEND"), "Screen capture lane requires X11");
 
 		Path output = Path.of (System.getProperty (OUTPUT, "target/screenshots/viewport"));
 		Files.createDirectories (output);
@@ -479,6 +481,11 @@ public class ViewportScreenshotRegressionTest {
 		target.update ();
 		drainEvents (80);
 
+		Rectangle screenBounds = SwtScreenshotCapture.screenBounds (target);
+		Path screenPng = output.resolve (name + "-screen.png");
+		SwtScreenshotCapture.Result screen = SwtScreenshotCapture.captureScreenControl (target, screenPng);
+		ImageData pixels = new ImageData (screenPng.toString ());
+
 		Path png = output.resolve (name + ".png");
 		SwtScreenshotCapture.Result capture = SwtScreenshotCapture.captureControl (target, png);
 
@@ -508,10 +515,78 @@ public class ViewportScreenshotRegressionTest {
 						.append ('\n');
 			}
 		}
+		text.append ("capture.api=SWT.GC(Display).copyArea\n");
+		text.append ("capture.bounds=").append (screenBounds).append ('\n');
+		text.append ("capture.coordinateSpace=").append ("display-logical").append ('\n');
+		text.append ("capture.pixels=").append (pixels.width + "x" + pixels.height).append ('\n');
+		text.append ("capture.dpi=").append (target.getDisplay ().getDPI ()).append ('\n');
+		text.append ("capture.backend=").append (System.getenv ("GDK_BACKEND")).append ('\n');
+		text.append ("capture.sha256=").append (screen.sha256 ()).append ('\n');
 		text.append (sidecar);
 		Files.writeString (
 				output.resolve (name + ".txt"), text, StandardCharsets.UTF_8);
 	}
+	@Test
+	public void test_swtScreenCaptureTracksVisiblePixels () throws Exception {
+		Assumptions.assumeTrue (Boolean.getBoolean (ENABLED), "viewport screenshot lane disabled");
+		Assumptions.assumeTrue (SwtTestUtil.isGTK, "initial deterministic screenshot lane is GTK");
+		assertNotEquals ("1", System.getenv ("SWT_GTK4"), "Screen capture lane requires GTK3");
+		assertEquals ("x11", System.getenv ("GDK_BACKEND"), "Screen capture lane requires X11");
+		Path output = Path.of (System.getProperty (OUTPUT, "target/screenshots/viewport"));
+		Files.createDirectories (output);
+		Display display = shell.getDisplay ();
+		shell.setBounds (40, 40, 320, 240);
+		Canvas target = new Canvas (shell, SWT.NONE);
+		target.setBounds (20, 30, 120, 80);
+		target.setBackground (display.getSystemColor (SWT.COLOR_RED));
+		target.addListener (SWT.Paint, event -> {
+			Rectangle oldClip = event.gc.getClipping ();
+			try {
+				event.gc.setClipping (90, 58, 20, 12);
+				event.gc.setBackground (display.getSystemColor (SWT.COLOR_YELLOW));
+				event.gc.fillRectangle (80, 50, 60, 40);
+			} finally { event.gc.setClipping (oldClip); }
+		});
+		Canvas overlap = new Canvas (shell, SWT.NONE);
+		overlap.setBounds (60, 40, 40, 40);
+		overlap.setBackground (display.getSystemColor (SWT.COLOR_GREEN));
+		overlap.moveAbove (target);
+		shell.open ();
+		drainEvents (120);
+		Rectangle firstBounds = SwtScreenshotCapture.screenBounds (target);
+		Path firstPng = output.resolve ("capture-canary-first.png");
+		SwtScreenshotCapture.Result firstCapture = SwtScreenshotCapture.captureScreenControl (target, firstPng);
+		ImageData first = new ImageData (firstPng.toString ());
+		assertScreenPixel (first, target.getSize (), 10, 10, display.getSystemColor (SWT.COLOR_RED).getRGB ());
+		assertScreenPixel (first, target.getSize (), 50, 20, display.getSystemColor (SWT.COLOR_GREEN).getRGB ());
+
+		target.setBackground (display.getSystemColor (SWT.COLOR_BLUE));
+		shell.setLocation (100, 90);
+		target.redraw (); target.update ();
+		drainEvents (120);
+		Rectangle secondBounds = SwtScreenshotCapture.screenBounds (target);
+		assertNotEquals (firstBounds, secondBounds, "The fixture must move in display coordinates");
+		Path secondPng = output.resolve ("capture-canary-second.png");
+		SwtScreenshotCapture.Result secondCapture = SwtScreenshotCapture.captureScreenControl (target, secondPng);
+		// Decode persisted artifacts too: a nonempty PNG is not evidence of current visible pixels.
+		ImageData decodedFirst = new ImageData (firstPng.toString ());
+		ImageData decodedSecond = new ImageData (secondPng.toString ());
+		assertScreenPixel (decodedFirst, target.getSize (), 10, 10, display.getSystemColor (SWT.COLOR_RED).getRGB ());
+		assertScreenPixel (decodedSecond, target.getSize (), 10, 10, display.getSystemColor (SWT.COLOR_BLUE).getRGB ());
+		assertScreenPixel (decodedSecond, target.getSize (), 50, 20, display.getSystemColor (SWT.COLOR_GREEN).getRGB ());
+		assertScreenPixel (decodedSecond, target.getSize (), 95, 62, display.getSystemColor (SWT.COLOR_YELLOW).getRGB ());
+		assertScreenPixel (decodedSecond, target.getSize (), 85, 55, display.getSystemColor (SWT.COLOR_BLUE).getRGB ());
+		assertNotEquals (firstCapture.sha256 (), secondCapture.sha256 (), "Repainted screen captures must change");
+	}
+
+	private static void assertScreenPixel (ImageData data, Point logicalSize, int x, int y, RGB expected) {
+		assertTrue (data.width > 0 && data.height > 0);
+		int pixelX = x * data.width / logicalSize.x;
+		int pixelY = y * data.height / logicalSize.y;
+		assertEquals (expected, data.palette.getRGB (data.getPixel (pixelX, pixelY)),
+				"SWT screen capture must contain the current visible pixel at " + x + "," + y);
+	}
+
 	private void drainEvents (long millis) throws InterruptedException {
 		Display display = shell.getDisplay ();
 		long deadline = System.currentTimeMillis () + millis;

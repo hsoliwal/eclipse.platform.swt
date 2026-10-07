@@ -87,3 +87,21 @@ The newly authored resource test, this document and Synexia recipe tooling are A
 Existing SWT files retain their upstream notices; running a recipe does not change their license.
 See `docs/licenses/synexia-viewport-Apache-2.0.txt` for the license and
 `docs/licenses/synexia-viewport-NOTICE.txt` for the exact scope.
+
+## SWT screen capture accompanies resource qualification
+
+`ViewportScreenshotRegressionTest` uses SWT `GC(Display).copyArea` for the required
+`<scenario>-screen.png` screen artifact. The retained `<scenario>.png` records the separate
+`Control.print` path (or its control-GC fallback). These represent different observations:
+the on-screen image includes overlapping controls and the actual viewport composition.
+Each scenario sidecar binds API, screen bounds, logical coordinate space, pixel dimensions,
+DPI, backend and both image hashes. Existing optional `<scenario>-native.png` shell captures remain available. The screen-capture canary moves/repaints a colored control
+under a second control and verifies known colors in decoded before/after PNGs.
+
+The dedicated GTK3/X11 lane requires both screenshot tests, nine screen/rendered pairs and
+two canary PNGs. Other platform/backend support requires its own run; no silent rendering
+fallback qualifies screen capture. Existing heap/RSS/CPU tests and budgets remain unchanged;
+screenshot work runs in the separate screenshot phase. Recipe ownership remains in Synexia:
+`synexia-openrewrite-recipes/recipe-crates/viewport-swt-screen-capture-20261007`.
+
+OpenCV 4.12.0.88 and NumPy 2.2.6 independently decode the PNGs and verify exact canary geometry, overlap, clip bounds and repaint area. Six negative controls must fail. Scene checks reject blank captures and stale scroll/resize frames; they do not establish cross-theme golden equivalence. JUnit supplies behavior checks; heap/RSS/CPU gates run separately. Acceptance is fully automated, with no manual QA sign-off.

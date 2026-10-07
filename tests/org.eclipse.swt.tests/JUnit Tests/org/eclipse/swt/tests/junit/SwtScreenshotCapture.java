@@ -12,6 +12,7 @@ package org.eclipse.swt.tests.junit;
 
 import java.io.*;
 import java.nio.file.*;
+import java.nio.file.Path;
 import java.security.*;
 import java.util.*;
 
@@ -102,6 +103,41 @@ final class SwtScreenshotCapture {
 		} finally {
 			image.dispose ();
 		}
+		return new Result (path, Method.DISPLAY_COPY_AREA, sha256 (path));
+	}
+
+	/** Visible control bounds in display coordinates, including the control trim. */
+	static Rectangle screenBounds (Control control) {
+		Objects.requireNonNull (control, "control");
+		if (control.isDisposed () || !control.isVisible ()) {
+			throw new IllegalArgumentException ("screen capture requires a visible control");
+		}
+		Display display = control.getDisplay ();
+		if (Display.getCurrent () != display) {
+			throw new IllegalStateException ("screen capture requires the SWT UI thread");
+		}
+		Rectangle bounds = control.getBounds ();
+		Point origin = control instanceof Shell ? new Point (bounds.x, bounds.y)
+				: control.getParent ().toDisplay (bounds.x, bounds.y);
+		Rectangle screen = new Rectangle (origin.x, origin.y, bounds.width, bounds.height);
+		if (screen.width <= 0 || screen.height <= 0 || !screen.equals (screen.intersection (display.getBounds ()))) {
+			throw new IllegalArgumentException ("screen capture must be fully on the display");
+		}
+		return screen;
+	}
+
+	/** Capture actual visible pixels; there is deliberately no offscreen rendering fallback. */
+	static Result captureScreenControl (Control control, Path path) throws IOException {
+		Objects.requireNonNull (path, "path");
+		Rectangle bounds = screenBounds (control);
+		Display display = control.getDisplay ();
+		Image image = new Image (display, bounds.width, bounds.height);
+		try {
+			GC displayGc = new GC (display);
+			try { displayGc.copyArea (image, bounds.x, bounds.y); }
+			finally { displayGc.dispose (); }
+			savePng (image, path);
+		} finally { image.dispose (); }
 		return new Result (path, Method.DISPLAY_COPY_AREA, sha256 (path));
 	}
 
