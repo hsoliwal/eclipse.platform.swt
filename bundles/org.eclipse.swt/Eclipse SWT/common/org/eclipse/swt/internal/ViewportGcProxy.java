@@ -33,6 +33,7 @@ public final class ViewportGcProxy implements AutoCloseable {
 
 	private final GC gc;
 	private final Region originalClipping;
+	private final Region originalDeviceClipping;
 	private final boolean originalAdvanced;
 	private final Transform originalTransform;
 	private final LineAttributes originalLineAttributes;
@@ -54,22 +55,44 @@ public final class ViewportGcProxy implements AutoCloseable {
 		if (gc.isDisposed ()) throw new IllegalArgumentException ("disposed GC");
 		this.gc = gc;
 		originalAdvanced = gc.getAdvanced ();
-		originalClipping = new Region (gc.getDevice ());
-		gc.getClipping (originalClipping);
-		originalTransform = new Transform (gc.getDevice ());
-		gc.getTransform (originalTransform);
-		originalLineAttributes = copy (gc.getLineAttributes ());
-		originalAlpha = gc.getAlpha ();
-		originalAntialias = gc.getAntialias ();
-		originalTextAntialias = gc.getTextAntialias ();
-		originalInterpolation = gc.getInterpolation ();
-		originalFillRule = gc.getFillRule ();
-		originalXorMode = gc.getXORMode ();
-		originalForeground = gc.getForeground ();
-		originalBackground = gc.getBackground ();
-		originalForegroundPattern = gc.getForegroundPattern ();
-		originalBackgroundPattern = gc.getBackgroundPattern ();
-		originalFont = gc.getFont ();
+		Region clipping = new Region (gc.getDevice ());
+		Region deviceClipping = null;
+		Transform transform = null;
+		try {
+			gc.getClipping (clipping);
+			transform = new Transform (gc.getDevice ());
+			gc.getTransform (transform);
+			if (!transform.isIdentity ()) {
+				/* Integer user-space Regions lose pixels when an affine is undone/reapplied. */
+				deviceClipping = new Region (gc.getDevice ());
+				try {
+					gc.setTransform (null);
+					gc.getClipping (deviceClipping);
+				} finally {
+					gc.setTransform (transform);
+				}
+			}
+			originalClipping = clipping;
+			originalDeviceClipping = deviceClipping;
+			originalTransform = transform;
+			originalLineAttributes = copy (gc.getLineAttributes ());
+			originalAlpha = gc.getAlpha ();
+			originalAntialias = gc.getAntialias ();
+			originalTextAntialias = gc.getTextAntialias ();
+			originalInterpolation = gc.getInterpolation ();
+			originalFillRule = gc.getFillRule ();
+			originalXorMode = gc.getXORMode ();
+			originalForeground = gc.getForeground ();
+			originalBackground = gc.getBackground ();
+			originalForegroundPattern = gc.getForegroundPattern ();
+			originalBackgroundPattern = gc.getBackgroundPattern ();
+			originalFont = gc.getFont ();
+		} catch (RuntimeException | Error failure) {
+			if (deviceClipping != null) deviceClipping.dispose ();
+			if (transform != null) transform.dispose ();
+			clipping.dispose ();
+			throw failure;
+		}
 	}
 
 	public static ViewportGcProxy wrap (GC gc) {
@@ -140,6 +163,7 @@ public final class ViewportGcProxy implements AutoCloseable {
 		if (gc.isDisposed ()) {
 			originalTransform.dispose ();
 			originalClipping.dispose ();
+			if (originalDeviceClipping != null) originalDeviceClipping.dispose ();
 			return;
 		}
 		try {
@@ -166,10 +190,20 @@ public final class ViewportGcProxy implements AutoCloseable {
 				gc.setBackgroundPattern (originalBackgroundPattern);
 			}
 			gc.setFont (originalFont);
-			gc.setClipping (originalClipping);
+			if (originalDeviceClipping == null) {
+				gc.setClipping (originalClipping);
+			} else {
+				try {
+					gc.setTransform (null);
+					gc.setClipping (originalDeviceClipping);
+				} finally {
+					gc.setTransform (originalTransform);
+				}
+			}
 		} finally {
 			originalTransform.dispose ();
 			originalClipping.dispose ();
+			if (originalDeviceClipping != null) originalDeviceClipping.dispose ();
 		}
 	}
 

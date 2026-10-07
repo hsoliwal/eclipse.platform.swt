@@ -93,44 +93,87 @@ public class Test_org_eclipse_swt_internal_ViewportGcProxy {
 				new LineAttributes (3.5f, SWT.CAP_ROUND, SWT.JOIN_BEVEL, SWT.LINE_DASH, null, 0, 10);
 		gc.setLineAttributes (originalLine);
 		Transform originalTransform = new Transform (display, 1, 0.25f, 0.5f, 1, 7, 9);
-		gc.setTransform (originalTransform);
+		try {
+			gc.setTransform (originalTransform);
+			Rectangle expectedClip = gc.getClipping ();
 
-		float [] expectedTransform = elements (originalTransform);
-		LineAttributes expectedLine = gc.getLineAttributes ();
-		Color expectedForeground = gc.getForeground ();
-		Color expectedBackground = gc.getBackground ();
+			float [] expectedTransform = elements (originalTransform);
+			LineAttributes expectedLine = gc.getLineAttributes ();
+			Color expectedForeground = gc.getForeground ();
+			Color expectedBackground = gc.getBackground ();
 
-		try (ViewportGcProxy proxy = ViewportGcProxy.wrap (gc)) {
-			proxy.clip (new Rectangle (20, 20, 30, 20))
-					.transform (Affine.rotation (0.37f).compose (Affine.translation (13, -8)))
-					.lineAttributes (new LineAttributes (
-							9f, SWT.CAP_SQUARE, SWT.JOIN_ROUND, SWT.LINE_SOLID, null, 0, 10))
-					.alpha (77);
+			try (ViewportGcProxy proxy = ViewportGcProxy.wrap (gc)) {
+				proxy.clip (new Rectangle (20, 20, 30, 20))
+						.transform (Affine.rotation (0.37f).compose (Affine.translation (13, -8)))
+						.lineAttributes (new LineAttributes (
+								9f, SWT.CAP_SQUARE, SWT.JOIN_ROUND, SWT.LINE_SOLID, null, 0, 10))
+						.alpha (77);
 
-			GC scoped = proxy.gc ();
-			scoped.setAntialias (SWT.ON);
-			scoped.setTextAntialias (SWT.OFF);
-			scoped.setInterpolation (SWT.LOW);
-			scoped.setFillRule (SWT.FILL_WINDING);
-			scoped.setXORMode (false);
-			scoped.setForeground (display.getSystemColor (SWT.COLOR_RED));
-			scoped.setBackground (display.getSystemColor (SWT.COLOR_GREEN));
-			assertNotEquals (originalClip, scoped.getClipping ());
+				GC scoped = proxy.gc ();
+				scoped.setAntialias (SWT.ON);
+				scoped.setTextAntialias (SWT.OFF);
+				scoped.setInterpolation (SWT.LOW);
+				scoped.setFillRule (SWT.FILL_WINDING);
+				scoped.setXORMode (false);
+				scoped.setForeground (display.getSystemColor (SWT.COLOR_RED));
+				scoped.setBackground (display.getSystemColor (SWT.COLOR_GREEN));
+				assertNotEquals (expectedClip, scoped.getClipping ());
+			}
+
+			assertEquals (expectedClip, gc.getClipping ());
+			assertArrayEquals (expectedTransform, elements (gc), 0.0001f);
+			assertLineEquals (expectedLine, gc.getLineAttributes ());
+			assertEquals (211, gc.getAlpha ());
+			assertEquals (SWT.OFF, gc.getAntialias ());
+			assertEquals (SWT.ON, gc.getTextAntialias ());
+			assertEquals (SWT.HIGH, gc.getInterpolation ());
+			assertEquals (SWT.FILL_EVEN_ODD, gc.getFillRule ());
+			assertTrue (gc.getXORMode ());
+			assertEquals (expectedForeground, gc.getForeground ());
+			assertEquals (expectedBackground, gc.getBackground ());
+		} finally {
+			originalTransform.dispose ();
 		}
+	}
 
-		assertEquals (originalClip, gc.getClipping ());
-		assertArrayEquals (expectedTransform, elements (gc), 0.0001f);
-		assertLineEquals (expectedLine, gc.getLineAttributes ());
-		assertEquals (211, gc.getAlpha ());
-		assertEquals (SWT.OFF, gc.getAntialias ());
-		assertEquals (SWT.ON, gc.getTextAntialias ());
-		assertEquals (SWT.HIGH, gc.getInterpolation ());
-		assertEquals (SWT.FILL_EVEN_ODD, gc.getFillRule ());
-		assertTrue (gc.getXORMode ());
-		assertEquals (expectedForeground, gc.getForeground ());
-		assertEquals (expectedBackground, gc.getBackground ());
-
-		originalTransform.dispose ();
+	@Test
+	public void test_gcScopePreservesDeviceRegionAcrossAffineRoundTrips () {
+		Region expected = new Region (display);
+		Region actual = new Region (display);
+		Region difference = new Region (display);
+		Transform transform = new Transform (display);
+		try {
+			expected.add (new Rectangle (3, 5, 12, 14));
+			expected.add (new Rectangle (45, 51, 17, 19));
+			float [][] matrices = {
+				{1, 0, 0, 1, 0, 0}, {1, 0, 0, 1, -3, 7},
+				{1, 0.25f, 0.5f, 1, 7, 9}, {0.8f, 0.6f, -0.6f, 0.8f, 5, 3},
+				{2, 0, 0, 0.5f, -2, 4}, {-1, 0, 0, 1, 80, 0}
+			};
+			for (float [] matrix : matrices) {
+				gc.setTransform (null);
+				gc.setClipping (expected);
+				transform.setElements (matrix [0], matrix [1], matrix [2], matrix [3], matrix [4], matrix [5]);
+				gc.setTransform (transform);
+				Rectangle before = gc.getClipping ();
+				try (ViewportGcProxy scope = ViewportGcProxy.wrap (gc)) {
+					scope.translate (13, -8).clip (new Rectangle (5, 7, 9, 11));
+				}
+				assertEquals (before, gc.getClipping (), "user-space bounds drift");
+				assertArrayEquals (matrix, elements (gc), 0.0001f);
+				gc.setTransform (null);
+				gc.getClipping (actual);
+				difference.add (expected);
+				difference.subtract (actual);
+				assertTrue (difference.isEmpty (), "device clipping lost pixels");
+				difference.add (actual);
+				difference.subtract (expected);
+				assertTrue (difference.isEmpty (), "device clipping leaked pixels or filled a hole");
+			}
+		} finally {
+			gc.setTransform (null);
+			transform.dispose (); difference.dispose (); actual.dispose (); expected.dispose ();
+		}
 	}
 
 	@Test

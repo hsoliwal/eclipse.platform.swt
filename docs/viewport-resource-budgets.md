@@ -126,3 +126,18 @@ nonrectangular holes and releasing its temporary Cairo region. The JUnit regress
 transforms. Nebula's complete mutable-GC-state restoration test is the cross-project reproducer.
 No public signature or JNI ABI changes. Actual GTK JNI and viewport/resource checks remain required;
 this does not qualify other platforms, general arbitrary affine rasterization or the whole reactor.
+
+### Viewport affine scope restoration
+
+A viewport scope captures clipping under the identity transform when its incoming
+transform is nonidentity, and restores that device-space region before restoring
+the incoming transform. This prevents integer Region inverse/forward rounding from
+losing pixels, filling holes or expanding clipping. The user-space snapshot remains
+the existing clip-operation boundary. Identity scopes allocate no additional Region.
+All snapshots are released on constructor failure, close, and already-disposed GCs.
+
+The state-restoration oracle records bounds after installing the original transform;
+pre-transform bounds are a different coordinate space. The test-owned Transform is
+released even if an assertion fails. A separate six-affine regression checks both
+user-space bounds and exact device-region symmetric differences, including holes.
+The native matrix must qualify Windows/Cocoa independently; GTK proof is not enough.
