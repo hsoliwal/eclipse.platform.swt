@@ -116,3 +116,28 @@ positive controls verify that the observer detects retained Image and GC resourc
 is `target/capture-qualification/graphics-lifetime.properties` and is checked by the OpenCV step.
 SWT tracking is an ownership oracle, not a claim about all native allocations; retain the separate
 24-process-report CPU/RSS/heap gate. No manual QA is required.
+
+### GTK clipping-region coordinate parity
+
+`GC.getClipping(Region)` must report the same user-coordinate space as `GC.getClipping()`.
+The GTK receiver now reuses the existing clipping-transform atom for both overloads, preserving
+nonrectangular holes and releasing its temporary Cairo region. The JUnit regression enumerates
+81 pairs of incoming/current translations, including null, unchanged, replaced and removed
+transforms. Nebula's complete mutable-GC-state restoration test is the cross-project reproducer.
+No public signature or JNI ABI changes. Actual GTK JNI and viewport/resource checks remain required;
+this does not qualify other platforms, general arbitrary affine rasterization or the whole reactor.
+
+### Viewport affine scope restoration
+
+A viewport scope captures clipping under the identity transform when its incoming
+transform is nonidentity, and restores that device-space region before restoring
+the incoming transform. This prevents integer Region inverse/forward rounding from
+losing pixels, filling holes or expanding clipping. The user-space snapshot remains
+the existing clip-operation boundary. Identity scopes allocate no additional Region.
+All snapshots are released on constructor failure, close, and already-disposed GCs.
+
+The state-restoration oracle records bounds after installing the original transform;
+pre-transform bounds are a different coordinate space. The test-owned Transform is
+released even if an assertion fails. A separate six-affine regression checks both
+user-space bounds and exact device-region symmetric differences, including holes.
+The native matrix must qualify Windows/Cocoa independently; GTK proof is not enough.

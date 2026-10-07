@@ -2237,89 +2237,93 @@ public int getCharWidth(char ch) {
  * </ul>
  */
 public Rectangle getClipping() {
-    if (handle == 0) {
-        SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
-    }
-	/* Calculate visible bounds in device space */
-	int x = 0, y = 0, width = 0, height = 0;
-	int[] w = new int[1], h = new int[1];
-	getSize(w, h);
-	width = w[0];
-	height = h[0];
-	/* Intersect visible bounds with clipping in device space and then convert then to user space */
-	long cairo = data.cairo;
-	long clipRgn = data.clipRgn;
-	long damageRgn = data.damageRgn;
-	if (clipRgn != 0 || damageRgn != 0 || cairo != 0) {
-		long rgn = Cairo.cairo_region_create();
-		cairo_rectangle_int_t rect = new cairo_rectangle_int_t();
-		rect.width = width;
-		rect.height = height;
-		Cairo.cairo_region_union_rectangle(rgn, rect);
-		if (damageRgn != 0) {
-			Cairo.cairo_region_intersect (rgn, damageRgn);
+	if (handle == 0) SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
+	long clipping = clippingInCurrentSpace();
+	try {
+		cairo_rectangle_int_t bounds = new cairo_rectangle_int_t();
+		Cairo.cairo_region_get_extents(clipping, bounds);
+		return new Rectangle(bounds.x, bounds.y, bounds.width, bounds.height);
+	} finally {
+		Cairo.cairo_region_destroy(clipping);
+	}
+}
+
+/** Caller owns the returned Cairo region, expressed in the current user space. */
+private long clippingInCurrentSpace() {
+	long clipping = Cairo.cairo_region_create();
+	try {
+		int[] width = new int[1], height = new int[1];
+		getSize(width, height);
+		cairo_rectangle_int_t bounds = new cairo_rectangle_int_t();
+		bounds.width = width[0];
+		bounds.height = height[0];
+		Cairo.cairo_region_union_rectangle(clipping, bounds);
+		if (data.damageRgn != 0) Cairo.cairo_region_intersect(clipping, data.damageRgn);
+		// Drawable and damage bounds are device coordinates, independent of clip history.
+		if (currentTransform != null) {
+			double[] inverse = currentTransform.clone();
+			Cairo.cairo_matrix_invert(inverse);
+			long converted = convertRgn(clipping, inverse);
+			Cairo.cairo_region_destroy(clipping);
+			clipping = converted;
 		}
-		/* Intersect visible bounds with clipping */
-		if (clipRgn != 0) {
-			/* Convert clipping to device space if needed */
-			if (!Arrays.equals(data.clippingTransform, currentTransform)) {
-				double[] clippingTransform;
-				if (currentTransform != null && data.clippingTransform == null) {
-					/*
-					 * User actions in this case are:
-					 * 1. Set clipping.
-					 * 2. Set a transformation B.
-		             *
-					 * The clipping was specified before transformation B was set.
-					 * So to convert it to the new space, we just invert the transformation B.
-					 */
-					clippingTransform = currentTransform.clone();
-					Cairo.cairo_matrix_invert(clippingTransform);
-				} else if (currentTransform != null && data.clippingTransform != null) {
-					/*
-					 * User actions in this case are:
-					 * 1. Set a transformation A.
-					 * 2. Set clipping.
-					 * 3. Set a different transformation B. This is global and wipes out transformation A.
-					 *
-					 * Since step 3. wipes out transformation A, we must apply A on the clipping rectangle to have
-					 * the correct clipping rectangle after transformation A is wiped.
-					 * Then, we apply the inverted transformation B on the resulting clipping,
-					 * to convert it to the new space (which results after applying B).
-					 */
-					clippingTransform = new double[6];
-					double[] invertedCurrentTransform = currentTransform.clone();
-					Cairo.cairo_matrix_invert(invertedCurrentTransform);
-					Cairo.cairo_matrix_multiply(clippingTransform, data.clippingTransform, invertedCurrentTransform);
-				} else {
-					/*
-					 * User actions in this case are:
-					 * 1. Set a transformation A.
-					 * 2. Set clipping.
-					 * 3. Wipe the transformation A (i.e. call GC.setTransformation(A)).
-					 *
-					 * We must apply transformation A on the clipping, to convert it to the new space.
-					 */
-					clippingTransform = data.clippingTransform.clone();
-				}
-				long oldRgn = rgn;
-				rgn = convertRgn(rgn, clippingTransform);
-				Cairo.cairo_region_destroy(oldRgn);
-				clipRgn = convertRgn(clipRgn, clippingTransform);
-				Cairo.cairo_region_intersect(rgn, clipRgn);
-				Cairo.cairo_region_destroy(clipRgn);
+		if (data.clipRgn != 0) {
+			if (Arrays.equals(data.clippingTransform, currentTransform)) {
+				Cairo.cairo_region_intersect(clipping, data.clipRgn);
 			} else {
-				Cairo.cairo_region_intersect(rgn, clipRgn);
+				long converted = convertRgn(data.clipRgn, clippingTransformInCurrentSpace());
+				try { Cairo.cairo_region_intersect(clipping, converted); }
+				finally { Cairo.cairo_region_destroy(converted); }
 			}
 		}
-		Cairo.cairo_region_get_extents(rgn, rect);
-		Cairo.cairo_region_destroy(rgn);
-		x = rect.x;
-		y = rect.y;
-		width = rect.width;
-		height = rect.height;
+		return clipping;
+	} catch (RuntimeException | Error failure) {
+		Cairo.cairo_region_destroy(clipping);
+		throw failure;
 	}
-	return new Rectangle(x, y, width, height);
+}
+
+private double[] clippingTransformInCurrentSpace() {
+	double[] clippingTransform;
+	if (currentTransform != null && data.clippingTransform == null) {
+		/*
+		 * User actions in this case are:
+		 * 1. Set clipping.
+		 * 2. Set a transformation B.
+		             *
+		 * The clipping was specified before transformation B was set.
+		 * So to convert it to the new space, we just invert the transformation B.
+		 */
+		clippingTransform = currentTransform.clone();
+		Cairo.cairo_matrix_invert(clippingTransform);
+	} else if (currentTransform != null && data.clippingTransform != null) {
+		/*
+		 * User actions in this case are:
+		 * 1. Set a transformation A.
+		 * 2. Set clipping.
+		 * 3. Set a different transformation B. This is global and wipes out transformation A.
+		 *
+		 * Since step 3. wipes out transformation A, we must apply A on the clipping rectangle to have
+		 * the correct clipping rectangle after transformation A is wiped.
+		 * Then, we apply the inverted transformation B on the resulting clipping,
+		 * to convert it to the new space (which results after applying B).
+		 */
+		clippingTransform = new double[6];
+		double[] invertedCurrentTransform = currentTransform.clone();
+		Cairo.cairo_matrix_invert(invertedCurrentTransform);
+		Cairo.cairo_matrix_multiply(clippingTransform, data.clippingTransform, invertedCurrentTransform);
+	} else {
+		/*
+		 * User actions in this case are:
+		 * 1. Set a transformation A.
+		 * 2. Set clipping.
+		 * 3. Wipe the transformation A (i.e. call GC.setTransformation(A)).
+		 *
+		 * We must apply transformation A on the clipping, to convert it to the new space.
+		 */
+		clippingTransform = data.clippingTransform.clone();
+	}
+	return clippingTransform;
 }
 
 /**
@@ -2346,21 +2350,12 @@ public void getClipping(Region region) {
     if (region.isDisposed()) {
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     }
-	long clipping = region.handle;
-	Cairo.cairo_region_subtract(clipping, clipping);
-	long clipRgn = data.clipRgn;
-	if (clipRgn == 0) {
-		cairo_rectangle_int_t rect = new cairo_rectangle_int_t();
-		int[] width = new int[1], height = new int[1];
-		getSize(width, height);
-		rect.width = width[0];
-		rect.height = height[0];
-		Cairo.cairo_region_union_rectangle(clipping, rect);
-	} else {
-		Cairo.cairo_region_union(clipping, clipRgn);
-	}
-	if (data.damageRgn != 0) {
-		Cairo.cairo_region_intersect(clipping, data.damageRgn);
+	long clipping = clippingInCurrentSpace();
+	try {
+		Cairo.cairo_region_subtract(region.handle, region.handle);
+		Cairo.cairo_region_union(region.handle, clipping);
+	} finally {
+		Cairo.cairo_region_destroy(clipping);
 	}
 }
 

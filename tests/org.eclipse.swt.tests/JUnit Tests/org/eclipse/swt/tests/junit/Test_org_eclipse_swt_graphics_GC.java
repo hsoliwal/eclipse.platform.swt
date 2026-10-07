@@ -895,6 +895,41 @@ public void test_setBackgroundLorg_eclipse_swt_graphics_Color() {
 }
 
 @Test
+public void test_getClippingRegion_respectsTransformAndPreservesHoles() {
+	Region islands = new Region(display);
+	Region observed = new Region(display);
+	Transform clipTransform = new Transform(display);
+	Transform queryTransform = new Transform(display);
+	try {
+		islands.add(new Rectangle(20, 20, 8, 8));
+		islands.add(new Rectangle(60, 60, 8, 8));
+		for (int ax : new int[] {-3, 0, 5}) for (int ay : new int[] {-4, 0, 6}) {
+			for (int bx : new int[] {-3, 0, 5}) for (int by : new int[] {-4, 0, 6}) {
+				clipTransform.setElements(1, 0, 0, 1, ax, ay);
+				queryTransform.setElements(1, 0, 0, 1, bx, by);
+				gc.setTransform(ax == 0 && ay == 0 ? null : clipTransform);
+				gc.setClipping(islands);
+				gc.setTransform(bx == 0 && by == 0 ? null : queryTransform);
+				gc.getClipping(observed);
+				int dx = ax - bx, dy = ay - by;
+				assertEquals(new Rectangle(20 + dx, 20 + dy, 48, 48), observed.getBounds());
+				assertEquals(gc.getClipping(), observed.getBounds());
+				assertTrue(observed.contains(24 + dx, 24 + dy));
+				assertTrue(observed.contains(64 + dx, 64 + dy));
+				assertFalse(observed.contains(44 + dx, 44 + dy));
+				gc.setClipping(new Rectangle(0, 0, IMAGE_SIZE, IMAGE_SIZE));
+				gc.setClipping(observed);
+				assertEquals(observed.getBounds(), gc.getClipping());
+			}
+		}
+	} finally {
+		gc.setTransform(null);
+		gc.setClipping((Rectangle) null);
+		queryTransform.dispose(); clipTransform.dispose(); observed.dispose(); islands.dispose();
+	}
+}
+
+@Test
 public void test_getClipping() {
 	gc.setClipping(0,5,10,20);
 	Region r = new Region();
