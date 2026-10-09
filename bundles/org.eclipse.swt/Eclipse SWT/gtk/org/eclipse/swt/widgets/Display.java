@@ -1814,10 +1814,9 @@ static long rendererClassInitProc (long g_class, long class_data) {
 void snapshotDrawProc(long handle, long snapshot) {
 	Display display = getCurrent ();
 	Widget widget = display.getWidget (handle);
-    // Draw background before children so it appears behind them
-    if (widget != null) {
-        widget.snapshotBackground(handle, snapshot);
-    }
+	boolean masked = widget != null && widget.snapshotPushMask(handle, snapshot);
+	// Draw background before children so it appears behind them
+	if (widget != null) widget.snapshotBackground(handle, snapshot);
 
     // Paint before children (used by Composite subclasses for backgrounds)
     if (widget != null) {
@@ -1831,10 +1830,9 @@ void snapshotDrawProc(long handle, long snapshot) {
 		child = GTK4.gtk_widget_get_next_sibling(child);
 	}
 
-    // Paint after children (used by leaf controls for overlay/on-top drawing)
-    if (widget != null) {
-        widget.snapshotToDrawAfterChildren(handle, snapshot);
-    }
+	// Paint after children (used by leaf controls for overlay/on-top drawing)
+	if (widget != null) widget.snapshotToDrawAfterChildren(handle, snapshot);
+	if (masked) GTK4.gtk_snapshot_pop(snapshot);
 }
 
 static long rendererGetPreferredWidthProc (long cell, long handle, long minimun_size, long natural_size) {
@@ -2153,7 +2151,41 @@ public Point getCursorLocation() {
 	if (GTK.GTK4) {
 		double[] xDouble = new double[1], yDouble = new double[1];
 
-		getPointerPosition(xDouble, yDouble);
+		long surface = gdk_device_get_surface_at_position(xDouble, yDouble);
+		/*
+		 * The position is relative to the surface under the pointer, while display
+		 * coordinates are relative to the nearest real top-level shell. Translate it
+		 * from the surface to the shell, and add the placement of a popover-backed
+		 * shell, as Control.getSurfaceOrigin() does. Other popovers, like a POP_UP
+		 * Menu, have no SWT placement: add the positions of their popup surfaces up
+		 * to the surface of their window instead.
+		 */
+		long nativeHandle = surface != 0 ? GTK4.gtk_native_get_for_surface(surface) : 0;
+		if (getWidget(nativeHandle) instanceof Shell shell) {
+			double[] dx = new double[1], dy = new double[1];
+			GTK4.gtk_native_get_surface_transform(nativeHandle, dx, dy);
+			xDouble[0] -= dx[0];
+			yDouble[0] -= dy[0];
+			if (shell.popover) {
+				xDouble[0] += shell.oldX;
+				yDouble[0] += shell.oldY;
+			}
+		} else if (nativeHandle != 0) {
+			double px = xDouble[0], py = yDouble[0];
+			while (nativeHandle != 0 && GTK4.gtk_widget_get_root(nativeHandle) != nativeHandle) {
+				long popup = GTK4.gtk_native_get_surface(nativeHandle);
+				px += GDK.gdk_popup_get_position_x(popup);
+				py += GDK.gdk_popup_get_position_y(popup);
+				long parent = GDK.gdk_popup_get_parent(popup);
+				nativeHandle = parent != 0 ? GTK4.gtk_native_get_for_surface(parent) : 0;
+			}
+			if (getWidget(nativeHandle) instanceof Shell) {
+				double[] dx = new double[1], dy = new double[1];
+				GTK4.gtk_native_get_surface_transform(nativeHandle, dx, dy);
+				xDouble[0] = px - dx[0];
+				yDouble[0] = py - dy[0];
+			}
+		}
 		x[0] = (int)xDouble[0];
 		y[0] = (int)yDouble[0];
 	} else {
@@ -3539,7 +3571,10 @@ void initializeSystemColorsTooltip() {
 	// Just use temporary label; this is easier then finding the original label
 	long styleContextLabel = GTK.gtk_widget_get_style_context(customLabel);
 	COLOR_INFO_FOREGROUND_RGBA = styleContextGetColor(styleContextLabel, GTK.GTK_STATE_FLAG_NORMAL);
-	COLOR_INFO_BACKGROUND_RGBA = styleContextEstimateBackgroundColor(styleContextLabel, GTK.GTK_STATE_FLAG_NORMAL);
+	// GTK4 style contexts have no parents, the background is on the tooltip window holding the label
+	long backgroundWidget = customLabel;
+	while (GTK.GTK4 && GTK.gtk_widget_get_parent(backgroundWidget) != 0) backgroundWidget = GTK.gtk_widget_get_parent(backgroundWidget);
+	COLOR_INFO_BACKGROUND_RGBA = styleContextEstimateBackgroundColor(GTK.gtk_widget_get_style_context(backgroundWidget), GTK.GTK_STATE_FLAG_NORMAL);
 
 	// Cleanup
 	// customLabel is owned by tooltip and will be destroyed automatically

@@ -132,7 +132,10 @@ public class Shell extends Decorations {
 	boolean popover;
 	long activateGesture;
 	int oldX, oldY, oldWidth, oldHeight;
+	long shapedProvider;
 	GeometryInterface geometry;
+	/* GTK3: client-side decoration size from the last allocation, -1 before the first one */
+	int decorationWidth = -1, decorationHeight = -1;
 	Control lastActive;
 	ToolTip [] toolTips;
 	boolean ignoreFocusOut, ignoreFocusIn;
@@ -2079,6 +2082,32 @@ long gtk_size_allocate (long widget, long allocation) {
 		}
 	} else {
 		GTK3.gtk_window_get_size(shellHandle, widthA, heightA);
+		/*
+		 * GTK has just allocated the content box inside the client-side decorations
+		 * (title bar, shadow) and the container border.
+		 */
+		GtkAllocation shellAllocation = new GtkAllocation (), boxAllocation = new GtkAllocation ();
+		GTK.gtk_widget_get_allocation (shellHandle, shellAllocation);
+		GTK.gtk_widget_get_allocation (vboxHandle, boxAllocation);
+		int border = gtk_container_get_border_width_or_margin (shellHandle);
+		int newDecorationWidth = Math.max (0, shellAllocation.width - boxAllocation.width - 2 * border);
+		int newDecorationHeight = Math.max (0, shellAllocation.height - boxAllocation.height - 2 * border);
+		/*
+		 * A full screen window has no decorations. Changing the hint for it would make GTK
+		 * shrink the window itself, and request that size again when leaving full screen.
+		 */
+		long gdkWindow = gtk_widget_get_window (shellHandle);
+		boolean fullScreenState = gdkWindow != 0 && (GDK.gdk_window_get_state (gdkWindow) & GDK.GDK_WINDOW_STATE_FULLSCREEN) != 0;
+		if (!fullScreenState && (newDecorationWidth != decorationWidth || newDecorationHeight != decorationHeight)) {
+			decorationWidth = newDecorationWidth;
+			decorationHeight = newDecorationHeight;
+			if (geometry.getMaxWidth () > 0 || geometry.getMaxHeight () > 0) {
+				/* GTK drops resizes queued during size allocation, set the hint from outside it */
+				display.asyncExec (() -> {
+					if (!isDisposed ()) setMaximumSizeHint ();
+				});
+			}
+		}
 	}
 	width = widthA[0];
 	height = heightA[0];
@@ -2348,14 +2377,10 @@ public void open () {
 @Override
 public boolean print (GC gc) {
 	checkWidget ();
-    if (gc == null) {
-        error(SWT.ERROR_NULL_ARGUMENT);
-    }
-    if (gc.isDisposed()) {
-        error(SWT.ERROR_INVALID_ARGUMENT);
-    }
-	// Needs to be implemented on GTK4/Wayland
-	if (!GTK.GTK4 && OS.isX11()) {
+	if (gc == null) error (SWT.ERROR_NULL_ARGUMENT);
+	if (gc.isDisposed ()) error (SWT.ERROR_INVALID_ARGUMENT);
+	if (GTK.GTK4) return super.print(gc);
+	if (OS.isX11()) {
 		Rectangle clipping = gc.getClipping();
 		long shellWindow = gtk_widget_get_window(shellHandle);
 		GdkRectangle rect = new GdkRectangle ();
@@ -3015,11 +3040,23 @@ public void setMinimumSize (int width, int height) {
 		return;
 	}
 
-	int hint = GDK.GDK_HINT_MIN_SIZE;
-	if (geometry.getMaxHeight() > 0 || geometry.getMaxWidth() > 0) {
-		hint = hint | GDK.GDK_HINT_MAX_SIZE;
+	/*
+	 * Set the minimum as a size request on the content box instead of a geometry
+	 * hint. GtkWindow adds its client-side decorations (title bar, shadow) to the
+	 * request and recomputes the minimum hint on every resize. A minimum passed
+	 * in the geometry hint is used as is, without the decorations on Wayland.
+	 */
+	int border = gtk_container_get_border_width_or_margin (shellHandle);
+	int boxWidth = geometry.getMinWidth () > 0 ? Math.max (0, geometry.getMinWidth () - 2 * border) : -1;
+	int boxHeight = geometry.getMinHeight () > 0 ? Math.max (0, geometry.getMinHeight () - 2 * border) : -1;
+	if ((style & SWT.RESIZE) == 0) {
+		/* The box size request also holds the size of a non-resizable shell, see resizeBounds() */
+		int [] requestWidth = new int [1], requestHeight = new int [1];
+		GTK.gtk_widget_get_size_request (vboxHandle, requestWidth, requestHeight);
+		boxWidth = Math.max (boxWidth, requestWidth [0]);
+		boxHeight = Math.max (boxHeight, requestHeight [0]);
 	}
-	GTK3.gtk_window_set_geometry_hints (shellHandle, 0, (GdkGeometry) geometry, hint);
+	GTK.gtk_widget_set_size_request (vboxHandle, boxWidth, boxHeight);
 }
 
 /**
@@ -3076,11 +3113,26 @@ public void setMaximumSize (int width, int height) {
 	}
 	geometry.setMaxWidth(Math.max (width, trimWidth ()) - trimWidth ());
 	geometry.setMaxHeight(Math.max (height, trimHeight ()) - trimHeight ());
-	int hint = GDK.GDK_HINT_MAX_SIZE;
-	if (geometry.getMinWidth() > 0 || geometry.getMinHeight() > 0) {
-		hint = hint | GDK.GDK_HINT_MIN_SIZE;
-	}
-	GTK3.gtk_window_set_geometry_hints (shellHandle, 0, (GdkGeometry) geometry, hint);
+	setMaximumSizeHint ();
+}
+
+/*
+ * GTK3 applies the maximum size hint to the whole window, including the
+ * client-side decorations (title bar, shadow), so they are added to it.
+ * gtk_size_allocate() measures the decoration size, which changes e.g. when
+ * the window is maximized, and calls this again when it changes.
+ * Until the first allocation the decoration size is unknown and no hint is
+ * sent: a hint without it would shrink the window, and GTK does not grow it
+ * back later.
+ */
+private void setMaximumSizeHint () {
+	if (decorationWidth < 0) return;
+	GdkGeometry hints = new GdkGeometry ();
+	int maxWidth = geometry.getMaxWidth (), maxHeight = geometry.getMaxHeight ();
+	hints.max_width = maxWidth > 0 ? (int) Math.min (Integer.MAX_VALUE, (long) maxWidth + decorationWidth) : 0;
+	hints.max_height = maxHeight > 0 ? (int) Math.min (Integer.MAX_VALUE, (long) maxHeight + decorationHeight) : 0;
+	/* The minimum comes from the content box size request, see setMinimumSize() */
+	GTK3.gtk_window_set_geometry_hints (shellHandle, 0, hints, GDK.GDK_HINT_MAX_SIZE);
 }
 
 /**
@@ -3190,10 +3242,65 @@ public void setRegion (Region region) {
 	} else {
 		originalRegion = null;
 	}
-	super.setRegion (region);
-    if (regionToDispose != null) {
-        regionToDispose.dispose();
-    }
+	if (GTK.GTK4) {
+		setRegionGTK4 (region);
+	} else {
+		super.setRegion (region);
+	}
+	if (regionToDispose != null) regionToDispose.dispose();
+}
+
+/*
+ * GTK4 has no shaped surfaces. Draw the shell through a mask of the region
+ * instead, see snapshotPushMask(), and drop the background, border, rounding
+ * and shadow that GTK draws for the frame and the shell outside of the mask.
+ */
+void setRegionGTK4 (Region region) {
+	this.region = region;
+	if (GTK.GTK_VERSION < OS.VERSION (4, 10, 0)) return;
+	cairoDisposeRegion ();
+	cairoCopyRegion (region);
+	if (shapedProvider == 0) {
+		/* Higher priority than the provider of setBackground() */
+		shapedProvider = GTK.gtk_css_provider_new ();
+		for (long widget : new long [] {GTK.gtk_widget_get_parent (vboxHandle), handle}) {
+			GTK.gtk_style_context_add_provider (GTK.gtk_widget_get_style_context (widget), shapedProvider, GTK.GTK_STYLE_PROVIDER_PRIORITY_USER);
+		}
+		OS.g_object_unref (shapedProvider);
+	}
+	String css = regionHandle != 0 ? "* {background: none; border: none; border-radius: 0; box-shadow: none;}" : "";
+	GTK4.gtk_css_provider_load_from_data (shapedProvider, Converter.wcsToMbcs (css, true), -1);
+	GTK.gtk_widget_queue_draw (handle);
+}
+
+@Override
+boolean snapshotPushMask (long handle, long snapshot) {
+	if (handle != this.handle || regionHandle == 0) return false;
+	int [] nRects = new int [1];
+	long [] rects = new long [1];
+	gdk_region_get_rectangles (regionHandle, rects, nRects);
+	GdkRectangle rectangle = new GdkRectangle ();
+	GdkRGBA opaque = new GdkRGBA ();
+	opaque.alpha = 1;
+	long rect = Graphene.graphene_rect_alloc ();
+	GTK4.gtk_snapshot_push_mask (snapshot, GTK4.GSK_MASK_MODE_ALPHA);
+	for (int i = 0; i < nRects [0]; i++) {
+		OS.memmove (rectangle, rects [0] + (i * GdkRectangle.sizeof), GdkRectangle.sizeof);
+		Graphene.graphene_rect_init (rect, rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+		GTK4.gtk_snapshot_append_color (snapshot, opaque, rect);
+	}
+	if (rects [0] != 0) OS.g_free (rects [0]);
+	/* Ends the mask, the content up to the next pop is drawn through it */
+	GTK4.gtk_snapshot_pop (snapshot);
+	/* Paint the background of setBackground() dropped by shapedProvider */
+	if ((state & BACKGROUND) != 0) {
+		GtkAllocation allocation = new GtkAllocation ();
+		GTK.gtk_widget_get_allocation (handle, allocation);
+		Graphene.graphene_rect_init (rect, 0, 0, allocation.width, allocation.height);
+		GTK4.gtk_snapshot_append_color (snapshot, getBackgroundGdkRGBA (), rect);
+	}
+	Graphene.graphene_rect_free (rect);
+	return true;
 }
 
 //copied from Region:
