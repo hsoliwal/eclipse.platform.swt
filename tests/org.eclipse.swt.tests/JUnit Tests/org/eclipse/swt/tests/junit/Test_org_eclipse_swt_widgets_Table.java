@@ -152,8 +152,14 @@ public void test_virtualDndHitPinsColdTableCoordinateWithoutDenseMaterialization
 	virtualTable.setTopIndex(2_000);
 	int top = virtualTable.getTopIndex();
 	int rowHeight = Math.max(1, virtualTable.getItemHeight());
-	org.eclipse.swt.graphics.Point displayPoint =
-			virtualTable.toDisplay(4, Math.max(1, rowHeight / 2));
+	// Cocoa client coordinates retain the scrolled document origin.
+	org.eclipse.swt.graphics.Rectangle viewport = virtualTable.getClientArea();
+	org.eclipse.swt.graphics.Point firstRowPoint = new org.eclipse.swt.graphics.Point(
+			viewport.x + 4, viewport.y + Math.max(1, rowHeight / 2));
+	assertTrue(viewport.contains(firstRowPoint), "DND probe must lie in the visible client area");
+	org.eclipse.swt.graphics.Point displayPoint = virtualTable.toDisplay(firstRowPoint);
+	assertEquals(firstRowPoint, virtualTable.toControl(displayPoint),
+			"screen hit coordinates must round-trip through the native client origin");
 
 	org.eclipse.swt.dnd.DropTargetEffect effect =
 			new org.eclipse.swt.dnd.DropTargetEffect(virtualTable);
@@ -164,7 +170,10 @@ public void test_virtualDndHitPinsColdTableCoordinateWithoutDenseMaterialization
 			"DND hit-testing must resolve the logical visible row");
 	assertSame(hit, effect.getItem(displayPoint.x, displayPoint.y),
 			"pending native scroll must not rebind an exposed facade");
-	org.eclipse.swt.graphics.Point nextPoint = virtualTable.toDisplay(4, rowHeight + Math.max(1, rowHeight / 2));
+	org.eclipse.swt.graphics.Point secondRowPoint = new org.eclipse.swt.graphics.Point(
+			firstRowPoint.x, firstRowPoint.y + rowHeight);
+	assertTrue(viewport.contains(secondRowPoint), "adjacent DND probe must remain visible");
+	org.eclipse.swt.graphics.Point nextPoint = virtualTable.toDisplay(secondRowPoint);
 	TableItem nextHit = (TableItem) effect.getItem(nextPoint.x, nextPoint.y);
 	assertNotNull(nextHit);
 	assertEquals(top + 1, virtualTable.indexOf(nextHit),

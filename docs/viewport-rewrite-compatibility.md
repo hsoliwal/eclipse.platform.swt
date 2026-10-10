@@ -491,3 +491,21 @@ SWT maps those ideas onto its existing owners:
 - public `Item` identities and SWT events remain outside retained rendering.
 
 This donor does not justify adding a wgpu dependency, a second scene graph, or another render-command owner.
+
+
+## Pending virtual Table scroll hit coordinates
+
+The pending programmatic-scroll translation in GTK Table applies to both GTK3 and
+GTK4 virtual tables. Native hit testing still owns column geometry and clipping;
+only a valid native row is translated while the requested top row is pending.
+An already-settled native top row clears the pending state through the existing path.
+
+The DND cold-row regression uses `getClientArea()`'s actual origin. Cocoa retains a
+scrolled document origin, so `(4, rowHeight / 2)` alone can address an off-viewport
+row. Assert viewport containment and the display/client round trip before checking
+the first and adjacent logical rows, facade identity, pinning and sparse residency.
+Those existing correctness and resource bounds remain unchanged.
+
+Canonical task recipe and evidence: Synexia crate
+`swt-virtual-table-hit-20261010`. Qualification is per executed backend; the Cocoa
+Tree density failures and broader resource/platform gates remain separate.
