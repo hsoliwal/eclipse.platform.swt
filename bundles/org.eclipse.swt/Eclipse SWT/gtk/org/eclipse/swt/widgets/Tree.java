@@ -137,7 +137,7 @@ public class Tree extends Composite {
 	Color headerBackground, headerForeground;
 	boolean boundsChangedSinceLastDraw, wasScrolled;
 	ViewportLayerState viewportLayers;
-	boolean rowActivated;
+	boolean defaultSelectionPending;
 
 	private long headerCSSProvider;
 
@@ -2991,7 +2991,6 @@ void createHandle (int index) {
 	}
 
 	if (GTK.GTK4) {
-		bindArrowKeyBindings();
 		/*
 		 * GTK renders the drop highlight requested through
 		 * gtk_tree_view_set_drag_dest_row() from the private TreeViewDragInfo struct,
@@ -3007,36 +3006,6 @@ void createHandle (int index) {
 		GTK4.gtk_tree_view_enable_model_drag_dest(handle, formats, 0);
 		GTK4.gdk_content_formats_unref(formats);
 	}
-}
-
-/**
- * Binds the left and right arrow keys to
- * allow for expanding and collapsing of the
- * tree nodes.
- *
- * Note: This function is to only be called in GTK4.
- * Binding of the arrow keys are also done in GTK3,
- * however it is done through GtkBindingSets in CSS.
- * See Device.init() for more information, specifically,
- * swt_functional_gtk_3_20.css
- */
-void bindArrowKeyBindings() {
-    if (!GTK.GTK4) {
-        return;
-    }
-
-	int[] keyval = new int[1];
-	GTK.gtk_accelerator_parse(Converter.javaStringToCString("Left"), keyval, null);
-	GTK4.gtk_widget_class_add_binding_signal(GTK.GTK_WIDGET_GET_CLASS(handle), keyval[0], 0,
-			Converter.javaStringToCString("expand-collapse-cursor-row"),
-			Converter.javaStringToCString("(bbb)"),
-			false, false, false);
-
-	GTK.gtk_accelerator_parse(Converter.javaStringToCString("Right"), keyval, null);
-	GTK4.gtk_widget_class_add_binding_signal(GTK.GTK_WIDGET_GET_CLASS(handle), keyval[0], 0,
-			Converter.javaStringToCString("expand-collapse-cursor-row"),
-			Converter.javaStringToCString("(bbb)"),
-			false, true, false);
 }
 
 @Override
@@ -4627,14 +4596,14 @@ long gtk3_button_press_event (long widget, long event) {
 
 	/*
 	 * Bug 312568: If mouse double-click pressed, manually send a DefaultSelection.
-	 * Bug 518414: Added rowActivated guard flag to only send a DefaultSelection when the
+	 * Bug 518414: Added defaultSelectionPending guard flag to only send a DefaultSelection when the
 	 * double-click triggers a 'row-activated' signal. Note that this relies on the fact
 	 * that 'row-activated' signal comes before double-click event. This prevents
 	 * opening of the current highlighted item when double clicking on any expander arrow.
 	 */
-	if (eventType == GDK.GDK_2BUTTON_PRESS && rowActivated) {
+	if (eventType == GDK.GDK_2BUTTON_PRESS && defaultSelectionPending) {
 		sendTreeDefaultSelection ();
-		rowActivated = false;
+		defaultSelectionPending = false;
 	}
 
 	return result;
@@ -4642,19 +4611,85 @@ long gtk3_button_press_event (long widget, long event) {
 
 @Override
 int gtk_gesture_press_event (long gesture, int n_press, double x, double y, long event) {
-	int result = super.gtk_gesture_press_event(gesture, n_press, x, y, event);
-
-	if (n_press == 2 && rowActivated) {
-		sendTreeDefaultSelection ();
-		rowActivated = false;
-	}
-
-	return result;
+	/*
+	 * GtkTreeView activates the row for a double-click in its own click gesture, which runs
+	 * after this one, and activates nothing for a double-click on an expander: send the
+	 * DefaultSelection from gtk_row_activated.
+	 */
+	defaultSelectionPending = n_press == 2;
+	return super.gtk_gesture_press_event(gesture, n_press, x, y, event);
 }
 
 @Override
+boolean gtk4_key_press_event (long controller, int keyval, int keycode, int state, long event) {
+	/* Space and Enter activate the row too, see gtk_gesture_press_event. */
+	defaultSelectionPending = false;
+	switch (keyval) {
+		case GDK.GDK_Return:
+		case GDK.GDK_KP_Enter:
+			// Send DefaultSelection as gtk3_key_press_event does, for the keypad Enter too.
+			if ((state & (GDK.GDK_SUPER_MASK | GDK.GDK_META_MASK | GDK.GDK_HYPER_MASK | GDK.GDK_MOD1_MASK)) == 0) {
+				sendTreeDefaultSelection ();
+				if (isDisposed ()) return true;
+			}
+			break;
+	}
+	boolean handled = super.gtk4_key_press_event(controller, keyval, keycode, state, event);
+	if (handled || isDisposed ()) return handled;
+	switch (keyval) {
+		case GDK.GDK_Left:
+		case GDK.GDK_Right:
+			/*
+			 * GtkTreeView moves between cells for Left and Right. Expand and collapse the
+			 * cursor row instead when it has children, as on GTK3. Leave the keys of the
+			 * search entry alone.
+			 */
+			if ((state & (GDK.GDK_SHIFT_MASK | GDK.GDK_CONTROL_MASK | GDK.GDK_MOD1_MASK | GDK.GDK_SUPER_MASK | GDK.GDK_META_MASK | GDK.GDK_HYPER_MASK)) == 0 && GTK.gtk_widget_has_focus (handle)) {
+				boolean expand = (keyval == GDK.GDK_Right) != ((style & SWT.RIGHT_TO_LEFT) != 0);
+				return expandCollapseCursorRow (expand);
+			}
+			break;
+	}
+	return false;
+}
+
+boolean expandCollapseCursorRow (boolean expand) {
+	long [] path = new long [1];
+	GTK.gtk_tree_view_get_cursor (handle, path, null);
+	if (path [0] == 0) return false;
+	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
+	boolean parent = GTK.gtk_tree_model_get_iter (modelHandle, iter, path [0]) && GTK.gtk_tree_model_iter_n_children (modelHandle, iter) > 0;
+	OS.g_free (iter);
+	if (parent) {
+		if (expand) {
+			GTK.gtk_tree_view_expand_row (handle, path [0], false);
+		} else {
+			GTK.gtk_tree_view_collapse_row (handle, path [0]);
+		}
+	}
+	GTK.gtk_tree_path_free (path [0]);
+	return parent;
+}
+
+
+@Override
 long gtk_row_activated (long tree, long path, long column) {
-	rowActivated = true;
+	if (GTK.GTK4) {
+		if (defaultSelectionPending) sendTreeDefaultSelection ();
+		defaultSelectionPending = false;
+		return 0;
+	}
+	/*
+	 * Enter, Space and accessibility tools activate the row too, but only the second press of a double-click is
+	 * followed by the GDK_2BUTTON_PRESS that sends the DefaultSelection, see gtk3_button_press_event.
+	 */
+	defaultSelectionPending = false;
+	long eventPtr = GTK3.gtk_get_current_event ();
+	if (eventPtr != 0) {
+		int eventType = GDK.gdk_event_get_event_type (eventPtr);
+		defaultSelectionPending = eventType == GDK.GDK_BUTTON_PRESS || eventType == GDK.GDK_2BUTTON_PRESS;
+		GDK.gdk_event_free (eventPtr);
+	}
 	return 0;
 }
 

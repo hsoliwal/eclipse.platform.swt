@@ -215,8 +215,4 @@ final class JPEGFrameHeader extends JPEGVariableSizeSegment {
 			|| marker == JPEGFileFormat.SOF10
 			|| marker == JPEGFileFormat.SOF14;
 	}
-
-	public boolean isArithmeticCoding() {
-		return getSegmentMarker() >= JPEGFileFormat.SOF9;
-	}
 }

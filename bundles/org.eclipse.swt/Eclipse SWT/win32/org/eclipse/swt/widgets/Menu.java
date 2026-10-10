@@ -1467,9 +1467,7 @@ LRESULT wmTimer (long wParam, long lParam) {
 void handleDPIChange(Event event, float scalingFactor) {
 	super.handleDPIChange(event, scalingFactor);
 	for (MenuItem item : getItems()) {
-		if (item != null && !item.isDisposed()) {
-			item.notifyListeners(SWT.ZoomChanged, event);
-		}
+		notifyZoomChanged(item, event);
 	}
 }
 }
