@@ -464,7 +464,46 @@ void restoreVirtualChildren (TreeItem item) {
     if (id < 0 || !virtualTopology.childCountKnown(id)) {
         return;
     }
-	ensureVirtualNativeChildren (item.handle, virtualTopology.childCount (id));
+	int logicalCount = virtualTopology.childCount (id);
+	int resident = nativeChildCount (item.handle);
+	int target = Math.min (logicalCount, Math.max (resident, VIRTUAL_FRONTIER_CHUNK));
+	ensureVirtualNativeChildren (item.handle, target);
+}
+
+void requestVirtualFrontier (TreeItem item) {
+	if (virtualTopology == null || item == null || item.isDisposed ()) return;
+	int itemId = virtualItemId (item);
+	if (itemId < 0 || !virtualTopology.contains (itemId)) return;
+	int parentId = virtualTopology.parentId (itemId);
+	if (!virtualTopology.childCountKnown (parentId)) return;
+	int logicalCount = virtualTopology.childCount (parentId);
+	long hParent = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_PARENT, item.handle);
+	int resident = nativeChildCount (hParent == 0 ? OS.TVI_ROOT : hParent);
+	if (resident >= logicalCount) return;
+	if (virtualTopology.childIndex (itemId) < Math.max (0, resident - VIRTUAL_FRONTIER_TRIGGER)) return;
+	int key = parentId + 1;
+	if (!virtualFrontierPending.add (key)) return;
+	display.asyncExec (() -> {
+		virtualFrontierPending.remove (key);
+		if (isDisposed () || item.isDisposed () || virtualTopology == null) return;
+		if (!virtualTopology.childCountKnown (parentId)) return;
+		long currentParent = OS.SendMessage (
+				handle, OS.TVM_GETNEXTITEM, OS.TVGN_PARENT, item.handle);
+		if (parentId != VirtualTreeTopology.ROOT) {
+			if (currentParent == 0) return;
+			int state = (int)OS.SendMessage (
+					handle, OS.TVM_GETITEMSTATE, currentParent, OS.TVIS_EXPANDED);
+			if ((state & OS.TVIS_EXPANDED) == 0) return;
+		} else {
+			currentParent = OS.TVI_ROOT;
+		}
+		int current = nativeChildCount (currentParent);
+		ensureVirtualNativeChildren (
+				currentParent,
+				Math.min (virtualTopology.childCount (parentId),
+						current + VIRTUAL_FRONTIER_CHUNK));
+		updateScrollBar ();
+	});
 }
 
 void scheduleVirtualCollapseCompaction (TreeItem item) {
