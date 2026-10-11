@@ -440,9 +440,19 @@ void ensureVirtualNativeChildren (long hParent, int requiredExclusive) {
     if (target <= resident) {
         return;
     }
-	for (int index = resident; index < target; index++) {
-		createItem (null, hParent, OS.TVI_LAST, 0);
+	boolean redraw = getDrawing () && target - resident > 1;
+	boolean previousIgnoreShrink = ignoreShrink;
+	if (redraw) setRedraw (false);
+	ignoreShrink = true;
+	try {
+		for (int index = resident; index < target; index++) {
+			createItem (null, hParent, OS.TVI_LAST, 0);
+		}
+	} finally {
+		ignoreShrink = previousIgnoreShrink;
+		if (redraw && !isDisposed ()) setRedraw (true);
 	}
+	updateScrollBar ();
 }
 
 void ensureVirtualNativeItem (long hParent, int index) {
@@ -5286,7 +5296,7 @@ void setItemCount (int count, long hParent) {
 	boolean expanded = false;
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
-	if (!redraw && (style & SWT.VIRTUAL) != 0) {
+	if ((style & SWT.VIRTUAL) != 0) {
 		if (hParent == OS.TVI_ROOT) {
 			// Trying to call TVM_GETITEMSTATE with TVI_ROOT causes a crash.
 			// Assume that root item is always expanded.
