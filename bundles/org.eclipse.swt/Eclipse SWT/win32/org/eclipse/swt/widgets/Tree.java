@@ -13,6 +13,7 @@
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
+import java.util.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.events.*;
@@ -82,6 +83,7 @@ public class Tree extends Composite {
 	VirtualTreeTopology virtualTopology;
 	VirtualTreeVisibleProjection virtualProjection;
 	VirtualTreeViewport virtualViewport;
+	Set<Integer> virtualFrontierPending;
 	TreeColumn [] columns;
 	int columnCount;
 	ImageList imageList, headerImageList;
@@ -122,6 +124,8 @@ public class Tree extends Composite {
 	static final int INCREMENT = 5;
 	static final int EXPLORER_EXTRA = 2;
 	static final int DRAG_IMAGE_SIZE = 301;
+	static final int VIRTUAL_FRONTIER_CHUNK = 256;
+	static final int VIRTUAL_FRONTIER_TRIGGER = 32;
 	// The default Indent at 100 dpi
 	static final int DEFAULT_INDENT = 16;
 	static final long TreeProc;
@@ -3147,6 +3151,7 @@ void createWidget () {
 		virtualTopology = new VirtualTreeTopology ();
 		virtualProjection = new VirtualTreeVisibleProjection (virtualTopology);
 		virtualViewport = new VirtualTreeViewport (virtualProjection);
+		virtualFrontierPending = new HashSet<> ();
 	}
 	columns = new TreeColumn [4];
 	cachedItemCount = -1;
