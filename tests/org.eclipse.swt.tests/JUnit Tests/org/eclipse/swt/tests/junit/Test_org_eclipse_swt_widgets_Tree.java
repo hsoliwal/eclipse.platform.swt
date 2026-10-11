@@ -1084,6 +1084,40 @@ public void test_virtualWin32NativeFrontierIsBoundedAndGrowsOnDemand() throws Ex
 }
 
 @Test
+public void test_virtualWin32RootInsertionRestoresOnlyRequiredPrefix() throws Exception {
+	if (!"win32".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(10_000);
+	Method resident = Tree.class.getDeclaredMethod("virtualResidentChildCount", long.class);
+	resident.setAccessible(true);
+	assertEquals(256, resident.invoke(virtualTree, 0L));
+
+	TreeItem inserted = new TreeItem(virtualTree, SWT.NONE, 1_000);
+	assertEquals(10_001, virtualTree.getItemCount());
+	assertEquals(1_000, virtualTree.indexOf(inserted));
+	assertSame(inserted, virtualTree.getItem(1_000));
+	assertEquals(1_001, resident.invoke(virtualTree, 0L),
+			"indexed root insertion should reconstruct only through its predecessor");
+}
+
+@Test
+public void test_virtualWin32GetItemsExplicitlyMaterializesLogicalRoots() throws Exception {
+	if (!"win32".equals(SWT.getPlatform())) return;
+
+	Tree virtualTree = new Tree(shell, SWT.VIRTUAL);
+	virtualTree.setItemCount(1_024);
+	Method resident = Tree.class.getDeclaredMethod("virtualResidentChildCount", long.class);
+	resident.setAccessible(true);
+	assertEquals(256, resident.invoke(virtualTree, 0L));
+
+	TreeItem[] all = virtualTree.getItems();
+	assertEquals(1_024, all.length);
+	assertEquals(1_024, resident.invoke(virtualTree, 0L),
+			"getItems remains the explicit full-materialization API");
+}
+
+@Test
 public void test_virtualWin32QueuedFrontierHonorsLogicalShrink() throws Exception {
 	if (!"win32".equals(SWT.getPlatform())) return;
 
