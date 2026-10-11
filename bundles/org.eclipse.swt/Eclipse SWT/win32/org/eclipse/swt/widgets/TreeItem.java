@@ -303,6 +303,7 @@ static long findPrevious (Tree parent, int index) {
         return OS.TVI_FIRST;
     }
 	long hwnd = parent.handle;
+	parent.ensureVirtualNativeItem (OS.TVI_ROOT, index - 1);
 	long hFirstItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_ROOT, 0);
 	long hItem = parent.findItem (hFirstItem, index - 1);
     if (hItem == 0) {
