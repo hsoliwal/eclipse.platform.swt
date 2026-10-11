@@ -943,7 +943,9 @@ public TreeItem [] getItems () {
     if (!parent.checkData(this, true)) {
         error(SWT.ERROR_WIDGET_DISPOSED);
     }
-	parent.restoreVirtualChildren (this);
+	if (parent.virtualTopology != null) {
+		parent.ensureVirtualNativeChildren (handle, parent.virtualChildCount (this));
+	}
 	long hwnd = parent.handle;
 	long hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
     if (hItem == 0) {
@@ -1241,7 +1243,9 @@ void releaseWidget () {
  */
 public void removeAll () {
 	checkWidget ();
-	parent.restoreVirtualChildren (this);
+	if (parent.virtualTopology != null) {
+		parent.ensureVirtualNativeChildren (handle, parent.virtualChildCount (this));
+	}
 	long hwnd = parent.handle;
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
