@@ -4123,6 +4123,7 @@ public TreeItem getItem (int index) {
     if (index < 0) {
         error(SWT.ERROR_INVALID_RANGE);
     }
+	ensureVirtualNativeItem (OS.TVI_ROOT, index);
 	long hFirstItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_ROOT, 0);
     if (hFirstItem == 0) {
         error(SWT.ERROR_INVALID_RANGE);
@@ -4295,6 +4296,10 @@ int getItemHeightInPixels () {
  */
 public TreeItem [] getItems () {
 	checkWidget ();
+	if (virtualTopology != null && virtualTopology.childCountKnown (VirtualTreeTopology.ROOT)) {
+		ensureVirtualNativeChildren (
+				OS.TVI_ROOT, virtualTopology.childCount (VirtualTreeTopology.ROOT));
+	}
 	long hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_ROOT, 0);
     if (hItem == 0) {
         return new TreeItem [0];
@@ -5261,6 +5266,13 @@ void setItemCount (int count, long hParent) {
 			indexInsertAfter = itemCount - 1;
 			numInserted = count - itemCount;
 		}
+	}
+
+	if ((style & SWT.VIRTUAL) != 0 && numInserted > 0) {
+		int resident = nativeChildCount (hParent);
+		int minimumResident = hParent == OS.TVI_ROOT ? VIRTUAL_FRONTIER_CHUNK : 1;
+		int target = Math.min (count, Math.max (resident, minimumResident));
+		numInserted = Math.max (0, target - resident);
 	}
 
 	boolean redraw = false;
@@ -8835,6 +8847,9 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
                 if (painted) {
                     item.setCachedState(true);
                 }
+			}
+			if ((style & SWT.VIRTUAL) != 0) {
+				requestVirtualFrontier (item);
 			}
 			int index = 0;
 			if (hwndHeader != 0) {
