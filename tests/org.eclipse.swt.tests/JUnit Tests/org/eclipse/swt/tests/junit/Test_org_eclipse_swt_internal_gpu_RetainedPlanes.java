@@ -312,6 +312,35 @@ public class Test_org_eclipse_swt_internal_gpu_RetainedPlanes {
 	}
 
 	@Test
+	public void test_win32RetainedNonSolidStrokeFailsClosedUntilDashReplayIsProven () throws Exception {
+		if (!"win32".equals (SWT.getPlatform ())) return;
+		Display display = Display.getDefault ();
+		Image image = new Image (display, 32, 8);
+		GC gc = new GC (image);
+		java.lang.reflect.Field dataField = GC.class.getDeclaredField ("data");
+		dataField.setAccessible (true);
+		Object data = dataField.get (gc);
+		java.lang.reflect.Field sinkField = data.getClass ().getField ("planeSink");
+		java.lang.reflect.Field drawField = data.getClass ().getField ("planeDraw");
+		OpStream ops = new OpStream (32, 128);
+		try {
+			gc.setLineStyle (SWT.LINE_DASH);
+			sinkField.set (data, ops);
+			drawField.setInt (data, RetainedPlanes.BODY);
+			gc.drawLine (1, 4, 30, 4);
+			assertNotEquals (0, ops.fail & OpStream.FAIL_UNSUPPORTED,
+					"a retained dashed stroke must fall back instead of replaying as a solid line");
+			assertEquals (0, ops.size (),
+					"unsupported dash state must not leave an ambiguous draw command in the stream");
+		} finally {
+			drawField.setInt (data, -1);
+			sinkField.set (data, null);
+			gc.dispose ();
+			image.dispose ();
+		}
+	}
+
+	@Test
 	public void test_facadeWithoutRetainedModeKeepsStockBehaviour () {
 		Display display = Display.getDefault ();
 		Image image = new Image (display, 8, 8);
