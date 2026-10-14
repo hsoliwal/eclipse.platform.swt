@@ -67,11 +67,16 @@ final class GCPlanes {
 		if ((data.plane & data.planeDraw) == 0) return true;
 		OpStream sink = sink (gc);
 		if (sink == null) return false;
-		if (unsupportedState (data)) {
+		boolean fill = op == OpStream.FILL_RECT || op == OpStream.FILL_OVAL;
+		if (unsupportedState (data) || (!fill && data.lineStyle != SWT.LINE_SOLID)) {
+			/*
+			 * PaintKeys retains lineStyle for future backend reuse, but Skija has
+			 * no proven mapping for SWT/GDI+ predefined dash styles yet. Refuse
+			 * rather than silently replay a dashed stroke as solid.
+			 */
 			sink.fail |= OpStream.FAIL_UNSUPPORTED;
 			return true;
 		}
-		boolean fill = op == OpStream.FILL_RECT || op == OpStream.FILL_OVAL;
 		int colorref = fill ? data.background : data.foreground;
 		sink.rect (op, a, b, c, d, PaintKeys.argbFromColorref (colorref, data.alpha), mask (data, fill ? PaintKeys.KIND_FILL : PaintKeys.KIND_STROKE));
 		return true;
@@ -96,11 +101,11 @@ final class GCPlanes {
 		if ((data.plane & data.planeDraw) == 0) return true;
 		OpStream sink = sink (gc);
 		if (sink == null) return false;
-		if (unsupportedState (data)) {
+		boolean fill = op == OpStream.FILL_POLY;
+		if (unsupportedState (data) || (!fill && data.lineStyle != SWT.LINE_SOLID)) {
 			sink.fail |= OpStream.FAIL_UNSUPPORTED;
 			return true;
 		}
-		boolean fill = op == OpStream.FILL_POLY;
 		sink.poly (op, points, PaintKeys.argbFromColorref (fill ? data.background : data.foreground, data.alpha),
 			mask (data, fill ? PaintKeys.KIND_FILL : PaintKeys.KIND_STROKE));
 		return true;
