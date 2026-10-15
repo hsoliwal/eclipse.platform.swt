@@ -22,11 +22,13 @@ public abstract class CustomComposite extends Composite {
 
 	@Override
 	public final Color getBackground() {
+		checkWidget();
 		return background != null ? background : getRenderer().getDefaultBackground();
 	}
 
 	@Override
 	public void setBackground(Color color) {
+		checkWidget();
 		if (color != null && color.isDisposed())
 			error(SWT.ERROR_INVALID_ARGUMENT);
 		this.background = color;
@@ -35,11 +37,13 @@ public abstract class CustomComposite extends Composite {
 
 	@Override
 	public final Color getForeground() {
+		checkWidget();
 		return foreground != null ? foreground : getRenderer().getDefaultForeground();
 	}
 
 	@Override
 	public void setForeground(Color color) {
+		checkWidget();
 		if (color != null && color.isDisposed())
 			error(SWT.ERROR_INVALID_ARGUMENT);
 		this.foreground = color;
@@ -50,12 +54,15 @@ public abstract class CustomComposite extends Composite {
 
 	@Override
 	public Point getSize() {
+		checkWidget();
 		return new Point(width, height);
 	}
 
 	@Override
 	public void setSize(int width, int height) {
 		checkWidget();
+		width = Math.max(0, width);
+		height = Math.max(0, height);
 		if (width == this.width && height == this.height) {
 			return;
 		}
@@ -112,14 +119,16 @@ public abstract class CustomComposite extends Composite {
 		if (rect == null)
 			error(SWT.ERROR_NULL_ARGUMENT);
 		checkWidget();
-		if (rect.x == this.x && rect.y == this.y && rect.width == this.width && rect.height == this.height) {
+		int normalizedWidth = Math.max(0, rect.width);
+		int normalizedHeight = Math.max(0, rect.height);
+		if (rect.x == this.x && rect.y == this.y && normalizedWidth == this.width && normalizedHeight == this.height) {
 			return;
 		}
 
 		this.x = rect.x;
 		this.y = rect.y;
-		this.width = rect.width;
-		this.height = rect.height;
+		this.width = normalizedWidth;
+		this.height = normalizedHeight;
 		super.setBounds(rect);
 		redraw();
 	}
