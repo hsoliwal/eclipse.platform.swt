@@ -173,12 +173,12 @@ public class SkijaGC extends GCHandle {
 	}
 
 	private void performDraw(Consumer<Paint> operations) {
-		Paint paint = new Paint();
-		if (!hasAlphaLayer) {
-			paint.setAlphaf(alpha / 255.0f);
+		try (Paint paint = new Paint()) {
+			if (!hasAlphaLayer) {
+				paint.setAlphaf(alpha / 255.0f);
+			}
+			operations.accept(paint);
 		}
-		operations.accept(paint);
-		paint.close();
 	}
 
 	private void performDrawLine(Consumer<Paint> operations) {
