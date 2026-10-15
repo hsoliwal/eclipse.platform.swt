@@ -79,11 +79,8 @@ public final class ItemBitSet {
 			case BITMAP: return (d [v >>> 5] & (1 << v)) != 0;
 			case ARRAY: return search (d, sizes [c], v) >= 0;
 			default:
-				for (int i = 0, r = sizes [c]; i < r; i++) {
-					if (v < d [2 * i]) return false;
-					if (v < d [2 * i + 1]) return true;
-				}
-				return false;
+				int run = firstRunAfter (d, sizes [c], v);
+				return run < sizes [c] && d [2 * run] <= v;
 		}
 	}
 
@@ -245,9 +242,20 @@ public final class ItemBitSet {
 		sizes [c] = o / 2;
 	}
 
+	/** First live run whose exclusive end exceeds v; sorted disjoint runs, no extra index. */
+	private static int firstRunAfter (int [] d, int runs, int v) {
+		int lo = 0, hi = runs;
+		while (lo < hi) {
+			int mid = (lo + hi) >>> 1;
+			if (d [2 * mid + 1] <= v) lo = mid + 1;
+			else hi = mid;
+		}
+		return lo;
+	}
+
 	private static int runCardinality (int [] d, int runs, int a, int b) {
 		int total = 0;
-		for (int i = 0; i < runs; i++) {
+		for (int i = firstRunAfter (d, runs, a); i < runs && d [2 * i] < b; i++) {
 			int s = Math.max (a, d [2 * i]), e = Math.min (b, d [2 * i + 1]);
 			if (e > s) total += e - s;
 		}
@@ -408,10 +416,8 @@ public final class ItemBitSet {
 				return at < sizes [c] ? d [at] : -1;
 			}
 			default:
-				for (int i = 0; i < sizes [c]; i++) {
-					if (v < d [2 * i + 1]) return Math.max (v, d [2 * i]);
-				}
-				return -1;
+				int run = firstRunAfter (d, sizes [c], v);
+				return run < sizes [c] ? Math.max (v, d [2 * run]) : -1;
 		}
 	}
 
@@ -429,10 +435,9 @@ public final class ItemBitSet {
 					next = base + Math.min (nextClearInBitmap (d, v), limit - base);
 					break;
 				case RUN: {
-					next = end;
-					for (int i = 0; i < sizes [c]; i++) {
-						if (v >= d [2 * i] && v < d [2 * i + 1]) next = base + Math.min (d [2 * i + 1], limit - base);
-					}
+					int run = firstRunAfter (d, sizes [c], v);
+					next = run < sizes [c] && d [2 * run] <= v
+							? base + Math.min (d [2 * run + 1], limit - base) : end;
 					break;
 				}
 				default:
