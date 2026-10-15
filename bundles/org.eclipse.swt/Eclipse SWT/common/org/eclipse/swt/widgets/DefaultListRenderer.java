@@ -33,8 +33,23 @@ public class DefaultListRenderer extends ListRenderer {
 		int x = clientArea.x;
 		int y = clientArea.y;
 
-		for (int i = list.getTopIndex(); i < list.getItems().length; i++) {
+		// Custom widgets/renderers retain their existing accessor and paint dispatch.
+		// Selected/disabled rows also retain all ColorProvider calls, including off-screen ones.
+		final boolean bounded = list.getClass() == List.class
+				&& getClass() == DefaultListRenderer.class && lineHeight > 0;
+		final long bottom = (long) clientArea.y + clientArea.height;
+		for (int i = list.getTopIndex(); i < paintItemCount(); i++) {
+			if (bounded && lineHeight > 0 && (clientArea.width <= 0
+					|| clientArea.height <= 0 || (long) y >= bottom)
+					&& list.isEnabled() && list.getSelectionCount() == 0) {
+				break;
+			}
 			drawTextLine(i, x, y, gc, clientArea);
+			// A positive row advance must not wrap to negative drawing coordinates.
+			if (bounded && lineHeight > 0 && (long) y + lineHeight > Integer.MAX_VALUE
+					&& list.isEnabled() && list.getSelectionCount() == 0) {
+				break;
+			}
 			y += lineHeight;
 		}
 	}
@@ -65,8 +80,21 @@ public class DefaultListRenderer extends ListRenderer {
 		return x;
 	}
 
+	/** Avoid full-list snapshots only for the unoverridden stock widget. */
+	private int paintItemCount() {
+		return list.getClass() == List.class ? list.getItemCount() : list.getItems().length;
+	}
+
+	private String paintItemText(int index) {
+		if (list.getClass() == List.class && index >= 0 && index < list.getItemCount()) {
+			return list.getItem(index);
+		}
+		// Preserve subclass getItems dispatch and the original invalid-index exception.
+		return list.getItems()[index];
+	}
+
 	private void drawTextLine(int lineNumber, int x, int y, GC gc, Rectangle clientArea) {
-		String text = list.getItems()[lineNumber];
+		String text = paintItemText(lineNumber);
 		Point textExtent = gc.textExtent(text);
 
 		int _x = calculateHorizontalAlignment(x, textExtent, clientArea);
