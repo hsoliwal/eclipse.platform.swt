@@ -39,6 +39,14 @@
                 <message_argument value="width()"/>
             </message_arguments>
         </filter>
+            <resource path="Eclipse SWT/common/org/eclipse/swt/SWT.java" type="org.eclipse.swt.SWT">
+        <filter comment="Ignore SWT.SKIA for the moment" id="336658481">
+            <message_arguments>
+                <message_argument value="org.eclipse.swt.SWT"/>
+                <message_argument value="SKIA"/>
+            </message_arguments>
+        </filter>
+    </resource>
         <filter id="338948223">
             <message_arguments>
                 <message_argument value="org.eclipse.swt.printing.PageSize"/>

@@ -39,7 +39,7 @@
         </filter>
     </resource>
     <resource path="Eclipse SWT/common/org/eclipse/swt/SWT.java" type="org.eclipse.swt.SWT">
-        <filter comment="Ignore the SKIA variable for the moment." id="336658481">
+        <filter comment="Ignore SWT.SKIA for the moment" id="336658481">
             <message_arguments>
                 <message_argument value="org.eclipse.swt.SWT"/>
                 <message_argument value="SKIA"/>
