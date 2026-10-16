@@ -1952,6 +1952,26 @@ public class TreeItem extends Item {
 			return;
 		}
 
+		if (sendEvent) {
+            Tree owner = parent;
+            Event event = new Event();
+            event.item = this;
+            // Listeners observe the old state and may change topology or dispose the receiver.
+            owner.notifyListeners(expanded ? SWT.Expand : SWT.Collapse, event);
+            if (isDisposed() || owner.isDisposed() || parent != owner) return;
+			if (!isVirtual() || virtualItemCount <= 0) {
+				if (itemsList.isEmpty()) {
+					if (this.expanded && parent != null) parent.invalidateVirtualTopology();
+					this.expanded = false;
+					return;
+				}
+			}
+
+			if (this.expanded == expanded) {
+				return;
+			}
+		}
+
 		long rank = parent.arrangementIndexOf(this);
         long oldRows = isVirtual() ? parent.virtualDescendantRows(this) : 0;
         this.expanded = expanded;
@@ -1963,12 +1983,7 @@ public class TreeItem extends Item {
             else parent.invalidateVirtualGeometry();
         }
 
-		if (sendEvent) {
-			Event event = new Event();
-			event.item = this;
-			getParent().notifyListeners(this.expanded ? SWT.Expand : SWT.Collapse, event);
-			return;
-		}
+		if (sendEvent) return;
 		getParent().synchronizeArrangements(true);
 	}
 
