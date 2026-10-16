@@ -182,6 +182,8 @@ public class Tree extends CustomComposite {
 	private Color headerForegroundColor;
 
 	private boolean ctrlPressed;
+	/** Suppress only the generic mouse-release Selection after item disclosure/CHECK. */
+	private boolean handledItemActionOnMouseDown;
 	private boolean hasMouseEntered;
 
 	private int virtualItemCount;
@@ -485,6 +487,7 @@ public class Tree extends CustomComposite {
 	}
 
 	private void onMouseDown(Event e) {
+		if (e.button == 1) handledItemActionOnMouseDown = false;
 		Point p = new Point(e.x, e.y);
         if (isVirtual() && itemsHandler.getItemsClientArea().contains(p)) { handleVirtualMouseDown(e, p); return; }
 
@@ -510,12 +513,18 @@ public class Tree extends CustomComposite {
 				TreeItem it = _getArrangementItem(i);
 
 				Rectangle b = it.getBounds();
-				if (it.isInArrowArea(p) && it.toggleExpand()) {
-					synchronizeArrangements(true);
-					break;
+				if (it.isInArrowArea(p)) {
+					// Arm before the callback: it may synchronously dispatch MouseUp.
+					if (e.button == 1) handledItemActionOnMouseDown = true;
+					if (it.toggleExpand()) {
+						synchronizeArrangements(true);
+						break;
+					}
+					if (e.button == 1) handledItemActionOnMouseDown = false;
 				}
 
 				if (it.isInCheckArea(p)) {
+					if (e.button == 1) handledItemActionOnMouseDown = true;
 					it.toggleCheck();
 					break;
 				}
@@ -544,11 +553,15 @@ public class Tree extends CustomComposite {
 	}
 
 	private void onMouseUp(Event e) {
+		boolean handledItemAction = e.button == 1 && handledItemActionOnMouseDown;
+		if (e.button == 1) {
+			handledItemActionOnMouseDown = false;
+		}
 		if (columnsHandler.getColumnsBounds().contains(e.x, e.y)) {
 			columnsHandler.handleMouseUp(e);
 		}
 
-		if ((e.stateMask & SWT.BUTTON1) != 0) {
+		if ((e.stateMask & SWT.BUTTON1) != 0 && !handledItemAction) {
 			handleSelection();
 		} else {
 			redraw();
@@ -3926,12 +3939,17 @@ public class Tree extends CustomComposite {
         long rank = virtualVisibleIndexOf(item);
         if (!isVirtualRowCurrent(expected, item, rank)) { if (!isDisposed()) redraw(); return; }
         if (event.button == 3 && selectedTreeItems.contains(item)) return;
-        if (item.isInArrowArea(point) && item.toggleExpand()) {
-            if (!isDisposed()) synchronizeArrangements(true);
-            return;
+        if (item.isInArrowArea(point)) {
+            if (event.button == 1) handledItemActionOnMouseDown = true;
+            if (item.toggleExpand()) {
+                if (!isDisposed()) synchronizeArrangements(true);
+                return;
+            }
+            if (event.button == 1) handledItemActionOnMouseDown = false;
         }
         if (!isVirtualRowCurrent(expected, item, rank)) { if (!isDisposed()) redraw(); return; }
         if (item.isInCheckArea(point)) {
+            if (event.button == 1) handledItemActionOnMouseDown = true;
             item.toggleCheck();
             if (!isDisposed()) redraw();
             return;
