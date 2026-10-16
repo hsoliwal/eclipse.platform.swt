@@ -22,8 +22,8 @@ source parent commit `5536d1195386c2927562637a39a0ed97d3ce6472`,
    Synexia branch `m3/tree-native-selection-release-20261016`:
    source Git blob `ab68ac590865251816c7a47c3d6aa1dbbc37c6fb`,
    SHA-256 `9ec368e1480f0aed7b4151327609d81a8a1bb11cf465a2324b614d70d310d8fe`;
-   output Git blob `39465d7e11c76625f5e3c891b903b90bda1da9cd`,
-   SHA-256 `4ccf81478abfec062b5dc4c31467f03ac449d5f11895dcf2f5d58850c44f16b3`.
+   output Git blob `3056dc5c20af686cd90b4f203973884451e192f2`,
+   SHA-256 `8efa9490f06ce5c816df4912a70be3ec604f14c3b8690ea7d7b9c6ede95c894b`.
    Receiver source matches canonical recipe output exactly.
 
 ## Scope: only extra itemless generic Selection
@@ -54,7 +54,7 @@ Canonical [Synexia source seal and JDK21 proof](https://github.com/hsoliwal/com.
 includes the exact original/after Tree images, one-file Maven/OpenRewrite recipe,
 before/after SHA-256 manifest, authored SDK fixed-point/drift-refusal cases,
 Java21 JDK AST source/API audit, and bounded event-state model. A related
-independent Java21 state harness executed locally with **25,034 assertions
+independent Java21 state harness executed locally with **25,038 assertions
 passed**, including 25,000 seeded cases. The exact committed source-level
 AST audit and Maven SDK tests are authored but have **not** run in real SWT.
 
@@ -70,3 +70,12 @@ Win32/GTK/Cocoa, Unicode/IME, accessibility and pixel/Skija checks.
 **Maven/OpenRewrite SDK, complete 680-source/Tycho product builds, native
 SWT/JNI and 360-widget parity are NOT_RUN/HOLD**. Do not merge on the
 strength of a Java model or a matching source hash.
+
+## Mixed-button source recipe correction
+
+The current exact recipe prevents a right MouseUp while `SWT.BUTTON1` is
+held from consuming the pending **left** disclosure/CHECK action. The
+one-bit suppression applies and clears only on `event.button == 1`.
+This follows a recorded multi-button counterexample and is committed as
+an additive correction to the canonical recipe **before** reapplying its
+exact postimage. Stock/native SWT acceptance is still NOT_RUN/RED.
