@@ -553,8 +553,8 @@ public class Tree extends CustomComposite {
 	}
 
 	private void onMouseUp(Event e) {
-		boolean handledItemAction = handledItemActionOnMouseDown;
-		if (e.button == 1 || (e.stateMask & SWT.BUTTON1) != 0) {
+		boolean handledItemAction = e.button == 1 && handledItemActionOnMouseDown;
+		if (e.button == 1) {
 			handledItemActionOnMouseDown = false;
 		}
 		if (columnsHandler.getColumnsBounds().contains(e.x, e.y)) {
