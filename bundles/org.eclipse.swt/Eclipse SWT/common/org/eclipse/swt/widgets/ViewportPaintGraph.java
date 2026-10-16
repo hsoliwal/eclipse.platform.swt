@@ -51,6 +51,8 @@ final class ViewportPaintGraph {
         if (width < 0 || height < 0) {
             throw new IllegalArgumentException("negative paint bounds");
         }
+		// Reserve every parent-owned column and both dirty-word lanes first.
+		// Failed allocation cannot expose a half-inserted logical node.
 		ensureNodeCapacity (nodeCount + 1);
 		int id = nodeCount++;
 		keys [id] = key;
@@ -60,7 +62,6 @@ final class ViewportPaintGraph {
 		this.width [id] = width;
 		this.height [id] = height;
 		firstOutgoing [id] = -1;
-		ensureDirtyCapacity (nodeCount);
 		setDirty (id, true);
 		return id;
 	}
@@ -244,39 +245,47 @@ final class ViewportPaintGraph {
         }
 	}
 
+	/** Reserve all node columns and bit lanes before publishing any replacement. */
 	private void ensureNodeCapacity (int required) {
-        if (required <= keys.length) {
-            return;
-        }
-		int next = Math.max (required, keys.length * 2);
-		keys = java.util.Arrays.copyOf (keys, next);
-		layers = java.util.Arrays.copyOf (layers, next);
-		x = java.util.Arrays.copyOf (x, next);
-		y = java.util.Arrays.copyOf (y, next);
-		width = java.util.Arrays.copyOf (width, next);
-		height = java.util.Arrays.copyOf (height, next);
-		int old = firstOutgoing.length;
-		firstOutgoing = java.util.Arrays.copyOf (firstOutgoing, next);
-		java.util.Arrays.fill (firstOutgoing, old, next, -1);
+		int requiredWords = (int) (((long) required + 63L) >>> 6);
+		boolean growNodes = required > keys.length;
+		boolean growWords = requiredWords > dirtyWords.length;
+		if (!growNodes && !growWords) return;
+		int next = growNodes ? Math.max (required, keys.length * 2) : keys.length;
+		long [] nextKeys = growNodes ? java.util.Arrays.copyOf (keys, next) : keys;
+		int [] nextLayers = growNodes ? java.util.Arrays.copyOf (layers, next) : layers;
+		long [] nextX = growNodes ? java.util.Arrays.copyOf (x, next) : x;
+		long [] nextY = growNodes ? java.util.Arrays.copyOf (y, next) : y;
+		long [] nextWidth = growNodes ? java.util.Arrays.copyOf (width, next) : width;
+		long [] nextHeight = growNodes ? java.util.Arrays.copyOf (height, next) : height;
+		int [] nextFirstOutgoing = growNodes
+				? java.util.Arrays.copyOf (firstOutgoing, next) : firstOutgoing;
+		if (growNodes) java.util.Arrays.fill (nextFirstOutgoing, firstOutgoing.length, next, -1);
+		long [] nextDirty = growWords
+				? java.util.Arrays.copyOf (dirtyWords, requiredWords) : dirtyWords;
+		long [] nextPending = growWords
+				? java.util.Arrays.copyOf (pendingWords, requiredWords) : pendingWords;
+		// Commit is owner-thread confined. There are no allocating operations below.
+		keys = nextKeys;
+		layers = nextLayers;
+		x = nextX;
+		y = nextY;
+		width = nextWidth;
+		height = nextHeight;
+		firstOutgoing = nextFirstOutgoing;
+		dirtyWords = nextDirty;
+		pendingWords = nextPending;
 	}
 
+	/** Edge columns share one publication point, including sentinel initialization. */
 	private void ensureEdgeCapacity (int required) {
-        if (required <= edgeTo.length) {
-            return;
-        }
+		if (required <= edgeTo.length) return;
 		int next = Math.max (required, edgeTo.length * 2);
-		edgeTo = java.util.Arrays.copyOf (edgeTo, next);
-		int old = edgeNext.length;
-		edgeNext = java.util.Arrays.copyOf (edgeNext, next);
-		java.util.Arrays.fill (edgeNext, old, next, -1);
-	}
-
-	private void ensureDirtyCapacity (int requiredNodes) {
-		int requiredWords = (requiredNodes + 63) >>> 6;
-		if (requiredWords > dirtyWords.length) {
-			dirtyWords = java.util.Arrays.copyOf (dirtyWords, requiredWords);
-			pendingWords = java.util.Arrays.copyOf (pendingWords, requiredWords);
-		}
+		int [] nextEdgeTo = java.util.Arrays.copyOf (edgeTo, next);
+		int [] nextEdgeNext = java.util.Arrays.copyOf (edgeNext, next);
+		java.util.Arrays.fill (nextEdgeNext, edgeNext.length, next, -1);
+		edgeTo = nextEdgeTo;
+		edgeNext = nextEdgeNext;
 	}
 
 	private void checkNode (int node) {
