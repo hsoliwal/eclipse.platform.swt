@@ -10,7 +10,11 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+<<<<<<< HEAD
  *     Hitesh Soliwal (Synexia) - viewport mediation hooks (ListViewport)
+=======
+ *     Hitesh Soliwal (Synexia) - drawn planes of the custom, skija and gpu modes (ListDrawnPlane hooks)
+>>>>>>> origin/m3/render-modes-20261017
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -121,6 +125,9 @@ public class List extends Scrollable {
 	/* Viewport mediation of a list without SWT.VIRTUAL (see ListViewport); null in the original mode. */
 	ListViewport viewport;
 
+	/* The drawn plane of the custom, skija and gpu modes (see ListDrawnPlane); null in the viewport and original modes. */
+	ListDrawnPlane drawnPlane;
+
 /**
  * Constructs a new instance of this class given its parent
  * and a style value describing its behavior and appearance.
@@ -161,6 +168,7 @@ public List (Composite parent, int style) {
 		viewport = new ListViewport (this);
 		viewport.install ();
 	}
+	drawnPlane = ListDrawnPlane.install (this);
 }
 /**
  * Adds the argument to the end of the receiver's list.
@@ -301,6 +309,7 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
     if (handle == 0) {
         return 0;
     }
+	if (drawnPlane != null && drawnPlane.paints (hwnd, msg)) return drawnPlane.paint (hwnd, msg, wParam, lParam);
 	if (viewport != null && msg == OS.WM_VSCROLL) return viewport.onVScroll (wParam);
 	if (viewport != null && msg == OS.WM_MOUSEWHEEL) return viewport.onWheel (hwnd, wParam, lParam);
 	boolean redraw = false;
@@ -3051,6 +3060,10 @@ void releaseWidget () {
 	}
 	storePrefetch = null;
 	super.releaseWidget ();
+	if (drawnPlane != null) {
+		drawnPlane.release ();
+		drawnPlane = null;
+	}
 }
 
 @Override

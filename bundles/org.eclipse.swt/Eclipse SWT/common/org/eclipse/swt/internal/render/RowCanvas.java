@@ -18,7 +18,7 @@ import org.eclipse.swt.graphics.*;
 
 /**
  * The backend of a drawn plane: the few primitives a row renderer needs, in device pixels of the plane.
- * One implementation per drawn mode (GC, Skija raster, graphics hardware). A frame is
+ * One implementation per drawn mode (GC, M3 raster, graphics hardware). A frame is
  * {@link #begin}, any number of primitives inside the frame's rectangle, {@link #end}.
  * <p>
  * Colours are <code>0xRRGGBB</code> ints. Fonts are native font handles of the widget's platform (on
@@ -59,6 +59,9 @@ public interface RowCanvas {
 
 	/** Draws an image scaled into a box (the widget's image size at the image's place). */
 	void image (Image image, int x, int y, int width, int height);
+
+	/** Draws theme glyph pixels (device independent) at a size; a backend keeps its device copy per image data. */
+	void imageData (ImageData data, int x, int y, int width, int height);
 
 	/** Fills a polygon of <code>count</code> points (<code>x, y</code> pairs) with a colour. */
 	void polygon (int [] points, int count, int rgb);
