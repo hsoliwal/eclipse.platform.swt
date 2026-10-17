@@ -1,0 +1,9 @@
+[
+  "/tmp/m3-toolchain/jdk-21.0.12.1+1/bin/javac",
+  "--release",
+  "21",
+  "-proc:none",
+  "-d",
+  "/tmp/swt-scrollbar-callback-base-classes-20261017",
+  "@/tmp/swt-scrollbar-callback-proof-20261017/full-gtk-before.args"
+]

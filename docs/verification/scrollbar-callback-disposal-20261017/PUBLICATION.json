@@ -1,0 +1,127 @@
+{
+  "SPDX-FileCopyrightText": "2026 Hitesh Soliwal and Contributors to the Synexia Project",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "schema": "SWT_CALLBACK_SOURCE_CUSTODY_V1",
+  "target_repository": "hsoliwal/eclipse.platform.swt",
+  "local_source_commit": "64b93072569e9f9749d30a065c793fca865ff16e",
+  "local_source_tree": "229e6e75db7fdda319a5e04ed0b45f18b093a56e",
+  "local_source_parent": "b42becc14a4522d5342649cb527bd5e70aa7c86b",
+  "local_source_parent_tree": "283cd2e30aa2c5522ca95a88b4d02fbcf9035a07",
+  "remote_publication_base": {
+    "repository": "hsoliwal/eclipse.platform.swt",
+    "base_branch": "m3/viewport-paintgraph-recovery-20261017",
+    "local_qualification_commit": "b42becc14a4522d5342649cb527bd5e70aa7c86b",
+    "local_tree": "283cd2e30aa2c5522ca95a88b4d02fbcf9035a07",
+    "remote_source_commit": "bff9c98564a575781d9a19f61dc5561c1d13ce2a",
+    "remote_tree": "06bcccfd1b29ae3ca06f1a4fb8220432ec9d8cc7",
+    "tree_relationship": "Different trees. Only exact receiving source paths are asserted equivalent; do not infer whole-tree equality.",
+    "existing_preimages_verified": [
+      {
+        "path": "bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java",
+        "git_blob": "d8c3902e7c710a436fa0ee9368ba098e0b237f59"
+      },
+      {
+        "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllWidgetTests.java",
+        "git_blob": "9979b2fbe45481f1c96db5a399dc3516108726b0"
+      }
+    ],
+    "method": "Authenticated GitHub file GET at exact remote commit compared with local Git HEAD:path object IDs",
+    "absent_targets_verified": [
+      {
+        "path": ".m3/swt-scrollbar-callback-disposal-20261017/RECEIVER.md",
+        "status": "GitHub API 404 NOT_FOUND at immutable remote parent"
+      },
+      {
+        "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java",
+        "status": "GitHub API 404 NOT_FOUND at immutable remote parent"
+      }
+    ]
+  },
+  "target_delta_rule": "Publish the exact four generated source/receipt paths and this new documentation directory as an additive delta atop the immutable remote graph parent. Preserve all other remote-parent paths and bytes; no remote whole-tree replacement.",
+  "canonical": {
+    "repository": "hsoliwal/com.synexia",
+    "pull_request": 12129,
+    "url": "https://github.com/hsoliwal/com.synexia/pull/12129",
+    "revision": "893118ced3ba18f97633c24c8090d1aa83b4113c",
+    "tree": "7ea37812f79395fe89a595df4517007eca460669",
+    "recipe_name": "com.synexia.swt.ScrollBarCallbackDisposal20261017",
+    "crate_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-scrollbar-callback-disposal-20261017",
+    "publication_verification": "Parent agent independently verified all 94 published paths and Git blobs against the frozen canonical packet."
+  },
+  "generated_targets": [
+    {
+      "path": ".m3/swt-scrollbar-callback-disposal-20261017/RECEIVER.md",
+      "preimage_sha256": "ABSENT",
+      "postimage_sha256": "a19a706f3ba03f828c2ca94b48535bd36d4ab08ef0cfd58707f3dfbd12c1b0f0",
+      "preimage_git_blob": "ABSENT",
+      "postimage_git_blob": "4d3570c577a880938240eca1b3baad8203f2c08a"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/ScrollBar.java",
+      "preimage_sha256": "966855c88fbe0fa13c25b5df89ec62ddbead1850bc94ef935d27f9d2c83f15ca",
+      "postimage_sha256": "b2cc90ce5b7f3f706a758099eacdca8199cae5ac53f7b44cdb9beb779aa09966",
+      "preimage_git_blob": "d8c3902e7c710a436fa0ee9368ba098e0b237f59",
+      "postimage_git_blob": "8aa2b71e77eda7ba2a1a3e3eb29700d71aad623d"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllWidgetTests.java",
+      "preimage_sha256": "486e76aa4145f86b342841c9eded7feb2a878b099b60d67db1a0b7a06fbef597",
+      "postimage_sha256": "5ad5c035f36409a26be9d2f763b42bba7686f6ce5b46badc4d40fa59bf89c883",
+      "preimage_git_blob": "9979b2fbe45481f1c96db5a399dc3516108726b0",
+      "postimage_git_blob": "e6398a083dfa3c81e45b61d8cfa647fd7ed19f03"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.java",
+      "preimage_sha256": "ABSENT",
+      "postimage_sha256": "cf94333fc5329b963bade2d842fbcb0352a05342d9c0f2bee2b1b8715898488a",
+      "preimage_git_blob": "ABSENT",
+      "postimage_git_blob": "2579c011d577618c007661c191ad67a69a28df82"
+    }
+  ],
+  "qualified_sdk": {
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "final_maven_log_sha256": "3e7619b8c591c1510a3fd9d297405c5790ffef355d39971bbf716b3402c4a187"
+  },
+  "receiver": {
+    "targets": 4,
+    "apply_changes": 4,
+    "second_pass_changes": 0,
+    "apply_log_sha256": "b3b02bf362ebf041830d7f641e4e635b58a4c069b00f89308070ea3254762f6a",
+    "check_log_sha256": "7322ed6b22769797164bb5988b5108dc9162b16eff61ab01ecb837042bb4e72f"
+  },
+  "received_native": {
+    "driver_sha256": "99a47c78b1f256acb5a5d99fd24129c941955cd2f67f8bd3fb1d0bea90738b33",
+    "source_sha256": {
+      "before": "966855c88fbe0fa13c25b5df89ec62ddbead1850bc94ef935d27f9d2c83f15ca",
+      "after": "b2cc90ce5b7f3f706a758099eacdca8199cae5ac53f7b44cdb9beb779aa09966"
+    },
+    "test_sha256": "cf94333fc5329b963bade2d842fbcb0352a05342d9c0f2bee2b1b8715898488a",
+    "native_platform": "GTK3/X11 under caller-provided isolated Xvfb",
+    "junit": {
+      "before": {
+        "tests": 12,
+        "skipped": 0,
+        "failures": 8,
+        "errors": 0,
+        "passed": 4
+      },
+      "after": {
+        "tests": 12,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0,
+        "passed": 12
+      }
+    },
+    "api": "PASS identical declared ScrollBar descriptors",
+    "compiler": "PASS Java21 production source; nine exact pre-existing warnings, zero new diagnostics; strict regression-test -Werror",
+    "scope": "Native GTK callback lifetime/event behavior. GTK4, Cocoa, Win32, whole-reactor and viewport performance/pixel acceptance not executed."
+  },
+  "received_native_result_sha256": "a434cff12e7331e30fc3392ece431d6c987649591514faf6efe8466c6aac1868",
+  "runtime_dependency_identity": "Actual locally compiled SWT GTK sources and built native libraries, with exact input/output/resource inventories. The callback behavior is not attributed to the official SWT 3.135 binary used for the earlier Nebula negative observation.",
+  "inherited_graph_scope": "The preceding package-private widgets ViewportPaintGraph recovery has no current direct production Java consumer; these callback results establish no native Tree/Table graph activation.",
+  "native_acceptance_scope": "GTK3/X11 callback lifetime and event behavior; GTK4, Cocoa, Win32, full Tycho reactor, all-widget viewport, screen pixels and CPU/heap/RSS acceptance are not executed here."
+}

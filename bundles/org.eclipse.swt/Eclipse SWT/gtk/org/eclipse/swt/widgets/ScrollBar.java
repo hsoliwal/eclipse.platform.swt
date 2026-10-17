@@ -979,9 +979,11 @@ public void setValues (int selection, int minimum, int maximum, int thumb, int i
  */
 public void setVisible (boolean visible) {
 	checkWidget ();
-	if (parent.setScrollBarVisible (this, visible)) {
-		sendEvent (visible ? SWT.Show : SWT.Hide);
-		parent.sendEvent (SWT.Resize);
+	// A visibility callback can dispose the scrollbar while its owner remains live.
+	Scrollable owner = parent;
+	if (owner.setScrollBarVisible (this, visible)) {
+		if (!isDisposed ()) sendEvent (visible ? SWT.Show : SWT.Hide);
+		if (!owner.isDisposed ()) owner.sendEvent (SWT.Resize);
 	}
 }
 
