@@ -1,0 +1,179 @@
+{
+  "schema": "SYNEXIA_VIEWPORT_OFFLINE_RECIPE_MIRROR_V1",
+  "canonical_repository": "hsoliwal/com.synexia",
+  "canonical_revision": "a14a26e92fb65d0fbcd7f71e7ae1653222ccc439",
+  "publication_status": "PINNED",
+  "canonical_crate_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017",
+  "canonical_engine_revision": "892e3f6c51d78bc0948e8a8cf736055b4c70eafa",
+  "recipe_name": "com.synexia.swt.PaintGraphRecovery20261017",
+  "target_repository": "hsoliwal/eclipse.platform.swt",
+  "target_revision": "ca77c0272fb6c1ea12594ac00baca8fb9b50ce3d",
+  "purpose": "Offline source-authoring and qualification mirror only; no product runtime dependency",
+  "licenses": {
+    "recipe_and_engine": "Apache-2.0",
+    "target_payloads": "Retain each original source header; Apache-2.0 OR EPL-2.0 and EPL-2.0 payloads are not relicensed"
+  },
+  "commands_from_recipe_directory": [
+    "mvn -B -o -ntp -Drecipe.owner.root=\"$PWD/sdk-owner\" verify",
+    "python3 receive.py --target /absolute/path/to/product --check",
+    "python3 receive.py --target /absolute/path/to/product",
+    "python3 receive.py --target /absolute/path/to/product --check"
+  ],
+  "sdk_qualification": "Run the exact five SDK tests locally before the receiver; target runtime evidence remains separate",
+  "files": [
+    {
+      "path": "LICENSES/Apache-2.0.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/LICENSES/Apache-2.0.txt",
+      "sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6",
+      "git_blob": "29f81d812f3e768fa89638d1f72920dbfd1413a8",
+      "bytes": 11558
+    },
+    {
+      "path": "LICENSES/EPL-2.0.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/LICENSES/EPL-2.0.txt",
+      "sha256": "0becf16567beb77fa252b7664631dd177c8f9a1889e48995b45379c7130e5303",
+      "git_blob": "e23ece2c852415800ac224b74ede6c5849f6f88d",
+      "bytes": 14198
+    },
+    {
+      "path": "NOTICE",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/NOTICE",
+      "sha256": "48c879ec1e01ba1a8f4f4643f9bc0b55324704e50655f9658c9a0ed654b03d0a",
+      "git_blob": "ad17f5b4a7425cf2abc66e54ca3a16b0aca4e3ce",
+      "bytes": 1094
+    },
+    {
+      "path": "README.md",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/README.md",
+      "sha256": "54e782a7a8940fdee13e674a64cfb1e77da58d72db98a91a7f1abd1a66a4681c",
+      "git_blob": "f5550a215de01b1ff80dfa1a702536745458a16b",
+      "bytes": 4623
+    },
+    {
+      "path": "crate.json",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/crate.json",
+      "sha256": "d2e969302f4dda11fbb91a27b1fe3af10fec9d3c7c43dd1646e8ccc19390ad36",
+      "git_blob": "0940dbb56051f8f6869b2a57f6d632cb619ad046",
+      "bytes": 3157
+    },
+    {
+      "path": "pom.xml",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/pom.xml",
+      "sha256": "a09d7be5ab59e01e29dedba9a95d5d7122b26dfa89d014ae14b396a832b6c575",
+      "git_blob": "1dd130c81d772d14df1694a94f4a9458c2eb8ec6",
+      "bytes": 3166
+    },
+    {
+      "path": "receive.py",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/receive.py",
+      "sha256": "24ce6011c0bc7d89fc863f8f809740b24d943cb40c5aaf9aba03adf0f222dadf",
+      "git_blob": "7b441c78df78c5c0dcc2f8a3526d588981880037",
+      "bytes": 5941
+    },
+    {
+      "path": "sdk-owner/src/main/java/com/synexia/rewrite/M3EditScope.java",
+      "canonical_path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3EditScope.java",
+      "sha256": "962d37d62d740c3e8055c365a048ae7ee0479c26a9f6bbfe741e540d6c1134ab",
+      "git_blob": "274360816db1e44a2f1796a3bc5cdeff6b0ce6db",
+      "bytes": 1052
+    },
+    {
+      "path": "sdk-owner/src/main/java/com/synexia/rewrite/M3HashPinnedJavaSnapshotRecipe.java",
+      "canonical_path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedJavaSnapshotRecipe.java",
+      "sha256": "67f7b81126e4736c7b61b444fa6545153a61e23c012975ca796fcee623ab6625",
+      "git_blob": "3bdeeaea9a212fe0c7d1f544510f87c4cd49eb40",
+      "bytes": 31181
+    },
+    {
+      "path": "sdk-owner/src/main/java/com/synexia/rewrite/M3HashPinnedTextSnapshotRecipe.java",
+      "canonical_path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedTextSnapshotRecipe.java",
+      "sha256": "fbf1ea9efad784afef5ac201ff7fc324551f77a099ebfe2f79b70c3a17c731ef",
+      "git_blob": "9d0788d3717e017d58345c5c3e62022c2915a3c8",
+      "bytes": 18026
+    },
+    {
+      "path": "sdk-owner/src/main/java/com/synexia/rewrite/M3ScopeInference.java",
+      "canonical_path": "synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3ScopeInference.java",
+      "sha256": "13660b59f60ec2941ec19e9bc8964ffd4b04689cdc33cd19711fba14b8da09a4",
+      "git_blob": "d24729950508857280ea1b56d4e930f05137ec85",
+      "bytes": 7655
+    },
+    {
+      "path": "src/main/resources/META-INF/rewrite/m3-swt-paintgraph-recovery-20261017.yml",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/main/resources/META-INF/rewrite/m3-swt-paintgraph-recovery-20261017.yml",
+      "sha256": "9fbab943e377b23492b84e87c21e04e950010b5d1403a3ff60217d0c16f88584",
+      "git_blob": "97f850182fc2295ef679d6b249452650a5ad6b24",
+      "bytes": 658
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/manifest.tsv",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/manifest.tsv",
+      "sha256": "e9ca0aee38ba9c344e87c199d2f591e76ee49b50690027ef2b29b35c6255b7dd",
+      "git_blob": "3c9b185eab1b07d4bed917272b7caadacaa462b7",
+      "bytes": 785
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/pre/target-002.java.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/pre/target-002.java.txt",
+      "sha256": "fd00903d07343044836963f54cf34e98cf24b794d38cc8242fcddfdf72527d7c",
+      "git_blob": "cf774d12e68c96ccd46cb4f63f66543474a14440",
+      "bytes": 10408
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/pre/target-003.java.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/pre/target-003.java.txt",
+      "sha256": "a50d54c3ec4d2174361b392f4011870ff1522a1ac794c8287d2d8d1475604af4",
+      "git_blob": "068a691c479daffabb189b796deb7dbfe8f3663a",
+      "bytes": 4900
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/target-002.java.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/target-002.java.txt",
+      "sha256": "2a7a8ce1564bc78f9fda1d49aee3c5fa5352a7f77c11521e8f498d57fec4e837",
+      "git_blob": "254a324952adf97e50bd49ee5646547524e3c68b",
+      "bytes": 11298
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/target-003.java.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/target-003.java.txt",
+      "sha256": "486e76aa4145f86b342841c9eded7feb2a878b099b60d67db1a0b7a06fbef597",
+      "git_blob": "9979b2fbe45481f1c96db5a399dc3516108726b0",
+      "bytes": 4972
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/target-004.java.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-paintgraph-recovery-20261017/target-004.java.txt",
+      "sha256": "d0c4b0062ba2413bf6c59670474b9922ce16109440796a31bc1de2badc410069",
+      "git_blob": "dd1d9765a822929e61a6c5a2b5f3b85e2f79c148",
+      "bytes": 7457
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-paintgraph-recovery-20261017/manifest.tsv",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-paintgraph-recovery-20261017/manifest.tsv",
+      "sha256": "90af7339398118261a24f828584c3d15df837e2b6ca07d9537e6412267a63697",
+      "git_blob": "8f1000c9ed8f63e98db9654506d41769af5cd564",
+      "bytes": 368
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-paintgraph-recovery-20261017/target-000.text.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-paintgraph-recovery-20261017/target-000.text.txt",
+      "sha256": "2a905a03aa0fd0256378766730c1d73193f7a4099ce976b09739bbac2ffa3c2c",
+      "git_blob": "1390cee8ec495d66598d37f71e013d04bd87fc84",
+      "bytes": 2868
+    },
+    {
+      "path": "src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-paintgraph-recovery-20261017/target-001.text.txt",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-paintgraph-recovery-20261017/target-001.text.txt",
+      "sha256": "3a6881a07f8e27b8f2d30404786bee026eb8d775edcc1dc35cfca881411f693d",
+      "git_blob": "77bbcc086f54b21aab1391282edc29065131072b",
+      "bytes": 4666
+    },
+    {
+      "path": "src/test/java/com/synexia/rewrite/M3TaskRecipeTest.java",
+      "canonical_path": "synexia-openrewrite-recipes/recipe-crates/m3-swt-paintgraph-recovery-20261017/src/test/java/com/synexia/rewrite/M3TaskRecipeTest.java",
+      "sha256": "015e2f8257c6e2b5573cecb32929cfbc8a41766a2bac4446172ccfab28b7ebb3",
+      "git_blob": "3ff7e6f49fd75a34d0991ced8d069b956da0ee49",
+      "bytes": 16821
+    }
+  ]
+}

@@ -95,6 +95,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_Tree_CoordinateVisibilityGtk.class, //
 		Test_org_eclipse_swt_widgets_TreeColumn.class, //
 		Test_org_eclipse_swt_widgets_TreeItem.class, //
+		Test_org_eclipse_swt_widgets_ViewportPaintGraphAtomicGrowth.class, //
 		Test_org_eclipse_swt_widgets_ViewportPaintGraphDirtyWordScan.class, //
 		Test_org_eclipse_swt_widgets_VirtualPageSource.class, //
 })
