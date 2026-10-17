@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/tmp/m3-toolchain/apache-maven-3.9.11/bin/mvn",
+    "-B",
+    "-o",
+    "-ntp",
+    "-f",
+    "/tmp/viewport-callback-mirror-verification-20261017/recipe/pom.xml",
+    "-Dmaven.repo.local=/tmp/m3-maven-repository",
+    "-Drecipe.owner.root=/tmp/viewport-callback-mirror-verification-20261017/recipe/sdk-owner",
+    "verify"
+  ],
+  "JAVA_HOME": "/tmp/m3-toolchain/jdk-21.0.12.1+1",
+  "exit_code": 0,
+  "elapsed_seconds": 17.827,
+  "log_sha256": "a61e7057bc1cf4b9255acfb1d92889ecb5aa9c7f404d07ac6a6aae0e83128240",
+  "scope": "Fresh offline Java21 SDK qualification of an exported authoring mirror in a separate new directory; no product writes."
+}

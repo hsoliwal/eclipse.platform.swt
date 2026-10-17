@@ -78,6 +78,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_widgets_Scale.class, //
 		Test_org_eclipse_swt_widgets_StyleBits.class, //
 		Test_org_eclipse_swt_widgets_ScrollBar.class, //
+		Test_org_eclipse_swt_widgets_ScrollBar_CallbackDisposalGtk.class, //
 		Test_org_eclipse_swt_widgets_ScrolledComposite.class, //
 		Test_org_eclipse_swt_widgets_Shell.class, //
 		Test_org_eclipse_swt_widgets_Slider.class, //

@@ -1,0 +1,127 @@
+Compiled from "ScrollBar.java"
+public class org.eclipse.swt.widgets.ScrollBar extends org.eclipse.swt.widgets.Widget {
+  org.eclipse.swt.widgets.Scrollable parent;
+    descriptor: Lorg/eclipse/swt/widgets/Scrollable;
+  long adjustmentHandle;
+    descriptor: J
+  int detail;
+    descriptor: I
+  boolean dragSent;
+    descriptor: Z
+  org.eclipse.swt.widgets.ScrollBar();
+    descriptor: ()V
+
+  org.eclipse.swt.widgets.ScrollBar(org.eclipse.swt.widgets.Scrollable, int);
+    descriptor: (Lorg/eclipse/swt/widgets/Scrollable;I)V
+
+  public void addSelectionListener(org.eclipse.swt.events.SelectionListener);
+    descriptor: (Lorg/eclipse/swt/events/SelectionListener;)V
+
+  static int checkStyle(int);
+    descriptor: (I)I
+
+  void deregister();
+    descriptor: ()V
+
+  void destroyWidget();
+    descriptor: ()V
+
+  public boolean getEnabled();
+    descriptor: ()Z
+
+  public int getIncrement();
+    descriptor: ()I
+
+  public int getMaximum();
+    descriptor: ()I
+
+  public int getMinimum();
+    descriptor: ()I
+
+  public int getPageIncrement();
+    descriptor: ()I
+
+  public org.eclipse.swt.widgets.Scrollable getParent();
+    descriptor: ()Lorg/eclipse/swt/widgets/Scrollable;
+
+  public int getSelection();
+    descriptor: ()I
+
+  public org.eclipse.swt.graphics.Point getSize();
+    descriptor: ()Lorg/eclipse/swt/graphics/Point;
+
+  public int getThumb();
+    descriptor: ()I
+
+  public org.eclipse.swt.graphics.Rectangle getThumbBounds();
+    descriptor: ()Lorg/eclipse/swt/graphics/Rectangle;
+
+  public org.eclipse.swt.graphics.Rectangle getThumbTrackBounds();
+    descriptor: ()Lorg/eclipse/swt/graphics/Rectangle;
+
+  public boolean getVisible();
+    descriptor: ()Z
+
+  long gtk3_button_press_event(long, long);
+    descriptor: (JJ)J
+
+  boolean gtk_change_value(long, int, double, long);
+    descriptor: (JIDJ)Z
+
+  long gtk_value_changed(long);
+    descriptor: (J)J
+
+  long gtk3_event_after(long, long);
+    descriptor: (JJ)J
+
+  void hookEvents();
+    descriptor: ()V
+
+  public boolean isEnabled();
+    descriptor: ()Z
+
+  public boolean isVisible();
+    descriptor: ()Z
+
+  void register();
+    descriptor: ()V
+
+  void releaseHandle();
+    descriptor: ()V
+
+  void releaseParent();
+    descriptor: ()V
+
+  public void removeSelectionListener(org.eclipse.swt.events.SelectionListener);
+    descriptor: (Lorg/eclipse/swt/events/SelectionListener;)V
+
+  public void setEnabled(boolean);
+    descriptor: (Z)V
+
+  public void setIncrement(int);
+    descriptor: (I)V
+
+  public void setMaximum(int);
+    descriptor: (I)V
+
+  public void setMinimum(int);
+    descriptor: (I)V
+
+  void setOrientation(boolean);
+    descriptor: (Z)V
+
+  public void setPageIncrement(int);
+    descriptor: (I)V
+
+  public void setSelection(int);
+    descriptor: (I)V
+
+  public void setThumb(int);
+    descriptor: (I)V
+
+  public void setValues(int, int, int, int, int, int);
+    descriptor: (IIIIII)V
+
+  public void setVisible(boolean);
+    descriptor: (Z)V
+}

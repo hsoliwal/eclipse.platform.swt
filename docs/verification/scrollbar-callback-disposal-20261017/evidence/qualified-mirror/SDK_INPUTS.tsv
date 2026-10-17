@@ -1,0 +1,17 @@
+# Recipe inputs used by this SDK execution
+crate/pom.xml	cb242e4a8f562d4e7b21e3984e7e1da5ee5103e4601c6659b1181df0db1adb09
+crate/receive.py	24ce6011c0bc7d89fc863f8f809740b24d943cb40c5aaf9aba03adf0f222dadf
+crate/src/main/resources/META-INF/rewrite/m3-swt-scrollbar-callback-disposal-20261017.yml	88aa64f7abafb4f2424bc389aeb0b4b17e730e6e9d56ade9f613949cb66a5467
+crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/manifest.tsv	053fe03435ab58cfc8ccb18c407134fe2c99e76277143833bfb9099062193a3f
+crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/pre/target-001.java.txt	966855c88fbe0fa13c25b5df89ec62ddbead1850bc94ef935d27f9d2c83f15ca
+crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/pre/target-002.java.txt	486e76aa4145f86b342841c9eded7feb2a878b099b60d67db1a0b7a06fbef597
+crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-001.java.txt	b2cc90ce5b7f3f706a758099eacdca8199cae5ac53f7b44cdb9beb779aa09966
+crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-002.java.txt	5ad5c035f36409a26be9d2f763b42bba7686f6ce5b46badc4d40fa59bf89c883
+crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-003.java.txt	cf94333fc5329b963bade2d842fbcb0352a05342d9c0f2bee2b1b8715898488a
+crate/src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-scrollbar-callback-disposal-20261017/manifest.tsv	3ffa9011543b4506d97b9c8c0d4d4df51620af5d09e9bd69db23bbab07721d91
+crate/src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-scrollbar-callback-disposal-20261017/target-000.text.txt	a19a706f3ba03f828c2ca94b48535bd36d4ab08ef0cfd58707f3dfbd12c1b0f0
+crate/src/test/java/com/synexia/rewrite/M3TaskRecipeTest.java	015e2f8257c6e2b5573cecb32929cfbc8a41766a2bac4446172ccfab28b7ebb3
+owner/src/main/java/com/synexia/rewrite/M3EditScope.java	962d37d62d740c3e8055c365a048ae7ee0479c26a9f6bbfe741e540d6c1134ab
+owner/src/main/java/com/synexia/rewrite/M3HashPinnedJavaSnapshotRecipe.java	67f7b81126e4736c7b61b444fa6545153a61e23c012975ca796fcee623ab6625
+owner/src/main/java/com/synexia/rewrite/M3HashPinnedTextSnapshotRecipe.java	fbf1ea9efad784afef5ac201ff7fc324551f77a099ebfe2f79b70c3a17c731ef
+owner/src/main/java/com/synexia/rewrite/M3ScopeInference.java	13660b59f60ec2941ec19e9bc8964ffd4b04689cdc33cd19711fba14b8da09a4

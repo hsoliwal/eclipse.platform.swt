@@ -1,0 +1,96 @@
+{
+  "schema": "SWT_NATIVE_SOURCE_BOUND_EVIDENCE_V1",
+  "directory": "/tmp/swt-scrollbar-callback-proof-20261017/received-native",
+  "files": [
+    {
+      "path": "after/api.txt",
+      "sha256": "1dac29e3cdc706fcd713fc5b56427fca9b06d9e6b17821e35ec19fdb78a7ed72",
+      "bytes": 2917
+    },
+    {
+      "path": "after/junit-reports/TEST-junit-jupiter.xml",
+      "sha256": "ba8a5da36efd19f885357ec5b134287b8fe96aafee1d87b96adf1800df6cebeb",
+      "bytes": 9992
+    },
+    {
+      "path": "after/junit-reports/TEST-junit-platform-suite.xml",
+      "sha256": "933be35f3961ceaff3dd0dee2662de1f6d7c676549d45eeb0f632805cd1456df",
+      "bytes": 3966
+    },
+    {
+      "path": "after/junit-reports/TEST-junit-vintage.xml",
+      "sha256": "87ca4ce228e72e8d858ba1aef36ec4cba575beb11ca4ec10ab501d7b95971649",
+      "bytes": 3949
+    },
+    {
+      "path": "after/junit.log",
+      "sha256": "627bb88c444142237fb8a902f62867094e8b62d24c4a6d9883598d3f053f3dcb",
+      "bytes": 7754
+    },
+    {
+      "path": "after/owner-compile.log",
+      "sha256": "08e6f8491f99091a02e963f4f461dabab70b89c76b02262fe8f9bcdf09eccf05",
+      "bytes": 2442
+    },
+    {
+      "path": "after/test-compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "before/api.txt",
+      "sha256": "1dac29e3cdc706fcd713fc5b56427fca9b06d9e6b17821e35ec19fdb78a7ed72",
+      "bytes": 2917
+    },
+    {
+      "path": "before/junit-reports/TEST-junit-jupiter.xml",
+      "sha256": "1586495d17b61883d07202137cba5ce83047bc43f0d0b39cc96b90385df3a470",
+      "bytes": 86726
+    },
+    {
+      "path": "before/junit-reports/TEST-junit-platform-suite.xml",
+      "sha256": "096c8148941729d137bffb7adbf832b9204489219b23bd52b08d6168c8f65138",
+      "bytes": 3968
+    },
+    {
+      "path": "before/junit-reports/TEST-junit-vintage.xml",
+      "sha256": "c3316d157bb75294d1c6e32587f55a0b38a95d7ab1985bc032012f748bf511af",
+      "bytes": 3951
+    },
+    {
+      "path": "before/junit.log",
+      "sha256": "b589ae01bcfa214b261671965451fc9f9180e84325568d052ac38343c8e5a8d7",
+      "bytes": 21278
+    },
+    {
+      "path": "before/owner-compile.log",
+      "sha256": "e7dc0e47432fd48b8b9b4360ab6f639bd113742879603c31085d0b23af47fda8",
+      "bytes": 2451
+    },
+    {
+      "path": "before/test-compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands.json",
+      "sha256": "695650c52c6730f3472d8cb24405528fe509ac75b860c9882810b96f65b29fec",
+      "bytes": 4568
+    },
+    {
+      "path": "dependency-inputs.json",
+      "sha256": "ff1455718c1c9909575307e5779a3371e3ba1b706e32521bb73a6287a7db7ee5",
+      "bytes": 135455
+    },
+    {
+      "path": "java-version.txt",
+      "sha256": "5b4412738541184e84f6b2d7520d4f4a7c2a455f60650491464c61adcbbbdeb0",
+      "bytes": 205
+    },
+    {
+      "path": "result.json",
+      "sha256": "a434cff12e7331e30fc3392ece431d6c987649591514faf6efe8466c6aac1868",
+      "bytes": 1031
+    }
+  ]
+}

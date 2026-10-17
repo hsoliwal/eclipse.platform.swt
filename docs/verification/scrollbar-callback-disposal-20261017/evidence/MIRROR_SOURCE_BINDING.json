@@ -1,0 +1,79 @@
+{
+  "SPDX-FileCopyrightText": "2026 Hitesh Soliwal and Contributors to the Synexia Project",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "schema": "SWT_CALLBACK_PINNED_MIRROR_SOURCE_BINDING_V1",
+  "canonical_revision": "893118ced3ba18f97633c24c8090d1aa83b4113c",
+  "canonical_pull_request": "https://github.com/hsoliwal/com.synexia/pull/12129",
+  "pinned_mirror_source_files": 21,
+  "pinned_handoff_sha256": "ee402931c5246c7f81cd7a6f151d82e8212a0b445e59c0c92e3987b07ba536b9",
+  "comparison": "Every exported source file equals its canonical source and the earlier actually qualified mirror. SHA-256 and Git blob hashes match the containing-revision handoff. All SDK-bound source inputs equal the actual earlier qualification inputs.",
+  "qualification_observation": "The preserved exported-mirror proof ran before canonical publication, hence its historical PENDING_CANONICAL_PUBLICATION status. This new handoff is PINNED. No new native or SDK test run is implied by this byte comparison.",
+  "qualified_sdk_inputs": [
+    {
+      "input": "crate/pom.xml",
+      "sha256": "cb242e4a8f562d4e7b21e3984e7e1da5ee5103e4601c6659b1181df0db1adb09"
+    },
+    {
+      "input": "crate/receive.py",
+      "sha256": "24ce6011c0bc7d89fc863f8f809740b24d943cb40c5aaf9aba03adf0f222dadf"
+    },
+    {
+      "input": "crate/src/main/resources/META-INF/rewrite/m3-swt-scrollbar-callback-disposal-20261017.yml",
+      "sha256": "88aa64f7abafb4f2424bc389aeb0b4b17e730e6e9d56ade9f613949cb66a5467"
+    },
+    {
+      "input": "crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/manifest.tsv",
+      "sha256": "053fe03435ab58cfc8ccb18c407134fe2c99e76277143833bfb9099062193a3f"
+    },
+    {
+      "input": "crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/pre/target-001.java.txt",
+      "sha256": "966855c88fbe0fa13c25b5df89ec62ddbead1850bc94ef935d27f9d2c83f15ca"
+    },
+    {
+      "input": "crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/pre/target-002.java.txt",
+      "sha256": "486e76aa4145f86b342841c9eded7feb2a878b099b60d67db1a0b7a06fbef597"
+    },
+    {
+      "input": "crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-001.java.txt",
+      "sha256": "b2cc90ce5b7f3f706a758099eacdca8199cae5ac53f7b44cdb9beb779aa09966"
+    },
+    {
+      "input": "crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-002.java.txt",
+      "sha256": "5ad5c035f36409a26be9d2f763b42bba7686f6ce5b46badc4d40fa59bf89c883"
+    },
+    {
+      "input": "crate/src/main/resources/com/synexia/rewrite/hash-pinned-java/m3-swt-scrollbar-callback-disposal-20261017/target-003.java.txt",
+      "sha256": "cf94333fc5329b963bade2d842fbcb0352a05342d9c0f2bee2b1b8715898488a"
+    },
+    {
+      "input": "crate/src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-scrollbar-callback-disposal-20261017/manifest.tsv",
+      "sha256": "3ffa9011543b4506d97b9c8c0d4d4df51620af5d09e9bd69db23bbab07721d91"
+    },
+    {
+      "input": "crate/src/main/resources/com/synexia/rewrite/hash-pinned-text/m3-swt-scrollbar-callback-disposal-20261017/target-000.text.txt",
+      "sha256": "a19a706f3ba03f828c2ca94b48535bd36d4ab08ef0cfd58707f3dfbd12c1b0f0"
+    },
+    {
+      "input": "crate/src/test/java/com/synexia/rewrite/M3TaskRecipeTest.java",
+      "sha256": "015e2f8257c6e2b5573cecb32929cfbc8a41766a2bac4446172ccfab28b7ebb3"
+    },
+    {
+      "input": "owner/src/main/java/com/synexia/rewrite/M3EditScope.java",
+      "sha256": "962d37d62d740c3e8055c365a048ae7ee0479c26a9f6bbfe741e540d6c1134ab"
+    },
+    {
+      "input": "owner/src/main/java/com/synexia/rewrite/M3HashPinnedJavaSnapshotRecipe.java",
+      "sha256": "67f7b81126e4736c7b61b444fa6545153a61e23c012975ca796fcee623ab6625"
+    },
+    {
+      "input": "owner/src/main/java/com/synexia/rewrite/M3HashPinnedTextSnapshotRecipe.java",
+      "sha256": "fbf1ea9efad784afef5ac201ff7fc324551f77a099ebfe2f79b70c3a17c731ef"
+    },
+    {
+      "input": "owner/src/main/java/com/synexia/rewrite/M3ScopeInference.java",
+      "sha256": "13660b59f60ec2941ec19e9bc8964ffd4b04689cdc33cd19711fba14b8da09a4"
+    }
+  ],
+  "sdk_report_sha256": "fb6f9fd749ff9418b3902da0b1601237c1a32906f5230a01271d52ff2607cae0",
+  "receiver_check_sha256": "7322ed6b22769797164bb5988b5108dc9162b16eff61ab01ecb837042bb4e72f"
+}
