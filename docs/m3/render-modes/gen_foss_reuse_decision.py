@@ -125,6 +125,13 @@ ROWS = [
     ["flatlaf_properties", "JFormDesigner/FlatLaf", "6b9b766659bb7307c3a4c54e615e734112035bd0",
      "flatlaf-core/src/main/resources/com/formdev/flatlaf/FlatLaf.properties;UIDefaultsLoader.java", "Apache-2.0",
      "properties-based defaults with references and derived colours", "PATTERN_ONLY", "two built-in themes need no loader yet; the key names follow it so a loader can be added (look-and-feel LF2)", "-", "-"],
+    ["svg_glyphs_swt", "hsoliwal/eclipse.platform.swt (this repository)", "3ebb3452dc",
+     "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/SVGRasterizer.java;bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/SVGFileFormat.java;bundles/org.eclipse.swt.svg/src/org/eclipse/swt/svg/JSVGRasterizer.java", "EPL-2.0",
+     "SVG to ImageData at a zoom or at a pixel size through SWT's ServiceLoader rasterizer (the org.eclipse.swt.svg fragment)", "REUSE_DIRECT", "-", "-", "same repository"],
+    ["svg_rasterizer_jsvg", "weisj/jsvg", "2.1.0 (Maven Central; the fragment imports [2.1.0,3.0.0))", "com.github.weisj.jsvg", "MIT",
+     "the rasterizer behind SWT's SVG fragment", "DIRECT_IMPORT", "used through the fragment, not vendored", "-", "bundles/org.eclipse.swt.svg/about.html"],
+    ["svg_full_batik", "apache/xmlgraphics-batik", "-", "batik-transcoder;batik-bridge", "Apache-2.0",
+     "full SVG 1.1 (filters, text, masks)", "FALLBACK_ONLY", "heavy (about 20 jars); only for an icon that needs a feature JSVG lacks; the built-in glyph set needs none", "-", "-"],
 ]
 
 

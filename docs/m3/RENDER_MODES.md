@@ -465,6 +465,35 @@ m3 pixels and the custom pixels are reported by similarity; every non-pixel answ
 | IM5 | frame pacing (skiko pattern) | I6 in gpu |
 | IM6 | the interactive differential | I1-I7 |
 
+## Vector glyphs: SVG at the exact DPI (design, user 2026-10-19)
+
+"SWT SVG is there, Batik is there": theme glyphs (expanders, check boxes, sort indicators, chevrons) and vector icons
+of the drawn modes come from SVG, rasterized at the widget's exact zoom.
+
+- **Rasterizer (donor rows in [render-modes/FOSS_REUSE_DECISION.tsv](render-modes/FOSS_REUSE_DECISION.tsv)).** SWT's
+  own: `org.eclipse.swt.internal.image.SVGRasterizer` (`rasterizeSVG (stream, zoom)` and `(stream, width, height)`),
+  found through the ServiceLoader, implemented by the `org.eclipse.swt.svg` fragment with JSVG (MIT). Apache Batik
+  (Apache-2.0) is the fallback for a feature JSVG lacks (filters, SVG text); the built-in glyph set needs none.
+- **Cache in lanes, never per frame.** A glyph key packs (icon id, size in pixels, zoom, theme generation) into one
+  long; an open-addressing table maps it to a slot of preallocated lanes holding the `ImageData`. A miss rasterizes
+  once (on the UI thread, or on a model worker as part of a snapshot in the interaction model); a frame only looks the
+  slot up. The backends already keep one device copy per `ImageData` (`GcRowCanvas`, `M3RowCanvas` glyph caches), so a
+  hit costs a table probe. A theme switch or a zoom change moves to new keys; old slots are reused LRU.
+- **Themes.** A theme names its glyphs by SVG resource (`Tree.icon.expanded`, `Tree.icon.collapsed`,
+  `CheckBox.icon.checked`, `CheckBox.icon.unchecked`, `CheckBox.icon.mixed`, `Table.sortIcon.ascending`,
+  `Table.sortIcon.descending`), keys of the look and feel tables (the all-widgets track owns the tables; FlatLaf's
+  icon key names). `Theme.expanderOpen` and the other glyph images become per-zoom lookups in the cache.
+- **Proof.** A differential leg runs at 100, 150 and 200 % (`-Dswt.autoScale`): the glyph pixels are crisp (no
+  scaled bitmap: the rasterized size equals the slot size at that zoom) and equal across custom, m3 and gpu (all three
+  blit the same `ImageData` 1:1); every non-pixel probe stays equal to stock.
+
+| Leaf | Scope | Gate |
+|---|---|---|
+| SV1 | glyph cache (packed keys, lanes, LRU), SWT rasterizer through the ServiceLoader | headless test: one rasterization per key, none per frame |
+| SV2 | built-in SVG glyph set for the flat looks; theme keys with the all-widgets track | the theme tests |
+| SV3 | the 100/150/200 % leg | crisp and equal across the three drawn modes |
+| SV4 | the example (below, with the interaction model's overlay) | runs on the invisible desktop |
+
 ## Leaves
 
 | Leaf | Scope | Gate |
