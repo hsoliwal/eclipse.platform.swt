@@ -27,7 +27,8 @@ import org.eclipse.swt.widgets.*;
  * Opens each example of examples/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/m3/M3Table*, presses its
  * buttons through <code>notifyListeners</code>, prints what its status controls show and, with an output
  * directory, saves the shell drawn by <code>WM_PRINT</code> (frame, client and children) as PNG.
- * Usage: TableExampleShots [png-dir]
+ * Usage: TableExampleShots [png-dir or -] [noplain]. <code>noplain</code> skips the plain 1,000,000-row Table, which
+ * the stock code path builds with a native item and a TableItem per row.
  */
 public class TableExampleShots {
 	static String dir;
@@ -35,7 +36,7 @@ public class TableExampleShots {
 	static final Logger LOG = Logger.getLogger (TableExampleShots.class.getName ());
 
 	public static void main (String [] args) {
-		dir = args.length > 0 ? args [0] : null;
+		dir = args.length > 0 && !args [0].equals ("-") ? args [0] : null;
 		plainLog ();
 		display = new Display ();
 		String mode = SWT.getVersion () == 4974 ? "official" : System.getProperty ("swt.widget.mode.Table", "default");
@@ -46,17 +47,19 @@ public class TableExampleShots {
 		report ("M3TableMillionRowsExample", shell, "m3-table-million-rows-virtual");
 		shell.dispose ();
 
-		shell = M3TableMillionRowsExample.open (display, true);
-		press (shell, "Middle");
-		report ("M3TableMillionRowsExample plain", shell, "m3-table-million-rows-plain");
-		shell.dispose ();
+		if (args.length < 2 || !args [1].equals ("noplain")) {
+			shell = M3TableMillionRowsExample.open (display, true);
+			press (shell, "Middle");
+			report ("M3TableMillionRowsExample plain", shell, "m3-table-million-rows-plain");
+			shell.dispose ();
+		}
 
 		shell = M3TableScrollSelectExample.open (display, false);
 		for (String operation : new String [] {"Page down", "Jump 10,000", "Deselect all", "Select row 900,000", "Select all"}) {
 			press (shell, operation);
 			LOG.info ("M3TableScrollSelectExample: " + text (shell, Label.class).replace ('\n', ';').replace ("\r", ""));
 		}
-		report ("M3TableScrollSelectExample", shell, "m3-table-scroll-select");
+		report (null, shell, "m3-table-scroll-select");
 		shell.dispose ();
 
 		shell = M3TableRowMathExample.open (display);
@@ -89,7 +92,7 @@ public class TableExampleShots {
 		settle ();
 		Control status = find (shell, c -> c instanceof Label || c instanceof Text);
 		String shown = status instanceof Text t ? t.getText () : ((Label) status).getText ();
-		LOG.info (name + ": " + shown.replace ("\r", "").stripTrailing ());
+		if (name != null) LOG.info (name + ": " + shown.replace ("\r", "").stripTrailing ());
 		if (dir == null) return;
 		Point size = shell.getSize ();
 		Image image = new Image (display, size.x, size.y);
