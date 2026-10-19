@@ -234,6 +234,26 @@ public class Test_M3ColumnSort {
 	}
 
 	@Test
+	public void test_collationAndComparatorKeysOnTheRadixPath () {
+		int n = 600;
+		String [] words = new String [n];
+		Random random = new Random (13);
+		for (int i = 0; i < n; i++) words [i] = new String [] {"\u00e4b", "ab", "Ab", "zz", "\u00c4a"} [random.nextInt (5)] + random.nextInt (3); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		M3SortKeys collation = M3Collation.keys (words, Locale.GERMAN);
+		M3ColumnSort sort = new M3ColumnSort (2, n);
+		sort.setKey (0, M3ColumnKey.ofSortKeys (collation));
+		sort.setKey (1, M3ColumnKey.ofRows ((a, b) -> Integer.compare (a % 7, b % 7)));
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		assertArrayEquals (collation.sortedOrder (), order (sort));
+		sort.setSortKeys (new int [] {1, 0}, new int [] {SWT.DOWN, SWT.UP});
+		List<Integer> reference = new ArrayList<> ();
+		for (int i = 0; i < n; i++) reference.add (i);
+		reference.sort (Comparator.<Integer> comparingInt (i -> -(i % 7)).thenComparing (collation::compare));
+		assertArrayEquals (reference.stream ().mapToInt (Integer::intValue).toArray (), order (sort));
+		assertThrows (IllegalArgumentException.class, () -> M3ColumnKey.ofSortKeys (null));
+	}
+
+	@Test
 	public void test_cellTextDefaultKey () {
 		String [][] cells = {{"b", "1"}, {"a", "2"}, {"c", "0"}}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 		M3ColumnSort sort = new M3ColumnSort (2, 3);

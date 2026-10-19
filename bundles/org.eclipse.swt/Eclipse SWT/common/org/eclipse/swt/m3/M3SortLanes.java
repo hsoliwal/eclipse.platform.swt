@@ -23,6 +23,7 @@ import java.util.function.*;
  * - multi-key order: every key becomes an unsigned radix key per row; LSD radix sort, least
  *   significant key first, one stable counting pass per byte, skipping bytes equal in every row;
  * - comparator keys (text, rows): dense ranks from one stable merge sort (coordinate compression);
+ *   text keys with at most n/2 distinct values hash the texts first and sort only the distinct ones;
  * - small inputs: stable merge sort with the key chain comparator.
  */
 final class M3SortLanes {
@@ -34,6 +35,7 @@ final class M3SortLanes {
 	int [] rowTmp = new int [0], idx = new int [0], idxTmp = new int [0];
 	long [] keys = new long [0], keyTmp = new long [0];
 	String [] texts = new String [0];
+	private int [] slots = new int [0], ids = new int [0];
 	private final int [] counts = new int [8 << 8];
 
 	void ensure (int n) {
@@ -125,6 +127,40 @@ final class M3SortLanes {
 			if (compareItems.applyAsInt (idx [k - 1], idx [k]) != 0) rank++;
 			keys [idx [k]] = rank;
 		}
+		return rank;
+	}
+
+	/*
+	 * dense ranks of texts [0, n) into keys, sorting only the distinct texts: an open-addressing
+	 * table (String.hashCode, linear probing) maps each text to its first item; the distinct items
+	 * are merge-sorted and ranked, then every item takes its distinct text's rank. Returns the
+	 * largest rank, or -1 (nothing written) when more than half of the texts are distinct.
+	 */
+	long distinctRanks (int n, Comparator<? super String> compare) {
+		int capacity = Integer.highestOneBit (Math.max (2, n) - 1) << 2, mask = capacity - 1, distinct = 0;
+		if (slots.length < capacity) slots = new int [capacity];
+		if (ids.length < n) ids = new int [Math.max (n, ids.length + (ids.length >> 1))];
+		Arrays.fill (slots, 0, capacity, -1);
+		for (int i = 0; i < n; i++) {
+			String text = texts [i];
+			int slot = (text == null ? 0 : text.hashCode () * 0x9E3779B9) & mask;
+			while (slots [slot] >= 0 && !Objects.equals (texts [slots [slot]], text)) slot = (slot + 1) & mask;
+			if (slots [slot] < 0) {
+				if (++distinct > n >> 1) return -1;
+				slots [slot] = i;
+				idx [distinct - 1] = i;
+				ids [i] = distinct - 1;
+			} else {
+				ids [i] = ids [slots [slot]];
+			}
+		}
+		mergeSort (idx, distinct, idxTmp, (a, b) -> compare.compare (texts [a], texts [b]));
+		long rank = 0;
+		for (int k = 0; k < distinct; k++) {
+			if (k > 0 && compare.compare (texts [idx [k - 1]], texts [idx [k]]) != 0) rank++;
+			rowTmp [ids [idx [k]]] = (int) rank;
+		}
+		for (int i = 0; i < n; i++) keys [i] = rowTmp [ids [i]];
 		return rank;
 	}
 
