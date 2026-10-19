@@ -177,16 +177,16 @@ abstract class DrawnPlane {
 	}
 
 	/*
-	 * -Dswt.drawn.overlay=true: the frame time (last, p99) and the input-to-pixel latency p99 in the top right corner of
-	 * the client area, repainted twice a second. A debugging aid: building its text allocates.
+	 * -Dswt.drawn.overlay=true: the frame time (last, p99) and the input-to-pixel latency p99 in the bottom right corner of
+	 * the client area (a header covers the top), repainted twice a second. A debugging aid: building its text allocates.
 	 */
 	private void overlay () {
 		overlayText.setLength (0);
 		overlayText.append (widget).append (' ').append (frames.frames ()).append (" f | frame p99 ").append (frames.frameTime (99) / 1000 / 1000.0)
 			.append (" ms | input p99 ").append (frames.inputLatency (99) / 1000 / 1000.0).append (" ms");
-		int width = 300, height = 18, x = Math.max (0, client.right - width - 2);
-		canvas.fill (x, 2, width, height, 0xFFFFE1);
-		canvas.text (overlayText.toString (), row.font, 0x000000, x + 4, 2, width - 8, height, SWT.LEFT);
+		int width = 300, height = 18, x = Math.max (0, client.right - width - 2), y = Math.max (0, client.bottom - height - 2);
+		canvas.fill (x, y, width, height, 0xFFFFE1);
+		canvas.text (overlayText.toString (), row.font, 0x000000, x + 4, y, width - 8, height, SWT.LEFT);
 	}
 
 	/*

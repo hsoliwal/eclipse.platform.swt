@@ -505,7 +505,7 @@ java -Dswt.widget.mode=gpu -Dswt.drawn.overlay=true ^
      org.eclipse.swt.snippets.M3DrawnModesDemo
 ```
 
-The overlay (top right) shows the frames drawn, the frame time p99 and the input-to-pixel latency p99 of the plane's
+The overlay (bottom right) shows the frames drawn, the frame time p99 and the input-to-pixel latency p99 of the plane's
 frame log (interaction model, IM1). `-Dswt.widget.mode=custom` draws with GDI, `m3` with the M3 renderer on the CPU.
 Nothing in the application changes between the modes:
 
