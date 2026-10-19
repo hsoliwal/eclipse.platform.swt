@@ -328,6 +328,67 @@ public class Test_M3ColumnFilter {
 	}
 
 	@Test
+	public void test_windowRangesAndChangeDescriptions () {
+		M3ColumnSort sort = new M3ColumnSort (1, 50);
+		sort.setKey (0, M3ColumnKey.ofInts (i -> i % 5));
+		M3RowWindow window = new M3RowWindow (sort);
+		List<String> kinds = new ArrayList<> ();
+		List<org.eclipse.swt.widgets.M3ItemRange> damaged = new ArrayList<> ();
+		window.addListener (change -> {
+			kinds.add (change.toString ());
+			damaged.add (change.damaged ());
+		});
+		window.setWindow (org.eclipse.swt.widgets.M3ItemRange.of (10, 19));
+		assertEquals (org.eclipse.swt.widgets.M3ItemRange.of (10, 19), window.getRange ());
+		window.setWindow (org.eclipse.swt.widgets.M3ItemRange.EMPTY);
+		assertEquals (org.eclipse.swt.widgets.M3ItemRange.EMPTY, window.getRange ());
+		window.setWindow (45, 10);
+		assertEquals (org.eclipse.swt.widgets.M3ItemRange.of (45, 49), window.getRange ());
+		sort.rowsInserted (0, 1);
+		sort.rowsRemoved (0, 1);
+		sort.toggle (0, false);
+		sort.rowsChanged (3);
+		sort.setSourceSize (50);
+		assertThrows (IllegalArgumentException.class, () -> window.setWindow (null));
+		String all = String.join (" ", kinds);
+		for (String kind : new String [] {"RESET", "INSERTED", "REMOVED", "ORDER", "UPDATED"}) assertTrue (all.contains (kind), kind);
+		assertEquals (org.eclipse.swt.widgets.M3ItemRange.of (0, 9), damaged.get (0));
+		assertEquals (org.eclipse.swt.widgets.M3ItemRange.EMPTY, damaged.get (1));
+		M3ColumnFilter filter = fruits ();
+		M3RowChange [] last = new M3RowChange [1];
+		filter.addListener (change -> last [0] = change);
+		filter.setText (0, "e", M3TextMatch.CONTAINS);
+		assertTrue (last [0].toString ().contains ("LEFT"));
+		filter.setText (0, null, 0);
+		assertTrue (last [0].toString ().contains ("ENTERED"));
+	}
+
+	@Test
+	public void test_valueChangesWithoutStatusChangeSkipTheFullPass () {
+		List<String []> cells = new ArrayList<> ();
+		for (String [] row : CELLS) cells.add (row.clone ());
+		M3ColumnFilter filter = new M3ColumnFilter (3, cells.size (), (row, column) -> cells.get (row) [column]);
+		filter.setText (1, "r", M3TextMatch.CONTAINS);
+		M3ColumnSort sort = new M3ColumnSort (3, filter);
+		sort.setCellText ((row, column) -> cells.get (row) [column]);
+		sort.toggle (0, false);
+		assertArrayEquals (new int [] {0, 2, 3, 5}, rows (sort));
+		cells.get (0) [0] = "zucchini";
+		sort.rowsChanged (0);
+		assertArrayEquals (new int [] {2, 3, 5, 0}, rows (sort));
+		cells.get (1) [0] = "aaa";
+		filter.rowsChanged (1);
+		assertArrayEquals (new int [] {2, 3, 5, 0}, rows (sort));
+		cells.get (1) [1] = "orange";
+		filter.rowsChanged (1);
+		assertArrayEquals (new int [] {1, 2, 3, 5, 0}, rows (sort));
+		M3ColumnFilter quiet = new M3ColumnFilter (3, cells.size (), (row, column) -> cells.get (row) [column]);
+		quiet.setText (0, "a", M3TextMatch.CONTAINS);
+		quiet.rowsChanged (0, 1);
+		assertEquals (2, quiet.size ());
+	}
+
+	@Test
 	public void test_windowClipsDamage () {
 		M3ColumnSort sort = new M3ColumnSort (1, 100);
 		sort.setKey (0, M3ColumnKey.ofInts (i -> -i));

@@ -95,11 +95,27 @@ final class M3SortOrder {
 	/* adds rows [0, m) (not in the view); returns the first damaged view row */
 	int insert (int [] rows, int m) {
 		if (m == 0) return size;
-		if (m > (size >> 2) && m >= M3SortLanes.MERGE_CUTOVER) return union (rows, m);
 		batch = ensure (batch, m, 0);
 		System.arraycopy (rows, 0, batch, 0, m);
 		sort.sortRows (batch, m);
 		order = ensure (order, size + m, size);
+		int first = m > (size >> 3) ? mergeLinear (m) : mergeSearch (m);
+		size += m;
+		reindex (first);
+		return first;
+	}
+
+	/* merges the sorted batch from the back, one comparison per step (large batches) */
+	private int mergeLinear (int m) {
+		int i = size - 1, out = size + m - 1;
+		for (int j = m - 1; j >= 0;) {
+			order [out--] = i >= 0 && sort.compare (order [i], batch [j]) > 0 ? order [i--] : batch [j--];
+		}
+		return i + 1;
+	}
+
+	/* merges the sorted batch from the back, finding each place by binary search and moving runs (small batches) */
+	private int mergeSearch (int m) {
 		int i = size - 1, out = size + m - 1, first = size;
 		for (int j = m - 1; j >= 0; j--) {
 			int row = batch [j], p = upper (row, 0, i + 1);
@@ -110,8 +126,6 @@ final class M3SortOrder {
 			order [out--] = row;
 			first = p;
 		}
-		size += m;
-		reindex (first);
 		return first;
 	}
 
@@ -170,14 +184,6 @@ final class M3SortOrder {
 		return low;
 	}
 
-	private int union (int [] rows, int m) {
-		order = ensure (order, size + m, size);
-		System.arraycopy (rows, 0, order, size, m);
-		size += m;
-		sort.sortRows (order, size);
-		reindex (0);
-		return 0;
-	}
 
 	private void compact (int first) {
 		int write = first;

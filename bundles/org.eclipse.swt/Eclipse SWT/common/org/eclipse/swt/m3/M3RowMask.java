@@ -112,12 +112,6 @@ final class M3RowMask {
 		return count;
 	}
 
-	/* the number of set bits of mask [0, words) */
-	static int count (long [] mask, int words) {
-		int count = 0;
-		for (int w = 0; w < words; w++) count += Long.bitCount (mask [w]);
-		return count;
-	}
 
 	/* the view row of a set bit, -1 for a clear bit */
 	static int rank (long [] mask, int [] rank, int bit) {

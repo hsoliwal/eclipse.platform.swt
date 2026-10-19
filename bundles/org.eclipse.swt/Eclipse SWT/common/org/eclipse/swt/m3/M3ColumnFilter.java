@@ -349,10 +349,37 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		switch (in.kind) {
 			case M3RowChange.INSERTED: shift (in.start, in.count, true); evaluate (in.start, in.start + in.count); break;
 			case M3RowChange.REMOVED: shift (in.start, in.count, false); break;
-			case M3RowChange.UPDATED: for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1); break;
+			case M3RowChange.UPDATED:
+				for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1);
+				if (parentOf == null && sameStatus (in)) {
+					if (hasListeners ()) delta.updated (in, previous, kept);
+					return;
+				}
+				break;
 			default: for (M3FilterCriterion criterion : criteria) criterion.mask = new long [M3RowMask.words (n)]; evaluate (0, n); break;
 		}
 		recompute (in);
+	}
+
+	/* whether every changed row still passes (or still fails) the fold: then only UPDATED is reported, without an O(n) pass */
+	private boolean sameStatus (M3RowChange in) {
+		for (int i = 0; i < in.rowCount; i++) {
+			int row = in.rows [i];
+			if (passes (row) != M3RowMask.get (kept, row)) return false;
+		}
+		return true;
+	}
+
+	/* the fold of the criteria for one row */
+	private boolean passes (int row) {
+		boolean result = true, first = true;
+		for (M3FilterCriterion criterion : criteria) {
+			if (!criterion.isActive ()) continue;
+			boolean bit = M3RowMask.get (criterion.mask, row);
+			result = first ? bit : criterion.logic == AND ? result && bit : result || bit;
+			first = false;
+		}
+		return result;
 	}
 
 	private void evaluate (int start, int end) {

@@ -62,31 +62,35 @@ final class M3FilterDelta {
 
 	/* fires the rows of a & ~b outside [skipStart, skipEnd), if any */
 	private void emit (int kind, long [] a, long [] b, int words, int skipStart, int skipEnd) {
-		change.set (kind, 0, 0);
 		int first = -1;
 		for (int w = 0; w < words; w++) {
 			for (long x = a [w] & ~b [w]; x != 0; x &= x - 1) {
 				int row = w << 6 | Long.numberOfTrailingZeros (x);
 				if (row >= skipStart && row < skipEnd) continue;
-				if (first < 0) first = row;
+				if (first < 0) {
+					first = row;
+					change.set (kind, 0, 0);
+				}
 				change.add (row);
 			}
 		}
-		if (change.rowCount == 0) return;
+		if (first < 0) return;
 		change.damage (filter.rankBefore (first), filter.size () - 1);
 		filter.fire ();
 	}
 
-	private void updated (M3RowChange in, long [] previous, long [] kept) {
-		change.set (M3RowChange.UPDATED, 0, 0);
+	void updated (M3RowChange in, long [] previous, long [] kept) {
+		boolean any = false;
 		for (int i = 0; i < in.rowCount; i++) {
 			int row = in.rows [i];
 			if (M3RowMask.get (kept, row) && M3RowMask.get (previous, row)) {
+				if (!any) change.set (M3RowChange.UPDATED, 0, 0);
+				any = true;
 				change.add (row);
 				int position = filter.rankBefore (row);
 				change.damage (position, position);
 			}
 		}
-		if (change.rowCount > 0) filter.fire ();
+		if (any) filter.fire ();
 	}
 }
