@@ -494,6 +494,57 @@ of the drawn modes come from SVG, rasterized at the widget's exact zoom.
 | SV3 | the 100/150/200 % leg | crisp and equal across the three drawn modes |
 | SV4 | the example (below, with the interaction model's overlay) | runs on the invisible desktop |
 
+## Examples (user 2026-10-19: "enrich everything with examples")
+
+**A drawn Table in the gpu mode with the overlay** ([M3DrawnModesDemo](../../examples/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/M3DrawnModesDemo.java):
+a million virtual rows, three columns, look and feel buttons):
+
+```
+java -Dswt.widget.mode=gpu -Dswt.drawn.overlay=true ^
+     -cp swt.jar;swt-render-m3.jar;skija-shared-0.116.3.jar;skija-windows-x64-0.116.3.jar;types-0.1.1.jar ^
+     org.eclipse.swt.snippets.M3DrawnModesDemo
+```
+
+The overlay (top right) shows the frames drawn, the frame time p99 and the input-to-pixel latency p99 of the plane's
+frame log (interaction model, IM1). `-Dswt.widget.mode=custom` draws with GDI, `m3` with the M3 renderer on the CPU.
+Nothing in the application changes between the modes:
+
+```java
+Table table = new Table (shell, SWT.VIRTUAL | SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION);
+table.setHeaderVisible (true);
+table.setLinesVisible (true);
+table.addListener (SWT.SetData, event -> ((TableItem) event.item).setText ("row " + event.index));
+table.setItemCount (1_000_000);
+```
+
+**Switching the look and feel at run time** (LF6; the rows' `M3RowUI` delegate is installed again and the widget
+repaints only when a key it reads changes):
+
+```java
+M3LookAndFeel.setLookAndFeel ("flatdark");   // native, swing, initiative31, flat, flatdark, or a registered one
+M3LookAndFeel.getDefaults ().put (M3UIKeys.of ("Table", "selectionBackground", M3UIKeys.COLOR), 0xFF2F6FD0); // developer layer
+```
+
+**One widget class pinned** at startup: `-Dswt.widget.theme.Tree=swing` keeps Trees in Swing's Metal look while the
+rest follows `setLookAndFeel`.
+
+**A theme of one's own** (painters and glyph images; a run-time selection wins over the look and feel):
+
+```java
+Theme ocean = Theme.builder ("ocean").look (Theme.LOOK_SWING).selection (0x2F6FD0, 0xC5D5EA).lines (0x7A8A99, 0xD0D8E0).build ();
+Themes.register (ocean);
+Themes.select ("Table", ocean);
+```
+
+**Measuring a drawn plane from a test** (the frame log is per plane; `FrameLog.monotonic` is invariant I2):
+
+```java
+FrameLog frames = ...;                  // the plane's log (package-private field DrawnPlane.frames)
+long frameP99 = frames.frameTime (99);    // nanoseconds
+long inputP99 = frames.inputLatency (99); // nanoseconds from input to the frame that shows it
+assertTrue (frames.monotonic ());
+```
+
 ## Leaves
 
 | Leaf | Scope | Gate |
