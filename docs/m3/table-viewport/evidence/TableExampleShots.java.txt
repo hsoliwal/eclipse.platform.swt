@@ -15,6 +15,7 @@
 // win32 harness of the Table examples (default package). Run it on the invisible desktop: table_example_shots.sh.
 
 import java.util.function.Predicate;
+import java.util.logging.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.*;
@@ -31,12 +32,14 @@ import org.eclipse.swt.widgets.*;
 public class TableExampleShots {
 	static String dir;
 	static Display display;
+	static final Logger LOG = Logger.getLogger (TableExampleShots.class.getName ());
 
 	public static void main (String [] args) {
 		dir = args.length > 0 ? args [0] : null;
+		plainLog ();
 		display = new Display ();
 		String mode = SWT.getVersion () == 4974 ? "official" : System.getProperty ("swt.widget.mode.Table", "default");
-		System.out.println ("# Table examples, mode " + mode + ", SWT " + SWT.getVersion () + " " + SWT.getPlatform ());
+		LOG.info ("# Table examples, mode " + mode + ", SWT " + SWT.getVersion () + " " + SWT.getPlatform ());
 
 		Shell shell = M3TableMillionRowsExample.open (display, false);
 		press (shell, "Middle");
@@ -51,7 +54,7 @@ public class TableExampleShots {
 		shell = M3TableScrollSelectExample.open (display, false);
 		for (String operation : new String [] {"Page down", "Jump 10,000", "Deselect all", "Select row 900,000", "Select all"}) {
 			press (shell, operation);
-			System.out.println ("M3TableScrollSelectExample: " + text (shell, Label.class).replace ('\n', ';').replace ("\r", ""));
+			LOG.info ("M3TableScrollSelectExample: " + text (shell, Label.class).replace ('\n', ';').replace ("\r", ""));
 		}
 		report ("M3TableScrollSelectExample", shell, "m3-table-scroll-select");
 		shell.dispose ();
@@ -61,6 +64,19 @@ public class TableExampleShots {
 		report ("M3TableRowMathExample", shell, "m3-table-row-math");
 		shell.dispose ();
 		display.dispose ();
+	}
+
+	/* one line per record, no JUL header, so the log reads like the transcripts of the other probes */
+	static void plainLog () {
+		ConsoleHandler handler = new ConsoleHandler ();
+		handler.setFormatter (new Formatter () {
+			@Override
+			public String format (LogRecord record) {
+				return record.getMessage () + "\n";
+			}
+		});
+		LOG.setUseParentHandlers (false);
+		LOG.addHandler (handler);
 	}
 
 	static void press (Shell shell, String text) {
@@ -73,7 +89,7 @@ public class TableExampleShots {
 		settle ();
 		Control status = find (shell, c -> c instanceof Label || c instanceof Text);
 		String shown = status instanceof Text t ? t.getText () : ((Label) status).getText ();
-		System.out.println (name + ": " + shown.replace ("\r", "").stripTrailing ());
+		LOG.info (name + ": " + shown.replace ("\r", "").stripTrailing ());
 		if (dir == null) return;
 		Point size = shell.getSize ();
 		Image image = new Image (display, size.x, size.y);

@@ -21,6 +21,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Formatter;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.InMemoryExecutionContext;
@@ -41,12 +45,27 @@ import org.openrewrite.java.JavaParser;
  * {@code UNCHANGED} per file; the exit status is non-zero on a parse or recipe error.</p>
  */
 public final class M3ClasspathApply {
+	private static final Logger LOG = Logger.getLogger (M3ClasspathApply.class.getName ());
+
+	static {
+		/* one line per message, no JUL header: the recipe scripts read the CHANGED and UNCHANGED lines */
+		ConsoleHandler handler = new ConsoleHandler ();
+		handler.setFormatter (new Formatter () {
+			@Override
+			public String format (LogRecord record) {
+				return record.getMessage () + "\n";
+			}
+		});
+		LOG.setUseParentHandlers (false);
+		LOG.addHandler (handler);
+	}
+
 	private M3ClasspathApply () {
 	}
 
 	public static void main (String [] args) throws IOException {
 		if (args.length < 4) {
-			System.err.println ("usage: M3ClasspathApply <recipe-name> <class-path> <base-dir> <file>...");
+			LOG.severe ("usage: M3ClasspathApply <recipe-name> <class-path> <base-dir> <file>...");
 			System.exit (2);
 		}
 		Recipe recipe = Environment.builder ().scanRuntimeClasspath ("com.synexia.openrewrite.viewport").build ().activateRecipes (args [0]);
@@ -69,7 +88,7 @@ public final class M3ClasspathApply {
 			changed.add (file.normalize ());
 		}
 		for (Path file : files) {
-			System.out.println ((changed.contains (file.normalize ()) ? "CHANGED\t" : "UNCHANGED\t") + base.relativize (file));
+			LOG.info (() -> (changed.contains (file.normalize ()) ? "CHANGED\t" : "UNCHANGED\t") + base.relativize (file));
 		}
 	}
 }
