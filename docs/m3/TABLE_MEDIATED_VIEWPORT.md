@@ -128,13 +128,18 @@ The renames are one OpenRewrite `ChangeMethodName` per row ([`m3-swt-table-names
   - In both modes (stock rows are the reference): `setTextDirection (SWT.AUTO_TEXT_DIRECTION)` reaches every row, and the ListView's accessible object counts and names every logical row.
 - Both classes skip (JUnit assumption), never hang, when the Table viewport is not active: a plain Table without `LVS_OWNERDATA` is the discriminator. A reference run (official jar or original mode) records instead. The two acceptance tests that run in both modes do not skip.
 
-## Status (win32, build `tt20261018p3`, invisible desktop, Windows 11, 100 % zoom)
+## Status (win32, build `tt20261019p7`, invisible desktop, Windows 11, 100 % zoom)
+
+One gate run with the JaCoCo agent ([`table_coverage.sh`](table-viewport/table_coverage.sh), [run](table-viewport/evidence/table_coverage-tt20261019p7-win11-hidden-run.txt)), against an official recording made with the tests of this build, and the repeatability run before it ([`table_flake.sh`](table-viewport/table_flake.sh), [run](table-viewport/evidence/table_flake-tt20261019p7-win11-hidden-run.txt)):
 
 | Gate | Viewport off (`-Dswt.widget.mode.Table=original`) | Viewport on (default) |
 |---|---|---|
-| Table, TableItem, TableColumn suites, `Test_org_eclipse_swt_widgets_Table_Viewport` and the headless lane tests (`Test_VirtualListWidth`, `Test_VirtualCellLanes`), the branch and white-box tests (`..._Table_ViewportBranches`, `..._Table_ViewportArms`) | 223 pass, 0 fail (the acceptance tests that need the viewport are skipped as not active) | **258 pass, 0 fail** |
-| `Test_org_eclipse_swt_widgets_Table_ViewportDifferential` variants 0-9 (88 seeds: variants 0-2 12 seeds x 150 steps, 3-8 8 seeds x 100 steps, 9 4 seeds x 60 steps; pixels per seed) | records the **original** reference; **equal to the official recording line for line on all 88 seeds** (rule 12) | **matches the official and the original recording on all 88 seeds, accepting exactly the 155 steps of `UPSTREAM_DEFECTS.tsv`** |
-| JaCoCo coverage (rule 15, [`table-viewport/coverage/COVERAGE.md`](table-viewport/coverage/COVERAGE.md)) over this gate | `TableStockItems` 92.6 % line | `VirtualListWidth` and `VirtualCellLanes` **100 % line and branch**; `TableViewport` **100 % line, 99.8 % branch** (one defensive arm) |
+| Table, TableItem, TableColumn suites, `Test_org_eclipse_swt_widgets_Table_Viewport` and the headless lane tests (`Test_VirtualListWidth`, `Test_VirtualCellLanes`), the branch and white-box tests (`..._Table_ViewportBranches`, `..._Table_ViewportArms`), the R4_38 store tests (`..._Table_StockItems`) | **228 pass, 0 fail** (37 skipped: the tests that need the viewport or the item store of the default mode, foreground alpha on win32) | **259 pass, 0 fail** (6 skipped: the 5 store tests of the original mode, foreground alpha on win32) |
+| `Test_org_eclipse_swt_widgets_Table_ViewportDifferential` variants 0-9 (88 seeds: variants 0-2 12 seeds x 150 steps, 3-8 8 seeds x 100 steps, 9 4 seeds x 60 steps; pixels per seed) | records the **original** reference; **equal to the official recording line for line on all 88 seeds** (rule 12) | **matches the official recording on all 88 seeds, accepting exactly the 155 steps of `UPSTREAM_DEFECTS.tsv`** (and so the original recording, which equals it) |
+| Repeatability: variants 7 and 8 (reentrancy, 16 seeds) 10 times, without the JaCoCo agent | the official jar and the original mode record **16 of 16 seeds equal to the official recording in all 10 runs** | passes in 8 runs; runs 8 and 9 ended without a result on native out-of-memory (paging file too small: the JVM failed during run 8 and could not reserve its heap in run 9), no step or pixel difference reported |
+| JaCoCo coverage (rule 15, [`table-viewport/coverage/COVERAGE.md`](table-viewport/coverage/COVERAGE.md)) over this gate | `TableStockItems` **100 % line and branch** | `VirtualListWidth` and `VirtualCellLanes` **100 % line and branch**; `TableViewport` **100 % line (497/497), 99.8 % branch (478/479)** (one defensive arm) |
+
+The gate of `tt20261019p6` failed on two pixel lines of the reentrancy variants (variant 7 seed 1 in the default mode, variant 8 seed 3 in the original mode), which moved between runs in the stock mode too. Since `quiesce` sends the ListView's pending scroll-wait timer (T-Table-13, rule Determinism of the recording below) both pass in every completed run.
 
 Variants 3-9 drive scripts of `TableViewportScripts`: input (keys and clicks with Shift and Ctrl in the thread keyboard state, marquee; variants 3, 4), geometry and presentation (`getItem (Point)`, item, text and image bounds, fonts, colours and images per row and cell, label-tip text, resizes while scrolled; 5, 6), listener reentrancy (7, 8) and `WM_DPICHANGED` (9).
 `ASPECT_MATRIX.tsv` maps every public member and behaviour aspect to its test: 59 COVERED by the differential, 57 SUITE, no GAP rows.
@@ -271,6 +276,7 @@ Enhanced-API candidates that this leaf's evidence suggests (for the api-enrichme
 | T-Table-10 | `upstream_defects.py` classifies both defects and stops on any other divergence | 155 listed steps, regenerated from the recordings |
 | T-Table-11 | benchmark candidates (`scrollPage`, `selectAll`) measured again | viewport not slower (section Performance) |
 | T-Table-12 | coverage harness (`table_coverage.sh`, `table_changed_coverage.sh`, rule 15); paint facades reuse their cell arrays (no per-row allocation on paint, rule 18) | coverage report `table-viewport/coverage/COVERAGE.md` (lane classes 100 %); suites and differential green on `tt20261017p2` |
+| T-Table-13 | determinism of the recording: `quiesce` runs the posted events and sends the ListView's pending scroll-wait timer; repeatability script `table_flake.sh` | gate `tt20261019p7` green (section Status): suites in both modes, differential 88 seeds, original equal to official 88/88; variants 7 and 8 equal in all 10 recordings of each reference |
 
 ## Donors
 
