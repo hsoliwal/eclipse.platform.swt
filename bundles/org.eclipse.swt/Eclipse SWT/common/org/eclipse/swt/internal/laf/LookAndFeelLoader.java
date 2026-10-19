@@ -240,6 +240,18 @@ public final class LookAndFeelLoader {
 					}
 					return new Value (LookAndFeelDefaults.COLOR, result, null);
 				}
+				case "rgb":
+				case "rgba":
+				case "hsl":
+				case "hsla":
+				case "saturate":
+				case "desaturate":
+				case "spin":
+				case "tint":
+				case "shade":
+				case "fadein":
+				case "fadeout":
+					return new Value (LookAndFeelDefaults.COLOR, M3ColorFunctions.apply (function, args, this::colorOf), null);
 				case "system": {
 					expect (function, args, 1);
 					return new Value (LookAndFeelDefaults.COLOR, 0xFF000000 | system.argb (args.get (0).trim ()), null);
