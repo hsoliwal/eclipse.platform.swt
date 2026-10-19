@@ -77,6 +77,8 @@ final class TableViewportScripts {
 			case Test_org_eclipse_swt_widgets_Table_ViewportDifferential.INPUT -> input (scene, kind, fraction, pick, span, delta);
 			case Test_org_eclipse_swt_widgets_Table_ViewportDifferential.GEOMETRY -> geometry (scene, kind, fraction, pick, span, delta);
 			case Test_org_eclipse_swt_widgets_Table_ViewportDifferential.REENTRANT -> reentrant (scene, kind, fraction, pick, span, delta);
+			case Test_org_eclipse_swt_widgets_Table_ViewportDifferential.SCALE -> TableScaleScripts.scale (scene, kind, fraction, pick, span, delta);
+			case Test_org_eclipse_swt_widgets_Table_ViewportDifferential.ZOOM -> TableScaleScripts.zoom (scene, kind, fraction, pick, span, delta);
 			default -> dpi (scene, kind, fraction, pick, span, delta);
 		});
 	}
@@ -629,7 +631,9 @@ final class TableViewportScripts {
 		State state = scene.state;
 		state.armedType = 0;
 		state.dpi = 96;
-		if (scene.variant.script () != Test_org_eclipse_swt_widgets_Table_ViewportDifferential.GEOMETRY) return;
+		int script = scene.variant.script ();
+		if (script == Test_org_eclipse_swt_widgets_Table_ViewportDifferential.ZOOM) state.fonts = TableScaleScripts.fonts (scene.display);
+		if (script != Test_org_eclipse_swt_widgets_Table_ViewportDifferential.GEOMETRY && script != Test_org_eclipse_swt_widgets_Table_ViewportDifferential.SCALE) return;
 		Display display = scene.display;
 		state.fonts = new Font [] {new Font (display, "Segoe UI", 12, SWT.BOLD), new Font (display, "Courier New", 8, SWT.ITALIC)};
 		state.images = new Image [] {image (display, 16, 16, SWT.COLOR_RED), image (display, 10, 24, SWT.COLOR_BLUE)};
