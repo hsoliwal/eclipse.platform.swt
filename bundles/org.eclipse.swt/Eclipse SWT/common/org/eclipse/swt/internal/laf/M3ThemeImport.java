@@ -37,21 +37,41 @@ public final class M3ThemeImport {
 	public record Imported (String text, int keys, int dropped) {
 	}
 
-	/* IntelliJ (and FlatLaf) key names -> LF2 catalogue key names */
-	private static final Map<String, String> KEYS = Map.ofEntries (Map.entry ("TableHeader.background", "Table.headerBackground"),
-		Map.entry ("TableHeader.foreground", "Table.headerForeground"), Map.entry ("TableHeader.separatorColor", "Table.headerSeparatorColor"),
-		Map.entry ("TableHeader.bottomSeparatorColor", "Table.headerSeparatorColor"), Map.entry ("Table.stripeColor", "Table.stripeBackground"),
-		Map.entry ("Tree.hash", "Tree.lineColor"), Map.entry ("TabbedPane.underlineColor", "TabFolder.underlineColor"),
-		Map.entry ("TabbedPane.hoverColor", "TabFolder.hoverBackground"), Map.entry ("TabbedPane.background", "TabFolder.background"),
-		Map.entry ("TabbedPane.selectedBackground", "TabFolder.selectedBackground"), Map.entry ("Link.activeForeground", "Link.foreground"),
-		Map.entry ("Button.startBackground", "Button.background"), Map.entry ("Button.startBorderColor", "Button.borderColor"),
-		Map.entry ("TextField.background", "Text.background"), Map.entry ("TextField.foreground", "Text.foreground"),
-		Map.entry ("ProgressBar.progressColor", "ProgressBar.foreground"), Map.entry ("ProgressBar.trackColor", "ProgressBar.background"));
+	/** A key name dialect: IntelliJ themes. */
+	static final char INTELLIJ = 'I';
+	/** A key name dialect: Swing and FlatLaf (UIManager keys). */
+	static final char SWING = 'S';
+	/*
+	 * Foreign key names -> LF2 catalogue key names, with the dialects that use them (the first row of a dialect for a
+	 * catalogue key is the name M3ThemeExport writes); every row is read on import.
+	 */
+	private static final String [][] NAMES = {{"TableHeader.background", "Table.headerBackground", "IS"},
+		{"TableHeader.foreground", "Table.headerForeground", "IS"}, {"TableHeader.separatorColor", "Table.headerSeparatorColor", "IS"},
+		{"TableHeader.bottomSeparatorColor", "Table.headerSeparatorColor", ""}, {"Table.stripeColor", "Table.stripeBackground", "I"},
+		{"Table.alternateRowColor", "Table.stripeBackground", "S"}, {"Tree.hash", "Tree.lineColor", "IS"},
+		{"TabbedPane.underlineColor", "TabFolder.underlineColor", "IS"}, {"TabbedPane.hoverColor", "TabFolder.hoverBackground", "IS"},
+		{"TabbedPane.background", "TabFolder.background", "IS"}, {"TabbedPane.selectedBackground", "TabFolder.selectedBackground", "IS"},
+		{"Link.activeForeground", "Link.foreground", "I"}, {"Component.linkColor", "Link.foreground", "S"},
+		{"Button.startBackground", "Button.background", "I"}, {"Button.startBorderColor", "Button.borderColor", "I"},
+		{"TextField.background", "Text.background", "IS"}, {"TextField.foreground", "Text.foreground", "IS"},
+		{"ProgressBar.progressColor", "ProgressBar.foreground", "I"}, {"ProgressBar.trackColor", "ProgressBar.background", "I"}};
+	private static final Map<String, String> KEYS = new HashMap<> ();
+	static {
+		for (String [] row : NAMES) KEYS.put (row [0], row [1]);
+	}
 	private static final Set<String> OPTIONS = Set.of ("relative", "autoInverse", "noAutoInverse", "lazy", "derived");
 	private static final Pattern CALL = Pattern.compile ("([A-Za-z]+)\\s*\\(");
 	private static final Pattern FAILED_KEY = Pattern.compile (": ([^ :=]+) = |^import: ([^ :=]+): unknown ");
 
 	private M3ThemeImport () {
+	}
+
+	/** The name of a catalogue key in a dialect ({@link #INTELLIJ}, {@link #SWING}): the first row that maps to it, else the key. */
+	static String foreign (String key, char dialect) {
+		for (String [] row : NAMES) {
+			if (row [1].equals (key) && row [2].indexOf (dialect) >= 0) return row [0];
+		}
+		return key;
 	}
 
 	/**
@@ -82,7 +102,8 @@ public final class M3ThemeImport {
 	/**
 	 * The LF2 table of a FlatLaf properties theme: <code>@baseTheme = dark|darcula</code> extends <code>flatdark</code>,
 	 * otherwise <code>flat</code>; <code>[light]</code> or <code>[dark]</code> lines of the other base and every other
-	 * bracketed line are dropped; FlatLaf's function options are removed; lines the loader cannot resolve are dropped.
+	 * bracketed line are dropped; FlatLaf's function options are removed; Swing key names become catalogue names; lines the
+	 * loader cannot resolve are dropped.
 	 */
 	public static Imported flatLaf (String properties) {
 		Map<String, String> lines = LookAndFeelLoader.parse (properties, "FlatLaf properties");
@@ -103,7 +124,7 @@ public final class M3ThemeImport {
 			}
 			String value = options (line.getValue ());
 			if (value == null) dropped++;
-			else table.put (key, value);
+			else table.put (KEYS.getOrDefault (key, key), value);
 		}
 		String base = dark ? "flatdark" : "flat";
 		dropped += resolvable (base, table);

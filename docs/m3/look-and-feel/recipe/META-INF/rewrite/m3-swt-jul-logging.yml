@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtAllWidgetsJulLogging
+displayName: JUL logging in the all-widgets tests and snippets (brief rule 22)
+description: >-
+  Brief rule 22: java.util.logging only, never System.out or System.err. The scale oracle tests of the all-widgets
+  branch log their measurement lines on the logger org.eclipse.swt.tests.junit.ScaleOracle (the evidence scripts grep
+  the message text, which is unchanged); the M3 snippets log on their class logger. Idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "System.out.println (\""
+      replace: "java.util.logging.Logger.getLogger (\"org.eclipse.swt.tests.junit.ScaleOracle\").info (\""
+      filePattern: "**/Test_*_ScaleOracle.java"
+  - org.openrewrite.text.FindAndReplace:
+      find: "System.out.println (\"saved \" + file);"
+      replace: "java.util.logging.Logger.getLogger (M3LookAndFeelSwitchSnippet.class.getName ()).info (\"saved \" + file);"
+      filePattern: "**/M3LookAndFeelSwitchSnippet.java"

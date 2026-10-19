@@ -89,7 +89,7 @@ public class Test_org_eclipse_swt_custom_CTabFolder_ScaleOracle {
 			}
 			ViewportDifferential.drain (display);
 			long append = (System.nanoTime () - start) / 1000 / APPEND;
-			System.out.println ("ctabfolder-oracle " + ViewportDifferential.reference ("CTabFolder") + " tabs " + count + " create " + create
+			java.util.logging.Logger.getLogger ("org.eclipse.swt.tests.junit.ScaleOracle").info ("ctabfolder-oracle " + ViewportDifferential.reference ("CTabFolder") + " tabs " + count + " create " + create
 				+ " layout " + median (layout) + " paint " + median (paint) + " select " + median (select) + " move " + median (move)
 				+ " append " + append);
 			shell.dispose ();

@@ -80,7 +80,7 @@ for the drawn modes (rule 18, DOOP) and each improvement measured against a `UIM
 | `UIManager.put` (developer defaults over the look and feel) | `M3UIDefaults.put`: a developer lane over the theme lanes, kept across switches | |
 | `UIDefaults.LazyValue`, `ActiveValue`; FlatLaf derived colours | expressions compiled once per theme with their dependencies (CSR arrays) | (2) a changed base recomputes only the values derived from it |
 | `JComponent.putClientProperty` (a map per component) | `M3LookAndFeel.override (control, key, value)`: one sparse lane per display (control slot x key id, open addressing) | (6) no map per widget; a widget without overrides costs nothing |
-| `ComponentUI` (`installUI`, `uninstallUI`, `paint`, `getPreferredSize`) | `M3ComponentUI`, created by the look and feel's `RendererFactory`, kept in the widget's data; `M3RowUI` for the drawn rows of Tree, Table and List | each delegate declares the key ids it reads (the diff in (3)) |
+| `ComponentUI` (`installUI`, `uninstallUI`, `paint`, `getPreferredSize`) | `M3ComponentUI`, created by the look and feel's `RendererFactory`, kept in the widget's data; the drawn rows of Tree, Table and List use render-modes' `org.eclipse.swt.internal.render.M3RowUI` (one row delegate type) | each delegate declares the key ids it reads (the diff in (3)) |
 | `SwingUtilities.updateComponentTreeUI` | `M3LookAndFeel.updateComponentTreeUI (control)` (full, the baseline) and the diff-driven update | |
 | FlatLaf `IntelliJTheme`, `FlatPropertiesLaf`, `UIDefaultsLoader` | `M3ThemeImport`: IntelliJ `.theme.json` and FlatLaf `.properties` into the LF2 table format; `M3ThemeWatcher`: live reload of theme files during development | (4) |
 | FlatLaf accent colour, `Component.accentColor` | `M3Palette`: an accent generates the palette (HSL ramps); a high-contrast theme from the platform; metrics scaled by the widget's zoom | (5) |
@@ -93,7 +93,8 @@ syntax stay; FlatLaf's function names (`rgb`, `rgba`, `hsl`, `hsla`, `saturate`,
 Steps, each committed and pushed when green: (a) this design, the donor rows and the catalogue; (b) `M3UIKeys`,
 `M3UIDefaults` and the sparse override lane, with the lookup benchmark; (c) `M3LookAndFeel`, `M3ComponentUI`, the
 resource cache and the diff-driven switch, with the switch benchmark; (d) dependency tracking; (e) imports and live
-reload; (f) palette, high contrast and DPI-aware metrics; (g) `light`/`dark` and the default row delegate; (h)
+reload; (f) palette, high contrast and DPI-aware metrics; (g) `light`/`dark` (the row delegate of the drawn rows is
+render-modes' `org.eclipse.swt.internal.render.M3RowUI`); (h)
 coverage (rule 15).
 
 Status (2026-10-19): steps (a) to (g) implemented in `org.eclipse.swt.internal.laf`, each with JUnit tests:
@@ -105,7 +106,7 @@ Status (2026-10-19): steps (a) to (g) implemented in `org.eclipse.swt.internal.l
 | `M3UIDerivation` | reversed CSR graph of the table's references; the cone of a changed base resolved by `LookAndFeelLoader.resolve` |
 | `M3UIOverrides` | the sparse per-widget lane (putClientProperty) |
 | `M3LookAndFeel` | `setLookAndFeel`, listeners, pins, `installUI`/`getUI`/`uninstallUI`, diff-driven `update`, `updateComponentTreeUI`, `override`, `reload`, `setAccent`; built-ins `light` and `dark` |
-| `M3ComponentUI`, `M3RowUI`, `M3DefaultRowUI` | UI delegates; the row delegate of the drawn Tree, Table and List |
+| `M3ComponentUI` | the UI delegate type (installUI, uninstallUI, paint and metric key ids); the drawn rows' delegate is render-modes' `org.eclipse.swt.internal.render.M3RowUI` |
 | `M3UIResources`, `M3UIFonts` | one `Color` per ARGB and one `Font` per font id per display, disposed by a switch |
 | `M3ThemeImport`, `M3Json`, `M3ColorFunctions` | IntelliJ `.theme.json` and FlatLaf `.properties` import; FlatLaf's colour functions in the loader |
 | `M3ThemeWatcher` | live reload of a theme file |
