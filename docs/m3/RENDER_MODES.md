@@ -378,6 +378,93 @@ all-widgets track's LF2 tables, to become `M3UIDefaults` lanes in LF6), not from
   (`initiative31`, `light`, `dark`, registered and imported ones) the flat glyphs. A run-time `Themes.select` or a
   user-defined theme named by the properties still wins (`Themes.explicit`).
 
+## Interaction model: CPU model, GPU renderer (design, user 2026-10-19)
+
+"The CPU model and the GPU model must have an interactive perfect model." The drawn modes split into a model side
+that changes and a renderer that only ever shows complete states. Status: design (documentation first, D2C); the
+leaves and their gates are at the end of this section.
+
+### Threads and roles
+
+| Role | Thread | Owns | Never does |
+|---|---|---|---|
+| Widget API and input | UI thread | the widget's public API, the behaviour plane (stage 1: the native control), input dispatch | wait for a model worker |
+| Model | UI thread for small changes; CPU workers for bulk work (10^6-row inserts and removes, sorting, prefix sums, lane fills) | the row model (viewport lanes, row index, heights), the theme ids | touch a device context, a GL context or a widget handle |
+| Renderer | UI thread (custom, m3: the back buffer; gpu: the thread's OpenGL context, `M3Gpu`, which is per UI thread) | the frame: the snapshot it paints, the back buffer or render target, the caches | read the live model, block, allocate per frame |
+
+### Snapshot protocol
+
+A **snapshot** is what one frame needs and nothing else, immutable once published:
+
+- `generation` (long, strictly increasing per widget) and the model generation it was built from;
+- the row window: first row, row count, the pixel offset of the first row, the row heights (a prefix-sum lane);
+- the window's lanes: text ids (interned), foreground, background and font ids, image ids, state bits (selected,
+  focused, checked, grayed, expanded, children, depth);
+- the theme id and theme generation (the look and feel of the widget: `M3RowUI`);
+- the damage since the previous snapshot (rectangles in plane pixels), and the scroll position.
+
+Publication is single-writer, many-reader, wait-free for the reader:
+
+1. The writer fills a **slab** (preallocated lanes; three slabs per widget: one being written, the latest published,
+   one being read). Strings are ids into the widget's interned text lane; no slab holds an object reference that
+   the model can change.
+2. When the slab is complete the writer stores its index and generation into one `AtomicLong` (`generation << 2 |
+   slab`) with release semantics. That store is the publication.
+3. The renderer loads the word with acquire semantics at the start of a frame and paints that slab. It marks the slab
+   as being read; the writer never reuses the read slab or the published one, so a frame never sees a slab change
+   under it.
+4. If no new generation was published since the last frame and nothing was damaged, no frame is drawn.
+
+### Input: model first, predicted pixels at once
+
+Input goes to the model immediately on the UI thread (scroll position, selection, focus, type-ahead): the API answers
+from the model at once, as stock does. The renderer does not wait for the next snapshot: it paints a **predicted**
+frame from the latest snapshot and the input (a scroll shifts the resident window by the delta; the resident window
+is larger than the visible rows, so a fast scroll stays inside it; a selection or focus change sets the state bits of
+resident rows). When the snapshot built after the input is published, the next frame paints it: the prediction is
+replaced within one frame. A prediction never shows a row the snapshot does not contain; rows outside the resident
+window are painted empty until their snapshot lands.
+
+### Invariants (checked by the interactive differential)
+
+| | Invariant |
+|---|---|
+| I1 | Complete or nothing: every frame paints exactly one published snapshot (plus, between snapshots, a prediction from it). |
+| I2 | Monotonic: the snapshot generation of frame n+1 is at least that of frame n (never an older state). |
+| I3 | Never blocking: the renderer takes no lock the model holds; a frame costs O(visible rows). |
+| I4 | No allocation per frame: slabs, caches and the frame log are preallocated (rule 18, DOOP). |
+| I5 | Input first: an input event changes the model before the next frame; its pixels appear in the next frame (predicted) and the snapshot's pixels within one frame of its publication. |
+| I6 | Budgets: input-to-pixel latency p99 within two frames; frame time p99 under 16.6 ms in the gpu mode. |
+| I7 | Same pixels: once the model is quiet, the gpu frame equals the CPU frame of the same snapshot. gpu and m3 (CPU raster) share the M3 renderer and are compared pixel for pixel; custom draws text with GDI, so against custom the comparison is the similarity of this document's other measurements. |
+
+### Frame pacing
+
+Pattern donor: skiko (JetBrains, Apache-2.0) frame dispatching, as the donor PATTERN_MAP's frame-pacing theme will
+record it: redraw requests coalesce into one pending frame; at most one frame in flight; frames align to the display
+refresh (swap interval on the GL path, a refresh-rate timer otherwise); a frame that has nothing new is skipped. No
+code is copied; the decision row goes into [render-modes/FOSS_REUSE_DECISION.tsv](render-modes/FOSS_REUSE_DECISION.tsv)
+when the pattern is applied.
+
+### Proof: the interactive differential
+
+`Test_org_eclipse_swt_widgets_DrawnInteraction` (to be written): a Table with 10^6 rows in custom, m3 and gpu on the
+invisible desktop; a scripted fast scroll (wheel bursts, page keys) and typing (type-ahead) while a model worker
+inserts and removes rows in bursts. Each frame appends to a preallocated frame log: snapshot generation, prediction or
+snapshot, input sequence number it reflects, frame start and end. Assertions: I2 over the whole log; input-to-pixel
+p99 and frame time p99 under the budgets of I6 (gpu); after the script, with the model quiet, the gpu pixels equal the
+m3 pixels and the custom pixels are reported by similarity; every non-pixel answer equals the viewport mode's.
+
+### Leaves
+
+| Leaf | Scope | Gate |
+|---|---|---|
+| IM1 | frame log and overlay: per frame generation, frame time and input-to-pixel latency, preallocated; `-Dswt.drawn.overlay=true` paints them in the corner | headless test of the log; the overlay in the examples |
+| IM2 | snapshot slabs and publication (`AtomicLong` word, three slabs), built on the UI thread from the viewport lanes | I1, I2, I4 under the existing differentials |
+| IM3 | model worker for bulk changes; the UI thread applies the finished change and publishes | I3 under 10^6-row churn |
+| IM4 | predicted frames for scroll, selection and focus | I5 |
+| IM5 | frame pacing (skiko pattern) | I6 in gpu |
+| IM6 | the interactive differential | I1-I7 |
+
 ## Leaves
 
 | Leaf | Scope | Gate |
