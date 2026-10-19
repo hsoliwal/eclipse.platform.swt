@@ -48,6 +48,8 @@ final class M3TreeViewport {
 
 	final Tree tree;
 	final M3TreeChildren roots;
+	/** The one tree model: its insertion delta does not read the inserted children. */
+	final M3TreeModel model;
 	private final M3TreeTableRows rows;
 	private final M3SwingScroll scroll = new M3SwingScroll ();
 	/** The parent whose slot {@link #adoptingIndex} is being materialized, or <code>null</code>. */
@@ -61,7 +63,10 @@ final class M3TreeViewport {
 		CTree cTree = (CTree) tree.handle;
 		roots = new M3TreeChildren (this, null, cTree.getRoot ());
 		cTree.getRoot ().m3Children (roots);
-		rows = M3TreeTableRows.install ((JTreeTable) cTree.getSwingComponent ());
+		JTreeTable treeTable = (JTreeTable) cTree.getSwingComponent ();
+		model = new M3TreeModel (cTree.getRoot ());
+		treeTable.setModel (model);
+		rows = M3TreeTableRows.install (treeTable);
 	}
 
 	/**
@@ -118,7 +123,7 @@ final class M3TreeViewport {
 		children.items.insert (index, item);
 		children.count++;
 		node.setParent (children.node);
-		cTree ().getModel ().nodesWereInserted (children.node, new int [] {index});
+		model.inserted (children.node, index, index + 1);
 		if (parentItem == null) cTree ().expandPath (new TreePath (children.node.getPath ()));
 	}
 
@@ -152,7 +157,7 @@ final class M3TreeViewport {
 
 	private void grow (M3TreeChildren children, int old, int count) {
 		children.count = count;
-		cTree ().getModel ().nodesWereInserted (children.node, range (old, count));
+		model.inserted (children.node, old, count);
 		if (children.owner == null) cTree ().expandPath (new TreePath (children.node.getPath ()));
 		refresh ();
 	}

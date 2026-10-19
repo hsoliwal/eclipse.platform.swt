@@ -27,10 +27,11 @@ import java.util.regex.Pattern;
  * Compares two differential records (the reference, then the candidate) line by line.
  * <p>
  * Columns <code>0..compared-1</code> must be equal, except the divergences listed in an optional accept file: tab
- * separated rows <code>operation-regex, column, defect-id</code>, one per divergence of
- * <code>UPSTREAM_DEFECTS.tsv</code>. A listed column of a step whose operation matches is counted under its defect,
- * not failed. Columns from <code>compared</code> on are always accepted divergences (counted). The last column is
- * the number of SetData calls; the report sums it for both sides.
+ * separated rows <code>operation-regex, column, defect-id[, reference-cell-regex]</code>, one per divergence of
+ * <code>UPSTREAM_DEFECTS.tsv</code>. A listed column of a step whose operation matches (and whose reference cell
+ * matches the fourth pattern, when given) is counted under its defect, not failed. Columns from
+ * <code>compared</code> on are always accepted divergences (counted). The last column is the number of SetData
+ * calls; the report sums it for both sides.
  * </p>
  * <p>
  * Usage: <code>DifferentialCompare &lt;reference&gt; &lt;candidate&gt; &lt;compared-columns&gt; &lt;report&gt; [accept-file]</code>;
@@ -41,16 +42,23 @@ public final class DifferentialCompare {
 	private DifferentialCompare () {
 	}
 
-	/** A divergence the comparison accepts: a column of the steps whose operation matches. */
+	/** A divergence the comparison accepts: a column of the steps whose operation (and reference cell) match. */
 	private static final class Accept {
 		final Pattern operation;
 		final int column;
 		final String defect;
+		final Pattern reference;
 
 		Accept (String [] row) {
 			operation = Pattern.compile (row [0]);
 			column = Integer.parseInt (row [1]);
 			defect = row [2];
+			reference = row.length > 3 ? Pattern.compile (row [3]) : null;
+		}
+
+		boolean matches (String [] cells, int c) {
+			return column == c && operation.matcher (cell (cells, 2)).find ()
+				&& (reference == null || reference.matcher (cell (cells, c)).find ());
 		}
 	}
 
@@ -76,7 +84,7 @@ public final class DifferentialCompare {
 			String [] b = i < candidate.size () ? candidate.get (i).split ("\t", -1) : new String [0];
 			boolean mismatch = false;
 			for (int c = 0; c < compared; c++) {
-				if (same (a, b, c)) continue;
+				if (cell (a, c).equals (cell (b, c))) continue;
 				String defect = acceptedBy (accepts, a, c);
 				if (defect == null) {
 					mismatch = true;
@@ -89,7 +97,7 @@ public final class DifferentialCompare {
 				continue;
 			}
 			for (int c = compared; c < Math.max (a.length, b.length) - 1; c++) {
-				if (!same (a, b, c)) {
+				if (!cell (a, c).equals (cell (b, c))) {
 					accepted++;
 					break;
 				}
@@ -104,17 +112,15 @@ public final class DifferentialCompare {
 	}
 
 	private static String acceptedBy (List<Accept> accepts, String [] reference, int column) {
-		String operation = reference.length > 2 ? reference [2] : "";
 		for (Accept accept : accepts) {
-			if (accept.column == column && accept.operation.matcher (operation).find ()) return accept.defect;
+			if (accept.matches (reference, column)) return accept.defect;
 		}
 		return null;
 	}
 
-	private static boolean same (String [] a, String [] b, int c) {
-		String x = c < a.length ? a [c] : null;
-		String y = c < b.length ? b [c] : null;
-		return x == null ? y == null : x.equals (y);
+	/** A cell, or the empty string beyond the row's end. */
+	private static String cell (String [] cells, int c) {
+		return c < cells.length ? cells [c] : "";
 	}
 
 	private static long last (String [] columns) {

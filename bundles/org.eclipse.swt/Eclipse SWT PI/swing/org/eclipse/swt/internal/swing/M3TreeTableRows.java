@@ -40,8 +40,6 @@ import javax.swing.tree.*;
  */
 public final class M3TreeTableRows implements TreeWillExpandListener {
 	static final String KEY = "org.eclipse.swt.internal.swing.M3TreeTableRows";
-	/** Text that sizes a row when the look and feel gives no row height. */
-	static final String SAMPLE = "Xg";
 
 	private final JTreeTable treeTable;
 	private final JTree tree;
@@ -77,14 +75,14 @@ public final class M3TreeTableRows implements TreeWillExpandListener {
 	}
 
 	/**
-	 * Sets the row height the rows are laid out with: the look and feel's when it gives one, otherwise the
-	 * height of a rendered row of text.
+	 * Sets the row height the rows are laid out with: the look and feel's when it gives one (Windows), otherwise
+	 * (Metal) the height of a rendered empty row or of the tree's font, whichever is larger.
 	 */
 	public void fixRowHeight () {
 		int height = tree.getRowHeight ();
 		if (height <= 0) {
-			Component c = tree.getCellRenderer ().getTreeCellRendererComponent (tree, SAMPLE, false, false, true, 0, false);
-			height = Math.max (1, c.getPreferredSize ().height);
+			Component c = tree.getCellRenderer ().getTreeCellRendererComponent (tree, null, false, false, true, 0, false);
+			height = Math.max (tree.getFontMetrics (tree.getFont ()).getHeight (), c.getPreferredSize ().height);
 		}
 		tree.setRowHeight (height);
 	}

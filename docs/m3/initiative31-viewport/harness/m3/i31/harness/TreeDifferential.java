@@ -19,23 +19,23 @@ import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.SplittableRandom;
 
 import org.eclipse.swt.*;
-import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 /**
  * Recorded differential of a {@link Tree}: seeded random public-API scripts. Every step records
- * <code>seed, step, operation, answer, item count, selection, events, scroll, SetData calls of the step</code>, one
- * tab-separated line. The same seeds run once per mode (one JVM each); {@link DifferentialCompare} compares
- * the records. Even seeds use <code>SWT.VIRTUAL</code> (items filled by SetData), odd seeds create their
- * items up front.
+ * <code>seed, step, operation, answer, item count, selection, events, top item, SetData calls of the step</code>,
+ * one tab-separated line. The same seeds run once per mode (one JVM each); {@link DifferentialCompare} compares
+ * the records. Even seeds use <code>SWT.VIRTUAL</code> (items filled by SetData), odd seeds create their items
+ * up front.
  * <p>
- * The script reads an item (<code>getText</code>) before it changes it, as a client does, so the moment
- * SetData fills an item does not decide the tree's shape. SetData creates children from the item's path
- * only, so both modes build the same tree whatever order SetData runs in.
+ * The script keeps the data behind the tree in its own model ({@link Node}): names and children fixed when a
+ * node is created, changed in step with the tree's structure. SetData reads that model by the item's index path,
+ * so an item's text and children are the same whenever SetData runs; the two modes run it at different moments.
  * </p>
  * <p>
  * Usage: <code>TreeDifferential &lt;out-file&gt; &lt;first-seed&gt; &lt;seeds&gt; &lt;steps&gt;</code>
@@ -43,17 +43,31 @@ import org.eclipse.swt.widgets.*;
  */
 public final class TreeDifferential {
 	private static final Watchdog WATCHDOG = Watchdog.start (120_000);
+
+	/** A node of the data: its name (its identity) and its children, fixed when it is created. */
+	static final class Node {
+		final String name;
+		final List<Node> children = new ArrayList<> ();
+
+		Node (String name) {
+			this.name = name;
+		}
+	}
+
 	private final Display display;
 	private final StringBuilder events = new StringBuilder ();
+	/** The data behind the root items; read by SetData on either thread, changed by the script. */
+	private final List<Node> roots = new ArrayList<> ();
 	private Tree tree;
 	private int setData;
+	private int created;
 
 	private TreeDifferential (Display display) {
 		this.display = display;
 	}
 
 	public static void main (String [] args) throws IOException {
-		java.util.List<String> out = new ArrayList<> ();
+		List<String> out = new ArrayList<> ();
 		int first = Integer.parseInt (args [1]);
 		int seeds = Integer.parseInt (args [2]);
 		int steps = Integer.parseInt (args [3]);
@@ -71,7 +85,7 @@ public final class TreeDifferential {
 		System.exit (0);
 	}
 
-	private void run (int seed, int steps, java.util.List<String> out) {
+	private void run (int seed, int steps, List<String> out) {
 		SplittableRandom random = new SplittableRandom (seed);
 		Shell shell = new Shell (display);
 		shell.setLayout (new FillLayout ());
@@ -79,21 +93,27 @@ public final class TreeDifferential {
 		boolean virtual = seed % 2 == 0;
 		tree = new Tree (shell, SWT.BORDER | SWT.MULTI | (virtual ? SWT.VIRTUAL : 0));
 		setData = 0;
+		created = 0;
 		events.setLength (0);
+		synchronized (roots) {
+			roots.clear ();
+		}
 		listen ();
 		if (virtual) {
-			tree.setItemCount (20 + random.nextInt (200));
+			int count = 20 + random.nextInt (200);
+			addVirtualRoots (count);
+			tree.setItemCount (count);
 		} else {
 			build (random);
 		}
 		shell.open ();
 		pump (true);
-		out.add (record (seed, -1, virtual ? "virtual" : "plain", "", random));
+		out.add (record (seed, -1, virtual ? "virtual" : "plain", ""));
 		for (int step = 0; step < steps; step++) {
 			WATCHDOG.tick (seed + ":" + step);
 			String [] done = step (random, virtual);
 			pump (step % 25 == 24);
-			out.add (record (seed, step, done [0], done [1], random));
+			out.add (record (seed, step, done [0], done [1]));
 		}
 		shell.dispose ();
 		pump (false);
@@ -103,10 +123,9 @@ public final class TreeDifferential {
 		tree.addListener (SWT.SetData, e -> {
 			setData++;
 			TreeItem item = (TreeItem) e.item;
-			String path = path (item);
-			item.setText ("n" + path);
-			int hash = Math.floorMod (path.hashCode (), 97);
-			if (depth (path) < 3 && hash % 4 == 0) item.setItemCount (1 + hash % 7);
+			Node node = nodeOf (item);
+			item.setText (node.name);
+			if (!node.children.isEmpty ()) item.setItemCount (node.children.size ());
 		});
 		Listener recorder = e -> events.append (e.type).append (':').append (e.item instanceof TreeItem ? path ((TreeItem) e.item) : "-").append (' ');
 		for (int type : new int [] {SWT.Selection, SWT.DefaultSelection, SWT.Expand, SWT.Collapse}) {
@@ -114,14 +133,52 @@ public final class TreeDifferential {
 		}
 	}
 
+	/** The data of an item, by its index path. */
+	private Node nodeOf (TreeItem item) {
+		TreeItem parent = item.getParentItem ();
+		if (parent == null) {
+			synchronized (roots) {
+				return roots.get (tree.indexOf (item));
+			}
+		}
+		return nodeOf (parent).children.get (parent.indexOf (item));
+	}
+
+	/** Adds roots whose children are derived from their names (fixed, so SetData is the same in both modes). */
+	private void addVirtualRoots (int count) {
+		synchronized (roots) {
+			for (int i = 0; i < count; i++) {
+				roots.add (virtualNode ("n" + created++, 0));
+			}
+		}
+	}
+
+	private static Node virtualNode (String name, int depth) {
+		Node node = new Node (name);
+		int hash = Math.floorMod (name.hashCode (), 97);
+		if (depth < 3 && hash % 4 == 0) {
+			for (int j = 0; j < 1 + hash % 7; j++) {
+				node.children.add (virtualNode (name + "/" + j, depth + 1));
+			}
+		}
+		return node;
+	}
+
 	private void build (SplittableRandom random) {
-		int roots = 10 + random.nextInt (60);
-		for (int i = 0; i < roots; i++) {
-			TreeItem item = new TreeItem (tree, SWT.NONE);
-			item.setText ("n/" + i);
+		int count = 10 + random.nextInt (60);
+		for (int i = 0; i < count; i++) {
+			Node node = new Node ("n" + created++);
 			int children = random.nextInt (4) == 0 ? 1 + random.nextInt (6) : 0;
 			for (int j = 0; j < children; j++) {
-				new TreeItem (item, SWT.NONE).setText ("n/" + i + "/" + j);
+				node.children.add (new Node (node.name + "/" + j));
+			}
+			synchronized (roots) {
+				roots.add (node);
+			}
+			TreeItem item = new TreeItem (tree, SWT.NONE);
+			item.setText (node.name);
+			for (Node child : node.children) {
+				new TreeItem (item, SWT.NONE).setText (child.name);
 			}
 		}
 	}
@@ -142,11 +199,17 @@ public final class TreeDifferential {
 			case 0: {
 				int grow = 1 + random.nextInt (60);
 				if (virtual) {
+					addVirtualRoots (grow);
 					tree.setItemCount (count + grow);
-				} else {
-					new TreeItem (tree, SWT.NONE, random.nextInt (count + 1)).setText ("x" + count);
+					return new String [] {"grow(" + grow + ")", ""};
 				}
-				return new String [] {"grow(" + grow + ")", ""};
+				int at = random.nextInt (count + 1);
+				Node node = new Node ("x" + created++);
+				synchronized (roots) {
+					roots.add (at, node);
+				}
+				new TreeItem (tree, SWT.NONE, at).setText (node.name);
+				return new String [] {"insert(" + at + ")", ""};
 			}
 			case 1:
 				return new String [] {"text(" + i + ")", tree.getItem (i).getText ()};
@@ -186,13 +249,21 @@ public final class TreeDifferential {
 			case 11:
 				tree.clearAll (random.nextBoolean ());
 				return new String [] {"clearAll", ""};
-			case 12:
-				touched (i).dispose ();
+			case 12: {
+				TreeItem item = touched (i);
+				synchronized (roots) {
+					roots.remove (i);
+				}
+				item.dispose ();
 				return new String [] {"dispose(" + i + ")", String.valueOf (tree.getItemCount ())};
+			}
 			case 13:
 				return new String [] {"items", String.valueOf (tree.getItems ().length)};
 			case 14:
 				if (random.nextInt (8) != 0) return new String [] {"noop", ""};
+				synchronized (roots) {
+					roots.clear ();
+				}
 				tree.removeAll ();
 				return new String [] {"removeAll", String.valueOf (tree.getItemCount ())};
 			case 15: {
@@ -219,11 +290,11 @@ public final class TreeDifferential {
 		return item;
 	}
 
-	private String record (int seed, int step, String op, String answer, SplittableRandom random) {
+	private String record (int seed, int step, String op, String answer) {
 		String recorded = events.toString ().trim ();
+		events.setLength (0);
 		int calls = setData;
 		setData = 0;
-		events.setLength (0);
 		return seed + "\t" + step + "\t" + op + "\t" + answer + "\t" + tree.getItemCount () + "\t" + selection () + "\t" + recorded + "\t" + scroll () + "\t" + calls;
 	}
 
@@ -252,14 +323,6 @@ public final class TreeDifferential {
 		TreeItem parent = item.getParentItem ();
 		if (parent == null) return "/" + item.getParent ().indexOf (item);
 		return path (parent) + "/" + parent.indexOf (item);
-	}
-
-	private static int depth (String path) {
-		int depth = -1;
-		for (int i = 0; i < path.length (); i++) {
-			if (path.charAt (i) == '/') depth++;
-		}
-		return depth;
 	}
 
 	private void pump (boolean settle) {

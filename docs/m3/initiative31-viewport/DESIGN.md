@@ -162,7 +162,7 @@ The SWT item model and the Swing model are one store (user rule, 2026-10-19: no 
 
 | Widget | The one store | What Swing reads | Deltas |
 |---|---|---|---|
-| Tree | `M3TreeChildren` per parent: count + `VirtualItemStorage` of materialized `TreeItem` facades | the parent node's child vector *is* the `M3TreeChildren` (`DefaultMutableTreeTableNode.m3Children`), so `DefaultTreeModel.getChildCount/getChild/getIndexOfChild` read the lane | `setItemCount`: one `nodesWereInserted`/`nodesWereRemoved` over the index run; insert/dispose: one-index delta; expansion: one table INSERT/DELETE run counted from the lane counts |
+| Tree | `M3TreeChildren` per parent: count + `VirtualItemStorage` of materialized `TreeItem` facades | the parent node's child vector *is* the `M3TreeChildren` (`DefaultMutableTreeTableNode.m3Children`), so the tree model's `getChildCount/getChild/getIndexOfChild` read the lane; the model is `M3TreeModel`, whose insertion delta carries indices only (`DefaultTreeModel.nodesWereInserted` would read, and so materialize, every inserted child) | `setItemCount`: one insertion/removal event over the index run; insert/dispose: one-index delta; expansion: one table INSERT/DELETE run counted from the lane counts |
 | Table | `Table.itemList` slots (null until materialized) | `CTableModel.getValueAt` reads the slot; its `rowCount` is a mirror of the slot count, updated by the same delta | `setItemCount`: one `fireTableRowsInserted/Deleted` per run (stock: one per row) |
 | List | the `JList`'s `DefaultListModel` (stock already keeps no second copy) | the model | unchanged |
 
