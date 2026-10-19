@@ -68,7 +68,11 @@ public class Test_M3Model {
 
 	/* a random patch of a list of ids: removes, inserts with fresh ids, updates */
 	private M3Patch randomPatch (Random random, long [] ids, long [] nextId) {
-		M3Patch.Builder builder = M3Patch.builder (M3Patch.ROOT);
+		return randomPatch (random, M3Patch.ROOT, ids, nextId);
+	}
+
+	private M3Patch randomPatch (Random random, long parent, long [] ids, long [] nextId) {
+		M3Patch.Builder builder = M3Patch.builder (parent);
 		int size = ids.length, limit = size;
 		for (int k = random.nextInt (4); k > 0 && limit > 0; k--) {
 			int count = 1 + random.nextInt (Math.min (5, limit));
@@ -295,6 +299,119 @@ public class Test_M3Model {
 		}
 		assertEquals (label (ids [3]), m3.text (ids [3], 0));
 		assertNull (m3.image (ids [3], 0));
+	}
+
+
+	/* 30 roots with ids 0..29 (positional), each with 5 children with ids 1000 * (root + 1) + c */
+	private Tree tree (int x, boolean stock) {
+		Tree tree = new Tree (shell, SWT.MULTI | SWT.BORDER);
+		tree.setBounds (x, 5, 300, 380);
+		for (int r = 0; r < 30; r++) {
+			TreeItem root = new TreeItem (tree, SWT.NONE);
+			root.setText (label (r));
+			if (stock) root.setData (Long.valueOf (r));
+			for (int c = 0; c < 5; c++) {
+				long id = 1000L * (r + 1) + c;
+				TreeItem child = new TreeItem (root, SWT.NONE);
+				child.setText (label (id));
+				if (stock) child.setData (Long.valueOf (id));
+			}
+			if (r % 3 == 0) root.setExpanded (true);
+		}
+		return tree;
+	}
+
+	private static TreeItem find (TreeItem [] items, long id) {
+		for (TreeItem item : items) {
+			if (item.getData () instanceof Long value && value == id) return item;
+			TreeItem found = find (item.getItems (), id);
+			if (found != null) return found;
+		}
+		return null;
+	}
+
+	private static void assertSameTrees (TreeItem [] model, TreeItem [] stock, String what) {
+		assertEquals (stock.length, model.length, what);
+		for (int i = 0; i < stock.length; i++) {
+			assertEquals (stock [i].getText (), model [i].getText (), what + " item " + i);
+			assertEquals (stock [i].getExpanded (), model [i].getExpanded (), what + " expanded " + i);
+			assertSameTrees (model [i].getItems (), stock [i].getItems (), what + "/" + i);
+		}
+	}
+
+	@Test
+	public void test_treeEqualsStockEdits () {
+		Tree model = tree (5, false), stock = tree (320, true);
+		M3Model m3 = M3Model.of (model);
+		Map<Long, long []> lanes = new HashMap<> ();
+		long [] roots = new long [30];
+		for (int r = 0; r < 30; r++) {
+			roots [r] = r;
+			long [] children = new long [5];
+			for (int c = 0; c < 5; c++) children [c] = 1000L * (r + 1) + c;
+			m3.setIds (r, children);
+			lanes.put ((long) r, children);
+		}
+		lanes.put (M3Model.ROOT, roots);
+		Random random = new Random (31);
+		long [] nextId = {100_000};
+		for (int round = 0; round < 60; round++) {
+			long [] current = lanes.get (M3Model.ROOT);
+			long parent = random.nextInt (3) == 0 || current.length == 0 ? M3Model.ROOT : current [random.nextInt (current.length)];
+			long [] ids = lanes.getOrDefault (parent, new long [0]);
+			M3Patch patch = randomPatch (random, parent, ids, nextId);
+			long [] after = patch.apply (ids);
+			for (int i = 0; i < patch.updateRuns (); i++) {
+				for (int k = 0; k < patch.updateCount (i); k++) versions.merge (after [patch.updateAt (i) + k], 1, Integer::sum);
+			}
+			TreeItem stockTop = stock.getTopItem ();
+			long anchor = stockTop == null ? -2 : (Long) stockTop.getData ();
+			m3.apply (patch, labels);
+			TreeItem stockParent = parent == M3Model.ROOT ? null : find (stock.getItems (), parent);
+			patch.applyTo (new M3Patch.Target () {
+				int run;
+
+				@Override
+				public void remove (int index, int count) {
+					for (int k = count - 1; k >= 0; k--) (stockParent == null ? stock.getItem (index + k) : stockParent.getItem (index + k)).dispose ();
+				}
+
+				@Override
+				public void insert (int index, int count) {
+					for (int k = 0; k < count; k++) {
+						long id = patch.insertedId (run, k);
+						TreeItem item = stockParent == null ? new TreeItem (stock, SWT.NONE, index + k) : new TreeItem (stockParent, SWT.NONE, index + k);
+						item.setText (label (id));
+						item.setData (Long.valueOf (id));
+					}
+					run++;
+				}
+
+				@Override
+				public void update (int index, int count) {
+					for (int k = 0; k < count; k++) (stockParent == null ? stock.getItem (index + k) : stockParent.getItem (index + k)).setText (label (after [index + k]));
+				}
+			});
+			TreeItem top = anchor == -2 ? null : find (stock.getItems (), anchor);
+			if (top != null) stock.setTopItem (top);
+			for (int i = 0; i < patch.removeRuns (); i++) {
+				for (int k = 0; k < patch.removeCount (i); k++) lanes.remove (ids [patch.removeAt (i) + k]);
+			}
+			lanes.put (parent, after);
+			assertSameTrees (model.getItems (), stock.getItems (), "round " + round);
+			assertEquals (stock.getTopItem () == null ? null : stock.getTopItem ().getText (), model.getTopItem () == null ? null : model.getTopItem ().getText (), "round " + round);
+			for (int i = 0; i < after.length; i++) {
+				assertEquals (i, m3.indexOf (after [i]));
+				assertEquals (parent, m3.parentOf (after [i]));
+				assertEquals (label (after [i]), m3.text (after [i], 0));
+			}
+			assertEquals (after.length, m3.size (parent));
+		}
+		assertThrows (IllegalArgumentException.class, () -> m3.size (99_999_999L), "no such parent");
+		assertThrows (IllegalArgumentException.class, () -> m3.text (99_999_999L, 0));
+		assertThrows (IllegalArgumentException.class, () -> m3.image (99_999_999L, 0));
+		assertEquals (-1, m3.indexOf (99_999_999L));
+		assertEquals (-2, m3.parentOf (99_999_999L));
 	}
 
 	@Test

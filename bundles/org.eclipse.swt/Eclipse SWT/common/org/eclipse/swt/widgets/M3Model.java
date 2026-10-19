@@ -21,8 +21,10 @@ import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.m3.*;
 
 /**
- * The one model of a <code>List</code> or <code>Table</code> (enhanced M3 API, the model seam):
- * the widget's rows plus one lane of row ids, edited by deltas ({@link M3Patch}).
+ * The one model of a <code>List</code>, <code>Table</code> or <code>Tree</code> (enhanced M3 API, the model seam):
+ * the widget's rows plus one lane of row ids per parent, edited by deltas ({@link M3Patch}). A tree's
+ * patch edits the children of one parent ({@link M3Patch#parent()}); removing or moving a row drops
+ * its children, as disposing its item does.
  * <p>
  * A viewer or a binding keeps its domain objects and refers to rows by id; it does not keep a second
  * row store. Ids are positional (the id of a row is its index) until {@link #setIds(long, long[])} or
@@ -116,9 +118,12 @@ public final class M3Model {
 	private M3DiffApply.Positions positions;
 	private Labels labels;
 	private Listener setData;
+	/* the per-parent id lanes of a Tree; null for a List or Table */
+	private M3TreeModel tree;
 
 	private M3Model (Control widget) {
 		this.widget = widget;
+		if (widget instanceof Tree t) tree = new M3TreeModel (t);
 	}
 
 	/**
@@ -157,6 +162,26 @@ public final class M3Model {
 		return model (list);
 	}
 
+	/**
+	 * Returns the model of a tree. The roots have positional ids until a patch or
+	 * {@link #setIds(long, long[])} gives them; the children of an item get ids from
+	 * <code>setIds</code> or from the patch that inserts them. Ids are unique in the whole tree.
+	 *
+	 * @param tree the tree
+	 * @return its model, the same object on every call
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the tree is null</li>
+	 * </ul>
+	 * @exception SWTException <ul>
+	 *    <li>ERROR_WIDGET_DISPOSED - if the tree has been disposed</li>
+	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the tree</li>
+	 * </ul>
+	 */
+	public static M3Model of (Tree tree) {
+		return model (tree);
+	}
+
 	private static M3Model model (Control widget) {
 		if (widget == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		widget.checkWidget ();
@@ -181,6 +206,8 @@ public final class M3Model {
 	 * </ul>
 	 */
 	public int size (long parent) {
+		widget.checkWidget ();
+		if (tree != null) return tree.size (parent);
 		checkParent (parent);
 		return count ();
 	}
@@ -202,6 +229,8 @@ public final class M3Model {
 	 * </ul>
 	 */
 	public long id (long parent, int index) {
+		widget.checkWidget ();
+		if (tree != null) return tree.id (parent, index);
 		checkParent (parent);
 		if (index < 0 || index >= count ()) SWT.error (SWT.ERROR_INVALID_RANGE);
 		return idAt (index);
@@ -220,6 +249,7 @@ public final class M3Model {
 	 */
 	public int indexOf (long id) {
 		widget.checkWidget ();
+		if (tree != null) return tree.indexOf (id);
 		sync ();
 		int count = count ();
 		if (ids == null) return id >= 0 && id < count ? (int) id : -1;
@@ -242,6 +272,8 @@ public final class M3Model {
 	 * </ul>
 	 */
 	public long parentOf (long id) {
+		widget.checkWidget ();
+		if (tree != null) return tree.parentOf (id);
 		return indexOf (id) >= 0 ? ROOT : -2;
 	}
 
@@ -261,6 +293,11 @@ public final class M3Model {
 	 * </ul>
 	 */
 	public void setIds (long parent, long [] rowIds) {
+		widget.checkWidget ();
+		if (tree != null) {
+			tree.setIds (parent, rowIds);
+			return;
+		}
 		checkParent (parent);
 		if (rowIds == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		if (rowIds.length != count ()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
@@ -288,6 +325,8 @@ public final class M3Model {
 	 * </ul>
 	 */
 	public String text (long id, int column) {
+		widget.checkWidget ();
+		if (tree != null) return tree.knownItem (id).getText (column);
 		int index = indexOf (id);
 		if (index < 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 		if (widget instanceof Table table) return table.getItem (index).getText (column);
@@ -310,6 +349,8 @@ public final class M3Model {
 	 * </ul>
 	 */
 	public Image image (long id, int column) {
+		widget.checkWidget ();
+		if (tree != null) return tree.knownItem (id).getImage (column);
 		int index = indexOf (id);
 		if (index < 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 		return widget instanceof Table table ? table.getItem (index).getImage (column) : null;
@@ -335,6 +376,13 @@ public final class M3Model {
 	 */
 	public void apply (M3Patch patch, Labels rowLabels) {
 		if (patch == null || rowLabels == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+		widget.checkWidget ();
+		if (tree != null) {
+			labels = rowLabels;
+			installSetData ();
+			tree.apply (patch, this);
+			return;
+		}
 		checkParent (patch.parent ());
 		long [] before = lane ();
 		long [] after;
@@ -350,15 +398,7 @@ public final class M3Model {
 		}
 		labels = rowLabels;
 		boolean virtual = (widget.getStyle () & SWT.VIRTUAL) != 0;
-		if (virtual && setData == null) {
-			setData = event -> {
-				if (labels != null && event.item instanceof TableItem item) {
-					sync ();
-					fillItem (item, idAt (event.index));
-				}
-			};
-			widget.addListener (SWT.SetData, setData);
-		}
+		installSetData ();
 		int top = topIndex ();
 		long anchor = before.length > 0 && top < before.length ? before [top] : 0;
 		M3BulkUpdates.bulk (widget, () -> {
@@ -388,6 +428,33 @@ public final class M3Model {
 	}
 
 	/* ------------------------------------------------------------------ helpers */
+
+	/* a virtual widget fills its rows from the labels when it shows them (SWT.SetData) */
+	private void installSetData () {
+		if ((widget.getStyle () & SWT.VIRTUAL) == 0 || setData != null) return;
+		setData = event -> {
+			if (labels == null) return;
+			if (event.item instanceof TableItem item) {
+				sync ();
+				fillItem (item, idAt (event.index));
+			} else if (event.item instanceof TreeItem item) {
+				M3TreeModel.Lane lane = tree.lane (tree.idOf (item.getParentItem ()));
+				if (lane != null && event.index < lane.ids.length) fillTreeItem (item, lane.ids [event.index]);
+			}
+		};
+		widget.addListener (SWT.SetData, setData);
+	}
+
+	void fillTreeItem (TreeItem item, long id) {
+		row.reset ();
+		labels.fill (id, row);
+		int columns = Math.max (1, item.getParent ().getColumnCount ());
+		for (int column = 0; column < columns; column++) {
+			item.setText (column, row.text (column));
+			item.setImage (column, column < row.images.length ? row.images [column] : null);
+		}
+		if ((item.getParent ().getStyle () & SWT.CHECK) != 0) item.setChecked (row.checked);
+	}
 
 	private void insertRow (int index, long id, boolean virtual) {
 		if (widget instanceof Table table) {
