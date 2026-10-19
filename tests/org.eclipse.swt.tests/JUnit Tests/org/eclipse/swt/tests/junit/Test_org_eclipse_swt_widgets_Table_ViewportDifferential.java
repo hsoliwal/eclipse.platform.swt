@@ -54,13 +54,14 @@ import org.junit.jupiter.api.*;
  * Variants 3 and up run the scripts of {@link TableViewportScripts}: keyboard and mouse input with Shift and
  * Ctrl (window messages; the modifiers are the thread's keyboard state, set with SetKeyboardState, so the JVM
  * runs with <code>--enable-preview</code> on JDK 21), accessibility, geometry and presentation, reentrant
- * listeners, and DPI changes. <code>-Dswt.viewport.variants=3,4</code> runs only the listed variants.
+ * listeners, and DPI changes; variants 10 and 11 run {@link TableScaleScripts} at every scale (100, 125, 150 and
+ * 200 %). <code>-Dswt.viewport.variants=3,4</code> runs only the listed variants.
  * </p>
  */
 public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 	static final int ROWS = 300, SEEDS = 12, STEPS = 150;
 	/* the operations a variant draws: the API script of this class, or a script of TableViewportScripts */
-	static final int API = 0, INPUT = 1, GEOMETRY = 2, REENTRANT = 3, DPI = 4;
+	static final int API = 0, INPUT = 1, GEOMETRY = 2, REENTRANT = 3, DPI = 4, SCALE = 5, ZOOM = 6;
 
 	/** A script variant: the Table's style, its columns, the script it runs, its seeds and steps. */
 	record Variant (int style, int columns, int script, int seeds, int steps) {}
@@ -81,6 +82,9 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		new Variant (SWT.MULTI | SWT.BORDER | SWT.VIRTUAL, 0, REENTRANT, 8, 100),
 		/* T-Table-10: DPI changes and resizes while scrolled */
 		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION, 2, DPI, 4, 60),
+		/* T-Table-14: every scale (TableScaleScripts): seeds at 100, 125, 150 and 200 %, and Table font, resize and zoom changes while scrolled */
+		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION, 2, SCALE, 8, 100),
+		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.CHECK, 2, ZOOM, 8, 80),
 	};
 
 	/** A plain Table realized as owner data is the non-blocking sign that the viewport is active. */
@@ -174,6 +178,8 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		Shell shell;
 		Table table;
 		int step;
+		/* the seed this scene runs: reset is called once per seed, in order */
+		int seed = -1;
 		/* script state (TableViewportScripts): resources, armed listener actions, accessibility, zoom */
 		final TableViewportScripts.State state = new TableViewportScripts.State ();
 
@@ -186,6 +192,7 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		void reset () {
 			dispose ();
 			step = 0;
+			seed++;
 			shell = new Shell (display);
 			Rectangle screen = display.getBounds ();
 			shell.setBounds (screen.x - 400, screen.y + 20, 320, 420);
@@ -226,6 +233,7 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 			/* the table receives focus once: the caret it gets on focus is part of the behaviour */
 			table.setFocus ();
 			ViewportDifferential.settle (display, 150);
+			TableScaleScripts.opened (this);
 			events.setLength (0);
 		}
 

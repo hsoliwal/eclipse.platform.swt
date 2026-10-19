@@ -70,7 +70,7 @@ public static Shell open (Display display, boolean plain) {
 		button.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, false, false));
 		button.addListener (SWT.Selection, event -> result.setText (measure (table, operation)));
 	}
-	GridData resultData = new GridData (SWT.FILL, SWT.TOP, false, true);
+	GridData resultData = new GridData (SWT.FILL, SWT.FILL, false, true);
 	resultData.widthHint = 220;
 	result.setLayoutData (resultData);
 	result.setText ("Press an operation: " + RUNS + " runs, median ms");

@@ -33,8 +33,8 @@ import org.eclipse.swt.widgets.*;
  * <li>row <code>r</code> starts at <code>y = H + (r - top) * h</code>, and the row at <code>y</code> is
  * <code>top + (y - H) / h</code> (Snippet3 asks <code>getItem (Point)</code>);</li>
  * <li><code>setTopIndex (n)</code> ends on <code>max (0, min (n, count - P))</code>: the last page stays full;</li>
- * <li>the vertical bar counts rows: maximum <code>count - 1</code>, thumb <code>P</code>, selection
- * <code>top</code>.</li>
+ * <li>the vertical bar counts rows: maximum <code>count - 1</code>, page <code>P</code> and selection
+ * <code>top</code>; on win32 <code>ScrollBar.getThumb</code> answers the native page minus one, <code>P - 1</code>.</li>
  * </ul>
  * <p>
  * "Check" sets several top rows of a 1,000,000-row Table and compares every formula with the widget's answer;
@@ -96,7 +96,7 @@ public static String check (Table table) {
 	out.append (String.format (Locale.ROOT, "h %d, H %d, A %d: P = %d whole rows, %d painted%n", h, header, area, page, painted));
 	ScrollBar bar = table.getVerticalBar ();
 	line (out, "bar maximum = count - 1", count - 1, bar.getMaximum ());
-	line (out, "bar thumb = P", page, bar.getThumb ());
+	line (out, "bar thumb = P - 1 (win32)", page - 1, bar.getThumb ());
 	for (int request : new int [] {0, 1, 12_345, count / 2, count - page, count - 1}) {
 		table.setTopIndex (request);
 		int top = Math.max (0, Math.min (request, count - page));
