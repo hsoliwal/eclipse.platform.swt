@@ -305,6 +305,16 @@ public final class M3UIDefaults {
 			generation++;
 		}
 
+		Lanes copy () {
+			Lanes copy = new Lanes ();
+			copy.values = values.clone ();
+			copy.quads = quads.clone ();
+			copy.present = present.clone ();
+			copy.variables = variables == null ? null : new HashMap<> (variables);
+			copy.generation = generation;
+			return copy;
+		}
+
 		/** True when the key has a value here. */
 		public boolean has (int key) {
 			int word = key >>> 6;

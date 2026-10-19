@@ -55,7 +55,32 @@ public final class M3LookAndFeel {
 	private static final org.eclipse.swt.widgets.Listener DISPOSED = event -> remove ((Control) event.widget);
 	private static volatile String selected;
 
+	static {
+		/* the light and dark built-ins of LF6 (the LF2 flat and flatdark tables) */
+		LookAndFeel.register ("light", "@extends = flat\n", null);
+		LookAndFeel.register ("dark", "@extends = flatdark\n", null);
+	}
+
 	private M3LookAndFeel () {
+	}
+
+	/**
+	 * Sets the accent colour of every look and feel (the developer variable <code>@accent</code>): the values derived
+	 * from it are resolved again (only those), and on a display thread the widgets whose delegate reads one of them
+	 * are updated.
+	 *
+	 * @return the number of delegates installed again
+	 */
+	public static int setAccent (int argb) {
+		Map<String, M3UIDefaults> before = new HashMap<> ();
+		for (Map.Entry<String, M3UIDefaults> entry : DEFAULTS.entrySet ()) before.put (entry.getKey (), entry.getValue ().snapshot ());
+		getDefaults ().putVariable ("accent", M3Palette.text (argb));
+		Display display = Display.getCurrent ();
+		int touched = 0;
+		if (display != null) {
+			for (Map.Entry<String, M3UIDefaults> entry : before.entrySet ()) touched += update (display, entry.getValue (), defaults (entry.getKey ()));
+		}
+		return touched;
 	}
 
 	/** The selected look and feel: the last {@link #setLookAndFeel}, else the startup property, else <code>native</code>. */

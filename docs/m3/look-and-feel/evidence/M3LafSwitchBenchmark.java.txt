@@ -90,6 +90,21 @@ public class M3LafSwitchBenchmark {
 			measure (display, "Swing updateComponentTreeUI (full)", pair, full);
 			measure (display, "LF6 M3LookAndFeel.update (diff)", pair, diff);
 		}
+		/* an accent change: FlatLaf sets the look and feel up again and updates every window; LF6 setAccent */
+		String [] accents = {"#c0392b", "#2f6fd0"};
+		Switch reinstall = (from, to) -> {
+			M3LookAndFeel.register ("bench-a", "@extends = flat\n@accent = " + to + "\n", null);
+			int touched = 0;
+			for (Shell shell : shells) touched += M3LookAndFeel.updateComponentTreeUI (shell);
+			return touched;
+		};
+		Switch accent = (from, to) -> M3LookAndFeel.setAccent (LookAndFeelLoader.color (to));
+		select ("bench-a");
+		measure (display, "FlatLaf setup + updateUI (full)", accents, reinstall, false);
+		M3LookAndFeel.register ("bench-a", "@extends = flat\n", null);
+		select ("bench-a");
+		M3LookAndFeel.updateComponentTreeUI (shells [0]);
+		measure (display, "LF6 M3LookAndFeel.setAccent (cone)", accents, accent, false);
 		for (Shell shell : shells) shell.dispose ();
 		display.dispose ();
 	}
@@ -125,12 +140,19 @@ public class M3LafSwitchBenchmark {
 	}
 
 	static void measure (Display display, String candidate, String [] pair, Switch body) {
+		measure (display, candidate, pair, body, true);
+	}
+
+	/* switching: before each round, the widgets are brought to the first look and feel of the pair */
+	static void measure (Display display, String candidate, String [] pair, Switch body, boolean switching) {
 		double [] call = new double [ROUNDS], settled = new double [ROUNDS], bytes = new double [ROUNDS];
 		int touched = 0;
 		for (int round = -WARMUP; round < ROUNDS; round++) {
 			String from = round % 2 == 0 ? pair [0] : pair [1], to = round % 2 == 0 ? pair [1] : pair [0];
-			select (from);
-			M3LookAndFeel.update (display, M3LookAndFeel.defaults (to), M3LookAndFeel.defaults (from));
+			if (switching) {
+				select (from);
+				M3LookAndFeel.update (display, M3LookAndFeel.defaults (to), M3LookAndFeel.defaults (from));
+			}
 			settle (display);
 			long allocated = allocated (), start = System.nanoTime ();
 			touched = body.run (from, to);
