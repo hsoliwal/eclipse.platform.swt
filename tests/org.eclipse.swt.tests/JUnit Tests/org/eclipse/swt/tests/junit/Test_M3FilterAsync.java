@@ -242,6 +242,38 @@ public class Test_M3FilterAsync {
 	}
 
 	@Test
+	public void test_slowModelIsSupersededMidComputation () {
+		int n = 50_000;
+		M3ColumnFilter filter = new M3ColumnFilter (1, n, (row, column) -> {
+			if (row % 8192 == 0) {
+				try {
+					Thread.sleep (40);
+				} catch (InterruptedException e) {
+					Thread.currentThread ().interrupt ();
+				}
+			}
+			return "x" + row;
+		});
+		filter.setAsync (display, 0);
+		java.util.List<Integer> applied = new ArrayList<> ();
+		filter.addListener (change -> applied.add (filter.getAppliedGeneration ()));
+		filter.setText (0, "x1*", M3TextMatch.WILDCARD);
+		pump (60);
+		filter.setText (0, "x2*", M3TextMatch.WILDCARD);
+		pump (60);
+		filter.setText (0, "x3*", M3TextMatch.WILDCARD);
+		int finalGeneration = filter.getGeneration ();
+		waitFor (() -> filter.getAppliedGeneration () == finalGeneration);
+		assertEquals (List.of (finalGeneration), applied);
+		int expected = 0;
+		for (int i = 0; i < n; i++) {
+			if (("x" + i).startsWith ("x3")) expected++;
+		}
+		assertEquals (expected, filter.size ());
+		filter.setAsync (null, 0);
+	}
+
+	@Test
 	public void test_workerFailureSurfacesOnTheUserInterfaceThread () {
 		int n = 100;
 		boolean [] broken = {false};

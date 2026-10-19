@@ -237,7 +237,7 @@ public final class M3RowBinding {
 	}
 
 	private static TreeItem itemOf (Tree tree, M3ColumnSort sort, int row) {
-		int [] path = new int [8];
+		int [] path = new int [2];
 		int depth = 0;
 		for (int r = row; r != -1; r = sort.parents ().applyAsInt (r)) {
 			if (sort.indexOfChild (r) < 0) return null;
