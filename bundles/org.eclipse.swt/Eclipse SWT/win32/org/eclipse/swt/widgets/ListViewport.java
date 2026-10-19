@@ -101,7 +101,7 @@ final class ListViewport {
 
 	/** Takes over the (still empty) list box. */
 	void install () {
-		OS.SendMessage (list.handle, OS.LB_RESETCONTENT, 0, 0);
+		resetNative ();
 		plan.clear ();
 		layout ();
 	}
@@ -214,11 +214,11 @@ final class ListViewport {
 		if (redraw) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);
 		try {
 			if (plan.replaced ()) {
-				OS.SendMessage (handle, OS.LB_RESETCONTENT, 0, 0);
+				resetNative ();
 			} else {
-				for (int i = 0; i < plan.retiredHead (); i++) OS.SendMessage (handle, OS.LB_DELETESTRING, 0, 0);
+				for (int i = 0; i < plan.retiredHead (); i++) deleteNative (0);
 				int remaining = plan.size () - plan.retiredHead ();
-				for (int i = 0; i < plan.retiredTail (); i++) OS.SendMessage (handle, OS.LB_DELETESTRING, --remaining, 0);
+				for (int i = 0; i < plan.retiredTail (); i++) deleteNative (--remaining);
 			}
 			int head = plan.insertedHead ();
 			for (int i = 0; i < head; i++) insertNative (i, nextFirst + i);
@@ -240,6 +240,7 @@ final class ListViewport {
 	}
 
 	private void insertNative (int entry, int row) {
+		nativeRowOps++;
 		int length = list.storeChars (model.getItem (row), false);
 		list.textBuffer [length] = 0;
 		long result = OS.SendMessage (list.handle, OS.LB_INSERTSTRING, entry, list.textBuffer);
@@ -248,6 +249,25 @@ final class ListViewport {
 
 	private void appendNative (int row) {
 		insertNative ((int) OS.SendMessage (list.handle, OS.LB_GETCOUNT, 0, 0), row);
+	}
+
+	/* native row operations so far (LB_INSERTSTRING, LB_DELETESTRING, LB_RESETCONTENT): the model seam's proof reads it */
+	private long nativeRowOps;
+	private static final char [] EMPTY_TEXT = {0};
+
+	private void deleteNative (int entry) {
+		nativeRowOps++;
+		deleteNative (entry);
+	}
+
+	private void resetNative () {
+		nativeRowOps++;
+		resetNative ();
+	}
+
+	private void insertEmptyNative (int entry) {
+		nativeRowOps++;
+		OS.SendMessage (list.handle, OS.LB_INSERTSTRING, entry, EMPTY_TEXT);
 	}
 
 	/** Puts the native top row of the window on the logical top row; the list box scrolls (and blits) natively. */
@@ -431,7 +451,7 @@ final class ListViewport {
 	private void clearNativeAnchor () {
 		long handle = list.handle;
 		boolean selected0 = OS.SendMessage (handle, OS.LB_GETSEL, 0, 0) > 0, selected1 = OS.SendMessage (handle, OS.LB_GETSEL, 1, 0) > 0;
-		OS.SendMessage (handle, OS.LB_DELETESTRING, 0, 0);
+		deleteNative (0);
 		insertNative (0, plan.first ());
 		if (selected0) {
 			OS.SendMessage (handle, OS.LB_SELITEMRANGEEX, 0, 1);
@@ -468,15 +488,14 @@ final class ListViewport {
 			OS.SendMessage (handle, OS.LB_SETCURSEL, c, 0);
 		} else if (s > c) {
 			/* the selected row moves up to the caret entry, is selected there, then the rows in between come back in front of it */
-			for (int i = c; i < s; i++) OS.SendMessage (handle, OS.LB_DELETESTRING, c, 0);
+			for (int i = c; i < s; i++) deleteNative (c);
 			OS.SendMessage (handle, OS.LB_SETCURSEL, c, 0);
 			for (int i = s - 1; i >= c; i--) insertNative (c, plan.first () + i);
 		} else {
 			/* blank rows push the selected row down to the caret entry; removing them moves the selection back, not the caret */
-			char [] empty = {0};
-			for (int i = s; i < c; i++) OS.SendMessage (handle, OS.LB_INSERTSTRING, s, empty);
+			for (int i = s; i < c; i++) insertEmptyNative (s);
 			OS.SendMessage (handle, OS.LB_SETCURSEL, c, 0);
-			for (int i = s; i < c; i++) OS.SendMessage (handle, OS.LB_DELETESTRING, s, 0);
+			for (int i = s; i < c; i++) deleteNative (s);
 		}
 	}
 
@@ -999,7 +1018,7 @@ final class ListViewport {
 		if (caret >= countAfter) caret = Math.max (0, countAfter - 1);
 		if (anchor >= index) anchor = -1;
 		model.remove (index);
-		if (plan.removed (index, 1) > 0) OS.SendMessage (list.handle, OS.LB_DELETESTRING, plan.removedEntry (index), 0);
+		if (plan.removed (index, 1) > 0) deleteNative (plan.removedEntry (index));
 	}
 
 	void remove (int index) {
@@ -1064,7 +1083,7 @@ final class ListViewport {
 	void removeAll () {
 		sync ();
 		model.removeAll ();
-		OS.SendMessage (list.handle, OS.LB_RESETCONTENT, 0, 0);
+		resetNative ();
 		plan.clear ();
 		/* LB_RESETCONTENT: caret and top row 0, the anchor is kept, the bar is freed */
 		top = caret = 0;
@@ -1080,7 +1099,7 @@ final class ListViewport {
 		String [] texts = new String [items.length];
 		for (int i = 0; i < items.length; i++) texts [i] = nativeText (items [i]);
 		model.setItems (texts);
-		OS.SendMessage (list.handle, OS.LB_RESETCONTENT, 0, 0);
+		resetNative ();
 		plan.clear ();
 		top = caret = 0;
 		/* a visible list redraws once at the end (the bar is written); a hidden one adds row by row */
@@ -1093,6 +1112,66 @@ final class ListViewport {
 		selectionDirty = true;
 		layout ();
 		writeExtent ();
+	}
+
+	/* ---------------------------------------------------------------- model seam (leaf 19) */
+
+	/** Native row operations so far, for List.m3NativeRowOps. */
+	long nativeRowOps () {
+		return nativeRowOps;
+	}
+
+	/**
+	 * One edit run of the model seam (List.m3Splice): the rows <code>[at, at + removed)</code> leave and
+	 * <code>inserted</code> enter at <code>at</code>, as the same removal and adds through the item API would, with
+	 * one difference: the top row stays the same row (a run above it moves the top index by the rows it adds or
+	 * removes; a run that holds the top row keeps the index, as the list box does). The caret, the anchor and the
+	 * selection follow the stock rules of one removal and one insert at a time (the caret index stays, a removal at
+	 * or before the anchor clears it). Native rows are touched only where the run meets the resident window
+	 * (O(changed)); a run outside it changes the lanes, the extent and the bar with no native row operation, except
+	 * the two of {@link #clearNativeAnchor()} when a removal clears a set native anchor.
+	 */
+	void splice (int at, int removed, String [] inserted) {
+		sync ();
+		int count = model.getItemCount (), added = inserted.length;
+		if (at < 0 || removed < 0 || at > count - removed) list.error (SWT.ERROR_INVALID_RANGE);
+		if (removed == 0 && added == 0) return;
+		String [] texts = new String [added];
+		for (int i = 0; i < added; i++) texts [i] = nativeText (inserted [i]);
+		int first = plan.first (), resident = 0, entry = -1, removedWidth = 0;
+		if (hScroll) for (int i = 0; i < removed; i++) removedWidth = Math.max (removedWidth, model.measureItem (at + i));
+		if (removed > 0) {
+			barState = BAR_SET;
+			/* the stock list box's caret and anchor after `removed` LB_DELETESTRINGs at `at` */
+			if (caret == at && caret > 0) caret--;
+			if (caret >= count - removed) caret = Math.max (0, count - removed - 1);
+			if (anchor >= at) anchor = -1;
+			resident = plan.removed (at, removed);
+			int removedEntry = plan.removedEntry (at);
+			for (int i = 0; i < resident; i++) deleteNative (removedEntry);
+			model.remove (at, at + removed - 1);
+		}
+		if (added > 0) {
+			barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
+			model.insert (at, texts);
+			entry = plan.inserted (at, added);
+			for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, at + i);
+			if (hScroll) for (int i = 0; i < added; i++) extent = Math.max (extent, model.measureItem (at + i) + List.INSET);
+		}
+		if (hScroll && removedWidth + List.INSET >= extent) extent = model.getWidestWidth () + List.INSET;
+		/* the top row stays the same row; a run that holds it keeps the index, which the layout clamps */
+		if (at + removed <= top) top += added - removed;
+		boolean windowTouched = plan.first () != first || resident > 0 || entry >= 0;
+		if (windowTouched) selectionDirty = true;
+		focusDirty = true;
+		deferBarPaint = true;
+		try {
+			layout ();
+		} finally {
+			deferBarPaint = false;
+		}
+		writeExtent ();
+		if (LOG.isTraceEnabled ()) LOG.trace (() -> "List splice at " + at + ": -" + removed + " +" + added + (windowTouched ? ", window touched" : ", outside the window"));
 	}
 
 	/** Stock setScrollWidth (): the widest row plus the inset, measured with the current font. */
@@ -1120,7 +1199,7 @@ final class ListViewport {
 	/** Bidi auto direction changed: the resident rows are added again (with or without the direction mark). */
 	void reloadResidentRows () {
 		int first = plan.first (), size = plan.size ();
-		OS.SendMessage (list.handle, OS.LB_RESETCONTENT, 0, 0);
+		resetNative ();
 		for (int i = 0; i < size; i++) insertNative (i, first + i);
 		selectionDirty = true;
 		layout ();

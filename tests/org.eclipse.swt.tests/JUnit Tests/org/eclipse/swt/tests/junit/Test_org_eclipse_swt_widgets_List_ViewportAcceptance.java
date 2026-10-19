@@ -386,6 +386,79 @@ public class Test_org_eclipse_swt_widgets_List_ViewportAcceptance {
 		assertEquals ("0 " + COM.VT_I4 + " 0", msaa.hitTest (origin.x + 10, origin.y + 10 * height + height / 2), "below the last row");
 	}
 
+	/*
+	 * The model seam (List.m3Splice, leaf 19): one edit run over the lanes. A run outside the resident window changes
+	 * the rows, the bar and the top row's index (the top row stays the same row) with zero native row operations; a
+	 * run inside it touches O(changed) native rows; a removal at or before a set anchor clears it (two operations).
+	 * Every run answers like the same edits made through the item API on a second list.
+	 */
+	@Test
+	public void spliceOutsideTheWindowTouchesNoNativeRow () throws ReflectiveOperationException {
+		List list = list (SWT.MULTI), stock = list (SWT.MULTI);
+		shell.open ();
+		list.setItems (rows (100_000));
+		stock.setItems (rows (100_000));
+		list.setTopIndex (50_000);
+		stock.setTopIndex (50_000);
+		Method splice = List.class.getDeclaredMethod ("m3Splice", int.class, int.class, String [].class);
+		Method ops = List.class.getDeclaredMethod ("m3NativeRowOps");
+		splice.setAccessible (true);
+		ops.setAccessible (true);
+		String [] thousand = new String [1000];
+		for (int i = 0; i < 1000; i++) thousand [i] = "new " + i;
+		long before = (Long) ops.invoke (list);
+		/* above the window: 1,000 rows in at 10, then 500 out at 20; below it: 2,000 out and 1,000 in at 90,000 */
+		splice.invoke (list, 10, 0, thousand);
+		itemApi (stock, 10, 0, thousand);
+		assertEquals (before, ops.invoke (list), "native row operations of an insert above the window");
+		assertSameList (stock, list);
+		splice.invoke (list, 20, 500, new String [0]);
+		itemApi (stock, 20, 500, new String [0]);
+		assertEquals (before, ops.invoke (list), "native row operations of a removal above the window");
+		assertSameList (stock, list);
+		splice.invoke (list, 90_000, 2_000, thousand);
+		itemApi (stock, 90_000, 2_000, thousand);
+		assertEquals (before, ops.invoke (list), "native row operations of a run below the window");
+		assertSameList (stock, list);
+		/* with a selection and its anchor: a removal above clears the anchor (at most two operations) */
+		list.setSelection (new int [] {7, 50_503, 99_990});
+		stock.setSelection (new int [] {7, 50_503, 99_990});
+		splice.invoke (list, 30, 10, new String [] {"a", "b"});
+		itemApi (stock, 30, 10, new String [] {"a", "b"});
+		long cleared = (Long) ops.invoke (list) - before;
+		assertTrue (cleared <= 2, "native row operations of a removal above the window with an anchor: " + cleared);
+		assertSameList (stock, list);
+		/* inside the window: three rows replaced by two */
+		before = (Long) ops.invoke (list);
+		splice.invoke (list, list.getTopIndex () + 2, 3, new String [] {"in 1", "in 2"});
+		itemApi (stock, stock.getTopIndex () + 2, 3, new String [] {"in 1", "in 2"});
+		long inside = (Long) ops.invoke (list) - before;
+		assertTrue (inside > 0 && inside <= 7, "native row operations of a run inside the window: " + inside);
+		assertSameList (stock, list);
+	}
+
+	/* the same edits through the item API, with the top row kept on the same row, as the seam keeps it */
+	static void itemApi (List list, int at, int removed, String [] inserted) {
+		int top = list.getTopIndex ();
+		if (removed > 0) list.remove (at, at + removed - 1);
+		for (int i = 0; i < inserted.length; i++) list.add (inserted [i], at + i);
+		if (at + removed <= top) list.setTopIndex (top - removed + inserted.length);
+	}
+
+	static void assertSameList (List expected, List actual) {
+		assertEquals (expected.getItemCount (), actual.getItemCount ());
+		assertEquals (expected.getTopIndex (), actual.getTopIndex ());
+		assertEquals (expected.getFocusIndex (), actual.getFocusIndex ());
+		assertArrayEquals (expected.getSelectionIndices (), actual.getSelectionIndices ());
+		int count = actual.getItemCount (), top = actual.getTopIndex ();
+		for (int row : new int [] {0, 9, 10, 1_009, 1_010, 20, 519, 29, 30, 31, 32, count / 2, 89_999, 90_000, 91_000, count - 1, top, top + 1, top + 2, top + 3, top + 4, top + 5}) {
+			int r = Math.max (0, Math.min (count - 1, row));
+			assertEquals (expected.getItem (r), actual.getItem (r), "row " + r);
+		}
+		assertEquals (expected.getVerticalBar ().getSelection (), actual.getVerticalBar ().getSelection ());
+		assertEquals (expected.getVerticalBar ().getMaximum (), actual.getVerticalBar ().getMaximum ());
+	}
+
 	@Test
 	public void emptyAndTinyListsAnswerLikeTheListBox () {
 		List list = list (SWT.SINGLE);
