@@ -117,12 +117,12 @@ final class M3SortLanes {
 		}
 	}
 
-	/* dense ranks (0, 1, ...) of the items 0 .. n-1 under the comparator of item indices, into keys; returns the largest rank */
+	/* dense ranks (0, 1, ...) of the items 0 .. n-1 (n > 0) under the comparator of item indices, into keys; returns the largest rank */
 	long ranks (int n, IntBinaryOperator compareItems) {
 		for (int i = 0; i < n; i++) idx [i] = i;
 		mergeSort (idx, n, idxTmp, compareItems);
 		long rank = 0;
-		if (n > 0) keys [idx [0]] = 0;
+		keys [idx [0]] = 0;
 		for (int k = 1; k < n; k++) {
 			if (compareItems.applyAsInt (idx [k - 1], idx [k]) != 0) rank++;
 			keys [idx [k]] = rank;

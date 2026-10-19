@@ -81,10 +81,10 @@ final class M3RowMask {
 		}
 	}
 
-	/* the 64 bits from position (bits past the lane read as 0) */
+	/* the 64 bits from position, a bit of the lane (bits past the lane read as 0) */
 	static long read (long [] mask, int position) {
 		int word = position >>> 6, bit = position & 63;
-		long low = word < mask.length ? mask [word] >>> bit : 0;
+		long low = mask [word] >>> bit;
 		if (bit == 0) return low;
 		long high = word + 1 < mask.length ? mask [word + 1] << (64 - bit) : 0;
 		return low | high;
