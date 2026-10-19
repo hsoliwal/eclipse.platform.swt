@@ -16,6 +16,8 @@
  *******************************************************************************/
 package org.eclipse.swt.m3;
 
+import java.util.*;
+
 import org.eclipse.swt.*;
 import org.eclipse.swt.widgets.*;
 
@@ -25,8 +27,10 @@ import org.eclipse.swt.widgets.*;
  * The widget's item count follows the view, and each <code>SWT.SetData</code> request fills the
  * item from the source row the view maps it to. When the view changes, only its damaged rows are
  * cleared, so the widget asks again only for the rows it shows (in viewport mode, the resident
- * window). A tree is driven by an {@link M3ColumnSort} in tree mode: the children of an item are
- * the sorted children of its source row.
+ * window). A table keeps its selection by source row: the rows the user selected stay selected,
+ * wherever the view moves them, as long as the view shows them. A tree is driven by an
+ * {@link M3ColumnSort} in tree mode: the children of an item are the sorted children of its
+ * source row.
  * </p>
  *
  * @since 3.138
@@ -46,17 +50,20 @@ public final class M3RowBinding {
 	}
 
 	private static final String ROW = "org.eclipse.swt.m3.M3RowBinding.row"; //$NON-NLS-1$
+	private static final int [] NONE = {};
 
 	private final Composite control;
 	private final M3RowView view;
-	private final Listener setData;
-	private final M3RowView.Listener changed;
+	private Listener setData, selection;
+	private M3RowView.Listener changed;
+	private int [] selected = NONE;
 
-	private M3RowBinding (Composite control, M3RowView view, Listener setData, M3RowView.Listener changed) {
+	private M3RowBinding (Composite control, M3RowView view) {
 		this.control = control;
 		this.view = view;
-		this.setData = setData;
-		this.changed = changed;
+	}
+
+	private void hook () {
 		control.addListener (SWT.SetData, setData);
 		view.addListener (changed);
 		control.addListener (SWT.Dispose, event -> view.removeListener (changed));
@@ -81,9 +88,15 @@ public final class M3RowBinding {
 	 */
 	public static M3RowBinding bind (Table table, M3RowView view, RowFill<TableItem> fill) {
 		check (table, view, fill);
-		M3RowBinding binding = new M3RowBinding (table, view, event -> {
+		M3RowBinding binding = new M3RowBinding (table, view);
+		binding.setData = event -> {
 			if (event.index < view.size ()) fill.fill ((TableItem) event.item, view.map (event.index));
-		}, change -> refresh (table, change));
+		};
+		binding.changed = binding::refresh;
+		binding.selection = event -> binding.capture ();
+		binding.hook ();
+		table.addListener (SWT.Selection, binding.selection);
+		table.addListener (SWT.DefaultSelection, binding.selection);
 		table.setItemCount (view.size ());
 		table.clearAll ();
 		return binding;
@@ -109,7 +122,8 @@ public final class M3RowBinding {
 	public static M3RowBinding bind (Tree tree, M3ColumnSort sort, RowFill<TreeItem> fill) {
 		check (tree, sort, fill);
 		int roots = sort.childCount (-1);
-		M3RowBinding binding = new M3RowBinding (tree, sort, event -> {
+		M3RowBinding binding = new M3RowBinding (tree, sort);
+		binding.setData = event -> {
 			TreeItem item = (TreeItem) event.item, parentItem = item.getParentItem ();
 			int parent = parentItem == null ? -1 : sourceRow (parentItem);
 			if (event.index < sort.childCount (parent)) {
@@ -118,10 +132,12 @@ public final class M3RowBinding {
 				fill.fill (item, row);
 				item.setItemCount (sort.childCount (row));
 			}
-		}, change -> {
+		};
+		binding.changed = change -> {
 			tree.setItemCount (sort.childCount (-1));
 			tree.clearAll (true);
-		});
+		};
+		binding.hook ();
 		tree.setItemCount (roots);
 		tree.clearAll (true);
 		return binding;
@@ -149,15 +165,77 @@ public final class M3RowBinding {
 		M3Checks.argument ((control.getStyle () & SWT.VIRTUAL) != 0);
 	}
 
-	private static void refresh (Table table, M3RowChange change) {
+	/* the table's selection as source rows (O(selected)) */
+	private void capture () {
+		int [] indices = ((Table) control).getSelectionIndices ();
+		selected = new int [indices.length];
+		for (int i = 0; i < indices.length; i++) selected [i] = view.map (indices [i]);
+	}
+
+	private void refresh (M3RowChange change) {
+		Table table = (Table) control;
 		if (table.isDisposed ()) return;
-		int size = change.view ().size ();
+		int size = view.size ();
 		if (table.getItemCount () != size) table.setItemCount (size);
 		if (change.kind () == M3RowChange.RESET) {
 			table.clearAll ();
 		} else if (change.firstDamaged () >= 0 && change.firstDamaged () < size) {
 			table.clear (change.firstDamaged (), Math.min (change.lastDamaged (), size - 1));
 		}
+		renumber (change);
+		restore ();
+	}
+
+	/* source rows move with insertions and removals of the source */
+	private void renumber (M3RowChange change) {
+		int kind = change.kind (), start = change.start (), count = change.count (), kept = 0;
+		if (kind != M3RowChange.INSERTED && kind != M3RowChange.REMOVED) return;
+		for (int row : selected) {
+			if (row < start) selected [kept++] = row;
+			else if (kind == M3RowChange.INSERTED) selected [kept++] = row + count;
+			else if (row >= start + count) selected [kept++] = row - count;
+		}
+		selected = Arrays.copyOf (selected, kept);
+	}
+
+	/* selects the view rows of the selected source rows (the table scrolls to show them) */
+	private void restore () {
+		if (selected.length == 0) return;
+		int [] indices = new int [selected.length];
+		int count = 0;
+		for (int row : selected) {
+			int index = row < view.sourceSize () ? view.unmap (row) : -1;
+			if (index >= 0) indices [count++] = index;
+		}
+		Table table = (Table) control;
+		if (count == 0) table.deselectAll (); else table.setSelection (Arrays.copyOf (indices, count));
+	}
+
+	/**
+	 * Returns the selected source rows of a bound table.
+	 *
+	 * @return a copy of the selected source rows (empty for a tree)
+	 */
+	public int [] getSelectedRows () {
+		return selected.clone ();
+	}
+
+	/**
+	 * Selects source rows in a bound table; the rows the view does not show stay selected and
+	 * appear when the view shows them again.
+	 *
+	 * @param sourceRows the source rows
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the rows are null</li>
+	 *    <li>ERROR_INVALID_ARGUMENT - if the binding drives a tree</li>
+	 * </ul>
+	 */
+	public void setSelectedRows (int... sourceRows) {
+		M3Checks.nonNull (sourceRows);
+		M3Checks.argument (control instanceof Table);
+		selected = sourceRows.clone ();
+		if (selected.length == 0) ((Table) control).deselectAll (); else restore ();
 	}
 
 	/**
@@ -172,6 +250,11 @@ public final class M3RowBinding {
 	/** Stops driving the widget; the widget keeps its items. */
 	public void dispose () {
 		view.removeListener (changed);
-		if (!control.isDisposed ()) control.removeListener (SWT.SetData, setData);
+		if (control.isDisposed ()) return;
+		control.removeListener (SWT.SetData, setData);
+		if (selection != null) {
+			control.removeListener (SWT.Selection, selection);
+			control.removeListener (SWT.DefaultSelection, selection);
+		}
 	}
 }
