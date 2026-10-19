@@ -86,6 +86,16 @@ public final class TableListOracle {
 		table.showSelection ();
 		TreeOracle.pump (display);
 		out.add ("table count=" + count + " showSelection(3) top=" + table.getTopIndex () + " indexOf=" + table.indexOf (table.getItem (count - 2)));
+		int [] selections = new int [1];
+		table.addListener (SWT.Selection, e -> selections [0]++);
+		table.setSelection (25);
+		table.setItemCount (count + 10);
+		TreeOracle.pump (display);
+		String grown = java.util.Arrays.toString (table.getSelectionIndices ());
+		table.setItemCount (count);
+		TreeOracle.pump (display);
+		out.add ("table count=" + count + " select(25)+setItemCount(+10) selection=" + grown + " then setItemCount(-10) selection="
+			+ java.util.Arrays.toString (table.getSelectionIndices ()) + " Selection events=" + selections [0]);
 		Point size = table.computeSize (SWT.DEFAULT, SWT.DEFAULT);
 		out.add ("table count=" + count + " computeSize setData=" + setData [0] + " size>0=" + (size.x > 0 && size.y > 0));
 		long t2 = System.nanoTime ();
