@@ -15,6 +15,7 @@
 package org.eclipse.swt.internal.swing;
 
 import java.awt.*;
+import java.util.Enumeration;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -26,8 +27,9 @@ import javax.swing.tree.*;
  * <ul>
  * <li>The tree is a large model with a fixed row height, so Swing lays rows out arithmetically
  * (<code>FixedHeightLayoutCache</code>) instead of measuring every row.</li>
- * <li>An expansion or collapse changes the table rows by the tree's row delta, instead of counting the
- * descendants node by node (which reads every child).</li>
+ * <li>An expansion or collapse changes the table by the rows shown below the node, counted from the model's
+ * child counts and the expanded paths, instead of counting the descendants node by node
+ * (which reads every child).</li>
  * <li>The tree column's preferred width is the widest row shown so far, instead of the widest of all rows
  * (which renders every row).</li>
  * </ul>
@@ -43,7 +45,7 @@ public final class M3TreeTableRows implements TreeWillExpandListener {
 
 	private final JTreeTable treeTable;
 	private final JTree tree;
-	private int rowsBefore;
+	private int collapsing;
 	private int widest;
 
 	private M3TreeTableRows (JTreeTable treeTable) {
@@ -65,7 +67,6 @@ public final class M3TreeTableRows implements TreeWillExpandListener {
 		rows.swapExpansionListener ();
 		rows.fixRowHeight ();
 		tree.setLargeModel (true);
-		rows.rowsBefore = tree.getRowCount ();
 		return rows;
 	}
 
@@ -90,24 +91,26 @@ public final class M3TreeTableRows implements TreeWillExpandListener {
 
 	@Override
 	public void treeWillExpand (TreeExpansionEvent event) {
-		rowsBefore = tree.getRowCount ();
+		// rows are counted once the path is expanded
 	}
 
 	@Override
 	public void treeWillCollapse (TreeExpansionEvent event) {
-		rowsBefore = tree.getRowCount ();
+		collapsing = shownBelow (event.getPath ());
 	}
 
 	/**
 	 * Replaces the tree table's own expansion listener, which counts the descendants of an expanded node one
-	 * child at a time, by {@link #rowsListener}; every listener keeps its place in the notification order.
+	 * child at a time, by {@link #rowsListener}. <code>getTreeExpansionListeners</code> answers the listeners
+	 * last-added first, so they are added back from the end: every listener keeps its place.
 	 */
 	private void swapExpansionListener () {
 		TreeExpansionListener [] listeners = tree.getTreeExpansionListeners ();
 		for (TreeExpansionListener listener : listeners) {
 			tree.removeTreeExpansionListener (listener);
 		}
-		for (TreeExpansionListener listener : listeners) {
+		for (int i = listeners.length - 1; i >= 0; i--) {
+			TreeExpansionListener listener = listeners [i];
 			tree.addTreeExpansionListener (listener.getClass ().getEnclosingClass () == JTreeTable.class ? rowsListener : listener);
 		}
 	}
@@ -116,22 +119,33 @@ public final class M3TreeTableRows implements TreeWillExpandListener {
 	private final TreeExpansionListener rowsListener = new TreeExpansionListener () {
 		@Override
 		public void treeExpanded (TreeExpansionEvent event) {
-			int delta = delta ();
-			if (delta > 0) fire (event.getPath (), delta, TableModelEvent.INSERT);
+			int count = shownBelow (event.getPath ());
+			if (count > 0) fire (event.getPath (), count, TableModelEvent.INSERT);
 		}
 
 		@Override
 		public void treeCollapsed (TreeExpansionEvent event) {
-			int delta = -delta ();
-			if (delta > 0) fire (event.getPath (), delta, TableModelEvent.DELETE);
+			int count = collapsing;
+			collapsing = 0;
+			if (count > 0) fire (event.getPath (), count, TableModelEvent.DELETE);
 		}
 	};
 
-	private int delta () {
-		int now = tree.getRowCount ();
-		int delta = now - rowsBefore;
-		rowsBefore = now;
-		return delta;
+	/**
+	 * The number of rows shown below an expanded path: its children, plus the children of every expanded
+	 * descendant that is shown. Counts come from the model and the tree's expanded state, so no child is read
+	 * and the answer does not depend on when the look and feel updates its layout.
+	 */
+	private int shownBelow (TreePath path) {
+		if (!tree.isExpanded (path)) return 0;
+		TreeModel model = tree.getModel ();
+		int count = model.getChildCount (path.getLastPathComponent ());
+		Enumeration<TreePath> expanded = tree.getExpandedDescendants (path);
+		while (expanded.hasMoreElements ()) {
+			TreePath descendant = expanded.nextElement ();
+			if (!descendant.equals (path)) count += model.getChildCount (descendant.getLastPathComponent ());
+		}
+		return count;
 	}
 
 	private void fire (TreePath path, int count, int type) {
@@ -147,27 +161,27 @@ public final class M3TreeTableRows implements TreeWillExpandListener {
 	 */
 	static int preferredWidth (JTreeTable treeTable) {
 		M3TreeTableRows rows = of (treeTable.tree);
-		return rows == null ? -1 : rows.measureShown (treeTable);
+		return rows == null ? -1 : rows.measureShown ();
 	}
 
-	private int measureShown (JTreeTable treeTable) {
+	private int measureShown () {
 		int count = tree.getRowCount ();
 		if (count > 0) {
 			Rectangle shown = treeTable.getVisibleRect ();
-			int first = rowAt (treeTable, shown.y, count);
-			int last = rowAt (treeTable, shown.y + Math.max (0, shown.height - 1), count);
+			int first = rowAt (shown.y, count);
+			int last = rowAt (shown.y + Math.max (0, shown.height - 1), count);
 			for (int row = first; row <= last; row++) {
 				Rectangle bounds = tree.getRowBounds (row);
-				if (bounds != null) widest = Math.max (widest, bounds.x + bounds.width);
+				widest = Math.max (widest, bounds.x + bounds.width);
 			}
 		}
 		Insets insets = tree.getInsets ();
 		return widest + insets.left + insets.right;
 	}
 
-	private static int rowAt (JTreeTable treeTable, int y, int count) {
+	private int rowAt (int y, int count) {
 		int row = treeTable.table.rowAtPoint (new Point (0, y));
-		return row < 0 ? (y <= 0 ? 0 : count - 1) : row;
+		return row < 0 ? count - 1 : row;
 	}
 
 	/** Forgets the widest row, for example after the rows were cleared. */
