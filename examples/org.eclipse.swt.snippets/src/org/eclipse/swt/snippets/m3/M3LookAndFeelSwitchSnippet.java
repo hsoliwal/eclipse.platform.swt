@@ -18,8 +18,8 @@ package org.eclipse.swt.snippets.m3;
  * M3 look and feel: switch the look and feel of drawn widgets at runtime (native, swing, initiative31, light, dark),
  * like Swing's UIManager.setLookAndFeel, and change the accent colour (docs/m3/look-and-feel/EXAMPLES.md).
  *
- * The rows on the left are drawn by the look and feel's row delegate (M3RowUI); the Table on the right is a native
- * widget and keeps native pixels. Run with the M3 SWT jar on the class path:
+ * The rows on the left are painted with the colours of an example UI delegate (M3ComponentUI); the Table on the
+ * right is a native widget and keeps native pixels. Run with the M3 SWT jar on the class path:
  *   java -cp swt.jar;snippets M3LookAndFeelSwitchSnippet [--screenshots <directory>]
  * With --screenshots, the snippet saves one PNG per look and feel (and one with another accent) and exits.
  */
@@ -72,17 +72,51 @@ public class M3LookAndFeelSwitchSnippet {
 		display.dispose ();
 	}
 
-	/* a canvas whose rows the look and feel's row delegate paints: row 2 selected, row 4 under the pointer */
+	/*
+	 * An example UI delegate (M3ComponentUI) that keeps the row colours of its look and feel; the drawn Tree, Table and
+	 * List of the drawn modes use org.eclipse.swt.internal.render.M3RowUI the same way. A switch that changes one of its
+	 * paint keys installs it again and repaints the canvas; a change of its metric key relays it out.
+	 */
+	static final class Rows implements M3ComponentUI {
+		static final int BACKGROUND = M3UIKeys.intern ("Table.background", M3UIKeys.COLOR), FOREGROUND = M3UIKeys.intern ("Table.foreground", M3UIKeys.COLOR);
+		static final int SELECTION = M3UIKeys.intern ("Table.selectionBackground", M3UIKeys.COLOR), SELECTION_TEXT = M3UIKeys.intern ("Table.selectionForeground", M3UIKeys.COLOR);
+		static final int STRIPE = M3UIKeys.intern ("Table.stripeBackground", M3UIKeys.COLOR), ROW_HEIGHT = M3UIKeys.intern ("Table.rowHeight", M3UIKeys.INTEGER);
+		int background, foreground, selection, selectionText, stripe, rowHeight;
+
+		@Override
+		public void installUI (Control control, M3UIDefaults defaults) {
+			background = defaults.color (BACKGROUND, 0xFFFFFFFF);
+			foreground = defaults.color (FOREGROUND, 0xFF000000);
+			selection = defaults.color (SELECTION, 0xFF0078D7);
+			selectionText = defaults.color (SELECTION_TEXT, 0xFFFFFFFF);
+			stripe = defaults.color (STRIPE, background);
+			rowHeight = Math.max (16, defaults.integer (ROW_HEIGHT, 18));
+		}
+
+		@Override
+		public int [] paintKeys () {
+			return new int [] {BACKGROUND, FOREGROUND, SELECTION, SELECTION_TEXT, STRIPE};
+		}
+
+		@Override
+		public int [] metricKeys () {
+			return new int [] {ROW_HEIGHT};
+		}
+	}
+
+	/* a canvas whose rows its delegate's colours paint: row 2 selected, odd rows striped */
 	static Canvas rows (Composite parent) {
 		Canvas canvas = new Canvas (parent, SWT.DOUBLE_BUFFERED | SWT.BORDER);
-		M3LookAndFeel.installUI (canvas, M3RowUI.class, new M3DefaultRowUI ("Table"));
+		M3LookAndFeel.installUI (canvas, Rows.class, new Rows ());
 		canvas.addListener (SWT.Paint, e -> {
-			M3RowUI ui = (M3RowUI) M3LookAndFeel.getUI (canvas);
-			int height = ui.rowHeight (100), width = canvas.getClientArea ().width;
-			for (int i = 0, y = 0; y < canvas.getClientArea ().height; i++, y += height) {
-				int state = (i == 2 ? M3RowUI.SELECTED | M3RowUI.FOCUSED : 0) | (i % 2 == 1 ? M3RowUI.ODD : 0) | (i == 4 ? M3RowUI.HOT : 0);
-				int text = ui.paintRow (canvas, e.gc, 0, y, width, height, state);
-				e.gc.setForeground (M3UIResources.of (canvas.getDisplay ()).color (text));
+			Rows ui = (Rows) M3LookAndFeel.getUI (canvas);
+			M3UIResources resources = M3UIResources.of (canvas.getDisplay ());
+			int width = canvas.getClientArea ().width;
+			for (int i = 0, y = 0; y < canvas.getClientArea ().height; i++, y += ui.rowHeight) {
+				boolean selected = i == 2;
+				e.gc.setBackground (resources.color (selected ? ui.selection : i % 2 == 1 ? ui.stripe : ui.background));
+				e.gc.fillRectangle (0, y, width, ui.rowHeight);
+				e.gc.setForeground (resources.color (selected ? ui.selectionText : ui.foreground));
 				e.gc.drawText ("Drawn row " + i, 6, y + 2, true);
 			}
 		});
@@ -93,6 +127,9 @@ public class M3LookAndFeelSwitchSnippet {
 	static void screenshots (Display display, Shell shell, String directory) {
 		new java.io.File (directory).mkdirs ();
 		for (String look : LOOKS) {
+			for (Control child : shell.getChildren ()) {
+				if (child instanceof Combo combo) combo.setText (look);
+			}
 			M3LookAndFeel.setLookAndFeel (look);
 			save (display, shell, directory + "/switch-" + look + ".png");
 		}
