@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtLafLf6ColorFunctions
+displayName: LF6 FlatLaf colour functions in the look and feel loader
+description: >-
+  LF6 improvement 4 (docs/m3/LOOK_AND_FEEL.md): FlatLaf properties import. The loader's function switch hands
+  rgb, rgba, hsl, hsla, saturate, desaturate, spin, tint, shade, fadein and fadeout to M3ColorFunctions (FlatLaf/Less
+  semantics). Idempotent: the second pass changes nothing.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "(?<!this::colorOf\\), null\\);\\n)(\\t\\t\\t\\tcase \"system\": \\{)"
+      replace: "\t\t\t\tcase \"rgb\":\n\t\t\t\tcase \"rgba\":\n\t\t\t\tcase \"hsl\":\n\t\t\t\tcase \"hsla\":\n\t\t\t\tcase \"saturate\":\n\t\t\t\tcase \"desaturate\":\n\t\t\t\tcase \"spin\":\n\t\t\t\tcase \"tint\":\n\t\t\t\tcase \"shade\":\n\t\t\t\tcase \"fadein\":\n\t\t\t\tcase \"fadeout\":\n\t\t\t\t\treturn new Value (LookAndFeelDefaults.COLOR, M3ColorFunctions.apply (function, args, this::colorOf), null);\n$1"
+      regex: true
