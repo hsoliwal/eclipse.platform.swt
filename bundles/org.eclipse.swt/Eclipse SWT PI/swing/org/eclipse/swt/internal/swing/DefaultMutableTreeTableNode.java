@@ -4,6 +4,9 @@
  * 
  * See the file "readme.txt" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * Contributors:
+ *     Synexia - child vector setter for the viewport mode of the SWT Tree (M3TreeViewport)
  */
 package org.eclipse.swt.internal.swing;
 
@@ -24,6 +27,14 @@ public class DefaultMutableTreeTableNode extends DefaultMutableTreeNode implemen
   public DefaultMutableTreeTableNode(Object[] userObjects, boolean allowsChildren) {
     super(null, allowsChildren);
     setUserObjects(userObjects);
+  }
+
+
+  /**
+   * Replaces the child vector; the viewport mode of the SWT Tree supplies one that reads its children lazily.
+   */
+  public void m3Children(java.util.Vector<javax.swing.tree.TreeNode> children) {
+    this.children = children;
   }
 
 

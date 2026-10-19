@@ -4,6 +4,9 @@
  * 
  * See the file "readme.txt" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * Contributors:
+ *     Synexia - tree-column width and row geometry of the viewport mode (M3TreeTableRows)
  */
 package org.eclipse.swt.internal.swing;
 
@@ -246,6 +249,9 @@ public class JTreeTable extends JPanel implements Scrollable {
     
     public Rectangle getCellRect(int row, int column, boolean includeSpacing) {
       Rectangle cellBounds = super.getCellRect(row, column, includeSpacing);
+      if(M3TreeTableRows.of(tree) != null) {
+        return cellBounds;
+      }
       Rectangle rowBounds = tree.getRowBounds(row);
 //      rowBounds.width += rowBounds.x;
 //      rowBounds.x = 0;
@@ -262,6 +268,9 @@ public class JTreeTable extends JPanel implements Scrollable {
     }
 
     public int getRowHeight(int row) {
+      if(M3TreeTableRows.of(tree) != null) {
+        return tree.getRowHeight() + getRowMargin();
+      }
       return tree.getRowBounds(row).height + getRowMargin();
     }
 
@@ -722,6 +731,10 @@ public class JTreeTable extends JPanel implements Scrollable {
   }
 
   public int getPreferredColumnWidth(int columnIndex) {
+    int m3Width = columnIndex == 0? M3TreeTableRows.preferredWidth(this): -1;
+    if(m3Width >= 0) {
+      return m3Width;
+    }
     if(columnIndex == 0) {
       return tree.getPreferredSize().width;
     }

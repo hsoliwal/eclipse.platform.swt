@@ -1,0 +1,25 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.I31SwingCopiesPackage
+displayName: Initiative 31 copies of M3 collection views live in org.eclipse.swt.internal.m3
+description: >-
+  The M3JDK collection views (com.m3.collections) are copied into Initiative 31 byte for byte; only the package
+  changes, so the copy compiles inside SWT without a dependency on M3JDK. Provenance: PROVENANCE.tsv.
+recipeList:
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: com.m3.collections
+      newPackageName: org.eclipse.swt.internal.m3
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.I31SwingCopiesTestPackage
+displayName: Initiative 31 copies of M3 collection-view tests
+description: >-
+  The source tests of the copied views run against the copies: the package moves as for the views, and class names
+  the tests load by reflection follow it.
+recipeList:
+  - com.synexia.openrewrite.viewport.I31SwingCopiesPackage
+  - org.openrewrite.text.FindAndReplace:
+      find: "\"com.m3.collections."
+      replace: "\"org.eclipse.swt.internal.m3."

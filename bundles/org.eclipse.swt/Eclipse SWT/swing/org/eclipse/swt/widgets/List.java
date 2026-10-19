@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Synexia - viewport mode hooks (M3ListViewport)
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -40,6 +41,9 @@ import org.eclipse.swt.internal.swing.*;
  */
 
 public class List extends Scrollable {
+
+	/* Viewport mode of the list (see M3ListViewport), created on first use; null otherwise. */
+	M3ListViewport viewport;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -953,6 +957,10 @@ public void setSelection (int start, int end) {
  */
 public void setTopIndex (int index) {
 	checkWidget ();
+	if (M3ListViewport.ENABLED) {
+		M3ListViewport.of (this).setTopIndex (index);
+		return;
+	}
   ((CList)handle).setFirstVisibleIndex(index);
 }
 
@@ -968,6 +976,10 @@ public void setTopIndex (int index) {
  */
 public void showSelection () {
 	checkWidget ();
+	if (M3ListViewport.ENABLED) {
+		M3ListViewport.of (this).showSelection ();
+		return;
+	}
   ((CList)handle).showSelection();
 }
 
