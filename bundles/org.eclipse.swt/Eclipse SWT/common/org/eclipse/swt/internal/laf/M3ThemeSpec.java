@@ -84,6 +84,11 @@ public final class M3ThemeSpec {
 		return new M3ThemeSpec (name, dark, palette, family, size, density, repairs);
 	}
 
+	/** The same data with another name (the generator's <code>--name</code>). */
+	public M3ThemeSpec withName (String name) {
+		return new M3ThemeSpec (name, dark, palette, family, size, density, repairs);
+	}
+
 	/** The name, or <code>null</code>. */
 	public String name () {
 		return name;

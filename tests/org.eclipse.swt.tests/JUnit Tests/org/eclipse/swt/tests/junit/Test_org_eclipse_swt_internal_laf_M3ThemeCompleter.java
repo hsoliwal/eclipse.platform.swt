@@ -86,6 +86,7 @@ public class Test_org_eclipse_swt_internal_laf_M3ThemeCompleter {
 		assertEquals ("{\"font\":{\"family\":\"A\\u0001\\\\\"},\"palette\":{\"background\":\"#000000\"}}",
 			M3ThemeSpec.parse ("{\"font\": {\"family\": \"A\\u0001\\\\\"}, \"palette\": {\"background\": \"#000\"}}").canonical ());
 		assertEquals ("{\"dark\":true}", M3ThemeSpec.parse ("{\"dark\": true}").canonical ());
+		assertEquals ("{\"dark\":true,\"name\":\"Renamed\"}", M3ThemeSpec.parse ("{\"dark\": true}").withName ("Renamed").canonical ());
 	}
 
 	@Test
