@@ -16,6 +16,7 @@ package org.eclipse.swt.widgets;
 
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.*;
+import org.eclipse.swt.internal.laf.*;
 import org.eclipse.swt.internal.render.*;
 import org.eclipse.swt.internal.win32.*;
 
@@ -38,6 +39,10 @@ abstract class DrawnPlane {
 	private final String widget;
 	/* the renderer of the theme in effect; replaced when the theme selection changes (Themes) */
 	RowRenderer renderer;
+	/* the look and feel delegate of the rows (M3LookAndFeel, LF6); a switch installs it again with a new theme */
+	private final M3RowUI ui;
+	/* the run-time or user-defined theme that wins over the delegate's (Themes.explicit), read again after a Themes change */
+	private Theme explicit;
 	private int themeGeneration;
 	private final Runnable themeChanged;
 	final RowPaint row = new RowPaint ();
@@ -60,8 +65,10 @@ abstract class DrawnPlane {
 		this.control = control;
 		this.nativeProc = nativeProc;
 		this.widget = widget;
+		this.ui = M3LookAndFeel.installUI (control, M3RowUI.class, new M3RowUI (widget));
 		this.themeGeneration = Themes.generation ();
-		this.renderer = new RowRenderer (Theme.of (widget));
+		this.explicit = Themes.explicit (widget);
+		this.renderer = new RowRenderer (explicit != null ? explicit : ui.theme ());
 		this.canvas = RowBackends.create (mode, widget, control.handle, itemThemeClass, control::getAutoscalingZoom, hdc -> {
 			GCData data = new GCData ();
 			data.device = control.display;
@@ -78,12 +85,17 @@ abstract class DrawnPlane {
 		Themes.addListener (themeChanged);
 	}
 
-	/* the renderer of the theme in effect, looked up again only after a theme change */
+	/*
+	 * The renderer of the theme in effect: a run-time or user-defined theme (looked up again only after a Themes
+	 * change), else the theme of the look and feel delegate, which a look and feel switch replaces.
+	 */
 	private void currentTheme () {
 		int generation = Themes.generation ();
-		if (generation == themeGeneration) return;
-		themeGeneration = generation;
-		Theme theme = Theme.of (widget);
+		if (generation != themeGeneration) {
+			themeGeneration = generation;
+			explicit = Themes.explicit (widget);
+		}
+		Theme theme = explicit != null ? explicit : ui.theme ();
 		if (theme != renderer.theme ()) renderer = new RowRenderer (theme);
 	}
 
@@ -180,6 +192,7 @@ abstract class DrawnPlane {
 	/** Frees the back buffer and the backend. */
 	void release () {
 		Themes.removeListener (themeChanged);
+		M3LookAndFeel.uninstallUI (control);
 		buffer.release ();
 		canvas.dispose ();
 		OS.DeleteObject (update);
