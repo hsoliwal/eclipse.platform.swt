@@ -50,6 +50,7 @@ public static void main (String [] args) {
 	new Label (shell, SWT.NONE).setText ("Name contains:");
 	Text filter = new Text (shell, SWT.BORDER);
 	filter.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
+	filter.setMessage ("fruit name, then Enter");
 	new Label (shell, SWT.NONE).setText ("Sort by:");
 	Combo sort = new Combo (shell, SWT.READ_ONLY);
 	sort.setItems (SORTS);
