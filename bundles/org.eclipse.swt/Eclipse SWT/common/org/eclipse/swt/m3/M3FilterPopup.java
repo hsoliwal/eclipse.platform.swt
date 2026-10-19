@@ -11,7 +11,7 @@
  *
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
- *     Hitesh Soliwal (Synexia) - adapted from TV_5.0 treeviewer PopUpFilterUI, ColumnFilterUI and
+ *     Hitesh Soliwal (Synexia) - adapted from TV_5.0 treeviewer PopUpFilterUI, ColumnFilterUI, TreeUtil and
  *         ViewerFilterUI (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
 package org.eclipse.swt.m3;
