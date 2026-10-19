@@ -67,9 +67,7 @@ final class M3ListViewport {
 	}
 
 	private static int pitch (JList<?> rows) {
-		if (rows.getModel ().getSize () == 0) return 0;
-		java.awt.Rectangle bounds = rows.getCellBounds (0, 0);
-		return bounds == null ? 0 : bounds.height;
+		return rows.getModel ().getSize () == 0 ? 0 : rows.getCellBounds (0, 0).height;
 	}
 
 	private JList<?> rows () {
