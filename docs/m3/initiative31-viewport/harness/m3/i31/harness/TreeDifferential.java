@@ -233,10 +233,13 @@ public final class TreeDifferential {
 		return String.join (",", paths);
 	}
 
+	/**
+	 * The top item. Hit tests (<code>getItem(Point)</code>) are left out: Initiative 31 answers them on the SWT
+	 * thread with the cell renderer that the Swing thread paints with, which races in both modes.
+	 */
 	private String scroll () {
 		TreeItem top = tree.getTopItem ();
-		TreeItem hit = tree.getItem (new Point (5, 5));
-		return (top == null ? "null" : path (top)) + "|" + (hit == null ? "null" : path (hit));
+		return top == null ? "null" : path (top);
 	}
 
 	/** The item's index path from the root, for example <code>/3/0</code>. */

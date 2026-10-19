@@ -13,6 +13,7 @@ recipeList:
   - com.synexia.openrewrite.viewport.I31SwingTreeViewportTree
   - com.synexia.openrewrite.viewport.I31SwingTreeViewportTreeItem
   - com.synexia.openrewrite.viewport.I31SwingTreeViewportSwing
+  - com.synexia.openrewrite.viewport.I31SwingTreeViewportRows
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.synexia.openrewrite.viewport.I31SwingTreeViewportTree
@@ -194,3 +195,25 @@ recipeList:
       parameterCount: 1
       position: METHOD_START
       statements: "    int m3Width = columnIndex == 0? M3TreeTableRows.preferredWidth(this): -1;\n    if(m3Width >= 0) {\n      return m3Width;\n    }"
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.I31SwingTreeViewportRows
+displayName: Initiative 31 JTreeTable row geometry without the renderer in the viewport mode
+description: >-
+  With a fixed row height every table row is one pitch high, so the tree table answers row heights and cell
+  rectangles arithmetically instead of asking the tree for the row's bounds (which renders the row each time with
+  FixedHeightLayoutCache, on whichever thread asks).
+recipeList:
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.internal.swing.JTreeTable$InternalTable]
+      methodName: getRowHeight
+      parameterCount: 1
+      position: METHOD_START
+      statements: "      if(M3TreeTableRows.of(tree) != null) {\n        return tree.getRowHeight() + getRowMargin();\n      }"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.internal.swing.JTreeTable$InternalTable]
+      methodName: getCellRect
+      parameterCount: 3
+      anchor: "Rectangle cellBounds = super.getCellRect("
+      position: AFTER
+      statements: "      if(M3TreeTableRows.of(tree) != null) {\n        return cellBounds;\n      }"

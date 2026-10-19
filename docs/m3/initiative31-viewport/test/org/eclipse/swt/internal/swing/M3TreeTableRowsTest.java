@@ -68,6 +68,31 @@ public class M3TreeTableRowsTest {
 	}
 
 	@Test
+	public void aRowHeightOfTheLookAndFeelIsKept () {
+		treeTable.tree.setRowHeight (23);
+		M3TreeTableRows.install (treeTable);
+		assertEquals (23, treeTable.tree.getRowHeight ());
+	}
+
+	@Test
+	public void rowsBelowExpandedDescendantsAreCounted () {
+		M3TreeTableRows.install (treeTable);
+		treeTable.expandPath (child (1));
+		treeTable.expandPath (child (3));
+		events.clear ();
+		treeTable.collapsePath (new TreePath (root));
+		assertEquals (1, events.size ());
+		assertEquals ("5 children and 2 x 3 grandchildren", 11, events.get (0).getLastRow () - events.get (0).getFirstRow () + 1);
+		events.clear ();
+		treeTable.expandPath (new TreePath (root));
+		assertEquals (11, events.get (0).getLastRow () - events.get (0).getFirstRow () + 1);
+		events.clear ();
+		treeTable.tree.fireTreeExpanded (new TreePath (root));
+		assertEquals ("an equal path in the expanded set is the node itself, not a descendant", 11,
+			events.get (0).getLastRow () - events.get (0).getFirstRow () + 1);
+	}
+
+	@Test
 	public void theTreeTableListenerIsSwappedInPlace () {
 		TreeExpansionListener first = new TreeExpansionAdapter ();
 		treeTable.tree.addTreeExpansionListener (first);
