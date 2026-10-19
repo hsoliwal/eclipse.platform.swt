@@ -530,3 +530,17 @@ All of these were (re)started at ~12:10 on 2026-10-17 with the no-trailer rule a
   Swing (openjdk/jdk #17165/#17458 JDK-8317771, #27682 JDK-8369327), custom-widgets + Grid (nebula #696/#165 frozen column,
   swt #624 SWT.VIRTUAL Composite), ui-interning (#4247), enhanced API (upstream-asks column).
 - Rule: every PR that answers an upstream issue cites its number and adds a row to UPSTREAM_DEFECTS.tsv or the track inventory.
+
+- 2026-10-19 17:58 ui_lock.sh: tickets carry the owner pid; a waiter drops the head ticket when that pid is dead (kill -0); the poll loop forks only `sleep`. Old-format tickets (empty) are never auto-dropped. Backup of the previous script: scratchpad ui_lock.sh.bak-*. UI_LOCK_PROTOCOL.md updated.
+
+## 00i Upstream sync 2026-10-19 results (upstream-sync agent)
+
+| Fork | Upstream delta | Result |
+|---|---|---|
+| eclipse.platform.swt | 47 commits since f87da9a863 | PR #233 MERGED by user into fork master (120 files; gtk Table/Tree kept fork logical-virtual structure; compile gtk/win32/cocoa 0 errors). Integration branch must merge fork master next (lead). 7 paths hold older upstream revisions from baseline e2a8c057c9 (listed in the PR). |
+| nebula | 0 commits | current. Review flag: 30 CSS-bundle config files hold the pre-5d0bcbb9 revision (BREE 11, e4.ui.services) while the 9 CSS handler sources are fork-modified. USER DECISION. |
+| gef-classic | 3 commits | PR #13 MERGED by user (36 files, all upstream blobs). |
+| eclipse.platform.ui | 23 commits | PR #19 MERGED by user (67 files; jface MANIFEST 3-way). |
+| M3jdk21 (jdk21u) | 3,335 commits since jdk-21+35 | BLOCKED. 23 conflicted files / 186 hunks: String.java (10) + AbstractStringBuilder (2) vs 8311906/8321180/8320570/8351000/8359454; 17 PQC files vs official JEP 496/497 backports; os_linux/os_bsd FD backport; README + cross-compile workflow. Head pushed as m3/upstream-sync-20261019-jdk21u-head; report on draft PR #1502; per-hunk resolution proposals requested. USER DECISION on the merge. |
+
+Analysis data: S:/m3-scratch/upstream-sync-20261019/ and S:/m3-scratch/worktrees/*-sync*.
