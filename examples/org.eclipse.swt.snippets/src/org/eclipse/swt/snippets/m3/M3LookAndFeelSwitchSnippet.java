@@ -105,10 +105,22 @@ public class M3LookAndFeelSwitchSnippet {
 		while (display.readAndDispatch ()) {
 			// let the update paint
 		}
-		Point size = shell.getSize ();
-		Image image = new Image (display, size.x, size.y);
+		/* the client area with every child printed at its place (Control.print of each child) */
+		Rectangle client = shell.getClientArea ();
+		Image image = new Image (display, client.width, client.height);
 		GC gc = new GC (image);
-		shell.print (gc);
+		gc.setBackground (shell.getBackground ());
+		gc.fillRectangle (0, 0, client.width, client.height);
+		for (Control child : shell.getChildren ()) {
+			Rectangle bounds = child.getBounds ();
+			if (bounds.width <= 0 || bounds.height <= 0) continue;
+			Image part = new Image (display, bounds.width, bounds.height);
+			GC partGC = new GC (part);
+			child.print (partGC);
+			partGC.dispose ();
+			gc.drawImage (part, bounds.x, bounds.y);
+			part.dispose ();
+		}
 		gc.dispose ();
 		ImageLoader loader = new ImageLoader ();
 		loader.data = new ImageData [] {image.getImageData ()};
