@@ -19,7 +19,6 @@ import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.*;
 import org.eclipse.swt.internal.laf.*;
 import org.eclipse.swt.internal.render.*;
-import org.eclipse.swt.internal.render.M3RowUI;
 import org.eclipse.swt.internal.win32.*;
 
 /**
