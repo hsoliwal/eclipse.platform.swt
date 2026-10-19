@@ -1,0 +1,295 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Random;
+import java.util.TreeMap;
+
+import org.eclipse.swt.*;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.win32.*;
+import org.eclipse.swt.widgets.*;
+
+/**
+ * Oracle of the splice seam (Table.m3Splice, docs/m3/TABLE_MEDIATED_VIEWPORT.md, T-Table-15).
+ * <ol>
+ * <li>RULES: the selection, focus and mark after a range removal followed by inserts at the same index, made row
+ * by row through the item API (one native message per row), compared with the arithmetic rules the splice applies
+ * after its one count change. 400 seeded scenarios on a plain MULTI Table of 60 rows, plus the mark inside the
+ * removed range and an insert at the mark, reported raw.</li>
+ * <li>SCROLL: on an owner-data (VIRTUAL) Table scrolled to row 500 of 1000, whether the top index can move without
+ * a paint and without moving the pixels: WM_SETREDRAW off, LVM_ENSUREVISIBLE or LVM_SCROLL, WM_SETREDRAW on
+ * (without RedrawWindow); and what LVM_SETITEMCOUNT with LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL paints.
+ * PaintItem counts the painted rows; a hash of the client pixels tells whether they changed.</li>
+ * </ol>
+ * Run on the invisible desktop: java -cp &lt;classes&gt;;&lt;swt jar&gt; SpliceProbe
+ */
+public class SpliceProbe {
+	static final int LVM_GETSELECTIONMARK = OS.LVM_FIRST + 66;
+	Display display;
+	Shell shell;
+	int paints;
+
+	public static void main (String [] args) {
+		Thread watchdog = new Thread (() -> {
+			try {
+				Thread.sleep (170_000);
+			} catch (InterruptedException e) {
+				return;
+			}
+			System.out.println ("TIMEOUT");
+			System.exit (3);
+		});
+		watchdog.setDaemon (true);
+		watchdog.start ();
+		new SpliceProbe ().run ();
+	}
+
+	void run () {
+		display = new Display ();
+		shell = new Shell (display);
+		shell.setBounds (20, 20, 660, 460);
+		shell.setLayout (null);
+		shell.open ();
+		pump (200);
+		Table probe = new Table (shell, SWT.MULTI | SWT.BORDER);
+		boolean ownerData = (OS.GetWindowLong (probe.handle, OS.GWL_STYLE) & OS.LVS_OWNERDATA) != 0;
+		probe.dispose ();
+		System.out.println ("SWT " + SWT.getVersion () + " zoom " + display.getPrimaryMonitor ().getZoom () + " plain Table owner data " + ownerData);
+		caseRules ();
+		caseScroll ();
+		display.dispose ();
+		System.out.println ("DONE");
+	}
+
+	/* ------------------------------------------------------------ rules */
+
+	Table table (int rows) {
+		Table table = new Table (shell, SWT.MULTI | SWT.BORDER);
+		table.setBounds (5, 5, 300, 380);
+		for (int i = 0; i < rows; i++) new TableItem (table, SWT.NONE).setText ("row " + i);
+		return table;
+	}
+
+	static int focus (Table table) {
+		return (int) OS.SendMessage (table.handle, OS.LVM_GETNEXTITEM, -1, OS.LVNI_FOCUSED);
+	}
+
+	static int mark (Table table) {
+		return (int) OS.SendMessage (table.handle, LVM_GETSELECTIONMARK, 0, 0);
+	}
+
+	static void setFocus (Table table, int index) {
+		LVITEM item = new LVITEM ();
+		item.state = item.stateMask = OS.LVIS_FOCUSED;
+		OS.SendMessage (table.handle, OS.LVM_SETITEMSTATE, index, item);
+	}
+
+	static String state (Table table) {
+		return "count=" + table.getItemCount () + " sel=" + Arrays.toString (table.getSelectionIndices ()) + " focus=" + focus (table) + " mark=" + mark (table)
+				+ " top=" + table.getTopIndex ();
+	}
+
+	/* the rules of the splice: rows before the run keep their state, rows after it move by inserted - removed, the removed rows lose theirs */
+	static int [] expectSelection (int [] sel, int at, int removed, int inserted) {
+		java.util.List<Integer> out = new ArrayList<> ();
+		for (int s : sel) {
+			if (s < at) out.add (s);
+			else if (s >= at + removed) out.add (s - removed + inserted);
+		}
+		return out.stream ().mapToInt (Integer::intValue).toArray ();
+	}
+
+	/* the focus of a removed row goes to the next row (the row now at the run's index), or to the new last row; the inserts at the index then move it */
+	static int expectFocus (int count, int focus, int at, int removed, int inserted) {
+		if (focus < 0) return -1;
+		if (focus < at) return focus;
+		if (focus >= at + removed) return focus - removed + inserted;
+		int left = count - removed;
+		int f = at < left ? at : left - 1;
+		return f >= at ? f + inserted : f;
+	}
+
+	void caseRules () {
+		System.out.println ("== RULES: item API row by row (removed x LVM_DELETEITEM at the index, then inserted x LVM_INSERTITEM) against the splice rules");
+		Random random = new Random (7);
+		int rows = 60, scenarios = 400, selectionMismatch = 0, focusMismatch = 0, markLikeFocus = 0, markMinusOne = 0, markOther = 0, markShown = 0;
+		Map<String, Integer> markInsert = new TreeMap<> ();
+		for (int seed = 0; seed < scenarios; seed++) {
+			Table table = table (rows);
+			int k = random.nextInt (6);
+			int [] sel = random.ints (0, rows).distinct ().limit (k).sorted ().toArray ();
+			table.setSelection (sel);
+			int focus = random.nextInt (rows + 1) - 1;
+			if (focus >= 0) setFocus (table, focus);
+			int mark = random.nextInt (rows + 1) - 1;
+			OS.SendMessage (table.handle, OS.LVM_SETSELECTIONMARK, 0, mark);
+			int at = random.nextInt (rows), removed = random.nextInt (Math.min (7, rows - at + 1)), inserted = random.nextInt (6);
+			if (seed % 8 == 0 && mark >= 0) { at = Math.max (0, mark - random.nextInt (3)); removed = Math.max (1, mark - at + 1 + random.nextInt (2)); }
+			if (seed % 8 == 1 && mark >= 0) { at = mark; removed = 0; inserted = 1 + random.nextInt (3); }
+			if (seed % 8 == 2 && focus >= 0) { at = Math.max (0, focus - random.nextInt (3)); removed = Math.min (rows - at, Math.max (1, focus - at + 1 + random.nextInt (2))); }
+			if (seed % 8 == 3) { at = rows - 1 - random.nextInt (3); removed = rows - at; focus = at + random.nextInt (removed); setFocus (table, focus); }
+			String before = state (table);
+			int markBefore = mark (table), focusBefore = focus (table);
+			int [] selBefore = table.getSelectionIndices ();
+			if (removed > 0) table.remove (at, at + removed - 1);
+			for (int i = 0; i < inserted; i++) new TableItem (table, SWT.NONE, at + i).setText ("new " + i);
+			String after = state (table);
+			int [] selExpected = expectSelection (selBefore, at, removed, inserted);
+			int focusExpected = expectFocus (rows, focusBefore, at, removed, inserted);
+			boolean selOk = Arrays.equals (selExpected, table.getSelectionIndices ()), focusOk = focusExpected == focus (table);
+			if (!selOk) selectionMismatch++;
+			if (!focusOk) focusMismatch++;
+			if (!selOk || !focusOk) {
+				System.out.println ("MISMATCH seed " + seed + " at " + at + " removed " + removed + " inserted " + inserted + "\n   before " + before + "\n   after  " + after
+						+ "\n   expected sel=" + Arrays.toString (selExpected) + " focus=" + focusExpected);
+			}
+			int markAfter = mark (table);
+			if (markBefore >= at && markBefore < at + removed) {
+				int likeFocus = expectFocus (rows, markBefore, at, removed, inserted);
+				if (markAfter == likeFocus) markLikeFocus++; else if (markAfter == -1) markMinusOne++; else markOther++;
+				if (markShown++ < 12) System.out.println ("MARK removed: mark " + markBefore + " at " + at + " removed " + removed + " inserted " + inserted + " focus " + focusBefore + "->" + focus (table) + " -> mark " + markAfter + " (like focus " + likeFocus + ")");
+			} else if (removed == 0 && inserted > 0 && markBefore == at) {
+				markInsert.merge ("mark " + markBefore + " insert " + inserted + " at mark -> " + markAfter, 1, Integer::sum);
+			} else if (markBefore >= 0) {
+				int expected = markBefore < at ? markBefore : markBefore - removed + inserted;
+				if (markAfter != expected) System.out.println ("MARK shift differs: mark " + markBefore + " at " + at + " removed " + removed + " inserted " + inserted + " -> " + markAfter + " expected " + expected);
+			}
+			table.dispose ();
+		}
+		System.out.println ("scenarios " + scenarios + ": selection mismatches " + selectionMismatch + ", focus mismatches " + focusMismatch
+				+ "; mark removed: like focus " + markLikeFocus + ", -1 " + markMinusOne + ", other " + markOther);
+		markInsert.forEach ((key, n) -> System.out.println ("MARK insert: " + key + " x" + n));
+	}
+
+	/* ------------------------------------------------------------ scroll without paint */
+
+	long hash (Table table) {
+		Rectangle r = table.getClientArea ();
+		Image image = new Image (display, Math.max (1, r.width), Math.max (1, r.height));
+		GC gc = new GC (table);
+		gc.copyArea (image, 0, 0);
+		gc.dispose ();
+		ImageData data = image.getImageData ();
+		image.dispose ();
+		long h = 1125899906842597L;
+		for (byte b : data.data) h = 31 * h + b;
+		return h;
+	}
+
+	void report (String label, Table table, long h0, int paints0) {
+		pump (300);
+		long h = hash (table);
+		System.out.println (label + ": top " + table.getTopIndex () + " count " + table.getItemCount () + " paints " + (paints - paints0) + " pixels " + (h == h0 ? "same" : "CHANGED"));
+	}
+
+	void caseScroll () {
+		System.out.println ("== SCROLL: moving the top index of an owner-data Table without a paint");
+		Table table = new Table (shell, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
+		table.setBounds (5, 5, 300, 380);
+		table.addListener (SWT.SetData, e -> ((TableItem) e.item).setText ("row " + e.index));
+		table.addListener (SWT.PaintItem, e -> paints++);
+		table.setItemCount (1000);
+		table.setTopIndex (500);
+		pump (400);
+		long hwnd = table.handle;
+		int page = (int) OS.SendMessage (hwnd, OS.LVM_GETCOUNTPERPAGE, 0, 0);
+		int height = table.getItemHeight ();
+		System.out.println ("page " + page + " item height " + height + " top " + table.getTopIndex ());
+		pump (300);
+		long h0 = hash (table);
+		int p0 = paints;
+		pump (300);
+		report ("idle", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 0, 0);
+		OS.SendMessage (hwnd, OS.LVM_ENSUREVISIBLE, 510 + page - 1, 0);
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
+		report ("T1 redraw off, LVM_ENSUREVISIBLE down 10, redraw on", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 0, 0);
+		OS.SendMessage (hwnd, OS.LVM_ENSUREVISIBLE, 500, 0);
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
+		report ("T2 redraw off, LVM_ENSUREVISIBLE up 10, redraw on", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 0, 0);
+		OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, 10 * height);
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
+		report ("T3 redraw off, LVM_SCROLL down 10 rows, redraw on", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 0, 0);
+		OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, -10 * height);
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
+		report ("T4 redraw off, LVM_SCROLL up 10 rows, redraw on", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.LVM_ENSUREVISIBLE, 510 + page - 1, 0);
+		report ("T5 control: LVM_ENSUREVISIBLE down 10 with redraw on", table, h0, p0);
+		OS.SendMessage (hwnd, OS.LVM_ENSUREVISIBLE, 500, 0);
+		pump (300);
+		p0 = paints;
+		report ("T6 back to 500", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.LVM_SETITEMCOUNT, 1010, OS.LVSICF_NOINVALIDATEALL | OS.LVSICF_NOSCROLL);
+		report ("T7 LVM_SETITEMCOUNT 1010 NOINVALIDATEALL|NOSCROLL", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.LVM_SETITEMCOUNT, 990, OS.LVSICF_NOINVALIDATEALL | OS.LVSICF_NOSCROLL);
+		report ("T8 LVM_SETITEMCOUNT 990 NOINVALIDATEALL|NOSCROLL", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 0, 0);
+		OS.SendMessage (hwnd, OS.LVM_SETITEMCOUNT, 1000, OS.LVSICF_NOINVALIDATEALL | OS.LVSICF_NOSCROLL);
+		OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, 10 * height);
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
+		report ("T9 redraw off, count 1000, LVM_SCROLL down 10, redraw on (the splice above the window)", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 0, 0);
+		OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, -10 * height);
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
+		LVITEM item = new LVITEM ();
+		item.state = item.stateMask = OS.LVIS_FOCUSED;
+		OS.SendMessage (hwnd, OS.LVM_SETITEMSTATE, 700, item);
+		OS.SendMessage (hwnd, OS.LVM_SETSELECTIONMARK, 0, 700);
+		report ("T10 back up 10, focus and mark set on row 700 (outside the window)", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.LVM_REDRAWITEMS, 505, 506);
+		report ("T11 control: LVM_REDRAWITEMS 505..506", table, h0, p0);
+		table.dispose ();
+	}
+
+	/* ------------------------------------------------------------ pump */
+
+	void pump (int millis) {
+		long end = System.currentTimeMillis () + millis;
+		while (System.currentTimeMillis () < end) {
+			if (!display.readAndDispatch ()) {
+				try {
+					Thread.sleep (5);
+				} catch (InterruptedException e) {
+					return;
+				}
+			}
+		}
+	}
+}
