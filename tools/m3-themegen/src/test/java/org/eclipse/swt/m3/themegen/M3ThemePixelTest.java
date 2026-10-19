@@ -38,7 +38,7 @@ public class M3ThemePixelTest {
 	@Test
 	public void theSameThemeAppliesInBothToolkits () throws Exception {
 		Assumptions.assumeTrue (Boolean.getBoolean ("m3.themegen.desktop"), "needs a desktop: -Dm3.themegen.desktop=true");
-		M3ThemeGenerator.Generated generated = new M3ThemeGenerator (new M3FixtureModel (Paths.get ("src", "test", "resources", "fixtures", "harbour-night.json")))
+		M3ThemeGenerator.Generated generated = new M3ThemeGenerator (new M3FixtureModel (Paths.get (System.getProperty ("m3.themegen.fixtures", "src/test/resources/fixtures"), "harbour-night.json")))
 			.generate ("x", List.of (), null, null, false, null);
 		int selection = 0xFF3B4252;
 		Display display = new Display ();
