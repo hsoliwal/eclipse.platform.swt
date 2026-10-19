@@ -134,9 +134,14 @@ public final class M3RowBinding {
 			}
 		};
 		binding.changed = change -> {
+			if (tree.isDisposed ()) return;
 			tree.setItemCount (sort.childCount (-1));
 			tree.clearAll (true);
+			binding.restoreTree (sort);
 		};
+		binding.selection = event -> binding.captureTree ();
+		tree.addListener (SWT.Selection, binding.selection);
+		tree.addListener (SWT.DefaultSelection, binding.selection);
 		binding.hook ();
 		tree.setItemCount (roots);
 		tree.clearAll (true);
@@ -197,7 +202,6 @@ public final class M3RowBinding {
 
 	/* selects the view rows of the selected source rows (the table scrolls to show them) */
 	private void restore () {
-		if (selected.length == 0) return;
 		int [] indices = new int [selected.length];
 		int count = 0;
 		for (int row : selected) {
@@ -208,31 +212,66 @@ public final class M3RowBinding {
 		if (count == 0) table.deselectAll (); else table.setSelection (Arrays.copyOf (indices, count));
 	}
 
+	/* the tree's selection as source rows (O(selected)) */
+	private void captureTree () {
+		TreeItem [] items = ((Tree) control).getSelection ();
+		selected = new int [items.length];
+		int count = 0;
+		for (TreeItem item : items) {
+			int row = sourceRow (item);
+			if (row >= 0) selected [count++] = row;
+		}
+		selected = Arrays.copyOf (selected, count);
+	}
+
+	/* selects the items of the selected source rows, walking down from the root by sibling index (O(depth) each) */
+	private void restoreTree (M3ColumnSort sort) {
+		Tree tree = (Tree) control;
+		TreeItem [] items = new TreeItem [selected.length];
+		int count = 0;
+		for (int row : selected) {
+			TreeItem item = row < sort.sourceSize () ? itemOf (tree, sort, row) : null;
+			if (item != null) items [count++] = item;
+		}
+		if (count == 0) tree.deselectAll (); else tree.setSelection (Arrays.copyOf (items, count));
+	}
+
+	private static TreeItem itemOf (Tree tree, M3ColumnSort sort, int row) {
+		int [] path = new int [8];
+		int depth = 0;
+		for (int r = row; r != -1; r = sort.parents ().applyAsInt (r)) {
+			if (sort.indexOfChild (r) < 0) return null;
+			if (depth == path.length) path = Arrays.copyOf (path, depth * 2);
+			path [depth++] = sort.indexOfChild (r);
+		}
+		TreeItem item = tree.getItem (path [--depth]);
+		while (depth > 0) item = item.getItem (path [--depth]);
+		return item;
+	}
+
 	/**
-	 * Returns the selected source rows of a bound table.
+	 * Returns the selected source rows of the bound widget, as last selected by the user or set
+	 * with {@link #setSelectedRows(int...)}.
 	 *
-	 * @return a copy of the selected source rows (empty for a tree)
+	 * @return a copy of the selected source rows
 	 */
 	public int [] getSelectedRows () {
 		return selected.clone ();
 	}
 
 	/**
-	 * Selects source rows in a bound table; the rows the view does not show stay selected and
-	 * appear when the view shows them again.
+	 * Selects source rows in the bound widget; the rows the view does not show stay selected and
+	 * appear selected when the view shows them again (a tree item is reached through its parents).
 	 *
 	 * @param sourceRows the source rows
 	 *
 	 * @exception IllegalArgumentException <ul>
 	 *    <li>ERROR_NULL_ARGUMENT - if the rows are null</li>
-	 *    <li>ERROR_INVALID_ARGUMENT - if the binding drives a tree</li>
 	 * </ul>
 	 */
 	public void setSelectedRows (int... sourceRows) {
-		M3Checks.nonNull (sourceRows);
-		M3Checks.argument (control instanceof Table);
-		selected = sourceRows.clone ();
-		if (selected.length == 0) ((Table) control).deselectAll (); else restore ();
+		selected = M3Checks.nonNull (sourceRows).clone ();
+		if (control instanceof Table) restore (); else restoreTree ((M3ColumnSort) view);
 	}
 
 	/**

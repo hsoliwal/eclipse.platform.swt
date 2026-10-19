@@ -56,6 +56,10 @@ public final class M3ColumnSort extends M3RowViewBase {
 	private M3ColumnKey [] chain = {};
 	private boolean [] descending = {};
 	private IntUnaryOperator parentOf;
+
+	IntUnaryOperator parents () {
+		return parentOf;
+	}
 	private final IntBinaryOperator compareRows = this::compare;
 	M3SortOrder order = new M3SortOrder (this);
 	private M3SortOrder prepared;
