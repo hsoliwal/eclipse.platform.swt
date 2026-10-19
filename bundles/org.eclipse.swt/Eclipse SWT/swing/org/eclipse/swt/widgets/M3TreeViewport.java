@@ -53,6 +53,8 @@ final class M3TreeViewport {
 	/** The parent whose slot {@link #adoptingIndex} is being materialized, or <code>null</code>. */
 	private M3TreeChildren adopting;
 	private int adoptingIndex = -1;
+	/** Whether a column width update is posted to the Swing thread. */
+	private boolean widthPending;
 
 	private M3TreeViewport (Tree tree) {
 		this.tree = tree;
@@ -270,6 +272,24 @@ final class M3TreeViewport {
 		for (TreeItem item : materialized (roots, 0)) {
 			item.handle.removeColumn (index);
 		}
+	}
+
+	/**
+	 * Hook of <code>Tree.adjustColumnWidth()</code>: without columns, the tree column gets the width of the widest
+	 * row shown, measured once per burst of changes on the Swing thread (which paints the rows with the same
+	 * renderer).
+	 */
+	void adjustColumnWidth () {
+		if (widthPending || tree.getColumnCount () != 0) return;
+		widthPending = true;
+		SwingUtilities.invokeLater (this::applyColumnWidth);
+	}
+
+	private void applyColumnWidth () {
+		widthPending = false;
+		if (tree.isDisposed ()) return;
+		CTree cTree = cTree ();
+		cTree.getColumnModel ().getColumn (0).setPreferredWidth (cTree.getPreferredColumnWidth (0));
 	}
 
 	/** Hook of <code>Tree.getTopItem()</code>: the item shown at the top of the viewport. */

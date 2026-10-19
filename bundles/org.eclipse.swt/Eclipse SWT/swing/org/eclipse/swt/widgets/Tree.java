@@ -151,6 +151,10 @@ static int checkStyle (int style) {
 }
 
 void adjustColumnWidth() {
+	if (viewport != null) {
+		viewport.adjustColumnWidth ();
+		return;
+	}
   // Could be more efficient. Should post, with coalescing?
   if(getColumnCount() == 0) {
     CTree cTree = (CTree)handle;

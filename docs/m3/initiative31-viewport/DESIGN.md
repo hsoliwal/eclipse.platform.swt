@@ -117,7 +117,8 @@ Lanes and facades:
 Hooks (recipe `recipe/META-INF/rewrite/m3-swt-i31-tree-viewport.yml`, applied twice, second pass UNCHANGED):
 `Tree`: `createWidget` (install), `createItem` (3 overloads: adopt/insert, columns), `destroyItem(TreeColumn)`,
 `releaseItem`, `releaseChildren`, `setItemCount` (3-argument worker), `getItem(int)`, `getItemCount`, `getItems`,
-`indexOf(TreeItem)`, `removeAll`, `clearAll`, `getTopItem`, `setTopItem` (`showItem`/`showSelection` keep the
+`indexOf(TreeItem)`, `removeAll`, `clearAll`, `adjustColumnWidth` (posted to the Swing thread, coalesced),
+`getTopItem`, `setTopItem` (`showItem`/`showSelection` keep the
 original least-scroll rule); `TreeItem`: `getItem(int)`, `getItemCount`, `getItems`, `indexOf`, `removeAll`;
 `DefaultMutableTreeTableNode`: one setter for the `children` vector; `JTreeTable`: the tree column width
 (`getPreferredColumnWidth`) and, in its inner table, `getRowHeight(int)`/`getCellRect` (section 11). The tree

@@ -14,6 +14,7 @@ recipeList:
   - com.synexia.openrewrite.viewport.I31SwingTreeViewportTreeItem
   - com.synexia.openrewrite.viewport.I31SwingTreeViewportSwing
   - com.synexia.openrewrite.viewport.I31SwingTreeViewportRows
+  - com.synexia.openrewrite.viewport.I31SwingTreeViewportColumnWidth
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.synexia.openrewrite.viewport.I31SwingTreeViewportTree
@@ -217,3 +218,18 @@ recipeList:
       anchor: "Rectangle cellBounds = super.getCellRect("
       position: AFTER
       statements: "      if(M3TreeTableRows.of(tree) != null) {\n        return cellBounds;\n      }"
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.I31SwingTreeViewportColumnWidth
+displayName: Initiative 31 Tree adjusts the tree column width on the Swing thread, coalesced
+description: >-
+  setText of every item recomputes the tree column width (adjustColumnWidth, marked "should post, with coalescing"
+  in the original). In the viewport mode the width is measured over the rows shown, once per burst of changes, on
+  the Swing thread that also paints them.
+recipeList:
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: adjustColumnWidth
+      parameterCount: 0
+      position: METHOD_START
+      statements: "\tif (viewport != null) {\n\t\tviewport.adjustColumnWidth ();\n\t\treturn;\n\t}"
