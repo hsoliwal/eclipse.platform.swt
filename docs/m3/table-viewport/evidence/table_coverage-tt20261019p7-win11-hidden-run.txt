@@ -1,0 +1,22 @@
+== gate 2026-10-19T13:37:23+05:30
+memory gate: headroom 3 GB, waiting (up to 15 min)
+== suites-viewport
+[         6 tests aborted         ]
+[       259 tests successful      ]
+[         0 tests failed          ]
+== suites-original
+[        37 tests aborted         ]
+[       228 tests successful      ]
+[         0 tests failed          ]
+== differential-viewport-vs-official
+[         0 tests aborted         ]
+[         1 tests successful      ]
+[         0 tests failed          ]
+== differential-record-original
+[         0 tests aborted         ]
+[         1 tests successful      ]
+[         0 tests failed          ]
+== original equals official (rule 12)
+88 same
+gate exit 0
+== done 2026-10-19T14:11:49+05:30
