@@ -1,0 +1,15 @@
+platform=win32 version=4974 mode=default
+count=1000 setItemCount_ms=663 setData_after_setItemCount=0
+count=1000 setData_after_open=12 touched=12[0..12)
+count=1000 itemCount=1000 itemHeight>0=true top=0
+count=1000 setTopItem(500) top=500 setData=24 touched=24[0..512)
+count=1000 showItem(last) top=989 setData=35
+count=1000 computeSize setData=35 size>0=true
+count=1000 setItemCount(0)_ms=1291 itemCount=0
+count=10000 setItemCount_ms=17768 setData_after_setItemCount=0
+count=10000 setData_after_open=12 touched=12[0..12)
+count=10000 itemCount=10000 itemHeight>0=true top=0
+count=10000 setTopItem(5000) top=5000 setData=24 touched=24[0..5012)
+count=10000 showItem(last) top=9989 setData=35
+count=10000 computeSize setData=35 size>0=true
+count=10000 setItemCount(0)_ms=19147 itemCount=0

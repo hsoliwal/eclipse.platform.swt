@@ -1,0 +1,27 @@
+platform=swing version=4967
+table count=1000 setItemCount_ms=4 setData=0
+table count=1000 open setData=6 touched=6[0..6) top=0
+table count=1000 setTopIndex(500) top=499 setData=26
+table count=1000 showItem(last) top=987 setData=39
+table count=1000 showSelection(3) top=2 indexOf=998
+table count=1000 computeSize setData=42 size>0=true
+table count=1000 setItemCount(0)_ms=2 itemCount=0
+list count=1000 setItems_ms=1 add(n/10)_ms=0 itemCount=1100
+list count=1000 open top=0
+list count=1000 setTopIndex(500) top=0
+list count=1000 showSelection(last) top=0 indexOf=998
+list count=1000 computeSize_ms=1 size>0=true
+list count=1000 removeAll_ms=0 itemCount=0
+table count=10000 setItemCount_ms=5 setData=0
+table count=10000 open setData=13 touched=13[0..13) top=0
+table count=10000 setTopIndex(5000) top=4999 setData=39
+table count=10000 showItem(last) top=9987 setData=39
+table count=10000 showSelection(3) top=2 indexOf=9998
+table count=10000 computeSize setData=42 size>0=true
+table count=10000 setItemCount(0)_ms=14 itemCount=0
+list count=10000 setItems_ms=5 add(n/10)_ms=1 itemCount=11000
+list count=10000 open top=0
+list count=10000 setTopIndex(5000) top=0
+list count=10000 showSelection(last) top=0 indexOf=9998
+list count=10000 computeSize_ms=3 size>0=true
+list count=10000 removeAll_ms=0 itemCount=0
