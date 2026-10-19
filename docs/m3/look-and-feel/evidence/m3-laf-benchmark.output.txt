@@ -1,9 +1,12 @@
-# M3LafBenchmark (step b), JDK 21, 2026-10-19, jar aw-cov3 + LF6 classes; median of 9 rounds after 3 warm-up rounds
+# M3LafBenchmark (steps b, d), JDK 21, 2026-10-19, headless; median of 9 rounds after 3 warm-up rounds
 keys 61 (colours of the flat table)
-lookup           UIDefaults-style Hashtable, boxed               61.12 ns/op    0.000 B/op
-lookup           LF2 LookAndFeelDefaults.color (String)          31.08 ns/op    0.000 B/op
-lookup           LF6 M3UIDefaults.color (int id)                  5.94 ns/op    0.000 B/op
+lookup           UIDefaults-style Hashtable, boxed               66.19 ns/op    0.000 B/op
+lookup           LF2 LookAndFeelDefaults.color (String)          28.91 ns/op    0.000 B/op
+lookup           LF6 M3UIDefaults.color (int id)                  5.01 ns/op    0.000 B/op
 overrides retained bytes for 10000 of 100000 widgets: map per widget 1807384, lane 659400
-override lookup  map per widget (putClientProperty shape)        22.79 ns/op    0.000 B/op
-override lookup  M3UIOverrides lane                              15.90 ns/op    0.000 B/op
-sink -925026972223876
+override lookup  map per widget (putClientProperty shape)        28.43 ns/op    0.000 B/op
+override lookup  M3UIOverrides lane                              15.06 ns/op    0.000 B/op
+accent change    whole table loaded again (FlatLaf, LF2)      82647.90 ns/op 59600.000 B/op
+accent change    LF6 putVariable: the cone of @accent          9216.40 ns/op 11232.000 B/op
+values resolved per accent change: whole table 77, cone 12
+sink -925455325879876
