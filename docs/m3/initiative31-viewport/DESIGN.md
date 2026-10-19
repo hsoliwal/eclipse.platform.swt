@@ -4,7 +4,8 @@ SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
 -->
 # Initiative 31 viewport (SWT on Swing): design
 
-Status: design (D2C) for the Tree, Table and List viewport of the Initiative 31 SWT-on-Swing prototype.
+Status: implemented for Tree, Table and List; first delivery merged as hsoliwal/eclipse.platform.swt#231 (2026-10-19,
+base `initiative31/prototype-swing/swing`); the differential and coverage results of the later commits are in section 13.
 Branch `m3/initiative31-swing-viewport-20261019` of hsoliwal/eclipse.platform.swt.
 Everything marked "measured" was run on 2026-10-19 on the hidden desktop; the outputs are in `evidence/`.
 

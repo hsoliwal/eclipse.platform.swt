@@ -41,6 +41,19 @@ public class M3SparseExtentsEdgeTest {
 	}
 
 	@Test
+	public void clearFromArgumentsAreChecked () {
+		extents.setExtent (5, 30);
+		extents.setExtent (15, 40);
+		assertThrows (IllegalArgumentException.class, () -> extents.clearFrom (-1));
+		assertThrows (IllegalArgumentException.class, () -> extents.clearFrom (21));
+		extents.clearFrom (20);
+		assertEquals ("clearing from the end keeps every measurement", 2, extents.measuredCount ());
+		extents.clearFrom (10);
+		assertEquals (1, extents.measuredCount ());
+		assertEquals (10, extents.extentOf (15));
+	}
+
+	@Test
 	public void insertArgumentsAreChecked () {
 		assertThrows (IllegalArgumentException.class, () -> extents.insert (0, -1));
 		assertThrows (IllegalArgumentException.class, () -> extents.insert (-1, 1));
