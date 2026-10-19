@@ -111,6 +111,7 @@ Status (2026-10-19): steps (a) to (g) implemented in `org.eclipse.swt.internal.l
 | `M3ThemeImport`, `M3Json`, `M3ColorFunctions` | IntelliJ `.theme.json` and FlatLaf `.properties` import; FlatLaf's colour functions in the loader |
 | `M3ThemeWatcher` | live reload of a theme file |
 | `M3Palette` | accent ramp, WCAG contrast, high contrast from the platform |
+| `M3SystemTheme` | the OS light/dark preference followed at runtime (`follow (display, light, dark)`: `Display.isSystemDarkTheme` re-read on `SWT.Settings`, win32 `WM_SETTINGCHANGE`; FlatLaf #204 absorbed) |
 
 The loader changes (`merged` package-private, `resolve (name, raw, keys)`, the FlatLaf function cases) are applied by
 the OpenRewrite recipes in [`look-and-feel/recipe`](look-and-feel/recipe) (`lf6_loader_recipe.sh`, second pass
