@@ -1,0 +1,22 @@
+file	line	kind	source	reason	exercised_by
+M3Checks.java	26	branch	if (value == null) SWT.error (ERROR_NULL_ARGUMENT)	SWT.error always throws: JaCoCo's probe after a one-condition check never fires (same artifact as docs/m3/enhanced-api/coverage)	every assertThrows on a null argument (Test_M3ColumnSort.test_argumentChecks, Test_M3ColumnFilter.test_argumentChecks)
+M3Checks.java	31	branch	if (index < 0 || index >= size) SWT.error (ERROR_INVALID_RANGE)	SWT.error artifact (both conditions exercised, the throwing edge is not recorded)	assertThrows on map/unmap/getSortColumn out of range
+M3Checks.java	36	branch	if (start < 0 || count < 0 || start > size - count) SWT.error (ERROR_INVALID_RANGE)	SWT.error artifact	assertThrows on rowsInserted/rowsRemoved out of range (Test_M3ColumnSort.test_singleMoveDamage)
+M3Checks.java	40	branch	if (!valid) SWT.error (ERROR_INVALID_ARGUMENT)	SWT.error artifact	assertThrows on negative counts, bad directions, duplicate columns
+M3TextMatch.java	107	branch	if (!problem.isEmpty ()) SWT.error (...)	SWT.error artifact	Test_M3TextMatch.test_checkAndErrors (compile of "(" throws)
+M3FilterWorker.java	82	branch	if (armed != filter.generation || stopped) return	the armed generation is re-armed by every change, so the first condition is true only when a generation moves without a schedule (synchronous flush), and stop() cancels the timer: defensive	-
+M3FilterWorker.java	126-128	line	InterruptedException in lock.wait	the worker thread is a daemon that nobody interrupts: defensive	-
+M3FilterWorker.java	164-165	line	SWTException from asyncExec on a disposed display	the display outlives the filters in the tests; the branch stops the worker when the display is gone	-
+M3FilterWorker.java	150,152,179,190,203,213	branch	generation checks that drop superseded work	which check sees the newer generation first depends on thread timing; Test_M3FilterAsync.test_slowModelIsSupersededMidComputation and test_supersededGenerationsNeverApply reach the row-loop check and the apply check, the others are the same guard at other points	Test_M3FilterAsync
+M3Columns.java	72	branch	bar == null ? 0 : bar.getSelection ()	Table and Tree always carry scroll bars (checkStyle adds H_SCROLL and V_SCROLL on every platform): platform-defensive	-
+M3FilterRow.java	91,169	branch	if (bar != null) ...	same: Table and Tree always have a horizontal bar	-
+M3FilterRow.java	154,161,165,178	branch	disposed checks in listeners	ordering of Dispose events (row before control and the reverse) is covered for one order in Test_M3SortFilterWidgets.test_filterRowFollowsColumnsAndFilters; the other order is defensive	-
+M3SortHeader.java	82	branch	ORDER change while the control is disposed	the Dispose listener removes the sort listener first, so a change cannot arrive after disposal: defensive	-
+M3FilterPopup.java	211,215	branch	deactivated() with the popup closed; marks() on a disposed control	asyncExec races after close/dispose: defensive	-
+M3HeaderDecoration.java	105	branch	zoom == 100 || zoom == 200 ? imageData : null	ImageDataProvider asked for other zooms only on monitors at other scales (hidden desktop is 100%)	Test_M3SortFilterWidgets asks 100 and 200 explicitly
+M3HeaderDecoration.java	121	branch	number == 10 ? '+' glyph	eleven or more sort keys	-
+M3Messages.java	71	branch	message.startsWith (key) ? ENGLISH fallback : message	the fallback is taken only when the running SWT jar has no SWT_M3_Filter_* keys (the tests run with this branch's jar, which has them)	-
+M3RowBinding.java	93,129	branch	event.index < view.size () guards in SetData	SetData for an index past the view size arrives only when the widget asks before the count is updated: defensive	-
+M3RowBinding.java	137,182	branch	disposed checks in the change listener	Dispose removes the listener first: defensive	-
+M3FilterEditPanel.java	138	branch	clipboard content that is not text	needs a non-text clipboard on the hidden desktop	-
+M3FilterEditPanel.java	151	branch	apply () after the panel is disposed	timer firing after close: defensive	-
