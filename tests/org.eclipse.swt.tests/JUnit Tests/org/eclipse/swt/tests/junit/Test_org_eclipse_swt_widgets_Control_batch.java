@@ -192,4 +192,48 @@ public class Test_org_eclipse_swt_widgets_Control_batch {
 		assertEquals (SWT.ERROR_FAILED_EXEC, failure.code);
 		assertThrows (IllegalArgumentException.class, () -> canvas.runBatch (SWT.PLANE_VIEWPORT, null, null));
 	}
+
+	/*
+	 * A control disposed while its planes are frozen cannot end its batch (endBatch rejects a disposed receiver):
+	 * its entry and the display's frozen-plane counts must go with it, or every later WM_PAINT and scroll bar
+	 * update of every other control takes the slow path, and the disposed control is retained by the display.
+	 */
+	@Test
+	public void test_disposeWhileBatchedReleasesTheFrozenPlanes () throws ReflectiveOperationException {
+		Canvas canvas = new Canvas (shell, SWT.V_SCROLL);
+		Canvas other = new Canvas (shell, SWT.NONE);
+		other.addListener (SWT.Paint, e -> paints++);
+		shell.open ();
+		SwtTestUtil.processEvents ();
+		canvas.beginBatch (SWT.PLANE_VIEWPORT | SWT.PLANE_SCROLLBARS);
+		canvas.beginBatch (SWT.PLANE_MAIN);
+		assertEquals (1, batchField ("batchCount"));
+		assertEquals (1, batchField ("batchViewports"));
+		canvas.dispose ();
+		assertEquals (0, batchField ("batchCount"), "the disposed control's batch entry is gone");
+		assertEquals (0, batchField ("batchViewports"), "no frozen viewport remains");
+		assertEquals (0, batchField ("batchScrollbars"), "no frozen scroll bars remain");
+		paints = 0;
+		other.redraw ();
+		other.update ();
+		assertEquals (1, paints, "the other control paints as usual");
+		/* a batch still works after the release, and the disposed control's end is still rejected */
+		other.beginBatch (SWT.PLANE_VIEWPORT);
+		other.redraw ();
+		other.update ();
+		assertEquals (1, paints, "frozen");
+		other.endBatch (SWT.PLANE_VIEWPORT);
+		other.update ();
+		assertEquals (2, paints, "painted once at the end");
+		assertEquals (0, batchField ("batchCount"));
+		SWTException failure = assertThrows (SWTException.class, () -> canvas.endBatch (SWT.PLANE_VIEWPORT));
+		assertEquals (SWT.ERROR_WIDGET_DISPOSED, failure.code);
+	}
+
+	/* Display's batch bookkeeping (package-private ints) */
+	int batchField (String name) throws ReflectiveOperationException {
+		java.lang.reflect.Field field = Display.class.getDeclaredField (name);
+		field.setAccessible (true);
+		return field.getInt (display);
+	}
 }
