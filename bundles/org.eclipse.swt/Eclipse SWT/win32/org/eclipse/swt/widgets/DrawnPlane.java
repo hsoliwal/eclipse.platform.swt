@@ -41,7 +41,7 @@ abstract class DrawnPlane {
 	/* the renderer of the theme in effect; replaced when the theme selection changes (Themes) */
 	RowRenderer renderer;
 	/* the look and feel delegate of the rows (M3LookAndFeel, LF6); a switch installs it again with a new theme */
-	private final M3RowUI ui;
+	private final M3DrawnRowUI ui;
 	/* the run-time or user-defined theme that wins over the delegate's (Themes.explicit), read again after a Themes change */
 	private Theme explicit;
 	private int themeGeneration;
@@ -71,7 +71,7 @@ abstract class DrawnPlane {
 		this.control = control;
 		this.nativeProc = nativeProc;
 		this.widget = widget;
-		this.ui = M3LookAndFeel.installUI (control, M3RowUI.class, new M3RowUI (widget));
+		this.ui = M3LookAndFeel.installUI (control, M3DrawnRowUI.class, new M3DrawnRowUI (widget));
 		this.themeGeneration = Themes.generation ();
 		this.explicit = Themes.explicit (widget);
 		this.renderer = new RowRenderer (explicit != null ? explicit : ui.theme ());

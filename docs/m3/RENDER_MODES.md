@@ -370,7 +370,7 @@ all-widgets track's LF2 tables, to become `M3UIDefaults` lanes in LF6), not from
   non-pixel probe must still equal stock, and the captures after the switch are compared with a leg that started in
   the target theme.
 - **Row delegate (since integration round 9 brought `M3LookAndFeel`, `M3UIDefaults` and `M3ComponentUI`):** every
-  drawn plane installs `M3RowUI` with `M3LookAndFeel.installUI`. The delegate reads the colours above by key id from
+  drawn plane installs `M3DrawnRowUI` with `M3LookAndFeel.installUI`. The delegate reads the colours above by key id from
   the look and feel's `M3UIDefaults` (`ThemeDefaults.of (widget, look, defaults)`; the developer layer of
   `M3UIDefaults.put` answers first) and declares them as its paint keys, so `M3LookAndFeel.setLookAndFeel` installs it
   again and repaints the widget only when a key it reads changes; the plane picks the new theme on its next frame.
@@ -400,7 +400,7 @@ A **snapshot** is what one frame needs and nothing else, immutable once publishe
 - the row window: first row, row count, the pixel offset of the first row, the row heights (a prefix-sum lane);
 - the window's lanes: text ids (interned), foreground, background and font ids, image ids, state bits (selected,
   focused, checked, grayed, expanded, children, depth);
-- the theme id and theme generation (the look and feel of the widget: `M3RowUI`);
+- the theme id and theme generation (the look and feel of the widget: `M3DrawnRowUI`);
 - the damage since the previous snapshot (rectangles in plane pixels), and the scroll position.
 
 Publication is single-writer, many-reader, wait-free for the reader:
@@ -517,7 +517,7 @@ table.addListener (SWT.SetData, event -> ((TableItem) event.item).setText ("row 
 table.setItemCount (1_000_000);
 ```
 
-**Switching the look and feel at run time** (LF6; the rows' `M3RowUI` delegate is installed again and the widget
+**Switching the look and feel at run time** (LF6; the rows' `M3DrawnRowUI` delegate is installed again and the widget
 repaints only when a key it reads changes):
 
 ```java
