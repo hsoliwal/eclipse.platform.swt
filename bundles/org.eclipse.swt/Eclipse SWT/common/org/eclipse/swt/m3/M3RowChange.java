@@ -33,7 +33,7 @@ import org.eclipse.swt.widgets.*;
  */
 public final class M3RowChange {
 
-	/** Everything may have changed: the view was rebuilt. */
+	/** The view was rebuilt; its rows from the first damaged one on may differ (an asynchronous filter result damages only from its first changed row). */
 	public static final int RESET = 1;
 
 	/** Source rows <code>start .. start + count - 1</code> were inserted; the payload lists those the view shows. */

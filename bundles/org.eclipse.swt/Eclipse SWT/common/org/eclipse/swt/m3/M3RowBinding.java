@@ -177,11 +177,8 @@ public final class M3RowBinding {
 		if (table.isDisposed ()) return;
 		int size = view.size ();
 		if (table.getItemCount () != size) table.setItemCount (size);
-		if (change.kind () == M3RowChange.RESET) {
-			table.clearAll ();
-		} else if (change.firstDamaged () >= 0 && change.firstDamaged () < size) {
-			table.clear (change.firstDamaged (), Math.min (change.lastDamaged (), size - 1));
-		}
+		/* the patch: the item count carries the extent, and only damaged rows are asked again */
+		if (change.firstDamaged () >= 0 && change.firstDamaged () < size) table.clear (change.firstDamaged (), Math.min (change.lastDamaged (), size - 1));
 		renumber (change);
 		restore ();
 	}
