@@ -85,6 +85,8 @@ final class TreeViewport {
 	private int drivingCaret;
 	/* counts window rebuilds, so a native call that rebuilt the window re-entrantly is noticed */
 	private int rebuilds;
+	/* the item height of the last layout: the bar's page follows a new item height only at the next layout (itemHeightKey) */
+	private int layoutItemHeight;
 
 	TreeViewport (Tree tree) {
 		this.tree = tree;
@@ -110,6 +112,7 @@ final class TreeViewport {
 		busy = true;
 		try {
 			int itemHeight = Math.max (1, tree.getItemHeightInPixels ());
+			layoutItemHeight = itemHeight;
 			int body = bodyHeight ();
 			/* the native control counts fully visible rows; the partial last row comes from the overscan */
 			tree.virtualViewport.configureGeometry (itemHeight, body / itemHeight * itemHeight);
@@ -820,6 +823,16 @@ final class TreeViewport {
 		return 0;
 	}
 
+	/*
+	 * A new item height (a taller MeasureItem row, Tree.setItemHeight) changes the rows natively at once, but the
+	 * native vertical bar keeps its page until the TreeView next recomputes its scroll bars, which every key it
+	 * receives does, also a key that changes nothing (custom draw recording, stock seed 0 step 8: Left without a
+	 * caret). The viewport's bar follows at its next layout, and a key lays out when the height changed.
+	 */
+	private void itemHeightKey () {
+		if (layoutItemHeight != 0 && Math.max (1, tree.getItemHeightInPixels ()) != layoutItemHeight) layout ();
+	}
+
 	/** Page Up, Page Down, Home and End move the caret over logical rows; other keys stay native. */
 	/*
 	 * A navigation key the mediator handles itself: the key is consumed, and the caret row is painted now, as the
@@ -834,6 +847,7 @@ final class TreeViewport {
 
 	LRESULT onKeyDown (long wParam) {
 		int key = (int) wParam;
+		itemHeightKey ();
 		if (OS.GetKeyState (OS.VK_SHIFT) < 0 || OS.GetKeyState (OS.VK_CONTROL) < 0) return null;
 		if (OS.SendMessage (tree.handle, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0) == 0
 				&& (key == OS.VK_UP || key == OS.VK_DOWN || key == OS.VK_PRIOR || key == OS.VK_NEXT || key == OS.VK_RIGHT)) {
