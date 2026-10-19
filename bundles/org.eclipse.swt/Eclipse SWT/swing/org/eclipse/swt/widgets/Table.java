@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Synexia - viewport mode hooks (M3TableViewport)
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -88,6 +89,9 @@ public class Table extends Composite {
 	static final int GRID_WIDTH = 1;
 	static final int HEADER_MARGIN = 10;
 	Color headerBackground, headerForeground;
+
+	/* Viewport mode of the table (see M3TableViewport); null in the original mode. */
+	M3TableViewport viewport;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -591,6 +595,7 @@ void createWidget () {
   itemList = new ArrayList();
   columnList = new ArrayList();
 	super.createWidget ();
+	if (M3TableViewport.ENABLED) viewport = M3TableViewport.install (this);
 }
 
 /**
@@ -1206,6 +1211,7 @@ public int getSortDirection () {
  */
 public int getTopIndex () {
 	checkWidget ();
+	if (viewport != null) return viewport.getTopIndex ();
   // Should we return -1 or 0 when there are no items?
   return Math.max(0, ((CTable)handle).getTopIndex());
 }
@@ -1927,6 +1933,7 @@ public void setItemCount (int count) {
 	count = Math.max (0, count);
 	int itemCount = getItemCount();
 	if (count == itemCount) return;
+	if (viewport != null && viewport.setItemCount (count)) return;
 	boolean isVirtual = (style & SWT.VIRTUAL) != 0;
 //	if (!isVirtual) setRedraw (false);
 	int index = count;
@@ -2385,6 +2392,10 @@ public void setSortDirection (int direction) {
  */
 public void setTopIndex (int index) {
 	checkWidget ();
+	if (viewport != null) {
+		viewport.setTopIndex (index);
+		return;
+	}
   ((CTable)handle).setTopIndex(index);
 }
 

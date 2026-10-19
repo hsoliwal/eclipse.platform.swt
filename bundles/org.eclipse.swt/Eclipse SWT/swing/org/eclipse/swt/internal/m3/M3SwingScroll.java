@@ -74,11 +74,36 @@ public final class M3SwingScroll {
 		scrollTo (viewport, row, rows, pitch, M3SparseExtents.ALIGN_AUTO);
 	}
 
+	/**
+	 * Does nothing when a row is fully shown; otherwise scrolls so that the row is in the middle of the viewport
+	 * (the top row is the row minus half the number of fully shown rows), as far as the scrollable range allows.
+	 * This is the rule of the native list of Windows (<code>List.showSelection</code>).
+	 *
+	 * @param viewport the viewport of the scroll pane
+	 * @param row the row to show
+	 * @param rows the number of rows of the view
+	 * @param pitch the height of one row, in pixels
+	 */
+	public void centerRow (JViewport viewport, int row, int rows, int pitch) {
+		if (row < 0 || row >= rows || pitch <= 0) return;
+		layout (rows, pitch);
+		validate (viewport);
+		int y = viewport.getViewPosition ().y;
+		int extent = viewport.getExtentSize ().height;
+		if (extents.scrollOffsetFor (row, M3SparseExtents.ALIGN_AUTO, y, extent) == y) return;
+		int shown = Math.max (1, extent / pitch);
+		setTopRow (viewport, Math.max (0, row - shown / 2), rows, pitch);
+	}
+
+	private static void validate (JViewport viewport) {
+		Container pane = viewport.getParent ();
+		if (pane != null && !pane.isValid ()) pane.validate ();
+	}
+
 	private void scrollTo (JViewport viewport, int row, int rows, int pitch, int align) {
 		if (row < 0 || row >= rows || pitch <= 0) return;
 		layout (rows, pitch);
-		Container pane = viewport.getParent ();
-		if (pane != null && !pane.isValid ()) pane.validate ();
+		validate (viewport);
 		Point position = viewport.getViewPosition ();
 		int extent = viewport.getExtentSize ().height;
 		long target = extents.scrollOffsetFor (row, align, position.y, extent);
