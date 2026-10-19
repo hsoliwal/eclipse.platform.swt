@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Synexia - viewport mode hooks (M3TreeViewport)
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -96,6 +97,8 @@ Color headerBackground, headerForeground;
 //	boolean linesVisible, customDraw, printClient;
 //	static final int INSET = 3;
 	static final int GRID_WIDTH = 1;
+	/* Viewport mode of the tree (see M3TreeViewport); null in the original mode. */
+	M3TreeViewport viewport;
 //	static final int HEADER_MARGIN = 10;
 //	static final char [] BUTTON = new char [] {'B', 'U', 'T', 'T', 'O', 'N', 0};
 
@@ -306,6 +309,10 @@ public void clear (int index, boolean all) {
  */
 public void clearAll (boolean all) {
   checkWidget ();
+	if (viewport != null) {
+		viewport.clearAll (all);
+		return;
+	}
   for(int i=getItemCount()-1; i>=0; i--) {
     getItem(i).clearAll(all);
   }
@@ -375,6 +382,7 @@ protected Container createHandle () {
 //}
 
 void createItem (TreeColumn column, int index) {
+	if (viewport != null) viewport.columnInserted (index);
 //	int columnCount = getColumnCount();
 	for (int i=0; i<itemList.size(); i++) {
 		TreeItem item = (TreeItem)itemList.get(i);
@@ -398,6 +406,10 @@ void createItem (TreeColumn column, int index) {
 }
 
 void createItem (TreeItem item, int index) {
+	if (viewport != null) {
+		viewport.insert (null, item, index);
+		return;
+	}
   itemList.add(index, item);
   ((CTree)handle).getRoot().insert((MutableTreeNode)item.handle, index);
   // TODO: check how to notify addition and if it is needed, because this line causes snippet8 not to work
@@ -405,6 +417,10 @@ void createItem (TreeItem item, int index) {
 }
 
 void createItem (TreeItem item, TreeItem parentItem, int index) {
+	if (viewport != null) {
+		viewport.insert (parentItem, item, index);
+		return;
+	}
   if(parentItem.itemList == null) {
     parentItem.itemList = new ArrayList();
   }
@@ -497,6 +513,7 @@ void createWidget () {
 	super.createWidget ();
   itemList = new ArrayList();
   columnList = new ArrayList();
+	if (M3TreeViewport.ENABLED) viewport = M3TreeViewport.install (this);
 }
 
 //void deregister () {
@@ -518,6 +535,7 @@ public void deselectAll () {
 }
 
 void destroyItem (TreeColumn column) {
+	if (viewport != null) viewport.columnRemoved (columnList.indexOf (column));
   int index = columnList.indexOf(column);
   for (int i=0; i<itemList.size(); i++) {
     TreeItem item = (TreeItem)itemList.get(i);
@@ -791,6 +809,7 @@ public TreeColumn [] getColumns () {
 public TreeItem getItem (int index) {
   checkWidget ();
   if (index < 0) error (SWT.ERROR_INVALID_RANGE);
+	if (viewport != null) return viewport.getItem (null, index);
   if (index >= itemList.size()) error (SWT.ERROR_INVALID_RANGE);
   return (TreeItem)itemList.get(index);
 }
@@ -844,6 +863,7 @@ public TreeItem getItem (Point point) {
  */
 public int getItemCount () {
 	checkWidget ();
+	if (viewport != null) return viewport.getItemCount (null);
   return itemList == null? 0: itemList.size();
 }
 
@@ -891,6 +911,7 @@ public int getItemHeight () {
  */
 public TreeItem [] getItems () {
 	checkWidget ();
+	if (viewport != null) return viewport.getItems (null);
   return (TreeItem[])itemList.toArray(new TreeItem[0]);
 }
 
@@ -1070,6 +1091,7 @@ public int getSortDirection () {
  */
 public TreeItem getTopItem () {
 	checkWidget ();
+	if (viewport != null) return viewport.getTopItem ();
   int index = ((CTree)handle).getTopIndex();
   if(index < 0) return null;
   return ((CTreeItem)((CTree)handle).getPathForRow(index).getLastPathComponent()).getTreeItem();
@@ -1156,6 +1178,7 @@ public int indexOf (TreeItem item) {
 	checkWidget ();
 	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
 	if (item.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+	if (viewport != null) return viewport.indexOf (null, item);
   return itemList.indexOf(item);
 }
 
@@ -1194,6 +1217,7 @@ public int indexOf (TreeItem item) {
 
 @Override
 void releaseChildren (boolean destroy) {
+	if (viewport != null) viewport.release ();
   if(itemList != null) {
     for (int i=0; i<itemList.size(); i++) {
       TreeItem item = (TreeItem)itemList.get(i);
@@ -1236,6 +1260,10 @@ void releaseChildren (boolean destroy) {
 }
 
 void releaseItem (TreeItem treeItem, boolean release) {
+	if (viewport != null) {
+		viewport.remove (treeItem, release);
+		return;
+	}
   TreeItem parentItem = treeItem.getParentItem();
   if(parentItem == null) {
     ((CTree)handle).getRoot().remove((MutableTreeNode)treeItem.handle);
@@ -1264,6 +1292,10 @@ void releaseItem (TreeItem treeItem, boolean release) {
  */
 public void removeAll () {
 	checkWidget ();
+	if (viewport != null) {
+		viewport.removeAll (null);
+		return;
+	}
   for (int i=itemList.size()-1; i>=0; i--) {
     TreeItem item = (TreeItem)itemList.get(i);
     if (item != null && !item.isDisposed ()) {
@@ -1386,6 +1418,10 @@ void setItemCount (TreeItem treeItem, int count) {
 }
 
 void setItemCount (TreeItem parentItem, ArrayList itemList, int count) {
+	if (viewport != null) {
+		viewport.setItemCount (parentItem, count);
+		return;
+	}
   count = Math.max (0, count);
   for(int i=itemList.size()-1; i>= count; i--) {
     TreeItem item = (TreeItem)itemList.get(i);
@@ -1904,6 +1940,10 @@ public void setTopItem (TreeItem item) {
 	checkWidget ();
 	if (item == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 	if (item.isDisposed ()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
+	if (viewport != null) {
+		viewport.setTopItem (item);
+		return;
+	}
   int row = ((CTree)handle).getRowForPath(new TreePath(item.handle.getPath()));
   if(row < 0) {
     return;

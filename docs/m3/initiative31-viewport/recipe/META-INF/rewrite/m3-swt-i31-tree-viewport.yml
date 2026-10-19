@@ -1,0 +1,196 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.I31SwingTreeViewport
+displayName: Initiative 31 (SWT on Swing) Tree mediates its items through the viewport
+description: >-
+  Catalogue VIEWPORT_WINDOWING. In the viewport mode (the default; -Dswt.widget.mode.Tree=original selects the
+  original implementation) a Tree materializes items only when Swing or the API reads them, sends one model event
+  per bulk change, and answers the top item from the viewport. Each hook is one delegation at the start of a
+  method or after its argument checks; the logic lives in M3TreeViewport, M3TreeChildren and M3TreeTableRows.
+recipeList:
+  - com.synexia.openrewrite.viewport.I31SwingTreeViewportTree
+  - com.synexia.openrewrite.viewport.I31SwingTreeViewportTreeItem
+  - com.synexia.openrewrite.viewport.I31SwingTreeViewportSwing
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.I31SwingTreeViewportTree
+displayName: Initiative 31 Tree viewport hooks
+description: The viewport field and the Tree delegations.
+recipeList:
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      memberName: viewport
+      beforeMethod: Tree
+      memberSource: "\t/* Viewport mode of the tree (see M3TreeViewport); null in the original mode. */\n\tM3TreeViewport viewport;"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: createWidget
+      parameterCount: 0
+      position: METHOD_END
+      statements: "\tif (M3TreeViewport.ENABLED) viewport = M3TreeViewport.install (this);"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: createItem
+      parameterTypes: "TreeItem,int"
+      position: METHOD_START
+      statements: "\tif (viewport != null) {\n\t\tviewport.insert (null, item, index);\n\t\treturn;\n\t}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: createItem
+      parameterTypes: "TreeItem,TreeItem,int"
+      position: METHOD_START
+      statements: "\tif (viewport != null) {\n\t\tviewport.insert (parentItem, item, index);\n\t\treturn;\n\t}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: createItem
+      parameterTypes: "TreeColumn,int"
+      position: METHOD_START
+      statements: "\tif (viewport != null) viewport.columnInserted (index);"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: destroyItem
+      parameterTypes: "TreeColumn"
+      position: METHOD_START
+      statements: "\tif (viewport != null) viewport.columnRemoved (columnList.indexOf (column));"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: releaseItem
+      parameterCount: 2
+      position: METHOD_START
+      statements: "\tif (viewport != null) {\n\t\tviewport.remove (treeItem, release);\n\t\treturn;\n\t}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: releaseChildren
+      parameterCount: 1
+      position: METHOD_START
+      statements: "\tif (viewport != null) viewport.release ();"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: setItemCount
+      parameterCount: 3
+      position: METHOD_START
+      statements: "\tif (viewport != null) {\n\t\tviewport.setItemCount (parentItem, count);\n\t\treturn;\n\t}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: getItem
+      parameterTypes: "int"
+      anchor: "if (index < 0) error"
+      position: AFTER
+      statements: "\tif (viewport != null) return viewport.getItem (null, index);"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: getItemCount
+      parameterCount: 0
+      anchor: "checkWidget ()"
+      position: AFTER
+      statements: "\tif (viewport != null) return viewport.getItemCount (null);"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: getItems
+      parameterCount: 0
+      anchor: "checkWidget ()"
+      position: AFTER
+      statements: "\tif (viewport != null) return viewport.getItems (null);"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: indexOf
+      parameterTypes: "TreeItem"
+      anchor: "if (item.isDisposed())"
+      position: AFTER
+      statements: "\tif (viewport != null) return viewport.indexOf (null, item);"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: removeAll
+      parameterCount: 0
+      anchor: "checkWidget ()"
+      position: AFTER
+      statements: "\tif (viewport != null) {\n\t\tviewport.removeAll (null);\n\t\treturn;\n\t}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: clearAll
+      parameterCount: 1
+      anchor: "checkWidget ()"
+      position: AFTER
+      statements: "\tif (viewport != null) {\n\t\tviewport.clearAll (all);\n\t\treturn;\n\t}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: getTopItem
+      parameterCount: 0
+      anchor: "checkWidget ()"
+      position: AFTER
+      statements: "\tif (viewport != null) return viewport.getTopItem ();"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Tree]
+      methodName: setTopItem
+      parameterCount: 1
+      anchor: "if (item.isDisposed ())"
+      position: AFTER
+      statements: "\tif (viewport != null) {\n\t\tviewport.setTopItem (item);\n\t\treturn;\n\t}"
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.I31SwingTreeViewportTreeItem
+displayName: Initiative 31 TreeItem viewport hooks
+description: The children field and the TreeItem delegations.
+recipeList:
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.TreeItem]
+      memberName: m3Children
+      beforeMethod: TreeItem
+      memberSource: "\t/* Children of the item in the viewport mode of its tree (see M3TreeViewport); null otherwise. */\n\tM3TreeChildren m3Children;"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.TreeItem]
+      methodName: getItem
+      parameterTypes: "int"
+      anchor: "if(index < 0 || index >= getItemCount())"
+      position: AFTER
+      statements: "\tif (parent.viewport != null) return parent.viewport.getItem (this, index);"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.TreeItem]
+      methodName: getItemCount
+      parameterCount: 0
+      anchor: "if (!parent.checkData (this, true))"
+      position: AFTER
+      statements: "\tif (parent.viewport != null) return parent.viewport.getItemCount (this);"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.TreeItem]
+      methodName: getItems
+      parameterCount: 0
+      anchor: "if (!parent.checkData (this, true))"
+      position: AFTER
+      statements: "\tif (parent.viewport != null) return parent.viewport.getItems (this);"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.TreeItem]
+      methodName: indexOf
+      parameterTypes: "TreeItem"
+      anchor: "if (item.isDisposed())"
+      position: AFTER
+      statements: "\tif (parent.viewport != null) return parent.viewport.indexOf (this, item);"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.TreeItem]
+      methodName: removeAll
+      parameterCount: 0
+      anchor: "checkWidget ()"
+      position: AFTER
+      statements: "\tif (parent.viewport != null) parent.viewport.removeAll (this);"
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.I31SwingTreeViewportSwing
+displayName: Initiative 31 JTreeTable viewport hooks
+description: >-
+  The child-vector setter of the tree node and the tree-column width delegation of JTreeTable. The table-row
+  bookkeeping of expansions is swapped at install time (M3TreeTableRows.install), because the listener that does
+  it in the original mode is an anonymous class, which M3InsertStatements does not visit.
+recipeList:
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.internal.swing.DefaultMutableTreeTableNode]
+      memberName: m3Children
+      beforeMethod: setUserObjects
+      memberSource: "  /**\n   * Replaces the child vector; the viewport mode of the SWT Tree supplies one that reads its children lazily.\n   */\n  public void m3Children(java.util.Vector<javax.swing.tree.TreeNode> children) {\n    this.children = children;\n  }"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.internal.swing.JTreeTable]
+      methodName: getPreferredColumnWidth
+      parameterCount: 1
+      position: METHOD_START
+      statements: "    int m3Width = columnIndex == 0? M3TreeTableRows.preferredWidth(this): -1;\n    if(m3Width >= 0) {\n      return m3Width;\n    }"

@@ -4,6 +4,9 @@
  * 
  * See the file "readme.txt" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * Contributors:
+ *     Synexia - tree-column width of the viewport mode (M3TreeTableRows)
  */
 package org.eclipse.swt.internal.swing;
 
@@ -722,6 +725,10 @@ public class JTreeTable extends JPanel implements Scrollable {
   }
 
   public int getPreferredColumnWidth(int columnIndex) {
+    int m3Width = columnIndex == 0? M3TreeTableRows.preferredWidth(this): -1;
+    if(m3Width >= 0) {
+      return m3Width;
+    }
     if(columnIndex == 0) {
       return tree.getPreferredSize().width;
     }

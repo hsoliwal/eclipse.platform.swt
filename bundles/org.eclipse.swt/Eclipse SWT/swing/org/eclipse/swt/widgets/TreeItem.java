@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Synexia - viewport mode hooks (M3TreeViewport)
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -60,6 +61,8 @@ public class TreeItem extends Item {
 //	String [] strings;
 	Image [] images;
   boolean cached;
+	/* Children of the item in the viewport mode of its tree (see M3TreeViewport); null otherwise. */
+	M3TreeChildren m3Children;
 //	int background = -1, foreground = -1, font = -1;
 //	int [] cellBackground, cellForeground, cellFont;
 	
@@ -598,6 +601,7 @@ public TreeItem getItem (int index) {
   if (index < 0) error (SWT.ERROR_INVALID_RANGE);
   if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
   if(index < 0 || index >= getItemCount()) error (SWT.ERROR_INVALID_RANGE);
+	if (parent.viewport != null) return parent.viewport.getItem (this, index);
   return (TreeItem)itemList.get(index);
 //  int hwnd = parent.handle;
 //  int hFirstItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_CHILD, handle);
@@ -621,6 +625,7 @@ public TreeItem getItem (int index) {
 public int getItemCount () {
 	checkWidget ();
   if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+	if (parent.viewport != null) return parent.viewport.getItemCount (this);
   return itemList == null? 0: itemList.size();
 }
 
@@ -643,6 +648,7 @@ public int getItemCount () {
 public TreeItem [] getItems () {
 	checkWidget ();
   if (!parent.checkData (this, true)) error (SWT.ERROR_WIDGET_DISPOSED);
+	if (parent.viewport != null) return parent.viewport.getItems (this);
   return itemList == null? new TreeItem [0]: (TreeItem [])itemList.toArray(new TreeItem [0]);
 }
 
@@ -793,6 +799,7 @@ public int indexOf (TreeItem item) {
 	checkWidget ();
 	if (item == null) error (SWT.ERROR_NULL_ARGUMENT);
 	if (item.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+	if (parent.viewport != null) return parent.viewport.indexOf (this, item);
   return itemList == null? -1: itemList.indexOf(item);
 }
 
@@ -826,6 +833,7 @@ void releaseWidget() {
  */
 public void removeAll () {
   checkWidget ();
+	if (parent.viewport != null) parent.viewport.removeAll (this);
   if(itemList != null) {
     for (int i=itemList.size()-1; i>=0; i--) {
       TreeItem item = (TreeItem)itemList.get(i);
