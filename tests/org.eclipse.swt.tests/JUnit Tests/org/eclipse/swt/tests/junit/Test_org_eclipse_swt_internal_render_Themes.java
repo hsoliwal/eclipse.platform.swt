@@ -68,7 +68,7 @@ public class Test_org_eclipse_swt_internal_render_Themes {
 	/* the row delegate of LF6: its paint keys, the theme of each look and feel, and the look of a look and feel's name */
 	@Test
 	public void rowDelegateReadsItsLookAndFeelDefaults () {
-		M3RowUI ui = new M3RowUI ("Table");
+		M3DrawnRowUI ui = new M3DrawnRowUI ("Table");
 		assertEquals (12, ui.paintKeys ().length);
 		assertTrue (Arrays.stream (ui.paintKeys ()).anyMatch (id -> "Table.selectionBackground".equals (M3UIKeys.name (id))));
 		assertSame (Theme.NATIVE, ui.theme (), "before it is installed");

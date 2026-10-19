@@ -42,7 +42,7 @@ abstract class DrawnPlane {
 	/* the renderer of the theme in effect; replaced when the theme selection changes (Themes) */
 	RowRenderer renderer;
 	/* the look and feel delegate of the rows (M3LookAndFeel, LF6); a switch installs it again with a new theme */
-	private final M3RowUI ui;
+	private final M3DrawnRowUI ui;
 	/* the run-time or user-defined theme that wins over the delegate's (Themes.explicit), read again after a Themes change */
 	private Theme explicit;
 	private int themeGeneration;
@@ -72,7 +72,7 @@ abstract class DrawnPlane {
 		this.control = control;
 		this.nativeProc = nativeProc;
 		this.widget = widget;
-		this.ui = M3LookAndFeel.installUI (control, M3RowUI.class, new M3RowUI (widget));
+		this.ui = M3LookAndFeel.installUI (control, M3DrawnRowUI.class, new M3DrawnRowUI (widget));
 		this.themeGeneration = Themes.generation ();
 		this.explicit = Themes.explicit (widget);
 		this.renderer = new RowRenderer (explicit != null ? explicit : ui.theme ());
@@ -178,16 +178,16 @@ abstract class DrawnPlane {
 	}
 
 	/*
-	 * -Dswt.drawn.overlay=true: the frame time (last, p99) and the input-to-pixel latency p99 in the top right corner of
-	 * the client area, repainted twice a second. A debugging aid: building its text allocates.
+	 * -Dswt.drawn.overlay=true: the frame time (last, p99) and the input-to-pixel latency p99 in the bottom right corner of
+	 * the client area (a header covers the top), repainted twice a second. A debugging aid: building its text allocates.
 	 */
 	private void overlay () {
 		overlayText.setLength (0);
 		overlayText.append (widget).append (' ').append (frames.frames ()).append (" f | frame p99 ").append (frames.frameTime (99) / 1000 / 1000.0)
 			.append (" ms | input p99 ").append (frames.inputLatency (99) / 1000 / 1000.0).append (" ms");
-		int width = 300, height = 18, x = Math.max (0, client.right - width - 2);
-		canvas.fill (x, 2, width, height, 0xFFFFE1);
-		canvas.text (overlayText.toString (), row.font, 0x000000, x + 4, 2, width - 8, height, SWT.LEFT);
+		int width = 300, height = 18, x = Math.max (0, client.right - width - 2), y = Math.max (0, client.bottom - height - 2);
+		canvas.fill (x, y, width, height, 0xFFFFE1);
+		canvas.text (overlayText.toString (), row.font, 0x000000, x + 4, y, width - 8, height, SWT.LEFT);
 	}
 
 	/*

@@ -125,7 +125,7 @@ public final class Themes {
 	}
 
 	/**
-	 * The theme a drawn plane paints with instead of the theme of its look and feel delegate ({@link M3RowUI}): a
+	 * The theme a drawn plane paints with instead of the theme of its look and feel delegate ({@link M3DrawnRowUI}): a
 	 * run-time selection ({@link #select}), or a user-defined theme named by the startup properties; null when the look
 	 * and feel ({@link M3LookAndFeel}) decides.
 	 */

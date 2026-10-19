@@ -370,7 +370,7 @@ all-widgets track's LF2 tables, to become `M3UIDefaults` lanes in LF6), not from
   non-pixel probe must still equal stock, and the captures after the switch are compared with a leg that started in
   the target theme.
 - **Row delegate (since integration round 9 brought `M3LookAndFeel`, `M3UIDefaults` and `M3ComponentUI`):** every
-  drawn plane installs `M3RowUI` with `M3LookAndFeel.installUI`. The delegate reads the colours above by key id from
+  drawn plane installs `M3DrawnRowUI` with `M3LookAndFeel.installUI`. The delegate reads the colours above by key id from
   the look and feel's `M3UIDefaults` (`ThemeDefaults.of (widget, look, defaults)`; the developer layer of
   `M3UIDefaults.put` answers first) and declares them as its paint keys, so `M3LookAndFeel.setLookAndFeel` installs it
   again and repaints the widget only when a key it reads changes; the plane picks the new theme on its next frame.
@@ -400,7 +400,7 @@ A **snapshot** is what one frame needs and nothing else, immutable once publishe
 - the row window: first row, row count, the pixel offset of the first row, the row heights (a prefix-sum lane);
 - the window's lanes: text ids (interned), foreground, background and font ids, image ids, state bits (selected,
   focused, checked, grayed, expanded, children, depth);
-- the theme id and theme generation (the look and feel of the widget: `M3RowUI`);
+- the theme id and theme generation (the look and feel of the widget: `M3DrawnRowUI`);
 - the damage since the previous snapshot (rectangles in plane pixels), and the scroll position.
 
 Publication is single-writer, many-reader, wait-free for the reader:
@@ -464,6 +464,97 @@ m3 pixels and the custom pixels are reported by similarity; every non-pixel answ
 | IM4 | predicted frames for scroll, selection and focus | I5 |
 | IM5 | frame pacing (skiko pattern) | I6 in gpu |
 | IM6 | the interactive differential | I1-I7 |
+
+## Vector glyphs: SVG at the exact DPI (design, user 2026-10-19)
+
+"SWT SVG is there, Batik is there": theme glyphs (expanders, check boxes, sort indicators, chevrons) and vector icons
+of the drawn modes come from SVG, rasterized at the widget's exact zoom.
+
+- **Rasterizer (donor rows in [render-modes/FOSS_REUSE_DECISION.tsv](render-modes/FOSS_REUSE_DECISION.tsv)).** SWT's
+  own: `org.eclipse.swt.internal.image.SVGRasterizer` (`rasterizeSVG (stream, zoom)` and `(stream, width, height)`),
+  found through the ServiceLoader, implemented by the `org.eclipse.swt.svg` fragment with JSVG (MIT). Apache Batik
+  (Apache-2.0) is the fallback for a feature JSVG lacks (filters, SVG text); the built-in glyph set needs none.
+- **Cache in lanes, never per frame.** A glyph key packs (icon id, size in pixels, zoom, theme generation) into one
+  long; an open-addressing table maps it to a slot of preallocated lanes holding the `ImageData`. A miss rasterizes
+  once (on the UI thread, or on a model worker as part of a snapshot in the interaction model); a frame only looks the
+  slot up. The backends already keep one device copy per `ImageData` (`GcRowCanvas`, `M3RowCanvas` glyph caches), so a
+  hit costs a table probe. A theme switch or a zoom change moves to new keys; old slots are reused LRU.
+- **Themes.** A theme names its glyphs by SVG resource (`Tree.icon.expanded`, `Tree.icon.collapsed`,
+  `CheckBox.icon.checked`, `CheckBox.icon.unchecked`, `CheckBox.icon.mixed`, `Table.sortIcon.ascending`,
+  `Table.sortIcon.descending`), keys of the look and feel tables (the all-widgets track owns the tables; FlatLaf's
+  icon key names). `Theme.expanderOpen` and the other glyph images become per-zoom lookups in the cache.
+- **Proof.** A differential leg runs at 100, 150 and 200 % (`-Dswt.autoScale`): the glyph pixels are crisp (no
+  scaled bitmap: the rasterized size equals the slot size at that zoom) and equal across custom, m3 and gpu (all three
+  blit the same `ImageData` 1:1); every non-pixel probe stays equal to stock.
+- **Theme tint.** The glyph sources use `currentColor`; before rasterizing, the cache resolves it to the theme's colour
+  (expander: `Tree.expandIconColor`, check box: the border and `CheckBox.icon.checkmarkColor`, sort indicator: the
+  header foreground), so one SVG serves every look and feel (the FlatSVGIcon colour-filter pattern, FlatLaf #303 and
+  #817; SWT's rasterizer takes the resolved SVG, as platform.ui #4497/#4505 set `currentColor`). The built-in set is
+  in `org/eclipse/swt/internal/render/glyphs` (chevron right and down, check box off/on/mixed, sort ascending and
+  descending; 16 x 16 view boxes, 1.5 px strokes).
+- **Differential cases absorbed from upstream (leaf SV3):** swt #3659 (the unfocused tree selection fill of the dark
+  theme on win32: the inactive selection colour comes from `Tree.selectionInactiveBackground` of the dark table, not
+  from the platform), swt #3631 (crisp HiDPI images: the glyph is rasterized at the slot's pixel size, never scaled
+  from 100 %), FlatLaf #1022 (fractional scale artifacts: at 125 and 150 % the slot and the glyph round the same way,
+  `(size * zoom + 50) / 100`, so no seam between a selection fill and the glyph).
+
+| Leaf | Scope | Gate |
+|---|---|---|
+| SV1 | glyph cache (packed keys, lanes, clock eviction), SWT rasterizer through the ServiceLoader: DONE (`GlyphCache`, 4/4 headless) | headless test: one rasterization per key, none per frame |
+| SV2 | built-in SVG glyph set for the flat looks (DONE: `Glyphs`, 7 glyphs with `currentColor`, tinted per theme; `Test_org_eclipse_swt_internal_render_Glyphs` 2/2 with the SVG fragment and JSVG 2.1.0 on the class path); theme keys with the all-widgets track | the theme tests |
+| SV3 | the 100/150/200 % leg: headless part DONE (every glyph at 16, 24 and 32 pixels, tinted, edge share under a half); the three-mode pixel leg and the upstream cases (swt #3659, #3631, FlatLaf #1022) next | crisp and equal across the three drawn modes |
+| SV4 | the example (below, with the interaction model's overlay) | runs on the invisible desktop |
+
+## Examples (user 2026-10-19: "enrich everything with examples")
+
+**A drawn Table in the gpu mode with the overlay** ([M3DrawnModesDemo](../../examples/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/M3DrawnModesDemo.java):
+a million virtual rows, three columns, look and feel buttons):
+
+```
+java -Dswt.widget.mode=gpu -Dswt.drawn.overlay=true ^
+     -cp swt.jar;swt-render-m3.jar;skija-shared-0.116.3.jar;skija-windows-x64-0.116.3.jar;types-0.1.1.jar ^
+     org.eclipse.swt.snippets.M3DrawnModesDemo
+```
+
+The overlay (bottom right) shows the frames drawn, the frame time p99 and the input-to-pixel latency p99 of the plane's
+frame log (interaction model, IM1). `-Dswt.widget.mode=custom` draws with GDI, `m3` with the M3 renderer on the CPU.
+Nothing in the application changes between the modes:
+
+```java
+Table table = new Table (shell, SWT.VIRTUAL | SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION);
+table.setHeaderVisible (true);
+table.setLinesVisible (true);
+table.addListener (SWT.SetData, event -> ((TableItem) event.item).setText ("row " + event.index));
+table.setItemCount (1_000_000);
+```
+
+**Switching the look and feel at run time** (LF6; the rows' `M3DrawnRowUI` delegate is installed again and the widget
+repaints only when a key it reads changes):
+
+```java
+M3LookAndFeel.setLookAndFeel ("flatdark");   // native, swing, initiative31, flat, flatdark, or a registered one
+M3LookAndFeel.getDefaults ().put (M3UIKeys.of ("Table", "selectionBackground", M3UIKeys.COLOR), 0xFF2F6FD0); // developer layer
+```
+
+**One widget class pinned** at startup: `-Dswt.widget.theme.Tree=swing` keeps Trees in Swing's Metal look while the
+rest follows `setLookAndFeel`.
+
+**A theme of one's own** (painters and glyph images; a run-time selection wins over the look and feel):
+
+```java
+Theme ocean = Theme.builder ("ocean").look (Theme.LOOK_SWING).selection (0x2F6FD0, 0xC5D5EA).lines (0x7A8A99, 0xD0D8E0).build ();
+Themes.register (ocean);
+Themes.select ("Table", ocean);
+```
+
+**Measuring a drawn plane from a test** (the frame log is per plane; `FrameLog.monotonic` is invariant I2):
+
+```java
+FrameLog frames = ...;                  // the plane's log (package-private field DrawnPlane.frames)
+long frameP99 = frames.frameTime (99);    // nanoseconds
+long inputP99 = frames.inputLatency (99); // nanoseconds from input to the frame that shows it
+assertTrue (frames.monotonic ());
+```
 
 ## Leaves
 
