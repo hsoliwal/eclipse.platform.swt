@@ -2,7 +2,7 @@
 # Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
 # SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
 # Applies the LF6 loader recipes (dependency tracking, FlatLaf colour functions; docs/m3/LOOK_AND_FEEL.md) to
-# LookAndFeelLoader.java, each twice: the second pass must report UNCHANGED.
+# LookAndFeelLoader.java, and the LF6 test updates to the LF2 suite, each twice: the second pass must report UNCHANGED.
 # Usage: lf6_loader_recipe.sh <worktree>
 WT=$1
 C=K:/m3-work/syn-recipes/synexia-openrewrite-recipes/crates/m3-viewport-catalogue-recipes
@@ -15,4 +15,9 @@ for pass in 1 2; do
   echo "$recipe pass $pass: $("$JAVA_HOME/bin/java" -Xmx1g -cp "$CPR" com.synexia.openrewrite.viewport.M3PerFileApply \
     com.synexia.openrewrite.viewport.$recipe "$F" 2>&1 | grep -oE '^(CHANGED|UNCHANGED|ERROR)' | tr '\n' ' ')"
 done
+done
+T="$WT/tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_internal_laf_LookAndFeel.java"
+for pass in 1 2; do
+  echo "SwtLafLf6TestUpdates pass $pass: $("$JAVA_HOME/bin/java" -Xmx1g -cp "$CPR" com.synexia.openrewrite.viewport.M3PerFileApply \
+    com.synexia.openrewrite.viewport.SwtLafLf6TestUpdates "$T" 2>&1 | grep -oE '^(CHANGED|UNCHANGED|ERROR)' | tr '\n' ' ')"
 done

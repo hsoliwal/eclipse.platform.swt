@@ -182,6 +182,6 @@ public class M3LafSwitchBenchmark {
 	}
 
 	static long allocated () {
-		return ((com.sun.management.ThreadMXBean) THREADS).getThreadAllocatedBytes (Thread.currentThread ().getId ());
+		return ((com.sun.management.ThreadMXBean) THREADS).getThreadAllocatedBytes (Thread.currentThread ().threadId ());
 	}
 }
