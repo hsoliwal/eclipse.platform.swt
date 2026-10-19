@@ -449,7 +449,7 @@ public final class ViewportDifferential<S> {
 			line = String.format (Locale.ROOT, "%s\t%s\t%s\t%.2f%% equal\t%.3f mean abs channel difference\t%s", name, reference (widget), where,
 				100.0 * equal / total, difference / (3.0 * total), evidence);
 		}
-		System.err.println ("pixel similarity: " + line);
+		LOG.info ("pixel similarity: " + line);
 		String output = System.getProperty ("swt.viewport.similarity");
 		if (output != null) Files.write (Paths.get (output), List.of (line), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 	}

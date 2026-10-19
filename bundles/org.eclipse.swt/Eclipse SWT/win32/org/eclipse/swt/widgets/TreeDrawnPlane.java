@@ -253,6 +253,6 @@ final class TreeDrawnPlane extends DrawnPlane {
 			checkRight = stateTo - label.left;
 			checkKnown = true;
 		}
-		LOG.trace (() -> "Tree drawn plane slots: expander " + expanderLeft + ".." + expanderRight + " (" + expanderKnown + "), check " + checkLeft + ".." + checkRight + " (" + checkKnown + ")");
+		if (LOG.isTraceEnabled ()) LOG.trace (() -> "Tree drawn plane slots: expander " + expanderLeft + ".." + expanderRight + " (" + expanderKnown + "), check " + checkLeft + ".." + checkRight + " (" + checkKnown + ")");
 	}
 }
