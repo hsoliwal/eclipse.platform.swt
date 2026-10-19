@@ -14,6 +14,7 @@
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
+import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.*;
 import org.eclipse.swt.internal.laf.*;
@@ -44,6 +45,11 @@ abstract class DrawnPlane {
 	/* the run-time or user-defined theme that wins over the delegate's (Themes.explicit), read again after a Themes change */
 	private Theme explicit;
 	private int themeGeneration;
+	/* the frame log of the interaction model (IM1): frame times, input-to-pixel latency, snapshot generations */
+	final FrameLog frames = new FrameLog ();
+	/* -Dswt.drawn.overlay=true paints the frame log's numbers over the rows */
+	static final boolean OVERLAY = Boolean.getBoolean ("swt.drawn.overlay");
+	private final StringBuilder overlayText = new StringBuilder (96);
 	private final Runnable themeChanged;
 	final RowPaint row = new RowPaint ();
 	final RECT damage = new RECT (), client = new RECT ();
@@ -83,6 +89,14 @@ abstract class DrawnPlane {
 			});
 		};
 		Themes.addListener (themeChanged);
+		if (OVERLAY) display.timerExec (500, new Runnable () {
+			@Override
+			public void run () {
+				if (control.isDisposed ()) return;
+				control.redraw ();
+				display.timerExec (500, this);
+			}
+		});
 	}
 
 	/*
@@ -106,7 +120,12 @@ abstract class DrawnPlane {
 
 	/** True for the messages this plane paints: the behaviour plane's paint and print-client. */
 	final boolean paints (long hwnd, int msg) {
-		return hwnd == control.handle && (msg == OS.WM_PAINT || msg == OS.WM_PRINTCLIENT);
+		if (hwnd != control.handle) return false;
+		if (msg == OS.WM_PAINT || msg == OS.WM_PRINTCLIENT) return true;
+		/* input reaches the model at once; the frame log measures until a frame shows it (interaction model, IM1) */
+		if (msg == OS.WM_KEYDOWN || msg == OS.WM_CHAR || msg == OS.WM_MOUSEWHEEL || msg == OS.WM_LBUTTONDOWN || msg == OS.WM_VSCROLL
+			|| msg == OS.WM_HSCROLL) frames.input (System.nanoTime ());
+		return false;
 	}
 
 	/**
@@ -137,6 +156,7 @@ abstract class DrawnPlane {
 
 	/* behaviour pass into the back buffer, drawn pass over it, present: the damage is visible */
 	private void draw (long hwnd, int msg, long target, long lParam) {
+		long begin = System.nanoTime ();
 		buffer.ensure (target, client.right, client.bottom);
 		behaviour (hwnd, msg, lParam);
 		if (control.isDisposed ()) return;
@@ -147,10 +167,26 @@ abstract class DrawnPlane {
 		canvas.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		try {
 			drawRows (hwnd);
+			if (OVERLAY) overlay ();
 		} finally {
 			canvas.end ();
 		}
 		buffer.present (target, damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
+		/* stage 1 paints the live model on the UI thread: one generation per frame until the snapshots of IM2 */
+		frames.frame (begin, System.nanoTime (), frames.frames ());
+	}
+
+	/*
+	 * -Dswt.drawn.overlay=true: the frame time (last, p99) and the input-to-pixel latency p99 in the top right corner of
+	 * the client area, repainted twice a second. A debugging aid: building its text allocates.
+	 */
+	private void overlay () {
+		overlayText.setLength (0);
+		overlayText.append (widget).append (' ').append (frames.frames ()).append (" f | frame p99 ").append (frames.frameTime (99) / 1000 / 1000.0)
+			.append (" ms | input p99 ").append (frames.inputLatency (99) / 1000 / 1000.0).append (" ms");
+		int width = 300, height = 18, x = Math.max (0, client.right - width - 2);
+		canvas.fill (x, 2, width, height, 0xFFFFE1);
+		canvas.text (overlayText.toString (), row.font, 0x000000, x + 4, 2, width - 8, height, SWT.LEFT);
 	}
 
 	/*
