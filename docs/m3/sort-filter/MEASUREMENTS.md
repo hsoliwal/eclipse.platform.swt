@@ -40,3 +40,31 @@ int descending, double ascending); the reference filters a `List<Integer>` with 
 | reference: rebuild after the updates | 0.56 | 5.8 | 55.9 | 425.4 |
 
 Before the distinct-text ranking the three-key sort took 395 ms at 10^6 (all texts merge-sorted).
+
+## Permutation build, second run up to 10^6 (after the distinct-text ranking; raw: `measurements/bench-20261019-2.tsv`)
+
+Milliseconds, one sort per timing at 10^6 (median of 7), same machine under load; all permutations equal.
+
+| keys | n | radix (M3) | merge | packed DPQS | parallel packed | TimSort Integer[] |
+|---|---|---|---|---|---|---|
+| int | 10^4 | 0.10 | 2.07 | 0.57 | 0.41 | 2.31 |
+| int,int | 10^4 | 0.36 | 1.52 | - | - | 2.77 |
+| text | 10^4 | 1.16 | 3.04 | - | - | 3.97 |
+| int | 10^5 | 1.54 | 26.5 | 23.5 | 1.50 | 45.0 |
+| int,int | 10^5 | 4.14 | 30.4 | - | - | 57.9 |
+| text | 10^5 | 30.9 | 48.4 | - | - | 64.3 |
+| text,int | 10^5 | 27.2 | 48.8 | - | - | 67.5 |
+| int | 10^6 | 160.8 | 762.7 | 99.8 | 48.6 | 704.9 |
+| int,int | 10^6 | 63.2 | 328.6 | - | - | 1047.3 |
+| text | 10^6 | 614.9 | 1005.9 | - | - | 1494.3 |
+| text,int | 10^6 | 788.3 | 951.0 | - | - | 1301.1 |
+
+The one-key int row at 10^6 is noisy (the two-key row, which does more passes, ran in 63 ms); the packed
+single-key sorts stay rejected because they cover one 32-bit key only and the parallel one borrows pool threads.
+Text keys here have about 0.43 n distinct values (the worst case for the distinct ranking short of the
+fallback).
+
+## Asynchronous filter over 10^6 rows (`Test_M3FilterAsync`, hidden desktop)
+
+See the async section of DESIGN.md; the numbers are appended to `measurements/async-20261019.tsv` by the test
+(`-Dm3.sortfilter.timings`).
