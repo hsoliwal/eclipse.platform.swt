@@ -502,7 +502,7 @@ of the drawn modes come from SVG, rasterized at the widget's exact zoom.
 |---|---|---|
 | SV1 | glyph cache (packed keys, lanes, clock eviction), SWT rasterizer through the ServiceLoader: DONE (`GlyphCache`, 4/4 headless) | headless test: one rasterization per key, none per frame |
 | SV2 | built-in SVG glyph set for the flat looks (DONE: `Glyphs`, 7 glyphs with `currentColor`, tinted per theme; `Test_org_eclipse_swt_internal_render_Glyphs` 2/2 with the SVG fragment and JSVG 2.1.0 on the class path); theme keys with the all-widgets track | the theme tests |
-| SV3 | the 100/150/200 % leg: headless part DONE (every glyph at 16, 24 and 32 pixels, tinted, edge share under a half); the three-mode pixel leg and the upstream cases (swt #3659, #3631, FlatLaf #1022) next | crisp and equal across the three drawn modes |
+| SV3 | the 100/125/150/200 % leg: headless part DONE; the drawn path DONE (non-native looks draw the SVG set at the zoom, `GcRowCanvas` blits glyphs 1:1 with AlphaBlend); `Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom` + `tools/glyph_zoom_legs.sh` with the upstream cases (swt #3659, #3631, FlatLaf #1022): results pending (queued on the UI lock) | crisp and equal across the three drawn modes |
 | SV4 | the example (below, with the interaction model's overlay) | runs on the invisible desktop |
 
 ## Examples (user 2026-10-19: "enrich everything with examples")
@@ -546,6 +546,17 @@ Theme ocean = Theme.builder ("ocean").look (Theme.LOOK_SWING).selection (0x2F6FD
 Themes.register (ocean);
 Themes.select ("Table", ocean);
 ```
+
+**Vector glyphs at a zoom** (the non-native looks; the SVG fragment and JSVG on the class path):
+
+```
+java -Dswt.autoScale=200 -Dswt.widget.theme=flatdark -Dswt.widget.mode=m3 -Dswt.drawn.overlay=true ^
+     -cp swt.jar;swt-render-m3.jar;skija-shared-0.116.3.jar;skija-windows-x64-0.116.3.jar;types-0.1.1.jar;org.eclipse.swt.svg.jar;jsvg-2.1.0.jar ^
+     org.eclipse.swt.snippets.M3DrawnModesDemo
+```
+
+The expanders and check boxes are rasterized once at 32 pixels (16 points at 200 %) and tinted with `Tree.expandIconColor`
+and `CheckBox.icon.checkmarkColor` of the look and feel; a zoom change rasterizes them again at the new size, never scales.
 
 **Measuring a drawn plane from a test** (the frame log is per plane; `FrameLog.monotonic` is invariant I2):
 
