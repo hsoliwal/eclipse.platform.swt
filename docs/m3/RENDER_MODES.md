@@ -489,7 +489,7 @@ of the drawn modes come from SVG, rasterized at the widget's exact zoom.
 
 | Leaf | Scope | Gate |
 |---|---|---|
-| SV1 | glyph cache (packed keys, lanes, LRU), SWT rasterizer through the ServiceLoader | headless test: one rasterization per key, none per frame |
+| SV1 | glyph cache (packed keys, lanes, clock eviction), SWT rasterizer through the ServiceLoader: DONE (`GlyphCache`, 4/4 headless) | headless test: one rasterization per key, none per frame |
 | SV2 | built-in SVG glyph set for the flat looks; theme keys with the all-widgets track | the theme tests |
 | SV3 | the 100/150/200 % leg | crisp and equal across the three drawn modes |
 | SV4 | the example (below, with the interaction model's overlay) | runs on the invisible desktop |
