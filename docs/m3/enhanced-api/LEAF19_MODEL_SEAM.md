@@ -114,7 +114,7 @@ Swing models already send deltas, so the seam routes them instead of rebuilding.
 | 2. `M3Model` for List and Table | pushed and compile-clean. `Test_M3Model` (differential against stock edits: rows, labels, selection, top row, emptiness events, pixels) is queued on the hidden desktop. |
 | 2b. `M3Model` for Tree | pushed and compile-clean. Ids are kept per parent in `M3TreeModel` over `M3LongIndex` (growable long->int, backward-shift removal). The tree differential is in `Test_M3Model`. |
 | 3. viewport fast paths and native-operation counters | specified below; needs the seams of the Table, List and Tree viewport owners |
-| Swing S8 | done on M3jdk21 `m3/swing-enhanced-api-20261019` (22 tests, new code 100% lines, behaviour differential equal); the commit waits for disk space on K: |
+| Swing S8 | done on M3jdk21 `m3/swing-enhanced-api-20261019`: `M3Patch` d7284fdd1f9, `firePatch` and the three `apply` methods with their tests 8cc0a4d2b29, verification record cced93e804b (22 tests, new code 100% lines / 97.2% branches, behaviour differential equal). |
 
 ## Step 3: the splice seam (for the viewport owners)
 
