@@ -105,3 +105,31 @@ Swing models already send deltas, so the seam routes them instead of rebuilding.
    the window, and O(changed) inside it.
 4. Swing S8.
 5. Examples: the same scenario as the other examples (a delta stream on the million-row catalogue), in SWT and Swing.
+
+## Status (2026-10-19)
+
+| step | state |
+|---|---|
+| 1. `M3Patch` | shipped. `Test_M3Patch` passes 3/3 (headless): minimal diff checked against a quadratic LIS, replay against a list oracle, argument checks. |
+| 2. `M3Model` for List and Table | pushed and compile-clean. `Test_M3Model` (differential against stock edits: rows, labels, selection, top row, emptiness events, pixels) is queued on the hidden desktop. |
+| 2b. `M3Model` for Tree | pushed and compile-clean. Ids are kept per parent in `M3TreeModel` over `M3LongIndex` (growable long->int, backward-shift removal). The tree differential is in `Test_M3Model`. |
+| 3. viewport fast paths and native-operation counters | specified below; needs the seams of the Table, List and Tree viewport owners |
+| Swing S8 | done on M3jdk21 `m3/swing-enhanced-api-20261019` (22 tests, new code 100% lines, behaviour differential equal); the commit waits for disk space on K: |
+
+## Step 3: the splice seam (for the viewport owners)
+
+Today `M3Model.apply` edits rows through the item API. Each inserted or removed row is one `createItem` /
+`destroyItem`. With the viewports that is a lane shift plus one native count change per row, and the visible
+content shifts before the top row is re-anchored. The zero-native-operations contract needs one call per run, in
+each viewport:
+
+| seam (package-private) | effect |
+|---|---|
+| `Table.m3Splice(int at, int removed, int inserted)` | `TableViewport.remove`/`insert` on the lanes and the item array once. Then one `LVM_SETITEMCOUNT` with `LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL`, the top index moved by the rows inserted or removed above it, and an invalidation of the visible rows whose content changed (none when the run is outside the window). |
+| `List.m3Splice(int at, int removed, String[] inserted)` | `ListViewport` shifts its window plan. Native rows are touched only when the run intersects the window. |
+| `Tree.m3Splice(TreeItem parent, int at, int removed, int inserted)` | `VirtualTreeTopology` and `TreeViewport.ensureWindow`. Native items are inserted or deleted only inside the paint window. |
+| `long m3NativeRowOps()` on each widget | count of the native row operations (List: `LB_INSERTSTRING`/`LB_DELETESTRING`/`LB_RESETCONTENT`; Table: `LVM_SETITEMCOUNT` without the no-invalidate flags, `LVM_REDRAWITEMS`, row invalidations; Tree: `TVM_INSERTITEM`/`TVM_DELETEITEM`/`TVM_SETITEM`). Exposed as `M3Residency.stats(widget)[NATIVE_ROW_OPS]`. |
+
+`M3Model.apply` calls the seam when the widget has a viewport and keeps the item-API path otherwise. The
+differential stays as it is. A new test asserts `NATIVE_ROW_OPS` unchanged and no `EraseItem`/`SetData` for a patch
+outside the window, and O(changed) inside it.
