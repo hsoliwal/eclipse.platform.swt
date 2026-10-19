@@ -369,9 +369,14 @@ all-widgets track's LF2 tables, to become `M3UIDefaults` lanes in LF6), not from
   switch leg, `-Dswt.viewport.themeSwitch=<step>:<theme>`: the theme changes at that step of every seed, every
   non-pixel probe must still equal stock, and the captures after the switch are compared with a leg that started in
   the target theme.
-- When `M3LookAndFeel` and `M3UIDefaults` land (LF6 steps b-c), `ThemeDefaults` reads key ids from the lanes and the
-  look and feel's listener bumps `Themes`' generation; the row delegate (`M3RowUI`) of the drawn rows is
-  `RowRenderer` with this theme.
+- **Row delegate (since integration round 9 brought `M3LookAndFeel`, `M3UIDefaults` and `M3ComponentUI`):** every
+  drawn plane installs `M3RowUI` with `M3LookAndFeel.installUI`. The delegate reads the colours above by key id from
+  the look and feel's `M3UIDefaults` (`ThemeDefaults.of (widget, look, defaults)`; the developer layer of
+  `M3UIDefaults.put` answers first) and declares them as its paint keys, so `M3LookAndFeel.setLookAndFeel` installs it
+  again and repaints the widget only when a key it reads changes; the plane picks the new theme on its next frame.
+  The look follows the look and feel's name: `native` the platform parts, `swing`/`metal` Metal, every other
+  (`initiative31`, `light`, `dark`, registered and imported ones) the flat glyphs. A run-time `Themes.select` or a
+  user-defined theme named by the properties still wins (`Themes.explicit`).
 
 ## Leaves
 
