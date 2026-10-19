@@ -166,7 +166,7 @@ final class M3TreeViewport {
 			int index = children.items.indexOfIdentity (item);
 			removed [index - count] = item.handle;
 			((DefaultMutableTreeNode) item.handle).setParent (null);
-			if (release && !item.isDisposed ()) item.release (false);
+			if (release) item.release (false);
 		}
 		children.items.truncate (count, item -> {});
 		children.count = count;
@@ -231,7 +231,7 @@ final class M3TreeViewport {
 		java.util.List<TreeItem> items = materialized (children, 0);
 		for (int i = items.size () - 1; i >= 0; i--) {
 			TreeItem item = items.get (i);
-			if (!item.isDisposed ()) item.dispose ();
+			item.dispose ();
 		}
 		if (children.count > 0) shrink (children, 0, false);
 		if (parentItem == null) rows.resetWidth ();
@@ -248,7 +248,7 @@ final class M3TreeViewport {
 	/** Hook of <code>Tree.releaseChildren(boolean)</code>. */
 	void release () {
 		for (TreeItem item : materialized (roots, 0)) {
-			if (!item.isDisposed ()) item.release (false);
+			item.release (false);
 		}
 		roots.items.clear (item -> {});
 		roots.count = 0;
