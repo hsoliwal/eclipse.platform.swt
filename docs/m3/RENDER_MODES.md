@@ -486,12 +486,23 @@ of the drawn modes come from SVG, rasterized at the widget's exact zoom.
 - **Proof.** A differential leg runs at 100, 150 and 200 % (`-Dswt.autoScale`): the glyph pixels are crisp (no
   scaled bitmap: the rasterized size equals the slot size at that zoom) and equal across custom, m3 and gpu (all three
   blit the same `ImageData` 1:1); every non-pixel probe stays equal to stock.
+- **Theme tint.** The glyph sources use `currentColor`; before rasterizing, the cache resolves it to the theme's colour
+  (expander: `Tree.expandIconColor`, check box: the border and `CheckBox.icon.checkmarkColor`, sort indicator: the
+  header foreground), so one SVG serves every look and feel (the FlatSVGIcon colour-filter pattern, FlatLaf #303 and
+  #817; SWT's rasterizer takes the resolved SVG, as platform.ui #4497/#4505 set `currentColor`). The built-in set is
+  in `org/eclipse/swt/internal/render/glyphs` (chevron right and down, check box off/on/mixed, sort ascending and
+  descending; 16 x 16 view boxes, 1.5 px strokes).
+- **Differential cases absorbed from upstream (leaf SV3):** swt #3659 (the unfocused tree selection fill of the dark
+  theme on win32: the inactive selection colour comes from `Tree.selectionInactiveBackground` of the dark table, not
+  from the platform), swt #3631 (crisp HiDPI images: the glyph is rasterized at the slot's pixel size, never scaled
+  from 100 %), FlatLaf #1022 (fractional scale artifacts: at 125 and 150 % the slot and the glyph round the same way,
+  `(size * zoom + 50) / 100`, so no seam between a selection fill and the glyph).
 
 | Leaf | Scope | Gate |
 |---|---|---|
 | SV1 | glyph cache (packed keys, lanes, clock eviction), SWT rasterizer through the ServiceLoader: DONE (`GlyphCache`, 4/4 headless) | headless test: one rasterization per key, none per frame |
-| SV2 | built-in SVG glyph set for the flat looks; theme keys with the all-widgets track | the theme tests |
-| SV3 | the 100/150/200 % leg | crisp and equal across the three drawn modes |
+| SV2 | built-in SVG glyph set for the flat looks (DONE: `Glyphs`, 7 glyphs with `currentColor`, tinted per theme; `Test_org_eclipse_swt_internal_render_Glyphs` 2/2 with the SVG fragment and JSVG 2.1.0 on the class path); theme keys with the all-widgets track | the theme tests |
+| SV3 | the 100/150/200 % leg: headless part DONE (every glyph at 16, 24 and 32 pixels, tinted, edge share under a half); the three-mode pixel leg and the upstream cases (swt #3659, #3631, FlatLaf #1022) next | crisp and equal across the three drawn modes |
 | SV4 | the example (below, with the interaction model's overlay) | runs on the invisible desktop |
 
 ## Examples (user 2026-10-19: "enrich everything with examples")

@@ -132,6 +132,12 @@ ROWS = [
      "the rasterizer behind SWT's SVG fragment", "DIRECT_IMPORT", "used through the fragment, not vendored", "-", "bundles/org.eclipse.swt.svg/about.html"],
     ["svg_full_batik", "apache/xmlgraphics-batik", "-", "batik-transcoder;batik-bridge", "Apache-2.0",
      "full SVG 1.1 (filters, text, masks)", "FALLBACK_ONLY", "heavy (about 20 jars); only for an icon that needs a feature JSVG lacks; the built-in glyph set needs none", "-", "-"],
+    ["svg_theme_tint_flatlaf", "JFormDesigner/FlatLaf", "6b9b766659bb7307c3a4c54e615e734112035bd0",
+     "flatlaf-extras/src/main/java/com/formdev/flatlaf/extras/FlatSVGIcon.java (ColorFilter; issues #303, #817)", "Apache-2.0",
+     "theme-tinted SVG icons: a colour filter maps the icon's colours to the look and feel's (currentColor, light/dark mappings)", "PATTERN_ONLY",
+     "pattern for the glyph tint: SWT's rasterizer takes the SVG with currentColor resolved per theme before rasterizing (platform.ui #4497, #4505 set currentColor); no FlatLaf source", "-", "-"],
+    ["svg_batik_graphics_gef", "eclipse-gef/gef-classic", "- (PR #952)", "org.eclipse.draw2d (a Batik-backed Graphics)", "EPL-2.0",
+     "Batik rendering behind a Draw2D Graphics", "PATTERN_ONLY", "the WRAP pattern for a Batik fallback, should an icon need it (svg_full_batik)", "-", "-"],
 ]
 
 

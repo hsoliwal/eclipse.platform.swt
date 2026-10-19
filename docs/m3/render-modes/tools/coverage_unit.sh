@@ -4,6 +4,7 @@
 # Headless JUnit tests of the render-modes drawing core (no display) under the JaCoCo agent, and the coverage report
 # of the given execution files. UI tests (the differentials) add their own .exec files through COVERAGE_AGENT.
 # Usage: coverage_unit.sh <swt-jar> <tests-dir> <out-dir> [more .exec files...]
+# Environment: M3_CP (the M3 backend jar, the Skija jars, and the SVG fragment jar with JSVG for the glyph test), M3_JAR (jars reported on)
 JAR=$1; TESTS=$2; OUT=$3; shift 3
 JDK="C:/Program Files/Java/jdk-21"
 M2=$(cygpath -m ~/.m2/repository)
@@ -15,7 +16,7 @@ mkdir -p "$OUT"
 rm -f "$OUT/unit.exec"
 "$JDK/bin/java" -Xmx512m "-javaagent:$AGENT=destfile=$(cygpath -m "$OUT")/unit.exec,includes=$INCLUDES" -jar "$CS" execute \
   -cp "$(cygpath -m "$TESTS");$(cygpath -m "$JAR")${M3_CP:+;$M3_CP}" --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_RowRenderer \
-  --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_Themes --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_Win32Backends --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_M3Canvas --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_FrameLog --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_GlyphCache ${EXTRA_SELECT:-} --disable-banner --details=summary > "$OUT/unit.log" 2>&1
+  --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_Themes --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_Win32Backends --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_M3Canvas --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_FrameLog --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_GlyphCache --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_Glyphs ${EXTRA_SELECT:-} --disable-banner --details=summary > "$OUT/unit.log" 2>&1
 sed 's/\x1b\[[0-9;]*m//g' "$OUT/unit.log" | grep -E "tests (successful|failed)|✘|=>" | head -12
 "$JDK/bin/javac" -cp "$JC" -d "$OUT/tool" "$(cygpath -m "$(dirname "$0")")/CoverageReport.java" || exit 1
 "$JDK/bin/java" -cp "$OUT/tool;$JC" CoverageReport "$(cygpath -m "$OUT")/coverage.tsv" \
