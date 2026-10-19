@@ -176,7 +176,7 @@ public final class M3ThemeSpec {
 		return MISSING;
 	}
 
-	private static String quote (String text) {
+	static String quote (String text) {
 		StringBuilder out = new StringBuilder ("\"");
 		for (char c : text.toCharArray ()) {
 			if (c == '"' || c == '\\') out.append ('\\').append (c);
