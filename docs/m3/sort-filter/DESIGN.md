@@ -126,6 +126,34 @@ decoration (`M3HeaderDecoration`) so they never overwrite each other.
 - Filtered columns carry a filter mark in their header image (shared `M3HeaderDecoration`).
 - Strings come from `SWT.getMessage` keys `SWT_M3_Filter_*` (TV_5.0 `messages.properties` values).
 
+### Asynchronous filtering: debounce, model work off the UI thread, one apply
+
+User 2026-10-19: "show how the filter must run on the model, and how to debounce and remain responsive"
+(donors: TV_5.0 `ViewerFilterUI` / `TreeViewerUpdater` / `TreeViewerWork`, x86core jsonviewer `TreeFilterControl`
+/ `LazyTreeFilter`, both user-authored). `M3ColumnFilter.setAsync (display, debounceMs)`:
+
+1. **Debounce with a superseding token.** Every criterion change records the criterion (compiled once, on the UI
+   thread, so an invalid pattern is reported at once), increments `generation` (an `int`) and re-arms one
+   preallocated timer runnable. When the timer fires it returns unless the armed generation is still current, so
+   a superseded change never runs and nothing is allocated per keystroke.
+2. **The filter runs on the model, off the UI thread.** One daemon worker (`M3FilterWorker`) takes the newest
+   request: it evaluates only the changed criteria over the source rows (masks, word-wide folds, ancestor rule,
+   compaction), and an `M3ColumnSort` over the filter sorts the result into spare lanes (`prepare`). It compares
+   the generation every 4096 rows and drops the work when a newer generation exists. The UI thread never walks
+   the model.
+3. **The UI applies only the result.** One `asyncExec` per result: if its generation is still current the filter
+   and the sort swap lanes (`apply`, `commitPrepared`) and report one change whose damage starts at the first row
+   that differs; the binding sets the item count (the scroll extent) and clears only the damaged rows, so only the
+   resident window is asked again. A table binding keeps the selection by source row (id-to-row remap).
+4. **Source deltas stay incremental.** `rowsChanged` re-tests only the changed rows (a row whose pass/fail does
+   not change costs O(columns) and reports UPDATED only); entering rows are sorted and merged into the
+   permutation; leaving rows are compacted. Source edits bump the generation, so a running computation over the
+   old numbering is dropped and rescheduled.
+
+Proof: `Test_M3FilterAsync` types 20 keystrokes 30 ms apart over 10^6 rows: only the last generation applies, the
+UI thread spends under 2 ms per keystroke, and the final view equals a synchronous reference. Logging: the worker
+logs each generation at FINE through `SwtLog` (`org.eclipse.swt.m3.M3ColumnFilter`), with level guards.
+
 ## 4. Binding to virtual widgets
 
 `M3RowBinding.bind(Table, M3RowView, RowFill<TableItem>)` and `bind(Tree, M3ColumnSort, RowFill<TreeItem>)`

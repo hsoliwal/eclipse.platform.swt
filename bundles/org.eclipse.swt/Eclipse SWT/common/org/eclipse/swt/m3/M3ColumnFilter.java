@@ -14,6 +14,8 @@
  *     Hitesh Soliwal (Synexia) - adapted from TV_5.0 treeviewer IMultiPropertyTextFilter,
  *         MultiPropertyTextFilter, ElementFilter, FilteredTreeElementProvider and
  *         TreeFilterStateProvider (docs/m3/sort-filter/PROVENANCE.tsv)
+ *     Hitesh Soliwal (Synexia) - filtering the model off the UI thread adapted from x86core
+ *         jsonviewer LazyTreeFilter and TreeFilterControl (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
 package org.eclipse.swt.m3;
 
