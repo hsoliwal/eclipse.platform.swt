@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
  *
- * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 826e57b779174368fec5c4295eca9e3ad794c2e1,
+ * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 b8313c4f84dc5426f41c259b56c2b864327c3f73,
  * com.m3.collections.M3HeapGrowth (same author; the SWT copy of the viewport collections).
  * Ported from hsoliwal/com.synexia 46e296ad537c6ecbd62b9783874e8f1714e278a9:
  * synexia-common/src/main/java/com/synexia/common/collections/PackedHeapGrowth.java (#10871),

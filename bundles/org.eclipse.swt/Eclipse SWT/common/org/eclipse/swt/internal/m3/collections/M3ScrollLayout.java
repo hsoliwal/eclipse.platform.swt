@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
  *
- * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 826e57b779174368fec5c4295eca9e3ad794c2e1,
+ * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 b8313c4f84dc5426f41c259b56c2b864327c3f73,
  * com.m3.collections.M3ScrollLayout (same author; the SWT copy of the viewport collections).
  * Derived by recipe (m3/docs/viewport-everywhere/recipe) from hsoliwal/eclipse.platform.swt 553eefd41d9961d303c41e0e4e181712e64a1e45,
  * ViewportScrollLayout.java; Apache-2.0 elected from its Apache-2.0 OR EPL-2.0 publication
