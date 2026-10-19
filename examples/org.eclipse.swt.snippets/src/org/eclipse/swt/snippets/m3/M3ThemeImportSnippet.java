@@ -23,7 +23,9 @@ package org.eclipse.swt.snippets.m3;
  */
 import java.nio.charset.*;
 import java.nio.file.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.internal.laf.*;
@@ -55,7 +57,7 @@ public class M3ThemeImportSnippet {
 		List<String> arguments = Arrays.asList (args);
 		List<String> names = new ArrayList<> ();
 		M3ThemeWatcher watcher = null;
-		if (!args.length == false && !args [0].startsWith ("--")) {
+		if (args.length > 0 && !args [0].startsWith ("--")) {
 			Path file = Paths.get (args [0]);
 			if (arguments.contains ("--watch")) {
 				watcher = M3ThemeWatcher.watch (display, file, "file");
@@ -79,7 +81,6 @@ public class M3ThemeImportSnippet {
 		Canvas rows = M3LookAndFeelSwitchSnippet.rows (shell);
 		rows.setLayoutData (new GridData (SWT.FILL, SWT.FILL, true, true));
 		M3LookAndFeel.setLookAndFeel (names.get (0));
-		M3LookAndFeel.installUI (rows, M3RowUI.class, new M3DefaultRowUI ("Table"));
 		choice.addListener (SWT.Selection, e -> M3LookAndFeel.setLookAndFeel (choice.getText ()));
 		shell.setSize (420, 300);
 		shell.open ();
