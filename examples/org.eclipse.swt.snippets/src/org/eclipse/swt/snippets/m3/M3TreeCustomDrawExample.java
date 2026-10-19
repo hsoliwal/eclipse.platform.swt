@@ -38,7 +38,8 @@ public class M3TreeCustomDrawExample {
 
 static final Logger LOG = Logger.getLogger (M3TreeCustomDrawExample.class.getName ());
 static final int ROOTS = 1_000_000, CHILDREN = 50;
-static int rowHeight = 24;
+/** The row height MeasureItem asks for ("Taller rows" grows it). */
+public static int rowHeight = 24;
 
 public static void main (String [] args) {
 	Display display = new Display ();
