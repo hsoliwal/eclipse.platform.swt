@@ -45,18 +45,33 @@ final class M3SortOrder {
 		this.sort = sort;
 	}
 
+	/* how rows are sorted: the sort's own chain, or a chain captured by a worker */
+	@FunctionalInterface
+	interface Sorter {
+		void sort (M3SortLanes lanes, int [] rows, int n);
+	}
+
 	/* replaces the rows by rows [0, n) of a source of sourceSize rows and sorts them */
 	void reset (int [] rows, int n, int sourceSize) {
+		reset (rows, n, sourceSize, sort::sortRows);
+	}
+
+	void reset (int [] rows, int n, int sourceSize, Sorter sorter) {
 		this.sourceSize = sourceSize;
 		order = ensure (order, n, 0);
 		System.arraycopy (rows, 0, order, 0, n);
 		size = n;
-		resort ();
+		sorter.sort (lanes, order, size);
+		index ();
 	}
 
 	/* sorts the current rows again (the sort keys changed) */
 	void resort () {
-		sort.sortRows (order, size);
+		sort.sortRows (lanes, order, size);
+		index ();
+	}
+
+	private void index () {
 		if (inverse.length < sourceSize) inverse = new int [sourceSize];
 		Arrays.fill (inverse, 0, sourceSize, -1);
 		reindex (0);
@@ -97,7 +112,7 @@ final class M3SortOrder {
 		if (m == 0) return size;
 		batch = ensure (batch, m, 0);
 		System.arraycopy (rows, 0, batch, 0, m);
-		sort.sortRows (batch, m);
+		sort.sortRows (lanes, batch, m);
 		order = ensure (order, size + m, size);
 		int first = m > (size >> 3) ? mergeLinear (m) : mergeSearch (m);
 		size += m;
