@@ -1,0 +1,81 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.swt.snippets.m3;
+
+import java.util.logging.*;
+
+import org.eclipse.swt.*;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.widgets.*;
+
+/*
+ * Captures the M3 sort/filter snippets for docs/m3/sort-filter/EXAMPLES.md. Run on the hidden
+ * test desktop: each snippet's main runs on this thread; a watcher thread waits for its display,
+ * then, after the given delay, the first shell is printed (WM_PRINT through Control.print) into a
+ * PNG and closed, which ends the snippet.
+ * Arguments: <output directory> then triples <snippet class> <file name> <delay ms>.
+ */
+public class SnippetShots {
+
+	private static final Logger LOG = Logger.getLogger (SnippetShots.class.getName ());
+
+	public static void main (String [] args) throws Exception {
+		Thread main = Thread.currentThread ();
+		for (int i = 1; i + 2 < args.length; i += 3) {
+			String file = args [0] + "/" + args [i + 1];
+			int delay = Integer.parseInt (args [i + 2]);
+			Thread watcher = new Thread (() -> watch (main, file, delay), "snippet shot");
+			watcher.setDaemon (true);
+			watcher.start ();
+			Class.forName (args [i]).getMethod ("main", String [].class).invoke (null, (Object) new String [0]);
+			watcher.join (60_000);
+		}
+	}
+
+	private static void watch (Thread main, String file, int delay) {
+		Display display = null;
+		for (int tries = 0; display == null && tries < 6000; tries++) {
+			display = Display.findDisplay (main);
+			if (display == null) sleep (10);
+		}
+		if (display == null) return;
+		Display found = display;
+		sleep (200);
+		found.asyncExec (() -> found.timerExec (delay, () -> capture (found, file)));
+	}
+
+	private static void capture (Display display, String file) {
+		Shell shell = display.getShells () [0];
+		Point size = shell.getSize ();
+		Image image = new Image (display, size.x, size.y);
+		GC gc = new GC (image);
+		shell.print (gc);
+		gc.dispose ();
+		ImageLoader loader = new ImageLoader ();
+		loader.data = new ImageData [] {image.getImageData ()};
+		loader.save (file, SWT.IMAGE_PNG);
+		image.dispose ();
+		LOG.info (() -> "captured " + file + " (" + size.x + "x" + size.y + ")");
+		shell.dispose ();
+	}
+
+	private static void sleep (long millis) {
+		try {
+			Thread.sleep (millis);
+		} catch (InterruptedException e) {
+			Thread.currentThread ().interrupt ();
+		}
+	}
+}

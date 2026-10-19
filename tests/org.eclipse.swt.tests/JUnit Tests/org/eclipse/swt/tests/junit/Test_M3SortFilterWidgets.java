@@ -195,6 +195,13 @@ public class Test_M3SortFilterWidgets {
 		filter.setSourceSize (ROWS);
 		drain ();
 		assertEquals (sort.size (), table.getItemCount ());
+		binding.setSelectedRows ();
+		assertEquals (0, table.getSelectionCount ());
+		binding.setSelectedRows (ROWS + 5);
+		assertEquals (0, table.getSelectionCount ());
+		binding.setSelectedRows (sort.map (0));
+		table.notifyListeners (SWT.Selection, new Event ());
+		assertArrayEquals (new int [] {sort.map (0)}, binding.getSelectedRows ());
 		binding.dispose ();
 		sort.toggle (1, false);
 		assertNotEquals (cell (sort.map (0), 1), table.getItem (0).getText (1));
@@ -213,7 +220,7 @@ public class Test_M3SortFilterWidgets {
 		/* 0 [1 [2, 3], 4], 5 [6], 7 */
 		int [] parents = {-1, 0, 1, 1, 0, -1, 5, -1};
 		String [] labels = {"root", "dir", "match", "amatch", "file", "top", "x", "lone"};
-		Tree tree = new Tree (shell, SWT.VIRTUAL | SWT.BORDER);
+		Tree tree = new Tree (shell, SWT.VIRTUAL | SWT.BORDER | SWT.MULTI);
 		tree.setHeaderVisible (true);
 		new TreeColumn (tree, SWT.NONE).setWidth (200);
 		M3ColumnFilter filter = new M3ColumnFilter (1, 8, (row, column) -> labels [row]);
@@ -222,7 +229,7 @@ public class Test_M3SortFilterWidgets {
 		sort.setParents (r -> parents [r]);
 		sort.setCellText ((row, column) -> labels [row]);
 		assertThrows (IllegalArgumentException.class, () -> M3RowBinding.bind (tree, new M3ColumnSort (1, 1), (item, row) -> {}));
-		M3RowBinding.bind (tree, sort, (item, row) -> item.setText (labels [row]));
+		M3RowBinding treeBinding = M3RowBinding.bind (tree, sort, (item, row) -> item.setText (labels [row]));
 		sort.install (tree);
 		M3FilterPopup popup = M3FilterPopup.install (tree, filter);
 		shell.open ();
@@ -241,6 +248,22 @@ public class Test_M3SortFilterWidgets {
 		TreeItem dir = root.getItem (0);
 		assertEquals (2, dir.getItemCount ());
 		assertEquals ("amatch", dir.getItem (0).getText ());
+		tree.setSelection (dir.getItem (0));
+		tree.notifyListeners (SWT.Selection, new Event ());
+		assertArrayEquals (new int [] {3}, treeBinding.getSelectedRows ());
+		filter.setText (0, "*match,dir,top", M3TextMatch.WILDCARD);
+		drain ();
+		assertEquals (3, M3RowBinding.sourceRow (tree.getSelection () [0]));
+		treeBinding.setSelectedRows (99);
+		assertEquals (0, tree.getSelectionCount ());
+		treeBinding.setSelectedRows (6);
+		assertEquals (0, tree.getSelectionCount ());
+		treeBinding.setSelectedRows (5, 2);
+		assertEquals (2, tree.getSelectionCount ());
+		treeBinding.setSelectedRows ();
+		assertEquals (0, tree.getSelectionCount ());
+		filter.setText (0, "*match", M3TextMatch.WILDCARD);
+		treeBinding.dispose ();
 		assertEquals (-1, M3RowBinding.sourceRow (new TreeItem (new Tree (shell, SWT.NONE), SWT.NONE)));
 		assertThrows (IllegalArgumentException.class, () -> M3RowBinding.sourceRow (null));
 		assertNotNull (tree.getColumn (0).getImage (), "filter mark");

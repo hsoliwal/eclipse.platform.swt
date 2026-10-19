@@ -14,6 +14,8 @@
  *     Hitesh Soliwal (Synexia) - adapted from TV_5.0 treeviewer IMultiPropertyTextFilter,
  *         MultiPropertyTextFilter, ElementFilter, FilteredTreeElementProvider and
  *         TreeFilterStateProvider (docs/m3/sort-filter/PROVENANCE.tsv)
+ *     Hitesh Soliwal (Synexia) - filtering the model off the UI thread adapted from x86core
+ *         jsonviewer LazyTreeFilter and TreeFilterControl (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
 package org.eclipse.swt.m3;
 
@@ -553,13 +555,17 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		this.rows = rows;
 		this.rank = rank;
 		this.size = size;
-		int words = M3RowMask.words (sourceSize ());
-		previous = M3RowMask.ensure (previous, sourceSize ());
+		int n = sourceSize (), words = M3RowMask.words (n), changed = words;
+		previous = M3RowMask.ensure (previous, n);
+		for (int w = 0; w < words && changed == words; w++) {
+			if (previous [w] != kept [w]) changed = w;
+		}
+		int first = changed == words ? size : rankBefore (changed << 6 | Long.numberOfTrailingZeros (previous [changed] ^ kept [changed]));
 		System.arraycopy (kept, 0, previous, 0, words);
 		appliedGeneration = generation;
 		if (follower != null) follower.commitPrepared (generation);
 		change.set (M3RowChange.RESET, 0, 0);
-		change.damage (0, size - 1);
+		change.damage (first, size - 1);
 		fire ();
 	}
 

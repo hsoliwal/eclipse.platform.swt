@@ -254,6 +254,71 @@ public class Test_M3ColumnSort {
 	}
 
 	@Test
+	public void test_viewChainsListenersAndForeignInputs () {
+		Rows rows = new Rows (100, 17, 5);
+		M3ColumnSort inner = rows.sort ();
+		M3ColumnSort outer = new M3ColumnSort (4, inner);
+		rows.keys (outer);
+		outer.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		inner.toggle (3, false);
+		assertArrayEquals (rows.reference (new int [] {0}, new int [] {SWT.UP}), order (outer));
+		M3RowView.Listener a = change -> {}, b = change -> {};
+		outer.addListener (a);
+		outer.addListener (b);
+		outer.addListener (a);
+		outer.removeListener (b);
+		outer.removeListener (b);
+		outer.removeListener (a);
+		/* a foreign input view that hides the last row of a filter: changes of that row reach the sort for a row it does not show */
+		String [] words = {"a", "b", "c", "d", "e", "f"};
+		M3ColumnFilter filter = new M3ColumnFilter (1, words.length, (row, column) -> words [row]);
+		M3RowView hiding = new M3RowView () {
+			@Override public int size () { return filter.size () - 1; }
+			@Override public int map (int row) { return filter.map (row); }
+			@Override public int unmap (int sourceRow) { return filter.unmap (sourceRow); }
+			@Override public int sourceSize () { return filter.sourceSize (); }
+			@Override public void setSourceSize (int sourceSize) { filter.setSourceSize (sourceSize); }
+			@Override public void rowsInserted (int start, int count) { filter.rowsInserted (start, count); }
+			@Override public void rowsRemoved (int start, int count) { filter.rowsRemoved (start, count); }
+			@Override public void rowsChanged (int... sourceRows) { filter.rowsChanged (sourceRows); }
+			@Override public void addListener (Listener listener) { filter.addListener (listener); }
+			@Override public void removeListener (Listener listener) { filter.removeListener (listener); }
+		};
+		M3ColumnSort sort = new M3ColumnSort (1, hiding);
+		sort.setCellText ((row, column) -> words [row]);
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.DOWN});
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		assertEquals (5, sort.size ());
+		words [5] = "z";
+		filter.rowsChanged (5);
+		filter.setText (0, "a,b,c,d,e", M3TextMatch.EXACT);
+		assertEquals (5, sort.size ());
+		assertArrayEquals (new int [] {0, 1, 2, 3, 4}, order (sort));
+	}
+
+	@Test
+	public void test_collatorEqualTextsShareARank () {
+		int n = 200;
+		String [] words = new String [n];
+		for (int i = 0; i < n; i++) words [i] = (i % 3 == 0 ? "A" : i % 3 == 1 ? "a" : "b") + (i % 2); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		Collator collator = Collator.getInstance (Locale.ENGLISH);
+		collator.setStrength (Collator.PRIMARY);
+		M3ColumnSort sort = new M3ColumnSort (1, n);
+		sort.setKey (0, M3ColumnKey.ofText (i -> words [i], collator));
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		List<Integer> reference = new ArrayList<> ();
+		for (int i = 0; i < n; i++) reference.add (i);
+		reference.sort (Comparator.comparing (i -> words [i], collator));
+		assertArrayEquals (reference.stream ().mapToInt (Integer::intValue).toArray (), order (sort));
+		String [] sorted = new String [n];
+		for (int i = 0; i < n; i++) sorted [i] = String.format ("s%04d", i); //$NON-NLS-1$
+		M3ColumnSort ordered = new M3ColumnSort (1, n);
+		ordered.setKey (0, M3ColumnKey.ofRows ((a, b) -> sorted [a].compareTo (sorted [b])));
+		ordered.setSortKeys (new int [] {0}, new int [] {SWT.DOWN});
+		assertEquals (n - 1, ordered.map (0));
+	}
+
+	@Test
 	public void test_cellTextDefaultKey () {
 		String [][] cells = {{"b", "1"}, {"a", "2"}, {"c", "0"}}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 		M3ColumnSort sort = new M3ColumnSort (2, 3);
@@ -454,6 +519,9 @@ public class Test_M3ColumnSort {
 		assertThrows (IllegalArgumentException.class, () -> sort.childCount (7));
 		assertThrows (IllegalArgumentException.class, () -> sort.indexOfChild (7));
 		parents [6] = 9;
+		sort.rowsChanged (6);
+		assertThrows (IllegalArgumentException.class, () -> sort.childCount (-1));
+		parents [6] = -5;
 		sort.rowsChanged (6);
 		assertThrows (IllegalArgumentException.class, () -> sort.childCount (-1));
 		parents [6] = 4;

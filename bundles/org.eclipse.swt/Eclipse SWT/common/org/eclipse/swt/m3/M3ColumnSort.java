@@ -56,11 +56,15 @@ public final class M3ColumnSort extends M3RowViewBase {
 	private M3ColumnKey [] chain = {};
 	private boolean [] descending = {};
 	private IntUnaryOperator parentOf;
+
+	IntUnaryOperator parents () {
+		return parentOf;
+	}
 	private final IntBinaryOperator compareRows = this::compare;
 	M3SortOrder order = new M3SortOrder (this);
 	private M3SortOrder prepared;
 	private volatile int keysVersion;
-	private int preparedGeneration = -1, preparedVersion;
+	private int preparedGeneration = -1, preparedVersion, preparedFirst;
 	private boolean takePrepared;
 
 	/**
@@ -325,6 +329,11 @@ public final class M3ColumnSort extends M3RowViewBase {
 		M3SortOrder next = prepared != null ? prepared : new M3SortOrder (this);
 		next.reset (rows, n, sourceSize, (lanes, r, count) -> lanes.sort (r, count, keys, down, keys.length, (a, b) -> compare (keys, down, a, b)));
 		if (parentOf != null) next.buildTree (parentOf);
+		M3SortOrder current = order;
+		int [] old = current.order;
+		int first = 0, common = Math.min (Math.min (current.size, old.length), next.size);
+		while (first < common && old [first] == next.order [first]) first++;
+		preparedFirst = first;
 		prepared = next;
 		preparedVersion = version;
 		preparedGeneration = generation;
@@ -479,7 +488,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 		for (int i = 0; i < in.rowCount; i++) change.add (in.rows [i]);
 		int first = -1;
 		switch (kind) {
-			case M3RowChange.RESET: if (takePrepared) takePrepared = false; else rebuild (); first = 0; break;
+			case M3RowChange.RESET: first = takePrepared ? preparedFirst : 0; if (!takePrepared) rebuild (); takePrepared = false; break;
 			case M3RowChange.INSERTED: order.insertSourceRange (in.start, in.count); first = order.insert (in.rows, in.rowCount); break;
 			case M3RowChange.REMOVED: first = order.removeSourceRange (in.start, in.count); break;
 			case M3RowChange.ENTERED: first = order.insert (in.rows, in.rowCount); break;

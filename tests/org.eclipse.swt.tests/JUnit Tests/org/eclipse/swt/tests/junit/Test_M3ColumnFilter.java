@@ -189,6 +189,33 @@ public class Test_M3ColumnFilter {
 	}
 
 	@Test
+	public void test_treeInsertMakesALaterAncestorEnter () {
+		List<String> names = new ArrayList<> (List.of ("a", "b"));
+		List<Integer> parents = new ArrayList<> (List.of (-1, -1));
+		M3ColumnFilter filter = new M3ColumnFilter (1, 2, (row, column) -> names.get (row));
+		filter.setParents (parents::get);
+		filter.setText (0, "match", M3TextMatch.EXACT);
+		assertEquals (0, filter.size ());
+		List<String> log = new ArrayList<> ();
+		filter.addListener (change -> {
+			StringBuilder rows = new StringBuilder ();
+			for (int i = 0; i < change.rowCount (); i++) rows.append (change.row (i));
+			log.add (change.kind () + ":" + rows);
+		});
+		names.add (0, "match");
+		parents.add (0, 2);
+		filter.rowsInserted (0, 1);
+		assertArrayEquals (new int [] {0, 2}, rows (filter));
+		assertEquals (List.of ("2:0", "4:2"), log);
+		log.clear ();
+		names.remove (0);
+		parents.remove (0);
+		filter.rowsRemoved (0, 1);
+		assertEquals (0, filter.size ());
+		assertEquals (List.of ("3:", "5:1"), log);
+	}
+
+	@Test
 	public void test_treeChainWithSortedSiblings () {
 		int [] parents = {-1, 0, 1, 1, 0, -1, 5, -1};
 		String [] names = {"root", "dir", "match", "amatch", "file", "top", "x", "lone"};

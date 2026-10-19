@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.function.*;
 
 import org.eclipse.swt.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /*
@@ -42,6 +43,7 @@ import org.eclipse.swt.widgets.*;
 final class M3FilterWorker implements Runnable {
 
 	static final int CHECK = 4096;
+	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.m3.M3ColumnFilter"); //$NON-NLS-1$
 
 	private final M3ColumnFilter filter;
 	private final Display display;
@@ -138,8 +140,14 @@ final class M3FilterWorker implements Runnable {
 	}
 
 	private void step (int generation, M3FilterCriterion [] criteria, M3FilterCriterion [] current, boolean [] dirty, IntUnaryOperator parents, int n) {
+		long start = System.nanoTime ();
 		try {
-			if (!compute (generation, criteria, current, dirty, parents, n)) return;
+			boolean computed = compute (generation, criteria, current, dirty, parents, n);
+			if (LOG.isDebugEnabled ()) {
+				long micros = (System.nanoTime () - start) / 1000;
+				LOG.debug (() -> "generation " + generation + (computed ? " computed over " + n + " rows in " + micros + " us" : " superseded after " + micros + " us")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+			}
+			if (!computed) return;
 		} catch (RuntimeException e) {
 			if (generation != filter.generation) return;
 			synchronized (lock) {
@@ -213,5 +221,6 @@ final class M3FilterWorker implements Runnable {
 			generation = resultGeneration;
 		}
 		filter.apply (criteria, matched, kept, rows, rank, size, generation);
+		if (LOG.isDebugEnabled ()) LOG.debug (() -> "generation " + generation + " applied: " + size + " rows shown"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

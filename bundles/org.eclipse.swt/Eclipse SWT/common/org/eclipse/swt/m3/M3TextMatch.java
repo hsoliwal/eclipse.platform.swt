@@ -13,6 +13,8 @@
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *     Hitesh Soliwal (Synexia) - adapted from TV_5.0 treeviewer IViewerTextFilter,
  *         AbstractRegexFilter and AbstractWildCardFilter (docs/m3/sort-filter/PROVENANCE.tsv)
+ *     Hitesh Soliwal (Synexia) - match types and match case adapted from x86core jsonviewer
+ *         MatcherFactory and its matchers (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
 package org.eclipse.swt.m3;
 
