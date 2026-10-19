@@ -25,7 +25,12 @@ import org.eclipse.swt.graphics.*;
  * {@link RowPaint} its plane filled.
  */
 public final class RowRenderer {
+	/** Glyphs kept per renderer: seven glyphs at a few zooms. */
+	private static final int GLYPHS = 32;
 	private final Theme theme;
+	/* the SVG glyph cache of a vectorGlyphs theme, made on first use; null when no SVG rasterizer is installed */
+	private GlyphCache glyphs;
+	private boolean glyphsTried;
 
 	public RowRenderer (Theme theme) {
 		this.theme = theme;
@@ -106,6 +111,7 @@ public final class RowRenderer {
 			glyph (canvas, open ? theme.expanderOpen : theme.expanderClosed, row.expanderX, row.y, row.expanderWidth, row.height);
 			return;
 		}
+		if (theme.vectorGlyphs && vector (canvas, open ? Glyphs.CHEVRON_DOWN : Glyphs.CHEVRON_RIGHT, row, row.expanderX, row.expanderWidth)) return;
 		switch (theme.look) {
 			case Theme.LOOK_NATIVE -> {
 				int state = (open ? RowCanvas.EXPANDER_OPEN : RowCanvas.EXPANDER_CLOSED) | (row.is (RowPaint.HOT) ? RowCanvas.HOT : 0);
@@ -134,6 +140,7 @@ public final class RowRenderer {
 			glyph (canvas, checked ? grayed ? theme.checkMixed : theme.checkOn : theme.checkOff, row.checkX, row.y, row.checkWidth, row.height);
 			return;
 		}
+		if (theme.vectorGlyphs && vector (canvas, checked ? grayed ? Glyphs.CHECK_MIXED : Glyphs.CHECK_ON : Glyphs.CHECK_OFF, row, row.checkX, row.checkWidth)) return;
 		switch (theme.look) {
 			case Theme.LOOK_NATIVE -> {
 				int state = checked ? grayed ? RowCanvas.CHECKBOX_MIXED : RowCanvas.CHECKBOX_CHECKED : RowCanvas.CHECKBOX_UNCHECKED;
@@ -159,6 +166,24 @@ public final class RowRenderer {
 	/* a theme glyph image, at its own size, centred in its slot */
 	private static void glyph (RowCanvas canvas, ImageData image, int x, int y, int width, int height) {
 		canvas.imageData (image, x + (width - image.width) / 2, y + (height - image.height) / 2, image.width, image.height);
+	}
+
+	/*
+	 * An SVG glyph of the built-in set, 16 points rasterized at the row's zoom and tinted with the theme (chevrons in the
+	 * expander colour, check boxes in the check fill or the border), centred in its slot; false when no SVG rasterizer is
+	 * installed (the look then draws its own).
+	 */
+	private boolean vector (RowCanvas canvas, int id, RowPaint row, int x, int width) {
+		if (!glyphsTried) {
+			glyphsTried = true;
+			GlyphCache.Rasterizer rasterizer = Glyphs.rasterizer (glyph -> glyph >= Glyphs.CHECK_OFF && glyph <= Glyphs.CHECK_MIXED && theme.checkFill != -1 ? theme.checkFill : theme.border);
+			if (rasterizer != null) glyphs = new GlyphCache (GLYPHS, rasterizer);
+		}
+		if (glyphs == null) return false;
+		ImageData image = glyphs.get (id, 16, row.zoom, 0);
+		if (image == null) return false;
+		glyph (canvas, image, x, row.y, width, row.height);
+		return true;
 	}
 
 	/** Paints the default content of a cell: its image, then its text (for cell painters that add to it). */

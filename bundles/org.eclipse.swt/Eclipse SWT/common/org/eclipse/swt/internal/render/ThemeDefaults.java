@@ -70,7 +70,9 @@ public final class ThemeDefaults {
 		int [] ids = keys (widget);
 		Theme.Builder b = look.derive (defaults.name ());
 		if (look.look != Theme.LOOK_NATIVE) {
-			b.colors (rgb (defaults, ids [0], look.foreground), rgb (defaults, ids [1], look.background)).selectionForeground (rgb (defaults, ids [2], look.selectionForeground));
+			/* the non-native looks draw the SVG glyph set at the widget's zoom (the native look draws the platform's parts) */
+			b.colors (rgb (defaults, ids [0], look.foreground), rgb (defaults, ids [1], look.background)).selectionForeground (rgb (defaults, ids [2], look.selectionForeground))
+				.vectorGlyphs (true);
 		}
 		return b.selection (rgb (defaults, ids [3], look.selectionBackground), rgb (defaults, ids [4], look.selectionInactiveBackground))
 			.hot (rgb (defaults, ids [5], look.hotBackground)).lines (rgb (defaults, ids [6], look.hash), rgb (defaults, ids [7], look.grid))

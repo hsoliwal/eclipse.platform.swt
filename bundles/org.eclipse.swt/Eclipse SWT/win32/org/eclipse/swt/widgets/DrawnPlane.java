@@ -163,6 +163,7 @@ abstract class DrawnPlane {
 		afterBehaviour (msg);
 		if (!clipDamage (hwnd)) return;
 		currentTheme ();
+		row.zoom = control.getAutoscalingZoom ();
 		canvas.target (buffer);
 		canvas.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		try {

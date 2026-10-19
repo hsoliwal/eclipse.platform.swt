@@ -37,8 +37,15 @@ public final class GcRowCanvas implements BufferCanvas {
 	private final RECT rect = new RECT ();
 	private char [] chars = new char [64];
 	private int [] polygon = new int [6];
-	/* device copies of theme glyph images, made on first use */
-	private final Map<ImageData, Image> glyphs = new WeakHashMap<> ();
+	/* device copies (premultiplied BGRA DIBs) of theme glyph images, made on first use */
+	private final Map<ImageData, BackBuffer> glyphs = new WeakHashMap<> ();
+	/* per-pixel alpha, no constant alpha */
+	private static final BLENDFUNCTION BLEND = new BLENDFUNCTION ();
+	static {
+		BLEND.BlendOp = (byte) OS.AC_SRC_OVER;
+		BLEND.SourceConstantAlpha = (byte) 255;
+		BLEND.AlphaFormat = (byte) OS.AC_SRC_ALPHA;
+	}
 
 	/**
 	 * @param hwnd the plane's window (its theme parts are opened for it)
@@ -104,16 +111,22 @@ public final class GcRowCanvas implements BufferCanvas {
 		gc.drawImage (image, DPIUtil.pixelToPoint (x, z), DPIUtil.pixelToPoint (y, z), DPIUtil.pixelToPoint (width, z), DPIUtil.pixelToPoint (height, z));
 	}
 
+	/*
+	 * Glyph pixels are device pixels already (rasterized at the widget's zoom): a premultiplied BGRA DIB per image data,
+	 * alpha-blended 1:1 with GDI, never through the GC (which would scale a 100 % image by the zoom).
+	 */
 	@Override
 	public void imageData (ImageData data, int x, int y, int width, int height) {
 		if (data == null || width <= 0 || height <= 0) return;
-		if (gc == null) gc = gcFactory.apply (hdc);
-		Image image = glyphs.get (data);
-		if (image == null) {
-			image = new Image (gc.getDevice (), data);
-			glyphs.put (data, image);
+		BackBuffer dib = glyphs.get (data);
+		if (dib == null) {
+			dib = new BackBuffer ();
+			dib.ensure (hdc, data.width, data.height);
+			byte [] bgra = RowImages.bgra (data);
+			OS.MoveMemory (dib.bits, bgra, bgra.length);
+			glyphs.put (data, dib);
 		}
-		image (image, x, y, width, height);
+		OS.AlphaBlend (hdc, x, y, width, height, dib.dc, 0, 0, data.width, data.height, BLEND);
 	}
 
 	@Override
@@ -145,7 +158,7 @@ public final class GcRowCanvas implements BufferCanvas {
 	@Override
 	public void dispose () {
 		parts.close ();
-		for (Image image : glyphs.values ()) image.dispose ();
+		for (BackBuffer dib : glyphs.values ()) dib.release ();
 		glyphs.clear ();
 	}
 
