@@ -140,6 +140,13 @@ public final class ViewportDifferential<S> {
 	 * step of every seed and goes back to the startup theme before the next seed. Behaviour must not change.
 	 */
 	private static final String THEME_SWITCH = System.getProperty ("swt.viewport.themeSwitch");
+	/*
+	 * -Dswt.viewport.lafSwitch=<step>:<look and feel>: the same through the look and feel manager (M3LookAndFeel
+	 * .setLookAndFeel, LF6: the row delegates of the drawn widgets are installed again), and M3LookAndFeel.reset before
+	 * each seed.
+	 */
+	private static final String LAF_SWITCH = System.getProperty ("swt.viewport.lafSwitch");
+	private static final String SWITCH = THEME_SWITCH != null ? THEME_SWITCH : LAF_SWITCH;
 
 	private ViewportDifferential (String name, long seedBase, Ops<S> ops) {
 		this.name = name;
@@ -319,7 +326,7 @@ public final class ViewportDifferential<S> {
 					}
 				}
 			}
-			int switchStep = THEME_SWITCH == null || !drawn (widget) ? -1 : Integer.parseInt (THEME_SWITCH.split (":", 2) [0]);
+			int switchStep = SWITCH == null || !drawn (widget) ? -1 : Integer.parseInt (SWITCH.split (":", 2) [0]);
 			if (switchStep >= 0) selectTheme (null);
 			beforeSeed.accept (subject);
 			Random random = new Random (seedBase + seed);
@@ -327,7 +334,7 @@ public final class ViewportDifferential<S> {
 			List<String> lines = new ArrayList<> ();
 			for (int step = 0; step < steps; step++) {
 				Op<S> op = ops.next (random, log);
-				if (step == switchStep) selectTheme (THEME_SWITCH.split (":", 2) [1]);
+				if (step == switchStep) selectTheme (SWITCH.split (":", 2) [1]);
 				stepCapture = null;
 				String got = line (subject, op);
 				if (stepCapture != null) got = stepPixels (stepCapture, seed, step, expected == null ? null : expected.get (step), got, against);
@@ -369,11 +376,18 @@ public final class ViewportDifferential<S> {
 	}
 
 	/*
-	 * Selects the theme of the widget class at run time (Themes.select of this SWT's render package; null goes back to
-	 * the startup properties) and dispatches, so that the drawn planes repaint before the step.
+	 * Selects the theme of the widget class at run time (Themes.select of this SWT's render package, or with
+	 * -Dswt.viewport.lafSwitch the look and feel of M3LookAndFeel; null goes back to the startup properties) and
+	 * dispatches, so that the drawn planes repaint before the step.
 	 */
 	private void selectTheme (String theme) {
 		try {
+			if (THEME_SWITCH == null) {
+				Class<?> manager = Class.forName ("org.eclipse.swt.internal.laf.M3LookAndFeel");
+				if (theme == null) manager.getMethod ("reset").invoke (null); else manager.getMethod ("setLookAndFeel", String.class).invoke (null, theme);
+				drain (Display.getCurrent ());
+				return;
+			}
 			Class<?> themes = Class.forName ("org.eclipse.swt.internal.render.Themes"), type = Class.forName ("org.eclipse.swt.internal.render.Theme");
 			Object value = theme == null ? null : themes.getMethod ("find", String.class).invoke (null, theme);
 			if (theme != null && value == null) fail ("-Dswt.viewport.themeSwitch names no registered theme: " + theme);
