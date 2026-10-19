@@ -122,6 +122,20 @@ public final class M3LookAndFeel {
 	}
 
 	/**
+	 * Replaces the table of a look and feel (keeping its renderers) and, on a display thread, updates the widgets that
+	 * use it: only those whose delegate reads a key the new table changes (live reload, {@link M3ThemeWatcher}).
+	 *
+	 * @return the number of delegates installed again
+	 */
+	public static int reload (String name, String table) {
+		M3UIDefaults before = defaults (name);
+		RendererFactory renderers = LookAndFeel.named (name).renderers ();
+		register (name, table, renderers == RendererFactory.NONE ? null : renderers);
+		Display display = Display.getCurrent ();
+		return display == null ? 0 : update (display, before, defaults (name));
+	}
+
+	/**
 	 * The look and feel of a widget class in a mode: <code>native</code> unless the mode draws the widget, else the
 	 * widget's pin, else the selected look and feel.
 	 */
@@ -198,8 +212,9 @@ public final class M3LookAndFeel {
 			Control control = registry.controls [i];
 			Slot slot = (Slot) control.getData (UI);
 			String target = lookAndFeel (control.getClass ().getSimpleName ());
-			if (target.equals (slot.lookAndFeel)) continue;
-			long [] keys = slot.lookAndFeel.equals (from.name ()) && target.equals (to.name ()) ? changed : M3UIDefaults.diff (defaults (slot.lookAndFeel), defaults (target));
+			boolean shared = slot.lookAndFeel.equals (from.name ()) && target.equals (to.name ());
+			if (!shared && target.equals (slot.lookAndFeel)) continue;
+			long [] keys = shared ? changed : M3UIDefaults.diff (defaults (slot.lookAndFeel), defaults (target));
 			boolean relayout = reads (slot.ui.metricKeys (), keys);
 			if (relayout || reads (slot.ui.paintKeys (), keys)) {
 				reinstall (control, slot, target);
