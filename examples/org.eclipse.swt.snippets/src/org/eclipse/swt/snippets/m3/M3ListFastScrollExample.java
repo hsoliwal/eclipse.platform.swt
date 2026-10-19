@@ -14,7 +14,8 @@
  *******************************************************************************/
 package org.eclipse.swt.snippets.m3;
 
-import java.util.*;
+import java.util.Locale;
+import java.util.Random;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.layout.*;

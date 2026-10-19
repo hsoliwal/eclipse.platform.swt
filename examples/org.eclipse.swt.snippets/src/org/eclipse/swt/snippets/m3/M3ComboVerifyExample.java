@@ -14,7 +14,7 @@
  *******************************************************************************/
 package org.eclipse.swt.snippets.m3;
 
-import java.util.*;
+import java.util.Locale;
 import java.util.logging.*;
 
 import org.eclipse.swt.*;
@@ -58,9 +58,9 @@ public static Shell open (Display display) {
 	combo.select (0);
 	Label status = new Label (shell, SWT.WRAP);
 	combo.addListener (SWT.Verify, event -> verify (combo, status, event));
-	button (shell, combo, "Unit 50,000", COUNT / 2);
-	button (shell, combo, "Retired unit 90,007", 90_007);
-	button (shell, combo, "Alias 99,999", COUNT - 1);
+	button (shell, combo, status, "Unit 50,000", COUNT / 2);
+	button (shell, combo, status, "Retired unit 90,007", 90_007);
+	button (shell, combo, status, "Alias 99,999", COUNT - 1);
 	GridData statusData = new GridData (SWT.FILL, SWT.TOP, true, false, 3, 1);
 	statusData.widthHint = 380;
 	status.setLayoutData (statusData);
@@ -92,12 +92,12 @@ static void verify (Combo combo, Label status, Event event) {
 	status.setData (decision);
 }
 
-static void button (Shell shell, Combo combo, String text, int index) {
+static void button (Shell shell, Combo combo, Label status, String text, int index) {
 	Button button = new Button (shell, SWT.PUSH);
 	button.setText (text);
 	button.setLayoutData (new GridData (SWT.FILL, SWT.CENTER, true, false));
 	button.addListener (SWT.Selection, event -> {
-		Label status = (Label) shell.getChildren () [shell.getChildren ().length - 1];
+		status.setData ("not sent");
 		combo.select (index);
 		status.setText (String.format (Locale.ROOT, "select (%,d): Verify %s; selected %,d '%s'", index, status.getData (),
 				combo.getSelectionIndex (), combo.getText ()));
