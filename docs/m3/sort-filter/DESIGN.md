@@ -157,9 +157,18 @@ logs each generation at FINE through `SwtLog` (`org.eclipse.swt.m3.M3ColumnFilte
 ## 4. Binding to virtual widgets
 
 `M3RowBinding.bind(Table, M3RowView, RowFill<TableItem>)` and `bind(Tree, M3ColumnSort, RowFill<TreeItem>)`
-(tables must be `SWT.VIRTUAL`): the item count follows the view; on a change only the damaged view range is
-cleared (`Table.clear(start, end)`, `TreeItem.clear`) so, in viewport mode, only resident rows are asked again
-through `SWT.SetData`. SetData fills an item from `map(index)`; tree items remember their source row in item data.
+(both `SWT.VIRTUAL`). One model: the binding keeps no copy of the rows; SetData fills an item from `map(index)`
+(tree items remember their source row in item data).
+
+- **Patch, not rebuild.** Every change reaches the widget as a patch: the item count carries the extent (scroll
+  bar), and only the damaged view rows are cleared (`Table.clear(start, end)`), so only rows that are resident and
+  damaged are asked again; rows outside the window cost nothing but the count. An asynchronous result damages only
+  from its first changed row. Trees still clear all materialized items on a change (next leaf: patches by sibling
+  ranges).
+- **Selection by id.** The binding keeps the selection as source rows (captured on `SWT.Selection`, or set with
+  `setSelectedRows`), renumbers them on source insertions and removals, and selects their new view rows after every
+  change (a tree item is reached by walking sibling indices from the root, O(depth)); rows the view hides stay
+  selected and come back with it.
 
 ## 5. Tests and proof
 
