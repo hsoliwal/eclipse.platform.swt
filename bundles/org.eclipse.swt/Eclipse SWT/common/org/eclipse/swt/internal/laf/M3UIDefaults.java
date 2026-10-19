@@ -180,6 +180,38 @@ public final class M3UIDefaults {
 		developer.setVariable ("@" + variable, null);
 	}
 
+	/** A frozen copy of the current answers, for a diff before the developer layer changes ({@link M3LookAndFeel#setAccent}). */
+	public M3UIDefaults snapshot () {
+		current ();
+		return new M3UIDefaults (name, theme, derived, developer.copy ());
+	}
+
+	private M3UIDefaults (String name, Lanes theme, Lanes derived, Lanes developer) {
+		this.name = name;
+		this.theme = theme;
+		this.derived = derived;
+		this.developer = developer;
+		this.derivation = null;
+		this.derivedGeneration = developer.generation;
+	}
+
+	/**
+	 * An {@link M3UIKeys#INTEGER} metric (row height, width, arc: points in the table) in pixels at a zoom, as SWT
+	 * scales points ({@link org.eclipse.swt.internal.DPIUtil#pointToPixel(int, int)}).
+	 *
+	 * @param zoom the widget's zoom, 100 for 100 %
+	 */
+	public int metric (int key, int fallback, int zoom) {
+		return org.eclipse.swt.internal.DPIUtil.pointToPixel (integer (key, fallback), zoom);
+	}
+
+	/** {@link #insets(int, int[])} in pixels at a zoom. */
+	public boolean insets (int key, int [] out, int zoom) {
+		if (!insets (key, out)) return false;
+		for (int i = 0; i < 4; i++) out [i] = org.eclipse.swt.internal.DPIUtil.pointToPixel (out [i], zoom);
+		return true;
+	}
+
 	/** The number of values the last recomputation of derived values resolved (0 with static values). */
 	public int derivedCount () {
 		current ();
