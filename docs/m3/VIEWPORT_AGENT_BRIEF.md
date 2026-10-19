@@ -83,7 +83,7 @@ this is what will be offered to Eclipse, so write upstream-quality Eclipse code.
     Changing JNI/native code is allowed when contract and behaviour are kept.
 11. **More donors:** Eclipse GEF **Draw2d** (`org.eclipse.draw2d.Viewport`, `FreeformViewport`, `RangeModel`,
     `DefaultRangeModel`, `ScrollPane`, `DeferredUpdateManager` damage coalescing; EPL-2.0) and the Initiative 31 /
-    Skija survey at `C:/m3-superset/tools/I31_M3_TRICKS.md` (visible-range math, paint cull, SetData once,
+    Skija survey at `C:/m3-superset/tools/I31_SKIJA_TRICKS.md` (visible-range math, paint cull, SetData once,
     row-rect damage, scrollbar model, ListLikeModel anchor/current; `Canvas.scroll` ScrollWindowEx blit).
     Initiative 31 renderers belong to the `custom`/`m3` modes only; the `viewport` mode keeps native pixels.
 
@@ -159,6 +159,8 @@ this is what will be offered to Eclipse, so write upstream-quality Eclipse code.
     your track's `docs/m3/<track>/ALGORITHM_CATALOGUE.tsv`. Example: LeetCode 136 / HackerRank Lonely Integer =
     XOR fold (x^x=0, O(n) time, O(1) space): the bit-manipulation category that viewport state masks, selection
     bitsets and popcount-based counts draw from. Problem statements are never copied; only licensed solutions.
+
+22. **JUL logging** (user 2026-10-19: "use JUL logging"). All logging goes through java.util.logging: SWT via `org.eclipse.swt.internal.SwtLog` (JUL, asynchronous); Nebula, GEF, JFace and the custom widgets via a `java.util.logging.Logger` named after the package; M3JDK via `System.Logger` (which routes to JUL). Never System.out/err, SLF4J, Log4j or commons-logging in our code. Hot paths guard with `isLoggable`/supplier lambdas so a disabled level allocates nothing. Levels: FINEST/FINER (TRACE) for per-row detail, FINE (DEBUG) for plans and decisions, INFO for mode selection and one-shot facts.
 
 ## Machine rules (hard)
 

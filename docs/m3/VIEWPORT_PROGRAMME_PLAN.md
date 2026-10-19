@@ -13,6 +13,52 @@ measured or committed. Anything not run is marked as not run.
   - Its log is `K:/m3-work/logs/commit-sweep.log`.
   - Restart the loop and the git-status watcher after every session restart.
 
+## 00g. ONE model, deltas end to end; re-implement all viewers and views (user, 2026-10-19; memory feedback-one-model-delta-processing)
+- **One store.** The viewport lanes are the only model. SWT items, JFace viewers (no CustomHashtable element map, no cached children) and data binding are deferred views over it. "Why 10 models and 10 hash maps" is the anti-pattern.
+- **Deltas end to end.** Source deltas (IResourceDelta/IMarkerDelta, Swing TreeModelEvent/TableModelEvent, model events) become an M3Patch. Inside the resident window rows update natively, O(changed); outside it only extents and the scrollbar change. Never a full rebuild; coalesce with the superseding-generation debounce.
+- **Seams:**
+  - SWT: the enhanced-API agent exposes M3Model + apply(M3Patch) on Tree/Table/List.
+  - Core: viewport-everywhere makes M3ListDiff/M3Patch invariant #1.
+  - JFace: the agent re-implements the viewers over it, then ALL views ("re-implement all viewers with this SWT and this JFace viewer; same idea for all the views"). The Markers view comes first (today it rebuilds the whole tree on any marker change), then Project Explorer (CNF), Outline, the e4 part stacks.
+- **Measurements:** CPU, heap, retained objects and time-to-reflect-one-change, stock vs ours, at 10^4-10^6.
+
+## 00f. Richer SWT + Swing API, SwingX and custom widgets (user, 2026-10-19)
+- **Richer API in both toolkits:** api-enrichment owns ENHANCED_API_MAP for both, with parallel names.
+  - SWT side: org.eclipse.swt.m3 (PR #227).
+  - Swing side: in place in M3jdk21 java.desktop, branch `m3/swing-enhanced-api-20261019`. Public additions are reviewed through API_DECISIONS.tsv.
+- **custom-widgets agent:** WIDGET_MATRIX + LIBRARIES.tsv, built exhaustively from the donor catalogue, the 1,479 mined links, the swt-initiative31 org and GitHub topics ("so many UI libraries related to SWT, Swing, Initiative31").
+  - Viewport for virtualizable Nebula widgets (Gallery, CompositeTable, TableCombo; Grid stays with its own agent): hsoliwal/nebula `m3/nebula-widgets-viewport-20261019`.
+  - The top missing rich widgets in both toolkits.
+  - SwingX: there is no fork, and it is LGPL, so API shape only.
+
+## 00e. LLM look-and-feel generator (user, 2026-10-19: "add a look and feel generator for SWT and Swing using an LLM")
+- **Owner:** all-widgets, as the next leaf after the Swing-style LAF core.
+- **M3ThemeGenerator:** the LLM (local Ollama first, Anthropic API fallback) proposes a closed-schema JSON palette from a prompt, brand colours or an image. The output is untrusted data.
+- **M3ThemeCompleter:** deterministic CPU. WCAG contrast auto-fix, derived states via HSL/OKLCH, every key filled, a light/dark twin, and a content hash.
+- **Emitters:** M3UIDefaults (SWT), FlatLaf .properties (Swing/UIManager, M3JDK Swing), IntelliJ .theme.json.
+- **Tests:** the LLM mocked by fixture, 99% coverage, a runtime-switch pixel smoke test in SWT and Swing.
+
+## 00d. All Swing, SWT, Nebula, GEF from GitHub: consolidate and implement (user, 2026-10-19)
+- **upstream-sync agent:** brings upstream into every fork as draft PRs from `m3/upstream-sync-20261019`, server-side first (GitHub merges API), verified zero-loss with the ancestry-only-safe method.
+  - Order: SWT (eclipse-platform), Nebula (EclipseNebula), GEF classic (eclipse-gef), platform.ui, then M3jdk21.
+  - M3jdk21 (jdk21u): measure and attempt only. Core conflicts go to the user.
+- **gef-viewport agent:** Draw2d/GEF/Zest on the viewport model, in hsoliwal/gef-classic `m3/gef-viewport-20261019` (worktree S:/m3-scratch/worktrees/gef-classic).
+  - A spatial index (rule 21) handles culling and hit tests.
+  - DOOP figure lanes; paint and validate only visible + damage; incremental FreeformLayer extents; EditPart refreshChildren via list diff.
+  - Opt-in `-Ddraw2d.viewport.mode=viewport`.
+- **Integration round 10 (5593cc43ba):** every SWT branch is in, including render-modes and sort-filter.
+
+## 00c. JFace viewers on the viewport (user, 2026-10-19: "optimize everything; start with JFace viewer, a wrapper over SWT; our viewport is much richer")
+- The jface-viewport agent works on the hsoliwal/eclipse.platform.ui fork, branch `m3/jface-viewport-20261019`, worktree `S:/m3-scratch/worktrees/platform-ui` (sparse: org.eclipse.jface, its tests, FilteredTree).
+- Approach: StructuredViewer/AbstractTreeViewer/ColumnViewer O(n) paths are rebuilt on the SWT viewport, the enhanced API, sort/filter (permutation index + bitmask) and M3 collection views:
+  - the element map becomes int-id lanes;
+  - refresh becomes a diff/patch of the visible projection;
+  - providers become lazy by construction.
+- The JFace API and behaviour are unchanged, proven by a differential against stock JFace.
+- Opt-in `-Djface.viewer.mode=viewport` until identical.
+- Donors: the user's own D:/TV_5.0 structured viewers (adapted under the Synexia header) and NatTable (EPL).
+- Worktrees: NEW worktrees go on S:\m3-scratch\worktrees (user-approved 2026-10-19; C: 148 MB, K: 500 MB), pushed after every step.
+
 ## 00b. M3jdk21 IS the JDK (user, 2026-10-19; memory feedback-m3jdk21-native-integration)
 "This is M3Jdk21, not m3 + jdk; the integration is not some layer."
 - m3/collections and m3/viewport-core are the PROVING GROUND.
@@ -114,7 +160,7 @@ Memory storms: git-status storms recur (73 git processes, 84 MB commit free at ~
     - Native access goes through SWT's existing Java OS/COM layer, Java libraries with their own natives (the M3 renderer's binding), or the JDK FFM API.
     - Non-Java projects are pattern donors, ported to Java.
 
-11. **M3 naming** (2026-10-17): no "Skija"/"Skia" in anything of ours. The mode `m3` becomes `m3` (`WidgetMode.M3`).
+11. **M3 naming** (2026-10-17): no "Skija"/"Skia" in anything of ours. The mode `skija` becomes `m3` (`WidgetMode.M3`).
     - Classes and packages are renamed to M3* by recipe, then atomized and patternized (brief rule 14).
     - Exception: third-party binding classes that the prebuilt natives require stay behind one internal M3 adapter, and licence notices keep naming their source.
 
@@ -271,6 +317,11 @@ These are older work and possibly another session's. Ask the user before touchin
 - Agents: tree-presentation owns TreeViewport/VirtualTree* bodies and the recipe generator; tree-coverage owns tests only.
 
 ### Table / List / Combo / all widgets
+- **TABLE FLAWLESS 2026-10-19 (a911d7c4084, build tt20261019p7):**
+  - The p7 gate is green: viewport suites 259/0 fail, original suites 228/0 fail; the default-mode differential vs official passes; rule 12 (original equals official) 88/88.
+  - The p6 end-of-seed flakes were fixed by quiescing the reentrancy variants. 10/10 repeat recordings of variants 7/8 are deterministic.
+  - TableViewport* coverage: 100% line, 99.79% branch, 99.88% instruction. TableStockItems 100/100.
+  - Next: examples, DPI/zoom differential legs, then adopting the SWT collections package.
 - **Table 2026-10-18 (55dd5b6c69, build tt20261018p3):**
   - TableViewport coverage: 100% line / 99.8% branch. The one stock `LVM_DELETEITEM` arm is documented.
   - Suites: 258 tests in viewport mode, 223 in original, 0 failures.
@@ -466,3 +517,16 @@ All of these were (re)started at ~12:10 on 2026-10-17 with the no-trailer rule a
 3. What to do with the 101 uncommitted changes in `K:/m3-work/com.synexia`.
 4. GTK and Cocoa have never been run.
 5. Fork CI on GitHub is disabled; the user must click "Enable workflows".
+
+## 00h GitHub harvest (done 2026-10-19; reuse, never re-search)
+
+- Where: hsoliwal/com.synexia branch `codex/m3-ui-donor-atomize-20261017` (15a9e1a51410),
+  `docs/M3-SCALE/runs/20261017-ui-donor-atomize/GITHUB_PR_HARVEST.tsv` (2,911 rows) and `GITHUB_PR_TOP30.md`.
+- Forwarded to owners on 2026-10-19: JFace (platform.ui #4404/#4301/#4304/#4469 Markers.getMarkerCounts, #649 quadratic lazy
+  reveal, #3728/#4403 virtual-tree refresh, #1093 viewer-limit family; prior art #4247 tree-path hashing, #3733, #4208/#2567,
+  #3527, #1331), Tree (swt #882/#904 TreeItem.getItemCount linear), Table (swt #208 setItemCount freeze), render-modes
+  (SWT SVGRasterizer + org.eclipse.swt.svg/jsvg seam, platform.ui #4497/#4505 currentColor, gef-classic #952 Batik Graphics,
+  FlatLaf #303/#817/#1022, swt #3659/#3631), all-widgets/LAF (FlatLaf #204 OS dark/light switch, #150/#683 smooth scrolling),
+  Swing (openjdk/jdk #17165/#17458 JDK-8317771, #27682 JDK-8369327), custom-widgets + Grid (nebula #696/#165 frozen column,
+  swt #624 SWT.VIRTUAL Composite), ui-interning (#4247), enhanced API (upstream-asks column).
+- Rule: every PR that answers an upstream issue cites its number and adds a row to UPSTREAM_DEFECTS.tsv or the track inventory.
