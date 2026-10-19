@@ -260,6 +260,30 @@ figures above miss what lies after it. Divergences found:
 5. Combo with a short reach: Escape after the window moved inside a drop restores another row (`READ_ONLY` seed 1
    step 83); the dropped list's pixels (Verify seed 2 step 40); an editable combo's text (seed 0 step 139). Open.
 
+### Model seam (leaf 19, step 3: `List.m3Splice`, `List.m3NativeRowOps`)
+
+[`enhanced-api/LEAF19_MODEL_SEAM.md`](enhanced-api/LEAF19_MODEL_SEAM.md) "Step 3" asks each viewport owner for one
+package-private edit run and a native-row-operation counter, so that `M3Model.apply (M3Patch)` with a patch outside
+the resident window performs zero native row operations. On List:
+
+- `List.m3Splice (int at, int removed, String [] inserted)`: with a viewport, `ListViewport.splice` removes
+  `[at, at + removed)` from the lanes and inserts the strings at `at` in one shift each (`VirtualListModel.insert`
+  is new: one `arraycopy`, where `add` per row shifts the lanes once per row). The window plan is shifted
+  (`VirtualRowWindowPlan.removed` / `inserted`); native rows are deleted or inserted only where the run meets the
+  window. The top row stays the same row (a run above it moves the top index by the rows it adds or removes; a run
+  that holds it keeps the index, as the list box does). The caret, the anchor and the selection follow the stock rules
+  of one removal and one insert at a time (the caret index stays; a removal at or before the anchor clears it, which
+  costs the two native operations of `clearNativeAnchor` when a native anchor is set). Without a viewport the run goes
+  through the item API with the top row put back.
+- `List.m3NativeRowOps ()`: `LB_ADDSTRING`, `LB_INSERTSTRING`, `LB_DELETESTRING` and `LB_RESETCONTENT` sent by the
+  List (every stock site) and by the viewport (every site routed through `insertNative`, `deleteNative`,
+  `resetNative`, `insertEmptyNative`).
+- `Test_org_eclipse_swt_widgets_List_ViewportAcceptance.spliceOutsideTheWindowTouchesNoNativeRow`: 100,000 rows,
+  top 50,000; 1,000 rows in at 10, 500 out at 20, 2,000 out and 1,000 in at 90,000: the counter is unchanged and
+  the rows, top, focus, selection and bar equal a second list edited through the item API; a removal above the
+  window with a selection costs at most the two anchor operations; a run inside the window (3 out, 2 in) costs at
+  most 7. Compile-clean; the run on the hidden desktop (build `lv19`) is queued.
+
 ### Naming against `TreeViewport` (tree branch `5c9f8b2121`)
 
 `ListViewport` shares 28 method names with `TreeViewport` (`keepRowVisible` and `deleteResidentRow` adopted on
