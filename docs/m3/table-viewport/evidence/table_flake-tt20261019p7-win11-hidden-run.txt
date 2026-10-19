@@ -1,0 +1,20 @@
+== record official 2026-10-19T13:17:33+05:30
+[         0 tests aborted         ]
+[         1 tests successful      ]
+[         0 tests failed          ]
+files 88
+# reference official, SWT 4974 win32
+record exit 0
+== flake 7,8 x10 2026-10-19T13:18:57+05:30
+run 1 official: 16 same, differs: none (16 files) | original: 16 same, differs: none (16 files) | viewport: 1 tests successful
+run 2 official: 16 same, differs: none (16 files) | original: 16 same, differs: none (16 files) | viewport: 1 tests successful
+run 3 official: 16 same, differs: none (16 files) | original: 16 same, differs: none (16 files) | viewport: 1 tests successful
+run 4 official: 16 same, differs: none (16 files) | original: 16 same, differs: none (16 files) | viewport: 1 tests successful
+run 5 official: 16 same, differs: none (16 files) | original: 16 same, differs: none (16 files) | viewport: 1 tests successful
+run 6 official: 16 same, differs: none (16 files) | original: 16 same, differs: none (16 files) | viewport: 1 tests successful
+run 7 official: 16 same, differs: none (16 files) | original: 16 same, differs: none (16 files) | viewport: 1 tests successful
+run 8 official: 16 same, differs: none (16 files) | original: 16 same, differs: none (16 files) | viewport: insufficient memory
+run 9 official: 16 same, differs: none (16 files) | original: 16 same, differs: none (16 files) | viewport: insufficient memory
+run 10 official: 16 same, differs: none (16 files) | original: 16 same, differs: none (16 files) | viewport: 1 tests successful
+flake exit 0
+== done 2026-10-19T13:37:14+05:30

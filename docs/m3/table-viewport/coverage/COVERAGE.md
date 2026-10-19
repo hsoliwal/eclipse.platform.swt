@@ -1,23 +1,21 @@
-# Table viewport coverage (rule 15), build `tt20261019p6`
+# Table viewport coverage (rule 15), build `tt20261019p7`
 
 JaCoCo 0.8.15 over one gate run ([`table_coverage.sh`](../table_coverage.sh), invisible desktop): the Table suites and acceptance tests in both modes, the differential of the default mode against the official recording, the differential recording of the original mode, the headless lane tests, the branch acceptance tests (`Test_org_eclipse_swt_widgets_Table_ViewportBranches`, and the white-box `Test_org_eclipse_swt_widgets_Table_ViewportArms`: selection tracks under every notification shape and nesting, facades that are not rows, paint helpers, undrawn stages; synthesized `LVN_ODFINDITEM` shapes, selection snapshots beyond 4096 rows, released and weakly held facades, paint-facade array reuse, text direction, pack over empty, image and indent rows, trace logging on) and the R4_38 store tests of the original mode (`Test_org_eclipse_swt_widgets_Table_StockItems`). [`table_changed_coverage.sh`](../table_changed_coverage.sh) writes [`classes.tsv`](classes.tsv) (per class) and [`changed-lines.tsv`](changed-lines.tsv) (the lines this fork adds to upstream files, against tag `R4_38`).
 
 The official recording of this gate was recorded afresh on the official jar (`org.eclipse.swt.win32.win32.x86_64-3.135.0.jar`, sha1 `872a552b`) with the tests of this build (88 seeds, header `reference official, SWT 4974 win32`).
 
-Gate results of this run:
+Gate results of this run ([log](../evidence/table_coverage-tt20261019p7-win11-hidden-run.txt)):
 
 | Run | Result |
 |---|---|
 | Suites, default mode | 259 pass, 0 fail (6 skipped: the 5 store tests of the original mode, foreground alpha on win32) |
 | Suites, original mode | 228 pass, 0 fail (37 skipped: tests that need the viewport or the item store of the default mode, foreground alpha on win32) |
-| Differential, default mode against the official recording | fails on the pixel line after variant 7, seed 1; every step line before it matches (the run stops at the first failure, so variants 8 and 9 did not run in it) |
-| Differential recording, original mode | 87 of 88 seeds equal to the official recording; variant 8, seed 3 differs in its pixel line only |
+| Differential, default mode against the official recording | passes, 88 seeds (the 155 steps of `UPSTREAM_DEFECTS.tsv` accepted) |
+| Differential recording, original mode | 88 of 88 seeds equal to the official recording line for line (rule 12) |
 
-Both differences are pixel lines of the reentrancy variants (7, 8) and move between runs on the same build, in the stock mode too:
+Before the gate, [`table_flake.sh`](../table_flake.sh) ran the reentrancy variants (7, 8; 16 seeds) 10 times without the JaCoCo agent ([log](../evidence/table_flake-tt20261019p7-win11-hidden-run.txt)): the official jar and the original mode recorded all 16 seeds equal to the official recording in every run, and the default mode passed against it in 8 runs; in runs 8 and 9 its JVM ran out of native memory (paging file too small), during the run and at heap reservation, and reported no result.
 
-- The original mode recorded variant 8, seed 3 six times: four equal the official recording, two end on one other pixel hash (`2af9893a` instead of `24a10934`), every step line equal. Its evidence shows other rows than the official capture (from row 239, against row 218) while the step lines, top index included, are equal; the likely reading is that the end-of-seed capture (`WM_PRINT`, synchronous) ran before the ListView settled.
-- The default mode against the official recording: the full differential once more (passes variant 7, fails on the pixel line after variant 8, seed 3) and variants 7 and 8 alone three times (pass); variant 7, seed 1 failed once in five runs, variant 8, seed 3 once in four.
-- So the end-of-seed quiesce of the reentrancy variants (`TableViewportScripts.quiesce`) is not deterministic on this machine under its present load (commit charge near its limit, other desktops running); the gate of this build is therefore not green on the differential, and the next leaf is that quiesce.
+The gate of build `tt20261019p6` failed on the pixel line after variant 7, seed 1 (default mode) and recorded variant 8, seed 3 with another pixel line (original mode); both moved between runs on the same build, in the stock mode too. `TableViewportScripts.quiesce` now runs the posted events and sends the ListView's pending scroll-wait timer (T-Table-13), and the per-class numbers below are unchanged from that build (`coverage.csv` byte-identical: only test-side code changed).
 
 | Class | Line | Branch |
 |---|---|---|
