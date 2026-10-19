@@ -42,6 +42,7 @@ import org.eclipse.swt.widgets.*;
  * </p>
  */
 public final class TreeDifferential {
+	private static final Watchdog WATCHDOG = Watchdog.start (120_000);
 	private final Display display;
 	private final StringBuilder events = new StringBuilder ();
 	private Tree tree;
@@ -66,6 +67,8 @@ public final class TreeDifferential {
 			display.dispose ();
 		}
 		Files.write (Paths.get (args [0]), out, StandardCharsets.UTF_8);
+		// the record is complete; do not wait for Swing threads that a disposed Initiative 31 display can leave behind
+		System.exit (0);
 	}
 
 	private void run (int seed, int steps, java.util.List<String> out) {
@@ -87,6 +90,7 @@ public final class TreeDifferential {
 		pump (true);
 		out.add (record (seed, -1, virtual ? "virtual" : "plain", "", random));
 		for (int step = 0; step < steps; step++) {
+			WATCHDOG.tick (seed + ":" + step);
 			String [] done = step (random, virtual);
 			pump (step % 25 == 24);
 			out.add (record (seed, step, done [0], done [1], random));

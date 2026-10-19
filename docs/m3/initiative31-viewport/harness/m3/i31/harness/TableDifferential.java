@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.*;
  * </p>
  */
 public final class TableDifferential {
+	private static final Watchdog WATCHDOG = Watchdog.start (120_000);
 	private final Display display;
 	private final StringBuilder events = new StringBuilder ();
 	private Table table;
@@ -59,6 +60,8 @@ public final class TableDifferential {
 			display.dispose ();
 		}
 		Files.write (Paths.get (args [0]), out, StandardCharsets.UTF_8);
+		// the record is complete; do not wait for Swing threads that a disposed Initiative 31 display can leave behind
+		System.exit (0);
 	}
 
 	private void run (int seed, int steps, java.util.List<String> out) {
@@ -91,6 +94,7 @@ public final class TableDifferential {
 		pump (true);
 		out.add (record (seed, -1, isTable ? (virtual ? "virtual" : "table") : "list", ""));
 		for (int step = 0; step < steps; step++) {
+			WATCHDOG.tick (seed + ":" + step);
 			String [] done = step (random);
 			pump (step % 25 == 24);
 			out.add (record (seed, step, done [0], done [1]));
@@ -119,6 +123,8 @@ public final class TableDifferential {
 			case 0: {
 				int next = Math.max (0, count + random.nextInt (120) - 40);
 				table.setItemCount (next);
+				// Initiative 31 resets the selection here in the original mode (UPSTREAM_DEFECTS I31-B3); start both modes again from none
+				table.deselectAll ();
 				return new String [] {"setItemCount(" + next + ")", ""};
 			}
 			case 1: return new String [] {"text(" + i + ")", table.getItem (i).getText ()};

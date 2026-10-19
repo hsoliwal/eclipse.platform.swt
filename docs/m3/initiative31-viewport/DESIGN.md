@@ -115,12 +115,15 @@ Lanes and facades:
   height (so `JTree` keeps state only for expanded nodes), and answers the delegated public API.
 
 Hooks (recipe `recipe/META-INF/rewrite/m3-swt-i31-tree-viewport.yml`, applied twice, second pass UNCHANGED):
-`Tree`: `createHandle` (install), `createItem` (2 overloads: adopt/insert), `releaseItem`, `setItemCount`
-(3-argument worker), `getItem(int)`, `getItemCount`, `getItems`, `indexOf(TreeItem)`, `removeAll`, `clearAll`,
-`releaseChildren`, `createItem(TreeColumn,int)`/`destroyItem(TreeColumn)` (resident rows only), `getTopItem`,
-`setTopItem`, `showItem`; `TreeItem`: `getItem(int)`, `getItemCount`, `getItems`, `indexOf`, `removeAll`,
-`clearAll`; `DefaultMutableTreeTableNode`: one setter for the `children` vector; `JTreeTable`: one accessor for
-the inner `JTree`. Each hook is one delegation `if (viewport != null) ...`; the logic lives in `M3TreeViewport`.
+`Tree`: `createWidget` (install), `createItem` (3 overloads: adopt/insert, columns), `destroyItem(TreeColumn)`,
+`releaseItem`, `releaseChildren`, `setItemCount` (3-argument worker), `getItem(int)`, `getItemCount`, `getItems`,
+`indexOf(TreeItem)`, `removeAll`, `clearAll`, `getTopItem`, `setTopItem` (`showItem`/`showSelection` keep the
+original least-scroll rule); `TreeItem`: `getItem(int)`, `getItemCount`, `getItems`, `indexOf`, `removeAll`;
+`DefaultMutableTreeTableNode`: one setter for the `children` vector; `JTreeTable`: the tree column width
+(`getPreferredColumnWidth`) and, in its inner table, `getRowHeight(int)`/`getCellRect` (section 11). The tree
+table's own expansion listener is an anonymous class, which `M3InsertStatements` does not visit, so
+`M3TreeTableRows.install` swaps it for an equivalent that counts rows from the lanes, keeping every listener's
+place. Each hook is one delegation `if (viewport != null) ...`; the logic lives in `M3TreeViewport`.
 
 ## 7. Table (leaf 2) and List (leaf 3)
 
@@ -150,3 +153,36 @@ The viewport mode adds no paint code and installs no look and feel. Themes for t
 `native` = the system look and feel (the Initiative 31 default), `swing` = Metal (`-Dswt.swing.laf=javax.swing.plaf.metal.MetalLookAndFeel`),
 `initiative31` = whatever `-Dswt.swing.laf` the application chooses (Initiative 31's own switch). The
 differential runs under `native` and `swing`.
+
+## 10. One model, deltas end to end
+
+The SWT item model and the Swing model are one store (user rule, 2026-10-19: no second copy of the data):
+
+| Widget | The one store | What Swing reads | Deltas |
+|---|---|---|---|
+| Tree | `M3TreeChildren` per parent: count + `VirtualItemStorage` of materialized `TreeItem` facades | the parent node's child vector *is* the `M3TreeChildren` (`DefaultMutableTreeTableNode.m3Children`), so `DefaultTreeModel.getChildCount/getChild/getIndexOfChild` read the lane | `setItemCount`: one `nodesWereInserted`/`nodesWereRemoved` over the index run; insert/dispose: one-index delta; expansion: one table INSERT/DELETE run counted from the lane counts |
+| Table | `Table.itemList` slots (null until materialized) | `CTableModel.getValueAt` reads the slot; its `rowCount` is a mirror of the slot count, updated by the same delta | `setItemCount`: one `fireTableRowsInserted/Deleted` per run (stock: one per row) |
+| List | the `JList`'s `DefaultListModel` (stock already keeps no second copy) | the model | unchanged |
+
+Rows inside the viewport are repainted by Swing from the delta; rows outside only change the scroll extent (Swing's
+`FixedHeightLayoutCache`/`JTable` row math), with no row work.
+
+Still two copies (next leaf): a materialized `TreeItem` keeps text/image/colours in its own fields and again in its
+Swing `TreeItemObject`s (stock Initiative 31 design). The leaf moves that state into lanes owned by `M3TreeChildren`,
+with `TreeItem` and `TreeItemObject` as views of the same lane entry.
+
+## 11. Threading (measured)
+
+Initiative 31 runs Swing on the AWT event thread and SWT on the application thread; the cell renderer and the
+models are read from both (`UPSTREAM_DEFECTS.tsv` I31-X1). Both modes log event-thread exceptions in the recorded
+runs. With `FixedHeightLayoutCache` every `JTree.getRowBounds` renders the row, so the viewport mode would have
+rendered rows on the SWT thread for each `JTable.getCellRect`/`getRowHeight`. The hook recipe
+`I31SwingTreeViewportRows` answers both arithmetically (one pitch per row) instead. `M3SwingScroll` never runs a
+Swing layout on the SWT thread (an earlier version validated the scroll pane and could wait on the Swing tree lock);
+it clamps to the rows' extent and, once the view is laid out, to its height.
+
+## 12. Examples
+
+`examples/m3/i31/examples/M3TreeExample`, `M3TableExample`, `M3ListExample`: 1,000,000 rows each, Initiative 31
+look and feel (`-Dswt.swing.laf`), mode switch (`-Dswt.widget.mode`), `--shot <png>` for a screenshot. See
+`EXAMPLES.md`.

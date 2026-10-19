@@ -24,51 +24,53 @@ import org.junit.*;
 
 /**
  * The scroll contract of {@link M3SwingScroll} on a plain Swing scroll pane (lightweight components only, so the
- * test runs headless): 100 rows of 10 pixels in a viewport 95 pixels high.
+ * test runs headless and lays the pane out by hand): 100 rows of 10 pixels in a viewport 95 pixels high.
  */
 public class M3SwingScrollTest {
 	private static final int ROWS = 100;
 	private static final int PITCH = 10;
 
-	private LayingPane pane;
+	private RowsView view;
+	private JScrollPane pane;
 	private JViewport viewport;
 	private M3SwingScroll scroll;
 
-	/**
-	 * A scroll pane that lays itself out on <code>validate</code>, which AWT does only for displayed components;
-	 * records that <code>validate</code> was called.
-	 */
-	static final class LayingPane extends JScrollPane {
+	/** A view that answers whether it is laid out as the test says (AWT lays out only displayed components). */
+	static final class RowsView extends JPanel {
 		private static final long serialVersionUID = 1L;
-		boolean validated;
-
-		LayingPane (Component view) {
-			super (view);
-		}
+		boolean laidOut;
 
 		@Override
-		public void validate () {
-			validated = true;
-			doLayout ();
-			getViewport ().doLayout ();
-			super.validate ();
+		public boolean isValid () {
+			return laidOut;
 		}
 	}
 
 	@Before
 	public void setUp () {
-		JPanel view = new JPanel ();
+		view = new RowsView ();
 		view.setPreferredSize (new Dimension (50, ROWS * PITCH));
-		pane = new LayingPane (view);
+		pane = new JScrollPane (view);
 		pane.setBorder (null);
 		pane.setSize (80, 95);
-		pane.validate ();
+		pane.doLayout ();
 		viewport = pane.getViewport ();
+		viewport.doLayout ();
 		scroll = new M3SwingScroll ();
 	}
 
 	private int y () {
 		return viewport.getViewPosition ().y;
+	}
+
+	private int extent () {
+		return viewport.getExtentSize ().height;
+	}
+
+	@Test
+	public void theViewportIsLaidOut () {
+		assertTrue (extent () > 0);
+		assertEquals (ROWS * PITCH, view.getHeight ());
 	}
 
 	@Test
@@ -93,9 +95,19 @@ public class M3SwingScrollTest {
 
 	@Test
 	public void setTopRowClampsToTheLastPage () {
-		int extent = viewport.getExtentSize ().height;
 		scroll.setTopRow (viewport, 99, ROWS, PITCH);
-		assertEquals (ROWS * PITCH - extent, y ());
+		assertEquals (ROWS * PITCH - extent (), y ());
+	}
+
+	@Test
+	public void aLaidOutViewShorterThanTheRowsClampsFurther () {
+		view.setSize (50, 500);
+		view.laidOut = true;
+		scroll.setTopRow (viewport, 99, ROWS, PITCH);
+		assertEquals (500 - extent (), y ());
+		view.laidOut = false;
+		scroll.setTopRow (viewport, 99, ROWS, PITCH);
+		assertEquals ("a view that is not laid out yet is clamped by the rows only", ROWS * PITCH - extent (), y ());
 	}
 
 	@Test
@@ -109,11 +121,10 @@ public class M3SwingScrollTest {
 
 	@Test
 	public void showRowScrollsTheLeast () {
-		int extent = viewport.getExtentSize ().height;
 		scroll.showRow (viewport, 50, ROWS, PITCH);
-		assertEquals (510 - extent, y ());
+		assertEquals (510 - extent (), y ());
 		scroll.showRow (viewport, 48, ROWS, PITCH);
-		assertEquals ("a shown row does not scroll", 510 - extent, y ());
+		assertEquals ("a shown row does not scroll", 510 - extent (), y ());
 		scroll.showRow (viewport, 10, ROWS, PITCH);
 		assertEquals (100, y ());
 	}
@@ -126,11 +137,11 @@ public class M3SwingScrollTest {
 
 	@Test
 	public void centerRowPutsAHiddenRowInTheMiddle () {
-		int shown = viewport.getExtentSize ().height / PITCH;
+		int shown = extent () / PITCH;
 		scroll.centerRow (viewport, 60, ROWS, PITCH);
 		assertEquals ((60 - shown / 2) * PITCH, y ());
 		scroll.centerRow (viewport, 99, ROWS, PITCH);
-		assertEquals (ROWS * PITCH - viewport.getExtentSize ().height, y ());
+		assertEquals (ROWS * PITCH - extent (), y ());
 		scroll.centerRow (viewport, 1, ROWS, PITCH);
 		assertEquals (0, y ());
 	}
@@ -153,30 +164,10 @@ public class M3SwingScrollTest {
 	}
 
 	@Test
-	public void aPendingLayoutIsValidatedFirst () {
-		JPanel view = (JPanel) viewport.getView ();
-		view.setPreferredSize (new Dimension (50, 2 * ROWS * PITCH));
-		pane.invalidate ();
-		pane.validated = false;
-		assertFalse (pane.isValid ());
-		scroll.setTopRow (viewport, 150, 2 * ROWS, PITCH);
-		assertTrue (pane.validated);
-		assertEquals (1500, y ());
-		pane.validated = false;
-		scroll.setTopRow (viewport, 10, 2 * ROWS, PITCH);
-		assertEquals ("a valid pane is not validated again", pane.isValid (), !pane.validated);
-	}
-
-	@Test
-	public void aViewportOutsideAScrollPaneIsUsedAsItIs () {
-		JViewport alone = new JViewport ();
-		JPanel view = new JPanel ();
-		view.setPreferredSize (new Dimension (50, ROWS * PITCH));
-		alone.setView (view);
-		alone.setSize (50, 95);
-		alone.doLayout ();
-		view.setSize (view.getPreferredSize ());
-		scroll.setTopRow (alone, 30, ROWS, PITCH);
-		assertEquals (300, alone.getViewPosition ().y);
+	public void aViewportWithoutAViewUsesTheRowsOnly () {
+		JViewport empty = new JViewport ();
+		empty.setSize (50, 95);
+		scroll.setTopRow (empty, 30, ROWS, PITCH);
+		assertEquals ("a viewport without a view has nothing to move", 0, empty.getViewPosition ().y);
 	}
 }

@@ -87,7 +87,6 @@ public final class M3SwingScroll {
 	public void centerRow (JViewport viewport, int row, int rows, int pitch) {
 		if (row < 0 || row >= rows || pitch <= 0) return;
 		layout (rows, pitch);
-		validate (viewport);
 		int y = viewport.getViewPosition ().y;
 		int extent = viewport.getExtentSize ().height;
 		if (extents.scrollOffsetFor (row, M3SparseExtents.ALIGN_AUTO, y, extent) == y) return;
@@ -95,20 +94,20 @@ public final class M3SwingScroll {
 		setTopRow (viewport, Math.max (0, row - shown / 2), rows, pitch);
 	}
 
-	private static void validate (JViewport viewport) {
-		Container pane = viewport.getParent ();
-		if (pane != null && !pane.isValid ()) pane.validate ();
-	}
-
+	/**
+	 * Moves the view. The target is clamped to the rows' extent and, when the view is laid out, to its height. A
+	 * view that is not laid out yet (rows were just added) is not laid out here: the SWT thread does not run Swing
+	 * layout, and the viewport's own layout clamps the position once it runs.
+	 */
 	private void scrollTo (JViewport viewport, int row, int rows, int pitch, int align) {
 		if (row < 0 || row >= rows || pitch <= 0) return;
 		layout (rows, pitch);
-		validate (viewport);
 		Point position = viewport.getViewPosition ();
 		int extent = viewport.getExtentSize ().height;
 		long target = extents.scrollOffsetFor (row, align, position.y, extent);
-		long limit = Math.max (0L, (long) viewport.getViewSize ().height - extent);
-		int y = (int) Math.min (target, limit);
+		Component view = viewport.getView ();
+		if (view != null && view.isValid ()) target = Math.min (target, Math.max (0L, (long) view.getHeight () - extent));
+		int y = (int) target;
 		if (y != position.y) viewport.setViewPosition (new Point (position.x, y));
 	}
 
