@@ -119,6 +119,8 @@ public final class ViewportDifferential<S> {
 		return out.toArray (new int [0][]);
 	}
 
+	/* java.util.logging (brief rule 22): the similarity rows of the drawn modes */
+	private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger (ViewportDifferential.class.getName ());
 	private final String name;
 	private final long seedBase;
 	private final Ops<S> ops;
