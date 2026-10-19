@@ -22,7 +22,7 @@ EXEC=$(cygpath -w $C/table.exec)
 INC='org.eclipse.swt.widgets.Table*:org.eclipse.swt.widgets.VirtualListWidth*:org.eclipse.swt.widgets.VirtualCellLanes*:org.eclipse.swt.widgets.VirtualBitLanes*:org.eclipse.swt.widgets.ScrollBar*'
 JA="-javaagent:$AGENT=destfile=$EXEC,append=true,includes=$INC"
 DEFECTS=$(cygpath -m "$(dirname "$0")")/UPSTREAM_DEFECTS.tsv
-XA="--enable-preview --enable-native-access=ALL-UNNAMED"
+XA="--enable-preview --enable-native-access=ALL-UNNAMED -Dswt.autoScale.updateOnRuntime=true"
 T=org.eclipse.swt.tests.junit
 SUITES="--select-class $T.Test_org_eclipse_swt_widgets_Table --select-class $T.Test_org_eclipse_swt_widgets_TableItem --select-class $T.Test_org_eclipse_swt_widgets_TableColumn --select-class $T.Test_org_eclipse_swt_widgets_Table_Viewport --select-class $T.Test_VirtualListWidth --select-class $T.Test_VirtualCellLanes --select-class $T.Test_org_eclipse_swt_widgets_Table_ViewportBranches --select-class $T.Test_org_eclipse_swt_widgets_Table_ViewportArms --select-class $T.Test_org_eclipse_swt_widgets_Table_StockItems --disable-banner --details=tree"
 DIFF="--select-class $T.Test_org_eclipse_swt_widgets_Table_ViewportDifferential --disable-banner --details=tree"
