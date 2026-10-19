@@ -114,6 +114,6 @@ public class M3LookAndFeelSwitchSnippet {
 		loader.data = new ImageData [] {image.getImageData ()};
 		loader.save (file, SWT.IMAGE_PNG);
 		image.dispose ();
-		System.out.println ("saved " + file);
+		java.util.logging.Logger.getLogger (M3LookAndFeelSwitchSnippet.class.getName ()).info ("saved " + file);
 	}
 }
