@@ -1,0 +1,9 @@
+# M3LafSwitchBenchmark (steps c, d, f), JDK 21, 2026-10-19, hidden desktop, jar aw-cov3 + LF6 classes; median of 7 rounds after 2 warm-up rounds; other agents' UI runs shared the machine
+widgets 7000, delegates 2000
+bench-a>bench-b    Swing updateComponentTreeUI (full)   touched  2000  call    8.367 ms  settled 1693.144 ms      828536 B
+bench-a>bench-b    LF6 M3LookAndFeel.update (diff)      touched   400  call    8.626 ms  settled 2360.324 ms      280840 B
+flat>flatdark      Swing updateComponentTreeUI (full)   touched  2000  call    7.955 ms  settled 1408.601 ms      828536 B
+flat>flatdark      LF6 M3LookAndFeel.update (diff)      touched  2000  call    6.303 ms  settled  520.320 ms      257416 B
+#c0392b>#2f6fd0    FlatLaf setup + updateUI (full)      touched  2000  call   21.790 ms  settled 3353.888 ms     1021536 B
+#c0392b>#2f6fd0    LF6 M3LookAndFeel.setAccent (cone)   touched   200  call    1.557 ms  settled   28.261 ms      269472 B
+

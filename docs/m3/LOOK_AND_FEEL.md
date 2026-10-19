@@ -96,6 +96,30 @@ resource cache and the diff-driven switch, with the switch benchmark; (d) depend
 reload; (f) palette, high contrast and DPI-aware metrics; (g) `light`/`dark` and the default row delegate; (h)
 coverage (rule 15).
 
+Status (2026-10-19): steps (a) to (g) implemented in `org.eclipse.swt.internal.laf`, each with JUnit tests:
+
+| Class | Role |
+|---|---|
+| `M3UIKeys` | key names interned to dense int ids with a kind and a `Component` parent |
+| `M3UIDefaults` | typed lanes per theme, developer layer (`put`, `putInsets`, `putVariable`), derived layer, `diff`, `snapshot`, DPI metrics (`metric`, `insets (key, out, zoom)`) |
+| `M3UIDerivation` | reversed CSR graph of the table's references; the cone of a changed base resolved by `LookAndFeelLoader.resolve` |
+| `M3UIOverrides` | the sparse per-widget lane (putClientProperty) |
+| `M3LookAndFeel` | `setLookAndFeel`, listeners, pins, `installUI`/`getUI`/`uninstallUI`, diff-driven `update`, `updateComponentTreeUI`, `override`, `reload`, `setAccent`; built-ins `light` and `dark` |
+| `M3ComponentUI`, `M3RowUI`, `M3DefaultRowUI` | UI delegates; the row delegate of the drawn Tree, Table and List |
+| `M3UIResources`, `M3UIFonts` | one `Color` per ARGB and one `Font` per font id per display, disposed by a switch |
+| `M3ThemeImport`, `M3Json`, `M3ColorFunctions` | IntelliJ `.theme.json` and FlatLaf `.properties` import; FlatLaf's colour functions in the loader |
+| `M3ThemeWatcher` | live reload of a theme file |
+| `M3Palette` | accent ramp, WCAG contrast, high contrast from the platform |
+
+The loader changes (`merged` package-private, `resolve (name, raw, keys)`, the FlatLaf function cases) are applied by
+the OpenRewrite recipes in [`look-and-feel/recipe`](look-and-feel/recipe) (`lf6_loader_recipe.sh`, second pass
+UNCHANGED). Measured against the UIManager-style baselines
+([`ALGORITHM_CATALOGUE.tsv`](look-and-feel/ALGORITHM_CATALOGUE.tsv), evidence in
+[`look-and-feel/evidence`](look-and-feel/evidence)): a colour read 5.0 ns against 66.2 ns (Hashtable of boxed values);
+per-widget values 0.66 MB against 1.81 MB for 10,000 of 100,000 widgets; an accent change resolves 12 values in 9.2
+us against 77 values in 82.6 us, and on 2,000 live delegates updates 200 of them and settles in 28 ms against 3.4 s
+for setting the look and feel up again.
+
 ## Tests
 
 `Test_org_eclipse_swt_internal_laf_LookAndFeel` (one test needs a display, so the suite runs on the hidden desktop): colours in every notation, integers, booleans
