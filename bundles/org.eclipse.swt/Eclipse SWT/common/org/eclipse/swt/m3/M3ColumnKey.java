@@ -157,7 +157,8 @@ public abstract class M3ColumnKey {
 			int radixKeys (int [] rows, int n, M3SortLanes lanes) {
 				String [] texts = lanes.texts (n);
 				for (int i = 0; i < n; i++) texts [i] = text.apply (rows [i]);
-				long maxRank = lanes.ranks (n, (i, j) -> compare.compare (texts [i], texts [j]));
+				long maxRank = lanes.distinctRanks (n, compare);
+				if (maxRank < 0) maxRank = lanes.ranks (n, (i, j) -> compare.compare (texts [i], texts [j]));
 				lanes.releaseTexts (n);
 				return M3SortLanes.bytesFor (maxRank);
 			}
