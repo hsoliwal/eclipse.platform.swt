@@ -343,15 +343,15 @@ public class Test_M3SortFilterWidgets {
 		text = find (window, Text.class, 0);
 		feedback = find (window, Label.class, 0);
 		assertEquals ("n1*", text.getText ());
-		select (tools [0]);
-		Label info = feedback;
-		waitFor (() -> info.getText ().contains ("regular"));
+		assertEquals (0, type.getSelectionIndex ());
 		type.select (2);
 		text.setText ("(");
 		assertFalse (feedback.isDisposed ());
 		ToolItem [] tools = find (window, ToolBar.class, 0).getItems ();
 		select (tools [0]);
 		assertEquals (".*", text.getText ());
+		Label info = feedback;
+		waitFor (() -> info.getText ().contains ("regular"));
 		type.select (4);
 		select (tools [0]);
 		assertEquals ("", text.getText ());

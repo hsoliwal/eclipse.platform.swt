@@ -264,7 +264,7 @@ public class Test_M3FilterAsync {
 		filter.setText (0, "x3*", M3TextMatch.WILDCARD);
 		int finalGeneration = filter.getGeneration ();
 		waitFor (() -> filter.getAppliedGeneration () == finalGeneration);
-		assertEquals (List.of (finalGeneration), applied);
+		assertEquals (java.util.List.of (finalGeneration), applied);
 		int expected = 0;
 		for (int i = 0; i < n; i++) {
 			if (("x" + i).startsWith ("x3")) expected++;
