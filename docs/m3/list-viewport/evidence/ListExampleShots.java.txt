@@ -1,0 +1,136 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+// win32 harness of the List and Combo examples (default package). Run it on the invisible desktop: list_example_shots.sh.
+
+import java.util.function.Predicate;
+import java.util.logging.*;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.snippets.m3.*;
+import org.eclipse.swt.widgets.*;
+
+/**
+ * Opens each example of examples/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/m3/M3List* and M3Combo*,
+ * presses its buttons through <code>notifyListeners</code>, logs what its status line shows and, with an output
+ * directory, saves the shell drawn by <code>WM_PRINT</code> (frame, client and children) as PNG.
+ * Usage: ListExampleShots [png-dir or -].
+ */
+public class ListExampleShots {
+	static String dir;
+	static Display display;
+	static final Logger LOG = Logger.getLogger (ListExampleShots.class.getName ());
+
+	public static void main (String [] args) {
+		dir = args.length > 0 && !args [0].equals ("-") ? args [0] : null;
+		plainLog ();
+		display = new Display ();
+		String mode = SWT.getVersion () == 4974 ? "official" : System.getProperty ("swt.widget.mode", "default");
+		LOG.info ("# List and Combo examples, mode " + mode + ", SWT " + SWT.getVersion () + " " + SWT.getPlatform ());
+
+		Shell shell = M3ListMillionItemsExample.open (display);
+		report ("M3ListMillionItemsExample", shell, null);
+		for (String operation : new String [] {"Middle", "Select 999,990", "Insert at 10", "Remove 1,000", "Last", "First"}) {
+			press (shell, operation);
+			report ("M3ListMillionItemsExample", shell, null);
+		}
+		press (shell, "Select 999,990");
+		report ("M3ListMillionItemsExample", shell, "m3-list-million-items");
+		shell.dispose ();
+
+		shell = M3ListFastScrollExample.open (display);
+		for (String operation : new String [] {"1,000 pages", "1,000 jumps", "1,000 random"}) {
+			press (shell, operation);
+			report ("M3ListFastScrollExample", shell, null);
+		}
+		report (null, shell, "m3-list-fast-scroll");
+		shell.dispose ();
+
+		shell = M3ComboMillionItemsExample.open (display);
+		report ("M3ComboMillionItemsExample", shell, null);
+		for (String operation : new String [] {"Select 999,999", "Select 500,000", "Type 'City 07'", "Find 'City 0765432'", "Drop"}) {
+			press (shell, operation);
+			report ("M3ComboMillionItemsExample", shell, null);
+		}
+		report (null, shell, "m3-combo-million-items");
+		press (shell, "Close");
+		shell.dispose ();
+
+		shell = M3ComboVerifyExample.open (display);
+		for (String operation : new String [] {"Unit 50,000", "Retired unit 90,007", "Alias 99,999"}) {
+			press (shell, operation);
+			report ("M3ComboVerifyExample", shell, null);
+		}
+		report (null, shell, "m3-combo-verify");
+		shell.dispose ();
+		display.dispose ();
+	}
+
+	/* one line per record, no JUL header, so the log reads like the transcripts of the other probes */
+	static void plainLog () {
+		ConsoleHandler handler = new ConsoleHandler ();
+		handler.setFormatter (new Formatter () {
+			@Override
+			public String format (LogRecord record) {
+				return record.getMessage () + "\n";
+			}
+		});
+		LOG.setUseParentHandlers (false);
+		LOG.addHandler (handler);
+	}
+
+	static void press (Shell shell, String text) {
+		Button button = (Button) find (shell, c -> c instanceof Button b && b.getText ().equals (text));
+		button.notifyListeners (SWT.Selection, new Event ());
+		settle ();
+	}
+
+	static void report (String name, Shell shell, String file) {
+		settle ();
+		Control status = find (shell, c -> c instanceof Label);
+		if (name != null) LOG.info (name + ": " + ((Label) status).getText ().replace ("\r", "").stripTrailing ());
+		if (dir == null || file == null) return;
+		Point size = shell.getSize ();
+		Image image = new Image (display, size.x, size.y);
+		GC gc = new GC (image);
+		OS.SendMessage (shell.handle, OS.WM_PRINT, gc.handle, OS.PRF_NONCLIENT | OS.PRF_CLIENT | OS.PRF_ERASEBKGND | OS.PRF_CHILDREN);
+		gc.dispose ();
+		ImageLoader loader = new ImageLoader ();
+		loader.data = new ImageData [] {image.getImageData ()};
+		loader.save (dir + "/" + file + ".png", SWT.IMAGE_PNG);
+		image.dispose ();
+	}
+
+	static Control find (Composite parent, Predicate<Control> test) {
+		for (Control child : parent.getChildren ()) {
+			if (test.test (child)) return child;
+			if (child instanceof Composite composite) {
+				Control found = find (composite, test);
+				if (found != null) return found;
+			}
+		}
+		return null;
+	}
+
+	static void settle () {
+		for (int i = 0; i < 3; i++) {
+			while (display.readAndDispatch ()) {
+				/* drain */
+			}
+			display.update ();
+		}
+	}
+}
