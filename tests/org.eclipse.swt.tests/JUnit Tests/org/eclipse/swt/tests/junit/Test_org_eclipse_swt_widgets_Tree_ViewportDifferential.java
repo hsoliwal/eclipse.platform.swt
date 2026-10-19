@@ -294,6 +294,51 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 		return randomOp (random, log, false, false, true);
 	}
 
+	/*
+	 * The plain scripts plus m3Splice (about one step in four): a run of roots, or of the children of an expandable
+	 * root, is replaced by new rows. Stock SWT (the official jar) has no m3Splice: there the op disposes the run from
+	 * its last row to its first and creates the new rows at the index, which is the contract of m3Splice.
+	 */
+	static ViewportDifferential.Op<Subject> randomSpliceOp (Random random, StringBuilder log) {
+		if (random.nextInt (4) != 0) return randomOp (random, log, false, false);
+		boolean children = random.nextInt (3) == 0;
+		int root = children ? 7 * random.nextInt (ROOTS / 7 + 1) : random.nextInt (ROOTS), at = random.nextInt (children ? CHILDREN : ROOTS);
+		int remove = random.nextInt (6), insert = random.nextInt (6);
+		log.append ("splice ").append (children ? "children of " + root : "roots").append (" at ").append (at).append (" -").append (remove).append (" +").append (insert).append ('\n');
+		return subject -> {
+			Tree tree = subject.tree ();
+			if (tree.getItemCount () == 0) return "empty";
+			TreeItem parent = children ? tree.getItem (Math.min (root, tree.getItemCount () - 1)) : null;
+			int count = parent == null ? tree.getItemCount () : parent.getItemCount ();
+			int index = Math.min (at, count), removed = Math.min (remove, count - index);
+			splice (tree, parent, index, removed, insert);
+			int after = parent == null ? tree.getItemCount () : parent.getItemCount ();
+			TreeItem first = index < after ? (parent == null ? tree.getItem (index) : parent.getItem (index)) : null;
+			return "count=" + after + " at=" + text (first) + " sel=" + tree.getSelectionCount ();
+		};
+	}
+
+	/* m3Splice where it exists (this build), else its contract on stock: dispose the run last to first, create the new rows */
+	static void splice (Tree tree, TreeItem parent, int index, int remove, int insert) {
+		try {
+			if (parent == null) Tree.class.getMethod ("m3Splice", int.class, int.class, int.class).invoke (tree, index, remove, insert);
+			else TreeItem.class.getMethod ("m3Splice", int.class, int.class, int.class).invoke (parent, index, remove, insert);
+			return;
+		} catch (NoSuchMethodException e) {
+			/* stock */
+		} catch (java.lang.reflect.InvocationTargetException e) {
+			if (e.getCause () instanceof RuntimeException failure) throw failure;
+			throw new IllegalStateException (e.getCause ());
+		} catch (IllegalAccessException e) {
+			throw new IllegalStateException (e);
+		}
+		for (int i = index + remove - 1; i >= index; i--) (parent == null ? tree.getItem (i) : parent.getItem (i)).dispose ();
+		for (int i = 0; i < insert; i++) {
+			if (parent == null) new TreeItem (tree, SWT.NONE, index + i);
+			else new TreeItem (parent, SWT.NONE, index + i);
+		}
+	}
+
 	static ViewportDifferential.Op<Subject> randomOp (Random random, StringBuilder log, boolean columns, boolean presentation) {
 		return randomOp (random, log, columns, presentation, false);
 	}
@@ -528,9 +573,14 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 	}
 
 	private ViewportDifferential<Subject> harness (boolean columns, boolean presentation, boolean expansionKeys, boolean customDraw) {
+		return harness (columns, presentation, expansionKeys, customDraw, false);
+	}
+
+	private ViewportDifferential<Subject> harness (boolean columns, boolean presentation, boolean expansionKeys, boolean customDraw, boolean splice) {
 		ViewportDifferential<Subject> harness = ViewportDifferential.<Subject>of (
-				customDraw ? "tree-viewport-customdraw" : expansionKeys ? "tree-viewport-keys" : columns ? "tree-viewport-columns" : presentation ? "tree-viewport-presentation" : "tree-viewport", 0x7EE5EEDL,
-				customDraw ? Test_org_eclipse_swt_widgets_Tree_ViewportDifferential::randomCustomDrawOp
+				splice ? "tree-viewport-splice" : customDraw ? "tree-viewport-customdraw" : expansionKeys ? "tree-viewport-keys" : columns ? "tree-viewport-columns" : presentation ? "tree-viewport-presentation" : "tree-viewport", 0x7EE5EEDL,
+				splice ? Test_org_eclipse_swt_widgets_Tree_ViewportDifferential::randomSpliceOp
+					: customDraw ? Test_org_eclipse_swt_widgets_Tree_ViewportDifferential::randomCustomDrawOp
 					: expansionKeys ? Test_org_eclipse_swt_widgets_Tree_ViewportDifferential::randomExpansionKeyOp
 					: columns ? Test_org_eclipse_swt_widgets_Tree_ViewportDifferential::randomColumnsOp
 					: presentation ? Test_org_eclipse_swt_widgets_Tree_ViewportDifferential::randomPresentationOp
@@ -686,6 +736,24 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 		tree.setFocus ();
 		ViewportDifferential.settle (display, 120);
 		harness (false, false, true).compareWithRecording (subject, record, System.getProperty ("swt.viewport.recording"));
+	}
+
+	/**
+	 * The plain scripts plus m3Splice on roots and on the children of expandable roots, against stock SWT where the
+	 * same runs are disposed (last to first) and created (recording tree-viewport-splice).
+	 */
+	@Test
+	public void seededSplicesAnswerLikeStockSwt () throws java.io.IOException {
+		boolean record = ViewportDifferential.records ("Tree");
+		Tree tree = virtualTree ();
+		if (!record) {
+			Assumptions.assumeTrue (tree.getVerticalBar ().getMaximum () == ROOTS - 1, "Tree viewport mediation is not active in this build");
+		}
+		Subject subject = subject (tree);
+		shell.open ();
+		tree.setFocus ();
+		ViewportDifferential.settle (display, 120);
+		harness (false, false, false, false, true).compareWithRecording (subject, record, System.getProperty ("swt.viewport.recording"));
 	}
 
 	/**

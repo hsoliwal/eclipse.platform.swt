@@ -5679,6 +5679,38 @@ public void setInsertMark (TreeItem item, boolean before) {
 }
 
 /**
+ * Replaces <code>removeCount</code> items at <code>index</code> by <code>insertCount</code> new ones, as if the old
+ * ones were disposed from the last to the first and the new ones then created at <code>index</code> (in a
+ * <code>SWT.VIRTUAL</code> tree they ask for their data when they show). In the default mode this is one update of
+ * the rows and the scroll bar whatever the counts; the stock Tree makes the native calls one item at a time.
+ *
+ * @param index the index of the first item to replace
+ * @param removeCount the number of items to remove
+ * @param insertCount the number of new items
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_INVALID_RANGE - if the index or a count is negative, or the range is not within the receiver's items</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @since 3.137
+ */
+public void m3Splice (int index, int removeCount, int insertCount) {
+	checkWidget ();
+	if (index < 0 || removeCount < 0 || insertCount < 0) error (SWT.ERROR_INVALID_RANGE);
+	if (viewport != null) {
+		viewport.splice (null, index, removeCount, insertCount);
+		return;
+	}
+	if (index + removeCount > getItemCount ()) error (SWT.ERROR_INVALID_RANGE);
+	for (int i = index + removeCount - 1; i >= index; i--) getItem (i).dispose ();
+	for (int i = 0; i < insertCount; i++) new TreeItem (this, SWT.NONE, index + i);
+}
+
+/**
  * Sets the number of root-level items contained in the receiver.
  * <p>
  * The fastest way to insert many items is documented in {@link TreeItem#TreeItem(Tree,int,int)}

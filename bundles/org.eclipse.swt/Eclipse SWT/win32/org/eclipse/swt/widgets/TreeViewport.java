@@ -1382,6 +1382,12 @@ final class TreeViewport {
 
 	/* the native caret moves of disposing the row holding the caret (or an ancestor of it): to the row, then to the next caret */
 	private void deselectOnDispose (int parentId, int index, int id, TreeItem nextCaret) {
+		deselectOnDispose (parentId, index, index + 1, id, nextCaret);
+	}
+
+	/* the same for the child id at from <= index < to going with the whole range [from, to) of its siblings (splice) */
+	private void deselectOnDispose (int parentId, int from, int to, int id, TreeItem nextCaret) {
+		int index = tree.virtualTopology.childIndex (id);
 		boolean inside = focusId != id;
 		long removed = VirtualTreeResidentPlan.key (parentId, index);
 		long [] oldKeys = inside ? new long [] {keyOf (focusId), removed} : new long [] {removed};
@@ -1396,7 +1402,7 @@ final class TreeViewport {
 			@Override
 			public boolean gone (long key) {
 				long branch = branchUnder (parentId, key);
-				return branch >= 0 && (branch >> 1) == index;
+				return branch >= 0 && (branch >> 1) >= from && (branch >> 1) < to;
 			}
 		});
 	}
@@ -1904,6 +1910,92 @@ final class TreeViewport {
 		if (parentId == VirtualTreeTopology.ROOT && topology.childCount (VirtualTreeTopology.ROOT) == 0) becameEmpty ();
 	}
 
+	/**
+	 * Tree.m3Splice and TreeItem.m3Splice: the children of a row (or the roots) in [index, index + remove) are
+	 * replaced by insert new cold rows in one pass. The facades and the native rows of the removed range go, the later
+	 * siblings keep their facades and resident rows and only change index, the new rows get their data when they
+	 * show. The caret and the selection follow the disposal of the range from its last row to its first, which moves
+	 * the native caret once: to the row after the range, else the row before it, else the parent (caretAfterRemoval,
+	 * deselectOnDispose); the removed rows scroll the row taking their place into view as a removed subtree does.
+	 */
+	void splice (TreeItem parent, int index, int remove, int insert) {
+		int parentId = parentIdOf (parent);
+		int count = knownCount (parentId);
+		if (index < 0 || index > count || remove < 0 || remove > count - index || insert < 0) tree.error (SWT.ERROR_INVALID_RANGE);
+		if (remove == 0 && insert == 0) return;
+		LOG.debug (() -> "Tree splice at " + index + " of " + (parent == null ? "roots" : "id " + idOf (parent)) + ": -" + remove + " +" + insert);
+		VirtualTreeTopology topology = tree.virtualTopology;
+		VirtualTreeViewport viewport = tree.virtualViewport;
+		long row = remove > 0 ? tree.virtualProjection.visibleIndexOfCoordinate (parentId, index) : -1;
+		long rowsBefore = viewport.visibleRowCount ();
+		captureResidentState ();
+		int caretChild = caretChildIn (parentId, index, index + remove);
+		TreeItem nextCaret = caretChild >= 0 ? caretAfterRemoval (parentId, index, remove, row) : null;
+		if (caretChild >= 0) deselectOnDispose (parentId, index, index + remove, caretChild, nextCaret);
+		boolean nextSelected = nextCaret != null && ((tree.style & SWT.SINGLE) != 0 || idOf (nextCaret) >= 0 && rowSelected (keyOf (idOf (nextCaret))));
+		/* the native rows go first, while the resident keys still match the topology (native notifications bind rows) */
+		deleteResidentRange (parentId, index, index + remove);
+		for (int id = topology.firstMaterializedChildId (parentId); id >= 0;) {
+			int next = topology.nextMaterializedSiblingId (id);
+			int childIndex = topology.childIndex (id);
+			if (childIndex >= index && childIndex < index + remove) releaseFacades (id);
+			id = next;
+		}
+		topology.spliceCoordinates (parentId, index, remove, insert);
+		boolean patterned = splicePattern (parentId, index, remove, insert);
+		if (insert != remove && shiftsResidentRows (parentId, index + remove)) shiftResidentRows (parentId, index + remove, insert - remove);
+		/* new rows under a selectAll pattern are not selected, as new items are: they get facades with the bit off */
+		if (patterned) {
+			for (int i = 0; i < insert; i++) topology.flag (idOf (facade (parentId, index + i)), VirtualItemState.SELECTED, false);
+		}
+		updateNativeChildren (parent, topology.childCount (parentId) > 0);
+		viewport.refreshLogicalRange ();
+		if (row >= 0) keepRemovalVisible (row, rowsBefore - viewport.visibleRowCount () + insert);
+		if (nextCaret != null) moveCaretAfterRemoval (nextCaret);
+		layout ();
+		if (nextCaret != null && (tree.style & SWT.SINGLE) != 0) selectSilently (nextCaret);
+		if (nextCaret != null) keepSelection (nextCaret, nextSelected);
+		if (parentId == VirtualTreeTopology.ROOT && topology.childCount (VirtualTreeTopology.ROOT) == 0) becameEmpty ();
+	}
+
+	/* the child of parentId at from <= index < to whose subtree holds the caret, or -1 */
+	private int caretChildIn (int parentId, int from, int to) {
+		VirtualTreeTopology topology = tree.virtualTopology;
+		for (int id = focusId; id >= 0 && topology.contains (id);) {
+			int parent = topology.parentId (id);
+			if (parent == parentId) {
+				int index = topology.childIndex (id);
+				return index >= from && index < to ? id : -1;
+			}
+			if (parent == VirtualTreeTopology.ROOT) return -1;
+			id = parent;
+		}
+		return -1;
+	}
+
+	/* the resident rows of parentId's children in [from, to) go, with their native subtrees */
+	private void deleteResidentRange (int parentId, int from, int to) {
+		long [] handles = new long [Math.min (plan.size (), to - from)];
+		int n = 0;
+		for (int entry = 0; entry < plan.size () && n < handles.length; entry++) {
+			long key = plan.keyOf (entry);
+			int index = (int) key;
+			if ((int) (key >> 32) == parentId && index >= from && index < to) handles [n++] = plan.handle (entry);
+		}
+		for (int i = 0; i < n; i++) deleteResidentRow (handles [i]);
+	}
+
+	/* the expander of a resident parent row follows its child count (TVIF_CHILDREN), as setItemCount keeps it */
+	private void updateNativeChildren (TreeItem parent, boolean children) {
+		long hParent = residentHandle (parent);
+		if (hParent == 0) return;
+		TVITEM tvItem = new TVITEM ();
+		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_CHILDREN;
+		tvItem.hItem = hParent;
+		tvItem.cChildren = children ? 1 : 0;
+		OS.SendMessage (tree.handle, OS.TVM_SETITEM, 0, tvItem);
+	}
+
 	/*
 	 * Stock destroyItem when the last item is gone (TVM_GETCOUNT == 0), measured by EmptyOracle: the image list is
 	 * released (the next first image sets a new image size), custom draw is reset where stock resets it, the scroll
@@ -1943,14 +2035,19 @@ final class TreeViewport {
 	 * off-screen one only when it is painted later. Answers that item or null.
 	 */
 	private TreeItem caretAfterRemoval (int parentId, int index, long row) {
+		return caretAfterRemoval (parentId, index, 1, row);
+	}
+
+	/* the same for the removal of removed siblings from index on (splice): the next sibling is the one after the range */
+	private TreeItem caretAfterRemoval (int parentId, int index, int removed, long row) {
 		int count = getItemCount (parentId == VirtualTreeTopology.ROOT ? null : facadeOrNull (parentId));
 		TreeItem next;
-		if (index + 1 < count) {
-			next = facade (parentId, index + 1);
+		if (index + removed < count) {
+			next = facade (parentId, index + removed);
 			VirtualTreeViewport viewport = tree.virtualViewport;
 			long top = viewport.topRow ();
 			/* the next sibling's row follows the removed row's visible descendants (an expanded row is not one row) */
-			long nextRow = row < 0 ? -1 : tree.virtualProjection.visibleIndexOfCoordinate (parentId, index + 1);
+			long nextRow = row < 0 ? -1 : tree.virtualProjection.visibleIndexOfCoordinate (parentId, index + removed);
 			boolean onScreen = nextRow >= 0 && nextRow >= top && nextRow < top + Math.max (1, viewport.visibleRows ());
 			if (next != null && onScreen) tree.checkData (next, false);
 			return next;
@@ -2281,6 +2378,24 @@ final class TreeViewport {
 		for (int s = 0; s < segments.length; s += 2) {
 			if (index < segments [s]) segments [s] += delta;
 		}
+	}
+
+	/*
+	 * A splice at index (remove rows out, insert rows in) moves every pattern bound above the index: a bound inside
+	 * the removed range clamps to the index, a bound beyond it shifts. Answers whether a bound still lies above the
+	 * index afterwards, i.e. whether the pattern would select the inserted cold rows (the caller gives them facades).
+	 */
+	private boolean splicePattern (int parentId, int index, int remove, int insert) {
+		long [] segments = patterns.get (parentId);
+		if (segments == null) return false;
+		boolean covered = false;
+		for (int s = 0; s < segments.length; s += 2) {
+			long bound = segments [s];
+			if (bound <= index) continue;
+			segments [s] = (bound > index + remove ? bound - remove : index) + insert;
+			covered |= segments [s] > index && insert > 0;
+		}
+		return covered;
 	}
 
 	/* a shrink to count children clamps the pattern of the parent */
