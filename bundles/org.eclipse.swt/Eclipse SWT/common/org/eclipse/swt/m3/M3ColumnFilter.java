@@ -145,7 +145,7 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	private void setText (int index, int [] columns, String pattern, int mode) {
 		M3TextMatch match = pattern == null ? null : M3TextMatch.compile (pattern, mode);
 		M3Checks.argument (text != null || match == null);
-		M3FilterCriterion criterion = edit (index);
+		M3FilterCriterion criterion = edit (index + 1);
 		if (match != null && match.isActive ()) {
 			criterion.match = match;
 			criterion.columns = columns;
