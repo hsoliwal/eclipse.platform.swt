@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtExpandBarPaintRunO2
+displayName: ExpandBar paint visits only the damaged run of items (optimization leaf O2)
+description: >-
+  Optimization pass leaf O2 (docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv). In the viewport mode drawWidget
+  tested every item against the damage (ExpandItem.paintsWithin), O(n) per paint: at 10^5 items every paint, so every
+  scroll and append, paid for all items. layoutItems puts the items down the bar in index order, each starting at or
+  below the end of the previous one's drawing, so the damaged items are one run: a binary search finds its start
+  (catalogue: lower bound) and the loop stops at the first item below the damage. O(log n + window). Viewport mode
+  only; idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tfor (int i = 0; i < itemCount; i++) {\n\t\tExpandItem item = items[i];\n\t\tif (VIEWPORT && clipRect != null && !item.paintsWithin (clipRect)) {\n\t\t\t//FLLDCIM: VIEWPORT - the DC clips to the damage, so an item drawn only outside it changes no pixel\n\t\t\tcontinue;\n\t\t}\n"
+      replace: "\t//FLLDCIM: VIEWPORT - the damaged items are one run of the index order: binary search its start (catalogue: lower bound), stop past its end\n\tint firstItem = VIEWPORT && clipRect != null ? firstItemBelow (clipRect.top) : 0;\n\tfor (int i = firstItem; i < itemCount; i++) {\n\t\tExpandItem item = items[i];\n\t\tif (VIEWPORT && clipRect != null && !item.paintsWithin (clipRect)) {\n\t\t\t//FLLDCIM: VIEWPORT - the DC clips to the damage, so an item drawn only outside it changes no pixel\n\t\t\tif (item.y >= clipRect.bottom) {\n\t\t\t\tbreak;\n\t\t\t}\n\t\t\tcontinue;\n\t\t}\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "(?<!\treturn low;\n}\n)\nint getBandHeight [(][)] [{]\n"
+      replace: "\n/*\n * VIEWPORT: the first item whose drawing reaches below top (ExpandItem.paintsWithin's bottom), or itemCount. layoutItems\n * puts the items down the bar in index order, each starting at or below the end of the previous one's drawing, so that\n * bottom grows with the index: lower bound, O(log n).\n */\nint firstItemBelow (int top) {\n\tint low = 0, high = itemCount;\n\twhile (low < high) {\n\t\tint mid = (low + high) >>> 1;\n\t\tExpandItem item = items [mid];\n\t\tif (item.y + item.getHeaderHeightInPixels () + (item.expanded ? item.height : 0) + 1 > top) {\n\t\t\thigh = mid;\n\t\t} else {\n\t\t\tlow = mid + 1;\n\t\t}\n\t}\n\treturn low;\n}\n\nint getBandHeight () {\n"
+      regex: true

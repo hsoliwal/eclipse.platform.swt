@@ -326,10 +326,15 @@ void drawWidget (GC gc, RECT clipRect) {
 			OS.SetTextColor (gc.handle, foreground);
 		}
 	}
-	for (int i = 0; i < itemCount; i++) {
+	//FLLDCIM: VIEWPORT - the damaged items are one run of the index order: binary search its start (catalogue: lower bound), stop past its end
+	int firstItem = VIEWPORT && clipRect != null ? firstItemBelow (clipRect.top) : 0;
+	for (int i = firstItem; i < itemCount; i++) {
 		ExpandItem item = items[i];
 		if (VIEWPORT && clipRect != null && !item.paintsWithin (clipRect)) {
 			//FLLDCIM: VIEWPORT - the DC clips to the damage, so an item drawn only outside it changes no pixel
+			if (item.y >= clipRect.bottom) {
+				break;
+			}
 			continue;
 		}
 		item.drawItem (gc, hTheme, clipRect, item == focusItem && drawFocus);
@@ -356,6 +361,25 @@ Control findBackgroundControl () {
 @Override
 Control findThemeControl () {
 	return isAppThemed () ? this : super.findThemeControl ();
+}
+
+/*
+ * VIEWPORT: the first item whose drawing reaches below top (ExpandItem.paintsWithin's bottom), or itemCount. layoutItems
+ * puts the items down the bar in index order, each starting at or below the end of the previous one's drawing, so that
+ * bottom grows with the index: lower bound, O(log n).
+ */
+int firstItemBelow (int top) {
+	int low = 0, high = itemCount;
+	while (low < high) {
+		int mid = (low + high) >>> 1;
+		ExpandItem item = items [mid];
+		if (item.y + item.getHeaderHeightInPixels () + (item.expanded ? item.height : 0) + 1 > top) {
+			high = mid;
+		} else {
+			low = mid + 1;
+		}
+	}
+	return low;
 }
 
 int getBandHeight () {
