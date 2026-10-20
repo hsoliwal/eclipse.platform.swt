@@ -27,7 +27,10 @@ import org.eclipse.swt.widgets.*;
  * The widget's item count follows the view, and each <code>SWT.SetData</code> request fills the
  * item from the source row the view maps it to. When the view changes, only its damaged rows are
  * cleared, so the widget asks again only for the rows it shows (in viewport mode, the resident
- * window). A table keeps its selection by source row: the rows the user selected stay selected,
+ * window). While the widget is hidden (it or an ancestor), the view keeps applying its changes to
+ * its lanes but the widget is not touched, and a filter result computed on a worker is kept instead
+ * of posted; when the widget shows again it is redone once from the view before it paints. A
+ * table keeps its selection by source row: the rows the user selected stay selected,
  * wherever the view moves them, as long as the view shows them. A tree is driven by an
  * {@link M3ColumnSort} in tree mode: the children of an item are the sorted children of its
  * source row.
@@ -55,8 +58,16 @@ public final class M3RowBinding {
 	private final Composite control;
 	private final M3RowView view;
 	private Listener setData, selection;
+	private final Listener visibility = this::visibility, disposed = event -> unhook ();
+	private final M3RowView.Listener listener = this::viewChanged;
 	private M3RowView.Listener changed;
 	private int [] selected = NONE;
+	/* the control and its ancestors up to the shell, whose Show and Hide events tell when the viewport shows */
+	private Control [] path = {};
+	/* shown: the viewport is visible; dirty: the view changed while it was hidden; showing: a show is being applied */
+	private boolean shown, dirty, showing, bound;
+	/* widget refresh passes (read by the hidden-viewport gate) */
+	int refreshes;
 
 	private M3RowBinding (Composite control, M3RowView view) {
 		this.control = control;
@@ -65,8 +76,96 @@ public final class M3RowBinding {
 
 	private void hook () {
 		control.addListener (SWT.SetData, setData);
-		view.addListener (changed);
-		control.addListener (SWT.Dispose, event -> view.removeListener (changed));
+		view.addListener (listener);
+		for (Control c = control; c != null; c = c instanceof Shell ? null : c.getParent ()) {
+			c.addListener (SWT.Show, visibility);
+			c.addListener (SWT.Hide, visibility);
+			path = Arrays.copyOf (path, path.length + 1);
+			path [path.length - 1] = c;
+		}
+		control.addListener (SWT.Dispose, disposed);
+		shown = control.isVisible ();
+		bound = true;
+		viewports (shown ? 1 : 0, shown ? 0 : 1);
+	}
+
+	private void unhook () {
+		if (!bound) return;
+		bound = false;
+		view.removeListener (listener);
+		for (Control c : path) {
+			if (c.isDisposed ()) continue;
+			c.removeListener (SWT.Show, visibility);
+			c.removeListener (SWT.Hide, visibility);
+		}
+		if (!control.isDisposed ()) control.removeListener (SWT.Dispose, disposed);
+		viewports (shown ? -1 : 0, shown ? 0 : -1);
+	}
+
+	private void viewports (int visible, int hidden) {
+		if (view instanceof M3RowViewBase base) base.viewports (visible, hidden);
+	}
+
+	/*
+	 * A change of the view: applied to the widget while the viewport shows; while it is hidden the view's lanes are
+	 * already up to date (deltas), so the widget is only marked dirty and redone once when it shows (brief rule 24).
+	 */
+	private void viewChanged (M3RowChange change) {
+		if (control.isDisposed ()) return;
+		if (shown && !showing) {
+			refreshes++;
+			changed.viewChanged (change);
+			return;
+		}
+		dirty = true;
+		if (control instanceof Table) renumber (change);
+	}
+
+	/* Show and Hide of the control or an ancestor (both are sent before the visibility changes) */
+	private void visibility (Event event) {
+		if (event.type == SWT.Hide) {
+			if (shown) {
+				shown = false;
+				viewports (-1, 1);
+			}
+			return;
+		}
+		if (shown || !visibleAfterShow ((Control) event.widget)) return;
+		shown = true;
+		showing = true;
+		try {
+			/* a filter result parked while hidden applies here, once */
+			viewports (1, -1);
+		} finally {
+			showing = false;
+		}
+		flush ();
+	}
+
+	/* whether the control is visible once the control being shown is */
+	private boolean visibleAfterShow (Control shownControl) {
+		for (Control c : path) {
+			if (c != shownControl && !c.getVisible ()) return false;
+		}
+		return true;
+	}
+
+	/* redoes the widget once from the view: item count, the items it shows asked again, selection */
+	private void flush () {
+		if (!dirty || control.isDisposed ()) return;
+		dirty = false;
+		refreshes++;
+		if (control instanceof Table table) {
+			table.setItemCount (view.size ());
+			table.clearAll ();
+			restore ();
+		} else {
+			Tree tree = (Tree) control;
+			M3ColumnSort sort = (M3ColumnSort) view;
+			tree.setItemCount (sort.childCount (-1));
+			tree.clearAll (true);
+			restoreTree (sort);
+		}
 	}
 
 	/**
@@ -285,7 +384,7 @@ public final class M3RowBinding {
 
 	/** Stops driving the widget; the widget keeps its items. */
 	public void dispose () {
-		view.removeListener (changed);
+		unhook ();
 		if (control.isDisposed ()) return;
 		control.removeListener (SWT.SetData, setData);
 		if (selection != null) {

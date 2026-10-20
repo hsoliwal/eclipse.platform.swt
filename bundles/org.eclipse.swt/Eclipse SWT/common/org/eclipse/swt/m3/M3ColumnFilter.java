@@ -66,11 +66,15 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	private boolean [] dirty;
 	volatile int generation;
 	private int appliedGeneration;
+	/* worker results applied on the UI thread (read by the hidden-viewport gate) */
+	int applies;
 	M3ColumnSort follower;
 	private M3FilterWorker worker;
 	private IntUnaryOperator parentOf;
 	private long [] matched = {}, kept = {}, previous = {};
 	private int [] rows = {}, rank = {}, spare = {}, flipRows = {}, flipAt = {};
+	/* tree mode: the number of matching strict descendants of every row */
+	private int [] below = {};
 	private int size;
 	private final M3FilterDelta delta = new M3FilterDelta (this);
 
@@ -387,11 +391,11 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	void inputChanged (M3RowChange in) {
 		generation++;
 		if (worker != null && anyDirty ()) worker.schedule ();
-		if (parentOf == null && in.kind != M3RowChange.RESET) {
+		if (in.kind == M3RowChange.UPDATED || parentOf == null && in.kind != M3RowChange.RESET) {
 			applyDelta (in);
 			return;
 		}
-		/* a new source (RESET), or tree mode, where the ancestor rule needs the whole fold */
+		/* a new source (RESET), or a structural edit in tree mode (the parents of removed rows are gone) */
 		fullPasses++;
 		int n = sourceSize ();
 		switch (in.kind) {
@@ -462,48 +466,101 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		return rank [w] + Long.bitCount (kept [w] & (1L << sourceRow) - 1);
 	}
 
-	/* an UPDATED edit: rows whose status flips leave or enter the rows lane, merged in one pass from the first flip */
+	/*
+	 * an UPDATED edit (values changed, structure kept): the rows whose kept status flips leave or enter the rows
+	 * lane, merged in one pass from the first flip; the events are built from the flips and the edited rows
+	 */
 	private void updated (M3RowChange in) {
 		for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1);
-		int flips = 0, entering = 0;
-		flipRows = capacity (flipRows, in.rowCount);
-		flipAt = capacity (flipAt, in.rowCount);
-		for (int i = 0; i < in.rowCount; i++) {
-			int row = in.rows [i];
-			boolean was = M3RowMask.get (kept, row);
-			if (M3FilterCriterion.passes (criteria, row) == was) continue;
-			flipAt [flips] = positionBefore (row, sourceSize ());
-			flipRows [flips++] = was ? ~row : row;
-			if (!was) entering++;
-		}
-		if (flips > 0) {
-			int first = flipAt [0], tail = size - first, out = first, read = first;
-			spare = capacity (spare, tail);
-			System.arraycopy (rows, first, spare, 0, tail);
-			rows = capacity (rows, size + entering);
-			for (int f = 0; f < flips; f++) {
-				int at = flipAt [f], row = flipRows [f];
-				System.arraycopy (spare, read - first, rows, out, at - read);
-				out += at - read;
-				read = at;
-				if (row < 0) {
-					read++;
-					row = ~row;
-				} else {
-					rows [out++] = row;
-				}
-				M3RowMask.set (matched, row, row == flipRows [f]);
-				M3RowMask.set (kept, row, row == flipRows [f]);
-			}
-			System.arraycopy (spare, read - first, rows, out, size - read);
-			size = out + size - read;
-			rerank ((flipRows [0] < 0 ? ~flipRows [0] : flipRows [0]) >>> 6, sourceSize ());
-		}
-		delta.changedRows (in, previous, kept);
+		int flips = parentOf == null ? flatFlips (in) : treeFlips (in);
+		if (flips > 0) merge (flips);
+		delta.changedRows (in, flipRows, flips, previous, kept);
 		for (int f = 0; f < flips; f++) {
 			int row = flipRows [f] < 0 ? ~flipRows [f] : flipRows [f];
 			M3RowMask.set (previous, row, flipRows [f] >= 0);
 		}
+	}
+
+	/* flat: the edited rows whose fold changed, ascending, ~row for a row that leaves */
+	private int flatFlips (M3RowChange in) {
+		flipRows = capacity (flipRows, in.rowCount);
+		int flips = 0;
+		for (int i = 0; i < in.rowCount; i++) {
+			int row = in.rows [i];
+			boolean was = M3RowMask.get (kept, row);
+			if (M3FilterCriterion.passes (criteria, row) == was) continue;
+			M3RowMask.set (matched, row, !was);
+			flipRows [flips++] = was ? ~row : row;
+		}
+		return flips;
+	}
+
+	/*
+	 * tree: a row is kept when it matches or has a matching descendant (below > 0). A match flip of an edited row
+	 * moves the descendant counts of its ancestors by one (O(depth)); the candidates for a kept flip are the edited
+	 * rows and the ancestors whose count crossed zero. Returns the flips, ascending, ~row for a row that leaves.
+	 */
+	private int treeFlips (M3RowChange in) {
+		int candidates = 0;
+		for (int i = 0; i < in.rowCount; i++) {
+			int row = in.rows [i];
+			boolean match = M3FilterCriterion.passes (criteria, row);
+			if (match == M3RowMask.get (matched, row)) continue;
+			M3RowMask.set (matched, row, match);
+			candidates = candidate (row, candidates);
+			int step = match ? 1 : -1;
+			for (int p = parentOf.applyAsInt (row); p != -1; p = parentOf.applyAsInt (p)) {
+				int before = below [p];
+				below [p] = before + step;
+				if (before == 0 || before + step == 0) candidates = candidate (p, candidates);
+			}
+		}
+		Arrays.sort (flipRows, 0, candidates);
+		int flips = 0, last = -1;
+		for (int k = 0; k < candidates; k++) {
+			int row = flipRows [k];
+			if (row == last) continue;
+			last = row;
+			boolean now = M3RowMask.get (matched, row) || below [row] > 0;
+			if (now != M3RowMask.get (kept, row)) flipRows [flips++] = now ? row : ~row;
+		}
+		return flips;
+	}
+
+	private int candidate (int row, int count) {
+		if (flipRows.length == count) flipRows = Arrays.copyOf (flipRows, Math.max (16, count << 1));
+		flipRows [count] = row;
+		return count + 1;
+	}
+
+	/* moves the flipped rows (ascending) in the rows lane in one pass from the first, sets their kept bits, recounts ranks */
+	private void merge (int flips) {
+		flipAt = capacity (flipAt, flips);
+		int entering = 0;
+		for (int f = 0; f < flips; f++) {
+			flipAt [f] = positionBefore (flipRows [f] < 0 ? ~flipRows [f] : flipRows [f], sourceSize ());
+			if (flipRows [f] >= 0) entering++;
+		}
+		int first = flipAt [0], tail = size - first, out = first, read = first;
+		spare = capacity (spare, tail);
+		System.arraycopy (rows, first, spare, 0, tail);
+		rows = capacity (rows, size + entering);
+		for (int f = 0; f < flips; f++) {
+			int at = flipAt [f], row = flipRows [f];
+			System.arraycopy (spare, read - first, rows, out, at - read);
+			out += at - read;
+			read = at;
+			if (row < 0) {
+				read++;
+				M3RowMask.set (kept, ~row, false);
+			} else {
+				rows [out++] = row;
+				M3RowMask.set (kept, row, true);
+			}
+		}
+		System.arraycopy (spare, read - first, rows, out, size - read);
+		size = out + size - read;
+		rerank ((flipRows [0] < 0 ? ~flipRows [0] : flipRows [0]) >>> 6, sourceSize ());
 	}
 
 	/* recounts the word ranks after word fromWord (the ranks up to it are unchanged) */
@@ -542,7 +599,10 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		M3FilterCriterion.fold (criteria, matched, n);
 		kept = M3RowMask.ensure (kept, n);
 		System.arraycopy (matched, 0, kept, 0, words);
-		if (parentOf != null) M3FilterCriterion.ancestors (matched, kept, n, parentOf);
+		if (parentOf != null) {
+			M3FilterCriterion.ancestors (matched, kept, n, parentOf);
+			below = M3FilterCriterion.below (matched, n, parentOf, below);
+		}
 		rows = rows.length >= n ? rows : new int [n];
 		rank = rank.length >= words ? rank : new int [words];
 		size = M3RowMask.compact (kept, words, rows, rank);
@@ -581,6 +641,7 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		}
 		if (worker == null) {
 			worker = new M3FilterWorker (this, display);
+			worker.hold (held ());
 			pending = criteria.clone ();
 		}
 		worker.debounce = debounceMs;
@@ -593,6 +654,12 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	 */
 	public boolean isAsync () {
 		return worker != null;
+	}
+
+	/* while every bound viewport is hidden, worker results are kept instead of posted; on show the newest applies once */
+	@Override
+	void viewportsChanged () {
+		if (worker != null) worker.hold (held ());
 	}
 
 	/**
@@ -660,10 +727,12 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	}
 
 	/* UI thread: takes a worker result (its generation is current) and reports one RESET */
-	void apply (M3FilterCriterion [] next, long [] matched, long [] kept, int [] rows, int [] rank, int size, int generation) {
+	void apply (M3FilterCriterion [] next, long [] matched, long [] kept, int [] below, int [] rows, int [] rank, int size, int generation) {
+		applies++;
 		System.arraycopy (next, 0, criteria, 0, criteria.length);
 		Arrays.fill (dirty, false);
 		this.matched = matched;
+		if (below != null) this.below = below;
 		this.kept = kept;
 		this.rows = rows;
 		this.rank = rank;

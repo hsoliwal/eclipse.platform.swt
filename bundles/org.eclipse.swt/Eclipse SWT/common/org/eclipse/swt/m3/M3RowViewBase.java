@@ -34,6 +34,7 @@ abstract class M3RowViewBase implements M3RowView {
 	private int rootSourceSize;
 	/* input changes this view applied by a pass over all its rows (re-evaluation, fold or re-sort) instead of a delta */
 	int fullPasses;
+	private int visibleViewports, hiddenViewports;
 
 	M3RowViewBase (M3RowView input, int sourceSize) {
 		this.input = input;
@@ -143,6 +144,25 @@ abstract class M3RowViewBase implements M3RowView {
 	 */
 	public void dispose () {
 		if (input != null) input.removeListener (inputListener);
+	}
+
+	/*
+	 * A bound viewport was added (+1) or removed (-1), or moved between visible and hidden: the chain counts them up to
+	 * its first view, which holds the results it would post to the UI thread while every viewport is hidden.
+	 */
+	void viewports (int visible, int hidden) {
+		visibleViewports += visible;
+		hiddenViewports += hidden;
+		if (input == null) viewportsChanged (); else if (input instanceof M3RowViewBase base) base.viewports (visible, hidden);
+	}
+
+	/* whether viewports are bound to this view and every one of them is hidden */
+	boolean held () {
+		return visibleViewports == 0 && hiddenViewports > 0;
+	}
+
+	/* the first view of a chain: the viewports changed visibility */
+	void viewportsChanged () {
 	}
 
 	boolean hasListeners () {

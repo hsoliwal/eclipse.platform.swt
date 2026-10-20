@@ -426,6 +426,56 @@ public class Test_M3ColumnFilter {
 	}
 
 	@Test
+	public void test_treeValueUpdatesAreDeltasThatReplay () {
+		Random random = new Random (25);
+		for (int seed = 0; seed < 30; seed++) {
+			int n = 1 + random.nextInt (300);
+			int [] parents = new int [n];
+			String [] labels = new String [n];
+			for (int row = 0; row < n; row++) {
+				parents [row] = row == 0 || random.nextInt (4) == 0 ? -1 : random.nextInt (row);
+				labels [row] = word (random);
+			}
+			M3ColumnFilter filter = new M3ColumnFilter (1, n, (row, column) -> labels [row]);
+			filter.setParents (row -> parents [row]);
+			String pattern = random.nextBoolean () ? "ab" : "ba";
+			filter.setText (0, pattern, M3TextMatch.CONTAINS);
+			List<Integer> mirror = new ArrayList<> ();
+			for (int row : rows (filter)) mirror.add (row);
+			filter.addListener (change -> replay (mirror, change, filter));
+			int passes = fullPasses (filter);
+			for (int step = 0; step < 50; step++) {
+				int [] changed = new int [1 + random.nextInt (random.nextInt (5) == 0 ? n : 3)];
+				for (int k = 0; k < changed.length; k++) {
+					changed [k] = random.nextInt (n);
+					labels [changed [k]] = word (random);
+				}
+				filter.rowsChanged (changed);
+				boolean [] keep = new boolean [n];
+				for (int row = 0; row < n; row++) {
+					if (!labels [row].contains (pattern)) continue;
+					for (int r = row; r != -1 && !keep [r]; r = parents [r]) keep [r] = true;
+				}
+				List<Integer> expected = new ArrayList<> ();
+				for (int row = 0; row < n; row++) {
+					if (keep [row]) expected.add (row);
+				}
+				String where = "seed " + seed + " step " + step;
+				assertEquals (expected, mirror, where);
+				assertArrayEquals (expected.stream ().mapToInt (Integer::intValue).toArray (), rows (filter), where);
+				for (int row = 0; row < n; row++) assertEquals (expected.indexOf (row), filter.unmap (row), where + " row " + row);
+			}
+			assertEquals (passes, fullPasses (filter), "tree value updates are deltas");
+		}
+	}
+
+	private static String word (Random random) {
+		StringBuilder word = new StringBuilder ();
+		for (int k = 1 + random.nextInt (4); k > 0; k--) word.append (random.nextBoolean () ? 'a' : 'b');
+		return word.toString ();
+	}
+
+	@Test
 	public void test_typingRefinementsEqualAFreshEvaluation () {
 		Random random = new Random (8);
 		int n = 3000;

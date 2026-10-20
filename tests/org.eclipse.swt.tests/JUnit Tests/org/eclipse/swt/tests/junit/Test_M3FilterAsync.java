@@ -115,6 +115,83 @@ public class Test_M3FilterAsync {
 		}
 	}
 
+	/* a package-private field of an M3 object (the gates of brief rule 24 read its counters) */
+	static Object field (Object owner, String name) {
+		for (Class<?> type = owner.getClass (); type != null; type = type.getSuperclass ()) {
+			try {
+				java.lang.reflect.Field field = type.getDeclaredField (name);
+				field.setAccessible (true);
+				return field.get (owner);
+			} catch (NoSuchFieldException e) {
+				/* declared in a superclass */
+			} catch (IllegalAccessException e) {
+				return fail (e);
+			}
+		}
+		return fail ("no field " + name);
+	}
+
+	static int counter (Object owner, String name) {
+		return (Integer) field (owner, name);
+	}
+
+	/*
+	 * Brief rule 24, hidden viewports: while the table is hidden, 10^4 model deltas and 10 filter edits update the lanes
+	 * (the edits on the worker) but nothing is posted to or applied on the UI thread and the widget is not touched;
+	 * showing it applies the newest result once and refreshes the widget once, and the rows equal the plain reference.
+	 */
+	@Test
+	public void test_hiddenViewportAppliesOnceOnShow () {
+		Table table = new Table (shell, SWT.VIRTUAL | SWT.MULTI);
+		for (int c = 0; c < 2; c++) new TableColumn (table, SWT.NONE).setWidth (150);
+		M3ColumnFilter filter = new M3ColumnFilter (2, ROWS, this::cell);
+		M3ColumnSort sort = new M3ColumnSort (2, filter);
+		sort.setKey (0, M3ColumnKey.ofInts (r -> numbers [r]));
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		M3RowBinding binding = M3RowBinding.bind (table, sort, (item, row) -> {
+			item.setText (0, cell (row, 0));
+			item.setText (1, cell (row, 1));
+		});
+		filter.setAsync (display, 50);
+		shell.open ();
+		filter.setText (1, "n1", M3TextMatch.CONTAINS);
+		waitFor (() -> filter.getAppliedGeneration () == filter.getGeneration ());
+		Object worker = field (filter, "worker");
+		int posted = counter (worker, "posted"), applies = counter (filter, "applies"), refreshes = counter (binding, "refreshes");
+
+		table.setVisible (false);
+		Random random = new Random (24);
+		String [] patterns = {"n12", "n123", "n12", "n1", "n2", "n23", "n234", "n23", "n2", "n29"};
+		for (int k = 0; k < 10_000; k++) {
+			int row = random.nextInt (ROWS);
+			numbers [row] = random.nextInt (1000);
+			names [row] = "n" + random.nextInt (1_000_000);
+			sort.rowsChanged (row);
+			if (k % 1000 == 999) {
+				filter.setText (1, patterns [k / 1000], M3TextMatch.CONTAINS);
+				pump (60);
+			}
+		}
+		waitFor (() -> (Boolean) field (worker, "parked") && counter (worker, "resultGeneration") == filter.getGeneration ());
+		pump (200);
+		assertEquals (posted, counter (worker, "posted"), "results posted to the UI thread while hidden");
+		assertEquals (applies, counter (filter, "applies"), "results applied while hidden");
+		assertEquals (refreshes, counter (binding, "refreshes"), "widget refreshes while hidden");
+		assertNotEquals (filter.getGeneration (), filter.getAppliedGeneration ());
+
+		table.setVisible (true);
+		assertEquals (applies + 1, counter (filter, "applies"), "applies on show");
+		assertEquals (refreshes + 1, counter (binding, "refreshes"), "widget refreshes on show");
+		assertEquals (filter.getGeneration (), filter.getAppliedGeneration ());
+		pump (200);
+		assertEquals (applies + 1, counter (filter, "applies"), "applies after show");
+		assertEquals (refreshes + 1, counter (binding, "refreshes"), "widget refreshes after show");
+		int [] expected = reference ("n29");
+		assertArrayEquals (expected, Test_M3ColumnSort.order (sort));
+		assertEquals (expected.length, table.getItemCount ());
+		for (int i = 0; i < Math.min (60, expected.length); i++) assertEquals (cell (expected [i], 1), table.getItem (i).getText (1), "row " + i);
+	}
+
 	@Test
 	public void test_typingOverAMillionRowsStaysResponsive () {
 		Table table = new Table (shell, SWT.VIRTUAL | SWT.MULTI);

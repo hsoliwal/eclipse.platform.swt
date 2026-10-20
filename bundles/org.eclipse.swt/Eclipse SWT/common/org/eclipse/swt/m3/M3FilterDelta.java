@@ -68,20 +68,20 @@ final class M3FilterDelta {
 		filter.fire ();
 	}
 
-	/* the change of an UPDATED edit of a flat filter, where only the edited rows can differ between previous and kept */
-	void changedRows (M3RowChange in, long [] previous, long [] kept) {
+	/* the change of an UPDATED edit: the kept flips (ascending, ~row for a row that left) and the edited rows that stayed */
+	void changedRows (M3RowChange in, int [] flips, int count, long [] previous, long [] kept) {
 		if (!filter.hasListeners ()) return;
-		emitRows (M3RowChange.LEFT, in, previous, kept);
+		emitFlips (M3RowChange.LEFT, flips, count, false);
 		updated (in, previous, kept);
-		emitRows (M3RowChange.ENTERED, in, kept, previous);
+		emitFlips (M3RowChange.ENTERED, flips, count, true);
 	}
 
-	/* fires the edited rows that are in a and not in b, if any (as emit, without the scan) */
-	private void emitRows (int kind, M3RowChange in, long [] a, long [] b) {
+	/* fires the flips that left (or entered), if any (as emit, without the scan) */
+	private void emitFlips (int kind, int [] flips, int count, boolean entering) {
 		int first = -1;
-		for (int i = 0; i < in.rowCount; i++) {
-			int row = in.rows [i];
-			if (!M3RowMask.get (a, row) || M3RowMask.get (b, row)) continue;
+		for (int f = 0; f < count; f++) {
+			if (flips [f] >= 0 != entering) continue;
+			int row = entering ? flips [f] : ~flips [f];
 			if (first < 0) {
 				first = row;
 				change.set (kind, 0, 0);
