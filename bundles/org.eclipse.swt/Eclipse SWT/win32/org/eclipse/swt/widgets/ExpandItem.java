@@ -387,6 +387,7 @@ boolean isHover (int x, int y) {
 }
 
 void redraw (boolean all) {
+	if (parent.redrawSuppressed) return; // VIEWPORT: the bar invalidates its whole client area after a resize
 	long parentHandle = parent.handle;
 	int headerHeightInPixels = getHeaderHeightInPixels();
 	int zoom = getAutoscalingZoom();

@@ -72,6 +72,8 @@ public class ExpandBar extends Composite {
 	boolean redrawClientValid;
 	/* VIEWPORT: the item whose header the mouse is over (the only item with hover set), or null */
 	ExpandItem hoverItem;
+	/* VIEWPORT: the item redraws are suppressed while WM_SIZE resizes every item (it invalidates the client area after) */
+	boolean redrawSuppressed;
 	long hFont;
 
 /**
@@ -737,11 +739,17 @@ void setSpacingInPixels (int spacing) {
 	RECT rect = new RECT ();
 	OS.GetClientRect (handle, rect);
 	int width = Math.max (0, (rect.right - rect.left) - spacing * 2);
-	for (int i = 0; i < itemCount; i++) {
-		ExpandItem item = items[i];
-        if (item.width != width) {
-            item.setBoundsInPixels(0, 0, width, item.height, false, true);
-        }
+	//FLLDCIM: VIEWPORT - no per-item invalidation: the whole client area is invalidated below
+	redrawSuppressed = VIEWPORT;
+	try {
+		for (int i = 0; i < itemCount; i++) {
+			ExpandItem item = items[i];
+			if (item.width != width) {
+				item.setBoundsInPixels(0, 0, width, item.height, false, true);
+			}
+		}
+	} finally {
+		redrawSuppressed = false;
 	}
 	layoutItems (0, true);
 	OS.InvalidateRect (handle, null, true);
@@ -1124,11 +1132,17 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 	RECT rect = new RECT ();
 	OS.GetClientRect (handle, rect);
 	int width = Math.max (0, (rect.right - rect.left) - spacing * 2);
-	for (int i = 0; i < itemCount; i++) {
-		ExpandItem item = items[i];
-        if (item.width != width) {
-            item.setBoundsInPixels(0, 0, width, item.height, false, true);
-        }
+	//FLLDCIM: VIEWPORT - no per-item invalidation: the whole client area is invalidated below
+	redrawSuppressed = VIEWPORT;
+	try {
+		for (int i = 0; i < itemCount; i++) {
+			ExpandItem item = items[i];
+			if (item.width != width) {
+				item.setBoundsInPixels(0, 0, width, item.height, false, true);
+			}
+		}
+	} finally {
+		redrawSuppressed = false;
 	}
 	setScrollbar ();
 	OS.InvalidateRect (handle, null, true);

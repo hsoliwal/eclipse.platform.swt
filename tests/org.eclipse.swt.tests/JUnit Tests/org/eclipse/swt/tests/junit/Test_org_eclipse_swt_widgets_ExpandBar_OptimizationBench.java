@@ -69,6 +69,11 @@ public class Test_org_eclipse_swt_widgets_ExpandBar_OptimizationBench {
 				ViewportDifferential.send (bar, 0x115, 3, 0); // WM_VSCROLL SB_PAGEDOWN
 				bar.update ();
 			}));
+			results.add (AllWidgetsBench.measure ("resize", k -> {
+				shell.setSize (400 + ((k & 1) == 0 ? 1 : -1) * (1 + k), 600);
+				ViewportDifferential.drain (display);
+				bar.update ();
+			}));
 			results.add (AllWidgetsBench.measure ("move", k -> {
 				/* 100 WM_MOUSEMOVE messages down the visible headers (hover in and out) */
 				for (int m = 0; m < 100; m++) ViewportDifferential.send (bar, 0x200, 0, ((long) (10 + m * 5) << 16) | 50);
