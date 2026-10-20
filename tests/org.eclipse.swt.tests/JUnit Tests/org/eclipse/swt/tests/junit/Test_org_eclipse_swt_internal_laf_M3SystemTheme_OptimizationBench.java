@@ -102,6 +102,9 @@ public class Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench {
 				shell.update ();
 			}));
 			int switchLayouts = layouts [0] / AllWidgetsBench.ROUNDS, switchPaints = paints [0] / AllWidgetsBench.ROUNDS;
+			/* the switch alone (the diff and the delegates installed again, the widgets invalidated), without the paint */
+			results.add (AllWidgetsBench.measure ("update", k -> M3LookAndFeel.setLookAndFeel ((k & 1) == 0 ? "dark" : "light")));
+			ViewportDifferential.drain (display);
 			M3SystemTheme.Follower follower = M3SystemTheme.follow (display, "light", "dark");
 			ViewportDifferential.drain (display);
 			results.add (AllWidgetsBench.measure ("check", k -> follower.check ()));

@@ -1,0 +1,17 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtTextCrLfX1
+displayName: Display.withCrLf counts the bare line feeds and copies once (optimization leaf X1)
+description: >-
+  Optimization pass leaf X1 (docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv). Text.setText converts the line
+  delimiters with Display.withCrLf, which appended a substring per line to a StringBuilder sized for the input, so
+  a document of 10^6 lines allocated 10^6 substrings and regrew the builder (130 MB per setText of 11.9 million
+  characters). The conversion now counts the bare line feeds first (none: the string itself, as stock) and appends
+  the runs between them into a builder of the exact size (no substring). Same result string. Text viewport mode only
+  (-Dswt.widget.mode.Text=original keeps the stock loop); idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "static String withCrLf (String string) {\n\t/* Create a new string with the CR/LF line terminator. */\n"
+      replace: "/* the Text viewport (docs/m3/TEXT_VIEWPORT.md, optimization leaf X1) unless the startup widget mode of Text is original */\nstatic final boolean TEXT_VIEWPORT = WidgetMode.of (\"Text\", WidgetMode.VIEWPORT) == WidgetMode.VIEWPORT; //\\$NON-NLS-1\\$\n\n/*\n * TEXT_VIEWPORT: withCrLf with one pass to count the line feeds without a carriage return before them, then one\n * exact-size copy that appends the runs between them (no substring per line). The input when there are none.\n */\nstatic String withCrLfCounted (String string) {\n\tint length = string.length (), bare = 0;\n\tfor (int j = string.indexOf ('\\n'); j >= 0; j = string.indexOf ('\\n', j + 1)) {\n\t\tif (j == 0 || string.charAt (j - 1) != '\\r') bare++;\n\t}\n\tif (bare == 0) return string;\n\tStringBuilder counted = new StringBuilder (length + bare);\n\tint i = 0;\n\tfor (int j = string.indexOf ('\\n'); j >= 0; j = string.indexOf ('\\n', j + 1)) {\n\t\tif (j > 0 && string.charAt (j - 1) == '\\r') continue;\n\t\t/* the run up to the line feed, a carriage return; the line feed starts the next run */\n\t\tcounted.append (string, i, j).append ('\\r');\n\t\ti = j;\n\t}\n\tcounted.append (string, i, length);\n\treturn counted.toString ();\n}\n\nstatic String withCrLf (String string) {\n\tif (TEXT_VIEWPORT) {\n\t\t//FLLDCIM: VIEWPORT - count, then one exact-size copy (optimization leaf X1)\n\t\treturn withCrLfCounted (string);\n\t}\n\t/* Create a new string with the CR/LF line terminator. */\n"

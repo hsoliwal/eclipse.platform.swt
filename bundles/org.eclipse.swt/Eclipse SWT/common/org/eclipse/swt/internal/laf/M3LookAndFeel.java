@@ -233,10 +233,12 @@ public final class M3LookAndFeel {
 		Registry registry = Registry.of (display);
 		long [] changed = M3UIDefaults.diff (from, to);
 		int touched = 0;
+		//FLLDCIM: HPCPOP - a widget's target depends on its class only (pins are per class): once per class, not per widget
+		Map<Class<?>, String> targets = new IdentityHashMap<> ();
 		for (int i = 0; i < registry.count; i++) {
 			Control control = registry.controls [i];
 			Slot slot = (Slot) control.getData (UI);
-			String target = lookAndFeel (control.getClass ().getSimpleName ());
+			String target = targets.computeIfAbsent (control.getClass (), type -> lookAndFeel (type.getSimpleName ()));
 			boolean shared = slot.lookAndFeel.equals (from.name ()) && target.equals (to.name ());
 			if (!shared && target.equals (slot.lookAndFeel)) continue;
 			long [] keys = shared ? changed : M3UIDefaults.diff (defaults (slot.lookAndFeel), defaults (target));
