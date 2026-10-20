@@ -27,7 +27,8 @@ import org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDi
  * The HIDDEN script of the Table differential (brief rule 24, hidden viewports; user 2026-10-20: "if the viewport
  * becomes visible from hidden it should paint; while it is hidden the model may make changes and the viewport is dirty
  * and renders on becoming visible"). Each step selects rows and scrolls, hides the Table (not visible, or a zero size),
- * applies 250 model deltas (40 steps: 10^4 per seed), shows it again and answers its rows; the probes record count,
+ * applies 250 model deltas (40 steps: 10^4 per seed), shows it again, puts the model's top row on top (a stock Table
+ * that is not visible does not end on the top row setTopIndex asked for while it was hidden) and answers its rows; the probes record count,
  * top, scroll bars, selection, focus, events and pixels. The deltas go through M3Model where this SWT has it (the
  * default and original modes); the official jar has none, so the same runs go through the item API followed by
  * <code>setTopIndex</code> of the old top row or of the first row after it that survives, which is M3Model's contract.
@@ -60,6 +61,8 @@ final class TableHiddenScripts {
 		}
 		ViewportDifferential.settle (scene.display, 30);
 		boolean zero = (pick & 1) != 0;
+		/* the row on top, moved by every delta as M3Model keeps it (the top row, or the first row after it that survives) */
+		int anchor = table.getTopIndex ();
 		Rectangle bounds = table.getBounds ();
 		if (zero) table.setSize (0, 0); else table.setVisible (false);
 		ViewportDifferential.settle (scene.display, 30);
@@ -72,15 +75,16 @@ final class TableHiddenScripts {
 		for (int i = 0; i < DELTAS; i++) {
 			int rows = table.getItemCount ();
 			int at = rows == 0 ? 0 : random.nextInt (rows);
-			int top = table.getTopIndex ();
 			if (rows < 50 || random.nextBoolean ()) {
 				long [] ids = new long [1 + random.nextInt (3)];
 				for (int k = 0; k < ids.length; k++) ids [k] = scene.nextId++;
-				apply (table, at, 0, ids, top);
+				apply (table, at, 0, ids, anchor);
+				anchor = anchored (anchor, at, 0, ids.length, rows + ids.length);
 			} else {
 				int removed = Math.min (1 + random.nextInt (3), rows - at);
 				if (removed == rows) continue;
-				apply (table, at, removed, new long [0], top);
+				apply (table, at, removed, new long [0], anchor);
+				anchor = anchored (anchor, at, removed, 0, rows - removed);
 			}
 			applied++;
 		}
@@ -90,6 +94,9 @@ final class TableHiddenScripts {
 		if (zero) table.setBounds (bounds); else table.setVisible (true);
 		ViewportDifferential.settle (scene.display, 150);
 		table.removeListener (SWT.Paint, paint);
+		/* a stock Table that is not visible loses the top rows setTopIndex asked for; the step puts the model's top row on top, visible */
+		if (table.getItemCount () > 0) table.setTopIndex (anchor);
+		ViewportDifferential.settle (scene.display, 30);
 		if (before != null) {
 			String step = "seed " + scene.seed + " step " + scene.counted + " (" + (zero ? "zero size" : "not visible") + ")";
 			if (!Arrays.equals (before, hidden)) scene.hiddenViolations.add (step + ": counters while hidden " + Arrays.toString (before) + " -> " + Arrays.toString (hidden));
@@ -107,9 +114,13 @@ final class TableHiddenScripts {
 		}
 		if (removed > 0) table.remove (at, at + removed - 1);
 		for (int k = 0; k < ids.length; k++) new TableItem (table, SWT.NONE, at + k).setText ("row " + ids [k]);
-		int anchor = top < at ? top : top >= at + removed ? top - removed + ids.length : at + ids.length;
-		int count = table.getItemCount ();
-		if (count > 0) table.setTopIndex (Math.min (anchor, count - 1));
+		if (table.getItemCount () > 0) table.setTopIndex (anchored (top, at, removed, ids.length, table.getItemCount ()));
+	}
+
+	/* the row the top row has after a run, or the first row after it that survives, within the rows */
+	static int anchored (int top, int at, int removed, int inserted, int count) {
+		int row = top < at ? top : top >= at + removed ? top - removed + inserted : at + inserted;
+		return Math.max (0, Math.min (row, count - 1));
 	}
 
 	/* native row and state operations, whole-list rebuilds, facades made and rows measured of the win32 viewport; null without it */

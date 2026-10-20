@@ -612,7 +612,7 @@ final class TableViewport {
 
 	/** The facade of a row that exists now, held strongly or weakly; never made (TableSplice). */
 	TableItem liveFacade (int row) {
-		return row >= 0 && row < table.items.length ? facadeOrNull (row) : null;
+		return facadeOrNull (row);
 	}
 
 	/* the selected rows at or after a splice (TableSplice), reused */
@@ -924,7 +924,7 @@ final class TableViewport {
 			TableSplice.setFocus (hwnd, dirtyFocus);
 			if (dirtyMark >= 0) TableSplice.setMark (hwnd, dirtyMark);
 			int current = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));
-			if (count > 0 && dirtyTop != current) OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, (dirtyTop - current) * table.getItemHeightInPixels ());
+			if (dirtyTop != current) OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, (dirtyTop - current) * table.getItemHeightInPixels ());
 		} finally {
 			if (redraw) OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
 			table.ignoreSelect = oldSelect;
@@ -942,7 +942,7 @@ final class TableViewport {
 	 * (false), so a facade stays its row's state and the image list registers its images.
 	 */
 	boolean setRow (int row, String [] texts, Image [] images, boolean checked) {
-		if (row < 0 || row >= cells.length () || liveFacade (row) != null) return false;
+		if (liveFacade (row) != null) return false;
 		int columns = Math.max (1, table.columnCount);
 		for (int column = 0; column < columns; column++) {
 			if (column < images.length && images [column] != null || cells.get (IMAGE, column, row) != null) return false;
@@ -1073,7 +1073,6 @@ final class TableViewport {
 		if (dirty) return true;
 		int row = indexOf (item);
 		if (pending > 0 && row >= nativeCount) return true;
-		if (row < 0 || painting > 0) return false;
 		long hwnd = table.handle;
 		int top = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));
 		return row < top || row > top + Math.max (1, (int) OS.SendMessage (hwnd, OS.LVM_GETCOUNTPERPAGE, 0, 0));

@@ -267,7 +267,8 @@ final class TableSplice {
 		RECT rect = new RECT ();
 		rect.left = OS.LVIR_BOUNDS;
 		int height = table.getItemHeightInPixels ();
-		int y = OS.SendMessage (hwnd, OS.LVM_GETITEMRECT, newTop, rect) != 0 ? rect.top + first * height : 0;
+		OS.SendMessage (hwnd, OS.LVM_GETITEMRECT, newTop, rect);
+		int y = rect.top + first * height;
 		RECT client = new RECT ();
 		OS.GetClientRect (hwnd, client);
 		client.top = Math.max (client.top, y);

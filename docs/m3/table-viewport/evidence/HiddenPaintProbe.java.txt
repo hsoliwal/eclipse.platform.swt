@@ -1,0 +1,153 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.swt.widgets;
+
+import java.util.logging.Logger;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.internal.win32.*;
+import org.eclipse.swt.m3.M3Patch;
+
+/**
+ * Brief rule 24, hidden viewports: the messages a plain Table of the viewport mode gets from <code>setVisible
+ * (true)</code> (or a non-zero size) until it is idle again, after model deltas made while it was hidden. Each case logs
+ * the window and ListView messages in order (WM_PAINT with its update rectangle) and the number of paint passes, so the
+ * source of every paint after showing is visible. Cases: A as the hidden gate (column-less, selection, top moved, text
+ * wider than the column); B with a column (no column-less width); C without selection; D without a top change (deltas
+ * below the window); E a zero size instead of hiding; F hidden without deltas.
+ * Usage: java -cp &lt;classes&gt;;&lt;swt jar&gt; org.eclipse.swt.widgets.HiddenPaintProbe
+ */
+public class HiddenPaintProbe {
+	static final Logger LOG = Logger.getLogger ("HiddenPaintProbe");
+
+	/** A Table that logs the messages it gets while recording. */
+	static final class LoggingTable extends Table {
+		boolean recording;
+		int paints;
+		final StringBuilder log = new StringBuilder ();
+
+		LoggingTable (Composite parent, int style) {
+			super (parent, style);
+		}
+
+		@Override
+		protected void checkSubclass () {
+		}
+
+		@Override
+		long windowProc (long hwnd, int msg, long wParam, long lParam) {
+			if (recording && hwnd == handle) {
+				String name = name (msg);
+				if (msg == OS.WM_PAINT) {
+					RECT rect = new RECT ();
+					boolean any = OS.GetUpdateRect (hwnd, rect, false);
+					paints++;
+					log.append (" WM_PAINT[").append (any ? rect.left + "," + rect.top + "-" + rect.right + "," + rect.bottom : "empty").append (']');
+				} else if (name != null) {
+					log.append (' ').append (name).append (msg == OS.WM_SETREDRAW || msg == OS.WM_SHOWWINDOW ? "(" + wParam + ")" : "");
+				}
+			}
+			return super.windowProc (hwnd, msg, wParam, lParam);
+		}
+	}
+
+	static String name (int msg) {
+		return switch (msg) {
+			case OS.WM_SHOWWINDOW -> "WM_SHOWWINDOW";
+			case OS.WM_WINDOWPOSCHANGED -> "WM_WINDOWPOSCHANGED";
+			case OS.WM_SIZE -> "WM_SIZE";
+			case OS.WM_SETREDRAW -> "WM_SETREDRAW";
+			case OS.WM_ERASEBKGND -> "WM_ERASEBKGND";
+			case OS.WM_NCPAINT -> "WM_NCPAINT";
+			case OS.LVM_SETITEMCOUNT -> "LVM_SETITEMCOUNT";
+			case OS.LVM_SCROLL -> "LVM_SCROLL";
+			case OS.LVM_SETITEMSTATE -> "LVM_SETITEMSTATE";
+			case OS.LVM_SETSELECTIONMARK -> "LVM_SETSELECTIONMARK";
+			case OS.LVM_SETCOLUMNWIDTH -> "LVM_SETCOLUMNWIDTH";
+			case OS.LVM_REDRAWITEMS -> "LVM_REDRAWITEMS";
+			case OS.LVM_ENSUREVISIBLE -> "LVM_ENSUREVISIBLE";
+			default -> null;
+		};
+	}
+
+	Display display;
+	Shell shell;
+	long nextId = 1_000_000;
+
+	public static void main (String [] args) {
+		System.setProperty ("java.util.logging.SimpleFormatter.format", "%5$s%n");
+		new HiddenPaintProbe ().run ();
+	}
+
+	void run () {
+		display = new Display ();
+		shell = new Shell (display);
+		shell.setBounds (20, 20, 400, 460);
+		shell.open ();
+		pump (200);
+		LOG.info ("SWT " + SWT.getVersion () + " mode " + System.getProperty ("swt.widget.mode.Table", "default"));
+		measure ("A column-less, selection, top moved, wide text", 0, true, true, false, true);
+		measure ("B one column", 1, true, true, false, true);
+		measure ("C no selection", 0, false, true, false, true);
+		measure ("D no top change", 0, true, false, false, true);
+		measure ("E zero size", 0, true, true, true, true);
+		measure ("F hidden without deltas", 0, true, true, false, false);
+		display.dispose ();
+		LOG.info ("DONE");
+	}
+
+	void measure (String name, int columns, boolean select, boolean above, boolean zero, boolean deltas) {
+		LoggingTable table = new LoggingTable (shell, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION);
+		table.setBounds (5, 5, 360, 400);
+		for (int c = 0; c < columns; c++) new TableColumn (table, SWT.NONE).setWidth (200);
+		for (int i = 0; i < 2000; i++) new TableItem (table, SWT.NONE).setText ("row " + i);
+		if (select) table.setSelection (new int [] {100, 101, 1500});
+		table.setTopIndex (900);
+		pump (200);
+		if (zero) table.setSize (0, 0); else table.setVisible (false);
+		pump (100);
+		M3Model model = M3Model.of (table);
+		M3Model.Labels labels = (id, row) -> row.setText (0, "a much wider row text than any before it " + id);
+		for (int i = 0; deltas && i < 200; i++) {
+			int at = above ? 10 + i : 1950;
+			M3Patch.Builder builder = M3Patch.builder (M3Model.ROOT);
+			if (i % 2 == 0) builder.insert (at, nextId++); else builder.remove (at, 1);
+			model.apply (builder.build (), labels);
+		}
+		table.paints = 0;
+		table.log.setLength (0);
+		table.recording = true;
+		if (zero) table.setBounds (5, 5, 360, 400); else table.setVisible (true);
+		table.log.append (" |shown|");
+		pump (400);
+		table.recording = false;
+		LOG.info (name + ": " + table.paints + " paints, top " + table.getTopIndex () + ", rows " + table.getItemCount () + "\n   " + table.log);
+		table.dispose ();
+		pump (100);
+	}
+
+	void pump (int millis) {
+		long end = System.currentTimeMillis () + millis;
+		while (System.currentTimeMillis () < end) {
+			if (!display.readAndDispatch ()) {
+				try {
+					Thread.sleep (5);
+				} catch (InterruptedException e) {
+					return;
+				}
+			}
+		}
+	}
+}
