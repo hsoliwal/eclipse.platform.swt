@@ -119,7 +119,9 @@ final class ListViewport {
 	}
 
 	private boolean hiddenNow () {
-		return clientHeight == 0 || !OS.IsWindowVisible (list.handle);
+		/* the shared gate (EffectiveVisibility: hidden chain, minimized, zero size, clipped out); redraw off as stock reports it */
+		if (clientHeight == 0 || !OS.IsWindowVisible (list.handle)) return true;
+		return EffectiveVisibility.ENABLED && EffectiveVisibility.hidden (list);
 	}
 
 	/* true while the native window is left alone; on becoming visible the stale window is dropped (the next layout rebuilds it) */
@@ -135,11 +137,16 @@ final class ListViewport {
 		}
 		if (!hiddenNow ()) return false;
 		stale = true;
+		/* enlist with the shared gate: its catch-up (VisibilityGate.CATCH_UP) patches the window when the list shows */
+		if (EffectiveVisibility.ENABLED) EffectiveVisibility.deferKinds (list, EffectiveVisibility.DIRTY_DATA);
 		return true;
 	}
 
 	/** Takes over the (still empty) list box. */
 	void install () {
+		list.addListener (VisibilityGate.CATCH_UP, event -> {
+			if (stale && !deferNative ()) layout ();
+		});
 		resetNative ();
 		plan.clear ();
 		layout ();
