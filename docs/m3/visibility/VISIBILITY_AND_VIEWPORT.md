@@ -1,4 +1,4 @@
-# Part visibility: `SWT.PartVisible` / `SWT.PartHidden` (brief rule 25)
+# Part visibility and the viewport listener: `SWT.PartVisible`, `SWT.PartHidden`, `SWT.Viewport` (brief rule 25)
 
 Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
 SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
@@ -71,3 +71,40 @@ TabFolder, StackLayout, ExpandItem, zero size, minimize, `setParent`, `setPartHi
 Each case checks exactly one event per transition, the cause and the origin, no event for no-op changes or for
 controls without a state change, and pre-order delivery. The stock-behaviour differentials stay at zero mismatches,
 because the events are additive.
+
+## The viewport listener (`SWT.Viewport`, rule 25 sub-rule)
+
+User, 2026-10-20: "would like to add viewport listener too?". A viewport widget (Tree, Table, List, Grid, the drawn
+planes, StyledText, the custom widgets) tells its listeners which part of its flattened visible order is on screen,
+once per coalesced change. The M3JDK Swing listener mirrors it with the same names and values (`javax.swing.event`).
+
+| Name | Kind | Meaning |
+|---|---|---|
+| `SWT.Viewport` = 59 | event type | the window of visible rows changed |
+| `org.eclipse.swt.events.ViewportListener` | typed listener (functional) | `viewportChanged (ViewportEvent)` |
+| `org.eclipse.swt.events.ViewportEvent` | typed event | the fields below |
+| `ViewportEvent.firstVisible`, `lastVisible` | `int` | the first and last index on screen in the flattened visible order (a Tree counts the expanded rows); both -1 when nothing is on screen |
+| `ViewportEvent.entered`, `left` | `int []` | the indexes that came onto or went off the screen since the last event, as ascending, coalesced pairs `[start0, end0, start1, end1, ...]` with **inclusive** ends; empty arrays (never null) when none; no per-row objects |
+| `ViewportEvent.extentsChanged` | `boolean` | the scroll extents (total rows, total size) changed |
+| `ViewportEvent.cause` | `int` bit mask | `SCROLL` = 1, `RESIZE` = 2, `LAYOUT` = 4, `MODEL_DELTA` = 8, `VISIBILITY` = 16, `EXPAND` = 32 (the union of everything coalesced into the event) |
+| `Scrollable.addViewportListener (ViewportListener)` / `removeViewportListener` | methods | the typed listener, equal to `addListener (SWT.Viewport, ...)` |
+| `org.eclipse.swt.internal.ViewportReporter` | internal helper for widget implementations | `new ViewportReporter (scrollable)`, then `changed (first, last, cause, extentsChanged)` (or with explicit `entered` and `left` pairs for a model delta) from every place that moves the window; it coalesces and fires |
+
+In an untyped `Event`: `start` = firstVisible, `end` = lastVisible, `detail` = cause, `count` = 1 when the extents
+changed (else 0), and `data` = `int [][] {entered, left}`.
+
+Rules:
+
+- The widget implementation fires it, once per coalesced change: every change within one turn of the event loop
+  goes into one event (the reporter posts one flush per turn, which runs after the layout and before the paint of that
+  turn). The causes are OR-ed, and entered/left are the difference between the window of the last event and the
+  current one, plus explicit ranges for model deltas.
+- Never while the widget is not part-visible (`Control.isPartVisible ()`): changes accumulate. The first event after
+  a `PartVisible` carries `VISIBILITY` and the difference from the last window reported.
+- Zero cost when no listener is attached: `changed` returns after one `isListening (SWT.Viewport)` test, and no
+  window is tracked.
+- Nothing is sent when a listener is added; the first event comes with the next change, or with the next
+  `PartVisible`.
+
+Tests: `Test_org_eclipse_swt_internal_ViewportReporter` checks the event sequences for scroll, resize, expand, a model
+delta inside and outside the window, and hide/show, with exactly one event per coalesced change.
