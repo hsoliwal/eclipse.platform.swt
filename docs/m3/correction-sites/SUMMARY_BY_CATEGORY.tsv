@@ -78,3 +78,10 @@ org.eclipse.emf	per_row_item	2
 org.eclipse.emf	remove_all	5
 org.eclipse.emf	set_input	62
 org.eclipse.emf	sync_exec	3
+p2	element_map	11
+p2	full_refresh	30
+p2	per_row_item	3
+p2	remove_all	4
+p2	set_input	35
+p2	swing_full_event	2
+p2	sync_exec	18

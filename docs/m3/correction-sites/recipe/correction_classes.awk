@@ -15,5 +15,23 @@ NR == 1 { print; next }
   else if (m ~ /^(createPartControl|createControl|createControls|createContents|createDialogArea|createViewer|createTreeViewer|createTableViewer|createTable|createTree|createClient|createNewRowPart|internalCreateNewRowPart|init|initialize|initializeViewer|initializeTreeViewer|initializeFrom|setInput|doSetInput|feedInput|fillEditorTable|open|create|configure|hookViewer|bind|createPage|createFormContent)$/ || m ~ /^[A-Z]/) c = "INITIAL_OR_SETUP"
   else if (m ~ /^(dispose|clear|removeAll|remove|add|addAll|syncExec|asyncExec|getInstance|getShellStyle|main)$/) c = "MAINTENANCE"
   else if (m == "-") c = "FIELD_OR_STATIC"
+  # pass 4c (multipass, dimension = category): DOOP and thread defects regardless of caller
+  if (c == "REVIEW" && $2 ~ /^(element_map)$/) c = "DOOP_STORE"
+  else if (c == "REVIEW" && $2 ~ /^(per_element_object|per_row_item)$/) c = "DOOP_OBJECTS"
+  else if (c == "REVIEW" && $2 == "sync_exec") c = "THREAD_BLOCKING"
+  # pass 4d (multipass, dimension = method-name shape) for the remaining rebuild sites
+  if (c == "REVIEW") {
+    if (m ~ /^(handle|on)[A-Z]/ || m ~ /(Changed|Change|Updated|Added|Removed)$/ || m ~ /^notify/) c = "MODEL_LISTENER_LIKE"
+    else if (m ~ /^(update|refresh|redraw|rebuild|reload|repopulate|recompute|reveal|sync)/) c = "ASYNC_OR_REFRESH_METHOD"
+    else if (m ~ /^set[A-Z]/) c = "STATE_SETTER_REBUILD"
+    else if (m ~ /^(create|init|build|fill|populate|load|setUp|configure|add[A-Z].*(Viewer|Table|Tree|Section|Page|Controls?))/) c = "INITIAL_OR_SETUP"
+    else if (m ~ /^(dispose|clear|remove|reset)/) c = "MAINTENANCE"
+  }
+  # pass 4e (multipass, dimension = words in the handler name): split MODEL_LISTENER_LIKE
+  if (c == "MODEL_LISTENER_LIKE") {
+    if (m ~ /(Button|Pressed|Delete|Remove|RemoveAll|Add[A-Z]|AddAll|Move|Up$|Down|Edit|Browse|Reset|Unlink|ToVisible|ToNonVisible|Hide|Show|Toggle|Clicked|Selected$)/) c = "USER_ACTION"
+    else if (m ~ /(SelectionChanged|Selection|Select|Validate|Activate|Link|Modified|Filter|Focus|Expand|Collapse|Key|Mouse|Text)/) c = "UI_EVENT"
+    else c = "MODEL_LISTENER"
+  }
   $3 = c; print
 }

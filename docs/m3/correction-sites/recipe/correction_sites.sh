@@ -6,7 +6,7 @@
 # Pass 2 drop tests/examples.  Pass 3 enclosing method (awk).  Pass 4 classify the caller.  Pass 5 permalink + summary.
 # The model's own pass reads only the classified output. Usage: correction_sites.sh <out-dir> [repo...]
 OUT=${1:-S:/m3-scratch/correction-sites}; shift; mkdir -p "$OUT"; F=S:/m3-scratch/forks; mkdir -p "$F"
-REPOS=${*:-"eclipse.platform.ui eclipse.platform eclipse.platform.swt nebula gef-classic eclipse.jdt.core eclipse.jdt.ui eclipse.jdt.debug eclipse.platform.text org.eclipse.emf egit initiative31-eclipse.pde"}
+REPOS=${*:-"eclipse.platform.ui eclipse.platform eclipse.platform.swt nebula gef-classic eclipse.jdt.core eclipse.jdt.ui eclipse.jdt.debug eclipse.platform.text org.eclipse.emf egit initiative31-eclipse.pde p2"}
 P=(
 "full_refresh \.refresh\(\s*(true|false)?\s*\)"
 "set_input \.setInput\("
