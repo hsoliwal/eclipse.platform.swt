@@ -81,6 +81,9 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDeltas {
 			Field field = viewport.getClass ().getDeclaredField (name);
 			field.setAccessible (true);
 			return ((Number) field.get (viewport)).longValue ();
+		} catch (NoSuchFieldException e) {
+			/* a build before the counter (the "before" run of a ledger row) */
+			return -1;
 		} catch (ReflectiveOperationException e) {
 			throw new AssertionError (e);
 		}
@@ -137,13 +140,13 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDeltas {
 	/* ---------------------------------------------------------------- viewport deltas */
 
 	/** One resize or column change: native inserts and deletes against the rows entering and leaving the window. */
-	record Step (int inserted, int deleted, int entering, int leaving, long remeasured, long full, long reinserted) {
+	record Step (int inserted, int deleted, int entering, int leaving, long remeasured, long full, long reinserted, int setItems) {
 	}
 
 	Step step (Tree tree, Object viewport, Runnable change) {
 		Set<Long> before = residentKeys (viewport);
 		long remeasured = counter (viewport, "remeasuredRows"), full = counter (viewport, "fullRebuilds"), reinserted = counter (viewport, "reinsertedRows");
-		int inserted, deleted;
+		int inserted, deleted, setItems;
 		try (NativeMessageCounter counter = new NativeMessageCounter (tree.handle, OS.TV_FIRST, OS.TV_FIRST + 0xFF)) {
 			change.run ();
 			tree.update ();
@@ -151,10 +154,12 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDeltas {
 			String breakdown = counter.breakdown ();
 			inserted = count (breakdown, TVM_INSERTITEM);
 			deleted = count (breakdown, TVM_DELETEITEM);
+			/* TVM_SETITEM: a re-measure is one, so the count compares builds without the counter */
+			setItems = count (breakdown, 0x113F);
 		}
 		Set<Long> after = residentKeys (viewport);
 		return new Step (inserted, deleted, minus (after, before), minus (before, after), counter (viewport, "remeasuredRows") - remeasured,
-			counter (viewport, "fullRebuilds") - full, counter (viewport, "reinsertedRows") - reinserted);
+			counter (viewport, "fullRebuilds") - full, counter (viewport, "reinsertedRows") - reinserted, setItems);
 	}
 
 	static int count (String breakdown, int message) {
@@ -167,7 +172,7 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDeltas {
 
 	void assertDelta (List<Step> steps, String sweep, int itemHeight) {
 		int inserted = 0, entering = 0, deleted = 0, leaving = 0;
-		long remeasured = 0;
+		long remeasured = 0, setItems = 0;
 		for (int i = 0; i < steps.size (); i++) {
 			Step s = steps.get (i);
 			inserted += s.inserted;
@@ -175,15 +180,16 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDeltas {
 			deleted += s.deleted;
 			leaving += s.leaving;
 			remeasured += s.remeasured;
+			setItems += s.setItems;
 			assertEquals (0, s.full, sweep + " step " + i + ": full re-plan " + s);
 			assertEquals (0, s.reinserted, sweep + " step " + i + ": staying rows inserted again " + s);
 			assertEquals (s.entering, s.inserted, sweep + " step " + i + ": native inserts are not the rows entering " + s);
 			assertTrue (s.deleted <= s.leaving, sweep + " step " + i + ": native deletes beyond the rows leaving " + s);
 		}
 		final int ins = inserted, ent = entering, del = deleted, lea = leaving;
-		final long rem = remeasured;
+		final long rem = remeasured, set = setItems;
 		LOG.info (() -> sweep + ": " + steps.size () + " steps, native inserts " + ins + " (rows entering " + ent + "), deletes " + del
-			+ " (rows leaving " + lea + "), rows re-measured " + rem);
+			+ " (rows leaving " + lea + "), rows re-measured " + rem + ", TVM_SETITEM " + set);
 	}
 
 	/** 50 sizes: one-pixel steps up and down around three heights, and large jumps between them. */
@@ -305,7 +311,7 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDeltas {
 		LOG.info (() -> "hidden gate (" + hide + "): " + sp + " paint passes after show");
 		LOG.info (() -> "hidden gate rows: " + rows);
 		assertEquals (expectedRows (tree), rows, "rows in view after show follow the model");
-		if (viewport != null) {
+		if (viewport != null && counter (viewport, "parks") >= 0) {
 			assertEquals (parks + 1, counter (viewport, "parks"), "the viewport parks once while hidden");
 			/* the first delta parks the window (lanes take its state, its rows go); every later delta sends nothing */
 			assertTrue (messages <= 4L * resident + 16, "TVM messages while hidden: " + messages + " (" + breakdown + ")");

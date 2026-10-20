@@ -190,31 +190,30 @@ final class TreeViewport {
 	/** Recomputes geometry, moves the resident window if needed, positions the plane and updates the bar. */
 	void layout () {
 		if (busy || tree.isDisposed () || tree.hwndParent == 0) return;
-		if (partHidden ()) {
-			if (!parked) {
-				busy = true;
-				try {
-					park ();
-				} finally {
-					busy = false;
-				}
-			}
-			parkedLayouts++;
-			return;
-		}
-		if (parked) {
-			parked = false;
-			LOG.debug (() -> "Tree visible again: one window patch after " + parkedLayouts + " parked layouts");
-		}
 		busy = true;
 		try {
-			int itemHeight = Math.max (1, tree.getItemHeightInPixels ());
+			boolean hidden = partHidden ();
+			/* a parked viewport keeps the item height it last asked the TreeView for: no native query per delta */
+			int itemHeight = hidden && layoutItemHeight > 0 ? layoutItemHeight : Math.max (1, tree.getItemHeightInPixels ());
 			layoutItemHeight = itemHeight;
 			int body = bodyHeight ();
 			/* the native control counts fully visible rows; the partial last row comes from the overscan */
 			tree.virtualViewport.configureGeometry (itemHeight, body / itemHeight * itemHeight);
-			ensureWindow ();
-			/* the bar first: showing or hiding it changes the client width the plane is laid out in */
+			if (hidden) {
+				if (!parked) park ();
+				parkedLayouts++;
+			} else {
+				if (parked) {
+					parked = false;
+					LOG.debug (() -> "Tree visible again: one window patch after " + parkedLayouts + " parked layouts");
+				}
+				ensureWindow ();
+			}
+			/*
+			 * The bar first: showing or hiding it changes the client width the plane is laid out in. Both follow while
+			 * parked too (extents only, no TreeView message): the bar answers getVerticalBar (), and the plane keeps the
+			 * Tree's client size, which SWT's effective visibility measures.
+			 */
 			updateBar ();
 			positionPlane ();
 		} finally {
@@ -778,6 +777,8 @@ final class TreeViewport {
 	 * which is why every layout re-applies it (measured by FirstVisibleProbe, see the design).
 	 */
 	private void resetPlaneTop () {
+		/* no resident row (an empty or parked viewport): nothing to scroll natively, and no TreeView message */
+		if (plan.size () == 0) return;
 		long tv = tree.handle;
 		long hTop = handleOfRow (tree.virtualViewport.topRow ());
 		if (hTop == 0) hTop = OS.SendMessage (tv, OS.TVM_GETNEXTITEM, OS.TVGN_ROOT, 0);
@@ -960,6 +961,11 @@ final class TreeViewport {
 			if (hFirst != 0) OS.SendMessage (tree.handle, OS.TVM_SELECTITEM, OS.TVGN_CARET, hFirst);
 			return navigationKeyUsed ();
 		}
+		if ((key == OS.VK_ADD || key == OS.VK_SUBTRACT || key == OS.VK_LEFT || key == OS.VK_RIGHT || key == OS.VK_MULTIPLY)
+				&& (tree.style & SWT.RIGHT_TO_LEFT) == 0) {
+			LRESULT result = expansionKey (key);
+			if (result != null) return result;
+		}
 		if (key == OS.VK_UP || key == OS.VK_DOWN) {
 			/*
 			 * Natively the caret moves to its logical neighbour, which is then scrolled into view.
@@ -1003,6 +1009,86 @@ final class TreeViewport {
 		long hTarget = handleOfRow (target);
 		if (hTarget != 0) OS.SendMessage (tree.handle, OS.TVM_SELECTITEM, OS.TVGN_CARET, hTarget);
 		return navigationKeyUsed ();
+	}
+
+	/*
+	 * An expansion key on a caret row outside the client area (an off-window anchor: resident without its logical
+	 * neighbours and children, so the native TreeView would expand, collapse or move along its own rows). The key is
+	 * answered here as the native TreeView answers it for the logical row (ExpansionKeyOracle, official 3.135.0, 60
+	 * cases: keys ADD, SUBTRACT, LEFT, RIGHT, MULTIPLY; row collapsed or expanded; top at, above, below and inside it):
+	 * ADD, MULTIPLY and RIGHT expand a collapsed row with children (Expand first, then the expansion scroll of
+	 * expanding); SUBTRACT and LEFT collapse an expanded row (Collapse first, the caret kept in view); RIGHT on an
+	 * expanded row moves the caret to its first child and LEFT on a collapsed child to its parent, each scrolled into
+	 * view; every other combination does nothing (ADD or MULTIPLY on an expanded row: no event, no scroll). Inside the
+	 * client area the native TreeView handles the key.
+	 */
+	private LRESULT expansionKey (int key) {
+		VirtualTreeViewport viewport = tree.virtualViewport;
+		long caret = caretRow (), top = viewport.topRow ();
+		if (caret < 0 || caret >= top && caret < top + Math.max (1, viewport.visibleRows ())) return null;
+		VirtualTreeVisibleProjection.Row row = tree.virtualProjection.rowAt (caret);
+		if (row == null) return null;
+		TreeItem item = facade (row.parentId (), row.childIndex ());
+		int id = idOf (item);
+		if (id < 0) return null;
+		VirtualTreeTopology topology = tree.virtualTopology;
+		boolean expanded = topology.flag (id, VirtualItemState.EXPANDED);
+		boolean children = getItemCount (item) > 0;
+		LOG.debug (() -> "Tree expansion key " + key + " on the off-window caret row " + caret + (expanded ? " (expanded)" : "") + (children ? "" : " (no children)"));
+		switch (key) {
+			case OS.VK_ADD, OS.VK_MULTIPLY -> {
+				if (!expanded && children) userExpand (item);
+			}
+			case OS.VK_SUBTRACT -> {
+				if (expanded) userCollapse (item);
+			}
+			case OS.VK_LEFT -> {
+				if (expanded) {
+					userCollapse (item);
+				} else if (row.parentId () != VirtualTreeTopology.ROOT) {
+					moveCaretTo (tree.virtualProjection.visibleIndexOf (row.parentId ()));
+				}
+			}
+			default -> {
+				if (!expanded && children) {
+					userExpand (item);
+				} else if (expanded && children) {
+					moveCaretTo (caret + 1);
+				}
+			}
+		}
+		return navigationKeyUsed ();
+	}
+
+	/* the native TreeView's user expansion: Expand before the row opens (TVN_ITEMEXPANDING), then the expansion scroll */
+	private void userExpand (TreeItem item) {
+		tree.pinVirtualFacade (item);
+		Event event = new Event ();
+		event.item = item;
+		tree.sendEvent (SWT.Expand, event);
+		if (tree.isDisposed () || item.isDisposed ()) return;
+		expanding (item);
+	}
+
+	/* the native TreeView's user collapse: Collapse before the row closes, the caret kept in view (collapsing) */
+	private void userCollapse (TreeItem item) {
+		tree.pinVirtualFacade (item);
+		Event event = new Event ();
+		event.item = item;
+		tree.sendEvent (SWT.Collapse, event);
+		if (tree.isDisposed () || item.isDisposed ()) return;
+		collapsing (item);
+		expansionChanged ();
+	}
+
+	/* the caret moves to a logical row, scrolled into view as TVM_ENSUREVISIBLE does, and the native selection follows */
+	private void moveCaretTo (long target) {
+		VirtualTreeViewport viewport = tree.virtualViewport;
+		if (target < 0 || target >= viewport.visibleRowCount ()) return;
+		viewport.ensureVisible (target);
+		layout ();
+		long hTarget = handleOfRow (target);
+		if (hTarget != 0) OS.SendMessage (tree.handle, OS.TVM_SELECTITEM, OS.TVGN_CARET, hTarget);
 	}
 
 	/**
@@ -1836,7 +1922,7 @@ final class TreeViewport {
 				long lastChild = topology.childCountKnown (parent) && topology.childCount (parent) > 0
 						? tree.virtualProjection.visibleIndexOfCoordinate (parent, topology.childCount (parent) - 1) : parentRow;
 				if (parentRow < topBefore && topBefore > lastChild + 1) tree.virtualViewport.setTopRow (parentRow);
-				scrollChildrenIntoView (parent);
+				scrollChildrenIntoView (parent, false);
 			}
 		}
 		return true;
@@ -1846,7 +1932,7 @@ final class TreeViewport {
 	 * The native TreeView's scroll after an item expands: as many of its children as possible
 	 * become visible, but the item itself never scrolls above the top row.
 	 */
-	private void scrollChildrenIntoView (int id) {
+	private void scrollChildrenIntoView (int id, boolean user) {
 		VirtualTreeTopology topology = tree.virtualTopology;
 		VirtualTreeVisibleProjection projection = tree.virtualProjection;
 		VirtualTreeViewport viewport = tree.virtualViewport;
@@ -1864,6 +1950,9 @@ final class TreeViewport {
 			long newTop = lastChild - rows + 1;
 			if (row >= top) newTop = Math.min (newTop, row);
 			viewport.setTopRow (newTop);
+		} else if (user && row < top) {
+			/* a user expansion above the view whose children stay above it: the row comes in at the top */
+			viewport.setTopRow (row);
 		}
 	}
 
@@ -1963,14 +2052,19 @@ final class TreeViewport {
 		LOG.debug (() -> "Tree native expansion of id " + id + ": cached " + item.isCachedState () + ", child count known " + knownBefore + " -> "
 				+ topology.childCountKnown (id) + (topology.childCountKnown (id) ? " (" + topology.childCount (id) + ")" : "") + ", expanded " + topology.flag (id, VirtualItemState.EXPANDED));
 		if (!topology.childCountKnown (id) || topology.childCount (id) == 0) return;
+		VirtualTreeViewport viewport = tree.virtualViewport;
+		long rowBefore = tree.virtualProjection.visibleIndexOf (id), topBefore = viewport.topRow ();
 		int [] top = topCoordinate ();
 		topology.flag (id, VirtualItemState.EXPANDED, true);
-		tree.virtualViewport.refreshLogicalRange ();
-		restoreTop (top);
-		/* a user expansion scrolls its children into view, as the native TreeView does */
-		scrollChildrenIntoView (id);
-		/* expanding the caret row (keyboard RIGHT, +, double click) also keeps the caret in view (stock seed 1 step 102) */
-		if (focusId == id) keepRowVisible (tree.virtualProjection.visibleIndexOf (id));
+		viewport.refreshLogicalRange ();
+		/*
+		 * A user expansion scrolls its children into view, as the native TreeView does (ExpansionKeyOracle, official
+		 * 3.135.0): a row above the view keeps the top index, not the top item (its last child then comes in at the
+		 * bottom, or the row itself at the top when its children stay above the view); elsewhere the top item stays.
+		 */
+		if (rowBefore >= 0 && rowBefore < topBefore) viewport.setTopRow (topBefore);
+		else restoreTop (top);
+		scrollChildrenIntoView (id, true);
 		layout ();
 	}
 
