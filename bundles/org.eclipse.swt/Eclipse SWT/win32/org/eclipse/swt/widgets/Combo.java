@@ -3799,4 +3799,10 @@ long m3WindowReplans () {
 	checkWidget ();
 	return viewport != null ? viewport.windowReplans () : 0;
 }
+
+/* Rule 24, hidden viewports: window patches the drop-down list applied after taking deltas while closed or hidden. */
+long m3WindowPatches () {
+	checkWidget ();
+	return viewport != null ? viewport.windowPatches () : 0;
+}
 }

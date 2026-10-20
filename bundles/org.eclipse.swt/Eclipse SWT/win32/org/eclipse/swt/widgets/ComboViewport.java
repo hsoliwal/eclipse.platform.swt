@@ -166,6 +166,8 @@ final class ComboViewport {
 	/** Moves the resident window to the selection (closed) or to the visible rows (dropped) and writes the bar. */
 	void layout () {
 		if (busy || !installed) return;
+		/* a stale (closed) window stays as it is until it drops or takes input */
+		if (stale && !isDropped ()) return;
 		measureGeometry ();
 		if (isDropped ()) {
 			int topRow = topRow ();
@@ -207,6 +209,55 @@ final class ComboViewport {
 	 * restores; the window holds at least a dropped page.
 	 */
 	private void cover (int low, int high) {
+		if (stale) {
+			/* one window patch: the stale native rows go, the window is built for this call, the bar keeps its logical state */
+			int bar = barState;
+			patch ();
+			coverRows (low, high);
+			barState = bar;
+			updateBar ();
+			return;
+		}
+		coverRows (low, high);
+	}
+
+	/*
+	 * Rule 24, hidden viewports: a closed drop-down list (a hidden combo is closed too) takes item deltas in the lanes
+	 * only. The list box keeps its rows, so the selected row keeps its native row and text and the read-only face stays
+	 * right; the window plan follows the deltas logically and the selection is a lane (staleSelection). The first
+	 * drop, key, selection or removal of the selected row (every caller of cover) applies one window patch.
+	 */
+	private boolean stale;
+	private int staleSelection = -1;
+	private long windowPatches;
+
+	long windowPatches () {
+		return windowPatches;
+	}
+
+	private void goStale () {
+		if (stale) return;
+		staleSelection = selection ();
+		stale = true;
+	}
+
+	/* the stale native rows are deleted (the face reads the parked selection meanwhile) and the plan starts empty */
+	private void patch () {
+		stale = false;
+		windowPatches++;
+		parked = staleSelection;
+		busy = true;
+		try {
+			int n = (int) OS.CallWindowProc (listWindowProc, hwndList, OS.LB_GETCOUNT, 0, 0);
+			for (int i = n - 1; i >= 0; i--) deleteNative (i);
+		} finally {
+			busy = false;
+		}
+		plan.clear ();
+		parkedCaret = -1;
+	}
+
+	private void coverRows (int low, int high) {
 		int count = model.getItemCount ();
 		if (count == 0) {
 			if (plan.size () != 0) rebuild (0, 0);
@@ -443,6 +494,7 @@ final class ComboViewport {
 
 	/** The selected logical row (CB_GETCURSEL): the list box's selection, or the parked one. */
 	int selection () {
+		if (stale) return staleSelection;
 		if (!installed || plan.size () == 0) return parked;
 		int entry = (int) OS.CallWindowProc (listWindowProc, hwndList, OS.LB_GETCURSEL, 0, 0);
 		if (entry >= 0 && entry < plan.size ()) {
@@ -716,7 +768,8 @@ final class ComboViewport {
 	 */
 	private long onFind (long hwnd, int msg, long wParam, long lParam) {
 		int start = (int) wParam;
-		int from = start >= 0 && start < plan.size () ? plan.first () + start : -1;
+		/* a stale window: the combo started from its (unchanged) native selection, which is the selection lane */
+		int from = stale ? (start >= 0 ? staleSelection : -1) : start >= 0 && start < plan.size () ? plan.first () + start : -1;
 		String text = "";
 		if (lParam != 0) {
 			int length = OS.wcslen (lParam);
@@ -877,11 +930,17 @@ final class ComboViewport {
 			int count = model.getItemCount ();
 			if (index < 0 || index > count) combo.error (SWT.ERROR_INVALID_RANGE);
 			/* a dropped list keeps its top row index over an insert: let the list box insert it */
+			/* a closed list takes the insert in its lanes only (rule 24, hidden viewports) */
+			if (!isDropped () && count > 0) goStale ();
 			coverForEdit (Math.min (index, Math.max (0, count - 1)), Math.min (index, Math.max (0, count - 1)));
 			model.add (ListViewport.nativeText (string), index);
 			if (parked >= index) parked++;
+			if (stale && staleSelection >= index) staleSelection++;
 			int entry = plan.inserted (index, 1);
-			if (entry >= 0) {
+			if (entry >= 0 && stale) {
+				/* the bar as the native insert would leave it */
+				inserted ();
+			} else if (entry >= 0) {
 				busy = true;
 				try {
 					insertNative (entry, index);
@@ -907,6 +966,13 @@ final class ComboViewport {
 		try {
 			int removed = end - start + 1;
 			boolean dropped = isDropped ();
+			/* a closed list takes a removal that keeps the selected row in its lanes only; one that takes the selected row is patched first (rule 24) */
+			int selected = selection ();
+			if (!dropped && (selected < start || selected > end)) {
+				goStale ();
+			} else if (stale) {
+				cover (selected >= 0 ? selected : 0, selected >= 0 ? selected : 0);
+			}
 			boolean nativeEdit = coverForEdit (start, end);
 			int topBefore = dropped ? topRow () : 0;
 			/* each stock CB_DELETESTRING at start: the caret steps back when it is the deleted row, then stays inside the list */
@@ -920,8 +986,11 @@ final class ComboViewport {
 			} else if (parked >= start) {
 				parked = -1;
 			}
+			if (stale && staleSelection > end) staleSelection -= removed;
 			int resident = plan.removed (start, removed);
-			if (resident > 0) {
+			if (resident > 0 && stale) {
+				barState = BAR_SET;
+			} else if (resident > 0) {
 				int entry = plan.removedEntry (start);
 				busy = true;
 				try {
@@ -1009,6 +1078,8 @@ final class ComboViewport {
 		model.removeAll ();
 		plan.clear ();
 		parked = parkedCaret = recordedRow = -1;
+		stale = false;
+		staleSelection = -1;
 		caret = 0;
 	}
 
@@ -1027,6 +1098,10 @@ final class ComboViewport {
 		plan.clear ();
 		parked = parkedCaret = -1;
 		caret = 0;
+		/* a closed list keeps no rows after the reset: its window is built when it drops (rule 24, hidden viewports) */
+		stale = false;
+		staleSelection = -1;
+		if (!isDropped ()) stale = true;
 		model.setItems (ListViewport.nativeTexts (items));
 		int newWidth = hScroll () ? widest () : 0;
 		layout ();
@@ -1111,6 +1186,7 @@ final class ComboViewport {
 	void deselect (int index) {
 		if (index < 0 || index >= model.getItemCount ()) return;
 		if (index != selection ()) return;
+		if (stale) staleSelection = -1;
 		OS.SendMessage (combo.handle, OS.CB_SETCURSEL, -1, 0);
 		combo.sendEvent (SWT.Modify);
 		combo.clearSegments (false);
