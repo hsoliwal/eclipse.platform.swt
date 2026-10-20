@@ -1727,6 +1727,7 @@ public void setFont (Font font){
 	if ((parent.style & SWT.VIRTUAL) == 0 && !cached && !parent.painted) {
 		return;
 	}
+	if (parent.viewport != null && handle == 0) return;
 	long hwnd = parent.handle;
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_TEXT;
@@ -1794,6 +1795,7 @@ public void setFont (int index, Font font) {
 		if ((parent.style & SWT.VIRTUAL) == 0 && !cached && !parent.painted) {
 			return;
 		}
+	if (parent.viewport != null && handle == 0) return;
 		long hwnd = parent.handle;
 		TVITEM tvItem = new TVITEM ();
 		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_TEXT;
@@ -2031,6 +2033,7 @@ public void setImage (int index, Image image) {
 		if ((parent.style & SWT.VIRTUAL) == 0 &&!cached && !parent.painted) {
 			return;
 		}
+	if (parent.viewport != null && handle == 0) return;
 		long hwnd = parent.handle;
 		TVITEM tvItem = new TVITEM ();
 		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_IMAGE | OS.TVIF_SELECTEDIMAGE;
@@ -2199,6 +2202,7 @@ public void setText (int index, String string) {
 		if ((parent.style & SWT.VIRTUAL) == 0 && !cached && !parent.painted) {
 			return;
 		}
+	if (parent.viewport != null && handle == 0) return;
 		long hwnd = parent.handle;
 		TVITEM tvItem = new TVITEM ();
 		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_TEXT;

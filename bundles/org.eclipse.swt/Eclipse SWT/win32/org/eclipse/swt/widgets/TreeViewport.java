@@ -119,9 +119,86 @@ final class TreeViewport {
 		layout ();
 	}
 
+	/*
+	 * Hidden viewports (brief rule 24; user 2026-10-20: "if the viewport becomes visible from hidden it should paint;
+	 * while it is hidden the model may make changes and the viewport is dirty and renders on becoming visible"). A Tree
+	 * that is not visible (itself or an ancestor hidden, for example an unselected tab page), has no client area or
+	 * sits in a minimized shell parks: the lanes take the resident rows' native state, the native rows go and the plan
+	 * forgets them. While parked a model delta updates the lanes and the logical extents only (layout returns before
+	 * any native call; every other native path finds no resident row, setters of a row without a handle return), so the
+	 * dirty state is O(1): the topology generation. The first layout or paint that finds the Tree visible again commits
+	 * the window against the current model, one patch, and the paint that follows draws it.
+	 */
+	private boolean parked;
+	/* parks, and the layouts absorbed while parked (the hidden-viewport gate reads them) */
+	long parks, parkedLayouts;
+
+	private boolean hidden () {
+		if (!OS.IsWindowVisible (tree.handle)) return true;
+		RECT client = new RECT ();
+		OS.GetClientRect (tree.hwndParent, client);
+		if (client.right <= client.left || client.bottom <= client.top) return true;
+		return OS.IsIconic (OS.GetAncestor (tree.handle, OS.GA_ROOT));
+	}
+
+	private void park () {
+		parked = true;
+		parks++;
+		committedGeneration = -1;
+		if (plan.size () == 0) return;
+		LOG.debug (() -> "Tree hidden: viewport parked, " + plan.size () + " native rows released");
+		captureResidentState ();
+		plan.plan (0, NO_INTS, NO_INTS, NO_INTS);
+		boolean oldShrink = tree.ignoreShrink, oldSelect = tree.ignoreSelect, oldDeselect = tree.ignoreDeselect;
+		tree.ignoreShrink = tree.ignoreSelect = tree.ignoreDeselect = true;
+		rebuilding = true;
+		try {
+			retirePlanned (tree.handle);
+			plan.commit (0, NO_INTS, NO_INTS, NO_INTS, new long [0]);
+		} finally {
+			rebuilding = false;
+			tree.ignoreShrink = oldShrink;
+			tree.ignoreSelect = oldSelect;
+			tree.ignoreDeselect = oldDeselect;
+		}
+	}
+
+	private static final int [] NO_INTS = new int [0];
+
+	/* deletes the plan's retired rows (top-most), detaching their facades and the caret first */
+	private void retirePlanned (long tv) {
+		long caret = OS.SendMessage (tv, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0);
+		for (int i = 0; i < plan.retiredCount (); i++) {
+			long hItem = plan.retired (i);
+			/* always detach: without a caret too, a retired row's facade must not keep a handle the TreeView reuses */
+			boolean caretInside = detachSubtree (hItem, caret);
+			if (caret != 0 && caretInside) {
+				clearNativeCaret ();
+				caret = 0;
+			}
+			OS.SendMessage (tv, OS.TVM_DELETEITEM, 0, hItem);
+		}
+	}
+
 	/** Recomputes geometry, moves the resident window if needed, positions the plane and updates the bar. */
 	void layout () {
 		if (busy || tree.isDisposed () || tree.hwndParent == 0) return;
+		if (hidden ()) {
+			if (!parked) {
+				busy = true;
+				try {
+					park ();
+				} finally {
+					busy = false;
+				}
+			}
+			parkedLayouts++;
+			return;
+		}
+		if (parked) {
+			parked = false;
+			LOG.debug (() -> "Tree visible again: one window patch after " + parkedLayouts + " parked layouts");
+		}
 		busy = true;
 		try {
 			int itemHeight = Math.max (1, tree.getItemHeightInPixels ());
@@ -185,17 +262,7 @@ final class TreeViewport {
 		rebuilding = true;
 		rebuilds++;
 		try {
-			long caret = OS.SendMessage (tv, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0);
-			for (int i = 0; i < retired; i++) {
-				long hItem = plan.retired (i);
-				/* always detach: without a caret too, a retired row's facade must not keep a handle the TreeView reuses */
-				boolean caretInside = detachSubtree (hItem, caret);
-				if (caret != 0 && caretInside) {
-					clearNativeCaret ();
-					caret = 0;
-				}
-				OS.SendMessage (tv, OS.TVM_DELETEITEM, 0, hItem);
-			}
+			retirePlanned (tv);
 			long [] handles = new long [count];
 			for (int entry = 0; entry < count; entry++) {
 				long reused = plan.plannedHandle (entry);
@@ -351,6 +418,8 @@ final class TreeViewport {
 	 * rows that are in view only in between (recorded differential, stock seed 0 step 10).
 	 */
 	void beforePaint () {
+		/* a parked viewport that paints is visible again: the one window patch goes in before this paint draws it */
+		if (parked && !busy && !rebuilding) layout ();
 		if (!remeasurePending || rebuilding) return;
 		remeasurePending = false;
 		remeasureClientRows ();
@@ -1004,6 +1073,8 @@ final class TreeViewport {
 	}
 
 	private long caretRow () {
+		/* no resident row, no native caret (a parked viewport sends nothing) */
+		if (plan.size () == 0) return -1;
 		long caret = OS.SendMessage (tree.handle, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0);
 		if (caret == 0) return -1;
 		int entry = plan.entryOf (caret);
