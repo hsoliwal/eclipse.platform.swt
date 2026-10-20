@@ -1,5 +1,6 @@
 # UI label interning and tree path ids (design)
-n> Copy of hsoliwal/M3jdk21 `m3/docs/ui-interning/DESIGN.md` (branch m3/ui-interning-20261019); the SWT copies of the classes live in `org.eclipse.swt.internal.m3.collections`.
+
+> Copy of hsoliwal/M3jdk21 `m3/docs/ui-interning/DESIGN.md` (branch m3/ui-interning-20261019); the SWT copies of the classes live in `org.eclipse.swt.internal.m3.collections`.
 
 Owner: ui-interning agent. Branches: hsoliwal/M3jdk21 `m3/ui-interning-20261019` (proving ground,
 `m3/collections`), hsoliwal/eclipse.platform.swt `m3/swt-interning-20261019` (package
