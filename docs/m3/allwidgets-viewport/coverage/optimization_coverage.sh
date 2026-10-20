@@ -23,7 +23,7 @@ W=org.eclipse.swt.widgets; T=org.eclipse.swt.tests.junit
 INCLUDES="$W.ExpandBar:$W.ExpandBar\$*:$W.ExpandItem:$W.ExpandItem\$*:org.eclipse.swt.custom.CTabFolder:org.eclipse.swt.custom.CTabFolder\$*:$W.Display:$W.Display\$*:org.eclipse.swt.internal.laf.M3LookAndFeel:org.eclipse.swt.internal.laf.M3LookAndFeel\$*"
 DIFF="--select-class $T.Test_org_eclipse_swt_widgets_ExpandBar_ViewportDifferential --select-class $T.Test_org_eclipse_swt_custom_CTabFolder_ViewportDifferential"
 STOCK="--select-class $T.Test_org_eclipse_swt_widgets_ExpandBar --select-class $T.Test_org_eclipse_swt_widgets_ExpandItem --select-class $T.Test_org_eclipse_swt_custom_CTabFolder --select-class $T.Test_org_eclipse_swt_custom_CTabItem --select-class $T.Test_org_eclipse_swt_widgets_Text"
-OWN="--select-class $T.Test_org_eclipse_swt_widgets_ExpandBar_Viewport --select-class $T.Test_org_eclipse_swt_widgets_ExpandBar_Coverage --select-class $T.Test_org_eclipse_swt_widgets_ExpandBar_Hover --select-class $T.Test_org_eclipse_swt_widgets_Display_WithCrLf"
+OWN="--select-class $T.Test_org_eclipse_swt_widgets_ExpandBar_Viewport --select-class $T.Test_org_eclipse_swt_widgets_ExpandBar_Coverage --select-class $T.Test_org_eclipse_swt_widgets_ExpandBar_Hover --select-class $T.Test_org_eclipse_swt_widgets_Display_WithCrLf --select-class $T.Test_org_eclipse_swt_custom_CTabFolder_Hover"
 LAF=""; for c in LookAndFeel M3UIDefaults M3UIDerivation M3LookAndFeel M3ThemeImport M3Palette M3SystemTheme; do LAF="$LAF --select-class $T.Test_org_eclipse_swt_internal_laf_$c"; done
 CP="$EXTRA;$OUT/tests"
 if [ -z "$REPORT_ONLY" ]; then
@@ -38,7 +38,7 @@ LOCK="bash C:/m3-superset/tools/ui_lock.sh swt-allwidgets"; [ -n "$NO_LOCK" ] &&
 $LOCK bash -c "
 $H 900 '$COV/record-official.log' $R -jar '$J' execute -cp '$CP;$OFFICIAL' $DIFF --disable-banner --details=summary
 $H 1800 '$COV/viewport.log' $R '$A' -jar '$J' execute -cp '$CP;$JAR' $OWN $STOCK $DIFF $LAF --disable-banner --details=tree
-$H 1200 '$COV/original.log' $R -Dswt.widget.mode=original '$A' -jar '$J' execute -cp '$CP;$JAR' $STOCK $DIFF --select-class $T.Test_org_eclipse_swt_widgets_ExpandBar_Hover --disable-banner --details=tree
+$H 1200 '$COV/original.log' $R -Dswt.widget.mode=original '$A' -jar '$J' execute -cp '$CP;$JAR' $STOCK $DIFF --select-class $T.Test_org_eclipse_swt_widgets_ExpandBar_Hover --select-class $T.Test_org_eclipse_swt_custom_CTabFolder_Hover --disable-banner --details=tree
 "
 for m in record-official viewport original; do
   echo "== $m: $(sed 's/\x1b\[[0-9;]*m//g' "$COV/$m.log" | grep -E "tests (successful|failed|aborted)" | tr -s ' []' ' ' | tr '\n' ';')"

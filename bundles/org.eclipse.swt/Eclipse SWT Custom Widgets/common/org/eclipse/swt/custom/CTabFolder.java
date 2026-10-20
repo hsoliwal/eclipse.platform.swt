@@ -142,6 +142,10 @@ public class CTabFolder extends Composite {
 	static final boolean VIEWPORT = org.eclipse.swt.internal.WidgetMode.of ("CTabFolder", org.eclipse.swt.internal.WidgetMode.VIEWPORT) == org.eclipse.swt.internal.WidgetMode.VIEWPORT; //$NON-NLS-1$
 	/* VIEWPORT: setItemSize's minimum widths, kept between updates (grown by doubling, cleared per update) */
 	int[] minWidthsScratch = new int[0];
+	/* VIEWPORT: the indexes of the showing tabs in index order (setItemLocation; -1: stale), and the tab under the mouse */
+	int[] showingIndices = new int[0];
+	int showingCount = -1;
+	CTabItem mouseItem;
 	boolean lazyPending;
 	/** index of the left most visible tab. */
 	int firstIndex = -1;
@@ -808,6 +812,7 @@ private void notifyItemCountChange() {
 }
 
 void createItem (CTabItem item, int index) {
+	showingCount = -1; // VIEWPORT: the indexes of the showing tabs shift
     if (0 > index || index > getItemCount()) {
         SWT.error(SWT.ERROR_INVALID_RANGE);
     }
@@ -853,6 +858,7 @@ void createItem (CTabItem item, int index) {
 	notifyItemCountChange();
 }
 void destroyItem (CTabItem item) {
+	showingCount = -1; // VIEWPORT: the indexes of the showing tabs shift
     if (inDispose) {
         return;
     }
@@ -1974,6 +1980,80 @@ void onMouseDoubleClick(Event event) {
 private static boolean containsPoint(CTabItem item, int px, int py) {
 	return px >= item.x && py >= item.y && px < item.x + item.width && py < item.y + item.height;
 }
+/*
+ * VIEWPORT: the tab under a point, or null. The showing tabs lie left to right in index order (setItemLocation), so
+ * the only candidate is the last showing tab starting at or left of x (binary search); every other tab is off screen.
+ * The stock scan while the indexes are stale (a tab was created, disposed or reordered since the layout).
+ */
+CTabItem hitItem (int x, int y) {
+	if (showingCount < 0) {
+		for (int t = 0; t < itemCount; t++) {
+			if (containsPoint(items[t], x, y)) return items[t];
+		}
+		return null;
+	}
+	int low = 0, high = showingCount;
+	while (low < high) {
+		int mid = (low + high) >>> 1;
+		if (items[showingIndices[mid]].x <= x) {
+			low = mid + 1;
+		} else {
+			high = mid;
+		}
+	}
+	if (low == 0) return null;
+	CTabItem item = items[showingIndices[low - 1]];
+	return containsPoint (item, x, y) ? item : null;
+}
+
+/*
+ * VIEWPORT: the state of one tab for a mouse at (x, y), as one iteration of the stock MouseMove loop (hot, close
+ * button hot or none, back to the rest state when the mouse is elsewhere).
+ */
+void mouseState (int i, int x, int y) {
+	CTabItem item = items[i];
+	boolean close = false;
+	if (containsPoint(item, x, y)) {
+		close = true;
+		if (item.closeRect.contains(x, y)) {
+			if (item.closeImageState != SWT.SELECTED && item.closeImageState != SWT.HOT) {
+				item.closeImageState = SWT.HOT;
+				redraw(item.closeRect.x, item.closeRect.y, item.closeRect.width, item.closeRect.height, false);
+			}
+		} else if (item.closeImageState != SWT.NONE) {
+			item.closeImageState = SWT.NONE;
+			redraw(item.closeRect.x, item.closeRect.y, item.closeRect.width, item.closeRect.height, false);
+		}
+		if ((item.state & SWT.HOT) == 0) {
+			item.state |= SWT.HOT;
+			redraw(item.x, item.y, item.width, item.height, false);
+		}
+	}
+	if (i != selectedIndex && item.closeImageState != SWT.BACKGROUND && !close) {
+		item.closeImageState = SWT.BACKGROUND;
+		redraw(item.closeRect.x, item.closeRect.y, item.closeRect.width, item.closeRect.height, false);
+	}
+	if ((item.state & SWT.HOT) != 0 && !close) {
+		item.state &= ~SWT.HOT;
+		redraw(item.x, item.y, item.width, item.height, false);
+	}
+	if (i == selectedIndex && item.closeImageState != SWT.NONE && !close) {
+		item.closeImageState = SWT.NONE;
+		redraw(item.closeRect.x, item.closeRect.y, item.closeRect.width, item.closeRect.height, false);
+	}
+}
+
+/* VIEWPORT: the mouse moved to (x, y): only the tab under it, the tab it left and the selected tab can change */
+void mouseMoved (int x, int y) {
+	CTabItem hit = hitItem (x, y);
+	CTabItem left = mouseItem != null && !mouseItem.isDisposed () && mouseItem != hit ? mouseItem : null;
+	mouseItem = hit;
+	CTabItem selected = selectedIndex != -1 ? items[selectedIndex] : null;
+	if (left != null) mouseState (indexOf (left), x, y);
+	if (hit != null) mouseState (indexOf (hit), x, y);
+	if (selected != null && selected != hit && selected != left) mouseState (selectedIndex, x, y);
+}
+
 void onMouse(Event event) {
 	if( isDisposed() ) {
 		return;
@@ -1981,6 +2061,12 @@ void onMouse(Event event) {
 	int x = event.x, y = event.y;
 	switch (event.type) {
 		case SWT.MouseExit: {
+			if (VIEWPORT) {
+				//FLLDCIM: VIEWPORT - only the tab the mouse was over and the selected tab leave a non-rest state
+				mouseMoved (Integer.MIN_VALUE, Integer.MIN_VALUE);
+				mouseItem = null;
+				break;
+			}
 			for (int i=0; i<itemCount; i++) {
 				CTabItem item = items[i];
 				if (i != selectedIndex && item.closeImageState != SWT.BACKGROUND) {
@@ -2054,6 +2140,10 @@ void onMouse(Event event) {
 						item = selectedItem;
 					}
 				}
+			} else if (VIEWPORT) {
+				//FLLDCIM: VIEWPORT - the tab under the mouse by binary search; it is the tab whose state the click changes
+				item = hitItem (x, y);
+				if (item != null) mouseItem = item;
 			} else {
 				for (int t = 0; t < itemCount; t++) {
 					CTabItem tabItem = items[t];
@@ -2089,6 +2179,11 @@ void onMouse(Event event) {
 		}
 		case SWT.MouseMove: {
 			_setToolTipText(event.x, event.y);
+			if (VIEWPORT) {
+				//FLLDCIM: VIEWPORT - the tab under the mouse by binary search; a move updates three tabs at most (O(log n))
+				mouseMoved (x, y);
+				break;
+			}
 			boolean close = false;
 			for (int i=0; i<itemCount; i++) {
 				CTabItem item = items[i];
@@ -2138,6 +2233,10 @@ void onMouse(Event event) {
 						item = selectedItem;
 					}
 				}
+			} else if (VIEWPORT) {
+				//FLLDCIM: VIEWPORT - the tab under the mouse by binary search; it is the tab whose state the click changes
+				item = hitItem (x, y);
+				if (item != null) mouseItem = item;
 			} else {
 				for (int t = 0; t < itemCount; t++) {
 					CTabItem tabItem = items[t];
@@ -2174,6 +2273,7 @@ void onMouse(Event event) {
 						pt = display.map(null, this, pt.x, pt.y);
 						CTabItem nextItem = getItem(pt);
 						if (nextItem != null) {
+							if (VIEWPORT) mouseItem = nextItem; // its close button state changes below
 							if (nextItem.closeRect.contains(pt)) {
 								if (nextItem.closeImageState != SWT.SELECTED && nextItem.closeImageState != SWT.HOT) {
 									nextItem.closeImageState = SWT.HOT;
@@ -3039,6 +3139,11 @@ public void setInsertMark(int index, boolean after) {
 }
 boolean setItemLocation(GC gc) {
 	boolean changed = false;
+	if (VIEWPORT) {
+		//FLLDCIM: VIEWPORT - the showing tabs, left to right in index order, for the mouse's binary search
+		if (showingIndices.length < itemCount) showingIndices = new int[Math.max(itemCount, showingIndices.length * 2)];
+		showingCount = 0;
+	}
     if (itemCount == 0) {
         return false;
     }
@@ -3055,6 +3160,7 @@ boolean setItemLocation(GC gc) {
 			CTabItem item = items[i];
 			if (i == selectedIndex) {
 				firstIndex = selectedIndex;
+				if (VIEWPORT) showingIndices[showingCount++] = i;
 				int oldX = item.x, oldY = item.y;
 				item.x = leftItemEdge;
 				item.y = y;
@@ -3104,6 +3210,7 @@ boolean setItemLocation(GC gc) {
 				Rectangle edgeTrim = renderer.computeTrim(i, state, 0, 0, 0, 0);
 				item.closeRect.x = item.x + item.width  - (edgeTrim.width + edgeTrim.x) - closeButtonSize.x;
 				item.closeRect.y = onBottom ? size.y - borderBottom - tabHeight + (tabHeight - closeButtonSize.y)/2: borderTop + (tabHeight - closeButtonSize.y)/2;
+				if (VIEWPORT) showingIndices[showingCount++] = i;
 				x = x + item.width;
 			}
 		}
@@ -3133,6 +3240,7 @@ boolean setItemLocation(GC gc) {
  * </ul>
  */
 /*public*/ void setItemOrder (int[] indices) {
+	showingCount = -1; // VIEWPORT: the indexes of the showing tabs move
 	checkWidget();
     if (indices == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);

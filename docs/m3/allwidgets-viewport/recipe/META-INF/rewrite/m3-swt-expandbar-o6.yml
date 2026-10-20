@@ -1,0 +1,24 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtExpandBarResizeO6
+displayName: ExpandBar resize without per-item invalidation (optimization leaf O6)
+description: >-
+  Optimization pass leaf O6 (docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv; brief rule 24, viewport deltas on
+  resize). WM_SIZE gives every item the new width through setBoundsInPixels, which redraws the item twice (each a
+  GetClientRect and up to three InvalidateRect calls), and then invalidates the whole client area anyway. In the
+  viewport mode the per-item redraws are suppressed during that loop: the one InvalidateRect after it repaints
+  everything. Item controls are still sized natively (open: size deferral for controls off the client area).
+  Idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tExpandItem hoverItem;\n(?!\t/[*] VIEWPORT: the item redraws are suppressed)"
+      replace: "\tExpandItem hoverItem;\n\t/* VIEWPORT: the item redraws are suppressed while WM_SIZE resizes every item (it invalidates the client area after) */\n\tboolean redrawSuppressed;\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tfor (int i = 0; i < itemCount; i++) {\n\t\tExpandItem item = items[i];\n        if (item.width != width) {\n            item.setBoundsInPixels(0, 0, width, item.height, false, true);\n        }\n\t}\n"
+      replace: "\t//FLLDCIM: VIEWPORT - no per-item invalidation: the whole client area is invalidated below\n\tredrawSuppressed = VIEWPORT;\n\ttry {\n\t\tfor (int i = 0; i < itemCount; i++) {\n\t\t\tExpandItem item = items[i];\n\t\t\tif (item.width != width) {\n\t\t\t\titem.setBoundsInPixels(0, 0, width, item.height, false, true);\n\t\t\t}\n\t\t}\n\t} finally {\n\t\tredrawSuppressed = false;\n\t}\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "void redraw (boolean all) {\n\tlong parentHandle = parent.handle;\n"
+      replace: "void redraw (boolean all) {\n\tif (parent.redrawSuppressed) return; // VIEWPORT: the bar invalidates its whole client area after a resize\n\tlong parentHandle = parent.handle;\n"

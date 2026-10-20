@@ -88,7 +88,7 @@ once per coalesced change. The M3JDK Swing listener mirrors it with the same nam
 | `ViewportEvent.extentsChanged` | `boolean` | the scroll extents (total rows, total size) changed |
 | `ViewportEvent.cause` | `int` bit mask | `SCROLL` = 1, `RESIZE` = 2, `LAYOUT` = 4, `MODEL_DELTA` = 8, `VISIBILITY` = 16, `EXPAND` = 32 (the union of everything coalesced into the event) |
 | `Scrollable.addViewportListener (ViewportListener)` / `removeViewportListener` | methods | the typed listener, equal to `addListener (SWT.Viewport, ...)` |
-| `org.eclipse.swt.internal.ViewportReporter` | internal helper for widget implementations | `new ViewportReporter (scrollable)`, then `changed (first, last, cause, extentsChanged)` (or with explicit `entered` and `left` pairs for a model delta) from every place that moves the window; it coalesces and fires |
+| `org.eclipse.swt.internal.ViewportReporter` | internal helper for widget implementations | `report (scrollable, first, last, cause, extentsChanged)` (or with explicit `entered` and `left` pairs) from every place that moves the window, and `shifted (scrollable, at, count)` for rows inserted or removed; it coalesces and fires |
 
 In an untyped `Event`: `start` = firstVisible, `end` = lastVisible, `detail` = cause, `count` = 1 when the extents
 changed (else 0), and `data` = `int [][] {entered, left}`.
@@ -105,6 +105,11 @@ Rules:
   window is tracked.
 - Nothing is sent when a listener is added; the first event comes with the next change, or with the next
   `PartVisible`.
+- Index spaces (agreed with the M3JDK Swing side): `entered` is in the current index space, `left` in the index
+  space of the previous event (the window the client was last told), and a row that only shifted (rows inserted or
+  removed elsewhere) is neither entered nor left. A widget reports its inserts and removals with
+  `ViewportReporter.shifted (scrollable, at, count)` (count above 0: inserted at `at`; below 0: removed from `at`)
+  before it reports the new window; removed rows that were on screen are reported as left at their previous indexes.
 
 Tests: `Test_org_eclipse_swt_internal_ViewportReporter` checks the event sequences for scroll, resize, expand, a model
 delta inside and outside the window, and hide/show, with exactly one event per coalesced change.
