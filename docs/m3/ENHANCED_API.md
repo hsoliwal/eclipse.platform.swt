@@ -96,6 +96,55 @@ Next leaves after these, in map order: M3-RESIDENCY,
 M3-BULK-UPDATES, M3-PREFETCH, M3-DIFF-APPLY, M3-VISIBILITY-OBSERVER, M3-PROXY-MODEL,
 M3-SCROLL-RESTORE, M3-LOCALE-COLLATION.
 
+## Viewport events and part visibility (brief rule 25)
+
+User, 2026-10-20: "would like to add viewport listener too?" and "you own the implementation, you are not a layer on
+it". The viewport-change event and the visibility event are core SWT and M3JDK Swing API, fired by the widget
+implementations themselves. They replace the enhanced-API add-ons that announced the same facts from outside
+(leaves 9 and 11), so there is one mechanism.
+
+| event | owner | API | when it fires |
+|---|---|---|---|
+| part visibility | all-widgets agent (`m3/allwidgets-viewport-20261016`, names published in `docs/m3/visibility/PART_VISIBLE.md`, 26ed0ce5cad) | `SWT.PartVisible` = 57, `SWT.PartHidden` = 58; `PartVisibilityListener` (`partVisible`, `partHidden`), `PartVisibilityAdapter`, `PartVisibilityEvent` (`cause`: `VISIBILITY`, `SIZE`, `MINIMIZE`, `REPARENT`, `CONTAINER`; `origin`); `Control.isPartVisible ()`, `setPartHidden`/`getPartHidden` | once per transition of the control's effective visibility: `setVisible` of it or an ancestor (tabs, stack pages, expand items), a size crossing zero, shell minimize/restore, `setParent`, a container's `setPartHidden`; pre-order, only to listening controls |
+| viewport | all-widgets agent (event and `Control` plumbing); Tree, Table, List, Grid fire it from their viewports | `SWT.Viewport`, `ViewportListener.viewportChanged (ViewportEvent)`: first and last visible row, entered and left row ranges as int pairs, extents changed, cause mask `SCROLL`, `RESIZE`, `LAYOUT`, `MODEL_DELTA`, `VISIBILITY`, `EXPAND` | once per coalesced viewport change, never while hidden; the first event after a show comes with the `PartVisible` transition; no cost without a listener |
+| Swing parallel | Swing agent (M3JDK `java.desktop`) | `javax.swing.event.ViewportListener` / `ViewportEvent` on `JComponent`, the same fields (names agreed with the all-widgets agent) | the same rules |
+
+### The enhanced API on top of the events
+
+| enhanced API | becomes | how |
+|---|---|---|
+| `M3VisibilityObserver` (leaf 11): `ENTERED`, `LEFT` ranges | `SWT.Viewport` | the entered and left ranges are the event's; the observer was never released and is withdrawn when the event lands (its latch, triggers and the "announced at the next trigger" gap for a programmatic `setTopIndex` go with it) |
+| `M3VisibilityObserver` extents draft (`EXTENTS`, `HIDDEN`, `SHOWN`, `isViewportHidden`, `isViewportDirty`) | `ViewportEvent` extents bit, `SWT.PartHidden`/`PartVisible` | withdrawn on 2026-10-20 before release (6555e432494); the Swing draft too (M3jdk21 502e0cd08f6) |
+| `M3Prefetch` (leaf 9): `PREFETCH`, `CANCEL` of the window widened by `setWindow (before, after)` | a listener of `SWT.Viewport` | keeps only the overscan arithmetic: the window's entered and left ranges are the event's ranges widened by the overscan and clamped to the rows (`M3Prefetch.difference`, shared with leaf 11) |
+| `M3Residency` (leaf 7): resident range, facade counts | read-only views, plus release on `SWT.Viewport` left ranges | facades of rows that left the window and are not held are released by the widget's residency (parent-owned, lazy); the views keep answering for diagnostics |
+| hidden-viewport deferral in `M3Model` (top row re-anchored at the show) | inside the widgets, on `PartHidden`/`PartVisible` | withdrawn from the enhanced API (6555e432494); the rule 24 gate (hide, 10^4 deltas, show: 0 native operations and 0 paints while hidden, one paint after) is the widget owners' |
+
+The widget seams already sit where the event will be fired: `Table.setItemCount`, `Table.m3StructureChanged`,
+`ListViewport` (window replan and scroll), `TableViewport.cacheHint`, `TreeViewport` window commit, and
+`M3BulkUpdates.bulk`. Each calls `M3Prefetch.windowChanged` and `M3VisibilityObserver.changed` today; both calls
+become one fire of `SWT.Viewport`.
+
+### Examples (`org.eclipse.swt.snippets.m3`)
+
+| example | pattern | the line that moves to `SWT.Viewport` |
+|---|---|---|
+| `M3LazyLoadingExample` | a `SWT.VIRTUAL` Table of 10^6 rows reads a slow store in pages of 100: entered rows request their pages, left rows withdraw the requests the store has not served, an arrived page clears only its visible rows | `M3VisibilityObserver.addListener (table, ...)` |
+| `M3PrefetchReleaseExample` | a cache that holds the window and nothing else: blocks of 64 rows loaded on `PREFETCH`, released on `CANCEL`, overscan 256 rows each side; SetData never misses | `M3Prefetch.addListener (table, ...)` |
+| `M3StickyGroupHeaderExample` | a pinned group header: 10^6 rows in groups of different sizes, the strip names the group of the first visible row (binary search over an `int` lane of group starts), redrawn only when the group changes | `M3VisibilityObserver.addListener (table, ...)` |
+| `M3HiddenTabDeltasExample` | rule 24: 100,000 deltas into a table in a background tab, then one show; counts labels asked, paints and the top row | none: measured with stock means (a counting `SetData` source and `SWT.Paint` listener) |
+| `M3DeltaStreamExample` | 100,000 one-row deltas into a visible table of 10^6 rows and a tree (leaf 19) | none |
+
+Runs, 2026-10-20, hidden desktop, jar `ea20261019m`, both modes, scripted with `exit` (60 to 200 programmatic
+`setTopIndex` steps): the three viewport examples received only the first announcement. Lazy loading: 1 page
+requested and served, the visible rows of later steps never loaded. Prefetch: 0 blocks prefetched, 4,325 SetData
+misses. Sticky header: 1 viewport change, the strip named another group than the first visible row's in 116 of 120
+steps. Cause: a `SWT.VIRTUAL` Table has no `TableViewport` (`Table.java`: the viewport is made only when
+`(style & SWT.VIRTUAL) == 0`), so nothing announces a programmatic scroll: `M3Prefetch` fires only through a
+viewport, and the observer waits for the next scroll-bar, wheel, key or resize trigger. Interactive use (wheel, keys,
+scroll bar) drives all three. This is the gap `SWT.Viewport` closes: it must fire for programmatic scrolls and for
+`SWT.VIRTUAL` tables. The hidden-tab run with 100,000 deltas hit the 1,700 s cap without output; a 10,000-delta
+run is queued. The Swing twins of the examples follow the Swing `ViewportListener`.
+
 ## Test method
 
 Each leaf has one JUnit class under `tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/`.

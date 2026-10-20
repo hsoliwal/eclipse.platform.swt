@@ -3,10 +3,12 @@
 Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
 SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
 
-Status: **draft for name agreement, 2026-10-20.** Owner of the design: enhanced-API agent. Implementers: Tree,
-Table, List (SWT widgets), viewport core (lanes, order index, threads), Swing (M3JDK `java.desktop`), sort-filter
-(`M3ProxyModel`), JFace delta viewers (Problems view, the first client). Names are frozen when every implementer
-has answered; the table "Answers to the implementers" at the end records each request and where the API meets it.
+Status: **names agreed and frozen, 2026-10-20** (draft 4d4e06e1c3f; every implementer answered "agreed", see
+"Agreement"). Owner of the design and of `M3Patch`, `M3LaneModel` (slot lanes, free list, id index, snapshots,
+labels, styles, generations) and the differential: enhanced-API agent. Implementers: Tree, Table, List (SWT
+widgets), viewport core (run kernel, order index, flattening, extents, window), Swing (M3JDK `java.desktop`),
+sort-filter (`M3ProxyModel`), JFace delta viewers (Problems view, the first client). The table "Answers to the
+implementers" at the end records each request and where the API meets it.
 
 User, 2026-10-20: "do you want to expose the model through a new API, so clients can start using that too?" The lane
 model that leaf 19 built behind `M3Model.of (table)` becomes public toolkit API inside SWT and M3JDK Swing (rule 25):
@@ -39,10 +41,13 @@ and receive the same deltas.
 | id | `long` | the client's identity of a row (a marker id, a database key); unique in the model | the life of the row, moves and reparenting included | id to slot O(1) expected (open addressing) |
 | slot | `int` | storage index of the row's lanes, `[0, slotCapacity)` | the life of the row; reused through a free list after removal | slot to row O(log n) |
 
-Inserted rows get their ids from the patch (as in leaf 19). Lanes are indexed by slot, so an insert never shifts a
-lane; the order of each parent's children is an order-statistic index over slots (blocked sorted lists or an AVL
-with subtree counts; `VirtualTreeSiblingIndex` is the first-party donor). Hot loops read by slot; `order (parent,
-from, count, int [] slots)` exports row-to-slot runs in O(count + log n) for bulk work such as a radix sort.
+Inserted rows get their ids from the patch (as in leaf 19). An id is any `long` except `M3Patch.ROOT` (-1), which
+names the invisible parent of the roots. Lanes are indexed by slot, so an insert never shifts a lane; the order of
+each parent's children is an order-statistic index over slots (blocked sorted lists or an AVL with subtree counts;
+`VirtualTreeSiblingIndex` is the first-party donor), and one run costs one index operation however many rows it
+carries (a run of 10^4 inserted rows is one block split, not 10^4 shifts). Hot loops read by slot; `order (parent,
+from, count, int [] slots)` exports row-to-slot runs in O(count + log n) for bulk work such as a radix sort or a
+window move, and `sequence (slot)` is an O(1) order key for comparing two rows of one parent.
 
 ## Types (SWT, package `org.eclipse.swt.m3`)
 
@@ -134,7 +139,8 @@ public interface M3ListModel {
 	int slotAt (int row);
 	int rowOf (int slot);
 	int slotCapacity ();
-	int order (long parent, int from, int count, int [] slots);   // bulk row-to-slot export, returns count
+	int order (long parent, int from, int count, int [] slots);   // bulk row-to-slot export, O(count + log n), returns count
+	long sequence (int slot);                      // O(1) order key: within one parent, sequence (a) < sequence (b) iff rowOf (a) < rowOf (b); read, do not cache across patches
 	long generation ();                            // +1 per apply
 
 	/* cells, by slot; column 0 for a list */
@@ -152,7 +158,7 @@ public interface M3ListModel {
 	int style (int slot, int column);              // -1 = the row's style; 0 = none
 	int extent (int slot);                         // row height in points, 0 = default
 
-	/* flags: bit numbers of the flag lanes; 16..63 are the client's */
+	/* flags: public bit numbers of the flag lanes, 16..63 are the client's; widgets map them to their internal lanes */
 	int CHECKED = 0, GRAYED = 1, EXPANDED = 2, HAS_CHILDREN = 3, DISABLED = 4, CUSTOM = 16;
 
 	long apply (M3Patch patch);                    // the only update path; returns the new generation
@@ -222,13 +228,18 @@ public final class M3LaneModel implements M3TreeModel {
 }
 
 public final class M3LabelTable {
-	public int intern (CharSequence text);                        // +1 reference
-	public void release (int labelId);
+	public int intern (CharSequence text);                        // the id of the text, +1 reference
+	public void acquire (int labelId);                            // +1 reference
+	public void release (int labelId);                            // -1; at 0 the id is freed, reused only after the next apply
 	public CharSequence text (int labelId);                       // stable object per label
 	public int length (int labelId);
 	public int getChars (int labelId, char [] buffer, int offset);
 	public java.text.CollationKey collationKey (int labelId, java.text.Collator collator);   // lazy, cached per collator
-	public int size ();
+	public int collate (int a, int b, java.text.Collator collator);   // through the collation keys
+	public int compare (int a, int b);                            // binary char order
+	public int size ();                                           // live labels
+	public int maxId ();                                          // ids are 1..maxId; 0 is the empty label
+	public long reuseEpoch ();                                    // +1 when freed ids become reusable: caches keyed by label id drop entries older than it
 }
 ```
 
@@ -238,7 +249,12 @@ thread).
 
 ## Semantics
 
-**Apply.** Sections apply in order; inside a section removes, then inserts, then updates (leaf 19). A move pairs a
+**Apply.** Sections apply in order; inside a section removes, then inserts, then updates (leaf 19): remove runs are
+in old indices, insert runs in final indices in ascending order, update runs in final indices. A builder bound to a
+model turns id-addressed operations into these runs: `removeId` for every row that leaves (or is re-placed), then
+`insertId (parent, at, id)` with `at` the index in the final order, ascending; the Problems view emits exactly this.
+An update run without a column mask means `ALL`. During `patched` the model is final: `slotCapacity ()` covers every
+inserted slot, and `slot (id)` answers for the inserted ids. A move pairs a
 removed and an inserted row with the same id, so the slot, its lanes and its view state (selection, focus,
 expansion) survive. An id inserted in one section and removed in another of the same patch is a reparent: the slot
 moves and the update carries `PARENT`. `REORDER` permutes rows and keeps every slot. `RESET` replaces a section's
@@ -258,9 +274,13 @@ generation that shares every lane chunk the next patches do not touch (copy on w
 
 **Widgets.** `setModel` replaces the rows (one `RESET` of the window, selection kept for ids that survive) and
 subscribes; patches then become native or drawn-plane work for the visible window only. Flags `CHECKED`, `GRAYED`,
-`EXPANDED` are model state: a user check or expand applies a one-row `FLAGS` patch and then fires the stock event
-(`SWT.Selection` with `CHECK`, `SWT.Expand`/`SWT.Collapse`), whose listener may apply more patches (lazy children).
-Selection and focus are view state, kept by the widget as ids, because two widgets may show one model. A hidden
+`EXPANDED` are model state, in the stock event order: a user check flips the state (a one-row `FLAGS` patch) and
+then fires `SWT.Selection` with `CHECK`; a user expand or collapse fires `SWT.Expand`/`SWT.Collapse` first (the row
+has not changed yet, `getExpanded ()` still answers the old state, and the listener may apply child patches: the lazy
+tree), then applies the `EXPANDED` patch unless the listener disposed the row. Because expansion is in the model,
+two trees showing one model share their expansion (stock expansion is per widget). Selection and focus are view
+state, kept by the widget, because two widgets may show one model: row ranges rebased by each patch (O(runs) for
+`selectAll` and `select (start, end)`), with ids carrying them across moves, reorders and resets. A hidden
 widget (`SWT.PartHidden`) only unions the touched rows into its dirty window; on `SWT.PartVisible` it applies one
 window patch and paints once, and `SWT.Viewport` reports the entered and left ranges (`ViewportEvent`). Widgets
 report visibility with `viewportVisibility`, so a proxy chain can park work while no viewport shows.
@@ -270,7 +290,10 @@ bound to a slot (residency rules of leaf 7: parent-owned, lazy, released when th
 holds them). Getters read the lanes. Setters apply a one-row patch to the widget's model; on a proxy they are
 forwarded to the source row (`map`), and structural edits through a proxy are rejected. The stock virtual path keeps
 its meaning: `setItemCount (n)` is a `RESET` of the internal model with synthetic ids, `SWT.SetData` is the internal
-`M3CellSource` (the item passed in writes the lanes), and `clear (i)` is an update without values.
+`M3CellSource` (the item passed in writes the lanes), and `clear (i)` is an update without values. The stock path
+allocates no patch per call: `List.add` or `new TableItem` in a loop of 10^6 goes through one reused builder of the
+internal model, and consecutive single-row calls at adjacent indices are one run (List measurements: a lane shift per
+row costs 119 to 132 ms per 1,000 rows at 10^6, one run 0.1 to 4 ms).
 
 ## Cost
 
@@ -290,7 +313,7 @@ its meaning: `setItemCount (n)` is a `RESET` of the internal model with syntheti
 | `M3ListModel` | `javax.swing.M3ListModel implements ListModel<CharSequence>` | `getElementAt` answers the interned label of column 0, no allocation |
 | `M3TableModel` | `javax.swing.table.M3TableModel extends AbstractTableModel` | `getValueAt` answers labels and boxed numbers; the `int`/`long`/`double` reads are the fast path for renderers |
 | `M3TreeModel` | `javax.swing.tree.M3TreeModel implements TreeModel` | nodes are lazy facades keyed by id (`M3TreeModel.Node`, equal by id), created only for rows JTree touches |
-| `M3LaneModel` | the three classes are lane-backed themselves | one shared lane store, `javax.swing.M3Lanes` (package-private) |
+| `M3LaneModel` | the three classes are lane-backed themselves | one shared lane store, `public final sun.swing.M3Lanes` (non-exported package, so the models in `javax.swing`, `javax.swing.table` and `javax.swing.tree` share it outside the public API) |
 | `M3LabelTable`, `M3CellSource`, `M3CellWriter`, `M3ModelListener` | same names in `javax.swing` | |
 
 `apply` fires the precise stock events of each run (rows inserted, deleted, updated; tree nodes inserted, removed,
@@ -407,7 +430,17 @@ listeners (`SWT.Selection`, `SWT.Expand`/`Collapse`, `SWT.SetData` order of the 
 | proxies are models | sort-filter 8 | `M3ProxyModel` implements the type it wraps; patches flow source, proxy, widget |
 | hidden viewport hook | sort-filter 9, Problems 12 | `viewportVisibility (viewport, visible)`, `visibleViewports`, `visibleViewportsChanged` |
 | ordered children O(log n), head(k), bulk sorted fill, atomic resort | Problems 3 | positions come from the client or the sort proxy; `childId` 0..k-1; `reset (ids)`; `reorder (permutation)` |
-| "show N of M" per parent | Problems 4 | proposed as a proxy stage (`M3ProxyModel` limit per parent), so the base keeps M and the widget sees N; open for the Problems view's answer |
+| "show N of M" per parent | Problems 4 | a proxy limit stage (`M3ProxyModel`, sort-filter's next leaf): the base answers M per parent in O(1) (`childCount`), the stage answers `childId (parent, i)` for i < N without walking the base; agreed by both |
+| apply order of id-addressed patches | Problems note 2 | removes for rows that leave or change, then inserts at final indices ascending (Semantics, Apply) |
+| collate/compare pair, acquire/release | Problems note 3 | `M3LabelTable.collate`, `compare`, `acquire`, `release` |
+| expand event order; shared expansion; ROOT value | Tree notes 1-3 | Expand/Collapse fire before the `EXPANDED` patch, check fires after its patch; expansion shared by widgets on one model; `ROOT` = -1 |
+| public flag numbers vs internal lanes | Table note 1 | public numbers are the API's; widgets map them (TableViewport lanes 2-4 are text direction, 5 the hidden selection snapshot) |
+| no allocation per stock call; one shift per run; cheap `order` | List notes 1, 3 | stock path through one reused builder, runs coalesced; `order` O(count + log n) |
+| selection as row ranges | List note 2 | ranges rebased per patch, ids across moves, reorders and resets |
+| O(1) row compare for the sort | sort-filter note 1 | `sequence (slot)` |
+| label id reuse and caches | sort-filter note 2 | freed ids reused only after the next apply; `maxId`, `reuseEpoch` |
+| slot growth visible to listeners | sort-filter note 3 | during `patched`, `slotCapacity ()` and `slot (id)` cover the inserted rows |
+| `ALL` as the default mask | sort-filter note 4 | yes |
 | counters per model and group | Problems 5 | kept in the client (they follow from the patches); not core API |
 | sort and filter as lanes, off the UI thread | Problems 7-8 | the sort-filter views over the model, reading snapshots |
 | expansion restorable after a rebuild | Problems 10 | `EXPANDED` is a model flag kept by `reset` for surviving ids |
@@ -416,3 +449,19 @@ listeners (`SWT.Selection`, `SWT.Expand`/`Collapse`, `SWT.SetData` order of the 
 | Swing class names and packages | Swing 1, 3, 4 | table "Swing" above |
 
 Donors: `FOSS_REUSE_DECISION.tsv`, capability `public-model-api`.
+
+## Agreement (2026-10-20)
+
+| implementer | agent | answer | binding notes |
+|---|---|---|---|
+| Problems view (JFace delta viewers) | ae5acc369949b2347 | agreed, no renames | implements `M3TreeModel` on `M3MarkerLanes` directly; drops its window code for the limit stage; switches to `M3LabelTable` |
+| Table | a9cb7083090852321 | agreed | `Table.m3Splice`/`m3SetRow` (4d38d24437b) become internal to `setModel`; a `SWT.VIRTUAL` Table without a viewport is a separate leaf for the coordinator |
+| Tree | a56862a3f7f3ea02d | agreed with the Expand order change (made) | int topology ids inside, long model ids outside; switches its hidden gate to `PartVisible`/`PartHidden` and `viewportVisibility` |
+| List and Combo | aee2e6b4539e3dbab | agreed, no renames | reads windows through `order`; one-run seam `List.m3Splice (at, removed, String [])`; counters for the differential: `m3NativeRowOps`, `m3FullRebuilds`, `m3WindowReplans`, `List.m3HiddenStats`, `Combo.m3WindowPatches` |
+| Swing | a4f3571116e413c4d | agreed | lane store `sun.swing.M3Lanes`; mirrors `M3Patch` from `m3/swing-enhanced-api-20261019` (d7284fdd1f9) with a lineage note; viewport events `javax.swing.event.ViewportListener` |
+| viewport core | aeba9473d82661f83 | agreed, no renames | gives the run kernel (`com.m3.collections` `M3Patch`, `M3ListDiff`), `M3OrderStatisticForest` (the order index, with `order (parent, from, count, slots)`), `M3TreeTopology`, `M3FlatteningView`, `M3SparseExtents` (extents by visible row), `M3WindowView` (`hide ()`/`show ()` = `viewportVisibility`); core views are confined to the applying thread; adds `Target.update` and run-level `compose` |
+| sort-filter | a26d1625a1f9f0a62 | agreed, no renames | proxies keep slot-indexed masks and permutations; limit stage next; selection stays in the widget |
+
+Layering: `M3LaneModel` (enhanced API) owns slots, the free list, the id index (`M3LongIndex`), chunked
+copy-on-write lanes and snapshots, labels, styles and generations, and uses the core's order index and run kernel;
+a sectioned `M3Patch.compose` calls the core's run-level compose per section.
