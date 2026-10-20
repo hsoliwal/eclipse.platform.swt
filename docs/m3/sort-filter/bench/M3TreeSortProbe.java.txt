@@ -1,0 +1,42 @@
+package org.eclipse.swt.m3;
+
+import java.util.*;
+
+import org.eclipse.swt.*;
+
+/* steady-state cost of a value update of 1 and of 100 rows in a tree-mode sort, including the sibling index a bound tree asks for */
+public final class ProbeTreeSort {
+	public static void main (String [] args) {
+		int n = Integer.parseInt (args [0]);
+		Random random = new Random (1);
+		int [] values = new int [n], parents = new int [n];
+		for (int i = 0; i < n; i++) {
+			values [i] = random.nextInt (1000);
+			parents [i] = i == 0 || random.nextInt (8) == 0 ? -1 : random.nextInt (i);
+		}
+		M3ColumnSort sort = new M3ColumnSort (1, n);
+		sort.setKey (0, M3ColumnKey.ofInts (r -> values [r]));
+		sort.setParents (r -> parents [r]);
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		sort.childCount (-1);
+		StringBuilder line = new StringBuilder ("tree-sort " + n);
+		for (int batch : new int [] {1, 100}) {
+			int rounds = 300;
+			long [] t = new long [rounds];
+			int [] rows = new int [batch];
+			for (int round = 0; round < rounds; round++) {
+				for (int k = 0; k < batch; k++) {
+					rows [k] = random.nextInt (n);
+					values [rows [k]] = random.nextInt (1000);
+				}
+				long start = System.nanoTime ();
+				sort.rowsChanged (rows);
+				sort.childCount (-1);
+				t [round] = System.nanoTime () - start;
+			}
+			Arrays.sort (t, 100, rounds);
+			line.append ("  change").append (batch).append (' ').append (t [200] / 1000).append (" us");
+		}
+		System.err.println (line);
+	}
+}

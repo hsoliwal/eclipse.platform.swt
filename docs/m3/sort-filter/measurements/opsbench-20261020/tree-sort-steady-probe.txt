@@ -1,0 +1,8 @@
+m3-b16-src tree-sort 100000  change1 1675 us  change100 2167 us
+cur tree-sort 100000  change1 92 us  change100 831 us
+m3-b16-src tree-sort 1000000  change1 107146 us  change100 101078 us
+cur tree-sort 1000000  change1 1714 us  change100 12442 us
+m3-b16-src tree-sort 100000  change1 1362 us  change100 1962 us
+cur tree-sort 100000  change1 111 us  change100 976 us
+m3-b16-src tree-sort 1000000  change1 101511 us  change100 87387 us
+cur tree-sort 1000000  change1 1491 us  change100 14038 us
