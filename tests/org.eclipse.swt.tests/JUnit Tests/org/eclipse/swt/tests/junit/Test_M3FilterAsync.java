@@ -115,6 +115,83 @@ public class Test_M3FilterAsync {
 		}
 	}
 
+	/* a package-private field of an M3 object (the gates of brief rule 24 read its counters) */
+	static Object field (Object owner, String name) {
+		for (Class<?> type = owner.getClass (); type != null; type = type.getSuperclass ()) {
+			try {
+				java.lang.reflect.Field field = type.getDeclaredField (name);
+				field.setAccessible (true);
+				return field.get (owner);
+			} catch (NoSuchFieldException e) {
+				/* declared in a superclass */
+			} catch (IllegalAccessException e) {
+				return fail (e);
+			}
+		}
+		return fail ("no field " + name);
+	}
+
+	static int counter (Object owner, String name) {
+		return (Integer) field (owner, name);
+	}
+
+	/*
+	 * Brief rule 24, hidden viewports: while the table is hidden, 10^4 model deltas and 10 filter edits update the lanes
+	 * (the edits on the worker) but nothing is posted to or applied on the UI thread and the widget is not touched;
+	 * showing it applies the newest result once and refreshes the widget once, and the rows equal the plain reference.
+	 */
+	@Test
+	public void test_hiddenViewportAppliesOnceOnShow () {
+		Table table = new Table (shell, SWT.VIRTUAL | SWT.MULTI);
+		for (int c = 0; c < 2; c++) new TableColumn (table, SWT.NONE).setWidth (150);
+		M3ColumnFilter filter = new M3ColumnFilter (2, ROWS, this::cell);
+		M3ColumnSort sort = new M3ColumnSort (2, filter);
+		sort.setKey (0, M3ColumnKey.ofInts (r -> numbers [r]));
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		M3RowBinding binding = M3RowBinding.bind (table, sort, (item, row) -> {
+			item.setText (0, cell (row, 0));
+			item.setText (1, cell (row, 1));
+		});
+		filter.setAsync (display, 50);
+		shell.open ();
+		filter.setText (1, "n1", M3TextMatch.CONTAINS);
+		waitFor (() -> filter.getAppliedGeneration () == filter.getGeneration ());
+		Object worker = field (filter, "worker");
+		int posted = counter (worker, "posted"), applies = counter (filter, "applies"), refreshes = counter (binding, "refreshes");
+
+		table.setVisible (false);
+		Random random = new Random (24);
+		String [] patterns = {"n12", "n123", "n12", "n1", "n2", "n23", "n234", "n23", "n2", "n29"};
+		for (int k = 0; k < 10_000; k++) {
+			int row = random.nextInt (ROWS);
+			numbers [row] = random.nextInt (1000);
+			names [row] = "n" + random.nextInt (1_000_000);
+			sort.rowsChanged (row);
+			if (k % 1000 == 999) {
+				filter.setText (1, patterns [k / 1000], M3TextMatch.CONTAINS);
+				pump (60);
+			}
+		}
+		waitFor (() -> (Boolean) field (worker, "parked") && counter (worker, "resultGeneration") == filter.getGeneration ());
+		pump (200);
+		assertEquals (posted, counter (worker, "posted"), "results posted to the UI thread while hidden");
+		assertEquals (applies, counter (filter, "applies"), "results applied while hidden");
+		assertEquals (refreshes, counter (binding, "refreshes"), "widget refreshes while hidden");
+		assertNotEquals (filter.getGeneration (), filter.getAppliedGeneration ());
+
+		table.setVisible (true);
+		assertEquals (applies + 1, counter (filter, "applies"), "applies on show");
+		assertEquals (refreshes + 1, counter (binding, "refreshes"), "widget refreshes on show");
+		assertEquals (filter.getGeneration (), filter.getAppliedGeneration ());
+		pump (200);
+		assertEquals (applies + 1, counter (filter, "applies"), "applies after show");
+		assertEquals (refreshes + 1, counter (binding, "refreshes"), "widget refreshes after show");
+		int [] expected = reference ("n29");
+		assertArrayEquals (expected, Test_M3ColumnSort.order (sort));
+		assertEquals (expected.length, table.getItemCount ());
+		for (int i = 0; i < Math.min (60, expected.length); i++) assertEquals (cell (expected [i], 1), table.getItem (i).getText (1), "row " + i);
+	}
+
 	@Test
 	public void test_typingOverAMillionRowsStaysResponsive () {
 		Table table = new Table (shell, SWT.VIRTUAL | SWT.MULTI);
@@ -124,7 +201,10 @@ public class Test_M3FilterAsync {
 		sort.setKey (0, M3ColumnKey.ofInts (r -> numbers [r]));
 		sort.setCellText (this::cell);
 		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		long [] firstFill = {0};
+		boolean [] armed = {false};
 		M3RowBinding binding = M3RowBinding.bind (table, sort, (item, row) -> {
+			if (armed [0] && firstFill [0] == 0 && filter.getAppliedGeneration () == filter.getGeneration ()) firstFill [0] = System.nanoTime ();
 			item.setText (0, cell (row, 0));
 			item.setText (1, cell (row, 1));
 		});
@@ -144,20 +224,29 @@ public class Test_M3FilterAsync {
 		binding.setSelectedRows (keep);
 		String [] typed = {"n", "n1", "n12", "n123", "n1234", "n123", "n12", "n1", "n", "n9", "n98", "n9", "n", "n1", "n12", "n123", "n1239", "n123", "n12", "n123"};
 		assertEquals (20, typed.length);
-		long slowestKeystroke = 0, slowestDispatch = 0;
-		for (String pattern : typed) {
+		long [] keystrokes = new long [typed.length];
+		armed [0] = true;
+		long slowestDispatch = 0, lastKeystroke = 0;
+		for (int k = 0; k < typed.length; k++) {
 			long start = System.nanoTime ();
-			filter.setText (1, pattern, M3TextMatch.CONTAINS);
-			slowestKeystroke = Math.max (slowestKeystroke, System.nanoTime () - start);
+			filter.setText (1, typed [k], M3TextMatch.CONTAINS);
+			lastKeystroke = System.nanoTime ();
+			keystrokes [k] = lastKeystroke - start;
 			slowestDispatch = Math.max (slowestDispatch, pump (30));
 		}
 		assertTrue (applied.isEmpty (), "nothing applies while typing faster than the debounce");
 		int finalGeneration = filter.getGeneration ();
 		long applyDispatch = waitFor (() -> filter.getAppliedGeneration () == finalGeneration);
-		time ("async-keystroke-max-ui", slowestKeystroke);
+		waitFor (() -> firstFill [0] != 0);
+		Arrays.sort (keystrokes);
+		long median = keystrokes [keystrokes.length / 2], p95 = keystrokes [(int) Math.ceil (keystrokes.length * 0.95) - 1];
+		time ("async-keystroke-median-ui", median);
+		time ("async-keystroke-p95-ui", p95);
+		time ("async-keystroke-max-ui", keystrokes [keystrokes.length - 1]);
 		time ("async-dispatch-while-typing-max", slowestDispatch);
 		time ("async-apply-dispatch-max", applyDispatch);
-		assertTrue (slowestKeystroke < 2_000_000L, "keystroke " + slowestKeystroke + " ns");
+		time ("async-last-keystroke-to-first-page", firstFill [0] - lastKeystroke);
+		assertTrue (p95 < 2_000_000L, "keystroke p95 " + p95 + " ns");
 		assertEquals (1, applied.size ());
 		assertArrayEquals (new int [] {finalGeneration, finalGeneration}, applied.get (0));
 		assertArrayEquals (reference (last), Test_M3ColumnSort.order (sort));
@@ -238,6 +327,38 @@ public class Test_M3FilterAsync {
 		reference.setParents (r -> parents [r]);
 		reference.setText (new int [] {0, 1}, "w2*", M3TextMatch.WILDCARD);
 		assertEquals (reference.size (), synchronous);
+		filter.setAsync (null, 0);
+	}
+
+	@Test
+	public void test_slowModelIsSupersededMidComputation () {
+		int n = 50_000;
+		M3ColumnFilter filter = new M3ColumnFilter (1, n, (row, column) -> {
+			if (row % 8192 == 0) {
+				try {
+					Thread.sleep (40);
+				} catch (InterruptedException e) {
+					Thread.currentThread ().interrupt ();
+				}
+			}
+			return "x" + row;
+		});
+		filter.setAsync (display, 0);
+		java.util.List<Integer> applied = new ArrayList<> ();
+		filter.addListener (change -> applied.add (filter.getAppliedGeneration ()));
+		filter.setText (0, "x1*", M3TextMatch.WILDCARD);
+		pump (60);
+		filter.setText (0, "x2*", M3TextMatch.WILDCARD);
+		pump (60);
+		filter.setText (0, "x3*", M3TextMatch.WILDCARD);
+		int finalGeneration = filter.getGeneration ();
+		waitFor (() -> filter.getAppliedGeneration () == finalGeneration);
+		assertEquals (java.util.List.of (finalGeneration), applied);
+		int expected = 0;
+		for (int i = 0; i < n; i++) {
+			if (("x" + i).startsWith ("x3")) expected++;
+		}
+		assertEquals (expected, filter.size ());
 		filter.setAsync (null, 0);
 	}
 

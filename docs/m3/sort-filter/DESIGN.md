@@ -189,3 +189,14 @@ logs each generation at FINE through `SwtLog` (`org.eclipse.swt.m3.M3ColumnFilte
 | M3ColumnSort | `int[]` order, `int[]` inverse, `long[]` radix keys (scratch), `int[]` CSR child start/rows | none |
 | M3RowWindow | `first`, `count` | none |
 | bindings | none | TableItem/TreeItem created by SWT for resident rows only |
+
+## 7. Status and next leaves (2026-10-19)
+
+- SWT leaf 1 merged: hsoliwal/eclipse.platform.swt PR #232 into `m3/viewport-integration-20261016` (74d7b821e9);
+  the asynchronous filter, the patch semantics, selection by id and the licence audit follow on this branch.
+- Grid: hsoliwal/nebula PR #262 (`org.eclipse.nebula.widgets.grid.m3.M3GridRowBinding`, `M3GridSortHeader`,
+  branch `m3/grid-sort-filter-20261019` from the Grid viewport branch), see `docs/m3/grid-sort-filter/DESIGN.md` there.
+- Next leaves: a Grid filter row/popup (Grid column geometry); tree patches by sibling range instead of
+  `clearAll` (M3Patch over the CSR index); `ViewerFiltersDialog` (named filter sets; EPL-1.0 header kept verbatim);
+  the M3JDK adapters once `m3/collections` ships `M3FlatteningView`/`M3WindowView` (rename by recipe); JFace
+  `TableViewer`/`TreeViewer` comparator and filter bridges over the same lanes (one model).

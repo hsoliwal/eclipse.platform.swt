@@ -37,6 +37,9 @@ import org.eclipse.swt.widgets.*;
  *   applies the tree ancestor rule, compacts the view and lets a following M3ColumnSort sort the
  *   result into spare lanes. It compares the generation every CHECK rows and drops the work as
  *   soon as a newer generation exists.
+ * - Hidden viewports: while every viewport bound to the chain is hidden, a finished result is
+ *   parked instead of posted; when one shows again, the parked result (if still the newest
+ *   generation) is applied once, before the widget paints.
  * - One asyncExec back: the result is applied on the UI thread only when its generation is still
  *   current; applying swaps lanes and fires one RESET, so a bound widget refreshes its window.
  */
@@ -64,8 +67,11 @@ final class M3FilterWorker implements Runnable {
 	private int resultGeneration = -1, resultSize;
 	private M3FilterCriterion [] resultCriteria;
 	private long [] resultMatched, resultKept;
-	private int [] resultRows, resultRank;
+	private int [] resultRows, resultRank, resultBelow, resultParents;
 	private RuntimeException failure;
+	/* held: results are parked, not posted (guarded by lock); posted: results handed to the UI thread */
+	private boolean held, parked;
+	int posted;
 
 	M3FilterWorker (M3ColumnFilter filter, Display display) {
 		this.filter = filter;
@@ -100,6 +106,22 @@ final class M3FilterWorker implements Runnable {
 			}
 			lock.notifyAll ();
 		}
+	}
+
+	/*
+	 * UI thread: holds or releases results. While held (every viewport bound to the chain is hidden) the worker keeps
+	 * computing, but a finished result is parked instead of posted to the UI thread; releasing applies the parked
+	 * result at once if it is still the newest generation, so a viewport that shows again applies one result.
+	 */
+	void hold (boolean hold) {
+		boolean apply;
+		synchronized (lock) {
+			if (held == hold) return;
+			held = hold;
+			apply = !hold && parked;
+			parked = false;
+		}
+		if (apply) applied ();
 	}
 
 	/* UI thread: stops the worker thread after its current step */
@@ -159,6 +181,13 @@ final class M3FilterWorker implements Runnable {
 	}
 
 	private void post () {
+		synchronized (lock) {
+			if (held) {
+				parked = true;
+				return;
+			}
+			posted++;
+		}
 		try {
 			display.asyncExec (applied);
 		} catch (SWTException e) {
@@ -173,6 +202,13 @@ final class M3FilterWorker implements Runnable {
 			M3FilterCriterion criterion = criteria [i];
 			if (!dirty [i]) {
 				criterion.mask = current [i].mask;
+			} else if (criterion.narrows (current [i])) {
+				/* a refining keystroke: only the rows the applied pattern kept are candidates */
+				criterion.mask = Arrays.copyOf (current [i].mask, words);
+				for (int word = 0; word < words; word += CHECK >> 6) {
+					if (generation != filter.generation) return false;
+					criterion.narrow (word, Math.min (words, word + (CHECK >> 6)), text);
+				}
 			} else if (criterion.isActive ()) {
 				criterion.mask = new long [words];
 				for (int start = 0; start < n; start += CHECK) {
@@ -185,6 +221,8 @@ final class M3FilterWorker implements Runnable {
 		M3FilterCriterion.fold (criteria, matched, n);
 		long [] kept = Arrays.copyOf (matched, words);
 		if (parents != null) M3FilterCriterion.ancestors (matched, kept, n, parents);
+		int [] parentLane = parents == null ? null : new int [n];
+		int [] below = parents == null ? null : M3FilterCriterion.below (matched, n, parents, new int [n], parentLane);
 		int [] rows = new int [n], rank = new int [words];
 		int size = M3RowMask.compact (kept, words, rows, rank);
 		if (generation != filter.generation) return false;
@@ -193,6 +231,8 @@ final class M3FilterWorker implements Runnable {
 		synchronized (lock) {
 			resultCriteria = criteria;
 			resultMatched = matched;
+			resultBelow = below;
+			resultParents = parentLane;
 			resultKept = kept;
 			resultRows = rows;
 			resultRank = rank;
@@ -207,20 +247,27 @@ final class M3FilterWorker implements Runnable {
 	private void applied () {
 		M3FilterCriterion [] criteria;
 		long [] matched, kept;
-		int [] rows, rank;
+		int [] rows, rank, below, parentLane;
 		int size, generation;
 		synchronized (lock) {
+			if (held) {
+				/* posted before the viewports were hidden: kept for the show */
+				parked = true;
+				return;
+			}
 			if (resultGeneration != filter.generation || stopped) return;
 			if (failure != null) throw failure;
 			criteria = resultCriteria;
 			matched = resultMatched;
+			below = resultBelow;
+			parentLane = resultParents;
 			kept = resultKept;
 			rows = resultRows;
 			rank = resultRank;
 			size = resultSize;
 			generation = resultGeneration;
 		}
-		filter.apply (criteria, matched, kept, rows, rank, size, generation);
+		filter.apply (criteria, matched, kept, below, parentLane, rows, rank, size, generation);
 		if (LOG.isDebugEnabled ()) LOG.debug (() -> "generation " + generation + " applied: " + size + " rows shown"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

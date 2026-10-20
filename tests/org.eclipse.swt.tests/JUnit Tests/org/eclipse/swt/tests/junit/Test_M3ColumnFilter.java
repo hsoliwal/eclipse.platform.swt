@@ -354,6 +354,183 @@ public class Test_M3ColumnFilter {
 		return any != ((match.mode () & M3TextMatch.NEGATE) != 0);
 	}
 
+	/* the package-private count of input changes a view applied by a full pass (brief rule 24: edits are deltas) */
+	static int fullPasses (M3RowView view) {
+		try {
+			java.lang.reflect.Field field = Class.forName ("org.eclipse.swt.m3.M3RowViewBase").getDeclaredField ("fullPasses");
+			field.setAccessible (true);
+			return field.getInt (view);
+		} catch (ReflectiveOperationException e) {
+			return fail (e);
+		}
+	}
+
+	/* a package-private field of an M3 object, declared in its class or a superclass */
+	static Object field (Object owner, String name) {
+		for (Class<?> type = owner.getClass (); type != null; type = type.getSuperclass ()) {
+			try {
+				java.lang.reflect.Field field = type.getDeclaredField (name);
+				field.setAccessible (true);
+				return field.get (owner);
+			} catch (NoSuchFieldException e) {
+				/* declared in a superclass */
+			} catch (IllegalAccessException e) {
+				return fail (e);
+			}
+		}
+		return fail ("no field " + name);
+	}
+
+	/* applies a change of a filter to a list of its rows (source order), as a listener that keeps a copy would */
+	static void replay (List<Integer> mirror, M3RowChange change, M3RowView view) {
+		int start = change.start (), count = change.count ();
+		switch (change.kind ()) {
+			case M3RowChange.RESET:
+				mirror.clear ();
+				for (int i = 0; i < view.size (); i++) mirror.add (view.map (i));
+				return;
+			case M3RowChange.INSERTED:
+				mirror.replaceAll (row -> row >= start ? row + count : row);
+				break;
+			case M3RowChange.REMOVED:
+				mirror.removeIf (row -> row >= start && row < start + count);
+				mirror.replaceAll (row -> row >= start + count ? row - count : row);
+				return;
+			case M3RowChange.LEFT:
+				for (int i = 0; i < change.rowCount (); i++) mirror.remove ((Integer) change.row (i));
+				return;
+			default:
+				break;
+		}
+		if (change.kind () == M3RowChange.UPDATED) return;
+		for (int i = 0; i < change.rowCount (); i++) {
+			int row = change.row (i), at = Collections.binarySearch (mirror, row);
+			assertTrue (at < 0, "row " + row + " entered twice");
+			mirror.add (-at - 1, row);
+		}
+	}
+
+	@Test
+	public void test_sourceEditsAreDeltasThatReplay () {
+		Random random = new Random (24);
+		for (int seed = 0; seed < 30; seed++) {
+			Test_M3ColumnSort.Rows rows = new Test_M3ColumnSort.Rows (random.nextInt (400), seed, 2 + random.nextInt (9));
+			M3CellText text = text (rows);
+			M3ColumnFilter filter = new M3ColumnFilter (4, rows.size (), text);
+			criterion (filter, random);
+			List<Integer> mirror = new ArrayList<> ();
+			for (int row : rows (filter)) mirror.add (row);
+			int [] resets = {0};
+			filter.addListener (change -> {
+				if (change.kind () == M3RowChange.RESET) resets [0]++;
+				replay (mirror, change, filter);
+			});
+			int passes = fullPasses (filter);
+			for (int step = 0; step < 60; step++) {
+				if (random.nextInt (4) == 0) criterion (filter, random); else Test_M3ColumnSort.edit (rows, filter, random);
+				List<Integer> expected = new ArrayList<> ();
+				for (int row = 0; row < rows.size (); row++) {
+					if (passes (filter, text, row)) expected.add (row);
+				}
+				String where = "seed " + seed + " step " + step;
+				assertEquals (expected, mirror, where);
+				assertArrayEquals (expected.stream ().mapToInt (Integer::intValue).toArray (), rows (filter), where);
+				for (int row = 0; row < rows.size (); row++) assertEquals (expected.indexOf (row), filter.unmap (row), where + " row " + row);
+			}
+			assertEquals (passes + resets [0], fullPasses (filter), "only a new source (RESET) is a full pass");
+		}
+	}
+
+	@Test
+	public void test_treeValueUpdatesAreDeltasThatReplay () {
+		Random random = new Random (25);
+		for (int seed = 0; seed < 30; seed++) {
+			int n = 1 + random.nextInt (300);
+			int [] parents = new int [n];
+			String [] labels = new String [n];
+			for (int row = 0; row < n; row++) {
+				parents [row] = row == 0 || random.nextInt (4) == 0 ? -1 : random.nextInt (row);
+				labels [row] = word (random);
+			}
+			M3ColumnFilter filter = new M3ColumnFilter (1, n, (row, column) -> labels [row]);
+			filter.setParents (row -> parents [row]);
+			String pattern = random.nextBoolean () ? "ab" : "ba";
+			filter.setText (0, pattern, M3TextMatch.CONTAINS);
+			List<Integer> mirror = new ArrayList<> ();
+			for (int row : rows (filter)) mirror.add (row);
+			filter.addListener (change -> replay (mirror, change, filter));
+			int passes = fullPasses (filter);
+			for (int step = 0; step < 50; step++) {
+				int [] changed = new int [1 + random.nextInt (random.nextInt (5) == 0 ? n : 3)];
+				for (int k = 0; k < changed.length; k++) {
+					changed [k] = random.nextInt (n);
+					labels [changed [k]] = word (random);
+					/* a value update may move a row to another parent (kept acyclic: a parent precedes its child) */
+					if (random.nextInt (3) == 0) parents [changed [k]] = changed [k] == 0 || random.nextInt (4) == 0 ? -1 : random.nextInt (changed [k]);
+				}
+				filter.rowsChanged (changed);
+				boolean [] keep = new boolean [n];
+				for (int row = 0; row < n; row++) {
+					if (!labels [row].contains (pattern)) continue;
+					for (int r = row; r != -1 && !keep [r]; r = parents [r]) keep [r] = true;
+				}
+				List<Integer> expected = new ArrayList<> ();
+				for (int row = 0; row < n; row++) {
+					if (keep [row]) expected.add (row);
+				}
+				String where = "seed " + seed + " step " + step;
+				assertEquals (expected, mirror, where);
+				assertArrayEquals (expected.stream ().mapToInt (Integer::intValue).toArray (), rows (filter), where);
+				for (int row = 0; row < n; row++) assertEquals (expected.indexOf (row), filter.unmap (row), where + " row " + row);
+			}
+			assertEquals (passes, fullPasses (filter), "tree value updates are deltas");
+		}
+	}
+
+	private static String word (Random random) {
+		StringBuilder word = new StringBuilder ();
+		for (int k = 1 + random.nextInt (4); k > 0; k--) word.append (random.nextBoolean () ? 'a' : 'b');
+		return word.toString ();
+	}
+
+	@Test
+	public void test_typingRefinementsEqualAFreshEvaluation () {
+		Random random = new Random (8);
+		int n = 3000;
+		String [] words = new String [n];
+		String alphabet = "abAB\u00e9";
+		for (int i = 0; i < n; i++) {
+			StringBuilder word = new StringBuilder ();
+			for (int k = 1 + random.nextInt (6); k > 0; k--) word.append (alphabet.charAt (random.nextInt (alphabet.length ())));
+			words [i] = word.toString ();
+		}
+		M3CellText cells = (row, column) -> column == 0 ? words [row] : words [n - 1 - row];
+		M3ColumnFilter filter = new M3ColumnFilter (2, n, cells);
+		int [] modes = {M3TextMatch.CONTAINS, M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE, M3TextMatch.STARTS_WITH, M3TextMatch.STARTS_WITH | M3TextMatch.IGNORE_CASE, M3TextMatch.CONTAINS | M3TextMatch.NEGATE};
+		for (int session = 0; session < 40; session++) {
+			int mode = modes [random.nextInt (modes.length)], column = random.nextInt (2);
+			StringBuilder typed = new StringBuilder ();
+			for (int key = 0; key < 8; key++) {
+				if (typed.length () > 0 && random.nextInt (4) == 0) typed.setLength (typed.length () - 1);
+				else typed.append (random.nextInt (9) == 0 ? ',' : alphabet.charAt (random.nextInt (alphabet.length ())));
+				if (random.nextInt (10) == 0) {
+					int row = random.nextInt (n);
+					words [row] = words [random.nextInt (n)];
+					filter.rowsChanged (row, n - 1 - row);
+				}
+				if (random.nextInt (12) == 0) {
+					filter.clear (column);
+					column = 1 - column;
+				}
+				filter.setText (column, typed.toString (), mode);
+				M3ColumnFilter fresh = new M3ColumnFilter (2, n, cells);
+				fresh.setText (column, typed.toString (), mode);
+				assertArrayEquals (rows (fresh), rows (filter), "session " + session + " typed '" + typed + "' mode " + mode);
+			}
+			filter.clear (column);
+		}
+	}
+
 	@Test
 	public void test_windowRangesAndChangeDescriptions () {
 		M3ColumnSort sort = new M3ColumnSort (1, 50);

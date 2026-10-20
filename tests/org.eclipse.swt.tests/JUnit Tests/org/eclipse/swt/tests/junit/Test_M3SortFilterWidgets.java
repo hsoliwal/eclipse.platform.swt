@@ -199,6 +199,11 @@ public class Test_M3SortFilterWidgets {
 		assertEquals (0, table.getSelectionCount ());
 		binding.setSelectedRows (ROWS + 5);
 		assertEquals (0, table.getSelectionCount ());
+		binding.setSelectedRows (sort.map (0), sort.map (1));
+		sort.rowsInserted (0, 3);
+		sort.rowsRemoved (1, 2);
+		sort.rowsRemoved (0, 1);
+		assertEquals (2, binding.getSelectedRows ().length);
 		binding.setSelectedRows (sort.map (0));
 		table.notifyListeners (SWT.Selection, new Event ());
 		assertArrayEquals (new int [] {sort.map (0)}, binding.getSelectedRows ());
@@ -345,6 +350,8 @@ public class Test_M3SortFilterWidgets {
 		ToolItem [] tools = find (window, ToolBar.class, 0).getItems ();
 		select (tools [0]);
 		assertEquals (".*", text.getText ());
+		Label info = feedback;
+		waitFor (() -> info.getText ().contains ("regular"));
 		type.select (4);
 		select (tools [0]);
 		assertEquals ("", text.getText ());
@@ -369,7 +376,9 @@ public class Test_M3SortFilterWidgets {
 		assertEquals (0, find (popup.getShell (), Combo.class, 1).getSelectionIndex ());
 		popup.close ();
 		filter.setText (0, "1", M3TextMatch.CONTAINS);
+		table.setHeaderVisible (false);
 		popup.open (0);
+		table.setHeaderVisible (true);
 		assertEquals (4, find (popup.getShell (), Combo.class, 1).getSelectionIndex ());
 		table.notifyListeners (SWT.MouseDown, new Event ());
 		assertFalse (popup.isOpen ());
@@ -434,7 +443,9 @@ public class Test_M3SortFilterWidgets {
 		assertTrue (row.getText (1).getLocation ().x < row.getText (0).getLocation ().x);
 		table.getHorizontalBar ().notifyListeners (SWT.Selection, new Event ());
 		row.getText (1).setText ("N12");
-		waitFor (() -> filter.isActive (1));
+		new TableColumn (table, SWT.NONE).setWidth (40);
+		row.refresh ();
+		table.getColumn (3).dispose ();
 		assertTrue (table.getItem (0).getText (1).contains ("12"));
 		assertNotNull (table.getColumn (1).getImage ());
 		row.getText (1).setText ("");

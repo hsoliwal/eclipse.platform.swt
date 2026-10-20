@@ -1,0 +1,8 @@
+m3-o4-src tree 100000 change100 127 us (size 7363)
+cur tree 100000 change100 56 us (size 7363)
+m3-o4-src tree 1000000 change100 2289 us (size 73173)
+cur tree 1000000 change100 80 us (size 73173)
+m3-o4-src tree 100000 change100 103 us (size 7363)
+cur tree 100000 change100 27 us (size 7363)
+m3-o4-src tree 1000000 change100 1968 us (size 73173)
+cur tree 1000000 change100 65 us (size 73173)

@@ -65,6 +65,21 @@ final class M3FilterCriterion {
 		for (int row = start; row < end; row++) M3RowMask.set (mask, row, test (row, text));
 	}
 
+	/* whether this criterion keeps a subset of the rows previous keeps (same columns, a narrowing text match) */
+	boolean narrows (M3FilterCriterion previous) {
+		return match != null && previous.match != null && Arrays.equals (columns, previous.columns) && match.narrows (previous.match);
+	}
+
+	/* clears, in the mask, the bits of rows [start, end) (by 64-row word) that this criterion rejects; set bits are the candidates */
+	void narrow (int startWord, int endWord, M3CellText text) {
+		for (int w = startWord; w < endWord; w++) {
+			for (long x = mask [w]; x != 0; x &= x - 1) {
+				int row = w << 6 | Long.numberOfTrailingZeros (x);
+				if (!test (row, text)) mask [w] &= ~(1L << row);
+			}
+		}
+	}
+
 	/* the same criterion with a new identity (spec and mask shared): a pending edit of an asynchronous filter */
 	M3FilterCriterion copy () {
 		M3FilterCriterion copy = new M3FilterCriterion ();
@@ -119,5 +134,21 @@ final class M3FilterCriterion {
 				}
 			}
 		}
+	}
+
+	/*
+	 * tree mode: the number of matching strict descendants of every row, so that a match flip updates its ancestors in
+	 * O(depth); parents receives the parent lane (a value update may change a parent: the old one is needed then)
+	 */
+	static int [] below (long [] matched, int n, IntUnaryOperator parentOf, int [] lane, int [] parents) {
+		if (lane.length < n) lane = new int [n]; else Arrays.fill (lane, 0, n, 0);
+		for (int row = 0; row < n; row++) parents [row] = parentOf.applyAsInt (row);
+		for (int w = 0, words = M3RowMask.words (n); w < words; w++) {
+			for (long x = matched [w]; x != 0; x &= x - 1) {
+				int steps = 0;
+				for (int p = parents [w << 6 | Long.numberOfTrailingZeros (x)]; p != -1 && steps++ < n; p = parents [p]) lane [p]++;
+			}
+		}
+		return lane;
 	}
 }
