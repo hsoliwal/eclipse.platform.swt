@@ -291,3 +291,20 @@ The footer is public SWT API inside Tree and Table (rule 25/26), shaped like the
   `computeTrim`/`getClientArea`, like the header.
 - Configuration: the configure-view bar and its dialog edit footer content per column, in the same Columns tab as the
   header, and the state persists with the columns.
+
+### Everything configurable (user, 2026-10-20: "autocomplete, free-floating search box, filter: everything is configurable")
+
+Every behaviour is a configurable part of the widget, not a fixed feature. One configuration model serves the API, the
+`.m3view` spec, the configure-view bar/dialog and persistence:
+- **Search box:** free-floating (an overlay anywhere over the view, movable, remembered position) or docked (view bar,
+  header-2 row, footer); shown on demand (Ctrl+F) or always; scope (visible rows, all rows, selected column, all
+  columns); match mode (contains, prefix, fuzzy, camelCase, regex, whole word, case); highlight versus hide; wrap;
+  history; keyboard shortcuts. `setSearch(M3SearchConfig)`.
+- **Autocomplete:** per text field or cell: proposal source (column values, history, a provider), trigger (typing,
+  Ctrl+Space, auto-activation delay), match mode, max proposals, popup placement and size, accept keys, insertion
+  versus replacement. `setAutocomplete(M3AutocompleteConfig)`.
+- **Filters:** which columns offer filters, the operators per column type, the filter row on or off, value-list filters
+  with counts, the expression language, chips, saved filter sets, highlight versus hide, debounce. `setFilters(M3FilterConfig)`.
+- Likewise decorators, validators, formatters, footers, header-2, view bar, popups and shortcuts each have a config
+  object with sensible defaults, settable by API, declared in the spec, editable in the dialog, and persisted with the
+  view state. Defaults are themeable (L&F keys), so a product can set them once for every view.
