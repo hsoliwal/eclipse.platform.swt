@@ -245,6 +245,8 @@ final class ComboViewport {
 		int selection = selection (), topRow = topRow ();
 		boolean dropped = isDropped ();
 		plan.plan (nextFirst, nextSize);
+		/* rule 24: a change that replaces every resident row (none stays) is a full rebuild */
+		if (changeDepth > 0 && plan.replaced () && plan.size () > 0) fullRebuilds++;
 		busy = true;
 		if (dropped) OS.DefWindowProc (hwndList, OS.WM_SETREDRAW, 0, 0);
 		try {
@@ -866,24 +868,29 @@ final class ComboViewport {
 	}
 
 	void add (String string, int index) {
-		int count = model.getItemCount ();
-		if (index < 0 || index > count) combo.error (SWT.ERROR_INVALID_RANGE);
-		/* a dropped list keeps its top row index over an insert: let the list box insert it */
-		coverForEdit (Math.min (index, Math.max (0, count - 1)), Math.min (index, Math.max (0, count - 1)));
-		model.add (ListViewport.nativeText (string), index);
-		if (parked >= index) parked++;
-		int entry = plan.inserted (index, 1);
-		if (entry >= 0) {
-			busy = true;
-			try {
-				insertNative (entry, index);
-			} finally {
-				busy = false;
+		changeDepth++;
+		try {
+			int count = model.getItemCount ();
+			if (index < 0 || index > count) combo.error (SWT.ERROR_INVALID_RANGE);
+			/* a dropped list keeps its top row index over an insert: let the list box insert it */
+			coverForEdit (Math.min (index, Math.max (0, count - 1)), Math.min (index, Math.max (0, count - 1)));
+			model.add (ListViewport.nativeText (string), index);
+			if (parked >= index) parked++;
+			int entry = plan.inserted (index, 1);
+			if (entry >= 0) {
+				busy = true;
+				try {
+					insertNative (entry, index);
+				} finally {
+					busy = false;
+				}
 			}
+			layout ();
+			/* as stock Combo.add: the scroll width follows the items only with SWT.H_SCROLL */
+			if (hScroll ()) combo.setScrollWidth (new TCHAR (string, true).chars, true);
+		} finally {
+			changeDepth--;
 		}
-		layout ();
-		/* as stock Combo.add: the scroll width follows the items only with SWT.H_SCROLL */
-		if (hScroll ()) combo.setScrollWidth (new TCHAR (string, true).chars, true);
 	}
 
 	private boolean hScroll () {
@@ -892,33 +899,38 @@ final class ComboViewport {
 
 	/* removes logical rows start .. end; resident rows through the combo, which clears its text when the selected row goes */
 	private void deleteRows (int start, int end) {
-		int removed = end - start + 1;
-		boolean dropped = isDropped ();
-		boolean nativeEdit = coverForEdit (start, end);
-		int topBefore = dropped ? topRow () : 0;
-		/* each stock CB_DELETESTRING at start: the caret steps back when it is the deleted row, then stays inside the list */
-		for (int i = 0, countAfter = model.getItemCount () - 1; i < removed; i++, countAfter--) {
-			if (start == caret && caret > 0) caret--;
-			if (caret >= countAfter) caret = Math.max (0, countAfter - 1);
-		}
-		model.remove (start, end);
-		if (parked > end) {
-			parked -= removed;
-		} else if (parked >= start) {
-			parked = -1;
-		}
-		int resident = plan.removed (start, removed);
-		if (resident > 0) {
-			int entry = plan.removedEntry (start);
-			busy = true;
-			try {
-				for (int i = 0; i < resident; i++) OS.CallWindowProc (Combo.ComboProc, combo.handle, OS.CB_DELETESTRING, entry, 0);
-				barState = BAR_SET;
-			} finally {
-				busy = false;
+		changeDepth++;
+		try {
+			int removed = end - start + 1;
+			boolean dropped = isDropped ();
+			boolean nativeEdit = coverForEdit (start, end);
+			int topBefore = dropped ? topRow () : 0;
+			/* each stock CB_DELETESTRING at start: the caret steps back when it is the deleted row, then stays inside the list */
+			for (int i = 0, countAfter = model.getItemCount () - 1; i < removed; i++, countAfter--) {
+				if (start == caret && caret > 0) caret--;
+				if (caret >= countAfter) caret = Math.max (0, countAfter - 1);
 			}
+			model.remove (start, end);
+			if (parked > end) {
+				parked -= removed;
+			} else if (parked >= start) {
+				parked = -1;
+			}
+			int resident = plan.removed (start, removed);
+			if (resident > 0) {
+				int entry = plan.removedEntry (start);
+				busy = true;
+				try {
+					for (int i = 0; i < resident; i++) OS.CallWindowProc (Combo.ComboProc, combo.handle, OS.CB_DELETESTRING, entry, 0);
+					barState = BAR_SET;
+				} finally {
+					busy = false;
+				}
+			}
+			if (dropped && !nativeEdit && model.getItemCount () > 0) afterDelete (topBefore);
+		} finally {
+			changeDepth--;
 		}
-		if (dropped && !nativeEdit && model.getItemCount () > 0) afterDelete (topBefore);
 	}
 
 	/*
@@ -1135,6 +1147,18 @@ final class ComboViewport {
 		lastSetResult = (int) code == OS.CB_ERR ? OS.CB_ERR : plan.first () + (int) code;
 		updateBar ();
 		return code;
+	}
+
+	/*
+	 * Rule 24 (delta-only views): window rebuilds that replace every resident row while a model change (add, remove)
+	 * runs. The combo never resets its list box in a change (rows are deleted and inserted one by one); the
+	 * differential asserts that this stays 0.
+	 */
+	private int changeDepth;
+	private long fullRebuilds;
+
+	long fullRebuilds () {
+		return fullRebuilds;
 	}
 
 	int residentCount () {

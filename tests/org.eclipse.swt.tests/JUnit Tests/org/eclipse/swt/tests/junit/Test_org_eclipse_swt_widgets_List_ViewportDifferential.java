@@ -164,7 +164,10 @@ public class Test_org_eclipse_swt_widgets_List_ViewportDifferential {
 			.widget ("List").seeds (SEEDS).steps (steps)
 			.beforeSeed (Subject::reset)
 			.beforeStep (s -> s.events.setLength (0))
-			.afterStep (s -> flush (s.shell.getDisplay ()))
+			.afterStep (s -> {
+				flush (s.shell.getDisplay ());
+				if (!reference) assertNoFullRebuild (s.list);
+			})
 			.probe ("bars", s -> ViewportDifferential.bar (s.list.getVerticalBar ()) + " " + ViewportDifferential.bar (s.list.getHorizontalBar ()))
 			.probe ("sel", s -> selection (s.list))
 			.probe ("focus", s -> s.list.getFocusIndex () + (s.list.isFocusControl () ? "*" : ""))
@@ -174,6 +177,23 @@ public class Test_org_eclipse_swt_widgets_List_ViewportDifferential {
 				return ViewportDifferential.render (s.list);
 			})
 			.compareWithRecording (subject, reference, System.getProperty ("swt.viewport.recording"));
+	}
+
+	/*
+	 * Rule 24 (delta-only views): after every step of a viewport run the widget's full-rebuild counter (native resets of
+	 * a non-empty window, or windows replaced whole, inside a model change) is 0. Skipped when this SWT has no counter.
+	 */
+	static void assertNoFullRebuild (org.eclipse.swt.widgets.Control control) {
+		try {
+			java.lang.reflect.Method method = control.getClass ().getDeclaredMethod ("m3FullRebuilds");
+			method.setAccessible (true);
+			long rebuilds = (Long) method.invoke (control);
+			if (rebuilds != 0) throw new AssertionError (control.getClass ().getSimpleName () + ": " + rebuilds + " full rebuilds inside model changes (rule 24)");
+		} catch (NoSuchMethodException e) {
+			/* an SWT without the counter */
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError (e);
+		}
 	}
 
 	static boolean viewportActive (Shell shell) {

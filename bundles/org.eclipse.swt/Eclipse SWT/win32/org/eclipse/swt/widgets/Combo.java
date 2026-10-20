@@ -3778,4 +3778,13 @@ void handleDPIChange(Event event, float scalingFactor) {
 		setScrollWidth();
 	}
 }
+
+/*
+ * Rule 24 (delta-only views): window rebuilds of the drop-down list that replace every resident row inside a model
+ * change (add, remove). 0 means every change applied only its delta; the differential asserts it.
+ */
+long m3FullRebuilds () {
+	checkWidget ();
+	return viewport != null ? viewport.fullRebuilds () : 0;
+}
 }

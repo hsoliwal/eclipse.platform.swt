@@ -3488,4 +3488,13 @@ long m3NativeRowOps () {
 	checkWidget ();
 	return nativeRowOps + (viewport != null ? viewport.nativeRowOps () : 0);
 }
+
+/*
+ * Rule 24 (delta-only views): native resets (LB_RESETCONTENT of a non-empty window) made inside a model change (add,
+ * setItemCount, remove, m3Splice). 0 means every change applied only its delta; the differential asserts it.
+ */
+long m3FullRebuilds () {
+	checkWidget ();
+	return viewport != null ? viewport.fullRebuilds () : 0;
+}
 }

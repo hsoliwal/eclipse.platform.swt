@@ -138,7 +138,10 @@ public class Test_org_eclipse_swt_widgets_Combo_ViewportDifferential {
 			.widget ("Combo").seeds (SEEDS).steps (STEPS)
 			.beforeSeed (Subject::reset)
 			.beforeStep (s -> s.events.setLength (0))
-			.afterStep (s -> flush (s.shell.getDisplay ()))
+			.afterStep (s -> {
+				flush (s.shell.getDisplay ());
+				if (!reference) Test_org_eclipse_swt_widgets_List_ViewportDifferential.assertNoFullRebuild (s.combo);
+			})
 			.probe ("state", s -> "sel " + s.combo.getSelectionIndex () + " count " + s.combo.getItemCount () + " text '" + s.combo.getText ()
 				+ "' dropped " + s.combo.getListVisible ())
 			.probe ("events", s -> s.events.toString ())

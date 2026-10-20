@@ -257,12 +257,26 @@ final class ListViewport {
 
 	private void deleteNative (int entry) {
 		nativeRowOps++;
-		deleteNative (entry);
+		OS.SendMessage (list.handle, OS.LB_DELETESTRING, entry, 0);
+	}
+
+	/*
+	 * Rule 24 (delta-only views): a model change (add, setItemCount, remove, m3Splice) applies only its delta. A native
+	 * reset (LB_RESETCONTENT, every resident row again) made while one runs is counted here; the differential asserts
+	 * that it stays 0. setItems and removeAll replace every row by definition and are not change paths.
+	 */
+	private int changeDepth;
+	private long fullRebuilds;
+
+	long fullRebuilds () {
+		return fullRebuilds;
 	}
 
 	private void resetNative () {
+		/* an empty window resets nothing: it is counted only when resident rows were there */
+		if (changeDepth > 0 && plan.size () > 0) fullRebuilds++;
 		nativeRowOps++;
-		resetNative ();
+		OS.SendMessage (list.handle, OS.LB_RESETCONTENT, 0, 0);
 	}
 
 	private void insertEmptyNative (int entry) {
@@ -980,26 +994,31 @@ final class ListViewport {
 	}
 
 	void add (String string, int index) {
-		sync ();
-		int count = model.getItemCount ();
-		if (index < 0 || index > count) list.error (SWT.ERROR_INVALID_RANGE);
-		String text = nativeText (string);
-		model.add (text, index);
-		barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
-		/* the list box keeps the caret, the anchor and the top row index; the selection shifts */
-		int first = plan.first ();
-		int entry = plan.inserted (index, 1);
-		if (entry >= 0) insertNative (entry, index);
-		if (hScroll) extent = Math.max (extent, model.measureItem (index) + List.INSET);
-		/* a row added after the window leaves the native rows, caret and anchor as they are */
-		if (entry >= 0 || plan.first () != first) focusDirty = true;
-		deferBarPaint = true;
+		changeDepth++;
 		try {
-			layout ();
+			sync ();
+			int count = model.getItemCount ();
+			if (index < 0 || index > count) list.error (SWT.ERROR_INVALID_RANGE);
+			String text = nativeText (string);
+			model.add (text, index);
+			barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
+			/* the list box keeps the caret, the anchor and the top row index; the selection shifts */
+			int first = plan.first ();
+			int entry = plan.inserted (index, 1);
+			if (entry >= 0) insertNative (entry, index);
+			if (hScroll) extent = Math.max (extent, model.measureItem (index) + List.INSET);
+			/* a row added after the window leaves the native rows, caret and anchor as they are */
+			if (entry >= 0 || plan.first () != first) focusDirty = true;
+			deferBarPaint = true;
+			try {
+				layout ();
+			} finally {
+				deferBarPaint = false;
+			}
+			writeExtent ();
 		} finally {
-			deferBarPaint = false;
+			changeDepth--;
 		}
-		writeExtent ();
 	}
 
 	void setItemCount (int count) {
@@ -1009,11 +1028,20 @@ final class ListViewport {
 			remove (count, itemCount - 1);
 			return;
 		}
-		for (int i = itemCount; i < count; i++) {
-			barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
-			model.add ("", i);
-			int entry = plan.inserted (i, 1);
-			if (entry >= 0) insertNative (entry, i);
+		int added = count - itemCount;
+		if (added > 0) {
+			changeDepth++;
+			try {
+				/* one run of empty rows at the end (one lane shift), as `added` adds of "" would leave it */
+				barState = added >= 2 || barState != BAR_NONE ? BAR_SET : BAR_DEFAULT;
+				String [] empty = new String [added];
+				java.util.Arrays.fill (empty, "");
+				model.insert (itemCount, empty);
+				int entry = plan.inserted (itemCount, added);
+				for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, itemCount + i);
+			} finally {
+				changeDepth--;
+			}
 		}
 		if (hScroll && count > itemCount) extent = Math.max (extent, List.INSET);
 		focusDirty = true;
@@ -1052,48 +1080,64 @@ final class ListViewport {
 	}
 
 	void remove (int index) {
-		sync ();
-		if (index < 0 || index >= model.getItemCount ()) list.error (SWT.ERROR_INVALID_RANGE);
-		int width = hScroll ? model.measureItem (index) : 0;
-		int topIndex = top;
-		deleteResidentRow (index);
-		if (index < topIndex) topIndex--;
-		finishRemove (topIndex, width);
+		changeDepth++;
+		try {
+			sync ();
+			if (index < 0 || index >= model.getItemCount ()) list.error (SWT.ERROR_INVALID_RANGE);
+			int width = hScroll ? model.measureItem (index) : 0;
+			int topIndex = top;
+			deleteResidentRow (index);
+			if (index < topIndex) topIndex--;
+			finishRemove (topIndex, width);
+		} finally {
+			changeDepth--;
+		}
 	}
 
 	void remove (int start, int end) {
 		sync ();
 		int count = model.getItemCount ();
 		if (!(0 <= start && start <= end && end < count)) list.error (SWT.ERROR_INVALID_RANGE);
+		/* every row goes: the stock list does removeAll, whose reset is the delta */
 		if (start == 0 && end == count - 1) {
 			removeAll ();
 			return;
 		}
-		int width = 0;
-		if (hScroll) for (int i = start; i <= end; i++) width = Math.max (width, model.measureItem (i));
-		int topIndex = top;
-		removeRun (start, end - start + 1);
-		if (end < topIndex) topIndex -= end - start + 1;
-		finishRemove (topIndex, width);
+		changeDepth++;
+		try {
+			int width = 0;
+			if (hScroll) for (int i = start; i <= end; i++) width = Math.max (width, model.measureItem (i));
+			int topIndex = top;
+			removeRun (start, end - start + 1);
+			if (end < topIndex) topIndex -= end - start + 1;
+			finishRemove (topIndex, width);
+		} finally {
+			changeDepth--;
+		}
 	}
 
 	void remove (int [] indices) {
-		sync ();
-		int [] sorted = indices.clone ();
-		java.util.Arrays.sort (sorted);
-		int count = model.getItemCount ();
-		int low = sorted [0], high = sorted [sorted.length - 1];
-		if (!(0 <= low && low <= high && high < count)) list.error (SWT.ERROR_INVALID_RANGE);
-		int topIndex = top, topCount = 0, width = 0, last = -1;
-		for (int i = sorted.length - 1; i >= 0; i--) {
-			int index = sorted [i];
-			if (index == last) continue;
-			if (hScroll) width = Math.max (width, model.measureItem (index));
-			deleteResidentRow (index);
-			if (index < topIndex) topCount++;
-			last = index;
+		changeDepth++;
+		try {
+			sync ();
+			int [] sorted = indices.clone ();
+			java.util.Arrays.sort (sorted);
+			int count = model.getItemCount ();
+			int low = sorted [0], high = sorted [sorted.length - 1];
+			if (!(0 <= low && low <= high && high < count)) list.error (SWT.ERROR_INVALID_RANGE);
+			int topIndex = top, topCount = 0, width = 0, last = -1;
+			for (int i = sorted.length - 1; i >= 0; i--) {
+				int index = sorted [i];
+				if (index == last) continue;
+				if (hScroll) width = Math.max (width, model.measureItem (index));
+				deleteResidentRow (index);
+				if (index < topIndex) topCount++;
+				last = index;
+			}
+			finishRemove (topIndex - topCount, width);
+		} finally {
+			changeDepth--;
 		}
-		finishRemove (topIndex - topCount, width);
 	}
 
 	/* stock remove: the top row index is set again (and clamped); the extent is recomputed when the widest row went */
@@ -1161,37 +1205,42 @@ final class ListViewport {
 	 * the two of {@link #clearNativeAnchor()} when a removal clears a set native anchor.
 	 */
 	void splice (int at, int removed, String [] inserted) {
-		sync ();
-		int count = model.getItemCount (), added = inserted.length;
-		if (at < 0 || removed < 0 || at > count - removed) list.error (SWT.ERROR_INVALID_RANGE);
-		if (removed == 0 && added == 0) return;
-		String [] texts = nativeTexts (inserted);
-		int first = plan.first (), resident = 0, entry = -1, removedWidth = 0;
-		if (hScroll) for (int i = 0; i < removed; i++) removedWidth = Math.max (removedWidth, model.measureItem (at + i));
-		if (removed > 0) {
-			resident = removeRun (at, removed);
-		}
-		if (added > 0) {
-			barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
-			model.insert (at, texts);
-			entry = plan.inserted (at, added);
-			for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, at + i);
-			if (hScroll) for (int i = 0; i < added; i++) extent = Math.max (extent, model.measureItem (at + i) + List.INSET);
-		}
-		if (hScroll && removedWidth + List.INSET >= extent) extent = model.getWidestWidth () + List.INSET;
-		/* the top row stays the same row; a run that holds it keeps the index, which the layout clamps */
-		if (at + removed <= top) top += added - removed;
-		boolean windowTouched = plan.first () != first || resident > 0 || entry >= 0;
-		if (windowTouched) selectionDirty = true;
-		focusDirty = true;
-		deferBarPaint = true;
+		changeDepth++;
 		try {
-			layout ();
+			sync ();
+			int count = model.getItemCount (), added = inserted.length;
+			if (at < 0 || removed < 0 || at > count - removed) list.error (SWT.ERROR_INVALID_RANGE);
+			if (removed == 0 && added == 0) return;
+			String [] texts = nativeTexts (inserted);
+			int first = plan.first (), resident = 0, entry = -1, removedWidth = 0;
+			if (hScroll) for (int i = 0; i < removed; i++) removedWidth = Math.max (removedWidth, model.measureItem (at + i));
+			if (removed > 0) {
+				resident = removeRun (at, removed);
+			}
+			if (added > 0) {
+				barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
+				model.insert (at, texts);
+				entry = plan.inserted (at, added);
+				for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, at + i);
+				if (hScroll) for (int i = 0; i < added; i++) extent = Math.max (extent, model.measureItem (at + i) + List.INSET);
+			}
+			if (hScroll && removedWidth + List.INSET >= extent) extent = model.getWidestWidth () + List.INSET;
+			/* the top row stays the same row; a run that holds it keeps the index, which the layout clamps */
+			if (at + removed <= top) top += added - removed;
+			boolean windowTouched = plan.first () != first || resident > 0 || entry >= 0;
+			if (windowTouched) selectionDirty = true;
+			focusDirty = true;
+			deferBarPaint = true;
+			try {
+				layout ();
+			} finally {
+				deferBarPaint = false;
+			}
+			writeExtent ();
+			if (LOG.isTraceEnabled ()) LOG.trace (() -> "List splice at " + at + ": -" + removed + " +" + added + (windowTouched ? ", window touched" : ", outside the window"));
 		} finally {
-			deferBarPaint = false;
+			changeDepth--;
 		}
-		writeExtent ();
-		if (LOG.isTraceEnabled ()) LOG.trace (() -> "List splice at " + at + ": -" + removed + " +" + added + (windowTouched ? ", window touched" : ", outside the window"));
 	}
 
 	/** Stock setScrollWidth (): the widest row plus the inset, measured with the current font. */
