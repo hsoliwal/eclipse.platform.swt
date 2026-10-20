@@ -606,6 +606,14 @@ final class TableViewport {
 		return -1;
 	}
 
+	/** The facade of a row that exists now, held strongly or weakly; never made (TableSplice). */
+	TableItem liveFacade (int row) {
+		return row >= 0 && row < table.items.length ? facadeOrNull (row) : null;
+	}
+
+	/* the selected rows at or after a splice (TableSplice), reused */
+	int [] spliceSelection = new int [0];
+
 	/* the facade of a row that exists now, held strongly or weakly; never made */
 	private TableItem facadeOrNull (int row) {
 		TableItem item = table.items [row];
@@ -885,11 +893,18 @@ final class TableViewport {
 		if (LOG.isTraceEnabled ()) LOG.trace (() -> "Table appends flushed: native count " + count);
 	}
 
-	/** Whether a facade's row is an append the native control does not count yet (nothing to repaint). */
+	/**
+	 * Whether a repaint of a facade's row draws nothing (TableItem.redraw): an append the native control does not count
+	 * yet, or a row outside the visible rows [top, top + rows per page], which the owner-data ListView asks for when it
+	 * paints it (T-Table-O2: no native row operation for a row nobody sees; the rule of Table.isVirtualPaintCandidate).
+	 */
 	boolean pending (TableItem item) {
-		if (pending == 0) return false;
 		int row = indexOf (item);
-		return row >= nativeCount;
+		if (pending > 0 && row >= nativeCount) return true;
+		if (row < 0 || painting > 0) return false;
+		long hwnd = table.handle;
+		int top = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));
+		return row < top || row > top + Math.max (1, (int) OS.SendMessage (hwnd, OS.LVM_GETCOUNTPERPAGE, 0, 0));
 	}
 
 	/* ---------------------------------------------------------------- column-less scroll width */

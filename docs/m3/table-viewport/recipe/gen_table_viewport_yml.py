@@ -22,6 +22,9 @@ def block(cond, call):
 
 TABLE_HOOKS = [
     # (method, parameterCount, position, anchor, statements)
+    # T-Table-O2: every message that reaches the native ListView is counted (row and state operations, M3Residency)
+    ('callWindowProc', 5, 'METHOD_START', '',
+     '\tif (hwnd == handle) TableSplice.count (this, msg, lParam);'),
     ('widgetStyle', 0, 'BEFORE', 'return bits;',
      '\tif (TableViewport.ENABLED) bits |= OS.LVS_OWNERDATA;'),
     ('createWidget', 0, 'METHOD_END', '',
@@ -234,6 +237,26 @@ lines = [
     '      memberName: stockItems',
     '      beforeMethod: Table',
     '      memberSource: %s' % q('\t/* The R4_38 item store of a VIRTUAL Table in the original mode (see TableStockItems); null otherwise. */\n\tTableStockItems stockItems;'),
+    '  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:',
+    '      declaringClasses: [%s]' % TABLE,
+    '      memberName: m3RowOps',
+    '      beforeMethod: Table',
+    '      memberSource: %s' % q('\t/* Native row and state operations of this Table (M3Residency.stats NATIVE_ROW_OPS and NATIVE_STATE_OPS; counted by TableSplice.count). */\n\tlong m3RowOps, m3StateOps;'),
+    '  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:',
+    '      declaringClasses: [%s]' % TABLE,
+    '      memberName: m3Splice',
+    '      beforeMethod: m3ResidentRange',
+    '      memberSource: %s' % q('/* M3Model seam (enhanced API leaf 19, step 3): rows [at, at + removed) replaced by inserted empty rows with one native count change (TableSplice); false when the caller is to edit through the item API */\nboolean m3Splice (int at, int removed, int inserted) {\n\tcheckWidget ();\n\treturn viewport != null && TableSplice.splice (this, viewport, at, removed, inserted);\n}'),
+    '  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:',
+    '      declaringClasses: [%s]' % TABLE,
+    '      memberName: m3NativeRowOps',
+    '      beforeMethod: m3ResidentRange',
+    '      memberSource: %s' % q('/* M3Residency seam: the native row operations of this Table so far (TableSplice.count) */\nlong m3NativeRowOps () {\n\treturn m3RowOps;\n}'),
+    '  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:',
+    '      declaringClasses: [%s]' % TABLE,
+    '      memberName: m3NativeStateOps',
+    '      beforeMethod: m3ResidentRange',
+    '      memberSource: %s' % q('/* M3Residency seam: the native state operations (selection, focus, mark) of this Table so far (TableSplice.count) */\nlong m3NativeStateOps () {\n\treturn m3StateOps;\n}'),
 ] + entries(TABLE, TABLE_HOOKS + STOCK_HOOKS) + [
     '---',
     'type: specs.openrewrite.org/v1beta/recipe',
@@ -264,4 +287,4 @@ lines = [
 
 with open(sys.argv[1], 'w', encoding='utf-8', newline='\n') as f:
     f.write('\n'.join(lines) + '\n')
-print('hooks: Table %d + %d stock + 2 members, TableColumn %d, TableItem %d + %d stock + 1 member, ScrollBar %d' % (len(TABLE_HOOKS), len(STOCK_HOOKS), len(COLUMN_HOOKS), len(ITEM_HOOKS), len(STOCK_ITEM_HOOKS), len(BAR_HOOKS)))
+print('hooks: Table %d + %d stock + 6 members, TableColumn %d, TableItem %d + %d stock + 1 member, ScrollBar %d' % (len(TABLE_HOOKS), len(STOCK_HOOKS), len(COLUMN_HOOKS), len(ITEM_HOOKS), len(STOCK_ITEM_HOOKS), len(BAR_HOOKS)))

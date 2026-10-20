@@ -1,0 +1,216 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.swt.widgets;
+
+import java.lang.management.ManagementFactory;
+import java.util.Arrays;
+import java.util.logging.Logger;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.win32.*;
+import org.eclipse.swt.m3.M3Patch;
+
+/**
+ * Leaf T-Table-O2 (docs/m3/TABLE_MEDIATED_VIEWPORT.md): what one <code>M3Model.apply (M3Patch)</code> costs on a
+ * plain Table of 10^5 and 10^6 rows scrolled to its middle, for runs above, below and inside the visible rows.
+ * A Table subclass in this package counts the messages that reach the native ListView (<code>callWindowProc</code>,
+ * so a deferred append is not counted): row messages (LVM_INSERTITEM, LVM_DELETEITEM, LVM_DELETEALLITEMS,
+ * LVM_REDRAWITEMS, LVM_SETITEM, LVM_SETITEMTEXT, LVM_SETITEMCOUNT without LVSICF_NOINVALIDATEALL), state messages
+ * (LVM_SETITEMSTATE, LVM_SETSELECTIONMARK) and count changes; and the WM_PAINT messages with the rows of their
+ * update rectangle. Per case: median wall time of 5, bytes allocated by the UI thread, the counts, whether the top
+ * row is the same row and whether the client pixels changed (outside the window they must not).
+ * Usage: java -cp &lt;classes&gt;;&lt;swt jar&gt; org.eclipse.swt.widgets.ModelSpliceProbe
+ */
+public class ModelSpliceProbe {
+	static final Logger LOG = Logger.getLogger ("ModelSpliceProbe");
+	static final int LVM_SETITEMTEXT = OS.LVM_FIRST + 116, LVM_SETSELECTIONMARK = OS.LVM_FIRST + 67;
+
+	/** A Table that counts the messages reaching the native ListView and the rows its paints cover. */
+	static final class CountingTable extends Table {
+		long rowOps, stateOps, countOps, paints, paintedRows;
+
+		CountingTable (Composite parent, int style) {
+			super (parent, style);
+		}
+
+		@Override
+		protected void checkSubclass () {
+		}
+
+		void reset () {
+			rowOps = stateOps = countOps = paints = paintedRows = 0;
+		}
+
+		@Override
+		long callWindowProc (long hwnd, int msg, long wParam, long lParam, boolean forceSelect) {
+			if (hwnd == handle) {
+				switch (msg) {
+					case OS.LVM_INSERTITEM, OS.LVM_DELETEITEM, OS.LVM_DELETEALLITEMS, OS.LVM_REDRAWITEMS, OS.LVM_SETITEM, LVM_SETITEMTEXT -> rowOps++;
+					case OS.LVM_SETITEMCOUNT -> {
+						countOps++;
+						if ((lParam & OS.LVSICF_NOINVALIDATEALL) == 0) rowOps++;
+					}
+					case OS.LVM_SETITEMSTATE, LVM_SETSELECTIONMARK -> stateOps++;
+					default -> {
+					}
+				}
+			}
+			return super.callWindowProc (hwnd, msg, wParam, lParam, forceSelect);
+		}
+
+		@Override
+		long windowProc (long hwnd, int msg, long wParam, long lParam) {
+			if (hwnd == handle && msg == OS.WM_PAINT) {
+				RECT rect = new RECT ();
+				if (OS.GetUpdateRect (hwnd, rect, false)) {
+					paints++;
+					int height = Math.max (1, getItemHeight ());
+					paintedRows += (rect.bottom - rect.top + height - 1) / height;
+				}
+			}
+			return super.windowProc (hwnd, msg, wParam, lParam);
+		}
+	}
+
+	final com.sun.management.ThreadMXBean threads = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean ();
+	Display display;
+	Shell shell;
+	long nextId = 100_000_000L;
+
+	public static void main (String [] args) {
+		System.setProperty ("java.util.logging.SimpleFormatter.format", "%5$s%n");
+		new ModelSpliceProbe ().run ();
+	}
+
+	void run () {
+		display = new Display ();
+		shell = new Shell (display);
+		shell.setBounds (20, 20, 360, 460);
+		shell.open ();
+		pump (200);
+		LOG.info ("SWT " + SWT.getVersion () + " mode " + System.getProperty ("swt.widget.mode.Table", "default"));
+		LOG.info ("rows\tcase\tmedian_ms\tmax_ms\tallocated_bytes\trow_ops\tstate_ops\tcount_ops\tpaints\tpainted_rows\ttop_same\tprinted_pixels\tscreen_copy");
+		for (int rows : new int [] {100_000, 1_000_000}) measure (rows);
+		display.dispose ();
+		LOG.info ("DONE");
+	}
+
+	void measure (int rows) {
+		CountingTable table = new CountingTable (shell, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION);
+		table.setBounds (5, 5, 330, 400);
+		table.setItemCount (rows);
+		M3Model model = M3Model.of (table);
+		M3Model.Labels labels = (id, row) -> row.setText (0, "row " + id);
+		/* the labels of the rows the window shows first; the model starts with positional ids */
+		int top = rows / 2;
+		table.setTopIndex (top);
+		pump (300);
+		top = table.getTopIndex ();
+		int page = (int) OS.SendMessage (table.handle, OS.LVM_GETCOUNTPERPAGE, 0, 0);
+		for (int i = top; i <= top + page; i++) table.getItem (i).setText ("row " + i);
+		table.setSelection (top + 3);
+		pump (300);
+		int above = top - 5000, below = top + page + 5000, inside = top + 4;
+		run (table, model, labels, rows, "insert 100 above", b -> b.insert (above, ids (100)), b -> b.remove (above, 100));
+		run (table, model, labels, rows, "insert 100 below", b -> b.insert (below, ids (100)), b -> b.remove (below, 100));
+		run (table, model, labels, rows, "update 100 below", b -> b.update (below, 100), b -> b.update (below, 100));
+		run (table, model, labels, rows, "insert 10000 above", b -> b.insert (above, ids (10_000)), b -> b.remove (above, 10_000));
+		run (table, model, labels, rows, "insert 5 inside", b -> b.insert (inside, ids (5)), b -> b.remove (inside, 5));
+		table.dispose ();
+		pump (100);
+	}
+
+	long [] ids (int count) {
+		long [] ids = new long [count];
+		for (int i = 0; i < count; i++) ids [i] = nextId++;
+		return ids;
+	}
+
+	/* the case and its inverse, alternately, 5 times each; the case is reported */
+	void run (CountingTable table, M3Model model, M3Model.Labels labels, int rows, String name, java.util.function.Consumer<M3Patch.Builder> edit,
+			java.util.function.Consumer<M3Patch.Builder> undo) {
+		long [] millis = new long [5], bytes = new long [5], rowOps = new long [5], stateOps = new long [5], countOps = new long [5], paints = new long [5],
+				paintedRows = new long [5];
+		boolean topSame = true, pixelsSame = true, screenSame = true;
+		for (int rep = 0; rep < 5; rep++) {
+			pump (150);
+			int top = table.getTopIndex ();
+			String topText = table.getItem (top).getText ();
+			long hash = hash (table, false), screen = hash (table, true);
+			M3Patch.Builder builder = M3Patch.builder (M3Model.ROOT);
+			edit.accept (builder);
+			M3Patch patch = builder.build ();
+			table.reset ();
+			long id = Thread.currentThread ().getId ();
+			long allocated = threads.getThreadAllocatedBytes (id);
+			long t0 = System.nanoTime ();
+			model.apply (patch, labels);
+			millis [rep] = (System.nanoTime () - t0) / 1_000_000;
+			bytes [rep] = threads.getThreadAllocatedBytes (id) - allocated;
+			pump (300);
+			rowOps [rep] = table.rowOps;
+			stateOps [rep] = table.stateOps;
+			countOps [rep] = table.countOps;
+			paints [rep] = table.paints;
+			paintedRows [rep] = table.paintedRows;
+			topSame &= topText.equals (table.getItem (table.getTopIndex ()).getText ());
+			pixelsSame &= hash == hash (table, false);
+			screenSame &= screen == hash (table, true);
+			M3Patch.Builder back = M3Patch.builder (M3Model.ROOT);
+			undo.accept (back);
+			model.apply (back.build (), labels);
+		}
+		LOG.info (rows + "\t" + name + "\t" + median (millis) + "\t" + Arrays.stream (millis).max ().getAsLong () + "\t" + median (bytes) + "\t" + median (rowOps) + "\t"
+				+ median (stateOps) + "\t" + median (countOps) + "\t" + median (paints) + "\t" + median (paintedRows) + "\t" + topSame + "\t" + (pixelsSame ? "same" : "CHANGED") + "\t" + (screenSame ? "same" : "changed"));
+	}
+
+	static long median (long [] values) {
+		long [] sorted = values.clone ();
+		Arrays.sort (sorted);
+		return sorted [sorted.length / 2];
+	}
+
+	/* the rows as the control draws them now (WM_PRINT of the client area, as the differential records pixels); with screen, the copy of the screen, which can be stale on a desktop that is not in the foreground */
+	long hash (Table table, boolean screen) {
+		Rectangle r = table.getClientArea ();
+		Image image = new Image (display, Math.max (1, r.width), Math.max (1, r.height));
+		GC gc = new GC (screen ? table : image);
+		if (screen) {
+			gc.copyArea (image, 0, 0);
+		} else {
+			OS.SendMessage (table.handle, OS.WM_PRINT, gc.handle, OS.PRF_CLIENT | OS.PRF_ERASEBKGND | OS.PRF_CHILDREN);
+		}
+		gc.dispose ();
+		ImageData data = image.getImageData ();
+		image.dispose ();
+		long h = 1125899906842597L;
+		for (byte b : data.data) h = 31 * h + b;
+		return h;
+	}
+
+	void pump (int millis) {
+		long end = System.currentTimeMillis () + millis;
+		while (System.currentTimeMillis () < end) {
+			if (!display.readAndDispatch ()) {
+				try {
+					Thread.sleep (5);
+				} catch (InterruptedException e) {
+					return;
+				}
+			}
+		}
+	}
+}

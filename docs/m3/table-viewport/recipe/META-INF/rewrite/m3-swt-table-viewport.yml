@@ -33,6 +33,32 @@ recipeList:
       memberName: stockItems
       beforeMethod: Table
       memberSource: "\t/* The R4_38 item store of a VIRTUAL Table in the original mode (see TableStockItems); null otherwise. */\n\tTableStockItems stockItems;"
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      memberName: m3RowOps
+      beforeMethod: Table
+      memberSource: "\t/* Native row and state operations of this Table (M3Residency.stats NATIVE_ROW_OPS and NATIVE_STATE_OPS; counted by TableSplice.count). */\n\tlong m3RowOps, m3StateOps;"
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      memberName: m3Splice
+      beforeMethod: m3ResidentRange
+      memberSource: "/* M3Model seam (enhanced API leaf 19, step 3): rows [at, at + removed) replaced by inserted empty rows with one native count change (TableSplice); false when the caller is to edit through the item API */\nboolean m3Splice (int at, int removed, int inserted) {\n\tcheckWidget ();\n\treturn viewport != null && TableSplice.splice (this, viewport, at, removed, inserted);\n}"
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      memberName: m3NativeRowOps
+      beforeMethod: m3ResidentRange
+      memberSource: "/* M3Residency seam: the native row operations of this Table so far (TableSplice.count) */\nlong m3NativeRowOps () {\n\treturn m3RowOps;\n}"
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      memberName: m3NativeStateOps
+      beforeMethod: m3ResidentRange
+      memberSource: "/* M3Residency seam: the native state operations (selection, focus, mark) of this Table so far (TableSplice.count) */\nlong m3NativeStateOps () {\n\treturn m3StateOps;\n}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      methodName: callWindowProc
+      parameterCount: 5
+      position: METHOD_START
+      statements: "\tif (hwnd == handle) TableSplice.count (this, msg, lParam);"
   - com.synexia.openrewrite.viewport.M3InsertStatements:
       declaringClasses: [org.eclipse.swt.widgets.Table]
       methodName: widgetStyle
