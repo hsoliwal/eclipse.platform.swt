@@ -73,8 +73,8 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	private IntUnaryOperator parentOf;
 	private long [] matched = {}, kept = {}, previous = {};
 	private int [] rows = {}, rank = {}, spare = {}, flipRows = {}, flipAt = {};
-	/* tree mode: the number of matching strict descendants of every row */
-	private int [] below = {};
+	/* tree mode: the number of matching strict descendants of every row, and the parent of every row */
+	private int [] below = {}, parentLane = {};
 	private int size;
 	private final M3FilterDelta delta = new M3FilterDelta (this);
 
@@ -473,6 +473,12 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	private void updated (M3RowChange in) {
 		for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1);
 		int flips = parentOf == null ? flatFlips (in) : treeFlips (in);
+		if (flips < 0) {
+			/* an invalid parent or a loop: the whole fold decides (and reports), as before */
+			fullPasses++;
+			recompute (in);
+			return;
+		}
 		if (flips > 0) merge (flips);
 		delta.changedRows (in, flipRows, flips, previous, kept);
 		for (int f = 0; f < flips; f++) {
@@ -497,23 +503,28 @@ public final class M3ColumnFilter extends M3RowViewBase {
 
 	/*
 	 * tree: a row is kept when it matches or has a matching descendant (below > 0). A match flip of an edited row
-	 * moves the descendant counts of its ancestors by one (O(depth)); the candidates for a kept flip are the edited
-	 * rows and the ancestors whose count crossed zero. Returns the flips, ascending, ~row for a row that leaves.
+	 * moves the descendant counts of its ancestors by one (O(depth)); a change of parent moves the row's matching
+	 * subtree count from the old ancestors (parent lane) to the new ones. The candidates for a kept flip are the edited
+	 * rows and the ancestors whose count crossed zero. Returns the flips, ascending, ~row for a row that leaves, or -1
+	 * when a parent chain loops (then the whole fold decides, as before).
 	 */
 	private int treeFlips (M3RowChange in) {
-		int candidates = 0;
+		int n = sourceSize (), candidates = 0;
 		for (int i = 0; i < in.rowCount; i++) {
-			int row = in.rows [i];
-			boolean match = M3FilterCriterion.passes (criteria, row);
-			if (match == M3RowMask.get (matched, row)) continue;
+			int row = in.rows [i], parent = parentOf.applyAsInt (row), old = parentLane [row];
+			if (parent < -1 || parent >= n) return -1;
+			boolean was = M3RowMask.get (matched, row), match = M3FilterCriterion.passes (criteria, row);
+			if (parent == old && match == was) continue;
 			M3RowMask.set (matched, row, match);
 			candidates = candidate (row, candidates);
-			int step = match ? 1 : -1;
-			for (int p = parentOf.applyAsInt (row); p != -1; p = parentOf.applyAsInt (p)) {
-				int before = below [p];
-				below [p] = before + step;
-				if (before == 0 || before + step == 0) candidates = candidate (p, candidates);
+			if (parent == old) {
+				candidates = climb (old, match ? 1 : -1, candidates, n);
+			} else {
+				candidates = climb (old, -((was ? 1 : 0) + below [row]), candidates, n);
+				parentLane [row] = parent;
+				if (candidates >= 0) candidates = climb (parent, (match ? 1 : 0) + below [row], candidates, n);
 			}
+			if (candidates < 0) return -1;
 		}
 		Arrays.sort (flipRows, 0, candidates);
 		int flips = 0, last = -1;
@@ -525,6 +536,18 @@ public final class M3ColumnFilter extends M3RowViewBase {
 			if (now != M3RowMask.get (kept, row)) flipRows [flips++] = now ? row : ~row;
 		}
 		return flips;
+	}
+
+	/* adds step to the counts of parent and its ancestors; candidates gain those that crossed zero; -1 on a loop */
+	private int climb (int parent, int step, int candidates, int n) {
+		if (step == 0) return candidates;
+		for (int p = parent, steps = 0; p != -1; p = parentLane [p]) {
+			if (++steps > n) return -1;
+			int before = below [p];
+			below [p] = before + step;
+			if (before == 0 || before + step == 0) candidates = candidate (p, candidates);
+		}
+		return candidates;
 	}
 
 	private int candidate (int row, int count) {
@@ -601,7 +624,8 @@ public final class M3ColumnFilter extends M3RowViewBase {
 		System.arraycopy (matched, 0, kept, 0, words);
 		if (parentOf != null) {
 			M3FilterCriterion.ancestors (matched, kept, n, parentOf);
-			below = M3FilterCriterion.below (matched, n, parentOf, below);
+			parentLane = parentLane.length >= n ? parentLane : new int [n];
+			below = M3FilterCriterion.below (matched, n, parentOf, below, parentLane);
 		}
 		rows = rows.length >= n ? rows : new int [n];
 		rank = rank.length >= words ? rank : new int [words];
@@ -727,12 +751,15 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	}
 
 	/* UI thread: takes a worker result (its generation is current) and reports one RESET */
-	void apply (M3FilterCriterion [] next, long [] matched, long [] kept, int [] below, int [] rows, int [] rank, int size, int generation) {
+	void apply (M3FilterCriterion [] next, long [] matched, long [] kept, int [] below, int [] parentLane, int [] rows, int [] rank, int size, int generation) {
 		applies++;
 		System.arraycopy (next, 0, criteria, 0, criteria.length);
 		Arrays.fill (dirty, false);
 		this.matched = matched;
-		if (below != null) this.below = below;
+		if (below != null) {
+			this.below = below;
+			this.parentLane = parentLane;
+		}
 		this.kept = kept;
 		this.rows = rows;
 		this.rank = rank;

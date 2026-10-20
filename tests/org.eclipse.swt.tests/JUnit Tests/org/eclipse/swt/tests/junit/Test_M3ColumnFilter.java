@@ -465,6 +465,8 @@ public class Test_M3ColumnFilter {
 				for (int k = 0; k < changed.length; k++) {
 					changed [k] = random.nextInt (n);
 					labels [changed [k]] = word (random);
+					/* a value update may move a row to another parent (kept acyclic: a parent precedes its child) */
+					if (random.nextInt (3) == 0) parents [changed [k]] = changed [k] == 0 || random.nextInt (4) == 0 ? -1 : random.nextInt (changed [k]);
 				}
 				filter.rowsChanged (changed);
 				boolean [] keep = new boolean [n];

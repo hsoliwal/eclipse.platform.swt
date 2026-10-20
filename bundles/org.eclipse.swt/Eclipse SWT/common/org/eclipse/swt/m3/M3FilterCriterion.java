@@ -136,12 +136,17 @@ final class M3FilterCriterion {
 		}
 	}
 
-	/* tree mode: the number of matching strict descendants of every row, so that a match flip updates its ancestors in O(depth) */
-	static int [] below (long [] matched, int n, IntUnaryOperator parentOf, int [] lane) {
+	/*
+	 * tree mode: the number of matching strict descendants of every row, so that a match flip updates its ancestors in
+	 * O(depth); parents receives the parent lane (a value update may change a parent: the old one is needed then)
+	 */
+	static int [] below (long [] matched, int n, IntUnaryOperator parentOf, int [] lane, int [] parents) {
 		if (lane.length < n) lane = new int [n]; else Arrays.fill (lane, 0, n, 0);
+		for (int row = 0; row < n; row++) parents [row] = parentOf.applyAsInt (row);
 		for (int w = 0, words = M3RowMask.words (n); w < words; w++) {
 			for (long x = matched [w]; x != 0; x &= x - 1) {
-				for (int p = parentOf.applyAsInt (w << 6 | Long.numberOfTrailingZeros (x)); p != -1; p = parentOf.applyAsInt (p)) lane [p]++;
+				int steps = 0;
+				for (int p = parents [w << 6 | Long.numberOfTrailingZeros (x)]; p != -1 && steps++ < n; p = parents [p]) lane [p]++;
 			}
 		}
 		return lane;

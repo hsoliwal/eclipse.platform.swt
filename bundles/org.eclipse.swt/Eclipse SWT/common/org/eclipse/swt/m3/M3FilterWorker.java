@@ -67,7 +67,7 @@ final class M3FilterWorker implements Runnable {
 	private int resultGeneration = -1, resultSize;
 	private M3FilterCriterion [] resultCriteria;
 	private long [] resultMatched, resultKept;
-	private int [] resultRows, resultRank, resultBelow;
+	private int [] resultRows, resultRank, resultBelow, resultParents;
 	private RuntimeException failure;
 	/* held: results are parked, not posted (guarded by lock); posted: results handed to the UI thread */
 	private boolean held, parked;
@@ -221,7 +221,8 @@ final class M3FilterWorker implements Runnable {
 		M3FilterCriterion.fold (criteria, matched, n);
 		long [] kept = Arrays.copyOf (matched, words);
 		if (parents != null) M3FilterCriterion.ancestors (matched, kept, n, parents);
-		int [] below = parents == null ? null : M3FilterCriterion.below (matched, n, parents, new int [n]);
+		int [] parentLane = parents == null ? null : new int [n];
+		int [] below = parents == null ? null : M3FilterCriterion.below (matched, n, parents, new int [n], parentLane);
 		int [] rows = new int [n], rank = new int [words];
 		int size = M3RowMask.compact (kept, words, rows, rank);
 		if (generation != filter.generation) return false;
@@ -231,6 +232,7 @@ final class M3FilterWorker implements Runnable {
 			resultCriteria = criteria;
 			resultMatched = matched;
 			resultBelow = below;
+			resultParents = parentLane;
 			resultKept = kept;
 			resultRows = rows;
 			resultRank = rank;
@@ -245,7 +247,7 @@ final class M3FilterWorker implements Runnable {
 	private void applied () {
 		M3FilterCriterion [] criteria;
 		long [] matched, kept;
-		int [] rows, rank, below;
+		int [] rows, rank, below, parentLane;
 		int size, generation;
 		synchronized (lock) {
 			if (held) {
@@ -258,13 +260,14 @@ final class M3FilterWorker implements Runnable {
 			criteria = resultCriteria;
 			matched = resultMatched;
 			below = resultBelow;
+			parentLane = resultParents;
 			kept = resultKept;
 			rows = resultRows;
 			rank = resultRank;
 			size = resultSize;
 			generation = resultGeneration;
 		}
-		filter.apply (criteria, matched, kept, below, rows, rank, size, generation);
+		filter.apply (criteria, matched, kept, below, parentLane, rows, rank, size, generation);
 		if (LOG.isDebugEnabled ()) LOG.debug (() -> "generation " + generation + " applied: " + size + " rows shown"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
