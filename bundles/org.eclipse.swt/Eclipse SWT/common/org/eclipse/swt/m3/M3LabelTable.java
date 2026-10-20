@@ -219,7 +219,7 @@ public final class M3LabelTable {
 	public CollationKey collationKey (int labelId, Collator collator) {
 		if (collator == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		String text = (String) text (labelId);
-		if (collator != this.collator || keys == null) {
+		if (collator != this.collator) {
 			this.collator = collator;
 			keys = new CollationKey [texts.length];
 		} else if (keys.length < texts.length) {
@@ -359,9 +359,8 @@ public final class M3LabelTable {
 		while (table [hole] != id) hole = (hole + 1) & mask;
 		for (int index = (hole + 1) & mask; table [index] != 0; index = (index + 1) & mask) {
 			int home = home (hashes [table [index]], mask);
-			/* the entry may move back into the hole unless its home lies cyclically in (hole, index] */
-			boolean stays = hole <= index ? hole < home && home <= index : hole < home || home <= index;
-			if (stays) continue;
+			/* the entry stays when its home lies cyclically in (hole, index]: nearer to its place than the hole is */
+			if (((index - home) & mask) < ((index - hole) & mask)) continue;
 			table [hole] = table [index];
 			hole = index;
 		}

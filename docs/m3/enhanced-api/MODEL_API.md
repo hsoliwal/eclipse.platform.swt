@@ -216,9 +216,19 @@ public final class M3Column {
 	public static M3Column ofLong (String name);
 	public static M3Column ofDouble (String name);
 	public static M3Column image (String name);
-	public static M3Column custom (String name, M3CellSource text);   // text computed on read, never stored
+	public static M3Column custom (String name, M3Column.Text text);   // text computed on read, never stored
 	public int kind ();
 	public String name ();
+	public Text textFunction ();                                  // CUSTOM only
+	@FunctionalInterface public interface Text { CharSequence text (long id, int slot); }
+}
+
+public final class M3StyleTable {
+	public int intern (Font font, Color foreground, Color background);   // 0 when all are null; never freed
+	public Font font (int styleId);
+	public Color foreground (int styleId);
+	public Color background (int styleId);
+	public int size ();
 }
 
 public final class M3LaneModel implements M3TreeModel {
@@ -229,8 +239,11 @@ public final class M3LaneModel implements M3TreeModel {
 
 public final class M3LabelTable {
 	public int intern (CharSequence text);                        // the id of the text, +1 reference
+	public int intern (char [] buffer, int offset, int length);   // the same without a String for a known text
 	public void acquire (int labelId);                            // +1 reference
-	public void release (int labelId);                            // -1; at 0 the id is freed, reused only after the next apply
+	public void release (int labelId);                            // -1; at 0 readable and revivable until recycle
+	public void recycle ();                                       // the model calls it at the end of each apply: frees ids at 0
+	public int references (int labelId);
 	public CharSequence text (int labelId);                       // stable object per label
 	public int length (int labelId);
 	public int getChars (int labelId, char [] buffer, int offset);

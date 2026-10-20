@@ -131,6 +131,26 @@ public class Test_M3LabelTable {
 	}
 
 	@Test
+	public void test_hashCollisionsAndManyReleases () {
+		M3LabelTable labels = new M3LabelTable ();
+		/* "Aa" and "BB" have one hash; "a" and "\0a" too, with different lengths */
+		int aa = labels.intern ("Aa"), bb = labels.intern (new StringBuilder ("BB"));
+		assertNotEquals (aa, bb);
+		assertEquals (bb, labels.intern ("BB".toCharArray (), 0, 2));
+		assertEquals (aa, labels.intern ("Aa".toCharArray (), 0, 2));
+		int a = labels.intern ("a"), zeroA = labels.intern ("\u0000a".toCharArray (), 0, 2);
+		assertNotEquals (a, zeroA);
+		assertEquals (a, labels.intern ("a".toCharArray (), 0, 1));
+		assertEquals (zeroA, labels.intern ("\u0000a"));
+		int [] ids = new int [40];
+		for (int i = 0; i < ids.length; i++) ids [i] = labels.intern ("label " + i);
+		for (int id : ids) labels.release (id);
+		labels.recycle ();
+		assertEquals (4, labels.size (), "40 released and freed at once");
+		for (int id : ids) assertThrows (IllegalArgumentException.class, () -> labels.text (id));
+	}
+
+	@Test
 	public void test_randomAgainstMapOracle () {
 		M3LabelTable labels = new M3LabelTable ();
 		Map<String, Integer> idOf = new HashMap<> ();
