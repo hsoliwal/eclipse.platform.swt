@@ -1,0 +1,58 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtCTabFolderMouseC2
+displayName: CTabFolder mouse handling by binary search over the showing tabs (optimization leaf C2)
+description: >-
+  Optimization pass leaf C2 (docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv). Every mouse move tested every tab
+  and reset the hover and close-button state of every tab: O(n) per move (10 ms at 10^5 tabs). setItemLocation now
+  records the indexes of the showing tabs, which lie left to right in index order, so the tab under the mouse is a
+  binary search (catalogue: upper bound); every tab other than the one under the mouse, the one it left and the
+  selected one is in its rest state, so a move updates only those (a delta). Mouse down, up and exit use the same
+  search; the indexes go stale (stock scan) when a tab is created, disposed or reordered. Viewport mode only;
+  idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tint[] minWidthsScratch = new int[0];\n(?!\t/[*] VIEWPORT: the indexes of the showing tabs)"
+      replace: "\tint[] minWidthsScratch = new int[0];\n\t/* VIEWPORT: the indexes of the showing tabs in index order (setItemLocation; -1: stale), and the tab under the mouse */\n\tint[] showingIndices = new int[0];\n\tint showingCount = -1;\n\tCTabItem mouseItem;\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "void createItem (CTabItem item, int index) {\n    if (0 > index || index > getItemCount()) {\n"
+      replace: "void createItem (CTabItem item, int index) {\n\tshowingCount = -1; // VIEWPORT: the indexes of the showing tabs shift\n    if (0 > index || index > getItemCount()) {\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "void destroyItem (CTabItem item) {\n    if (inDispose) {\n"
+      replace: "void destroyItem (CTabItem item) {\n\tshowingCount = -1; // VIEWPORT: the indexes of the showing tabs shift\n    if (inDispose) {\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "/[*]public[*]/ void setItemOrder [(]int\\[\\] indices[)] [{]\n(?!\tshowingCount = -1;)"
+      replace: "/*public*/ void setItemOrder (int[] indices) {\n\tshowingCount = -1; // VIEWPORT: the indexes of the showing tabs move\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "boolean setItemLocation(GC gc) {\n\tboolean changed = false;\n    if (itemCount == 0) {\n"
+      replace: "boolean setItemLocation(GC gc) {\n\tboolean changed = false;\n\tif (VIEWPORT) {\n\t\t//FLLDCIM: VIEWPORT - the showing tabs, left to right in index order, for the mouse's binary search\n\t\tif (showingIndices.length < itemCount) showingIndices = new int[Math.max(itemCount, showingIndices.length * 2)];\n\t\tshowingCount = 0;\n\t}\n    if (itemCount == 0) {\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\t\tif (i == selectedIndex) {\n\t\t\t\tfirstIndex = selectedIndex;\n"
+      replace: "\t\t\tif (i == selectedIndex) {\n\t\t\t\tfirstIndex = selectedIndex;\n\t\t\t\tif (VIEWPORT) showingIndices[showingCount++] = i;\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\t\t\tx = x + item.width;\n\t\t\t}\n\t\t}\n\t}\n\treturn changed;\n}\n"
+      replace: "\t\t\t\tif (VIEWPORT) showingIndices[showingCount++] = i;\n\t\t\t\tx = x + item.width;\n\t\t\t}\n\t\t}\n\t}\n\treturn changed;\n}\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\nvoid onMouse[(]Event event[)] [{]\n(?<!\treturn containsPoint [(]item, x, y[)] [?] item : null;\n[}]\n\n/[*]\n [*] VIEWPORT: the state of one tab[^\n]*\n[^\n]*\n [*]/\nvoid mouseState [(]int i, int x, int y[)] [{]\n(?:[^\n]*\n){1,30}?[}]\n\nvoid onMouse[(]Event event[)] [{]\n)"
+      replace: "\n/*\n * VIEWPORT: the tab under a point, or null. The showing tabs lie left to right in index order (setItemLocation), so\n * the only candidate is the last showing tab starting at or left of x (binary search); every other tab is off screen.\n * The stock scan while the indexes are stale (a tab was created, disposed or reordered since the layout).\n */\nCTabItem hitItem (int x, int y) {\n\tif (showingCount < 0) {\n\t\tfor (int t = 0; t < itemCount; t++) {\n\t\t\tif (containsPoint(items[t], x, y)) return items[t];\n\t\t}\n\t\treturn null;\n\t}\n\tint low = 0, high = showingCount;\n\twhile (low < high) {\n\t\tint mid = (low + high) >>> 1;\n\t\tif (items[showingIndices[mid]].x <= x) {\n\t\t\tlow = mid + 1;\n\t\t} else {\n\t\t\thigh = mid;\n\t\t}\n\t}\n\tif (low == 0) return null;\n\tCTabItem item = items[showingIndices[low - 1]];\n\treturn containsPoint (item, x, y) ? item : null;\n}\n\n/*\n * VIEWPORT: the state of one tab for a mouse at (x, y), as one iteration of the stock MouseMove loop (hot, close\n * button hot or none, back to the rest state when the mouse is elsewhere).\n */\nvoid mouseState (int i, int x, int y) {\n\tCTabItem item = items[i];\n\tboolean close = false;\n\tif (containsPoint(item, x, y)) {\n\t\tclose = true;\n\t\tif (item.closeRect.contains(x, y)) {\n\t\t\tif (item.closeImageState != SWT.SELECTED && item.closeImageState != SWT.HOT) {\n\t\t\t\titem.closeImageState = SWT.HOT;\n\t\t\t\tredraw(item.closeRect.x, item.closeRect.y, item.closeRect.width, item.closeRect.height, false);\n\t\t\t}\n\t\t} else if (item.closeImageState != SWT.NONE) {\n\t\t\titem.closeImageState = SWT.NONE;\n\t\t\tredraw(item.closeRect.x, item.closeRect.y, item.closeRect.width, item.closeRect.height, false);\n\t\t}\n\t\tif ((item.state & SWT.HOT) == 0) {\n\t\t\titem.state |= SWT.HOT;\n\t\t\tredraw(item.x, item.y, item.width, item.height, false);\n\t\t}\n\t}\n\tif (i != selectedIndex && item.closeImageState != SWT.BACKGROUND && !close) {\n\t\titem.closeImageState = SWT.BACKGROUND;\n\t\tredraw(item.closeRect.x, item.closeRect.y, item.closeRect.width, item.closeRect.height, false);\n\t}\n\tif ((item.state & SWT.HOT) != 0 && !close) {\n\t\titem.state &= ~SWT.HOT;\n\t\tredraw(item.x, item.y, item.width, item.height, false);\n\t}\n\tif (i == selectedIndex && item.closeImageState != SWT.NONE && !close) {\n\t\titem.closeImageState = SWT.NONE;\n\t\tredraw(item.closeRect.x, item.closeRect.y, item.closeRect.width, item.closeRect.height, false);\n\t}\n}\n\n/* VIEWPORT: the mouse moved to (x, y): only the tab under it, the tab it left and the selected tab can change */\nvoid mouseMoved (int x, int y) {\n\tCTabItem hit = hitItem (x, y);\n\tCTabItem left = mouseItem != null && !mouseItem.isDisposed () && mouseItem != hit ? mouseItem : null;\n\tmouseItem = hit;\n\tCTabItem selected = selectedIndex != -1 ? items[selectedIndex] : null;\n\tif (left != null) mouseState (indexOf (left), x, y);\n\tif (hit != null) mouseState (indexOf (hit), x, y);\n\tif (selected != null && selected != hit && selected != left) mouseState (selectedIndex, x, y);\n}\n\nvoid onMouse(Event event) {\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\tcase SWT.MouseExit: [{]\n\t\t\tfor [(]int i=0; i<itemCount; i[+][+][)] [{]\n"
+      replace: "\t\tcase SWT.MouseExit: {\n\t\t\tif (VIEWPORT) {\n\t\t\t\t//FLLDCIM: VIEWPORT - only the tab the mouse was over and the selected tab leave a non-rest state\n\t\t\t\tmouseMoved (Integer.MIN_VALUE, Integer.MIN_VALUE);\n\t\t\t\tmouseItem = null;\n\t\t\t\tbreak;\n\t\t\t}\n\t\t\tfor (int i=0; i<itemCount; i++) {\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\tcase SWT.MouseMove: [{]\n\t\t\t_setToolTipText[(]event[.]x, event[.]y[)];\n\t\t\tboolean close = false;\n"
+      replace: "\t\tcase SWT.MouseMove: {\n\t\t\t_setToolTipText(event.x, event.y);\n\t\t\tif (VIEWPORT) {\n\t\t\t\t//FLLDCIM: VIEWPORT - the tab under the mouse by binary search; a move updates three tabs at most (O(log n))\n\t\t\t\tmouseMoved (x, y);\n\t\t\t\tbreak;\n\t\t\t}\n\t\t\tboolean close = false;\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\t\t[}] else [{]\n\t\t\t\tfor [(]int t = 0; t < itemCount; t[+][+][)] [{]\n\t\t\t\t\tCTabItem tabItem = items\\[t\\];\n\t\t\t\t\tif [(]containsPoint[(]tabItem, x, y[)][)][{]\n\t\t\t\t\t\titem = tabItem;\n\t\t\t\t\t\tbreak;\n\t\t\t\t\t[}]\n\t\t\t\t[}]\n\t\t\t[}]\n"
+      replace: "\t\t\t} else if (VIEWPORT) {\n\t\t\t\t//FLLDCIM: VIEWPORT - the tab under the mouse by binary search; it is the tab whose state the click changes\n\t\t\t\titem = hitItem (x, y);\n\t\t\t\tif (item != null) mouseItem = item;\n\t\t\t} else {\n\t\t\t\tfor (int t = 0; t < itemCount; t++) {\n\t\t\t\t\tCTabItem tabItem = items[t];\n\t\t\t\t\tif (containsPoint(tabItem, x, y)){\n\t\t\t\t\t\titem = tabItem;\n\t\t\t\t\t\tbreak;\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\t\t\t\t\tCTabItem nextItem = getItem[(]pt[)];\n\t\t\t\t\t\tif [(]nextItem != null[)] [{]\n(?!\t\t\t\t\t\t\tif [(]VIEWPORT[)] mouseItem = nextItem;)"
+      replace: "\t\t\t\t\t\tCTabItem nextItem = getItem(pt);\n\t\t\t\t\t\tif (nextItem != null) {\n\t\t\t\t\t\t\tif (VIEWPORT) mouseItem = nextItem; // its close button state changes below\n"
+      regex: true
