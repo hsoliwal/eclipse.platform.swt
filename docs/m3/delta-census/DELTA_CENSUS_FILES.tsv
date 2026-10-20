@@ -1,0 +1,692 @@
+repo	file	pattern	count
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/customize/dialog/XViewerCustomizeDialog.java	jface_setInput	15
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/cpd/CustomizePerspectiveDialog.java	jface_setInput	15
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/tools/AbstractTool.java	jface_setInput	12
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/CompareEditorInput.java	jface_setInput	12
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/wizards/ExportProjectSetMainPage.java	jface_setInput	10
+platform	resources/bundles/org.eclipse.core.tools.resources/src/org/eclipse/core/tools/resources/markers/MarkerView.java	jface_setInput	9
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/tablecombo/viewer/TableComboViewerSnippet1.java	jface_setInput	8
+nebula	widgets/calendarcombo/org.eclipse.nebula.widgets.calendarcombo/src/org/eclipse/nebula/widgets/calendarcombo/CalendarCombo.java	swt_removeAll	8
+nebula	widgets/tablecombo/org.eclipse.nebula.widgets.tablecombo.snippets/src/org/eclipse/nebula/widgets/tablecombo/TableComboViewerSnippet1.java	jface_setInput	8
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/ViewerColumnsDialog.java	jface_refresh_all	8
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/ContentTypesPreferencePage.java	jface_refresh_all	8
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/editparts/AbstractEditPart.java	gef_refreshChildren	7
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/tree/DefaultTreeModel.java	swing_treeStructure	7
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/ClasspathModel.java	swt_removeAll	7
+platform	ua/org.eclipse.ui.intro.universal/src/org/eclipse/ui/internal/intro/universal/CustomizationContentsArea.java	jface_refresh_all	7
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/TreeViewer.java	swt_clearAll	7
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/cpd/CustomizePerspectiveDialog.java	jface_refresh_all	7
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/customize/CustomizeManager.java	jface_refresh_all	6
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/ui/PrototypeTab.java	jface_setInput	6
+platform	ua/org.eclipse.ui.intro.universal/src/org/eclipse/ui/internal/intro/universal/CustomizationContentsArea.java	jface_setInput	6
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/ResourceFilterGroup.java	jface_refresh_all	6
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/dialogs/FilteredItemsSelectionDialog.java	jface_refresh_all	6
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/views/AntView.java	jface_refresh_all	5
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/groups/GroupLaunchConfigurationTabGroup.java	jface_refresh_all	5
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/keys/NewKeysPreferencePage.java	jface_setInput	5
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/metal/MetalFileChooserUI.java	swing_contentsChanged	4
+nebula	widgets/ctreecombo/org.eclipse.nebula.widgets.ctreecombo/src/org/eclipse/nebula/widgets/ctreecombo/viewer/CTreeComboViewer.java	swt_clearAll	4
+nebula	widgets/timeline/org.eclipse.nebula.widgets.timeline/src/org/eclipse/nebula/widgets/timeline/figures/RootFigure.java	swt_removeAll	4
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/customize/XViewerCustomMenu.java	jface_setInput	4
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/AntPropertiesBlock.java	jface_setInput	4
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/LaunchConfigurationsDialog.java	jface_refresh_all	4
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/memory/provisional/AbstractAsyncTableRendering.java	jface_refresh_all	4
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/memory/MemoryBlocksTreeViewPane.java	jface_setInput	4
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/patch/PatchCompareEditorInput.java	jface_refresh_all	4
+platform	team/bundles/org.eclipse.jsch.ui/src/org/eclipse/jsch/internal/ui/preference/PreferencePage.java	swt_removeAll	4
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/history/LocalHistoryPage.java	jface_setInput	4
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/preferences/TextPreferencePage.java	jface_refresh_all	4
+platform	team/bundles/org.eclipse.ui.net/src/org/eclipse/ui/internal/net/NonProxyHostsComposite.java	jface_refresh_all	4
+platform	team/bundles/org.eclipse.ui.net/src/org/eclipse/ui/internal/net/ProxyEntriesComposite.java	jface_refresh_all	4
+platform	terminal/bundles/org.eclipse.terminal.view.ui/src/org/eclipse/terminal/view/ui/internal/preferences/PreferencePage.java	jface_refresh_all	4
+platform	ua/org.eclipse.ui.cheatsheets/src/org/eclipse/ui/internal/cheatsheets/views/CheatSheetViewer.java	jface_setInput	4
+platform.ui	bundles/org.eclipse.text.quicksearch/src/org/eclipse/text/quicksearch/internal/ui/QuickSearchDialog.java	jface_refresh_all	4
+platform.ui	bundles/org.eclipse.ui.views.properties.tabbed/src/org/eclipse/ui/views/properties/tabbed/ISection.java	jface_refresh_all	4
+platform.ui	bundles/org.eclipse.ui.views.properties.tabbed/src/org/eclipse/ui/views/properties/tabbed/ISection.java	jface_setInput	4
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/activities/ActivityCategoryPreferencePage.java	jface_setInput	4
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/dialogs/FilteredItemsSelectionDialog.java	jface_setInput	4
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/keys/NewKeysPreferencePage.java	jface_refresh_all	4
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet050DelegatingStyledCellLabelProvider.java	jface_refresh_all	4
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/internal/ui/palette/editparts/PaletteStackEditPart.java	gef_refreshChildren	3
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicDirectoryModel.java	swing_contentsChanged	3
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/table/DefaultTableModel.java	swing_tableStructureChanged	3
+nebula	widgets/richtext/org.eclipse.nebula.widgets.richtext.example/src/org/eclipse/nebula/widgets/richtext/example/JFaceViewerIntegrationExample.java	jface_setInput	3
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/FavoritesDialog.java	jface_refresh_all	3
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/LaunchConfigurationsDialog.java	jface_setInput	3
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/preferences/LaunchersPreferencePage.java	jface_setInput	3
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/preferences/StringVariablePreferencePage.java	jface_refresh_all	3
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/model/InternalTreeModelViewer.java	swt_clearAll	3
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/ui/CommonTab.java	jface_setInput	3
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/ui/memory/AbstractTableRendering.java	jface_refresh_all	3
+platform	debug/org.eclipse.ui.console/src/org/eclipse/ui/internal/console/ansi/preferences/AnsiConsolePreferenceUtils.java	jface_refresh_all	3
+platform	debug/org.eclipse.ui.externaltools/External Tools Base/org/eclipse/ui/externaltools/internal/ui/TreeAndListGroup.java	jface_setInput	3
+platform	debug/org.eclipse.unittest.ui/src/org/eclipse/unittest/internal/ui/history/HistoryDialog.java	jface_refresh_all	3
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/CompareViewerSwitchingPane.java	jface_setInput	3
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/EditionSelectionDialog.java	jface_setInput	3
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/structuremergeviewer/StructureDiffViewer.java	jface_setInput	3
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/history/GenericHistoryView.java	jface_setInput	3
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/wizards/ConfigureProjectWizardMainPage.java	jface_setInput	3
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/ui/PageSaveablePart.java	jface_setInput	3
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/ScopeSetDialog.java	jface_refresh_all	3
+platform	ua/org.eclipse.ui.cheatsheets/src/org/eclipse/ui/internal/cheatsheets/views/CheatSheetView.java	jface_setInput	3
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/m3/M3Viewers.java	jface_refresh_all	3
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/window/ApplicationWindow.java	swt_removeAll	3
+platform.ui	bundles/org.eclipse.search/search/org/eclipse/search/internal/ui/text/FileTreeContentProvider.java	jface_refresh_all	3
+platform.ui	bundles/org.eclipse.ui.ide/extensions/org/eclipse/ui/dialogs/ResourceListSelectionDialog.java	swt_removeAll	3
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/ide/dialogs/ResourceTreeAndListGroup.java	jface_setInput	3
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/LargeFileAssociationsPreferencePage.java	swt_removeAll	3
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/LinkedResourceEditor.java	jface_refresh_all	3
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/misc/CheckboxTreeAndListGroup.java	jface_setInput	3
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/FiltersConfigurationDialog.java	jface_refresh_all	3
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/wizards/datatransfer/WizardProjectsImportPage.java	jface_refresh_all	3
+platform.ui	bundles/org.eclipse.ui.navigator.resources/src/org/eclipse/ui/internal/navigator/resources/actions/WorkingSetActionProvider.java	jface_setInput	3
+platform.ui	bundles/org.eclipse.ui.views.properties.tabbed/src/org/eclipse/ui/views/properties/tabbed/TabbedPropertySheetPage.java	jface_refresh_all	3
+platform.ui	bundles/org.eclipse.ui.views/src/org/eclipse/ui/views/properties/PropertySheetPage.java	jface_setInput	3
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/ShowInMenu.java	swt_removeAll	3
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/ContentTypesPreferencePage.java	jface_setInput	3
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/keys/KeysPreferencePage.java	swt_removeAll	3
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/themes/ColorsAndFontsPreferencePage.java	jface_refresh_all	3
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/part/DrillDownAdapter.java	jface_setInput	3
+swt	bundles/org.eclipse.swt.tools/JNI Generation/org/eclipse/swt/tools/internal/JNIGeneratorAppUI.java	swt_removeAll	3
+swt	bundles/org.eclipse.swt.tools/Mac Generation/org/eclipse/swt/tools/internal/MacGeneratorUI.java	swt_removeAll	3
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/editparts/AbstractTreeEditPart.java	jface_refresh_all	2
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/editparts/GraphicalRootEditPart.java	gef_refreshChildren	2
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/editparts/RootTreeEditPart.java	gef_refreshChildren	2
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/editparts/SimpleRootEditPart.java	gef_refreshChildren	2
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/internal/ui/palette/editparts/PinnablePaletteStackEditPart.java	gef_refreshChildren	2
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/ui/palette/editparts/PaletteEditPart.java	gef_refreshChildren	2
+gef-classic	org.eclipse.zest.core/src/org/eclipse/zest/core/widgets/Graph.java	swt_removeAll	2
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/DefaultListModel.java	swing_contentsChanged	2
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/PopupFactory.java	swt_removeAll	2
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicComboBoxUI.java	swt_removeAll	2
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicFileChooserUI.java	swt_removeAll	2
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicTreeUI.java	swt_removeAll	2
+m3jdk21-desktop	src/java.desktop/share/classes/sun/swing/FilePane.java	swing_contentsChanged	2
+m3jdk21-desktop	src/java.desktop/share/classes/sun/swing/FilePane.java	swing_tableStructureChanged	2
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippetDisposePerformance.java	jface_setInput	2
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippetGridColumnLayout.java	jface_setInput	2
+nebula	widgets/gallery/org.eclipse.nebula.widgets.gallery/src/org/eclipse/nebula/widgets/gallery/Gallery.java	swt_clearAll	2
+nebula	widgets/geomap/org.eclipse.nebula.widgets.geomap.example/src/org/eclipse/nebula/widgets/geomap/jface/example/GeoMapViewerExampleTab.java	jface_setInput	2
+nebula	widgets/radiogroup/org.eclipse.nebula.widgets.radiogroup/src/org/eclipse/nebula/jface/viewer/radiogroup/RadioGroupViewer.java	swt_removeAll	2
+nebula	widgets/treemapper/org.eclipse.nebula.widgets.treemapper/src/org/eclipse/nebula/widgets/treemapper/TreeMapper.java	jface_refresh_all	2
+nebula	widgets/treemapper/org.eclipse.nebula.widgets.treemapper/src/org/eclipse/nebula/widgets/treemapper/TreeMapper.java	jface_setInput	2
+nebula	widgets/visualization/org.eclipse.nebula.visualization.xygraph/src/org/eclipse/nebula/visualization/internal/xygraph/toolbar/AnnotationConfigPage.java	swt_removeAll	2
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/customize/SearchDataUI.java	jface_refresh_all	2
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/customize/XViewerCustomMenu.java	jface_refresh_all	2
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/customize/dialog/XViewerCustDialogDragDrop.java	jface_setInput	2
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/util/internal/FilteredTreeComposite.java	jface_refresh_all	2
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/util/internal/dialog/ListDialogSortableFiltered.java	jface_setInput	2
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/util/internal/dialog/XCheckFilteredTreeDialog.java	jface_setInput	2
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/util/internal/dialog/XFilteredTree.java	jface_refresh_all	2
+platform	ant/org.eclipse.ant.ui/Ant Editor/org/eclipse/ant/internal/ui/editor/outline/AntEditorContentOutlinePage.java	jface_refresh_all	2
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/datatransfer/AntNewJavaProjectPage.java	jface_setInput	2
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/launchConfigurations/AntTargetsTab.java	jface_setInput	2
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/launchConfigurations/TargetOrderDialog.java	jface_setInput	2
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/AntClasspathContentProvider.java	swt_removeAll	2
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/AntClasspathPage.java	jface_setInput	2
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/AntRuntimePreferencePage.java	jface_setInput	2
+platform	ant/org.eclipse.ant.ui/Remote Ant Support/org/eclipse/ant/internal/ui/antsupport/inputhandler/SWTInputHandler.java	jface_setInput	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/actions/breakpointGroups/GroupBreakpointsByDialog.java	jface_refresh_all	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/actions/breakpointGroups/GroupBreakpointsByDialog.java	jface_setInput	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/actions/breakpoints/ShowSupportedBreakpointsAction.java	jface_refresh_all	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/groups/GroupLaunchConfigurationTabGroup.java	jface_setInput	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/LaunchConfigurationPropertiesDialog.java	jface_setInput	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/preferences/ConsolePreferencePage.java	jface_setInput	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/preferences/RunDebugPropertiesPage.java	jface_setInput	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/breadcrumb/AbstractBreadcrumb.java	jface_setInput	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/model/SubTreeModelViewer.java	jface_setInput	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/breakpoints/BreakpointsView.java	jface_setInput	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/launch/LaunchViewBreadcrumb.java	jface_setInput	2
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/ui/memory/AbstractTableRendering.java	jface_setInput	2
+platform	debug/org.eclipse.unittest.ui/src/org/eclipse/unittest/internal/ui/CompareResultsAction.java	jface_setInput	2
+platform	debug/org.eclipse.unittest.ui/src/org/eclipse/unittest/internal/ui/FailureTraceUIBlock.java	swt_removeAll	2
+platform	resources/bundles/org.eclipse.core.tools.resources/src/org/eclipse/core/tools/resources/ResourceChangeView.java	jface_setInput	2
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/runtime/EventsView.java	jface_setInput	2
+platform	team/bundles/org.eclipse.compare.core/src/org/eclipse/compare/rangedifferencer/RangeDifferencer.java	swt_removeAll	2
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/CompareViewerPane.java	swt_removeAll	2
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/contentmergeviewer/TextMergeViewer.java	jface_setInput	2
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/AddFromHistoryDialog.java	jface_setInput	2
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/CompareContentViewerSwitchingPane.java	jface_setInput	2
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/CompareOutlinePage.java	jface_setInput	2
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/ComparePreferencePage.java	jface_setInput	2
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/CompareStructureViewerSwitchingPane.java	jface_setInput	2
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/patch/PatchCompareEditorInput.java	jface_setInput	2
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/patch/PreviewPatchPage2.java	jface_refresh_all	2
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/history/GenericHistoryView.java	jface_refresh_all	2
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/history/LocalHistoryTableProvider.java	jface_refresh_all	2
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/mapping/CommonViewerAdvisor.java	jface_setInput	2
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/preferences/FileTypeTable.java	jface_refresh_all	2
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/actions/ChangeSetActionGroup.java	swt_removeAll	2
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/patch/ApplyPatchModelCompareEditorInput.java	jface_setInput	2
+platform	team/bundles/org.eclipse.ui.net/src/org/eclipse/ui/internal/net/ProxyPreferencePage.java	jface_refresh_all	2
+platform	team/examples/org.eclipse.compare.examples.xml/src/org/eclipse/compare/examples/xml/XMLComparePreferencePage.java	swt_removeAll	2
+platform	team/examples/org.eclipse.team.examples.filesystem/src/org/eclipse/team/examples/filesystem/ui/FileSystemHistoryPage.java	jface_setInput	2
+platform	terminal/bundles/org.eclipse.terminal.control/src/org/eclipse/terminal/internal/emulator/VT100Emulator.java	swt_clearAll	2
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/preferences/ICButtons.java	jface_refresh_all	2
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/search/InfoCenterPage.java	jface_setInput	2
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/search/LocalHelpPage.java	jface_setInput	2
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/HyperlinkTreePart.java	jface_refresh_all	2
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/ReusableHelpPart.java	jface_refresh_all	2
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/ReusableHelpPart.java	jface_setInput	2
+platform	ua/org.eclipse.ui.cheatsheets/src/org/eclipse/ui/cheatsheets/OpenCheatSheetAction.java	jface_setInput	2
+platform	ua/org.eclipse.ui.cheatsheets/src/org/eclipse/ui/internal/cheatsheets/composite/views/CheatsheetTaskEditor.java	jface_setInput	2
+platform	ua/org.eclipse.ui.cheatsheets/src/org/eclipse/ui/internal/cheatsheets/dialogs/CheatSheetCategoryBasedSelectionDialog.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.e4.ui.dialogs/src/org/eclipse/e4/ui/dialogs/filteredtree/FilteredTable.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.e4.ui.dialogs/src/org/eclipse/e4/ui/dialogs/filteredtree/FilteredTree.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.e4.ui.workbench.renderers.swt/src/org/eclipse/e4/ui/internal/workbench/renderers/swt/AbstractTableInformationControl.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.jface.text/projection/org/eclipse/jface/text/source/projection/SourceViewerInformationControl.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.jface.text/src/org/eclipse/jface/internal/text/InformationControlReplacer.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/action/SubMenuManager.java	swt_removeAll	2
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/ComboViewer.java	swt_removeAll	2
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/TreeViewer.java	swt_setItemCount0	2
+platform.ui	bundles/org.eclipse.search/newsearch/org/eclipse/search/ui/text/AbstractTextSearchViewPage.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.search/newsearch/org/eclipse/search2/internal/ui/SearchView.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.search/search/org/eclipse/search/internal/ui/text/DecoratingFileSearchLabelProvider.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.text.quicksearch/src/org/eclipse/text/quicksearch/internal/ui/QuickSearchDialog.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/ProjectNaturesPage.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/ResourceFilterGroup.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/ResourceFilterGroup.java	swt_removeAll	2
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/CachedMarkerBuilder.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/QuickFixPage.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/ViewerColumnsDialog.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/wizards/datatransfer/SmartImportRootWizardPage.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/wizards/datatransfer/SmartImportRootWizardPage.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.navigator.resources/src/org/eclipse/ui/internal/navigator/resources/actions/WorkingSetActionProvider.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/internal/navigator/NavigatorDecoratingLabelProvider.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/internal/navigator/filters/UserFiltersTab.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.views.log/src/org/eclipse/ui/internal/views/log/LogView.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.views.properties.tabbed/src/org/eclipse/ui/views/properties/tabbed/TabbedPropertySheetPage.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/dialogs/EditorSelectionDialog.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/dialogs/FilteredTree.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/CoolBarToTrimManager.java	swt_removeAll	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/FilteredTableBaseHandler.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/about/AboutFeaturesPage.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/about/AboutPluginsPage.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/activities/ws/ActivityEnabler.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/FileEditorsPreferencePage.java	swt_removeAll	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/FilteredPreferenceDialog.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/SimpleWorkingSetSelectionDialog.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/ViewsPreferencePage.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/WorkingSetSelectionDialog.java	jface_setInput	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/progress/DetailedProgressViewer.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/statushandlers/WorkbenchStatusDialogManagerImpl.java	jface_refresh_all	2
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/views/WorkbenchViewerSetup.java	jface_setInput	2
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet019TableViewerAddRemoveColumnsWithEditing.java	jface_refresh_all	2
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet022TableViewerRefreshNoScroll.java	jface_refresh_all	2
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet054NativeControlsInViewers.java	jface_setInput	2
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet067TreeViewerSorted.java	jface_setInput	2
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/wizard/Snippet047WizardWithLongRunningOperation.java	jface_setInput	2
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/editparts/AbstractConnectionEditPart.java	jface_refresh_all	1
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/editparts/AbstractGraphicalEditPart.java	jface_refresh_all	1
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/editparts/RootTreeEditPart.java	swt_removeAll	1
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/editpolicies/DirectEditPolicy.java	jface_refresh_all	1
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/internal/ui/rulers/RulerEditPart.java	gef_refreshChildren	1
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/ui/actions/RedoAction.java	jface_refresh_all	1
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/ui/actions/UndoAction.java	jface_refresh_all	1
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/ui/palette/PaletteViewer.java	jface_refresh_all	1
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/ui/palette/customize/PaletteCustomizerDialog.java	jface_setInput	1
+gef-classic	org.eclipse.gef/src/org/eclipse/gef/ui/palette/customize/PaletteCustomizerDialog.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/AbstractListModel.java	swing_contentsChanged	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/DefaultComboBoxModel.java	swing_contentsChanged	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/JDesktopPane.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/JFileChooser.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/JLayeredPane.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/JMenu.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/JOptionPane.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/JSplitPane.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/Popup.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicListUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicOptionPaneUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicSpinnerUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicTabbedPaneUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicTableHeaderUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicTableUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/basic/BasicTextUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/metal/MetalFileChooserUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/synth/SynthComboBoxUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/synth/SynthTableUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/plaf/synth/SynthTreeUI.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/table/AbstractTableModel.java	swing_tableDataChanged	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/table/AbstractTableModel.java	swing_tableStructureChanged	1
+m3jdk21-desktop	src/java.desktop/share/classes/javax/swing/text/ZoneView.java	swt_removeAll	1
+m3jdk21-desktop	src/java.desktop/share/classes/sun/swing/FilePane.java	swing_tableDataChanged	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/datechooser/DateChooserSnippet3.java	swt_removeAll	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/gallery/SnippetVirtual.java	swt_setItemCount0	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerShortTextPerformance.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippet1.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippet2.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippet3.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippet4.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippet5.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippet6.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippet7.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippetWithAdaptedDataVisualizer.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridViewerSnippetWithGridItemDataVisualizer.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/GridVirtualTableViewer.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/grid/viewer/Snippet026TreeViewerTabEditing.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/pshelf/PShelfViewerSnippet1.java	jface_setInput	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/radiogroup/RadioGroupViewerSnippet01.java	jface_refresh_all	1
+nebula	examples/org.eclipse.nebula.snippets/src/org/eclipse/nebula/snippets/tablecombo/Bug385585.java	jface_setInput	1
+nebula	widgets/calendarcombo/org.eclipse.nebula.widgets.calendarcombo/src/org/eclipse/nebula/widgets/calendarcombo/CustomCombo.java	swt_removeAll	1
+nebula	widgets/cdatetime/org.eclipse.nebula.widgets.cdatetime.snippets/src/org/eclipse/nebula/widgets/cdatetime/snippets/CDTEditorSample.java	jface_setInput	1
+nebula	widgets/collapsiblebuttons/org.eclipse.nebula.widgets.collapsiblebuttons/src/org/eclipse/nebula/widgets/collapsiblebuttons/CollapsibleButtons.java	swt_removeAll	1
+nebula	widgets/compositetable/org.eclipse.nebula.widgets.compositetable/src/org/eclipse/nebula/widgets/compositetable/viewers/MonthCalendarViewer.java	jface_refresh_all	1
+nebula	widgets/ctreecombo/org.eclipse.nebula.widgets.ctreecombo/src/org/eclipse/nebula/widgets/ctreecombo/CTreeCombo.java	swt_clearAll	1
+nebula	widgets/ctreecombo/org.eclipse.nebula.widgets.ctreecombo/src/org/eclipse/nebula/widgets/ctreecombo/CTreeCombo.java	swt_removeAll	1
+nebula	widgets/ctreecombo/org.eclipse.nebula.widgets.ctreecombo/src/org/eclipse/nebula/widgets/ctreecombo/CTreeComboItem.java	swt_clearAll	1
+nebula	widgets/ctreecombo/org.eclipse.nebula.widgets.ctreecombo/src/org/eclipse/nebula/widgets/ctreecombo/viewer/CTreeComboViewer.java	swt_removeAll	1
+nebula	widgets/ctreecombo/org.eclipse.nebula.widgets.ctreecombo/src/org/eclipse/nebula/widgets/ctreecombo/viewer/CTreeComboViewer.java	swt_setItemCount0	1
+nebula	widgets/gallery/org.eclipse.nebula.widgets.gallery.example/src/org/eclipse/nebula/widgets/gallery/example/GalleryExampleTab.java	swt_removeAll	1
+nebula	widgets/gallery/org.eclipse.nebula.widgets.gallery/src/org/eclipse/nebula/jface/galleryviewer/GalleryTreeViewer.java	swt_removeAll	1
+nebula	widgets/gallery/org.eclipse.nebula.widgets.gallery/src/org/eclipse/nebula/widgets/gallery/GalleryItem.java	swt_clearAll	1
+nebula	widgets/geomap/org.eclipse.nebula.widgets.geomap/src/org/eclipse/nebula/widgets/geomap/internal/geomapbrowser/ResultsPage.java	swt_removeAll	1
+nebula	widgets/grid/org.eclipse.nebula.widgets.grid.test/src/org/eclipse/nebula/widgets/grid/GridDifferentialDriver.java	swt_removeAll	1
+nebula	widgets/grid/org.eclipse.nebula.widgets.grid.test/src/org/eclipse/nebula/widgets/grid/bench/ClassicDriver.java	swt_clearAll	1
+nebula	widgets/grid/org.eclipse.nebula.widgets.grid/src/org/eclipse/nebula/jface/gridviewer/GridTableViewer.java	jface_refresh_all	1
+nebula	widgets/grid/org.eclipse.nebula.widgets.grid/src/org/eclipse/nebula/jface/gridviewer/GridTableViewer.java	swt_clearAll	1
+nebula	widgets/grid/org.eclipse.nebula.widgets.grid/src/org/eclipse/nebula/jface/gridviewer/GridTableViewer.java	swt_removeAll	1
+nebula	widgets/grid/org.eclipse.nebula.widgets.grid/src/org/eclipse/nebula/jface/gridviewer/GridTreeViewer.java	swt_removeAll	1
+nebula	widgets/opal/columnbrowser/org.eclipse.nebula.widgets.opal.columnbrowser/src/org/eclipse/nebula/widgets/opal/columnbrowser/ColumnBrowserWidget.java	swt_removeAll	1
+nebula	widgets/opal/textassist/org.eclipse.nebula.widgets.opal.textassist/src/org/eclipse/nebula/widgets/opal/textassist/TextAssist.java	swt_removeAll	1
+nebula	widgets/pagination/org.eclipse.nebula.widgets.pagination/src/org/eclipse/nebula/widgets/pagination/PageLoaderStrategyHelper.java	jface_setInput	1
+nebula	widgets/pagination/org.eclipse.nebula.widgets.pagination/src/org/eclipse/nebula/widgets/pagination/renderers/pagesize/PageSizeComboRenderer.java	jface_setInput	1
+nebula	widgets/pshelf/org.eclipse.nebula.widgets.pshelf/src/org/eclipse/nebula/jface/pshelfviewer/PShelfViewer.java	jface_setInput	1
+nebula	widgets/pshelf/org.eclipse.nebula.widgets.pshelf/src/org/eclipse/nebula/jface/pshelfviewer/PShelfViewer.java	swt_removeAll	1
+nebula	widgets/tablecombo/org.eclipse.nebula.widgets.tablecombo/src/org/eclipse/nebula/jface/checktablecomboviewer/CheckTableComboViewer.java	swt_clearAll	1
+nebula	widgets/tablecombo/org.eclipse.nebula.widgets.tablecombo/src/org/eclipse/nebula/jface/checktablecomboviewer/CheckTableComboViewer.java	swt_removeAll	1
+nebula	widgets/tablecombo/org.eclipse.nebula.widgets.tablecombo/src/org/eclipse/nebula/jface/tablecomboviewer/TableComboViewer.java	swt_clearAll	1
+nebula	widgets/tablecombo/org.eclipse.nebula.widgets.tablecombo/src/org/eclipse/nebula/jface/tablecomboviewer/TableComboViewer.java	swt_removeAll	1
+nebula	widgets/timeline/org.eclipse.nebula.widgets.timeline.snippets/src/org/eclipse/nebula/widgets/timeline/snippets/TimelineUsingContentProvider.java	jface_setInput	1
+nebula	widgets/timeline/org.eclipse.nebula.widgets.timeline.snippets/src/org/eclipse/nebula/widgets/timeline/snippets/TimelineUsingEMFModel.java	jface_refresh_all	1
+nebula	widgets/timeline/org.eclipse.nebula.widgets.timeline/src/org/eclipse/nebula/widgets/timeline/jface/TimelineViewer.java	swt_removeAll	1
+nebula	widgets/treemapper/org.eclipse.nebula.widgets.treemapper.examples/src/org/eclipse/nebula/widgets/treemapper/examples/TreeMapperExampleTab.java	jface_setInput	1
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/XViewer.java	jface_refresh_all	1
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/XViewer.java	jface_setInput	1
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/XViewer.java	swt_removeAll	1
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/action/ColumnMultiEditAction.java	jface_setInput	1
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/action/TableCustomizationCustomizeDataAction.java	jface_refresh_all	1
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/edit/XViewerEditAdapter.java	jface_setInput	1
+nebula	widgets/xviewer/org.eclipse.nebula.widgets.xviewer/src/org/eclipse/nebula/widgets/xviewer/util/internal/dialog/ColumnFilterDialog.java	jface_setInput	1
+platform	ant/org.eclipse.ant.ui/Ant Editor/org/eclipse/ant/internal/ui/editor/AntSourceViewerInformationControl.java	jface_setInput	1
+platform	ant/org.eclipse.ant.ui/Ant Editor/org/eclipse/ant/internal/ui/editor/outline/AntEditorContentOutlinePage.java	jface_setInput	1
+platform	ant/org.eclipse.ant.ui/Ant Runner Support/org/eclipse/ant/internal/ui/antsupport/inputhandler/AntInputHandler.java	jface_setInput	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/ColumnSorter.java	jface_refresh_all	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/datatransfer/AntBuildfileExportPage.java	jface_setInput	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/launchConfigurations/AntTargetsTab.java	jface_refresh_all	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/AntClasspathBlock.java	jface_refresh_all	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/AntClasspathBlock.java	jface_setInput	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/AntClasspathContentProvider.java	jface_refresh_all	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/AntPage.java	jface_setInput	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/AntPropertiesBlock.java	jface_refresh_all	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/preferences/FileSelectionDialog.java	jface_refresh_all	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/views/AntView.java	jface_setInput	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/views/AntView.java	swt_removeAll	1
+platform	ant/org.eclipse.ant.ui/Ant Tools Support/org/eclipse/ant/internal/ui/views/actions/RefreshBuildFilesAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.examples.ui/src/org/eclipse/debug/examples/ui/pda/adapters/PDAVirtualFindAction.java	jface_setInput	1
+platform	debug/org.eclipse.debug.examples.ui/src/org/eclipse/debug/examples/ui/pda/views/DataStackView.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.examples.ui/src/org/eclipse/debug/examples/ui/pda/views/DataStackView.java	jface_setInput	1
+platform	debug/org.eclipse.debug.examples.ui/src/org/eclipse/debug/examples/ui/pda/views/PopHandler.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.examples.ui/src/org/eclipse/debug/examples/ui/pda/views/PushHandler.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui.launchview/src/org/eclipse/debug/ui/launchview/internal/view/LaunchViewImpl.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/AbstractDebugSelectionDialog.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/actions/expressions/WatchExpressionDialog.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/actions/variables/ShowTypesAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/groups/CommonTabLite.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/hover/ExpressionInformationControlCreator.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/importexport/breakpoints/EmbeddedBreakpointsViewer.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/importexport/breakpoints/EmbeddedBreakpointsViewer.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/importexport/breakpoints/WizardImportBreakpointsSelectionPage.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/importexport/breakpoints/WizardImportBreakpointsSelectionPage.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/importexport/launchconfigurations/ExportLaunchConfigurationsWizardPage.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/importexport/launchconfigurations/ExportLaunchConfigurationsWizardPage.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/FavoritesDialog.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/LaunchConfigurationDialog.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/LaunchConfigurationEditDialog.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/LaunchConfigurationFilteredTree.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/LaunchConfigurationFilteredTree.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/LaunchConfigurationPropertiesDialog.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/LinkPrototypeAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/LinkPrototypeAction.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/ResetWithPrototypeValuesAction.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/SelectFavoritesDialog.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/SortLaunchConfigurationAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/UnlinkPrototypeAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/launchConfigurations/UnlinkPrototypeAction.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/memory/provisional/AbstractAsyncTableRendering.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/memory/provisional/AbstractAsyncTableRendering.java	swt_removeAll	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/preferences/LaunchConfigurationsPreferencePage.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/preferences/LaunchPerspectivePreferencePage.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/preferences/LaunchPerspectivePreferencePage.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/preferences/StringVariablePreferencePage.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/preferences/ViewManagementPreferencePage.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/sourcelookup/AddSourceContainerDialog.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/sourcelookup/browsers/ArchiveSourceContainerBrowser.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/AsynchronousTableViewer.java	swt_clearAll	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/breadcrumb/AbstractBreadcrumb.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/model/InternalTreeModelViewer.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/model/InternalTreeModelViewer.java	swt_setItemCount0	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/model/InternalVirtualTreeModelViewer.java	swt_clearAll	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/model/SubTreeModelViewer.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/model/VirtualCopyToClipboardActionDelegate.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/viewers/model/VirtualFindAction.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/breakpoints/BreakpointsContentProvider.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/breakpoints/BreakpointsViewer.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/launch/LaunchView.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/launch/LaunchView.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/launch/SourceNotFoundEditor.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/memory/MemoryBlocksTreeViewPane.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/memory/renderings/AsyncTableRenderingUpdatePolicy.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/memory/renderings/BasicDebugViewContentProvider.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/memory/renderings/BigEndianAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/memory/renderings/CreateRendering.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/memory/renderings/CreateRendering.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/memory/renderings/DefaultEndianessAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/memory/renderings/LittleEndianAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/memory/renderings/TableRenderingContentProvider.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/variables/SelectLogicalStructureAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/variables/ToggleLogicalStructureAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/variables/VariablesView.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/internal/ui/views/variables/VariablesView.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/ui/EnvironmentTab.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/ui/InspectPopupDialog.java	jface_setInput	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/ui/PrototypeTab.java	jface_refresh_all	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/ui/memory/AbstractMemoryRendering.java	swt_removeAll	1
+platform	debug/org.eclipse.debug.ui/ui/org/eclipse/debug/ui/sourcelookup/CommonSourceNotFoundEditor.java	jface_setInput	1
+platform	debug/org.eclipse.ui.externaltools/External Tools Base/org/eclipse/ui/externaltools/internal/launchConfigurations/ExternalToolsBuilderTab.java	jface_setInput	1
+platform	debug/org.eclipse.unittest.ui/src/org/eclipse/unittest/internal/ui/CompareResultDialog.java	jface_setInput	1
+platform	debug/org.eclipse.unittest.ui/src/org/eclipse/unittest/internal/ui/EnableStackFilterAction.java	jface_refresh_all	1
+platform	debug/org.eclipse.unittest.ui/src/org/eclipse/unittest/internal/ui/history/HistoryDialog.java	jface_setInput	1
+platform	platform/org.eclipse.platform/src-intro/org/eclipse/platform/internal/CheatSheetStandbyContent.java	jface_setInput	1
+platform	resources/bundles/org.eclipse.core.tools.resources/src/org/eclipse/core/tools/resources/LocalHistoryBrowserView.java	jface_setInput	1
+platform	resources/bundles/org.eclipse.core.tools.resources/src/org/eclipse/core/tools/resources/ProjectView.java	jface_setInput	1
+platform	resources/bundles/org.eclipse.core.tools.resources/src/org/eclipse/core/tools/resources/ResourceChangeView.java	swt_removeAll	1
+platform	resources/bundles/org.eclipse.core.tools.resources/src/org/eclipse/core/tools/resources/ResourceView.java	jface_setInput	1
+platform	resources/examples/org.eclipse.ui.examples.filesystem/src/org/eclipse/core/internal/filesystem/memory/MemoryTreeSelectionDialog.java	jface_refresh_all	1
+platform	resources/examples/org.eclipse.ui.examples.filesystem/src/org/eclipse/core/internal/filesystem/memory/MemoryTreeSelectionDialog.java	jface_setInput	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/TableWithTotalView.java	jface_refresh_all	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/TableWithTotalView.java	swt_removeAll	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/metadata/MetadataTreeContentProvider.java	jface_refresh_all	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/metadata/MetadataTreeView.java	jface_setInput	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/runtime/ContentTypeView.java	jface_setInput	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/runtime/EclipsePreferencesView.java	jface_setInput	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/runtime/EventsView.java	jface_refresh_all	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/runtime/PluginDependencyView.java	jface_refresh_all	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/runtime/PluginListView.java	jface_setInput	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/search/FindUnusedSearchQuery.java	swt_removeAll	1
+platform	runtime/bundles/org.eclipse.core.tools/src/org/eclipse/core/tools/search/FindUnusedSearchResultPage.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.compare.win32/src/org/eclipse/compare/internal/win32/WordMergeViewer.java	jface_setInput	1
+platform	team/bundles/org.eclipse.compare.win32/src/org/eclipse/compare/internal/win32/WordMergeViewer.java	swt_removeAll	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/EditionSelectionDialog.java	swt_removeAll	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/contentmergeviewer/ContentMergeViewer.java	swt_removeAll	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/contentmergeviewer/TextMergeViewer.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/AddFromHistoryDialog.java	swt_removeAll	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/ChangeCompareFilterPropertyAction.java	jface_setInput	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/CompareEditor.java	jface_setInput	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/CompareUIPlugin.java	jface_setInput	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/ResourceCompareInput.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/patch/InputPatchPage.java	jface_setInput	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/patch/PatchCompareEditorInput.java	swt_removeAll	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/patch/PatchTargetPage.java	jface_setInput	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/patch/PatchWizard.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/patch/Patcher.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/internal/patch/RetargetPatchElementDialog.java	jface_setInput	1
+platform	team/bundles/org.eclipse.compare/compare/org/eclipse/compare/structuremergeviewer/DiffTreeViewer.java	swt_removeAll	1
+platform	team/bundles/org.eclipse.jsch.ui/src/org/eclipse/jsch/internal/ui/preference/PreferencePage.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/dialogs/ResourceMappingHierarchyArea.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/dialogs/ResourceMappingHierarchyArea.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/history/LocalHistoryPage.java	swt_removeAll	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/mapping/CommonViewerAdvisor.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/mapping/ModelElementSelectionPage.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/mapping/ModelEnablementPreferencePage.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/mapping/ResourceModelContentProvider.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/preferences/FileTypeTable.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/preferences/IgnorePreferencePage.java	swt_removeAll	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/AbstractSynchronizeModelProvider.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/FlatModelProvider.java	swt_removeAll	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/GlobalRefreshResourceSelectionPage.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/SynchronizeModelManager.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/SynchronizeModelUpdateHandler.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/TreeViewerAdvisor.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/TreeViewerAdvisor.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/actions/GlobalRefreshAction.java	swt_removeAll	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/synchronize/patch/ApplyPatchSubscriber.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/wizards/ExportProjectSetLocationPage.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/wizards/ExportProjectSetMainPage.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/wizards/GlobalRefreshWizardSelectionPage.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/wizards/PatchInaccessibleProjectsPage.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/wizards/ProjectSelectionPage.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/wizards/ProjectSelectionPage.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/ui/PageCompareEditorInput.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/ui/history/HistoryPageCompareEditorInput.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/ui/history/HistoryPageSaveablePart.java	jface_setInput	1
+platform	team/bundles/org.eclipse.team.ui/src/org/eclipse/team/ui/mapping/SynchronizationContentProvider.java	jface_refresh_all	1
+platform	team/bundles/org.eclipse.ui.net/src/org/eclipse/ui/internal/net/NonProxyHostsComposite.java	jface_setInput	1
+platform	team/bundles/org.eclipse.ui.net/src/org/eclipse/ui/internal/net/ProxyEntriesComposite.java	jface_setInput	1
+platform	team/examples/org.eclipse.team.examples.filesystem/src/org/eclipse/team/examples/filesystem/ui/FileSystemTableProvider.java	jface_refresh_all	1
+platform	team/examples/org.eclipse.team.examples.filesystem/src/org/eclipse/team/examples/filesystem/ui/NonSyncModelMergePage.java	jface_setInput	1
+platform	team/examples/org.eclipse.team.examples.filesystem/src/org/eclipse/team/examples/model/ui/ModelNavigatorContentProvider.java	jface_refresh_all	1
+platform	team/examples/org.eclipse.team.examples.filesystem/src/org/eclipse/team/examples/model/ui/mapping/ModelSyncContentProvider.java	jface_refresh_all	1
+platform	team/examples/org.eclipse.team.examples.filesystem/src/org/eclipse/team/examples/pessimistic/PessimisticModificationValidator.java	jface_setInput	1
+platform	team/examples/org.eclipse.team.examples.filesystem/src/org/eclipse/team/examples/pessimistic/ResourceChangeListener.java	jface_setInput	1
+platform	terminal/bundles/org.eclipse.terminal.control/src/org/eclipse/terminal/internal/emulator/VT100BackendTraceDecorator.java	swt_clearAll	1
+platform	terminal/bundles/org.eclipse.terminal.view.ui/src/org/eclipse/terminal/view/ui/internal/preferences/PreferencePage.java	jface_setInput	1
+platform	terminal/bundles/org.eclipse.terminal.view.ui/src/org/eclipse/terminal/view/ui/launcher/AbstractExtendedConfigurationPanel.java	swt_removeAll	1
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/BookmarksPart.java	jface_refresh_all	1
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/EngineTypeWizardPage.java	jface_setInput	1
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/HyperlinkTreePart.java	jface_setInput	1
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/RelatedTopicsPart.java	jface_setInput	1
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/ScopePreferenceDialog.java	jface_refresh_all	1
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/ScopeSelectPart.java	jface_setInput	1
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/ScopeSetDialog.java	jface_setInput	1
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/SearchPart.java	jface_refresh_all	1
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/SearchPart.java	jface_setInput	1
+platform	ua/org.eclipse.help.ui/src/org/eclipse/help/ui/internal/views/SeeAlsoPart.java	jface_refresh_all	1
+platform	ua/org.eclipse.ui.cheatsheets/src/org/eclipse/ui/internal/cheatsheets/composite/explorer/ConfirmRestartDialog.java	jface_setInput	1
+platform	ua/org.eclipse.ui.cheatsheets/src/org/eclipse/ui/internal/cheatsheets/composite/explorer/TreeTaskExplorer.java	jface_setInput	1
+platform	ua/org.eclipse.ui.cheatsheets/src/org/eclipse/ui/internal/cheatsheets/composite/model/EditableTask.java	jface_setInput	1
+platform	ua/org.eclipse.ui.cheatsheets/src/org/eclipse/ui/internal/cheatsheets/composite/views/CompositeCheatSheetPage.java	jface_setInput	1
+platform	ua/org.eclipse.ui.intro.quicklinks/src/org/eclipse/ui/intro/quicklinks/QuicklinksViewer.java	jface_setInput	1
+platform	ua/org.eclipse.ui.intro/src/org/eclipse/ui/internal/intro/impl/model/AbstractIntroPartImplementation.java	jface_setInput	1
+platform	ua/org.eclipse.ui.intro/src/org/eclipse/ui/internal/intro/impl/parts/StandbyPart.java	jface_setInput	1
+platform	ua/org.eclipse.ui.intro/src/org/eclipse/ui/internal/intro/impl/presentations/IntroLaunchBar.java	swt_removeAll	1
+platform	update/org.eclipse.update.configurator/src/org/eclipse/update/internal/configurator/PlatformConfiguration.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.e4.ui.workbench.renderers.swt/src/org/eclipse/e4/ui/internal/workbench/renderers/swt/BasicPartList.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.e4.ui.workbench.renderers.swt/src/org/eclipse/e4/ui/workbench/renderers/swt/StackRenderer.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.e4.ui.workbench.renderers.swt/src/org/eclipse/e4/ui/workbench/renderers/swt/TrimBarRenderer.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.e4.ui.workbench.renderers.swt/src/org/eclipse/e4/ui/workbench/renderers/swt/WBWRenderer.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.jface.text/src/org/eclipse/jface/internal/text/link/contentassist/CompletionProposalPopup2.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.jface.text/src/org/eclipse/jface/internal/text/link/contentassist/ContextInformationPopup2.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.jface.text/src/org/eclipse/jface/text/AbstractInformationControlManager.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.jface.text/src/org/eclipse/jface/text/contentassist/CompletionProposalPopup.java	swt_clearAll	1
+platform.ui	bundles/org.eclipse.jface.text/src/org/eclipse/jface/text/contentassist/ContextInformationPopup.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.jface.text/src/org/eclipse/jface/text/hyperlink/MultipleHyperlinkPresenter.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/action/ToolBarContributionItem.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/dialogs/ErrorDialog.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/fieldassist/ContentProposalAdapter.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/fieldassist/ContentProposalAdapter.java	swt_clearAll	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/preference/ListEditor.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/preference/PreferenceDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/util/Policy.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/util/SafeRunnableDialog.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/util/SafeRunnableDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/ComboBoxCellEditor.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/ComboBoxViewerCellEditor.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/ListViewer.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/StructuredViewer.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/TableViewer.java	swt_clearAll	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/TableViewer.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/TreeViewer.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.search/newsearch/org/eclipse/search/ui/text/AbstractTextSearchViewPage.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.search/newsearch/org/eclipse/search/ui/text/AbstractTextSearchViewPage.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.search/newsearch/org/eclipse/search2/internal/ui/InternalSearchUI.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.search/newsearch/org/eclipse/search2/internal/ui/MatchFilterSelectionDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.search/newsearch/org/eclipse/search2/internal/ui/SearchHistorySelectionDialog.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.search/newsearch/org/eclipse/search2/internal/ui/SearchHistorySelectionDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.search/newsearch/org/eclipse/search2/internal/ui/basic/views/RemoveAllMatchesAction.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.search/newsearch/org/eclipse/search2/internal/ui/text/EditorAnnotationManager.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.search/search/org/eclipse/search/internal/ui/text/EditorOpener.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.search/search/org/eclipse/search/internal/ui/text/FileSearchPage.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.search/search/org/eclipse/search/internal/ui/text/FileSearchQuery.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.search/search/org/eclipse/search/internal/ui/text/FileTableContentProvider.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.ide.application/src/org/eclipse/ui/internal/ide/application/dialogs/UriSchemeHandlerPreferencePage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/extensions/org/eclipse/ui/actions/NewWizardMenu.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.ide/extensions/org/eclipse/ui/dialogs/MarkerResolutionSelectionDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/extensions/org/eclipse/ui/dialogs/WizardNewProjectReferencePage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/ide/dialogs/PathVariableSelectionDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/DirectoryProposalContentAssist.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/ExtendedFileEditorsPreferencePage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/FeatureSelectionDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/CleanDialog.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/CleanDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/FileSystemSelectionArea.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/LinkedResourceEditor.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/PathVariablesGroup.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/PathVariablesGroup.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/ProjectNaturesPage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/ProjectReferencePage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/dialogs/ResourceWorkingSetPage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/ide/misc/ContainerSelectionGroup.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/ExtendedMarkersView.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/FiltersConfigurationDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/MarkerResourceUtil.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/QuickFixPage.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/TypesConfigurationArea.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/TypesConfigurationArea.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/UIUpdateJob.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/wizards/datatransfer/WizardProjectsImportPage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/views/framelist/TreeViewerFrameSource.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.ide/src/org/eclipse/ui/views/markers/internal/ProblemMarker.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.navigator.resources/src/org/eclipse/ui/internal/navigator/resources/actions/ResourceMgmtActionProvider.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.navigator.resources/src/org/eclipse/ui/internal/navigator/resources/actions/WorkingSetRootModeActionGroup.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.navigator.resources/src/org/eclipse/ui/internal/navigator/resources/nested/ProjectPresentationHandler.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.navigator.resources/src/org/eclipse/ui/navigator/resources/ProjectExplorer.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/internal/navigator/extensions/StructuredViewerManager.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/internal/navigator/filters/CommonFiltersTab.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/internal/navigator/filters/CommonFiltersTab.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/internal/navigator/filters/ContentExtensionsTab.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/internal/navigator/filters/FilterActionGroup.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/internal/navigator/filters/UpdateActiveExtensionsOperation.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/internal/navigator/filters/UserFiltersTab.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/internal/navigator/framelist/TreeViewerFrameSource.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.navigator/src/org/eclipse/ui/navigator/CommonNavigator.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.views.log/src/org/eclipse/ui/internal/views/log/LogView.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.views.properties.tabbed/src/org/eclipse/ui/internal/views/properties/tabbed/view/OverridableTabListContentProvider.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.views.properties.tabbed/src/org/eclipse/ui/internal/views/properties/tabbed/view/TabbedPropertyViewer.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.views.properties.tabbed/src/org/eclipse/ui/views/properties/tabbed/AdvancedPropertySection.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.views.properties.tabbed/src/org/eclipse/ui/views/properties/tabbed/AdvancedPropertySection.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.views.properties.tabbed/src/org/eclipse/ui/views/properties/tabbed/TabContents.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.views.properties.tabbed/src/org/eclipse/ui/views/properties/tabbed/TabContents.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/SubActionBars2.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/actions/PerspectiveMenu.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/dialogs/CheckedTreeSelectionDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/dialogs/ElementTreeSelectionDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/dialogs/ListDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/dialogs/ListSelectionDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/dialogs/TwoPaneElementSelector.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/dialogs/TypeFilteringDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/EditorActionBars.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/EditorReference.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/FilteredTableBaseHandler.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/NavigationHistoryEntry.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/PopupMenuExtender.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/ShowViewMenu.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/StandardTrim.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/WorkbenchPage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/WorkbenchWindow.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/about/AboutFeaturesPage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/about/AboutPluginsPage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/activities/ws/EnablementDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/DecoratorsPreferencePage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/ImportExportPage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/NewWizardNewPage.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/NewWizardNewPage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/PerspectivesPreferencePage.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/SavePerspectiveDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/SelectPerspectiveDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/ShowViewDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/StartupPreferencePage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/WorkbenchEditorsDialog.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/WorkbenchWizardListSelectionPage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/WorkingSetTypePage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/dialogs/cpd/ActionSetSelectionChangedListener.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/e4/compatibility/ActionBars.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/progress/BlockedJobsDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/progress/ProgressMonitorJobsDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/progress/ProgressRegion.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/progress/ProgressRegion.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/progress/ProgressView.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/progress/ProgressView.java	swt_clearAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/progress/ProgressViewUpdater.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/progress/ProgressViewerContentProvider.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/quickaccess/QuickAccessContents.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/statushandlers/InternalDialog.java	jface_refresh_all	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/statushandlers/InternalDialog.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/statushandlers/StackTraceSupportArea.java	swt_removeAll	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/themes/ColorsAndFontsPreferencePage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/internal/wizards/preferences/WizardPreferencesPage.java	jface_setInput	1
+platform.ui	bundles/org.eclipse.ui.workbench/eclipseui/org/eclipse/ui/views/WorkbenchViewerSetup.java	jface_refresh_all	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/dialogs/Snippet070GenericSelectionDialog.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/layout/Snippet016TableLayout.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/layout/Snippet027TreeLayout.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet001TableViewer.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet002TreeViewer.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet003TableLabelProvider.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet004HideSelection.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet005TreeCustomMenu.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet006TableMultiLineCells.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet007FullSelection.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet008RevealElement.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet009CellEditors.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet010OwnerDraw.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet011CustomTooltips.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet013TableViewerNoMandatoryLabelProvider.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet014TreeViewerNoMandatoryLabelProvider.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet015CustomTooltipsForTree.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet017TableViewerHideShowColumns.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet019TableViewerAddRemoveColumnsWithEditing.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet022TableViewerRefreshNoScroll.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet024TableViewerExploreNewAPI.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet025TabEditing.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet026TreeViewerTabEditing.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet027ComboBoxCellEditors.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet029VirtualTableViewer.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet030VirtualLazyTableViewer.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet031TableViewerCustomTooltipsMultiSelection.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet034CellEditorPerRow.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet035TableCursorCellHighlighter.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet036FocusBorderCellHighlighter.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet037FancyCustomTooltips.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet039ListViewer.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet040TableViewerSorting.java	jface_refresh_all	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet040TableViewerSorting.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet041TableViewerAlternatingColors.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet043TreeViewerKeyboardEditing.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet044TableViewerKeyboardEditing.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet045TableViewerFillFromBackgroundThread.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet046UpdateViewerFromBackgroundThread.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet047VirtualBigTreeViewer.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet047VirtualLazyTreeViewer.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet048TreeViewerTabWithCheckboxFor3_3.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet049StyledCellLabelProvider.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet050DelegatingStyledCellLabelProvider.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet051TableCenteredImage.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet052DoubleClickCellEditor.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet053StartEditorWithContextMenu.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet054NativeControlsInViewers.java	jface_refresh_all	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet055HideShowColumn.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet056BooleanCellEditor.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet057TableViewerSkipHiddenCells.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet058CellNavigationIn34.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet060TextCellEditorWithContentProposal.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet061FakedNativeCellEditor.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet062TextAndDialogCellEditor.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet063ComboViewer.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet064TreeViewerReplacingElements.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet065TableViewerReplacingElements.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet066TableViewerWithLabelDecorator.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet068TableViewerWithLimit.java	jface_refresh_all	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet068TableViewerWithLimit.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet069TreeViewerWithLimit.java	jface_refresh_all	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/viewers/Snippet069TreeViewerWithLimit.java	jface_setInput	1
+platform.ui	examples/org.eclipse.jface.snippets/Eclipse JFace Snippets/org/eclipse/jface/snippets/window/Snippet031TableStaticTooltip.java	jface_setInput	1
+swt	bundles/org.eclipse.swt.tools/src/org/eclipse/swt/tools/views/MacGeneratorView.java	jface_refresh_all	1
