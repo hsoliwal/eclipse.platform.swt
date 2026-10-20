@@ -1,12 +1,16 @@
 /*******************************************************************************
- * Copyright (c) 2026 Contributors to the Eclipse Foundation.
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
  *
- * This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License 2.0
- * which accompanies this distribution, and is available at
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
  * https://www.eclipse.org/legal/epl-2.0/
  *
- * SPDX-License-Identifier: EPL-2.0
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -147,6 +151,8 @@ final class TreeViewport {
 		committedGeneration = tree.virtualTopology.generation ();
 		committedFirstRow = first;
 		committedCount = count;
+		M3Prefetch.windowChanged (tree);
+		M3VisibilityObserver.changed (tree);
 	}
 
 	/** Moves the native window to the current paint window: retire, insert, commit. */
@@ -1183,6 +1189,28 @@ final class TreeViewport {
 		TreeItem item = facade (parentIdOf (parent), index);
 		tree.pinVirtualFacade (item);
 		return item;
+	}
+
+	/* ---------------------------------------------------------------- M3RowMath seam (enhanced API) */
+
+	/** Visible row of the facade from the projection (rank), -1 under a collapsed ancestor; UNKNOWN for a foreign facade. */
+	long visibleRowOf (TreeItem item) {
+		int id = idOf (item);
+		return id < 0 ? M3RowMath.UNKNOWN : tree.virtualProjection.visibleIndexOf (id);
+	}
+
+	/** The facade at a visible row (select), made or reused and pinned like the result of getItem. */
+	TreeItem visibleItem (long row) {
+		VirtualTreeVisibleProjection.Row coordinate = tree.virtualProjection.rowAt (row);
+		TreeItem item = facade (coordinate.parentId (), coordinate.childIndex ());
+		tree.pinVirtualFacade (item);
+		return item;
+	}
+
+	/** Rows of the facade's visible subtree: the facade plus the topology's visible extra rows below it. */
+	long subtreeRows (TreeItem item) {
+		int id = idOf (item);
+		return id < 0 ? M3RowMath.UNKNOWN : Math.addExact (1L, tree.virtualTopology.visibleExtraRows (id));
 	}
 
 	TreeItem [] getItems (TreeItem parent) {

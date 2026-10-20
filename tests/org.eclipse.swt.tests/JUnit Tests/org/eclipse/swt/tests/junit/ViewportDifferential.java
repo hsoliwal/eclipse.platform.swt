@@ -1,12 +1,17 @@
 /*******************************************************************************
- * Copyright (c) 2026 Contributors to the Eclipse Foundation.
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
  *
- * This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License 2.0
- * which accompanies this distribution, and is available at
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
  * https://www.eclipse.org/legal/epl-2.0/
  *
- * SPDX-License-Identifier: EPL-2.0
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *     Hitesh Soliwal (Synexia) - pixel similarity of the drawn modes
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
@@ -128,6 +133,13 @@ public final class ViewportDifferential<S> {
 	private final boolean survey = Boolean.getBoolean ("swt.viewport.survey");
 	private final Map<String, Integer> surveyCounts = new TreeMap<> ();
 	private final Map<String, String> surveyExamples = new TreeMap<> ();
+	/* the pixels the current operation answered with (stepPixels); the UI thread runs every step */
+	private static ImageData stepCapture;
+	/*
+	 * -Dswt.viewport.themeSwitch=<step>:<theme>: a drawn mode switches the widget's theme (its look and feel) at that
+	 * step of every seed and goes back to the startup theme before the next seed. Behaviour must not change.
+	 */
+	private static final String THEME_SWITCH = System.getProperty ("swt.viewport.themeSwitch");
 
 	private ViewportDifferential (String name, long seedBase, Ops<S> ops) {
 		this.name = name;
@@ -307,13 +319,19 @@ public final class ViewportDifferential<S> {
 					}
 				}
 			}
+			int switchStep = THEME_SWITCH == null || !drawn (widget) ? -1 : Integer.parseInt (THEME_SWITCH.split (":", 2) [0]);
+			if (switchStep >= 0) selectTheme (null);
 			beforeSeed.accept (subject);
 			Random random = new Random (seedBase + seed);
 			StringBuilder log = new StringBuilder ("seed " + seed + "\n");
 			List<String> lines = new ArrayList<> ();
 			for (int step = 0; step < steps; step++) {
 				Op<S> op = ops.next (random, log);
+				if (step == switchStep) selectTheme (THEME_SWITCH.split (":", 2) [1]);
+				stepCapture = null;
 				String got = line (subject, op);
+				if (stepCapture != null) got = stepPixels (stepCapture, seed, step, expected == null ? null : expected.get (step), got, against);
+				stepCapture = null;
 				if (expected != null && !matches (expected.get (step), got)) {
 					String message = "step " + step + " differs (" + against + ")\n  recorded: " + expected.get (step) + "\n  this run: " + got + "\nlog:\n" + log;
 					if (!survey) fail (message);
@@ -325,7 +343,10 @@ public final class ViewportDifferential<S> {
 				ImageData pixels = stable (subject);
 				String hash = "pixels " + hash (pixels);
 				String evidence = save (name + "-seed" + seed + "-" + reference (widget), pixels);
-				if (expected != null && !expected.get (steps).equals (hash)) {
+				if (expected != null && !expected.get (steps).equals (hash) && drawn (widget)) {
+					/* drawn modes differ from stock pixels by design: a similarity metric, not a gate */
+					similarity (name + "-seed" + seed, String.valueOf (seed), pixels, evidence, against);
+				} else if (expected != null && !expected.get (steps).equals (hash)) {
 					if (!survey) fail ("pixels after seed " + seed + " differ from the recording (" + against + "; " + evidence + ")\nlog:\n" + log);
 					surveyCounts.merge ("pixels", 1, Integer::sum);
 					surveyExamples.putIfAbsent ("pixels", "seed " + seed + ": " + evidence);
@@ -339,6 +360,84 @@ public final class ViewportDifferential<S> {
 			}
 		}
 		reportSurvey ();
+	}
+
+	/** True when this JVM runs a drawn mode (custom, m3, gpu) for a widget class: its pixels are not stock's by design. */
+	public static boolean drawn (String widgetClass) {
+		String mode = reference (widgetClass);
+		return "custom".equals (mode) || "m3".equals (mode) || "gpu".equals (mode);
+	}
+
+	/*
+	 * Selects the theme of the widget class at run time (Themes.select of this SWT's render package; null goes back to
+	 * the startup properties) and dispatches, so that the drawn planes repaint before the step.
+	 */
+	private void selectTheme (String theme) {
+		try {
+			Class<?> themes = Class.forName ("org.eclipse.swt.internal.render.Themes"), type = Class.forName ("org.eclipse.swt.internal.render.Theme");
+			Object value = theme == null ? null : themes.getMethod ("find", String.class).invoke (null, theme);
+			if (theme != null && value == null) fail ("-Dswt.viewport.themeSwitch names no registered theme: " + theme);
+			themes.getMethod ("select", String.class, type).invoke (null, widget, value);
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError ("the theme switch needs the render package of this SWT", e);
+		}
+		drain (Display.getCurrent ());
+	}
+
+	/**
+	 * The answer of an operation that captures pixels during a step: <code>pixels &lt;hash&gt;</code>. The harness
+	 * keeps the capture: every run saves it as <code>&lt;name&gt;-seed&lt;k&gt;-step&lt;n&gt;-&lt;reference&gt;.png</code>
+	 * in the evidence directory, and a drawn mode compares it by similarity instead of by hash.
+	 */
+	public static String stepPixels (ImageData pixels) {
+		stepCapture = pixels;
+		return "pixels " + hash (pixels);
+	}
+
+	/*
+	 * Saves the pixels a step answered with. A drawn mode differs from stock pixels by design: when both answers are
+	 * pixels, its similarity to the reference capture of the same step is reported and the line takes the recorded
+	 * answer, so that the step's probes are still compared with the recording.
+	 */
+	private String stepPixels (ImageData pixels, int seed, int step, String expected, String got, String against) throws IOException {
+		String capture = name + "-seed" + seed + "-step" + step, evidence = save (capture + "-" + reference (widget), pixels);
+		if (expected == null || !drawn (widget) || !expected.startsWith ("pixels ") || !got.startsWith ("pixels ")) return got;
+		similarity (capture, seed + " step " + step, pixels, evidence, against);
+		int recorded = expected.indexOf (" | "), answered = got.indexOf (" | ");
+		return (recorded < 0 ? expected : expected.substring (0, recorded)) + (answered < 0 ? "" : got.substring (answered));
+	}
+
+	/*
+	 * Pixel similarity of a drawn mode against the reference capture of the same seed or step (saved by the reference
+	 * run under the same evidence directory as <capture>-official.png): the share of equal pixels and the mean
+	 * absolute channel difference. Appended to -Dswt.viewport.similarity (TSV) and printed; never a failure.
+	 */
+	private void similarity (String capture, String where, ImageData pixels, String evidence, String against) throws IOException {
+		String directory = System.getProperty ("swt.viewport.evidence", System.getProperty ("java.io.tmpdir"));
+		String referenceName = against.contains ("official") ? "official" : "original";
+		File file = new File (directory, capture + "-" + referenceName + ".png");
+		String line;
+		if (!file.exists ()) {
+			line = name + "\t" + reference (widget) + "\t" + where + "\tno reference capture " + file;
+		} else {
+			ImageData stock = new ImageData (file.getPath ());
+			int width = Math.min (stock.width, pixels.width), height = Math.min (stock.height, pixels.height);
+			long equal = 0, difference = 0;
+			for (int y = 0; y < height; y++) {
+				for (int x = 0; x < width; x++) {
+					RGB a = stock.palette.getRGB (stock.getPixel (x, y)), b = pixels.palette.getRGB (pixels.getPixel (x, y));
+					int d = Math.abs (a.red - b.red) + Math.abs (a.green - b.green) + Math.abs (a.blue - b.blue);
+					if (d == 0) equal++;
+					difference += d;
+				}
+			}
+			long total = Math.max (1L, (long) width * height);
+			line = String.format (Locale.ROOT, "%s\t%s\t%s\t%.2f%% equal\t%.3f mean abs channel difference\t%s", name, reference (widget), where,
+				100.0 * equal / total, difference / (3.0 * total), evidence);
+		}
+		System.err.println ("pixel similarity: " + line);
+		String output = System.getProperty ("swt.viewport.similarity");
+		if (output != null) Files.write (Paths.get (output), List.of (line), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 	}
 
 	/* survey: counts differing steps per probe label and operation, keeps the first example of each */

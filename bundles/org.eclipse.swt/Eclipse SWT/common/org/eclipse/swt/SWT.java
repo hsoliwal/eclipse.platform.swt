@@ -11,6 +11,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 455263
+ *     Hitesh Soliwal (Synexia) - fork changes (see the Git history)
  *******************************************************************************/
 package org.eclipse.swt;
 
@@ -3359,6 +3360,33 @@ public class SWT {
 	 * @since 3.0
 	 */
 	public static final int PRINT_SCREEN = KEYCODE_BIT + 87;
+
+	/**
+	 * Keyboard event constant representing the copy
+	 * key (value is (1&lt;&lt;24)+88).
+	 * This event is currently only supported on GTK.
+	 *
+	 * @since 3.136
+	 */
+	public static final int COPY = KEYCODE_BIT + 88;
+
+	/**
+	 * Keyboard event constant representing the cut
+	 * key (value is (1&lt;&lt;24)+89).
+	 * This event is currently only supported on GTK.
+	 *
+	 * @since 3.136
+	 */
+	public static final int CUT = KEYCODE_BIT + 89;
+
+	/**
+	 * Keyboard event constant representing the paste
+	 * key (value is (1&lt;&lt;24)+90).
+	 * This event is currently only supported on GTK.
+	 *
+	 * @since 3.136
+	 */
+	public static final int PASTE = KEYCODE_BIT + 90;
 
 	/**
 	 * The <code>MessageBox</code> style constant for error icon
