@@ -28,11 +28,15 @@ final class AllWidgetsBench {
 	static final int ROUNDS = 5;
 	private static final com.sun.management.ThreadMXBean THREADS = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean ();
 
-	/** One measured operation: wall time in microseconds and allocated bytes, medians of {@link #ROUNDS}. */
-	record Result (String operation, long micros, long bytes) {
+	/**
+	 * One measured operation, medians of {@link #ROUNDS}: wall time and the UI thread's CPU time (user and kernel, so
+	 * native window work counts; less sensitive than wall time to other processes on a shared host) in microseconds,
+	 * and allocated bytes.
+	 */
+	record Result (String operation, long micros, long cpuMicros, long bytes) {
 		@Override
 		public String toString () {
-			return operation + " " + micros + " us " + bytes + " B";
+			return operation + " " + micros + " us cpu " + cpuMicros + " us " + bytes + " B";
 		}
 	}
 
@@ -41,15 +45,17 @@ final class AllWidgetsBench {
 
 	/** Runs the operation {@link #ROUNDS} times (round index as argument) and returns the medians. */
 	static Result measure (String operation, java.util.function.IntConsumer round) {
-		long [] micros = new long [ROUNDS], bytes = new long [ROUNDS];
+		long [] micros = new long [ROUNDS], cpu = new long [ROUNDS], bytes = new long [ROUNDS];
 		for (int k = 0; k < ROUNDS; k++) {
 			long allocated = THREADS.getCurrentThreadAllocatedBytes ();
+			long cpuStart = THREADS.getCurrentThreadCpuTime ();
 			long start = System.nanoTime ();
 			round.accept (k);
 			micros [k] = (System.nanoTime () - start) / 1000;
+			cpu [k] = (THREADS.getCurrentThreadCpuTime () - cpuStart) / 1000;
 			bytes [k] = THREADS.getCurrentThreadAllocatedBytes () - allocated;
 		}
-		return new Result (operation, median (micros), median (bytes));
+		return new Result (operation, median (micros), median (cpu), median (bytes));
 	}
 
 	/** The sizes of a bench: the property's comma list, else the default. */
