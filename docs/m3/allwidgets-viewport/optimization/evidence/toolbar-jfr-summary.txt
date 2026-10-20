@@ -1,0 +1,15 @@
+# JFR of Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench at 10^4 items (jar aw-x1): top stacks, sample counts
+## execution samples (Java)
+39  <- org.eclipse.swt.widgets.ToolBar.layoutItems()  <- org.eclipse.swt.widgets.ToolBar.createItem(ToolItem, int)  <- org.eclipse.swt.widgets.ToolItem.<init>(ToolBar, int)
+35  <- org.eclipse.swt.widgets.ToolItem.setText(String)  <- org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench.append(ToolBar, int)  <- org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench.measure()
+15  <- org.eclipse.swt.widgets.ToolBar.layoutItems()  <- org.eclipse.swt.widgets.ToolItem.setText(String)  <- org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench.append(ToolBar, int)
+14  <- org.eclipse.swt.widgets.ToolBar.setDropDownItems(boolean)  <- org.eclipse.swt.widgets.ToolItem.setText(String)  <- org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench.append(ToolBar, int)
+9  <- org.eclipse.swt.widgets.ToolItem.resizeControl()  <- org.eclipse.swt.widgets.ToolBar.layoutItems()  <- org.eclipse.swt.widgets.ToolItem.setText(String)
+9  <- org.eclipse.swt.widgets.ToolItem.resizeControl()  <- org.eclipse.swt.widgets.ToolBar.layoutItems()  <- org.eclipse.swt.widgets.ToolBar.createItem(ToolItem, int)
+2  <- org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench.append(ToolBar, int)  <- org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_ToolBar_OptimizationBench.measure()  <- jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Object, Object[])
+2  <- jdk.internal.event.ThreadSleepEvent.commit() <- java.lang.Thread.afterSleep(ThreadSleepEvent)  <- java.lang.Thread.sleep(long)
+## native method samples
+668  <- org.eclipse.swt.internal.win32.OS.CallWindowProc(long, long, int, long, long) <- org.eclipse.swt.widgets.ToolBar.callWindowProc(long, int, long, long)  <- org.eclipse.swt.widgets.Control.windowProc(long, int, long, long)
+57  <- jdk.jfr.internal.JVM.emitEvent(long, long, long) <- jdk.jfr.internal.periodic.JVMEventTask.execute(long, PeriodicType)  <- jdk.jfr.internal.periodic.PeriodicTask.run(long, PeriodicType)
+6  <- java.io.FileInputStream.readBytes(byte[], int, int) <- java.io.FileInputStream.read(byte[], int, int)  <- java.io.BufferedInputStream.read1(byte[], int, int)
+2  <- org.eclipse.swt.internal.win32.OS.SendMessage(long, int, long, TBBUTTONINFO) <- org.eclipse.swt.widgets.ToolItem._setText(String)  <- org.eclipse.swt.widgets.ToolItem.setText(String)

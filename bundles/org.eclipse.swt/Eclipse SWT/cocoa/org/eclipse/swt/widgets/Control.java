@@ -62,6 +62,10 @@ public abstract class Control extends Widget implements Drawable {
 	 */
 	public NSView view;
 	Composite parent;
+	/* part visibility (PartVisibility, docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md): watched controls of the subtree, registry slot, last state told, container mark */
+	int partCount, partIndex = -1;
+	byte partState;
+	boolean partHidden;
 	String toolTipText;
 	Object layoutData;
 	int drawCount, backgroundAlpha = 255;
@@ -3210,8 +3214,118 @@ void releaseHandle () {
 	parent = null;
 }
 
+/**
+ * Adds the listener to the collection of listeners who will be notified when the receiver becomes part-visible or
+ * part-hidden (see {@link #isPartVisible()}), by sending it one of the messages defined in the
+ * <code>PartVisibilityListener</code> interface. SWT sends them itself, once per transition
+ * (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md).
+ *
+ * @param listener the listener which should be notified
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the listener is null</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @see PartVisibilityListener
+ * @see #removePartVisibilityListener
+ * @since 3.136
+ */
+public void addPartVisibilityListener (PartVisibilityListener listener) {
+	addTypedListener (listener, SWT.PartVisible, SWT.PartHidden);
+}
+
+/**
+ * Removes the listener from the collection of listeners who will be notified when the receiver becomes
+ * part-visible or part-hidden.
+ *
+ * @param listener the listener which should no longer be notified
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the listener is null</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @see PartVisibilityListener
+ * @see #addPartVisibilityListener
+ * @since 3.136
+ */
+public void removePartVisibilityListener (PartVisibilityListener listener) {
+	checkWidget ();
+	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
+	removeTypedListener (SWT.PartVisible, listener);
+	removeTypedListener (SWT.PartHidden, listener);
+}
+
+/**
+ * Returns <code>true</code> if the receiver is part-visible: the receiver and all its ancestors up to its shell are
+ * visible, have a width and height above zero and are not marked with {@link #setPartHidden(boolean)}, and the shell
+ * is not minimized. Non-selected tab pages, non-top stack pages and the controls of collapsed expand items are hidden
+ * by their containers, so they are not part-visible (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md).
+ *
+ * @return the receiver's part visibility state
+ *
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @see PartVisibilityListener
+ * @since 3.136
+ */
+public boolean isPartVisible () {
+	checkWidget ();
+	return PartVisibility.visible (this);
+}
+
+/**
+ * Marks the receiver hidden for part visibility, for a container that hides its content without
+ * <code>setVisible</code> or a zero size (a drawn collapsible pane or stack, an overlay). Every listening control at
+ * or under the receiver whose state changes is told.
+ *
+ * @param hidden <code>true</code> to mark the receiver hidden, <code>false</code> to clear the mark
+ *
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @see #isPartVisible()
+ * @since 3.136
+ */
+public void setPartHidden (boolean hidden) {
+	checkWidget ();
+	if (partHidden == hidden) return;
+	partHidden = hidden;
+	PartVisibility.changed (this, PartVisibilityEvent.CONTAINER);
+}
+
+/**
+ * Returns the mark set by {@link #setPartHidden(boolean)}.
+ *
+ * @return <code>true</code> when a container marked the receiver hidden
+ *
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @since 3.136
+ */
+public boolean getPartHidden () {
+	checkWidget ();
+	return partHidden;
+}
+
 @Override
 void releaseParent () {
+	PartVisibility.released (this);
 	invalidateVisibleRegion ();
 	parent.removeControl (this);
 }
@@ -4507,7 +4621,19 @@ public void setOrientation (int orientation) {
  *	</ul>
  */
 public boolean setParent (Composite parent) {
-	checkWidget();
+	checkWidget ();
+	Composite partOldParent = this.parent;
+	//FLLDCIM: rule 25 - the watched subtree moves its counts to the new ancestors; a new parent is a transition
+	PartVisibility.detach (this);
+	try {
+		return setParentInPart (parent);
+	} finally {
+		PartVisibility.attach (this, partOldParent);
+	}
+}
+
+/* setParent without the part visibility bookkeeping */
+boolean setParentInPart (Composite parent) {
     if (parent == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
     }
@@ -4909,7 +5035,14 @@ public void setTouchEnabled(boolean enabled) {
  * </ul>
  */
 public void setVisible (boolean visible) {
-	checkWidget();
+	checkWidget ();
+	setVisibleInPart (visible);
+	//FLLDCIM: rule 25 - SWT itself reports the part visibility transition of the control and its watched subtree
+	PartVisibility.changed (this, PartVisibilityEvent.VISIBILITY);
+}
+
+/* setVisible without the report (rule 25: the public method reports after every path of this one) */
+void setVisibleInPart (boolean visible) {
 	if (visible) {
         if ((state & HIDDEN) == 0) {
             return;

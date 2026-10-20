@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtPartVisibilityShells
+displayName: SWT part visibility of shells (brief rule 25)
+description: >-
+  Shells change visibility outside Control.setVisible: the win32 Decorations.setVisible (which win32 Shell.setVisible
+  calls) and the GTK Shell.setVisible do their own native work without calling Control.setVisible, so they are
+  wrapped the same way (every return path reports). On win32 a restore from minimized sends no Resize (the size does
+  not change) and Deiconify comes from WM_QUERYOPEN, before the restore: Decorations.WM_SIZE reports after the
+  native change. Applied to the win32 Decorations and the GTK Shell. Idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tif (wParam == OS.SIZE_MINIMIZED) {\n\t\tsendEvent (SWT.Iconify);\n\t\t// widget could be disposed at this point\n\t}\n\treturn result;\n}\n"
+      replace: "\tif (wParam == OS.SIZE_MINIMIZED) {\n\t\tsendEvent (SWT.Iconify);\n\t\t// widget could be disposed at this point\n\t}\n\t//FLLDCIM: rule 25 - a restore from minimized sends no Resize (same size) and Deiconify comes before it: report here\n\tif (!isDisposed ()) {\n\t\tPartVisibility.restored (this);\n\t}\n\treturn result;\n}\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "public void setVisible [(]boolean visible[)] [{]\n\tcheckWidget ?[(][)];\n(?!\tsetShellVisibleInPart)"
+      replace: "public void setVisible (boolean visible) {\n\tcheckWidget ();\n\tsetShellVisibleInPart (visible);\n\t//FLLDCIM: rule 25 - the shell's own visibility change, reported like Control.setVisible\n\tPartVisibility.shown (this);\n}\n\n/* the shell's setVisible without the report (rule 25: the public method reports after every path of this one) */\nvoid setShellVisibleInPart (boolean visible) {\n"
+      regex: true

@@ -74,7 +74,7 @@ public class M3LookAndFeelSwitchSnippet {
 
 	/*
 	 * An example UI delegate (M3ComponentUI) that keeps the row colours of its look and feel; the drawn Tree, Table and
-	 * List of the drawn modes use org.eclipse.swt.internal.render.M3RowUI the same way. A switch that changes one of its
+	 * List of the drawn modes use org.eclipse.swt.internal.render.M3DrawnRowUI the same way. A switch that changes one of its
 	 * paint keys installs it again and repaints the canvas; a change of its metric key relays it out.
 	 */
 	static final class Rows implements M3ComponentUI {

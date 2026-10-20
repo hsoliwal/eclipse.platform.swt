@@ -5693,7 +5693,36 @@ String wrapText (String text, long handle, int width) {
 	return result.toString ();
 }
 
+/* the Text viewport (docs/m3/TEXT_VIEWPORT.md, optimization leaf X1) unless the startup widget mode of Text is original */
+static final boolean TEXT_VIEWPORT = WidgetMode.of ("Text", WidgetMode.VIEWPORT) == WidgetMode.VIEWPORT;
+
+/*
+ * TEXT_VIEWPORT: withCrLf with one pass to count the line feeds without a carriage return before them, then one
+ * exact-size copy that appends the runs between them (no substring per line). The input when there are none.
+ */
+static String withCrLfCounted (String string) {
+	int length = string.length (), bare = 0;
+	for (int j = string.indexOf ('\n'); j >= 0; j = string.indexOf ('\n', j + 1)) {
+		if (j == 0 || string.charAt (j - 1) != '\r') bare++;
+	}
+	if (bare == 0) return string;
+	StringBuilder counted = new StringBuilder (length + bare);
+	int i = 0;
+	for (int j = string.indexOf ('\n'); j >= 0; j = string.indexOf ('\n', j + 1)) {
+		if (j > 0 && string.charAt (j - 1) == '\r') continue;
+		/* the run up to the line feed, a carriage return; the line feed starts the next run */
+		counted.append (string, i, j).append ('\r');
+		i = j;
+	}
+	counted.append (string, i, length);
+	return counted.toString ();
+}
+
 static String withCrLf (String string) {
+	if (TEXT_VIEWPORT) {
+		//FLLDCIM: VIEWPORT - count, then one exact-size copy (optimization leaf X1)
+		return withCrLfCounted (string);
+	}
 	/* Create a new string with the CR/LF line terminator. */
 	int i = 0;
 	int length = string.length();

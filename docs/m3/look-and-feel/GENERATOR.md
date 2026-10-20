@@ -86,3 +86,24 @@ Maven module that uses the SWT jar:
 - emitters: round trip through `M3ThemeImport` and the LF2 loader;
 - generator: the recorded fixture, and the Ollama client against a local `com.sun.net.httpserver` server;
 - a hidden-desktop pixel test that applies one generated theme to SWT (drawn rows) and to a Swing `JTable`.
+
+## Status (2026-10-19)
+
+Implemented: `M3Oklch`, `M3ThemeSpec`, `M3ThemeCompleter`, `M3ThemeExport` in the SWT bundle (tested by
+`Test_org_eclipse_swt_internal_laf_M3ThemeCompleter`, 10 cases, no display); `tools/m3-themegen` with
+`M3ThemeModel`, `M3OllamaModel`, `M3AnthropicModel`, `M3FixtureModel`, `M3ThemeGenerator` (the command line),
+`M3SwingTheme` and `M3ThemeGeneratorExample` (tested by `M3ThemeGeneratorTest`, 7 cases headless, and
+`M3ThemePixelTest` on the hidden desktop with `-Dm3.themegen.desktop=true`). Build and test the module with the M3 SWT
+jar:
+
+```
+cd tools/m3-themegen
+mvn -Dswt.jar=<the M3 SWT jar> test
+java -cp target/classes;<the M3 SWT jar>;<dependency jars> org.eclipse.swt.m3.themegen.M3ThemeGenerator \
+  --prompt "a calm harbour at night" --brand "#5e81ac" --twin --out S:/m3-scratch/allwidgets/themes/harbour
+```
+
+The dependency jars come from `mvn dependency:build-classpath`. The Anthropic SDK is `com.anthropic:anthropic-java`
+2.70.0 (MIT); the model id is `-Dm3.themegen.anthropic.model` (default `claude-sonnet-5-5`); the key is read from
+`ANTHROPIC_API_KEY` only. Ollama is `-Dm3.themegen.ollama.url` (default `http://localhost:11434`) and
+`-Dm3.themegen.ollama.model` (default `llama3.2`).

@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtLafRowContractJavadoc
+displayName: The drawn row delegate names the LF6 contract M3ComponentUI
+description: >-
+  The LF6 row contract is org.eclipse.swt.internal.laf.M3ComponentUI (installUI, uninstallUI, paintKeys, metricKeys);
+  the separate laf.M3RowUI interface was folded into it when the row types were unified (one type, memory "one
+  model"). render-modes' M3DrawnRowUI already implements M3ComponentUI; this corrects its class Javadoc, which still
+  named org.eclipse.swt.internal.laf.M3RowUI. No filePattern (M3PerFileApply parses a lone text, whose source
+  path does not match a directory glob); the find text occurs only in that file. Idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: " * LF6; Swing's <code>ComponentUI</code>). One row delegate type: the LF6 contract is the all-widgets track's\n * <code>org.eclipse.swt.internal.laf.M3RowUI</code>; this class is the drawn planes' implementation of it (it\n * implements that interface once the interface is in integration) and no second row interface exists. A drawn plane\n * installs it with {@link M3LookAndFeel#installUI}; it reads the\n"
+      replace: " * LF6; Swing's <code>ComponentUI</code>). One row delegate type: the LF6 contract is the all-widgets track's\n * {@link M3ComponentUI} (<code>installUI</code>, <code>uninstallUI</code>, <code>paintKeys</code>,\n * <code>metricKeys</code>; there is no separate row interface) and this class is the drawn planes' implementation\n * of it. A drawn plane installs it with {@link M3LookAndFeel#installUI}; it reads the\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "List of the drawn modes use org.eclipse.swt.internal.render.M3RowUI the same way."
+      replace: "List of the drawn modes use org.eclipse.swt.internal.render.M3DrawnRowUI the same way."

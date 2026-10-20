@@ -208,6 +208,10 @@ void _addListener (int eventType, Listener listener) {
         eventTable = new EventTable();
     }
 	eventTable.hook (eventType, listener);
+	if ((eventType == SWT.PartVisible || eventType == SWT.PartHidden) && this instanceof Control control) {
+		//FLLDCIM: rule 25 - a part visibility listener watches the control
+		PartVisibility.watch (control);
+	}
 }
 
 void _removeListener (int eventType, Listener listener) {
@@ -1300,6 +1304,10 @@ void sendEvent (int eventType, Event event) {
 }
 
 void sendEvent (int eventType, Event event, boolean send) {
+	if (eventType == SWT.Resize || eventType == SWT.Iconify || eventType == SWT.Deiconify) {
+		//FLLDCIM: rule 25 - a size crossing zero or a shell minimized or restored is a part visibility transition
+		PartVisibility.sent (this, eventType);
+	}
 	if (eventTable == null && !display.filters (eventType)) {
 		return;
 	}

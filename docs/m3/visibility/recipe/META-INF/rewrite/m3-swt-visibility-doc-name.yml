@@ -1,0 +1,13 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtVisibilityDocName
+displayName: The part visibility and viewport API page is docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md
+description: >-
+  The API page of brief rule 25 was renamed when the viewport listener joined the part visibility events; the
+  references in the Javadoc and comments follow. Idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "docs/m3/visibility/PART_VISIBLE.md"
+      replace: "docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md"

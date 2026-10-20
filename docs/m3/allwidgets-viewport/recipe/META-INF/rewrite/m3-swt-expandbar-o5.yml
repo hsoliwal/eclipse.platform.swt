@@ -1,0 +1,26 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtExpandBarCursorO5
+displayName: ExpandBar WM_SETCURSOR without a scan; the paint run and hover tests at their invariants (optimization leaf O5)
+description: >-
+  Optimization pass leaf O5 (docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv). Windows sends WM_SETCURSOR before
+  every WM_MOUSEMOVE, and the bar scanned every item for the hover flag to choose the hand cursor: O(n) per mouse
+  move after O4 had made the move itself O(log n). The hovered item is tracked since O4, so the cursor is decided from
+  it. The coverage of O2 and O4 showed three tests that cannot fail under their invariants, removed here: in the
+  paint run every item from the first damaged one that is off the damage lies below it (the bottoms grow with the
+  index), and the tracked hover item always has its hover flag set. Viewport mode only; idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\t\t//FLLDCIM: VIEWPORT - the DC clips to the damage, so an item drawn only outside it changes no pixel\n\t\t\tif (item.y >= clipRect.bottom) {\n\t\t\t\tbreak;\n\t\t\t}\n\t\t\tcontinue;\n"
+      replace: "\t\t\t//FLLDCIM: VIEWPORT - the DC clips to the damage; from the first damaged item on, an item off it lies below it: the run ended\n\t\t\tbreak;\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\tif (hoverItem != null && !hoverItem.isDisposed () && hoverItem.hover) {\n"
+      replace: "\t\tif (hoverItem != null && !hoverItem.isDisposed ()) {\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\tif (hoverItem != null && hoverItem != hit && !hoverItem.isDisposed () && hoverItem.hover) {\n"
+      replace: "\t\tif (hoverItem != null && hoverItem != hit && !hoverItem.isDisposed ()) {\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tint hitTest = (short) OS.LOWORD (lParam);\n\tif (hitTest == OS.HTCLIENT) {\n\t\tfor (int i = 0; i < itemCount; i++) {\n\t\t\tExpandItem item = items [i];\n\t\t\tif (item.hover) {\n"
+      replace: "\tint hitTest = (short) OS.LOWORD (lParam);\n\tif (VIEWPORT && hitTest == OS.HTCLIENT) {\n\t\t//FLLDCIM: VIEWPORT - the hovered item is tracked by WM_MOUSEMOVE (O4): no scan per WM_SETCURSOR\n\t\tif (hoverItem != null && !hoverItem.isDisposed ()) {\n\t\t\tOS.SetCursor (OS.LoadCursor (0, OS.IDC_HAND));\n\t\t\treturn LRESULT.ONE;\n\t\t}\n\t\treturn result;\n\t}\n\tif (hitTest == OS.HTCLIENT) {\n\t\tfor (int i = 0; i < itemCount; i++) {\n\t\t\tExpandItem item = items [i];\n\t\t\tif (item.hover) {\n"

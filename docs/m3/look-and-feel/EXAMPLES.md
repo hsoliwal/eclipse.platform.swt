@@ -15,7 +15,8 @@ screenshots of the hidden desktop are regenerated, not committed: `S:/m3-scratch
 
 | Snippet | Shows | Screenshots |
 |---|---|---|
-| `M3LookAndFeelSwitchSnippet` | runtime switching across `native`, `swing`, `initiative31`, `light` and `dark` in one shell (`M3LookAndFeel.setLookAndFeel`); a "Next accent" button (`M3LookAndFeel.setAccent`); rows painted with the colours of an example UI delegate (`M3ComponentUI`, as render-modes' `M3RowUI` does for the drawn Tree, Table and List) next to a native `Table` that keeps native pixels | `switch-<look>.png`, `switch-light-accent.png` |
+| `M3LookAndFeelSwitchSnippet` | runtime switching across `native`, `swing`, `initiative31`, `light` and `dark` in one shell (`M3LookAndFeel.setLookAndFeel`); a "Next accent" button (`M3LookAndFeel.setAccent`); rows painted with the colours of an example UI delegate (`M3ComponentUI`, as render-modes' `M3DrawnRowUI` does for the drawn Tree, Table and List) next to a native `Table` that keeps native pixels | `switch-<look>.png`, `switch-light-accent.png` |
+| `M3ThemeGeneratorExample` (in [`tools/m3-themegen`](../../../tools/m3-themegen), with Swing) | generate a theme from a prompt (`--ollama`, `--anthropic`, or `--fixture` for the recorded answer; no key in code), then apply it live to SWT rows and a Swing `JTable` side by side; "Generate" asks again with the text field, "Twin" switches both to the other brightness | `generated-<name>-swt.png`, `generated-<name>-swing.png` (and the twin) |
 | `M3ThemeImportSnippet` | an IntelliJ `.theme.json` and a FlatLaf `.properties` theme imported (`M3ThemeImport`) and applied; with a file argument that file, and with `--watch` live reload while the file is edited (`M3ThemeWatcher`) | `import-sample-intellij.png`, `import-sample-flatlaf.png` |
 
 Only widgets with a UI delegate change: a switch diffs the two look and feels and repaints (or relays out) the

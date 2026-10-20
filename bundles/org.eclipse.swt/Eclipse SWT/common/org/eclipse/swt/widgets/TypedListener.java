@@ -309,6 +309,18 @@ public void handleEvent (Event e) {
 			e.doit = event.doit;
 			break;
 		}
+		case SWT.Viewport: {
+			((ViewportListener) eventListener).viewportChanged (new ViewportEvent (e));
+			break;
+		}
+		case SWT.PartVisible: {
+			((PartVisibilityListener) eventListener).partVisible (new PartVisibilityEvent (e));
+			break;
+		}
+		case SWT.PartHidden: {
+			((PartVisibilityListener) eventListener).partHidden (new PartVisibilityEvent (e));
+			break;
+		}
 		case SWT.Verify: {
 			/* Fields set by Text, RichText */
 			VerifyEvent event = new VerifyEvent (e);

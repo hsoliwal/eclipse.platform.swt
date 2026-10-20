@@ -3458,7 +3458,14 @@ void setVisiblePopover (boolean visible) {
 
 @Override
 public void setVisible (boolean visible) {
-	checkWidget();
+	checkWidget ();
+	setShellVisibleInPart (visible);
+	//FLLDCIM: rule 25 - the shell's own visibility change, reported like Control.setVisible
+	PartVisibility.shown (this);
+}
+
+/* the shell's setVisible without the report (rule 25: the public method reports after every path of this one) */
+void setShellVisibleInPart (boolean visible) {
 
 	if (popover) {
 		setVisiblePopover (visible);
