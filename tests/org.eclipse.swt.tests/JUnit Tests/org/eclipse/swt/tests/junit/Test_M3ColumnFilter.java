@@ -355,6 +355,44 @@ public class Test_M3ColumnFilter {
 	}
 
 	@Test
+	public void test_typingRefinementsEqualAFreshEvaluation () {
+		Random random = new Random (8);
+		int n = 3000;
+		String [] words = new String [n];
+		String alphabet = "abAB\u00e9";
+		for (int i = 0; i < n; i++) {
+			StringBuilder word = new StringBuilder ();
+			for (int k = 1 + random.nextInt (6); k > 0; k--) word.append (alphabet.charAt (random.nextInt (alphabet.length ())));
+			words [i] = word.toString ();
+		}
+		M3CellText cells = (row, column) -> column == 0 ? words [row] : words [n - 1 - row];
+		M3ColumnFilter filter = new M3ColumnFilter (2, n, cells);
+		int [] modes = {M3TextMatch.CONTAINS, M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE, M3TextMatch.STARTS_WITH, M3TextMatch.STARTS_WITH | M3TextMatch.IGNORE_CASE, M3TextMatch.CONTAINS | M3TextMatch.NEGATE};
+		for (int session = 0; session < 40; session++) {
+			int mode = modes [random.nextInt (modes.length)], column = random.nextInt (2);
+			StringBuilder typed = new StringBuilder ();
+			for (int key = 0; key < 8; key++) {
+				if (typed.length () > 0 && random.nextInt (4) == 0) typed.setLength (typed.length () - 1);
+				else typed.append (random.nextInt (9) == 0 ? ',' : alphabet.charAt (random.nextInt (alphabet.length ())));
+				if (random.nextInt (10) == 0) {
+					int row = random.nextInt (n);
+					words [row] = words [random.nextInt (n)];
+					filter.rowsChanged (row, n - 1 - row);
+				}
+				if (random.nextInt (12) == 0) {
+					filter.clear (column);
+					column = 1 - column;
+				}
+				filter.setText (column, typed.toString (), mode);
+				M3ColumnFilter fresh = new M3ColumnFilter (2, n, cells);
+				fresh.setText (column, typed.toString (), mode);
+				assertArrayEquals (rows (fresh), rows (filter), "session " + session + " typed '" + typed + "' mode " + mode);
+			}
+			filter.clear (column);
+		}
+	}
+
+	@Test
 	public void test_windowRangesAndChangeDescriptions () {
 		M3ColumnSort sort = new M3ColumnSort (1, 50);
 		sort.setKey (0, M3ColumnKey.ofInts (i -> i % 5));

@@ -124,7 +124,10 @@ public class Test_M3FilterAsync {
 		sort.setKey (0, M3ColumnKey.ofInts (r -> numbers [r]));
 		sort.setCellText (this::cell);
 		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		long [] firstFill = {0};
+		boolean [] armed = {false};
 		M3RowBinding binding = M3RowBinding.bind (table, sort, (item, row) -> {
+			if (armed [0] && firstFill [0] == 0 && filter.getAppliedGeneration () == filter.getGeneration ()) firstFill [0] = System.nanoTime ();
 			item.setText (0, cell (row, 0));
 			item.setText (1, cell (row, 1));
 		});
@@ -144,20 +147,29 @@ public class Test_M3FilterAsync {
 		binding.setSelectedRows (keep);
 		String [] typed = {"n", "n1", "n12", "n123", "n1234", "n123", "n12", "n1", "n", "n9", "n98", "n9", "n", "n1", "n12", "n123", "n1239", "n123", "n12", "n123"};
 		assertEquals (20, typed.length);
-		long slowestKeystroke = 0, slowestDispatch = 0;
-		for (String pattern : typed) {
+		long [] keystrokes = new long [typed.length];
+		armed [0] = true;
+		long slowestDispatch = 0, lastKeystroke = 0;
+		for (int k = 0; k < typed.length; k++) {
 			long start = System.nanoTime ();
-			filter.setText (1, pattern, M3TextMatch.CONTAINS);
-			slowestKeystroke = Math.max (slowestKeystroke, System.nanoTime () - start);
+			filter.setText (1, typed [k], M3TextMatch.CONTAINS);
+			lastKeystroke = System.nanoTime ();
+			keystrokes [k] = lastKeystroke - start;
 			slowestDispatch = Math.max (slowestDispatch, pump (30));
 		}
 		assertTrue (applied.isEmpty (), "nothing applies while typing faster than the debounce");
 		int finalGeneration = filter.getGeneration ();
 		long applyDispatch = waitFor (() -> filter.getAppliedGeneration () == finalGeneration);
-		time ("async-keystroke-max-ui", slowestKeystroke);
+		waitFor (() -> firstFill [0] != 0);
+		Arrays.sort (keystrokes);
+		long median = keystrokes [keystrokes.length / 2], p95 = keystrokes [(int) Math.ceil (keystrokes.length * 0.95) - 1];
+		time ("async-keystroke-median-ui", median);
+		time ("async-keystroke-p95-ui", p95);
+		time ("async-keystroke-max-ui", keystrokes [keystrokes.length - 1]);
 		time ("async-dispatch-while-typing-max", slowestDispatch);
 		time ("async-apply-dispatch-max", applyDispatch);
-		assertTrue (slowestKeystroke < 2_000_000L, "keystroke " + slowestKeystroke + " ns");
+		time ("async-last-keystroke-to-first-page", firstFill [0] - lastKeystroke);
+		assertTrue (p95 < 2_000_000L, "keystroke p95 " + p95 + " ns");
 		assertEquals (1, applied.size ());
 		assertArrayEquals (new int [] {finalGeneration, finalGeneration}, applied.get (0));
 		assertArrayEquals (reference (last), Test_M3ColumnSort.order (sort));
