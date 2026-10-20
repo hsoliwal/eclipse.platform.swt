@@ -945,6 +945,17 @@ final class ListViewport {
 
 	/* ---------------------------------------------------------------- items */
 
+	/* the items as the list box keeps them (each cut at its first NUL): the array itself when no item has one (the model copies it) */
+	static String [] nativeTexts (String [] items) {
+		for (int i = 0; i < items.length; i++) {
+			if (items [i].indexOf ('\0') == -1) continue;
+			String [] texts = items.clone ();
+			for (int j = i; j < texts.length; j++) texts [j] = nativeText (texts [j]);
+			return texts;
+		}
+		return items;
+	}
+
 	static String nativeText (String string) {
 		int nul = string.indexOf ('\0');
 		return nul == -1 ? string : string.substring (0, nul);
@@ -1115,8 +1126,7 @@ final class ListViewport {
 
 	void setItems (String [] items) {
 		sync ();
-		String [] texts = new String [items.length];
-		for (int i = 0; i < items.length; i++) texts [i] = nativeText (items [i]);
+		String [] texts = nativeTexts (items);
 		model.setItems (texts);
 		resetNative ();
 		plan.clear ();
@@ -1155,8 +1165,7 @@ final class ListViewport {
 		int count = model.getItemCount (), added = inserted.length;
 		if (at < 0 || removed < 0 || at > count - removed) list.error (SWT.ERROR_INVALID_RANGE);
 		if (removed == 0 && added == 0) return;
-		String [] texts = new String [added];
-		for (int i = 0; i < added; i++) texts [i] = nativeText (inserted [i]);
+		String [] texts = nativeTexts (inserted);
 		int first = plan.first (), resident = 0, entry = -1, removedWidth = 0;
 		if (hScroll) for (int i = 0; i < removed; i++) removedWidth = Math.max (removedWidth, model.measureItem (at + i));
 		if (removed > 0) {

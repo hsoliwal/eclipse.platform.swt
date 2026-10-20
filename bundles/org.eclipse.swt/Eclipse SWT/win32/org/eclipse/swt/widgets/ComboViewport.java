@@ -1004,9 +1004,7 @@ final class ComboViewport {
 		plan.clear ();
 		parked = parkedCaret = -1;
 		caret = 0;
-		String [] texts = new String [items.length];
-		for (int i = 0; i < items.length; i++) texts [i] = ListViewport.nativeText (items [i]);
-		model.setItems (texts);
+		model.setItems (ListViewport.nativeTexts (items));
 		int newWidth = hScroll () ? widest () : 0;
 		layout ();
 		if (hScroll ()) combo.setScrollWidth (newWidth + 3);
