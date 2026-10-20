@@ -32,3 +32,6 @@ progress-overlay	JetBrains/intellij-community (LoadingDecorator, JBLoadingPanel)
 progress-overlay	openjdk (javax.swing.JLayer, M3JDK in place)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	GPL-2.0-with-classpath-exception	UNPROVEN	ADAPT_IN_M3JDK	-	-	-
 breadcrumbs	eclipse-jdt/eclipse.jdt.ui (JavaEditorBreadcrumb)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
 breadcrumbs	ant-design/ant-design (Breadcrumb)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+diff-viewer	eclipse-platform/eclipse.platform (compare TextMergeViewer)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+diff-viewer	java-diff-utils/java-diff-utils	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	Apache-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+diff-viewer	microsoft/monaco-editor (diff editor)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
