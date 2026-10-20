@@ -708,6 +708,10 @@ void destroyItem (TableColumn column) {
 }
 
 void destroyItem (TableItem item) {
+	if (viewport != null) {
+		viewport.destroyItem (item);
+		return;
+	}
   int index = indexOf(item);
   itemList.remove(item);
   ((CTable)handle).removeItem(index);

@@ -33,6 +33,8 @@ import org.eclipse.swt.internal.swing.*;
  * per row, and sends no SWT.Selection (UPSTREAM_DEFECTS I31-B3).</li>
  * <li>Rows have a fixed height and the list a fixed cell width, kept by {@link M3ListRows} from the model's
  * change events: a layout, a resize or a change of rows renders only the rows shown, never every row.</li>
+ * <li>While the list is hidden, a change reaches Swing only as row geometry and selection; the list is laid out
+ * and painted once when it shows (M3ListModel, brief rule 24 hidden viewports).</li>
  * </ul>
  * The <code>JList</code>, its model and its renderer are those of the original mode.
  */
@@ -60,8 +62,9 @@ final class M3ListViewport {
 		return list.viewport;
 	}
 
-	/** Hook of <code>List.createWidget()</code>: fixed row geometry. */
+	/** Hook of <code>List.createWidget()</code>: the model with hidden viewports (M3ListModel), fixed row geometry. */
 	void install () {
+		M3ListModel.install (rows ());
 		geometry = M3ListRows.install (rows ());
 	}
 

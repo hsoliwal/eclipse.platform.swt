@@ -56,6 +56,12 @@ recipeList:
       anchor: "checkWidget ()"
       position: AFTER
       statements: "\tif (viewport != null) {\n\t\tviewport.remove (0, itemList.size () - 1);\n\t\treturn;\n\t}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      methodName: destroyItem
+      parameterTypes: TableItem
+      position: METHOD_START
+      statements: "\tif (viewport != null) {\n\t\tviewport.destroyItem (item);\n\t\treturn;\n\t}"
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.synexia.openrewrite.viewport.I31SwingListViewport

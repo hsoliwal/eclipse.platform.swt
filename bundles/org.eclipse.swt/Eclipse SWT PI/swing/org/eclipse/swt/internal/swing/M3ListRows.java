@@ -50,6 +50,8 @@ public final class M3ListRows implements ListDataListener, PropertyChangeListene
 	/** What the renderer adds to the text width (insets, gaps), and the row height, for the current font. */
 	private int extra, height;
 	private FontMetrics metrics;
+	/** Cell sizes changed while the list was hidden. */
+	private boolean pending;
 
 	private M3ListRows (JList<?> list) {
 		this.list = list;
@@ -164,10 +166,23 @@ public final class M3ListRows implements ListDataListener, PropertyChangeListene
 		while (widest > 0 && counts [widest] == 0) widest--;
 	}
 
-	/** Gives the list the cell sizes, when they changed (each change makes Swing lay the list out again). */
+	/**
+	 * Gives the list the cell sizes, when they changed (each change makes Swing lay the list out again). While the
+	 * list is displayable but not showing (brief rule 24, hidden viewports), the sizes wait for {@link #shown()}.
+	 */
 	private void apply () {
+		if (list.isDisplayable () && !list.isShowing ()) {
+			pending = true;
+			return;
+		}
+		pending = false;
 		int cellWidth = widest + extra;
 		if (list.getFixedCellHeight () != height) list.setFixedCellHeight (height);
 		if (list.getFixedCellWidth () != cellWidth) list.setFixedCellWidth (cellWidth);
+	}
+
+	/** The list shows: the cell sizes that changed while it was hidden reach Swing. */
+	public void shown () {
+		if (pending) apply ();
 	}
 }

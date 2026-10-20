@@ -453,6 +453,112 @@ public class M3ViewportAcceptanceTest {
 		assertEquals ("", table.getItem (19).getText ());
 	}
 
+
+	/** Swing model events of the Swing table or list of a control. */
+	private static int [] countSwingEvents (Control control) {
+		int [] events = {0};
+		java.awt.Container swing = ((org.eclipse.swt.internal.swing.CControl) control.handle).getSwingComponent ();
+		if (swing instanceof javax.swing.JTable) ((javax.swing.JTable) swing).getModel ().addTableModelListener (e -> events [0]++);
+		if (swing instanceof javax.swing.JList) ((javax.swing.JList<?>) swing).getModel ().addListDataListener (new javax.swing.event.ListDataListener () {
+			public void intervalAdded (javax.swing.event.ListDataEvent e) { events [0]++; }
+			public void intervalRemoved (javax.swing.event.ListDataEvent e) { events [0]++; }
+			public void contentsChanged (javax.swing.event.ListDataEvent e) { events [0]++; }
+		});
+		if (swing instanceof org.eclipse.swt.internal.swing.JTreeTable) ((org.eclipse.swt.internal.swing.JTreeTable) swing).getModel ().addTreeModelListener (new javax.swing.event.TreeModelListener () {
+			public void treeNodesChanged (javax.swing.event.TreeModelEvent e) { events [0]++; }
+			public void treeNodesInserted (javax.swing.event.TreeModelEvent e) { events [0]++; }
+			public void treeNodesRemoved (javax.swing.event.TreeModelEvent e) { events [0]++; }
+			public void treeStructureChanged (javax.swing.event.TreeModelEvent e) { events [0]++; }
+		});
+		return events;
+	}
+
+	@Test
+	public void hiddenTableTakesDeltasWithoutSwingAndShowsOnce () {
+		assumeTrue (M3TableViewport.ENABLED);
+		Table table = new Table (shell, SWT.VIRTUAL | SWT.BORDER | SWT.MULTI);
+		table.addListener (SWT.SetData, e -> {
+			setData++;
+			((TableItem) e.item).setText ("r" + e.index);
+		});
+		table.setItemCount (100);
+		shell.open ();
+		pump ();
+		table.setSelection (new int [] {5, 90});
+		int [] events = countSwingEvents (table);
+		table.setVisible (false);
+		pump ();
+		setData = 0;
+		for (int i = 0; i < 10_000; i++) table.setItemCount (table.getItemCount () + 1);
+		table.remove (0, 9);
+		table.setItemCount (table.getItemCount () - 5);
+		pump ();
+		assertEquals ("no Swing model event while hidden", 0, events [0]);
+		assertEquals ("no SetData while hidden", 0, setData);
+		assertEquals (10_085, table.getItemCount ());
+		javax.swing.JTable rows = (javax.swing.JTable) ((org.eclipse.swt.internal.swing.CTable) table.handle).getSwingComponent ();
+		assertEquals ("Swing has the row count", 10_085, rows.getRowCount ());
+		assertArrayEquals ("the selection moved with the removal", new int [] {80}, table.getSelectionIndices ());
+		table.setVisible (true);
+		pump ();
+		assertEquals ("still no model event: the show is one validation and paint", 0, events [0]);
+		assertTrue ("the window asked for data on show: " + setData, setData > 0 && setData < 100);
+		assertEquals (10_085 * rows.getRowHeight (), rows.getPreferredSize ().height);
+	}
+
+	@Test
+	public void hiddenListTakesDeltasWithoutSwingAndShowsOnce () {
+		assumeTrue (M3ListViewport.ENABLED);
+		List list = new List (shell, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
+		list.setItems ("a", "b", "c");
+		shell.open ();
+		pump ();
+		list.setSelection (new int [] {0, 2});
+		int [] events = countSwingEvents (list);
+		list.setVisible (false);
+		pump ();
+		for (int i = 0; i < 10_000; i++) list.add ("h" + i);
+		list.remove (1);
+		pump ();
+		assertEquals ("no Swing model event while hidden", 0, events [0]);
+		assertEquals (10_002, list.getItemCount ());
+		assertArrayEquals ("the selection moved with the removal", new int [] {0, 1}, list.getSelectionIndices ());
+		list.setVisible (true);
+		pump ();
+		assertEquals ("one patch on show", 1, events [0]);
+		javax.swing.JList<?> rows = (javax.swing.JList<?>) ((org.eclipse.swt.internal.swing.CList) list.handle).getSwingComponent ();
+		assertEquals (10_002 * rows.getFixedCellHeight (), rows.getPreferredSize ().height);
+		assertEquals ("h9999", list.getItem (10_001));
+	}
+
+	@Test
+	public void hiddenTreeTakesDeltasWithoutSwingAndShowsOnce () {
+		Tree tree = virtualTree (100);
+		shell.open ();
+		pump ();
+		int [] events = countSwingEvents (tree);
+		tree.setVisible (false);
+		pump ();
+		setData = 0;
+		for (int i = 0; i < 10_000; i++) tree.setItemCount (tree.getItemCount () + 1);
+		pump ();
+		assertEquals ("no Swing model event while hidden", 0, events [0]);
+		assertEquals ("no SetData while hidden", 0, setData);
+		assertEquals (10_100, tree.getItemCount ());
+		tree.setVisible (true);
+		pump ();
+		assertEquals ("one insertion on show", 1, events [0]);
+		org.eclipse.swt.internal.swing.JTreeTable swingTree = (org.eclipse.swt.internal.swing.JTreeTable) ((org.eclipse.swt.internal.swing.CTree) tree.handle).getSwingComponent ();
+		assertEquals ("Swing has every root row", 10_100, swingTree.getRowCount ());
+		assertEquals ("r10099", tree.getItem (10_099).getText ());
+		tree.setVisible (false);
+		tree.setItemCount (50);
+		tree.setItemCount (60);
+		tree.setVisible (true);
+		pump ();
+		assertEquals ("a shrink tells Swing at once, the growth on show", 60, swingTree.getRowCount ());
+	}
+
 	@Test
 	public void listScrollContract () {
 		assumeTrue (M3ListViewport.ENABLED);

@@ -44,6 +44,8 @@ final class M3TreeChildren extends Vector<TreeNode> {
 	final transient VirtualItemStorage<TreeItem> items = new VirtualItemStorage<> ();
 	/** The number of children. */
 	int count;
+	/** First child added while the tree was hidden, not yet told to Swing; -1 when Swing knows every child. */
+	int hiddenFrom = -1;
 
 	M3TreeChildren (M3TreeViewport viewport, TreeItem owner, DefaultMutableTreeTableNode node) {
 		super (0);

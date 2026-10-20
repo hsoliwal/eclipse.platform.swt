@@ -57,6 +57,8 @@ final class M3TreeViewport {
 	private int adoptingIndex = -1;
 	/** Whether a column width update is posted to the Swing thread. */
 	private boolean widthPending;
+	/** Children that grew while the tree was hidden (brief rule 24, hidden viewports); Swing gets them on show. */
+	private final java.util.List<M3TreeChildren> hiddenGrowth = new ArrayList<> ();
 
 	private M3TreeViewport (Tree tree) {
 		this.tree = tree;
@@ -77,6 +79,9 @@ final class M3TreeViewport {
 	 */
 	static M3TreeViewport install (Tree tree) {
 		M3TreeViewport viewport = new M3TreeViewport (tree);
+		viewport.cTree ().getSwingComponent ().addHierarchyListener (e -> {
+			if ((e.getChangeFlags () & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0 && e.getComponent ().isShowing ()) viewport.shown ();
+		});
 		LOG.debug (() -> "viewport installed, style " + Integer.toHexString (tree.style));
 		return viewport;
 	}
@@ -110,6 +115,30 @@ final class M3TreeViewport {
 		}
 	}
 
+	/**
+	 * The tree shows again: every parent that grew while it was hidden reaches Swing as one insertion of the new
+	 * children, then the tree is validated and painted once.
+	 */
+	void shown () {
+		if (hiddenGrowth.isEmpty ()) return;
+		for (M3TreeChildren children : hiddenGrowth) tell (children);
+		hiddenGrowth.clear ();
+		refresh ();
+	}
+
+	/** Tells Swing the children added while the tree was hidden. */
+	private void tell (M3TreeChildren children) {
+		if (children.hiddenFrom < 0) return;
+		int from = children.hiddenFrom;
+		children.hiddenFrom = -1;
+		if (from < children.count) model.inserted (children.node, from, children.count);
+		if (children.owner == null) cTree ().expandPath (new TreePath (children.node.getPath ()));
+	}
+
+	private boolean hidden () {
+		return !cTree ().getSwingComponent ().isShowing ();
+	}
+
 	/** Hook of <code>Tree.createItem</code>: adopts a materialized child, or inserts a new one. */
 	void insert (TreeItem parentItem, TreeItem item, int index) {
 		M3TreeChildren children = children (parentItem, true);
@@ -120,6 +149,7 @@ final class M3TreeViewport {
 			return;
 		}
 		if (index > children.count) SWT.error (SWT.ERROR_INVALID_RANGE);
+		tell (children);
 		children.items.insert (index, item);
 		children.count++;
 		node.setParent (children.node);
@@ -132,6 +162,7 @@ final class M3TreeViewport {
 		M3TreeChildren children = children (item.parentItem, false);
 		int index = children == null ? -1 : children.items.indexOfIdentity (item);
 		if (index >= 0) {
+			tell (children);
 			DefaultMutableTreeNode node = (DefaultMutableTreeNode) item.handle;
 			children.items.remove (index);
 			children.count--;
@@ -156,6 +187,15 @@ final class M3TreeViewport {
 	}
 
 	private void grow (M3TreeChildren children, int old, int count) {
+		if (hidden ()) {
+			children.count = count;
+			if (children.hiddenFrom < 0) {
+				children.hiddenFrom = old;
+				hiddenGrowth.add (children);
+			}
+			return;
+		}
+		tell (children);
 		children.count = count;
 		model.inserted (children.node, old, count);
 		if (children.owner == null) cTree ().expandPath (new TreePath (children.node.getPath ()));
@@ -164,6 +204,7 @@ final class M3TreeViewport {
 
 	/** Drops the children from <code>count</code> on; materialized ones are released when <code>release</code> is set. */
 	private void shrink (M3TreeChildren children, int count, boolean release) {
+		tell (children);
 		int old = children.count;
 		Object [] removed = new Object [old - count];
 		Arrays.fill (removed, UNMATERIALIZED);

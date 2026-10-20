@@ -14,9 +14,11 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.swing;
 
+import javax.swing.JTable;
+
 /**
  * Bulk row changes of the Swing table behind an SWT Table in the viewport mode: one model event for a run of
- * rows, where the original mode sends one event per row.
+ * rows, where the original mode sends one event per row; while the table is hidden, no event at all.
  * <p>
  * IMPORTANT: This class is <em>not</em> part of the SWT public API.
  * </p>
@@ -49,5 +51,34 @@ public final class M3TableRows {
 		CTableImplementation implementation = (CTableImplementation) table;
 		implementation.rowCount -= count;
 		implementation.getModel ().fireTableRowsDeleted (index, index + count - 1);
+	}
+
+	/**
+	 * Adds rows while the table is not showing (brief rule 24, hidden viewports): the row count and the selection
+	 * move as {@link JTable} would move them for the event, but no model event reaches Swing; the caller revalidates
+	 * and repaints the table once when it shows.
+	 *
+	 * @param table the Swing side of the SWT Table
+	 * @param index the first new row
+	 * @param count the number of new rows, at least 1
+	 */
+	public static void insertedHidden (CTable table, int index, int count) {
+		CTableImplementation implementation = (CTableImplementation) table;
+		implementation.rowCount += count;
+		implementation.getSelectionModel ().insertIndexInterval (index, count, true);
+	}
+
+	/**
+	 * Removes rows while the table is not showing: the row count and the selection move, no model event reaches
+	 * Swing (see {@link #insertedHidden(CTable, int, int)}).
+	 *
+	 * @param table the Swing side of the SWT Table
+	 * @param index the first removed row
+	 * @param count the number of removed rows, at least 1
+	 */
+	public static void removedHidden (CTable table, int index, int count) {
+		CTableImplementation implementation = (CTableImplementation) table;
+		implementation.rowCount -= count;
+		implementation.getSelectionModel ().removeIndexInterval (index, index + count - 1);
 	}
 }

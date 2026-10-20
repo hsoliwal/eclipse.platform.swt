@@ -14,6 +14,7 @@
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
+import java.awt.event.HierarchyEvent;
 import java.util.*;
 
 import javax.swing.*;
@@ -41,6 +42,8 @@ final class M3TableViewport {
 
 	final Table table;
 	private final M3SwingScroll scroll = new M3SwingScroll ();
+	/** Rows changed while the table was not showing; Swing gets them as one patch when it shows. */
+	private boolean dirty;
 
 	private M3TableViewport (Table table) {
 		this.table = table;
@@ -53,7 +56,49 @@ final class M3TableViewport {
 	 * @return the viewport of the table
 	 */
 	static M3TableViewport install (Table table) {
-		return new M3TableViewport (table);
+		M3TableViewport viewport = new M3TableViewport (table);
+		viewport.rows ().addHierarchyListener (e -> {
+			if ((e.getChangeFlags () & HierarchyEvent.SHOWING_CHANGED) != 0 && e.getComponent ().isShowing ()) viewport.shown ();
+		});
+		return viewport;
+	}
+
+	/**
+	 * The table shows again (brief rule 24, hidden viewports): the rows changed while it was hidden reach Swing as
+	 * one validation and one paint of the window.
+	 */
+	void shown () {
+		if (!dirty) return;
+		dirty = false;
+		JTable rows = rows ();
+		rows.revalidate ();
+		rows.repaint ();
+	}
+
+	/** Hook of <code>Table.destroyItem(TableItem)</code>: the slot leaves with a model event, or quietly while hidden. */
+	void destroyItem (TableItem item) {
+		int index = table.indexOf (item);
+		if (index < 0) return;
+		slots ().remove (index);
+		removed (index, 1);
+	}
+
+	private void inserted (int index, int count) {
+		if (rows ().isShowing ()) {
+			M3TableRows.inserted ((CTable) table.handle, index, count);
+		} else {
+			M3TableRows.insertedHidden ((CTable) table.handle, index, count);
+			dirty = true;
+		}
+	}
+
+	private void removed (int index, int count) {
+		if (rows ().isShowing ()) {
+			M3TableRows.removed ((CTable) table.handle, index, count);
+		} else {
+			M3TableRows.removedHidden ((CTable) table.handle, index, count);
+			dirty = true;
+		}
 	}
 
 	/** Hook of <code>Table.getTopIndex()</code>. */
@@ -86,7 +131,7 @@ final class M3TableViewport {
 		int old = slots.size ();
 		if (count > old) {
 			slots.addAll (Collections.nCopies (count - old, null));
-			M3TableRows.inserted ((CTable) table.handle, old, count - old);
+			inserted (old, count - old);
 		} else {
 			shrink (slots, count);
 		}
@@ -112,7 +157,7 @@ final class M3TableViewport {
 			while (from > start && slots.get (from - 1) == null) from--;
 			if (from < stop) {
 				slots.subList (from, stop).clear ();
-				M3TableRows.removed ((CTable) table.handle, from, stop - from);
+				removed (from, stop - from);
 			}
 			// disposing the item takes its slot out (Table.destroyItem)
 			if (from > start) ((TableItem) slots.get (from - 1)).dispose ();
@@ -142,7 +187,7 @@ final class M3TableViewport {
 			while (start > count && slots.get (start - 1) == null) start--;
 			if (start < end) {
 				slots.subList (start, end).clear ();
-				M3TableRows.removed ((CTable) table.handle, start, end - start);
+				removed (start, end - start);
 			}
 			if (start > count) ((TableItem) slots.get (start - 1)).release (true);
 			end = Math.min (start - 1, slots.size ());
