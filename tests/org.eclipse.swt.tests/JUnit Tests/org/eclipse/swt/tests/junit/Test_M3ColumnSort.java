@@ -492,6 +492,50 @@ public class Test_M3ColumnSort {
 		sort.dispose ();
 	}
 
+	/*
+	 * A widget that follows the changes as a binding does: the item count follows the view and only damaged rows are
+	 * read again. After every edit its rows must equal the view: the damage covers every view row whose source row
+	 * changed (flat filter + sort chain and a sort alone, single and multi-row edits).
+	 */
+	@Test
+	public void test_damageCoversEveryChangedViewRow () {
+		Random random = new Random (33);
+		for (int seed = 0; seed < 40; seed++) {
+			Rows rows = new Rows (random.nextInt (300), seed, 2 + random.nextInt (9));
+			M3ColumnSort sort;
+			M3ColumnFilter filter = null;
+			if (seed % 2 == 0) {
+				filter = new M3ColumnFilter (4, rows.size (), Test_M3ColumnFilter.text (rows));
+				filter.setText (3, "t1*,t2*,t3*", M3TextMatch.WILDCARD);
+				sort = new M3ColumnSort (4, filter);
+			} else {
+				sort = new M3ColumnSort (4, rows.size ());
+			}
+			rows.keys (sort);
+			int first = random.nextInt (4);
+			sort.setSortKeys (new int [] {first, (first + 1 + random.nextInt (3)) % 4}, new int [] {SWT.UP, SWT.DOWN});
+			List<Integer> widget = new ArrayList<> ();
+			for (int row : order (sort)) widget.add (row);
+			M3ColumnSort view = sort;
+			view.addListener (change -> {
+				/* a source edit renumbers the rows after it: the same rows, nothing to read again */
+				int start = change.start (), count = change.count ();
+				if (change.kind () == M3RowChange.INSERTED) widget.replaceAll (row -> row >= start ? row + count : row);
+				if (change.kind () == M3RowChange.REMOVED) widget.replaceAll (row -> row >= start + count ? row - count : row >= start ? -1 : row);
+				while (widget.size () > view.size ()) widget.remove (widget.size () - 1);
+				while (widget.size () < view.size ()) widget.add (-1);
+				if (change.firstDamaged () < 0) return;
+				for (int i = change.firstDamaged (); i <= Math.min (change.lastDamaged (), view.size () - 1); i++) widget.set (i, view.map (i));
+			});
+			for (int step = 0; step < 40; step++) {
+				if (filter != null && random.nextInt (5) == 0) Test_M3ColumnFilter.criterion (filter, random); else edit (rows, sort, random);
+				List<Integer> expected = new ArrayList<> ();
+				for (int row : order (sort)) expected.add (row);
+				assertEquals (expected, widget, "seed " + seed + " step " + step);
+			}
+		}
+	}
+
 	@Test
 	public void test_treeValueUpdatesKeepTheSiblingIndex () {
 		Random random = new Random (31);
