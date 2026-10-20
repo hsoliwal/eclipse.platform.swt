@@ -103,11 +103,23 @@ final class TableSplice {
 	 * @return false when the caller is to make the edit through the item API
 	 */
 	static boolean splice (Table table, TableViewport viewport, int at, int removed, int inserted) {
-		viewport.flush ();
 		long hwnd = table.handle;
+		/* the logical rows: a dirty viewport and deferred appends answer them without the native control */
 		int count = (int) OS.SendMessage (hwnd, OS.LVM_GETITEMCOUNT, 0, 0);
 		int newCount = count - removed + inserted;
-		if (count == 0 || newCount == 0) return false;
+		if (count == 0 || newCount == 0) {
+			viewport.applyHidden ();
+			return false;
+		}
+		if (viewport.dirty () || viewport.hidden ()) {
+			/* brief rule 24, hidden viewports: lanes and items only; the window patch waits for the first observer */
+			viewport.spliceHidden (count, at, removed, inserted);
+			moveRows (table, viewport, count, at, removed, inserted);
+			table.m3StructureChanged ();
+			if (LOG.isTraceEnabled ()) LOG.trace (() -> "Table splice of a hidden Table at " + at + ": -" + removed + " +" + inserted + ", rows " + count + " -> " + newCount);
+			return true;
+		}
+		viewport.flush ();
 		int selectedAfter = selectedFrom (viewport, hwnd, at, removed + inserted + SELECTION_SLACK);
 		if (selectedAfter < 0) return false;
 		int top = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));
@@ -132,6 +144,8 @@ final class TableSplice {
 			table.ignoreShrink = oldShrink;
 		}
 		if (redraw) invalidateChanged (table, top, newTop, newCount, at, removed, inserted);
+		viewport.freshFirst = at;
+		viewport.freshEnd = redraw ? at + inserted : at;
 		table.setDeferResize (false);
 		table.m3StructureChanged ();
 		if (LOG.isTraceEnabled ()) {
@@ -205,7 +219,7 @@ final class TableSplice {
 	}
 
 	/* the focus where the row messages put it, when the count change left it elsewhere (setting it also moves the mark) */
-	private static void setFocus (long hwnd, int row) {
+	static void setFocus (long hwnd, int row) {
 		if (row < 0 || row == (int) OS.SendMessage (hwnd, OS.LVM_GETNEXTITEM, -1, OS.LVNI_FOCUSED)) return;
 		LVITEM lvItem = new LVITEM ();
 		lvItem.state = lvItem.stateMask = OS.LVIS_FOCUSED;
@@ -213,14 +227,19 @@ final class TableSplice {
 	}
 
 	/* the selection mark where the row messages put it, when it is elsewhere now */
-	private static void setMark (long hwnd, int row) {
+	static void setMark (long hwnd, int row) {
 		if (row != (int) OS.SendMessage (hwnd, LVM_GETSELECTIONMARK, 0, 0)) OS.SendMessage (hwnd, OS.LVM_SETSELECTIONMARK, 0, row);
+	}
+
+	/** The row of the new numbering that the old top row (or the first row after it that survives) has. */
+	static int anchored (int top, int at, int removed, int inserted) {
+		return top < at ? top : top >= at + removed ? top - removed + inserted : at + inserted;
 	}
 
 	/* the old top row (or the first row after it that survives) on top again: one LVM_SCROLL while the redraw is off */
 	private static int anchorTop (Table table, int top, int count, int at, int removed, int inserted) {
 		long hwnd = table.handle;
-		int target = top < at ? top : top >= at + removed ? top - removed + inserted : at + inserted;
+		int target = anchored (top, at, removed, inserted);
 		int current = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));
 		if (target != current) OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, (target - current) * table.getItemHeightInPixels ());
 		return Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));

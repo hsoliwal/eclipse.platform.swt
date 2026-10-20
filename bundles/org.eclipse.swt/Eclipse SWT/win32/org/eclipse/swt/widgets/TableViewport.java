@@ -349,9 +349,11 @@ final class TableViewport {
 	static final int ROW_FONT = 0;
 	static final int ROW_BACKGROUND = 0, ROW_FOREGROUND = 1, INDENT = 2;
 	static final int CHECKED = 0, GRAYED = 1, DIRECTION = 2, DIRECTION_AUTO = 3, DIRECTION_FLIP = 4;
+	/* the native selection of a dirty (hidden) viewport, moved by the splices with the other lanes */
+	static final int SELECTED = 5;
 	final VirtualCellLanes cells = new VirtualCellLanes (3, new int [] {-1, -1}, 1);
 	final VirtualCellLanes rowLanes = new VirtualCellLanes (1, new int [] {-1, -1, 0}, 1);
-	final VirtualBitLanes flags = new VirtualBitLanes (5);
+	final VirtualBitLanes flags = new VirtualBitLanes (6);
 
 	/*
 	 * Facades. items [row] holds the facades that are held strongly: pinned ones (listeners, data or a
@@ -814,6 +816,166 @@ final class TableViewport {
 		};
 	}
 
+	/* ---------------------------------------------------------------- hidden viewport (brief rule 24) */
+
+	/*
+	 * A splice of a hidden Table (not visible, an empty client area, or in a minimized shell) changes the lanes and the
+	 * item array only: no native work, no facade, no paint. The viewport is dirty: the native ListView keeps its old
+	 * rows, LVM_GETITEMCOUNT and LVM_GETTOPINDEX answer the logical rows, the selection waits in the SELECTED lane
+	 * (moved by the splices with every other lane) and focus, mark and top are kept as rows, each moved in O(1) per
+	 * splice. The first message that observes the native rows (the first paint once the Table shows, or a query of the
+	 * application) applies one window patch: the count, the selection, focus and mark, the top row, then one paint.
+	 */
+	private boolean dirty, dirtySelection;
+	private int dirtyTop, dirtyFocus, dirtyMark;
+	/* the rows a splice inserted and invalidated, until the next paint: their labels need no repaint of their own */
+	int freshFirst, freshEnd;
+	private final RECT clientRect = new RECT ();
+
+	boolean dirty () {
+		return dirty;
+	}
+
+	/** Whether the native control is hidden: not visible, an empty client area, or in a minimized shell. */
+	boolean hidden () {
+		long hwnd = table.handle;
+		if (!OS.IsWindowVisible (hwnd)) return true;
+		OS.GetClientRect (hwnd, clientRect);
+		if (clientRect.right <= clientRect.left || clientRect.bottom <= clientRect.top) return true;
+		return OS.IsIconic (table.getShell ().handle);
+	}
+
+	/** The splice of a hidden Table: lanes and items, and the rows of the window patch. */
+	void spliceHidden (int count, int at, int removed, int inserted) {
+		if (!dirty) beginDirty ();
+		dirtyTop = Math.min (TableSplice.anchored (dirtyTop, at, removed, inserted), count - removed + inserted - 1);
+		if (dirtyFocus >= 0) dirtyFocus = TableSplice.moved (dirtyFocus, count, at, removed, inserted);
+		if (dirtyMark >= 0) dirtyMark = TableSplice.moved (dirtyMark, count, at, removed, inserted);
+	}
+
+	/* the native state, read once when the viewport becomes dirty; appends not counted natively yet join the patch */
+	private void beginDirty () {
+		long hwnd = table.handle;
+		pending = 0;
+		dirtyTop = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));
+		dirtyFocus = (int) OS.SendMessage (hwnd, OS.LVM_GETNEXTITEM, -1, OS.LVNI_FOCUSED);
+		dirtyMark = (int) OS.SendMessage (hwnd, LVM_GETSELECTIONMARK, 0, 0);
+		dirtySelection = false;
+		int row = -1;
+		while ((row = (int) OS.SendMessage (hwnd, OS.LVM_GETNEXTITEM, row, OS.LVNI_SELECTED)) != -1) {
+			flags.set (SELECTED, row, true);
+			dirtySelection = true;
+		}
+		dirty = true;
+	}
+
+	/* a message while dirty: the logical count and top, the queries that do not depend on the rows, or the window patch */
+	private long dirtyMessage (int msg, long lParam) {
+		switch (msg) {
+			case OS.LVM_GETITEMCOUNT:
+				return cells.length ();
+			case OS.LVM_GETTOPINDEX:
+				return dirtyTop;
+			case OS.LVM_GETCOUNTPERPAGE:
+			case OS.LVM_GETSTRINGWIDTH:
+			case OS.LVM_GETCOLUMNWIDTH:
+			case OS.LVM_GETIMAGELIST:
+			case OS.LVM_GETEXTENDEDLISTVIEWSTYLE:
+			case OS.LVM_GETHEADER:
+			case OS.WM_GETFONT:
+				return PASS;
+			case OS.LVM_SETCOLUMNWIDTH:
+				if (lParam >= 0) return PASS;
+				break;
+		}
+		/* window messages of a Table that is still hidden pass (it gets no paint); ListView messages observe the rows */
+		if ((msg < OS.LVM_FIRST || msg >= OS.LVM_FIRST + 0x100) && hidden ()) return PASS;
+		applyHidden ();
+		return PASS;
+	}
+
+	/** The window patch of a dirty viewport: one count change, the selection, focus, mark and top row, then one paint. */
+	void applyHidden () {
+		if (!dirty) return;
+		dirty = false;
+		long hwnd = table.handle;
+		int count = cells.length ();
+		boolean redraw = table.getDrawing () && OS.IsWindowVisible (hwnd);
+		boolean oldSelect = table.ignoreSelect, oldShrink = table.ignoreShrink;
+		table.ignoreSelect = table.ignoreShrink = true;
+		try {
+			if (redraw) OS.SendMessage (hwnd, OS.WM_SETREDRAW, 0, 0);
+			OS.SendMessage (hwnd, OS.LVM_SETITEMCOUNT, count, OS.LVSICF_NOINVALIDATEALL | OS.LVSICF_NOSCROLL);
+			if (dirtySelection) {
+				LVITEM lvItem = new LVITEM ();
+				lvItem.stateMask = OS.LVIS_SELECTED;
+				OS.SendMessage (hwnd, OS.LVM_SETITEMSTATE, -1, lvItem);
+				lvItem.state = OS.LVIS_SELECTED;
+				for (int row = flags.nextSet (SELECTED, 0); row >= 0; row = flags.nextSet (SELECTED, row + 1)) {
+					OS.SendMessage (hwnd, OS.LVM_SETITEMSTATE, row, lvItem);
+				}
+				flags.setRange (SELECTED, 0, flags.length (), false);
+			}
+			TableSplice.setFocus (hwnd, dirtyFocus);
+			if (dirtyMark >= 0) TableSplice.setMark (hwnd, dirtyMark);
+			int current = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));
+			if (count > 0 && dirtyTop != current) OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, (dirtyTop - current) * table.getItemHeightInPixels ());
+		} finally {
+			if (redraw) OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
+			table.ignoreSelect = oldSelect;
+			table.ignoreShrink = oldShrink;
+		}
+		/* a Table that just became visible is invalid as a whole already: this adds no second paint */
+		if (redraw) OS.InvalidateRect (hwnd, null, true);
+		if (LOG.isTraceEnabled ()) LOG.trace (() -> "Table window patch: " + count + " rows, top " + dirtyTop);
+	}
+
+	/**
+	 * M3Model's labels of a row that has no facade (Table.m3SetRow): the text of every column and the check box,
+	 * written to the lanes as the item setters store them, then the repaint of a visible row and the column-less width,
+	 * as TableItem.setText does. A row with a facade, with images, or labelled with images is left to the item setters
+	 * (false), so a facade stays its row's state and the image list registers its images.
+	 */
+	boolean setRow (int row, String [] texts, Image [] images, boolean checked) {
+		if (row < 0 || row >= cells.length () || facadeOrNull (row) != null) return false;
+		int columns = Math.max (1, table.columnCount);
+		for (int column = 0; column < columns; column++) {
+			if (column < images.length && images [column] != null || cells.get (IMAGE, column, row) != null) return false;
+		}
+		Object oldText = cells.get (TEXT, 0, row);
+		for (int column = 0; column < columns; column++) {
+			String text = column < texts.length && texts [column] != null ? texts [column] : "";
+			/* column 0 keeps no empty text; another column keeps the empty text a setter stored */
+			if (column == 0) {
+				cells.set (TEXT, 0, row, text.isEmpty () ? null : text);
+			} else if (!text.isEmpty () || cells.get (TEXT, column, row) != null || columns > 1) {
+				cells.set (TEXT, column, row, text);
+			}
+		}
+		if ((table.style & SWT.CHECK) != 0) flags.set (CHECKED, row, checked);
+		boolean textChanged = !Objects.equals (oldText, cells.get (TEXT, 0, row));
+		if (textChanged) widths.setUnmeasured (row);
+		if (dirty || hidden () || !table.getDrawing ()) {
+			if (textChanged && table.columnCount == 0) table.fixScrollWidth = true;
+			return true;
+		}
+		if (row < freshFirst || row >= freshEnd) {
+			long hwnd = table.handle;
+			int top = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));
+			if (row >= top && row <= top + Math.max (1, (int) OS.SendMessage (hwnd, OS.LVM_GETCOUNTPERPAGE, 0, 0))) {
+				OS.SendMessage (hwnd, OS.LVM_REDRAWITEMS, row, row);
+			}
+		}
+		if (textChanged && table.columnCount == 0) widenToRow (row);
+		return true;
+	}
+
+	/* TableItem.setText's setScrollWidth (item, false) for a row without a facade: the column-less width fits the row */
+	private void widenToRow (int row) {
+		measuringRow = row;
+		widen (measureRow (), rowLanes.getInt (INDENT, 0, row));
+	}
+
 	/* ---------------------------------------------------------------- appends and the native count */
 
 	/** Answer of {@link #beforeMessage(int, long, long)} for a message the ListView handles itself. */
@@ -839,6 +1001,11 @@ final class TableViewport {
 	 * any other message first brings the native count up to date.
 	 */
 	long beforeMessage (int msg, long wParam, long lParam) {
+		if (freshEnd > freshFirst && msg == OS.WM_PAINT) freshFirst = freshEnd = 0;
+		if (dirty) {
+			long answer = dirtyMessage (msg, lParam);
+			if (answer != PASS || dirty) return answer;
+		}
 		if (msg == OS.LVM_INSERTITEM && appending (lParam)) return defer (lParam);
 		if (pending == 0) return PASS;
 		switch (msg) {
@@ -902,6 +1069,7 @@ final class TableViewport {
 	 * paints it (T-Table-O2: no native row operation for a row nobody sees; the rule of Table.isVirtualPaintCandidate).
 	 */
 	boolean pending (TableItem item) {
+		if (dirty) return true;
 		int row = indexOf (item);
 		if (pending > 0 && row >= nativeCount) return true;
 		if (row < 0 || painting > 0) return false;
@@ -952,14 +1120,18 @@ final class TableViewport {
 	 * text or font changed.
 	 */
 	boolean widenToWidestRow () {
-		long hwnd = table.handle;
 		widths.measurePending (row -> {
 			/* the measure function reads the row's lanes (text and font), the string only names it */
 			measuringRow = row;
 			return "";
 		});
-		int newWidth = widths.maxWidth ();
-		int imageIndent = Math.max (0, rowLanes.maxInt (INDENT, 0));
+		return widen (widths.maxWidth (), Math.max (0, rowLanes.maxInt (INDENT, 0)));
+	}
+
+	/* the stock arithmetic of the column-less width over a text width and an image indent; the column only widens */
+	private boolean widen (int textWidth, int imageIndent) {
+		long hwnd = table.handle;
+		int newWidth = textWidth;
 		if (newWidth == 0) {
 			char [] buffer = {' ', '\0'};
 			newWidth = (int) OS.SendMessage (hwnd, OS.LVM_GETSTRINGWIDTH, 0, buffer);
