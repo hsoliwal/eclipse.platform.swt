@@ -111,6 +111,66 @@ public final class RowPaint {
 		return (state & bit) != 0;
 	}
 
+	/** The ints {@link #key} writes for a row of <code>cells</code> cells. */
+	public static int keyLength (int cells) {
+		return 26 + 11 * Math.max (1, cells);
+	}
+
+	/**
+	 * Writes everything a renderer reads from this row (geometry, slots, state, index, zoom, defaults, cells) into an int
+	 * key and the cell texts, so a plane can keep a row it drew before when nothing of it changed (brief rule 24, delta
+	 * based view). Keys are compared exactly (texts with <code>equals</code>), never by hash.
+	 *
+	 * @param ints at least {@link #keyLength} ints
+	 * @param texts at least <code>cells</code> strings
+	 * @return the ints written, or -1 when a cell has an image: its pixels may change in place, so such a row is drawn
+	 */
+	public int key (int [] ints, String [] texts) {
+		int n = 0;
+		ints [n++] = x;
+		ints [n++] = y;
+		ints [n++] = width;
+		ints [n++] = height;
+		ints [n++] = selectionX;
+		ints [n++] = selectionWidth;
+		ints [n++] = expanderX;
+		ints [n++] = expanderWidth;
+		ints [n++] = checkX;
+		ints [n++] = checkWidth;
+		ints [n++] = state;
+		ints [n++] = depth;
+		ints [n++] = indent;
+		ints [n++] = index;
+		ints [n++] = zoom;
+		ints [n++] = foreground;
+		ints [n++] = background;
+		ints [n++] = (int) font;
+		ints [n++] = (int) (font >>> 32);
+		ints [n++] = systemSelectionBackground;
+		ints [n++] = systemSelectionForeground;
+		ints [n++] = listGrid;
+		ints [n++] = listColumnDetail;
+		ints [n++] = sortCell;
+		ints [n++] = sortBackground;
+		ints [n++] = cells;
+		for (int i = 0; i < cells; i++) {
+			if (image [i] != null) return -1;
+			ints [n++] = cellX [i];
+			ints [n++] = cellWidth [i];
+			ints [n++] = textX [i];
+			ints [n++] = textWidth [i];
+			ints [n++] = imageX [i];
+			ints [n++] = imageWidth [i];
+			ints [n++] = align [i];
+			ints [n++] = (int) cellFont [i];
+			ints [n++] = (int) (cellFont [i] >>> 32);
+			ints [n++] = cellForeground [i];
+			ints [n++] = cellBackground [i];
+			texts [i] = text [i];
+		}
+		return n;
+	}
+
 	/** Converts a win32 <code>COLORREF</code> (<code>0x00BBGGRR</code>) to <code>0xRRGGBB</code>; -1 stays -1. */
 	public static int rgbOf (int colorRef) {
 		if (colorRef == -1) return -1;

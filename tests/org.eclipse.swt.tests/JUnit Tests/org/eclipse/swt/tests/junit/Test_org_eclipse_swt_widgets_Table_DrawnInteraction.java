@@ -64,7 +64,7 @@ public class Test_org_eclipse_swt_widgets_Table_DrawnInteraction {
 		FrameLog frames = frameLog (table);
 		AtomicInteger applied = new AtomicInteger ();
 		Thread worker = churn (display, table, applied);
-		long [] latencies = new long [STEPS];
+		long [] latencies = new long [STEPS * 5];
 		int [] counts = new int [2];
 		try {
 			script (display, table, frames, latencies, counts);
@@ -96,30 +96,35 @@ public class Test_org_eclipse_swt_widgets_Table_DrawnInteraction {
 	}
 
 	/*
-	 * Fast scroll and typing: wheel bursts, page keys, type-ahead characters, each followed by one frame's time. An input
-	 * is timed from its send to the end of the paint update () makes; inputs that damaged nothing (no frame) are counted
-	 * apart (counts [1]), as they have no pixels to show: latencies [0 .. counts [0]) are the input-to-pixel times.
+	 * Fast scroll and typing: wheel bursts, page keys, type-ahead characters, each followed by one frame's time. Each input
+	 * event (every wheel notch of a burst) is timed on its own, from its send to the end of the paint update () makes;
+	 * inputs that damaged nothing (no frame) are counted apart (counts [1]), as they have no pixels to show:
+	 * latencies [0 .. counts [0]) are the input-to-pixel times.
 	 */
 	static void script (Display display, Table table, FrameLog frames, long [] latencies, int [] counts) {
 		Random random = new Random (0x5C2011L);
 		for (int step = 0; step < STEPS; step++) {
 			int kind = random.nextInt (4);
-			long sent = System.nanoTime (), framesBefore = frames.frames ();
 			if (kind == 0) {
-				for (int k = 0; k < 5; k++) ViewportDifferential.send (table, WM_MOUSEWHEEL, ((random.nextBoolean () ? -120 : 120) & 0xFFFFL) << 16, 0);
+				for (int k = 0; k < 5; k++) input (table, frames, latencies, counts, WM_MOUSEWHEEL, ((random.nextBoolean () ? -120 : 120) & 0xFFFFL) << 16);
 			} else if (kind == 1) {
-				ViewportDifferential.send (table, WM_KEYDOWN, random.nextBoolean () ? VK_NEXT : VK_PRIOR, 0);
+				input (table, frames, latencies, counts, WM_KEYDOWN, random.nextBoolean () ? VK_NEXT : VK_PRIOR);
 			} else if (kind == 2) {
-				ViewportDifferential.send (table, WM_CHAR, 'r', 0);
+				input (table, frames, latencies, counts, WM_CHAR, 'r');
 			} else {
 				table.setTopIndex (random.nextInt (ROWS / 2));
-			}
-			table.update ();
-			if (kind < 3) {
-				if (frames.frames () > framesBefore) latencies [counts [0]++] = System.nanoTime () - sent; else counts [1]++;
+				table.update ();
 			}
 			ViewportDifferential.settle (display, 16);
 		}
+	}
+
+	/* one input event, timed from its send to the end of the paint that shows it */
+	static void input (Table table, FrameLog frames, long [] latencies, int [] counts, int msg, long wParam) {
+		long sent = System.nanoTime (), framesBefore = frames.frames ();
+		ViewportDifferential.send (table, msg, wParam, 0);
+		table.update ();
+		if (frames.frames () > framesBefore) latencies [counts [0]++] = System.nanoTime () - sent; else counts [1]++;
 	}
 
 	/* a fixed view once the churn is done: the pixels depend only on the final model */

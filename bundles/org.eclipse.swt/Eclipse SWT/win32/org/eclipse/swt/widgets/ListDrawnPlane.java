@@ -69,7 +69,7 @@ final class ListDrawnPlane extends DrawnPlane {
 				if (OS.SendMessage (hwnd, OS.LB_GETITEMRECT, index, bounds) == OS.LB_ERR || bounds.top >= damage.bottom) break;
 				boolean selected = single ? index == current : OS.SendMessage (hwnd, OS.LB_GETSEL, index, 0) > 0;
 				fillRow (hwnd, index, common | (selected ? RowPaint.SELECTED : 0) | (index == caret ? RowPaint.CARET : 0));
-				renderer.paint (canvas, row);
+				paintRow ();
 				bottom = bounds.bottom;
 			}
 		}

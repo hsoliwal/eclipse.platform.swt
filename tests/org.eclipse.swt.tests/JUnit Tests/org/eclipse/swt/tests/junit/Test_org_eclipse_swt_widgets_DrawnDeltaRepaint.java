@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.logging.*;
 
 import org.eclipse.swt.*;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.render.*;
 import org.eclipse.swt.widgets.*;
 import org.junit.jupiter.api.*;
@@ -67,24 +68,46 @@ public class Test_org_eclipse_swt_widgets_DrawnDeltaRepaint {
 
 	/* applies each delta, drains its paints, and answers the deltas that repainted all the rows */
 	List<String> deltas (Control control, Map<String, Runnable> deltas) {
-		FrameLog log = log (control);
-		Assumptions.assumeTrue (log != null, "a drawn mode (custom, m3, gpu) only");
+		Assumptions.assumeTrue (log (control) != null, "a drawn mode (custom, m3, gpu) only");
 		shell.open ();
 		ViewportDifferential.settle (display, 300);
 		control.update ();
 		List<String> full = new ArrayList<> ();
 		for (Map.Entry<String, Runnable> delta : deltas.entrySet ()) {
-			long fullBefore = log.fullRepaints (), pixelsBefore = log.paintedPixels (), framesBefore = log.frames ();
+			/* the plane in effect now: a widget that makes its handle again installs a new plane */
+			FrameLog log = log (control);
+			long fullBefore = log.fullRepaints (), pixelsBefore = log.paintedPixels (), framesBefore = log.frames (), drawnBefore = log.rowsDrawn (), keptBefore = log.rowsKept ();
 			delta.getValue ().run ();
 			control.update ();
 			ViewportDifferential.settle (display, 60);
 			control.update ();
+			if (log (control) != log) LOG.warning (control.getClass ().getSimpleName () + " " + delta.getKey () + ": the widget installed a new drawn plane");
 			long fulls = log.fullRepaints () - fullBefore, pixels = log.paintedPixels () - pixelsBefore, frames = log.frames () - framesBefore;
-			String line = control.getClass ().getSimpleName () + " " + delta.getKey () + ": " + frames + " frames, " + pixels + " pixels, " + fulls + " full";
+			String line = control.getClass ().getSimpleName () + " " + delta.getKey () + ": " + frames + " frames, " + pixels + " pixels, " + (log.rowsDrawn () - drawnBefore) + " rows drawn, " + (log.rowsKept () - keptBefore) + " kept, " + fulls + " full";
 			LOG.info (line);
 			if (fulls > 0) full.add (line);
 		}
+		keptRowsAreTheDrawnRows (control);
 		return full;
+	}
+
+	/*
+	 * The rows the plane kept from its retained frame are the rows it would draw: the capture after the deltas equals the
+	 * capture after the plane forgot every row (a font set again) and drew them all.
+	 */
+	void keptRowsAreTheDrawnRows (Control control) {
+		ImageData kept = ViewportDifferential.render (control);
+		control.setFont (control.getFont ());
+		control.redraw ();
+		control.update ();
+		ViewportDifferential.settle (display, 60);
+		ImageData drawn = ViewportDifferential.render (control);
+		String name = control.getClass ().getSimpleName () + "-" + ViewportDifferential.reference (control.getClass ().getSimpleName ());
+		if (!Arrays.equals (kept.data, drawn.data)) {
+			ViewportDifferential.save ("delta-kept-" + name, kept);
+			ViewportDifferential.save ("delta-drawn-" + name, drawn);
+			fail ("rule 24: a kept row differs from the drawn row (delta-kept-/delta-drawn-" + name + ".png)");
+		}
 	}
 
 	@Test

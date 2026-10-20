@@ -67,14 +67,15 @@ public class Test_org_eclipse_swt_widgets_DrawnResizeSweep {
 	}
 
 	void sweep (Control control) throws Exception {
-		Object plane = plane (control);
-		Assumptions.assumeTrue (plane != null, "a drawn mode (custom, m3, gpu) only");
-		FrameLog log = Test_org_eclipse_swt_widgets_DrawnDeltaRepaint.log (control);
+		Assumptions.assumeTrue (plane (control) != null, "a drawn mode (custom, m3, gpu) only");
 		control.setBounds (5, 5, 300, 300);
 		shell.open ();
 		ViewportDifferential.settle (display, 300);
 		control.update ();
-		long framesStart = log.frames (), pixelsStart = log.paintedPixels ();
+		/* the plane in effect once the widget is shown: a widget that makes its handle again installs a new plane */
+		Object plane = plane (control);
+		FrameLog log = Test_org_eclipse_swt_widgets_DrawnDeltaRepaint.log (control);
+		long framesStart = log.frames (), pixelsStart = log.paintedPixels (), drawnStart = log.rowsDrawn (), keptStart = log.rowsKept ();
 		int creationsStart = creations (plane);
 		long [] full = new long [STEPS];
 		int [] made = new int [STEPS];
@@ -88,12 +89,14 @@ public class Test_org_eclipse_swt_widgets_DrawnResizeSweep {
 			control.update ();
 			full [step] = log.fullRepaints () - fullBefore;
 			made [step] = creations (plane) - creationsBefore;
+			if (plane (control) != plane) fail ("step " + step + ": the widget installed a new drawn plane");
 		}
 		long fullAfterFirst = Arrays.stream (full, 1, STEPS).sum ();
 		int creations = creations (plane) - creationsStart;
 		String mode = ViewportDifferential.reference (control.getClass ().getSimpleName ());
-		String row = String.format (Locale.ROOT, "%s\t%s\tsteps %d\tfull repaints after the first step %d\tback buffer re-creations %d\tframes %d\tpixels %d\tframe p50 %.3f ms\tp99 %.3f ms\tfull per step %s",
+		String row = String.format (Locale.ROOT, "%s\t%s\tsteps %d\tfull repaints after the first step %d\tback buffer re-creations %d\tframes %d\tpixels %d\trows drawn %d\tkept %d\tframe p50 %.3f ms\tp99 %.3f ms\tfull per step %s",
 			control.getClass ().getSimpleName (), mode, STEPS, fullAfterFirst, creations, log.frames () - framesStart, log.paintedPixels () - pixelsStart,
+			log.rowsDrawn () - drawnStart, log.rowsKept () - keptStart,
 			log.frameTime (50) / 1e6, log.frameTime (99) / 1e6, Arrays.toString (full));
 		LOG.info ("drawn resize sweep: " + row);
 		String output = System.getProperty ("swt.drawn.resize");

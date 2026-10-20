@@ -86,7 +86,7 @@ final class TableDrawnPlane extends DrawnPlane {
 			for (int index = top + Math.max (0, (damage.top - bounds.top) / height); index < count; index++) {
 				if (!rect (hwnd, index, OS.LVIR_BOUNDS, bounds) || bounds.top >= damage.bottom) break;
 				fillRow (hwnd, index, focus);
-				renderer.paint (canvas, row);
+				paintRow ();
 				bottom = bounds.bottom;
 			}
 		}

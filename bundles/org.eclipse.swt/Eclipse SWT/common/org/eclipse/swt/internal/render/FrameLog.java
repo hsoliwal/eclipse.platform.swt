@@ -28,14 +28,15 @@ public final class FrameLog {
 	public static final int CAPACITY = 256;
 	private final long [] start = new long [CAPACITY], end = new long [CAPACITY], generation = new long [CAPACITY],
 		latency = new long [CAPACITY], scratch = new long [CAPACITY];
-	private long frames, pendingInput, fullRepaints, paintedPixels;
+	private long frames, pendingInput, fullRepaints, paintedPixels, rowsDrawn, rowsKept;
 
 	/**
-	 * Records the damage a frame paints (brief rule 24, "all delta based view"): a frame whose damage covers the whole
-	 * rows area is a full repaint. A model delta repaints only the rows it damages, so a delta adds no full repaint;
-	 * {@link #fullRepaints} before and after a delta is the gate.
+	 * Records the damage a frame paints (brief rule 24, "all delta based view"): a frame that drew every row of the rows
+	 * area is a full repaint. A model delta repaints only the rows it changes (the plane keeps the others from its
+	 * retained frame, whatever the native control invalidated), so a delta adds no full repaint; {@link #fullRepaints}
+	 * before and after a delta is the gate.
 	 *
-	 * @param full the damage covers the rows area
+	 * @param full the frame drew every row of the rows area
 	 * @param pixels the damage's area
 	 */
 	public void damage (boolean full, long pixels) {
@@ -46,6 +47,22 @@ public final class FrameLog {
 	/** Frames that repainted the whole rows area since the log was made. */
 	public long fullRepaints () {
 		return fullRepaints;
+	}
+
+	/** Records the rows a frame drew and the rows it kept from the retained frame (unchanged since they were drawn). */
+	public void rows (int drawn, int kept) {
+		rowsDrawn += drawn;
+		rowsKept += kept;
+	}
+
+	/** Rows drawn since the log was made. */
+	public long rowsDrawn () {
+		return rowsDrawn;
+	}
+
+	/** Rows kept from the retained frame since the log was made. */
+	public long rowsKept () {
+		return rowsKept;
 	}
 
 	/** Pixels of damage painted since the log was made. */

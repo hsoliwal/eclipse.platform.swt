@@ -67,7 +67,7 @@ final class TreeDrawnPlane extends DrawnPlane {
 		while (hItem != 0) {
 			if (!OS.TreeView_GetItemRect (hwnd, hItem, line, false) || line.top >= damage.bottom) break;
 			fillRow (hwnd, hItem, caret);
-			renderer.paint (canvas, row);
+			paintRow ();
 			bottom = line.bottom;
 			hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_NEXTVISIBLE, hItem);
 		}
