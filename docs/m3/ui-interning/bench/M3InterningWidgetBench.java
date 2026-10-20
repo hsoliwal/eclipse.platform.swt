@@ -68,7 +68,7 @@ public final class M3InterningWidgetBench {
 	}
 
 	public static void main (String [] args) throws IOException {
-		Path out = Path.of (args.length > 0 ? args [0] : "WIDGET_BENCH.tsv");
+		java.nio.file.Path out = java.nio.file.Path.of (args.length > 0 ? args [0] : "WIDGET_BENCH.tsv");
 		String what = args.length > 1 ? args [1] : "all";
 		Display display = new Display ();
 		try (PrintWriter tsv = new PrintWriter (Files.newBufferedWriter (out, StandardCharsets.UTF_8))) {
