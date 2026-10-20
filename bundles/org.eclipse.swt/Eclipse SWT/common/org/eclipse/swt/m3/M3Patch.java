@@ -324,31 +324,36 @@ public final class M3Patch {
 	 */
 	public long [] apply (long [] before) {
 		if (before == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-		long [] ids = before;
 		int size = before.length;
 		for (int i = 0; i < removeAt.length; i++) {
 			if (removeAt [i] + removeCount [i] > size) SWT.error (SWT.ERROR_INVALID_RANGE);
-			ids = splice (ids, size, removeAt [i], removeCount [i], null, 0, 0);
 			size -= removeCount [i];
 		}
 		for (int i = 0; i < insertAt.length; i++) {
 			if (insertAt [i] > size) SWT.error (SWT.ERROR_INVALID_RANGE);
-			ids = splice (ids, size, insertAt [i], 0, insertedIds, insertStart [i], insertCount [i]);
 			size += insertCount [i];
 		}
 		for (int i = 0; i < updateAt.length; i++) {
 			if (updateAt [i] + updateCount [i] > size) SWT.error (SWT.ERROR_INVALID_RANGE);
 		}
-		return ids == before ? before.clone () : ids;
-	}
-
-	/* a new array: ids [0, at) + source [from, from + count) + ids [at + cut, size) */
-	private static long [] splice (long [] ids, int size, int at, int cut, long [] source, int from, int count) {
-		long [] next = new long [size - cut + count];
-		System.arraycopy (ids, 0, next, 0, at);
-		if (count > 0) System.arraycopy (source, from, next, at, count);
-		System.arraycopy (ids, at + cut, next, at + count, size - at - cut);
-		return next;
+		/* one pass, one array (catalogue: two-pointer merge of the kept rows and the insert runs) */
+		long [] after = new long [size];
+		int from = 0, to = 0, cut = removeAt.length - 1;
+		for (int i = 0; i <= insertAt.length; i++) {
+			int until = i < insertAt.length ? insertAt [i] : size;
+			while (to < until) {
+				while (cut >= 0 && removeAt [cut] == from) from += removeCount [cut--];
+				int kept = Math.min (until - to, (cut >= 0 ? removeAt [cut] : before.length) - from);
+				System.arraycopy (before, from, after, to, kept);
+				from += kept;
+				to += kept;
+			}
+			if (i < insertAt.length) {
+				System.arraycopy (insertedIds, insertStart [i], after, to, insertCount [i]);
+				to += insertCount [i];
+			}
+		}
+		return after;
 	}
 
 	private static int sum (int [] values) {
