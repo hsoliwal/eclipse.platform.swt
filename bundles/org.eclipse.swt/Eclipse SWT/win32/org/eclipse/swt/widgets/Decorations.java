@@ -1400,6 +1400,13 @@ public void setText (String string) {
 @Override
 public void setVisible (boolean visible) {
 	checkWidget ();
+	setShellVisibleInPart (visible);
+	//FLLDCIM: rule 25 - the shell's own visibility change, reported like Control.setVisible
+	PartVisibility.shown (this);
+}
+
+/* the shell's setVisible without the report (rule 25: the public method reports after every path of this one) */
+void setShellVisibleInPart (boolean visible) {
 	if (!getDrawing()) {
         if (((state & HIDDEN) == 0) == visible) {
             return;
@@ -1864,6 +1871,10 @@ LRESULT WM_SIZE (long wParam, long lParam) {
 	if (wParam == OS.SIZE_MINIMIZED) {
 		sendEvent (SWT.Iconify);
 		// widget could be disposed at this point
+	}
+	//FLLDCIM: rule 25 - a restore from minimized sends no Resize (same size) and Deiconify comes before it: report here
+	if (!isDisposed ()) {
+		PartVisibility.restored (this);
 	}
 	return result;
 }
