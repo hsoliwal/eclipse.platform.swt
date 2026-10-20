@@ -199,3 +199,13 @@ paint code per control.
 - Owner: render-modes, with all-widgets for the L&F keys. Gate: pixel comparison against the stock button in native mode
   is unchanged (skins are opt-in per L&F), skin rendering at 100/125/150/200% zoom and 10 sizes, and no paint
   allocation after the cache is warm.
+
+## Info popups on header, body and footer; footers on trees (user, 2026-10-20: "popups for additional information on headers, on body, on footer .. dude, trees should have a footer")
+
+| Behaviour | What it does | Donors (route) | Owner |
+|---|---|---|---|
+| Header info popup | hover or click on a column header: what the column means, its unit, the active sort and filter, value statistics (count, distinct, min/max, nulls) from lanes, quick actions (sort, filter, hide, pin) | AG Grid column menu (MIT community), MUI DataGrid column menu (MIT), Radix HoverCard (MIT) | custom-widgets + sort-filter |
+| Body info popup | hover card or click popover on a cell or row: full untruncated value, details, related items, actions; anchored to the cell bounds on an overlay plane, delayed and dismissable, keyboard accessible | Radix HoverCard/Popover, Floating UI (MIT: ADAPT), JFace ColumnViewerToolTipSupport (EPL), ControlsFX PopOver (BSD-3: ADAPT) | custom-widgets |
+| Footer info popup | click a footer cell: the aggregate breakdown (sum, count, average, min, max, per group), switch the aggregate shown, copy | AG Grid status bar aggregation (pattern), NatTable summary row (EPL) | sort-filter |
+| Tree footer | trees get a footer row like tables: per-column aggregates over all, filtered or visible rows; optional per-branch subtotal rows; updated by deltas (O(changed + depth) via subtree aggregate lanes, Fenwick-style); pinned at the bottom of the viewport | NatTable summary row (EPL: ADAPT), TanStack aggregation (MIT: ADAPT) | Tree track (SWT Tree footer inside the widget, rule 25), Swing track (JTree/JXTreeTable) |
+| Table footer | the same footer for Table and Grid, with the popup above | as above | Table track, nebula-grid |
