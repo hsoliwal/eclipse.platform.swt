@@ -36,8 +36,10 @@ final class VirtualTreeResidentPlan {
 	private long [] keys = new long [0], handles = new long [0];
 	private int [] parentSlots = new int [0];
 	private int size;
-	private final HashMap<Long, Integer> slotByKey = new HashMap<> ();
-	private final HashMap<Long, Integer> slotByHandle = new HashMap<> ();
+	/* row key and native handle to committed entry: open addressing, no boxing (a window commit allocates nothing) */
+	private final VirtualLongIntTable slotByKey = new VirtualLongIntTable ();
+	private final VirtualLongIntTable slotByHandle = new VirtualLongIntTable ();
+	private int [] lastChild = new int [0];
 
 	private long [] planned = new long [0], retired = new long [0];
 	private int [] previousSiblings = new int [0];
@@ -60,14 +62,13 @@ final class VirtualTreeResidentPlan {
 
 	/** Native handle of the committed row at this coordinate, or 0 when it is not resident. */
 	long handleOf (int parentId, int childIndex) {
-		Integer slot = slotByKey.get (key (parentId, childIndex));
-		return slot == null ? 0 : handles [slot];
+		int slot = slotByKey.get (key (parentId, childIndex));
+		return slot < 0 ? 0 : handles [slot];
 	}
 
 	/** Entry (dense preorder index) of a committed native handle, or -1. */
 	int entryOf (long handle) {
-		Integer slot = slotByHandle.get (handle);
-		return slot == null ? -1 : slot;
+		return slotByHandle.get (handle);
 	}
 
 	/** Native handle of a committed entry. */
@@ -99,8 +100,8 @@ final class VirtualTreeResidentPlan {
 		if (kept.length < size) kept = new boolean [capacity (kept.length, size)];
 		Arrays.fill (kept, 0, size, false);
 		overlapCount = reinsertedCount = 0;
-		int [] lastChild = new int [count + 1];
-		Arrays.fill (lastChild, -1);
+		if (lastChild.length < count + 1) lastChild = new int [capacity (lastChild.length, count + 1)];
+		Arrays.fill (lastChild, 0, count + 1, -1);
 		for (int entry = 0; entry < count; entry++) {
 			int physicalParent = physicalParents [entry];
 			if (physicalParent < -1 || physicalParent >= entry) throw new IllegalArgumentException ("preorder");
@@ -110,16 +111,16 @@ final class VirtualTreeResidentPlan {
 			 * parent may retain its topology id while its coordinate (and native row) changes.
 			 * Reusing the child's old handle after deleting that parent would be use-after-delete. */
 			boolean parentSurvives = physicalParent == -1 || planned [physicalParent] != 0;
-			Integer slot = slotByKey.get (key (parentIds [entry], childIndices [entry]));
-			if (slot != null) overlapCount++;
-			if (parentSurvives && slot != null && !kept [slot]) {
+			int slot = slotByKey.get (key (parentIds [entry], childIndices [entry]));
+			if (slot >= 0) overlapCount++;
+			if (parentSurvives && slot >= 0 && !kept [slot]) {
 				kept [slot] = true;
 				planned [entry] = handles [slot];
 				plannedSlots [entry] = slot;
 			} else {
 				planned [entry] = 0;
 				plannedSlots [entry] = -1;
-				if (slot != null) reinsertedCount++;
+				if (slot >= 0) reinsertedCount++;
 			}
 		}
 		plannedCount = count;
