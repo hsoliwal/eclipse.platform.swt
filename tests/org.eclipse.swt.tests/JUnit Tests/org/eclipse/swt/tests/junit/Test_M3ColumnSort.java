@@ -535,6 +535,55 @@ public class Test_M3ColumnSort {
 	}
 
 	@Test
+	public void test_treeFilterEditsKeepTheSiblingIndex () {
+		Random random = new Random (32);
+		for (int seed = 0; seed < 20; seed++) {
+			int n = 1 + random.nextInt (400);
+			int [] parents = new int [n], values = new int [n];
+			String [] labels = new String [n];
+			for (int row = 0; row < n; row++) {
+				parents [row] = row == 0 || random.nextInt (5) == 0 ? -1 : random.nextInt (row);
+				values [row] = random.nextInt (20);
+				labels [row] = random.nextInt (3) == 0 ? "x" + random.nextInt (9) : "y";
+			}
+			java.util.function.Supplier<M3ColumnSort> create = () -> {
+				M3ColumnFilter filter = new M3ColumnFilter (1, n, (row, column) -> labels [row]);
+				filter.setParents (r -> parents [r]);
+				filter.setText (0, "x", M3TextMatch.CONTAINS);
+				M3ColumnSort sort = new M3ColumnSort (1, filter);
+				sort.setKey (0, M3ColumnKey.ofInts (r -> values [r]));
+				sort.setParents (r -> parents [r]);
+				sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+				return sort;
+			};
+			M3ColumnSort sort = create.get ();
+			sort.childCount (-1);
+			Object order = Test_M3ColumnFilter.field (sort, "order");
+			int builds = (Integer) Test_M3ColumnFilter.field (order, "treeBuilds");
+			for (int step = 0; step < 40; step++) {
+				int [] changed = new int [1 + random.nextInt (random.nextInt (4) == 0 ? n : 3)];
+				for (int k = 0; k < changed.length; k++) {
+					changed [k] = random.nextInt (n);
+					values [changed [k]] = random.nextInt (20);
+					labels [changed [k]] = random.nextInt (3) == 0 ? "x" + random.nextInt (9) : "y";
+				}
+				sort.rowsChanged (changed);
+				M3ColumnSort fresh = create.get ();
+				assertArrayEquals (order (fresh), order (sort), "seed " + seed + " step " + step);
+				for (int parent = -1; parent < n; parent++) {
+					if (parent >= 0 && fresh.indexOfChild (parent) < 0) continue;
+					assertEquals (fresh.childCount (parent), sort.childCount (parent), "seed " + seed + " step " + step + " parent " + parent);
+					for (int i = 0; i < fresh.childCount (parent); i++) {
+						assertEquals (fresh.child (parent, i), sort.child (parent, i), "seed " + seed + " step " + step + " parent " + parent);
+						assertEquals (i, sort.indexOfChild (sort.child (parent, i)));
+					}
+				}
+			}
+			assertEquals (builds, (Integer) Test_M3ColumnFilter.field (order, "treeBuilds"), "rows entering and leaving keep the sibling index");
+		}
+	}
+
+	@Test
 	public void test_treeModeSortsSiblings () {
 		/* 0 root(b) [2(z), 3(a)], 1 root(a) [4(m) [5(c), 6(b)]] */
 		int [] parents = {-1, -1, 0, 0, 1, 4, 4};

@@ -121,6 +121,7 @@ final class M3SortOrder {
 	/* adds rows [0, m) (not in the view); returns the first damaged view row */
 	int insert (int [] rows, int m) {
 		if (m == 0) return size;
+		boolean tree = treeValid && sort.parents () != null;
 		batch = ensure (batch, m, 0);
 		System.arraycopy (rows, 0, batch, 0, m);
 		sort.sortRows (lanes, batch, m);
@@ -128,6 +129,7 @@ final class M3SortOrder {
 		int first = m > (size >> 3) ? mergeLinear (m) : mergeSearch (m);
 		size += m;
 		reindex (first);
+		if (tree) treeValid = enterSiblings (m, sort.parents ());
 		return first;
 	}
 
@@ -157,6 +159,7 @@ final class M3SortOrder {
 
 	/* removes rows [0, m) that are in the view; returns the first damaged view row */
 	int remove (int [] rows, int m) {
+		boolean tree = treeValid && sort.parents () != null && leaveSiblings (rows, m, sort.parents ());
 		int first = size;
 		for (int k = 0; k < m; k++) {
 			int position = inverse [rows [k]];
@@ -166,6 +169,7 @@ final class M3SortOrder {
 			}
 		}
 		compact (first);
+		if (tree) treeValid = true;
 		return first;
 	}
 
@@ -217,6 +221,95 @@ final class M3SortOrder {
 			children [out] = i >= start && sort.compare (children [i], batch [j]) > 0 ? children [i--] : batch [j--];
 		}
 		for (int i = start; i < end; i++) siblingIndex [children [i]] = i - start;
+	}
+
+	/*
+	 * rows batch [0, m) (sorted by the key chain) entered the view: each is placed in its parent's segment by binary
+	 * search (rows of one segment in order), the children lane is merged once from the end, the segment starts after
+	 * the first changed segment move up, and only the changed segments are renumbered (brief rule 24). Returns false
+	 * (rebuild on demand) for a parent outside the source.
+	 */
+	private boolean enterSiblings (int m, IntUnaryOperator parentOf) {
+		int old = size - m;
+		long [] keyed = new long [m];
+		for (int k = 0; k < m; k++) {
+			int parent = parentOf.applyAsInt (batch [k]);
+			if (parent < -1 || parent >= sourceSize) return false;
+			keyed [k] = (long) (parent + 1) << 32 | k;
+		}
+		Arrays.sort (keyed);
+		places = ensure (places, m, 0);
+		olds = ensure (olds, m, 0);
+		for (int j = 0, low = 0, bucket = -1; j < m; j++) {
+			int b = (int) (keyed [j] >>> 32), row = batch [(int) keyed [j]], high = childStart [b + 1];
+			if (b != bucket) {
+				bucket = b;
+				low = childStart [b];
+			}
+			while (low < high) {
+				int middle = (low + high) >>> 1;
+				if (sort.compare (children [middle], row) > 0) high = middle; else low = middle + 1;
+			}
+			places [j] = low;
+			olds [j] = row;
+		}
+		children = ensure (children, size, old);
+		for (int j = m - 1, out = size - 1, i = old - 1; j >= 0; j--) {
+			while (i >= places [j]) children [out--] = children [i--];
+			children [out--] = olds [j];
+		}
+		shiftStarts (keyed, m, 1);
+		renumber (keyed, m);
+		return true;
+	}
+
+	/*
+	 * rows [0, m) leave the view (called before the order lane drops them): they are taken out of their parents'
+	 * segments in one compaction from the first, the segment starts after it move down, and only the changed segments
+	 * are renumbered. Returns false (rebuild on demand) when a row is not in the segment of its parent.
+	 */
+	private boolean leaveSiblings (int [] rows, int m, IntUnaryOperator parentOf) {
+		long [] keyed = new long [m];
+		int count = 0;
+		for (int k = 0; k < m; k++) {
+			int row = rows [k];
+			if (inverse [row] < 0) continue;
+			int parent = parentOf.applyAsInt (row);
+			if (parent < -1 || parent >= sourceSize) return false;
+			int start = childStart [parent + 1], index = siblingIndex [row];
+			if (index >= childStart [parent + 2] - start || children [start + index] != row) return false;
+			keyed [count++] = (long) (parent + 1) << 32 | start + index;
+		}
+		if (count == 0) return true;
+		Arrays.sort (keyed, 0, count);
+		int unique = 0;
+		for (int j = 0; j < count; j++) {
+			if (j == 0 || keyed [j] != keyed [j - 1]) keyed [unique++] = keyed [j];
+		}
+		for (int j = 0; j < unique; j++) children [(int) keyed [j]] = -1;
+		for (int read = (int) keyed [0], write = read; read < size; read++) {
+			if (children [read] >= 0) children [write++] = children [read];
+		}
+		shiftStarts (keyed, unique, -1);
+		renumber (keyed, unique);
+		return true;
+	}
+
+	/* the segment start of every bucket after the first changed one moves by sign per changed row in an earlier bucket */
+	private void shiftStarts (long [] keyed, int count, int sign) {
+		for (int b = (int) (keyed [0] >>> 32) + 1, j = 0; b <= sourceSize + 1; b++) {
+			while (j < count && (int) (keyed [j] >>> 32) < b) j++;
+			childStart [b] += sign * j;
+		}
+	}
+
+	/* the sibling indexes of the changed buckets (keyed by bucket, ascending) */
+	private void renumber (long [] keyed, int count) {
+		for (int j = 0; j < count; j++) {
+			int b = (int) (keyed [j] >>> 32);
+			if (j > 0 && b == (int) (keyed [j - 1] >>> 32)) continue;
+			for (int i = childStart [b], end = childStart [b + 1]; i < end; i++) siblingIndex [children [i]] = i - childStart [b];
+		}
 	}
 
 	/* a row whose values changed moves inside its parent's sibling segment: binary search and one shift, O(log c + distance) */
