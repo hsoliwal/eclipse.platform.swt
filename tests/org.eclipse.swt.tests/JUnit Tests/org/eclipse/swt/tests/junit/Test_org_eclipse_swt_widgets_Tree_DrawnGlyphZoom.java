@@ -71,23 +71,24 @@ public class Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom {
 		shell.open ();
 		focus.setFocus ();
 		ViewportDifferential.settle (display, 200);
-		ImageData capture = ViewportDifferential.render (tree);
+		/* the control's own pixels at the zoom (a 100 % capture would scale them down) */
+		ImageData capture = ViewportDifferential.render (tree, zoom);
 		String mode = ViewportDifferential.reference ("Tree");
 		String file = ViewportDifferential.save ("glyphzoom-" + zoom + "-" + laf + "-" + mode, capture);
 		M3UIDefaults defaults = M3LookAndFeel.getDefaults ();
-		Theme theme = Theme.of ("Tree");
+		/* the theme the plane paints with: its installed row delegate's */
+		Theme theme = M3LookAndFeel.getUI (tree) instanceof M3DrawnRowUI drawn ? drawn.theme () : ThemeDefaults.of ("Tree", ThemeDefaults.look (laf), defaults);
 		int background = defaults.color (M3UIKeys.of ("Tree", "background", M3UIKeys.COLOR), 0xFFFFFF) & 0xFFFFFF;
 		int inactive = defaults.color (M3UIKeys.of ("Tree", "selectionInactiveBackground", M3UIKeys.COLOR), -1) & 0xFFFFFF;
-		Rectangle row0 = tree.getItem (0).getBounds (), row1 = tree.getItem (1).getBounds ();
-		int size = (16 * zoom + 50) / 100;
+		Rectangle row0 = pixels (tree.getItem (0).getBounds (), zoom), row1 = pixels (tree.getItem (1).getBounds (), zoom);
 		/* crisp: the open chevron of root 0 (expanded), tinted as the renderer tints it, found 1:1 left of the label */
 		ImageData chevron = new GlyphCache (4, Glyphs.rasterizer (glyph -> theme.border)).get (Glyphs.CHEVRON_DOWN, 16, zoom, 0);
-		int found = find (capture, chevron, 0, row0.y, row0.x, row0.y + row0.height);
-		LOG.info (() -> "glyph zoom " + zoom + " " + laf + " " + mode + ": chevron " + size + " px found at x " + found + " in " + file);
-		assertTrue (found >= 0, "swt #3631: the " + size + " px chevron is not in the capture 1:1 (scaled?): " + file);
+		int found = find (capture, chevron, 0, row0.y - 1, row0.x, row0.y + row0.height + 1);
+		LOG.info (() -> "glyph zoom " + zoom + " " + laf + " " + mode + ": chevron " + chevron.width + " px found at x " + found + " in " + file);
+		assertTrue (found >= 0, "swt #3631: the " + chevron.width + " px chevron is not in the capture 1:1 (scaled?): " + file);
 		/* no seam: root 1 is selected and unfocused; the pixels next to its check box are the inactive selection colour */
 		ImageData box = new GlyphCache (4, Glyphs.rasterizer (glyph -> theme.checkFill != -1 ? theme.checkFill : theme.border)).get (Glyphs.CHECK_OFF, 16, zoom, 0);
-		int boxX = find (capture, box, 0, row1.y, row1.x, row1.y + row1.height);
+		int boxX = find (capture, box, 0, row1.y - 1, row1.x, row1.y + row1.height + 1);
 		assertTrue (boxX >= 0, "the check box of the selected row is in the capture 1:1: " + file);
 		int middle = row1.y + row1.height / 2;
 		int left = rgb (capture, boxX - 1, middle), right = rgb (capture, boxX + box.width, middle);
@@ -98,6 +99,11 @@ public class Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom {
 		assertEquals (inactive, fill, "swt #3659: the unfocused selection of " + laf + " is not Tree.selectionInactiveBackground: " + file);
 		assertNotEquals (background, inactive, "the look and feel distinguishes the inactive selection");
 		shell.dispose ();
+	}
+
+	/* item bounds (points) in the capture's device pixels */
+	static Rectangle pixels (Rectangle r, int zoom) {
+		return new Rectangle (Math.round (r.x * zoom / 100f), Math.round (r.y * zoom / 100f), Math.round (r.width * zoom / 100f), Math.round (r.height * zoom / 100f));
 	}
 
 	/* the x where a glyph's opaque and transparent pixels match the capture 1:1 within [x0, x1) at the row [y0, y1), or -1 */

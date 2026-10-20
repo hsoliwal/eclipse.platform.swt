@@ -564,6 +564,14 @@ public final class ViewportDifferential<S> {
 	 * there and was not stable between two captures. Other platforms use <code>Control.print</code>.
 	 */
 	public static ImageData render (Control control) {
+		return render (control, 0);
+	}
+
+	/**
+	 * {@link #render(Control)} in the device pixels of a zoom (<code>0</code>: the image's default data, scaled to
+	 * 100 %); a capture at a zoom above 100 % is the control's own pixels, not scaled down.
+	 */
+	public static ImageData render (Control control, int zoom) {
 		Point size = control.getSize ();
 		Image image = new Image (control.getDisplay (), Math.max (1, size.x), Math.max (1, size.y));
 		GC gc = new GC (image);
@@ -578,7 +586,7 @@ public final class ViewportDifferential<S> {
 		} finally {
 			gc.dispose ();
 		}
-		ImageData data = image.getImageData ();
+		ImageData data = zoom == 0 ? image.getImageData () : image.getImageData (zoom);
 		image.dispose ();
 		return data;
 	}

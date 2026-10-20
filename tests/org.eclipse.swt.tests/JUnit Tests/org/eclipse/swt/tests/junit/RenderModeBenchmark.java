@@ -110,7 +110,8 @@ public final class RenderModeBenchmark {
 			Rows rows = subject [0];
 			int [] state = {0};
 			Runnable prepare = () -> {}, run;
-			int repetitions = 20;
+			/* -Dbench.repetitions: more frames for an allocation profile (JFR) of one operation */
+			int repetitions = Integer.getInteger ("bench.repetitions", 20);
 			switch (operation) {
 				case "setItemCount" -> run = () -> rows.setCount ((state [0]++ & 1) == 0 ? ROWS - 1000 : ROWS);
 				case "scrollPage" -> run = () -> rows.top (state [0] += rows.pageRows ());
