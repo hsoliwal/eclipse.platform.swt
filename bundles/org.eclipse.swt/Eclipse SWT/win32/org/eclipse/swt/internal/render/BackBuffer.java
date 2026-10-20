@@ -28,6 +28,8 @@ public final class BackBuffer {
 	public long bitmap, bits;
 	/** Allocated size in pixels. */
 	public int width, height;
+	/** Times the DC and DIB were (re)created (rule 24, viewport deltas: a resize step should reuse them). */
+	public int creations;
 	private long oldBitmap;
 
 	/** Makes the buffer at least <code>width x height</code>; answers true when it was (re)created. */
@@ -52,6 +54,7 @@ public final class BackBuffer {
 		oldBitmap = OS.SelectObject (dc, bitmap);
 		this.width = width;
 		this.height = height;
+		creations++;
 		return true;
 	}
 

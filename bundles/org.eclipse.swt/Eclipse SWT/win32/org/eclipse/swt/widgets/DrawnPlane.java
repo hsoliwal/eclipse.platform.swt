@@ -172,6 +172,9 @@ abstract class DrawnPlane {
 		if (control.isDisposed ()) return;
 		afterBehaviour (msg);
 		if (!clipDamage (hwnd)) return;
+		/* rule 24: a frame that repaints the whole rows area is a full repaint; a model delta must not cause one */
+		frames.damage (damage.left <= 0 && damage.right >= client.right && damage.top <= rowsTop && damage.bottom >= client.bottom,
+			(long) (damage.right - damage.left) * (damage.bottom - damage.top));
 		currentTheme ();
 		/* glyphs at the window's DPI, the density of the native rows (a forced swt.autoScale does not resize them) */
 		row.zoom = control.nativeZoom;
@@ -229,10 +232,13 @@ abstract class DrawnPlane {
 	void afterBehaviour (int msg) {
 	}
 
-	/** Narrows the damage to the rows area (for example below a header); answers false when nothing is left. */
+	/** Narrows the damage to the rows area (for example below a header, setting {@link #rowsTop}); answers false when nothing is left. */
 	boolean clipDamage (long hwnd) {
 		return true;
 	}
+
+	/** The top of the rows area in the client area (below a header), as the last {@link #clipDamage} found it. */
+	int rowsTop;
 
 	/** Paints the rows that intersect the damage, top to bottom, and the empty area below them. */
 	abstract void drawRows (long hwnd);

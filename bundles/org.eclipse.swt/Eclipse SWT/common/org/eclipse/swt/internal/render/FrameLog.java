@@ -28,7 +28,30 @@ public final class FrameLog {
 	public static final int CAPACITY = 256;
 	private final long [] start = new long [CAPACITY], end = new long [CAPACITY], generation = new long [CAPACITY],
 		latency = new long [CAPACITY], scratch = new long [CAPACITY];
-	private long frames, pendingInput;
+	private long frames, pendingInput, fullRepaints, paintedPixels;
+
+	/**
+	 * Records the damage a frame paints (brief rule 24, "all delta based view"): a frame whose damage covers the whole
+	 * rows area is a full repaint. A model delta repaints only the rows it damages, so a delta adds no full repaint;
+	 * {@link #fullRepaints} before and after a delta is the gate.
+	 *
+	 * @param full the damage covers the rows area
+	 * @param pixels the damage's area
+	 */
+	public void damage (boolean full, long pixels) {
+		if (full) fullRepaints++;
+		paintedPixels += pixels;
+	}
+
+	/** Frames that repainted the whole rows area since the log was made. */
+	public long fullRepaints () {
+		return fullRepaints;
+	}
+
+	/** Pixels of damage painted since the log was made. */
+	public long paintedPixels () {
+		return paintedPixels;
+	}
 
 	/** Notes an input event (key, wheel, click, scroll) at <code>now</code>; the next frame shows it. */
 	public void input (long now) {

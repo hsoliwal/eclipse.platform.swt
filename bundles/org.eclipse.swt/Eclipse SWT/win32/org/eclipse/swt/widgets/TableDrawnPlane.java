@@ -64,9 +64,11 @@ final class TableDrawnPlane extends DrawnPlane {
 	@Override
 	boolean clipDamage (long hwnd) {
 		long hwndHeader = OS.SendMessage (hwnd, OS.LVM_GETHEADER, 0, 0);
+		rowsTop = 0;
 		if (hwndHeader != 0 && OS.IsWindowVisible (hwndHeader)) {
 			OS.GetWindowRect (hwndHeader, header);
 			OS.MapWindowPoints (0, hwnd, header, 2);
+			rowsTop = header.bottom;
 			damage.top = Math.max (damage.top, header.bottom);
 		}
 		return damage.top < damage.bottom;
