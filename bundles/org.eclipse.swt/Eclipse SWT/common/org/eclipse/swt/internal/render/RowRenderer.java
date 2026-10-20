@@ -25,12 +25,32 @@ import org.eclipse.swt.graphics.*;
  * {@link RowPaint} its plane filled.
  */
 public final class RowRenderer {
-	/** Glyphs kept per renderer: seven glyphs at a few zooms. */
-	private static final int GLYPHS = 32;
+	/** Glyphs kept per thread for every renderer: seven glyphs at a few zooms and tints. */
+	static final int GLYPHS = 64;
+	/*
+	 * The SVG glyphs of every renderer of a thread (the UI thread), keyed by (glyph, size, zoom, tint): the renderers of
+	 * all widgets share them, and a theme or look and feel switch (a new renderer) rasterizes only tints it never drew.
+	 */
+	private static final ThreadLocal<SharedGlyphs> SHARED = ThreadLocal.withInitial (SharedGlyphs::new);
 	private final Theme theme;
-	/* the SVG glyph cache of a vectorGlyphs theme, made on first use; null when no SVG rasterizer is installed */
-	private GlyphCache glyphs;
-	private boolean glyphsTried;
+	/* the thread's shared glyphs, taken on first use */
+	private SharedGlyphs glyphs;
+
+	/* a glyph cache whose rasterizer tints with the tint of the request in progress; null cache without an SVG rasterizer */
+	static final class SharedGlyphs {
+		final GlyphCache cache;
+		int tint;
+
+		SharedGlyphs () {
+			GlyphCache.Rasterizer rasterizer = Glyphs.rasterizer (glyph -> tint);
+			cache = rasterizer == null ? null : new GlyphCache (GLYPHS, rasterizer);
+		}
+
+		ImageData get (int id, int zoom, int rgb) {
+			tint = rgb & 0xFFFFFF;
+			return cache.get (id, 16, zoom, tint);
+		}
+	}
 
 	public RowRenderer (Theme theme) {
 		this.theme = theme;
@@ -39,6 +59,12 @@ public final class RowRenderer {
 	/** The theme this renderer paints with. */
 	public Theme theme () {
 		return theme;
+	}
+
+	/** The SVG rasterizations of this thread's shared glyphs so far (-1 without an SVG rasterizer). */
+	public static int rasterizations () {
+		GlyphCache cache = SHARED.get ().cache;
+		return cache == null ? -1 : cache.rasterizations ();
 	}
 
 	/** Paints a row: the theme's row painter when it has one, else {@link #paintDefault}. */
@@ -174,13 +200,10 @@ public final class RowRenderer {
 	 * installed (the look then draws its own).
 	 */
 	private boolean vector (RowCanvas canvas, int id, RowPaint row, int x, int width) {
-		if (!glyphsTried) {
-			glyphsTried = true;
-			GlyphCache.Rasterizer rasterizer = Glyphs.rasterizer (glyph -> glyph >= Glyphs.CHECK_OFF && glyph <= Glyphs.CHECK_MIXED && theme.checkFill != -1 ? theme.checkFill : theme.border);
-			if (rasterizer != null) glyphs = new GlyphCache (GLYPHS, rasterizer);
-		}
-		if (glyphs == null) return false;
-		ImageData image = glyphs.get (id, 16, row.zoom, 0);
+		if (glyphs == null) glyphs = SHARED.get ();
+		if (glyphs.cache == null) return false;
+		int tint = id >= Glyphs.CHECK_OFF && id <= Glyphs.CHECK_MIXED && theme.checkFill != -1 ? theme.checkFill : theme.border;
+		ImageData image = glyphs.get (id, row.zoom, tint);
 		if (image == null) return false;
 		glyph (canvas, image, x, row.y, width, row.height);
 		return true;

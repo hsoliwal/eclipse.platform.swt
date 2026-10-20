@@ -37,8 +37,21 @@ public final class GcRowCanvas implements BufferCanvas {
 	private final RECT rect = new RECT ();
 	private char [] chars = new char [64];
 	private int [] polygon = new int [6];
-	/* device copies (premultiplied BGRA DIBs) of theme glyph images, made on first use */
-	private final Map<ImageData, BackBuffer> glyphs = new WeakHashMap<> ();
+	/*
+	 * Device copies (premultiplied BGRA DIBs) of theme glyph images, made on first use, by image identity: an LRU as large
+	 * as the shared glyph cache that releases the device context and bitmap of the copy it drops (a weak map dropped them
+	 * unreleased when the image was collected).
+	 */
+	private final Map<ImageData, BackBuffer> glyphs = new LinkedHashMap<> (16, 0.75f, true) {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		protected boolean removeEldestEntry (Map.Entry<ImageData, BackBuffer> eldest) {
+			if (size () <= RowRenderer.GLYPHS) return false;
+			eldest.getValue ().release ();
+			return true;
+		}
+	};
 	/* per-pixel alpha, no constant alpha */
 	private static final BLENDFUNCTION BLEND = new BLENDFUNCTION ();
 	static {

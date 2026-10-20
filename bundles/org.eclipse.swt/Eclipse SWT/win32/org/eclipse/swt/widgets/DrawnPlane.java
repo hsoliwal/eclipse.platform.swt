@@ -80,12 +80,12 @@ abstract class DrawnPlane {
 			data.device = control.display;
 			return control.createNewGC (hdc, data);
 		});
-		/* a theme change (any thread) repaints the plane on its display's thread */
+		/* a theme change (any thread) repaints the plane on its display's thread, when it changes the theme the plane paints with */
 		Display display = control.display;
 		this.themeChanged = () -> {
 			if (display.isDisposed ()) return;
 			display.asyncExec (() -> {
-				if (!control.isDisposed ()) control.redraw ();
+				if (!control.isDisposed () && themeChanges ()) control.redraw ();
 			});
 		};
 		Themes.addListener (themeChanged);
@@ -111,6 +111,16 @@ abstract class DrawnPlane {
 		}
 		Theme theme = explicit != null ? explicit : ui.theme ();
 		if (theme != renderer.theme ()) renderer = new RowRenderer (theme);
+	}
+
+	/*
+	 * True when the theme in effect differs from the one the plane last painted with: a selection for another widget
+	 * class (Themes.select ("Table", ...)) does not repaint a Tree. Comparing instances may answer true for an equal theme
+	 * (a re-resolved one); that only repaints once more, as before.
+	 */
+	private boolean themeChanges () {
+		Theme selected = Themes.explicit (widget);
+		return (selected != null ? selected : ui.theme ()) != renderer.theme ();
 	}
 
 	/** True for the drawn modes. */

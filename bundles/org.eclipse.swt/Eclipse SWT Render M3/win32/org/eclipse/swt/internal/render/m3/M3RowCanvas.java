@@ -49,11 +49,14 @@ public final class M3RowCanvas implements BufferCanvas {
 	private static final int FONTS = 32, LINES = 2048, PART_IMAGES = 256;
 	private static final int CLIP_INTERSECT = ClipMode.INTERSECT.ordinal ();
 	private static final String ELLIPSIS_TEXT = "...";
+	/* what Canvas.drawImage and drawImageRect pass: the default sampling, strict source bounds */
+	private static final long SAMPLING = SamplingMode.DEFAULT._pack ();
 
-	/** A cached font and its metrics, measured once. */
+	/** A cached font, its metrics measured once, and its shaped lines (by string, an LRU closed on eviction). */
 	static final class FontEntry implements AutoCloseable {
 		final Font font;
 		final float ascent, lineHeight;
+		final Map<String, LineEntry> lines = lru (LINES);
 
 		FontEntry (Font font) {
 			this.font = font;
@@ -64,7 +67,28 @@ public final class M3RowCanvas implements BufferCanvas {
 
 		@Override
 		public void close () {
+			lines.values ().forEach (M3RowCanvas::close);
+			lines.clear ();
 			font.close ();
+		}
+	}
+
+	/** A library image with its pointer and size, read once: drawn through the primitive entry point. */
+	static final class Bitmap implements AutoCloseable {
+		final Image image;
+		final long ptr;
+		final int width, height;
+
+		Bitmap (Image image) {
+			this.image = image;
+			ptr = io.github.humbleui.skija.impl.Native.getPtr (image);
+			width = image.getWidth ();
+			height = image.getHeight ();
+		}
+
+		@Override
+		public void close () {
+			image.close ();
 		}
 	}
 
@@ -100,21 +124,25 @@ public final class M3RowCanvas implements BufferCanvas {
 		.setPathEffect (PathEffect.makeDash (new float [] {1, 1}, 0));
 	private final long paintPtr = io.github.humbleui.skija.impl.Native.getPtr (paint);
 	private final long textPaintPtr = io.github.humbleui.skija.impl.Native.getPtr (textPaint);
+	private final long focusPaintPtr = io.github.humbleui.skija.impl.Native.getPtr (focusPaint);
 	private final SurfaceProps props = new SurfaceProps (false, PixelGeometry.RGB_H);
 	private Surface surface;
 	private Canvas canvas;
 	private long canvasPtr;
 	private long dc, bits;
 	private int width, height;
-	private final Map<Long, FontEntry> fonts = lru (FONTS);
-	private final Map<Long, Map<String, LineEntry>> lines = new HashMap<> ();
-	private final Map<org.eclipse.swt.graphics.Image, Image> images = new WeakHashMap<> ();
-	private final Map<ImageData, Image> glyphs = new WeakHashMap<> ();
-	private final Map<Long, Image> partImages = lru (PART_IMAGES);
+	/* by native handle or packed part key: no boxing per lookup (LongCache) */
+	private final LongCache<FontEntry> fonts = new LongCache<> (FONTS, M3RowCanvas::close);
+	private final Map<org.eclipse.swt.graphics.Image, Bitmap> images = new WeakHashMap<> ();
+	private final Map<ImageData, Bitmap> glyphs = new WeakHashMap<> ();
+	private final LongCache<Bitmap> partImages = new LongCache<> (PART_IMAGES, M3RowCanvas::close);
 	private final LOGFONT logFont = new LOGFONT ();
+	/* the path of polygon, reset per call */
+	private final Path path = new Path ();
 	/* the gpu mode: the frame is drawn on the graphics hardware and read back into the back buffer */
 	private final M3Gpu gpu;
 	private Pixmap readback;
+	private ImageInfo readbackInfo;
 	private int frameX, frameY, frameWidth, frameHeight;
 
 	/**
@@ -192,22 +220,24 @@ public final class M3RowCanvas implements BufferCanvas {
 		frameY = y;
 		frameWidth = width;
 		frameHeight = height;
-		canvas.save ();
-		canvas.clipRect (Rect.makeXYWH (x, y, width, height));
+		Canvas._nSave (canvasPtr);
+		Canvas._nClipRect (canvasPtr, x, y, x + width, y + height, CLIP_INTERSECT, false);
 	}
 
 	@Override
 	public void end () {
-		canvas.restore ();
+		Canvas._nRestore (canvasPtr);
 		if (gpu == null || frameWidth <= 0 || frameHeight <= 0) return;
 		/* the GPU frame is read back into the damage of the back buffer; the read waits for the GPU work */
 		gpu.context.flush ();
-		ImageInfo info = new ImageInfo (frameWidth, frameHeight, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
+		if (readbackInfo == null || readbackInfo.getWidth () != frameWidth || readbackInfo.getHeight () != frameHeight) {
+			readbackInfo = new ImageInfo (frameWidth, frameHeight, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
+		}
 		long address = bits + ((long) frameY * width + frameX) * 4L;
 		if (readback == null) {
-			readback = Pixmap.make (info, address, width * 4);
+			readback = Pixmap.make (readbackInfo, address, width * 4);
 		} else {
-			readback.reset (info, address, width * 4);
+			readback.reset (readbackInfo, address, width * 4);
 		}
 		surface.readPixels (readback, frameX, frameY);
 	}
@@ -223,8 +253,8 @@ public final class M3RowCanvas implements BufferCanvas {
 	public void text (String text, long font, int rgb, int x, int y, int width, int height, int align) {
 		if (text.isEmpty () || width <= 0) return;
 		FontEntry entry = font (font);
-		LineEntry line = line (font, entry.font, text);
-		if ((align & ELLIPSIS) != 0 && line.width > width) line = fitted (font, entry.font, line, text, width);
+		LineEntry line = line (entry, text);
+		if ((align & ELLIPSIS) != 0 && line.width > width) line = fitted (entry, line, text, width);
 		align &= ~ELLIPSIS;
 		if (line.blobPtr == 0) return;
 		float baseline = y + (height - entry.lineHeight) / 2 + entry.ascent;
@@ -269,39 +299,43 @@ public final class M3RowCanvas implements BufferCanvas {
 	 * The line cut as DrawText's DT_END_ELLIPSIS cuts it: the longest prefix whose width plus the width of "..." fits
 	 * the box, then "..." (only "..." when no character fits). Kept on the full line for the last width asked.
 	 */
-	private LineEntry fitted (long hFont, Font font, LineEntry full, String text, int width) {
+	private LineEntry fitted (FontEntry entry, LineEntry full, String text, int width) {
 		if (full.fittedWidth == width) return full.fitted;
-		float room = width - line (hFont, font, ELLIPSIS_TEXT).width;
+		float room = width - line (entry, ELLIPSIS_TEXT).width;
 		int low = 0, high = text.length ();
 		while (low < high) {
 			int middle = (low + high + 1) >>> 1;
 			if (full.line.getCoordAtOffset (middle) <= room) low = middle; else high = middle - 1;
 		}
 		if (full.fitted != null) full.fitted.close ();
-		full.fitted = new LineEntry (TextLine.make (text.substring (0, low) + ELLIPSIS_TEXT, font));
+		full.fitted = new LineEntry (TextLine.make (text.substring (0, low) + ELLIPSIS_TEXT, entry.font));
 		full.fittedWidth = width;
 		return full.fitted;
 	}
 
-	private LineEntry line (long hFont, Font font, String text) {
-		Map<String, LineEntry> cache = lines.computeIfAbsent (hFont, key -> lru (LINES));
-		LineEntry line = cache.get (text);
+	private static LineEntry line (FontEntry entry, String text) {
+		LineEntry line = entry.lines.get (text);
 		if (line == null) {
-			line = new LineEntry (TextLine.make (text, font));
-			cache.put (text, line);
+			line = new LineEntry (TextLine.make (text, entry.font));
+			entry.lines.put (text, line);
 		}
 		return line;
+	}
+
+	/* an image at a box: Canvas.drawImageRect (whole image, box, default sampling, no paint, strict) without the rectangles */
+	private void draw (Bitmap bitmap, float x, float y, float width, float height) {
+		Canvas._nDrawImageRect (canvasPtr, bitmap.ptr, 0, 0, bitmap.width, bitmap.height, x, y, x + width, y + height, SAMPLING, 0, true);
 	}
 
 	@Override
 	public void image (org.eclipse.swt.graphics.Image image, int x, int y, int width, int height) {
 		if (image == null || image.isDisposed () || width <= 0 || height <= 0) return;
-		Image skImage = images.get (image);
-		if (skImage == null) {
-			skImage = convert (image.getImageData (zoom.getAsInt ()));
-			images.put (image, skImage);
+		Bitmap bitmap = images.get (image);
+		if (bitmap == null) {
+			bitmap = new Bitmap (convert (image.getImageData (zoom.getAsInt ())));
+			images.put (image, bitmap);
 		}
-		canvas.drawImageRect (skImage, Rect.makeXYWH (x, y, width, height));
+		draw (bitmap, x, y, width, height);
 	}
 
 	private static Image convert (ImageData data) {
@@ -311,53 +345,55 @@ public final class M3RowCanvas implements BufferCanvas {
 	@Override
 	public void imageData (ImageData data, int x, int y, int width, int height) {
 		if (data == null || width <= 0 || height <= 0) return;
-		Image image = glyphs.computeIfAbsent (data, M3RowCanvas::convert);
-		canvas.drawImageRect (image, Rect.makeXYWH (x, y, width, height));
+		Bitmap bitmap = glyphs.get (data);
+		if (bitmap == null) {
+			bitmap = new Bitmap (convert (data));
+			glyphs.put (data, bitmap);
+		}
+		draw (bitmap, x, y, width, height);
 	}
 
 	@Override
 	public void polygon (int [] points, int count, int rgb) {
 		if (count < 3) return;
-		try (Path path = new Path ()) {
-			path.moveTo (points [0], points [1]);
-			for (int i = 1; i < count; i++) path.lineTo (points [2 * i], points [2 * i + 1]);
-			path.closePath ();
-			paint.setColor (0xFF000000 | rgb);
-			canvas.drawPath (path, paint);
-		}
+		path.reset ();
+		path.moveTo (points [0], points [1]);
+		for (int i = 1; i < count; i++) path.lineTo (points [2 * i], points [2 * i + 1]);
+		path.closePath ();
+		paint.setColor (0xFF000000 | rgb);
+		canvas.drawPath (path, paint);
 	}
 
 	@Override
 	public void part (int part, int state, int x, int y, int width, int height) {
 		if (width <= 0 || height <= 0) return;
 		long key = (long) part << 56 | (long) (state & 0xFFFF) << 40 | (long) (width & 0xFFFFF) << 20 | height & 0xFFFFF;
-		Image image = partImages.get (key);
+		Bitmap image = partImages.get (key);
 		if (image == null) {
 			byte [] pixels = parts.image (part, state, width, height);
-			image = Image.makeRasterFromBytes (new ImageInfo (width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL), pixels, width * 4L);
+			image = new Bitmap (Image.makeRasterFromBytes (new ImageInfo (width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL), pixels, width * 4L));
 			partImages.put (key, image);
 		}
-		canvas.drawImage (image, x, y);
+		/* Canvas.drawImage at (x, y): the image at its own size */
+		draw (image, x, y, image.width, image.height);
 	}
 
 	@Override
 	public void focus (int x, int y, int width, int height) {
-		canvas.drawRect (Rect.makeXYWH (x + 0.5f, y + 0.5f, width - 1, height - 1), focusPaint);
+		/* Canvas.drawRect of (x + 0.5, y + 0.5, width - 1, height - 1) with the dotted paint */
+		Canvas._nDrawRect (canvasPtr, x + 0.5f, y + 0.5f, x + 0.5f + (width - 1), y + 0.5f + (height - 1), focusPaintPtr);
 	}
 
 	@Override
 	public void dispose () {
 		parts.close ();
-		fonts.values ().forEach (M3RowCanvas::close);
-		lines.values ().forEach (cache -> cache.values ().forEach (M3RowCanvas::close));
+		fonts.clear ();
 		images.values ().forEach (M3RowCanvas::close);
+		images.clear ();
 		glyphs.values ().forEach (M3RowCanvas::close);
 		glyphs.clear ();
-		partImages.values ().forEach (M3RowCanvas::close);
-		fonts.clear ();
-		lines.clear ();
-		images.clear ();
 		partImages.clear ();
+		path.close ();
 		if (surface != null) surface.close ();
 		surface = null;
 		if (readback != null) readback.close ();

@@ -67,4 +67,19 @@ public class Test_org_eclipse_swt_internal_render_VectorGlyphs {
 		assertEquals (400, canvas.count ("imageData"), "every frame draws both glyphs");
 		assertTrue (canvas.has ("imageData 20 10,17 20x20"), "125 % of 16 points is 20 pixels: " + canvas.calls.get (canvas.calls.size () - 3));
 	}
+
+	/* a theme or look and feel switch makes a new renderer: it draws the glyphs the thread already rasterized in its tints */
+	@Test
+	public void switchingThemesBackRasterizesNothing () {
+		Assumptions.assumeTrue (SVG, "no SVG rasterizer (org.eclipse.swt.svg fragment) on the class path");
+		Theme a = Theme.SWING.derive ("tint-a").vectorGlyphs (true).border (0x335577).build ();
+		Theme b = Theme.SWING.derive ("tint-b").vectorGlyphs (true).border (0x775533).build ();
+		Recorder canvas = new Recorder ();
+		new RowRenderer (a).paint (canvas, row (175));
+		new RowRenderer (b).paint (canvas, row (175));
+		int warm = RowRenderer.rasterizations ();
+		for (int i = 0; i < 20; i++) new RowRenderer (i % 2 == 0 ? a : b).paint (canvas, row (175));
+		assertEquals (warm, RowRenderer.rasterizations (), "twenty switches between two themes rasterize nothing new");
+		assertEquals (44, canvas.count ("imageData"), "every frame draws both glyphs");
+	}
 }
