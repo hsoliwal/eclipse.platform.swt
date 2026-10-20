@@ -33,6 +33,7 @@ public final class M3SortFilterOpsBench {
 	static final com.sun.management.ThreadMXBean THREADS = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean ();
 	static Path out;
 	static String label;
+	static java.util.regex.Pattern only = java.util.regex.Pattern.compile (".*");
 
 	interface Op {
 		void run ();
@@ -42,6 +43,7 @@ public final class M3SortFilterOpsBench {
 		int [] sizes = Arrays.stream (args [0].split (",")).mapToInt (Integer::parseInt).toArray ();
 		out = Paths.get (args [1]);
 		label = args.length > 2 ? args [2] : "run";
+		if (args.length > 3) only = java.util.regex.Pattern.compile (args [3]);
 		for (int n : sizes) measure (n);
 	}
 
@@ -54,6 +56,7 @@ public final class M3SortFilterOpsBench {
 	}
 
 	static void time (String operation, int n, Op setup, Op op) {
+		if (!only.matcher (operation).matches ()) return;
 		long [] times = new long [5], bytes = new long [5];
 		for (int r = -2; r < 5; r++) {
 			setup.run ();

@@ -37,7 +37,7 @@ final class M3SortOrder {
 	int size;
 	int [] inverse = new int [0];
 	int sourceSize;
-	private int [] batch = new int [0];
+	private int [] batch = new int [0], places = new int [0], olds = new int [0];
 	private int [] childStart = new int [0], children = new int [0], siblingIndex = new int [0], cursor = new int [0];
 	private boolean treeValid;
 
@@ -184,6 +184,7 @@ final class M3SortOrder {
 	private void reposition (int [] rows, int m, M3RowChange change) {
 		batch = ensure (batch, m, 0);
 		places = ensure (places, m, 0);
+		olds = ensure (olds, m, 0);
 		int count = 0, first = size, last = -1;
 		for (int k = 0; k < m; k++) {
 			int position = inverse [rows [k]];
@@ -191,6 +192,7 @@ final class M3SortOrder {
 			first = Math.min (first, position);
 			last = Math.max (last, position);
 			inverse [rows [k]] = REMOVED;
+			olds [count] = position;
 			batch [count++] = rows [k];
 		}
 		if (count == 0) return;
@@ -202,21 +204,31 @@ final class M3SortOrder {
 		}
 		int span = last - first + 1;
 		lanes.ensure (span);
-		System.arraycopy (order, first, lanes.rowTmp, 0, span);
+		int [] old = lanes.rowTmp;
+		System.arraycopy (order, first, old, 0, span);
+		/* the old places of the moved rows are marked in the copy, so that the pass reads no inverse entry */
+		for (int k = 0; k < count; k++) old [olds [k] - first] = -1;
 		int out = first, j = 0;
 		for (int i = first; i <= last; i++) {
-			while (j < count && places [j] <= i) out = place (batch [j++], out);
-			int row = lanes.rowTmp [i - first];
-			if (inverse [row] != REMOVED) out = place (row, out);
+			while (j < count && places [j] <= i) out = enter (j++, out);
+			int row = old [i - first];
+			if (row < 0) continue;
+			if (out != i) {
+				order [out] = row;
+				inverse [row] = out;
+			}
+			out++;
 		}
-		while (j < count) out = place (batch [j++], out);
+		while (j < count) out = enter (j++, out);
+		for (j = 0; j < count; j++) inverse [batch [j]] = places [j];
 		treeValid = false;
 		change.damage (first, last);
 	}
 
-	private int place (int row, int position) {
-		order [position] = row;
-		inverse [row] = position;
+	/* writes batch row j at position (its inverse entry is set after the pass); returns the next position */
+	private int enter (int j, int position) {
+		order [position] = batch [j];
+		places [j] = position;
 		return position + 1;
 	}
 
