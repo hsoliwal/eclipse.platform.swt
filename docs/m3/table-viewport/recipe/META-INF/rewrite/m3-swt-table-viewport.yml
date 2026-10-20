@@ -43,6 +43,11 @@ recipeList:
       memberName: m3Splice
       beforeMethod: m3ResidentRange
       memberSource: "/* M3Model seam (enhanced API leaf 19, step 3): rows [at, at + removed) replaced by inserted empty rows with one native count change (TableSplice); false when the caller is to edit through the item API */\nboolean m3Splice (int at, int removed, int inserted) {\n\tcheckWidget ();\n\treturn viewport != null && TableSplice.splice (this, viewport, at, removed, inserted);\n}"
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      memberName: m3SetRow
+      beforeMethod: m3ResidentRange
+      memberSource: "/* M3Model seam (T-Table-O2): the labels of a row written to the viewport lanes without an item (TableViewport.setRow); false when the caller is to write them through the item */\nboolean m3SetRow (int index, String [] texts, Image [] images, boolean checked) {\n\treturn viewport != null && viewport.setRow (index, texts, images, checked);\n}"
   - com.synexia.openrewrite.viewport.M3InsertStatements:
       declaringClasses: [org.eclipse.swt.widgets.Table]
       methodName: callWindowProc

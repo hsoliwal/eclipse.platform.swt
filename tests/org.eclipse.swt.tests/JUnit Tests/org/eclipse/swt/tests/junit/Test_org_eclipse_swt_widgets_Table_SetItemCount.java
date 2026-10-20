@@ -70,8 +70,10 @@ public class Test_org_eclipse_swt_widgets_Table_SetItemCount {
 		return (System.nanoTime () - t0) / 1_000_000;
 	}
 
-	/* the pilot: grow to PILOT rows, clear, grow again; a linear projection to a million rows must stay within ten budgets */
+	/* the pilot: grow to PILOT rows, clear, grow again; a linear projection to a million rows must stay within ten budgets (after a warm-up of a tenth of the rows: class loading and compilation are not timed) */
 	private void pilot (Table table, String name) {
+		table.setItemCount (PILOT / 10);
+		table.setItemCount (0);
 		long grow = millis (() -> table.setItemCount (PILOT));
 		long clear = millis (() -> table.setItemCount (0));
 		long reload = millis (() -> table.setItemCount (PILOT));

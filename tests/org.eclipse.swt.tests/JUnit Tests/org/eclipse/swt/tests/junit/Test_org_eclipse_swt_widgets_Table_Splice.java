@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.win32.OS;
 import org.eclipse.swt.m3.M3Patch;
 import org.eclipse.swt.widgets.*;
@@ -190,6 +191,83 @@ public class Test_org_eclipse_swt_widgets_Table_Splice {
 		assertEquals ("row " + top, table.getItem (table.getTopIndex ()).getText ());
 		assertEquals (rebuilds, counter (table, "m3FullRebuilds"), "no whole-list rebuild (brief rule 24)");
 		LOG.info (() -> "splice outside the window: state messages " + states + "; inside: row operations " + inside + " (" + (page + 1) + " visible rows)");
+	}
+
+	/* the client area as the control draws it (WM_PRINT), as the differential records pixels */
+	static ImageData print (Table table) {
+		Rectangle size = table.getClientArea ();
+		Image image = new Image (table.getDisplay (), Math.max (1, size.width), Math.max (1, size.height));
+		GC gc = new GC (image);
+		try {
+			OS.SendMessage (table.handle, OS.WM_PRINT, gc.handle, OS.PRF_CLIENT | OS.PRF_ERASEBKGND | OS.PRF_CHILDREN);
+		} finally {
+			gc.dispose ();
+		}
+		ImageData data = image.getImageData ();
+		image.dispose ();
+		return data;
+	}
+
+	/**
+	 * Brief rule 24, hidden viewports: hide, apply 10^4 deltas through M3Model, show. While hidden: no native row or
+	 * state operation, no whole-list rebuild, no facade and no paint. After showing: exactly one paint pass, and the
+	 * Table answers and draws like the reference, which made the same edits visible through the item API.
+	 */
+	@Test
+	public void hiddenTableAppliesOneWindowPatchWhenShown () {
+		int rows = 2000, deltas = 10_000;
+		Table model = table (SWT.MULTI | SWT.FULL_SELECTION, rows, 5), reference = table (SWT.MULTI | SWT.FULL_SELECTION, rows, 320);
+		Assumptions.assumeTrue (splices (model), "the hidden viewport is the win32 viewport's");
+		for (Table table : new Table [] {model, reference}) {
+			table.setSelection (new int [] {100, 101, 1500});
+			table.setTopIndex (900);
+		}
+		int [] paints = new int [1];
+		model.addListener (SWT.Paint, event -> paints [0]++);
+		while (display.readAndDispatch ()) {
+		}
+		model.setVisible (false);
+		while (display.readAndDispatch ()) {
+		}
+		paints [0] = 0;
+		Object viewport = Test_org_eclipse_swt_widgets_Table_ViewportDeltas.field (model, Table.class, "viewport");
+		long [] before = {counter (model, "m3RowOps"), counter (model, "m3StateOps"), counter (model, "m3FullRebuilds"),
+				(Long) Test_org_eclipse_swt_widgets_Table_ViewportDeltas.field (viewport, viewport.getClass (), "facadesMade")};
+		Random random = new Random (0x41DE);
+		for (int i = 0; i < deltas; i++) {
+			int count = model.getItemCount ();
+			int at = random.nextInt (count);
+			int top = reference.getTopIndex ();
+			if (random.nextBoolean () || count < 200) {
+				long [] inserted = ids (1 + random.nextInt (3));
+				model (model, at, 0, inserted);
+				itemApi (reference, at, 0, inserted, top);
+			} else {
+				int removed = Math.min (1 + random.nextInt (3), count - at);
+				if (removed == count) continue;
+				model (model, at, removed, new long [0]);
+				itemApi (reference, at, removed, new long [0], top);
+			}
+		}
+		long [] hidden = {counter (model, "m3RowOps"), counter (model, "m3StateOps"), counter (model, "m3FullRebuilds"),
+				(Long) Test_org_eclipse_swt_widgets_Table_ViewportDeltas.field (viewport, viewport.getClass (), "facadesMade")};
+		while (display.readAndDispatch ()) {
+		}
+		assertArrayEquals (before, hidden, "native row and state operations, whole-list rebuilds and facades while hidden");
+		assertEquals (0, paints [0], "paints while hidden");
+		model.setVisible (true);
+		for (int i = 0; i < 3; i++) {
+			while (display.readAndDispatch ()) {
+			}
+		}
+		assertEquals (1, paints [0], "paint passes after showing");
+		assertEquals (reference.getItemCount (), model.getItemCount ());
+		assertEquals (reference.getTopIndex (), model.getTopIndex (), "the top row");
+		ImageData drawn = print (model), expected = print (reference);
+		assertArrayEquals (expected.data, drawn.data, "the visible rows draw like the reference");
+		assertEquals (state (reference), state (model), "after showing");
+		long [] shown = {counter (model, "m3RowOps") - hidden [0], counter (model, "m3StateOps") - hidden [1]};
+		LOG.info (() -> "hidden: " + deltas + " deltas, " + model.getItemCount () + " rows; window patch: row operations " + shown [0] + ", state operations " + shown [1]);
 	}
 
 	@Test

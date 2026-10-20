@@ -836,7 +836,12 @@ final class TableViewport {
 		return dirty;
 	}
 
-	/** Whether the native control is hidden: not visible, an empty client area, or in a minimized shell. */
+	/**
+	 * Whether the native control is hidden: not visible, an empty client area, or in a minimized shell. Interim test
+	 * until Control.isPartVisible () lands (brief rule 25, all-widgets track): then this answers !isPartVisible () and
+	 * SWT.PartVisible applies the window patch (applyHidden); until then the first message that observes the native
+	 * rows applies it (the first paint once the Table shows).
+	 */
 	boolean hidden () {
 		long hwnd = table.handle;
 		if (!OS.IsWindowVisible (hwnd)) return true;
@@ -937,7 +942,7 @@ final class TableViewport {
 	 * (false), so a facade stays its row's state and the image list registers its images.
 	 */
 	boolean setRow (int row, String [] texts, Image [] images, boolean checked) {
-		if (row < 0 || row >= cells.length () || facadeOrNull (row) != null) return false;
+		if (row < 0 || row >= cells.length () || liveFacade (row) != null) return false;
 		int columns = Math.max (1, table.columnCount);
 		for (int column = 0; column < columns; column++) {
 			if (column < images.length && images [column] != null || cells.get (IMAGE, column, row) != null) return false;
@@ -945,12 +950,8 @@ final class TableViewport {
 		Object oldText = cells.get (TEXT, 0, row);
 		for (int column = 0; column < columns; column++) {
 			String text = column < texts.length && texts [column] != null ? texts [column] : "";
-			/* column 0 keeps no empty text; another column keeps the empty text a setter stored */
-			if (column == 0) {
-				cells.set (TEXT, 0, row, text.isEmpty () ? null : text);
-			} else if (!text.isEmpty () || cells.get (TEXT, column, row) != null || columns > 1) {
-				cells.set (TEXT, column, row, text);
-			}
+			/* as store () keeps them: column 0 without an empty text, another column with the text its setter stored */
+			cells.set (TEXT, column, row, column == 0 && text.isEmpty () ? null : text);
 		}
 		if ((table.style & SWT.CHECK) != 0) flags.set (CHECKED, row, checked);
 		boolean textChanged = !Objects.equals (oldText, cells.get (TEXT, 0, row));

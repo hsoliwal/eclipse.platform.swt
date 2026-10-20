@@ -3557,6 +3557,11 @@ boolean m3Splice (int at, int removed, int inserted) {
 	return false;
 }
 
+/* M3Model seam (win32 viewport only): the labels go through the item here */
+boolean m3SetRow (int index, String [] texts, Image [] images, boolean checked) {
+	return false;
+}
+
 /**
  * Returns the height of the area which would be used to
  * display <em>one</em> of the items in the receiver.

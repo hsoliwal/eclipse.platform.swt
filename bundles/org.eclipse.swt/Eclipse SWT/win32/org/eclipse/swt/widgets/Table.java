@@ -2987,6 +2987,11 @@ boolean m3Splice (int at, int removed, int inserted) {
 	return viewport != null && TableSplice.splice (this, viewport, at, removed, inserted);
 }
 
+/* M3Model seam (T-Table-O2): the labels of a row written to the viewport lanes without an item (TableViewport.setRow); false when the caller is to write them through the item */
+boolean m3SetRow (int index, String [] texts, Image [] images, boolean checked) {
+	return viewport != null && viewport.setRow (index, texts, images, checked);
+}
+
 /* M3Residency seam: the last native cache hint with the viewport; null (every row) without one */
 int [] m3ResidentRange () {
 	return viewport != null ? viewport.residentRange () : null;

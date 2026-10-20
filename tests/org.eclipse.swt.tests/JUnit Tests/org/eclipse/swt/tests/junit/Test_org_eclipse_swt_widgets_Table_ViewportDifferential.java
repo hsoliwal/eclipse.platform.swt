@@ -62,7 +62,7 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 	static final int ROWS = 300, SEEDS = 12, STEPS = 150;
 	static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger (Test_org_eclipse_swt_widgets_Table_ViewportDifferential.class.getName ());
 	/* the operations a variant draws: the API script of this class, or a script of TableViewportScripts */
-	static final int API = 0, INPUT = 1, GEOMETRY = 2, REENTRANT = 3, DPI = 4, SCALE = 5, ZOOM = 6;
+	static final int API = 0, INPUT = 1, GEOMETRY = 2, REENTRANT = 3, DPI = 4, SCALE = 5, ZOOM = 6, HIDDEN = 7;
 
 	/** A script variant: the Table's style, its columns, the script it runs, its seeds and steps. */
 	record Variant (int style, int columns, int script, int seeds, int steps) {}
@@ -86,6 +86,8 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		/* T-Table-14: every scale (TableScaleScripts): seeds at 100, 125, 150 and 200 %, and Table font, resize and zoom changes while scrolled */
 		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION, 2, SCALE, 8, 100),
 		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.CHECK, 2, ZOOM, 8, 80),
+		/* brief rule 24, hidden viewports (TableHiddenScripts): hide, 250 model deltas, show; 10^4 deltas per seed */
+		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION, 0, HIDDEN, 8, 40),
 	};
 
 	/** A plain Table realized as owner data is the non-blocking sign that the viewport is active. */
@@ -114,6 +116,7 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 			try {
 				harness (variant).compareWithRecording (scene, record, directory);
 				if (!record) Assertions.assertEquals (List.of (), scene.rebuilds, "variant " + variant + ": whole-list rebuilds in a change path (brief rule 24; " + scene.explicitRebuilds + " by removeAll and clearAll steps)");
+				if (!record) Assertions.assertEquals (List.of (), scene.hiddenViolations, "variant " + variant + ": hidden viewport (brief rule 24)");
 				final int shown = variant;
 				LOG.info (() -> "table-variant" + shown + ": " + scene.counted + " steps, whole-list rebuilds in change paths " + scene.rebuilds.size () + ", by removeAll and clearAll steps " + scene.explicitRebuilds);
 			} finally {
@@ -230,6 +233,9 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		int counted;
 		long explicitRebuilds;
 		final List<String> rebuilds = new ArrayList<> ();
+		/* the HIDDEN script: ids of the rows it inserts, and the hidden-viewport checks that failed */
+		long nextId;
+		final List<String> hiddenViolations = new ArrayList<> ();
 		/* script state (TableViewportScripts): resources, armed listener actions, accessibility, zoom */
 		final TableViewportScripts.State state = new TableViewportScripts.State ();
 
@@ -242,6 +248,7 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		void reset () {
 			dispose ();
 			step = 0;
+			nextId = 1_000_000L;
 			seed++;
 			shell = new Shell (display);
 			Rectangle screen = display.getBounds ();

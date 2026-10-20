@@ -42,6 +42,8 @@ import org.eclipse.swt.internal.win32.*;
  * the rows inserted or removed above the top paint nothing (SpliceProbe, SCROLL T9; T10 for focus and mark outside the
  * visible rows), so a run outside the visible rows changes only the scroll bar.</li>
  * <li>A run that reaches the visible rows invalidates them from the first changed row down: O(visible rows).</li>
+ * <li>A hidden Table (brief rule 24) changes its lanes and items only; the native control is patched once, when it is
+ * observed again (TableViewport.applyHidden: the first paint after showing, or a query).</li>
  * </ul>
  * <p>
  * Moving the selection costs one state message per selected row at or after the run. When more rows are selected
@@ -137,7 +139,7 @@ final class TableSplice {
 			moveSelection (hwnd, viewport.spliceSelection, selectedAfter, newCount, at, removed, inserted);
 			setFocus (hwnd, focus < 0 ? -1 : moved (focus, count, at, removed, inserted));
 			setMark (hwnd, mark < 0 ? -1 : moved (mark, count, at, removed, inserted));
-			newTop = anchorTop (table, top, count, at, removed, inserted);
+			newTop = anchorTop (table, top, at, removed, inserted);
 		} finally {
 			if (redraw) OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
 			table.ignoreSelect = oldSelect;
@@ -237,7 +239,7 @@ final class TableSplice {
 	}
 
 	/* the old top row (or the first row after it that survives) on top again: one LVM_SCROLL while the redraw is off */
-	private static int anchorTop (Table table, int top, int count, int at, int removed, int inserted) {
+	private static int anchorTop (Table table, int top, int at, int removed, int inserted) {
 		long hwnd = table.handle;
 		int target = anchored (top, at, removed, inserted);
 		int current = Math.max (0, (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0));

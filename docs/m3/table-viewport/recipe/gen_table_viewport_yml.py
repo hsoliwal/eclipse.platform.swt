@@ -249,6 +249,11 @@ lines = [
     '      memberName: m3Splice',
     '      beforeMethod: m3ResidentRange',
     '      memberSource: %s' % q('/* M3Model seam (enhanced API leaf 19, step 3): rows [at, at + removed) replaced by inserted empty rows with one native count change (TableSplice); false when the caller is to edit through the item API */\nboolean m3Splice (int at, int removed, int inserted) {\n\tcheckWidget ();\n\treturn viewport != null && TableSplice.splice (this, viewport, at, removed, inserted);\n}'),
+    '  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:',
+    '      declaringClasses: [%s]' % TABLE,
+    '      memberName: m3SetRow',
+    '      beforeMethod: m3ResidentRange',
+    '      memberSource: %s' % q('/* M3Model seam (T-Table-O2): the labels of a row written to the viewport lanes without an item (TableViewport.setRow); false when the caller is to write them through the item */\nboolean m3SetRow (int index, String [] texts, Image [] images, boolean checked) {\n\treturn viewport != null && viewport.setRow (index, texts, images, checked);\n}'),
 ] + entries(TABLE, TABLE_HOOKS + STOCK_HOOKS) + [
     '---',
     'type: specs.openrewrite.org/v1beta/recipe',
@@ -279,4 +284,4 @@ lines = [
 
 with open(sys.argv[1], 'w', encoding='utf-8', newline='\n') as f:
     f.write('\n'.join(lines) + '\n')
-print('hooks: Table %d + %d stock + 4 members, TableColumn %d, TableItem %d + %d stock + 1 member, ScrollBar %d' % (len(TABLE_HOOKS), len(STOCK_HOOKS), len(COLUMN_HOOKS), len(ITEM_HOOKS), len(STOCK_ITEM_HOOKS), len(BAR_HOOKS)))
+print('hooks: Table %d + %d stock + 5 members, TableColumn %d, TableItem %d + %d stock + 1 member, ScrollBar %d' % (len(TABLE_HOOKS), len(STOCK_HOOKS), len(COLUMN_HOOKS), len(ITEM_HOOKS), len(STOCK_ITEM_HOOKS), len(BAR_HOOKS)))
