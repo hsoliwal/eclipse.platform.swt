@@ -17,6 +17,7 @@ package org.eclipse.swt.widgets;
 import java.util.*;
 
 import org.eclipse.swt.*;
+import org.eclipse.swt.internal.VisibilityGate;
 import org.eclipse.swt.internal.win32.*;
 
 /**
@@ -116,29 +117,35 @@ final class TreeViewport {
 		int bits = OS.GetWindowLong (tv, OS.GWL_STYLE);
 		OS.SetWindowLong (tv, OS.GWL_STYLE, (bits | OS.TVS_NOSCROLL | OS.WS_CLIPSIBLINGS) & ~(OS.WS_VSCROLL | OS.WS_HSCROLL));
 		OS.SetWindowPos (tv, 0, 0, 0, 0, 0, OS.SWP_NOMOVE | OS.SWP_NOSIZE | OS.SWP_NOZORDER | OS.SWP_NOACTIVATE | OS.SWP_FRAMECHANGED);
+		tree.addListener (VisibilityGate.CATCH_UP, event -> partShown ());
 		layout ();
 	}
 
 	/*
 	 * Hidden viewports (brief rule 24; user 2026-10-20: "if the viewport becomes visible from hidden it should paint;
-	 * while it is hidden the model may make changes and the viewport is dirty and renders on becoming visible"). A Tree
-	 * that is not visible (itself or an ancestor hidden, for example an unselected tab page), has no client area or
-	 * sits in a minimized shell parks: the lanes take the resident rows' native state, the native rows go and the plan
-	 * forgets them. While parked a model delta updates the lanes and the logical extents only (layout returns before
-	 * any native call; every other native path finds no resident row, setters of a row without a handle return), so the
-	 * dirty state is O(1): the topology generation. The first layout or paint that finds the Tree visible again commits
-	 * the window against the current model, one patch, and the paint that follows draws it.
+	 * while it is hidden the model may make changes and the viewport is dirty and renders on becoming visible"). The
+	 * Tree does not keep its own notion of visibility: it asks SWT's effective visibility (VisibilityGate, the win32
+	 * EffectiveVisibility bits: a hidden chain such as an unselected tab page, a minimized shell, zero size or clipped
+	 * out by an ancestor). A hidden Tree parks: the lanes take the resident rows' native state, the native rows go and
+	 * the plan forgets them. While parked a model delta updates the lanes and the logical extents only (layout returns
+	 * before any native call; every other native path finds no resident row, setters of a row without a handle return),
+	 * so the dirty state is O(1): the gate's dirty bits and the topology generation. When the Tree is visible again SWT
+	 * sends CATCH_UP once (or the first paint comes first): the window is committed against the current model, one
+	 * patch, and the paint that follows draws it. When SWT.PartVisible/SWT.PartHidden land (all-widgets track) they
+	 * replace partHidden () and the catch-up listener; the parking itself stays.
 	 */
 	private boolean parked;
 	/* parks, and the layouts absorbed while parked (the hidden-viewport gate reads them) */
 	long parks, parkedLayouts;
 
-	private boolean hidden () {
-		if (!OS.IsWindowVisible (tree.handle)) return true;
-		RECT client = new RECT ();
-		OS.GetClientRect (tree.hwndParent, client);
-		if (client.right <= client.left || client.bottom <= client.top) return true;
-		return OS.IsIconic (OS.GetAncestor (tree.handle, OS.GA_ROOT));
+	/* the Tree cannot be seen: the layout is skipped and recorded as dirty, CATCH_UP follows when it can */
+	private boolean partHidden () {
+		return VisibilityGate.defer (tree, VisibilityGate.LAYOUT | VisibilityGate.DATA);
+	}
+
+	/* CATCH_UP: the Tree is effectively visible again */
+	private void partShown () {
+		if (parked && !busy && !rebuilding) layout ();
 	}
 
 	private void park () {
@@ -183,7 +190,7 @@ final class TreeViewport {
 	/** Recomputes geometry, moves the resident window if needed, positions the plane and updates the bar. */
 	void layout () {
 		if (busy || tree.isDisposed () || tree.hwndParent == 0) return;
-		if (hidden ()) {
+		if (partHidden ()) {
 			if (!parked) {
 				busy = true;
 				try {

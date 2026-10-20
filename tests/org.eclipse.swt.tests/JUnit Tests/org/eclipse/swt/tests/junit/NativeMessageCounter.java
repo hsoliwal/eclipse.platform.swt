@@ -64,8 +64,41 @@ final class NativeMessageCounter implements AutoCloseable {
 				counter.count++;
 				counter.perMessage [message - counter.first]++;
 			}
+			/* WM_PAINT sent (UpdateWindow) */
+			if (counter.cwp [3] == counter.hwnd && message == OS.WM_PAINT) counter.paints++;
 		}
 		return OS.CallNextHookEx (0, (int) code, wParam, lParam);
+	}
+
+	static final int WH_GETMESSAGE = 3, PM_REMOVE = 1;
+	/* MSG (64-bit): hwnd, message (UINT, padded), wParam, lParam */
+	private final long [] msg = new long [4];
+	private Callback paintCallback;
+	private long paintHook;
+	private long paints;
+
+	/* WM_PAINT retrieved from the queue (GetMessage, PeekMessage with PM_REMOVE) */
+	static long getMessageProc (long code, long wParam, long lParam) {
+		NativeMessageCounter counter = active;
+		if (counter != null && code >= 0 && lParam != 0 && wParam == PM_REMOVE) {
+			OS.MoveMemory (counter.msg, lParam, 4 * 8);
+			if (counter.msg [0] == counter.hwnd && (int) counter.msg [1] == OS.WM_PAINT) counter.paints++;
+		}
+		return OS.CallNextHookEx (0, (int) code, wParam, lParam);
+	}
+
+	/** Also counts paint passes of the window: WM_PAINT sent to it or dispatched from the queue. */
+	NativeMessageCounter countPaints () {
+		if (paintHook == 0) {
+			paintCallback = new Callback (NativeMessageCounter.class, "getMessageProc", 3);
+			paintHook = OS.SetWindowsHookEx (WH_GETMESSAGE, paintCallback.getAddress (), 0, OS.GetCurrentThreadId ());
+		}
+		return this;
+	}
+
+	/** Paint passes counted so far (see {@link #countPaints()}). */
+	long paints () {
+		return paints;
 	}
 
 	/** Messages counted so far. */
@@ -75,7 +108,7 @@ final class NativeMessageCounter implements AutoCloseable {
 
 	/** Resets the counts (the hook stays installed). */
 	void reset () {
-		count = 0;
+		count = paints = 0;
 		java.util.Arrays.fill (perMessage, 0);
 	}
 
@@ -99,6 +132,10 @@ final class NativeMessageCounter implements AutoCloseable {
 	public void close () {
 		OS.UnhookWindowsHookEx (hook);
 		callback.dispose ();
+		if (paintHook != 0) {
+			OS.UnhookWindowsHookEx (paintHook);
+			paintCallback.dispose ();
+		}
 		active = null;
 	}
 }
