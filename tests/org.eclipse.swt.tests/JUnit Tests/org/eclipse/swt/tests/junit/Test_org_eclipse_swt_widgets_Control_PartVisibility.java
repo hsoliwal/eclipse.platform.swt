@@ -68,6 +68,7 @@ public class Test_org_eclipse_swt_widgets_Control_PartVisibility {
 	}
 
 	void listen (Control control, String name) {
+		if (control.getData ("name") == null) control.setData ("name", name);
 		control.addPartVisibilityListener (new PartVisibilityListener () {
 			@Override
 			public void partVisible (PartVisibilityEvent e) {
@@ -118,7 +119,7 @@ public class Test_org_eclipse_swt_widgets_Control_PartVisibility {
 		expect (() -> page.setVisible (false));
 		expect (() -> page.setVisible (true), "leaf visible " + V + " page");
 		expect (() -> page.setVisible (true));
-		expect (() -> leaf.setVisible (false), "leaf hidden " + V + " -");
+		expect (() -> leaf.setVisible (false), "leaf hidden " + V + " leaf");
 		expect (() -> page.setVisible (false));
 		expect (() -> leaf.setVisible (true));
 		expect (() -> page.setVisible (true), "leaf visible " + V + " page");
@@ -214,7 +215,7 @@ public class Test_org_eclipse_swt_widgets_Control_PartVisibility {
 		assertTrue (leaf.isPartVisible ());
 		expect (() -> page.setSize (0, 200), "leaf hidden " + Z + " page");
 		expect (() -> page.setSize (0, 100));
-		expect (() -> page.setSize (200, 200), "leaf visible " + Z + " page");
+		expect (() -> page.setSize (200, 200), "leaf visible " + Z + " leaf");
 		expect (() -> page.setSize (210, 200));
 	}
 
@@ -313,9 +314,9 @@ public class Test_org_eclipse_swt_widgets_Control_PartVisibility {
 		Canvas leaf = new Canvas (page, SWT.NONE);
 		java.util.List<String> events = new ArrayList<> ();
 		BiFunction<String, Event, String> line = (kind, e) -> kind + " " + e.detail + " " + ((Widget) e.item).getData ("name");
+		open ();
 		leaf.addListener (SWT.PartHidden, e -> events.add (line.apply ("hidden", e)));
 		leaf.addListener (SWT.PartVisible, e -> events.add (line.apply ("visible", e)));
-		open ();
 		page.setVisible (false);
 		page.setVisible (true);
 		assertEquals (java.util.List.of ("hidden " + V + " page", "visible " + V + " page"), events);
