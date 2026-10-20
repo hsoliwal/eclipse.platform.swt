@@ -18,17 +18,17 @@ import java.util.concurrent.atomic.*;
 
 /**
  * The snapshot protocol of the interaction model (docs/m3/RENDER_MODES.md, interaction model, leaf IM2): three
- * preallocated slabs per widget, one being written by the model side, the latest published, one being read by the
- * renderer. A slab holds what one frame needs in lanes (per row: y, height, state bits, text id, foreground,
+ * preallocated slabs per widget, a lock-free triple buffer. The model side owns the <em>back</em> slab and fills it;
+ * the renderer owns the <em>front</em> slab and paints it; the third is the <em>middle</em>, the latest complete
+ * snapshot. A slab holds what one frame needs in lanes (per row: y, height, state bits, text id, foreground,
  * background, font id, image id) plus the window (first row, row count, scroll offset) and the theme generation; it is
  * immutable once published.
  * <p>
- * One atomic state word holds the published slab and the slab being read (two 2-bit fields, 3 for none). The model
- * side publishes a filled slab with a compare-and-set that puts it into the published field; the renderer acquires a
- * frame with a compare-and-set that moves the published slab into the read field, so the writer can never pick a
- * slab the renderer may be reading: {@link #writable} answers a slab that is in neither field. Generations are
- * strictly increasing (invariant I2); a frame sees a complete slab or keeps the previous one (I1); neither side blocks
- * or spins on the other for more than a retried compare-and-set (I3); nothing is allocated after construction (I4).
+ * One atomic word holds the middle slab and a <em>fresh</em> bit. {@link #publish} exchanges the back slab with the
+ * middle and sets the bit; {@link #acquire} exchanges the front slab with the middle only when the bit is set. Each
+ * side only ever touches the slab it owns, so a frame never sees a slab being written (invariant I1); the renderer only
+ * takes a slab newer than its own (I2); both sides finish in one atomic exchange, never waiting for the other (I3);
+ * nothing is allocated after construction (I4).
  * </p>
  */
 public final class RowSnapshots {
@@ -36,8 +36,9 @@ public final class RowSnapshots {
 	public static final class Slab {
 		/** The snapshot generation this slab holds (0: never published). */
 		public long generation;
-		/** The model generation it was built from, the theme generation, the window. */
+		/** The model generation it was built from. */
 		public long modelGeneration;
+		/** The theme generation and the window. */
 		public int themeGeneration, firstRow, rows, scrollX, scrollY;
 		/** Per row, indexed from 0 to <code>rows - 1</code>. */
 		public final int [] y, height, state, text, foreground, background, font, image;
@@ -86,11 +87,15 @@ public final class RowSnapshots {
 		}
 	}
 
-	private static final int NONE = 3;
+	private static final int FRESH = 4;
 	private final Slab [] slabs = new Slab [3];
-	/* bits 0-1: the published slab, bits 2-3: the slab being read; NONE when empty */
-	private final AtomicInteger state = new AtomicInteger (NONE | NONE << 2);
+	/* bits 0-1: the middle slab; FRESH: it is newer than the front */
+	private final AtomicInteger middle = new AtomicInteger (1);
+	/* owned by the model side */
+	private int back = 0;
 	private long generation;
+	/* owned by the renderer */
+	private int front = 2;
 	private volatile long latest;
 
 	/** @param rows the largest row window a slab holds */
@@ -98,72 +103,39 @@ public final class RowSnapshots {
 		for (int i = 0; i < slabs.length; i++) slabs [i] = new Slab (Math.max (1, rows));
 	}
 
-	/**
-	 * The slab the model side may fill now: neither the published one nor the one being read. With three slabs there is
-	 * always one. Model side only.
-	 */
+	/** The slab the model side fills now: neither the latest snapshot nor the renderer's. Model side only. */
 	public Slab writable () {
-		int s = state.get (), published = s & 3, reading = s >>> 2 & 3;
-		for (int i = 0; i < slabs.length; i++) {
-			if (i != published && i != reading) return slabs [i];
-		}
-		throw new IllegalStateException ("no writable slab"); /* unreachable with three slabs */
+		return slabs [back];
 	}
 
 	/**
-	 * Publishes a filled slab as the next generation: its checksum is written, then the slab becomes the published one.
-	 * Model side only.
+	 * Publishes the filled {@link #writable} slab as the next generation: its checksum is written, then it is exchanged
+	 * with the middle slab, which becomes the next writable one. Model side only.
 	 *
 	 * @return the generation published
 	 */
 	public long publish (Slab slab) {
-		int index = index (slab);
+		if (slab != slabs [back]) throw new IllegalArgumentException ("not the writable slab of these snapshots");
 		slab.generation = ++generation;
 		slab.checksum = slab.sum ();
-		int s;
-		do {
-			s = state.get ();
-		} while (!state.compareAndSet (s, s & ~3 | index));
+		back = middle.getAndSet (back | FRESH) & 3;
 		latest = generation;
 		return generation;
 	}
 
 	/**
-	 * The latest complete snapshot for a frame: the published slab becomes the one being read (and stays so until the
-	 * next call or {@link #release}); when nothing was published since the last frame, the slab of the last frame
-	 * again. Null before the first publication. Renderer only.
+	 * The latest complete snapshot for a frame: the middle slab when it is newer than the renderer's, else the
+	 * renderer's slab again; null before the first publication. The slab stays the renderer's until the next call.
+	 * Renderer only.
 	 */
 	public Slab acquire () {
-		int s, next;
-		do {
-			s = state.get ();
-			int published = s & 3;
-			if (published == NONE) {
-				int reading = s >>> 2 & 3;
-				return reading == NONE ? null : slabs [reading];
-			}
-			next = NONE | published << 2;
-		} while (!state.compareAndSet (s, next));
-		return slabs [next >>> 2 & 3];
-	}
-
-	/** The renderer is done with the acquired slab; the writer may reuse it. */
-	public void release () {
-		int s;
-		do {
-			s = state.get ();
-		} while (!state.compareAndSet (s, s & 3 | NONE << 2));
+		if ((middle.get () & FRESH) != 0) front = middle.getAndSet (front) & 3;
+		Slab slab = slabs [front];
+		return slab.generation == 0 ? null : slab;
 	}
 
 	/** The generation of the latest published snapshot (0: none). */
 	public long generation () {
 		return latest;
-	}
-
-	private int index (Slab slab) {
-		for (int i = 0; i < slabs.length; i++) {
-			if (slabs [i] == slab) return i;
-		}
-		throw new IllegalArgumentException ("not a slab of these snapshots");
 	}
 }

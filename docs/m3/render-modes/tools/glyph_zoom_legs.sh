@@ -2,7 +2,7 @@
 # Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
 # SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
 # The vector glyph leg (SV3): Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom in custom, m3 and gpu at 100, 125, 150 and
-# 200 % (-Dswt.autoScale) under the swing and flatdark look and feels, then the captures compared across the modes:
+# 200 % (-Dswt.autoScale with -Dswt.autoScale.updateOnRuntime=false: a fixed zoom needs monitor-specific scaling off) under the swing and flatdark look and feels, then the captures compared across the modes:
 # gpu against m3 pixel for pixel (both the M3 renderer), custom against m3 by the share of equal pixels and the largest
 # channel difference (GDI text and blending). Needs the SVG fragment jar and JSVG (SVG_CP). Run under ui_lock.sh.
 # Environment: STAMP, TESTSET; OUT (default S:/m3-scratch/render-modes); SVG_CP; ZOOMS, LAFS, MODES.
@@ -16,7 +16,7 @@ for zoom in ${ZOOMS:-100 125 150 200}; do
   for laf in ${LAFS:-swing flatdark}; do
     for m in ${MODES:-custom m3 gpu}; do
       log=$RUN/$zoom-$laf-$m.log
-      bash C:/m3-superset/tools/hidden_java.sh 300 $log -Xmx512m -Dswt.autoScale=$zoom -Dswt.widget.theme=$laf -Dswt.widget.mode=$m -Dswt.viewport.evidence=$RUN \
+      bash C:/m3-superset/tools/hidden_java.sh 300 $log -Xmx512m -Dswt.autoScale=$zoom -Dswt.autoScale.updateOnRuntime=false -Dswt.widget.theme=$laf -Dswt.widget.mode=$m -Dswt.viewport.evidence=$RUN \
         -jar $CS execute -cp "$CP" --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom --disable-banner --details=tree
       r="$zoom $laf $m: $(sed 's/\x1b\[[0-9;]*m//g' $log | grep -aE 'tests (successful|failed|aborted)' | tr -s ' ' | tr '\n' ' ')"
       echo "$r" | tee -a $RUN/results.txt; sed 's/\x1b\[[0-9;]*m//g' $log | grep -aE "✘" | head -2 | tee -a $RUN/results.txt
