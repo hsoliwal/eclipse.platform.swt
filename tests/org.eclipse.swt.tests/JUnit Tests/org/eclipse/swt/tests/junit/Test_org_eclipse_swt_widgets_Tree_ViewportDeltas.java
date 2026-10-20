@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.List;
 import java.util.logging.*;
 
 import org.eclipse.swt.*;
@@ -386,15 +387,19 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDeltas {
 
 	/* preorder from child index of parent (null: roots), then on through the following siblings of the ancestors */
 	static void collect (Tree tree, TreeItem parent, int index, List<TreeItem> out, int limit) {
+		preorder (tree, parent, index, out, limit);
+		for (TreeItem child = parent; child != null && out.size () < limit; child = child.getParentItem ()) {
+			TreeItem grand = child.getParentItem ();
+			preorder (tree, grand, (grand == null ? tree.indexOf (child) : grand.indexOf (child)) + 1, out, limit);
+		}
+	}
+
+	static void preorder (Tree tree, TreeItem parent, int index, List<TreeItem> out, int limit) {
 		int count = parent == null ? tree.getItemCount () : parent.getItemCount ();
 		for (int i = index; i < count && out.size () < limit; i++) {
 			TreeItem item = parent == null ? tree.getItem (i) : parent.getItem (i);
 			out.add (item);
-			if (item.getExpanded () && item.getItemCount () > 0) collect (tree, item, 0, out, limit);
-		}
-		if (parent != null && out.size () < limit) {
-			TreeItem grand = parent.getParentItem ();
-			collect (tree, grand, (grand == null ? tree.indexOf (parent) : grand.indexOf (parent)) + 1, out, limit);
+			if (item.getExpanded () && item.getItemCount () > 0) preorder (tree, item, 0, out, limit);
 		}
 	}
 }
