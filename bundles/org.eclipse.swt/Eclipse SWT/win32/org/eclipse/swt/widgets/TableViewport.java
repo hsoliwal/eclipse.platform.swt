@@ -377,6 +377,8 @@ final class TableViewport {
 	private int exactBelow;
 	/* depth of LVN_GETDISPINFO and custom draw: a row without a facade is painted from a paint facade */
 	int painting;
+	/* brief rule 24 (viewport deltas): facades made on demand and rows measured for the column-less width, for the resize and column sweeps; tests read them */
+	long facadesMade, rowsMeasured;
 
 	/** Rows <code>[index, index + count)</code> were inserted (the Table's item array is shifted by the Table). */
 	void insert (int index, int count) {
@@ -645,6 +647,7 @@ final class TableViewport {
 		if (!create && (!state || (table.state & Widget.DISPOSE_SENT) != 0)) return null;
 		if (table.ignoreShrink) return null;
 		item = new TableItem (table, SWT.NONE, -1, false);
+		facadesMade++;
 		bind (item, index, null);
 		hold (index, item);
 		return item;
@@ -918,6 +921,7 @@ final class TableViewport {
 	private int measuringRow;
 
 	private int measureRow () {
+		rowsMeasured++;
 		String text = (String) cells.get (TEXT, 0, measuringRow);
 		if (text == null || text.isEmpty ()) return 0;
 		Font font = (Font) cells.get (CELL_FONT, 0, measuringRow);
