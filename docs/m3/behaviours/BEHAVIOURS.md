@@ -261,3 +261,14 @@ gets it.
   filter data, saved customizations, already flagged with full-rebuild sites in correction-sites (XViewerCustomizeDialog.java,
   XViewerCustomMenu.java). Its setInput/refresh calls become lane patches. Owners: custom-widgets (dialog, SWT and Swing),
   sort-filter (complex filter model), jface (template binding).
+
+## Panels, windows and dialogs (user, 2026-10-20: "slide-out missing, translucent with a settings cog", "full screen, cross, hide", "minimize maximize", "dialog with tree like preference wizard dialogs", "wizard tree dialogs", "web has infinite scroll too", "a summary list on getting the cursor to the scroll bar, a list of checkpoints in the scrolled composite")
+
+| Behaviour | What it does | Donors (route) | Owner |
+|---|---|---|---|
+| Translucent slide-out panel with a settings cog | a cog on the view (header or view bar) slides out a translucent panel over the view with its settings (the configure-view content), live preview, dismiss on outside click or Esc; an overlay plane, PartVisible-aware | MUI Drawer, Mantine Drawer (MIT: ADAPT); ULTIMATE_KIT "drawer" (23 kits) | custom-widgets + render-modes |
+| Full screen, close (cross), hide | per view/panel: full-screen toggle (temporary maximize to the window or screen), close cross, hide-to-side with a restore tab; keyboard shortcuts | e4 part stack min/max (EPL: ADAPT), IntelliJ tool-window hide/maximize (Apache: ADAPT) | all-widgets + jface (e4 stacks) |
+| Minimize / maximize | parts, stacks, panels and split panes minimize to a trim bar and maximize, with remembered layout; a hidden part is PartHidden (rule 24 dirty rendering) | e4 MinMaxAddon (EPL: ADAPT) | jface (e4 stacks) + all-widgets |
+| Tree-navigated dialogs (preference-style and wizard-tree) | a left tree of pages (filterable, with search across page contents), right page area; for wizards the tree shows steps with state (done, current, error) and allows jumping back; pages are created lazily (PartVisible) | JFace PreferenceDialog/FilteredPreferenceDialog (EPL: stock reference), WizardDialog (EPL), MUI Stepper (MIT) | platform-ui-surfaces |
+| Infinite scroll | the viewport loads windows on demand (already the core); "load more" at the end for remote sources, with prefetch via the ViewportListener | TanStack Virtual (MIT), ULTIMATE_KIT infinite-scroll | viewport core |
+| Scroll checkpoints (scroll spy) | hovering near the scrollbar of a scrolled composite or form shows a summary list of checkpoints (sections, headings, groups, problems, search hits); markers on the scrollbar track; click jumps; the list is a viewport list | VS Code overview ruler and sticky scroll (MIT: ADAPT), Bootstrap/MUI scroll-spy (MIT), JFace Text overview ruler (EPL: in our fork) | all-widgets (ScrolledComposite/ScrolledForm) + custom-widgets |

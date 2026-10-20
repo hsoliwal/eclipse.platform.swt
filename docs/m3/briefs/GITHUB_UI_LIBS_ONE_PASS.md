@@ -32,3 +32,7 @@ Load these first. A repo already atomized is marked KNOWN, not re-read.
 - GitHub API calls are read-only.
 - Scratch only under S:/m3-scratch/github-ui-libs. Never write to G:, D: or E:.
 - Commit and push after each output file.
+
+## Eclipse Corner (user, 2026-10-20: "Eclipse Corner also may have some tricks and tips")
+
+Also read the Eclipse Corner articles index (eclipse.org/articles) once, using WebFetch with no GitHub API cost, and extract tips relevant to the programme: virtual tables and trees, jobs and the UI thread ("On the Job"), progress monitors, decorators, label providers, SWT images and resources, and performance. Output ECLIPSE_CORNER_TIPS.tsv (article, tip, programme rule it supports or contradicts, owner) in the same run dir, and hand each tip to its owner.
