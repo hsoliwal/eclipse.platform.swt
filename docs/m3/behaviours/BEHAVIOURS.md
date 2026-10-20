@@ -113,6 +113,8 @@ Rows are in FOSS_REUSE_DECISION.tsv next to this file. Each owner fills in the c
 | Touch paradigms | Hammer.js, use-gesture (MIT) | JavaFX gesture events (GPL+CPE: PATTERN_ONLY) |
 | Motion | Framer Motion (MIT), FLIP technique | IntelliJ animators (Apache) |
 | Busy / progress | MUI Progress (MIT) | JFace ProgressMonitorPart (EPL), SwingX JXBusyLabel (LGPL: PATTERN_ONLY) |
+| Translucent progress overlay over a widget (user, 2026-10-20) | MUI Backdrop + CircularProgress, Mantine LoadingOverlay (MIT: ADAPT) | IntelliJ LoadingDecorator / JBLoadingPanel (Apache: ADAPT); javax.swing.JLayer + LayerUI (JDK, ours in M3JDK: ADAPT in place); SwingX JXBusyLabel (LGPL: PATTERN_ONLY). Drawn on an overlay plane above the viewport while its model window loads; input passes through or is blocked per spec; never blocks the UI thread (rule 28) |
+| Breadcrumbs (user, 2026-10-20) | MUI Breadcrumbs, Ant Design Breadcrumb with overflow (MIT: ADAPT) | JDT JavaEditorBreadcrumb (EPL: ADAPT, in our jdt.ui fork), e4 breadcrumb viewer (EPL). A path bar over the tree's topology lanes (TreePath = interned segment ids), with drop-down children per segment from the same viewport list, and overflow collapsing |
 
 The GitHub one-pass harvest (brief GITHUB_UI_LIBS_ONE_PASS.md) adds donors it finds. Owners start each behaviour from the
 first ADAPT donor in its row.

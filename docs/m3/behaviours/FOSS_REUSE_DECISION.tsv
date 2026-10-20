@@ -28,3 +28,7 @@ drag-reorder	clauderic/dnd-kit	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	U
 popover-hovercard	floating-ui/floating-ui	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
 popover-hovercard	controlsfx/controlsfx (PopOver)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	BSD-3-Clause	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
 empty-state	JetBrains/intellij-community (StatusText)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	Apache-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+progress-overlay	JetBrains/intellij-community (LoadingDecorator, JBLoadingPanel)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	Apache-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+progress-overlay	openjdk (javax.swing.JLayer, M3JDK in place)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	GPL-2.0-with-classpath-exception	UNPROVEN	ADAPT_IN_M3JDK	-	-	-
+breadcrumbs	eclipse-jdt/eclipse.jdt.ui (JavaEditorBreadcrumb)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+breadcrumbs	ant-design/ant-design (Breadcrumb)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
