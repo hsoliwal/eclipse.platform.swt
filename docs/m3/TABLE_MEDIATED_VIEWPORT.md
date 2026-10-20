@@ -141,7 +141,7 @@ One gate run with the JaCoCo agent ([`table_coverage.sh`](table-viewport/table_c
 
 The gate of `tt20261019p6` failed on two pixel lines of the reentrancy variants (variant 7 seed 1 in the default mode, variant 8 seed 3 in the original mode), which moved between runs in the stock mode too. Since `quiesce` sends the ListView's pending scroll-wait timer (T-Table-13, rule Determinism of the recording below) both pass in every completed run.
 
-Variants 3-9 drive scripts of `TableViewportScripts`: input (keys and clicks with Shift and Ctrl in the thread keyboard state, marquee; variants 3, 4), geometry and presentation (`getItem (Point)`, item, text and image bounds, fonts, colours and images per row and cell, label-tip text, resizes while scrolled; 5, 6), listener reentrancy (7, 8) and `WM_DPICHANGED` (9).
+Variants 3-9 drive scripts of `TableViewportScripts`: input (keys and clicks with Shift and Ctrl in the thread keyboard state, marquee; variants 3, 4), geometry and presentation (`getItem (Point)`, item, text and image bounds, fonts, colours and images per row and cell, label-tip text, resizes while scrolled; 5, 6), listener reentrancy (7, 8) and `WM_DPICHANGED` (9). Variants 10 and 11 (T-Table-14, `TableScaleScripts`) run seeds at 125, 150 and 200 % and change the font and the zoom while scrolled; on `tt20261019p7` the original recording equals the official one on all 16 seeds and the default mode matches both ([run](table-viewport/evidence/table_differential_references-tt20261019p7-scale-win11-hidden-run.txt)).
 `ASPECT_MATRIX.tsv` maps every public member and behaviour aspect to its test: 59 COVERED by the differential, 57 SUITE, no GAP rows.
 
 Rules found by these variants (T-Table-7, T-Table-8):
@@ -277,6 +277,7 @@ Enhanced-API candidates that this leaf's evidence suggests (for the api-enrichme
 | T-Table-11 | benchmark candidates (`scrollPage`, `selectAll`) measured again | viewport not slower (section Performance) |
 | T-Table-12 | coverage harness (`table_coverage.sh`, `table_changed_coverage.sh`, rule 15); paint facades reuse their cell arrays (no per-row allocation on paint, rule 18) | coverage report `table-viewport/coverage/COVERAGE.md` (lane classes 100 %); suites and differential green on `tt20261017p2` |
 | T-Table-13 | determinism of the recording: `quiesce` runs the posted events and sends the ListView's pending scroll-wait timer; repeatability script `table_flake.sh` | gate `tt20261019p7` green (section Status): suites in both modes, differential 88 seeds, original equal to official 88/88; variants 7 and 8 equal in all 10 recordings of each reference |
+| T-Table-14 | differential at every scale: variant 10 (SCALE, each seed at 100, 125, 150 or 200 %, input, geometry, presentation and the API script at that zoom) and variant 11 (ZOOM: `Table.setFont` 7 to 16 pt, resizes, top index and zoom changes while scrolled); `TableScaleScripts`; runtime rescaling explicit in the gate scripts | 16 seeds: original equal to official 16&16, default mode matches both ([run](table-viewport&evidence&table_differential_references-tt20261019p7-scale-win11-hidden-run.txt)) |
 
 ## Donors
 
