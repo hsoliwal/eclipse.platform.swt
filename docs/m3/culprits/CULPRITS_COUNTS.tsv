@@ -1,0 +1,6 @@
+rank	culprit	main_sites	files	e4_bundles	emf
+1	collections (objects every possible place)	27358	7324	744	1898
+2	StringBuilder, StringBuffer, concatenation	90948	9411	2062	21987
+3	IO	7481	1622	113	206
+4	regex	3005	1031	117	369
+5	loops (hard limit: banned)	60073	10310	1295	6189

@@ -1,0 +1,7 @@
+rank	culprit	targets	lane	why
+1	collections (objects every possible place)	M3_ARRAY_LANES;M3_HASH_LANES;M3_SET_LANES;M3_ORDERED_LANES;M3_SORTED_LANES;M3_IDENTITY_WEAK_LANES;M3_ENUM_BITS;M3_DEQUE_LANES;M3_HEAP_LANES;M3_PRIMITIVE_LANES;MULTIMAP_TO_LANE;BULK_LANE_PASS	collections	one lane model, M3 collections (primitive lanes, bitsets, interned ids); no entry objects, no boxing
+2	StringBuilder, StringBuffer, concatenation	M3STRING_COMPOSITE;FORMAT_PRECOMPUTE;CASE_FOLD_FACTS;TOKEN_INTERNER	m3string	String = composite of M3Strings (tuple DAG), compile-time format precompute, interned tokens; never flatten
+3	IO	M3FILE_IO;M3FILE_STREAMS;M3FILE_ARCHIVE_STREAM	m3file	M3File entries (attribute-first change detection, shadow streams, sub-progress, deltas); no File object per entry
+4	regex	REGEX_PRECOMPUTE	precompute	constant Pattern.compile precompute, regex-cursor over M3String, trigram absence gates
+5	loops (hard limit: banned)	LOOP_TO_LANE;ITERATION_TO_LANE	collections	bulk lane passes, fused scans, streams
+6	method length (hard limit: 15 lines)	METHOD_SPLIT	method-split	MRL method splitting (template-only, behaviour preserved); METHOD_LENGTH.tsv

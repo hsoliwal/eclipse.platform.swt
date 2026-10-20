@@ -1,0 +1,16 @@
+repo	methods_over_15	over_50	over_100	longest
+eclipse.platform.ui	7685	1120	248	doSwitch 530
+eclipse.jdt.ui	6703	1128	260	process 607
+org.eclipse.emf	6455	1574	554	generate 4771
+eclipse.platform	6141	821	154	createKeyManagementPage 543
+eclipse.platform.swt	6054	1351	396	create 830
+eclipse.jdt.core	5774	1466	454	consumeRule 1703
+initiative31-eclipse.pde	5090	791	179	processComponent 816
+nebula	3188	674	191	getVisitor 778
+equinox	2030	294	40	parseActions 205
+p2	1751	267	51	traverse 989
+egit	1746	309	97	createPartControl 706
+eclipse.jdt.debug	1565	238	44	visit 333
+gef-classic	1141	148	24	layout 522
+m2e-core	1030	175	42	initializePackageContents 630
+eclipse.platform.releng.aggregator	63	8	4	describeJavaTarget 105

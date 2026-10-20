@@ -10,9 +10,9 @@ M08	new LinkedList<|new ArrayDeque<|new LinkedList\(|new ArrayDeque\(	java.util.
 M09	new PriorityQueue<|new PriorityQueue\(	java.util.PriorityQueue	M3_HEAP_LANES	M3LongPriorityQueue / IntMinHeap
 M10	(Map|List|Set|Collection)<(Integer|Long|Short|Byte|Character|Boolean)[,>]|Map<[A-Za-z]+, ?(Integer|Long)>	boxed primitives in collections	M3_PRIMITIVE_LANES	no boxing: primitive lanes
 M11	String\.format\(|MessageFormat\.format\(|NLS\.bind\(	java.lang.String#format	FORMAT_PRECOMPUTE	compile-time precompute of format constants (project-compiletime-precompute)
-M12	Pattern\.compile\(|\.matches\("|\.replaceAll\("|\.split\("	java.util.regex.Pattern	REGEX_PRECOMPUTE	constant Pattern.compile first leaf; regex-cursor over M3String
+M12	Pattern\.compile\(|\.matches\("|\.replaceAll\("|\.replaceFirst\("|\.split\("|Matcher |\.matcher\(|\.find\(\)|\.group\(	java.util.regex.Pattern	REGEX_PRECOMPUTE	constant Pattern.compile first leaf; regex-cursor over M3String
 M13	\.intern\(\)	java.lang.String#intern	TOKEN_INTERNER	TIL: bounded TokenInterner / M3String ids
-M14	new StringBuilder|new StringBuffer	java.lang.StringBuilder	M3STRING_COMPOSITE	String = composite of M3Strings (tuple DAG)
+M14	new StringBuilder|new StringBuffer|StringBuilder [a-z]|StringBuffer [a-z]|\.append\(	java.lang.StringBuilder	M3STRING_COMPOSITE	String = composite of M3Strings (tuple DAG)
 M15	\.stream\(\)|Stream\.of\(|Collectors\.	java.util.stream	BULK_LANE_PASS	fused scans over lanes (precompute A8)
 M16	Collections\.sort\(|Arrays\.sort\(	java.util.Collections#sort	SORT_LANE	sort lanes / M3ProxyModel
 M17	\.toLowerCase\(|\.toUpperCase\(|equalsIgnoreCase\(	java.lang.String case folding	CASE_FOLD_FACTS	caseFoldHash facts with a consumer
@@ -29,3 +29,6 @@ M27	GridLayout|GridData|FormLayout|FormData	org.eclipse.swt.layout	LAYOUT_DELTA	
 M28	\.getText\(\)|\.setText\(	org.eclipse.swt.widgets text API	TEXT_API_LANE	label ids interned; editor and text API enhance
 M29	new Label\(|new Text\(|new Combo\(|new Button\(|new Table\(|new Tree\(|new List\(	org.eclipse.swt.widgets constructors	WIDGET_FULL_API	widgets own all the API; JFace forwards (rule 25)
 M30	new TableViewer\(|new TreeViewer\(|new ListViewer\(|new CheckboxTreeViewer\(|new CheckboxTableViewer\(|new ComboViewer\(	org.eclipse.jface.viewers	JFACE_FORWARD	JFace viewers forward to the widget model API, no second model
+M31	new File\(|FileInputStream|FileOutputStream|FileReader|FileWriter|BufferedReader|BufferedWriter|InputStreamReader|OutputStreamWriter|Files\.(readAllBytes|readAllLines|readString|writeString|newBufferedReader|newBufferedWriter|newInputStream|newOutputStream|copy|exists|isDirectory|size)\(|\.toFile\(\)|\.getAbsolutePath\(\)|\.listFiles\(	java.io / java.nio.file	M3FILE_IO	IO is a culprit (user 2026-10-20): M3File entries, attribute-first, shadow streams, sub-progress; no File objects per entry (M3FILE_STREAMS brief)
+M32	^\s*(for|while|do)\s*[({]|^\s*\}\s*while\s*\(	loops (hard limit: BANNED, use streams)	LOOP_TO_LANE	loops are a culprit (user 2026-10-20): bulk lane passes, streams, fused scans; method length 15
+M33	\.toString\(\)|String\.valueOf\(|Integer\.toString\(|Long\.toString\(|\+ "|" \+	string concatenation and conversion	M3STRING_COMPOSITE	StringBuilder/Buffer and concatenation are culprits (user 2026-10-20): tuple DAG, interned ids, no flattening

@@ -68,3 +68,6 @@ ASYNC_FUTURE	model-thread	JAVA	thread-architecture
 BACKGROUND_MODEL_THREAD	model-thread	JAVA	thread-architecture
 THREAD_OWNERSHIP	model-thread	JAVA	thread-architecture
 OTHER_CALLBACK	review	REVIEW	final-pass
+M3FILE_IO	m3file	JAVA	m3file-streams
+LOOP_TO_LANE	collections	JAVA	m3-collections
+METHOD_SPLIT	method-split	JAVA	mechanical-refactoring
