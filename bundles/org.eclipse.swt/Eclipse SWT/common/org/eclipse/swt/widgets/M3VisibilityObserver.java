@@ -44,6 +44,21 @@ import org.eclipse.swt.graphics.*;
  * three details are the window delta: an application prefetches what entered, releases what left
  * and re-plans only on new extents, instead of polling <code>getTopIndex</code>.
  * </p>
+ * <p>
+ * Hidden viewports (brief rule 24): a viewport is hidden while the widget or one of its ancestors
+ * is not visible, its shell is minimized, or its client area is empty
+ * ({@link #isViewportHidden(Table)}). A hidden viewport announces {@link #HIDDEN} once and then
+ * nothing: no range, no extents. The model may change it meanwhile; a change through
+ * {@link M3Model#apply}, <code>M3BulkUpdates</code> or <code>M3DiffApply</code> (with a listener
+ * added here, also through the item API) makes it dirty ({@link #isViewportDirty(Table)}) and costs
+ * no window work: the top row is re-anchored, and the window planned, when the viewport shows.
+ * When it shows, a listener receives {@link #SHOWN} (while the viewport still answers dirty), then
+ * the window delta since the last announced range ({@link #LEFT}, {@link #ENTERED}) and the new
+ * {@link #EXTENTS}; then the viewport is clean. A show through <code>setVisible (true)</code> of
+ * the widget or an ancestor, or the restore of its shell, is announced before the widget paints,
+ * so the viewport paints once, with its final rows. A viewport that becomes non-empty by a resize
+ * is announced at the end of the resize.
+ * </p>
  *
  * @since 3.138
  */
@@ -63,15 +78,38 @@ public final class M3VisibilityObserver {
 	 * @since 3.138
 	 */
 	public static final int EXTENTS = 2;
+	/**
+	 * <code>event.detail</code>: the viewport became hidden; no range or extents follow until
+	 * {@link #SHOWN}.
+	 *
+	 * @since 3.138
+	 */
+	public static final int HIDDEN = 3;
+	/**
+	 * <code>event.detail</code>: the viewport became visible. During this event
+	 * {@link #isViewportDirty(Table)} answers whether the rows changed while it was hidden; the window
+	 * delta and the extents follow.
+	 *
+	 * @since 3.138
+	 */
+	public static final int SHOWN = 4;
 
 	private static final String KEY = "org.eclipse.swt.widgets.M3VisibilityObserver"; //$NON-NLS-1$
 
-	/* The latch of a listened widget: the last announced range and extents, and the trigger listener itself. */
+	/*
+	 * The latch of a widget: the last announced range and extents, whether the viewport was hidden and dirty
+	 * when last seen, and the listeners it installed. It exists while the widget has observer listeners or holds
+	 * changes back while hidden.
+	 */
 	private static final class Latch implements Listener {
 		final Control widget;
 		int first, last = -1;
 		int width = -1, height = -1, rows = -1, rowExtent = -1, contentWidth = -1;
-		boolean scheduled, extentsDirty = true;
+		boolean scheduled, extentsDirty = true, hidden, dirty, triggers;
+		/* the widget and its ancestors up to its shell, while their Show and Hide events are heard */
+		Control [] chain;
+		/* Show and Hide of the chain, Iconify and Deiconify of the shell, Dispose of the widget: at once, not deferred */
+		final Listener chainListener = this::chainEvent;
 
 		Latch (Control widget) {
 			this.widget = widget;
@@ -87,6 +125,14 @@ public final class M3VisibilityObserver {
 				scheduled = false;
 				if (!widget.isDisposed ()) check (widget, this);
 			});
+		}
+
+		private void chainEvent (Event event) {
+			if (event.type == SWT.Dispose) {
+				unwatch (this);
+				return;
+			}
+			if (!widget.isDisposed ()) visibility (widget, this, event);
 		}
 	}
 
@@ -201,20 +247,224 @@ public final class M3VisibilityObserver {
 		remove (tree, listener);
 	}
 
+	/**
+	 * Returns whether the viewport of the table is hidden: the table or one of its ancestors is not
+	 * visible, its shell is minimized, or its client area is empty.
+	 *
+	 * @param table the table
+	 * @return <code>true</code> when the table shows no rows
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the table is null</li>
+	 * </ul>
+	 * @exception SWTException <ul>
+	 *    <li>ERROR_WIDGET_DISPOSED - if the table has been disposed</li>
+	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the table</li>
+	 * </ul>
+	 */
+	public static boolean isViewportHidden (Table table) {
+		return isHidden (table);
+	}
+
+	/**
+	 * Returns whether the viewport of the list is hidden: the list or one of its ancestors is not
+	 * visible, its shell is minimized, or its client area is empty.
+	 *
+	 * @param list the list
+	 * @return <code>true</code> when the list shows no rows
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the list is null</li>
+	 * </ul>
+	 * @exception SWTException <ul>
+	 *    <li>ERROR_WIDGET_DISPOSED - if the list has been disposed</li>
+	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the list</li>
+	 * </ul>
+	 */
+	public static boolean isViewportHidden (List list) {
+		return isHidden (list);
+	}
+
+	/**
+	 * Returns whether the viewport of the tree is hidden: the tree or one of its ancestors is not
+	 * visible, its shell is minimized, or its client area is empty.
+	 *
+	 * @param tree the tree
+	 * @return <code>true</code> when the tree shows no rows
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the tree is null</li>
+	 * </ul>
+	 * @exception SWTException <ul>
+	 *    <li>ERROR_WIDGET_DISPOSED - if the tree has been disposed</li>
+	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the tree</li>
+	 * </ul>
+	 */
+	public static boolean isViewportHidden (Tree tree) {
+		return isHidden (tree);
+	}
+
+	/**
+	 * Returns whether the rows of the table changed while its viewport was hidden and the viewport has
+	 * not shown since. During {@link #SHOWN} it still answers for the hidden period.
+	 *
+	 * @param table the table
+	 * @return <code>true</code> when the viewport holds changes back for its next show
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the table is null</li>
+	 * </ul>
+	 * @exception SWTException <ul>
+	 *    <li>ERROR_WIDGET_DISPOSED - if the table has been disposed</li>
+	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the table</li>
+	 * </ul>
+	 */
+	public static boolean isViewportDirty (Table table) {
+		return isDirty (table);
+	}
+
+	/**
+	 * Returns whether the rows of the list changed while its viewport was hidden and the viewport has
+	 * not shown since. During {@link #SHOWN} it still answers for the hidden period.
+	 *
+	 * @param list the list
+	 * @return <code>true</code> when the viewport holds changes back for its next show
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the list is null</li>
+	 * </ul>
+	 * @exception SWTException <ul>
+	 *    <li>ERROR_WIDGET_DISPOSED - if the list has been disposed</li>
+	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the list</li>
+	 * </ul>
+	 */
+	public static boolean isViewportDirty (List list) {
+		return isDirty (list);
+	}
+
+	/**
+	 * Returns whether the rows of the tree changed while its viewport was hidden and the viewport has
+	 * not shown since. During {@link #SHOWN} it still answers for the hidden period.
+	 *
+	 * @param tree the tree
+	 * @return <code>true</code> when the viewport holds changes back for its next show
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the tree is null</li>
+	 * </ul>
+	 * @exception SWTException <ul>
+	 *    <li>ERROR_WIDGET_DISPOSED - if the tree has been disposed</li>
+	 *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the tree</li>
+	 * </ul>
+	 */
+	public static boolean isViewportDirty (Tree tree) {
+		return isDirty (tree);
+	}
+
 	/* ------------------------------------------------------------------ widget seam */
 
-	/* A viewport moved its window or the rows changed: check the visible range now. */
+	/* A viewport moved its window or the rows changed through the item API: check the visible range now. */
 	static void changed (Control widget) {
 		if (!widget.hooks (EVENT) || widget.isDisposed ()) return;
 		Latch latch = latch (widget);
 		if (latch == null) return;
 		latch.extentsDirty = true;
+		if (visibility (widget, latch, null)) {
+			latch.dirty = true;
+			return;
+		}
+		if (!widget.isDisposed () && widget.hooks (EVENT)) window (widget, latch);
+	}
+
+	/*
+	 * The rows changed through the model (M3Model, M3BulkUpdates, M3DiffApply). A hidden viewport becomes dirty
+	 * and is watched until it shows, so the model can re-anchor its top row then; a visible one is checked now.
+	 */
+	static void modelChanged (Control widget) {
+		if (widget.isDisposed ()) return;
+		Latch latch = latch (widget);
+		if (hidden (widget, null)) {
+			if (latch == null) latch = create (widget);
+			watch (latch);
+			visibility (widget, latch, null);
+			latch.dirty = true;
+			latch.extentsDirty = true;
+			return;
+		}
+		if (latch == null) return;
+		latch.extentsDirty = true;
 		check (widget, latch);
+	}
+
+	/* Whether the viewport is hidden now (M3Model asks before a patch). */
+	static boolean hidden (Control widget) {
+		return hidden (widget, null);
 	}
 
 	/* ------------------------------------------------------------------ helpers */
 
+	private static boolean isHidden (Control widget) {
+		if (widget == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+		widget.checkWidget ();
+		return hidden (widget, null);
+	}
+
+	private static boolean isDirty (Control widget) {
+		if (widget == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+		widget.checkWidget ();
+		Latch latch = latch (widget);
+		return latch != null && latch.dirty;
+	}
+
+	/*
+	 * Whether the viewport is hidden, with the event that is changing it: Show is sent before the control shows,
+	 * Deiconify before the shell is restored, so they count as done.
+	 */
+	private static boolean hidden (Control widget, Event cause) {
+		int type = cause == null ? SWT.None : cause.type;
+		Widget changing = cause == null ? null : cause.widget;
+		if (type == SWT.Iconify) return true;
+		for (Control c = widget; c != null; c = c.getParent ()) {
+			boolean visible = c == changing && type == SWT.Show || (c != changing || type != SWT.Hide) && c.getVisible ();
+			if (!visible) return true;
+			if (c instanceof Shell shell) {
+				if (type != SWT.Deiconify && shell.getMinimized ()) return true;
+				break;
+			}
+		}
+		Rectangle area = ((Scrollable) widget).getClientArea ();
+		return area.width <= 0 || area.height <= 0;
+	}
+
+	/*
+	 * Answers whether the viewport is hidden now, and announces a change: HIDDEN; or, when it shows, the model's
+	 * re-anchoring, SHOWN while still dirty, the window delta and the extents, then clean.
+	 */
+	private static boolean visibility (Control widget, Latch latch, Event cause) {
+		boolean hidden = hidden (widget, cause);
+		if (hidden == latch.hidden) return hidden;
+		latch.hidden = hidden;
+		if (hidden) {
+			if (widget.hooks (EVENT)) send (widget, HIDDEN, 0, -1);
+			return true;
+		}
+		M3Model.shown (widget);
+		if (!widget.isDisposed () && widget.hooks (EVENT)) {
+			send (widget, SHOWN, 0, -1);
+			latch.extentsDirty = true;
+			if (!widget.isDisposed ()) window (widget, latch);
+		}
+		latch.dirty = false;
+		if (!widget.isDisposed ()) release (latch);
+		return false;
+	}
+
 	private static void check (Control widget, Latch latch) {
+		if (!visibility (widget, latch, null) && !widget.isDisposed () && widget.hooks (EVENT)) window (widget, latch);
+	}
+
+	/* the window delta of a visible viewport: the rows that left, the rows that entered, then new extents */
+	private static void window (Control widget, Latch latch) {
 		M3ItemRange visible = visible (widget);
 		int first = visible.isEmpty () ? 0 : visible.start (), last = visible.isEmpty () ? -1 : visible.end ();
 		int oldFirst = latch.first, oldLast = latch.last;
@@ -259,6 +509,14 @@ public final class M3VisibilityObserver {
 		widget.sendEvent (EVENT, event);
 	}
 
+	private static void send (Control widget, int detail, int start, int end) {
+		Event event = new Event ();
+		event.detail = detail;
+		event.start = start;
+		event.end = end;
+		widget.sendEvent (EVENT, event);
+	}
+
 	/* the width of the columns: TableColumn and TreeColumn widths, in any order */
 	private static int width (Item [] columns) {
 		int sum = 0;
@@ -272,13 +530,19 @@ public final class M3VisibilityObserver {
 		return M3ItemSelection.getVisibleRange ((List) widget);
 	}
 
+	private static Latch create (Control widget) {
+		Latch latch = new Latch (widget);
+		widget.setData (KEY, latch);
+		return latch;
+	}
+
 	private static void add (Control widget, Listener listener) {
 		if (widget == null || listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		widget.checkWidget ();
 		Latch latch = latch (widget);
-		if (latch == null) {
-			latch = new Latch (widget);
-			widget.setData (KEY, latch);
+		if (latch == null) latch = create (widget);
+		if (!latch.triggers) {
+			latch.triggers = true;
 			widget.addListener (SWT.Resize, latch);
 			if (widget instanceof Tree) {
 				widget.addListener (SWT.Expand, latch);
@@ -289,11 +553,13 @@ public final class M3VisibilityObserver {
 			widget.addListener (SWT.MouseVerticalWheel, latch);
 			widget.addListener (SWT.KeyDown, latch);
 			widget.addListener (SWT.ZoomChanged, latch);
-			for (Item column : columns (widget)) {
-				column.addListener (SWT.Resize, latch);
-			}
+			for (Item column : columns (widget)) column.addListener (SWT.Resize, latch);
 		}
+		watch (latch);
+		boolean first = !widget.hooks (EVENT);
 		widget.addListener (EVENT, listener);
+		/* the first listener hears the current state: HIDDEN, or the range and the extents */
+		if (first && latch.hidden && hidden (widget, null)) send (widget, HIDDEN, 0, -1);
 		check (widget, latch);
 	}
 
@@ -308,19 +574,60 @@ public final class M3VisibilityObserver {
 		widget.checkWidget ();
 		widget.removeListener (EVENT, listener);
 		Latch latch = latch (widget);
-		if (latch == null || widget.hooks (EVENT)) return;
-		widget.removeListener (SWT.Resize, latch);
-		widget.removeListener (SWT.Expand, latch);
-		widget.removeListener (SWT.Collapse, latch);
-		ScrollBar bar = ((Scrollable) widget).getVerticalBar ();
-		if (bar != null) bar.removeListener (SWT.Selection, latch);
-		widget.removeListener (SWT.MouseVerticalWheel, latch);
-		widget.removeListener (SWT.KeyDown, latch);
-		widget.removeListener (SWT.ZoomChanged, latch);
-		for (Item column : columns (widget)) {
-			column.removeListener (SWT.Resize, latch);
+		if (latch != null) release (latch);
+	}
+
+	/* a latch without listeners and without held-back changes is forgotten with everything it installed */
+	private static void release (Latch latch) {
+		Control widget = latch.widget;
+		if (widget.hooks (EVENT) || latch.dirty) return;
+		if (latch.triggers) {
+			latch.triggers = false;
+			widget.removeListener (SWT.Resize, latch);
+			widget.removeListener (SWT.Expand, latch);
+			widget.removeListener (SWT.Collapse, latch);
+			ScrollBar bar = ((Scrollable) widget).getVerticalBar ();
+			if (bar != null) bar.removeListener (SWT.Selection, latch);
+			widget.removeListener (SWT.MouseVerticalWheel, latch);
+			widget.removeListener (SWT.KeyDown, latch);
+			widget.removeListener (SWT.ZoomChanged, latch);
+			for (Item column : columns (widget)) column.removeListener (SWT.Resize, latch);
 		}
+		unwatch (latch);
 		widget.setData (KEY, null);
+	}
+
+	/* hears the Show and Hide of the widget and its ancestors, the Iconify and Deiconify of its shell */
+	private static void watch (Latch latch) {
+		if (latch.chain != null) return;
+		int depth = 0;
+		for (Control c = latch.widget; c != null; c = c instanceof Shell ? null : c.getParent ()) depth++;
+		Control [] chain = new Control [depth];
+		Control c = latch.widget;
+		for (int i = 0; i < depth; i++, c = c.getParent ()) {
+			chain [i] = c;
+			c.addListener (SWT.Show, latch.chainListener);
+			c.addListener (SWT.Hide, latch.chainListener);
+		}
+		chain [depth - 1].addListener (SWT.Iconify, latch.chainListener);
+		chain [depth - 1].addListener (SWT.Deiconify, latch.chainListener);
+		latch.widget.addListener (SWT.Dispose, latch.chainListener);
+		latch.chain = chain;
+	}
+
+	/* the ancestors outlive the widget: they forget its listener when it is disposed or released */
+	private static void unwatch (Latch latch) {
+		Control [] chain = latch.chain;
+		if (chain == null) return;
+		latch.chain = null;
+		for (Control c : chain) {
+			if (c.isDisposed ()) continue;
+			c.removeListener (SWT.Show, latch.chainListener);
+			c.removeListener (SWT.Hide, latch.chainListener);
+			c.removeListener (SWT.Iconify, latch.chainListener);
+			c.removeListener (SWT.Deiconify, latch.chainListener);
+			c.removeListener (SWT.Dispose, latch.chainListener);
+		}
 	}
 
 	private static Latch latch (Widget widget) {

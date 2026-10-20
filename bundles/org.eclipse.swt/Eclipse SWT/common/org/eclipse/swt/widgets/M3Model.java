@@ -121,6 +121,11 @@ public final class M3Model {
 	 * against ids by indexOf and rebuilt only when a stale hint is asked for.
 	 */
 	private M3LongIndex positions;
+	/* the top row of the first patch while hidden, re-anchored when the viewport shows; the top index the patches left */
+	private boolean topPending;
+	private long [] hiddenBefore;
+	private int hiddenTop, hiddenExpectedTop;
+	private long hiddenAnchor;
 	private Labels labels;
 	private Listener setData;
 	/* the per-parent id lanes of a Tree; null for a List or Table */
@@ -366,6 +371,13 @@ public final class M3Model {
 	 * get new labels, and the row that was on top stays on top (or the first surviving row below it).
 	 * For a table with <code>SWT.VIRTUAL</code> the labels are kept as the fill source of
 	 * <code>SWT.SetData</code> and asked only for the rows the table shows.
+	 * <p>
+	 * A patch is always safe while the viewport is hidden (a background tab, a hidden or minimized
+	 * shell: <code>M3VisibilityObserver.isViewportHidden</code>) and does no window work: the rows
+	 * and the ids change, a virtual widget is asked for no label, nothing paints, and the top row is
+	 * re-anchored, once, when the viewport shows (unless the application moved the top row
+	 * meanwhile). The viewport answers dirty until then.
+	 * </p>
 	 *
 	 * @param patch the delta of the parent {@link #ROOT}
 	 * @param rowLabels the labels of inserted and updated rows
@@ -389,6 +401,9 @@ public final class M3Model {
 			return;
 		}
 		checkParent (patch.parent ());
+		boolean hidden = M3VisibilityObserver.hidden (widget);
+		/* a show that was not heard: the pending top row goes back on top before this patch */
+		if (!hidden && topPending) shown ();
 		long [] before = lane ();
 		/* an update-only patch keeps the lane; inserts and removes make one new lane in one pass */
 		boolean shifts = patch.removedCount () > 0 || patch.insertedCount () > 0;
@@ -427,7 +442,12 @@ public final class M3Model {
 					for (int k = 0; k < count; k++) updateRow (index + k, virtual);
 				}
 			});
-			if (before.length > 0) restoreTop (before, top, anchor, patch);
+			if (before.length == 0) return;
+			if (hidden) {
+				deferTop (before, top, anchor);
+			} else {
+				restoreTop (before, top, anchor, patch);
+			}
 		});
 	}
 
@@ -507,11 +527,40 @@ public final class M3Model {
 	private void restoreTop (long [] before, int top, long anchor, M3Patch patch) {
 		int count = count ();
 		if (count == 0) return;
-		int index = top < before.length ? follow (patch, top) : -1;
+		int index = patch != null && top < before.length ? follow (patch, top) : -1;
 		if (index < 0) index = indexOf (anchor);
 		for (int k = top + 1; index < 0 && k < before.length; k++) index = indexOf (before [k]);
 		if (index < 0) index = count - 1;
 		if (widget instanceof Table table) table.setTopIndex (index); else ((List) widget).setTopIndex (index);
+	}
+
+	/* a patch while hidden: the top row of the first one is kept for the show; no scrolling now */
+	private void deferTop (long [] before, int top, long anchor) {
+		if (!topPending) {
+			topPending = true;
+			hiddenBefore = before;
+			hiddenTop = top;
+			hiddenAnchor = anchor;
+		}
+		hiddenExpectedTop = topIndex ();
+	}
+
+	/* The viewport shows (M3VisibilityObserver): the model of the widget re-anchors its top row. */
+	static void shown (Control widget) {
+		if (widget.getData (KEY) instanceof M3Model model) model.shown ();
+	}
+
+	/* the top row of the first hidden patch goes back on top, once, unless the application moved the top row */
+	private void shown () {
+		if (tree != null) {
+			tree.shown ();
+			return;
+		}
+		if (!topPending) return;
+		topPending = false;
+		long [] before = hiddenBefore;
+		hiddenBefore = null;
+		if (topIndex () == hiddenExpectedTop) restoreTop (before, hiddenTop, hiddenAnchor, null);
 	}
 
 	/* the final row of an old row through a patch, or -1 when the patch removes it */

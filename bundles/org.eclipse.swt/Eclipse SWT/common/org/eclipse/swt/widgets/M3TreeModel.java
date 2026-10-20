@@ -51,6 +51,9 @@ final class M3TreeModel {
 	private final ArrayList<Lane> lanes = new ArrayList<> ();
 	private final M3LongIndex parentSlot = new M3LongIndex (16);
 	private final M3LongIndex childSlot = new M3LongIndex (64);
+	/* the top row of the first patch while hidden, and the top row the patches left */
+	private boolean topPending;
+	private long hiddenAnchor, hiddenExpected;
 
 	M3TreeModel (Tree tree) {
 		this.tree = tree;
@@ -216,6 +219,9 @@ final class M3TreeModel {
 		}
 		TreeItem parentItem = parent == M3Model.ROOT ? null : item (parent);
 		boolean virtual = (tree.getStyle () & SWT.VIRTUAL) != 0;
+		boolean hidden = M3VisibilityObserver.hidden (tree);
+		/* a show that was not heard: the pending top row goes back on top before this patch */
+		if (!hidden && topPending) shown ();
 		long anchor = idOf (tree.getTopItem ());
 		M3BulkUpdates.bulk (tree, () -> {
 			patch.applyTo (new M3Patch.Target () {
@@ -258,9 +264,27 @@ final class M3TreeModel {
 				for (int k = 0; k < patch.removeCount (i); k++) dropLane (before [patch.removeAt (i) + k]);
 			}
 			setLane (parent, after);
+			if (hidden) {
+				/* no scrolling while hidden: the top row of the first hidden patch goes back on top at the show */
+				if (!topPending) {
+					topPending = true;
+					hiddenAnchor = anchor;
+				}
+				hiddenExpected = idOf (tree.getTopItem ());
+				return;
+			}
 			TreeItem top = anchor == -2 || anchor == M3Model.ROOT ? null : item (anchor);
 			if (top != null) tree.setTopItem (top);
 		});
+	}
+
+	/* the viewport shows: the top row of the first hidden patch goes back on top, unless the application moved the top row */
+	void shown () {
+		if (!topPending) return;
+		topPending = false;
+		if (idOf (tree.getTopItem ()) != hiddenExpected) return;
+		TreeItem top = hiddenAnchor == -2 || hiddenAnchor == M3Model.ROOT ? null : item (hiddenAnchor);
+		if (top != null) tree.setTopItem (top);
 	}
 
 	private void clear (TreeItem parentItem, int index) {

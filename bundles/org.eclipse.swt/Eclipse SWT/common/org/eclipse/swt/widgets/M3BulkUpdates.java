@@ -114,6 +114,6 @@ public final class M3BulkUpdates {
 			}
 		}
 		/* the edits changed the rows: announce the window delta now (M3VisibilityObserver) */
-		M3VisibilityObserver.changed (widget);
+		M3VisibilityObserver.modelChanged (widget);
 	}
 }
