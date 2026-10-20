@@ -86,7 +86,7 @@ public class Test_org_eclipse_swt_widgets_AllWidgets_ResizeSweep {
 		scrolled.setExpandHorizontal (true);
 		scrolled.setMinHeight (content.computeSize (SWT.DEFAULT, SWT.DEFAULT).y);
 		scrolled.setExpandVertical (true);
-		sweep ("scrolled-layout", content, content::getChildren);
+		sweep ("scrolled-layout", scrolled, content::getChildren); // visible: inside the ScrolledComposite's viewport
 	}
 
 	@Test
