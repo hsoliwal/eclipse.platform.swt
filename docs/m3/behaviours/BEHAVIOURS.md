@@ -224,6 +224,7 @@ counters (O(1)), updates by deltas, and has a footer popup for detail.
 - **Validation and problems:** error and warning counts for the rows (click to jump), as in the Problems view title.
 - **Change summary:** rows added, removed or changed since the last view or save; undo hint.
 - **Paging and position:** current window position ("rows 4,001–4,060"), jump-to-row field.
+- **Paging controls (optional, web style; user 2026-10-20: "the footer typically has paging controls if desired, in web"):** page size selector, first/previous/next/last, page numbers with ellipsis, "rows 101-150 of 10,345", jump to page. A page is a viewport window, so paging is another scroll mapping over the same lanes: switching between continuous scrolling and pages is a presentation option (`footer=paging`), with no reload. For remote or lazy sources, the page request goes through the ViewportListener entered/left ranges with prefetch of the next page. Donors: MUI TablePagination, TanStack pagination (MIT: ADAPT), AG Grid community pagination (MIT), NatTable (EPL).
 - **Hints:** keyboard shortcuts for the view, configurable.
 
 Owners: Tree and Table tracks (the footer inside the widgets, one shared API), sort-filter (aggregates and filter
