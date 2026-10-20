@@ -66,6 +66,7 @@ public class M3ThemePixelTest {
 				M3SwingTheme.apply (flatLaf);
 				JTable table = new JTable (new Object [][] {{"a"}, {"b"}, {"c"}}, new Object [] {"c"});
 				table.setSize (200, 100);
+				table.doLayout (); // the column spans the width (else x = 150 lies beyond the 75-pixel default column)
 				table.setRowSelectionInterval (2, 2);
 				BufferedImage buffer = new BufferedImage (200, 100, BufferedImage.TYPE_INT_RGB);
 				table.paint (buffer.getGraphics ());
