@@ -52,6 +52,8 @@ public class Test_org_eclipse_swt_widgets_List_ViewportDifferential {
 		final Shell shell;
 		final int style;
 		final StringBuilder events = new StringBuilder ();
+		/* hidden-viewport gate (viewport runs): native row operations, window patches and paints when the list was hidden */
+		final long [] hidden = new long [3];
 		List list;
 
 		Subject (Shell shell, int style) {
@@ -344,6 +346,93 @@ public class Test_org_eclipse_swt_widgets_List_ViewportDifferential {
 					return;
 				}
 			}
+		}
+	}
+
+	/**
+	 * Rule 24, hidden viewports: the list is hidden, takes 10,000 deltas (adds, removes, setItem, selections, top rows) in
+	 * ten steps of 1,000, and is shown again. Every step answers like the reference and the shown list paints like it (the
+	 * pixels after the seed). In the viewport mode the list box gets no row operation and no paint while hidden, and one
+	 * window patch with one paint pass when shown.
+	 */
+	@Test
+	public void hiddenDeltasAnswerLikeTheReference () throws IOException {
+		run ("list-hidden", SWT.MULTI, Test_org_eclipse_swt_widgets_List_ViewportDifferential::hiddenOp, HIDDEN_STEPS);
+	}
+
+	static final int HIDDEN_STEPS = 12;
+
+	static ViewportDifferential.Op<Subject> hiddenOp (Random random, StringBuilder log) {
+		int step = log.toString ().split ("\n", -1).length - 1;
+		if (log.indexOf ("seed") == 0) step--;
+		long seed = random.nextLong ();
+		String name = step == 0 ? "hide" : step == HIDDEN_STEPS - 1 ? "show" : "deltas " + seed;
+		log.append (name).append ('\n');
+		return subject -> {
+			List list = subject.list;
+			switch (name.split (" ") [0]) {
+				case "hide" -> {
+					list.setVisible (false);
+					ViewportDifferential.settle (list.getDisplay (), 30);
+					long [] now = hiddenCounters (list);
+					System.arraycopy (now, 0, subject.hidden, 0, 3);
+				}
+				case "show" -> {
+					list.setVisible (true);
+					ViewportDifferential.settle (list.getDisplay (), 120);
+					long [] now = hiddenCounters (list);
+					if (now [0] >= 0) {
+						if (now [0] - subject.hidden [0] == 0) throw new AssertionError ("no native row work after show");
+						if (now [1] - subject.hidden [1] != 1) throw new AssertionError ("window patches on show: " + (now [1] - subject.hidden [1]));
+						if (now [2] - subject.hidden [2] != 1) throw new AssertionError ("paint passes on show: " + (now [2] - subject.hidden [2]));
+					}
+				}
+				default -> {
+					Random deltas = new Random (seed);
+					for (int i = 0; i < 1000; i++) hiddenDelta (list, deltas);
+					ViewportDifferential.settle (list.getDisplay (), 10);
+					long [] now = hiddenCounters (list);
+					if (now [0] >= 0 && (now [0] != subject.hidden [0] || now [2] != subject.hidden [2])) {
+						throw new AssertionError ("native work while hidden: row operations " + (now [0] - subject.hidden [0]) + ", paints " + (now [2] - subject.hidden [2]));
+					}
+				}
+			}
+			return "top " + list.getTopIndex () + " count " + list.getItemCount () + " focus " + list.getFocusIndex () + " visible " + list.getVisible ();
+		};
+	}
+
+	/* one model delta, indices always in range */
+	static void hiddenDelta (List list, Random random) {
+		int count = list.getItemCount (), i = count == 0 ? 0 : random.nextInt (count);
+		switch (random.nextInt (8)) {
+			case 0, 1 -> list.add ("hidden " + random.nextInt (1000), random.nextInt (count + 1));
+			case 2 -> {
+				if (count > 50) list.remove (i);
+			}
+			case 3 -> {
+				if (count > 50) list.remove (Math.min (i, count - 5), Math.min (i, count - 5) + 3);
+			}
+			case 4 -> {
+				if (count > 0) list.setItem (i, "set " + random.nextInt (1000));
+			}
+			case 5 -> list.select (i);
+			case 6 -> list.deselect (i);
+			default -> list.setTopIndex (i);
+		}
+	}
+
+	/* {row operations, window patches, paints} of a viewport list, or -1s when this SWT has no counters */
+	static long [] hiddenCounters (List list) {
+		try {
+			java.lang.reflect.Method ops = List.class.getDeclaredMethod ("m3NativeRowOps"), stats = List.class.getDeclaredMethod ("m3HiddenStats");
+			ops.setAccessible (true);
+			stats.setAccessible (true);
+			long [] hidden = (long []) stats.invoke (list);
+			return new long [] {(Long) ops.invoke (list), hidden [0], hidden [1]};
+		} catch (NoSuchMethodException e) {
+			return new long [] {-1, -1, -1};
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError (e);
 		}
 	}
 

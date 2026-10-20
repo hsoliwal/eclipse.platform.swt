@@ -99,6 +99,45 @@ final class ListViewport {
 
 	/* ---------------------------------------------------------------- layout */
 
+	/*
+	 * Rule 24, hidden viewports: while the list box is not visible (itself or an ancestor hidden, setRedraw (false), or a
+	 * zero-height client area) the lanes take every delta and the native window is left alone: no row is inserted,
+	 * deleted or written and nothing paints; the window is only marked stale (O(1) per delta). The first layout, paint,
+	 * show or input that finds the list visible again applies one window patch against the current lanes (a reset and
+	 * the resident rows), and the list paints once.
+	 */
+	private boolean stale;
+	/* window patches applied on becoming visible, and WM_PAINT messages the list box received (List.m3HiddenStats) */
+	private long windowPatches, paints;
+
+	long windowPatches () {
+		return windowPatches;
+	}
+
+	long paints () {
+		return paints;
+	}
+
+	private boolean hiddenNow () {
+		return clientHeight == 0 || !OS.IsWindowVisible (list.handle);
+	}
+
+	/* true while the native window is left alone; on becoming visible the stale window is dropped (the next layout rebuilds it) */
+	private boolean deferNative () {
+		if (stale) {
+			if (hiddenNow ()) return true;
+			stale = false;
+			plan.clear ();
+			resetNative ();
+			selectionDirty = focusDirty = true;
+			windowPatches++;
+			return false;
+		}
+		if (!hiddenNow ()) return false;
+		stale = true;
+		return true;
+	}
+
 	/** Takes over the (still empty) list box. */
 	void install () {
 		resetNative ();
@@ -120,8 +159,10 @@ final class ListViewport {
 				relayout = false;
 				measureGeometry ();
 				top = clampTop (top);
-				ensureWindow ();
-				writeLanes ();
+				if (!deferNative ()) {
+					ensureWindow ();
+					writeLanes ();
+				}
 				updateBar ();
 				if (!relayout) break;
 			}
@@ -531,6 +572,16 @@ final class ListViewport {
 	 * @return true when the message was handled and the list box must not see it
 	 */
 	boolean beforeNative (int msg, long wParam, long lParam) {
+		if (msg == OS.WM_PAINT) paints++;
+		/* a stale window (the list was hidden) is patched before the list box paints or takes input */
+		if (stale) {
+			switch (msg) {
+				case OS.WM_PAINT, OS.WM_SETFOCUS, OS.WM_KEYDOWN, OS.WM_CHAR, OS.WM_LBUTTONDOWN, OS.WM_LBUTTONDBLCLK, OS.WM_RBUTTONDOWN -> {
+					if (!deferNative ()) layout ();
+				}
+				default -> {}
+			}
+		}
 		switch (msg) {
 			case OS.WM_LBUTTONDOWN, OS.WM_LBUTTONDBLCLK -> {
 				sync ();
@@ -726,6 +777,9 @@ final class ListViewport {
 	 */
 	long onWheel (long hwnd, long wParam, long lParam) {
 		sync ();
+		/* the wheel reaches a stale window only when the list shows again: patch it first; a hidden list does not scroll */
+		if (stale && deferNative ()) return 0;
+		if (plan.size () == 0) layout ();
 		int first = plan.first ();
 		long code = OS.CallWindowProc (List.ListProc, hwnd, OS.WM_MOUSEWHEEL, wParam, lParam);
 		int nativeTop = (int) OS.SendMessage (list.handle, OS.LB_GETTOPINDEX, 0, 0);
@@ -1013,7 +1067,7 @@ final class ListViewport {
 			barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
 			/* the list box keeps the caret, the anchor and the top row index; the selection shifts */
 			int first = plan.first ();
-			int entry = plan.inserted (index, 1);
+			int entry = deferNative () ? -1 : plan.inserted (index, 1);
 			if (entry >= 0) insertNative (entry, index);
 			if (hScroll) extent = Math.max (extent, model.measureItem (index) + List.INSET);
 			/* a row added after the window leaves the native rows, caret and anchor as they are */
@@ -1046,7 +1100,7 @@ final class ListViewport {
 				String [] empty = new String [added];
 				java.util.Arrays.fill (empty, "");
 				model.insert (itemCount, empty);
-				int entry = plan.inserted (itemCount, added);
+				int entry = deferNative () ? -1 : plan.inserted (itemCount, added);
 				for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, itemCount + i);
 			} finally {
 				changeDepth--;
@@ -1070,7 +1124,7 @@ final class ListViewport {
 		if (caret == at && caret > 0) caret--;
 		if (caret >= count - removed) caret = Math.max (0, count - removed - 1);
 		if (anchor >= at) anchor = -1;
-		int resident = plan.removed (at, removed);
+		int resident = deferNative () ? 0 : plan.removed (at, removed);
 		int removedEntry = plan.removedEntry (at);
 		for (int i = 0; i < resident; i++) deleteNative (removedEntry);
 		model.remove (at, at + removed - 1);
@@ -1085,7 +1139,7 @@ final class ListViewport {
 		if (caret >= countAfter) caret = Math.max (0, countAfter - 1);
 		if (anchor >= index) anchor = -1;
 		model.remove (index);
-		if (plan.removed (index, 1) > 0) deleteNative (plan.removedEntry (index));
+		if (!deferNative () && plan.removed (index, 1) > 0) deleteNative (plan.removedEntry (index));
 	}
 
 	void remove (int index) {
@@ -1166,7 +1220,7 @@ final class ListViewport {
 	void removeAll () {
 		sync ();
 		model.removeAll ();
-		resetNative ();
+		if (!deferNative ()) resetNative ();
 		plan.clear ();
 		/* LB_RESETCONTENT: caret and top row 0, the anchor is kept, the bar is freed */
 		top = caret = 0;
@@ -1181,7 +1235,7 @@ final class ListViewport {
 		sync ();
 		String [] texts = nativeTexts (items);
 		model.setItems (texts);
-		resetNative ();
+		if (!deferNative ()) resetNative ();
 		plan.clear ();
 		top = caret = 0;
 		/* a visible list redraws once at the end (the bar is written); a hidden one adds row by row */
@@ -1229,7 +1283,7 @@ final class ListViewport {
 			if (added > 0) {
 				barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
 				model.insert (at, texts);
-				entry = plan.inserted (at, added);
+				entry = deferNative () ? -1 : plan.inserted (at, added);
 				for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, at + i);
 				if (hScroll) for (int i = 0; i < added; i++) extent = Math.max (extent, model.measureItem (at + i) + List.INSET);
 			}
@@ -1276,6 +1330,7 @@ final class ListViewport {
 
 	/** Bidi auto direction changed: the resident rows are added again (with or without the direction mark). */
 	void reloadResidentRows () {
+		if (deferNative ()) return;
 		int first = plan.first (), size = plan.size ();
 		resetNative ();
 		for (int i = 0; i < size; i++) insertNative (i, first + i);
@@ -1356,6 +1411,12 @@ final class ListViewport {
 	 * the original. Drawing is suspended: the list box may scroll; positionPlane puts the top back.
 	 */
 	private void mirror (int message, long wParam, long lParam) {
+		/* a stale window has nothing to mirror into: its rows and focus are written whole when it shows */
+		boolean wasStale = stale;
+		if (deferNative () || wasStale) {
+			focusDirty = true;
+			return;
+		}
 		long handle = list.handle;
 		boolean redraw = list.getDrawing () && OS.IsWindowVisible (handle);
 		if (redraw) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);

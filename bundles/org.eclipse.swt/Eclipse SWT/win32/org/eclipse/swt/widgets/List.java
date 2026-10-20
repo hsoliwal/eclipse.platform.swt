@@ -3503,4 +3503,13 @@ long m3WindowReplans () {
 	checkWidget ();
 	return viewport != null ? viewport.windowReplans () : 0;
 }
+
+/*
+ * Rule 24, hidden viewports: window patches applied when the list showed again after taking deltas while hidden, and
+ * WM_PAINT messages the list box received: {patches, paints}.
+ */
+long [] m3HiddenStats () {
+	checkWidget ();
+	return viewport != null ? new long [] {viewport.windowPatches (), viewport.paints ()} : new long [2];
+}
 }
