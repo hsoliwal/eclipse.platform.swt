@@ -1,0 +1,8 @@
+remove 1000 middle, one model.remove per row	100000	11.39 ms	47 KB
+remove 1000 middle, one run	100000	0.02 ms	0 KB
+setItems, per-item copy then model copy	100000	1.44 ms	782 KB
+setItems, model copy only	100000	0.28 ms	391 KB
+remove 1000 middle, one model.remove per row	1000000	121.72 ms	0 KB
+remove 1000 middle, one run	1000000	0.11 ms	0 KB
+setItems, per-item copy then model copy	1000000	20.78 ms	7813 KB
+setItems, model copy only	1000000	3.66 ms	3907 KB
