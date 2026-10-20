@@ -67,6 +67,9 @@ public class ExpandBar extends Composite {
 	 * one band height), so that a layout from item i > 0 can continue from item i - 1 instead of summing all before.
 	 */
 	int layoutBand = -1;
+	/* VIEWPORT: the client rectangle of the running layout (valid while redrawClientValid) and ExpandItem.redraw's scratch */
+	final RECT redrawClient = new RECT (), redrawRect = new RECT ();
+	boolean redrawClientValid;
 	long hFont;
 
 /**
@@ -532,13 +535,22 @@ void layoutItems (int index, boolean setScrollbar) {
 		if (VIEWPORT) {
 			layoutBand = index == 0 || band == layoutBand ? band : -1;
 		}
-		for (int i = index; i < itemCount; i++) {
-			ExpandItem item = items [i];
-			item.setBoundsInPixels (spacing, y, 0, 0, true, false);
-            if (item.expanded) {
-                y += item.height;
-            }
-			y += item.getHeaderHeightInPixels () + spacing;
+		if (VIEWPORT) {
+			//FLLDCIM: HPCPOP - one GetClientRect per layout instead of two per moved item (ExpandItem.redraw)
+			OS.GetClientRect (handle, redrawClient);
+			redrawClientValid = true;
+		}
+		try {
+			for (int i = index; i < itemCount; i++) {
+				ExpandItem item = items [i];
+				item.setBoundsInPixels (spacing, y, 0, 0, true, false);
+				if (item.expanded) {
+					y += item.height;
+				}
+				y += item.getHeaderHeightInPixels () + spacing;
+			}
+		} finally {
+			redrawClientValid = false;
 		}
 	}
     if (setScrollbar) {

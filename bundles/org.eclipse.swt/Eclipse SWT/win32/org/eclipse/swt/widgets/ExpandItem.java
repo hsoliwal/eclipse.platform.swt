@@ -392,12 +392,15 @@ void redraw (boolean all) {
 	int zoom = getAutoscalingZoom();
 	int imageHeightInPixels = DPIUtil.pointToPixel(imageHeight, zoom);
 	int imageWidthInPixels = DPIUtil.pointToPixel(imageWidth, zoom);
-	RECT rect = new RECT ();
+	RECT rect = ExpandBar.VIEWPORT ? parent.redrawRect : new RECT ();
 	RECT client = null;
 	if (ExpandBar.VIEWPORT) {
 		//FLLDCIM: VIEWPORT - an invalidation off the client area adds nothing to the update region (clipped to it)
-		client = new RECT ();
-		OS.GetClientRect (parentHandle, client);
+		client = parent.redrawClient;
+		if (!parent.redrawClientValid) {
+			//FLLDCIM: HPCPOP - inside a layout the layout's client rectangle; no allocation either way
+			OS.GetClientRect (parentHandle, client);
+		}
 	}
 	int left = all ? x : x + width - headerHeightInPixels;
 	OS.SetRect (rect, left, y, x + width, y + headerHeightInPixels);
