@@ -488,7 +488,14 @@ public final class M3ColumnSort extends M3RowViewBase {
 		for (int i = 0; i < in.rowCount; i++) change.add (in.rows [i]);
 		int first = -1;
 		switch (kind) {
-			case M3RowChange.RESET: first = takePrepared ? preparedFirst : 0; if (!takePrepared) rebuild (); takePrepared = false; break;
+			case M3RowChange.RESET:
+				first = takePrepared ? preparedFirst : 0;
+				if (!takePrepared) {
+					fullPasses++;
+					rebuild ();
+				}
+				takePrepared = false;
+				break;
 			case M3RowChange.INSERTED: order.insertSourceRange (in.start, in.count); first = order.insert (in.rows, in.rowCount); break;
 			case M3RowChange.REMOVED: first = order.removeSourceRange (in.start, in.count); break;
 			case M3RowChange.ENTERED: first = order.insert (in.rows, in.rowCount); break;

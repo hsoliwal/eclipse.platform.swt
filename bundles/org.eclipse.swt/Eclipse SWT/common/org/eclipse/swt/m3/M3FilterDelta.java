@@ -44,20 +44,53 @@ final class M3FilterDelta {
 		}
 		int skipStart = 0, skipEnd = 0;
 		if (kind == M3RowChange.INSERTED || kind == M3RowChange.REMOVED) {
-			change.set (kind, in.start, in.count);
+			structural (in, kept);
 			if (kind == M3RowChange.INSERTED) {
 				skipStart = in.start;
 				skipEnd = in.start + in.count;
-				for (int row = skipStart; row < skipEnd; row++) {
-					if (M3RowMask.get (kept, row)) change.add (row);
-				}
 			}
-			change.damage (filter.rankBefore (in.start), last);
-			filter.fire ();
 		}
 		emit (M3RowChange.LEFT, previous, kept, words, 0, 0);
 		if (kind == M3RowChange.UPDATED) updated (in, previous, kept);
 		emit (M3RowChange.ENTERED, kept, previous, words, skipStart, skipEnd);
+	}
+
+	/* the INSERTED or REMOVED event of a source edit: the inserted rows that pass, damage from the edit to the end */
+	void structural (M3RowChange in, long [] kept) {
+		if (!filter.hasListeners ()) return;
+		change.set (in.kind, in.start, in.count);
+		if (in.kind == M3RowChange.INSERTED) {
+			for (int row = in.start; row < in.start + in.count; row++) {
+				if (M3RowMask.get (kept, row)) change.add (row);
+			}
+		}
+		change.damage (filter.rankBefore (in.start), filter.size () - 1);
+		filter.fire ();
+	}
+
+	/* the change of an UPDATED edit of a flat filter, where only the edited rows can differ between previous and kept */
+	void changedRows (M3RowChange in, long [] previous, long [] kept) {
+		if (!filter.hasListeners ()) return;
+		emitRows (M3RowChange.LEFT, in, previous, kept);
+		updated (in, previous, kept);
+		emitRows (M3RowChange.ENTERED, in, kept, previous);
+	}
+
+	/* fires the edited rows that are in a and not in b, if any (as emit, without the scan) */
+	private void emitRows (int kind, M3RowChange in, long [] a, long [] b) {
+		int first = -1;
+		for (int i = 0; i < in.rowCount; i++) {
+			int row = in.rows [i];
+			if (!M3RowMask.get (a, row) || M3RowMask.get (b, row)) continue;
+			if (first < 0) {
+				first = row;
+				change.set (kind, 0, 0);
+			}
+			change.add (row);
+		}
+		if (first < 0) return;
+		change.damage (filter.rankBefore (first), filter.size () - 1);
+		filter.fire ();
 	}
 
 	/* fires the rows of a & ~b outside [skipStart, skipEnd), if any */

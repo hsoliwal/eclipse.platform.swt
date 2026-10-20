@@ -354,6 +354,77 @@ public class Test_M3ColumnFilter {
 		return any != ((match.mode () & M3TextMatch.NEGATE) != 0);
 	}
 
+	/* the package-private count of input changes a view applied by a full pass (brief rule 24: edits are deltas) */
+	static int fullPasses (M3RowView view) {
+		try {
+			java.lang.reflect.Field field = Class.forName ("org.eclipse.swt.m3.M3RowViewBase").getDeclaredField ("fullPasses");
+			field.setAccessible (true);
+			return field.getInt (view);
+		} catch (ReflectiveOperationException e) {
+			return fail (e);
+		}
+	}
+
+	/* applies a change of a filter to a list of its rows (source order), as a listener that keeps a copy would */
+	static void replay (List<Integer> mirror, M3RowChange change, M3RowView view) {
+		int start = change.start (), count = change.count ();
+		switch (change.kind ()) {
+			case M3RowChange.RESET:
+				mirror.clear ();
+				for (int i = 0; i < view.size (); i++) mirror.add (view.map (i));
+				return;
+			case M3RowChange.INSERTED:
+				mirror.replaceAll (row -> row >= start ? row + count : row);
+				break;
+			case M3RowChange.REMOVED:
+				mirror.removeIf (row -> row >= start && row < start + count);
+				mirror.replaceAll (row -> row >= start + count ? row - count : row);
+				return;
+			case M3RowChange.LEFT:
+				for (int i = 0; i < change.rowCount (); i++) mirror.remove ((Integer) change.row (i));
+				return;
+			default:
+				break;
+		}
+		if (change.kind () == M3RowChange.UPDATED) return;
+		for (int i = 0; i < change.rowCount (); i++) {
+			int row = change.row (i), at = Collections.binarySearch (mirror, row);
+			assertTrue (at < 0, "row " + row + " entered twice");
+			mirror.add (-at - 1, row);
+		}
+	}
+
+	@Test
+	public void test_sourceEditsAreDeltasThatReplay () {
+		Random random = new Random (24);
+		for (int seed = 0; seed < 30; seed++) {
+			Test_M3ColumnSort.Rows rows = new Test_M3ColumnSort.Rows (random.nextInt (400), seed, 2 + random.nextInt (9));
+			M3CellText text = text (rows);
+			M3ColumnFilter filter = new M3ColumnFilter (4, rows.size (), text);
+			criterion (filter, random);
+			List<Integer> mirror = new ArrayList<> ();
+			for (int row : rows (filter)) mirror.add (row);
+			int [] resets = {0};
+			filter.addListener (change -> {
+				if (change.kind () == M3RowChange.RESET) resets [0]++;
+				replay (mirror, change, filter);
+			});
+			int passes = fullPasses (filter);
+			for (int step = 0; step < 60; step++) {
+				if (random.nextInt (4) == 0) criterion (filter, random); else Test_M3ColumnSort.edit (rows, filter, random);
+				List<Integer> expected = new ArrayList<> ();
+				for (int row = 0; row < rows.size (); row++) {
+					if (passes (filter, text, row)) expected.add (row);
+				}
+				String where = "seed " + seed + " step " + step;
+				assertEquals (expected, mirror, where);
+				assertArrayEquals (expected.stream ().mapToInt (Integer::intValue).toArray (), rows (filter), where);
+				for (int row = 0; row < rows.size (); row++) assertEquals (expected.indexOf (row), filter.unmap (row), where + " row " + row);
+			}
+			assertEquals (passes + resets [0], fullPasses (filter), "only a new source (RESET) is a full pass");
+		}
+	}
+
 	@Test
 	public void test_typingRefinementsEqualAFreshEvaluation () {
 		Random random = new Random (8);

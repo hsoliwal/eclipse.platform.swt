@@ -70,7 +70,7 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	private M3FilterWorker worker;
 	private IntUnaryOperator parentOf;
 	private long [] matched = {}, kept = {}, previous = {};
-	private int [] rows = {}, rank = {};
+	private int [] rows = {}, rank = {}, spare = {}, flipRows = {}, flipAt = {};
 	private int size;
 	private final M3FilterDelta delta = new M3FilterDelta (this);
 
@@ -387,31 +387,135 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	void inputChanged (M3RowChange in) {
 		generation++;
 		if (worker != null && anyDirty ()) worker.schedule ();
+		if (parentOf == null && in.kind != M3RowChange.RESET) {
+			applyDelta (in);
+			return;
+		}
+		/* a new source (RESET), or tree mode, where the ancestor rule needs the whole fold */
+		fullPasses++;
 		int n = sourceSize ();
 		switch (in.kind) {
 			case M3RowChange.INSERTED: shift (in.start, in.count, true); evaluate (in.start, in.start + in.count); break;
 			case M3RowChange.REMOVED: shift (in.start, in.count, false); break;
-			case M3RowChange.UPDATED:
-				for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1);
-				if (parentOf == null && sameStatus (in)) {
-					if (hasListeners ()) delta.updated (in, previous, kept);
-					return;
-				}
-				break;
+			case M3RowChange.UPDATED: for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1); break;
 			default: for (M3FilterCriterion criterion : criteria) criterion.mask = new long [M3RowMask.words (n)]; evaluate (0, n); break;
 		}
 		recompute (in);
 	}
 
-	/* whether every changed row still passes (or still fails) the fold: then only UPDATED is reported, without an O(n) pass */
-	private boolean sameStatus (M3RowChange in) {
-		for (int i = 0; i < in.rowCount; i++) {
-			int row = in.rows [i];
-			if (M3FilterCriterion.passes (criteria, row) != M3RowMask.get (kept, row)) return false;
+	/*
+	 * a model delta of a flat filter, applied to the edited rows only: their criterion bits are evaluated (bit flips),
+	 * the rows whose status flips are moved in the rows lane in one pass from the first of them, the word ranks are
+	 * recounted from there, and the change is reported from the edited rows (no fold, compaction or scan over n)
+	 */
+	private void applyDelta (M3RowChange in) {
+		int n = sourceSize (), start = in.start, count = in.count;
+		switch (in.kind) {
+			case M3RowChange.INSERTED: {
+				int old = n - count, at = positionBefore (start, old);
+				shift (start, count, true);
+				matched = shift (matched, old, n, start, count, true);
+				kept = shift (kept, old, n, start, count, true);
+				evaluate (start, start + count);
+				int entering = 0;
+				for (int row = start; row < start + count; row++) {
+					if (M3FilterCriterion.passes (criteria, row)) {
+						M3RowMask.set (matched, row, true);
+						M3RowMask.set (kept, row, true);
+						entering++;
+					}
+				}
+				rows = capacity (rows, size + entering);
+				for (int i = size - 1; i >= at; i--) rows [i + entering] = rows [i] + count;
+				for (int row = start, p = at; p < at + entering; row++) {
+					if (M3RowMask.get (kept, row)) rows [p++] = row;
+				}
+				size += entering;
+				rerank (start >>> 6, n);
+				delta.structural (in, kept);
+				for (int row = start; row < start + count; row++) {
+					if (M3RowMask.get (kept, row)) M3RowMask.set (previous, row, true);
+				}
+				break;
+			}
+			case M3RowChange.REMOVED: {
+				int old = n + count, from = positionBefore (start, old), to = positionBefore (start + count, old);
+				shift (start, count, false);
+				matched = shift (matched, old, n, start, count, false);
+				kept = shift (kept, old, n, start, count, false);
+				for (int i = to; i < size; i++) rows [i - to + from] = rows [i] - count;
+				size -= to - from;
+				rerank (start >>> 6, n);
+				delta.structural (in, kept);
+				break;
+			}
+			default:
+				updated (in);
+				break;
 		}
-		return true;
 	}
 
+	/* the view position of a source row (the number of kept rows before it) in lanes of oldSize source rows */
+	private int positionBefore (int sourceRow, int oldSize) {
+		if (sourceRow >= oldSize) return size;
+		int w = sourceRow >>> 6;
+		return rank [w] + Long.bitCount (kept [w] & (1L << sourceRow) - 1);
+	}
+
+	/* an UPDATED edit: rows whose status flips leave or enter the rows lane, merged in one pass from the first flip */
+	private void updated (M3RowChange in) {
+		for (int i = 0; i < in.rowCount; i++) evaluate (in.rows [i], in.rows [i] + 1);
+		int flips = 0, entering = 0;
+		flipRows = capacity (flipRows, in.rowCount);
+		flipAt = capacity (flipAt, in.rowCount);
+		for (int i = 0; i < in.rowCount; i++) {
+			int row = in.rows [i];
+			boolean was = M3RowMask.get (kept, row);
+			if (M3FilterCriterion.passes (criteria, row) == was) continue;
+			flipAt [flips] = positionBefore (row, sourceSize ());
+			flipRows [flips++] = was ? ~row : row;
+			if (!was) entering++;
+		}
+		if (flips > 0) {
+			int first = flipAt [0], tail = size - first, out = first, read = first;
+			spare = capacity (spare, tail);
+			System.arraycopy (rows, first, spare, 0, tail);
+			rows = capacity (rows, size + entering);
+			for (int f = 0; f < flips; f++) {
+				int at = flipAt [f], row = flipRows [f];
+				System.arraycopy (spare, read - first, rows, out, at - read);
+				out += at - read;
+				read = at;
+				if (row < 0) {
+					read++;
+					row = ~row;
+				} else {
+					rows [out++] = row;
+				}
+				M3RowMask.set (matched, row, row == flipRows [f]);
+				M3RowMask.set (kept, row, row == flipRows [f]);
+			}
+			System.arraycopy (spare, read - first, rows, out, size - read);
+			size = out + size - read;
+			rerank ((flipRows [0] < 0 ? ~flipRows [0] : flipRows [0]) >>> 6, sourceSize ());
+		}
+		delta.changedRows (in, previous, kept);
+		for (int f = 0; f < flips; f++) {
+			int row = flipRows [f] < 0 ? ~flipRows [f] : flipRows [f];
+			M3RowMask.set (previous, row, flipRows [f] >= 0);
+		}
+	}
+
+	/* recounts the word ranks after word fromWord (the ranks up to it are unchanged) */
+	private void rerank (int fromWord, int n) {
+		int words = M3RowMask.words (n);
+		if (rank.length < words) rank = Arrays.copyOf (rank, Math.max (words, rank.length + (rank.length >> 1)));
+		for (int w = fromWord + 1; w < words; w++) rank [w] = rank [w - 1] + Long.bitCount (kept [w - 1]);
+	}
+
+	private static int [] capacity (int [] lane, int length) {
+		return lane.length >= length ? lane : Arrays.copyOf (lane, Math.max (length, lane.length + (lane.length >> 1)));
+	}
 
 	private void evaluate (int start, int end) {
 		for (M3FilterCriterion criterion : criteria) {

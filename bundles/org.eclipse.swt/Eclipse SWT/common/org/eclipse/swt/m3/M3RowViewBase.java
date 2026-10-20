@@ -32,6 +32,8 @@ abstract class M3RowViewBase implements M3RowView {
 	private final M3RowView.Listener inputListener;
 	private M3RowView.Listener [] listeners = NO_LISTENERS;
 	private int rootSourceSize;
+	/* input changes this view applied by a pass over all its rows (re-evaluation, fold or re-sort) instead of a delta */
+	int fullPasses;
 
 	M3RowViewBase (M3RowView input, int sourceSize) {
 		this.input = input;

@@ -115,6 +115,7 @@ public class Test_M3SortFilterDifferential {
 			window.setWindow (expected.length / 2, 40);
 			for (int i = 0; i < window.size (); i++) assertEquals (expected [expected.length / 2 + i], window.map (i));
 
+			int filterPasses = Test_M3ColumnFilter.fullPasses (filter), sortPasses = Test_M3ColumnFilter.fullPasses (sort);
 			Random random = new Random (n + 1);
 			int updates = 1000;
 			start = System.nanoTime ();
@@ -132,6 +133,9 @@ public class Test_M3SortFilterDifferential {
 			}
 			sort.rowsChanged (batch);
 			time ("m3-batch-update-1pct", n, System.nanoTime () - start);
+			assertEquals (filterPasses, Test_M3ColumnFilter.fullPasses (filter), "n " + n + ": value updates are filter deltas");
+			assertEquals (sortPasses, Test_M3ColumnFilter.fullPasses (sort), "n " + n + ": value updates are sort deltas");
+			assertEquals (0, Test_M3ColumnFilter.fullPasses (window), "n " + n + ": the window applies deltas");
 			start = System.nanoTime ();
 			filter.setText (3, "w1*", M3TextMatch.WILDCARD);
 			filter.setText (3, "w1*,w2*", M3TextMatch.WILDCARD);
@@ -162,10 +166,17 @@ public class Test_M3SortFilterDifferential {
 				d [k] = random.nextBoolean () ? SWT.UP : SWT.DOWN;
 			}
 			sort.setSortKeys (c, d);
+			int [] resets = {0, 0};
+			filter.addListener (change -> resets [0] += change.kind () == M3RowChange.RESET ? 1 : 0);
+			sort.addListener (change -> resets [1] += change.kind () == M3RowChange.RESET ? 1 : 0);
+			int filterPasses = Test_M3ColumnFilter.fullPasses (filter), sortPasses = Test_M3ColumnFilter.fullPasses (sort);
 			for (int step = 0; step < 40; step++) {
 				if (random.nextInt (3) == 0) Test_M3ColumnFilter.criterion (filter, random); else Test_M3ColumnSort.edit (rows, sort, random);
 				assertArrayEquals (Test_M3ColumnFilter.reference (rows, filter, text, c, d), Test_M3ColumnSort.order (sort), "seed " + seed + " step " + step);
 			}
+			/* brief rule 24: only a new source (setSourceSize, one RESET) is applied by a full pass */
+			assertEquals (filterPasses + resets [0], Test_M3ColumnFilter.fullPasses (filter), "seed " + seed);
+			assertEquals (sortPasses + resets [1], Test_M3ColumnFilter.fullPasses (sort), "seed " + seed);
 		}
 	}
 }
