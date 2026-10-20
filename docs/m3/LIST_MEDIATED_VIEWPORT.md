@@ -284,6 +284,47 @@ the resident window performs zero native row operations. On List:
   window with a selection costs at most the two anchor operations; a run inside the window (3 out, 2 in) costs at
   most 7. Compile-clean; the run on the hidden desktop (build `lv19`) is queued.
 
+### Regression in `f9bfbb08b4` (fixed in `72f5933279`)
+
+The model-seam commit routed the native row operations through counting helpers with a `sed` rewrite that also
+rewrote the helpers' own bodies: `deleteNative` and `resetNative` called themselves, so every row deletion or reset
+of a List in the viewport mode overflowed the stack. It was compile-clean and reached integration round 12 before a
+UI run; `72f5933279` sends `LB_DELETESTRING` / `LB_RESETCONTENT` again, and `lv21` passes the List differential against
+fresh official recordings. Compile-only checks are not enough for routing edits: the gate is now a UI run before a
+leaf is reported.
+
+### Optimization pass (2026-10-20, `C:/m3-superset/tools/OPTIMIZATION_PASS.md`)
+
+Ledger: [`list-viewport/OPTIMIZATION_LEDGER.tsv`](list-viewport/OPTIMIZATION_LEDGER.tsv). Measured so far (headless,
+lane work, `evidence/ListModelMicroBench`): `remove (start, end)` of 1,000 rows as one run 121.72 -> 0.11 ms at 10^6
+(O1); `setItems` without the second copy 20.78 -> 3.66 ms and 7.8 -> 3.9 MB (O2); 1,000 rows inserted as one
+`m3Splice` run 3.98 ms against 119.44 ms through `List.add` (O3). Other leaves committed and awaiting the UI bench
+(`list_ops_bench.sh`, `evidence/ListComboOpsBench`: wall time, allocations, LB/CB messages and row operations at
+10^5 and 10^6): Combo measures widths and sets its scroll width only with `SWT.H_SCROLL`, as stock does (a 10^6
+`setItems` measured every item); the Combo row text buffer is reused; `setItemCount` grows by one run.
+
+### Rule 24: delta-only views
+
+- **Change paths.** `m3FullRebuilds` (List, Combo): native resets of a non-empty window, or windows replaced whole,
+  inside a model change. Asserted 0 after every viewport step of the List and Combo differentials. Every reset and
+  re-plan site is listed with its justification in [`list-viewport/DELTA_GATE.tsv`](list-viewport/DELTA_GATE.tsv).
+- **Viewport deltas (resize, layout).** `m3WindowReplans` counts windows replaced whole; the Combo also counts its
+  drop-down row operations (`m3NativeRowOps`). `resizeSweepMovesOnlyTheRowsEnteringOrLeaving` (50 list heights: 1 px
+  up and down, then jumps) and `droppedResizeSweepMovesOnlyTheRowsEnteringOrLeaving` (50 dropped visible-item counts
+  with combo widths) assert no re-plan and native row operations equal to the rows entering or leaving the window.
+- **Hidden viewports.** A List whose list box is hidden (the shared `EffectiveVisibility`: hidden chain, minimized,
+  zero size, clipped out; or `setRedraw (false)`) takes every delta in the lanes; the native window is only marked
+  stale and enlisted with the shared gate (`deferKinds`, `DIRTY_DATA`). The `VisibilityGate.CATCH_UP` event, or the
+  first paint, input or layout that finds it visible, applies one window patch, and the list paints once. A closed
+  Combo drop-down (a hidden combo is closed too) takes item deltas that keep the selected row in the lanes only: the
+  window plan follows them logically, the selection is a lane, and the face keeps its native row; the first drop,
+  key, selection or removal of the selected row applies one patch. Gates:
+  `hiddenDeltasAnswerLikeTheReference` (List: hide, 10,000 deltas in ten steps, show; no row operation or paint while
+  hidden, one patch and one paint pass on show; every step and the pixels against the reference) and
+  `closedDeltasAnswerLikeTheReference` (Combo: select, 10,000 deltas, drop, close; no row operation while closed, one
+  patch on drop). The SWT-level `SWT.PartVisible` / `PartHidden` events (all-widgets agent) will replace the local
+  triggers when they land.
+
 ### Naming against `TreeViewport` (tree branch `5c9f8b2121`)
 
 `ListViewport` shares 28 method names with `TreeViewport` (`keepRowVisible` and `deleteResidentRow` adopted on
