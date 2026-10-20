@@ -89,6 +89,13 @@ final class TreeViewport {
 	private int drivingCaret;
 	/* counts window rebuilds, so a native call that rebuilt the window re-entrantly is noticed */
 	private int rebuilds;
+	/*
+	 * Delta-only gate (brief rule 24): a window commit is a delta, it keeps every row that stays in the window and
+	 * inserts only the rows entering it. fullRebuilds counts commits that inserted all rows again although rows of the
+	 * old window stayed, reinsertedRows the rows inserted again although resident; both stay 0 (the differential reads them).
+	 */
+	int fullRebuilds;
+	long reinsertedRows;
 	/* the item height of the last layout: the bar's page follows a new item height only at the next layout (itemHeightKey) */
 	private int layoutItemHeight;
 
@@ -163,6 +170,11 @@ final class TreeViewport {
 		NativeWindow window = nativeWindow ();
 		plan.plan (window.count, window.parentIds, window.childIndices, window.physicalParents);
 		int count = plan.plannedCount ();
+		if (plan.reinsertedCount () > 0) {
+			reinsertedRows += plan.reinsertedCount ();
+			if (plan.reinsertedCount () == plan.overlapCount ()) fullRebuilds++;
+			LOG.debug (() -> "Tree window commit inserts " + plan.reinsertedCount () + " of " + plan.overlapCount () + " staying rows again");
+		}
 		boolean redraw = tree.getDrawing () && OS.IsWindowVisible (tv);
 		if (redraw) OS.DefWindowProc (tv, OS.WM_SETREDRAW, 0, 0);
 		boolean oldShrink = tree.ignoreShrink, oldSelect = tree.ignoreSelect, oldDeselect = tree.ignoreDeselect;

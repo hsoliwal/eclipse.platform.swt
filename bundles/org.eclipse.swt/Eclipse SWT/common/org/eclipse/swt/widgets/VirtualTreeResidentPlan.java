@@ -43,6 +43,8 @@ final class VirtualTreeResidentPlan {
 	private int [] previousSiblings = new int [0];
 	private boolean [] kept = new boolean [0];
 	private int plannedCount, retiredCount;
+	/* the last plan: next entries whose key was committed (overlap) and those of them that are inserted again (reinserted) */
+	private int overlapCount, reinsertedCount;
 
 	static long key (int parentId, int childIndex) {
 		return ((long) parentId << 32) | (childIndex & 0xFFFFFFFFL);
@@ -92,6 +94,7 @@ final class VirtualTreeResidentPlan {
 		}
 		if (kept.length < size) kept = new boolean [capacity (kept.length, size)];
 		Arrays.fill (kept, 0, size, false);
+		overlapCount = reinsertedCount = 0;
 		int [] lastChild = new int [count + 1];
 		Arrays.fill (lastChild, -1);
 		for (int entry = 0; entry < count; entry++) {
@@ -104,11 +107,13 @@ final class VirtualTreeResidentPlan {
 			 * Reusing the child's old handle after deleting that parent would be use-after-delete. */
 			boolean parentSurvives = physicalParent == -1 || planned [physicalParent] != 0;
 			Integer slot = slotByKey.get (key (parentIds [entry], childIndices [entry]));
+			if (slot != null) overlapCount++;
 			if (parentSurvives && slot != null && !kept [slot]) {
 				kept [slot] = true;
 				planned [entry] = handles [slot];
 			} else {
 				planned [entry] = 0;
+				if (slot != null) reinsertedCount++;
 			}
 		}
 		plannedCount = count;
@@ -157,6 +162,16 @@ final class VirtualTreeResidentPlan {
 
 	int retiredCount () {
 		return retiredCount;
+	}
+
+	/** Next entries of the last plan whose row was in the committed window (by key). */
+	int overlapCount () {
+		return overlapCount;
+	}
+
+	/** Entries of {@link #overlapCount()} that the last plan inserts again (their native parent does not survive). */
+	int reinsertedCount () {
+		return reinsertedCount;
 	}
 
 	/** Top-most native row to delete; deleting it deletes its native subtree. */

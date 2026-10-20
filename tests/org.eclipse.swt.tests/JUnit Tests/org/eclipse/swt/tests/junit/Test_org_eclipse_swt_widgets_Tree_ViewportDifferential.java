@@ -639,6 +639,34 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 	}
 
 	/*
+	 * Delta-only gate (brief rule 24): every model change of the scripts reached the native window as a delta, no
+	 * window commit inserted rows again that stayed in the window (TreeViewport.fullRebuilds and reinsertedRows stay 0).
+	 * Stock SWT (the recording side) and the original mode have no viewport: nothing to check there.
+	 */
+	static void assertDeltaOnly (Tree tree, boolean record) {
+		if (record) return;
+		try {
+			java.lang.reflect.Field field = Tree.class.getDeclaredField ("viewport");
+			field.setAccessible (true);
+			Object viewport = field.get (tree);
+			if (viewport == null) return;
+			java.lang.reflect.Field full = viewport.getClass ().getDeclaredField ("fullRebuilds"), rows = viewport.getClass ().getDeclaredField ("reinsertedRows");
+			full.setAccessible (true);
+			rows.setAccessible (true);
+			int fullRebuilds = full.getInt (viewport);
+			long reinserted = rows.getLong (viewport);
+			java.util.logging.Logger.getLogger (Test_org_eclipse_swt_widgets_Tree_ViewportDifferential.class.getName ())
+				.info (() -> "delta gate: " + fullRebuilds + " full window rebuilds, " + reinserted + " staying rows inserted again");
+			Assertions.assertEquals (0, fullRebuilds, "full window rebuilds on model changes");
+			Assertions.assertEquals (0L, reinserted, "rows of the window inserted again on model changes");
+		} catch (NoSuchFieldException e) {
+			/* a build without the gate counters (official jar) */
+		} catch (IllegalAccessException e) {
+			throw new AssertionError (e);
+		}
+	}
+
+	/*
 	 * Keyboard cues (focus rectangles) follow the thread's input history: SWT's traversal code sends
 	 * WM_CHANGEUISTATE UIS_INITIALIZE for real keyboard input, scripted keys are sent messages, and the state a
 	 * new shell starts with depends on the tests run before it. Both sides are captured with the cues hidden.
@@ -711,6 +739,7 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 		tree.setFocus ();
 		ViewportDifferential.settle (display, 120);
 		harness ().compareWithRecording (subject, record, System.getProperty ("swt.viewport.recording"));
+		assertDeltaOnly (tree, record);
 	}
 
 	/** The same scripts plus check boxes and columns (width, order, showColumn, sort indicator), against stock SWT. */
@@ -726,6 +755,7 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 		tree.setFocus ();
 		ViewportDifferential.settle (display, 120);
 		harness (true).compareWithRecording (subject, record, System.getProperty ("swt.viewport.recording"));
+		assertDeltaOnly (tree, record);
 	}
 
 	/**
@@ -744,6 +774,7 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 		tree.setFocus ();
 		ViewportDifferential.settle (display, 120);
 		harness (false, false, true).compareWithRecording (subject, record, System.getProperty ("swt.viewport.recording"));
+		assertDeltaOnly (tree, record);
 	}
 
 	/**
@@ -762,6 +793,7 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 		tree.setFocus ();
 		ViewportDifferential.settle (display, 120);
 		harness (false, false, false, false, true).compareWithRecording (subject, record, System.getProperty ("swt.viewport.recording"));
+		assertDeltaOnly (tree, record);
 	}
 
 	/**
@@ -782,6 +814,7 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 		ViewportDifferential.parkCursor (display);
 		ViewportDifferential.settle (display, 120);
 		harness (false, false, false, true).compareWithRecording (subject, record, System.getProperty ("swt.viewport.recording"));
+		assertDeltaOnly (tree, record);
 	}
 
 	/**
@@ -801,5 +834,6 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 		ViewportDifferential.parkCursor (display);
 		ViewportDifferential.settle (display, 120);
 		harness (false, true).compareWithRecording (subject, record, System.getProperty ("swt.viewport.recording"));
+		assertDeltaOnly (tree, record);
 	}
 }
