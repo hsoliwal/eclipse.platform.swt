@@ -209,3 +209,24 @@ paint code per control.
 | Footer info popup | click a footer cell: the aggregate breakdown (sum, count, average, min, max, per group), switch the aggregate shown, copy | AG Grid status bar aggregation (pattern), NatTable summary row (EPL) | sort-filter |
 | Tree footer | trees get a footer row like tables: per-column aggregates over all, filtered or visible rows; optional per-branch subtotal rows; updated by deltas (O(changed + depth) via subtree aggregate lanes, Fenwick-style); pinned at the bottom of the viewport | NatTable summary row (EPL: ADAPT), TanStack aggregation (MIT: ADAPT) | Tree track (SWT Tree footer inside the widget, rule 25), Swing track (JTree/JXTreeTable) |
 | Table footer | the same footer for Table and Grid, with the popup above | as above | Table track, nebula-grid |
+
+### What a footer can encode (user, 2026-10-20: "footers are missing, you can encode so much info")
+
+Every list, table, tree and grid gets an optional footer, per column and/or as one footer bar. Each item reads from lane
+counters (O(1)), updates by deltas, and has a footer popup for detail.
+- **Counts:** shown / total / selected ("12 of 10,345, 3 selected"), hidden by filter, collapsed descendants.
+- **Selection summary:** sum, average and count of the selected cells (spreadsheet status bar), copy the summary.
+- **Per-column aggregates:** sum, count, distinct, min, max, average, percent filled; per-branch subtotals in trees.
+- **Column micro-charts:** sparkline, histogram or value distribution of the column, drawn from lanes.
+- **State:** active sort keys and direction, active filters as chips (click to edit or clear), grouping.
+- **Freshness and activity:** last update time, live-stream rate (deltas/s), loading progress (the translucent overlay's
+  twin), pending or failed loads with retry.
+- **Validation and problems:** error and warning counts for the rows (click to jump), as in the Problems view title.
+- **Change summary:** rows added, removed or changed since the last view or save; undo hint.
+- **Paging and position:** current window position ("rows 4,001–4,060"), jump-to-row field.
+- **Hints:** keyboard shortcuts for the view, configurable.
+
+Owners: Tree and Table tracks (the footer inside the widgets, one shared API), sort-filter (aggregates and filter
+chips), render-modes (micro-charts), custom-widgets (footer popups). The footer content is declared in the `.m3view`
+spec (`footer=counts, selection, aggregates:sum(size), sort, filters, freshness, problems`), so every templated view
+gets it.
