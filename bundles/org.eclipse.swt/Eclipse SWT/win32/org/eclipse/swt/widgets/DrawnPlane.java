@@ -59,6 +59,22 @@ abstract class DrawnPlane {
 	private final long update = OS.CreateRectRgn (0, 0, 0, 0);
 	/* winuser.h: invalidate the window only, not its children (the header); OS has no constant for it */
 	private static final int RDW_NOCHILDREN = 0x40;
+	/* rule 28: -Dswt.drawn.renderThread=true draws the frames on the Display's render thread (RenderThread) */
+	static final boolean RENDER_THREAD = Boolean.getBoolean ("swt.drawn.renderThread");
+	/* the plane on the render thread, and the thread; null without it */
+	final RenderTarget renderTarget;
+	private final RenderThread renderThread;
+	/* the slab being filled while a paint goes to the render thread; null otherwise */
+	private FrameSlab slab;
+	/* the damage of the last slab published, added to the next while the render thread has not taken it */
+	private final RECT pending = new RECT ();
+	/* the zoom the render thread's canvas reads (theme parts), written by the UI thread */
+	private volatile int renderZoom = 100;
+	/* font descriptors by handle (the platform is asked once per handle) */
+	private final LongCache<FontDescriptor> fontDescriptors = new LongCache<> (32, descriptor -> {
+		/* nothing to free */
+	});
+	private final LOGFONT logFont = new LOGFONT ();
 
 	/**
 	 * @param control the widget whose <code>handle</code> is the behaviour plane
@@ -83,6 +99,19 @@ abstract class DrawnPlane {
 			data.device = control.display;
 			return control.createNewGC (hdc, data);
 		});
+		if (RENDER_THREAD) {
+			/* the render thread's canvas: made there, reading only the zoom the UI thread writes; it draws image pixels, never an SWT GC */
+			java.util.function.IntSupplier zoom = () -> renderZoom;
+			long hwnd = control.handle;
+			this.renderTarget = new RenderTarget (hwnd, () -> RowBackends.create (mode, widget, hwnd, itemThemeClass, zoom, dc -> {
+				throw new IllegalStateException ("rule 28: the render thread makes no SWT GC");
+			}));
+			this.renderThread = RenderThread.of (control.display);
+			renderThread.add (renderTarget);
+		} else {
+			this.renderTarget = null;
+			this.renderThread = null;
+		}
 		/* a theme change (any thread) repaints the plane on its display's thread, when it changes the theme the plane paints with */
 		Display display = control.display;
 		this.themeChanged = () -> {
@@ -137,11 +166,16 @@ abstract class DrawnPlane {
 		/* rule 24, hidden viewports: every message that reaches the native window procedure is native work */
 		frames.message ();
 		if (msg == OS.WM_PAINT || msg == OS.WM_PRINTCLIENT) return true;
+		/* rule 28: the render thread's completion, and no erase (the frames cover the client; the screen keeps its pixels until the present) */
+		if (renderTarget != null && (msg == RenderTarget.PRESENT || msg == OS.WM_ERASEBKGND)) return true;
 		/* input reaches the model at once; the frame log measures until a frame shows it (interaction model, IM1) */
 		if (msg == OS.WM_KEYDOWN || msg == OS.WM_CHAR || msg == OS.WM_MOUSEWHEEL || msg == OS.WM_LBUTTONDOWN || msg == OS.WM_VSCROLL
 			|| msg == OS.WM_HSCROLL) frames.input (System.nanoTime ());
 		/* what no row key holds: the platform's theme parts and colours, and a font handle that may be reused */
-		if (msg == OS.WM_THEMECHANGED || msg == OS.WM_SYSCOLORCHANGE || msg == OS.WM_SETTINGCHANGE || msg == OS.WM_SETFONT) forgetRows ();
+		if (msg == OS.WM_THEMECHANGED || msg == OS.WM_SYSCOLORCHANGE || msg == OS.WM_SETTINGCHANGE || msg == OS.WM_SETFONT) {
+			forgetRows ();
+			fontDescriptors.clear ();
+		}
 		return false;
 	}
 
@@ -153,6 +187,13 @@ abstract class DrawnPlane {
 	 */
 	final long paint (long hwnd, int msg, long wParam, long lParam) {
 		ThreadRole.UI.check ("DrawnPlane.paint");
+		if (msg == RenderTarget.PRESENT) {
+			/* the render thread finished a frame: blit it when it shows the newest snapshot */
+			OS.GetClientRect (hwnd, client);
+			renderTarget.present (rowsTop, client.right, client.bottom);
+			return 0;
+		}
+		if (msg == OS.WM_ERASEBKGND) return 1;
 		boolean own = msg == OS.WM_PAINT && wParam == 0, visible;
 		if (own) OS.GetUpdateRgn (hwnd, update, false);
 		long target = own ? OS.BeginPaint (hwnd, ps) : wParam;
@@ -174,10 +215,14 @@ abstract class DrawnPlane {
 
 	/* behaviour pass into the back buffer, drawn pass over it, present: the damage is visible */
 	private void draw (long hwnd, int msg, long target, long lParam) {
+		if (renderTarget != null && msg == OS.WM_PAINT) {
+			drawOnRenderThread (hwnd, msg, target, lParam);
+			return;
+		}
 		long begin = System.nanoTime ();
 		buffer.ensureFrame (target, client.right, client.bottom);
 		/* the retained frame has the back buffer's size: a new one keeps no row */
-		if (retained.ensureFrame (target, buffer.width, buffer.height)) forgetRows ();
+		retainedRows.ensure (target, buffer.width, buffer.height);
 		behaviour (hwnd, msg, lParam);
 		if (control.isDisposed ()) return;
 		afterBehaviour (msg);
@@ -187,23 +232,24 @@ abstract class DrawnPlane {
 		row.zoom = control.nativeZoom;
 		/* a theme's own row or cell painter may read state outside the row: its rows are always drawn */
 		Theme theme = renderer.theme ();
-		retain = !OVERLAY && theme.rowPainter == null && theme.cellPainter == null;
-		frameNumber++;
-		kept = rowsIterated = rowsDrawn = 0;
+		/* with a render thread this path serves captures (WM_PRINTCLIENT) only: its slots are not kept up, so it draws every row */
+		boolean retain = renderTarget == null && !OVERLAY && theme.rowPainter == null && theme.cellPainter == null;
 		canvas.target (buffer);
 		canvas.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
+		retainedRows.begin (canvas, renderer, buffer, damage.left, damage.top, damage.right, damage.bottom, client.right, rowsTop, retain);
 		try {
 			drawRows (hwnd);
 			if (OVERLAY) overlay ();
 		} finally {
 			canvas.end ();
 		}
-		retainFrame ();
+		retainedRows.end ();
 		/* rule 24: a frame that drew every row of the rows area is a full repaint; a model delta must not cause one */
 		int width = damage.right - damage.left, height = damage.bottom - damage.top;
 		boolean allRows = damage.left <= 0 && damage.right >= client.right && height * 10L >= (client.bottom - rowsTop) * 9L;
-		frames.damage (allRows && rowsIterated > 0 && rowsDrawn == rowsIterated, (long) width * height);
-		frames.rows (rowsDrawn, kept);
+		int iterated = retainedRows.rowsIterated, drawn = retainedRows.rowsDrawn;
+		frames.damage (allRows && iterated > 0 && drawn == iterated, (long) width * height);
+		frames.rows (drawn, retainedRows.kept);
 		buffer.present (target, damage.left, damage.top, width, height);
 		/* stage 1 paints the live model on the UI thread: one generation per frame until the snapshots of IM2 */
 		frames.frame (begin, System.nanoTime (), frames.frames ());
@@ -261,172 +307,113 @@ abstract class DrawnPlane {
 	/** Paints the rows that intersect the damage, top to bottom (each with {@link #paintRow}), and the empty area below them. */
 	abstract void drawRows (long hwnd);
 
-	/*
-	 * Rule 24, delta based view. The retained frame holds the pixels the plane last presented. Per row slot (a row's
-	 * place in the rows area) the plane keeps what it drew there: the row's key (RowPaint.key: everything the renderer
-	 * reads, compared exactly) and the theme. A row whose key and theme are those of its slot is not drawn again: its
-	 * band is copied back from the retained frame over the behaviour pass. So a native control that invalidates every row
-	 * for a one-row change (a list box insert, a tree delete, a resize) costs one drawn row, not a full repaint. A slot
-	 * is remembered only for a row drawn whole, with the damage spanning the client width; a slot in the damage that no row
-	 * claimed this frame is forgotten.
-	 */
-	private final BackBuffer retained = new BackBuffer ();
-	private int [][] slotKey = new int [0][];
-	private String [][] slotText = new String [0][];
-	private Theme [] slotTheme = new Theme [0];
-	private int [] slotLength = new int [0], slotY = new int [0], slotHeight = new int [0];
-	private long [] slotFrame = new long [0];
-	private int [] key = new int [RowPaint.keyLength (4)];
-	private String [] keyText = new String [4];
-	private int [] keptY = new int [32], keptHeight = new int [32], keptRight = new int [32];
-	/* the right end of the pixels the retained frame holds for a slot's row */
-	private int [] slotRight = new int [0];
-	private int kept, rowsIterated, rowsDrawn;
-	private long frameNumber;
-	private boolean retain;
-	/* the rows area holds at most this many slots: taller planes draw the rows beyond it every time */
-	private static final int SLOTS = 512;
+	/* rule 24, delta based view: the rows the frame keeps instead of drawing (RetainedRows, UI-thread placement) */
+	private final RetainedRows retainedRows = new RetainedRows (false);
 
-	/** Paints the row the plane filled ({@link #row}), or keeps it from the retained frame when its slot shows it already. */
+	/**
+	 * Paints the row the plane filled ({@link #row}), or keeps it when its slot shows it already (rule 24); while a
+	 * paint goes to the render thread, adds it to the snapshot instead (rule 28).
+	 */
 	final void paintRow () {
-		rowsIterated++;
-		int cells = Math.max (1, row.cells);
-		if (key.length < RowPaint.keyLength (cells)) key = new int [RowPaint.keyLength (cells) * 2];
-		if (keyText.length < cells) keyText = new String [cells * 2];
-		int length = retain ? row.key (key, keyText) : -1;
-		int slot = slot ();
-		if (slot >= 0 && length >= 0 && same (slot, length)) {
-			keep (Integer.MAX_VALUE);
-			slotFrame [slot] = frameNumber;
+		if (slab != null) {
+			addRow ();
 			return;
 		}
-		if (slot >= 0 && length >= 0 && widened (slot, length)) {
-			/* rule 24, viewport deltas: only the width changed (a resize); keep the left part, draw the strip on its right */
-			int keepRight = Math.min (slotRight [slot], Math.min (row.x + row.width, client.right));
-			keep (keepRight);
-			canvas.clip (keepRight, row.y, Math.max (0, damage.right - keepRight), row.height);
-			try {
-				renderer.paint (canvas, row);
-			} finally {
-				canvas.unclip ();
-			}
-		} else {
-			renderer.paint (canvas, row);
-			rowsDrawn++;
-		}
-		if (slot < 0) return;
-		slotFrame [slot] = frameNumber;
-		boolean whole = length >= 0 && damage.left <= 0 && damage.right >= client.right && row.y >= damage.top && row.y + row.height <= damage.bottom;
-		if (whole) remember (slot, length); else slotLength [slot] = -1;
+		retainedRows.paint (row);
 	}
 
-	/* a row kept from the retained frame, up to a right end (the strip right of it is drawn) */
-	private void keep (int right) {
-		if (kept == keptY.length) {
-			keptY = java.util.Arrays.copyOf (keptY, kept * 2);
-			keptHeight = java.util.Arrays.copyOf (keptHeight, kept * 2);
-			keptRight = java.util.Arrays.copyOf (keptRight, kept * 2);
+	/** Paints the empty area below the rows with the frame's defaults (or adds it to the snapshot). */
+	final void paintEmpty (int x, int y, int width, int height) {
+		if (slab != null) {
+			int rowY = row.y, rowHeight = row.height;
+			row.y = y;
+			row.height = height;
+			slab.add (row, FrameSlab.EMPTY);
+			row.y = rowY;
+			row.height = rowHeight;
+			return;
 		}
-		keptY [kept] = row.y;
-		keptHeight [kept] = row.height;
-		keptRight [kept++] = right;
+		renderer.paintEmpty (canvas, row, x, y, width, height);
 	}
 
 	/*
-	 * True when the row differs from its slot only in width: the row's width and selection width, and the last cell's
-	 * box and text widths (a list box row spans the client). Its left part is then the pixels the slot holds, unless
-	 * something is anchored at the right end: a focus rectangle (the caret row), an ellipsis, or a last cell that is not
-	 * left-aligned.
+	 * Rule 28: the behaviour pass runs here as always (into the back buffer, for its side effects); the rows go into the
+	 * next snapshot, which the render thread draws; the screen keeps its pixels until the render thread's frame is
+	 * presented (RenderTarget.PRESENT). The UI thread never waits: one exchange publishes, an unpark wakes the thread.
 	 */
-	private boolean widened (int slot, int length) {
-		if (slotLength [slot] != length || slotTheme [slot] != renderer.theme ()) return false;
-		if ((row.state & (RowPaint.CARET | RowPaint.ELLIPSIS)) != 0) return false;
-		int last = 26 + 11 * (Math.max (1, row.cells) - 1);
-		int align = key [last + 6];
-		if (align != 0 && align != SWT.LEFT) return false;
-		int [] remembered = slotKey [slot];
-		for (int i = 0; i < length; i++) {
-			if (remembered [i] == key [i] || i == 2 || i == 5 || i == last + 1 || i == last + 3) continue;
-			return false;
+	private void drawOnRenderThread (long hwnd, int msg, long target, long lParam) {
+		long begin = System.nanoTime ();
+		buffer.ensureFrame (target, client.right, client.bottom);
+		behaviour (hwnd, msg, lParam);
+		if (control.isDisposed ()) return;
+		afterBehaviour (msg);
+		if (!clipDamage (hwnd)) return;
+		currentTheme ();
+		row.zoom = control.nativeZoom;
+		renderZoom = control.getAutoscalingZoom ();
+		/* a slab the render thread has not taken yet is replaced: this one covers both damages, from the current model */
+		if (renderTarget.slabs.fresh ()) {
+			damage.left = Math.max (client.left, Math.min (damage.left, pending.left));
+			damage.top = Math.max (rowsTop, Math.min (damage.top, pending.top));
+			damage.right = Math.min (client.right, Math.max (damage.right, pending.right));
+			damage.bottom = Math.min (client.bottom, Math.max (damage.bottom, pending.bottom));
 		}
-		String [] texts = slotText [slot];
-		for (int i = 0; i < row.cells; i++) {
-			if (!java.util.Objects.equals (texts [i], keyText [i])) return false;
+		OS.SetRect (pending, damage.left, damage.top, damage.right, damage.bottom);
+		Theme theme = renderer.theme ();
+		slab = renderTarget.slabs.writable ();
+		slab.clear ();
+		slab.damageX = damage.left;
+		slab.damageY = damage.top;
+		slab.damageWidth = damage.right - damage.left;
+		slab.damageHeight = damage.bottom - damage.top;
+		slab.clientWidth = client.right;
+		slab.clientHeight = client.bottom;
+		slab.rowsTop = rowsTop;
+		slab.zoom = row.zoom;
+		slab.theme = theme;
+		slab.retain = theme.rowPainter == null && theme.cellPainter == null;
+		try {
+			drawRows (hwnd);
+		} finally {
+			slab = null;
 		}
-		return true;
+		long generation = renderTarget.slabs.publish ();
+		renderThread.wake ();
+		frames.damage (false, (long) (damage.right - damage.left) * (damage.bottom - damage.top));
+		frames.frame (begin, System.nanoTime (), generation);
 	}
 
-	/* the slot of the row's place, or -1; a slot that held another place forgets it */
-	private int slot () {
-		if (row.height <= 0 || row.y < rowsTop) return -1;
-		int slot = (row.y - rowsTop) / row.height;
-		if (slot >= SLOTS) return -1;
-		if (slot >= slotLength.length) growSlots (slot + 1);
-		if (slotY [slot] != row.y || slotHeight [slot] != row.height) slotLength [slot] = -1;
-		return slot;
-	}
-
-	private boolean same (int slot, int length) {
-		if (slotLength [slot] != length || slotTheme [slot] != renderer.theme ()) return false;
-		int [] remembered = slotKey [slot];
-		for (int i = 0; i < length; i++) {
-			if (remembered [i] != key [i]) return false;
+	/* a row into the snapshot: SWT images as pixel copies at the frame's zoom, its fonts described */
+	private void addRow () {
+		for (int c = 0; c < row.cells; c++) {
+			Image image = row.image [c];
+			if (image != null) {
+				/* copied per frame: an image may change in place, and the render thread never reads an SWT image */
+				row.imageData [c] = image.isDisposed () ? null : image.getImageData (renderZoom);
+				row.image [c] = null;
+			}
+			describe (row.cellFont [c]);
 		}
-		String [] texts = slotText [slot];
-		for (int i = 0; i < row.cells; i++) {
-			if (!java.util.Objects.equals (texts [i], keyText [i])) return false;
+		describe (row.font);
+		slab.add (row, FrameSlab.DRAW);
+	}
+
+	private void describe (long handle) {
+		if (handle == 0 || handle == -1 || slab.font (handle) != null) return;
+		FontDescriptor descriptor = fontDescriptors.get (handle);
+		if (descriptor == null) {
+			if (OS.GetObject (handle, LOGFONT.sizeof, logFont) == 0) return;
+			int length = 0;
+			while (length < logFont.lfFaceName.length && logFont.lfFaceName [length] != 0) length++;
+			descriptor = new FontDescriptor (new String (logFont.lfFaceName, 0, length), logFont.lfHeight, logFont.lfWeight, logFont.lfItalic != 0,
+				logFont.lfCharSet & 0xFF, logFont.lfQuality & 0xFF, logFont.lfPitchAndFamily & 0xFF);
+			fontDescriptors.put (handle, descriptor);
 		}
-		return true;
-	}
-
-	private void remember (int slot, int length) {
-		if (slotKey [slot] == null || slotKey [slot].length < length) slotKey [slot] = new int [key.length];
-		System.arraycopy (key, 0, slotKey [slot], 0, length);
-		if (slotText [slot] == null || slotText [slot].length < row.cells) slotText [slot] = new String [keyText.length];
-		System.arraycopy (keyText, 0, slotText [slot], 0, row.cells);
-		slotTheme [slot] = renderer.theme ();
-		slotY [slot] = row.y;
-		slotHeight [slot] = row.height;
-		slotRight [slot] = Math.min (row.x + row.width, client.right);
-		slotLength [slot] = length;
-	}
-
-	private void growSlots (int count) {
-		int n = Math.min (SLOTS, Math.max (count, slotLength.length * 2));
-		int old = slotLength.length;
-		slotKey = java.util.Arrays.copyOf (slotKey, n);
-		slotText = java.util.Arrays.copyOf (slotText, n);
-		slotTheme = java.util.Arrays.copyOf (slotTheme, n);
-		slotLength = java.util.Arrays.copyOf (slotLength, n);
-		slotY = java.util.Arrays.copyOf (slotY, n);
-		slotHeight = java.util.Arrays.copyOf (slotHeight, n);
-		slotRight = java.util.Arrays.copyOf (slotRight, n);
-		slotFrame = java.util.Arrays.copyOf (slotFrame, n);
-		java.util.Arrays.fill (slotLength, old, n, -1);
-		java.util.Arrays.fill (slotY, old, n, Integer.MIN_VALUE);
+		slab.font (handle, descriptor);
 	}
 
 	private void forgetRows () {
-		java.util.Arrays.fill (slotLength, -1);
-	}
-
-	/*
-	 * After the drawn pass: the kept rows' bands come back from the retained frame (over the behaviour pass), slots in the
-	 * damage that no row claimed are forgotten, and the retained frame takes the damage as it will be presented.
-	 */
-	private void retainFrame () {
-		int left = damage.left, width = damage.right - damage.left;
-		for (int i = 0; i < kept; i++) {
-			int top = Math.max (keptY [i], damage.top), bottom = Math.min (keptY [i] + keptHeight [i], damage.bottom);
-			int right = Math.min (damage.right, keptRight [i]);
-			if (bottom > top && right > left) OS.BitBlt (buffer.dc, left, top, right - left, bottom - top, retained.dc, left, top, OS.SRCCOPY);
-		}
-		for (int slot = 0; slot < slotLength.length; slot++) {
-			if (slotLength [slot] >= 0 && slotFrame [slot] != frameNumber && slotY [slot] < damage.bottom && slotY [slot] + slotHeight [slot] > damage.top) {
-				slotLength [slot] = -1;
-			}
-		}
-		OS.BitBlt (retained.dc, left, damage.top, width, damage.bottom - damage.top, buffer.dc, left, damage.top, OS.SRCCOPY);
+		retainedRows.forget ();
 	}
 
 	/** Frees the back buffer and the backend. */
@@ -434,7 +421,8 @@ abstract class DrawnPlane {
 		Themes.removeListener (themeChanged);
 		M3LookAndFeel.uninstallUI (control);
 		buffer.release ();
-		retained.release ();
+		retainedRows.release ();
+		if (renderTarget != null) renderThread.remove (renderTarget);
 		canvas.dispose ();
 		OS.DeleteObject (update);
 	}

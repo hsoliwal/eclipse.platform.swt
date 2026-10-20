@@ -34,6 +34,9 @@ public final class GcRowCanvas implements BufferCanvas {
 	private long hdc;
 	private GC gc;
 	private int saved, clipSaved;
+	/* the fonts of the frame being drawn on the render thread (rule 28), and the GDI fonts made from them */
+	private FontTable table;
+	private final LongCache<OwnFont> ownFonts = new LongCache<> (32, own -> OS.DeleteObject (own.handle));
 	private boolean gcBeforeClip;
 	private final RECT rect = new RECT ();
 	private char [] chars = new char [64];
@@ -94,6 +97,39 @@ public final class GcRowCanvas implements BufferCanvas {
 		OS.RestoreDC (hdc, saved);
 	}
 
+	/*
+	 * The GDI font to draw with: the UI thread's handle itself, or on the render thread (rule 28) a font this canvas made
+	 * from the frame's descriptor of that handle, kept until the handle names another font.
+	 */
+	private long font (long handle) {
+		if (table == null || handle == 0 || handle == -1) return handle;
+		FontDescriptor descriptor = table.font (handle);
+		if (descriptor == null) return handle;
+		OwnFont own = ownFonts.get (handle);
+		if (own != null && own.descriptor.equals (descriptor)) return own.handle;
+		LOGFONT logFont = new LOGFONT ();
+		logFont.lfHeight = descriptor.height ();
+		logFont.lfWeight = descriptor.weight ();
+		logFont.lfItalic = (byte) (descriptor.italic () ? 1 : 0);
+		logFont.lfCharSet = (byte) descriptor.charset ();
+		logFont.lfQuality = (byte) descriptor.quality ();
+		logFont.lfPitchAndFamily = (byte) descriptor.pitchAndFamily ();
+		String face = descriptor.face ();
+		face.getChars (0, Math.min (face.length (), logFont.lfFaceName.length - 1), logFont.lfFaceName, 0);
+		own = new OwnFont (descriptor, OS.CreateFontIndirect (logFont));
+		ownFonts.put (handle, own);
+		return own.handle;
+	}
+
+	/* a GDI font this canvas made for a descriptor (render thread) */
+	private record OwnFont (FontDescriptor descriptor, long handle) {
+	}
+
+	@Override
+	public void fonts (FontTable table) {
+		this.table = table;
+	}
+
 	@Override
 	public void clip (int x, int y, int width, int height) {
 		gcBeforeClip = gc != null;
@@ -125,6 +161,7 @@ public final class GcRowCanvas implements BufferCanvas {
 		if (length == 0 || width <= 0) return;
 		if (chars.length < length) chars = new char [Math.max (length, chars.length * 2)];
 		text.getChars (0, length, chars, 0);
+		font = font (font);
 		long oldFont = font != -1 && font != 0 ? OS.SelectObject (hdc, font) : 0;
 		OS.SetTextColor (hdc, colorRef (rgb));
 		OS.SetRect (rect, x, y, x + width, y + height);
@@ -191,6 +228,7 @@ public final class GcRowCanvas implements BufferCanvas {
 		parts.close ();
 		for (BackBuffer dib : glyphs.values ()) dib.release ();
 		glyphs.clear ();
+		ownFonts.clear ();
 	}
 
 	/** <code>0xRRGGBB</code> to a GDI <code>COLORREF</code>. */

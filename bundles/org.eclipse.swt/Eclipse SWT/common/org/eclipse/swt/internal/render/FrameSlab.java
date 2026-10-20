@@ -28,17 +28,21 @@ import org.eclipse.swt.graphics.*;
  * published, read by the render thread; the lanes grow when a frame needs more and are reused, so a frame allocates
  * nothing once they fit.
  */
-public final class FrameSlab {
+public final class FrameSlab implements FontTable {
 	/** Drawn: the render thread paints the row. */
 	public static final int DRAW = -1;
 	/** Kept whole from the previous frame. */
 	public static final int KEEP = Integer.MAX_VALUE;
+	/** Not a row: the empty area below the rows (its y and height), painted with the row's defaults. */
+	public static final int EMPTY = Integer.MIN_VALUE;
 
 	/** The frame's damage in client pixels, the client size and the top of the rows area. */
 	public int damageX, damageY, damageWidth, damageHeight, clientWidth, clientHeight, rowsTop;
 	/** The window's zoom (glyphs) and the theme the frame paints with. */
 	public int zoom = 100;
 	public Theme theme;
+	/** False when every row must be drawn (a theme with its own row or cell painter). */
+	public boolean retain = true;
 	/** Rows in the frame, top to bottom. */
 	public int rows;
 	private int [] ints = new int [RowPaint.keyLength (4) * 64];
@@ -56,14 +60,15 @@ public final class FrameSlab {
 		Arrays.fill (fonts, 0, fontCount, null);
 		rows = fontCount = cellsUsed = 0;
 		theme = null;
+		retain = true;
 	}
 
 	/**
 	 * Adds a row.
 	 *
 	 * @param row the row as the plane filled it; an SWT image of a cell must already be in its {@link RowPaint#imageData}
-	 * @param keepRight {@link #DRAW}, {@link #KEEP}, or the right end up to which the row is kept (a widened row: the strip
-	 *        right of it is drawn)
+	 * @param keepRight {@link #DRAW}, {@link #KEEP}, the right end up to which the row is kept (a widened row: the strip
+	 *        right of it is drawn), or {@link #EMPTY} for the empty area below the rows
 	 */
 	public void add (RowPaint row, int keepRight) {
 		int cells = Math.max (1, row.cells), at = intStart [rows];
@@ -88,7 +93,7 @@ public final class FrameSlab {
 		into.read (ints, intStart [r], texts, images, cellStart [r]);
 	}
 
-	/** {@link #DRAW}, {@link #KEEP} or the right end up to which row <code>r</code> is kept. */
+	/** {@link #DRAW}, {@link #KEEP}, {@link #EMPTY} or the right end up to which row <code>r</code> is kept. */
 	public int keep (int r) {
 		return keep [r];
 	}
@@ -105,6 +110,7 @@ public final class FrameSlab {
 	}
 
 	/** The descriptor of a font handle the rows name, or null. */
+	@Override
 	public FontDescriptor font (long handle) {
 		for (int i = 0; i < fontCount; i++) {
 			if (fontHandles [i] == handle) return fonts [i];

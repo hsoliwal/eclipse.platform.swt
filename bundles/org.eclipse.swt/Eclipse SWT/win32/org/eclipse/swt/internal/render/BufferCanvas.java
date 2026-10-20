@@ -27,4 +27,11 @@ public interface BufferCanvas extends RowCanvas {
 
 	/** Restores the frame's clip after {@link #clip}. */
 	void unclip ();
+
+	/**
+	 * The fonts of the frame being drawn, by handle (brief rule 28): a canvas on the render thread makes its own fonts
+	 * from these descriptors and never asks the platform about the UI thread's handles. Null (the UI thread): font handles
+	 * are the platform's.
+	 */
+	void fonts (FontTable table);
 }
