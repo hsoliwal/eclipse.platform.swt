@@ -73,6 +73,10 @@ public class Test_org_eclipse_swt_widgets_ExpandBar_OptimizationBench {
 				/* 100 WM_MOUSEMOVE messages down the visible headers (hover in and out) */
 				for (int m = 0; m < 100; m++) ViewportDifferential.send (bar, 0x200, 0, ((long) (10 + m * 5) << 16) | 50);
 			}));
+			results.add (AllWidgetsBench.measure ("cursor", k -> {
+				/* 100 WM_SETCURSOR (HTCLIENT, from WM_MOUSEMOVE), which Windows sends before every mouse move */
+				for (int m = 0; m < 100; m++) ViewportDifferential.send (bar, 0x20, 0, (0x200L << 16) | 1);
+			}));
 			int [] next = {count};
 			results.add (AllWidgetsBench.measure ("append", k -> {
 				append (bar, next [0]++);

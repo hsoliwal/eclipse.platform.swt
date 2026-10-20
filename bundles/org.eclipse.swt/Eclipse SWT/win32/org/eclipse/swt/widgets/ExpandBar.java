@@ -333,11 +333,8 @@ void drawWidget (GC gc, RECT clipRect) {
 	for (int i = firstItem; i < itemCount; i++) {
 		ExpandItem item = items[i];
 		if (VIEWPORT && clipRect != null && !item.paintsWithin (clipRect)) {
-			//FLLDCIM: VIEWPORT - the DC clips to the damage, so an item drawn only outside it changes no pixel
-			if (item.y >= clipRect.bottom) {
-				break;
-			}
-			continue;
+			//FLLDCIM: VIEWPORT - the DC clips to the damage; from the first damaged item on, an item off it lies below it: the run ended
+			break;
 		}
 		item.drawItem (gc, hTheme, clipRect, item == focusItem && drawFocus);
 	}
@@ -982,7 +979,7 @@ LRESULT WM_MOUSELEAVE (long wParam, long lParam) {
     }
 	if (VIEWPORT) {
 		//FLLDCIM: VIEWPORT - the hovered item is tracked by WM_MOUSEMOVE, no search
-		if (hoverItem != null && !hoverItem.isDisposed () && hoverItem.hover) {
+		if (hoverItem != null && !hoverItem.isDisposed ()) {
 			hoverItem.hover = false;
 			hoverItem.redraw (false);
 		}
@@ -1012,7 +1009,7 @@ LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
 		//FLLDCIM: VIEWPORT - only the item under the mouse can be hovered: binary search it and update the old and the new one
 		int index = itemAt (y);
 		ExpandItem hit = index >= 0 && items [index].isHover (x, y) ? items [index] : null;
-		if (hoverItem != null && hoverItem != hit && !hoverItem.isDisposed () && hoverItem.hover) {
+		if (hoverItem != null && hoverItem != hit && !hoverItem.isDisposed ()) {
 			hoverItem.hover = false;
 			hoverItem.redraw (false);
 		}
@@ -1091,6 +1088,14 @@ LRESULT WM_SETCURSOR (long wParam, long lParam) {
         return result;
     }
 	int hitTest = (short) OS.LOWORD (lParam);
+	if (VIEWPORT && hitTest == OS.HTCLIENT) {
+		//FLLDCIM: VIEWPORT - the hovered item is tracked by WM_MOUSEMOVE (O4): no scan per WM_SETCURSOR
+		if (hoverItem != null && !hoverItem.isDisposed ()) {
+			OS.SetCursor (OS.LoadCursor (0, OS.IDC_HAND));
+			return LRESULT.ONE;
+		}
+		return result;
+	}
 	if (hitTest == OS.HTCLIENT) {
 		for (int i = 0; i < itemCount; i++) {
 			ExpandItem item = items [i];
