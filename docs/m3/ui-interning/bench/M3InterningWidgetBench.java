@@ -74,8 +74,9 @@ public final class M3InterningWidgetBench {
 		try (PrintWriter tsv = new PrintWriter (Files.newBufferedWriter (out, StandardCharsets.UTF_8))) {
 			tsv.print ("measurement\tvariant\trows\tvalue\tunit\tdetail\n");
 			if (!what.equals ("tree")) {
-				table (display, false, tsv);
-				table (display, true, tsv);
+				table (display, false, false, tsv);
+				table (display, true, false, tsv);
+				table (display, true, true, tsv);
 			}
 			if (!what.equals ("table")) tree (display, tsv);
 		}
@@ -92,8 +93,8 @@ public final class M3InterningWidgetBench {
 
 	/* ---------------------------------------------------------------- Table */
 
-	static void table (Display display, boolean pool, PrintWriter tsv) {
-		String variant = pool ? "pool-on" : "pool-off";
+	static void table (Display display, boolean pool, boolean immediates, PrintWriter tsv) {
+		String variant = pool ? immediates ? "pool-on-immediate-lanes" : "pool-on" : "pool-off";
 		Shell shell = new Shell (display);
 		shell.setSize (1000, 700);
 		Table table = new Table (shell, SWT.VIRTUAL | SWT.BORDER | SWT.FULL_SELECTION);
@@ -104,7 +105,7 @@ public final class M3InterningWidgetBench {
 		Random random = new Random (42);
 		M3LabelPool labels = pool ? new M3LabelPool (4096) : null;
 		M3TextExtentCache extents = pool ? new M3TextExtentCache (1 << 16) : null;
-		M3LabelLanes lanes = pool ? new M3LabelLanes (COLUMNS, labels, extents) : null;
+		M3LabelLanes lanes = pool ? new M3LabelLanes (COLUMNS, labels, extents, immediates) : null;
 		String [] [] cells = pool ? null : new String [COLUMNS] [ROWS];
 		if (pool) lanes.setRowCount (ROWS);
 		for (int r = 0; r < ROWS; r++) {
@@ -114,7 +115,7 @@ public final class M3InterningWidgetBench {
 			}
 		}
 		long retainedBytes = retained () - before;
-		int distinct = pool ? labels.size () : distinct (cells);
+		int distinct = pool ? labels.size () + distinctImmediates (lanes) : distinct (cells);
 		row (tsv, "table-memory", variant, ROWS, retainedBytes / 1048576.0, "MB retained by the model", "distinct labels " + distinct);
 		row (tsv, "table-memory", variant, ROWS, retainedBytes / (double) (ROWS * COLUMNS), "bytes per cell", "");
 		row (tsv, "table-memory", variant, ROWS, retainedBytes / (double) distinct, "bytes per distinct label", "");
@@ -136,7 +137,7 @@ public final class M3InterningWidgetBench {
 		long [] calls = new long [1];
 		M3TextExtentCache.Measurer measurer = (id, font) -> {
 			calls [0]++;
-			Point extent = gc.stringExtent (lanes.pool ().text (id));
+			Point extent = gc.stringExtent (lanes.text (id));
 			return M3TextExtentCache.pack (extent.x, extent.y);
 		};
 		Random random = new Random (9);
@@ -165,6 +166,17 @@ public final class M3InterningWidgetBench {
 		row (tsv, "table-scroll", variant, ROWS, calls [0] / (double) PAGES, "stringExtent calls per page", page + " visible rows x " + COLUMNS + " columns; sink " + (sink & 1));
 		row (tsv, "table-scroll", variant, ROWS, measureNanos / 1e6 / PAGES, "ms per page in the width pass", "");
 		row (tsv, "table-scroll", variant, ROWS, pageNanos / 1e6 / PAGES, "ms per page incl. setTopIndex + SetData", "");
+	}
+
+	static int distinctImmediates (M3LabelLanes lanes) {
+		HashSet<Long> seen = new HashSet<> ();
+		for (int c = 0; c < COLUMNS && lanes.immediates (); c++) {
+			for (int r = 0; r < ROWS; r++) {
+				long label = lanes.label (r, c);
+				if (M3ShortLabel.isImmediate (label)) seen.add (label);
+			}
+		}
+		return seen.size ();
 	}
 
 	static int distinct (String [] [] cells) {

@@ -44,8 +44,8 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 		for (int seed = 1; seed <= 16; seed++) {
 			Random random = new Random (seed);
 			M3LabelPool pool = new M3LabelPool (seed % 3 * 4);
-			M3LabelLanes on = new M3LabelLanes (2, pool, new M3TextExtentCache (1 + seed % 5 * 8));
-			M3TextExtentCache.Measurer byId = (label, font) -> measure (pool.text (label), font);
+			M3LabelLanes on = new M3LabelLanes (2, pool, new M3TextExtentCache (1 + seed % 5 * 8), seed % 2 == 0);
+			M3TextExtentCache.Measurer byId = (label, font) -> measure (on.text (label), font);
 			List<String []> off = new ArrayList<> ();
 			for (int step = 0; step < 3000; step++) {
 				int op = random.nextInt (10), rows = off.size ();
@@ -94,7 +94,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 		assertEquals (lanes.labelId (0, 0), lanes.labelId (4, 0));
 		assertSame (lanes.text (0, 0), lanes.text (8, 0));
 		measured = 0;
-		int widest = lanes.widest (0, 0, 10_000, 0, (label, font) -> measure (pool.text (label), font));
+		int widest = lanes.widest (0, 0, 10_000, 0, (label, font) -> measure (pool.text ((int) label), font));
 		assertEquals (4, measured);
 		assertTrue (widest > 0);
 		assertEquals (1, lanes.columnCount ());
@@ -106,6 +106,35 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 		pool.clear ();
 	}
 
+	/**
+	 * Brief rule 24: a full refresh that hands every row its text again changes no
+	 * id and measures nothing; a changed label re-interns one entry and measures
+	 * one label. Nothing is rebuilt.
+	 */
+	@Test
+	void refreshIsADeltaNotARebuild () {
+		M3LabelPool pool = new M3LabelPool ();
+		M3TextExtentCache extents = new M3TextExtentCache (64);
+		M3LabelLanes lanes = new M3LabelLanes (1, pool, extents);
+		M3TextExtentCache.Measurer measurer = (label, font) -> measure (pool.text ((int) label), font);
+		lanes.setRowCount (1000);
+		for (int r = 0; r < 1000; r++) lanes.setText (r, 0, TYPES [r % 4]);
+		int [] ids = new int [1000];
+		for (int r = 0; r < 1000; r++) ids [r] = lanes.labelId (r, 0);
+		int widest = lanes.widest (0, 0, 1000, 0, measurer);
+		long misses = pool.misses (), measurements = extents.misses ();
+		for (int r = 0; r < 1000; r++) lanes.setText (r, 0, new String (TYPES [r % 4]));
+		for (int r = 0; r < 1000; r++) assertEquals (ids [r], lanes.labelId (r, 0));
+		assertEquals (widest, lanes.widest (0, 0, 1000, 0, measurer));
+		assertEquals (misses, pool.misses ());
+		assertEquals (measurements, extents.misses ());
+		lanes.setText (7, 0, "renamed.tsv");
+		assertEquals (misses + 1, pool.misses ());
+		lanes.widest (0, 0, 1000, 0, measurer);
+		assertEquals (measurements + 1, extents.misses ());
+		assertEquals (5, pool.size ());
+	}
+
 	@Test
 	void evictedLabelsLeaveTheExtentCache () {
 		M3LabelPool pool = new M3LabelPool (0);
@@ -114,7 +143,7 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 		lanes.setRowCount (1);
 		lanes.setText (0, 0, "first");
 		int first = lanes.labelId (0, 0);
-		lanes.extent (0, 0, 1, (label, font) -> measure (pool.text (label), font));
+		lanes.extent (0, 0, 1, (label, font) -> measure (pool.text ((int) label), font));
 		assertNotEquals (-1L, extents.peek (first, 1));
 		lanes.setText (0, 0, "second");
 		assertEquals (-1L, extents.peek (first, 1));
@@ -139,5 +168,49 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes {
 		assertThrows (IndexOutOfBoundsException.class, () -> lanes.widest (0, 0, 2, 0, (l, f) -> 0L));
 		assertThrows (NullPointerException.class, () -> lanes.setText (0, 0, null));
 		assertEquals ("", lanes.text (0, 1));
+		M3LabelLanes wide = new M3LabelLanes (1, pool, extents, true);
+		wide.setRowCount (1);
+		assertThrows (NullPointerException.class, () -> wide.setText (0, 0, null));
+		assertThrows (IndexOutOfBoundsException.class, () -> wide.immediateCells (1));
+		assertEquals (0, lanes.immediateCells (0));
+	}
+
+	@Test
+	void immediateLanesKeepShortLabelsOutOfThePool () {
+		M3LabelPool pool = new M3LabelPool ();
+		M3TextExtentCache extents = new M3TextExtentCache (64);
+		M3LabelLanes lanes = new M3LabelLanes (2, pool, extents, true);
+		assertTrue (lanes.immediates ());
+		lanes.setRowCount (6);
+		String [] texts = {"Error", "Warning", "line 42", "identifier", "a longer label", "अ File"};
+		for (int r = 0; r < texts.length; r++) lanes.setText (r, 0, texts [r]);
+		assertEquals (4, lanes.immediateCells (0));
+		assertEquals (2, pool.size ());
+		assertTrue (M3ShortLabel.isImmediate (lanes.label (0, 0)));
+		assertEquals (M3ShortLabel.pack ("Error"), lanes.label (0, 0));
+		assertThrows (IllegalArgumentException.class, () -> lanes.labelId (0, 0));
+		assertEquals (pool.find ("a longer label"), lanes.labelId (4, 0));
+		char [] buffer = new char [20];
+		for (int r = 0; r < texts.length; r++) {
+			assertEquals (texts [r], lanes.text (r, 0));
+			assertEquals (texts [r].length (), lanes.length (r, 0));
+			assertEquals (texts [r], new String (buffer, 0, lanes.getChars (r, 0, buffer, 0)));
+		}
+		assertEquals ("", lanes.text (0, 1));
+		assertEquals (0, lanes.length (0, 1));
+		M3TextExtentCache.Measurer measurer = (label, font) -> measure (lanes.text (label), font);
+		int widest = lanes.widest (0, 0, 6, 0, measurer);
+		assertEquals (6, extents.misses ());
+		lanes.setText (1, 0, "Error");
+		assertEquals (widest, Math.max (widest, lanes.widest (0, 0, 6, 0, measurer)));
+		assertEquals (6, extents.misses ());
+		assertEquals (measure ("Error", 0), lanes.extent (1, 0, 0, measurer));
+		lanes.removeRows (3, 2);
+		assertEquals (1, pool.cachedCount ());
+		lanes.insertRows (0, 1);
+		assertEquals ("Error", lanes.text (1, 0));
+		assertTrue (lanes.retainedBytes () > new M3LabelLanes (2, new M3LabelPool (), new M3TextExtentCache (64)).retainedBytes () - 1);
+		lanes.setRowCount (40);
+		assertEquals ("अ File", lanes.text (4, 0));
 	}
 }

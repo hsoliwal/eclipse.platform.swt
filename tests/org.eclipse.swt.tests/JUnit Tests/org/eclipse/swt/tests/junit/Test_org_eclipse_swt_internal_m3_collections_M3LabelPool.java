@@ -172,6 +172,32 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3LabelPool {
 	}
 
 	@Test
+	void facadeCacheIsBoundedAndDirectMapped () {
+		M3LabelPool pool = new M3LabelPool (8, null, 1);
+		int a = pool.intern ("alpha"), b = pool.intern ("beta");
+		String first = pool.text (a);
+		assertSame (first, pool.text (a));
+		assertEquals ("beta", pool.text (b));
+		assertEquals (1, pool.facadeCount ());
+		String again = pool.text (a);
+		assertEquals ("alpha", again);
+		assertNotSame (first, again);
+		M3LabelPool zero = new M3LabelPool (0, null, 1);
+		int x = zero.intern ("x"), y = zero.intern ("y");
+		zero.text (x);
+		zero.release (y);
+		assertEquals (1, zero.facadeCount ());
+		zero.release (x);
+		assertEquals (0, zero.facadeCount ());
+		M3LabelPool wide = new M3LabelPool (8, null, 3000);
+		for (int i = 0; i < 100; i++) wide.text (wide.intern ("w" + i));
+		assertTrue (wide.facadeCount () > 90 && wide.facadeCount () <= 100, "facades " + wide.facadeCount ());
+		assertTrue (wide.retainedBytes () > 4096 * 8);
+		assertThrows (IllegalArgumentException.class, () -> new M3LabelPool (1, null, 0));
+		assertThrows (IllegalArgumentException.class, () -> new M3LabelPool (1, null, (1 << 30) + 1));
+	}
+
+	@Test
 	void facadesAreDroppedOnTrimAndCountedInRetainedBytes () {
 		M3LabelPool pool = new M3LabelPool ();
 		int id = pool.intern ("facade");

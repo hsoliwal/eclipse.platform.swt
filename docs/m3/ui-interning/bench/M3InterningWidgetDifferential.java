@@ -68,7 +68,7 @@ public final class M3InterningWidgetDifferential {
 		Table off = table (shell, 0), on = table (shell, 500);
 		M3LabelPool pool = new M3LabelPool (seed % 3 * 8);
 		M3TextExtentCache extents = new M3TextExtentCache (64);
-		M3LabelLanes lanes = new M3LabelLanes (COLUMNS, pool, extents);
+		M3LabelLanes lanes = new M3LabelLanes (COLUMNS, pool, extents, seed % 2 == 0);
 		Font [] fonts = {display.getSystemFont (), new Font (display, "Segoe UI", 11, SWT.BOLD), new Font (display, "Consolas", 9, SWT.NORMAL)};
 		int [] font = {0};
 		for (int r = 0; r < ROWS; r++) insert (off, on, lanes, r, random);
@@ -157,7 +157,7 @@ public final class M3InterningWidgetDifferential {
 		check (seed, step, operation, "item height", off.getItemHeight (), on.getItemHeight (), counts, tsv);
 		for (int c = 0; c < COLUMNS; c++) check (seed, step, operation, "column " + c + " width", off.getColumn (c).getWidth (), on.getColumn (c).getWidth (), counts, tsv);
 		M3TextExtentCache.Measurer measurer = (id, f) -> {
-			Point extent = gcOn.stringExtent (lanes.pool ().text (id));
+			Point extent = gcOn.stringExtent (lanes.text (id));
 			return M3TextExtentCache.pack (extent.x, extent.y);
 		};
 		int top = off.getTopIndex (), bottom = Math.min (off.getItemCount (), top + 30);

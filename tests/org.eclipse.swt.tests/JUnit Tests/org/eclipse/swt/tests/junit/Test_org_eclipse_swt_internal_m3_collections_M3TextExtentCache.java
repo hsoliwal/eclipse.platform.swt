@@ -25,9 +25,9 @@ import org.junit.jupiter.api.Test;
 public class Test_org_eclipse_swt_internal_m3_collections_M3TextExtentCache {
 	private int calls;
 
-	private long measure (int label, int font) {
+	private long measure (long label, int font) {
 		calls++;
-		return M3TextExtentCache.pack (label * 7 + font, 10 + font);
+		return M3TextExtentCache.pack ((int) label * 7 + font, 10 + font);
 	}
 
 	@Test
@@ -110,6 +110,24 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3TextExtentCache {
 		assertNotEquals (-1L, cache.peek (3, 0));
 		assertNotEquals (-1L, cache.peek (4, 0));
 		assertEquals (2, cache.size ());
+	}
+
+	@Test
+	void immediateLabelsAreKeysToo () {
+		M3TextExtentCache cache = new M3TextExtentCache (16);
+		long [] labels = {M3ShortLabel.pack ("Error"), M3ShortLabel.pack ("Warning"), M3ShortLabel.pack ("Error"), 3L};
+		M3TextExtentCache.Measurer measurer = (label, font) -> M3TextExtentCache.pack ((int) (label % 1000), font);
+		int expected = 0;
+		for (long label : labels) expected = Math.max (expected, (int) (label % 1000));
+		assertEquals (expected, cache.widest (labels, 0, 4, 1, measurer));
+		assertEquals (3, cache.misses ());
+		assertNotEquals (-1L, cache.peek (labels [0], 1));
+		cache.invalidateLabel (labels [0]);
+		assertEquals (-1L, cache.peek (labels [0], 1));
+		assertEquals (2, cache.size ());
+		assertThrows (IndexOutOfBoundsException.class, () -> cache.widest (labels, 0, 5, 1, measurer));
+		assertThrows (IllegalArgumentException.class, () -> cache.peek (-2L, 0));
+		assertThrows (IllegalArgumentException.class, () -> cache.invalidateLabel (-2L));
 	}
 
 	@Test

@@ -42,9 +42,11 @@ import java.util.function.IntConsumer;
  * caches keyed by label id can drop it. Referenced labels are never evicted.
  * Id {@link #EMPTY} is the empty string and is permanent.</p>
  *
- * <p>Strings are facades: {@link #text(int)} creates one per id on demand and
- * keeps it until the label is evicted or {@link #trimFacades()} runs. The other
- * queries answer from the arena without creating a String.</p>
+ * <p>Strings are facades: {@link #text(int)} creates one on demand and keeps it
+ * in a small direct-mapped cache (4096 slots by default), so the Strings of the
+ * rows being painted are reused while the memory they hold stays bounded,
+ * whatever the number of labels. The other queries answer from the arena
+ * without creating a String.</p>
  *
  * <p>The pool is not thread-safe; the model that owns it confines it to one
  * thread, normally the user-interface thread.</p>
@@ -84,7 +86,9 @@ public final class M3LabelPool {
 	private int [] refs;
 	private int [] prev;
 	private int [] next;
-	private String [] facades;
+	private final String [] facades;
+	private final int [] facadeIds;
+	private final int facadeMask;
 	private int [] slots;
 	private int shift;
 	private int idCount, entries, cached, facadeCount;
@@ -110,9 +114,23 @@ public final class M3LabelPool {
 	 * when {@code canonical} is not null, keys labels on their canonical ids.
 	 */
 	public M3LabelPool (int maxCached, CanonicalIds canonical) {
+		this (maxCached, canonical, 4096);
+	}
+
+	/**
+	 * Creates a pool that keeps up to {@code maxCached} unreferenced labels, keys
+	 * labels on canonical ids when {@code canonical} is not null, and keeps String
+	 * facades in {@code facadeSlots} direct-mapped slots (rounded up to a power of two).
+	 */
+	public M3LabelPool (int maxCached, CanonicalIds canonical, int facadeSlots) {
 		if (maxCached < 0) throw new IllegalArgumentException ("maxCached < 0: " + maxCached);
+		if (facadeSlots < 1 || facadeSlots > 1 << 30) throw new IllegalArgumentException ("facadeSlots out of range: " + facadeSlots);
 		this.maxCached = maxCached;
 		this.canonical = canonical;
+		int size = facadeSlots == 1 ? 1 : Integer.highestOneBit (facadeSlots - 1) << 1;
+		facades = new String [size];
+		facadeIds = new int [size];
+		facadeMask = size - 1;
 		reset ();
 	}
 
@@ -123,12 +141,11 @@ public final class M3LabelPool {
 		refs = new int [8];
 		prev = new int [8];
 		next = new int [8];
-		facades = new String [8];
 		slots = new int [16];
 		shift = 32 - 4;
 		refs [EMPTY] = 1;
-		facades [EMPTY] = "";
-		arenaUsed = garbage = entries = cached = facadeCount = 0;
+		trimFacades ();
+		arenaUsed = garbage = entries = cached = 0;
 		idCount = 1;
 		freeHead = lruHead = lruTail = NONE;
 	}
@@ -197,15 +214,20 @@ public final class M3LabelPool {
 		if (--refs [id] == 0) cacheReleased (id);
 	}
 
-	/** Returns the text of {@code id}, creating its String facade on first use. */
+	/**
+	 * Returns the text of {@code id}. The String is taken from the facade cache
+	 * when its slot still holds this id, otherwise it is created and replaces
+	 * the slot's previous facade.
+	 */
 	public String text (int id) {
 		checkId (id);
-		String facade = facades [id];
-		if (facade == null) {
-			facade = decode (spans [id]);
-			facades [id] = facade;
-			facadeCount++;
-		}
+		if (id == EMPTY) return "";
+		int slot = facadeSlot (id);
+		if (facadeIds [slot] == id + 1) return facades [slot];
+		String facade = decode (spans [id]);
+		if (facadeIds [slot] == 0) facadeCount++;
+		facadeIds [slot] = id + 1;
+		facades [slot] = facade;
 		return facade;
 	}
 
@@ -335,22 +357,23 @@ public final class M3LabelPool {
 	 * facades it holds (object headers of 16 bytes, references of 4 bytes).
 	 */
 	public long retainedBytes () {
-		long lanes = (long) spans.length * (8 + 8 + 4 + 4 + 4 + 4);
-		long arrays = 7L * 16 + arena.length + (long) slots.length * 4 + lanes;
+		long lanes = (long) spans.length * (8 + 8 + 4 + 4 + 4);
+		long arrays = 9L * 16 + arena.length + (long) slots.length * 4 + lanes + facades.length * 8L;
 		return arrays + facadeBytes ();
 	}
 
 	private long facadeBytes () {
 		long bytes = 0;
-		for (int id = 1; id < idCount; id++) {
-			if (facades [id] != null) bytes += 24 + 16 + bytes (spans [id]);
+		for (int slot = 0; slot < facadeIds.length; slot++) {
+			if (facadeIds [slot] != 0) bytes += 24 + 16 + bytes (spans [facadeIds [slot] - 1]);
 		}
 		return bytes;
 	}
 
-	/** Drops every String facade except the empty string's. */
+	/** Drops every String facade. */
 	public void trimFacades () {
-		Arrays.fill (facades, 1, idCount, null);
+		Arrays.fill (facades, null);
+		Arrays.fill (facadeIds, 0);
 		facadeCount = 0;
 	}
 
@@ -471,7 +494,6 @@ public final class M3LabelPool {
 		refs = Arrays.copyOf (refs, capacity);
 		prev = Arrays.copyOf (prev, capacity);
 		next = Arrays.copyOf (next, capacity);
-		facades = Arrays.copyOf (facades, capacity);
 	}
 
 	/*
@@ -489,6 +511,11 @@ public final class M3LabelPool {
 		int mask = slots.length - 1, i = slot (keys [id]);
 		while (slots [i] != 0) i = (i + 1) & mask;
 		slots [i] = id + 1;
+	}
+
+	private int facadeSlot (int id) {
+		int hash = id * FIBONACCI;
+		return (hash ^ (hash >>> 16)) & facadeMask;
 	}
 
 	private int slot (long key) {
@@ -519,8 +546,12 @@ public final class M3LabelPool {
 		unlinkReleased (id);
 		deleteSlot (id);
 		garbage += bytes (spans [id]);
-		if (facades [id] != null) facadeCount--;
-		facades [id] = null;
+		int slot = facadeSlot (id);
+		if (facadeIds [slot] == id + 1) {
+			facadeIds [slot] = 0;
+			facades [slot] = null;
+			facadeCount--;
+		}
 		refs [id] = FREE;
 		next [id] = freeHead;
 		freeHead = id;

@@ -69,7 +69,7 @@ public class M3LabelPoolTableSnippet {
 		return new Model () {
 			public String text (int row, int column) { return lanes.text (row, column); }
 			public int widest (int column, ToIntFunction<String> measure) {
-				return lanes.widest (column, 0, ROWS, 0, (id, font) -> M3TextExtentCache.pack (measure.applyAsInt (pool.text (id)), 0));
+				return lanes.widest (column, 0, ROWS, 0, (id, font) -> M3TextExtentCache.pack (measure.applyAsInt (lanes.text (id)), 0));
 			}
 			public long calls () { return extents.misses (); }
 		};
