@@ -136,5 +136,42 @@ public final class M3SortFilterOpsBench {
 			time ("delta-rows-changed-" + changed, n, dirty, () -> filter [0].rowsChanged (rows));
 		}
 		time ("full-pass-reset", n, typedW1, () -> filter [0].setSourceSize (n));
+		Op filterOnly = () -> {
+			filter [0] = new M3ColumnFilter (2, n, cells);
+			filter [0].setText (0, "w1", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE);
+		};
+		for (int changed : new int [] {100, 10_000}) {
+			if (changed > n / 10) continue;
+			int [] rows = new int [changed];
+			Op dirty = () -> {
+				filterOnly.run ();
+				Random edits = new Random (changed);
+				for (int k = 0; k < changed; k++) {
+					rows [k] = edits.nextInt (n);
+					texts [rows [k]] = "w" + edits.nextInt (5000);
+				}
+			};
+			time ("delta-filter-only-" + changed, n, dirty, () -> filter [0].rowsChanged (rows));
+		}
+		M3ColumnSort [] alone = new M3ColumnSort [1];
+		Op sortOnly = () -> {
+			alone [0] = new M3ColumnSort (2, n);
+			alone [0].setKey (0, M3ColumnKey.ofText (r -> texts [r], null));
+			alone [0].setKey (1, M3ColumnKey.ofInts (r -> small [r]));
+			alone [0].setSortKeys (new int [] {0, 1}, new int [] {SWT.UP, SWT.DOWN});
+		};
+		for (int changed : new int [] {1, 100, 10_000}) {
+			if (changed > n / 10) continue;
+			int [] rows = new int [changed];
+			Op dirty = () -> {
+				sortOnly.run ();
+				Random edits = new Random (changed);
+				for (int k = 0; k < changed; k++) {
+					rows [k] = edits.nextInt (n);
+					texts [rows [k]] = "w" + edits.nextInt (5000);
+				}
+			};
+			time ("delta-sort-only-" + changed, n, dirty, () -> alone [0].rowsChanged (rows));
+		}
 	}
 }

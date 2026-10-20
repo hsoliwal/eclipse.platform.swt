@@ -173,9 +173,68 @@ final class M3SortOrder {
 			move (rows [0], change);
 			return;
 		}
-		int first = remove (rows, m);
-		first = Math.min (first, insert (rows, m));
-		change.damage (first, size - 1);
+		reposition (rows, m, change);
+	}
+
+	/*
+	 * moves rows [0, m) of the view (their values changed) in one pass: they are marked, sorted, their new places
+	 * found by binary search over the unmarked rows, and the span between the first and the last place that changes
+	 * is rewritten once (removals and insertions are equal in number, so the rows after the span keep their place)
+	 */
+	private void reposition (int [] rows, int m, M3RowChange change) {
+		batch = ensure (batch, m, 0);
+		places = ensure (places, m, 0);
+		int count = 0, first = size, last = -1;
+		for (int k = 0; k < m; k++) {
+			int position = inverse [rows [k]];
+			if (position < 0) continue;
+			first = Math.min (first, position);
+			last = Math.max (last, position);
+			inverse [rows [k]] = REMOVED;
+			batch [count++] = rows [k];
+		}
+		if (count == 0) return;
+		sort.sortRows (lanes, batch, count);
+		for (int j = 0, low = 0; j < count; j++) {
+			low = places [j] = unmarkedUpper (batch [j], low);
+			first = Math.min (first, low);
+			last = Math.max (last, Math.min (low, size - 1));
+		}
+		int span = last - first + 1;
+		lanes.ensure (span);
+		System.arraycopy (order, first, lanes.rowTmp, 0, span);
+		int out = first, j = 0;
+		for (int i = first; i <= last; i++) {
+			while (j < count && places [j] <= i) out = place (batch [j++], out);
+			int row = lanes.rowTmp [i - first];
+			if (inverse [row] != REMOVED) out = place (row, out);
+		}
+		while (j < count) out = place (batch [j++], out);
+		treeValid = false;
+		change.damage (first, last);
+	}
+
+	private int place (int row, int position) {
+		order [position] = row;
+		inverse [row] = position;
+		return position + 1;
+	}
+
+	/* the first position in [low, size) whose unmarked row sorts after row; marked rows are stepped over */
+	private int unmarkedUpper (int row, int low) {
+		int high = size;
+		while (low < high) {
+			int middle = (low + high) >>> 1, probe = middle;
+			while (probe < high && inverse [order [probe]] == REMOVED) probe++;
+			if (probe == high) {
+				high = middle;
+			} else if (sort.compare (order [probe], row) > 0) {
+				high = middle;
+			} else {
+				low = probe + 1;
+			}
+		}
+		return low;
 	}
 
 	private void move (int row, M3RowChange change) {
