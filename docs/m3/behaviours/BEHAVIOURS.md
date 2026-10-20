@@ -308,3 +308,9 @@ Every behaviour is a configurable part of the widget, not a fixed feature. One c
 - Likewise decorators, validators, formatters, footers, header-2, view bar, popups and shortcuts each have a config
   object with sensible defaults, settable by API, declared in the spec, editable in the dialog, and persisted with the
   view state. Defaults are themeable (L&F keys), so a product can set them once for every view.
+- **Widget decorator (user, 2026-10-20: "also the widget decorator"):** per control and per cell: which decorations
+  (error, warning, info, required, modified, custom), position (corner, margin, inline before or after the text),
+  image set (SVG skins per theme), hover tooltip content and delay, click action (open the popup, jump to the problem),
+  stacking order when several apply, and whether the decoration affects layout. Decorations are ids in a lane, so
+  10^6 rows carry them at no object cost; `setDecorations(M3DecorationConfig)`, declared in the spec as
+  `decorations=...`, editable in the dialog, persisted, themeable.
