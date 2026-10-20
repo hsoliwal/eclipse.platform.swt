@@ -1,0 +1,24 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtViewportListener
+displayName: SWT viewport listener (brief rule 25 sub-rule)
+description: >-
+  SWT.Viewport (59), the typed ViewportListener dispatch, and Scrollable.addViewportListener / removeViewportListener
+  on win32, GTK and Cocoa (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md). The widgets fire it through
+  org.eclipse.swt.internal.ViewportReporter. Applied to SWT.java, TypedListener.java and the three Scrollable files.
+  Idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tpublic static final int PartHidden = 58;\n\n(?!\t/[*][*]\n\t [*] The SWT viewport event type)"
+      replace: "\tpublic static final int PartHidden = 58;\n\n\t/**\n\t * The SWT viewport event type (value is 59).\n\t * <p>\n\t * A viewport widget sends it when its window of visible rows changed, once per coalesced change and never while\n\t * it is not part-visible: <code>start</code> and <code>end</code> hold the first and last index on screen,\n\t * <code>detail</code> the cause bits, <code>count</code> 1 when the extents changed, <code>data</code> an\n\t * <code>int [][] {entered, left}</code> (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md).\n\t * </p>\n\t *\n\t * @see org.eclipse.swt.events.ViewportListener\n\t * @since 3.136\n\t */\n\tpublic static final int Viewport = 59;\n\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "(?<!viewportChanged [(]new ViewportEvent [(]e[)][)];\n\t\t\tbreak;\n\t\t[}]\n)\t\tcase SWT[.]PartVisible: [{]\n"
+      replace: "\t\tcase SWT.Viewport: {\n\t\t\t((ViewportListener) eventListener).viewportChanged (new ViewportEvent (e));\n\t\t\tbreak;\n\t\t}\n\t\tcase SWT.PartVisible: {\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "public ScrollBar getHorizontalBar [(][)] [{]\n\tcheckWidget ?[(][)];\n\treturn horizontalBar;\n[}]\n(?!\n/[*][*]\n [*] Adds the listener to the collection of listeners who will be notified when the window of visible rows)"
+      replace: "public ScrollBar getHorizontalBar () {\n\tcheckWidget ();\n\treturn horizontalBar;\n}\n\n/**\n * Adds the listener to the collection of listeners who will be notified when the window of visible rows of the\n * receiver changes, by sending it the <code>viewportChanged</code> message defined in the\n * <code>ViewportListener</code> interface. Viewport widgets (Tree, Table, List, the drawn planes) send it once per\n * coalesced change, never while not part-visible (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md).\n *\n * @param listener the listener which should be notified\n *\n * @exception IllegalArgumentException <ul>\n *    <li>ERROR_NULL_ARGUMENT - if the listener is null</li>\n * </ul>\n * @exception SWTException <ul>\n *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>\n *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>\n * </ul>\n *\n * @see org.eclipse.swt.events.ViewportListener\n * @see #removeViewportListener\n * @since 3.136\n */\npublic void addViewportListener (org.eclipse.swt.events.ViewportListener listener) {\n\taddTypedListener (listener, SWT.Viewport);\n}\n\n/**\n * Removes the listener from the collection of listeners who will be notified when the window of visible rows of\n * the receiver changes.\n *\n * @param listener the listener which should no longer be notified\n *\n * @exception IllegalArgumentException <ul>\n *    <li>ERROR_NULL_ARGUMENT - if the listener is null</li>\n * </ul>\n * @exception SWTException <ul>\n *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>\n *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>\n * </ul>\n *\n * @see org.eclipse.swt.events.ViewportListener\n * @see #addViewportListener\n * @since 3.136\n */\npublic void removeViewportListener (org.eclipse.swt.events.ViewportListener listener) {\n\tcheckWidget ();\n\tif (listener == null) error (SWT.ERROR_NULL_ARGUMENT);\n\tremoveTypedListener (SWT.Viewport, listener);\n}\n"
+      regex: true

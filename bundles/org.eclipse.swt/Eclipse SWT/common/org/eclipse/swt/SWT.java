@@ -1048,7 +1048,7 @@ public class SWT {
 	 * SWT sends it to a control that became part-visible: the control and all its ancestors visible with a non-zero
 	 * size, the shell visible and not minimized, no container marking it hidden (see
 	 * <code>Control.isPartVisible ()</code>). <code>detail</code> holds the cause, <code>item</code> the origin
-	 * (docs/m3/visibility/PART_VISIBLE.md).
+	 * (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md).
 	 * </p>
 	 *
 	 * @see org.eclipse.swt.events.PartVisibilityListener
@@ -1063,6 +1063,20 @@ public class SWT {
 	 * @since 3.136
 	 */
 	public static final int PartHidden = 58;
+
+	/**
+	 * The SWT viewport event type (value is 59).
+	 * <p>
+	 * A viewport widget sends it when its window of visible rows changed, once per coalesced change and never while
+	 * it is not part-visible: <code>start</code> and <code>end</code> hold the first and last index on screen,
+	 * <code>detail</code> the cause bits, <code>count</code> 1 when the extents changed, <code>data</code> an
+	 * <code>int [][] {entered, left}</code> (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md).
+	 * </p>
+	 *
+	 * @see org.eclipse.swt.events.ViewportListener
+	 * @since 3.136
+	 */
+	public static final int Viewport = 59;
 
 	/* Event Details */
 

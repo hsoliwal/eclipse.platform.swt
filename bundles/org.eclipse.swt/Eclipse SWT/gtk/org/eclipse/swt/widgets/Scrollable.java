@@ -290,6 +290,54 @@ public ScrollBar getHorizontalBar () {
 	checkWidget ();
 	return horizontalBar;
 }
+
+/**
+ * Adds the listener to the collection of listeners who will be notified when the window of visible rows of the
+ * receiver changes, by sending it the <code>viewportChanged</code> message defined in the
+ * <code>ViewportListener</code> interface. Viewport widgets (Tree, Table, List, the drawn planes) send it once per
+ * coalesced change, never while not part-visible (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md).
+ *
+ * @param listener the listener which should be notified
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the listener is null</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @see org.eclipse.swt.events.ViewportListener
+ * @see #removeViewportListener
+ * @since 3.136
+ */
+public void addViewportListener (org.eclipse.swt.events.ViewportListener listener) {
+	addTypedListener (listener, SWT.Viewport);
+}
+
+/**
+ * Removes the listener from the collection of listeners who will be notified when the window of visible rows of
+ * the receiver changes.
+ *
+ * @param listener the listener which should no longer be notified
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the listener is null</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @see org.eclipse.swt.events.ViewportListener
+ * @see #addViewportListener
+ * @since 3.136
+ */
+public void removeViewportListener (org.eclipse.swt.events.ViewportListener listener) {
+	checkWidget ();
+	if (listener == null) error (SWT.ERROR_NULL_ARGUMENT);
+	removeTypedListener (SWT.Viewport, listener);
+}
 /**
  * Returns the mode of the receiver's scrollbars. This will be
  * <em>bitwise</em> OR of one or more of the constants defined in class

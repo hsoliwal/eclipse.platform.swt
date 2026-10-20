@@ -64,7 +64,7 @@ public abstract class Control extends Widget implements Drawable {
 	int drawCount, backgroundAlpha = 255;
 	long dragGesture, zoomGesture, rotateGesture, panGesture;
 	Composite parent;
-	/* part visibility (PartVisibility, docs/m3/visibility/PART_VISIBLE.md): watched controls of the subtree, registry slot, last state told, container mark */
+	/* part visibility (PartVisibility, docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md): watched controls of the subtree, registry slot, last state told, container mark */
 	int partCount, partIndex = -1;
 	byte partState;
 	boolean partHidden;
@@ -5156,7 +5156,7 @@ void releaseHandle () {
  * Adds the listener to the collection of listeners who will be notified when the receiver becomes part-visible or
  * part-hidden (see {@link #isPartVisible()}), by sending it one of the messages defined in the
  * <code>PartVisibilityListener</code> interface. SWT sends them itself, once per transition
- * (docs/m3/visibility/PART_VISIBLE.md).
+ * (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md).
  *
  * @param listener the listener which should be notified
  *
@@ -5205,7 +5205,7 @@ public void removePartVisibilityListener (PartVisibilityListener listener) {
  * Returns <code>true</code> if the receiver is part-visible: the receiver and all its ancestors up to its shell are
  * visible, have a width and height above zero and are not marked with {@link #setPartHidden(boolean)}, and the shell
  * is not minimized. Non-selected tab pages, non-top stack pages and the controls of collapsed expand items are hidden
- * by their containers, so they are not part-visible (docs/m3/visibility/PART_VISIBLE.md).
+ * by their containers, so they are not part-visible (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md).
  *
  * @return the receiver's part visibility state
  *

@@ -18,7 +18,7 @@ import org.eclipse.swt.widgets.*;
 
 /**
  * Instances of this class are sent as a result of a control becoming part-visible or part-hidden
- * (docs/m3/visibility/PART_VISIBLE.md). <code>widget</code> is the control whose state changed.
+ * (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md). <code>widget</code> is the control whose state changed.
  *
  * @see PartVisibilityListener
  * @since 3.136

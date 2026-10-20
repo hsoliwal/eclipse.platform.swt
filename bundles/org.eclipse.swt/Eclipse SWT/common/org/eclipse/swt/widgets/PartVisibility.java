@@ -19,7 +19,7 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 
 /**
- * The part visibility of controls (brief rule 25, docs/m3/visibility/PART_VISIBLE.md), shared by every platform:
+ * The part visibility of controls (brief rule 25, docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md), shared by every platform:
  * {@link Control#isPartVisible()}, and the {@link SWT#PartVisible} and {@link SWT#PartHidden} events, which SWT fires
  * itself from hooks in its implementation (<code>Control.setVisible</code>, <code>setParent</code>,
  * <code>setPartHidden</code>, the Resize, Iconify and Deiconify events, and the platform's restore of a minimized

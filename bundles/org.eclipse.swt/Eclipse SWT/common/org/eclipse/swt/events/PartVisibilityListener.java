@@ -27,7 +27,7 @@ import java.util.function.*;
  * <p>
  * After creating an instance of a class that implements this interface it can be added to a control using the
  * <code>addPartVisibilityListener</code> method and removed using the <code>removePartVisibilityListener</code>
- * method (docs/m3/visibility/PART_VISIBLE.md).
+ * method (docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md).
  * </p>
  *
  * @see PartVisibilityAdapter
