@@ -70,6 +70,8 @@ public class ExpandBar extends Composite {
 	/* VIEWPORT: the client rectangle of the running layout (valid while redrawClientValid) and ExpandItem.redraw's scratch */
 	final RECT redrawClient = new RECT (), redrawRect = new RECT ();
 	boolean redrawClientValid;
+	/* VIEWPORT: the item whose header the mouse is over (the only item with hover set), or null */
+	ExpandItem hoverItem;
 	long hFont;
 
 /**
@@ -361,6 +363,23 @@ Control findBackgroundControl () {
 @Override
 Control findThemeControl () {
 	return isAppThemed () ? this : super.findThemeControl ();
+}
+
+/*
+ * VIEWPORT: the index of the last item whose header starts above y (the only item whose header can contain y), or -1.
+ * Headers lie down the bar in index order, each starting below the previous one's header: binary search, O(log n).
+ */
+int itemAt (int y) {
+	int low = 0, high = itemCount;
+	while (low < high) {
+		int mid = (low + high) >>> 1;
+		if (items [mid].y < y) {
+			low = mid + 1;
+		} else {
+			high = mid;
+		}
+	}
+	return low - 1;
 }
 
 /*
@@ -907,6 +926,18 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
     }
 	int x = OS.GET_X_LPARAM (lParam);
 	int y = OS.GET_Y_LPARAM (lParam);
+	if (VIEWPORT) {
+		//FLLDCIM: VIEWPORT - the item under the mouse by binary search (O(log n)), not a scan of every item
+		int index = itemAt (y);
+		ExpandItem item = index >= 0 ? items [index] : null;
+		if (item != null && item.isHover (x, y) && focusItem != item) {
+			focusItem.redraw (true);
+			focusItem = item;
+			focusItem.redraw (true);
+			forceFocus ();
+		}
+		return result;
+	}
 	for (int i = 0; i < itemCount; i++) {
 		ExpandItem item = items[i];
 		boolean hover = item.isHover (x, y);
@@ -949,6 +980,15 @@ LRESULT WM_MOUSELEAVE (long wParam, long lParam) {
     if (result != null) {
         return result;
     }
+	if (VIEWPORT) {
+		//FLLDCIM: VIEWPORT - the hovered item is tracked by WM_MOUSEMOVE, no search
+		if (hoverItem != null && !hoverItem.isDisposed () && hoverItem.hover) {
+			hoverItem.hover = false;
+			hoverItem.redraw (false);
+		}
+		hoverItem = null;
+		return result;
+	}
 	for (int i = 0; i < itemCount; i++) {
 		ExpandItem item = items [i];
 		if (item.hover) {
@@ -968,6 +1008,21 @@ LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
     }
 	int x = OS.GET_X_LPARAM (lParam);
 	int y = OS.GET_Y_LPARAM (lParam);
+	if (VIEWPORT) {
+		//FLLDCIM: VIEWPORT - only the item under the mouse can be hovered: binary search it and update the old and the new one
+		int index = itemAt (y);
+		ExpandItem hit = index >= 0 && items [index].isHover (x, y) ? items [index] : null;
+		if (hoverItem != null && hoverItem != hit && !hoverItem.isDisposed () && hoverItem.hover) {
+			hoverItem.hover = false;
+			hoverItem.redraw (false);
+		}
+		if (hit != null && !hit.hover) {
+			hit.hover = true;
+			hit.redraw (false);
+		}
+		hoverItem = hit;
+		return result;
+	}
 	for (int i = 0; i < itemCount; i++) {
 		ExpandItem item = items [i];
 		boolean hover = item.isHover (x, y);

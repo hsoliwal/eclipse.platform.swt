@@ -140,6 +140,8 @@ public class CTabFolder extends Composite {
 	 * (-Dswt.widget.mode.CTabFolder=original).
 	 */
 	static final boolean VIEWPORT = org.eclipse.swt.internal.WidgetMode.of ("CTabFolder", org.eclipse.swt.internal.WidgetMode.VIEWPORT) == org.eclipse.swt.internal.WidgetMode.VIEWPORT; //$NON-NLS-1$
+	/* VIEWPORT: setItemSize's minimum widths, kept between updates (grown by doubling, cleared per update) */
+	int[] minWidthsScratch = new int[0];
 	boolean lazyPending;
 	/** index of the left most visible tab. */
 	int firstIndex = -1;
@@ -3272,7 +3274,17 @@ boolean setItemSize(GC gc) {
 	int tabAreaWidth = Math.max(0, getRightItemEdge(gc) - getLeftItemEdge(gc, CTabFolderRenderer.PART_BORDER));
 	// First, try the minimum tab size at full compression.
 	int minWidth = 0;
-	int[] minWidths = new int[itemCount];
+	int[] minWidths;
+	if (VIEWPORT) {
+		//FLLDCIM: HPCPOP - the folder's widths array, cleared instead of allocated per update
+		if (minWidthsScratch.length < itemCount) {
+			minWidthsScratch = new int[Math.max(itemCount, minWidthsScratch.length * 2)];
+		}
+		minWidths = minWidthsScratch;
+		java.util.Arrays.fill(minWidths, 0, itemCount, 0);
+	} else {
+		minWidths = new int[itemCount];
+	}
 	for (int p = 0; p < itemCount; p++) {
 		int element = priority[p];
 		int index = element;
@@ -3342,6 +3354,7 @@ boolean setItemSize(GC gc) {
 		}
 	}
 
+	Point closeSize = null;
 	for (int i = 0; i < itemCount; i++) {
 		CTabItem tab = items[i];
 		int width = widths[i];
@@ -3353,7 +3366,10 @@ boolean setItemSize(GC gc) {
 		tab.closeRect.width = tab.closeRect.height = 0;
 		if (showClose || tab.showClose || (dirtyIndicatorStyle && tab.showDirty)) {
 			if (i == selectedIndex || showUnselectedClose || (dirtyIndicatorStyle && tab.showDirty)) {
-				Point closeSize = renderer.computeSize(CTabFolderRenderer.PART_CLOSE_BUTTON, SWT.NONE, gc, SWT.DEFAULT, SWT.DEFAULT);
+				//FLLDCIM: VIEWPORT - the close button's size does not depend on the tab: measured once per update, not per tab
+				if (!VIEWPORT || closeSize == null) {
+					closeSize = renderer.computeSize(CTabFolderRenderer.PART_CLOSE_BUTTON, SWT.NONE, gc, SWT.DEFAULT, SWT.DEFAULT);
+				}
 				tab.closeRect.width = closeSize.x;
 				tab.closeRect.height = closeSize.y;
 			}
