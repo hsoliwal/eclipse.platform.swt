@@ -200,3 +200,44 @@ logs each generation at FINE through `SwtLog` (`org.eclipse.swt.m3.M3ColumnFilte
   `clearAll` (M3Patch over the CSR index); `ViewerFiltersDialog` (named filter sets; EPL-1.0 header kept verbatim);
   the M3JDK adapters once `m3/collections` ships `M3FlatteningView`/`M3WindowView` (rename by recipe); JFace
   `TableViewer`/`TreeViewer` comparator and filter bridges over the same lanes (one model).
+
+## 8. Delta-only views and hidden viewports (brief rule 24, 2026-10-20)
+
+A model edit (`rowsInserted`, `rowsRemoved`, `rowsChanged`) is applied as a delta in every view of the chain. No view
+runs a pass over all rows for it; only a new source (`setSourceSize`, one `RESET`) does. `DELTA_GATE.tsv` lists every
+rebuild site reachable from a listener, with its file and line. The runtime counter `fullPasses`
+(`M3RowViewBase`) is asserted in the differential tests to equal the number of `RESET`s.
+
+- **Flat filter.** The edited rows are evaluated (bit flips). The rows whose status flips are merged into the rows
+  lane in one pass from the first flip. The word ranks are recounted from that word on, and the events are built
+  from the edited rows. Inserted and removed source rows shift the masks word-wise and renumber the tail of the rows
+  lane.
+- **Tree filter.** Every row has a count of its matching strict descendants. A match flip moves the counts of its
+  ancestors by one, in O(depth). A change of parent moves the row's matching-subtree count from the old ancestors to
+  the new ones (the parent lane is kept with the counts). A row is kept when it matches or has a count above 0. An
+  invalid parent or a loop falls back to the whole fold, as before. Structural edits in tree mode keep the full pass
+  (justified in the gate): the parents of removed rows cannot be asked any more.
+- **Sort.** One changed row moves by binary search and one shift. Several changed rows are marked, sorted alone and
+  placed among the unmarked rows by binary search. The span between the first and the last place is then rewritten
+  once, so damage covers that span only.
+- **Tree sort.** The CSR sibling index follows the delta instead of being rebuilt. A value update moves the row
+  inside its parent's segment. Rows entering or leaving through a filter are inserted into or taken out of their
+  segments with one merge or compaction, and the segment starts are shifted. A change of parent or a structural edit
+  marks the index stale; it is rebuilt on demand (`treeBuilds` counts it in the tests).
+- **Bindings.** A table clears only damaged rows. A tree redoes only the parents of entered, left or changed rows
+  (child count plus one level of children). The Nebula Grid binding clears only damaged rows.
+
+Hidden viewports (user, 2026-10-20). The bindings (`M3RowBinding`, `M3GridRowBinding`) watch `SWT.Show`/`SWT.Hide`
+of the widget and its ancestors. While the widget is hidden, a change only marks it dirty; on show the widget is
+redone once (`setItemCount` + `clearAll` + selection), before it paints. A bound view chain counts its visible and
+hidden viewports (`M3RowViewBase.viewports`). While every viewport is hidden, the asynchronous filter's worker keeps
+computing but parks its result instead of posting it. On show, the newest parked result is applied once, inside the
+Show handler. The gate is `Test_M3FilterAsync.test_hiddenViewportAppliesOnceOnShow`, with 10^4 deltas and 10 filter
+edits over 10^6 rows: 0 posts, 0 applies and 0 widget refreshes while hidden; 1 apply and 1 refresh on show; rows
+equal to the reference. When SWT fires `SWT.PartVisible`/`SWT.PartHidden` itself (the toolkit invariant), the
+bindings will listen to that event instead of walking the ancestors.
+
+Next (rule 26): the views become proxies over the public `M3ListModel`/`M3TableModel`/`M3TreeModel` + `M3Patch`
+(`docs/m3/enhanced-api/MODEL_API.md` on `m3/enhanced-api-20261017`). Masks and permutations will be indexed by
+slot, so inserts no longer shift them. The `PARENT` bit makes structural tree edits deltas. `viewportVisibility`
+replaces the internal viewport count. This track also owns the "show N of M" per-parent limit stage.
