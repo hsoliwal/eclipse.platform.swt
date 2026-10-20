@@ -3558,4 +3558,28 @@ long m3NativeRowOps () {
 	checkWidget ();
 	return nativeRowOps + (viewport != null ? viewport.nativeRowOps () : 0);
 }
+
+/*
+ * Rule 24 (delta-only views): native resets (LB_RESETCONTENT of a non-empty window) made inside a model change (add,
+ * setItemCount, remove, m3Splice). 0 means every change applied only its delta; the differential asserts it.
+ */
+long m3FullRebuilds () {
+	checkWidget ();
+	return viewport != null ? viewport.fullRebuilds () : 0;
+}
+
+/* Rule 24, viewport deltas: whole-window replacements of a non-empty resident window (a resize or a short scroll makes none). */
+long m3WindowReplans () {
+	checkWidget ();
+	return viewport != null ? viewport.windowReplans () : 0;
+}
+
+/*
+ * Rule 24, hidden viewports: window patches applied when the list showed again after taking deltas while hidden, and
+ * WM_PAINT messages the list box received: {patches, paints}.
+ */
+long [] m3HiddenStats () {
+	checkWidget ();
+	return viewport != null ? new long [] {viewport.windowPatches (), viewport.paints ()} : new long [2];
+}
 }

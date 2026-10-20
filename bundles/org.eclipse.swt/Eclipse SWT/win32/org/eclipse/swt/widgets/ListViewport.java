@@ -103,8 +103,54 @@ final class ListViewport {
 
 	/* ---------------------------------------------------------------- layout */
 
+	/*
+	 * Rule 24, hidden viewports: while the list box is not visible (itself or an ancestor hidden, setRedraw (false), or a
+	 * zero-height client area) the lanes take every delta and the native window is left alone: no row is inserted,
+	 * deleted or written and nothing paints; the window is only marked stale (O(1) per delta). The first layout, paint,
+	 * show or input that finds the list visible again applies one window patch against the current lanes (a reset and
+	 * the resident rows), and the list paints once.
+	 */
+	private boolean stale;
+	/* window patches applied on becoming visible, and WM_PAINT messages the list box received (List.m3HiddenStats) */
+	private long windowPatches, paints;
+
+	long windowPatches () {
+		return windowPatches;
+	}
+
+	long paints () {
+		return paints;
+	}
+
+	private boolean hiddenNow () {
+		/* the shared gate (EffectiveVisibility: hidden chain, minimized, zero size, clipped out); redraw off as stock reports it */
+		if (clientHeight == 0 || !OS.IsWindowVisible (list.handle)) return true;
+		return EffectiveVisibility.ENABLED && EffectiveVisibility.hidden (list);
+	}
+
+	/* true while the native window is left alone; on becoming visible the stale window is dropped (the next layout rebuilds it) */
+	private boolean deferNative () {
+		if (stale) {
+			if (hiddenNow ()) return true;
+			stale = false;
+			plan.clear ();
+			resetNative ();
+			selectionDirty = focusDirty = true;
+			windowPatches++;
+			return false;
+		}
+		if (!hiddenNow ()) return false;
+		stale = true;
+		/* enlist with the shared gate: its catch-up (VisibilityGate.CATCH_UP) patches the window when the list shows */
+		if (EffectiveVisibility.ENABLED) EffectiveVisibility.deferKinds (list, EffectiveVisibility.DIRTY_DATA);
+		return true;
+	}
+
 	/** Takes over the (still empty) list box. */
 	void install () {
+		list.addListener (VisibilityGate.CATCH_UP, event -> {
+			if (stale && !deferNative ()) layout ();
+		});
 		resetNative ();
 		plan.clear ();
 		layout ();
@@ -124,8 +170,10 @@ final class ListViewport {
 				relayout = false;
 				measureGeometry ();
 				top = clampTop (top);
-				ensureWindow ();
-				writeLanes ();
+				if (!deferNative ()) {
+					ensureWindow ();
+					writeLanes ();
+				}
 				updateBar ();
 				if (!relayout) break;
 			}
@@ -216,6 +264,8 @@ final class ListViewport {
 		long handle = list.handle;
 		captureResidentState ();
 		plan.plan (nextFirst, nextSize);
+		/* rule 24, viewport deltas: a move that keeps no resident row replaces the window; resizes and scrolls by less than a window never do */
+		if (plan.replaced () && plan.size () > 0) windowReplans++;
 		boolean redraw = list.getDrawing () && OS.IsWindowVisible (handle);
 		if (redraw) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);
 		try {
@@ -265,12 +315,33 @@ final class ListViewport {
 
 	private void deleteNative (int entry) {
 		nativeRowOps++;
-		deleteNative (entry);
+		OS.SendMessage (list.handle, OS.LB_DELETESTRING, entry, 0);
+	}
+
+	/*
+	 * Rule 24 (delta-only views): a model change (add, setItemCount, remove, m3Splice) applies only its delta. A native
+	 * reset (LB_RESETCONTENT, every resident row again) made while one runs is counted here; the differential asserts
+	 * that it stays 0. setItems and removeAll replace every row by definition and are not change paths.
+	 */
+	private int changeDepth;
+	private long fullRebuilds;
+
+	/* whole-window replacements of a non-empty window, on any path (List.m3WindowReplans) */
+	private long windowReplans;
+
+	long windowReplans () {
+		return windowReplans;
+	}
+
+	long fullRebuilds () {
+		return fullRebuilds;
 	}
 
 	private void resetNative () {
+		/* an empty window resets nothing: it is counted only when resident rows were there */
+		if (changeDepth > 0 && plan.size () > 0) fullRebuilds++;
 		nativeRowOps++;
-		resetNative ();
+		OS.SendMessage (list.handle, OS.LB_RESETCONTENT, 0, 0);
 	}
 
 	private void insertEmptyNative (int entry) {
@@ -516,6 +587,16 @@ final class ListViewport {
 	 * @return true when the message was handled and the list box must not see it
 	 */
 	boolean beforeNative (int msg, long wParam, long lParam) {
+		if (msg == OS.WM_PAINT) paints++;
+		/* a stale window (the list was hidden) is patched before the list box paints or takes input */
+		if (stale) {
+			switch (msg) {
+				case OS.WM_PAINT, OS.WM_SETFOCUS, OS.WM_KEYDOWN, OS.WM_CHAR, OS.WM_LBUTTONDOWN, OS.WM_LBUTTONDBLCLK, OS.WM_RBUTTONDOWN -> {
+					if (!deferNative ()) layout ();
+				}
+				default -> {}
+			}
+		}
 		switch (msg) {
 			case OS.WM_LBUTTONDOWN, OS.WM_LBUTTONDBLCLK -> {
 				sync ();
@@ -711,6 +792,9 @@ final class ListViewport {
 	 */
 	long onWheel (long hwnd, long wParam, long lParam) {
 		sync ();
+		/* the wheel reaches a stale window only when the list shows again: patch it first; a hidden list does not scroll */
+		if (stale && deferNative ()) return 0;
+		if (plan.size () == 0) layout ();
 		int first = plan.first ();
 		long code = OS.CallWindowProc (List.ListProc, hwnd, OS.WM_MOUSEWHEEL, wParam, lParam);
 		int nativeTop = (int) OS.SendMessage (list.handle, OS.LB_GETTOPINDEX, 0, 0);
@@ -953,6 +1037,17 @@ final class ListViewport {
 
 	/* ---------------------------------------------------------------- items */
 
+	/* the items as the list box keeps them (each cut at its first NUL): the array itself when no item has one (the model copies it) */
+	static String [] nativeTexts (String [] items) {
+		for (int i = 0; i < items.length; i++) {
+			if (items [i].indexOf ('\0') == -1) continue;
+			String [] texts = items.clone ();
+			for (int j = i; j < texts.length; j++) texts [j] = nativeText (texts [j]);
+			return texts;
+		}
+		return items;
+	}
+
 	static String nativeText (String string) {
 		int nul = string.indexOf ('\0');
 		return nul == -1 ? string : string.substring (0, nul);
@@ -977,26 +1072,31 @@ final class ListViewport {
 	}
 
 	void add (String string, int index) {
-		sync ();
-		int count = model.getItemCount ();
-		if (index < 0 || index > count) list.error (SWT.ERROR_INVALID_RANGE);
-		String text = nativeText (string);
-		model.add (text, index);
-		barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
-		/* the list box keeps the caret, the anchor and the top row index; the selection shifts */
-		int first = plan.first ();
-		int entry = plan.inserted (index, 1);
-		if (entry >= 0) insertNative (entry, index);
-		if (hScroll) extent = Math.max (extent, model.measureItem (index) + List.INSET);
-		/* a row added after the window leaves the native rows, caret and anchor as they are */
-		if (entry >= 0 || plan.first () != first) focusDirty = true;
-		deferBarPaint = true;
+		changeDepth++;
 		try {
-			layout ();
+			sync ();
+			int count = model.getItemCount ();
+			if (index < 0 || index > count) list.error (SWT.ERROR_INVALID_RANGE);
+			String text = nativeText (string);
+			model.add (text, index);
+			barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
+			/* the list box keeps the caret, the anchor and the top row index; the selection shifts */
+			int first = plan.first ();
+			int entry = deferNative () ? -1 : plan.inserted (index, 1);
+			if (entry >= 0) insertNative (entry, index);
+			if (hScroll) extent = Math.max (extent, model.measureItem (index) + List.INSET);
+			/* a row added after the window leaves the native rows, caret and anchor as they are */
+			if (entry >= 0 || plan.first () != first) focusDirty = true;
+			deferBarPaint = true;
+			try {
+				layout ();
+			} finally {
+				deferBarPaint = false;
+			}
+			writeExtent ();
 		} finally {
-			deferBarPaint = false;
+			changeDepth--;
 		}
-		writeExtent ();
 	}
 
 	void setItemCount (int count) {
@@ -1006,16 +1106,44 @@ final class ListViewport {
 			remove (count, itemCount - 1);
 			return;
 		}
-		for (int i = itemCount; i < count; i++) {
-			barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
-			model.add ("", i);
-			int entry = plan.inserted (i, 1);
-			if (entry >= 0) insertNative (entry, i);
+		int added = count - itemCount;
+		if (added > 0) {
+			changeDepth++;
+			try {
+				/* one run of empty rows at the end (one lane shift), as `added` adds of "" would leave it */
+				barState = added >= 2 || barState != BAR_NONE ? BAR_SET : BAR_DEFAULT;
+				String [] empty = new String [added];
+				java.util.Arrays.fill (empty, "");
+				model.insert (itemCount, empty);
+				int entry = deferNative () ? -1 : plan.inserted (itemCount, added);
+				for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, itemCount + i);
+			} finally {
+				changeDepth--;
+			}
 		}
 		if (hScroll && count > itemCount) extent = Math.max (extent, List.INSET);
 		focusDirty = true;
 		layout ();
 		writeExtent ();
+	}
+
+	/*
+	 * `removed` rows at `at` leave in one step: the lanes shift once (one arraycopy instead of one per row), the window
+	 * plan once, and the native rows among them are deleted (O(window)). The caret and the anchor end where `removed`
+	 * single deletions at `at` (deleteResidentRow) put them: equal for all 75,376 cases up to 14 rows (brute force,
+	 * docs/m3/list-viewport/OPTIMIZATION_LEDGER.tsv). Answers the number of native rows deleted.
+	 */
+	private int removeRun (int at, int removed) {
+		int count = model.getItemCount ();
+		barState = BAR_SET;
+		if (caret == at && caret > 0) caret--;
+		if (caret >= count - removed) caret = Math.max (0, count - removed - 1);
+		if (anchor >= at) anchor = -1;
+		int resident = deferNative () ? 0 : plan.removed (at, removed);
+		int removedEntry = plan.removedEntry (at);
+		for (int i = 0; i < resident; i++) deleteNative (removedEntry);
+		model.remove (at, at + removed - 1);
+		return resident;
 	}
 
 	/* one native LB_DELETESTRING: caret and anchor as the stock list box moves them */
@@ -1026,52 +1154,68 @@ final class ListViewport {
 		if (caret >= countAfter) caret = Math.max (0, countAfter - 1);
 		if (anchor >= index) anchor = -1;
 		model.remove (index);
-		if (plan.removed (index, 1) > 0) deleteNative (plan.removedEntry (index));
+		if (!deferNative () && plan.removed (index, 1) > 0) deleteNative (plan.removedEntry (index));
 	}
 
 	void remove (int index) {
-		sync ();
-		if (index < 0 || index >= model.getItemCount ()) list.error (SWT.ERROR_INVALID_RANGE);
-		int width = hScroll ? model.measureItem (index) : 0;
-		int topIndex = top;
-		deleteResidentRow (index);
-		if (index < topIndex) topIndex--;
-		finishRemove (topIndex, width);
+		changeDepth++;
+		try {
+			sync ();
+			if (index < 0 || index >= model.getItemCount ()) list.error (SWT.ERROR_INVALID_RANGE);
+			int width = hScroll ? model.measureItem (index) : 0;
+			int topIndex = top;
+			deleteResidentRow (index);
+			if (index < topIndex) topIndex--;
+			finishRemove (topIndex, width);
+		} finally {
+			changeDepth--;
+		}
 	}
 
 	void remove (int start, int end) {
 		sync ();
 		int count = model.getItemCount ();
 		if (!(0 <= start && start <= end && end < count)) list.error (SWT.ERROR_INVALID_RANGE);
+		/* every row goes: the stock list does removeAll, whose reset is the delta */
 		if (start == 0 && end == count - 1) {
 			removeAll ();
 			return;
 		}
-		int width = 0;
-		if (hScroll) for (int i = start; i <= end; i++) width = Math.max (width, model.measureItem (i));
-		int topIndex = top;
-		for (int i = start; i <= end; i++) deleteResidentRow (start);
-		if (end < topIndex) topIndex -= end - start + 1;
-		finishRemove (topIndex, width);
+		changeDepth++;
+		try {
+			int width = 0;
+			if (hScroll) for (int i = start; i <= end; i++) width = Math.max (width, model.measureItem (i));
+			int topIndex = top;
+			removeRun (start, end - start + 1);
+			if (end < topIndex) topIndex -= end - start + 1;
+			finishRemove (topIndex, width);
+		} finally {
+			changeDepth--;
+		}
 	}
 
 	void remove (int [] indices) {
-		sync ();
-		int [] sorted = indices.clone ();
-		java.util.Arrays.sort (sorted);
-		int count = model.getItemCount ();
-		int low = sorted [0], high = sorted [sorted.length - 1];
-		if (!(0 <= low && low <= high && high < count)) list.error (SWT.ERROR_INVALID_RANGE);
-		int topIndex = top, topCount = 0, width = 0, last = -1;
-		for (int i = sorted.length - 1; i >= 0; i--) {
-			int index = sorted [i];
-			if (index == last) continue;
-			if (hScroll) width = Math.max (width, model.measureItem (index));
-			deleteResidentRow (index);
-			if (index < topIndex) topCount++;
-			last = index;
+		changeDepth++;
+		try {
+			sync ();
+			int [] sorted = indices.clone ();
+			java.util.Arrays.sort (sorted);
+			int count = model.getItemCount ();
+			int low = sorted [0], high = sorted [sorted.length - 1];
+			if (!(0 <= low && low <= high && high < count)) list.error (SWT.ERROR_INVALID_RANGE);
+			int topIndex = top, topCount = 0, width = 0, last = -1;
+			for (int i = sorted.length - 1; i >= 0; i--) {
+				int index = sorted [i];
+				if (index == last) continue;
+				if (hScroll) width = Math.max (width, model.measureItem (index));
+				deleteResidentRow (index);
+				if (index < topIndex) topCount++;
+				last = index;
+			}
+			finishRemove (topIndex - topCount, width);
+		} finally {
+			changeDepth--;
 		}
-		finishRemove (topIndex - topCount, width);
 	}
 
 	/* stock remove: the top row index is set again (and clamped); the extent is recomputed when the widest row went */
@@ -1091,7 +1235,7 @@ final class ListViewport {
 	void removeAll () {
 		sync ();
 		model.removeAll ();
-		resetNative ();
+		if (!deferNative ()) resetNative ();
 		plan.clear ();
 		/* LB_RESETCONTENT: caret and top row 0, the anchor is kept, the bar is freed */
 		top = caret = 0;
@@ -1104,10 +1248,9 @@ final class ListViewport {
 
 	void setItems (String [] items) {
 		sync ();
-		String [] texts = new String [items.length];
-		for (int i = 0; i < items.length; i++) texts [i] = nativeText (items [i]);
+		String [] texts = nativeTexts (items);
 		model.setItems (texts);
-		resetNative ();
+		if (!deferNative ()) resetNative ();
 		plan.clear ();
 		top = caret = 0;
 		/* a visible list redraws once at the end (the bar is written); a hidden one adds row by row */
@@ -1140,46 +1283,42 @@ final class ListViewport {
 	 * the two of {@link #clearNativeAnchor()} when a removal clears a set native anchor.
 	 */
 	void splice (int at, int removed, String [] inserted) {
-		sync ();
-		int count = model.getItemCount (), added = inserted.length;
-		if (at < 0 || removed < 0 || at > count - removed) list.error (SWT.ERROR_INVALID_RANGE);
-		if (removed == 0 && added == 0) return;
-		String [] texts = new String [added];
-		for (int i = 0; i < added; i++) texts [i] = nativeText (inserted [i]);
-		int first = plan.first (), resident = 0, entry = -1, removedWidth = 0;
-		if (hScroll) for (int i = 0; i < removed; i++) removedWidth = Math.max (removedWidth, model.measureItem (at + i));
-		if (removed > 0) {
-			barState = BAR_SET;
-			/* the stock list box's caret and anchor after `removed` LB_DELETESTRINGs at `at` */
-			if (caret == at && caret > 0) caret--;
-			if (caret >= count - removed) caret = Math.max (0, count - removed - 1);
-			if (anchor >= at) anchor = -1;
-			resident = plan.removed (at, removed);
-			int removedEntry = plan.removedEntry (at);
-			for (int i = 0; i < resident; i++) deleteNative (removedEntry);
-			model.remove (at, at + removed - 1);
-		}
-		if (added > 0) {
-			barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
-			model.insert (at, texts);
-			entry = plan.inserted (at, added);
-			for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, at + i);
-			if (hScroll) for (int i = 0; i < added; i++) extent = Math.max (extent, model.measureItem (at + i) + List.INSET);
-		}
-		if (hScroll && removedWidth + List.INSET >= extent) extent = model.getWidestWidth () + List.INSET;
-		/* the top row stays the same row; a run that holds it keeps the index, which the layout clamps */
-		if (at + removed <= top) top += added - removed;
-		boolean windowTouched = plan.first () != first || resident > 0 || entry >= 0;
-		if (windowTouched) selectionDirty = true;
-		focusDirty = true;
-		deferBarPaint = true;
+		changeDepth++;
 		try {
-			layout ();
+			sync ();
+			int count = model.getItemCount (), added = inserted.length;
+			if (at < 0 || removed < 0 || at > count - removed) list.error (SWT.ERROR_INVALID_RANGE);
+			if (removed == 0 && added == 0) return;
+			String [] texts = nativeTexts (inserted);
+			int first = plan.first (), resident = 0, entry = -1, removedWidth = 0;
+			if (hScroll) for (int i = 0; i < removed; i++) removedWidth = Math.max (removedWidth, model.measureItem (at + i));
+			if (removed > 0) {
+				resident = removeRun (at, removed);
+			}
+			if (added > 0) {
+				barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
+				model.insert (at, texts);
+				entry = deferNative () ? -1 : plan.inserted (at, added);
+				for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, at + i);
+				if (hScroll) for (int i = 0; i < added; i++) extent = Math.max (extent, model.measureItem (at + i) + List.INSET);
+			}
+			if (hScroll && removedWidth + List.INSET >= extent) extent = model.getWidestWidth () + List.INSET;
+			/* the top row stays the same row; a run that holds it keeps the index, which the layout clamps */
+			if (at + removed <= top) top += added - removed;
+			boolean windowTouched = plan.first () != first || resident > 0 || entry >= 0;
+			if (windowTouched) selectionDirty = true;
+			focusDirty = true;
+			deferBarPaint = true;
+			try {
+				layout ();
+			} finally {
+				deferBarPaint = false;
+			}
+			writeExtent ();
+			if (LOG.isTraceEnabled ()) LOG.trace (() -> "List splice at " + at + ": -" + removed + " +" + added + (windowTouched ? ", window touched" : ", outside the window"));
 		} finally {
-			deferBarPaint = false;
+			changeDepth--;
 		}
-		writeExtent ();
-		if (LOG.isTraceEnabled ()) LOG.trace (() -> "List splice at " + at + ": -" + removed + " +" + added + (windowTouched ? ", window touched" : ", outside the window"));
 	}
 
 	/** Stock setScrollWidth (): the widest row plus the inset, measured with the current font. */
@@ -1206,6 +1345,7 @@ final class ListViewport {
 
 	/** Bidi auto direction changed: the resident rows are added again (with or without the direction mark). */
 	void reloadResidentRows () {
+		if (deferNative ()) return;
 		int first = plan.first (), size = plan.size ();
 		resetNative ();
 		for (int i = 0; i < size; i++) insertNative (i, first + i);
@@ -1286,6 +1426,12 @@ final class ListViewport {
 	 * the original. Drawing is suspended: the list box may scroll; positionPlane puts the top back.
 	 */
 	private void mirror (int message, long wParam, long lParam) {
+		/* a stale window has nothing to mirror into: its rows and focus are written whole when it shows */
+		boolean wasStale = stale;
+		if (deferNative () || wasStale) {
+			focusDirty = true;
+			return;
+		}
 		long handle = list.handle;
 		boolean redraw = list.getDrawing () && OS.IsWindowVisible (handle);
 		if (redraw) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);

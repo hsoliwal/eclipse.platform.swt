@@ -3782,4 +3782,31 @@ void handleDPIChange(Event event, float scalingFactor) {
 		setScrollWidth();
 	}
 }
+
+/*
+ * Rule 24 (delta-only views): window rebuilds of the drop-down list that replace every resident row inside a model
+ * change (add, remove). 0 means every change applied only its delta; the differential asserts it.
+ */
+long m3FullRebuilds () {
+	checkWidget ();
+	return viewport != null ? viewport.fullRebuilds () : 0;
+}
+
+/* Native row operations of the drop-down list box (LB_INSERTSTRING, LB_DELETESTRING) made by the viewport. */
+long m3NativeRowOps () {
+	checkWidget ();
+	return viewport != null ? viewport.nativeRowOps () : 0;
+}
+
+/* Rule 24, viewport deltas: whole-window replacements of a non-empty resident window of the drop-down list. */
+long m3WindowReplans () {
+	checkWidget ();
+	return viewport != null ? viewport.windowReplans () : 0;
+}
+
+/* Rule 24, hidden viewports: window patches the drop-down list applied after taking deltas while closed or hidden. */
+long m3WindowPatches () {
+	checkWidget ();
+	return viewport != null ? viewport.windowPatches () : 0;
+}
 }
