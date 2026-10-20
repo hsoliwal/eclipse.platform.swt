@@ -212,7 +212,10 @@ public final class RowRenderer {
 
 	/** Paints the default content of a cell: its image, then its text (for cell painters that add to it). */
 	public void paintCell (RowCanvas canvas, RowPaint row, int cell) {
-		if (row.image [cell] != null && row.imageWidth [cell] > 0) {
+		if (row.imageData [cell] != null && row.imageWidth [cell] > 0) {
+			/* a row read back from a snapshot: the image's pixels at the frame's zoom */
+			canvas.imageData (row.imageData [cell], row.imageX [cell], row.y, row.imageWidth [cell], row.height);
+		} else if (row.image [cell] != null && row.imageWidth [cell] > 0) {
 			canvas.image (row.image [cell], row.imageX [cell], row.y, row.imageWidth [cell], row.height);
 		}
 		String text = row.text [cell];
