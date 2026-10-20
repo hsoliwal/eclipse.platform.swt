@@ -591,3 +591,27 @@ User invariant (repeated): "you own the entire SWT .. you own the SWT scrollbar,
 - 2026-10-20 13:20 user "all of eclipse claude", "multipass approach claude": SDK check via aggregator .gitmodules; forked hsoliwal/p2 (only UI repo of the SDK missing; equinox/jdt/binaries have no UI). correction-sites re-run with multipass classes 4c-4e and p2: 3,733 sites, 12 forks; REVIEW 1,869 to 576; MODEL_LISTENER 180 with 131 DELTA_DEFECT (PDE 59, platform 20, jdt.ui 16, platform.ui 9, emf 7). p2 UI goes to the platform.ui surfaces track.
 - 2026-10-20 13:40 scheduled job ran: 18 agents resumed; new agents: a859a72cfeb6cb536 (JFace and EMF binding on M3, brief DATABINDING_M3.md), a0f35d3df4fea5d89 (platform.ui surfaces, brief PLATFORM_UI_SURFACES.md). GitHub UI libs one pass NOT started: concurrent subagent limit (20) reached; start it when a slot frees. Custom-widgets popup plane pushed (nebula e8036498: M3InfoPopup + M3Placement anchors, forwarded to Tree/Table/Grid/Swing). User: "make all UI in Eclipse first".
 - 2026-10-20 user (x4): "New file API streams: read a completed directory as a stream like a zip, file/folder entries, filter and transformer lambdas, entry M3File" = brief C:/m3-superset/tools/briefs/M3FILE_STREAMS.md (M3File flyweight entries on lanes, M3Files.stream over dir/zip/git commit, pruning filters, lazy content transformers; reuse M3jdk21 M3File #1288). Start an agent when a slot frees, after/beside the UI tracks ("make all UI in Eclipse first"). First consumer: the UI-file marking stream.
+
+## 00n Eclipse at Java 21 for M3JDK21; MOP; four mechanical passes (2026-10-20)
+
+User (x4): "please change eclipse to M3JDK21 compatible"; "Java 25 is not widely accepted yet"; "most Maven plugins support only Java 21"; order "platform UI first, then PDE, then JDT, then m2e, then the rest"; "scaffold all the way, tokens reset in 2 days, that's when we fill".
+
+- Branch `m3/jdk21-compat-20261020` in every fork with Java 22+ bundles; docs in `docs/m3/jdk21/` of each (README, BUNDLES, CENSUS, RECIPE_CHANGES, COLLISIONS, GATE_RESIDUE, FILE_MARKS, PASS2_MARKS, PASS3_MARKS, FILL_ITEMS, RECIPE_CORRECTIONS, tools). Gate = JDK 25 javac `--release 21` on the recipe output minus `--release 25` on the original (classpath noise cancels; BOM files excluded).
+  | Fork | Bundles | Renamed lines | Collisions | Residue | State |
+  | --- | --- | --- | --- | --- | --- |
+  | eclipse.platform.ui | 43 | 330 | 1 | 0 | GATE_GREEN |
+  | eclipse.platform | 27 | 355 | 4 | 255 (FFM, org.eclipse.core.filesystem) | FILL: restore JNA Win32Handler (upstream 9dc9a9359b; FFM came in 31b3f6afbb) and port 4 later fixes |
+  | eclipse.jdt.ui | 12 | 293 | 5 | 0 | GATE_GREEN |
+  | eclipse.jdt.core | 13 (+9 build.properties) | 1 | 0 | 0 | GATE_GREEN (test classpath noise 40k: fill a sharper gate) |
+  | eclipse.jdt.debug | 5 | 9 | 0 | 0 | GATE_GREEN |
+  | equinox, aggregator, emf, gef-classic | 1, 3, 0, 0 + pins (parent pom EE, products requiredJavaVersion) | 0 | 0 | not gated | metadata only |
+  | PDE (initiative31 and upstream master), m2e, swt, p2, egit, nebula, Felix, Maven | 0 | - | - | - | already Java 21 or lower |
+  | spring-framework | 0 (Gradle) | - | - | - | 13 hits in its java24 multi-release set only; 43 main hits look like regex false positives: verify by gate |
+- Recipe crate (saved, user "I love this recipe, save"): com.synexia `codex/m3-eclipse-jdk21-compat-20261020`, `recipe-crates/m3-eclipse-jdk21-compat-20261020` (962d9cff92); self-test 27/27.
+- Runtime stand-in: Temurin 21.0.12.1 at `F:/jdks/temurin21/jdk-21.0.12.1+1` (no Windows M3JDK21 image; the Temurin build is the donor, the user runs the build later).
+- Backports (user "back port what is possible from 22-27 JEPs, JBS and JIRAs"; "see what's there already"): M3jdk21 `m3/backports` already holds all 85 JEPs of 22-27 with dispositions; new scaffold `m3/backports/jbs/` (branch `m3/jbs-enhancements-scaffold-20261020`, c262f27220): 5,299 fixed JBS enhancements, 733 already in jdk21u, 4,566 to classify.
+- MOP (user: "each time the LLM corrects a recipe the recipe records that memory ... Machine Oriented Programming ... Atomize and Patternize, annotate and Document"; "a recipe compiler"): M3jdk21 `m3/docs/MACHINE_ORIENTED_PROGRAMMING.md` (branch `m3/mop-invariant-20261020`, 2d817f3bbe); brief rule 31; first ledger: 14 corrections.
+- Four mechanical passes (brief rule 32): pass three `docs/m3/enhance-targets/` (40 templates), pass four `docs/m3/code-mapping/` (30 mappings, about 148k sites across 16 forks).
+- M3File streams: user notes 2026-10-20 (default methods, SubMonitor both ways, shadow streams, layered traversal, attribute-first change detection, interning, deltas, DOOP) added to `briefs/M3FILE_STREAMS.md`.
+- Pitfalls paid for today are the 14 rows of RECIPE_CORRECTIONS.tsv; plus: K: filled up at 16:3x (0.15 GB free), so commits to com.synexia, M3jdk21 and the integration branch went through the Git Data API (`S:/m3-scratch/jdk21/api/api_commit_dir.sh`).
+- Fill after the token reset (2026-10-22 21:30 IST): FFM Win32Handler leaf; jdt.core test classpath for a sharp gate; spring gate; classify the 4,566 JBS rows; final naming pass over PASS2/PASS3 marks; recipe compiler; merge `m3/jdk21-compat-20261020` into the working branches (platform-ui m3/jface-viewport-20261019 etc.) and switch the markers harness to JDK 21 (`build_overlay.sh` ide `--release 21`, `run_markers.sh`/`run_headless_tests.sh` on Temurin 21).

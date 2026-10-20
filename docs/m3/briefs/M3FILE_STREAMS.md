@@ -40,3 +40,28 @@ differential.
 - Tests against Files.walk and ZipInputStream on the same trees: same entries, same order rules, same content.
 - Benchmarks: entries/s and allocations per entry, before (Files.walk + Path objects) and after.
 - Recipe-first: the receiver lands in M3jdk21 via a Synexia crate, with lineage rows.
+
+## Requirements added 2026-10-20 (user notes)
+
+1. **Default methods** carry most of the API: `M3File`, `M3FileStream` and `M3FileTransformer` are interfaces whose
+   default methods give filter/map/visit/delta behaviour, so providers implement only a few primitives.
+2. **Progress on both directions**: every input and output stream takes a sub-progress monitor (Eclipse
+   `SubMonitor` shape: split by entries and bytes, cancellation checked per entry).
+3. **Shadow streams**: secondary readers that advance as and when the main stream is read (no second read of the
+   bytes), for layered parsing: a hash shadow, a line/token shadow, a structure shadow (M3AST) over one pass.
+4. **Layered traversal**: the directory walk is layered the same way: the main traversal feeds shadow traversals
+   (type classifier, hash, structure, delta) in one pass; the traversal order is a declared parameter.
+5. **Change detection**: an M3File records content hash and structured hash (M3AST hash) and, where the provider
+   has change attributes (modified time, length, file key), uses them first; hashes only when attributes differ or
+   are missing. Providers with their own change mechanism (resource deltas, watch services) plug in as sources.
+6. **Small by interning**: names, extensions and path segments are interned ids (TokenInterner), so an M3File is a
+   few ints and longs; DOOP lanes hold the metadata of all entries, objects only on request.
+7. **Deltas downstream**: two snapshots produce an M3File delta (added, removed, changed with the attribute or hash
+   that changed), which downstream consumers apply instead of rescanning.
+8. **DOOP, no file-system mirror**: only what the consumer declares is kept: file type (.txt, .json, .bin, ...),
+   traversal order, the attributes it asked for. Never a whole file-system object graph.
+
+Donors to inventory first (m3-foss-donor-first): Apache Commons IO `TeeInputStream`, `ObservableInputStream`,
+`ProxyInputStream` (Apache-2.0) for shadow streams; Eclipse `SubMonitor` (EPL-2.0) for progress; Eclipse
+`IResourceDelta`/`IResourceDeltaVisitor` and `java.nio.file.WatchService` as change sources; JGit `WorkingTreeIterator`
+and `DirCache` (EDL-1.0) for attribute-first change detection with content-hash fallback.
