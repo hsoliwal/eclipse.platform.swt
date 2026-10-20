@@ -164,6 +164,8 @@ this is what will be offered to Eclipse, so write upstream-quality Eclipse code.
 
 23. **Optimization pass** (user 2026-10-20: "proceed with optimizing the whole"). Follow `C:/m3-superset/tools/OPTIMIZATION_PASS.md`: measure at 10^5 and 10^6 first, one model + deltas, allocation-free hot paths, catalogue algorithms, native work O(window); one ledger row per leaf in `docs/m3/<track>/OPTIMIZATION_LEDGER.tsv`; no number, no leaf.
 
+24. **Delta-only views** (user 2026-10-20: "all delta based view"; "next target is the Problems view, then all the platform UI using the same viewport and DOOP"). On a model change a view applies only a delta (insert/remove/update/move to M3Patch): no root `refresh()`, no `setInput()`, no clear-and-re-add in a change handler. Gate per view: `DELTA_GATE.tsv` (rg count of rebuild calls reachable from listeners = 0, or each site justified with file:line) plus a runtime full-refresh counter = 0 in the differential.
+
 ## Machine rules (hard)
 
 - **Hidden desktop (user requirement 2026-10-16: never move the user's mouse, never steal focus):** every GUI
