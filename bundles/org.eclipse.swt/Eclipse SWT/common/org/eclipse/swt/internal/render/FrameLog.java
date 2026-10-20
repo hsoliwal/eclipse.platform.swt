@@ -28,7 +28,7 @@ public final class FrameLog {
 	public static final int CAPACITY = 256;
 	private final long [] start = new long [CAPACITY], end = new long [CAPACITY], generation = new long [CAPACITY],
 		latency = new long [CAPACITY], scratch = new long [CAPACITY];
-	private long frames, pendingInput, fullRepaints, paintedPixels, rowsDrawn, rowsKept;
+	private long frames, pendingInput, fullRepaints, paintedPixels, rowsDrawn, rowsKept, messages;
 
 	/**
 	 * Records the damage a frame paints (brief rule 24, "all delta based view"): a frame that drew every row of the rows
@@ -47,6 +47,19 @@ public final class FrameLog {
 	/** Frames that repainted the whole rows area since the log was made. */
 	public long fullRepaints () {
 		return fullRepaints;
+	}
+
+	/**
+	 * Counts a message to the plane's window that reached the widget's native window procedure (rule 24, hidden viewports:
+	 * while the widget is hidden, model deltas cause no native work, so the count over the hidden period is the gate).
+	 */
+	public void message () {
+		messages++;
+	}
+
+	/** Messages counted by {@link #message} since the log was made. */
+	public long messages () {
+		return messages;
 	}
 
 	/** Records the rows a frame drew and the rows it kept from the retained frame (unchanged since they were drawn). */

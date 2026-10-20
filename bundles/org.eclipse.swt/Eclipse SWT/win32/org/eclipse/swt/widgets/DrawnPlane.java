@@ -131,6 +131,8 @@ abstract class DrawnPlane {
 	/** True for the messages this plane paints: the behaviour plane's paint and print-client. */
 	final boolean paints (long hwnd, int msg) {
 		if (hwnd != control.handle) return false;
+		/* rule 24, hidden viewports: every message that reaches the native window procedure is native work */
+		frames.message ();
 		if (msg == OS.WM_PAINT || msg == OS.WM_PRINTCLIENT) return true;
 		/* input reaches the model at once; the frame log measures until a frame shows it (interaction model, IM1) */
 		if (msg == OS.WM_KEYDOWN || msg == OS.WM_CHAR || msg == OS.WM_MOUSEWHEEL || msg == OS.WM_LBUTTONDOWN || msg == OS.WM_VSCROLL
