@@ -26,6 +26,12 @@ public class ListModelMicroBench {
 				for (int i = 0; i < 1000; i++) m.remove (size / 2);
 			});
 			measure ("remove 1000 middle, one run", size, items, m -> m.remove (size / 2, size / 2 + 999));
+			String [] more = new String [1000];
+			for (int i = 0; i < more.length; i++) more [i] = "More " + i;
+			measure ("insert 1000 middle, one model.add per row (List.add loop)", size, items, m -> {
+				for (int i = 0; i < more.length; i++) m.add (more [i], size / 2 + i);
+			});
+			measure ("insert 1000 middle, one run (m3Splice)", size, items, m -> m.insert (size / 2, more));
 			measure ("setItems, per-item copy then model copy", size, items, m -> {
 				String [] texts = new String [items.length];
 				for (int i = 0; i < items.length; i++) texts [i] = items [i];
