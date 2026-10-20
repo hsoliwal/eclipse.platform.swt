@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
  *
- * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 b8313c4f84dc5426f41c259b56c2b864327c3f73,
+ * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 118b3cb7e59ea4d4cc32468dccfc6f32e5715dcb,
  * com.m3.collections.M3TreeTopology (same author; the SWT copy of the viewport collections).
  * Derived by recipe (m3/docs/viewport-everywhere/recipe) from hsoliwal/eclipse.platform.swt 553eefd41d9961d303c41e0e4e181712e64a1e45,
  * VirtualTreeTopology.java; Apache-2.0 elected from its Apache-2.0 OR EPL-2.0 publication
@@ -29,6 +29,12 @@ import java.util.*;
  * do not require slots; only their parent's logical child count is retained.
  * This is intentionally independent of any native Tree model so native rows can
  * later become a reconstructable viewport projection.</p>
+ *
+ * <p>Structural edits arrive as patch runs ({@link #apply}, {@link #insertCoordinates},
+ * {@link #removeCoordinates}): O(log k + discarded) per run plus one refresh of the
+ * ancestors, through the lazy shifts of the {@link M3OrderStatisticForest} sibling
+ * index (brief rule 24). Threads: not thread-safe and holds no lock; confined to the
+ * thread that applies the model's patches.</p>
  */
 public final class M3TreeTopology {
 	static final int ROOT = -1;
@@ -58,6 +64,10 @@ public final class M3TreeTopology {
 	/* Parent-owned presentation flags have a separate epoch: checkbox/cache
 	 * changes must not force a native tree-model rebuild. */
 	private long presentationGeneration;
+	/* reusable buffers: ids of a range removal, (id, new index) pairs of moved children */
+	private int [] scratch = new int [16];
+	private int [] parkedIds = new int [0];
+	private java.util.function.IntConsumer discardListener;
 
 	public M3TreeTopology () {
 		Arrays.fill (parentIds, ABSENT);
@@ -100,7 +110,7 @@ public final class M3TreeTopology {
 			materializedCount++;
 		} else {
 			int oldParent = parentIds [id];
-			int oldIndex = childIndices [id];
+			int oldIndex = siblings.key (id);
             if (oldParent == parentId && oldIndex == childIndex) {
                 return;
             }
@@ -140,12 +150,83 @@ public final class M3TreeTopology {
 		adjustKnownChildCount (parentId, -1);
 	}
 
+	/**
+	 * Removes the {@code count} child coordinates of {@code parentId} at {@code childIndex}: the materialized children
+	 * among them are discarded with their subtrees, later siblings move down and the known child count drops.
+	 * O(log k + discarded) plus one refresh of the ancestors, whatever the number of later siblings (brief rule 24).
+	 */
+	public void removeCoordinates (int parentId, int childIndex, int count) {
+		if (childIndex < 0 || count < 0) throw new IllegalArgumentException ("negative child range");
+		if (count == 0) return;
+		if (parentId != ROOT) requirePresent (parentId);
+		if (childIndex > childCount (parentId) - count) throw new IndexOutOfBoundsException (childIndex);
+		int end = childIndex + count;
+		discardRange (parentId, childIndex, end);
+		shiftSiblingIndices (parentId, end, -count);
+		adjustKnownChildCount (parentId, -count);
+	}
+
+	/**
+	 * Opens {@code count} cold child coordinates of {@code parentId} at {@code childIndex}: later siblings move up and
+	 * the known child count grows. O(log k) plus one refresh of the ancestors.
+	 */
+	public void insertCoordinates (int parentId, int childIndex, int count) {
+		if (childIndex < 0 || count < 0) throw new IllegalArgumentException ("negative child range");
+		if (count == 0) return;
+		if (parentId != ROOT) requirePresent (parentId);
+		if (childIndex > childCount (parentId)) throw new IndexOutOfBoundsException (childIndex);
+		shiftSiblingIndices (parentId, childIndex, count);
+		adjustKnownChildCount (parentId, count);
+	}
+
+	/**
+	 * Applies a patch of the child list of {@code parentId} (old snapshot to new): remove runs, then insert runs, then
+	 * the moved children that were materialized go back in at their new index with their subtrees and expansion.
+	 * O(runs log k + moves log k + discarded); the only structural update path of the children (brief rule 24).
+	 */
+	public void apply (int parentId, M3Patch patch) {
+		if (parentId != ROOT) requirePresent (parentId);
+		int moves = patch.moveCount (), parked = 0;
+		if (moves > 0 && parkedIds.length < moves * 2) parkedIds = new int [moves * 2];
+		for (int i = 0; i < moves; i++) {
+			int id = materializedChildId (parentId, patch.moveFrom (i));
+			if (id < 0) continue;
+			long contribution = visibleExtraRows [id];
+			if (contribution != 0) propagateVisibleContribution (parentId, -contribution);
+			unlink (id);
+			parkedIds [parked * 2] = id;
+			parkedIds [parked * 2 + 1] = patch.moveTo (i);
+			parked++;
+		}
+		for (int i = 0; i < patch.removeRuns (); i++) removeCoordinates (parentId, patch.removeAt (i), patch.removeCount (i));
+		for (int i = 0; i < patch.insertRuns (); i++) insertCoordinates (parentId, patch.insertAt (i), patch.insertCount (i));
+		for (int i = 0; i < parked; i++) {
+			int id = parkedIds [i * 2];
+			childIndices [id] = parkedIds [i * 2 + 1];
+			nextSiblingIds [id] = -1;
+			linkSorted (id);
+			generation++;
+			long contribution = visibleExtraRows [id];
+			if (contribution != 0) propagateVisibleContribution (parentId, contribution);
+		}
+	}
+
+	/** Receives every id the topology discards (once each), so an owner can drop what it keeps per id. */
+	public void onDiscard (java.util.function.IntConsumer listener) {
+		discardListener = listener;
+	}
+
+	/** Nodes visited by the sibling index (the cost counter of brief rule 24). */
+	public long indexWork () {
+		return siblings.work ();
+	}
+
 	public void releaseSubtree (int id) {
         if (!contains(id)) {
             return;
         }
 		int parentId = parentIds [id];
-		int removedIndex = childIndices [id];
+		int removedIndex = siblings.key (id);
 		discardSubtree (id);
 		shiftSiblingIndices (parentId, removedIndex + 1, -1);
 		adjustKnownChildCount (parentId, -1);
@@ -198,7 +279,7 @@ public final class M3TreeTopology {
 
 	public int childIndex (int id) {
 		requirePresent (id);
-		return childIndices [id];
+		return siblings.key (id);
 	}
 
 	public int firstMaterializedChildId (int parentId) {
@@ -221,8 +302,8 @@ public final class M3TreeTopology {
 		if (siblings.treeHeight (parentId) > LINEAR_HEIGHT) {
 			return siblings.find (parentId, childIndex);
 		}
-		for (int id = firstChild (parentId); id >= 0 && childIndices [id] <= childIndex; id = nextSiblingIds [id]) {
-			if (childIndices [id] == childIndex) return id;
+		for (int id = firstChild (parentId), key; id >= 0 && (key = siblings.key (id)) <= childIndex; id = nextSiblingIds [id]) {
+			if (key == childIndex) return id;
 		}
 		return -1;
 	}
@@ -238,7 +319,7 @@ public final class M3TreeTopology {
 			return siblings.prefix (parentId, childIndex);
 		}
 		long result = 0;
-		for (int id = firstChild (parentId); id >= 0 && childIndices [id] < childIndex; id = nextSiblingIds [id]) {
+		for (int id = firstChild (parentId); id >= 0 && siblings.key (id) < childIndex; id = nextSiblingIds [id]) {
 			result += visibleExtraRows [id];
 		}
 		return result;
@@ -267,7 +348,7 @@ public final class M3TreeTopology {
 		long before = 0;
 		seekBefore = 0;
 		for (int id = firstChild (parentId); id >= 0; id = nextSiblingIds [id]) {
-			int index = childIndices [id];
+			int index = siblings.key (id);
 			if (index >= limit || index + before > row) break;
 			found = id;
 			seekBefore = before;
@@ -340,7 +421,9 @@ public final class M3TreeTopology {
 		snapshot [0] = capacity;
 		snapshot [1] = rootChildCount == UNKNOWN_CHILD_COUNT ? 0 : rootChildCount;
 		System.arraycopy (parentIds, 0, snapshot, 2, capacity);
-		System.arraycopy (childIndices, 0, snapshot, 2 + capacity, capacity);
+		for (int id = 0; id < capacity; id++) {
+			snapshot [2 + capacity + id] = parentIds [id] == ABSENT ? childIndices [id] : siblings.key (id);
+		}
 		System.arraycopy (childCounts, 0, snapshot, 2 + capacity * 2, capacity);
 		return snapshot;
 	}
@@ -401,7 +484,7 @@ public final class M3TreeTopology {
 		int highest = -1;
 		for (int id = firstMaterializedChildId (parentId); id >= 0; id = nextSiblingIds [id]) {
             if (subtreeHasFlag(id, flag)) {
-                highest = childIndices [id];
+                highest = siblings.key (id);
             }
 		}
 		return highest;
@@ -437,13 +520,35 @@ public final class M3TreeTopology {
 	}
 
 	private void pruneCoordinatesPast (int parentId, int count) {
-		int id = firstMaterializedChildId (parentId);
-		while (id >= 0) {
-			int next = nextSiblingIds [id];
-            if (childIndices [id] >= count) {
-                discardSubtree(id);
-            }
-			id = next;
+		discardRange (parentId, count, Integer.MAX_VALUE);
+		int last = siblings.last (parentId);
+		if (last >= 0 && siblings.key (last) == Integer.MAX_VALUE) {
+			discardSubtree (last);
+		}
+	}
+
+	/*
+	 * Discards the materialized children of parentId with a coordinate in [from, to) and their subtrees: one range
+	 * removal from the sibling index (O(log k + removed)), one splice of the sibling chain, one ancestor refresh.
+	 */
+	private void discardRange (int parentId, int from, int to) {
+		int removed = siblings.countRange (parentId, from, to);
+		if (removed == 0) return;
+		int previous = siblings.lower (parentId, from);
+		if (scratch.length < removed) scratch = new int [M3LaneGrowth.capacity (scratch.length, removed, 4)];
+		int [] ids = scratch;
+		siblings.removeRange (parentId, from, to, ids);
+		int next = nextSiblingIds [ids [removed - 1]];
+		if (previous >= 0) nextSiblingIds [previous] = next;
+		else if (parentId == ROOT) rootFirstChildId = next;
+		else firstChildIds [parentId] = next;
+		long contribution = 0;
+		for (int i = 0; i < removed; i++) contribution = Math.addExact (contribution, visibleExtraRows [ids [i]]);
+		if (contribution != 0) propagateVisibleContribution (parentId, -contribution);
+		for (int i = 0; i < removed; i++) {
+			int id = ids [i];
+			nextSiblingIds [id] = -1;
+			discardSubtreeDetached (id, false);
 		}
 	}
 
@@ -460,6 +565,11 @@ public final class M3TreeTopology {
 	}
 
 	private void discardSubtreeDetached (int id) {
+		discardSubtreeDetached (id, true);
+	}
+
+	/* topLinked: whether id is still in its parent's sibling index and chain (a range removal has taken it out) */
+	private void discardSubtreeDetached (int id, boolean topLinked) {
 		if (!contains (id)) {
 			return;
 		}
@@ -470,11 +580,20 @@ public final class M3TreeTopology {
 				current = child;
 				continue;
 			}
-			/* Delete leaves before their parents. Unlink advances the parent's
-			 * first-child lane, which supplies the next postorder step without
-			 * recursion, an auxiliary stack, or per-node temporary objects. */
+			/* Delete leaves before their parents. Advancing the parent's first-child
+			 * lane supplies the next postorder step without recursion, an auxiliary
+			 * stack, or per-node temporary objects. Below id every sibling index is
+			 * dropped whole, so a descendant costs O(1), not an index removal. */
 			int parentId = parentIds [current];
-			unlink (current);
+			if (current != id) {
+				int next = nextSiblingIds [current];
+				firstChildIds [parentId] = next;
+				siblings.forget (current);
+				if (next < 0) siblings.dropTree (parentId);
+			} else if (topLinked) {
+				unlink (current);
+			}
+			if (discardListener != null) discardListener.accept (current);
 			parentIds [current] = ABSENT;
 			childIndices [current] = -1;
 			childCounts [current] = UNKNOWN_CHILD_COUNT;
@@ -550,32 +669,31 @@ public final class M3TreeTopology {
         if (delta == 0) {
             return;
         }
-		if ((long)materializedCount * 4 < parentIds.length
-				&& (parentId == ROOT || contains (parentId))
-				&& tryShiftSparseSiblings (parentId, fromInclusive, delta)) return;
+		if (parentId != ROOT && !contains (parentId)) {
+			legacyShift (parentId, fromInclusive, delta);
+			return;
+		}
+		int first = siblings.ceiling (parentId, fromInclusive);
+		if (first < 0) return;
+		long edge = delta > 0 ? (long) siblings.key (siblings.last (parentId)) + delta : (long) siblings.key (first) + delta;
+		if (edge < Integer.MIN_VALUE || edge > Integer.MAX_VALUE) {
+			legacyShift (parentId, fromInclusive, delta);
+			return;
+		}
+		// One lazy shift of the sibling index: O(log k) whatever the number of later siblings (brief rule 24).
+		siblings.shift (parentId, fromInclusive, delta);
+		generation++;
+	}
+
+	/* Overflow must retain the original id-ordered partial updates, so it keeps the original id-order loop. */
+	private void legacyShift (int parentId, int fromInclusive, int delta) {
+		if (parentId == ROOT || contains (parentId)) siblings.flush (parentId);
 		boolean changed = false;
 		for (int id = 0; id < parentIds.length; id++) {
 			if (parentIds [id] == parentId && childIndices [id] >= fromInclusive) {
 				changed = shiftSiblingIndex (id, delta, changed);
 			}
 		}
-	}
-
-	private boolean tryShiftSparseSiblings (int parentId, int fromInclusive, int delta) {
-		int first = firstMaterializedChildId (parentId);
-		// Overflow must retain the original id-ordered partial updates.
-		for (int id = first; id >= 0; id = nextSiblingIds [id]) {
-			if (childIndices [id] < fromInclusive) continue;
-			long shifted = (long)childIndices [id] + delta;
-			if (shifted < Integer.MIN_VALUE || shifted > Integer.MAX_VALUE) return false;
-		}
-		boolean changed = false;
-		for (int id = first; id >= 0; id = nextSiblingIds [id]) {
-			if (childIndices [id] >= fromInclusive) {
-				changed = shiftSiblingIndex (id, delta, changed);
-			}
-		}
-		return true;
 	}
 
 	private boolean shiftSiblingIndex (int id, int delta, boolean changed) {
@@ -608,7 +726,7 @@ public final class M3TreeTopology {
             return;
         }
 		int parentId = parentIds [id];
-		int previous = siblings.lower (parentId, childIndices [id]);
+		int previous = siblings.lower (parentId, siblings.key (id));
 		if (previous < 0 ? firstChild (parentId) != id : nextSiblingIds [previous] != id) {
 			throw new IllegalStateException ("materialized tree sibling chain is inconsistent");
 		}

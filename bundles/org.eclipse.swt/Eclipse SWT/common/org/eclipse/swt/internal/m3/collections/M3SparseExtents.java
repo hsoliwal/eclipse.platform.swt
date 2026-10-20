@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
  *
- * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 b8313c4f84dc5426f41c259b56c2b864327c3f73,
+ * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 118b3cb7e59ea4d4cc32468dccfc6f32e5715dcb,
  * com.m3.collections.M3SparseExtents (same author; the SWT copy of the viewport collections).
  * Derived by recipe (m3/docs/viewport-everywhere/recipe) from hsoliwal/eclipse.platform.swt 553eefd41d9961d303c41e0e4e181712e64a1e45,
  * VirtualRowExtents.java; Apache-2.0 elected from its Apache-2.0 OR EPL-2.0 publication
@@ -20,7 +20,7 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.m3.collections;
 
-import java.util.*;
+import java.util.Arrays;
 
 /**
  * Variable row extents with a measurement cache: where a row starts, which row
@@ -29,18 +29,27 @@ import java.util.*;
  *
  * <p>{@link M3ScrollMetrics} covers uniform rows; this class is its variable
  * counterpart for widgets whose rows differ in height (wrapped text, owner-drawn
- * items, nested content). Rows that have not been measured count as the estimate,
- * so the scrollable extent is available before every row is laid out.</p>
+ * items, nested content) or columns that differ in width. Rows that have not been
+ * measured count as the estimate, so the scrollable extent is available before every
+ * row is laid out.</p>
  *
  * <p>Unmeasured rows are implicit: logical count and estimate allocate no row-sized
- * backing. Sorted primitive row IDs and measured extents carry only measured rows;
- * the existing Fenwick algorithm indexes their signed deltas from the estimate.
- * With m measured rows, offset and repeat measurement are O(log m), row lookup is
- * O(log squared m), and sequential first measurements append in O(log m). A first
- * measurement inserted in the middle, deletion of measurements, or an estimate
- * change is O(m). This is a sparse-residency tradeoff, not a universal speedup.
- * No Item/proxy or per-row object is created. Reset drops all measurement backing.
- * The behaviour follows two pattern donors, read at pinned commits and not copied:
+ * backing. Measured rows are the nodes of an {@link M3OrderStatisticForest} (one
+ * tree): the row is the key, the measured extent the weight, and every node keeps
+ * its subtree count and extent sum, so the offset of row r is
+ * {@code (r - measured rows before r) * estimate + measured extent before r}.
+ * With m measured rows: offset, row lookup and a measurement (first or repeated) are
+ * O(log m); an estimate change is O(1); opening or deleting rows ({@link #insert},
+ * {@link #remove}, the {@link M3Patch.Target} operations) is one lazy key shift plus
+ * a range removal, O(log m + removed measurements), never a rebuild (brief rule 24,
+ * viewport deltas: one row height or column width in O(log m)). {@link #work()}
+ * counts the visited nodes. No Item/proxy or per-row object is created; reset drops
+ * all measurement backing.</p>
+ *
+ * <p>Threads: not thread-safe and holds no lock; confined to the thread that applies the
+ * model's patches and measures rows (the UI thread for a widget).</p>
+ *
+ * <p>The behaviour follows two pattern donors, read at pinned commits and not copied:
  * react-window (MIT, 439cfee: lib/core getOffsetForIndex, getEstimatedSize,
  * createCachedBounds, getStartStopIndices) for lazy measurement, the
  * start/end/center/auto/smart alignments and the oversized-row rule; and TanStack
@@ -51,21 +60,26 @@ import java.util.*;
  * cleared in any order; and the estimate for unmeasured rows is a constant
  * the caller sets (setEstimate), where react-window uses the running average.</p>
  */
-public final class M3SparseExtents {
+public final class M3SparseExtents implements M3Patch.Target {
 	static final int ALIGN_AUTO = 0;
 	static final int ALIGN_START = 1;
 	static final int ALIGN_CENTER = 2;
 	static final int ALIGN_END = 3;
 	static final int ALIGN_SMART = 4;
+	private static final int TREE = -1;
 	private static final int [] EMPTY = new int [0];
-	private static final long [] EMPTY_TREE = new long [1];
+	private static final long [] EMPTY_EXTENTS = new long [0];
 
 	private int estimate;
 	private int count;
-	private int measured;
-	private int [] rowIds = EMPTY;
-	private int [] extents = EMPTY;
-	private long [] tree = EMPTY_TREE;
+	private M3OrderStatisticForest index = new M3OrderStatisticForest ();
+	/* node lanes by slot: the row (relative to pending shifts, see M3OrderStatisticForest) and the measured extent */
+	private int [] rows = EMPTY;
+	private long [] extents = EMPTY_EXTENTS;
+	/* free slots below nextSlot, as a stack */
+	private int [] free = EMPTY;
+	private int freeCount, nextSlot;
+	private int [] removed = EMPTY;
 
 	public M3SparseExtents (int estimate) {
 		checkEstimate (estimate);
@@ -81,12 +95,17 @@ public final class M3SparseExtents {
 	}
 
 	public int measuredCount () {
-		return measured;
+		return index.size (TREE);
+	}
+
+	/** Nodes visited by the measurement index since the last reset (the cost counter of brief rule 24). */
+	public long work () {
+		return index.work ();
 	}
 
 	public boolean isMeasured (int row) {
 		checkRow (row);
-		return position (row) >= 0;
+		return index.find (TREE, row) >= 0;
 	}
 
 	/** Measured extent, or the estimate for a row that was never measured. */
@@ -95,121 +114,104 @@ public final class M3SparseExtents {
 		return effective (row);
 	}
 
+	/** O(1): unmeasured rows are counted, not stored. */
 	public void setEstimate (int estimate) {
 		checkEstimate (estimate);
-		if (estimate == this.estimate) return;
 		this.estimate = estimate;
-		rebuild ();
 	}
 
 	/** Forgets every measurement and sets the row count; all rows become the estimate. */
 	public void reset (int rows) {
 		if (rows < 0) throw new IllegalArgumentException ("negative row count");
 		count = rows;
-		measured = 0;
-		rowIds = extents = EMPTY;
-		tree = EMPTY_TREE;
+		index = new M3OrderStatisticForest ();
+		this.rows = EMPTY;
+		extents = EMPTY_EXTENTS;
+		free = removed = EMPTY;
+		freeCount = nextSlot = 0;
 	}
 
-	/** Records the measured extent of one row. */
+	/** Records the measured extent of one row (a row height or a column width): O(log m). */
 	public void setExtent (int row, int extent) {
 		checkRow (row);
 		if (extent < 0) throw new IllegalArgumentException ("negative extent");
-		int at = position (row);
-		if (at >= 0) {
-			int before = extents [at];
-			extents [at] = extent;
-			add (at, (long) extent - before);
+		int slot = index.find (TREE, row);
+		if (slot >= 0) {
+			long delta = extent - extents [slot];
+			extents [slot] = extent;
+			index.adjust (TREE, slot, delta);
 			return;
 		}
-		at = -at - 1;
-		resizeLanes (Math.addExact (measured, 1));
-		System.arraycopy (rowIds, at, rowIds, at + 1, measured - at);
-		System.arraycopy (extents, at, extents, at + 1, measured - at);
-		rowIds [at] = row;
-		extents [at] = extent;
-		measured++;
-		if (at == measured - 1) {
-			// New Fenwick node includes preceding nodes in its low-bit block.
-			tree [measured] = (long) extent - estimate + deltaPrefix (measured - 1)
-					- deltaPrefix (measured - (measured & -measured));
-		} else {
-			rebuild ();
-		}
+		slot = allocate ();
+		rows [slot] = row;
+		extents [slot] = extent;
+		index.insert (TREE, slot);
 	}
 
 	/** Returns one row to the estimate. */
 	public void clearExtent (int row) {
 		checkRow (row);
-		int at = position (row);
-		if (at < 0) return;
-		System.arraycopy (rowIds, at + 1, rowIds, at, measured - at - 1);
-		System.arraycopy (extents, at + 1, extents, at, measured - at - 1);
-		measured--;
-		rebuild ();
+		int slot = index.find (TREE, row);
+		if (slot < 0) return;
+		index.remove (TREE, slot);
+		release (slot);
 	}
 
 	/** Returns every row from {@code row} on to the estimate (react-window resetAfterIndex). */
 	public void clearFrom (int row) {
 		if (row < 0 || row > count) throw new IllegalArgumentException ("invalid row");
-		int keep = lowerBound (row);
-		if (keep == measured) return;
-		measured = keep;
-		rebuild ();
+		dropRange (row, count);
 	}
 
-	/** Opens {@code rows} unmeasured rows at {@code index}. */
+	/** Opens {@code rows} unmeasured rows at {@code index}: one lazy shift of the measured rows after it, O(log m). */
+	@Override
 	public void insert (int index, int rows) {
 		if (rows < 0 || index < 0 || index > count) throw new IllegalArgumentException ("invalid insert");
 		if (rows == 0) return;
 		int next = Math.addExact (count, rows);
-		for (int i = lowerBound (index); i < measured; i++) rowIds [i] += rows;
+		this.index.shift (TREE, index, rows);
 		count = next;
-		// Delta order and values did not change; do not rebuild or allocate.
 	}
 
-	/** Deletes {@code rows} rows at {@code index}. */
+	/** Deletes {@code rows} rows at {@code index}: O(log m + measurements removed). */
+	@Override
 	public void remove (int index, int rows) {
 		if (rows < 0 || index < 0 || index > count - rows) throw new IllegalArgumentException ("invalid remove");
 		if (rows == 0) return;
-		int left = lowerBound (index), right = lowerBound (index + rows);
-		int removed = right - left;
-		System.arraycopy (rowIds, right, rowIds, left, measured - right);
-		System.arraycopy (extents, right, extents, left, measured - right);
-		measured -= removed;
-		for (int i = left; i < measured; i++) rowIds [i] -= rows;
+		dropRange (index, index + rows);
+		this.index.shift (TREE, index + rows, -rows);
 		count -= rows;
-		if (removed != 0) rebuild ();
 	}
 
-	/** Start offset of {@code row}; {@code offsetOf (rowCount ())} is the total extent. */
+	/** Applies a structural patch of the rows (remove runs, then insert runs); moved rows come back unmeasured. */
+	public void apply (M3Patch patch) {
+		patch.applyTo (this);
+	}
+
+	/** Start offset of {@code row}; {@code offsetOf (rowCount ())} is the total extent. O(log m). */
 	public long offsetOf (int row) {
 		if (row < 0 || row > count) throw new IllegalArgumentException ("invalid row");
-		return (long) row * estimate + deltaPrefix (lowerBound (row));
+		long before = index.prefixRank (TREE, row);
+		return (long) (row - index.seekRank ()) * estimate + before;
 	}
 
 	public long totalExtent () {
-		return offsetOf (count);
+		return (long) (count - index.size (TREE)) * estimate + index.total (TREE);
 	}
 
-	/** Row that contains {@code offset}; clamped to the first or last row, -1 when empty. */
+	/** Row that contains {@code offset}; clamped to the first or last row, -1 when empty. O(log m). */
 	public int rowAt (long offset) {
 		if (count == 0) return -1;
 		if (offset <= 0) return 0;
 		if (offset >= totalExtent ()) return count - 1;
-		// Upper bound of measured-row ends; zero-height runs remain half-open.
-		int low = 0, high = measured;
-		while (low < high) {
-			int mid = (low + high) >>> 1;
-			long end = ((long) rowIds [mid] + 1) * estimate + deltaPrefix (mid + 1);
-			if (end <= offset) low = mid + 1;
-			else high = mid;
-		}
-		int first = low == 0 ? 0 : rowIds [low - 1] + 1;
-		long start = (long) first * estimate + deltaPrefix (low);
-		long inGap = first + (offset - start) / estimate;
-		int limit = low == measured ? count - 1 : rowIds [low];
-		return (int) Math.min (inGap, limit);
+		// The last measured row that starts at or before the offset; zero-height rows stay half-open.
+		int slot = index.seekOffset (TREE, offset, estimate);
+		if (slot < 0) return (int) Math.min (offset / estimate, count - 1);
+		int key = index.seekKey ();
+		long start = (long) (key - index.seekRank ()) * estimate + index.seekBefore ();
+		long end = start + extents [slot];
+		if (offset < end) return key;
+		return (int) Math.min (key + 1 + (offset - end) / estimate, count - 1);
 	}
 
 	/**
@@ -268,7 +270,7 @@ public final class M3SparseExtents {
 	public long setExtentAnchored (int row, int extent, long scrollOffset, boolean scrollingBackward) {
 		checkRow (row);
 		if (extent < 0) throw new IllegalArgumentException ("negative extent");
-		boolean first = position (row) < 0;
+		boolean first = index.find (TREE, row) < 0;
 		long start = offsetOf (row);
 		long end = start + effective (row);
 		long delta = (long) extent - effective (row);
@@ -290,60 +292,38 @@ public final class M3SparseExtents {
 	}
 
 	private int effective (int row) {
-		int at = position (row);
-		return at < 0 ? estimate : extents [at];
+		int slot = index.find (TREE, row);
+		return slot < 0 ? estimate : (int) extents [slot];
 	}
 
-	private int position (int row) {
-		return Arrays.binarySearch (rowIds, 0, measured, row);
+	/* the measured rows in [from, to) return to the estimate: one range removal, O(log m + removed) */
+	private void dropRange (int from, int to) {
+		int n = index.countRange (TREE, from, to);
+		if (n == 0) return;
+		if (removed.length < n) removed = new int [M3LaneGrowth.capacity (removed.length, n, 4)];
+		index.removeRange (TREE, from, to, removed);
+		for (int i = 0; i < n; i++) release (removed [i]);
 	}
 
-	private int lowerBound (int row) {
-		int at = position (row);
-		return at < 0 ? -at - 1 : at;
-	}
-
-	private long deltaPrefix (int entries) {
-		long sum = 0;
-		for (int i = entries; i > 0; i -= i & -i) sum += tree [i];
-		return sum;
-	}
-
-	/** Adds a measured-slot delta; the tree is over measured slots, not logical rows. */
-	private void add (int slot, long delta) {
-		if (delta == 0) return;
-		for (int i = slot + 1; i <= measured;) {
-			tree [i] += delta;
-			int step = i & -i;
-			if (step > measured - i) break;
-			i += step;
+	private int allocate () {
+		if (freeCount > 0) return free [--freeCount];
+		int slot = nextSlot++;
+		if (slot == rows.length) {
+			// One parent-owned lane directory: stage every allocation before publication.
+			int grown = M3HeapGrowth.capacity (rows.length, slot + 1, 45);
+			int [] nextRows = Arrays.copyOf (rows, grown);
+			long [] nextExtents = Arrays.copyOf (extents, grown);
+			index.ensureCapacity (grown);
+			rows = nextRows;
+			extents = nextExtents;
+			index.lanes (rows, extents);
 		}
+		return slot;
 	}
 
-	private void rebuild () {
-		if (measured == 0) {
-			rowIds = extents = EMPTY;
-			tree = EMPTY_TREE;
-			return;
-		}
-		Arrays.fill (tree, 0, measured + 1, 0L);
-		for (int i = 1; i <= measured; i++) {
-			tree [i] += (long) extents [i - 1] - estimate;
-			int step = i & -i;
-			if (step <= measured - i) tree [i + step] += tree [i];
-		}
-	}
-
-	private void resizeLanes (int entries) {
-		if (entries <= extents.length) return;
-		int grown = M3HeapGrowth.capacity (extents.length, entries, 16);
-		// One parent-owned three-lane directory. Stage all allocations before publication.
-		int [] nextRows = Arrays.copyOf (rowIds, grown);
-		int [] nextExtents = Arrays.copyOf (extents, grown);
-		long [] nextTree = Arrays.copyOf (tree, Math.addExact (grown, 1));
-		rowIds = nextRows;
-		extents = nextExtents;
-		tree = nextTree;
+	private void release (int slot) {
+		if (freeCount == free.length) free = Arrays.copyOf (free, M3LaneGrowth.capacity (free.length, freeCount + 1, 4));
+		free [freeCount++] = slot;
 	}
 
 	private void checkRow (int row) {

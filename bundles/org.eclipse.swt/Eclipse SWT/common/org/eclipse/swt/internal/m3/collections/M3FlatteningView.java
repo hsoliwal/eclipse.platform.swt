@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
  *
- * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 b8313c4f84dc5426f41c259b56c2b864327c3f73,
+ * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 118b3cb7e59ea4d4cc32468dccfc6f32e5715dcb,
  * com.m3.collections.M3FlatteningView (same author; the SWT copy of the viewport collections).
  *
  * Contributors:
@@ -30,6 +30,11 @@ import java.util.RandomAccess;
  * order-statistic sibling forest), and {@link M3TreeProjection} maps a row to its (parent, child index) coordinate in
  * O(depth x log k). Cold children are arithmetic: {@link #get(int)} asks the {@link Source} for them only when read.
  * Child counts are read when a node is expanded.</p>
+ * <p>Cost (k materialized siblings, d depth): {@link #size()} O(1); {@link #get}, {@link #depth}, {@link #isExpanded}
+ * O(d log k); {@link #expand}, {@link #collapse} O(d log k); {@link #apply} O(runs log k + discarded nodes + d log k),
+ * never a rebuild (brief rule 24). {@link #work()} counts the sibling-index steps.</p>
+ * <p>Threads: not thread-safe and holds no lock; the view and its {@link Source} are confined to the thread that
+ * applies the model's patches.</p>
  *
  * @param <N> node type
  */
@@ -51,6 +56,8 @@ public final class M3FlatteningView<N> extends AbstractList<N> implements Random
 	public M3FlatteningView (Source<N> source) {
 		this.source = Objects.requireNonNull (source, "source");
 		topology.setChildCount (M3TreeTopology.ROOT, source.childCount (null));
+		// a discarded subtree releases its node objects (ids are never reused)
+		topology.onDiscard (id -> nodes [id] = null);
 	}
 
 	@Override
@@ -94,6 +101,30 @@ public final class M3FlatteningView<N> extends AbstractList<N> implements Random
 	/** Number of materialized (once expanded) nodes. */
 	public int materializedCount () {
 		return topology.materializedCount ();
+	}
+
+	/**
+	 * Applies a patch of the children of the node at {@code row} (old child list to new; row -1 stands for the roots):
+	 * the only structural update path of this view (brief rule 24). Later siblings shift lazily, removed subtrees are
+	 * dropped, child counts and row counts are refreshed along the ancestors: O(runs log k + discarded nodes), no
+	 * rebuild and no re-read of unchanged children. A moved child that was expanded keeps its subtree and expansion.
+	 * The node at {@code row} must be expanded (or have been: a collapsed node with known children takes the patch too).
+	 */
+	public void apply (int row, M3Patch patch) {
+		int parentId = M3TreeTopology.ROOT;
+		if (row >= 0) {
+			parentId = rowAt (row).materializedId ();
+			if (parentId < 0 || !topology.childCountKnown (parentId)) {
+				throw new IllegalArgumentException ("the node at row " + row + " was never expanded");
+			}
+		}
+		topology.apply (parentId, patch);
+		modCount++;
+	}
+
+	/** Nodes visited by the sibling index since this view was created (the cost counter of brief rule 24). */
+	public long work () {
+		return topology.indexWork ();
 	}
 
 	private M3TreeProjection.Row rowAt (int row) {

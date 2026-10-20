@@ -9,7 +9,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
  *
- * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 b8313c4f84dc5426f41c259b56c2b864327c3f73,
+ * Derived by recipe (M3jdk21 m3/docs/viewport-everywhere/recipe, SwtHome) from hsoliwal/M3jdk21 m3/viewport-everywhere-20261018 118b3cb7e59ea4d4cc32468dccfc6f32e5715dcb,
  * com.m3.collections.M3LongLongHashMapTest (same author; the SWT copy of the viewport collections).
  *
  * Contributors:
@@ -117,5 +117,22 @@ public class M3LongLongHashMapTest {
 		for (long k = 0; k < 5_000; k += 2) big.remove (k * 1_000_003L);
 		for (long k = 1; k < 5_000; k += 2) assertEquals (k, big.getOrDefault (k * 1_000_003L, -1), "survives rehash after mass deletion");
 		assertEquals (2_500, big.keysToArray ().length);
+	}
+
+	@Test
+	public void growthBoundaryReusesTombstoneAndIteratorDrains () {
+		M3LongLongHashMap map = new M3LongLongHashMap ();
+		assertEquals (8, map.capacity ());
+		for (long k = 0; k < 5; k++) map.put (k, k);
+		for (long k = 0; k < 4; k++) map.remove (k);
+		assertTrue (map.put (0, 42), "the growth-boundary probe reuses the tombstone of key 0");
+		assertEquals (8, map.capacity (), "no growth when a tombstone takes the key");
+		assertEquals (42, map.getOrDefault (0, -1));
+		assertEquals (2, map.size ());
+		long [] sum = {0};
+		map.keyIterator ().forEachRemaining (k -> sum [0] += k);
+		assertEquals (4, sum [0]);
+		assertThrows (NullPointerException.class, () -> map.keyIterator ().forEachRemaining (null));
+		assertThrows (IllegalArgumentException.class, () -> new M3LongLongHashMap (Integer.MAX_VALUE));
 	}
 }
