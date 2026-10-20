@@ -173,6 +173,13 @@ final class M3FilterWorker implements Runnable {
 			M3FilterCriterion criterion = criteria [i];
 			if (!dirty [i]) {
 				criterion.mask = current [i].mask;
+			} else if (criterion.narrows (current [i])) {
+				/* a refining keystroke: only the rows the applied pattern kept are candidates */
+				criterion.mask = Arrays.copyOf (current [i].mask, words);
+				for (int word = 0; word < words; word += CHECK >> 6) {
+					if (generation != filter.generation) return false;
+					criterion.narrow (word, Math.min (words, word + (CHECK >> 6)), text);
+				}
 			} else if (criterion.isActive ()) {
 				criterion.mask = new long [words];
 				for (int start = 0; start < n; start += CHECK) {

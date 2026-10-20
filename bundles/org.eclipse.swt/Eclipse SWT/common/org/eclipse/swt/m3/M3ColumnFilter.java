@@ -147,12 +147,21 @@ public final class M3ColumnFilter extends M3RowViewBase {
 	private void setText (int index, int [] columns, String pattern, int mode) {
 		M3TextMatch match = pattern == null ? null : M3TextMatch.compile (pattern, mode);
 		M3Checks.argument (text != null || match == null);
+		M3FilterCriterion before = pending [index + 1];
+		boolean narrowing = worker == null && match != null && before.match != null && Arrays.equals (columns, before.columns) && match.narrows (before.match);
 		M3FilterCriterion criterion = edit (index + 1);
 		if (match != null && match.isActive ()) {
 			criterion.match = match;
 			criterion.columns = columns;
 		}
-		changed (criterion);
+		if (narrowing) narrowed (criterion); else changed (criterion);
+	}
+
+	/* typing more of a contains or starts-with pattern: only the rows the previous pattern kept are tested again */
+	private void narrowed (M3FilterCriterion criterion) {
+		generation++;
+		criterion.narrow (0, M3RowMask.words (sourceSize ()), text);
+		recompute (null);
 	}
 
 	/**

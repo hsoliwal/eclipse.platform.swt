@@ -65,6 +65,21 @@ final class M3FilterCriterion {
 		for (int row = start; row < end; row++) M3RowMask.set (mask, row, test (row, text));
 	}
 
+	/* whether this criterion keeps a subset of the rows previous keeps (same columns, a narrowing text match) */
+	boolean narrows (M3FilterCriterion previous) {
+		return match != null && previous.match != null && Arrays.equals (columns, previous.columns) && match.narrows (previous.match);
+	}
+
+	/* clears, in the mask, the bits of rows [start, end) (by 64-row word) that this criterion rejects; set bits are the candidates */
+	void narrow (int startWord, int endWord, M3CellText text) {
+		for (int w = startWord; w < endWord; w++) {
+			for (long x = mask [w]; x != 0; x &= x - 1) {
+				int row = w << 6 | Long.numberOfTrailingZeros (x);
+				if (!test (row, text)) mask [w] &= ~(1L << row);
+			}
+		}
+	}
+
 	/* the same criterion with a new identity (spec and mask shared): a pending edit of an asynchronous filter */
 	M3FilterCriterion copy () {
 		M3FilterCriterion copy = new M3FilterCriterion ();
