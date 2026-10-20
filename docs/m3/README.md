@@ -22,7 +22,7 @@ Five startup modes are chosen with `-Dswt.widget.mode=viewport|original|custom|m
 | Topic | Document |
 |---|---|
 | Programme plan (state, tracks, PRs, decisions) | [VIEWPORT_PROGRAMME_PLAN.md](VIEWPORT_PROGRAMME_PLAN.md) |
-| Rules every contributor follows (1-27) | [VIEWPORT_AGENT_BRIEF.md](VIEWPORT_AGENT_BRIEF.md) |
+| Rules every contributor follows (1-28) | [VIEWPORT_AGENT_BRIEF.md](VIEWPORT_AGENT_BRIEF.md) |
 | Optimization pass (measure first, ledger per track) | [OPTIMIZATION_PASS.md](OPTIMIZATION_PASS.md) |
 | How behaviour is proven equal to stock | [VIEWPORT_DIFFERENTIAL_HARNESS.md](VIEWPORT_DIFFERENTIAL_HARNESS.md) |
 | Object residency (lazy, parent-owned facades) | [M3_ITEM_RESIDENCY.md](M3_ITEM_RESIDENCY.md) |
