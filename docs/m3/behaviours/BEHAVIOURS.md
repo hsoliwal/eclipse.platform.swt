@@ -248,3 +248,16 @@ gets it.
   binding).
 - Donors: NatTable filter row and column groups (EPL: ADAPT), AG Grid floating filters and tool panels (MIT community),
   MUI DataGrid toolbar (MIT), IntelliJ view options toolbars (Apache: ADAPT).
+- **Configure-view dialog, multi-tab (user, 2026-10-20: "complex XViewer filter, multi-tab settings"):** the bar's
+  "configure" opens one settings dialog with tabs:
+  - Columns: show, hide, order, width, pin, with search;
+  - Sort: multi-key;
+  - Filters: complex filters per column with operators, AND/OR groups and the expression language;
+  - Grouping and aggregates;
+  - Footer and header-2 content;
+  - Saved views: name, default, share, import/export.
+  It edits one view-state object applied as one patch, with live preview and cancel restoring the old state.
+  Primary donor: Nebula XViewer (EPL: ADAPT, in our nebula fork): XViewerCustomizeDialog, XViewerCustomMenu, column
+  filter data, saved customizations, already flagged with full-rebuild sites in correction-sites (XViewerCustomizeDialog.java,
+  XViewerCustomMenu.java). Its setInput/refresh calls become lane patches. Owners: custom-widgets (dialog, SWT and Swing),
+  sort-filter (complex filter model), jface (template binding).

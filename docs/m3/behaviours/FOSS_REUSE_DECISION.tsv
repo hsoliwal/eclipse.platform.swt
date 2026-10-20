@@ -42,3 +42,4 @@ split-panel	JetBrains/intellij-community (Splitter, OnePixelSplitter)	REQUIRED_B
 split-panel	johnwalley/allotment	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
 split-panel	bvaughn/react-resizable-panels	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
 split-panel	swingx (JXMultiSplitPane)	-	-	LGPL-2.1	-	PATTERN_ONLY	-	-	-
+configure-view-dialog	EclipseNebula/nebula (XViewer customize dialog, column filters, saved customizations)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
