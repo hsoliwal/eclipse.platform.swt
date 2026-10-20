@@ -189,6 +189,16 @@ public final class M3TreePathTrie {
 		return segments [path];
 	}
 
+	/**
+	 * Answers whether some interned path extends {@code path}. When none does, no
+	 * descendant of {@code path} is interned, so a walk that restores flags can
+	 * skip the lookups of the whole subtree (the trie is prefix-closed).
+	 */
+	public boolean hasChildren (int path) {
+		checkPath (path);
+		return firstChildren [path] != NONE;
+	}
+
 	/** Number of segments of {@code path}. */
 	public int depth (int path) {
 		checkPath (path);

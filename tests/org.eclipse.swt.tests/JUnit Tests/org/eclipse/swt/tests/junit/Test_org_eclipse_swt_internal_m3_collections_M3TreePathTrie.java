@@ -44,6 +44,9 @@ public class Test_org_eclipse_swt_internal_m3_collections_M3TreePathTrie {
 		assertEquals (1, trie.segment (abc));
 		assertEquals (M3TreePathTrie.NOT_FOUND, trie.parent (M3TreePathTrie.ROOT));
 		assertEquals (0, trie.depth (M3TreePathTrie.ROOT));
+		assertTrue (trie.hasChildren (M3TreePathTrie.ROOT));
+		assertTrue (trie.hasChildren (ab));
+		assertFalse (trie.hasChildren (abc));
 		int [] segments = new int [5];
 		assertEquals (3, trie.segments (abc, segments));
 		assertArrayEquals (new int [] {3, 7, 1, 0, 0}, segments);
