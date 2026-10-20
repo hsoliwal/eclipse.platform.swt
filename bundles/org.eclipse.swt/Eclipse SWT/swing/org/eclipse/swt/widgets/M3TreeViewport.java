@@ -52,9 +52,18 @@ final class M3TreeViewport {
 	final M3TreeModel model;
 	private final M3TreeTableRows rows;
 	private final M3SwingScroll scroll = new M3SwingScroll ();
-	/** The parent whose slot {@link #adoptingIndex} is being materialized, or <code>null</code>. */
-	private M3TreeChildren adopting;
-	private int adoptingIndex = -1;
+	/**
+	 * The slot being materialized, per thread: Swing reads children on its own thread (UPSTREAM_DEFECTS I31-X1), so
+	 * one thread's materialization must not see another's.
+	 */
+	private static final ThreadLocal<Adoption> ADOPTION = ThreadLocal.withInitial (Adoption::new);
+
+	/** A parent and the index of the child being materialized in it. */
+	private static final class Adoption {
+		M3TreeChildren children;
+		int index = -1;
+	}
+
 	/** Whether a column width update is posted to the Swing thread. */
 	private boolean widthPending;
 	/** Children that grew while the tree was hidden (brief rule 24, hidden viewports); Swing gets them on show. */
@@ -79,9 +88,7 @@ final class M3TreeViewport {
 	 */
 	static M3TreeViewport install (Tree tree) {
 		M3TreeViewport viewport = new M3TreeViewport (tree);
-		viewport.cTree ().getSwingComponent ().addHierarchyListener (e -> {
-			if ((e.getChangeFlags () & java.awt.event.HierarchyEvent.SHOWING_CHANGED) != 0 && e.getComponent ().isShowing ()) viewport.shown ();
-		});
+		M3ShowGate.install (tree, viewport.cTree ().getSwingComponent (), viewport::shown);
 		LOG.debug (() -> "viewport installed, style " + Integer.toHexString (tree.style));
 		return viewport;
 	}
@@ -103,15 +110,16 @@ final class M3TreeViewport {
 	TreeItem item (M3TreeChildren children, int index) {
 		TreeItem item = children.items.get (index);
 		if (item != null) return item;
-		M3TreeChildren outer = adopting;
-		int outerIndex = adoptingIndex;
-		adopting = children;
-		adoptingIndex = index;
+		Adoption adoption = ADOPTION.get ();
+		M3TreeChildren outer = adoption.children;
+		int outerIndex = adoption.index;
+		adoption.children = children;
+		adoption.index = index;
 		try {
 			return children.owner == null ? new TreeItem (tree, SWT.NONE, index) : new TreeItem (children.owner, SWT.NONE, index);
 		} finally {
-			adopting = outer;
-			adoptingIndex = outerIndex;
+			adoption.children = outer;
+			adoption.index = outerIndex;
 		}
 	}
 
@@ -143,7 +151,8 @@ final class M3TreeViewport {
 	void insert (TreeItem parentItem, TreeItem item, int index) {
 		M3TreeChildren children = children (parentItem, true);
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode) item.handle;
-		if (adopting == children && adoptingIndex == index) {
+		Adoption adoption = ADOPTION.get ();
+		if (adoption.children == children && adoption.index == index) {
 			children.items.put (index, item);
 			node.setParent (children.node);
 			return;

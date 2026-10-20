@@ -14,7 +14,6 @@
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
-import java.awt.event.HierarchyEvent;
 import java.util.*;
 
 import javax.swing.*;
@@ -57,9 +56,7 @@ final class M3TableViewport {
 	 */
 	static M3TableViewport install (Table table) {
 		M3TableViewport viewport = new M3TableViewport (table);
-		viewport.rows ().addHierarchyListener (e -> {
-			if ((e.getChangeFlags () & HierarchyEvent.SHOWING_CHANGED) != 0 && e.getComponent ().isShowing ()) viewport.shown ();
-		});
+		M3ShowGate.install (table, viewport.rows (), viewport::shown);
 		return viewport;
 	}
 
