@@ -512,7 +512,7 @@ deltas/s at 10^6 rows (the interactive differential with a model thread).
 | Leaf | Scope | Status |
 |---|---|---|
 | R28-1 | `ThreadRole` and the assertion mode at the plane, snapshot and renderer boundaries; this design | DONE (headless: `Test_..._ThreadRole` with and without the mode) |
-| R28-2 | the row slab: `RowPaint` rows into snapshot lanes (key ints, texts, image copies, font descriptors) and back | next |
+| R28-2 | the row slab: `RowPaint` rows into snapshot lanes (key ints, texts, image copies, font descriptors) and back | DONE headless (`FrameSlab`, `TripleBuffer`, `FontDescriptor`, `RowPaint.write/read`: identical renderer calls after the round trip, 0 torn frames in 50000 publications under concurrent reads, 0 bytes per frame); the planes fill it with R28-3 |
 | R28-3 | the render thread per Display, the frame triple buffer, the completion that invalidates the damage | |
 | R28-4 | the frame listener of the planes on the Synchronizer (API above, all-widgets track implements it) | agreed |
 | R28-5 | the gates under churn at 10^6 rows in custom, m3 and gpu | |
