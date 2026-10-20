@@ -272,3 +272,22 @@ gets it.
 | Tree-navigated dialogs (preference-style and wizard-tree) | a left tree of pages (filterable, with search across page contents), right page area; for wizards the tree shows steps with state (done, current, error) and allows jumping back; pages are created lazily (PartVisible) | JFace PreferenceDialog/FilteredPreferenceDialog (EPL: stock reference), WizardDialog (EPL), MUI Stepper (MIT) | platform-ui-surfaces |
 | Infinite scroll | the viewport loads windows on demand (already the core); "load more" at the end for remote sources, with prefetch via the ViewportListener | TanStack Virtual (MIT), ULTIMATE_KIT infinite-scroll | viewport core |
 | Scroll checkpoints (scroll spy) | hovering near the scrollbar of a scrolled composite or form shows a summary list of checkpoints (sections, headings, groups, problems, search hits); markers on the scrollbar track; click jumps; the list is a viewport list | VS Code overview ruler and sticky scroll (MIT: ADAPT), Bootstrap/MUI scroll-spy (MIT), JFace Text overview ruler (EPL: in our fork) | all-widgets (ScrolledComposite/ScrolledForm) + custom-widgets |
+
+### Footer API: configurable like the header (user, 2026-10-20: "show footer should be an API", "SWT.WIDGET_FOOTER", "the header is configurable, the footer configurable")
+
+The footer is public SWT API inside Tree and Table (rule 25/26), shaped like the header API, with the same in Swing:
+- `SWT.FOOTER` style hint at creation (parallel to the header; the footer can also be turned on later), and
+  `setFooterVisible(boolean)` / `getFooterVisible()` on Tree, Table and List (Nebula Grid already has
+  `Grid.setFooterVisible` and `GridColumn.setFooterText`: ADAPT the shape, EPL).
+- Per column, the footer cell follows the header cell automatically: order, width, visibility, alignment, pinning and
+  resizing are the column's; nothing is configured twice.
+- Per column content: `TreeColumn/TableColumn.setFooterText(String)`, `setFooterImage(Image)`, and the typed form
+  `setFooterContent(M3FooterContent)` where content is an aggregate (sum, count, distinct, min, max, average, percent,
+  custom), a micro-chart, a filter chip, or a lane counter; aggregates are computed from the model's lanes, updated by
+  deltas, and read by `getFooterText()`.
+- The footer bar (counts, selection summary, sort and filter chips, freshness, problems, changes, position, paging,
+  hints) is `setFooterBar(...)` with the same declarative parts as the `.m3view` `footer=` key.
+- Events: `SWT.Selection` on a footer cell (the popup opens from the anchor API), and footer height in
+  `computeTrim`/`getClientArea`, like the header.
+- Configuration: the configure-view bar and its dialog edit footer content per column, in the same Columns tab as the
+  header, and the state persists with the columns.
