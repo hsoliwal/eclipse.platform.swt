@@ -115,6 +115,7 @@ public final class RowSnapshots {
 	 * @return the generation published
 	 */
 	public long publish (Slab slab) {
+		ThreadRole.RENDER.forbid ("RowSnapshots.publish");
 		if (slab != slabs [back]) throw new IllegalArgumentException ("not the writable slab of these snapshots");
 		slab.generation = ++generation;
 		slab.checksum = slab.sum ();
@@ -129,6 +130,7 @@ public final class RowSnapshots {
 	 * Renderer only.
 	 */
 	public Slab acquire () {
+		ThreadRole.MODEL.forbid ("RowSnapshots.acquire");
 		if ((middle.get () & FRESH) != 0) front = middle.getAndSet (front) & 3;
 		Slab slab = slabs [front];
 		return slab.generation == 0 ? null : slab;

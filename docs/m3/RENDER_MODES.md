@@ -467,6 +467,56 @@ m3 pixels and the custom pixels are reported by similarity; every non-pixel answ
 | IM5 | frame pacing (skiko pattern) | I6 in gpu |
 | IM6 | the interactive differential | I1-I7 |
 
+## Thread architecture: CPU and GPU separation (brief rule 28, user 2026-10-20)
+
+User 2026-10-20: "CPU vs GPU thread separation must exist", "the SWT synchronizer too", "just like Swing". Three roles,
+never mixed (`ThreadRole`):
+
+| Role | Owns | Never |
+|---|---|---|
+| UI | OS events, the native control (behaviour plane) and its resident window, ONE patch per widget per frame, building and publishing the frame's snapshot | waits on the render thread |
+| MODEL | lanes, deltas, sort, filter, scope (viewport tracks) | touches a widget handle, a device context or a frame |
+| RENDER | in custom, m3 and gpu: acquires the newest published snapshot, draws it into its own frame buffer (GDI DIB, Skia raster or GL target), hands the frame to the UI thread | touches the model, a widget or any SWT object; blocks on the model |
+
+**The frame tick** (agreed with the all-widgets track, which rebuilds the Synchronizer as a Swing-EventQueue-like
+dispatcher: a ring, keyed coalescing, priority classes `Synchronizer.INPUT`, `LAYOUT`, `DEFAULT` (stock FIFO), `MODEL`,
+`IDLE`). Model threads post their completions as `MODEL` runnables keyed by widget (`asyncExec (priority, key,
+runnable)`: the latest per key replaces the queued one). At most one tick is pending per Display, paced at 16 ms and
+skipped when nothing is dirty; it drains the queued `MODEL` runnables (one window patch per widget), increments the
+Display's frame generation (1, 2, 3, ...) and calls every `org.eclipse.swt.widgets.FrameListener`
+(`frameApplied (Display, long frameGeneration)`, registered with `display.getSynchronizer ().addFrameListener`) once,
+in one dispatcher step, so no `WM_PAINT` runs between the patches and the listeners. A plane that is dirty without model
+work asks for a tick with `requestFrame ()`.
+
+**Flow of a frame.** In its frame listener a dirty drawn plane fills its back slab (`RowSnapshots`) from the viewport
+lanes: per visible row the `RowPaint.key` ints, the texts (immutable strings), image pixels as immutable copies and
+fonts as descriptors, never an SWT object; it publishes (one `getAndSet`) and unparks the render thread. The render
+thread exchanges in the newest slab (older ones are dropped: the newest generation wins), draws it and publishes the
+finished frame through a second triple buffer. On `WM_PAINT` the UI thread runs the behaviour pass and blits the newest
+finished frame over the damage; when that frame is older than the snapshot of the damage it is shown once more and the
+render thread's completion invalidates the damage again (one frame later, invariant I5). The UI thread never waits on
+the render thread; the render thread never blocks on the model (it reads published slabs only). A hidden widget
+(rule 24) skips the patch and the publication; on becoming part-visible it posts its one patch as `MODEL`, keyed by the
+widget, and the next tick publishes once.
+
+**Captures.** `WM_PRINTCLIENT` (tests, printing) asks for the pixels of the current model now: it is served from the
+newest finished frame when its generation is current, otherwise drawn once on the UI thread outside the frame path and
+counted apart in the frame log.
+
+**Gates.** `-Dswt.m3.threadCheck=true` turns on the role assertions (a constant false otherwise, so the checks compile
+away): a plane is made and painted on the UI thread, the render thread never publishes, a model thread never acquires
+or renders, an undeclared thread fails role-owned code. The frame log counts the UI thread's waits on the render thread
+and the render thread's blocks on the model (both must stay 0) and the frame time p99 under model churn of 10^4
+deltas/s at 10^6 rows (the interactive differential with a model thread).
+
+| Leaf | Scope | Status |
+|---|---|---|
+| R28-1 | `ThreadRole` and the assertion mode at the plane, snapshot and renderer boundaries; this design | DONE (headless: `Test_..._ThreadRole` with and without the mode) |
+| R28-2 | the row slab: `RowPaint` rows into snapshot lanes (key ints, texts, image copies, font descriptors) and back | next |
+| R28-3 | the render thread per Display, the frame triple buffer, the completion that invalidates the damage | |
+| R28-4 | the frame listener of the planes on the Synchronizer (API above, all-widgets track implements it) | agreed |
+| R28-5 | the gates under churn at 10^6 rows in custom, m3 and gpu | |
+
 ## Optimization pass and brief rule 24 (2026-10-20)
 
 User 2026-10-20: "proceed with optimizing the whole" (C:/m3-superset/tools/OPTIMIZATION_PASS.md) and "all delta based

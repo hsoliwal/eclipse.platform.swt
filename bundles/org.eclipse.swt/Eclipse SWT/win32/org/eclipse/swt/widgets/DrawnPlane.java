@@ -71,6 +71,9 @@ abstract class DrawnPlane {
 		this.control = control;
 		this.nativeProc = nativeProc;
 		this.widget = widget;
+		/* rule 28: a plane is made on its display's thread, the UI thread */
+		if (ThreadRole.current () == ThreadRole.NONE) ThreadRole.assume (ThreadRole.UI);
+		ThreadRole.UI.check ("a drawn plane");
 		this.ui = M3LookAndFeel.installUI (control, M3DrawnRowUI.class, new M3DrawnRowUI (widget));
 		this.themeGeneration = Themes.generation ();
 		this.explicit = Themes.explicit (widget);
@@ -149,6 +152,7 @@ abstract class DrawnPlane {
 	 * natively: an empty paint still asks for the row at the top (SetData) and sends its custom draw.
 	 */
 	final long paint (long hwnd, int msg, long wParam, long lParam) {
+		ThreadRole.UI.check ("DrawnPlane.paint");
 		boolean own = msg == OS.WM_PAINT && wParam == 0, visible;
 		if (own) OS.GetUpdateRgn (hwnd, update, false);
 		long target = own ? OS.BeginPaint (hwnd, ps) : wParam;

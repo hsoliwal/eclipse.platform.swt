@@ -69,6 +69,7 @@ public final class RowRenderer {
 
 	/** Paints a row: the theme's row painter when it has one, else {@link #paintDefault}. */
 	public void paint (RowCanvas canvas, RowPaint row) {
+		ThreadRole.MODEL.forbid ("RowRenderer.paint");
 		if (theme.rowPainter != null) {
 			theme.rowPainter.paint (canvas, row, theme, this);
 		} else {
