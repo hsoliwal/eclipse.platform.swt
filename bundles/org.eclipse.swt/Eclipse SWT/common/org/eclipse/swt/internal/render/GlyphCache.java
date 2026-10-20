@@ -35,12 +35,9 @@ public final class GlyphCache {
 	}
 
 	private final Rasterizer rasterizer;
-	private final long [] keys;
-	private final ImageData [] images;
-	private final boolean [] used;
-	/* open addressing: table slot -> cache slot + 1 (0 empty); twice the capacity, a power of two */
-	private final int [] table;
-	private int count, hand, rasterizations;
+	/* the lanes, the open-addressing table and the clock (no native resources: nothing to close on eviction) */
+	private final LongCache<ImageData> cache;
+	private int rasterizations;
 
 	/**
 	 * @param capacity the glyphs kept (at least 1)
@@ -48,14 +45,15 @@ public final class GlyphCache {
 	 */
 	public GlyphCache (int capacity, Rasterizer rasterizer) {
 		this.rasterizer = Objects.requireNonNull (rasterizer, "rasterizer");
-		int slots = Math.max (1, capacity);
-		keys = new long [slots];
-		images = new ImageData [slots];
-		used = new boolean [slots];
-		table = new int [Integer.highestOneBit (slots * 2 - 1) << 1];
+		cache = new LongCache<> (capacity, image -> {
+			/* garbage collected */
+		});
 	}
 
-	/** The key of a glyph: icon (16 bits), size in pixels (12 bits), zoom in percent (12 bits), theme generation (24 bits). */
+	/**
+	 * The key of a glyph: icon (16 bits), size in pixels (12 bits), zoom in percent (12 bits), and a 24-bit variant: the
+	 * theme generation, or the tint (<code>0xRRGGBB</code>) of a cache shared by every theme.
+	 */
 	public static long key (int icon, int size, int zoom, int themeGeneration) {
 		return (icon & 0xFFFFL) << 48 | (size & 0xFFFL) << 36 | (zoom & 0xFFFL) << 24 | themeGeneration & 0xFFFFFFL;
 	}
@@ -68,14 +66,12 @@ public final class GlyphCache {
 	 */
 	public ImageData get (int icon, int size, int zoom, int themeGeneration) {
 		long key = key (icon, size, zoom, themeGeneration);
-		int slot = find (key);
-		if (slot >= 0) {
-			used [slot] = true;
-			return images [slot];
-		}
+		int lane = cache.lane (key);
+		/* a kept null (the rasterizer could not make it) is answered too: no rasterization per frame */
+		if (lane >= 0) return cache.value (lane);
 		ImageData image = rasterizer.rasterize (icon, Math.max (1, (size * zoom + 50) / 100));
 		rasterizations++;
-		store (key, image);
+		cache.put (key, image);
 		return image;
 	}
 
@@ -86,66 +82,7 @@ public final class GlyphCache {
 
 	/** The glyphs kept. */
 	public int size () {
-		return count;
-	}
-
-	private int find (long key) {
-		int mask = table.length - 1;
-		for (int i = hash (key) & mask;; i = (i + 1) & mask) {
-			int slot = table [i] - 1;
-			if (slot < 0) return -1;
-			if (keys [slot] == key) return slot;
-		}
-	}
-
-	private void store (long key, ImageData image) {
-		int slot;
-		if (count < keys.length) {
-			slot = count++;
-		} else {
-			slot = victim ();
-			unlink (slot);
-		}
-		keys [slot] = key;
-		images [slot] = image;
-		used [slot] = true;
-		link (slot);
-	}
-
-	/* the clock: the first slot from the hand not used since the last pass */
-	private int victim () {
-		while (used [hand]) {
-			used [hand] = false;
-			hand = (hand + 1) % keys.length;
-		}
-		int slot = hand;
-		hand = (hand + 1) % keys.length;
-		return slot;
-	}
-
-	private void link (int slot) {
-		int mask = table.length - 1;
-		int i = hash (keys [slot]) & mask;
-		while (table [i] != 0) i = (i + 1) & mask;
-		table [i] = slot + 1;
-	}
-
-	/* removes a slot from the table and re-inserts the rest of its probe cluster (no tombstones) */
-	private void unlink (int slot) {
-		int mask = table.length - 1;
-		int i = hash (keys [slot]) & mask;
-		while (table [i] != slot + 1) i = (i + 1) & mask;
-		table [i] = 0;
-		for (int j = (i + 1) & mask; table [j] != 0; j = (j + 1) & mask) {
-			int moved = table [j];
-			table [j] = 0;
-			link (moved - 1);
-		}
-	}
-
-	private static int hash (long key) {
-		long h = key * 0x9E3779B97F4A7C15L;
-		return (int) (h ^ h >>> 32);
+		return cache.size ();
 	}
 
 	/**

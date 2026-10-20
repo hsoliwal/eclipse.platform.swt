@@ -28,9 +28,28 @@ public final class BackBuffer {
 	public long bitmap, bits;
 	/** Allocated size in pixels. */
 	public int width, height;
+	/** Times the DC and DIB were (re)created (rule 24, viewport deltas: a resize step should reuse them). */
+	public int creations;
 	private long oldBitmap;
 
-	/** Makes the buffer at least <code>width x height</code>; answers true when it was (re)created. */
+	/** The size class of a frame buffer: it grows in steps of this many pixels per axis. */
+	public static final int SIZE_CLASS = 128;
+
+	/**
+	 * {@link #ensure} for a plane's frame, which a resize changes step by step (rule 24, viewport deltas): a buffer that
+	 * must grow takes the next size class on both axes and never shrinks, so a resize drag re-creates it (and the
+	 * surface over its pixels) once per class instead of once per step. A buffer that fits is reused as it is.
+	 */
+	public boolean ensureFrame (long referenceDC, int width, int height) {
+		if (dc != 0 && width <= this.width && height <= this.height) return false;
+		return ensure (referenceDC, sizeClass (Math.max (width, this.width)), sizeClass (Math.max (height, this.height)));
+	}
+
+	static int sizeClass (int pixels) {
+		return (Math.max (1, pixels) + SIZE_CLASS - 1) / SIZE_CLASS * SIZE_CLASS;
+	}
+
+	/** Makes the buffer at least <code>width x height</code> (exactly that size when it is made); answers true when it was (re)created. */
 	public boolean ensure (long referenceDC, int width, int height) {
 		width = Math.max (1, width);
 		height = Math.max (1, height);
@@ -52,6 +71,7 @@ public final class BackBuffer {
 		oldBitmap = OS.SelectObject (dc, bitmap);
 		this.width = width;
 		this.height = height;
+		creations++;
 		return true;
 	}
 

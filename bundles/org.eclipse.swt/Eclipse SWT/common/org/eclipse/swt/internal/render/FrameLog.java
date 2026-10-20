@@ -28,7 +28,60 @@ public final class FrameLog {
 	public static final int CAPACITY = 256;
 	private final long [] start = new long [CAPACITY], end = new long [CAPACITY], generation = new long [CAPACITY],
 		latency = new long [CAPACITY], scratch = new long [CAPACITY];
-	private long frames, pendingInput;
+	private long frames, pendingInput, fullRepaints, paintedPixels, rowsDrawn, rowsKept, messages;
+
+	/**
+	 * Records the damage a frame paints (brief rule 24, "all delta based view"): a frame that drew every row of the rows
+	 * area is a full repaint. A model delta repaints only the rows it changes (the plane keeps the others from its
+	 * retained frame, whatever the native control invalidated), so a delta adds no full repaint; {@link #fullRepaints}
+	 * before and after a delta is the gate.
+	 *
+	 * @param full the frame drew every row of the rows area
+	 * @param pixels the damage's area
+	 */
+	public void damage (boolean full, long pixels) {
+		if (full) fullRepaints++;
+		paintedPixels += pixels;
+	}
+
+	/** Frames that repainted the whole rows area since the log was made. */
+	public long fullRepaints () {
+		return fullRepaints;
+	}
+
+	/**
+	 * Counts a message to the plane's window that reached the widget's native window procedure (rule 24, hidden viewports:
+	 * while the widget is hidden, model deltas cause no native work, so the count over the hidden period is the gate).
+	 */
+	public void message () {
+		messages++;
+	}
+
+	/** Messages counted by {@link #message} since the log was made. */
+	public long messages () {
+		return messages;
+	}
+
+	/** Records the rows a frame drew and the rows it kept from the retained frame (unchanged since they were drawn). */
+	public void rows (int drawn, int kept) {
+		rowsDrawn += drawn;
+		rowsKept += kept;
+	}
+
+	/** Rows drawn since the log was made. */
+	public long rowsDrawn () {
+		return rowsDrawn;
+	}
+
+	/** Rows kept from the retained frame since the log was made. */
+	public long rowsKept () {
+		return rowsKept;
+	}
+
+	/** Pixels of damage painted since the log was made. */
+	public long paintedPixels () {
+		return paintedPixels;
+	}
 
 	/** Notes an input event (key, wheel, click, scroll) at <code>now</code>; the next frame shows it. */
 	public void input (long now) {

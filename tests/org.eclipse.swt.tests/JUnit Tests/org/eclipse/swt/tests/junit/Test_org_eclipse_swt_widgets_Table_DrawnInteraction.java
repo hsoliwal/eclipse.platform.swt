@@ -64,13 +64,15 @@ public class Test_org_eclipse_swt_widgets_Table_DrawnInteraction {
 		FrameLog frames = frameLog (table);
 		AtomicInteger applied = new AtomicInteger ();
 		Thread worker = churn (display, table, applied);
+		long [] latencies = new long [STEPS * 5];
+		int [] counts = new int [2];
 		try {
-			script (display, table);
+			script (display, table, frames, latencies, counts);
 		} finally {
 			worker.join (60_000);
 		}
 		while (applied.get () < CHURN) ViewportDifferential.settle (display, 20);
-		report (frames, finalPixels (display, table));
+		report (frames, finalPixels (display, table), latencies, counts);
 		shell.dispose ();
 	}
 
@@ -93,23 +95,36 @@ public class Test_org_eclipse_swt_widgets_Table_DrawnInteraction {
 		return worker;
 	}
 
-	/* fast scroll and typing: wheel bursts, page keys, type-ahead characters, each followed by one frame's time */
-	static void script (Display display, Table table) {
+	/*
+	 * Fast scroll and typing: wheel bursts, page keys, type-ahead characters, each followed by one frame's time. Each input
+	 * event (every wheel notch of a burst) is timed on its own, from its send to the end of the paint update () makes;
+	 * inputs that damaged nothing (no frame) are counted apart (counts [1]), as they have no pixels to show:
+	 * latencies [0 .. counts [0]) are the input-to-pixel times.
+	 */
+	static void script (Display display, Table table, FrameLog frames, long [] latencies, int [] counts) {
 		Random random = new Random (0x5C2011L);
 		for (int step = 0; step < STEPS; step++) {
 			int kind = random.nextInt (4);
 			if (kind == 0) {
-				for (int k = 0; k < 5; k++) ViewportDifferential.send (table, WM_MOUSEWHEEL, ((random.nextBoolean () ? -120 : 120) & 0xFFFFL) << 16, 0);
+				for (int k = 0; k < 5; k++) input (table, frames, latencies, counts, WM_MOUSEWHEEL, ((random.nextBoolean () ? -120 : 120) & 0xFFFFL) << 16);
 			} else if (kind == 1) {
-				ViewportDifferential.send (table, WM_KEYDOWN, random.nextBoolean () ? VK_NEXT : VK_PRIOR, 0);
+				input (table, frames, latencies, counts, WM_KEYDOWN, random.nextBoolean () ? VK_NEXT : VK_PRIOR);
 			} else if (kind == 2) {
-				ViewportDifferential.send (table, WM_CHAR, 'r', 0);
+				input (table, frames, latencies, counts, WM_CHAR, 'r');
 			} else {
 				table.setTopIndex (random.nextInt (ROWS / 2));
+				table.update ();
 			}
-			table.update ();
 			ViewportDifferential.settle (display, 16);
 		}
+	}
+
+	/* one input event, timed from its send to the end of the paint that shows it */
+	static void input (Table table, FrameLog frames, long [] latencies, int [] counts, int msg, long wParam) {
+		long sent = System.nanoTime (), framesBefore = frames.frames ();
+		ViewportDifferential.send (table, msg, wParam, 0);
+		table.update ();
+		if (frames.frames () > framesBefore) latencies [counts [0]++] = System.nanoTime () - sent; else counts [1]++;
 	}
 
 	/* a fixed view once the churn is done: the pixels depend only on the final model */
@@ -122,11 +137,17 @@ public class Test_org_eclipse_swt_widgets_Table_DrawnInteraction {
 		return pixels;
 	}
 
-	static void report (FrameLog frames, ImageData pixels) throws IOException {
+	static void report (FrameLog frames, ImageData pixels, long [] latencies, int [] counts) throws IOException {
 		String mode = ViewportDifferential.reference ("Table");
-		double frameP99 = frames.frameTime (99) / 1e6, inputP99 = frames.inputLatency (99) / 1e6, frameP50 = frames.frameTime (50) / 1e6;
-		String row = String.format (Locale.ROOT, "%s\t%d frames\tframe p50 %.3f ms\tframe p99 %.3f ms\tinput p99 %.3f ms\tmonotonic %s\tpixels %s", mode,
-			frames.frames (), frameP50, frameP99, inputP99, frames.monotonic (), ViewportDifferential.hash (pixels));
+		double frameP99 = frames.frameTime (99) / 1e6, frameP50 = frames.frameTime (50) / 1e6;
+		/* the frame log's input latency charges an input that damaged nothing to the next frame, whatever made it */
+		double logInputP99 = frames.inputLatency (99) / 1e6;
+		long [] shown = Arrays.copyOf (latencies, counts [0]);
+		Arrays.sort (shown);
+		double inputP50 = shown.length == 0 ? 0 : shown [shown.length / 2] / 1e6;
+		double inputP99 = shown.length == 0 ? 0 : shown [Math.max (0, (int) Math.ceil (shown.length * 0.99) - 1)] / 1e6;
+		String row = String.format (Locale.ROOT, "%s\t%d frames\tframe p50 %.3f ms\tframe p99 %.3f ms\tinput p99 %.3f ms\tinput-to-pixel p50 %.3f ms\tp99 %.3f ms (%d inputs with a frame, %d without)\tmonotonic %s\tpixels %s",
+			mode, frames.frames (), frameP50, frameP99, logInputP99, inputP50, inputP99, counts [0], counts [1], frames.monotonic (), ViewportDifferential.hash (pixels));
 		LOG.info ("drawn interaction: " + row);
 		String output = System.getProperty ("swt.drawn.interaction");
 		if (output != null) Files.write (Paths.get (output), List.of (row), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);

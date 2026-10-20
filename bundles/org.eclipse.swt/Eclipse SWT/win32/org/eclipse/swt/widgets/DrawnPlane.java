@@ -80,12 +80,12 @@ abstract class DrawnPlane {
 			data.device = control.display;
 			return control.createNewGC (hdc, data);
 		});
-		/* a theme change (any thread) repaints the plane on its display's thread */
+		/* a theme change (any thread) repaints the plane on its display's thread, when it changes the theme the plane paints with */
 		Display display = control.display;
 		this.themeChanged = () -> {
 			if (display.isDisposed ()) return;
 			display.asyncExec (() -> {
-				if (!control.isDisposed ()) control.redraw ();
+				if (!control.isDisposed () && themeChanges ()) control.redraw ();
 			});
 		};
 		Themes.addListener (themeChanged);
@@ -113,6 +113,16 @@ abstract class DrawnPlane {
 		if (theme != renderer.theme ()) renderer = new RowRenderer (theme);
 	}
 
+	/*
+	 * True when the theme in effect differs from the one the plane last painted with: a selection for another widget
+	 * class (Themes.select ("Table", ...)) does not repaint a Tree. Comparing instances may answer true for an equal theme
+	 * (a re-resolved one); that only repaints once more, as before.
+	 */
+	private boolean themeChanges () {
+		Theme selected = Themes.explicit (widget);
+		return (selected != null ? selected : ui.theme ()) != renderer.theme ();
+	}
+
 	/** True for the drawn modes. */
 	static boolean drawn (WidgetMode mode) {
 		return mode == WidgetMode.CUSTOM || mode == WidgetMode.M3 || mode == WidgetMode.GPU;
@@ -121,10 +131,14 @@ abstract class DrawnPlane {
 	/** True for the messages this plane paints: the behaviour plane's paint and print-client. */
 	final boolean paints (long hwnd, int msg) {
 		if (hwnd != control.handle) return false;
+		/* rule 24, hidden viewports: every message that reaches the native window procedure is native work */
+		frames.message ();
 		if (msg == OS.WM_PAINT || msg == OS.WM_PRINTCLIENT) return true;
 		/* input reaches the model at once; the frame log measures until a frame shows it (interaction model, IM1) */
 		if (msg == OS.WM_KEYDOWN || msg == OS.WM_CHAR || msg == OS.WM_MOUSEWHEEL || msg == OS.WM_LBUTTONDOWN || msg == OS.WM_VSCROLL
 			|| msg == OS.WM_HSCROLL) frames.input (System.nanoTime ());
+		/* what no row key holds: the platform's theme parts and colours, and a font handle that may be reused */
+		if (msg == OS.WM_THEMECHANGED || msg == OS.WM_SYSCOLORCHANGE || msg == OS.WM_SETTINGCHANGE || msg == OS.WM_SETFONT) forgetRows ();
 		return false;
 	}
 
@@ -157,12 +171,21 @@ abstract class DrawnPlane {
 	/* behaviour pass into the back buffer, drawn pass over it, present: the damage is visible */
 	private void draw (long hwnd, int msg, long target, long lParam) {
 		long begin = System.nanoTime ();
-		buffer.ensure (target, client.right, client.bottom);
+		buffer.ensureFrame (target, client.right, client.bottom);
+		/* the retained frame has the back buffer's size: a new one keeps no row */
+		if (retained.ensureFrame (target, buffer.width, buffer.height)) forgetRows ();
 		behaviour (hwnd, msg, lParam);
 		if (control.isDisposed ()) return;
 		afterBehaviour (msg);
 		if (!clipDamage (hwnd)) return;
 		currentTheme ();
+		/* glyphs at the window's DPI, the density of the native rows (a forced swt.autoScale does not resize them) */
+		row.zoom = control.nativeZoom;
+		/* a theme's own row or cell painter may read state outside the row: its rows are always drawn */
+		Theme theme = renderer.theme ();
+		retain = !OVERLAY && theme.rowPainter == null && theme.cellPainter == null;
+		frameNumber++;
+		kept = rowsIterated = rowsDrawn = 0;
 		canvas.target (buffer);
 		canvas.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		try {
@@ -171,7 +194,13 @@ abstract class DrawnPlane {
 		} finally {
 			canvas.end ();
 		}
-		buffer.present (target, damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
+		retainFrame ();
+		/* rule 24: a frame that drew every row of the rows area is a full repaint; a model delta must not cause one */
+		int width = damage.right - damage.left, height = damage.bottom - damage.top;
+		boolean allRows = damage.left <= 0 && damage.right >= client.right && height * 10L >= (client.bottom - rowsTop) * 9L;
+		frames.damage (allRows && rowsIterated > 0 && rowsDrawn == rowsIterated, (long) width * height);
+		frames.rows (rowsDrawn, kept);
+		buffer.present (target, damage.left, damage.top, width, height);
 		/* stage 1 paints the live model on the UI thread: one generation per frame until the snapshots of IM2 */
 		frames.frame (begin, System.nanoTime (), frames.frames ());
 	}
@@ -217,19 +246,143 @@ abstract class DrawnPlane {
 	void afterBehaviour (int msg) {
 	}
 
-	/** Narrows the damage to the rows area (for example below a header); answers false when nothing is left. */
+	/** Narrows the damage to the rows area (for example below a header, setting {@link #rowsTop}); answers false when nothing is left. */
 	boolean clipDamage (long hwnd) {
 		return true;
 	}
 
-	/** Paints the rows that intersect the damage, top to bottom, and the empty area below them. */
+	/** The top of the rows area in the client area (below a header), as the last {@link #clipDamage} found it. */
+	int rowsTop;
+
+	/** Paints the rows that intersect the damage, top to bottom (each with {@link #paintRow}), and the empty area below them. */
 	abstract void drawRows (long hwnd);
+
+	/*
+	 * Rule 24, delta based view. The retained frame holds the pixels the plane last presented. Per row slot (a row's
+	 * place in the rows area) the plane keeps what it drew there: the row's key (RowPaint.key: everything the renderer
+	 * reads, compared exactly) and the theme. A row whose key and theme are those of its slot is not drawn again: its
+	 * band is copied back from the retained frame over the behaviour pass. So a native control that invalidates every row
+	 * for a one-row change (a list box insert, a tree delete, a resize) costs one drawn row, not a full repaint. A slot
+	 * is remembered only for a row drawn whole, with the damage spanning the client width; a slot in the damage that no row
+	 * claimed this frame is forgotten.
+	 */
+	private final BackBuffer retained = new BackBuffer ();
+	private int [][] slotKey = new int [0][];
+	private String [][] slotText = new String [0][];
+	private Theme [] slotTheme = new Theme [0];
+	private int [] slotLength = new int [0], slotY = new int [0], slotHeight = new int [0];
+	private long [] slotFrame = new long [0];
+	private int [] key = new int [RowPaint.keyLength (4)];
+	private String [] keyText = new String [4];
+	private int [] keptY = new int [32], keptHeight = new int [32];
+	private int kept, rowsIterated, rowsDrawn;
+	private long frameNumber;
+	private boolean retain;
+	/* the rows area holds at most this many slots: taller planes draw the rows beyond it every time */
+	private static final int SLOTS = 512;
+
+	/** Paints the row the plane filled ({@link #row}), or keeps it from the retained frame when its slot shows it already. */
+	final void paintRow () {
+		rowsIterated++;
+		int cells = Math.max (1, row.cells);
+		if (key.length < RowPaint.keyLength (cells)) key = new int [RowPaint.keyLength (cells) * 2];
+		if (keyText.length < cells) keyText = new String [cells * 2];
+		int length = retain ? row.key (key, keyText) : -1;
+		int slot = slot ();
+		if (slot >= 0 && length >= 0 && same (slot, length)) {
+			if (kept == keptY.length) {
+				keptY = java.util.Arrays.copyOf (keptY, kept * 2);
+				keptHeight = java.util.Arrays.copyOf (keptHeight, kept * 2);
+			}
+			keptY [kept] = row.y;
+			keptHeight [kept++] = row.height;
+			slotFrame [slot] = frameNumber;
+			return;
+		}
+		renderer.paint (canvas, row);
+		rowsDrawn++;
+		if (slot < 0) return;
+		slotFrame [slot] = frameNumber;
+		boolean whole = length >= 0 && damage.left <= 0 && damage.right >= client.right && row.y >= damage.top && row.y + row.height <= damage.bottom;
+		if (whole) remember (slot, length); else slotLength [slot] = -1;
+	}
+
+	/* the slot of the row's place, or -1; a slot that held another place forgets it */
+	private int slot () {
+		if (row.height <= 0 || row.y < rowsTop) return -1;
+		int slot = (row.y - rowsTop) / row.height;
+		if (slot >= SLOTS) return -1;
+		if (slot >= slotLength.length) growSlots (slot + 1);
+		if (slotY [slot] != row.y || slotHeight [slot] != row.height) slotLength [slot] = -1;
+		return slot;
+	}
+
+	private boolean same (int slot, int length) {
+		if (slotLength [slot] != length || slotTheme [slot] != renderer.theme ()) return false;
+		int [] remembered = slotKey [slot];
+		for (int i = 0; i < length; i++) {
+			if (remembered [i] != key [i]) return false;
+		}
+		String [] texts = slotText [slot];
+		for (int i = 0; i < row.cells; i++) {
+			if (!java.util.Objects.equals (texts [i], keyText [i])) return false;
+		}
+		return true;
+	}
+
+	private void remember (int slot, int length) {
+		if (slotKey [slot] == null || slotKey [slot].length < length) slotKey [slot] = new int [key.length];
+		System.arraycopy (key, 0, slotKey [slot], 0, length);
+		if (slotText [slot] == null || slotText [slot].length < row.cells) slotText [slot] = new String [keyText.length];
+		System.arraycopy (keyText, 0, slotText [slot], 0, row.cells);
+		slotTheme [slot] = renderer.theme ();
+		slotY [slot] = row.y;
+		slotHeight [slot] = row.height;
+		slotLength [slot] = length;
+	}
+
+	private void growSlots (int count) {
+		int n = Math.min (SLOTS, Math.max (count, slotLength.length * 2));
+		int old = slotLength.length;
+		slotKey = java.util.Arrays.copyOf (slotKey, n);
+		slotText = java.util.Arrays.copyOf (slotText, n);
+		slotTheme = java.util.Arrays.copyOf (slotTheme, n);
+		slotLength = java.util.Arrays.copyOf (slotLength, n);
+		slotY = java.util.Arrays.copyOf (slotY, n);
+		slotHeight = java.util.Arrays.copyOf (slotHeight, n);
+		slotFrame = java.util.Arrays.copyOf (slotFrame, n);
+		java.util.Arrays.fill (slotLength, old, n, -1);
+		java.util.Arrays.fill (slotY, old, n, Integer.MIN_VALUE);
+	}
+
+	private void forgetRows () {
+		java.util.Arrays.fill (slotLength, -1);
+	}
+
+	/*
+	 * After the drawn pass: the kept rows' bands come back from the retained frame (over the behaviour pass), slots in the
+	 * damage that no row claimed are forgotten, and the retained frame takes the damage as it will be presented.
+	 */
+	private void retainFrame () {
+		int left = damage.left, width = damage.right - damage.left;
+		for (int i = 0; i < kept; i++) {
+			int top = Math.max (keptY [i], damage.top), bottom = Math.min (keptY [i] + keptHeight [i], damage.bottom);
+			if (bottom > top) OS.BitBlt (buffer.dc, left, top, width, bottom - top, retained.dc, left, top, OS.SRCCOPY);
+		}
+		for (int slot = 0; slot < slotLength.length; slot++) {
+			if (slotLength [slot] >= 0 && slotFrame [slot] != frameNumber && slotY [slot] < damage.bottom && slotY [slot] + slotHeight [slot] > damage.top) {
+				slotLength [slot] = -1;
+			}
+		}
+		OS.BitBlt (retained.dc, left, damage.top, width, damage.bottom - damage.top, buffer.dc, left, damage.top, OS.SRCCOPY);
+	}
 
 	/** Frees the back buffer and the backend. */
 	void release () {
 		Themes.removeListener (themeChanged);
 		M3LookAndFeel.uninstallUI (control);
 		buffer.release ();
+		retained.release ();
 		canvas.dispose ();
 		OS.DeleteObject (update);
 	}

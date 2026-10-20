@@ -408,11 +408,13 @@ Publication is single-writer, many-reader, wait-free for the reader:
 1. The writer fills a **slab** (preallocated lanes; three slabs per widget: one being written, the latest published,
    one being read). Strings are ids into the widget's interned text lane; no slab holds an object reference that
    the model can change.
-2. When the slab is complete the writer stores its index and generation into one `AtomicLong` (`generation << 2 |
-   slab`) with release semantics. That store is the publication.
-3. The renderer loads the word with acquire semantics at the start of a frame and paints that slab. It marks the slab
-   as being read; the writer never reuses the read slab or the published one, so a frame never sees a slab change
-   under it.
+2. The three slabs are a lock-free triple buffer (`RowSnapshots`, 2026-10-20): the writer owns the *back* slab, the
+   renderer the *front* slab, the third is the *middle*, the latest complete snapshot. One `AtomicInteger` holds the
+   middle slab and a *fresh* bit. Publishing exchanges back and middle (`getAndSet`, release) and sets the bit.
+3. At the start of a frame the renderer exchanges front and middle only when the bit is set (acquire), then paints its
+   front slab. Each side only touches the slab it owns, so a frame never sees a slab change under it. A first design
+   (one published word plus a separate "being read" index) tore: the writer could take a slab the renderer had loaded
+   but not yet marked (1012 torn frames in 200000 publications); the triple buffer has none.
 4. If no new generation was published since the last frame and nothing was damaged, no frame is drawn.
 
 ### Input: model first, predicted pixels at once
@@ -459,11 +461,84 @@ m3 pixels and the custom pixels are reported by similarity; every non-pixel answ
 | Leaf | Scope | Gate |
 |---|---|---|
 | IM1 | frame log and overlay: per frame generation, frame time and input-to-pixel latency, preallocated; `-Dswt.drawn.overlay=true` paints them in the corner | headless test of the log; the overlay in the examples |
-| IM2 | snapshot slabs and publication (`AtomicLong` word, three slabs), built on the UI thread from the viewport lanes | I1, I2, I4 under the existing differentials |
+| IM2 | snapshot slabs and publication (three slabs, a lock-free triple buffer), built on the UI thread from the viewport lanes: the protocol DONE (`RowSnapshots`, headless: 0 torn and 0 backward frames under concurrent reads, about 1.1-1.9 us per publish and acquire of 64 rows, no allocation); building the slabs in the planes is open | I1, I2, I4 under the existing differentials |
 | IM3 | model worker for bulk changes; the UI thread applies the finished change and publishes | I3 under 10^6-row churn |
 | IM4 | predicted frames for scroll, selection and focus | I5 |
 | IM5 | frame pacing (skiko pattern) | I6 in gpu |
 | IM6 | the interactive differential | I1-I7 |
+
+## Optimization pass and brief rule 24 (2026-10-20)
+
+User 2026-10-20: "proceed with optimizing the whole" (C:/m3-superset/tools/OPTIMIZATION_PASS.md) and "all delta based
+view" (brief rule 24, with the sub-rules "viewport deltas (resize, layout)" and "hidden viewports"). Every leaf has a
+row with its before and after numbers in [render-modes/OPTIMIZATION_LEDGER.tsv](render-modes/OPTIMIZATION_LEDGER.tsv).
+
+### Frame allocations
+
+A paint frame's bytes are attributed with JFR (`render-modes/bench/alloc_profile.sh`: TLAB events whose stack passes
+through `DrawnPlane.draw`). The drawn path's own allocations are gone:
+
+- `LongCache`: a boxing-free cache keyed by a native handle or a packed key (open addressing with backward
+  re-insertion, clock eviction, a callback that closes what it drops). `GlyphCache` keeps its glyphs in one;
+  `M3RowCanvas` keys fonts and part images in them, and a font entry carries its shaped lines.
+- `M3RowCanvas` clips and draws images, glyphs, parts and the focus rectangle through Skija's primitive entry points
+  (`_nDrawImageRect` with the default sampling and strict bounds, which is what `drawImage`/`drawImageRect` pass), and
+  keeps one `Path` and the gpu readback's `ImageInfo`.
+- `ListDrawnPlane` reuses the string it kept for an index while the list box's characters are the same.
+
+Every backend now allocates per frame what custom does (Tree 35008 bytes, List 3504 at 10^6 rows); the rest is
+shared SWT and viewport code (`Display.getControl` boxing, `Tree.wmNotifyChild` structs per notification, the Tree
+viewport's boxed lookups), outside this track.
+
+### Theme and look and feel switches
+
+- One glyph cache per UI thread serves every renderer, keyed by (glyph, size, zoom, tint): a switch back draws glyphs
+  already rasterized. The first row after a switch went from 1.1-1.6 ms to 6-9 us at 150 %.
+- A `Themes` selection repaints only the planes whose theme it changes (before: every drawn plane repainted).
+- Look and feel switches reinstall and repaint only the delegates whose paint keys changed (`M3LookAndFeel.update`,
+  all-widgets track).
+
+### Delta based view (rule 24)
+
+The native controls invalidate more than a delta changes: a list box insert or remove repaints every row below it
+(also for rows outside the window), a tree delete below the window repaints the whole client, a resize repaints the
+whole client. The drawn plane therefore keeps a **retained frame** (the pixels it last presented) and, per row slot,
+what it drew there: the row's key (`RowPaint.key`: every field the renderer reads, compared exactly, texts with
+`equals`) and the theme. A row whose key and theme equal its slot's is not drawn: its band is copied back from the
+retained frame over the behaviour pass. A row with a cell image is always drawn (its pixels may change in place), and
+so is every row of a theme with its own row or cell painter. A slot is remembered only for a row drawn whole under a
+damage as wide as the client; a platform theme, system colour, setting or font change forgets all slots.
+
+`FrameLog` counts per frame the damage, the rows drawn and kept, and a **full repaint** (a frame that drew every row
+of at least 90 % of the rows area); the gates read it before and after each delta:
+
+| Gate | Test, tool | Pass |
+|---|---|---|
+| model deltas | `Test_org_eclipse_swt_widgets_DrawnDeltaRepaint`, `tools/delta_repaint_legs.sh` | no full repaint per delta (text, colour, check of a visible row; inserts, removes and count changes outside the window), and the kept rows equal the rows drawn from scratch |
+| viewport deltas (resize) | `Test_org_eclipse_swt_widgets_DrawnResizeSweep`, `tools/resize_sweep_legs.sh` | 50 sizes: no full repaint after the first step; back buffer re-creations and frame p50/p99 reported |
+| hidden viewports | `Test_org_eclipse_swt_widgets_DrawnHiddenViewport`, `tools/hidden_viewport_legs.sh` | hide, 10^4 deltas, show: no paint and no native message while hidden, one paint on show, kept rows equal drawn rows |
+
+The back buffer grows in **size classes** of 128 pixels per axis and never shrinks (`BackBuffer.ensureFrame`): a resize
+drag re-creates it, and the m3 or gpu surface over it, once per class instead of once per step (50-step sweep: 24
+re-creations before, 3-4 after). Glyph and shaped-line caches belong to the backend, not to the size, so a resize keeps
+them.
+
+While a drawn widget is hidden, Windows sends no paint, so the plane draws nothing and publishes nothing. Native work
+while hidden is the widget viewport's (Tree, Table, List tracks): the gate counts every message that reaches the native
+window procedure (`FrameLog.messages`) so their hidden-period deferral is measured here too.
+
+### Measurement notes
+
+- Input-to-pixel latency is measured per input event in `Test_org_eclipse_swt_widgets_Table_DrawnInteraction` (send
+  to the end of the paint `update ()` makes; inputs that damaged nothing counted apart). The frame log's own figure
+  charges an input that damaged nothing to the next frame, whatever made it (186-197 ms p99 at stamp m was mostly
+  that).
+- gpu and m3 share the M3 renderer: the glyph column matches within one level per channel (blending rounding); text
+  differs by up to five levels (the GPU's text anti-aliasing), so I7 holds for glyphs, not for text.
+- Glyphs follow the window's DPI (`Widget.nativeZoom`), the density of the native rows: a forced `swt.autoScale`
+  above the monitor's does not enlarge them, as it does not the native expanders and check boxes.
+- gpu timings on this machine vary with the other UI legs that run in the other two desktop slots; allocation counts
+  and frame or row counts are the stable measures.
 
 ## Vector glyphs: SVG at the exact DPI (design, user 2026-10-19)
 
@@ -502,7 +577,7 @@ of the drawn modes come from SVG, rasterized at the widget's exact zoom.
 |---|---|---|
 | SV1 | glyph cache (packed keys, lanes, clock eviction), SWT rasterizer through the ServiceLoader: DONE (`GlyphCache`, 4/4 headless) | headless test: one rasterization per key, none per frame |
 | SV2 | built-in SVG glyph set for the flat looks (DONE: `Glyphs`, 7 glyphs with `currentColor`, tinted per theme; `Test_org_eclipse_swt_internal_render_Glyphs` 2/2 with the SVG fragment and JSVG 2.1.0 on the class path); theme keys with the all-widgets track | the theme tests |
-| SV3 | the 100/150/200 % leg: headless part DONE (every glyph at 16, 24 and 32 pixels, tinted, edge share under a half); the three-mode pixel leg and the upstream cases (swt #3659, #3631, FlatLaf #1022) next | crisp and equal across the three drawn modes |
+| SV3 | the 100/125/150/200 % leg: headless part DONE; the drawn path DONE (non-native looks draw the SVG set at the zoom, `GcRowCanvas` blits glyphs 1:1 with AlphaBlend); `Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom` + `tools/glyph_zoom_legs.sh` with the upstream cases (swt #3659, #3631, FlatLaf #1022): results pending (queued on the UI lock) | crisp and equal across the three drawn modes |
 | SV4 | the example (below, with the interaction model's overlay) | runs on the invisible desktop |
 
 ## Examples (user 2026-10-19: "enrich everything with examples")
@@ -546,6 +621,17 @@ Theme ocean = Theme.builder ("ocean").look (Theme.LOOK_SWING).selection (0x2F6FD
 Themes.register (ocean);
 Themes.select ("Table", ocean);
 ```
+
+**Vector glyphs at a zoom** (the non-native looks; the SVG fragment and JSVG on the class path):
+
+```
+java -Dswt.autoScale=200 -Dswt.widget.theme=flatdark -Dswt.widget.mode=m3 -Dswt.drawn.overlay=true ^
+     -cp swt.jar;swt-render-m3.jar;skija-shared-0.116.3.jar;skija-windows-x64-0.116.3.jar;types-0.1.1.jar;org.eclipse.swt.svg.jar;jsvg-2.1.0.jar ^
+     org.eclipse.swt.snippets.M3DrawnModesDemo
+```
+
+The expanders and check boxes are rasterized once at 32 pixels (16 points at 200 %) and tinted with `Tree.expandIconColor`
+and `CheckBox.icon.checkmarkColor` of the look and feel; a zoom change rasterizes them again at the new size, never scales.
 
 **Measuring a drawn plane from a test** (the frame log is per plane; `FrameLog.monotonic` is invariant I2):
 
