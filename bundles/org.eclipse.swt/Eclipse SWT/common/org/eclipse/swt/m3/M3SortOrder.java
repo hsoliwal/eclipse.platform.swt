@@ -40,6 +40,8 @@ final class M3SortOrder {
 	private int [] batch = new int [0], places = new int [0], olds = new int [0];
 	private int [] childStart = new int [0], children = new int [0], siblingIndex = new int [0], cursor = new int [0];
 	private boolean treeValid;
+	/* full rebuilds of the sibling index (read by the tests: value updates keep it) */
+	int treeBuilds;
 
 	M3SortOrder (M3ColumnSort sort) {
 		this.sort = sort;
@@ -169,11 +171,78 @@ final class M3SortOrder {
 
 	/* rows [0, m) of the view changed their values; returns {first, last} damaged view rows */
 	void update (int [] rows, int m, M3RowChange change) {
-		if (m == 1) {
-			move (rows [0], change);
+		boolean tree = treeValid && sort.parents () != null;
+		if (m == 1) move (rows [0], change); else reposition (rows, m, change);
+		if (tree) treeValid = siblings (rows, m, sort.parents ());
+	}
+
+	/*
+	 * the sibling index follows rows whose values changed inside their parents' segments instead of being rebuilt
+	 * (brief rule 24): a single row by binary search and one shift, several rows of one segment by one merge. Returns
+	 * false (rebuild on demand) when a row changed its parent, which is a structural edit.
+	 */
+	private boolean siblings (int [] rows, int m, IntUnaryOperator parentOf) {
+		long [] keyed = new long [m];
+		int count = 0;
+		for (int k = 0; k < m; k++) {
+			int row = rows [k];
+			if (inverse [row] < 0) continue;
+			int parent = parentOf.applyAsInt (row);
+			if (parent < -1 || parent >= sourceSize) return false;
+			int start = childStart [parent + 1], index = siblingIndex [row];
+			if (index >= childStart [parent + 2] - start || children [start + index] != row) return false;
+			keyed [count++] = (long) (parent + 1) << 32 | row;
+		}
+		Arrays.sort (keyed, 0, count);
+		for (int k = 0; k < count;) {
+			int bucket = (int) (keyed [k] >>> 32), group = k;
+			while (k < count && (int) (keyed [k] >>> 32) == bucket) k++;
+			if (k - group == 1) moveSibling ((int) keyed [group], bucket); else mergeSiblings (keyed, group, k, bucket);
+		}
+		return true;
+	}
+
+	/* rows keyed [from, to) of one segment changed: they are taken out, sorted alone and merged back from the end */
+	private void mergeSiblings (long [] keyed, int from, int to, int bucket) {
+		int start = childStart [bucket], end = childStart [bucket + 1], k = to - from;
+		for (int j = from; j < to; j++) children [start + siblingIndex [(int) keyed [j]]] = -1;
+		int kept = start;
+		for (int i = start; i < end; i++) {
+			if (children [i] >= 0) children [kept++] = children [i];
+		}
+		batch = ensure (batch, k, 0);
+		for (int j = 0; j < k; j++) batch [j] = (int) keyed [from + j];
+		sort.sortRows (lanes, batch, k);
+		for (int out = end - 1, i = kept - 1, j = k - 1; j >= 0; out--) {
+			children [out] = i >= start && sort.compare (children [i], batch [j]) > 0 ? children [i--] : batch [j--];
+		}
+		for (int i = start; i < end - 1; i++) siblingIndex [children [i]] = i - start;
+	}
+
+	/* a row whose values changed moves inside its parent's sibling segment: binary search and one shift, O(log c + distance) */
+	private void moveSibling (int row, int bucket) {
+		int start = childStart [bucket], end = childStart [bucket + 1], old = start + siblingIndex [row], at = old;
+		if (old > start && sort.compare (children [old - 1], row) > 0) {
+			int low = start, high = old;
+			while (low < high) {
+				int middle = (low + high) >>> 1;
+				if (sort.compare (children [middle], row) > 0) high = middle; else low = middle + 1;
+			}
+			at = low;
+			System.arraycopy (children, at, children, at + 1, old - at);
+		} else if (old < end - 1 && sort.compare (children [old + 1], row) < 0) {
+			int low = old + 1, high = end;
+			while (low < high) {
+				int middle = (low + high) >>> 1;
+				if (sort.compare (children [middle], row) > 0) high = middle; else low = middle + 1;
+			}
+			at = low - 1;
+			System.arraycopy (children, old + 1, children, old, at - old);
+		} else {
 			return;
 		}
-		reposition (rows, m, change);
+		children [at] = row;
+		for (int i = Math.min (old, at), last = Math.max (old, at); i <= last; i++) siblingIndex [children [i]] = i - start;
 	}
 
 	/*
@@ -307,6 +376,7 @@ final class M3SortOrder {
 	/* the sibling index for tree mode, rebuilt on demand by one stable counting pass over the order */
 	void buildTree (IntUnaryOperator parentOf) {
 		if (treeValid) return;
+		treeBuilds++;
 		childStart = ensureExact (childStart, sourceSize + 2);
 		Arrays.fill (childStart, 0, sourceSize + 2, 0);
 		children = ensure (children, size, 0);

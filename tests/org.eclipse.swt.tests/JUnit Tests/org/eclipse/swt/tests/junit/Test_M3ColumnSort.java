@@ -493,6 +493,48 @@ public class Test_M3ColumnSort {
 	}
 
 	@Test
+	public void test_treeValueUpdatesKeepTheSiblingIndex () {
+		Random random = new Random (31);
+		for (int seed = 0; seed < 20; seed++) {
+			int n = 1 + random.nextInt (400);
+			int [] parents = new int [n], values = new int [n];
+			for (int row = 0; row < n; row++) {
+				parents [row] = row == 0 || random.nextInt (5) == 0 ? -1 : random.nextInt (row);
+				values [row] = random.nextInt (20);
+			}
+			int direction = random.nextBoolean () ? SWT.UP : SWT.DOWN;
+			java.util.function.Supplier<M3ColumnSort> create = () -> {
+				M3ColumnSort sort = new M3ColumnSort (1, n);
+				sort.setKey (0, M3ColumnKey.ofInts (r -> values [r]));
+				sort.setParents (r -> parents [r]);
+				sort.setSortKeys (new int [] {0}, new int [] {direction});
+				return sort;
+			};
+			M3ColumnSort sort = create.get ();
+			sort.childCount (-1);
+			Object order = Test_M3ColumnFilter.field (sort, "order");
+			int builds = (Integer) Test_M3ColumnFilter.field (order, "treeBuilds");
+			for (int step = 0; step < 40; step++) {
+				int [] changed = new int [1 + random.nextInt (random.nextInt (4) == 0 ? n : 3)];
+				for (int k = 0; k < changed.length; k++) {
+					changed [k] = random.nextInt (n);
+					values [changed [k]] = random.nextInt (20);
+				}
+				sort.rowsChanged (changed);
+				M3ColumnSort fresh = create.get ();
+				for (int parent = -1; parent < n; parent++) {
+					assertEquals (fresh.childCount (parent), sort.childCount (parent), "seed " + seed + " step " + step);
+					for (int i = 0; i < fresh.childCount (parent); i++) {
+						assertEquals (fresh.child (parent, i), sort.child (parent, i), "seed " + seed + " step " + step + " parent " + parent);
+						assertEquals (i, sort.indexOfChild (sort.child (parent, i)));
+					}
+				}
+			}
+			assertEquals (builds, (Integer) Test_M3ColumnFilter.field (order, "treeBuilds"), "value updates keep the sibling index");
+		}
+	}
+
+	@Test
 	public void test_treeModeSortsSiblings () {
 		/* 0 root(b) [2(z), 3(a)], 1 root(a) [4(m) [5(c), 6(b)]] */
 		int [] parents = {-1, -1, 0, 0, 1, 4, 4};

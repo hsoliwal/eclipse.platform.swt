@@ -365,6 +365,22 @@ public class Test_M3ColumnFilter {
 		}
 	}
 
+	/* a package-private field of an M3 object, declared in its class or a superclass */
+	static Object field (Object owner, String name) {
+		for (Class<?> type = owner.getClass (); type != null; type = type.getSuperclass ()) {
+			try {
+				java.lang.reflect.Field field = type.getDeclaredField (name);
+				field.setAccessible (true);
+				return field.get (owner);
+			} catch (NoSuchFieldException e) {
+				/* declared in a superclass */
+			} catch (IllegalAccessException e) {
+				return fail (e);
+			}
+		}
+		return fail ("no field " + name);
+	}
+
 	/* applies a change of a filter to a list of its rows (source order), as a listener that keeps a copy would */
 	static void replay (List<Integer> mirror, M3RowChange change, M3RowView view) {
 		int start = change.start (), count = change.count ();
