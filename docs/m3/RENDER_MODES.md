@@ -514,8 +514,38 @@ deltas/s at 10^6 rows (the interactive differential with a model thread).
 | R28-1 | `ThreadRole` and the assertion mode at the plane, snapshot and renderer boundaries; this design | DONE (headless: `Test_..._ThreadRole` with and without the mode) |
 | R28-2 | the row slab: `RowPaint` rows into snapshot lanes (key ints, texts, image copies, font descriptors) and back | DONE headless (`FrameSlab`, `TripleBuffer`, `FontDescriptor`, `RowPaint.write/read`: identical renderer calls after the round trip, 0 torn frames in 50000 publications under concurrent reads, 0 bytes per frame); the planes fill it with R28-3 |
 | R28-3 | the render thread per Display, the frame triple buffer, the completion that invalidates the damage | |
-| R28-4 | the frame listener of the planes on the Synchronizer (API above, all-widgets track implements it) | agreed |
+| R28-4 | the frame listener of the planes on the Synchronizer (API above, all-widgets track implements it) | DONE (render-thread mode: at a tick a damaged visible plane paints at once, so a patch is published in the same tick; the Synchronizer delta of all-widgets 9c52f39e315 is on this branch) |
 | R28-5 | the gates under churn at 10^6 rows in custom, m3 and gpu | |
+
+## SVG-skinned controls (user 2026-10-20: "SVG-painted button to my size, instead of painting it manually")
+
+docs/m3/behaviours/BEHAVIOURS.md, "SVG-skinned controls": buttons, toolbar items, badges, chips, toggles, check and radio
+marks, sash grips and scroll carets take their visuals from SVG skins, with no paint code per control. This track owns
+the skin engine (`SvgSkins`); the all-widgets track owns the controls and the L&amp;F keys, agreed 2026-10-20:
+
+| Key | Kind | Meaning |
+|---|---|---|
+| `<Component>.skin` | STRING (all-widgets adds the kind, interned to an int id) | the skin: a resource name such as `m3/button`; unset: the control paints as today, so native mode stays pixel-identical |
+| `<Component>.skin.insets` | INSETS | nine-slice insets in SVG units (top, left, bottom, right); unset: the skin's `data-insets` |
+| `<Component>.skin.<part>.<state>.tint`, `<Component>.skin.<part>.tint` | COLOR | the colour that replaces `currentColor`; falls back to `<Component>.foreground` |
+
+Parts: background, border, mark, grip, caret (SVG resources `skins/<skin>/<part>[.<state>].svg`). States: normal, hover,
+pressed, focused, disabled, selected, mixed (a missing state uses the normal part). A skinned delegate's paint keys
+include its skin keys, so a look and feel switch repaints only the skinned widgets whose keys changed.
+
+How a part is drawn: rasterized once per (skin, part, state, tint, zoom) at its own size times the zoom through SWT's
+`SVGRasterizer` seam (org.eclipse.swt.svg, JSVG), then composed to the control's size by nine-slice scaling: corners
+copied 1:1 (they keep their radius at every size), edges stretched along one axis, the centre along both. A part
+without insets (a mark, a grip, a caret) is rasterized at the exact size instead, crisp. Both levels are cached
+(`LongCache`); a warm lookup allocates nothing. Built-in skins: `m3/button` (background, border, focused border),
+`m3/check` (border, mark, mixed mark), `m3/radio` (border, mark), `m3/sash` (grip), `m3/scroll` (caret).
+
+Donors (ADAPT, no code copied): SWT SVGRasterizer and JSVG (MIT) for rasterizing, FlatLaf FlatSVGIcon colour filters
+(Apache-2.0) for the tint by colour replacement, IntelliJ's SVG icon loader (Apache-2.0) for caching by size and scale,
+the CSS nine-slice (`border-image`) pattern. Gate (`Test_org_eclipse_swt_internal_render_SvgSkins`, headless): the button
+at 100/125/150/200 % and 10 sizes keeps its corners equal to the part at its own size, its edges uniform and its fill the
+tint; one rasterization per zoom whatever the sizes; marks at their exact size; a missing state falls back; 100000 warm
+lookups allocate 688 bytes in total (not per lookup). The Swing side (M3JDK) reads the same skins.
 
 ## Optimization pass and brief rule 24 (2026-10-20)
 

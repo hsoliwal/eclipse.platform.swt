@@ -73,6 +73,8 @@ abstract class DrawnPlane {
 	private FrameSlab slab;
 	/* the damage of the last slab published, added to the next while the render thread has not taken it */
 	private final RECT pending = new RECT ();
+	/* the client size of the last slab published (-1: none yet) */
+	private int publishedWidth = -1, publishedHeight = -1;
 	/* the zoom the render thread's canvas reads (theme parts), written by the UI thread */
 	private volatile int renderZoom = 100;
 	/* font descriptors by handle (the platform is asked once per handle) */
@@ -363,6 +365,16 @@ abstract class DrawnPlane {
 		currentTheme ();
 		row.zoom = control.nativeZoom;
 		renderZoom = control.getAutoscalingZoom ();
+		/*
+		 * The first frame, and a frame after the client size changed, covers the whole rows area: the render thread's
+		 * canonical frame may be new (no pixels yet), and erase is suppressed, so nothing else would fill what the damage
+		 * leaves out (the strip under the last whole row). Its unchanged rows are still kept there.
+		 */
+		if (client.right != publishedWidth || client.bottom != publishedHeight) {
+			OS.SetRect (damage, 0, rowsTop, client.right, client.bottom);
+			publishedWidth = client.right;
+			publishedHeight = client.bottom;
+		}
 		/* a slab the render thread has not taken yet is replaced: this one covers both damages, from the current model */
 		if (renderTarget.slabs.fresh ()) {
 			damage.left = Math.max (client.left, Math.min (damage.left, pending.left));

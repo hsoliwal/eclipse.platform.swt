@@ -65,7 +65,8 @@ public final class RetainedRows {
 
 	/** Sizes the retained frame like the frame buffer (UI-thread placement); a new one keeps no row. */
 	public void ensure (long referenceDC, int width, int height) {
-		if (retained != null && retained.ensureFrame (referenceDC, width, height)) forget ();
+		/* a frame that grows keeps its pixels (BackBuffer.growFrame): a resize keeps its rows */
+		if (retained != null && retained.growFrame (referenceDC, width, height)) forget ();
 	}
 
 	/**
@@ -174,11 +175,13 @@ public final class RetainedRows {
 	 */
 	private boolean widened (int slot, int length, RowPaint row) {
 		if (slotLength [slot] != length || slotTheme [slot] != renderer.theme ()) return false;
-		if ((row.state & (RowPaint.CARET | RowPaint.ELLIPSIS)) != 0) return false;
+		if ((row.state & RowPaint.CARET) != 0) return false;
 		int last = 26 + 11 * (Math.max (1, row.cells) - 1);
 		int align = key [last + 6];
-		if (align != 0 && align != SWT.LEFT) return false;
 		int [] remembered = slotKey [slot];
+		/* an ellipsis or a right or centre alignment moves only when the last cell's box changes (a list box row), not with the row (a list view row) */
+		boolean lastCellWidened = remembered [last + 1] != key [last + 1] || remembered [last + 3] != key [last + 3];
+		if (lastCellWidened && ((row.state & RowPaint.ELLIPSIS) != 0 || align != 0 && align != SWT.LEFT)) return false;
 		for (int i = 0; i < length; i++) {
 			if (remembered [i] == key [i] || i == 2 || i == 5 || i == last + 1 || i == last + 3) continue;
 			return false;

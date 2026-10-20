@@ -89,7 +89,7 @@ public final class RenderTarget {
 		long begin = System.nanoTime ();
 		if (canvas == null) canvas = canvasFactory.get ();
 		/* a new canonical frame holds no row */
-		if (canonical.ensureFrame (0, slab.clientWidth, slab.clientHeight)) rows.forget ();
+		if (canonical.growFrame (0, slab.clientWidth, slab.clientHeight)) rows.forget ();
 		if (renderer == null || renderer.theme () != slab.theme) renderer = new RowRenderer (slab.theme);
 		int left = slab.damageX, top = slab.damageY, right = left + slab.damageWidth, bottom = top + slab.damageHeight;
 		canvas.fonts (slab);

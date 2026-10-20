@@ -97,6 +97,18 @@ public class Test_org_eclipse_swt_widgets_DrawnRenderThread {
 		}
 	}
 
+	static int rowsTop (Control control) {
+		try {
+			Field plane = control.getClass ().getDeclaredField ("drawnPlane");
+			plane.setAccessible (true);
+			Field top = Class.forName ("org.eclipse.swt.widgets.DrawnPlane").getDeclaredField ("rowsTop");
+			top.setAccessible (true);
+			return top.getInt (plane.get (control));
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException (e);
+		}
+	}
+
 	static RECT clientRect (Control control) {
 		RECT rect = new RECT ();
 		try {
@@ -125,8 +137,9 @@ public class Test_org_eclipse_swt_widgets_DrawnRenderThread {
 		settle (target);
 		ImageData drawn = capture (control), rendered = frame (target, control, 0);
 		String name = control.getClass ().getSimpleName () + "-" + ViewportDifferential.reference (control.getClass ().getSimpleName ()) + "-" + step;
+		/* the rows area: above it is the header, a child window over the plane that the render thread never draws */
 		int differ = 0;
-		for (int y = 0; y < Math.min (drawn.height, rendered.height); y++) {
+		for (int y = rowsTop (control); y < Math.min (drawn.height, rendered.height); y++) {
 			for (int x = 0; x < Math.min (drawn.width, rendered.width); x++) {
 				if (drawn.getPixel (x, y) != rendered.getPixel (x, y)) differ++;
 			}

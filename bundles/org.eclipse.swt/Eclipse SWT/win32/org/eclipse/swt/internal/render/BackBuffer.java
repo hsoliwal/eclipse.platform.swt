@@ -45,6 +45,28 @@ public final class BackBuffer {
 		return ensure (referenceDC, sizeClass (Math.max (width, this.width)), sizeClass (Math.max (height, this.height)));
 	}
 
+	/**
+	 * {@link #ensureFrame} that keeps the pixels (rule 24, viewport deltas): a buffer that must grow is made at the next size
+	 * class and its pixels are copied in, so the rows it holds stay valid across a resize.
+	 *
+	 * @return true only when the buffer was made for the first time (it holds no pixels yet)
+	 */
+	public boolean growFrame (long referenceDC, int width, int height) {
+		if (dc != 0 && width <= this.width && height <= this.height) return false;
+		if (dc == 0) return ensureFrame (referenceDC, width, height);
+		long oldDc = dc, oldDib = bitmap, oldSelected = oldBitmap;
+		int oldWidth = this.width, oldHeight = this.height, made = creations;
+		/* detached: ensure makes the new buffer without freeing the old one, which is copied, then freed */
+		dc = 0;
+		ensure (referenceDC, sizeClass (Math.max (width, oldWidth)), sizeClass (Math.max (height, oldHeight)));
+		OS.BitBlt (dc, 0, 0, oldWidth, oldHeight, oldDc, 0, 0, OS.SRCCOPY);
+		OS.SelectObject (oldDc, oldSelected);
+		OS.DeleteObject (oldDib);
+		OS.DeleteDC (oldDc);
+		creations = made + 1;
+		return false;
+	}
+
 	static int sizeClass (int pixels) {
 		return (Math.max (1, pixels) + SIZE_CLASS - 1) / SIZE_CLASS * SIZE_CLASS;
 	}
