@@ -42,8 +42,8 @@ import org.eclipse.swt.widgets.*;
  * from <code>-Dswt.widget.mode</code>): wall time (median of the repetitions), bytes allocated on the SWT and the
  * Swing threads, heap retained after a full collection, and the items that exist as Swing peers (materialized
  * items with their Swing nodes). Appends tab-separated rows
- * <code>widget mode size operation median_ms min_ms allocated_bytes retained_bytes peers setdata renders</code> (the
- * last two: SetData events and renderer uses per repetition) to the output file; an
+ * <code>widget mode size operation median_ms min_ms allocated_bytes retained_bytes peers setdata renders paints events</code>
+ * (the last four per repetition: SetData events, renderer uses, paint passes, Swing model events) to the output file; an
  * operation past <code>-Dbench.limit</code> seconds leaves a TIMEOUT row and stops the run.
  * <p>
  * Usage: <code>ViewportBench &lt;out-file&gt; &lt;Tree|Table|List&gt; &lt;size&gt; &lt;repetitions&gt;</code>
@@ -125,8 +125,8 @@ public final class ViewportBench {
 			shell.open ();
 		});
 		retained ("filled");
-		viewportDeltas ();
 		Tree tree = (Tree) control;
+		viewportDeltas (i -> tree.setItemCount (tree.getItemCount () + 1));
 		measure ("scroll", r -> tree.setTopItem (tree.getItem ((int) ((long) size * (r + 1) / (repetitions + 2)))));
 		measure ("append100", r -> tree.setItemCount (tree.getItemCount () + 100));
 		int children = Math.min (size, 100_000);
@@ -153,8 +153,8 @@ public final class ViewportBench {
 			shell.open ();
 		});
 		retained ("filled");
-		viewportDeltas ();
 		Table table = (Table) control;
+		viewportDeltas (i -> table.setItemCount (table.getItemCount () + 1));
 		measure ("scroll", r -> table.setTopIndex ((int) ((long) size * (r + 1) / (repetitions + 2))));
 		measure ("append100", r -> table.setItemCount (table.getItemCount () + 100));
 		measure ("append10000", r -> table.setItemCount (table.getItemCount () + 10_000));
@@ -174,8 +174,8 @@ public final class ViewportBench {
 			shell.open ();
 		});
 		retained ("filled");
-		viewportDeltas ();
 		List list = (List) control;
+		viewportDeltas (i -> list.add ("h" + i));
 		measure ("scroll", r -> list.setTopIndex ((int) ((long) size * (r + 1) / (repetitions + 2))));
 		measure ("showSelection", r -> {
 			list.setSelection ((int) ((long) size * (r + 1) / (repetitions + 3)));
@@ -190,27 +190,78 @@ public final class ViewportBench {
 
 	/** Shell sizes of the resize sweep: grow, shrink below the start, grow again, back to the start. */
 	private static final int [] [] SIZES = {{420, 640}, {840, 960}, {300, 240}, {640, 480}, {420, 320}};
+	/** Deltas applied while the control is hidden (brief rule 24, hidden viewports). */
+	private static final int HIDDEN_DELTAS = 10_000;
 
 	/**
-	 * Viewport deltas (brief rule 24): a resize sweep and a layout pass without a size change. The SetData and
-	 * renderer counters of each row show whether only the rows entering the window were asked for.
+	 * Viewport deltas (brief rule 24): a resize sweep, a layout pass without a size change and the hidden gate. The
+	 * counters of each row show whether only the rows entering the window were asked for and painted.
+	 *
+	 * @param delta one model change of the widget (the hidden gate applies it {@link #HIDDEN_DELTAS} times)
 	 */
-	private void viewportDeltas () {
+	private void viewportDeltas (Operation delta) {
 		countRenders ();
 		measure ("resize", r -> {
 			int [] next = SIZES [r % SIZES.length];
 			shell.setSize (next [0], next [1]);
 		});
 		measure ("layout", r -> shell.layout (true, true));
+		hiddenGate (delta);
 	}
 
 	/**
-	 * Counts renderer uses: the renderer pane of every Swing list, table and tree under the control is replaced, on
-	 * the Swing thread, by a {@link CountingPane} (needs <code>--add-opens java.desktop/javax.swing.plaf.basic</code>).
+	 * The hidden gate: hide the control, apply the deltas, show it. Row <code>hidden</code>: the time and the counters
+	 * while hidden (SetData, renders and paint passes must be 0); row <code>shown</code>: the time and the counters of
+	 * the show (one paint pass).
+	 */
+	private void hiddenGate (Operation delta) {
+		control.setVisible (false);
+		pump ();
+		long [] before = counters ();
+		long allocated = allocated ();
+		long start = System.nanoTime ();
+		running = "hidden";
+		since = System.currentTimeMillis ();
+		for (int i = 0; i < HIDDEN_DELTAS; i++) delta.run (i);
+		pump ();
+		long hidden = (System.nanoTime () - start) / 1_000_000;
+		long [] whileHidden = minus (counters (), before);
+		row ("hidden" + HIDDEN_DELTAS, hidden, hidden, allocated () - allocated, -1, whileHidden);
+		before = counters ();
+		allocated = allocated ();
+		start = System.nanoTime ();
+		running = "shown";
+		since = System.currentTimeMillis ();
+		control.setVisible (true);
+		pump ();
+		long shown = (System.nanoTime () - start) / 1_000_000;
+		running = null;
+		row ("shown" + HIDDEN_DELTAS, shown, shown, allocated () - allocated, -1, minus (counters (), before));
+	}
+
+	/** SetData events, renderer uses, paint passes with renderer uses, Swing model events: so far. */
+	private long [] counters () {
+		return new long [] {setData, CountingPane.USES.get (), CountingPane.PASSES.get (), CountingPane.EVENTS.get ()};
+	}
+
+	private static long [] minus (long [] after, long [] before) {
+		long [] delta = new long [after.length];
+		Arrays.setAll (delta, i -> after [i] - before [i]);
+		return delta;
+	}
+
+	/**
+	 * Counts renderer uses, paint passes and Swing model events: the renderer pane of every Swing list, table and
+	 * tree under the control is replaced, on the Swing thread, by a {@link CountingPane}, their models get a counting
+	 * listener, and a {@link CountingRepaints} numbers the paint cycles (needs
+	 * <code>--add-opens java.desktop/javax.swing.plaf.basic</code>).
 	 */
 	private void countRenders () {
 		Container root = control.handle;
-		SwingUtilities.invokeLater (() -> swapPanes (root));
+		SwingUtilities.invokeLater (() -> {
+			if (!(RepaintManager.currentManager (root) instanceof CountingRepaints)) RepaintManager.setCurrentManager (new CountingRepaints ());
+			swapPanes (root);
+		});
 		pump ();
 	}
 
@@ -235,20 +286,62 @@ public final class ViewportBench {
 			} catch (ReflectiveOperationException | RuntimeException e) {
 				LOG.log (Level.WARNING, "renderer pane of " + container.getClass ().getName () + " not counted", e);
 			}
+			if (container instanceof JTable) ((JTable) container).getModel ().addTableModelListener (e -> CountingPane.EVENTS.incrementAndGet ());
+			if (container instanceof JList) ((JList<?>) container).getModel ().addListDataListener (new CountingListData ());
 		}
 		for (Component child : container.getComponents ()) {
 			if (child instanceof Container) swapPanes ((Container) child);
 		}
 	}
 
-	/** A renderer pane that counts each renderer it paints or takes in (to measure it). */
+	/** Counts the events of a list model. */
+	static final class CountingListData implements javax.swing.event.ListDataListener {
+		@Override
+		public void intervalAdded (javax.swing.event.ListDataEvent e) {
+			CountingPane.EVENTS.incrementAndGet ();
+		}
+
+		@Override
+		public void intervalRemoved (javax.swing.event.ListDataEvent e) {
+			CountingPane.EVENTS.incrementAndGet ();
+		}
+
+		@Override
+		public void contentsChanged (javax.swing.event.ListDataEvent e) {
+			CountingPane.EVENTS.incrementAndGet ();
+		}
+	}
+
+	/** A repaint manager that numbers its paint cycles. */
+	static final class CountingRepaints extends RepaintManager {
+		static final AtomicLong CYCLES = new AtomicLong ();
+
+		@Override
+		public void paintDirtyRegions () {
+			CYCLES.incrementAndGet ();
+			super.paintDirtyRegions ();
+		}
+	}
+
+	/**
+	 * A renderer pane that counts each renderer it paints or takes in (to measure it), and the paint cycles in which
+	 * it painted (paint passes of the control).
+	 */
 	static final class CountingPane extends CellRendererPane {
 		private static final long serialVersionUID = 1L;
 		static final AtomicLong USES = new AtomicLong ();
+		static final AtomicLong PASSES = new AtomicLong ();
+		static final AtomicLong EVENTS = new AtomicLong ();
+		private static long lastCycle = -1;
 
 		@Override
 		public void paintComponent (Graphics g, Component c, Container p, int x, int y, int w, int h, boolean shouldValidate) {
 			USES.incrementAndGet ();
+			long cycle = CountingRepaints.CYCLES.get ();
+			if (cycle != lastCycle) {
+				lastCycle = cycle;
+				PASSES.incrementAndGet ();
+			}
 			super.paintComponent (g, c, p, x, y, w, h, shouldValidate);
 		}
 
@@ -267,39 +360,42 @@ public final class ViewportBench {
 	private void measure (String operation, Operation setup, Operation body) {
 		long [] millis = new long [repetitions];
 		long allocated = 0;
-		long data = 0, renders = 0;
+		long [] counted = new long [4];
 		for (int r = 0; r < repetitions; r++) {
 			if (setup != null) {
 				setup.run (r);
 				pump ();
 			}
-			long dataBefore = setData, rendersBefore = CountingPane.USES.get ();
-			long before = allocated ();
+			long [] before = counters ();
+			long bytes = allocated ();
 			running = operation + "#" + r;
 			since = System.currentTimeMillis ();
 			long start = System.nanoTime ();
 			body.run (r);
 			pump ();
 			millis [r] = (System.nanoTime () - start) / 1_000_000;
-			allocated += allocated () - before;
-			data += setData - dataBefore;
-			renders += CountingPane.USES.get () - rendersBefore;
+			allocated += allocated () - bytes;
+			long [] delta = minus (counters (), before);
+			for (int i = 0; i < counted.length; i++) counted [i] += delta [i];
 			running = null;
 		}
 		long [] sorted = millis.clone ();
 		Arrays.sort (sorted);
-		row (operation, sorted [sorted.length / 2], sorted [0], allocated / repetitions, -1, data / repetitions, renders / repetitions);
+		for (int i = 0; i < counted.length; i++) counted [i] /= repetitions;
+		row (operation, sorted [sorted.length / 2], sorted [0], allocated / repetitions, -1, counted);
 	}
 
 	private void retained (String state) {
 		pump ();
 		for (int i = 0; i < 3; i++) System.gc ();
 		MemoryUsage heap = ManagementFactory.getMemoryMXBean ().getHeapMemoryUsage ();
-		row ("retained-" + state, -1, -1, -1, heap.getUsed (), -1, -1);
+		row ("retained-" + state, -1, -1, -1, heap.getUsed (), new long [] {-1, -1, -1, -1});
 	}
 
-	private void row (String operation, long median, long min, long allocated, long retained, long data, long renders) {
-		write (widget + "\t" + mode + "\t" + size + "\t" + operation + "\t" + median + "\t" + min + "\t" + allocated + "\t" + retained + "\t" + peers () + "\t" + data + "\t" + renders);
+	/** One row; <code>counted</code>: SetData events, renderer uses, paint passes, Swing model events. */
+	private void row (String operation, long median, long min, long allocated, long retained, long [] counted) {
+		write (widget + "\t" + mode + "\t" + size + "\t" + operation + "\t" + median + "\t" + min + "\t" + allocated + "\t" + retained + "\t" + peers ()
+			+ "\t" + counted [0] + "\t" + counted [1] + "\t" + counted [2] + "\t" + counted [3]);
 	}
 
 	private synchronized void write (String line) {
@@ -380,7 +476,7 @@ public final class ViewportBench {
 				LockSupport.parkNanos (1_000_000_000L);
 				String operation = running;
 				if (operation == null || System.currentTimeMillis () - since < limit) continue;
-				write (widget + "\t" + mode + "\t" + size + "\t" + operation + "\tTIMEOUT\t" + limit + "\t-1\t-1\t-1\t-1\t-1");
+				write (widget + "\t" + mode + "\t" + size + "\t" + operation + "\tTIMEOUT\t" + limit + "\t-1\t-1\t-1\t-1\t-1\t-1\t-1");
 				StringBuilder stacks = new StringBuilder ();
 				Thread.getAllStackTraces ().forEach ((t, frames) -> {
 					stacks.append ('"').append (t.getName ()).append ("\"\n");
