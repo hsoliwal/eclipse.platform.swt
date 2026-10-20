@@ -26,7 +26,8 @@ import org.junit.jupiter.api.*;
 /**
  * The startup switch of the widget modes: <code>-Dswt.widget.mode</code> for every widget and
  * <code>-Dswt.widget.mode.&lt;Widget&gt;</code> for one widget class, with the fallback of a widget that
- * does not implement the requested mode. Headless: the properties are read on every call.
+ * does not implement the requested mode. Headless: the properties are read on every call; the records go to a
+ * capturing handler only. One suite for the Tree-coverage and the all-widgets branches (the distinct cases of both).
  */
 @SuppressWarnings("restriction")
 public class Test_org_eclipse_swt_internal_WidgetMode {
@@ -60,6 +61,7 @@ public class Test_org_eclipse_swt_internal_WidgetMode {
 		logger = Logger.getLogger (LOGGER);
 		levelBefore = logger.getLevel ();
 		logger.addHandler (capture);
+		logger.setUseParentHandlers (false);
 	}
 
 	@AfterEach
@@ -67,6 +69,7 @@ public class Test_org_eclipse_swt_internal_WidgetMode {
 		restore (WidgetMode.PROPERTY, globalBefore);
 		restore (SPECIFIC, specificBefore);
 		logger.removeHandler (capture);
+		logger.setUseParentHandlers (true);
 		logger.setLevel (levelBefore);
 	}
 
@@ -152,5 +155,29 @@ public class Test_org_eclipse_swt_internal_WidgetMode {
 		assertEquals (WIDGET + ": mode M3", chosen.getMessage ());
 		assertEquals (WidgetMode.VIEWPORT, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT));
 		assertEquals (WIDGET + ": mode VIEWPORT (requested M3)", nextRecord ().getMessage ());
+	}
+
+	@Test
+	public void theModesInOrderAndNoSkija () {
+		assertEquals (List.of ("VIEWPORT", "ORIGINAL", "CUSTOM", "M3", "GPU"), Arrays.stream (WidgetMode.values ()).map (Enum::name).toList ());
+		assertThrows (IllegalArgumentException.class, () -> WidgetMode.valueOf ("SKIJA"), "the drawn mode is m3 (brief rule 14)");
+	}
+
+	@Test
+	public void theOriginalIsImpliedBesideTheViewportAndABlankValueFallsBack () throws InterruptedException {
+		System.setProperty (SPECIFIC, "original");
+		assertEquals (WidgetMode.ORIGINAL, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT), "original is implied beside the viewport");
+		logger.setLevel (Level.INFO);
+		System.setProperty (SPECIFIC, "");
+		assertEquals (WidgetMode.ORIGINAL, WidgetMode.of (WIDGET, WidgetMode.CUSTOM), "a blank value asks for the viewport, which this widget lacks");
+		assertEquals ("ignoring swt.widget.mode value '' for " + WIDGET, nextRecord ().getMessage ());
+	}
+
+	@Test
+	public void noDebugRecordAtTheDefaultLevel () throws InterruptedException {
+		logger.setLevel (null);
+		System.setProperty (SPECIFIC, "m3");
+		assertEquals (WidgetMode.VIEWPORT, WidgetMode.of (WIDGET, WidgetMode.VIEWPORT));
+		assertNull (records.poll (200, TimeUnit.MILLISECONDS), "no debug record at the default level");
 	}
 }

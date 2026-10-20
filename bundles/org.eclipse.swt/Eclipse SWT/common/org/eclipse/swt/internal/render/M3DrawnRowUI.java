@@ -20,9 +20,9 @@ import org.eclipse.swt.widgets.*;
 /**
  * The UI delegate of the drawn rows of a Tree, Table or List in the custom, m3 and gpu modes (docs/m3/LOOK_AND_FEEL.md
  * LF6; Swing's <code>ComponentUI</code>). One row delegate type: the LF6 contract is the all-widgets track's
- * <code>org.eclipse.swt.internal.laf.M3RowUI</code>; this class is the drawn planes' implementation of it (it
- * implements that interface once the interface is in integration) and no second row interface exists. A drawn plane
- * installs it with {@link M3LookAndFeel#installUI}; it reads the
+ * {@link M3ComponentUI} (<code>installUI</code>, <code>uninstallUI</code>, <code>paintKeys</code>,
+ * <code>metricKeys</code>; there is no separate row interface) and this class is the drawn planes' implementation
+ * of it. A drawn plane installs it with {@link M3LookAndFeel#installUI}; it reads the
  * row colours of its look and feel from {@link M3UIDefaults} into a {@link Theme} ({@link ThemeDefaults}), and the
  * plane's {@link RowRenderer} paints with that theme. Its paint keys are the colour keys it reads, so a look and feel
  * switch that changes one of them installs it again and repaints the widget; it has no metric keys (stage 1: the
