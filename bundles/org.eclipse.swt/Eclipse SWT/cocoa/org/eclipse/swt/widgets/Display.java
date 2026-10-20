@@ -648,6 +648,57 @@ public void asyncExec (Runnable runnable) {
 }
 
 /**
+ * Causes the <code>run()</code> method of the runnable to be invoked by the user-interface thread, coalesced by key:
+ * while a runnable posted with an equal key is still queued, it is replaced in place by this one (brief rule 28,
+ * docs/m3/SYNCHRONIZER.md). Same as <code>asyncExec (Synchronizer.DEFAULT, key, runnable)</code>.
+ *
+ * @param key the coalescing key (compared with <code>equals</code>), or <code>null</code> for none
+ * @param runnable code to run on the user-interface thread
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the runnable is null</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_DEVICE_DISPOSED - if the receiver has been disposed</li>
+ * </ul>
+ *
+ * @see Synchronizer#asyncExec(Object, Runnable)
+ * @since 3.136
+ */
+public void asyncExec (Object key, Runnable runnable) {
+	asyncExec (Synchronizer.DEFAULT, key, runnable);
+}
+
+/**
+ * Causes the <code>run()</code> method of the runnable to be invoked by the user-interface thread in a priority
+ * class of the receiver's synchronizer, coalesced by key (brief rule 28, docs/m3/SYNCHRONIZER.md).
+ *
+ * @param priority one of <code>Synchronizer.INPUT</code>, <code>LAYOUT</code>, <code>DEFAULT</code>,
+ *    <code>MODEL</code>, <code>IDLE</code>
+ * @param key the coalescing key (compared with <code>equals</code>), or <code>null</code> for none
+ * @param runnable code to run on the user-interface thread
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the runnable is null</li>
+ *    <li>ERROR_INVALID_ARGUMENT - if the priority is not one of the classes</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_DEVICE_DISPOSED - if the receiver has been disposed</li>
+ * </ul>
+ *
+ * @see Synchronizer#asyncExec(int, Object, Runnable)
+ * @since 3.136
+ */
+public void asyncExec (int priority, Object key, Runnable runnable) {
+	synchronized (Device.class) {
+        if (isDisposed()) {
+            error(SWT.ERROR_DEVICE_DISPOSED);
+        }
+		synchronizer.asyncExec (priority, key, runnable);
+	}
+}
+
+/**
  * Executes the given runnable in the user-interface thread of this Display.
  * <ul>
  * <li>If the calling thread is the user-interface thread of this display it is

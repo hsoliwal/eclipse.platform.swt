@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtDisplayKeyedAsync
+displayName: Display.asyncExec with a key and a priority (brief rule 28)
+description: >-
+  Display.asyncExec (Object key, Runnable) and asyncExec (int priority, Object key, Runnable) on win32, GTK and Cocoa,
+  each a copy of the platform's plain asyncExec body (the disposed check and, on GTK, the idle source) that hands the
+  runnable to Synchronizer.asyncExec (priority, key, runnable) (docs/m3/SYNCHRONIZER.md). Idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "(public void asyncExec [(]Runnable runnable[)] [{]\n)((?:.*\n){0,16}?)(\t\tsynchronizer[.]asyncExec [(]runnable[)];\n\t[}]\n[}]\n)(?!\n/[*][*]\n [*] Causes the <code>run[(][)]</code> method of the runnable to be invoked by the user-interface thread, coalesced)"
+      replace: "$1$2$3\n/**\n * Causes the <code>run()</code> method of the runnable to be invoked by the user-interface thread, coalesced by key:\n * while a runnable posted with an equal key is still queued, it is replaced in place by this one (brief rule 28,\n * docs/m3/SYNCHRONIZER.md). Same as <code>asyncExec (Synchronizer.DEFAULT, key, runnable)</code>.\n *\n * @param key the coalescing key (compared with <code>equals</code>), or <code>null</code> for none\n * @param runnable code to run on the user-interface thread\n *\n * @exception IllegalArgumentException <ul>\n *    <li>ERROR_NULL_ARGUMENT - if the runnable is null</li>\n * </ul>\n * @exception SWTException <ul>\n *    <li>ERROR_DEVICE_DISPOSED - if the receiver has been disposed</li>\n * </ul>\n *\n * @see Synchronizer#asyncExec(Object, Runnable)\n * @since 3.136\n */\npublic void asyncExec (Object key, Runnable runnable) {\n\tasyncExec (Synchronizer.DEFAULT, key, runnable);\n}\n\n/**\n * Causes the <code>run()</code> method of the runnable to be invoked by the user-interface thread in a priority\n * class of the receiver's synchronizer, coalesced by key (brief rule 28, docs/m3/SYNCHRONIZER.md).\n *\n * @param priority one of <code>Synchronizer.INPUT</code>, <code>LAYOUT</code>, <code>DEFAULT</code>,\n *    <code>MODEL</code>, <code>IDLE</code>\n * @param key the coalescing key (compared with <code>equals</code>), or <code>null</code> for none\n * @param runnable code to run on the user-interface thread\n *\n * @exception IllegalArgumentException <ul>\n *    <li>ERROR_NULL_ARGUMENT - if the runnable is null</li>\n *    <li>ERROR_INVALID_ARGUMENT - if the priority is not one of the classes</li>\n * </ul>\n * @exception SWTException <ul>\n *    <li>ERROR_DEVICE_DISPOSED - if the receiver has been disposed</li>\n * </ul>\n *\n * @see Synchronizer#asyncExec(int, Object, Runnable)\n * @since 3.136\n */\npublic void asyncExec (int priority, Object key, Runnable runnable) {\n$2\t\tsynchronizer.asyncExec (priority, key, runnable);\n\t}\n}\n"
+      regex: true

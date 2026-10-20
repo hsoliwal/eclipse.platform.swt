@@ -13,9 +13,6 @@
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
-import java.util.*;
-import java.util.concurrent.*;
-
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 
@@ -39,7 +36,18 @@ import org.eclipse.swt.graphics.*;
  */
 public class Synchronizer {
 	Display display;
-	final ConcurrentLinkedQueue<RunnableLock>  messages= new ConcurrentLinkedQueue<>();
+	/* rule 28: the dispatcher (rings per priority class, keyed coalescing, frame ticks, reused syncExec locks) */
+	final DispatchQueue queue = new DispatchQueue (this);
+
+	/**
+	 * Priority classes of {@link #asyncExec(int, Object, Runnable)}, highest first (docs/m3/SYNCHRONIZER.md): input,
+	 * layout and paint, the default class (plain <code>asyncExec</code> and <code>syncExec</code>, first in, first
+	 * out), model patches (applied together once per frame tick, then the {@link FrameListener}s), idle.
+	 *
+	 * @since 3.136
+	 */
+	public static final int INPUT = DispatchQueue.INPUT, LAYOUT = DispatchQueue.LAYOUT, DEFAULT = DispatchQueue.DEFAULT,
+		MODEL = DispatchQueue.MODEL, IDLE = DispatchQueue.IDLE;
 	Thread syncThread;
 	static final int GROW_SIZE = 4;
 	static final int MESSAGE_LIMIT = 64;
@@ -64,20 +72,8 @@ public Synchronizer (Display display) {
  * @param toReceiveTheEvents the synchronizer that will receive the events
  */
 void moveAllEventsTo (Synchronizer toReceiveTheEvents) {
-	// Drain target queue and add it later again to insert at the beginning of the
-	// queue for backward compatibility:
-	java.util.List<RunnableLock> tail = new ArrayList<>();
-	toReceiveTheEvents.messages.removeIf(tail::add);
-	messages.removeIf(toReceiveTheEvents.messages::add);
-	toReceiveTheEvents.messages.addAll(tail);
-}
-
-
-void addLast (RunnableLock lock) {
-	messages.add(lock);
-    if (messages.peek() == lock) {
-        display.wakeThread();
-    }
+	// inserted at the beginning of the target's queue, class by class, for backward compatibility
+	queue.moveAllTo (toReceiveTheEvents.queue);
 }
 
 /**
@@ -99,21 +95,18 @@ protected void asyncExec (Runnable runnable) {
 			return;
 		}
 	}
-	addLast (new RunnableLock (runnable));
+	//FLLDCIM: rule 28 - no RunnableLock and no queue node per call: a slot of the default ring
+	queue.add (DispatchQueue.DEFAULT, null, runnable, null);
 }
 
 boolean isMessagesEmpty() {
-	return messages.isEmpty();
+	return queue.isEmpty ();
 }
 
 void releaseSynchronizer () {
 	display = null;
-	messages.clear();
+	queue.clear ();
 	syncThread = null;
-}
-
-RunnableLock removeFirst () {
-	return messages.poll();
 }
 
 boolean runAsyncMessages () {
@@ -121,31 +114,8 @@ boolean runAsyncMessages () {
 }
 
 boolean runAsyncMessages (boolean all) {
-	boolean run = false;
-	do {
-		RunnableLock lock = removeFirst ();
-        if (lock == null) {
-            return run;
-        }
-		run = true;
-		synchronized (lock) {
-			syncThread = lock.thread;
-			display.sendPreEvent(SWT.None);
-			try {
-				lock.run (display);
-			} catch (Throwable t) {
-				lock.throwable = t;
-				SWT.error (SWT.ERROR_FAILED_EXEC, t);
-			} finally {
-				if (display != null && !display.isDisposed()) {
-					display.sendPostEvent(SWT.None);
-				}
-				syncThread = null;
-				lock.notifyAll ();
-			}
-		}
-	} while (all);
-	return run;
+	//FLLDCIM: rule 28 - stock order for the default class; higher classes first; a due frame counts as one message
+	return queue.run (all);
 }
 
 /**
@@ -163,7 +133,7 @@ boolean runAsyncMessages (boolean all) {
  * @see #asyncExec
  */
 protected void syncExec (Runnable runnable) {
-	RunnableLock lock = null;
+	DispatchQueue.SyncLock lock = null;
 	synchronized (Device.class) {
         if (display == null || display.isDisposed()) {
             SWT.error(SWT.ERROR_DEVICE_DISPOSED);
@@ -173,12 +143,8 @@ protected void syncExec (Runnable runnable) {
 				display.wake ();
 				return;
 			}
-			lock = new RunnableLock (runnable);
-			/*
-			 * Only remember the syncThread for syncExec.
-			 */
-			lock.thread = Thread.currentThread();
-			addLast (lock);
+			//FLLDCIM: rule 28 - the calling thread's reused lock (it remembers the syncThread)
+			lock = queue.addSync (runnable);
 		}
 	}
 	if (lock == null) {
@@ -198,22 +164,104 @@ protected void syncExec (Runnable runnable) {
 		}
 		return;
 	}
-	synchronized (lock) {
-		boolean interrupted = false;
-		while (!lock.done ()) {
-			try {
-				lock.wait ();
-			} catch (InterruptedException e) {
-				interrupted = true;
-			}
-		}
-		if (interrupted) {
-			Thread.currentThread().interrupt();
-		}
-		if (lock.throwable != null) {
-			SWT.error (SWT.ERROR_FAILED_EXEC, lock.throwable);
-		}
-	}
+	//FLLDCIM: rule 28 - waits over swt.synchronizer.syncWarnMillis are logged once with both stacks
+	queue.await (lock);
+}
+
+/**
+ * Causes the <code>run()</code> method of the runnable to be invoked by the user-interface thread at the next
+ * reasonable opportunity, coalesced by key: while a runnable posted with an equal key is still queued, it is replaced
+ * in place by this one (like <code>EventQueue.coalesceEvents</code>). Runs in the default class, with the plain
+ * <code>asyncExec</code> runnables (docs/m3/SYNCHRONIZER.md).
+ *
+ * @param key the coalescing key (compared with <code>equals</code>), or <code>null</code> for none
+ * @param runnable code to run on the user-interface thread
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the runnable is null</li>
+ * </ul>
+ *
+ * @see #asyncExec(int, Object, Runnable)
+ * @since 3.136
+ */
+public void asyncExec (Object key, Runnable runnable) {
+	asyncExec (DEFAULT, key, runnable);
+}
+
+/**
+ * Causes the <code>run()</code> method of the runnable to be invoked by the user-interface thread in the given
+ * priority class: {@link #INPUT} and {@link #LAYOUT} before the default class, {@link #MODEL} together once per frame
+ * tick (then the {@link FrameListener}s), {@link #IDLE} when nothing else is queued. A runnable posted with a key equal
+ * to one still queued in the same class replaces it in place (docs/m3/SYNCHRONIZER.md).
+ *
+ * @param priority one of {@link #INPUT}, {@link #LAYOUT}, {@link #DEFAULT}, {@link #MODEL}, {@link #IDLE}
+ * @param key the coalescing key (compared with <code>equals</code>), or <code>null</code> for none
+ * @param runnable code to run on the user-interface thread
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the runnable is null</li>
+ *    <li>ERROR_INVALID_ARGUMENT - if the priority is not one of the classes</li>
+ * </ul>
+ *
+ * @since 3.136
+ */
+public void asyncExec (int priority, Object key, Runnable runnable) {
+	if (runnable == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+	if (priority < INPUT || priority > IDLE) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
+	queue.add (priority, key, runnable, null);
+}
+
+/**
+ * Adds a listener told once per frame tick, on the user-interface thread, after the frame's model patches ran.
+ *
+ * @param listener the listener
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the listener is null</li>
+ * </ul>
+ *
+ * @since 3.136
+ */
+public void addFrameListener (FrameListener listener) {
+	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+	queue.addFrameListener (listener);
+}
+
+/**
+ * Removes a frame listener.
+ *
+ * @param listener the listener
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the listener is null</li>
+ * </ul>
+ *
+ * @since 3.136
+ */
+public void removeFrameListener (FrameListener listener) {
+	if (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+	queue.removeFrameListener (listener);
+}
+
+/**
+ * Asks for a frame tick even when no model patch is queued (a drawn plane with a new snapshot to publish). At most
+ * one tick is pending, paced to the frame rate.
+ *
+ * @since 3.136
+ */
+public void requestFrame () {
+	queue.requestFrame ();
+}
+
+/**
+ * Returns the number of frames applied so far on this display (the generation the last frame listeners saw).
+ *
+ * @return the frame generation, 0 before the first frame
+ *
+ * @since 3.136
+ */
+public long getFrameGeneration () {
+	return queue.generation ();
 }
 
 }

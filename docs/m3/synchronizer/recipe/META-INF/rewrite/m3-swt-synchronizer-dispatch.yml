@@ -1,0 +1,42 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtSynchronizerDispatch
+displayName: The SWT Synchronizer on the DispatchQueue (brief rule 28)
+description: >-
+  Brief rule 28 (docs/m3/SYNCHRONIZER.md): the Synchronizer keeps its API and its stock semantics, and its queue
+  becomes the DispatchQueue (rings per priority class, keyed coalescing, frame ticks with FrameListeners, a reused lock
+  per thread for syncExec, long syncExec waits logged through JUL). Plain asyncExec allocates no RunnableLock and no
+  queue node. New public API: the priority constants, asyncExec (Object key, Runnable), asyncExec (int priority,
+  Object key, Runnable), addFrameListener, removeFrameListener, requestFrame, getFrameGeneration. Idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "import java.util.*;\nimport java.util.concurrent.*;\n\nimport org.eclipse.swt.*;\n"
+      replace: "import org.eclipse.swt.*;\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tfinal ConcurrentLinkedQueue<RunnableLock>  messages= new ConcurrentLinkedQueue<>();\n"
+      replace: "\t/* rule 28: the dispatcher (rings per priority class, keyed coalescing, frame ticks, reused syncExec locks) */\n\tfinal DispatchQueue queue = new DispatchQueue (this);\n\n\t/**\n\t * Priority classes of {@link #asyncExec(int, Object, Runnable)}, highest first (docs/m3/SYNCHRONIZER.md): input,\n\t * layout and paint, the default class (plain <code>asyncExec</code> and <code>syncExec</code>, first in, first\n\t * out), model patches (applied together once per frame tick, then the {@link FrameListener}s), idle.\n\t *\n\t * @since 3.136\n\t */\n\tpublic static final int INPUT = DispatchQueue.INPUT, LAYOUT = DispatchQueue.LAYOUT, DEFAULT = DispatchQueue.DEFAULT,\n\t\tMODEL = DispatchQueue.MODEL, IDLE = DispatchQueue.IDLE;\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t// Drain target queue and add it later again to insert at the beginning of the\n\t// queue for backward compatibility:\n\tjava.util.List<RunnableLock> tail = new ArrayList<>();\n\ttoReceiveTheEvents.messages.removeIf(tail::add);\n\tmessages.removeIf(toReceiveTheEvents.messages::add);\n\ttoReceiveTheEvents.messages.addAll(tail);\n}\n\n\nvoid addLast (RunnableLock lock) {\n\tmessages.add(lock);\n    if (messages.peek() == lock) {\n        display.wakeThread();\n    }\n}\n"
+      replace: "\t// inserted at the beginning of the target's queue, class by class, for backward compatibility\n\tqueue.moveAllTo (toReceiveTheEvents.queue);\n}\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\taddLast (new RunnableLock (runnable));\n}\n\nboolean isMessagesEmpty() {\n\treturn messages.isEmpty();\n}\n"
+      replace: "\t//FLLDCIM: rule 28 - no RunnableLock and no queue node per call: a slot of the default ring\n\tqueue.add (DispatchQueue.DEFAULT, null, runnable, null);\n}\n\nboolean isMessagesEmpty() {\n\treturn queue.isEmpty ();\n}\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tmessages.clear();\n\tsyncThread = null;\n}\n\nRunnableLock removeFirst () {\n\treturn messages.poll();\n}\n"
+      replace: "\tqueue.clear ();\n\tsyncThread = null;\n}\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "boolean runAsyncMessages [(]boolean all[)] [{]\n\tboolean run = false;\n\tdo [{]\n(?:.*\n)*?\t[}] while [(]all[)];\n\treturn run;\n[}]\n"
+      replace: "boolean runAsyncMessages (boolean all) {\n\t//FLLDCIM: rule 28 - stock order for the default class; higher classes first; a due frame counts as one message\n\treturn queue.run (all);\n}\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tRunnableLock lock = null;\n"
+      replace: "\tDispatchQueue.SyncLock lock = null;\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\t\tlock = new RunnableLock (runnable);\n\t\t\t/*\n\t\t\t * Only remember the syncThread for syncExec.\n\t\t\t */\n\t\t\tlock.thread = Thread.currentThread();\n\t\t\taddLast (lock);\n"
+      replace: "\t\t\t//FLLDCIM: rule 28 - the calling thread's reused lock (it remembers the syncThread)\n\t\t\tlock = queue.addSync (runnable);\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tsynchronized [(]lock[)] [{]\n\t\tboolean interrupted = false;\n\t\twhile [(]!lock[.]done [(][)][)] [{]\n(?:.*\n)*?\t\tif [(]lock[.]throwable != null[)] [{]\n\t\t\tSWT[.]error [(]SWT[.]ERROR_FAILED_EXEC, lock[.]throwable[)];\n\t\t[}]\n\t[}]\n[}]\n\n[}]\n"
+      replace: "\t//FLLDCIM: rule 28 - waits over swt.synchronizer.syncWarnMillis are logged once with both stacks\n\tqueue.await (lock);\n}\n\n/**\n * Causes the <code>run()</code> method of the runnable to be invoked by the user-interface thread at the next\n * reasonable opportunity, coalesced by key: while a runnable posted with an equal key is still queued, it is replaced\n * in place by this one (like <code>EventQueue.coalesceEvents</code>). Runs in the default class, with the plain\n * <code>asyncExec</code> runnables (docs/m3/SYNCHRONIZER.md).\n *\n * @param key the coalescing key (compared with <code>equals</code>), or <code>null</code> for none\n * @param runnable code to run on the user-interface thread\n *\n * @exception IllegalArgumentException <ul>\n *    <li>ERROR_NULL_ARGUMENT - if the runnable is null</li>\n * </ul>\n *\n * @see #asyncExec(int, Object, Runnable)\n * @since 3.136\n */\npublic void asyncExec (Object key, Runnable runnable) {\n\tasyncExec (DEFAULT, key, runnable);\n}\n\n/**\n * Causes the <code>run()</code> method of the runnable to be invoked by the user-interface thread in the given\n * priority class: {@link #INPUT} and {@link #LAYOUT} before the default class, {@link #MODEL} together once per frame\n * tick (then the {@link FrameListener}s), {@link #IDLE} when nothing else is queued. A runnable posted with a key equal\n * to one still queued in the same class replaces it in place (docs/m3/SYNCHRONIZER.md).\n *\n * @param priority one of {@link #INPUT}, {@link #LAYOUT}, {@link #DEFAULT}, {@link #MODEL}, {@link #IDLE}\n * @param key the coalescing key (compared with <code>equals</code>), or <code>null</code> for none\n * @param runnable code to run on the user-interface thread\n *\n * @exception IllegalArgumentException <ul>\n *    <li>ERROR_NULL_ARGUMENT - if the runnable is null</li>\n *    <li>ERROR_INVALID_ARGUMENT - if the priority is not one of the classes</li>\n * </ul>\n *\n * @since 3.136\n */\npublic void asyncExec (int priority, Object key, Runnable runnable) {\n\tif (runnable == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);\n\tif (priority < INPUT || priority > IDLE) SWT.error (SWT.ERROR_INVALID_ARGUMENT);\n\tqueue.add (priority, key, runnable, null);\n}\n\n/**\n * Adds a listener told once per frame tick, on the user-interface thread, after the frame's model patches ran.\n *\n * @param listener the listener\n *\n * @exception IllegalArgumentException <ul>\n *    <li>ERROR_NULL_ARGUMENT - if the listener is null</li>\n * </ul>\n *\n * @since 3.136\n */\npublic void addFrameListener (FrameListener listener) {\n\tif (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);\n\tqueue.addFrameListener (listener);\n}\n\n/**\n * Removes a frame listener.\n *\n * @param listener the listener\n *\n * @exception IllegalArgumentException <ul>\n *    <li>ERROR_NULL_ARGUMENT - if the listener is null</li>\n * </ul>\n *\n * @since 3.136\n */\npublic void removeFrameListener (FrameListener listener) {\n\tif (listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);\n\tqueue.removeFrameListener (listener);\n}\n\n/**\n * Asks for a frame tick even when no model patch is queued (a drawn plane with a new snapshot to publish). At most\n * one tick is pending, paced to the frame rate.\n *\n * @since 3.136\n */\npublic void requestFrame () {\n\tqueue.requestFrame ();\n}\n\n/**\n * Returns the number of frames applied so far on this display (the generation the last frame listeners saw).\n *\n * @return the frame generation, 0 before the first frame\n *\n * @since 3.136\n */\npublic long getFrameGeneration () {\n\treturn queue.generation ();\n}\n\n}\n"
+      regex: true

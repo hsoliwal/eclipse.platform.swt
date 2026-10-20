@@ -76,8 +76,9 @@ public class Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport {
 				int value = rows [row];
 				gc.setBackground (gc.getDevice ().getSystemColor (SWT.COLOR_WHITE + (value & 7)));
 				gc.fillRectangle (0, y, area.width, ROW);
-				gc.setForeground (gc.getDevice ().getSystemColor (SWT.COLOR_BLACK));
-				gc.drawText (Integer.toString (value), 4, y, true);
+				/* a bar whose length encodes the value (no text: anti-aliased glyphs differ between a window and an image) */
+				gc.setBackground (gc.getDevice ().getSystemColor (SWT.COLOR_BLACK));
+				gc.fillRectangle (2, y + 4, (value >>> 3) % Math.max (1, area.width - 4), ROW - 8);
 			}
 		}
 	}
