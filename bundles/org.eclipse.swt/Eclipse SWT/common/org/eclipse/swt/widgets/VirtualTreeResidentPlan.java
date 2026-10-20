@@ -36,13 +36,20 @@ final class VirtualTreeResidentPlan {
 	private long [] keys = new long [0], handles = new long [0];
 	private int [] parentSlots = new int [0];
 	private int size;
-	private final HashMap<Long, Integer> slotByKey = new HashMap<> ();
-	private final HashMap<Long, Integer> slotByHandle = new HashMap<> ();
+	/* row key and native handle to committed entry: open addressing, no boxing (a window commit allocates nothing) */
+	private final VirtualLongIntTable slotByKey = new VirtualLongIntTable ();
+	private final VirtualLongIntTable slotByHandle = new VirtualLongIntTable ();
+	private int [] lastChild = new int [0];
 
 	private long [] planned = new long [0], retired = new long [0];
 	private int [] previousSiblings = new int [0];
 	private boolean [] kept = new boolean [0];
+	/* per committed entry: the row was measured with its data (carried for a reused row), and the old slot of each planned entry (-1: inserted) */
+	private boolean [] measuredSlots = new boolean [0], nextMeasured = new boolean [0];
+	private int [] plannedSlots = new int [0];
 	private int plannedCount, retiredCount;
+	/* the last plan: next entries whose key was committed (overlap) and those of them that are inserted again (reinserted) */
+	private int overlapCount, reinsertedCount;
 
 	static long key (int parentId, int childIndex) {
 		return ((long) parentId << 32) | (childIndex & 0xFFFFFFFFL);
@@ -55,14 +62,13 @@ final class VirtualTreeResidentPlan {
 
 	/** Native handle of the committed row at this coordinate, or 0 when it is not resident. */
 	long handleOf (int parentId, int childIndex) {
-		Integer slot = slotByKey.get (key (parentId, childIndex));
-		return slot == null ? 0 : handles [slot];
+		int slot = slotByKey.get (key (parentId, childIndex));
+		return slot < 0 ? 0 : handles [slot];
 	}
 
 	/** Entry (dense preorder index) of a committed native handle, or -1. */
 	int entryOf (long handle) {
-		Integer slot = slotByHandle.get (handle);
-		return slot == null ? -1 : slot;
+		return slotByHandle.get (handle);
 	}
 
 	/** Native handle of a committed entry. */
@@ -89,11 +95,13 @@ final class VirtualTreeResidentPlan {
 		if (planned.length < count) {
 			planned = new long [capacity (planned.length, count)];
 			previousSiblings = new int [planned.length];
+			plannedSlots = new int [planned.length];
 		}
 		if (kept.length < size) kept = new boolean [capacity (kept.length, size)];
 		Arrays.fill (kept, 0, size, false);
-		int [] lastChild = new int [count + 1];
-		Arrays.fill (lastChild, -1);
+		overlapCount = reinsertedCount = 0;
+		if (lastChild.length < count + 1) lastChild = new int [capacity (lastChild.length, count + 1)];
+		Arrays.fill (lastChild, 0, count + 1, -1);
 		for (int entry = 0; entry < count; entry++) {
 			int physicalParent = physicalParents [entry];
 			if (physicalParent < -1 || physicalParent >= entry) throw new IllegalArgumentException ("preorder");
@@ -103,12 +111,16 @@ final class VirtualTreeResidentPlan {
 			 * parent may retain its topology id while its coordinate (and native row) changes.
 			 * Reusing the child's old handle after deleting that parent would be use-after-delete. */
 			boolean parentSurvives = physicalParent == -1 || planned [physicalParent] != 0;
-			Integer slot = slotByKey.get (key (parentIds [entry], childIndices [entry]));
-			if (parentSurvives && slot != null && !kept [slot]) {
+			int slot = slotByKey.get (key (parentIds [entry], childIndices [entry]));
+			if (slot >= 0) overlapCount++;
+			if (parentSurvives && slot >= 0 && !kept [slot]) {
 				kept [slot] = true;
 				planned [entry] = handles [slot];
+				plannedSlots [entry] = slot;
 			} else {
 				planned [entry] = 0;
+				plannedSlots [entry] = -1;
+				if (slot >= 0) reinsertedCount++;
 			}
 		}
 		plannedCount = count;
@@ -159,6 +171,16 @@ final class VirtualTreeResidentPlan {
 		return retiredCount;
 	}
 
+	/** Next entries of the last plan whose row was in the committed window (by key). */
+	int overlapCount () {
+		return overlapCount;
+	}
+
+	/** Entries of {@link #overlapCount()} that the last plan inserts again (their native parent does not survive). */
+	int reinsertedCount () {
+		return reinsertedCount;
+	}
+
 	/** Top-most native row to delete; deleting it deletes its native subtree. */
 	long retired (int index) {
 		if (index < 0 || index >= retiredCount) throw new IllegalArgumentException ("retired index");
@@ -181,6 +203,15 @@ final class VirtualTreeResidentPlan {
 		}
 		slotByKey.clear ();
 		slotByHandle.clear ();
+		/* a reused row keeps its measured flag (read from the old slots before they are overwritten); an inserted row has none */
+		if (nextMeasured.length < count) nextMeasured = new boolean [capacity (nextMeasured.length, count)];
+		for (int entry = 0; entry < count; entry++) {
+			int slot = plannedSlots [entry];
+			nextMeasured [entry] = slot >= 0 && slot < measuredSlots.length && nativeHandles [entry] == planned [entry] && measuredSlots [slot];
+		}
+		boolean [] swap = measuredSlots;
+		measuredSlots = nextMeasured;
+		nextMeasured = swap;
 		for (int entry = 0; entry < count; entry++) {
 			long handle = nativeHandles [entry];
 			if (handle == 0) throw new IllegalArgumentException ("uncommitted native row " + entry);
@@ -226,6 +257,7 @@ final class VirtualTreeResidentPlan {
 		System.arraycopy (keys, end, keys, entry, tail);
 		System.arraycopy (handles, end, handles, entry, tail);
 		System.arraycopy (parentSlots, end, parentSlots, entry, tail);
+		if (measuredSlots.length >= size) System.arraycopy (measuredSlots, end, measuredSlots, entry, tail);
 		size -= removed;
 		for (int next = entry; next < size; next++) {
 			if (parentSlots [next] >= end) parentSlots [next] -= removed;
@@ -242,6 +274,23 @@ final class VirtualTreeResidentPlan {
 		}
 		plannedCount = retiredCount = 0;
 		lastParentIds = lastChildIndices = lastPhysicalParents = null;
+	}
+
+	/**
+	 * The committed row of <code>entry</code> was measured with its data (the caller's notion, for example a label
+	 * re-measured inside the client area). The flag follows the row: a later plan that reuses the row keeps it, a
+	 * removed or retired row drops it, an inserted row starts without it. So a window move re-measures only the rows
+	 * entering it, never the whole window.
+	 */
+	boolean measured (int entry) {
+		requireEntry (entry);
+		return entry < measuredSlots.length && measuredSlots [entry];
+	}
+
+	void markMeasured (int entry) {
+		requireEntry (entry);
+		if (measuredSlots.length < size) measuredSlots = Arrays.copyOf (measuredSlots, capacity (measuredSlots.length, size));
+		measuredSlots [entry] = true;
 	}
 
 	/** Forgets the committed window (all native rows were deleted by the caller). */

@@ -2792,6 +2792,8 @@ void releaseParent () {
 @Override
 void releaseWidget () {
 	super.releaseWidget ();
+	/* a batch still open on a disposed control: its entry goes, without the repaint of an end (the window is gone) */
+	if (display.batchCount > 0) ViewportBatch.disposed (this);
 	EffectiveVisibility.release (this);
 	if (retainedFrame != null) {
 		retainedFrame.dispose ();

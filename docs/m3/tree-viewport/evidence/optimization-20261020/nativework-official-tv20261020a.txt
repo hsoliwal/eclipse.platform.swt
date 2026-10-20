@@ -1,0 +1,18 @@
+INFO: item.setItemCount 10000: 20005 TVM messages, 318 ms (0x110A=10001 0x1132=10000 0x1104=1 0x1105=1 0x1127=1 0x112D=1)
+INFO: expand 10000: 297 TVM messages, 309 ms (0x110A=164 0x113E=51 0x1104=43 0x113F=34 0x1102=1 0x110B=1 0x1110=1 0x1127=1 0x112D=1)
+INFO: setTopItem middle of 10000: 5283 TVM messages, 91 ms (0x110A=5153 0x113E=63 0x113F=42 0x1104=21 0x112C=2 0x110B=1 0x112D=1)
+INFO: collapse 10000: 110 TVM messages, 14 ms (0x110A=70 0x1104=26 0x113F=6 0x113E=3 0x1102=1 0x110B=1 0x1110=1 0x1127=1 0x112D=1)
+INFO: item.setItemCount 100000: 200005 TVM messages, 2632 ms (0x110A=100001 0x1132=100000 0x1104=1 0x1105=1 0x1127=1 0x112D=1)
+INFO: expand 100000: 297 TVM messages, 2562 ms (0x110A=164 0x113E=51 0x1104=43 0x113F=34 0x1102=1 0x110B=1 0x1110=1 0x1127=1 0x112D=1)
+INFO: setTopItem middle of 100000: 50283 TVM messages, 770 ms (0x110A=50153 0x113E=63 0x113F=42 0x1104=21 0x112C=2 0x110B=1 0x112D=1)
+INFO: collapse 100000: 110 TVM messages, 14 ms (0x110A=70 0x1104=26 0x113F=6 0x113E=3 0x1102=1 0x110B=1 0x1110=1 0x1127=1 0x112D=1)
+INFO: setItemCount 10000: 20253 TVM messages, 22714 ms (0x110A=10167 0x1132=10000 0x113F=42 0x1104=21 0x113E=21 0x1105=1 0x112D=1)
+INFO: setItemCount 100000: 200253 TVM messages, 286831 ms (0x110A=100167 0x1132=100000 0x113F=42 0x1104=21 0x113E=21 0x1105=1 0x112D=1)
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_Tree_NativeWork ✔
+│     ├─ expandAndCollapseOfALargeSubtreeAreWindowBound() 11986 ms ✘ TreeItem.setItemCount + expand + setTopItem + collapse: 250695 TVM messages at 100000 against 25695 at 10000 (native work grows with the model) ==> expected: <true> but was: <false>
+│     └─ rootSetItemCountIsWindowBound() 454074 ms ✘ Tree.setItemCount: 200253 TVM messages at 100000 against 20253 at 10000 (native work grows with the model) ==> expected: <true> but was: <false>
+└─ JUnit Vintage ✔
+[         0 tests successful      ]
+[         2 tests failed          ]

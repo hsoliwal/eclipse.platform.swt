@@ -1727,6 +1727,7 @@ public void setFont (Font font){
 	if ((parent.style & SWT.VIRTUAL) == 0 && !cached && !parent.painted) {
 		return;
 	}
+	if (parent.viewport != null && handle == 0) return;
 	long hwnd = parent.handle;
 	TVITEM tvItem = new TVITEM ();
 	tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_TEXT;
@@ -1794,6 +1795,7 @@ public void setFont (int index, Font font) {
 		if ((parent.style & SWT.VIRTUAL) == 0 && !cached && !parent.painted) {
 			return;
 		}
+	if (parent.viewport != null && handle == 0) return;
 		long hwnd = parent.handle;
 		TVITEM tvItem = new TVITEM ();
 		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_TEXT;
@@ -2031,6 +2033,7 @@ public void setImage (int index, Image image) {
 		if ((parent.style & SWT.VIRTUAL) == 0 &&!cached && !parent.painted) {
 			return;
 		}
+	if (parent.viewport != null && handle == 0) return;
 		long hwnd = parent.handle;
 		TVITEM tvItem = new TVITEM ();
 		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_IMAGE | OS.TVIF_SELECTEDIMAGE;
@@ -2055,6 +2058,38 @@ public void setImage (int index, Image image) {
 public void setImage (Image image) {
 	checkWidget ();
 	setImage (0, image);
+}
+
+/**
+ * Replaces <code>removeCount</code> children at <code>index</code> by <code>insertCount</code> new ones, as if the old
+ * ones were disposed from the last to the first and the new ones then created at <code>index</code> (in a
+ * <code>SWT.VIRTUAL</code> tree they ask for their data when they show). In the default mode this is one update of
+ * the rows and the scroll bar whatever the counts; the stock Tree makes the native calls one item at a time.
+ *
+ * @param index the index of the first item to replace
+ * @param removeCount the number of items to remove
+ * @param insertCount the number of new items
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_INVALID_RANGE - if the index or a count is negative, or the range is not within the receiver's children</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @since 3.137
+ */
+public void m3Splice (int index, int removeCount, int insertCount) {
+	checkWidget ();
+	if (index < 0 || removeCount < 0 || insertCount < 0) error (SWT.ERROR_INVALID_RANGE);
+	if (parent.viewport != null) {
+		parent.viewport.splice (this, index, removeCount, insertCount);
+		return;
+	}
+	if (index + removeCount > getItemCount ()) error (SWT.ERROR_INVALID_RANGE);
+	for (int i = index + removeCount - 1; i >= index; i--) getItem (i).dispose ();
+	for (int i = 0; i < insertCount; i++) new TreeItem (this, SWT.NONE, index + i);
 }
 
 /**
@@ -2167,6 +2202,7 @@ public void setText (int index, String string) {
 		if ((parent.style & SWT.VIRTUAL) == 0 && !cached && !parent.painted) {
 			return;
 		}
+	if (parent.viewport != null && handle == 0) return;
 		long hwnd = parent.handle;
 		TVITEM tvItem = new TVITEM ();
 		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_TEXT;

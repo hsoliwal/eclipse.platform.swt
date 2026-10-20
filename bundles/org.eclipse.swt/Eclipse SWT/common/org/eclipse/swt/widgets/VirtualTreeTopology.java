@@ -134,6 +134,26 @@ final class VirtualTreeTopology {
 		adjustKnownChildCount (parentId, -1);
 	}
 
+	/**
+	 * Replaces the children of a parent in [childIndex, childIndex + remove) by insert cold slots, in one pass over the
+	 * materialized siblings: the subtrees of the removed range are discarded, the later siblings shift by the
+	 * difference, and the known child count follows (Tree.m3Splice).
+	 */
+	void spliceCoordinates (int parentId, int childIndex, int remove, int insert) {
+		if (childIndex < 0 || remove < 0 || insert < 0) throw new IllegalArgumentException ("negative splice");
+		if (parentId != ROOT) requirePresent (parentId);
+		int count = childCount (parentId);
+		if (childIndex + remove > count) throw new IndexOutOfBoundsException (childIndex + remove);
+		for (int id = firstMaterializedChildId (parentId); id >= 0;) {
+			int next = nextSiblingIds [id];
+			int index = childIndices [id];
+			if (index >= childIndex && index < childIndex + remove) discardSubtree (id);
+			id = next;
+		}
+		shiftSiblingIndices (parentId, childIndex + remove, insert - remove);
+		adjustKnownChildCount (parentId, insert - remove);
+	}
+
 	void releaseSubtree (int id) {
         if (!contains(id)) {
             return;

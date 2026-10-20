@@ -156,6 +156,29 @@ final class ViewportBatch {
 		return true;
 	}
 
+	/**
+	 * A control disposed while a batch of its planes is open (endBatch rejects a disposed receiver, and runBatch
+	 * skips it): the entry and the display's frozen-plane counts go, so later paints and scrollbar updates of every
+	 * other control take their fast path again, and nothing of the gone window is touched (no layout, no repaint).
+	 */
+	static void disposed (Control c) {
+		Display d = c.display;
+		int index = indexOf (d, c);
+		if (index < 0) {
+			return;
+		}
+		if (depth (d.batchDepths [index], SWT.PLANE_VIEWPORT) > 0) {
+			d.batchViewports--;
+		}
+		if (depth (d.batchDepths [index], SWT.PLANE_SCROLLBARS) > 0) {
+			d.batchScrollbars--;
+		}
+		if (d.batchDamage [index] != null) {
+			d.batchDamage [index].clear ();
+		}
+		remove (d, index);
+	}
+
 	static void enter (Display d, int index, Control c, int plane) {
 		switch (plane) {
 			case SWT.PLANE_MAIN -> {
