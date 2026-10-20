@@ -69,3 +69,30 @@ must report UNCHANGED.
   section, then the Java Outline.
 - Every later conversion is a spec plus a recipe run, recorded as one VIEW_INVENTORY row (spec path, adapter, recipe
   result, differential, delta gate, ledger numbers).
+
+## Features every templated view gets (enrich once, every view inherits)
+
+User, 2026-10-20: "if JFace can be enhanced, others can be enhanced; keep doing; we'll have a very rich Eclipse". Each
+feature is built once in the template or JFace delta viewer, with an owner. Every view generated from a spec gets it
+with no per-view code. A view that opts out says so in its spec.
+
+| Feature | Owner | Notes |
+|---|---|---|
+| Multi-column sort (header clicks, sort keys, stable) | sort-filter | permutation lanes, k-way merge |
+| Column filters + filter row + quick search box | sort-filter | superseding-generation filter lanes, debounced |
+| Column control (show/hide/reorder/pack columns) | custom-widgets | the SwingX JXTable column-control pattern |
+| Sticky group headers and group counts | jface | from the Problems view categories |
+| Type-ahead find (incremental, wraps, highlights) | jface | over interned labels, no String creation |
+| Copy as text/TSV, export visible or all rows | jface | streams from the lanes, no item materialization |
+| Expand/collapse all, expand to level, reveal path | jface | tree topology lanes, O(window) native work |
+| Lazy prefetch and release by window | enhanced-api | ViewportListener entered/left ranges |
+| Hidden-view dirty rendering | all-widgets + jface | PartVisible (rule 24/25) |
+| Live counts in title, status line and group rows | jface | O(1) lane counters |
+| Selection as ranges (select all of 10^6 rows instantly) | viewport core | M3RangeSet |
+| Row striping, highlighters, style rules | render-modes + custom-widgets | the SwingX highlighter pattern, theme keys |
+| Persisted view state (sort, filters, widths, expansion) | jface | memento from the lanes |
+| Keyboard navigation parity with stock (and more) | Tree/Table tracks | differential-proven |
+| Large-model safety (10^6 rows smooth, no freezes) | all | ledger numbers per view |
+
+Add each new request here first, with an owner. A feature that only one view needs still goes into the template when
+it could be generic.
