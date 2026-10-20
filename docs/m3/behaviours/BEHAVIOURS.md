@@ -164,3 +164,21 @@ marked otherwise.
 | Undo/redo of view edits | moves, edits and deletes as inverse patches | JFace IUndoableOperation (EPL) | enhanced-api |
 | Accessibility, RTL and i18n formats | screen-reader names from lanes, RTL mirroring, locale formats | SWT Accessible (EPL: stock reference) | all-widgets |
 | Print and export | visible or all rows to CSV, TSV, HTML or PDF, streamed from the lanes | NatTable export (EPL) | jface |
+
+## Split panels: SashForm done right (user, 2026-10-20: "SashForm is a pain")
+
+| Problem with stock SashForm | M3 split panel |
+|---|---|
+| weights are bare int ratios; no min/max pane sizes | per-pane min/max/preferred sizes in px or %, honoured during drag and resize |
+| no collapse or maximize of a pane | collapsible panes (button or double-click on the sash), maximize/restore, remembered sizes |
+| every drag step re-lays out every child | drag is a viewport delta: only the two neighbours re-layout (live), or a ghost sash with one layout on release (configurable) |
+| no keyboard resizing, snapping or double-click restore | keyboard focusable sashes (arrows, Home/End), snap points, double-click restores the last size |
+| nested splits are not persisted | the whole split tree (orientation, sizes, collapsed state) saved and restored as one memento |
+| one direction per SashForm, nesting by hand | multi-split layout tree (rows and columns in one control) |
+
+Donors: IntelliJ Splitter/OnePixelSplitter (Apache-2.0: ADAPT), VS Code split view and allotment (MIT: ADAPT),
+react-resizable-panels (MIT: ADAPT), SwingX JXMultiSplitPane (LGPL: PATTERN_ONLY), stock SashForm (EPL: stock
+reference). Owner: all-widgets (SWT, inside the toolkit per rule 25, keeping SashForm's API and adding to it), with
+the Swing parallel by the Swing track (JSplitPane enrichment) and the multi-split widget by custom-widgets. Gate: a
+SashForm differential (stock API answers and layouts identical when the new options are off) and a drag sweep
+counting layouts per drag step.
