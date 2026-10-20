@@ -42,6 +42,9 @@ final class VirtualTreeResidentPlan {
 	private long [] planned = new long [0], retired = new long [0];
 	private int [] previousSiblings = new int [0];
 	private boolean [] kept = new boolean [0];
+	/* per committed entry: the row was measured with its data (carried for a reused row), and the old slot of each planned entry (-1: inserted) */
+	private boolean [] measuredSlots = new boolean [0], nextMeasured = new boolean [0];
+	private int [] plannedSlots = new int [0];
 	private int plannedCount, retiredCount;
 	/* the last plan: next entries whose key was committed (overlap) and those of them that are inserted again (reinserted) */
 	private int overlapCount, reinsertedCount;
@@ -91,6 +94,7 @@ final class VirtualTreeResidentPlan {
 		if (planned.length < count) {
 			planned = new long [capacity (planned.length, count)];
 			previousSiblings = new int [planned.length];
+			plannedSlots = new int [planned.length];
 		}
 		if (kept.length < size) kept = new boolean [capacity (kept.length, size)];
 		Arrays.fill (kept, 0, size, false);
@@ -111,8 +115,10 @@ final class VirtualTreeResidentPlan {
 			if (parentSurvives && slot != null && !kept [slot]) {
 				kept [slot] = true;
 				planned [entry] = handles [slot];
+				plannedSlots [entry] = slot;
 			} else {
 				planned [entry] = 0;
+				plannedSlots [entry] = -1;
 				if (slot != null) reinsertedCount++;
 			}
 		}
@@ -196,6 +202,15 @@ final class VirtualTreeResidentPlan {
 		}
 		slotByKey.clear ();
 		slotByHandle.clear ();
+		/* a reused row keeps its measured flag (read from the old slots before they are overwritten); an inserted row has none */
+		if (nextMeasured.length < count) nextMeasured = new boolean [capacity (nextMeasured.length, count)];
+		for (int entry = 0; entry < count; entry++) {
+			int slot = plannedSlots [entry];
+			nextMeasured [entry] = slot >= 0 && slot < measuredSlots.length && nativeHandles [entry] == planned [entry] && measuredSlots [slot];
+		}
+		boolean [] swap = measuredSlots;
+		measuredSlots = nextMeasured;
+		nextMeasured = swap;
 		for (int entry = 0; entry < count; entry++) {
 			long handle = nativeHandles [entry];
 			if (handle == 0) throw new IllegalArgumentException ("uncommitted native row " + entry);
@@ -241,6 +256,7 @@ final class VirtualTreeResidentPlan {
 		System.arraycopy (keys, end, keys, entry, tail);
 		System.arraycopy (handles, end, handles, entry, tail);
 		System.arraycopy (parentSlots, end, parentSlots, entry, tail);
+		if (measuredSlots.length >= size) System.arraycopy (measuredSlots, end, measuredSlots, entry, tail);
 		size -= removed;
 		for (int next = entry; next < size; next++) {
 			if (parentSlots [next] >= end) parentSlots [next] -= removed;
@@ -257,6 +273,23 @@ final class VirtualTreeResidentPlan {
 		}
 		plannedCount = retiredCount = 0;
 		lastParentIds = lastChildIndices = lastPhysicalParents = null;
+	}
+
+	/**
+	 * The committed row of <code>entry</code> was measured with its data (the caller's notion, for example a label
+	 * re-measured inside the client area). The flag follows the row: a later plan that reuses the row keeps it, a
+	 * removed or retired row drops it, an inserted row starts without it. So a window move re-measures only the rows
+	 * entering it, never the whole window.
+	 */
+	boolean measured (int entry) {
+		requireEntry (entry);
+		return entry < measuredSlots.length && measuredSlots [entry];
+	}
+
+	void markMeasured (int entry) {
+		requireEntry (entry);
+		if (measuredSlots.length < size) measuredSlots = Arrays.copyOf (measuredSlots, capacity (measuredSlots.length, size));
+		measuredSlots [entry] = true;
 	}
 
 	/** Forgets the committed window (all native rows were deleted by the caller). */

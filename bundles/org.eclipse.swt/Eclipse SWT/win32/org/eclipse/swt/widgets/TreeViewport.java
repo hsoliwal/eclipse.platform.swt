@@ -77,11 +77,13 @@ final class TreeViewport {
 	private long selectionClock;
 	private final TreeSet<Long> patternEpochs = new TreeSet<> ();
 	/*
-	 * Per plan entry: the row's label was re-measured while it was inside the client area. A rebuild
-	 * clears every bit, because rows it touches are measured while SWT declines their data.
+	 * A resident row's label is re-measured once it is inside the client area with its data (the plan's measured
+	 * flag). Rows inserted by a window commit are measured while SWT declines their data, so they start without the
+	 * flag; a reused row keeps it. A window move (scroll, resize, expansion) re-measures only the rows entering the
+	 * client area; remeasuredRows counts them for the viewport-delta gate.
 	 */
-	private boolean [] measured = new boolean [0];
 	private boolean remeasurePending;
+	long remeasuredRows;
 	/* the mediator itself is driving the native control (style toggle, TVM_EXPAND): no SetData for what is in view only in between */
 	private boolean quiet;
 	private boolean busy, rebuilding;
@@ -180,7 +182,6 @@ final class TreeViewport {
 		boolean oldShrink = tree.ignoreShrink, oldSelect = tree.ignoreSelect, oldDeselect = tree.ignoreDeselect;
 		tree.ignoreShrink = tree.ignoreSelect = tree.ignoreDeselect = true;
 		int retired = plan.retiredCount (), inserted = 0;
-		boolean [] measuredNext = null;
 		rebuilding = true;
 		rebuilds++;
 		try {
@@ -196,7 +197,6 @@ final class TreeViewport {
 				OS.SendMessage (tv, OS.TVM_DELETEITEM, 0, hItem);
 			}
 			long [] handles = new long [count];
-			measuredNext = new boolean [count];
 			for (int entry = 0; entry < count; entry++) {
 				long reused = plan.plannedHandle (entry);
 				if (reused != 0) {
@@ -211,7 +211,6 @@ final class TreeViewport {
 				inserted++;
 			}
 			plan.commit (window.count, window.parentIds, window.childIndices, window.physicalParents, handles);
-			measured = measuredNext;
 			rebuilding = false;
 			bindResidentFacades ();
 			syncResidentShape ();
@@ -358,15 +357,15 @@ final class TreeViewport {
 	}
 
 	private void remeasureClientRows () {
-		if (rebuilding || measured.length != plan.size ()) return;
+		if (rebuilding) return;
 		long tv = tree.handle;
 		RECT client = new RECT (), rect = new RECT ();
 		OS.GetClientRect (tv, client);
 		TVITEM tvItem = new TVITEM ();
 		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_TEXT;
 		tvItem.pszText = OS.LPSTR_TEXTCALLBACK;
-		for (int entry = 0; entry < measured.length; entry++) {
-			if (measured [entry]) continue;
+		for (int entry = 0; entry < plan.size (); entry++) {
+			if (plan.measured (entry)) continue;
 			long hItem = plan.handle (entry);
 			if (!OS.TreeView_GetItemRect (tv, hItem, rect, false) || rect.bottom <= client.top || rect.top >= client.bottom) continue;
 			/* SWT answers TVN_GETDISPINFO only for a row with a facade (lParam), as a plain virtual Tree has for every painted row */
@@ -374,7 +373,8 @@ final class TreeViewport {
 			facade ((int) (key >> 32), (int) key);
 			tvItem.hItem = hItem;
 			OS.SendMessage (tv, OS.TVM_SETITEM, 0, tvItem);
-			measured [entry] = true;
+			plan.markMeasured (entry);
+			remeasuredRows++;
 			if (LOG.isTraceEnabled ()) {
 				RECT label = new RECT ();
 				OS.TreeView_GetItemRect (tv, hItem, label, true);
