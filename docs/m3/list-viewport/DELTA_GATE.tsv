@@ -1,0 +1,16 @@
+view	site	call	reachable_from_change	verdict	justification	runtime_gate
+List	ListViewport.java:132-133	plan.clear + resetNative	no	justified	window patch of a list that shows again after taking deltas while hidden (rule 24 hidden viewports): one reset and the resident rows, O(window), once per hidden period	Test_..._List_ViewportDifferential#hiddenDeltasAnswerLikeTheReference: one patch, one paint pass on show
+List	ListViewport.java:150-151	resetNative + plan.clear	no	justified	install (): the empty list box is taken over at creation	-
+List	ListViewport.java:267	resetNative (in rebuild, plan.replaced)	only when the window keeps no row	justified	a scroll or jump whose new window shares no row with the old one: every row leaves and enters, so the reset is the delta (O(window)); inside a model change it is counted	m3FullRebuilds = 0 after every viewport step of the List differentials; m3WindowReplans = 0 over the 50-height resize sweep
+List	ListViewport.java:336	LB_RESETCONTENT (resetNative body)	-	-	the counted helper itself	-
+List	ListViewport.java:1229-1231	model.removeAll + resetNative + plan.clear	no	justified	List.removeAll (and remove (0, count - 1), which stock turns into removeAll): every row goes, the reset is the delta; skipped while hidden	-
+List	ListViewport.java:1244-1246	model.setItems + resetNative + plan.clear	no	justified	List.setItems replaces every row by definition; skipped while hidden	-
+List	ListViewport.java:1325	model.invalidateWidths	no	justified	WM_SETFONT: every width changes; O(1) (the width lane becomes uniform-unmeasured, rows are measured again on demand)	-
+List	ListViewport.java:1342	resetNative (reloadResidentRows)	no	justified	automatic text direction changed: the resident rows (only) are added again with or without the mark, O(window); skipped while hidden	-
+Combo	ComboViewport.java:131	plan.clear	no	justified	install (): the empty drop-down list is taken over at creation	-
+Combo	ComboViewport.java:256	plan.clear (patch)	no	justified	window patch of a drop-down list that took deltas while closed or hidden (rule 24): the stale native rows are deleted and the window built for the drop, key or selection that needs it, once	Test_..._Combo_ViewportDifferential#closedDeltasAnswerLikeTheReference: no row operation while closed, one patch on drop
+Combo	ComboViewport.java:1049	CB_RESETCONTENT	yes (remove)	justified	stock Combo.remove resets an emptied combo (Bug#440671); the list is empty, so nothing is rebuilt	m3FullRebuilds = 0 after every viewport step of the Combo differentials
+Combo	ComboViewport.java:1070	CB_RESETCONTENT	yes (remove)	justified	as above, for remove (start, end)	m3FullRebuilds = 0
+Combo	ComboViewport.java:1078-1079	model.removeAll + plan.clear	no	justified	Combo.removeAll: every row goes	-
+Combo	ComboViewport.java:1092-1105	CB_RESETCONTENT + plan.clear + model.setItems	no	justified	Combo.setItems replaces every row by definition; a closed list then stays empty until it drops	-
+Combo	ComboViewport.java:1133	model.invalidateWidths	no	justified	the measuring font changed: O(1), widths measured again on demand	-
