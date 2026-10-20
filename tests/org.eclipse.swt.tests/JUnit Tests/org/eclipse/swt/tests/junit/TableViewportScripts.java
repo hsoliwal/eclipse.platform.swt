@@ -84,6 +84,7 @@ final class TableViewportScripts {
 			case Test_org_eclipse_swt_widgets_Table_ViewportDifferential.SCALE -> TableScaleScripts.scale (scene, kind, fraction, pick, span, delta);
 			case Test_org_eclipse_swt_widgets_Table_ViewportDifferential.ZOOM -> TableScaleScripts.zoom (scene, kind, fraction, pick, span, delta);
 			case Test_org_eclipse_swt_widgets_Table_ViewportDifferential.HIDDEN -> TableHiddenScripts.hidden (scene, kind, fraction, pick, span, delta);
+			case Test_org_eclipse_swt_widgets_Table_ViewportDifferential.SWEEP -> TableSweepScripts.sweep (scene, kind, fraction, pick, span, delta);
 			default -> dpi (scene, kind, fraction, pick, span, delta);
 		});
 	}

@@ -112,7 +112,7 @@ final class TableHiddenScripts {
 		if (count > 0) table.setTopIndex (Math.min (anchor, count - 1));
 	}
 
-	/* native row and state operations, whole-list rebuilds and facades made of the win32 viewport; null without it */
+	/* native row and state operations, whole-list rebuilds, facades made and rows measured of the win32 viewport; null without it */
 	static long [] counters (Table table) {
 		try {
 			Field viewportField = Table.class.getDeclaredField ("viewport");
@@ -121,7 +121,7 @@ final class TableHiddenScripts {
 			if (viewport == null) return null;
 			Field made = viewport.getClass ().getDeclaredField ("facadesMade");
 			made.setAccessible (true);
-			long [] counters = new long [4];
+			long [] counters = new long [5];
 			String [] names = {"m3RowOps", "m3StateOps", "m3FullRebuilds"};
 			for (int i = 0; i < names.length; i++) {
 				Field field = Table.class.getDeclaredField (names [i]);
@@ -129,6 +129,9 @@ final class TableHiddenScripts {
 				counters [i] = field.getLong (table);
 			}
 			counters [3] = made.getLong (viewport);
+			Field measured = viewport.getClass ().getDeclaredField ("rowsMeasured");
+			measured.setAccessible (true);
+			counters [4] = measured.getLong (viewport);
 			return counters;
 		} catch (ReflectiveOperationException | RuntimeException e) {
 			return null;
