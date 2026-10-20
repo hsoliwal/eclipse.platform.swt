@@ -216,7 +216,7 @@ final class M3SortOrder {
 		for (int out = end - 1, i = kept - 1, j = k - 1; j >= 0; out--) {
 			children [out] = i >= start && sort.compare (children [i], batch [j]) > 0 ? children [i--] : batch [j--];
 		}
-		for (int i = start; i < end - 1; i++) siblingIndex [children [i]] = i - start;
+		for (int i = start; i < end; i++) siblingIndex [children [i]] = i - start;
 	}
 
 	/* a row whose values changed moves inside its parent's sibling segment: binary search and one shift, O(log c + distance) */
