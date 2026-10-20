@@ -395,7 +395,7 @@ final class TreeFooter {
 			RECT inset = new RECT ();
 			OS.SetRect (inset, cell.left + 6, cell.top + 1, cell.right - 6, cell.bottom);
 			char [] chars = text.toCharArray ();
-			OS.DrawText (hDC, chars, chars.length, inset, OS.DT_SINGLELINE | OS.DT_VCENTER | OS.DT_RIGHT | OS.DT_END_ELLIPSIS | OS.DT_NOPREFIX);
+			OS.DrawText (hDC, chars, chars.length, inset, OS.DT_SINGLELINE | OS.DT_VCENTER | OS.DT_RIGHT | OS.DT_ENDELLIPSIS | OS.DT_NOPREFIX);
 		}
 		OS.SetTextColor (hDC, oldColor);
 		OS.SetBkMode (hDC, oldMode);
