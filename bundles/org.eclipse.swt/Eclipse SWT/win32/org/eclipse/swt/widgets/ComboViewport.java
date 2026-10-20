@@ -272,9 +272,16 @@ final class ComboViewport {
 				+ (dropped ? ", dropped, top " + topRow : ", closed") + " (" + plan.touched () + " native rows touched)");
 	}
 
+	/* the NUL-terminated text of the row being inserted, reused (a window move inserts tens of rows) */
+	private char [] rowText = new char [64];
+
 	private void insertNative (int entry, int row) {
-		TCHAR buffer = new TCHAR (model.getItem (row), true);
-		long result = OS.SendMessage (hwndList, OS.LB_INSERTSTRING, entry, buffer);
+		String text = model.getItem (row);
+		int length = text.length ();
+		if (rowText.length <= length) rowText = new char [Math.max (length + 1, 2 * rowText.length)];
+		text.getChars (0, length, rowText, 0);
+		rowText [length] = 0;
+		long result = OS.SendMessage (hwndList, OS.LB_INSERTSTRING, entry, rowText);
 		if (result == OS.LB_ERR || result == OS.LB_ERRSPACE) combo.error (SWT.ERROR_ITEM_NOT_ADDED);
 		inserted ();
 	}
