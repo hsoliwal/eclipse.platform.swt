@@ -1,0 +1,194 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+import java.lang.management.ManagementFactory;
+import java.util.Arrays;
+import java.util.logging.Logger;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.widgets.*;
+
+/**
+ * eclipse.platform.swt#208 ("1.3 second UI freezes in Table.setItemCount"), measured on win32 (optimization leaf
+ * T-Table-O1, docs/m3/TABLE_MEDIATED_VIEWPORT.md). The JFace refresh of the issue's stack is
+ * <code>setItemCount (0)</code> (the viewer's input is cleared) and then <code>setItemCount (n)</code> (the new input).
+ * Per Table style (plain, VIRTUAL) and size (10^5, 10^6) on a visible shell of the invisible desktop:
+ * <ul>
+ * <li>grow: <code>setItemCount (n)</code> on an empty Table;</li>
+ * <li>clear: <code>setItemCount (0)</code> on a Table of n rows;</li>
+ * <li>reload: <code>setItemCount (n)</code> again.</li>
+ * </ul>
+ * Wall time (median of 5, a fresh Table per repetition), bytes allocated by the UI thread
+ * (<code>ThreadMXBean.getThreadAllocatedBytes</code>) and the heap retained by the Table of n rows after a GC
+ * (median run). An operation whose first repetition takes longer than <code>cap</code> seconds runs once; a grow that
+ * projects past one second from the previous size (a Table that makes its rows one by one) runs in steps of 10^5 rows
+ * until the cap and reports the rows reached and their total (a lower bound of the stock time when the cap stops it).
+ * Usage: java -cp &lt;classes&gt;;&lt;swt jar&gt; SetItemCountProbe [cap-seconds]
+ */
+public class SetItemCountProbe {
+	static final Logger LOG = Logger.getLogger ("SetItemCountProbe");
+	static final int REPS = 5;
+	final com.sun.management.ThreadMXBean threads = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean ();
+	Display display;
+	Shell shell;
+	long capMillis;
+	/* the medians of the previous size of the same style: a size that projects past the cap is not run whole */
+	long lastGrow, lastClear;
+	int lastRows;
+
+	public static void main (String [] args) {
+		System.setProperty ("java.util.logging.SimpleFormatter.format", "%5$s%n");
+		new SetItemCountProbe ().run (args.length > 0 ? Integer.parseInt (args [0]) : 120);
+	}
+
+	void run (int capSeconds) {
+		capMillis = capSeconds * 1000L;
+		display = new Display ();
+		shell = new Shell (display);
+		shell.setBounds (20, 20, 360, 460);
+		shell.open ();
+		pump (200);
+		Table probe = new Table (shell, SWT.MULTI);
+		boolean ownerData = (OS.GetWindowLong (probe.handle, OS.GWL_STYLE) & OS.LVS_OWNERDATA) != 0;
+		probe.dispose ();
+		LOG.info ("SWT " + SWT.getVersion () + " mode " + System.getProperty ("swt.widget.mode.Table", "default") + ", plain Table owner data " + ownerData
+				+ ", cap " + capSeconds + " s, " + REPS + " repetitions");
+		LOG.info ("style\trows\toperation\tmedian_ms\tmin_ms\tmax_ms\trepetitions\tallocated_bytes\tretained_bytes");
+		for (int style : new int [] {SWT.MULTI | SWT.VIRTUAL, SWT.MULTI}) {
+			lastRows = 0;
+			for (int rows : new int [] {100_000, 1_000_000}) measure (style, rows);
+		}
+		display.dispose ();
+		LOG.info ("DONE");
+	}
+
+	Table table (int style) {
+		Table table = new Table (shell, style | SWT.BORDER);
+		table.setBounds (5, 5, 330, 400);
+		if ((style & SWT.VIRTUAL) != 0) table.addListener (SWT.SetData, e -> ((TableItem) e.item).setText ("row " + e.index));
+		return table;
+	}
+
+	void measure (int style, int rows) {
+		String name = (style & SWT.VIRTUAL) != 0 ? "VIRTUAL" : "plain";
+		long [] grow = new long [REPS], clear = new long [REPS], reload = new long [REPS];
+		long [] growBytes = new long [REPS], clearBytes = new long [REPS], reloadBytes = new long [REPS];
+		long retained = -1;
+		int reps = 0;
+		if (lastRows > 0 && lastGrow * rows / lastRows > 1000) {
+			LOG.info (name + "\t" + rows + "\tgrow\tprojected " + lastGrow * rows / lastRows + " from " + lastRows + " rows: stepped");
+			Table table = table (style);
+			stepped (name, table, rows);
+			table.dispose ();
+			return;
+		}
+		for (int rep = 0; rep < REPS; rep++) {
+			Table table = table (style);
+			pump (50);
+			long base = rep == REPS / 2 ? retained () : 0;
+			long [] t = timed (() -> table.setItemCount (rows));
+			if (rep == 0 && t [0] > capMillis / 4) {
+				LOG.info (name + "\t" + rows + "\tgrow\t" + t [0] + "\t" + t [0] + "\t" + t [0] + "\t1\t" + t [1] + "\t-");
+				stepped (name, table, rows);
+				table.dispose ();
+				return;
+			}
+			grow [rep] = t [0];
+			growBytes [rep] = t [1];
+			pump (50);
+			if (rep == REPS / 2) retained = retained () - base;
+			t = timed (() -> table.setItemCount (0));
+			clear [rep] = t [0];
+			clearBytes [rep] = t [1];
+			pump (50);
+			t = timed (() -> table.setItemCount (rows));
+			reload [rep] = t [0];
+			reloadBytes [rep] = t [1];
+			table.dispose ();
+			pump (50);
+			reps++;
+			if (clear [rep] + reload [rep] > capMillis / 2) break;
+		}
+		lastGrow = median (grow, reps);
+		lastClear = median (clear, reps);
+		lastRows = rows;
+		report (name, rows, "grow", grow, growBytes, reps, retained);
+		report (name, rows, "clear", clear, clearBytes, reps, -1);
+		report (name, rows, "reload", reload, reloadBytes, reps, -1);
+	}
+
+	/* a grow past the cap: steps of 10^5 rows until the cap, then the clear of what was reached */
+	void stepped (String name, Table table, int rows) {
+		long total = 0;
+		int reached = table.getItemCount ();
+		for (int count = reached + 100_000; count <= rows && total < capMillis; count += 100_000) {
+			final int next = count;
+			long [] t = timed (() -> table.setItemCount (next));
+			total += t [0];
+			reached = next;
+			LOG.info (name + "\t" + next + "\tgrow step to\t" + t [0] + "\t\t\t1\t" + t [1] + "\t-");
+		}
+		LOG.info (name + "\t" + rows + "\tgrow stepped\t" + (reached < rows ? ">" : "") + total + "\t\t\t1\t\t-\treached " + reached + " rows");
+		final int start = reached;
+		if (lastRows > 0 && lastClear * start / lastRows > capMillis) {
+			LOG.info (name + "\t" + start + "\tclear\tskipped: projected " + lastClear * start / lastRows + " ms from " + lastRows + " rows");
+			return;
+		}
+		long [] t = timed (() -> table.setItemCount (0));
+		LOG.info (name + "\t" + start + "\tclear\t" + t [0] + "\t\t\t1\t" + t [1] + "\t-");
+	}
+
+	long [] timed (Runnable operation) {
+		long id = Thread.currentThread ().getId ();
+		long bytes = threads.getThreadAllocatedBytes (id);
+		long t0 = System.nanoTime ();
+		operation.run ();
+		long millis = (System.nanoTime () - t0) / 1_000_000;
+		return new long [] {millis, threads.getThreadAllocatedBytes (id) - bytes};
+	}
+
+	static long median (long [] values, int count) {
+		long [] sorted = Arrays.copyOf (values, count);
+		Arrays.sort (sorted);
+		return sorted [count / 2];
+	}
+
+	long retained () {
+		Runtime runtime = Runtime.getRuntime ();
+		for (int i = 0; i < 3; i++) System.gc ();
+		return runtime.totalMemory () - runtime.freeMemory ();
+	}
+
+	void report (String name, int rows, String operation, long [] millis, long [] bytes, int reps, long retained) {
+		long [] m = Arrays.copyOf (millis, reps), b = Arrays.copyOf (bytes, reps);
+		Arrays.sort (m);
+		Arrays.sort (b);
+		LOG.info (name + "\t" + rows + "\t" + operation + "\t" + m [reps / 2] + "\t" + m [0] + "\t" + m [reps - 1] + "\t" + reps + "\t" + b [reps / 2] + "\t"
+				+ (retained < 0 ? "-" : String.valueOf (retained)));
+	}
+
+	void pump (int millis) {
+		long end = System.currentTimeMillis () + millis;
+		while (System.currentTimeMillis () < end) {
+			if (!display.readAndDispatch ()) {
+				try {
+					Thread.sleep (5);
+				} catch (InterruptedException e) {
+					return;
+				}
+			}
+		}
+	}
+}

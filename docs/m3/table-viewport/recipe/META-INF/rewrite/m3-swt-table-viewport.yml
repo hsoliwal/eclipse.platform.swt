@@ -33,6 +33,27 @@ recipeList:
       memberName: stockItems
       beforeMethod: Table
       memberSource: "\t/* The R4_38 item store of a VIRTUAL Table in the original mode (see TableStockItems); null otherwise. */\n\tTableStockItems stockItems;"
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      memberName: m3RowOps
+      beforeMethod: Table
+      memberSource: "\t/* Native operations of this Table, counted by TableSplice.count (T-Table-O2, brief rule 24): row messages, state messages (selection, focus, mark) and whole-list rebuilds (LVM_DELETEALLITEMS, a count change that invalidates every row); tests read them. */\n\tlong m3RowOps, m3StateOps, m3FullRebuilds;"
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      memberName: m3Splice
+      beforeMethod: m3ResidentRange
+      memberSource: "/* M3Model seam (enhanced API leaf 19, step 3): rows [at, at + removed) replaced by inserted empty rows with one native count change (TableSplice); false when the caller is to edit through the item API */\nboolean m3Splice (int at, int removed, int inserted) {\n\tcheckWidget ();\n\treturn viewport != null && TableSplice.splice (this, viewport, at, removed, inserted);\n}"
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      memberName: m3SetRow
+      beforeMethod: m3ResidentRange
+      memberSource: "/* M3Model seam (T-Table-O2): the labels of a row written to the viewport lanes without an item (TableViewport.setRow); false when the caller is to write them through the item */\nboolean m3SetRow (int index, String [] texts, Image [] images, boolean checked) {\n\treturn viewport != null && viewport.setRow (index, texts, images, checked);\n}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      methodName: callWindowProc
+      parameterCount: 5
+      position: METHOD_START
+      statements: "\tif (hwnd == handle) TableSplice.count (this, msg, lParam);"
   - com.synexia.openrewrite.viewport.M3InsertStatements:
       declaringClasses: [org.eclipse.swt.widgets.Table]
       methodName: widgetStyle
@@ -62,7 +83,7 @@ recipeList:
       statements: "\t\t\tif (viewport != null) viewport.stateChanged (lParam);"
   - com.synexia.openrewrite.viewport.M3InsertStatements:
       declaringClasses: [org.eclipse.swt.widgets.Table]
-      methodName: setItemCount
+      methodName: setCount
       parameterCount: 1
       anchor: "count = Math.max (0, count);"
       position: AFTER
@@ -112,7 +133,7 @@ recipeList:
       statements: "\tif (viewport != null) viewport.rowsResized (0);"
   - com.synexia.openrewrite.viewport.M3InsertStatements:
       declaringClasses: [org.eclipse.swt.widgets.Table]
-      methodName: createItem
+      methodName: createTableItem
       parameterCount: 2
       parameterTypes: "TableItem,int"
       position: METHOD_END
@@ -222,7 +243,7 @@ recipeList:
       statements: "\tif (viewport != null) return viewport.indexOf (item);"
   - com.synexia.openrewrite.viewport.M3InsertStatements:
       declaringClasses: [org.eclipse.swt.widgets.Table]
-      methodName: destroyItem
+      methodName: destroyTableItem
       parameterCount: 1
       parameterTypes: "TableItem"
       position: METHOD_START

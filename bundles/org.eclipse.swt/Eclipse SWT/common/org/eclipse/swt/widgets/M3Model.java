@@ -407,14 +407,23 @@ public final class M3Model {
 			patch.applyTo (new M3Patch.Target () {
 				int run;
 
+				/* a Table that splices (win32 viewport, Table.m3Splice) moves a run with one native count change, keeping the top row on top */
 				@Override
 				public void remove (int index, int count) {
-					if (widget instanceof Table table) table.remove (index, index + count - 1); else ((List) widget).remove (index, index + count - 1);
+					if (widget instanceof Table table) {
+						if (!table.m3Splice (index, count, 0)) table.remove (index, index + count - 1);
+					} else {
+						((List) widget).remove (index, index + count - 1);
+					}
 				}
 
 				@Override
 				public void insert (int index, int count) {
-					for (int k = 0; k < count; k++) insertRow (index + k, patch.insertedId (run, k), virtual);
+					if (widget instanceof Table table && table.m3Splice (index, 0, count)) {
+						for (int k = 0; k < count; k++) fillRow (table, index + k, patch.insertedId (run, k));
+					} else {
+						for (int k = 0; k < count; k++) insertRow (index + k, patch.insertedId (run, k), virtual);
+					}
 					run++;
 				}
 
@@ -476,7 +485,7 @@ public final class M3Model {
 			if (virtual) {
 				table.clear (index);
 			} else {
-				fillItem (table.getItem (index), ids [index]);
+				fillRow (table, index, ids [index]);
 			}
 			return;
 		}
@@ -485,9 +494,20 @@ public final class M3Model {
 		((List) widget).setItem (index, row.text (0));
 	}
 
+	/* the labels of a Table row: written to its lanes without an item where the Table keeps them (win32 viewport, Table.m3SetRow), else through its item */
+	private void fillRow (Table table, int index, long id) {
+		row.reset ();
+		labels.fill (id, row);
+		if (!table.m3SetRow (index, row.texts, row.images, row.checked)) fillItem (table.getItem (index));
+	}
+
 	private void fillItem (TableItem item, long id) {
 		row.reset ();
 		labels.fill (id, row);
+		fillItem (item);
+	}
+
+	private void fillItem (TableItem item) {
 		int columns = Math.max (1, item.getParent ().getColumnCount ());
 		for (int column = 0; column < columns; column++) {
 			item.setText (column, row.text (column));

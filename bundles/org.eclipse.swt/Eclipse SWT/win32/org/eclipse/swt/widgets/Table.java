@@ -133,6 +133,9 @@ public class Table extends Composite {
 	/* The drawn plane of the custom, m3 and gpu modes (see TableDrawnPlane); null in the viewport and original modes. */
 	TableDrawnPlane drawnPlane;
 
+	/* Native operations of this Table, counted by TableSplice.count (T-Table-O2, brief rule 24): row messages, state messages (selection, focus, mark) and whole-list rebuilds (LVM_DELETEALLITEMS, a count change that invalidates every row); tests read them. */
+	long m3RowOps, m3StateOps, m3FullRebuilds;
+
 /**
  * Constructs a new instance of this class given its parent
  * and a style value describing its behavior and appearance.
@@ -425,6 +428,7 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 }
 
 long callWindowProc (long hwnd, int msg, long wParam, long lParam, boolean forceSelect) {
+	if (hwnd == handle) TableSplice.count (this, msg, lParam);
     if (handle == 0) {
         return 0;
     }
@@ -2975,6 +2979,17 @@ TableItem getItemInPixels (Point point) {
 public int getItemCount () {
 	checkWidget ();
 	return (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
+}
+
+/* M3Model seam (enhanced API leaf 19, step 3): rows [at, at + removed) replaced by inserted empty rows with one native count change (TableSplice); false when the caller is to edit through the item API */
+boolean m3Splice (int at, int removed, int inserted) {
+	checkWidget ();
+	return viewport != null && TableSplice.splice (this, viewport, at, removed, inserted);
+}
+
+/* M3Model seam (T-Table-O2): the labels of a row written to the viewport lanes without an item (TableViewport.setRow); false when the caller is to write them through the item */
+boolean m3SetRow (int index, String [] texts, Image [] images, boolean checked) {
+	return viewport != null && viewport.setRow (index, texts, images, checked);
 }
 
 /* M3Residency seam: the last native cache hint with the viewport; null (every row) without one */

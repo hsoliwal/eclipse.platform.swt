@@ -1,0 +1,42 @@
+# T-Table-14: table_differential_references.sh S:/m3-scratch/table/p8 tt20261019p7 10,11 (variants 10 SCALE and 11 ZOOM), invisible desktop, Windows 11, -Dswt.autoScale.updateOnRuntime=true
+# tests of HEAD 65dc529195d compiled against build tt20261019p7 (no bundle change since); 2026-10-19 18:14-18:16
+tests javac errors=0
+== original equals official (rule 12)
+     16 seeds equal
+== record-official
+[         0 tests aborted         ]
+[         1 tests successful      ]
+[         0 tests failed          ]
+== record-original
+[         0 tests aborted         ]
+[         1 tests successful      ]
+[         0 tests failed          ]
+== viewport-vs-official
+[         0 tests aborted         ]
+[         1 tests successful      ]
+[         0 tests failed          ]
+== viewport-vs-original
+[         0 tests aborted         ]
+[         1 tests successful      ]
+[         0 tests failed          ]
+== per-seed recordings
+table-variant10-seed0.txt official 101 lines after the header, original equal
+table-variant10-seed1.txt official 101 lines after the header, original equal
+table-variant10-seed2.txt official 101 lines after the header, original equal
+table-variant10-seed3.txt official 101 lines after the header, original equal
+table-variant10-seed4.txt official 101 lines after the header, original equal
+table-variant10-seed5.txt official 101 lines after the header, original equal
+table-variant10-seed6.txt official 101 lines after the header, original equal
+table-variant10-seed7.txt official 101 lines after the header, original equal
+table-variant11-seed0.txt official 81 lines after the header, original equal
+table-variant11-seed1.txt official 81 lines after the header, original equal
+table-variant11-seed2.txt official 81 lines after the header, original equal
+table-variant11-seed3.txt official 81 lines after the header, original equal
+table-variant11-seed4.txt official 81 lines after the header, original equal
+table-variant11-seed5.txt official 81 lines after the header, original equal
+table-variant11-seed6.txt official 81 lines after the header, original equal
+table-variant11-seed7.txt official 81 lines after the header, original equal
+== record-official: seededScriptsAnswerLikeTheReference() 38063 ms, passed
+== record-original: seededScriptsAnswerLikeTheReference() 35541 ms, passed
+== viewport-vs-official: seededScriptsAnswerLikeTheReference() 34901 ms, passed
+== viewport-vs-original: seededScriptsAnswerLikeTheReference() 36080 ms, passed
