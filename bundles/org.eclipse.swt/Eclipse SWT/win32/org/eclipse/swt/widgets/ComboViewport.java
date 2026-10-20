@@ -875,7 +875,12 @@ final class ComboViewport {
 			}
 		}
 		layout ();
-		combo.setScrollWidth (new TCHAR (string, true).chars, true);
+		/* as stock Combo.add: the scroll width follows the items only with SWT.H_SCROLL */
+		if (hScroll ()) combo.setScrollWidth (new TCHAR (string, true).chars, true);
+	}
+
+	private boolean hScroll () {
+		return (combo.style & SWT.H_SCROLL) != 0;
 	}
 
 	/* removes logical rows start .. end; resident rows through the combo, which clears its text when the selected row goes */
@@ -951,7 +956,7 @@ final class ComboViewport {
 		/* the combo had exactly one item (Combo.remove: Bug#440671) */
 		if (model.getItemCount () == 0) OS.SendMessage (combo.handle, OS.CB_RESETCONTENT, 0, 0);
 		layout ();
-		combo.setScrollWidth (new TCHAR (text, true).chars, false);
+		if (hScroll ()) combo.setScrollWidth (new TCHAR (text, true).chars, false);
 		if (notify && length != OS.GetWindowTextLength (combo.handle)) combo.sendEvent (SWT.Modify);
 	}
 
@@ -960,16 +965,19 @@ final class ComboViewport {
 		int count = model.getItemCount ();
 		if (!(0 <= start && start <= end && end < count)) combo.error (SWT.ERROR_INVALID_RANGE);
 		int textLength = OS.GetWindowTextLength (combo.handle);
-		int newWidth = beginMeasure ();
-		try {
-			for (int i = start; i <= end; i++) newWidth = Math.max (newWidth, measure (model.getItem (i)));
-		} finally {
-			endMeasure ();
+		int newWidth = 0;
+		if (hScroll ()) {
+			newWidth = beginMeasure ();
+			try {
+				for (int i = start; i <= end; i++) newWidth = Math.max (newWidth, measure (model.getItem (i)));
+			} finally {
+				endMeasure ();
+			}
 		}
 		deleteRows (start, end);
 		if (model.getItemCount () == 0) OS.SendMessage (combo.handle, OS.CB_RESETCONTENT, 0, 0);
 		layout ();
-		combo.setScrollWidth (newWidth, false);
+		if (hScroll ()) combo.setScrollWidth (newWidth, false);
 		if (textLength != OS.GetWindowTextLength (combo.handle)) combo.sendEvent (SWT.Modify);
 	}
 
@@ -983,7 +991,8 @@ final class ComboViewport {
 
 	/** Combo.setItems over logical rows. */
 	void setItems (String [] items) {
-		combo.setScrollWidth (0);
+		/* as stock Combo.setItems: the items are measured only with SWT.H_SCROLL (1,000,000 DrawText calls otherwise) */
+		if (hScroll ()) combo.setScrollWidth (0);
 		busy = true;
 		try {
 			OS.CallWindowProc (Combo.ComboProc, combo.handle, OS.CB_RESETCONTENT, 0, 0);
@@ -998,9 +1007,9 @@ final class ComboViewport {
 		String [] texts = new String [items.length];
 		for (int i = 0; i < items.length; i++) texts [i] = ListViewport.nativeText (items [i]);
 		model.setItems (texts);
-		int newWidth = widest ();
+		int newWidth = hScroll () ? widest () : 0;
 		layout ();
-		combo.setScrollWidth (newWidth + 3);
+		if (hScroll ()) combo.setScrollWidth (newWidth + 3);
 		combo.sendEvent (SWT.Modify);
 	}
 
