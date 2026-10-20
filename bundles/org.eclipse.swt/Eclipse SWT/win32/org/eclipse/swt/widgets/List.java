@@ -3497,4 +3497,10 @@ long m3FullRebuilds () {
 	checkWidget ();
 	return viewport != null ? viewport.fullRebuilds () : 0;
 }
+
+/* Rule 24, viewport deltas: whole-window replacements of a non-empty resident window (a resize or a short scroll makes none). */
+long m3WindowReplans () {
+	checkWidget ();
+	return viewport != null ? viewport.windowReplans () : 0;
+}
 }

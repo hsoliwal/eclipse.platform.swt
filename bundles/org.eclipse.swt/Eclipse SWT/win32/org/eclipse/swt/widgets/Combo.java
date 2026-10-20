@@ -3787,4 +3787,16 @@ long m3FullRebuilds () {
 	checkWidget ();
 	return viewport != null ? viewport.fullRebuilds () : 0;
 }
+
+/* Native row operations of the drop-down list box (LB_INSERTSTRING, LB_DELETESTRING) made by the viewport. */
+long m3NativeRowOps () {
+	checkWidget ();
+	return viewport != null ? viewport.nativeRowOps () : 0;
+}
+
+/* Rule 24, viewport deltas: whole-window replacements of a non-empty resident window of the drop-down list. */
+long m3WindowReplans () {
+	checkWidget ();
+	return viewport != null ? viewport.windowReplans () : 0;
+}
 }

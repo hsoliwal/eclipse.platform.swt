@@ -247,6 +247,7 @@ final class ComboViewport {
 		plan.plan (nextFirst, nextSize);
 		/* rule 24: a change that replaces every resident row (none stays) is a full rebuild */
 		if (changeDepth > 0 && plan.replaced () && plan.size () > 0) fullRebuilds++;
+		if (plan.replaced () && plan.size () > 0) windowReplans++;
 		busy = true;
 		if (dropped) OS.DefWindowProc (hwndList, OS.WM_SETREDRAW, 0, 0);
 		try {
@@ -283,12 +284,14 @@ final class ComboViewport {
 		if (rowText.length <= length) rowText = new char [Math.max (length + 1, 2 * rowText.length)];
 		text.getChars (0, length, rowText, 0);
 		rowText [length] = 0;
+		nativeRowOps++;
 		long result = OS.SendMessage (hwndList, OS.LB_INSERTSTRING, entry, rowText);
 		if (result == OS.LB_ERR || result == OS.LB_ERRSPACE) combo.error (SWT.ERROR_ITEM_NOT_ADDED);
 		inserted ();
 	}
 
 	private void deleteNative (int entry) {
+		nativeRowOps++;
 		OS.SendMessage (hwndList, OS.LB_DELETESTRING, entry, 0);
 		barState = BAR_SET;
 	}
@@ -371,6 +374,7 @@ final class ComboViewport {
 		} else {
 			char [] empty = {0};
 			for (int i = s; i < c; i++) {
+				nativeRowOps++;
 				OS.SendMessage (hwndList, OS.LB_INSERTSTRING, s, empty);
 				inserted ();
 			}
@@ -1156,6 +1160,17 @@ final class ComboViewport {
 	 */
 	private int changeDepth;
 	private long fullRebuilds;
+
+	/* native row operations of the drop-down list box (LB_INSERTSTRING, LB_DELETESTRING) and whole-window replacements */
+	private long nativeRowOps, windowReplans;
+
+	long nativeRowOps () {
+		return nativeRowOps;
+	}
+
+	long windowReplans () {
+		return windowReplans;
+	}
 
 	long fullRebuilds () {
 		return fullRebuilds;

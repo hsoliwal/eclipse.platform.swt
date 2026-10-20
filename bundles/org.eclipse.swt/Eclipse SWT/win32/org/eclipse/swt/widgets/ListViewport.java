@@ -210,6 +210,8 @@ final class ListViewport {
 		long handle = list.handle;
 		captureResidentState ();
 		plan.plan (nextFirst, nextSize);
+		/* rule 24, viewport deltas: a move that keeps no resident row replaces the window; resizes and scrolls by less than a window never do */
+		if (plan.replaced () && plan.size () > 0) windowReplans++;
 		boolean redraw = list.getDrawing () && OS.IsWindowVisible (handle);
 		if (redraw) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);
 		try {
@@ -267,6 +269,13 @@ final class ListViewport {
 	 */
 	private int changeDepth;
 	private long fullRebuilds;
+
+	/* whole-window replacements of a non-empty window, on any path (List.m3WindowReplans) */
+	private long windowReplans;
+
+	long windowReplans () {
+		return windowReplans;
+	}
 
 	long fullRebuilds () {
 		return fullRebuilds;

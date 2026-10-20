@@ -387,6 +387,62 @@ public class Test_org_eclipse_swt_widgets_List_ViewportAcceptance {
 	}
 
 	/*
+	 * Rule 24, viewport deltas: a resize is a delta of the viewport. Over a sweep of 50 heights (1 px steps up and down,
+	 * then large jumps) with the top row far inside 100,000 rows, the window is never replaced whole and the native row
+	 * operations of each resize are exactly the rows that enter or leave the resident window.
+	 */
+	@Test
+	public void resizeSweepMovesOnlyTheRowsEnteringOrLeaving () throws ReflectiveOperationException {
+		shell.setBounds (20, 20, 330, 1000);
+		List list = list (SWT.MULTI);
+		shell.open ();
+		list.setItems (rows (100_000));
+		list.setTopIndex (50_000);
+		settleUi ();
+		int [] heights = new int [50];
+		for (int i = 0; i < 20; i++) heights [i] = 380 + i;
+		for (int i = 20; i < 40; i++) heights [i] = 399 - (i - 20);
+		int [] jumps = {120, 860, 64, 700, 381, 950, 90, 512, 300, 777};
+		System.arraycopy (jumps, 0, heights, 40, jumps.length);
+		Method ops = List.class.getDeclaredMethod ("m3NativeRowOps"), replans = List.class.getDeclaredMethod ("m3WindowReplans");
+		ops.setAccessible (true);
+		replans.setAccessible (true);
+		for (int height : heights) {
+			int [] before = window (list);
+			long opsBefore = (Long) ops.invoke (list), replansBefore = (Long) replans.invoke (list);
+			list.setSize (300, height);
+			settleUi ();
+			int [] after = window (list);
+			int entering = Math.max (0, before [0] - after [0]) + Math.max (0, after [1] - before [1]);
+			int leaving = Math.max (0, after [0] - before [0]) + Math.max (0, before [1] - after [1]);
+			assertEquals (replansBefore, replans.invoke (list), "the window was replaced whole at height " + height);
+			assertEquals (entering + leaving, (Long) ops.invoke (list) - opsBefore, "native row operations at height " + height + ", window "
+				+ before [0] + ".." + before [1] + " -> " + after [0] + ".." + after [1]);
+			assertTrue (after [0] <= list.getTopIndex () && list.getTopIndex () < after [1], "the top row is resident at height " + height);
+		}
+	}
+
+	/* the resident window [first, end) of a viewport list */
+	static int [] window (List list) throws ReflectiveOperationException {
+		Object viewport = viewport (list);
+		Field planField = viewport.getClass ().getDeclaredField ("plan");
+		planField.setAccessible (true);
+		Object plan = planField.get (viewport);
+		Method first = plan.getClass ().getDeclaredMethod ("first"), end = plan.getClass ().getDeclaredMethod ("end");
+		first.setAccessible (true);
+		end.setAccessible (true);
+		return new int [] {(Integer) first.invoke (plan), (Integer) end.invoke (plan)};
+	}
+
+	void settleUi () {
+		for (int i = 0; i < 3; i++) {
+			while (display.readAndDispatch ()) {
+				/* drain */
+			}
+		}
+	}
+
+	/*
 	 * The model seam (List.m3Splice, leaf 19): one edit run over the lanes. A run outside the resident window changes
 	 * the rows, the bar and the top row's index (the top row stays the same row) with zero native row operations; a
 	 * run inside it touches O(changed) native rows; a removal at or before a set anchor clears it (two operations).
