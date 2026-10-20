@@ -33,7 +33,8 @@ public final class GcRowCanvas implements BufferCanvas {
 	private final ThemeParts parts;
 	private long hdc;
 	private GC gc;
-	private int saved;
+	private int saved, clipSaved;
+	private boolean gcBeforeClip;
 	private final RECT rect = new RECT ();
 	private char [] chars = new char [64];
 	private int [] polygon = new int [6];
@@ -91,6 +92,23 @@ public final class GcRowCanvas implements BufferCanvas {
 			gc = null;
 		}
 		OS.RestoreDC (hdc, saved);
+	}
+
+	@Override
+	public void clip (int x, int y, int width, int height) {
+		gcBeforeClip = gc != null;
+		clipSaved = OS.SaveDC (hdc);
+		OS.IntersectClipRect (hdc, x, y, x + width, y + height);
+	}
+
+	@Override
+	public void unclip () {
+		/* a GC made inside the clip keeps selections the restore would take back */
+		if (gc != null && !gcBeforeClip) {
+			gc.dispose ();
+			gc = null;
+		}
+		OS.RestoreDC (hdc, clipSaved);
 	}
 
 	@Override

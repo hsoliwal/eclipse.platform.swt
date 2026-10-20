@@ -18,4 +18,13 @@ package org.eclipse.swt.internal.render;
 public interface BufferCanvas extends RowCanvas {
 	/** Sets the back buffer the next frame draws into. */
 	void target (BackBuffer buffer);
+
+	/**
+	 * Narrows the frame's clip to a rectangle until {@link #unclip} (rule 24: a row that only widened draws the strip
+	 * a resize exposed). Calls do not nest.
+	 */
+	void clip (int x, int y, int width, int height);
+
+	/** Restores the frame's clip after {@link #clip}. */
+	void unclip ();
 }

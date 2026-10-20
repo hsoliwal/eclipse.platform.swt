@@ -243,6 +243,17 @@ public final class M3RowCanvas implements BufferCanvas {
 	}
 
 	@Override
+	public void clip (int x, int y, int width, int height) {
+		Canvas._nSave (canvasPtr);
+		Canvas._nClipRect (canvasPtr, x, y, x + width, y + height, CLIP_INTERSECT, false);
+	}
+
+	@Override
+	public void unclip () {
+		Canvas._nRestore (canvasPtr);
+	}
+
+	@Override
 	public void fill (int x, int y, int width, int height, int rgb) {
 		if (width <= 0 || height <= 0) return;
 		paint.setColor (0xFF000000 | rgb);

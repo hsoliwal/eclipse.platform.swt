@@ -278,7 +278,9 @@ abstract class DrawnPlane {
 	private long [] slotFrame = new long [0];
 	private int [] key = new int [RowPaint.keyLength (4)];
 	private String [] keyText = new String [4];
-	private int [] keptY = new int [32], keptHeight = new int [32];
+	private int [] keptY = new int [32], keptHeight = new int [32], keptRight = new int [32];
+	/* the right end of the pixels the retained frame holds for a slot's row */
+	private int [] slotRight = new int [0];
 	private int kept, rowsIterated, rowsDrawn;
 	private long frameNumber;
 	private boolean retain;
@@ -294,21 +296,64 @@ abstract class DrawnPlane {
 		int length = retain ? row.key (key, keyText) : -1;
 		int slot = slot ();
 		if (slot >= 0 && length >= 0 && same (slot, length)) {
-			if (kept == keptY.length) {
-				keptY = java.util.Arrays.copyOf (keptY, kept * 2);
-				keptHeight = java.util.Arrays.copyOf (keptHeight, kept * 2);
-			}
-			keptY [kept] = row.y;
-			keptHeight [kept++] = row.height;
+			keep (Integer.MAX_VALUE);
 			slotFrame [slot] = frameNumber;
 			return;
 		}
-		renderer.paint (canvas, row);
-		rowsDrawn++;
+		if (slot >= 0 && length >= 0 && widened (slot, length)) {
+			/* rule 24, viewport deltas: only the width changed (a resize); keep the left part, draw the strip on its right */
+			int keepRight = Math.min (slotRight [slot], Math.min (row.x + row.width, client.right));
+			keep (keepRight);
+			canvas.clip (keepRight, row.y, Math.max (0, damage.right - keepRight), row.height);
+			try {
+				renderer.paint (canvas, row);
+			} finally {
+				canvas.unclip ();
+			}
+		} else {
+			renderer.paint (canvas, row);
+			rowsDrawn++;
+		}
 		if (slot < 0) return;
 		slotFrame [slot] = frameNumber;
 		boolean whole = length >= 0 && damage.left <= 0 && damage.right >= client.right && row.y >= damage.top && row.y + row.height <= damage.bottom;
 		if (whole) remember (slot, length); else slotLength [slot] = -1;
+	}
+
+	/* a row kept from the retained frame, up to a right end (the strip right of it is drawn) */
+	private void keep (int right) {
+		if (kept == keptY.length) {
+			keptY = java.util.Arrays.copyOf (keptY, kept * 2);
+			keptHeight = java.util.Arrays.copyOf (keptHeight, kept * 2);
+			keptRight = java.util.Arrays.copyOf (keptRight, kept * 2);
+		}
+		keptY [kept] = row.y;
+		keptHeight [kept] = row.height;
+		keptRight [kept++] = right;
+	}
+
+	/*
+	 * True when the row differs from its slot only in width: the row's width and selection width, and the last cell's
+	 * box and text widths (a list box row spans the client). Its left part is then the pixels the slot holds, unless
+	 * something is anchored at the right end: a focus rectangle (the caret row), an ellipsis, or a last cell that is not
+	 * left-aligned.
+	 */
+	private boolean widened (int slot, int length) {
+		if (slotLength [slot] != length || slotTheme [slot] != renderer.theme ()) return false;
+		if ((row.state & (RowPaint.CARET | RowPaint.ELLIPSIS)) != 0) return false;
+		int last = 26 + 11 * (Math.max (1, row.cells) - 1);
+		int align = key [last + 6];
+		if (align != 0 && align != SWT.LEFT) return false;
+		int [] remembered = slotKey [slot];
+		for (int i = 0; i < length; i++) {
+			if (remembered [i] == key [i] || i == 2 || i == 5 || i == last + 1 || i == last + 3) continue;
+			return false;
+		}
+		String [] texts = slotText [slot];
+		for (int i = 0; i < row.cells; i++) {
+			if (!java.util.Objects.equals (texts [i], keyText [i])) return false;
+		}
+		return true;
 	}
 
 	/* the slot of the row's place, or -1; a slot that held another place forgets it */
@@ -342,6 +387,7 @@ abstract class DrawnPlane {
 		slotTheme [slot] = renderer.theme ();
 		slotY [slot] = row.y;
 		slotHeight [slot] = row.height;
+		slotRight [slot] = Math.min (row.x + row.width, client.right);
 		slotLength [slot] = length;
 	}
 
@@ -354,6 +400,7 @@ abstract class DrawnPlane {
 		slotLength = java.util.Arrays.copyOf (slotLength, n);
 		slotY = java.util.Arrays.copyOf (slotY, n);
 		slotHeight = java.util.Arrays.copyOf (slotHeight, n);
+		slotRight = java.util.Arrays.copyOf (slotRight, n);
 		slotFrame = java.util.Arrays.copyOf (slotFrame, n);
 		java.util.Arrays.fill (slotLength, old, n, -1);
 		java.util.Arrays.fill (slotY, old, n, Integer.MIN_VALUE);
@@ -371,7 +418,8 @@ abstract class DrawnPlane {
 		int left = damage.left, width = damage.right - damage.left;
 		for (int i = 0; i < kept; i++) {
 			int top = Math.max (keptY [i], damage.top), bottom = Math.min (keptY [i] + keptHeight [i], damage.bottom);
-			if (bottom > top) OS.BitBlt (buffer.dc, left, top, width, bottom - top, retained.dc, left, top, OS.SRCCOPY);
+			int right = Math.min (damage.right, keptRight [i]);
+			if (bottom > top && right > left) OS.BitBlt (buffer.dc, left, top, right - left, bottom - top, retained.dc, left, top, OS.SRCCOPY);
 		}
 		for (int slot = 0; slot < slotLength.length; slot++) {
 			if (slotLength [slot] >= 0 && slotFrame [slot] != frameNumber && slotY [slot] < damage.bottom && slotY [slot] + slotHeight [slot] > damage.top) {
