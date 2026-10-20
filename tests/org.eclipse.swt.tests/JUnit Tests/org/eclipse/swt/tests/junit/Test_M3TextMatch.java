@@ -121,7 +121,7 @@ public class Test_M3TextMatch {
 		IllegalArgumentException e = assertThrows (IllegalArgumentException.class, () -> M3TextMatch.compile ("(", REGEX));
 		assertTrue (e.getMessage ().contains ("Unclosed group"), e.getMessage ());
 		assertThrows (IllegalArgumentException.class, () -> M3TextMatch.compile (null, CONTAINS));
-		assertThrows (IllegalArgumentException.class, () -> M3TextMatch.compile ("x", 5));
+		assertThrows (IllegalArgumentException.class, () -> M3TextMatch.compile ("x", 7));
 		assertThrows (IllegalArgumentException.class, () -> M3TextMatch.compile ("x", 1 << 12));
 		assertThrows (IllegalArgumentException.class, () -> check (null, CONTAINS));
 		assertThrows (IllegalArgumentException.class, () -> check ("x", 7));
@@ -145,5 +145,84 @@ public class Test_M3TextMatch {
 			if (p.isEmpty ()) continue;
 			assertEquals (text.toString ().matches (regex.toString ()), m (p, WILDCARD, text.toString ()), p + " / " + text);
 		}
+	}
+
+	@Test
+	public void test_camelCase () {
+		assertTrue (m ("NPE", CAMEL_CASE, "NullPointerException"));
+		assertTrue (m ("NPE", CAMEL_CASE, "java.lang.NullPointerException: x"));
+		assertTrue (m ("NuPoEx", CAMEL_CASE, "NullPointerException"));
+		assertTrue (m ("NE", CAMEL_CASE, "NullPointerException"));
+		assertTrue (m ("XMLP", CAMEL_CASE, "XMLParser"));
+		assertTrue (m ("XP", CAMEL_CASE, "XMLParser"));
+		assertTrue (m ("UTF8E", CAMEL_CASE, "UTF8Encoder"));
+		assertTrue (m ("nPE", CAMEL_CASE, "NullPointerException"));
+		assertTrue (m ("AbC", CAMEL_CASE, "AxBdAbBcC"));
+		assertFalse (m ("NPF", CAMEL_CASE, "NullPointerException"));
+		assertFalse (m ("NuX", CAMEL_CASE, "NullPointerException"));
+		assertFalse (m ("PN", CAMEL_CASE, "NullPointerException"));
+		assertFalse (m ("NPE", CAMEL_CASE, null));
+		assertTrue (m ("NPE", CAMEL_CASE | NEGATE, "IllegalStateException"));
+	}
+
+	@Test
+	public void test_fuzzySubsequence () {
+		assertTrue (m ("nlpex", FUZZY | IGNORE_CASE, "NullPointerException"));
+		assertFalse (m ("nlpex", FUZZY, "NullPointerException"));
+		assertTrue (m ("NPE", FUZZY, "NullPointerException"));
+		assertFalse (m ("NPEX", FUZZY, "NullPointerException"));
+		assertTrue (m ("abc,xyz", FUZZY, "a-x-y-z"));
+		M3TextMatch npe = M3TextMatch.compile ("npe", FUZZY | IGNORE_CASE);
+		int humps = npe.score ("NullPointerException"), inside = npe.score ("unpaired");
+		assertTrue (humps > inside, humps + " > " + inside);
+		assertEquals (-1, npe.score ("plain"));
+		assertEquals (0, M3TextMatch.compile ("np", CONTAINS).score ("np"));
+		assertTrue (M3TextMatch.compile ("npe", FUZZY).score ("npe") > M3TextMatch.compile ("npe", FUZZY).score ("nxpxe"));
+	}
+
+	@Test
+	public void test_highlights () {
+		int [] ranges = new int [8];
+		assertEquals (1, M3TextMatch.compile ("point", CONTAINS | IGNORE_CASE).highlights ("NullPointerException", ranges));
+		assertArrayEquals (new int [] {4, 9}, Arrays.copyOf (ranges, 2));
+		assertEquals (3, M3TextMatch.compile ("npe", FUZZY | IGNORE_CASE).highlights ("NullPointerException", ranges));
+		assertArrayEquals (new int [] {0, 1, 4, 5, 9, 10}, Arrays.copyOf (ranges, 6));
+		assertEquals (3, M3TextMatch.compile ("NuPoEx", CAMEL_CASE).highlights ("NullPointerException", ranges));
+		assertArrayEquals (new int [] {0, 2, 4, 6, 11, 13}, Arrays.copyOf (ranges, 6));
+		assertEquals (1, M3TextMatch.compile ("ab", FUZZY).highlights ("xxab", ranges));
+		assertArrayEquals (new int [] {2, 4}, Arrays.copyOf (ranges, 2));
+		assertEquals (1, M3TextMatch.compile ("Nu", STARTS_WITH).highlights ("Null", ranges));
+		assertEquals (1, M3TextMatch.compile ("N*", WILDCARD).highlights ("Null", ranges));
+		assertArrayEquals (new int [] {0, 4}, Arrays.copyOf (ranges, 2));
+		assertEquals (0, M3TextMatch.compile ("x", CONTAINS | NEGATE).highlights ("Null", ranges));
+		assertEquals (-1, M3TextMatch.compile ("x", CONTAINS).highlights ("Null", ranges));
+		assertEquals (1, M3TextMatch.compile ("abc", FUZZY).highlights ("a1b2c", new int [2]));
+		assertThrows (IllegalArgumentException.class, () -> M3TextMatch.compile ("x", CONTAINS).highlights ("x", null));
+		assertThrows (IllegalArgumentException.class, () -> M3TextMatch.compile ("x", 7));
+	}
+
+	/* fuzzy against a plain subsequence check, random texts and tokens */
+	@Test
+	public void test_fuzzyAgainstASubsequenceCheck () {
+		Random random = new Random (5);
+		for (int k = 0; k < 20000; k++) {
+			String text = word (random, 12), token = word (random, 4);
+			int t = 0;
+			for (int i = 0; i < text.length () && t < token.length (); i++) {
+				if (text.charAt (i) == token.charAt (t)) t++;
+			}
+			M3TextMatch match = M3TextMatch.compile (token, FUZZY);
+			assertEquals (t == token.length (), match.matches (text), token + " / " + text);
+			int [] ranges = new int [2 * token.length ()];
+			int pairs = match.highlights (text, ranges), covered = 0;
+			for (int p = 0; p < pairs; p++) covered += ranges [2 * p + 1] - ranges [2 * p];
+			if (match.matches (text)) assertEquals (token.length (), covered, token + " / " + text);
+		}
+	}
+
+	private static String word (Random random, int max) {
+		StringBuilder word = new StringBuilder ();
+		for (int k = 1 + random.nextInt (max); k > 0; k--) word.append ((char) ('a' + random.nextInt (3)));
+		return word.toString ();
 	}
 }

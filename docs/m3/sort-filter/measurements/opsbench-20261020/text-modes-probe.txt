@@ -1,0 +1,2 @@
+modes 100000  contains 7113 us (7689)  fuzzy 19159 us (8828)  camelCase 20875 us (3537)
+modes 1000000  contains 80875 us (77147)  fuzzy 253356 us (89547)  camelCase 226616 us (35261)

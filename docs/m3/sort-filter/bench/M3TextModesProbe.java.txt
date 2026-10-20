@@ -1,0 +1,36 @@
+package org.eclipse.swt.m3;
+
+import java.util.*;
+
+/* cost of a filter edit per text mode over n class-name-like cells: median of 7 */
+public final class ProbeModes {
+	public static void main (String [] args) {
+		int n = Integer.parseInt (args [0]);
+		Random random = new Random (1);
+		String [] parts = {"Null", "Pointer", "Illegal", "State", "Argument", "Index", "Out", "Of", "Bounds", "Class", "Cast", "Number", "Format"};
+		String [] texts = new String [n];
+		for (int i = 0; i < n; i++) {
+			StringBuilder name = new StringBuilder ();
+			for (int k = 2 + random.nextInt (3); k > 0; k--) name.append (parts [random.nextInt (parts.length)]);
+			texts [i] = name.append ("Exception").toString ();
+		}
+		M3CellText cells = (row, column) -> texts [row];
+		int [] modes = {M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE, M3TextMatch.FUZZY | M3TextMatch.IGNORE_CASE, M3TextMatch.CAMEL_CASE};
+		String [] names = {"contains", "fuzzy", "camelCase"};
+		StringBuilder line = new StringBuilder ("modes " + n);
+		for (int m = 0; m < modes.length; m++) {
+			long [] t = new long [9];
+			int size = 0;
+			for (int rep = 0; rep < t.length; rep++) {
+				M3ColumnFilter filter = new M3ColumnFilter (1, n, cells);
+				long start = System.nanoTime ();
+				filter.setText (0, m == 0 ? "pointerexc" : m == 1 ? "npe" : "NPE", modes [m]);
+				t [rep] = System.nanoTime () - start;
+				size = filter.size ();
+			}
+			Arrays.sort (t, 2, t.length);
+			line.append ("  ").append (names [m]).append (' ').append (t [5] / 1000).append (" us (").append (size).append (')');
+		}
+		System.err.println (line);
+	}
+}

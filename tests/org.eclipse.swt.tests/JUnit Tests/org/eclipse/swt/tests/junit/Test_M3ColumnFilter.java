@@ -506,7 +506,7 @@ public class Test_M3ColumnFilter {
 		}
 		M3CellText cells = (row, column) -> column == 0 ? words [row] : words [n - 1 - row];
 		M3ColumnFilter filter = new M3ColumnFilter (2, n, cells);
-		int [] modes = {M3TextMatch.CONTAINS, M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE, M3TextMatch.STARTS_WITH, M3TextMatch.STARTS_WITH | M3TextMatch.IGNORE_CASE, M3TextMatch.CONTAINS | M3TextMatch.NEGATE};
+		int [] modes = {M3TextMatch.CONTAINS, M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE, M3TextMatch.STARTS_WITH, M3TextMatch.STARTS_WITH | M3TextMatch.IGNORE_CASE, M3TextMatch.CONTAINS | M3TextMatch.NEGATE, M3TextMatch.FUZZY, M3TextMatch.FUZZY | M3TextMatch.IGNORE_CASE, M3TextMatch.CAMEL_CASE};
 		for (int session = 0; session < 40; session++) {
 			int mode = modes [random.nextInt (modes.length)], column = random.nextInt (2);
 			StringBuilder typed = new StringBuilder ();
