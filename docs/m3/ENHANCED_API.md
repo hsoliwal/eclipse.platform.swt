@@ -42,6 +42,7 @@ any API you can add" from our own commit history, and from ecosystems beyond Int
 | `contract_tests` | what the JUnit test must assert |
 | `priority` | P1..P4 by viewport relevance |
 | `status` | `leaf-N-shipped` or `proposed` |
+| `upstream_asks` | upstream issues and PRs the row answers, from the GitHub harvest (`docs/M3-SCALE/runs/20261017-ui-donor-atomize/GITHUB_PR_TOP30.md` on com.synexia `codex/m3-ui-donor-atomize-20261017`): `swt#624` SWT.VIRTUAL for Composite, `swt#882`/`swt#904` TreeItem.getItemCount cost, `swt#208` setItemCount freeze, `platform.ui#1093` family (viewer limits), `jdk#17165`/`jdk#27682` (Swing fixes); `-` when none is known |
 
 Ranking: first-party rows outrank donor rows where they overlap (the mechanism exists and is measured);
 the task's first three leaves are first-party exposures plus the language seed; the strongest
