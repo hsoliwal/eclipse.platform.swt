@@ -815,6 +815,10 @@ public void setItems (String... items) {
 	for (int i=0; i<items.length; i++) {
 		if (items [i] == null) error (SWT.ERROR_INVALID_ARGUMENT);
 	}
+	if (M3ListViewport.ENABLED) {
+		M3ListViewport.of (this).setItems (items);
+		return;
+	}
   ((CList)handle).setElements(items);
 }
 

@@ -145,7 +145,13 @@ public final class TableDifferential {
 			case 11: table.deselectAll (); return new String [] {"deselectAll", ""};
 			case 12: return new String [] {"items", String.valueOf (table.getItems ().length)};
 			default:
-				if (random.nextInt (6) != 0) return new String [] {"noop", ""};
+				int pick = random.nextInt (6);
+				if (pick == 1) {
+					int end = Math.min (count - 1, i + random.nextInt (60));
+					table.remove (i, end);
+					return new String [] {"remove(" + i + "," + end + ")", ""};
+				}
+				if (pick != 0) return new String [] {"noop", ""};
 				table.removeAll ();
 				return new String [] {"removeAll", ""};
 		}
@@ -171,7 +177,19 @@ public final class TableDifferential {
 			case 11: return new String [] {"items", String.valueOf (list.getItems ().length)};
 			case 12: return new String [] {"selectionCount", String.valueOf (list.getSelectionCount ())};
 			default:
-				if (random.nextInt (6) != 0) return new String [] {"noop", ""};
+				int pick = random.nextInt (6);
+				if (pick == 1) {
+					int end = Math.min (count - 1, i + random.nextInt (60));
+					list.remove (i, end);
+					return new String [] {"remove(" + i + "," + end + ")", ""};
+				}
+				if (pick == 2) {
+					String [] items = new String [random.nextInt (400)];
+					Arrays.setAll (items, k -> "n" + k);
+					list.setItems (items);
+					return new String [] {"setItems(" + items.length + ")", ""};
+				}
+				if (pick != 0) return new String [] {"noop", ""};
 				list.removeAll ();
 				return new String [] {"removeAll", ""};
 		}

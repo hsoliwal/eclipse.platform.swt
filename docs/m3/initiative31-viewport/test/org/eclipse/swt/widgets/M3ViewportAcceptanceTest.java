@@ -361,6 +361,78 @@ public class M3ViewportAcceptanceTest {
 	}
 
 	@Test
+	public void tableRemovesRunsOfRowsAndDisposesMaterializedItems () {
+		assumeTrue (M3TableViewport.ENABLED);
+		Table table = new Table (shell, SWT.VIRTUAL | SWT.BORDER);
+		table.addListener (SWT.SetData, e -> ((TableItem) e.item).setText ("r" + e.index));
+		table.setItemCount (100);
+		TableItem before = table.getItem (9);
+		TableItem inside = table.getItem (30);
+		TableItem after = table.getItem (61);
+		java.util.List<Integer> rowEvents = new java.util.ArrayList<> ();
+		((javax.swing.JTable) ((org.eclipse.swt.internal.swing.CTable) table.handle).getSwingComponent ()).getModel ()
+			.addTableModelListener (e -> {
+				if (e.getType () == javax.swing.event.TableModelEvent.DELETE) rowEvents.add (e.getLastRow () - e.getFirstRow () + 1);
+			});
+		table.remove (10, 60);
+		assertEquals (49, table.getItemCount ());
+		assertTrue (inside.isDisposed ());
+		assertFalse (before.isDisposed ());
+		assertFalse (after.isDisposed ());
+		assertEquals ("r61", after.getText ());
+		assertEquals (after, table.getItem (10));
+		assertEquals ("a run of 30, the materialized item, a run of 20", java.util.List.of (30, 1, 20), rowEvents);
+		rowEvents.clear ();
+		table.removeAll ();
+		assertEquals (0, table.getItemCount ());
+		assertTrue (before.isDisposed ());
+		assertTrue (after.isDisposed ());
+		assertEquals ("a run of 38, the two materialized items, a run of 9", java.util.List.of (38, 1, 1, 9), rowEvents);
+		table.removeAll ();
+		assertEquals (0, table.getItemCount ());
+	}
+
+	@Test
+	public void plainTableRemovesItemByItem () {
+		assumeTrue (M3TableViewport.ENABLED);
+		Table table = new Table (shell, SWT.BORDER);
+		for (int i = 0; i < 5; i++) new TableItem (table, SWT.NONE).setText ("p" + i);
+		table.remove (1, 3);
+		assertEquals (2, table.getItemCount ());
+		assertEquals ("p4", table.getItem (1).getText ());
+		table.removeAll ();
+		assertEquals (0, table.getItemCount ());
+	}
+
+	@Test
+	public void listSetItemsReachesSwingAsOneDelta () {
+		assumeTrue (M3ListViewport.ENABLED);
+		List list = new List (shell, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
+		list.setItems ("a", "b", "c");
+		list.setSelection (1);
+		javax.swing.ListModel<?> model = ((javax.swing.JList<?>) ((org.eclipse.swt.internal.swing.CList) list.handle).getSwingComponent ()).getModel ();
+		java.util.List<String> events = new java.util.ArrayList<> ();
+		model.addListDataListener (new javax.swing.event.ListDataListener () {
+			public void intervalAdded (javax.swing.event.ListDataEvent e) { events.add ("+" + e.getIndex0 () + ".." + e.getIndex1 ()); }
+			public void intervalRemoved (javax.swing.event.ListDataEvent e) { events.add ("-" + e.getIndex0 () + ".." + e.getIndex1 ()); }
+			public void contentsChanged (javax.swing.event.ListDataEvent e) { events.add ("~"); }
+		});
+		String [] items = new String [1000];
+		for (int i = 0; i < items.length; i++) items [i] = "n" + i;
+		list.setItems (items);
+		assertEquals (java.util.List.of ("-0..2", "+0..999"), events);
+		assertEquals (1000, list.getItemCount ());
+		assertEquals ("n999", list.getItem (999));
+		assertEquals ("the selection goes with the old rows", 0, list.getSelectionCount ());
+		events.clear ();
+		list.setItems ();
+		assertEquals (java.util.List.of ("-0..999"), events);
+		assertEquals (0, list.getItemCount ());
+		list.setItems ();
+		assertEquals (0, list.getItemCount ());
+	}
+
+	@Test
 	public void plainTableKeepsTheOriginalSetItemCount () {
 		assumeTrue (M3TableViewport.ENABLED);
 		Table table = new Table (shell, SWT.BORDER);

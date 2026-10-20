@@ -1494,6 +1494,10 @@ public void remove (int start, int end) {
 	if (!(0 <= start && start <= end && end < count)) {
 		error (SWT.ERROR_INVALID_RANGE);
 	}
+	if (viewport != null) {
+		viewport.remove (start, end);
+		return;
+	}
   for(int i=end; i>=start; i--) {
     TableItem tableItem = (TableItem)itemList.get(i);
     if(tableItem != null) {
@@ -1515,6 +1519,10 @@ public void remove (int start, int end) {
  */
 public void removeAll () {
 	checkWidget ();
+	if (viewport != null) {
+		viewport.remove (0, itemList.size () - 1);
+		return;
+	}
   for(int i=itemList.size()-1; i>=0; i--) {
     TableItem tableItem = (TableItem)itemList.get(i);
     if(tableItem != null) {

@@ -6,7 +6,8 @@ name: com.synexia.openrewrite.viewport.I31SwingTableViewport
 displayName: Initiative 31 (SWT on Swing) Table mediates its scroll contract and bulk rows through the viewport
 description: >-
   Catalogue VIEWPORT_WINDOWING. In the viewport mode (the default; -Dswt.widget.mode.Table=original selects the
-  original implementation) a virtual Table tells Swing once per setItemCount, and getTopIndex/setTopIndex follow
+  original implementation) a virtual Table tells Swing once per setItemCount and once per run of unmaterialized
+  rows in remove(int, int)/removeAll(), and getTopIndex/setTopIndex follow
   the viewport (M3SwingScroll). The logic lives in M3TableViewport and M3TableRows.
 recipeList:
   - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
@@ -41,13 +42,28 @@ recipeList:
       anchor: "if (count == itemCount) return;"
       position: AFTER
       statements: "\tif (viewport != null && viewport.setItemCount (count)) return;"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      methodName: remove
+      parameterCount: 2
+      anchor: "for(int i=end; i>=start; i--)"
+      position: BEFORE
+      statements: "\tif (viewport != null) {\n\t\tviewport.remove (start, end);\n\t\treturn;\n\t}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.Table]
+      methodName: removeAll
+      parameterCount: 0
+      anchor: "checkWidget ()"
+      position: AFTER
+      statements: "\tif (viewport != null) {\n\t\tviewport.remove (0, itemList.size () - 1);\n\t\treturn;\n\t}"
 ---
 type: specs.openrewrite.org/v1beta/recipe
 name: com.synexia.openrewrite.viewport.I31SwingListViewport
 displayName: Initiative 31 (SWT on Swing) List mediates its scroll contract through the viewport
 description: >-
   Catalogue VIEWPORT_WINDOWING. In the viewport mode (the default; -Dswt.widget.mode.List=original selects the
-  original implementation) setTopIndex puts the row at the top and showSelection reveals the first selected row
+  original implementation) setTopIndex puts the row at the top, showSelection reveals the first selected row and
+  setItems reaches Swing as one delta
   (M3SwingScroll). The logic lives in M3ListViewport.
 recipeList:
   - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
@@ -69,3 +85,10 @@ recipeList:
       anchor: "checkWidget ()"
       position: AFTER
       statements: "\tif (M3ListViewport.ENABLED) {\n\t\tM3ListViewport.of (this).showSelection ();\n\t\treturn;\n\t}"
+  - com.synexia.openrewrite.viewport.M3InsertStatements:
+      declaringClasses: [org.eclipse.swt.widgets.List]
+      methodName: setItems
+      parameterCount: 1
+      anchor: "((CList)handle).setElements(items)"
+      position: BEFORE
+      statements: "\tif (M3ListViewport.ENABLED) {\n\t\tM3ListViewport.of (this).setItems (items);\n\t\treturn;\n\t}"

@@ -29,6 +29,8 @@ import org.eclipse.swt.internal.swing.*;
  * viewport mode adds:
  * <ul>
  * <li>one model event per <code>setItemCount</code> of a virtual table, instead of one per row;</li>
+ * <li>one model event per run of unmaterialized rows in <code>remove(int, int)</code> and <code>removeAll()</code>
+ * (Swing gets the delta, never one event per row);</li>
  * <li>the scroll contract of {@link M3SwingScroll}: the top index is the row shown at the top of the viewport,
  * and <code>setTopIndex</code> puts the row there.</li>
  * </ul>
@@ -84,6 +86,30 @@ final class M3TableViewport {
 			shrink (slots, count);
 		}
 		return true;
+	}
+
+	/**
+	 * Hook of <code>Table.remove(int, int)</code> and <code>Table.removeAll()</code> (the range is checked): from the
+	 * end to the start, as in the original mode, materialized items are disposed and each run of unmaterialized rows
+	 * leaves with one model event.
+	 *
+	 * @param start the first row removed
+	 * @param end the last row removed (inclusive); below <code>start</code> removes nothing
+	 */
+	void remove (int start, int end) {
+		ArrayList<Object> slots = slots ();
+		int stop = end + 1;
+		while (stop > start) {
+			int from = stop;
+			while (from > start && slots.get (from - 1) == null) from--;
+			if (from < stop) {
+				slots.subList (from, stop).clear ();
+				M3TableRows.removed ((CTable) table.handle, from, stop - from);
+			}
+			// disposing the item takes its slot out (Table.destroyItem)
+			if (from > start) ((TableItem) slots.get (from - 1)).dispose ();
+			stop = from - 1;
+		}
 	}
 
 	private void shrink (ArrayList<Object> slots, int count) {

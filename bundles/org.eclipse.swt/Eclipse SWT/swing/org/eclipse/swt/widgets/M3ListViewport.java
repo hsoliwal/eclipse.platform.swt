@@ -14,6 +14,8 @@
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
+import java.util.Arrays;
+
 import javax.swing.*;
 
 import org.eclipse.swt.internal.*;
@@ -27,6 +29,8 @@ import org.eclipse.swt.internal.swing.*;
  * <li><code>setTopIndex</code> puts the row at the top of the viewport, clamped to the scrollable range.</li>
  * <li><code>showSelection</code> does nothing when the first selected row is shown, and otherwise scrolls it
  * to the middle of the viewport, as far as the range allows.</li>
+ * <li><code>setItems</code> gives Swing the replacement as one delta (rows removed, rows added), not one event
+ * per row.</li>
  * </ul>
  * The <code>JList</code>, its model and its renderer are those of the original mode.
  */
@@ -64,6 +68,18 @@ final class M3ListViewport {
 		int index = rows.getMinSelectionIndex ();
 		if (index < 0) return;
 		scroll.centerRow (viewport (), index, rows.getModel ().getSize (), pitch (rows));
+	}
+
+	/**
+	 * Hook of <code>List.setItems(String...)</code> (the items are checked): the model drops every row with one
+	 * event and takes the new rows with one more (<code>DefaultListModel.addAll</code>), where the original mode
+	 * sends one event per row.
+	 */
+	@SuppressWarnings ("unchecked")
+	void setItems (String [] items) {
+		DefaultListModel<Object> model = (DefaultListModel<Object>) rows ().getModel ();
+		model.removeAllElements ();
+		model.addAll (Arrays.asList (items));
 	}
 
 	private static int pitch (JList<?> rows) {
