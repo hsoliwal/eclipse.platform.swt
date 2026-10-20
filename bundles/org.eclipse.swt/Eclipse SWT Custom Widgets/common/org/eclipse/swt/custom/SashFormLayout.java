@@ -170,6 +170,30 @@ protected void layout(Composite composite, boolean flushCache) {
 	}
 
 	int sashwidth = sashes.length > 0 ? sashForm.SASH_WIDTH + sashes [0].getBorderWidth() * 2 : sashForm.SASH_WIDTH;
+	if (sashForm.sizes != null && sashForm.sizes.hasLimits ()) {
+		//FLLDCIM: SF1 - the weighted shares inside every pane's minimum and maximum (SashFormSizes)
+		boolean horizontal = sashForm.getOrientation () == SWT.HORIZONTAL;
+		int extent = horizontal ? area.width : area.height;
+		int[] sizes = sashForm.sizes.sizes (ratios, Math.max (0, extent - sashes.length * sashwidth), extent);
+		int at = horizontal ? area.x : area.y;
+		for (int i = 0; i < controls.length; i++) {
+			if (horizontal) {
+				controls[i].setBounds (at, area.y, sizes[i], area.height);
+			} else {
+				controls[i].setBounds (area.x, at, area.width, sizes[i]);
+			}
+			at += sizes[i];
+			if (i < sashes.length) {
+				if (horizontal) {
+					sashes[i].setBounds (at, area.y, sashwidth, area.height);
+				} else {
+					sashes[i].setBounds (area.x, at, area.width, sashwidth);
+				}
+				at += sashwidth;
+			}
+		}
+		return;
+	}
 	if (sashForm.getOrientation() == SWT.HORIZONTAL) {
 		int width = (int)(ratios[0] * (area.width - sashes.length * sashwidth) / total);
 		int x = area.x;

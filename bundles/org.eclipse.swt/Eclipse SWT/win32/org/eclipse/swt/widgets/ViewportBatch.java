@@ -185,9 +185,27 @@ final class ViewportBatch {
 			default -> {
 				d.batchScrollbars--;
 				long hwnd = c instanceof Scrollable scrollable ? scrollable.scrolledHandle () : c.topHandle ();
-				OS.RedrawWindow (hwnd, null, 0, OS.RDW_FRAME | OS.RDW_INVALIDATE);
+				redrawFrame (hwnd);
 			}
 		}
+	}
+
+	/*
+	 * The frame only (scroll bars, border): the update region is the window minus its client area, in client
+	 * coordinates, so RDW_FRAME sends WM_NCPAINT for the non-client parts and no client pixel is invalidated (a null
+	 * rectangle would add the whole client area).
+	 */
+	static void redrawFrame (long hwnd) {
+		RECT window = new RECT (), client = new RECT ();
+		OS.GetWindowRect (hwnd, window);
+		OS.MapWindowPoints (0, hwnd, window, 2);
+		OS.GetClientRect (hwnd, client);
+		long frame = OS.CreateRectRgn (window.left, window.top, window.right, window.bottom);
+		long inside = OS.CreateRectRgn (client.left, client.top, client.right, client.bottom);
+		OS.CombineRgn (frame, frame, inside, OS.RGN_DIFF);
+		OS.RedrawWindow (hwnd, null, frame, OS.RDW_FRAME | OS.RDW_INVALIDATE);
+		OS.DeleteObject (frame);
+		OS.DeleteObject (inside);
 	}
 
 	static void flushViewport (Control c, ViewportDamageRegion region, boolean allChildren) {

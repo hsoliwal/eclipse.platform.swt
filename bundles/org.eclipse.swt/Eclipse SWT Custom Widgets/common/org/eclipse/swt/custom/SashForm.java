@@ -53,6 +53,16 @@ public class SashForm extends Composite {
 	Listener sashListener;
 	static final int DRAG_MINIMUM = 20;
 
+	/**
+	 * Units of the pane sizes of {@link #setMinimumSizes(int, int...)} and {@link #setMaximumSizes(int, int...)}:
+	 * points, or percent of the area (docs/m3/split-panels/SPLIT_PANELS.md).
+	 *
+	 * @since 3.136
+	 */
+	public static final int POINTS = 0, PERCENT = 1;
+	/* SF1: the pane limits, or null when none were ever set (the stock layout and drag) */
+	SashFormSizes sizes;
+
 /**
  * Constructs a new instance of this class given its parent
  * and a style value describing its behavior and appearance.
@@ -229,6 +239,11 @@ void onDragSash(Event event) {
 
 	Rectangle sashBounds = sash.getBounds();
 	Rectangle area = getClientArea();
+	if (sizes != null && sizes.hasLimits ()) {
+		//FLLDCIM: SF1 - the drag keeps both neighbours inside their limits; only the two of them and the sash move
+		dragWithinLimits (event, sash, sashIndex, c1, c2, b1, b2, sashBounds, area);
+		return;
+	}
 	boolean correction = false;
 	if (getOrientation() == SWT.HORIZONTAL) {
 		correction = b1.width < DRAG_MINIMUM || b2.width < DRAG_MINIMUM;
@@ -485,5 +500,144 @@ public void setWeights(int... weights) {
 	}
 
 	layout(false);
+}
+
+/* SF1: a drag between panes index and index + 1 inside their limits (stock: DRAG_MINIMUM only) */
+void dragWithinLimits (Event event, Sash sash, int index, Control c1, Control c2, Rectangle b1, Rectangle b2, Rectangle sashBounds, Rectangle area) {
+	boolean horizontal = getOrientation () == SWT.HORIZONTAL;
+	int extent = horizontal ? area.width : area.height;
+	int wanted = horizontal ? event.x - sashBounds.x : event.y - sashBounds.y;
+	int shift = sizes.clampShift (index, horizontal ? b1.width : b1.height, horizontal ? b2.width : b2.height, wanted, extent);
+	if (horizontal) {
+		b1.width += shift;
+		b2.x += shift;
+		b2.width -= shift;
+		event.x = sashBounds.x + shift;
+	} else {
+		b1.height += shift;
+		b2.y += shift;
+		b2.height -= shift;
+		event.y = sashBounds.y + shift;
+	}
+	if (shift != wanted) event.doit = false;
+	SashFormData data1 = sashFormData (c1), data2 = sashFormData (c2);
+	data1.weight = (((long) (horizontal ? b1.width : b1.height) << 16) + extent - 1) / extent;
+	data2.weight = (((long) (horizontal ? b2.width : b2.height) << 16) + extent - 1) / extent;
+	if (event.doit && event.detail != SWT.DRAG) {
+		c1.setBounds (b1);
+		sash.setBounds (event.x, event.y, event.width, event.height);
+		c2.setBounds (b2);
+	}
+}
+
+/* the control's SashFormData, created as the stock drag creates it */
+static SashFormData sashFormData (Control control) {
+	Object data = control.getLayoutData ();
+	if (!(data instanceof SashFormData)) {
+		data = new SashFormData ();
+		control.setLayoutData (data);
+	}
+	return (SashFormData) data;
+}
+
+/* SF1: the pane limits, created on first use */
+SashFormSizes paneSizes () {
+	if (sizes == null) sizes = new SashFormSizes ();
+	return sizes;
+}
+
+/**
+ * Sets the smallest size of each pane, in {@link #POINTS} or {@link #PERCENT} of the area: drags, resizes and
+ * {@link #setWeights(int...)} stop at it, and when the panes cannot all fit the last ones give up space first
+ * (docs/m3/split-panels/SPLIT_PANELS.md).
+ *
+ * @param unit {@link #POINTS} or {@link #PERCENT}
+ * @param sizes one value per pane, in the order of the children; 0 means none
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the sizes are null</li>
+ *    <li>ERROR_INVALID_ARGUMENT - if the unit is not POINTS or PERCENT, or a size is negative</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @since 3.136
+ */
+public void setMinimumSizes (int unit, int... sizes) {
+	checkWidget ();
+	checkSizes (unit, sizes);
+	paneSizes ().minimumUnit = unit;
+	paneSizes ().minimums = sizes.clone ();
+	layout (false);
+}
+
+/**
+ * Returns the smallest pane sizes set by {@link #setMinimumSizes(int, int...)}, in their unit.
+ *
+ * @return the sizes, empty when none were set
+ *
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @since 3.136
+ */
+public int[] getMinimumSizes () {
+	checkWidget ();
+	return sizes == null ? new int [0] : sizes.minimums.clone ();
+}
+
+/**
+ * Sets the largest size of each pane, in {@link #POINTS} or {@link #PERCENT} of the area; the space a pane cannot take
+ * goes to the other panes (docs/m3/split-panels/SPLIT_PANELS.md).
+ *
+ * @param unit {@link #POINTS} or {@link #PERCENT}
+ * @param sizes one value per pane, in the order of the children; 0 means none
+ *
+ * @exception IllegalArgumentException <ul>
+ *    <li>ERROR_NULL_ARGUMENT - if the sizes are null</li>
+ *    <li>ERROR_INVALID_ARGUMENT - if the unit is not POINTS or PERCENT, or a size is negative</li>
+ * </ul>
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @since 3.136
+ */
+public void setMaximumSizes (int unit, int... sizes) {
+	checkWidget ();
+	checkSizes (unit, sizes);
+	paneSizes ().maximumUnit = unit;
+	paneSizes ().maximums = sizes.clone ();
+	layout (false);
+}
+
+/**
+ * Returns the largest pane sizes set by {@link #setMaximumSizes(int, int...)}, in their unit.
+ *
+ * @return the sizes, empty when none were set
+ *
+ * @exception SWTException <ul>
+ *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+ *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
+ * </ul>
+ *
+ * @since 3.136
+ */
+public int[] getMaximumSizes () {
+	checkWidget ();
+	return sizes == null ? new int [0] : sizes.maximums.clone ();
+}
+
+static void checkSizes (int unit, int[] sizes) {
+	if (sizes == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+	if (unit != POINTS && unit != PERCENT) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
+	for (int size : sizes) {
+		if (size < 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
+	}
 }
 }
