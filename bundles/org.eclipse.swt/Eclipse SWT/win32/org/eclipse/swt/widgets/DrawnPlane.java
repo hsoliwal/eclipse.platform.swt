@@ -163,7 +163,8 @@ abstract class DrawnPlane {
 		afterBehaviour (msg);
 		if (!clipDamage (hwnd)) return;
 		currentTheme ();
-		row.zoom = control.getAutoscalingZoom ();
+		/* glyphs at the window's DPI, the density of the native rows (a forced swt.autoScale does not resize them) */
+		row.zoom = control.nativeZoom;
 		canvas.target (buffer);
 		canvas.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		try {

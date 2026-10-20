@@ -45,7 +45,7 @@ public final class RowPaint {
 	public int state;
 	/** Depth of a tree row (0 for roots and for Table and List rows), its indent step, and the row index. */
 	public int depth, indent, index;
-	/** The widget's zoom in percent (100 for 100 %): vector glyphs are rasterized at this zoom. */
+	/** The window's native zoom in percent (its DPI, 100 for 96 DPI), the density of the native rows: vector glyphs are rasterized at it. */
 	public int zoom = 100;
 	/** Defaults of the widget for this frame. */
 	public int foreground, background;
