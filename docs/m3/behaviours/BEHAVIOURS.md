@@ -122,3 +122,45 @@ Rows are in FOSS_REUSE_DECISION.tsv next to this file. Each owner fills in the c
 
 The GitHub one-pass harvest (brief GITHUB_UI_LIBS_ONE_PASS.md) adds donors it finds. Owners start each behaviour from the
 first ADAPT donor in its row.
+
+## Filters in depth (user, 2026-10-20: "what more .. filters")
+
+All filters are bit lanes over the model, folded word-wide, evaluated on a model thread with a superseding generation.
+A change reports ENTERED/LEFT as `old ^ new` and becomes one window patch, never a refresh. Owner: sort-filter, unless
+marked otherwise.
+
+| Filter paradigm | What it does | Donors (route) |
+|---|---|---|
+| Quick filter box | contains, starts-with, wildcard, regex, case, whole word; tokens with OR/NOT | TV_5.0, x86core (user-owned); JFace PatternFilter (EPL) |
+| Fuzzy and camelCase matching | "NPE" finds NullPointerException; subsequence and fuzzy scores with match highlighting | JDT SearchPattern camelCase (EPL: ADAPT); fzf algorithm (MIT: ADAPT) |
+| Column filters and filter row | one criterion per column, text/number/date operators, a row of inputs above the header | NatTable filter row (EPL: ADAPT); TanStack Table filterFns (MIT); AG Grid community text/number/date filters (MIT) |
+| Value-list (Excel-style) filter | checkbox list of distinct values with counts, search inside, select all/none | TanStack faceted unique values (MIT: ADAPT); AG Grid set filter (enterprise: PATTERN_ONLY) |
+| Range filters | numeric range slider, date presets (today, last 7 days, this month), between | Nebula range widgets (EPL); MUI Slider (MIT) |
+| Faceted filters with live counts | sidebar facets (type, severity, resource, date, author), counts from lanes, combined with AND across facets and OR within | TanStack faceting (MIT: ADAPT) |
+| Filter expression language | `severity:error type:java path:*/ui/* -resolved`; parsed once, compiled to lane predicates | GitHub search syntax (pattern), Kibana KQL (Elastic: PATTERN_ONLY) |
+| Filter chips | active filters shown as removable chips above the view, click to edit | MUI Chip (MIT) |
+| Highlight instead of hide | dim non-matching rows, keep the context, jump between matches | VS Code "filter on type" toggle (MIT) |
+| Filter from a cell | context menu "filter to this value" or "exclude this value" | AG Grid / Excel pattern |
+| Scope filters | selection, working set, project, open editors; set-diff on scope changes | Problems view reference (FALLBACKS_TO_DELTAS.md) |
+| Tree-aware filtering | keep ancestors of matches, auto-expand to matches, counts per branch | TV_5.0 ancestor rule (user-owned); FilteredTree (EPL) |
+| Saved and named filter sets | named filter+sort+column states per view, shared via preferences | Problems view filter configurations (EPL: ADAPT) |
+| Refine within results | stack a new filter on the current result as a cheap AND lane | - |
+| Status | "12 of 10,345 shown, 3 filters active, clear all" from lane counters | - |
+
+## More behaviours (user, 2026-10-20: "what more")
+
+| Behaviour | What it does | Donors (route) | Owner |
+|---|---|---|---|
+| Totals / footer row and aggregates | sum, count, min, max and average per column and per group, updated by deltas | NatTable summary row (EPL), TanStack aggregation (MIT) | sort-filter + nebula-grid |
+| Conditional formatting, heatmap, sparkline, progress and rating cells | cell renderers driven by lane values and theme keys | Nebula (EPL), AG Grid community renderers (MIT) | render-modes + custom-widgets |
+| Change flash | briefly highlight rows or cells that a delta changed (live data views) | AG Grid flashCells (MIT) | render-modes |
+| Row details (master-detail) | expandable detail pane under a row, materialized only in the window | TanStack expanding (MIT), NatTable (EPL) | Table track |
+| Tri-state check cascading | CheckboxTreeViewer grayed states as bit lanes, propagated in O(changed + depth) | JFace CheckboxTreeViewer (EPL: stock reference) | Tree track |
+| Lazy children with "load more" | placeholder child with a spinner, async children, error rows | JFace DeferredTreeContentManager (EPL) | jface |
+| Link with editor / outline sync | the selection follows the active editor through tree paths | Eclipse link-with-editor (EPL) | jface |
+| Sticky scroll | the enclosing scopes stay pinned at the top while scrolling (trees and editors) | Eclipse 4.31 sticky scrolling (EPL: in our fork), VS Code (MIT) | jface + StyledText track |
+| Code minings and inline hints | inline annotations in text without a re-layout of the whole document | JFace Text code minings (EPL: in our fork) | StyledText track |
+| Zoom | Ctrl+wheel font zoom per view, as a viewport delta | Eclipse zoom commands (EPL) | all-widgets |
+| Undo/redo of view edits | moves, edits and deletes as inverse patches | JFace IUndoableOperation (EPL) | enhanced-api |
+| Accessibility, RTL and i18n formats | screen-reader names from lanes, RTL mirroring, locale formats | SWT Accessible (EPL: stock reference) | all-widgets |
+| Print and export | visible or all rows to CSV, TSV, HTML or PDF, streamed from the lanes | NatTable export (EPL) | jface |
