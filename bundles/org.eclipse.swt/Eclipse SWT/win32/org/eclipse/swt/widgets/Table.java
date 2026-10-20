@@ -133,8 +133,8 @@ public class Table extends Composite {
 	/* The drawn plane of the custom, m3 and gpu modes (see TableDrawnPlane); null in the viewport and original modes. */
 	TableDrawnPlane drawnPlane;
 
-	/* Native row and state operations of this Table (M3Residency.stats NATIVE_ROW_OPS and NATIVE_STATE_OPS; counted by TableSplice.count). */
-	long m3RowOps, m3StateOps;
+	/* Native operations of this Table, counted by TableSplice.count (T-Table-O2, brief rule 24): row messages, state messages (selection, focus, mark) and whole-list rebuilds (LVM_DELETEALLITEMS, a count change that invalidates every row); tests read them. */
+	long m3RowOps, m3StateOps, m3FullRebuilds;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -2087,7 +2087,6 @@ void createItem (TableColumn column, int index) {
 void createItem (TableItem item, int index) {
 	createTableItem (item, index);
 	m3StructureChanged ();
-	if (viewport != null) viewport.adopt (item);
 }
 
 void createTableItem (TableItem item, int index) {
@@ -2516,10 +2515,6 @@ void destroyItem (TableColumn column) {
 }
 
 void destroyItem (TableItem item) {
-	if (viewport != null) {
-		viewport.destroy (item);
-		return;
-	}
 	destroyTableItem (item);
 	m3StructureChanged ();
 }
@@ -2990,16 +2985,6 @@ public int getItemCount () {
 boolean m3Splice (int at, int removed, int inserted) {
 	checkWidget ();
 	return viewport != null && TableSplice.splice (this, viewport, at, removed, inserted);
-}
-
-/* M3Residency seam: the native row operations of this Table so far (TableSplice.count) */
-long m3NativeRowOps () {
-	return m3RowOps;
-}
-
-/* M3Residency seam: the native state operations (selection, focus, mark) of this Table so far (TableSplice.count) */
-long m3NativeStateOps () {
-	return m3StateOps;
 }
 
 /* M3Residency seam: the last native cache hint with the viewport; null (every row) without one */

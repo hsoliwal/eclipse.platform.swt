@@ -16,7 +16,6 @@ package org.eclipse.swt.widgets;
 
 import java.util.Arrays;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.internal.SwtLog;
 import org.eclipse.swt.internal.win32.*;
 
@@ -54,7 +53,9 @@ import org.eclipse.swt.internal.win32.*;
  * (<code>Table.callWindowProc</code>). Row operations are <code>LVM_INSERTITEM</code>, <code>LVM_DELETEITEM</code>,
  * <code>LVM_DELETEALLITEMS</code>, <code>LVM_REDRAWITEMS</code>, <code>LVM_SETITEM</code>, <code>LVM_SETITEMTEXT</code>,
  * an <code>LVM_SETITEMCOUNT</code> without <code>LVSICF_NOINVALIDATEALL</code> and the rows the splice invalidates;
- * state operations are <code>LVM_SETITEMSTATE</code> and <code>LVM_SETSELECTIONMARK</code>. Row invalidations made by
+ * state operations are <code>LVM_SETITEMSTATE</code> and <code>LVM_SETSELECTIONMARK</code>; whole-list rebuilds
+ * (<code>m3FullRebuilds</code>, brief rule 24) are <code>LVM_DELETEALLITEMS</code> and a count change without
+ * <code>LVSICF_NOINVALIDATEALL</code>, also counted as row operations. Row invalidations made by
  * <code>InvalidateRect</code> elsewhere are not messages; tests see them as paints.
  * </p>
  */
@@ -70,9 +71,16 @@ final class TableSplice {
 	/** Counts a message that reaches the native ListView (Table.callWindowProc). */
 	static void count (Table table, int msg, long lParam) {
 		switch (msg) {
-			case OS.LVM_INSERTITEM, OS.LVM_DELETEITEM, OS.LVM_DELETEALLITEMS, OS.LVM_REDRAWITEMS, OS.LVM_SETITEM, LVM_SETITEMTEXT -> table.m3RowOps++;
+			case OS.LVM_INSERTITEM, OS.LVM_DELETEITEM, OS.LVM_REDRAWITEMS, OS.LVM_SETITEM, LVM_SETITEMTEXT -> table.m3RowOps++;
+			case OS.LVM_DELETEALLITEMS -> {
+				table.m3RowOps++;
+				table.m3FullRebuilds++;
+			}
 			case OS.LVM_SETITEMCOUNT -> {
-				if ((lParam & OS.LVSICF_NOINVALIDATEALL) == 0) table.m3RowOps++;
+				if ((lParam & OS.LVSICF_NOINVALIDATEALL) == 0) {
+					table.m3RowOps++;
+					table.m3FullRebuilds++;
+				}
 			}
 			case OS.LVM_SETITEMSTATE, OS.LVM_SETSELECTIONMARK -> table.m3StateOps++;
 			default -> {
@@ -90,15 +98,14 @@ final class TableSplice {
 	}
 
 	/**
-	 * Replaces the rows [at, at + removed) of a mediated Table by inserted empty rows.
+	 * Replaces the rows [at, at + removed) of a mediated Table by inserted empty rows. The caller validated the run (M3Patch.apply: inside the
+	 * rows, not empty).
 	 * @return false when the caller is to make the edit through the item API
 	 */
 	static boolean splice (Table table, TableViewport viewport, int at, int removed, int inserted) {
 		viewport.flush ();
 		long hwnd = table.handle;
 		int count = (int) OS.SendMessage (hwnd, OS.LVM_GETITEMCOUNT, 0, 0);
-		if (at < 0 || removed < 0 || inserted < 0 || at + removed > count) table.error (SWT.ERROR_INVALID_RANGE);
-		if (removed == 0 && inserted == 0) return true;
 		int newCount = count - removed + inserted;
 		if (count == 0 || newCount == 0) return false;
 		int selectedAfter = selectedFrom (viewport, hwnd, at, removed + inserted + SELECTION_SLACK);
@@ -141,7 +148,6 @@ final class TableSplice {
 		int n = 0;
 		int row = at - 1;
 		while ((row = (int) OS.SendMessage (hwnd, OS.LVM_GETNEXTITEM, row, OS.LVNI_SELECTED)) != -1) {
-			if (row < at) continue;
 			if (n == limit) return -1;
 			if (n == selected.length) selected = viewport.spliceSelection = Arrays.copyOf (selected, Math.min (limit, Math.max (16, n * 2)));
 			selected [n++] = row;
@@ -153,7 +159,7 @@ final class TableSplice {
 	private static void moveRows (Table table, TableViewport viewport, int count, int at, int removed, int inserted) {
 		for (int row = at; row < at + removed; row++) {
 			TableItem item = viewport.liveFacade (row);
-			if (item != null && !item.isDisposed ()) item.release (false);
+			if (item != null) item.release (false);
 		}
 		int newCount = count - removed + inserted;
 		TableItem [] items = table.items;

@@ -3552,6 +3552,11 @@ long m3Facades (boolean held) {
 	return -1;
 }
 
+/* M3Model seam (win32 viewport only): no splice here, M3Model edits through the item API */
+boolean m3Splice (int at, int removed, int inserted) {
+	return false;
+}
+
 /**
  * Returns the height of the area which would be used to
  * display <em>one</em> of the items in the receiver.

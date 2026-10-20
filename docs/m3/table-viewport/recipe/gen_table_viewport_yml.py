@@ -21,6 +21,8 @@ def block(cond, call):
     return '\tif (%s) {\n\t\t%s;\n\t\treturn;\n\t}' % (cond, call)
 
 TABLE_HOOKS = [
+    # render modes (round 10) split the stock bodies: setItemCount -> setCount, createItem (TableItem) -> createTableItem,
+    # destroyItem (TableItem) -> destroyTableItem; the hooks follow the bodies
     # (method, parameterCount, position, anchor, statements)
     # T-Table-O2: every message that reaches the native ListView is counted (row and state operations, M3Residency)
     ('callWindowProc', 5, 'METHOD_START', '',
@@ -33,7 +35,7 @@ TABLE_HOOKS = [
      '\t\t\tif (viewport != null) return viewport.findItem (lParam);'),
     ('wmNotifyChild', 3, 'BEFORE', 'if ((style & SWT.VIRTUAL) != 0) { if (!ignoreSelect)',
      '\t\t\tif (viewport != null) viewport.stateChanged (lParam);'),
-    ('setItemCount', 1, 'AFTER', 'count = Math.max (0, count);',
+    ('setCount', 1, 'AFTER', 'count = Math.max (0, count);',
      '\tif (viewport != null) {\n\t\tviewport.setItemCount (count);\n\t\treturn;\n\t}'),
     # T-Table-3: facades as pinned proxies with row hints; rows nobody asked for have no facade
     ('_getItem', 3, 'BEFORE', 'if (index >= items.length)',
@@ -51,7 +53,7 @@ TABLE_HOOKS = [
     ('_initItems', 0, 'METHOD_END', '',
      '\tif (viewport != null) viewport.rowsResized (0);'),
     # T-Table-3b: columnar lanes; facades held weakly beyond the most recent ones
-    ('createItem', 2, 'METHOD_END', '',
+    ('createTableItem', 2, 'METHOD_END', '',
      '\tif (viewport != null) viewport.adopt (item);', 'TableItem,int'),
     # the lanes move with the facades' arrays, right after the Table's loop over the items
     ('createItem', 2, 'AFTER', 'for (int i=0; i<itemCount; i++) { TableItem item = _getItem (i, false); if (item != null) { String [] strings = item.strings;',
@@ -85,7 +87,7 @@ TABLE_HOOKS = [
      '\t\t\tif (viewport != null) itemCount = 0;', 'TableColumn'),
     ('indexOf', 1, 'BEFORE', 'int count = (int)OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);',
      '\tif (viewport != null) return viewport.indexOf (item);', 'TableItem'),
-    ('destroyItem', 1, 'METHOD_START', '',
+    ('destroyTableItem', 1, 'METHOD_START', '',
      '\tif (viewport != null) {\n\t\tviewport.destroy (item);\n\t\treturn;\n\t}', 'TableItem'),
     ('wmNotifyChild', 3, 'BEFORE', 'TableItem item = _getItem (plvfi.iItem);',
      '\t\t\tif (viewport != null) viewport.painting++;'),
@@ -241,22 +243,12 @@ lines = [
     '      declaringClasses: [%s]' % TABLE,
     '      memberName: m3RowOps',
     '      beforeMethod: Table',
-    '      memberSource: %s' % q('\t/* Native row and state operations of this Table (M3Residency.stats NATIVE_ROW_OPS and NATIVE_STATE_OPS; counted by TableSplice.count). */\n\tlong m3RowOps, m3StateOps;'),
+    '      memberSource: %s' % q('\t/* Native operations of this Table, counted by TableSplice.count (T-Table-O2, brief rule 24): row messages, state messages (selection, focus, mark) and whole-list rebuilds (LVM_DELETEALLITEMS, a count change that invalidates every row); tests read them. */\n\tlong m3RowOps, m3StateOps, m3FullRebuilds;'),
     '  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:',
     '      declaringClasses: [%s]' % TABLE,
     '      memberName: m3Splice',
     '      beforeMethod: m3ResidentRange',
     '      memberSource: %s' % q('/* M3Model seam (enhanced API leaf 19, step 3): rows [at, at + removed) replaced by inserted empty rows with one native count change (TableSplice); false when the caller is to edit through the item API */\nboolean m3Splice (int at, int removed, int inserted) {\n\tcheckWidget ();\n\treturn viewport != null && TableSplice.splice (this, viewport, at, removed, inserted);\n}'),
-    '  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:',
-    '      declaringClasses: [%s]' % TABLE,
-    '      memberName: m3NativeRowOps',
-    '      beforeMethod: m3ResidentRange',
-    '      memberSource: %s' % q('/* M3Residency seam: the native row operations of this Table so far (TableSplice.count) */\nlong m3NativeRowOps () {\n\treturn m3RowOps;\n}'),
-    '  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:',
-    '      declaringClasses: [%s]' % TABLE,
-    '      memberName: m3NativeStateOps',
-    '      beforeMethod: m3ResidentRange',
-    '      memberSource: %s' % q('/* M3Residency seam: the native state operations (selection, focus, mark) of this Table so far (TableSplice.count) */\nlong m3NativeStateOps () {\n\treturn m3StateOps;\n}'),
 ] + entries(TABLE, TABLE_HOOKS + STOCK_HOOKS) + [
     '---',
     'type: specs.openrewrite.org/v1beta/recipe',
@@ -287,4 +279,4 @@ lines = [
 
 with open(sys.argv[1], 'w', encoding='utf-8', newline='\n') as f:
     f.write('\n'.join(lines) + '\n')
-print('hooks: Table %d + %d stock + 6 members, TableColumn %d, TableItem %d + %d stock + 1 member, ScrollBar %d' % (len(TABLE_HOOKS), len(STOCK_HOOKS), len(COLUMN_HOOKS), len(ITEM_HOOKS), len(STOCK_ITEM_HOOKS), len(BAR_HOOKS)))
+print('hooks: Table %d + %d stock + 4 members, TableColumn %d, TableItem %d + %d stock + 1 member, ScrollBar %d' % (len(TABLE_HOOKS), len(STOCK_HOOKS), len(COLUMN_HOOKS), len(ITEM_HOOKS), len(STOCK_ITEM_HOOKS), len(BAR_HOOKS)))

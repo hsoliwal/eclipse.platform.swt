@@ -407,14 +407,23 @@ public final class M3Model {
 			patch.applyTo (new M3Patch.Target () {
 				int run;
 
+				/* a Table that splices (win32 viewport, Table.m3Splice) moves a run with one native count change, keeping the top row on top */
 				@Override
 				public void remove (int index, int count) {
-					if (widget instanceof Table table) table.remove (index, index + count - 1); else ((List) widget).remove (index, index + count - 1);
+					if (widget instanceof Table table) {
+						if (!table.m3Splice (index, count, 0)) table.remove (index, index + count - 1);
+					} else {
+						((List) widget).remove (index, index + count - 1);
+					}
 				}
 
 				@Override
 				public void insert (int index, int count) {
-					for (int k = 0; k < count; k++) insertRow (index + k, patch.insertedId (run, k), virtual);
+					if (widget instanceof Table table && table.m3Splice (index, 0, count)) {
+						for (int k = 0; k < count; k++) fillItem (table.getItem (index + k), patch.insertedId (run, k));
+					} else {
+						for (int k = 0; k < count; k++) insertRow (index + k, patch.insertedId (run, k), virtual);
+					}
 					run++;
 				}
 

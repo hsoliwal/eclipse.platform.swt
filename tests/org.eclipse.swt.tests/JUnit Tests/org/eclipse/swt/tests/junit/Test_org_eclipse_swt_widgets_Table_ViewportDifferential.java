@@ -60,6 +60,7 @@ import org.junit.jupiter.api.*;
  */
 public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 	static final int ROWS = 300, SEEDS = 12, STEPS = 150;
+	static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger (Test_org_eclipse_swt_widgets_Table_ViewportDifferential.class.getName ());
 	/* the operations a variant draws: the API script of this class, or a script of TableViewportScripts */
 	static final int API = 0, INPUT = 1, GEOMETRY = 2, REENTRANT = 3, DPI = 4, SCALE = 5, ZOOM = 6;
 
@@ -112,6 +113,9 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 			Scene scene = new Scene (display, VARIANTS [variant]);
 			try {
 				harness (variant).compareWithRecording (scene, record, directory);
+				if (!record) Assertions.assertEquals (List.of (), scene.rebuilds, "variant " + variant + ": whole-list rebuilds in a change path (brief rule 24; " + scene.explicitRebuilds + " by removeAll and clearAll steps)");
+				final int shown = variant;
+				LOG.info (() -> "table-variant" + shown + ": " + scene.counted + " steps, whole-list rebuilds in change paths " + scene.rebuilds.size () + ", by removeAll and clearAll steps " + scene.explicitRebuilds);
 			} finally {
 				scene.dispose ();
 			}
@@ -151,10 +155,52 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		return copy.toString ();
 	}
 
+	/* brief rule 24: whole-list rebuilds of this SWT's Table (Table.m3FullRebuilds, counted by TableSplice); none without the counter (the official jar) */
+	static final java.lang.reflect.Field FULL_REBUILDS = fullRebuildsField ();
+
+	static java.lang.reflect.Field fullRebuildsField () {
+		try {
+			java.lang.reflect.Field field = Table.class.getDeclaredField ("m3FullRebuilds");
+			field.setAccessible (true);
+			return field;
+		} catch (ReflectiveOperationException | RuntimeException e) {
+			return null;
+		}
+	}
+
+	static long fullRebuilds (Table table) {
+		try {
+			return FULL_REBUILDS == null || table == null ? 0 : FULL_REBUILDS.getLong (table);
+		} catch (IllegalAccessException e) {
+			return 0;
+		}
+	}
+
+	/* each step counts the whole-list rebuilds it made: only a removeAll or clearAll of the script may make one (brief rule 24) */
+	static ViewportDifferential.Ops<Scene> counted (ViewportDifferential.Ops<Scene> ops) {
+		return (random, log) -> {
+			ViewportDifferential.Op<Scene> op = ops.next (random, log);
+			return scene -> {
+				Table table = scene.table;
+				long before = fullRebuilds (table);
+				String answer = op.apply (scene);
+				long made = fullRebuilds (table) - before;
+				int step = scene.counted++;
+				if (made != 0 && (answer.startsWith ("removeAll") || answer.startsWith ("clearAll"))) {
+					scene.explicitRebuilds += made;
+				} else if (made != 0) {
+					scene.rebuilds.add ("seed " + scene.seed + " step " + step + " (" + answer + "): " + made);
+				}
+				return answer;
+			};
+		};
+	}
+
 	static ViewportDifferential<Scene> harness (int variant) {
 		Variant v = VARIANTS [variant];
 		ViewportDifferential.Ops<Scene> ops = v.script () == API ? Test_org_eclipse_swt_widgets_Table_ViewportDifferential::next
 				: (random, log) -> TableViewportScripts.next (v.script (), random, log);
+		ops = counted (ops);
 		return ViewportDifferential.<Scene> of ("table-variant" + variant, 0x7AB1E5EEDL + 31L * variant, ops)
 				.widget ("Table").seeds (v.seeds ()).steps (v.steps ())
 				.beforeSeed (Scene::reset)
@@ -180,6 +226,10 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		int step;
 		/* the seed this scene runs: reset is called once per seed, in order */
 		int seed = -1;
+		/* brief rule 24: steps counted, whole-list rebuilds of removeAll and clearAll steps, and every other step that made one */
+		int counted;
+		long explicitRebuilds;
+		final List<String> rebuilds = new ArrayList<> ();
 		/* script state (TableViewportScripts): resources, armed listener actions, accessibility, zoom */
 		final TableViewportScripts.State state = new TableViewportScripts.State ();
 
