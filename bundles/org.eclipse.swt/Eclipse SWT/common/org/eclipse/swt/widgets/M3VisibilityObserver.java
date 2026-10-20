@@ -15,6 +15,7 @@
 package org.eclipse.swt.widgets;
 
 import org.eclipse.swt.*;
+import org.eclipse.swt.graphics.*;
 
 /**
  * Visible-range observer of <code>Table</code>, <code>List</code> and <code>Tree</code>
@@ -33,6 +34,16 @@ import org.eclipse.swt.*;
  * mode a <code>setTopIndex</code> that is not followed by any of these is announced at the next
  * one. The win32 widgets drive the viewport checks.
  * </p>
+ * <p>
+ * Viewport deltas (brief rule 24): after the row ranges, a listener receives {@link #EXTENTS} when
+ * the extents of the viewport changed: the size of the client area, the rows (the visible rows of a
+ * Tree), the row height, or the width of the columns. The extents are checked after a resize, an
+ * expand or collapse, a zoom change, a resize of a column that existed when the first
+ * listener was added, and immediately after a model patch ({@link M3Model#apply}) or a bulk update;
+ * scrolling alone changes no extent. The first listener hears the current extents. Together the
+ * three details are the window delta: an application prefetches what entered, releases what left
+ * and re-plans only on new extents, instead of polling <code>getTopIndex</code>.
+ * </p>
  *
  * @since 3.138
  */
@@ -44,22 +55,32 @@ public final class M3VisibilityObserver {
 	public static final int ENTERED = 0;
 	/** <code>event.detail</code>: the rows from <code>start</code> to <code>end</code> left the view. */
 	public static final int LEFT = 1;
+	/**
+	 * <code>event.detail</code>: the extents of the viewport changed. <code>event.width</code> and
+	 * <code>event.height</code> are the size of the client area and <code>event.count</code> the rows
+	 * (the visible rows of a Tree); <code>M3Scrolling.getScrollInfo</code> answers the rest.
+	 *
+	 * @since 3.138
+	 */
+	public static final int EXTENTS = 2;
 
 	private static final String KEY = "org.eclipse.swt.widgets.M3VisibilityObserver"; //$NON-NLS-1$
 
-	/* The latch of a listened widget: the last announced range, and the trigger listener itself. */
+	/* The latch of a listened widget: the last announced range and extents, and the trigger listener itself. */
 	private static final class Latch implements Listener {
 		final Control widget;
 		int first, last = -1;
-		boolean scheduled;
+		int width = -1, height = -1, rows = -1, rowExtent = -1, contentWidth = -1;
+		boolean scheduled, extentsDirty = true;
 
 		Latch (Control widget) {
 			this.widget = widget;
 		}
 
-		/* a trigger: check once at the end of the current event */
+		/* a trigger: check once at the end of the current event; scrolling alone changes no extent */
 		@Override
 		public void handleEvent (Event event) {
+			if (event.type != SWT.Selection && event.type != SWT.MouseVerticalWheel && event.type != SWT.KeyDown) extentsDirty = true;
 			if (scheduled || widget.isDisposed ()) return;
 			scheduled = true;
 			widget.getDisplay ().asyncExec (() -> {
@@ -186,7 +207,9 @@ public final class M3VisibilityObserver {
 	static void changed (Control widget) {
 		if (!widget.hooks (EVENT) || widget.isDisposed ()) return;
 		Latch latch = latch (widget);
-		if (latch != null) check (widget, latch);
+		if (latch == null) return;
+		latch.extentsDirty = true;
+		check (widget, latch);
 	}
 
 	/* ------------------------------------------------------------------ helpers */
@@ -195,11 +218,52 @@ public final class M3VisibilityObserver {
 		M3ItemRange visible = visible (widget);
 		int first = visible.isEmpty () ? 0 : visible.start (), last = visible.isEmpty () ? -1 : visible.end ();
 		int oldFirst = latch.first, oldLast = latch.last;
-		if (first == oldFirst && last == oldLast) return;
-		latch.first = first;
-		latch.last = last;
-		M3Prefetch.difference (widget, EVENT, LEFT, oldFirst, oldLast, first, last);
-		M3Prefetch.difference (widget, EVENT, ENTERED, first, last, oldFirst, oldLast);
+		if (first != oldFirst || last != oldLast) {
+			latch.first = first;
+			latch.last = last;
+			M3Prefetch.difference (widget, EVENT, LEFT, oldFirst, oldLast, first, last);
+			M3Prefetch.difference (widget, EVENT, ENTERED, first, last, oldFirst, oldLast);
+		}
+		if (latch.extentsDirty && !widget.isDisposed ()) extents (widget, latch);
+	}
+
+	/* the extents of the viewport: EXTENTS when the client area, the rows, the row height or the column widths changed */
+	private static void extents (Control widget, Latch latch) {
+		latch.extentsDirty = false;
+		Rectangle area = ((Scrollable) widget).getClientArea ();
+		int rows, rowExtent, contentWidth = area.width;
+		if (widget instanceof Table table) {
+			rows = table.getItemCount ();
+			rowExtent = table.getItemHeight ();
+			if (table.getColumnCount () > 0) contentWidth = width (table.getColumns ());
+		} else if (widget instanceof Tree tree) {
+			rows = (int) Math.min (Integer.MAX_VALUE, M3RowMath.visibleRowCount (tree));
+			rowExtent = tree.getItemHeight ();
+			if (tree.getColumnCount () > 0) contentWidth = width (tree.getColumns ());
+		} else {
+			rows = ((List) widget).getItemCount ();
+			rowExtent = ((List) widget).getItemHeight ();
+		}
+		if (area.width == latch.width && area.height == latch.height && rows == latch.rows && rowExtent == latch.rowExtent
+				&& contentWidth == latch.contentWidth) return;
+		latch.width = area.width;
+		latch.height = area.height;
+		latch.rows = rows;
+		latch.rowExtent = rowExtent;
+		latch.contentWidth = contentWidth;
+		Event event = new Event ();
+		event.detail = EXTENTS;
+		event.width = area.width;
+		event.height = area.height;
+		event.count = rows;
+		widget.sendEvent (EVENT, event);
+	}
+
+	/* the width of the columns: TableColumn and TreeColumn widths, in any order */
+	private static int width (Item [] columns) {
+		int sum = 0;
+		for (Item column : columns) sum += column instanceof TableColumn c ? c.getWidth () : ((TreeColumn) column).getWidth ();
+		return sum;
 	}
 
 	private static M3ItemRange visible (Control widget) {
@@ -224,9 +288,19 @@ public final class M3VisibilityObserver {
 			if (bar != null) bar.addListener (SWT.Selection, latch);
 			widget.addListener (SWT.MouseVerticalWheel, latch);
 			widget.addListener (SWT.KeyDown, latch);
+			widget.addListener (SWT.ZoomChanged, latch);
+			for (Item column : columns (widget)) {
+				column.addListener (SWT.Resize, latch);
+			}
 		}
 		widget.addListener (EVENT, listener);
 		check (widget, latch);
+	}
+
+	private static Item [] columns (Control widget) {
+		if (widget instanceof Table table) return table.getColumns ();
+		if (widget instanceof Tree tree) return tree.getColumns ();
+		return new Item [0];
 	}
 
 	private static void remove (Control widget, Listener listener) {
@@ -242,6 +316,10 @@ public final class M3VisibilityObserver {
 		if (bar != null) bar.removeListener (SWT.Selection, latch);
 		widget.removeListener (SWT.MouseVerticalWheel, latch);
 		widget.removeListener (SWT.KeyDown, latch);
+		widget.removeListener (SWT.ZoomChanged, latch);
+		for (Item column : columns (widget)) {
+			column.removeListener (SWT.Resize, latch);
+		}
 		widget.setData (KEY, null);
 	}
 

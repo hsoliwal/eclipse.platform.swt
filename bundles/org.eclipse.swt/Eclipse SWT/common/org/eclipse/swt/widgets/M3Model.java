@@ -115,7 +115,12 @@ public final class M3Model {
 	private final Row row = new Row ();
 	/* row -> id; null while ids are positional */
 	private long [] ids;
-	private M3DiffApply.Positions positions;
+	/*
+	 * id -> row of every id in ids, built on demand. A patch keeps it in O(changed rows): the removed ids leave, the
+	 * inserted ids come in with their rows, and the rows shifted by the patch keep a stale row as a hint, checked
+	 * against ids by indexOf and rebuilt only when a stale hint is asked for.
+	 */
+	private M3LongIndex positions;
 	private Labels labels;
 	private Listener setData;
 	/* the per-parent id lanes of a Tree; null for a List or Table */
@@ -253,10 +258,10 @@ public final class M3Model {
 		sync ();
 		int count = count ();
 		if (ids == null) return id >= 0 && id < count ? (int) id : -1;
-		if (positions == null) {
-			positions = new M3DiffApply.Positions (count);
-			for (int i = 0; i < count; i++) positions.put (ids [i], i);
-		}
+		if (positions == null) positions = positionsOf (ids);
+		int index = positions.get (id);
+		if (index < 0 || index < ids.length && ids [index] == id) return index;
+		positions = positionsOf (ids);
 		return positions.get (id);
 	}
 
@@ -301,7 +306,7 @@ public final class M3Model {
 		checkParent (parent);
 		if (rowIds == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		if (rowIds.length != count ()) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
-		M3DiffApply.Positions check = new M3DiffApply.Positions (rowIds.length);
+		M3LongIndex check = new M3LongIndex (rowIds.length);
 		for (int i = 0; i < rowIds.length; i++) {
 			if (check.put (rowIds [i], i) >= 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 		}
@@ -385,17 +390,16 @@ public final class M3Model {
 		}
 		checkParent (patch.parent ());
 		long [] before = lane ();
+		/* an update-only patch keeps the lane; inserts and removes make one new lane in one pass */
+		boolean shifts = patch.removedCount () > 0 || patch.insertedCount () > 0;
 		long [] after;
 		try {
-			after = patch.apply (before);
+			after = shifts ? patch.apply (before) : updatesFit (patch, before);
 		} catch (IllegalArgumentException e) {
 			SWT.error (SWT.ERROR_INVALID_ARGUMENT, e);
 			return;
 		}
-		M3DiffApply.Positions next = new M3DiffApply.Positions (after.length);
-		for (int i = 0; i < after.length; i++) {
-			if (next.put (after [i], i) >= 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
-		}
+		M3LongIndex lanePositions = shifts ? checkInserted (patch, before) : null;
 		labels = rowLabels;
 		boolean virtual = (widget.getStyle () & SWT.VIRTUAL) != 0;
 		installSetData ();
@@ -403,7 +407,7 @@ public final class M3Model {
 		long anchor = before.length > 0 && top < before.length ? before [top] : 0;
 		M3BulkUpdates.bulk (widget, () -> {
 			ids = after;
-			positions = next;
+			if (shifts) positions = repoint (lanePositions, patch, before);
 			patch.applyTo (new M3Patch.Target () {
 				int run;
 
@@ -423,7 +427,7 @@ public final class M3Model {
 					for (int k = 0; k < count; k++) updateRow (index + k, virtual);
 				}
 			});
-			if (before.length > 0) restoreTop (before, top, anchor);
+			if (before.length > 0) restoreTop (before, top, anchor, patch);
 		});
 	}
 
@@ -496,14 +500,78 @@ public final class M3Model {
 		if ((item.getParent ().getStyle () & SWT.CHECK) != 0) item.setChecked (row.checked);
 	}
 
-	/* the old top row, or the first surviving row below it, goes back on top */
-	private void restoreTop (long [] before, int top, long anchor) {
+	/*
+	 * The old top row, or the first surviving row below it, goes back on top. A top row the patch keeps is followed
+	 * through the runs in O(runs); only a removed (or moved) top row is looked up by id.
+	 */
+	private void restoreTop (long [] before, int top, long anchor, M3Patch patch) {
 		int count = count ();
 		if (count == 0) return;
-		int index = indexOf (anchor);
+		int index = top < before.length ? follow (patch, top) : -1;
+		if (index < 0) index = indexOf (anchor);
 		for (int k = top + 1; index < 0 && k < before.length; k++) index = indexOf (before [k]);
 		if (index < 0) index = count - 1;
 		if (widget instanceof Table table) table.setTopIndex (index); else ((List) widget).setTopIndex (index);
+	}
+
+	/* the final row of an old row through a patch, or -1 when the patch removes it */
+	static int follow (M3Patch patch, int old) {
+		int index = old;
+		for (int i = 0; i < patch.removeRuns (); i++) {
+			int at = patch.removeAt (i), count = patch.removeCount (i);
+			if (old >= at + count) {
+				index -= count;
+			} else if (old >= at) {
+				return -1;
+			}
+		}
+		for (int i = 0; i < patch.insertRuns () && patch.insertAt (i) <= index; i++) index += patch.insertCount (i);
+		return index;
+	}
+
+	/* an update-only patch keeps the lane: its runs must fit the rows */
+	private static long [] updatesFit (M3Patch patch, long [] lane) {
+		for (int i = 0; i < patch.updateRuns (); i++) {
+			if (patch.updateAt (i) + patch.updateCount (i) > lane.length) SWT.error (SWT.ERROR_INVALID_RANGE);
+		}
+		return lane;
+	}
+
+	/*
+	 * An inserted id must be new to the lane, or a row the same patch removes (a move), and appear once: checked
+	 * over the changed rows only. Answers the positions of the lane before the patch.
+	 */
+	private M3LongIndex checkInserted (M3Patch patch, long [] before) {
+		M3LongIndex lane = ids == before && positions != null ? positions : positionsOf (before);
+		M3LongIndex removed = new M3LongIndex (patch.removedCount ());
+		for (int i = 0; i < patch.removeRuns (); i++) {
+			for (int k = 0; k < patch.removeCount (i); k++) removed.put (before [patch.removeAt (i) + k], 0);
+		}
+		M3LongIndex inserted = new M3LongIndex (patch.insertedCount ());
+		for (int i = 0; i < patch.insertRuns (); i++) {
+			for (int k = 0; k < patch.insertCount (i); k++) {
+				long id = patch.insertedId (i, k);
+				if (inserted.put (id, 0) >= 0 || lane.get (id) >= 0 && removed.get (id) < 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
+			}
+		}
+		return lane;
+	}
+
+	/* the positions after a patch: removed ids leave, inserted ids come in with their rows, shifted rows keep hints */
+	private static M3LongIndex repoint (M3LongIndex lane, M3Patch patch, long [] before) {
+		for (int i = 0; i < patch.removeRuns (); i++) {
+			for (int k = 0; k < patch.removeCount (i); k++) lane.remove (before [patch.removeAt (i) + k]);
+		}
+		for (int i = 0; i < patch.insertRuns (); i++) {
+			for (int k = 0; k < patch.insertCount (i); k++) lane.put (patch.insertedId (i, k), patch.insertAt (i) + k);
+		}
+		return lane;
+	}
+
+	private static M3LongIndex positionsOf (long [] lane) {
+		M3LongIndex index = new M3LongIndex (lane.length);
+		for (int i = 0; i < lane.length; i++) index.put (lane [i], i);
+		return index;
 	}
 
 	private int topIndex () {
