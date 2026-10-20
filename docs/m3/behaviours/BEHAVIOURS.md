@@ -81,3 +81,38 @@ The web kits carry most of today's interaction paradigms. Two sources, both alre
 
 Each paradigm is a behaviour or widget with an owner, a spec key (`behaviours=` in `.m3view`), a differential where a
 stock equivalent exists, and an example. The GitHub one-pass harvest adds any web paradigm it finds with an owner.
+
+## Donors first: most behaviours are already implemented (user, 2026-10-20: "that's why I said look at web UI and/or custom UI, you will get a lot already implemented")
+
+Every behaviour starts from an existing implementation (m3-foss-donor-first): inventory the donor (repo, commit, paths,
+licence), prove the contract fits, attribute, and write only the gap on our lane model. Licence routes:
+- ADAPT: MIT, Apache-2.0, BSD and EPL donors; code may be adapted with notices kept.
+- PATTERN_ONLY: LGPL, GPL and commercial donors; behaviour and API only.
+Rows are in FOSS_REUSE_DECISION.tsv next to this file. Each owner fills in the commit and paths before reuse.
+
+| Behaviour | Web donors (route) | Java / custom UI donors (route) |
+|---|---|---|
+| Decorator + tooltip | Radix Tooltip/HoverCard, MUI Badge (MIT: ADAPT) | JFace ControlDecoration/FieldDecorationRegistry (EPL: ADAPT), ControlsFX decoration (BSD-3: ADAPT), IntelliJ ComponentValidator (Apache: ADAPT) |
+| Autocomplete | downshift, react-select, MUI Autocomplete (MIT: ADAPT) | JFace ContentProposalAdapter (EPL: ADAPT), ControlsFX AutoCompletionBinding (BSD-3: ADAPT), SwingX AutoCompleteDecorator (LGPL: PATTERN_ONLY) |
+| Validator | Zod, React Hook Form (MIT: ADAPT) | ControlsFX ValidationSupport (BSD-3: ADAPT), JFace data-binding validators (EPL: ADAPT), IntelliJ ValidationInfo (Apache: ADAPT) |
+| Formatter / constrainer | imask (MIT), Cleave.js (Apache-2.0), ECMA-402 Intl formats (spec) | java.text / java.time formats (JDK), Nebula FormattedText (EPL: ADAPT) |
+| Enabler / disabler | MUI disabled state, form libraries' dependent fields (MIT) | Eclipse core expressions enabledWhen (EPL: ADAPT), JFace action enablement (EPL) |
+| Bulk selection mover (up/down/indent/outdent) | react-arborist, react-complex-tree, dnd-kit sortable (MIT: ADAPT) | IntelliJ TreeUtil and move actions (Apache: ADAPT) |
+| Expand/collapse to level | Ant Design Tree, react-arborist (MIT) | JFace AbstractTreeViewer.expandToLevel/collapseToLevel (EPL: ADAPT, stock reference), IntelliJ TreeUtil.expand (Apache) |
+| Scroll to first/last selected | TanStack Virtual scrollToIndex (MIT) | IntelliJ ScrollingUtil (Apache: ADAPT) |
+| Type-ahead find | WAI-ARIA tree/listbox typeahead pattern (W3C), Radix (MIT) | IntelliJ SpeedSearch (Apache: ADAPT) |
+| Sort / filter / filter row / grouping | TanStack Table (MIT: ADAPT), AG Grid Community (MIT: ADAPT; Enterprise grouping/pivot: PATTERN_ONLY) | NatTable (EPL: ADAPT), Glazed Lists (LGPL/MPL: PATTERN_ONLY), TV_5.0 and x86core (user-owned) |
+| Command palette | cmdk, kbar (MIT: ADAPT) | Eclipse Quick Access (EPL), IntelliJ Search Everywhere / GotoAction (Apache: ADAPT) |
+| Toast with Undo | Sonner, react-hot-toast (MIT: ADAPT) | ControlsFX NotificationPane/Notifications (BSD-3: ADAPT), IntelliJ balloon notifications (Apache) |
+| Chips / tag input / multi-select | MUI Chip, react-select multi (MIT) | ControlsFX CheckComboBox (BSD-3), Nebula widgets (EPL) |
+| Drag reorder / kanban | dnd-kit, react-beautiful-dnd (MIT/Apache-2.0: ADAPT) | JFace ViewerDropAdapter (EPL) |
+| Hover card / popover / tour | Radix, Floating UI (MIT: ADAPT), Shepherd (MIT) | ControlsFX PopOver (BSD-3: ADAPT) |
+| Skeleton / empty / loading states | MUI Skeleton, Mantine (MIT) | IntelliJ StatusText ("Nothing to show") (Apache: ADAPT) |
+| Sticky headers / pinned columns | TanStack Table, AG Grid Community (MIT) | NatTable freeze/pinning (EPL), nebula#696 (EPL) |
+| Grid power features | AG Grid Community (MIT; Enterprise: PATTERN_ONLY), TanStack Table (MIT) | NatTable (EPL: ADAPT) |
+| Touch paradigms | Hammer.js, use-gesture (MIT) | JavaFX gesture events (GPL+CPE: PATTERN_ONLY) |
+| Motion | Framer Motion (MIT), FLIP technique | IntelliJ animators (Apache) |
+| Busy / progress | MUI Progress (MIT) | JFace ProgressMonitorPart (EPL), SwingX JXBusyLabel (LGPL: PATTERN_ONLY) |
+
+The GitHub one-pass harvest (brief GITHUB_UI_LIBS_ONE_PASS.md) adds donors it finds. Owners start each behaviour from the
+first ADAPT donor in its row.

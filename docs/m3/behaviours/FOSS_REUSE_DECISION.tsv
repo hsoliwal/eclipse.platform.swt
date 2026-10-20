@@ -1,0 +1,30 @@
+capability	candidate_repo	commit	source_paths	license	contract_fit	decision	rejected_reason	adapted_hashes	notice_path
+decorator-tooltip	eclipse-platform/eclipse.platform.ui (JFace fieldassist ControlDecoration)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+decorator-tooltip	controlsfx/controlsfx (decoration)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	BSD-3-Clause	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+autocomplete	eclipse-platform/eclipse.platform.ui (JFace ContentProposalAdapter)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+autocomplete	controlsfx/controlsfx (AutoCompletionBinding)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	BSD-3-Clause	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+autocomplete	downshift-js/downshift	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+autocomplete	swingx (AutoCompleteDecorator)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	LGPL-2.1	UNPROVEN	PATTERN_ONLY	-	-	THIRD_PARTY_NOTICES.md
+validator	controlsfx/controlsfx (ValidationSupport)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	BSD-3-Clause	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+validator	colinhacks/zod	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+formatter-constrainer	uNmAnNeR/imaskjs	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+formatter-constrainer	EclipseNebula/nebula (FormattedText)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+enabler	eclipse-platform/eclipse.platform (core expressions)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+selection-mover	brimdata/react-arborist	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+selection-mover	lukasbach/react-complex-tree	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+selection-mover	JetBrains/intellij-community (TreeUtil, move actions)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	Apache-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+expand-to-level	eclipse-platform/eclipse.platform.ui (AbstractTreeViewer)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+scroll-to-selection	TanStack/virtual	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+type-ahead	JetBrains/intellij-community (SpeedSearch)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	Apache-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+sort-filter-grouping	TanStack/table	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+sort-filter-grouping	eclipse-nattable/nattable	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+sort-filter-grouping	ag-grid/ag-grid (community)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+sort-filter-grouping	ag-grid enterprise features	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	commercial	UNPROVEN	PATTERN_ONLY	-	-	THIRD_PARTY_NOTICES.md
+sort-filter-grouping	glazedlists/glazedlists	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	LGPL-2.1 OR MPL-1.1	UNPROVEN	PATTERN_ONLY	-	-	THIRD_PARTY_NOTICES.md
+command-palette	pacocoursey/cmdk	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+toast-undo	emilkowalski/sonner	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+toast-undo	controlsfx/controlsfx (NotificationPane)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	BSD-3-Clause	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+drag-reorder	clauderic/dnd-kit	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+popover-hovercard	floating-ui/floating-ui	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+popover-hovercard	controlsfx/controlsfx (PopOver)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	BSD-3-Clause	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+empty-state	JetBrains/intellij-community (StatusText)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	Apache-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
