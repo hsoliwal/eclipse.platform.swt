@@ -25,8 +25,8 @@ import org.junit.jupiter.api.*;
  * Optimization pass bench of the ExpandBar (docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv): one bar of 400 x 600
  * with n items of height 40, every other expanded, one <code>Label</code> control every 1000th item (the per-process
  * window quota allows no more at 10^5); the hot operations are expanding or collapsing the first item (a layout from
- * item 0), scrolling a page (<code>WM_VSCROLL SB_PAGEDOWN</code>), changing the height of the first item, and appending
- * one item. Opt-in: <code>-Dswt.allwidgets.bench=true</code>; sizes <code>-Dswt.allwidgets.bench.expandbar=10000,100000</code>.
+ * item 0), scrolling a page (<code>WM_VSCROLL SB_PAGEDOWN</code>), changing the height of the first item, 100 mouse
+ * moves over the headers (<code>WM_MOUSEMOVE</code>, hover tracking), and appending one item. Opt-in: <code>-Dswt.allwidgets.bench=true</code>; sizes <code>-Dswt.allwidgets.bench.expandbar=10000,100000</code>.
  * Win32 only (scrolling is driven with window messages).
  */
 public class Test_org_eclipse_swt_widgets_ExpandBar_OptimizationBench {
@@ -68,6 +68,10 @@ public class Test_org_eclipse_swt_widgets_ExpandBar_OptimizationBench {
 			results.add (AllWidgetsBench.measure ("scroll", k -> {
 				ViewportDifferential.send (bar, 0x115, 3, 0); // WM_VSCROLL SB_PAGEDOWN
 				bar.update ();
+			}));
+			results.add (AllWidgetsBench.measure ("move", k -> {
+				/* 100 WM_MOUSEMOVE messages down the visible headers (hover in and out) */
+				for (int m = 0; m < 100; m++) ViewportDifferential.send (bar, 0x200, 0, ((long) (10 + m * 5) << 16) | 50);
 			}));
 			int [] next = {count};
 			results.add (AllWidgetsBench.measure ("append", k -> {
