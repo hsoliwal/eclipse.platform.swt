@@ -167,7 +167,7 @@ abstract class DrawnPlane {
 	/* behaviour pass into the back buffer, drawn pass over it, present: the damage is visible */
 	private void draw (long hwnd, int msg, long target, long lParam) {
 		long begin = System.nanoTime ();
-		buffer.ensure (target, client.right, client.bottom);
+		buffer.ensureFrame (target, client.right, client.bottom);
 		behaviour (hwnd, msg, lParam);
 		if (control.isDisposed ()) return;
 		afterBehaviour (msg);
