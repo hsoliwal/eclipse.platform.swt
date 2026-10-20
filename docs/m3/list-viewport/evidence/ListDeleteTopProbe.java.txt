@@ -1,0 +1,89 @@
+// Manual win32 probe (default package: runs on the official SWT jar too). Run it on the hidden desktop.
+
+import java.util.logging.*;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.widgets.*;
+
+/**
+ * How the list box's top row index and caret move while rows are deleted one at a time (LB_DELETESTRING),
+ * as List.remove (start, end) deletes them, and what the LB_SETTOPINDEX that follows does. Each case: count,
+ * top, start, end, caret (set first with LB_SETCARETINDEX, then the top). Logs the top and caret after every
+ * deletion where the top changed and at the end, then after LB_SETTOPINDEX with the count and the bar, and what
+ * List.remove (start, end) answers for the same case.
+ * Arguments: outDir.
+ */
+public class ListDeleteTopProbe {
+	static final Logger LOG = Logger.getLogger ("ListDeleteTopProbe");
+	static final int [][] CASES = {
+		{295, 235, 131, 294, 238}, {295, 235, 131, 294, 0}, {295, 235, 131, 294, 250}, {295, 235, 200, 294, 238},
+		{295, 235, 0, 100, 238}, {295, 235, 240, 294, 238}, {295, 235, 240, 294, 250}, {295, 100, 50, 294, 110},
+		{295, 270, 131, 294, 280}, {60, 30, 10, 59, 40}, {295, 235, 236, 240, 238}, {295, 235, 230, 240, 250},
+		{295, 270, 290, 294, 292}, {295, 235, 131, 200, 238}, {295, 235, 131, 294, 140}
+	};
+
+	static {
+		LOG.setUseParentHandlers (false);
+		Handler handler = new ConsoleHandler ();
+		handler.setFormatter (new Formatter () {
+			@Override
+			public String format (LogRecord entry) {
+				return entry.getMessage () + System.lineSeparator ();
+			}
+		});
+		LOG.addHandler (handler);
+	}
+
+	public static void main (String [] args) {
+		Display display = new Display ();
+		Shell shell = new Shell (display);
+		shell.setBounds (20, 20, 330, 420);
+		shell.open ();
+		for (int [] c : CASES) {
+			List list = list (shell, c);
+			int top = top (list), caret = caret (list);
+			StringBuilder out = new StringBuilder ();
+			out.append (String.format ("count %d top %d caret %d remove %d..%d:", c [0], top, caret, c [2], c [3]));
+			for (int i = c [2]; i <= c [3]; i++) {
+				OS.SendMessage (list.handle, OS.LB_DELETESTRING, c [2], 0);
+				int nowTop = top (list), nowCaret = caret (list);
+				if (nowTop != top) out.append (String.format (" [count %d top %d caret %d]", count (list), nowTop, nowCaret));
+				top = nowTop;
+				caret = nowCaret;
+			}
+			out.append (String.format (" end top %d caret %d", top, caret));
+			long result = OS.SendMessage (list.handle, OS.LB_SETTOPINDEX, c [1] - (c [3] < c [1] ? c [3] - c [2] + 1 : 0), 0);
+			out.append (String.format (" | LB_SETTOPINDEX -> %d: top %d count %d bar %d/%d page %d", result, top (list), count (list),
+				list.getVerticalBar ().getSelection (), list.getVerticalBar ().getMaximum (), list.getVerticalBar ().getThumb ()));
+			list.dispose ();
+			List swt = list (shell, c);
+			swt.remove (c [2], c [3]);
+			out.append (String.format (" | SWT remove: top %d caret %d bar %d", swt.getTopIndex (), caret (swt), swt.getVerticalBar ().getSelection ()));
+			swt.dispose ();
+			LOG.info (out.toString ());
+		}
+		display.dispose ();
+	}
+
+	static List list (Shell shell, int [] c) {
+		List list = new List (shell, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		list.setBounds (5, 5, 300, 380);
+		for (int i = 0; i < c [0]; i++) list.add ("row " + i);
+		OS.SendMessage (list.handle, OS.LB_SETCARETINDEX, c [4], 0);
+		list.setTopIndex (c [1]);
+		return list;
+	}
+
+	static int top (List list) {
+		return (int) OS.SendMessage (list.handle, OS.LB_GETTOPINDEX, 0, 0);
+	}
+
+	static int caret (List list) {
+		return (int) OS.SendMessage (list.handle, OS.LB_GETCARETINDEX, 0, 0);
+	}
+
+	static int count (List list) {
+		return (int) OS.SendMessage (list.handle, OS.LB_GETCOUNT, 0, 0);
+	}
+}

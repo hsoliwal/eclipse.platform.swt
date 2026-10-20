@@ -80,7 +80,7 @@ public class Test_org_eclipse_swt_widgets_ToolBar_ScaleOracle {
 				}
 				ViewportDifferential.drain (display);
 				long append = (System.nanoTime () - start) / 1000 / APPEND;
-				System.out.println ("toolbar-oracle " + ViewportDifferential.reference ("ToolBar") + (wrap == SWT.WRAP ? " wrap" : " single") + " items " + count
+				java.util.logging.Logger.getLogger ("org.eclipse.swt.tests.junit.ScaleOracle").info ("toolbar-oracle " + ViewportDifferential.reference ("ToolBar") + (wrap == SWT.WRAP ? " wrap" : " single") + " items " + count
 					+ " create " + create + " computeSize " + median (size) + " paint " + median (paint) + " getItems " + median (items)
 					+ " indexOf " + median (index) + " rename " + median (rename) + " readd " + median (readd) + " append " + append);
 				shell.dispose ();
@@ -121,7 +121,7 @@ public class Test_org_eclipse_swt_widgets_ToolBar_ScaleOracle {
 				ViewportDifferential.drain (display);
 				layout [k] = (System.nanoTime () - start) / 1000;
 			}
-			System.out.println ("coolbar-oracle " + ViewportDifferential.reference ("CoolBar") + " bands " + bands + " create " + create
+			java.util.logging.Logger.getLogger ("org.eclipse.swt.tests.junit.ScaleOracle").info ("coolbar-oracle " + ViewportDifferential.reference ("CoolBar") + " bands " + bands + " create " + create
 				+ " setWrapIndices " + median (wrapIndices) + " paint " + median (paint) + " resize " + median (layout));
 			shell.dispose ();
 		}

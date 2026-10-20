@@ -1,0 +1,44 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.swt.internal.laf;
+
+import java.util.*;
+import java.util.logging.*;
+
+public class M3CompleterTiming {
+	static {
+		System.setProperty ("java.util.logging.SimpleFormatter.format", "%5$s%n");
+	}
+	static final Logger LOG = Logger.getLogger (M3CompleterTiming.class.getName ());
+
+	public static void main (String [] args) {
+		Random random = new Random (1);
+		List<M3ThemeSpec> specs = new ArrayList<> ();
+		for (int i = 0; i < 1000; i++) {
+			specs.add (M3ThemeSpec.parse (String.format ("{\"dark\": %s, \"palette\": {\"background\": \"#%06x\", \"foreground\": \"#%06x\", \"accent\": \"#%06x\"}}", random.nextBoolean (), random.nextInt (0x1000000), random.nextInt (0x1000000), random.nextInt (0x1000000))));
+		}
+		long sink = 0;
+		for (int round = 0; round < 3; round++) for (M3ThemeSpec spec : specs) sink += M3ThemeCompleter.complete (spec).table ().size ();
+		long start = System.nanoTime ();
+		int notes = 0;
+		for (M3ThemeSpec spec : specs) {
+			M3ThemeCompleter.Theme theme = M3ThemeCompleter.complete (spec);
+			notes += theme.notes ().size ();
+			sink += theme.table ().size ();
+		}
+		long elapsed = System.nanoTime () - start;
+		LOG.info (String.format (Locale.ROOT, "complete: %.1f us per theme over 1000 random proposals, %.2f contrast moves per theme (sink %d)", elapsed / 1000 / 1000.0, notes / 1000.0, sink));
+	}
+}

@@ -1,12 +1,16 @@
 /*******************************************************************************
- * Copyright (c) 2026 Contributors to the Eclipse Foundation.
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
  *
- * This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License 2.0
- * which accompanies this distribution, and is available at
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
  * https://www.eclipse.org/legal/epl-2.0/
  *
- * SPDX-License-Identifier: EPL-2.0
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
@@ -267,6 +271,56 @@ public class Test_org_eclipse_swt_widgets_List_ViewportAcceptance {
 			return value [0];
 		}
 
+		/* accLocation of a row: left, top, width, height on the screen */
+		int [] location (int row) {
+			child (row + 1);
+			invoke ("accLocation", new Class<?> [] {long.class, long.class, long.class, long.class, long.class}, memory + 32, memory + 36, memory + 40,
+				memory + 44, memory);
+			int [] bounds = new int [4];
+			OS.MoveMemory (bounds, memory + 32, 16);
+			return bounds;
+		}
+
+		/* accHitTest at a screen point: "code vt value" (VT_I4 values are MSAA child ids: 0 the list itself, rows 1-based) */
+		String hitTest (int x, int y) {
+			int code = invoke ("accHitTest", new Class<?> [] {int.class, int.class, long.class}, x, y, memory + 32);
+			return code + " " + variant (memory + 32);
+		}
+
+		/* get_accSelection: "code vt value" */
+		String selection () {
+			int code = invoke ("get_accSelection", new Class<?> [] {long.class}, memory + 32);
+			return code + " " + variant (memory + 32);
+		}
+
+		/* the first rows of the IEnumVARIANT enumeration of the children, as MSAA child ids */
+		int [] children (int count) {
+			long variants = OS.HeapAlloc (OS.GetProcessHeap (), OS.HEAP_ZERO_MEMORY, count * VARIANT.sizeof);
+			try {
+				invoke ("Reset", new Class<?> [0]);
+				invoke ("Next", new Class<?> [] {int.class, long.class, long.class}, count, variants, memory + 48);
+				int [] fetched = new int [1];
+				OS.MoveMemory (fetched, memory + 48, 4);
+				int [] ids = new int [fetched [0]];
+				for (int i = 0; i < ids.length; i++) {
+					int [] value = new int [1];
+					OS.MoveMemory (value, variants + (long) i * VARIANT.sizeof + 8, 4);
+					ids [i] = value [0];
+				}
+				return ids;
+			} finally {
+				OS.HeapFree (OS.GetProcessHeap (), 0, variants);
+			}
+		}
+
+		static String variant (long address) {
+			short [] type = new short [1];
+			int [] value = new int [1];
+			OS.MoveMemory (type, address, 2);
+			OS.MoveMemory (value, address + 8, 4);
+			return type [0] + " " + (type [0] == COM.VT_I4 ? value [0] : 0);
+		}
+
 		/* the focused child as a 0-based row, or -1 */
 		int focus () {
 			invoke ("get_accFocus", new Class<?> [] {long.class}, memory + 32);
@@ -298,6 +352,115 @@ public class Test_org_eclipse_swt_widgets_List_ViewportAcceptance {
 		assertEquals (0, visible & COM.STATE_SYSTEM_OFFSCREEN, "a visible row is on screen");
 		assertTrue ((far & COM.STATE_SYSTEM_OFFSCREEN) != 0);
 		if (list.isFocusControl ()) assertEquals (list.getFocusIndex (), msaa.focus ());
+	}
+
+	/*
+	 * Bounds, hit tests, selection and the children enumeration answer for logical rows: a visible row where the
+	 * list box paints it, a row far below the window where it would be, points in a row, on the border, outside the
+	 * list and below the last row; one, several and no selected rows; and the first children of the enumeration.
+	 * A key the list box handles afterwards moves the accessible focus with the caret.
+	 */
+	@Test
+	public void accessibilityLocatesHitTestsAndEnumeratesLogicalRows () {
+		List list = list (SWT.MULTI);
+		shell.open ();
+		list.setItems (rows (100_000));
+		list.setTopIndex (50_000);
+		list.setSelection (50_003);
+		list.setFocus ();
+		Msaa msaa = new Msaa (list);
+		int height = list.getItemHeight (), width = list.getClientArea ().width;
+		org.eclipse.swt.graphics.Point origin = list.toDisplay (0, 0);
+		assertArrayEquals (new int [] {origin.x, origin.y + 3 * height, width, height}, msaa.location (50_003));
+		assertArrayEquals (new int [] {origin.x, origin.y + 49_000 * height, width, height}, msaa.location (99_000));
+		assertEquals ("0 " + COM.VT_I4 + " " + (50_003 + 1), msaa.hitTest (origin.x + 10, origin.y + 3 * height + height / 2));
+		org.eclipse.swt.graphics.Point corner = list.toDisplay (-1, -1);
+		assertEquals ("0 " + COM.VT_I4 + " 0", msaa.hitTest (corner.x, corner.y), "the border is the list itself");
+		org.eclipse.swt.graphics.Point outside = shell.toDisplay (1, 1);
+		assertEquals ("1 " + COM.VT_EMPTY + " 0", msaa.hitTest (outside.x, outside.y), "a point outside the list");
+		assertEquals ("0 " + COM.VT_I4 + " " + (50_003 + 1), msaa.selection ());
+		list.setSelection (new int [] {10, 99_999});
+		assertTrue (msaa.selection ().startsWith ("0 "), "several selected rows: " + msaa.selection ());
+		list.deselectAll ();
+		assertEquals ("1 " + COM.VT_EMPTY + " 0", msaa.selection ());
+		assertArrayEquals (new int [] {1, 2, 3}, msaa.children (3));
+		send (list, "WM_KEYDOWN", constant ("VK_DOWN"), 0);
+		if (list.isFocusControl ()) assertEquals (list.getFocusIndex (), msaa.focus ());
+		list.setItems (rows (5));
+		assertEquals ("0 " + COM.VT_I4 + " 0", msaa.hitTest (origin.x + 10, origin.y + 10 * height + height / 2), "below the last row");
+	}
+
+	/*
+	 * The model seam (List.m3Splice, leaf 19): one edit run over the lanes. A run outside the resident window changes
+	 * the rows, the bar and the top row's index (the top row stays the same row) with zero native row operations; a
+	 * run inside it touches O(changed) native rows; a removal at or before a set anchor clears it (two operations).
+	 * Every run answers like the same edits made through the item API on a second list.
+	 */
+	@Test
+	public void spliceOutsideTheWindowTouchesNoNativeRow () throws ReflectiveOperationException {
+		List list = list (SWT.MULTI), stock = list (SWT.MULTI);
+		shell.open ();
+		list.setItems (rows (100_000));
+		stock.setItems (rows (100_000));
+		list.setTopIndex (50_000);
+		stock.setTopIndex (50_000);
+		Method splice = List.class.getDeclaredMethod ("m3Splice", int.class, int.class, String [].class);
+		Method ops = List.class.getDeclaredMethod ("m3NativeRowOps");
+		splice.setAccessible (true);
+		ops.setAccessible (true);
+		String [] thousand = new String [1000];
+		for (int i = 0; i < 1000; i++) thousand [i] = "new " + i;
+		long before = (Long) ops.invoke (list);
+		/* above the window: 1,000 rows in at 10, then 500 out at 20; below it: 2,000 out and 1,000 in at 90,000 */
+		splice.invoke (list, 10, 0, thousand);
+		itemApi (stock, 10, 0, thousand);
+		assertEquals (before, ops.invoke (list), "native row operations of an insert above the window");
+		assertSameList (stock, list);
+		splice.invoke (list, 20, 500, new String [0]);
+		itemApi (stock, 20, 500, new String [0]);
+		assertEquals (before, ops.invoke (list), "native row operations of a removal above the window");
+		assertSameList (stock, list);
+		splice.invoke (list, 90_000, 2_000, thousand);
+		itemApi (stock, 90_000, 2_000, thousand);
+		assertEquals (before, ops.invoke (list), "native row operations of a run below the window");
+		assertSameList (stock, list);
+		/* with a selection and its anchor: a removal above clears the anchor (at most two operations) */
+		list.setSelection (new int [] {7, 50_503, 99_990});
+		stock.setSelection (new int [] {7, 50_503, 99_990});
+		splice.invoke (list, 30, 10, new String [] {"a", "b"});
+		itemApi (stock, 30, 10, new String [] {"a", "b"});
+		long cleared = (Long) ops.invoke (list) - before;
+		assertTrue (cleared <= 2, "native row operations of a removal above the window with an anchor: " + cleared);
+		assertSameList (stock, list);
+		/* inside the window: three rows replaced by two */
+		before = (Long) ops.invoke (list);
+		splice.invoke (list, list.getTopIndex () + 2, 3, new String [] {"in 1", "in 2"});
+		itemApi (stock, stock.getTopIndex () + 2, 3, new String [] {"in 1", "in 2"});
+		long inside = (Long) ops.invoke (list) - before;
+		assertTrue (inside > 0 && inside <= 7, "native row operations of a run inside the window: " + inside);
+		assertSameList (stock, list);
+	}
+
+	/* the same edits through the item API, with the top row kept on the same row, as the seam keeps it */
+	static void itemApi (List list, int at, int removed, String [] inserted) {
+		int top = list.getTopIndex ();
+		if (removed > 0) list.remove (at, at + removed - 1);
+		for (int i = 0; i < inserted.length; i++) list.add (inserted [i], at + i);
+		if (at + removed <= top) list.setTopIndex (top - removed + inserted.length);
+	}
+
+	static void assertSameList (List expected, List actual) {
+		assertEquals (expected.getItemCount (), actual.getItemCount ());
+		assertEquals (expected.getTopIndex (), actual.getTopIndex ());
+		assertEquals (expected.getFocusIndex (), actual.getFocusIndex ());
+		assertArrayEquals (expected.getSelectionIndices (), actual.getSelectionIndices ());
+		int count = actual.getItemCount (), top = actual.getTopIndex ();
+		for (int row : new int [] {0, 9, 10, 1_009, 1_010, 20, 519, 29, 30, 31, 32, count / 2, 89_999, 90_000, 91_000, count - 1, top, top + 1, top + 2, top + 3, top + 4, top + 5}) {
+			int r = Math.max (0, Math.min (count - 1, row));
+			assertEquals (expected.getItem (r), actual.getItem (r), "row " + r);
+		}
+		assertEquals (expected.getVerticalBar ().getSelection (), actual.getVerticalBar ().getSelection ());
+		assertEquals (expected.getVerticalBar ().getMaximum (), actual.getVerticalBar ().getMaximum ());
 	}
 
 	@Test

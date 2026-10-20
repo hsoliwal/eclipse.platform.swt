@@ -10,6 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Hitesh Soliwal (Synexia) - shared style policy
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -644,6 +645,8 @@ public boolean getEnabled () {
 	checkWidget();
 
 	if (GTK.GTK4) {
+		/* A separator has no action, see createHandle() */
+		if (actionHandle == 0) return enabled;
 		return OS.g_action_get_enabled(actionHandle);
 	} else {
 		return GTK.gtk_widget_get_sensitive(handle);

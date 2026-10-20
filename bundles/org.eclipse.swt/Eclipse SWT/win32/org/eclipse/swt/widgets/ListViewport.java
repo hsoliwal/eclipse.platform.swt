@@ -1,12 +1,16 @@
 /*******************************************************************************
- * Copyright (c) 2026 Contributors to the Eclipse Foundation.
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
  *
- * This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License 2.0
- * which accompanies this distribution, and is available at
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
  * https://www.eclipse.org/legal/epl-2.0/
  *
- * SPDX-License-Identifier: EPL-2.0
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -101,7 +105,7 @@ final class ListViewport {
 
 	/** Takes over the (still empty) list box. */
 	void install () {
-		OS.SendMessage (list.handle, OS.LB_RESETCONTENT, 0, 0);
+		resetNative ();
 		plan.clear ();
 		layout ();
 	}
@@ -133,6 +137,8 @@ final class ListViewport {
 		} finally {
 			busy = false;
 		}
+		M3Prefetch.windowChanged (list);
+		M3VisibilityObserver.changed (list);
 	}
 
 	/*
@@ -214,11 +220,11 @@ final class ListViewport {
 		if (redraw) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);
 		try {
 			if (plan.replaced ()) {
-				OS.SendMessage (handle, OS.LB_RESETCONTENT, 0, 0);
+				resetNative ();
 			} else {
-				for (int i = 0; i < plan.retiredHead (); i++) OS.SendMessage (handle, OS.LB_DELETESTRING, 0, 0);
+				for (int i = 0; i < plan.retiredHead (); i++) deleteNative (0);
 				int remaining = plan.size () - plan.retiredHead ();
-				for (int i = 0; i < plan.retiredTail (); i++) OS.SendMessage (handle, OS.LB_DELETESTRING, --remaining, 0);
+				for (int i = 0; i < plan.retiredTail (); i++) deleteNative (--remaining);
 			}
 			int head = plan.insertedHead ();
 			for (int i = 0; i < head; i++) insertNative (i, nextFirst + i);
@@ -237,9 +243,12 @@ final class ListViewport {
 		}
 		if (LOG.isTraceEnabled ()) LOG.trace (() -> "List window: rows " + plan.first () + "+" + plan.size () + " of " + model.getItemCount ()
 				+ ", top " + top + " (" + plan.touched () + " native rows touched)");
+		M3Prefetch.windowChanged (list);
+		M3VisibilityObserver.changed (list);
 	}
 
 	private void insertNative (int entry, int row) {
+		nativeRowOps++;
 		int length = list.storeChars (model.getItem (row), false);
 		list.textBuffer [length] = 0;
 		long result = OS.SendMessage (list.handle, OS.LB_INSERTSTRING, entry, list.textBuffer);
@@ -248,6 +257,25 @@ final class ListViewport {
 
 	private void appendNative (int row) {
 		insertNative ((int) OS.SendMessage (list.handle, OS.LB_GETCOUNT, 0, 0), row);
+	}
+
+	/* native row operations so far (LB_INSERTSTRING, LB_DELETESTRING, LB_RESETCONTENT): the model seam's proof reads it */
+	private long nativeRowOps;
+	private static final char [] EMPTY_TEXT = {0};
+
+	private void deleteNative (int entry) {
+		nativeRowOps++;
+		deleteNative (entry);
+	}
+
+	private void resetNative () {
+		nativeRowOps++;
+		resetNative ();
+	}
+
+	private void insertEmptyNative (int entry) {
+		nativeRowOps++;
+		OS.SendMessage (list.handle, OS.LB_INSERTSTRING, entry, EMPTY_TEXT);
 	}
 
 	/** Puts the native top row of the window on the logical top row; the list box scrolls (and blits) natively. */
@@ -431,7 +459,7 @@ final class ListViewport {
 	private void clearNativeAnchor () {
 		long handle = list.handle;
 		boolean selected0 = OS.SendMessage (handle, OS.LB_GETSEL, 0, 0) > 0, selected1 = OS.SendMessage (handle, OS.LB_GETSEL, 1, 0) > 0;
-		OS.SendMessage (handle, OS.LB_DELETESTRING, 0, 0);
+		deleteNative (0);
 		insertNative (0, plan.first ());
 		if (selected0) {
 			OS.SendMessage (handle, OS.LB_SELITEMRANGEEX, 0, 1);
@@ -468,15 +496,14 @@ final class ListViewport {
 			OS.SendMessage (handle, OS.LB_SETCURSEL, c, 0);
 		} else if (s > c) {
 			/* the selected row moves up to the caret entry, is selected there, then the rows in between come back in front of it */
-			for (int i = c; i < s; i++) OS.SendMessage (handle, OS.LB_DELETESTRING, c, 0);
+			for (int i = c; i < s; i++) deleteNative (c);
 			OS.SendMessage (handle, OS.LB_SETCURSEL, c, 0);
 			for (int i = s - 1; i >= c; i--) insertNative (c, plan.first () + i);
 		} else {
 			/* blank rows push the selected row down to the caret entry; removing them moves the selection back, not the caret */
-			char [] empty = {0};
-			for (int i = s; i < c; i++) OS.SendMessage (handle, OS.LB_INSERTSTRING, s, empty);
+			for (int i = s; i < c; i++) insertEmptyNative (s);
 			OS.SendMessage (handle, OS.LB_SETCURSEL, c, 0);
-			for (int i = s; i < c; i++) OS.SendMessage (handle, OS.LB_DELETESTRING, s, 0);
+			for (int i = s; i < c; i++) deleteNative (s);
 		}
 	}
 
@@ -521,8 +548,8 @@ final class ListViewport {
 		return false;
 	}
 
-	/** Rows apart within which a user action is left to the list box (the window is grown to hold them). */
-	static final int NATIVE_REACH = 2000;
+	/** Rows apart within which a user action is left to the list box (the window is grown to hold them); internal, tests lower it. */
+	static final int NATIVE_REACH = Math.max (1, Integer.getInteger ("swt.viewport.list.reach", 2000));
 
 	/**
 	 * Before the list box handles user input: the resident window holds every row the list box
@@ -577,7 +604,7 @@ final class ListViewport {
 		model.deselectAll ();
 		if (anchor >= 0 && anchor < count) model.select (Math.min (anchor, row), Math.max (anchor, row));
 		caret = row;
-		scrollIntoView (row);
+		keepRowVisible (row);
 		selectionDirty = true;
 		layout ();
 		list.sendSelectionEvent (SWT.Selection);
@@ -742,24 +769,34 @@ final class ListViewport {
 			default -> caret + 1;
 		};
 		target = Math.max (0, Math.min (count - 1, target));
+		if (single) {
+			/*
+			 * A single-selection list box (102 recorded key steps): a key whose row is already selected changes
+			 * nothing, not even the caret or the top; with the selection away from the caret (or none), Up and Down first
+			 * select the caret row without moving.
+			 */
+			int selected = firstSelected ();
+			if (selected >= 0 && selected == target) return LRESULT.ZERO;
+			if ((key == OS.VK_UP || key == OS.VK_DOWN) && selected != caret) target = caret;
+		}
 		if (!single && !extended) {
-			/* SIMPLE (LBS_MULTIPLESEL): the keys move the caret only; the list box still notifies */
-			boolean moved = caret != target;
+			/* SIMPLE (LBS_MULTIPLESEL): the keys move the caret only; the list box notifies even when the caret stays (recorded differential) */
 			caret = target;
 			if (key == OS.VK_HOME) {
 				top = 0;
 			} else if (key == OS.VK_END) {
 				top = count;
 			} else {
-				scrollIntoView (target);
+				keepRowVisible (target);
 			}
 			focusDirty = true;
 			layout ();
-			if (moved) list.sendSelectionEvent (SWT.Selection);
+			list.sendSelectionEvent (SWT.Selection);
 			return LRESULT.ZERO;
 		}
 		int from = extend ? (anchor >= 0 && anchor < count ? anchor : caret) : target;
-		boolean changed = caret != target || !model.isSelected (target) || model.getSelectionCount () != Math.abs (target - from) + 1;
+		/* an extended list box notifies for every key it handles; a single-selection one only when the selection changes */
+		boolean changed = extended || caret != target || !model.isSelected (target) || model.getSelectionCount () != Math.abs (target - from) + 1;
 		model.deselectAll ();
 		model.select (Math.min (from, target), Math.max (from, target));
 		caret = target;
@@ -770,7 +807,7 @@ final class ListViewport {
 		} else if (key == OS.VK_END) {
 			top = count;
 		} else {
-			scrollIntoView (target);
+			keepRowVisible (target);
 		}
 		selectionDirty = true;
 		layout ();
@@ -837,7 +874,7 @@ final class ListViewport {
 		}
 		if (0 <= newIndex && newIndex < count) {
 			caret = newIndex;
-			scrollIntoView (newIndex);
+			keepRowVisible (newIndex);
 			focusDirty = true;
 			layout ();
 		}
@@ -865,7 +902,7 @@ final class ListViewport {
 			char first = text.charAt (0);
 			if (first != key && Character.toUpperCase (first) != upper && Character.toLowerCase (first) != lower) continue;
 			caret = row;
-			scrollIntoView (row);
+			keepRowVisible (row);
 			if (!single && !extended) {
 				/* SIMPLE: the caret moves, the selection stays; the list box still notifies */
 				focusDirty = true;
@@ -982,14 +1019,14 @@ final class ListViewport {
 	}
 
 	/* one native LB_DELETESTRING: caret and anchor as the stock list box moves them */
-	private void deleteRow (int index) {
+	private void deleteResidentRow (int index) {
 		barState = BAR_SET;
 		int countAfter = model.getItemCount () - 1;
 		if (index == caret && caret > 0) caret--;
 		if (caret >= countAfter) caret = Math.max (0, countAfter - 1);
 		if (anchor >= index) anchor = -1;
 		model.remove (index);
-		if (plan.removed (index, 1) > 0) OS.SendMessage (list.handle, OS.LB_DELETESTRING, plan.removedEntry (index), 0);
+		if (plan.removed (index, 1) > 0) deleteNative (plan.removedEntry (index));
 	}
 
 	void remove (int index) {
@@ -997,7 +1034,7 @@ final class ListViewport {
 		if (index < 0 || index >= model.getItemCount ()) list.error (SWT.ERROR_INVALID_RANGE);
 		int width = hScroll ? model.measureItem (index) : 0;
 		int topIndex = top;
-		deleteRow (index);
+		deleteResidentRow (index);
 		if (index < topIndex) topIndex--;
 		finishRemove (topIndex, width);
 	}
@@ -1013,7 +1050,7 @@ final class ListViewport {
 		int width = 0;
 		if (hScroll) for (int i = start; i <= end; i++) width = Math.max (width, model.measureItem (i));
 		int topIndex = top;
-		for (int i = start; i <= end; i++) deleteRow (start);
+		for (int i = start; i <= end; i++) deleteResidentRow (start);
 		if (end < topIndex) topIndex -= end - start + 1;
 		finishRemove (topIndex, width);
 	}
@@ -1030,7 +1067,7 @@ final class ListViewport {
 			int index = sorted [i];
 			if (index == last) continue;
 			if (hScroll) width = Math.max (width, model.measureItem (index));
-			deleteRow (index);
+			deleteResidentRow (index);
 			if (index < topIndex) topCount++;
 			last = index;
 		}
@@ -1054,7 +1091,7 @@ final class ListViewport {
 	void removeAll () {
 		sync ();
 		model.removeAll ();
-		OS.SendMessage (list.handle, OS.LB_RESETCONTENT, 0, 0);
+		resetNative ();
 		plan.clear ();
 		/* LB_RESETCONTENT: caret and top row 0, the anchor is kept, the bar is freed */
 		top = caret = 0;
@@ -1070,7 +1107,7 @@ final class ListViewport {
 		String [] texts = new String [items.length];
 		for (int i = 0; i < items.length; i++) texts [i] = nativeText (items [i]);
 		model.setItems (texts);
-		OS.SendMessage (list.handle, OS.LB_RESETCONTENT, 0, 0);
+		resetNative ();
 		plan.clear ();
 		top = caret = 0;
 		/* a visible list redraws once at the end (the bar is written); a hidden one adds row by row */
@@ -1083,6 +1120,66 @@ final class ListViewport {
 		selectionDirty = true;
 		layout ();
 		writeExtent ();
+	}
+
+	/* ---------------------------------------------------------------- model seam (leaf 19) */
+
+	/** Native row operations so far, for List.m3NativeRowOps. */
+	long nativeRowOps () {
+		return nativeRowOps;
+	}
+
+	/**
+	 * One edit run of the model seam (List.m3Splice): the rows <code>[at, at + removed)</code> leave and
+	 * <code>inserted</code> enter at <code>at</code>, as the same removal and adds through the item API would, with
+	 * one difference: the top row stays the same row (a run above it moves the top index by the rows it adds or
+	 * removes; a run that holds the top row keeps the index, as the list box does). The caret, the anchor and the
+	 * selection follow the stock rules of one removal and one insert at a time (the caret index stays, a removal at
+	 * or before the anchor clears it). Native rows are touched only where the run meets the resident window
+	 * (O(changed)); a run outside it changes the lanes, the extent and the bar with no native row operation, except
+	 * the two of {@link #clearNativeAnchor()} when a removal clears a set native anchor.
+	 */
+	void splice (int at, int removed, String [] inserted) {
+		sync ();
+		int count = model.getItemCount (), added = inserted.length;
+		if (at < 0 || removed < 0 || at > count - removed) list.error (SWT.ERROR_INVALID_RANGE);
+		if (removed == 0 && added == 0) return;
+		String [] texts = new String [added];
+		for (int i = 0; i < added; i++) texts [i] = nativeText (inserted [i]);
+		int first = plan.first (), resident = 0, entry = -1, removedWidth = 0;
+		if (hScroll) for (int i = 0; i < removed; i++) removedWidth = Math.max (removedWidth, model.measureItem (at + i));
+		if (removed > 0) {
+			barState = BAR_SET;
+			/* the stock list box's caret and anchor after `removed` LB_DELETESTRINGs at `at` */
+			if (caret == at && caret > 0) caret--;
+			if (caret >= count - removed) caret = Math.max (0, count - removed - 1);
+			if (anchor >= at) anchor = -1;
+			resident = plan.removed (at, removed);
+			int removedEntry = plan.removedEntry (at);
+			for (int i = 0; i < resident; i++) deleteNative (removedEntry);
+			model.remove (at, at + removed - 1);
+		}
+		if (added > 0) {
+			barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
+			model.insert (at, texts);
+			entry = plan.inserted (at, added);
+			for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, at + i);
+			if (hScroll) for (int i = 0; i < added; i++) extent = Math.max (extent, model.measureItem (at + i) + List.INSET);
+		}
+		if (hScroll && removedWidth + List.INSET >= extent) extent = model.getWidestWidth () + List.INSET;
+		/* the top row stays the same row; a run that holds it keeps the index, which the layout clamps */
+		if (at + removed <= top) top += added - removed;
+		boolean windowTouched = plan.first () != first || resident > 0 || entry >= 0;
+		if (windowTouched) selectionDirty = true;
+		focusDirty = true;
+		deferBarPaint = true;
+		try {
+			layout ();
+		} finally {
+			deferBarPaint = false;
+		}
+		writeExtent ();
+		if (LOG.isTraceEnabled ()) LOG.trace (() -> "List splice at " + at + ": -" + removed + " +" + added + (windowTouched ? ", window touched" : ", outside the window"));
 	}
 
 	/** Stock setScrollWidth (): the widest row plus the inset, measured with the current font. */
@@ -1110,7 +1207,7 @@ final class ListViewport {
 	/** Bidi auto direction changed: the resident rows are added again (with or without the direction mark). */
 	void reloadResidentRows () {
 		int first = plan.first (), size = plan.size ();
-		OS.SendMessage (list.handle, OS.LB_RESETCONTENT, 0, 0);
+		resetNative ();
 		for (int i = 0; i < size; i++) insertNative (i, first + i);
 		selectionDirty = true;
 		layout ();
@@ -1132,7 +1229,7 @@ final class ListViewport {
 	}
 
 	/** The row scrolled just into view, as LB_SETCURSEL (SINGLE) and LB_SETCARETINDEX (MULTI) scroll it. */
-	private void scrollIntoView (int index) {
+	private void keepRowVisible (int index) {
 		if (index < top) {
 			top = index;
 		} else if (index >= top + page) {
@@ -1171,7 +1268,7 @@ final class ListViewport {
 			model.deselectAll ();
 			model.select (index);
 			caret = index;
-			if (scroll) scrollIntoView (index);
+			if (scroll) keepRowVisible (index);
 			if (entry >= 0) mirror (OS.LB_SETCURSEL, entry, 0);
 		} else {
 			model.select (index);
@@ -1380,7 +1477,7 @@ final class ListViewport {
 			if (model.getSelectionCount () != 0) return;
 		}
 		caret = index;
-		scrollIntoView (index);
+		keepRowVisible (index);
 		int entry = plan.entryOf (index);
 		if (entry >= 0) mirror (OS.LB_SETCARETINDEX, entry, 0);
 		focusDirty = true;
@@ -1554,5 +1651,10 @@ final class ListViewport {
 	/** Number of native rows (the resident window), for tests and diagnostics. */
 	int residentCount () {
 		return plan.size ();
+	}
+
+	/** M3Residency seam: the logical rows of the native row window, [first, last]. */
+	int [] residentRange () {
+		return new int [] {plan.first (), plan.end () - 1};
 	}
 }

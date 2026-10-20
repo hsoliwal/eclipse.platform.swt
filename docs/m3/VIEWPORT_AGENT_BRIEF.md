@@ -160,6 +160,8 @@ this is what will be offered to Eclipse, so write upstream-quality Eclipse code.
     XOR fold (x^x=0, O(n) time, O(1) space): the bit-manipulation category that viewport state masks, selection
     bitsets and popcount-based counts draw from. Problem statements are never copied; only licensed solutions.
 
+22. **JUL logging** (user 2026-10-19: "use JUL logging"). All logging goes through java.util.logging: SWT via `org.eclipse.swt.internal.SwtLog` (JUL, asynchronous); Nebula, GEF, JFace and the custom widgets via a `java.util.logging.Logger` named after the package; M3JDK via `System.Logger` (which routes to JUL). Never System.out/err, SLF4J, Log4j or commons-logging in our code. Hot paths guard with `isLoggable`/supplier lambdas so a disabled level allocates nothing. Levels: FINEST/FINER (TRACE) for per-row detail, FINE (DEBUG) for plans and decisions, INFO for mode selection and one-shot facts.
+
 ## Machine rules (hard)
 
 - **Hidden desktop (user requirement 2026-10-16: never move the user's mouse, never steal focus):** every GUI

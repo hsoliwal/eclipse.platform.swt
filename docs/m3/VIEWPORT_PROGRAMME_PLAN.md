@@ -13,6 +13,78 @@ measured or committed. Anything not run is marked as not run.
   - Its log is `K:/m3-work/logs/commit-sweep.log`.
   - Restart the loop and the git-status watcher after every session restart.
 
+## 00g. ONE model, deltas end to end; re-implement all viewers and views (user, 2026-10-19; memory feedback-one-model-delta-processing)
+- **One store.** The viewport lanes are the only model. SWT items, JFace viewers (no CustomHashtable element map, no cached children) and data binding are deferred views over it. "Why 10 models and 10 hash maps" is the anti-pattern.
+- **Deltas end to end.** Source deltas (IResourceDelta/IMarkerDelta, Swing TreeModelEvent/TableModelEvent, model events) become an M3Patch. Inside the resident window rows update natively, O(changed); outside it only extents and the scrollbar change. Never a full rebuild; coalesce with the superseding-generation debounce.
+- **Seams:**
+  - SWT: the enhanced-API agent exposes M3Model + apply(M3Patch) on Tree/Table/List.
+  - Core: viewport-everywhere makes M3ListDiff/M3Patch invariant #1.
+  - JFace: the agent re-implements the viewers over it, then ALL views ("re-implement all viewers with this SWT and this JFace viewer; same idea for all the views"). The Markers view comes first (today it rebuilds the whole tree on any marker change), then Project Explorer (CNF), Outline, the e4 part stacks.
+- **Measurements:** CPU, heap, retained objects and time-to-reflect-one-change, stock vs ours, at 10^4-10^6.
+
+## 00f. Richer SWT + Swing API, SwingX and custom widgets (user, 2026-10-19)
+- **Richer API in both toolkits:** api-enrichment owns ENHANCED_API_MAP for both, with parallel names.
+  - SWT side: org.eclipse.swt.m3 (PR #227).
+  - Swing side: in place in M3jdk21 java.desktop, branch `m3/swing-enhanced-api-20261019`. Public additions are reviewed through API_DECISIONS.tsv.
+- **custom-widgets agent:** WIDGET_MATRIX + LIBRARIES.tsv, built exhaustively from the donor catalogue, the 1,479 mined links, the swt-initiative31 org and GitHub topics ("so many UI libraries related to SWT, Swing, Initiative31").
+  - Viewport for virtualizable Nebula widgets (Gallery, CompositeTable, TableCombo; Grid stays with its own agent): hsoliwal/nebula `m3/nebula-widgets-viewport-20261019`.
+  - The top missing rich widgets in both toolkits.
+  - SwingX: there is no fork, and it is LGPL, so API shape only.
+
+## 00e. LLM look-and-feel generator (user, 2026-10-19: "add a look and feel generator for SWT and Swing using an LLM")
+- **Owner:** all-widgets, as the next leaf after the Swing-style LAF core.
+- **M3ThemeGenerator:** the LLM (local Ollama first, Anthropic API fallback) proposes a closed-schema JSON palette from a prompt, brand colours or an image. The output is untrusted data.
+- **M3ThemeCompleter:** deterministic CPU. WCAG contrast auto-fix, derived states via HSL/OKLCH, every key filled, a light/dark twin, and a content hash.
+- **Emitters:** M3UIDefaults (SWT), FlatLaf .properties (Swing/UIManager, M3JDK Swing), IntelliJ .theme.json.
+- **Tests:** the LLM mocked by fixture, 99% coverage, a runtime-switch pixel smoke test in SWT and Swing.
+
+## 00d. All Swing, SWT, Nebula, GEF from GitHub: consolidate and implement (user, 2026-10-19)
+- **upstream-sync agent:** brings upstream into every fork as draft PRs from `m3/upstream-sync-20261019`, server-side first (GitHub merges API), verified zero-loss with the ancestry-only-safe method.
+  - Order: SWT (eclipse-platform), Nebula (EclipseNebula), GEF classic (eclipse-gef), platform.ui, then M3jdk21.
+  - M3jdk21 (jdk21u): measure and attempt only. Core conflicts go to the user.
+- **gef-viewport agent:** Draw2d/GEF/Zest on the viewport model, in hsoliwal/gef-classic `m3/gef-viewport-20261019` (worktree S:/m3-scratch/worktrees/gef-classic).
+  - A spatial index (rule 21) handles culling and hit tests.
+  - DOOP figure lanes; paint and validate only visible + damage; incremental FreeformLayer extents; EditPart refreshChildren via list diff.
+  - Opt-in `-Ddraw2d.viewport.mode=viewport`.
+- **Integration round 10 (5593cc43ba):** every SWT branch is in, including render-modes and sort-filter.
+
+## 00c. JFace viewers on the viewport (user, 2026-10-19: "optimize everything; start with JFace viewer, a wrapper over SWT; our viewport is much richer")
+- The jface-viewport agent works on the hsoliwal/eclipse.platform.ui fork, branch `m3/jface-viewport-20261019`, worktree `S:/m3-scratch/worktrees/platform-ui` (sparse: org.eclipse.jface, its tests, FilteredTree).
+- Approach: StructuredViewer/AbstractTreeViewer/ColumnViewer O(n) paths are rebuilt on the SWT viewport, the enhanced API, sort/filter (permutation index + bitmask) and M3 collection views:
+  - the element map becomes int-id lanes;
+  - refresh becomes a diff/patch of the visible projection;
+  - providers become lazy by construction.
+- The JFace API and behaviour are unchanged, proven by a differential against stock JFace.
+- Opt-in `-Djface.viewer.mode=viewport` until identical.
+- Donors: the user's own D:/TV_5.0 structured viewers (adapted under the Synexia header) and NatTable (EPL).
+- Worktrees: NEW worktrees go on S:\m3-scratch\worktrees (user-approved 2026-10-19; C: 148 MB, K: 500 MB), pushed after every step.
+
+## 00b. M3jdk21 IS the JDK (user, 2026-10-19; memory feedback-m3jdk21-native-integration)
+"This is M3Jdk21, not m3 + jdk; the integration is not some layer."
+- m3/collections and m3/viewport-core are the PROVING GROUND.
+- The destination is in place:
+  - collection views go into java.base (java.util internals or jdk.internal.util);
+  - Swing/AWT adapters go into java.desktop;
+  - both via M3JdkHandoff recipe packets, TARGET_OWNED_PORT GPLv2+CPE.
+- JNI/HotSpot are allowed for M3JDK21. The Java-only rule still governs SWT, Nebula and the other projects.
+- The Swing opt-in `-Dm3.swing.viewport` is to become default-on once every differential is identical. That flip is a proposal to the user; for now the property stays as a kill switch.
+- Integration branch: M3jdk21 **draft PR #1423** (viewport-everywhere + Swing leaves 2-3; verified clean).
+
+## 00a. Fold ALL viewport logic into collections (user, 2026-10-19)
+"If you want to fold all of your viewport logic into collection, go ahead." The viewport becomes general M3 collection VIEWS in M3jdk21 `m3/collections`:
+- **M3WindowView:** the resident window.
+- **M3FlatteningView:** the visible projection, a tree-to-list view with expand masks.
+- **An int-pair-keyed map:** the resident plan, via M3LongLongHashMap.
+- **M3ListDiff/M3Patch:** the diff planner.
+- **M3BoundedCache:** residency.
+- **M3RangeSet:** selection.
+- **M3SparseExtents:** scroll geometry.
+- **M3OrderStatisticForest:** the order-statistic tree.
+
+All of them are arrays + offsets + masks with no Entry objects, and they compose with the filtered/sorted wrapper lane (a view of a view). `m3/viewport-core` keeps only the adapter interfaces (M3RowHost/M3RowEvents/M3RowPainter).
+
+Owner: viewport-everywhere (PR #1403). collections-superset lists them as CLAIMED first-party-viewport rows in its INVENTORY.
+
 ## 00. Viewport everywhere (user, 2026-10-18): "viewport UI is king"
 
 "Everything enhanced with viewport logic: SWT, Nebula, RWT, IntelliJ, SwingX, AWT... everything now has a viewport. Skija will help us map across the libs. M3JDK is the superset anyway."
@@ -149,7 +221,7 @@ The full list is `K:/m3-work/donors/catalogue/links/CHAT_DIRECTIVES.tsv`: 224 di
 
 | Track | Repo / branch | Head | PR |
 |---|---|---|---|
-| Integration | hsoliwal/eclipse.platform.swt `m3/viewport-integration-20261016` | **553eefd41d** (round 6, 2026-10-18: Tree d7c3b86259 + Table 8d252bdf3b + List f3198f41c7; round 5 8de19a48da; round 4 23df1c5664, Tree 52ca3c8347 + Table d479621bbd + List 83a2350ad0 + all-widgets fdb6c79e47 + Tree-coverage 7be675526f; round 3 was ff36ce3c51 with SKIJA->M3 in drawn-plane classes; LookAndFeel.named conflict resolved for the all-widgets `final candidate` form; win32 765 sources 0 errors) | **#203 draft** (round 3 and 4 comments posted; render-modes kept in #202 because its Table/List hooks conflict; it re-applies them by recipe) |
+| Integration | hsoliwal/eclipse.platform.swt `m3/viewport-integration-20261016` | **3827f5f296** (round 7, 2026-10-18 evening: MASTER SYNC ea39a4cb4e + Tree flawless 5c9f8b2121; merges into master CLEANLY with 0 files lost; see memory project-superset-consolidation-20261013 for the ancestry-only-safe sync method: never plain-merge master) — round 6 was **553eefd41d** ( Tree d7c3b86259 + Table 8d252bdf3b + List f3198f41c7; round 5 8de19a48da; round 4 23df1c5664, Tree 52ca3c8347 + Table d479621bbd + List 83a2350ad0 + all-widgets fdb6c79e47 + Tree-coverage 7be675526f; round 3 was ff36ce3c51 with SKIJA->M3 in drawn-plane classes; LookAndFeel.named conflict resolved for the all-widgets `final candidate` form; win32 765 sources 0 errors) | **#203 draft** (round 3 and 4 comments posted; render-modes kept in #202 because its Table/List hooks conflict; it re-applies them by recipe) |
 | Tree (lead) | `m3/tree-viewport-20261016`, worktree `C:/m3-superset/swt-tree` | 0904279df1 | via #203 (#196 merged) |
 | Table | `m3/table-viewport-20261016`, `K:/m3-work/agents/swt-table/wt` | 48dc6cf84c | via #203 (#200 merged) |
 | List + Combo | `m3/list-viewport-20261016`, `K:/m3-work/agents/swt-list/wt` | 6ec7052d3a | via #203 (#199 merged) |
@@ -197,7 +269,23 @@ These are older work and possibly another session's. Ask the user before touchin
 ### Tree (lead): `docs/m3/TREE_MEDIATED_VIEWPORT.md`
 - **Passing against official 3.135.0:** plain and check+columns variants (12 seeds x 150 steps), acceptance 8/8, resident-plan tests 8/8.
   - Oracles CaretDispose, Empty, NoCaretKey and DisposeAboveTop are identical to stock.
-- **Open:** presentation variant, 66 kinds of difference (cascades).
+- **FLAWLESS MILESTONE 2026-10-18 (tv20261018a, head 5c9f8b2121):** zero mismatches against official 3.135.0 on ALL THREE variants: plain, check+columns, presentation; 12 seeds × 150 steps with per-step pixel CRC. Acceptance 8/8.
+  - Fixes:
+    - a key whose target is the caret row is a no-op;
+    - shrinking past the caret keeps the selection per ShrinkSelectionOracle (7 cases);
+    - caret-anchor bounds via `translateAnchor`.
+  - The seed-10 "flake" was a REAL bug: rows retired without a caret kept stale native handles, and the TreeView reuses handles, so a check, gray or clear wrote another row's box.
+    - Fix: always drop the handle when a row leaves the window, and check the handle in the `clear()` and `updateNativeVirtualCheckState()` recipe hooks.
+    - Regression test: `Test_org_eclipse_swt_widgets_Tree_ViewportHandles`.
+  - One residual no seed reaches: selectAll, deselect the next caret row, shrink. It gets oracle cases next.
+- **2026-10-19:**
+  - **Residual stock rule:** derived from 60 oracle cases, mirrored in 81b33c37a2 (UNTESTED: native OOM, so held out of integration).
+  - **CONFIRMED DEFECT** (VkSubtractCollapseOracle, coverage PR #228, 1f20e174ad): a native key collapse (VK_SUBTRACT or VK_LEFT) of an expanded caret row.
+    - Stock: Collapse only; getExpanded false; bar max 339 -> 299; the top moves to the row when it was below it.
+    - Viewport: the row stays expanded because the EXPANDED lane misses the native collapse, and with the top inside the subtree it also sends a spurious Expand.
+  - Fix plus a regression test go to tree-presentation. The differential vocabulary gains native expand/collapse keys so this class is covered.
+- **Next:** custom draw as a 4th differential variant with a new stock recording, then font/item height, then mouse.
+- (Earlier: presentation variant had 66 kinds of difference, mostly cascades.)
   - Next: replay each seed with `ReplayTree <seed> 149 K:/m3-work/runs/tree-stock-recording-i presentation` on both jars and fix the first divergence.
   - Seeds with early hints: 5 (step 138 key HOME), 6 (137 setItemCount), 8 (112 image), 10 (118 key DOWN).
   - Recording: `K:/m3-work/runs/tree-stock-recording-i`. Latest jar: tv20261017j in `C:/m3-superset/tvd`.
@@ -229,6 +317,25 @@ These are older work and possibly another session's. Ask the user before touchin
 - Agents: tree-presentation owns TreeViewport/VirtualTree* bodies and the recipe generator; tree-coverage owns tests only.
 
 ### Table / List / Combo / all widgets
+- **TABLE FLAWLESS 2026-10-19 (a911d7c4084, build tt20261019p7):**
+  - The p7 gate is green: viewport suites 259/0 fail, original suites 228/0 fail; the default-mode differential vs official passes; rule 12 (original equals official) 88/88.
+  - The p6 end-of-seed flakes were fixed by quiescing the reentrancy variants. 10/10 repeat recordings of variants 7/8 are deterministic.
+  - TableViewport* coverage: 100% line, 99.79% branch, 99.88% instruction. TableStockItems 100/100.
+  - Next: examples, DPI/zoom differential legs, then adopting the SWT collections package.
+- **Table 2026-10-18 (55dd5b6c69, build tt20261018p3):**
+  - TableViewport coverage: 100% line / 99.8% branch. The one stock `LVM_DELETEITEM` arm is documented.
+  - Suites: 258 tests in viewport mode, 223 in original, 0 failures.
+  - Differential: 88/88 seeds against official, accepting exactly the 155 listed steps.
+  - T-Table-12 closed: the plain page-scroll cost is the owner-data paint protocol, and the viewport is still no slower than stock.
+  - Next: TableStockItems coverage, then the NAME CONVERGENCE to Tree's names by an OpenRewrite rename recipe (ListViewport shares 24 names with Tree; TableViewport shares only 4).
+- **List 2026-10-18:**
+  - Scroll speed: scroll10k 2.95 -> 1.71 ms, scrollPage 2.30 -> 1.15 ms.
+  - **Differential DONE (4470b70850):** List 3/3, Combo read-only + editable 2/2.
+    - Captures are cue-neutral (557c48ada2, user-approved "Approve + verify").
+    - A WH_CALLWNDPROC cue-message trace shows identical traffic on both jars. **The viewport sends no cue message, so there is no defect.** Evidence is in docs/m3/list-viewport/evidence/cues/.
+  - Open:
+    - Re-record the resize/zoom differentials: the system highlight colour changed (0,120,215 -> 0,120,212), so the 10-17 recordings are stale.
+    - list_coverage.sh: stopped at C: = 248 MB.
 - Mirror the Tree rules (same family) and check each against stock with the oracles:
   - synchronous repaint on setSelection, keys and wheel;
   - no keyboard-cue changes;
@@ -255,12 +362,31 @@ These are older work and possibly another session's. Ask the user before touchin
 - Done: G2 O(log n) row tree; legacy 457/457; D1-D21; header overflow.
 - **G3 DONE 2026-10-17 (head fca53507):** GridSelectionList (O(1) row selection, stock order) + GridCellSelectionList (per-cell counts, column-shift reindex); selectAllCells 20k x 4: 3.5 s -> 0.22 s; one-of-200k toggle 1.48 -> 0.05 ms. Native focus-rectangle rule by recipe (pass 2 UNCHANGED); the flaky tree scene is deterministic via explicit WM_CHANGEUISTATE cues. Suite 610/610 both modes; stock differential 8/8 seeds strict pixels.
 - **Bug harvest DONE (rule: every Nebula bug gets fixed):** `docs/m3/grid-viewport/NEBULA_BUGS.tsv` (open GitHub tracker + all 46 non-FIXED archived Bugzilla Grid reports, triaged). P1 shipped: BZ455474 fixed default-mode (D23 disposed colours/fonts), GH700 kept, BZ218708 not reproducible, BZ454575 verified fixed.
-- Next: P2 bugs (377617, 259087, 382376, 238601, ...), G4-G6 per `docs/m3/grid-viewport`, DOOP lanes for GridItem state, measure JaCoCo toward 99%.
+- **2026-10-18:**
+  - **Coverage:** JaCoCo baseline cb1cdd80, line 88.3% / branch 77.1% over 614 tests and 38 classes. Gaps: GridRowSpanIndex, GridModelJobs, GridNativeCellRenderer, the selection lists.
+  - **Bugs:** P2 bugs 377617, 259087, 382376, 238601, 202517 and 330224 fixed (D24-D29, each with a stock-behaviour test). 360798, 273923 and 385351 verified already fixed. P1+P2 closed; P3 next.
+  - **G4 approved (lead, under "enrich the API"):** first a SetData-once differential plus memory measurement on the existing API. Then an additive `GridItem.setItemCount` that mirrors SWT TreeItem's virtual contract:
+    - viewport mode: sparse child facades;
+    - original mode: eager children, with stock behaviour unchanged.
+- Next: G5 variable-height/tree blit scroll (exact row-tree pixel deltas), G6 column metrics, GridItem DOOP lanes, coverage to 99%.
 
 ### M3JDK (M3jdk21#1001): the user asks about this repeatedly
 
 **Leaf 1 DONE 2026-10-17 (head a00549b373b, PR #1001 draft):** DOOP `sun.swing.tree.M3VariableHeightLayoutCache` — SoA int lanes + packed flags, per-node Fenwick trees for rows/heights, no stored y origins, TreePath/Rectangle only on API demand; opt-in `-Dm3.swing.viewport=true`, BasicTreeUI hook by recipe (pass 2 UNCHANGED). Proof: layout differential 500 seeds x 400 steps and JTree pixel differential 120 x 250 (3,120 captures equal) on stock vs --patch-module; JaCoCo 100.00% line / 99.71% branch. At 10^6 nodes: getRowForPath 174-214 us -> 0.95-2.9 us; collapse+expand 433 ms/44.4 s -> 3.5-23 us; heap 125-249 MB -> 21-53 MB (6-40,000x). Upstream defects: D1 stale y origins (fixed by construction), D2 DefaultTreeSelectionModel AIOOBE (open). Bug harvest: 2,653 open JBS client-libs bugs in `K:/m3-work/runs/bugs/jdk-swing-BUGS.tsv`; first fix JDK-8299722 (DefaultRowSorter AIOOBE) shipped with a failing-on-stock test. OpenJDK make/jtreg PENDING_CI.
-**Next leaves:** arithmetic FixedHeightLayoutCache (largeModel), JList cellHeights prefix sums (recipe-first redo), JTree expansion-table index, D2 fix, then bugs in TSV order (next JDK-8366188).
+**PR #1001 MERGED by the user. Leaf 2 DONE 2026-10-18 (head 82a71ecbb51, PR #1394):** DOOP `M3FixedHeightLayoutCache` for large-model JTree.
+- Differential: fixed mode 20x200, plus 60x300 in JUnit.
+- JTree pixel differential: fixed 60x250 (1,560 equal captures) and variable 30x250.
+- Coverage: 100% line / 99.7% branch.
+- Both BasicTreeUI hooks applied by recipe; pass 2 UNCHANGED.
+- D4: stock's parent-row answer for a vanished child is mirrored on purpose; returning -1 would expose D2.
+- DESIGN 7a documents the cache seams for viewport-everywhere.
+**Leaf 3 DONE 2026-10-19 (PR #1404, stacked on #1394):**
+- JList row offsets via the `M3SwingViewportBasicListUI` recipe hook. `M3InsertStatements` now handles brace-less else-if/case, as committed in Synexia 8c122afccd25.
+- 40/40 seeds x 300 steps, with 1,240 equal pixel captures; a planted off-by-one was caught.
+- Coverage 100/100.
+- At 10^6 rows: locationToIndex 360 µs -> 2.5 µs; frame p50 0.6-0.9 ms -> 0.37 ms.
+**Recipe crate replay:** com.synexia #11799 was an ancestry-only merge (cae38e5b47, 0 files). The crate was replayed onto develop as **draft PR #12401** (35 files, clean add).
+**Next leaves:** lazy JList row measurement (relayout is still ~470 ms), JTree expansion-table index, D2 fix, then bugs in TSV order (next JDK-8366188).
 - Goal: DOOP (data-oriented OOP, brief rule 18) plus the viewport mediation for Swing (JTree, JList, JTable), then SwingX and JavaFX ("DOOP Swing/SwingX/JFX").
   - Node and row state goes into lanes; TreeNode/cell objects become lazy facades.
 - Leaf 1: arithmetic layout cache for JTree, behind `m3.swing.viewport`, with a seeded differential against the stock `AbstractLayoutCache`.
@@ -301,6 +427,34 @@ These are older work and possibly another session's. Ask the user before touchin
    - one PR per batch.
 4. **Swing bugs** are fixed in M3jdk21 `src/java.desktop` (GPLv2+CPE), with tests run through `--patch-module`.
 
+### Donor atomize (rule 19): DONE 2026-10-18
+- com.synexia **draft PR #12398** (`codex/m3-ui-donor-atomize-20261017`, 061542b4).
+- Coverage:
+  - 69 donors, 6,934 Java files, 159,232 leaves;
+  - 85,140 exact classes (11,381 shared across donors), 46,722 structural (8,115 shared);
+  - IntelliJ UI 459 files, RAP RWT 192, t-rex 452 leaves;
+  - skiko and regex-cursor as blob hashes only.
+- `PATTERN_MAP.md` findings:
+  - prefix-sum row math is the most lane-shaped theme (24/51);
+  - **damage/blit has no lane-shaped donor (0/46)**: our resident-window blit math is first-of-its-kind;
+  - expansion maps are object graphs (2/62): VirtualTreeTopology is the lane-shaped extraction target.
+- Licence flag: t-rex has no LICENSE file (README says Apache-2.0), so it is LICENSE_REVIEW_REQUIRED.
+
+### Donor wave 2 (user 2026-10-19: "Skija, IntelliJ as donor; you can add more")
+- Queued on donor-atomize, in this order:
+  1. **JetBrains/skija** Java API: Canvas, Paint, Paragraph/TextLine, Surface/DirectContext. Feeds the M3 row painter and M3TextSegments.
+  2. **JetBrainsRuntime** java.desktop Swing/AWT/Java2D, as a diff against OpenJDK 21. It is GPLv2+CPE, the same licence as M3jdk21, so it is a TARGET_OWNED_PORT-compatible source for Swing bug fixes.
+  3. More **intellij-community** UI: openapi.ui, treetable, table, render, hover, scale, tree, laf, speed search.
+  4. **HumbleUI/JWM**.
+  5. HumbleUI.
+  6. jewel and compose-multiplatform, as hashes plus lazy-list paths.
+  7. Added on the user's repeat:
+     - the **IntelliJ editor viewport**: EditorView/EditorPainter/VisualLinesIterator, soft wraps, folding, inlays, scrolling. The prime StyledText-viewport donor.
+     - **jediterm**: Swing terminal text viewport over a line ring buffer; dual LGPL/Apache, Apache elected.
+     - **compose-multiplatform-core** LazyList measure/prefetch.
+     - **skiko** frame pacing, for gpu mode.
+- Scratch: S:\m3-scratch\donor-atomize.
+
 ### Donor catalogue
 - `K:/m3-work/donors/catalogue/DONOR_CATALOGUE.tsv` (179 rows) + `TRICKS.md` (30 techniques) + `HF_LANGUAGE.tsv` (46) + `LANGUAGE_SUPPORT.md`. Done by the donor-survey agent.
 - Session-log links: `K:/m3-work/donors/catalogue/links/` (USER_LINKS.md with 180 repos/sites typed by the user, CHAT_DIRECTIVES.tsv with 224 rows, the CODEX/CLAUDE URL lists).
@@ -325,10 +479,10 @@ These are older work and possibly another session's. Ask the user before touchin
 | a6ca57b181ca089ab | donor survey (completed) |
 | af3db5218820e576c | donor-atomize (GitHub UI donor corpus -> Synexia atoms/patterns, rule 19) |
 | a56862a3f7f3ea02d | tree-presentation (presentation variant; then the seed-10 race; then the aspect gaps) |
-| a708603ec47eadfeb | m3-regex-cursor (user 2026-10-18: helix-editor/regex-cursor "for M3 structures" + token-aware regex; M3ChunkCursor over M3String leaves, literal prefilter, cursor lazy DFA, M3TokenCursor over interned ids; differential vs java.util.regex; M3jdk21 branch m3/regex-cursor-20261018) |
+| a708603ec47eadfeb | m3-regex-cursor: **delivered 2026-10-18.** M3jdk21 draft PRs **#1384** (cursor regex; module m3/ports/regex-cursor) and **#1402** (M3TokenCursor/M3TokenPattern, stacked on #1384). 120k random + 640k mastery + 46k token cases, 0 mismatches; line coverage 99.9%. Next: O(1) cursor step, DFA cache reset, \b/MULTILINE/CASE_INSENSITIVE, java.base recipe + M3JdkHandoff. — brief: (user 2026-10-18: helix-editor/regex-cursor "for M3 structures" + token-aware regex; M3ChunkCursor over M3String leaves, literal prefilter, cursor lazy DFA, M3TokenCursor over interned ids; differential vs java.util.regex; M3jdk21 branch m3/regex-cursor-20261018) |
 | aeba9473d82661f83 | viewport-everywhere (toolkit-neutral M3JDK m3/viewport-core by recipe from SWT; adapters AWT -> SwingX -> IntelliJ -> RWT; M3 renderer as the cross-library row painter) |
 | a4a54cbc5baf005fc | collections-superset (user 2026-10-18: "implement all Guava, Apache, Eclipse, Spring and JDK collections, superset them, using arrays and masks, no Entry objects"; M3jdk21 m3/collections, branch m3/collections-superset-20261018, worktree K:/m3-work/agents/collections-superset/wt; FOSS gate first, SUPERSET_MAP.tsv, wave 1 M3SupersetHashMap/Multimap/Multiset/BiMap/MultiValueMap with donor oracles; Eclipse Collections pattern-only) |
-| a13c57aeb02e89e47 | api-enrichment (user 2026-10-17 "enrich the API", "expand and include the shared links": donor capabilities -> additive M3 API; branch m3/enhanced-api-20261017, worktree C:/m3-superset/swt-api; map ENHANCED_API_MAP.tsv, first leaves M3ItemRange selection, M3ScrollInfo smooth scroll, M3TextSegments language seed) |
+| a13c57aeb02e89e47 | api-enrichment (2026-10-18: ENHANCED_API_MAP 46 rows with per-toolkit applicability; shipped M3ItemRange/M3ItemSelection/M3Mode, M3ScrollInfo/M3Scrolling, M3TextSegments; 44/44 tests both modes; 100% line / 93.5% branch, the gap being always-throwing SWT.error checks, accepted; draft PR #227; next M3-TOKEN-CURSOR, M3-EMPTINESS, M3-ROW-MATH) — earlier brief: api-enrichment (user 2026-10-17 "enrich the API", "expand and include the shared links": donor capabilities -> additive M3 API; branch m3/enhanced-api-20261017, worktree C:/m3-superset/swt-api; map ENHANCED_API_MAP.tsv, first leaves M3ItemRange selection, M3ScrollInfo smooth scroll, M3TextSegments language seed) |
 | af4655bf4cce9b7fd | tree-coverage (99% line/branch, tests only, `C:/m3-superset/swt-tree-cov`) |
 | a17996dd318549981 | link-miner (commit history and PR bodies -> donor links; local outputs only) |
 
@@ -363,3 +517,30 @@ All of these were (re)started at ~12:10 on 2026-10-17 with the no-trailer rule a
 3. What to do with the 101 uncommitted changes in `K:/m3-work/com.synexia`.
 4. GTK and Cocoa have never been run.
 5. Fork CI on GitHub is disabled; the user must click "Enable workflows".
+
+## 00h GitHub harvest (done 2026-10-19; reuse, never re-search)
+
+- Where: hsoliwal/com.synexia branch `codex/m3-ui-donor-atomize-20261017` (15a9e1a51410),
+  `docs/M3-SCALE/runs/20261017-ui-donor-atomize/GITHUB_PR_HARVEST.tsv` (2,911 rows) and `GITHUB_PR_TOP30.md`.
+- Forwarded to owners on 2026-10-19: JFace (platform.ui #4404/#4301/#4304/#4469 Markers.getMarkerCounts, #649 quadratic lazy
+  reveal, #3728/#4403 virtual-tree refresh, #1093 viewer-limit family; prior art #4247 tree-path hashing, #3733, #4208/#2567,
+  #3527, #1331), Tree (swt #882/#904 TreeItem.getItemCount linear), Table (swt #208 setItemCount freeze), render-modes
+  (SWT SVGRasterizer + org.eclipse.swt.svg/jsvg seam, platform.ui #4497/#4505 currentColor, gef-classic #952 Batik Graphics,
+  FlatLaf #303/#817/#1022, swt #3659/#3631), all-widgets/LAF (FlatLaf #204 OS dark/light switch, #150/#683 smooth scrolling),
+  Swing (openjdk/jdk #17165/#17458 JDK-8317771, #27682 JDK-8369327), custom-widgets + Grid (nebula #696/#165 frozen column,
+  swt #624 SWT.VIRTUAL Composite), ui-interning (#4247), enhanced API (upstream-asks column).
+- Rule: every PR that answers an upstream issue cites its number and adds a row to UPSTREAM_DEFECTS.tsv or the track inventory.
+
+- 2026-10-19 17:58 ui_lock.sh: tickets carry the owner pid; a waiter drops the head ticket when that pid is dead (kill -0); the poll loop forks only `sleep`. Old-format tickets (empty) are never auto-dropped. Backup of the previous script: scratchpad ui_lock.sh.bak-*. UI_LOCK_PROTOCOL.md updated.
+
+## 00i Upstream sync 2026-10-19 results (upstream-sync agent)
+
+| Fork | Upstream delta | Result |
+|---|---|---|
+| eclipse.platform.swt | 47 commits since f87da9a863 | PR #233 MERGED by user into fork master (120 files; gtk Table/Tree kept fork logical-virtual structure; compile gtk/win32/cocoa 0 errors). Integration branch must merge fork master next (lead). 7 paths hold older upstream revisions from baseline e2a8c057c9 (listed in the PR). |
+| nebula | 0 commits | current. Review flag: 30 CSS-bundle config files hold the pre-5d0bcbb9 revision (BREE 11, e4.ui.services) while the 9 CSS handler sources are fork-modified. USER DECISION. |
+| gef-classic | 3 commits | PR #13 MERGED by user (36 files, all upstream blobs). |
+| eclipse.platform.ui | 23 commits | PR #19 MERGED by user (67 files; jface MANIFEST 3-way). |
+| M3jdk21 (jdk21u) | 3,335 commits since jdk-21+35 | BLOCKED. 23 conflicted files / 186 hunks: String.java (10) + AbstractStringBuilder (2) vs 8311906/8321180/8320570/8351000/8359454; 17 PQC files vs official JEP 496/497 backports; os_linux/os_bsd FD backport; README + cross-compile workflow. Head pushed as m3/upstream-sync-20261019-jdk21u-head; report on draft PR #1502; per-hunk resolution proposals requested. USER DECISION on the merge. |
+
+Analysis data: S:/m3-scratch/upstream-sync-20261019/ and S:/m3-scratch/worktrees/*-sync*.

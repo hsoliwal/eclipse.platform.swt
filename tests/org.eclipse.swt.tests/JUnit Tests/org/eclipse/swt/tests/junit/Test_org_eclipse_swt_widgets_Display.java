@@ -11,6 +11,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Red Hat Inc. - Bug 462631
+ *     Hitesh Soliwal (Synexia) - fork changes (see the Git history)
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
@@ -154,7 +155,7 @@ public void test_addListenerILorg_eclipse_swt_widgets_Listener() {
 public void test_asyncExecLjava_lang_Runnable() {
 	final Display display = new Display();
 	try {
-		display.asyncExec(() -> display.beep());
+		display.asyncExec(() -> {});
 	} finally {
 		display.dispose();
 	}
@@ -1412,7 +1413,9 @@ public void test_sleep() {
 public void test_syncExecLjava_lang_Runnable() {
 	final Display display = new Display();
 	try {
-		display.syncExec(() -> display.beep());
+		AtomicBoolean ran = new AtomicBoolean();
+		display.syncExec(() -> ran.set(true));
+		assertTrue(ran.get());
 	} finally {
 		display.dispose();
 	}

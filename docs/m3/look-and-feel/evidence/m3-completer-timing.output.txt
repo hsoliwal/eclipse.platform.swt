@@ -1,0 +1,2 @@
+# M3CompleterTiming (LF7), JDK 21, 2026-10-19, headless; 3 warm-up passes, then one timed pass over 1000 seeded proposals
+complete: 607.2 us per theme over 1000 random proposals, 12.88 contrast moves per theme (sink 308000)

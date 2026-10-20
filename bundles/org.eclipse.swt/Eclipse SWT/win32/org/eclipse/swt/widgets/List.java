@@ -11,6 +11,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Hitesh Soliwal (Synexia) - viewport mediation hooks (ListViewport)
+ *     Hitesh Soliwal (Synexia) - drawn planes of the custom, m3 and gpu modes (ListDrawnPlane hooks)
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -120,6 +121,11 @@ public class List extends Scrollable {
 
 	/* Viewport mediation of a list without SWT.VIRTUAL (see ListViewport); null in the original mode. */
 	ListViewport viewport;
+	/* native row operations of the list box so far (the model seam, m3NativeRowOps): LB_ADDSTRING, LB_INSERTSTRING, LB_DELETESTRING, LB_RESETCONTENT */
+	long nativeRowOps;
+
+	/* The drawn plane of the custom, m3 and gpu modes (see ListDrawnPlane); null in the viewport and original modes. */
+	ListDrawnPlane drawnPlane;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -161,6 +167,7 @@ public List (Composite parent, int style) {
 		viewport = new ListViewport (this);
 		viewport.install ();
 	}
+	drawnPlane = ListDrawnPlane.install (this);
 }
 /**
  * Adds the argument to the end of the receiver's list.
@@ -181,6 +188,11 @@ public List (Composite parent, int style) {
  * @see #add(String,int)
  */
 public void add (String string) {
+	addItem (string);
+	M3Emptiness.changed (this);
+}
+
+void addItem (String string) {
 	checkWidget ();
     if (string == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -194,6 +206,7 @@ public void add (String string) {
 		return;
 	}
 	TCHAR buffer = new TCHAR (string, true);
+	nativeRowOps++;
 	int result = (int)OS.SendMessage (handle, OS.LB_ADDSTRING, 0, buffer);
     if (result == OS.LB_ERR) {
         error(SWT.ERROR_ITEM_NOT_ADDED);
@@ -232,6 +245,11 @@ public void add (String string) {
  * @see #add(String)
  */
 public void add (String string, int index) {
+	insertItem (string, index);
+	M3Emptiness.changed (this);
+}
+
+void insertItem (String string, int index) {
 	checkWidget ();
     if (string == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -251,6 +269,7 @@ public void add (String string, int index) {
 		return;
 	}
 	TCHAR buffer = new TCHAR (string, true);
+	nativeRowOps++;
 	int result = (int)OS.SendMessage (handle, OS.LB_INSERTSTRING, index, buffer);
     if (result == OS.LB_ERRSPACE) {
         error(SWT.ERROR_ITEM_NOT_ADDED);
@@ -301,6 +320,7 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
     if (handle == 0) {
         return 0;
     }
+	if (drawnPlane != null && drawnPlane.paints (hwnd, msg)) return drawnPlane.paint (hwnd, msg, wParam, lParam);
 	if (viewport != null && msg == OS.WM_VSCROLL) return viewport.onVScroll (wParam);
 	if (viewport != null && msg == OS.WM_MOUSEWHEEL) return viewport.onWheel (hwnd, wParam, lParam);
 	boolean redraw = false;
@@ -754,6 +774,11 @@ public int getItemCount () {
 	return result;
 }
 
+/* M3Residency seam: the native row window with the viewport; null (every row) without one */
+int [] m3ResidentRange () {
+	return viewport != null ? viewport.residentRange () : null;
+}
+
 /**
  * Returns the height of the area which would be used to
  * display <em>one</em> of the items in the list.
@@ -1099,6 +1124,11 @@ boolean isUseWsBorder () {
  * </ul>
  */
 public void remove (int [] indices) {
+	removeIndices (indices);
+	M3Emptiness.changed (this);
+}
+
+void removeIndices (int [] indices) {
 	checkWidget ();
     if (indices == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -1151,6 +1181,7 @@ public void remove (int [] indices) {
                     break;
                 }
 			}
+			nativeRowOps++;
 			int result = (int)OS.SendMessage (handle, OS.LB_DELETESTRING, index, 0);
             if (result == OS.LB_ERR) {
                 break;
@@ -1198,6 +1229,11 @@ public void remove (int [] indices) {
  * </ul>
  */
 public void remove (int index) {
+	removeIndex (index);
+	M3Emptiness.changed (this);
+}
+
+void removeIndex (int index) {
 	checkWidget ();
 	if (viewport != null) {
 		viewport.remove (index);
@@ -1238,6 +1274,7 @@ public void remove (int index) {
 		}
 	}
 	int topIndex = (int)OS.SendMessage (handle, OS.LB_GETTOPINDEX, 0, 0);
+	nativeRowOps++;
 	int result = (int)OS.SendMessage (handle, OS.LB_DELETESTRING, index, 0);
 	if (result == OS.LB_ERR) {
 		int count = (int)OS.SendMessage (handle, OS.LB_GETCOUNT, 0, 0);
@@ -1272,6 +1309,11 @@ public void remove (int index) {
  * </ul>
  */
 public void remove (int start, int end) {
+	removeSpan (start, end);
+	M3Emptiness.changed (this);
+}
+
+void removeSpan (int start, int end) {
 	checkWidget ();
     if (start > end) {
         return;
@@ -1326,6 +1368,7 @@ public void remove (int start, int end) {
                 break;
             }
 		}
+		nativeRowOps++;
 		int result = (int)OS.SendMessage (handle, OS.LB_DELETESTRING, start, 0);
         if (result == OS.LB_ERR) {
             break;
@@ -1389,11 +1432,17 @@ public void remove (String string) {
  * </ul>
  */
 public void removeAll () {
+	removeAllItems ();
+	M3Emptiness.changed (this);
+}
+
+void removeAllItems () {
 	checkWidget ();
 	if (viewport != null) {
 		viewport.removeAll ();
 		return;
 	}
+	nativeRowOps++;
 	OS.SendMessage (handle, OS.LB_RESETCONTENT, 0, 0);
 	if (itemStore != null) {
 		itemStore.removeAll ();
@@ -1678,6 +1727,16 @@ public void setFont (Font font) {
  * </ul>
  */
 public void setItem (int index, String string) {
+	/* remove and add: the transient count is not an emptiness change */
+	M3Emptiness.hold (this);
+	try {
+		setItemText (index, string);
+	} finally {
+		M3Emptiness.release (this);
+	}
+}
+
+void setItemText (int index, String string) {
 	checkWidget ();
     if (string == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -1716,6 +1775,16 @@ public void setItem (int index, String string) {
  * @since 3.137
  */
 public void setItemCount (int count) {
+	/* the native path adds and removes through the public methods: one announcement, at the end */
+	M3Emptiness.hold (this);
+	try {
+		setCount (count);
+	} finally {
+		M3Emptiness.release (this);
+	}
+}
+
+void setCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
 	int itemCount = getItemCount ();
@@ -1754,6 +1823,11 @@ public void setItemCount (int count) {
  * </ul>
  */
 public void setItems (String... items) {
+	setAllItems (items);
+	M3Emptiness.changed (this);
+}
+
+void setAllItems (String... items) {
 	checkWidget ();
     if (items == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -1790,12 +1864,14 @@ public void setItems (String... items) {
 		OS.SendMessage (handle, OS.LB_SETHORIZONTALEXTENT, 0, 0);
 	}
 	int length = items.length;
+	nativeRowOps++;
 	OS.SendMessage (handle, OS.LB_RESETCONTENT, 0, 0);
 	OS.SendMessage (handle, OS.LB_INITSTORAGE, length, length * 32);
 	int index = 0;
 	while (index < length) {
 		String string = items [index];
 		TCHAR buffer = new TCHAR (string, true);
+		nativeRowOps++;
 		int result = (int)OS.SendMessage (handle, OS.LB_ADDSTRING, 0, buffer);
         if (result == OS.LB_ERR || result == OS.LB_ERRSPACE) {
             break;
@@ -2328,6 +2404,7 @@ boolean storeNativeCountFrozen (int start, int delta, boolean descending, int ma
  */
 boolean storeSetEmptyCount (int count) {
 	if ((style & SWT.SINGLE) != 0) {
+		nativeRowOps++;
 		OS.SendMessage (handle, OS.LB_INSERTSTRING, 0, 0);
 	}
 	int result = (int)OS.SendMessage (handle, OS.LB_SETCOUNT, count, 0);
@@ -2339,8 +2416,10 @@ boolean storeRowMessages (int start, int delta, boolean descending, int count) {
 	for (int i = 0; i < magnitude; i++) {
 		int result;
 		if (delta > 0) {
+			nativeRowOps++;
 			result = (int)OS.SendMessage (handle, OS.LB_INSERTSTRING, start + i, 0);
 		} else {
+			nativeRowOps++;
 			result = (int)OS.SendMessage (handle, OS.LB_DELETESTRING, descending ? start + magnitude - 1 - i : start, 0);
 		}
 		if (result == OS.LB_ERR || result == OS.LB_ERRSPACE) {
@@ -2359,6 +2438,7 @@ boolean storeSingleInsert (int start, int delta, int count) {
 	if (delta <= removeRebuildThreshold) {
 		boolean inserted = true;
 		for (int i = 0; i < delta && inserted; i++) {
+			nativeRowOps++;
 			int result = (int)OS.SendMessage (handle, OS.LB_INSERTSTRING, start + i, 0);
 			inserted = result != OS.LB_ERR && result != OS.LB_ERRSPACE;
 		}
@@ -2436,6 +2516,7 @@ boolean storeRebuild (int newCount, int start, int delta, boolean descending) {
 	int nativeAnchor = storeNativeAnchor (anchor, start, delta);
 	if (nativeAnchor < 0 && anchor >= 0 && count > 0) {
 		/* LB_SETCOUNT keeps the anchor and LB_SETANCHORINDEX refuses -1; deleting row 0 drops it (N14) */
+		nativeRowOps++;
 		OS.SendMessage (handle, OS.LB_DELETESTRING, 0, 0);
 	}
 	int result = (int)OS.SendMessage (handle, OS.LB_SETCOUNT, newCount, 0);
@@ -2751,12 +2832,14 @@ String storeSetData (int index) {
 
 void storeSetItems (String [] items) {
 	boolean frozen = storeFreeze ();
+	nativeRowOps++;
 	OS.SendMessage (handle, OS.LB_RESETCONTENT, 0, 0);
 	itemStore.setItems (items);
 	int result = items.length == 0 ? 0 : storeSetEmptyCount (items.length) ? 0 : OS.LB_ERR;
 	storeBits |= STORE_EMPTY_EXTENT_INSET;
 	if (result == OS.LB_ERR || result == OS.LB_ERRSPACE) {
 		itemStore.removeAll ();
+		nativeRowOps++;
 		OS.SendMessage (handle, OS.LB_RESETCONTENT, 0, 0);
 	}
 	if ((style & SWT.H_SCROLL) != 0) {
@@ -2846,7 +2929,9 @@ void storeReAddRowsFrozen (boolean auto) {
 			if (string == null || string.isEmpty ()) {
 				continue;
 			}
+			nativeRowOps++;
 			OS.SendMessage (handle, OS.LB_DELETESTRING, i, 0);
+			nativeRowOps++;
 			OS.SendMessage (handle, OS.LB_INSERTSTRING, i, 0);
 			if (auto) {
 				storeBits |= STORE_ADDED_UCC;
@@ -3007,6 +3092,7 @@ boolean updateTextDirection (int textDirection) {
         if (OS.SendMessage(handle, OS.LB_GETTEXT, count, buffer) == OS.LB_ERR) {
             break;
         }
+        nativeRowOps++;
         if (OS.SendMessage(handle, OS.LB_DELETESTRING, count, 0) == OS.LB_ERR) {
             break;
         }
@@ -3015,6 +3101,7 @@ boolean updateTextDirection (int textDirection) {
 			System.arraycopy(buffer, 1, buffer, 0, length);
 		}
         /* Adding UCC is handled in OS.LB_INSERTSTRING */
+        nativeRowOps++;
         if (OS.SendMessage(handle, OS.LB_INSERTSTRING, count, buffer) == OS.LB_ERR) {
             break;
         }
@@ -3051,6 +3138,10 @@ void releaseWidget () {
 	}
 	storePrefetch = null;
 	super.releaseWidget ();
+	if (drawnPlane != null) {
+		drawnPlane.release ();
+		drawnPlane = null;
+	}
 }
 
 @Override
@@ -3439,5 +3530,32 @@ void handleDPIChange(Event event, float scalingFactor) {
 		// Recalculate the Scroll width, as length of items has changed
 		setScrollWidth();
 	}
+}
+
+/*
+ * The model seam (docs/m3/enhanced-api/LEAF19_MODEL_SEAM.md, step 3): one edit run, which M3Model.apply (M3Patch)
+ * uses for a widget with a viewport. The rows [at, at + removed) leave and the inserted strings enter at `at`; the
+ * top row stays the same row. Without a viewport the run goes through the item API, with the top row put back.
+ */
+void m3Splice (int at, int removed, String [] inserted) {
+	checkWidget ();
+	if (inserted == null) error (SWT.ERROR_NULL_ARGUMENT);
+	if (viewport != null) {
+		viewport.splice (at, removed, inserted);
+		return;
+	}
+	int top = getTopIndex ();
+	if (removed > 0) remove (at, at + removed - 1);
+	for (int i = 0; i < inserted.length; i++) add (inserted [i], at + i);
+	if (at + removed <= top) setTopIndex (top - removed + inserted.length);
+}
+
+/**
+ * Native row operations of the list box so far (LB_ADDSTRING, LB_INSERTSTRING, LB_DELETESTRING, LB_RESETCONTENT): the
+ * model seam's proof that an edit run outside the resident window performs none.
+ */
+long m3NativeRowOps () {
+	checkWidget ();
+	return nativeRowOps + (viewport != null ? viewport.nativeRowOps () : 0);
 }
 }
