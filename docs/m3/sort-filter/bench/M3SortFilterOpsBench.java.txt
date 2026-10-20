@@ -94,6 +94,11 @@ public final class M3SortFilterOpsBench {
 		time ("sort-int-int", n, fresh, () -> sort [0].setSortKeys (new int [] {1, 3}, new int [] {SWT.UP, SWT.DOWN}));
 		time ("sort-text-int", n, fresh, () -> sort [0].setSortKeys (new int [] {0, 3}, new int [] {SWT.UP, SWT.UP}));
 		time ("sort-text-int-double", n, fresh, () -> sort [0].setSortKeys (new int [] {0, 1, 2}, new int [] {SWT.UP, SWT.DOWN, SWT.UP}));
+		Op sorted = () -> {
+			fresh.run ();
+			sort [0].setSortKeys (new int [] {0, 1, 2}, new int [] {SWT.UP, SWT.DOWN, SWT.UP});
+		};
+		time ("resort-text-int-double-steady", n, sorted, () -> sort [0].setSortKeys (new int [] {0, 1, 2}, new int [] {SWT.DOWN, SWT.UP, SWT.DOWN}));
 
 		M3ColumnFilter [] filter = new M3ColumnFilter [1];
 		M3ColumnSort [] chained = new M3ColumnSort [1];

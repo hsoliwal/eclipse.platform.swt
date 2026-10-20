@@ -65,8 +65,17 @@ final class M3SortOrder {
 		index ();
 	}
 
-	/* sorts the current rows again (the sort keys changed) */
+	/*
+	 * sorts the current rows again (the sort keys changed); in a dense view the rows are first laid out in source
+	 * order from the inverse lane (one sequential pass instead of the radix source-order pass), so that the keys are
+	 * also read from the model lanes in order
+	 */
 	void resort () {
+		if (size << 3 >= sourceSize) {
+			for (int s = 0, k = 0; k < size; s++) {
+				if (inverse [s] >= 0) order [k++] = s;
+			}
+		}
 		sort.sortRows (lanes, order, size);
 		index ();
 	}

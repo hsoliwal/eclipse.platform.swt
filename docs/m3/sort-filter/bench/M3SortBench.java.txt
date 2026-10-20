@@ -94,7 +94,7 @@ public final class M3SortBench {
 				lanes.ensure (n);
 				for (int j = keys.length - 1; j >= 0 && n > 1; j--) {
 					int bytes = keys [j].radixKeys (rows, n, lanes);
-					lanes.radixSort (rows, n, bytes);
+					lanes.radixSort (rows, n, bytes, null);
 				}
 				return rows;
 			}
