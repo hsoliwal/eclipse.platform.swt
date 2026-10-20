@@ -17,6 +17,7 @@
 package org.eclipse.swt.m3;
 
 import java.util.*;
+import java.util.function.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.widgets.*;
@@ -234,8 +235,14 @@ public final class M3RowBinding {
 		};
 		binding.changed = change -> {
 			if (tree.isDisposed ()) return;
-			tree.setItemCount (sort.childCount (-1));
-			tree.clearAll (true);
+			int kind = change.kind ();
+			if (kind == M3RowChange.ENTERED || kind == M3RowChange.LEFT || kind == M3RowChange.UPDATED) {
+				binding.parentsChanged (tree, sort, change);
+			} else {
+				/* a new order or a structural source edit: every item's source row may differ */
+				tree.setItemCount (sort.childCount (-1));
+				tree.clearAll (true);
+			}
 			binding.restoreTree (sort);
 		};
 		binding.selection = event -> binding.captureTree ();
@@ -309,6 +316,34 @@ public final class M3RowBinding {
 		}
 		Table table = (Table) control;
 		if (count == 0) table.deselectAll (); else table.setSelection (Arrays.copyOf (indices, count));
+	}
+
+	/*
+	 * Rows entered, left or changed (brief rule 24): only their parents' items are redone, one level each: the child
+	 * count and the children asked again. Parents are taken outermost first, so that a parent that entered in the same
+	 * change already has its place when its own children are set. A parent outside the view has no item to redo.
+	 */
+	private void parentsChanged (Tree tree, M3ColumnSort sort, M3RowChange change) {
+		IntUnaryOperator parentOf = sort.parents ();
+		long [] keyed = new long [change.rowCount ()];
+		for (int i = 0; i < keyed.length; i++) {
+			int parent = parentOf.applyAsInt (change.row (i)), depth = 0;
+			for (int p = parent; p != -1; p = parentOf.applyAsInt (p)) depth++;
+			keyed [i] = (long) depth << 32 | parent + 1;
+		}
+		Arrays.sort (keyed);
+		for (int i = 0; i < keyed.length; i++) {
+			if (i > 0 && keyed [i] == keyed [i - 1]) continue;
+			int parent = (int) keyed [i] - 1;
+			if (parent == -1) {
+				tree.setItemCount (sort.childCount (-1));
+				tree.clearAll (false);
+			} else if (sort.indexOfChild (parent) >= 0) {
+				TreeItem item = itemOf (tree, sort, parent);
+				item.setItemCount (sort.childCount (parent));
+				item.clearAll (false);
+			}
+		}
 	}
 
 	/* the tree's selection as source rows (O(selected)) */
