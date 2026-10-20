@@ -1,0 +1,48 @@
+# T-Table-O2 (enhanced API leaf 19, step 3): M3Model.apply on a plain Table of 10^5 and 10^6 rows scrolled to its middle; ModelSpliceProbe.java.txt
+# before = build tt20261020a (HEAD fbf37fdcebb: item API, one LVM_INSERTITEM/LVM_DELETEITEM per row); after = build tt20261020b (TableSplice: one count change, rows written to the lanes); invisible desktop, Windows 11, 100 %, 2026-10-20
+# row_ops/state_ops/count_ops: messages reaching the native ListView; paints/painted_rows: WM_PAINT and the rows of its update rectangle; median of 5
+# the before run stopped at its 600 s limit during 10^6 rows, insert 10000 above (10^5: 18.2 s)
+== ModelSplice_q1_before
+SWT 4975 mode default
+rows	case	median_ms	max_ms	allocated_bytes	row_ops	state_ops	count_ops	paints	painted_rows	top_same	printed_pixels	screen_copy
+100000	insert 100 above	233	301	14131160	100	0	0	1	21	true	CHANGED	changed
+100000	insert 100 below	155	178	14130848	100	0	0	1	21	true	same	same
+100000	update 100 below	28	33	4004448	0	0	0	1	21	true	same	same
+100000	insert 10000 above	18184	19550	1071061656	10000	0	0	1	21	true	same	same
+100000	insert 5 inside	20	143	4754448	5	0	0	1	21	true	CHANGED	changed
+1000000	insert 100 above	573	1570	133351256	100	0	0	1	21	true	CHANGED	changed
+1000000	insert 100 below	480	830	133350944	100	0	0	1	21	true	same	same
+1000000	update 100 below	146	355	33224544	0	0	0	1	21	true	same	same
+== ModelSplice_q2_after
+SWT 4975 mode default
+rows	case	median_ms	max_ms	allocated_bytes	row_ops	state_ops	count_ops	paints	painted_rows	top_same	printed_pixels	screen_copy
+100000	insert 100 above	23	57	4631872	0	4	1	1	21	true	CHANGED	changed
+100000	insert 100 below	14	18	4634784	0	0	1	1	21	true	same	same
+100000	update 100 below	9	17	3978848	0	0	0	1	21	true	same	same
+100000	insert 10000 above	1078	1129	12964448	0	4	1	1	21	true	same	same
+100000	insert 5 inside	8	10	4554200	0	0	1	1	21	true	CHANGED	changed
+1000000	insert 100 above	67	131	39251808	0	4	1	1	21	true	CHANGED	changed
+1000000	insert 100 below	65	78	39254880	0	0	1	1	21	true	same	same
+1000000	update 100 below	49	69	33198944	0	0	0	1	21	true	same	same
+1000000	insert 10000 above	1062	1247	47584544	0	4	1	1	21	true	same	same
+1000000	insert 5 inside	72	110	39174296	0	0	1	1	21	true	CHANGED	changed
+DONE
+== SpliceProbe on tt20261020b (rules and scroll cases; the official run is evidence of the rules)
+SWT 4975 zoom 100 plain Table owner data true
+scenarios 400: selection mismatches 0, focus mismatches 0; mark removed: like focus 61, -1 0, other 0
+page 19 item height 19 top 500
+idle: top 500 count 1000 paints 0 pixels same
+T1 redraw off, LVM_ENSUREVISIBLE down 10, redraw on: top 510 count 1000 paints 20 pixels CHANGED
+T2 redraw off, LVM_ENSUREVISIBLE up 10, redraw on: top 500 count 1000 paints 20 pixels same
+T3 redraw off, LVM_SCROLL down 10 rows, redraw on: top 510 count 1000 paints 0 pixels same
+T4 redraw off, LVM_SCROLL up 10 rows, redraw on: top 500 count 1000 paints 0 pixels same
+T5 control: LVM_ENSUREVISIBLE down 10 with redraw on: top 510 count 1000 paints 11 pixels CHANGED
+T6 back to 500: top 500 count 1000 paints 0 pixels same
+T7 LVM_SETITEMCOUNT 1010 NOINVALIDATEALL|NOSCROLL: top 500 count 1010 paints 0 pixels same
+T8 LVM_SETITEMCOUNT 990 NOINVALIDATEALL|NOSCROLL: top 500 count 990 paints 0 pixels same
+T9 redraw off, count 1000, LVM_SCROLL down 10, redraw on (the splice above the window): top 510 count 1000 paints 0 pixels same
+T10 back up 10, focus and mark set on row 700 (outside the window): top 500 count 1000 paints 0 pixels same
+T11 control: LVM_REDRAWITEMS 505..506: top 500 count 1000 paints 2 pixels same
+T12 redraw off, remove (100) x10, LVM_SCROLL up 10 rows, redraw on (old row 500 on top at 490): top 490 count 990 paints 20 pixels same
+T13 redraw off, new TableItem at 100 x10, LVM_SCROLL down 10 rows, redraw on (row 500 back on top): top 500 count 1000 paints 40 pixels same
+T14 control: remove (100) x10 with redraw on (stock: no re-anchoring): top 500 count 990 paints 20 pixels CHANGED
