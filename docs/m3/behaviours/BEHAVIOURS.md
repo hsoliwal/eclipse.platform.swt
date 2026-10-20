@@ -182,3 +182,20 @@ reference). Owner: all-widgets (SWT, inside the toolkit per rule 25, keeping Sas
 the Swing parallel by the Swing track (JSplitPane enrichment) and the multi-split widget by custom-widgets. Gate: a
 SashForm differential (stock API answers and layouts identical when the new options are off) and a drag sweep
 counting layouts per drag step.
+
+## SVG-skinned controls (user, 2026-10-20: "SVG-painted button to my size, instead of painting it manually")
+
+Buttons, toolbar items, badges, chips, toggles, check and radio marks, sash grips and scroll carets take their visuals
+from SVG resources, scaled to the control's current size and zoom and tinted from theme keys. There is no hand-written
+paint code per control.
+- Each skin is an SVG with named parts (background, border, glyph, focus ring), states (normal, hover, pressed, disabled,
+  focused, checked) and optional nine-slice insets, so corners keep their radius at any size.
+- Rasterized through SWT's SVG seam (SVGRasterizer + org.eclipse.swt.svg/jsvg, MIT), cached in the render-modes
+  GlyphCache by (skin, part, state, size, zoom, theme generation), and re-rasterized only when one of those changes,
+  so a resize is a cache miss for the new size only.
+- The same skins drive Swing via M3JDK, so one asset set themes SWT and Swing.
+- Donors: SWT SVGRasterizer/jsvg (MIT: ADAPT), FlatLaf FlatSVGIcon colour filters (Apache-2.0: ADAPT), IntelliJ SVG icon
+  loader (Apache-2.0: ADAPT), CSS SVG background/mask techniques (web pattern).
+- Owner: render-modes, with all-widgets for the L&F keys. Gate: pixel comparison against the stock button in native mode
+  is unchanged (skins are opt-in per L&F), skin rendering at 100/125/150/200% zoom and 10 sizes, and no paint
+  allocation after the cache is warm.
