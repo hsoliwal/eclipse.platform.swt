@@ -28,11 +28,12 @@ import org.junit.jupiter.api.*;
  * (<code>AbstractTableViewer.internalVirtualRefreshAll</code>, <code>TableViewer.doSetItemCount</code>). Each of these
  * calls must stay under {@link #BUDGET_MILLIS} for a million rows, plain or <code>SWT.VIRTUAL</code>.
  * <p>
- * The tests run in every mode and on any SWT. A Table that makes and deletes its rows one by one (the stock plain
- * Table) would block the test for minutes at a million rows, so each test first times the same calls on
- * {@link #PILOT} rows and fails at once when they project past ten budgets (a linear projection, so the real cost
- * is higher). On win32 the Table viewport (docs/m3/TABLE_MEDIATED_VIEWPORT.md, leaf T-Table-O1) passes; the stock
- * plain Table fails at the pilot. Evidence: docs/m3/table-viewport/evidence/SetItemCountProbe.java.txt.
+ * The VIRTUAL test runs in every mode and on any SWT; the plain test runs where the plain Table is the win32 viewport.
+ * A Table that makes and deletes its rows one by one (the stock plain Table) would block a test for minutes at a million
+ * rows, so each test first times the same calls on {@link #PILOT} rows and fails at once when they project past ten
+ * budgets (a linear projection, so the real cost is higher): run against the official jar, the plain test fails at the
+ * pilot (evidence/table_setitemcount-swt208-tt20261020b-win11-hidden-run.txt). On win32 the Table viewport
+ * (docs/m3/TABLE_MEDIATED_VIEWPORT.md, leaf T-Table-O1) passes. Evidence: docs/m3/table-viewport/evidence/SetItemCountProbe.java.txt.
  * </p>
  */
 public class Test_org_eclipse_swt_widgets_Table_SetItemCount {
@@ -105,6 +106,8 @@ public class Test_org_eclipse_swt_widgets_Table_SetItemCount {
 	@Test
 	@Timeout (120)
 	public void refreshOfAMillionPlainRowsStaysUnderBudget () {
+		/* the stock plain Table (the official jar, the original mode) makes and deletes its rows one by one: minutes at a million rows (evidence) */
+		Assumptions.assumeTrue (Test_org_eclipse_swt_widgets_Table_Splice.splices (new Table (shell, SWT.MULTI)), "the plain Table is the win32 viewport's");
 		refreshAMillionRows (SWT.MULTI, "plain Table");
 	}
 

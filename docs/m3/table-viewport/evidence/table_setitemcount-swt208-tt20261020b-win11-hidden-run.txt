@@ -1,0 +1,107 @@
+# T-Table-O1, eclipse.platform.swt#208 ("1.3 second UI freezes in Table.setItemCount") on win32: SetItemCountProbe.java.txt and Test_org_eclipse_swt_widgets_Table_SetItemCount
+# invisible desktop, Windows 11, 100 %; official = org.eclipse.swt.win32.win32.x86_64 3.135.0; default and original = build tt20261020b (HEAD 726a2b9a56e + working tree), 2026-10-20
+# grow = setItemCount (n) on an empty Table; clear = setItemCount (0); reload = setItemCount (n) again; median of 5 (a fresh Table each), bytes allocated by the UI thread, heap retained by the Table after GC
+== SetItemCount_official
+SWT 4974 mode default, plain Table owner data false, cap 240 s, 5 repetitions
+style	rows	operation	median_ms	min_ms	max_ms	repetitions	allocated_bytes	retained_bytes
+VIRTUAL	100000	grow	15	8	22	5	80064	9744
+VIRTUAL	100000	clear	2	1	3	5	4160	-
+VIRTUAL	100000	reload	1	1	2	5	776	-
+VIRTUAL	1000000	grow	20	15	45	5	80064	5568
+VIRTUAL	1000000	clear	5	4	5	5	4160	-
+VIRTUAL	1000000	reload	6	4	8	5	776	-
+plain	100000	grow	1341	937	2198	5	52387840	21203608
+plain	100000	clear	31689	27995	33426	5	37600960	-
+plain	100000	reload	1367	990	2287	5	52386960	-
+plain	1000000	grow	projected 13410 from 100000 rows: stepped
+plain	100000	grow step to	1039			1	52387912	-
+plain	200000	grow step to	1203			1	53198208	-
+plain	300000	grow step to	1482			1	53398440	-
+plain	400000	grow step to	2031			1	52000552	-
+plain	500000	grow step to	1739			1	55097376	-
+plain	600000	grow step to	1842			1	52800552	-
+plain	700000	grow step to	2126			1	57245784	-
+plain	800000	grow step to	1996			1	53600552	-
+plain	900000	grow step to	3000			1	54000552	-
+plain	1000000	grow step to	2729			1	54400552	-
+plain	1000000	grow stepped	19187			1		-	reached 1000000 rows
+plain	1000000	clear	skipped: projected 316890 ms from 100000 rows
+DONE
+== SetItemCount_q2_default
+SWT 4975 mode default, plain Table owner data true, cap 240 s, 5 repetitions
+style	rows	operation	median_ms	min_ms	max_ms	repetitions	allocated_bytes	retained_bytes
+VIRTUAL	100000	grow	32	21	62	5	80712	5960
+VIRTUAL	100000	clear	4	3	13	5	4144	-
+VIRTUAL	100000	reload	4	2	23	5	760	-
+VIRTUAL	1000000	grow	30	20	36	5	80376	5960
+VIRTUAL	1000000	clear	18	16	19	5	4144	-
+VIRTUAL	1000000	reload	10	7	11	5	760	-
+plain	100000	grow	13	8	26	5	802232	800216
+plain	100000	clear	8	4	14	5	1160	-
+plain	100000	reload	7	6	22	5	801352	-
+plain	1000000	grow	17	13	29	5	8002232	8388808
+plain	1000000	clear	6	4	7	5	1160	-
+plain	1000000	reload	15	13	19	5	8001352	-
+DONE
+== SetItemCount_q2_original
+SWT 4975 mode original, plain Table owner data false, cap 240 s, 5 repetitions
+style	rows	operation	median_ms	min_ms	max_ms	repetitions	allocated_bytes	retained_bytes
+VIRTUAL	100000	grow	27	19	37	5	80592	5736
+VIRTUAL	100000	clear	4	2	29	5	4184	-
+VIRTUAL	100000	reload	5	3	11	5	800	-
+VIRTUAL	1000000	grow	54	31	113	5	80256	5736
+VIRTUAL	1000000	clear	21	10	39	5	4184	-
+VIRTUAL	1000000	reload	8	7	63	5	800	-
+plain	100000	grow	3335	3335	3335	1	53193808	-
+plain	100000	clear	113413	113413	113413	1	37601064	-
+plain	100000	reload	12379	12379	12379	1	53187008	-
+plain	1000000	grow	projected 33350 from 100000 rows: stepped
+plain	100000	grow step to	12111			1	53187960	-
+plain	200000	grow step to	8454			1	53998256	-
+plain	300000	grow step to	13979			1	54198488	-
+plain	400000	grow step to	15062			1	52800600	-
+plain	500000	grow step to	15239			1	55897424	-
+plain	600000	grow step to	17251			1	53600600	-
+plain	700000	grow step to	9927			1	58045832	-
+plain	800000	grow step to	11082			1	54400600	-
+plain	900000	grow step to	8521			1	54800600	-
+plain	1000000	grow step to	14240			1	55200600	-
+plain	1000000	grow stepped	125866			1		-	reached 1000000 rows
+plain	1000000	clear	skipped: projected 1134130 ms from 100000 rows
+DONE
+== T208_official
+INFO: VIRTUAL Table pilot of 20000 rows: grow 47 ms, clear 4 ms, reload 35 ms
+INFO: VIRTUAL Table of 1000000 rows: grow 23 ms, clear 39 ms, reload 45 ms
+INFO: plain Table pilot of 20000 rows: grow 3120 ms, clear 2416 ms, reload 1580 ms
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_Table_SetItemCount ✔
+│     ├─ refreshOfAMillionVirtualRowsStaysUnderBudget() ✔
+│     └─ refreshOfAMillionPlainRowsStaysUnderBudget() ✘ plain Table: setItemCount (20000) took 3120 ms, 156000 ms projected for 1000000 rows (budget 250 ms) ==> expected: <true> but was: <false>
+└─ JUnit Vintage ✔
+[         1 tests successful      ]
+[         1 tests failed          ]
+== T208_q2_default
+INFO: VIRTUAL Table pilot of 20000 rows: grow 50 ms, clear 5 ms, reload 5 ms
+INFO: VIRTUAL Table of 1000000 rows: grow 30 ms, clear 16 ms, reload 11 ms
+INFO: plain Table pilot of 20000 rows: grow 21 ms, clear 8 ms, reload 8 ms
+INFO: plain Table of 1000000 rows: grow 79 ms, clear 43 ms, reload 29 ms
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_Table_SetItemCount ✔
+│     ├─ refreshOfAMillionVirtualRowsStaysUnderBudget() ✔
+│     └─ refreshOfAMillionPlainRowsStaysUnderBudget() ✔
+└─ JUnit Vintage ✔
+[         2 tests successful      ]
+[         0 tests failed          ]
+== T208_q2_original
+INFO: VIRTUAL Table pilot of 20000 rows: grow 193 ms, clear 3 ms, reload 3 ms
+INFO: plain Table pilot of 20000 rows: grow 2664 ms, clear 2277 ms, reload 2049 ms
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_Table_SetItemCount ✔
+│     ├─ refreshOfAMillionVirtualRowsStaysUnderBudget() ✘ VIRTUAL Table: setItemCount (20000) took 193 ms, 9650 ms projected for 1000000 rows (budget 250 ms) ==> expected: <true> but was: <false>
+│     └─ refreshOfAMillionPlainRowsStaysUnderBudget() ✘ plain Table: setItemCount (20000) took 2664 ms, 133200 ms projected for 1000000 rows (budget 250 ms) ==> expected: <true> but was: <false>
+└─ JUnit Vintage ✔
+[         0 tests successful      ]
+[         2 tests failed          ]
