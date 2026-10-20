@@ -1,0 +1,18 @@
+INFO: item.setItemCount 10000: 280 TVM messages, 32 ms (0x113E=222 0x1104=29 0x113F=22 0x110A=5 0x111C=1 0x112D=1)
+INFO: expand 10000: 455 TVM messages, 30 ms (0x113E=218 0x110A=80 0x113F=57 0x1104=46 0x1101=25 0x1132=25 0x1102=2 0x111C=1 0x112D=1)
+INFO: setTopItem middle of 10000: 629 TVM messages, 51 ms (0x113E=312 0x110A=111 0x113F=78 0x1104=60 0x1132=37 0x1101=28 0x110B=1 0x111C=1 0x112D=1)
+INFO: collapse 10000: 428 TVM messages, 72 ms (0x113E=245 0x110A=50 0x1101=37 0x1104=35 0x1132=31 0x113F=27 0x1102=1 0x111C=1 0x112D=1)
+INFO: item.setItemCount 100000: 280 TVM messages, 16 ms (0x113E=222 0x1104=29 0x113F=22 0x110A=5 0x111C=1 0x112D=1)
+INFO: expand 100000: 455 TVM messages, 23 ms (0x113E=218 0x110A=80 0x113F=57 0x1104=46 0x1101=25 0x1132=25 0x1102=2 0x111C=1 0x112D=1)
+INFO: setTopItem middle of 100000: 629 TVM messages, 37 ms (0x113E=312 0x110A=111 0x113F=78 0x1104=60 0x1132=37 0x1101=28 0x110B=1 0x111C=1 0x112D=1)
+INFO: collapse 100000: 428 TVM messages, 49 ms (0x113E=245 0x110A=50 0x1101=37 0x1104=35 0x1132=31 0x113F=27 0x1102=1 0x111C=1 0x112D=1)
+INFO: setItemCount 10000: 373 TVM messages, 34 ms (0x113E=163 0x110A=66 0x113F=63 0x1104=50 0x1132=29 0x111C=1 0x112D=1)
+INFO: setItemCount 100000: 373 TVM messages, 30 ms (0x113E=163 0x110A=66 0x113F=63 0x1104=50 0x1132=29 0x111C=1 0x112D=1)
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_Tree_NativeWork ✔
+│     ├─ expandAndCollapseOfALargeSubtreeAreWindowBound() ✔
+│     └─ rootSetItemCountIsWindowBound() ✔
+└─ JUnit Vintage ✔
+[         2 tests successful      ]
+[         0 tests failed          ]
