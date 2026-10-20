@@ -275,6 +275,25 @@ public class SpliceProbe {
 		p0 = paints;
 		OS.SendMessage (hwnd, OS.LVM_REDRAWITEMS, 505, 506);
 		report ("T11 control: LVM_REDRAWITEMS 505..506", table, h0, p0);
+
+		/* the item API above the window, with the native redraw off and the top re-anchored by a scroll (one row at a time: remove (int) keeps the R4_38 keyed store right) */
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 0, 0);
+		for (int i = 0; i < 10; i++) table.remove (100);
+		OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, -10 * height);
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
+		report ("T12 redraw off, remove (100) x10, LVM_SCROLL up 10 rows, redraw on (old row 500 on top at 490)", table, h0, p0);
+
+		p0 = paints;
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 0, 0);
+		for (int i = 0; i < 10; i++) new TableItem (table, SWT.NONE, 100);
+		OS.SendMessage (hwnd, OS.LVM_SCROLL, 0, 10 * height);
+		OS.SendMessage (hwnd, OS.WM_SETREDRAW, 1, 0);
+		report ("T13 redraw off, new TableItem at 100 x10, LVM_SCROLL down 10 rows, redraw on (row 500 back on top)", table, h0, p0);
+
+		p0 = paints;
+		for (int i = 0; i < 10; i++) table.remove (100);
+		report ("T14 control: remove (100) x10 with redraw on (stock: no re-anchoring)", table, h0, p0);
 		table.dispose ();
 	}
 
