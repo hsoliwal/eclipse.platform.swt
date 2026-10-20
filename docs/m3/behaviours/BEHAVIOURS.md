@@ -230,3 +230,20 @@ Owners: Tree and Table tracks (the footer inside the widgets, one shared API), s
 chips), render-modes (micro-charts), custom-widgets (footer popups). The footer content is declared in the `.m3view`
 spec (`footer=counts, selection, aggregates:sum(size), sort, filters, freshness, problems`), so every templated view
 gets it.
+
+## Double header and the configure-view bar (user, 2026-10-20: "or a double header for configuration, a configure view bar")
+
+- **Second header row (configuration row):** a row under the column headers, aligned to the columns, one cell per column.
+  Each cell holds that column's controls: a filter input (the filter row), an aggregate selector for the footer, the
+  sort key position, a visibility, pin or width preset, or a unit/format choice. It scrolls horizontally with the columns
+  and is part of the viewport (only visible columns are materialized). The content is declared per view:
+  `header2=filters|aggregates|config`. Owners: Tree and Table tracks (inside the widgets, the same API as the footer),
+  sort-filter (filter and aggregate cells).
+- **Configure-view bar:** a slim bar above the view with search/quick filter, group-by, column chooser (show, hide,
+  reorder, pin), density (compact, normal, comfortable), presentation (tree, flat, table), saved views (named
+  sort+filter+columns+grouping), export and copy, and reset to defaults. It is the same everywhere because it comes from
+  the template: `viewbar=search,group,columns,density,presentation,savedViews,export`. Collapsible, keyboard accessible,
+  with toolbar scroll carets when narrow. Owners: custom-widgets (the bar widget, SWT and Swing), jface (template
+  binding).
+- Donors: NatTable filter row and column groups (EPL: ADAPT), AG Grid floating filters and tool panels (MIT community),
+  MUI DataGrid toolbar (MIT), IntelliJ view options toolbars (Apache: ADAPT).
