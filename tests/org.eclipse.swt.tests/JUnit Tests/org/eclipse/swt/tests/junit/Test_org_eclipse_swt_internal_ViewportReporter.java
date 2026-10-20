@@ -122,6 +122,26 @@ public class Test_org_eclipse_swt_internal_ViewportReporter {
 	}
 
 	@Test
+	public void shiftedRowsAreNeitherEnteredNorLeftAndRemovedRowsLeaveAtTheirOldIndexes () {
+		listen ();
+		ViewportReporter.report (viewport, 100, 119, ViewportEvent.LAYOUT, true);
+		single ();
+		/* 3 rows inserted above the window, the same 20 rows on screen at shifted indexes */
+		ViewportReporter.shifted (viewport, 50, 3);
+		ViewportReporter.report (viewport, 103, 122, ViewportEvent.MODEL_DELTA, true);
+		window (single (), 103, 122, NONE, NONE, true, ViewportEvent.MODEL_DELTA);
+		/* in one batch: 3 rows inserted above, then 2 removed inside (old indexes 105 and 106), 2 more come in below */
+		ViewportReporter.shifted (viewport, 50, 3);
+		ViewportReporter.shifted (viewport, 108, -2);
+		ViewportReporter.report (viewport, 106, 125, ViewportEvent.MODEL_DELTA, true);
+		window (single (), 106, 125, new int [] {124, 125}, new int [] {105, 106}, true, ViewportEvent.MODEL_DELTA);
+		/* rows inserted inside the window: they entered; the last two rows were pushed out (at their old indexes) */
+		ViewportReporter.shifted (viewport, 110, 2);
+		ViewportReporter.report (viewport, 106, 125, ViewportEvent.MODEL_DELTA, true);
+		window (single (), 106, 125, new int [] {110, 111}, new int [] {124, 125}, true, ViewportEvent.MODEL_DELTA);
+	}
+
+	@Test
 	public void oneEventPerTurnCoalescesTheCausesAndTheRanges () {
 		listen ();
 		ViewportReporter.report (viewport, 0, 9, ViewportEvent.LAYOUT, true);
