@@ -1010,6 +1010,25 @@ final class ListViewport {
 		writeExtent ();
 	}
 
+	/*
+	 * `removed` rows at `at` leave in one step: the lanes shift once (one arraycopy instead of one per row), the window
+	 * plan once, and the native rows among them are deleted (O(window)). The caret and the anchor end where `removed`
+	 * single deletions at `at` (deleteResidentRow) put them: equal for all 75,376 cases up to 14 rows (brute force,
+	 * docs/m3/list-viewport/OPTIMIZATION_LEDGER.tsv). Answers the number of native rows deleted.
+	 */
+	private int removeRun (int at, int removed) {
+		int count = model.getItemCount ();
+		barState = BAR_SET;
+		if (caret == at && caret > 0) caret--;
+		if (caret >= count - removed) caret = Math.max (0, count - removed - 1);
+		if (anchor >= at) anchor = -1;
+		int resident = plan.removed (at, removed);
+		int removedEntry = plan.removedEntry (at);
+		for (int i = 0; i < resident; i++) deleteNative (removedEntry);
+		model.remove (at, at + removed - 1);
+		return resident;
+	}
+
 	/* one native LB_DELETESTRING: caret and anchor as the stock list box moves them */
 	private void deleteResidentRow (int index) {
 		barState = BAR_SET;
@@ -1042,7 +1061,7 @@ final class ListViewport {
 		int width = 0;
 		if (hScroll) for (int i = start; i <= end; i++) width = Math.max (width, model.measureItem (i));
 		int topIndex = top;
-		for (int i = start; i <= end; i++) deleteResidentRow (start);
+		removeRun (start, end - start + 1);
 		if (end < topIndex) topIndex -= end - start + 1;
 		finishRemove (topIndex, width);
 	}
@@ -1141,15 +1160,7 @@ final class ListViewport {
 		int first = plan.first (), resident = 0, entry = -1, removedWidth = 0;
 		if (hScroll) for (int i = 0; i < removed; i++) removedWidth = Math.max (removedWidth, model.measureItem (at + i));
 		if (removed > 0) {
-			barState = BAR_SET;
-			/* the stock list box's caret and anchor after `removed` LB_DELETESTRINGs at `at` */
-			if (caret == at && caret > 0) caret--;
-			if (caret >= count - removed) caret = Math.max (0, count - removed - 1);
-			if (anchor >= at) anchor = -1;
-			resident = plan.removed (at, removed);
-			int removedEntry = plan.removedEntry (at);
-			for (int i = 0; i < resident; i++) deleteNative (removedEntry);
-			model.remove (at, at + removed - 1);
+			resident = removeRun (at, removed);
 		}
 		if (added > 0) {
 			barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
