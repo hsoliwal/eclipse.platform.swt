@@ -7,6 +7,7 @@
 # -Dswt.widget.mode=original; -Dswt.widget.mode.ExpandBar=original with the Composite viewport on) into one exec file.
 # Writes jacoco.csv (whole classes) and changed-lines.tsv (every executable line the branch adds or changes since
 # BASE, default the merge base with origin/master) next to this script; HTML under <out-dir>/aw-coverage/report.
+# NO_LOCK=1 runs the JVMs without taking a desktop slot (the caller holds one).
 # Run the jar build first (build_and_tests.sh <wt> <out> <stamp>). Usage: allwidgets_coverage.sh <worktree> <out-dir> <stamp>
 WT=$1; OUT=$2; STAMP=$3
 BASE=${BASE:-$(git -C "$WT" merge-base HEAD origin/master)}
@@ -38,7 +39,8 @@ unzip -q "$(cygpath -u "$JAR")" 'org/eclipse/swt/internal/WidgetMode*.class' 'or
 A="-javaagent:$AGENT=destfile=$COV/aw.exec,includes=$INCLUDES"
 R="-Xmx1g -Dswt.viewport.recording=$COV/rec -Dswt.viewport.evidence=$COV/evidence"
 H="bash C:/m3-superset/tools/hidden_java.sh"
-bash C:/m3-superset/tools/ui_lock.sh swt-allwidgets bash -c "
+LOCK="bash C:/m3-superset/tools/ui_lock.sh swt-allwidgets"; [ -n "$NO_LOCK" ] && LOCK=
+$LOCK bash -c "
 $H 900 '$COV/record-official.log' $R -jar '$J' execute -cp '$OUT/tests;$OFFICIAL' $DIFF --disable-banner --details=summary
 $H 1500 '$COV/viewport.log' $R '$A' -jar '$J' execute -cp '$OUT/tests;$JAR' $OWN $STOCK $DIFF --disable-banner --details=tree
 $H 900 '$COV/original.log' $R -Dswt.widget.mode=original '$A' -jar '$J' execute -cp '$OUT/tests;$JAR' $STOCK $DIFF $GAPS --disable-banner --details=tree
