@@ -443,6 +443,7 @@ public class Test_M3SortFilterWidgets {
 		assertTrue (row.getText (1).getLocation ().x < row.getText (0).getLocation ().x);
 		table.getHorizontalBar ().notifyListeners (SWT.Selection, new Event ());
 		row.getText (1).setText ("N12");
+		waitFor (() -> filter.isActive (1));
 		new TableColumn (table, SWT.NONE).setWidth (40);
 		row.refresh ();
 		table.getColumn (3).dispose ();
