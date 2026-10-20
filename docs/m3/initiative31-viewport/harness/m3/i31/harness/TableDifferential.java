@@ -20,6 +20,8 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.SplittableRandom;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.layout.*;
@@ -35,6 +37,7 @@ import org.eclipse.swt.widgets.*;
  */
 public final class TableDifferential {
 	private static final Watchdog WATCHDOG = Watchdog.start (120_000);
+	private static final Logger LOG = Logger.getLogger ("m3.i31.harness.TableDifferential");
 	private final Display display;
 	private final StringBuilder events = new StringBuilder ();
 	private Table table;
@@ -114,6 +117,8 @@ public final class TableDifferential {
 		try {
 			return table != null ? table (op, i, count, random) : list (op, i, count, random);
 		} catch (RuntimeException e) {
+			// the record keeps the exception class; the log keeps where it was thrown
+			LOG.log (Level.WARNING, "op" + op + "(" + i + ") of " + count + " rows threw", e);
 			return new String [] {"op" + op + "(" + i + ")", "EX:" + e.getClass ().getSimpleName ()};
 		}
 	}

@@ -20,6 +20,11 @@ import java.lang.reflect.*;
 import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.*;
 
@@ -32,13 +37,15 @@ import org.eclipse.swt.widgets.*;
  * from <code>-Dswt.widget.mode</code>): wall time (median of the repetitions), bytes allocated on the SWT and the
  * Swing threads, heap retained after a full collection, and the items that exist as Swing peers (materialized
  * items with their Swing nodes). Appends tab-separated rows
- * <code>widget mode size operation median_ms min_ms allocated_bytes retained_bytes peers</code> to the output file.
+ * <code>widget mode size operation median_ms min_ms allocated_bytes retained_bytes peers</code> to the output file; an
+ * operation past <code>-Dbench.limit</code> seconds leaves a TIMEOUT row and stops the run.
  * <p>
  * Usage: <code>ViewportBench &lt;out-file&gt; &lt;Tree|Table|List&gt; &lt;size&gt; &lt;repetitions&gt;</code>
  * </p>
  */
 public final class ViewportBench {
 	private static final com.sun.management.ThreadMXBean THREADS = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean ();
+	private static final Logger LOG = Logger.getLogger ("m3.i31.harness.ViewportBench");
 
 	private final Display display;
 	private final String widget;
@@ -49,6 +56,9 @@ public final class ViewportBench {
 	private Thread swing;
 	private Shell shell;
 	private Control control;
+	/** The operation being measured and its start (wall clock), read by the watchdog. */
+	private volatile String running;
+	private volatile long since;
 
 	private ViewportBench (Path out, Display display, String widget, int size, int repetitions) {
 		this.out = out;
@@ -74,9 +84,11 @@ public final class ViewportBench {
 		void run (int repetition);
 	}
 
-	private void run () throws Exception {
+	private void run () {
+		watch ();
 		Thread [] edt = new Thread [1];
-		SwingUtilities.invokeAndWait (() -> edt [0] = Thread.currentThread ());
+		SwingUtilities.invokeLater (() -> edt [0] = Thread.currentThread ());
+		pump ();
 		swing = edt [0];
 		switch (widget) {
 			case "Tree": tree (); break;
@@ -171,11 +183,14 @@ public final class ViewportBench {
 		long allocated = 0;
 		for (int r = 0; r < repetitions; r++) {
 			long before = allocated ();
+			running = operation + "#" + r;
+			since = System.currentTimeMillis ();
 			long start = System.nanoTime ();
 			body.run (r);
 			pump ();
 			millis [r] = (System.nanoTime () - start) / 1_000_000;
 			allocated += allocated () - before;
+			running = null;
 		}
 		long [] sorted = millis.clone ();
 		Arrays.sort (sorted);
@@ -190,7 +205,10 @@ public final class ViewportBench {
 	}
 
 	private void row (String operation, long median, long min, long allocated, long retained) {
-		String line = widget + "\t" + mode + "\t" + size + "\t" + operation + "\t" + median + "\t" + min + "\t" + allocated + "\t" + retained + "\t" + peers ();
+		write (widget + "\t" + mode + "\t" + size + "\t" + operation + "\t" + median + "\t" + min + "\t" + allocated + "\t" + retained + "\t" + peers ());
+	}
+
+	private synchronized void write (String line) {
 		try {
 			// one row at a time, so a run stopped by its time limit keeps what it measured
 			Files.write (out, java.util.List.of (line), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
@@ -240,16 +258,46 @@ public final class ViewportBench {
 		return m.invoke (target);
 	}
 
+	/**
+	 * Drains the SWT queue until Swing has run everything queued before. The SWT thread never blocks on Swing: the
+	 * Swing thread can be waiting for an SWT exclusive section, which only <code>readAndDispatch</code> grants.
+	 */
 	private void pump () {
-		for (int round = 0; round < 3; round++) {
-			for (int i = 0; i < 1_000_000 && display.readAndDispatch (); i++) {
-				// drain the queue
+		for (int round = 0; round < 2; round++) {
+			AtomicBoolean reached = new AtomicBoolean ();
+			SwingUtilities.invokeLater (() -> reached.set (true));
+			while (!reached.get ()) {
+				if (!display.readAndDispatch ()) LockSupport.parkNanos (200_000);
 			}
-			try {
-				SwingUtilities.invokeAndWait (() -> { /* Swing has painted what was queued before */ });
-			} catch (Exception e) {
-				throw new IllegalStateException (e);
+			for (int i = 0; i < 1_000_000 && display.readAndDispatch (); i++) {
+				// drain what Swing posted back
 			}
 		}
+	}
+
+	/**
+	 * Stops an operation that runs past <code>-Dbench.limit</code> seconds (default 240): appends a TIMEOUT row (median
+	 * = the limit in ms), logs every thread's stack and halts, so the desktop slot is freed and the ledger keeps a "no".
+	 */
+	private void watch () {
+		long limit = Long.getLong ("bench.limit", 240) * 1000;
+		Thread watchdog = new Thread (() -> {
+			while (true) {
+				LockSupport.parkNanos (1_000_000_000L);
+				String operation = running;
+				if (operation == null || System.currentTimeMillis () - since < limit) continue;
+				write (widget + "\t" + mode + "\t" + size + "\t" + operation + "\tTIMEOUT\t" + limit + "\t-1\t-1\t-1");
+				StringBuilder stacks = new StringBuilder ();
+				Thread.getAllStackTraces ().forEach ((t, frames) -> {
+					stacks.append ('"').append (t.getName ()).append ("\"\n");
+					for (StackTraceElement frame : frames) stacks.append ("\tat ").append (frame).append ('\n');
+				});
+				LOG.log (Level.SEVERE, operation + " ran past " + limit + " ms; thread stacks:\n" + stacks);
+				for (Handler handler : Logger.getLogger ("").getHandlers ()) handler.flush ();
+				Runtime.getRuntime ().halt (3);
+			}
+		}, "bench watchdog");
+		watchdog.setDaemon (true);
+		watchdog.start ();
 	}
 }
