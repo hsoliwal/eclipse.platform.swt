@@ -19,7 +19,7 @@ cp "$HERE/evidence/ListComboOpsBench.java.txt" $D/ListComboOpsBench.java
 CP="$(cygpath -w $D/classes);$JAR"
 run () {
   local tag=$1; shift
-  bash C:/m3-superset/tools/ui_lock.sh swt-list bash $H 1500 $D/$tag.log -Xmx3g "$@" -cp "$CP" ListComboOpsBench - ${tag##*-} $WHICH
+  bash ${M3_UI_LOCK:-C:/m3-superset/tools/ui_lock.sh} swt-list bash $H 1500 $D/$tag.log -Xmx3g "$@" -cp "$CP" ListComboOpsBench - ${tag##*-} $WHICH
   tr -d '\r' < $D/$tag.log
 }
 run viewport-100000

@@ -9,6 +9,7 @@
 # remainder per thread, so one style must not see another's history). JOPTS adds JVM options, for
 # example -Dswt.viewport.combo.reach=30 (window moves inside every drop); TAG names such a run's logs; RECNAME
 # names the recording directory (default: the widget), so a separate test records without deleting the others.
+# M3_UI_LOCK names another copy of the desktop-lock client (same queue and slots), default C:/m3-superset/tools/ui_lock.sh.
 # M3_RUNS moves the recordings and evidence (default K:/m3-work/runs), for example to a scratch disk.
 OUT=$1; STAMP=$2; MODE=$3; shift 3
 RUNS=${M3_RUNS:-K:/m3-work/runs}
@@ -38,7 +39,7 @@ i=0
 for S in "$@"; do
   i=$((i + 1))
   LOG=$OUT/run-$STAMP-$R-$MODE${TAG:-}-$i.log
-  bash C:/m3-superset/tools/ui_lock.sh swt-list bash C:/m3-superset/tools/hidden_java.sh ${BUDGET:-1500} "$LOG" -Xmx2g --enable-preview \
+  bash ${M3_UI_LOCK:-C:/m3-superset/tools/ui_lock.sh} swt-list bash C:/m3-superset/tools/hidden_java.sh ${BUDGET:-1500} "$LOG" -Xmx2g --enable-preview \
     -Dswt.viewport.evidence=$RUNS/$R-evidence $PROPS $JOPTS -jar "$CS" execute -cp "$CP" $S --disable-banner --details=tree
   sed 's/\x1b\[[0-9;]*m//g' "$LOG" | grep -E "memory gate|GUARD|TIMEOUT|hidden desktop|✘|✔ *$|tests (successful|failed)|recorded:|this run:" | grep -v "Platform Suite\|Vintage\|Jupiter ✔" | head -8 | cut -c1-400
 done
