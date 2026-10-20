@@ -106,7 +106,7 @@ Swing models already send deltas, so the seam routes them instead of rebuilding.
 4. Swing S8.
 5. Examples: the same scenario as the other examples (a delta stream on the million-row catalogue), in SWT and Swing.
 
-## Status (2026-10-19)
+## Status (2026-10-20)
 
 | step | state |
 |---|---|
@@ -114,6 +114,8 @@ Swing models already send deltas, so the seam routes them instead of rebuilding.
 | 2. `M3Model` for List and Table | pushed and compile-clean. `Test_M3Model` (differential against stock edits: rows, labels, selection, top row, emptiness events, pixels) is queued on the hidden desktop. |
 | 2b. `M3Model` for Tree | pushed and compile-clean. Ids are kept per parent in `M3TreeModel` over `M3LongIndex` (growable long->int, backward-shift removal). The tree differential is in `Test_M3Model`. |
 | 3. viewport fast paths and native-operation counters | specified below; needs the seams of the Table, List and Tree viewport owners |
+| 4. a patch costs O(changed) in the model | done (code in the interval-sweep commits 0566ed57f93 and 8c13c0d1b9e). `M3Patch.apply (long [])` builds the new lane in one pass and one allocation (two-pointer merge of the kept rows and the insert runs) instead of one array per run. `M3Model` keeps its id-to-row index (`M3LongIndex`) across patches: removed ids leave, inserted ids come in with their rows, shifted rows keep a stale row as a hint that `indexOf` checks against the lane and rebuilds only when a stale hint is asked for; an update-only patch keeps the lane; the inserted-id check covers the changed rows only; the top row is followed through the runs in O(runs) (`follow`), and looked up by id only when the patch removed it. `Test_M3Model`, `Test_M3DiffApply`, `Test_M3Patch`, `Test_M3BulkUpdates`: 25/25 in viewport mode and 25/25 in original mode (hidden desktop, jar ea20261019m with the patched classes ahead). The widget side of an insert or remove is still one `createItem` / `destroyItem` per row, O(n) lane shifts in the viewports: step 3. |
+| 5. examples | SWT: `M3DeltaStreamExample` (100,000 one-row deltas, 70% updates, 15% inserts, 15% removes, into a `SWT.VIRTUAL` Table of 10^6 rows and a Tree of 1,000 categories of 999 products, events pumped every 100 deltas, no refresh). Table, before step 4: 5,745 deltas in the 300 s cap, median 44,293 us per delta (the lane copy and the id index rebuilt per patch); after: 100,000 deltas in 200 s, median 15 us, p99 13,987 us (the p99 is the native row insert or remove of step 3); 31 labels asked for the whole stream (only rows on screen); the top row never moved for a delta outside the window. Tree: median 1,190 us before, 1,058 us after (its lanes are per parent, 999 rows; the cost is the item API). `M3HiddenTabDeltasExample`: the same stream into a table in a background tab, then one show (brief rules 24 and 25). Swing twin: pending (the Swing `apply` methods of S8 take the same patches). |
 | Swing S8 | done on M3jdk21 `m3/swing-enhanced-api-20261019`: `M3Patch` d7284fdd1f9, `firePatch` and the three `apply` methods with their tests 8cc0a4d2b29, verification record cced93e804b (22 tests, new code 100% lines / 97.2% branches, behaviour differential equal). |
 
 ## Step 3: the splice seam (for the viewport owners)
