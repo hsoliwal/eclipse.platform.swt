@@ -40,3 +40,7 @@ Keep EMF's own test suites green. Write EMF_PLAN.md first, listing the exact fil
 - Scratch only under S:/m3-scratch/databinding. Never write to G:, D: or E:.
 - Builds through C:/m3-superset/tools/build_lock.sh databinding <cmd>.
 - Commit and push after every leaf.
+
+## Marked sites to fix (2026-10-20)
+
+The lead marked every full-rebuild, per-element-map and syncExec site across the Eclipse forks: integration branch m3/viewport-integration-20261016 (hsoliwal/eclipse.platform.swt), docs/m3/correction-sites/ (CORRECTION_SITES.tsv with permalinks; FINAL_PASS_MODEL_LISTENER.tsv with a verdict and owner per model-listener rebuild; re-run with recipe/correction_sites.sh). Filter the rows owned by your track (owner column, or by repo and path) and close each one: either fixed (record the commit) or JUSTIFIED in your DELTA_GATE.tsv with numbers.

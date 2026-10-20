@@ -35,3 +35,7 @@ Re-run C:/m3-superset/tools/delta_census.sh after each surface and record the dr
 - Scratch under S:/m3-scratch/platform-ui-surfaces. Never write to G:, D: or E:.
 - Builds through C:/m3-superset/tools/build_lock.sh platform-ui-surfaces <cmd>; UI runs through C:/m3-superset/tools/ui_lock.sh platform-ui-surfaces <cmd>.
 - Commit and push after every surface. A surface without numbers and a passing differential is not done.
+
+## Marked sites to fix (2026-10-20)
+
+The lead marked every full-rebuild, per-element-map and syncExec site across the Eclipse forks: integration branch m3/viewport-integration-20261016 (hsoliwal/eclipse.platform.swt), docs/m3/correction-sites/ (CORRECTION_SITES.tsv with permalinks; FINAL_PASS_MODEL_LISTENER.tsv with a verdict and owner per model-listener rebuild; re-run with recipe/correction_sites.sh). Filter the rows owned by your track (owner column, or by repo and path) and close each one: either fixed (record the commit) or JUSTIFIED in your DELTA_GATE.tsv with numbers.
