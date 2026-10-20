@@ -165,6 +165,13 @@ static int checkStyle (int style) {
 	return checkBits (style, SWT.SINGLE, SWT.MULTI, 0, 0, 0, 0);
 }
 
+@Override
+void createWidget () {
+	super.createWidget ();
+	// viewport mode: fixed row geometry kept from the model's change events (M3ListRows)
+	if (M3ListViewport.ENABLED) M3ListViewport.of (this).install ();
+}
+
 /**
  * Deselects the items at the given zero-relative indices in the receiver.
  * If the item at the given zero-relative index in the receiver
@@ -769,6 +776,12 @@ public void selectAll () {
   isAdjustingSelection = true;
   ((CList)handle).setSelectionInterval(0, count - 1);
   isAdjustingSelection = false;
+}
+
+@Override
+public void setFont (org.eclipse.swt.graphics.Font font) {
+	super.setFont (font);
+	if (M3ListViewport.ENABLED) M3ListViewport.of (this).fontChanged ();
 }
 
 /**

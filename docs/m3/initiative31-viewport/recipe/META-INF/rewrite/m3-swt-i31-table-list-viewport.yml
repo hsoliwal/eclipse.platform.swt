@@ -92,3 +92,13 @@ recipeList:
       anchor: "((CList)handle).setElements(items)"
       position: BEFORE
       statements: "\tif (M3ListViewport.ENABLED) {\n\t\tM3ListViewport.of (this).setItems (items);\n\t\treturn;\n\t}"
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.List]
+      memberName: createWidget
+      beforeMethod: deselect
+      memberSource: "@Override\nvoid createWidget () {\n\tsuper.createWidget ();\n\t// viewport mode: fixed row geometry kept from the model's change events (M3ListRows)\n\tif (M3ListViewport.ENABLED) M3ListViewport.of (this).install ();\n}"
+  - com.synexia.openrewrite.viewport.M3AddMemberIfMissing:
+      declaringClasses: [org.eclipse.swt.widgets.List]
+      memberName: setFont
+      beforeMethod: setItem
+      memberSource: "@Override\npublic void setFont (org.eclipse.swt.graphics.Font font) {\n\tsuper.setFont (font);\n\tif (M3ListViewport.ENABLED) M3ListViewport.of (this).fontChanged ();\n}"

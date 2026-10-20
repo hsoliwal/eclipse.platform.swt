@@ -77,6 +77,11 @@ final class M3TableViewport {
 	 */
 	boolean setItemCount (int count) {
 		if ((table.style & SWT.VIRTUAL) == 0) return false;
+		quietly (() -> resize (count));
+		return true;
+	}
+
+	private void resize (int count) {
 		ArrayList<Object> slots = slots ();
 		int old = slots.size ();
 		if (count > old) {
@@ -85,7 +90,6 @@ final class M3TableViewport {
 		} else {
 			shrink (slots, count);
 		}
-		return true;
 	}
 
 	/**
@@ -97,6 +101,10 @@ final class M3TableViewport {
 	 * @param end the last row removed (inclusive); below <code>start</code> removes nothing
 	 */
 	void remove (int start, int end) {
+		quietly (() -> removeRuns (start, end));
+	}
+
+	private void removeRuns (int start, int end) {
 		ArrayList<Object> slots = slots ();
 		int stop = end + 1;
 		while (stop > start) {
@@ -109,6 +117,21 @@ final class M3TableViewport {
 			// disposing the item takes its slot out (Table.destroyItem)
 			if (from > start) ((TableItem) slots.get (from - 1)).dispose ();
 			stop = from - 1;
+		}
+	}
+
+	/**
+	 * Runs a change of the rows with <code>isAdjustingSelection</code> set: the selection events Swing sends for
+	 * it do not become SWT.Selection, as the official SWT sends none for a programmatic change (UPSTREAM_DEFECTS
+	 * I31-B3).
+	 */
+	private void quietly (Runnable change) {
+		boolean adjusting = table.isAdjustingSelection;
+		table.isAdjustingSelection = true;
+		try {
+			change.run ();
+		} finally {
+			table.isAdjustingSelection = adjusting;
 		}
 	}
 

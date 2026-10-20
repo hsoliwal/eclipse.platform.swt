@@ -30,7 +30,9 @@ import org.eclipse.swt.internal.swing.*;
  * <li><code>showSelection</code> does nothing when the first selected row is shown, and otherwise scrolls it
  * to the middle of the viewport, as far as the range allows.</li>
  * <li><code>setItems</code> gives Swing the replacement as one delta (rows removed, rows added), not one event
- * per row.</li>
+ * per row, and sends no SWT.Selection (UPSTREAM_DEFECTS I31-B3).</li>
+ * <li>Rows have a fixed height and the list a fixed cell width, kept by {@link M3ListRows} from the model's
+ * change events: a layout, a resize or a change of rows renders only the rows shown, never every row.</li>
  * </ul>
  * The <code>JList</code>, its model and its renderer are those of the original mode.
  */
@@ -40,6 +42,8 @@ final class M3ListViewport {
 
 	final List list;
 	private final M3SwingScroll scroll = new M3SwingScroll ();
+	/** Row geometry of the list; installed when the list is created. */
+	private M3ListRows geometry;
 
 	private M3ListViewport (List list) {
 		this.list = list;
@@ -54,6 +58,16 @@ final class M3ListViewport {
 	static M3ListViewport of (List list) {
 		if (list.viewport == null) list.viewport = new M3ListViewport (list);
 		return list.viewport;
+	}
+
+	/** Hook of <code>List.createWidget()</code>: fixed row geometry. */
+	void install () {
+		geometry = M3ListRows.install (rows ());
+	}
+
+	/** Hook of <code>List.setFont(Font)</code>: the rows are measured with the new font. */
+	void fontChanged () {
+		if (geometry != null) geometry.measureAll ();
 	}
 
 	/** Hook of <code>List.setTopIndex(int)</code>. */
@@ -73,13 +87,20 @@ final class M3ListViewport {
 	/**
 	 * Hook of <code>List.setItems(String...)</code> (the items are checked): the model drops every row with one
 	 * event and takes the new rows with one more (<code>DefaultListModel.addAll</code>), where the original mode
-	 * sends one event per row.
+	 * sends one event per row. The selection events Swing sends for it do not become SWT.Selection, as the official
+	 * SWT sends none for a programmatic change.
 	 */
 	@SuppressWarnings ("unchecked")
 	void setItems (String [] items) {
 		DefaultListModel<Object> model = (DefaultListModel<Object>) rows ().getModel ();
-		model.removeAllElements ();
-		model.addAll (Arrays.asList (items));
+		boolean adjusting = list.isAdjustingSelection;
+		list.isAdjustingSelection = true;
+		try {
+			model.removeAllElements ();
+			model.addAll (Arrays.asList (items));
+		} finally {
+			list.isAdjustingSelection = adjusting;
+		}
 	}
 
 	private static int pitch (JList<?> rows) {

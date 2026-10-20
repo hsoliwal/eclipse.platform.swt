@@ -21,6 +21,8 @@ DEPS=$(printf '%s;' \
 	$(jar org/eclipse/platform/org.eclipse.core.runtime/3.35.0/org.eclipse.core.runtime-3.35.0.jar) \
 	$(jar org/eclipse/platform/org.eclipse.core.jobs/3.15.900/org.eclipse.core.jobs-3.15.900.jar) \
 	$(jar org/eclipse/platform/org.eclipse.osgi/3.19.0/org.eclipse.osgi-3.19.0.jar) \
+	$(jar org/eclipse/platform/org.eclipse.equinox.registry/3.12.600/org.eclipse.equinox.registry-3.12.600.jar) \
+	$(jar org/eclipse/platform/org.eclipse.equinox.preferences/3.12.100/org.eclipse.equinox.preferences-3.12.100.jar) \
 	$(jar org/eclipse/platform/org.eclipse.jface.text/3.31.100/org.eclipse.jface.text-3.31.100.jar) \
 	$(jar org/eclipse/platform/org.eclipse.e4.ui.css.swt/0.17.100/org.eclipse.e4.ui.css.swt-0.17.100.jar) \
 	$(jar org/eclipse/platform/org.eclipse.e4.ui.css.core/0.14.800/org.eclipse.e4.ui.css.core-0.14.800.jar) \
@@ -46,9 +48,12 @@ DEPS=$(printf '%s;' \
 	$(jar javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2.jar))
 JDK="C:/Program Files/Java/jdk-21/bin"
 mkdir -p "$OUT"
+# the classpaths, for i31_widgets_run.sh
+echo "$DEPS" > "$OUT/deps.cp"; echo "$OFFICIAL" > "$OUT/official.cp"
 # every bundle source folder of every widget and of the shared examples, so a widget finds the Nebula bundles it
-# depends on; Draw2d (GEF classic, drawn on SWT GC) is compiled from source on the same side
-SP=$( { find "$N/widgets" "$N/examples" -maxdepth 4 -type d -name src -path '*/org.eclipse.nebula*' | grep -v -i 'test'; echo "${DRAW2D:-K:/m3-work/donors/_fetch/GEFC/org.eclipse.draw2d/src}"; } | sed 's#$#;#' | tr -d '\n')
+# depends on; Draw2d (GEF classic 3.24, eclipse-gef/gef-classic 4052c50, EPL-2.0, drawn on SWT GC) is compiled from
+# source on the same side
+SP=$( { find "$N/widgets" "$N/examples" -maxdepth 4 -type d -name src -path '*/org.eclipse.nebula*' | grep -v -i 'test'; echo "${DRAW2D:-S:/m3-scratch/initiative31/gef/org.eclipse.draw2d/src}"; } | sed 's#$#;#' | tr -d '\n')
 # an error key: file, line and message, without the checkout prefix
 keys () { grep ': error:' "$1" | sed -E 's#^.*[\\/]widgets[\\/]##; s#\\#/#g' | sort -u; }
 echo -e "widget\tsources\ti31_errors\tofficial_errors\ti31_only_errors\ti31_only_symbols" > "$OUT/build.tsv"

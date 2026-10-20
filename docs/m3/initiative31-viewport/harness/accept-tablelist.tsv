@@ -1,2 +1,5 @@
 # operation-regex	column	defect (UPSTREAM_DEFECTS.tsv): divergences the Table/List differential accepts
 ^setItemCount\(	6	I31-B3
+^remove\([0-9]+,[0-9]+\)	6	I31-B3
+^removeAll	6	I31-B3
+^setItems\(	6	I31-B3
