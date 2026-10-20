@@ -77,6 +77,11 @@ public class Test_org_eclipse_swt_widgets_ExpandBar_OptimizationBench {
 				/* 100 WM_SETCURSOR (HTCLIENT, from WM_MOUSEMOVE), which Windows sends before every mouse move */
 				for (int m = 0; m < 100; m++) ViewportDifferential.send (bar, 0x20, 0, (0x200L << 16) | 1);
 			}));
+			ViewportDifferential.send (bar, 0x2A3, 0, 0); // WM_MOUSELEAVE: no header hovered
+			results.add (AllWidgetsBench.measure ("cursor-none", k -> {
+				/* 100 WM_SETCURSOR with no header hovered (the mouse over an item body or the gaps) */
+				for (int m = 0; m < 100; m++) ViewportDifferential.send (bar, 0x20, 0, (0x200L << 16) | 1);
+			}));
 			int [] next = {count};
 			results.add (AllWidgetsBench.measure ("append", k -> {
 				append (bar, next [0]++);

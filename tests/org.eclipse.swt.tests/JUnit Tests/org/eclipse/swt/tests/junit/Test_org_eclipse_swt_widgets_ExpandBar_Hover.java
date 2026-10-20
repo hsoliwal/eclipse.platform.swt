@@ -138,6 +138,28 @@ public class Test_org_eclipse_swt_widgets_ExpandBar_Hover {
 		assertEquals (-1, hovered ());
 	}
 
+	static final int WM_SETCURSOR = 0x20, HTCLIENT = 1, HTCAPTION = 2;
+
+	/* WM_SETCURSOR as Windows sends it before a mouse move: the hand cursor (answer 1) only over a hovered header */
+	long setCursor (int hitTest) {
+		return ViewportDifferential.send (bar, WM_SETCURSOR, 0, ((long) WM_MOUSEMOVE << 16) | hitTest);
+	}
+
+	@Test
+	public void theHandCursorOnlyOverAHoveredHeader () throws ReflectiveOperationException {
+		send (WM_MOUSEMOVE, headerY (2));
+		assertEquals (2, hovered ());
+		assertEquals (1, setCursor (HTCLIENT), "hovered header: the hand");
+		send (WM_MOUSEMOVE, headerY (0) + bar.getItem (0).getHeaderHeight () + 10);
+		assertEquals (-1, hovered ());
+		assertNotEquals (1, setCursor (HTCLIENT), "a body: no hand");
+		send (WM_MOUSEMOVE, headerY (3));
+		bar.getItem (3).dispose ();
+		assertNotEquals (1, setCursor (HTCLIENT), "the hovered item was disposed");
+		send (WM_MOUSEMOVE, headerY (4));
+		assertNotEquals (1, setCursor (HTCAPTION), "not the client area");
+	}
+
 	@Test
 	public void aClickOnAHeaderTakesTheFocus () throws ReflectiveOperationException {
 		assertSame (bar.getItem (0), focus (bar));
