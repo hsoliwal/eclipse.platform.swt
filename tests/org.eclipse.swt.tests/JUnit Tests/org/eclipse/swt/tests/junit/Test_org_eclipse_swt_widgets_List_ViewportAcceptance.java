@@ -479,6 +479,9 @@ public class Test_org_eclipse_swt_widgets_List_ViewportAcceptance {
 		/* with a selection and its anchor: a removal above clears the anchor (at most two operations) */
 		list.setSelection (new int [] {7, 50_503, 99_990});
 		stock.setSelection (new int [] {7, 50_503, 99_990});
+		settleUi ();
+		/* setSelection may move the window (showSelection): only the splice is measured */
+		before = (Long) ops.invoke (list);
 		splice.invoke (list, 30, 10, new String [] {"a", "b"});
 		itemApi (stock, 30, 10, new String [] {"a", "b"});
 		long cleared = (Long) ops.invoke (list) - before;

@@ -937,8 +937,8 @@ final class ComboViewport {
 			if (parked >= index) parked++;
 			if (stale && staleSelection >= index) staleSelection++;
 			int entry = plan.inserted (index, 1);
-			if (entry >= 0 && stale) {
-				/* the bar as the native insert would leave it */
+			if (stale) {
+				/* the stock list box holds every row: every insert moves its bar state (freed, default, written) */
 				inserted ();
 			} else if (entry >= 0) {
 				busy = true;
@@ -988,7 +988,8 @@ final class ComboViewport {
 			}
 			if (stale && staleSelection > end) staleSelection -= removed;
 			int resident = plan.removed (start, removed);
-			if (resident > 0 && stale) {
+			if (stale) {
+				/* every stock delete writes the bar */
 				barState = BAR_SET;
 			} else if (resident > 0) {
 				int entry = plan.removedEntry (start);
@@ -1101,7 +1102,11 @@ final class ComboViewport {
 		/* a closed list keeps no rows after the reset: its window is built when it drops (rule 24, hidden viewports) */
 		stale = false;
 		staleSelection = -1;
-		if (!isDropped ()) stale = true;
+		if (!isDropped ()) {
+			stale = true;
+			/* the stock combo adds every item after its reset: freed for none, default for one, written for more */
+			barState = items.length == 0 ? BAR_NONE : items.length == 1 ? BAR_DEFAULT : BAR_SET;
+		}
 		model.setItems (ListViewport.nativeTexts (items));
 		int newWidth = hScroll () ? widest () : 0;
 		layout ();
@@ -1171,6 +1176,12 @@ final class ComboViewport {
 
 	/** Combo.select over logical rows: the row is made resident, CB_SETCURSEL runs through the combo (and its Verify), Modify when the selection changed. */
 	void select (int index) {
+		if (stale && index >= 0 && index == staleSelection) {
+			/* the selected row again (Combo.setItem puts the selection back): stock CB_SETCURSEL changes nothing but records the row */
+			recordedRow = index;
+			recordedFirst = plan.first ();
+			return;
+		}
 		if (0 <= index && index < model.getItemCount ()) {
 			int selection = selection ();
 			int entry = residentEntry (index);
