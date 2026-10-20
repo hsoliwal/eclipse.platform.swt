@@ -100,7 +100,8 @@ public class Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom {
 		assertEquals (inactive, left, "FlatLaf #1022: a seam left of the check box at " + zoom + " %: " + file);
 		assertEquals (inactive, right, "FlatLaf #1022: a seam right of the check box at " + zoom + " %: " + file);
 		/* the unfocused selection fill is the look and feel's, not the platform's */
-		int fill = rgb (capture, row1.x + 2, middle);
+		/* sampled right of the label (a full selection row), never on the label's text */
+		int fill = rgb (capture, Math.min (capture.width - 40, row1.x + row1.width + 10), middle);
 		assertEquals (inactive, fill, "swt #3659: the unfocused selection of " + laf + " is not Tree.selectionInactiveBackground: " + file);
 		assertNotEquals (background, inactive, "the look and feel distinguishes the inactive selection");
 		shell.dispose ();
