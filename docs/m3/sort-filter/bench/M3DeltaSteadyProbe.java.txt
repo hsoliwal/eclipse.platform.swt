@@ -1,0 +1,57 @@
+package org.eclipse.swt.m3;
+
+import java.util.*;
+
+import org.eclipse.swt.*;
+
+/* steady-state delta costs: one chain, 300 rounds of (change 100 rows, insert 100 rows, remove 100 rows); medians of the last 200 */
+public final class Probe {
+	public static void main (String [] args) {
+		int n = Integer.parseInt (args [0]);
+		boolean chain = args [1].equals ("chain");
+		Random random = new Random (1);
+		String [] texts = new String [n];
+		int [] small = new int [n];
+		for (int i = 0; i < n; i++) {
+			texts [i] = "w" + random.nextInt (5000);
+			small [i] = random.nextInt (1000);
+		}
+		M3CellText cells = (row, column) -> texts [row];
+		M3ColumnFilter filter = new M3ColumnFilter (2, n - 100, cells);
+		if (chain) {
+			M3ColumnSort sort = new M3ColumnSort (2, filter);
+			sort.setKey (0, M3ColumnKey.ofText (r -> texts [r], null));
+			sort.setKey (1, M3ColumnKey.ofInts (r -> small [r]));
+			sort.setSortKeys (new int [] {0, 1}, new int [] {SWT.UP, SWT.DOWN});
+		}
+		filter.setText (0, "w1", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE);
+		int rounds = 300;
+		long [][] t = new long [3][rounds];
+		int [] rows = new int [100];
+		for (int round = 0; round < rounds; round++) {
+			for (int k = 0; k < 100; k++) {
+				rows [k] = random.nextInt (n - 100);
+				texts [rows [k]] = "w" + random.nextInt (5000);
+				small [rows [k]] = random.nextInt (1000);
+			}
+			long start = System.nanoTime ();
+			filter.rowsChanged (rows);
+			t [0][round] = System.nanoTime () - start;
+			int at = random.nextInt (n - 99);
+			start = System.nanoTime ();
+			filter.rowsInserted (at, 100);
+			t [1][round] = System.nanoTime () - start;
+			at = random.nextInt (n - 99);
+			start = System.nanoTime ();
+			filter.rowsRemoved (at, 100);
+			t [2][round] = System.nanoTime () - start;
+		}
+		String [] names = {"change100", "insert100", "remove100"};
+		StringBuilder line = new StringBuilder (chain ? "chain " : "filter ").append (n);
+		for (int op = 0; op < 3; op++) {
+			Arrays.sort (t [op], 100, rounds);
+			line.append ("  ").append (names [op]).append (' ').append (t [op][200] / 1000).append (" us");
+		}
+		System.err.println (line);
+	}
+}

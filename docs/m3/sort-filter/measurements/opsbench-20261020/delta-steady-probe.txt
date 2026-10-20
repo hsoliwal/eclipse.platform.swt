@@ -1,0 +1,16 @@
+m3-o3-src filter 100000  change100 81 us  insert100 94 us  remove100 89 us
+cur filter 100000  change100 138 us  insert100 149 us  remove100 125 us
+m3-o3-src filter 1000000  change100 669 us  insert100 803 us  remove100 921 us
+cur filter 1000000  change100 195 us  insert100 466 us  remove100 581 us
+m3-o3-src chain 100000  change100 298 us  insert100 290 us  remove100 252 us
+cur chain 100000  change100 246 us  insert100 319 us  remove100 297 us
+m3-o3-src chain 1000000  change100 7533 us  insert100 4756 us  remove100 5530 us
+cur chain 1000000  change100 4962 us  insert100 3011 us  remove100 3445 us
+m3-o3-src filter 100000  change100 83 us  insert100 93 us  remove100 89 us
+cur filter 100000  change100 37 us  insert100 149 us  remove100 103 us
+m3-o3-src filter 1000000  change100 648 us  insert100 826 us  remove100 931 us
+cur filter 1000000  change100 181 us  insert100 382 us  remove100 494 us
+m3-o3-src chain 100000  change100 291 us  insert100 276 us  remove100 236 us
+cur chain 100000  change100 255 us  insert100 283 us  remove100 239 us
+m3-o3-src chain 1000000  change100 9337 us  insert100 5504 us  remove100 6684 us
+cur chain 1000000  change100 6540 us  insert100 3773 us  remove100 4374 us

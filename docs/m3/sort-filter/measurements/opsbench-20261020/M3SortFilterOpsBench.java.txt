@@ -127,9 +127,10 @@ public final class M3SortFilterOpsBench {
 		for (int changed : new int [] {1, 100, 10_000}) {
 			if (changed > n / 10) continue;
 			int [] rows = new int [changed];
+			/* one generator per operation: every run changes the rows to new values (not to the values of the previous run) */
+			Random edits = new Random (changed);
 			Op dirty = () -> {
 				typedW1.run ();
-				Random edits = new Random (changed);
 				for (int k = 0; k < changed; k++) {
 					rows [k] = edits.nextInt (n);
 					texts [rows [k]] = "w" + edits.nextInt (5000);
@@ -139,6 +140,16 @@ public final class M3SortFilterOpsBench {
 			time ("delta-rows-changed-" + changed, n, dirty, () -> filter [0].rowsChanged (rows));
 		}
 		time ("full-pass-reset", n, typedW1, () -> filter [0].setSourceSize (n));
+		Op shortChain = () -> {
+			filter [0] = new M3ColumnFilter (2, n - 100, cells);
+			chained [0] = new M3ColumnSort (2, filter [0]);
+			chained [0].setKey (0, M3ColumnKey.ofText (r -> texts [r], null));
+			chained [0].setKey (1, M3ColumnKey.ofInts (r -> small [r]));
+			chained [0].setSortKeys (new int [] {0, 1}, new int [] {SWT.UP, SWT.DOWN});
+			filter [0].setText (0, "w1", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE);
+		};
+		time ("delta-insert-100-rows", n, shortChain, () -> filter [0].rowsInserted (n / 2, 100));
+		time ("delta-remove-100-rows", n, typedW1, () -> filter [0].rowsRemoved (n / 2, 100));
 		Op filterOnly = () -> {
 			filter [0] = new M3ColumnFilter (2, n, cells);
 			filter [0].setText (0, "w1", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE);
@@ -146,9 +157,10 @@ public final class M3SortFilterOpsBench {
 		for (int changed : new int [] {100, 10_000}) {
 			if (changed > n / 10) continue;
 			int [] rows = new int [changed];
+			/* one generator per operation: every run changes the rows to new values (not to the values of the previous run) */
+			Random edits = new Random (changed);
 			Op dirty = () -> {
 				filterOnly.run ();
-				Random edits = new Random (changed);
 				for (int k = 0; k < changed; k++) {
 					rows [k] = edits.nextInt (n);
 					texts [rows [k]] = "w" + edits.nextInt (5000);
@@ -166,9 +178,10 @@ public final class M3SortFilterOpsBench {
 		for (int changed : new int [] {1, 100, 10_000}) {
 			if (changed > n / 10) continue;
 			int [] rows = new int [changed];
+			/* one generator per operation: every run changes the rows to new values (not to the values of the previous run) */
+			Random edits = new Random (changed);
 			Op dirty = () -> {
 				sortOnly.run ();
-				Random edits = new Random (changed);
 				for (int k = 0; k < changed; k++) {
 					rows [k] = edits.nextInt (n);
 					texts [rows [k]] = "w" + edits.nextInt (5000);

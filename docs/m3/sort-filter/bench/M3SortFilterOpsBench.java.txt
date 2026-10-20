@@ -127,9 +127,10 @@ public final class M3SortFilterOpsBench {
 		for (int changed : new int [] {1, 100, 10_000}) {
 			if (changed > n / 10) continue;
 			int [] rows = new int [changed];
+			/* one generator per operation: every run changes the rows to new values (not to the values of the previous run) */
+			Random edits = new Random (changed);
 			Op dirty = () -> {
 				typedW1.run ();
-				Random edits = new Random (changed);
 				for (int k = 0; k < changed; k++) {
 					rows [k] = edits.nextInt (n);
 					texts [rows [k]] = "w" + edits.nextInt (5000);
@@ -156,9 +157,10 @@ public final class M3SortFilterOpsBench {
 		for (int changed : new int [] {100, 10_000}) {
 			if (changed > n / 10) continue;
 			int [] rows = new int [changed];
+			/* one generator per operation: every run changes the rows to new values (not to the values of the previous run) */
+			Random edits = new Random (changed);
 			Op dirty = () -> {
 				filterOnly.run ();
-				Random edits = new Random (changed);
 				for (int k = 0; k < changed; k++) {
 					rows [k] = edits.nextInt (n);
 					texts [rows [k]] = "w" + edits.nextInt (5000);
@@ -176,9 +178,10 @@ public final class M3SortFilterOpsBench {
 		for (int changed : new int [] {1, 100, 10_000}) {
 			if (changed > n / 10) continue;
 			int [] rows = new int [changed];
+			/* one generator per operation: every run changes the rows to new values (not to the values of the previous run) */
+			Random edits = new Random (changed);
 			Op dirty = () -> {
 				sortOnly.run ();
-				Random edits = new Random (changed);
 				for (int k = 0; k < changed; k++) {
 					rows [k] = edits.nextInt (n);
 					texts [rows [k]] = "w" + edits.nextInt (5000);
