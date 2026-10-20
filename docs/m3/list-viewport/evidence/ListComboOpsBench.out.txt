@@ -1,0 +1,115 @@
+# ListComboOpsBench (list_ops_bench.sh), hidden desktop, 2026-10-20: operation size mode wall_ms(median of 5) alloc_KB messages row_ops
+## lv17 viewport-100000
+list retained heap	100000	viewport	-	321	-	-
+list setItems	100000	viewport	7.8	784	68	53
+list setItems H_SCROLL	100000	viewport	3198.8	3519	70	53
+list add 1000 at end	100000	viewport	314.3	680	2000	0
+list add 100 at 10	100000	viewport	42.1	601	500	100
+list remove 1000 middle	100000	viewport	10.7	24	4	0
+list remove 100 single at 10	100000	viewport	56.3	21	720	204
+list removeAll	100000	viewport	1.4	1	5	1
+list setTopIndex 100 jumps	100000	viewport	246.9	238	8417	7623
+list remove 1000 then setTopIndex last	100000	viewport	3.4	2	59	51
+combo retained heap	100000	viewport	-	785	-	-
+combo setItems	100000	viewport	1059.6	1180	118	102
+combo add 1000 at end	100000	viewport	345.0	1382	2000	0
+combo remove 1000 middle	100000	viewport	7.8	0	4	0
+combo removeAll	100000	viewport	1.2	1	8	2
+combo select last	100000	viewport	35.6	16	213	203
+combo drop open (selection middle)	100000	viewport	183.8	7	75	41
+## lv17 viewport-1000000
+list retained heap	1000000	viewport	-	3658	-	-
+list setItems	1000000	viewport	21.5	7816	68	53
+list setItems H_SCROLL	1000000	viewport	37556.7	35160	70	53
+list add 1000 at end	1000000	viewport	343.5	5954	2000	0
+list add 100 at 10	1000000	viewport	69.9	5874	500	100
+list remove 1000 middle	1000000	viewport	49.7	24	4	0
+list remove 100 single at 10	1000000	viewport	67.4	21	720	204
+list removeAll	1000000	viewport	1.1	1	5	1
+list setTopIndex 100 jumps	1000000	viewport	320.5	238	8417	7623
+list remove 1000 then setTopIndex last	1000000	viewport	3.5	2	59	51
+combo retained heap	1000000	viewport	-	8196	-	-
+combo setItems	1000000	viewport	7633.0	11727	118	102
+combo add 1000 at end	1000000	viewport	167.8	11929	2000	0
+combo remove 1000 middle	1000000	viewport	5.5	0	4	0
+combo removeAll	1000000	viewport	0.7	1	8	2
+combo select last	1000000	viewport	17.6	16	213	203
+combo drop open (selection middle)	1000000	viewport	189.7	7	75	41
+## lv17 original-100000
+list retained heap	100000	original	-	-128	-	-
+list setItems	100000	original	683.0	3906	100002	100001
+list setItems H_SCROLL	100000	original	1541.5	3906	100004	100001
+list add 1000 at end	100000	original	174.7	78	1000	1000
+list add 100 at 10	100000	original	22.4	7	100	100
+list remove 1000 middle	100000	original	537.7	47	1003	1000
+list remove 100 single at 10	100000	original	80.8	10	300	100
+list removeAll	100000	original	0.8	1	3	1
+list setTopIndex 100 jumps	100000	original	84.0	19	200	0
+list remove 1000 then setTopIndex last	100000	original	1.4	0	3	0
+combo retained heap	100000	original	-	2	-	-
+combo setItems	100000	original	11318.1	6250	200013	200002
+combo add 1000 at end	100000	original	137.7	156	2000	2000
+combo remove 1000 middle	100000	original	407.8	180	9004	2000
+combo removeAll	100000	original	0.8	1	8	2
+combo select last	100000	original	0.3	1	11	0
+combo drop open (selection middle)	100000	original	165.2	2	32	0
+## lv22 viewport-100000
+list retained heap	100000	viewport	-	282	-	-
+list setItems	100000	viewport	3.2	394	68	53
+list setItems H_SCROLL	100000	viewport	1767.0	3128	70	53
+list add 1000 at end	100000	viewport	122.6	680	2000	0
+list add 100 at 10	100000	viewport	18.7	601	500	100
+list remove 1000 middle	100000	viewport	1.3	1	4	0
+list remove 100 single at 10	100000	viewport	16.2	24	720	204
+list removeAll	100000	viewport	0.5	1	5	1
+list setTopIndex 100 jumps	100000	viewport	94.8	238	8417	7623
+list remove 1000 then setTopIndex last	100000	viewport	1.5	2	59	51
+list m3Splice 1000 out 1000 in outside window	100000	viewport	0.1	0	4	0
+list m3Splice 3 out 2 in inside window	100000	viewport	3.2	3	64	31
+combo retained heap	100000	viewport	-	784	-	-
+combo setItems	100000	viewport	492.8	782	12	1
+combo add 1000 at end	100000	viewport	16.5	1328	0	0
+combo remove 1000 middle	100000	viewport	4.8	0	2	0
+combo removeAll	100000	viewport	0.2	1	8	2
+combo select last	100000	viewport	8.5	3	111	101
+combo drop open (selection middle)	100000	viewport	184.5	6	75	41
+## lv22 viewport-1000000
+list retained heap	1000000	viewport	-	3646	-	-
+list setItems	1000000	viewport	8.0	3909	68	53
+list setItems H_SCROLL	1000000	viewport	21741.3	31253	70	53
+list add 1000 at end	1000000	viewport	135.5	5954	2000	0
+list add 100 at 10	1000000	viewport	30.0	5872	500	100
+list remove 1000 middle	1000000	viewport	1.4	1	4	0
+list remove 100 single at 10	1000000	viewport	42.3	25	720	204
+list removeAll	1000000	viewport	0.7	1	5	1
+list setTopIndex 100 jumps	1000000	viewport	102.9	238	8417	7623
+list remove 1000 then setTopIndex last	1000000	viewport	2.3	2	59	51
+list m3Splice 1000 out 1000 in outside window	1000000	viewport	2.8	1	4	0
+list m3Splice 3 out 2 in inside window	1000000	viewport	5.3	3	64	31
+combo retained heap	1000000	viewport	-	8195	-	-
+combo setItems	1000000	viewport	6270.1	7814	12	1
+combo add 1000 at end	1000000	viewport	20.4	11851	0	0
+combo remove 1000 middle	1000000	viewport	5.9	0	2	0
+combo removeAll	1000000	viewport	0.3	1	8	2
+combo select last	1000000	viewport	10.8	3	111	101
+combo drop open (selection middle)	1000000	viewport	183.4	6	75	41
+## lv22 original-100000
+list retained heap	100000	original	-	-128	-	-
+list setItems	100000	original	709.0	3906	100002	100001
+list setItems H_SCROLL	100000	original	1608.2	3906	100004	100001
+list add 1000 at end	100000	original	226.3	78	1000	1000
+list add 100 at 10	100000	original	23.5	7	100	100
+list remove 1000 middle	100000	original	776.5	47	1003	1000
+list remove 100 single at 10	100000	original	97.3	10	300	100
+list removeAll	100000	original	1.1	1	3	1
+list setTopIndex 100 jumps	100000	original	303.4	19	200	0
+list remove 1000 then setTopIndex last	100000	original	1.4	0	3	0
+list m3Splice 1000 out 1000 in outside window	100000	original	1099.5	125	2004	2000
+list m3Splice 3 out 2 in inside window	100000	original	6.2	1	9	5
+combo retained heap	100000	original	-	2	-	-
+combo setItems	100000	original	13273.8	6250	200013	200002
+combo add 1000 at end	100000	original	179.5	156	2000	2000
+combo remove 1000 middle	100000	original	553.3	180	9004	2000
+combo removeAll	100000	original	1.2	1	8	2
+combo select last	100000	original	0.5	1	11	0
+combo drop open (selection middle)	100000	original	181.4	2	32	0
