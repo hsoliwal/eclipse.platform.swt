@@ -43,3 +43,7 @@ The lead marked every full-rebuild, per-element-map and syncExec site across the
 ## Template-first (brief rule 27)
 
 Every surface becomes a `.m3view` spec plus the template's conversion recipe (contract: docs/m3/view-template/VIEW_TEMPLATE.md on the integration branch; template owned by the JFace agent). FilteredItemsSelectionDialog, FilteredTree and the selection dialogs share one "filtered list/tree" spec shape with a search-text filter lane; write that shape once and use it for every dialog.
+
+## p2 (forked 2026-10-20: hsoliwal/p2)
+
+Also yours: the p2 UI in org.eclipse.equinox.p2.ui, which is Install New Software (the available-software tree), Installed Software, Revert Configuration and update dialogs. These are huge trees with a filter box, so use the same filtered list/tree spec shape. correction-sites lists 103 p2 sites, 4 of them DELTA_DEFECTs.
