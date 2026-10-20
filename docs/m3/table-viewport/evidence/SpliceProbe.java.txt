@@ -138,7 +138,7 @@ public class SpliceProbe {
 			int mark = random.nextInt (rows + 1) - 1;
 			OS.SendMessage (table.handle, OS.LVM_SETSELECTIONMARK, 0, mark);
 			int at = random.nextInt (rows), removed = random.nextInt (Math.min (7, rows - at + 1)), inserted = random.nextInt (6);
-			if (seed % 8 == 0 && mark >= 0) { at = Math.max (0, mark - random.nextInt (3)); removed = Math.max (1, mark - at + 1 + random.nextInt (2)); }
+			if (seed % 8 == 0 && mark >= 0) { at = Math.max (0, mark - random.nextInt (3)); removed = Math.min (rows - at, Math.max (1, mark - at + 1 + random.nextInt (2))); }
 			if (seed % 8 == 1 && mark >= 0) { at = mark; removed = 0; inserted = 1 + random.nextInt (3); }
 			if (seed % 8 == 2 && focus >= 0) { at = Math.max (0, focus - random.nextInt (3)); removed = Math.min (rows - at, Math.max (1, focus - at + 1 + random.nextInt (2))); }
 			if (seed % 8 == 3) { at = rows - 1 - random.nextInt (3); removed = rows - at; focus = at + random.nextInt (removed); setFocus (table, focus); }
