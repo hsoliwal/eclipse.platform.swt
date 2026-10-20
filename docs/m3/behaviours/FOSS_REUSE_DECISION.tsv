@@ -35,3 +35,6 @@ breadcrumbs	ant-design/ant-design (Breadcrumb)	REQUIRED_BEFORE_REUSE	REQUIRED_BE
 diff-viewer	eclipse-platform/eclipse.platform (compare TextMergeViewer)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
 diff-viewer	java-diff-utils/java-diff-utils	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	Apache-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
 diff-viewer	microsoft/monaco-editor (diff editor)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+text-folding	eclipse-platform/eclipse.platform.ui (JFace Text projection)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+popup-find	eclipse-platform/eclipse.platform.ui (FindReplaceOverlay)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	EPL-2.0	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
+popup-find	microsoft/vscode (find widget)	REQUIRED_BEFORE_REUSE	REQUIRED_BEFORE_REUSE	MIT	UNPROVEN	ADAPT	-	-	THIRD_PARTY_NOTICES.md
