@@ -162,6 +162,8 @@ this is what will be offered to Eclipse, so write upstream-quality Eclipse code.
 
 22. **JUL logging** (user 2026-10-19: "use JUL logging"). All logging goes through java.util.logging: SWT via `org.eclipse.swt.internal.SwtLog` (JUL, asynchronous); Nebula, GEF, JFace and the custom widgets via a `java.util.logging.Logger` named after the package; M3JDK via `System.Logger` (which routes to JUL). Never System.out/err, SLF4J, Log4j or commons-logging in our code. Hot paths guard with `isLoggable`/supplier lambdas so a disabled level allocates nothing. Levels: FINEST/FINER (TRACE) for per-row detail, FINE (DEBUG) for plans and decisions, INFO for mode selection and one-shot facts.
 
+23. **Optimization pass** (user 2026-10-20: "proceed with optimizing the whole"). Follow `C:/m3-superset/tools/OPTIMIZATION_PASS.md`: measure at 10^5 and 10^6 first, one model + deltas, allocation-free hot paths, catalogue algorithms, native work O(window); one ledger row per leaf in `docs/m3/<track>/OPTIMIZATION_LEDGER.tsv`; no number, no leaf.
+
 ## Machine rules (hard)
 
 - **Hidden desktop (user requirement 2026-10-16: never move the user's mouse, never steal focus):** every GUI

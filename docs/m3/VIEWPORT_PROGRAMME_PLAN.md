@@ -544,3 +544,10 @@ All of these were (re)started at ~12:10 on 2026-10-17 with the no-trailer rule a
 | M3jdk21 (jdk21u) | 3,335 commits since jdk-21+35 | BLOCKED. 23 conflicted files / 186 hunks: String.java (10) + AbstractStringBuilder (2) vs 8311906/8321180/8320570/8351000/8359454; 17 PQC files vs official JEP 496/497 backports; os_linux/os_bsd FD backport; README + cross-compile workflow. Head pushed as m3/upstream-sync-20261019-jdk21u-head; report on draft PR #1502; per-hunk resolution proposals requested. USER DECISION on the merge. |
 
 Analysis data: S:/m3-scratch/upstream-sync-20261019/ and S:/m3-scratch/worktrees/*-sync*.
+
+- 2026-10-19 20:20 K:/m3-work/logs/commit_extra.sh <worktree...>: one-off commit-and-push for trees outside the interval sweep (skips build output, unstages CR/whitespace-only changes, refuses secrets and files > 5 MB, pushes -u). Log K:/m3-work/logs/commit-extra.log. Never run it on K:/m3-work/com.synexia (user-owned uncommitted files).
+- 2026-10-19 21:10 commit_extra.sh now uses `git add --sparse`; com.synexia pushes that hang up (big commits from blobless worktrees) are replayed with K:/m3-work/agents/donor-atomize/run/api_push.py; synexia-to-public local work is on side branch codex/synexia-to-public-gap-20261017-wip-20261019 (4 shared ledgers conflict with 8 remote commits; owning agent merges).
+
+## 00j Optimization pass (2026-10-20)
+
+User: "proceed with optimizing the whole". All 17 tracks resumed after the 06:23 reboot with brief rule 23 and C:/m3-superset/tools/OPTIMIZATION_PASS.md. Each track keeps docs/m3/<track>/OPTIMIZATION_LEDGER.tsv (one row per leaf, before/after at 10^5 and 10^6). String precompute (M3jdk21 A-leaves, PRs #1406/#1417/#1463/#1464) is owned by other sessions; not duplicated here.
