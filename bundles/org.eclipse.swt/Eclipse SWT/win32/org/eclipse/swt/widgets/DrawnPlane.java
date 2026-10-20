@@ -64,6 +64,11 @@ abstract class DrawnPlane {
 	/* the plane on the render thread, and the thread; null without it */
 	final RenderTarget renderTarget;
 	private final RenderThread renderThread;
+	/*
+	 * Rule 28, leaf R28-4: at each frame tick of the Display's Synchronizer, after the model patches, a plane whose window
+	 * the patches damaged paints now (its snapshot is published in the same tick); a hidden window has no update region
+	 */
+	private final FrameListener frameListener;
 	/* the slab being filled while a paint goes to the render thread; null otherwise */
 	private FrameSlab slab;
 	/* the damage of the last slab published, added to the next while the render thread has not taken it */
@@ -108,9 +113,16 @@ abstract class DrawnPlane {
 			}));
 			this.renderThread = RenderThread.of (control.display);
 			renderThread.add (renderTarget);
+			this.frameListener = (tickDisplay, frameGeneration) -> {
+				if (control.isDisposed ()) return;
+				long handle = control.handle;
+				if (OS.IsWindowVisible (handle) && OS.GetUpdateRect (handle, null, false)) OS.UpdateWindow (handle);
+			};
+			control.display.getSynchronizer ().addFrameListener (frameListener);
 		} else {
 			this.renderTarget = null;
 			this.renderThread = null;
+			this.frameListener = null;
 		}
 		/* a theme change (any thread) repaints the plane on its display's thread, when it changes the theme the plane paints with */
 		Display display = control.display;
@@ -422,7 +434,10 @@ abstract class DrawnPlane {
 		M3LookAndFeel.uninstallUI (control);
 		buffer.release ();
 		retainedRows.release ();
-		if (renderTarget != null) renderThread.remove (renderTarget);
+		if (renderTarget != null) {
+			renderThread.remove (renderTarget);
+			if (!control.display.isDisposed ()) control.display.getSynchronizer ().removeFrameListener (frameListener);
+		}
 		canvas.dispose ();
 		OS.DeleteObject (update);
 	}
