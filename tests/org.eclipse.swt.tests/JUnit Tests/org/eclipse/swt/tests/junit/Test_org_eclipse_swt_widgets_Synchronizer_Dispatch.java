@@ -44,8 +44,13 @@ public class Test_org_eclipse_swt_widgets_Synchronizer_Dispatch {
 	/* runs the event loop until the condition holds or the deadline passes */
 	boolean pump (java.util.function.BooleanSupplier done, long millis) {
 		long end = System.currentTimeMillis () + millis;
+		Runnable tick = () -> {};
 		while (!done.getAsBoolean () && System.currentTimeMillis () < end) {
-			if (!display.readAndDispatch ()) display.sleep ();
+			if (!display.readAndDispatch ()) {
+				/* a condition that turns true off the UI thread posts nothing: wake at least every 20 ms */
+				display.timerExec (20, tick);
+				display.sleep ();
+			}
 		}
 		return done.getAsBoolean ();
 	}

@@ -47,6 +47,7 @@ Per frame, in this order:
   - posting from the UI thread, null runnables, failures in async and sync runnables, and `syncExec` on the UI thread.
 - Its second part covers the rebuilt queue: keyed coalescing in place, the class order, and model patches once per frame before the frame listeners. That part skips on the stock jar.
 - The stock `Test_org_eclipse_swt_widgets_Display` and `Test_org_eclipse_swt_widgets_Synchronizer` run on both jars.
+- Results (hidden desktop): the stock `Test_org_eclipse_swt_widgets_Display` and `Test_org_eclipse_swt_widgets_Synchronizer` pass 65 and fail 1 on both jars (the same `test_postLorg_eclipse_swt_widgets_Event`: `Display.post` cannot send input on the invisible desktop); the dispatch test passes 4 of 4 on the rebuilt jar and its 2 differential cases on the stock jar (the 2 others skip there). Evidence: `docs/m3/allwidgets-viewport/optimization/evidence/synchronizer-*.log`.
 - `Test_org_eclipse_swt_widgets_Synchronizer_Bench` measures three things:
   - bytes allocated per `asyncExec` on the posting thread;
   - `asyncExec` per second for 10^6 calls from 4 threads;
