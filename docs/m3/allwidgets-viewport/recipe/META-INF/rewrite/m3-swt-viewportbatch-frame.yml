@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtViewportBatchFrameOnly
+displayName: ViewportBatch repaints only the frame when the scroll-bar plane is released
+description: >-
+  Defect reported by the enhanced-API and Table agents (SpliceProbe T9): leaving a SWT.PLANE_SCROLLBARS batch called
+  RedrawWindow (hwnd, null, 0, RDW_FRAME | RDW_INVALIDATE), and a null rectangle with no region adds the whole client
+  area to the update region, so every batch that froze the scroll bars (every M3Model.apply) repainted every visible
+  row. The update region is now the window minus its client area (in client coordinates): RDW_FRAME repaints the
+  non-client parts (the WS_VSCROLL and WS_HSCROLL bars, the border) and no client pixel is invalidated, as the class
+  comment always said. Idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\t\t\tlong hwnd = c instanceof Scrollable scrollable ? scrollable.scrolledHandle () : c.topHandle ();\n\t\t\t\tOS.RedrawWindow (hwnd, null, 0, OS.RDW_FRAME | OS.RDW_INVALIDATE);\n"
+      replace: "\t\t\t\tlong hwnd = c instanceof Scrollable scrollable ? scrollable.scrolledHandle () : c.topHandle ();\n\t\t\t\tredrawFrame (hwnd);\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "(?<!\t\tOS[.]DeleteObject [(]inside[)];\n\t[}]\n)\n\tstatic void flushViewport [(]Control c, ViewportDamageRegion region, boolean allChildren[)] [{]\n"
+      replace: "\n\t/*\n\t * The frame only (scroll bars, border): the update region is the window minus its client area, in client\n\t * coordinates, so RDW_FRAME sends WM_NCPAINT for the non-client parts and no client pixel is invalidated (a null\n\t * rectangle would add the whole client area).\n\t */\n\tstatic void redrawFrame (long hwnd) {\n\t\tRECT window = new RECT (), client = new RECT ();\n\t\tOS.GetWindowRect (hwnd, window);\n\t\tOS.MapWindowPoints (0, hwnd, window, 2);\n\t\tOS.GetClientRect (hwnd, client);\n\t\tlong frame = OS.CreateRectRgn (window.left, window.top, window.right, window.bottom);\n\t\tlong inside = OS.CreateRectRgn (client.left, client.top, client.right, client.bottom);\n\t\tOS.CombineRgn (frame, frame, inside, OS.RGN_DIFF);\n\t\tOS.RedrawWindow (hwnd, null, frame, OS.RDW_FRAME | OS.RDW_INVALIDATE);\n\t\tOS.DeleteObject (frame);\n\t\tOS.DeleteObject (inside);\n\t}\n\n\tstatic void flushViewport (Control c, ViewportDamageRegion region, boolean allChildren) {\n"
+      regex: true
