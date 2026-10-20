@@ -1,1 +1,2 @@
 leaf	operation	size	before	after	unit	method	catalogue_id	commit	evidence_path
+O1	ExpandBar: expand the first item (layout from item 0)	10^5 items	86015	49777	us (median of 5, wall)	the client rectangle read once per layout, a scratch RECT in ExpandItem.redraw: 2 x 10^5 GetClientRect calls -> 1, allocated 12815552 -> 15616 B per expand; height change 93876 -> 56962 us; 10^4: alloc 1283624 -> 3688 B (wall time within load noise)	loop-invariant hoisting (HP-LAW)	971b0e36698	docs/m3/allwidgets-viewport/optimization/evidence/expandbar-o1-before.log, expandbar-o1-after.log
