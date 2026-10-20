@@ -1,0 +1,77 @@
+// Manual win32 probe (default package). Run it on the hidden desktop: where Combo.setItems of 1,000,000 items spends
+// its time. A sampler thread records the UI thread's top frames every 5 ms while setItems runs; JUL logs the frames
+// seen most often (the first SWT frames of each sample).
+
+import java.util.*;
+import java.util.logging.*;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.*;
+
+public class ComboSetItemsProfile {
+	static final Logger LOG = Logger.getLogger ("ComboSetItemsProfile");
+
+	static {
+		LOG.setUseParentHandlers (false);
+		Handler handler = new ConsoleHandler ();
+		handler.setFormatter (new java.util.logging.Formatter () {
+			@Override
+			public String format (LogRecord entry) {
+				return entry.getMessage () + System.lineSeparator ();
+			}
+		});
+		LOG.addHandler (handler);
+	}
+
+	public static void main (String [] args) throws Exception {
+		int size = args.length > 1 ? Integer.parseInt (args [1]) : 1_000_000;
+		Display display = new Display ();
+		Shell shell = new Shell (display);
+		shell.setBounds (20, 20, 330, 420);
+		shell.open ();
+		String [] items = new String [size];
+		for (int i = 0; i < size; i++) items [i] = "Item " + i;
+		Combo combo = new Combo (shell, SWT.DROP_DOWN | SWT.READ_ONLY);
+		combo.setBounds (5, 5, 300, 30);
+		Thread ui = Thread.currentThread ();
+		Map<String, Integer> top = new HashMap<> ();
+		int [] samples = {0};
+		volatile_flag running = new volatile_flag ();
+		Thread sampler = new Thread (() -> {
+			while (running.on) {
+				StackTraceElement [] stack = ui.getStackTrace ();
+				StringBuilder key = new StringBuilder ();
+				int n = 0;
+				for (StackTraceElement frame : stack) {
+					if (n == 4) break;
+					if (key.length () > 0) key.append (" < ");
+					key.append (frame.getClassName ().replaceAll (".*\\.", "")).append ('.').append (frame.getMethodName ()).append (':').append (frame.getLineNumber ());
+					n++;
+				}
+				synchronized (top) {
+					top.merge (key.toString (), 1, Integer::sum);
+					samples [0]++;
+				}
+				try {
+					Thread.sleep (5);
+				} catch (InterruptedException e) {
+					return;
+				}
+			}
+		});
+		running.on = true;
+		sampler.start ();
+		long start = System.nanoTime ();
+		combo.setItems (items);
+		long millis = (System.nanoTime () - start) / 1_000_000;
+		running.on = false;
+		sampler.join ();
+		LOG.info ("setItems " + size + " took " + millis + " ms, " + samples [0] + " samples; mode " + System.getProperty ("swt.widget.mode", "viewport"));
+		top.entrySet ().stream ().sorted ((a, b) -> b.getValue () - a.getValue ()).limit (12).forEach (e -> LOG.info (e.getValue () + "\t" + e.getKey ()));
+		display.dispose ();
+	}
+
+	static final class volatile_flag {
+		volatile boolean on;
+	}
+}

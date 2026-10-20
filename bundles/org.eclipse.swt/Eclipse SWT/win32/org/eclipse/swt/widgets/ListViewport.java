@@ -236,7 +236,7 @@ final class ListViewport {
 	/* rows that must be resident: the page, the partial row and half the overscan on each side */
 	private void ensureWindow () {
 		int count = model.getItemCount ();
-		int visible = Math.max (1, page) + 1, margin = overscan () / 2;
+		int visible = Math.max (1, page) + 1, margin = leanWindow ? 0 : overscan () / 2;
 		int needFirst = Math.max (0, top - margin), needEnd = Math.min (count, top + visible + margin);
 		int wantFirst = Math.max (0, top - overscan ()), wantEnd = Math.min (count, top + visible + overscan ());
 		boolean covered = plan.covers (needFirst, needEnd) && plan.end () <= count;
@@ -244,17 +244,33 @@ final class ListViewport {
 		if (OS.GetCapture () == list.handle && plan.size () > 0 && plan.end () <= count) return;
 		boolean bloated = plan.size () > (wantEnd - wantFirst) + 2 * overscan ();
 		if (covered && !bloated && !(count == 0 && plan.size () != 0)) return;
-		/* a jump keeps no resident row: build only the rows input needs now; the next move grows the window to the overscan */
+		/*
+		 * A jump keeps no resident row: only the visible rows are built (a lean window); the wheel, keys, clicks and a
+		 * drag grow it to the overscan before the list box sees them, and so does the next move that overlaps it.
+		 */
 		boolean jump = plan.size () == 0 || wantEnd <= plan.first () || wantFirst >= plan.end ();
 		if (jump) {
-			rebuild (needFirst, needEnd - needFirst);
+			int first = Math.max (0, Math.min (top, count - visible));
+			rebuild (first, Math.min (count, first + visible) - first);
+			leanWindow = true;
 		} else {
 			rebuild (wantFirst, wantEnd - wantFirst);
 		}
 	}
 
+	/* the window holds only the visible rows (after a jump) until input or an overlapping move grows it */
+	private boolean leanWindow;
+
+	/* before input the list box handles itself: a lean window grows to the overscan around the top row */
+	private void growLeanWindow () {
+		if (!leanWindow) return;
+		leanWindow = false;
+		ensureWindow ();
+	}
+
 	/** Moves the native window: retire head and tail, insert head and tail, commit, then write the lanes. */
 	private void rebuild (int nextFirst, int nextSize) {
+		leanWindow = false;
 		long handle = list.handle;
 		captureResidentState ();
 		plan.plan (nextFirst, nextSize);
@@ -787,6 +803,8 @@ final class ListViewport {
 		/* the wheel reaches a stale window only when the list shows again: patch it first; a hidden list does not scroll */
 		if (stale && deferNative ()) return 0;
 		if (plan.size () == 0) layout ();
+		/* the list box scrolls by itself: the rows it may scroll into must be resident */
+		growLeanWindow ();
 		int first = plan.first ();
 		long code = OS.CallWindowProc (List.ListProc, hwnd, OS.WM_MOUSEWHEEL, wParam, lParam);
 		int nativeTop = (int) OS.SendMessage (list.handle, OS.LB_GETTOPINDEX, 0, 0);
