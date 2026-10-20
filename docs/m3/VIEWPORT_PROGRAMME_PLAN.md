@@ -551,3 +551,13 @@ Analysis data: S:/m3-scratch/upstream-sync-20261019/ and S:/m3-scratch/worktrees
 ## 00j Optimization pass (2026-10-20)
 
 User: "proceed with optimizing the whole". All 17 tracks resumed after the 06:23 reboot with brief rule 23 and C:/m3-superset/tools/OPTIMIZATION_PASS.md. Each track keeps docs/m3/<track>/OPTIMIZATION_LEDGER.tsv (one row per leaf, before/after at 10^5 and 10^6). String precompute (M3jdk21 A-leaves, PRs #1406/#1417/#1463/#1464) is owned by other sessions; not duplicated here.
+
+## 00k Every custom widget on every platform (2026-10-20)
+
+User: "swingx and all the custom widgets now available across every platform". Matrix docs/m3/custom-widgets/WIDGET_PLATFORM_MATRIX.tsv (widget x SWT win32/gtk/cocoa, Swing M3JDK, Initiative31, RWT). Owners: custom-widgets (matrix + SwingX-to-SWT ports, pattern-only), Swing (Nebula/custom-to-Swing), Initiative31 (SWT-on-Swing proof). RWT column unowned. Proof: compile 0 errors on all three SWT platforms, win32 differential, example per widget.
+
+## 00l All of Eclipse the same way (2026-10-20)
+
+User: "all of eclipse implemented the same way". Every Eclipse view = mediated viewport over one lane model, deltas end to end (memory feedback-one-model-delta-processing). Forks: eclipse.platform.ui (JFace agent: viewers, Markers/Problems, e4 stacks, VIEW_INVENTORY), eclipse.platform (new platform-views agent: Debug, Console, Team/Compare, Search, Help, Ant, Resources; branch m3/platform-views-viewport-20261020), eclipse.platform.swt / nebula / gef-classic (existing tracks). Not forked (USER DECISION, listed in MISSING_FORKS.md by the platform-views agent): eclipse.jdt.ui (Package Explorer, Outline, hierarchies), eclipse.pde, EGit. Proof per view: stock-vs-ours differential, zero mismatches, ledger row with before/after.
+
+- 2026-10-20 07:31 ui_lock.sh fix: since 2026-10-19 17:58 the wait loop `set --` overwrote the command, so UI runs executed a ticket path (exit 127). Last line now `"${CMD[@]}"` (someone had added CMD=("$@")); every track told to re-run 127 exits. Lesson: never reuse positional parameters in a wrapper that runs "$@" later.
