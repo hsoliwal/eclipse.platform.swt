@@ -81,13 +81,18 @@ public class Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom {
 		int background = defaults.color (M3UIKeys.of ("Tree", "background", M3UIKeys.COLOR), 0xFFFFFF) & 0xFFFFFF;
 		int inactive = defaults.color (M3UIKeys.of ("Tree", "selectionInactiveBackground", M3UIKeys.COLOR), -1) & 0xFFFFFF;
 		Rectangle row0 = pixels (tree.getItem (0).getBounds (), zoom), row1 = pixels (tree.getItem (1).getBounds (), zoom);
-		/* crisp: the open chevron of root 0 (expanded), tinted as the renderer tints it, found 1:1 left of the label */
-		ImageData chevron = new GlyphCache (4, Glyphs.rasterizer (glyph -> theme.border)).get (Glyphs.CHEVRON_DOWN, 16, zoom, 0);
+		/*
+		 * crisp: the open chevron of root 0 (expanded), tinted as the renderer tints it, found 1:1 left of the label. The
+		 * glyphs follow the window's DPI (its native zoom), the density of the native rows: a forced swt.autoScale above the
+		 * monitor's neither enlarges nor scales them, as it does not the native expanders and check boxes.
+		 */
+		int glyphZoom = tree.nativeZoom;
+		ImageData chevron = new GlyphCache (4, Glyphs.rasterizer (glyph -> theme.border)).get (Glyphs.CHEVRON_DOWN, 16, glyphZoom, 0);
 		int found = find (capture, chevron, 0, row0.y - 1, row0.x, row0.y + row0.height + 1);
 		LOG.info (() -> "glyph zoom " + zoom + " " + laf + " " + mode + ": chevron " + chevron.width + " px found at x " + found + " in " + file);
 		assertTrue (found >= 0, "swt #3631: the " + chevron.width + " px chevron is not in the capture 1:1 (scaled?): " + file);
 		/* no seam: root 1 is selected and unfocused; the pixels next to its check box are the inactive selection colour */
-		ImageData box = new GlyphCache (4, Glyphs.rasterizer (glyph -> theme.checkFill != -1 ? theme.checkFill : theme.border)).get (Glyphs.CHECK_OFF, 16, zoom, 0);
+		ImageData box = new GlyphCache (4, Glyphs.rasterizer (glyph -> theme.checkFill != -1 ? theme.checkFill : theme.border)).get (Glyphs.CHECK_OFF, 16, glyphZoom, 0);
 		int boxX = find (capture, box, 0, row1.y - 1, row1.x, row1.y + row1.height + 1);
 		assertTrue (boxX >= 0, "the check box of the selected row is in the capture 1:1: " + file);
 		int middle = row1.y + row1.height / 2;
