@@ -12,6 +12,7 @@
  *     IBM Corporation - initial API and implementation
  *     Paul Pazderski - Bug 349112: allow setting alignment on the text field
  *     Hitesh Soliwal (Synexia) - shared style policy
+ *     Hitesh Soliwal (Synexia) - complete deselection before Modify callbacks
  *******************************************************************************/
 package org.eclipse.swt.custom;
 
@@ -695,8 +696,8 @@ public void deselect (int index) {
  */
 public void deselectAll () {
 	checkWidget ();
-	text.setText("");  //$NON-NLS-1$
 	list.deselectAll ();
+	text.setText("");  //$NON-NLS-1$
 }
 void dropDown (boolean drop) {
     if (drop == isDropped()) {
