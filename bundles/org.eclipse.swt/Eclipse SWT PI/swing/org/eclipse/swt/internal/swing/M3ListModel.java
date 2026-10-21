@@ -14,8 +14,6 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.swing;
 
-import java.awt.event.HierarchyEvent;
-
 import javax.swing.*;
 import javax.swing.event.*;
 
@@ -38,7 +36,7 @@ public final class M3ListModel extends DefaultListModel<Object> {
 	}
 
 	/**
-	 * Gives a list this model (empty) and the patch on show.
+	 * Gives a list this model (empty); the owner calls {@link #shown()} when the list starts showing.
 	 *
 	 * @param list the list, before its first row
 	 * @return the model
@@ -47,9 +45,6 @@ public final class M3ListModel extends DefaultListModel<Object> {
 	public static M3ListModel install (JList<?> list) {
 		M3ListModel model = new M3ListModel (list);
 		((JList<Object>) list).setModel (model);
-		list.addHierarchyListener (e -> {
-			if ((e.getChangeFlags () & HierarchyEvent.SHOWING_CHANGED) != 0 && list.isShowing ()) model.shown ();
-		});
 		return model;
 	}
 
