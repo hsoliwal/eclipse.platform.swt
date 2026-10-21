@@ -1,0 +1,11 @@
+view	source	cells	distinct	latin1_cells	ident_cells	empty_cells	pool_cells	immediate_cell_pct	immediate_distinct	pool_distinct	immediate_distinct_pct
+Project Explorer names	os.scandir of S:/ (2,000,000 entries)	2000000	169618	220921	47558	0	1731521	13.4	8141	161477	4.8
+Project Explorer names	SWT repository tree 5593cc43ba	11363	4603	1286	223	0	9854	13.3	186	4417	4.0
+path segments	SWT repository tree 5593cc43ba (all path components)	85694	4603	38187	13439	0	34068	60.2	186	4417	4.0
+Problems view Description	javac -Xlint:all over guava + eclipse-collections	19910	309	0	0	0	19910	0.0	0	309	0.0
+Problems view Resource	javac -Xlint:all over guava + eclipse-collections	19910	938	0	0	0	19910	0.0	0	938	0.0
+Problems view Path	javac -Xlint:all over guava + eclipse-collections	19910	128	0	0	0	19910	0.0	0	128	0.0
+Problems view Location	javac -Xlint:all over guava + eclipse-collections	19910	2314	6782	0	0	13128	34.1	87	2227	3.8
+Problems view Type	javac -Xlint:all over guava + eclipse-collections	19910	1	0	0	0	19910	0.0	0	1	0.0
+Problems view Severity	javac -Xlint:all over guava + eclipse-collections	19910	2	19910	0	0	0	100.0	2	0	100.0
+Problems view all columns	javac -Xlint:all over guava + eclipse-collections	119460	3692	26692	0	0	92768	22.3	89	3603	2.4

@@ -1,0 +1,20 @@
+dataset	source	view	rows	distinct	distinct_over_rows	rows_per_distinct	chars_total	chars_distinct	char_saving_pct	top_label	top_count	notes
+file-system	os.scandir walk of S:/ (first 2,000,000 entries, depth-first, sorted)	Name column	2000000	169618	0.0848	11.8	40541537	4024220	90.1	com	17716	-
+file-system	os.scandir walk of S:/ (first 2,000,000 entries, depth-first, sorted)	Type column	2000000	693	0.0003	2886.0	17883890	8553	100.0	JAVA File	632438	-
+file-system	os.scandir walk of S:/ (first 2,000,000 entries, depth-first, sorted)	Size column (files)	1666496	1301	0.0008	1280.9	7091758	8871	99.9	1 KB	409891	-
+file-system	os.scandir walk of S:/ (first 2,000,000 entries, depth-first, sorted)	Date modified column	2000000	2836	0.0014	705.2	32000000	45376	99.9	2026-10-02 17:47	120214	-
+file-system	os.scandir walk of S:/ (first 2,000,000 entries, depth-first, sorted)	all four columns	8000000	174448	0.0218	45.9	97517185	4087016	95.8	JAVA File	632438	one pool per table model
+file-system	os.scandir walk of S:/ (first 2,000,000 entries, depth-first, sorted)	full path strings	2000000	2000000	1.0000	1.0	327150394	327150394	0.0	$RECYCLE.BIN	1	one String per row: what a path-keyed expansion map stores
+file-system	os.scandir walk of S:/ (first 2,000,000 entries, depth-first, sorted)	path components	22621263	169618	0.0075	133.4	306529131	4024220	98.7	tmp	1905876	trie nodes=2000000; component labels are pooled
+json-viewer	hsoliwal/com.x86core.tools.jsonviewer resources/large-file.json (637,594 nodes)	key column	637594	11520	0.0181	55.3	4639738	69953	98.5	id	48735	array indices shown as [i]
+json-viewer	hsoliwal/com.x86core.tools.jsonviewer resources/large-file.json (637,594 nodes)	value column	637594	190778	0.2992	3.3	19434102	9639584	50.4	{...}	88593	-
+json-viewer	hsoliwal/com.x86core.tools.jsonviewer resources/large-file.json (637,594 nodes)	key: value label	637594	221648	0.3476	2.9	25349028	12428238	51.0	gravatar_id: ""	21151	single-column tree label
+json-viewer	hsoliwal/com.x86core.tools.jsonviewer resources/large-file.json (637,594 nodes)	full path strings	637594	637594	1.0000	1.0	19317708	19317708	0.0	[0].id	1	one String per row: what a path-keyed expansion map stores
+json-viewer	hsoliwal/com.x86core.tools.jsonviewer resources/large-file.json (637,594 nodes)	path components	2649751	11520	0.0043	230.0	17305551	69953	99.6	payload	447859	trie nodes=637594; component labels are pooled
+swt-differential	Test_org_eclipse_swt_widgets_Table_ViewportDifferential.java:220 (ROWS=300)	Table 3 columns	900	900	1.0000	1.0	11070	11070	0.0	row 0	1	unique per row: worst case
+swt-differential	Test_org_eclipse_swt_widgets_Tree_ViewportDifferential.java:130 (ROOTS=300, CHILDREN=40)	Tree full-path labels	12300	12300	1.0000	1.0	150890	150890	0.0	root 0	1	label embeds the parent label
+swt-differential	Test_org_eclipse_swt_widgets_Tree_ViewportDifferential.java:130 (ROOTS=300, CHILDREN=40)	Tree label segments	12300	340	0.0276	36.2	23290	2360	89.9	0	300	same labels as segment ids: parent label id + own segment id
+eclipse-workspace	git ls-tree of hsoliwal/eclipse.platform.swt 5593cc43ba (11,363 explorer nodes)	Project Explorer names	11363	4603	0.4051	2.5	207672	95890	53.8	org	155	-
+eclipse-workspace	git ls-tree of hsoliwal/eclipse.platform.swt 5593cc43ba (11,363 explorer nodes)	full path strings	11363	11363	1.0000	1.0	1192329	1192329	0.0	.gitattributes	1	one String per row: what a path-keyed expansion map stores
+eclipse-workspace	git ls-tree of hsoliwal/eclipse.platform.swt 5593cc43ba (11,363 explorer nodes)	path components	97398	4603	0.0473	21.2	1106294	95890	91.3	org	6853	trie nodes=11363; component labels are pooled
+eclipse-workspace	Outline labels of S:/m3-scratch/worktrees/m3jdk-ui-interning/m3/collections/src/main/java	Outline member labels	6366	3910	0.6142	1.6	154171	111884	27.4	size()	139	method name(parameter types) as the JDT Outline shows

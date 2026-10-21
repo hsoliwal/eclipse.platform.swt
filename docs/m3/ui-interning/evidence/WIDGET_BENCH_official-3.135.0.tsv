@@ -1,0 +1,17 @@
+measurement	variant	rows	value	unit	detail
+table-memory	pool-off	1000000	193.841	MB retained by the model	distinct labels 171848
+table-memory	pool-off	1000000	50.814	bytes per cell	-
+table-memory	pool-off	1000000	1182.772	bytes per distinct label	-
+table-scroll	pool-off	1000000	136.000	stringExtent calls per page	34 visible rows x 4 columns; sink 1
+table-scroll	pool-off	1000000	0.212	ms per page in the width pass	-
+table-scroll	pool-off	1000000	39.344	ms per page incl. setTopIndex + SetData	-
+table-memory	pool-on	1000000	31.384	MB retained by the model	distinct labels 171848
+table-memory	pool-on	1000000	8.227	bytes per cell	-
+table-memory	pool-on	1000000	191.501	bytes per distinct label	-
+table-scroll	pool-on	1000000	46.460	stringExtent calls per page	34 visible rows x 4 columns; sink 1
+table-scroll	pool-on	1000000	0.081	ms per page in the width pass	-
+table-scroll	pool-on	1000000	23.552	ms per page incl. setTopIndex + SetData	-
+tree-restore	treepath-hash-4247	1000000	9842.010	ms per restore (median of 5)	600 expanded paths; 199991 items materialized; 404089 KB allocated
+tree-restore	m3-path-trie	1000000	9294.679	ms per restore (median of 5)	600 expanded paths; 1000 items materialized; 73261 KB allocated
+tree-restore	treepath-hash-4247	1000000	9779.081	ms per restore (median of 5)	600 expanded paths; 199991 items materialized; 404077 KB allocated
+tree-restore	m3-path-trie	1000000	9655.655	ms per restore (median of 5)	600 expanded paths; 1000 items materialized; 73247 KB allocated

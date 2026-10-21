@@ -1,0 +1,9 @@
+shape	scheme	elements	expanded_paths	restore_ms_min	restore_ms_p50	state_alloc_kb	allocated_kb_per_restore	probes	restored
+outline-8ary-8%-of-containers-expanded	treepath-hash-4247	1000000	10179	82.24	136.03	1147	69976	999928	10179
+outline-8ary-8%-of-containers-expanded	m3-path-trie	1000000	10179	10.33	13.02	3615	0	69927	10179
+outline-8ary-all-containers-expanded	treepath-hash-4247	1000000	125000	70.71	84.49	14378	69946	999992	125000
+outline-8ary-all-containers-expanded	m3-path-trie	1000000	125000	22.83	28.74	14338	0	125002	125000
+filesystem-20ary-all-containers-expanded	treepath-hash-4247	1000000	50000	49.33	54.89	5643	62429	999979	50000
+filesystem-20ary-all-containers-expanded	m3-path-trie	1000000	50000	8.50	9.44	7170	0	50002	50000
+flat-2-expanded	treepath-hash-4247	1000000	2	32.72	37.37	1	46875	1000000	2
+flat-2-expanded	m3-path-trie	1000000	2	9.99	12.26	1	0	1000000	2
