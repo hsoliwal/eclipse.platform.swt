@@ -20,7 +20,7 @@ package org.eclipse.swt.examples.superset;
  * @param concept   catalog concept (SUPERSET_WIDGET_CATALOG.tsv)
  * @param owner     {@code swt}, {@code nebula/<family>} or {@code -}
  * @param widgetClass fully qualified class name, or {@code -} for a placeholder
- * @param kind      demo kind, see {@link Demos#create(DemoSpec)}
+ * @param kind      demo kind, see {@link Demos#create(DemoSpec, Counters)}
  * @param maxScale  largest scale the demo is designed for; 0 = small content
  * @param hosts     classes exercised through this demo (items, columns, ...)
  */

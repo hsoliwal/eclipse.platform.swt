@@ -23,7 +23,7 @@ import org.eclipse.swt.widgets.Item;
 
 /**
  * Nebula Gallery in SWT.VIRTUAL mode (kind NGALLERY), as in the Gallery
- * javadoc snippet: root items are expanded groups of {@link #GROUP} tiles, so
+ * javadoc snippet: root items are expanded groups of {@code GROUP} tiles, so
  * scale N = N tiles in ceil(N/GROUP) groups. Scrolling drives the vertical
  * ScrollBar, which is the Gallery's own scroll input.
  */
