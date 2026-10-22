@@ -13,6 +13,7 @@
  *     Paul Pazderski - Bug 349112: allow setting alignment on the text field
  *     Hitesh Soliwal (Synexia) - shared style policy
  *     Hitesh Soliwal (Synexia) - complete deselection before Modify callbacks
+ *     Hitesh Soliwal (Synexia) - complete valid selection before Modify callbacks
  *******************************************************************************/
 package org.eclipse.swt.custom;
 
@@ -64,6 +65,8 @@ public class CCombo extends Composite {
 	Listener listener, filter;
 	Color foreground, background;
 	Font font;
+	/* A text change consumes its requested row before client Modify callbacks. */
+	private int pendingSelectionIndex = -1;
 	/* SWT.VIRTUAL: widest item text in the text font, -1 when an item or the font changed */
 	int itemTextWidth = -1;
 	/* measurements of more items than this show busy */
@@ -1680,14 +1683,27 @@ public void select (int index) {
 	}
 	if (0 <= index && index < list.getItemCount()) {
 		if (index != getSelectionIndex()) {
-			text.setText (list.getItem (index));
-            if (text.getEditable() && text.isFocusControl()) {
-                text.selectAll();
-            }
-			list.select (index);
-			list.showSelection ();
+			int previousSelectionIndex = pendingSelectionIndex;
+			pendingSelectionIndex = index;
+			try {
+				text.setText (list.getItem (index));
+				if (!isDisposed() && pendingSelectionIndex != -1) {
+					// Verify may prevent Modify; preserve the existing list selection.
+					pendingSelectionIndex = -1;
+					completeSelection (index);
+				}
+			} finally {
+				pendingSelectionIndex = previousSelectionIndex;
+			}
 		}
 	}
+}
+private void completeSelection (int index) {
+	if (text.getEditable() && text.isFocusControl()) {
+		text.selectAll();
+	}
+	list.select (index);
+	list.showSelection ();
 }
 
 /**
@@ -2129,7 +2145,13 @@ void textEvent (Event event) {
 			break;
 		}
 		case SWT.Modify: {
-			list.deselectAll ();
+			int index = pendingSelectionIndex;
+			pendingSelectionIndex = -1;
+			if (index == -1) {
+				list.deselectAll ();
+			} else {
+				completeSelection (index);
+			}
 			Event e = new Event ();
 			e.time = event.time;
 			notifyListeners (SWT.Modify, e);
@@ -2258,7 +2280,13 @@ void textEvent (Event event) {
 			e.keyCode = event.keyCode;
 			e.keyLocation = event.keyLocation;
 			e.stateMask = event.stateMask;
-			notifyListeners (SWT.Verify, e);
+			int selectionIndex = pendingSelectionIndex;
+			pendingSelectionIndex = -1;
+			try {
+				notifyListeners (SWT.Verify, e);
+			} finally {
+				pendingSelectionIndex = selectionIndex;
+			}
 			event.text = e.text;
 			event.doit = e.doit;
 			break;
