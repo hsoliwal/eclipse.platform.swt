@@ -62,3 +62,12 @@ regex > loops > method length. 33 no second AST: marks come from the compiler's 
    working branches and move the markers harness to Temurin 21.
 
 Pitfalls paid for are the RECIPE_MEMORY.tsv rows of both crates (22 so far): read them before touching the tools.
+
+## Consolidation 2026-10-23 (same line, later the same day)
+
+`docs/m3/consolidation/README.md` is the report. Supersets: platform.ui PR #45 (JFace superset) + #47 (anchors),
+M3jdk21 PR #1861 (38 merged / 120 conflicting), com.synexia codex/superset-20261023 (72 merged / 174 conflicting),
+13 forward-merged programme branches with PRs (#250 #251 #273 #18 #19 #44 #4 #5 #3 #1 #13 #2 #18 #5). Requirements
+from the session logs and the PR history: `docs/m3/consolidation/requirements/REQUIREMENTS_ALL.tsv` (1,371 rows).
+Next: the conflict passes (120 + 174 PRs, one PR at a time, agents), the atomize bootstrap once `.superset/conflicts`
+may be deleted, then the transform lanes in culprit order on the merged supersets.
