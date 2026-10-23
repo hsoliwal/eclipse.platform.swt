@@ -15,7 +15,7 @@ each recorded in the superset commit messages.
 | com.synexia | 281 (246 after the dump) | two recipe-crate branches |
 
 The requirements themselves (user, 2026-10-23: "you have all the requirements in your session logs", "the PR history and
-comments speak of requirements"): `requirements/REQUIREMENTS_ALL.tsv`, rendered as `requirements/REQUIREMENTS.md`: 3973 rows,
+comments speak of requirements"): `requirements/REQUIREMENTS_ALL.tsv`, rendered as `requirements/REQUIREMENTS.md`: 974 rows,
 759 unique directives from the Claude (241) and Codex (518) session logs of 2026-10-07 to 23, and the PR history of all
 nine forks (12,600 Synexia PRs, 1,862 M3jdk21 PRs, the Eclipse forks) reduced to what speaks for the user: the owner's
 own typed comments (lowercase, short, no code spans) and the sentences of agent-written bodies and comments that quote
