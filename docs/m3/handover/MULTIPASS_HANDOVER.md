@@ -97,3 +97,60 @@ may be deleted, then the transform lanes in culprit order on the merged superset
 - Workflow agents: unavailable all day (the probe stalled on 6 attempts); everything ran as CPU scripts and one model.
 - Owner decisions still open: merge the open PRs; delete `.superset/conflicts` (SWT integration branch) for the
   atomize bootstrap; delete the redundant M3jdk21 branch m3/mop-invariant-20261020.
+
+## Later the same afternoon (2026-10-23, after 05:30 UTC)
+
+- M3jdk21 superset: the batches run on S: with timeouts and a dedicated loop descriptor (Maven had eaten the loop's
+  stdin); candidates per PR are superset:ours, superset:theirs, ours, theirs (hunk classes from diff3 markers: add/add
+  unions, modify/modify from one side), every module above a conflicted file gated; three JSON-ledger PRs merged through
+  the API path with the recorded scalar policy (JSON_SCALAR_POLICY=ours: superset value kept, PR value in the row).
+  Reading packets now carry base sections and HUNKS_DIFF3.tsv (846 hunks: 493 modify/modify, 339 add/add; C: 114 vs 21).
+  C stays with the owner: no C toolchain here, and the auto-mode classifier refused an ungated C union.
+- Synexia superset: conflict table rebuilt (one row per PR, kinds against the current head: 94 LEDGER, 5 CLEAN_NOW,
+  21 JAVA, 36 MIXED, 5 already contained); the javac-gated batch runs over the source conflicts; the ledger loop
+  (run_api_loop.sh, 20 s per PR) still needs the owner (classifier).
+- JBS scaffold: reading passes committed on m3/jbs-enhancements-scaffold-20261020 (m3/backports/reading/): 41
+  collections-lane rows (16 confirmed, 14 docs, 8 preview holds, 3 API holds) and 195 java.lang/java.util rows (61
+  adapted, 30 string-lane for the STRING owners, 33 docs, 18 API holds, 9 preview holds, runtime/native/data holds).
+- Collections lane scaffold (culprit one): recipe-crates/m3-eclipse-collections-lane-20261023 (0281f8f75ab4): donor
+  inventory (FOSS_REUSE_DECISION.tsv), TYPE_MAP.tsv (15 rows with the BCP condition), SITES.tsv (compiler-attributed
+  sites per fork, main vs test), report-mode FindTypes recipe, gates, leaf order L1..L5; packaging gap: m3-collections
+  as a JavaSE-21 bundle for the forks' target platform.
+- M3MarksPlugin marks M10 (boxed-primitive generics on fields, locals, parameters); the four forks' marks tables are
+  being recomputed with it (pass7/marks_only.sh -> marks2.tsv); the anchors are not re-tagged until tag_sites.awk is
+  proven idempotent on already-tagged lines.
+- Marks noise: jdt.core's 40k javac errors sit in tests.model ASTConverter tests and org.eclipse.test.* deps; main
+  bundles attribute cleanly (13,427 marks in org.eclipse.jdt.core).
+
+## Evening 2026-10-23 (after 06:30 UTC)
+
+- Strings lane scaffold (culprit two): recipe-crates/m3-eclipse-strings-lane-20261023 (cf020d31ab39): SHAPE_MAP.tsv
+  (builder chains, StringBuffer, interned comparisons, intern, constant formats), donors (M3jdk21 M3String runtime,
+  Synexia string recipes), SITES.tsv (M13/M14/M33 per fork main vs test), report recipe, leaf order L1..L4. Lesson:
+  plain + is already an M3 tuple on M3JDK21; the lane rewrites what the runtime cannot see.
+- M10 anchors pushed on the four marks branches (jdt.debug 4f96d3b, platform ef30611, jdt.ui 7662d044, jdt.core
+  34f7d8b); marks2.tsv on each branch; the lane crate's SITES.tsv carries the M10 counts (jdt.ui 138 main).
+- JBS scaffold repaired twice (an empty table, then a truncated one) and finalised at 9783cc811602: 5,299 rows, the
+  classifier writes UTF-8 and re-reads its own output; reading-pass rules folded in (HotSpot components hold-runtime,
+  jpackage/jshell/jdeps tooling).
+- Superset batches: retries now get a fresh worktree directory and a time-stamped side branch (a stale remote side
+  branch made a push and a server merge fail); infrastructure refusals were separated from compiler verdicts and
+  three PRs found already contained; M3jdk21 at 62 resolved / 66 refused (58 C/JNI, the rest compiler verdicts);
+  Synexia source batch stops early (trace run in progress), 23 resolved; the baseline compile state of the M3jdk21
+  modules on the superset head is being measured because every candidate of some PRs fails with one error.
+
+## Superset head repair and the classifier boundary (2026-10-23, 07:00 UTC)
+
+- The M3jdk21 superset head itself did not compile (m3/collections 56 errors, m3/file 88): clean server-side merges
+  appended the same method block twice and whole-file side choices dropped methods other merged files call. Two
+  mechanical repairs (dedupe_methods.py, donate_methods.py; compiler-arbitrated) took m3/collections to 12 and landed
+  (41fb35c259db); m3/file needs a whole-file donor of M3File.java from PR 1619 or 1755 (REPAIR_20261023.md on the
+  branch). Every "neither side compiles" verdict on PRs touching those modules is provisional until the head compiles.
+- The Claude Code auto-mode classifier refused: the bulk ledger loop (run_api_loop.sh), the script landing gated
+  merges through the API, an ungated C union, and the m3/file donor run. Single API merges, the push-based batches and
+  docs commits were allowed. Owner options: add permission rules for S:/m3-scratch/consolidate/run_api_loop.sh and
+  the repair tools, or run them: `./run_api_loop.sh K:/m3-work/com.synexia hsoliwal/com.synexia codex/superset-20261023
+  CONFLICTS.com.synexia.tsv resolved.com.synexia.tsv` (94 ledger + 5 clean PRs, 20 s each) and
+  `python -I donate_methods.py <mvn log> <worktree> <clone> <heads>` on m3/file.
+- The Synexia source batch (batch5, traced) runs at about nine minutes per PR over 47 PRs; its worktrees under
+  S:/m3-scratch/worktrees must not be touched while the todo file exists.
