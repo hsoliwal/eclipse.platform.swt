@@ -15,12 +15,14 @@ each recorded in the superset commit messages.
 | com.synexia | 281 (246 after the dump) | two recipe-crate branches |
 
 The requirements themselves (user, 2026-10-23: "you have all the requirements in your session logs", "the PR history and
-comments speak of requirements"): `requirements/REQUIREMENTS_ALL.tsv`, 1,371 rows: 759 unique directives from the
-Claude (241) and Codex (518) session logs of 2026-10-07 to 23 and 612 requirement sentences from the PR history of
-the forks (bodies and comments; the owner's short comments whole, agents' text filtered to sentences that quote the
-user or state a requirement, invariant, law, rule or must). By track: M3JDK 401, viewport/SWT 290, process 154,
-recipes/MOP 59, platform UI 27, other 440. `REQUIREMENTS_COVERAGE.tsv` maps each row's track to the PR or branch
-that carries it. The pending work above is what those requirements produced that is not yet on a master branch.
+comments speak of requirements"): `requirements/REQUIREMENTS_ALL.tsv` and its rendering `requirements/REQUIREMENTS.md`:
+4,638 rows: 759 unique directives from the Claude (241) and Codex (518) session logs of 2026-10-07 to 23, and 3,879
+requirement sentences from the PR history of the forks (1,411 from PR bodies, 2,468 from comments; M3jdk21 3,276, Nebula
+325, SWT 215, platform.ui 60; Synexia's 12,600 PRs are being harvested after the API limit reset). PR bodies are agent
+text pushed under the owner's login, so they are filtered to sentences that quote the user or state a requirement,
+invariant, law, rule or must; the owner's short comments are kept whole. By track: M3JDK 1,197, viewport/SWT 446,
+process 621, recipes/MOP 247, platform UI 111, other 2,016. `REQUIREMENTS_COVERAGE.tsv` maps each track to the PR
+or branch that carries it. The pending work above is what those requirements produced that is not yet on a master branch.
 
 ## 2. What was done
 
