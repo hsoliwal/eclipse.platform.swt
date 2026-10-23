@@ -60,9 +60,9 @@ the forward-merge loop and `api_commit_dir.sh`. All under S:/m3-scratch/consolid
 docs and the recipe crate.
 
 <!-- resolutions -->
-## Resolution pass (snapshot 2026-10-23 05:43 UTC)
+## Resolution pass (snapshot 2026-10-23 06:29 UTC)
 
-M3jdk21: 35 resolved, 93 refused; finish failed after ledger union: 16; JNI implementations diverge: 1; neither side compiles: 4; no gate for native or workflow conflicts: 64; conflicts span 1 module: 1; conflicts span 2 module: 1; finish failed: 4; conflicts span 0 module: 2 (resolutions.M3jdk21.tsv). Synexia: 14 resolved, 1 refused; no gate for native or workflow conflicts: 1 (resolutions.com.synexia.tsv). Reading packets of the refused
+M3jdk21: 52 resolved, 50 refused; JNI implementations diverge: 1; no gate for native or workflow conflicts: 49 (resolutions.M3jdk21.tsv). Synexia: 21 resolved, 4 refused; no gate for native or workflow conflicts: 1; conflicts span 2 module: 2; conflicts span 0 module: 1 (resolutions.com.synexia.tsv). Reading packets of the refused
 M3jdk21 PRs: reading.M3jdk21.SUMMARY.tsv, reading.M3jdk21.HUNKS.tsv (full packets on the superset branch under
 m3/docs/superset/reading-20261023). Method and corrections: Synexia recipe-crates/m3-superset-merge-20261023.
 <!-- /resolutions -->

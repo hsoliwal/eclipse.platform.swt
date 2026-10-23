@@ -2,15 +2,25 @@ number	result	files	note
 12262	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;	superset-merge/pr-12262
 12310	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12310
 12311	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12311
+12314	REFUSED	synexia-mindex/compiler/src/main/java/com/synexia/mindex/compiler/ast/M3FileSourceFacts.java;synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedJavaSnapshotRecipe.java;synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedTextSnapshotRecipe.java;synexia-ope	conflicts span 2 module(s) and 0 java.base files, or no pom: reading pass
 12324	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/recipe-crates/m3-collections-contract-refinement-20261017/CATALOGUE.tsv;	superset-merge/pr-12324
+12329	REFUSED	docs/M3-SCALE/runs/20261017-synexia-to-public/B8-linked-hash-map/out/M3LongLongLinkedHashMap.java;docs/M3-SCALE/runs/20261017-synexia-to-public/B8-linked-hash-map/out/synexia-linked-hash-map-receipt.json;docs/M3-SCALE/runs/20261017-synexia-to-public/HIST-ALL/summaries/nebula.md;docs/M3-SCALE/runs/20	conflicts span 0 module(s) and 0 java.base files, or no pom: reading pass
 12472	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12472
 12474	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;	superset-merge/pr-12474
 12476	RESOLVED	synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12476
 12481	RESOLVED	synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12481
 12486	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12486
+12487	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/recipe-crates/m3-collections-contract-refinement-20261017/CATALOGUE.tsv;synexia-openrewrite-recipes/recipe-crates/m3-collect	superset-merge/pr-12487 (hand: source conflicts resolved to the side the compiler accepts (ours; mvn javac gate green; workflows from the superset); no module gate)
+12490	RESOLVED		superset-merge/pr-12490 (hand: source conflicts resolved to the side the compiler accepts (ours; mvn javac gate green; workflows from the superset); no module gate)
+12496	REFUSED	synexia-openrewrite-recipes/crates/m3-string-consumers/composite-builder/pom.xml;synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedTextSnapshotRecipe.java	conflicts span 2 module(s) and 0 java.base files, or no pom: reading pass
 12507	RESOLVED	synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12507
+12514	RESOLVED	docs/M3-SCALE/invariants/SYNEXIA-LLM-RECIPE-FIRST-2.json;docs/M3-SCALE/invariants/SYNEXIA-LLM-RECIPE-FIRST-2.md;synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3HashPinnedJavaSnapshotRe	superset-merge/pr-12514 (hand: source conflicts resolved to the side the compiler accepts (ours; mvn javac gate green; workflows from the superset); no module gate)
 12534	RESOLVED	synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	18ba02c51c96 (api merge, 1 unions, 1 paths, 0 merged blobs)
+12555	RESOLVED	synexia-openrewrite-recipes/recipe-crates/m3-lexicon-selection-20261018/CONTRACT.md;synexia-openrewrite-recipes/recipe-crates/m3-lexicon-selection-20261018/OWNERS.tsv;synexia-openrewrite-recipes/recip	superset-merge/pr-12555 (hand: source conflicts resolved to the side the compiler accepts (ours; mvn javac gate green; workflows from the superset); no module gate)
+12844	RESOLVED		already in codex/superset-20261023 (reclassify)
+12847	RESOLVED		already in codex/superset-20261023 (reclassify)
 12860	RESOLVED		already in codex/superset-20261023
 12863	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;	5fbc767a690d (api merge, 1 unions, 466 paths, 1 merged blobs)
+12944	RESOLVED		already in codex/superset-20261023 (reclassify)
 12977	REFUSED	.github/workflows/m3-executed-recipe-proof.yml;synexia-openrewrite-recipes/recipe-crates/m3jdk-product-output-only-20261022/test_verify_receiver_results.py;synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3JdkProductOutputOnly20261022Recipe.java;synexia-openrewrite-recipes/src/main/res	no gate for native or workflow conflicts
 13104	RESOLVED	Auto-merging synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;Auto-merging synexia-openrewrite-recipes/crates/m3-pr-stack-preservation/RECIPE_MEMORY.tsv;CONFLICT (content): Merge conflict in synexia-openrewrite-recipes/crates/m3-pr-stack-preservation/RECIPE_MEMORY.tsv;synexia-openrewrite-recipe	superset-merge/pr-13104
