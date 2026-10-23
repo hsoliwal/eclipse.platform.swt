@@ -58,3 +58,11 @@ m3/compatibility 1 / 3, m3/ports 3 / 0, the rest 7 / 9.
 (server-side merges, conflict ledger), `resolve_hunks.py` (ours/theirs/union/per-hunk resolution, byte-preserving),
 the forward-merge loop and `api_commit_dir.sh`. All under S:/m3-scratch/consolidate; copies go to the integration
 docs and the recipe crate.
+
+<!-- resolutions -->
+## Resolution pass (snapshot 2026-10-23 05:43 UTC)
+
+M3jdk21: 35 resolved, 93 refused; finish failed after ledger union: 16; JNI implementations diverge: 1; neither side compiles: 4; no gate for native or workflow conflicts: 64; conflicts span 1 module: 1; conflicts span 2 module: 1; finish failed: 4; conflicts span 0 module: 2 (resolutions.M3jdk21.tsv). Synexia: 14 resolved, 1 refused; no gate for native or workflow conflicts: 1 (resolutions.com.synexia.tsv). Reading packets of the refused
+M3jdk21 PRs: reading.M3jdk21.SUMMARY.tsv, reading.M3jdk21.HUNKS.tsv (full packets on the superset branch under
+m3/docs/superset/reading-20261023). Method and corrections: Synexia recipe-crates/m3-superset-merge-20261023.
+<!-- /resolutions -->

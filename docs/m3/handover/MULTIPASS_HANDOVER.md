@@ -71,3 +71,29 @@ M3jdk21 PR #1861 (38 merged / 120 conflicting), com.synexia codex/superset-20261
 from the session logs and the PR history: `docs/m3/consolidation/requirements/REQUIREMENTS_ALL.tsv` (1,371 rows).
 Next: the conflict passes (120 + 174 PRs, one PR at a time, agents), the atomize bootstrap once `.superset/conflicts`
 may be deleted, then the transform lanes in culprit order on the merged supersets.
+
+## Consolidation 2026-10-23, afternoon (session a6de83fe continued after compaction)
+
+- Compiler-AST marks + anchors on every Java-25 bundle of the other four forks (javac plugin M3Marks inside the JDK21
+  gate compile, `pass7/marks_fork.sh`): jdt.debug 18,707 marks / PR #4; platform 14,702 / PR #20; jdt.core 72,737 / PR #6;
+  jdt.ui 36,142 / PR #5, each `m3/marks-tags-20261020` stacked on the fork's Java 21 PR, line counts unchanged.
+- Maven form of the marks pass (user: "save as recipe or Maven plugin"): no new plugin, a maven-compiler-plugin profile
+  (`recipe-crates/m3-eclipse-enhance-marks-20261020/maven/sample`), proof 5 marks on a module with no Eclipse class path.
+- M3jdk21 superset (`m3/superset-20261023`, PR #1861): the batches were wrong until fixed (grep -P skip test dead in this
+  Git Bash, python got POSIX paths under MSYS_NO_PATHCONV, rename detection fetching every blob, zdiff3 base sections,
+  gate build output staged, orphaned batch processes after a stop, drifting conflict kinds): 8 RECIPE_MEMORY rows and the
+  tools in `recipe-crates/m3-superset-merge-20261023` (72a9eacc06e0). State: 35 PRs resolved (hand + compiler-arbitrated),
+  58 refused for C/JNI or workflow conflicts; their reading packets (conflict-marked files, SUMMARY.tsv, HUNKS.tsv with a
+  class per hunk) are on the superset branch under `m3/docs/superset/reading-20261023`; gate residue removed
+  (ab83dbe678a8); the workflow-only refusals re-run under WORKFLOW_POLICY=ours (batch_resolve4.sh).
+- Synexia superset (`codex/superset-20261023`, PR #13187): the conflict table held three runs' rows for 175 PRs; one row
+  per PR now, re-classified against the current head (`reclassify_pending.sh`). `api_merge_ledger.sh` merges a ledger-only
+  PR in 20 s without worktree or push (merge-tree, unions, blobs API, tree rebuilt along the resolved paths, two-parent
+  commit, fast-forward ref): 3 PRs merged by it (12863, 12534, 12860 already contained). The loop over the ~90 remaining
+  ledger PRs (`run_api_loop.sh`) is blocked by the Claude Code auto-mode classifier ("Merge Without Review"): the owner runs
+  `./run_api_loop.sh K:/m3-work/com.synexia hsoliwal/com.synexia codex/superset-20261023 CONFLICTS.com.synexia.tsv
+  resolved.com.synexia.tsv` from S:/m3-scratch/consolidate, or adds a permission rule for it. The javac-gated batch
+  (batch_resolve3.sh, fallback class path + sibling sources) runs over the 65 source-conflict PRs.
+- Workflow agents: unavailable all day (the probe stalled on 6 attempts); everything ran as CPU scripts and one model.
+- Owner decisions still open: merge the open PRs; delete `.superset/conflicts` (SWT integration branch) for the
+  atomize bootstrap; delete the redundant M3jdk21 branch m3/mop-invariant-20261020.

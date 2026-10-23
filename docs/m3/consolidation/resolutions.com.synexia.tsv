@@ -1,0 +1,16 @@
+number	result	files	note
+12262	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;	superset-merge/pr-12262
+12310	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12310
+12311	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12311
+12324	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/recipe-crates/m3-collections-contract-refinement-20261017/CATALOGUE.tsv;	superset-merge/pr-12324
+12472	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12472
+12474	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;	superset-merge/pr-12474
+12476	RESOLVED	synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12476
+12481	RESOLVED	synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12481
+12486	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12486
+12507	RESOLVED	synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	superset-merge/pr-12507
+12534	RESOLVED	synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;	18ba02c51c96 (api merge, 1 unions, 1 paths, 0 merged blobs)
+12860	RESOLVED		already in codex/superset-20261023
+12863	RESOLVED	docs/M3-SCALE/provenance/M3_FILE_PROVENANCE.tsv;	5fbc767a690d (api merge, 1 unions, 466 paths, 1 merged blobs)
+12977	REFUSED	.github/workflows/m3-executed-recipe-proof.yml;synexia-openrewrite-recipes/recipe-crates/m3jdk-product-output-only-20261022/test_verify_receiver_results.py;synexia-openrewrite-recipes/src/main/java/com/synexia/rewrite/M3JdkProductOutputOnly20261022Recipe.java;synexia-openrewrite-recipes/src/main/res	no gate for native or workflow conflicts
+13104	RESOLVED	Auto-merging synexia-openrewrite-recipes/CANONICAL_RECIPE_HOME.tsv;Auto-merging synexia-openrewrite-recipes/crates/m3-pr-stack-preservation/RECIPE_MEMORY.tsv;CONFLICT (content): Merge conflict in synexia-openrewrite-recipes/crates/m3-pr-stack-preservation/RECIPE_MEMORY.tsv;synexia-openrewrite-recipe	superset-merge/pr-13104
