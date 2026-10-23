@@ -811,8 +811,6 @@ long gtk_insert_text (long widget, long new_text, long new_text_length, long pos
     if (pos [0] == -1) {
         pos [0] = (int) OS.g_utf8_strlen(ptr, -1);
     }
-	int start = (int)OS.g_utf16_pointer_to_offset (ptr, pos [0]);
-	if (pos [0] == -1) pos [0] = (int)OS.g_utf8_strlen (ptr, -1);
 	int start = (int)OS.g_utf8_offset_to_utf16_offset (ptr, pos [0]);
 	String newText = verifyText (oldText, start, start);
 	if (newText != oldText) {
