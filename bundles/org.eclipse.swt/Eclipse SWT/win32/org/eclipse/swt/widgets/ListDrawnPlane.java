@@ -34,6 +34,8 @@ final class ListDrawnPlane extends DrawnPlane {
 	final List list;
 	private final RECT bounds = new RECT ();
 	private char [] text = new char [64];
+	/* the strings last drawn, by index modulo the length (a power of two above a window of rows) */
+	private final String [] shown = new String [256];
 
 	private ListDrawnPlane (List list) {
 		super (list, MODE, "List", List.ListProc, Display.TREEVIEW);
@@ -67,11 +69,11 @@ final class ListDrawnPlane extends DrawnPlane {
 				if (OS.SendMessage (hwnd, OS.LB_GETITEMRECT, index, bounds) == OS.LB_ERR || bounds.top >= damage.bottom) break;
 				boolean selected = single ? index == current : OS.SendMessage (hwnd, OS.LB_GETSEL, index, 0) > 0;
 				fillRow (hwnd, index, common | (selected ? RowPaint.SELECTED : 0) | (index == caret ? RowPaint.CARET : 0));
-				renderer.paint (canvas, row);
+				paintRow ();
 				bottom = bounds.bottom;
 			}
 		}
-		if (bottom < damage.bottom) renderer.paintEmpty (canvas, row, damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
+		if (bottom < damage.bottom) paintEmpty (damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
 	}
 
 	private int commonState (long hwnd) {
@@ -98,13 +100,28 @@ final class ListDrawnPlane extends DrawnPlane {
 		row.text [0] = text (hwnd, index);
 	}
 
-	/* the entry's text: the item store's for an owner-data list box, else the list box's own */
+	/*
+	 * The entry's text: the item store's for an owner-data list box, else the list box's own. The list box's text is read
+	 * every frame (it may change without telling the plane), but a string is made only when the characters differ from
+	 * the string kept for that index: a repaint of unchanged rows allocates nothing.
+	 */
 	private String text (long hwnd, int index) {
 		if (list.itemStore != null) return list.itemStore.getItem (index);
 		int length = (int) OS.SendMessage (hwnd, OS.LB_GETTEXTLEN, index, 0);
 		if (length <= 0) return null;
 		if (text.length < length + 1) text = new char [Math.max (length + 1, text.length * 2)];
 		OS.SendMessage (hwnd, OS.LB_GETTEXT, index, text);
-		return new String (text, 0, length);
+		int slot = index & (shown.length - 1);
+		String kept = shown [slot];
+		if (kept != null && same (kept, text, length)) return kept;
+		return shown [slot] = new String (text, 0, length);
+	}
+
+	private static boolean same (String kept, char [] chars, int length) {
+		if (kept.length () != length) return false;
+		for (int i = 0; i < length; i++) {
+			if (kept.charAt (i) != chars [i]) return false;
+		}
+		return true;
 	}
 }

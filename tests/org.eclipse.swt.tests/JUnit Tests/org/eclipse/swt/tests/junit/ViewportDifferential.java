@@ -119,6 +119,8 @@ public final class ViewportDifferential<S> {
 		return out.toArray (new int [0][]);
 	}
 
+	/* java.util.logging (brief rule 22): the similarity rows of the drawn modes */
+	private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger (ViewportDifferential.class.getName ());
 	private final String name;
 	private final long seedBase;
 	private final Ops<S> ops;
@@ -140,6 +142,13 @@ public final class ViewportDifferential<S> {
 	 * step of every seed and goes back to the startup theme before the next seed. Behaviour must not change.
 	 */
 	private static final String THEME_SWITCH = System.getProperty ("swt.viewport.themeSwitch");
+	/*
+	 * -Dswt.viewport.lafSwitch=<step>:<look and feel>: the same through the look and feel manager (M3LookAndFeel
+	 * .setLookAndFeel, LF6: the row delegates of the drawn widgets are installed again), and M3LookAndFeel.reset before
+	 * each seed.
+	 */
+	private static final String LAF_SWITCH = System.getProperty ("swt.viewport.lafSwitch");
+	private static final String SWITCH = THEME_SWITCH != null ? THEME_SWITCH : LAF_SWITCH;
 
 	private ViewportDifferential (String name, long seedBase, Ops<S> ops) {
 		this.name = name;
@@ -319,7 +328,7 @@ public final class ViewportDifferential<S> {
 					}
 				}
 			}
-			int switchStep = THEME_SWITCH == null || !drawn (widget) ? -1 : Integer.parseInt (THEME_SWITCH.split (":", 2) [0]);
+			int switchStep = SWITCH == null || !drawn (widget) ? -1 : Integer.parseInt (SWITCH.split (":", 2) [0]);
 			if (switchStep >= 0) selectTheme (null);
 			beforeSeed.accept (subject);
 			Random random = new Random (seedBase + seed);
@@ -327,7 +336,7 @@ public final class ViewportDifferential<S> {
 			List<String> lines = new ArrayList<> ();
 			for (int step = 0; step < steps; step++) {
 				Op<S> op = ops.next (random, log);
-				if (step == switchStep) selectTheme (THEME_SWITCH.split (":", 2) [1]);
+				if (step == switchStep) selectTheme (SWITCH.split (":", 2) [1]);
 				stepCapture = null;
 				String got = line (subject, op);
 				if (stepCapture != null) got = stepPixels (stepCapture, seed, step, expected == null ? null : expected.get (step), got, against);
@@ -369,11 +378,18 @@ public final class ViewportDifferential<S> {
 	}
 
 	/*
-	 * Selects the theme of the widget class at run time (Themes.select of this SWT's render package; null goes back to
-	 * the startup properties) and dispatches, so that the drawn planes repaint before the step.
+	 * Selects the theme of the widget class at run time (Themes.select of this SWT's render package, or with
+	 * -Dswt.viewport.lafSwitch the look and feel of M3LookAndFeel; null goes back to the startup properties) and
+	 * dispatches, so that the drawn planes repaint before the step.
 	 */
 	private void selectTheme (String theme) {
 		try {
+			if (THEME_SWITCH == null) {
+				Class<?> manager = Class.forName ("org.eclipse.swt.internal.laf.M3LookAndFeel");
+				if (theme == null) manager.getMethod ("reset").invoke (null); else manager.getMethod ("setLookAndFeel", String.class).invoke (null, theme);
+				drain (Display.getCurrent ());
+				return;
+			}
 			Class<?> themes = Class.forName ("org.eclipse.swt.internal.render.Themes"), type = Class.forName ("org.eclipse.swt.internal.render.Theme");
 			Object value = theme == null ? null : themes.getMethod ("find", String.class).invoke (null, theme);
 			if (theme != null && value == null) fail ("-Dswt.viewport.themeSwitch names no registered theme: " + theme);
@@ -435,7 +451,7 @@ public final class ViewportDifferential<S> {
 			line = String.format (Locale.ROOT, "%s\t%s\t%s\t%.2f%% equal\t%.3f mean abs channel difference\t%s", name, reference (widget), where,
 				100.0 * equal / total, difference / (3.0 * total), evidence);
 		}
-		System.err.println ("pixel similarity: " + line);
+		LOG.info ("pixel similarity: " + line);
 		String output = System.getProperty ("swt.viewport.similarity");
 		if (output != null) Files.write (Paths.get (output), List.of (line), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 	}
@@ -548,6 +564,14 @@ public final class ViewportDifferential<S> {
 	 * there and was not stable between two captures. Other platforms use <code>Control.print</code>.
 	 */
 	public static ImageData render (Control control) {
+		return render (control, 0);
+	}
+
+	/**
+	 * {@link #render(Control)} in the device pixels of a zoom (<code>0</code>: the image's default data, scaled to
+	 * 100 %); a capture at a zoom above 100 % is the control's own pixels, not scaled down.
+	 */
+	public static ImageData render (Control control, int zoom) {
 		Point size = control.getSize ();
 		Image image = new Image (control.getDisplay (), Math.max (1, size.x), Math.max (1, size.y));
 		GC gc = new GC (image);
@@ -562,7 +586,7 @@ public final class ViewportDifferential<S> {
 		} finally {
 			gc.dispose ();
 		}
-		ImageData data = image.getImageData ();
+		ImageData data = zoom == 0 ? image.getImageData () : image.getImageData (zoom);
 		image.dispose ();
 		return data;
 	}

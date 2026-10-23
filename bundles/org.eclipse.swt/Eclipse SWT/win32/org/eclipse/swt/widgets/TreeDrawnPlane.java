@@ -67,11 +67,11 @@ final class TreeDrawnPlane extends DrawnPlane {
 		while (hItem != 0) {
 			if (!OS.TreeView_GetItemRect (hwnd, hItem, line, false) || line.top >= damage.bottom) break;
 			fillRow (hwnd, hItem, caret);
-			renderer.paint (canvas, row);
+			paintRow ();
 			bottom = line.bottom;
 			hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_NEXTVISIBLE, hItem);
 		}
-		if (bottom < damage.bottom) renderer.paintEmpty (canvas, row, damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
+		if (bottom < damage.bottom) paintEmpty (damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
 	}
 
 	private void frameDefaults (long hwnd) {
@@ -253,6 +253,6 @@ final class TreeDrawnPlane extends DrawnPlane {
 			checkRight = stateTo - label.left;
 			checkKnown = true;
 		}
-		LOG.trace (() -> "Tree drawn plane slots: expander " + expanderLeft + ".." + expanderRight + " (" + expanderKnown + "), check " + checkLeft + ".." + checkRight + " (" + checkKnown + ")");
+		if (LOG.isTraceEnabled ()) LOG.trace (() -> "Tree drawn plane slots: expander " + expanderLeft + ".." + expanderRight + " (" + expanderKnown + "), check " + checkLeft + ".." + checkRight + " (" + checkKnown + ")");
 	}
 }

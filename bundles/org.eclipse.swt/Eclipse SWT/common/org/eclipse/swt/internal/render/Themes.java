@@ -118,20 +118,36 @@ public final class Themes {
 		String key = widget + '/' + theme.name;
 		Theme resolved = RESOLVED.get (key);
 		if (resolved != null) return resolved;
-		resolved = ThemeDefaults.of (widget, theme, LookAndFeel.named (theme.name).defaults ());
+		resolved = ThemeDefaults.of (widget, theme, M3LookAndFeel.defaults (theme.name));
 		/* platform colours are resolved on a display thread; a theme read without one is not kept (as LookAndFeel.named) */
 		if (Display.getCurrent () != null) RESOLVED.put (key, resolved);
 		return resolved;
+	}
+
+	/**
+	 * The theme a drawn plane paints with instead of the theme of its look and feel delegate ({@link M3DrawnRowUI}): a
+	 * run-time selection ({@link #select}), or a user-defined theme named by the startup properties; null when the look
+	 * and feel ({@link M3LookAndFeel}) decides.
+	 */
+	public static Theme explicit (String widget) {
+		if (SELECTED.containsKey (widget) || SELECTED.containsKey (ALL)) return current (widget);
+		Theme named = find (property (widget));
+		return named == null || builtIn (named.name) ? null : named;
+	}
+
+	/* the theme name of the startup properties: widget, global, then the aliases; null when none is set */
+	private static String property (String widget) {
+		String value = System.getProperty (PROPERTY + "." + widget);
+		if (value == null) value = System.getProperty (PROPERTY);
+		if (value == null) value = System.getProperty (ALIAS + "." + widget);
+		return value == null ? System.getProperty (ALIAS) : value;
 	}
 
 	private static Theme chosen (String widget) {
 		Theme theme = SELECTED.get (widget);
 		if (theme == null) theme = SELECTED.get (ALL);
 		if (theme != null) return theme;
-		String value = System.getProperty (PROPERTY + "." + widget);
-		if (value == null) value = System.getProperty (PROPERTY);
-		if (value == null) value = System.getProperty (ALIAS + "." + widget);
-		if (value == null) value = System.getProperty (ALIAS);
+		String value = property (widget);
 		if (value == null) return Theme.NATIVE;
 		theme = find (value);
 		if (theme != null) return theme;

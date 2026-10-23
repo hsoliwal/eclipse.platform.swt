@@ -89,6 +89,8 @@ public final class Theme {
 	/** Optional painters; null for the default painting. */
 	public final RowPainter rowPainter;
 	public final CellPainter cellPainter;
+	/** True when expanders and check boxes come from the SVG glyph set ({@link Glyphs}) at the widget's zoom. */
+	public final boolean vectorGlyphs;
 
 	private Theme (Builder b) {
 		name = b.name;
@@ -116,6 +118,7 @@ public final class Theme {
 		checkMixed = b.checkMixed;
 		rowPainter = b.rowPainter;
 		cellPainter = b.cellPainter;
+		vectorGlyphs = b.vectorGlyphs;
 	}
 
 	/** The theme in effect for a widget class (see {@link Themes#current(String)}). */
@@ -133,7 +136,7 @@ public final class Theme {
 		Builder b = new Builder (newName).look (look).colors (foreground, background).selection (selectionBackground, selectionInactiveBackground)
 			.selectionForeground (selectionForeground).hot (hotBackground).lines (hash, grid).border (border).focus (focusColor)
 			.check (checkFill, grayFill).metrics (textInset, rowHeight, indent).expanderImages (expanderOpen, expanderClosed)
-			.checkImages (checkOn, checkOff, checkMixed).rowPainter (rowPainter).cellPainter (cellPainter);
+			.checkImages (checkOn, checkOff, checkMixed).rowPainter (rowPainter).cellPainter (cellPainter).vectorGlyphs (vectorGlyphs);
 		return b;
 	}
 
@@ -151,6 +154,7 @@ public final class Theme {
 		ImageData expanderOpen, expanderClosed, checkOn, checkOff, checkMixed;
 		RowPainter rowPainter;
 		CellPainter cellPainter;
+		boolean vectorGlyphs;
 
 		Builder (String name) {
 			this.name = Objects.requireNonNull (name, "name").trim ().toLowerCase (Locale.ROOT);
@@ -251,6 +255,12 @@ public final class Theme {
 		/** A painter for cell contents, null for the default. */
 		public Builder cellPainter (CellPainter painter) {
 			cellPainter = painter;
+			return this;
+		}
+
+		/** Expanders and check boxes from the built-in SVG glyphs ({@link Glyphs}), rasterized at the widget's zoom; the look's own when no SVG rasterizer is installed. */
+		public Builder vectorGlyphs (boolean value) {
+			vectorGlyphs = value;
 			return this;
 		}
 

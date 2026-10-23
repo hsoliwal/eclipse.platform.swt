@@ -3508,6 +3508,11 @@ boolean isCustomToolTip () {
 }
 
 boolean isOptimizedRedraw () {
+	/*
+	 * A drawn plane (custom, m3, gpu) paints every WM_PAINT of the ListView: the optimized redraw would unsubclass the
+	 * window around update () and the scroll and key handling, and the native control would paint the screen itself.
+	 */
+	if (drawnPlane != null) return false;
     if ((style & SWT.H_SCROLL) == 0 || (style & SWT.V_SCROLL) == 0) {
         return false;
     }

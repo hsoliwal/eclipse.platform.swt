@@ -21,6 +21,8 @@ for try in 1 2 3 4 5 6; do
   echo "build try $try: no jar"
 done
 [ -f "$JAR" ] || { echo "FAILED: no jar"; exit 1; }
+# the SVG glyph resources of the drawn modes (build-swt.sh stages classes only)
+(cd "$WT/bundles/org.eclipse.swt/Eclipse SWT/common" && "C:/Program Files/Java/jdk-21/bin/jar" --update --file "$JAR" org/eclipse/swt/internal/render/glyphs) || { echo "FAILED: glyph resources"; exit 1; }
 bash $WT/docs/m3/render-modes/tools/build_m3_backend.sh $WT $JAR $M3 >> $O/build-$STAMP.log 2>&1
 [ -f "$M3" ] || { echo "FAILED: no M3 backend jar"; exit 1; }
 WT=$WT bash $WT/docs/m3/render-modes/tools/compile_tests.sh $JAR $O/tests >> $O/build-$STAMP.log 2>&1 || { echo "FAILED: tests incomplete"; exit 1; }

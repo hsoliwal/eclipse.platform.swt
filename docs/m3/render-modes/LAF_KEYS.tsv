@@ -2,7 +2,7 @@ input	where	key	kind	state	note
 Theme.foreground	RowRenderer text colour	<Widget>.foreground	COLOR	READ	non-native looks; native keeps -1 (the widget's own colours: an application's setForeground wins, as on the platform)
 Theme.background	RowRenderer row fill	<Widget>.background	COLOR	READ	non-native looks; native keeps -1 (the widget's own)
 Theme.selectionBackground	selection fill (non-native looks)	<Widget>.selectionBackground	COLOR	READ	native draws the uxtheme selection part
-Theme.selectionInactiveBackground	selection fill without focus	<Widget>.selectionInactiveBackground	COLOR	READ
+Theme.selectionInactiveBackground	selection fill without focus	<Widget>.selectionInactiveBackground	COLOR	READ	read by key id through M3DrawnRowUI (M3UIDefaults)
 Theme.selectionForeground	selected text	<Widget>.selectionForeground	COLOR	READ	non-native looks; native keeps -1 (the cell's)
 Theme.hotBackground	hot row fill (non-native looks)	Component.hoverBackground	COLOR	READ	FlatLaf has no row hover key; LF2 Component key
 Theme.hash	tree lines, Initiative 31 arrows, Metal handle line	Tree.lineColor	COLOR	READ
