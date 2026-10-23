@@ -1,0 +1,26 @@
+/* Brute force: the caret and anchor after `removed` single-row deletions at `start` (ListViewport.deleteResidentRow)
+   against the one-step rule of ListViewport.splice, for every small case. */
+public class RemoveRule {
+	public static void main (String [] args) {
+		int cases = 0, differ = 0;
+		for (int count = 1; count <= 14; count++) for (int caret = 0; caret < count; caret++) for (int anchor = -1; anchor < count; anchor++)
+			for (int start = 0; start < count; start++) for (int removed = 1; start + removed <= count; removed++) {
+				int c = caret, a = anchor;
+				for (int k = 0; k < removed; k++) {
+					int countAfter = count - k - 1;
+					if (start == c && c > 0) c--;
+					if (c >= countAfter) c = Math.max (0, countAfter - 1);
+					if (a >= start) a = -1;
+				}
+				int c2 = caret, a2 = anchor;
+				if (c2 == start && c2 > 0) c2--;
+				if (c2 >= count - removed) c2 = Math.max (0, count - removed - 1);
+				if (a2 >= start) a2 = -1;
+				cases++;
+				if (c != c2 || a != a2) {
+					if (differ++ < 8) java.util.logging.Logger.getLogger ("RemoveRule").info ("count " + count + " caret " + caret + " start " + start + " removed " + removed + ": per row " + c + " one step " + c2);
+				}
+			}
+		java.util.logging.Logger.getLogger ("RemoveRule").info (cases + " cases, " + differ + " differ");
+	}
+}

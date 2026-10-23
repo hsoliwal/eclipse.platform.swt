@@ -1,0 +1,30 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtExpandBarHoverO4
+displayName: ExpandBar mouse tracking by binary search and the tracked hover item (optimization leaf O4)
+description: >-
+  Optimization pass leaf O4 (docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv). WM_MOUSEMOVE tested every item for
+  hover, WM_LBUTTONDOWN and WM_MOUSELEAVE searched all items: O(n) per mouse message. Headers lie down the bar in index
+  order (y strictly increasing, each header below the previous one), so the only item a point can hover is the last
+  one starting above it (catalogue: binary search, upper bound); only one item is hovered at a time, so the bar tracks
+  it and a move updates the old and the new one (a delta, not a rescan). O(log n). Viewport mode only; idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tboolean redrawClientValid;\n(?!\t/[*] VIEWPORT: the item whose header the mouse is over)"
+      replace: "\tboolean redrawClientValid;\n\t/* VIEWPORT: the item whose header the mouse is over (the only item with hover set), or null */\n\tExpandItem hoverItem;\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "(?<!\treturn low - 1;\n}\n)\n/[*]\n [*] VIEWPORT: the first item whose drawing reaches below top"
+      replace: "\n/*\n * VIEWPORT: the index of the last item whose header starts above y (the only item whose header can contain y), or -1.\n * Headers lie down the bar in index order, each starting below the previous one's header: binary search, O(log n).\n */\nint itemAt (int y) {\n\tint low = 0, high = itemCount;\n\twhile (low < high) {\n\t\tint mid = (low + high) >>> 1;\n\t\tif (items [mid].y < y) {\n\t\t\tlow = mid + 1;\n\t\t} else {\n\t\t\thigh = mid;\n\t\t}\n\t}\n\treturn low - 1;\n}\n\n/*\n * VIEWPORT: the first item whose drawing reaches below top"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tint y = OS.GET_Y_LPARAM (lParam);\n\tfor (int i = 0; i < itemCount; i++) {\n\t\tExpandItem item = items[i];\n\t\tboolean hover = item.isHover (x, y);\n\t\tif (hover && focusItem != item) {\n"
+      replace: "\tint y = OS.GET_Y_LPARAM (lParam);\n\tif (VIEWPORT) {\n\t\t//FLLDCIM: VIEWPORT - the item under the mouse by binary search (O(log n)), not a scan of every item\n\t\tint index = itemAt (y);\n\t\tExpandItem item = index >= 0 ? items [index] : null;\n\t\tif (item != null && item.isHover (x, y) && focusItem != item) {\n\t\t\tfocusItem.redraw (true);\n\t\t\tfocusItem = item;\n\t\t\tfocusItem.redraw (true);\n\t\t\tforceFocus ();\n\t\t}\n\t\treturn result;\n\t}\n\tfor (int i = 0; i < itemCount; i++) {\n\t\tExpandItem item = items[i];\n\t\tboolean hover = item.isHover (x, y);\n\t\tif (hover && focusItem != item) {\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "    }\n\tfor (int i = 0; i < itemCount; i++) {\n\t\tExpandItem item = items [i];\n\t\tif (item.hover) {\n\t\t\titem.hover = false;\n"
+      replace: "    }\n\tif (VIEWPORT) {\n\t\t//FLLDCIM: VIEWPORT - the hovered item is tracked by WM_MOUSEMOVE, no search\n\t\tif (hoverItem != null && !hoverItem.isDisposed () && hoverItem.hover) {\n\t\t\thoverItem.hover = false;\n\t\t\thoverItem.redraw (false);\n\t\t}\n\t\thoverItem = null;\n\t\treturn result;\n\t}\n\tfor (int i = 0; i < itemCount; i++) {\n\t\tExpandItem item = items [i];\n\t\tif (item.hover) {\n\t\t\titem.hover = false;\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tint y = OS.GET_Y_LPARAM (lParam);\n\tfor (int i = 0; i < itemCount; i++) {\n\t\tExpandItem item = items [i];\n\t\tboolean hover = item.isHover (x, y);\n\t\tif (item.hover != hover) {\n"
+      replace: "\tint y = OS.GET_Y_LPARAM (lParam);\n\tif (VIEWPORT) {\n\t\t//FLLDCIM: VIEWPORT - only the item under the mouse can be hovered: binary search it and update the old and the new one\n\t\tint index = itemAt (y);\n\t\tExpandItem hit = index >= 0 && items [index].isHover (x, y) ? items [index] : null;\n\t\tif (hoverItem != null && hoverItem != hit && !hoverItem.isDisposed () && hoverItem.hover) {\n\t\t\thoverItem.hover = false;\n\t\t\thoverItem.redraw (false);\n\t\t}\n\t\tif (hit != null && !hit.hover) {\n\t\t\thit.hover = true;\n\t\t\thit.redraw (false);\n\t\t}\n\t\thoverItem = hit;\n\t\treturn result;\n\t}\n\tfor (int i = 0; i < itemCount; i++) {\n\t\tExpandItem item = items [i];\n\t\tboolean hover = item.isHover (x, y);\n\t\tif (item.hover != hover) {\n"

@@ -1,0 +1,23 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtExpandBarLayoutRedrawO1
+displayName: ExpandBar layout without per-item native calls or allocations (optimization leaf O1)
+description: >-
+  Optimization pass leaf O1 (docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv). A layout from item i moves every
+  later item, and each move redraws the item twice; in the viewport mode each redraw asked Windows for the client
+  rectangle and allocated two RECTs, so expanding the first of 10^5 items made 2 x 10^5 GetClientRect calls. The bar
+  now reads the client rectangle once per layout and ExpandItem.redraw uses it (and a scratch RECT of the bar), so an
+  item off the client area costs integer work only. Viewport mode only; idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tint layoutBand = -1;\n(?!\t/[*] VIEWPORT: the client rectangle)"
+      replace: "\tint layoutBand = -1;\n\t/* VIEWPORT: the client rectangle of the running layout (valid while redrawClientValid) and ExpandItem.redraw's scratch */\n\tfinal RECT redrawClient = new RECT (), redrawRect = new RECT ();\n\tboolean redrawClientValid;\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\tfor (int i = index; i < itemCount; i++) {\n\t\t\tExpandItem item = items [i];\n\t\t\titem.setBoundsInPixels (spacing, y, 0, 0, true, false);\n            if (item.expanded) {\n                y += item.height;\n            }\n\t\t\ty += item.getHeaderHeightInPixels () + spacing;\n\t\t}\n"
+      replace: "\t\tif (VIEWPORT) {\n\t\t\t//FLLDCIM: HPCPOP - one GetClientRect per layout instead of two per moved item (ExpandItem.redraw)\n\t\t\tOS.GetClientRect (handle, redrawClient);\n\t\t\tredrawClientValid = true;\n\t\t}\n\t\ttry {\n\t\t\tfor (int i = index; i < itemCount; i++) {\n\t\t\t\tExpandItem item = items [i];\n\t\t\t\titem.setBoundsInPixels (spacing, y, 0, 0, true, false);\n\t\t\t\tif (item.expanded) {\n\t\t\t\t\ty += item.height;\n\t\t\t\t}\n\t\t\t\ty += item.getHeaderHeightInPixels () + spacing;\n\t\t\t}\n\t\t} finally {\n\t\t\tredrawClientValid = false;\n\t\t}\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tRECT rect = new RECT ();\n\tRECT client = null;\n\tif (ExpandBar.VIEWPORT) {\n\t\t//FLLDCIM: VIEWPORT - an invalidation off the client area adds nothing to the update region (clipped to it)\n\t\tclient = new RECT ();\n\t\tOS.GetClientRect (parentHandle, client);\n\t}\n"
+      replace: "\tRECT rect = ExpandBar.VIEWPORT ? parent.redrawRect : new RECT ();\n\tRECT client = null;\n\tif (ExpandBar.VIEWPORT) {\n\t\t//FLLDCIM: VIEWPORT - an invalidation off the client area adds nothing to the update region (clipped to it)\n\t\tclient = parent.redrawClient;\n\t\tif (!parent.redrawClientValid) {\n\t\t\t//FLLDCIM: HPCPOP - inside a layout the layout's client rectangle; no allocation either way\n\t\t\tOS.GetClientRect (parentHandle, client);\n\t\t}\n\t}\n"

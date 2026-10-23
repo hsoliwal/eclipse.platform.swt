@@ -369,9 +369,278 @@ all-widgets track's LF2 tables, to become `M3UIDefaults` lanes in LF6), not from
   switch leg, `-Dswt.viewport.themeSwitch=<step>:<theme>`: the theme changes at that step of every seed, every
   non-pixel probe must still equal stock, and the captures after the switch are compared with a leg that started in
   the target theme.
-- When `M3LookAndFeel` and `M3UIDefaults` land (LF6 steps b-c), `ThemeDefaults` reads key ids from the lanes and the
-  look and feel's listener bumps `Themes`' generation; the row delegate (`M3RowUI`) of the drawn rows is
-  `RowRenderer` with this theme.
+- **Row delegate (since integration round 9 brought `M3LookAndFeel`, `M3UIDefaults` and `M3ComponentUI`):** every
+  drawn plane installs `M3DrawnRowUI` with `M3LookAndFeel.installUI`. The delegate reads the colours above by key id from
+  the look and feel's `M3UIDefaults` (`ThemeDefaults.of (widget, look, defaults)`; the developer layer of
+  `M3UIDefaults.put` answers first) and declares them as its paint keys, so `M3LookAndFeel.setLookAndFeel` installs it
+  again and repaints the widget only when a key it reads changes; the plane picks the new theme on its next frame.
+  The look follows the look and feel's name: `native` the platform parts, `swing`/`metal` Metal, every other
+  (`initiative31`, `light`, `dark`, registered and imported ones) the flat glyphs. A run-time `Themes.select` or a
+  user-defined theme named by the properties still wins (`Themes.explicit`).
+
+## Interaction model: CPU model, GPU renderer (design, user 2026-10-19)
+
+"The CPU model and the GPU model must have an interactive perfect model." The drawn modes split into a model side
+that changes and a renderer that only ever shows complete states. Status: design (documentation first, D2C); the
+leaves and their gates are at the end of this section.
+
+### Threads and roles
+
+| Role | Thread | Owns | Never does |
+|---|---|---|---|
+| Widget API and input | UI thread | the widget's public API, the behaviour plane (stage 1: the native control), input dispatch | wait for a model worker |
+| Model | UI thread for small changes; CPU workers for bulk work (10^6-row inserts and removes, sorting, prefix sums, lane fills) | the row model (viewport lanes, row index, heights), the theme ids | touch a device context, a GL context or a widget handle |
+| Renderer | UI thread (custom, m3: the back buffer; gpu: the thread's OpenGL context, `M3Gpu`, which is per UI thread) | the frame: the snapshot it paints, the back buffer or render target, the caches | read the live model, block, allocate per frame |
+
+### Snapshot protocol
+
+A **snapshot** is what one frame needs and nothing else, immutable once published:
+
+- `generation` (long, strictly increasing per widget) and the model generation it was built from;
+- the row window: first row, row count, the pixel offset of the first row, the row heights (a prefix-sum lane);
+- the window's lanes: text ids (interned), foreground, background and font ids, image ids, state bits (selected,
+  focused, checked, grayed, expanded, children, depth);
+- the theme id and theme generation (the look and feel of the widget: `M3DrawnRowUI`);
+- the damage since the previous snapshot (rectangles in plane pixels), and the scroll position.
+
+Publication is single-writer, many-reader, wait-free for the reader:
+
+1. The writer fills a **slab** (preallocated lanes; three slabs per widget: one being written, the latest published,
+   one being read). Strings are ids into the widget's interned text lane; no slab holds an object reference that
+   the model can change.
+2. The three slabs are a lock-free triple buffer (`RowSnapshots`, 2026-10-20): the writer owns the *back* slab, the
+   renderer the *front* slab, the third is the *middle*, the latest complete snapshot. One `AtomicInteger` holds the
+   middle slab and a *fresh* bit. Publishing exchanges back and middle (`getAndSet`, release) and sets the bit.
+3. At the start of a frame the renderer exchanges front and middle only when the bit is set (acquire), then paints its
+   front slab. Each side only touches the slab it owns, so a frame never sees a slab change under it. A first design
+   (one published word plus a separate "being read" index) tore: the writer could take a slab the renderer had loaded
+   but not yet marked (1012 torn frames in 200000 publications); the triple buffer has none.
+4. If no new generation was published since the last frame and nothing was damaged, no frame is drawn.
+
+### Input: model first, predicted pixels at once
+
+Input goes to the model immediately on the UI thread (scroll position, selection, focus, type-ahead): the API answers
+from the model at once, as stock does. The renderer does not wait for the next snapshot: it paints a **predicted**
+frame from the latest snapshot and the input (a scroll shifts the resident window by the delta; the resident window
+is larger than the visible rows, so a fast scroll stays inside it; a selection or focus change sets the state bits of
+resident rows). When the snapshot built after the input is published, the next frame paints it: the prediction is
+replaced within one frame. A prediction never shows a row the snapshot does not contain; rows outside the resident
+window are painted empty until their snapshot lands.
+
+### Invariants (checked by the interactive differential)
+
+| | Invariant |
+|---|---|
+| I1 | Complete or nothing: every frame paints exactly one published snapshot (plus, between snapshots, a prediction from it). |
+| I2 | Monotonic: the snapshot generation of frame n+1 is at least that of frame n (never an older state). |
+| I3 | Never blocking: the renderer takes no lock the model holds; a frame costs O(visible rows). |
+| I4 | No allocation per frame: slabs, caches and the frame log are preallocated (rule 18, DOOP). |
+| I5 | Input first: an input event changes the model before the next frame; its pixels appear in the next frame (predicted) and the snapshot's pixels within one frame of its publication. |
+| I6 | Budgets: input-to-pixel latency p99 within two frames; frame time p99 under 16.6 ms in the gpu mode. |
+| I7 | Same pixels: once the model is quiet, the gpu frame equals the CPU frame of the same snapshot. gpu and m3 (CPU raster) share the M3 renderer and are compared pixel for pixel; custom draws text with GDI, so against custom the comparison is the similarity of this document's other measurements. |
+
+### Frame pacing
+
+Pattern donor: skiko (JetBrains, Apache-2.0) frame dispatching, as the donor PATTERN_MAP's frame-pacing theme will
+record it: redraw requests coalesce into one pending frame; at most one frame in flight; frames align to the display
+refresh (swap interval on the GL path, a refresh-rate timer otherwise); a frame that has nothing new is skipped. No
+code is copied; the decision row goes into [render-modes/FOSS_REUSE_DECISION.tsv](render-modes/FOSS_REUSE_DECISION.tsv)
+when the pattern is applied.
+
+### Proof: the interactive differential
+
+`Test_org_eclipse_swt_widgets_DrawnInteraction` (to be written): a Table with 10^6 rows in custom, m3 and gpu on the
+invisible desktop; a scripted fast scroll (wheel bursts, page keys) and typing (type-ahead) while a model worker
+inserts and removes rows in bursts. Each frame appends to a preallocated frame log: snapshot generation, prediction or
+snapshot, input sequence number it reflects, frame start and end. Assertions: I2 over the whole log; input-to-pixel
+p99 and frame time p99 under the budgets of I6 (gpu); after the script, with the model quiet, the gpu pixels equal the
+m3 pixels and the custom pixels are reported by similarity; every non-pixel answer equals the viewport mode's.
+
+### Leaves
+
+| Leaf | Scope | Gate |
+|---|---|---|
+| IM1 | frame log and overlay: per frame generation, frame time and input-to-pixel latency, preallocated; `-Dswt.drawn.overlay=true` paints them in the corner | headless test of the log; the overlay in the examples |
+| IM2 | snapshot slabs and publication (three slabs, a lock-free triple buffer), built on the UI thread from the viewport lanes: the protocol DONE (`RowSnapshots`, headless: 0 torn and 0 backward frames under concurrent reads, about 1.1-1.9 us per publish and acquire of 64 rows, no allocation); building the slabs in the planes is open | I1, I2, I4 under the existing differentials |
+| IM3 | model worker for bulk changes; the UI thread applies the finished change and publishes | I3 under 10^6-row churn |
+| IM4 | predicted frames for scroll, selection and focus | I5 |
+| IM5 | frame pacing (skiko pattern) | I6 in gpu |
+| IM6 | the interactive differential | I1-I7 |
+
+## Optimization pass and brief rule 24 (2026-10-20)
+
+User 2026-10-20: "proceed with optimizing the whole" (C:/m3-superset/tools/OPTIMIZATION_PASS.md) and "all delta based
+view" (brief rule 24, with the sub-rules "viewport deltas (resize, layout)" and "hidden viewports"). Every leaf has a
+row with its before and after numbers in [render-modes/OPTIMIZATION_LEDGER.tsv](render-modes/OPTIMIZATION_LEDGER.tsv).
+
+### Frame allocations
+
+A paint frame's bytes are attributed with JFR (`render-modes/bench/alloc_profile.sh`: TLAB events whose stack passes
+through `DrawnPlane.draw`). The drawn path's own allocations are gone:
+
+- `LongCache`: a boxing-free cache keyed by a native handle or a packed key (open addressing with backward
+  re-insertion, clock eviction, a callback that closes what it drops). `GlyphCache` keeps its glyphs in one;
+  `M3RowCanvas` keys fonts and part images in them, and a font entry carries its shaped lines.
+- `M3RowCanvas` clips and draws images, glyphs, parts and the focus rectangle through Skija's primitive entry points
+  (`_nDrawImageRect` with the default sampling and strict bounds, which is what `drawImage`/`drawImageRect` pass), and
+  keeps one `Path` and the gpu readback's `ImageInfo`.
+- `ListDrawnPlane` reuses the string it kept for an index while the list box's characters are the same.
+
+Every backend now allocates per frame what custom does (Tree 35008 bytes, List 3504 at 10^6 rows); the rest is
+shared SWT and viewport code (`Display.getControl` boxing, `Tree.wmNotifyChild` structs per notification, the Tree
+viewport's boxed lookups), outside this track.
+
+### Theme and look and feel switches
+
+- One glyph cache per UI thread serves every renderer, keyed by (glyph, size, zoom, tint): a switch back draws glyphs
+  already rasterized. The first row after a switch went from 1.1-1.6 ms to 6-9 us at 150 %.
+- A `Themes` selection repaints only the planes whose theme it changes (before: every drawn plane repainted).
+- Look and feel switches reinstall and repaint only the delegates whose paint keys changed (`M3LookAndFeel.update`,
+  all-widgets track).
+
+### Delta based view (rule 24)
+
+The native controls invalidate more than a delta changes: a list box insert or remove repaints every row below it
+(also for rows outside the window), a tree delete below the window repaints the whole client, a resize repaints the
+whole client. The drawn plane therefore keeps a **retained frame** (the pixels it last presented) and, per row slot,
+what it drew there: the row's key (`RowPaint.key`: every field the renderer reads, compared exactly, texts with
+`equals`) and the theme. A row whose key and theme equal its slot's is not drawn: its band is copied back from the
+retained frame over the behaviour pass. A row with a cell image is always drawn (its pixels may change in place), and
+so is every row of a theme with its own row or cell painter. A slot is remembered only for a row drawn whole under a
+damage as wide as the client; a platform theme, system colour, setting or font change forgets all slots.
+
+`FrameLog` counts per frame the damage, the rows drawn and kept, and a **full repaint** (a frame that drew every row
+of at least 90 % of the rows area); the gates read it before and after each delta:
+
+| Gate | Test, tool | Pass |
+|---|---|---|
+| model deltas | `Test_org_eclipse_swt_widgets_DrawnDeltaRepaint`, `tools/delta_repaint_legs.sh` | no full repaint per delta (text, colour, check of a visible row; inserts, removes and count changes outside the window), and the kept rows equal the rows drawn from scratch |
+| viewport deltas (resize) | `Test_org_eclipse_swt_widgets_DrawnResizeSweep`, `tools/resize_sweep_legs.sh` | 50 sizes: no full repaint after the first step; back buffer re-creations and frame p50/p99 reported |
+| hidden viewports | `Test_org_eclipse_swt_widgets_DrawnHiddenViewport`, `tools/hidden_viewport_legs.sh` | hide, 10^4 deltas, show: no paint and no native message while hidden, one paint on show, kept rows equal drawn rows |
+
+The back buffer grows in **size classes** of 128 pixels per axis and never shrinks (`BackBuffer.ensureFrame`): a resize
+drag re-creates it, and the m3 or gpu surface over it, once per class instead of once per step (50-step sweep: 24
+re-creations before, 3-4 after). Glyph and shaped-line caches belong to the backend, not to the size, so a resize keeps
+them.
+
+While a drawn widget is hidden, Windows sends no paint, so the plane draws nothing and publishes nothing. Native work
+while hidden is the widget viewport's (Tree, Table, List tracks): the gate counts every message that reaches the native
+window procedure (`FrameLog.messages`) so their hidden-period deferral is measured here too.
+
+### Measurement notes
+
+- Input-to-pixel latency is measured per input event in `Test_org_eclipse_swt_widgets_Table_DrawnInteraction` (send
+  to the end of the paint `update ()` makes; inputs that damaged nothing counted apart). The frame log's own figure
+  charges an input that damaged nothing to the next frame, whatever made it (186-197 ms p99 at stamp m was mostly
+  that).
+- gpu and m3 share the M3 renderer: the glyph column matches within one level per channel (blending rounding); text
+  differs by up to five levels (the GPU's text anti-aliasing), so I7 holds for glyphs, not for text.
+- Glyphs follow the window's DPI (`Widget.nativeZoom`), the density of the native rows: a forced `swt.autoScale`
+  above the monitor's does not enlarge them, as it does not the native expanders and check boxes.
+- gpu timings on this machine vary with the other UI legs that run in the other two desktop slots; allocation counts
+  and frame or row counts are the stable measures.
+
+## Vector glyphs: SVG at the exact DPI (design, user 2026-10-19)
+
+"SWT SVG is there, Batik is there": theme glyphs (expanders, check boxes, sort indicators, chevrons) and vector icons
+of the drawn modes come from SVG, rasterized at the widget's exact zoom.
+
+- **Rasterizer (donor rows in [render-modes/FOSS_REUSE_DECISION.tsv](render-modes/FOSS_REUSE_DECISION.tsv)).** SWT's
+  own: `org.eclipse.swt.internal.image.SVGRasterizer` (`rasterizeSVG (stream, zoom)` and `(stream, width, height)`),
+  found through the ServiceLoader, implemented by the `org.eclipse.swt.svg` fragment with JSVG (MIT). Apache Batik
+  (Apache-2.0) is the fallback for a feature JSVG lacks (filters, SVG text); the built-in glyph set needs none.
+- **Cache in lanes, never per frame.** A glyph key packs (icon id, size in pixels, zoom, theme generation) into one
+  long; an open-addressing table maps it to a slot of preallocated lanes holding the `ImageData`. A miss rasterizes
+  once (on the UI thread, or on a model worker as part of a snapshot in the interaction model); a frame only looks the
+  slot up. The backends already keep one device copy per `ImageData` (`GcRowCanvas`, `M3RowCanvas` glyph caches), so a
+  hit costs a table probe. A theme switch or a zoom change moves to new keys; old slots are reused LRU.
+- **Themes.** A theme names its glyphs by SVG resource (`Tree.icon.expanded`, `Tree.icon.collapsed`,
+  `CheckBox.icon.checked`, `CheckBox.icon.unchecked`, `CheckBox.icon.mixed`, `Table.sortIcon.ascending`,
+  `Table.sortIcon.descending`), keys of the look and feel tables (the all-widgets track owns the tables; FlatLaf's
+  icon key names). `Theme.expanderOpen` and the other glyph images become per-zoom lookups in the cache.
+- **Proof.** A differential leg runs at 100, 150 and 200 % (`-Dswt.autoScale`): the glyph pixels are crisp (no
+  scaled bitmap: the rasterized size equals the slot size at that zoom) and equal across custom, m3 and gpu (all three
+  blit the same `ImageData` 1:1); every non-pixel probe stays equal to stock.
+- **Theme tint.** The glyph sources use `currentColor`; before rasterizing, the cache resolves it to the theme's colour
+  (expander: `Tree.expandIconColor`, check box: the border and `CheckBox.icon.checkmarkColor`, sort indicator: the
+  header foreground), so one SVG serves every look and feel (the FlatSVGIcon colour-filter pattern, FlatLaf #303 and
+  #817; SWT's rasterizer takes the resolved SVG, as platform.ui #4497/#4505 set `currentColor`). The built-in set is
+  in `org/eclipse/swt/internal/render/glyphs` (chevron right and down, check box off/on/mixed, sort ascending and
+  descending; 16 x 16 view boxes, 1.5 px strokes).
+- **Differential cases absorbed from upstream (leaf SV3):** swt #3659 (the unfocused tree selection fill of the dark
+  theme on win32: the inactive selection colour comes from `Tree.selectionInactiveBackground` of the dark table, not
+  from the platform), swt #3631 (crisp HiDPI images: the glyph is rasterized at the slot's pixel size, never scaled
+  from 100 %), FlatLaf #1022 (fractional scale artifacts: at 125 and 150 % the slot and the glyph round the same way,
+  `(size * zoom + 50) / 100`, so no seam between a selection fill and the glyph).
+
+| Leaf | Scope | Gate |
+|---|---|---|
+| SV1 | glyph cache (packed keys, lanes, clock eviction), SWT rasterizer through the ServiceLoader: DONE (`GlyphCache`, 4/4 headless) | headless test: one rasterization per key, none per frame |
+| SV2 | built-in SVG glyph set for the flat looks (DONE: `Glyphs`, 7 glyphs with `currentColor`, tinted per theme; `Test_org_eclipse_swt_internal_render_Glyphs` 2/2 with the SVG fragment and JSVG 2.1.0 on the class path); theme keys with the all-widgets track | the theme tests |
+| SV3 | the 100/125/150/200 % leg: headless part DONE; the drawn path DONE (non-native looks draw the SVG set at the zoom, `GcRowCanvas` blits glyphs 1:1 with AlphaBlend); `Test_org_eclipse_swt_widgets_Tree_DrawnGlyphZoom` + `tools/glyph_zoom_legs.sh` with the upstream cases (swt #3659, #3631, FlatLaf #1022): results pending (queued on the UI lock) | crisp and equal across the three drawn modes |
+| SV4 | the example (below, with the interaction model's overlay) | runs on the invisible desktop |
+
+## Examples (user 2026-10-19: "enrich everything with examples")
+
+**A drawn Table in the gpu mode with the overlay** ([M3DrawnModesDemo](../../examples/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/M3DrawnModesDemo.java):
+a million virtual rows, three columns, look and feel buttons):
+
+```
+java -Dswt.widget.mode=gpu -Dswt.drawn.overlay=true ^
+     -cp swt.jar;swt-render-m3.jar;skija-shared-0.116.3.jar;skija-windows-x64-0.116.3.jar;types-0.1.1.jar ^
+     org.eclipse.swt.snippets.M3DrawnModesDemo
+```
+
+The overlay (bottom right) shows the frames drawn, the frame time p99 and the input-to-pixel latency p99 of the plane's
+frame log (interaction model, IM1). `-Dswt.widget.mode=custom` draws with GDI, `m3` with the M3 renderer on the CPU.
+Nothing in the application changes between the modes:
+
+```java
+Table table = new Table (shell, SWT.VIRTUAL | SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION);
+table.setHeaderVisible (true);
+table.setLinesVisible (true);
+table.addListener (SWT.SetData, event -> ((TableItem) event.item).setText ("row " + event.index));
+table.setItemCount (1_000_000);
+```
+
+**Switching the look and feel at run time** (LF6; the rows' `M3DrawnRowUI` delegate is installed again and the widget
+repaints only when a key it reads changes):
+
+```java
+M3LookAndFeel.setLookAndFeel ("flatdark");   // native, swing, initiative31, flat, flatdark, or a registered one
+M3LookAndFeel.getDefaults ().put (M3UIKeys.of ("Table", "selectionBackground", M3UIKeys.COLOR), 0xFF2F6FD0); // developer layer
+```
+
+**One widget class pinned** at startup: `-Dswt.widget.theme.Tree=swing` keeps Trees in Swing's Metal look while the
+rest follows `setLookAndFeel`.
+
+**A theme of one's own** (painters and glyph images; a run-time selection wins over the look and feel):
+
+```java
+Theme ocean = Theme.builder ("ocean").look (Theme.LOOK_SWING).selection (0x2F6FD0, 0xC5D5EA).lines (0x7A8A99, 0xD0D8E0).build ();
+Themes.register (ocean);
+Themes.select ("Table", ocean);
+```
+
+**Vector glyphs at a zoom** (the non-native looks; the SVG fragment and JSVG on the class path):
+
+```
+java -Dswt.autoScale=200 -Dswt.widget.theme=flatdark -Dswt.widget.mode=m3 -Dswt.drawn.overlay=true ^
+     -cp swt.jar;swt-render-m3.jar;skija-shared-0.116.3.jar;skija-windows-x64-0.116.3.jar;types-0.1.1.jar;org.eclipse.swt.svg.jar;jsvg-2.1.0.jar ^
+     org.eclipse.swt.snippets.M3DrawnModesDemo
+```
+
+The expanders and check boxes are rasterized once at 32 pixels (16 points at 200 %) and tinted with `Tree.expandIconColor`
+and `CheckBox.icon.checkmarkColor` of the look and feel; a zoom change rasterizes them again at the new size, never scales.
+
+**Measuring a drawn plane from a test** (the frame log is per plane; `FrameLog.monotonic` is invariant I2):
+
+```java
+FrameLog frames = ...;                  // the plane's log (package-private field DrawnPlane.frames)
+long frameP99 = frames.frameTime (99);    // nanoseconds
+long inputP99 = frames.inputLatency (99); // nanoseconds from input to the frame that shows it
+assertTrue (frames.monotonic ());
+```
 
 ## Leaves
 

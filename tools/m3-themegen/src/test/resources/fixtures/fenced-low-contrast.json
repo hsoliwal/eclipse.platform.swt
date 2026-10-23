@@ -1,0 +1,7 @@
+Here is a theme for you:
+
+```json
+{"name": "Fog", "dark": false, "palette": {"background": "#dddddd", "foreground": "#cccccc", "accent": "#d0d0d0", "border": "not-a-colour"}, "density": "compact"}
+```
+
+Enjoy!

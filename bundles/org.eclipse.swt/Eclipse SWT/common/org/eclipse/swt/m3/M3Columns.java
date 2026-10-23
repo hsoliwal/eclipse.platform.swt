@@ -11,6 +11,8 @@
  *
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *     Hitesh Soliwal (Synexia) - header hit test and column lookup adapted from TV_5.0 treeviewer
+ *         TreeUtil (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
 package org.eclipse.swt.m3;
 

@@ -1,0 +1,270 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+// Optimization pass (C:/m3-superset/tools/OPTIMIZATION_PASS.md), measurement harness of the List and Combo track.
+// Manual win32 probe (default package: runs on the official jar too). Run it on the hidden desktop.
+
+import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.logging.*;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.internal.Callback;
+import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.widgets.*;
+
+/**
+ * Hot operations of List and Combo at one size: wall time (median of 5, each on a fresh widget, the event loop drained
+ * inside the timing), bytes allocated by the UI thread (median), list-box and combo messages sent while the operation
+ * runs (one extra run with a WH_CALLWNDPROC hook: all LB_* / CB_* messages, and the row operations among them:
+ * LB_ADDSTRING, LB_INSERTSTRING, LB_DELETESTRING, LB_RESETCONTENT and the CB_ equivalents), and the heap the filled
+ * widget retains after GC. One JUL line per operation:
+ * <code>operation size mode wall_ms alloc_KB messages row_ops</code>.
+ * Arguments: outDir size [list|combo|all]. The mode is the jar's (official) or -Dswt.widget.mode.
+ */
+public class ListComboOpsBench {
+	static final Logger LOG = Logger.getLogger ("ListComboOpsBench");
+	static final int REPEATS = 5;
+	static Display display;
+	static Shell shell;
+	static String mode;
+	static int size;
+	static long [] handles = new long [3];
+	static boolean counting;
+	static long messages, rowOps;
+
+	static {
+		LOG.setUseParentHandlers (false);
+		Handler handler = new ConsoleHandler ();
+		handler.setFormatter (new Formatter () {
+			@Override
+			public String format (LogRecord entry) {
+				return entry.getMessage () + System.lineSeparator ();
+			}
+		});
+		LOG.addHandler (handler);
+	}
+
+	interface Op {
+		void run (Control control);
+	}
+
+	public static void main (String [] args) throws Exception {
+		size = Integer.parseInt (args [1]);
+		String which = args.length > 2 ? args [2] : "all";
+		mode = SWT.getVersion () == 4974 ? "official" : System.getProperty ("swt.widget.mode", "viewport");
+		display = new Display ();
+		shell = new Shell (display);
+		shell.setBounds (20, 20, 330, 420);
+		shell.open ();
+		Callback call = new Callback (ListComboOpsBench.class, "callWndProc", 3);
+		long hook = OS.SetWindowsHookEx (4 /* WH_CALLWNDPROC */, call.getAddress (), 0, OS.GetCurrentThreadId ());
+		String [] items = new String [size], more = new String [1000];
+		for (int i = 0; i < size; i++) items [i] = "Item " + i;
+		for (int i = 0; i < more.length; i++) more [i] = "More " + i;
+		LOG.info ("# ListComboOpsBench size " + size + " mode " + mode + " SWT " + SWT.getVersion () + "; operation size mode wall_ms alloc_KB messages row_ops");
+		if (!which.equals ("combo")) lists (items, more);
+		if (!which.equals ("list")) combos (items, more);
+		OS.UnhookWindowsHookEx (hook);
+		display.dispose ();
+	}
+
+	static void lists (String [] items, String [] more) throws Exception {
+		retained ("list retained heap", () -> {
+			List list = list (SWT.MULTI | SWT.V_SCROLL);
+			list.setItems (items);
+			return list;
+		});
+		measure ("list setItems", () -> list (SWT.MULTI | SWT.V_SCROLL), c -> ((List) c).setItems (items));
+		measure ("list setItems H_SCROLL", () -> list (SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL), c -> ((List) c).setItems (items));
+		measure ("list add 1000 at end", () -> filledList (items), c -> {
+			for (String s : more) ((List) c).add (s);
+		});
+		measure ("list add 100 at 10", () -> filledList (items), c -> {
+			for (int i = 0; i < 100; i++) ((List) c).add (more [i], 10);
+		});
+		measure ("list remove 1000 middle", () -> filledList (items), c -> ((List) c).remove (size / 2, size / 2 + 999));
+		measure ("list remove 100 single at 10", () -> filledList (items), c -> {
+			for (int i = 0; i < 100; i++) ((List) c).remove (10);
+		});
+		measure ("list removeAll", () -> filledList (items), c -> ((List) c).removeAll ());
+		measure ("list setTopIndex 100 jumps", () -> filledList (items), c -> {
+			for (int i = 0; i < 100; i++) ((List) c).setTopIndex ((int) ((i * 7919L * 104729L) % size));
+		});
+		measure ("list remove 1000 then setTopIndex last", () -> {
+			List list = filledList (items);
+			list.remove (size / 2, size / 2 + 999);
+			return list;
+		}, c -> ((List) c).setTopIndex (((List) c).getItemCount () - 1));
+		Method splice = spliceMethod ();
+		if (splice != null) {
+			measure ("list m3Splice 1000 out 1000 in outside window", () -> filledList (items), c -> invoke (splice, c, size / 2, 1000, more));
+			measure ("list m3Splice 3 out 2 in inside window", () -> filledList (items), c -> invoke (splice, c, 2, 3, new String [] {"a", "b"}));
+		}
+	}
+
+	static void combos (String [] items, String [] more) throws Exception {
+		retained ("combo retained heap", () -> {
+			Combo combo = combo ();
+			combo.setItems (items);
+			return combo;
+		});
+		measure ("combo setItems", ListComboOpsBench::combo, c -> ((Combo) c).setItems (items));
+		measure ("combo add 1000 at end", () -> filledCombo (items), c -> {
+			for (String s : more) ((Combo) c).add (s);
+		});
+		measure ("combo remove 1000 middle", () -> filledCombo (items), c -> ((Combo) c).remove (size / 2, size / 2 + 999));
+		measure ("combo removeAll", () -> filledCombo (items), c -> ((Combo) c).removeAll ());
+		measure ("combo select last", () -> filledCombo (items), c -> ((Combo) c).select (size - 1));
+		measure ("combo drop open (selection middle)", () -> {
+			Combo combo = filledCombo (items);
+			combo.select (size / 2);
+			return combo;
+		}, c -> ((Combo) c).setListVisible (true));
+	}
+
+	interface Make {
+		Control make () throws Exception;
+	}
+
+	static void measure (String name, Make setup, Op op) throws Exception {
+		long [] wall = new long [REPEATS], alloc = new long [REPEATS];
+		for (int r = 0; r < REPEATS; r++) {
+			Control control = setup.make ();
+			drain ();
+			long a0 = allocated (), t0 = System.nanoTime ();
+			op.run (control);
+			drain ();
+			wall [r] = System.nanoTime () - t0;
+			alloc [r] = allocated () - a0;
+			close (control);
+		}
+		Control control = setup.make ();
+		drain ();
+		handles (control);
+		messages = rowOps = 0;
+		counting = true;
+		op.run (control);
+		drain ();
+		counting = false;
+		close (control);
+		Arrays.sort (wall);
+		Arrays.sort (alloc);
+		LOG.info (String.format ("%s\t%d\t%s\t%.1f\t%d\t%d\t%d", name, size, mode, wall [REPEATS / 2] / 1e6, alloc [REPEATS / 2] / 1024, messages, rowOps));
+	}
+
+	static void retained (String name, Make make) throws Exception {
+		long before = used ();
+		Control control = make.make ();
+		drain ();
+		long after = used ();
+		LOG.info (String.format ("%s\t%d\t%s\t-\t%d\t-\t-", name, size, mode, (after - before) / 1024));
+		close (control);
+	}
+
+	static long used () {
+		for (int i = 0; i < 3; i++) System.gc ();
+		Runtime runtime = Runtime.getRuntime ();
+		return runtime.totalMemory () - runtime.freeMemory ();
+	}
+
+	static long allocated () {
+		return ((com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean ()).getThreadAllocatedBytes (Thread.currentThread ().getId ());
+	}
+
+	static List list (int style) {
+		List list = new List (shell, style | SWT.BORDER);
+		list.setBounds (5, 5, 300, 380);
+		return list;
+	}
+
+	static List filledList (String [] items) {
+		List list = list (SWT.MULTI | SWT.V_SCROLL);
+		list.setItems (items);
+		return list;
+	}
+
+	static Combo combo () {
+		Combo combo = new Combo (shell, SWT.DROP_DOWN | SWT.READ_ONLY);
+		combo.setBounds (5, 5, 300, 30);
+		combo.setVisibleItemCount (20);
+		return combo;
+	}
+
+	static Combo filledCombo (String [] items) {
+		Combo combo = combo ();
+		combo.setItems (items);
+		return combo;
+	}
+
+	static void close (Control control) {
+		if (control instanceof Combo combo && combo.getListVisible ()) combo.setListVisible (false);
+		control.dispose ();
+		drain ();
+	}
+
+	static Method spliceMethod () {
+		try {
+			Method method = List.class.getDeclaredMethod ("m3Splice", int.class, int.class, String [].class);
+			method.setAccessible (true);
+			return method;
+		} catch (NoSuchMethodException e) {
+			return null;
+		}
+	}
+
+	static void invoke (Method splice, Control control, int at, int removed, String [] inserted) {
+		try {
+			splice.invoke (control, at, removed, inserted);
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError (e);
+		}
+	}
+
+	/* the widget's window, and for a combo its drop-down list box */
+	static void handles (Control control) {
+		Arrays.fill (handles, 0);
+		handles [0] = control.handle;
+		if (control instanceof Combo) {
+			org.eclipse.swt.internal.win32.COMBOBOXINFO info = new org.eclipse.swt.internal.win32.COMBOBOXINFO ();
+			info.cbSize = org.eclipse.swt.internal.win32.COMBOBOXINFO.sizeof;
+			OS.GetComboBoxInfo (control.handle, info);
+			handles [1] = info.hwndList;
+			handles [2] = info.hwndItem;
+		}
+	}
+
+	static void drain () {
+		for (int i = 0; i < 3; i++) {
+			while (display.readAndDispatch ()) {
+				/* drain */
+			}
+		}
+	}
+
+	public static long callWndProc (long code, long wParam, long lParam) {
+		if (code >= 0 && counting) {
+			long [] message = new long [4]; /* CWPSTRUCT: lParam, wParam, message, hwnd */
+			OS.MoveMemory (message, lParam, 32);
+			int id = (int) message [2];
+			long hwnd = message [3];
+			if ((hwnd == handles [0] || hwnd == handles [1]) && id >= 0x140 && id <= 0x1B0) {
+				messages++;
+				if (id == 0x180 || id == 0x181 || id == 0x182 || id == 0x184 || id == 0x143 || id == 0x144 || id == 0x14A || id == 0x14B) rowOps++;
+			}
+		}
+		return OS.CallNextHookEx (0, (int) code, wParam, lParam);
+	}
+}

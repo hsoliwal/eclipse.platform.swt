@@ -74,6 +74,58 @@ public class Test_org_eclipse_swt_widgets_Combo_ViewportAcceptance {
 		return Test_org_eclipse_swt_widgets_Combo_ViewportDifferential.Native.send (Test_org_eclipse_swt_widgets_Combo_ViewportDifferential.Native.list (combo), 0x18b, 0, 0);
 	}
 
+	/*
+	 * Rule 24, viewport deltas: resizing a dropped list (the visible item count, 1 step up and down, then large jumps,
+	 * 50 changes) and the combo's width never replaces the drop-down list's window whole, and its native row operations
+	 * are exactly the rows that enter or leave the window.
+	 */
+	@Test
+	public void droppedResizeSweepMovesOnlyTheRowsEnteringOrLeaving () throws ReflectiveOperationException {
+		Combo combo = combo (SWT.DROP_DOWN | SWT.READ_ONLY, 100_000);
+		combo.select (50_000);
+		combo.setListVisible (true);
+		settle ();
+		int [] counts = new int [50];
+		for (int i = 0; i < 20; i++) counts [i] = 10 + i;
+		for (int i = 20; i < 40; i++) counts [i] = 29 - (i - 20);
+		int [] jumps = {3, 40, 5, 33, 12, 48, 2, 25, 8, 20};
+		System.arraycopy (jumps, 0, counts, 40, jumps.length);
+		java.lang.reflect.Method ops = Combo.class.getDeclaredMethod ("m3NativeRowOps"), replans = Combo.class.getDeclaredMethod ("m3WindowReplans");
+		ops.setAccessible (true);
+		replans.setAccessible (true);
+		int step = 0;
+		for (int count : counts) {
+			int [] before = window (combo);
+			long opsBefore = (Long) ops.invoke (combo), replansBefore = (Long) replans.invoke (combo);
+			combo.setVisibleItemCount (count);
+			if (step++ % 5 == 0) combo.setSize (200 + 4 * count, 30);
+			if (!combo.getListVisible ()) combo.setListVisible (true);
+			settle ();
+			int [] after = window (combo);
+			int entering = Math.max (0, before [0] - after [0]) + Math.max (0, after [1] - before [1]);
+			int leaving = Math.max (0, after [0] - before [0]) + Math.max (0, before [1] - after [1]);
+			assertEquals (replansBefore, replans.invoke (combo), "the window was replaced whole at " + count + " visible items");
+			assertEquals (entering + leaving, (Long) ops.invoke (combo) - opsBefore, "native row operations at " + count + " visible items, window "
+				+ before [0] + ".." + before [1] + " -> " + after [0] + ".." + after [1]);
+			assertEquals (50_000, combo.getSelectionIndex ());
+		}
+		combo.setListVisible (false);
+	}
+
+	/* the resident window [first, end) of a viewport combo's drop-down list */
+	static int [] window (Combo combo) throws ReflectiveOperationException {
+		java.lang.reflect.Field viewportField = Combo.class.getDeclaredField ("viewport");
+		viewportField.setAccessible (true);
+		Object viewport = viewportField.get (combo);
+		java.lang.reflect.Field planField = viewport.getClass ().getDeclaredField ("plan");
+		planField.setAccessible (true);
+		Object plan = planField.get (viewport);
+		java.lang.reflect.Method first = plan.getClass ().getDeclaredMethod ("first"), end = plan.getClass ().getDeclaredMethod ("end");
+		first.setAccessible (true);
+		end.setAccessible (true);
+		return new int [] {(Integer) first.invoke (plan), (Integer) end.invoke (plan)};
+	}
+
 	@Test
 	public void millionItemsKeepOneWindowNative () {
 		Combo combo = combo (SWT.DROP_DOWN | SWT.READ_ONLY, MILLION);

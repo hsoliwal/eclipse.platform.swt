@@ -26,6 +26,11 @@ import javax.swing.table.*;
  * Run headless: java -Djava.awt.headless=true SwingDefaultsProbe.java
  */
 public class SwingDefaultsProbe {
+	/* the probe lines as they are (brief rule 22: JUL, never System.out) */
+	static {
+		System.setProperty ("java.util.logging.SimpleFormatter.format", "%5$s%n");
+	}
+	static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger (SwingDefaultsProbe.class.getName ());
 	static final String [] KEYS = {"Panel.background", "Label.foreground", "Label.disabledForeground", "control", "controlShadow",
 		"controlDkShadow", "controlHighlight", "textHighlight", "textHighlightText", "textInactiveText", "Button.background",
 		"Button.foreground", "Button.disabledText", "Button.select", "Button.focus", "Button.margin", "Button.darkShadow",
@@ -42,24 +47,24 @@ public class SwingDefaultsProbe {
 
 	public static void main (String [] args) throws Exception {
 		UIManager.setLookAndFeel (new MetalLookAndFeel ());
-		System.out.println ("# " + UIManager.getLookAndFeel ().getName () + " theme " + MetalLookAndFeel.getCurrentTheme ().getName ()
+		LOG.info ("# " + UIManager.getLookAndFeel ().getName () + " theme " + MetalLookAndFeel.getCurrentTheme ().getName ()
 			+ ", Java " + System.getProperty ("java.version"));
-		for (String key : KEYS) System.out.println (key + "\t" + text (UIManager.get (key)));
+		for (String key : KEYS) LOG.info (key + "\t" + text (UIManager.get (key)));
 		JTable table = new JTable (new DefaultTableModel (3, 2));
-		System.out.println ("geometry.JTable.rowHeight\t" + table.getRowHeight () + "\tshowHorizontalLines\t" + table.getShowHorizontalLines ()
+		LOG.info ("geometry.JTable.rowHeight\t" + table.getRowHeight () + "\tshowHorizontalLines\t" + table.getShowHorizontalLines ()
 			+ "\tshowVerticalLines\t" + table.getShowVerticalLines ());
 		JList<String> list = new JList<> (new String [] {"Xg"});
 		Component cell = list.getCellRenderer ().getListCellRendererComponent (list, "Xg", 0, false, false);
-		System.out.println ("geometry.JList.cellHeight\t" + cell.getPreferredSize ().height);
+		LOG.info ("geometry.JList.cellHeight\t" + cell.getPreferredSize ().height);
 		JButton button = new JButton ("Xg");
-		System.out.println ("geometry.JButton.preferred\t" + button.getPreferredSize ().width + "x" + button.getPreferredSize ().height);
-		System.out.println ("geometry.JScrollBar.width\t" + new JScrollBar (JScrollBar.VERTICAL).getPreferredSize ().width);
+		LOG.info ("geometry.JButton.preferred\t" + button.getPreferredSize ().width + "x" + button.getPreferredSize ().height);
+		LOG.info ("geometry.JScrollBar.width\t" + new JScrollBar (JScrollBar.VERTICAL).getPreferredSize ().width);
 		JTabbedPane tabs = new JTabbedPane ();
 		tabs.addTab ("Xg", new JPanel ());
 		tabs.setSize (200, 100);
 		tabs.doLayout ();
-		System.out.println ("geometry.JTabbedPane.tabHeight\t" + tabs.getBoundsAt (0).height);
-		System.out.println ("geometry.JProgressBar.preferredHeight\t" + new JProgressBar ().getPreferredSize ().height);
+		LOG.info ("geometry.JTabbedPane.tabHeight\t" + tabs.getBoundsAt (0).height);
+		LOG.info ("geometry.JProgressBar.preferredHeight\t" + new JProgressBar ().getPreferredSize ().height);
 	}
 
 	static String text (Object value) {

@@ -1,0 +1,66 @@
+package org.eclipse.swt.widgets;
+
+import java.lang.management.ManagementFactory;
+import java.util.Arrays;
+import java.util.logging.*;
+
+/* Headless: the lane work of ListViewport.remove (start, end) before (one model.remove per row) and after (one
+   run), and of setItems with one or two array copies, at 100,000 and 1,000,000 items. Median of 5. */
+public class ListModelMicroBench {
+	static final Logger LOG = Logger.getLogger ("ListModelMicroBench");
+
+	public static void main (String [] args) {
+		LOG.setUseParentHandlers (false);
+		Handler handler = new ConsoleHandler ();
+		handler.setFormatter (new Formatter () {
+			@Override
+			public String format (LogRecord entry) {
+				return entry.getMessage () + System.lineSeparator ();
+			}
+		});
+		LOG.addHandler (handler);
+		for (int size : new int [] {100_000, 1_000_000}) {
+			String [] items = new String [size];
+			for (int i = 0; i < size; i++) items [i] = "Item " + i;
+			measure ("remove 1000 middle, one model.remove per row", size, items, m -> {
+				for (int i = 0; i < 1000; i++) m.remove (size / 2);
+			});
+			measure ("remove 1000 middle, one run", size, items, m -> m.remove (size / 2, size / 2 + 999));
+			String [] more = new String [1000];
+			for (int i = 0; i < more.length; i++) more [i] = "More " + i;
+			measure ("insert 1000 middle, one model.add per row (List.add loop)", size, items, m -> {
+				for (int i = 0; i < more.length; i++) m.add (more [i], size / 2 + i);
+			});
+			measure ("insert 1000 middle, one run (m3Splice)", size, items, m -> m.insert (size / 2, more));
+			measure ("setItems, per-item copy then model copy", size, items, m -> {
+				String [] texts = new String [items.length];
+				for (int i = 0; i < items.length; i++) texts [i] = items [i];
+				m.setItems (texts);
+			});
+			measure ("setItems, model copy only", size, items, m -> m.setItems (items));
+		}
+	}
+
+	interface Op {
+		void run (VirtualListModel model);
+	}
+
+	static void measure (String name, int size, String [] items, Op op) {
+		long [] wall = new long [5], alloc = new long [5];
+		for (int r = 0; r < 5; r++) {
+			VirtualListModel model = new VirtualListModel (String::length, true);
+			model.setItems (items);
+			long a0 = allocated (), t0 = System.nanoTime ();
+			op.run (model);
+			wall [r] = System.nanoTime () - t0;
+			alloc [r] = allocated () - a0;
+		}
+		Arrays.sort (wall);
+		Arrays.sort (alloc);
+		LOG.info (String.format ("%s\t%d\t%.2f ms\t%d KB", name, size, wall [2] / 1e6, alloc [2] / 1024));
+	}
+
+	static long allocated () {
+		return ((com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean ()).getThreadAllocatedBytes (Thread.currentThread ().getId ());
+	}
+}

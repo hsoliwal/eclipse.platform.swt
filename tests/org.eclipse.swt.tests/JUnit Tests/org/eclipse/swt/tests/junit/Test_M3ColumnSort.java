@@ -234,6 +234,91 @@ public class Test_M3ColumnSort {
 	}
 
 	@Test
+	public void test_collationAndComparatorKeysOnTheRadixPath () {
+		int n = 600;
+		String [] words = new String [n];
+		Random random = new Random (13);
+		for (int i = 0; i < n; i++) words [i] = new String [] {"\u00e4b", "ab", "Ab", "zz", "\u00c4a"} [random.nextInt (5)] + random.nextInt (3); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		M3SortKeys collation = M3Collation.keys (words, Locale.GERMAN);
+		M3ColumnSort sort = new M3ColumnSort (2, n);
+		sort.setKey (0, M3ColumnKey.ofSortKeys (collation));
+		sort.setKey (1, M3ColumnKey.ofRows ((a, b) -> Integer.compare (a % 7, b % 7)));
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		assertArrayEquals (collation.sortedOrder (), order (sort));
+		sort.setSortKeys (new int [] {1, 0}, new int [] {SWT.DOWN, SWT.UP});
+		List<Integer> reference = new ArrayList<> ();
+		for (int i = 0; i < n; i++) reference.add (i);
+		reference.sort (Comparator.<Integer> comparingInt (i -> -(i % 7)).thenComparing (collation::compare));
+		assertArrayEquals (reference.stream ().mapToInt (Integer::intValue).toArray (), order (sort));
+		assertThrows (IllegalArgumentException.class, () -> M3ColumnKey.ofSortKeys (null));
+	}
+
+	@Test
+	public void test_viewChainsListenersAndForeignInputs () {
+		Rows rows = new Rows (100, 17, 5);
+		M3ColumnSort inner = rows.sort ();
+		M3ColumnSort outer = new M3ColumnSort (4, inner);
+		rows.keys (outer);
+		outer.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		inner.toggle (3, false);
+		assertArrayEquals (rows.reference (new int [] {0}, new int [] {SWT.UP}), order (outer));
+		M3RowView.Listener a = change -> {}, b = change -> {};
+		outer.addListener (a);
+		outer.addListener (b);
+		outer.addListener (a);
+		outer.removeListener (b);
+		outer.removeListener (b);
+		outer.removeListener (a);
+		/* a foreign input view that hides the last row of a filter: changes of that row reach the sort for a row it does not show */
+		String [] words = {"a", "b", "c", "d", "e", "f"};
+		M3ColumnFilter filter = new M3ColumnFilter (1, words.length, (row, column) -> words [row]);
+		M3RowView hiding = new M3RowView () {
+			@Override public int size () { return filter.size () - 1; }
+			@Override public int map (int row) { return filter.map (row); }
+			@Override public int unmap (int sourceRow) { return filter.unmap (sourceRow); }
+			@Override public int sourceSize () { return filter.sourceSize (); }
+			@Override public void setSourceSize (int sourceSize) { filter.setSourceSize (sourceSize); }
+			@Override public void rowsInserted (int start, int count) { filter.rowsInserted (start, count); }
+			@Override public void rowsRemoved (int start, int count) { filter.rowsRemoved (start, count); }
+			@Override public void rowsChanged (int... sourceRows) { filter.rowsChanged (sourceRows); }
+			@Override public void addListener (Listener listener) { filter.addListener (listener); }
+			@Override public void removeListener (Listener listener) { filter.removeListener (listener); }
+		};
+		M3ColumnSort sort = new M3ColumnSort (1, hiding);
+		sort.setCellText ((row, column) -> words [row]);
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.DOWN});
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		assertEquals (5, sort.size ());
+		words [5] = "z";
+		filter.rowsChanged (5);
+		filter.setText (0, "a,b,c,d,e", M3TextMatch.EXACT);
+		assertEquals (5, sort.size ());
+		assertArrayEquals (new int [] {0, 1, 2, 3, 4}, order (sort));
+	}
+
+	@Test
+	public void test_collatorEqualTextsShareARank () {
+		int n = 200;
+		String [] words = new String [n];
+		for (int i = 0; i < n; i++) words [i] = (i % 3 == 0 ? "A" : i % 3 == 1 ? "a" : "b") + (i % 2); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		Collator collator = Collator.getInstance (Locale.ENGLISH);
+		collator.setStrength (Collator.PRIMARY);
+		M3ColumnSort sort = new M3ColumnSort (1, n);
+		sort.setKey (0, M3ColumnKey.ofText (i -> words [i], collator));
+		sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+		List<Integer> reference = new ArrayList<> ();
+		for (int i = 0; i < n; i++) reference.add (i);
+		reference.sort (Comparator.comparing (i -> words [i], collator));
+		assertArrayEquals (reference.stream ().mapToInt (Integer::intValue).toArray (), order (sort));
+		String [] sorted = new String [n];
+		for (int i = 0; i < n; i++) sorted [i] = String.format ("s%04d", i); //$NON-NLS-1$
+		M3ColumnSort ordered = new M3ColumnSort (1, n);
+		ordered.setKey (0, M3ColumnKey.ofRows ((a, b) -> sorted [a].compareTo (sorted [b])));
+		ordered.setSortKeys (new int [] {0}, new int [] {SWT.DOWN});
+		assertEquals (n - 1, ordered.map (0));
+	}
+
+	@Test
 	public void test_cellTextDefaultKey () {
 		String [][] cells = {{"b", "1"}, {"a", "2"}, {"c", "0"}}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 		M3ColumnSort sort = new M3ColumnSort (2, 3);
@@ -408,6 +493,97 @@ public class Test_M3ColumnSort {
 	}
 
 	@Test
+	public void test_treeValueUpdatesKeepTheSiblingIndex () {
+		Random random = new Random (31);
+		for (int seed = 0; seed < 20; seed++) {
+			int n = 1 + random.nextInt (400);
+			int [] parents = new int [n], values = new int [n];
+			for (int row = 0; row < n; row++) {
+				parents [row] = row == 0 || random.nextInt (5) == 0 ? -1 : random.nextInt (row);
+				values [row] = random.nextInt (20);
+			}
+			int direction = random.nextBoolean () ? SWT.UP : SWT.DOWN;
+			java.util.function.Supplier<M3ColumnSort> create = () -> {
+				M3ColumnSort sort = new M3ColumnSort (1, n);
+				sort.setKey (0, M3ColumnKey.ofInts (r -> values [r]));
+				sort.setParents (r -> parents [r]);
+				sort.setSortKeys (new int [] {0}, new int [] {direction});
+				return sort;
+			};
+			M3ColumnSort sort = create.get ();
+			sort.childCount (-1);
+			Object order = Test_M3ColumnFilter.field (sort, "order");
+			int builds = (Integer) Test_M3ColumnFilter.field (order, "treeBuilds");
+			for (int step = 0; step < 40; step++) {
+				int [] changed = new int [1 + random.nextInt (random.nextInt (4) == 0 ? n : 3)];
+				for (int k = 0; k < changed.length; k++) {
+					changed [k] = random.nextInt (n);
+					values [changed [k]] = random.nextInt (20);
+				}
+				sort.rowsChanged (changed);
+				M3ColumnSort fresh = create.get ();
+				for (int parent = -1; parent < n; parent++) {
+					assertEquals (fresh.childCount (parent), sort.childCount (parent), "seed " + seed + " step " + step);
+					for (int i = 0; i < fresh.childCount (parent); i++) {
+						assertEquals (fresh.child (parent, i), sort.child (parent, i), "seed " + seed + " step " + step + " parent " + parent);
+						assertEquals (i, sort.indexOfChild (sort.child (parent, i)));
+					}
+				}
+			}
+			assertEquals (builds, (Integer) Test_M3ColumnFilter.field (order, "treeBuilds"), "value updates keep the sibling index");
+		}
+	}
+
+	@Test
+	public void test_treeFilterEditsKeepTheSiblingIndex () {
+		Random random = new Random (32);
+		for (int seed = 0; seed < 20; seed++) {
+			int n = 1 + random.nextInt (400);
+			int [] parents = new int [n], values = new int [n];
+			String [] labels = new String [n];
+			for (int row = 0; row < n; row++) {
+				parents [row] = row == 0 || random.nextInt (5) == 0 ? -1 : random.nextInt (row);
+				values [row] = random.nextInt (20);
+				labels [row] = random.nextInt (3) == 0 ? "x" + random.nextInt (9) : "y";
+			}
+			java.util.function.Supplier<M3ColumnSort> create = () -> {
+				M3ColumnFilter filter = new M3ColumnFilter (1, n, (row, column) -> labels [row]);
+				filter.setParents (r -> parents [r]);
+				filter.setText (0, "x", M3TextMatch.CONTAINS);
+				M3ColumnSort sort = new M3ColumnSort (1, filter);
+				sort.setKey (0, M3ColumnKey.ofInts (r -> values [r]));
+				sort.setParents (r -> parents [r]);
+				sort.setSortKeys (new int [] {0}, new int [] {SWT.UP});
+				return sort;
+			};
+			M3ColumnSort sort = create.get ();
+			sort.childCount (-1);
+			Object order = Test_M3ColumnFilter.field (sort, "order");
+			int builds = (Integer) Test_M3ColumnFilter.field (order, "treeBuilds");
+			for (int step = 0; step < 40; step++) {
+				int [] changed = new int [1 + random.nextInt (random.nextInt (4) == 0 ? n : 3)];
+				for (int k = 0; k < changed.length; k++) {
+					changed [k] = random.nextInt (n);
+					values [changed [k]] = random.nextInt (20);
+					labels [changed [k]] = random.nextInt (3) == 0 ? "x" + random.nextInt (9) : "y";
+				}
+				sort.rowsChanged (changed);
+				M3ColumnSort fresh = create.get ();
+				assertArrayEquals (order (fresh), order (sort), "seed " + seed + " step " + step);
+				for (int parent = -1; parent < n; parent++) {
+					if (parent >= 0 && fresh.indexOfChild (parent) < 0) continue;
+					assertEquals (fresh.childCount (parent), sort.childCount (parent), "seed " + seed + " step " + step + " parent " + parent);
+					for (int i = 0; i < fresh.childCount (parent); i++) {
+						assertEquals (fresh.child (parent, i), sort.child (parent, i), "seed " + seed + " step " + step + " parent " + parent);
+						assertEquals (i, sort.indexOfChild (sort.child (parent, i)));
+					}
+				}
+			}
+			assertEquals (builds, (Integer) Test_M3ColumnFilter.field (order, "treeBuilds"), "rows entering and leaving keep the sibling index");
+		}
+	}
+
+	@Test
 	public void test_treeModeSortsSiblings () {
 		/* 0 root(b) [2(z), 3(a)], 1 root(a) [4(m) [5(c), 6(b)]] */
 		int [] parents = {-1, -1, 0, 0, 1, 4, 4};
@@ -434,6 +610,9 @@ public class Test_M3ColumnSort {
 		assertThrows (IllegalArgumentException.class, () -> sort.childCount (7));
 		assertThrows (IllegalArgumentException.class, () -> sort.indexOfChild (7));
 		parents [6] = 9;
+		sort.rowsChanged (6);
+		assertThrows (IllegalArgumentException.class, () -> sort.childCount (-1));
+		parents [6] = -5;
 		sort.rowsChanged (6);
 		assertThrows (IllegalArgumentException.class, () -> sort.childCount (-1));
 		parents [6] = 4;

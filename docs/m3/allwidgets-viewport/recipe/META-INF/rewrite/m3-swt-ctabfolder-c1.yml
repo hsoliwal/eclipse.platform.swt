@@ -1,0 +1,27 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtCTabFolderItemSizeC1
+displayName: CTabFolder.setItemSize measures the close button once and keeps its widths array (optimization leaf C1)
+description: >-
+  Optimization pass leaf C1 (docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv). Every folder update runs
+  setItemSize, which asked the renderer for the close button's size once per tab (computeSize and computeTrim, with
+  their Point and Rectangle allocations) and allocated an int array of the tab count: at 10^5 tabs 6 MB and 10^5
+  renderer calls per selection, rename, resize or append. The close button's size does not depend on the tab, so it
+  is measured once per update (catalogue: loop-invariant hoisting), and the minimum widths go into an array the folder
+  keeps (cleared, not allocated). Viewport mode only; idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "(WidgetMode[.]VIEWPORT; //[$]NON-NLS-1[$]\n)(?!\t/[*] VIEWPORT: setItemSize)"
+      replace: "$1\t/* VIEWPORT: setItemSize's minimum widths, kept between updates (grown by doubling, cleared per update) */\n\tint[] minWidthsScratch = new int[0];\n"
+      regex: true
+  - org.openrewrite.text.FindAndReplace:
+      find: "\tint minWidth = 0;\n\tint[] minWidths = new int[itemCount];\n"
+      replace: "\tint minWidth = 0;\n\tint[] minWidths;\n\tif (VIEWPORT) {\n\t\t//FLLDCIM: HPCPOP - the folder's widths array, cleared instead of allocated per update\n\t\tif (minWidthsScratch.length < itemCount) {\n\t\t\tminWidthsScratch = new int[Math.max(itemCount, minWidthsScratch.length * 2)];\n\t\t}\n\t\tminWidths = minWidthsScratch;\n\t\tjava.util.Arrays.fill(minWidths, 0, itemCount, 0);\n\t} else {\n\t\tminWidths = new int[itemCount];\n\t}\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t}\n\n\tfor (int i = 0; i < itemCount; i++) {\n\t\tCTabItem tab = items[i];\n\t\tint width = widths[i];\n"
+      replace: "\t}\n\n\tPoint closeSize = null;\n\tfor (int i = 0; i < itemCount; i++) {\n\t\tCTabItem tab = items[i];\n\t\tint width = widths[i];\n"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\t\t\tPoint closeSize = renderer.computeSize(CTabFolderRenderer.PART_CLOSE_BUTTON, SWT.NONE, gc, SWT.DEFAULT, SWT.DEFAULT);\n"
+      replace: "\t\t\t\t//FLLDCIM: VIEWPORT - the close button's size does not depend on the tab: measured once per update, not per tab\n\t\t\t\tif (!VIEWPORT || closeSize == null) {\n\t\t\t\t\tcloseSize = renderer.computeSize(CTabFolderRenderer.PART_CLOSE_BUTTON, SWT.NONE, gc, SWT.DEFAULT, SWT.DEFAULT);\n\t\t\t\t}\n"

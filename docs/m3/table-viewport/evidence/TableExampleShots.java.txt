@@ -1,0 +1,132 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+// win32 harness of the Table examples (default package). Run it on the invisible desktop: table_example_shots.sh.
+
+import java.util.function.Predicate;
+import java.util.logging.*;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.snippets.m3.*;
+import org.eclipse.swt.widgets.*;
+
+/**
+ * Opens each example of examples/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/m3/M3Table*, presses its
+ * buttons through <code>notifyListeners</code>, prints what its status controls show and, with an output
+ * directory, saves the shell drawn by <code>WM_PRINT</code> (frame, client and children) as PNG.
+ * Usage: TableExampleShots [png-dir or -] [noplain]. <code>noplain</code> skips the plain 1,000,000-row Table, which
+ * the stock code path builds with a native item and a TableItem per row.
+ */
+public class TableExampleShots {
+	static String dir;
+	static Display display;
+	static final Logger LOG = Logger.getLogger (TableExampleShots.class.getName ());
+
+	public static void main (String [] args) {
+		dir = args.length > 0 && !args [0].equals ("-") ? args [0] : null;
+		plainLog ();
+		display = new Display ();
+		String mode = SWT.getVersion () == 4974 ? "official" : System.getProperty ("swt.widget.mode.Table", "default");
+		LOG.info ("# Table examples, mode " + mode + ", SWT " + SWT.getVersion () + " " + SWT.getPlatform ());
+
+		Shell shell = M3TableMillionRowsExample.open (display, false);
+		press (shell, "Middle");
+		report ("M3TableMillionRowsExample", shell, "m3-table-million-rows-virtual");
+		shell.dispose ();
+
+		if (args.length < 2 || !args [1].equals ("noplain")) {
+			shell = M3TableMillionRowsExample.open (display, true);
+			press (shell, "Middle");
+			report ("M3TableMillionRowsExample plain", shell, "m3-table-million-rows-plain");
+			shell.dispose ();
+		}
+
+		shell = M3TableScrollSelectExample.open (display, false);
+		for (String operation : new String [] {"Page down", "Jump 10,000", "Deselect all", "Select row 900,000", "Select all"}) {
+			press (shell, operation);
+			LOG.info ("M3TableScrollSelectExample: " + text (shell, Label.class).replace ('\n', ';').replace ("\r", ""));
+		}
+		report (null, shell, "m3-table-scroll-select");
+		shell.dispose ();
+
+		shell = M3TableRowMathExample.open (display);
+		press (shell, "Check");
+		report ("M3TableRowMathExample", shell, "m3-table-row-math");
+		shell.dispose ();
+		display.dispose ();
+	}
+
+	/* one line per record, no JUL header, so the log reads like the transcripts of the other probes */
+	static void plainLog () {
+		ConsoleHandler handler = new ConsoleHandler ();
+		handler.setFormatter (new Formatter () {
+			@Override
+			public String format (LogRecord record) {
+				return record.getMessage () + "\n";
+			}
+		});
+		LOG.setUseParentHandlers (false);
+		LOG.addHandler (handler);
+	}
+
+	static void press (Shell shell, String text) {
+		Button button = (Button) find (shell, c -> c instanceof Button b && b.getText ().equals (text));
+		button.notifyListeners (SWT.Selection, new Event ());
+		settle ();
+	}
+
+	static void report (String name, Shell shell, String file) {
+		settle ();
+		Control status = find (shell, c -> c instanceof Label || c instanceof Text);
+		String shown = status instanceof Text t ? t.getText () : ((Label) status).getText ();
+		if (name != null) LOG.info (name + ": " + shown.replace ("\r", "").stripTrailing ());
+		if (dir == null) return;
+		Point size = shell.getSize ();
+		Image image = new Image (display, size.x, size.y);
+		GC gc = new GC (image);
+		OS.SendMessage (shell.handle, OS.WM_PRINT, gc.handle, OS.PRF_NONCLIENT | OS.PRF_CLIENT | OS.PRF_ERASEBKGND | OS.PRF_CHILDREN);
+		gc.dispose ();
+		ImageLoader loader = new ImageLoader ();
+		loader.data = new ImageData [] {image.getImageData ()};
+		loader.save (dir + "/" + file + ".png", SWT.IMAGE_PNG);
+		image.dispose ();
+	}
+
+	static String text (Shell shell, Class<? extends Control> type) {
+		Control control = find (shell, type::isInstance);
+		return control instanceof Text t ? t.getText () : ((Label) control).getText ();
+	}
+
+	static Control find (Composite parent, Predicate<Control> test) {
+		for (Control child : parent.getChildren ()) {
+			if (test.test (child)) return child;
+			if (child instanceof Composite composite) {
+				Control found = find (composite, test);
+				if (found != null) return found;
+			}
+		}
+		return null;
+	}
+
+	static void settle () {
+		for (int i = 0; i < 3; i++) {
+			while (display.readAndDispatch ()) {
+				/* drain */
+			}
+			display.update ();
+		}
+	}
+}

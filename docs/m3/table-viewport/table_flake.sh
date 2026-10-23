@@ -15,7 +15,7 @@ JAR=$(cygpath -w $O/dist/org.eclipse.swt.win32.win32.x86_64-m3-$STAMP.jar)
 TESTS=$(cygpath -w $O/tests)
 H=C:/m3-superset/tools/hidden_java.sh
 DEFECTS=$(cygpath -m "$(dirname "$0")")/UPSTREAM_DEFECTS.tsv
-XA="--enable-preview --enable-native-access=ALL-UNNAMED -Dswt.viewport.variants=$VARIANTS"
+XA="--enable-preview --enable-native-access=ALL-UNNAMED -Dswt.autoScale.updateOnRuntime=true -Dswt.viewport.variants=$VARIANTS"
 DIFF="--select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDifferential --disable-banner --details=tree"
 # compares every recording of a directory with the official recording: "<same> same, differs: <file>:<lines> ..."
 compare () {

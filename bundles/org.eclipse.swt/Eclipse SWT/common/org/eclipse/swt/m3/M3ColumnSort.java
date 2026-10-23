@@ -11,6 +11,8 @@
  *
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *     Hitesh Soliwal (Synexia) - per-parent sorted children adapted from TV_5.0 treeviewer
+ *         SortedElementProvider and Comparator (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
 package org.eclipse.swt.m3;
 
@@ -54,8 +56,16 @@ public final class M3ColumnSort extends M3RowViewBase {
 	private M3ColumnKey [] chain = {};
 	private boolean [] descending = {};
 	private IntUnaryOperator parentOf;
+
+	IntUnaryOperator parents () {
+		return parentOf;
+	}
 	private final IntBinaryOperator compareRows = this::compare;
-	final M3SortOrder order = new M3SortOrder (this);
+	M3SortOrder order = new M3SortOrder (this);
+	private M3SortOrder prepared;
+	private volatile int keysVersion;
+	private int preparedGeneration = -1, preparedVersion, preparedFirst;
+	private boolean takePrepared;
 
 	/**
 	 * Constructs a sort of all rows of a source, in source order until sort keys are set.
@@ -91,6 +101,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 		M3Checks.argument (columnCount >= 0);
 		keys = new M3ColumnKey [columnCount];
 		textKeys = new M3ColumnKey [columnCount];
+		if (input instanceof M3ColumnFilter filter) filter.follower = this;
 		rebuild ();
 	}
 
@@ -174,6 +185,7 @@ public final class M3ColumnSort extends M3RowViewBase {
 		sortDirections = directions.clone ();
 		chain = newChain;
 		descending = newDescending;
+		keysVersion++;
 		order.resort ();
 		change.set (M3RowChange.ORDER, 0, 0);
 		change.damage (0, order.size - 1);
@@ -302,15 +314,52 @@ public final class M3ColumnSort extends M3RowViewBase {
 	 * @return negative, zero or positive as <code>sourceA</code> sorts before, with or after <code>sourceB</code>
 	 */
 	public int compare (int sourceA, int sourceB) {
-		for (int i = 0; i < chain.length; i++) {
-			int c = descending [i] ? chain [i].compare (sourceB, sourceA) : chain [i].compare (sourceA, sourceB);
-			if (c != 0) return c;
-		}
-		return Integer.compare (sourceA, sourceB);
+		return compare (chain, descending, sourceA, sourceB);
 	}
 
-	void sortRows (int [] rows, int n) {
-		order.lanes.sort (rows, n, chain, descending, chain.length, compareRows);
+	/*
+	 * Worker side of an asynchronous filter (M3FilterWorker): sorts the rows the filter will show
+	 * into a second set of lanes, with the key chain read once; the UI thread later swaps the lanes
+	 * in (commitPrepared) instead of sorting. Returns false when the sort keys changed meanwhile.
+	 */
+	boolean prepare (int [] rows, int n, int sourceSize, int generation) {
+		int version = keysVersion;
+		M3ColumnKey [] keys = chain;
+		boolean [] down = descending;
+		M3SortOrder next = prepared != null ? prepared : new M3SortOrder (this);
+		next.reset (rows, n, sourceSize, (lanes, r, count) -> lanes.sort (r, count, keys, down, keys.length, (a, b) -> compare (keys, down, a, b)));
+		if (parentOf != null) next.buildTree (parentOf);
+		M3SortOrder current = order;
+		int [] old = current.order;
+		int first = 0, common = Math.min (Math.min (current.size, old.length), next.size);
+		while (first < common && old [first] == next.order [first]) first++;
+		preparedFirst = first;
+		prepared = next;
+		preparedVersion = version;
+		preparedGeneration = generation;
+		return version == keysVersion;
+	}
+
+	/* UI side: takes the prepared lanes of a generation if the sort keys did not change since */
+	boolean commitPrepared (int generation) {
+		if (prepared == null || preparedGeneration != generation || preparedVersion != keysVersion) return false;
+		M3SortOrder swap = order;
+		order = prepared;
+		prepared = swap;
+		takePrepared = true;
+		return true;
+	}
+
+	private static int compare (M3ColumnKey [] keys, boolean [] down, int a, int b) {
+		for (int i = 0; i < keys.length; i++) {
+			int c = down [i] ? keys [i].compare (b, a) : keys [i].compare (a, b);
+			if (c != 0) return c;
+		}
+		return Integer.compare (a, b);
+	}
+
+	void sortRows (M3SortLanes lanes, int [] rows, int n) {
+		lanes.sort (rows, n, chain, descending, chain.length, compareRows);
 	}
 
 	@Override
@@ -439,7 +488,14 @@ public final class M3ColumnSort extends M3RowViewBase {
 		for (int i = 0; i < in.rowCount; i++) change.add (in.rows [i]);
 		int first = -1;
 		switch (kind) {
-			case M3RowChange.RESET: rebuild (); first = 0; break;
+			case M3RowChange.RESET:
+				first = takePrepared ? preparedFirst : 0;
+				if (!takePrepared) {
+					fullPasses++;
+					rebuild ();
+				}
+				takePrepared = false;
+				break;
 			case M3RowChange.INSERTED: order.insertSourceRange (in.start, in.count); first = order.insert (in.rows, in.rowCount); break;
 			case M3RowChange.REMOVED: first = order.removeSourceRange (in.start, in.count); break;
 			case M3RowChange.ENTERED: first = order.insert (in.rows, in.rowCount); break;

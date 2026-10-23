@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtLafLf6TestUpdates
+displayName: LF6 updates of the LF2 look and feel test
+description: >-
+  The LF2 suite after LF6 (docs/m3/LOOK_AND_FEEL.md): shade is a FlatLaf colour function now, so the unknown-function
+  case uses a name no table knows; displayResolution uses the thread's display when the JVM already has one (the LF6
+  suites run in the same JVM) and disposes only a display it created. Idempotent. Replacements are regex
+  replacements: a backslash in the Java text is written four times here.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "one (\"a = shade(#fff, 2%)\\n\")"
+      replace: "one (\"a = bogus(#fff, 2%)\\\\n\")"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\tDisplay display = new Display ();\n\t\t/* with FINE on"
+      replace: "\t\tDisplay current = Display.getCurrent (), display = current != null ? current : new Display ();\n\t\t/* with FINE on"
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\t\tLookAndFeel.register (\"test-display\", \"@extends = flat\\n\", null);\n\t\t\tdisplay.dispose ();"
+      replace: "\t\t\tLookAndFeel.register (\"test-display\", \"@extends = flat\\\\n\", null);\n\t\t\tif (current == null) display.dispose ();"

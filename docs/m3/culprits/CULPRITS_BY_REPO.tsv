@@ -1,0 +1,76 @@
+repo	culprit	main_sites
+eclipse.jdt.core	StringBuilder, StringBuffer, concatenation	11088
+eclipse.jdt.core	loops (hard limit: banned)	8093
+eclipse.jdt.core	collections (objects every possible place)	2673
+eclipse.jdt.core	IO	809
+eclipse.jdt.core	regex	244
+eclipse.jdt.debug	StringBuilder, StringBuffer, concatenation	3190
+eclipse.jdt.debug	loops (hard limit: banned)	1626
+eclipse.jdt.debug	collections (objects every possible place)	943
+eclipse.jdt.debug	IO	260
+eclipse.jdt.debug	regex	102
+eclipse.jdt.ui	StringBuilder, StringBuffer, concatenation	8365
+eclipse.jdt.ui	loops (hard limit: banned)	7722
+eclipse.jdt.ui	collections (objects every possible place)	3718
+eclipse.jdt.ui	IO	408
+eclipse.jdt.ui	regex	328
+eclipse.platform	StringBuilder, StringBuffer, concatenation	10603
+eclipse.platform	loops (hard limit: banned)	6503
+eclipse.platform	collections (objects every possible place)	3309
+eclipse.platform	IO	1031
+eclipse.platform	regex	313
+eclipse.platform.releng.aggregator	StringBuilder, StringBuffer, concatenation	327
+eclipse.platform.releng.aggregator	collections (objects every possible place)	117
+eclipse.platform.releng.aggregator	loops (hard limit: banned)	116
+eclipse.platform.releng.aggregator	regex	91
+eclipse.platform.releng.aggregator	IO	76
+eclipse.platform.swt	loops (hard limit: banned)	5264
+eclipse.platform.swt	StringBuilder, StringBuffer, concatenation	2006
+eclipse.platform.swt	collections (objects every possible place)	482
+eclipse.platform.swt	IO	115
+eclipse.platform.swt	regex	54
+eclipse.platform.ui	loops (hard limit: banned)	7634
+eclipse.platform.ui	StringBuilder, StringBuffer, concatenation	7332
+eclipse.platform.ui	collections (objects every possible place)	4396
+eclipse.platform.ui	IO	445
+eclipse.platform.ui	regex	357
+egit	StringBuilder, StringBuffer, concatenation	1799
+egit	loops (hard limit: banned)	1191
+egit	collections (objects every possible place)	963
+egit	IO	373
+egit	regex	181
+equinox	StringBuilder, StringBuffer, concatenation	3882
+equinox	loops (hard limit: banned)	2850
+equinox	collections (objects every possible place)	1587
+equinox	IO	646
+equinox	regex	75
+gef-classic	loops (hard limit: banned)	1203
+gef-classic	collections (objects every possible place)	488
+gef-classic	StringBuilder, StringBuffer, concatenation	323
+gef-classic	IO	5
+gef-classic	regex	3
+initiative31-eclipse.pde	StringBuilder, StringBuffer, concatenation	10391
+initiative31-eclipse.pde	loops (hard limit: banned)	5090
+initiative31-eclipse.pde	collections (objects every possible place)	3030
+initiative31-eclipse.pde	IO	1555
+initiative31-eclipse.pde	regex	412
+m2e-core	StringBuilder, StringBuffer, concatenation	1820
+m2e-core	loops (hard limit: banned)	1019
+m2e-core	collections (objects every possible place)	842
+m2e-core	IO	386
+m2e-core	regex	114
+nebula	loops (hard limit: banned)	3391
+nebula	StringBuilder, StringBuffer, concatenation	3188
+nebula	collections (objects every possible place)	1434
+nebula	regex	296
+nebula	IO	198
+org.eclipse.emf	StringBuilder, StringBuffer, concatenation	21987
+org.eclipse.emf	loops (hard limit: banned)	6189
+org.eclipse.emf	collections (objects every possible place)	1898
+org.eclipse.emf	regex	369
+org.eclipse.emf	IO	206
+p2	StringBuilder, StringBuffer, concatenation	4647
+p2	loops (hard limit: banned)	2182
+p2	collections (objects every possible place)	1478
+p2	IO	968
+p2	regex	66

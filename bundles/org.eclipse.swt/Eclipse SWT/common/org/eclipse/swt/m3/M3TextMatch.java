@@ -13,6 +13,8 @@
  *     Hitesh Soliwal (Synexia) - initial API and implementation
  *     Hitesh Soliwal (Synexia) - adapted from TV_5.0 treeviewer IViewerTextFilter,
  *         AbstractRegexFilter and AbstractWildCardFilter (docs/m3/sort-filter/PROVENANCE.tsv)
+ *     Hitesh Soliwal (Synexia) - match types and match case adapted from x86core jsonviewer
+ *         MatcherFactory and its matchers (docs/m3/sort-filter/PROVENANCE.tsv)
  *******************************************************************************/
 package org.eclipse.swt.m3;
 
@@ -214,6 +216,25 @@ public final class M3TextMatch {
 
 	boolean negated () {
 		return (mode & NEGATE) != 0;
+	}
+
+	/*
+	 * whether every text this match accepts is also accepted by previous (typing more characters of a contains or
+	 * starts-with filter): then only the rows previous kept need testing. The previous match tests this match's
+	 * token itself, so the relation uses exactly the matching rules; with IGNORE_CASE only ASCII tokens qualify.
+	 */
+	boolean narrows (M3TextMatch previous) {
+		if (previous == null || previous.mode != mode || negated () || tokens.length != 1 || previous.tokens.length != 1) return false;
+		if (kind () != CONTAINS && kind () != STARTS_WITH) return false;
+		if ((mode & IGNORE_CASE) != 0 && !(ascii (tokens [0]) && ascii (previous.tokens [0]))) return false;
+		return previous.any (tokens [0]);
+	}
+
+	private static boolean ascii (String token) {
+		for (int i = 0; i < token.length (); i++) {
+			if (token.charAt (i) > 127) return false;
+		}
+		return true;
 	}
 
 	private int kind () {

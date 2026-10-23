@@ -1,0 +1,14 @@
+# LF6 look-and-feel switch leg through M3LookAndFeel.setLookAndFeel (-Dswt.viewport.lafSwitch=40:swing), Table variants 0 and 5,
+# build rm20261019k (integration round 9 + M3RowUI delegate), invisible desktop, 2026-10-19; B starts in swing (-Dswt.widget.theme=swing)
+== laf-swing-switch-custom try 1 14:17:47
+   [ 0 tests aborted ] [ 1 tests successful ] [ 0 tests failed ]
+== laf-swing-swing-custom try 1 14:18:42
+   [ 0 tests aborted ] [ 1 tests successful ] [ 0 tests failed ]
+custom: after the switch 29/29 captures equal to the started-in-target leg; before it 0/4 equal (expected to differ)
+== laf-swing-switch-m3 try 1 14:19:06
+   [ 0 tests aborted ] [ 1 tests successful ] [ 0 tests failed ]
+== laf-swing-swing-m3 try 1 14:19:37
+   [ 0 tests aborted ] [ 1 tests successful ] [ 0 tests failed ]
+m3: after the switch 29/29 captures equal to the started-in-target leg; before it 0/4 equal (expected to differ)
+== all done 14:20:12
+# flatdark (round 9 has no 'dark' alias yet; LF6 step g): see the next run

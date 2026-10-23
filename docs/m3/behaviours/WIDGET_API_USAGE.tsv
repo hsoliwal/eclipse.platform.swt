@@ -1,0 +1,75 @@
+family	api	using_files	by_repo
+widget	StyledText	343	eclipse.jdt.core=1 eclipse.jdt.debug=6 eclipse.jdt.ui=35 eclipse.platform=29 eclipse.platform.swt=106 eclipse.platform.ui=103 egit=13 gef-classic=5 initiative31-eclipse.pde=22 nebula=17 org.eclipse.emf=2 p2=4
+filter	ViewerFilter	288	eclipse.jdt.debug=9 eclipse.jdt.ui=77 eclipse.platform=45 eclipse.platform.ui=70 egit=9 gef-classic=1 initiative31-eclipse.pde=62 nebula=4 org.eclipse.emf=8 p2=3
+menu	MenuManager	279	eclipse.jdt.debug=1 eclipse.jdt.ui=46 eclipse.platform=58 eclipse.platform.ui=89 egit=19 gef-classic=8 initiative31-eclipse.pde=35 nebula=3 org.eclipse.emf=18 p2=2
+sort	ViewerComparator	276	eclipse.jdt.core=1 eclipse.jdt.debug=5 eclipse.jdt.ui=37 eclipse.platform=41 eclipse.platform.ui=78 egit=23 initiative31-eclipse.pde=76 nebula=3 org.eclipse.emf=3 p2=9
+forms	FormToolkit	275	eclipse.jdt.ui=4 eclipse.platform=49 eclipse.platform.ui=14 egit=11 initiative31-eclipse.pde=191 nebula=5 p2=1
+busy	BusyIndicator	227	eclipse.jdt.debug=10 eclipse.jdt.ui=28 eclipse.platform=51 eclipse.platform.swt=8 eclipse.platform.ui=73 egit=2 initiative31-eclipse.pde=44 nebula=3 org.eclipse.emf=3 p2=5
+widget	Link	204	eclipse.jdt.core=3 eclipse.jdt.debug=2 eclipse.jdt.ui=42 eclipse.platform=22 eclipse.platform.swt=15 eclipse.platform.ui=43 egit=9 initiative31-eclipse.pde=40 nebula=14 p2=14
+wizard	WizardPage	203	eclipse.jdt.debug=6 eclipse.jdt.ui=16 eclipse.platform=21 eclipse.platform.ui=25 egit=32 initiative31-eclipse.pde=88 org.eclipse.emf=8 p2=7
+forms	Section	190	eclipse.jdt.core=1 eclipse.jdt.ui=5 eclipse.platform=14 eclipse.platform.swt=8 eclipse.platform.ui=14 egit=7 gef-classic=1 initiative31-eclipse.pde=127 nebula=5 org.eclipse.emf=8
+layout	CTabFolder	178	eclipse.jdt.ui=3 eclipse.platform=15 eclipse.platform.swt=26 eclipse.platform.ui=46 initiative31-eclipse.pde=77 nebula=3 org.eclipse.emf=8
+styled	StyledString	162	eclipse.jdt.ui=48 eclipse.platform=7 eclipse.platform.ui=28 egit=16 initiative31-eclipse.pde=48 nebula=3 org.eclipse.emf=11 p2=1
+widget	Browser	113	eclipse.jdt.debug=1 eclipse.jdt.ui=6 eclipse.platform=21 eclipse.platform.swt=58 eclipse.platform.ui=16 initiative31-eclipse.pde=3 nebula=7 p2=1
+forms	ExpandableComposite	96	eclipse.jdt.core=1 eclipse.jdt.debug=1 eclipse.jdt.ui=9 eclipse.platform=10 eclipse.platform.ui=9 egit=8 initiative31-eclipse.pde=58
+filter	PatternFilter	92	eclipse.jdt.debug=1 eclipse.jdt.ui=2 eclipse.platform=4 eclipse.platform.ui=21 egit=10 initiative31-eclipse.pde=31 nebula=10 org.eclipse.emf=2 p2=11
+layout	StackLayout	88	eclipse.jdt.ui=3 eclipse.platform=6 eclipse.platform.swt=6 eclipse.platform.ui=7 egit=5 gef-classic=13 initiative31-eclipse.pde=40 nebula=4 org.eclipse.emf=2 p2=2
+widget	CLabel	85	eclipse.jdt.ui=9 eclipse.platform=7 eclipse.platform.swt=16 eclipse.platform.ui=26 egit=9 gef-classic=1 initiative31-eclipse.pde=3 nebula=10 org.eclipse.emf=3 p2=1
+layout	SashForm	84	eclipse.jdt.debug=1 eclipse.jdt.ui=10 eclipse.platform=10 eclipse.platform.swt=8 eclipse.platform.ui=12 egit=5 gef-classic=1 initiative31-eclipse.pde=15 nebula=4 org.eclipse.emf=8 p2=10
+menu	IMenuListener	77	eclipse.jdt.debug=1 eclipse.jdt.ui=15 eclipse.platform=9 eclipse.platform.ui=20 egit=6 gef-classic=1 initiative31-eclipse.pde=8 nebula=4 org.eclipse.emf=13
+forms	ScrolledForm	75	eclipse.platform=6 eclipse.platform.ui=11 egit=3 initiative31-eclipse.pde=55
+dialog	StatusDialog	70	eclipse.jdt.core=2 eclipse.jdt.debug=2 eclipse.jdt.ui=46 eclipse.platform=4 eclipse.platform.ui=7 initiative31-eclipse.pde=7 p2=2
+styled	DelegatingStyledCellLabelProvider	62	eclipse.jdt.ui=11 eclipse.platform=5 eclipse.platform.ui=14 egit=13 initiative31-eclipse.pde=13 nebula=1 org.eclipse.emf=5
+dialog	TitleAreaDialog	58	eclipse.jdt.debug=1 eclipse.jdt.ui=1 eclipse.platform=8 eclipse.platform.ui=12 egit=22 initiative31-eclipse.pde=10 p2=4
+styled	StyledCellLabelProvider	58	eclipse.jdt.ui=9 eclipse.platform=1 eclipse.platform.ui=13 egit=2 initiative31-eclipse.pde=30 nebula=2 org.eclipse.emf=1
+filter	FilteredTree	57	eclipse.jdt.debug=1 eclipse.jdt.ui=2 eclipse.platform=2 eclipse.platform.ui=19 egit=7 initiative31-eclipse.pde=15 nebula=4 p2=7
+decoration	IDecoration	56	eclipse.jdt.ui=7 eclipse.platform=10 eclipse.platform.ui=19 egit=14 gef-classic=1 initiative31-eclipse.pde=3 p2=2
+dnd	LocalSelectionTransfer	55	eclipse.jdt.core=1 eclipse.jdt.debug=1 eclipse.jdt.ui=9 eclipse.platform=9 eclipse.platform.ui=12 egit=7 initiative31-eclipse.pde=4 nebula=1 org.eclipse.emf=7 p2=4
+dialog	ElementTreeSelectionDialog	54	eclipse.jdt.debug=1 eclipse.jdt.ui=16 eclipse.platform=6 eclipse.platform.ui=3 initiative31-eclipse.pde=27 org.eclipse.emf=1
+tooltip	ToolTip	53	eclipse.platform.swt=25 eclipse.platform.ui=14 egit=3 initiative31-eclipse.pde=6 nebula=3 p2=2
+widget	CCombo	52	eclipse.platform=1 eclipse.platform.swt=8 eclipse.platform.ui=20 egit=1 gef-classic=1 initiative31-eclipse.pde=7 nebula=10 org.eclipse.emf=4
+binding	WidgetProperties	49	eclipse.platform.ui=4 egit=1 initiative31-eclipse.pde=44
+decoration	ControlDecoration	48	eclipse.jdt.debug=3 eclipse.jdt.ui=1 eclipse.platform=5 eclipse.platform.ui=21 egit=5 initiative31-eclipse.pde=12 p2=1
+dialog	ElementListSelectionDialog	47	eclipse.jdt.debug=11 eclipse.jdt.ui=15 eclipse.platform=8 eclipse.platform.ui=2 initiative31-eclipse.pde=9 org.eclipse.emf=2
+busy	ProgressBar	44	eclipse.jdt.core=2 eclipse.jdt.ui=2 eclipse.platform=1 eclipse.platform.swt=21 eclipse.platform.ui=11 initiative31-eclipse.pde=2 nebula=3 p2=2
+decoration	FieldDecorationRegistry	44	eclipse.jdt.debug=3 eclipse.jdt.ui=1 eclipse.platform=6 eclipse.platform.ui=17 egit=3 initiative31-eclipse.pde=13 p2=1
+forms	Hyperlink	44	eclipse.platform=9 eclipse.platform.ui=16 egit=4 initiative31-eclipse.pde=14 nebula=1
+widget	Spinner	43	eclipse.jdt.ui=4 eclipse.platform=1 eclipse.platform.swt=10 eclipse.platform.ui=11 initiative31-eclipse.pde=10 nebula=7
+cell_edit	TextCellEditor	39	eclipse.jdt.ui=4 eclipse.platform=7 eclipse.platform.ui=8 egit=6 initiative31-eclipse.pde=8 nebula=2 org.eclipse.emf=2 p2=2
+validation	IInputValidator	38	eclipse.jdt.debug=4 eclipse.jdt.ui=3 eclipse.platform=5 eclipse.platform.ui=10 egit=9 initiative31-eclipse.pde=3 org.eclipse.emf=4
+binding	DataBindingContext	37	eclipse.platform.ui=28 egit=1 initiative31-eclipse.pde=7 org.eclipse.emf=1
+dnd	DropTargetAdapter	36	eclipse.jdt.debug=1 eclipse.jdt.ui=2 eclipse.platform=1 eclipse.platform.swt=18 eclipse.platform.ui=5 egit=2 gef-classic=1 nebula=3 org.eclipse.emf=2 p2=1
+decoration	DecorationOverlayIcon	33	eclipse.jdt.ui=2 eclipse.platform=7 eclipse.platform.ui=8 egit=10 gef-classic=1 initiative31-eclipse.pde=3 p2=2
+cell_edit	EditingSupport	32	eclipse.jdt.ui=2 eclipse.platform=1 eclipse.platform.ui=11 egit=5 initiative31-eclipse.pde=8 nebula=4 p2=1
+prefs	FieldEditor	32	eclipse.jdt.debug=3 eclipse.platform=7 eclipse.platform.ui=18 egit=4
+dnd	DragSourceAdapter	31	eclipse.jdt.debug=1 eclipse.jdt.ui=4 eclipse.platform=2 eclipse.platform.swt=4 eclipse.platform.ui=7 egit=4 gef-classic=1 initiative31-eclipse.pde=3 nebula=4 p2=1
+layout	ViewForm	31	eclipse.jdt.ui=6 eclipse.platform=5 eclipse.platform.swt=4 eclipse.platform.ui=10 initiative31-eclipse.pde=1 nebula=1 org.eclipse.emf=4
+prefs	BooleanFieldEditor	30	eclipse.jdt.debug=2 eclipse.jdt.ui=1 eclipse.platform=9 eclipse.platform.ui=6 egit=9 initiative31-eclipse.pde=2 p2=1
+widget	DateTime	30	eclipse.platform=1 eclipse.platform.swt=8 eclipse.platform.ui=10 initiative31-eclipse.pde=1 nebula=6 org.eclipse.emf=4
+forms	ImageHyperlink	28	eclipse.platform=13 eclipse.platform.ui=3 egit=2 initiative31-eclipse.pde=10
+dnd	ViewerDropAdapter	27	eclipse.jdt.ui=3 eclipse.platform=3 eclipse.platform.ui=4 egit=1 initiative31-eclipse.pde=15 p2=1
+decoration	DecoratingLabelProvider	25	eclipse.jdt.ui=5 eclipse.platform=8 eclipse.platform.ui=9 egit=1 gef-classic=1 org.eclipse.emf=1
+tooltip	ColumnViewerToolTipSupport	25	eclipse.platform=1 eclipse.platform.ui=6 egit=8 initiative31-eclipse.pde=8 p2=2
+autocomplete	ContentProposalAdapter	22	eclipse.platform.ui=11 egit=6 initiative31-eclipse.pde=4 p2=1
+prefs	StringFieldEditor	22	eclipse.jdt.debug=2 eclipse.platform=4 eclipse.platform.ui=12 egit=3 initiative31-eclipse.pde=1
+cell_edit	ComboBoxCellEditor	21	eclipse.jdt.debug=1 eclipse.jdt.ui=2 eclipse.platform=2 eclipse.platform.ui=8 egit=2 initiative31-eclipse.pde=4 org.eclipse.emf=2
+decoration	FieldDecoration	21	eclipse.jdt.debug=3 eclipse.platform=2 eclipse.platform.ui=10 initiative31-eclipse.pde=6
+decoration	ILightweightLabelDecorator	20	eclipse.jdt.ui=3 eclipse.platform=1 eclipse.platform.ui=12 egit=3 initiative31-eclipse.pde=1
+widget	ExpandBar	20	eclipse.platform.swt=19 nebula=1
+cell_edit	ColumnViewerEditorActivationStrategy	19	eclipse.platform=1 eclipse.platform.ui=9 egit=2 initiative31-eclipse.pde=3 nebula=3 org.eclipse.emf=1
+autocomplete	IContentProposalProvider	17	eclipse.jdt.ui=1 eclipse.platform=1 eclipse.platform.ui=7 egit=3 initiative31-eclipse.pde=3 org.eclipse.emf=1 p2=1
+filter	FilteredItemsSelectionDialog	17	eclipse.jdt.debug=1 eclipse.jdt.ui=5 eclipse.platform.ui=5 egit=1 initiative31-eclipse.pde=5
+autocomplete	ContentAssistCommandAdapter	16	eclipse.jdt.ui=1 eclipse.platform=1 eclipse.platform.ui=8 egit=3 initiative31-eclipse.pde=3
+validation	IValidator	16	eclipse.platform.ui=11 egit=1 initiative31-eclipse.pde=4
+dialog	ListSelectionDialog	15	eclipse.jdt.debug=1 eclipse.jdt.ui=2 eclipse.platform=5 eclipse.platform.ui=6 egit=1
+busy	ProgressMonitorPart	12	eclipse.platform=2 eclipse.platform.ui=8 egit=1 org.eclipse.emf=1
+decoration	DecoratingStyledCellLabelProvider	10	eclipse.jdt.ui=2 eclipse.platform=1 eclipse.platform.ui=4 egit=3
+cell_edit	CheckboxCellEditor	8	eclipse.platform.ui=5 egit=1 initiative31-eclipse.pde=1 org.eclipse.emf=1
+autocomplete	SimpleContentProposalProvider	6	eclipse.platform.ui=4 egit=1 initiative31-eclipse.pde=1
+cell_edit	DialogCellEditor	6	eclipse.platform.ui=3 initiative31-eclipse.pde=1 org.eclipse.emf=2
+cell_edit	FocusCellOwnerDrawHighlighter	5	eclipse.platform.ui=1 initiative31-eclipse.pde=3 org.eclipse.emf=1
+tooltip	DefaultToolTip	5	eclipse.platform.ui=2 egit=1 nebula=2
+dialog	CheckedTreeSelectionDialog	4	eclipse.jdt.ui=2 eclipse.platform.ui=1 nebula=1
+validation	ControlDecorationSupport	3	eclipse.platform.ui=2 egit=1
+autocomplete	AutoCompleteField	2	eclipse.platform.ui=1 initiative31-eclipse.pde=1
+binding	ViewerSupport	1	eclipse.platform.ui=1

@@ -80,7 +80,7 @@ public class Test_org_eclipse_swt_widgets_ExpandBar_ScaleOracle {
 			}
 			ViewportDifferential.drain (display);
 			long append = (System.nanoTime () - start) / 1000 / APPEND;
-			System.out.println ("expandbar-oracle " + ViewportDifferential.reference ("ExpandBar") + " items " + count + " create " + create
+			java.util.logging.Logger.getLogger ("org.eclipse.swt.tests.junit.ScaleOracle").info ("expandbar-oracle " + ViewportDifferential.reference ("ExpandBar") + " items " + count + " create " + create
 				+ " paint " + median (paint) + " scroll " + median (scroll) + " expand " + median (expand) + " resize " + median (resize)
 				+ " append " + append);
 			shell.dispose ();

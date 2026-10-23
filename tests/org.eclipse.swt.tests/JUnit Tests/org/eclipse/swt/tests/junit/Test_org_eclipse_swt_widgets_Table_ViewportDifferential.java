@@ -54,13 +54,15 @@ import org.junit.jupiter.api.*;
  * Variants 3 and up run the scripts of {@link TableViewportScripts}: keyboard and mouse input with Shift and
  * Ctrl (window messages; the modifiers are the thread's keyboard state, set with SetKeyboardState, so the JVM
  * runs with <code>--enable-preview</code> on JDK 21), accessibility, geometry and presentation, reentrant
- * listeners, and DPI changes. <code>-Dswt.viewport.variants=3,4</code> runs only the listed variants.
+ * listeners, and DPI changes; variants 10 and 11 run {@link TableScaleScripts} at every scale (100, 125, 150 and
+ * 200 %). <code>-Dswt.viewport.variants=3,4</code> runs only the listed variants.
  * </p>
  */
 public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 	static final int ROWS = 300, SEEDS = 12, STEPS = 150;
+	static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger (Test_org_eclipse_swt_widgets_Table_ViewportDifferential.class.getName ());
 	/* the operations a variant draws: the API script of this class, or a script of TableViewportScripts */
-	static final int API = 0, INPUT = 1, GEOMETRY = 2, REENTRANT = 3, DPI = 4;
+	static final int API = 0, INPUT = 1, GEOMETRY = 2, REENTRANT = 3, DPI = 4, SCALE = 5, ZOOM = 6, HIDDEN = 7, SWEEP = 8;
 
 	/** A script variant: the Table's style, its columns, the script it runs, its seeds and steps. */
 	record Variant (int style, int columns, int script, int seeds, int steps) {}
@@ -81,6 +83,13 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		new Variant (SWT.MULTI | SWT.BORDER | SWT.VIRTUAL, 0, REENTRANT, 8, 100),
 		/* T-Table-10: DPI changes and resizes while scrolled */
 		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION, 2, DPI, 4, 60),
+		/* T-Table-14: every scale (TableScaleScripts): seeds at 100, 125, 150 and 200 %, and Table font, resize and zoom changes while scrolled */
+		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION, 2, SCALE, 8, 100),
+		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.CHECK, 2, ZOOM, 8, 80),
+		/* brief rule 24, hidden viewports (TableHiddenScripts): hide, 250 model deltas, show; 10^4 deltas per seed */
+		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION, 0, HIDDEN, 8, 40),
+		/* brief rule 24, viewport deltas (TableSweepScripts): 50 sizes, then 50 column widths, orders and hidden columns */
+		new Variant (SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION, 4, SWEEP, 4, 100),
 	};
 
 	/** A plain Table realized as owner data is the non-blocking sign that the viewport is active. */
@@ -108,6 +117,10 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 			Scene scene = new Scene (display, VARIANTS [variant]);
 			try {
 				harness (variant).compareWithRecording (scene, record, directory);
+				if (!record) Assertions.assertEquals (List.of (), scene.rebuilds, "variant " + variant + ": whole-list rebuilds in a change path (brief rule 24; " + scene.explicitRebuilds + " by removeAll and clearAll steps)");
+				if (!record) Assertions.assertEquals (List.of (), scene.hiddenViolations, "variant " + variant + ": hidden viewport and viewport deltas (brief rule 24)");
+				final int shown = variant;
+				LOG.info (() -> "table-variant" + shown + ": " + scene.counted + " steps, whole-list rebuilds in change paths " + scene.rebuilds.size () + ", by removeAll and clearAll steps " + scene.explicitRebuilds);
 			} finally {
 				scene.dispose ();
 			}
@@ -147,10 +160,52 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		return copy.toString ();
 	}
 
+	/* brief rule 24: whole-list rebuilds of this SWT's Table (Table.m3FullRebuilds, counted by TableSplice); none without the counter (the official jar) */
+	static final java.lang.reflect.Field FULL_REBUILDS = fullRebuildsField ();
+
+	static java.lang.reflect.Field fullRebuildsField () {
+		try {
+			java.lang.reflect.Field field = Table.class.getDeclaredField ("m3FullRebuilds");
+			field.setAccessible (true);
+			return field;
+		} catch (ReflectiveOperationException | RuntimeException e) {
+			return null;
+		}
+	}
+
+	static long fullRebuilds (Table table) {
+		try {
+			return FULL_REBUILDS == null || table == null ? 0 : FULL_REBUILDS.getLong (table);
+		} catch (IllegalAccessException e) {
+			return 0;
+		}
+	}
+
+	/* each step counts the whole-list rebuilds it made: only a removeAll or clearAll of the script may make one (brief rule 24) */
+	static ViewportDifferential.Ops<Scene> counted (ViewportDifferential.Ops<Scene> ops) {
+		return (random, log) -> {
+			ViewportDifferential.Op<Scene> op = ops.next (random, log);
+			return scene -> {
+				Table table = scene.table;
+				long before = fullRebuilds (table);
+				String answer = op.apply (scene);
+				long made = fullRebuilds (table) - before;
+				int step = scene.counted++;
+				if (made != 0 && (answer.startsWith ("removeAll") || answer.startsWith ("clearAll"))) {
+					scene.explicitRebuilds += made;
+				} else if (made != 0) {
+					scene.rebuilds.add ("seed " + scene.seed + " step " + step + " (" + answer + "): " + made);
+				}
+				return answer;
+			};
+		};
+	}
+
 	static ViewportDifferential<Scene> harness (int variant) {
 		Variant v = VARIANTS [variant];
 		ViewportDifferential.Ops<Scene> ops = v.script () == API ? Test_org_eclipse_swt_widgets_Table_ViewportDifferential::next
 				: (random, log) -> TableViewportScripts.next (v.script (), random, log);
+		ops = counted (ops);
 		return ViewportDifferential.<Scene> of ("table-variant" + variant, 0x7AB1E5EEDL + 31L * variant, ops)
 				.widget ("Table").seeds (v.seeds ()).steps (v.steps ())
 				.beforeSeed (Scene::reset)
@@ -174,6 +229,16 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		Shell shell;
 		Table table;
 		int step;
+		/* the seed this scene runs: reset is called once per seed, in order */
+		int seed = -1;
+		/* brief rule 24: steps counted, whole-list rebuilds of removeAll and clearAll steps, and every other step that made one */
+		int counted;
+		long explicitRebuilds;
+		final List<String> rebuilds = new ArrayList<> ();
+		/* the HIDDEN script: ids of the rows it inserts, and the hidden-viewport checks that failed */
+		long nextId;
+		int sweepStep;
+		final List<String> hiddenViolations = new ArrayList<> ();
 		/* script state (TableViewportScripts): resources, armed listener actions, accessibility, zoom */
 		final TableViewportScripts.State state = new TableViewportScripts.State ();
 
@@ -186,6 +251,9 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 		void reset () {
 			dispose ();
 			step = 0;
+			nextId = 1_000_000L;
+			sweepStep = 0;
+			seed++;
 			shell = new Shell (display);
 			Rectangle screen = display.getBounds ();
 			shell.setBounds (screen.x - 400, screen.y + 20, 320, 420);
@@ -226,6 +294,7 @@ public class Test_org_eclipse_swt_widgets_Table_ViewportDifferential {
 			/* the table receives focus once: the caret it gets on focus is part of the behaviour */
 			table.setFocus ();
 			ViewportDifferential.settle (display, 150);
+			TableScaleScripts.opened (this);
 			events.setLength (0);
 		}
 

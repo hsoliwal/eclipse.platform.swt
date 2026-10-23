@@ -1,0 +1,12 @@
+remove 1000 middle, one model.remove per row	100000	28.72 ms	47 KB
+remove 1000 middle, one run	100000	0.02 ms	0 KB
+insert 1000 middle, one model.add per row (List.add loop)	100000	13.02 ms	610 KB
+insert 1000 middle, one run (m3Splice)	100000	0.32 ms	586 KB
+setItems, per-item copy then model copy	100000	1.56 ms	782 KB
+setItems, model copy only	100000	0.14 ms	391 KB
+remove 1000 middle, one model.remove per row	1000000	131.70 ms	0 KB
+remove 1000 middle, one run	1000000	0.13 ms	0 KB
+insert 1000 middle, one model.add per row (List.add loop)	1000000	119.44 ms	5860 KB
+insert 1000 middle, one run (m3Splice)	1000000	3.98 ms	5860 KB
+setItems, per-item copy then model copy	1000000	14.95 ms	7813 KB
+setItems, model copy only	1000000	1.23 ms	3907 KB

@@ -58,6 +58,8 @@ public class Test_org_eclipse_swt_widgets_Combo_ViewportDifferential {
 		final Shell shell;
 		final int style;
 		final boolean verify;
+		/* hidden-viewport gate (viewport runs): native row operations and window patches when the list closed for the deltas */
+		final long [] hidden = new long [2];
 		final StringBuilder events = new StringBuilder ();
 		Combo combo;
 
@@ -129,20 +131,100 @@ public class Test_org_eclipse_swt_widgets_Combo_ViewportDifferential {
 		run ("combo-verify", SWT.DROP_DOWN | SWT.READ_ONLY, true);
 	}
 
+	/**
+	 * Rule 24, hidden viewports: a closed read-only combo with a selection takes 10,000 item deltas that keep the
+	 * selected row (adds, removes, setItem) in ten steps of 1,000, then drops and closes. Every step answers like the
+	 * reference, the face included, and the dropped list's bar and pixels too. In the viewport mode the drop-down list
+	 * gets no row operation while closed, and one window patch when it drops.
+	 */
+	@Test
+	public void closedDeltasAnswerLikeTheReference () throws IOException {
+		run ("combo-closed", SWT.DROP_DOWN | SWT.READ_ONLY, false, Test_org_eclipse_swt_widgets_Combo_ViewportDifferential::closedOp, CLOSED_STEPS);
+	}
+
+	static final int CLOSED_STEPS = 13;
+
+	static ViewportDifferential.Op<Subject> closedOp (Random random, StringBuilder log) {
+		int step = log.toString ().split ("\n", -1).length - 1;
+		if (log.indexOf ("seed") == 0) step--;
+		long seed = random.nextLong ();
+		String name = step == 0 ? "select " + (100 + random.nextInt (100)) : step == CLOSED_STEPS - 2 ? "drop" : step == CLOSED_STEPS - 1 ? "close" : "deltas " + seed;
+		log.append (name).append ('\n');
+		return subject -> {
+			Combo combo = subject.combo;
+			switch (name.split (" ") [0]) {
+				case "select" -> {
+					combo.select (Integer.parseInt (name.split (" ") [1]));
+					long [] now = closedCounters (combo);
+					System.arraycopy (now, 0, subject.hidden, 0, 2);
+				}
+				case "drop" -> {
+					combo.setListVisible (true);
+					long [] now = closedCounters (combo);
+					if (now [0] >= 0 && now [1] - subject.hidden [1] != 1) throw new AssertionError ("window patches on drop: " + (now [1] - subject.hidden [1]));
+				}
+				case "close" -> combo.setListVisible (false);
+				default -> {
+					Random deltas = new Random (seed);
+					for (int i = 0; i < 1000; i++) closedDelta (combo, deltas);
+					long [] now = closedCounters (combo);
+					if (now [0] >= 0 && now [0] != subject.hidden [0]) throw new AssertionError ("row operations while closed: " + (now [0] - subject.hidden [0]));
+				}
+			}
+			return "ok";
+		};
+	}
+
+	/* one item delta that keeps the selected row, indices always in range */
+	static void closedDelta (Combo combo, Random random) {
+		int count = combo.getItemCount (), selected = combo.getSelectionIndex ();
+		int i = random.nextInt (count);
+		switch (random.nextInt (4)) {
+			case 0, 1 -> combo.add ("closed " + random.nextInt (1000), random.nextInt (count + 1));
+			case 2 -> {
+				if (count > 50 && i != selected) combo.remove (i);
+			}
+			default -> {
+				if (i != selected) combo.setItem (i, "set " + random.nextInt (1000));
+			}
+		}
+	}
+
+	/* {drop-down row operations, window patches} of a viewport combo, or -1s when this SWT has no counters */
+	static long [] closedCounters (Combo combo) {
+		try {
+			Method ops = Combo.class.getDeclaredMethod ("m3NativeRowOps"), patches = Combo.class.getDeclaredMethod ("m3WindowPatches");
+			ops.setAccessible (true);
+			patches.setAccessible (true);
+			return new long [] {(Long) ops.invoke (combo), (Long) patches.invoke (combo)};
+		} catch (NoSuchMethodException e) {
+			return new long [] {-1, -1};
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError (e);
+		}
+	}
+
 	private void run (String name, int style) throws IOException {
 		run (name, style, false);
 	}
 
 	private void run (String name, int style, boolean verify) throws IOException {
+		run (name, style, verify, Test_org_eclipse_swt_widgets_Combo_ViewportDifferential::randomOp, STEPS);
+	}
+
+	private void run (String name, int style, boolean verify, ViewportDifferential.Ops<Subject> ops, int steps) throws IOException {
 		Assumptions.assumeTrue ("win32".equals (SWT.getPlatform ()), "the Combo viewport is win32 only");
 		boolean reference = ViewportDifferential.isReference ("Combo");
 		if (!reference) Assumptions.assumeTrue (viewportActive (shell), "Combo viewport mediation is not active in this build");
 		Subject subject = new Subject (shell, style, verify);
-		ViewportDifferential.<Subject> of (name, 0xC0B0L, Test_org_eclipse_swt_widgets_Combo_ViewportDifferential::randomOp)
-			.widget ("Combo").seeds (SEEDS).steps (STEPS)
+		ViewportDifferential.<Subject> of (name, 0xC0B0L, ops)
+			.widget ("Combo").seeds (SEEDS).steps (steps)
 			.beforeSeed (Subject::reset)
 			.beforeStep (s -> s.events.setLength (0))
-			.afterStep (s -> flush (s.shell.getDisplay ()))
+			.afterStep (s -> {
+				flush (s.shell.getDisplay ());
+				if (!reference) Test_org_eclipse_swt_widgets_List_ViewportDifferential.assertNoFullRebuild (s.combo);
+			})
 			.probe ("state", s -> "sel " + s.combo.getSelectionIndex () + " count " + s.combo.getItemCount () + " text '" + s.combo.getText ()
 				+ "' dropped " + s.combo.getListVisible ())
 			.probe ("events", s -> s.events.toString ())

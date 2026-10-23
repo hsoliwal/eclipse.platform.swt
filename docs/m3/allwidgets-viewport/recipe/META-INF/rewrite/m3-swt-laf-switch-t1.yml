@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+# SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.synexia.openrewrite.viewport.SwtLafSwitchTargetsT1
+displayName: A look and feel switch resolves each widget class's target once (optimization leaf T1)
+description: >-
+  Optimization pass leaf T1 (docs/m3/allwidgets-viewport/OPTIMIZATION_LEDGER.tsv; FlatLaf #204, the OS light/dark
+  switch as a cheap repaint). M3LookAndFeel.update asked every widget for its target look and feel, which builds two
+  property names and reads three system properties per widget; the target depends only on the widget's class (pins
+  are per class), so it is resolved once per class per switch. Idempotent.
+recipeList:
+  - org.openrewrite.text.FindAndReplace:
+      find: "\t\tint touched = 0;\n\t\tfor (int i = 0; i < registry.count; i++) {\n\t\t\tControl control = registry.controls [i];\n\t\t\tSlot slot = (Slot) control.getData (UI);\n\t\t\tString target = lookAndFeel (control.getClass ().getSimpleName ());\n"
+      replace: "\t\tint touched = 0;\n\t\t//FLLDCIM: HPCPOP - a widget's target depends on its class only (pins are per class): once per class, not per widget\n\t\tMap<Class<?>, String> targets = new IdentityHashMap<> ();\n\t\tfor (int i = 0; i < registry.count; i++) {\n\t\t\tControl control = registry.controls [i];\n\t\t\tSlot slot = (Slot) control.getData (UI);\n\t\t\tString target = targets.computeIfAbsent (control.getClass (), type -> lookAndFeel (type.getSimpleName ()));\n"

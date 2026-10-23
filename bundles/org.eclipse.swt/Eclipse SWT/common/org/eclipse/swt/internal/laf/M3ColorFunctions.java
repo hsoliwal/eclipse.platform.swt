@@ -68,23 +68,16 @@ final class M3ColorFunctions {
 		}
 	}
 
-	/* saturate, desaturate, spin: one HSL component of a colour moved */
+	/* spin, saturate, desaturate (the loader passes only the names of NAMES): one HSL component of a colour moved */
 	private static int hslFunction (String function, List<String> args, ToIntFunction<String> colour) {
 		LookAndFeelLoader.expect (function, args, 2);
 		int argb = colour.applyAsInt (args.get (0));
 		float [] hsl = LookAndFeelLoader.hsl (argb);
-		switch (function) {
-			case "saturate":
-				hsl [1] = LookAndFeelLoader.clamp (hsl [1] + LookAndFeelLoader.percent (args.get (1)));
-				break;
-			case "desaturate":
-				hsl [1] = LookAndFeelLoader.clamp (hsl [1] - LookAndFeelLoader.percent (args.get (1)));
-				break;
-			case "spin":
-				hsl [0] = ((hsl [0] + LookAndFeelLoader.percent (args.get (1))) % 360 + 360) % 360;
-				break;
-			default:
-				throw new IllegalArgumentException ("unknown function " + function);
+		float amount = LookAndFeelLoader.percent (args.get (1));
+		if (function.equals ("spin")) {
+			hsl [0] = ((hsl [0] + amount) % 360 + 360) % 360;
+		} else {
+			hsl [1] = LookAndFeelLoader.clamp (hsl [1] + (function.equals ("saturate") ? amount : -amount));
 		}
 		return LookAndFeelLoader.argb (hsl, LookAndFeelLoader.alpha (argb));
 	}

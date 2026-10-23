@@ -17,7 +17,7 @@ H=C:/m3-superset/tools/hidden_java.sh
 # the official answers of upstream defects that the comparison with the official recording accepts
 DEFECTS=$(cygpath -m "$(dirname "$0")")/UPSTREAM_DEFECTS.tsv
 # the input scripts set the keyboard state through java.lang.foreign (preview on JDK 21)
-XA="--enable-preview --enable-native-access=ALL-UNNAMED${VARIANTS:+ -Dswt.viewport.variants=$VARIANTS}"
+XA="--enable-preview --enable-native-access=ALL-UNNAMED -Dswt.autoScale.updateOnRuntime=true${VARIANTS:+ -Dswt.viewport.variants=$VARIANTS}"
 SEL="--select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Table_ViewportDifferential --disable-banner --details=tree"
 R=$O/recording
 mkdir -p $R/official $R/original

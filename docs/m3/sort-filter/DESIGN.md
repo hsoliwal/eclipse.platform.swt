@@ -126,12 +126,49 @@ decoration (`M3HeaderDecoration`) so they never overwrite each other.
 - Filtered columns carry a filter mark in their header image (shared `M3HeaderDecoration`).
 - Strings come from `SWT.getMessage` keys `SWT_M3_Filter_*` (TV_5.0 `messages.properties` values).
 
+### Asynchronous filtering: debounce, model work off the UI thread, one apply
+
+User 2026-10-19: "show how the filter must run on the model, and how to debounce and remain responsive"
+(donors: TV_5.0 `ViewerFilterUI` / `TreeViewerUpdater` / `TreeViewerWork`, x86core jsonviewer `TreeFilterControl`
+/ `LazyTreeFilter`, both user-authored). `M3ColumnFilter.setAsync (display, debounceMs)`:
+
+1. **Debounce with a superseding token.** Every criterion change records the criterion (compiled once, on the UI
+   thread, so an invalid pattern is reported at once), increments `generation` (an `int`) and re-arms one
+   preallocated timer runnable. When the timer fires it returns unless the armed generation is still current, so
+   a superseded change never runs and nothing is allocated per keystroke.
+2. **The filter runs on the model, off the UI thread.** One daemon worker (`M3FilterWorker`) takes the newest
+   request: it evaluates only the changed criteria over the source rows (masks, word-wide folds, ancestor rule,
+   compaction), and an `M3ColumnSort` over the filter sorts the result into spare lanes (`prepare`). It compares
+   the generation every 4096 rows and drops the work when a newer generation exists. The UI thread never walks
+   the model.
+3. **The UI applies only the result.** One `asyncExec` per result: if its generation is still current the filter
+   and the sort swap lanes (`apply`, `commitPrepared`) and report one change whose damage starts at the first row
+   that differs; the binding sets the item count (the scroll extent) and clears only the damaged rows, so only the
+   resident window is asked again. A table binding keeps the selection by source row (id-to-row remap).
+4. **Source deltas stay incremental.** `rowsChanged` re-tests only the changed rows (a row whose pass/fail does
+   not change costs O(columns) and reports UPDATED only); entering rows are sorted and merged into the
+   permutation; leaving rows are compacted. Source edits bump the generation, so a running computation over the
+   old numbering is dropped and rescheduled.
+
+Proof: `Test_M3FilterAsync` types 20 keystrokes 30 ms apart over 10^6 rows: only the last generation applies, the
+UI thread spends under 2 ms per keystroke, and the final view equals a synchronous reference. Logging: the worker
+logs each generation at FINE through `SwtLog` (`org.eclipse.swt.m3.M3ColumnFilter`), with level guards.
+
 ## 4. Binding to virtual widgets
 
 `M3RowBinding.bind(Table, M3RowView, RowFill<TableItem>)` and `bind(Tree, M3ColumnSort, RowFill<TreeItem>)`
-(tables must be `SWT.VIRTUAL`): the item count follows the view; on a change only the damaged view range is
-cleared (`Table.clear(start, end)`, `TreeItem.clear`) so, in viewport mode, only resident rows are asked again
-through `SWT.SetData`. SetData fills an item from `map(index)`; tree items remember their source row in item data.
+(both `SWT.VIRTUAL`). One model: the binding keeps no copy of the rows; SetData fills an item from `map(index)`
+(tree items remember their source row in item data).
+
+- **Patch, not rebuild.** Every change reaches the widget as a patch: the item count carries the extent (scroll
+  bar), and only the damaged view rows are cleared (`Table.clear(start, end)`), so only rows that are resident and
+  damaged are asked again; rows outside the window cost nothing but the count. An asynchronous result damages only
+  from its first changed row. Trees still clear all materialized items on a change (next leaf: patches by sibling
+  ranges).
+- **Selection by id.** The binding keeps the selection as source rows (captured on `SWT.Selection`, or set with
+  `setSelectedRows`), renumbers them on source insertions and removals, and selects their new view rows after every
+  change (a tree item is reached by walking sibling indices from the root, O(depth)); rows the view hides stay
+  selected and come back with it.
 
 ## 5. Tests and proof
 
@@ -152,3 +189,14 @@ through `SWT.SetData`. SetData fills an item from `map(index)`; tree items remem
 | M3ColumnSort | `int[]` order, `int[]` inverse, `long[]` radix keys (scratch), `int[]` CSR child start/rows | none |
 | M3RowWindow | `first`, `count` | none |
 | bindings | none | TableItem/TreeItem created by SWT for resident rows only |
+
+## 7. Status and next leaves (2026-10-19)
+
+- SWT leaf 1 merged: hsoliwal/eclipse.platform.swt PR #232 into `m3/viewport-integration-20261016` (74d7b821e9);
+  the asynchronous filter, the patch semantics, selection by id and the licence audit follow on this branch.
+- Grid: hsoliwal/nebula PR #262 (`org.eclipse.nebula.widgets.grid.m3.M3GridRowBinding`, `M3GridSortHeader`,
+  branch `m3/grid-sort-filter-20261019` from the Grid viewport branch), see `docs/m3/grid-sort-filter/DESIGN.md` there.
+- Next leaves: a Grid filter row/popup (Grid column geometry); tree patches by sibling range instead of
+  `clearAll` (M3Patch over the CSR index); `ViewerFiltersDialog` (named filter sets; EPL-1.0 header kept verbatim);
+  the M3JDK adapters once `m3/collections` ships `M3FlatteningView`/`M3WindowView` (rename by recipe); JFace
+  `TableViewer`/`TreeViewer` comparator and filter bridges over the same lanes (one model).

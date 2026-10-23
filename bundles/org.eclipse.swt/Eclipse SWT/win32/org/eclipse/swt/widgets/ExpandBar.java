@@ -68,6 +68,11 @@ public class ExpandBar extends Composite {
 	 * one band height), so that a layout from item i > 0 can continue from item i - 1 instead of summing all before.
 	 */
 	int layoutBand = -1;
+	/* VIEWPORT: the client rectangle of the running layout (valid while redrawClientValid) and ExpandItem.redraw's scratch */
+	final RECT redrawClient = new RECT (), redrawRect = new RECT ();
+	boolean redrawClientValid;
+	/* VIEWPORT: the item whose header the mouse is over (the only item with hover set), or null */
+	ExpandItem hoverItem;
 	long hFont;
 
 /**
@@ -324,11 +329,13 @@ void drawWidget (GC gc, RECT clipRect) {
 			OS.SetTextColor (gc.handle, foreground);
 		}
 	}
-	for (int i = 0; i < itemCount; i++) {
+	//FLLDCIM: VIEWPORT - the damaged items are one run of the index order: binary search its start (catalogue: lower bound), stop past its end
+	int firstItem = VIEWPORT && clipRect != null ? firstItemBelow (clipRect.top) : 0;
+	for (int i = firstItem; i < itemCount; i++) {
 		ExpandItem item = items[i];
 		if (VIEWPORT && clipRect != null && !item.paintsWithin (clipRect)) {
-			//FLLDCIM: VIEWPORT - the DC clips to the damage, so an item drawn only outside it changes no pixel
-			continue;
+			//FLLDCIM: VIEWPORT - the DC clips to the damage; from the first damaged item on, an item off it lies below it: the run ended
+			break;
 		}
 		item.drawItem (gc, hTheme, clipRect, item == focusItem && drawFocus);
 	}
@@ -354,6 +361,42 @@ Control findBackgroundControl () {
 @Override
 Control findThemeControl () {
 	return isAppThemed () ? this : super.findThemeControl ();
+}
+
+/*
+ * VIEWPORT: the index of the last item whose header starts above y (the only item whose header can contain y), or -1.
+ * Headers lie down the bar in index order, each starting below the previous one's header: binary search, O(log n).
+ */
+int itemAt (int y) {
+	int low = 0, high = itemCount;
+	while (low < high) {
+		int mid = (low + high) >>> 1;
+		if (items [mid].y < y) {
+			low = mid + 1;
+		} else {
+			high = mid;
+		}
+	}
+	return low - 1;
+}
+
+/*
+ * VIEWPORT: the first item whose drawing reaches below top (ExpandItem.paintsWithin's bottom), or itemCount. layoutItems
+ * puts the items down the bar in index order, each starting at or below the end of the previous one's drawing, so that
+ * bottom grows with the index: lower bound, O(log n).
+ */
+int firstItemBelow (int top) {
+	int low = 0, high = itemCount;
+	while (low < high) {
+		int mid = (low + high) >>> 1;
+		ExpandItem item = items [mid];
+		if (item.y + item.getHeaderHeightInPixels () + (item.expanded ? item.height : 0) + 1 > top) {
+			high = mid;
+		} else {
+			low = mid + 1;
+		}
+	}
+	return low;
 }
 
 int getBandHeight () {
@@ -533,13 +576,22 @@ void layoutItems (int index, boolean setScrollbar) {
 		if (VIEWPORT) {
 			layoutBand = index == 0 || band == layoutBand ? band : -1;
 		}
-		for (int i = index; i < itemCount; i++) {
-			ExpandItem item = items [i];
-			item.setBoundsInPixels (spacing, y, 0, 0, true, false);
-            if (item.expanded) {
-                y += item.height;
-            }
-			y += item.getHeaderHeightInPixels () + spacing;
+		if (VIEWPORT) {
+			//FLLDCIM: HPCPOP - one GetClientRect per layout instead of two per moved item (ExpandItem.redraw)
+			OS.GetClientRect (handle, redrawClient);
+			redrawClientValid = true;
+		}
+		try {
+			for (int i = index; i < itemCount; i++) {
+				ExpandItem item = items [i];
+				item.setBoundsInPixels (spacing, y, 0, 0, true, false);
+				if (item.expanded) {
+					y += item.height;
+				}
+				y += item.getHeaderHeightInPixels () + spacing;
+			}
+		} finally {
+			redrawClientValid = false;
 		}
 	}
     if (setScrollbar) {
@@ -872,6 +924,18 @@ LRESULT WM_LBUTTONDOWN (long wParam, long lParam) {
     }
 	int x = OS.GET_X_LPARAM (lParam);
 	int y = OS.GET_Y_LPARAM (lParam);
+	if (VIEWPORT) {
+		//FLLDCIM: VIEWPORT - the item under the mouse by binary search (O(log n)), not a scan of every item
+		int index = itemAt (y);
+		ExpandItem item = index >= 0 ? items [index] : null;
+		if (item != null && item.isHover (x, y) && focusItem != item) {
+			focusItem.redraw (true);
+			focusItem = item;
+			focusItem.redraw (true);
+			forceFocus ();
+		}
+		return result;
+	}
 	for (int i = 0; i < itemCount; i++) {
 		ExpandItem item = items[i];
 		boolean hover = item.isHover (x, y);
@@ -914,6 +978,15 @@ LRESULT WM_MOUSELEAVE (long wParam, long lParam) {
     if (result != null) {
         return result;
     }
+	if (VIEWPORT) {
+		//FLLDCIM: VIEWPORT - the hovered item is tracked by WM_MOUSEMOVE, no search
+		if (hoverItem != null && !hoverItem.isDisposed ()) {
+			hoverItem.hover = false;
+			hoverItem.redraw (false);
+		}
+		hoverItem = null;
+		return result;
+	}
 	for (int i = 0; i < itemCount; i++) {
 		ExpandItem item = items [i];
 		if (item.hover) {
@@ -933,6 +1006,21 @@ LRESULT WM_MOUSEMOVE (long wParam, long lParam) {
     }
 	int x = OS.GET_X_LPARAM (lParam);
 	int y = OS.GET_Y_LPARAM (lParam);
+	if (VIEWPORT) {
+		//FLLDCIM: VIEWPORT - only the item under the mouse can be hovered: binary search it and update the old and the new one
+		int index = itemAt (y);
+		ExpandItem hit = index >= 0 && items [index].isHover (x, y) ? items [index] : null;
+		if (hoverItem != null && hoverItem != hit && !hoverItem.isDisposed ()) {
+			hoverItem.hover = false;
+			hoverItem.redraw (false);
+		}
+		if (hit != null && !hit.hover) {
+			hit.hover = true;
+			hit.redraw (false);
+		}
+		hoverItem = hit;
+		return result;
+	}
 	for (int i = 0; i < itemCount; i++) {
 		ExpandItem item = items [i];
 		boolean hover = item.isHover (x, y);
@@ -1001,6 +1089,14 @@ LRESULT WM_SETCURSOR (long wParam, long lParam) {
         return result;
     }
 	int hitTest = (short) OS.LOWORD (lParam);
+	if (VIEWPORT && hitTest == OS.HTCLIENT) {
+		//FLLDCIM: VIEWPORT - the hovered item is tracked by WM_MOUSEMOVE (O4): no scan per WM_SETCURSOR
+		if (hoverItem != null && !hoverItem.isDisposed ()) {
+			OS.SetCursor (OS.LoadCursor (0, OS.IDC_HAND));
+			return LRESULT.ONE;
+		}
+		return result;
+	}
 	if (hitTest == OS.HTCLIENT) {
 		for (int i = 0; i < itemCount; i++) {
 			ExpandItem item = items [i];

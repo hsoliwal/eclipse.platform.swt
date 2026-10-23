@@ -174,7 +174,7 @@ public class Test_org_eclipse_swt_internal_laf_LookAndFeel {
 		assertThrows (IllegalArgumentException.class, () -> one ("a = #zzzzzz\n"));
 		assertThrows (IllegalArgumentException.class, () -> one ("a = darken(#fff)\n"));
 		assertThrows (IllegalArgumentException.class, () -> one ("a = darken(#fff, x%)\n"));
-		assertThrows (IllegalArgumentException.class, () -> one ("a = shade(#fff, 2%)\n"));
+		assertThrows (IllegalArgumentException.class, () -> one ("a = bogus(#fff, 2%)\n"));
 		assertThrows (IllegalArgumentException.class, () -> one ("a = lighten(12, 2%)\n"));
 		assertThrows (IllegalArgumentException.class, () -> one ("a = \n"));
 		assertThrows (IllegalArgumentException.class, () -> one ("a = x,2\n"));
@@ -290,7 +290,7 @@ public class Test_org_eclipse_swt_internal_laf_LookAndFeel {
 
 	@Test
 	public void displayResolution () throws InterruptedException {
-		Display display = new Display ();
+		Display current = Display.getCurrent (), display = current != null ? current : new Display ();
 		/* with FINE on, the resolution record is built on this thread and published by the SWT log thread */
 		Logger log = Logger.getLogger ("org.eclipse.swt.internal.laf.LookAndFeel");
 		BlockingQueue<String> records = new LinkedBlockingQueue<> ();
@@ -324,7 +324,7 @@ public class Test_org_eclipse_swt_internal_laf_LookAndFeel {
 			assertTrue (record.startsWith ("look and feel test-display: "), record);
 		} finally {
 			LookAndFeel.register ("test-display", "@extends = flat\n", null);
-			display.dispose ();
+			if (current == null) display.dispose ();
 			log.setLevel (null);
 			log.removeHandler (handler);
 		}

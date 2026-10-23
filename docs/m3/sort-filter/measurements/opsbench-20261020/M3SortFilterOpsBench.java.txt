@@ -1,0 +1,193 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.swt.m3;
+
+import java.io.*;
+import java.lang.management.*;
+import java.nio.charset.*;
+import java.nio.file.*;
+import java.util.*;
+
+import org.eclipse.swt.*;
+
+/*
+ * Optimization-pass benchmark of the sort/filter operations (OPTIMIZATION_PASS.md step 1), headless, public API
+ * only. For each size: median wall time of 5 runs and bytes allocated by the measuring thread (median), per
+ * operation. Arguments: <sizes, comma separated> <results.tsv> <label>. Rows: label, operation, size, median_us,
+ * allocated_bytes.
+ */
+public final class M3SortFilterOpsBench {
+
+	static final com.sun.management.ThreadMXBean THREADS = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean ();
+	static Path out;
+	static String label;
+	static java.util.regex.Pattern only = java.util.regex.Pattern.compile (".*");
+
+	interface Op {
+		void run ();
+	}
+
+	public static void main (String [] args) {
+		int [] sizes = Arrays.stream (args [0].split (",")).mapToInt (Integer::parseInt).toArray ();
+		out = Paths.get (args [1]);
+		label = args.length > 2 ? args [2] : "run";
+		if (args.length > 3) only = java.util.regex.Pattern.compile (args [3]);
+		for (int n : sizes) measure (n);
+	}
+
+	static void write (String line) {
+		try {
+			Files.writeString (out, line + (char) 10, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+		} catch (IOException e) {
+			throw new UncheckedIOException (e);
+		}
+	}
+
+	static void time (String operation, int n, Op setup, Op op) {
+		if (!only.matcher (operation).matches ()) return;
+		long [] times = new long [5], bytes = new long [5];
+		for (int r = -2; r < 5; r++) {
+			setup.run ();
+			long id = Thread.currentThread ().getId ();
+			long allocated = THREADS.getThreadAllocatedBytes (id), start = System.nanoTime ();
+			op.run ();
+			long elapsed = System.nanoTime () - start, used = THREADS.getThreadAllocatedBytes (id) - allocated;
+			if (r >= 0) {
+				times [r] = elapsed;
+				bytes [r] = used;
+			}
+		}
+		Arrays.sort (times);
+		Arrays.sort (bytes);
+		write (label + "\t" + operation + "\t" + n + "\t" + times [2] / 1000 + "\t" + bytes [2]);
+	}
+
+	static void measure (int n) {
+		Random random = new Random (n);
+		int [] ints = new int [n], small = new int [n];
+		double [] doubles = new double [n];
+		String [] texts = new String [n];
+		for (int i = 0; i < n; i++) {
+			ints [i] = random.nextInt (Math.max (2, n / 10));
+			small [i] = random.nextInt (1000);
+			doubles [i] = random.nextInt (1000) / 8.0;
+			texts [i] = "w" + random.nextInt (5000);
+		}
+		M3CellText cells = (row, column) -> column == 0 ? texts [row] : String.valueOf (small [row]);
+		M3ColumnSort [] sort = new M3ColumnSort [1];
+		Op fresh = () -> {
+			sort [0] = new M3ColumnSort (4, n);
+			sort [0].setKey (0, M3ColumnKey.ofText (r -> texts [r], null));
+			sort [0].setKey (1, M3ColumnKey.ofInts (r -> ints [r]));
+			sort [0].setKey (2, M3ColumnKey.ofDoubles (r -> doubles [r]));
+			sort [0].setKey (3, M3ColumnKey.ofInts (r -> small [r]));
+		};
+		time ("sort-int-int", n, fresh, () -> sort [0].setSortKeys (new int [] {1, 3}, new int [] {SWT.UP, SWT.DOWN}));
+		time ("sort-text-int", n, fresh, () -> sort [0].setSortKeys (new int [] {0, 3}, new int [] {SWT.UP, SWT.UP}));
+		time ("sort-text-int-double", n, fresh, () -> sort [0].setSortKeys (new int [] {0, 1, 2}, new int [] {SWT.UP, SWT.DOWN, SWT.UP}));
+		Op sorted = () -> {
+			fresh.run ();
+			sort [0].setSortKeys (new int [] {0, 1, 2}, new int [] {SWT.UP, SWT.DOWN, SWT.UP});
+		};
+		time ("resort-text-int-double-steady", n, sorted, () -> sort [0].setSortKeys (new int [] {0, 1, 2}, new int [] {SWT.DOWN, SWT.UP, SWT.DOWN}));
+
+		M3ColumnFilter [] filter = new M3ColumnFilter [1];
+		M3ColumnSort [] chained = new M3ColumnSort [1];
+		Op chain = () -> {
+			filter [0] = new M3ColumnFilter (2, n, cells);
+			chained [0] = new M3ColumnSort (2, filter [0]);
+			chained [0].setKey (0, M3ColumnKey.ofText (r -> texts [r], null));
+			chained [0].setKey (1, M3ColumnKey.ofInts (r -> small [r]));
+			chained [0].setSortKeys (new int [] {0, 1}, new int [] {SWT.UP, SWT.DOWN});
+		};
+		time ("filter-contains-from-all", n, chain, () -> filter [0].setText (0, "w1", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE));
+		Op typedW1 = () -> {
+			chain.run ();
+			filter [0].setText (0, "w1", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE);
+		};
+		time ("filter-refine-w1-to-w12", n, typedW1, () -> filter [0].setText (0, "w12", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE));
+		Op typedW12 = () -> {
+			typedW1.run ();
+			filter [0].setText (0, "w12", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE);
+		};
+		time ("filter-widen-w12-to-w1", n, typedW12, () -> filter [0].setText (0, "w1", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE));
+
+		for (int changed : new int [] {1, 100, 10_000}) {
+			if (changed > n / 10) continue;
+			int [] rows = new int [changed];
+			/* one generator per operation: every run changes the rows to new values (not to the values of the previous run) */
+			Random edits = new Random (changed);
+			Op dirty = () -> {
+				typedW1.run ();
+				for (int k = 0; k < changed; k++) {
+					rows [k] = edits.nextInt (n);
+					texts [rows [k]] = "w" + edits.nextInt (5000);
+					small [rows [k]] = edits.nextInt (1000);
+				}
+			};
+			time ("delta-rows-changed-" + changed, n, dirty, () -> filter [0].rowsChanged (rows));
+		}
+		time ("full-pass-reset", n, typedW1, () -> filter [0].setSourceSize (n));
+		Op shortChain = () -> {
+			filter [0] = new M3ColumnFilter (2, n - 100, cells);
+			chained [0] = new M3ColumnSort (2, filter [0]);
+			chained [0].setKey (0, M3ColumnKey.ofText (r -> texts [r], null));
+			chained [0].setKey (1, M3ColumnKey.ofInts (r -> small [r]));
+			chained [0].setSortKeys (new int [] {0, 1}, new int [] {SWT.UP, SWT.DOWN});
+			filter [0].setText (0, "w1", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE);
+		};
+		time ("delta-insert-100-rows", n, shortChain, () -> filter [0].rowsInserted (n / 2, 100));
+		time ("delta-remove-100-rows", n, typedW1, () -> filter [0].rowsRemoved (n / 2, 100));
+		Op filterOnly = () -> {
+			filter [0] = new M3ColumnFilter (2, n, cells);
+			filter [0].setText (0, "w1", M3TextMatch.CONTAINS | M3TextMatch.IGNORE_CASE);
+		};
+		for (int changed : new int [] {100, 10_000}) {
+			if (changed > n / 10) continue;
+			int [] rows = new int [changed];
+			/* one generator per operation: every run changes the rows to new values (not to the values of the previous run) */
+			Random edits = new Random (changed);
+			Op dirty = () -> {
+				filterOnly.run ();
+				for (int k = 0; k < changed; k++) {
+					rows [k] = edits.nextInt (n);
+					texts [rows [k]] = "w" + edits.nextInt (5000);
+				}
+			};
+			time ("delta-filter-only-" + changed, n, dirty, () -> filter [0].rowsChanged (rows));
+		}
+		M3ColumnSort [] alone = new M3ColumnSort [1];
+		Op sortOnly = () -> {
+			alone [0] = new M3ColumnSort (2, n);
+			alone [0].setKey (0, M3ColumnKey.ofText (r -> texts [r], null));
+			alone [0].setKey (1, M3ColumnKey.ofInts (r -> small [r]));
+			alone [0].setSortKeys (new int [] {0, 1}, new int [] {SWT.UP, SWT.DOWN});
+		};
+		for (int changed : new int [] {1, 100, 10_000}) {
+			if (changed > n / 10) continue;
+			int [] rows = new int [changed];
+			/* one generator per operation: every run changes the rows to new values (not to the values of the previous run) */
+			Random edits = new Random (changed);
+			Op dirty = () -> {
+				sortOnly.run ();
+				for (int k = 0; k < changed; k++) {
+					rows [k] = edits.nextInt (n);
+					texts [rows [k]] = "w" + edits.nextInt (5000);
+				}
+			};
+			time ("delta-sort-only-" + changed, n, dirty, () -> alone [0].rowsChanged (rows));
+		}
+	}
+}

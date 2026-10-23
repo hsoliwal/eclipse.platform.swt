@@ -111,6 +111,29 @@ final class VirtualListModel {
 		relayout ();
 	}
 
+	/** Inserts {@code strings} before {@code index}: one shift of the lanes, where {@code add} per row shifts them once per row. */
+	void insert (int index, String [] strings) {
+		if (strings == null) throw new IllegalArgumentException ("null items");
+		if (index < 0 || index > count) throw new IllegalArgumentException ("invalid index");
+		int added = strings.length;
+		if (added == 0) return;
+		for (String string : strings) {
+			if (string == null) throw new IllegalArgumentException ("null item");
+		}
+		modifiedStructure ();
+		ensureCapacity (Math.addExact (count, added));
+		if (lazy) {
+			width.insertUnmeasured (index, added);
+		} else {
+			for (int i = 0; i < added; i++) width.insert (index + i, strings [i]);
+		}
+		System.arraycopy (items, index, items, index + added, count - index);
+		System.arraycopy (strings, 0, items, index, added);
+		count += added;
+		planner.insert (index, added);
+		relayout ();
+	}
+
 	void setItem (int index, String string) {
 		checkIndex (index);
 		if (string == null) throw new IllegalArgumentException ("null item");

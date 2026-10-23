@@ -121,6 +121,8 @@ public class List extends Scrollable {
 
 	/* Viewport mediation of a list without SWT.VIRTUAL (see ListViewport); null in the original mode. */
 	ListViewport viewport;
+	/* native row operations of the list box so far (the model seam, m3NativeRowOps): LB_ADDSTRING, LB_INSERTSTRING, LB_DELETESTRING, LB_RESETCONTENT */
+	long nativeRowOps;
 
 	/* The drawn plane of the custom, m3 and gpu modes (see ListDrawnPlane); null in the viewport and original modes. */
 	ListDrawnPlane drawnPlane;
@@ -204,6 +206,7 @@ void addItem (String string) {
 		return;
 	}
 	TCHAR buffer = new TCHAR (string, true);
+	nativeRowOps++;
 	int result = (int)OS.SendMessage (handle, OS.LB_ADDSTRING, 0, buffer);
     if (result == OS.LB_ERR) {
         error(SWT.ERROR_ITEM_NOT_ADDED);
@@ -266,6 +269,7 @@ void insertItem (String string, int index) {
 		return;
 	}
 	TCHAR buffer = new TCHAR (string, true);
+	nativeRowOps++;
 	int result = (int)OS.SendMessage (handle, OS.LB_INSERTSTRING, index, buffer);
     if (result == OS.LB_ERRSPACE) {
         error(SWT.ERROR_ITEM_NOT_ADDED);
@@ -1177,6 +1181,7 @@ void removeIndices (int [] indices) {
                     break;
                 }
 			}
+			nativeRowOps++;
 			int result = (int)OS.SendMessage (handle, OS.LB_DELETESTRING, index, 0);
             if (result == OS.LB_ERR) {
                 break;
@@ -1269,6 +1274,7 @@ void removeIndex (int index) {
 		}
 	}
 	int topIndex = (int)OS.SendMessage (handle, OS.LB_GETTOPINDEX, 0, 0);
+	nativeRowOps++;
 	int result = (int)OS.SendMessage (handle, OS.LB_DELETESTRING, index, 0);
 	if (result == OS.LB_ERR) {
 		int count = (int)OS.SendMessage (handle, OS.LB_GETCOUNT, 0, 0);
@@ -1362,6 +1368,7 @@ void removeSpan (int start, int end) {
                 break;
             }
 		}
+		nativeRowOps++;
 		int result = (int)OS.SendMessage (handle, OS.LB_DELETESTRING, start, 0);
         if (result == OS.LB_ERR) {
             break;
@@ -1435,6 +1442,7 @@ void removeAllItems () {
 		viewport.removeAll ();
 		return;
 	}
+	nativeRowOps++;
 	OS.SendMessage (handle, OS.LB_RESETCONTENT, 0, 0);
 	if (itemStore != null) {
 		itemStore.removeAll ();
@@ -1856,12 +1864,14 @@ void setAllItems (String... items) {
 		OS.SendMessage (handle, OS.LB_SETHORIZONTALEXTENT, 0, 0);
 	}
 	int length = items.length;
+	nativeRowOps++;
 	OS.SendMessage (handle, OS.LB_RESETCONTENT, 0, 0);
 	OS.SendMessage (handle, OS.LB_INITSTORAGE, length, length * 32);
 	int index = 0;
 	while (index < length) {
 		String string = items [index];
 		TCHAR buffer = new TCHAR (string, true);
+		nativeRowOps++;
 		int result = (int)OS.SendMessage (handle, OS.LB_ADDSTRING, 0, buffer);
         if (result == OS.LB_ERR || result == OS.LB_ERRSPACE) {
             break;
@@ -2394,6 +2404,7 @@ boolean storeNativeCountFrozen (int start, int delta, boolean descending, int ma
  */
 boolean storeSetEmptyCount (int count) {
 	if ((style & SWT.SINGLE) != 0) {
+		nativeRowOps++;
 		OS.SendMessage (handle, OS.LB_INSERTSTRING, 0, 0);
 	}
 	int result = (int)OS.SendMessage (handle, OS.LB_SETCOUNT, count, 0);
@@ -2405,8 +2416,10 @@ boolean storeRowMessages (int start, int delta, boolean descending, int count) {
 	for (int i = 0; i < magnitude; i++) {
 		int result;
 		if (delta > 0) {
+			nativeRowOps++;
 			result = (int)OS.SendMessage (handle, OS.LB_INSERTSTRING, start + i, 0);
 		} else {
+			nativeRowOps++;
 			result = (int)OS.SendMessage (handle, OS.LB_DELETESTRING, descending ? start + magnitude - 1 - i : start, 0);
 		}
 		if (result == OS.LB_ERR || result == OS.LB_ERRSPACE) {
@@ -2425,6 +2438,7 @@ boolean storeSingleInsert (int start, int delta, int count) {
 	if (delta <= removeRebuildThreshold) {
 		boolean inserted = true;
 		for (int i = 0; i < delta && inserted; i++) {
+			nativeRowOps++;
 			int result = (int)OS.SendMessage (handle, OS.LB_INSERTSTRING, start + i, 0);
 			inserted = result != OS.LB_ERR && result != OS.LB_ERRSPACE;
 		}
@@ -2502,6 +2516,7 @@ boolean storeRebuild (int newCount, int start, int delta, boolean descending) {
 	int nativeAnchor = storeNativeAnchor (anchor, start, delta);
 	if (nativeAnchor < 0 && anchor >= 0 && count > 0) {
 		/* LB_SETCOUNT keeps the anchor and LB_SETANCHORINDEX refuses -1; deleting row 0 drops it (N14) */
+		nativeRowOps++;
 		OS.SendMessage (handle, OS.LB_DELETESTRING, 0, 0);
 	}
 	int result = (int)OS.SendMessage (handle, OS.LB_SETCOUNT, newCount, 0);
@@ -2817,12 +2832,14 @@ String storeSetData (int index) {
 
 void storeSetItems (String [] items) {
 	boolean frozen = storeFreeze ();
+	nativeRowOps++;
 	OS.SendMessage (handle, OS.LB_RESETCONTENT, 0, 0);
 	itemStore.setItems (items);
 	int result = items.length == 0 ? 0 : storeSetEmptyCount (items.length) ? 0 : OS.LB_ERR;
 	storeBits |= STORE_EMPTY_EXTENT_INSET;
 	if (result == OS.LB_ERR || result == OS.LB_ERRSPACE) {
 		itemStore.removeAll ();
+		nativeRowOps++;
 		OS.SendMessage (handle, OS.LB_RESETCONTENT, 0, 0);
 	}
 	if ((style & SWT.H_SCROLL) != 0) {
@@ -2912,7 +2929,9 @@ void storeReAddRowsFrozen (boolean auto) {
 			if (string == null || string.isEmpty ()) {
 				continue;
 			}
+			nativeRowOps++;
 			OS.SendMessage (handle, OS.LB_DELETESTRING, i, 0);
+			nativeRowOps++;
 			OS.SendMessage (handle, OS.LB_INSERTSTRING, i, 0);
 			if (auto) {
 				storeBits |= STORE_ADDED_UCC;
@@ -3073,6 +3092,7 @@ boolean updateTextDirection (int textDirection) {
         if (OS.SendMessage(handle, OS.LB_GETTEXT, count, buffer) == OS.LB_ERR) {
             break;
         }
+        nativeRowOps++;
         if (OS.SendMessage(handle, OS.LB_DELETESTRING, count, 0) == OS.LB_ERR) {
             break;
         }
@@ -3081,6 +3101,7 @@ boolean updateTextDirection (int textDirection) {
 			System.arraycopy(buffer, 1, buffer, 0, length);
 		}
         /* Adding UCC is handled in OS.LB_INSERTSTRING */
+        nativeRowOps++;
         if (OS.SendMessage(handle, OS.LB_INSERTSTRING, count, buffer) == OS.LB_ERR) {
             break;
         }
@@ -3509,5 +3530,56 @@ void handleDPIChange(Event event, float scalingFactor) {
 		// Recalculate the Scroll width, as length of items has changed
 		setScrollWidth();
 	}
+}
+
+/*
+ * The model seam (docs/m3/enhanced-api/LEAF19_MODEL_SEAM.md, step 3): one edit run, which M3Model.apply (M3Patch)
+ * uses for a widget with a viewport. The rows [at, at + removed) leave and the inserted strings enter at `at`; the
+ * top row stays the same row. Without a viewport the run goes through the item API, with the top row put back.
+ */
+void m3Splice (int at, int removed, String [] inserted) {
+	checkWidget ();
+	if (inserted == null) error (SWT.ERROR_NULL_ARGUMENT);
+	if (viewport != null) {
+		viewport.splice (at, removed, inserted);
+		return;
+	}
+	int top = getTopIndex ();
+	if (removed > 0) remove (at, at + removed - 1);
+	for (int i = 0; i < inserted.length; i++) add (inserted [i], at + i);
+	if (at + removed <= top) setTopIndex (top - removed + inserted.length);
+}
+
+/**
+ * Native row operations of the list box so far (LB_ADDSTRING, LB_INSERTSTRING, LB_DELETESTRING, LB_RESETCONTENT): the
+ * model seam's proof that an edit run outside the resident window performs none.
+ */
+long m3NativeRowOps () {
+	checkWidget ();
+	return nativeRowOps + (viewport != null ? viewport.nativeRowOps () : 0);
+}
+
+/*
+ * Rule 24 (delta-only views): native resets (LB_RESETCONTENT of a non-empty window) made inside a model change (add,
+ * setItemCount, remove, m3Splice). 0 means every change applied only its delta; the differential asserts it.
+ */
+long m3FullRebuilds () {
+	checkWidget ();
+	return viewport != null ? viewport.fullRebuilds () : 0;
+}
+
+/* Rule 24, viewport deltas: whole-window replacements of a non-empty resident window (a resize or a short scroll makes none). */
+long m3WindowReplans () {
+	checkWidget ();
+	return viewport != null ? viewport.windowReplans () : 0;
+}
+
+/*
+ * Rule 24, hidden viewports: window patches applied when the list showed again after taking deltas while hidden, and
+ * WM_PAINT messages the list box received: {patches, paints}.
+ */
+long [] m3HiddenStats () {
+	checkWidget ();
+	return viewport != null ? new long [] {viewport.windowPatches (), viewport.paints ()} : new long [2];
 }
 }

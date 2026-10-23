@@ -17,6 +17,7 @@ package org.eclipse.swt.tests.junit;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.*;
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.*;
  */
 public class Test_org_eclipse_swt_widgets_Table_Viewport {
 	static final int MILLION = 1_000_000;
+	static final Logger LOG = Logger.getLogger (Test_org_eclipse_swt_widgets_Table_Viewport.class.getName ());
 	Display display;
 	Shell shell;
 
@@ -301,7 +303,7 @@ public class Test_org_eclipse_swt_widgets_Table_Viewport {
 		new TableItem (table, SWT.NONE, 0).setText ("first");
 		assertEquals (rows, table.getSelectionIndex (), "an insert in front shifts the selection natively");
 		settle ();
-		System.out.println ("appendsAreBatchedAndVisibleWhenAsked: " + rows + " appends in " + millis + " ms");
+		LOG.info (() -> "appendsAreBatchedAndVisibleWhenAsked: " + rows + " appends in " + millis + " ms");
 		assertTrue (millis < 10_000, rows + " appends took " + millis + " ms");
 	}
 

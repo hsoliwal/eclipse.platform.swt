@@ -44,49 +44,86 @@ final class M3FilterDelta {
 		}
 		int skipStart = 0, skipEnd = 0;
 		if (kind == M3RowChange.INSERTED || kind == M3RowChange.REMOVED) {
-			change.set (kind, in.start, in.count);
+			structural (in, kept);
 			if (kind == M3RowChange.INSERTED) {
 				skipStart = in.start;
 				skipEnd = in.start + in.count;
-				for (int row = skipStart; row < skipEnd; row++) {
-					if (M3RowMask.get (kept, row)) change.add (row);
-				}
 			}
-			change.damage (filter.rankBefore (in.start), last);
-			filter.fire ();
 		}
 		emit (M3RowChange.LEFT, previous, kept, words, 0, 0);
 		if (kind == M3RowChange.UPDATED) updated (in, previous, kept);
 		emit (M3RowChange.ENTERED, kept, previous, words, skipStart, skipEnd);
 	}
 
+	/* the INSERTED or REMOVED event of a source edit: the inserted rows that pass, damage from the edit to the end */
+	void structural (M3RowChange in, long [] kept) {
+		if (!filter.hasListeners ()) return;
+		change.set (in.kind, in.start, in.count);
+		if (in.kind == M3RowChange.INSERTED) {
+			for (int row = in.start; row < in.start + in.count; row++) {
+				if (M3RowMask.get (kept, row)) change.add (row);
+			}
+		}
+		change.damage (filter.rankBefore (in.start), filter.size () - 1);
+		filter.fire ();
+	}
+
+	/* the change of an UPDATED edit: the kept flips (ascending, ~row for a row that left) and the edited rows that stayed */
+	void changedRows (M3RowChange in, int [] flips, int count, long [] previous, long [] kept) {
+		if (!filter.hasListeners ()) return;
+		emitFlips (M3RowChange.LEFT, flips, count, false);
+		updated (in, previous, kept);
+		emitFlips (M3RowChange.ENTERED, flips, count, true);
+	}
+
+	/* fires the flips that left (or entered), if any (as emit, without the scan) */
+	private void emitFlips (int kind, int [] flips, int count, boolean entering) {
+		int first = -1;
+		for (int f = 0; f < count; f++) {
+			if (flips [f] >= 0 != entering) continue;
+			int row = entering ? flips [f] : ~flips [f];
+			if (first < 0) {
+				first = row;
+				change.set (kind, 0, 0);
+			}
+			change.add (row);
+		}
+		if (first < 0) return;
+		change.damage (filter.rankBefore (first), filter.size () - 1);
+		filter.fire ();
+	}
+
 	/* fires the rows of a & ~b outside [skipStart, skipEnd), if any */
 	private void emit (int kind, long [] a, long [] b, int words, int skipStart, int skipEnd) {
-		change.set (kind, 0, 0);
 		int first = -1;
 		for (int w = 0; w < words; w++) {
 			for (long x = a [w] & ~b [w]; x != 0; x &= x - 1) {
 				int row = w << 6 | Long.numberOfTrailingZeros (x);
 				if (row >= skipStart && row < skipEnd) continue;
-				if (first < 0) first = row;
+				if (first < 0) {
+					first = row;
+					change.set (kind, 0, 0);
+				}
 				change.add (row);
 			}
 		}
-		if (change.rowCount == 0) return;
+		if (first < 0) return;
 		change.damage (filter.rankBefore (first), filter.size () - 1);
 		filter.fire ();
 	}
 
-	private void updated (M3RowChange in, long [] previous, long [] kept) {
-		change.set (M3RowChange.UPDATED, 0, 0);
+	void updated (M3RowChange in, long [] previous, long [] kept) {
+		boolean any = false;
 		for (int i = 0; i < in.rowCount; i++) {
 			int row = in.rows [i];
 			if (M3RowMask.get (kept, row) && M3RowMask.get (previous, row)) {
+				if (!any) change.set (M3RowChange.UPDATED, 0, 0);
+				any = true;
 				change.add (row);
 				int position = filter.rankBefore (row);
 				change.damage (position, position);
 			}
 		}
-		if (change.rowCount > 0) filter.fire ();
+		if (any) filter.fire ();
 	}
 }

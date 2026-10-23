@@ -81,10 +81,10 @@ final class M3RowMask {
 		}
 	}
 
-	/* the 64 bits from position (bits past the lane read as 0) */
+	/* the 64 bits from position, a bit of the lane (bits past the lane read as 0) */
 	static long read (long [] mask, int position) {
 		int word = position >>> 6, bit = position & 63;
-		long low = word < mask.length ? mask [word] >>> bit : 0;
+		long low = mask [word] >>> bit;
 		if (bit == 0) return low;
 		long high = word + 1 < mask.length ? mask [word + 1] << (64 - bit) : 0;
 		return low | high;
@@ -112,12 +112,6 @@ final class M3RowMask {
 		return count;
 	}
 
-	/* the number of set bits of mask [0, words) */
-	static int count (long [] mask, int words) {
-		int count = 0;
-		for (int w = 0; w < words; w++) count += Long.bitCount (mask [w]);
-		return count;
-	}
 
 	/* the view row of a set bit, -1 for a clear bit */
 	static int rank (long [] mask, int [] rank, int bit) {

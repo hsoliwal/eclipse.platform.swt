@@ -90,7 +90,7 @@ public class Test_org_eclipse_swt_widgets_Text_ScaleOracle {
 				ViewportDifferential.drain (display);
 				type [k] = (System.nanoTime () - start) / 1000;
 			}
-			System.out.println ("text-oracle " + ViewportDifferential.reference ("Text") + " lines " + count + " setText " + median (set)
+			java.util.logging.Logger.getLogger ("org.eclipse.swt.tests.junit.ScaleOracle").info ("text-oracle " + ViewportDifferential.reference ("Text") + " lines " + count + " setText " + median (set)
 				+ " getText " + median (get) + " getLineCount " + median (lines) + " setTopIndex " + median (top) + " caretLine " + median (caret)
 				+ " selectEnd " + median (end) + " paint " + median (paint) + " append " + median (append) + " insert " + median (type));
 			shell.dispose ();

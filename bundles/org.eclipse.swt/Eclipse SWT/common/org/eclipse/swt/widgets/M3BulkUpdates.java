@@ -97,7 +97,7 @@ public final class M3BulkUpdates {
 		bulk (list, edits);
 	}
 
-	private static void bulk (Control widget, Runnable edits) {
+	static void bulk (Control widget, Runnable edits) {
 		if (widget == null || edits == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		widget.beginBatch (PLANES);
 		M3Emptiness.hold (widget);

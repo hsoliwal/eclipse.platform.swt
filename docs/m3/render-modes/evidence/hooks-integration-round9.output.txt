@@ -1,0 +1,6 @@
+# Integration round 9 (49e6947020) merged into render modes (1a027b0553), 2026-10-19
+# Conflicts: the render-owned files (M3RowCanvas, RowBackends, RENDER_MODES.md, bench, recipe, tools) keep this branch's state; Table.java takes the integration head
+render_modes_recipe.sh pass 1: UNCHANGED CHANGED UNCHANGED (Tree Table List): Table's drawnPlane field, callWindowProc, createWidget and releaseWidget hooks re-applied
+render_modes_recipe.sh pass 2: UNCHANGED UNCHANGED UNCHANGED (fixed point)
+build_stamp rm20261019j (build-swt.sh, full win32 bundle): jar built; tests: 2 errors in Test_org_eclipse_swt_internal_laf_M3LookAndFeel (ambiguous List, from round 9), fixed by 3ce2c60a0c (import java.util.List)
+compile_tests.sh rm20261019j after the fix: tests complete, 0 errors

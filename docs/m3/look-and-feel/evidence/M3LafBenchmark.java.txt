@@ -16,6 +16,7 @@ package org.eclipse.swt.internal.laf;
 
 import java.lang.management.*;
 import java.util.*;
+import java.util.logging.*;
 
 /**
  * Benchmarks of the LF6 look and feel data layer against a UIManager-style baseline (docs/m3/LOOK_AND_FEEL.md,
@@ -32,6 +33,11 @@ import java.util.*;
  * </ul>
  */
 public class M3LafBenchmark {
+	/* the benchmark lines as they are (brief rule 22: JUL, never System.out) */
+	static {
+		System.setProperty ("java.util.logging.SimpleFormatter.format", "%5$s%n");
+	}
+	static final Logger LOG = Logger.getLogger (M3LafBenchmark.class.getName ());
 	static final int ROUNDS = 9, WARMUP = 3, LOOKUPS = 4_000_000, WIDGETS = 100_000;
 	static final ThreadMXBean THREADS = ManagementFactory.getThreadMXBean ();
 	static long sink;
@@ -48,7 +54,7 @@ public class M3LafBenchmark {
 		M3UIDefaults lanes = new M3UIDefaults (table, new M3UIDefaults.Lanes ());
 		int [] ids = new int [keys.length];
 		for (int i = 0; i < keys.length; i++) ids [i] = M3UIKeys.id (keys [i]);
-		System.out.println ("keys " + keys.length + " (colours of the flat table)");
+		LOG.info ("keys " + keys.length + " (colours of the flat table)");
 		report ("lookup", "UIDefaults-style Hashtable, boxed", LOOKUPS, () -> {
 			long sum = 0;
 			for (int i = 0; i < LOOKUPS; i++) sum += uiDefaultsGet (swing, keys [i % keys.length]);
@@ -66,7 +72,7 @@ public class M3LafBenchmark {
 		});
 		overrides (ids [0]);
 		derivation ();
-		System.out.println ("sink " + sink);
+		LOG.info ("sink " + sink);
 	}
 
 	/* an accent change: FlatLaf and LF2 load the whole table again; LF6 resolves the values derived from @accent */
@@ -91,7 +97,7 @@ public class M3LafBenchmark {
 			}
 			return sum;
 		});
-		System.out.println ("values resolved per accent change: whole table " + LookAndFeel.named ("flat").defaults ().size () + ", cone " + defaults.derivedCount ());
+		LOG.info ("values resolved per accent change: whole table " + LookAndFeel.named ("flat").defaults ().size () + ", cone " + defaults.derivedCount ());
 	}
 
 
@@ -117,7 +123,7 @@ public class M3LafBenchmark {
 		M3UIOverrides lane = new M3UIOverrides ();
 		for (int i = 0; i < WIDGETS; i += 10) lane.put (widgets [i], key, i);
 		long laneBytes = retained () - before;
-		System.out.println ("overrides retained bytes for " + WIDGETS / 10 + " of " + WIDGETS + " widgets: map per widget " + mapBytes + ", lane " + laneBytes);
+		LOG.info ("overrides retained bytes for " + WIDGETS / 10 + " of " + WIDGETS + " widgets: map per widget " + mapBytes + ", lane " + laneBytes);
 		report ("override lookup", "map per widget (putClientProperty shape)", WIDGETS, () -> {
 			long sum = 0;
 			for (int i = 0; i < WIDGETS; i++) {
@@ -148,11 +154,11 @@ public class M3LafBenchmark {
 		}
 		Arrays.sort (nanos);
 		Arrays.sort (bytes);
-		System.out.printf (Locale.ROOT, "%-16s %-44s %8.2f ns/op %8.3f B/op%n", operation, candidate, nanos [ROUNDS / 2], bytes [ROUNDS / 2]);
+		LOG.info (String.format (Locale.ROOT, "%-16s %-44s %8.2f ns/op %8.3f B/op", operation, candidate, nanos [ROUNDS / 2], bytes [ROUNDS / 2]));
 	}
 
 	static long allocated () {
-		return ((com.sun.management.ThreadMXBean) THREADS).getThreadAllocatedBytes (Thread.currentThread ().getId ());
+		return ((com.sun.management.ThreadMXBean) THREADS).getThreadAllocatedBytes (Thread.currentThread ().threadId ());
 	}
 
 	static long retained () {

@@ -17,7 +17,6 @@ package org.eclipse.swt.tests.junit;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.*;
 
 import org.eclipse.swt.*;
@@ -149,7 +148,7 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 		M3LookAndFeel.reset ();
 		String startup = M3LookAndFeel.getLookAndFeel ();
 		if (System.getProperty (LookAndFeel.PROPERTY) == null && System.getProperty (LookAndFeel.ALIAS) == null) assertEquals ("native", startup);
-		List<String> changes = new ArrayList<> ();
+		java.util.List<String> changes = new ArrayList<> ();
 		M3LookAndFeel.Listener listener = (from, to) -> changes.add (from + ">" + to);
 		M3LookAndFeel.addListener (listener);
 		M3LookAndFeel.setLookAndFeel ("  TEST-M3-B ");
@@ -157,7 +156,7 @@ public class Test_org_eclipse_swt_internal_laf_M3LookAndFeel {
 		M3LookAndFeel.setLookAndFeel ("metal");
 		M3LookAndFeel.removeListener (listener);
 		M3LookAndFeel.setLookAndFeel ("test-m3-a");
-		assertEquals (List.of (startup + ">test-m3-b", "test-m3-b>metal"), changes);
+		assertEquals (java.util.List.of (startup + ">test-m3-b", "test-m3-b>metal"), changes);
 		IllegalArgumentException unknown = assertThrows (IllegalArgumentException.class, () -> M3LookAndFeel.setLookAndFeel ("no-such-look"));
 		assertEquals ("unknown look and feel 'no-such-look'", unknown.getMessage ());
 		assertEquals ("test-m3-a", M3LookAndFeel.getLookAndFeel (), "a failed switch keeps the selection");

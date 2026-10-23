@@ -1,0 +1,12 @@
+scenario	store	rows	columns	distinct_labels	retained_mb	measurer_calls_widest	frame_us_p50	frame_us_p90	fill_ms	notes
+explorer-4-columns	strings	1000000	4	171848	193.8	4000000	50	67	1637	fresh String per cell
+explorer-4-columns	hashmap	1000000	4	171848	30.7	4000000	22	34	4366	HashMap dedupe: entry object + String per distinct label
+explorer-4-columns	pool	1000000	4	171848	36.8	171848	49	240	3265	pool 13553 KB, extents 8704 KB
+json-keys	strings	1000000	1	11520	57.1	1000000	5	8	400	fresh String per cell
+json-keys	hashmap	1000000	1	11520	4.8	1000000	5	6	476	HashMap dedupe: entry object + String per distinct label
+json-keys	pool	1000000	1	11520	13.2	11520	10	24	841	pool 1064 KB, extents 8704 KB
+worst-all-distinct	strings	1000000	1	631575	58.2	1000000	7	8	471	fresh String per cell
+worst-all-distinct	hashmap	1000000	1	631575	61.4	1000000	10	14	1360	HashMap dedupe: entry object + String per distinct label
+worst-all-distinct	pool	1000000	1	631575	64.3	775017	27	56	1687	pool 53498 KB, extents 8704 KB
+fs-paths	strings	1000000	1	461832	125.5	0	0	0	0	one String path per node
+fs-paths	trie	1000000	1	461832	32.1	0	0	0	3515	one int per node path, 8194 names pooled, 333334 expanded flags kept in the lane

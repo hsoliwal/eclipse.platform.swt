@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.laf.*;
 import org.eclipse.swt.internal.render.*;
 import org.junit.jupiter.api.*;
 
@@ -45,7 +46,7 @@ public class Test_org_eclipse_swt_internal_render_Themes {
 			System.setProperty ("swt.widget.theme", name);
 			for (String widget : new String [] {"Tree", "Table", "List"}) {
 				Theme theme = Theme.of (widget);
-				org.eclipse.swt.internal.laf.LookAndFeelDefaults table = org.eclipse.swt.internal.laf.LookAndFeel.named (name).defaults ();
+				LookAndFeelDefaults table = LookAndFeel.named (name).defaults ();
 				assertEquals (table.color (widget + ".selectionBackground", 0) & 0xFFFFFF, theme.selectionBackground, name + " " + widget);
 				assertEquals (table.color (widget + ".selectionInactiveBackground", 0) & 0xFFFFFF, theme.selectionInactiveBackground, name + " " + widget);
 				assertEquals (table.color ("Component.hoverBackground", 0) & 0xFFFFFF, theme.hotBackground);
@@ -62,6 +63,41 @@ public class Test_org_eclipse_swt_internal_render_Themes {
 		Theme user = Theme.builder ("user").look (Theme.LOOK_SWING).selection (0x123456, 0x654321).build ();
 		Themes.select ("Tree", user);
 		assertSame (user, Theme.of ("Tree"), "a user-defined theme answers as built");
+	}
+
+	/* the row delegate of LF6: its paint keys, the theme of each look and feel, and the look of a look and feel's name */
+	@Test
+	public void rowDelegateReadsItsLookAndFeelDefaults () {
+		M3DrawnRowUI ui = new M3DrawnRowUI ("Table");
+		assertEquals (12, ui.paintKeys ().length);
+		assertTrue (Arrays.stream (ui.paintKeys ()).anyMatch (id -> "Table.selectionBackground".equals (M3UIKeys.name (id))));
+		assertSame (Theme.NATIVE, ui.theme (), "before it is installed");
+		for (String name : new String [] {"native", "swing", "initiative31", "light", "dark"}) {
+			M3UIDefaults defaults = M3LookAndFeel.defaults (name);
+			ui.installUI (null, defaults);
+			Theme theme = ui.theme ();
+			assertEquals (ThemeDefaults.look (defaults.name ()).look, theme.look, name);
+			assertEquals (defaults.color (M3UIKeys.id ("Table.selectionBackground"), 0) & 0xFFFFFF, theme.selectionBackground, name);
+			assertEquals (defaults.color (M3UIKeys.id ("Table.gridColor"), 0) & 0xFFFFFF, theme.grid, name);
+		}
+		assertSame (Theme.SWING, ThemeDefaults.look ("Metal"));
+		assertSame (Theme.NATIVE, ThemeDefaults.look (null));
+		assertSame (Theme.INITIATIVE31, ThemeDefaults.look ("i31"));
+		assertSame (Theme.INITIATIVE31, ThemeDefaults.look ("dark"), "flat look and feels draw the flat glyphs");
+	}
+
+	/* a run-time selection or a user-defined theme wins over the look and feel delegate; a built-in name does not */
+	@Test
+	public void explicitThemesWinOverTheLookAndFeel () {
+		assertNull (Themes.explicit ("Tree"), "no selection and no user theme: the look and feel decides");
+		System.setProperty ("swt.widget.theme", "swing");
+		assertNull (Themes.explicit ("Tree"), "a built-in name belongs to the look and feel");
+		Theme ocean = Theme.builder ("ocean").look (Theme.LOOK_SWING).build ();
+		assertTrue (Themes.register (ocean));
+		System.setProperty ("swt.widget.theme", "ocean");
+		assertSame (ocean, Themes.explicit ("Tree"));
+		Themes.select ("Tree", Theme.INITIATIVE31);
+		assertLook (Theme.INITIATIVE31, Themes.explicit ("Tree"));
 	}
 
 	@BeforeEach
