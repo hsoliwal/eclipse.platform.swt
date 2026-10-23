@@ -22,7 +22,7 @@ Five startup modes are chosen with `-Dswt.widget.mode=viewport|original|custom|m
 | Topic | Document |
 |---|---|
 | Programme plan (state, tracks, PRs, decisions) | [VIEWPORT_PROGRAMME_PLAN.md](VIEWPORT_PROGRAMME_PLAN.md) |
-| Rules every contributor follows (1-29) | [VIEWPORT_AGENT_BRIEF.md](VIEWPORT_AGENT_BRIEF.md) |
+| Rules every contributor follows (1-33) | [VIEWPORT_AGENT_BRIEF.md](VIEWPORT_AGENT_BRIEF.md) |
 | Optimization pass (measure first, ledger per track) | [OPTIMIZATION_PASS.md](OPTIMIZATION_PASS.md) |
 | How behaviour is proven equal to stock | [VIEWPORT_DIFFERENTIAL_HARNESS.md](VIEWPORT_DIFFERENTIAL_HARNESS.md) |
 | Object residency (lazy, parent-owned facades) | [M3_ITEM_RESIDENCY.md](M3_ITEM_RESIDENCY.md) |
@@ -47,6 +47,18 @@ Five startup modes are chosen with `-Dswt.widget.mode=viewport|original|custom|m
 | Multi-column sort, column filters, debounced model-side filtering | [sort-filter/](sort-filter/) |
 | Attribution and licences | [attribution/](attribution/) |
 | Naming (M3, never Skija/Skia) | [naming/](naming/) |
+
+## Multipass marks across all of Eclipse, Java 21 for M3JDK21 (2026-10-20 to 23)
+
+| Topic | Document |
+| --- | --- |
+| Handover of the whole multipass line (branches, passes, next leaves) | [handover/MULTIPASS_HANDOVER.md](handover/MULTIPASS_HANDOVER.md) |
+| Pass three: enhancement targets, 40 listener and callback families (git grep over the bare forks) | [enhance-targets/](enhance-targets/) |
+| Pass four: code mapping to M3, 33 API usages | [code-mapping/](code-mapping/) |
+| Pass five: the per-file plan, 13,919 files with their ordered approach | [plan/](plan/) |
+| Culprits ranked by the user (collections, StringBuilder, IO, regex, loops, method length) | [culprits/](culprits/) |
+| Pass seven: marks from the compiler's AST (javac plugin, rule 33) and the differential against grep | [marks-ast/](marks-ast/) |
+| Eclipse at Java 21: branch `m3/jdk21-compat-20261020` in every fork, `docs/m3/jdk21/` there | crates in hsoliwal/com.synexia: `m3-eclipse-jdk21-compat-20261020`, `m3-eclipse-enhance-marks-20261020` |
 
 ## Beyond SWT (other repositories)
 
