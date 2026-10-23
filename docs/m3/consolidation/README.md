@@ -15,14 +15,13 @@ each recorded in the superset commit messages.
 | com.synexia | 281 (246 after the dump) | two recipe-crate branches |
 
 The requirements themselves (user, 2026-10-23: "you have all the requirements in your session logs", "the PR history and
-comments speak of requirements"): `requirements/REQUIREMENTS_ALL.tsv` and its rendering `requirements/REQUIREMENTS.md`:
-4,638 rows: 759 unique directives from the Claude (241) and Codex (518) session logs of 2026-10-07 to 23, and 3,879
-requirement sentences from the PR history of the forks (1,411 from PR bodies, 2,468 from comments; M3jdk21 3,276, Nebula
-325, SWT 215, platform.ui 60; Synexia's 12,600 PRs are being harvested after the API limit reset). PR bodies are agent
-text pushed under the owner's login, so they are filtered to sentences that quote the user or state a requirement,
-invariant, law, rule or must; the owner's short comments are kept whole. By track: M3JDK 1,197, viewport/SWT 446,
-process 621, recipes/MOP 247, platform UI 111, other 2,016. `REQUIREMENTS_COVERAGE.tsv` maps each track to the PR
-or branch that carries it. The pending work above is what those requirements produced that is not yet on a master branch.
+comments speak of requirements"): `requirements/REQUIREMENTS_ALL.tsv`, rendered as `requirements/REQUIREMENTS.md`: 3973 rows,
+759 unique directives from the Claude (241) and Codex (518) session logs of 2026-10-07 to 23, and the PR history of all
+nine forks (12,600 Synexia PRs, 1,862 M3jdk21 PRs, the Eclipse forks) reduced to what speaks for the user: the owner's
+own typed comments (lowercase, short, no code spans) and the sentences of agent-written bodies and comments that quote
+the user ("the user asked", "per the user", "(user, ...)"). Agent receipts are not requirements. `REQUIREMENTS_COVERAGE.tsv`
+maps each track to the PR or branch that carries it. The pending work above is what those requirements produced that
+is not yet on a master branch.
 
 ## 2. What was done
 
@@ -48,7 +47,7 @@ m3/compatibility 1 / 3, m3/ports 3 / 0, the rest 7 / 9.
 | --- | --- | --- |
 | Viewports (SWT, Nebula, render modes) | PRs #250 #251 #273, gates green | owner merges; then the jdk21 branches and marks on top |
 | JFace / Problems view / platform UI | PR #45 (superset), #44 (Java 21), #18 (platform views), PDE #5 | owner merges #45; M3SparseExtents leaf from M3jdk21; anchors regenerated on the superset |
-| Java 21 for M3JDK21 | 9 PRs (one per fork) | owner merges; platform FFM Win32Handler fill |
+| Java 21 for M3JDK21 | 9 PRs (one per fork), all gates green: the platform FFM residue closed by porting Win32Handler back to JNA with the four later upstream fixes (3c1ea6c) | owner merges |
 | M3JDK (collections, fs, tooling, qualification) | superset PR with 38 merged, 120 conflicting by track (m3/collections 72 PRs, m3/tooling 16, m3/fs 14, m3/qualification 10) | conflict pass by agents, PR by PR, module Maven gate |
 | Synexia recipes | superset PR with 72 merged, 174 conflicting (recipe-crates 44, src 39, crates 12 of the dumped tracks) | conflict pass by agents, crate Maven gate and RECIPE_MEMORY per crate |
 | Atomize/patternize | receiver on every branch | bootstrap (inventory binding) on each final superset, then run.sh. First try on the SWT integration worktree failed: `sha256sum` cannot read the long paths under `.superset/conflicts/pr-209-table-viewport-20261017-0725/...` (leftover conflict copies from the 2026-10-17 superset); deleting that directory needs the owner's approval, then the bootstrap runs |
