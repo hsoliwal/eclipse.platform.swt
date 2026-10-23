@@ -1,0 +1,15 @@
+repo	branch	pr
+eclipse.platform.swt	m3/viewport-integration-20261016	https://github.com/hsoliwal/eclipse.platform.swt/pull/250
+eclipse.platform.swt	m3/render-modes-20261017	https://github.com/hsoliwal/eclipse.platform.swt/pull/251
+nebula	m3/grid-viewport-20261016	https://github.com/hsoliwal/nebula/pull/273
+eclipse.platform	m3/platform-views-viewport-20261020	https://github.com/hsoliwal/eclipse.platform/pull/18
+eclipse.platform	m3/jdk21-compat-20261020	https://github.com/hsoliwal/eclipse.platform/pull/19
+eclipse.platform.ui	m3/jdk21-compat-20261020	https://github.com/hsoliwal/eclipse.platform.ui/pull/44
+eclipse.jdt.ui	m3/jdk21-compat-20261020	https://github.com/hsoliwal/eclipse.jdt.ui/pull/4
+eclipse.jdt.core	m3/jdk21-compat-20261020	https://github.com/hsoliwal/eclipse.jdt.core/pull/5
+eclipse.jdt.debug	m3/jdk21-compat-20261020	https://github.com/hsoliwal/eclipse.jdt.debug/pull/3
+equinox	m3/jdk21-compat-20261020	https://github.com/hsoliwal/equinox/pull/1
+eclipse.platform.releng.aggregator	m3/jdk21-compat-20261020	https://github.com/hsoliwal/eclipse.platform.releng.aggregator/pull/13
+org.eclipse.emf	m3/jdk21-compat-20261020	https://github.com/hsoliwal/org.eclipse.emf/pull/2
+gef-classic	m3/jdk21-compat-20261020	https://github.com/hsoliwal/gef-classic/pull/18
+initiative31-eclipse.pde	m3/views-viewport-20261020	https://github.com/hsoliwal/initiative31-eclipse.pde/pull/5

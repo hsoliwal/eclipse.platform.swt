@@ -1,0 +1,17 @@
+repo	branch	has_atomize
+eclipse.platform.swt	m3/viewport-integration-20261016	README.md,bootstrap.sh,run.sh
+eclipse.platform.swt	master	README.md,bootstrap.sh,run.sh
+nebula	m3/grid-viewport-20261016	README.md,bootstrap.sh,run.sh
+nebula	master	README.md,bootstrap.sh,run.sh
+eclipse.platform.ui	m3/jdk21-compat-20261020	README.md,bootstrap.sh,run.sh
+eclipse.platform	m3/jdk21-compat-20261020	README.md,bootstrap.sh,run.sh
+eclipse.jdt.ui	m3/jdk21-compat-20261020	{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/contents#get-repository-content","status":"404"}none
+eclipse.jdt.core	m3/jdk21-compat-20261020	{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/contents#get-repository-content","status":"404"}none
+eclipse.jdt.debug	m3/jdk21-compat-20261020	{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/contents#get-repository-content","status":"404"}none
+equinox	m3/jdk21-compat-20261020	{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/contents#get-repository-content","status":"404"}none
+eclipse.platform.releng.aggregator	m3/jdk21-compat-20261020	README.md,bootstrap.sh,run.sh
+org.eclipse.emf	m3/jdk21-compat-20261020	{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/contents#get-repository-content","status":"404"}none
+gef-classic	m3/jdk21-compat-20261020	README.md,bootstrap.sh,run.sh
+initiative31-eclipse.pde	m3/views-viewport-20261020	{"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/contents#get-repository-content","status":"404"}none
+M3jdk21	master	README.md,bootstrap.sh,public-verify.sh,run.sh
+com.synexia	develop	README.md,bootstrap.sh,run.sh

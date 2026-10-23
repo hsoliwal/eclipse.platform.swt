@@ -1,0 +1,159 @@
+number	base	state	files	track	created	user	title
+1735	master	blocked	6	m3/collections	2026-10-21	hsoliwal	feat(M3JDK21): Eclipse SDK capability convergence and indexed change journal
+1737	master	blocked	5	m3/fs	2026-10-21	hsoliwal	feat(jdk.m3fs): array/mask bulk file deltas, Eclipse capability census
+1738	master	blocked	10	m3/collections	2026-10-21	hsoliwal	M3JDK21: receive primitive array-mask rank bulk for filtered/sorted projections
+1739	master	blocked	16	m3/collections	2026-10-21	hsoliwal	Use existing JNI array owners for ordered Map growth
+1740	master	blocked	7	m3/fs	2026-10-21	hsoliwal	feat(m3fs): native stat bulk columns, mask selection and stable row indexes
+1744	master	blocked	11	m3/collections	2026-10-21	hsoliwal	feat(M3JDK21): catalogue 109 Eclipse gaps and implement in-place viewport delta projection
+1745	master	blocked	4	m3/file	2026-10-21	hsoliwal	feat(m3-file): bounded hierarchical resource locks for Eclipse-style jobs
+1746	master	blocked	4	m3/lexicon	2026-10-21	hsoliwal	feat(M3JDK21): canonical shared-lexicon M3FMT frames and JNI CWID expansion
+1749	master	blocked	5	m3/fs	2026-10-21	hsoliwal	feat(jdk.m3fs): manager-routed multi-provider bulk commands with indexed masks
+1753	master	blocked	7	m3/collections	2026-10-21	hsoliwal	collections: remove duplicate identity-index arrays using existing rank masks and JNI sele
+1757	master	blocked	7	m3/collections	2026-10-21	hsoliwal	M3JDK21: compact stable filtered/sorted index reversal using primitive group masks
+1758	master	blocked	5	m3/fs	2026-10-21	hsoliwal	M3JDK21 master V2: isolate offline observed profiles without duplicating SQLite or success
+1759	master	blocked	31	m3/collections	2026-10-21	hsoliwal	perf(viewport): receive qualified bounded JNI and constant-mask source refinements
+1760	master	blocked	50	m3/docs	2026-10-21	hsoliwal	collections: publish recipe-generated index-array refinements
+1762	master	blocked	4	.github/workflows	2026-10-21	hsoliwal	feat(java.base): bounded, resumable viewport batches in original ChangeJournal
+1765	master	blocked	7	m3/collections	2026-10-21	hsoliwal	feat(M3JDK21): original array-mask viewport page JNI, canonical recipe and parity tests
+1768	master	blocked	4	m3/collections	2026-10-21	hsoliwal	perf(M3JDK21): recipe-owned O(1) scratch stable descending index runs
+1773	master	blocked	6	m3/compatibility	2026-10-21	hsoliwal	fix(java.util): preserve stored elements and visible removal in filtered views
+1774	master	blocked	6	m3/collections	2026-10-21	hsoliwal	perf(M3JDK21): lazy original-owner filtered Deque stream and catalogue
+1776	master	blocked	10	test	2026-10-21	hsoliwal	fix(M3JDK21 java.base): consolidate filtered identity, reentrancy and sorted Spliterator m
+1777	master	blocked	3	test	2026-10-21	hsoliwal	fix(java.base): recover stored filtered occurrences and one-pass bulk admission
+1781	master	blocked	5	m3/eclipse	2026-10-21	hsoliwal	fix(M3JDK21): native Eclipse EFS page cancellation and monitored recursion
+1783	master	blocked	22	m3/collections	2026-10-21	hsoliwal	M3JDK21: combine direct filtered/sorted cursor state masks and stable index groups
+1787	master	blocked	10	m3/ports	2026-10-21	hsoliwal	feat(M3JDK21): integrate SHA-bound M3FMT shared lexicon IDs and C17 JNI bulk kernel
+1792	master	blocked	8	m3/collections	2026-10-21	hsoliwal	fix(M3JDK21): fail-closed primitive tree sibling shifts, retain viewport native handles
+1793	master	blocked	4	m3/fs	2026-10-21	hsoliwal	feat(jdk.m3fs): filtered and stable sorted directory views over native indexed arrays
+1794	master	blocked	11	m3/collections	2026-10-21	hsoliwal	fix(M3JDK21): preserve 36-file history and admit 76 five-provider source owners
+1798	master	blocked	71	m3/collections	2026-10-21	hsoliwal	M3JDK21: refine integrated collection index and filtered-view atoms
+1801	master	blocked	10	m3/collections	2026-10-22	hsoliwal	M3JDK21: manufacture typed source-time compiler signals with validity masks and native par
+1807	master	blocked	5	m3/collections	2026-10-22	hsoliwal	perf(M3JDK21 collections): compact sorted long pages from packed decision masks
+1818	master	blocked	3	m3/ports	2026-10-22	hsoliwal	jni(vcpu): bounded array-region transfers and generation-safe close checks
+1829	master	blocked	28	test	2026-10-22	hsoliwal	M3JDK21: integrate qualified regex precompute with array/mask filtered and sorted owners
+1859	master	blocked	7	m3/tooling	2026-10-23	hsoliwal	m3ast(parser): consolidate javac geometry onto the JAVAC-domain M3ASTIndex; fix forward th
+1614	master	unknown	16	m3/collections	2026-10-20	hsoliwal	collections: arrayify removal masks and reuse fresh masked-sort indexes
+1616	master	unknown	999	m3/recipes	2026-10-20	hsoliwal	Receive qualified filtered-view, callback lifecycle and JNI mask refinements
+1630	master	unknown	7	m3/collections	2026-10-21	hsoliwal	Propose filtered COW mutation and sorted endpoint contract repairs
+1766	master	unknown	42	m3/collections	2026-10-21	hsoliwal	feat(M3JDK21): original viewport CPU/JNI and filtered/sorted collection pages
+1796	master	unknown	8	m3/collections	2026-10-21	hsoliwal	perf(M3JDK21): compose original M3Patch edits into one primitive long[]
+1837	master	unknown	5	m3/collections	2026-10-22	hsoliwal	Preserve 76 M3 collection sources while admitting one exact Java21 test syntax revision
+1838	master	unknown	9	m3/compiler	2026-10-22	hsoliwal	M3JDK21: extend existing javac source signals with opt-in attributed method facts
+1842	master	unknown	8	m3/collections	2026-10-22	hsoliwal	Require all 158 JUnit interop methods from 44 original M3JDK21 collection test sources
+1847	master	unknown	15	m3/collections	2026-10-22	hsoliwal	fix(collections): source-sealed five-provider Java21 interop receiver after #1840
+1849	master	unknown	8	m3/collections	2026-10-22	hsoliwal	Receive exact three-source Java21 five-library interop compiler fixes in original M3JDK21
+1853	master	unknown	9	m3/collections	2026-10-22	hsoliwal	Receive three Java21 five-library compiler fixes, preserving original M3 array/index/mask 
+1289	master	dirty	51	m3/tooling	2026-10-18	hsoliwal	Add Jackson ObjectMapper JMOD pack with M3File and M3AST support
+1292	master	dirty	7	m3/collections	2026-10-18	hsoliwal	Reuse stable index-group reversal and trim JNI mask-window row transfers
+1294	master	dirty	376	m3/collections	2026-10-18	hsoliwal	M3 collections: receive qualified filtered views, long path masks and stable order refinem
+1305	master	dirty	7	m3/collections	2026-10-18	hsoliwal	M3 collections: physical-slot 32-bit mask projections through existing JNI
+1328	master	dirty	14	m3/collections	2026-10-18	hsoliwal	M3JDK: preserve filtered-set null navigation and path-mask input aliases
+1329	master	dirty	56	m3/vendor	2026-10-18	hsoliwal	Add M3File and M3AST integration to Lucene/OpenNLP JMOD pack
+1330	master	dirty	10	m3/collections	2026-10-18	hsoliwal	collections: DOOP array/index/mask storage without stored entries (stacked #1325)
+1332	master	dirty	11	m3/collections	2026-10-18	hsoliwal	collections: DOOP array slot masks and LFU API entry reuse (stacked on #1325)
+1335	master	dirty	18	m3/collections	2026-10-18	hsoliwal	feat(m3 collections): array-only LFU API Entry facades, stacked on JDK21 source #1325
+1340	master	dirty	4	m3/collections	2026-10-18	hsoliwal	collections: array-only backshift hash probes and catalogue 59 JDK source families
+1342	master	dirty	156	m3/collections	2026-10-18	hsoliwal	Use guarded array slots for M3 tree entries and stop stable AVL insertion repair
+1344	master	dirty	19	src/java.base	2026-10-18	hsoliwal	java.base: add lazy asynchronous M3Object events and JNI publication
+1357	master	dirty	681	m3/collections	2026-10-18	hsoliwal	Converge M3JDK21 collection wrappers, array spans and state-mask JNI
+1363	master	dirty	14	m3/qualification	2026-10-18	hsoliwal	perf(java.base): recipe-generated sparse array/mask compaction inside M3JDK21
+1366	master	dirty	9	m3/collections	2026-10-18	hsoliwal	perf(M3JDK21 collections): packed filter indexes, immutable directory reuse and native emp
+1367	master	dirty	11	m3/collections	2026-10-18	hsoliwal	collections: eliminate internal Map.Entry creation in native filtered M3TreeMap views
+1368	master	dirty	935	m3/collections	2026-10-18	hsoliwal	Combine M3JDK21 regex precomputation, collection refinements and Java/JNI validation
+1371	master	dirty	38	m3/runtime-integration	2026-10-18	hsoliwal	M3String: reuse full scalar windows in UTF-16 cursors
+1375	master	dirty	20	m3/collections	2026-10-18	hsoliwal	M3JDK21: reduce filtered terminal and native window scratch
+1379	master	dirty	5	m3/collections	2026-10-18	hsoliwal	perf(collections): reduce bulk-add and snapshot filter allocations
+1381	master	dirty	41	m3/runtime-integration	2026-10-18	hsoliwal	M3JDK21: receive lexical RX7, transfer JNI and filtered sorted refinement
+1397	master	dirty	16	m3/tooling	2026-10-18	hsoliwal	java.base: token-sequence regex scaffold in jdk.internal.mindex (receives Synexia #12396; 
+1406	master	dirty	37	m3/qualification	2026-10-19	hsoliwal	M3StringPool: bound frozen lookup precompute and intern bucket metadata
+1407	master	dirty	12	m3/qualification	2026-10-19	hsoliwal	M3GVAS: precompute exact lookup and strengthen fixed-address process proof
+1420	master	dirty	196	m3/tooling	2026-10-19	hsoliwal	collections: receive installed-source successor 20261018 (B8, B9, B10, GAP-LC, five-librar
+1424	master	dirty	213	m3/qualification	2026-10-19	hsoliwal	Restore strict M3JDK21 builds and the six-slot Object bootstrap invariant
+1426	master	dirty	126	m3/collections	2026-10-19	hsoliwal	M3JDK21: converge DOOP filtered/sorted array views with native java.base maps and JNI mask
+1430	master	dirty	10	m3/migration	2026-10-19	hsoliwal	Qualify canonical substring recipe SDK through existing provider lane
+1435	master	dirty	789	m3/tooling	2026-10-19	hsoliwal	Integrate collection views, mask JNI, and IO/Streams/Reflection utilities into java.base
+1441	master	dirty	14	src/java.base	2026-10-19	hsoliwal	Restore strict Java build prerequisites for M3JDK21 String refinement
+1451	master	dirty	23	m3/collections	2026-10-19	hsoliwal	fix(collections): refine filtered navigation and stable index-only sorted views
+1456	master	dirty	55	m3/runtime-integration	2026-10-19	hsoliwal	M3JDK21: converge chunked search, collection views and JNI kernels
+1463	master	dirty	491	m3/collections	2026-10-19	hsoliwal	M3JDK21: combine string precompute, Java/JNI array collections and token grammar
+1479	master	dirty	29	m3/collections	2026-10-19	hsoliwal	Refine collection scans and clear ranges; fix saturated keyed admission
+1482	master	dirty	16	m3/collections	2026-10-19	hsoliwal	M3 collections: refine primitive residency, views and JNI contracts
+1494	master	dirty	6	m3/compatibility	2026-10-19	hsoliwal	M3: preserve builder pieces during indexed reads
+1497	master	dirty	11	m3/collections	2026-10-19	hsoliwal	Fix filtered wrapper compilation and bound Java/JNI mask projection memory
+1500	master	dirty	4	m3/collections	2026-10-19	hsoliwal	m3 collections: repair duplicate Java 21 filtered/sorted overrides in original owner
+1513	master	dirty	133	m3/collections	2026-10-19	hsoliwal	m3: qualify JDT semantic indexes and array-backed collection refinements
+1515	master	dirty	318	m3/collections	2026-10-19	hsoliwal	Preserve filtered cursors and refine stable index ordering
+1522	master	dirty	283	m3/tooling	2026-10-20	hsoliwal	Refine current collection owners and JNI mask selection with canonical recipes
+1530	master	dirty	19	m3/tooling	2026-10-20	hsoliwal	feat(m3string): compose UTF-16 ranges into interned tuple views
+1537	master	dirty	10	m3/qualification	2026-10-20	hsoliwal	perf(java.base): bound M3 deletion-mask run scans with sealed recipe and differential proo
+1538	master	dirty	175	m3/tooling	2026-10-20	hsoliwal	Refine M3JDK21 array views, sorted projections and JNI mask compaction
+1546	master	dirty	176	m3/eclipse	2026-10-20	hsoliwal	Converge M3JDK21 native AST/JDT, MIndex scopes, array-mask collections and Java/JNI supers
+1553	master	dirty	34	m3/collections	2026-10-20	hsoliwal	Consolidate internal JNI exception atoms and safe exact-address mapping
+1559	master	dirty	17	m3/tooling	2026-10-20	hsoliwal	Reuse unchanged binaries in scoped M3AST compilations and lean AST projections
+1562	master	dirty	3	m3/docs	2026-10-20	hsoliwal	perf(M3JDK21 String): traverse canonical tuple leaves for equality and prefix
+1573	master	dirty	22	m3/tooling	2026-10-20	hsoliwal	feat(m3): add source/class delta APIs and share compiler source projections
+1577	master	dirty	219	m3/eclipse	2026-10-20	hsoliwal	M3JDK21: combine String, AST and collections with qualified Java/JNI refinements
+1579	master	dirty	9	m3/file	2026-10-20	hsoliwal	M3JDK21 SDK: source/class delta kernel for Maven and Gradle reuse (draft)
+1581	master	dirty	8	m3/file	2026-10-20	hsoliwal	feat(m3-file): observe source and class byte deltas
+1586	master	dirty	29	m3/tooling	2026-10-20	hsoliwal	feat(m3string): compose regex DFA over canonical M3 String tokens
+1590	master	dirty	88	m3/file	2026-10-20	hsoliwal	m3/file: M3FileTree lanes + M3File entry role (slice 1 of 6)
+1596	master	dirty	6	m3/tooling	2026-10-20	hsoliwal	feat(parser): one javac PARSED M3ASTIndex projection shared across analyzers
+1597	master	dirty	23	m3/tooling	2026-10-20	hsoliwal	feat(M3JDK21): project original javac AST once into MIndexAST primitive facts
+1602	master	dirty	5	m3/tooling	2026-10-20	hsoliwal	M3JDK21: ingest original javac trees into the existing M3ASTIndex lanes
+1603	master	dirty	95	m3/collections	2026-10-20	hsoliwal	M3JDK21: refine source seals, indexed growth and filtered JNI collections
+1608	master	dirty	42	m3/file	2026-10-20	hsoliwal	Refine M3 streams, file/AST deltas and collection views with Java/JNI proofs
+1611	master	dirty	53	m3/tooling	2026-10-20	hsoliwal	feat(m3file): monitored shadow streams, lazy system traversal, and delta receipts
+1619	master	dirty	478	m3/collections	2026-10-21	hsoliwal	Refine filtered and sorted collection views and receive the JNI mask owner
+1627	master	dirty	35	m3/collections	2026-10-21	hsoliwal	Refine M3JDK21 composite String comparisons through qualified Synexia recipes
+1631	master	dirty	19	m3/collections	2026-10-21	hsoliwal	M3 collections: preserve filtered cursor errors and skip uniform Java/JNI radix passes
+1637	master	dirty	2404	m3/runtime-integration	2026-10-21	hsoliwal	Refine M3 collections, monitored scheduling, and Eclipse resource state
+1684	master	dirty	44	m3/collections	2026-10-21	hsoliwal	Refine composite String keys, array-index views and JNI transfer
+1718	master	dirty	5	m3/lexicon	2026-10-21	hsoliwal	Catalogue additional language structures and morphology donors
+1722	master	dirty	5	m3/lexicon	2026-10-21	hsoliwal	Resolve #1718 additively: retain 270 language records and union 9 new sources
+1733	master	dirty	30	m3/collections	2026-10-21	hsoliwal	candidate(M3JDK21): stage 25 exact #1330/#1335 collection blobs; hold 3 owners
+1734	master	dirty	10	m3/collections	2026-10-21	hsoliwal	fix(M3JDK21): source-sealed parent-owned filtered/sorted live index invalidation
+1747	master	dirty	19	m3/fs	2026-10-21	hsoliwal	Add M3FS content defaults, live NIO paths and native database provider
+1754	master	dirty	8	m3/qualification	2026-10-21	hsoliwal	perf(M3JDK21 java.base): eliminate untouched-prefix Object[] stores in mask compaction
+1761	master	dirty	4	src/java.base	2026-10-21	hsoliwal	Receive reviewed java.base JNI mask selection and bounded count atoms
+1770	master	dirty	11	test	2026-10-21	hsoliwal	fix(java.util): preserve filtered view identity, mutation, and traversal contracts
+1771	master	dirty	23	test	2026-10-21	hsoliwal	Refine integrated regex precomputation and atomic indexed-array growth
+1786	master	dirty	13	m3/collections	2026-10-21	hsoliwal	M3JDK21: integrate source-sealed array/mask rank, JNI bulk and strict filtered/sorted view
+1788	master	dirty	29	m3/collections	2026-10-21	hsoliwal	Refine parser reuse, primitive indices and JNI result batching
+1800	master	dirty	6	src/java.base	2026-10-22	hsoliwal	Refine indexed-array merge tails and JNI mask windows
+1811	master	dirty	10	test	2026-10-22	hsoliwal	M3JDK21: manufacture compiler method facts and integrate lexical JNI signals
+1820	master	dirty	2	m3/compatibility	2026-10-22	hsoliwal	build: reject third-party donor names introduced into original JDK product
+1828	master	dirty	5	m3/compatibility	2026-10-22	hsoliwal	fix(M3JDK21): combine donor-namespace and recipe-custody checks from #1820/#1822
+1402	m3/regex-cursor-20261018	blocked	8	m3/ports	2026-10-18	hsoliwal	m3/ports/regex-cursor: token-aware regex over interned token-id lanes (M3TokenCursor, M3To
+1755	chatgpt/m3jdk21-offline-project-scan-sqlite-20261021	blocked	6	m3/fs	2026-10-21	hsoliwal	M3JDK21: isolate offline Maven/Gradle scan generations in original project SQLite
+1764	m3/identity-rank-array-mask-20261021	blocked	9	m3/collections	2026-10-21	hsoliwal	collections: superset implicit bitmap rank, JNI bulk and filtered/sorted live views
+1769	codex/m3-mask-window-receive-20261021	blocked	14	m3/tooling	2026-10-21	hsoliwal	Receive qualified UnicodeX ranks and strict M3 indexed range views
+1775	m3/collections-rank-bulk-live-superset-20261021	blocked	4	m3/collections	2026-10-21	hsoliwal	collections: retain strict subList/reversal across reentrant filtered/sorted indexed views
+1780	m3/viewport-frame-lanes-jni-20261021-chatgpt	blocked	8	m3/collections	2026-10-21	hsoliwal	feat(M3JDK21): converge bounded JNI page and aligned CPU viewport frame
+1782	chatgpt/m3jdk21-masterv2-observed-profiles-20261021	blocked	11	m3/fs	2026-10-21	hsoliwal	M3JDK21: one original M3File byte stream feeds completed V2 inventory and native SQLite
+1791	m3/viewport-page-frame-superset-20261021	blocked	13	m3/collections	2026-10-21	hsoliwal	merge(M3JDK21): array-mask rank, filtered/sorted live views and JNI viewport superset
+1795	m3/rank-live-viewport-convergence-20261021	blocked	9	m3/collections	2026-10-21	hsoliwal	feat(M3JDK21): original filtered/sorted live view copies only viewport index page
+1797	chatgpt/m3jdk21-masterv2-host-stream-ingress-20261021	blocked	17	m3/collections	2026-10-21	hsoliwal	M3JDK21 superset: original filtered/sorted arrays and java.base JNI mask kernels
+1802	chatgpt/m3jdk21-superset-native-filtered-20261021	blocked	11	m3/qualification	2026-10-22	hsoliwal	test(M3JDK21 java.base): prove integrated filtered/sorted arrays and original JNI mask ker
+1804	m3/integrated-native-filtered-proof-20261022	blocked	5	m3/qualification	2026-10-22	hsoliwal	M3JDK21: fuse predicate, state-mask and stable-sorted array views
+1808	m3/indexed-live-physical-page-20261021	blocked	33	m3/collections	2026-10-22	hsoliwal	merge(M3JDK21): qualified Apache/Spring interop with JNI viewport and filtered/sorted rank
+1814	chatgpt/m3jdk21-superset-native-filtered-20261021	blocked	27	m3/fs	2026-10-22	hsoliwal	M3JDK21 M3FS/M3File: provider use cases, native SQLite files and one-read source capture
+1816	m3/interop-viewport-rank-superset-20261022	blocked	4	m3/qualification	2026-10-22	hsoliwal	policy(M3JDK21): receive Synexia-executed results only; never store recipes in SDK
+1817	chatgpt/m3jdk21-superset-native-filtered-20261021	blocked	4	m3/file	2026-10-22	hsoliwal	M3JDK21: reuse one bounded M3File scratch across M3FS offline project scans
+1823	chatgpt/m3jdk21-m3fs-m3file-provider-usecases-20261022	blocked	5	m3/file	2026-10-22	hsoliwal	M3JDK21 M3FS/M3File: combine native provider captures with reusable offline scan scratch
+1824	chatgpt/m3jdk21-provider-capture-shared-scratch-20261022	blocked	17	m3/qualification	2026-10-22	hsoliwal	M3JDK21: original M3FS directory masks and provider byte ranges without losing M3File capt
+1825	chatgpt/m3jdk21-fs-range-indexed-views-20261022	blocked	9	m3/fs	2026-10-22	hsoliwal	M3JDK21: original M3FS multi-provider bulk operations over packed physical-index masks
+1832	m3/typed-signal-compiler-image-20261022	blocked	9	m3/collections	2026-10-22	hsoliwal	M3JDK21: primitive stable domain Top-K over exact typed signal columns
+1836	chatgpt/m3jdk21-fs-range-indexed-views-20261022	blocked	9	m3/fs	2026-10-22	hsoliwal	M3JDK21 M3FS: reusable directory name/prefix index over original primitive row arrays
+1839	m3/typed-signal-topk-20261022	blocked	9	m3/collections	2026-10-22	hsoliwal	M3JDK21: fail-closed exact typed coordinates for progressive signal evidence
+1841	chatgpt/m3jdk21-fs-range-indexed-views-20261022	blocked	8	m3/fs	2026-10-22	hsoliwal	M3JDK21 M3FS: original masked multi-provider bulk commands over physical indexes
+1843	chatgpt/m3jdk21-fs-manager-bulk-superset-20261022	blocked	8	m3/fs	2026-10-22	hsoliwal	M3JDK21 M3FS JNI: batch native SQLite stat into original primitive array and mask columns
+1844	m3/typed-signal-topk-20261022	blocked	2	.github/workflows	2026-10-22	hsoliwal	M3JDK21: focused real-source typed signal/CSR/TopK Java21 JUnit qualification
+1846	m3/interop-surefire-receiver-20261022	blocked	8	m3/collections	2026-10-22	hsoliwal	Receive three source-sealed Java21 test compile fixes; retain all 76 M3 owners and 158 JUn
+1848	m3/typed-signal-topk-20261022	blocked	9	m3/collections	2026-10-22	hsoliwal	M3JDK21: versioned typed domain ordering and certified progressive metric policy
+1851	chatgpt/m3jdk21-fs-manager-bulk-superset-20261022	blocked	6	m3/fs	2026-10-22	hsoliwal	M3JDK21 M3FS: reusable caller-owned scratch for original sequential provider range transfe
+1855	m3/interop-three-test-compile-receiver-20261022	blocked	7	m3/collections	2026-10-22	hsoliwal	Receive Apache Commons 4.5.0 counted Bag retainAll fix in original M3JDK21 array/index own
+1857	codex/m3-interop-nine-source-sealed-gates-20261022	blocked	5	m3/collections	2026-10-22	hsoliwal	test(interop): dual-mode JNI Guava parity with SHA-pinned tenth source receipt
+1778	m3/java-base-filtered-cursor-reentry-20261021-gpt6	dirty	9	m3/runtime-integration	2026-10-21	hsoliwal	fix(java.base): additive stored-occurrence and reentrant filtered cursor convergence
+1784	m3/java-base-filtered-cursor-reentry-20261021-gpt6	dirty	7	m3/runtime-integration	2026-10-21	hsoliwal	fix(java.base): preserve backing Set identity in the current filtered CollectionViews owne
+1785	m3/java-base-filtered-cursor-reentry-20261021-gpt6	dirty	5	m3/runtime-integration	2026-10-21	hsoliwal	fix(java.base): restore original filtered Set identity without losing newer List/Spliterat
+1805	m3/indexed-live-physical-page-20261021	dirty	4	.github/workflows	2026-10-22	hsoliwal	ci(M3JDK21): repair array-mask source seals and execute original Java21 live-view contract
