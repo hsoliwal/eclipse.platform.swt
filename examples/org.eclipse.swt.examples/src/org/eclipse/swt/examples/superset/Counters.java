@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Listener;
  * items created, lines laid out) and measure calls. Every paint's clip
  * rectangle (the OS update region's bounds, i.e. what a VNC server would ship
  * as framebuffer update rectangles) is mapped into the root control's client
- * coordinates and fed to the {@link DamageSink}; its bounding union is kept
+ * coordinates and fed to the {@code DamageSink}; its bounding union is kept
  * for the pixel-diff check.
  */
 public final class Counters {
