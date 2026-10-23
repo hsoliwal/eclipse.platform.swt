@@ -12,11 +12,15 @@ each recorded in the superset commit messages.
 | UI forks (SWT, Nebula, GEF, PDE, platform, JDT, equinox, EMF, aggregator) | 0 (the owner merged 78 SWT, 71 Nebula, 10 GEF, 4 PDE PRs in the week) | 15 programme branches, all behind master; SWT viewport integration 304 ahead / 44 behind |
 | eclipse.platform.ui | 3 agent PRs (#27, #35, #37), all conflicting with master | jface-viewport (6 ahead, conflicting), jdk21-compat, marks-tags (conflicting) |
 | M3jdk21 | 162 (158 after the dump): 84 dirty against master, 63 blocked, 11 unknown; 1,293 shared paths | jbs scaffold 1,086 behind |
-| com.synexia | 281 (276 after the dump) | two recipe-crate branches |
+| com.synexia | 281 (246 after the dump) | two recipe-crate branches |
 
-The user's directives themselves: 242 unique directives recovered from the six session logs (2026-10-07 to 23),
-`requirements/REQUIREMENTS.tsv`, by track: viewport/SWT 54, M3JDK 20, platform UI 11, recipes/MOP 22, process 39,
-other 96. The pending work above is what those directives produced that is not yet on a master branch.
+The requirements themselves (user, 2026-10-23: "you have all the requirements in your session logs", "the PR history and
+comments speak of requirements"): `requirements/REQUIREMENTS_ALL.tsv`, 1,371 rows: 759 unique directives from the
+Claude (241) and Codex (518) session logs of 2026-10-07 to 23 and 612 requirement sentences from the PR history of
+the forks (bodies and comments; the owner's short comments whole, agents' text filtered to sentences that quote the
+user or state a requirement, invariant, law, rule or must). By track: M3JDK 401, viewport/SWT 290, process 154,
+recipes/MOP 59, platform UI 27, other 440. `REQUIREMENTS_COVERAGE.tsv` maps each row's track to the PR or branch
+that carries it. The pending work above is what those requirements produced that is not yet on a master branch.
 
 ## 2. What was done
 
@@ -26,13 +30,15 @@ other 96. The pending work above is what those directives produced that is not y
 | SWT compile gates on the merged integration head 4c997f14 | win32 860 sources / 0 errors, gtk 651 / 0, cocoa 793 / 0 |
 | Superset PRs opened for the owner | SWT #250 (viewport integration) #251 (render modes), Nebula #273, platform #18 #19, platform.ui #44 (Java 21) #45 (JFace superset), jdt.ui #4, jdt.core #5, jdt.debug #3, equinox #1, aggregator #13, EMF #2, GEF #18, PDE #5, M3jdk21 superset PR |
 | platform.ui JFace superset `m3/jface-superset-20261023` | jface-viewport + PR #27 + PR #37 (contains #35) merged on master; 5 conflict files resolved on master's lineage; gate 0 errors; supersedes #27 #35 #37 |
-| M3jdk21 superset `m3/superset-20261023` | 38 of 158 PR heads merged server side, 120 conflicting listed in the ledger |
-M3jdk21 superset by track (merged / conflicting): m3/collections 18 / 54, m3/tooling 1 / 15, m3/fs 6 / 8,
-m3/qualification 0 / 10, m3/file 1 / 6, m3/runtime-integration 1 / 6, test 1 / 5, src/java.base 0 / 4,
-m3/compatibility 1 / 3, m3/ports 3 / 0, the rest 7 / 9. PR: hsoliwal/M3jdk21 #1861.
-
+| M3jdk21 superset `m3/superset-20261023` | 38 of 158 PR heads merged server side, 120 conflicting listed in the ledger; PR #1861 |
+| Synexia superset `codex/superset-20261023` | 72 of 246 PR heads merged server side, 174 conflicting listed in the ledger; PR opened after the API limit reset |
+| JFace superset anchored | PR #47 on top of #45: 11,276 compiler-AST marks of org.eclipse.ui.ide, 9,844 anchored lines in 987 files |
 | Atomize/patternize receiver | rolled out to the 6 branches that lacked it; present on all programme branches now |
 | Workflows (agents) | still no model turns (agent limit): the JFace merge was done by hand, the M3jdk21 conflicts wait for agents |
+
+M3jdk21 superset by track (merged / conflicting): m3/collections 18 / 54, m3/tooling 1 / 15, m3/fs 6 / 8,
+m3/qualification 0 / 10, m3/file 1 / 6, m3/runtime-integration 1 / 6, test 1 / 5, src/java.base 0 / 4,
+m3/compatibility 1 / 3, m3/ports 3 / 0, the rest 7 / 9.
 
 ## 3. Pending work by track after this pass
 
@@ -42,8 +48,8 @@ m3/compatibility 1 / 3, m3/ports 3 / 0, the rest 7 / 9. PR: hsoliwal/M3jdk21 #18
 | JFace / Problems view / platform UI | PR #45 (superset), #44 (Java 21), #18 (platform views), PDE #5 | owner merges #45; M3SparseExtents leaf from M3jdk21; anchors regenerated on the superset |
 | Java 21 for M3JDK21 | 9 PRs (one per fork) | owner merges; platform FFM Win32Handler fill |
 | M3JDK (collections, fs, tooling, qualification) | superset PR with 38 merged, 120 conflicting by track (m3/collections 72 PRs, m3/tooling 16, m3/fs 14, m3/qualification 10) | conflict pass by agents, PR by PR, module Maven gate |
-| Synexia recipes | 276 open PRs; dump in progress | same superset method once the dump completes |
-| Atomize/patternize | receiver on every branch | bootstrap (inventory binding) on each final superset, then run.sh |
+| Synexia recipes | superset PR with 72 merged, 174 conflicting (recipe-crates 44, src 39, crates 12 of the dumped tracks) | conflict pass by agents, crate Maven gate and RECIPE_MEMORY per crate |
+| Atomize/patternize | receiver on every branch | bootstrap (inventory binding) on each final superset, then run.sh. First try on the SWT integration worktree failed: `sha256sum` cannot read the long paths under `.superset/conflicts/pr-209-table-viewport-20261017-0725/...` (leftover conflict copies from the 2026-10-17 superset); deleting that directory needs the owner's approval, then the bootstrap runs |
 
 ## 4. Method, reusable
 

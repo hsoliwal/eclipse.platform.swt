@@ -1,0 +1,913 @@
+timestamp	repo	pr	source	text
+2026-10-03T06:59	eclipse.platform.swt	1	pr-body	Synexia donor invariants reused
+2026-10-03T11:35	eclipse.platform.swt	3	pr-body	The latter keeps the newly added SWT-level API aligned with the documented JFace level convention while preserving the rewrite invariant that unseen virtual items should not be materialized without demand.
+2026-10-03T14:06	eclipse.platform.swt	12	pr-body	never touches SWT widgets or native handles.
+2026-10-03T16:01	eclipse.platform.swt	17	pr-body	Facades returned by public item/selection APIs and by `SetData` are pinned and never rebound to another logical coordinate.
+2026-10-03T16:11	eclipse.platform.swt	18	pr-body	One compatibility repair was added after that merge: owner-draw and default-selection event paths can expose a materialized `TableItem` directly to application code, so those facades must be marked `PINNED` before dispatch.
+2026-10-03T16:43	eclipse.platform.swt	20	pr-body	Internal custom-draw/traversal lookup deliberately does **not** pin; scrolling across rows must not gradually pin the whole dataset.
+2026-10-04T00:59	eclipse.platform.swt	25	pr-body	This closes the constructor escape path so compaction can never retire an object the application already owns.
+2026-10-04T01:56	eclipse.platform.swt	31	pr-body	NEVER policy suppression;
+2026-10-04T02:51	eclipse.platform.swt	40	pr-body	The graph never retains an SWT `Path`.
+2026-10-04T03:07	eclipse.platform.swt	41	pr-body	Application `Paint` / `PaintItem` callbacks are never cached or replayed away.
+2026-10-04T04:59	eclipse.platform.swt	52	pr-body	NEVER policy under huge logical extents;
+2026-10-04T05:00	nebula	7	pr-body	A later Nebula source mutation must be a bounded, separately hash-pinned recipe selected from the emitted atom/pattern evidence.
+2026-10-04T05:00	nebula	7	pr-body	This is the direct application of the chat invariant:
+2026-10-04T06:26	nebula	13	pr-body	A future native candidate must first provide SHA-256 evidence for:
+2026-10-04T06:26	nebula	13	pr-body	Challenge-platform rows are reference-only and never grant source-copy authority.
+2026-10-04T06:26	nebula	13	pr-body	The workflow never commits/promotes source automatically.
+2026-10-04T06:47	eclipse.platform.swt	55	pr-body	The detailed startup cause is unverified; local test results above must not be read as a remote CI pass.
+2026-10-04T08:17	nebula	23	pr-body	`rightmost column must be visible after showColumn`
+2026-10-04T08:30	nebula	24	pr-body	Full-crate tests, complete source transformation/replay, original Tycho and widget contract verification must execute successfully before that claim.
+2026-10-04T08:35	nebula	25	pr-body	Those are not claimed invariant; this is not formal equivalence for arbitrary reflective/security policies.
+2026-10-04T08:44	nebula	25	pr-comment	Companion recipe and complete-source tests are saved in hsoliwal/com.synexia#8802 at commit `2d177de1179da10141b203d6d973ef53da7e89e9`, branch `m3/physical-bean-atom-extraction-20261004`.
+2026-10-04T08:44	nebula	25	pr-comment	Executed Java result: 5,342 differential cases / 5,389 assertions passed; original and transformed classes compile; precompiled client/subclass linkage and fixed-point/collision/cancellation checks pass.
+2026-10-04T08:44	nebula	25	pr-comment	No merge has been performed by this change.
+2026-10-04T08:44	nebula	25	pr-comment	Recipe crate: `synexia-openrewrite-recipes/recipes/nebula-bean-atoms`.
+2026-10-04T08:44	nebula	25	pr-comment	The OpenRewrite scheduler/Maven adapter and complete Tycho/UI suite remain unexecuted locally.
+2026-10-04T08:44	nebula	25	pr-comment	The committed `BeanUtils.java` blob `075ae55598cb73e62dfcc31d4fb89930a2f7cbc2` matches the actual generated and tested local output.
+2026-10-04T08:44	nebula	25	pr-comment	The committed generator, mutating CLI and test harness blobs were also checked against the executed source bytes (`4972cef482c159c58c57420fbe220bc9716d0138`, `5c0c56951a5f86a077969a497eefe16510ea99d2`, `2169d298fd3bc4914cb721e4b854c413a2c7ee2c`).
+2026-10-04T08:44	nebula	25	pr-comment	This is the actual five-production-file extraction diff, not just a catalogue.
+2026-10-04T09:08	nebula	27	pr-body	Apply the M3/A3 invariant to Nebula's already-existing recipe-first substrate without replacing Tycho or adding a parallel refactoring engine.
+2026-10-04T10:24	nebula	37	pr-body	It cannot write master/develop or another branch, never force-pushes/rebases, and refuses a moved head.
+2026-10-04T10:28	nebula	38	pr-body	Any implementation must be Nebula-owned, recipe-owned and contract-proven.
+2026-10-04T10:28	nebula	38	pr-body	Apply the user's M3 recipe-first invariant to the existing Nebula convergence plane using the official OpenRewrite recipe model.
+2026-10-04T10:36	nebula	37	pr-comment	Both bind to captured source commit `bd495742f68e57e63ef3e81b400f09f42a96f5ce`; they must not be blindly applied to a later revision.
+2026-10-04T10:36	nebula	37	pr-comment	Both real Jupiter runtime runs now pass all **11 tests**, zero failures/skips.
+2026-10-04T10:36	nebula	37	pr-comment	Canonical implemented recipe/tests and detailed local receipt: https://github.com/hsoliwal/com.synexia/pull/8837.
+2026-10-04T10:36	nebula	37	pr-comment	Every before/after SHA-256 still matches, original files remain unchanged, and Git reverse-apply checking passes.
+2026-10-04T10:36	nebula	37	pr-comment	Execution status and actual source output
+2026-10-04T10:36	nebula	37	pr-comment	Keep this PR draft until the exact-head source materialization and applicable acceptance gates execute.
+2026-10-04T10:36	nebula	37	pr-comment	No hosted recipe/test/materialization job ran, and this PR has not received the 513 generated Java postimages from that job.** Existing CI gates have not been weakened or bypassed.
+2026-10-04T10:36	nebula	37	pr-comment	The complete Java-source/proof archive is delivered to the user as `nebula-statement-atoms-executed.zip`, 12,006,094 bytes, SHA-256 `6b3e73a53755593185e321cea067939094f746d7005763336d5bf2f5dac69277`.
+2026-10-04T10:36	nebula	37	pr-comment	The directly applicable text patch is `nebula-statement-blocks-513-files.patch`, SHA-256 `ea4307a88ce80d1ec6238f762a3c57662f7e0c3d7a02a3434443e00e8bc8a371`.
+2026-10-04T10:36	nebula	37	pr-comment	The independent local full-input run is completed and its source output is real: all **1,756 application Java postimages** and the **513-file generated Git patch** have been assembled and verified.
+2026-10-04T10:36	nebula	37	pr-comment	The new workflow run `37195270556` completed with failure, but the jobs endpoint returned an empty array and the head's check-runs endpoint returned zero entries.
+2026-10-04T10:36	nebula	37	pr-comment	This is statement/block/loop normalization and compositional addressing, not full Tycho/native/UI promotion.
+2026-10-04T10:48	nebula	41	pr-comment	All four implementation/plan/test blobs match the locally tested hashes.
+2026-10-04T10:48	nebula	41	pr-comment	Final execution observation for `b21980f79ecea54ad05644d98e6692db72ab84ba`: GitHub created convergence run [37196397629](https://github.com/hsoliwal/nebula/actions/runs/37196397629), which reports failure; its jobs endpoint returned `jobs: []`.
+2026-10-04T10:48	nebula	41	pr-comment	Full method-extraction atomization remains unexecuted by this delivery.
+2026-10-04T10:48	nebula	41	pr-comment	No source-test result is inferred and no full Nebula build/application is claimed.
+2026-10-04T10:48	nebula	41	pr-comment	The existing hosted workflow was not replaced or weakened; this PR adds the explicit local application command, not an automatic promotion.
+2026-10-04T10:48	nebula	41	pr-comment	The final 18 process-double routing tests passed in deterministic batches; they remain separate from real Maven/OpenRewrite/Tycho/SWT execution.
+2026-10-04T10:48	nebula	41	pr-comment	The published delta is exactly 5 paths / 569 added lines / zero deleted lines: four additions and the 9-line dispatch inserted into the existing launcher.
+2026-10-04T13:28	nebula	46	pr-body	A later stacked materialization branch must use a reviewed base that already contains this recipe so `apply_catalogue.py` can keep its strict:
+2026-10-04T13:28	nebula	46	pr-body	works on OpenRewrite `PlainText`, never Java LSTs;
+2026-10-04T14:29	nebula	49	pr-body	Nebula records `PENDING_HOSTED_PROOF`; absence/failure of workflow startup is never reported as a test pass.
+2026-10-04T14:29	nebula	49	pr-body	a later run must receive that exact prior evidence root;
+2026-10-05T02:54	nebula	62	pr-body	This PR must not supersede the merged runtime binding until the upstream saved DAG is merged and an execution-capable runner proves its focused tests.
+2026-10-05T04:22	eclipse.platform.swt	69	pr-comment	Drift refusal: PASS.
+2026-10-05T04:22	eclipse.platform.swt	69	pr-comment	Exact replacement fixed point: PASS.
+2026-10-05T04:22	eclipse.platform.swt	69	pr-comment	Independent Java 21 candidate gate passed with `javac --release 21 -Xlint:all -Werror`.
+2026-10-05T04:22	eclipse.platform.swt	69	pr-comment	PR Actions fired, but current repository workflows are failing before emitting jobs.
+2026-10-05T04:22	eclipse.platform.swt	69	pr-comment	Platform/native acceptance remains unclaimed until an executable CI/local platform gate is available.
+2026-10-05T04:22	eclipse.platform.swt	69	pr-comment	The proof receipt on the branch has been updated accordingly.
+2026-10-05T04:22	eclipse.platform.swt	69	pr-comment	The same SWT Matrix Build startup-style failure is present on current `master`, so this is not being treated as a branch regression.
+2026-10-05T04:22	eclipse.platform.swt	69	pr-comment	Verification update:
+2026-10-05T05:20	eclipse.platform.swt	73	pr-body	The second CLI pass must be a fixed point.
+2026-10-05T05:40	nebula	65	pr-body	Use Nebula as the independent proving ground for the chat-wide recipe-first invariant before mechanically replaying the same DAG contract into M3JDK21.
+2026-10-05T06:25	eclipse.platform.swt	75	pr-body	This PR establishes the intermediate invariant:
+2026-10-05T08:03	eclipse.platform.swt	77	pr-body	This PR must remain draft until those gates are satisfied.
+2026-10-05T08:57	nebula	66	pr-body	All mixed schedules deduplicate to the same `A+P` operation set and must converge to byte-identical source.
+2026-10-05T08:57	nebula	66	pr-body	Apply the Synexia M3 recipe-first invariant to Nebula's existing Atomize/Patternize control plane without touching widget/product source.
+2026-10-06T01:17	nebula	69	pr-body	Camel/Airflow/Drools may schedule/order/shard these already-admitted recipe atoms; they never gain mutation or promotion authority.
+2026-10-06T01:17	nebula	69	pr-body	Finish Nebula as the proving ground for the Synexia M3 recipe-first invariant before mechanically applying the same recipe/DAG shape to M3JDK21 and com.synexia.
+2026-10-06T01:17	nebula	69	pr-body	M3JDK21 must still inventory each
+2026-10-06T01:53	nebula	70	pr-body	The donor note now states explicitly that Swing/AWT names may identify donor sources but never become Nebula runtime names.
+2026-10-06T02:33	eclipse.platform.swt	87	pr-body	Nebula's qualified Grid graphics v2 exposed one real affine edge case after #83 had already been merged: canonical quarter-turn rotations must retain exact integer matrix geometry.
+2026-10-06T02:50	nebula	75	pr-body	Make the user's M3 refactoring-scope law executable in the Nebula proving ground.
+2026-10-06T03:29	eclipse.platform.swt	89	pr-body	Upstream bug fixes and refactorings must be retained as a superset.
+2026-10-06T03:44	nebula	78	pr-body	Each destination must inventory its own contracts and supply repository-specific eligibility/source fences.
+2026-10-06T03:44	nebula	78	pr-body	Repository size never widens authority.
+2026-10-06T04:24	eclipse.platform.swt	88	pr-comment	Additive convergence note: this PR has the same head commit (`30c45b0e275fe79e766c8376252bb79f99093a6a`) as PR #89.
+2026-10-06T04:24	eclipse.platform.swt	88	pr-comment	Closing this duplicate as superseded/contained; no source or history is discarded.
+2026-10-06T04:24	eclipse.platform.swt	88	pr-comment	GitHub refuses retargeting because there are no commits left between the contained upstream head and `master`.
+2026-10-06T04:24	eclipse.platform.swt	88	pr-comment	That head is now an explicit parent of `master` via commit `c5f32ba3c7ff11853d1e44d208ff41905394b0f9`.
+2026-10-06T05:33	eclipse.platform.swt	90	pr-body	That violates the viewport rewrite's bounded-residency invariant even though Java materialization remains sparse.
+2026-10-06T06:08	nebula	80	pr-body	The existing workflows must establish:
+2026-10-06T06:10	eclipse.platform.swt	91	pr-body	Every interactive step must paint and reach its requested position.
+2026-10-06T06:42	eclipse.platform.swt	92	pr-body	The root recipe/reuse/resource invariant already merged in #91; M3jdk21's counterpart merged in #225.
+2026-10-06T10:12	nebula	83	pr-comment	Closing the PR records non-admission; it does not delete the branch or canonical recipe history.
+2026-10-06T10:12	nebula	83	pr-comment	Its own retained evidence shows a final 64-identity diagnostic of 1512 ns versus 1155 ns original, while hosted runs on the current head still terminate before producing jobs.
+2026-10-06T10:12	nebula	83	pr-comment	LeetCode/HackerRank/GeeksForGeeks remain catalogue/problem-shape donors only; no copied challenge implementation enters product code.
+2026-10-06T10:12	nebula	83	pr-comment	Nebula checkpoint: a0df2f974b6a15a5e40dffc6335b764838e40b4c
+2026-10-06T10:12	nebula	83	pr-comment	Production disposition (2026-10-06)
+2026-10-06T10:12	nebula	83	pr-comment	SWT checkpoint: 9982596c311ae1197065efd7a6eb90ce0f83eade
+2026-10-06T10:12	nebula	83	pr-comment	Synexia checkpoint receipt: 00b6cb5411d342820a2722de296dc445baabc366
+2026-10-06T10:12	nebula	83	pr-comment	The SWT/Nebula UI viewport/paint/event distillation is already promoted and checkpointed independently of this experiment:
+2026-10-06T10:12	nebula	83	pr-comment	The memory reduction is useful evidence, but it does not justify merging a hot-path regression into the product baseline.
+2026-10-06T10:12	nebula	83	pr-comment	This packed-counter candidate is **not production-admitted**.
+2026-10-06T10:12	nebula	83	pr-comment	keep the production UI distillation baseline unchanged;
+2026-10-06T10:12	nebula	83	pr-comment	preserve this branch, exact source images, corpus, recipe, and evidence for a future measurement-driven hybrid/threshold design;
+2026-10-07T09:08	nebula	92	pr-body	affine operations remain ordered and are never deduplicated like equivalent GC state;
+2026-10-07T09:16	nebula	92	pr-comment	Closing without rebase/squash/force-push; branch remains as provenance/evidence.
+2026-10-07T09:16	nebula	92	pr-comment	Merging this historical clean receiver now would risk rolling those forward repairs back.
+2026-10-07T09:16	nebula	92	pr-comment	Superseded by merged #91 and current `master`.
+2026-10-07T09:16	nebula	92	pr-comment	The intended product outputs are already canonical on master:
+2026-10-07T09:16	nebula	92	pr-comment	The remaining differences on this branch are older copies of the convergence workflow, licensing table and README, while current master has newer reconciled versions.
+2026-10-07T09:16	nebula	92	pr-comment	`GridIdentityOccurrenceTable.java` matches the reviewed V2 postimage;
+2026-10-07T09:16	nebula	92	pr-comment	`GridTransform.java` matches the reviewed identity-inverse repair;
+2026-10-07T09:16	nebula	92	pr-comment	the Apache/M3 first-party license, authors and notice files are present.
+2026-10-07T10:29	nebula	96	pr-comment	Current product master trees are byte-identical to the saved v4 checkpoint trees; later bootstrap merges changed ancestry only.
+2026-10-07T10:29	nebula	96	pr-comment	GitHub also refuses a failed-jobs rerun for the earlier attempt.
+2026-10-07T10:29	nebula	96	pr-comment	Hosted proof status on the current head:
+2026-10-07T10:29	nebula	96	pr-comment	Keep this PR draft until a hosted or equivalent local proof can actually execute.
+2026-10-07T10:29	nebula	96	pr-comment	Latest hosted attempts for Maven, CodeQL, A3 mastery, declarative convergence, final-transfer and recipe-first all terminate with **zero jobs created**.
+2026-10-07T10:29	nebula	96	pr-comment	No test step has executed, so this is recorded as an Actions startup/infrastructure blocker, not as a recipe/product failure.
+2026-10-07T10:29	nebula	96	pr-comment	The SWT/Nebula runtime distillation itself remains closed by the v4 Synexia receipt.
+2026-10-07T10:29	nebula	96	pr-comment	`M3NebulaAtomizePatternizeRecipe` and `M3AtomPatternSignalChainRecipe` exist at the pinned Synexia commit;
+2026-10-07T10:29	nebula	96	pr-comment	branch policy/POM assertions point to those exact recipe owners;
+2026-10-07T10:29	nebula	96	pr-comment	current Nebula master: `49ce0b4d5ef73db6e31a7dd98db624a4cbf7c8b1`
+2026-10-07T10:29	nebula	96	pr-comment	current proof head: `75277c72c16c86ac66b11661661f2b5a22c9a9b4`
+2026-10-07T10:29	nebula	96	pr-comment	proof request already names that exact baseline;
+2026-10-07T10:29	nebula	96	pr-comment	sourceMutationAuthority/source.promotion remain false.
+2026-10-07T11:14	eclipse.platform.swt	98	pr-body	Viewport screenshots must prove that current visible screen pixels were captured.
+2026-10-07T11:44	eclipse.platform.swt	99	pr-body	SWT's own tracker must return to its baseline GC/Image set; two retained-resource controls prove detection.
+2026-10-07T11:44	eclipse.platform.swt	99	pr-body	The invariant and resource documentation record these requirements.
+2026-10-08T07:35	nebula	112	pr-body	`SOURCE.tsv` must contain exactly the six canonical pure-int Java sources;
+2026-10-08T07:35	nebula	112	pr-body	the resulting local jar must exist and contain
+2026-10-09T04:27	eclipse.platform.swt	102	pr-body	Its provider topology must remain stable for the source lifetime; callbacks run synchronously inside synchronized methods.
+2026-10-09T04:27	eclipse.platform.swt	102	pr-body	Preserve SWT ViewportGcProxy's additional device-space clip snapshot and constructor cleanup when considering reuse; the older Nebula template must not overwrite those protections.
+2026-10-10T01:05	nebula	121	pr-body	recipe-first/fixed-point/drift-refusal/additive-history M3 invariants.
+2026-10-10T06:12	nebula	122	pr-body	Existing workflows must prove, in order:
+2026-10-11T04:24	eclipse.platform.swt	104	pr-comment	Comparing the qualified closure receiver `bb4fc921c100432ddf7fc78c590588e28193fe96` to current Nebula `master` shows no runtime source drift; only the closure receipt was added.
+2026-10-11T04:24	eclipse.platform.swt	104	pr-comment	Current closure reconciliation (2026-10-11): this draft is a **post-closure successor optimization**, not a blocker for the already-merged SWT/Nebula viewport distillation.
+2026-10-11T04:24	eclipse.platform.swt	104	pr-comment	Do not merge it merely to claim completion, and do not rewrite the closed recipe/closure ancestry.
+2026-10-11T04:24	eclipse.platform.swt	104	pr-comment	If admitted later, treat it as an additive successor recipe from the closed baseline.
+2026-10-11T04:24	eclipse.platform.swt	104	pr-comment	Nebula master contains the current-master runtime-equivalence closure and its Java2s/Swing donor catalogue.
+2026-10-11T04:24	eclipse.platform.swt	104	pr-comment	Therefore keep this PR draft until its explicitly listed target Tycho/platform/native/JNI/capture/resource gates are satisfied.
+2026-10-11T05:03	nebula	130	pr-body	This PR makes the saved M3 invariant executable for the final distillation.
+2026-10-11T05:11	eclipse.platform.swt	105	pr-body	recipe-first successor invariant.
+2026-10-11T05:11	nebula	132	pr-body	Java-before-JNI and recipe-first invariants.
+2026-10-11T13:51	nebula	137	pr-comment	Executed locally (limited check):** Java 21 `javac --release 21 -Xlint:all -Werror` plus a standalone independent affine-numerical model compared against `java.awt.geom.AffineTransform.preConcatenate`: 100,000 deterministic noncommuting sequences, 449,916 transitions, seed `0x4711ACED`, passed.
+2026-10-11T13:51	nebula	137	pr-comment	It checks scale → translate against SWT's own `Transform.multiply`, zero premature GC mutation, one planned boundary flush, and exact caller transform restoration.
+2026-10-11T13:51	nebula	137	pr-comment	New native SWT JUnit obligation: `nonCommutingAffineBatchMatchesNativeSwtTransformMultiply`.
+2026-10-11T13:51	nebula	137	pr-comment	Not executed:** the actual Nebula `GridGCProxy_Test` class against SWT, Tycho GUI/Xvfb, screenshots, Windows and Cocoa.
+2026-10-11T13:51	nebula	137	pr-comment	October 11 verification update — mixed-affine regression
+2026-10-11T13:51	nebula	137	pr-comment	Related source-custody recipe: https://github.com/hsoliwal/com.synexia/pull/10437
+2026-10-11T13:51	nebula	137	pr-comment	The PR must remain **draft**; the headless oracle is *not* a substitute for SWT native proof.
+2026-10-11T13:51	nebula	137	pr-comment	The current environment lacks Maven/Tycho/SWT runtime dependencies; current hosted recipe workflows have failed before creating jobs.
+2026-10-11T13:51	nebula	137	pr-comment	The reviewed product and canonical Synexia postimage now share Git blob `43f33e4345fd3c33ea8e5ea96f43f376532518c8` and SHA-256 `a4ba23441afca673cd5ac0f148f243f85b36d00e53f3c1194fcd4096bf160528`.
+2026-10-11T13:51	nebula	139	pr-comment	1M+ logical items: viewport/overscan + SetData calls stay bounded, even after distant scrollbar seeks and filter/sort changes.
+2026-10-11T13:51	nebula	139	pr-comment	All lazy/update entry points propagate the configured progress monitor and cancellation without partial commit.
+2026-10-11T13:51	nebula	139	pr-comment	Bounded asynchronous update batches never dispatch an event for a rebound logical coordinate or leave redraw disabled after failure.
+2026-10-11T13:51	nebula	139	pr-comment	Canonical reuse targets: `VirtualTreeTopology`, `VirtualTreeVisibleProjection`, `VirtualSelectionModel`, `VirtualViewportPlanner`, `ViewportLayerState`; Nebula `GridViewportProjection`, `GridVisibleRangeSupport`, `GridPaintDAG`, `GridGCStateDAG`.
+2026-10-11T13:51	nebula	139	pr-comment	Collapse/expand and filter refresh retain checked/selected/expanded logical state and any exposed `TreeItem` identity while allowing private paint shells to be discarded.
+2026-10-11T13:51	nebula	139	pr-comment	Inspected user-provided `src.zip` and `src-filters.zip` (October 3 SWT/JFace examples).
+2026-10-11T13:51	nebula	139	pr-comment	Native behavioral obligations for existing SWT/Nebula owners:
+2026-10-11T13:51	nebula	139	pr-comment	No new competing viewer or graphics engine.
+2026-10-11T13:51	nebula	139	pr-comment	Preserve accessibility, keyboard focus, DND and JFace element-to-item/path selection semantics across these operations.
+2026-10-11T13:51	nebula	139	pr-comment	Relevant original source paths:
+2026-10-11T13:51	nebula	139	pr-comment	The legacy archives are research/behavior inputs.
+2026-10-11T13:51	nebula	139	pr-comment	Their licensing and provenance are not established for source import, so **do not copy implementation**.
+2026-10-11T13:51	nebula	139	pr-comment	This review adds no mutation/promotion authority and does not claim runtime test coverage beyond the existing linked proof receipts.
+2026-10-11T13:51	nebula	139	pr-comment	Uploaded legacy viewer donor review (behavior-only; no source copy)
+2026-10-11T13:51	nebula	139	pr-comment	Vertical scroll does not invalidate fixed header chrome; horizontal scroll reprojects body/header consistently.
+2026-10-11T13:51	nebula	139	pr-comment	`src-filters/examples/eclipse/jface/patternfilters/DynamicColumnsFilter.java` — debounced model filter changes; one stable viewport/header model with no control recreation.
+2026-10-11T13:51	nebula	139	pr-comment	`src-filters/examples/eclipse/jface/patternfilters/experimental/DeferrredTreeViewer.java` — lazy child count/replace, collapse, selection and expanded-path retention when model changes.
+2026-10-11T13:51	nebula	139	pr-comment	`src/org/eclipse/jface/viewers/structured/impl/LazySortList.java` / `LazySortUtil.java` — bounded partial-order/top-K/filter mechanics rather than eager whole-dataset sorting.
+2026-10-11T13:51	nebula	139	pr-comment	`src/org/eclipse/jface/viewers/structured/tree/TreeViewerContext.java` — provider/context injection remains adapter-level; SWT owns row topology, flags, visibility and painting.
+2026-10-11T13:51	nebula	139	pr-comment	`src/org/eclipse/jface/viewers/structured/tree/TreeViewerLazyTool.java` — `revealNext`, `adjustScrollBar`, `adjustScrollForViewPort`, `adjustScrollForPagination`: preserve logical viewport anchor while the materialized frontier changes.
+2026-10-11T13:51	nebula	139	pr-comment	`src/org/eclipse/jface/viewers/structured/tree/TreeViewerWithViewPort.java` and `TreeViewerWithPagination.java` — model extent, scroll projection and page/frontier are separate authorities; pagination must not determine item identity.
+2026-10-11T13:51	nebula	139	pr-comment	`src/org/eclipse/jface/viewers/structured/tree/TreeViewerWork.java` / `TreeViewerUpdater.java` — queued/coalesced updates, deterministic ordering and progress/cancellation; avoid bursts of one-item redraws.
+2026-10-11T13:57	nebula	137	pr-comment	Added explicit completion-workflow trigger commit `a07944517c68fee55e3cf90d835c10c3226ba23b` under `.m3-ui-distillation-trigger/`.
+2026-10-11T13:57	nebula	137	pr-comment	Correct SHA-256 of that shared postimage: `a4ba23441afca673cd5ac0f148f243f85b36d00e53f3c1194fcd4096bf160528`.
+2026-10-11T13:57	nebula	137	pr-comment	Exact source custody is intact: the candidate `GridGCProxy_Test.java` Git blob is byte-identical to the canonical Synexia #10437 postimage blob.
+2026-10-11T13:57	nebula	137	pr-comment	GitHub still reports **zero workflow runs** for the PR head after the synchronize event.
+2026-10-11T13:57	nebula	137	pr-comment	M3 proof status update — 2026-10-11
+2026-10-11T13:57	nebula	137	pr-comment	No authorized Desktop Commander device is connected, and the available browser profile has no GitHub sign-in recorded, so there is currently no second executor available for the native SWT/Tycho run.
+2026-10-11T13:57	nebula	137	pr-comment	This is an execution-admission blocker, not a source mismatch and not a native-green claim.
+2026-10-11T14:13	nebula	140	pr-body	Each control capture must identify a supported SWT `CONTROL_PRINT` or `CONTROL_COPY_AREA` path, match its own SHA-256, decode with valid dimensions, contain interior Grid edges, and change across scroll transitions.
+2026-10-11T14:17	eclipse.platform.swt	109	pr-body	Repair two demonstrated baseline build issues: qualify the logical-size error call as `SWT.error(...)`, and align the host POM plus eight implementation fragment versions with the already-3.137 host manifest and exact p2 requirements.
+2026-10-12T01:00	nebula	137	pr-comment	A combined completion candidate has been assembled on:
+2026-10-12T01:00	nebula	137	pr-comment	A push to the dedicated completion branch therefore created zero workflow runs.
+2026-10-12T01:00	nebula	137	pr-comment	A repository maintainer can choose to re-enable these.
+2026-10-12T01:00	nebula	137	pr-comment	Canonical fail-closed closure receipt is merged in hsoliwal/com.synexia #10503.
+2026-10-12T01:00	nebula	137	pr-comment	Final execution status (2026-10-12)
+2026-10-12T01:00	nebula	137	pr-comment	GitHub's public Actions page now states:
+2026-10-12T01:00	nebula	137	pr-comment	It preserves current Nebula master plus the exact #137 nested-affine GC candidate and #140 million-row/screenshot candidate with merge ancestry.
+2026-10-12T01:00	nebula	137	pr-comment	Keep this product PR draft.
+2026-10-12T01:00	nebula	137	pr-comment	Native GTK/Tycho/OpenCV completion remains mandatory and is **not** claimed green.
+2026-10-12T01:00	nebula	137	pr-comment	The current screenshot verifier synthetic self-test executed locally and passed:
+2026-10-12T01:00	nebula	137	pr-comment	This is an external repository-level Actions suppression, not a source/test verdict.
+2026-10-12T01:00	nebula	137	pr-comment	Workflows are not currently being run on this fork due to the scale of GitHub Actions usage.
+2026-10-12T01:00	nebula	137	pr-comment	`SYNTHETIC_GRID_CONTROL_ORACLE_PASS: 2 valid paths; 5 defects rejected`
+2026-10-12T01:00	nebula	137	pr-comment	`m3/ui-distillation-current-head-completion-20261011@bd9b48b2b27b176c1d077696c7414349cf122ca5`
+2026-10-12T01:13	nebula	137	pr-comment	Canonical recipe custody remains hsoliwal/com.synexia#10437 on branch m3/nebula-grid-nested-gc-geometry-recipe-20261011.
+2026-10-12T01:13	nebula	137	pr-comment	Current closure check (2026-10-12): the source/recipe state remains exact and saved.
+2026-10-12T01:13	nebula	137	pr-comment	GitHub still reports zero workflow runs for this branch, consistent with the fork-scale Actions blocker recorded by Synexia #10503.
+2026-10-12T01:13	nebula	137	pr-comment	I independently re-executed the screenshot/control-surface observer self-test used by the final distillation closure; it passed with both accepted control-capture paths and all five fail-closed defect controls rejected.
+2026-10-12T01:13	nebula	137	pr-comment	Keep this PR draft; do not promote a native-green claim until an actual native job executes.
+2026-10-12T01:13	nebula	137	pr-comment	This does not substitute for the native SWT/Tycho GridGCProxy_Test lane.
+2026-10-12T01:13	nebula	140	pr-comment	Canonical recipe custody remains hsoliwal/com.synexia#10461 on branch m3/ui-dual-snapshot-recipe-20261011.
+2026-10-12T01:13	nebula	140	pr-comment	Current closure check (2026-10-12): the dual-surface acceptance observer was independently re-executed and passed: CONTROL_PRINT + CONTROL_COPY_AREA accepted; wrong method, forged hash, blank pixels, stale pixels and mismatched dimensions all rejected.
+2026-10-12T01:13	nebula	140	pr-comment	GitHub reports zero workflow runs for this branch, matching the external fork-scale Actions blocker recorded by Synexia #10503.
+2026-10-12T01:13	nebula	140	pr-comment	No donor source is copied.
+2026-10-12T01:13	nebula	140	pr-comment	The Java2s SWT/SWT-2D/Swing/Swing-Event donor catalogue is already merged on Nebula master and remains behavioral taxonomy only.
+2026-10-12T01:13	nebula	140	pr-comment	This is still not native GTK/Tycho screenshot proof.
+2026-10-12T02:17	eclipse.platform.swt	110	pr-body	Existing CI must produce native JUnit/OpenCV/resource receipts.
+2026-10-12T02:17	eclipse.platform.swt	110	pr-body	Record SWT naming and automated QA invariants.
+2026-10-12T02:17	eclipse.platform.swt	110	pr-body	fix(m3): reconcile SWT viewport build, native capture QA and naming invariants.
+2026-10-12T02:18	nebula	142	pr-body	Record SWT naming and automated capture/vision/resource QA invariants.
+2026-10-12T05:52	eclipse.platform.swt	111	pr-body	Prefer both-side preservation for overlapping files and compatible APIs; never use blanket ours/theirs, force-push, reset, history squash, mass-deletion, or wholesale upstream checkout.
+2026-10-12T15:09	eclipse.platform.swt	114	pr-body	Logical row count, aggregate width and one huge intersecting column must not enlarge the resident surface.
+2026-10-13T03:10	nebula	148	pr-body	distant body paint must grow materialized residency by <128 rows, not the 500K prefix;
+2026-10-13T06:15	eclipse.platform.swt	116	pr-body	`List` uses the shared viewport only to mirror scrolling and never windows rows; win32 and gtk keep their only copy of the item text in the native control.
+2026-10-13T07:19	eclipse.platform.swt	117	pr-body	Digests must be identical.
+2026-10-13T07:19	eclipse.platform.swt	117	pr-body	GWT does not wrap `int` `+ - *` to 32 bits, so shared-layer code must not rely on int overflow wrapping (the atoms keep sums in `long`).
+2026-10-13T08:45	nebula	149	pr-body	The existing workflows must actually execute:
+2026-10-13T09:12	eclipse.platform.swt	120	pr-body	User law: "IF A WIDGET IS NOT VISIBLE WHY SHOULD IT EVEN BE PAINTED".
+2026-10-13T09:21	eclipse.platform.swt	121	pr-body	Damaged device-pixel rectangles in one reusable `int` lane (`x, y, width, height`), always **disjoint**: adding a rectangle subtracts the stored ones from it, so `area()` is exact, and rectangles that share a complete edge are merged.
+2026-10-13T09:21	eclipse.platform.swt	121	pr-body	The pixel rectangle always contains the exact scaled one, and two touching point rectangles that share a boundary pixel after rounding are kept as their union (no gap, no double count).
+2026-10-13T09:21	eclipse.platform.swt	121	pr-body	`pixelFloor`/`pixelCeil` vs `Math.floorDiv` at 100, 125, 150, 175 and 200 percent (10,000 points); point rectangles contain the exact scaled rectangle within one pixel per edge; touching rectangles never leave a gap or count a pixel twice at any of those zooms;
+2026-10-13T09:21	eclipse.platform.swt	121	pr-body	`protectedArea()`: border, margin and scrollbar rectangles that damage must never cover.
+2026-10-13T09:24	eclipse.platform.swt	122	pr-body	A COLD item never re-fires SetData.
+2026-10-13T09:24	eclipse.platform.swt	122	pr-body	Any materialization during paint is counted in `materializedDuringPaint`, which must stay 0.
+2026-10-13T09:24	eclipse.platform.swt	122	pr-body	Governing invariant: Synexia #10889 (M3-LAZY-OBJECT-PRESSURE-1).
+2026-10-13T09:52	eclipse.platform.swt	124	pr-body	Public API.** After reveal, the gated control's API values equal those of a never-hidden twin in 15/15 runs.
+2026-10-13T09:52	eclipse.platform.swt	124	pr-body	These are the counts where the gated control equals the never-hidden twin:
+2026-10-13T09:53	nebula	150	pr-body	Docs in `.m3/tree-table-viewport-20261013/`: `DESIGN.md` (per-widget changes, law coverage, residency, bit lanes,
+2026-10-13T09:53	nebula	150	pr-body	tablecombo | TableCombo/CheckTableCombo drop-down built on first use; `SWT.VIRTUAL` popup table with packed row bit set; no item arrays for counts; measuring never builds the drop-down
+2026-10-13T09:53	nebula	151	pr-body	Status per law (implemented / partial / not implemented): design doc section 9.
+2026-10-13T09:53	nebula	151	pr-body	ledger row / law | code
+2026-10-13T09:55	eclipse.platform.swt	121	pr-comment	Overlap note (no code change): Synexia #10911 ("M3: SWT/VNC damage isolation and Java/JNI viewport candidates", draft, hash-pinned templates) carries a second damage model: `ViewportDamage` with at most 32 conservative device-pixel rectangles and revision-bound acknowledgements, `ViewportFrames`, `ViewportPixels` (CopyRect/scroll in Java and JNI) and `ViewportScroll`.
+2026-10-13T09:55	eclipse.platform.swt	121	pr-comment	They are not reconciled; whoever merges first should decide whether one consumes the other, so there is a single damage owner in `org.eclipse.swt.internal`.
+2026-10-13T09:55	eclipse.platform.swt	121	pr-comment	This PR differs in keeping rectangles disjoint (exact `area()`), one point-to-pixel rounding rule (`pixelFloor`/`pixelCeil`), a protected set with `addFrame` rings, and a per-frame recorder with painted-versus-moved accounting.
+2026-10-13T09:55	eclipse.platform.swt	126	pr-body	Overlay planes | SELECTION, CARET, EDITOR, FEEDBACK | Composed over a copy of the content in a present buffer for the damaged rectangle; they never touch the content framebuffer or the tiles.
+2026-10-13T09:55	eclipse.platform.swt	126	pr-body	The GL host is a hidden, disabled, never-shown popup.
+2026-10-13T09:55	eclipse.platform.swt	126	pr-body	Tiles are never rewritten while sampled by an in-flight frame, because frames are synchronous.
+2026-10-13T09:55	eclipse.platform.swt	126	pr-body	`Decorations`, `Shell` and native non-CANVAS controls never get the bit.
+2026-10-13T10:00	eclipse.platform.swt	128	pr-body	ControlExample live-resize sweep:** Resize, Move and Paint events per frame, frame time p50/p95, and a final bounds/client-area tree hash that must equal stock.
+2026-10-13T10:00	eclipse.platform.swt	128	pr-body	Never skipped for a frame or z-order change, or when the parent is mirrored.
+2026-10-13T10:28	nebula	154	pr-body	unfixed master (`eab2a65c`): `Tests run: 2, Failures: 1` — `popupStaysOpenAfterSelectionWhenClosePopupAfterSelectionIsFalse`: `drop-down must stay open`, i.e.
+2026-10-13T10:30	nebula	155	pr-body	A monitor left of the primary one has negative x, so the pop-up was always moved to the
+2026-10-13T11:33	nebula	158	pr-body	The gate is the same: the FILE fixed-point stage must exist in the plan.
+2026-10-13T11:33	nebula	158	pr-body	This job never checks out Nebula: it clones com.synexia into `$RUNNER_TEMP` after setup-java, so the cache key glob matched nothing and the job failed at step 2 every time (15/15).
+2026-10-13T11:47	eclipse.platform.swt	133	pr-body	`Test_org_eclipse_swt_widgets_Display.test_wakeBeforeSleepIsNotLost`: a `wake()` from another thread before `sleep()`, with a 30 s `timerExec` pending, must not block `sleep()` (limit 10 s).
+2026-10-13T11:48	nebula	159	pr-body	The pull requests are merged forward with `--no-ff`, never rebased:
+2026-10-13T14:07	nebula	161	pr-body	Existing `Grid` API, event order, facade identity, and SWT-native painting behavior must remain unchanged.
+2026-10-13T14:07	nebula	161	pr-body	pure HeapGrowth never returns less than minimum;
+2026-10-13T15:48	eclipse.platform.swt	137	pr-body	CR-only changes never land.
+2026-10-13T15:48	eclipse.platform.swt	137	pr-body	Restores 5 ancestry-only merges.** `master` recorded #126, #127, #128, #129 and integration #134 as "merged" while their code never landed (merge tree = first parent).
+2026-10-13T15:48	eclipse.platform.swt	137	pr-body	These old-root PRs never reached any master:
+2026-10-13T16:21	nebula	162	pr-body	`NebulaM3A3LabTest` (288-row campaign, untouched here) is NOT_RUN: it never finished while external git processes exhausted memory.
+2026-10-13T16:28	eclipse.platform.swt	138	pr-body	This PR applies the upstream Eclipse SWT fixes that PR #111 recorded as ancestry-only, so they never reached master.
+2026-10-13T17:22	eclipse.platform.swt	139	pr-body	This PR lands the last old-root work that never reached master.
+2026-10-13T17:22	eclipse.platform.swt	139	pr-body	Win32 virtual Tree native frontier.** This branch, `m3/swt-win32-tree-native-frontier-20261011`, was never opened as a PR.
+2026-10-14T03:32	eclipse.platform.ui	9	pr-body	prepares children with `createChildren` when a newly requested item must become expanded;
+2026-10-14T03:32	eclipse.platform.ui	9	pr-body	setExpandedElements must not walk hundreds of cold siblings;
+2026-10-14T03:33	eclipse.platform.swt	145	pr-body	Preserves exact end points (never a double >2^53 rounding loss).
+2026-10-14T03:34	eclipse.platform.swt	146	pr-body	Native `List` still eagerly requests necessary visible text via `WM_DRAWITEM`; never drops authoritative `setItem` values or suppresses visible `SWT.SetData`.
+2026-10-14T03:34	eclipse.platform.swt	146	pr-body	Native visible events and selection ordering must be tested under an actual SWT Display before promotion.
+2026-10-14T04:05	eclipse.platform.swt	147	pr-body	Thus the deferred work never plans more than **384 candidate rows**, regardless of `Integer.MAX_VALUE` logical count or huge reported client dimensions.
+2026-10-14T04:06	eclipse.platform.swt	148	pr-body	Logical dimensions never resize the widget or allocate a logical-content-sized image.
+2026-10-14T04:26	nebula	170	pr-body	Arbitrarily many independent modified Java files remain allowed; repository size never widens edit scope.
+2026-10-14T07:54	eclipse.platform.swt	151	pr-body	This PR targets the pinned Initiative31 source branch, NOT the unrelated native SWT master; future receiving merges must be contract qualified.
+2026-10-14T08:16	nebula	173	pr-body	Each host must produce byte-identical:
+2026-10-14T08:16	nebula	173	pr-body	those mitigations must be re-proven in a fresh hosted run rather than assumed.
+2026-10-14T08:24	eclipse.platform.swt	152	pr-body	The user-facing rule extends to SWT, Nebula, Swing, JavaFX and SwingX: **preserve every original widget/control public contract, callback, listener, native peer and identity, and optimize internal viewport/overscan/state storage in that same widget.** This PR implements one concrete slice **inside Cocoa `org.eclipse.swt.widgets.Tree`**, not in a proxy widget or a new upper-layer viewport.
+2026-10-14T08:36	eclipse.platform.swt	153	pr-body	GPU/SCREEN/OpenCV, packaging/Tycho, large actual-payload swap and cross-platform requirements remain open.
+2026-10-14T10:46	eclipse.platform.swt	157	pr-body	Font/resize invalidates cached metrics; scrollbar decoration is always recalculated.
+2026-10-14T11:40	eclipse.platform.swt	158	pr-body	Native exceptional disposal timing is improved and must be qualified before promotion.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	All four DPI owners and the namespace repair are unchanged from #159.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Both parent commits are ancestors of the candidate, with zero behind in each comparison.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Combined native/UI/physical-DPI, current Table, distant-scroll and GPU presentation tests remain NOT_RUN; keep DRAFT/HOLD.** No default branch or upstream PR has been merged.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Compared merged candidate against original #160: only #159's four DPI owners plus #153's TreeExpansionModel repair differ.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Compared merged candidate against pinned #159: only VirtualItemStorage differs.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	DPI behavior remains in the existing `Item`, Win32 `TableItem`, `Tree` and `TreeItem`: cached-image DPI queries, resident-child traversal, unknown custom-draw item refusal and nested guard restoration.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Exact source composition checked
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Following the user's request to use the new DPI PR, this branch now incorporates **#159** at exact head `1a9ecbac10a389b578eceb64224cae45dede059c` (including its #153 namespace dependency) through additive merge commit `e8fa9940fcb0fce4f27712b5f886e2f42fdd9667`.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	No new DPI recipe/runtime implementation is introduced.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	No rebase or force push.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Our source-sealed storage output is unchanged.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Recipe ownership stays with **hsoliwal/com.synexia#11342**, named `com.synexia.rewrite.M3SwtIntrinsicDpiAdmissionV420261014`; storage recipe ownership stays with **hsoliwal/com.synexia#11346**.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Reuse update: stack on the existing DPI work, do not reimplement it
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Review stack: **#153 -> #159 -> #160**.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	The DPI recipe's pinned validation records 29 Maven tests, source compilation and ABI checks.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	The V3 native DPI01/DPI05 results do not establish V4 or combined runtime parity.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	The original storage commit `4c3627b2cb5b48959803903ccedf48ee0ed04d7c` is retained as the first parent.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	This PR's base is now `codex/intrinsic-dpi-lifecycle-20261014` so its review diff stays **one file: VirtualItemStorage.java, +14/-4**.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	This verifies actual file content composition, not ancestry alone.
+2026-10-14T11:48	eclipse.platform.swt	160	pr-comment	Those are **existing recorded results**, not new execution of this combined branch.
+2026-10-14T12:16	eclipse.platform.swt	161	pr-body	DPI transitions could therefore materialize a billion-row logical model, violating the viewport and memory-pressure invariants.
+2026-10-14T12:16	eclipse.platform.swt	161	pr-body	It never calls public `getItems()` on `SWT.VIRTUAL`.
+2026-10-14T13:32	nebula	175	pr-body	Any discovered defect must be fixed in the canonical Synexia recipe and re-emitted into this PR, not patched here.
+2026-10-14T13:52	nebula	177	pr-comment	176 has the narrower fast-path admission for custom/virtual-group behavior and the larger documented Java21 geometry proof.
+2026-10-14T13:52	nebula	177	pr-comment	Both contain primitive root paint indices, ordered clipping, long-safe child bounds and an empty fill guard.
+2026-10-14T13:52	nebula	177	pr-comment	Closing this duplicate to maintain a single product candidate.
+2026-10-14T13:52	nebula	177	pr-comment	Superseded by [Nebula #176](https://github.com/hsoliwal/nebula/pull/176), backed by [Synexia #11393](https://github.com/hsoliwal/com.synexia/pull/11393), which was opened concurrently on the same master baseline and changes all three original Gallery sources.
+2026-10-14T13:52	nebula	177	pr-comment	The canonical remaining candidate is still DRAFT/HOLD pending actual Maven/OpenRewrite SDK, Tycho and SWT Display proofs.
+2026-10-14T13:52	nebula	177	pr-comment	The source-sealed branch/commit remains as provenance; nothing was merged into master.
+2026-10-14T14:08	eclipse.platform	8	pr-body	Document the checked-in JDK 25 Jenkins lane, display requirements, parent resolution and report-based test verification
+2026-10-14T14:08	eclipse.platform.ui	10	pr-body	Clarify JDK 25 Jenkins setup, PDE target resolution and native display requirements
+2026-10-14T14:17	eclipse.platform.swt	166	pr-body	Capacity-changing operations still allocate, and retained backing must still be measured separately.
+2026-10-14T14:26	eclipse.platform.swt	167	pr-body	Entire SWT requirement remains active, not falsely marked complete
+2026-10-14T14:30	nebula	181	pr-body	The explicit current master ref is distinct from the PR's creation-base metadata and must be refreshed before merging.
+2026-10-14T15:35	nebula	173	pr-comment	2026-10-14 — additive source-first one-build repair (head `2a3b85ee4181c043489e45b9e3a53f667131af4c`)
+2026-10-14T15:35	nebula	173	pr-comment	After actual one-build + portability verification, the existing machine-readable order is Nebula → canonical Synexia recipe absorption/proof → M3JDK21 backport inventory/replay/proof.
+2026-10-14T15:35	nebula	173	pr-comment	Initial Maven command is `clean install` (the `install` phase includes `verify`); it no longer redundantly executes `clean verify install`.
+2026-10-14T15:35	nebula	173	pr-comment	Initial atom/pattern/IOP/documentation proof uses `m3/reactor.xml -pl recipe-first -am`, building the pinned `openrewrite-line-terminators` dependency from source.
+2026-10-14T15:35	nebula	173	pr-comment	Maven 3.9.11 is pinned identically to the three-host recipe portability workflow.
+2026-10-14T15:35	nebula	173	pr-comment	No GitHub Actions workflow run was returned for this head.
+2026-10-14T15:35	nebula	173	pr-comment	No direct Nebula widget code transfer or automatic scope promotion is authorized.
+2026-10-14T15:35	nebula	173	pr-comment	Observed:** GitHub source read-back/static assertions passed (2/2 reactor invocations, correct reactor module order, pinned Maven, fixed-point/Tycho stages retained).
+2026-10-14T15:35	nebula	173	pr-comment	Post-candidate semantic-coverage/JUnit reproof also invokes the source-first reactor.
+2026-10-14T15:35	nebula	173	pr-comment	Static validation is not a Maven/JUnit/99%-coverage/Tycho/SWT/three-host PASS.
+2026-10-14T15:35	nebula	173	pr-comment	The saved transfer branch now repairs the original `M3 one-build OpenRewrite convergence` job:
+2026-10-14T15:35	nebula	173	pr-comment	The transfer contract must remain `HOLD_UNTIL_PROVEN`.
+2026-10-14T15:35	nebula	173	pr-comment	`m3/ci/test_one_build_source_first_reactor.py` adds 7 regression tests for clean reactor topology, direct module-only invocation, missing dependency closure, test skipping, duplicate lifecycle execution, missing fixed-point replay and missing parser module.
+2026-10-14T15:35	nebula	173	pr-comment	`m3/docs/M3_PORTABLE_RECIPE_DAG.md` records the exact commands, strict Tycho product gate and HOLD state.
+2026-10-14T16:01	eclipse.platform.swt	170	pr-body	Always attempt cleanup of both locally owned contexts, including when adapter cleanup throws.
+2026-10-14T16:01	eclipse.platform.swt	170	pr-body	Never dispose a borrowed paint GC; do not dispose an aliased original twice.
+2026-10-15T01:06	nebula	176	pr-comment	Before full SHA-256 `6c6d831cb1fa9568c41bd03313e42408bd258abe90484c8af65fe8edee67f7bf`; after full SHA-256 `c07fcd185404f8563443584c47facf6a7c12dc1bb0dae691e03ac62b8062c39d`.
+2026-10-15T01:06	nebula	176	pr-comment	Canonical follow-on review/receiver:** Found that `orderedViewportGroups` admitted an ordered default renderer in ordinary `SWT.VIRTUAL` mode (`virtual=true, virtualGroups=false`), even though a binary skip bypasses preceding `_getItem`/potential SetData accesses.
+2026-10-15T01:06	nebula	176	pr-comment	Java21/C17 JNI proof-only test: 51,203 comparisons PASS, old predicate mutant rejected.
+2026-10-15T01:06	nebula	176	pr-comment	Maven/OpenRewrite SDK and actual native SWT Display/SetData/Tycho remain NOT_RUN; keep draft/HOLD**.
+2026-10-15T01:06	nebula	176	pr-comment	No rebase, force push or duplicate widget.
+2026-10-15T01:06	nebula	176	pr-comment	Source-sealed correction is in [Synexia #11459](https://github.com/hsoliwal/com.synexia/pull/11459), created *before* applying the exact template to this PR in receiver commit `4bdcc43647ccccc10a626c96321431c090d33795`.
+2026-10-15T01:06	nebula	176	pr-comment	The sole source change is `&& !virtual` in the original eligibility guard.
+2026-10-15T01:06	nebula	184	pr-comment	A source-sealed follow-on contract correction now lives in [Synexia #11459](https://github.com/hsoliwal/com.synexia/pull/11459) and is applied to #176.
+2026-10-15T01:06	nebula	184	pr-comment	Pending native Gallery/Tycho/OpenRewrite SDK gates are still HOLD.
+2026-10-15T01:06	nebula	184	pr-comment	Retain this branch as historical evidence, but do not merge a duplicate Gallery implementation.
+2026-10-15T01:06	nebula	184	pr-comment	Superseded by existing intrinsic Gallery PR #176 and canonical Synexia #11393.** This PR's single-file primitive index builder overlaps with #176's more complete, three-file original-widget viewport patch.
+2026-10-15T01:12	eclipse.platform.swt	172	pr-body	Native default-action mediation must retain this public API behavior.
+2026-10-15T01:15	nebula	186	pr-body	never executes `rewrite:run`.
+2026-10-15T01:55	nebula	189	pr-body	`NebulaM3BackportDagIntegrityRecipe`: reuses the existing `NebulaM3ExactJavaSnapshotRecipe` to replay the reviewed validator as Java LST, never PlainText.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	A runnable *Java 21 Swing JTree architecture prototype* was launched in a virtual X display in the current ChatGPT work session.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	At startup it modeled 1,001,000,000 logical nodes while materializing 36 JTree nodes and one bit-mask page.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Avoid preceding-prefix `TreeItem` creation when scrolling to distant rows.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	CPU bits, primitive dynamic arrays, lazy facades:** keep compact parent-owned expanded/selected/checked state, rank/select over visible logical order, bounded real `TreeItem` residency and an explicit policy for externally escaped/pinned item identities.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Do not rely on `SWT.VIRTUAL` for the internal presentation `Tree`.** Keep a normal native Tree and its existing public Tree/TreeItem API, scrollbar, selection, accessibility and lifecycle owner.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	It uses an ordinary non-virtual JTree, a CPU parent-owned `long[]` page-mask index, a mediated on-demand data provider, native-scrollbar-like logical navigation and a 22-row viewport + 7 overscan.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Keep this PR in DRAFT/HOLD: its own description already records pre-paint selection/layout and cold-scroll defects.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	M3 Tree direction — non-virtual internal control; M3-mediated SetData (2026-10-15)
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Never let SWT's native virtual SetData callback silently own logical data creation or callback sequencing.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Only window native items** for the visible projection plus bounded overscan; native scrollbar ranges are logical, not resident.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Please treat the non-virtual native Tree + M3-mediated demand requirement as the contract to satisfy in a dedicated recipe-driven successor, not as something this prototype proves has landed.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Preserve expansion and hit-testing semantics; catch up hidden widgets on first exposure.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Recipe-first and fail-closed:** adapt the existing Synexia `M3GpuToolJoinRecipe`/manifest owner, inventory Tree/TreeItem file-local atoms, source-seal the candidate, replay, test fixed point and drift refusal, and only then receive the result on the SWT branch.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Recycled internal resident items must not break public object identity or disposal behavior.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Retain original EPL notices; do not merge before full platform/API tests.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Route every internal SetData-equivalent request through the M3 mediator** (visible → overscan → optional prefetch), with generation/epoch checks, nested callback context protection, cancellation, reentrant disposal handling and deterministic request order.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	Strict Java21 headless rank/select selftest passed 15,000 random samples; independent C17/JNI oracle passed 20,000 comparisons and invalid-input gates.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	The implementation direction is now explicit:
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	The logical CPU model can still be sparse; the native *widget* itself is not the demand authority.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	The mediator may adapt to the caller's established public callback contract only after differential proof.
+2026-10-15T02:03	eclipse.platform.swt	172	pr-comment	This is not an SWT native launch or proof of this PR's Tree implementation.** SWT Win32/GTK/Cocoa runtime, real SWT.SetData ABI, escaped TreeItem identity, accessibility, paint and full Tycho builds remain OPEN.
+2026-10-15T02:21	eclipse.platform.swt	176	pr-body	Hosted native result must be observed; do not infer from stub compile or preview.
+2026-10-15T02:37	nebula	190	pr-comment	2,238,694 comparisons PASS**, without exceptions or mismatches.
+2026-10-15T02:37	nebula	190	pr-comment	A strict JDK 21 headless oracle compiled with `javac --release 21 -Xlint:all -Werror` and executed under `-Xmx256m`.
+2026-10-15T02:37	nebula	190	pr-comment	At last check, this PR head has no attached hosted workflow runs or combined status checks, so the generated JDK21 test, actual widget compile, GTK Xvfb smoke, Tycho and native JNI remain **NOT_RUN/HOLD**.
+2026-10-15T02:37	nebula	190	pr-comment	Independent Java 21 PShelf geometry parity (2026-10-15)
+2026-10-15T02:37	nebula	190	pr-comment	It compared original `ArrayList<Integer>` geometry and the new primitive `int[]` formulas, including every tested previous/new shelf index, forward/reverse animation, negative and extreme signed-int arithmetic, and 2,000 seeded randomized states.
+2026-10-15T02:37	nebula	190	pr-comment	No clipping optimization for arbitrary user-provided renderers was added, because built-in focus drawing and custom callback side effects prevent assuming exact pixel/effect parity without native proof.
+2026-10-15T02:37	nebula	190	pr-comment	Source provenance remains EPL-2.0.
+2026-10-15T02:37	nebula	190	pr-comment	The source-sealed receiver at `d4dd4cfa299f9f802a1a5481672788f3b1178d1e` was re-read: **all nine Git blobs match the canonical Synexia resources exactly**.
+2026-10-15T02:37	nebula	190	pr-comment	This was a standalone independently reconstructed geometry-model exercise; **it is not the committed production PShelf Java class compiled against real SWT** and is not a claim of native GTK/Win32/Cocoa success.
+2026-10-15T03:13	eclipse.platform.swt	177	pr-body	Candidates were emitted by its qualified manifest kernel, never hand-repaired.
+2026-10-15T03:18	nebula	191	pr-body	It never disposes the borrowed GC.
+2026-10-15T03:22	nebula	190	pr-comment	1,371,159 comparison checks total, 0 mismatches**, including int32 modular overflow, float-to-int saturation/NaN, 100,000-row stress, and malformed JNI sibling-index refusals.
+2026-10-15T03:22	nebula	190	pr-comment	2026-10-15 recipe-first JNI qualification continuation
+2026-10-15T03:22	nebula	190	pr-comment	Actual locally executed result:** OpenJDK21 + GCC C17 `-O2 -Wall -Wextra -Wconversion -Wpedantic -Werror` compiled Java+JNI and ran `PSHELF_JNI_PARITY_PASS checks=457053` **three times**: normal `-Xcheck:jni`; interpreter `-Xint -Xcheck:jni`; and native `-fsanitize=undefined -fno-sanitize-recover=undefined` plus `UBSAN_OPTIONS=halt_on_error=1` with `-Xcheck:jni`.
+2026-10-15T03:22	nebula	190	pr-comment	All changes are tests/docs/workflow plus new C17/Java21 proof.
+2026-10-15T03:22	nebula	190	pr-comment	C and Java canonical template Git blobs were checked identical against locally compiled, executed sources.
+2026-10-15T03:22	nebula	190	pr-comment	Full SWT/GTK/Win32/Cocoa/Tycho/native-image qualification remains pending; do not merge or relax admission gates.
+2026-10-15T03:22	nebula	190	pr-comment	Hosted proof boundary:** the dedicated canonical Maven/OpenRewrite SDK run [38675688406](https://github.com/hsoliwal/com.synexia/actions/runs/38675688406) failed **before any build step**: the GitHub job reports no assigned runner, `steps=[]`, and completion roughly 3 seconds after creation.
+2026-10-15T03:22	nebula	190	pr-comment	Its original `PShelf.java` / `RedmondShelfRenderer.java` source blobs remain unchanged since the earlier source-sealed receipt.
+2026-10-15T03:22	nebula	190	pr-comment	Source-first commit chain on [Synexia #11502](https://github.com/hsoliwal/com.synexia/pull/11502): the existing `M3NebulaPShelfViewport20261015Recipe` now source-seals **12 exact target images** (was 9), including the test-only C17 JNI kernel, Java21 native differential oracle and strict test runner.
+2026-10-15T03:22	nebula	190	pr-comment	Target Nebula Actions had no recorded runs at exact head.
+2026-10-15T03:22	nebula	190	pr-comment	The corrected target [Nebula #190](https://github.com/hsoliwal/nebula/pull/190) head `e8880b0190c81563970b6a7f31c6ee3bff778458` was generated from the exact canonical templates.
+2026-10-15T03:22	nebula	190	pr-comment	The source/test Maven recipe therefore remains **NOT_EXECUTED/HOLD**, not a compile/test failure and not a claimed green receipt.
+2026-10-15T03:22	nebula	190	pr-comment	This is an oracle only**: production PShelf is still Java/O(n), no production JNI symbols or native layout calls were added.
+2026-10-15T03:22	nebula	190	pr-comment	`CATEGORY_EVALUATION.tsv` records rejected undefined signed-C overflow and floating narrowing, accepted uint32 bit-preserving arithmetic and explicit NaN/saturation, with first-party EPL-2.0 attribution.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	85 public/protected Tree declaration lines preserved.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	Architectural requirement unchanged: internal rendering Tree should stay a **nonvirtual presentation widget** with M3's parent-owned CPU state and explicit M3 mediation of SetData-equivalent demand; do not outsource request ordering to SWT native VIRTUAL.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	Both PRs are DRAFT/HOLD.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	Concurrency reconciliation:** your #172 head advanced from `19a99960` to `739183ec` while the candidate was prepared.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	I discarded the stale full-source candidate and rebuilt the canonical recipe against `739183ec`, preserving your newly added scrollbar/reentrancy changes and the newer `TreeItem` X-origin guard.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	Independent strict Java21/C17 JNI scalar oracle: **100,336** geometry comparisons passed; old scrollbar endpoint mutant detected.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	NOT_RUN:** actual Maven/OpenRewrite SDK, native Display, UI paint/selection/SetData callbacks, whole donor/Tycho build and platform/overscan evidence.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	Only `Tree.java` is delivered: route horizontal selection through its current onScrollBar owner, invalidate existing header cache, read live horizontal X origin, and clamp programmatic top row to the current full-page endpoint.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	Receiver Git blob equals the canonical recipe template `4fef19f7542f855f04c38f1599fd6c9921bc2ead`.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	Recipe-first Tree viewport scroll successor (2026-10-15)
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	The current-head scroll/geometry corrective leaf is now in **Synexia [#11517](https://github.com/hsoliwal/com.synexia/pull/11517)** (canonical source-sealed Maven/OpenRewrite recipe, exact current Tree/TreeItem inventory, Java21 + C17 JNI proof and catalogue) and stacked **SWT [#178](https://github.com/hsoliwal/eclipse.platform.swt/pull/178)** (one actual `Tree.java` change).
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	This narrow correction improves the existing owner but does not qualify that full architecture, identity escape, or billion-row residency.
+2026-10-15T03:44	eclipse.platform.swt	172	pr-comment	`TreeItem.java` is now a mandatory unchanged recipe `KEEP` input.
+2026-10-15T04:15	nebula	193	pr-comment	Actual cases compare original/optimized index predicates, return values, exception **class and message**, subclass `getItems()` virtual call/guard counts, negative short-circuit and renderer first-item selection, plus 60,000 seeded randomized cases.
+2026-10-15T04:15	nebula	193	pr-comment	Actual exact-source Java21 differential and generated receiver proof
+2026-10-15T04:15	nebula	193	pr-comment	All core classes remain the original PShelf and PShelfItem, with no viewport wrapper.
+2026-10-15T04:15	nebula	193	pr-comment	Canonical recipe evidence now lives beside its POM at `synexia-openrewrite-recipes/recipes/m3-pshelf-item-count-20261015/EXECUTED_JAVA21_PROOF.md`; previous compile failure is retained.
+2026-10-15T04:15	nebula	193	pr-comment	DRAFT / HOLD:** actual canonical Maven/OpenRewrite SDK JUnit, final native Nebula/SWT Tycho build, real GTK/Win32/Cocoa widget events/lifecycle, javap binary API, GWT and heap/JFR performance NOT_PROVEN.
+2026-10-15T04:15	nebula	193	pr-comment	Exactly the same Git blob is present in [Nebula #193](https://github.com/hsoliwal/nebula/pull/193) at head `fe80a7202868618ec5aedf5baa2e4f1ef3a3dca1`.
+2026-10-15T04:15	nebula	193	pr-comment	No JNI product symbols added.
+2026-10-15T04:15	nebula	193	pr-comment	No production generated source was patched to work around the test failure.
+2026-10-15T04:15	nebula	193	pr-comment	Original public/protected source declaration lines compare equal before/after.
+2026-10-15T04:15	nebula	193	pr-comment	Strict `javac --release 21 -Xlint:all -Werror` succeeded, then `java -Xmx128m` printed **`PSHELF_ITEM_OWNER_CONTRACT_PASS checks=311408`**.
+2026-10-15T04:15	nebula	193	pr-comment	The corrected source tested locally is Git blob `bddb5d3d38f26de29abdfd3e39321f4c33a4ad61`, SHA-256 `27a4c80a2347a0440a1574fb20fdfbbb5b0bee8bb7748c02190ea419831988b3`.
+2026-10-15T04:15	nebula	193	pr-comment	The correction was applied to the canonical Synexia source template **first**, and `manifest.tsv` was repinned; Nebula's generated test was then replayed as a new source-identical Git blob.
+2026-10-15T04:15	nebula	193	pr-comment	The exact emitted bodies are `6d008b3b1a8ef3920da686ef2566a09dc8bb73f8` and `0ac11032d1ed993a7b3a596f50c559c6aacb8a39`.
+2026-10-15T04:15	nebula	193	pr-comment	The initial Java21 model compile failed legitimately: the `Outcome` record's accessor is `checks()`, not `widgetChecks`.
+2026-10-15T04:15	nebula	193	pr-comment	The original `PShelf.java` and `PShelfItem.java` preimages are Git-blobs `7c32f415d06b86697e65e30087dbd78f7a29daba` and `2ecd1963d593a784491951d7d5e570911ee96570`, respectively.
+2026-10-15T04:15	nebula	193	pr-comment	This is **not** a compiled SWT binary ABI or native Display test.
+2026-10-15T04:26	nebula	191	pr-comment	1,103 semantic checks on original/candidate; candidate repeated at Xmx32m/128m.
+2026-10-15T04:26	nebula	191	pr-comment	19 canonical kernel admission/emission/refusal/fixed-point checks.
+2026-10-15T04:26	nebula	191	pr-comment	2,026 structural checks per candidate heap, including cleared references, copy/callback failure and reentrancy.
+2026-10-15T04:26	nebula	191	pr-comment	Actual Maven/OpenRewrite SDK remains NOT_RUN (attempt exited127, mvn absent; custom dependency unchanged).
+2026-10-15T04:26	nebula	191	pr-comment	Alias `com.synexia.M3CwtPaintSnapshot20261015` reuses unchanged M3GpuToolJoinRecipe/Manifest.
+2026-10-15T04:26	nebula	191	pr-comment	At most one cleared array of **256 references** is retained per renderer.
+2026-10-15T04:26	nebula	191	pr-comment	Before blob `952cde8896a2697e2f58da6a9f6765d53c098bcf`.
+2026-10-15T04:26	nebula	191	pr-comment	Caller-owned arrays are never cleared or retained; public getChildren remains unchanged.
+2026-10-15T04:26	nebula	191	pr-comment	Canonical [Synexia #11509](https://github.com/hsoliwal/com.synexia/pull/11509#issuecomment-6184389598) was updated first: docs `3d3859be67fda16b62bf82e860c4e02012859dab`, then qualified recipe/templates/tests/evidence `5c2b5bc37ae570ce28ed2caafd424c885f4f02bc`.
+2026-10-15T04:26	nebula	191	pr-comment	Child/Event identity, mutation during callbacks, order, exceptions and the existing viewport paint path are retained.
+2026-10-15T04:26	nebula	191	pr-comment	Complete real VPanel/VControl/VPaintScope/VPanelPainter compile with explicit host API doubles.
+2026-10-15T04:26	nebula	191	pr-comment	Every-widget acceptance remains open.
+2026-10-15T04:26	nebula	191	pr-comment	Exact source readback before branch update matched canonical blob **`3e2f2f474b9179a46a524de64ca6c2f120159976`**, SHA256 `c6414d73a074b1f58ba290fb5c10c9e9f271caca4cd7136e4ce7e03844ba2578`.
+2026-10-15T04:26	nebula	191	pr-comment	Exact-head PR-triggered workflow search returned no receiver runs; canonical head has failed hosted checks, not a passing gate.
+2026-10-15T04:26	nebula	191	pr-comment	Existing PR extended: bounded reentrant child paint snapshots
+2026-10-15T04:26	nebula	191	pr-comment	Existing PShelf190 and newer Initiative31 Tree172/178 work were inspected and left untouched; this increment does not replace or import their qualification.
+2026-10-15T04:26	nebula	191	pr-comment	Existing public/protected/package descriptors match.
+2026-10-15T04:26	nebula	191	pr-comment	Final executed campaign snapshot03
+2026-10-15T04:26	nebula	191	pr-comment	For exact VPanel/default ArrayList it leases an exact-sized private buffer, removes it from the cache while active, then clears references before release.
+2026-10-15T04:26	nebula	191	pr-comment	Kernel replay is not SDK execution.
+2026-10-15T04:26	nebula	191	pr-comment	Larger panels, subclasses, custom lists, public getter overrides and post-dispose calls retain the original getter path.
+2026-10-15T04:26	nebula	191	pr-comment	Native CWT/SWT/Tycho, JUnit discovery, actual GC/Region and platform frame behavior remain unqualified.
+2026-10-15T04:26	nebula	191	pr-comment	Nested/shared-renderer calls cannot borrow the same active buffer.
+2026-10-15T04:26	nebula	191	pr-comment	New head **`61f422ea7c3b7b3a252accf227ba5110ab322c7b`** adds exactly one modification after `4130b7b141325b1426a36a5a9c8be0a136746ab4`: existing `VPanelPainter.java`, **+54/-3**.
+2026-10-15T04:26	nebula	191	pr-comment	No additional child culling, SetData change, item virtualization, persistent child index or production JNI path.
+2026-10-15T04:26	nebula	191	pr-comment	No callback executes under the private handoff lock.
+2026-10-15T04:26	nebula	191	pr-comment	No merge, rebase, force-push, root/default-branch change or deletion.
+2026-10-15T04:26	nebula	191	pr-comment	No new PR, branch, widget or wrapper was created.
+2026-10-15T04:26	nebula	191	pr-comment	Not new feature-native proof or acceleration.
+2026-10-15T04:26	nebula	191	pr-comment	O(n) copying/traversal remains and clearing adds O(n) stores; the cap is a retention budget, not a limit on children.
+2026-10-15T04:26	nebula	191	pr-comment	Parent regression retains 76 paint checks, 26/26 fixture Regions and 32 handler checks.
+2026-10-15T04:26	nebula	191	pr-comment	Preserved snapshot semantics
+2026-10-15T04:26	nebula	191	pr-comment	Task: `recipes/widget-owner-viewport-20261015/cwt-snapshot/` in synexia-openrewrite-recipes.
+2026-10-15T04:26	nebula	191	pr-comment	The changed renderer separately passes Java21 `-Xlint:all -Werror`; full original/candidate compilation has the same three inherited diagnostics.
+2026-10-15T04:26	nebula	191	pr-comment	The receiver is the exact emitted postimage; no generated output was hand-patched.
+2026-10-15T04:26	nebula	191	pr-comment	The renderer still captures the current complete child order before callbacks.
+2026-10-15T04:26	nebula	191	pr-comment	The stopped baseline-fixture run and later recipe refinement are retained in the canonical task/archive.
+2026-10-15T04:26	nebula	191	pr-comment	This is snapshot-array allocation only, not zero-allocation full painting or a UI/JMH performance claim.
+2026-10-15T04:26	nebula	191	pr-comment	This reuses array storage, not stale logical snapshots.
+2026-10-15T04:26	nebula	191	pr-comment	Three compiled incorrect variants rejected.
+2026-10-15T04:26	nebula	191	pr-comment	Two-thread proof is confined to private buffer handoff, not concurrent SWT access.
+2026-10-15T04:26	nebula	191	pr-comment	Unchanged C17 JNI geometry regression: 200,576 comparisons, five refusals, strict warnings/UBSan/-Xcheck:jni.
+2026-10-15T04:26	nebula	191	pr-comment	VControl, VPaintScope, VPanel, prior Grid work and all other files are unchanged.
+2026-10-15T04:26	nebula	191	pr-comment	With 128 children and child painters disabled, an isolated allocation counter after10,000 warm-up calls measured **10,560,000 bytes original versus 0 bytes candidate** in each of three20,000-call samples.
+2026-10-15T05:01	nebula	197	pr-comment	Concurrent-base merge HOLD — do not take this older postimage over the current #191 branch.** During publication, its head was reported as `61f422ea7c3b7b3a252accf227ba5110ab322c7b`, introducing a separate bounded-256 renderer snapshot optimization in the same VPanelPainter file.
+2026-10-15T05:01	nebula	197	pr-comment	Full comparison is now committed in canonical Synexia #11533 at `bb95ca63e01ec3080232bfcf3c04cbbbfe5d2bce`, `evidence/CONCURRENT_BASE_REVIEW.md`.
+2026-10-15T05:01	nebula	197	pr-comment	I fetched and compiled the exact new painter (`3e2f2f474b9179a46a524de64ca6c2f120159976`) with the same original VPanel and explicit host fixtures.
+2026-10-15T05:01	nebula	197	pr-comment	It passed 59,184 shared behavior/probe checks.
+2026-10-15T05:01	nebula	197	pr-comment	Its 1,024-child allocation results retain the expected >256 fallback; ours trades a larger parent-owned buffer for eliminating that allocation.
+2026-10-15T05:01	nebula	197	pr-comment	No merge, force push or newer-source overwrite.
+2026-10-15T05:01	nebula	197	pr-comment	Receiver source readback remains exact for the declared candidate; native toolkit and SDK gates stay open.
+2026-10-15T05:01	nebula	197	pr-comment	Retention, fallback and ownership must be reconciled through a new exact-current-base recipe before merge, not by manual conflict selection.
+2026-10-15T05:01	nebula	197	pr-comment	The current donor also explicitly preserves custom-list and disposed-renderer admission policy.
+2026-10-15T05:01	nebula	197	pr-comment	This PR remains tied to pinned `4130b7b...` and is an alternative candidate, not an already-reconciled successor.
+2026-10-15T05:46	nebula	198	pr-body	Use `try/finally` to always release only a locally constructed temporary GC and reset `totalWidth=null` only if measurement did not complete, allowing a subsequent retry.
+2026-10-15T06:13	nebula	199	pr-comment	2026-10-15 exact-head receipt / scope correction
+2026-10-15T06:13	nebula	199	pr-comment	A full interpreted reference replay timed out and is **not** reported as a pass.
+2026-10-15T06:13	nebula	199	pr-comment	Actual Maven/OpenRewrite SDK, original complete Tiles native/GTK/Cocoa/Win32 SWT/Tycho, binary javap ABI, GUI/pixel/hit/disposal checks, heap/frame performance and GWT/RAP remain NOT_PROVEN.
+2026-10-15T06:13	nebula	199	pr-comment	C17 JNI oracle (test-only):** original/Java/native comparison **37,749 normal -Xcheck:jni**, **1,005 bounded -Xint -Xcheck:jni**, **37,749 GCC -fsanitize=undefined/no-recover with -Xcheck:jni**; combined **76,503 PASS**, including invalid geometry refusal.
+2026-10-15T06:13	nebula	199	pr-comment	Do not merge or promote until those pass; do not rebase Synexia develop.
+2026-10-15T06:13	nebula	199	pr-comment	HOLD / not overclaimed:** GitHub Nebula receiver currently has **zero attached hosted runs**.
+2026-10-15T06:13	nebula	199	pr-comment	Java21 actual differential:** exact committed source `TilesHitGridProof.java`, original layout/hit oracle vs safe grid candidate, **170,784 checks PASS** at both Xmx256m and Xmx64m; includes 1,079 qualified frames, 3,537 fallback frames, 10,000 tile stress, overflow/bounds/mutated layouts.
+2026-10-15T06:13	nebula	199	pr-comment	Native acceleration is **not introduced to the product** because crossing JNI per pointer event is not justified.
+2026-10-15T06:13	nebula	199	pr-comment	Production and ownership proof:** exact two original source preimages on Nebula `master@4ea8bf0dd5440b64a59b8b529d6ae6d81f7e0bd8`, `Tiles.java=4c93a479b3189a834f15b7e61b2378958a25ec1f`, `FrameStatic.java=983b0e383f76f8badab75e6935641f827ecedca2`.
+2026-10-15T06:13	nebula	199	pr-comment	Recipe-first source custody:** [Synexia #11540](https://github.com/hsoliwal/com.synexia/pull/11540) owns exactly 10 SHA-256 postimages, before-state snapshots, named Maven/OpenRewrite leaf, SDK tests for exact replay/fixed point/source refusal, category decisions, runner and a hosted Java/JNI/real-SWT-compile workflow.
+2026-10-15T06:13	nebula	199	pr-comment	The **full original Tiles.paintFrame method is byte-for-byte untouched**.
+2026-10-15T06:13	nebula	199	pr-comment	The Synexia source PR CI workflows reported failures, including a sampled CI job with **zero executed steps** (runner not assigned); this is not an SDK source failure proven by Maven logs, nor a passing gate.
+2026-10-15T06:13	nebula	199	pr-comment	The all-widget [catalogue #11521](https://github.com/hsoliwal/com.synexia/pull/11521) now points to this PR and the other newly reviewed original-widget donors while keeping all 360 entries HOLD.
+2026-10-15T06:13	nebula	199	pr-comment	The generated candidates, `Tiles=6b324561c4b4024c2b4da15cc27395cc5b41f374`, `FrameStatic=78707b7fe9f65aca4ef274545cc3150d1cd98aa7`, are byte-identical to the canonical Synexia templates.
+2026-10-15T06:13	nebula	199	pr-comment	The original first-hit ordered loop within getTileAt also remains **byte-for-byte identical** as the fallback, including its inclusive edges.
+2026-10-15T06:13	nebula	199	pr-comment	The target's ten new/changed Git blobs were re-read and match the source recipe.
+2026-10-15T06:13	nebula	199	pr-comment	Thirty-five public/protected source declaration lines per original class match exactly; **this is not yet javap/compiled ABI proof**.
+2026-10-15T07:06	nebula	191	pr-comment	7,004 CWT assertions per candidate heap32m/128m pass**, including tree topology/disposal/identity, axis separation/int edges/input ownership/image and oval precedence, and constructor/font/extent/cleanup failures.
+2026-10-15T07:06	nebula	191	pr-comment	Alias `com.synexia.M3WidgetBugfixNebula20261015` reuses unchanged M3GpuToolJoinRecipe/Manifest.
+2026-10-15T07:06	nebula	191	pr-comment	Canonical recipe/evidence published first in [Synexia #11509](https://github.com/hsoliwal/com.synexia/pull/11509#issuecomment-6186514004), head301f0c61299972d0842f751cfce47855fe561f4f after docs-firstdeca79d8e07673777b4c5d3a5010ce8cdd74ad78.
+2026-10-15T07:06	nebula	191	pr-comment	Companion original row-renderer fixes are now published in [SWT #181](https://github.com/hsoliwal/eclipse.platform.swt/pull/181), stacked on #179.
+2026-10-15T07:06	nebula	191	pr-comment	Complete private/public javap descriptors match.
+2026-10-15T07:06	nebula	191	pr-comment	DRAFT/HOLD remains:** actual Maven/OpenRewrite SDK command exits127 because mvn is absent; native Nebula/SWT/Tycho/JUnit discovery, actual Display/GC/Region lifetime, full callback/pixel/platform/DPI/accessibility and performance acceptance are NOT_RUN.
+2026-10-15T07:06	nebula	191	pr-comment	Exact whole-file postimage **ef76ce59ec18af517e5a4b2be22ff72af38d802a**, SHA256 **8365884fb89024cf2648250db4488a99dd8c962e85a46b9ea80a4b6e37702d5e**, was read back before branch update.
+2026-10-15T07:06	nebula	191	pr-comment	Existing PR extended: three VControl bug fixes
+2026-10-15T07:06	nebula	191	pr-comment	Fresh recovery01 compiles the complete actual VControl and retained CWT owners against explicit host doubles.
+2026-10-15T07:06	nebula	191	pr-comment	Generated output was not hand-repaired.
+2026-10-15T07:06	nebula	191	pr-comment	JNI remains test-only: no product native symbol, native GC proof or UI speedup claim.
+2026-10-15T07:06	nebula	191	pr-comment	No merge, default-branch update, force-push, rebase or deletion.
+2026-10-15T07:06	nebula	191	pr-comment	No replacement widget or alternate data/viewport owner.
+2026-10-15T07:06	nebula	191	pr-comment	Original source exposes200 containment,1,217 polygon and24 measurement failure observations in this corpus.
+2026-10-15T07:06	nebula	191	pr-comment	Public/private method and field descriptors are unchanged.
+2026-10-15T07:06	nebula	191	pr-comment	Published head **aa0a36e5bfcfebb26f1a85d6b3dc2e390fc7d2f5** adds exactly one source delta after61f422ea7c3b7b3a252accf227ba5110ab322c7b: `VControl.java`, **+22/-7**.
+2026-10-15T07:06	nebula	191	pr-comment	Retained76 paint checks balance26/26 fixture Regions;1,103 snapshot semantic checks pass.
+2026-10-15T07:06	nebula	191	pr-comment	The existing containment helper now continues siblings after an unsuccessful recursive branch; the polygon-size loop advances x/y pairs; text measurement always disposes its own GC after font/extent failures while retaining the original primary RuntimeException/Error, suppressing cleanup failures and preserving successful call order.
+2026-10-15T07:06	nebula	191	pr-comment	The independent C17 JNI oracle compares20,000 polygon inputs/40,000 components with actual VControl measurement and separately checks four oracle flag cases and six refusals under strict warnings, UBSan and-Xcheck:jni.
+2026-10-15T07:06	nebula	191	pr-comment	This does not merge the competing parent-owned snapshot proposal in #197 or finish every widget.
+2026-10-15T07:06	nebula	191	pr-comment	Three CWT compiled mutants are rejected; the complete companion campaign rejects five in total.
+2026-10-15T07:06	nebula	191	pr-comment	Unaffected focus-event order, canonical data, SetData and paint/snapshot behavior remain original.
+2026-10-15T07:06	nebula	191	pr-comment	VPanel, VPanelPainter, VPaintScope, prior Grid work and all other sources remain unchanged.
+2026-10-15T07:20	nebula	204	pr-body	It was source-sealed first with exact JUnit SDK replay, fixed-point/drift/refusal tests, before fixture, complete after template, Maven POM, Java/C17 JNI oracles, source/law catalogue and receipts.
+2026-10-15T07:20	nebula	204	pr-body	V2 uses a parent-owned `long viewportPaintEpoch` and a bounded one/two-use measurement lease: if preparation sees a nested paint, escape, mutation or font change, stage one still consumes the original measured result once and stage two must perform a fresh measurement.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	Actually executed local standalone proof:** strict Java21+C17 JNI resource counter test, `-Xcheck:jni`, UBSan/warnings-as-errors, output `PASS ...
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	Both canonical #11591 and SWT receiver #182 remain DRAFT/HOLD.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	Current qualification receipt — 2026-10-15 (DRAFT/HOLD)
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	Exactly one original private `performDraw` method changed; 90 public/protected source signatures identical.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	GitHub job steps were empty and job logs returned `BlobNotFound` via this connector; root cause unconfirmed.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	Hosted GitHub Actions is FAIL, not PASS:** [run 38707498315](https://github.com/hsoliwal/com.synexia/actions/runs/38707498315) reports `native-counter=failure` and `source-sealed-openrewrite=skipped`.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	No merge, auto-merge, rebase or direct default-branch write.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	No production JNI signatures introduced.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	Original `Drawing.java` unchanged.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	Other repository CI workflows report failures.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	Source and ownership proven:** Current parent SWT #172 `0ab96311eae1a7d6c27b0ca61578b0eeca635484`; `SkijaGC.java` before blob `6ad4afef8e25320e4e849b9b1a2aca4c50e46f14`; current emitted/receiver Git blob `015eb4651ce31dd18e4595e853522a8ea1d5a3ed`, identical on canonical and SWT branch.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	Still NOT_RUN:** Maven/OpenRewrite SDK JUnit, real current SWT/Tycho 677-source compilation, HumbleUI Skija native JNI, Win32/GTK/Cocoa pixel/alpha/clip, resource heap/leak/dpi/ime, SetData/Tree/UI callbacks and native binary ABI.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	The public chat includes a runnable ZIP.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	The smaller on-branch `M3SkijaPaintLeaseSmoke` source/runner is committed for hosted verification, **not locally executed**.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	This compiles an exact-body **test double**, not the whole SWT SkijaGC.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	This result must not be interpreted as a qualified SDK or hosted JNI run.
+2026-10-15T08:44	eclipse.platform.swt	182	pr-comment	checks=193413 normalCases=15620 intentionalExceptionRepairs=4385`.
+2026-10-15T09:06	eclipse.platform.swt	183	pr-body	It is never loaded by SWT.
+2026-10-15T09:59	nebula	212	pr-body	and never automatic source authority.
+2026-10-15T10:12	nebula	212	pr-comment	Added `m3/ci/test_final_transfer_workflow.py` (7 fail-closed regression cases) and strengthened `test_portable_recipe_workflow.py` (6 cases).
+2026-10-15T10:12	nebula	212	pr-comment	Aligned final-transfer Maven to 3.9.11, matching portable and one-build proof.
+2026-10-15T10:12	nebula	212	pr-comment	Final hosted-transfer workflow now has a single 18-stage path, with the duplicated stages 7–14 and orphaned fragment removed.
+2026-10-15T10:12	nebula	212	pr-comment	Its four proof scripts have one matching terminator each.
+2026-10-15T10:12	nebula	212	pr-comment	Latest branch structural readback: one portable worker/reducer, two matching five-root schemas, 18 unique final stages, four complete heredocs.
+2026-10-15T10:12	nebula	212	pr-comment	M3 recipe-first/Java-grade proof-chain repair on the saved branch:
+2026-10-15T10:12	nebula	212	pr-comment	No GitHub Actions runs have appeared for the latest head; Maven/OpenRewrite/JUnit/JaCoCo 99%, original Tycho/SWT pixels/runtime, cross-host roots and downstream M3JDK21/Synexia application remain UNVERIFIED/HOLD.
+2026-10-15T10:12	nebula	212	pr-comment	Pending Java-grade evidence remains HOLD with zero mutation/promotion authority.
+2026-10-15T10:12	nebula	212	pr-comment	Portable three-host workflow now has exactly one Java-21 worker matrix, one reducer, and the five explicit DAG / orchestration / backport-plan / backport-bundle / transfer roots.
+2026-10-15T10:12	nebula	212	pr-comment	The branch and PR remain draft; this repair grants no source promotion or automatic backport authority.
+2026-10-15T10:12	nebula	212	pr-comment	The existing one-build job discovers `m3/ci/test_*.py` before recipe application.
+2026-10-15T10:12	nebula	212	pr-comment	Verification honesty:** These are structural/source checks only.
+2026-10-15T10:18	nebula	214	pr-body	No new widget hierarchy, duplicated viewport state, source copy, or Skija runtime requirement.
+2026-10-15T10:18	nebula	214	pr-body	The Git patch is the only source-changing instruction; it must replay the pinned original `CTree.java` to the exact reviewed output, refuse a stale preimage or second application, and reverse back to the original.
+2026-10-15T10:32	eclipse.platform.swt	187	pr-body	never disposes a borrowed paint GC and never double-disposes an aliased original;
+2026-10-15T10:33	eclipse.platform.swt	182	pr-comment	187** now receives the exact existing #170 `Drawing.java` ownership repair onto this current Skija Paint lineage, as a **one-file** draft diff.
+2026-10-15T10:33	eclipse.platform.swt	182	pr-comment	Canonical recipe and fresh original/candidate tests are in **hsoliwal/com.synexia#11620**, recipe commit `9f24d81779b4a643d16679ad999c9f1adfa47571`.
+2026-10-15T10:33	eclipse.platform.swt	182	pr-comment	It preserves this PR's SkijaGC source rather than merging #170's incompatible whole branch.
+2026-10-15T10:33	eclipse.platform.swt	182	pr-comment	Receiver Drawing blob is exactly `ddea4ee87948534f2602fe9b6a9d98adaec8c589`; actual readback matches.
+2026-10-15T10:33	eclipse.platform.swt	182	pr-comment	This is not native SWT/Skija resource proof, GPU acceleration or PNG-transfer removal; all current native/SDK/platform HOLD gates remain.
+2026-10-15T10:33	eclipse.platform.swt	182	pr-comment	Whole Drawing passes 6,447 checks against explicit API doubles in both Java and test-only JNI ledger modes.
+2026-10-15T10:37	nebula	215	pr-body	It always closes the temporary GC; if cleanup also fails after an earlier error, it retains that original exception as primary and attaches the cleanup error as suppressed.
+2026-10-15T10:37	nebula	215	pr-body	Target CI attempts Java21 normal/interpreted tests; a green run must be observed.
+2026-10-15T10:44	nebula	215	pr-comment	2026-10-15 exact-head verification receipt — source status vs runtime status
+2026-10-15T10:44	nebula	215	pr-comment	Algorithm/donor rationale:** original BadgedLabel (EPL-2.0) is the single native Control/GC owner.
+2026-10-15T10:44	nebula	215	pr-comment	Borrowing a paint Event.gc for out-of-paint computeSize is rejected as a contract violation; no unrelated challenge code or production JNI hotpath was introduced.
+2026-10-15T10:44	nebula	215	pr-comment	CWT #191/#197 and SWT Project31 #182 are pattern leads, not copied bodies.
+2026-10-15T10:44	nebula	215	pr-comment	Canonical PR:** [Synexia #11623](https://github.com/hsoliwal/com.synexia/pull/11623), head `7b3ab6be19832aa7597d933ca8320e41017ec0bd`.
+2026-10-15T10:44	nebula	215	pr-comment	Central [Synexia original-widget catalogue #11521](https://github.com/hsoliwal/com.synexia/pull/11521) was updated with this new PR hint and all 360 records remain `HOLD_UNQUALIFIED`.
+2026-10-15T10:44	nebula	215	pr-comment	Entire original source outside precisely two private measurement methods matches unchanged; all 22 public/protected declaration lines match.
+2026-10-15T10:44	nebula	215	pr-comment	Exact compiled Java model Git blob `2e8aaf23800f6d688186b3a75fb9067ca9b347dc`, SHA-256 `a6a9013a1a102e692e85e06702ac8e2f81c8d221cf77b633e54870072c463041`.
+2026-10-15T10:44	nebula	215	pr-comment	Full actual SWT/Opal/Tycho, GTK/Cocoa/Win32 native GC/Font/pixels, compiled javap/JNI ABI, GWT/RAP and end-user performance are **NOT_PROVEN / HOLD**.
+2026-10-15T10:44	nebula	215	pr-comment	Hosted gate situation:** dedicated canonical [Actions run #38722095038](https://github.com/hsoliwal/com.synexia/actions/runs/38722095038) reported **both** Java21-model and Maven/OpenRewrite jobs as failed **with zero executed steps**; this neither proves a production compile failure nor a successful SDK run.
+2026-10-15T10:44	nebula	215	pr-comment	Locally executed:** `javac --release 21 -Xlint:all -Werror`, then `java -Xmx128m` and `java -Xint -Xmx128m`, both `BADGEDLABEL_GC_OWNER_PASS assertions=960000` (same 160,000 seeded model states in both execution modes).
+2026-10-15T10:44	nebula	215	pr-comment	No merge/rebase/default-branch edit performed in this delivery.
+2026-10-15T10:44	nebula	215	pr-comment	Original BadgedLabel source `dcf9be1b3a53354f63afdee2050dbf2150c042f4` → candidate `ad2e308fb111a32d4f645c844ad9132bcedf13c2`.
+2026-10-15T10:44	nebula	215	pr-comment	Original paint/layout/selection remains untouched.
+2026-10-15T10:44	nebula	215	pr-comment	Receiver:** [Nebula #215](https://github.com/hsoliwal/nebula/pull/215), head `5923e07c2f377f13e6877a7f1f1780974fe7d9d2`.
+2026-10-15T10:44	nebula	215	pr-comment	Recipe execution is still pending; canonical source hash replay is not represented as actual OpenRewrite SDK execution.
+2026-10-15T10:44	nebula	215	pr-comment	Six receiver files were **re-read from the exact target branch** and compared byte-for-byte and Git-blob-for-Git-blob against all six canonical resource templates; **6/6 exact match**.
+2026-10-15T10:44	nebula	215	pr-comment	The model checks old/candidate native-GC counter behavior, exception family/message, resource closure and secondary disposal-failure suppression.
+2026-10-15T10:44	nebula	215	pr-comment	The target Nebula #215 still has **no confirmed hosted run** at exact receiver head.
+2026-10-15T10:50	nebula	216	pr-body	The Maven `semantic-coverage` JaCoCo include set now covers `NebulaM3DagWavePlanner*`, with a 99% line coverage requirement unchanged.
+2026-10-15T10:50	nebula	216	pr-body	The next phase must transitively depend on every node of the preceding phase.
+2026-10-15T11:02	nebula	217	pr-body	Repository size never promotes scope.
+2026-10-15T11:03	nebula	212	pr-comment	Closing this draft preserves history while leaving one canonical proof branch.
+2026-10-15T11:03	nebula	212	pr-comment	Superseded by #217, which preserves this PR's work and consolidates the Java-grade/backport bundle with dependency-wave validation and dependency-driven Camel/Airflow/Drools projections.
+2026-10-15T11:04	nebula	212	pr-comment	Current downstream proof-gated receivers are now materialized:
+2026-10-15T11:04	nebula	212	pr-comment	Hosted proof remains the only blocker to target-source application.
+2026-10-15T11:04	nebula	212	pr-comment	M3JDK21 current backport admission: hsoliwal/M3jdk21#934
+2026-10-15T11:04	nebula	212	pr-comment	No green proof is being inferred from source inspection.
+2026-10-15T11:04	nebula	212	pr-comment	Synexia canonical custody: hsoliwal/com.synexia#11632
+2026-10-15T11:04	nebula	212	pr-comment	does NOT stop independent JEP/JDK inventory/recipe preparation
+2026-10-15T11:04	nebula	212	pr-comment	grants no mutation or promotion authority
+2026-10-15T11:04	nebula	212	pr-comment	next action is WAIT_FOR_NEBULA_GREEN_AND_SYNEXIA_MERGE
+2026-10-15T11:04	nebula	212	pr-comment	packet_execution=false, mutation=false, promotion=false
+2026-10-15T11:04	nebula	212	pr-comment	pins this PR/commit as HOLD_UNTIL_PROVEN
+2026-10-15T11:04	nebula	212	pr-comment	reuses merged M3NebulaRecipeDag / M3NebulaViewportDistillationRecipe owners
+2026-10-15T11:04	nebula	212	pr-comment	validates the current Nebula -> Synexia -> M3JDK21 chain in m3/backports
+2026-10-15T11:26	nebula	219	pr-body	An independent verifier must validate actual proof evidence before an adapter supplies completion; SHA shape alone is not authentication.
+2026-10-15T11:26	nebula	219	pr-body	They never set COMPLETE or fabricate a fingerprint.
+2026-10-15T12:07	nebula	220	pr-body	This check is **identity binding**, not external proof authenticity: hosted Maven/JUnit/Tycho receipts must still be independently verified.
+2026-10-15T12:44	eclipse.platform.swt	188	pr-body	Disposed/wrong-thread getters must not return cached state or invoke the renderer; invalid setters must not mutate protected color fields before superclass refusal.
+2026-10-15T14:16	eclipse.platform.swt	185	pr-comment	Do not merge the second pass independently of this source lineage.
+2026-10-15T14:16	eclipse.platform.swt	185	pr-comment	Exact old/new whole-class Java21, 1,700-node/2,000-edge digest, 13,000 callback differential and forced OOME reference negative controls passed; real SWT/Tycho/Skija/UI remains HOLD.
+2026-10-15T14:16	eclipse.platform.swt	185	pr-comment	Follow-up original-owner correctness receiver, not replacement graph
+2026-10-15T14:16	eclipse.platform.swt	185	pr-comment	It stages original `ViewportPaintGraph`'s parallel node, dirty and edge arrays before publication under allocation failure.
+2026-10-15T14:16	eclipse.platform.swt	185	pr-comment	The first-pass hybrid dirty-word paint traversal and public/package method descriptors are preserved.
+2026-10-15T14:16	eclipse.platform.swt	185	pr-comment	[SWT #190](https://github.com/hsoliwal/eclipse.platform.swt/pull/190) is **stacked on this exact PR head** and [Synexia recipe #11681](https://github.com/hsoliwal/com.synexia/pull/11681) uses this PR's final source SHA-256 as a strict second-pass preimage.
+2026-10-16T01:06	nebula	227	pr-body	Atomicity is per artifact, not a seven-file transaction**; consumers must verify the content-addressed receipt set.
+2026-10-16T01:06	nebula	227	pr-body	Repository size alone never escalates scope.
+2026-10-16T01:43	eclipse.platform.swt	191	pr-body	Must run full SWT/Tycho, exact Windows native events and JNI provenance, GTK/Cocoa, cancellation/reentrancy/disposal, GPU/Skija pixels, accessibility/IME/DPI and performance before promotion.
+2026-10-16T01:53	eclipse.platform.swt	172	pr-comment	Executed only: strict Java21 helper/JUnit-body checks (6 tests) and 50,000 Java vs test-only C17 JNI scalar admissions, also `-Xint`/UBSan.
+2026-10-16T01:53	eclipse.platform.swt	172	pr-comment	Existing Tree #172 source and archaeology are unchanged.
+2026-10-16T01:53	eclipse.platform.swt	172	pr-comment	Full 125-KiB Tree compiler AST verifier is authored/compiled but not yet executed on the exact images; Maven/OpenRewrite SDK and native SWT/Tycho not run.
+2026-10-16T01:53	eclipse.platform.swt	172	pr-comment	No new widget, native callback dispatcher, Skija backend, TreeItem change or public API.
+2026-10-16T01:53	eclipse.platform.swt	172	pr-comment	One source-backed defect from the stock/common native red traces is now isolated in **draft [SWT #192](https://github.com/hsoliwal/eclipse.platform.swt/pull/192)**, stacked on this exact original Tree source head `5536d119`, with **canonical Maven/OpenRewrite recipe first [Synexia #11739](https://github.com/hsoliwal/com.synexia/pull/11739)**.
+2026-10-16T01:53	eclipse.platform.swt	172	pr-comment	Product Tree.java postimage Git blob `8b5f696b9ac6d569ce30ceb2ef813c76d80f015a`; all four product/test files match the canonical source-sealed resources byte-for-byte.
+2026-10-16T01:53	eclipse.platform.swt	172	pr-comment	Scoped native Tree event repair candidate (2026-10-16)
+2026-10-16T01:53	eclipse.platform.swt	172	pr-comment	The current original `Tree.onMouseUp` sent a generic itemless Selection after *every* BUTTON1 mouse release, including disclosure and CHECK.
+2026-10-16T01:53	eclipse.platform.swt	172	pr-comment	The new original-owner-only candidate admits generic Selection only after a valid regular/virtual row press, using one replaceable package-private, parent-owned two-field gesture atom.
+2026-10-16T01:53	eclipse.platform.swt	172	pr-comment	This may remove one extra itemless Selection, but does not fix native Expand/Collapse/CHECK default-action timing, focus phase or tested older-runtime native parity.** Keep both PRs DRAFT/HOLD until matched stock/current eight-owner native traces and full gates pass.
+2026-10-16T03:08	nebula	194	pr-comment	Superseded: master already carries the same allocation-free PrintPreview damage rejection (isOutsideSafeDamage); after merging master this branch has no remaining change.
+2026-10-16T03:14	nebula	229	pr-body	The candidate sums by integer index **only** for an exact `SegmentedBar.class`, exact internally created private `ArrayList.class`, and only exact ordinary `Segment` instances that can never override `getValue()`.
+2026-10-16T03:17	eclipse.platform.swt	192	pr-comment	Canonical recipe proof-tool repair; product Tree source unchanged (2026-10-16)
+2026-10-16T03:17	eclipse.platform.swt	192	pr-comment	Existing C17 JNI test-only scalar parity was reexecuted with `-Xcheck:jni` and `-Xint`/UBSan (50,000 seeded comparisons each run).
+2026-10-16T03:17	eclipse.platform.swt	192	pr-comment	Full ~125 KiB sealed Tree image AST verification, SDK Maven/JUnit and current composed native stock-vs-product callback timing/focus still require real execution; the archived four stock/common traces remain RED.
+2026-10-16T03:17	eclipse.platform.swt	192	pr-comment	It is not a native Tree event fix.
+2026-10-16T03:17	eclipse.platform.swt	192	pr-comment	Keep this SWT PR **DRAFT/HOLD**.
+2026-10-16T03:17	eclipse.platform.swt	192	pr-comment	Proof: [AST source-kind receipt](https://github.com/hsoliwal/com.synexia/blob/m3/tree-native-pointer-admission-recipe-20261016/synexia-openrewrite-recipes/recipe-crates/m3-tree-native-pointer-admission-20261016/verification/AST_SOURCE_KIND_RECIPE_20261016.md).
+2026-10-16T03:17	eclipse.platform.swt	192	pr-comment	The corrected exact source Git blob `9cfb36d7eb67678d1bb89431503973c0059c5773` compiled under strict Java21 and its focused AST, malformed-source and foreign-file refusal checks passed.
+2026-10-16T03:17	eclipse.platform.swt	192	pr-comment	The matched [Synexia #11739](https://github.com/hsoliwal/com.synexia/pull/11739) canonical recipe now includes an additional source-sealed OpenRewrite **verification-code** atom.
+2026-10-16T03:17	eclipse.platform.swt	192	pr-comment	The verification-code repair changes **none of this SWT PR's four recipe-produced Java/suite output blobs**.
+2026-10-16T03:17	eclipse.platform.swt	192	pr-comment	We reproduced the actual JDK21 `.java.txt` `Kind.OTHER` failure that blocked the Tree method/constructor AST checker, then fixed the checker with allowlisted in-memory `JavaFileObject.Kind.SOURCE`.
+2026-10-16T03:55	nebula	197	pr-comment	Actual offline Maven/OpenRewrite 8.89.0 compatibility-profile tests and full 56-source CWT GTK/JNI tests pass on original, parent-only serial and final images at two scales.
+2026-10-16T03:55	nebula	197	pr-comment	Candidate: 1,075 checks per scale; original/serial pixel and callback roots match; five faulty compiled controls rejected.
+2026-10-16T03:55	nebula	197	pr-comment	Current-base reconciliation is now reviewable in **#231**, based on #191 at `c935534ad2a37c195eb0f25e5d62e3fd14a55f05`, with canonical recipe/tests in **hsoliwal/com.synexia#11763** committed first.
+2026-10-16T03:55	nebula	197	pr-comment	It does not replay this older unbounded parent-buffer proposal over the newer painter.
+2026-10-16T03:55	nebula	197	pr-comment	Retention is explicitly per parent, so aggregate memory tradeoffs remain visible.
+2026-10-16T03:55	nebula	197	pr-comment	The new two-file output moves scratch storage to the original parent while retaining current 256-reference admission, exact-class/custom-list fallback, disposed-renderer behavior, nested snapshot isolation and reference clearing.
+2026-10-16T03:55	nebula	197	pr-comment	This comment records the successor; it does not close or merge either proposal.
+2026-10-16T03:55	nebula	197	pr-comment	Win32/Cocoa compilation passes, native runtime/full Tycho/GWT/Skija/all-widget gates remain open.
+2026-10-16T03:55	nebula	231	pr-body	Candidate: **1,075 checks per scale**, including extra retention invariants.
+2026-10-16T05:45	nebula	232	pr-body	New boundary cases: the span's own start row (499_995, never covered by its own span), the span's last row (500_015), and one row past its end (500_016).
+2026-10-16T11:23	nebula	234	pr-body	[x] scroll-paint check: right after a scroll the window shows old or new rows, never a mix or a blank row
+2026-10-16T11:40	eclipse.platform.swt	198	pr-body	Gate `WidgetMode "Composite"`; controls that fit natively never take the new path.
+2026-10-16T11:40	eclipse.platform.swt	198	pr-body	Plan** `docs/m3/ALL_WIDGETS_VIEWPORT_PLAN.md`: audit of every remaining SWT widget (win32 first, GTK/Cocoa notes) and every Nebula widget: what "viewport" means for it, the native path to mediate, what an oracle must measure first, the expected win, the priority.
+2026-10-16T11:46	eclipse.platform.swt	199	pr-body	A list box created without `WS_VSCROLL` never writes the caller's bar (13/13 operations), so the list box itself is the viewport (no `hwndParent` plane, unlike Tree; unlike Table, owner data would change the pixels).
+2026-10-16T11:46	eclipse.platform.swt	199	pr-body	`ComboPlaneProbe`: the `ComboLBox` keeps writing its own bar even with `WS_VSCROLL` removed, so the viewport must re-write the logical bar after its messages; with that, the dropped 36-row resident list matches the stock 300-row drop-down except 92 pixels of the highlighted row's text (cause not isolated).
+2026-10-17T01:41	eclipse.platform.swt	202	pr-body	Coverage (rule 15): docs/m3/render-modes/coverage.
+2026-10-17T05:03	nebula	236	pr-body	Drawing an item stores its bounds, so the same rows must be drawn.
+2026-10-17T05:35	eclipse.platform.swt	204	pr-body	unclassified bytes are refused by the recipe (tested), third-party headers are never re-headed (tested)
+2026-10-17T09:50	eclipse.platform.swt	212	pr-body	M3 naming on the Initiative 31 integration branch (rule 14)
+2026-10-17T09:50	eclipse.platform.swt	212	pr-body	the `skija-*`/`types-*` jar names (the prebuilt native binds to those names; rule 13 forbids rebuilding it), donor
+2026-10-17T09:56	nebula	238	pr-body	Also rule 14 on the Grid's own `WidgetMode` copy: mode value `skija` becomes `m3` (recipe `M3NamingJava`).
+2026-10-17T11:07	eclipse.platform.swt	213	pr-comment	GitHub rejects retargeting because there are no new commits between the head and `master`; closing as integrated-by-ancestry rather than squashing/rebasing or discarding the preservation work.
+2026-10-17T11:07	eclipse.platform.swt	213	pr-comment	Integrated additively into `master` via ancestry-preservation commit `678da68f34007af0aab0689aa72bd85fb44b800e`.
+2026-10-17T11:07	eclipse.platform.swt	213	pr-comment	The PR head is now an ancestor of `master` (`behind_by=0`), so no code/history is lost.
+2026-10-17T11:34	nebula	241	pr-body	Not proven:** This test exercises ordinary recycle parity, **not** deterministic allocation-failure atomicity; OOME injection and all real SWT/Windows/GTK/Cocoa native/Tycho/CI gates remain pending and must be recorded before acceptance.
+2026-10-17T11:36	nebula	242	pr-body	Adds an independent Nebula Grid JUnit4 regression proving that a failed `GridRowExtents.rebuild()` MUST invalidate previously valid Fenwick index lanes.
+2026-10-17T11:44	eclipse.platform.swt	216	pr-body	Other draft source PRs (#215, Nebula #240, #243) have their own test requirements.
+2026-10-17T11:44	eclipse.platform.swt	216	pr-body	`docs/m3/history/VIEWPORT_HISTORY_AUDIT_20261017.md` — owner-level history, classification rules, preserved-ancestry caveat and staged viewport qualification process.
+2026-10-17T11:50	eclipse.platform.swt	218	pr-body	Existing richer pattern-based implementation is preserved in [SWT #203](https://github.com/hsoliwal/eclipse.platform.swt/pull/203)/[#213](https://github.com/hsoliwal/eclipse.platform.swt/pull/213) and **must not be replayed wholesale**.
+2026-10-17T12:22	nebula	246	pr-body	A future repair must define callback-safe or deferred scrollbar geometry and preserve stable row identity, sparse virtualization, frozen planes and public events before this gate can be cleared.
+2026-10-17T12:22	nebula	246	pr-body	The candidate patch is retained as explicitly rejected diagnostic text and was never received into a product checkout.
+2026-10-17T13:21	eclipse.platform.swt	222	pr-body	Apply only hash-bound postimages to this fork in a new reviewable branch; independently execute **SWT Java/Tycho/native/paint and EPL/EDL** proof and preserve original notices and product API/native invariants.
+2026-10-17T13:21	nebula	248	pr-body	Apply only hash-bound postimages to this fork in a new reviewable branch; independently execute **Nebula Maven/Tycho/Java21/SWT/native and EPL** proof and preserve original notices and product API/native invariants.
+2026-10-18T03:34	eclipse.platform.swt	203	pr-comment	Integration round 3 at ff36ce3c51: merged Tree 58385964af (presentation work, programme plan), Table b4f32f0f95 (T-Table-11/12, viewport faster than stock on every bench, 88/88 differential), List b91cd3a0ff, all-widgets c464fd0e30 (M3 rename, theme seam), Tree-coverage 35ffb358f9 (new branch).
+2026-10-18T03:34	eclipse.platform.swt	203	pr-comment	M3 rename completed in drawn-plane classes (WidgetMode.SKIJA -> M3); LookAndFeel lambda capture fixed.
+2026-10-18T03:34	eclipse.platform.swt	203	pr-comment	render-modes stays in #202 (its Table/List hooks conflict; will re-enter by recipe).
+2026-10-18T03:34	eclipse.platform.swt	203	pr-comment	win32 compile: 765 sources, 0 errors.
+2026-10-18T08:39	eclipse.platform.swt	203	pr-comment	Integration round 4 at 23df1c5664: merged Tree 52ca3c8347, Table d479621bbd (coverage leaf), List 83a2350ad0, all-widgets fdb6c79e47 (LookAndFeel 100% lines / 99.5% branches, 11/11 tests), Tree-coverage 7be675526f.
+2026-10-18T08:39	eclipse.platform.swt	203	pr-comment	LookAndFeel.named conflict resolved in favour of the all-widgets fix (final candidate before try).
+2026-10-18T09:05	eclipse.platform.swt	203	pr-comment	Integration round 5 at 8de19a48da: merged Tree dba4c754ff (programme plan), Table 3b2037113d, Tree-coverage 706aed266b (List 83a2350ad0 and all-widgets fdb6c79e47 unchanged since round 4).
+2026-10-18T09:21	eclipse.platform.swt	203	pr-comment	Integration round 6 at 553eefd41d: merged Tree d7c3b86259, Table 8d252bdf3b, List f3198f41c7.
+2026-10-18T12:30	nebula	253	pr-body	The test fixture uses simple `Col` data classes, not the real GridColumn/Display integration, and must not be conflated with a product/native pass.
+2026-10-18T14:11	eclipse.platform.swt	227	pr-body	The 15 missed branches are `if (...) SWT.error (...)` checks: JaCoCo cannot record them because the call always throws.
+2026-10-18T14:11	eclipse.platform.swt	227	pr-body	first-party: mechanisms our viewport already has internally that stock SWT never exposed;
+2026-10-18T14:23	eclipse.platform.swt	228	pr-body	JUnit tests that take the win32 Tree viewport classes toward 99% JaCoCo line and branch coverage (brief rule 15).
+2026-10-18T14:23	eclipse.platform.swt	228	pr-body	Test_VirtualTreeCoverage: argument guards and defensive invariants of topology, projection, resident plan and viewport.
+2026-10-18T14:23	eclipse.platform.swt	228	pr-body	Test_VirtualTreeResidency: ancestor closure, every lane, physical paths, native snapshot, expander hints, facade binding, preorder invariants.
+2026-10-18T14:23	eclipse.platform.swt	228	pr-body	TreeViewport branches stay below 99%: the 121 missed branches are dead guards and invariants (46 rows in COVERAGE_GAPS.tsv name each line, the reason and a proposed change for the owner).
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	3-way merged the 5 files both sides changed against each fleet commit's own base.
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	A plain merge of this PR therefore made git treat our files as deleted or reverted on master: 20 conflicts, and 131 files dropped plus 53 reverted to their #196/#199-era versions *without* a conflict.
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	Fix (ea39a4cb4e).** Merged master into integration, keeping integration's content for every path it has.
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	Integration round 7 at 3827f5f296: master sync + Tree flawless milestone.
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	None of the kept paths ever existed on master's first-parent history.
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	Please merge with a merge commit, not squash.
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	The seed-10 race was a real stale-handle bug, now fixed with a regression test.
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	Took master's 4,643 new paths: 76 from fleet PRs #215-#223 and 4,567 under .superset/conflicts/pr-209-*.
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	Tree (5c9f8b2121).** Zero mismatches against official SWT 3.135.0 on all three differential variants (plain, check+columns, presentation; 12 seeds x 150 steps with pixel CRC).
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	Verification.** win32 compile 765 sources, 0 errors.
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	Why this round matters.** Fork master records our viewport commits as ancestry only (PR #214 took Tree commit 58385964af with 2 files changed; the superset 'preserve ancestry' merges changed 0).
+2026-10-18T15:31	eclipse.platform.swt	203	pr-comment	`git merge-tree` integration -> master: clean, and 0 integration files missing from the merge result.
+2026-10-19T02:09	eclipse.platform.swt	203	pr-comment	0 files lost; win32 compile 765 sources 0 errors; still merges cleanly into master.
+2026-10-19T02:09	eclipse.platform.swt	203	pr-comment	Held: Tree head (untested 81b33c37a2), render-modes #202 (Table drawn-mode pixels), enhanced-api #227 (leaves 5-6 unbuilt), attribution #226 (re-applying on this round).
+2026-10-19T02:09	eclipse.platform.swt	203	pr-comment	Integration round 8 at e22b93a6b1: merged gate-verified heads Table 55dd5b6c69 (100%/99.8% coverage, 88/88 vs official), List 66f516a8d7 (all differentials pass; private renames to Tree names verified bytecode-equal), Tree-coverage 1f20e174ad (tests + VK_SUBTRACT oracle).
+2026-10-19T04:21	nebula	254	pr-body	It must not replace newer master behavior or bypass the canonical recipe and target acceptance gates.
+2026-10-19T04:31	nebula	255	pr-body	Keep this PR draft until native/SDK gates pass, do not auto merge and never rebase Synexia `develop`.
+2026-10-19T04:36	nebula	255	pr-comment	Do not promote yet:** [Synexia canonical recipe #12438](https://github.com/hsoliwal/com.synexia/pull/12438) authored Maven/OpenRewrite SDK tests but they have not reported an actual green execution; source workflows are currently queued.
+2026-10-19T04:36	nebula	255	pr-comment	Exact source/JDK 21 replay and PR head receipt (2026-10-19)
+2026-10-19T04:36	nebula	255	pr-comment	Executed that **actual packaged script** from the receiver directory; strict `javac --release 21 -Xlint:all -Werror` PASS, normal `LED_ORIGINAL_GC_SCOPE_PASS checks=933332 quick=false`, interpreted `LED_ORIGINAL_GC_SCOPE_PASS checks=18666 quick=true`.
+2026-10-19T04:36	nebula	255	pr-comment	Native/JNI runtime remains unchanged.
+2026-10-19T04:36	nebula	255	pr-comment	Neither pass tests the native SWT Display; these are **headless old/new callback models**.
+2026-10-19T04:36	nebula	255	pr-comment	Only the original widget's private GC nesting bookkeeping changes.
+2026-10-19T04:36	nebula	255	pr-comment	Original full LED/SWT/Tycho/GTK/Cocoa/Win32 native context, actual nested event and pixel proof, GWT/RAP remain NOT_PROVEN.
+2026-10-19T04:36	nebula	255	pr-comment	Read back original/new production sources and confirmed the **10 public/protected declaration lines are identical**; all five original paint operations (background, rectangle fill, advanced mode, antialias, virtual `paintInternal()`) remain in identical order.
+2026-10-19T04:36	nebula	255	pr-comment	Reconstructed the **exact six-file receiver** from the canonical Synexia source templates, with original `BaseLED.java` preimage Git blob `37810a26326e5681f073be486d9eb03a68b565ae` and generated blob `7dabc426230c147e320936cbe3a9a85d454d6a4c`.
+2026-10-19T04:36	nebula	255	pr-comment	The [Nebula receiver #255](https://github.com/hsoliwal/nebula/pull/255) has no attached hosted workflow run at last check.
+2026-10-19T04:36	nebula	255	pr-comment	The headless Java21 regression and execution shell script were copied into the exact receiver layout and checked with `git hash-object`:
+2026-10-19T04:36	nebula	255	pr-comment	This is source-level evidence, not a compiled `javap` ABI comparison.
+2026-10-19T04:36	nebula	255	pr-comment	`LEDNestedGcScopeProof.java` = **`7a975fcd843cba511b030674b47b627b7a5e17e4`**, the same as the recipe resource
+2026-10-19T04:36	nebula	255	pr-comment	`run-gc-scope-proof.sh` = **`0c14276250410faeccc64ce16a6c1dbe257608da`**, the same as the recipe resource
+2026-10-19T04:47	nebula	256	pr-body	The native screen producer, eight-scene acceptance, `GC(Display).copyArea` requirement, separate `Control.print` evidence and combined SWT/Nebula resource/vision runner are unchanged.
+2026-10-19T04:47	nebula	256	pr-body	The second command requires genuine native captures and reports; generated synthetic inputs must never be supplied as native acceptance evidence.
+2026-10-19T04:49	nebula	256	pr-comment	Detailed CI/readback note: https://github.com/hsoliwal/com.synexia/pull/12440#issuecomment-6259902086.
+2026-10-19T04:49	nebula	256	pr-comment	Keep DRAFT pending the original native capture, compiler and resource gates.
+2026-10-19T04:49	nebula	256	pr-comment	Local actual OpenCV results remain 12/12 synthetic-validator test methods passed; no native SWT screenshot or real JUnit/Tycho pass is claimed.
+2026-10-19T04:49	nebula	256	pr-comment	Publication readback confirmed all four receiver blobs at `fc6ba78829d50456bad76cfa3f1448fb2612dcc8` equal the canonical generated outputs.
+2026-10-19T04:49	nebula	256	pr-comment	The paired canonical PR https://github.com/hsoliwal/com.synexia/pull/12440 has its new focused workflow marked failed, with **both jobs returning zero recorded steps**.
+2026-10-19T04:49	nebula	256	pr-comment	This head currently returns no PR-triggered workflow runs.
+2026-10-19T04:49	nebula	256	pr-comment	This is not hosted test execution or a pass; no cause is inferred from empty step records.
+2026-10-19T05:38	nebula	257	pr-body	Dedicated receiver workflow attempts strict JDK21 host-model execution; GitHub native green proof must be observed at exact commit before any merge.
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	0 files lost vs round 8; win32 compile 795 sources, 0 errors; merges cleanly into master.
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	Fixed here: isLive called the renamed live -> facadeOrNull.
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	Held:** render-modes #202 (10 conflicting files; its agent is re-applying hooks by recipe).
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	Integration round 9 at 49e6947020.
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	Its WidgetMode test suite collided with Tree-coverage's, so it was added as Test_org_eclipse_swt_internal_WidgetModeAllWidgets (fix later: dedupe).
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	Per the user ("we can always go back in history and fix the error"), this round takes every branch's LATEST head, compile-gated, and lists what is not yet verified so it can be fixed forward or reverted:
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	Table** (latest): TableStockItems 100% coverage and the Tree-name renames.
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	The VK_SUBTRACT/VK_LEFT collapse fix is in progress.
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	The p6 gate has an end-of-seed pixel flake on reentrancy variants 7/8 that also happens on stock; a quiesce fix is in progress.
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	Tree** (latest): includes 81b33c37a2, the caret-move/shrink selection rule from 60 stock oracle cases; differential re-run pending.
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	Tree-coverage** (latest).
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	all-widgets** (latest): Swing-style L&F work in progress.
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	attribution #226** (latest).
+2026-10-19T07:31	eclipse.platform.swt	203	pr-comment	enhanced-api #227** (latest): leaves 5-6 (M3Emptiness, M3RowMath) are built in this round only by compile.
+2026-10-19T08:22	eclipse.platform.swt	230	pr-body	Overflowing insertion/removal endpoints are rejected before resident-window mutations; normal O(1) viewport planning, index mapping and established exception contracts must remain unchanged.
+2026-10-19T08:28	eclipse.platform.swt	203	pr-comment	EVERY branch is now in: Tree, Table, List, Tree-coverage, all-widgets, attribution (9 post-#226 commits), enhanced-api, **sort-filter (first time)**, and **render-modes (first time since round 3)**.
+2026-10-19T08:28	eclipse.platform.swt	203	pr-comment	Integration round 10 at 5593cc43ba (latest heads, fix-forward).
+2026-10-19T08:28	eclipse.platform.swt	203	pr-comment	Merges cleanly into master.
+2026-10-19T08:28	eclipse.platform.swt	203	pr-comment	Test_org_eclipse_swt_internal_laf_M3LookAndFeel is taken from all-widgets.
+2026-10-19T08:28	eclipse.platform.swt	203	pr-comment	The Tree differential keeps the custom-draw probes, plus render-modes' rule that drawn modes report pixels without gating on them.
+2026-10-19T08:28	eclipse.platform.swt	203	pr-comment	The WidgetMode suites are kept side by side (fix later: dedupe).
+2026-10-19T08:28	eclipse.platform.swt	203	pr-comment	TreeDrawnPlane takes render-modes' DrawnPlane base class.
+2026-10-19T08:28	eclipse.platform.swt	203	pr-comment	win32 compile: 826 sources, 0 errors.
+2026-10-19T08:42	eclipse.platform.ui	19	pr-body	5441e2e4b8 Honor 'Always run in background' in IProgressService.run() #4202
+2026-10-19T10:05	eclipse.platform.swt	227	pr-comment	M3ColumnSort.compare has the M3ProxyModel.RowComparator shape; M3RowView uses the proxy's size/map/unmap names so M3ProxyModel can implement it when you want.
+2026-10-19T10:05	eclipse.platform.swt	227	pr-comment	No file of yours is changed besides those two map rows.
+2026-10-19T10:05	eclipse.platform.swt	227	pr-comment	Sort-filter agent: the M3-COLUMN-SORT and M3-COLUMN-FILTER map rows are filled on m3/sort-filter-20261019 (draft PR #232) with the shipped surface: M3ColumnSort, M3ColumnKey (ofSortKeys reuses M3SortKeys), M3ColumnFilter (+ setAsync), M3TextMatch, M3RowView/M3RowChange (damaged() answers an M3ItemRange), M3RowWindow (setWindow(M3ItemRange)), M3RowBinding, M3FilterPopup, M3FilterRow.
+2026-10-19T10:09	eclipse.platform.swt	233	pr-body	7daa37bbda [GTK] Remove always true null check from NativeImageLoader
+2026-10-19T10:12	nebula	261	pr-body	SwingX is LGPL-2.1: API shape only, never code.
+2026-10-19T10:12	nebula	261	pr-body	WIDGET_MATRIX.tsv: 66 widget concepts ranked by library count x virtualization need x absence from stock SWT and Swing; the stack family (StackLayout, CTabFolder stacks, workbench part stacks) is P0 by user decision.
+2026-10-19T10:34	nebula	260	pr-comment	2026-10-19 source-preserving viewport verification follow-up
+2026-10-19T10:34	nebula	260	pr-comment	I preserved PR #260's original head `9182636843211a38b40b38195027272eca5574ed` at `preserve/pr260-before-grid-proof-ci-20261019` and added the focused workflow `.github/workflows/m3-grid-viewport-geometry-java21.yml` (current PR head `76375fd108ca80eec9f135e6d2bbdc65326ac082`).
+2026-10-19T10:34	nebula	260	pr-comment	No SWT/Grid shim or replacement implementation is introduced.
+2026-10-19T10:34	nebula	260	pr-comment	Qualification truth:** GitHub's workflow-run API currently returns no run for this new branch/current head, and no check runs were recorded.
+2026-10-19T10:34	nebula	260	pr-comment	Re-evaluate once a real workflow run executes, then perform source-content merge rather than ancestry-only closure.
+2026-10-19T10:34	nebula	260	pr-comment	The ordinary source, source license and contracts remain unchanged; only CI wiring was added.
+2026-10-19T10:34	nebula	260	pr-comment	The workflow compiles **actual** `GridRowExtents`, `GridRowIndex`, `HeapGrowth` and `HeapSampler` with Java 21, `-Xlint:all -Werror`, then executes both existing scalar/Fenwick geometry proofs.
+2026-10-19T10:34	nebula	260	pr-comment	Thus the focused proof is **NOT_EXECUTED / NOT_GREEN**, and the protected `master` must not be merged/bypassed.
+2026-10-19T10:34	nebula	260	pr-comment	Tycho/OSGi native widget, scrolling, events and graphical parity also remain HOLD.
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	Actual source repair committed** (no viewer logic/ABI change):
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	Additive CI repair — 2026-10-19
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	Applied exact ten `//$NON-NLS-1$` annotations to `TreeViewer.java` in commit `ad4c14532e57c868dd00797305d79ff2adef71f9`; original Git blob `88a47bcd2a5f57ebae1fe71bde045daa1637122c`, new blob `8e9c66c447f4477845a3179eaa2d5414107b428e`.
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	Do not suppress checks or delete/move this crate without an exact source/manifest/reference-preserving relocation recipe and independent checkout proof.
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	Full Linux/Mac/Windows PDE, functional and differential gates remain required before promotion.
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	New macOS CI result is pending; do not claim pass until recorded steps complete.
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	Preservation ref: `preserve/pr21-before-nls-repair-20261019` at the original head `c6e5ee1763ff24639941532582d274a01a26764e`.
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	Production `master` remains unchanged.
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	Separately held Windows blocker:** executed job `118063800657` fails in Git checkout (`Filename too long`) under `docs/M3-SCALE/jface-forwarding-20261017/tooling/synexia-openrewrite-recipes/recipe-crates/.../resources/...`; the deepest directory prefix is 206 characters and contains 12 source-sealed files.
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	Source-pinned Java-21 idempotent recipe `docs/m3/jface-viewport/tools/TreeViewerNonNlsRecipe.java` in commit `b4232f763f0eb32c0290209c7c1e4d4a5119b7ef`.
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	The shared upstream reusable `mavenBuild.yml` checks out before Maven.
+2026-10-19T14:19	eclipse.platform.ui	21	pr-comment	The ten sites correspond to all macOS Tycho JFace non-externalized-string errors in executed job `118063801253`.
+2026-10-20T02:45	nebula	263	pr-body	RWT (Eclipse RAP, web) column of the every-platform widget matrix (user directive 2026-10-20: "swingx and all the custom widgets now available across every platform, make them available").
+2026-10-20T06:14	eclipse.platform.swt	236	pr-body	Production receiving must be a separate one-file commit only after actual SDK generation and generated-source tests execute successfully.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Both baseline and candidate have now completed tiered **and C1** runs on Debian OpenJDK21.0.12.1/Linux x86_64:
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Executed local proof supplement and receiving hold
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Failures overlap across dependent operations and are not a count of unique GUI bugs.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Four separately compiled mutations were rejected: narrow range, narrow page, narrow hit extent, and changed tie rounding.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Production Java is unchanged; no manual template installation, forced update or merge occurred.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Receiving remains held.** At the latest check this SWT proof head returned zero workflow-run records.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Rounded thumb length stays within track; forward/inverse offsets remain bounded.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Seven SDK tests are authored, not yet passed.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Strict Java compilation and identical package/public `javap -s` descriptors were verified.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Synexia run 39377751813 and linked [M3JDK21 compatibility PR #1544](https://github.com/hsoliwal/M3jdk21/pull/1544), run [39379594297](https://github.com/hsoliwal/M3jdk21/actions/runs/39379594297), were queued without executed steps.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	The 14 recorded native sample tuples from unchanged test blob `f634d69289b013d8d83bc74427033888274c182e`, plus its fine/coarse drag and non-scrollable checks, were replayed in a standalone harness: `HISTORICAL_SAMPLE_REPLAY_PASS samples=14 checks=326 nativeExecution=false` on both sources.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	The digest identifies expected oracle values, not observed-output equality.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	The immutable probe is SHA256 `bf11b1abb3cc394331bc213860dd6bc6fc01cde09856035e32074c955df5f7c8` (Git blob `0765c1a56c0f85d64f987e7e15edfcc8553f3b54`).
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	This numeric argument does not establish native Win32/GTK/Cocoa or M3JDK runtime acceptance.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	This was NOT the full original JUnit suite or fresh native measurement.
+2026-10-20T06:24	eclipse.platform.swt	236	pr-comment	Within valid geometry, `thumb+1 <= range+1 <= 2^31` and `track*(thumb+1) < 2^62`; all widened endpoints are <=3*Integer.MAX_VALUE.
+2026-10-20T13:50	eclipse.platform.swt	237	pr-body	The existing receiver workflow must verify generation equality and actual SDK JUnit on this exact head.
+2026-10-21T01:25	eclipse.platform.swt	240	pr-body	The fast path never treats them as ordinary live event types.
+2026-10-21T09:00	eclipse.platform.ui	27	pr-body	Canonical Maven/OpenRewrite mastery and full fixed-point/admission tests must be carried to `hsoliwal/com.synexia` before promotion.
+2026-10-21T09:12	eclipse.platform.ui	28	pr-comment	Canonical source snapshots are in Synexia PR #12787.
+2026-10-21T09:12	eclipse.platform.ui	28	pr-comment	Git reported `fatal: cannot create directory .../docs/M3-SCALE/jface-forwarding-20261017/tooling/synexia-openrewrite-recipes/recipe-crates/m3-jface-array-forwarding-20261017/resources/com/synexia/rewrite/hash-pinned-java/m3-jface-array-forwarding-20261017: Filename too long`.
+2026-10-21T09:12	eclipse.platform.ui	28	pr-comment	I inspected the newly triggered Windows CI job **Verify Windows** (job `119136349353`).
+2026-10-21T09:12	eclipse.platform.ui	28	pr-comment	It failed in `actions/checkout` before Java/Maven compilation.
+2026-10-21T09:12	eclipse.platform.ui	28	pr-comment	Linux and macOS source build/test gates have not been established passing by this review; keep this PR draft.
+2026-10-21T09:12	eclipse.platform.ui	28	pr-comment	Repair the checkout/long-path runner configuration separately before accepting cross-platform IDE tests.
+2026-10-21T09:12	eclipse.platform.ui	28	pr-comment	The Windows result is **infrastructure/checkout blocking**, not a Java regression verdict.
+2026-10-21T09:12	eclipse.platform.ui	28	pr-comment	This path is outside the four files changed by this PR.
+2026-10-21T09:12	eclipse.platform.ui	28	pr-comment	Validation blocker (2026-10-21)
+2026-10-21T14:51	eclipse.platform.swt	243	pr-body	The outer operation must preserve the listener's final intent and widget lifetime.
+2026-10-21T14:52	eclipse.platform.ui	33	pr-body	The shared owners must preserve ordered deltas and final callback intent across Table, Tree, List and Combo viewers.
+2026-10-21T15:06	eclipse.platform.ui	34	pr-body	Do not recalculate the hard limit from later, longer posts.
+2026-10-21T15:11	eclipse.platform.ui	28	pr-comment	Do **not** merge or cherry-pick the whole older file over #27/#30; it would discard qualified shared-viewer behavior.
+2026-10-21T15:11	eclipse.platform.ui	28	pr-comment	Superset/collision note:** this PR's older `M3Viewers.java` variant overlaps UI #27 (worker-safe Display) and UI #30 (refresh coalescing + stale-batch identity).
+2026-10-21T15:11	eclipse.platform.ui	28	pr-comment	The #28 bulk-array append candidate is preserved for separate measured review, not silently discarded or promoted.
+2026-10-21T15:11	eclipse.platform.ui	28	pr-comment	The unique first-post monotonic-deadline correction is isolated and source-sealed in Synexia #12885 and received *on top of UI #30* in [UI #34](https://github.com/hsoliwal/eclipse.platform.ui/pull/34).
+2026-10-21T15:11	eclipse.platform.ui	30	pr-comment	Canonical exact-source recipes are in [Synexia #12885](https://github.com/hsoliwal/com.synexia/pull/12885); no public ABI or JNI symbol changes.
+2026-10-21T15:11	eclipse.platform.ui	30	pr-comment	Focused/native tests of this new increment remain pending.
+2026-10-21T15:11	eclipse.platform.ui	30	pr-comment	It only pins the first post's absolute monotonic deadline against later longer delays and adds the SWT owning regression.
+2026-10-21T15:11	eclipse.platform.ui	30	pr-comment	Stacked incremental correction:** [UI #34](https://github.com/hsoliwal/eclipse.platform.ui/pull/34) is based on this exact #30 head and retains its batch epoch, adjacent refresh coalescing and UI #27 Display-thread contract.
+2026-10-22T02:03	eclipse.platform.ui	33	pr-comment	2026-10-22 — canonical one-file CI gate repair received
+2026-10-22T02:03	eclipse.platform.ui	33	pr-comment	Full 57-case Java25/PDE/Gtk validation still required before merging.
+2026-10-22T02:03	eclipse.platform.ui	33	pr-comment	GitHub rejected this PR's `jobs.m3-viewers.env.M3_EVIDENCE` because it referenced `${{ runner.temp }}`, which is unavailable in job-level `env`.
+2026-10-22T02:03	eclipse.platform.ui	33	pr-comment	Job is initially **queued**, not a PASS.
+2026-10-22T02:03	eclipse.platform.ui	33	pr-comment	Prior remote zero-job failure is resolved at the workflow parser/admission stage.
+2026-10-22T02:03	eclipse.platform.ui	33	pr-comment	Real GitHub acceptance observation:** [workflow run 39709065260](https://github.com/hsoliwal/eclipse.platform.ui/actions/runs/39709065260) now contains an `m3-viewers` job `119595786929`.
+2026-10-22T02:03	eclipse.platform.ui	33	pr-comment	Source was received into **this existing PR head** at commit `80e57503f69bf10fc5140868c763e10ea063a00a` using the original blob as the write lease.
+2026-10-22T02:03	eclipse.platform.ui	33	pr-comment	The canonical Synexia Maven/OpenRewrite text snapshot is [#12898](https://github.com/hsoliwal/com.synexia/pull/12898) (full before/after snapshots, original Git blob, strict SHA-256 and exact one-line scope).
+2026-10-22T02:03	eclipse.platform.ui	33	pr-comment	The only change is `M3_EVIDENCE: ${{ github.workspace }}/m3-viewers-evidence`; no original JFace/SWT/native/test/pinned dependency owner changed.
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	22 October 2026 — exact original viewer superset + static roster receipt
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	All three final target Git blobs match the canonical generated templates byte-for-byte; PR diff confirms **exactly those three original files**.
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	Canonical recipe: [Synexia #12901](https://github.com/hsoliwal/com.synexia/pull/12901) (stacked on source-locked CI admission #12898).
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	Do not merge until the actual native Java25/PDE 59-case JUnit, full Maven/OpenRewrite fixed-point and source-drift controls, SWT callback ordering, and non-GTK peers are verified.
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	Four serial passes have original before/post images: `M3Viewers.java`, `M3ViewersTest.java`, CI test-name/hash roster and nested-PR branch routing.
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	GitHub created [native JFace workflow run 39710461979](https://github.com/hsoliwal/eclipse.platform.ui/actions/runs/39710461979), with `m3-viewers` job `119600303102`.
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	I independently re-read this PR head and compared every `@Test public void` method with the CI `expected_tests` literal: **44 JFace test names exactly match**, unique both sides, no missing/extra names, and other 15 tests make the exact total **59**.
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	It was **queued** when inspected, **NOT** a passing result.
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	PR #33 native 42-test evidence is the preserved incumbent, not a replacement for this new qualification.
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	Source SHA and exact Git blob receipts are in `evidence/VIEWER_ROSTER_STATIC_PROOF.json`.
+2026-10-22T02:23	eclipse.platform.ui	35	pr-comment	The CI test-source digest and nested branch route are present.
+2026-10-22T03:38	eclipse.platform.ui	38	pr-body	Never rebase Synexia develop, no master direct write, no destructive merge.
+2026-10-22T03:38	eclipse.platform.ui	38	pr-body	`ResourceExtensionContentProvider.java`**: on `inputChanged` the UI thread publishes one immutable `Binding(Viewer, Display)`; worker-side resource callbacks never call SWT `viewer.getControl/isDisposed/getDisplay`; queued work executes only on the published display and checks binding identity again after async delivery to refuse stale/disposed receivers.
+2026-10-22T03:39	eclipse.platform.ui	27	pr-comment	36 preserves current master M3ViewerDelta and tests byte-for-byte.
+2026-10-22T03:39	eclipse.platform.ui	27	pr-comment	A Java21 isolated algorithm oracle passed 460,010 checks; full new Maven/SDK, Tycho, SWT native GTK/Win32/Cocoa, JFace test and resource/performance qualification are **not** yet completed.
+2026-10-22T03:39	eclipse.platform.ui	27	pr-comment	A fresh **master-based, source-sealed successor** is open as [#36](https://github.com/hsoliwal/eclipse.platform.ui/pull/36), with the canonical Maven/OpenRewrite source recipes in [Synexia #12917](https://github.com/hsoliwal/com.synexia/pull/12917).
+2026-10-22T03:39	eclipse.platform.ui	27	pr-comment	Exact receiver Git blob readback matches the precommitted canonical postimages.
+2026-10-22T03:39	eclipse.platform.ui	27	pr-comment	It selectively receives this PR's off-worker SWT access repair, explicit owning-Display `post` overload and UI-safe `flush`, the feature-stacked #30 adjacent-refresh coalescing, opt-in M3ViewerPaths iterative A5 and AbstractTreeViewer hook, and a **16-method** union of these JFace tests with the two #28 deadline regressions.
+2026-10-22T03:39	eclipse.platform.ui	27	pr-comment	Keep both PRs reviewable; #36 is the preferred master-based conflict-resolution path, not an assertion that the entire viewer program is done.
+2026-10-22T03:39	eclipse.platform.ui	27	pr-comment	Please **do not copy or merge this PR's M3Viewers.java / M3ViewerDelta.java wholesale into current master** without owner-level reconciliation: master already contains merged #28's faster **five-lane System.arraycopy append** and immutable **System.nanoTime/deadlineNanos first-post timer bound**.
+2026-10-22T03:39	eclipse.platform.ui	27	pr-comment	Source-level reconciliation warning — 2026-10-22
+2026-10-22T03:39	eclipse.platform.ui	27	pr-comment	This branch's `M3ViewerDelta.append` uses per-item push, and its queue recomputes a wall-clock deadline using the latest delay; either can regress an already delivered atom.
+2026-10-22T04:16	eclipse.platform.ui	39	pr-body	Source-patch matching and whole-queue/bulk-array invariants also passed.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	A checked-in standalone Java21 selection model and checksum/refusal script reproduce 179,958 checks.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	A new direct-source review chain recovers these selection/callback atoms **without overwriting the already admitted M3 primitive-array and queue owners**:
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	Actual receiver Git postimages match canonical templates.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	Additive source-order reconciliation notice (2026-10-22)
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	Adds four original SWT/JFace regression methods.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	Original public JFace contracts, donor licences, and all needed tests must be preserved.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	Please do not copy this PR's full `M3ViewerDelta.java` or differently shaped `M3Viewers.Queue` onto master or #36/#39, as that could undo already merged optimized append and timer contracts.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	Selects only the **first five selection-related** `M3Viewers` hunks; verifies the **entire existing Queue suffix is byte-identical** to #36, including fixed `System.nanoTime/deadlineNanos`, worker-display fencing, adjacent refresh barriers and stale batch checks.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	That prior evidence is NOT automatically conferred upon #39's new combined source.** Those native/regression tests and the full original JFace/PDE/Win32/macOS matrix must be rerun before product merge.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	The two PR chains should be reconciled by content and exact-head proof, never ancestry-only merge.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	This PR remains valuable because #33/#35/#37 demonstrated more extensive **47 native SWT/JFace cases per mode** on its earlier head, with native differential traces and CCombo edge cases.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	[Synexia #12945](https://github.com/hsoliwal/com.synexia/pull/12945): source-sealed six-stage Maven/OpenRewrite recipe stack.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	[UI #36](https://github.com/hsoliwal/eclipse.platform.ui/pull/36): master-based JFace worker-safe/display/batch/timer reconciliation and opt-in iterative tree lookup, preserving the current master **five-lane `M3ViewerDelta.append` bulk arraycopy**.
+2026-10-22T04:20	eclipse.platform.ui	37	pr-comment	[UI #39](https://github.com/hsoliwal/eclipse.platform.ui/pull/39): stacked on #36, receives exact first-party #33 `StructuredViewer` (six hunks), `StructuredViewerInternals` (one), `ComboViewer` (three), and `M3ViewerDifferential` (three) source postimages.
+2026-10-22T04:27	eclipse.platform.swt	245	pr-comment	At current review branch `6356f902b65ae59222e6a8c81e6864231877d3ef`, Debian OpenJDK 21.0.12.1 strict Java 21 compile (`--release 21 -proc:none -Xlint:all -Werror`) and `java -ea` executed the independent event-state **model**:
+2026-10-22T04:27	eclipse.platform.swt	245	pr-comment	Do not merge or call CI green.
+2026-10-22T04:27	eclipse.platform.swt	245	pr-comment	Exact local Java-only model evidence and receiving hold (2026-10-22)
+2026-10-22T04:27	eclipse.platform.swt	245	pr-comment	It is **not** an SWT `List.java` compilation or a GTK4 display/native event test.
+2026-10-22T04:27	eclipse.platform.swt	245	pr-comment	No source generated/output received in the public fork and no native GTK4 MouseDown/DefaultSelection, key, disposal, DPI or accessibility acceptance.
+2026-10-22T04:27	eclipse.platform.swt	245	pr-comment	SWT fork/actions query returned **zero exact-branch runs**; Synexia exact-head Maven/OpenRewrite run [39722035881](https://github.com/hsoliwal/com.synexia/actions/runs/39722035881) was queued.
+2026-10-22T04:27	eclipse.platform.swt	245	pr-comment	The model source/receipt are in `m3/qualification/swt-gtk4-list-event-20261022/proof/`.
+2026-10-22T04:27	eclipse.platform.swt	245	pr-comment	The reviewed upstream donor is [Eclipse #3750](https://github.com/eclipse-platform/eclipse.platform.swt/pull/3750), merged commit `54869aaecf22eb79e373daca710bfcf7f67e94ba`, requalifying the original fork source under [Synexia #12953](https://github.com/hsoliwal/com.synexia/pull/12953).
+2026-10-22T04:27	eclipse.platform.swt	245	pr-comment	`SWT_GTK4_EVENT_MODEL_PASS traces=100000 checks=2400008 legacy_divergences=99913`
+2026-10-22T04:27	nebula	270	pr-comment	At current review branch `a25ec682a9157637a959ef889ae28323b5ed9c24`, strict Debian OpenJDK 21.0.12.1 `javac --release 21 -proc:none -Xlint:all -Werror` and `java -ea` passed an **independent standalone algorithm oracle**:
+2026-10-22T04:27	nebula	270	pr-comment	Canonical convergence: [Synexia #12941](https://github.com/hsoliwal/com.synexia/pull/12941), reusing existing count recipe owner [#12745](https://github.com/hsoliwal/com.synexia/pull/12745).
+2026-10-22T04:27	nebula	270	pr-comment	Current public fork/actions query returned **zero workflow runs**, while Synexia exact-head Maven run [39720911420](https://github.com/hsoliwal/com.synexia/actions/runs/39720911420) remains queued.
+2026-10-22T04:27	nebula	270	pr-comment	Do not receive the production file from a manually copied template: only actual qualified OpenRewrite output may be committed later.
+2026-10-22T04:27	nebula	270	pr-comment	Exact local CPU discriminator and receiving hold (2026-10-22)
+2026-10-22T04:27	nebula	270	pr-comment	It differentiates retained null-only/empty-column row membership from the historical incorrect value scan.
+2026-10-22T04:27	nebula	270	pr-comment	Target product source remains the original master blob; Win32/GTK/Cocoa, Tycho and exact-head native tests remain NOT_RUN.
+2026-10-22T04:27	nebula	270	pr-comment	The Java source and receipt are in `m3/qualification/grid-row-count-master-20261022/proof/`.
+2026-10-22T04:27	nebula	270	pr-comment	This is **not** compilation/execution of Nebula Grid or a native SWT platform test.
+2026-10-22T04:27	nebula	270	pr-comment	`M3_GRID_COUNT_ATOM_PASS trials=100000 checks=100005 legacy_discrepancies=72943`
+2026-10-22T04:30	eclipse.platform.ui	39	pr-comment	Exact-head source/model workflow received (2026-10-22)
+2026-10-22T04:30	eclipse.platform.ui	39	pr-comment	GitHub accepted the new workflow** and created [run 39722656415](https://github.com/hsoliwal/eclipse.platform.ui/actions/runs/39722656415) for this PR head.
+2026-10-22T04:30	eclipse.platform.ui	39	pr-comment	Its `bash .../verify-isolated.sh` was rerun and passed **179,958** checks.
+2026-10-22T04:30	eclipse.platform.ui	39	pr-comment	Only the workflow metadata was added after the six original Java source changes; no generated Java was edited.
+2026-10-22T04:30	eclipse.platform.ui	39	pr-comment	Status queued when inspected; zero passing hosted assertions claimed.** Exact merged Java source (JFace/SWT/UI), the four native receiver JUnit tests, 47 historical GTK cases on this new head, full Tycho, JNI/Win32/Cocoa and performance remain pending.
+2026-10-22T04:30	eclipse.platform.ui	39	pr-comment	The exact 8,324-byte tested model is now checked in at canonical `.../evidence/model/M3SelectionAtomOracle.java`, local Git blob `7b52bd39b21cab82930e8cdcc65764abc8fc0730`.
+2026-10-22T04:30	eclipse.platform.ui	39	pr-comment	The target now contains **one additional source-first workflow file** `.github/workflows/m3-jface-selection-source-20261022.yml`, received byte-for-byte from the existing canonical Synexia **text** recipe `com.synexia.m3.EclipseJFaceSelectionSourceWorkflow20261022` in [#12945](https://github.com/hsoliwal/com.synexia/pull/12945).
+2026-10-22T04:30	eclipse.platform.ui	39	pr-comment	The template and receiver Git blob are both `5aefa0e5e015b14b2a01cf05d09aec87aeb359f9`, SHA-256 `059cc70c684a010f58825770e22fc1bae19deeb5a8eb5657e53bd2b026d47c5a`.
+2026-10-22T04:30	eclipse.platform.ui	39	pr-comment	This PR **must stay DRAFT** until those gates pass.
+2026-10-22T04:30	eclipse.platform.ui	39	pr-comment	This workflow checks all **six** product Java postimage SHA-256s, requires the unchanged original `M3ViewerDelta.java` fast-five-lane Git blob `b68f93b3854e49ad0571905ad274823c9c502bae`, compares the *entire* `M3Viewers.Queue` and trailing source bytes to the exact approved #36 parent, and checks out pinned Synexia Git `48fde6ad83d5889126aa3570deaa247801b95c8e` for its checksum-guarded JDK21 source model.
+2026-10-22T04:54	eclipse.platform.swt	245	pr-comment	Do not describe this merged proof as a production fix or green GTK4 events.
+2026-10-22T04:54	eclipse.platform.swt	245	pr-comment	Post-merge receiving check (2026-10-22).** This proof-only PR merged to master as `537324f46bbc90fbf632c5e50551716ccf100099`, but current-master GTK `List.java` remains exact original blob `eb610ee3ecc80dcc68bbfbb2a6c2538a13a2123f` (first GTK4 click still bypasses superclass).
+2026-10-22T04:54	eclipse.platform.swt	245	pr-comment	Product source receiving, exact-head SWT/Tycho and native GTK4 MouseDown/DefaultSelection, key, disposal, DPI/accessibility gates are still required.
+2026-10-22T04:54	eclipse.platform.swt	245	pr-comment	Strict standalone Java model rerun: `100000` traces, `2400008` checks, `99913` historical-model divergences; **not** native SWT List execution.
+2026-10-22T04:54	eclipse.platform.swt	245	pr-comment	Synexia #12953 exact-head Maven/OpenRewrite run 39722035881 remains queued (no SDK result).
+2026-10-22T04:54	eclipse.platform.swt	245	pr-comment	The candidate generated-data diff was reviewed as **5 line-change groups, 12 removed / 29 added lines**, matching the bounded upstream #3750 event correction without touching GTK3 code or Eclipse/IBM EPL notices.
+2026-10-22T04:54	nebula	270	pr-comment	Canonical source-sealed dataset Synexia #12941 run 39720911420 remains **queued with no executed Maven/OpenRewrite steps** at this check.
+2026-10-22T04:54	nebula	270	pr-comment	Do not claim this merged proof package fixes current master.
+2026-10-22T04:54	nebula	270	pr-comment	Exact current master production `GridRowAddressedItemDataVisualizer.java` is **still Git blob `a08d253f1ea9cdcc29f84368f6701c3fe4b4a373`**, the historical six-line value-scan preimage, not the one-line retained-row fix.
+2026-10-22T04:54	nebula	270	pr-comment	M3 representation and Eclipse widget contracts remain with existing owners.
+2026-10-22T04:54	nebula	270	pr-comment	Post-merge receiving check (2026-10-22).** This proof-only PR was merged to master as `a3ef1517d75a3b54d3844e2c30ae36ac072f0281`.
+2026-10-22T04:54	nebula	270	pr-comment	Receive only the exact generator output after SDK gates, then separately run current-head Grid/SWT/native tests.
+2026-10-22T04:54	nebula	270	pr-comment	The existing standalone CPU oracle was re-executed on OpenJDK 21 with strict warnings: `100000` trials/`100005` checks passed, `72943` old-value-scan divergences.
+2026-10-22T04:54	nebula	270	pr-comment	This is a model, not actual Grid/Tycho/native acceptance.
+2026-10-22T05:27	nebula	241	pr-comment	2026-10-22 receiving follow-through:** actual Nebula master `GridRowTree.java` still has original blob `6b3dac2acb24e6953cf1bdae417c59b47ddbaa73`; the proof-only merged #241 did not install the canonical preflight.
+2026-10-22T05:27	nebula	241	pr-comment	Do not receive production by copying a template.** Wait for exact hosted OpenRewrite output, qualify a one-file Nebula product PR, then run SWT/Tycho native and disposal/viewport tests on the exact head.
+2026-10-22T05:27	nebula	241	pr-comment	I opened **[Synexia draft #12985](https://github.com/hsoliwal/com.synexia/pull/12985)**, an additive exact-full-original-source JUnit/CI continuation of existing recipe #12076, preserving the original dual Apache-2.0/EPL-2.0 header and using `M3InsertStatements` rather than another transformation engine.
+2026-10-22T05:27	nebula	241	pr-comment	No merge/force/rebase, and no green platform claim.
+2026-10-22T05:27	nebula	241	pr-comment	The local 248,303-check failure-atomicity model passes, but is not actual Grid/Java LST/native GUI proof.
+2026-10-22T07:57	eclipse.platform.ui	41	pr-body	Merge method must be `merge`, not squash/rebase.
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	Current PR #37 targets `develop` and was reported `mergeable: false` at inspection; merging that branch into master is not completion.
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	Do not overwrite the newer master batching/first-post semantics with older queue code
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	Exact-head no-regression gate (2026-10-22) — do not merge this develop stack wholesale into current master
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	Keep the current master queue/selection and indexed-sort features intact, and do not publish recipes in this public fork.
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	Neither algorithm may be substituted merely because a Git ancestry merge succeeds; compare first-match/ordering/mutation and run strict head tests
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	No changes to `master`, branch rebases or forced PR merges are authorized by this audit.
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	Original Java owner | current master Git blob | this PR Git blob | critical divergence
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	Preserve their JFace selection/Combo/UI-thread behavior.
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	Read original `master` and this PR's head sources directly:
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	Related owner inventory: [Synexia #12944](https://github.com/hsoliwal/com.synexia/pull/12944).
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	Required next step**: source-sealed Synexia Maven/OpenRewrite recipe for *only* proven novel, non-conflicting atoms from #37 onto an exact observed master source; actual `Recipe.run` fixed point/drift refusal, native JFace/SWT/Tycho tests, and marker-index differential mutation/range benchmarks at each resulting head.
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	The original [UI #36](https://github.com/hsoliwal/eclipse.platform.ui/pull/36), [#38](https://github.com/hsoliwal/eclipse.platform.ui/pull/38) and [#39](https://github.com/hsoliwal/eclipse.platform.ui/pull/39) are merged into `master`.
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	This PR's branch has a different `schedule/wake/cancelTimer` state machine and **no** `deadlineNanos` or `redundantRefresh`.
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	`bundles/org.eclipse.jface/src/org/eclipse/jface/viewers/m3/M3Viewers.java` | `fcadd56125b52c6fa3c5911112b9cf3bda5cb14a` | `73da4eb60306b682cf18615014e7b323014f5674` | **master** already owns `post(Display,...)`, selection-preserving application, monotonic `deadlineNanos`, and `redundantRefresh` with barriers.
+2026-10-22T13:06	eclipse.platform.ui	37	pr-comment	`bundles/org.eclipse.ui.ide/src/org/eclipse/ui/internal/views/markers/M3SlotOrder.java` | `dd5e7b7d33c6521343f237c34d210b086dd8d80e` | `0ea028e7b2c6e59e37f552a59ce75c070e53c042` | both are different indexed-array owners: current master uses `blockCounts`, `countBefore`, `addCount` and `rebuildCounts`; this branch uses `M3SparseExtents blockIndex`.
+2026-10-22T15:38	eclipse.platform.swt	249	pr-body	Full SDK reactor and GUI/natives still must pass before review promotion; keep draft.
+2026-10-23T01:39	eclipse.platform.ui	45	pr-body	The viewport branch's version (commit 018b965b2e, "Use M3SparseExtents", PR #25) imports com.m3.collections.M3SparseExtents, a class that exists in no platform.ui tree: that lineage never compiled here.
