@@ -645,6 +645,8 @@ public boolean getEnabled () {
 	checkWidget();
 
 	if (GTK.GTK4) {
+		/* A separator has no action, see createHandle() */
+		if (actionHandle == 0) return enabled;
 		return OS.g_action_get_enabled(actionHandle);
 	} else {
 		return GTK.gtk_widget_get_sensitive(handle);
@@ -1452,6 +1454,7 @@ private void createCustomMenuWidget() {
 	OS.g_signal_connect(focusController, OS.enter, display.focusProc, FOCUS_IN);
 	OS.g_signal_connect(focusController, OS.leave, display.focusProc, FOCUS_OUT);
 	GTK4.gtk_widget_add_controller(customWidgetHandle, focusController);
+	if ((parent.style & SWT.RIGHT_TO_LEFT) != 0) setOrientation (customWidgetHandle, GTK.GTK_TEXT_DIR_RTL);
 
 	// Mark this GMenuItem slot as "custom" so GtkPopoverMenu creates a placeholder.
 	// injectCustomWidgetGTK4() reassigns a fresh id before actually embedding.
@@ -1790,11 +1793,11 @@ public void setMenu (Menu menu) {
 
 	if (GTK.GTK4) {
 		this.menu = menu;
+		if (oldMenu != null) oldMenu.cascade = null;
 		if (menu != null) {
 			menu.cascade = this;
 			OS.g_menu_item_set_submenu(handle, menu.modelHandle);
 		} else {
-			oldMenu.cascade = null;
 			OS.g_menu_item_set_submenu(handle, 0);
 		}
 
@@ -1845,6 +1848,9 @@ void setOrientation (boolean create) {
         if (menu != null) {
             menu._setOrientation(parent.style & (SWT.RIGHT_TO_LEFT | SWT.LEFT_TO_RIGHT));
         }
+		// On GTK4 handle is a GMenuItem; only a custom row is a widget
+		setOrientation (GTK.GTK4 ? customWidgetHandle : handle, dir);
+		if (menu != null) menu._setOrientation (parent.style & (SWT.RIGHT_TO_LEFT | SWT.LEFT_TO_RIGHT));
 	}
 }
 

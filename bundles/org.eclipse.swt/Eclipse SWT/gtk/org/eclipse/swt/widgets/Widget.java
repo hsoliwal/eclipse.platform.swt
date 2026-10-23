@@ -598,20 +598,6 @@ public void dispose () {
 }
 
 long dpiChanged (long object, long arg0) {
-	int oldScaleFactor = DPIUtil.getDeviceZoom() / 100;
-	int newScaleFactor = GTK.gtk_widget_get_scale_factor(object);
-
-	if (oldScaleFactor != newScaleFactor) {
-		display.dpiChanged(newScaleFactor);
-
-		Event event = new Event();
-		event.type = SWT.ZoomChanged;
-		event.widget = this;
-		event.detail = newScaleFactor;
-		event.doit = true;
-		notifyListeners(SWT.ZoomChanged, event);
-	}
-
 	return 0;
 }
 
@@ -2916,6 +2902,23 @@ void gtk_widget_show(long widget) {
     } else {
         GTK3.gtk_widget_show(widget);
     }
+}
+
+/**
+ * Sets the text direction of the widget and of all its descendants. A GTK
+ * widget without an explicit direction uses the default direction instead of
+ * the one of its parent.
+ */
+void setOrientation(long widget, int direction) {
+	if (widget == 0) return;
+	GTK.gtk_widget_set_direction(widget, direction);
+	if (GTK.GTK4) {
+		for (long child = GTK4.gtk_widget_get_first_child(widget); child != 0; child = GTK4.gtk_widget_get_next_sibling(child)) {
+			setOrientation(child, direction);
+		}
+	} else {
+		GTK3.gtk_container_forall(widget, display.setDirectionProc, direction);
+	}
 }
 
 }

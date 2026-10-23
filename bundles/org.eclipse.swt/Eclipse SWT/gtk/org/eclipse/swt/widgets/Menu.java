@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2025 IBM Corporation and others.
+ * Copyright (c) 2000, 2026 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -662,6 +662,33 @@ void fixMenus (Decorations newParent) {
 	for (int i=0; i<items.length; i++) {
 		items [i].fixMenus (newParent);
 	}
+	if (GTK.GTK4 && newParent != parent) {
+		/*
+		 * The items' actions are looked up from the popover up through its ancestors.
+		 * Once the control is moved to another shell (e.g. Eclipse 4 creates a part in
+		 * a hidden shell while its stack is minimized) the popover sits under the new
+		 * shell, so move the action group there, or every item shows disabled.
+		 */
+		byte[] groupName = Converter.javaStringToCString(String.valueOf(this.hashCode()));
+		long oldShellHandle = parent.getShell().topHandle();
+		long newShellHandle = newParent.getShell().topHandle();
+		if (oldShellHandle != newShellHandle) {
+			GTK.gtk_widget_insert_action_group(oldShellHandle, groupName, 0);
+			GTK.gtk_widget_insert_action_group(newShellHandle, groupName, actionGroup);
+		}
+		if (shortcutController != 0) {
+			OS.g_object_ref(shortcutController);
+			GTK4.gtk_widget_remove_controller(parent.handle, shortcutController);
+			GTK4.gtk_widget_add_controller(newParent.handle, shortcutController);
+		}
+		/* A popover still under the old shell would not find the actions and dies with that shell. */
+		if ((style & SWT.POP_UP) != 0 && GTK.gtk_widget_get_parent(handle) == parent.handle) {
+			OS.g_object_ref(handle);
+			GTK.gtk_widget_unparent(handle);
+			GTK.gtk_widget_set_parent(handle, newParent.handle);
+			OS.g_object_unref(handle);
+		}
+	}
 	parent.removeMenu (this);
 	newParent.addMenu (this);
 	this.parent = newParent;
@@ -1049,6 +1076,8 @@ void modelItemsChanged() {
     if (!GTK.GTK4 || isDisposed()) {
         return;
     }
+	if (!GTK.GTK4 || isDisposed()) return;
+	updateOrientationGTK4();
 	Menu root = this;
 	while (root.cascade != null && root.cascade.parent != null && !root.cascade.parent.isDisposed()) {
 		root = root.cascade.parent;
@@ -1079,6 +1108,7 @@ private void wireSubMenuPopover(Menu submenu, long popover) {
 	}
 	OS.g_object_ref(popover);
 	submenu.popoverHandle = popover;
+	submenu.updateOrientationGTK4();
 	display.addWidget(popover, submenu);
 	submenu.hookRowSelectionSync(popover);
 	OS.g_signal_connect_closure_by_id(popover, display.signalIds[SHOW], 0, display.getClosure(SHOW), false);
@@ -2155,10 +2185,43 @@ void setOrientation (boolean create) {
         if (handle != 0) {
             GTK.gtk_widget_set_direction(handle, dir);
         }
+		if (GTK.GTK4) {
+			// The handle of a DROP_DOWN menu is its GMenu model, the widget is the popover
+			setOrientation ((style & SWT.DROP_DOWN) != 0 ? popoverHandle : handle, dir);
+		} else if (handle != 0) {
+			GTK.gtk_widget_set_direction (handle, dir);
+		}
 		MenuItem [] items = getItems ();
 		for (int i = 0; i < items.length; i++) {
 			items [i].setOrientation (create);
 		}
+	}
+}
+
+/**
+ * GTK4 builds the rows and popovers of a menu from its model, also after the
+ * orientation was set, and a new widget does not take the direction of its
+ * parent. Give them the direction of a right to left menu, and of a left to
+ * right menu inside a right to left one.
+ */
+void updateOrientationGTK4() {
+	updateOrientationGTK4 (false);
+}
+
+/**
+ * @param applied whether the widgets already have the direction of this menu
+ * from the one of its parent menu
+ */
+private void updateOrientationGTK4(boolean applied) {
+	int flags = SWT.RIGHT_TO_LEFT | SWT.LEFT_TO_RIGHT;
+	boolean rightToLeft = (style & SWT.RIGHT_TO_LEFT) != 0;
+	if (!applied && (rightToLeft || (cascade != null && (cascade.parent.style & SWT.RIGHT_TO_LEFT) != 0))) {
+		setOrientation ((style & SWT.DROP_DOWN) != 0 ? popoverHandle : handle, rightToLeft ? GTK.GTK_TEXT_DIR_RTL : GTK.GTK_TEXT_DIR_LTR);
+		applied = true;
+	}
+	// The popovers of the submenus are inside, give them back their own direction
+	for (MenuItem item : getItems ()) {
+		if (item.menu != null) item.menu.updateOrientationGTK4 (applied && (item.menu.style & flags) == (style & flags));
 	}
 }
 

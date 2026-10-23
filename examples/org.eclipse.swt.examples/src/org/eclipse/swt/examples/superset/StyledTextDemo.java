@@ -21,7 +21,7 @@ import org.eclipse.swt.widgets.Control;
 
 /**
  * StyledText (and subclasses such as Nebula's ReadOnlyStyledText) over a
- * {@link GeneratedContent} of N lines (kind STYLEDTEXT). "Lines measured" is
+ * {@code GeneratedContent} of N lines (kind STYLEDTEXT). "Lines measured" is
  * counted through a LineStyleListener, which StyledText calls once per line it
  * lays out. Style ranges are not part of the round-trip mix because StyledText
  * ignores setStyleRange while a LineStyleListener is installed; line
