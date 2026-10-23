@@ -154,3 +154,20 @@ may be deleted, then the transform lanes in culprit order on the merged superset
   `python -I donate_methods.py <mvn log> <worktree> <clone> <heads>` on m3/file.
 - The Synexia source batch (batch5, traced) runs at about nine minutes per PR over 47 PRs; its worktrees under
   S:/m3-scratch/worktrees must not be touched while the todo file exists.
+
+## 2026-10-23, 07:30 UTC: the whole-file resolutions dropped superset work
+
+- `audit_theirs.py` over the 23 M3jdk21 PRs resolved as "theirs": 68 of 69 conflicted source files lost superset lines,
+  3,703 lines (M3ASTPC.java 628, m3/file 530, parser 455, java.util.concurrent progress monitors 266, collections 319).
+  The superset head's own compile errors made every superset-side candidate fail, so the gate took the only candidate
+  that compiled. Audit and plan: `m3/docs/superset/AUDIT_THEIRS.md` on the branch.
+- Fixes written, both under adversarial review by workflow agents before they run: `batch_resolve5.sh` (baseline-aware
+  gate: only errors the head does not already have count; whole Maven modules, plain source roots derived from the
+  package declaration, JDK modules, jtreg parse, python/xml/sh checks; empty units and crashed javac fail; no whole-file
+  candidate) and `repair_theirs.sh` (hunk-level re-merge of each damaged file, restoration replayed on the current head,
+  same gate, side branch + server merge). `gatelib.sh` holds the shared gate functions.
+- Workflow agents work again after the model switch (probe 9 min); the JBS reading pass of the 1,997 remaining
+  candidate rows runs as 19 chunk agents with a skeptic per chunk.
+- C conflicts: all 73 distinct hunks have proposals (`C_PROPOSALS.tsv`, `C_PER_PR.tsv`): 23 PRs' C side equals the
+  superset, 4 need one port (1513's span-bounded read), 22 need the owner (H1/H68: PR 1619's M3IndexMaskWindow.c is the
+  fuller file; H24 M3StateRelation compose body).
