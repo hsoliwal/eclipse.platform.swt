@@ -641,3 +641,4 @@ User: "look at the PRs and compare the pending work, the viewports, the M3JDK, a
 - 2026-10-23 10:45 UTC: regex lane L1+L2 PRs open on jdt.debug (#5 #6), platform (#21 #22), jdt.ui (#6), jdt.core (#7 #8); next: plain split leaf, IO lane L1; consolidation reruns blocked on scratch space (other projects fill S:).
 - 2026-10-23 11:00 UTC: regex lane L1b PRs on the four forks (jdt.debug #7, platform #23, jdt.ui #8, jdt.core #9); lane PR set complete for L1/L1b/L2; next IO lane L1.
 - 2026-10-23 11:20 UTC: L1b re-landed with the NLS fix as l1b2 PRs (jdt.debug #8, platform #24, jdt.core #10; jdt.ui pending a re-run); scratch space critical (other projects fill S:).
+- 2026-10-24: regex lane PR set final (12 PRs on four forks); JBS chunk01 + repair review resumed; consolidation v6 dry runs restarting (S: 11.6 GB free).
