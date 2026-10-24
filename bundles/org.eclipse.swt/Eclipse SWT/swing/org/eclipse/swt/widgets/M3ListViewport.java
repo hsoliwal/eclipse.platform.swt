@@ -64,7 +64,8 @@ final class M3ListViewport {
 
 	/** Hook of <code>List.createWidget()</code>: the model with hidden viewports (M3ListModel), fixed row geometry. */
 	void install () {
-		M3ListModel.install (rows ());
+		M3ListModel model = M3ListModel.install (rows ());
+		M3ShowGate.install (list, rows (), model::shown);
 		geometry = M3ListRows.install (rows ());
 	}
 
