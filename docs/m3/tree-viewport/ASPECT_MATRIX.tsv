@@ -114,7 +114,7 @@ aspect: structural changes (insert, dispose, setItemCount, clear, removeAll) rec
 aspect: SWT.CHECK (setChecked, setGrayed, check events)		GAP
 aspect: columns (header, column order, sort indicator, showColumn, horizontal scroll)		GAP
 aspect: presentation (fonts, colours, images per item and cell) in pixels		GAP
-aspect: MeasureItem/EraseItem/PaintItem custom draw		GAP
+aspect: MeasureItem/EraseItem/PaintItem custom draw	seededScriptsWithCustomDrawAnswerLikeStockSwt (12 seeds x 150, recordings tree-stock-recording-i)	DIFFERENTIAL_SURVEY 2026-10-24 (jar tv20261024d, round 14): 161 kinds of difference, by operation expansionKey 13, selectAll 8, getTopItem 6, showSelection 4, select+ 4, wheel 3, showItem 3, read 1, key 1, bounds 1: the top row and the row bounds are off by rows once MeasureItem changed the row height; open
 aspect: drag and drop feedback (insert mark, auto-scroll)		GAP
 aspect: tooltips for truncated rows		GAP
 aspect: accessibility (row count, focus, names)		GAP

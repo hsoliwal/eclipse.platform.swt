@@ -237,3 +237,14 @@ See [`tree-viewport/FOSS_REUSE_DECISION.tsv`](tree-viewport/FOSS_REUSE_DECISION.
 - No leaf is implemented by this commit.
 - GTK and Cocoa runtime behaviour is not measured on this host.
 - Accessibility with logical row counts is not claimed.
+
+## Status 2026-10-24 (round 14 of the integration branch, jar tv20261024d)
+
+- Regression fixed: the effective-visibility gate parked every virtual Tree in viewport mode since round 13
+  (9a71e3f844, docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md); the tree-viewport branch head 83fbeb36fb is merged
+  (the bar and the plane follow while parked, off-window expansion keys), its unfinished footer engine left out.
+- `viewport_probe.sh`: Tree, Table and List GOOD (bar maximum 299, thumbs 12/11/14, row 0 materialized).
+- Viewport suites, 41 tests: 39 pass, 0 aborted; the plain, columns, presentation and splice differential variants are
+  identical to the stock recordings; two survey reports stay open: custom draw 161 kinds (ASPECT_MATRIX line 117) and
+  expansion keys 44 kinds (ADD or MULTIPLY on an expanded off-window caret row scrolls the viewport by ten rows where
+  stock does nothing; collapse and expand move the bar by 9 to 35 rows against the recording; next leaf).
