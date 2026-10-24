@@ -2047,6 +2047,18 @@ final class TreeViewport {
 		int id = idOf (item);
 		if (id < 0) return;
 		VirtualTreeTopology topology = tree.virtualTopology;
+		/*
+		 * VK_ADD or VK_MULTIPLY on a row that is already expanded: Windows still sends TVN_ITEMEXPANDING with
+		 * TVE_EXPAND, SWT sends no Expand event for it (the native state is TVIS_EXPANDED), and the native TreeView
+		 * keeps its top (ExpansionKeyOracle, official 3.135.0; keys differential 2026-10-24: 9 ADD and 3 MULTIPLY
+		 * cases scrolled the row to the top). Nothing to make resident and nothing to scroll.
+		 */
+		long hItem = residentHandle (item);
+		if (hItem != 0 && topology.flag (id, VirtualItemState.EXPANDED)
+				&& (OS.SendMessage (tree.handle, OS.TVM_GETITEMSTATE, hItem, OS.TVIS_EXPANDED) & OS.TVIS_EXPANDED) != 0) {
+			LOG.debug (() -> "Tree native expansion of id " + id + ": already expanded, no scroll");
+			return;
+		}
 		boolean knownBefore = topology.childCountKnown (id);
 		if (!knownBefore) tree.checkData (item, false);
 		LOG.debug (() -> "Tree native expansion of id " + id + ": cached " + item.isCachedState () + ", child count known " + knownBefore + " -> "
