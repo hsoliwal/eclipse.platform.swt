@@ -17,5 +17,5 @@ for i in $(seq 1 90); do
   kb=$(bash C:/m3-superset/tools/commit_free_kb.sh)
   [ "$kb" -ge 6291456 ] && break; sleep 20
 done
-bash C:/m3-superset/tools/ui_lock.sh claude-tree bash C:/m3-superset/tools/hidden_java.sh 900 $OUT/run-$STAMP.log -Xmx1g -Dswt.viewport.evidence=K:/m3-work/runs/tree-evidence -Dswt.viewport.recording=$RECORDING -jar $CS execute -cp "$OUT/tests;$JAR" $SEL --disable-banner --details=tree
+bash C:/m3-superset/tools/ui_lock.sh claude-tree bash C:/m3-superset/tools/hidden_java.sh 900 $OUT/run-$STAMP.log -Xmx1g -Dswt.viewport.evidence=K:/m3-work/runs/tree-evidence -Dswt.viewport.recording=$RECORDING ${JVM_OPTS:-} -jar $CS execute -cp "$OUT/tests;$JAR" $SEL --disable-banner --details=tree
 sed 's/\x1b\[[0-9;]*m//g' $OUT/run-$STAMP.log | grep -E "memory gate|✘|tests (successful|failed)|^  plain:|^  viewport:|differs|^seed|^log:" | head -16
