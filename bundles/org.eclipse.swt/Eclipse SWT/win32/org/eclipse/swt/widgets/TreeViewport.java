@@ -922,9 +922,7 @@ final class TreeViewport {
 	 * A new item height (a taller MeasureItem row, Tree.setItemHeight) changes the rows natively at once, but the
 	 * native vertical bar keeps its page until the TreeView next recomputes its scroll bars, which every key it
 	 * receives does, also a key that changes nothing (custom draw recording, stock seed 0 step 8: Left without a
-	 * caret). The viewport's bar follows at its next layout: a key lays out when the height changed, and so do
-	 * showItem, showSelection and setTopItem (an ensure-visible recomputes the native bars even when nothing scrolls:
-	 * custom draw recording, stock seed 0 step 81, showSelection after a taller row, thumb 14 -> 12 with the top kept).
+	 * caret). The viewport's bar follows at its next layout, and a key lays out when the height changed.
 	 */
 	private void itemHeightKey () {
 		if (layoutItemHeight != 0 && Math.max (1, tree.getItemHeightInPixels ()) != layoutItemHeight) layout ();
@@ -1847,7 +1845,6 @@ final class TreeViewport {
 	void setTopItem (TreeItem item) {
 		int id = idOf (item);
 		if (id < 0) return;
-		itemHeightKey ();
 		LOG.debug (() -> "Tree setTopItem id " + id);
 		if (!ensureAncestorsExpanded (id, false)) return;
 		long row = tree.virtualProjection.visibleIndexOf (id);
@@ -1863,7 +1860,6 @@ final class TreeViewport {
 	void showItem (TreeItem item) {
 		int id = idOf (item);
 		if (id < 0) return;
-		itemHeightKey ();
 		LOG.debug (() -> "Tree showItem id " + id + " from top row " + tree.virtualViewport.topRow ());
 		VirtualTreeViewport viewport = tree.virtualViewport;
 		VirtualTreeTopology topology = tree.virtualTopology;
