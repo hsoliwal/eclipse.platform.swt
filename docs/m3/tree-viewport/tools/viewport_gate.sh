@@ -7,9 +7,9 @@
 # (survey mode: every divergence listed, none fails the run early). One line per stage, a verdict at the end;
 # VIEWPORT_GATE.tsv in OUT gets one row (utc, worktree, commit, probe, tests successful/failed/aborted).
 # A merge into the integration branch is not done until this says GATE_GREEN (user: every widget must be a viewport).
-# Usage: [OUT=S:/m3-scratch/swt-tv] [RECORDING=K:/m3-work/runs/tree-stock-recording-i] viewport_gate.sh <worktree> [<stamp>]
+# Usage: [OUT=S:/m3-scratch/swt-tv] [RECORDING=K:/m3-work/runs/viewport-stock-recording-20261024] viewport_gate.sh <worktree> [<stamp>]
 set -uo pipefail; export LC_ALL=C
-W="${1:?worktree}"; STAMP="${2:-gate$(date -u +%Y%m%d%H%M)}"; OUT=${OUT:-S:/m3-scratch/swt-tv}; RECORDING=${RECORDING:-K:/m3-work/runs/tree-stock-recording-i}
+W="${1:?worktree}"; STAMP="${2:-gate$(date -u +%Y%m%d%H%M)}"; OUT=${OUT:-S:/m3-scratch/swt-tv}; RECORDING=${RECORDING:-K:/m3-work/runs/viewport-stock-recording-20261024}
 D=$(cd "$(dirname "$0")" && pwd); T=org.eclipse.swt.tests.junit; mkdir -p "$OUT"
 commit=$(git -C "$W" rev-parse --short HEAD 2>/dev/null || echo "-")
 say() { echo "[$(date -u +%H:%M:%S)] $*"; }
