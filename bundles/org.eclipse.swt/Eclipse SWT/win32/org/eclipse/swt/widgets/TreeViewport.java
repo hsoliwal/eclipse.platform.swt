@@ -1997,6 +1997,8 @@ final class TreeViewport {
 	void setExpanded (TreeItem item, boolean expanded) {
 		int id = idOf (item);
 		if (id < 0) return;
+		/* the native TreeView adopts a new item height when it expands or collapses (HeightBarOracle: expand) */
+		itemHeightKey ();
 		LOG.debug (() -> "Tree setExpanded id " + id + " " + expanded);
 		VirtualTreeTopology topology = tree.virtualTopology;
 		if (expanded) {
@@ -2138,6 +2140,8 @@ final class TreeViewport {
 	void destroy (TreeItem item) {
 		int id = idOf (item);
 		if (id < 0) return;
+		/* the native TreeView adopts a new item height when it deletes an item (custom draw recording, seed 11 step 76) */
+		itemHeightKey ();
 		VirtualTreeTopology topology = tree.virtualTopology;
 		int parentId = topology.parentId (id), index = topology.childIndex (id);
 		long hRow = plan.handleOf (parentId, index);
@@ -2800,6 +2804,8 @@ final class TreeViewport {
 		for (TreeItem item : items) {
 			if (item != null && item.isDisposed ()) tree.error (SWT.ERROR_INVALID_ARGUMENT);
 		}
+		/* the native TreeView adopts a new item height when it selects (HeightBarOracle: setSelection) */
+		itemHeightKey ();
 		deselectAll ();
 		boolean single = (tree.style & SWT.SINGLE) != 0;
 		if (items.length == 0 || (single && items.length > 1)) return;
