@@ -1011,6 +1011,7 @@ public void test_virtualDndHitPinsColdTableCoordinateWithoutDenseMaterialization
 	assertSame(hit, virtualTable.getItem(top),
 			"scrolling away must not rebind a DND-exposed TableItem facade");
 	virtualTable.dispose();
+}
 @Test
 public void test_setOrientationWithColumns() {
 	new TableColumn(table, SWT.NONE);
