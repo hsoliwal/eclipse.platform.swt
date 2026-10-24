@@ -1780,6 +1780,7 @@ public void test_virtualPackedStateFollowsLogicalInsertAndRemoveOnCocoa() throws
 	assertSame(marked, virtualTree.getItem(20));
 	assertTrue(marked.getChecked());
 	assertTrue(marked.getGrayed());
+}
 @Test
 public void test_setOrientationWithColumns() {
 	new TreeColumn(tree, SWT.NONE);
