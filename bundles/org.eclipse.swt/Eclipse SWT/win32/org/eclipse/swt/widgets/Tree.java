@@ -6660,6 +6660,7 @@ public void setRedraw (boolean redraw) {
 	}
 
 	super.setRedraw (redraw);
+	if (viewport != null && willEnableDraw) viewport.redrawEnabled ();
 
 	boolean haveDisabledDraw = !redraw && (drawCount == 1);
 	if (haveDisabledDraw) {

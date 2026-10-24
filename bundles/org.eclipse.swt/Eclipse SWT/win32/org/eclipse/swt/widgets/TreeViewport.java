@@ -101,6 +101,18 @@ final class TreeViewport {
 	long reinsertedRows;
 	/* the item height of the last layout: the bar's page follows a new item height only at the next layout (itemHeightKey) */
 	private int layoutItemHeight;
+	/*
+	 * The vertical bar as a programmatic expand or collapse of a row in view leaves it in stock's parent window
+	 * (BarScriptOracle, official 3.135.0, a tree with a MeasureItem listener): SWT expands with redraw off and scrolls
+	 * the old top item back, and the bar keeps the row the TreeView scrolled to (staleBarRow, -1 when the bar shows the
+	 * top row); a collapse in view leaves the whole bar as it was (frozenBar). The next native scroll-bar update brings
+	 * the bar back to the top row (barFollowsTop).
+	 */
+	private long staleBarRow = -1;
+	private SCROLLINFO frozenBar;
+	/* the visible row count and the size the bar was last updated for: a change updates the native bar (barShapeChanged) */
+	private long layoutRowCount = -1;
+	private int layoutOuterWidth = -1, layoutOuterHeight = -1, layoutClientHeight = -1;
 
 	TreeViewport (Tree tree) {
 		this.tree = tree;
@@ -199,6 +211,7 @@ final class TreeViewport {
 			int body = bodyHeight ();
 			/* the native control counts fully visible rows; the partial last row comes from the overscan */
 			tree.virtualViewport.configureGeometry (itemHeight, body / itemHeight * itemHeight);
+			if (barShapeChanged ()) clearStaleBar ();
 			if (hidden) {
 				if (!parked) park ();
 				parkedLayouts++;
@@ -216,9 +229,87 @@ final class TreeViewport {
 			 */
 			updateBar ();
 			positionPlane ();
+			rememberBarShape ();
 		} finally {
 			busy = false;
 		}
+	}
+
+	/*
+	 * Rows inserted, deleted, expanded or collapsed, a new size of the tree or a horizontal bar shown or hidden since
+	 * the bar was last updated: the native TreeView updates its bar for each (BarScriptOracle). The vertical bar itself
+	 * changes only the client width, so the outer size and the client height are compared.
+	 */
+	private boolean barShapeChanged () {
+		if (layoutRowCount < 0) return false;
+		RECT outer = new RECT (), client = new RECT ();
+		OS.GetWindowRect (tree.hwndParent, outer);
+		OS.GetClientRect (tree.hwndParent, client);
+		return tree.virtualViewport.visibleRowCount () != layoutRowCount || outer.right - outer.left != layoutOuterWidth
+				|| outer.bottom - outer.top != layoutOuterHeight || client.bottom - client.top != layoutClientHeight;
+	}
+
+	private void rememberBarShape () {
+		RECT outer = new RECT (), client = new RECT ();
+		OS.GetWindowRect (tree.hwndParent, outer);
+		OS.GetClientRect (tree.hwndParent, client);
+		layoutRowCount = tree.virtualViewport.visibleRowCount ();
+		layoutOuterWidth = outer.right - outer.left;
+		layoutOuterHeight = outer.bottom - outer.top;
+		layoutClientHeight = client.bottom - client.top;
+	}
+
+	/** @return whether the bar showed a row other than the top row (an expand or collapse in view left it) */
+	private boolean clearStaleBar () {
+		boolean stale = staleBarRow >= 0 || frozenBar != null;
+		staleBarRow = -1;
+		frozenBar = null;
+		return stale;
+	}
+
+	/* A native scroll-bar update (a key, the wheel, a scroll, an ensure-visible): the bar shows the top row again. */
+	private void barFollowsTop () {
+		if (!clearStaleBar ()) return;
+		LOG.debug (() -> "Tree vertical bar follows the top row again");
+		updateBar ();
+		rememberBarShape ();
+	}
+
+	/*
+	 * After a programmatic expand or collapse of a row in view (setExpanded): natively SWT expands with redraw off and
+	 * scrolls the old top item back. The bar keeps the row the TreeView scrolled to for the children (none when they
+	 * fit below the row), and a collapse leaves the bar as it was shown before it (BarScriptOracle, official 3.135.0:
+	 * expand of root 7 at top 0 shows bar 7/339 with root 0 on top; collapse of root 7 then keeps 7/339).
+	 */
+	private void barAfterExpansionInView (int id, boolean expanded, SCROLLINFO shownBefore) {
+		if (expanded) {
+			long scrolled = childrenScrollTop (id, false);
+			staleBarRow = scrolled >= 0 && scrolled != tree.virtualViewport.topRow () ? scrolled : -1;
+			frozenBar = null;
+		} else {
+			staleBarRow = -1;
+			frozenBar = shownBefore;
+		}
+		if (staleBarRow < 0 && frozenBar == null) return;
+		LOG.debug (() -> "Tree " + (expanded ? "expand" : "collapse") + " in view: the bar keeps " + (expanded ? "row " + staleBarRow : "its range and position"));
+		updateBar ();
+		rememberBarShape ();
+	}
+
+	/* Whether a row is in view, the partly visible last row included (the TreeView scrolls for its expansion too). */
+	private boolean rowInView (long row) {
+		long top = tree.virtualViewport.topRow ();
+		int itemHeight = Math.max (1, tree.getItemHeightInPixels ());
+		return row >= top && row < top + (bodyHeight () + itemHeight - 1) / itemHeight;
+	}
+
+	/* The vertical bar as it is shown now. */
+	private SCROLLINFO shownBar () {
+		SCROLLINFO info = new SCROLLINFO ();
+		info.cbSize = SCROLLINFO.sizeof;
+		info.fMask = OS.SIF_RANGE | OS.SIF_PAGE | OS.SIF_POS;
+		OS.GetScrollInfo (tree.hwndParent, OS.SB_VERT, info);
+		return info;
 	}
 
 	private int bodyHeight () {
@@ -856,10 +947,14 @@ final class TreeViewport {
 		info.cbSize = SCROLLINFO.sizeof;
 		info.fMask = OS.SIF_RANGE | OS.SIF_PAGE | OS.SIF_POS;
 		info.nMin = 0;
-		if (rows <= Integer.MAX_VALUE) {
+		if (frozenBar != null && rows <= Integer.MAX_VALUE) {
+			info.nMax = frozenBar.nMax;
+			info.nPage = frozenBar.nPage;
+			info.nPos = frozenBar.nPos;
+		} else if (rows <= Integer.MAX_VALUE) {
 			info.nMax = (int) Math.max (0, rows - 1);
 			info.nPage = rows <= page ? info.nMax + 1 : page;
-			info.nPos = (int) viewport.topRow ();
+			info.nPos = (int) (staleBarRow >= 0 ? staleBarRow : viewport.topRow ());
 		} else {
 			info.nMax = viewport.scrollbarMaximum () - 1;
 			info.nPage = viewport.scrollbarThumb ();
@@ -886,6 +981,8 @@ final class TreeViewport {
 	/* ---------------------------------------------------------------- scroll input */
 
 	long onVScroll (long wParam, long lParam) {
+		/* the TreeView scrolls from its top row, not from a bar an expand or collapse left behind */
+		barFollowsTop ();
 		ScrollBar bar = tree.verticalBar;
 		if (bar != null) {
 			/* SWT's own bar semantics: increments, track position and the ScrollBar Selection event */
@@ -908,6 +1005,8 @@ final class TreeViewport {
 
 	/** Replaces the TreeView's own wheel handling (which would scroll the content plane). */
 	long onWheel (long wParam) {
+		/* the native wheel updates the bar also when it does not scroll (BarScriptOracle: wheel up at the top) */
+		barFollowsTop ();
 		ScrollBar bar = tree.verticalBar;
 		Widget.MouseWheelData wheel = tree.new MouseWheelData (true, bar, wParam, tree.display.scrollRemainderBar);
 		if (wheel.count != 0) {
@@ -944,6 +1043,8 @@ final class TreeViewport {
 
 	LRESULT onKeyDown (long wParam) {
 		int key = (int) wParam;
+		/* every key the TreeView receives updates its bar, also one that changes nothing (BarScriptOracle: Left) */
+		barFollowsTop ();
 		itemHeightKey ();
 		if (OS.GetKeyState (OS.VK_SHIFT) < 0 || OS.GetKeyState (OS.VK_CONTROL) < 0) return null;
 		if (OS.SendMessage (tree.handle, OS.TVM_GETNEXTITEM, OS.TVGN_CARET, 0) == 0
@@ -1847,11 +1948,29 @@ final class TreeViewport {
 	void setTopItem (TreeItem item) {
 		int id = idOf (item);
 		if (id < 0) return;
-		itemHeightKey ();
 		LOG.debug (() -> "Tree setTopItem id " + id);
+		long rowsBefore = tree.virtualViewport.visibleRowCount ();
 		if (!ensureAncestorsExpanded (id, false)) return;
 		long row = tree.virtualProjection.visibleIndexOf (id);
-		if (row >= 0) setTopRow (row);
+		if (row < 0) return;
+		/*
+		 * TVGN_FIRSTVISIBLE of the top row is no native scroll: the bar keeps its page and its position (ExpandBarOracle:
+		 * setTopItem of the top row after a taller row keeps thumb 20). A new top row, or ancestors it expanded, update
+		 * the bar: the layout adopts a new item height (HeightBarOracle: setTopItem) and shows the top row again.
+		 */
+		if (row == tree.virtualViewport.topRow () && tree.virtualViewport.visibleRowCount () == rowsBefore) return;
+		clearStaleBar ();
+		setTopRow (row);
+	}
+
+	/*
+	 * Tree.setRedraw (true) ends the last setRedraw (false): the TreeView's WM_SETREDRAW recomputes its bar, which adopts
+	 * a new item height (HeightBarOracle: setRedraw) and shows the top row again (ExpandBarOracle: setRedraw after an
+	 * expand in view, bar 7 -> 0).
+	 */
+	void redrawEnabled () {
+		itemHeightKey ();
+		barFollowsTop ();
 	}
 
 	/**
@@ -1864,6 +1983,8 @@ final class TreeViewport {
 		int id = idOf (item);
 		if (id < 0) return;
 		itemHeightKey ();
+		/* an ensure-visible updates the native bar also when the row is in view (BarScriptOracle) */
+		barFollowsTop ();
 		LOG.debug (() -> "Tree showItem id " + id + " from top row " + tree.virtualViewport.topRow ());
 		VirtualTreeViewport viewport = tree.virtualViewport;
 		VirtualTreeTopology topology = tree.virtualTopology;
@@ -1889,10 +2010,18 @@ final class TreeViewport {
 	 * Stock showItem reads the text bounds of the row before scrolling and, in a tree with a parent window,
 	 * again after it to adjust the horizontal scroll. A row inside a collapsed branch has no bounds the first
 	 * time, so the second read is its first measure: the TreeView asks for its data inside the call
-	 * (SetDataTimingOracle, columns variant). Stock creates that parent window for the first column, a shown
-	 * header or a MeasureItem listener; the viewport always has one, so the stock condition is checked here.
+	 * (SetDataTimingOracle, columns variant).
 	 */
 	private boolean measuresShownRow () {
+		return stockParentWindow ();
+	}
+
+	/*
+	 * Stock creates its parent window (hwndParent, whose vertical bar is a copy of the TreeView's) for the first
+	 * column, a shown header or a MeasureItem listener (Tree.createItem, setHeaderVisible, NM_CUSTOMDRAW); the viewport
+	 * always has one, so the stock condition is checked where it shows.
+	 */
+	private boolean stockParentWindow () {
 		return tree.columnCount > 0 || tree.getHeaderVisible () || tree.hooks (SWT.MeasureItem);
 	}
 
@@ -1937,11 +2066,17 @@ final class TreeViewport {
 	 * become visible, but the item itself never scrolls above the top row.
 	 */
 	private void scrollChildrenIntoView (int id, boolean user) {
+		long newTop = childrenScrollTop (id, user);
+		if (newTop >= 0) tree.virtualViewport.setTopRow (newTop);
+	}
+
+	/** @return the top row the native TreeView scrolls to after an item expands (scrollChildrenIntoView), or -1 when it does not scroll */
+	private long childrenScrollTop (int id, boolean user) {
 		VirtualTreeTopology topology = tree.virtualTopology;
 		VirtualTreeVisibleProjection projection = tree.virtualProjection;
 		VirtualTreeViewport viewport = tree.virtualViewport;
 		long row = projection.visibleIndexOf (id);
-		if (row < 0 || !topology.childCountKnown (id) || topology.childCount (id) == 0) return;
+		if (row < 0 || !topology.childCountKnown (id) || topology.childCount (id) == 0) return -1;
 		/*
 		 * Measured on the native control (EnsureVisibleOracle, 15 cases): when the last child is
 		 * below the view, it is scrolled to the bottom edge; an item at or below the top row is
@@ -1953,7 +2088,7 @@ final class TreeViewport {
 		if (lastChild >= top + rows) {
 			long newTop = lastChild - rows + 1;
 			if (row >= top) newTop = Math.min (newTop, row);
-			viewport.setTopRow (newTop);
+			return newTop;
 		} else if (user && row < top && lastChild < top) {
 			/*
 			 * A user expansion above the view whose children all stay above it: the row comes in at the top. When
@@ -1961,8 +2096,9 @@ final class TreeViewport {
 			 * top item (ExpansionKeyOracle; keys differential 2026-10-24 seed 3 step 11: stock top=root 245 / 34,
 			 * bar 280; the viewport had put root 245 at the top).
 			 */
-			viewport.setTopRow (row);
+			return row;
 		}
+		return -1;
 	}
 
 	/* The logical coordinate of the top row, to keep the same item at the top across a shape change. */
@@ -1997,8 +2133,6 @@ final class TreeViewport {
 	void setExpanded (TreeItem item, boolean expanded) {
 		int id = idOf (item);
 		if (id < 0) return;
-		/* the native TreeView adopts a new item height when it expands or collapses (HeightBarOracle: expand) */
-		itemHeightKey ();
 		LOG.debug (() -> "Tree setExpanded id " + id + " " + expanded);
 		VirtualTreeTopology topology = tree.virtualTopology;
 		if (expanded) {
@@ -2009,6 +2143,19 @@ final class TreeViewport {
 			if (!topology.childCountKnown (id) || topology.childCount (id) == 0) return;
 		}
 		if (topology.flag (id, VirtualItemState.EXPANDED) == expanded) return;
+		/*
+		 * The native TreeView adopts a new item height when it expands or collapses (HeightBarOracle: expand), not when
+		 * stock setExpanded returns early for a row without children or already in that state (custom draw recording,
+		 * seed 0 step 88: expand of a root without children kept thumb 12).
+		 */
+		itemHeightKey ();
+		/*
+		 * The bar stays behind only in stock's parent window, which copies the TreeView's bar when SWT updates it (with a
+		 * TreeView of its own the bar follows: plain and presentation recordings, seed 1 step 57 bar 0/380), and SWT
+		 * turns redraw off for a drawing, visible tree only.
+		 */
+		boolean inView = stockParentWindow () && !partHidden () && tree.getDrawing () && rowInView (tree.virtualProjection.visibleIndexOf (id));
+		SCROLLINFO shownBefore = inView && !expanded ? shownBar () : null;
 		int [] top = topCoordinate ();
 		/*
 		 * Native collapse of a row whose subtree holds the caret: the caret moves to the collapsed
@@ -2031,6 +2178,7 @@ final class TreeViewport {
 		tree.virtualViewport.refreshLogicalRange ();
 		restoreTop (top);
 		layout ();
+		if (inView) barAfterExpansionInView (id, expanded, shownBefore);
 		if (caretMoved) {
 			restoreFocus ();
 			Event event = new Event ();
@@ -2804,11 +2952,12 @@ final class TreeViewport {
 		for (TreeItem item : items) {
 			if (item != null && item.isDisposed ()) tree.error (SWT.ERROR_INVALID_ARGUMENT);
 		}
-		/* the native TreeView adopts a new item height when it selects (HeightBarOracle: setSelection) */
-		itemHeightKey ();
 		deselectAll ();
 		boolean single = (tree.style & SWT.SINGLE) != 0;
+		/* stock setSelection of no item (or of several in a SINGLE tree) is a deselectAll, which adopts no new item height */
 		if (items.length == 0 || (single && items.length > 1)) return;
+		/* the native TreeView adopts a new item height when it selects (HeightBarOracle: setSelection) */
+		itemHeightKey ();
 		TreeItem first = null;
 		for (TreeItem item : items) {
 			int id = idOf (item);

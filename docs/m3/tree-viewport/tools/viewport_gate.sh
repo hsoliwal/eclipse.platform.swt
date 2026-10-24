@@ -18,7 +18,8 @@ bash C:/m3-superset/tools/compile_platform.sh "$W" win32 2>&1 | tail -n 1 || { s
 say "jar and tests ($STAMP)"
 bash C:/m3-superset/tools/build_and_tests.sh "$W" "$OUT" "$STAMP" 2>&1 | grep -E "tests javac|no jar" | head -n 2
 JAR="$OUT/dist/org.eclipse.swt.win32.win32.x86_64-m3-$STAMP.jar"; [ -f "$JAR" ] || { say "GATE_RED: no jar"; exit 1; }
-errors=$(grep -c ': error:' "$OUT/tests.log" 2>/dev/null || echo 0); [ "$errors" -eq 0 ] || { say "GATE_RED: $errors test compile errors ($OUT/tests.log)"; exit 1; }
+# grep -c prints 0 and exits 1 when nothing matches: no "|| echo 0" (that made the count "0 0")
+errors=$(grep -c ': error:' "$OUT/tests.log" 2>/dev/null); errors=${errors:-0}; [ "$errors" -eq 0 ] || { say "GATE_RED: $errors test compile errors ($OUT/tests.log)"; exit 1; }
 say "probe"
 probe=$(bash "$D/viewport_probe.sh" "$JAR" 300); say "$probe"
 say "suites (every viewport widget: acceptance and differential classes, survey mode)"

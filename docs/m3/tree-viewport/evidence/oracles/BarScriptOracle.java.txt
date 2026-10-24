@@ -1,0 +1,84 @@
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.widgets.*;
+
+/**
+ * Oracle: the native vertical bar and the top item after each operation of a script. Same tree as the custom draw
+ * differential: SWT.VIRTUAL | SWT.MULTI | SWT.BORDER, 300 roots, 40 children each, 300 x 380 inside a 320 x 420 shell.
+ * Usage: java BarScriptOracle op... with op one of top:N expand:N collapse:N show:N sel:N select:N key:L key:D
+ *   wheel:down wheel:up taller:H redraw count:N insert:N dispose:N size:H setRedraw clear:N
+ */
+public class BarScriptOracle {
+	static int measureHeight;
+
+	static String bar (Tree tree) {
+		ScrollBar b = tree.getVerticalBar ();
+		TreeItem t = tree.getTopItem ();
+		return b.getSelection () + "/" + b.getMaximum () + " t" + b.getThumb () + " top=" + (t == null ? "null" : t.getText ());
+	}
+
+	static void pump (Display d) throws Exception {
+		for (int i = 0; i < 10; i++) {
+			while (d.readAndDispatch ()) { }
+			Thread.sleep (5);
+		}
+	}
+
+	static void key (Tree tree, int vk) {
+		OS.SendMessage (tree.handle, 0x0100, vk, 0);
+		OS.SendMessage (tree.handle, 0x0101, vk, 0xC0000001L);
+	}
+
+	public static void main (String [] args) throws Exception {
+		Display display = new Display ();
+		Shell shell = new Shell (display);
+		shell.setBounds (20, 20, 320, 420);
+		Tree tree = new Tree (shell, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
+		tree.setBounds (5, 5, 300, 380);
+		tree.addListener (SWT.SetData, e -> {
+			TreeItem item = (TreeItem) e.item;
+			TreeItem parent = item.getParentItem ();
+			if (parent == null) {
+				item.setText ("root " + tree.indexOf (item));
+				item.setItemCount (40);
+			} else {
+				item.setText ("child " + parent.indexOf (item));
+			}
+		});
+		tree.addListener (SWT.MeasureItem, e -> {
+			if (measureHeight > e.height) e.height = measureHeight;
+		});
+		tree.setItemCount (300);
+		shell.open ();
+		pump (display);
+		StringBuilder out = new StringBuilder ("start " + bar (tree));
+		for (String op : args) {
+			String [] p = op.split (":");
+			int n = p.length > 1 && p [1].matches ("-?[0-9]+") ? Integer.parseInt (p [1]) : 0;
+			switch (p [0]) {
+				case "top" -> tree.setTopItem (tree.getItem (n));
+				case "expand" -> tree.getItem (n).setExpanded (true);
+				case "collapse" -> tree.getItem (n).setExpanded (false);
+				case "show" -> tree.showItem (tree.getItem (n));
+				case "sel" -> tree.setSelection (tree.getItem (n));
+				case "select" -> tree.select (tree.getItem (n));
+				case "key" -> key (tree, "L".equals (p [1]) ? 0x25 : 0x28);
+				case "wheel" -> { Point c = tree.toDisplay (150, 190); OS.SendMessage (tree.handle, 0x020A, ((long) (("up".equals (p [1]) ? 120 : -120) & 0xFFFF)) << 16, (c.x & 0xFFFF) | ((long) (c.y & 0xFFFF) << 16)); }
+				case "taller" -> { measureHeight = n; tree.redraw (); tree.update (); }
+				case "redraw" -> { tree.redraw (); tree.update (); }
+				case "count" -> tree.setItemCount (n);
+				case "insert" -> new TreeItem (tree, SWT.NONE, n);
+				case "dispose" -> tree.getItem (n).dispose ();
+				case "size" -> tree.setSize (300, n);
+				case "setRedraw" -> { tree.setRedraw (false); tree.setRedraw (true); }
+				case "clear" -> tree.clear (n, false);
+				default -> throw new IllegalArgumentException (op);
+			}
+			pump (display);
+			out.append (" | ").append (op).append (" ").append (bar (tree));
+		}
+		System.out.println ("script " + out);
+		display.dispose ();
+	}
+}

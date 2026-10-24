@@ -1,0 +1,126 @@
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.widgets.*;
+
+/**
+ * Oracle: after TreeItem.setExpanded (true) of a root in view whose children do not fit below it, where are the
+ * native vertical bar and the top item? The native TreeView scrolls on TVM_EXPAND and SWT scrolls back to the old
+ * top item with redraw off. Same tree as the custom draw differential: SWT.VIRTUAL | SWT.MULTI | SWT.BORDER, 300
+ * roots, 40 children each, 300 x 380 inside a 320 x 420 shell.
+ * Usage: java ExpandBarOracle <height> <adopt> <top root> <expanded root> [then]
+ *   height: 0 = default rows, else MeasureItem raises the rows to it; adopt: true = a key adopts the new height
+ *   before the expand; then: an operation after the expand (taller, redraw, getTopItem, setTopItem, key, none)
+ */
+public class ExpandBarOracle {
+	static int measureHeight;
+
+	static String bar (Tree tree) {
+		ScrollBar b = tree.getVerticalBar ();
+		TreeItem t = tree.getTopItem ();
+		long first = OS.SendMessage (tree.handle, OS.TVM_GETNEXTITEM, OS.TVGN_FIRSTVISIBLE, 0);
+		return b.getSelection () + "/" + b.getMaximum () + " t" + b.getThumb () + " h" + tree.getItemHeight () + " top=" + (t == null ? "null" : t.getText ()) + (first == 0 ? " nofirst" : "");
+	}
+
+	static void pump (Display d) throws Exception {
+		for (int i = 0; i < 10; i++) {
+			while (d.readAndDispatch ()) { }
+			Thread.sleep (5);
+		}
+	}
+
+	static void key (Tree tree, int vk) {
+		OS.SendMessage (tree.handle, 0x0100, vk, 0);
+		OS.SendMessage (tree.handle, 0x0101, vk, 0xC0000001L);
+	}
+
+	public static void main (String [] args) throws Exception {
+		int height = Integer.parseInt (args [0]);
+		boolean adopt = Boolean.parseBoolean (args [1]);
+		int top = Integer.parseInt (args [2]), expand = Integer.parseInt (args [3]);
+		String then = args.length > 4 ? args [4] : "none";
+		Display display = new Display ();
+		Shell shell = new Shell (display);
+		shell.setBounds (20, 20, 320, 420);
+		Tree tree = new Tree (shell, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
+		tree.setBounds (5, 5, 300, 380);
+		tree.addListener (SWT.SetData, e -> {
+			TreeItem item = (TreeItem) e.item;
+			TreeItem parent = item.getParentItem ();
+			if (parent == null) {
+				item.setText ("root " + tree.indexOf (item));
+				item.setItemCount (40);
+			} else {
+				item.setText ("child " + parent.indexOf (item));
+			}
+		});
+		tree.addListener (SWT.MeasureItem, e -> {
+			if (measureHeight > e.height) e.height = measureHeight;
+		});
+		tree.setItemCount (300);
+		shell.open ();
+		pump (display);
+		if (height > 0) {
+			measureHeight = height;
+			tree.redraw ();
+			tree.update ();
+			pump (display);
+			/* Left without a caret changes nothing but recomputes the native bars (HeightBarOracle: keys) */
+			if (adopt) key (tree, 0x25);
+			pump (display);
+		}
+		tree.setTopItem (tree.getItem (top));
+		pump (display);
+		String before = bar (tree);
+		tree.getItem (expand).setExpanded (true);
+		String after = bar (tree);
+		pump (display);
+		String settled = bar (tree);
+		switch (then) {
+			case "none" -> { }
+			case "taller" -> { measureHeight = (height == 0 ? 18 : height) + 4; tree.redraw (); tree.update (); }
+			case "redraw" -> { tree.redraw (); tree.update (); }
+			case "getTopItem" -> tree.getTopItem ();
+			case "setTopItem" -> tree.setTopItem (tree.getItem (top));
+			case "key" -> key (tree, 0x25);
+			case "collapse" -> tree.getItem (expand).setExpanded (false);
+			case "setTopItemSame" -> tree.setTopItem (tree.getItem (top));
+			case "setTopItemOther" -> tree.setTopItem (tree.getItem (top + 2));
+			case "showItemVisible" -> tree.showItem (tree.getItem (top + 5));
+			case "showItemFar" -> tree.showItem (tree.getItem (top + 150));
+			case "setSelectionVisible" -> tree.setSelection (tree.getItem (top + 5));
+			case "selectVisible" -> tree.select (tree.getItem (top + 5));
+			case "deselectAll" -> tree.deselectAll ();
+			case "keyDown" -> key (tree, 0x28);
+			case "wheelDown" -> { org.eclipse.swt.graphics.Point c = tree.toDisplay (150, 190); OS.SendMessage (tree.handle, 0x020A, ((long) (-120 & 0xFFFF)) << 16, (c.x & 0xFFFF) | ((long) (c.y & 0xFFFF) << 16)); }
+			case "setItemCountSame" -> tree.setItemCount (300);
+			case "setItemCountPlus" -> tree.setItemCount (301);
+			case "insertRootBelow" -> new TreeItem (tree, SWT.NONE, top + 50);
+			case "insertRootAbove" -> new TreeItem (tree, SWT.NONE, Math.max (0, top - 5));
+			case "disposeRootBelow" -> tree.getItem (top + 50).dispose ();
+			case "disposeRootAbove" -> tree.getItem (Math.max (0, top - 5)).dispose ();
+			case "clear" -> tree.clear (top + 5, false);
+			case "expandFar" -> tree.getItem (top + 200).setExpanded (true);
+			case "expandInView" -> tree.getItem (top + 3).setExpanded (true);
+			case "collapseFar" -> { tree.getItem (top + 200).setExpanded (true); tree.getItem (top + 200).setExpanded (false); }
+			case "setRedraw" -> { tree.setRedraw (false); tree.setRedraw (true); }
+			case "resizeSame" -> tree.setSize (300, 380);
+			case "resizePlus" -> tree.setSize (300, 381);
+			case "focus" -> tree.setFocus ();
+			case "getBounds" -> tree.getItem (top + 5).getBounds ();
+			case "setText" -> tree.getItem (top + 5).setText ("edited");
+			case "selectAll" -> tree.selectAll ();
+			case "showSelection" -> { tree.select (tree.getItem (top + 5)); tree.showSelection (); }
+			case "lineDown" -> OS.SendMessage (tree.handle, OS.WM_VSCROLL, OS.SB_LINEDOWN, 0);
+			case "barSelection" -> tree.getVerticalBar ().setSelection (tree.getVerticalBar ().getSelection ());
+			case "top0collapse" -> { tree.setTopItem (tree.getItem (0)); pump (display); System.out.print ("[top0 " + bar (tree) + "] "); tree.getItem (expand).setExpanded (false); }
+			case "keyCollapse" -> { key (tree, 0x25); pump (display); System.out.print ("[key " + bar (tree) + "] "); tree.getItem (expand).setExpanded (false); }
+			case "collapseKey" -> { tree.getItem (expand).setExpanded (false); pump (display); System.out.print ("[collapse " + bar (tree) + "] "); key (tree, 0x25); }
+			case "expand3collapse3" -> { tree.getItem (3).setExpanded (true); pump (display); System.out.print ("[expand3 " + bar (tree) + "] "); tree.getItem (3).setExpanded (false); }
+			case "collapseExpand" -> { tree.getItem (expand).setExpanded (false); pump (display); System.out.print ("[collapse " + bar (tree) + "] "); tree.getItem (expand).setExpanded (true); }
+			default -> throw new IllegalArgumentException (then);
+		}
+		pump (display);
+		System.out.println ("h" + height + " adopt=" + adopt + " top=" + top + " expand=" + expand + " then=" + then + " | before " + before + " | after " + after + " | settled " + settled + " | then " + bar (tree));
+		display.dispose ();
+	}
+}

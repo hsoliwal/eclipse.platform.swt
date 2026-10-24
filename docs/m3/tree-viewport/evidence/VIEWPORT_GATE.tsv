@@ -1,3 +1,5 @@
 utc	worktree	commit	stamp	probe	counts	verdict
 2026-10-24T08:56Z	S:/m3-scratch/worktrees/swt-name-convergence	3a3d1802bb	tv20261024d	GOOD Tree/Table/List (max 299, thumbs 12/11/14, row 0)	39 tests successful;2 tests failed (survey: custom draw 161 kinds, expansion keys 44 kinds);0 tests aborted	GATE_RED (surveys open; mediation active, no aborts)
 2026-10-24T09:45Z	S:/m3-scratch/worktrees/swt-name-convergence	1c02dc64ae	tv20261024h	GOOD Tree/Table/List	plain ok;presentation ok;custom draw 161 kinds (survey)	GATE_RED (custom draw open)
+2026-10-24T13:57Z	S:/m3-scratch/worktrees/swt-name-convergence	58783ad6ef+	tv20261024k	GOOD Tree/Table/List	51 tests successful;3 tests failed;17 tests aborted (no stock reference for 8 widgets)	GATE_RED (stale bar applied without a stock parent window: plain 3, presentation 4, keys 2 kinds; custom draw identical)
+2026-10-24T14:20Z	S:/m3-scratch/worktrees/swt-name-convergence	58783ad6ef+	tv20261024l	-	Tree suites: 14 tests successful;0 tests failed (six differential variants identical, custom draw included)	TREE_GREEN (all-widget gate waits for stock references)
