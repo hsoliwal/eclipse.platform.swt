@@ -645,3 +645,4 @@ User: "look at the PRs and compare the pending work, the viewports, the M3JDK, a
 - 2026-10-24: IO lane L1a PRs (jdt.debug #9, platform #25, jdt.ui #10); io crate b7d751297292; next io leaf = attribute-read chains with a differential gate; challenge3 unpushed work being pushed.
 - 2026-10-24 02:30 UTC: L1b PRs completed for spaceless tag groups; strings lane L1 recipe landing (donor covers nothing here); scratch sweep committing/pushing every stray repo (fk-* = line-ending noise).
 - 2026-10-24 03:05 UTC: strings L1 PRs on four forks; JBS pass complete (89d34038f1a8); scratch sweep done (note the develop push on synexia-m3scale-apache2); batch6 landing run for 1614/1766/1846/1847 starting.
+- 2026-10-24 03:45 UTC: repair2 dry 11/23 resolve (648 lines); dry tables published (m3/docs/superset/dry-20261024); landing = owner command; next: loops/method-length inventories, platform.ui marks when RAM allows.
