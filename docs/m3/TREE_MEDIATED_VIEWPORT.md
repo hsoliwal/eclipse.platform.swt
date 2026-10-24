@@ -248,3 +248,9 @@ See [`tree-viewport/FOSS_REUSE_DECISION.tsv`](tree-viewport/FOSS_REUSE_DECISION.
   identical to the stock recordings; two survey reports stay open: custom draw 161 kinds (ASPECT_MATRIX line 117) and
   expansion keys 44 kinds (ADD or MULTIPLY on an expanded off-window caret row scrolls the viewport by ten rows where
   stock does nothing; collapse and expand move the bar by 9 to 35 rows against the recording; next leaf).
+- 2026-10-24 09:20 UTC: the keys variant is identical to the stock recording (44 kinds -> 7 -> 0) after two viewport
+  rules were corrected against the ExpansionKeyOracle with probes on both jars: `expanding()` returns for a row already
+  expanded natively (1f7a07f1a1), and `scrollChildrenIntoView` puts a row above the view at the top only when every
+  child stays above the view (jar tv20261024f: keys, plain, columns and splice variants identical, 0 aborted). Open:
+  custom draw, 161 kinds; the wheel notch after taller rows answers like stock in isolation, so the root is an earlier
+  step of seed 9 (survey mode keeps first examples per kind only; replay one seed without survey to see the step log).

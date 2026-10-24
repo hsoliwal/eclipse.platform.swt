@@ -1950,8 +1950,13 @@ final class TreeViewport {
 			long newTop = lastChild - rows + 1;
 			if (row >= top) newTop = Math.min (newTop, row);
 			viewport.setTopRow (newTop);
-		} else if (user && row < top) {
-			/* a user expansion above the view whose children stay above it: the row comes in at the top */
+		} else if (user && row < top && lastChild < top) {
+			/*
+			 * A user expansion above the view whose children all stay above it: the row comes in at the top. When
+			 * the children reach into the view the top index is kept, so the child that lands on it becomes the
+			 * top item (ExpansionKeyOracle; keys differential 2026-10-24 seed 3 step 11: stock top=root 245 / 34,
+			 * bar 280; the viewport had put root 245 at the top).
+			 */
 			viewport.setTopRow (row);
 		}
 	}
