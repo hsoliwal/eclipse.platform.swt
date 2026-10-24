@@ -6,6 +6,7 @@
 package org.eclipse.swt.tests.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -45,7 +46,7 @@ public class Test_org_eclipse_swt_internal_render_ThreadRoleBasic {
         }, "m3-role-smoke");
         worker.start();
         worker.join(10_000L);
-        assertEquals(false, worker.isAlive(), "role contract worker terminated");
+        assertFalse(worker.isAlive(), "role contract worker terminated");
         assertNull(failure.get(), "role contract worker completed");
     }
 }
