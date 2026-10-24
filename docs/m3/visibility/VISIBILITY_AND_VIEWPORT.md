@@ -108,3 +108,24 @@ Rules:
 
 Tests: `Test_org_eclipse_swt_internal_ViewportReporter` checks the event sequences for scroll, resize, expand, a model
 delta inside and outside the window, and hide/show, with exactly one event per coalesced change.
+
+## Defect 2026-10-24: the gate parked every virtual Tree in viewport mode (fixed)
+
+Found while building the Tree custom-draw differential: with the jar of the integration head (50b0d51254), a
+`SWT.VIRTUAL` Tree in the default viewport mode never materialized a row and its vertical bar stayed at maximum 0
+(official jar: row 0, maximum 299); every Tree viewport acceptance and differential test aborted on its "mediation is
+active" assumption. Bisect by build and probe: round 12 (4654d451d3) good, the 2026-10-22 head bad; the gate
+(EffectiveVisibility, VisibilityGate) landed with round 13.
+
+Cause: `EffectiveVisibility.recompute` clipped each node against the client area of `node.handle`. A Tree in viewport
+mode is wrapped (`hwndParent`), and its inner TreeView window is sized by the viewport's own layout; while the viewport
+is parked that window is 0 x 0. The first `TreeViewport.layout()` asked `partHidden()` before any layout, the gate saw
+the zero inner window, answered OFFSCREEN, the viewport parked, and a parked viewport never lays out, so the inner window
+stayed at zero and every later recompute confirmed the verdict (probe: `parked=true parks=1`,
+`gate.defer(LAYOUT|DATA)=true`, `tree.handle win=201,224,201,224`, wrapper `200,223,560,463`; `-Dswt.visibility.gate=false`
+restored stock answers, `-Dswt.visibility.occlusion=false` did not).
+
+Fix: the clip a node hands down is its top handle's client area (`screenClientRect (node.topHandle (), clip)`): the
+wrapper is what an ancestor clips; the inner window is the control's own. Only the Tree consulted the gate for parking
+(`VisibilityGate.defer`); the List viewport uses `EffectiveVisibility.hidden` without a wrapper and was not affected;
+the Table viewport does not park.
