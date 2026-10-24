@@ -281,6 +281,9 @@ See [`tree-viewport/FOSS_REUSE_DECISION.tsv`](tree-viewport/FOSS_REUSE_DECISION.
     cases identical; the open case is `WM_VSCROLL` sent to `tree.handle` (leaf T7).
   - `Tree.setRedraw (true)` reaches the viewport (`redrawEnabled`), a hook of recipe SwtTreeViewportWin32Tree
     (syn-recipes, second pass UNCHANGED).
+  - 14:40 UTC: every logical scroll counts as a native bar update (a click or a type-ahead that scrolls the caret
+    into view goes through `afterNative`, not through the key, wheel or showItem paths): the layout compares the top
+    row with the one the bar was last shown for. Jar tv20261024m: Tree 14 of 14, oracles 51 of 52 and 28 of 28.
 - Gate tool: viewport_gate.sh read the test-compile error count as "0 0" (`grep -c || echo 0`) and stopped before the
   suites; fixed. Over all 14 viewport classes it aborts 17 tests that have no stock reference yet (CTabFolder,
   StyledText, CoolBar, ExpandBar, ScrolledComposite, Table, the List hidden/zoom/resize/count and Combo verify/closed

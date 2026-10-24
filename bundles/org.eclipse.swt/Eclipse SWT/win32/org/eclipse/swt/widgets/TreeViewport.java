@@ -110,8 +110,8 @@ final class TreeViewport {
 	 */
 	private long staleBarRow = -1;
 	private SCROLLINFO frozenBar;
-	/* the visible row count and the size the bar was last updated for: a change updates the native bar (barShapeChanged) */
-	private long layoutRowCount = -1;
+	/* the top row, the visible row count and the size the bar was last updated for: a change updates the native bar (barShapeChanged) */
+	private long layoutTopRow = -1, layoutRowCount = -1;
 	private int layoutOuterWidth = -1, layoutOuterHeight = -1, layoutClientHeight = -1;
 
 	TreeViewport (Tree tree) {
@@ -236,23 +236,26 @@ final class TreeViewport {
 	}
 
 	/*
-	 * Rows inserted, deleted, expanded or collapsed, a new size of the tree or a horizontal bar shown or hidden since
-	 * the bar was last updated: the native TreeView updates its bar for each (BarScriptOracle). The vertical bar itself
-	 * changes only the client width, so the outer size and the client height are compared.
+	 * A scroll, rows inserted, deleted, expanded or collapsed, a new size of the tree or a horizontal bar shown or hidden
+	 * since the bar was last updated: the native TreeView updates its bar for each (BarScriptOracle: setTopItem of
+	 * another row, the wheel, a far showItem; a click or a type-ahead that scrolls the caret into view takes the same
+	 * path). The vertical bar itself changes only the client width, so the outer size and the client height are compared.
 	 */
 	private boolean barShapeChanged () {
 		if (layoutRowCount < 0) return false;
 		RECT outer = new RECT (), client = new RECT ();
 		OS.GetWindowRect (tree.hwndParent, outer);
 		OS.GetClientRect (tree.hwndParent, client);
-		return tree.virtualViewport.visibleRowCount () != layoutRowCount || outer.right - outer.left != layoutOuterWidth
-				|| outer.bottom - outer.top != layoutOuterHeight || client.bottom - client.top != layoutClientHeight;
+		return tree.virtualViewport.topRow () != layoutTopRow || tree.virtualViewport.visibleRowCount () != layoutRowCount
+				|| outer.right - outer.left != layoutOuterWidth || outer.bottom - outer.top != layoutOuterHeight
+				|| client.bottom - client.top != layoutClientHeight;
 	}
 
 	private void rememberBarShape () {
 		RECT outer = new RECT (), client = new RECT ();
 		OS.GetWindowRect (tree.hwndParent, outer);
 		OS.GetClientRect (tree.hwndParent, client);
+		layoutTopRow = tree.virtualViewport.topRow ();
 		layoutRowCount = tree.virtualViewport.visibleRowCount ();
 		layoutOuterWidth = outer.right - outer.left;
 		layoutOuterHeight = outer.bottom - outer.top;
