@@ -171,12 +171,20 @@ final class EffectiveVisibility {
 			if (!off) {
 				off = !styleVisible (node);
 			}
+			long nodeTop = node.topHandle ();
 			if (!off) {
-				OS.GetWindowRect (node.topHandle (), r);
+				OS.GetWindowRect (nodeTop, r);
 				off = !intersect (r, clip);
 			}
 			if (!off) {
-				screenClientRect (node.handle, clip);
+				/*
+				 * The clip a node hands down is its top handle's client area. A wrapped control (a Tree or Table with
+				 * hwndParent) sizes its inner window itself, and a parked viewport keeps that window at zero until
+				 * its next layout: measured on node.handle the verdict was OFFSCREEN, the viewport parked on it and
+				 * never laid out again (2026-10-24: every virtual Tree in viewport mode stayed empty with a zero
+				 * scrollbar since the gate landed in round 13).
+				 */
+				screenClientRect (nodeTop, clip);
 				off = !intersect (clip, r);
 			}
 			node.state = (node.state & ~OFFSCREEN) | KNOWN | (off ? OFFSCREEN : 0);
