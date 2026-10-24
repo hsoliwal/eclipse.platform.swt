@@ -254,3 +254,9 @@ See [`tree-viewport/FOSS_REUSE_DECISION.tsv`](tree-viewport/FOSS_REUSE_DECISION.
   child stays above the view (jar tv20261024f: keys, plain, columns and splice variants identical, 0 aborted). Open:
   custom draw, 161 kinds; the wheel notch after taller rows answers like stock in isolation, so the root is an earlier
   step of seed 9 (survey mode keeps first examples per kind only; replay one seed without survey to see the step log).
+- 2026-10-24 09:45 UTC: af24dd274b (showItem and setTopItem re-lay out after a MeasureItem height change) regressed the
+  differential (plain 0 -> 165 kinds, presentation 0 -> 386, custom draw 161 -> 331, jar tv20261024g) and is reverted by
+  1c02dc64ae; the reverted tree (jar tv20261024h) is back to the previous state: probe GOOD for Tree, Table and List,
+  plain and presentation identical to the stock recordings, custom draw 161 kinds. The custom-draw root (seed 0 step
+  81: stock thumb 14 -> 12 on a showSelection after a taller row, top kept) needs an oracle of when the native TreeView
+  recomputes its bars after a height change before the viewport copies the rule.
