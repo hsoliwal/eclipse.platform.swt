@@ -1,0 +1,15 @@
+# reference official, SWT 4974 win32
+ok | state sel 184 count 300 text 'date 184' dropped false | events M  | face 8edf5ee | list -
+ok | state sel 306 count 563 text 'date 184' dropped false | events  | face 8edf5ee | list -
+ok | state sel 440 count 785 text 'date 184' dropped false | events  | face 8edf5ee | list -
+ok | state sel 570 count 1027 text 'date 184' dropped false | events  | face 8edf5ee | list -
+ok | state sel 695 count 1287 text 'date 184' dropped false | events  | face 8edf5ee | list -
+ok | state sel 838 count 1550 text 'date 184' dropped false | events  | face 8edf5ee | list -
+ok | state sel 963 count 1805 text 'date 184' dropped false | events  | face 8edf5ee | list -
+ok | state sel 1106 count 2017 text 'date 184' dropped false | events  | face 8edf5ee | list -
+ok | state sel 1257 count 2300 text 'date 184' dropped false | events  | face 8edf5ee | list -
+ok | state sel 1421 count 2588 text 'date 184' dropped false | events  | face 8edf5ee | list -
+ok | state sel 1587 count 2822 text 'date 184' dropped false | events  | face 8edf5ee | list -
+ok | state sel 1587 count 2822 text 'date 184' dropped true | events  | face c5ebf983 | list 0..2821/20@1587 19b58061
+ok | state sel 1587 count 2822 text 'date 184' dropped false | events  | face 8edf5ee | list -
+pixels 8edf5ee

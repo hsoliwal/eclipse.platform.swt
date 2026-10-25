@@ -1,0 +1,13 @@
+seed 0: 12 differing steps, first 57 (wheel -240)
+  recorded: top 196 count 300 | bars 196/299 t24 p10 true 0/93 t93 p10 false | sel 5 [63, 99, 193, 276, 293] | focus 193* | events 
+  this run: top 187 count 300 | bars 187/299 t24 p10 true 0/93 t93 p10 false | sel 5 [63, 99, 193, 276, 293] | focus 193* | events 
+seed 1: 1 differing steps, first 150 (pixels)
+  recorded: pixels b7326b24
+  this run: pixels 858de59d
+seed 2: 0 differing steps, first -1
+seed 3: 1 differing steps, first 150 (pixels)
+  recorded: pixels d40cee88
+  this run: pixels fd256632
+seed 4: 1 differing steps, first 150 (pixels)
+  recorded: pixels fddbb9bd
+  this run: pixels c61e109e

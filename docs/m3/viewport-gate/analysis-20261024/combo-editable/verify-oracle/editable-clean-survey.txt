@@ -1,0 +1,260 @@
+=> org.opentest4j.AssertionFailedError: survey: 65 kinds of difference
+16 x face after 'add #'
+  seed 0 step 37
+recorded: face a581cce8
+this run: face 87a328d6
+14 x face after 'addAt # #'
+  seed 0 step 67
+recorded: face 77886c90
+this run: face 9cae8bc6
+19 x face after 'addEmpty #'
+  seed 0 step 9
+recorded: face f62953c1
+this run: face 883bf1d9
+16 x face after 'altdown'
+  seed 0 step 19
+recorded: face a581cce8
+this run: face 87a328d6
+18 x face after 'click #'
+  seed 0 step 34
+recorded: face e0eeb0ad
+this run: face c3100c9b
+9 x face after 'deselect #'
+  seed 1 step 3
+recorded: face f62953c1
+this run: face 883bf1d9
+6 x face after 'drop false'
+  seed 0 step 120
+recorded: face 37e3415
+this run: face d8f3c48d
+55 x face after 'drop true'
+  seed 0 step 36
+recorded: face a581cce8
+this run: face 87a328d6
+33 x face after 'hover #'
+  seed 0 step 35
+recorded: face e0eeb0ad
+this run: face c3100c9b
+11 x face after 'indexOfEmpty #'
+  seed 0 step 40
+recorded: face a581cce8
+this run: face 87a328d6
+9 x face after 'indexOfEmpty -#'
+  seed 0 step 17
+recorded: face e0eeb0ad
+this run: face c3100c9b
+9 x face after 'key DOWN'
+  seed 0 step 8
+recorded: face f62953c1
+this run: face 883bf1d9
+5 x face after 'key ESCAPE'
+  seed 0 step 27
+recorded: face e0eeb0ad
+this run: face c3100c9b
+6 x face after 'key F#'
+  seed 0 step 149
+recorded: face 2013e7c5
+this run: face 5b30910c
+6 x face after 'key NEXT'
+  seed 0 step 54
+recorded: face 77886c90
+this run: face 9cae8bc6
+9 x face after 'key PRIOR'
+  seed 2 step 94
+recorded: face 1adb7b19
+this run: face ab097c32
+4 x face after 'key RETURN'
+  seed 5 step 64
+recorded: face db4aa45d
+this run: face fcb96020
+20 x face after 'key UP'
+  seed 0 step 32
+recorded: face e0eeb0ad
+this run: face c3100c9b
+14 x face after 'listwheel #'
+  seed 0 step 26
+recorded: face a581cce8
+this run: face 87a328d6
+17 x face after 'listwheel -#'
+  seed 0 step 10
+recorded: face f62953c1
+this run: face 883bf1d9
+17 x face after 'read # #'
+  seed 0 step 66
+recorded: face 77886c90
+this run: face 9cae8bc6
+10 x face after 'remove #'
+  seed 2 step 48
+recorded: face e5ea41f6
+this run: face a6e31045
+12 x face after 'removeRange # #'
+  seed 0 step 148
+recorded: face 5b80cb8a
+this run: face 969d74d1
+20 x face after 'removeString #'
+  seed 0 step 20
+recorded: face a581cce8
+this run: face 87a328d6
+45 x face after 'select #'
+  seed 0 step 117
+recorded: face 8a6066e3
+this run: face 37122439
+98 x face after 'selectionIndex'
+  seed 0 step 21
+recorded: face a581cce8
+this run: face 87a328d6
+14 x face after 'setItem # #'
+  seed 0 step 24
+recorded: face a581cce8
+this run: face 87a328d6
+15 x face after 'thumb #'
+  seed 1 step 64
+recorded: face be601c15
+this run: face ee7b3ce5
+25 x face after 'visible #'
+  seed 0 step 16
+recorded: face e0eeb0ad
+this run: face c3100c9b
+23 x face after 'vscroll #'
+  seed 0 step 73
+recorded: face 3c1b88cb
+this run: face 6141a801
+9 x face after 'wheel #'
+  seed 0 step 15
+recorded: face e0eeb0ad
+this run: face c3100c9b
+18 x face after 'wheel -#'
+  seed 0 step 129
+recorded: face df7ffa0
+this run: face 49f9cf73
+10 x list after 'add #'
+  seed 0 step 37
+recorded: list 0..149/21@0 cb2ae767
+this run: list 0..149/21@0 53211c40
+9 x list after 'addAt # #'
+  seed 1 step 87
+recorded: list 0..303/8@175 6ee161ea
+this run: list 0..303/8@175 b4fe1fed
+5 x list after 'addEmpty #'
+  seed 1 step 20
+recorded: list 0..300/20@0 240dc12c
+this run: list 0..300/20@0 3c27ffa
+8 x list after 'altdown'
+  seed 0 step 19
+recorded: list 0..148/21@0 40085f3d
+this run: list 0..148/21@0 c7fe9416
+8 x list after 'deselect #'
+  seed 0 step 56
+recorded: list 0..149/15@14 5e4ce914
+this run: list 0..149/15@14 4af2e482
+65 x list after 'drop true'
+  seed 0 step 36
+recorded: list 0..148/21@0 40085f3d
+this run: list 0..148/21@0 c7fe9416
+34 x list after 'hover #'
+  seed 0 step 71
+recorded: list 0..151/19@14 ad6c26b3
+this run: list 0..151/19@14 87379d35
+8 x list after 'indexOfEmpty #'
+  seed 0 step 40
+recorded: list 0..149/21@0 cb2ae767
+this run: list 0..149/21@0 53211c40
+2 x list after 'indexOfEmpty -#'
+  seed 0 step 22
+recorded: list 0..148/21@0 40085f3d
+this run: list 0..148/21@0 c7fe9416
+8 x list after 'key DOWN'
+  seed 1 step 14
+recorded: list 0..299/20@1 b48a4371
+this run: list 0..299/20@1 87cb3ec5
+2 x list after 'key END'
+  seed 2 step 54
+recorded: list 0..147/20@125 7670b8e8
+this run: list 0..147/20@125 3a804102
+3 x list after 'key F#'
+  seed 0 step 149
+recorded: list 0..153/8@8 f1b94770
+this run: list 0..153/8@8 4595216f
+1 x list after 'key LEFT'
+  seed 2 step 53
+recorded: list 0..147/20@125 7670b8e8
+this run: list 0..147/20@125 3a804102
+8 x list after 'key NEXT'
+  seed 1 step 89
+recorded: list 0..302/8@182 3571c35f
+this run: list 0..302/8@182 7ce323f9
+9 x list after 'key PRIOR'
+  seed 3 step 64
+recorded: list 0..1/2@0 91842ebf
+this run: list 0..1/2@0 877b409d
+3 x list after 'key RIGHT'
+  seed 6 step 74
+recorded: list 0..1/1@0 e3f2f4ea
+this run: list 0..1/1@0 cfce6066
+13 x list after 'key UP'
+  seed 1 step 19
+recorded: list 0..299/20@0 240dc12c
+this run: list 0..299/20@0 3c27ffa
+9 x list after 'listwheel #'
+  seed 0 step 26
+recorded: list 0..148/21@0 40085f3d
+this run: list 0..148/21@0 c7fe9416
+1 x list after 'listwheel -#'
+  seed 2 step 12
+recorded: list 0..299/20@4 535bd6d1
+this run: list 0..299/20@4 d26c5cc4
+16 x list after 'read # #'
+  seed 0 step 58
+recorded: list 0..149/15@11 e85c5b0c
+this run: list 0..149/15@11 cff2fa7a
+9 x list after 'remove #'
+  seed 0 step 89
+recorded: list 0..152/19@0 4acb0ed4
+this run: list 0..152/19@0 64193fa8
+6 x list after 'removeRange # #'
+  seed 0 step 43
+recorded: list 0..149/21@0 cb2ae767
+this run: list 0..149/21@0 53211c40
+13 x list after 'removeString #'
+  seed 0 step 20
+recorded: list 0..148/21@0 40085f3d
+this run: list 0..148/21@0 c7fe9416
+29 x list after 'select #'
+  seed 0 step 117
+recorded: list 0..155/8@120 78ccbc5d
+this run: list 0..155/8@120 76c59239
+70 x list after 'selectionIndex'
+  seed 0 step 21
+recorded: list 0..148/21@0 40085f3d
+this run: list 0..148/21@0 c7fe9416
+13 x list after 'setItem # #'
+  seed 0 step 24
+recorded: list 0..148/21@0 40085f3d
+this run: list 0..148/21@0 c7fe9416
+8 x list after 'setText # #'
+  seed 0 step 41
+recorded: list 0..149/21@0 cb2ae767
+this run: list 0..149/21@0 53211c40
+3 x list after 'thumb #'
+  seed 3 step 107
+recorded: list 0..2/3@0 e8db81e9
+this run: list 0..2/3@0 f75a7fc7
+1 x list after 'visible #'
+  seed 3 step 75
+recorded: list 0..1/2@0 91842ebf
+this run: list 0..1/2@0 877b409d
+8 x list after 'vscroll #'
+  seed 2 step 36
+recorded: list 0..300/20@7 3238c907
+this run: list 0..300/20@7 931157ea
+3 x list after 'wheel #'
+  seed 0 step 57
+recorded: list 0..149/15@11 e85c5b0c
+this run: list 0..149/15@11 cff2fa7a
+1 x list after 'wheel -#'
+  seed 6 step 139
+recorded: list 0..5/6@0 a5be90c8
+this run: list 0..5/6@0 a8616954
+4 x pixels
+  seed 0: K:\codex-work\agent-temp\claude\e--ws2-com-synexia\a6de83fe-6489-4056-8689-f1217602e9cc\scratchpad\analysis\combo-editable\verify-oracle\evidence-clean\combo-dropdown-seed0-viewport.png
+

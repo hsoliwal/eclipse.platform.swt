@@ -1,0 +1,9 @@
+seed 5: 0 differing steps, first -1
+seed 6: 0 differing steps, first -1
+seed 7: 0 differing steps, first -1
+seed 8: 1 differing steps, first 131 (drag 13 down 23)
+  recorded: top 50 count 75 | bars 50/74 t24 p10 true 0/150 t150 p10 false | sel 0 [] | focus 74* | events S 
+  this run: top 50 count 75 | bars 50/74 t24 p10 true 0/150 t150 p10 false | sel 1 [42] | focus 74* | events S 
+seed 9: 4 differing steps, first 133 (click 18 none)
+  recorded: top 131 count 136 | bars 111/135 t24 p10 true 0/2 t2 p10 false | sel 0 [] | focus 135* | events S 
+  this run: top 131 count 136 | bars 111/135 t24 p10 true 0/2 t2 p10 false | sel 1 [29] | focus 135* | events S 

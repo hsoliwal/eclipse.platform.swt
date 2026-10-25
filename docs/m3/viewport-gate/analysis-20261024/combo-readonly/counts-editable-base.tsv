@@ -1,0 +1,96 @@
+answer after 'selectionIndex'	14
+events after 'altdown'	1
+face after 'add #'	4
+face after 'addAt # #'	2
+face after 'addEmpty #'	3
+face after 'altdown'	1
+face after 'click #'	1
+face after 'deselect #'	2
+face after 'drop false'	1
+face after 'drop true'	17
+face after 'hover #'	3
+face after 'indexOfEmpty #'	3
+face after 'indexOfEmpty -#'	1
+face after 'key DOWN'	1
+face after 'key END'	3
+face after 'key F#'	2
+face after 'key LEFT'	1
+face after 'key NEXT'	2
+face after 'key RETURN'	1
+face after 'key UP'	2
+face after 'listwheel -#'	3
+face after 'read # #'	2
+face after 'remove #'	2
+face after 'removeRange # #'	2
+face after 'removeString #'	2
+face after 'select #'	1
+face after 'selectionIndex'	13
+face after 'setItem # #'	3
+face after 'thumb #'	4
+face after 'type A'	1
+face after 'visible #'	3
+face after 'vscroll #'	3
+face after 'wheel #'	2
+face after 'wheel -#'	4
+list after 'add #'	1
+list after 'addAt # #'	1
+list after 'altdown'	3
+list after 'deselect #'	1
+list after 'drop true'	23
+list after 'hover #'	4
+list after 'indexOfEmpty #'	3
+list after 'indexOfEmpty -#'	1
+list after 'key DOWN'	1
+list after 'key END'	2
+list after 'key F#'	2
+list after 'key NEXT'	1
+list after 'key UP'	3
+list after 'listwheel #'	3
+list after 'listwheel -#'	1
+list after 'read # #'	1
+list after 'remove #'	2
+list after 'removeString #'	3
+list after 'selectionIndex'	15
+list after 'setItem # #'	1
+list after 'setText # #'	3
+list after 'thumb #'	1
+list after 'type '	1
+list after 'type d'	1
+list after 'vscroll #'	2
+list after 'wheel #'	1
+list after 'wheel -#'	1
+pixels	1
+state after 'add #'	4
+state after 'addAt # #'	2
+state after 'addEmpty #'	3
+state after 'altdown'	1
+state after 'click #'	1
+state after 'deselect #'	2
+state after 'deselectAll'	2
+state after 'drop false'	1
+state after 'drop true'	17
+state after 'hover #'	4
+state after 'indexOfEmpty #'	3
+state after 'indexOfEmpty -#'	1
+state after 'key DOWN'	1
+state after 'key END'	3
+state after 'key F#'	2
+state after 'key LEFT'	1
+state after 'key NEXT'	2
+state after 'key RETURN'	1
+state after 'key UP'	2
+state after 'listwheel -#'	4
+state after 'read # #'	2
+state after 'remove #'	2
+state after 'removeRange # #'	2
+state after 'removeString #'	2
+state after 'select #'	1
+state after 'selectionIndex'	14
+state after 'setItem # #'	3
+state after 'setText # #'	4
+state after 'thumb #'	4
+state after 'type A'	1
+state after 'visible #'	4
+state after 'vscroll #'	3
+state after 'wheel #'	2
+state after 'wheel -#'	4

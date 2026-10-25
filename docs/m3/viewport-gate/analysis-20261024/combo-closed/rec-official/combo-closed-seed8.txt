@@ -1,0 +1,15 @@
+# reference official, SWT 4974 win32
+ok | state sel 129 count 300 text 'Apple 129' dropped false | events M  | face a7f14757 | list -
+ok | state sel 212 count 561 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+ok | state sel 340 count 817 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+ok | state sel 448 count 1108 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+ok | state sel 539 count 1321 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+ok | state sel 655 count 1619 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+ok | state sel 753 count 1859 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+ok | state sel 870 count 2157 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+ok | state sel 953 count 2401 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+ok | state sel 1021 count 2600 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+ok | state sel 1092 count 2831 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+ok | state sel 1092 count 2831 text 'Apple 129' dropped true | events  | face f0d0cb0e | list 0..2830/20@1092 c1712c82
+ok | state sel 1092 count 2831 text 'Apple 129' dropped false | events  | face a7f14757 | list -
+pixels a7f14757

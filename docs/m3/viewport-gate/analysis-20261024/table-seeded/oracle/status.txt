@@ -1,0 +1,7 @@
+[15:10:21] queued for ui_lock
+[15:10:24] lock held; official oracle
+[15:10:26] viewport oracle
+[15:10:29] original-mode oracle
+[15:10:31] differential variant 2 with UPSTREAM_DEFECTS.tsv
+[15:10:43] inner done
+[15:10:52] DONE exit=0

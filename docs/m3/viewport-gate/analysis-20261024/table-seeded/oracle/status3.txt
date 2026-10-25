@@ -1,0 +1,5 @@
+[15:16:34] queued for ui_lock
+[15:16:57] all variants, gate options + UPSTREAM_DEFECTS.tsv
+[15:20:26] inner3 done
+[15:20:36] heartbeat: still waiting or running
+[15:20:36] DONE exit=0

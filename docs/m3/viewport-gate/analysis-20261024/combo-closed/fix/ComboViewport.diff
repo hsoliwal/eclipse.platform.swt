@@ -1,0 +1,19 @@
+1179a1180,1184
+> 			//FLLDCIM: rule 24 — hidden viewports: a closed read-only combo re-selecting its selected row stays in the lanes
+> 			if (stale && readOnly && index == selection) {
+> 				reselectStale (index);
+> 				return;
+> 			}
+1183a1189,1200
+> 	}
+> 
+> 	/*
+> 	 * Combo.setItem re-selects the selected row after its remove and add (Combo.setItem: select (selection)). Stock
+> 	 * CB_SETCURSEL of the selected row answers that row (no Modify; no Verify, the text is the same) and puts the list
+> 	 * box's caret on it (LB_SETCURSEL, as afterNative's captureCaret reads it). The stale window still holds the selected
+> 	 * row natively and the face shows it, so only the lanes take the re-select: no window patch, no row operation.
+> 	 */
+> 	private void reselectStale (int index) {
+> 		caret = index;
+> 		parkedCaret = -1;
+> 		lastSetResult = index;

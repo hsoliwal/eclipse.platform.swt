@@ -1,0 +1,13 @@
+seed 5: 1 differing steps, first 78 (click 2 ctrlshift)
+  recorded: top 205 count 259 | bars 205/258 t24 p10 true 0/93 t93 p10 false | sel 0 [] | focus 207* | events S 
+  this run: top 205 count 259 | bars 205/258 t24 p10 true 0/93 t93 p10 false | sel 1 [228] | focus 207* | events S 
+seed 6: 1 differing steps, first 150 (pixels)
+  recorded: pixels 15389fa6
+  this run: pixels 867b149e
+seed 7: 0 differing steps, first -1
+seed 8: 1 differing steps, first 150 (pixels)
+  recorded: pixels 5006b631
+  this run: pixels f26575cc
+seed 9: 4 differing steps, first 123 (dblclick 6)
+  recorded: top 0 count 3 | bars 0/2 t2 p10 false 0/45 t45 p10 false | sel 1 [1] | focus 2* | events S D 
+  this run: top 0 count 3 | bars 0/2 t2 p10 false 0/45 t45 p10 false | sel 1 [2] | focus 2* | events S D 

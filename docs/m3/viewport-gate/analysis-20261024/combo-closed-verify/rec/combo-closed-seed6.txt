@@ -1,0 +1,15 @@
+# reference official, SWT 4974 win32
+ok | state sel 165 count 300 text 'Apple 165' dropped false | events M  | face 35942822 | list -
+ok | state sel 247 count 534 text 'Apple 165' dropped false | events  | face 35942822 | list -
+ok | state sel 384 count 797 text 'Apple 165' dropped false | events  | face 35942822 | list -
+ok | state sel 487 count 1030 text 'Apple 165' dropped false | events  | face 35942822 | list -
+ok | state sel 605 count 1303 text 'Apple 165' dropped false | events  | face 35942822 | list -
+ok | state sel 760 count 1595 text 'Apple 165' dropped false | events  | face 35942822 | list -
+ok | state sel 889 count 1863 text 'Apple 165' dropped false | events  | face 35942822 | list -
+ok | state sel 1033 count 2135 text 'Apple 165' dropped false | events  | face 35942822 | list -
+ok | state sel 1168 count 2427 text 'Apple 165' dropped false | events  | face 35942822 | list -
+ok | state sel 1261 count 2698 text 'Apple 165' dropped false | events  | face 35942822 | list -
+ok | state sel 1387 count 2926 text 'Apple 165' dropped false | events  | face 35942822 | list -
+ok | state sel 1387 count 2926 text 'Apple 165' dropped true | events  | face 107aa829 | list 0..2925/20@1387 4196c5aa
+ok | state sel 1387 count 2926 text 'Apple 165' dropped false | events  | face 35942822 | list -
+pixels 35942822

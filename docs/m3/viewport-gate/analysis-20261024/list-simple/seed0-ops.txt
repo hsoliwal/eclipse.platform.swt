@@ -1,0 +1,150 @@
+0: selectAll
+1: click 18 none
+2: getTop
+3: click 8 none
+4: setEmpty 42
+5: click 13 ctrl
+6: add 825
+7: remove 202
+8: key NEXT ctrl
+9: dblclick 12
+10: getTop
+11: key HOME ctrlshift
+12: selectIndices 178 91
+13: click 12 none
+14: showSelection
+15: select 17
+16: setSelectionRange 195 202
+17: setSelectionStrings 115 286
+18: indexOf 108 231
+19: showSelection
+20: type x
+21: setSelection 298
+22: deselectAll
+23: setEmpty 190
+24: click 0 ctrlshift
+25: setSelection 124
+26: setEmpty 28
+27: selectIndices 104 26
+28: read 152
+29: menu
+30: setSelectionStrings 42 70
+31: setEmpty 201
+32: key DOWN none
+33: type s
+34: removeIndices 205 161 208
+35: add 90
+36: read 233
+37: deselectRange 194 206
+38: type x
+39: deselectRange 122 151
+40: click 1 ctrl
+41: indexOf 139 248
+42: select 169
+43: deselect 63
+44: setItem 199 611
+45: deselectRange 225 236
+46: select 147
+47: addNul 212
+48: deselectAll
+49: addNul 25
+50: click 19 ctrl
+51: click 11 ctrlshift
+52: setTopIndex 280
+53: setSelectionStrings 63 293
+54: selectIndices 276 99
+55: setTopIndex 181
+56: click 12 ctrl
+57: wheel -240
+58: read 193
+59: addNul 157
+60: key UP ctrl
+61: click 10 none
+62: click 24 ctrlshift
+63: key DOWN ctrlshift
+64: indexOf 182 174
+65: removeRange 293 318
+66: showSelection
+67: type R
+68: setSelectionIndices 2 204
+69: addNul 54
+70: drag 13 up 16
+71: addEmpty 220
+72: click 4 shift
+73: deselectIndices 246 3
+74: click 18 ctrlshift
+75: click 1 none
+76: addEmpty 218
+77: removeRange 133 135
+78: showSelection
+79: setSelectionIndices 233 6
+80: addAt 110 857
+81: wheel -360
+82: removeRange 159 179
+83: addNul 202
+84: setSelection 84
+85: setSelection 247
+86: removeRange 166 193
+87: deselectRange 195 217
+88: removeRange 5 32
+89: remove 81
+90: showSelection
+91: click 10 none
+92: menu
+93: selectionIndex
+94: setTopIndex 286
+95: selectRange 109 116
+96: selectionIndex
+97: selectionIndex
+98: select 258
+99: indexOf 184 289
+100: remove 150
+101: key DOWN ctrl
+102: read 209
+103: key DOWN shift
+104: removeIndices 254 215 254
+105: setSelection 264
+106: deselectRange 279 286
+107: click 24 none
+108: read 212
+109: add 299
+110: setItem 182 770
+111: setEmpty 287
+112: indexOf 128 273
+113: removeRange 127 153
+114: showSelection
+115: removeIndices 195 243 198
+116: wheel -120
+117: key SPACE ctrlshift
+118: dblclick 24
+119: addNul 199
+120: read 80
+121: setSelection 176
+122: setItem 202 758
+123: type x
+124: showSelection
+125: setTopIndex 171
+126: click 19 shift
+127: click 5 ctrl
+128: setSelection 111
+129: key END none
+130: selectionIndex
+131: getTop
+132: click 18 shift
+133: read 228
+134: key UP shift
+135: menu
+136: setTopIndex 236
+137: click 23 ctrl
+138: setTopIndex 266
+139: deselectIndices 260 92
+140: deselectRange 3 30
+141: add 176
+142: click 6 shift
+143: select 211
+144: vscroll 4
+145: vscroll 3
+146: addAt 7 547
+147: key DOWN none
+148: addNul 200
+149: setSelection 0

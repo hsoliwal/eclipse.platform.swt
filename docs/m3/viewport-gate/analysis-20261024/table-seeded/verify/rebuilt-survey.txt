@@ -1,0 +1,50 @@
+6 x answer after 'op # at # span # delta # rare'
+    seed 3 step 63 | rec: select 292..293 | ours: select 295..296
+37 x answer after 'op # at # span # delta #'
+    seed 3 step 55 | rec: clear 182 | ours: clear 184
+13 x answer after 'op # at # span # delta -# rare'
+    seed 3 step 61 | rec: setChecked 97 -> false | ours: setChecked 98 -> false
+28 x answer after 'op # at # span # delta -#'
+    seed 3 step 48 | rec: error java.lang.ArrayIndexOutOfBoundsException Index 297 out of bounds for length 289 | ours: getItems -> items 285 last appended 36
+11 x bar after 'op # at # span # delta # rare'
+    seed 3 step 60 | rec: bar 1/306 t18 p10 true | ours: bar 1/309 t18 p10 true
+43 x bar after 'op # at # span # delta #'
+    seed 3 step 55 | rec: bar 1/280 t18 p10 true | ours: bar 1/282 t18 p10 true
+14 x bar after 'op # at # span # delta -# rare'
+    seed 3 step 61 | rec: bar 1/306 t18 p10 true | ours: bar 1/309 t18 p10 true
+31 x bar after 'op # at # span # delta -#'
+    seed 3 step 51 | rec: bar 1/280 t18 p10 true | ours: bar 1/281 t18 p10 true
+1 x events after 'op # at # span # delta # rare'
+    seed 3 step 102 | rec: events SD:250  | ours: events SD:253 
+14 x events after 'op # at # span # delta #'
+    seed 3 step 86 | rec: events SD:59  | ours: events SD:60 
+3 x events after 'op # at # span # delta -# rare'
+    seed 3 step 61 | rec: events SD:97  | ours: events SD:98 
+9 x events after 'op # at # span # delta -#'
+    seed 3 step 74 | rec: events SD:301  | ours: events SD:304 
+11 x focus after 'op # at # span # delta # rare'
+    seed 3 step 60 | rec: focus 243 | ours: focus 244
+43 x focus after 'op # at # span # delta #'
+    seed 3 step 55 | rec: focus 243 | ours: focus 244
+14 x focus after 'op # at # span # delta -# rare'
+    seed 3 step 61 | rec: focus 243 | ours: focus 244
+31 x focus after 'op # at # span # delta -#'
+    seed 3 step 51 | rec: focus 243 | ours: focus 244
+2 x pixels
+    seed 3 (pixels)
+11 x rows after 'op # at # span # delta # rare'
+    seed 3 step 60 | rec: rows 307 top 1 | ours: rows 310 top 1
+43 x rows after 'op # at # span # delta #'
+    seed 3 step 55 | rec: rows 281 top 1 | ours: rows 283 top 1
+14 x rows after 'op # at # span # delta -# rare'
+    seed 3 step 61 | rec: rows 307 top 1 | ours: rows 310 top 1
+31 x rows after 'op # at # span # delta -#'
+    seed 3 step 51 | rec: rows 281 top 1 | ours: rows 282 top 1
+9 x sel after 'op # at # span # delta # rare'
+    seed 3 step 60 | rec: sel 307[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] index 243 | ours: sel 310[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] index 244
+43 x sel after 'op # at # span # delta #'
+    seed 3 step 55 | rec: sel 281[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] index 243 | ours: sel 283[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] index 244
+14 x sel after 'op # at # span # delta -# rare'
+    seed 3 step 61 | rec: sel 307[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] index 243 | ours: sel 310[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] index 244
+30 x sel after 'op # at # span # delta -#'
+    seed 3 step 51 | rec: sel 281[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] index 243 | ours: sel 281[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] index 244

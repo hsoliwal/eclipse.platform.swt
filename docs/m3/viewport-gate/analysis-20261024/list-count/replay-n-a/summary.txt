@@ -1,0 +1,15 @@
+seed 0: 3 differing steps, first 54 (setItemCount 131)
+  recorded: top 110 count 131 | bars 106/130 t24 p10 true 0/81 t81 p10 false | sel 104 104 rows 26..130 sum 8148 | focus 130* | events 
+  this run: top 106 count 131 | bars 106/130 t24 p10 true 0/81 t81 p10 false | sel 104 104 rows 26..130 sum 8148 | focus 130* | events 
+seed 1: 22 differing steps, first 86 (setItemCount 110)
+  recorded: top 95 count 110 | bars 85/109 t24 p10 true 0/87 t87 p10 false | sel 0 [] | focus 109* | events 
+  this run: top 85 count 110 | bars 85/109 t24 p10 true 0/87 t87 p10 false | sel 0 [] | focus 109* | events 
+seed 2: 5 differing steps, first 63 (setItemCount 43)
+  recorded: top 42 count 43 | bars 18/42 t24 p10 true 0/87 t87 p10 false | sel 0 [] | focus 42* | events 
+  this run: top 18 count 43 | bars 18/42 t24 p10 true 0/87 t87 p10 false | sel 0 [] | focus 42* | events 
+seed 3: 19 differing steps, first 32 (setItemCount 65)
+  recorded: top 49 count 65 | bars 40/64 t24 p10 true 0/87 t87 p10 false | sel 9 [54, 55, 56, 57, 58, 59, 60, 61, 62] | focus 64* | events 
+  this run: top 40 count 65 | bars 40/64 t24 p10 true 0/87 t87 p10 false | sel 9 [54, 55, 56, 57, 58, 59, 60, 61, 62] | focus 64* | events 
+seed 4: 50 differing steps, first 14 (setItemCount 145)
+  recorded: top 123 count 145 | bars 120/144 t24 p10 true 0/150 t150 p10 false | sel 0 [] | focus 144* | events 
+  this run: top 120 count 145 | bars 120/144 t24 p10 true 0/150 t150 p10 false | sel 0 [] | focus 144* | events 

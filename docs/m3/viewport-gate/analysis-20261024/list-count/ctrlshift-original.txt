@@ -1,0 +1,41 @@
+# SWT 4975 mode original
+select 40 / remove 30 / selectRange 3 6 / selectRange 50 52 / click 12 ctrlshift:
+   select 40 -> anchor 40 caret 0 sel 1 [40] events 
+   remove 30 -> anchor -1 caret 0 sel 1 [39] events 
+   selectRange 3 6 -> anchor -1 caret 0 sel 5 [3, 4, 5, 6, 39] events 
+   selectRange 50 52 -> anchor -1 caret 0 sel 8 [3, 4, 5, 6, 39, 50, 51, 52] events 
+   click 12 ctrlshift -> anchor 12 caret 12 sel 3 [50, 51, 52] events S 
+select 20 / remove 10 / selectRange 2 4 / click 22 ctrlshift:
+   select 20 -> anchor 20 caret 0 sel 1 [20] events 
+   remove 10 -> anchor -1 caret 0 sel 1 [19] events 
+   selectRange 2 4 -> anchor -1 caret 0 sel 4 [2, 3, 4, 19] events 
+   click 22 ctrlshift -> anchor 22 caret 22 sel 0 [] events S 
+selectRange 0 3 / click 12 ctrlshift:
+   selectRange 0 3 -> anchor -1 caret 0 sel 4 [0, 1, 2, 3] events 
+   click 12 ctrlshift -> anchor 12 caret 12 sel 4 [0, 1, 2, 3] events S 
+click 3 none / remove 1 / selectRange 5 8 / click 12 ctrlshift:
+   click 3 none -> anchor 3 caret 3 sel 1 [3] events S 
+   remove 1 -> anchor -1 caret 3 sel 1 [2] events 
+   selectRange 5 8 -> anchor -1 caret 3 sel 5 [2, 5, 6, 7, 8] events 
+   click 12 ctrlshift -> anchor 12 caret 12 sel 4 [5, 6, 7, 8] events S 
+click 3 none / remove 1 / selectRange 5 8 / click 1 ctrlshift:
+   click 3 none -> anchor 3 caret 3 sel 1 [3] events S 
+   remove 1 -> anchor -1 caret 3 sel 1 [2] events 
+   selectRange 5 8 -> anchor -1 caret 3 sel 5 [2, 5, 6, 7, 8] events 
+   click 1 ctrlshift -> anchor 1 caret 1 sel 4 [5, 6, 7, 8] events S 
+select 8 / remove 2 / selectRange 15 20 / selectRange 0 1 / click 10 ctrlshift:
+   select 8 -> anchor 8 caret 0 sel 1 [8] events 
+   remove 2 -> anchor -1 caret 0 sel 1 [7] events 
+   selectRange 15 20 -> anchor -1 caret 0 sel 7 [7, 15, 16, 17, 18, 19, 20] events 
+   selectRange 0 1 -> anchor -1 caret 0 sel 9 [0, 1, 7, 15, 16, 17, 18, 19, 20] events 
+   click 10 ctrlshift -> anchor 10 caret 10 sel 6 [15, 16, 17, 18, 19, 20] events S 
+key DOWN shift / key DOWN shift / remove 0 / selectRange 10 14 / click 6 ctrlshift:
+   key DOWN shift -> anchor 1 caret 1 sel 0 [] events S 
+   key DOWN shift -> anchor 1 caret 2 sel 0 [] events S 
+   remove 0 -> anchor -1 caret 2 sel 0 [] events 
+   selectRange 10 14 -> anchor -1 caret 2 sel 5 [10, 11, 12, 13, 14] events 
+   click 6 ctrlshift -> anchor 6 caret 6 sel 5 [10, 11, 12, 13, 14] events S 
+selectAll / remove 5 / click 12 ctrlshift:
+   selectAll -> anchor -1 caret 0 sel 300 300 rows 0..299 sum 44850 events 
+   remove 5 -> anchor -1 caret 0 sel 299 299 rows 0..298 sum 44551 events 
+   click 12 ctrlshift -> anchor 12 caret 12 sel 299 299 rows 0..298 sum 44551 events S 

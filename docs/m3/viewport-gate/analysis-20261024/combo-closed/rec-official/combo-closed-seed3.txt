@@ -1,0 +1,15 @@
+# reference official, SWT 4974 win32
+ok | state sel 157 count 300 text 'berry 157' dropped false | events M  | face d917a70a | list -
+ok | state sel 294 count 553 text 'berry 157' dropped false | events  | face d917a70a | list -
+ok | state sel 378 count 796 text 'berry 157' dropped false | events  | face d917a70a | list -
+ok | state sel 469 count 1027 text 'berry 157' dropped false | events  | face d917a70a | list -
+ok | state sel 580 count 1302 text 'berry 157' dropped false | events  | face d917a70a | list -
+ok | state sel 703 count 1539 text 'berry 157' dropped false | events  | face d917a70a | list -
+ok | state sel 807 count 1781 text 'berry 157' dropped false | events  | face d917a70a | list -
+ok | state sel 915 count 2036 text 'berry 157' dropped false | events  | face d917a70a | list -
+ok | state sel 1011 count 2314 text 'berry 157' dropped false | events  | face d917a70a | list -
+ok | state sel 1110 count 2593 text 'berry 157' dropped false | events  | face d917a70a | list -
+ok | state sel 1220 count 2828 text 'berry 157' dropped false | events  | face d917a70a | list -
+ok | state sel 1220 count 2828 text 'berry 157' dropped true | events  | face 50414a19 | list 0..2827/20@1220 7acf31f9
+ok | state sel 1220 count 2828 text 'berry 157' dropped false | events  | face d917a70a | list -
+pixels d917a70a

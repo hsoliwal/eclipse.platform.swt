@@ -1,0 +1,150 @@
+indexOfEmpty -1
+add 85
+select 259
+hover 16
+deselect 240
+select 256
+selectionIndex
+key PRIOR
+addAt 184 694
+key RETURN
+selectionIndex
+visible 13
+hover 11
+hover 16
+key RIGHT
+read 290 266
+select 113
+removeAll
+hover 13
+select 169
+key UP
+drop false
+drop true
+selectionIndex
+click 8
+visible 22
+drop true
+indexOfEmpty 5
+key HOME
+indexOfEmpty 2
+listwheel -120
+key HOME
+vscroll 4
+selectionIndex
+removeString 133
+select 114
+key END
+visible 5
+deselect 34
+setText 162 1
+deselect 208
+selectionIndex
+addAt 14 87
+drop true
+removeString 245
+key UP
+read 181 181
+selectionIndex
+removeString 228
+listwheel -120
+vscroll 2
+type c
+key RETURN
+key END
+click 2
+type d
+select 199
+key END
+visible 16
+addAt 3 562
+listwheel -120
+key RIGHT
+visible 24
+selectionIndex
+hover 5
+key UP
+visible 19
+add 143
+visible 3
+key END
+selectionIndex
+drop true
+key DOWN
+add 232
+key RIGHT
+select 93
+drop true
+visible 15
+setText 233 3
+type A
+wheel -240
+type e
+indexOfEmpty 2
+selectionIndex
+drop false
+remove 225
+selectionIndex
+thumb 295
+indexOfEmpty 0
+drop true
+read 179 47
+drop true
+deselect 241
+thumb 189
+select 257
+selectionIndex
+selectionIndex
+selectionIndex
+drop true
+selectionIndex
+setItem 123 963
+listwheel -120
+deselect 11
+drop false
+deselect 301
+indexOfEmpty -2
+key HOME
+visible 10
+selectionIndex
+wheel -240
+selectionIndex
+removeString 25
+drop true
+vscroll 2
+read 158 279
+thumb 272
+drop true
+select 55
+add 641
+visible 8
+removeString 195
+selectionIndex
+add 341
+indexOfEmpty 0
+indexOfEmpty 2
+visible 9
+deselect 80
+addEmpty 230
+addEmpty 187
+addAt 53 70
+indexOfEmpty 0
+listwheel 120
+selectionIndex
+hover 17
+selectionIndex
+drop true
+thumb 15
+indexOfEmpty 1
+selectionIndex
+wheel -240
+drop true
+selectionIndex
+key NEXT
+selectionIndex
+key RIGHT
+remove 155
+selectionIndex
+hover 19
+read 149 289
+visible 8

@@ -1,0 +1,65 @@
+16	face after 'add #'	hash-only	face a581cce8 || face 87a328d6
+14	face after 'addAt # #'	hash-only	face 77886c90 || face 9cae8bc6
+19	face after 'addEmpty #'	hash-only	face f62953c1 || face 883bf1d9
+16	face after 'altdown'	hash-only	face a581cce8 || face 87a328d6
+18	face after 'click #'	hash-only	face e0eeb0ad || face c3100c9b
+9	face after 'deselect #'	hash-only	face f62953c1 || face 883bf1d9
+6	face after 'drop false'	hash-only	face 37e3415 || face d8f3c48d
+55	face after 'drop true'	hash-only	face a581cce8 || face 87a328d6
+33	face after 'hover #'	hash-only	face e0eeb0ad || face c3100c9b
+11	face after 'indexOfEmpty #'	hash-only	face a581cce8 || face 87a328d6
+9	face after 'indexOfEmpty -#'	hash-only	face e0eeb0ad || face c3100c9b
+9	face after 'key DOWN'	hash-only	face f62953c1 || face 883bf1d9
+5	face after 'key ESCAPE'	hash-only	face e0eeb0ad || face c3100c9b
+6	face after 'key F#'	hash-only	face 2013e7c5 || face 5b30910c
+6	face after 'key NEXT'	hash-only	face 77886c90 || face 9cae8bc6
+9	face after 'key PRIOR'	hash-only	face 1adb7b19 || face ab097c32
+4	face after 'key RETURN'	hash-only	face db4aa45d || face fcb96020
+20	face after 'key UP'	hash-only	face e0eeb0ad || face c3100c9b
+14	face after 'listwheel #'	hash-only	face a581cce8 || face 87a328d6
+17	face after 'listwheel -#'	hash-only	face f62953c1 || face 883bf1d9
+17	face after 'read # #'	hash-only	face 77886c90 || face 9cae8bc6
+10	face after 'remove #'	hash-only	face e5ea41f6 || face a6e31045
+12	face after 'removeRange # #'	hash-only	face 5b80cb8a || face 969d74d1
+20	face after 'removeString #'	hash-only	face a581cce8 || face 87a328d6
+45	face after 'select #'	hash-only	face 8a6066e3 || face 37122439
+98	face after 'selectionIndex'	hash-only	face a581cce8 || face 87a328d6
+14	face after 'setItem # #'	hash-only	face a581cce8 || face 87a328d6
+15	face after 'thumb #'	hash-only	face be601c15 || face ee7b3ce5
+25	face after 'visible #'	hash-only	face e0eeb0ad || face c3100c9b
+23	face after 'vscroll #'	hash-only	face 3c1b88cb || face 6141a801
+9	face after 'wheel #'	hash-only	face e0eeb0ad || face c3100c9b
+18	face after 'wheel -#'	hash-only	face df7ffa0 || face 49f9cf73
+10	list after 'add #'	hash-only	list 0..149/21@0 cb2ae767 || list 0..149/21@0 53211c40
+9	list after 'addAt # #'	hash-only	list 0..303/8@175 6ee161ea || list 0..303/8@175 b4fe1fed
+5	list after 'addEmpty #'	hash-only	list 0..300/20@0 240dc12c || list 0..300/20@0 3c27ffa
+8	list after 'altdown'	hash-only	list 0..148/21@0 40085f3d || list 0..148/21@0 c7fe9416
+8	list after 'deselect #'	hash-only	list 0..149/15@14 5e4ce914 || list 0..149/15@14 4af2e482
+65	list after 'drop true'	hash-only	list 0..148/21@0 40085f3d || list 0..148/21@0 c7fe9416
+34	list after 'hover #'	hash-only	list 0..151/19@14 ad6c26b3 || list 0..151/19@14 87379d35
+8	list after 'indexOfEmpty #'	hash-only	list 0..149/21@0 cb2ae767 || list 0..149/21@0 53211c40
+2	list after 'indexOfEmpty -#'	hash-only	list 0..148/21@0 40085f3d || list 0..148/21@0 c7fe9416
+8	list after 'key DOWN'	hash-only	list 0..299/20@1 b48a4371 || list 0..299/20@1 87cb3ec5
+2	list after 'key END'	hash-only	list 0..147/20@125 7670b8e8 || list 0..147/20@125 3a804102
+3	list after 'key F#'	hash-only	list 0..153/8@8 f1b94770 || list 0..153/8@8 4595216f
+1	list after 'key LEFT'	hash-only	list 0..147/20@125 7670b8e8 || list 0..147/20@125 3a804102
+8	list after 'key NEXT'	hash-only	list 0..302/8@182 3571c35f || list 0..302/8@182 7ce323f9
+9	list after 'key PRIOR'	hash-only	list 0..1/2@0 91842ebf || list 0..1/2@0 877b409d
+3	list after 'key RIGHT'	hash-only	list 0..1/1@0 e3f2f4ea || list 0..1/1@0 cfce6066
+13	list after 'key UP'	hash-only	list 0..299/20@0 240dc12c || list 0..299/20@0 3c27ffa
+9	list after 'listwheel #'	hash-only	list 0..148/21@0 40085f3d || list 0..148/21@0 c7fe9416
+1	list after 'listwheel -#'	hash-only	list 0..299/20@4 535bd6d1 || list 0..299/20@4 d26c5cc4
+16	list after 'read # #'	hash-only	list 0..149/15@11 e85c5b0c || list 0..149/15@11 cff2fa7a
+9	list after 'remove #'	hash-only	list 0..152/19@0 4acb0ed4 || list 0..152/19@0 64193fa8
+6	list after 'removeRange # #'	hash-only	list 0..149/21@0 cb2ae767 || list 0..149/21@0 53211c40
+13	list after 'removeString #'	hash-only	list 0..148/21@0 40085f3d || list 0..148/21@0 c7fe9416
+29	list after 'select #'	hash-only	list 0..155/8@120 78ccbc5d || list 0..155/8@120 76c59239
+70	list after 'selectionIndex'	hash-only	list 0..148/21@0 40085f3d || list 0..148/21@0 c7fe9416
+13	list after 'setItem # #'	hash-only	list 0..148/21@0 40085f3d || list 0..148/21@0 c7fe9416
+8	list after 'setText # #'	hash-only	list 0..149/21@0 cb2ae767 || list 0..149/21@0 53211c40
+3	list after 'thumb #'	hash-only	list 0..2/3@0 e8db81e9 || list 0..2/3@0 f75a7fc7
+1	list after 'visible #'	hash-only	list 0..1/2@0 91842ebf || list 0..1/2@0 877b409d
+8	list after 'vscroll #'	hash-only	list 0..300/20@7 3238c907 || list 0..300/20@7 931157ea
+3	list after 'wheel #'	hash-only	list 0..149/15@11 e85c5b0c || list 0..149/15@11 cff2fa7a
+1	list after 'wheel -#'	hash-only	list 0..5/6@0 a5be90c8 || list 0..5/6@0 a8616954
+4	pixels	  seed 0: K:\codex-work\agent-temp\claude\e--ws2-com-synexia\a6de83fe-6489-4056-8689-f1217602e9cc\scratchpad\analysis\combo-editable\verify-oracle\evidence-clean\combo-dropdown-seed0-viewport.png

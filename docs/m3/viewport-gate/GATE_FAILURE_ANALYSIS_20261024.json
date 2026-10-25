@@ -1,0 +1,752 @@
+{
+ "results": [
+  {
+   "unit": "combo-editable",
+   "analysis": {
+    "unit": "combo-editable: Test_org_eclipse_swt_widgets_Combo_ViewportDifferential#editableComboAnswersLikeTheReference (96 kinds; survey S:/m3-scratch/swt-tv/survey-n/combo-editable.txt; jar tv20261024n = worktree 2dcbcb50f1, code-identical to head 5bf82c5d38). I reproduced the survey with a replay of the test's own Subject/randomOp/probes (scratch .../analysis/combo-editable/oracle/src/org/eclipse/swt/tests/junit/ComboReplayDump.java). On the uncontended desktop slot, the official 3.135.0 replay equals the recording in 1500/1500 steps. The fork's original mode (-Dswt.widget.mode.Combo=original) also equals it in 1500/1500 steps. The viewport replay gives the same 95 step kinds as the gate, with identical counts and first examples (replay-survey.txt vs survey; the 96th kind is the end-of-seed pixels). Step ops are recovered from Random(0xC0B0+seed) in ops.tsv/joined.tsv. The proposed mediator diff is scratch .../analysis/combo-editable/proposed-ComboViewport.diff. With it applied, the replay is byte-identical to the official jar on the same desktop slot: 1500/1500 lines (answer, state, events, face, list bar and pixels) and 10/10 end pixels (oracle/clean-run-*.tsv). Every 'scratch ...' path below means K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/combo-editable/.",
+    "rootCauses": [
+     {
+      "id": "P-stale-patch-empties-edit-field",
+      "kinds": [
+       "state after 'drop true'",
+       "face after 'drop true'",
+       "list after 'drop true'",
+       "state after 'altdown'",
+       "events after 'altdown'",
+       "face after 'altdown'",
+       "list after 'altdown'",
+       "answer after 'selectionIndex'",
+       "state after 'selectionIndex'",
+       "face after 'selectionIndex'",
+       "list after 'selectionIndex'",
+       "state after 'type A'",
+       "face after 'type A'",
+       "state after 'add #'",
+       "face after 'add #'",
+       "list after 'add #'",
+       "state after 'addAt # #'",
+       "face after 'addAt # #'",
+       "list after 'addAt # #'",
+       "state after 'addEmpty #'",
+       "face after 'addEmpty #'",
+       "state after 'click #'",
+       "face after 'click #'",
+       "state after 'deselect #'",
+       "face after 'deselect #'",
+       "list after 'deselect #'",
+       "state after 'drop false'",
+       "face after 'drop false'",
+       "state after 'hover #'",
+       "face after 'hover #'",
+       "list after 'hover #'",
+       "state after 'indexOfEmpty #'",
+       "face after 'indexOfEmpty #'",
+       "list after 'indexOfEmpty #'",
+       "state after 'indexOfEmpty -#'",
+       "face after 'indexOfEmpty -#'",
+       "state after 'key DOWN'",
+       "face after 'key DOWN'",
+       "list after 'key DOWN'",
+       "state after 'key END'",
+       "face after 'key END'",
+       "list after 'key END'",
+       "state after 'key F#'",
+       "face after 'key F#'",
+       "list after 'key F#'",
+       "state after 'key LEFT'",
+       "face after 'key LEFT'",
+       "state after 'key NEXT'",
+       "face after 'key NEXT'",
+       "list after 'key NEXT'",
+       "state after 'key RETURN'",
+       "face after 'key RETURN'",
+       "state after 'key UP'",
+       "face after 'key UP'",
+       "list after 'key UP'",
+       "state after 'listwheel -#'",
+       "face after 'listwheel -#'",
+       "state after 'read # #'",
+       "face after 'read # #'",
+       "state after 'remove #'",
+       "face after 'remove #'",
+       "list after 'remove #'",
+       "state after 'removeRange # #'",
+       "face after 'removeRange # #'",
+       "state after 'removeString #'",
+       "face after 'removeString #'",
+       "list after 'removeString #'",
+       "state after 'select #'",
+       "face after 'select #'",
+       "state after 'setItem # #'",
+       "face after 'setItem # #'",
+       "state after 'setText # #'",
+       "list after 'setText # #'",
+       "state after 'thumb #'",
+       "face after 'thumb #'",
+       "list after 'thumb #'",
+       "state after 'visible #'",
+       "face after 'visible #'",
+       "state after 'vscroll #'",
+       "face after 'vscroll #'",
+       "list after 'vscroll #'",
+       "state after 'wheel #'",
+       "face after 'wheel #'",
+       "list after 'wheel #'",
+       "state after 'wheel -#'",
+       "face after 'wheel -#'",
+       "list after 'wheel -#'",
+       "pixels"
+      ],
+      "firstExample": "seed 0 step 70 'drop true' (steps 67/68 'addAt 85 764'/'addAt 50 817' made the closed list stale): recorded 'state sel 14 count 152 text 'berry 163' dropped true | list 0..151/19@14'; this run 'sel -1 ... text '' ... | list 0..151/19@0'. Before the step the viewport diag shows stale=true, staleSelection=14, native list 76 rows with native sel 14 (scratch oracle/viewport-a.tsv). Same mechanism opens every other episode: S0#132, S1#86, S2#107 Alt+Down (also 'events M S'), S4#148 (text 'ABSENT' becomes ''), S5#50, S6#135, S8#53, S8#124, S9#23/62/86 drops, and S9#122 'type A' (text 'A' becomes '').",
+      "stockRule": "An editable drop on stock (official 3.135.0, ComboStepTrace seed 0 step 70, scratch oracle/trace-off-s0-70.txt) runs in this order. (1) CBN_DROPDOWN (line 8). (2) LB_FINDSTRING -1 'berry 163' returns 14 (:24). (3) LB_SETCURSEL 14, LB_SETCARETINDEX, LB_SETTOPINDEX (:26-30). (4) LB_FINDSTRINGEXACT and LB_GETTEXT 14, then WM_SETTEXT 'berry 163' to the edit (:32-38). (5) LBCB_STARTTRACK records 14 (:46). Result: sel 14, text kept, bar @14 (recording combo-dropdown-seed0.txt line 72). The same order shows in docs/m3/list-viewport/evidence/ComboMessageOracle.out.txt ('DD CB_SHOWDROPDOWN 1', 'DD F4'). The native rule the viewport trips: when the ComboLBox deletes its selected row, the combo re-reads LB_GETCURSEL (-1) and empties the edit field. It does so with WM_SETTEXT '' and EM_SETSEL and no CBN_EDITCHANGE, so no Modify is sent. Evidence: scratch oracle/trace-vp-s0-70.txt:127-131 (LB_DELETESTRING 14 then ED WM_SETTEXT '') and trace-vp-s2-107.txt:64-68. Stock SWT relies on the same rule for CB_DELETESTRING of the selected item (Combo.java:1762-1787; Bug#440671 comment at 1772-1777).",
+      "viewportCode": "S:/m3-scratch/worktrees/swt-name-convergence/bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/ComboViewport.java:249-262. patch() deletes every stale native row (loop at 255-256 through deleteNative 348-352) while the list box still selects the stale selection's native row. How the list becomes stale and patched: a closed list goes stale on every add or remove that keeps the selection (goStale 242-246, called from add 938 and deleteRows 975-976). The first cover() of a stale window then patches (215-224). On the editable drop that cover() comes from beforeDrop 888-901 (cover at 900), reached through CBN_DROPDOWN (Combo.java:3556 calls onNotification 880-886) before the native search. The same patch also runs from onFind 773-798 (cover at 789; this is the typing case S9#122) and from onKeyDown 745. Effect: the edit text is emptied, so the native drop searches no text. It ends with LB_SETCURSEL -1, caret/top 0, and LBCB_STARTTRACK recording -1 (trace-vp-s0-70.txt:376-386; afterNative 606-615). Cascades: Combo.wmSysKeyDown compares 122 with -1 and sends Modify+Selection (Combo.java:3750-3770; this is 'events after altdown'). A later close cannot restore the recorded entry (S0#96 'visible 8': the resize closes the list; stock restores 14, the viewport has -1). Relative keys, wheel and hover then start from the wrong row (S5#50-79 keep a constant offset of 38). Seed 4 ends with the empty text, so its end-of-seed pixels are 85318e2f instead of stock c906b8b7 ('pixels' kind).",
+      "origin": "viewport",
+      "fix": "In ComboViewport.patch(), before the delete loop (ComboViewport.java:253-256), add `OS.CallWindowProc (listWindowProc, hwndList, OS.LB_SETCURSEL, -1, 0);` so that window maintenance never deletes the selected row. LB_SETCURSEL sent to the list box leaves the edit field alone. coverRows then calls rebuild, whose restoreFocus (363-378) goes through setSingleState/setCursel (411-445) and selects parked (= staleSelection) again. The change is in the mediator only. The original mode never builds a ComboViewport (Combo.java:150-153; ENABLED at ComboViewport.java:48), and its replay equals the recording in 1500/1500 steps. The hunk is '@@ -252' in scratch proposed-ComboViewport.diff. The same rule probably explains the open item 'an editable combo's text (seed 0 step 139)' with a short reach (docs/m3/LIST_MEDIATED_VIEWPORT.md:260-261), where rebuild() retires a selected native row beyond NATIVE_REACH. Guarding rebuild's retire loops the same way would cover it; this is not validated here.",
+      "oracle": "I wrote ComboStepTrace (scratch oracle/src/org/eclipse/swt/tests/junit/ComboStepTrace.java), which subclasses the list, edit, combo and shell and logs nested messages with the edit text after each one. I ran it through ui_lock/hidden_java on both jars for seed 0 step 70 and seed 2 step 107 (scratch oracle/trace-{off,vp}-s{0-70,2-107}.txt). On the official jar the text is kept and the row selected. On the viewport the edit is emptied inside CBN_DROPDOWN at LB_DELETESTRING of the selected native row. A prototype run (patched ComboViewport shadowing the jar's class, -Dproto.fixP, scratch oracle/proto-P-*.tsv) drops the differing steps from 134 to 31; every P kind is gone and only the B and D steps remain.",
+      "confidence": "high"
+     },
+     {
+      "id": "B-bar-lane-follows-window-not-stock",
+      "kinds": [
+       "list after 'altdown'",
+       "list after 'drop true'",
+       "list after 'hover #'",
+       "list after 'indexOfEmpty #'",
+       "list after 'indexOfEmpty -#'",
+       "list after 'key F#'",
+       "list after 'key UP'",
+       "list after 'listwheel #'",
+       "list after 'listwheel -#'",
+       "list after 'read # #'",
+       "list after 'removeString #'",
+       "list after 'selectionIndex'",
+       "list after 'setItem # #'",
+       "list after 'type ^H' (backspace)",
+       "list after 'type d'"
+      ],
+      "firstExample": "seed 0 step 19 'altdown' (step 14 was 'setItems 149'): recorded 'list 0..148/21@0 40085f3d', this run 'list 0..100/21@0 c2c35849'; state, events and face are equal. The viewport diag shows barState=0 and a window of 0+101 rows. Other episodes follow the first drop after Subject.reset's 300 adds with barState=1: S1#10, S2#4, S3#1, S5#0, S7#28-42, S8#3. These are 29 list-only steps; the kind is shared with P for 8 kinds.",
+      "stockRule": "The stock list box writes its bar on every insert after the first and on every delete. ListBarOracle2.out.txt shows: new list 'max 0 page 0' (freed), add→1 'max 100 page 0' (default bar), add→2 'max 1 page 2' (written). Stock Combo puts every row into the list box: add (Combo.java:183-184), add(int) (231-236), and setItems as CB_RESETCONTENT plus one CB_ADDSTRING per item (2374-2389). So after the 300 adds of Subject.reset (test :81) or after setItems 149, the dropped bar is 0..count-1: recording seed 0 step 19 (combo-dropdown-seed0.txt line 21) shows '0..148/21@0', and seed 1 step 10 shows '0..300/20@0'.",
+      "viewportCode": "ComboViewport.updateBar (478-495) writes the logical bar only when barState == BAR_SET (480). But barState follows the window's native operations, not the stock list. add() (943-954) advances it only for an insert that lands in the window. plan.inserted returns -1 for appends after the window (VirtualRowWindowPlan.java:140-155), so after reset only the first add counts: barState is BAR_DEFAULT with a window of 0+1. Window maintenance is counted instead: insertNative 345, deleteNative 351, and setSingleState 434. deleteRows (994-1006) counts only resident removals. setItems sets BAR_NONE (1100) although stock adds every item. The stale cover() puts the pre-patch value back after the window build (218/221). The dropped list therefore keeps the native window's own bar 0..100 (101 rows).",
+      "origin": "viewport",
+      "fix": "Make barState a logical lane of the stock list box. (1) add() calls inserted() once for every logical insert, resident or not, closed or dropped. It inserts natively only when entry >= 0 && !stale. (2) insertNative() and the empty-row inserts in setSingleState stop calling inserted(). (3) deleteNative() stops setting BAR_SET, and deleteRows() sets BAR_SET for every removal. (4) setItems() sets `barState = items.length == 0 ? BAR_NONE : items.length == 1 ? BAR_DEFAULT : BAR_SET`. After this, the save and restore in cover() at 218/221 has no effect. The hunks are '@@ -86', '@@ -342', '@@ -431', '@@ -941', '@@ -992' and '@@ -1097' in scratch proposed-ComboViewport.diff. The change is in the mediator only; the original mode is unaffected.",
+      "oracle": "The prototype with P+B+D gives 0 differing steps against the recording (scratch oracle/proto-PBD-*.tsv). On the same desktop slot, the clean diff is byte-identical to the official jar: 1500/1500 lines and 10/10 end pixels (scratch oracle/clean-run-clean-*.tsv vs clean-run-official-*.tsv). Side check on the read-only differential with the same diff: its 20 list-only steps (9 kinds, cause B) are gone. Only seed 6 steps 14-15 'key RIGHT' remain, which is the read-only unit's own cause (scratch oracle/clean-run-ro-*.tsv).",
+      "confidence": "high"
+     },
+     {
+      "id": "D-deselectAll-keeps-stale-selection-lane",
+      "kinds": [
+       "state after 'deselectAll'"
+      ],
+      "firstExample": "seed 8 step 35 'deselectAll' on a closed, stale combo (stale=true, staleSelection=0): recorded 'state sel -1 count 304 text '' dropped false | events M'; this run 'sel 0'. The text, the Modify event and the face match. The second instance is seed 8 step 62, where this run answers sel 172.",
+      "stockRule": "Combo.deselectAll (Combo.java:954-961) sends CB_SETCURSEL(-1) and then Modify. Afterwards stock CB_GETCURSEL answers -1 (recording combo-dropdown-seed8.txt lines 37 and 64).",
+      "viewportCode": "Combo.deselectAll has no viewport hook. Its CB_SETCURSEL(-1) reaches ComboViewport.onSetCursel through Combo.windowProc (Combo.java:3028-3030 calls ComboViewport.java:1204-1234). onSetCursel deselects natively (1230) and clears parked (1229), but leaves staleSelection unchanged. While the closed list is stale, selection() answers staleSelection (500-501), so getSelectionIndex (Combo.java:1422) still answers 0 or 172. deselect(int) already clears the lane (1193); deselectAll does not.",
+      "origin": "viewport",
+      "fix": "In ComboViewport.onSetCursel, before the native CB_SETCURSEL, add `if (stale && entry == -1) staleSelection = -1;` (hunk '@@ -1227' in scratch proposed-ComboViewport.diff). Callers that select a row (select, keys, search) patch the window before CB_SETCURSEL, so only -1 reaches a stale window. The change is in the mediator only.",
+      "oracle": "With only P applied, exactly these 2 steps are left with a state difference (scratch oracle/proto-P-*.tsv, S8#35 and S8#62). With D added, there are 0.",
+      "confidence": "high"
+     },
+     {
+      "id": "H-pixel-probes-depend-on-desktop-slot",
+      "kinds": [],
+      "firstExample": "This explains none of the 96 kinds; it is a risk for future gate runs. The official 3.135.0 jar replayed on m3-ui-tests-1 and m3-ui-tests-2 gives face 883bf1d9 at seed 0 step 8 'key DOWN', against recorded f62953c1. The state, events and answer are equal there.",
+      "stockRule": "Replays on the uncontended (first) slot equal the recording in 1500/1500 steps. There the gate's 96 kinds are reproduced exactly, and every differing step has an answer, state, event or bar difference. The same official jar on slots 1 and 2 (identical to each other) differs from the recording in 723 of 1500 steps, in face and list pixels only. It also differs in 4 of 10 end-of-seed pixels (seeds 0, 2, 8, 9). See scratch oracle/clean-run-official-*.tsv and final-official-*.tsv. The first difference comes at a step where the combo selects the edit text, so the mechanism is likely the edit's selection highlight under different activation or focus on that desktop. This mechanism is not isolated.",
+      "viewportCode": "None; this is the harness. C:/m3-superset/tools/ui_lock.sh hands out any of 3 slots, each with its own desktop m3-ui-tests-N. Neither record_stock_references.sh nor viewport_gate.sh (through tree_viewport_run.sh) pins the slot. Within one slot the viewport and stock pixels agree wherever the semantics agree.",
+      "origin": "harness",
+      "fix": "Record and gate on the same desktop slot, by pinning M3_UI_DESKTOP or the slot for the reference and the gate, or keep one recording per slot. Otherwise a gate run under contention reports pixel-only kinds (face/list/pixels). The alternative is to normalise activation/focus before the face capture, which needs a re-recording.",
+      "oracle": "Measured: ComboReplayDump of the official jar on three slots, with semantic probes equal in all 1500 steps. The mechanism still needs an oracle that saves both face PNGs for seed 0 step 8.",
+      "confidence": "medium"
+     }
+    ],
+    "unexplainedKinds": []
+   },
+   "verdict": {
+    "unit": "combo-editable: Test_org_eclipse_swt_widgets_Combo_ViewportDifferential#editableComboAnswersLikeTheReference (96 kinds; survey S:/m3-scratch/swt-tv/survey-n/combo-editable.txt; jar tv20261024n = 2dcbcb50f1, bundles identical to head 5bf82c5d38). Verifier files: K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/verify/combo-editable/ and K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/combo-editable/verify-oracle/",
+    "checks": [
+     {
+      "id": "kinds-coverage",
+      "holds": true,
+      "problems": [],
+      "correctedFix": "No fix needed; the partition is confirmed. The survey's 96 kinds equal P (88) ∪ B (15) ∪ D (1). I recomputed the harness survey (ViewportDifferential.java:472-484) from the analysis's viewport-a/b.tsv replay against the recording: the same 95 step kinds, with identical counts and first examples. All 134 differing steps have a difference in answer, state, events or bar; none differs in pixels only. Splitting the steps by what the P-only prototype leaves (31 steps against the official jar in the same session) gives exactly the 87 P step kinds (88 with 'pixels') and exactly the 15 B kinds plus the 1 D kind. Original mode: -Dswt.widget.mode.Combo=original makes ENABLED false (WidgetMode.java:64-77, ComboViewport.java:48), so no ComboViewport is built (Combo.java:150-153). The original replay equals the recording in 1500/1500 steps (oracle/original-a/b.tsv)."
+     },
+     {
+      "id": "P-stale-patch-empties-edit-field",
+      "holds": true,
+      "problems": [
+       "The fix text overstates its reach. 'Window maintenance never deletes the selected row' is true only for patch(). rebuild()'s retire loops (ComboViewport.java:310-312) still delete a selected native row whenever coverRows leaves the selection outside the window; coverRows adds the selection only within NATIVE_REACH (ComboViewport.java:271-279, 51). This case cannot occur here (at most 310 rows, reach 2000), so it does not affect the 96 kinds. The short-reach open item (LIST_MEDIATED_VIEWPORT.md:260-261) remains open and unvalidated.",
+       "Minor: 'S5#50-79 keep a constant offset of 38' is not exact. At S5#50-53 the viewport answers sel -1 where the recording has 39 (viewport-b.tsv). The offset of 38 holds only for S5#54-79.",
+       "Minor citation: Combo.java:1772-1777 (Bug#440671) describes the exception, a single item whose text Windows does not clear. Where stock relies on the rule is the text-length comparison around CB_DELETESTRING (Combo.java:1762, 1782-1783). The native rule itself is shown only in fork-jar traces (trace-vp-s0-70.txt:127-134, trace-vp-s2-107.txt:64-71). That is acceptable, because the rule belongs to the ComboLBox, not to SWT.",
+       "Gate caveat (see H): even with the fix, the editable test fails in the current session, now with environment pixel kinds only. I ran the real test with the diff on m3-ui-tests-0 (verify-oracle/junit-clean.log). It reports 64 face/list kinds plus 4 end-of-seed pixels, and these kinds and counts are identical to the official jar's own drift (final-official vs recording)."
+      ],
+      "correctedFix": "Keep hunk '@@ -252' as proposed: LB_SETCURSEL -1 through listWindowProc before the delete loop in patch() (ComboViewport.java:253-256). Verified: (1) Every P episode starts with stale=true and a native selection before the step: S0#70, S0#132, S1#86, S2#107, S4#148, S5#50, S6#135, S8#53, S8#124, S9#23/62/86 and S9#122. S0#96 is the cascade of the recorded entry -1. (2) After the P-only prototype, exactly 31 steps differ from the official jar in the same session: the 29 bar steps plus S8#35 and S8#62. (3) LB_SETCURSEL sent to the list box writes nothing to the edit (trace-vp-s0-70.txt:363 and :376-377, trace-off-s0-70.txt:26-27). (4) The full diff gives 0 semantic differences in the real harness. Optional generalisation for the short-reach item, not validated: in rebuild(), before the retire loops (ComboViewport.java:310), add `int sel = (int) OS.CallWindowProc (listWindowProc, hwndList, OS.LB_GETCURSEL, 0, 0); if (sel >= 0 && (sel < plan.retiredHead () || sel >= plan.size () - plan.retiredTail ())) OS.CallWindowProc (listWindowProc, hwndList, OS.LB_SETCURSEL, -1, 0);`. restoreFocus then parks the row (ComboViewport.java:375-376), so the text stays as it does in stock."
+     },
+     {
+      "id": "B-bar-lane-follows-window-not-stock",
+      "holds": true,
+      "problems": [
+       "Minor mechanism detail: after Subject.reset, the one counted insert does not come from add()'s own branch. plan.inserted on the empty plan returns -1 (VirtualRowWindowPlan.java:146-148). BAR_DEFAULT comes from add's layout(), which runs cover(), rebuild() and insertNative() (ComboViewport.java:955, 314, 345). Later appends land on the stale window and also return -1 (VirtualRowWindowPlan.java:154). The conclusion is unchanged: the diag shows barState=1 and window 0+1 at S0#0, barState=0 after S0#14 setItems, and window 0+101 at S0#19.",
+       "The stock evidence ListBarOracle2.out.txt:1-3 comes from a plain List. That the ComboLBox follows the same rule rests on the recordings (combo-dropdown-seed0.txt:21 '0..148/21@0', combo-dropdown-seed1.txt:12 '0..300/20@0') and on the fixed runs, not on a combo oracle.",
+       "Wording: 'P+B+D gives 0 differing steps against the recording' holds only for the semantic fields the analysis compared (answer, state, events, bar; semantic.awk). Against the full recording, proto-PBD-*.tsv differs in 723 face/list-pixel steps, which is the session drift described in H. Full byte parity holds against the official jar in the same session: final-official vs final-proto, and clean-run-official vs clean-run-clean, both 1500/1500 steps and 10/10 end pixels."
+      ],
+      "correctedFix": "Keep hunks '@@ -86', '@@ -342', '@@ -431', '@@ -941', '@@ -992' and '@@ -1097' as proposed. Other Combo variants, run on one slot with the jar alone and then with the diff (verify-oracle/junit-jar.log vs junit-clean.log, m3-ui-tests-0): (1) In combo-verify, 7 kinds have a bar difference in their first example; with the diff none does. Only the 3 key RIGHT semantic kinds remain, plus the session pixel drift. (2) Combo_ViewportAcceptance.editTextMatchFindsTheFirstLogicalRow fails on the jar with '0..100/20@81' instead of '0..99999/20@99980', which is exactly this bar bug; with the diff it passes. (3) CoolBar_ViewportDifferential, ScrolledComposite_Viewport.aFarComboReportsTheNativeHeightOfAComboInRange and the other 4 acceptance tests still pass. (4) The analysis's read-only replay goes from 22 semantic steps to 2 (S6#14-15 key RIGHT). After the fix, the barState save and restore in cover() (ComboViewport.java:218, 221) is dead code and can be removed."
+     },
+     {
+      "id": "D-deselectAll-keeps-stale-selection-lane",
+      "holds": true,
+      "problems": [
+       "Robustness note, not a defect in this unit: the fix assumes that only CB_SETCURSEL(-1) reaches onSetCursel while the window is stale. That holds for SWT's API paths. select patches the window first (ComboViewport.java:1180, residentEntry at 518-521). deselect clears the lane first (1193). uninstall calls ComboProc directly (154). A client that sends CB_SETCURSEL n ≥ 0 to a stale combo would still index stale native rows (1230-1231). This gap predates the analysis and lies outside this unit."
+      ],
+      "correctedFix": "Keep hunk '@@ -1227' as proposed: `if (stale && entry == -1) staleSelection = -1;` before the native CB_SETCURSEL in onSetCursel (ComboViewport.java:1229-1230). Verified: after the P-only prototype, the only state differences left are S8#35 and S8#62 (sel 0 and 172 where the recording has -1). With P+B+D there are none (proto-PBD 0 semantic steps; clean run byte-identical to the official jar in the same session)."
+     },
+     {
+      "id": "H-pixel-probes-depend-on-desktop-slot",
+      "holds": false,
+      "problems": [
+       "The slot attribution is wrong. I replayed the official 3.135.0 jar on the uncontended slot m3-ui-tests-0 (verify-oracle/slot.txt). No other ui_lock holder was active, and the replay finished at 15:50:35 UTC, before the second claim started at 15:50:44. It gives face 883bf1d9 at seed 0 step 8 (verify-oracle/replay-official-s0.tsv). m3-ui-tests-1 gives the same (replay-official-s0-second.tsv). The recording has f62953c1.",
+       "The drift is bound to time, not to a slot. In the analysis's own runs, viewport-a.tsv (20:29) and original-a.tsv (20:31) still match the recording (S0#8 f62953c1), while proto-none-a.tsv (20:43) already has 883bf1d9.",
+       "The mechanism is not activation or focus: only the highlight colour changed. Comparing the recorded evidence/combo-dropdown-seed0-official.png with verify-oracle/evidence-clean/combo-dropdown-seed0-viewport.png, 694 pixels of the selected text differ, and they go from (0,120,212) to (0,120,215). Seeds 2, 8 and 9 show the same change (verify-oracle/pixdiff/pixdiff.py). The session's live COLOR_HIGHLIGHT is now 0,120,215 (SystemColors.Highlight), while HKCU\\Control Panel\\Colors Hilight still reads 0 120 212. So the system colours changed for the whole session, on every desktop, between 20:32 and 20:43 local. The fork's win32 sources and tests contain no SetSysColors or SPI_SETHIGHCONTRAST call.",
+       "The impact is understated. In this session the official jar itself fails the gate with 64 face/list kinds (602 face steps and 386 list-pixel steps) plus 4 end-of-seed pixels. The Verify differential on the gate jar shows 50 kinds instead of the gate's 14 (verify-oracle/junit-jar.log). Pinning M3_UI_DESKTOP or the slot does not prevent any of this.",
+       "Correct part: neither record_stock_references.sh:25 nor tree_viewport_run.sh:20 pins a slot (ui_lock.sh:13-19 takes the first free one, :32 sets the desktop), and nothing checks the environment the pixel probes depend on."
+      ],
+      "correctedFix": "Origin: the environment (the session's system colours), plus a missing harness guard; the slot is not the cause. (1) Before gating, restore the session colours: log off and on, or re-apply HKCU\\Control Panel\\Colors through SetSysColors so COLOR_HIGHLIGHT is back to 0,120,212. Otherwise, re-record the references in the current session with record_stock_references.sh. (2) Add a harness guard. Write the GetSysColor values the probes depend on (COLOR_HIGHLIGHT, COLOR_HIGHLIGHTTEXT, COLOR_WINDOW, COLOR_WINDOWTEXT, COLOR_BTNFACE, COLOR_GRAYTEXT), plus the theme and DPI, into the recording header (ViewportDifferential.java:326). compareWithRecording (ViewportDifferential.java:332-341) should then fail once with 'environment differs from the recording' instead of reporting face, list and pixels kinds. (3) Find and fix whatever changed the system colours between 20:32 and 20:43 local; it must restore the values it found. Slot pinning is not needed for this effect."
+     }
+    ]
+   }
+  },
+  {
+   "unit": "combo-readonly",
+   "analysis": {
+    "unit": "combo-readonly",
+    "rootCauses": [
+     {
+      "id": "C1-bar-lane-misses-hidden-deltas",
+      "kinds": [
+       "list after 'altdown'",
+       "list after 'drop true'",
+       "list after 'hover #'",
+       "list after 'indexOfEmpty -#'",
+       "list after 'key F#'",
+       "list after 'listwheel #'",
+       "list after 'removeString #'",
+       "list after 'selectionIndex'",
+       "list after 'setItem # #'"
+      ],
+      "firstExample": "seed 0 step 19 'altdown'. The ops come from Random(0xC0B0+0): step 14 'setItems 149', 15 'wheel 120', 16 'visible 21', 19 'altdown'. Recorded: list 0..148/21@0 40085f3d. This run: list 0..100/21@0. Steps 20-26 and 36 follow the same pattern; at step 36 'drop true' this run shows 0..105/21@5. Other first examples: seed 5 steps 0-2 ('drop true', 'hover 11', 'listwheel 240') run straight after Subject.reset's 300 adds, and seed 8 step 3 'key F4' runs after step 2 'key UP'. Both read 0..299/20@0 in stock and 0..100/20@0 here.",
+      "stockRule": "Stock rule (ListBarOracle2, documented at ComboViewport.java:85-89 and ListViewport.java:361-367): LB_RESETCONTENT frees the drop-down list box's vertical bar. The first insert afterwards leaves the default bar, and every later insert or delete writes the bar: 0..count-1, page = fully visible rows, pos = top row. This holds while the list is closed too. In the original-mode path, Subject.reset adds 300 rows with CB_ADDSTRING (Combo.java:183-193) and setItems does CB_RESETCONTENT plus n CB_ADDSTRING (Combo.java:2374-2380), so the bar is written. Evidence from K:/m3-work/runs/viewport-stock-recording-20261024: combo-readonly-seed0.txt:21 (step 19) shows list 0..148/21@0, combo-readonly-seed5.txt:2 shows 0..299/20@0, and combo-readonly-seed8.txt:5 shows 0..299/20@0. Oracle on the official 3.135.0 jar: the closed list box right after reset reads 'bar 0..299/5@0' (oracle-official.log, line 'ro seed 0 start').",
+      "viewportCode": "All lines are in S:/m3-scratch/worktrees/swt-name-convergence/bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/ComboViewport.java.\n\nupdateBar writes the logical bar only when barState==BAR_SET (:480). The lane is advanced by the window's own native row operations: insertNative calls inserted() at :345, deleteNative sets BAR_SET at :351, and setSingleState calls inserted() at :434.\n\nSince rule 24 (commit 8eb78a2e01), closed deltas do not reach the list box:\n- add: goStale at :938, and the lane advances at :944-946 only for a resident insert. VirtualRowWindowPlan.inserted (common/.../VirtualRowWindowPlan.java:140-155) returns -1 for every append behind the window, so reset()'s adds 2..300 leave the lane at BAR_DEFAULT.\n- deleteRows advances it only for resident rows (:995-996).\n- setItems sets BAR_NONE (:1100) and marks the list stale (:1108), so layout inserts nothing (:174).\n\nThe first patch, cover at :216-223, rebuilds 101 or 106 native rows and then puts back the stale lane (:218/:221). updateBar then never writes, and the probe reads the window's own native bar (0..100 or 0..105). The bar stays wrong until a later non-stale rebuild inserts rows: seed 0 step 37 'add 143' then matches with 0..149.\n\nM3 oracle (oracle-m3n.log):\n- seed 0 start: barState 1, stale true, plan 0+1, bar 0..100/0@0.\n- after step 14: barState 0.\n- step 19: barState 0, plan 0+101, bar 0..100/21@0.",
+      "origin": "viewport",
+      "fix": "The fix changes only ComboViewport.java (S:/m3-scratch/worktrees/swt-name-convergence/bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/). It makes barState the stock list box's lane, as ListViewport already does: there the native insert and delete (ListViewport.java:300-319) never touch it, while add (:1082), the removes (:1138/:1151) and setItems (:1260) do.\n1. insertNative (:345), deleteNative (:351) and setSingleState (:434) no longer change barState. A window move is not a stock insert or delete.\n2. add (:943-954): call inserted() once for every logical insert, unconditionally, and call insertNative only when entry >= 0 && !stale.\n3. deleteRows (:994-1006): set barState = BAR_SET once per removal, and send the native CB_DELETESTRING only when resident > 0 && !stale.\n4. setItems (:1100): barState = items.length == 0 ? BAR_NONE : items.length == 1 ? BAR_DEFAULT : BAR_SET.\n\nThe bar save and restore in cover (:218/:221) then has no effect and can stay. Optional hardening: port ListViewport.updateBar's three-state write (ListViewport.java:368-393).\n\nThe original mode stays stock: ComboViewport is constructed only when WidgetMode is VIEWPORT (ComboViewport.java:48, 108-110; Combo.java:150-153). With -Dswt.widget.mode.Combo=original, Combo.viewport is null and no changed line is reachable.\n\nReady diff: K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/combo-readonly/fix/ComboViewport.fix.diff",
+      "oracle": "Scratchpad: K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/combo-readonly/\n\nOp replay: OpGen.java writes ops.tsv. Oracle: src/org/eclipse/swt/tests/junit/ComboReadOnlyOracle.java. It reuses the test's own randomOp, Subject, flush and probes, and adds the native caret, selection and bar plus the viewport lanes. It ran through ui_lock.sh and hidden_java.sh on three jars: official 3.135.0, tv20261024n, and tv20261024n with the patched ComboViewport first on the class path. Coverage was 83 steps: read-only seeds 0 (0-37), 5 (0-3), 6 (0-16) and 8 (0-6), plus seed 6 (0-16) with the Verify listener. tv20261024n reproduces the survey's 'this run' values exactly. The patched jar has 0 differing steps against official (oracle-official.log, oracle-m3n.log, oracle-m3fix.log).\n\nJUnit, both methods, survey mode, against an official recording made in the same JVM composition (rec-official-fresh):\n- unpatched: 14 kinds, same counts as the gate (test-base-vs-fresh.log)\n- lane fix alone: only C2's 5 kinds remain (test-laneOnly-vs-fresh.log)\n- caret guard alone: exactly these 9 kinds remain (test-caretOnly-vs-fresh.log)\n- both fixes: 2/2 pass (test-fix-vs-fresh.log)\n\nSide effect on unit combo-dropdown: the editable test with the full fix goes from 96 to 89 kinds and from 298 to 269 differing steps, with no new kind and no kind that grows (test-editable-base.log, test-editable-fix.log).",
+      "confidence": "high"
+     },
+     {
+      "id": "C2-caret-lane-captured-from-stale-window",
+      "kinds": [
+       "events after 'key RIGHT'",
+       "face after 'key RIGHT'",
+       "state after 'key RIGHT'",
+       "face after 'read # #'",
+       "state after 'read # #'"
+      ],
+      "firstExample": "seed 6 step 14 'key RIGHT'. The earlier ops from Random(0xC0B0+6): 5 'select 256', 7 'key PRIOR' (moves to 252), 8 'addAt 184 694' (moves the selection to 253), 9 'key RETURN', 11 'visible 13', and 12/13 'hover', which do nothing while closed. Recorded: state sel 253 text 'apple 252', no events, face 30b3a8fc. This run: sel 254 'berry 253', events M S, face 672538df. Step 15 'read 290 266' carries the same state and face as a cascade, which step 16 'select 113' clears. The verify test is identical: its listener stays silent because the text is already updated.",
+      "stockRule": "The list box's caret is an index. An insert shifts the selection but not the caret (ComboViewport.java:77-82; docs/m3/LIST_MEDIATED_VIEWPORT.md:105 and :396). A closed read-only combo's keys run in the list box from that caret and selection state. Evidence: K:/m3-work/runs/viewport-stock-recording-20261024/combo-readonly-seed6.txt:10 (step 8) shows sel 253, and :16 (step 14 'key RIGHT') shows sel 253 'apple 252' with no events. Oracle on the official jar (oracle-official.log): after step 8 the native caret is 252 and cursel 253. After step 14 'key RIGHT' they are still 252 and 253: RIGHT changes nothing and sends no notification.",
+      "viewportCode": "captureCaret (ComboViewport.java:452-464) maps the native LB_GETCARETINDEX through plan.first() at :461.\n\nUnder rule 24, a closed list is stale after a delta (add :938 goStale). It keeps the rows it had before the delta, while plan.first follows the delta: VirtualRowWindowPlan.java:146-148 moves the window 199+101 to 200+101 for the insert at 184. Native entry 53, the row 'apple 252' whose stock caret index is 252, is therefore read back as 253.\n\nThe capture runs through afterNative (:643-644) on the forwarded WM_KEYDOWN VK_RETURN. Combo.wmKeyDown (Combo.java:3730-3736) passes that key to the native combo. onKeyDown (:722-723) returns without a patch for a non-navigation key. The WM_CHAR CR never reaches the list box because Combo.wmChar consumes it for a closed drop-down (Combo.java:3412-3431).\n\nM3 oracle (oracle-m3n.log):\n- step 8: lanes caret 252, stale true, plan 200+101, native caret 53.\n- step 9 'key RETURN': lanes caret 253.\n- step 14: the patch restores caret = selection = 253, RIGHT moves to 254, and CBN_SELCHANGE fires M S.",
+      "origin": "viewport",
+      "fix": "ComboViewport.java:455 becomes 'if (size == 0 || stale) return;'. While the list is stale, the native caret entry is not in plan coordinates. The caret lane stays authoritative until the patch: add leaves it alone, and deleteRows moves it by the stock rule (:982-986). Navigation keys (:745), a matching type-ahead character (:763), select (:1180) and drop (:900) all patch through cover() before the native list box moves its caret.\n\nFollow-ups that this survey does not exercise:\n- While stale, an LB_CARETON should apply its stock rule to the lane in afterNative (:643): caret = -1 when staleSelection < 0 (LIST_MEDIATED_VIEWPORT.md:396).\n- While stale, onChar should also patch when no logical row matches, so the native search never runs over stale rows.\n\nThis is viewport mode only. In the original mode ComboViewport does not exist (Combo.java:150-153), so it stays stock.",
+      "oracle": "Same oracle and runs as C1. The caret guard alone removes exactly these 5 kinds, and the lane fix alone leaves exactly these 5. With both fixes, seed 6 matches official step by step for read-only and verify (oracle-m3fix.log), and both JUnit methods pass against the same-composition official recording (test-fix-vs-fresh.log).",
+      "confidence": "high"
+     },
+     {
+      "id": "H1-list-pixels-depend-on-jvm-history (explains none of the 14 kinds)",
+      "kinds": [],
+      "firstExample": "On the official 3.135.0 jar in a fresh JVM running only these two methods, seed 0 step 19 gives list 0..148/21@0 c7fe9416. The stored reference has 40085f3d. The bar is identical.",
+      "stockRule": "This comes from the reference and harness, not from the widget. The dropped list's WM_PRINT pixels (the list probe, Test_org_eclipse_swt_widgets_Combo_ViewportDifferential.java:235 and Native.print :557-577) depend on what ran earlier in the JVM. The official jar recorded these two methods alone into rec-official-fresh. Compared with K:/m3-work/runs/viewport-stock-recording-20261024 (made in a multi-class JVM), 1147 of 3020 lines differ, all only in the list hash. Bars, state, events, face and per-seed pixels are identical. The mechanism is not established. A likely candidate is the list box's focus cue: hideCues (:250-254) sends WM_CHANGEUISTATE only to the shell, and the drop-down list is a separate popup.",
+      "viewportCode": "None. This is not viewport code. In the gate run the class composition matched the recording's, and every survey kind of this unit differs in bar values, not only in the hash.",
+      "origin": "harness",
+      "fix": "Not needed for this unit's 14 kinds. To make the list probe independent of class composition, hide the cues on the drop-down list as well before Native.print (WM_CHANGEUISTATE with UIS_SET sent to Native.list(combo)), then re-record. This is unverified. Until then, compare viewport runs against a reference recorded in the same JVM composition.",
+      "oracle": "Recorded rec-official-fresh with the official jar (test-official-fresh.log) and compared it with the stored reference using cmprec.awk: 1873 lines identical, 1147 differ only in the list hash, 0 other differences.",
+      "confidence": "medium"
+     }
+    ],
+    "unexplainedKinds": []
+   },
+   "verdict": null
+  },
+  {
+   "unit": "combo-closed",
+   "analysis": {
+    "unit": "combo-closed",
+    "rootCauses": [
+     {
+      "id": "RC1-setItem-reselect-patches-stale-window",
+      "kinds": [
+       "closedOp gate: 'row operations while closed: 50788' (Test_org_eclipse_swt_widgets_Combo_ViewportDifferential.java:171, seed 0 step 1; the survey file holds only this assertion because the op throws before any probe is compared)",
+       "latent, same cause: closedOp drop gate 'window patches on drop' (test :164). The deltas steps already patch 237-274 times each, so the drop step would fail next."
+      ],
+      "firstExample": "seed 0, step 0 'select 176' (Random(0xC0B0): nextLong, then 100+nextInt(100)), step 1 'deltas 5250155769187346188'. Its 1000 deltas are 501 add, 250 remove and 249 setItem. Oracle attribution on the gate jar: add 0 row ops/0 patches, remove 0/0, setItem 50788 row ops/249 patches. In the split run, setItem.remove(index,false) gives 0, setItem.add gives 0, and setItem.select(selection) gives all 50788 row ops and all 249 patches. The state probes still match the recording (sel 328 count 551 text 'cherry 176', no events).",
+      "stockRule": "Combo.setItem is the unchanged upstream body. It reads selection = getSelectionIndex() (Combo.java:2323), calls remove(index,false) (:2324) and add(string,index) (:2328), then calls select(selection) (:2329-2331). Stock select sends CB_SETCURSEL and sends Modify only when the answer differs from the old selection (Combo.java:2171-2179, test at :2175). The CB_SETCURSEL Verify runs only when the item text differs from the current text (Combo.java:3042). So re-selecting the selected row has no event and no visible effect. Its only native effect is that the list box caret and top index move to the row. Oracle ComboClosedOracle 'reselect' on the official 3.135.0 jar: after select 176 and 3 adds at 0, the list shows cursel 179 caret 176 top 176. After select(179) it shows cursel 179 caret 179 top 179 with modify 0, and CB_SETCURSEL 179 answers 179. On the drop, stock puts caret and top on the selection (cursel 181 caret 181 top 181, bar 0..304/20@181). The recording K:/m3-work/runs/viewport-stock-recording-20261024/combo-closed-seed0.txt lines 3-12 agree: events empty, text 'cherry 176' and face 89b1d980 constant over 10,000 deltas.",
+      "viewportCode": "ComboViewport.select (ComboViewport.java:1177-1184) always calls residentEntry(index) (:1180, :518-521), which calls cover(). While the closed list is stale, cover (:215-223) runs patch() (:249-262). patch() deletes every native row: the LB_GETCOUNT loop at :255-256 calls deleteNative (:348-352, nativeRowOps++ at :349). coverRows/rebuild (:264-331) then inserts the whole window again (insertNative :336-346, nativeRowOps++ at :342). restoreFocus/setSingleState (:363-439) adds caret shifts (:426-437). That is about 204 row ops per call (101 deletes, 101 inserts, shifts). The next setItem's remove/add makes the window stale again (deleteRows goStale at :975-976, add at :938), so every setItem of a non-selected row costs one full patch. The stale design (:228-233) keeps the selected row natively, but it never treats a re-select of staleSelection as a lane delta. The counters m3NativeRowOps and m3WindowPatches are at Combo.java:3796-3811.",
+      "origin": "viewport",
+      "fix": "File: ComboViewport.java (our mediator). Upstream Combo.java is unchanged. In select(int index), right after 'int selection = selection ();' (:1179), add:\n//FLLDCIM: rule 24 — hidden viewports: a closed read-only combo re-selecting its selected row stays in the lanes\nif (stale && readOnly && index == selection) { reselectStale (index); return; }\nAlso add a helper:\nprivate void reselectStale (int index) { caret = index; parkedCaret = -1; lastSetResult = index; }\nThe helper gets a doc comment: stock CB_SETCURSEL of the selected row answers that row (no Modify, and no Verify because the text is the same) and moves the list box caret to it, which is the rule afterNative LB_SETCURSEL/captureCaret already encodes (:616-623). Why this matches stock: no event, as at Combo.java:2175 and :3042. The face keeps its native selected row, as the doc at :228-233 intends. The caret lane matches stock's moved caret. The top index is set again by the drop in both stock and viewport. recordedRow is refreshed by the drop patch (restoreFocus -> setCursel -> record). Editable combos keep the patch path, because stock CB_SETCURSEL also rewrites and selects their edit text. The original mode is untouched: with -Dswt.widget.mode.Combo=original, ComboViewport.ENABLED is false (:48) and mediates() is false (:108-110), so Combo.viewport stays null (Combo.java:150-153) and Combo.select runs its stock branch (:2171-2179). Patched source and diff: K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/combo-closed/fix/src/org/eclipse/swt/widgets/ComboViewport.java and .../combo-closed/fix/ComboViewport.diff. Separate issue, not caused here: cover() keeps the pre-patch barState (:218-221), and after reset barState is BAR_DEFAULT (oracle step 0 barState=1). This script reaches BAR_SET through stale resident deltas before the drop, so its drop bar is logical. The initial-fill bar state is the cause of the combo-readonly unit's window-size list bars.",
+      "oracle": "Oracle: K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/combo-closed/ComboClosedOracle.java. It replays closedOp/closedDelta with the same Random draws. Runs went through ui_lock.sh + hidden_java.sh on both jars, and logs are in the same folder. fork-plain-0.log: step 1 rowOps +50788 patches +249 (add 501x 0, remove 250x 0, setItem 249x 50788/249), and steps 2-10 show 48354-55836 row ops each. fork-split-0.log: setItem.select carries all row ops and patches. off-plain-0.log: the official state lines equal the recording. off-reselect.log and fork-reselect.log give the stock rule above, while the viewport re-select costs rowOps +208 and patches +1. fix-plain-0.log uses the fork jar with the patched ComboViewport class first on the class path: steps 1-10 show rowOps +0 patches +0, and the drop shows rowOps +203 patches +1 with identical states. JUnit runs (fix-vs-rec.log, nofix-vs-rec.log) compared against an official reference re-recorded in the same slot (.../combo-closed/rec-official). Patched: closedDeltasAnswerLikeTheReference passes. Unpatched control: fails with 'row operations while closed: 50788'. The readOnly and Verify surveys are byte-identical with and without the patch (14 kinds each, the same as survey-n), so there is no regression.",
+      "confidence": "high"
+     },
+     {
+      "id": "RC2-dropped-list-pixels-not-reproducible-in-reference",
+      "kinds": [
+       "list after 'drop' x10 (dropped-list WM_PRINT hash). Seen only after the RC1 fix, and only when the run's environment differs from the K: recording run: seed 0 step 11 recorded 'list 0..2709/20@1578 7ff3bec1', this run 'list 0..2709/20@1578 1e92353b'. The bar is equal; only the pixel hash differs."
+      ],
+      "firstExample": "Seed 0, step 11 'drop' (after 10 deltas steps; recording line 13). State, events, face and bar all match. Only the pixel hash of the dropped ComboLBox capture differs.",
+      "stockRule": "Stock itself does not reproduce the recorded hash. The official 3.135.0 jar, fresh JVM, same script (off-capture-0.log), gives list 0..2709/20@1578 with hash 1e92353b. Re-recording the whole Combo class with the official jar, in the same method order (editable, readonly, verify, closed) and in this environment (rec-official), changes only the dropped-list pixel hash against K:/m3-work/runs/viewport-stock-recording-20261024. combo-closed differs on 10/10 drop lines. combo-readonly differs on 574 step lines and combo-verify on 573, all with equal bars (classify.awk). combo-dropdown differs on 602 face, 386 list and 4 answer lines. All of these are two official runs disagreeing.",
+      "viewportCode": "No viewport code answers differently. The list probe (test :235) hashes WM_PRINT of the dropped ComboLBox, which is a child of the desktop (style 0x54a08141, exstyle 0x88). hideCues (test :250-254) reaches only the shell's children. The patched viewport capture is byte-identical to the official one: PngDiff on evidence/off-seed0-list.png vs evidence/fix-seed0-list.png reports 0 differing pixels, and both hash to 1e92353b. Keyboard-cue state is excluded: WM_UPDATEUISTATE UIS_CLEAR on the list (uistate 3->0) leaves the hash at 1e92353b (off-cues-0.log, fix-cues-0.log).",
+      "origin": "reference",
+      "fix": "No viewport change. Harness and reference: compare the Combo dropped-list probe only against an official reference recorded in the same ui_lock slot and session as the viewport run. For example, the gate re-records the official jar's Combo class into a fresh directory right before the viewport run, which takes about 4 minutes. Alternatively, replace the dropped-list pixel hash in the 'list' probe (test :235) with a deterministic semantic probe: top row, the visible rows' texts via LB_GETTEXT mapped to logical rows, and the cursel/caret rows. Keep the pixels as a same-run similarity check. Against the same-environment re-record, the RC1-patched closed test passes (fix-vs-rec.log). Do not run the original mode against the K: directory: isReference makes that run record over it (test :217, :241). The exact environment factor between the 19:47 recording run and this session is still unknown; keyboard cues are ruled out.",
+      "oracle": "Runs: off-capture-0.log, fix-capture-0.log, diff-0.log (0 differing pixels), off-cues-0.log and fix-cues-0.log (cue state does not change the hash), off-record-junit.log with rec-official/*.txt compared with the K: recording, fix-history-junit.log (the patched viewport with the recording's test history still gives 1e92353b, like the official re-record), and fix-vs-rec.log (closed test passes against the same-environment official reference). All are under K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/combo-closed/. Still needed for the factor itself: the recording run's slot/session settings (font smoothing, DWM, concurrent desktops), which are not recoverable from here.",
+      "confidence": "high"
+     }
+    ],
+    "unexplainedKinds": []
+   },
+   "verdict": {
+    "unit": "combo-closed",
+    "checks": [
+     {
+      "id": "RC1-setItem-reselect-patches-stale-window",
+      "holds": true,
+      "problems": [
+       "Confirmed by reading the code and by my own rerun (desktop m3-ui-tests-0, 21:18-21:19, logs in K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/combo-closed-verify/). Results: patched jar against a same-session official recording PASSES (fix-vs-myrec.log). Unpatched jar fails with 'row operations while closed: 50788' (nofix-vs-myrec.log). Patched jar against K: fails only with RC2's '10 x list after drop' (fix-vs-K.log). javap shows the analyst's fix class differs from the gate jar's ComboViewport only in select() and the new reselectStale() (jar-c.txt vs fix-c.txt). The gate jar was built from 2dcbcb50f1, which differs from head 5bf82c5d38 only in docs/m3/tree-viewport tooling. Combo.setItem and Combo.select bytecode in the official 3.135.0 jar match Combo.java:2318-2332 and :2171-2179. The other line citations are accurate.",
+       "The stock rule is incomplete. It says the only native effect is that caret and top index move, but stock LB_SETCURSEL also records the list box's drop entry. The viewport models this as recordedRow/recordedFirst (ComboViewport.java:66-73, :441-450, :616-619). reselectStale leaves recordedRow=176/recordedFirst=116 through steps 1-10 (combo-closed/fix-plain-0.log), while the unpatched path re-records it (fork-plain-0.log). This is harmless: recordedRow is read only in onEndTrack (:819-862) and in coverRows while dropped (:271). Every path to those first runs cover()->patch()->rebuild->restoreFocus->setSingleState->setCursel->record (:215-223, :299-331, :363-450) or LBCB_STARTTRACK (:606-614). fix-plain-0.log step 11 shows recordedRow=1578 after the drop. The helper's doc comment should say this.",
+       "The helper's doc comment says 'The stale window still holds the selected row natively', which is not always true. goStale (:242-246) can take a parked selection (selection() :500-509), and the face then reads it through parkedAnswer (:571-601). The early return is still correct there, because stock's re-select is invisible either way.",
+       "The fix makes stale periods longer: setItem no longer heals the window with a patch, and the logical plan grows to resident=792 by step 10 (fix-plain-0.log) while the list box holds 101 rows. Two existing paths that ignore staleness become reachable for longer. (1) uninstall() rebuilds against the logical plan without a patch (:149-159). (2) afterNative LB_CARETON (the combo sends it on focus) runs captureCaret, which maps a stale native caret through the logical plan (:453-464, :643-646). Both gaps exist today after any stale add. This unit and the gate scripts do not exercise them.",
+       "Cosmetic: the new anchor uses an em dash. The 36 existing //FLLDCIM anchors in win32/widgets use ' - ' (for example Control.java:4720). The build is UTF-8 (compile_platform.sh:13), so this is style only."
+      ],
+      "correctedFix": "Keep the proposed fix in ComboViewport.java; Combo.java stays unchanged. In select(int index), right after 'int selection = selection ();', add: if (stale && readOnly && index == selection) { reselectStale (index); return; }. Add private void reselectStale (int index) { caret = index; parkedCaret = -1; lastSetResult = index; }. Optional hardening in the same file: (a) add '&& !isDropped ()' to the guard. Stale already implies closed (goStale only when closed :938/:975, and beforeDrop patches :889-900), so this is defensive. (b) Write the anchor as '//FLLDCIM: rule 24 - hidden viewports: a closed read-only combo re-selecting its selected row stays in the lanes'. (c) Doc comment: stock CB_SETCURSEL of the selected row answers that row (no Modify :2175, no Verify :3042) and moves caret, top index and the list box's drop entry. The caret goes into the lane, and the top index and drop entry are rewritten by the next patch (restoreFocus->setCursel->record) before anything reads them. Separate hazards that exist today (not this unit), worth one follow-up leaf: 'if (stale) patch ();' at the top of uninstall() (:149), and no captureCaret while stale (:453). The original mode is untouched (ENABLED :48, mediates :108-110, Combo.java:150-153). Editable combos are unaffected because readOnly is final (:61, :102). The gate's passing Combo users (CoolBar :80, ScrolledComposite_Viewport :261-263) are editable. The readOnly and Verify surveys against a same-session re-record are identical with and without the fix (combo-closed/fix-vs-rec.kinds.txt == nofix-vs-rec.kinds.txt)."
+     },
+     {
+      "id": "RC2-dropped-list-pixels-not-reproducible-in-reference",
+      "holds": false,
+      "problems": [
+       "The environment factor can be identified and is not the reference. The session's live COLOR_HIGHLIGHT changed from (0,120,212) to (0,120,215) between 20:16:10 and 20:38:56. Every capture of the K: recording and of the gate run up to 20:16:10 has highlight (0,120,212) and none (0,120,215). Examples: K:/m3-work/runs/viewport-stock-recording-20261024/evidence/list-simple-seed0-official.png has 4049 px, and K:/m3-work/runs/tree-evidence/combo-dropdown-seed0-viewport.png (20:04) and tree-viewport-seed11-viewport.png (20:16) match. Every capture from 20:38:56 on has only (0,120,215): combo-closed/evidence/off-seed0-list.png and fix-seed0-list.png have 3954 px of 215 and 0 of 212. Now, GetSysColor(COLOR_HIGHLIGHT)=0,120,215 and COLOR_MENUHILIGHT=51,153,255, but HKCU\\Control Panel\\Colors still says Hilight/MenuHilight '0 120 212' (key last written 2026-04-10). So the change was not persisted. Evidence: combo-closed-verify/highlight-evidence.txt.",
+       "Pixel diffs show this is the whole difference. K: list-simple-seed0 against a 21:14 replay: 4170 differing pixels, all in the 15 rows of the selected item, each changed only in blue by +1..+3 (4049 x 0,120,212->0,120,215, and ClearType edges the same way). K: combo-dropdown-seed0 against the analyst's official re-record: 694 px, the same pattern. The dropped closed list's selected row is drawn in COLOR_HIGHLIGHT (3954 px), and every other probe is equal. I did not regenerate K:'s 7ff3bec1 directly, because that needs a session-wide SetSysColors.",
+       "'Stock itself does not reproduce the recorded hash' and origin 'reference' do not hold. The gate run (20:04-20:16, highlight 212) reproduced K:'s dropped-list pixels: survey-n/combo-readonly.txt has only 20 differing list lines, whose first examples all have different bars. The same test class against K: in the post-change session has about 580 (combo-closed/fix-history-junit.log). RC2's kind never occurs in the gate, so it is not a root cause of this unit's failure.",
+       "'Re-recording changes only the dropped-list pixel hash' is false for combo-dropdown (602 face lines). The '4 answer lines' are not answers. They are the final 'pixels <hash>' lines of seeds 0, 2, 8 and 9, which classify.awk labels 'answer' because a line without ' | ' has only field 1. No op answer differs between the two official runs. All of these differences are highlight pixels.",
+       "The proposed fixes aim at the wrong factor. 'Same ui_lock slot' is not the factor: my slot-0 official recording at 21:18 (combo-closed-verify/rec) is byte-identical to the analyst's re-record and differs from K: on exactly the 10 drop lines, because the colour is session-wide. Replacing the dropped-list pixel hash (test :235) would drop the contract stated at test :136-138 and force re-recording every Combo method. 'confidence: high' with an unknown factor is overstated. Keyboard cues are correctly excluded. Font smoothing and UI-effect settings are at their defaults, and the Desktop/Themes/DWM keys were not written today."
+      ],
+      "correctedFix": "No viewport change and no probe change. Root cause: environment drift. The session's live COLOR_HIGHLIGHT went from (0,120,212) to (0,120,215), and COLOR_MENUHILIGHT to (51,153,255), between 20:16:10 and 20:38:56, after both the recording and the gate. The K: reference is valid for the persisted colours. It affects every highlight-bearing probe (Combo dropped list and editable face, List and Tree selections), not only this unit. Before the next gate or any comparison with K:, the user should either bring the live system colours back to the persisted HKCU\\Control Panel\\Colors values (Hilight and MenuHilight '0 120 212', for example by signing out and in) or re-record all official references in the current colour state. Agents should not change session colours. Harness hardening on the test side (our ViewportDifferential): write GetSysColor COLOR_HIGHLIGHT, HIGHLIGHTTEXT, WINDOW and WINDOWTEXT into the '# reference' header (ViewportDifferential.java:326). When they differ, skip with an 'environment differs: COLOR_HIGHLIGHT a vs b' assumption instead of reporting pixel kinds. Fix classify.awk to label a line without ' | ' by its first word ('pixels'). Keep RC2's correct caution as a separate harness fix: the Combo and List tests pass isReference as the record flag (Combo test :217/:241, List test :166/:185), so an original-mode run records over the directory. Pass ViewportDifferential.records (\"Combo\") / records (\"List\") instead, as CTabFolder :228, CoolBar :266 and ExpandBar :316 do (ViewportDifferential.java:255-257). RC1 is verified in the current session against a same-session official recording (combo-closed-verify/fix-vs-myrec.log: pass)."
+     }
+    ]
+   }
+  },
+  {
+   "unit": "list-count",
+   "analysis": {
+    "unit": "list-count: Test_org_eclipse_swt_widgets_List_ViewportDifferential#setItemCountAnswersLikeTheOriginal (146 kinds, survey S:/m3-scratch/swt-tv/survey-n/list-count.txt; reference = fork original mode, SWT 4975). Evidence and validated patch under K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/list-count/ (patch/ListViewport-list-count.unified.diff, oracle/, src/, *.txt). Replaying the n jar without JUnit (ListCountReplay) reproduces exactly the gate's 145 step kinds. With the patch applied, the replay has 0 differing steps out of 1,500 and end pixels equal to the recording. The pixel match needs one normalisation: my desktop slot drew the selection in 0x0078d7, while the recording and the gate's own captures use 0x0078d4. That is an environment artifact of my runs, not the widget. The other artifact is a wheel step: list-multi/list-simple seed 0 step 57 diverges in my runs both with and without the patch.",
+    "rootCauses": [
+     {
+      "id": "C1-top-past-page-after-tail-cut",
+      "kinds": [
+       "answer after 'addAt # #'",
+       "answer after 'addEmpty #'",
+       "answer after 'addNul #'",
+       "answer after 'click # ctrl'",
+       "answer after 'click # ctrlshift'",
+       "answer after 'click # none'",
+       "answer after 'click # shift'",
+       "answer after 'dblclick #'",
+       "answer after 'deselect #'",
+       "answer after 'deselectAll'",
+       "answer after 'deselectIndices # #'",
+       "answer after 'deselectRange # #'",
+       "answer after 'drag # down #'",
+       "answer after 'getTop'",
+       "answer after 'key DOWN ctrlshift'",
+       "answer after 'key NEXT none'",
+       "answer after 'key PRIOR ctrl'",
+       "answer after 'key PRIOR ctrlshift'",
+       "answer after 'key SPACE ctrlshift'",
+       "answer after 'key UP ctrl'",
+       "answer after 'menu'",
+       "answer after 'remove #'",
+       "answer after 'removeRange # #'",
+       "answer after 'select #'",
+       "answer after 'selectAll'",
+       "answer after 'selectIndices # #'",
+       "answer after 'selectRange # #'",
+       "answer after 'selectionIndex'",
+       "answer after 'setEmpty #'",
+       "answer after 'setItem # #'",
+       "answer after 'setItemCount #'",
+       "answer after 'setSelection #'",
+       "answer after 'setSelectionIndices # #'",
+       "answer after 'setSelectionRange # #'",
+       "answer after 'showSelection'",
+       "answer after 'type s'",
+       "answer after 'type x'",
+       "answer after 'wheel #'",
+       "answer after 'wheel -#'",
+       "bars after 'addAt # #'",
+       "bars after 'addEmpty #'",
+       "bars after 'addNul #'",
+       "bars after 'click # ctrl'",
+       "bars after 'click # ctrlshift'",
+       "bars after 'click # none'",
+       "bars after 'click # shift'",
+       "bars after 'deselect #'",
+       "bars after 'deselectAll'",
+       "bars after 'deselectIndices # #'",
+       "bars after 'deselectRange # #'",
+       "bars after 'drag # down #'",
+       "bars after 'getTop'",
+       "bars after 'indexOf # #'",
+       "bars after 'key DOWN ctrlshift'",
+       "bars after 'key NEXT none'",
+       "bars after 'key PRIOR ctrl'",
+       "bars after 'key PRIOR ctrlshift'",
+       "bars after 'key SPACE ctrlshift'",
+       "bars after 'key UP ctrl'",
+       "bars after 'menu'",
+       "bars after 'read #'",
+       "bars after 'remove #'",
+       "bars after 'removeIndices # # #'",
+       "bars after 'removeRange # #'",
+       "bars after 'select #'",
+       "bars after 'selectAll'",
+       "bars after 'selectIndices # #'",
+       "bars after 'selectionIndex'",
+       "bars after 'setEmpty #'",
+       "bars after 'setItem # #'",
+       "bars after 'setItemCount #'",
+       "bars after 'setSelection #'",
+       "bars after 'showSelection'",
+       "bars after 'type s'",
+       "bars after 'type x'",
+       "bars after 'wheel #'",
+       "bars after 'wheel -#'",
+       "focus after 'addAt # #'",
+       "focus after 'addEmpty #'",
+       "focus after 'addNul #'",
+       "focus after 'click # ctrl'",
+       "focus after 'click # ctrlshift'",
+       "focus after 'click # none'",
+       "focus after 'click # shift'",
+       "focus after 'dblclick #'",
+       "focus after 'deselectAll'",
+       "focus after 'deselectIndices # #'",
+       "focus after 'drag # down #'",
+       "focus after 'getTop'",
+       "focus after 'indexOf # #'",
+       "focus after 'key DOWN ctrlshift'",
+       "focus after 'key NEXT none'",
+       "focus after 'key PRIOR ctrl'",
+       "focus after 'key SPACE ctrlshift'",
+       "focus after 'key UP ctrl'",
+       "focus after 'key UP none'",
+       "focus after 'menu'",
+       "focus after 'read #'",
+       "focus after 'remove #'",
+       "focus after 'removeRange # #'",
+       "focus after 'select #'",
+       "focus after 'selectIndices # #'",
+       "focus after 'selectRange # #'",
+       "focus after 'selectionIndex'",
+       "focus after 'setEmpty #'",
+       "focus after 'setItem # #'",
+       "focus after 'setItemCount #'",
+       "focus after 'setSelection #'",
+       "focus after 'setSelectionIndices # #'",
+       "focus after 'setTopIndex #'",
+       "focus after 'showSelection'",
+       "focus after 'wheel #'",
+       "pixels",
+       "sel after 'addAt # #'",
+       "sel after 'addEmpty #'",
+       "sel after 'addNul #'",
+       "sel after 'click # ctrl'",
+       "sel after 'click # ctrlshift'",
+       "sel after 'click # none'",
+       "sel after 'click # shift'",
+       "sel after 'dblclick #'",
+       "sel after 'deselectIndices # #'",
+       "sel after 'drag # down #'",
+       "sel after 'getTop'",
+       "sel after 'indexOf # #'",
+       "sel after 'key DOWN ctrlshift'",
+       "sel after 'key END ctrlshift'",
+       "sel after 'key HOME ctrl'",
+       "sel after 'key NEXT none'",
+       "sel after 'key SPACE ctrlshift'",
+       "sel after 'key UP ctrl'",
+       "sel after 'key UP none'",
+       "sel after 'menu'",
+       "sel after 'read #'",
+       "sel after 'remove #'",
+       "sel after 'removeRange # #'",
+       "sel after 'select #'",
+       "sel after 'selectIndices # #'",
+       "sel after 'selectRange # #'",
+       "sel after 'selectionIndex'",
+       "sel after 'setEmpty #'",
+       "sel after 'setItem # #'",
+       "sel after 'setItemCount #'",
+       "sel after 'setTopIndex #'",
+       "sel after 'showSelection'",
+       "sel after 'wheel #'"
+      ],
+      "firstExample": "seed 0 step 54 'setItemCount 131' (295 rows, top 235, caret 238): recorded 'top 110 count 131 | bars 106/130', this run 'top 106 count 131 | bars 106/130'. The cascade continues at step 55 'setItemCount 167' (bars 110/166 vs 106/166), and later clicks, menu and keys hit other rows. A replay of the n jar puts the first divergence of 9 of 10 seeds on such a shrinking setItemCount: seed 0 step 54, seed 1 step 86, seed 2 step 63, seed 3 step 32, seed 4 step 14, seed 5 step 35, seed 6 step 6, seed 8 step 119, seed 9 step 46. Every later difference in those seeds is a cascade. The 'pixels' kind (seed 4) is the vertical bar thumb only (x 289..290). No survey example lies before its seed's first such step.",
+      "stockRule": "The original mode is stock here. List.setCount (List.java:1787-1809) cuts the tail with remove(count, itemCount - 1) (List.java:1803). That runs removeSpan (List.java:1316-1395): LB_DELETESTRING at `start` for every row (1372), then setScrollWidth(newWidth, false) (1387), which sends LB_SETHORIZONTALEXTENT from setScrollWidth() (List.java:1915-1951, message at 1950) when the widest row went. Last, it sends LB_SETTOPINDEX(topIndex) unconditionally, with topIndex lowered only when end < topIndex (1389-1392). The official 3.135.0 remove(int,int) bytecode is the same (javap: `if (end < topIndex) topIndex -= end-start+1;` then SendMessage(0x197, topIndex)).\n\nThe list box rules, measured:\n- R1: the caret moves as in ListViewport.deleteResidentRow.\n- R2: after each LB_DELETESTRING, a top index at or past the new count becomes count - page (page = 25 full rows).\n- R3: when count <= page, the top becomes 0.\n- R4: the caret is then scrolled into view. Caret < top gives top = caret; caret >= top + page gives top = caret - page + 1. Otherwise the top index is kept, even past count - page.\n- R5: LB_SETTOPINDEX with an index >= count returns LB_ERR and changes nothing. The deletion top stays, for example 110 of 131 rows, while the bar (clamped by SetScrollInfo) reads 106.\n- R6: LB_SETHORIZONTALEXTENT with a changed value clamps the top to count - page. The same value does not.\n\nEvidence:\n- ListShrinkTopOracle, official 3.135.0 and the M3 n jar with -Dswt.widget.mode.List=original, identical outputs. Raw deletes from 295 to 131 rows (top 235, caret 238) give top 110, bar 106/130. LB_SETTOPINDEX 235 returns -1 and the top stays 110. Extent same: 110; extent -10, +10 or 1000: 106. Stock List.remove with the widest row removed: 106; widest row tied or kept: 110. Caret 200 gives [count 294 top 176], then jumps of 25, then [count 25 top 0].\n- The earlier ListDeleteTopProbe run S:/m3-scratch/list/deletetop-official.txt shows the same trajectories.\n- Recording check (native_shrink.awk): R1-R6 predict the top of all 193 shrinking setItemCount steps in the 10 original recordings. The viewport's clamp misses 39 of them, 3 of which are explained by R6.\n\nWhile the top is past count - page, stock keeps that index through calls that do not scroll: deselect*, select(start,end) (LB_SELITEMRANGEEX), getters, LB_ADDSTRING grows, and clicks below the last row. It clamps the top on LB_SETTOPINDEX (select(int) List.java:1595, setTopIndex, showSelection), keys, wheel, drag, a caret that has to scroll into view (oracle: LB_SETCARETINDEX 108 gives top 106) and a new extent (recording: 65 steps in quirk_next.tsv).",
+      "viewportCode": "ListViewport.java:1222-1223: finishRemove sets top = topIndex for every removal. ListViewport.java:172: layout clamps that with clampTop (233-236) to count - max(1, page). So the viewport assumes stock's LB_SETTOPINDEX always succeeds. remove(start,end) (1175-1195), remove(int) (1160-1173) and remove(int[]) (1197-1220) never compute the top that the deletions leave. positionPlane (353-358) can only send LB_SETTOPINDEX, which the list box clamps, so a top past count - page could not even be painted or hit-tested natively. Result: top 106 where stock answers 110.",
+      "origin": "viewport",
+      "fix": "All changes are in ListViewport.java (validated: patch/ListViewport-list-count.unified.diff in the scratchpad).\n1. Add a lane `boolean pastPage`. clampTop returns min(row, count - 1) while it is set, and layout clears it once top <= max(0, count - page).\n2. Add `int deletedTop(top, caret, count, at, removed)`, which applies R1-R4 for each deleted row. It is integer arithmetic only, with no native work, and is needed only when the adjusted topIndex >= the new count. remove(int), remove(start,end) and remove(int[]) (per index, before deleteResidentRow) compute it before mutating and pass it to finishRemove(topIndex, width, nativeTop): `if (topIndex < count) { pastPage = false; top = topIndex; } else { top = nativeTop; pastPage = extent == extentBefore; }`. The extent check covers R6.\n3. Clear pastPage wherever stock clamps: setTopRow (setTopIndex, showSelection, vscroll, wheel); keepRowVisible when it moves the top; select(index, false), which mirrors List.java:1595; Home/End in onKeyDown; add() and setItemCount() when the extent grows.\n4. positionPlane: when pastPage is set, the window ends at count and the native caret is in view, append (wanted + page - size) blank rows with insertEmptyNative, send LB_SETTOPINDEX(wanted), then delete the blanks. LB_DELETESTRING keeps a valid top index. Redraw is suspended with DefWindowProc(WM_SETREDRAW). The native plane then paints and hit-tests the same rows as stock.\nThe original mode is unchanged because List.java and its stock path are untouched. No LB_RESETCONTENT is added (rule 24 counter unchanged), and hidden lists never reach positionPlane. Also update LIST_MEDIATED_VIEWPORT.md open item 4 (lines 258-259).",
+      "oracle": "All runs used the UI lock and hidden desktop.\n- ListShrinkTopOracle: official 3.135.0 and M3 original outputs are identical (oracle/out-official.txt, out-m3-original.txt).\n- Unpatched replay of the n jar (ListCountReplay) reproduces exactly the gate's 145 step kinds.\n- Patched replay (the ListViewport class from the diff placed before the n jar, ListScriptReplay): 0 differing steps in seeds 0-9. End pixels equal the recording in all 10 seeds once the accent colour 0x0078d7 of my slot is mapped to the recorded 0x0078d4.\n- list-multi, list-single and list-simple: the patch gives the same step results as the unpatched jar, and list-multi gives the same pixels. No regression.",
+      "confidence": "high"
+     },
+     {
+      "id": "C2-ctrlshift-click-without-anchor-clears-all",
+      "kinds": [
+       "sel after 'click # ctrlshift'",
+       "sel after 'setItemCount #'",
+       "sel after 'setTopIndex #'"
+      ],
+      "firstExample": "seed 7 step 8 'click 12 ctrlshift', after selectRange 124 135 and key DOWN ctrl, with no anchor. Recorded 'sel 12 [124..135] | focus 12*', this run 'sel 0 []'. The cascade covers steps 9-11 (setItemCount 167, setItemCount 267, setTopIndex 132) until step 12 resets the selection. The survey does not show it as a first example: those kinds' first examples are C1 cascades (seed 5 step 40, seed 0 step 82, seed 4 step 67), but the n-jar replay's first divergence in seed 7 is this step.",
+      "stockRule": "Extended list box, Ctrl+Shift+click without an anchor (anchor -1 on a fresh list, or after a delete at or before the anchor):\n- rows 0..X are deselected, where X is the list box's last clicked, LB_SETSEL or type-ahead row;\n- X is a raw index: inserts and deletes do not move it, and LB_SELITEMRANGEEX, selectAll and navigation keys do not set it;\n- every other row keeps its state;\n- the clicked row becomes anchor and caret, and LBN_SELCHANGE is sent.\n\nEvidence (ListAnchorReplay and ListCtrlShiftOracle; official 3.135.0 equals M3 original):\n- seed 7 steps 0-8: [124..135] kept, anchor 12;\n- select 40 / remove 30 / selectRange 3 6 / selectRange 50 52 / Ctrl+Shift+click 12: [50, 51, 52];\n- click 3 / remove 1 / selectRange 5 8 / Ctrl+Shift+click 12: [5..8] (row 2 deselected);\n- selectRange 0 3 / Ctrl+Shift+click 12: all kept;\n- selectAll / remove 5 / Ctrl+Shift+click 12: all 299 kept;\n- the official list-multi recording, seed 5 step 78 (type-ahead to row 229, then remove 205): row 228 deselected.",
+      "viewportCode": "ListViewport.java:702-705 (replaceRange): `if (anchor < 0 || anchor >= count) { model.deselectAll (); anchor = row; }` clears every selected row. Its own comment at 694-699 says only the caret moves, and LIST_MEDIATED_VIEWPORT.md:120 documents the clear-all rule. The rangeEnd lane (line 62) is not the list box's index either: it is also set by keys and drags (753) and not by type-ahead.",
+      "origin": "viewport",
+      "fix": "Add a lane `int clickEnd = -1` that tracks the list box's last clicked row. Set it:\n- in afterNative on WM_LBUTTONDOWN and WM_LBUTTONDBLCLK, to the caret the native click left;\n- in select(index, scroll), as `anchor = rangeEnd = clickEnd = index` (line 1415);\n- in toggleCaret when it selects (1020);\n- in type-ahead (onChar 999);\n- in clickRange (687) and replaceRange (717).\nInserts and deletes never shift it. In replaceRange's no-anchor branch, replace `model.deselectAll ();` with `if (clickEnd >= 0) model.deselect (0, Math.min (clickEnd, count - 1));` and keep `anchor = row`. Correct LIST_MEDIATED_VIEWPORT.md:120 to match.",
+      "oracle": "Patched replay: seed 7 has 0 differing steps. list-multi seed 5 step 78 matches the official recording. A first variant that used rangeEnd instead of clickEnd regressed that step: rangeEnd was 46 (from setSelectionStrings) while the list box index was 229 (from type-ahead).",
+      "confidence": "high"
+     },
+     {
+      "id": "C3-click-below-last-row-reads-stale-native-index",
+      "kinds": [
+       "sel after 'drag # down #'",
+       "sel after 'click # none'",
+       "sel after 'indexOf # #'",
+       "sel after 'selectRange # #'",
+       "sel after 'read #'"
+      ],
+      "firstExample": "Latent: it needs a plain click or drag start below the last row (count - top < page). In this survey C1 cascades hide it. With only C1 fixed it surfaces:\n- seed 8 step 131 'drag 13 down 23' (top 67 of 75 rows): recorded 'sel 0 []', run 'sel 1 [42]';\n- seed 9 step 133 'click 18 none' (top 131 of 136 rows): recorded 'sel 0 []', run 'sel 1 [29]'; steps 134-136 (indexOf, selectRange, read) cascade.",
+      "stockRule": "A plain click or drag start below the last row of an extended list puts anchor and caret on the last row. The only selected row afterwards is X, the list box's last clicked, LB_SETSEL or type-ahead row. Deletes, inserts, drag moves and navigation keys do not change X. Nothing is selected when X >= count.\n\nEvidence (ListBelowClickOracle; official 3.135.0 equals M3 original):\n- click 5, then click below: [5];\n- click 5, Down, Down, deselectAll, then click below: [5];\n- click 5, Shift+click 9, deselectAll: [9];\n- select 7, deselect 7: [7];\n- click 5, remove 3: [5];\n- fresh list: nothing;\n- selectRange 2 4: nothing.\nListClickDebug in the original mode, seed 9 step 133: anchor 135, caret 135, nothing selected (X = 280 >= 136). The official list-multi recording, seed 9 step 123 (double click below the last row after a drag from row 1): [1].",
+      "viewportCode": "ListViewport.java:601-620 passes the click to the list box. growForDrag (619, 727-732) first rebuilds the window with head inserts (rebuild 263-). The list box's own X is a raw native index: inserts do not shift it, and the viewport has no lane for it and never writes it. afterNative (746-756) and captureResidentState (408-447) then copy the stale native choice into the lanes. ListClickDebug, patched-for-C1 runs: seed 9 window 106+30 grows to 0+136 and the list box selects entry 29; seed 8 window 17+58 grows to 0+75 and it selects entry 42.",
+      "origin": "viewport",
+      "fix": "Reuse the clickEnd lane from C2.\n1. In beforeNative (after the ctrl/shift read at line 607), set `belowLastRow = row < 0 && !ctrl && !shift`.\n2. In afterNative, do not update clickEnd during that gesture (until WM_LBUTTONUP).\n3. After the native button-down, call belowLastRowClick(): model.deselectAll(); select clickEnd when 0 <= clickEnd < count; write the resident rows with LB_SELITEMRANGE (0x19b). That message moves neither anchor nor caret, so a drag that follows still extends from the list box's own anchor.\nThe native anchor and caret on the last row already match stock.",
+      "oracle": "Patched replay: seeds 8 and 9 have 0 differing steps. list-multi seed 9 step 123 (double click below the last row) matches the official recording. A variant that also set clickEnd on drag moves selected row 2 instead of 1 there, which is why clickEnd is set on button-down only.",
+      "confidence": "medium"
+     }
+    ],
+    "unexplainedKinds": []
+   },
+   "verdict": null
+  },
+  {
+   "unit": "list-simple",
+   "analysis": {
+    "unit": "list-simple",
+    "rootCauses": [
+     {
+      "id": "LS-1 cross-test wheel remainder (harness test order)",
+      "kinds": [
+       "answer after 'addNul #'",
+       "answer after 'click # ctrlshift'",
+       "answer after 'click # none'",
+       "answer after 'key DOWN ctrlshift'",
+       "answer after 'key UP ctrl'",
+       "answer after 'type R'",
+       "answer after 'wheel -#'",
+       "bars after 'addNul #'",
+       "bars after 'click # ctrlshift'",
+       "bars after 'click # none'",
+       "bars after 'indexOf # #'",
+       "bars after 'key DOWN ctrlshift'",
+       "bars after 'key UP ctrl'",
+       "bars after 'read #'",
+       "bars after 'removeRange # #'",
+       "bars after 'type R'",
+       "bars after 'wheel -#'",
+       "focus after 'click # ctrlshift'",
+       "focus after 'click # none'",
+       "focus after 'indexOf # #'",
+       "focus after 'key DOWN ctrlshift'",
+       "focus after 'removeRange # #'",
+       "focus after 'showSelection'",
+       "focus after 'type R'",
+       "sel after 'click # ctrlshift'",
+       "sel after 'click # none'",
+       "sel after 'indexOf # #'",
+       "sel after 'key DOWN ctrlshift'",
+       "sel after 'removeRange # #'",
+       "sel after 'showSelection'",
+       "sel after 'type R'"
+      ],
+      "firstExample": "seed 0 step 57 is 'wheel -240'. The op was recovered from Random(0x1157+0) in the scratchpad file analysis/list-simple/ops-random.tsv:58. Before the step the top is 181 (list-simple-seed0.txt:58). The recording has top 196 (+15, list-simple-seed0.txt:59) and this run has top 187 (+6). Steps 58-67 then cascade with the top 9 rows apart, later 5 rows: read 193, addNul 157, key UP ctrl (stock scrolls to caret 192, the viewport is already showing it), click 10 none and click 24 ctrlshift (rows 202/216 vs 197/211), key DOWN ctrlshift, indexOf 182 174, removeRange 293 318, showSelection, type R (caret 218 vs 213). The runs agree again from step 68 (setSelectionIndices 2 204, top 0). This accounts for exactly the 31 kinds: 2+1+2+2+4+4+4+3+3+2+4.",
+      "stockRule": "Official 3.135.0 list box: Windows keeps one wheel remainder per thread. A whole-notch WM_MOUSEWHEEL sent to a list box with no scroll bar is added to the remainder but not used. Disposing the shell and focusing a list in a new shell (a test boundary) keeps the remainder. Disposing a focused list inside the same shell (a seed boundary), or moving the focus between lists, clears it. The next wheel on a list that has a bar scrolls remainder + delta.\n\nEvidence from the recordings:\n- list-single-seed9.txt:150 and list-multi-seed9.txt:150: step 148 is wheel -360 on a 4-row list with both bars hidden ('bars 0/3 t3 p10 false ... false').\n- The next test's seed 0 step 57 'wheel -240' then moves +15 (5 notches x 3) in list-multi-seed0.txt:59 and list-simple-seed0.txt:59.\n- list-single-seed0.txt:59 (same op) moves only +6, because the wheel before it was list-resize seed 9 step 149, -120 with a bar (list-resize-seed9.txt:151), and that one was used up.\n\nWhy only the recording carried 3 notches into list-simple:\n- Recording JVM order (record-20261024T140844Z.log:51-57): extended, then setItemCount, then simple. setItemCount stops at its assumption on the official jar before it creates a List (line 56; Test:132), so simple directly inherits the 3 notches list-multi left.\n- Gate JVM order (run-tv20261024n.log:546-551,1134): setItemCount runs between extended and simple. Its seed 0 step 76 wheel -120 uses the inherited 3 notches (survey-n/list-count.txt:154-157: recorded top 16, this run 25, which is +12 instead of +3). So list-simple starts with a remainder of 0 and moves +6.\n\nOracle runs on both jars (scratchpad/analysis/list-simple) agree with this rule.",
+      "viewportCode": "No viewport code answers differently.\n\n- List.java:325 sends WM_MOUSEWHEEL to ListViewport.onWheel (ListViewport.java:793-803).\n- onWheel calls the list box's own procedure (line 799) and copies the native top (line 801). The native list box therefore applies the same per-thread remainder as stock. The oracle shows the carry and the clearing are the same in viewport, original and official runs.\n- The divergence is in the harness:\n  - Subject.reset (Test_org_eclipse_swt_widgets_List_ViewportDifferential.java:68-79) does nothing about the thread's wheel remainder at a test's first seed. When list == null no focused list is disposed, unlike seeds 1-9.\n  - The comment at Test:283-286 assumes whole notches keep seeds independent. That is false when a notch goes to a list without scroll bars.\n  - setItemCountAnswersLikeTheOriginal (Test:130-134) runs only on the fork, so list-simple has a different predecessor in the reference JVM and in the gate JVM.\n- The reference itself is genuine stock, but it holds only for the recording's test sequence. The doc's earlier mitigation, 'each style now runs in its own JVM' (docs/m3/LIST_MEDIATED_VIEWPORT.md:149), was not used for the 20261024 recording or the gate.",
+      "origin": "harness",
+      "fix": "The change goes in the test harness only. ListViewport.java and List.java do not change. The same code runs in the reference run and the viewport run, so the original mode stays stock.\n\nIn Subject.reset (Test_org_eclipse_swt_widgets_List_ViewportDifferential.java:68-79), after `list.setFocus ();` (line 76), flush the thread's wheel remainder:\n\n    /* whole notches sent to a list without scroll bars stay in the thread's wheel remainder and survive a shell disposal (ListWheelResetOracle): a zero delta applies the leftover here, setTopIndex (0) undoes it */\n    ViewportDifferential.send (list, 0x20A, 0, 0);\n    list.setTopIndex (0);\n\nOracle case 'zerosubj' confirms it on both jars: the leftover moves the list +9, setTopIndex 0 restores the top, and the next -240 moves +6.\n\nAn equivalent, also confirmed by the oracle (case 'seed'): on the first seed (list == null), create a List, call shell.open () and list.setFocus (), and let the existing `list.dispose ()` run. Seed 0 then starts like seeds 1-9.\n\nAfter either change:\n1. Re-record the official list-single, list-multi and list-simple references. list-multi and list-simple seed 0 steps 57-67 change from the carried +15 to +6.\n2. Correct the comment at Test:283-286.\n\nStop-gap without re-recording: run setItemCountAnswersLikeTheOriginal in its own JVM in the gate, the way its original recording was made (record-20261024T143052Z.log:10). list-simple then follows list-multi as in the recording run, and the same cause stops showing in list-count seed 0 step 76.",
+      "oracle": "Done; logs are in K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/list-simple/.\n\n1) ListWheelCarryOracle.java, logs oracle-{official,viewport,original}-{carry,reset}.log.\n- Setup: a 4-row list with no bars takes wheel -360, the shell is disposed, and a new shell gets a 300-row list at top 181.\n- carry: wheel -240 moves 181 to 196 (+15) on the official jar, in viewport mode and in original mode.\n- reset: '+120 at top 0' does NOT clear the remainder. It moves 0 to 6, because 3 notches down minus 1 notch up leaves 2 notches.\n\n2) ListWheelResetOracle.java, logs oracle2-{official,viewport}-{seed,test,zero,zerosubj,focus}.log. The official jar and the viewport mode give identical results:\n- test boundary: kept, +15.\n- seed boundary: cleared, +6.\n- wheel 0 on a throwaway list (+9), then the subject moves +6.\n- wheel 0 on the subject at top 0 (+9), then setTopIndex 0, then +6.\n- focus moved from a throwaway list to the subject: +6.\n\nThis also contradicts LIST_MEDIATED_VIEWPORT.md:121 ('reset when the rotation turns') for a leftover that was never used.",
+      "confidence": "high"
+     }
+    ],
+    "unexplainedKinds": []
+   },
+   "verdict": {
+    "unit": "list-simple",
+    "checks": [
+     {
+      "id": "LS-1 cross-test wheel remainder (harness test order)",
+      "holds": true,
+      "problems": [
+       "The scope in the stock rule is wrong. It says one wheel remainder per thread; the viewportCode says per-thread and the fix comment says 'the thread's wheel remainder'. All three inherit it from Test_org_eclipse_swt_widgets_List_ViewportDifferential.java:284 and LIST_MEDIATED_VIEWPORT.md:121. Verifier oracles ran on both jars. ListWheelThreadOracle (logs/thread-official.log, logs/thread-viewport.log): thread A leaves -360 on a 4-row list with no bars; a list in thread B, which has its own Display, then moves 181->196 (+15); after that thread A moves 181->187 (+6). ListWheelProcessOracle (logs/process-*-probe.log): the next JVM on the same desktop (m3-ui-tests-0) moves +6. So there is one remainder per process, shared by every thread, Display and list box, and it dies with the process. The diagnosis for this unit is unaffected, because the gate and recording JVMs each run one UI thread. The corrected comment and doc must still say per process.",
+       "The alternative fix is cited as 'also confirmed by the oracle (case seed)'. That case (analysis/list-simple/ListWheelResetOracle.java:76-78) disposes the list that took the leftover inside the same shell. It never runs a throwaway focused list in a new shell after a test boundary. The claim is true, but it was not shown. ListSimpleSeed0Replay with reset=alt shows it directly: logs/off-barless-alt.log and logs/vp-barless-alt.log are identical to the run with no leftover.",
+       "The 'zerosubj' oracle sends the zero delta after list() has already settled for 60 ms (ListWheelResetOracle.java:41, 93-94). The proposed fix sends it right after Test:76, before the settle at Test:77, when the viewport window can still be stale. The oracle therefore did not cover the exact placement. I replayed the exact placement with the test's compiled randomOp, Subject, probes and afterStep (including assertNoFullRebuild at Test:175):\n- off-, vp- and orig-barless-fix (3 notches down) and off-, vp- and orig-barlessup-fix (1 notch up) are byte-identical to off-none-stock.\n- off-none-fix and vp-none-fix are also identical, so the fix does nothing when there is no leftover.\n- vp-barless-fix-simple150, -multi150 and -single150 equal the official runs with no leftover over all 150 steps of seed 0.",
+       "The re-record list is too wide. list-single needs no re-record: the official replay with no leftover reproduces list-single-seed0.txt:2-151 byte for byte. Only list-multi and list-simple seed 0 change, at exactly steps 57-67 (150-step replays). The fix also leaves these unchanged:\n- list-zoom: the first wheel of seed 0 (step 13) is clamped at the bottom either way (list-zoom-seed0.txt:15, 275->283).\n- list-resize: seed 0 step 4 is a clean +9 (list-resize-seed0.txt:5-6).\n- list-hidden: it has no wheel.\n- The original-mode list-count recording: it was made in a fresh JVM (record-20261024T143052Z.log:10).",
+       "Wording in firstExample: 'key UP ctrl (stock scrolls to caret 192, the viewport is already showing it)'. The official jar with remainder 0 also keeps top 187 at step 60 (steps/off-none-stock.txt:61). What differs is the remainder, not the viewport.",
+       "Overstated: 'the carry and the clearing are the same in viewport, original and official runs'. The original mode ran only in ListWheelCarryOracle (carry and reset), never in the clearing cases of ListWheelResetOracle. The verifier added the original mode on the fix path only (orig-barless-fix, orig-barlessup-fix), and it is stock there.",
+       "The proposed code comment cites ListWheelResetOracle. That oracle exists only in the scratchpad, so it has to be committed as evidence next to docs/m3/list-viewport/evidence/ListWheelOracle.java.txt. Otherwise the reference points to nothing."
+      ],
+      "correctedFix": "The root cause is confirmed. Replaying the test's own compiled generator, Subject and probes (ListSimpleSeed0Replay):\n- With a 'previous test' that leaves wheel -360 on a list with no bars, list-simple-seed0.txt:2-71 is reproduced byte for byte. This holds on the official 3.135.0 jar and in the viewport mode; list-multi-seed0.txt is reproduced over 150 steps on the official jar.\n- With no leftover, the official jar gives exactly the gate's values. Compared with the recording, this predicts exactly the 31 survey kinds (predicted-kinds.txt equals the survey).\n- A list-count stand-in in gate order (88 rows, wheel -120 at top 13) moves 13->25 on both jars.\n\nThe fix stays in the harness. List.java, ListViewport.java and the original mode do not change. In Subject.reset (Test_org_eclipse_swt_widgets_List_ViewportDifferential.java:68-79), insert after `list.setFocus ();` (line 76) and before the settle (line 77):\n\n    /* whole notches sent to a list box without scroll bars stay in the process's wheel remainder (one per process, shared by every thread and list box) and survive a shell disposal: a zero delta spends any leftover, down or up, on this list; setTopIndex (0) undoes the scroll (ListWheelResetOracle, ListSimpleSeed0Replay) */\n    ViewportDifferential.send (list, 0x20A, 0, 0);\n    list.setTopIndex (0);\n\nThen:\n1. Re-record only the official list-multi and list-simple references. Their seed 0 steps 57-67 change from the carried +15 path to the +6 path; every other recording stays byte-identical.\n2. Rewrite Test:283-286 and LIST_MEDIATED_VIEWPORT.md:121 to say: one remainder per process; a whole notch to a list box without bars is stored but not used; the remainder is kept across a shell disposal; it is cleared when a focused list box is destroyed or the focus moves to another list; the next wheel to a list with a bar spends remainder + delta, with no reset when the direction turns (1 notch up, then -240, gives +3).\n3. Commit the oracles as evidence under docs/m3/list-viewport/evidence/.\n\nThe alternative fix (on the first seed, focus a throwaway List and dispose it) and the stop-gap (setItemCountAnswersLikeTheOriginal in its own gate JVM, where vp-barless-stock equals the recording) are also confirmed by replay.\n\nEvidence is in K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/list-simple-verify/ (src/, logs/, steps/, run_replay*.sh)."
+     },
+     {
+      "id": "unexplainedKinds: none",
+      "holds": true,
+      "problems": [],
+      "correctedFix": "No change. I compared the recording with the official replay that has no leftover, building the keys the way the harness's note() does (ViewportDifferential.java:472-484). The result is exactly the 31 kinds of survey-n/list-simple.txt, each once, all in seed 0 steps 57-67 (K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/list-simple-verify/predicted-kinds.txt). Nothing is left unexplained."
+     }
+    ]
+   }
+  },
+  {
+   "unit": "table-seeded",
+   "analysis": {
+    "unit": "table-seeded",
+    "rootCauses": [
+     {
+      "id": "T1-stock-removeItems-stale-keys-throw-and-row-cascade",
+      "kinds": [
+       "answer after 'op # at # span # delta # rare'",
+       "answer after 'op # at # span # delta #'",
+       "answer after 'op # at # span # delta -# rare'",
+       "answer after 'op # at # span # delta -#'",
+       "bar after 'op # at # span # delta # rare'",
+       "bar after 'op # at # span # delta #'",
+       "bar after 'op # at # span # delta -# rare'",
+       "bar after 'op # at # span # delta -#'",
+       "events after 'op # at # span # delta # rare'",
+       "events after 'op # at # span # delta #'",
+       "events after 'op # at # span # delta -# rare'",
+       "events after 'op # at # span # delta -#'",
+       "focus after 'op # at # span # delta # rare'",
+       "focus after 'op # at # span # delta #'",
+       "focus after 'op # at # span # delta -# rare'",
+       "focus after 'op # at # span # delta -#'",
+       "pixels",
+       "rows after 'op # at # span # delta # rare'",
+       "rows after 'op # at # span # delta #'",
+       "rows after 'op # at # span # delta -# rare'",
+       "rows after 'op # at # span # delta -#'",
+       "sel after 'op # at # span # delta # rare'",
+       "sel after 'op # at # span # delta #'",
+       "sel after 'op # at # span # delta -# rare'",
+       "sel after 'op # at # span # delta -#'"
+      ],
+      "firstExample": "Variant 2 (SWT.MULTI|BORDER|VIRTUAL, API script; Test_org_eclipse_swt_widgets_Table_ViewportDifferential.java:74). Variants 0 and 1 pass (run-tv20261024n.log:9,11). Seed 3, Random(0x7AB1E5EEDL+62+3), :209. Step 48 is op 24 at 688541, getItems (:495-508). Recorded: 'error java.lang.ArrayIndexOutOfBoundsException Index 297 out of bounds for length 289'. This run: 'getItems -> items 285 last appended 36'. The row count first differs at step 51, op 0 at 720440, insert at row 720440*281>>>20=193: stock throws and keeps 281 rows; this run answers 'insert 193 -> index 193', rows 282, sel/focus index 243->244. Ops of the other first examples (seed 3): 50 op 24 getItems; 53 and 56 op 1 append; 55 op 19 clear (stock row 182, ours 184); 57 op 5 setItemCount count+26 (stock 307, ours 310); 60 op 20 rare clear [37,40]; 61 op 22 rare setChecked (stock 97, ours 98); 63 op 8 rare select (stock 292..293, ours 295..296); 74 op 24 getItems (stock SD:301, ours SD:304); 86 op 9 deselect (stock 59, ours 60); 102 op 17 rare read (stock 250, ours 253).",
+      "stockRule": "In the official 3.135.0 jar, Table._removeItems shifts the later sparse keys by the number of items held in the removed range, not by the number of rows removed. Bytecode at line 392, offsets 242-273: keys[i] -= (right - left). The javap output is in scratchpad/analysis/table-seeded/official-Table.javap.txt. Same code as R4_38; the fork transliterates it at TableStockItems.java:246-247. Its Javadoc says the rows are removed, so this is an upstream defect.\nOracle key dump for seed 3: remove 211..214 at step 20 shifts by 0 instead of 4; remove 255..260 at step 23 by 0 instead of 6; remove 126..129 at step 47 by 1 instead of 4. After step 47 the stale keys are [286, 287, 297] with 285 rows.\nStep 48: getItems calls _getItem (line 2607), which calls _checkGrow (line 295). When keyCount reaches 143 > 285/2, _checkGrow compacts into new TableItem[count+4=289], and newItems[keys[i]]=items[i] at line 193 (offsets 170-186) throws at key 297. The exception leaves the store sparse with keyCount > count/2, so every later creation compacts and throws again.\nStep 49 (remove 109..112, 4 items held, shift 4) leaves stale keys [282, 283, 293]. Then steps 50 (getItems), 51 (insert), 53 (append) and 56 (append) all throw 'Index 293 out of bounds for length 285'. createItem calls _checkGrow at line 1763, before LVM_INSERTITEM, so these rows are never inserted.\nStep 57: setItemCount runs _setItemCount (lines 403-412), which truncates the keys at 281. The table now has 307 rows against 310 in the viewport.\nAfter that, every op's row (fraction*count>>>20) differs. No removeAll+refill follows in seed 3 (op generator scan), so answers, rows, bar, sel, focus and events differ at every step from 51 to 149 (99 rows kinds), and the final pixels differ.",
+      "viewportCode": "The difference is not in the TableViewport mediator: Table.java:2138 creates it only when (style & SWT.VIRTUAL) == 0. A VIRTUAL Table in the default mode uses the fork's VirtualItemStorage:\n- Table.java:190-194: _checkGrow returns false for VIRTUAL when stockItems is null, so there is no compaction and no throw.\n- Table.java:259-273: _getItem creates facades in virtualItems.\n- Table.java:355-365: _removeItems calls virtualItems.removeRange(start, index, ...) and virtualViewport.remove(start, index - start).\n- VirtualItemStorage.java:155-159: later indices shift by logicalWidth = endExclusive - start, the number of rows removed.\n- Table.java:2097 and 2117: createTableItem's _checkGrow does nothing, so LVM_INSERTITEM runs.\nResult: getItems succeeds at steps 48 and 50, and insert/append succeed at 51, 53 and 56 (+3 rows).\nThe original mode keeps the stock store: Table.java:318 with TableStockItems.java:39 and 51-55 (only when !TableViewport.ENABLED, TableViewport.java:58); compaction at TableStockItems.java:74-84 (line 79 newItems[keys[i]] = items[i]); the defect kept at :246-247.",
+      "origin": "reference",
+      "fix": "Do not change the viewport code: the default mode answers as the Table.remove(int,int) and getItems Javadoc say.\nRejected alternative: making VirtualItemStorage.removeRange or Table._checkGrow throw like stock. That would import an upstream defect into the default mode, against TableStockItems.java:30-35 and docs/m3/TABLE_MEDIATED_VIEWPORT.md:182, 233-235 and 272 (T-Table-R12).\nThe original mode already stays stock (oracle: 70 of 70 steps equal to the official recording, AIOOBE included).\nThe divergence is already documented data: docs/m3/table-viewport/UPSTREAM_DEFECTS.tsv:5-106 lists variant 2, seed 3, steps 48 and 50-150. Why the gate still compares these steps is root cause T3.",
+      "oracle": "Scratchpad root: K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/table-seeded. Paths below are under it.\n(1) Op generator replay, ops/TableOps.java and ops/ops-variant2.tsv: recovers every op listed in firstExample.\n(2) Survey rebuilt from UPSTREAM_DEFECTS.tsv:2-110 plus the op generator (ops/reconstructed-survey.txt): diff against survey-n/table-seeded.txt is IDENTICAL (25 kinds, counts, first seed and step). All 24 non-pixel first-example values equal the listed stock/ours answers.\n(3) oracle/src/org/eclipse/swt/tests/junit/TableKeysOracle.java replays seed 3 through harness.line and dumps the item store each step. Run on the hidden desktop via ui_lock.sh and hidden_java.sh.\n- Official 3.135.0: 70 of 70 lines equal to table-variant2-seed3.txt. Key dumps match the stockRule (oracle/keys-official.txt).\n- Fork tv20261024n with -Dswt.widget.mode.Table=original: 70 of 70 equal to the official recording (oracle/keys-original.txt).\n- Fork default mode: differs at exactly the 21 listed steps up to 69, each equal to the listed our_answer (oracle/keys-viewport.txt).\n(4) javap -c -l of the official Table: lines 392, 193, 1763, 2607, 295 and 403-412.",
+      "confidence": "high"
+     },
+     {
+      "id": "T2-stock-removeItems-stale-keys-wrong-item-identity",
+      "kinds": [
+       "answer after 'op # at # span # delta -#'",
+       "events after 'op # at # span # delta #'",
+       "events after 'op # at # span # delta -#'",
+       "pixels"
+      ],
+      "firstExample": "Seed 4, step 60: op 17 at 586115, read 147. Recorded: 'read 147 -> new 41 / index 147 ... | events ' (no SetData). This run: 'read 147 -> data 147 ... | events SD:147'.\nThe other instances, listed at UPSTREAM_DEFECTS.tsv:2-4 and 107-110:\n- seed 4 step 97: op 22, setChecked 180; stock has no SD:180.\n- seed 8 step 29: op 13, setSelection item 155; stock sends an extra SD:155.\n- seed 8 step 33: op 12, setSelection [51, 49]; stock has no SD:49.\n- seed 11 step 36: op 1, append; stock has no SD:66.\n- seed 11 step 62: op 22, setChecked 97; stock sends an extra SD:97.\n- seed 11: final pixels.\nThis cause adds 1, 2, 4 and 1 occurrences to the four kinds; seed 3 (T1) gives their first examples.",
+      "stockRule": "Same _removeItems shift as T1 (official Table.java:392), but here the stale keys stay below the row count. They then point at another row instead of throwing.\nSeed 4: remove 155..159 at step 44 and remove 137..141 at step 59 shift by 0 instead of 5. Item 'new 41' (inserted at 150 in step 41, moved to key 147 by the three single removals of step 57) keeps key 147 although it now belongs to row 142. getItem(147) returns that cached item, so no SetData is sent. Later the store compacts into a dense array that carries these misplaced items: at step 97 its slot 180 holds another row's cached item, so no SD:180.\nSeed 8: remove 60..65 at step 5 shifts by 2 instead of 6, and remove 9..10 at step 7 by 0 instead of 2.\nSeed 11: remove 195..199 at step 17 and remove 41..45 at step 34 shift by 0 instead of 5.\nRows below a short-shifted range then answer another row's cached item (SetData missing) or a fresh item (SetData extra).",
+      "viewportCode": "Same as T1. VirtualItemStorage.java:155-159 shifts later indices by the rows removed, so every item stays on its own row. Table.java:259-273 returns the row's own facade, or creates one and fills it (SetData exactly when the row has none). TableViewport is not involved (Table.java:2138).",
+      "origin": "reference",
+      "fix": "None in the viewport or the mediators, for the same reason as T1. The original mode keeps the defect through TableStockItems.java:246-247. The steps are already listed at docs/m3/table-viewport/UPSTREAM_DEFECTS.tsv:2-4 and 107-110. The gate must apply that list (T3).",
+      "oracle": "TableKeysOracle on the official jar for seeds 4, 8 and 11, steps 0-99: 100 of 100 lines equal to the recordings each. The key dumps show the short shifts and the misplaced key 147 (seed 4, steps 57-60).\nOutput files are under K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/table-seeded/oracle/: keys-official-s4.txt, keys-official-s8.txt and keys-official-s11.txt.\nThe survey split from UPSTREAM_DEFECTS.tsv per seed gives seeds 4, 8 and 11 = 1 answer '-#', 2 events '#', 4 events '-#' and 1 pixels.",
+      "confidence": "high"
+     },
+     {
+      "id": "T3-gate-runs-without-the-upstream-defect-list",
+      "kinds": [
+       "answer after 'op # at # span # delta # rare'",
+       "answer after 'op # at # span # delta #'",
+       "answer after 'op # at # span # delta -# rare'",
+       "answer after 'op # at # span # delta -#'",
+       "bar after 'op # at # span # delta # rare'",
+       "bar after 'op # at # span # delta #'",
+       "bar after 'op # at # span # delta -# rare'",
+       "bar after 'op # at # span # delta -#'",
+       "events after 'op # at # span # delta # rare'",
+       "events after 'op # at # span # delta #'",
+       "events after 'op # at # span # delta -# rare'",
+       "events after 'op # at # span # delta -#'",
+       "focus after 'op # at # span # delta # rare'",
+       "focus after 'op # at # span # delta #'",
+       "focus after 'op # at # span # delta -# rare'",
+       "focus after 'op # at # span # delta -#'",
+       "pixels",
+       "rows after 'op # at # span # delta # rare'",
+       "rows after 'op # at # span # delta #'",
+       "rows after 'op # at # span # delta -# rare'",
+       "rows after 'op # at # span # delta -#'",
+       "sel after 'op # at # span # delta # rare'",
+       "sel after 'op # at # span # delta #'",
+       "sel after 'op # at # span # delta -# rare'",
+       "sel after 'op # at # span # delta -#'"
+      ],
+      "firstExample": "Seed 3, step 48 is listed at UPSTREAM_DEFECTS.tsv:5 with exactly the recorded stock answer and this run's answer, but the gate survey still reports it. Its survey example shows the raw stock line ('recorded: error java.lang.ArrayIndexOutOfBoundsException ...'), so the listed answer was never applied.",
+      "stockRule": "The test's comparison contract: with -Dswt.viewport.upstreamDefects=<tsv>, the official recording is copied (Test_org_eclipse_swt_widgets_Table_ViewportDifferential.java:113, 135-161) and each listed step's stock answer is replaced by this SWT's answer. The replacement happens only while the recorded line equals the listed stock answer (:151-156). Without the property, :136-137 returns the recording unchanged.\ndocs/m3/TABLE_MEDIATED_VIEWPORT.md:114 and :235 state that the comparison with the official recording accepts exactly the listed steps.\nEvidence:\n- All 155 listed stock answers equal today's K:/m3-work/runs/viewport-stock-recording-20261024 lines (awk check).\n- The listed variant 2 rows (lines 2-110) reproduce the gate survey exactly.",
+      "viewportCode": "This is harness code, not viewport code. docs/m3/tree-viewport/tools/viewport_gate.sh:29 sets JVM_OPTS=\"-Dswt.viewport.survey=true\" only. tree_viewport_run.sh:20 passes only -Dswt.viewport.evidence, -Dswt.viewport.recording and JVM_OPTS, with no -Dswt.viewport.upstreamDefects.\nThe Table scripts do pass it: docs/m3/table-viewport/table_differential_references.sh:18 and 26, table_flake.sh:17 and 33, table_coverage.sh:24 and 31.\nOnly Test_org_eclipse_swt_widgets_Table_ViewportDifferential reads the property (grep), so adding it to the gate cannot affect other suites.",
+      "origin": "harness",
+      "fix": "In docs/m3/tree-viewport/tools/viewport_gate.sh:29 use:\nJVM_OPTS=\"-Dswt.viewport.survey=true -Dswt.viewport.upstreamDefects=$(cygpath -m \"$W\")/docs/m3/table-viewport/UPSTREAM_DEFECTS.tsv\"\nThis is the same file that table_differential_references.sh:18 uses. Alternatively, forward an UPSTREAM_DEFECTS variable in tree_viewport_run.sh:20.\nNo SWT source change and no recipe hook. The original mode is untouched (stock).\nThis fix does not make the test green: it then reaches variant 12 (HIDDEN, TableHiddenScripts) and fails with 9 further kinds. The variant 2 failure had hidden them. First examples:\n- seed 0 step 3: 'hidden not visible: 250 deltas -> rows 248 top 99' recorded vs 'top 229' this run, with bar 99/247 vs 229/247.\n- seed 2 step 0: hbar 0/51 vs 0/75.\n- pixels: seed 4.\nThose 9 kinds are a separate unit and are not root-caused here.",
+      "oracle": "Runs on the hidden desktop through ui_lock.sh and hidden_java.sh, with jar tv20261024n and the tests in S:/m3-scratch/swt-tv/tests.\n(a) -Dswt.viewport.variants=2, survey on, with the TSV: 1 test successful, table-variant2 1800 steps, 0 differences, no rebuild violations (oracle/fix-run.log).\n(b) All variants with the gate's options plus the TSV: variants 0-11 pass; variant 12 fails with 'survey: 9 kinds of difference' (oracle/fix-run-all.log, evidence in oracle/evidence-all).\nThe oracle/ paths are under K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/table-seeded/.",
+      "confidence": "high"
+     }
+    ],
+    "unexplainedKinds": []
+   },
+   "verdict": {
+    "unit": "table-seeded",
+    "checks": [
+     {
+      "id": "T1-stock-removeItems-stale-keys-throw-and-row-cascade",
+      "holds": true,
+      "problems": [
+       "The narrative overstates the cascade. It says answers, rows, bar, sel, focus and events differ at every step from 51 to 149. UPSTREAM_DEFECTS.tsv:5-106 shows that only rows, bar and focus differ at all 99 of those steps. Answers differ at 83 steps (48 and 50 included), sel at 96 and events at 21 (steps 61-136). 'Every op's row differs' is also false: at step 60, 127959*307>>>20 and 127959*310>>>20 both give 37. This is cosmetic: the kind counts and first examples are right. I rebuilt the survey on my own from the TSV and the generator new Random(0x7AB1E5EEDL+62+seed) (Test_org_eclipse_swt_widgets_Table_ViewportDifferential.java:209, ViewportDifferential.java:346). The result matches survey-n/table-seeded.txt kind for kind, count for count and example for example (K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/table-seeded/verify/rebuilt-survey.txt).",
+       "The proposed 'fix' changes no code, so the 25 kinds leave the gate only together with T3. The analysis says this. Every code citation checks out: official javap line 392 offsets 242-273, line 193 offsets 170-186, lines 295, 1763, 2607 and 403-412; fork Table.java:190-194, 259-273, 355-365, 2097, 2117, 2138 and 318; VirtualItemStorage.java:155-159; TableStockItems.java:39, 51-55, 74-84 and 246-247; TableViewport.java:58. The cited files are identical at the build commit 2dcbcb50f1 and at HEAD 5bf82c5d38."
+      ],
+      "correctedFix": "No viewport or mediator change; the analysis is correct. Additional oracle evidence, under K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/table-seeded/verify/oracle2/: (1) The fork's original mode records exactly the official lines on all 12 variant-2 seeds, pixels included (recA). (2) I ran the original mode with only TableStockItems.java:247 changed to 'keys[i] -= (index - start)' (recB). It differs from the official recording at exactly the 109 variant-2 steps of UPSTREAM_DEFECTS.tsv:2-110. (3) The default mode compared against recB gives 0 differences over 1800 steps and 12 pixel hashes with survey on (runC.log). So the official Table.java:392 shift is the only cause of all 25 kinds, and the seed-3 cascade hides no fork divergence. The kinds leave the gate through T3."
+     },
+     {
+      "id": "T2-stock-removeItems-stale-keys-wrong-item-identity",
+      "holds": true,
+      "problems": [
+       "Wording: Table.java:259-273 does not fill a new facade itself unless there is a page source (:272 calls checkData only when pageSource != null). SetData comes from the later checkData call (getText, getChecked or paint). This does not change the conclusion.",
+       "The analysis's oracle covered only steps 0-99, so it did not support the seed-11 final-pixels claim (TSV:4). I checked it now with VisibleRowsOracle (K:/codex-work/agent-temp/claude/e--ws2-com-synexia/a6de83fe-6489-4056-8689-f1217602e9cc/scratchpad/analysis/table-seeded/verify/oracle/v-off-s11.txt and v-vp-s11.txt). Official: 150 of 150 lines equal to the recording, pixels 8c10a206. Default mode: pixels 4cf4d675, which is the TSV's our_answer. The visible rows 138 and 143 show 'data 138'/'data 167' in stock and 'data 167'/'data 143' in ours: one item is placed 5 rows too low by the short shifts at steps 17 and 34. Seed 4 before step 97 (v-off-s4.txt, v-vp-s4.txt): in stock, row 180 holds the cached item 'data 194', so no SD:180 is sent; ours creates row 180's own facade and sends SD:180. All other claims check out: the official key dumps for seeds 4, 8 and 11 match the recordings (100 of 100 lines each), and so do the short shifts and the per-kind counts 1, 2, 4 and 1."
+      ],
+      "correctedFix": "None, as proposed: no viewport or mediator change, and the original mode keeps TableStockItems.java:246-247. These steps leave the gate through T3 (UPSTREAM_DEFECTS.tsv:2-4 and 107-110)."
+     },
+     {
+      "id": "T3-gate-runs-without-the-upstream-defect-list",
+      "holds": true,
+      "problems": [
+       "The stockRule misreads :151-156. A mismatching listed stock answer does not just skip the replacement: :154 calls assertEquals, and a mismatch fails the whole test before any variant runs. Only files whose header starts with '# reference official' or '# reference original' are processed (:151). Today all 155 listed stock answers equal the lines in K:/m3-work/runs/viewport-stock-recording-20261024 (I checked with awk), so the gate would not trip on this now.",
+       "The fix leaves the test red. The variant loop (Test_org_eclipse_swt_widgets_Table_ViewportDifferential.java:115-127) stops at the first variant whose survey fails, because reportSurvey fails once per compareWithRecording call (ViewportDifferential.java:383 and 488-493). The fix therefore exposes the 9 kinds of variant 12 (oracle/fix-run-all.log), and variant 13 still never runs. This is outside the unit, and the analysis says so.",
+       "Scope: the TSV also holds 46 variant-8 rows (UPSTREAM_DEFECTS.tsv:111-156). They belong to a separate upstream defect, the createItem/_insertItem keys overflow (TABLE_MEDIATED_VIEWPORT.md:182). The gate change accepts those rows too, and this analysis did not verify them.",
+       "Hardening: if the path is missing or not a regular file, :137 silently returns the raw recording, so a wrong or relative path brings back the 25 kinds with no hint why. The gate should pass an absolute path and stop if the file is missing.",
+       "The fix was tested only in a run of the Table class alone (fix-run-all.log), not in the 14-class gate JVM. That is enough, because only this class reads swt.viewport.upstreamDefects: I grepped the worktree sources, the compiled tests in S:/m3-scratch/swt-tv/tests and the tv20261024n jar, and it does not appear elsewhere. Other suites are unaffected, and variants 0 and 1 have no listed rows."
+      ],
+      "correctedFix": "Keep the proposed harness fix, with fail-fast added. In docs/m3/tree-viewport/tools/viewport_gate.sh, before line 29 add:\nDEFECTS=\"$(cygpath -am \"$W\")/docs/m3/table-viewport/UPSTREAM_DEFECTS.tsv\"; [ -f \"$DEFECTS\" ] || { say \"GATE_RED: no $DEFECTS\"; exit 1; }\nand change line 29 to:\nOUT=$OUT RECORDING=$RECORDING JVM_OPTS=\"-Dswt.viewport.survey=true -Dswt.viewport.upstreamDefects=$DEFECTS\" bash \"$D/tree_viewport_run.sh\" \"$STAMP\" $SEL > /dev/null 2>&1\nThis needs no SWT or recipe-hook change, and the original mode is untouched. Optional, in our own test: in survey mode, let the loop at :115-127 run every variant and fail once at the end, so that one gate run also lists the kinds of variants 12 and 13."
+     }
+    ]
+   }
+  }
+ ],
+ "plan": null
+}

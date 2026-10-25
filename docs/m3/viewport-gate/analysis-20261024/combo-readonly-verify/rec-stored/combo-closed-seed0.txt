@@ -1,0 +1,15 @@
+# reference official, SWT 4974 win32
+ok | state sel 176 count 300 text 'cherry 176' dropped false | events M  | face 89b1d980 | list -
+ok | state sel 328 count 551 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+ok | state sel 472 count 777 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+ok | state sel 613 count 1000 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+ok | state sel 756 count 1227 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+ok | state sel 897 count 1485 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+ok | state sel 1032 count 1745 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+ok | state sel 1157 count 1996 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+ok | state sel 1315 count 2239 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+ok | state sel 1443 count 2475 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+ok | state sel 1578 count 2710 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+ok | state sel 1578 count 2710 text 'cherry 176' dropped true | events  | face 75894991 | list 0..2709/20@1578 7ff3bec1
+ok | state sel 1578 count 2710 text 'cherry 176' dropped false | events  | face 89b1d980 | list -
+pixels 89b1d980

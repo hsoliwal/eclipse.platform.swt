@@ -1,0 +1,7 @@
+seed 5: 0 differing steps, first -1
+seed 6: 0 differing steps, first -1
+seed 7: 0 differing steps, first -1
+seed 8: 0 differing steps, first -1
+seed 9: 1 differing steps, first 150 (pixels)
+  recorded: pixels 9db5045f
+  this run: pixels 322e2fed

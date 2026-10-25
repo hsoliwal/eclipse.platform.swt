@@ -1,0 +1,15 @@
+# reference official, SWT 4974 win32
+ok | state sel 102 count 300 text 'apple 102' dropped false | events M  | face b8225a6e | list -
+ok | state sel 208 count 583 text 'apple 102' dropped false | events  | face b8225a6e | list -
+ok | state sel 295 count 857 text 'apple 102' dropped false | events  | face b8225a6e | list -
+ok | state sel 395 count 1096 text 'apple 102' dropped false | events  | face b8225a6e | list -
+ok | state sel 458 count 1336 text 'apple 102' dropped false | events  | face b8225a6e | list -
+ok | state sel 552 count 1582 text 'apple 102' dropped false | events  | face b8225a6e | list -
+ok | state sel 601 count 1792 text 'apple 102' dropped false | events  | face b8225a6e | list -
+ok | state sel 692 count 2039 text 'apple 102' dropped false | events  | face b8225a6e | list -
+ok | state sel 781 count 2256 text 'apple 102' dropped false | events  | face b8225a6e | list -
+ok | state sel 859 count 2490 text 'apple 102' dropped false | events  | face b8225a6e | list -
+ok | state sel 962 count 2729 text 'apple 102' dropped false | events  | face b8225a6e | list -
+ok | state sel 962 count 2729 text 'apple 102' dropped true | events  | face 2e72ea70 | list 0..2728/20@962 61d2d65d
+ok | state sel 962 count 2729 text 'apple 102' dropped false | events  | face b8225a6e | list -
+pixels b8225a6e

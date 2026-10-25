@@ -1,0 +1,54 @@
+# SWT 4975 mode original
+click 5 none / click 22 none:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   click 22 none -> anchor 19 caret 19 top 0 sel 1 [5] events S 
+click 5 none / click 9 shift / deselectAll / click 22 none:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   click 9 shift -> anchor 5 caret 9 top 0 sel 5 [5, 6, 7, 8, 9] events S 
+   deselectAll -> anchor 5 caret 9 top 0 sel 0 [] events 
+   click 22 none -> anchor 19 caret 19 top 0 sel 1 [9] events S 
+select 7 / deselect 7 / click 22 none:
+   select 7 -> anchor 7 caret 0 top 0 sel 1 [7] events 
+   deselect 7 -> anchor 7 caret 0 top 0 sel 0 [] events 
+   click 22 none -> anchor 19 caret 19 top 0 sel 1 [7] events S 
+click 5 none / remove 3 / click 22 none:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   remove 3 -> anchor -1 caret 5 top 0 sel 1 [4] events 
+   click 22 none -> anchor 18 caret 18 top 0 sel 1 [5] events S 
+click 22 none:
+   click 22 none -> anchor 19 caret 19 top 0 sel 0 [] events S 
+click 5 none / key DOWN none / key DOWN none / deselectAll / click 22 none:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   key DOWN none -> anchor 6 caret 6 top 0 sel 1 [6] events S 
+   key DOWN none -> anchor 7 caret 7 top 0 sel 1 [7] events S 
+   deselectAll -> anchor 7 caret 7 top 0 sel 0 [] events 
+   click 22 none -> anchor 19 caret 19 top 0 sel 1 [5] events S 
+click 5 none / click 9 ctrl / click 22 none:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   click 9 ctrl -> anchor 9 caret 9 top 0 sel 2 [5, 9] events S 
+   click 22 none -> anchor 19 caret 19 top 0 sel 1 [9] events S 
+click 5 none / click 22 ctrl:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   click 22 ctrl -> anchor 19 caret 19 top 0 sel 2 [5, 19] events S 
+click 5 none / click 22 shift:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   click 22 shift -> anchor 5 caret 19 top 0 sel 15 [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19] events S 
+selectRange 2 4 / click 22 none:
+   selectRange 2 4 -> anchor -1 caret 0 top 0 sel 3 [2, 3, 4] events 
+   click 22 none -> anchor 19 caret 19 top 0 sel 0 [] events S 
+click 5 none / click 9 shift / remove 15 / click 22 none:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   click 9 shift -> anchor 5 caret 9 top 0 sel 5 [5, 6, 7, 8, 9] events S 
+   remove 15 -> anchor 5 caret 9 top 0 sel 5 [5, 6, 7, 8, 9] events 
+   click 22 none -> anchor 18 caret 18 top 0 sel 1 [9] events S 
+click 5 none / click 9 shift / remove 7 / click 22 none:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   click 9 shift -> anchor 5 caret 9 top 0 sel 5 [5, 6, 7, 8, 9] events S 
+   remove 7 -> anchor 5 caret 9 top 0 sel 4 [5, 6, 7, 8] events 
+   click 22 none -> anchor 18 caret 18 top 0 sel 1 [9] events S 
+click 5 none / drag 22 down 3:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   drag 22 down 3 -> anchor 19 caret 19 top 0 sel 1 [5] events S 
+click 5 none / drag 22 up 3:
+   click 5 none -> anchor 5 caret 5 top 0 sel 1 [5] events S 
+   drag 22 up 3 -> anchor 19 caret 0 top 0 sel 19 19 rows 0..18 sum 171 events S 

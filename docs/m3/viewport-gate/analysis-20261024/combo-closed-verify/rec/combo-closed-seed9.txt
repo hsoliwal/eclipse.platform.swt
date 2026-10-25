@@ -1,0 +1,15 @@
+# reference official, SWT 4974 win32
+ok | state sel 148 count 300 text 'date 148' dropped false | events M  | face 69069ba8 | list -
+ok | state sel 250 count 526 text 'date 148' dropped false | events  | face 69069ba8 | list -
+ok | state sel 364 count 789 text 'date 148' dropped false | events  | face 69069ba8 | list -
+ok | state sel 505 count 1072 text 'date 148' dropped false | events  | face 69069ba8 | list -
+ok | state sel 632 count 1328 text 'date 148' dropped false | events  | face 69069ba8 | list -
+ok | state sel 757 count 1603 text 'date 148' dropped false | events  | face 69069ba8 | list -
+ok | state sel 877 count 1879 text 'date 148' dropped false | events  | face 69069ba8 | list -
+ok | state sel 1005 count 2129 text 'date 148' dropped false | events  | face 69069ba8 | list -
+ok | state sel 1141 count 2416 text 'date 148' dropped false | events  | face 69069ba8 | list -
+ok | state sel 1267 count 2677 text 'date 148' dropped false | events  | face 69069ba8 | list -
+ok | state sel 1386 count 2904 text 'date 148' dropped false | events  | face 69069ba8 | list -
+ok | state sel 1386 count 2904 text 'date 148' dropped true | events  | face 9ece631e | list 0..2903/20@1386 30c94b2c
+ok | state sel 1386 count 2904 text 'date 148' dropped false | events  | face 69069ba8 | list -
+pixels 69069ba8

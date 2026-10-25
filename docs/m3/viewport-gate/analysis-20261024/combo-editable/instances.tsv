@@ -1,0 +1,297 @@
+B	list after 'altdown'	S0#19
+B	list after 'removeString #'	S0#20
+B	list after 'selectionIndex'	S0#21
+B	list after 'indexOfEmpty -#'	S0#22
+B	list after 'selectionIndex'	S0#23
+B	list after 'setItem # #'	S0#24
+B	list after 'selectionIndex'	S0#25
+B	list after 'listwheel #'	S0#26
+P	state after 'drop true'	S0#70
+P	face after 'drop true'	S0#70
+P	list after 'drop true'	S0#70
+P	state after 'hover #'	S0#71
+P	face after 'hover #'	S0#71
+P	list after 'hover #'	S0#71
+P	state after 'drop true'	S0#72
+P	face after 'drop true'	S0#72
+P	list after 'drop true'	S0#72
+P	state after 'vscroll #'	S0#73
+P	face after 'vscroll #'	S0#73
+P	list after 'vscroll #'	S0#73
+P	state after 'visible #'	S0#96
+P	state after 'drop true'	S0#132
+P	face after 'drop true'	S0#132
+P	list after 'drop true'	S0#132
+P	state after 'vscroll #'	S0#133
+P	face after 'vscroll #'	S0#133
+P	state after 'hover #'	S0#134
+P	face after 'hover #'	S0#134
+B	list after 'drop true'	S1#10
+B	list after 'selectionIndex'	S1#11
+B	list after 'listwheel #'	S1#12
+P	state after 'drop true'	S1#86
+P	face after 'drop true'	S1#86
+P	list after 'drop true'	S1#86
+P	state after 'addAt # #'	S1#87
+P	face after 'addAt # #'	S1#87
+P	list after 'addAt # #'	S1#87
+P	state after 'removeString #'	S1#88
+P	face after 'removeString #'	S1#88
+P	list after 'removeString #'	S1#88
+P	state after 'key NEXT'	S1#89
+P	face after 'key NEXT'	S1#89
+P	list after 'key NEXT'	S1#89
+B	list after 'drop true'	S2#4
+P	state after 'altdown'	S2#107
+P	events after 'altdown'	S2#107
+P	face after 'altdown'	S2#107
+P	list after 'altdown'	S2#107
+P	state after 'thumb #'	S2#108
+P	face after 'thumb #'	S2#108
+P	state after 'drop true'	S2#109
+P	face after 'drop true'	S2#109
+P	state after 'setText # #'	S2#110
+P	state after 'listwheel -#'	S2#111
+P	answer after 'selectionIndex'	S2#112
+P	state after 'selectionIndex'	S2#112
+P	state after 'key UP'	S2#113
+P	face after 'key UP'	S2#113
+P	list after 'key UP'	S2#113
+P	state after 'visible #'	S2#114
+P	face after 'visible #'	S2#114
+P	state after 'wheel #'	S2#115
+P	face after 'wheel #'	S2#115
+P	state after 'wheel -#'	S2#116
+P	face after 'wheel -#'	S2#116
+P	state after 'setItem # #'	S2#117
+P	face after 'setItem # #'	S2#117
+P	state after 'read # #'	S2#118
+P	face after 'read # #'	S2#118
+P	state after 'thumb #'	S2#119
+P	face after 'thumb #'	S2#119
+P	state after 'read # #'	S2#120
+P	face after 'read # #'	S2#120
+P	state after 'listwheel -#'	S2#121
+P	face after 'listwheel -#'	S2#121
+P	state after 'addEmpty #'	S2#122
+P	face after 'addEmpty #'	S2#122
+B	list after 'drop true'	S3#1
+P	state after 'drop true'	S4#148
+P	face after 'drop true'	S4#148
+P	state after 'removeRange # #'	S4#149
+P	face after 'removeRange # #'	S4#149
+B	list after 'drop true'	S5#0
+B	list after 'hover #'	S5#1
+B	list after 'listwheel #'	S5#2
+P	state after 'drop true'	S5#50
+P	face after 'drop true'	S5#50
+P	list after 'drop true'	S5#50
+P	state after 'indexOfEmpty #'	S5#51
+P	face after 'indexOfEmpty #'	S5#51
+P	list after 'indexOfEmpty #'	S5#51
+P	answer after 'selectionIndex'	S5#52
+P	state after 'selectionIndex'	S5#52
+P	face after 'selectionIndex'	S5#52
+P	list after 'selectionIndex'	S5#52
+P	state after 'deselect #'	S5#53
+P	face after 'deselect #'	S5#53
+P	list after 'deselect #'	S5#53
+P	state after 'key UP'	S5#54
+P	face after 'key UP'	S5#54
+P	list after 'key UP'	S5#54
+P	answer after 'selectionIndex'	S5#55
+P	state after 'selectionIndex'	S5#55
+P	face after 'selectionIndex'	S5#55
+P	list after 'selectionIndex'	S5#55
+P	answer after 'selectionIndex'	S5#56
+P	state after 'selectionIndex'	S5#56
+P	face after 'selectionIndex'	S5#56
+P	list after 'selectionIndex'	S5#56
+P	state after 'drop true'	S5#57
+P	face after 'drop true'	S5#57
+P	list after 'drop true'	S5#57
+P	state after 'remove #'	S5#58
+P	face after 'remove #'	S5#58
+P	list after 'remove #'	S5#58
+P	state after 'key END'	S5#59
+P	face after 'key END'	S5#59
+P	list after 'key END'	S5#59
+P	state after 'add #'	S5#60
+P	face after 'add #'	S5#60
+P	list after 'add #'	S5#60
+P	state after 'setText # #'	S5#61
+P	list after 'setText # #'	S5#61
+P	state after 'setText # #'	S5#62
+P	list after 'setText # #'	S5#62
+P	state after 'hover #'	S5#63
+P	list after 'hover #'	S5#63
+P	state after 'key RETURN'	S5#64
+P	face after 'key RETURN'	S5#64
+P	state after 'drop false'	S5#65
+P	face after 'drop false'	S5#65
+P	state after 'add #'	S5#66
+P	face after 'add #'	S5#66
+P	state after 'addEmpty #'	S5#67
+P	face after 'addEmpty #'	S5#67
+P	state after 'listwheel -#'	S5#68
+P	face after 'listwheel -#'	S5#68
+P	state after 'key END'	S5#69
+P	face after 'key END'	S5#69
+P	state after 'indexOfEmpty #'	S5#70
+P	face after 'indexOfEmpty #'	S5#70
+P	state after 'wheel -#'	S5#71
+P	face after 'wheel -#'	S5#71
+P	state after 'add #'	S5#72
+P	face after 'add #'	S5#72
+P	state after 'removeRange # #'	S5#73
+P	face after 'removeRange # #'	S5#73
+P	state after 'addAt # #'	S5#74
+P	face after 'addAt # #'	S5#74
+P	state after 'add #'	S5#75
+P	face after 'add #'	S5#75
+P	state after 'key NEXT'	S5#76
+P	face after 'key NEXT'	S5#76
+P	state after 'select #'	S5#77
+P	face after 'select #'	S5#77
+P	state after 'indexOfEmpty -#'	S5#78
+P	face after 'indexOfEmpty -#'	S5#78
+P	answer after 'selectionIndex'	S5#79
+P	state after 'selectionIndex'	S5#79
+P	face after 'selectionIndex'	S5#79
+P	state after 'drop true'	S6#135
+P	face after 'drop true'	S6#135
+P	list after 'drop true'	S6#135
+P	state after 'thumb #'	S6#136
+P	face after 'thumb #'	S6#136
+P	list after 'thumb #'	S6#136
+P	state after 'indexOfEmpty #'	S6#137
+P	face after 'indexOfEmpty #'	S6#137
+P	list after 'indexOfEmpty #'	S6#137
+P	answer after 'selectionIndex'	S6#138
+P	state after 'selectionIndex'	S6#138
+P	face after 'selectionIndex'	S6#138
+P	list after 'selectionIndex'	S6#138
+P	state after 'wheel -#'	S6#139
+P	face after 'wheel -#'	S6#139
+P	list after 'wheel -#'	S6#139
+P	state after 'drop true'	S6#140
+P	face after 'drop true'	S6#140
+P	list after 'drop true'	S6#140
+P	answer after 'selectionIndex'	S6#141
+P	state after 'selectionIndex'	S6#141
+P	face after 'selectionIndex'	S6#141
+P	list after 'selectionIndex'	S6#141
+B	list after 'altdown'	S7#28
+B	list after 'type d'	S7#33
+B	list after 'type b'	S7#34
+B	list after 'drop true'	S7#35
+B	list after 'listwheel -#'	S7#36
+B	list after 'read # #'	S7#37
+B	list after 'drop true'	S7#39
+B	list after 'indexOfEmpty #'	S7#40
+B	list after 'key UP'	S7#41
+B	list after 'selectionIndex'	S7#42
+B	list after 'key F#'	S8#3
+B	list after 'drop true'	S8#4
+B	list after 'drop true'	S8#5
+D	state after 'deselectAll'	S8#35
+P	state after 'drop true'	S8#53
+P	face after 'drop true'	S8#53
+P	list after 'drop true'	S8#53
+P	state after 'thumb #'	S8#54
+P	face after 'thumb #'	S8#54
+P	state after 'listwheel -#'	S8#55
+P	face after 'listwheel -#'	S8#55
+P	state after 'key DOWN'	S8#56
+P	face after 'key DOWN'	S8#56
+P	list after 'key DOWN'	S8#56
+P	state after 'click #'	S8#57
+P	face after 'click #'	S8#57
+P	state after 'addEmpty #'	S8#58
+P	face after 'addEmpty #'	S8#58
+P	answer after 'selectionIndex'	S8#59
+P	state after 'selectionIndex'	S8#59
+P	face after 'selectionIndex'	S8#59
+P	state after 'deselect #'	S8#60
+P	face after 'deselect #'	S8#60
+P	state after 'key LEFT'	S8#61
+P	face after 'key LEFT'	S8#61
+D	state after 'deselectAll'	S8#62
+P	state after 'drop true'	S8#124
+P	face after 'drop true'	S8#124
+P	list after 'drop true'	S8#124
+P	state after 'vscroll #'	S8#125
+P	face after 'vscroll #'	S8#125
+P	list after 'vscroll #'	S8#125
+P	state after 'visible #'	S8#126
+P	face after 'visible #'	S8#126
+P	state after 'setItem # #'	S8#127
+P	face after 'setItem # #'	S8#127
+P	state after 'drop true'	S9#23
+P	face after 'drop true'	S9#23
+P	list after 'drop true'	S9#23
+P	answer after 'selectionIndex'	S9#24
+P	state after 'selectionIndex'	S9#24
+P	face after 'selectionIndex'	S9#24
+P	list after 'selectionIndex'	S9#24
+P	state after 'remove #'	S9#25
+P	face after 'remove #'	S9#25
+P	list after 'remove #'	S9#25
+P	state after 'hover #'	S9#26
+P	face after 'hover #'	S9#26
+P	list after 'hover #'	S9#26
+P	state after 'key F#'	S9#27
+P	face after 'key F#'	S9#27
+P	state after 'wheel -#'	S9#28
+P	face after 'wheel -#'	S9#28
+P	answer after 'selectionIndex'	S9#29
+P	state after 'selectionIndex'	S9#29
+P	face after 'selectionIndex'	S9#29
+P	state after 'drop true'	S9#30
+P	face after 'drop true'	S9#30
+P	list after 'drop true'	S9#30
+P	answer after 'selectionIndex'	S9#31
+P	state after 'selectionIndex'	S9#31
+P	face after 'selectionIndex'	S9#31
+P	list after 'selectionIndex'	S9#31
+P	state after 'visible #'	S9#32
+P	face after 'visible #'	S9#32
+P	state after 'setItem # #'	S9#33
+P	face after 'setItem # #'	S9#33
+P	state after 'key F#'	S9#34
+P	face after 'key F#'	S9#34
+P	list after 'key F#'	S9#34
+P	answer after 'selectionIndex'	S9#35
+P	state after 'selectionIndex'	S9#35
+P	face after 'selectionIndex'	S9#35
+P	list after 'selectionIndex'	S9#35
+P	state after 'drop true'	S9#62
+P	face after 'drop true'	S9#62
+P	list after 'drop true'	S9#62
+P	answer after 'selectionIndex'	S9#63
+P	state after 'selectionIndex'	S9#63
+P	face after 'selectionIndex'	S9#63
+P	list after 'selectionIndex'	S9#63
+P	state after 'wheel #'	S9#64
+P	face after 'wheel #'	S9#64
+P	list after 'wheel #'	S9#64
+P	state after 'setText # #'	S9#65
+P	list after 'setText # #'	S9#65
+P	state after 'drop true'	S9#86
+P	face after 'drop true'	S9#86
+P	list after 'drop true'	S9#86
+P	state after 'drop true'	S9#87
+P	face after 'drop true'	S9#87
+P	list after 'drop true'	S9#87
+P	state after 'removeString #'	S9#88
+P	face after 'removeString #'	S9#88
+P	list after 'removeString #'	S9#88
+P	answer after 'selectionIndex'	S9#89
+P	state after 'selectionIndex'	S9#89
+P	face after 'selectionIndex'	S9#89
+P	list after 'selectionIndex'	S9#89
+P	state after 'key END'	S9#90
+P	face after 'key END'	S9#90
+P	list after 'key END'	S9#90
+P	state after 'type A'	S9#122
+P	face after 'type A'	S9#122

@@ -1,0 +1,65 @@
+0	55	setItemCount 167	prev quirk top 110 cnt 131	-> top 110 cnt 167	normalized
+1	87	setItemCount 11	prev quirk top 95 cnt 110	-> top 0 cnt 11	normalized
+1	113	deselectIndices 51 17	prev quirk top 87 cnt 106	-> top 87 cnt 106	STILL-QUIRK
+1	114	deselectIndices 164 282	prev quirk top 87 cnt 106	-> top 87 cnt 106	STILL-QUIRK
+1	115	setSelectionIndices 260 273	prev quirk top 87 cnt 106	-> top 87 cnt 106	STILL-QUIRK
+1	116	selectIndices 291 29	prev quirk top 87 cnt 106	-> top 81 cnt 106	normalized
+1	119	select 258	prev quirk top 31 cnt 49	-> top 31 cnt 49	STILL-QUIRK
+1	120	deselect 123	prev quirk top 31 cnt 49	-> top 31 cnt 49	STILL-QUIRK
+1	121	setSelection 146	prev quirk top 31 cnt 49	-> top 31 cnt 49	STILL-QUIRK
+1	122	remove 198	prev quirk top 31 cnt 49	-> top 31 cnt 49	STILL-QUIRK
+1	123	setItemCount 334	prev quirk top 31 cnt 49	-> top 31 cnt 334	normalized
+1	128	setSelectionRange 207 221	prev quirk top 233 cnt 252	-> top 195 cnt 252	normalized
+1	131	selectIndices 300 224	prev quirk top 120 cnt 123	-> top 120 cnt 123	STILL-QUIRK
+1	132	setItemCount 272	prev quirk top 120 cnt 123	-> top 120 cnt 272	normalized
+1	134	click 14 ctrlshift	prev quirk top 20 cnt 34	-> top 20 cnt 34	STILL-QUIRK
+1	135	setItemCount 72	prev quirk top 20 cnt 34	-> top 20 cnt 72	normalized
+2	64	deselectIndices 131 263	prev quirk top 42 cnt 43	-> top 42 cnt 43	STILL-QUIRK
+2	65	setSelectionRange 102 126	prev quirk top 42 cnt 43	-> top 42 cnt 43	STILL-QUIRK
+2	66	setItemCount 98	prev quirk top 42 cnt 43	-> top 42 cnt 98	normalized
+3	33	key NEXT ctrlshift	prev quirk top 49 cnt 65	-> top 40 cnt 65	normalized
+3	108	key NEXT shift	prev quirk top 100 cnt 121	-> top 96 cnt 121	normalized
+3	122	select 34	prev quirk top 235 cnt 257	-> top 232 cnt 257	normalized
+4	15	showSelection	prev quirk top 123 cnt 145	-> top 123 cnt 145	STILL-QUIRK
+4	16	key HOME ctrlshift	prev quirk top 123 cnt 145	-> top 0 cnt 145	normalized
+4	149	setItemCount 250	prev quirk top 59 cnt 63	-> top 59 cnt 250	normalized
+5	57	remove 127	prev quirk top 71 cnt 73	-> top 71 cnt 73	STILL-QUIRK
+5	58	deselectRange 195 198	prev quirk top 71 cnt 73	-> top 71 cnt 73	STILL-QUIRK
+5	59	click 24 ctrlshift	prev quirk top 71 cnt 73	-> top 71 cnt 73	STILL-QUIRK
+5	60	getTop	prev quirk top 71 cnt 73	-> top 71 cnt 73	STILL-QUIRK
+5	61	wheel -240	prev quirk top 71 cnt 73	-> top 48 cnt 73	normalized
+6	7	click 20 shift	prev quirk top 24 cnt 39	-> top 24 cnt 39	STILL-QUIRK
+6	8	setItemCount 64	prev quirk top 24 cnt 39	-> top 24 cnt 64	normalized
+6	73	indexOf 41 89	prev quirk top 68 cnt 76	-> top 68 cnt 76	STILL-QUIRK
+6	74	selectRange 265 266	prev quirk top 68 cnt 76	-> top 68 cnt 76	STILL-QUIRK
+6	75	setItemCount 111	prev quirk top 68 cnt 76	-> top 68 cnt 111	normalized
+6	119	setItemCount 296	prev quirk top 95 cnt 102	-> top 95 cnt 296	normalized
+7	28	selectRange 105 108	prev quirk top 185 cnt 191	-> top 185 cnt 191	STILL-QUIRK
+7	29	wheel 120	prev quirk top 185 cnt 191	-> top 166 cnt 191	normalized
+7	34	setItemCount 163	prev quirk top 77 cnt 89	-> top 77 cnt 163	normalized
+7	44	addAt 153 550	prev quirk top 63 cnt 64	-> top 63 cnt 64	STILL-QUIRK
+7	45	setItemCount 342	prev quirk top 63 cnt 64	-> top 63 cnt 342	normalized
+7	122	selectionIndex	prev quirk top 164 cnt 187	-> top 164 cnt 187	STILL-QUIRK
+7	123	select 269	prev quirk top 164 cnt 187	-> top 164 cnt 187	STILL-QUIRK
+7	124	dblclick 23	prev quirk top 164 cnt 187	-> top 164 cnt 187	STILL-QUIRK
+7	125	setItemCount 267	prev quirk top 164 cnt 187	-> top 164 cnt 267	normalized
+7	127	setItemCount 154	prev quirk top 89 cnt 98	-> top 89 cnt 154	normalized
+7	135	setSelectionIndices 78 44	prev quirk top 64 cnt 77	-> top 32 cnt 77	normalized
+7	145	select 208	prev quirk top 91 cnt 107	-> top 91 cnt 107	STILL-QUIRK
+7	146	setItemCount 89	prev quirk top 91 cnt 107	-> top 66 cnt 89	STILL-QUIRK
+7	147	setItemCount 202	prev quirk top 66 cnt 89	-> top 66 cnt 202	normalized
+8	120	selectionIndex	prev quirk top 24 cnt 41	-> top 24 cnt 41	STILL-QUIRK
+8	121	setSelection 160	prev quirk top 24 cnt 41	-> top 24 cnt 41	STILL-QUIRK
+8	122	setItemCount 152	prev quirk top 24 cnt 41	-> top 24 cnt 152	normalized
+8	129	addAt 24 780	prev quirk top 123 cnt 141	-> top 117 cnt 142	normalized
+8	131	drag 13 down 23	prev quirk top 67 cnt 75	-> top 50 cnt 75	normalized
+8	144	setSelectionIndices 210 63	prev quirk top 204 cnt 206	-> top 51 cnt 206	normalized
+9	133	click 18 none	prev quirk top 131 cnt 136	-> top 131 cnt 136	STILL-QUIRK
+9	134	indexOf 79 59	prev quirk top 131 cnt 136	-> top 131 cnt 136	STILL-QUIRK
+9	135	selectRange 294 314	prev quirk top 131 cnt 136	-> top 131 cnt 136	STILL-QUIRK
+9	136	read 288	prev quirk top 131 cnt 136	-> top 131 cnt 136	STILL-QUIRK
+9	137	setSelection 188	prev quirk top 131 cnt 136	-> top 131 cnt 136	STILL-QUIRK
+9	138	setSelectionIndices 257 271	prev quirk top 131 cnt 136	-> top 131 cnt 136	STILL-QUIRK
+9	139	key UP none	prev quirk top 131 cnt 136	-> top 111 cnt 136	normalized
+9	141	key DOWN none	prev quirk top 61 cnt 65	-> top 40 cnt 65	normalized
+9	146	setItemCount 352	prev quirk top 68 cnt 84	-> top 68 cnt 352	normalized

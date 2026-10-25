@@ -1,0 +1,25 @@
+6 x answer after 'op # at # span # delta # rare'  first: seed 3 step 63
+37 x answer after 'op # at # span # delta #'  first: seed 3 step 55
+13 x answer after 'op # at # span # delta -# rare'  first: seed 3 step 61
+28 x answer after 'op # at # span # delta -#'  first: seed 3 step 48
+11 x bar after 'op # at # span # delta # rare'  first: seed 3 step 60
+43 x bar after 'op # at # span # delta #'  first: seed 3 step 55
+14 x bar after 'op # at # span # delta -# rare'  first: seed 3 step 61
+31 x bar after 'op # at # span # delta -#'  first: seed 3 step 51
+1 x events after 'op # at # span # delta # rare'  first: seed 3 step 102
+14 x events after 'op # at # span # delta #'  first: seed 3 step 86
+3 x events after 'op # at # span # delta -# rare'  first: seed 3 step 61
+9 x events after 'op # at # span # delta -#'  first: seed 3 step 74
+11 x focus after 'op # at # span # delta # rare'  first: seed 3 step 60
+43 x focus after 'op # at # span # delta #'  first: seed 3 step 55
+14 x focus after 'op # at # span # delta -# rare'  first: seed 3 step 61
+31 x focus after 'op # at # span # delta -#'  first: seed 3 step 51
+2 x pixels  first: seed 3
+11 x rows after 'op # at # span # delta # rare'  first: seed 3 step 60
+43 x rows after 'op # at # span # delta #'  first: seed 3 step 55
+14 x rows after 'op # at # span # delta -# rare'  first: seed 3 step 61
+31 x rows after 'op # at # span # delta -#'  first: seed 3 step 51
+9 x sel after 'op # at # span # delta # rare'  first: seed 3 step 60
+43 x sel after 'op # at # span # delta #'  first: seed 3 step 55
+14 x sel after 'op # at # span # delta -# rare'  first: seed 3 step 61
+30 x sel after 'op # at # span # delta -#'  first: seed 3 step 51
