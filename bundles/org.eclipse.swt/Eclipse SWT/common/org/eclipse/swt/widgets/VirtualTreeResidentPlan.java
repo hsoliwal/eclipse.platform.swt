@@ -39,6 +39,9 @@ final class VirtualTreeResidentPlan {
 	/* row key and native handle to committed entry: open addressing, no boxing (a window commit allocates nothing) */
 	private final VirtualLongIntTable slotByKey = new VirtualLongIntTable ();
 	private final VirtualLongIntTable slotByHandle = new VirtualLongIntTable ();
+	/* Preflight-only primitive directories: never overwrite the committed indexes on rejection. */
+	private final VirtualLongIntTable incomingKeys = new VirtualLongIntTable ();
+	private final VirtualLongIntTable incomingHandles = new VirtualLongIntTable ();
 	private int [] lastChild = new int [0];
 
 	private long [] planned = new long [0], retired = new long [0];
@@ -194,7 +197,26 @@ final class VirtualTreeResidentPlan {
 	}
 
 	void commit (int count, int [] parentIds, int [] childIndices, int [] physicalParents, long [] nativeHandles) {
-		if (count != plannedCount || nativeHandles.length < count) throw new IllegalArgumentException ("commit arrays");
+		if (count != plannedCount || nativeHandles.length < count || parentIds.length < count
+				|| childIndices.length < count || physicalParents.length < count) {
+			throw new IllegalArgumentException ("commit arrays");
+		}
+		// Validate the entire native batch before discarding prior committed
+		// indexes or swapping measured-row ownership. The scratch tables retain
+		// primitive high-water capacity; no per-row box/Entry/Node is created.
+		incomingKeys.clear ();
+		incomingHandles.clear ();
+		for (int entry = 0; entry < count; entry++) {
+			long handle = nativeHandles [entry];
+			if (handle == 0) throw new IllegalArgumentException ("uncommitted native row " + entry);
+			int physicalParent = physicalParents [entry];
+			if (physicalParent < -1 || physicalParent >= entry) throw new IllegalArgumentException ("preorder");
+			long coordinate = key (parentIds [entry], childIndices [entry]);
+			if (incomingKeys.get (coordinate) >= 0) throw new IllegalArgumentException ("duplicate logical row");
+			if (incomingHandles.get (handle) >= 0) throw new IllegalArgumentException ("duplicate native handle");
+			incomingKeys.put (coordinate, entry);
+			incomingHandles.put (handle, entry);
+		}
 		if (keys.length < count) {
 			int next = capacity (keys.length, count);
 			keys = new long [next];
