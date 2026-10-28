@@ -1,0 +1,17 @@
+0	indexOfEmpty -1
+1	add 85
+2	select 259
+3	hover 16
+4	deselect 240
+5	select 256
+6	selectionIndex
+7	key PRIOR
+8	addAt 184 694
+9	key RETURN
+10	selectionIndex
+11	visible 13
+12	hover 11
+13	hover 16
+14	key RIGHT
+15	read 290 266
+16	select 113

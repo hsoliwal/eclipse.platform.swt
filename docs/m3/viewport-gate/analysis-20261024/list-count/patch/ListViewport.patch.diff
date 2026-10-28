@@ -1,0 +1,197 @@
+62a63,76
+> 	/*
+> 	 * The list box keeps a top row index past count - page (ListShrinkTopOracle, official 3.135.0): LB_DELETESTRING
+> 	 * keeps the index (a top at or past the new end moves to count - page) and the LB_SETTOPINDEX that stock remove
+> 	 * sends after it fails with LB_ERR for an index >= count. Every path that lets the list box clamp its top
+> 	 * (LB_SETTOPINDEX, scrolling, a caret scrolled into view, a new horizontal extent) clears it.
+> 	 */
+> 	private boolean pastPage;
+> 	/*
+> 	 * The list box's last clicked row (button down), LB_SETSEL row or type-ahead row, a raw index that inserts and deletes do
+> 	 * not move and navigation keys and drags do not set: a plain click below the last row selects it, or nothing when it is past the rows
+> 	 * (ListBelowClickOracle, official 3.135.0). The resident window's own copy is stale once the window moved.
+> 	 */
+> 	private int clickEnd = -1;
+> 	private boolean belowLastRow;
+172a187
+> 				if (pastPage && top <= Math.max (0, model.getItemCount () - Math.max (1, page))) pastPage = false;
+235c250,273
+< 		return Math.max (0, Math.min (row, count - Math.max (1, page)));
+---
+> 		return Math.max (0, Math.min (row, pastPage ? count - 1 : count - Math.max (1, page)));
+> 	}
+> 
+> 	/*
+> 	 * The top row index the list box is left with after `removed` LB_DELETESTRINGs at `at` (the stock remove order),
+> 	 * from `count` rows, top `top` and caret `caret` (ListDeleteTopProbe, ListShrinkTopOracle, official 3.135.0):
+> 	 * the caret moves as deleteResidentRow moves it; a top at or past the new end moves to count - page; a list that
+> 	 * fits the page shows row 0; then the caret is scrolled into view (above: on top; below: on the last full row).
+> 	 */
+> 	private int deletedTop (int top, int caret, int count, int at, int removed) {
+> 		int full = Math.max (1, page);
+> 		for (int k = 0; k < removed; k++) {
+> 			count--;
+> 			if (at == caret && caret > 0) caret--;
+> 			if (caret >= count) caret = Math.max (0, count - 1);
+> 			if (top >= count) top = Math.max (0, count - full);
+> 			if (count <= full) top = 0;
+> 			if (caret < top) {
+> 				top = caret;
+> 			} else if (caret >= top + full) {
+> 				top = caret - full + 1;
+> 			}
+> 		}
+> 		return top;
+355,357c393,416
+< 		int wanted = Math.max (0, Math.min (top - plan.first (), plan.size () - 1));
+< 		if ((int) OS.SendMessage (list.handle, OS.LB_GETTOPINDEX, 0, 0) != wanted) {
+< 			OS.SendMessage (list.handle, OS.LB_SETTOPINDEX, wanted, 0);
+---
+> 		int size = plan.size ();
+> 		int wanted = Math.max (0, Math.min (top - plan.first (), size - 1));
+> 		long handle = list.handle;
+> 		if ((int) OS.SendMessage (handle, OS.LB_GETTOPINDEX, 0, 0) == wanted) return;
+> 		int full = Math.max (1, page), fill = wanted + full - size;
+> 		int nativeCaret = (int) OS.SendMessage (handle, OS.LB_GETCARETINDEX, 0, 0);
+> 		if (pastPage && fill > 0 && size > full && plan.end () == model.getItemCount () && nativeCaret >= wanted && nativeCaret < wanted + full) {
+> 			/*
+> 			 * A top past count - page: LB_SETTOPINDEX clamps it, LB_DELETESTRING keeps it (ListShrinkTopOracle). Blank
+> 			 * rows below the window let the list box take the top, and leave again; the caret stays in view.
+> 			 */
+> 			boolean redraw = list.getDrawing () && OS.IsWindowVisible (handle);
+> 			if (redraw) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);
+> 			try {
+> 				for (int i = 0; i < fill; i++) insertEmptyNative (size + i);
+> 				OS.SendMessage (handle, OS.LB_SETTOPINDEX, wanted, 0);
+> 				for (int i = 0; i < fill; i++) deleteNative (size);
+> 			} finally {
+> 				if (redraw) {
+> 					OS.DefWindowProc (handle, OS.WM_SETREDRAW, 1, 0);
+> 					OS.InvalidateRect (handle, null, true);
+> 				}
+> 			}
+> 			return;
+358a418
+> 		OS.SendMessage (handle, OS.LB_SETTOPINDEX, wanted, 0);
+607a668
+> 				belowLastRow = row < 0 && !ctrl && !shift;
+687c748
+< 		caret = row;
+---
+> 		caret = clickEnd = row;
+703,704c764,765
+< 			/* without an anchor the selection is cleared and the clicked row becomes the anchor */
+< 			model.deselectAll ();
+---
+> 			/* without an anchor (ListCtrlShiftOracle, official 3.135.0) rows 0 .. clickEnd are deselected and the clicked row becomes the anchor; the other rows keep their state */
+> 			if (clickEnd >= 0) model.deselect (0, Math.min (clickEnd, count - 1));
+717c778
+< 		rangeEnd = row;
+---
+> 		rangeEnd = clickEnd = row;
+744a806,823
+> 	/*
+> 	 * A plain click below the last row of an extended list: the list box put anchor and caret on the last row; the only
+> 	 * selected row is clickEnd (none past the rows). The selection is written with LB_SELITEMRANGE, which moves neither
+> 	 * the anchor nor the caret, so a drag that follows extends from the list box's own anchor.
+> 	 */
+> 	private void belowLastRowClick () {
+> 		int count = model.getItemCount ();
+> 		model.deselectAll ();
+> 		if (clickEnd >= 0 && clickEnd < count) model.select (clickEnd);
+> 		int size = plan.size (), first = plan.first ();
+> 		if (size == 0 || deferNative ()) return;
+> 		long handle = list.handle;
+> 		for (int entry = 0; entry < size; entry++) {
+> 			boolean want = model.isSelected (first + entry), have = OS.SendMessage (handle, OS.LB_GETSEL, entry, 0) > 0;
+> 			if (want != have) OS.SendMessage (handle, LB_SELITEMRANGE, want ? 1 : 0, OS.MAKELPARAM (entry, entry));
+> 		}
+> 	}
+> 
+753a833,839
+> 				if (belowLastRow) {
+> 					/* the gesture of a plain click below the last row, until the button goes up */
+> 					if (msg == OS.WM_LBUTTONDOWN || msg == OS.WM_LBUTTONDBLCLK) belowLastRowClick ();
+> 					if (msg == OS.WM_LBUTTONUP) belowLastRow = false;
+> 				} else if (msg == OS.WM_LBUTTONDOWN || msg == OS.WM_LBUTTONDBLCLK) {
+> 					clickEnd = caret;
+> 				}
+868a955
+> 			if (key == OS.VK_HOME || key == OS.VK_END) pastPage = false;
+888a976
+> 		if (key == OS.VK_HOME || key == OS.VK_END) pastPage = false;
+999c1087
+< 			anchor = row;
+---
+> 			anchor = clickEnd = row;
+1020c1108
+< 			anchor = rangeEnd = caret;
+---
+> 			anchor = rangeEnd = clickEnd = caret;
+1028a1117
+> 		pastPage = false;
+1087c1176,1181
+< 			if (hScroll) extent = Math.max (extent, model.measureItem (index) + List.INSET);
+---
+> 			if (hScroll) {
+> 				int grown = Math.max (extent, model.measureItem (index) + List.INSET);
+> 				/* stock setScrollWidth (grow): LB_SETHORIZONTALEXTENT with a new extent lets the list box clamp its top */
+> 				if (grown != extent) pastPage = false;
+> 				extent = grown;
+> 			}
+1124c1218,1221
+< 		if (hScroll && count > itemCount) extent = Math.max (extent, List.INSET);
+---
+> 		if (hScroll && count > itemCount && extent < List.INSET) {
+> 			pastPage = false;
+> 			extent = List.INSET;
+> 		}
+1166a1264
+> 			int nativeTop = deletedTop (top, caret, model.getItemCount (), index, 1);
+1169c1267
+< 			finishRemove (topIndex, width);
+---
+> 			finishRemove (topIndex, width, nativeTop);
+1188a1287
+> 			int nativeTop = deletedTop (top, caret, count, start, end - start + 1);
+1191c1290
+< 			finishRemove (topIndex, width);
+---
+> 			finishRemove (topIndex, width, nativeTop);
+1206c1305
+< 			int topIndex = top, topCount = 0, width = 0, last = -1;
+---
+> 			int topIndex = top, topCount = 0, width = 0, last = -1, nativeTop = top;
+1210a1310
+> 				nativeTop = deletedTop (nativeTop, caret, model.getItemCount (), index, 1);
+1215c1315
+< 			finishRemove (topIndex - topCount, width);
+---
+> 			finishRemove (topIndex - topCount, width, nativeTop);
+1222,1223c1322,1323
+< 	private void finishRemove (int topIndex, int removedWidth) {
+< 		top = topIndex;
+---
+> 	private void finishRemove (int topIndex, int removedWidth, int nativeTop) {
+> 		int written = extent;
+1224a1325,1333
+> 		if (topIndex < model.getItemCount ()) {
+> 			/* LB_SETTOPINDEX (topIndex): the list box clamps it to count - page */
+> 			pastPage = false;
+> 			top = topIndex;
+> 		} else {
+> 			/* LB_SETTOPINDEX fails (LB_ERR): the top stays where the deletions left it, unless a new extent (LB_SETHORIZONTALEXTENT) clamped it */
+> 			top = nativeTop;
+> 			pastPage = extent == written;
+> 		}
+1374a1484
+> 			pastPage = false;
+1376a1487
+> 			pastPage = false;
+1405a1517,1518
+> 		/* stock select (index, false) ends with LB_SETTOPINDEX (topIndex), which clamps a top past count - page */
+> 		if (!scroll) pastPage = false;
+1415c1528
+< 			anchor = rangeEnd = index;
+---
+> 			anchor = rangeEnd = clickEnd = index;

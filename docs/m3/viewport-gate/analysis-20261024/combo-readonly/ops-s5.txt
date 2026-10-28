@@ -1,0 +1,17 @@
+0	drop true
+1	hover 11
+2	listwheel 240
+3	addAt 255 122
+4	add 68
+5	hover 2
+6	select 143
+7	drop true
+8	hover 13
+9	selectionIndex
+10	click 16
+11	visible 15
+12	drop true
+13	type e
+14	selectionIndex
+15	wheel -120
+16	selectionIndex

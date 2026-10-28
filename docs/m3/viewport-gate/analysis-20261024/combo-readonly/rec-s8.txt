@@ -1,0 +1,17 @@
+index -1 | state sel -1 count 300 text '' dropped false | events  | face 256f1b1a | list -
+ok | state sel -1 count 300 text '' dropped false | events  | face 256f1b1a | list -
+ok | state sel 0 count 300 text 'apple 0' dropped false | events M S  | face 9e7b499d | list -
+ok | state sel 0 count 300 text 'apple 0' dropped true | events  | face 98dfa892 | list 0..299/20@0 240dc12c
+ok | state sel 0 count 300 text 'apple 0' dropped true | events  | face 98dfa892 | list 0..299/20@0 240dc12c
+ok | state sel 0 count 300 text 'apple 0' dropped true | events  | face 98dfa892 | list 0..299/20@0 240dc12c
+ok | state sel 0 count 299 text 'apple 0' dropped true | events  | face 98dfa892 | list 0..298/20@0 240dc12c
+item elder 119 indexOf 119 -1 items 299 height 15 | state sel 0 count 299 text 'apple 0' dropped true | events  | face 98dfa892 | list 0..298/20@0 240dc12c
+index 0 | state sel 0 count 299 text 'apple 0' dropped true | events  | face 98dfa892 | list 0..298/20@0 240dc12c
+ok | state sel 0 count 299 text 'apple 0' dropped true | events  | face 98dfa892 | list 0..298/20@0 240dc12c
+ok | state sel 0 count 299 text 'apple 0' dropped true | events  | face 98dfa892 | list 0..298/20@0 240dc12c
+ok | state sel 0 count 299 text 'apple 0' dropped false | events  | face 9e7b499d | list -
+ok | state sel 0 count 299 text 'apple 0' dropped false | events  | face 9e7b499d | list -
+index 0 | state sel 0 count 299 text 'apple 0' dropped false | events  | face 9e7b499d | list -
+ok | state sel 0 count 299 text 'apple 0' dropped false | events  | face 9e7b499d | list -
+item elder 95 indexOf 95 -1 items 299 height 15 | state sel 0 count 299 text 'apple 0' dropped false | events  | face 9e7b499d | list -
+ok | state sel 0 count 299 text 'apple 0' dropped false | events  | face 9e7b499d | list -

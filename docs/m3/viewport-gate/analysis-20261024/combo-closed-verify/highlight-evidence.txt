@@ -1,0 +1,42 @@
+﻿# COLOR_HIGHLIGHT evidence, written 2026-10-24T21:29:07.5240212+05:30
+## last K:/gate-era captures (0,120,212) and first post-change captures (0,120,215)
+19:52:50 K:\m3-work\runs\viewport-stock-recording-20261024\evidence\list-simple-seed0-official.png :: list-simple-seed0-official.png 0x? hilight212=4049 hilight215=0 other0,120,x=13
+19:43:44 K:\m3-work\runs\viewport-stock-recording-20261024\evidence\combo-dropdown-seed0-official.png :: combo-dropdown-seed0-official.png 0x? hilight212=1087 hilight215=0 other0,120,x=41
+20:04:36 K:\m3-work\runs\tree-evidence\combo-dropdown-seed0-viewport.png :: combo-dropdown-seed0-viewport.png 0x? hilight212=1087 hilight215=0 other0,120,x=41
+20:16:10 K:\m3-work\runs\tree-evidence\tree-viewport-seed11-viewport.png :: tree-viewport-seed11-viewport.png 0x? hilight212=118 hilight215=0 other0,120,x=0
+20:38:56 K:\codex-work\agent-temp\claude\e--ws2-com-synexia\a6de83fe-6489-4056-8689-f1217602e9cc\scratchpad\analysis\combo-closed\evidence\off-seed0-list.png :: off-seed0-list.png 0x? hilight212=0 hilight215=3954 other0,120,x=48
+20:39:00 K:\codex-work\agent-temp\claude\e--ws2-com-synexia\a6de83fe-6489-4056-8689-f1217602e9cc\scratchpad\analysis\combo-closed\evidence\fix-seed0-list.png :: fix-seed0-list.png 0x? hilight212=0 hilight215=3954 other0,120,x=48
+20:46:50 K:\codex-work\agent-temp\claude\e--ws2-com-synexia\a6de83fe-6489-4056-8689-f1217602e9cc\scratchpad\analysis\combo-closed\evidence-off\combo-dropdown-seed0-official.png :: combo-dropdown-seed0-official.png 0x? hilight212=581 hilight215=506 other0,120,x=41
+## pixel pairs K: list-simple seed0 official -> post-change replay
+size 300x380 vs 300x380
+differing pixels 4170 in rows 2..16 (15 rows)
+    4049 x 0,120,212 -> 0,120,215
+      12 x 0,120,226 -> 0,120,229
+      12 x 144,144,212 -> 144,144,215
+      11 x 219,190,219 -> 219,190,222
+      11 x 0,144,234 -> 0,144,236
+       9 x 0,168,241 -> 0,168,242
+       8 x 58,190,247 -> 58,190,248
+       8 x 182,255,247 -> 182,255,248
+       7 x 182,168,212 -> 182,168,215
+       6 x 255,212,226 -> 255,212,229
+       6 x 102,120,212 -> 102,120,215
+       4 x 219,255,241 -> 219,255,242
+distinct pairs 31
+## pixel pairs K: combo-dropdown seed0 official -> analyst re-record official
+size 300x23 vs 300x23
+differing pixels 694 in rows 3..17 (15 rows)
+     506 x 0,120,212 -> 0,120,215
+      35 x 0,120,226 -> 0,120,229
+      22 x 144,144,212 -> 144,144,215
+      19 x 182,255,247 -> 182,255,248
+      17 x 102,120,212 -> 102,120,215
+      12 x 219,190,219 -> 219,190,222
+      11 x 182,255,241 -> 182,255,242
+      10 x 0,144,234 -> 0,144,236
+      10 x 182,168,212 -> 182,168,215
+       6 x 58,190,247 -> 58,190,248
+       6 x 0,120,219 -> 0,120,222
+       5 x 0,168,241 -> 0,168,242
+distinct pairs 30
+## live vs persisted: COLOR_HIGHLIGHT live 0 120 215 registry '0 120 212'; COLOR_MENUHILIGHT live 51 153 255 registry '0 120 212'

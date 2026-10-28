@@ -1,0 +1,336 @@
+--- a/bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/ListViewport.java
++++ b/bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/ListViewport.java
+@@ -60,6 +60,20 @@
+ 	 * keeps it internally and LB_SETANCHORINDEX resets it, so it is a lane here.
+ 	 */
+ 	private int rangeEnd = -1;
++	/*
++	 * The list box keeps a top row index past count - page (ListShrinkTopOracle, official 3.135.0): LB_DELETESTRING
++	 * keeps the index (a top at or past the new end moves to count - page) and the LB_SETTOPINDEX that stock remove
++	 * sends after it fails with LB_ERR for an index >= count. Every path that lets the list box clamp its top
++	 * (LB_SETTOPINDEX, scrolling, a caret scrolled into view, a new horizontal extent) clears it.
++	 */
++	private boolean pastPage;
++	/*
++	 * The list box's last clicked row (button down), LB_SETSEL row or type-ahead row, a raw index that inserts and deletes do
++	 * not move and navigation keys and drags do not set: a plain click below the last row selects it, or nothing when it is past the rows
++	 * (ListBelowClickOracle, official 3.135.0). The resident window's own copy is stale once the window moved.
++	 */
++	private int clickEnd = -1;
++	private boolean belowLastRow;
+ 	private int itemHeight = 1, clientHeight, page;
+ 	/* horizontal extent written to the list box, as LB_SETHORIZONTALEXTENT keeps it */
+ 	private int extent;
+@@ -170,6 +184,7 @@
+ 				relayout = false;
+ 				measureGeometry ();
+ 				top = clampTop (top);
++				if (pastPage && top <= Math.max (0, model.getItemCount () - Math.max (1, page))) pastPage = false;
+ 				if (!deferNative ()) {
+ 					ensureWindow ();
+ 					writeLanes ();
+@@ -232,7 +247,30 @@
+ 	/** Largest top row: the native list box keeps a full page below it (at least one row). */
+ 	private int clampTop (int row) {
+ 		int count = model.getItemCount ();
+-		return Math.max (0, Math.min (row, count - Math.max (1, page)));
++		return Math.max (0, Math.min (row, pastPage ? count - 1 : count - Math.max (1, page)));
++	}
++
++	/*
++	 * The top row index the list box is left with after `removed` LB_DELETESTRINGs at `at` (the stock remove order),
++	 * from `count` rows, top `top` and caret `caret` (ListDeleteTopProbe, ListShrinkTopOracle, official 3.135.0):
++	 * the caret moves as deleteResidentRow moves it; a top at or past the new end moves to count - page; a list that
++	 * fits the page shows row 0; then the caret is scrolled into view (above: on top; below: on the last full row).
++	 */
++	private int deletedTop (int top, int caret, int count, int at, int removed) {
++		int full = Math.max (1, page);
++		for (int k = 0; k < removed; k++) {
++			count--;
++			if (at == caret && caret > 0) caret--;
++			if (caret >= count) caret = Math.max (0, count - 1);
++			if (top >= count) top = Math.max (0, count - full);
++			if (count <= full) top = 0;
++			if (caret < top) {
++				top = caret;
++			} else if (caret >= top + full) {
++				top = caret - full + 1;
++			}
++		}
++		return top;
+ 	}
+ 
+ 	private int overscan () {
+@@ -352,10 +390,32 @@
+ 	/** Puts the native top row of the window on the logical top row; the list box scrolls (and blits) natively. */
+ 	void positionPlane () {
+ 		if (plan.size () == 0) return;
+-		int wanted = Math.max (0, Math.min (top - plan.first (), plan.size () - 1));
+-		if ((int) OS.SendMessage (list.handle, OS.LB_GETTOPINDEX, 0, 0) != wanted) {
+-			OS.SendMessage (list.handle, OS.LB_SETTOPINDEX, wanted, 0);
++		int size = plan.size ();
++		int wanted = Math.max (0, Math.min (top - plan.first (), size - 1));
++		long handle = list.handle;
++		if ((int) OS.SendMessage (handle, OS.LB_GETTOPINDEX, 0, 0) == wanted) return;
++		int full = Math.max (1, page), fill = wanted + full - size;
++		int nativeCaret = (int) OS.SendMessage (handle, OS.LB_GETCARETINDEX, 0, 0);
++		if (pastPage && fill > 0 && size > full && plan.end () == model.getItemCount () && nativeCaret >= wanted && nativeCaret < wanted + full) {
++			/*
++			 * A top past count - page: LB_SETTOPINDEX clamps it, LB_DELETESTRING keeps it (ListShrinkTopOracle). Blank
++			 * rows below the window let the list box take the top, and leave again; the caret stays in view.
++			 */
++			boolean redraw = list.getDrawing () && OS.IsWindowVisible (handle);
++			if (redraw) OS.DefWindowProc (handle, OS.WM_SETREDRAW, 0, 0);
++			try {
++				for (int i = 0; i < fill; i++) insertEmptyNative (size + i);
++				OS.SendMessage (handle, OS.LB_SETTOPINDEX, wanted, 0);
++				for (int i = 0; i < fill; i++) deleteNative (size);
++			} finally {
++				if (redraw) {
++					OS.DefWindowProc (handle, OS.WM_SETREDRAW, 1, 0);
++					OS.InvalidateRect (handle, null, true);
++				}
++			}
++			return;
+ 		}
++		OS.SendMessage (handle, OS.LB_SETTOPINDEX, wanted, 0);
+ 	}
+ 
+ 	/**
+@@ -605,6 +665,7 @@
+ 				boolean exact = prepareNative (row >= 0 ? row : caret, row >= 0 ? row : caret);
+ 				if (!extended) return false;
+ 				boolean ctrl = OS.GetKeyState (OS.VK_CONTROL) < 0, shift = OS.GetKeyState (OS.VK_SHIFT) < 0;
++				belowLastRow = row < 0 && !ctrl && !shift;
+ 				if (ctrl && shift && row >= 0) {
+ 					replaceRange (row);
+ 					return true;
+@@ -684,7 +745,7 @@
+ 		/* Shift and Ctrl+Shift alike: the rows from the anchor to the clicked row replace the selection; without an anchor none */
+ 		model.deselectAll ();
+ 		if (anchor >= 0 && anchor < count) model.select (Math.min (anchor, row), Math.max (anchor, row));
+-		caret = row;
++		caret = clickEnd = row;
+ 		keepRowVisible (row);
+ 		selectionDirty = true;
+ 		layout ();
+@@ -700,8 +761,8 @@
+ 	private void replaceRange (int row) {
+ 		int count = model.getItemCount ();
+ 		if (anchor < 0 || anchor >= count) {
+-			/* without an anchor the selection is cleared and the clicked row becomes the anchor */
+-			model.deselectAll ();
++			/* without an anchor (ListCtrlShiftOracle, official 3.135.0) rows 0 .. clickEnd are deselected and the clicked row becomes the anchor; the other rows keep their state */
++			if (clickEnd >= 0) model.deselect (0, Math.min (clickEnd, count - 1));
+ 			anchor = row;
+ 		} else {
+ 			boolean selected = model.isSelected (anchor);
+@@ -714,7 +775,7 @@
+ 			}
+ 		}
+ 		caret = row;
+-		rangeEnd = row;
++		rangeEnd = clickEnd = row;
+ 		if (OS.GetFocus () != list.handle) OS.SetFocus (list.handle);
+ 		selectionDirty = true;
+ 		layout ();
+@@ -742,6 +803,24 @@
+ 		if (end < count) model.deselect (end, count - 1);
+ 	}
+ 
++	/*
++	 * A plain click below the last row of an extended list: the list box put anchor and caret on the last row; the only
++	 * selected row is clickEnd (none past the rows). The selection is written with LB_SELITEMRANGE, which moves neither
++	 * the anchor nor the caret, so a drag that follows extends from the list box's own anchor.
++	 */
++	private void belowLastRowClick () {
++		int count = model.getItemCount ();
++		model.deselectAll ();
++		if (clickEnd >= 0 && clickEnd < count) model.select (clickEnd);
++		int size = plan.size (), first = plan.first ();
++		if (size == 0 || deferNative ()) return;
++		long handle = list.handle;
++		for (int entry = 0; entry < size; entry++) {
++			boolean want = model.isSelected (first + entry), have = OS.SendMessage (handle, OS.LB_GETSEL, entry, 0) > 0;
++			if (want != have) OS.SendMessage (handle, LB_SELITEMRANGE, want ? 1 : 0, OS.MAKELPARAM (entry, entry));
++		}
++	}
++
+ 	/** After the list box handled a message: copy user changes into the lanes and let the window follow. */
+ 	void afterNative (int msg, long wParam) {
+ 		if (msg == OS.WM_MOUSEMOVE && (wParam & OS.MK_LBUTTON) == 0) return;
+@@ -751,6 +830,13 @@
+ 				nativeDirty = true;
+ 				captureResidentState ();
+ 				if (msg != OS.WM_SIZE && msg != OS.WM_CHAR) rangeEnd = caret;
++				if (belowLastRow) {
++					/* the gesture of a plain click below the last row, until the button goes up */
++					if (msg == OS.WM_LBUTTONDOWN || msg == OS.WM_LBUTTONDBLCLK) belowLastRowClick ();
++					if (msg == OS.WM_LBUTTONUP) belowLastRow = false;
++				} else if (msg == OS.WM_LBUTTONDOWN || msg == OS.WM_LBUTTONDBLCLK) {
++					clickEnd = caret;
++				}
+ 				layout ();
+ 				if (msg != OS.WM_SIZE && msg != OS.WM_MOUSEMOVE && msg != OS.WM_TIMER) notifyAccessibility ();
+ 			}
+@@ -866,6 +952,7 @@
+ 		if (!single && !extended) {
+ 			/* SIMPLE (LBS_MULTIPLESEL): the keys move the caret only; the list box notifies even when the caret stays (recorded differential) */
+ 			caret = target;
++			if (key == OS.VK_HOME || key == OS.VK_END) pastPage = false;
+ 			if (key == OS.VK_HOME) {
+ 				top = 0;
+ 			} else if (key == OS.VK_END) {
+@@ -886,6 +973,7 @@
+ 		caret = target;
+ 		rangeEnd = target;
+ 		if (!extend) anchor = target;
++		if (key == OS.VK_HOME || key == OS.VK_END) pastPage = false;
+ 		if (key == OS.VK_HOME) {
+ 			top = 0;
+ 		} else if (key == OS.VK_END) {
+@@ -996,7 +1084,7 @@
+ 			}
+ 			model.deselectAll ();
+ 			model.select (row);
+-			anchor = row;
++			anchor = clickEnd = row;
+ 			selectionDirty = true;
+ 			layout ();
+ 			list.sendSelectionEvent (SWT.Selection);
+@@ -1017,7 +1105,7 @@
+ 			model.deselect (caret);
+ 		} else {
+ 			model.select (caret);
+-			anchor = rangeEnd = caret;
++			anchor = rangeEnd = clickEnd = caret;
+ 		}
+ 		selectionDirty = true;
+ 		layout ();
+@@ -1026,6 +1114,7 @@
+ 	}
+ 
+ 	void setTopRow (int row) {
++		pastPage = false;
+ 		top = clampTop (row);
+ 		layout ();
+ 	}
+@@ -1084,7 +1173,12 @@
+ 			int first = plan.first ();
+ 			int entry = deferNative () ? -1 : plan.inserted (index, 1);
+ 			if (entry >= 0) insertNative (entry, index);
+-			if (hScroll) extent = Math.max (extent, model.measureItem (index) + List.INSET);
++			if (hScroll) {
++				int grown = Math.max (extent, model.measureItem (index) + List.INSET);
++				/* stock setScrollWidth (grow): LB_SETHORIZONTALEXTENT with a new extent lets the list box clamp its top */
++				if (grown != extent) pastPage = false;
++				extent = grown;
++			}
+ 			/* a row added after the window leaves the native rows, caret and anchor as they are */
+ 			if (entry >= 0 || plan.first () != first) focusDirty = true;
+ 			deferBarPaint = true;
+@@ -1121,7 +1215,10 @@
+ 				changeDepth--;
+ 			}
+ 		}
+-		if (hScroll && count > itemCount) extent = Math.max (extent, List.INSET);
++		if (hScroll && count > itemCount && extent < List.INSET) {
++			pastPage = false;
++			extent = List.INSET;
++		}
+ 		focusDirty = true;
+ 		layout ();
+ 		writeExtent ();
+@@ -1164,9 +1261,10 @@
+ 			if (index < 0 || index >= model.getItemCount ()) list.error (SWT.ERROR_INVALID_RANGE);
+ 			int width = hScroll ? model.measureItem (index) : 0;
+ 			int topIndex = top;
++			int nativeTop = deletedTop (top, caret, model.getItemCount (), index, 1);
+ 			deleteResidentRow (index);
+ 			if (index < topIndex) topIndex--;
+-			finishRemove (topIndex, width);
++			finishRemove (topIndex, width, nativeTop);
+ 		} finally {
+ 			changeDepth--;
+ 		}
+@@ -1186,9 +1284,10 @@
+ 			int width = 0;
+ 			if (hScroll) for (int i = start; i <= end; i++) width = Math.max (width, model.measureItem (i));
+ 			int topIndex = top;
++			int nativeTop = deletedTop (top, caret, count, start, end - start + 1);
+ 			removeRun (start, end - start + 1);
+ 			if (end < topIndex) topIndex -= end - start + 1;
+-			finishRemove (topIndex, width);
++			finishRemove (topIndex, width, nativeTop);
+ 		} finally {
+ 			changeDepth--;
+ 		}
+@@ -1203,25 +1302,35 @@
+ 			int count = model.getItemCount ();
+ 			int low = sorted [0], high = sorted [sorted.length - 1];
+ 			if (!(0 <= low && low <= high && high < count)) list.error (SWT.ERROR_INVALID_RANGE);
+-			int topIndex = top, topCount = 0, width = 0, last = -1;
++			int topIndex = top, topCount = 0, width = 0, last = -1, nativeTop = top;
+ 			for (int i = sorted.length - 1; i >= 0; i--) {
+ 				int index = sorted [i];
+ 				if (index == last) continue;
+ 				if (hScroll) width = Math.max (width, model.measureItem (index));
++				nativeTop = deletedTop (nativeTop, caret, model.getItemCount (), index, 1);
+ 				deleteResidentRow (index);
+ 				if (index < topIndex) topCount++;
+ 				last = index;
+ 			}
+-			finishRemove (topIndex - topCount, width);
++			finishRemove (topIndex - topCount, width, nativeTop);
+ 		} finally {
+ 			changeDepth--;
+ 		}
+ 	}
+ 
+ 	/* stock remove: the top row index is set again (and clamped); the extent is recomputed when the widest row went */
+-	private void finishRemove (int topIndex, int removedWidth) {
+-		top = topIndex;
++	private void finishRemove (int topIndex, int removedWidth, int nativeTop) {
++		int written = extent;
+ 		if (hScroll && removedWidth + List.INSET >= extent) extent = model.getWidestWidth () + List.INSET;
++		if (topIndex < model.getItemCount ()) {
++			/* LB_SETTOPINDEX (topIndex): the list box clamps it to count - page */
++			pastPage = false;
++			top = topIndex;
++		} else {
++			/* LB_SETTOPINDEX fails (LB_ERR): the top stays where the deletions left it, unless a new extent (LB_SETHORIZONTALEXTENT) clamped it */
++			top = nativeTop;
++			pastPage = extent == written;
++		}
+ 		focusDirty = true;
+ 		deferBarPaint = true;
+ 		try {
+@@ -1372,8 +1481,10 @@
+ 	private void keepRowVisible (int index) {
+ 		if (index < top) {
+ 			top = index;
++			pastPage = false;
+ 		} else if (index >= top + page) {
+ 			top = !single && page == 0 && clientHeight > 0 ? index : index - page + 1;
++			pastPage = false;
+ 		}
+ 		top = clampTop (top);
+ 	}
+@@ -1403,6 +1514,8 @@
+ 	void select (int index, boolean scroll) {
+ 		sync ();
+ 		if (index < 0 || index >= model.getItemCount ()) return;
++		/* stock select (index, false) ends with LB_SETTOPINDEX (topIndex), which clamps a top past count - page */
++		if (!scroll) pastPage = false;
+ 		int entry = plan.entryOf (index);
+ 		if (single) {
+ 			model.deselectAll ();
+@@ -1412,7 +1525,7 @@
+ 			if (entry >= 0) mirror (OS.LB_SETCURSEL, entry, 0);
+ 		} else {
+ 			model.select (index);
+-			anchor = rangeEnd = index;
++			anchor = rangeEnd = clickEnd = index;
+ 			if (scroll) caret = index;
+ 			if (entry >= 0) mirror (OS.LB_SETSEL, 1, entry);
+ 		}

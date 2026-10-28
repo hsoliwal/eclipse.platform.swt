@@ -1,0 +1,152 @@
+# reference official, SWT 4974 win32
+ok | state sel -1 count 300 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 300 text '' dropped true | events  | face 85318e2f | list 0..299/20@0 c6024cf8
+ok | state sel -1 count 300 text '' dropped true | events  | face 85318e2f | list 0..299/20@0 c6024cf8
+ok | state sel -1 count 0 text '' dropped true | events M  | face 85318e2f | list 0..100/0@0 30a15891
+index -1 | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..100/0@0 30a15891
+index -1 | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..100/0@0 30a15891
+ok | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..100/0@0 30a15891
+index -1 | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..100/0@0 30a15891
+error Index out of bounds | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..100/0@0 30a15891
+ok | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..100/0@0 30a15891
+error Index out of bounds | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..100/0@0 30a15891
+ok | state sel -1 count 0 text '' dropped false | events M S  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+error Index out of bounds | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+index -1 | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+error Index out of bounds | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..0/1@0 aa6b3d1b
+index -1 | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'e' dropped true | events M  | face 9cfd6665 | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'e' dropped true | events  | face 9cfd6665 | list 0..0/1@0 aa6b3d1b
+index -1 | state sel -1 count 0 text 'e' dropped true | events  | face 9cfd6665 | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'e' dropped true | events  | face 9cfd6665 | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'ec' dropped true | events M  | face 45386204 | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'ecA' dropped true | events M  | face 2ded21d3 | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'ecA' dropped true | events  | face 2ded21d3 | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'ecA' dropped true | events  | face 2ded21d3 | list 0..0/1@0 aa6b3d1b
+index -1 | state sel -1 count 0 text 'ecA' dropped true | events  | face 2ded21d3 | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'ecA' dropped true | events  | face 2ded21d3 | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'ecA' dropped false | events  | face 695a0598 | list -
+index -1 | state sel -1 count 0 text 'ecA' dropped false | events  | face 695a0598 | list -
+ok | state sel -1 count 0 text 'ecA' dropped false | events D  | face 695a0598 | list -
+ok | state sel -1 count 0 text 'ecA' dropped false | events  | face 695a0598 | list -
+index -1 | state sel -1 count 0 text 'ecA' dropped false | events  | face 695a0598 | list -
+item absent indexOf -1 -1 items 0 height 15 | state sel -1 count 0 text 'ecA' dropped false | events  | face 695a0598 | list -
+index -1 | state sel -1 count 0 text 'ecA' dropped false | events  | face 695a0598 | list -
+ok | state sel -1 count 0 text 'ecA' dropped false | events  | face 695a0598 | list -
+ok | state sel -1 count 1 text 'ecA' dropped false | events  | face 695a0598 | list -
+error Index out of bounds | state sel -1 count 1 text 'ecA' dropped false | events  | face 695a0598 | list -
+ok | state sel -1 count 1 text 'ecA1' dropped false | events M  | face 7d9ccbd5 | list -
+indexOf '' -1 0 | state sel -1 count 1 text 'ecA1' dropped false | events  | face 7d9ccbd5 | list -
+ok | state sel -1 count 1 text 'ecA1' dropped false | events  | face 7d9ccbd5 | list -
+ok | state sel -1 count 1 text 'ecA1' dropped false | events  | face 7d9ccbd5 | list -
+ok | state sel -1 count 1 text 'ecA1' dropped false | events  | face 7d9ccbd5 | list -
+ok | state sel -1 count 1 text 'ecA1' dropped false | events  | face 7d9ccbd5 | list -
+index -1 | state sel -1 count 1 text 'ecA1' dropped false | events  | face 7d9ccbd5 | list -
+ok | state sel -1 count 2 text 'ecA1' dropped false | events  | face 7d9ccbd5 | list -
+ok | state sel -1 count 2 text 'ecA1' dropped false | events  | face 7d9ccbd5 | list -
+ok | state sel -1 count 2 text 'ecA1' dropped false | events  | face 7d9ccbd5 | list -
+ok | state sel -1 count 2 text 'ecA1' dropped true | events  | face 422fe810 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'ecA1' dropped true | events  | face 422fe810 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'ecA1' dropped true | events  | face 422fe810 | list 0..1/2@0 d3bab9d
+error Index out of bounds | state sel -1 count 2 text 'ecA1' dropped true | events  | face 422fe810 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'absent' dropped true | events M  | face 63da6897 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'absent' dropped true | events  | face 63da6897 | list 0..1/2@0 d3bab9d
+index -1 | state sel -1 count 2 text 'absent' dropped true | events  | face 63da6897 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'absent' dropped true | events  | face 63da6897 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'absent' dropped true | events M  | face 63da6897 | list 0..1/2@0 d3bab9d
+ok | state sel 0 count 2 text '' dropped true | events M S  | face 85318e2f | list 0..1/2@0 877b409d
+index 0 | state sel 0 count 2 text '' dropped true | events  | face 85318e2f | list 0..1/2@0 877b409d
+index 0 | state sel 0 count 2 text '' dropped true | events  | face 85318e2f | list 0..1/2@0 877b409d
+ok | state sel 0 count 2 text '' dropped true | events  | face 85318e2f | list 0..1/2@0 877b409d
+index 0 | state sel 0 count 2 text '' dropped true | events  | face 85318e2f | list 0..1/2@0 877b409d
+ok | state sel 0 count 2 text 'ABSENT' dropped true | events M  | face c906b8b7 | list 0..1/2@0 877b409d
+ok | state sel 0 count 2 text 'ABSENT' dropped true | events  | face c906b8b7 | list 0..1/2@0 877b409d
+index 0 | state sel 0 count 2 text 'ABSENT' dropped true | events  | face c906b8b7 | list 0..1/2@0 877b409d
+ok | state sel 0 count 2 text 'ABSENT' dropped true | events  | face c906b8b7 | list 0..1/2@0 877b409d
+item absent indexOf -1 -1 items 2 height 15 | state sel 0 count 2 text 'ABSENT' dropped true | events  | face c906b8b7 | list 0..1/2@0 877b409d
+ok | state sel 0 count 2 text 'ABSENT' dropped true | events  | face c906b8b7 | list 0..1/2@0 877b409d
+ok | state sel 0 count 2 text 'ABSENT' dropped true | events  | face c906b8b7 | list 0..1/2@0 877b409d
+ok | state sel 0 count 2 text 'ABSENT' dropped false | events  | face 4739c7c | list -
+ok | state sel 0 count 2 text 'ABSENT' dropped false | events  | face 4739c7c | list -
+ok | state sel 0 count 2 text 'ABSENT' dropped false | events  | face 4739c7c | list -
+ok | state sel -1 count 2 text 'ABSENT' dropped true | events M S  | face c906b8b7 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'ABSENT' dropped true | events  | face c906b8b7 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'ABSENT' dropped true | events  | face c906b8b7 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'absen' dropped true | events M  | face 16c44399 | list 0..1/2@0 d3bab9d
+index -1 | state sel -1 count 2 text 'absen' dropped true | events  | face 16c44399 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'absen' dropped true | events  | face 16c44399 | list 0..1/2@0 d3bab9d
+ok | state sel 1 count 2 text '' dropped true | events M S  | face 85318e2f | list 0..1/2@0 c62d409d
+ok | state sel 1 count 2 text '' dropped true | events  | face 85318e2f | list 0..1/2@0 c62d409d
+index 1 | state sel 1 count 2 text '' dropped true | events  | face 85318e2f | list 0..1/2@0 c62d409d
+ok | state sel 1 count 2 text '' dropped true | events  | face 85318e2f | list 0..1/2@0 c62d409d
+ok | state sel 1 count 2 text '' dropped true | events  | face 85318e2f | list 0..1/2@0 c62d409d
+ok | state sel 0 count 2 text '' dropped true | events M S  | face 85318e2f | list 0..1/2@0 877b409d
+ok | state sel 0 count 2 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel 0 count 2 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel 0 count 2 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel 0 count 2 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 2 text '' dropped true | events  | face 85318e2f | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 2 text 'ABSENT' dropped true | events M  | face c906b8b7 | list 0..1/2@0 d3bab9d
+ok | state sel -1 count 3 text 'ABSENT' dropped true | events  | face c906b8b7 | list 0..2/2@0 810517bd
+ok | state sel 1 count 3 text '' dropped true | events M S  | face 85318e2f | list 0..2/2@1 36a4043d
+ok | state sel 1 count 3 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 3 text '' dropped true | events M S  | face 85318e2f | list 0..2/3@0 3e68eac7
+ok | state sel 0 count 3 text '' dropped true | events M S  | face 85318e2f | list 0..2/3@0 2df67fc7
+ok | state sel 0 count 3 text '' dropped true | events  | face 85318e2f | list 0..2/3@0 2df67fc7
+ok | state sel -1 count 3 text 'b' dropped true | events M  | face d68387ff | list 0..2/3@0 3e68eac7
+ok | state sel 0 count 3 text '' dropped true | events M S  | face 85318e2f | list 0..2/3@0 2df67fc7
+error Index out of bounds | state sel 0 count 3 text '' dropped true | events  | face 85318e2f | list 0..2/3@0 2df67fc7
+ok | state sel 2 count 3 text '' dropped true | events M S  | face 85318e2f | list 0..2/3@0 f75a7fc7
+ok | state sel 2 count 3 text '' dropped true | events  | face 85318e2f | list 0..2/3@0 f75a7fc7
+ok | state sel 2 count 3 text '' dropped true | events  | face 85318e2f | list 0..2/3@0 f75a7fc7
+ok | state sel 2 count 3 text '' dropped true | events  | face 85318e2f | list 0..2/3@0 f75a7fc7
+error Index out of bounds | state sel 2 count 3 text '' dropped true | events  | face 85318e2f | list 0..2/3@0 f75a7fc7
+ok | state sel 2 count 3 text '' dropped true | events  | face 85318e2f | list 0..2/3@0 f75a7fc7
+item absent indexOf -1 -1 items 3 height 15 | state sel 2 count 3 text '' dropped true | events  | face 85318e2f | list 0..2/3@0 f75a7fc7
+ok | state sel 2 count 3 text '' dropped false | events  | face c09e71f4 | list -
+error Index out of bounds | state sel 2 count 3 text '' dropped false | events  | face c09e71f4 | list -
+error Index out of bounds | state sel 2 count 3 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel 2 count 3 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel 2 count 3 text '' dropped false | events  | face c09e71f4 | list -
+error Index out of bounds | state sel 2 count 3 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped false | events M  | face c09e71f4 | list -
+index -1 | state sel -1 count 0 text '' dropped false | events  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '1' dropped true | events M  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+index -1 | state sel -1 count 0 text '1' dropped true | events  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+error Index out of bounds | state sel -1 count 0 text '1' dropped true | events  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '1' dropped true | events  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '1' dropped true | events  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '1' dropped true | events  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '1' dropped true | events  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+index -1 | state sel -1 count 0 text '1' dropped true | events  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '1' dropped true | events  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '1' dropped true | events  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+error Index out of bounds | state sel -1 count 0 text '1' dropped true | events  | face 1ae1d26c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '1z' dropped true | events M  | face 875fe3b3 | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '1zz' dropped true | events M  | face 133a443c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text '1zz' dropped true | events  | face 133a443c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'b1zz' dropped true | events M  | face de51e38c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'b1zz' dropped true | events  | face de51e38c | list 0..0/1@0 aa6b3d1b
+error Argument not valid | state sel -1 count 0 text 'b1zz' dropped true | events  | face de51e38c | list 0..0/1@0 aa6b3d1b
+error Index out of bounds | state sel -1 count 0 text 'b1zz' dropped true | events  | face de51e38c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'b1zz' dropped true | events  | face de51e38c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'b1zz' dropped true | events  | face de51e38c | list 0..0/1@0 aa6b3d1b
+error Index out of bounds | state sel -1 count 0 text 'b1zz' dropped true | events  | face de51e38c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 0 text 'b1zz' dropped true | events  | face de51e38c | list 0..0/1@0 aa6b3d1b
+error Index out of bounds | state sel -1 count 0 text 'b1zz' dropped true | events  | face de51e38c | list 0..0/1@0 aa6b3d1b
+index -1 | state sel -1 count 0 text 'b1zz' dropped true | events  | face de51e38c | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 1 text 'b1zz' dropped true | events  | face de51e38c | list 0..0/1@0 35bc75d6
+ok | state sel -1 count 2 text 'b1zz' dropped true | events  | face de51e38c | list 0..1/2@0 35bc75d6
+item absent indexOf -1 -1 items 2 height 15 | state sel -1 count 2 text 'b1zz' dropped true | events  | face de51e38c | list 0..1/2@0 35bc75d6
+pixels de51e38c

@@ -1,0 +1,90 @@
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.widgets.*;
+
+/**
+ * Oracle: after a MeasureItem listener makes the rows taller (the native item height follows during the next paint),
+ * which operation makes the native TreeView recompute its vertical scroll bar (thumb = page)? Same tree as the custom
+ * draw differential: SWT.VIRTUAL | SWT.MULTI | SWT.BORDER, 300 roots, 40 children each, 300 x 380 inside a 320 x 420 shell.
+ * Usage: java HeightBarOracle <op>   prints: op, bar before the height change, after it, after the op.
+ */
+public class HeightBarOracle {
+	static int measureHeight;
+
+	static String bar (Tree tree) {
+		ScrollBar b = tree.getVerticalBar ();
+		TreeItem t = tree.getTopItem ();
+		return b.getSelection () + "/" + b.getMaximum () + " t" + b.getThumb () + " h" + tree.getItemHeight () + " top=" + (t == null ? "null" : t.getText ());
+	}
+
+	static void pump (Display d) throws Exception {
+		for (int i = 0; i < 10; i++) {
+			while (d.readAndDispatch ()) { }
+			Thread.sleep (5);
+		}
+	}
+
+	public static void main (String [] args) throws Exception {
+		String op = args.length > 0 ? args [0] : "none";
+		Display display = new Display ();
+		Shell shell = new Shell (display);
+		shell.setBounds (20, 20, 320, 420);
+		Tree tree = new Tree (shell, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
+		tree.setBounds (5, 5, 300, 380);
+		tree.addListener (SWT.SetData, e -> {
+			TreeItem item = (TreeItem) e.item;
+			TreeItem parent = item.getParentItem ();
+			if (parent == null) {
+				item.setText ("root " + tree.indexOf (item));
+				item.setItemCount (40);
+			} else {
+				item.setText ("child " + parent.indexOf (item));
+			}
+		});
+		tree.addListener (SWT.MeasureItem, e -> {
+			if (measureHeight > e.height) e.height = measureHeight;
+		});
+		tree.setItemCount (300);
+		shell.open ();
+		pump (display);
+		tree.setTopItem (tree.getItem (157));
+		tree.update ();
+		pump (display);
+		String start = bar (tree);
+		measureHeight = 28;
+		tree.redraw ();
+		tree.update ();
+		pump (display);
+		String taller = bar (tree);
+		TreeItem root202 = tree.getItem (202);
+		switch (op) {
+			case "none" -> { }
+			case "selectChild" -> tree.select (root202.getItem (31));
+			case "selectRoot" -> tree.select (tree.getItem (204));
+			case "setSelectionRoot" -> tree.setSelection (tree.getItem (159));
+			case "showSelection" -> { tree.setSelection (tree.getItem (159)); pump (display); String mid = bar (tree); tree.showSelection (); System.out.print ("[after setSelection " + mid + "] "); }
+			case "showItemVisible" -> tree.showItem (tree.getItem (160));
+			case "showItemFar" -> tree.showItem (tree.getItem (280));
+			case "setTopItem" -> tree.setTopItem (tree.getItem (159));
+			case "redraw" -> { tree.redraw (); tree.update (); }
+			case "keyDown" -> { OS.SendMessage (tree.handle, 0x0100, 0x28, 0); OS.SendMessage (tree.handle, 0x0101, 0x28, 0xC0000001L); }
+			case "wheel" -> { Point c = tree.toDisplay (150, 190); OS.SendMessage (tree.handle, 0x020A, ((long) (-120 & 0xFFFF)) << 16, (c.x & 0xFFFF) | ((long) (c.y & 0xFFFF) << 16)); }
+			case "setItemCountSame" -> tree.setItemCount (300);
+			case "setItemCountPlus" -> tree.setItemCount (301);
+			case "clear" -> tree.clear (158, false);
+			case "getBounds" -> tree.getItem (158).getBounds ();
+			case "expand" -> tree.getItem (158).setExpanded (true);
+			case "setRedraw" -> { tree.setRedraw (false); tree.setRedraw (true); }
+			case "setSizeSame" -> tree.setSize (300, 380);
+			case "setSizePlus" -> tree.setSize (300, 381);
+			case "setText" -> tree.getItem (158).setText ("edited");
+			case "deselectAll" -> tree.deselectAll ();
+			case "focus" -> tree.setFocus ();
+			default -> throw new IllegalArgumentException (op);
+		}
+		pump (display);
+		System.out.println ("op=" + op + " | start " + start + " | taller " + taller + " | after " + bar (tree));
+		display.dispose ();
+	}
+}

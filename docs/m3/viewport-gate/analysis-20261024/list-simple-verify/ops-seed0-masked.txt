@@ -1,0 +1,70 @@
+selectAll
+click # none
+getTop
+click # none
+setEmpty #
+click # ctrl
+add #
+remove #
+key NEXT ctrl
+dblclick #
+getTop
+key HOME ctrlshift
+selectIndices # #
+click # none
+showSelection
+select #
+setSelectionRange # #
+setSelectionStrings # #
+indexOf # #
+showSelection
+type x
+setSelection #
+deselectAll
+setEmpty #
+click # ctrlshift
+setSelection #
+setEmpty #
+selectIndices # #
+read #
+menu
+setSelectionStrings # #
+setEmpty #
+key DOWN none
+type s
+removeIndices # # #
+add #
+read #
+deselectRange # #
+type x
+deselectRange # #
+click # ctrl
+indexOf # #
+select #
+deselect #
+setItem # #
+deselectRange # #
+select #
+addNul #
+deselectAll
+addNul #
+click # ctrl
+click # ctrlshift
+setTopIndex #
+setSelectionStrings # #
+selectIndices # #
+setTopIndex #
+click # ctrl
+wheel -#
+read #
+addNul #
+key UP ctrl
+click # none
+click # ctrlshift
+key DOWN ctrlshift
+indexOf # #
+removeRange # #
+showSelection
+type R
+setSelectionIndices # #
+addNul #

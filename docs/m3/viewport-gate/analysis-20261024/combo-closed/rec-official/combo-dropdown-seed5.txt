@@ -1,0 +1,152 @@
+# reference official, SWT 4974 win32
+ok | state sel -1 count 300 text '' dropped true | events  | face 85318e2f | list 0..299/20@0 c6024cf8
+ok | state sel 11 count 300 text '' dropped true | events  | face 85318e2f | list 0..299/20@0 cbfd33c1
+ok | state sel 11 count 300 text '' dropped true | events  | face 85318e2f | list 0..299/20@0 cbfd33c1
+ok | state sel 11 count 301 text '' dropped true | events  | face 85318e2f | list 0..300/20@0 cbfd33c1
+ok | state sel 11 count 302 text '' dropped true | events  | face 85318e2f | list 0..301/20@0 cbfd33c1
+ok | state sel 2 count 302 text '' dropped true | events  | face 85318e2f | list 0..301/20@0 d23d5c33
+ok | state sel 143 count 302 text 'elder 143' dropped true | events M  | face 3767b442 | list 0..301/20@143 b5a387e4
+ok | state sel 143 count 302 text 'elder 143' dropped true | events  | face 3767b442 | list 0..301/20@143 b5a387e4
+ok | state sel 156 count 302 text 'elder 143' dropped true | events  | face 3767b442 | list 0..301/20@143 db2b8abb
+index 156 | state sel 156 count 302 text 'elder 143' dropped true | events  | face 3767b442 | list 0..301/20@143 db2b8abb
+ok | state sel 159 count 302 text 'Apple 159' dropped false | events M S  | face 10eba454 | list -
+ok | state sel 159 count 302 text 'Apple 159' dropped false | events  | face 10eba454 | list -
+ok | state sel 159 count 302 text 'Apple 159' dropped true | events  | face d57ec08f | list 0..301/15@159 e19d899f
+ok | state sel -1 count 302 text 'e' dropped true | events M  | face 9cfd6665 | list 0..301/15@5 78ac8501
+index -1 | state sel -1 count 302 text 'e' dropped true | events  | face 9cfd6665 | list 0..301/15@5 78ac8501
+ok | state sel -1 count 302 text 'e' dropped true | events  | face 9cfd6665 | list 0..301/15@8 203a04f0
+index -1 | state sel -1 count 302 text 'e' dropped true | events  | face 9cfd6665 | list 0..301/15@8 203a04f0
+index -1 | state sel -1 count 302 text 'e' dropped true | events  | face 9cfd6665 | list 0..301/15@8 203a04f0
+index -1 | state sel -1 count 302 text 'e' dropped true | events  | face 9cfd6665 | list 0..301/15@8 203a04f0
+ok | state sel -1 count 292 text 'e' dropped true | events  | face 9cfd6665 | list 0..291/15@5 78ac8501
+item date 154 indexOf 154 154 items 292 height 15 | state sel -1 count 292 text 'e' dropped true | events  | face 9cfd6665 | list 0..291/15@5 78ac8501
+ok | state sel -1 count 292 text 'date 28' dropped true | events M  | face 8e1c1345 | list 0..291/15@5 78ac8501
+ok | state sel -1 count 292 text 'date 28' dropped true | events  | face 8e1c1345 | list 0..291/15@277 b7ba643b
+ok | state sel -1 count 292 text 'date 28' dropped true | events  | face 8e1c1345 | list 0..291/15@271 53429a5c
+ok | state sel -1 count 291 text 'date 28' dropped true | events  | face 8e1c1345 | list 0..290/15@5 78ac8501
+ok | state sel 0 count 291 text 'apple 0' dropped true | events M S  | face 4ccf0e14 | list 0..290/15@0 d50bbb5b
+ok | state sel 12 count 291 text 'apple 12' dropped false | events M S  | face 5846a57e | list -
+ok | state sel 13 count 291 text 'berry 13' dropped false | events M S  | face b8a119a1 | list -
+ok | state sel 13 count 291 text 'elder 89' dropped false | events M  | face d145e0ad | list -
+index 13 | state sel 13 count 291 text 'elder 89' dropped false | events  | face d145e0ad | list -
+ok | state sel 48 count 291 text 'apple 48' dropped false | events M  | face 30bfbba5 | list -
+ok | state sel 48 count 291 text 'apple 48' dropped false | events  | face 30bfbba5 | list -
+ok | state sel 48 count 291 text 'apple 48' dropped true | events  | face f552d7e0 | list 0..290/15@48 e0bcc6ae
+ok | state sel 48 count 289 text 'apple 48' dropped true | events  | face f552d7e0 | list 0..288/15@48 e0bcc6ae
+defect COMBO-1 | state sel 48 count 289 text 'apple 48' dropped true | events  | face f552d7e0 | list 0..288/15@48 e0bcc6ae
+ok | state sel 48 count 289 text 'apple 48' dropped true | events  | face f552d7e0 | list 0..288/15@274 b7ba643b
+ok | state sel 48 count 288 text 'apple 48' dropped true | events  | face f552d7e0 | list 0..287/15@48 2205c6ae
+ok | state sel 48 count 288 text 'apple 48' dropped true | events  | face f552d7e0 | list 0..287/15@273 b7ba643b
+ok | state sel -1 count 288 text 'B' dropped true | events M  | face 4abc8306 | list 0..287/15@1 f589200d
+ok | state sel -1 count 288 text 'B' dropped true | events  | face 4abc8306 | list 0..287/15@1 f589200d
+ok | state sel -1 count 288 text 'B' dropped true | events  | face 4abc8306 | list 0..287/15@0 37eb6459
+ok | state sel -1 count 288 text 'Apple 39' dropped true | events M  | face fab93ace | list 0..287/15@0 37eb6459
+ok | state sel 48 count 288 text 'Apple 39' dropped false | events  | face c1f64a92 | list -
+ok | state sel 48 count 288 text 'Apple 39' dropped false | events  | face c1f64a92 | list -
+ok | state sel 48 count 288 text 'Apple 39' dropped false | events  | face c1f64a92 | list -
+ok | state sel 48 count 288 text 'Apple 39' dropped false | events  | face c1f64a92 | list -
+ok | state sel 48 count 289 text 'Apple 39' dropped false | events  | face c1f64a92 | list -
+index 48 | state sel 48 count 289 text 'Apple 39' dropped false | events  | face c1f64a92 | list -
+ok | state sel 48 count 289 text 'Apple 39' dropped false | events  | face c1f64a92 | list -
+index 48 | state sel 48 count 289 text 'Apple 39' dropped false | events  | face c1f64a92 | list -
+ok | state sel 39 count 289 text 'Apple 39' dropped true | events  | face 868966cd | list 0..288/13@39 628d2524
+indexOf '' -1 -1 | state sel 39 count 289 text 'Apple 39' dropped true | events  | face 868966cd | list 0..288/13@39 628d2524
+index 39 | state sel 39 count 289 text 'Apple 39' dropped true | events  | face 868966cd | list 0..288/13@39 628d2524
+ok | state sel 39 count 289 text 'Apple 39' dropped true | events  | face 868966cd | list 0..288/13@39 628d2524
+ok | state sel 38 count 289 text 'cherry 38' dropped true | events M S  | face 87cb6e68 | list 0..288/13@38 6e26d647
+index 38 | state sel 38 count 289 text 'cherry 38' dropped true | events  | face 87cb6e68 | list 0..288/13@38 6e26d647
+index 38 | state sel 38 count 289 text 'cherry 38' dropped true | events  | face 87cb6e68 | list 0..288/13@38 6e26d647
+ok | state sel 38 count 289 text 'cherry 38' dropped true | events  | face 87cb6e68 | list 0..288/13@38 6e26d647
+error Index out of bounds | state sel 38 count 289 text 'cherry 38' dropped true | events  | face 87cb6e68 | list 0..288/13@38 6e26d647
+ok | state sel 38 count 289 text 'cherry 38' dropped true | events  | face ffaf986f | list 0..288/13@38 6e26d647
+ok | state sel 38 count 290 text 'cherry 38' dropped true | events  | face ffaf986f | list 0..289/13@38 6e26d647
+ok | state sel 38 count 290 text 'zz154' dropped true | events M  | face 1dd1f575 | list 0..289/13@38 6e26d647
+ok | state sel 38 count 290 text 'berry 91' dropped true | events M  | face 4dff70fd | list 0..289/13@38 6e26d647
+ok | state sel 45 count 290 text 'berry 91' dropped true | events  | face 4dff70fd | list 0..289/13@38 2e201191
+ok | state sel 45 count 290 text 'Apple 45' dropped false | events M S  | face fcb96020 | list -
+ok | state sel 45 count 290 text 'Apple 45' dropped false | events  | face fcb96020 | list -
+ok | state sel 45 count 291 text 'Apple 45' dropped false | events  | face fcb96020 | list -
+ok | state sel 45 count 292 text 'Apple 45' dropped false | events  | face fcb96020 | list -
+ok | state sel 45 count 292 text 'Apple 45' dropped false | events  | face fcb96020 | list -
+ok | state sel 45 count 292 text 'Apple 45' dropped false | events  | face 72422dd | list -
+indexOf '' 100 100 | state sel 45 count 292 text 'Apple 45' dropped false | events  | face 72422dd | list -
+ok | state sel 46 count 292 text 'date 46' dropped false | events M S  | face 223aa3d5 | list -
+ok | state sel 46 count 293 text 'date 46' dropped false | events  | face 223aa3d5 | list -
+ok | state sel 46 count 282 text 'date 46' dropped false | events  | face 223aa3d5 | list -
+ok | state sel 46 count 283 text 'date 46' dropped false | events  | face 223aa3d5 | list -
+ok | state sel 46 count 284 text 'date 46' dropped false | events  | face 223aa3d5 | list -
+ok | state sel 58 count 284 text 'date 58' dropped false | events M S  | face cf242504 | list -
+ok | state sel 58 count 284 text 'date 58' dropped false | events  | face cf242504 | list -
+defect COMBO-1 | state sel 58 count 284 text 'date 58' dropped false | events  | face cf242504 | list -
+index 58 | state sel 58 count 284 text 'date 58' dropped false | events  | face cf242504 | list -
+ok | state sel -1 count 284 text 'B' dropped false | events M  | face 862966cb | list -
+ok | state sel -1 count 283 text 'B' dropped false | events  | face 862966cb | list -
+ok | state sel -1 count 282 text 'B' dropped false | events  | face 862966cb | list -
+ok | state sel -1 count 282 text 'BA' dropped false | events M  | face 5bb7291a | list -
+ok | state sel -1 count 282 text 'BA' dropped false | events  | face 5bb7291a | list -
+ok | state sel -1 count 282 text 'BA' dropped false | events  | face 5bb7291a | list -
+index -1 | state sel -1 count 282 text 'BA' dropped false | events  | face 5bb7291a | list -
+ok | state sel -1 count 282 text 'BA' dropped false | events  | face 5bb7291a | list -
+indexOf '' 100 100 | state sel -1 count 282 text 'BA' dropped false | events  | face 5bb7291a | list -
+ok | state sel -1 count 282 text 'BA' dropped false | events  | face 5bb7291a | list -
+ok | state sel -1 count 282 text 'BA' dropped false | events  | face 5bb7291a | list -
+ok | state sel -1 count 282 text 'BA' dropped false | events  | face 5bb7291a | list -
+ok | state sel -1 count 282 text 'BA' dropped false | events  | face 5bb7291a | list -
+ok | state sel -1 count 282 text 'BA' dropped false | events  | face 5bb7291a | list -
+ok | state sel 0 count 282 text 'apple 0' dropped false | events M S  | face 883bf1d9 | list -
+index 0 | state sel 0 count 282 text 'apple 0' dropped false | events  | face 883bf1d9 | list -
+error Index out of bounds | state sel 0 count 282 text 'apple 0' dropped false | events  | face 883bf1d9 | list -
+ok | state sel 0 count 283 text 'apple 0' dropped false | events  | face 883bf1d9 | list -
+ok | state sel -1 count 283 text 'e' dropped false | events M  | face d86a4a2a | list -
+ok | state sel -1 count 283 text 'eB' dropped false | events M  | face 526f9401 | list -
+ok | state sel -1 count 283 text 'eB' dropped false | events  | face 526f9401 | list -
+ok | state sel -1 count 283 text 'eB' dropped false | events  | face 526f9401 | list -
+item new 886 indexOf 280 280 items 283 height 15 | state sel -1 count 283 text 'eB' dropped false | events  | face 526f9401 | list -
+ok | state sel -1 count 284 text 'eB' dropped false | events  | face 526f9401 | list -
+ok | state sel -1 count 284 text 'eB' dropped true | events  | face 1702b03c | list 0..283/13@0 b4e88168
+ok | state sel -1 count 284 text 'eB' dropped false | events  | face 526f9401 | list -
+ok | state sel -1 count 284 text 'eB' dropped true | events  | face 1702b03c | list 0..283/13@0 b4e88168
+ok | state sel -1 count 284 text 'ceB' dropped true | events M  | face 572395db | list 0..283/13@0 b4e88168
+ok | state sel -1 count 284 text 'ceB' dropped true | events  | face 572395db | list 0..283/13@0 b4e88168
+ok | state sel -1 count 284 text 'ceB' dropped false | events  | face 929079a0 | list -
+ok | state sel -1 count 284 text 'ceB' dropped false | events  | face 929079a0 | list -
+ok | state sel -1 count 284 text 'ceB' dropped false | events  | face 929079a0 | list -
+index -1 | state sel -1 count 284 text 'ceB' dropped false | events  | face 929079a0 | list -
+index -1 | state sel -1 count 284 text 'ceB' dropped false | events  | face 929079a0 | list -
+ok | state sel -1 count 284 text 'zz92' dropped false | events M  | face 1220c162 | list -
+ok | state sel -1 count 284 text 'zz92' dropped false | events  | face 1220c162 | list -
+ok | state sel -1 count 285 text 'zz92' dropped false | events  | face 1220c162 | list -
+ok | state sel -1 count 285 text 'zz92' dropped false | events  | face 1220c162 | list -
+ok | state sel -1 count 285 text 'zz92' dropped true | events  | face d6b3dd9d | list 0..284/12@0 d674abc6
+ok | state sel -1 count 285 text 'zz92' dropped true | events  | face d6b3dd9d | list 0..284/12@150 900216a4
+ok | state sel -1 count 285 text 'zz177' dropped true | events M  | face 82b7f20a | list 0..284/12@150 900216a4
+ok | state sel 234 count 285 text 'elder 257' dropped true | events M  | face 18cf740b | list 0..284/12@234 b8b5c58
+ok | state sel 233 count 285 text 'date 256' dropped true | events M S  | face 20a772f5 | list 0..284/12@233 ebde5325
+ok | state sel 233 count 285 text 'date 256' dropped true | events  | face 20a772f5 | list 0..284/12@236 a7660a89
+ok | state sel 233 count 285 text 'date 256' dropped true | events  | face 20a772f5 | list 0..284/12@245 620e8b07
+ok | state sel 258 count 285 text 'apple 282' dropped true | events M  | face a61556bb | list 0..284/12@258 535c3526
+ok | state sel -1 count 285 text 'c' dropped true | events M  | face 14eb5cce | list 0..284/12@2 4fdb7fc7
+ok | state sel -1 count 286 text 'c' dropped true | events  | face 14eb5cce | list 0..285/12@2 4fdb7fc7
+ok | state sel -1 count 286 text 'c' dropped true | events  | face 14eb5cce | list 0..285/12@0 d674abc6
+ok | state sel -1 count 287 text 'c' dropped true | events  | face 14eb5cce | list 0..286/12@0 d674abc6
+ok | state sel -1 count 287 text 'c' dropped true | events  | face 14eb5cce | list 0..286/12@0 d674abc6
+ok | state sel -1 count 287 text 'c' dropped true | events  | face 14eb5cce | list 0..286/12@0 d674abc6
+ok | state sel 1 count 287 text 'c' dropped true | events  | face 14eb5cce | list 0..286/12@0 8e762e8e
+ok | state sel 1 count 287 text 'berry 91' dropped true | events M  | face 4dff70fd | list 0..286/12@0 8e762e8e
+ok | state sel 1 count 287 text 'berry 91' dropped true | events  | face 4dff70fd | list 0..286/12@0 8e762e8e
+ok | state sel 41 count 287 text 'elder 41' dropped true | events M  | face 1e533738 | list 0..286/12@41 2defd510
+index 41 | state sel 41 count 287 text 'elder 41' dropped true | events  | face 1e533738 | list 0..286/12@41 2defd510
+ok | state sel 41 count 287 text 'elder 41' dropped true | events  | face 1e533738 | list 0..286/12@41 2defd510
+ok | state sel 41 count 288 text 'elder 41' dropped true | events  | face 1e533738 | list 0..287/12@41 2defd510
+ok | state sel 30 count 288 text 'apple 30' dropped true | events M S  | face 385a011e | list 0..287/12@30 fe530752
+index 30 | state sel 30 count 288 text 'apple 30' dropped true | events  | face 385a011e | list 0..287/12@30 fe530752
+index 30 | state sel 30 count 288 text 'apple 30' dropped true | events  | face 385a011e | list 0..287/12@30 fe530752
+ok | state sel 30 count 288 text 'apple 30' dropped true | events  | face 385a011e | list 0..287/12@30 fe530752
+ok | state sel 30 count 288 text 'absent' dropped true | events M  | face 63da6897 | list 0..287/12@30 fe530752
+ok | state sel 30 count 288 text 'absent' dropped false | events  | face 9f474c5c | list -
+ok | state sel -1 count 0 text '' dropped false | events M  | face c09e71f4 | list -
+ok | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..0/1@0 aa6b3d1b
+item absent indexOf -1 -1 items 0 height 15 | state sel -1 count 0 text '' dropped true | events  | face 85318e2f | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 1 text '' dropped true | events  | face 85318e2f | list 0..0/1@0 aa6b3d1b
+ok | state sel -1 count 1 text '' dropped true | events  | face 85318e2f | list 0..0/1@0 aa6b3d1b
+pixels 85318e2f

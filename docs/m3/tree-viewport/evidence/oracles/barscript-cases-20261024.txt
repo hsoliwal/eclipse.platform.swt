@@ -1,0 +1,28 @@
+top:100 top:0 expand:105
+top:100 top:0 expand:19
+top:100 top:0 expand:18
+top:100 top:0 expand:20
+expand:5 top:100 collapse:5
+top:100 top:0 expand:105 collapse:105
+expand:5 top:30 collapse:5
+top:20 expand:25 top:30 collapse:25
+expand:7 key:L top:10 collapse:7
+expand:7 expand:3 key:L
+expand:7 wheel:up
+expand:7 wheel:down
+expand:7 size:380
+expand:7 size:300
+expand:7 select:3 sel:3
+expand:7 insert:250
+expand:7 dispose:250
+expand:7 count:300
+expand:7 count:299
+expand:7 top:100 top:0
+expand:7 show:200
+expand:7 collapse:7 expand:5
+expand:7 collapse:7 wheel:down
+expand:7 collapse:7 show:3
+expand:7 collapse:7 insert:250
+expand:7 collapse:7 size:300
+top:2 expand:2
+top:2 expand:1

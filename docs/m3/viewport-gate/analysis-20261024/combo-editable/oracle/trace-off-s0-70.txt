@@ -1,0 +1,49 @@
+# SWT 4974 mode official seed 0
+== step 70 drop true | before: text 'berry 163' sel 14
+CB CB_146 0
+  LB LB_GETCOUNT
+    -> 152 | edit 'berry 163'
+  -> 152 | edit 'berry 163'
+CB CB_14f 1
+  SH notify CBN_DROPDOWN
+    CB CB_152 0
+      -> 1 | edit 'berry 163'
+    CB CB_146 0
+      LB LB_GETCOUNT
+        -> 152 | edit 'berry 163'
+      -> 152 | edit 'berry 163'
+    CB CB_164 0
+      -> 1 | edit 'berry 163'
+    CB CB_154 0
+      LB LB_GETITEMHEIGHT
+        -> 15 | edit 'berry 163'
+      -> 15 | edit 'berry 163'
+    CB CB_164 0
+      -> 1 | edit 'berry 163'
+    -> 0 | edit 'berry 163'
+  LB LB_FINDSTRING -1 'berry 163'
+    -> 14 | edit 'berry 163'
+  LB LB_SETCURSEL 14
+    -> 14 | edit 'berry 163'
+  LB LB_SETCARETINDEX 14
+    -> -1 | edit 'berry 163'
+  LB LB_SETTOPINDEX 14
+    -> 0 | edit 'berry 163'
+  LB LB_FINDSTRINGEXACT -1 'berry 163'
+    -> 14 | edit 'berry 163'
+  LB LB_GETTEXTLEN 14
+    -> 9 | edit 'berry 163'
+  LB LB_GETTEXT 14
+    -> 9 | edit 'berry 163'
+  ED WM_SETTEXT 'berry 163'
+    -> 1 | edit 'berry 163'
+  ED EM_SETSEL 0,2147483647
+    -> 1 | edit 'berry 163'
+  LB LB_GETITEMHEIGHT
+    -> 15 | edit 'berry 163'
+  LB LB_GETCOUNT
+    -> 152 | edit 'berry 163'
+  LB LBCB_STARTTRACK
+    -> 0 | edit 'berry 163'
+  -> 1 | edit 'berry 163'
+== after step 70: ok | sel 14 text 'berry 163' dropped true events 

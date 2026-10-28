@@ -59,3 +59,20 @@ the harness's reflection helpers) runs unchanged on the official jar.
 with the official 3.135.0 jar and with `-Dswt.widget.mode=original`: the viewport run matches both (jar `aw5`, win32). The ScrolledComposite differentials run on the harness: stock recording 1/1,
 viewport run 21/21 together with the plane geometry and acceptance tests (jar `aw5`, win32). The Tree differential on
 #196 is not migrated here (another agent's file); its probes are listed above so the move is mechanical.
+
+## The probe and the gate (2026-10-24)
+
+Every Tree viewport test aborts on its "mediation is active" assumption when the viewport does not drive the scrollbar,
+and an aborted test is easy to read as a passed run. Two tools in `docs/m3/tree-viewport/tools` close that gap:
+
+- `viewport_probe.sh <swt jar> [rows] [java options]`: a 300-row `SWT.VIRTUAL` Tree on the test desktop, one line of
+  facts (viewport class, parked flag, gate verdict, bar maximum and thumb, top item), `GOOD` iff the rows materialize
+  and the bar spans them (the official 3.135.0 jar: maximum 299, thumb 12, "row 0"); thirty seconds, exit 0 iff GOOD.
+  `-Dswt.visibility.gate=false` as the third argument is the control that separates the gate from the viewport.
+- `viewport_gate.sh <worktree> [<stamp>]`: compile win32, build the jar and the tests, probe, then the Tree, Table and
+  List viewport acceptance classes and every Tree differential variant in survey mode; `GATE_GREEN` only with a GOOD
+  probe, 0 failed and 0 aborted tests; one row per run in `VIEWPORT_GATE.tsv` of OUT. A merge into the integration
+  branch is not done until this says GATE_GREEN.
+
+The 2026-10-24 regression (EffectiveVisibility clipping a wrapped Tree against its parked, zero-sized inner window:
+every virtual Tree empty since round 13) was invisible for four days because the aborted assumptions read as green.

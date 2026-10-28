@@ -114,8 +114,8 @@ aspect: structural changes (insert, dispose, setItemCount, clear, removeAll) rec
 aspect: SWT.CHECK (setChecked, setGrayed, check events)		GAP
 aspect: columns (header, column order, sort indicator, showColumn, horizontal scroll)		GAP
 aspect: presentation (fonts, colours, images per item and cell) in pixels		GAP
-aspect: MeasureItem/EraseItem/PaintItem custom draw		GAP
-aspect: drag and drop feedback (insert mark, auto-scroll)		GAP
+aspect: MeasureItem/EraseItem/PaintItem custom draw	seededScriptsWithCustomDrawAnswerLikeStockSwt (12 seeds x 150, recordings tree-stock-recording-i)	DIFFERENTIAL_IDENTICAL 2026-10-24 (jar tv20261024l): 0 kinds of difference (161 at tv20261024d, 45 after 98a81e9c0f, 12 after 58783ad6ef); rules: item height adoption per HeightBarOracle, the bar that stock's parent window leaves after an expand or collapse in view per ExpandBarOracle and BarScriptOracle (evidence/oracles)
+aspect: drag and drop feedback (insert mark, auto-scroll)		GAP (leaf T7: TreeDropTargetEffect sends TVM_HITTEST, TVGN_FIRSTVISIBLE and TVM_ENSUREVISIBLE to the content plane: auto-scroll moves the plane, not the viewport)
 aspect: tooltips for truncated rows		GAP
 aspect: accessibility (row count, focus, names)		GAP
 aspect: DPI change while scrolled		GAP

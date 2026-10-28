@@ -220,6 +220,7 @@ Every answer is compared with the linear walk, kept in the test as `LinearRefere
 | T4 | non-virtual Trees through the same topology (`new TreeItem` registers a logical row and inserts natively only when resident) | 100,000-row build < 1 s; plain-Tree differential |
 | T5 | GTK and Cocoa non-virtual mediation (GTK virtual is already bounded) | compile plus hosted runtime evidence |
 | T6 | logical accessibility | NOT_CLAIMED until done |
+| T7 | native TreeView messages that SWT's own code sends to `tree.handle` (the content plane in viewport mode): `TreeDropTargetEffect.dragOver` hit-tests, reads `TVGN_FIRSTVISIBLE`/`TVGN_NEXTVISIBLE` and scrolls with `TVM_ENSUREVISIBLE`, so drag auto-scroll and auto-expand see resident rows only and scroll the plane instead of the viewport; a client `WM_VSCROLL` to `tree.handle` scrolls stock by a line and does nothing in viewport mode (ExpandBarOracle `lineDown`, 2026-10-24) | DND script (auto-scroll up and down across the resident window edges, auto-expand) and `WM_VSCROLL` to `tree.handle` answer like stock |
 
 After Tree comes Table (win32 already has `LVS_OWNERDATA`; a mediated Table always uses it internally), then the other widget families in `docs/M3-SCALE/runs/20261013-all-widget-viewport/WIDGET_IMPLEMENTATION_LEDGER.tsv` (Synexia).
 
@@ -237,3 +238,53 @@ See [`tree-viewport/FOSS_REUSE_DECISION.tsv`](tree-viewport/FOSS_REUSE_DECISION.
 - No leaf is implemented by this commit.
 - GTK and Cocoa runtime behaviour is not measured on this host.
 - Accessibility with logical row counts is not claimed.
+
+## Status 2026-10-24 (round 14 of the integration branch, jar tv20261024d)
+
+- Regression fixed: the effective-visibility gate parked every virtual Tree in viewport mode since round 13
+  (9a71e3f844, docs/m3/visibility/VISIBILITY_AND_VIEWPORT.md); the tree-viewport branch head 83fbeb36fb is merged
+  (the bar and the plane follow while parked, off-window expansion keys), its unfinished footer engine left out.
+- `viewport_probe.sh`: Tree, Table and List GOOD (bar maximum 299, thumbs 12/11/14, row 0 materialized).
+- Viewport suites, 41 tests: 39 pass, 0 aborted; the plain, columns, presentation and splice differential variants are
+  identical to the stock recordings; two survey reports stay open: custom draw 161 kinds (ASPECT_MATRIX line 117) and
+  expansion keys 44 kinds (ADD or MULTIPLY on an expanded off-window caret row scrolls the viewport by ten rows where
+  stock does nothing; collapse and expand move the bar by 9 to 35 rows against the recording; next leaf).
+- 2026-10-24 09:20 UTC: the keys variant is identical to the stock recording (44 kinds -> 7 -> 0) after two viewport
+  rules were corrected against the ExpansionKeyOracle with probes on both jars: `expanding()` returns for a row already
+  expanded natively (1f7a07f1a1), and `scrollChildrenIntoView` puts a row above the view at the top only when every
+  child stays above the view (jar tv20261024f: keys, plain, columns and splice variants identical, 0 aborted). Open:
+  custom draw, 161 kinds; the wheel notch after taller rows answers like stock in isolation, so the root is an earlier
+  step of seed 9 (survey mode keeps first examples per kind only; replay one seed without survey to see the step log).
+- 2026-10-24 09:45 UTC: af24dd274b (showItem and setTopItem re-lay out after a MeasureItem height change) regressed the
+  differential (plain 0 -> 165 kinds, presentation 0 -> 386, custom draw 161 -> 331, jar tv20261024g) and is reverted by
+  1c02dc64ae; the reverted tree (jar tv20261024h) is back to the previous state: probe GOOD for Tree, Table and List,
+  plain and presentation identical to the stock recordings, custom draw 161 kinds. The custom-draw root (seed 0 step
+  81: stock thumb 14 -> 12 on a showSelection after a taller row, top kept) needs an oracle of when the native TreeView
+  recomputes its bars after a height change before the viewport copies the rule.
+- 2026-10-24 12:28 UTC: 98a81e9c0f re-applies af24dd274b (the regression did not reproduce; rebuilt exactly it keeps
+  plain and presentation identical twice) and custom draw goes 161 -> 45 kinds; HeightBarOracle (cf8ed38fc5, 22
+  operations after a MeasureItem height change on the official 3.135.0 jar and the M3 jar) names the operations that
+  adopt a new item height.
+- 2026-10-24 13:02 UTC: 58783ad6ef: setSelection, setExpanded and destroy adopt a new item height first (jar
+  tv20261024i, two runs): custom draw 45 -> 12 kinds, the other five variants identical.
+- 2026-10-24 14:20 UTC: custom draw identical to the stock recording (12 -> 0 kinds). Jar tv20261024l: all six Tree
+  differential variants and the Tree acceptance suite green (14 of 14). Rules copied from stock:
+  - setExpanded and setSelection adopt a new item height only where stock acts, after its early returns (an expand of
+    a row without children or already expanded, setSelection of nothing; recording seed 0 step 88 kept thumb 12), and
+    setTopItem of the top row adopts nothing (ExpandBarOracle, case h28 adopt=false);
+  - where stock has a parent window (a column, a shown header or a MeasureItem listener), whose bar is a copy of the
+    TreeView's, a programmatic expand of a row in view leaves the bar at the row the TreeView scrolled to while the top
+    row stays (root 7 at top 0: bar 7/339), and a collapse in view leaves the bar untouched; the next native bar update
+    (a key, the wheel, a scroll, an ensure-visible, a new size, rows inserted or removed, setRedraw (true)) shows the top
+    row again. A tree without a parent window keeps its bar in step (plain and presentation recordings, seed 1 step 57).
+    ExpandBarOracle and BarScriptOracle (evidence/oracles, official 3.135.0 against the M3 jar): 51 of 52 and 28 of 28
+    cases identical; the open case is `WM_VSCROLL` sent to `tree.handle` (leaf T7).
+  - `Tree.setRedraw (true)` reaches the viewport (`redrawEnabled`), a hook of recipe SwtTreeViewportWin32Tree
+    (syn-recipes, second pass UNCHANGED).
+  - 14:40 UTC: every logical scroll counts as a native bar update (a click or a type-ahead that scrolls the caret
+    into view goes through `afterNative`, not through the key, wheel or showItem paths): the layout compares the top
+    row with the one the bar was last shown for. Jar tv20261024m: Tree 14 of 14, oracles 51 of 52 and 28 of 28.
+- Gate tool: viewport_gate.sh read the test-compile error count as "0 0" (`grep -c || echo 0`) and stopped before the
+  suites; fixed. Over all 14 viewport classes it aborts 17 tests that have no stock reference yet (CTabFolder,
+  StyledText, CoolBar, ExpandBar, ScrolledComposite, Table, the List hidden/zoom/resize/count and Combo verify/closed
+  variants): the next leaf records them with the official jar.

@@ -1,0 +1,12 @@
+# SWT 4974 mode official
+0	0	drop false	ok | state sel -1 count 300 text '' dropped false | events  | face c09e71f4 | list -	lb n300 sel-1 top0 caret0 official	before lb n300 sel-1 top0 caret0 official
+0	1	deselect 211	ok | state sel -1 count 300 text '' dropped false | events  | face c09e71f4 | list -	lb n300 sel-1 top0 caret0 official	before lb n300 sel-1 top0 caret0 official
+0	2	click 18	ok | state sel -1 count 300 text '' dropped false | events  | face c09e71f4 | list -	lb n300 sel-1 top0 caret0 official	before lb n300 sel-1 top0 caret0 official
+0	3	listwheel -360	ok | state sel -1 count 300 text '' dropped false | events  | face c09e71f4 | list -	lb n300 sel-1 top0 caret0 official	before lb n300 sel-1 top0 caret0 official
+0	4	selectionIndex	index -1 | state sel -1 count 300 text '' dropped false | events  | face c09e71f4 | list -	lb n300 sel-1 top0 caret0 official	before lb n300 sel-1 top0 caret0 official
+0	5	thumb 181	ok | state sel -1 count 300 text '' dropped false | events  | face c09e71f4 | list -	lb n300 sel-1 top0 caret0 official	before lb n300 sel-1 top0 caret0 official
+0	6	indexOfEmpty -2	defect COMBO-1 | state sel -1 count 300 text '' dropped false | events  | face c09e71f4 | list -	lb n300 sel-1 top0 caret0 official	before lb n300 sel-1 top0 caret0 official
+0	7	setText 56 2	ok | state sel -1 count 300 text 'CHERRY 56' dropped false | events M  | face 89aab7a2 | list -	lb n300 sel-1 top0 caret0 official	before lb n300 sel-1 top0 caret0 official
+0	8	key DOWN	ok | state sel 0 count 300 text 'apple 0' dropped false | events M S  | face 883bf1d9 | list -	lb n300 sel0 top0 caret0 official	before lb n300 sel-1 top0 caret0 official
+0	9	addEmpty 196	ok | state sel 0 count 301 text 'apple 0' dropped false | events  | face 883bf1d9 | list -	lb n301 sel0 top0 caret0 official	before lb n300 sel0 top0 caret0 official
+0	END	pixels	pixels 883bf1d9

@@ -1,0 +1,17 @@
+defect COMBO-1 | state sel -1 count 300 text '' dropped false | events  | face 256f1b1a | list -
+ok | state sel -1 count 301 text '' dropped false | events  | face 256f1b1a | list -
+ok | state sel 259 count 301 text 'berry 259' dropped false | events M  | face 24f70dcc | list -
+ok | state sel 259 count 301 text 'berry 259' dropped false | events  | face 24f70dcc | list -
+ok | state sel 259 count 301 text 'berry 259' dropped false | events  | face 24f70dcc | list -
+ok | state sel 256 count 301 text 'date 256' dropped false | events M  | face 402e8502 | list -
+index 256 | state sel 256 count 301 text 'date 256' dropped false | events  | face 402e8502 | list -
+ok | state sel 252 count 301 text 'apple 252' dropped false | events M S  | face 30b3a8fc | list -
+ok | state sel 253 count 302 text 'apple 252' dropped false | events  | face 30b3a8fc | list -
+ok | state sel 253 count 302 text 'apple 252' dropped false | events D  | face 30b3a8fc | list -
+index 253 | state sel 253 count 302 text 'apple 252' dropped false | events  | face 30b3a8fc | list -
+ok | state sel 253 count 302 text 'apple 252' dropped false | events  | face 30b3a8fc | list -
+ok | state sel 253 count 302 text 'apple 252' dropped false | events  | face 30b3a8fc | list -
+ok | state sel 253 count 302 text 'apple 252' dropped false | events  | face 30b3a8fc | list -
+ok | state sel 253 count 302 text 'apple 252' dropped false | events  | face 30b3a8fc | list -
+item berry 289 indexOf 290 290 items 302 height 15 | state sel 253 count 302 text 'apple 252' dropped false | events  | face 30b3a8fc | list -
+ok | state sel 113 count 302 text 'elder 113' dropped false | events M  | face c460fbc0 | list -

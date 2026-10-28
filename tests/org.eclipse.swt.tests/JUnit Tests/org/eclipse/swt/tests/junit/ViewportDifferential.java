@@ -133,6 +133,16 @@ public final class ViewportDifferential<S> {
 	private String widget = "";
 	/* -Dswt.viewport.survey=true: collect every differing step instead of failing at the first (triage of a new reference) */
 	private final boolean survey = Boolean.getBoolean ("swt.viewport.survey");
+	/* -Dswt.viewport.seeds=9 or 0,3,9: only those seeds (replay of one seed without the survey shows its step log) */
+	private static final String SEEDS_ONLY = System.getProperty ("swt.viewport.seeds");
+
+	private static boolean seedSelected (int seed) {
+		if (SEEDS_ONLY == null || SEEDS_ONLY.isBlank ()) return true;
+		for (String s : SEEDS_ONLY.split (",")) {
+			if (s.trim ().equals (String.valueOf (seed))) return true;
+		}
+		return false;
+	}
 	private final Map<String, Integer> surveyCounts = new TreeMap<> ();
 	private final Map<String, String> surveyExamples = new TreeMap<> ();
 	/* the pixels the current operation answered with (stepPixels); the UI thread runs every step */
@@ -285,6 +295,7 @@ public final class ViewportDifferential<S> {
 	/** Runs every seed on both subjects in this JVM; the expected subject is the reference. */
 	public void compare (S expected, S actual) {
 		for (int seed = 0; seed < seeds; seed++) {
+			if (!seedSelected (seed)) continue;
 			beforeSeed.accept (expected);
 			beforeSeed.accept (actual);
 			Random random = new Random (seedBase + seed);
@@ -314,6 +325,7 @@ public final class ViewportDifferential<S> {
 		Assumptions.assumeTrue (directory != null, "-Dswt.viewport.recording=<dir> is not set");
 		String header = "# reference " + reference (widget) + ", SWT " + SWT.getVersion () + " " + SWT.getPlatform ();
 		for (int seed = 0; seed < seeds; seed++) {
+			if (!seedSelected (seed)) continue;
 			Path file = Paths.get (directory, name + "-seed" + seed + ".txt");
 			List<String> expected = null;
 			String against = "reference";

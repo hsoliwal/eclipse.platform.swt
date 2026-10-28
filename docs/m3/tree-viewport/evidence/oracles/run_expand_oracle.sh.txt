@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Runs ExpandBarOracle cases against the official jar and an M3 jar on the hidden test desktop (one ui_lock claim).
+# Usage: run_expand_oracle.sh <out.tsv> <m3 jar> <case file: one "height adopt top expand then" per line>
+OUT=$1; M3=$2; CASES=$3; D=$(dirname "$0")
+OJ=$(cygpath -m ~/.m2/repository/org/eclipse/platform/org.eclipse.swt.win32.win32.x86_64/3.135.0/org.eclipse.swt.win32.win32.x86_64-3.135.0.jar)
+: > "$OUT"
+while read -r h a t e then; do
+  [ -z "$h" ] && continue
+  for jar in official m3; do
+    J=$OJ; [ $jar = m3 ] && J=$M3
+    L="$D/case.log"; rm -f "$L"
+    bash C:/m3-superset/tools/hidden_java.sh 60 "$L" -cp "$J;$D" ExpandBarOracle $h $a $t $e $then > /dev/null 2>&1
+    printf '%s\t%s\n' "$jar" "$(grep -a "adopt=" "$L" | tr -d '\r' | head -n 1)" >> "$OUT"
+  done
+done < "$CASES"

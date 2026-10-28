@@ -1,0 +1,96 @@
+1 x events after 'altdown'	seed 2 step 107
+1 x face after 'altdown'	seed 2 step 107
+1 x face after 'click #'	seed 8 step 57
+1 x face after 'drop false'	seed 5 step 65
+1 x face after 'indexOfEmpty -#'	seed 5 step 78
+1 x face after 'key DOWN'	seed 8 step 56
+1 x face after 'key LEFT'	seed 8 step 61
+1 x face after 'key RETURN'	seed 5 step 64
+1 x face after 'select #'	seed 5 step 77
+1 x face after 'type A'	seed 9 step 122
+1 x list after 'add #'	seed 5 step 60
+1 x list after 'addAt # #'	seed 1 step 87
+1 x list after 'deselect #'	seed 5 step 53
+1 x list after 'indexOfEmpty -#'	seed 0 step 22
+1 x list after 'key DOWN'	seed 8 step 56
+1 x list after 'key NEXT'	seed 1 step 89
+1 x list after 'listwheel -#'	seed 7 step 36
+1 x list after 'read # #'	seed 7 step 37
+1 x list after 'setItem # #'	seed 0 step 24
+1 x list after 'thumb #'	seed 6 step 136
+1 x list after 'type b'	seed 7 step 34
+1 x list after 'type d'	seed 7 step 33
+1 x list after 'wheel #'	seed 9 step 64
+1 x list after 'wheel -#'	seed 6 step 139
+1 x pixels	seed 4: K:\m3-work\runs\tree-evidence\combo-dropdown-seed4-viewport.png
+1 x state after 'altdown'	seed 2 step 107
+1 x state after 'click #'	seed 8 step 57
+1 x state after 'drop false'	seed 5 step 65
+1 x state after 'indexOfEmpty -#'	seed 5 step 78
+1 x state after 'key DOWN'	seed 8 step 56
+1 x state after 'key LEFT'	seed 8 step 61
+1 x state after 'key RETURN'	seed 5 step 64
+1 x state after 'select #'	seed 5 step 77
+1 x state after 'type A'	seed 9 step 122
+13 x face after 'selectionIndex'	seed 5 step 52
+14 x answer after 'selectionIndex'	seed 2 step 112
+14 x state after 'selectionIndex'	seed 2 step 112
+15 x list after 'selectionIndex'	seed 0 step 21
+17 x face after 'drop true'	seed 0 step 70
+17 x state after 'drop true'	seed 0 step 70
+2 x face after 'addAt # #'	seed 1 step 87
+2 x face after 'deselect #'	seed 5 step 53
+2 x face after 'key F#'	seed 9 step 27
+2 x face after 'key NEXT'	seed 1 step 89
+2 x face after 'key UP'	seed 2 step 113
+2 x face after 'read # #'	seed 2 step 118
+2 x face after 'remove #'	seed 5 step 58
+2 x face after 'removeRange # #'	seed 4 step 149
+2 x face after 'removeString #'	seed 1 step 88
+2 x face after 'wheel #'	seed 2 step 115
+2 x list after 'key END'	seed 5 step 59
+2 x list after 'key F#'	seed 8 step 3
+2 x list after 'remove #'	seed 5 step 58
+2 x list after 'vscroll #'	seed 0 step 73
+2 x state after 'addAt # #'	seed 1 step 87
+2 x state after 'deselect #'	seed 5 step 53
+2 x state after 'deselectAll'	seed 8 step 35
+2 x state after 'key F#'	seed 9 step 27
+2 x state after 'key NEXT'	seed 1 step 89
+2 x state after 'key UP'	seed 2 step 113
+2 x state after 'read # #'	seed 2 step 118
+2 x state after 'remove #'	seed 5 step 58
+2 x state after 'removeRange # #'	seed 4 step 149
+2 x state after 'removeString #'	seed 1 step 88
+2 x state after 'wheel #'	seed 2 step 115
+23 x list after 'drop true'	seed 0 step 70
+3 x face after 'addEmpty #'	seed 2 step 122
+3 x face after 'hover #'	seed 0 step 71
+3 x face after 'indexOfEmpty #'	seed 5 step 51
+3 x face after 'key END'	seed 5 step 59
+3 x face after 'listwheel -#'	seed 2 step 121
+3 x face after 'setItem # #'	seed 2 step 117
+3 x face after 'visible #'	seed 2 step 114
+3 x face after 'vscroll #'	seed 0 step 73
+3 x list after 'altdown'	seed 0 step 19
+3 x list after 'indexOfEmpty #'	seed 5 step 51
+3 x list after 'key UP'	seed 2 step 113
+3 x list after 'listwheel #'	seed 0 step 26
+3 x list after 'removeString #'	seed 0 step 20
+3 x list after 'setText # #'	seed 5 step 61
+3 x state after 'addEmpty #'	seed 2 step 122
+3 x state after 'indexOfEmpty #'	seed 5 step 51
+3 x state after 'key END'	seed 5 step 59
+3 x state after 'setItem # #'	seed 2 step 117
+3 x state after 'vscroll #'	seed 0 step 73
+4 x face after 'add #'	seed 5 step 60
+4 x face after 'thumb #'	seed 2 step 108
+4 x face after 'wheel -#'	seed 2 step 116
+4 x list after 'hover #'	seed 0 step 71
+4 x state after 'add #'	seed 5 step 60
+4 x state after 'hover #'	seed 0 step 71
+4 x state after 'listwheel -#'	seed 2 step 111
+4 x state after 'setText # #'	seed 2 step 110
+4 x state after 'thumb #'	seed 2 step 108
+4 x state after 'visible #'	seed 0 step 96
+4 x state after 'wheel -#'	seed 2 step 116

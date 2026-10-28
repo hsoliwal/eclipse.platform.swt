@@ -1,0 +1,240 @@
+0	0	vscroll 5
+0	1	select 177
+0	2	select 184
+0	3	setTopIndex 5
+0	4	setTopIndex 149
+0	5	vscroll 6
+0	6	vscroll 0
+0	7	showSelection
+0	8	select 194
+0	9	vscroll 5
+0	10	zoom 120
+0	11	add 788
+0	12	select 162
+0	13	wheel -360
+0	14	add 858
+0	15	showSelection
+0	16	setTopIndex 175
+0	17	key END none
+0	18	vscroll 0
+0	19	select 227
+0	20	setTopIndex 109
+0	21	add 625
+0	22	add 28
+0	23	zoom 96
+1	0	wheel 120
+1	1	vscroll 2
+1	2	wheel -120
+1	3	showSelection
+1	4	vscroll 1
+1	5	wheel 120
+1	6	setTopIndex 24
+1	7	wheel -120
+1	8	setTopIndex 178
+1	9	showSelection
+1	10	zoom 144
+1	11	add 727
+1	12	setTopIndex 145
+1	13	key END none
+1	14	showSelection
+1	15	showSelection
+1	16	select 56
+1	17	showSelection
+1	18	key HOME none
+1	19	key PRIOR none
+1	20	key PRIOR none
+1	21	setTopIndex 300
+1	22	wheel -360
+1	23	zoom 96
+2	0	setTopIndex 220
+2	1	wheel -360
+2	2	wheel -360
+2	3	select 259
+2	4	wheel -360
+2	5	setTopIndex 124
+2	6	select 73
+2	7	select 225
+2	8	setTopIndex 74
+2	9	select 130
+2	10	zoom 120
+2	11	vscroll 5
+2	12	showSelection
+2	13	add 283
+2	14	vscroll 5
+2	15	select 131
+2	16	vscroll 1
+2	17	resize 352 269
+2	18	key UP none
+2	19	add 795
+2	20	resize 353 305
+2	21	key HOME none
+2	22	add 632
+2	23	zoom 96
+3	0	showSelection
+3	1	wheel -120
+3	2	setTopIndex 136
+3	3	wheel 120
+3	4	wheel 120
+3	5	setTopIndex 145
+3	6	wheel -120
+3	7	select 125
+3	8	showSelection
+3	9	vscroll 2
+3	10	zoom 144
+3	11	setTopIndex 165
+3	12	showSelection
+3	13	add 450
+3	14	vscroll 4
+3	15	resize 145 213
+3	16	resize 247 133
+3	17	vscroll 3
+3	18	add 102
+3	19	key END none
+3	20	key END none
+3	21	wheel -120
+3	22	resize 407 218
+3	23	zoom 96
+4	0	wheel 120
+4	1	select 153
+4	2	vscroll 3
+4	3	showSelection
+4	4	vscroll 6
+4	5	wheel -360
+4	6	showSelection
+4	7	setTopIndex 282
+4	8	vscroll 5
+4	9	vscroll 3
+4	10	zoom 144
+4	11	vscroll 1
+4	12	showSelection
+4	13	wheel 120
+4	14	add 454
+4	15	add 662
+4	16	vscroll 4
+4	17	select 224
+4	18	key END none
+4	19	add 993
+4	20	vscroll 6
+4	21	add 452
+4	22	wheel -120
+4	23	zoom 96
+5	0	select 9
+5	1	setTopIndex 46
+5	2	setTopIndex 239
+5	3	wheel -120
+5	4	showSelection
+5	5	select 116
+5	6	setTopIndex 36
+5	7	select 21
+5	8	wheel -120
+5	9	setTopIndex 126
+5	10	zoom 120
+5	11	showSelection
+5	12	resize 149 274
+5	13	add 276
+5	14	add 421
+5	15	add 733
+5	16	vscroll 1
+5	17	setTopIndex 190
+5	18	wheel -120
+5	19	vscroll 4
+5	20	select 98
+5	21	select 63
+5	22	showSelection
+5	23	zoom 96
+6	0	showSelection
+6	1	select 277
+6	2	showSelection
+6	3	wheel -360
+6	4	vscroll 0
+6	5	vscroll 1
+6	6	wheel -360
+6	7	wheel 120
+6	8	showSelection
+6	9	select 251
+6	10	zoom 144
+6	11	add 633
+6	12	setTopIndex 244
+6	13	key END none
+6	14	wheel 120
+6	15	setTopIndex 142
+6	16	setTopIndex 101
+6	17	wheel 120
+6	18	add 809
+6	19	key HOME none
+6	20	vscroll 4
+6	21	select 267
+6	22	wheel 120
+6	23	zoom 96
+7	0	vscroll 1
+7	1	showSelection
+7	2	showSelection
+7	3	vscroll 2
+7	4	wheel -360
+7	5	wheel 120
+7	6	showSelection
+7	7	showSelection
+7	8	showSelection
+7	9	showSelection
+7	10	zoom 144
+7	11	add 950
+7	12	key DOWN none
+7	13	showSelection
+7	14	wheel -120
+7	15	setTopIndex 220
+7	16	setTopIndex 175
+7	17	setTopIndex 250
+7	18	showSelection
+7	19	showSelection
+7	20	showSelection
+7	21	select 285
+7	22	resize 191 135
+7	23	zoom 96
+8	0	select 282
+8	1	showSelection
+8	2	showSelection
+8	3	setTopIndex 171
+8	4	wheel -120
+8	5	select 49
+8	6	showSelection
+8	7	vscroll 0
+8	8	vscroll 0
+8	9	showSelection
+8	10	zoom 144
+8	11	vscroll 1
+8	12	showSelection
+8	13	add 161
+8	14	vscroll 3
+8	15	vscroll 2
+8	16	key SPACE none
+8	17	add 4
+8	18	wheel -120
+8	19	vscroll 5
+8	20	showSelection
+8	21	add 32
+8	22	showSelection
+8	23	zoom 96
+9	0	select 200
+9	1	setTopIndex -1
+9	2	wheel 120
+9	3	vscroll 2
+9	4	showSelection
+9	5	showSelection
+9	6	vscroll 6
+9	7	vscroll 5
+9	8	setTopIndex 119
+9	9	select 65
+9	10	zoom 144
+9	11	resize 53 188
+9	12	resize 291 190
+9	13	vscroll 0
+9	14	add 141
+9	15	resize 416 194
+9	16	resize 249 323
+9	17	add 449
+9	18	add 489
+9	19	setTopIndex 286
+9	20	resize 344 418
+9	21	key HOME none
+9	22	vscroll 4
+9	23	zoom 96

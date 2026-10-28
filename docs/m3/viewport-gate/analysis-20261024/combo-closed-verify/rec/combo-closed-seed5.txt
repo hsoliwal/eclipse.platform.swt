@@ -1,0 +1,15 @@
+# reference official, SWT 4974 win32
+ok | state sel 121 count 300 text 'berry 121' dropped false | events M  | face 4df73961 | list -
+ok | state sel 241 count 536 text 'berry 121' dropped false | events  | face 4df73961 | list -
+ok | state sel 357 count 814 text 'berry 121' dropped false | events  | face 4df73961 | list -
+ok | state sel 467 count 1066 text 'berry 121' dropped false | events  | face 4df73961 | list -
+ok | state sel 574 count 1366 text 'berry 121' dropped false | events  | face 4df73961 | list -
+ok | state sel 704 count 1621 text 'berry 121' dropped false | events  | face 4df73961 | list -
+ok | state sel 822 count 1911 text 'berry 121' dropped false | events  | face 4df73961 | list -
+ok | state sel 951 count 2237 text 'berry 121' dropped false | events  | face 4df73961 | list -
+ok | state sel 1067 count 2471 text 'berry 121' dropped false | events  | face 4df73961 | list -
+ok | state sel 1179 count 2711 text 'berry 121' dropped false | events  | face 4df73961 | list -
+ok | state sel 1267 count 2966 text 'berry 121' dropped false | events  | face 4df73961 | list -
+ok | state sel 1267 count 2966 text 'berry 121' dropped true | events  | face 61b9baf4 | list 0..2965/20@1267 4dac4621
+ok | state sel 1267 count 2966 text 'berry 121' dropped false | events  | face 4df73961 | list -
+pixels 4df73961

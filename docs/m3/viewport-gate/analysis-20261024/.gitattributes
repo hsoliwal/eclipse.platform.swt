@@ -1,0 +1,3 @@
+# Raw evidence of the gate failure analysis (oracle output, traces, proposed diffs): kept byte for byte
+* -whitespace
+*.diff -text

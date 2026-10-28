@@ -1,0 +1,50 @@
+events after 'key RIGHT'	1
+face after 'key RIGHT'	1
+face after 'read # #'	1
+list after 'add #'	13
+list after 'addAt # #'	11
+list after 'addEmpty #'	11
+list after 'altdown'	13
+list after 'deselect #'	16
+list after 'drop true'	98
+list after 'hover #'	37
+list after 'indexOfEmpty #'	15
+list after 'indexOfEmpty -#'	2
+list after 'key DOWN'	8
+list after 'key END'	3
+list after 'key F#'	4
+list after 'key HOME'	4
+list after 'key LEFT'	6
+list after 'key NEXT'	8
+list after 'key PRIOR'	8
+list after 'key RIGHT'	3
+list after 'key UP'	13
+list after 'listwheel #'	16
+list after 'listwheel -#'	5
+list after 'read # #'	22
+list after 'remove #'	15
+list after 'removeRange # #'	11
+list after 'removeString #'	14
+list after 'select #'	36
+list after 'selectionIndex'	99
+list after 'setItem # #'	17
+list after 'setItem -# #'	1
+list after 'setText # #'	15
+list after 'thumb #'	6
+list after 'type '	4
+list after 'type  '	2
+list after 'type #'	1
+list after 'type A'	2
+list after 'type B'	3
+list after 'type a'	2
+list after 'type b'	4
+list after 'type c'	3
+list after 'type d'	2
+list after 'type e'	2
+list after 'type z'	2
+list after 'visible #'	1
+list after 'vscroll #'	12
+list after 'wheel #'	3
+list after 'wheel -#'	2
+state after 'key RIGHT'	1
+state after 'read # #'	1

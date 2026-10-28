@@ -1,0 +1,17 @@
+0	selectionIndex
+1	thumb 303
+2	key UP
+3	key F4
+4	drop true
+5	drop true
+6	remove 137
+7	read 119 266
+8	selectionIndex
+9	wheel 360
+10	drop true
+11	visible 22
+12	listwheel -360
+13	selectionIndex
+14	key HOME
+15	read 95 206
+16	hover 13

@@ -1,0 +1,7 @@
+# SWT 4975 mode original
+step 133 click 18 none
+  before           native top 131 caret 135 anchor -1 count 136 sel 0 [] | window - | api top 131 focus 135 sel 0 []
+  WM_MOUSEMOVE     native top 131 caret 135 anchor -1 count 136 sel 0 [] | window - | api top 131 focus 135 sel 0 []
+  WM_LBUTTONDOWN   native top 131 caret 135 anchor 135 count 136 sel 0 [] | window - | api top 131 focus 135 sel 0 []
+  WM_LBUTTONUP     native top 131 caret 135 anchor 135 count 136 sel 0 [] | window - | api top 131 focus 135 sel 0 []
+  flushed          native top 131 caret 135 anchor 135 count 136 sel 0 [] | window - | api top 131 focus 135 sel 0 []

@@ -1,0 +1,83 @@
+--- ComboViewport.orig.java	2026-10-24 20:41:28.244754800 +0530
++++ src/org/eclipse/swt/widgets/ComboViewport.java	2026-10-24 20:42:33.253307800 +0530
+@@ -342,16 +342,16 @@
+ 		nativeRowOps++;
+ 		long result = OS.SendMessage (hwndList, OS.LB_INSERTSTRING, entry, rowText);
+ 		if (result == OS.LB_ERR || result == OS.LB_ERRSPACE) combo.error (SWT.ERROR_ITEM_NOT_ADDED);
+-		inserted ();
++		/* a window move is no stock insert: the bar lane follows the logical rows only (ListViewport.insertNative) */
+ 	}
+ 
+ 	private void deleteNative (int entry) {
+ 		nativeRowOps++;
+ 		OS.SendMessage (hwndList, OS.LB_DELETESTRING, entry, 0);
+-		barState = BAR_SET;
++		/* a window move is no stock delete: the bar lane follows the logical rows only (ListViewport.deleteNative) */
+ 	}
+ 
+-	/* a row went into the list box: the freed bar becomes the default one, the default one a written one */
++	/* a row went into the stock list box: the freed bar becomes the default one, the default one a written one */
+ 	private void inserted () {
+ 		barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
+ 	}
+@@ -431,7 +431,6 @@
+ 			for (int i = s; i < c; i++) {
+ 				nativeRowOps++;
+ 				OS.SendMessage (hwndList, OS.LB_INSERTSTRING, s, empty);
+-				inserted ();
+ 			}
+ 			setCursel (c);
+ 			for (int i = s; i < c; i++) deleteNative (s);
+@@ -452,7 +451,8 @@
+ 	/* after native input: the list box's caret is the logical one (unless it is the stand-in for a caret outside the window) */
+ 	private void captureCaret () {
+ 		int size = plan.size ();
+-		if (size == 0) return;
++		/* a stale window holds the rows from before the deltas: its caret entry is no stock caret index, the lane is (rule 24) */
++		if (size == 0 || stale) return;
+ 		int entry = (int) OS.CallWindowProc (listWindowProc, hwndList, OS.LB_GETCARETINDEX, 0, 0);
+ 		if (entry == -1) {
+ 			caret = -1;
+@@ -940,11 +940,10 @@
+ 			model.add (ListViewport.nativeText (string), index);
+ 			if (parked >= index) parked++;
+ 			if (stale && staleSelection >= index) staleSelection++;
++			/* the bar as the stock CB_INSERTSTRING leaves it: every insert reaches the stock list box, resident here or not (ListViewport.add) */
++			inserted ();
+ 			int entry = plan.inserted (index, 1);
+-			if (entry >= 0 && stale) {
+-				/* the bar as the native insert would leave it */
+-				inserted ();
+-			} else if (entry >= 0) {
++			if (entry >= 0 && !stale) {
+ 				busy = true;
+ 				try {
+ 					insertNative (entry, index);
+@@ -992,14 +991,13 @@
+ 			}
+ 			if (stale && staleSelection > end) staleSelection -= removed;
+ 			int resident = plan.removed (start, removed);
+-			if (resident > 0 && stale) {
+-				barState = BAR_SET;
+-			} else if (resident > 0) {
++			/* every stock CB_DELETESTRING writes the bar, resident here or not (ListViewport.removeRun) */
++			barState = BAR_SET;
++			if (resident > 0 && !stale) {
+ 				int entry = plan.removedEntry (start);
+ 				busy = true;
+ 				try {
+ 					for (int i = 0; i < resident; i++) OS.CallWindowProc (Combo.ComboProc, combo.handle, OS.CB_DELETESTRING, entry, 0);
+-					barState = BAR_SET;
+ 				} finally {
+ 					busy = false;
+ 				}
+@@ -1097,7 +1095,8 @@
+ 		} finally {
+ 			busy = false;
+ 		}
+-		barState = BAR_NONE;
++		/* stock: CB_RESETCONTENT frees the bar, the first CB_ADDSTRING leaves the default bar, every later one writes it (ListViewport.setItems) */
++		barState = items.length == 0 ? BAR_NONE : items.length == 1 ? BAR_DEFAULT : BAR_SET;
+ 		recordedRow = -1;
+ 		plan.clear ();
+ 		parked = parkedCaret = -1;

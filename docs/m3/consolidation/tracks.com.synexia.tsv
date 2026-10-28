@@ -1,0 +1,382 @@
+number	base	state	files	track	created	user	title
+12926	develop	unstable	9	synexia-openrewrite-recipes/recipes	2026-10-22	hsoliwal	test(m3): enforce regex problem-category/donor decisions against actual corpus via sealed 
+12930	develop	unstable	5	synexia-mindex	2026-10-22	hsoliwal	perf(mindex): canonical mandatory-literal KMP precompute before residual RE2/J
+12939	develop	unstable	27	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(m3): preserve Unicode supplementary category tokens in original challenge search in
+12943	develop	unstable	36	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	Recipe-owned Java atom allocation and JNI SHA schedule refinement
+12966	develop	unstable	25	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3 recipe mastery: make compiler AST helper selection immune to code-looking regex payload
+12968	develop	unstable	68	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	feat(m3): enforce Synexia-only recipe execution and result-only product handoffs
+12972	develop	unstable	18	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	convergence: execute and attest Synexia recipes; receivers contain output only
+12977	develop	unstable	25	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	fix(M3JDK21): authenticate executed Synexia recipe artifacts and source-only receiver proo
+12978	develop	unstable	43	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3 JNI: validate complete ASCII descriptors before dead-state short circuit
+13004	develop	unstable	124	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	Regex mastery: indexed fan-in, bounded intake and checked Java/JNI precompute
+13049	develop	unstable	425	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	Canonical M3 project delta recipes and evidence
+13080	develop	unstable	12	synexia-openrewrite-recipes/verification	2026-10-22	hsoliwal	[Draft] Actual OpenRewrite Java AST → existing M3 web-widget ESM transpiler
+13084	develop	unstable	30	synexia-openrewrite-recipes/recipes	2026-10-22	hsoliwal	recipe(nebula): translate static React JSX to original SWT Canvas factory via OpenRewrite
+13089	develop	unstable	61	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(M3): prove seven compile-time ASCII grammar masks with Java21/JNI gates
+13090	develop	unstable	13	synexia-openrewrite-recipes/verification	2026-10-22	hsoliwal	[Draft][Synexia] Guard UTF-16 KMP literal-regex admission with exact JDK21 code-point and 
+13091	develop	unstable	14	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(m3): lossless typed signal domain policy and progressive certified bounds
+13093	develop	unstable	36	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	merge(recipe): reconcile #12992/#13002 history-proof DAG and preserve both correction ledg
+13094	develop	unstable	22	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	Refine three M3JDK21 five-provider Java21 compiler atoms with exact Synexia recipes
+13095	develop	unstable	17	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(M3JDK21): reuse bounded scratch across original M3FS provider range transfers
+13096	develop	unstable	19	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	Recipe-first nine-owner source custody and five-provider CI admission (after #13081)
+13097	develop	unstable	35	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(m3): source-sealed indexed-mask XOR delta with Java21/JNI parity
+13098	develop	unstable	14	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	test(m3 recipes): deterministic regex UTF-16 oracle and categorized donor admission invari
+13099	develop	unstable	45	synexia-openrewrite-recipes/recipes	2026-10-22	hsoliwal	restore(m3): materialize missing KMP Java/JNI owner required by CSR Aho
+13100	develop	unstable	3	.github/workflows	2026-10-22	hsoliwal	Qualify all 158 M3JDK21 five-library JUnit methods through source-sealed OpenRewrite and a
+13101	develop	unstable	22	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	recipe(APM/JNI): primitive batch necessary signals with checked native parity
+13104	develop	unstable	187	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	recipe(conflicts): #12692/#12917/#12944/#12992 + develop exact superset [HOLD]
+13106	develop	unstable	12	synexia-openrewrite-recipes/verification	2026-10-22	hsoliwal	[Draft] APM: source-sealed OpenRewrite one-atom ConstantValue ABI proof for in-memory java
+13107	develop	unstable	39	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(m3): source-sealed sparse Unicode UTF-16 Java21/C17 JNI and APM mastery
+13108	develop	unstable	28	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	Master three exact Java21 five-provider test repairs and immutable 76-file successor in Sy
+13110	develop	unstable	12	synexia-openrewrite-recipes/verification	2026-10-22	hsoliwal	recipe(swt): repair unreachable GTK4 List handler on current master with exact source seal
+13112	develop	unstable	23	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	Fix three Java 21 five-library test diagnostics through exact OpenRewrite Java/Text recipe
+13113	develop	unstable	16	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(Eclipse PDE): source-sealed RequiresSection worker-safe Display and stale-viewer gu
+13114	develop	unstable	5	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(m3): seal Apache Commons 4.5.0 Bag retainAll compatibility fix
+13115	develop	unstable	21	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	Match Apache Commons Collections 4.5.0 Bag retainAll with a source-sealed M3 counted-array
+13118	develop	unstable	41	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	test(m3): qualify regex corpus with original JNI and compiler-oracle fixtures
+13119	develop	unstable	26	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(eclipse): seal SWT 3.138 host, fragments and GPU dependency alignment
+13122	develop	unstable	29	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(m3): qualify Java21 literal necessary signals with 480k permutation checks
+13123	develop	unstable	11	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	recipe(apm): Java21 pairwise regex/code-string signal matrix with fail-closed JNI gate
+13124	develop	unstable	9	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(eclipse): seal JFace marker selection helper collision repair
+13125	develop	unstable	18	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(m3): source-seal original regex-signal JNI selection with Java21/C17 differential a
+13179	develop	unstable	3	synexia-openrewrite-recipes/src	2026-10-23	hsoliwal	fix(naming): require complete evidence for every internal M3 binary name
+12262	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	feat(m3): implement Eclipse catalogue forwarding with canonical recipes
+12305	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	feat(m3): qualify native Guava ArrayListMultimap and storage recipes
+12310	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	Centralize public-fork recipes in com.synexia with sealed source custody
+12311	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	M3: qualify collection fixes, full Java/JNI builds and Swift deque spans
+12314	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	M3: canonical recipes for current Lucene/OpenNLP JMODs
+12324	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	Reuse prepared String trigram facts with source-sealed recipe successors
+12329	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	docs(m3): run 20261017-synexia-to-public - follow-up ledgers (S2, HIST-SYN, ROPE/REGEX don
+12333	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	M3: qualify array/index algorithms, range algebra and lazy iterator recipes
+12334	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	Qualify Lucene/OpenNLP M3File, String and M3AST JMOD integration
+12335	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	[M3] Complete public recipe custody and verified fork applications
+12379	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	M3: preserve catalogue-guided Java/JNI refinements in existing recipes
+12380	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	recipe(collections): measured allocation pass and all-repository ledger
+12382	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-18	hsoliwal	M3JDK21: canonical lexical, transfer JNI and filtered-view recipes
+12403	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	M3JDK21: catalogue-driven serial String, GVAS and array-mask recipes
+12416	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Qualify M3JDK21 String/JNI, lexicon and collection recipes with a searchable algorithm cat
+12417	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Add canonical M3FS capability port recipe and qualification
+12418	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	fix(m3 collections): stack-safe nested filtered ArrayList spliterator with source-sealed r
+12419	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	recipe(m3): preserve nested SubMIndexString UTF-16 policy
+12421	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Draft: qualify adaptive M3 linked clearing and catalogue collection-fork donors
+12423	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	recipes: additively converge canonical M3JDK21 DOOP collection and java.base transformatio
+12427	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Qualify collection array recipes, generated receivers and proof custody
+12431	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Refine pending substring mapping and named recipe qualification
+12436	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Preserve unpublished donor catalogue checkpoint
+12439	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Qualify M3JDK21 filesystem and collection refinements through canonical recipes
+12441	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Canonical recipes for integrated M3JDK21 collections, Java/JNI utilities and algorithm cat
+12445	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	M3: qualify packed JFace viewer-map forwarding and sparse filtering
+12451	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	M3JDK21: qualify String-family recipes, catalogue, and strict-build prerequisites
+12459	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	M3JDK21: qualify integrated dense collection refinement recipe
+12467	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Restore Tree discriminator packet and repair conflicting provenance
+12468	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	M3JDK21: qualify catalogue-driven Java/JNI convergence recipes
+12471	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	M3JDK21: canonical per-file refinements, catalogue and Java/JNI evidence
+12472	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	M3JDK21: qualify NetBeans-guided gap boundary refinement
+12474	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	M3JDK21 collection recipes: qualified current-master recovery and donor catalogue
+12476	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	recipe: qualify shortstring reuse for numeric vocabulary construction
+12481	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	recipe(m3jdk21): sealed tools4j-inspired indexed bit claiming
+12484	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Qualify array operations across all-fork inventory: Eclipse primitives and Lucene
+12486	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Register catalogue-driven M3JDK21 collection refinements and qualified recipes
+12487	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	M3Scale: retain tools4j/Unix refinement recipes, catalogue and proof
+12490	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	WIP: preserve Claude recipe audits, scaffolds and 1,033 postimages
+12493	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Codex | com.synexia.m3.recipe | Report | retain complete regex campaign proof
+12496	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	recipe(m3): preserve composite builder pieces during indexed reads
+12507	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	recipe: sealed bounded full-width indexed-mask Java/JNI scan for M3JDK21
+12514	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Qualify reusable M3JDK21 parser, collection and JDT owner recipes
+12534	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	restore(m3): additive canonical tools4j bit-claim recipe and Java21 gate
+12554	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	feat(recipes): common JNI/native contract and donor catalogues
+12555	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Qualify Synexia lexicon CSR and semantic convergence for M3JDK21
+12557	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Add validated common JNI and filtered sorted refinement recipe for M3JDK21
+12559	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Converge M3AST scope, unchanged-binary reuse and direct AST binding recipes
+12564	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	M3JDK21: qualify mapped/JNI efficiency atoms and common Android build recipes
+12567	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Qualify M3File deltas and callable OpenRewrite/native build APIs
+12568	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	M3JDK21: canonical Maven/Gradle source-class delta recipe and verification (draft)
+12572	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	feat(m3-recipes): seal M3File source/class deltas and shared source qualification
+12574	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	fix(m3): qualify collection view invalidation and receiving evidence
+12578	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	feat(m3): qualify source/class byte deltas and Maven build reuse
+12579	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	feat(recipes): add scoped coding actions, bounded regex and verified DAG combinations
+12580	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	feat(m3): add scoped coding-agent recipe API and provider bridge
+12584	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	recipe(m3file): native M3JDK21 build-impact CSR with fail-closed ABI gates
+12587	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	restore(m3): exact 67 missing canonical recipe blobs without dropping current code
+12588	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Refuse target-revision drift in migration completion through a reversible recipe
+12590	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Restore ASCII source compatibility of immediate String comments through existing Java reci
+12592	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Retain MOP recipe compiler correction memory and verified caller evidence
+12595	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Stack B01: chronological integration of the 25 oldest open com.synexia PRs
+12599	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Qualify M3JDK21 runtime convergence recipes and algorithm catalogue
+12600	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	chore: preserve Claude Webui source and programme handoffs
+12601	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	recipe(M3JDK21): source-sealed shadow stream progress correction and MOP memory
+12604	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	M3: qualify composite String, indexed views and JNI refinement recipes
+12605	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Canonical recipes: qualify M3JDK21 String, AST, arrays and JNI refinements
+12609	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Preserve MOP memory and qualify M3 file, AST and collection recipes
+12616	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	M3JDK21: qualify filtered-view, callback and JNI mask recipes
+12633	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	M3JDK21 convergence: source-sealed algorithms, receipts and catalogue
+12637	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Canonical M3JDK21 recipes, catalogue and Java/JNI qualification
+12639	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	M3: qualify Eclipse structure rewrites and Java/JNI collection recipes
+12645	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Refine challenge category lookup with array slices and a qualified M3 recipe
+12648	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Qualify recipe-driven M3 collections, scheduling, and Eclipse refinements
+12664	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	[Draft] Add recipe-first LangDex source export CLI
+12665	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Qualify Eclipse M3 array and range refinements with reusable recipes
+12681	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	perf(indexstring): receive ordered-range and sparse JNI refinements
+12692	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	feat(prstack): unify canonical recipe compiler and exact hunk resolver
+12694	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	feat(mop): source-exact donor FILE review, four Maven recipes and Android-style JNI batch 
+12695	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Add canonical TornadoVM integration recipe and correction memory
+12705	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipes: qualify array-reusing sorted batch merge
+12740	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Compose recipe compiler, hunk resolver, Maven boot and Chrome advice
+12745	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(nebula): restore retained-row count contract with qualified atom tests
+12748	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Qualify integrated M3JDK21 String and collection refinement with 23 canonical recipes
+12761	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	M3: source-sealed packed regex truth rank/select with Java21 differential tests
+12763	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(m3): reuse canonical Unicode eligibility for Java lexical signals
+12765	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	draft(m3): master serial regex DP/matcher recipes, compiler permutations and JNI evidence
+12768	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Strengthen recipe-mastery fan-in and reuse bounded JNI hash scratch
+12770	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Add source-sealed PR stack dependency DAG recipe
+12772	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	MOP: qualify five behavioral repairs and append correction memory
+12775	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(m3): source-seal canonical regex/String atom and 160-compile mastery invariant
+12786	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	test(m3): qualify code-looking regex/JNI strings through canonical recipe lab
+12787	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(m3): source-seal shared Eclipse viewer delta and timer repairs
+12788	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	M3 regex: precompute common corpus facts through Java/JNI recipe gates
+12790	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	CPULLM: bounded reference-only Chrome replies with exact CPU reconstruction
+12795	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	M3 convergence: stream/memory recipe, recovery inventory and source custody
+12802	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(pr-stack): preserve GitHub PR history and refuse provenance code loss
+12808	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	candidate(prstack): preserve PR #12262 164 exact donor files; hold only provenance hunk
+12811	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Recipe: gate M3JDK21 JDK names, internal helpers, and source-sealed formatting
+12812	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	ChromeLLM Java: indexed evidence proposals and strict multipass completion
+12820	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(m3): preserve history binding and RC0137 proof packages
+12822	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Preserve recovered CpuLLM Unix source and recipe refinements
+12824	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Preserve compiler recipe sources and receiving qualification evidence
+12826	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Preserve Grid device-region repair, recipes and native qualification
+12831	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	checkpoint: preserve older E worktree source variants
+12832	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Converge M3 project-delta recipes and Maven plugin catalogue across both source histories
+12833	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	restore(m3): recover merged TornadoVM 7.3.1 superset
+12835	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	JNI array allocation and ordered Map growth: recipes and finite proofs
+12837	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(apm): verify adversarial Java21 regex permutations and guarded JNI literal precompu
+12839	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	M3 Search viewers: bounded child projection through canonical Java recipe
+12841	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(history): forward-only Git admission for qualified M3 branch-history replay
+12844	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Qualify M3FS provider/default refinements with the existing Java/text SDK
+12846	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(m3fs): seal manager-routed cross-provider bulk masks and category proof
+12851	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(java21): qualify direct M3JDK21 array-mask prefix compaction with sealed Maven/JUni
+12855	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(viewport): qualified bounded JNI, installed proof and constant-mask receiving
+12856	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Qualify UnicodeX lexical transport and canonical M3JDK21 refinement recipes
+12862	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipe(m3): catalogue and seal viewport frame, immutable and live sorted page atoms
+12870	develop	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	recipes(M3JDK21): recover java.base stored-occurrence and one-pass bulk atoms
+12871	develop	dirty	0	(no files)	2026-10-21	hsoliwal	Preserve canonical M3JDK21 regex and indexed-array refinement recipes
+12873	develop	dirty	15	synexia-openrewrite-recipes/src	2026-10-21	hsoliwal	recipe(m3fs): source-seal packed Result state-mask and physical-index selection
+12875	develop	dirty	10	synexia-openrewrite-recipes/src	2026-10-21	hsoliwal	recipe(M3JDK21): source-seal Eclipse EFS paged cancellation and progress
+12881	develop	dirty	30	synexia-openrewrite-recipes/recipe-crates	2026-10-21	hsoliwal	recipe(m3fmt): source-seal integrated M3JDK21 shared lexicon Java/JNI transport
+12882	develop	dirty	1443	synexia-openrewrite-recipes/recipe-crates	2026-10-21	hsoliwal	M3JDK21: canonical parser, array, JNI and wrapper convergence recipes
+12883	develop	dirty	430	synexia-openrewrite-recipes/recipe-crates	2026-10-21	hsoliwal	Restore canonical M3 project-delta recipes, 333 Maven goals and source-provenance gates
+12887	develop	dirty	17	synexia-openrewrite-recipes/recipe-crates	2026-10-21	hsoliwal	recipe(m3fs): seal parent-owned directory mask, stable index sort and JNI wire proof
+12888	develop	dirty	70	synexia-openrewrite-recipes/recipe-crates	2026-10-21	hsoliwal	recipe(m3): immutable 36→76 five-provider source census successor
+12895	develop	dirty	97	synexia-openrewrite-recipes/recipe-crates	2026-10-21	hsoliwal	M3JDK21: add qualified integrated collection refinement recipe and catalogue
+12900	develop	dirty	3000	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3JDK21: recover sources and qualify intrinsic Java/JNI recipes
+12913	develop	dirty	53	synexia-code-convergence	2026-10-22	hsoliwal	feat(convergence): dated additive superset Git/PR engine with preservation receipts
+12917	develop	dirty	39	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipes(Eclipse): reconcile master JFace queue, worker dispatch and iterative tree atoms
+12921	develop	dirty	11	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	recipe(apm): seal 176-case regex region/invalid syntax oracle and reject compiler-valid mu
+12933	develop	dirty	175	synexia-openrewrite-recipes/recipes	2026-10-22	hsoliwal	M3: typed primitive signal frame and compile-time declaration facts
+12944	develop	dirty	61	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipes(Eclipse estate): 12-fork DAG, Nebula arrays and JDT UI worker-safe delta ownership
+12948	develop	dirty	7	docs/M3-SCALE	2026-10-22	hsoliwal	policy(m3): keep every recipe and its execution exclusively in Synexia
+12954	develop	dirty	303	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	Retain qualified Eclipse viewer M3 recipes and integrate current registry
+12961	develop	dirty	33	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3: Synexia-exclusive recipes and fail-closed output-only public delivery
+12964	develop	dirty	722	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	Converge M3JDK21 array masks and collection views through validated recipes
+12967	develop	dirty	21	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(m3): source-seal FileIndex range hashing and provider stream use cases
+12969	develop	dirty	535	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	Converge M3File/M3AST Maven delta recipes, native state and proof archive
+12980	develop	dirty	34	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(jni): qualify bounded vCPU region staging and retire-safe handles
+12981	develop	dirty	32	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipes(M3): master regex replacement/split semantics and source-sealed Java/JNI permutati
+12987	develop	dirty	11	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	fix(m3jdk21): enforce canonical owner naming and staging refusal
+12989	develop	dirty	8	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	recipe(M3JDK21): donor namespace guard and mapped JDK-internal renames
+12992	develop	dirty	63	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	recipe(pr-stack): resolve divergent PR provenance without historical code loss
+13055	develop	dirty	428	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	Recover M3 project-delta recipes, Maven plugin catalogue and qualification archive
+13103	develop	dirty	12	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	Deduplicate static regex necessary-literal probes with sorted primitive ordinal lanes
+13116	develop	dirty	13	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	Extend canonical Synexia Atomize/Patternize lab to fourteen depth-three Java21 regex progr
+13120	develop	dirty	11	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	recipe(apm): source-sealed UTF-16 provenance successor and refusal receipts
+13141	develop	dirty	15	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	fix(m3 collections): source-sealed reentrant ArrayList split cursor guards
+13160	develop	dirty	7	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	M3: ensure JUnit evidence for every executable Java atom
+12885	aix/jface-queue-recipe-20261021	unstable	17	synexia-openrewrite-recipes/recipe-crates	2026-10-21	hsoliwal	recipe(m3): seal JFace first-post deadline without losing #27/#30 viewer superset
+12897	m3/regex-string-campaign-mastery-20261021	unstable	6	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(m3): seal exhaustive Java21 regex all-find oracle into canonical APM campaign
+12901	m3/viewer-ci-job-env-context-20261022	unstable	22	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(m3): preserve UI #33 viewer superset with worker-safe Display and 59-test source se
+12903	codex/m3-regex-allfind-recipe-20261022	unstable	16	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(m3): independently gate Java/JNI regex literal Unicode semantics with source-sealed
+12908	m3/recipe-jni-atom-lab-20261021	unstable	32	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3: recipe-first Java/JNI correlated bound reuse with chunk-crossing proofs
+12923	m3/native-correlated-rank-20261022	unstable	20	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3 recipe-first monotone batch rank narrowing in Java/JNI
+12936	codex/m3jdk21-convergence-20261021-reviewed	unstable	33	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	Require a qualified Maven recipe crate for every Synexia artifact task
+12937	m3/signal-frame-manufacture-20261022	unstable	297	synexia-openrewrite-recipes/recipes	2026-10-22	hsoliwal	M3JDK21: canonical compiler-signal and lexical JNI recipe with receiving proof
+12938	m3/recipe-jni-atom-lab-20261021	unstable	30	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3 recipe-first equal-range reuse: JNI/Java signed-long batch bounds with 4-mode proofs
+12942	m3/monotone-rank-recipe-20261022	unstable	21	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3: recipe-first exponential rank bracketing for bounded Java/JNI query runs
+12945	codex/eclipse-project-explorer-delta-20261022	unstable	33	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipes(JFace): source-sealed selected-state, Combo callback and trace geometry atoms
+12950	chatgpt/m3-regex-packed-truth-index-20261021	unstable	14	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3: source-sealed Boolean AND/OR precompute over existing regex truth rows
+12957	chatgpt/m3-regex-packed-truth-index-20261021	unstable	32	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3: source-sealed mixed-mode AND/OR queries over precomputed Rgx truth masks
+12929	m3/apm-regex-jni-mastery-20261021	dirty	48	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	perf(m3): source-sealed Java21/JNI literal region slices with 4,313 JDK oracle cases
+12962	m3/apm-literal-jni-region-slices-20261022	unstable	50	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	perf(m3 JNI): bounded UTF-16 chunked KMP with Java21/JNI oracle and recipe-first memory pr
+12996	m3/regex-code-multipass-master-20261022	unstable	22	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(regex): fuse sealed Java21 quoted literals with 261k JDK oracle and A/P multipass
+13003	codex/m3-opportunity-discovery-20261021	unstable	29	synexia-openrewrite-recipes/recipes	2026-10-22	hsoliwal	M3: prepared KMP Java/JNI first-index + overlap profiles and multipass regex mastery
+13010	m3/convergence-result-only-20261022	unstable	57	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	feat(m3): export only executed, hash-bound Java/JNI postimages from Synexia
+13041	m3/source-declaration-facts-20261022	unstable	3	synexia-code-convergence	2026-10-22	hsoliwal	feat(m3): materialize compiler-owned declaration signals
+13082	m3/typed-signal-topk-20261022	unstable	9	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(m3): source-sealed focused JUnit proof without replacing custom collections reactor
+13102	codex/pr-history-loss-resolver-20261022	unstable	18	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(pr-stack): seal deterministic admission and fixed-pattern precompute correction
+13111	codex/eclipse-estate-array-ui-wave1-20261022	unstable	18	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(Eclipse JDT Debug): source-sealed worker-safe VM events and 12-fork qualification l
+13117	codex/eclipse-jdt-debug-vm-events-20261022	unstable	8	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(JDT Debug): admit exact legacy InstalledJREsBlock in canonical source engine
+13121	recipe/m3-utf16-sparse-literal-jni-20261022	unstable	27	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(m3): stitch bounded UTF16 literal DFA windows over original Java/JNI batch
+13126	m3/regex-depth-three-programme-20261022	unstable	18	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	test(M3): source-sealed depth-four A/P regex/compiler fanout with 30-order convergence gat
+13127	m3/regex-depth-three-programme-20261022	unstable	18	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(M3): 30 depth-four A/P source programmes with original javac/regex gates
+13133	m3/regex-native-corpus-20261022	unstable	14	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	ci(JNI): run original Synexia regex corpus under actual OpenRewrite/Maven and native Java2
+13138	codex/m3-project-delta-20261022-9120e006	unstable	12	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	Recipe: seal one M3File generation for M3AST and M3FS source consumers
+13140	codex/eclipse-jdt-debug-vm-events-20261022	unstable	31	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	fix(Eclipse): require live exact-head GitHub recipe, Tycho and native evidence before rele
+13142	m3/pr-stack-dag-recipe-20261021	unstable	2	synexia-openrewrite-recipes/crates	2026-10-22	hsoliwal	recipe(m3): source-seal 246 open PRs into existing superset DAG
+13149	m3/bitap-utf16-recipe-20261022	unstable	58	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(m3): source-seal Bitap 256-row JNI batching and four-JVM parity [HOLD]
+13158	fix/supersession-current-tree-proof-20261022	unstable	13	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(history): require exact active blob/mode before PR supersession
+13159	feat/m3-atom-junit-completeness-20261022	unstable	7	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(atom-junit): extend canonical atom test generation to Maven, JDK and PDE roots
+13163	m3/leetcode-export-admission-gate-20261022	unstable	29	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3 LeetCode: canonical byte-parity admission over pinned catalogue (recipe-first)
+13168	codex/eclipse-evidence-gate-20261022	unstable	16	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	fix(Eclipse): source-seal bounded GitHub CI output and preserve full recipe-proof lineage
+13174	m3/leetcode-export-admission-gate-20261022	unstable	15	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	M3: source-sealed structural LeetCode JSON admission and regex-decoy proofs
+13175	m3/recipe-lab-strict-regex-20261022	unstable	11	synexia-openrewrite-recipes/recipe-crates	2026-10-22	hsoliwal	recipe(m3): source-seal strict compiler/permutation receipt reconciliation
+12463	m3/filtered-arraylist-flat-predicate-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	fix(m3 collections): recipe-sealed stack-safe nested filtered ArrayList iterators
+12488	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Qualify current text-metadata ownership and actual C11 JNI differential
+12489	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Qualify current-owner regex recipes and generated-test compilation
+12491	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Qualify current char-copy successor custody and historical recipe replay
+12499	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Reconcile exact feature provenance through qualified Maven recipes
+12506	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Qualify ASCII regex numeric admission and preserve exact applied-owner evidence
+12510	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-19	hsoliwal	Reuse the current StateRelation proof in a source-sealed Maven and C11 JNI lane
+12526	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Qualify backport contract and wave-consumer recipes with applied-state proofs
+12546	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Restore canonical targetPaths with verified source recipe and exact application
+12615	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-20	hsoliwal	Recipe: preserve fresh range ownership and qualify three explicit core cohorts
+12693	codex/jtreg-public-provider-qualification-source-20261021	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Qualify public workflow recipe with six passing portable tests
+12758	chatgpt/m3-donor-category-scope-multipass-20261021	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	feat(MOP): exact donor-file selection, five source-sealed recipe passes and one-parse Java
+12801	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	candidate(prstack): retain #12614 history and both Git parents without provenance loss
+12825	codex/source-qualified-tq-reactor-20261019	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Add recipe-backed Windows C JNI array qualification
+12847	m3/m3fs-provider-defaults-20261021	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Qualify R12 signal remap with serial recipes, Java/JNI proof and allocation evidence
+12860	m3/signal-dimensions-remap-20261021	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Qualify serial comparator-origin recipes for M3 filtered owners
+12863	m3/filtered-comparator-origin-20261021	error connecting to api.github.com
+check your internet connection or https://githubstatus.com	0	(no files)	2026-10-21	hsoliwal	Seal reproducible naming-audit repair through the canonical SDK
+12912	m3/apm-regex-jni-mastery-20261021	dirty	41	synexia-openrewrite-recipes/src	2026-10-22	hsoliwal	recipe(m3): bound Pattern.LITERAL JNI copies to exact UTF-16 regions with compiler and nat

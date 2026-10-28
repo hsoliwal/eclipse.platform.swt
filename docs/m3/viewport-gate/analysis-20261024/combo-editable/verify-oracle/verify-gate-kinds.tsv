@@ -1,0 +1,14 @@
+events after 'key RIGHT'	1
+face after 'key RIGHT'	1
+face after 'read # #'	1
+list after 'altdown'	1
+list after 'drop true'	7
+list after 'hover #'	1
+list after 'indexOfEmpty -#'	1
+list after 'key F#'	1
+list after 'listwheel #'	3
+list after 'removeString #'	1
+list after 'selectionIndex'	4
+list after 'setItem # #'	1
+state after 'key RIGHT'	1
+state after 'read # #'	1

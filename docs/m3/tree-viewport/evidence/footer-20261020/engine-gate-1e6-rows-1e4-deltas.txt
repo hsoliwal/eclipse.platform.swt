@@ -1,0 +1,4 @@
+INFO: footer engine: 1000000 rows built in 2268.8 ms
+INFO: footer engine: 10000 deltas at 1000000 rows, 50.41 us per delta, 5.2 rows walked per delta, 1323 rows removed in subtrees; recounts 11 (scope switches and min/max on, none from a delta), 349 ms per recount (scope switch) at this size; the delta time includes the test reference of removed subtrees
+[         1 tests successful      ]
+[         0 tests failed          ]

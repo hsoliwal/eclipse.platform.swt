@@ -1,0 +1,67 @@
+# SWT 4974 mode official seed 2
+== step 107 altdown | before: text 'cherry 272' sel 122
+CB CB_146 0
+  LB LB_GETCOUNT
+    -> 147 | edit 'cherry 272'
+  -> 147 | edit 'cherry 272'
+CB CB_164 0
+  -> 1 | edit 'cherry 272'
+CB CB_164 0
+  -> 1 | edit 'cherry 272'
+ED WM_SYSKEYDOWN 40
+  CB CB_147 0
+    LB LB_GETCURSEL
+      -> 122 | edit 'cherry 272'
+    -> 122 | edit 'cherry 272'
+  CB CB_156 0
+    -> 0 | edit 'cherry 272'
+  LB WM_KEYDOWN 115
+    SH notify CBN_DROPDOWN
+      CB CB_152 0
+        -> 1 | edit 'cherry 272'
+      CB CB_146 0
+        LB LB_GETCOUNT
+          -> 147 | edit 'cherry 272'
+        -> 147 | edit 'cherry 272'
+      CB CB_164 0
+        -> 1 | edit 'cherry 272'
+      CB CB_154 0
+        LB LB_GETITEMHEIGHT
+          -> 15 | edit 'cherry 272'
+        -> 15 | edit 'cherry 272'
+      CB CB_164 0
+        -> 1 | edit 'cherry 272'
+      -> 0 | edit 'cherry 272'
+    LB LB_FINDSTRING -1 'cherry 272'
+      -> 122 | edit 'cherry 272'
+    LB LB_SETCURSEL 122
+      -> 122 | edit 'cherry 272'
+    LB LB_SETCARETINDEX 122
+      -> -1 | edit 'cherry 272'
+    LB LB_SETTOPINDEX 122
+      -> 0 | edit 'cherry 272'
+    LB LB_FINDSTRINGEXACT -1 'cherry 272'
+      -> 122 | edit 'cherry 272'
+    LB LB_GETTEXTLEN 122
+      -> 10 | edit 'cherry 272'
+    LB LB_GETTEXT 122
+      -> 10 | edit 'cherry 272'
+    ED WM_SETTEXT 'cherry 272'
+      -> 1 | edit 'cherry 272'
+    ED EM_SETSEL 0,2147483647
+      -> 1 | edit 'cherry 272'
+    LB LB_GETITEMHEIGHT
+      -> 15 | edit 'cherry 272'
+    LB LB_GETCOUNT
+      -> 147 | edit 'cherry 272'
+    LB LBCB_STARTTRACK
+      -> 0 | edit 'cherry 272'
+    -> 0 | edit 'cherry 272'
+  CB CB_147 0
+    LB LB_GETCURSEL
+      -> 122 | edit 'cherry 272'
+    -> 122 | edit 'cherry 272'
+  -> 0 | edit 'cherry 272'
+ED WM_SYSKEYUP 40
+  -> 0 | edit 'cherry 272'
+== after step 107: ok | sel 122 text 'cherry 272' dropped true events 

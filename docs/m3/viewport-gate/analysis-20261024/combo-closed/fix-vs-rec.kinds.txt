@@ -1,0 +1,112 @@
+1 x events after 'key RIGHT'
+  seed 6 step 14
+    recorded: events 
+    this run: events M S 
+1 x face after 'key RIGHT'
+  seed 6 step 14
+    recorded: face 30b3a8fc
+    this run: face 672538df
+1 x face after 'read # #'
+  seed 6 step 15
+    recorded: face 30b3a8fc
+    this run: face 672538df
+1 x list after 'altdown'
+  seed 0 step 19
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+7 x list after 'drop true'
+  seed 0 step 36
+    recorded: list 0..148/21@5 e09eb301
+    this run: list 0..105/21@5 7b58061
+1 x list after 'hover #'
+  seed 5 step 1
+    recorded: list 0..299/20@0 cbfd33c1
+    this run: list 0..100/20@0 6cb43a03
+1 x list after 'indexOfEmpty -#'
+  seed 0 step 22
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+1 x list after 'key F#'
+  seed 8 step 3
+    recorded: list 0..299/20@0 3c27ffa
+    this run: list 0..100/20@0 a479863c
+3 x list after 'listwheel #'
+  seed 0 step 26
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+1 x list after 'removeString #'
+  seed 0 step 20
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+4 x list after 'selectionIndex'
+  seed 0 step 21
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+1 x list after 'setItem # #'
+  seed 0 step 24
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+1 x state after 'key RIGHT'
+  seed 6 step 14
+    recorded: state sel 253 count 302 text 'apple 252' dropped false
+    this run: state sel 254 count 302 text 'berry 253' dropped false
+1 x state after 'read # #'
+  seed 6 step 15
+    recorded: state sel 253 count 302 text 'apple 252' dropped false
+    this run: state sel 254 count 302 text 'berry 253' dropped false
+1 x events after 'key RIGHT'
+  seed 6 step 14
+    recorded: events 
+    this run: events M S 
+1 x face after 'key RIGHT'
+  seed 6 step 14
+    recorded: face 30b3a8fc
+    this run: face 672538df
+1 x face after 'read # #'
+  seed 6 step 15
+    recorded: face 30b3a8fc
+    this run: face 672538df
+1 x list after 'altdown'
+  seed 0 step 19
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+7 x list after 'drop true'
+  seed 0 step 36
+    recorded: list 0..148/21@5 e09eb301
+    this run: list 0..105/21@5 7b58061
+1 x list after 'hover #'
+  seed 5 step 1
+    recorded: list 0..299/20@0 cbfd33c1
+    this run: list 0..100/20@0 6cb43a03
+1 x list after 'indexOfEmpty -#'
+  seed 0 step 22
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+1 x list after 'key F#'
+  seed 8 step 3
+    recorded: list 0..299/20@0 3c27ffa
+    this run: list 0..100/20@0 a479863c
+3 x list after 'listwheel #'
+  seed 0 step 26
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+1 x list after 'removeString #'
+  seed 0 step 20
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+4 x list after 'selectionIndex'
+  seed 0 step 21
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+1 x list after 'setItem # #'
+  seed 0 step 24
+    recorded: list 0..148/21@0 c7fe9416
+    this run: list 0..100/21@0 4ab98d22
+1 x state after 'key RIGHT'
+  seed 6 step 14
+    recorded: state sel 253 count 302 text 'apple 252' dropped false
+    this run: state sel 254 count 302 text 'berry 253' dropped false
+1 x state after 'read # #'
+  seed 6 step 15
+    recorded: state sel 253 count 302 text 'apple 252' dropped false
+    this run: state sel 254 count 302 text 'berry 253' dropped false

@@ -1,0 +1,10 @@
+# SWT 4975 mode -
+step 131 drag 13 down 23
+  before           native top 50 caret 57 anchor -1 count 58 sel 0 [] | window first 17 size 58 top 67 caret 74 anchor -1 rangeEnd 305 parkedCaret -1 pastPage true | api top 67 focus 74 sel 0 []
+  WM_LBUTTONDOWN   native top 67 caret 74 anchor 74 count 75 sel 1 [42] | window first 0 size 75 top 67 caret 74 anchor 74 rangeEnd 74 parkedCaret -1 pastPage true | api top 67 focus 74 sel 1 [42]
+  WM_MOUSEMOVE 0   native top 50 caret 74 anchor 74 count 75 sel 1 [42] | window first 0 size 75 top 50 caret 74 anchor 74 rangeEnd 74 parkedCaret -1 pastPage false | api top 50 focus 74 sel 1 [42]
+  WM_MOUSEMOVE 1   native top 50 caret 74 anchor 74 count 75 sel 1 [42] | window first 0 size 75 top 50 caret 74 anchor 74 rangeEnd 74 parkedCaret -1 pastPage false | api top 50 focus 74 sel 1 [42]
+  WM_MOUSEMOVE 2   native top 50 caret 74 anchor 74 count 75 sel 1 [42] | window first 0 size 75 top 50 caret 74 anchor 74 rangeEnd 74 parkedCaret -1 pastPage false | api top 50 focus 74 sel 1 [42]
+  WM_MOUSEMOVE 22  native top 50 caret 74 anchor 74 count 75 sel 1 [42] | window first 0 size 75 top 50 caret 74 anchor 74 rangeEnd 74 parkedCaret -1 pastPage false | api top 50 focus 74 sel 1 [42]
+  WM_LBUTTONUP     native top 50 caret 74 anchor 74 count 75 sel 1 [42] | window first 0 size 75 top 50 caret 74 anchor 74 rangeEnd 74 parkedCaret -1 pastPage false | api top 50 focus 74 sel 1 [42]
+  flushed          native top 50 caret 74 anchor 74 count 75 sel 1 [42] | window first 0 size 75 top 50 caret 74 anchor 74 rangeEnd 74 parkedCaret -1 pastPage false | api top 50 focus 74 sel 1 [42]

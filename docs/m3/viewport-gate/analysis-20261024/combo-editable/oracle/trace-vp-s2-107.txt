@@ -1,0 +1,411 @@
+# SWT 4975 mode viewport seed 2
+== step 107 altdown | before: text 'cherry 272' sel 122
+CB CB_164 0
+  -> 1 | edit 'cherry 272'
+CB CB_164 0
+  -> 1 | edit 'cherry 272'
+ED WM_SYSKEYDOWN 40
+  CB CB_147 0
+    LB LB_GETCURSEL
+      -> 61 | edit 'cherry 272'
+    -> 61 | edit 'cherry 272'
+  CB CB_156 0
+    -> 0 | edit 'cherry 272'
+  LB WM_KEYDOWN 115
+    SH notify CBN_DROPDOWN
+      LB LB_DELETESTRING 85
+        -> 85 | edit 'cherry 272'
+      LB LB_DELETESTRING 84
+        -> 84 | edit 'cherry 272'
+      LB LB_DELETESTRING 83
+        -> 83 | edit 'cherry 272'
+      LB LB_DELETESTRING 82
+        -> 82 | edit 'cherry 272'
+      LB LB_DELETESTRING 81
+        -> 81 | edit 'cherry 272'
+      LB LB_DELETESTRING 80
+        -> 80 | edit 'cherry 272'
+      LB LB_DELETESTRING 79
+        -> 79 | edit 'cherry 272'
+      LB LB_DELETESTRING 78
+        -> 78 | edit 'cherry 272'
+      LB LB_DELETESTRING 77
+        -> 77 | edit 'cherry 272'
+      LB LB_DELETESTRING 76
+        -> 76 | edit 'cherry 272'
+      LB LB_DELETESTRING 75
+        -> 75 | edit 'cherry 272'
+      LB LB_DELETESTRING 74
+        -> 74 | edit 'cherry 272'
+      LB LB_DELETESTRING 73
+        -> 73 | edit 'cherry 272'
+      LB LB_DELETESTRING 72
+        -> 72 | edit 'cherry 272'
+      LB LB_DELETESTRING 71
+        -> 71 | edit 'cherry 272'
+      LB LB_DELETESTRING 70
+        -> 70 | edit 'cherry 272'
+      LB LB_DELETESTRING 69
+        -> 69 | edit 'cherry 272'
+      LB LB_DELETESTRING 68
+        -> 68 | edit 'cherry 272'
+      LB LB_DELETESTRING 67
+        -> 67 | edit 'cherry 272'
+      LB LB_DELETESTRING 66
+        -> 66 | edit 'cherry 272'
+      LB LB_DELETESTRING 65
+        -> 65 | edit 'cherry 272'
+      LB LB_DELETESTRING 64
+        -> 64 | edit 'cherry 272'
+      LB LB_DELETESTRING 63
+        -> 63 | edit 'cherry 272'
+      LB LB_DELETESTRING 62
+        -> 62 | edit 'cherry 272'
+      LB LB_DELETESTRING 61
+        LB LB_GETCURSEL
+          -> -1 | edit 'cherry 272'
+        ED WM_SETTEXT ''
+          -> 1 | edit ''
+        ED EM_SETSEL 0,2147483647
+          -> 1 | edit ''
+        -> 61 | edit ''
+      LB LB_DELETESTRING 60
+        -> 60 | edit ''
+      LB LB_DELETESTRING 59
+        -> 59 | edit ''
+      LB LB_DELETESTRING 58
+        -> 58 | edit ''
+      LB LB_DELETESTRING 57
+        -> 57 | edit ''
+      LB LB_DELETESTRING 56
+        -> 56 | edit ''
+      LB LB_DELETESTRING 55
+        -> 55 | edit ''
+      LB LB_DELETESTRING 54
+        -> 54 | edit ''
+      LB LB_DELETESTRING 53
+        -> 53 | edit ''
+      LB LB_DELETESTRING 52
+        -> 52 | edit ''
+      LB LB_DELETESTRING 51
+        -> 51 | edit ''
+      LB LB_DELETESTRING 50
+        -> 50 | edit ''
+      LB LB_DELETESTRING 49
+        -> 49 | edit ''
+      LB LB_DELETESTRING 48
+        -> 48 | edit ''
+      LB LB_DELETESTRING 47
+        -> 47 | edit ''
+      LB LB_DELETESTRING 46
+        -> 46 | edit ''
+      LB LB_DELETESTRING 45
+        -> 45 | edit ''
+      LB LB_DELETESTRING 44
+        -> 44 | edit ''
+      LB LB_DELETESTRING 43
+        -> 43 | edit ''
+      LB LB_DELETESTRING 42
+        -> 42 | edit ''
+      LB LB_DELETESTRING 41
+        -> 41 | edit ''
+      LB LB_DELETESTRING 40
+        -> 40 | edit ''
+      LB LB_DELETESTRING 39
+        -> 39 | edit ''
+      LB LB_DELETESTRING 38
+        -> 38 | edit ''
+      LB LB_DELETESTRING 37
+        -> 37 | edit ''
+      LB LB_DELETESTRING 36
+        -> 36 | edit ''
+      LB LB_DELETESTRING 35
+        -> 35 | edit ''
+      LB LB_DELETESTRING 34
+        -> 34 | edit ''
+      LB LB_DELETESTRING 33
+        -> 33 | edit ''
+      LB LB_DELETESTRING 32
+        -> 32 | edit ''
+      LB LB_DELETESTRING 31
+        -> 31 | edit ''
+      LB LB_DELETESTRING 30
+        -> 30 | edit ''
+      LB LB_DELETESTRING 29
+        -> 29 | edit ''
+      LB LB_DELETESTRING 28
+        -> 28 | edit ''
+      LB LB_DELETESTRING 27
+        -> 27 | edit ''
+      LB LB_DELETESTRING 26
+        -> 26 | edit ''
+      LB LB_DELETESTRING 25
+        -> 25 | edit ''
+      LB LB_DELETESTRING 24
+        -> 24 | edit ''
+      LB LB_DELETESTRING 23
+        -> 23 | edit ''
+      LB LB_DELETESTRING 22
+        -> 22 | edit ''
+      LB LB_DELETESTRING 21
+        -> 21 | edit ''
+      LB LB_DELETESTRING 20
+        -> 20 | edit ''
+      LB LB_DELETESTRING 19
+        -> 19 | edit ''
+      LB LB_DELETESTRING 18
+        -> 18 | edit ''
+      LB LB_DELETESTRING 17
+        -> 17 | edit ''
+      LB LB_DELETESTRING 16
+        -> 16 | edit ''
+      LB LB_DELETESTRING 15
+        -> 15 | edit ''
+      LB LB_DELETESTRING 14
+        -> 14 | edit ''
+      LB LB_DELETESTRING 13
+        -> 13 | edit ''
+      LB LB_DELETESTRING 12
+        -> 12 | edit ''
+      LB LB_DELETESTRING 11
+        -> 11 | edit ''
+      LB LB_DELETESTRING 10
+        -> 10 | edit ''
+      LB LB_DELETESTRING 9
+        -> 9 | edit ''
+      LB LB_DELETESTRING 8
+        -> 8 | edit ''
+      LB LB_DELETESTRING 7
+        -> 7 | edit ''
+      LB LB_DELETESTRING 6
+        -> 6 | edit ''
+      LB LB_DELETESTRING 5
+        -> 5 | edit ''
+      LB LB_DELETESTRING 4
+        -> 4 | edit ''
+      LB LB_DELETESTRING 3
+        -> 3 | edit ''
+      LB LB_DELETESTRING 2
+        -> 2 | edit ''
+      LB LB_DELETESTRING 1
+        -> 1 | edit ''
+      LB LB_DELETESTRING 0
+        LB LB_RESETCONTENT
+          -> 0 | edit ''
+        -> 0 | edit ''
+      LB LB_INSERTSTRING 0 'elder 209'
+        -> 0 | edit ''
+      LB LB_INSERTSTRING 1 'apple 210'
+        -> 1 | edit ''
+      LB LB_INSERTSTRING 2 'berry 211'
+        -> 2 | edit ''
+      LB LB_INSERTSTRING 3 'cherry 212'
+        -> 3 | edit ''
+      LB LB_INSERTSTRING 4 'Apple 213'
+        -> 4 | edit ''
+      LB LB_INSERTSTRING 5 'date 214'
+        -> 5 | edit ''
+      LB LB_INSERTSTRING 6 'elder 215'
+        -> 6 | edit ''
+      LB LB_INSERTSTRING 7 'apple 216'
+        -> 7 | edit ''
+      LB LB_INSERTSTRING 8 'berry 217'
+        -> 8 | edit ''
+      LB LB_INSERTSTRING 9 'cherry 218'
+        -> 9 | edit ''
+      LB LB_INSERTSTRING 10 'Apple 219'
+        -> 10 | edit ''
+      LB LB_INSERTSTRING 11 'elder 221'
+        -> 11 | edit ''
+      LB LB_INSERTSTRING 12 'apple 222'
+        -> 12 | edit ''
+      LB LB_INSERTSTRING 13 'berry 223'
+        -> 13 | edit ''
+      LB LB_INSERTSTRING 14 'cherry 224'
+        -> 14 | edit ''
+      LB LB_INSERTSTRING 15 'Apple 225'
+        -> 15 | edit ''
+      LB LB_INSERTSTRING 16 'date 226'
+        -> 16 | edit ''
+      LB LB_INSERTSTRING 17 'elder 227'
+        -> 17 | edit ''
+      LB LB_INSERTSTRING 18 'apple 228'
+        -> 18 | edit ''
+      LB LB_INSERTSTRING 19 'berry 229'
+        -> 19 | edit ''
+      LB LB_INSERTSTRING 20 'cherry 230'
+        -> 20 | edit ''
+      LB LB_INSERTSTRING 21 'Apple 231'
+        -> 21 | edit ''
+      LB LB_INSERTSTRING 22 'date 232'
+        -> 22 | edit ''
+      LB LB_INSERTSTRING 23 'elder 233'
+        -> 23 | edit ''
+      LB LB_INSERTSTRING 24 'apple 234'
+        -> 24 | edit ''
+      LB LB_INSERTSTRING 25 'berry 235'
+        -> 25 | edit ''
+      LB LB_INSERTSTRING 26 'cherry 236'
+        -> 26 | edit ''
+      LB LB_INSERTSTRING 27 'Apple 237'
+        -> 27 | edit ''
+      LB LB_INSERTSTRING 28 'date 238'
+        -> 28 | edit ''
+      LB LB_INSERTSTRING 29 'elder 239'
+        -> 29 | edit ''
+      LB LB_INSERTSTRING 30 'apple 240'
+        -> 30 | edit ''
+      LB LB_INSERTSTRING 31 'berry 241'
+        -> 31 | edit ''
+      LB LB_INSERTSTRING 32 'cherry 242'
+        -> 32 | edit ''
+      LB LB_INSERTSTRING 33 'Apple 243'
+        -> 33 | edit ''
+      LB LB_INSERTSTRING 34 'date 244'
+        -> 34 | edit ''
+      LB LB_INSERTSTRING 35 'elder 245'
+        -> 35 | edit ''
+      LB LB_INSERTSTRING 36 'apple 246'
+        -> 36 | edit ''
+      LB LB_INSERTSTRING 37 'berry 247'
+        -> 37 | edit ''
+      LB LB_INSERTSTRING 38 'cherry 248'
+        -> 38 | edit ''
+      LB LB_INSERTSTRING 39 'Apple 249'
+        -> 39 | edit ''
+      LB LB_INSERTSTRING 40 'date 250'
+        -> 40 | edit ''
+      LB LB_INSERTSTRING 41 'elder 251'
+        -> 41 | edit ''
+      LB LB_INSERTSTRING 42 'berry 253'
+        -> 42 | edit ''
+      LB LB_INSERTSTRING 43 'cherry 254'
+        -> 43 | edit ''
+      LB LB_INSERTSTRING 44 'Apple 255'
+        -> 44 | edit ''
+      LB LB_INSERTSTRING 45 'date 256'
+        -> 45 | edit ''
+      LB LB_INSERTSTRING 46 'elder 257'
+        -> 46 | edit ''
+      LB LB_INSERTSTRING 47 'apple 258'
+        -> 47 | edit ''
+      LB LB_INSERTSTRING 48 'berry 259'
+        -> 48 | edit ''
+      LB LB_INSERTSTRING 49 'cherry 260'
+        -> 49 | edit ''
+      LB LB_INSERTSTRING 50 'Apple 261'
+        -> 50 | edit ''
+      LB LB_INSERTSTRING 51 'date 262'
+        -> 51 | edit ''
+      LB LB_INSERTSTRING 52 'elder 263'
+        -> 52 | edit ''
+      LB LB_INSERTSTRING 53 'apple 264'
+        -> 53 | edit ''
+      LB LB_INSERTSTRING 54 'berry 265'
+        -> 54 | edit ''
+      LB LB_INSERTSTRING 55 'cherry 266'
+        -> 55 | edit ''
+      LB LB_INSERTSTRING 56 'Apple 267'
+        -> 56 | edit ''
+      LB LB_INSERTSTRING 57 'date 268'
+        -> 57 | edit ''
+      LB LB_INSERTSTRING 58 'elder 269'
+        -> 58 | edit ''
+      LB LB_INSERTSTRING 59 'apple 270'
+        -> 59 | edit ''
+      LB LB_INSERTSTRING 60 'berry 271'
+        -> 60 | edit ''
+      LB LB_INSERTSTRING 61 'cherry 272'
+        -> 61 | edit ''
+      LB LB_INSERTSTRING 62 'Apple 273'
+        -> 62 | edit ''
+      LB LB_INSERTSTRING 63 'date 274'
+        -> 63 | edit ''
+      LB LB_INSERTSTRING 64 'elder 275'
+        -> 64 | edit ''
+      LB LB_INSERTSTRING 65 'apple 276'
+        -> 65 | edit ''
+      LB LB_INSERTSTRING 66 'berry 277'
+        -> 66 | edit ''
+      LB LB_INSERTSTRING 67 'cherry 278'
+        -> 67 | edit ''
+      LB LB_INSERTSTRING 68 'Apple 279'
+        -> 68 | edit ''
+      LB LB_INSERTSTRING 69 'date 280'
+        -> 69 | edit ''
+      LB LB_INSERTSTRING 70 'elder 281'
+        -> 70 | edit ''
+      LB LB_INSERTSTRING 71 'apple 282'
+        -> 71 | edit ''
+      LB LB_INSERTSTRING 72 'berry 283'
+        -> 72 | edit ''
+      LB LB_INSERTSTRING 73 'cherry 284'
+        -> 73 | edit ''
+      LB LB_INSERTSTRING 74 'Apple 285'
+        -> 74 | edit ''
+      LB LB_INSERTSTRING 75 'date 286'
+        -> 75 | edit ''
+      LB LB_INSERTSTRING 76 'elder 287'
+        -> 76 | edit ''
+      LB LB_INSERTSTRING 77 'berry 289'
+        -> 77 | edit ''
+      LB LB_INSERTSTRING 78 'cherry 290'
+        -> 78 | edit ''
+      LB LB_INSERTSTRING 79 'Apple 291'
+        -> 79 | edit ''
+      LB LB_INSERTSTRING 80 'date 292'
+        -> 80 | edit ''
+      LB LB_INSERTSTRING 81 'elder 293'
+        -> 81 | edit ''
+      LB LB_INSERTSTRING 82 'apple 294'
+        -> 82 | edit ''
+      LB LB_INSERTSTRING 83 'berry 295'
+        -> 83 | edit ''
+      LB LB_INSERTSTRING 84 ''
+        -> 84 | edit ''
+      LB LB_INSERTSTRING 85 'new 458'
+        -> 85 | edit ''
+      LB LB_GETCOUNT
+        -> 86 | edit ''
+      LB LB_GETCARETINDEX
+        -> 0 | edit ''
+      LB LB_GETCURSEL
+        -> -1 | edit ''
+      LB LB_INSERTSTRING 61 ''
+        -> 61 | edit ''
+      LB LB_SETCURSEL 62
+        -> 62 | edit ''
+      LB LB_DELETESTRING 61
+        -> 86 | edit ''
+      CB CB_152 0
+        -> 1 | edit ''
+      CB CB_164 0
+        -> 1 | edit ''
+      CB CB_154 0
+        LB LB_GETITEMHEIGHT
+          -> 15 | edit ''
+        -> 15 | edit ''
+      CB CB_164 0
+        -> 1 | edit ''
+      -> 0 | edit ''
+    LB LB_SETCURSEL -1
+      -> -1 | edit ''
+    LB LB_SETCARETINDEX 0
+      -> 0 | edit ''
+    LB LB_SETTOPINDEX 0
+      -> 0 | edit ''
+    LB LB_GETITEMHEIGHT
+      -> 15 | edit ''
+    LB LB_GETCOUNT
+      -> 86 | edit ''
+    LB LBCB_STARTTRACK
+      -> 0 | edit ''
+    -> 0 | edit ''
+  CB CB_147 0
+    LB LB_GETCURSEL
+      -> -1 | edit ''
+    -> -1 | edit ''
+  -> 0 | edit ''
+ED WM_SYSKEYUP 40
+  -> 0 | edit ''
+== after step 107: ok | sel -1 text '' dropped true events M S 

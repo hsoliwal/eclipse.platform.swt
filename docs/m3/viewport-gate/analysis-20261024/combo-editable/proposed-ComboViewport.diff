@@ -1,0 +1,103 @@
+--- "a/bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/ComboViewport.java"	2026-10-24 20:51:21.612293000 +0530
++++ "b/bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/ComboViewport.java"	2026-10-24 20:51:21.661211800 +0530
+@@ -86,6 +86,8 @@
+ 	 * What the list box last did to its vertical bar (ListViewport's rule, ListBarOracle2): LB_RESETCONTENT
+ 	 * frees it, the first row added afterwards leaves the default bar, every later insert or delete writes it.
+ 	 * The viewport writes the logical bar only in the last state, so the freed and default bars stay the stock ones.
++	 * A logical lane: it follows the rows the stock list box takes (every add, remove and setItems), not the
++	 * window's own native inserts and deletes (a closed combo takes most adds in its lanes only).
+ 	 */
+ 	static final int BAR_NONE = 0, BAR_DEFAULT = 1, BAR_SET = 2;
+ 	private int barState = BAR_NONE;
+@@ -252,6 +254,13 @@
+ 		parked = staleSelection;
+ 		busy = true;
+ 		try {
++			/*
++			 * When its list box deletes the selected row, the combo empties an editable combo's edit field (the rule of
++			 * stock CB_DELETESTRING, ComboStepTrace seed 0 step 70); the drop or the typing that called cover would then
++			 * search an empty text. The stale rows go without a selection: rebuild's restoreFocus selects again, and
++			 * LB_SETCURSEL to the list box leaves the edit field alone.
++			 */
++			OS.CallWindowProc (listWindowProc, hwndList, OS.LB_SETCURSEL, -1, 0);
+ 			int n = (int) OS.CallWindowProc (listWindowProc, hwndList, OS.LB_GETCOUNT, 0, 0);
+ 			for (int i = n - 1; i >= 0; i--) deleteNative (i);
+ 		} finally {
+@@ -342,16 +351,15 @@
+ 		nativeRowOps++;
+ 		long result = OS.SendMessage (hwndList, OS.LB_INSERTSTRING, entry, rowText);
+ 		if (result == OS.LB_ERR || result == OS.LB_ERRSPACE) combo.error (SWT.ERROR_ITEM_NOT_ADDED);
+-		inserted ();
+ 	}
+ 
++	/* window maintenance: the bar lane is logical (add, deleteRows, setItems), see barState */
+ 	private void deleteNative (int entry) {
+ 		nativeRowOps++;
+ 		OS.SendMessage (hwndList, OS.LB_DELETESTRING, entry, 0);
+-		barState = BAR_SET;
+ 	}
+ 
+-	/* a row went into the list box: the freed bar becomes the default one, the default one a written one */
++	/* a row went into the stock list box: the freed bar becomes the default one, the default one a written one */
+ 	private void inserted () {
+ 		barState = barState == BAR_NONE ? BAR_DEFAULT : BAR_SET;
+ 	}
+@@ -431,7 +439,6 @@
+ 			for (int i = s; i < c; i++) {
+ 				nativeRowOps++;
+ 				OS.SendMessage (hwndList, OS.LB_INSERTSTRING, s, empty);
+-				inserted ();
+ 			}
+ 			setCursel (c);
+ 			for (int i = s; i < c; i++) deleteNative (s);
+@@ -941,10 +948,9 @@
+ 			if (parked >= index) parked++;
+ 			if (stale && staleSelection >= index) staleSelection++;
+ 			int entry = plan.inserted (index, 1);
+-			if (entry >= 0 && stale) {
+-				/* the bar as the native insert would leave it */
+-				inserted ();
+-			} else if (entry >= 0) {
++			/* the stock list box takes every insert, resident or not, closed or dropped: the bar lane follows it */
++			inserted ();
++			if (entry >= 0 && !stale) {
+ 				busy = true;
+ 				try {
+ 					insertNative (entry, index);
+@@ -992,14 +998,13 @@
+ 			}
+ 			if (stale && staleSelection > end) staleSelection -= removed;
+ 			int resident = plan.removed (start, removed);
+-			if (resident > 0 && stale) {
+-				barState = BAR_SET;
+-			} else if (resident > 0) {
++			/* the stock list box takes every delete, resident or not, and writes its bar */
++			barState = BAR_SET;
++			if (resident > 0 && !stale) {
+ 				int entry = plan.removedEntry (start);
+ 				busy = true;
+ 				try {
+ 					for (int i = 0; i < resident; i++) OS.CallWindowProc (Combo.ComboProc, combo.handle, OS.CB_DELETESTRING, entry, 0);
+-					barState = BAR_SET;
+ 				} finally {
+ 					busy = false;
+ 				}
+@@ -1097,7 +1102,8 @@
+ 		} finally {
+ 			busy = false;
+ 		}
+-		barState = BAR_NONE;
++		/* stock Combo.setItems adds the items one by one after CB_RESETCONTENT: freed, default after one, written after more */
++		barState = items.length == 0 ? BAR_NONE : items.length == 1 ? BAR_DEFAULT : BAR_SET;
+ 		recordedRow = -1;
+ 		plan.clear ();
+ 		parked = parkedCaret = -1;
+@@ -1227,6 +1233,8 @@
+ 			}
+ 		}
+ 		parked = -1;
++		/* CB_SETCURSEL (-1) of a closed stale combo (Combo.deselectAll has no hook) clears the selection lane too */
++		if (stale && entry == -1) staleSelection = -1;
+ 		long code = OS.CallWindowProc (Combo.ComboProc, combo.handle, OS.CB_SETCURSEL, entry, lParam);
+ 		lastSetResult = (int) code == OS.CB_ERR ? OS.CB_ERR : plan.first () + (int) code;
+ 		updateBar ();

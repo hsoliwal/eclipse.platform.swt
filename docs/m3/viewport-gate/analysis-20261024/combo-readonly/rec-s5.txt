@@ -1,0 +1,17 @@
+ok | state sel -1 count 300 text '' dropped true | events  | face 6a81c58 | list 0..299/20@0 c6024cf8
+ok | state sel 11 count 300 text 'elder 11' dropped true | events  | face c5c6de0f | list 0..299/20@0 89eb1dac
+ok | state sel 11 count 300 text 'elder 11' dropped true | events  | face c5c6de0f | list 0..299/20@0 89eb1dac
+ok | state sel 11 count 301 text 'elder 11' dropped true | events  | face c5c6de0f | list 0..300/20@0 89eb1dac
+ok | state sel 11 count 302 text 'elder 11' dropped true | events  | face c5c6de0f | list 0..301/20@0 89eb1dac
+ok | state sel 2 count 302 text 'cherry 2' dropped true | events  | face 8aa8650c | list 0..301/20@0 48c04b3b
+ok | state sel 143 count 302 text 'elder 143' dropped true | events M  | face a8b4e5cd | list 0..301/20@143 9edbfaf6
+ok | state sel 143 count 302 text 'elder 143' dropped true | events  | face a8b4e5cd | list 0..301/20@143 9edbfaf6
+ok | state sel 156 count 302 text 'apple 156' dropped true | events  | face f9e039b1 | list 0..301/20@143 499dfb63
+index 156 | state sel 156 count 302 text 'apple 156' dropped true | events  | face f9e039b1 | list 0..301/20@143 499dfb63
+ok | state sel 159 count 302 text 'Apple 159' dropped false | events M S  | face fbffbdb9 | list -
+ok | state sel 159 count 302 text 'Apple 159' dropped false | events  | face fbffbdb9 | list -
+ok | state sel 159 count 302 text 'Apple 159' dropped true | events  | face 39f4e068 | list 0..301/15@159 3cedaadc
+ok | state sel 161 count 302 text 'elder 161' dropped true | events M S  | face 26795113 | list 0..301/15@161 d3ff75e6
+index 161 | state sel 161 count 302 text 'elder 161' dropped true | events  | face 26795113 | list 0..301/15@161 d3ff75e6
+ok | state sel 161 count 302 text 'elder 161' dropped true | events  | face 26795113 | list 0..301/15@164 739600b2
+index 161 | state sel 161 count 302 text 'elder 161' dropped true | events  | face 26795113 | list 0..301/15@164 739600b2
