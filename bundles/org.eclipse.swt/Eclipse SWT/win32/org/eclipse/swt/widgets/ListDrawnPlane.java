@@ -73,7 +73,7 @@ final class ListDrawnPlane extends DrawnPlane {
 				bottom = bounds.bottom;
 			}
 		}
-		if (bottom < damage.bottom) renderer.paintEmpty (canvas, row, damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
+		if (bottom < damage.bottom) paintEmpty (damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
 	}
 
 	private int commonState (long hwnd) {

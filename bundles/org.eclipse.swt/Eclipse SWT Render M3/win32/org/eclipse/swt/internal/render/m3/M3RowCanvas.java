@@ -55,11 +55,14 @@ public final class M3RowCanvas implements BufferCanvas {
 	/** A cached font, its metrics measured once, and its shaped lines (by string, an LRU closed on eviction). */
 	static final class FontEntry implements AutoCloseable {
 		final Font font;
+		/* what the font was made from on the render thread (null: from the platform's handle) */
+		final FontDescriptor descriptor;
 		final float ascent, lineHeight;
 		final Map<String, LineEntry> lines = lru (LINES);
 
-		FontEntry (Font font) {
+		FontEntry (Font font, FontDescriptor descriptor) {
 			this.font = font;
+			this.descriptor = descriptor;
 			FontMetrics metrics = font.getMetrics ();
 			ascent = -metrics.getAscent ();
 			lineHeight = metrics.getDescent () - metrics.getAscent ();
@@ -137,6 +140,8 @@ public final class M3RowCanvas implements BufferCanvas {
 	private final Map<ImageData, Bitmap> glyphs = new WeakHashMap<> ();
 	private final LongCache<Bitmap> partImages = new LongCache<> (PART_IMAGES, M3RowCanvas::close);
 	private final LOGFONT logFont = new LOGFONT ();
+	/* the fonts of the frame being drawn on the render thread (rule 28); null on the UI thread */
+	private FontTable table;
 	/* the path of polygon, reset per call */
 	private final Path path = new Path ();
 	/* the gpu mode: the frame is drawn on the graphics hardware and read back into the back buffer */
@@ -243,6 +248,17 @@ public final class M3RowCanvas implements BufferCanvas {
 	}
 
 	@Override
+	public void clip (int x, int y, int width, int height) {
+		Canvas._nSave (canvasPtr);
+		Canvas._nClipRect (canvasPtr, x, y, x + width, y + height, CLIP_INTERSECT, false);
+	}
+
+	@Override
+	public void unclip () {
+		Canvas._nRestore (canvasPtr);
+	}
+
+	@Override
 	public void fill (int x, int y, int width, int height, int rgb) {
 		if (width <= 0 || height <= 0) return;
 		paint.setColor (0xFF000000 | rgb);
@@ -268,12 +284,19 @@ public final class M3RowCanvas implements BufferCanvas {
 
 	/* one library font per native font handle: face, pixel height, weight and italic of its LOGFONT */
 	private FontEntry font (long hFont) {
+		/* on the render thread the frame describes its fonts; a handle reused for another font makes a new entry */
+		FontDescriptor described = table != null ? table.font (hFont) : null;
 		FontEntry cached = fonts.get (hFont);
-		if (cached != null) return cached;
+		if (cached != null && (described == null || described.equals (cached.descriptor))) return cached;
 		String face = "Segoe UI";
 		int height = -12, weight = 400;
 		boolean italic = false;
-		if (hFont != 0 && hFont != -1 && OS.GetObject (hFont, LOGFONT.sizeof, logFont) != 0) {
+		if (described != null) {
+			face = described.face ();
+			height = described.height ();
+			weight = described.weight ();
+			italic = described.italic ();
+		} else if (hFont != 0 && hFont != -1 && OS.GetObject (hFont, LOGFONT.sizeof, logFont) != 0) {
 			int length = 0;
 			while (length < logFont.lfFaceName.length && logFont.lfFaceName [length] != 0) length++;
 			face = new String (logFont.lfFaceName, 0, length);
@@ -290,9 +313,14 @@ public final class M3RowCanvas implements BufferCanvas {
 			font.setSize (height * height / Math.max (1f, metrics.getDescent () - metrics.getAscent ()));
 		}
 		font.setEdging (FontEdging.SUBPIXEL_ANTI_ALIAS).setSubpixel (true).setHinting (FontHinting.NORMAL);
-		FontEntry entry = new FontEntry (font);
+		FontEntry entry = new FontEntry (font, described);
 		fonts.put (hFont, entry);
 		return entry;
+	}
+
+	@Override
+	public void fonts (FontTable table) {
+		this.table = table;
 	}
 
 	/*

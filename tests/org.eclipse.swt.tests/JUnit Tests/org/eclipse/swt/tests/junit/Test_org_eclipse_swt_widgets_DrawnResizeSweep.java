@@ -91,6 +91,8 @@ public class Test_org_eclipse_swt_widgets_DrawnResizeSweep {
 			made [step] = creations (plane) - creationsBefore;
 			if (plane (control) != plane) fail ("step " + step + ": the widget installed a new drawn plane");
 		}
+		/* the rows kept or widened over the sweep are the rows the plane would draw */
+		Test_org_eclipse_swt_widgets_DrawnHiddenViewport.keptRowsAreTheDrawnRows (display, control);
 		long fullAfterFirst = Arrays.stream (full, 1, STEPS).sum ();
 		int creations = creations (plane) - creationsStart;
 		String mode = ViewportDifferential.reference (control.getClass ().getSimpleName ());

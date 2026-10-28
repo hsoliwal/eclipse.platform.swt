@@ -87,25 +87,18 @@ public final class RowSnapshots {
 		}
 	}
 
-	private static final int FRESH = 4;
-	private final Slab [] slabs = new Slab [3];
-	/* bits 0-1: the middle slab; FRESH: it is newer than the front */
-	private final AtomicInteger middle = new AtomicInteger (1);
-	/* owned by the model side */
-	private int back = 0;
-	private long generation;
-	/* owned by the renderer */
-	private int front = 2;
-	private volatile long latest;
+	/* the exchange of the three slabs (back, middle, front) */
+	private final TripleBuffer<Slab> slabs;
 
 	/** @param rows the largest row window a slab holds */
 	public RowSnapshots (int rows) {
-		for (int i = 0; i < slabs.length; i++) slabs [i] = new Slab (Math.max (1, rows));
+		int capacity = Math.max (1, rows);
+		slabs = new TripleBuffer<> (() -> new Slab (capacity));
 	}
 
 	/** The slab the model side fills now: neither the latest snapshot nor the renderer's. Model side only. */
 	public Slab writable () {
-		return slabs [back];
+		return slabs.writable ();
 	}
 
 	/**
@@ -115,12 +108,11 @@ public final class RowSnapshots {
 	 * @return the generation published
 	 */
 	public long publish (Slab slab) {
-		if (slab != slabs [back]) throw new IllegalArgumentException ("not the writable slab of these snapshots");
-		slab.generation = ++generation;
+		ThreadRole.RENDER.forbid ("RowSnapshots.publish");
+		if (slab != slabs.writable ()) throw new IllegalArgumentException ("not the writable slab of these snapshots");
+		slab.generation = slabs.generation () + 1;
 		slab.checksum = slab.sum ();
-		back = middle.getAndSet (back | FRESH) & 3;
-		latest = generation;
-		return generation;
+		return slabs.publish ();
 	}
 
 	/**
@@ -129,13 +121,12 @@ public final class RowSnapshots {
 	 * Renderer only.
 	 */
 	public Slab acquire () {
-		if ((middle.get () & FRESH) != 0) front = middle.getAndSet (front) & 3;
-		Slab slab = slabs [front];
-		return slab.generation == 0 ? null : slab;
+		ThreadRole.MODEL.forbid ("RowSnapshots.acquire");
+		return slabs.acquire ();
 	}
 
 	/** The generation of the latest published snapshot (0: none). */
 	public long generation () {
-		return latest;
+		return slabs.generation ();
 	}
 }

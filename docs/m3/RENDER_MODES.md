@@ -467,6 +467,86 @@ m3 pixels and the custom pixels are reported by similarity; every non-pixel answ
 | IM5 | frame pacing (skiko pattern) | I6 in gpu |
 | IM6 | the interactive differential | I1-I7 |
 
+## Thread architecture: CPU and GPU separation (brief rule 28, user 2026-10-20)
+
+User 2026-10-20: "CPU vs GPU thread separation must exist", "the SWT synchronizer too", "just like Swing". Three roles,
+never mixed (`ThreadRole`):
+
+| Role | Owns | Never |
+|---|---|---|
+| UI | OS events, the native control (behaviour plane) and its resident window, ONE patch per widget per frame, building and publishing the frame's snapshot | waits on the render thread |
+| MODEL | lanes, deltas, sort, filter, scope (viewport tracks) | touches a widget handle, a device context or a frame |
+| RENDER | in custom, m3 and gpu: acquires the newest published snapshot, draws it into its own frame buffer (GDI DIB, Skia raster or GL target), hands the frame to the UI thread | touches the model, a widget or any SWT object; blocks on the model |
+
+**The frame tick** (agreed with the all-widgets track, which rebuilds the Synchronizer as a Swing-EventQueue-like
+dispatcher: a ring, keyed coalescing, priority classes `Synchronizer.INPUT`, `LAYOUT`, `DEFAULT` (stock FIFO), `MODEL`,
+`IDLE`). Model threads post their completions as `MODEL` runnables keyed by widget (`asyncExec (priority, key,
+runnable)`: the latest per key replaces the queued one). At most one tick is pending per Display, paced at 16 ms and
+skipped when nothing is dirty; it drains the queued `MODEL` runnables (one window patch per widget), increments the
+Display's frame generation (1, 2, 3, ...) and calls every `org.eclipse.swt.widgets.FrameListener`
+(`frameApplied (Display, long frameGeneration)`, registered with `display.getSynchronizer ().addFrameListener`) once,
+in one dispatcher step, so no `WM_PAINT` runs between the patches and the listeners. A plane that is dirty without model
+work asks for a tick with `requestFrame ()`.
+
+**Flow of a frame.** In its frame listener a dirty drawn plane fills its back slab (`RowSnapshots`) from the viewport
+lanes: per visible row the `RowPaint.key` ints, the texts (immutable strings), image pixels as immutable copies and
+fonts as descriptors, never an SWT object; it publishes (one `getAndSet`) and unparks the render thread. The render
+thread exchanges in the newest slab (older ones are dropped: the newest generation wins), draws it and publishes the
+finished frame through a second triple buffer. On `WM_PAINT` the UI thread runs the behaviour pass and blits the newest
+finished frame over the damage; when that frame is older than the snapshot of the damage it is shown once more and the
+render thread's completion invalidates the damage again (one frame later, invariant I5). The UI thread never waits on
+the render thread; the render thread never blocks on the model (it reads published slabs only). A hidden widget
+(rule 24) skips the patch and the publication; on becoming part-visible it posts its one patch as `MODEL`, keyed by the
+widget, and the next tick publishes once.
+
+**Captures.** `WM_PRINTCLIENT` (tests, printing) asks for the pixels of the current model now: it is served from the
+newest finished frame when its generation is current, otherwise drawn once on the UI thread outside the frame path and
+counted apart in the frame log.
+
+**Gates.** `-Dswt.m3.threadCheck=true` turns on the role assertions (a constant false otherwise, so the checks compile
+away): a plane is made and painted on the UI thread, the render thread never publishes, a model thread never acquires
+or renders, an undeclared thread fails role-owned code. The frame log counts the UI thread's waits on the render thread
+and the render thread's blocks on the model (both must stay 0) and the frame time p99 under model churn of 10^4
+deltas/s at 10^6 rows (the interactive differential with a model thread).
+
+| Leaf | Scope | Status |
+|---|---|---|
+| R28-1 | `ThreadRole` and the assertion mode at the plane, snapshot and renderer boundaries; this design | DONE (headless: `Test_..._ThreadRole` with and without the mode) |
+| R28-2 | the row slab: `RowPaint` rows into snapshot lanes (key ints, texts, image copies, font descriptors) and back | DONE headless (`FrameSlab`, `TripleBuffer`, `FontDescriptor`, `RowPaint.write/read`: identical renderer calls after the round trip, 0 torn frames in 50000 publications under concurrent reads, 0 bytes per frame); the planes fill it with R28-3 |
+| R28-3 | the render thread per Display, the frame triple buffer, the completion that invalidates the damage | |
+| R28-4 | the frame listener of the planes on the Synchronizer (API above, all-widgets track implements it) | DONE (render-thread mode: at a tick a damaged visible plane paints at once, so a patch is published in the same tick; the Synchronizer delta of all-widgets 9c52f39e315 is on this branch) |
+| R28-5 | the gates under churn at 10^6 rows in custom, m3 and gpu | |
+
+## SVG-skinned controls (user 2026-10-20: "SVG-painted button to my size, instead of painting it manually")
+
+docs/m3/behaviours/BEHAVIOURS.md, "SVG-skinned controls": buttons, toolbar items, badges, chips, toggles, check and radio
+marks, sash grips and scroll carets take their visuals from SVG skins, with no paint code per control. This track owns
+the skin engine (`SvgSkins`); the all-widgets track owns the controls and the L&amp;F keys, agreed 2026-10-20:
+
+| Key | Kind | Meaning |
+|---|---|---|
+| `<Component>.skin` | STRING (all-widgets adds the kind, interned to an int id) | the skin: a resource name such as `m3/button`; unset: the control paints as today, so native mode stays pixel-identical |
+| `<Component>.skin.insets` | INSETS | nine-slice insets in SVG units (top, left, bottom, right); unset: the skin's `data-insets` |
+| `<Component>.skin.<part>.<state>.tint`, `<Component>.skin.<part>.tint` | COLOR | the colour that replaces `currentColor`; falls back to `<Component>.foreground` |
+
+Parts: background, border, mark, grip, caret (SVG resources `skins/<skin>/<part>[.<state>].svg`). States: normal, hover,
+pressed, focused, disabled, selected, mixed (a missing state uses the normal part). A skinned delegate's paint keys
+include its skin keys, so a look and feel switch repaints only the skinned widgets whose keys changed.
+
+How a part is drawn: rasterized once per (skin, part, state, tint, zoom) at its own size times the zoom through SWT's
+`SVGRasterizer` seam (org.eclipse.swt.svg, JSVG), then composed to the control's size by nine-slice scaling: corners
+copied 1:1 (they keep their radius at every size), edges stretched along one axis, the centre along both. A part
+without insets (a mark, a grip, a caret) is rasterized at the exact size instead, crisp. Both levels are cached
+(`LongCache`); a warm lookup allocates nothing. Built-in skins: `m3/button` (background, border, focused border),
+`m3/check` (border, mark, mixed mark), `m3/radio` (border, mark), `m3/sash` (grip), `m3/scroll` (caret).
+
+Donors (ADAPT, no code copied): SWT SVGRasterizer and JSVG (MIT) for rasterizing, FlatLaf FlatSVGIcon colour filters
+(Apache-2.0) for the tint by colour replacement, IntelliJ's SVG icon loader (Apache-2.0) for caching by size and scale,
+the CSS nine-slice (`border-image`) pattern. Gate (`Test_org_eclipse_swt_internal_render_SvgSkins`, headless): the button
+at 100/125/150/200 % and 10 sizes keeps its corners equal to the part at its own size, its edges uniform and its fill the
+tint; one rasterization per zoom whatever the sizes; marks at their exact size; a missing state falls back; 100000 warm
+lookups allocate 688 bytes in total (not per lookup). The Swing side (M3JDK) reads the same skins.
+
 ## Optimization pass and brief rule 24 (2026-10-20)
 
 User 2026-10-20: "proceed with optimizing the whole" (C:/m3-superset/tools/OPTIMIZATION_PASS.md) and "all delta based

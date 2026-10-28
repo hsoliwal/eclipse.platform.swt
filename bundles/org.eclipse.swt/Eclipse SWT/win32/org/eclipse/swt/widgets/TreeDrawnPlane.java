@@ -71,7 +71,7 @@ final class TreeDrawnPlane extends DrawnPlane {
 			bottom = line.bottom;
 			hItem = OS.SendMessage (hwnd, OS.TVM_GETNEXTITEM, OS.TVGN_NEXTVISIBLE, hItem);
 		}
-		if (bottom < damage.bottom) renderer.paintEmpty (canvas, row, damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
+		if (bottom < damage.bottom) paintEmpty (damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
 	}
 
 	private void frameDefaults (long hwnd) {
