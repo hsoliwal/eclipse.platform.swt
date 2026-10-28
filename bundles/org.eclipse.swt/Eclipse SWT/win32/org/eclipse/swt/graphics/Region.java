@@ -1020,6 +1020,9 @@ private static class OperationWithRegion extends Operation {
 	OperationWithRegion(OperationStrategy operationStrategy, List<Operation> operations) {
 		super(operationStrategy);
 		this.operations = List.copyOf(operations);
+		// The operations of the other region are retained beyond that region's lifetime,
+		// so they must be kept alive until this operation itself is destroyed.
+		this.operations.forEach(Operation::reference);
 	}
 
 	@Override
@@ -1048,6 +1051,11 @@ private static class OperationWithRegion extends Operation {
 	@Override
 	void translate(long handle, int zoom) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	void destroy() {
+		operations.forEach(Operation::dereference);
 	}
 
 }
