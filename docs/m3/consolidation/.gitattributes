@@ -1,0 +1,2 @@
+# Raw consolidation ledgers (TSV): empty trailing cells are data, kept byte for byte
+*.tsv -whitespace
