@@ -464,4 +464,36 @@ public class Test_ViewportDamage {
 		shortHeader.putShort((short) 0).putShort((short) 0);
 		assertThrows(IllegalArgumentException.class, () -> RfbFeed.feed(bytes(shortHeader), 4, rec));
 	}
+
+	@Test
+	public void rejectedCopiesPreserveDamageAndAccounting() {
+		ViewportDamageRegion region = new ViewportDamageRegion();
+		region.add(-4, -4, 2, 2);
+		region.addCopy(0, 0, 12, 20, 5, 6);
+		int[] before = new int[4];
+		region.boundingBox(before);
+		int[] invalid = {Integer.MIN_VALUE, -(1 << 29) - 1, (1 << 29) + 1, Integer.MAX_VALUE};
+		for (int coordinate : invalid) {
+			for (int lane = 0; lane < 4; lane++) {
+				int[] xy = {0, 0, 12, 20};
+				xy[lane] = coordinate;
+				assertThrows(IllegalArgumentException.class, () -> region.addCopy(xy[0], xy[1], xy[2], xy[3], 5, 6));
+				assertEquals(1, region.copyCount());
+				assertEquals(30, region.copiedPixels());
+				assertEquals(34, region.area());
+				assertEquals(2, region.rectCount());
+				assertFalse(region.overflowed());
+				int[] after = new int[4];
+				region.boundingBox(after);
+				assertArrayEquals(before, after);
+			}
+		}
+		region.addCopy(Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, 0, 6);
+		assertEquals(1, region.copyCount());
+		assertEquals(30, region.copiedPixels());
+		region.addCopy(0, 0, 12, 20, 5, 6);
+		assertEquals(2, region.copyCount());
+		assertEquals(60, region.copiedPixels());
+		assertEquals(34, region.area());
+	}
 }
