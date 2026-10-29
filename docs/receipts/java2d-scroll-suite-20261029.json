@@ -1,0 +1,77 @@
+{
+  "SPDX-FileCopyrightText": "2026 Hitesh Soliwal and Contributors to the Synexia Project",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "schema": "M3_UI_CONTRACT_PRODUCT_RECEIPT_V1",
+  "status": "BOUNDED_CODE_QUALIFICATION_FOR_DRAFT_REVIEW",
+  "target_repository": "hsoliwal/eclipse.platform.swt",
+  "product_baseline": {
+    "ref": "codex/java2d-scroll-reuse-20261029-c76173",
+    "sha": "6f623e83cb893126e9496527bd06dc6cc09a991a",
+    "parent_pr": 261
+  },
+  "source": {
+    "repository": "hsoliwal/com.synexia",
+    "code_qualification_commit": "8e6a01014c5217a4582d419f7ad1a9eaf7509f17",
+    "canonical_recipe_engine_commit": "8e6a01014c5217a4582d419f7ad1a9eaf7509f17",
+    "code_proof_path": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs/swt-scroll-suite-20261029/SUMMARY.json",
+    "execution_evidence": [
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs/swt-scroll-suite-20261029/sdk-suite/SDK_INPUTS.tsv",
+        "sha256": "9b2e5b9b620b50a9e65484bd736916e8437e891d334db8576919582e60c23474",
+        "git_blob": "aa92aebeb55cab75cf4780ca63aeb1ad4eab88e4",
+        "bytes": 2732
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs/swt-scroll-suite-20261029/sdk-suite/SDK_RESULTS.tsv",
+        "sha256": "4cadc41168b341218ca8af28b3e2f6c19123a649143c001a8c18aca82e7fed46",
+        "git_blob": "4b082e1f26b881606e0f8664cd56dad69a62047a",
+        "bytes": 282
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs/swt-scroll-suite-20261029/sdk-suite/TEST-com.synexia.rewrite.M3TaskRecipeTest.xml",
+        "sha256": "a99e23821fccbf3d7e4d244ecae36aefc77df07eeb3ed778ac58800ce82faad8",
+        "git_blob": "a767560f976693b48cef46a24d3ac775d5ec1e25",
+        "bytes": 15374
+      },
+      {
+        "path": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs/swt-scroll-suite-20261029/sdk-suite/RECEIVER_RECEIPT.json",
+        "sha256": "efa5011a93e60b324d4d45dd85e4b901487ee435dd129e5750cc132a8696463d",
+        "git_blob": "a973f090ffcf59354801dac8eb9f23b73b927a65",
+        "bytes": 2592
+      }
+    ]
+  },
+  "files": [
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllNonBrowserTests.java",
+      "before_sha256": "822e13cbf45fa8f58c3b51f514bb9a2197b50724004fc3ac37d8795107c261f2",
+      "after_sha256": "21a0e0166a6a5b90b0fa196b13a28809ab7e24bba1c794681303fd1da5b147ea",
+      "git_blob": "2cf0138a00a60f7ec74eb8dc530e40b4cdeda967",
+      "dataset": "swt-scroll-suite-20261029",
+      "kind": "GENERATED_TEST"
+    }
+  ],
+  "validation": {
+    "raster_junit": 11,
+    "native_gtk3_x11_junit": 17,
+    "discovered_before": 4870,
+    "discovered_after": 4876,
+    "removed_ids": 0,
+    "entire_suite_execution": false
+  },
+  "limitations": [
+    "4876 tests were discovered, not executed as a complete suite.",
+    "Native GTK3/X11 and raster checks are focused qualification, not a complete coherent current-source Tycho/distribution build.",
+    "Windows/Cocoa/GTK4, native HiDPI matrix and performance/memory benchmarks not run."
+  ],
+  "receipt_generation": {
+    "dataset": "ui-swt-suite-receipt-20261029",
+    "recipe_identity": "com.synexia.m3jdk.AstBuildReverse20261017",
+    "target_path": "docs/receipts/java2d-scroll-suite-20261029.json",
+    "execution_lane": "MAVEN_OPENREWRITE_SDK",
+    "template_and_execution_evidence": "successor additions to the immutable code qualification commit; their content is not asserted to be present in that earlier commit",
+    "successor_commit": "resolved by the private publication that records these artifacts; deliberately no self-referential hash",
+    "proof_path": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs/ui-contract-public-receipts-20261029/swt"
+  },
+  "promotion": "Draft review only; bounded evidence does not constitute full platform or release qualification."
+}
