@@ -316,7 +316,13 @@ public class Test_VirtualTreeOrderStatistic {
 		}
 
 		static long visibleIndexOfCoordinate (Object t, int parentId, int childIndex) {
-			long base = parentId == ROOT ? 0 : Math.addExact (visibleIndexOf (t, parentId), 1);
+			long base = 0;
+			if (parentId != ROOT) {
+				if (!Api.expanded (t, parentId)) return -1;
+				long visibleParent = visibleIndexOf (t, parentId);
+				if (visibleParent < 0) return -1;
+				base = Math.addExact (visibleParent, 1);
+			}
 			return Math.addExact (base, offsetWithinParent (t, parentId, childIndex));
 		}
 
@@ -547,6 +553,49 @@ public class Test_VirtualTreeOrderStatistic {
 			checks++;
 			assertEquals (expected, Api.paintRows (residency, first), context + " residencyWindow " + first + " " + length);
 		}
+	}
+
+	/**
+	 * The independent linear coordinate oracle must reject collapsed and hidden
+	 * ancestors, while root coordinates and expanded descendants remain visible.
+	 */
+	@Test
+	public void linearCoordinateOracleRejectsHiddenAncestry () {
+		Object topology = Api.newTopology ();
+		Api.setChildCount (topology, ROOT, 4);
+		Api.bind (topology, 0, ROOT, 1);
+		Api.setChildCount (topology, 0, 3);
+		Api.bind (topology, 1, 0, 1);
+		Api.setChildCount (topology, 1, 2);
+		Api.expand (topology, 1, true);
+		Object projection = Api.newProjection (topology);
+
+		assertEquals (-1L, LinearReference.visibleIndexOfCoordinate (topology, 0, 0));
+		assertEquals (-1L, LinearReference.visibleIndexOfCoordinate (topology, 1, 0));
+		assertEquals (-1L, Api.indexOfCoordinate (projection, 0, 0));
+		assertEquals (-1L, Api.indexOfCoordinate (projection, 1, 0));
+		assertEquals (2L, LinearReference.visibleIndexOfCoordinate (topology, ROOT, 2));
+		assertEquals (2L, Api.indexOfCoordinate (projection, ROOT, 2));
+
+		Api.expand (topology, 0, true);
+		assertEquals (2L, LinearReference.visibleIndexOfCoordinate (topology, 0, 0));
+		assertEquals (2L, Api.indexOfCoordinate (projection, 0, 0));
+		assertEquals (4L, LinearReference.visibleIndexOfCoordinate (topology, 1, 0));
+		assertEquals (4L, Api.indexOfCoordinate (projection, 1, 0));
+		assertEquals (7L, LinearReference.visibleIndexOfCoordinate (topology, ROOT, 2));
+		assertEquals (7L, Api.indexOfCoordinate (projection, ROOT, 2));
+
+		Api.expand (topology, 1, false);
+		assertEquals (-1L, LinearReference.visibleIndexOfCoordinate (topology, 1, 0));
+		assertEquals (-1L, Api.indexOfCoordinate (projection, 1, 0));
+		assertEquals (4L, LinearReference.visibleIndexOfCoordinate (topology, 0, 2));
+		assertEquals (4L, Api.indexOfCoordinate (projection, 0, 2));
+
+		Api.expand (topology, 0, false);
+		assertEquals (-1L, LinearReference.visibleIndexOfCoordinate (topology, 0, 2));
+		assertEquals (-1L, Api.indexOfCoordinate (projection, 0, 2));
+		assertEquals (2L, LinearReference.visibleIndexOfCoordinate (topology, ROOT, 2));
+		assertEquals (2L, Api.indexOfCoordinate (projection, ROOT, 2));
 	}
 
 	@Test
