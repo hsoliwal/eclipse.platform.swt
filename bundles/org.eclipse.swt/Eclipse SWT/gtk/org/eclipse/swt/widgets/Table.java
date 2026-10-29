@@ -607,6 +607,9 @@ void updateVirtualViewportGeometry () {
 				GTK.gtk_tree_path_free (path);
 			}
 		}
+		/* A layout callback may measure new rows before GTK publishes their
+		 * adjustment range. Do not interpret old pixels using that new scale. */
+		if (virtualRowExtent != extent) virtualViewRangeDirty = true;
 		virtualRowExtent = extent;
 		virtualPixelRemainder = Math.max (0, Math.min (virtualPixelRemainder, Math.nextDown ((double)extent)));
 		virtualBodyExtent = body;
@@ -656,7 +659,11 @@ void alignVirtualViewAdjustment () {
 	updatingVirtualAdjustment = true;
 	try {
 		GTK.gtk_adjustment_set_value (virtualViewAdjustment, value);
-		virtualViewRangeDirty = false;
+		/* Rebinding can leave the previous model's range until allocation.
+		 * Short models use the viewport page as their native upper bound. */
+		double upper = Math.max (GTK.gtk_adjustment_get_page_size (virtualViewAdjustment),
+				virtualViewCount * (double)virtualRowExtent);
+		virtualViewRangeDirty = GTK.gtk_adjustment_get_upper (virtualViewAdjustment) != upper;
 	} finally {
 		updatingVirtualAdjustment = previous;
 	}
@@ -718,6 +725,26 @@ long virtualAdjustmentProc (long adjustment, long kind) {
 
 void restoreVirtualSelection () {
 	if (!usesBoundedVirtualView () || virtualViewport == null || isDisposed ()) return;
+	if (currentItem != null || virtualCallbackDepth != 0) {
+		virtualViewChanged = true;
+		scheduleVirtualView ();
+		return;
+	}
+	if (GTK.gtk_widget_get_realized (handle) && virtualFocusIndex >= virtualViewStart
+			&& virtualFocusIndex - virtualViewStart < virtualViewCount) {
+		/* GTK may measure the attached rows while setting its cursor. A SetData
+		 * provider can dispose the widget, so mediate that finite window before
+		 * entering GTK instead of destroying its tree from a native callback. */
+		int start = virtualViewStart, count = virtualViewCount;
+		long generation = virtualModelGeneration;
+		for (int row = 0; row < count; row++) {
+			if (!checkData (_getItem (start + row))) return;
+			if (virtualViewSnapshotChanged (generation, start, count)) {
+				scheduleVirtualView ();
+				return;
+			}
+		}
+	}
 	long selection = OS.g_object_ref (GTK.gtk_tree_view_get_selection (handle));
 	boolean previousAdjustment = updatingVirtualAdjustment;
 	updatingVirtualAdjustment = true;
