@@ -54,6 +54,7 @@ public class AllNonBrowserTests {
 			Test_org_eclipse_swt_accessibility_AccessibleEvent.class, //
 			Test_org_eclipse_swt_accessibility_AccessibleTextEvent.class, //
 			Test_org_eclipse_swt_awt_Java2DCanvas.class, //
+			Test_org_eclipse_swt_awt_Java2DCanvasScrollReuse.class, //
 			Test_org_eclipse_swt_dnd_ByteArrayTransfer.class, //
 			Test_org_eclipse_swt_dnd_Clipboard.class, //
 			Test_org_eclipse_swt_dnd_FileTransfer.class, //
