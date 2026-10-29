@@ -137,9 +137,10 @@ public final class ViewportDamageRegion {
 	public void addCopy (int srcX, int srcY, int dstX, int dstY, int width, int height) {
 		if (width <= 0 || height <= 0) return;
 		checkRange (srcX, srcY, width, height);
+		checkRange (dstX, dstY, width, height);
+		add (dstX, dstY, width, height);
 		copyCount++;
 		copiedPixels += (long) width * height;
-		add (dstX, dstY, width, height);
 	}
 
 	/** Damaged pixels; exact unless {@link #overflowed()}, then an upper bound. */
@@ -175,7 +176,9 @@ public final class ViewportDamageRegion {
 	/** True when every damaged pixel of this region lies inside {@code other}. */
 	public boolean isSubsetOf (ViewportDamageRegion other) {
 		for (int i = 0; i < count; i++) {
-			if (!other.covers (rects [i * 4], rects [i * 4 + 1], rects [i * 4 + 2], rects [i * 4 + 3])) return false;
+			// Stored unions can exceed the per-input size limit; intersections stay disjoint.
+			if (other.areaWithin (rects [i * 4], rects [i * 4 + 1], rects [i * 4 + 2], rects [i * 4 + 3])
+					!= (long) rects [i * 4 + 2] * rects [i * 4 + 3]) return false;
 		}
 		return true;
 	}

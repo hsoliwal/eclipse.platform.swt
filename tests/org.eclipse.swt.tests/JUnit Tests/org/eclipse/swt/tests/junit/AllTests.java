@@ -26,6 +26,8 @@ import org.junit.platform.suite.api.Suite;
 	Test_ViewportBounds.class,
 	Test_ViewportBoundsGtk.class,
 	Test_ViewportRowWindow.class,
+	Test_ViewportDamage.class,
+	Test_ViewportDamageSubset.class,
 	Test_ViewportDamageRecorderClipping.class,
 	Test_ViewportTableAdjustment.class,
 	Test_ViewportTextLifecycle.class,
