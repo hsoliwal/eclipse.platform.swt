@@ -72,7 +72,8 @@ public final class FrameSlab implements FontTable {
 	 */
 	public void add (RowPaint row, int keepRight) {
 		int cells = Math.max (1, row.cells), at = intStart [rows];
-		if (rows + 2 > intStart.length) {
+		// The retention lane has no sentinel; it reaches capacity before the offset lanes.
+		if (rows == keep.length) {
 			intStart = Arrays.copyOf (intStart, intStart.length * 2);
 			cellStart = Arrays.copyOf (cellStart, cellStart.length * 2);
 			keep = Arrays.copyOf (keep, keep.length * 2);
