@@ -118,7 +118,7 @@ public final class ViewportDamageRecorder {
 		long paintedArea = painted.area ();
 		long inside = painted.areaWithin (0, 0, viewportWidth, viewportHeight);
 		long hits = protectedArea.isEmpty () ? 0 : all.intersectionArea (protectedArea);
-		long paintedHits = protectedArea.isEmpty () ? 0 : painted.intersectionArea (protectedArea);
+		long paintedHits = protectedPaintedWithinViewport ();
 		boolean full = isFull (inside, paintedHits);
 		if (frames < MAX_FRAMES) {
 			store (damaged, paintedArea, inside, full, hits);
@@ -151,7 +151,26 @@ public final class ViewportDamageRecorder {
 	private boolean isFull (long inside, long paintedProtected) {
 		long area = (long) viewportWidth * viewportHeight - protectedArea.areaWithin (0, 0, viewportWidth, viewportHeight);
 		long clean = Math.max (0, inside - paintedProtected);
-		return area > 0 && clean * 100 >= area * fullPercent;
+		// Quotient/remainder scaling cannot overflow even at Integer.MAX_VALUE extents.
+		long threshold = area / 100 * fullPercent + (area % 100 * fullPercent + 99) / 100;
+		return area > 0 && clean >= threshold;
+	}
+
+	/** Only protected pixels inside the same viewport can reduce its painted coverage. */
+	private long protectedPaintedWithinViewport () {
+		long hits = 0;
+		for (int i = 0; i < protectedArea.rectCount (); i++) {
+			int left = Math.max (0, protectedArea.x (i));
+			int top = Math.max (0, protectedArea.y (i));
+			long right = Math.min ((long) viewportWidth,
+					(long) protectedArea.x (i) + protectedArea.width (i));
+			long bottom = Math.min ((long) viewportHeight,
+					(long) protectedArea.y (i) + protectedArea.height (i));
+			if (right > left && bottom > top) {
+				hits += painted.areaWithin (left, top, (int) (right - left), (int) (bottom - top));
+			}
+		}
+		return hits;
 	}
 
 	private void store (long damaged, long paintedArea, long inside, boolean full, long hits) {

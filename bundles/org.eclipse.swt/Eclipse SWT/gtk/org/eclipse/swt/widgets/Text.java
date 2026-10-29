@@ -878,8 +878,6 @@ void deregister () {
         display.removeWidget(imContext);
     }
 	if (GTK.GTK4 && (style & SWT.SINGLE) != 0 && textHandle != 0) display.removeWidget (textHandle);
-	if (bufferHandle != 0) display.removeWidget (bufferHandle);
-	if (imContext != 0) display.removeWidget (imContext);
 }
 
 @Override
@@ -2242,8 +2240,6 @@ void register () {
         display.addWidget(imContext, this);
     }
 	if (GTK.GTK4 && (style & SWT.SINGLE) != 0 && textHandle != 0) display.addWidget (textHandle, this);
-	if (bufferHandle != 0) display.addWidget (bufferHandle, this);
-	if (imContext != 0) display.addWidget (imContext, this);
 }
 
 @Override
