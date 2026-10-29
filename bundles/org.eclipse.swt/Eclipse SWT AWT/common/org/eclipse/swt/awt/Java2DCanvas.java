@@ -87,6 +87,7 @@ public final class Java2DCanvas extends Canvas {
 	private Consumer<Graphics2D> renderer;
 	private AffineTransform viewTransform = new AffineTransform ();
 	private boolean painting;
+	private boolean scrollReuse;
 	/* Internal mediation flags, never public SWT style bits. */
 	private static final int VIEWPORT_SYNC = 1, VIEWPORT_AGAIN = 2, VIEWPORT_CLOSED = 4, VIEWPORT_RESTORE = 8, VIEWPORT_DIRTY = 16;
 	private int viewportState;
@@ -177,6 +178,43 @@ public final class Java2DCanvas extends Canvas {
 	public void setRenderer (Consumer<Graphics2D> renderer) {
 		checkWidget ();
 		this.renderer = renderer;
+		redraw ();
+	}
+
+	/**
+	 * Returns whether valid logical-content pixels may be reused during integer
+	 * one-axis scrolling. The default is {@code false}.
+	 *
+	 * @return whether scroll reuse is enabled
+	 * @since 3.138
+	 */
+	public boolean getScrollReuse () {
+		checkWidget ();
+		return scrollReuse;
+	}
+
+	/**
+	 * Enables reuse of the old/new viewport intersection during integer one-axis
+	 * scrolling. This is an explicit renderer contract: the renderer must draw
+	 * translation-compatible logical content from model state using the supplied
+	 * transform. It must not draw viewport-fixed decorations, reset the device
+	 * transform, or vary pixels with callback count or clip extent. Call
+	 * {@link #redraw()} when the model changes. Leave this disabled for arbitrary
+	 * Java2D renderers; their historical full invalidation behavior is unchanged.
+	 * <p>
+	 * Exposed strips are rendered normally. Scaling, shear, fractional or diagonal
+	 * translation, background/size changes, and reentrant paint changes retain full
+	 * invalidation. No native Image is retained and the raster stays visible-sized.
+	 * Changing this flag invalidates cached pixels and schedules ordinary painting.
+	 * </p>
+	 *
+	 * @param enabled whether the renderer satisfies the scroll-reuse contract
+	 * @since 3.138
+	 */
+	public void setScrollReuse (boolean enabled) {
+		checkWidget ();
+		if (scrollReuse == enabled) return;
+		scrollReuse = enabled;
 		redraw ();
 	}
 
@@ -339,8 +377,10 @@ public final class Java2DCanvas extends Canvas {
 			originX = nextX;
 			originY = nextY;
 			viewportEpoch++;
-			/* A renderer can change the origin during its own callback. */
-			surface.invalidate ();
+			/* Reentrant movement invalidates the in-flight callback. Otherwise the
+			 * surface can retain valid integer-scroll pixels until configureSurface
+			 * computes the new transform; all other transforms still invalidate. */
+			if (painting || !scrollReuse) surface.invalidate ();
 		}
 		long epoch = viewportEpoch;
 		/* Movement changes positions only. Range/layout work stays in geometry
@@ -606,7 +646,7 @@ public final class Java2DCanvas extends Canvas {
 		Color background = getBackground ();
 		int argb = background.getAlpha () << 24 | background.getRed () << 16
 				| background.getGreen () << 8 | background.getBlue ();
-		surface.configure (area.width, area.height, transform, argb);
+		surface.configure (area.width, area.height, transform, argb, scrollReuse);
 	}
 
 	private static Rectangle paintBounds (Event event, Rectangle area) {
