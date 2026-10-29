@@ -242,8 +242,9 @@ public class Test_VirtualTreeOrderStatistic {
 	}
 
 	/**
-	 * The linear sibling walk that the sibling index replaced, kept verbatim
-	 * apart from the access path. Every query is O(k) per level.
+	 * The original linear sibling walk, retaining its independent rank arithmetic
+	 * with contract-preserving visibility checks for child coordinates.
+	 * Every query is O(k) per level.
 	 */
 	static final class LinearReference {
 		private LinearReference () {
