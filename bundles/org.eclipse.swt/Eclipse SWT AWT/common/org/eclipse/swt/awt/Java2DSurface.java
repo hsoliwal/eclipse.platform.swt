@@ -43,6 +43,7 @@ final class Java2DSurface implements AutoCloseable {
 	private AffineTransform transform = new AffineTransform ();
 	private int backgroundArgb;
 	private long generation;
+	private int rendering;
 
 	int width () {
 		return image == null ? 0 : image.getWidth ();
@@ -53,6 +54,11 @@ final class Java2DSurface implements AutoCloseable {
 	}
 
 	void configure (int width, int height, AffineTransform nextTransform, int nextBackgroundArgb) {
+		configure (width, height, nextTransform, nextBackgroundArgb, false);
+	}
+
+	void configure (int width, int height, AffineTransform nextTransform, int nextBackgroundArgb,
+			boolean scrollReuse) {
 		if (width < 0 || height < 0) throw new IllegalArgumentException ("negative raster size");
 		Objects.requireNonNull (nextTransform, "transform");
 		if (!Double.isFinite (nextTransform.getScaleX ()) || !Double.isFinite (nextTransform.getScaleY ())
@@ -83,10 +89,54 @@ final class Java2DSurface implements AutoCloseable {
 			if (previous != null) previous.flush ();
 		}
 		if (!transform.equals (nextTransform) || backgroundArgb != nextBackgroundArgb) {
-			transform = new AffineTransform (nextTransform);
+			AffineTransform copied = new AffineTransform (nextTransform);
+			boolean translated = scrollReuse && backgroundArgb == nextBackgroundArgb && translateValidPixels (copied);
+			transform = copied;
 			backgroundArgb = nextBackgroundArgb;
-			invalidate ();
+			if (translated) generation++;
+			else invalidate ();
 		}
+	}
+
+	/* Integer one-axis scrolling can retain the old/new viewport intersection.
+	 * The caller has already invalidated model changes; only valid source pixels
+	 * may move. Other transforms retain the full-render contract. Prepare the new
+	 * mask before modifying pixels, so allocation failure leaves the old raster
+	 * and its validity intact. No native Image or caller-owned data is retained. */
+	private boolean translateValidPixels (AffineTransform next) {
+		if (image == null || valid.isEmpty () || rendering != 0
+				|| !isIntegerTranslation (transform) || !isIntegerTranslation (next)) return false;
+		double oldX = transform.getTranslateX (), oldY = transform.getTranslateY ();
+		double nextX = next.getTranslateX (), nextY = next.getTranslateY ();
+		if (oldX != (int)oldX || oldY != (int)oldY || nextX != (int)nextX || nextY != (int)nextY) return false;
+		double shiftX = nextX - oldX, shiftY = nextY - oldY;
+		int rasterWidth = width (), rasterHeight = height ();
+		if ((shiftX != 0 && shiftY != 0)
+				|| Math.abs (shiftX) >= rasterWidth || Math.abs (shiftY) >= rasterHeight) return false;
+		int dx = (int)shiftX, dy = (int)shiftY;
+		int sourceX = Math.max (0, -dx), sourceY = Math.max (0, -dy);
+		int destinationX = Math.max (0, dx), destinationY = Math.max (0, dy);
+		int copyWidth = rasterWidth - Math.abs (dx), copyHeight = rasterHeight - Math.abs (dy);
+		BitSet translated = new BitSet (rasterWidth * rasterHeight);
+		int shift = dy * rasterWidth + dx;
+		for (int row = 0; row < copyHeight; row++) {
+			int start = (sourceY + row) * rasterWidth + sourceX;
+			int end = start + copyWidth;
+			for (int bit = valid.nextSetBit (start); bit >= 0 && bit < end;) {
+				int stop = Math.min (valid.nextClearBit (bit), end);
+				translated.set (bit + shift, stop + shift);
+				bit = valid.nextSetBit (stop);
+			}
+		}
+		int [] pixels = ((DataBufferInt)image.getRaster ().getDataBuffer ()).getData ();
+		/* Traverse vertically against overlap; arraycopy handles horizontal overlap. */
+		for (int pass = 0; pass < copyHeight; pass++) {
+			int row = dy > 0 ? copyHeight - pass - 1 : pass;
+			System.arraycopy (pixels, (sourceY + row) * rasterWidth + sourceX,
+					pixels, (destinationY + row) * rasterWidth + destinationX, copyWidth);
+		}
+		valid = translated;
+		return true;
 	}
 
 	void invalidate () {
@@ -124,6 +174,7 @@ final class Java2DSurface implements AutoCloseable {
 		/* A subimage supplies a device clip that even setClip(null) cannot widen. */
 		BufferedImage slice = current.getSubimage (dirty.x, dirty.y, dirty.width, dirty.height);
 		Graphics2D graphics = slice.createGraphics ();
+		rendering++;
 		try {
 			Color background = new Color (backgroundArgb, true);
 			graphics.setBackground (background);
@@ -139,6 +190,7 @@ final class Java2DSurface implements AutoCloseable {
 		} finally {
 			graphics.dispose ();
 			slice.flush ();
+			rendering--;
 		}
 		if (image != current || generation != renderingGeneration) return false;
 		setValid (dirty, true);
@@ -146,10 +198,14 @@ final class Java2DSurface implements AutoCloseable {
 	}
 
 	private boolean isIntegerTranslation () {
-		return transform.getScaleX () == 1 && transform.getScaleY () == 1
-				&& transform.getShearX () == 0 && transform.getShearY () == 0
-				&& transform.getTranslateX () == Math.rint (transform.getTranslateX ())
-				&& transform.getTranslateY () == Math.rint (transform.getTranslateY ());
+		return isIntegerTranslation (transform);
+	}
+
+	private static boolean isIntegerTranslation (AffineTransform value) {
+		return value.getScaleX () == 1 && value.getScaleY () == 1
+				&& value.getShearX () == 0 && value.getShearY () == 0
+				&& value.getTranslateX () == Math.rint (value.getTranslateX ())
+				&& value.getTranslateY () == Math.rint (value.getTranslateY ());
 	}
 
 	ImageData copyImageData (int x, int y, int width, int height) {
