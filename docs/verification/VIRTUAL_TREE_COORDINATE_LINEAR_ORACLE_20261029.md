@@ -18,11 +18,13 @@ was missing both visibility checks. Its old formula was:
 base = parentId == ROOT ? 0 : visibleIndexOf(parentId) + 1;
 return base + offsetWithinParent(parentId, childIndex);
 ```
-For a hidden parent, `visibleIndexOf(parentId)` is `-1`; adding one
-silently converts the hidden sentinel to a plausible row index. The test then
-expects a visible row where no visible row exists. This is a defect in the
-test's independent reference model, **not evidence that production must reveal
-hidden children**.
+A collapsed parent can itself remain visible, but its children are hidden:
+the old formula then assigns them imaginary visible ranks. For a parent hidden
+by an ancestor, `visibleIndexOf(parentId)` returns `-1`; adding one
+silently converts that hidden sentinel to row zero before adding an offset.
+Both paths produce an invalid positive expected coordinate. This is a defect
+in the test's independent reference model, **not evidence that production
+must reveal hidden children**.
 
 The exact 2026-10-29 baseline/candidate comparison retained in private Synexia
 `m3-long-widgets-20261029/verification/legacy-core-final/comparison.json`
