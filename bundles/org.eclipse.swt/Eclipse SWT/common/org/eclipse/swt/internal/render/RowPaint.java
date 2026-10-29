@@ -100,6 +100,13 @@ public final class RowPaint {
 			cellFont = new long [n];
 			cellForeground = new int [n];
 			cellBackground = new int [n];
+		} else if (count >= 0 && count < cells) {
+			/* Release the previous row's inactive payload; keep reusable lanes and caller-owned images. */
+			for (int i = count; i < cells; i++) {
+				text [i] = null;
+				image [i] = null;
+				imageData [i] = null;
+			}
 		}
 		cells = count;
 		for (int i = 0; i < count; i++) {

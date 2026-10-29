@@ -1,0 +1,190 @@
+{
+  "schema": "SWT_CURRENT_FRAME_ROW_RECEIVING_RECEIPT_V1",
+  "copyright": "2026 Hitesh Soliwal and Contributors to the Synexia Project",
+  "license": "Apache-2.0",
+  "status": "DRAFT_RESULT_RECEIVING_COMPONENT_PROOF_ONLY",
+  "canonicalRepository": "hsoliwal/com.synexia",
+  "target": {
+    "repository": "hsoliwal/eclipse.platform.swt",
+    "baseBranch": "master",
+    "baseCommit": "7f3367932cee3cae8885f42cbcef931a086d2249",
+    "baseTree": "0a631c572ee4e4a0ab27c9aa8762593579e4a15d",
+    "receiptPath": "docs/verification/current-frame-row-retention-20261029/RECEIVER_RECEIPT.json",
+    "receiptPreimage": "ABSENT_HTTP_404",
+    "agentsBlob": "e0ebc6f23d970a7c381eb514200924f99f276513"
+  },
+  "outputs": [
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/render/FrameSlab.java",
+      "recipeId": "com.synexia.rewrite.SwtFrameCapacity20261029",
+      "dataset": "swt-frame-capacity-20261029",
+      "manifestPath": "synexia-openrewrite-recipes/src/main/resources/com/synexia/rewrite/hash-pinned-java/swt-frame-capacity-20261029/manifest.tsv",
+      "manifestSha256": "13b8040271ac70a9dd1155eabd7e904bf2d42565eca46aa976d515ccacd12b47",
+      "input": {
+        "gitBlob": "e99a081d42208641104ec41e5df4c118268c9bbe",
+        "sha256": "85cdd4e24b59936a7fcb682122e9c46a6b68c07113a80ea6fda2341237d4bbee"
+      },
+      "output": {
+        "gitBlob": "806c05e69edd8edf9209a2ff5c1f6474b95bca19",
+        "sha256": "fcbf8790561ae9cec829959edc85bc14bc2c1d133d9bacdad63e3d024aa51799",
+        "bytes": 5558
+      },
+      "manifestGitBlob": "4d792a605f05cfddc03db88e01f27aadedb2c10f",
+      "descriptorPath": "synexia-openrewrite-recipes/src/main/resources/META-INF/rewrite/swt-frame-capacity-20261029.yml",
+      "descriptorGitBlob": "43dd398d2bb7be3ac1a4d45de33f191d5a12c666"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/render/RowPaint.java",
+      "recipeId": "com.synexia.rewrite.SwtRowRetention20261029",
+      "dataset": "swt-row-retention-20261029",
+      "manifestPath": "synexia-openrewrite-recipes/src/main/resources/com/synexia/rewrite/hash-pinned-java/swt-row-retention-20261029/manifest.tsv",
+      "manifestSha256": "215e99f8ed2c637531f1f224ba777ee48e6691cc216989f101c683906e5c1899",
+      "input": {
+        "gitBlob": "dc43e67cceecac16f15370c957280fbdcae44ac5",
+        "sha256": "e31d601399e4a95d5b6aa594f5ecaea0798b93691786e738c33ffd01414fd85b"
+      },
+      "output": {
+        "gitBlob": "7ec7c87c8ec6bf0484a4bb3482355399492bad58",
+        "sha256": "f801879ea196f7f95c86340994e569b0d0cfa9e3aeffd9b23de6ced7c3f0703d",
+        "bytes": 10108
+      },
+      "manifestGitBlob": "da66732465e64ffea6f665993ae1d04fb120caa5",
+      "descriptorPath": "synexia-openrewrite-recipes/src/main/resources/META-INF/rewrite/swt-row-retention-20261029.yml",
+      "descriptorGitBlob": "9a88772d8fd29a74b3bf6bb860da8b5c5cf99392"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_internal_render_RowPaintRetention.java",
+      "recipeId": "com.synexia.rewrite.SwtRowRetentionTests20261029",
+      "dataset": "swt-row-retention-tests-20261029",
+      "manifestPath": "synexia-openrewrite-recipes/src/main/resources/com/synexia/rewrite/hash-pinned-java/swt-row-retention-tests-20261029/manifest.tsv",
+      "manifestSha256": "414d38fe491375e85856cdbe43d5f3cb243037e831014408c13b89cc0e907f71",
+      "input": "ABSENT",
+      "output": {
+        "gitBlob": "200216d112ef5bd0ea3b180e85531b4b63b5100f",
+        "sha256": "8ffe9ad0918376adef1da6ec3cacddc4ad2ae171a1a02aa817987bd128b79459",
+        "bytes": 3551
+      },
+      "manifestGitBlob": "1d467908654aa9ad23d622b0ab9af94d20a15590",
+      "descriptorPath": "synexia-openrewrite-recipes/src/main/resources/META-INF/rewrite/swt-row-retention-tests-20261029.yml",
+      "descriptorGitBlob": "79a3d2fb8e7ba0065f53e3a5dcaab894f2853d4a"
+    }
+  ],
+  "canonicalEvidence": [
+    {
+      "canonicalPath": "synexia-openrewrite-recipes/recipe-crates/viewport-presentation-20261021/evidence/CurrentSwtReuse/SDK_EXECUTION.json",
+      "sha256": "cb6b12f5f5e9b442da00ca3df8f41efb239a3748ecf337ca4c1a4188a5f394b9"
+    },
+    {
+      "canonicalPath": "synexia-openrewrite-recipes/recipe-crates/viewport-presentation-20261021/evidence/CurrentSwtReuse/owner-first/QUALIFICATION.json",
+      "sha256": "3410e71c8d24c77438a10098b3ddc4372305ca0c380e35aec954813828d43240"
+    },
+    {
+      "canonicalPath": "synexia-openrewrite-recipes/recipe-crates/viewport-presentation-20261021/evidence/CurrentSwtReuse/owner-first/DEPENDENCIES.json",
+      "sha256": "5443eb0d5925729114b9f788e69ddbeb55730e243f448f888c21f6dde010730a"
+    }
+  ],
+  "execution": {
+    "java": "21.0.12+8-1-24.04-Ubuntu",
+    "maven": "3.9.9",
+    "openrewrite": "8.17.1",
+    "sdkJUnit": {
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "ownerJUnit": [
+      {
+        "variant": "baseline",
+        "mode": "mixed",
+        "tests": 8,
+        "failures": 4,
+        "errors": 2,
+        "skipped": 0
+      },
+      {
+        "variant": "candidate",
+        "mode": "mixed",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "variant": "candidate",
+        "mode": "interpreted",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "fixedPointAndDriftRefusal": "PASS_ACTUAL_SDK_EXECUTION",
+    "proofScope": "PASS_CURRENT_SOURCE_HEADLESS_OWNERS",
+    "recipeReuse": "All three ancestor datasets, descriptors and templates reused unchanged",
+    "strictOwnerAndTestCompile": "PASS_JAVA21_XLINT_ALL_WERROR",
+    "ownerTests": [
+      "com.synexia.viewport.FrameSlabCapacityTest",
+      "org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_RowPaintRetention"
+    ],
+    "baselineCounterexample": "4 assertion failures and 2 ArrayIndexOutOfBoundsException errors at index128/length128 among 8 tests; zero skips",
+    "allJvmFieldAndMethodDescriptorsEqual": true,
+    "coverage": [
+      "4097-row snapshots",
+      "capacity/boundary reuse",
+      "2048 grow-shrink rounds",
+      "active payload and Unicode identity",
+      "serialization"
+    ],
+    "dependencyScope": "Reused historical source-built GTK classes; no fresh complete current SWT build.",
+    "dependencyManifestSha256": "5443eb0d5925729114b9f788e69ddbeb55730e243f448f888c21f6dde010730a"
+  },
+  "productBoundary": {
+    "payloads": "Executed product owners, target regression and passive receipt",
+    "recipeAndImprovementMemoryOwner": "hsoliwal/com.synexia",
+    "recipeRuntimeDependency": false,
+    "nativeOrHostedAcceptanceClaim": false,
+    "completeToolkitSupersetClaim": false,
+    "mergeOrReleaseAdmission": false
+  },
+  "namingDisposition": {
+    "status": "SAME_EXISTING_SWT_OWNER_CORRECTIVE_EDIT",
+    "owners": [
+      "org.eclipse.swt.internal.render.FrameSlab",
+      "org.eclipse.swt.internal.render.RowPaint"
+    ],
+    "publicApiAndToolkitNames": "PRESERVED",
+    "wrapperOrOwnerMigration": false,
+    "fullCapabilityParity": "DEFERRED"
+  },
+  "openGates": [
+    {
+      "gate": "fresh whole current SWT build",
+      "status": "NOT_RUN"
+    },
+    {
+      "gate": "full original SWT/Tycho reactor",
+      "status": "NOT_RUN"
+    },
+    {
+      "gate": "native Display/Image lifetime/pixels",
+      "status": "NOT_RUN"
+    },
+    {
+      "gate": "Windows/Cocoa/GTK4",
+      "status": "NOT_RUN"
+    },
+    {
+      "gate": "hosted CI",
+      "status": "NOT_RUN"
+    },
+    {
+      "gate": "comparative CPU/allocation/retained heap/native RSS/FPS",
+      "status": "NOT_RUN"
+    }
+  ],
+  "visualAcceptance": "Before visual promotion, use settled SWT GC(display).copyArea capture with exact bounds/DPI/backend/hashes and automatic blank/stale/shifted/cropped/overlap/clip controls; native resource lifetime remains separate. Headless owner proofs and Control.print do not satisfy that gate.",
+  "licenses": "Product sources preserve Apache-2.0 OR EPL-2.0 notices; this passive first-party receipt is Apache-2.0.",
+  "canonicalBaseCommit": "2b262532c683f026e121ba7b93fd0c5881d66296",
+  "canonicalDelivery": "Exact delivery commit pinned in accompanying PR; base+manifest/output seals are embedded here"
+}
