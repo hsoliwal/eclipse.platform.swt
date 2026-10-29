@@ -15,6 +15,7 @@ package org.eclipse.swt.tests.junit;
 
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.SWT;
@@ -34,6 +36,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Widget;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -53,6 +57,73 @@ public void setUp() {
 	super.setUp();
 	combo = new Combo(shell, 0);
 	setWidget(combo);
+}
+
+private static int gtkNativeRegistrations(Display display) throws ReflectiveOperationException {
+	Field table = Display.class.getDeclaredField("widgetTable");
+	table.setAccessible(true);
+	int count = 0;
+	for (Widget registered : (Widget[]) table.get(display)) {
+		if (registered != null) count++;
+	}
+	return count;
+}
+
+@Test
+public void test_disposeGtkEditorsReturnsNativeRegistrations() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+	Display display = shell.getDisplay();
+	int baseline = gtkNativeRegistrations(display);
+	for (int style : new int[] {SWT.NONE, SWT.DROP_DOWN, SWT.DROP_DOWN | SWT.READ_ONLY, SWT.SIMPLE | SWT.BORDER}) {
+		for (int iteration = 0; iteration < 16; iteration++) {
+			Combo tested = new Combo(shell, style);
+			int[] disposed = {0};
+			tested.addDisposeListener(event -> disposed[0]++);
+			try {
+				tested.setItems("first", "second", "third");
+				tested.select(1);
+				assertEquals(1, tested.getSelectionIndex());
+				assertEquals("second", tested.getText());
+				assertDoesNotThrow(tested::dispose, "each native handle must be deregistered once");
+				assertTrue(tested.isDisposed());
+				assertEquals(1, disposed[0]);
+				assertEquals(baseline, gtkNativeRegistrations(display),
+						"Combo disposal must not strand native widget-table entries");
+			} finally {
+				if (!tested.isDisposed()) tested.dispose();
+			}
+		}
+	}
+}
+
+@Test
+public void test_parentDisposalGtkEditorsReturnsNativeRegistrations() throws Exception {
+	if (!"gtk".equals(SWT.getPlatform())) return;
+	Display display = shell.getDisplay();
+	int baseline = gtkNativeRegistrations(display);
+	int[] styles = {SWT.NONE, SWT.DROP_DOWN, SWT.DROP_DOWN | SWT.READ_ONLY, SWT.SIMPLE | SWT.BORDER};
+	for (int iteration = 0; iteration < 8; iteration++) {
+		Shell owner = new Shell(display);
+		Combo[] editors = new Combo[styles.length];
+		int[] disposed = new int[styles.length];
+		try {
+			for (int index = 0; index < styles.length; index++) {
+				int item = index;
+				Combo tested = editors[index] = new Combo(owner, styles[index]);
+				tested.setItems("first", "second");
+				tested.select(1);
+				tested.addDisposeListener(event -> disposed[item]++);
+			}
+			assertDoesNotThrow(owner::dispose, "parent disposal must balance all Combo registrations");
+			for (int index = 0; index < editors.length; index++) {
+				assertTrue(editors[index].isDisposed());
+				assertEquals(1, disposed[index]);
+			}
+			assertEquals(baseline, gtkNativeRegistrations(display));
+		} finally {
+			if (!owner.isDisposed()) owner.dispose();
+		}
+	}
 }
 
 @Override

@@ -10,6 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Hitesh Soliwal (Synexia) - clear range, provider and lifetime regression tests
  *******************************************************************************/
 package org.eclipse.swt.tests.junit;
 
@@ -48,6 +49,113 @@ public void setUp() {
 	super.setUp();
 	makeCleanEnvironment();
 }
+
+@Test
+public void test_clearIZ_rejectsInvalidChildIndexWithoutRequests() {
+	for (int style : new int[] {SWT.NONE, SWT.VIRTUAL, SWT.VIRTUAL | SWT.CHECK}) {
+		Tree tested = new Tree(shell, style);
+		try {
+			TreeItem parent = new TreeItem(tested, SWT.NONE);
+			parent.setText("parent");
+			int[] requests = {0};
+			tested.addListener(SWT.SetData, event -> requests[0]++);
+			for (int count : new int[] {0, 1, 2}) {
+				parent.setItemCount(count);
+				for (boolean all : new boolean[] {false, true}) {
+					for (int index : new int[] {Integer.MIN_VALUE, -1, count, count + 1, Integer.MAX_VALUE}) {
+						IllegalArgumentException failure = assertThrows(IllegalArgumentException.class,
+								() -> parent.clear(index, all));
+						SwtTestUtil.assertSWTProblem("invalid child clear", SWT.ERROR_INVALID_RANGE, failure);
+						assertEquals(count, parent.getItemCount());
+					}
+				}
+			}
+			assertEquals(0, requests[0], "invalid child clear must not request virtual data");
+			TreeItem first = parent.getItem(0);
+			first.setText("first");
+			assertThrows(IllegalArgumentException.class, () -> parent.clear(2, true));
+			assertSame(first, parent.getItem(0));
+			assertEquals("first", first.getText());
+		} finally {
+			tested.dispose();
+		}
+	}
+}
+
+@Test
+public void test_clearIZ_preservesValidChildIdentityAndDescendants() {
+	Tree tested = new Tree(shell, SWT.CHECK);
+	try {
+		TreeItem parent = new TreeItem(tested, SWT.NONE);
+		TreeItem child = new TreeItem(parent, SWT.NONE);
+		TreeItem sibling = new TreeItem(parent, SWT.NONE);
+		TreeItem grandchild = new TreeItem(child, SWT.NONE);
+		parent.setText("parent");
+		child.setText("child");
+		child.setChecked(true);
+		child.setData("marker", "owned");
+		sibling.setText("sibling");
+		grandchild.setText("grandchild");
+		parent.clear(0, false);
+		assertSame(child, parent.getItem(0));
+		assertEquals("", child.getText());
+		assertFalse(child.getChecked());
+		assertEquals("owned", child.getData("marker"));
+		assertEquals("grandchild", grandchild.getText());
+		child.setText("again");
+		parent.clear(0, true);
+		assertEquals("", child.getText());
+		assertEquals("", grandchild.getText());
+		assertEquals("parent", parent.getText());
+		assertEquals("sibling", sibling.getText());
+		assertSame(grandchild, child.getItem(0));
+		assertFalse(child.isDisposed());
+		assertFalse(grandchild.isDisposed());
+	} finally {
+		tested.dispose();
+	}
+}
+
+@Test
+public void test_clearIZ_virtualChildProviderReentrancyAndDisposal() {
+	Tree tested = new Tree(shell, SWT.VIRTUAL);
+	try {
+		TreeItem parent = new TreeItem(tested, SWT.NONE);
+		parent.setText("parent");
+		parent.setItemCount(2);
+		TreeItem requested = parent.getItem(0);
+		int[] requests = {0};
+		int[] depth = {0};
+		tested.addListener(SWT.SetData, event -> {
+			assertEquals(1, ++depth[0], "clear must not reenter the child provider");
+			try {
+				assertSame(requested, event.item);
+				assertEquals(0, event.index);
+				requests[0]++;
+				assertThrows(IllegalArgumentException.class, () -> parent.clear(2, true));
+				parent.clear(0, false);
+				requested.setText("child " + requests[0]);
+			} finally {
+				depth[0]--;
+			}
+		});
+		parent.clear(0, false);
+		assertEquals(0, requests[0], "clearing a cold child must not populate it");
+		assertEquals("child 1", requested.getText());
+		parent.clear(0, true);
+		assertEquals(1, requests[0], "a valid child clear defers repopulation until a read");
+		assertSame(requested, parent.getItem(0));
+		assertEquals("child 2", requested.getText());
+		assertEquals(2, requests[0]);
+		tested.dispose();
+		org.eclipse.swt.SWTException failure = assertThrows(org.eclipse.swt.SWTException.class,
+				() -> parent.clear(-1, false));
+		assertEquals(SWT.ERROR_WIDGET_DISPOSED, failure.code);
+	} finally {
+		if (!tested.isDisposed()) tested.dispose();
+	}
+}
+
 
 @Test
 public void test_ConstructorLorg_eclipse_swt_widgets_TreeI() {

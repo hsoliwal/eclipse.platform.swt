@@ -105,6 +105,284 @@ private static int attachedGtkRootCount(Tree tree) throws Exception {
 }
 
 @Test
+public void test_clearIZ_rejectsInvalidRootIndexWithoutRequests() {
+	for (int style : new int[] {SWT.NONE, SWT.VIRTUAL, SWT.VIRTUAL | SWT.CHECK}) {
+		Tree tested = new Tree(shell, style);
+		try {
+			int[] requests = {0};
+			tested.addListener(SWT.SetData, event -> requests[0]++);
+			for (int count : new int[] {0, 1, 2}) {
+				tested.setItemCount(count);
+				for (boolean all : new boolean[] {false, true}) {
+					for (int index : new int[] {Integer.MIN_VALUE, -1, count, count + 1, Integer.MAX_VALUE}) {
+						IllegalArgumentException failure = assertThrows(IllegalArgumentException.class,
+								() -> tested.clear(index, all));
+						SwtTestUtil.assertSWTProblem("invalid root clear", SWT.ERROR_INVALID_RANGE, failure);
+						assertEquals(count, tested.getItemCount());
+					}
+				}
+			}
+			assertEquals(0, requests[0], "invalid clear must not request virtual data");
+			TreeItem first = tested.getItem(0);
+			first.setText("first");
+			tested.setSelection(first);
+			assertThrows(IllegalArgumentException.class, () -> tested.clear(2, true));
+			assertSame(first, tested.getItem(0));
+			assertEquals("first", first.getText());
+			assertArrayEquals(new TreeItem[] {first}, tested.getSelection());
+		} finally {
+			tested.dispose();
+		}
+	}
+}
+
+@Test
+public void test_clearIZ_preservesValidRootIdentityAndChildren() {
+	Tree tested = new Tree(shell, SWT.CHECK);
+	try {
+		TreeItem first = new TreeItem(tested, SWT.NONE);
+		TreeItem sibling = new TreeItem(tested, SWT.NONE);
+		TreeItem child = new TreeItem(first, SWT.NONE);
+		TreeItem grandchild = new TreeItem(child, SWT.NONE);
+		first.setText("root");
+		first.setChecked(true);
+		first.setData("marker", "owned");
+		sibling.setText("sibling");
+		child.setText("child");
+		grandchild.setText("grandchild");
+		tested.clear(0, false);
+		assertSame(first, tested.getItem(0));
+		assertEquals("", first.getText());
+		assertFalse(first.getChecked());
+		assertEquals("owned", first.getData("marker"));
+		assertEquals("child", child.getText());
+		assertEquals("grandchild", grandchild.getText());
+		first.setText("again");
+		tested.clear(0, true);
+		assertEquals("", first.getText());
+		assertEquals("", child.getText());
+		assertEquals("", grandchild.getText());
+		assertEquals("sibling", sibling.getText());
+		assertSame(child, first.getItem(0));
+		assertSame(grandchild, child.getItem(0));
+		assertFalse(first.isDisposed());
+		assertFalse(child.isDisposed());
+		assertFalse(grandchild.isDisposed());
+	} finally {
+		tested.dispose();
+	}
+}
+
+@Test
+public void test_clearIZ_virtualProviderReentrancyAndDisposal() {
+	Tree tested = new Tree(shell, SWT.VIRTUAL);
+	try {
+		tested.setItemCount(2);
+		TreeItem requested = tested.getItem(1);
+		int[] requests = {0};
+		int[] depth = {0};
+		tested.addListener(SWT.SetData, event -> {
+			assertEquals(1, ++depth[0], "clear must not reenter the provider");
+			try {
+				assertSame(requested, event.item);
+				assertEquals(1, event.index);
+				requests[0]++;
+				assertThrows(IllegalArgumentException.class, () -> tested.clear(2, true));
+				tested.clear(1, false);
+				requested.setText("row " + requests[0]);
+			} finally {
+				depth[0]--;
+			}
+		});
+		tested.clear(1, false);
+		assertEquals(0, requests[0], "clearing a cold item must not populate it");
+		assertEquals("row 1", requested.getText());
+		tested.clear(1, true);
+		assertEquals(1, requests[0], "a valid clear defers repopulation until a read");
+		assertSame(requested, tested.getItem(1));
+		assertEquals("row 2", requested.getText());
+		assertEquals(2, requests[0]);
+		tested.dispose();
+		org.eclipse.swt.SWTException failure = assertThrows(org.eclipse.swt.SWTException.class,
+				() -> tested.clear(-1, false));
+		assertEquals(SWT.ERROR_WIDGET_DISPOSED, failure.code);
+	} finally {
+		if (!tested.isDisposed()) tested.dispose();
+	}
+}
+
+
+@Test
+public void test_clearVirtualGtkColdMillionChildrenRemainBounded() throws Exception {
+	if (!isGtk3()) return;
+	for (String mode : new String[] {"false", "true"}) {
+		Tree tested = newVirtualTreeWithGtkLogicalMode(SWT.VIRTUAL, mode);
+		try {
+			int[] requests = {0};
+			tested.addListener(SWT.SetData, event -> requests[0]++);
+			tested.setItemCount(1_000_000);
+			TreeItem parent = tested.getItem(0);
+			parent.setText("parent");
+			parent.setItemCount(1_000_000);
+			TreeItem child = parent.getItem(0);
+			child.setText("child");
+			child.setItemCount(1_000_000);
+			TreeItem grandchild = child.getItem(0);
+			grandchild.setText("grandchild");
+			Field topologyField = Tree.class.getDeclaredField("virtualTopology");
+			Field itemsField = Tree.class.getDeclaredField("items");
+			topologyField.setAccessible(true);
+			itemsField.setAccessible(true);
+			Object topology = topologyField.get(tested);
+			Field materialized = topology.getClass().getDeclaredField("materializedCount");
+			Field parentIds = topology.getClass().getDeclaredField("parentIds");
+			materialized.setAccessible(true);
+			parentIds.setAccessible(true);
+			Object originalItems = itemsField.get(tested);
+			Object originalParents = parentIds.get(topology);
+			assertEquals(3, materialized.getInt(topology));
+			Method roots = Tree.class.getDeclaredMethod("virtualResidentChildCount", long.class);
+			Method children = Tree.class.getDeclaredMethod("virtualResidentChildCount", TreeItem.class);
+			roots.setAccessible(true);
+			children.setAccessible(true);
+			int rootResidents = (Integer) roots.invoke(tested, 0L);
+			int childResidents = (Integer) children.invoke(tested, parent);
+			int grandchildResidents = (Integer) children.invoke(tested, child);
+			assertTrue(rootResidents <= 256);
+			assertTrue(childResidents <= 256);
+			assertTrue(grandchildResidents <= 256);
+			for (int pass = 0; pass < 32; pass++) {
+				for (boolean all : new boolean[] {false, true}) {
+					tested.clear(999_999, all);
+					parent.clear(999_999, all);
+					child.clear(999_999, all);
+					parent.clearAll(all);
+					tested.clearAll(all);
+				}
+			}
+			assertEquals(0, requests[0], "clear must not request cold logical rows");
+			assertEquals(3, materialized.getInt(topology), "clear must not create facades or topology nodes");
+			assertSame(originalItems, itemsField.get(tested));
+			assertSame(originalParents, parentIds.get(topology));
+			assertEquals(rootResidents, roots.invoke(tested, 0L));
+			assertEquals(childResidents, children.invoke(tested, parent));
+			assertEquals(grandchildResidents, children.invoke(tested, child));
+			assertEquals(1_000_000, tested.getItemCount());
+			assertEquals(1_000_000, parent.getItemCount());
+			assertEquals(1_000_000, child.getItemCount());
+			assertSame(parent, tested.getItem(0));
+			assertSame(child, parent.getItem(0));
+			assertSame(grandchild, child.getItem(0));
+		} finally {
+			tested.dispose();
+		}
+	}
+}
+
+@Test
+public void test_clearAllZ_virtualSparseDescendantsRepopulateOnDemand() throws Exception {
+	if (!isGtk3()) return;
+	for (String mode : new String[] {"false", "true"}) {
+		Tree tested = newVirtualTreeWithGtkLogicalMode(SWT.VIRTUAL | SWT.CHECK, mode);
+		try {
+			tested.setItemCount(2);
+			TreeItem parent = tested.getItem(0);
+			parent.setText("parent");
+			parent.setItemCount(36);
+			TreeItem child = parent.getItem(35);
+			child.setText("child");
+			child.setItemCount(4);
+			TreeItem grandchild = child.getItem(3);
+			TreeItem sibling = tested.getItem(1);
+			TreeItem[] nodes = {parent, child, grandchild, sibling};
+			String[] initial = {"parent", "child", "grandchild", "sibling"};
+			int[] requests = new int[nodes.length];
+			for (int index = 0; index < nodes.length; index++) {
+				nodes[index].setText(initial[index]);
+				nodes[index].setChecked(true);
+				nodes[index].setData("clearIndex", index);
+			}
+			tested.addListener(SWT.SetData, event -> {
+				TreeItem item = (TreeItem) event.item;
+				int index = (Integer) item.getData("clearIndex");
+				item.setText("loaded " + index + ":" + ++requests[index]);
+			});
+			tested.clear(0, false);
+			assertArrayEquals(new int[] {0, 0, 0, 0}, requests);
+			assertEquals("loaded 0:1", parent.getText());
+			assertFalse(parent.getChecked());
+			assertEquals("child", child.getText());
+			assertEquals("grandchild", grandchild.getText());
+			parent.clear(35, false);
+			assertArrayEquals(new int[] {1, 0, 0, 0}, requests);
+			assertEquals("loaded 1:1", child.getText());
+			assertEquals("grandchild", grandchild.getText());
+			parent.clearAll(true);
+			assertArrayEquals(new int[] {1, 1, 0, 0}, requests);
+			assertEquals("loaded 1:2", child.getText());
+			assertEquals("loaded 2:1", grandchild.getText());
+			assertEquals("loaded 0:1", parent.getText());
+			assertEquals("sibling", sibling.getText());
+			tested.clearAll(false);
+			assertArrayEquals(new int[] {1, 2, 1, 0}, requests);
+			assertEquals("loaded 0:2", parent.getText());
+			assertEquals("loaded 3:1", sibling.getText());
+			assertEquals("loaded 1:2", child.getText());
+			assertEquals("loaded 2:1", grandchild.getText());
+			tested.clearAll(true);
+			assertArrayEquals(new int[] {2, 2, 1, 1}, requests);
+			assertEquals("loaded 0:3", parent.getText());
+			assertEquals("loaded 1:3", child.getText());
+			assertEquals("loaded 2:2", grandchild.getText());
+			assertEquals("loaded 3:2", sibling.getText());
+			assertEquals(36, parent.getItemCount());
+			assertEquals(4, child.getItemCount());
+			assertSame(parent, tested.getItem(0));
+			assertSame(child, parent.getItem(35));
+			assertSame(grandchild, child.getItem(3));
+			assertSame(sibling, tested.getItem(1));
+		} finally {
+			tested.dispose();
+		}
+	}
+}
+
+@Test
+public void test_clearAllZ_virtualProviderDoesNotReenterCurrentItem() {
+	Tree tested = new Tree(shell, SWT.VIRTUAL);
+	try {
+		tested.setItemCount(1);
+		TreeItem parent = tested.getItem(0);
+		parent.setText("parent");
+		parent.setItemCount(2);
+		TreeItem requested = parent.getItem(1);
+		int[] requests = {0};
+		int[] depth = {0};
+		tested.addListener(SWT.SetData, event -> {
+			assertSame(requested, event.item);
+			assertEquals(1, ++depth[0]);
+			try {
+				requests[0]++;
+				parent.clearAll(true);
+				tested.clearAll(true);
+				requested.setText("row " + requests[0]);
+			} finally {
+				depth[0]--;
+			}
+		});
+		assertEquals("row 1", requested.getText());
+		assertEquals("row 1", requested.getText());
+		assertEquals(1, requests[0]);
+		tested.clearAll(true);
+		assertEquals(1, requests[0], "recursive clear must defer SetData");
+		assertEquals("row 2", requested.getText());
+		assertEquals(2, requests[0]);
+	} finally {
+		tested.dispose();
+	}
+}
+
+@Test
 public void test_virtualGtkSetDataExceptionAllowsRemovalAndRetry() throws Exception {
 	if (!isGtk3()) return;
 	for (String mode : new String[] {"true", "false"}) {

@@ -2777,8 +2777,22 @@ public void clear(int index, boolean all) {
 }
 
 void clear (long parentIter, int index, boolean all) {
+	if (index < 0) error (SWT.ERROR_INVALID_RANGE);
+	if (virtualTopology != null) {
+		if (index >= virtualChildCount (parentIter)) error (SWT.ERROR_INVALID_RANGE);
+		int id = virtualTopology.materializedChildId (virtualParentId (parentIter), index);
+		if (id >= 0) {
+			TreeItem item = id < items.length ? items [id] : null;
+			if (item != null && !item.isDisposed ()) item.clear ();
+			if (all) clearVirtualItems (id, true);
+		}
+		return;
+	}
 	long iter = OS.g_malloc (GTK.GtkTreeIter_sizeof ());
-	GTK.gtk_tree_model_iter_nth_child(modelHandle, iter, parentIter, index);
+	if (!GTK.gtk_tree_model_iter_nth_child(modelHandle, iter, parentIter, index)) {
+		OS.g_free (iter);
+		error (SWT.ERROR_INVALID_RANGE);
+	}
 	int[] value = new int[1];
 	GTK.gtk_tree_model_get (modelHandle, iter, ID_COLUMN, value, -1);
 	if (value [0] != -1) {
@@ -2815,6 +2829,10 @@ public void clearAll (boolean all) {
 	clearAll (all, 0);
 }
 void clearAll (boolean all, long parentIter) {
+	if (virtualTopology != null) {
+		clearVirtualItems (virtualParentId (parentIter), all);
+		return;
+	}
 	int length = GTK.gtk_tree_model_iter_n_children (modelHandle, parentIter);
     if (length == 0) {
         return;
@@ -2834,6 +2852,17 @@ void clearAll (boolean all, long parentIter) {
 		valid = GTK.gtk_tree_model_iter_next (modelHandle, iter);
 	}
 	OS.g_free (iter);
+}
+
+/* Clearing cached attributes must not materialize cold logical children or
+ * depend on their presence in the native resident frontier. */
+private void clearVirtualItems (int parentId, boolean all) {
+	for (int id = virtualTopology.firstMaterializedChildId (parentId);
+			id >= 0; id = virtualTopology.nextMaterializedSiblingId (id)) {
+		TreeItem item = id < items.length ? items [id] : null;
+		if (item != null && !item.isDisposed ()) item.clear ();
+		if (all) clearVirtualItems (id, true);
+	}
 }
 
 @Override
