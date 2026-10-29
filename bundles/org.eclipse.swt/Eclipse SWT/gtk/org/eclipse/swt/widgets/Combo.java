@@ -643,18 +643,6 @@ GdkRGBA defaultBackground () {
 @Override
 void deregister () {
 	super.deregister ();
-    if (buttonHandle != 0) {
-        display.removeWidget(buttonHandle);
-    }
-    if (entryHandle != 0) {
-        display.removeWidget(entryHandle);
-    }
-    if (popupHandle != 0) {
-        display.removeWidget(popupHandle);
-    }
-    if (menuHandle != 0) {
-        display.removeWidget(menuHandle);
-    }
 	if (entryTextHandle != 0) display.removeWidget (entryTextHandle);
 	if (buttonHandle != 0) display.removeWidget (buttonHandle);
 	if (entryHandle != 0) display.removeWidget (entryHandle);
@@ -2064,18 +2052,6 @@ long parentingHandle() {
 @Override
 void register () {
 	super.register ();
-    if (buttonHandle != 0) {
-        display.addWidget(buttonHandle, this);
-    }
-    if (entryHandle != 0) {
-        display.addWidget(entryHandle, this);
-    }
-    if (popupHandle != 0) {
-        display.addWidget(popupHandle, this);
-    }
-    if (menuHandle != 0) {
-        display.addWidget(menuHandle, this);
-    }
 	if (buttonHandle != 0) display.addWidget (buttonHandle, this);
 	if (entryHandle != 0) display.addWidget (entryHandle, this);
 	if (entryTextHandle != 0) display.addWidget (entryTextHandle, this);
