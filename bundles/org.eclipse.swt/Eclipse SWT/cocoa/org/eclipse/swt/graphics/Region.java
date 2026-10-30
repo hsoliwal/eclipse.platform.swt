@@ -1024,4 +1024,8 @@ public String toString () {
     }
 	return "Region {" + handle + "}";
 }
+
+RegionLog getLog() {
+    return null;
+}
 }

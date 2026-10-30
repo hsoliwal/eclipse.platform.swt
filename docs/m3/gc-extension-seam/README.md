@@ -39,3 +39,18 @@ are a Tycho concern and are not part of the javac gate.
 Catalogue rows: I31-GC-SEALED-SEAM, I31-SKIAGC, I31-HEADLESS-GC-DOUBLES, I31-EXTERNAL-CANVAS-FACTORY,
 I31-SKIJA-CANVAS-20261021 (K:/m3-work/donors/catalogue/DONOR_CATALOGUE.tsv); FOSS rows in com.synexia
 docs/M3-SCALE/runs/20261017-ui-donor-atomize/FOSS_REUSE_DECISION.tsv (wave 4, PR #14191).
+
+### Leaf 1 correction (same day): the first gate was a false zero
+
+`compile_platform.sh` was first called with an MSYS path (`/c/m3-superset/swt-gcseam`); javac failed before compiling and
+the script counts only `: error:` lines, so it printed 0 errors on all three platforms. Re-run with `C:/...` (always pass
+Windows paths to the gates) the seam had: win32 1 error (`Region.java:584`, a `log.intersect(region)` that
+`seam_rejects.py` had leaked into `set(ZoomToRegionMap, int)` when the `intersect(Region)` anchor did not match the
+braced body), cocoa 1 error (`RegionLog.java:45`: the cocoa `Region.getLog()` hunk was among the rejects that were deleted
+unapplied), gtk 0 by luck (its `Region` had the field and `getLog()` but none of the 13 log calls; its
+`TextLayout.drawInPixels` delegation was missing). Fixed mechanically: the stray line removed; cocoa `Region.getLog()`
+(returns null, as in I31); gtk `TextLayout` hunk re-applied; the 13 gtk `Region` log calls inserted by
+`tools/gtk_region_logs.py` (before the first non-check statement of each public add/intersect/subtract/translate).
+A fuzzy re-apply (`git apply -C1`) duplicated the gtk `log` field, `getLog()` and the TextLayout hunk (into
+`getLineCount`); the duplicates were removed. Gate now, real: win32 886/0, gtk 675/0, cocoa 816/0. Found by leaf 2's
+`compile_m3gc.sh`, which counts launcher failures as errors (PRE_EXISTING.tsv P01, P03 on the backend branch).
