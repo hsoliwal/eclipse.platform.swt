@@ -33,6 +33,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_m3gc_TextDrawFlags.class, //
 		Test_org_eclipse_swt_m3gc_ScaleRounding.class, //
 		Test_org_eclipse_swt_m3gc_GcContract.class, //
+		Test_org_eclipse_swt_m3gc_ArgContract.class, //
 
 })
 public class AllM3GcTests {

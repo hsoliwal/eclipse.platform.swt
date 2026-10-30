@@ -56,7 +56,6 @@ import io.github.humbleui.types.Rect;
 
 public class M3ExternalGC implements IExternalGC {
 
-	private static boolean logImageNullError = true;
 	private final IM3Surface surface;
 	private int alpha = 255;
 	// M3 (GC seam, leaf 6; HINT_STATE, pattern M3-GC-HINT v1, census GF06): the stock fresh GC answers SWT.DEFAULT (no GDI+ graphics);
@@ -142,22 +141,20 @@ public class M3ExternalGC implements IExternalGC {
 		fillRectangle(rect.x, rect.y, rect.width, rect.height);
 	}
 
-	private static void logImageNull(int[] positionData) {
-		if (logImageNullError) {
-			Logger.logException(new IllegalArgumentException(
-					"Image argument is null. Position and size data: " + java.util.Arrays.toString(positionData))); //$NON-NLS-1$
-			logImageNullError = false;
+	/* leaf 6 (ARG_CONTRACT, GF24): the stock checks after the size checks: null image, disposed image */
+	private static void checkImage(Image image) {
+		if (image == null) {
+			SWT.error(SWT.ERROR_NULL_ARGUMENT);
+		}
+		if (image.isDisposed()) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
 	}
 
 	@Override
 	public void drawImage(Image image, int x, int y) {
 
-		if (image == null) {
-			logImageNull(new int[] { x, y });
-			return;
-		}
-
+		checkImage(image);
 		final var imgBounds = image.getBounds();
 		drawImage(image, 0, 0, imgBounds.width, imgBounds.height, x, y, imgBounds.width, imgBounds.height);
 	}
@@ -165,11 +162,15 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void drawImage(Image image, int destX, int destY, int destWidth, int destHeight) {
 
-		if (image == null) {
-			logImageNull(new int[] { destX, destY, destWidth, destHeight });
+		// leaf 6 (ARG_CONTRACT, pattern M3-GC-CONTRACT v1, census GF24): the stock order: a zero size returns, a negative size is
+		// rejected, then the image is checked (the donor logged a null image once and returned, and divided by a zero size)
+		if (destWidth == 0 || destHeight == 0) {
 			return;
 		}
-
+		if (destWidth < 0 || destHeight < 0) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkImage(image);
 		drawImage(image, 0, 0, image.getBounds().width, image.getBounds().height, destX, destY, destWidth, destHeight);
 
 	}
@@ -178,10 +179,14 @@ public class M3ExternalGC implements IExternalGC {
 	public void drawImage(Image image, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY,
 			int destWidth, int destHeight) {
 
-		if (image == null) {
-			logImageNull(new int[] { srcX, srcY, srcWidth, srcHeight, destX, destY, destWidth, destHeight });
+		// leaf 6 (ARG_CONTRACT, GF24): the stock order (W32G/GC.java drawImage): sizes, then signs, then the image
+		if (srcWidth == 0 || srcHeight == 0 || destWidth == 0 || destHeight == 0) {
 			return;
 		}
+		if (srcX < 0 || srcY < 0 || srcWidth < 0 || srcHeight < 0 || destWidth < 0 || destHeight < 0) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkImage(image);
 
 		int sizeFactorInImage = Math.round(Math.max((float) destWidth / srcWidth, (float) destHeight / srcHeight));
 
@@ -337,10 +342,10 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public void drawPoint(int x, int y) {
-		paintManager.performDrawFilled(paint -> {
+		// leaf 6 (ARG_CONTRACT, GF46): the stock GDI+ point is a 1x1 fill with the foreground brush (colour at the GC alpha, or
+		// the foreground pattern); the donor filled with performDrawFilled, whose background pattern replaced the colour
+		paintManager.performFillForeground(paint -> {
 			// points have always one pixel no matter the zoom...
-			// fill mode is right for it, not stroke, so we use performDrawFilled
-			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(getForeground()));
 			final var rec = RectangleConverter.scaleUpRectangle(getScaler(), new Rectangle(x, y, 1, 1));
 			final var r = new Rect(rec.x, rec.y, rec.x + 1, rec.y + 1);
 			surface.getCanvas().drawRect(r, paint);

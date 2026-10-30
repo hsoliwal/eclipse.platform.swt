@@ -149,6 +149,24 @@ public class M3PaintManager {
 		}
 	}
 
+	/**
+	 * leaf 6 (ARG_CONTRACT, census GF46): a fill with the foreground brush, as the stock GDI+ getFgBrush: the foreground colour at
+	 * the GC alpha, or the foreground pattern (drawPoint).
+	 */
+	public void performFillForeground(Consumer<Paint> operations) {
+		try (final Paint paint = new Paint()) {
+			paint.setMode(PaintMode.FILL);
+			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha()));
+			paint.setAntiAlias(gc.getAntialias() == SWT.ON);
+			paint.setBlendMode(gc.getXORMode() ? io.github.humbleui.skija.BlendMode.DIFFERENCE : io.github.humbleui.skija.BlendMode.SRC_OVER);
+			final Pattern pattern = gc.getForegroundPattern();
+			try (Shader shader = pattern != null && !pattern.isDisposed() ? convertSWTPatternToM3Shader(pattern) : null) {
+				paint.setShader(shader);
+				operations.accept(paint);
+			}
+		}
+	}
+
 	public static PaintStrokeCap getM3LineCap(int lineCap) {
 		if (lineCap == SWT.CAP_SQUARE) {
 			return PaintStrokeCap.SQUARE;

@@ -165,6 +165,18 @@ DELTAS = [
      "remained, the cause was GF41, L6-17)",
      "correction of my own code: a points -> pixels -> points round trip of the offset is lossy at fractional zoom; the "
      "entries in points no longer make it", False, 0),
+    ("L6-20", GC + "M3ExternalGC.java", "drawImage: a null image logged once and ignored, no size or sign checks (a zero source "
+     "size gave Integer.MAX_VALUE as the image zoom); drawPoint through performDrawFilled with the foreground colour at "
+     "Color alpha",
+     "drawImage x3 in the stock order: zero size returns, negative sizes or source coordinates ERROR_INVALID_ARGUMENT, then "
+     "checkImage (null ERROR_NULL_ARGUMENT, disposed ERROR_INVALID_ARGUMENT); drawPoint through the new "
+     "M3PaintManager.performFillForeground (foreground at the GC alpha, or the foreground pattern) (scratch script "
+     "H:/m3-scratch/gc-leaf6/edits/contract_atoms.py, job arg)",
+     "Test_org_eclipse_swt_m3gc_ArgContract: 6/6 failing before (nothing thrown for null and negatives; SWTException for a "
+     "disposed image; Argument not valid for a zero size; alpha 255 instead of 128; the background pattern's shader on the "
+     "point), 6/6 after",
+     "ARG_CONTRACT (M3-GC-CONTRACT v1), GF24, GF46; stock W32G/GC.java drawImage (1231/1321/1372) and drawPointInPixels "
+     "(GDI+ FillRectangle with getFgBrush); same in I31 SkiaGC.drawImage/drawPoint", False, 0),
 ]
 
 
