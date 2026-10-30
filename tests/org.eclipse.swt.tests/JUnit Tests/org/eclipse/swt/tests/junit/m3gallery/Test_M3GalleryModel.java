@@ -81,7 +81,7 @@ public class Test_M3GalleryModel {
 	@Test
 	void featureRows () {
 		String table = "bit\tfeature_id\tconcept\tfamily\tstate\tdefault\towner\tapi\talias\tshipped\n0\tcard\tc\tpanel\tGAP\toff\t-\t-\t-\tno\n"
-			+ "1\tnative\tc\tf\tNATIVE_HAS\ton\tx\t-\t-\tyes\n2\tframe-overlay\tc\tf\tVIEWPORT_HAS\toff\tx\t-\talias\tyes\nshort\trow\n";
+			+ "\n1\tnative\tc\tf\tNATIVE_HAS\ton\tx\t-\t-\tyes\n2\tframe-overlay\tc\tf\tVIEWPORT_HAS\toff\tx\t-\talias\tyes\nshort\trow\n";
 		List<String []> rows = M3GalleryModel.featureRows (table);
 		assertEquals (3, rows.size ());
 		assertArrayEquals (new String [] {"2", "frame-overlay", "VIEWPORT_HAS", "off", "yes"}, rows.get (2));

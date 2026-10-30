@@ -106,15 +106,19 @@ public class Test_M3GalleryIndexGen {
 
 	/** A repository with one API row, one widget gate, two examples (one with anchors) and one non-example. */
 	static Path synthetic (Path dir) throws IOException {
-		write (dir.resolve ("docs/m3/ENHANCED_API_MAP.tsv"), "api_id" + "\tc".repeat (12) + "\nM3-A" + "\tc".repeat (11) + "\tM3Alpha.of(Table)\nM3-Z" + "\tc".repeat (11) + "\tM3Zeta.of(Table)\n");
+		write (dir.resolve ("docs/m3/ENHANCED_API_MAP.tsv"), "api_id" + "\tc".repeat (12) + "\nM3-A" + "\tc".repeat (11) + "\tM3Alpha.of(Table)\nM3-Z" + "\tc".repeat (11) + "\tM3Zeta.of(Table)\nM3-B" + "\tc".repeat (11) + "\tM3Beta.run(Table)\nM3-N" + "\tc".repeat (11) + "\tno class\n");
+		write (dir.resolve ("bundles/org.eclipse.swt/src/M3Beta.java"), "class M3Beta {}");
 		write (dir.resolve ("bundles/org.eclipse.swt/src/M3Alpha.java"), "class M3Alpha {}");
 		write (dir.resolve ("bundles/org.eclipse.swt/src/Table.java"), "static final X MODE = WidgetMode.of (\"Table\", WidgetMode.VIEWPORT, WidgetMode.CUSTOM);");
 		write (dir.resolve (M3GalleryIndexGen.BUNDLE + "/tools/M3GalleryIndexGen.java"), "/* licence */\nclass G {}");
 		String src = M3GalleryIndexGen.SRC;
 		write (dir.resolve (src + "/m3/gallery/widgets/W.java"), "package org.eclipse.swt.snippets.m3.gallery.widgets;\n/**\n * Widgets demo. More.\n */\npublic class W {\n//GALLERY: a b | first\n//GALLERY: c | second\npublic static void main (String [] args) { new Table (s, 0); M3Alpha.of (t); }\n}\n");
-		write (dir.resolve (src + "/M3Root.java"), "package org.eclipse.swt.snippets;\n/* Root demo \"quoted\" \\ slash. */\npublic final class M3Root {\npublic static void main (String [] args) {}\n}\n");
+		write (dir.resolve (src + "/M3Root.java"), "package org.eclipse.swt.snippets;\n/* Copyright (c) 2026 X */\n/* Root demo \"quoted\" \\ slash. */\npublic final class M3Root {\npublic static void main (String [] args) {}\n}\n");
 		write (dir.resolve (src + "/m3/NoMain.java"), "package org.eclipse.swt.snippets.m3;\npublic class NoMain {}\n");
 		write (dir.resolve (src + "/m3/gallery/Infra.java"), "package org.eclipse.swt.snippets.m3.gallery;\npublic class Infra { public static void main (String [] a) {} }\n");
+		write (dir.resolve (src + "/m3/tools/Tool.java"), "package org.eclipse.swt.snippets.m3.tools;\npublic class Tool { public static void main (String [] a) {} }\n");
+		write (dir.resolve (src + "/m3/Hidden.java"), "package org.eclipse.swt.snippets.m3;\nclass Hidden { public static void main (String [] a) {} }\n");
+		write (dir.resolve (src + "/m3/NoPackage.java"), "public class NoPackage { public static void main (String [] a) {} }\n");
 		write (dir.resolve (src + "/Snippet1.java"), "package org.eclipse.swt.snippets;\npublic class Snippet1 { public static void main (String [] a) {} }\n");
 		return dir;
 	}
@@ -128,9 +132,18 @@ public class Test_M3GalleryIndexGen {
 		assertEquals ("demos", g.entries ().get (2).category ());
 		assertEquals ("Root demo \"quoted\" \\ slash.", g.entries ().get (2).title ());
 		assertTrue (g.apiExamples ().contains ("M3-A\tCOVERED\tW"), g.apiExamples ());
+		assertTrue (g.apiExamples ().contains ("M3-B\tMISSING\t-"), g.apiExamples ());
+		assertTrue (g.summary ().contains ("without example 1"), g.summary ());
 		assertTrue (g.indexJava ().contains ("\"Root demo \\\"quoted\\\" \\\\ slash.\""), g.indexJava ());
 		assertTrue (g.indexJava ().startsWith ("/* licence */\npackage org.eclipse.swt.snippets.m3.gallery;"));
 		assertTrue (g.indexTsv ().contains ("\t-\t"), "empty args and widgets are written as -");
+	}
+
+	/** Without arguments the generator reads the working directory: the repository (0) or a directory without the map. */
+	@Test
+	void runWithoutArgumentsReadsTheWorkingDirectory () throws IOException {
+		if (Files.exists (Paths.get ("docs/m3/ENHANCED_API_MAP.tsv"))) assertEquals (0, M3GalleryIndexGen.run (new String [0]));
+		else assertThrows (NoSuchFileException.class, () -> M3GalleryIndexGen.run (new String [0]));
 	}
 
 	@Test
@@ -142,7 +155,10 @@ public class Test_M3GalleryIndexGen {
 		M3GalleryIndexGen.main (new String [] {"--check", root.toString ()});
 		assertEquals (first, Files.readString (index, StandardCharsets.UTF_8));
 		write (index, "stale");
-		assertTrue (new M3GalleryIndexGen (root).scan ().write (true));
+		assertEquals (1, M3GalleryIndexGen.run (new String [] {"--check", root.toString ()}));
 		assertEquals ("stale", Files.readString (index, StandardCharsets.UTF_8));
+		assertEquals (0, M3GalleryIndexGen.run (new String [] {root.toString ()}));
+		assertEquals (Paths.get ("."), M3GalleryIndexGen.root (new String [0], false));
+		assertEquals (Paths.get ("."), M3GalleryIndexGen.root (new String [] {"--check"}, true));
 	}
 }
