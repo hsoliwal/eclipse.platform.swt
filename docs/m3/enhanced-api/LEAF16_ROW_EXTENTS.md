@@ -43,3 +43,14 @@ With m measured rows, offsets and re-measurements cost O(log m).
 
 Already catalogued for VirtualRowExtents (Fenwick over measured deltas). The catalogue row below records the public
 exposure.
+
+## Status (2026-10-30)
+
+| gate | result |
+|---|---|
+| build | master `d5f6048f398`, jar `master-d5f6048` (sha256 `d3e26aff00a3...`); win32, GTK and Cocoa source sets 0 errors |
+| JUnit, hidden desktop | `Test_M3RowExtents` 5/5 viewport, 5/5 original |
+| differential | M3RowExtents is widget-free (no SWT widget state), so the official jar has nothing to compare; its oracle is the naive prefix sum over the same rows in every test (offsets, `rowAt`, `visibleRange`, anchoring, insert/remove), equal in both modes |
+| coverage (JaCoCo 0.8.15, both modes) | lines 54/54; branches 30/42, the other 12 are `SWT.error` probe artifacts (one-condition argument checks, each with an `assertThrows` test): every reachable branch covered |
+
+Open: the map row's link to the viewports (VirtualRowExtents as the public face inside Tree/Table row heights) is not wired; GTK and Cocoa not run.
