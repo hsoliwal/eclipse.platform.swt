@@ -72,6 +72,8 @@ public abstract class Control extends Widget implements Drawable {
 	Cursor cursor;
 	Menu menu;
 	Image backgroundImage;
+	Color backgroundColor;
+	int backgroundColorGeneration;
 	Font font;
 	Region region;
 	long eventRegion;
@@ -467,6 +469,7 @@ private void hookMouseSignals(long eventHandle) {
 		GTK4.gtk_widget_add_controller(eventHandle, clickGesture);
 		OS.g_signal_connect(clickGesture, OS.pressed, display.gesturePressReleaseProc, GESTURE_PRESSED);
 		OS.g_signal_connect(clickGesture, OS.released, display.gesturePressReleaseProc, GESTURE_RELEASED);
+		OS.g_signal_connect(clickGesture, OS.cancel, display.gestureCancelProc, 0);
 
 		long motionController = GTK4.gtk_event_controller_motion_new();
 		GTK.gtk_event_controller_set_propagation_phase(motionController, GTK.GTK_PHASE_TARGET);
@@ -5777,6 +5780,8 @@ private void _setBackground (Color color) {
 	if (color != null && color.isDisposed ()) {
 		error(SWT.ERROR_INVALID_ARGUMENT);
 	}
+	if (color != null && color.equals (backgroundColor) && backgroundAlpha == color.getAlpha ()
+			&& backgroundColorGeneration == display.systemColorsGeneration) return;
 	GdkRGBA rgba = null;
 	if (color != null) {
 		rgba = color.handle;
@@ -5787,6 +5792,8 @@ private void _setBackground (Color color) {
 	} else {
 		state |= BACKGROUND;
 	}
+	backgroundColor = color;
+	backgroundColorGeneration = display.systemColorsGeneration;
 	setBackgroundGdkRGBA (rgba);
 	redrawChildren ();
 }
