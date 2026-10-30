@@ -46,6 +46,8 @@ public final class Region extends Resource {
 	 */
 	public long handle;
 
+	private final RegionLog log = new RegionLog();
+
 /**
  * Constructs a new empty region.
  * <p>
@@ -93,6 +95,14 @@ public Region(Device device) {
 Region(Device device, long handle) {
 	super(device);
 	this.handle = handle;
+}
+
+/**
+* @noreference This method is not intended to be referenced by clients.
+* @return a log characterizing the region
+*/
+public RegionLog getLog() {
+	return log;
 }
 
 static long gdk_region_polygon(int[] pointArray, int npoints, int fill_rule) {

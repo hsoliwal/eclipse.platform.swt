@@ -37,6 +37,8 @@ import org.eclipse.swt.internal.win32.*;
  */
 public final class Region extends Resource {
 
+	private final RegionLog log = new RegionLog();
+
 	private Map<Integer, RegionHandle> zoomToHandle = new HashMap<>();
 
 	private List<Operation> operations = new ArrayList<>();
@@ -108,6 +110,7 @@ public void add (int[] pointArray) {
     if (pointArray == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.add(pointArray);
 	final Operation operation = new OperationWithArray(Operation::add, Arrays.copyOf(pointArray, pointArray.length));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -133,6 +136,7 @@ public void add (Rectangle rect) {
     if (rect == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.add(rect);
 	final Operation operation = new OperationWithRectangle(Operation::add, new Rectangle(rect.x, rect.y, rect.width, rect.height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -159,6 +163,7 @@ public void add (int x, int y, int width, int height) {
     if (isDisposed()) {
         SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
     }
+	log.add(new Rectangle(x,y,width,height));
 	final Operation operation = new OperationWithRectangle(Operation::add, new Rectangle(x, y, width, height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -188,6 +193,7 @@ public void add (Region region) {
     if (region.isDisposed()) {
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	log.add(region);
 	if (!region.operations.isEmpty()) {
 		adoptTemporaryHandleZoomHint(region);
 		final Operation operation = new OperationWithRegion(Operation::add, region.operations);
@@ -200,6 +206,14 @@ private void adoptTemporaryHandleZoomHint(Region region) {
 		this.temporaryHandleZoomHint = region.temporaryHandleZoomHint;
 	}
 }
+
+/**
+* @return a log characterizing the region
+*/
+RegionLog getLog() {
+	return log;
+}
+
 
 /**
  * Returns <code>true</code> if the point specified by the
@@ -360,6 +374,7 @@ public void intersect (Rectangle rect) {
     if (rect == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.intersect(rect);
 	final Operation operation = new OperationWithRectangle(Operation::intersect, new Rectangle(rect.x, rect.y, rect.width, rect.height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -386,6 +401,7 @@ public void intersect (int x, int y, int width, int height) {
     if (isDisposed()) {
         SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
     }
+	log.intersect(new Rectangle(x,y,width,height));
 	final Operation operation = new OperationWithRectangle(Operation::intersect, new Rectangle(x, y, width, height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -417,6 +433,7 @@ public void intersect (Region region) {
     if (region.isDisposed()) {
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	log.intersect(region);
 	if (!region.operations.isEmpty()) {
 		adoptTemporaryHandleZoomHint(region);
 		final Operation operation = new OperationWithRegion(Operation::intersect, region.operations);
@@ -564,6 +581,7 @@ static class ZoomToRegionMap {
  */
 void set(ZoomToRegionMap zoomToRegionHandleMap, int contextZoom) {
 	this.temporaryHandleZoomHint = contextZoom;
+	log.intersect(region);
 	final Operation operation = new OperationWithRegionHandle(Operation::set, zoomToRegionHandleMap);
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -590,6 +608,7 @@ public void subtract (int[] pointArray) {
     if (pointArray == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.subtract(pointArray);
 	final Operation operation = new OperationWithArray(Operation::subtract, Arrays.copyOf(pointArray, pointArray.length));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -617,6 +636,7 @@ public void subtract (Rectangle rect) {
     if (rect == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.subtract(rect);
 	final Operation operation = new OperationWithRectangle(Operation::subtract, new Rectangle(rect.x, rect.y, rect.width, rect.height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -643,6 +663,7 @@ public void subtract (int x, int y, int width, int height) {
     if (isDisposed()) {
         SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
     }
+	log.subtract(new Rectangle(x,y,width,height));
 	final Operation operation = new OperationWithRectangle(Operation::subtract, new Rectangle(x, y, width, height));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -674,6 +695,7 @@ public void subtract (Region region) {
     if (region.isDisposed()) {
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	log.subtract(region);
 	if (!region.operations.isEmpty()) {
 		adoptTemporaryHandleZoomHint(region);
 		final Operation operation = new OperationWithRegion(Operation::subtract, region.operations);
@@ -698,6 +720,7 @@ public void translate (int x, int y) {
     if (isDisposed()) {
         SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
     }
+	log.translate(new Point(x,y));
 	final Operation operation = new OperationWithPoint(Operation::translate, new Point(x, y));
 	storeAndApplyOperationForAllHandles(operation);
 }
@@ -724,6 +747,7 @@ public void translate (Point pt) {
     if (pt == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.translate(pt);
 	final Operation operation = new OperationWithPoint(Operation::translate, new Point(pt.x, pt.y));
 	storeAndApplyOperationForAllHandles(operation);
 }

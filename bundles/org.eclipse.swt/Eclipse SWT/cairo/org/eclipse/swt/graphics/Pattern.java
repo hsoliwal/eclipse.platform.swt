@@ -37,6 +37,8 @@ import org.eclipse.swt.internal.cairo.*;
  */
 public class Pattern extends Resource {
 
+	private PatternProperties properties;
+
 	/**
 	 * the OS resource for the Pattern
 	 * (Warning: This field is platform dependent)
@@ -96,6 +98,7 @@ public Pattern(Device device, Image image) {
 	Cairo.cairo_pattern_set_extend(handle, Cairo.CAIRO_EXTEND_REPEAT);
 	surface = image.surface;
 	init();
+	properties = new PatternProperties(image);
 }
 
 /**
@@ -197,6 +200,7 @@ public Pattern(Device device, float x1, float y1, float x2, float y2, Color colo
 	GC.setCairoPatternColor(handle, 1, color2, alpha2);
 	Cairo.cairo_pattern_set_extend(handle, Cairo.CAIRO_EXTEND_REPEAT);
 	init();
+	properties = new PatternProperties(x1,y1,x2,y2,color1,alpha1,color2,alpha2);
 }
 
 @Override
@@ -232,6 +236,10 @@ public String toString() {
         return "Pattern {*DISPOSED*}";
     }
 	return "Pattern {" + handle + "}";
+}
+
+PatternProperties getProperties() {
+	return properties;
 }
 
 }
