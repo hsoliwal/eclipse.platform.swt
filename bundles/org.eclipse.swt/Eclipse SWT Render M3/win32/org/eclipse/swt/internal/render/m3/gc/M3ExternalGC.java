@@ -42,12 +42,9 @@ import org.eclipse.swt.internal.canvasext.IExternalGC;
 
 import io.github.humbleui.skija.ClipMode;
 import io.github.humbleui.skija.EncoderPNG;
-import io.github.humbleui.skija.FilterMipmap;
-import io.github.humbleui.skija.FilterMode;
 import io.github.humbleui.skija.FilterTileMode;
 import io.github.humbleui.skija.GradientStyle;
 import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.skija.MipmapMode;
 import io.github.humbleui.skija.Paint;
 import io.github.humbleui.skija.PaintMode;
 import io.github.humbleui.skija.PathEffect;
@@ -61,7 +58,9 @@ public class M3ExternalGC implements IExternalGC {
 	private static boolean logImageNullError = true;
 	private final IM3Surface surface;
 	private int alpha = 255;
-	private int antialias;
+	// M3 (GC seam, leaf 6; HINT_STATE, pattern M3-GC-HINT v1, census GF06): the stock fresh GC answers SWT.DEFAULT (no GDI+ graphics);
+	// the donor started at 0 (= SWT.OFF), text ON and nearest sampling read back as NONE
+	private int antialias = SWT.DEFAULT;
 	private boolean xorModeActive;
 	private int lineWidth = 1;
 	private int lineCap = SWT.CAP_FLAT;
@@ -86,6 +85,7 @@ public class M3ExternalGC implements IExternalGC {
 	private Matrix33 currentTransform = Matrix33.IDENTITY;
 
 	private SamplingMode interpolationMode = SamplingMode.DEFAULT;
+	private int interpolation = SWT.DEFAULT;
 
 	private boolean isClipSet;
 	private Rectangle currentClipBounds;
@@ -94,7 +94,7 @@ public class M3ExternalGC implements IExternalGC {
 	private final IM3CanvasExtension m3Extension;
 	private final IM3Resources resources;
 	private final int style;
-	private int textAntiAlias = SWT.ON;
+	private int textAntiAlias = SWT.DEFAULT;
 
 	private final int initialSaveCount;
 	private final M3PaintManager paintManager;
@@ -857,18 +857,9 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public int getInterpolation() {
-		if (interpolationMode == SamplingMode.DEFAULT) {
-			return SWT.NONE;
-		}
-		if (interpolationMode == SamplingMode.LINEAR) {
-			return SWT.HIGH;
-		}
-		if (interpolationMode instanceof final FilterMipmap fm) {
-			if (fm.getFilterMode() == FilterMode.LINEAR && fm.getMipmapMode() == MipmapMode.LINEAR) {
-				return SWT.LOW;
-			}
-		}
-		return SWT.DEFAULT;
+		// leaf 6 (HINT_STATE, GF06): the value set, as the stock GC reads its GDI+ mode back (the donor decoded the sampling: LOW
+		// read back HIGH, HIGH read back DEFAULT, the fresh GC NONE)
+		return interpolation;
 	}
 
 	@Override
@@ -1023,13 +1014,15 @@ public class M3ExternalGC implements IExternalGC {
 		// HighQualityBicubic SKCubicResampler.CatmullRom maximum sharp, cubic
 		// interpolation
 
+		// leaf 6 (HINT_STATE, GF06): DEFAULT samples nearest like the untouched GC (stock without GDI+: StretchBlt COLORONCOLOR);
+		// the donor mapped DEFAULT to Mitchell, a second default (departure from I31 SkiaGC.setInterpolation)
 		switch (interpolation) {
-		case SWT.NONE -> this.interpolationMode = SamplingMode.DEFAULT; // Nearest neighbor
+		case SWT.NONE, SWT.DEFAULT -> this.interpolationMode = SamplingMode.DEFAULT; // Nearest neighbor
 		case SWT.LOW -> this.interpolationMode = SamplingMode.LINEAR;
-		case SWT.DEFAULT -> this.interpolationMode = SamplingMode.MITCHELL;
 		case SWT.HIGH -> this.interpolationMode = SamplingMode.CATMULL_ROM;
 		default -> SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
+		this.interpolation = interpolation;
 	}
 
 	@Override
@@ -1209,6 +1202,10 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public void setTextAntialias(int antialias) {
+		// leaf 6 (HINT_STATE, GF06): validated as the stock GC does (DEFAULT, OFF, ON)
+		if (antialias != SWT.DEFAULT && antialias != SWT.ON && antialias != SWT.OFF) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
 		this.textAntiAlias = antialias;
 	}
 

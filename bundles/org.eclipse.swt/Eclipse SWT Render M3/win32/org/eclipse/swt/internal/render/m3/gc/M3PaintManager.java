@@ -43,7 +43,7 @@ public class M3PaintManager {
 		try (final Paint paint = new Paint()) {
 			paint.setAlpha(gc.getAlpha());
 			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha()));
-			paint.setAntiAlias(gc.getAntialias() != SWT.OFF);
+			paint.setAntiAlias(gc.getAntialias() == SWT.ON);
 			if (gc.getXORMode()) {
 				paint.setBlendMode(io.github.humbleui.skija.BlendMode.DIFFERENCE);
 			} else {
@@ -127,7 +127,7 @@ public class M3PaintManager {
 		try (final Paint paint = new Paint()) {
 			paint.setMode(PaintMode.FILL);
 			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha()));
-			paint.setAntiAlias(gc.getAntialias() != SWT.OFF);
+			paint.setAntiAlias(gc.getAntialias() == SWT.ON);
 			if (gc.getXORMode()) {
 				paint.setBlendMode(io.github.humbleui.skija.BlendMode.DIFFERENCE);
 			} else {

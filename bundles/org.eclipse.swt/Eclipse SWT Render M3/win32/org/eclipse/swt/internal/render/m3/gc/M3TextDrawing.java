@@ -55,7 +55,7 @@ public class M3TextDrawing {
 		final var scaler = new DpiScalerUtil(resources.getScaler());
 
 		final boolean transparent = isTransparent(flags);
-		final boolean antiAlias = gc.getAntialias() != SWT.OFF || gc.getTextAntialias() != SWT.OFF;
+		final boolean antiAlias = gc.getTextAntialias() != SWT.OFF;
 		final int[] yPos = new int[1];
 		yPos[0] = y;
 		final var f = gc.getM3Resources().getM3Font();
@@ -132,7 +132,7 @@ public class M3TextDrawing {
 				? M3ColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha())
 						: M3ColorConverter.convertSWTColorToM3Color(gc.getBackground());
 		final int foregroundColor = M3ColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha());
-		final boolean antiAlias = gc.getAntialias() != SWT.OFF || gc.getTextAntialias() != SWT.OFF;
+		final boolean antiAlias = gc.getTextAntialias() != SWT.OFF;
 
 		final int[] yPos = new int[1];
 		yPos[0] = y;
