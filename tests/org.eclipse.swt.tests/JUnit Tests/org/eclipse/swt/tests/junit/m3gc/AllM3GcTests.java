@@ -35,6 +35,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_m3gc_GcContract.class, //
 		Test_org_eclipse_swt_m3gc_ArgContract.class, //
 		Test_org_eclipse_swt_m3gc_PathHitTest.class, //
+		Test_org_eclipse_swt_m3gc_PixelCopy.class, //
 
 })
 public class AllM3GcTests {

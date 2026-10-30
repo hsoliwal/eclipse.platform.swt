@@ -193,6 +193,18 @@ DELTAS = [
      "\"this.data\" is null), 2/2 after",
      "PATH_HIT_TEST (M3-GC-PATH-HIT v1), GF51; stock W32G/Path.java contains (GDI+ IsVisible/IsOutlineVisible with the GC's pen "
      "and fill mode; the GC transform is ignored there too: stock TODO); I31 has the same NPE", False, 0),
+    ("L6-23", GC + "M3ExternalGC.java", "copyArea: snapshot of the unclipped source drawn at dest (null not handled, a cut "
+     "source misplaced); copyArea(Image): convertSWTImageToM3Image only for the size, support surface, 24-bit data with "
+     "BGRA masks, premultiplied colour, new Image(device, data) drawn in points with alpha (blend)",
+     "copyArea: source IRect intersected with the surface, nothing outside, dest moved by the cut; copyArea(Image): the image's "
+     "area at the GC zoom intersected with the surface, M3ToSwtImageConverter (24-bit RGB masks, unpremultiplied), alpha "
+     "dropped, drawn 1:1 through an ImageDataProvider image at the GC zoom at the cut offset (replacePixels); "
+     "M3SurfaceAdapter.makeImageSnapshot(IRect) answers null for a null image, M3SurfaceAdapter public for the raster tests "
+     "(scratch script contract_atoms.py, job copy)",
+     "Test_org_eclipse_swt_m3gc_PixelCopy: 4/4 failing before (Cannot invoke Image.getWidth() because <parameter1> is null; "
+     "wrapper around null; RGB {100, 200, 0} for {200, 100, 50}; cut source at x 50), 4/4 after",
+     "PIXEL_COPY (M3-GC-PIXEL-COPY v1), GF20, GF21; stock W32G/GC.java copyArea (BitBlt SRCCOPY, clipped silently; into the image "
+     "handle at the GC zoom); same defects in I31 SkiaGC.copyArea and SkijaToSwtImageConverter", False, 0),
 ]
 
 

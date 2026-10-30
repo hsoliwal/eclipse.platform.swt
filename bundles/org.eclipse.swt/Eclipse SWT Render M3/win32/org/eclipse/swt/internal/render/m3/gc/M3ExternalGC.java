@@ -31,6 +31,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.GCData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageDataProvider;
 import org.eclipse.swt.graphics.LineAttributes;
 import org.eclipse.swt.graphics.Path;
 import org.eclipse.swt.graphics.Pattern;
@@ -52,6 +53,7 @@ import io.github.humbleui.skija.PathEffect;
 import io.github.humbleui.skija.PathFillMode;
 import io.github.humbleui.skija.SamplingMode;
 import io.github.humbleui.skija.Shader;
+import io.github.humbleui.types.IRect;
 import io.github.humbleui.types.Rect;
 
 public class M3ExternalGC implements IExternalGC {
@@ -731,43 +733,57 @@ public class M3ExternalGC implements IExternalGC {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		}
 
-		final IM3Image m3Image = SwtToM3ImageConverter.convertSWTImageToM3Image(image,
-				getScaler().getNativeZoom(), resources);
-		try (final IM3Image copiedArea = surface.makeImageSnapshot(RectangleConverter
-				.createScaledRectangle(getScaler(), x, y, m3Image.getWidth(), m3Image.getHeight()).toIRect())) {
-
-			if (copiedArea == null) {
-				SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		if (image.isDisposed()) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		// leaf 6 (PIXEL_COPY, pattern M3-GC-PIXEL-COPY v1, census GF21): the image's area of the surface at this GC's zoom, opaque and
+		// unpremultiplied in 24-bit RGB (M3ToSwtImageConverter), replaces the image's pixels at that zoom (BitBlt SRCCOPY); the
+		// part outside the surface is left as it was. The donor gave 24-bit data 32-bit masks, kept premultiplied colour,
+		// drew a 100 % image in points (twice the size at 200 %) and blended it over the old content
+		final Rectangle size = image.getBounds();
+		final IRect area = RectangleConverter.createScaledRectangle(getScaler(), x, y, size.width, size.height).toIRect();
+		final IRect visible = area.intersect(new IRect(0, 0, surface.getWidth(), surface.getHeight()));
+		if (visible == null) {
+			return;
+		}
+		try (final IM3Image copied = surface.makeImageSnapshot(visible)) {
+			if (copied != null) {
+				replacePixels(image, M3ToSwtImageConverter.convertM3ImageToImageData(copied), visible.getLeft() - area.getLeft(),
+						visible.getTop() - area.getTop());
 			}
+		}
+	}
 
-			try (final IM3Surface imageSurface = surface.makeSurface(m3Image.getWidth(), m3Image.getHeight())) {
-				imageSurface.getCanvas().drawImage(copiedArea, 0, 0);
-				try (final IM3Image snapshot = imageSurface.makeImageSnapshot()) {
-					final ImageData imgData = M3ToSwtImageConverter.convertM3ImageToImageData(snapshot);
-					Image i = null;
-					GC gc = null;
-					try {
-						i = new Image(device, imgData);
-						gc = new GC(image);
-						gc.drawImage(i, 0, 0);
-					} finally {
-						if (gc != null) {
-							gc.dispose();
-						}
-						if (i != null) {
-							i.dispose();
-						}
-					}
-				}
-			}
+	/* leaf 6: opaque pixels (at this GC's zoom) drawn 1:1 into the image through a stock GC, at the pixel offset */
+	private void replacePixels(Image image, ImageData pixels, int offsetX, int offsetY) {
+		pixels.alphaData = null;
+		final int zoom = getScaler().getNativeZoom();
+		final Image copy = new Image(device, (ImageDataProvider) z -> z == zoom ? pixels
+				: pixels.scaledTo(Math.max(1, pixels.width * z / zoom), Math.max(1, pixels.height * z / zoom)));
+		final GC imageGC = new GC(image);
+		try {
+			final Point at = getScaler().scaleDown(new Point(offsetX, offsetY));
+			imageGC.drawImage(copy, at.x, at.y);
+		} finally {
+			imageGC.dispose();
+			copy.dispose();
 		}
 	}
 
 	@Override
 	public void copyArea(int srcX, int srcY, int width, int height, int destX, int destY) {
-		try (var copiedArea = surface.makeImageSnapshot(
-				RectangleConverter.createScaledRectangle(getScaler(), srcX, srcY, width, height).toIRect())) {
-			surface.getCanvas().drawImage(copiedArea, getScaler().autoScaleUp(destX), getScaler().autoScaleUp(destY));
+		// leaf 6 (PIXEL_COPY, GF20): the source cut to the surface as BitBlt cuts it, the destination moved by the cut; a source
+		// outside the surface copies nothing (the donor threw on the null snapshot and misplaced a source cut at the edge)
+		final IRect source = RectangleConverter.createScaledRectangle(getScaler(), srcX, srcY, width, height).toIRect();
+		final IRect visible = source.intersect(new IRect(0, 0, surface.getWidth(), surface.getHeight()));
+		if (visible == null) {
+			return;
+		}
+		try (var copiedArea = surface.makeImageSnapshot(visible)) {
+			if (copiedArea != null) {
+				surface.getCanvas().drawImage(copiedArea, getScaler().autoScaleUp(destX) + visible.getLeft() - source.getLeft(),
+						getScaler().autoScaleUp(destY) + visible.getTop() - source.getTop());
+			}
 		}
 	}
 
