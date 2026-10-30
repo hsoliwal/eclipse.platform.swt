@@ -31,6 +31,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_m3gc_TransformState.class, //
 		Test_org_eclipse_swt_m3gc_TextMetrics.class, //
 		Test_org_eclipse_swt_m3gc_TextDrawFlags.class, //
+		Test_org_eclipse_swt_m3gc_ScaleRounding.class, //
 
 })
 public class AllM3GcTests {
