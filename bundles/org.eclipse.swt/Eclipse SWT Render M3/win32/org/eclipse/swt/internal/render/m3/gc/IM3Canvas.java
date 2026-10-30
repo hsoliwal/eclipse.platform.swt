@@ -14,6 +14,10 @@ import io.github.humbleui.types.Rect;
  */
 public interface IM3Canvas {
 	int getSaveCount();
+	/** The current local-to-device matrix (leaf 6, TRANSFORM_STATE: the GC transform is drawn on the frame's matrix). */
+	default Matrix33 getLocalToDevice() {
+		return Matrix33.IDENTITY;
+	}
 	void restoreToCount(int saveCount);
 	void drawLine(float x0, float y0, float x1, float y1, Paint paint);
 	void drawArc(int left, int top, int right, int bottom, int startAngle, int sweepAngle, boolean useCenter, Paint paint);

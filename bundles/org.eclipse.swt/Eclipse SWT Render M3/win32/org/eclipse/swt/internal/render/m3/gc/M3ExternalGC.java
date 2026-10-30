@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -82,21 +83,17 @@ public class M3ExternalGC implements IExternalGC {
 	private final Drawable drawable;
 	private final Device device;
 
-	private Matrix33 currentTransform = Matrix33.IDENTITY;
-
 	private SamplingMode interpolationMode = SamplingMode.DEFAULT;
 	private int interpolation = SWT.DEFAULT;
-
-	private boolean isClipSet;
-	private Rectangle currentClipBounds;
-	private Region currentClipRegion;
 
 	private final IM3CanvasExtension m3Extension;
 	private final IM3Resources resources;
 	private final int style;
 	private int textAntiAlias = SWT.DEFAULT;
 
-	private final int initialSaveCount;
+	// M3 (GC seam, leaf 6; CLIP_STATE + TRANSFORM_STATE, census GF02, GF16): the clip and the transform of this GC in one layer
+	// above the frame (M3GcLayer); it records the canvas save count at construction, the count dispose restores
+	private final M3GcLayer layer;
 	private final M3PaintManager paintManager;
 	private final DpiScalerUtil dpiScalerUtil;
 
@@ -107,11 +104,9 @@ public class M3ExternalGC implements IExternalGC {
 		this.m3Extension = exst;
 		this.resources = m3Extension.getResources();
 		this.style = style;
-		// Save the initial canvas state so it can be fully restored on dispose()
-		this.initialSaveCount = this.surface.getCanvas().getSaveCount();
+		this.layer = new M3GcLayer(this.surface);
 		this.paintManager = new M3PaintManager(this);
 		this.dpiScalerUtil = new DpiScalerUtil(this.resources.getScaler());
-		this.currentClipBounds = exst.getClientArea();
 
 	}
 
@@ -119,16 +114,10 @@ public class M3ExternalGC implements IExternalGC {
 	public void dispose() {
 
 		resources.resetBaseColors();
-		// Restore all canvas state changes made during the lifetime of this GC,
-		// including any clipping or transform layers pushed after construction
-		surface.getCanvas().restoreToCount(initialSaveCount);
-		// M3 (GC seam, leaf 3): the GC is reusable after dispose. A drawn plane disposes it after each owner-draw event
-		// and hands the same object to the next one, so the clip and transform bookkeeping goes back to the constructed
-		// state along with the canvas (a stale isClipSet would pop the plane's own frame clip on the next setClipping).
-		isClipSet = false;
-		currentClipRegion = null;
-		currentClipBounds = m3Extension.getClientArea();
-		currentTransform = Matrix33.IDENTITY;
+		// M3 (GC seam, leaves 3 and 6): the GC is reusable after dispose. A drawn plane disposes it after each owner-draw event
+		// and hands the same object to the next one: the canvas goes back to the construction save count and the clip and
+		// transform bookkeeping to none (M3GcLayer.close)
+		layer.close();
 
 	}
 
@@ -611,12 +600,9 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void setTransform(Transform transform) {
 
-		final var sc = getScaler();
-		this.currentTransform = M3TransformConverter.toM3Matrix(transform, sc);
-		surface.getCanvas().setMatrix(this.currentTransform);
-		// Save the canvas state after applying the new transform, so subsequent
-		// operations (e.g. clipping) can be stacked and later restored independently
-		surface.getCanvas().save();
+		// leaf 6 (TRANSFORM_STATE, GF16): the matrix of the GC layer on the frame's matrix; the clip in force stays (the donor saved
+		// a level per call, which setClipping then popped instead of the clip)
+		layer.setTransform(M3TransformConverter.toM3Matrix(transform, getScaler()));
 
 	}
 
@@ -689,10 +675,29 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public Rectangle getClipping() {
-		if (currentClipRegion != null) {
-			return currentClipBounds;
+		// leaf 6 (CLIP_STATE, GF02): the stock clip box in points: the clip (or the frame when none) within the frame, seen
+		// through the transform (GDI+ visible clip bounds). The donor answered the frame in pixels unless a region was set, and
+		// null after setClipping(Region)
+		return toPoints(layer.localClip(frame()));
+	}
+
+	/* the frame of this GC (the paint's damage) in device pixels; the surface when the extension has none */
+	private Rect frame() {
+		final Rectangle area = m3Extension.getClientArea();
+		if (area == null) {
+			return new Rect(0, 0, surface.getWidth(), surface.getHeight());
 		}
-		return m3Extension.getBounds();
+		return Rect.makeXYWH(area.x, area.y, area.width, area.height);
+	}
+
+	/* local pixels to the enclosing rectangle in points */
+	private Rectangle toPoints(Rect r) {
+		final var sc = getScaler();
+		final int left = (int) Math.floor(sc.autoScaleDown(r.getLeft()) + 1e-3f);
+		final int top = (int) Math.floor(sc.autoScaleDown(r.getTop()) + 1e-3f);
+		final int right = (int) Math.ceil(sc.autoScaleDown(r.getRight()) - 1e-3f);
+		final int bottom = (int) Math.ceil(sc.autoScaleDown(r.getBottom()) - 1e-3f);
+		return new Rectangle(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
 	}
 
 	@Override
@@ -773,7 +778,7 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public boolean isClipped() {
-		return isClipSet;
+		return layer.isClipped();
 	}
 
 	@Override
@@ -790,18 +795,18 @@ public class M3ExternalGC implements IExternalGC {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
 
-		if (this.currentClipBounds != null) {
-
-			region.intersect(this.currentClipBounds);
-			region.add(this.currentClipBounds);
+		// leaf 6 (CLIP_STATE, GF03, GF04): the region becomes the clip in points: a region clip's own rectangles within the frame
+		// (untransformed), else the clip box. The donor intersected with the caller's region object (disposed by
+		// CTabFolderRenderer after setClipping: ERROR_INVALID_ARGUMENT) and answered nothing for a path clip
+		region.intersect(0, 0, 0, 0);
+		final int[] rects = layer.regionRects();
+		if (rects == null || layer.isTransformed()) {
+			region.add(getClipping());
 			return;
 		}
-
-		if (this.currentClipRegion != null) {
-			region.intersect(this.currentClipRegion);
-			region.add(this.currentClipRegion);
-			return;
-		}
+		final Rect frame = frame();
+		IntStream.range(0, rects.length / 4).mapToObj(i -> Rect.makeLTRB(rects[4 * i], rects[4 * i + 1], rects[4 * i + 2],
+				rects[4 * i + 3]).intersect(frame)).filter(r -> r != null).forEach(r -> region.add(toPoints(r)));
 	}
 
 	@Override
@@ -888,7 +893,10 @@ public class M3ExternalGC implements IExternalGC {
 		if (transform == null) {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		}
-		M3TransformConverter.fromM3Matrix(currentTransform, transform, getScaler());
+		if (transform.isDisposed()) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		M3TransformConverter.fromM3Matrix(layer.transform(), transform, getScaler());
 	}
 
 	@Override
@@ -906,80 +914,46 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public void setClipping(Path path) {
-		final IM3Canvas canvas = surface.getCanvas();
-		if (isClipSet) {
-			canvas.restore(); // pop the previously saved clip layer
-			isClipSet = false;
-		}
-		if (path == null) {
-			return;
-		}
-		if (path.isDisposed()) {
+		// leaf 6 (CLIP_STATE, GF16): replaces the clip in the GC layer at the current transform (M3GcLayer.setClip); a disposed
+		// path is rejected before the clip changes, as the stock GC does
+		if (path != null && path.isDisposed()) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
-		try (final io.github.humbleui.skija.Path m3Path = M3PathConverter.convertSWTPathToM3Path(path,
-				getScaler())) {
+		try (final io.github.humbleui.skija.Path m3Path = path == null ? null
+				: M3PathConverter.convertSWTPathToM3Path(path, getScaler())) {
 			if (m3Path == null) {
+				layer.setClip(null, null, null);
 				return;
 			}
 			m3Path.setFillMode(fillRule == SWT.FILL_EVEN_ODD ? PathFillMode.EVEN_ODD : PathFillMode.WINDING);
-			// Push a new canvas layer so the clip can be undone later with restore()
-			canvas.save();
-			isClipSet = true;
-			canvas.clipPath(m3Path, ClipMode.INTERSECT, true);
+			layer.setClip(canvas -> canvas.clipPath(m3Path, ClipMode.INTERSECT, true), m3Path.computeTightBounds(), null);
 		}
 	}
 
 	@Override
 	public void setClipping(Rectangle rect) {
-
-		// Skija uses a canvas state stack; each save() pushes a new layer,
-		// and restore() pops it, removing the clipping region set in that layer.
-		// Since only one clip is tracked at a time, no explicit restore() is needed
-		// here
-		// because the clip will be cleared when the next setClipping call is made or on
-		// dispose.
-		final IM3Canvas canvas = surface.getCanvas();
-		if (isClipSet) {
-			canvas.restore(); // pop the previously saved clip layer
-			isClipSet = false;
-		}
+		// leaf 6 (CLIP_STATE, GF02, GF16): the rectangle replaces the clip in the GC layer, whatever setTransform did since
 		if (rect == null) {
-			currentClipBounds = null;
+			layer.setClip(null, null, null);
 			return;
 		}
-		currentClipBounds = new Rectangle(rect.x, rect.y, rect.width, rect.height);
-		// Push a new canvas layer so the clip can be undone later with restore()
-		canvas.save();
-		canvas.clipRect(RectangleConverter.createScaledRectangle(getScaler(), rect));
-		isClipSet = true;
-
+		final Rect local = RectangleConverter.createScaledRectangle(getScaler(), rect);
+		layer.setClip(canvas -> canvas.clipRect(local), local, null);
 	}
 
 	@Override
 	public void setClipping(Region region) {
-
-		// Skija uses a canvas state stack; each save() pushes a new layer,
-		// and restore() pops it, removing the clipping region set in that layer.
-		final IM3Canvas canvas = surface.getCanvas();
-		if (isClipSet) {
-			canvas.restore(); // pop the previously saved clip layer
-			isClipSet = false;
-		}
-		currentClipBounds = null;
-		currentClipRegion = region;
-
+		// leaf 6 (CLIP_STATE, GF03, GF18): the region's rectangles at this GC's zoom, copied now from the region's own handle
+		// (M3RegionCalculator), so a later change or dispose of the caller's region does not reach the clip
 		if (region == null) {
+			layer.setClip(null, null, null);
 			return;
 		}
-
-		final M3RegionCalculator calc = new M3RegionCalculator(region, m3Extension);
-		// Push a new canvas layer so the clip can be undone later with restore()
-		canvas.save();
-		try (calc) {
-			canvas.clipRegion(calc.getM3Region());
+		if (region.isDisposed()) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
-		isClipSet = true;
+		final int[] rects = M3RegionCalculator.rectangles(region, getScaler().getNativeZoom());
+		layer.setClip(canvas -> M3RegionCalculator.clip(canvas, rects), M3RegionCalculator.bounds(rects), rects);
 	}
 
 	@Override

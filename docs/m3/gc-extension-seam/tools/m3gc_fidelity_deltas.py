@@ -56,6 +56,52 @@ DELTAS = [
      "STROKE_SCALE, GF11 = PRE_EXISTING P05 (leaf 5 proposal); stock W32G/GC.java getPen: GDI+ dashes / width with the array "
      "doubled, GDI PS_USERSTYLE absolute; same in I31 SkiaPaintManager.createPathEffect; the predefined styles keep the "
      "width-relative tables (GF12, approximated, not in this leaf)", False, 0),
+    ("L6-06", TESTS + "Test_org_eclipse_swt_m3gc_StrokeScale.java", "asserted runs[1] as the dash and runs[2] as the gap",
+     "runs[] = on, off, on, ...: runs[2] is the first whole dash, runs[1] the first gap (and the stray List8x4 holder removed)",
+     "own review before the first run (no javac or JUnit line)",
+     "correction of my own test: the run-length helper starts at the first lit pixel, so index 0 is a dash that may be cut by "
+     "the line start", False, 0),
+    ("L6-07", GC + "M3GcLayer.java", "(new)",
+     "one save layer above the frame for the GC transform and the GC clip: setTransform = setMatrix(frame x T) on the layer, "
+     "setClip = restoreToCount(base) + save + setMatrix + clip once, close = restoreToCount(base); localClip maps the clip's "
+     "device bounds within the frame back through the inverse matrix (Read + Write)",
+     "Test_org_eclipse_swt_m3gc_ClipState 8/9 failing before (overlay run tests-before-clip), 9/9 after; "
+     "Test_org_eclipse_swt_m3gc_TransformState 3/3 failing before, 3/3 after",
+     "CLIP_STATE (M3-GC-CLIP v1) + TRANSFORM_STATE (M3-GC-TRANSFORM v1), GF02, GF16; stock W32G/GC.java setClipping replaces "
+     "the clip regardless of setTransform, getClippingInPixels = GDI+ visible clip bounds (world coordinates) or GetClipBox; "
+     "departs from I31 SkiaGC (save per setTransform, restore per setClipping on one stack)", False, 0),
+    ("L6-08", GC + "M3GcLayer.java", "setClip computed the clip's device bounds with matrix() before openLayer captured the "
+     "frame matrix; localClip used base x T while the layer was closed",
+     "device bounds computed after openLayer; a closed layer reads canvas.getLocalToDevice()",
+     "own review before the first compile",
+     "correction of my own code: base is captured when the layer opens, so a bound computed earlier used a stale or identity "
+     "frame matrix", False, 0),
+    ("L6-09", TESTS + "StateCanvasDouble.java", "save() pushed a copy of the parent level's clips and cleared it; "
+     "restoreToCount popped in a while loop",
+     "save() pushes an empty level (clips() concatenates the levels); restoreToCount pops through IntStream.range",
+     "own review before the first compile",
+     "correction of my own test double: a level holds only the clips applied in it, otherwise clips() counted a parent clip "
+     "twice; no loops in new code (M3-SCALE hard limit)", False, 0),
+    ("L6-10", GC + "M3RegionCalculator.java", "RegionLog replay into a Skija Region (translate in points, polygons inside "
+     "IRect(0, 0, maxX, maxY), live argument objects, empty for an unlogged region; AutoCloseable instance)",
+     "static rectangles(Region, zoom) = GetRegionData of Region.win32_getHandle(region, zoom) copied once; bounds(int[]); "
+     "clip(IM3Canvas, int[]) through Region.setRects + clipRegion (Write, whole file)",
+     "Test_org_eclipse_swt_m3gc_ClipState.testRegionReplayKeepsTranslateAndNegativeAreaAtZoom: expected [(-10,-10,50,50)] but "
+     "was [(5,5,...)]; testRegionFilledByTheStockGcReplays: expected (3,4,5,6) but was null; testRegionClipIsACopy: Argument "
+     "not valid",
+     "CLIP_STATE, GF03, GF18; stock W32G/GC.java setClipping(Region) copies win32_getHandle(region, zoom) into its own HRGN; "
+     "M3 no longer reads RegionLog (the common RegionLog keeps growing for I31's reader: next leaf); departs from I31 "
+     "SkiaRegionCalculator", False, 0),
+    ("L6-11", GC + "M3ExternalGC.java", "isClipSet/currentClipBounds/currentClipRegion/currentTransform/initialSaveCount; "
+     "getClipping = frame in pixels unless a region was set (then null); getClipping(Region) intersected with the caller's "
+     "region; fromM3Matrix scaled m21 and kept dx in pixels",
+     "M3GcLayer layer; setClipping(Rectangle|Path|Region) and setTransform through the layer; getClipping = toPoints("
+     "layer.localClip(frame())); getClipping(Region) = the region clip's rectangles within the frame in points, else the clip "
+     "box; getTransform checks a disposed transform; M3TransformConverter.fromM3Matrix(m[0], m[3], m[1], m[4], down(m[2]), "
+     "down(m[5])) (Read + Edit, python replace with count 1)",
+     "ClipState and TransformState as L6-07",
+     "CLIP_STATE + TRANSFORM_STATE, GF02, GF03, GF04 (path clip answered by its bounds), GF15, GF16; IM3Canvas gains "
+     "default getLocalToDevice (M3CanvasAdapter: Canvas.getLocalToDeviceAsMatrix33)", False, 0),
 ]
 
 
