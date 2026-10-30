@@ -1,0 +1,15 @@
+class	lines_covered	lines_total	line_pct	branches_covered	branches_total	branch_pct
+org.eclipse.swt.snippets.m3.gallery.M3ExampleGallery	0	150	0.0	0	54	0.0
+org.eclipse.swt.snippets.m3.gallery.M3ExampleRunner	0	117	0.0	0	56	0.0
+org.eclipse.swt.snippets.m3.gallery.M3GalleryIndex	1	1	100.0	0	0	-
+org.eclipse.swt.snippets.m3.gallery.M3GalleryModel	42	42	100.0	35	36	97.2
+org.eclipse.swt.snippets.m3.gallery.features.M3FeatureSwitchExample	0	43	0.0	0	12	0.0
+org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	0	66	0.0	0	25	0.0
+org.eclipse.swt.snippets.m3.gallery.renderer.M3RendererCanvasExample	0	44	0.0	0	6	0.0
+org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	0	49	0.0	0	20	0.0
+org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	0	134	0.0	0	30	0.0
+org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	0	97	0.0	0	14	0.0
+org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	0	108	0.0	0	24	0.0
+org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	0	114	0.0	0	76	0.0
+org.eclipse.swt.snippets.m3.tools.M3GalleryIndexGen	141	141	100.0	104	114	91.2
+org.eclipse.swt.tests.m3.tools.M3CoveringArray	212	214	99.1	180	193	93.3
