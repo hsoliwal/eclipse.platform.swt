@@ -272,13 +272,16 @@ public class M3ExternalGC implements IExternalGC {
 	}
 
 	private void executeTextDraw(String inputText, int flags, int x, int y) {
-
-		if (this.surface.getWidth() < x || this.surface.getHeight() < y) {
+		if (isCulled(x, y)) {
 			return;
 		}
-
 		final String splits[] = this.resources.getTextSplits(inputText, flags);
 		M3TextDrawing.drawText(this, splits, flags, x, y);
+	}
+
+	/* the donor's early out (GF33, approximated): a start beyond the surface draws nothing */
+	private boolean isCulled(int x, int y) {
+		return this.surface.getWidth() < x || this.surface.getHeight() < y;
 	}
 
 	M3PaintManager getPaintManager() {
@@ -450,7 +453,11 @@ public class M3ExternalGC implements IExternalGC {
 		if (string == null) {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		}
-		drawText(string, x, y, isTransparent);
+		// leaf 6 (TEXT_DRAW_FLAGS, pattern M3-GC-TEXT-FLAGS v1, census GF29): one line as given, as the stock ExtTextOut draws it;
+		// the donor drew through drawText with DRAW_DELIMITER | DRAW_TAB (lines split, tabs expanded)
+		if (!isCulled(x, y)) {
+			M3TextDrawing.drawText(this, new String[] { string }, isTransparent ? SWT.DRAW_TRANSPARENT : SWT.NONE, x, y);
+		}
 	}
 
 	@Override

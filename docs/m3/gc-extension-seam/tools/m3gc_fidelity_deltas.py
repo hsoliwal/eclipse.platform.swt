@@ -102,6 +102,25 @@ DELTAS = [
      "ClipState and TransformState as L6-07",
      "CLIP_STATE + TRANSFORM_STATE, GF02, GF03, GF04 (path clip answered by its bounds), GF15, GF16; IM3Canvas gains "
      "default getLocalToDevice (M3CanvasAdapter: Canvas.getLocalToDeviceAsMatrix33)", False, 0),
+    ("L6-12", GC + "M3ExternalGC.java", "drawString -> drawText(string, x, y, isTransparent) (DRAW_DELIMITER | DRAW_TAB)",
+     "drawString -> M3TextDrawing.drawText(this, new String[] { string }, isTransparent ? DRAW_TRANSPARENT : NONE, x, y), "
+     "the culling shared with executeTextDraw (isCulled); M3Resources.replaceMnemonics = replaceAll(\"&(&?)\", \"$1\") (Read + "
+     "Edit through the scratch script H:/m3-scratch/gc-leaf6/edits/text_atoms.py)",
+     "Test_org_eclipse_swt_m3gc_TextDrawFlags: drawString(\"a\\nb\") drew [a, b], drawString(\"a\\tb\") drew [a    b], "
+     "getTextSplits(\"a&&b\", DRAW_MNEMONIC) gave [ab]: 3/4 failing before, 4/4 after",
+     "TEXT_DRAW_FLAGS (M3-GC-TEXT-FLAGS v1), GF29 (and GF28's flag part, GF30's '&&'); stock W32G/GC.java drawString "
+     "(ExtTextOut, verbatim) and DrawText DT_NOPREFIX; same in I31 SkiaGC.drawString", False, 0),
+    ("L6-13", "H:/m3-scratch/gc-leaf6/edits/split_hunks.py", "sys.stdout.write(text) of the selected hunks",
+     "sys.stdout.buffer.write(bytes): stdin and stdout as UTF-8 bytes",
+     "git apply --cached: patch failed: M3ExternalGC.java:272, M3Resources.java:481 (patch does not apply)",
+     "correction of my own scratch tool (staging one atom's hunks of a shared owner file): Python text mode wrote CRLF into the "
+     "patch of LF sources (the known Windows newline trap, MEMORY feedback-python-newlines-windows)", False, 0),
+    ("L6-14", "docs/m3/gc-extension-seam/tools/m3gc_fidelity_deltas.py (Bash tool)", "one Bash call carrying a ~9 KB "
+     "python heredoc of the text-atom replacements",
+     "the replacements in a file (H:/m3-scratch/gc-leaf6/edits/text_atoms.py, Write tool), run with python -I",
+     "bash: -c: line 152: unexpected EOF while looking for matching `''",
+     "correction of my own procedure: the Bash tool breaks long heredoc commands (MEMORY feedback-bash-tool-command-length: "
+     "keep commands under ~5 KB, long text via Write)", False, 0),
 ]
 
 

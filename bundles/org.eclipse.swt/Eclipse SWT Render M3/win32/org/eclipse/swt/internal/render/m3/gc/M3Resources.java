@@ -481,13 +481,9 @@ public class M3Resources implements IM3Resources {
 	}
 
 	public static String replaceMnemonics(String text) {
-		final int mnemonicIndex = text.lastIndexOf('&');
-		if (mnemonicIndex != -1) {
-			text = text.replaceAll("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
-			// TODO Underline the mnemonic key
-			// it seems this also does not work in windows with a simple snippet.
-		}
-		return text;
+		// M3 (GC seam, leaf 6; TEXT_DRAW_FLAGS): DrawText without DT_NOPREFIX: a single '&' marks the mnemonic and is not drawn,
+		// "&&" draws one '&' (the donor removed every '&'). The underline is not drawn (GF30, approximated)
+		return text.replaceAll("&(&?)", "$1"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Override
