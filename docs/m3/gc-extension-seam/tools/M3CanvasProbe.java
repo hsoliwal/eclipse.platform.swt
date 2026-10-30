@@ -48,8 +48,10 @@ public class M3CanvasProbe {
 			e.gc.fillRectangle (10, 10, 60, 40);
 		});
 		shell.open ();
-		long end = System.currentTimeMillis () + 1500;
-		while (System.currentTimeMillis () < end) if (!display.readAndDispatch ()) display.sleep ();
+		/* a bare canvas raises no event after its first paint: a timer wakes display.sleep (), the clock alone would not */
+		boolean [] done = new boolean [1];
+		display.timerExec (1500, () -> done [0] = true);
+		while (!done [0]) if (!display.readAndDispatch ()) display.sleep ();
 		int screenPaints = paints [0], extensionPaints = paints [1];
 		Rectangle area = canvas.getClientArea ();
 		Image image = new Image (display, area.width, area.height);

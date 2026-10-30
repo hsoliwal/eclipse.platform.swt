@@ -104,6 +104,11 @@ DELTAS = [
      "scroll(): if (control.isDisposed ()) return; (Widget.checkWidget is protected; Canvas.scroll delegates to the handler before its own check: adopted I31 hook)",
      "M3CanvasHandler.java:214: error: checkWidget() has protected access in Widget",
      "documented deviation: the thread check of a scroll on an SWT.M3 canvas is the window's (ScrollWindowEx), not SWT's ERROR_THREAD_INVALID_ACCESS", False),
+    ("L4-13", "docs/m3/gc-extension-seam/tools/M3CanvasProbe.java", "event loop `while (now < end) if (!readAndDispatch ()) sleep ()` (the leaf-3 OwnerDrawProbe loop)",
+     "display.timerExec (1500, () -> done [0] = true) and `while (!done [0]) ...`: the timer wakes display.sleep ()",
+     "probe_canvas_stock.log: empty, hidden desktop: timed out after 120 s (exit=124)",
+     "a bare Canvas raises no event after its first paint, so display.sleep () never returned and the clock was never re-read; the leaf-3 Table kept "
+     "producing events, which hid the loop's defect", False),
 ]
 
 
