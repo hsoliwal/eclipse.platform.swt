@@ -140,6 +140,31 @@ DELTAS = [
      "TEXT_METRICS, GF28; stock W32G/GC.java textExtent (DT_CALCRECT with DT_SINGLELINE/DT_EXPANDTABS/DT_NOPREFIX per flag) and "
      "stringExtent (GetTextExtentPoint32); the extent follows M3's draw (its line advance includes Skia's line gap), so an "
      "extent and the drawn text agree; same defect in I31 SkiaResources.textExtent", False, 0),
+    ("L6-17", GC + "DpiScalerUtil.java", "scaleUp = (v * zoom + 50) / 100; scaleDown = (v * 100 + zoom / 2) / zoom",
+     "Math.floorDiv for both (round half up for negative values, = Math.round of the scaled value) (Read + Edit)",
+     "Test_org_eclipse_swt_m3gc_GcContract.testDrawBackgroundTilesTheBackgroundImage: tile at -2.0, expected -3.0; "
+     "Test_org_eclipse_swt_m3gc_ScaleRounding: scale up -40 at 100 expected <-40> but was <-39>",
+     "census GF41 (APPROXIMATED, outside the leaf's BUG/STUBBED/MISSING list) taken in because the GF01 tile test exposed it: "
+     "every negative coordinate drew one pixel off at 100 %; stock DPIUtil.pointToPixel = Math.round; same in I31 "
+     "DpiScalerUtil", False, 0),
+    ("L6-18", WIDGETS + "Composite.java", "drawBackgroundInPixels read gc.getGCData().planeDraw and gc.handle for any GC",
+     "a GCExtension fills through the GC: Composite/Canvas.drawBackground (points, no pixel round trip) and "
+     "drawBackgroundInPixels (pixels -> points) -> drawBackgroundThroughGC (alpha 255 and no background pattern while "
+     "filling, both put back) -> paintBackgroundThroughGC (background image tiled with the offset, else the background control's "
+     "pixel, else the GC background) (Read + Edit; Canvas.java, Control.java printThroughGC/printInto, Shell.print branch)",
+     "Test_org_eclipse_swt_m3gc_GcContract: 5/5 failing before (NullPointerException: Cannot read field \"planeDraw\" because "
+     "\"<local8>\" is null; \"gdipGraphics\" ... getGCData() is null), 5/5 after",
+     "ARG_CONTRACT (M3-GC-CONTRACT v1), GF01; pattern of leaf 5's reverted L5-44/L5-45 (measured StyledText PASS), plus: no "
+     "pixel round trip for the point entries (a 3-point offset came back as 2 at 150 %), FillRect semantics (GC alpha and "
+     "background pattern ignored), Control/Shell.print through an image; M3ExternalGC.getGCData answers its own GCData "
+     "(planeDraw -1, gdipGraphics 0, nativeZoom, style, alpha); I31 SkiaGC.getGCData answers null (same defect)", False, 0),
+    ("L6-19", WIDGETS + "Composite.java", "drawBackgroundThroughGC (gc, x, y, width, height, offsetX, offsetY) in pixels, "
+     "converted to points inside",
+     "drawBackgroundThroughGC (gc, Rectangle area, Point offset) in points; the public point entries call it directly",
+     "testDrawBackgroundTilesTheBackgroundImage: expected <-3.0> but was <-2.0> (the pixel round trip ruled out: the same -2 "
+     "remained, the cause was GF41, L6-17)",
+     "correction of my own code: a points -> pixels -> points round trip of the offset is lossy at fractional zoom; the "
+     "entries in points no longer make it", False, 0),
 ]
 
 

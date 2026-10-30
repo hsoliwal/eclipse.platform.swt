@@ -95,6 +95,7 @@ public class M3ExternalGC implements IExternalGC {
 	// above the frame (M3GcLayer); it records the canvas save count at construction, the count dispose restores
 	private final M3GcLayer layer;
 	private final M3PaintManager paintManager;
+	private final GCData data = new GCData();
 	private final DpiScalerUtil dpiScalerUtil;
 
 	public M3ExternalGC(IM3CanvasExtension exst, int style) {
@@ -859,7 +860,14 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public GCData getGCData() {
-		return null;
+		// leaf 6 (ARG_CONTRACT, pattern M3-GC-CONTRACT v1, census GF01): stock widget code reads the GC's data (planeDraw in
+		// Composite.drawBackgroundInPixels and RetainedHook, gdipGraphics and nativeZoom in Control/Shell.print, uiState): this
+		// GC's own, with no GDI+ graphics (0) and no retained plane (-1). The donor answered null (I31 SkiaGC.getGCData)
+		data.device = device;
+		data.style = style;
+		data.nativeZoom = getScaler().getNativeZoom();
+		data.alpha = alpha;
+		return data;
 	}
 
 	@Override
