@@ -264,11 +264,13 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void drawLine(int x1, int y1, int x2, int y2) {
 		final float scaledOffsetValue = RectangleConverter.getScaledOffsetValue(getScaler(), lineWidth);
-
+		// leaf 6 (LINE_ENDS, pattern M3-GC-LINE-ENDS v1, leaf 7 finding L7-32): an axis-aligned line is offset across its direction
+		// only, so a one-pixel line covers x1 .. x2 - 1 like the stock line (ViewForm's separator); the donor offset both axes and
+		// the start pixel was lost. Diagonals keep the donor's offset (the adopted drawLine tests pin it)
+		final float ox = y1 == y2 && x1 != x2 ? 0 : scaledOffsetValue, oy = x1 == x2 && y1 != y2 ? 0 : scaledOffsetValue;
 		final var scaler = this.dpiScalerUtil;
-		paintManager.performDraw(paint -> surface.getCanvas().drawLine(scaler.autoScaleUp(x1) + scaledOffsetValue,
-				scaler.autoScaleUp(y1) + scaledOffsetValue, scaler.autoScaleUp(x2) + scaledOffsetValue,
-				scaler.autoScaleUp(y2) + scaledOffsetValue, paint));
+		paintManager.performDraw(paint -> surface.getCanvas().drawLine(scaler.autoScaleUp(x1) + ox, scaler.autoScaleUp(y1) + oy,
+				scaler.autoScaleUp(x2) + ox, scaler.autoScaleUp(y2) + oy, paint));
 	}
 
 	@Override
@@ -500,17 +502,22 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public void fillGradientRectangle(int x, int y, int width, int height, boolean vertical) {
-
+		// leaf 6 (GRADIENT_ROWS, pattern M3-GC-GRADIENT v1, leaf 7 findings L7-31, L7-34): a zero extent draws nothing; a negative
+		// extent moves the origin (stock x += width; the donor clamped it to 0: GF47); without advanced graphics the stock GC
+		// uses GDI GradientFill, whose rows are reproduced exactly (gradientRows), else the Skia gradient stands for GDI+'s brush
+		if (width == 0 || height == 0) {
+			return;
+		}
 		boolean swapColors = false;
 		if (width < 0) {
-			x = Math.max(0, x + width);
+			x = x + width;
 			width = -width;
 			if (!vertical) {
 				swapColors = true;
 			}
 		}
 		if (height < 0) {
-			y = Math.max(0, y + height);
+			y = y + height;
 			height = -height;
 			if (vertical) {
 				swapColors = true;
@@ -532,9 +539,37 @@ public class M3ExternalGC implements IExternalGC {
 			toColor = tempColor;
 		}
 
+		if (!advanced) {
+			gradientRows(rect, vertical, fromColor, toColor);
+			return;
+		}
 		final var s = getScaler();
 		performDrawGradientFilled(paint -> surface.getCanvas().drawRect(rect, paint), s.autoScaleUp(x),
 				s.autoScaleUp(y), s.autoScaleUp(x2), s.autoScaleUp(y2), fromColor, toColor);
+	}
+
+	/* leaf 6: GDI GradientFill's rows in pixels: row i of n = from + (to - from) * i / n per 16-bit channel, aliased, opaque */
+	private void gradientRows(Rect rect, boolean vertical, int from, int to) {
+		final int left = Math.round(rect.getLeft()), top = Math.round(rect.getTop());
+		final int right = Math.round(rect.getRight()), bottom = Math.round(rect.getBottom());
+		final int n = vertical ? bottom - top : right - left;
+		paintManager.performDrawFilled(paint -> {
+			paint.setShader(null);
+			paint.setAntiAlias(false);
+			IntStream.range(0, n).forEach(i -> {
+				paint.setColor(gradientColor(from, to, i, n));
+				surface.getCanvas().drawRect(vertical ? Rect.makeLTRB(left, top + i, right, top + i + 1)
+						: Rect.makeLTRB(left + i, top, left + i + 1, bottom), paint);
+			});
+		});
+	}
+
+	/* leaf 6: one GradientFill row colour: ((a * 257) + (b - a) * 257 * i / n) >> 8 per channel (measured: 0 mismatches) */
+	static int gradientColor(int from, int to, int i, int n) {
+		return 0xFF000000 | IntStream.of(16, 8, 0).map(s -> {
+			final int a = (from >> s) & 0xFF, b = (to >> s) & 0xFF;
+			return (((a * 257) + (b - a) * 257 * i / n) >> 8) << s;
+		}).reduce(0, (p, q) -> p | q);
 	}
 
 	private void performDrawGradientFilled(Consumer<Paint> operations, int x, int y, int x2, int y2, int fromColor,

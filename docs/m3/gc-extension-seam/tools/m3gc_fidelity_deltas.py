@@ -216,6 +216,46 @@ DELTAS = [
      "GC_STATE_RESET (M3-GC-RESET v1), GF05, GF49; stock W32G/GC.java getAdvanced (data.gdipGraphics != 0), SetAdvancedOperation "
      "(alpha, patterns, transform, clip reset) and a new stock GC per owner-draw event; I31 SkiaGC.setAdvanced is a no-op "
      "(same defect); GF49 is M3 only (reuse added in leaf 3)", False, 0),
+    ("L6-25", TESTS + "Test_org_eclipse_swt_m3gc_drawText_NoCache.java", "System.setProperty(M3TextDrawing.NO_TEXT_CACHE, "
+     "\"true\") never cleared",
+     "@AfterAll clearNoCacheProperty: System.clearProperty(M3TextDrawing.NO_TEXT_CACHE) (Read + python replace)",
+     "Test_org_eclipse_swt_m3gc_CompositeParity.testTransparentTextIsNotDrawnAsBlocks passed in the suite (text ran uncached "
+     "after drawText_NoCache) and failed alone in H:/m3-scratch/gc-leaf6/exp/TextSmear.java (158 pure black pixels vs 12)",
+     "PRE_EXISTING P04 fixed (the leaf-2 proposal): in suite order every text test after drawText_NoCache ran uncached and hid "
+     "the cache's defects (the raster glyph blocks of L7-35); the suite still passes with the cache on", False, 0),
+    ("L6-26", GC + "M3Resources.java", "TEXT_METRICS v1: textExtent = widest Skia line rounded up x line count x Skia line "
+     "height; stringExtent = Skia width",
+     "TEXT_METRICS v2: M3GdiText (new): the stock GC's GDI measurement (DrawText DT_CALCRECT with the flag mapping, "
+     "GetTextExtentPoint32, a space's height for \"\") on a memory DC with SWTFontProvider.getFontHandle(font, zoom); "
+     "Test_org_eclipse_swt_m3gc_TextMetrics.testWidthRoundsUp (v1) replaced by testExtentIsTheStockGcs",
+     "leaf 7 probe (L7-35): gpu CTabFolder 'Tab 2' shortened to 'Tab...' (strip ink 264 vs 165); H:/m3-scratch/gc-leaf6/exp/"
+     "parity.txt: Segoe UI 9 pt 'Tab 2' stock 28 vs Skija 29.20 for every hinting/subpixel setting; CompositeParity."
+     "testTextExtentsAreTheStockGcs: expected {28, 15} but was {30, 17}",
+     "correction of my own TEXT_METRICS v1 (L6-16): a Skia measurement disagrees with the stock GCs widgets lay out with outside "
+     "paint (GF50); REUSE_DIRECT of stock GC.textExtentInPixels/stringExtentInPixels; M3TextDrawing still draws Skia glyphs "
+     "(a line can be 1-2 px wider than measured; its line advance is Skia's: next leaf)", False, 0),
+    ("L6-27", GC + "M3TextDrawing.java", "transparent text drawn on the transparent support surface and cached",
+     "drawTextBlobWithCache: transparent text goes to drawTextBlobNoCache (drawn on the destination) (python replace)",
+     "CompositeParity.testTransparentTextIsNotDrawnAsBlocks: 158 pure black pixels transparent vs 12 opaque; leaf 7 probe m3 "
+     "CTabFolder strip ink 425 vs 165 (H:/m3-scratch/gc-leaf6/exp/smear.png)",
+     "leaf 7 finding L7-35 (raster): subpixel (LCD) coverage on a transparent raster layer is written with an opaque alpha, so "
+     "the cached glyphs were solid black blocks; drawn on the opaque back buffer LCD text composites as ClearType does; GPU "
+     "targets were unaffected (Skia drops LCD there)", False, 0),
+    ("L6-28", GC + "M3ExternalGC.java", "fillGradientRectangle: Skia linear gradient always; negative extents clamped to 0",
+     "zero extent returns; negative extent moves the origin; without advanced graphics gradientRows: GDI GradientFill rows "
+     "exactly (((a * 257) + (b - a) * 257 * i / n) >> 8 per channel), aliased; advanced keeps the Skia gradient (GDI+ brush) "
+     "(python replace)",
+     "H:/m3-scratch/gc-leaf6/exp/parity.txt: the 16-bit formula 0 mismatches on 3 GDI gradients (i/h round 12..78, "
+     "(i+.5)/h 42..294); CompositeParity.testGradientRowsAreGradientFills: row 0 expected 0054e3 but was 0658e3",
+     "GRADIENT_ROWS (M3-GC-GRADIENT v1), leaf 7 findings L7-31 (CBanner tail row) and L7-34 (CustomButton 1-2 levels), GF47 "
+     "(negative extents); stock W32G/GC.java fillGradientRectangleInPixels (GradientFill without GDI+); a decreasing channel "
+     "uses Java's truncating division (unmeasured against GDI)", False, 0),
+    ("L6-29", GC + "M3ExternalGC.java", "drawLine offset both ends by the half pixel on both axes",
+     "an axis-aligned line is offset across its direction only (horizontal: y, vertical: x); diagonals unchanged (python replace)",
+     "CompositeParity.testHorizontalLineCoversStartToEndMinusOne: start pixel (3, 19) white; leaf 7 probe ViewForm flat "
+     "mismatch 1 at (3, 19)",
+     "LINE_ENDS (M3-GC-LINE-ENDS v1), leaf 7 finding L7-32: Skia's aliased scan rounds the start edge at x1 + 0.5 up, so the "
+     "first pixel was lost; GDI covers x1 .. x2 - 1; the adopted drawLine tests (diagonals) keep their pinned offsets", False, 0),
 ]
 
 

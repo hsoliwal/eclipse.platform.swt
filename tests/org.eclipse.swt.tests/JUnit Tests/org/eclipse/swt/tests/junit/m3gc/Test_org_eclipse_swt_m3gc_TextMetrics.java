@@ -21,7 +21,10 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
 import org.eclipse.swt.internal.render.m3.gc.M3Resources;
 import org.eclipse.swt.widgets.Display;
@@ -107,11 +110,14 @@ public class Test_org_eclipse_swt_m3gc_TextMetrics {
 	}
 
 	@Test
-	public void testWidthRoundsUp() {
-		M3ExternalGC gc = realGc(100);
-		M3Resources resources = new M3Resources(null, new M3GcFixture(100).ext);
-		resources.setFont(font);
-		float exact = resources.getM3Font().measureTextWidth("Wil");
-		assertEquals((int) Math.ceil(exact), gc.textExtent("Wil", SWT.NONE).x, "ceil of " + exact + " (stock DT_CALCRECT covers the text)");
+	public void testExtentIsTheStockGcs() {
+		// v2 (L6-26): the stock GC is the measure, not ceil(Skia width): 'Wil' in Arial 12 is 22.21 Skia pixels and 22 GDI pixels
+		M3ExternalGC gc = realGc(DPIUtil.getDeviceZoom());
+		Image image = new Image(Display.getDefault(), 4, 4);
+		GC stock = new GC(image);
+		stock.setFont(font);
+		assertEquals(stock.textExtent("Wil", SWT.NONE), gc.textExtent("Wil", SWT.NONE), "DrawText DT_CALCRECT, as stock");
+		stock.dispose();
+		image.dispose();
 	}
 }

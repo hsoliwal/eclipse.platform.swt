@@ -115,6 +115,13 @@ public class M3TextDrawing {
 	}
 
 	private static void drawTextBlobWithCache(M3ExternalGC gc, String[] splits, int flags, int xIn, int yIn) {
+		// M3 (GC seam, leaf 6; TEXT_DRAW_FLAGS, leaf 7 finding L7-35): transparent text is drawn on the destination, not cached: on
+		// the transparent support surface the subpixel (LCD) glyph coverage went into an opaque alpha, so a raster back buffer got
+		// solid black glyph blocks (CTabFolder's tab text); on the opaque destination LCD text composites as ClearType does
+		if (isTransparent(flags)) {
+			drawTextBlobNoCache(gc, splits, flags, xIn, yIn);
+			return;
+		}
 
 		final var paintManager = gc.getPaintManager();
 		final var resources = gc.getM3Resources();
