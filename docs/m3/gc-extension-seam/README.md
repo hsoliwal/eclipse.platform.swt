@@ -483,7 +483,7 @@ Nebula's self-painting composites kept the stock GDI path in `m3`/`gpu`.
 
 - `m3gc_composite_deltas.py <worktree> [--ledger]`: every owner edit as an exact byte-preserving replacement through leaf 5's engine
   (`apply_one`, imported from `m3gc_coverage_deltas.py`, not copied), idempotent (a replay prints DONE for every delta); RECIPE_MEMORY rows
-  L7-01..L7-23 and L7-33 (deltas) and the record-only rows of `m3gc_composite_rows.tsv` (L7-24..L7-32, L7-34..L7-36: decisions,
+  L7-01..L7-23 and L7-33 (deltas) and the record-only rows of `m3gc_composite_rows.tsv` (L7-24..L7-32, L7-34..L7-37: decisions,
   corrections, findings); with `--ledger`
   the `FOSS_REUSE_DECISION.tsv` rows `m3-gc-composite-coverage:*`.
 - `m3gc_composite_inventory.sh [worktree] [nebula-root] [census_m3.tsv]` writes `COVERAGE.tsv`: leaf 5's script is run and its rows kept,
