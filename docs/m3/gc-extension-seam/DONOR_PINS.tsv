@@ -1,0 +1,53 @@
+commit	status	path	blob_sha	additions	deletions
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT Custom Widgets/common/org/eclipse/swt/custom/CLabel.java	b0c3e753604c53272da0df4d0702b2c7d0904f79	1	1
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT OpenGL/cocoa/org/eclipse/swt/opengl/GLPaintEventInvoker.java	4cb05d079fdf7cd2f9b463b517f1df2fc7d63744	28	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT OpenGL/gtk/org/eclipse/swt/opengl/GLCanvasExtension.java	e5547f5ac8dab503f824d11b1174e9121e4809ba	296	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT OpenGL/gtk/org/eclipse/swt/opengl/GLPaintEventInvoker.java	5a61ea68929d9bbed81419144e902e2734d2890a	47	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT OpenGL/win32/org/eclipse/swt/opengl/GLCanvasExtension.java	3a5a0898307ef585b6d58308e821fa19094ea983	206	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT OpenGL/win32/org/eclipse/swt/opengl/GLPaintEventInvoker.java	ad42451d7af664e5d7f43c8c0d6120e8583e497c	62	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/cairo/org/eclipse/swt/graphics/Pattern.java	51a1578595f5374a8d73006c6720e8e894f109b5	8	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/graphics/FontMetrics.java	f15f39c1894954938f0ba5287d77f82f810e5ccc	1	1
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	efeeef192f4f55ce0a805ad0ab4dc5fbbf6981c0	1	1
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/graphics/Pattern.java	07336537ef8cdc100a17378b295910b27ea5824c	4	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/graphics/Region.java	320d396142b0294920156b70f32f42d90f055df4	4	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/internal/canvasext/DpiScaler.java	380cac9bbec1ae90b15d4c5b8a23aa4d73ff4594	21	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/internal/canvasext/FontProperties.java	2162e126810f2a8f67a324bdda394684f535399d	25	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWT.java	f95fb1a72be7cc64d725bd8738a14e1f2fa3583d	14	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/FontMetricsExtension.java	89f9306f7ff4993c2c7ae79b42272d9fa45b9d69	61	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/GCExtension.java	c971b7cae07879d107277e6ff9a3f0f1e31c0eb2	534	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/PatternProperties.java	287a9b9848b9938f350bee35834d03f0b90c549b	95	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/RegionLog.java	0711e50f2a8e1286647edfe59b70c5da0456ceff	49	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/canvasext/ExternalCanvasHandler.java	abf5992c5fc75ae50c2c0bfcdbefb7c673d276dc	154	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/canvasext/IDpiScaler.java	d37660ca409ca551eaf94e8fadded4089445d606	6	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/canvasext/IExternalCanvasFactory.java	b9e71b0f5efb4a4db8bc442d9980ae8a4d1d002c	25	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/canvasext/IExternalCanvasHandler.java	502b2abda6c6a58c0c39141c983283c5c2f0fbc0	30	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/canvasext/IExternalFontMetrics.java	13431316131ecff60bc5ce96b1a5105807fd2cb9	30	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/canvasext/IExternalGC.java	7b88a35f9a9fdfd0ae477b3b946cb9168a8e2509	197	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/graphics/FontMetrics.java	1fb0fc941080bb6bdea414b39166cdc9dfe481e9	1	1
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/graphics/FontProperties.java	63bc5a0a47133de224a303293420cfeac1d3b220	57	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	57024b7d398087344dc7d9da662cf3d96493c427	1	1
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/graphics/Region.java	b34e96c059caf2f710794b228f1421ecbcd6b8c2	19	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/graphics/TextLayout.java	310d44d8ade0e77ae7cef32338c61bcb7cc9632a	6	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/internal/canvasext/DpiScaler.java	fbe5cffa8fdb12675eaeecb95817e8b64f278a66	20	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/internal/canvasext/FontProperties.java	e1f1d19942a18c519c00b59d1a9680cfa3701caa	74	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/widgets/Canvas.java	2500554d1b563bef7e8e1a3218ea75f85f1c1526	34	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	01cfe312799a2058d65313c345d00a2c8de3fd08	1	1
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/graphics/GC.java	7c9a01f2728118605ed4b28ad4bf32cdb0885b11	2	1
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/graphics/Pattern.java	e8893f2058cbafd035a339a714415fb2541125dd	9	1
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/graphics/Region.java	f224cf16f5f5bb90b2243a09861087488f2eff5b	23	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/graphics/TextLayout.java	9dd2aa790c08dcfea3988a7821700be4f2b0afea	10	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/internal/canvasext/DpiScaler.java	7681a9d2913368a5e521b8e3a22c8c87944046ad	36	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	added	bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/internal/canvasext/FontProperties.java	962ed91d1c21aee18f6bf4059cdf509d99084130	151	0
+a5af63895d0a7fa797a45d236ff7d0163f38e65b	modified	bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/Canvas.java	09397611df47505b59d07f17dc736c74984ceea0	51	0
+1b959eac89d8f4bfbf720b05d04f8c2bb7a0c0c6	modified	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWT.java	9e5b4e68a5854b918850ee5033ae381ef4f3a281	1	1
+d4f863a06d647292478c39cad87063c33fa2ca9c	added	bundles/org.eclipse.swt/Eclipse SWT OpenGL/cocoa/org/eclipse/swt/opengl/GLCanvasExtension.java	e25e999a52e77ab99afcdfa9ae6c8f9ce4278393	8	0
+d4f863a06d647292478c39cad87063c33fa2ca9c	modified	bundles/org.eclipse.swt/Eclipse SWT OpenGL/cocoa/org/eclipse/swt/opengl/GLPaintEventInvoker.java	8305fa9568ff7518f4b293eedda53450d8ba1996	11	1
+d4f863a06d647292478c39cad87063c33fa2ca9c	modified	bundles/org.eclipse.swt/Eclipse SWT OpenGL/gtk/org/eclipse/swt/opengl/GLCanvasExtension.java	55d47018546ce7e0a452afd8e09af57883f3d199	0	7
+d4f863a06d647292478c39cad87063c33fa2ca9c	modified	bundles/org.eclipse.swt/Eclipse SWT OpenGL/gtk/org/eclipse/swt/opengl/GLPaintEventInvoker.java	dede81e424a3ada4fee1b891fdc55eaf0cb8de08	0	3
+d4f863a06d647292478c39cad87063c33fa2ca9c	modified	bundles/org.eclipse.swt/Eclipse SWT OpenGL/win32/org/eclipse/swt/opengl/GLCanvasExtension.java	cefa1ebcffa394c4a528a9308471ed48e4411944	0	9
+d4f863a06d647292478c39cad87063c33fa2ca9c	modified	bundles/org.eclipse.swt/Eclipse SWT OpenGL/win32/org/eclipse/swt/opengl/GLPaintEventInvoker.java	6bd1eac333151297cfb8bbdce470dd6430a60242	5	9
+d4f863a06d647292478c39cad87063c33fa2ca9c	modified	bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/internal/canvasext/DpiScaler.java	ca133fb6a37c8ceb0eed2f0749f549b7f2d70d71	1	1
+d4f863a06d647292478c39cad87063c33fa2ca9c	modified	bundles/org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/internal/canvasext/FontProperties.java	e6902b58ea6ee7db3f6a10d501b357fe10c0dee5	4	1
+d4f863a06d647292478c39cad87063c33fa2ca9c	modified	bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/graphics/FontProperties.java	7486d1eee9f6334df6701c42ed684c7a118f718c	16	4
+d4f863a06d647292478c39cad87063c33fa2ca9c	modified	bundles/org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/internal/canvasext/FontProperties.java	41c103ab7437f0667d7d2aebbd430b6c80db472e	19	2
+2c46f3d030282ecbcafa4a4dae9cf3385eb92c05	modified	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/SWT.java	1cfd479152f2646436d4e31ddd93e1fb79dafbfd	1	1

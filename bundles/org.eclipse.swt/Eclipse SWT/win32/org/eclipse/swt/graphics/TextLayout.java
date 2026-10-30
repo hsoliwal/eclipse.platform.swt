@@ -738,6 +738,9 @@ long createGdipBrush(Color color, int alpha) {
 public void draw (GC gc, int x, int y) {
 	checkLayout();
 	drawInPixels(gc, x, y);
+
+
+
 }
 
 /**
@@ -820,6 +823,12 @@ void drawInPixels (GC gc, int xInPoints, int yInPoints) {
 }
 
 void drawInPixels (GC gc, int xInPoints, int yInPoints, int selectionStart, int selectionEnd, Color selectionForeground, Color selectionBackground, int flags) {
+
+	if(gc instanceof GCExtension gcext) {
+		gcext.textLayoutDraw(this, gc,  xInPoints,  yInPoints,  selectionStart,  selectionEnd,  selectionForeground,  selectionBackground,  flags);
+		return;
+	}
+
 	if (gc != null && !gc.isDisposed() && gc.data.planeDraw != -1) {
 		/* Retained planes: skipped plane, or record shaped glyph runs for GPU replay */
 		if ((gc.data.plane & gc.data.planeDraw) == 0) return;

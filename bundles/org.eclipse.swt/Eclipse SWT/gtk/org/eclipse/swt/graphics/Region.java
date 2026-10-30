@@ -46,6 +46,8 @@ public final class Region extends Resource {
 	 */
 	public long handle;
 
+	private final RegionLog log = new RegionLog();
+
 /**
  * Constructs a new empty region.
  * <p>
@@ -93,6 +95,14 @@ public Region(Device device) {
 Region(Device device, long handle) {
 	super(device);
 	this.handle = handle;
+}
+
+/**
+* @noreference This method is not intended to be referenced by clients.
+* @return a log characterizing the region
+*/
+public RegionLog getLog() {
+	return log;
 }
 
 static long gdk_region_polygon(int[] pointArray, int npoints, int fill_rule) {
@@ -175,6 +185,7 @@ public void add (int[] pointArray) {
     if (pointArray == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.add(pointArray);
     /*
     * Bug in GTK. If gdk_region_polygon() is called with one point,
     * it segment faults. The fix is to make sure that it is called
@@ -209,6 +220,7 @@ public void add(Rectangle rect) {
     if (rect == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.add(rect);
 	add (rect.x, rect.y, rect.width, rect.height);
 }
 
@@ -237,6 +249,7 @@ public void add(int x, int y, int width, int height) {
     if (width < 0 || height < 0) {
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	log.add(new Rectangle(x, y, width, height));
 	cairo_rectangle_int_t rect = new cairo_rectangle_int_t();
 	rect.x = x;
 	rect.y = y;
@@ -270,6 +283,7 @@ public void add(Region region) {
     if (region.isDisposed()) {
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	log.add(region);
 	Cairo.cairo_region_union(handle, region.handle);
 }
 
@@ -419,6 +433,7 @@ public void intersect(Rectangle rect) {
     if (rect == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.intersect(rect);
 	intersect (rect.x, rect.y, rect.width, rect.height);
 }
 
@@ -447,6 +462,7 @@ public void intersect(int x, int y, int width, int height) {
     if (width < 0 || height < 0) {
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	log.intersect(new Rectangle(x, y, width, height));
 	cairo_rectangle_int_t rect = new cairo_rectangle_int_t();
 	rect.x = x;
 	rect.y = y;
@@ -484,6 +500,7 @@ public void intersect(Region region) {
     if (region.isDisposed()) {
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	log.intersect(region);
 	Cairo.cairo_region_intersect(handle, region.handle);
 }
 
@@ -594,6 +611,7 @@ public void subtract (int[] pointArray) {
     if (pointArray == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.subtract(pointArray);
     /*
     * Bug in GTK. If gdk_region_polygon() is called with one point,
     * it segment faults. The fix is to make sure that it is called
@@ -629,6 +647,7 @@ public void subtract(Rectangle rect) {
     if (rect == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.subtract(rect);
 	subtract (rect.x, rect.y, rect.width, rect.height);
 }
 
@@ -657,6 +676,7 @@ public void subtract(int x, int y, int width, int height) {
     if (width < 0 || height < 0) {
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	log.subtract(new Rectangle(x, y, width, height));
 	cairo_rectangle_int_t rect = new cairo_rectangle_int_t ();
 	rect.x = x;
 	rect.y = y;
@@ -694,6 +714,7 @@ public void subtract(Region region) {
     if (region.isDisposed()) {
         SWT.error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	log.subtract(region);
 	Cairo.cairo_region_subtract(handle, region.handle);
 }
 
@@ -714,6 +735,7 @@ public void translate (int x, int y) {
     if (isDisposed()) {
         SWT.error(SWT.ERROR_GRAPHIC_DISPOSED);
     }
+	log.translate(new Point(x, y));
 	Cairo.cairo_region_translate (handle, x, y);
 }
 
@@ -739,6 +761,7 @@ public void translate (Point pt) {
     if (pt == null) {
         SWT.error(SWT.ERROR_NULL_ARGUMENT);
     }
+	log.translate(pt);
 	translate(pt.x, pt.y);
 }
 
