@@ -25,6 +25,19 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_m3gc_CanvasCoverage.class, //
 		Test_org_eclipse_swt_m3gc_CanvasDamage.class, //
 		Test_org_eclipse_swt_m3gc_StrokeState.class, //
+		Test_org_eclipse_swt_m3gc_HintState.class, //
+		Test_org_eclipse_swt_m3gc_StrokeScale.class, //
+		Test_org_eclipse_swt_m3gc_ClipState.class, //
+		Test_org_eclipse_swt_m3gc_TransformState.class, //
+		Test_org_eclipse_swt_m3gc_TextMetrics.class, //
+		Test_org_eclipse_swt_m3gc_TextDrawFlags.class, //
+		Test_org_eclipse_swt_m3gc_ScaleRounding.class, //
+		Test_org_eclipse_swt_m3gc_GcContract.class, //
+		Test_org_eclipse_swt_m3gc_ArgContract.class, //
+		Test_org_eclipse_swt_m3gc_PathHitTest.class, //
+		Test_org_eclipse_swt_m3gc_PixelCopy.class, //
+		Test_org_eclipse_swt_m3gc_GcStateReset.class, //
+		Test_org_eclipse_swt_m3gc_CompositeParity.class, //
 
 })
 public class AllM3GcTests {

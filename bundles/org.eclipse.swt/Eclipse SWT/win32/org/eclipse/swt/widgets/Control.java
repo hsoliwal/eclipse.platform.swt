@@ -2433,6 +2433,7 @@ public boolean print (GC gc) {
     if (gc.isDisposed()) {
         error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	if (gc instanceof GCExtension) return printThroughGC (gc);
 	VisibilityCatchUp.flushGeometry (this, true);
 	long topHandle = topHandle ();
 	long hdc = gc.handle;
@@ -2493,6 +2494,34 @@ public boolean print (GC gc) {
 		Gdip.Graphics_ReleaseHDC(gdipGraphics, hdc);
 	}
 	return true;
+}
+
+/*
+ * M3 (GC seam, leaf 6; ARG_CONTRACT, pattern M3-GC-CONTRACT v1, census GF01): a GCExtension (the Paint GC of an M3 canvas) has
+ * no device context and no GDI+ graphics to print into, so the control prints into an image through a stock GC, which is
+ * then drawn through the GC at the origin (the transform and clip of the GC apply, as they do to a printed DC).
+ */
+boolean printThroughGC (GC gc) {
+	Rectangle size = getBounds ();
+	if (size.width <= 0 || size.height <= 0) return true;
+	Image image = new Image (display, size.width, size.height);
+	try {
+		boolean printed = printInto (image);
+		if (printed) gc.drawImage (image, 0, 0);
+		return printed;
+	} finally {
+		image.dispose ();
+	}
+}
+
+/* leaf 6: print through a stock GC on the image */
+boolean printInto (Image image) {
+	GC imageGC = new GC (image);
+	try {
+		return print (imageGC);
+	} finally {
+		imageGC.dispose ();
+	}
 }
 
 void printWidget (long hwnd, long hdc, GC gc, int printWindowFlags) {
