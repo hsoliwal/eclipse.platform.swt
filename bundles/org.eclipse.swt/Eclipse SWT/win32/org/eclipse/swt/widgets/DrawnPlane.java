@@ -47,8 +47,6 @@ abstract class DrawnPlane {
 	private int themeGeneration;
 	/* the frame log of the interaction model (IM1): frame times, input-to-pixel latency, snapshot generations */
 	final FrameLog frames = new FrameLog ();
-	/* -Dswt.drawn.overlay=true paints the frame log's numbers over the rows */
-	static final boolean OVERLAY = Boolean.getBoolean ("swt.drawn.overlay");
 	private final StringBuilder overlayText = new StringBuilder (96);
 	private final Runnable themeChanged;
 	final RowPaint row = new RowPaint ();
@@ -149,7 +147,7 @@ abstract class DrawnPlane {
 			});
 		};
 		Themes.addListener (themeChanged);
-		if (OVERLAY) display.timerExec (500, new Runnable () {
+		if (M3Features.isOn (control, M3Features.FRAME_OVERLAY)) display.timerExec (500, new Runnable () {
 			@Override
 			public void run () {
 				if (control.isDisposed ()) return;
@@ -270,14 +268,14 @@ abstract class DrawnPlane {
 		 * With a render thread this path serves captures (WM_PRINTCLIENT) and owner-drawn frames only: its slots are not kept
 		 * up, so it draws every row; a listener's drawing is never kept either (it may draw anything, from state no key holds)
 		 */
-		boolean retain = renderTarget == null && !OVERLAY && !owner && theme.rowPainter == null && theme.cellPainter == null;
+		boolean retain = renderTarget == null && !M3Features.isOn (control, M3Features.FRAME_OVERLAY) && !owner && theme.rowPainter == null && theme.cellPainter == null;
 		canvas.target (buffer);
 		canvas.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		if (owner) ownerDraw.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		retainedRows.begin (canvas, renderer, buffer, damage.left, damage.top, damage.right, damage.bottom, client.right, rowsTop, retain);
 		try {
 			drawRows (hwnd);
-			if (OVERLAY) overlay ();
+			if (M3Features.isOn (control, M3Features.FRAME_OVERLAY)) overlay ();
 		} finally {
 			if (owner) ownerDraw.end ();
 			canvas.end ();
@@ -295,7 +293,7 @@ abstract class DrawnPlane {
 	}
 
 	/*
-	 * -Dswt.drawn.overlay=true: the frame time (last, p99) and the input-to-pixel latency p99 in the bottom right corner of
+	 * -Dswt.widget.feature.frame-overlay=true (M3Features.FRAME_OVERLAY; -Dswt.drawn.overlay=true is its alias): the frame time (last, p99) and the input-to-pixel latency p99 in the bottom right corner of
 	 * the client area (a header covers the top), repainted twice a second. A debugging aid: building its text allocates.
 	 */
 	private void overlay () {

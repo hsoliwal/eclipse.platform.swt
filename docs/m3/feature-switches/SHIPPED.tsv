@@ -1,0 +1,2 @@
+feature_id	owner_file	seam	since
+frame-overlay	bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/DrawnPlane.java	M3Features.isOn (control, M3Features.FRAME_OVERLAY) at the overlay timer, the retain decision and the overlay paint	m3/feature-switches-20261030
