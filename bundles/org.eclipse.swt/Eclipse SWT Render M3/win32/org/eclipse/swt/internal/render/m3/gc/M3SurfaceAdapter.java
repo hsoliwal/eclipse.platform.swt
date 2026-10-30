@@ -1,12 +1,13 @@
 package org.eclipse.swt.internal.render.m3.gc;
 
+import io.github.humbleui.skija.Image;
 import io.github.humbleui.skija.Surface;
 import io.github.humbleui.types.IRect;
 
 /**
  * Adapter to wrap Skija's Surface as IM3Surface.
  */
-class M3SurfaceAdapter implements IM3Surface {
+public class M3SurfaceAdapter implements IM3Surface {
 	private final Surface delegate;
 
 	public M3SurfaceAdapter(Surface surface) {
@@ -41,7 +42,10 @@ class M3SurfaceAdapter implements IM3Surface {
 
 	@Override
 	public IM3Image makeImageSnapshot(IRect rect) {
-		return new M3ImageAdapter(delegate.makeImageSnapshot(rect));
+		// M3 (GC seam, leaf 6; PIXEL_COPY, census GF20): Skija answers null for a rectangle outside the surface; so does the adapter
+		// (the donor wrapped the null, so copyArea's null check was dead and drawImage threw)
+		final Image image = delegate.makeImageSnapshot(rect);
+		return image == null ? null : new M3ImageAdapter(image);
 	}
 
 	@Override

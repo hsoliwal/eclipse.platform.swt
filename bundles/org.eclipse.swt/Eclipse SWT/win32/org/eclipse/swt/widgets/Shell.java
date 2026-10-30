@@ -1486,6 +1486,8 @@ public boolean print (GC gc) {
     if (gc.isDisposed()) {
         error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	/* M3 (GC seam, leaf 6; ARG_CONTRACT, census GF01): a GCExtension has no HDC or GDI+ graphics: printed through an image */
+	if (gc instanceof GCExtension) return printThroughGC (gc);
 	// Print only the client area (children) without shell decorations
 	forceResize ();
 	Control [] children = _getChildren ();

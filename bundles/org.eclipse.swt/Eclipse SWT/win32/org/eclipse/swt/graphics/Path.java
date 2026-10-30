@@ -574,6 +574,7 @@ private static class PathHandle {
 	}
 
 	private boolean containsInPixels(float x, float y, GC gc, boolean outline) {
+		if (gc instanceof GCExtension) return containsThroughGC(x, y, gc, outline);
 		//TODO - should use GC transformation
 		gc.initGdip();
 		gc.checkGC(GC.LINE_CAP | GC.LINE_JOIN | GC.LINE_STYLE | GC.LINE_WIDTH);
@@ -583,6 +584,27 @@ private static class PathHandle {
 			return Gdip.GraphicsPath_IsOutlineVisible(handle, x, y, gc.data.gdipPen, gc.data.gdipGraphics);
 		} else {
 			return Gdip.GraphicsPath_IsVisible(handle, x, y, gc.data.gdipGraphics);
+		}
+	}
+
+	/*
+	 * M3 (GC seam, leaf 6; PATH_HIT_TEST, pattern M3-GC-PATH-HIT v1, census GF51): a GCExtension has no HDC and no GDI+ graphics
+	 * (initGdip threw on its null data); the test runs on the path alone (a null Graphics: path coordinates; the stock TODO
+	 * above already ignores the GC transform) with the GC's fill rule and, for an outline, a pen of its width, cap and join
+	 */
+	private boolean containsThroughGC(float x, float y, GC gc, boolean outline) {
+		Gdip.GraphicsPath_SetFillMode(handle, gc.getFillRule() == SWT.FILL_WINDING ? Gdip.FillModeWinding : Gdip.FillModeAlternate);
+		if (!outline) return Gdip.GraphicsPath_IsVisible(handle, x, y, 0);
+		long brush = Gdip.SolidBrush_new(0xFF000000);
+		long pen = Gdip.Pen_new(brush, Math.max(1, Win32DPIUtils.pointToPixel(device, (float) gc.getLineWidth(), zoom)));
+		try {
+			int cap = gc.getLineCap() == SWT.CAP_ROUND ? Gdip.LineCapRound : gc.getLineCap() == SWT.CAP_SQUARE ? Gdip.LineCapSquare : Gdip.LineCapFlat;
+			Gdip.Pen_SetLineCap(pen, cap, cap, 0);
+			Gdip.Pen_SetLineJoin(pen, gc.getLineJoin() == SWT.JOIN_ROUND ? Gdip.LineJoinRound : gc.getLineJoin() == SWT.JOIN_BEVEL ? Gdip.LineJoinBevel : Gdip.LineJoinMiter);
+			return Gdip.GraphicsPath_IsOutlineVisible(handle, x, y, pen, 0);
+		} finally {
+			Gdip.Pen_delete(pen);
+			Gdip.SolidBrush_delete(brush);
 		}
 	}
 

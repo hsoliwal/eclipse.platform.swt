@@ -15,6 +15,8 @@
 package org.eclipse.swt.widgets;
 
 
+import java.util.stream.*;
+
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.*;
@@ -379,6 +381,10 @@ int applyThemeBackground () {
  */
 public void drawBackground (GC gc, int x, int y, int width, int height, int offsetX, int offsetY) {
 	checkWidget ();
+	if (gc instanceof GCExtension && !gc.isDisposed ()) {
+		drawBackgroundThroughGC (gc, new Rectangle (x, y, width, height), new Point (offsetX, offsetY));
+		return;
+	}
 	int zoom = getAutoscalingZoom();
 	Rectangle rectangle = Win32DPIUtils.pointToPixel(new Rectangle(x, y, width, height), zoom);
 	offsetX = DPIUtil.pointToPixel(offsetX, zoom);
@@ -393,6 +399,12 @@ void drawBackgroundInPixels(GC gc, int x, int y, int width, int height, int offs
     if (gc.isDisposed()) {
         error(SWT.ERROR_INVALID_ARGUMENT);
     }
+	if (gc instanceof GCExtension) {
+		int zoom = getAutoscalingZoom ();
+		Point offset = new Point (DPIUtil.pixelToPoint (offsetX, zoom), DPIUtil.pixelToPoint (offsetY, zoom));
+		drawBackgroundThroughGC (gc, Win32DPIUtils.pixelToPoint (new Rectangle (x, y, width, height), zoom), offset);
+		return;
+	}
 	/* Retained planes: skipped plane, or record the fill for GPU replay instead of drawing on the HDC */
 	GCData data = gc.getGCData ();
 	if (data.planeDraw != -1 && RetainedFrame.divertBackground (this, data, x, y, width, height, background == -1 ? gc.getBackground ().handle : -1)) return;
@@ -401,6 +413,56 @@ void drawBackgroundInPixels(GC gc, int x, int y, int width, int height, int offs
 	long hDC = gc.handle;
 	int pixel = background == -1 ? gc.getBackground ().handle : -1;
 	drawBackground (hDC, rect, pixel, offsetX, offsetY);
+}
+
+/*
+ * M3 (GC seam, leaf 6; ARG_CONTRACT, pattern M3-GC-CONTRACT v1, census GF01): the Paint GC of an M3 canvas (a GCExtension)
+ * has no device context, so the background goes through the GC itself, in points, with the choice drawBackground (hDC, ...)
+ * makes: the background control's image tiled from its client origin moved by the offset, else its colour, else the GC's
+ * background (a theme background falls back to that colour). As FillRect does, the fill ignores the GC's alpha and
+ * background pattern; the GC's state is put back. StyledText fills its line backgrounds and margins this way. Pattern:
+ * leaf 5's measured, reverted patch (RECIPE_MEMORY L5-44, L5-45; StyledText PASS in m3 and gpu). The public point entries
+ * (this drawBackground and Canvas.drawBackground) come here without a round trip through pixels; the area and offset in points.
+ */
+void drawBackgroundThroughGC (GC gc, Rectangle area, Point offset) {
+	int alpha = gc.getAlpha ();
+	Pattern pattern = gc.getBackgroundPattern ();
+	gc.setAlpha (0xFF);
+	gc.setBackgroundPattern (null);
+	try {
+		paintBackgroundThroughGC (gc, area, offset);
+	} finally {
+		gc.setBackgroundPattern (pattern);
+		gc.setAlpha (alpha);
+	}
+}
+
+/* the choice of drawBackground (hDC, rect, pixel, tx, ty), through the GC: image, background control colour, GC background */
+void paintBackgroundThroughGC (GC gc, Rectangle area, Point offset) {
+	Control control = findBackgroundControl ();
+	if (control != null && control.backgroundImage != null) {
+		tileBackgroundThroughGC (gc, control.backgroundImage, display.map (control, this, 0, 0), area, offset);
+		return;
+	}
+	int pixel = control != null ? control.getBackgroundPixel () : background == -1 ? gc.getBackground ().handle : getBackgroundPixel ();
+	Color previous = gc.getBackground ();
+	gc.setBackground (Color.win32_new (display, pixel));
+	gc.fillRectangle (area);
+	gc.setBackground (previous);
+}
+
+/* the image tiled over the area (points), the tiles aligned on the origin moved back by the offset; the GC's clip put back */
+void tileBackgroundThroughGC (GC gc, Image image, Point origin, Rectangle area, Point offset) {
+	Rectangle tile = image.getBounds ();
+	int startX = area.x - Math.floorMod (area.x - origin.x + offset.x, tile.width);
+	int startY = area.y - Math.floorMod (area.y - origin.y + offset.y, tile.height);
+	Region saved = gc.isClipped () ? new Region (display) : null;
+	if (saved != null) gc.getClipping (saved);
+	gc.setClipping (area.intersection (gc.getClipping ()));
+	IntStream.iterate (startY, ty -> ty < area.y + area.height, ty -> ty + tile.height).forEach (ty ->
+		IntStream.iterate (startX, tx -> tx < area.x + area.width, tx -> tx + tile.width).forEach (tx -> gc.drawImage (image, tx, ty)));
+	gc.setClipping (saved);
+	if (saved != null) saved.dispose ();
 }
 
 Composite findDeferredControl () {
