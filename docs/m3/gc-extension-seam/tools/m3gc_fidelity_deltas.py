@@ -41,6 +41,21 @@ DELTAS = [
      "no IllegalArgumentException; DEFAULT sampled Mitchell), 6/6 after",
      "HINT_STATE, GF06; stock W32G/GC.java getAntialias/getTextAntialias/getInterpolation (DEFAULT without GDI+), setTextAntialias "
      "(ERROR_INVALID_ARGUMENT); departs from I31 SkiaGC (fields at :70/:100, getInterpolation at :851)", False, 0),
+    ("L6-04", GC + "M3ExternalGC.java", "setLineAttributes wrote width 1 into the caller's object for width <= 0 and stored "
+     "autoScaleUp(width) (pixels) in lineWidth (points); getLineAttributes divided lineWidth by the zoom",
+     "setLineAttributes keeps the width in points in a local (<= 0 -> 1), the caller's object untouched; getLineAttributes = new "
+     "LineAttributes(lineWidth, cap, join, style, autoScaleDown(lineDashes), dashOffset, miterLimit), getLineAttributesInPixels "
+     "removed (no other caller) (Read + Edit)",
+     "Test_org_eclipse_swt_m3gc_StrokeScale: getLineWidth expected <2> but was <4>; width read back 1.5 for 3; caller width 0 "
+     "became 1.0",
+     "STROKE_SCALE (M3-GC-STROKE v2), GF14; stock W32G/GC.java setLineAttributes (SetLineAttributesOperation copies; point and "
+     "pixel attributes apart), getLineAttributes; same defect in I31 SkiaGC.setLineAttributes (:1028)", False, 0),
+    ("L6-05", GC + "M3PaintManager.java", "LINE_CUSTOM: even arrays x scaled line width, odd arrays doubled x autoScaleUp(1)",
+     "LINE_CUSTOM: PathEffect.makeDash(doubled(lineDashes), phase): absolute pixel lengths, every array doubled (Read + Edit)",
+     "Test_org_eclipse_swt_m3gc_StrokeScale: {4,2} width 3 at 200 % ran [48, 24] instead of [8, 4]; {3} ran 12 instead of 6",
+     "STROKE_SCALE, GF11 = PRE_EXISTING P05 (leaf 5 proposal); stock W32G/GC.java getPen: GDI+ dashes / width with the array "
+     "doubled, GDI PS_USERSTYLE absolute; same in I31 SkiaPaintManager.createPathEffect; the predefined styles keep the "
+     "width-relative tables (GF12, approximated, not in this leaf)", False, 0),
 ]
 
 

@@ -681,16 +681,10 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public LineAttributes getLineAttributes() {
-		final LineAttributes attributes = getLineAttributesInPixels();
-		attributes.width = getScaler().autoScaleDown(attributes.width);
-		if (attributes.dash != null) {
-			attributes.dash = getScaler().autoScaleDown(attributes.dash);
-		}
-		return attributes;
-	}
-
-	LineAttributes getLineAttributesInPixels() {
-		return new LineAttributes(lineWidth, lineCap, lineJoin, lineStyle, lineDashes, dashOffset, miterLimit);
+		// leaf 6 (STROKE_SCALE, pattern M3-GC-STROKE v2, census GF14): every field in points, a fresh object. The line width and the
+		// dash offset are kept in points, the dashes in pixels (the donor divided the point width by the zoom a second time)
+		return new LineAttributes(lineWidth, lineCap, lineJoin, lineStyle, getScaler().autoScaleDown(lineDashes), dashOffset,
+				miterLimit);
 	}
 
 	@Override
@@ -1031,12 +1025,11 @@ public class M3ExternalGC implements IExternalGC {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		}
 
-		if(attributes.width <= 0) {
-			attributes.width = 1;
-		}
-
-		final float scaledWidth = getScaler().autoScaleUp(attributes.width);
-		setLineAttributesInPixels(attributes, scaledWidth);
+		// leaf 6 (STROKE_SCALE, GF14): the width stays in points, the unit of lineWidth everywhere (setLineWidth, getLineWidth,
+		// M3PaintManager scales it once); the caller's object is not written (the stock GC copies it). A width <= 0 strokes 1
+		// point as the donor did (GF13, hairline semantics, not in this leaf)
+		final float width = attributes.width <= 0 ? 1 : attributes.width;
+		setLineAttributesInPixels(attributes, width);
 	}
 
 	private void setLineAttributesInPixels(LineAttributes attributes, float scaledWidth) {
