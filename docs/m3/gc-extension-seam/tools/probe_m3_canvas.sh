@@ -19,11 +19,16 @@ NAT=${M3_NATIVES:-H:/m3-scratch/gc-wiring/natives}
 free=$(powershell -NoProfile -Command "[int]((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1024)")
 [ "${free:-0}" -ge 1536 ] || { echo "MEMORY_GATE free=${free}MB < 1536MB"; exit 2; }
 mkdir -p "$P/classes"
-"$JDK/bin/javac" -J-Xmx512m --release 21 -encoding UTF-8 -nowarn -proc:none -cp "$CP" -d "$P/classes" "$WT/docs/m3/gc-extension-seam/tools/M3CanvasProbe.java" > "$P/javac.log" 2>&1 \
+# Leaf 7: M3_PROBE_CLASS (default M3CanvasProbe) picks the probe and M3_PROBE_TAG its log name; M3_PROBE_SRC adds a source tree
+# (a Nebula widget built from source into the probe's scratch classes only), M3_PROBE_CP a run-time class path entry (its
+# resources), M3_PROBE_AGENT the ui_lock name
+CLASS=${M3_PROBE_CLASS:-M3CanvasProbe}; TAG=${M3_PROBE_TAG:-canvas}
+{ echo "\"$WT/docs/m3/gc-extension-seam/tools/$CLASS.java\""; [ -n "$M3_PROBE_SRC" ] && find "$M3_PROBE_SRC" -name '*.java' -type f | sed 's#.*#"&"#'; } > "$P/src"
+"$JDK/bin/javac" -J-Xmx512m --release 21 -encoding UTF-8 -nowarn -proc:none -cp "$CP" -d "$P/classes" @"$P/src" > "$P/javac.log" 2>&1 \
   || { echo "PROBE_COMPILE_FAILED"; cat "$P/javac.log"; exit 3; }
 case "$MODE" in stock) PROP="" ;; *) PROP="-Dswt.widget.mode=$MODE" ;; esac
-LOG=$P/probe_canvas_$MODE.log; : > "$LOG"
-bash C:/m3-superset/tools/ui_lock.sh claude-gcleaf5 bash C:/m3-superset/tools/hidden_java.sh 180 "$LOG" -Xmx1536m \
-  $PROP -Dm3.probe.out="$(cygpath -m "$W/probes")" -Djava.library.path="$(cygpath -w "$NAT")" -Dswt.library.path="$(cygpath -w "$NAT")" -cp "$CP;$P/classes" M3CanvasProbe
+LOG=$P/probe_${TAG}_$MODE.log; : > "$LOG"
+bash C:/m3-superset/tools/ui_lock.sh "${M3_PROBE_AGENT:-claude-gcleaf5}" bash C:/m3-superset/tools/hidden_java.sh 180 "$LOG" -Xmx1536m \
+  $PROP -Dm3.probe.out="$(cygpath -m "$W/probes")" -Djava.library.path="$(cygpath -w "$NAT")" -Dswt.library.path="$(cygpath -w "$NAT")" -cp "$CP;$P/classes${M3_PROBE_CP:+;$M3_PROBE_CP}" "$CLASS"
 echo "exit=$?" >> "$LOG"
 grep -E 'PROBE|Exception|Error|exit=' "$LOG" | head -40
