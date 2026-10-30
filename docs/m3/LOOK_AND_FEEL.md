@@ -157,3 +157,12 @@ listed with its reason in [`look-and-feel/coverage/COVERAGE.md`](look-and-feel/c
 - A table resolved on a display thread keeps the platform colours of that moment; a later system theme change is
   not followed.
 - Fonts are not part of the table yet.
+
+## Public theme table and runtime switch (M3-THEME-HOOKS, 2026-10-30)
+
+`org.eclipse.swt.m3.M3Theme` (47 packed slots: the web `--vs-*` slots, the SWT system-colour roles, the drawn-plane roles,
+fonts and metrics; built-ins light, dark, high contrast at WCAG AA) and `M3Themes.apply (Display, M3Theme)` sit on top of this
+seam: a theme is registered as the look and feel `m3-<name>` (`M3Theme.toLookAndFeelTable`, LF2 format extending `flat` or
+`flatdark`) and selected with `M3LookAndFeel.setLookAndFeel`, so the drawn planes reinstall only the delegates whose keys change;
+native and custom widgets get the slots as colours in one damage pass. Design, slots, gates:
+[`theme-language/README.md`](theme-language/README.md).
