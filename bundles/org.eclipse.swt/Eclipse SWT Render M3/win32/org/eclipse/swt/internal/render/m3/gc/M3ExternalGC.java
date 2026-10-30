@@ -709,7 +709,8 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public Point stringExtent(String string) {
-		return textExtent(string);
+		// leaf 6 (TEXT_METRICS, GF28): the string as given (stock GetTextExtentPoint32), not textExtent
+		return getScaler().scaleDown(resources.stringExtent(string));
 	}
 
 	@Override
@@ -1208,7 +1209,7 @@ public class M3ExternalGC implements IExternalGC {
 
 		final var font = getM3Font();
 		final var m = font.getMetrics();
-		final var fe = new FontMetricsExtension(new M3ExternalFontMetrics(m, getScaler()));
+		final var fe = new FontMetricsExtension(new M3ExternalFontMetrics(m, font.getSize(), getScaler()));
 		return fe;
 	}
 

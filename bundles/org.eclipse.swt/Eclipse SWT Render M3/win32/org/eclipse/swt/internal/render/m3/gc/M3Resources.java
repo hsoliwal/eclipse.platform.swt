@@ -11,6 +11,7 @@
 package org.eclipse.swt.internal.render.m3.gc;
 
 import java.util.HashMap;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -465,10 +466,24 @@ public class M3Resources implements IM3Resources {
 
 	@Override
 	public Point textExtent(String text, int flags) {
+		// M3 (GC seam, leaf 6; TEXT_METRICS, pattern M3-GC-TEXT-METRICS v1, census GF28): the lines the draw draws for these flags
+		// (getTextSplits: DRAW_DELIMITER lines, DRAW_TAB expansion, DRAW_MNEMONIC prefixes), the widest rounded up, one line
+		// height each. The donor ignored the flags, always removed '&' and truncated
+		final String[] lines = getTextSplits(text, flags);
+		final io.github.humbleui.skija.Font font = getM3Font();
+		final double width = Arrays.stream(lines).mapToDouble(font::measureTextWidth).max().orElse(0);
+		return new Point((int) Math.ceil(width), Math.max(1, lines.length) * lineHeight());
+	}
 
-		final float height = getM3Font().getMetrics().getHeight();
-		final float width = getM3Font().measureTextWidth(replaceMnemonics(text));
-		return new Point((int) width, (int) height);
+	@Override
+	public Point stringExtent(String string) {
+		return new Point((int) Math.ceil(getM3Font().measureTextWidth(string)), lineHeight());
+	}
+
+	/* one line as M3TextDrawing advances it: ceil |ascent| + ceil descent + Skia's line gap, rounded up (the text image height) */
+	private int lineHeight() {
+		final var m = getM3Font().getMetrics();
+		return (int) Math.ceil(Math.ceil(Math.abs(m.getAscent())) + Math.ceil(Math.abs(m.getDescent())) + m.getLeading());
 	}
 
 	@Override

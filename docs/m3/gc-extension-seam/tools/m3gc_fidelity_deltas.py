@@ -121,6 +121,25 @@ DELTAS = [
      "bash: -c: line 152: unexpected EOF while looking for matching `''",
      "correction of my own procedure: the Bash tool breaks long heredoc commands (MEMORY feedback-bash-tool-command-length: "
      "keep commands under ~5 KB, long text via Write)", False, 0),
+    ("L6-15", GC + "M3ExternalFontMetrics.java", "ascent = ceil(|ascent| - line gap) scaled; descent, height = ceil of the "
+     "scaled Skia values; leading = autoScaleDownToInt(height - ascent - descent) (scaled twice)",
+     "ascentPixels = ceil |ascent|, descentPixels = ceil descent, internal leading = ascent + descent - round(em size); "
+     "getAscent = down(ascent - internal), getDescent = down(descent), getHeight = down(ascent + descent), getLeading = "
+     "height - ascent - descent; the em size is a constructor argument (M3ExternalGC passes font.getSize()) (Read + Edit)",
+     "Test_org_eclipse_swt_m3gc_TextMetrics.testAscentExcludesTheInternalLeading: expected <12> but was <14>",
+     "TEXT_METRICS (M3-GC-TEXT-METRICS v1), GF36; stock win32 FontMetrics (tmAscent - tmInternalLeading, tmDescent, tmHeight, "
+     "derived leading); GDI's VDMX-hinted TEXTMETRIC differs by 1-2 px at small sizes (H:/m3-scratch/gc-leaf6/exp/"
+     "fontprobe.tsv), so the M3 values follow M3's own text placement; same defect in I31 SkiaFontMetrics", False, 0),
+    ("L6-16", GC + "M3Resources.java", "textExtent(text, flags) = ((int) measureTextWidth(replaceMnemonics(text)), (int) "
+     "Skia height); stringExtent = textExtent(string)",
+     "textExtent = widest of getTextSplits(text, flags) rounded up x (lines x lineHeight), lineHeight = ceil(ceil |ascent| + "
+     "ceil descent + Skia line gap) as M3TextDrawing advances; stringExtent(string) as given (IM3Resources default for the "
+     "doubles) (Read + Edit)",
+     "Test_org_eclipse_swt_m3gc_TextMetrics: two lines 17 high (expected 34), '&' never measured, tab not expanded, width 22 "
+     "for 22.21: 5/6 failing before, 6/6 after",
+     "TEXT_METRICS, GF28; stock W32G/GC.java textExtent (DT_CALCRECT with DT_SINGLELINE/DT_EXPANDTABS/DT_NOPREFIX per flag) and "
+     "stringExtent (GetTextExtentPoint32); the extent follows M3's draw (its line advance includes Skia's line gap), so an "
+     "extent and the drawn text agree; same defect in I31 SkiaResources.textExtent", False, 0),
 ]
 
 

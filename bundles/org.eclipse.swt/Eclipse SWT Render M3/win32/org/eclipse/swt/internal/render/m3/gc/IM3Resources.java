@@ -16,4 +16,8 @@ public interface IM3Resources {
 	String[] getTextSplits(String inputText, int flags);
 	org.eclipse.swt.graphics.Point textExtent(String text, int flags);
 	org.eclipse.swt.graphics.Point textExtent(String string);
+	/** leaf 6 (TEXT_METRICS): the extent of the string as given, in pixels (stock GetTextExtentPoint32). */
+	default org.eclipse.swt.graphics.Point stringExtent(String string) {
+		return textExtent(string, org.eclipse.swt.SWT.NONE);
+	}
 }
