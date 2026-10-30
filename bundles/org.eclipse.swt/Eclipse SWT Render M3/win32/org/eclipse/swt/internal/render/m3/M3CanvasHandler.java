@@ -26,7 +26,7 @@ import org.eclipse.swt.internal.canvasext.*;
 import org.eclipse.swt.internal.render.*;
 import org.eclipse.swt.internal.render.m3.gc.*;
 import org.eclipse.swt.internal.win32.*;
-import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 
 import io.github.humbleui.skija.ColorAlphaType;
@@ -62,13 +62,20 @@ import io.github.humbleui.skija.SurfaceProps;
  * (<code>SWT.NO_BACKGROUND</code>, <code>SWT.TRANSPARENT</code>) keeps its pixels when the buffer grows, and a new GPU
  * target starts from the buffer's pixels.
  * </p>
+ * <p>
+ * Leaf 7 (pattern COMPOSITE_PAINT_HOOK v1): a <code>Composite</code> that paints itself (CTabFolder, CBanner, ViewForm, an
+ * application's or Nebula's composite with a Paint listener) gets this handler too, made at its first painted
+ * <code>WM_PAINT</code> (<code>Composite.paintThroughM3</code>). Its child controls stay native windows: the paint runs between
+ * <code>BeginPaint</code> and <code>EndPaint</code> with <code>WS_CLIPCHILDREN</code>, so the present, clipped by the paint
+ * device context, never covers a child (CHILD_CLIP v1); the back buffer under a child holds the composite's own pixels.
+ * </p>
  */
 public final class M3CanvasHandler implements IExternalCanvasHandler {
 	/** The data key under which a handled canvas carries its handler (<code>Canvas.getData</code>). */
 	public static final String DATA_KEY = "org.eclipse.swt.internal.render.m3.M3CanvasHandler"; //$NON-NLS-1$
 	private static final SurfaceProps PROPS = new SurfaceProps (false, PixelGeometry.RGB_H);
 
-	private final Canvas control;
+	private final Composite control;
 	private final M3Gpu gpu;
 	private final BackBuffer buffer = new BackBuffer ();
 	private final M3PlaneCanvasExtension extension;
@@ -84,7 +91,7 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	private int [] regionData = new int [M3CanvasDamage.HEADER + 4 * 8];
 	private boolean painting, released;
 
-	private M3CanvasHandler (Canvas canvas, M3Gpu gpu) {
+	private M3CanvasHandler (Composite canvas, M3Gpu gpu) {
 		this.control = canvas;
 		this.gpu = gpu;
 		this.extension = new M3PlaneCanvasExtension (canvas, buffer, this::surface);
@@ -93,7 +100,7 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	}
 
 	/** The <code>m3</code> mode: the surface draws straight into the back buffer's pixels. */
-	public static M3CanvasHandler raster (Canvas canvas) {
+	public static M3CanvasHandler raster (Composite canvas) {
 		return new M3CanvasHandler (canvas, null);
 	}
 
@@ -101,7 +108,7 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	 * The <code>gpu</code> mode: a surface on the thread's GL context, read back into the back buffer; the raster handler
 	 * when no GL context can be made (as <code>RowBackends</code> falls back for the planes).
 	 */
-	public static M3CanvasHandler gpu (Canvas canvas) {
+	public static M3CanvasHandler gpu (Composite canvas) {
 		return new M3CanvasHandler (canvas, M3Gpu.acquire ());
 	}
 
