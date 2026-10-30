@@ -46,8 +46,8 @@ import org.eclipse.swt.widgets.Shell;
 /**
  * Display probe (GC seam, leaf 5; pattern M3-CANVAS-PROBE v2, v1 was leaf 4's single SWT.M3 canvas). One shell, five widgets:
  * a Canvas created without SWT.M3 (a fill, two LINE_CUSTOM dashed lines with offsets 0 and 3 (a quarter period: the direction shows), two miter polylines with limits
- * 1 and 10, then a partial redraw), a StyledText with a selection, a CTabFolder with 3 tabs (a Composite: outside the Canvas
- * hook), a CLabel with an image, and the leaf-4 Canvas created with SWT.M3. The startup mode (-Dswt.widget.mode=m3|gpu, or
+ * 1 and 10, then a partial redraw), a StyledText with a selection, a CTabFolder with 3 tabs (a Composite: leaf 7's
+ * Composite hook), a CLabel with an image, and the leaf-4 Canvas created with SWT.M3. The startup mode (-Dswt.widget.mode=m3|gpu, or
  * none for stock) decides whether a widget gets the M3 handler. Per widget: handler, paints and GCExtension paints (counted
  * before any print), the print (a stock GC on an Image in every mode) against the M3 back buffer: exact mismatches of the
  * non-text regions, text coverage (pixels that are neither background nor selection) within TEXT_TOLERANCE. PNGs of both
@@ -189,13 +189,13 @@ public class M3CanvasProbe {
 		return new Probe ("StyledText", text, true);
 	}
 
-	/* CTabFolder extends Composite, not Canvas: the Canvas hook does not reach it (expected stock in every mode) */
+	/* CTabFolder extends Composite, not Canvas: leaf 7's Composite hook reaches it in m3/gpu (M3CompositeProbe measures its regions) */
 	static Probe tabs (Shell shell) {
 		CTabFolder folder = new CTabFolder (shell, SWT.NONE);
 		folder.setLayoutData (fill ());
 		for (int i = 1; i <= 3; i++) new CTabItem (folder, SWT.NONE).setText ("Tab " + i);
 		folder.setSelection (0);
-		return new Probe ("CTabFolder", folder, false);
+		return new Probe ("CTabFolder", folder, true);
 	}
 
 	static Image labelImage (Display display) {
@@ -376,8 +376,7 @@ public class M3CanvasProbe {
 		Rectangle area = p.control.getClientArea ();
 		int background = rgb (p.print, area.width - 3, area.height - 3);
 		p.fact ("printInk", count (p.print, new Rectangle (0, 0, area.width, Math.min (30, area.height)), c -> c != background));
-		if (DRAWN && "PASS".equals (p.result)) p.result = "NOT_COVERED";
-		p.fact ("reason", "extends Composite: the Canvas hook does not reach it");
+		p.fact ("hook", "Composite (leaf 7; regions and ink in M3CompositeProbe)");
 	}
 
 	static void checkLabel (Probe p, RGB labelBackground) {

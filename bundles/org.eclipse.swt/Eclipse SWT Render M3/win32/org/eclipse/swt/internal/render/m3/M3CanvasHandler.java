@@ -171,9 +171,12 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		damage.read (regionData, ps.left, ps.top, ps.right, ps.bottom);
 		prepare (hdc);
 		int passes = damage.passes (control.getStyle ());
-		IntStream.range (0, passes).takeWhile (p -> !disposed).forEach (p -> pass (send, p, passes));
-		if (disposed) return;
-		IntStream.range (0, damage.count ()).forEach (i -> present (hdc, damage.x (i), damage.y (i), damage.width (i), damage.height (i)));
+		try {
+			IntStream.range (0, passes).takeWhile (p -> !disposed).forEach (p -> pass (send, p, passes));
+		} finally {
+			/* leaf 7: a listener that throws still has its partial frame presented (stock: what it drew is on the paint DC); it still throws */
+			if (!disposed) IntStream.range (0, damage.count ()).forEach (i -> present (hdc, damage.x (i), damage.y (i), damage.width (i), damage.height (i)));
+		}
 	}
 
 	/* one Paint event, clipped to its pass (M3CanvasDamage.clip): the background first unless the canvas retains its pixels */

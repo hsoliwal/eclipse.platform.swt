@@ -343,6 +343,72 @@ LRESULT paintThroughM3 (long wParam, long lParam) {
 LRESULT WM_PRINTCLIENT (long wParam, long lParam) {
 '''
 
+# ---------------------------------------------------------------- M3-COMPOSITE-PROBE v1: the probe runner serves both probes
+PS_JAVAC_OLD = '''\
+"$JDK/bin/javac" -J-Xmx512m --release 21 -encoding UTF-8 -nowarn -proc:none -cp "$CP" -d "$P/classes" "$WT/docs/m3/gc-extension-seam/tools/M3CanvasProbe.java" > "$P/javac.log" 2>&1 \\
+'''
+PS_JAVAC_NEW = '''\
+# Leaf 7: M3_PROBE_CLASS (default M3CanvasProbe) picks the probe and M3_PROBE_TAG its log name; M3_PROBE_SRC adds a source tree
+# (a Nebula widget built from source into the probe's scratch classes only), M3_PROBE_CP a run-time class path entry (its
+# resources), M3_PROBE_AGENT the ui_lock name
+CLASS=${M3_PROBE_CLASS:-M3CanvasProbe}; TAG=${M3_PROBE_TAG:-canvas}
+{ echo "\\"$WT/docs/m3/gc-extension-seam/tools/$CLASS.java\\""; [ -n "$M3_PROBE_SRC" ] && find "$M3_PROBE_SRC" -name '*.java' -type f | sed 's#.*#"&"#'; } > "$P/src"
+"$JDK/bin/javac" -J-Xmx512m --release 21 -encoding UTF-8 -nowarn -proc:none -cp "$CP" -d "$P/classes" @"$P/src" > "$P/javac.log" 2>&1 \\
+'''
+PS_LOG_OLD = 'LOG=$P/probe_canvas_$MODE.log; : > "$LOG"\n'
+PS_LOG_NEW = 'LOG=$P/probe_${TAG}_$MODE.log; : > "$LOG"\n'
+PS_LOCK_OLD = "bash C:/m3-superset/tools/ui_lock.sh claude-gcleaf5 bash"
+PS_LOCK_NEW = 'bash C:/m3-superset/tools/ui_lock.sh "${M3_PROBE_AGENT:-claude-gcleaf5}" bash'
+PS_CP_OLD = '-cp "$CP;$P/classes" M3CanvasProbe\n'
+PS_CP_NEW = '-cp "$CP;$P/classes${M3_PROBE_CP:+;$M3_PROBE_CP}" "$CLASS"\n'
+
+MCP_DOC_OLD = "a CTabFolder with 3 tabs (a Composite: outside the Canvas\n * hook), a CLabel"
+MCP_DOC_NEW = "a CTabFolder with 3 tabs (a Composite: leaf 7's\n * Composite hook), a CLabel"
+MCP_TABS_OLD = '''\
+\t/* CTabFolder extends Composite, not Canvas: the Canvas hook does not reach it (expected stock in every mode) */
+\tstatic Probe tabs (Shell shell) {
+\t\tCTabFolder folder = new CTabFolder (shell, SWT.NONE);
+\t\tfolder.setLayoutData (fill ());
+\t\tfor (int i = 1; i <= 3; i++) new CTabItem (folder, SWT.NONE).setText ("Tab " + i);
+\t\tfolder.setSelection (0);
+\t\treturn new Probe ("CTabFolder", folder, false);
+'''
+MCP_TABS_NEW = '''\
+\t/* CTabFolder extends Composite, not Canvas: leaf 7's Composite hook reaches it in m3/gpu (M3CompositeProbe measures its regions) */
+\tstatic Probe tabs (Shell shell) {
+\t\tCTabFolder folder = new CTabFolder (shell, SWT.NONE);
+\t\tfolder.setLayoutData (fill ());
+\t\tfor (int i = 1; i <= 3; i++) new CTabItem (folder, SWT.NONE).setText ("Tab " + i);
+\t\tfolder.setSelection (0);
+\t\treturn new Probe ("CTabFolder", folder, true);
+'''
+MCP_CHECK_OLD = '''\
+\t\tif (DRAWN && "PASS".equals (p.result)) p.result = "NOT_COVERED";
+\t\tp.fact ("reason", "extends Composite: the Canvas hook does not reach it");
+'''
+MCP_CHECK_NEW = '''\
+\t\tp.fact ("hook", "Composite (leaf 7; regions and ink in M3CompositeProbe)");
+'''
+
+# ---------------------------------------------------------------- PARTIAL_PRESENT: a throwing listener's frame still reaches the window
+H_FRAME_OLD = '''\
+\t\tint passes = damage.passes (control.getStyle ());
+\t\tIntStream.range (0, passes).takeWhile (p -> !disposed).forEach (p -> pass (send, p, passes));
+\t\tif (disposed) return;
+\t\tIntStream.range (0, damage.count ()).forEach (i -> present (hdc, damage.x (i), damage.y (i), damage.width (i), damage.height (i)));
+\t}
+'''
+H_FRAME_NEW = '''\
+\t\tint passes = damage.passes (control.getStyle ());
+\t\ttry {
+\t\t\tIntStream.range (0, passes).takeWhile (p -> !disposed).forEach (p -> pass (send, p, passes));
+\t\t} finally {
+\t\t\t/* leaf 7: a listener that throws still has its partial frame presented (stock: what it drew is on the paint DC); it still throws */
+\t\t\tif (!disposed) IntStream.range (0, damage.count ()).forEach (i -> present (hdc, damage.x (i), damage.y (i), damage.width (i), damage.height (i)));
+\t\t}
+\t}
+'''
+
 S = "seam"
 DELTAS = [
     # (id, file, old, new, javac_line, reason, apply)
@@ -371,6 +437,18 @@ DELTAS = [
      "COMPOSITE_PAINT_HOOK v1: one call after the CANVAS/FOREIGN_HANDLE test of the stock WM_PAINT; drawBackground*/getGCData untouched (leaf 6 owns them)", True),
     ("L7-16", WIDGETS + "Composite.java", C_HOOK_OLD, C_HOOK_NEW, S,
      "paintThroughM3 + its two fields in one block after WM_PAINT (merge-friendly with leaf 6); CONTAINER_OPT_OUT = the stock test hooks||filters(Paint); retained/viewport planes keep their paths", True),
+    ("L7-17", TOOLS + "probe_m3_canvas.sh", PS_JAVAC_OLD, PS_JAVAC_NEW, "tool",
+     "M3-COMPOSITE-PROBE v1: one runner for both probes (M3_PROBE_CLASS/TAG/SRC/CP/AGENT); defaults keep the leaf-5 run byte for byte", True),
+    ("L7-18", TOOLS + "probe_m3_canvas.sh", PS_LOG_OLD, PS_LOG_NEW, "tool", "as L7-17 (log probe_<tag>_<mode>.log, tag canvas by default)", True),
+    ("L7-19", TOOLS + "probe_m3_canvas.sh", PS_LOCK_OLD, PS_LOCK_NEW, "tool", "as L7-17 (the lock name of the agent that runs it)", True),
+    ("L7-20", TOOLS + "probe_m3_canvas.sh", PS_CP_OLD, PS_CP_NEW, "tool", "as L7-17 (the probe class and an extra class path entry)", True),
+    ("L7-21", TOOLS + "M3CanvasProbe.java", MCP_DOC_OLD, MCP_DOC_NEW, "tool", "leaf-5 probe: its CTabFolder row encoded the leaf-5 contract (handler=false); leaf 7 changes it", True),
+    ("L7-22", TOOLS + "M3CanvasProbe.java", MCP_TABS_OLD, MCP_TABS_NEW, "tool", "as L7-21: covered (handler expected in m3/gpu)", True),
+    ("L7-23", TOOLS + "M3CanvasProbe.java", MCP_CHECK_OLD, MCP_CHECK_NEW, "tool", "as L7-21: no NOT_COVERED marking; the regions are M3CompositeProbe's", True),
+    ("L7-33", M3 + "M3CanvasHandler.java", H_FRAME_OLD, H_FRAME_NEW,
+     "probe gpu: CTabFolder buffer black (bodyMismatch=56304, selected/unselected fill 000000) while m3 had the partial frame (bodyMismatch=0)",
+     "PARTIAL_PRESENT v1, found by the composite probe: a Paint listener that throws (CTabFolder under GF02) left frame() before present, so the "
+     "gpu frame was never read back and neither mode copied the damage to the window; the stock path has the partial drawing on the paint DC", True),
 ]
 
 
@@ -387,7 +465,39 @@ def read_rows():
     return rows
 
 
-FOSS_ROWS = []  # filled by m3gc_composite_ledger rows at the end of this file
+HERE = "hsoliwal/eclipse.platform.swt (this repository)"
+SAME = "EPL-2.0 OR Apache-2.0 (same repository, same licence)"
+FOSS_ROWS = [
+    # (capability, repo, commit, source_paths, licence, contract_fit, decision, rejected_reason, our files -> adapted_hashes)
+    ("m3-gc-composite-coverage:skija-canvas-seam", "swt-initiative31/skija-canvas", "9bcb404c421361b7f5e046dc844ec076e539d0e6",
+     "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/canvasext/IExternalCanvasFactory.java@blob:b9e71b0f5efb4a4db8bc442d9980ae8a4d1d002c;"
+     "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/canvasext/ExternalCanvasHandler.java@blob:abf5992c5fc75ae50c2c0bfcdbefb7c673d276dc"
+     " (added a5af63895d, unchanged to the head; DONOR_PINS.tsv)", "EPL-2.0",
+     "the canvas-only seam (a factory decides, a handler owns WM_PAINT); extended for a composite that paints itself: acceptsComposite/"
+     "createCompositeExtension defaults (false/null keep an I31 factory canvas-only), createCompositeHandler with the seam's disable/failure rule; "
+     "the Decorations exclusion kept; CompositeCoverage 6/6", "ADAPT", "-",
+     [COMMON + "internal/canvasext/IExternalCanvasFactory.java", COMMON + "internal/canvasext/ExternalCanvasHandler.java"]),
+    ("m3-gc-composite-coverage:custom-drawn-controls", "swt-initiative31/custom-drawn-controls", "01471120c8429952d4c8b586de25084cc81dc774",
+     "bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/Composite.java@blob:e257c77d30924a8e5c0000a622ea4d4db8d97ed6 (widgetStyle, WM_PAINT)",
+     "EPL-2.0", "searched for a composite paint hook: git grep of SWT.SKIA|ExternalCanvas|SkiaCanvas at that head finds nothing; its Composite is the "
+     "stock one (WS_CLIPCHILDREN in widgetStyle, the WM_PAINT clip bits), the contract this leaf reuses from this repository", "NO_FIT",
+     "no Composite hook, no child clip beyond stock", []),
+    ("m3-gc-composite-coverage:stock-composite-paint", HERE, "578bdc98997",
+     "bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/Composite.java#WM_PAINT,widgetStyle@blob:fb219b49a3f28b2d256d750a484ec282cca99076",
+     SAME, "contract: the CANVAS/FOREIGN_HANDLE test, hooks||filters(Paint) as the paint test (CONTAINER_OPT_OUT), WS_CLIPSIBLINGS|WS_CLIPCHILDREN "
+     "while painting (CHILD_CLIP, already in M3CanvasHandler.clipBits); probe ChildClip: dcExcludesChild=true, window child green in stock/m3/gpu",
+     "REUSE_DIRECT", "-", [WIDGETS + "Composite.java"]),
+    ("m3-gc-composite-coverage:retained-planes-rule", HERE, "578bdc98997",
+     "bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/Composite.java#createHandle (GPU_RETAINED: not TRANSPARENT, not RIGHT_TO_LEFT, not Decorations)",
+     SAME, "pattern: the composites the retained planes leave stock are the ones the M3 composite path leaves stock (compositeBackend)",
+     "REUSE_DIRECT", "-", [GC + "M3CanvasFactory.java"]),
+    ("m3-gc-composite-coverage:nebula-collapsiblebuttons", "eclipse/nebula (local clone C:/m3-superset/nebula, origin hsoliwal/nebula)",
+     "33aaf10f5467e4d7e23919f54f92feb9f54a4a56",
+     "widgets/collapsiblebuttons/org.eclipse.nebula.widgets.collapsiblebuttons/src/org/eclipse/nebula/widgets/collapsiblebuttons/*.java"
+     " (CollapsibleButtons.java@blob:1935834a923e62e9fe9d800dc9f8836785944875)", "EPL-2.0",
+     "probe subject only: compiled from source into the probe's scratch classes (H:/m3-scratch/gc-leaf7/probe/classes) by probe_m3_canvas.sh "
+     "M3_PROBE_SRC; nothing copied into this repository", "DIRECT_IMPORT", "-", []),
+]
 
 
 def ledger(wt):
@@ -421,6 +531,7 @@ def main(worktree):
                 return 1
         if delta_id not in known:
             rows.append("\t".join([delta_id, rel, tsv(describe(old)) if apply else old, tsv(new) if apply else new, javac, reason]) + "\n")
+    rows.sort(key=lambda row: int(row.split("\t", 1)[0][3:]))  # L7-xx in id order (deltas and record-only rows interleave)
     if rows:
         if not existing.endswith("\n"):
             existing += "\n"
