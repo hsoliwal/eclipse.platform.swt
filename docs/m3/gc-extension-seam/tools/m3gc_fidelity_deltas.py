@@ -177,6 +177,22 @@ DELTAS = [
      "point), 6/6 after",
      "ARG_CONTRACT (M3-GC-CONTRACT v1), GF24, GF46; stock W32G/GC.java drawImage (1231/1321/1372) and drawPointInPixels "
      "(GDI+ FillRectangle with getFgBrush); same in I31 SkiaGC.drawImage/drawPoint", False, 0),
+    ("L6-21", "H:/m3-scratch/gc-leaf6 (gate of a staged atom)", "git stash push --keep-index --include-untracked, gates, git "
+     "stash pop",
+     "stage_gate.sh: the index versions of the changed bundle files as M3_OVERLAY of compile_m3gc.sh and the index's m3gc test "
+     "directory exported to a scratch root for test_m3gc.sh; the working tree is never touched",
+     "git stash pop: CONFLICT in AllM3GcTests.java (index and working copy both changed), every other change left staged",
+     "correction of my own procedure: the suite file is staged partially per atom, so a keep-index stash conflicts on pop and "
+     "loses the staged selection; recovered by taking the stash's file, git reset (mixed) and restaging (the working tree "
+     "compared byte-equal to the stash first)", False, 0),
+    ("L6-22", GRAPHICS + "Path.java", "PathHandle.containsInPixels: gc.initGdip(); gc.checkGC(...); GetPolyFillMode(gc.handle)",
+     "a GCExtension takes containsThroughGC: GraphicsPath_SetFillMode by gc.getFillRule(), IsVisible(handle, x, y, 0), and for an "
+     "outline a temporary pen (SolidBrush black, width = the GC line width in pixels, cap and join of the GC) with "
+     "IsOutlineVisible(..., 0) (Read + Edit)",
+     "Test_org_eclipse_swt_m3gc_PathHitTest: 2/2 failing before (NullPointerException: Cannot read field \"device\" because "
+     "\"this.data\" is null), 2/2 after",
+     "PATH_HIT_TEST (M3-GC-PATH-HIT v1), GF51; stock W32G/Path.java contains (GDI+ IsVisible/IsOutlineVisible with the GC's pen "
+     "and fill mode; the GC transform is ignored there too: stock TODO); I31 has the same NPE", False, 0),
 ]
 
 
