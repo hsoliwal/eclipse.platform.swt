@@ -15,6 +15,7 @@
 package org.eclipse.swt.internal;
 
 import java.util.*;
+import java.util.stream.*;
 
 /**
  * Startup strategy of SWT widgets. Every mode keeps the public API contract; they differ in how a
@@ -68,6 +69,37 @@ public enum WidgetMode {
 		WidgetMode mode = modes.contains (requested) ? requested : modes.contains (VIEWPORT) ? VIEWPORT : ORIGINAL;
 		LOG.debug (() -> widget + ": mode " + mode + (mode == requested ? "" : " (requested " + requested + ")"));
 		return mode;
+	}
+
+	/**
+	 * Answers the mode of a widget class that inherits its realization from <code>root</code> (GC seam, leaf 5: every
+	 * <code>Canvas</code> subclass). The most derived class with its own property decides
+	 * (<code>swt.widget.mode.StyledText</code> before <code>swt.widget.mode.Canvas</code>), otherwise the global property;
+	 * anonymous classes have no property of their own.
+	 *
+	 * @param type the runtime class of the widget
+	 * @param root the class whose realization the widget inherits, for example <code>Canvas.class</code>
+	 * @param supported the modes the root implements; {@link #ORIGINAL} is always implied
+	 * @return the requested mode when supported, otherwise the fallback
+	 */
+	public static WidgetMode of (Class<?> type, Class<?> root, WidgetMode... supported) {
+		String owner = Stream.<Class<?>> iterate (type, c -> c != null && root.isAssignableFrom (c), c -> c.getSuperclass ())
+			.map (Class::getSimpleName)
+			.filter (name -> !name.isEmpty () && System.getProperty (PROPERTY + "." + name) != null)
+			.findFirst ().orElse (root.getSimpleName ());
+		return of (owner, supported);
+	}
+
+	/**
+	 * Whether any startup property, global or per widget, asks for one of the modes (GC seam, leaf 5: the Display registers
+	 * the M3 canvas factory when one does, so <code>swt.widget.mode.StyledText=m3</code> alone reaches it).
+	 */
+	public static boolean anyRequested (WidgetMode... modes) {
+		List<WidgetMode> wanted = Arrays.asList (modes);
+		return System.getProperties ().stringPropertyNames ().stream ()
+			.filter (key -> key.equals (PROPERTY) || key.startsWith (PROPERTY + "."))
+			.map (key -> System.getProperty (key, "").trim ().toUpperCase (Locale.ROOT))
+			.anyMatch (value -> wanted.stream ().anyMatch (mode -> mode.name ().equals (value)));
 	}
 
 	/** The mode the startup properties ask for, before any fallback. */

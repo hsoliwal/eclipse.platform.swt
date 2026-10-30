@@ -72,10 +72,13 @@ public class M3ExternalGC implements IExternalGC {
 	private int fillRule = SWT.FILL_EVEN_ODD;
 	private int lineJoin = SWT.JOIN_MITER;
 	private float[] lineDashes;
-	// TODO: implement -----------------------------------
+	// M3 (GC seam, leaf 5; pattern M3-GC-STROKE v1): the stroke state the donor stored but never applied, with the stock
+	// defaults (GCData: dash offset 0, miter limit 10); the dash phase reaches LINE_CUSTOM patterns (M3PaintManager), the
+	// miter limit every stroke once setLineAttributes ran (until then the paint keeps the donor's Skija miter, 4, and
+	// drawPath's 1000, which the adopted tests pin)
 	private float dashOffset;
-	private float miterLimit;
-	// -----------------------------------
+	private float miterLimit = 10;
+	private boolean miterLimitSet;
 
 	private final Drawable drawable;
 	private final Device device;
@@ -329,8 +332,11 @@ public class M3ExternalGC implements IExternalGC {
 				if (m3Path == null) {
 					return;
 				}
-				// the stroke miter on GC is quite high.
-				paint.setStrokeMiter(1000);
+				// the stroke miter on GC is quite high (the donor's default; leaf 5: a miter limit setLineAttributes gave wins,
+				// M3PaintManager.performDraw applied it)
+				if (!miterLimitSet) {
+					paint.setStrokeMiter(1000);
+				}
 				surface.getCanvas().drawPath(m3Path, paint);
 			}
 		});
@@ -1145,6 +1151,7 @@ public class M3ExternalGC implements IExternalGC {
 			this.miterLimit = miterLimit;
 			changed = true;
 		}
+		this.miterLimitSet = true;
 		if (!changed) {
 			return;
 		}
@@ -1285,6 +1292,21 @@ public class M3ExternalGC implements IExternalGC {
 
 	float[] getLineDashes() {
 		return this.lineDashes;
+	}
+
+	/* leaf 5: the dash phase in pixels; the stock GC offsets only a custom pattern (win32 GC.getPen: LINE_CUSTOM, GDI+ dash offset) */
+	float getDashPhase() {
+		return lineStyle == SWT.LINE_CUSTOM ? getScaler().autoScaleUp(dashOffset) : 0f;
+	}
+
+	/* leaf 5: whether setLineAttributes gave a miter limit (the stroke then uses it) */
+	boolean isMiterLimitSet() {
+		return miterLimitSet;
+	}
+
+	/* leaf 5: the miter limit of the line attributes (stock default 10) */
+	float getMiterLimit() {
+		return miterLimit;
 	}
 
 }

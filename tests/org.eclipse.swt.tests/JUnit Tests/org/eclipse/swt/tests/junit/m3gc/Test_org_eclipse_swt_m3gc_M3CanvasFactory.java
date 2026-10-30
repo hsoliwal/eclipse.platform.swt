@@ -29,9 +29,10 @@ import org.eclipse.swt.widgets.Event;
 import org.junit.jupiter.api.Test;
 
 /**
- * Headless (no Display): the activation decision of the M3 canvas factory (GC seam, leaf 4). A canvas gets a handler only
- * when the widget mode of <code>Canvas</code> is <code>m3</code> or <code>gpu</code> and it was created with
- * <code>SWT.M3</code>; the selector and the handler makers are stubbed, so mode x style bit maps to a handler or null.
+ * Headless (no Display): the activation decision of the M3 canvas factory (GC seam, leaf 4; leaf 5 contract). A plain
+ * canvas gets a handler when the widget mode of <code>Canvas</code> is <code>m3</code> or <code>gpu</code>, with or
+ * without <code>SWT.M3</code> (leaf 4 required the bit: L5-02); the selector and the handler makers are stubbed, so the
+ * mode maps to a handler or null. The per-class matrix is Test_org_eclipse_swt_m3gc_CanvasCoverage.
  */
 public class Test_org_eclipse_swt_m3gc_M3CanvasFactory {
 	/** A handler double: which maker answered is the outcome. */
@@ -71,11 +72,12 @@ public class Test_org_eclipse_swt_m3gc_M3CanvasFactory {
 	}
 
 	@Test
-	public void testBackendNeedsTheStyleBitAndADrawnMode() {
+	public void testBackendNeedsADrawnModeNotTheStyleBit() {
 		for (WidgetMode mode : WidgetMode.values()) {
-			assertNull(M3CanvasFactory.backend(mode, SWT.NONE), mode + " without SWT.M3");
-			assertNull(M3CanvasFactory.backend(mode, SWT.BORDER | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED), mode + " without SWT.M3");
 			WidgetMode expected = mode == WidgetMode.M3 || mode == WidgetMode.GPU ? mode : null;
+			// leaf 5 (L5-02): a plain canvas no longer needs SWT.M3 in a drawn mode; leaf 4 asserted null here
+			assertEquals(expected, M3CanvasFactory.backend(mode, SWT.NONE), mode + " without SWT.M3");
+			assertEquals(expected, M3CanvasFactory.backend(mode, SWT.BORDER | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED), mode + " without SWT.M3");
 			assertEquals(expected, M3CanvasFactory.backend(mode, SWT.M3), mode + " with SWT.M3");
 			assertEquals(expected, M3CanvasFactory.backend(mode, SWT.M3 | SWT.BORDER | SWT.NO_BACKGROUND), mode + " with SWT.M3 and other bits");
 		}
@@ -86,8 +88,9 @@ public class Test_org_eclipse_swt_m3gc_M3CanvasFactory {
 		assertSame(RASTER, factory(WidgetMode.M3).create(null, SWT.M3));
 		assertSame(GPU, factory(WidgetMode.GPU).create(null, SWT.M3));
 		assertSame(RASTER, factory(WidgetMode.M3).create(null, SWT.M3 | SWT.BORDER));
-		assertNull(factory(WidgetMode.M3).create(null, SWT.NONE), "m3 mode without the style bit");
-		assertNull(factory(WidgetMode.GPU).create(null, SWT.BORDER), "gpu mode without the style bit");
+		// leaf 5 (L5-02): without the style bit too; leaf 4 asserted null for these two
+		assertSame(RASTER, factory(WidgetMode.M3).create(null, SWT.NONE), "m3 mode without the style bit");
+		assertSame(GPU, factory(WidgetMode.GPU).create(null, SWT.BORDER), "gpu mode without the style bit");
 		assertNull(factory(WidgetMode.VIEWPORT).create(null, SWT.M3), "viewport mode");
 		assertNull(factory(WidgetMode.ORIGINAL).create(null, SWT.M3), "original mode");
 		assertNull(factory(WidgetMode.CUSTOM).create(null, SWT.M3), "custom mode (a GC, no M3 surface)");
@@ -99,6 +102,7 @@ public class Test_org_eclipse_swt_m3gc_M3CanvasFactory {
 		assumeTrue(System.getProperty(WidgetMode.PROPERTY + "." + M3CanvasFactory.WIDGET) == null, "the test JVM sets no Canvas mode");
 		assertEquals(WidgetMode.ORIGINAL, shipped(), "Canvas has no viewport: the fallback is the stock path");
 		assertNull(M3CanvasFactory.backend(shipped(), SWT.M3), "default off even with the style bit");
+		assertNull(M3CanvasFactory.backend(shipped(), SWT.NONE), "default off without it");
 	}
 
 	@Test
