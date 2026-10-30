@@ -36,7 +36,7 @@ final class M3ThemeApplier {
 	private M3ThemeApplier () {
 	}
 
-	static int apply (Display display, M3Themes.State state) {
+	static int apply (Display display, M3ThemeState state) {
 		M3Theme theme = state.theme;
 		lookAndFeel (theme);
 		boolean dark = theme.dark ();
@@ -50,7 +50,7 @@ final class M3ThemeApplier {
 		return themed;
 	}
 
-	static int reset (Display display, M3Themes.State state) {
+	static int reset (Display display, M3ThemeState state) {
 		M3LookAndFeel.setLookAndFeel (state.lookAndFeel);
 		state.excluded.forEach (widget -> Themes.select (widget, null));
 		boolean undo = state.theme.dark ();
@@ -98,7 +98,7 @@ final class M3ThemeApplier {
 		M3LookAndFeel.setLookAndFeel (name);
 	}
 
-	private static void paint (Control control, Display display, M3Themes.State state, boolean dark, boolean undo) {
+	private static void paint (Control control, Display display, M3ThemeState state, boolean dark, boolean undo) {
 		if (dark || undo) M3NativeTheme.apply (control, dark);
 		boolean field = field (control);
 		control.setBackground (state.color (display, field ? LIST_BACKGROUND : WIDGET_BACKGROUND));

@@ -137,7 +137,7 @@ public final class M3Themes {
 	public static int apply (Display display, M3Theme theme) {
 		checkDisplay (display);
 		if (theme == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-		State state = state (display, true);
+		M3ThemeState state = state (display, true);
 		M3Theme from = state.theme;
 		state.switchTo (theme);
 		int themed = M3ThemeApplier.apply (display, state);
@@ -155,7 +155,7 @@ public final class M3Themes {
 	 */
 	public static int reset (Display display) {
 		checkDisplay (display);
-		State state = state (display, false);
+		M3ThemeState state = state (display, false);
 		if (state == null) return 0;
 		M3Theme from = state.theme;
 		int reset = M3ThemeApplier.reset (display, state);
@@ -208,7 +208,7 @@ public final class M3Themes {
 	public static Color color (Display display, int slot) {
 		checkDisplay (display);
 		if (M3ThemeSlot.kind (slot) != M3ThemeSlot.COLOR) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
-		State state = state (display, false);
+		M3ThemeState state = state (display, false);
 		if (state != null) return state.color (display, slot);
 		int system = M3ThemeSlot.systemColor (slot);
 		return system >= 0 ? display.getSystemColor (system) : stock (display).color (display, slot);
@@ -274,62 +274,20 @@ public final class M3Themes {
 		if (display.getThread () != Thread.currentThread ()) SWT.error (SWT.ERROR_THREAD_INVALID_ACCESS);
 	}
 
-	private static State state (Display display, boolean create) {
-		State state = (State) display.getData (STATE);
-		if (state == null && create) display.setData (STATE, state = new State (M3LookAndFeel.getLookAndFeel ()));
+	private static M3ThemeState state (Display display, boolean create) {
+		M3ThemeState state = (M3ThemeState) display.getData (STATE);
+		if (state == null && create) display.setData (STATE, state = new M3ThemeState (M3LookAndFeel.getLookAndFeel ()));
 		return state;
 	}
 
 	/* the colours of a stock display's non-system slots: the light theme, kept in the display's data until it is disposed */
-	private static State stock (Display display) {
+	private static M3ThemeState stock (Display display) {
 		String key = STATE + ".stock";
-		State stock = (State) display.getData (key);
+		M3ThemeState stock = (M3ThemeState) display.getData (key);
 		if (stock == null) {
-			display.setData (key, stock = new State (null));
+			display.setData (key, stock = new M3ThemeState (null));
 			stock.theme = M3Theme.LIGHT;
 		}
 		return stock;
-	}
-
-	/* a display's theme, its colours (one per slot, lazy) and the look and feel it had before the first apply */
-	static final class State {
-		final String lookAndFeel;
-		/* the drawn widget classes kept stock by theme-provider=false (Themes.select (widget, Theme.NATIVE)) */
-		final Set<String> excluded = new TreeSet<> ();
-		M3Theme theme, from;
-		Color [] colors = new Color [M3ThemeSlot.COUNT];
-		Color [] previous;
-
-		State (String lookAndFeel) {
-			this.lookAndFeel = lookAndFeel;
-		}
-
-		void switchTo (M3Theme next) {
-			from = theme;
-			theme = next;
-			previous = colors;
-			colors = new Color [M3ThemeSlot.COUNT];
-		}
-
-		Color color (Display display, int slot) {
-			Color color = colors [slot];
-			if (color == null || color.isDisposed ()) colors [slot] = color = new Color (display, rgba (theme.get (slot)));
-			return color;
-		}
-
-		/* the colours of the previous theme, once every control holds the new ones */
-		void release () {
-			if (previous != null) Arrays.stream (previous).filter (Objects::nonNull).forEach (Color::dispose);
-			previous = null;
-		}
-
-		void dispose () {
-			release ();
-			Arrays.stream (colors).filter (Objects::nonNull).forEach (Color::dispose);
-		}
-
-		private static RGBA rgba (int argb) {
-			return new RGBA ((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF, argb >>> 24);
-		}
 	}
 }

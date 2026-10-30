@@ -58,17 +58,11 @@ public final class M3Language {
 		void languageChanged (Locale from, Locale to);
 	}
 
-	private record Bundle (String baseName, ClassLoader loader) {
-	}
-
-	private static final ResourceBundle.Control CONTROL = ResourceBundle.Control.getNoFallbackControl (ResourceBundle.Control.FORMAT_DEFAULT);
 	private static final Set<UnicodeScript> RTL_SCRIPTS = EnumSet.of (UnicodeScript.ARABIC, UnicodeScript.HEBREW, UnicodeScript.SYRIAC,
 		UnicodeScript.THAANA, UnicodeScript.NKO, UnicodeScript.SAMARITAN, UnicodeScript.MANDAIC, UnicodeScript.ADLAM, UnicodeScript.HANIFI_ROHINGYA,
 		UnicodeScript.MENDE_KIKAKUI, UnicodeScript.IMPERIAL_ARAMAIC, UnicodeScript.OLD_SOUTH_ARABIAN, UnicodeScript.YEZIDI);
-	private static final List<Bundle> BUNDLES = new CopyOnWriteArrayList<> ();
 	private static final List<Listener> LISTENERS = new CopyOnWriteArrayList<> ();
 	private static volatile Locale locale;
-	private static volatile List<Locale> fallbacks = List.of ();
 
 	private M3Language () {
 	}
@@ -115,19 +109,18 @@ public final class M3Language {
 	 */
 	public static void addBundle (String baseName, ClassLoader loader) {
 		if (baseName == null || loader == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-		BUNDLES.removeIf (bundle -> bundle.baseName.equals (baseName));
-		BUNDLES.add (new Bundle (baseName, loader));
+		M3MessageLookup.add (baseName, loader);
 	}
 
 	/** Removes a bundle family from the lookup. */
 	public static void removeBundle (String baseName) {
-		BUNDLES.removeIf (bundle -> bundle.baseName.equals (baseName));
+		M3MessageLookup.remove (baseName);
 	}
 
 	/** @param chain the locales tried after the active locale's candidates and before the root bundles (none by default) */
 	public static void setFallbacks (Locale... chain) {
 		if (chain == null || Arrays.asList (chain).contains (null)) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-		fallbacks = List.of (chain);
+		M3MessageLookup.fallbacks (List.of (chain));
 	}
 
 	/**
@@ -135,8 +128,7 @@ public final class M3Language {
 	 * @return the lookup chain of the locale: its candidate locales, the fallbacks' candidates, the root locale last
 	 */
 	public static List<Locale> chain (Locale of) {
-		Stream<Locale> chain = Stream.concat (Stream.of (of), fallbacks.stream ()).flatMap (l -> CONTROL.getCandidateLocales ("", l).stream ());
-		return Stream.concat (chain.filter (l -> !Locale.ROOT.equals (l)), Stream.of (Locale.ROOT)).distinct ().toList ();
+		return M3MessageLookup.chain (of);
 	}
 
 	/**
@@ -162,21 +154,7 @@ public final class M3Language {
 	 */
 	public static Optional<String> find (String key) {
 		if (key == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
-		return chain (getLocale ()).stream ().flatMap (l -> BUNDLES.stream ().map (b -> lookup (b, l, key))).flatMap (Optional::stream).findFirst ();
-	}
-
-	/* the key in the bundle of exactly this locale, not one inherited from its parent (except for the root bundle) */
-	private static Optional<String> lookup (Bundle bundle, Locale of, String key) {
-		try {
-			ResourceBundle exact = ResourceBundle.getBundle (bundle.baseName, of, bundle.loader, CONTROL);
-			if (!exact.getLocale ().equals (of) || !exact.containsKey (key)) return Optional.empty ();
-			if (Locale.ROOT.equals (of)) return Optional.of (exact.getString (key));
-			ResourceBundle root = ResourceBundle.getBundle (bundle.baseName, Locale.ROOT, bundle.loader, CONTROL);
-			Object value = exact.getObject (key);
-			return root.containsKey (key) && root.getObject (key) == value ? Optional.empty () : Optional.of (exact.getString (key));
-		} catch (MissingResourceException e) {
-			return Optional.empty ();
-		}
+		return M3MessageLookup.find (getLocale (), key);
 	}
 
 	/**
@@ -314,7 +292,6 @@ public final class M3Language {
 	/** Back to the startup locale, no bundles and no fallbacks (tests, and applications that undo a switch). */
 	public static void reset () {
 		locale = null;
-		fallbacks = List.of ();
-		BUNDLES.clear ();
+		M3MessageLookup.reset ();
 	}
 }
