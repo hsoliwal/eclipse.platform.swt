@@ -581,7 +581,6 @@ static class ZoomToRegionMap {
  */
 void set(ZoomToRegionMap zoomToRegionHandleMap, int contextZoom) {
 	this.temporaryHandleZoomHint = contextZoom;
-	log.intersect(region);
 	final Operation operation = new OperationWithRegionHandle(Operation::set, zoomToRegionHandleMap);
 	storeAndApplyOperationForAllHandles(operation);
 }
