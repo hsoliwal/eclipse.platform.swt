@@ -64,6 +64,8 @@ public class M3ExternalGC implements IExternalGC {
 	// the donor started at 0 (= SWT.OFF), text ON and nearest sampling read back as NONE
 	private int antialias = SWT.DEFAULT;
 	private boolean xorModeActive;
+	// leaf 6 (GC_STATE_RESET, GF05): whether advanced graphics were asked for (stock: a GDI+ graphics exists)
+	private boolean advanced;
 	private int lineWidth = 1;
 	private int lineCap = SWT.CAP_FLAT;
 	private int lineStyle = SWT.LINE_SOLID;
@@ -120,7 +122,28 @@ public class M3ExternalGC implements IExternalGC {
 		// and hands the same object to the next one: the canvas goes back to the construction save count and the clip and
 		// transform bookkeeping to none (M3GcLayer.close)
 		layer.close();
+		resetState();
+	}
 
+	/*
+	 * leaf 6 (GC_STATE_RESET, census GF49): every attribute back to the constructed defaults, so a reused GC (drawn planes dispose
+	 * and reuse one per owner-draw event) starts each event as a new stock GC does; the donor reset only the colours, the
+	 * canvas state, the clip and the transform
+	 */
+	private void resetState() {
+		advanced = xorModeActive = miterLimitSet = false;
+		alpha = 255;
+		foregroundPattern = backgroundPattern = null;
+		lineWidth = 1;
+		lineCap = SWT.CAP_FLAT;
+		lineJoin = SWT.JOIN_MITER;
+		lineStyle = SWT.LINE_SOLID;
+		lineDashes = null;
+		dashOffset = 0;
+		miterLimit = 10;
+		fillRule = SWT.FILL_EVEN_ODD;
+		resetHints();
+		resources.resetFont();
 	}
 
 	@Override
@@ -617,6 +640,7 @@ public class M3ExternalGC implements IExternalGC {
 
 		// leaf 6 (TRANSFORM_STATE, GF16): the matrix of the GC layer on the frame's matrix; the clip in force stays (the donor saved
 		// a level per call, which setClipping then popped instead of the clip)
+		advanced |= transform != null;
 		layer.setTransform(M3TransformConverter.toM3Matrix(transform, getScaler()));
 
 	}
@@ -624,6 +648,8 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void setAlpha(int alpha) {
 		alpha = alpha & 0xFF;
+		// leaf 6 (GC_STATE_RESET, GF05): as the stock GC, an alpha other than 255 needs advanced graphics
+		advanced |= alpha != 0xFF;
 		this.alpha = alpha;
 	}
 
@@ -653,12 +679,32 @@ public class M3ExternalGC implements IExternalGC {
 		if (antialias != SWT.DEFAULT && antialias != SWT.ON && antialias != SWT.OFF) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
+		advanced |= antialias != SWT.DEFAULT;
 		this.antialias = antialias;
 	}
 
 	@Override
 	public void setAdvanced(boolean enable) {
-		// Nothing to do...
+		// leaf 6 (GC_STATE_RESET, pattern M3-GC-RESET v1, census GF05): stock SetAdvancedOperation: leaving the advanced mode puts
+		// alpha back to 255, drops the patterns, the transform and the clip, and the hints read DEFAULT again (no GDI+ graphics);
+		// the donor did nothing, so StyledText's block selection left alpha 100 for the rest of the paint
+		if (enable) {
+			advanced = true;
+			return;
+		}
+		advanced = false;
+		alpha = 255;
+		foregroundPattern = backgroundPattern = null;
+		layer.close();
+		resetHints();
+	}
+
+	/* leaf 6: antialias, text antialias and interpolation at DEFAULT (the stock GC without GDI+ graphics) */
+	private void resetHints() {
+		antialias = SWT.DEFAULT;
+		textAntiAlias = SWT.DEFAULT;
+		interpolation = SWT.DEFAULT;
+		interpolationMode = SamplingMode.DEFAULT;
 	}
 
 	@Override
@@ -861,7 +907,8 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public boolean getAdvanced() {
-		return true;
+		// leaf 6 (GC_STATE_RESET, GF05): stock data.gdipGraphics != 0: false until setAdvanced(true) or a call that needs GDI+
+		return advanced;
 	}
 
 	@Override
@@ -946,6 +993,7 @@ public class M3ExternalGC implements IExternalGC {
 		if (pattern != null && pattern.isDisposed()) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
+		advanced |= pattern != null;
 		this.backgroundPattern = pattern;
 	}
 
@@ -1006,6 +1054,7 @@ public class M3ExternalGC implements IExternalGC {
 		if (pattern != null && pattern.isDisposed()) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
+		advanced |= pattern != null;
 		this.foregroundPattern = pattern;
 	}
 
@@ -1027,6 +1076,7 @@ public class M3ExternalGC implements IExternalGC {
 		case SWT.HIGH -> this.interpolationMode = SamplingMode.CATMULL_ROM;
 		default -> SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
+		advanced |= interpolation != SWT.DEFAULT;
 		this.interpolation = interpolation;
 	}
 
@@ -1210,6 +1260,7 @@ public class M3ExternalGC implements IExternalGC {
 		if (antialias != SWT.DEFAULT && antialias != SWT.ON && antialias != SWT.OFF) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
+		advanced |= antialias != SWT.DEFAULT;
 		this.textAntiAlias = antialias;
 	}
 

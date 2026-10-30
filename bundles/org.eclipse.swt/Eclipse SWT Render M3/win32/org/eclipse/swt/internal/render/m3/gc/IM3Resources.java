@@ -11,6 +11,9 @@ public interface IM3Resources {
 	org.eclipse.swt.graphics.Font getFont();
 	org.eclipse.swt.graphics.FontData getFontData();
 	void resetBaseColors();
+	/** leaf 6 (GC_STATE_RESET): back to the control's font, as a new stock GC starts (a reused GC is reset on dispose). */
+	default void resetFont() {
+	}
 	void cacheTextImage(String text, org.eclipse.swt.internal.canvasext.FontProperties fontProperties, boolean transparent, int background, int foreground, boolean antiAlias, IM3Image image);
 	IM3Image getTextImage(String text, org.eclipse.swt.internal.canvasext.FontProperties fontProperties, boolean transparent, int background, int foreground, boolean antialias);
 	String[] getTextSplits(String inputText, int flags);

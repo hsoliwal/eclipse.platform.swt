@@ -348,6 +348,13 @@ public class M3Resources implements IM3Resources {
 	}
 
 	@Override
+	public void resetFont() {
+		// M3 (GC seam, leaf 6; GC_STATE_RESET, census GF49): back to the control's font (getFont/getM3Font derive it lazily)
+		swtFont = null;
+		m3Font = null;
+	}
+
+	@Override
 	public void resetBaseColors() {
 		foreground = null;
 		background = null;

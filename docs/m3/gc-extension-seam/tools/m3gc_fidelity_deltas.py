@@ -205,6 +205,17 @@ DELTAS = [
      "wrapper around null; RGB {100, 200, 0} for {200, 100, 50}; cut source at x 50), 4/4 after",
      "PIXEL_COPY (M3-GC-PIXEL-COPY v1), GF20, GF21; stock W32G/GC.java copyArea (BitBlt SRCCOPY, clipped silently; into the image "
      "handle at the GC zoom); same defects in I31 SkiaGC.copyArea and SkijaToSwtImageConverter", False, 0),
+    ("L6-24", GC + "M3ExternalGC.java", "setAdvanced: no-op; getAdvanced: true; dispose: colours, canvas, clip, transform only",
+     "boolean advanced: set by setAdvanced(true) and by the calls that need GDI+ in the stock GC (alpha != 255, antialias / text "
+     "antialias / interpolation != DEFAULT, non-null transform or pattern); setAdvanced(false) = alpha 255, no patterns, "
+     "layer.close(), resetHints; dispose = layer.close() + resetState (every attribute to its construction default, "
+     "IM3Resources.resetFont: M3Resources drops its font so the control's is derived again) (scratch script contract_atoms.py, "
+     "job reset; M3ResourcesDouble.resetFont)",
+     "Test_org_eclipse_swt_m3gc_GcStateReset: 3/3 failing before (getAdvanced true on a fresh GC; alpha 100 after "
+     "setAdvanced(false); alpha 50 after dispose), 3/3 after",
+     "GC_STATE_RESET (M3-GC-RESET v1), GF05, GF49; stock W32G/GC.java getAdvanced (data.gdipGraphics != 0), SetAdvancedOperation "
+     "(alpha, patterns, transform, clip reset) and a new stock GC per owner-draw event; I31 SkiaGC.setAdvanced is a no-op "
+     "(same defect); GF49 is M3 only (reuse added in leaf 3)", False, 0),
 ]
 
 
