@@ -56,6 +56,15 @@ DELTAS = [
     ("L3-06", COMMON + "DrawnCustomDraw.java", "-",
      "new headless protocol class: hooks, Sender, Supplier<GC>, Consumer<GC> released; one reusable Event; measure/erase/paint per cell; clip in points edge by edge (DPIUtil)",
      "seam", "the sequencing, fields, clip and release are testable without a Display (tests/.../junit/m3gc/Test_org_eclipse_swt_m3gc_DrawnCustomDraw)", False),
+    ("L3-07", "docs/m3/gc-extension-seam/tools/test_m3gc.sh", "junit JVM without swt.library.path: 66 found, 29 passed, 37 failed on master (testDrawLine first: UnsatisfiedLinkError Could not load SWT library, "
+     "then NoClassDefFoundError Device)",
+     "M3_NATIVES (default H:/m3-scratch/gc-wiring/natives, staged by tools/m3gc_natives.sh under the worktree's Library revision names) passed as -Dswt.library.path",
+     "junit.log: java.lang.UnsatisfiedLinkError: Could not load SWT library ... no swt-osversion-win32-4975r19 in java.library.path",
+     "root cause is the base, not leaf 3: Color(null, ...) -> Resource(Device) -> Device.getDevice() -> Device.<clinit> Class.forName(Display) -> OS -> Library in every draw test; "
+     "leaf 2 passed 59/59 at Library REVISION 15 because ~/.swt/lib/win32/x86_64 holds swt-*-4975r15.dll; master (ef6af883b04) is REVISION 19 and no r19 dll exists on this machine", False),
+    ("L3-08", "docs/m3/gc-extension-seam/tools/m3gc_baseline_overlay.py", "SystemExit('P01: anchor not unique') on master, where P01 is fixed: no overlay written, compile_m3gc.sh with M3_OVERLAY still showed the 2 P02 errors",
+     "a defect whose anchors are all absent is reported as fixed and skipped; the other overlays are still written; PRE_EXISTING.tsv output unchanged",
+     "overlay.log: P01: anchor not unique in .../win32/.../graphics/Region.java", "the gate must be reproducible from master, where leaf 1's correction removed P01", False),
 ]
 
 

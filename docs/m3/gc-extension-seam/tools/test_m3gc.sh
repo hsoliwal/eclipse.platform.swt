@@ -28,7 +28,13 @@ cd "$OUT" || exit 1
 # runs the classpath scan instead and shows exactly that
 if [ -n "$M3_SCAN" ]; then SELECT="--scan-classpath $OUT/classes --include-engine junit-jupiter"
 else SELECT="--select-class org.eclipse.swt.tests.junit.m3gc.AllM3GcTests --include-engine junit-platform-suite"; fi
-"$JDK/bin/java" -Xmx1024m -Djava.awt.headless=true -jar "$JUNIT" execute --class-path "$OUT/classes;$CP" $SELECT \
+# Leaf 3 (L3-07): the tests initialize Device (Color(null, ...) -> Resource(Device) -> Device.getDevice() -> Display -> OS ->
+# Library), which loads swt-osversion/swt-win32 of the worktree's Library revision; leaf 2 found 4975r15 in ~/.swt/lib, master
+# is at r19 with no built dll. M3_NATIVES (m3gc_natives.sh stages the newest set under the revision's names) is handed to
+# the JVM as swt.library.path; without it the 59 draw tests fail with "Could not load SWT library" before their first draw.
+NATIVES=${M3_NATIVES:-H:/m3-scratch/gc-wiring/natives}
+[ -d "$NATIVES" ] && SWTLIB="-Dswt.library.path=$(cygpath -w "$NATIVES")" || SWTLIB=""
+"$JDK/bin/java" -Xmx1024m -Djava.awt.headless=true $SWTLIB -jar "$JUNIT" execute --class-path "$OUT/classes;$CP" $SELECT \
   --details=tree --disable-banner --disable-ansi-colors > "$OUT/junit.log" 2>&1
 grep -E '^\[ +[0-9]+ (containers|tests) ' "$OUT/junit.log"
 grep -E 'tests (found|successful|failed|skipped|aborted)' "$OUT/junit.log"

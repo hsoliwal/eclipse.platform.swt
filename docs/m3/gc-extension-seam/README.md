@@ -217,13 +217,29 @@ provider or `StyledCellLabelProvider` saw its events and lost its pixels.
 - Seam edits by Read + Edit on the owner files; the leaf-2 correction by `tools/m3gc_wiring_deltas.py` (byte preserving,
   idempotent; it also appends the L3 rows to `RECIPE_MEMORY.tsv`). Donors in `FOSS_REUSE_DECISION.tsv`
   (`m3-gc-planes-wiring:*`, two rows: the native contract REUSE_DIRECT, I31 `TreeItemRenderer.java:287-347` PATTERN_ONLY).
-- `compile_m3gc.sh C:/m3-superset/swt-gcseam H:/m3-scratch/gc-wiring/main`: GATE_M3GC. `compile_platform.sh` (Windows paths):
-  GATE_PLATFORMS.
+- `compile_m3gc.sh C:/m3-superset/swt-gcseam H:/m3-scratch/gc-wiring/main`: **920 sources, 0 errors** with `M3_OVERLAY`
+  (P02 only; `m3gc_baseline_overlay.py` now skips P01, which master fixed: L3-08), the 2 P02 errors without it (the same
+  as the base: 918/2 at `ef6af883b04`). `compile_platform.sh C:/m3-superset/swt-gcseam win32|gtk|cocoa` (Windows paths):
+  **win32 888 / 0, gtk 678 / 0, cocoa 817 / 0** (base 886, 675, 816: `DrawnCustomDraw` is common, `DrawnOwnerDraw` win32).
+- Natives for the headless gate (L3-07, `tools/m3gc_natives.sh`): every leaf-2 draw test initializes `Device`
+  (`new Color (null, ...)` -> `Resource (Device)` -> `Device.getDevice ()` -> `Device.<clinit>` loads `Display` -> `OS` ->
+  `Library`), which loads `swt-osversion`/`swt-win32` of the worktree's `Library` revision. Leaf 2 passed 59/59 at revision
+  `4975r15` because `~/.swt/lib/win32/x86_64` holds that set; master is `4975r19` and no r19 dll was built on this machine,
+  so on master the same 59 tests failed with `Could not load SWT library` before their first draw (the coordinator's run:
+  66 found, 29 passed, 37 failed; not a leaf-3 regression, the leaf's 7 tests passed). `m3gc_natives.sh` stages the newest
+  set (r15, r14 for awt/wgl) under the r19 names in `H:/m3-scratch/gc-wiring/natives`, never into `~/.swt`, and
+  `test_m3gc.sh` hands it to the JVM as `-Dswt.library.path` (`M3_NATIVES`).
 - `test_m3gc.sh` (headless, no `Display`; `AllM3GcTests` now includes `Test_org_eclipse_swt_m3gc_DrawnCustomDraw`, 7 tests over
   a `GCExtension` on the M3 doubles: nothing hooked / no GC sends nothing; Measure then Erase then Paint per cell with the
   native bounds and detail; cleared detail bits and `doit` are the outcome and the reused event is reset; the clip is the
   cell in points, scaled back to the surface, set before the listener and released after; `MeasureItem` bounds read back
-  in pixels; the extension is reusable after `dispose`): GATE_TESTS.
-- Display probe (`H:/m3-scratch/gc-wiring/probe/OwnerDrawProbe.java`, hidden desktop through `ui_lock.sh` + `hidden_java.sh`,
-  `-Dswt.widget.mode=m3`): a `Table` with the three listeners, `PaintItem` fills its cell red through `event.gc`, then
-  `table.print (gc)` and a pixel read of the cell: GATE_PROBE.
+  in pixels; the extension is reusable after `dispose`): tests compile 28 sources / 0 errors; **66 tests found, 66 passed,
+  0 failed** (the 59 of leaf 2 and the 7 new ones; suite order, `M3_NATIVES` staged).
+- Display probe (`tools/OwnerDrawProbe.java` through `tools/probe_owner_draw.sh <mode>`: hidden desktop via `ui_lock.sh` +
+  `hidden_java.sh`, the staged natives, `-Dswt.widget.mode=<mode>`): a two-column `Table` of 5 rows with the three
+  listeners; `PaintItem` fills its cell red through `event.gc`; after 1.5 s of events, `table.print (gc)` into an `Image` and
+  a pixel read inside the second cell of row 1. **PASS in `m3`**: `measure=22 erase=22 paint=22 printPaint=10` (one event
+  of each kind per cell per paint; the print is one paint of 10 cells), `gcExtension=true` (every `event.gc` was a
+  `GCExtension`), `order=true` (Measure, Erase, Paint for every cell), `pixel=ff0000`. **PASS in `custom`**: the same
+  counts and order, `gcExtension=false` (the plane's own GC, as designed), `pixel=ff0000`. `gpu`: NOT_RUN (no GL context
+  on the hidden desktop was attempted; the `gpu` backend is the same `M3RowCanvas` with a GPU surface).
