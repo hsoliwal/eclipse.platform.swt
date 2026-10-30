@@ -2,19 +2,26 @@
   "schema": "SYNEXIA_PASSIVE_QUALIFICATION_RECEIPT_V1",
   "target_repository": "hsoliwal/eclipse.platform.swt",
   "qualified_target_base": "7f3367932cee3cae8885f42cbcef931a086d2249",
+  "followup_target_base": "6f623e83cb893126e9496527bd06dc6cc09a991a",
   "canonical_repository": "hsoliwal/com.synexia",
-  "canonical_commit": "73c2f572db2100926ba3b63e6de93f0015fb8d4b",
-  "canonical_evidence_url": "https://github.com/hsoliwal/com.synexia/tree/73c2f572db2100926ba3b63e6de93f0015fb8d4b/synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs",
+  "canonical_commit": "bf2cd74c552eb3cbb02ef0aad81deefc1d728542",
   "canonical_engine_commit": "3cda7fa7fb30c9d4d75089265e73bbef3417bba7",
+  "canonical_evidence_url": "https://github.com/hsoliwal/com.synexia/tree/bf2cd74c552eb3cbb02ef0aad81deefc1d728542/synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs",
   "datasets": [
     {
+      "dataset": "swt-scroll-current-20261029",
       "path": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/datasets/swt-scroll-current-20261029",
+      "baseline_ref": "7f3367932cee3cae8885f42cbcef931a086d2249",
       "manifests": [
         {
           "path": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/datasets/swt-scroll-current-20261029/resources/com/synexia/rewrite/hash-pinned-java/m3-ast-build-reverse-20261017-swt-scroll-current-20261029/manifest.tsv",
           "sha256": "139c4674dd1900a02e411a307eee9663224486510852451c5c1fc83b743c6c10"
         }
       ],
+      "sdk_results": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs/canonical-replay-repair-20261029/swt-scroll-current-20261029/SDK_RESULTS.tsv",
+      "sdk_results_sha256": "512aeaa52093fe76432da733ce45f9e3617697b2a4152e2cfb7705c4d21524d1",
+      "sdk_inputs": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs/canonical-replay-repair-20261029/swt-scroll-current-20261029/SDK_INPUTS.tsv",
+      "sdk_inputs_sha256": "5c345803848e2b20c3515bb6e76102eb0520f3231683076a405088226e1b5559",
       "actual_sdk_tests": 5,
       "input_sealing_tests": 12,
       "receiver_integrity_cases": 15,
@@ -23,34 +30,85 @@
   ],
   "generated_results": [
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT AWT/common/org/eclipse/swt/awt/Java2DCanvas.java",
+      "dataset": "swt-scroll-current-20261029",
+      "baseline_ref": "7f3367932cee3cae8885f42cbcef931a086d2249",
       "pre_sha256": "06e89c5d9019a9576ecbe5016e103de024e5991862a35cf3302cd8d1d4ce9ba1",
-      "sha256": "3095546386a2c675711d0995b234459dd5d0a28c5efe2b92628f6309bac0f1bc"
+      "sha256": "3095546386a2c675711d0995b234459dd5d0a28c5efe2b92628f6309bac0f1bc",
+      "path": "bundles/org.eclipse.swt/Eclipse SWT AWT/common/org/eclipse/swt/awt/Java2DCanvas.java",
+      "execution_steps": [
+        {
+          "dataset": "swt-scroll-current-20261029",
+          "baseline_ref": "7f3367932cee3cae8885f42cbcef931a086d2249",
+          "pre_sha256": "06e89c5d9019a9576ecbe5016e103de024e5991862a35cf3302cd8d1d4ce9ba1",
+          "sha256": "3095546386a2c675711d0995b234459dd5d0a28c5efe2b92628f6309bac0f1bc"
+        }
+      ]
     },
     {
-      "path": "bundles/org.eclipse.swt/Eclipse SWT AWT/common/org/eclipse/swt/awt/Java2DSurface.java",
+      "dataset": "swt-scroll-current-20261029",
+      "baseline_ref": "7f3367932cee3cae8885f42cbcef931a086d2249",
       "pre_sha256": "874794e743e5e08d38fc63ccf1714d0012538027e9ee16812a841131e739abef",
-      "sha256": "c97cfd062d11ebe6716456a2337db29e01f9d5407574c0eda304c56e055f8caf"
+      "sha256": "c97cfd062d11ebe6716456a2337db29e01f9d5407574c0eda304c56e055f8caf",
+      "path": "bundles/org.eclipse.swt/Eclipse SWT AWT/common/org/eclipse/swt/awt/Java2DSurface.java",
+      "execution_steps": [
+        {
+          "dataset": "swt-scroll-current-20261029",
+          "baseline_ref": "7f3367932cee3cae8885f42cbcef931a086d2249",
+          "pre_sha256": "874794e743e5e08d38fc63ccf1714d0012538027e9ee16812a841131e739abef",
+          "sha256": "c97cfd062d11ebe6716456a2337db29e01f9d5407574c0eda304c56e055f8caf"
+        }
+      ]
     },
     {
-      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_awt_Java2DCanvasScrollReuse.java",
+      "dataset": "swt-scroll-current-20261029",
+      "baseline_ref": "7f3367932cee3cae8885f42cbcef931a086d2249",
       "pre_sha256": "ABSENT",
-      "sha256": "c4794a58c86af03ead9def76181ffe78f396b0a857c987acb03df24cdb18cc23"
+      "sha256": "c4794a58c86af03ead9def76181ffe78f396b0a857c987acb03df24cdb18cc23",
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_awt_Java2DCanvasScrollReuse.java",
+      "execution_steps": [
+        {
+          "dataset": "swt-scroll-current-20261029",
+          "baseline_ref": "7f3367932cee3cae8885f42cbcef931a086d2249",
+          "pre_sha256": "ABSENT",
+          "sha256": "c4794a58c86af03ead9def76181ffe78f396b0a857c987acb03df24cdb18cc23"
+        }
+      ]
     }
   ],
+  "preimage_semantics": "Each result names its immediate last executed preimage; ordered execution_steps retain the full per-file chain and exact dataset baselines.",
   "product_gate": {
-    "differential_raster_tests": 11,
-    "actual_gtk_x11_tests": 17,
-    "failures": 0,
-    "errors": 0,
-    "skipped": 0
+    "qualification": "PASSED",
+    "scope": "Owning SWT reactor source build plus GTK3/Linux x86_64/X11 focused runtime qualification.",
+    "selected_gtk_java_sources": 660,
+    "java21_classfiles": 995,
+    "native_source_and_build_inputs": 65,
+    "native_libraries_built": 8,
+    "native_builds": [
+      "GTK3",
+      "GTK4"
+    ],
+    "runtime_platform": "GTK3/Linux x86_64/X11",
+    "raster_tests": 11,
+    "native_functional_tests": 17,
+    "independent_artifact_origin_tests": 1,
+    "focused_failures": 0,
+    "focused_errors": 0,
+    "focused_skipped": 0,
+    "swt_jar_sha256": "5142be4e137879592b595e847d1fa4f557ebb1d29c2539f370603c1634920a0b",
+    "production_class_overlay": false,
+    "owning_reactor_platform_note": "Each of two Win32 fragments ran26 pure-Java mapper cases and skipped107 platform cases; these are not Windows runtime qualification.",
+    "opt_in_default": false,
+    "evidence": "synexia-openrewrite-recipes/recipe-crates/m3-ast-build-reverse-20261017/proofs/swt-coherent-followup-20261029/"
   },
-  "public_api_preservation": "Existing public JVM descriptors retained; additions recorded in canonical proof",
-  "scope": "Qualified component increment; complete toolkit parity and full distribution release are not claimed",
+  "evidence_corrections": [
+    "Original SDK_INPUTS omitted two published dataset metadata files and bound four unpublished refusal manifests. The exact published closure was re-executed using unchanged canonical engines and produced identical qualified outputs; the original invalid proof remains historical."
+  ],
+  "public_api_preservation": "Prior public JVM descriptors retained; explicit additions and behavior corrections are recorded in the canonical proof.",
+  "scope": "Qualified component increment; complete toolkit parity and full release qualification are not claimed.",
   "remaining_gates": [
-    "full owning distribution and installed-image integration",
-    "Windows/Cocoa and cross-platform pixel acceptance",
-    "performance and memory benchmarks"
+    "GTK4 runtime and Windows/Cocoa native acceptance.",
+    "Complete Eclipse distribution and full SWT test suite.",
+    "Performance measurement of scroll reuse; no elapsed-time speedup claimed."
   ],
   "passive": true
 }
