@@ -35,4 +35,19 @@ public interface IExternalCanvasFactory {
 		return (style & SWT.M3) != 0 && !(canvas instanceof StyledText);
 	}
 
+	/**
+	 * M3 (GC seam, leaf 7; pattern COMPOSITE_PAINT_HOOK v1): whether this factory draws a composite that paints itself (a
+	 * <code>Composite</code> that is not a <code>Canvas</code>, asked once at its first <code>WM_PAINT</code> with a Paint
+	 * listener or filter, when the subclass constructor has run). The default is false: the Initiative 31 seam handles
+	 * canvases only.
+	 */
+	default boolean acceptsComposite(Composite composite, int style) {
+		return false;
+	}
+
+	/** The handler of a composite this factory accepts ({@link #acceptsComposite}), or null for the stock path. */
+	default IExternalCanvasHandler createCompositeExtension(Composite composite) {
+		return null;
+	}
+
 }
