@@ -20,7 +20,10 @@ import java.util.function.*;
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.render.*;
+import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
+import org.eclipse.swt.internal.render.m3.gc.M3PlaneCanvasExtension;
 import org.eclipse.swt.internal.win32.*;
+import org.eclipse.swt.widgets.Control;
 
 import io.github.humbleui.skija.*;
 import io.github.humbleui.skija.Font;
@@ -149,6 +152,13 @@ public final class M3RowCanvas implements BufferCanvas {
 	private Pixmap readback;
 	private ImageInfo readbackInfo;
 	private int frameX, frameY, frameWidth, frameHeight;
+	/*
+	 * The GC seam (leaf 3): the plane's side of the seam is made once per canvas (its resources listen to the control); the
+	 * GC over it once per surface (M3ExternalGC keeps the surface it was made on), inside a frame, so its save count is the
+	 * frame's and a dispose per event restores to it. Null until a listener asks.
+	 */
+	private M3PlaneCanvasExtension extension;
+	private GC gc;
 
 	/**
 	 * The CPU (raster) backend of the <code>m3</code> mode.
@@ -202,6 +212,8 @@ public final class M3RowCanvas implements BufferCanvas {
 		dc = buffer.dc;
 		if (surface != null && buffer.bits == bits && buffer.width == width && buffer.height == height) return;
 		if (surface != null) surface.close ();
+		/* the GC was made on the surface being replaced: the next listener gets one on the new surface */
+		gc = null;
 		bits = buffer.bits;
 		width = buffer.width;
 		height = buffer.height;
@@ -245,6 +257,26 @@ public final class M3RowCanvas implements BufferCanvas {
 			readback.reset (readbackInfo, address, width * 4);
 		}
 		surface.readPixels (readback, frameX, frameY);
+	}
+
+	/** The library surface over the current target's pixels (replaced when the back buffer grows), or null before the first target. */
+	public Surface surface () {
+		return surface;
+	}
+
+	/*
+	 * A GCExtension over M3ExternalGC on this canvas's surface (the GC seam, leaves 1 and 2), for the owner-draw events of
+	 * the plane: one per surface, made inside the frame that first asks (M3ExternalGC records the canvas save count it
+	 * restores to on dispose, and the plane disposes it after each event, which leaves the frame's own clip in place). The
+	 * frame's damage is the GC's client area and initial clip.
+	 */
+	@Override
+	public GC gc (Control control, BackBuffer buffer) {
+		if (surface == null) return null;
+		if (extension == null) extension = new M3PlaneCanvasExtension (control, buffer, this::surface);
+		extension.frame (frameX, frameY, frameWidth, frameHeight);
+		if (gc == null) gc = new GCExtension (new M3ExternalGC (extension, SWT.NONE));
+		return gc;
 	}
 
 	@Override

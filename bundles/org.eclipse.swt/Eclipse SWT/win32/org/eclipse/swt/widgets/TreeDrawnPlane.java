@@ -59,6 +59,20 @@ final class TreeDrawnPlane extends DrawnPlane {
 	}
 
 	@Override
+	boolean ignoreNativeCustomDraw (boolean ignore) {
+		boolean previous = tree.ignoreCustomDraw;
+		tree.ignoreCustomDraw = ignore;
+		return previous;
+	}
+
+	/* as Tree.sendMeasureItemEvent applies the listener's bounds: the scroll width of a column-less tree with a header, the item height */
+	@Override
+	void measured (int x, int width, int height) {
+		if (tree.hwndHeader != 0 && tree.columnCount == 0 && x + width > tree.scrollWidth) tree.setScrollWidth (tree.scrollWidth = x + width);
+		if (height > tree.getItemHeightInPixels ()) tree.setItemHeight (height);
+	}
+
+	@Override
 	void drawRows (long hwnd) {
 		frameDefaults (hwnd);
 		int bottom = damage.top;
@@ -100,6 +114,7 @@ final class TreeDrawnPlane extends DrawnPlane {
 		int id = (int) tvItem.lParam;
 		/* read the facade only: no facade is created and no SetData is sent while drawing */
 		TreeItem item = id >= 0 && tree.items != null && id < tree.items.length ? tree.items [id] : null;
+		rowItem = item;
 		OS.TreeView_GetItemRect (hwnd, hItem, label, true);
 		row.x = line.left;
 		row.y = line.top;
@@ -145,6 +160,7 @@ final class TreeDrawnPlane extends DrawnPlane {
 	private void firstColumnOnly (TreeItem item) {
 		row.cells (1);
 		row.sortCell = -1;
+		cellColumn [0] = 0;
 		row.cellX [0] = label.left;
 		row.cellWidth [0] = label.right - label.left;
 		row.textX [0] = label.left;
@@ -163,9 +179,11 @@ final class TreeDrawnPlane extends DrawnPlane {
 		int count = tree.columnCount;
 		row.cells (count);
 		row.sortCell = -1;
+		cellColumns (count);
 		int right = row.x;
 		for (int order = 0; order < count; order++) {
 			int index = (int) OS.SendMessage (tree.hwndHeader, OS.HDM_ORDERTOINDEX, order, 0);
+			cellColumn [order] = index;
 			RECT header = tree.getColumnRect (index);
 			if (header == null) continue;
 			row.cellX [order] = header.left;

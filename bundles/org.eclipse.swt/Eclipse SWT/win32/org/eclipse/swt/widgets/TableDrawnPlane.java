@@ -95,16 +95,39 @@ final class TableDrawnPlane extends DrawnPlane {
 
 	/*
 	 * The facade the Table's own custom draw sees for a row: a live facade, or (viewport) the paint facade loaded
-	 * from the lanes while painting, or none. No facade is created.
+	 * from the lanes while painting, or none. No facade is created, unless a MeasureItem, EraseItem or PaintItem
+	 * listener is about to be handed the item (as Table.CDDS_SUBITEMPREPAINT forces one then).
 	 */
 	private TableItem facade (int index) {
+		boolean create = ownerDraw.hooked ();
 		TableViewport viewport = table.viewport;
-		if (viewport == null) return table._getItem (index, false);
+		if (viewport == null) return table._getItem (index, create);
 		viewport.painting++;
 		try {
-			return viewport.facade (index, false);
+			return viewport.facade (index, create);
 		} finally {
 			viewport.painting--;
+		}
+	}
+
+	@Override
+	boolean ignoreNativeCustomDraw (boolean ignore) {
+		boolean previous = table.ignoreCustomDraw;
+		table.ignoreCustomDraw = ignore;
+		return previous;
+	}
+
+	/* as Table.sendMeasureItemEvent applies the listener's bounds: the scroll width of a column-less table, the item height */
+	@Override
+	void measured (int x, int width, int height) {
+		if (table.columnCount == 0) {
+			int columnWidth = (int) OS.SendMessage (table.handle, OS.LVM_GETCOLUMNWIDTH, 0, 0);
+			if (x + width > columnWidth) table.setScrollWidth (x + width);
+		}
+		if (!table.settingItemHeight && height > table.getItemHeightInPixels ()) {
+			table.settingItemHeight = true;
+			table.setItemHeight (height);
+			table.settingItemHeight = false;
 		}
 	}
 
@@ -148,6 +171,7 @@ final class TableDrawnPlane extends DrawnPlane {
 		row.width = Math.max (bounds.right, client.right) - bounds.left;
 		row.height = bounds.bottom - bounds.top;
 		row.index = index;
+		rowItem = facade;
 		row.state = state (hwnd, index, focus, facade);
 		row.expanderWidth = 0;
 		row.checkWidth = row.is (RowPaint.CHECKBOX) ? stateWidth [0] : 0;
@@ -182,6 +206,7 @@ final class TableDrawnPlane extends DrawnPlane {
 	private void firstColumnOnly (long hwnd, int index, TableItem facade) {
 		row.cells (1);
 		row.sortCell = -1;
+		cellColumn [0] = 0;
 		int width = (int) OS.SendMessage (hwnd, OS.LVM_GETCOLUMNWIDTH, 0, 0);
 		row.cellX [0] = bounds.left;
 		row.cellWidth [0] = width;
@@ -197,8 +222,10 @@ final class TableDrawnPlane extends DrawnPlane {
 		int count = table.columnCount, right = row.x;
 		row.cells (count);
 		row.sortCell = -1;
+		cellColumns (count);
 		for (int order = 0; order < count; order++) {
 			int column = (int) OS.SendMessage (hwndHeader, OS.HDM_ORDERTOINDEX, order, 0);
+			cellColumn [order] = column;
 			if (OS.SendMessage (hwndHeader, OS.HDM_GETITEMRECT, column, item) == 0) continue;
 			int left = header.left + item.left, end = header.left + item.right;
 			row.cellX [order] = left;

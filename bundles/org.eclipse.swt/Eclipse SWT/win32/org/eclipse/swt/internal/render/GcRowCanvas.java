@@ -21,6 +21,7 @@ import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.*;
 import org.eclipse.swt.internal.win32.*;
+import org.eclipse.swt.widgets.Control;
 
 /**
  * The <code>custom</code> backend on win32: draws with the platform GC (the GDI device context of the plane's
@@ -79,6 +80,17 @@ public final class GcRowCanvas implements BufferCanvas {
 	@Override
 	public void target (BackBuffer buffer) {
 		this.hdc = buffer.dc;
+	}
+
+	/*
+	 * The frame's GC (the one images are drawn through), made now when the frame has none yet: a listener draws with it on
+	 * the back buffer's device context, exactly where the plane draws. Asked before any clip, it outlives unclip and is
+	 * disposed at end; the plane restores its clip after each event (DrawnOwnerDraw).
+	 */
+	@Override
+	public GC gc (Control control, BackBuffer buffer) {
+		if (gc == null) gc = gcFactory.apply (hdc);
+		return gc;
 	}
 
 	@Override

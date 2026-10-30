@@ -67,11 +67,25 @@ public final class RowRenderer {
 		return cache == null ? -1 : cache.rasterizations ();
 	}
 
-	/** Paints a row: the theme's row painter when it has one, else {@link #paintDefault}. */
+	/* a row painter the plane installs for its frames over the theme's: the owner-draw protocol (DrawnCustomDraw); null: none */
+	private Theme.RowPainter override;
+
+	/**
+	 * Installs a row painter for the frames to come, over the theme's (null: the theme's again): a plane whose widget hooks
+	 * <code>MeasureItem</code>, <code>EraseItem</code> or <code>PaintItem</code> paints its rows through the owner-draw
+	 * protocol, which interleaves the events with the default pieces ({@link #background}, {@link #selection},
+	 * {@link #paintCell} and the others).
+	 */
+	public void override (Theme.RowPainter painter) {
+		override = painter;
+	}
+
+	/** Paints a row: the installed or the theme's row painter when there is one, else {@link #paintDefault}. */
 	public void paint (RowCanvas canvas, RowPaint row) {
 		ThreadRole.MODEL.forbid ("RowRenderer.paint");
-		if (theme.rowPainter != null) {
-			theme.rowPainter.paint (canvas, row, theme, this);
+		Theme.RowPainter painter = override != null ? override : theme.rowPainter;
+		if (painter != null) {
+			painter.paint (canvas, row, theme, this);
 		} else {
 			paintDefault (canvas, row);
 		}
@@ -108,15 +122,24 @@ public final class RowRenderer {
 	}
 
 	private void background (RowCanvas canvas, RowPaint row) {
-		canvas.fill (row.x, row.y, row.width, row.height, background (row));
-		for (int cell = 0; cell < row.cells; cell++) {
-			int color = row.cellBackground [cell];
-			if (color == -1 && cell == row.sortCell) color = row.sortBackground;
-			if (color != -1) canvas.fill (row.cellX [cell], row.y, row.cellWidth [cell], row.height, color);
-		}
+		rowBackground (canvas, row);
+		for (int cell = 0; cell < row.cells; cell++) cellBackground (canvas, row, cell);
 	}
 
-	private void selection (RowCanvas canvas, RowPaint row) {
+	/** Fills the row rectangle with the row's background (the theme's or the widget's); the cells' own colours are {@link #cellBackground}. */
+	public void rowBackground (RowCanvas canvas, RowPaint row) {
+		canvas.fill (row.x, row.y, row.width, row.height, background (row));
+	}
+
+	/** Fills a cell with its own background colour, or the sort column's, when it has one (what <code>SWT.BACKGROUND</code> offers an <code>EraseItem</code> listener). */
+	public void cellBackground (RowCanvas canvas, RowPaint row, int cell) {
+		int color = row.cellBackground [cell];
+		if (color == -1 && cell == row.sortCell) color = row.sortBackground;
+		if (color != -1) canvas.fill (row.cellX [cell], row.y, row.cellWidth [cell], row.height, color);
+	}
+
+	/** Paints the selection (or hover) of a selected, drop-target or hot row over its selection rectangle. */
+	public void selection (RowCanvas canvas, RowPaint row) {
 		boolean selected = row.is (RowPaint.SELECTED) || row.is (RowPaint.DROP), hot = row.is (RowPaint.HOT);
 		if (!selected && !hot || row.selectionWidth <= 0) return;
 		if (theme.parts && row.is (RowPaint.SYSTEM_SELECTION)) {
@@ -131,7 +154,8 @@ public final class RowRenderer {
 		}
 	}
 
-	private void expander (RowCanvas canvas, RowPaint row) {
+	/** Paints the expander of a row with children in its slot. */
+	public void expander (RowCanvas canvas, RowPaint row) {
 		if (!row.is (RowPaint.CHILDREN) || row.expanderWidth <= 0) return;
 		boolean open = row.is (RowPaint.EXPANDED);
 		if (theme.expanderOpen != null) {
@@ -160,7 +184,8 @@ public final class RowRenderer {
 		if (!open) canvas.fill (cx, top + 2, 1, size - 4, theme.foreground);
 	}
 
-	private void checkBox (RowCanvas canvas, RowPaint row) {
+	/** Paints the check box of a row in its slot. */
+	public void checkBox (RowCanvas canvas, RowPaint row) {
 		if (!row.is (RowPaint.CHECKBOX) || row.checkWidth <= 0) return;
 		boolean checked = row.is (RowPaint.CHECKED), grayed = row.is (RowPaint.GRAYED);
 		if (theme.checkOn != null) {
@@ -232,7 +257,8 @@ public final class RowRenderer {
 			align | (row.is (RowPaint.ELLIPSIS) ? RowCanvas.ELLIPSIS : 0));
 	}
 
-	private void gridLines (RowCanvas canvas, RowPaint row) {
+	/** Paints the grid lines of a row that shows them. */
+	public void gridLines (RowCanvas canvas, RowPaint row) {
 		if (!row.is (RowPaint.GRID_LINES)) return;
 		if (theme.parts && row.listGrid != -1) {
 			listGridLines (canvas, row);
@@ -254,7 +280,8 @@ public final class RowRenderer {
 		canvas.fill (row.x, row.y + row.height - 1, row.width, 1, row.listGrid);
 	}
 
-	private void focus (RowCanvas canvas, RowPaint row) {
+	/** Paints the focus rectangle of the caret row of the focus control (what <code>SWT.FOCUSED</code> offers an <code>EraseItem</code> listener). */
+	public void focus (RowCanvas canvas, RowPaint row) {
 		if (theme.look == Theme.LOOK_INITIATIVE31) {
 			/* Initiative 31 draws the focus on every selected row of the focus control */
 			if (row.is (RowPaint.SELECTED) && row.is (RowPaint.FOCUSED) && row.selectionWidth > 0) canvas.focus (row.selectionX, row.y, row.selectionWidth, row.height);

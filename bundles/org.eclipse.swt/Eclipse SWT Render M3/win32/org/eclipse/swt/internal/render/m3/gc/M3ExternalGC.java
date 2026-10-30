@@ -119,6 +119,13 @@ public class M3ExternalGC implements IExternalGC {
 		// Restore all canvas state changes made during the lifetime of this GC,
 		// including any clipping or transform layers pushed after construction
 		surface.getCanvas().restoreToCount(initialSaveCount);
+		// M3 (GC seam, leaf 3): the GC is reusable after dispose. A drawn plane disposes it after each owner-draw event
+		// and hands the same object to the next one, so the clip and transform bookkeeping goes back to the constructed
+		// state along with the canvas (a stale isClipSet would pop the plane's own frame clip on the next setClipping).
+		isClipSet = false;
+		currentClipRegion = null;
+		currentClipBounds = m3Extension.getClientArea();
+		currentTransform = Matrix33.IDENTITY;
 
 	}
 

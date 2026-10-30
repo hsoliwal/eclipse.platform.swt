@@ -167,3 +167,63 @@ unapplied), gtk 0 by luck (its `Region` had the field and `getLog()` but none of
 A fuzzy re-apply (`git apply -C1`) duplicated the gtk `log` field, `getLog()` and the TextLayout hunk (into
 `getLineCount`); the duplicates were removed. Gate now, real: win32 886/0, gtk 675/0, cocoa 816/0. Found by leaf 2's
 `compile_m3gc.sh`, which counts launcher failures as errors (PRE_EXISTING.tsv P01, P03 on the backend branch).
+
+## Leaf 3: the drawn planes hand listeners a real GC (`m3/gc-planes-wiring-20261030`, on master)
+
+The gap, measured: the drawn planes of the `custom`, `m3` and `gpu` modes (`DrawnPlane`, `TableDrawnPlane`,
+`TreeDrawnPlane`, `ListDrawnPlane`) raised no `MeasureItem`, `EraseItem` or `PaintItem` (`grep -cE` 0 in all four), while the
+native win32 `Table`/`Tree` send them from `NM_CUSTOMDRAW` with a GC on the item DC. Worse than nothing: the behaviour pass
+(`DrawnPlane.behaviour`, the native `WM_PAINT` into the back buffer) did run the native custom draw, so a listener got the
+events with a GC on the back-buffer DC and the drawn pass then painted over whatever it drew. A JFace owner-draw label
+provider or `StyledCellLabelProvider` saw its events and lost its pixels.
+
+### What the leaf does (contract donor: the native `Table`/`Tree` of this repository, REUSE_DIRECT; pattern: I31 trick T9)
+
+- `DrawnCustomDraw` (common `internal.render`, headless): the protocol without the widget. Per cell `MeasureItem` (bounds:
+  the cell's image and text; the listener's bounds read back in pixels), `EraseItem` (bounds and clip: the cell; the
+  outcome is the listener's `event.detail`, or 0 on `doit == false`), `PaintItem` (content bounds, cell clip). One reusable
+  `Event` (every field a listener sees is reset per event), coordinates in points as natively (`DPIUtil`, edge by edge, the
+  widget's autoscaling zoom), the GC clipped before and handed to `released` after each event.
+- `DrawnOwnerDraw` (widgets, package-private, a `Theme.RowPainter`): installed on the plane's `RowRenderer` (`override`) for
+  the frames in which the widget hooks one of the three events, checked on each paint. It paints the row as
+  `paintDefault` does, with the events around each cell: the kept detail bits decide the cell's own background colour
+  (`SWT.BACKGROUND`), the selection (`SWT.SELECTED`), the image and text (`SWT.FOREGROUND`); a cleared `SWT.FOCUSED` drops
+  the focus rectangle. `event.index` is the column index (creation order; `DrawnPlane.cellColumn` per display cell),
+  `event.item` the facade (`DrawnPlane.rowItem`; `TableDrawnPlane.facade` creates one while a listener is hooked, as the
+  native `CDDS_SUBITEMPREPAINT` forces one). The GC's font is the cell's, its colours the native widget's for the cell's
+  state (the theme's selection colours when the theme draws its own selection), through one `Color` object each.
+  `MeasureItem` bounds are applied as the widget applies them (`DrawnPlane.measured`: `Table.setScrollWidth`/`setItemHeight`,
+  `Tree.setScrollWidth`/`setItemHeight`).
+- `event.gc`: the frame's GC through the new seam `BufferCanvas.gc (Control, BackBuffer)` (default null; `RowCanvas`
+  untouched, no Skija type named outside the M3 tree). `GcRowCanvas` answers its own frame GC (made on first use, before
+  any `clip`, disposed at `end`); after each event the plane gives it the frame's clip back (its other state, font and
+  colours, is set before each event; a transform or alpha a listener leaves stays with the frame, where the native widget
+  made a new GC per event: documented deviation). `M3RowCanvas` answers `new GCExtension (new M3ExternalGC (new
+  M3PlaneCanvasExtension (control, buffer, this::surface), SWT.NONE))`: one extension per canvas, one GC per surface
+  (`surface ()` is new, re-read per call because `target` replaces the surface when the buffer grows), made inside a frame
+  so `M3ExternalGC.initialSaveCount` is the frame's; the plane disposes it after each event (the renderer's canvas goes back
+  to the frame's state) and reuses it, which needed the leaf-2 correction L3-01 (`dispose` also resets `isClipSet`,
+  `currentClipRegion`, `currentClipBounds`, `currentTransform`; the stale flag would have popped the frame's own clip).
+- One source of events: while a listener is hooked, `DrawnPlane.behaviour` sets `Table/Tree.ignoreCustomDraw` around the
+  native `WM_PAINT`/`WM_PRINTCLIENT` call (previous value restored), so the native custom draw sends nothing and the drawn
+  pass sends each event once with a GC whose drawing reaches the screen.
+- Rule 28 (the render thread makes no SWT GC): a frame whose widget hooks a custom-draw event takes the UI-thread path even
+  with `-Dswt.drawn.renderThread=true` (checked on each paint; the render thread's canonical frame and slots serve again
+  once the listener is gone). Owner-drawn rows are never retained (rule 24: a listener may draw from state no key holds).
+- `ListDrawnPlane`: unchanged; a `List` has no items to hand out (`rowItem` stays null, so the default painting runs).
+
+### Method and gates (2026-10-30; base master `ef6af883b04`, PRs #267/#268 merged through #269)
+
+- Seam edits by Read + Edit on the owner files; the leaf-2 correction by `tools/m3gc_wiring_deltas.py` (byte preserving,
+  idempotent; it also appends the L3 rows to `RECIPE_MEMORY.tsv`). Donors in `FOSS_REUSE_DECISION.tsv`
+  (`m3-gc-planes-wiring:*`, two rows: the native contract REUSE_DIRECT, I31 `TreeItemRenderer.java:287-347` PATTERN_ONLY).
+- `compile_m3gc.sh C:/m3-superset/swt-gcseam H:/m3-scratch/gc-wiring/main`: GATE_M3GC. `compile_platform.sh` (Windows paths):
+  GATE_PLATFORMS.
+- `test_m3gc.sh` (headless, no `Display`; `AllM3GcTests` now includes `Test_org_eclipse_swt_m3gc_DrawnCustomDraw`, 7 tests over
+  a `GCExtension` on the M3 doubles: nothing hooked / no GC sends nothing; Measure then Erase then Paint per cell with the
+  native bounds and detail; cleared detail bits and `doit` are the outcome and the reused event is reset; the clip is the
+  cell in points, scaled back to the surface, set before the listener and released after; `MeasureItem` bounds read back
+  in pixels; the extension is reusable after `dispose`): GATE_TESTS.
+- Display probe (`H:/m3-scratch/gc-wiring/probe/OwnerDrawProbe.java`, hidden desktop through `ui_lock.sh` + `hidden_java.sh`,
+  `-Dswt.widget.mode=m3`): a `Table` with the three listeners, `PaintItem` fills its cell red through `event.gc`, then
+  `table.print (gc)` and a pixel read of the cell: GATE_PROBE.
