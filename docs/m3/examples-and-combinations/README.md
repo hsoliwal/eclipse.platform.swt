@@ -40,7 +40,13 @@ change.
 Factors: widget (Table, Tree, List, Combo, StyledText, Canvas, CTabFolder, CCombo, Model = the widget-free M3 model layer,
 headless), render mode (viewport, original, custom, m3, gpu), style (as applicable), feature switch (shipped rows), enhanced
 API call (shipped rows), operation (setItemCount, scroll top/middle/bottom, select range, sort/filter, update item,
-dispose), item count (0, 1, 10^3, 10^5).
+dispose), item count (0, 1, 10^3, 10^5), theme (none, light, dark, high-contrast) and language (none, en, de, ar = right to
+left, ja). Theme and language come from `M3Theme` / `M3Language` of the theme-language branch
+(`m3/theme-language-20261030`): until those classes are on the class path the row's theme/language step answers
+`NOT_RUN` (column `theme_language` of the results) and the rest of the row runs; when they are, the first public static
+`apply|set|select(Control, String)` is called. The gallery's toolbar slot mounts `M3ThemeSwitcher` and
+`M3LanguageSwitcher` (`new X (Composite, int)`, packages `org.eclipse.swt.widgets`, `custom`, `m3`) when present and is
+hidden otherwise, so this branch builds without theirs.
 
 Each row is one parameterized JUnit case (`Test_M3CombinationMatrix`) asserting:
 

@@ -145,6 +145,29 @@ public class Test_M3ExampleGallery {
 		((Shell) field (gallery, "shell")).dispose ();
 	}
 
+	/** Every toolbar button and a double click start children; disposing the gallery destroys them. */
+	@Test
+	void toolbarButtonsStartChildrenAndDisposeEndsThem () throws ReflectiveOperationException, InterruptedException {
+		M3ExampleGallery gallery = new M3ExampleGallery (display);
+		Tree tree = (Tree) field (gallery, "tree");
+		TreeItem button = leaves (tree).stream ().filter (i -> i.getText ().startsWith ("M3ControlsExample Button")).findFirst ().orElseThrow ();
+		call (gallery, "select", new Class [] {M3GalleryModel.Entry.class}, button.getData ());
+		Shell shell = (Shell) field (gallery, "shell");
+		for (Control c : ((Composite) shell.getChildren () [0]).getChildren ()) if (c instanceof Button b) b.notifyListeners (SWT.Selection, new Event ());
+		tree.notifyListeners (SWT.DefaultSelection, new Event ());
+		@SuppressWarnings ("unchecked")
+		List<Process> children = new ArrayList<> ((List<Process>) field (gallery, "children"));
+		assertEquals (8, children.size (), "Run, five modes, Run and close, double click");
+		shell.dispose ();
+		for (Process p : children) p.waitFor (20, java.util.concurrent.TimeUnit.SECONDS);
+		assertTrue (children.stream ().noneMatch (Process::isAlive), "children end with the gallery");
+	}
+
+	@Test
+	void runnerUsageWithoutArguments () throws Exception {
+		M3ExampleRunner.main (new String [0]);
+	}
+
 	@Test
 	void switcherSlotMountsByClassName () {
 		Shell shell = new Shell (display);

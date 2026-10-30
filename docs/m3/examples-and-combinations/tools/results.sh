@@ -27,16 +27,17 @@ awk -F'\t' -v OFS='\t' '
     }
   }' "$O/results/matrix-all.tsv" "$M" > "$D/results/COMBINATION_RESULTS.tsv"
 if [ -f "$O/results/examples-modes.tsv" ]; then
-  awk -F'\t' -v OFS='\t' 'NR > 1 { key = $2; cls[key] = $3; args[key] = $4; st[key, $1] = $5; det[key, $1] = $8 }
+  awk -F'\t' -v OFS='\t' 'FNR == 1 { file++; next } file == 1 { impl[FNR - 2] = $7; title[FNR - 2] = $2 "\t" $3; next }
+    { key = $2; cls[key] = $3; args[key] = $4; st[key, $1] = $5; det[key, $1] = $8 }
     END {
-      print "entry\tclass\targs\tviewport\toriginal\tcustom\tm3\tgpu\tdetail_of_first_non_pass"
-      for (k = 0; k in cls; k++) {
-        d = "-"; line = k "\t" cls[k] "\t" args[k]
+      print "entry\tclass\targs\timplemented_modes\tviewport\toriginal\tcustom\tm3\tgpu\tdetail_of_first_non_pass"
+      for (k = 0; k in impl; k++) {
+        split (title[k], t, "\t"); d = "-"; line = k "\t" t[1] "\t" t[2] "\t" impl[k]
         split ("viewport original custom m3 gpu", modes, " ")
         for (m = 1; m <= 5; m++) { s = ((k, modes[m]) in st) ? st[k, modes[m]] : "NOT_RUN"; line = line "\t" s; if (s != "PASS" && d == "-") d = modes[m] ": " substr (det[k, modes[m]], 1, 300) }
         print line, d
       }
-    }' "$O/results/examples-modes.tsv" > "$D/results/EXAMPLE_MODES.tsv"
+    }' "$WT/examples/org.eclipse.swt.snippets/tools/GALLERY_INDEX.tsv" "$O/results/examples-modes.tsv" > "$D/results/EXAMPLE_MODES.tsv"
 fi
 # failure classes: a mode difference is classed by its differing step (create, feature, theme-language, op, api, dispose)
 # and the row's api or op; any other failure by its exception and location
@@ -59,5 +60,5 @@ fi
     }
   }' | sort -t$'\t' -k3,3nr -k1,2 | awk 'BEGIN { print "finding\tfailure\tlocation\tcount\towner\tsubjects (first 8)\tmessage" } { printf "F%02d\t%s\n", NR, $0 }' > "$D/FINDINGS.tsv"
 awk -F'\t' 'NR > 1 { c[$12]++; if ($14 ~ /NOT_RUN/) tl++ } END { printf "matrix rows: "; for (s in c) printf "%s=%d ", s, c[s]; printf "(theme/language step NOT_RUN in %d rows)\n", tl }' "$D/results/COMBINATION_RESULTS.tsv"
-[ -f "$D/results/EXAMPLE_MODES.tsv" ] && awk -F'\t' 'NR > 1 { for (i = 4; i <= 8; i++) c[$i]++ } END { printf "example runs: "; for (s in c) printf "%s=%d ", s, c[s]; print "" }' "$D/results/EXAMPLE_MODES.tsv"
+[ -f "$D/results/EXAMPLE_MODES.tsv" ] && awk -F'\t' 'NR > 1 { for (i = 5; i <= 9; i++) c[$i]++ } END { printf "example runs: "; for (s in c) printf "%s=%d ", s, c[s]; print "" }' "$D/results/EXAMPLE_MODES.tsv"
 echo "findings: $(($(wc -l < "$D/FINDINGS.tsv") - 1))"
