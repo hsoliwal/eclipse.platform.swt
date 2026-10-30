@@ -61,6 +61,18 @@ Each row is one parameterized JUnit case (`Test_M3CombinationMatrix`) asserting:
 Rows with `env=headless` (widget Model) run without a Display; `env=display` rows run on the hidden desktop through
 `C:/m3-superset/tools/ui_lock.sh`, one JVM per mode, the reference first.
 
+## Runs
+
+| Step | Command (Windows paths; output under `H:/m3-scratch/swt-examples`) |
+|---|---|
+| SWT classes (win32 + M3 render/GPU trees) | `bash docs/m3/examples-and-combinations/tools/compile_platform.sh C:/m3-superset/swt-examples win32` |
+| fixed points + javac of snippets and tests | `bash docs/m3/examples-and-combinations/tools/build.sh` |
+| headless legs (generators, model, Model rows) | `bash docs/m3/examples-and-combinations/tools/run_headless.sh` |
+| display legs (hidden desktop, `ui_lock.sh`, one JVM at a time) | `bash docs/m3/examples-and-combinations/tools/run_display.sh matrix\|gallery\|examples` |
+| results, findings | `bash docs/m3/examples-and-combinations/tools/results.sh` |
+| coverage (JaCoCo 0.8.15) | `bash docs/m3/examples-and-combinations/tools/coverage.sh` |
+| theme/language rows against a local merge | `bash docs/m3/examples-and-combinations/tools/theme_language_rerun.sh <their-ref>` |
+
 ## Results
 
 See `results/` and `FINDINGS.tsv` (filled by the runs below).

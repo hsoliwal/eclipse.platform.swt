@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.stream.*;
 
 import org.eclipse.swt.graphics.*;
@@ -46,16 +47,26 @@ public class Test_M3CombinationMatrix {
 	static final String ENV = System.getProperty ("m3.combinations.env", "headless");
 	static final boolean RECORD = Boolean.getBoolean ("swt.viewport.record");
 	static final String RECORDING = System.getProperty ("swt.viewport.recording");
-	static final String FROM = System.getProperty ("m3.combinations.from", "");
+	static final boolean RESUME = Boolean.getBoolean ("m3.combinations.resume");
+	static final int ROW_LIMIT = Integer.getInteger ("m3.combinations.rowLimit", 900);
 	static final int STEPS = 6;
+	static final ScheduledExecutorService WATCHDOG = Executors.newSingleThreadScheduledExecutor (r -> {
+		Thread thread = new Thread (r, "m3 combination row watchdog");
+		thread.setDaemon (true);
+		return thread;
+	});
 	static Display display;
 	static Shell shell;
 
-	/** The rows this JVM runs: the reference runs every row of its environment, a mode JVM the rows of its mode. */
+	/**
+	 * The rows this JVM runs: the reference runs every row of its environment, a mode JVM the rows of its mode; rows of
+	 * 10^5 items last; with <code>-Dm3.combinations.resume=true</code> the rows this mode and role already ran are skipped.
+	 */
 	static Stream<CombinationRow> rows () throws IOException {
 		String mode = System.getProperty ("swt.widget.mode", "viewport");
+		Set<String> done = RESUME ? ResultLog.done (mode, RECORD ? "record" : "compare") : Set.of ();
 		return CombinationRow.load (CombinationRow.matrixFile ()).stream ().filter (r -> r.env ().equals (ENV)).filter (r -> RECORD || r.mode ().equals (mode))
-			.filter (r -> r.id ().compareTo (FROM) >= 0);
+			.filter (r -> !done.contains (r.id ())).sorted (Comparator.comparingInt ((CombinationRow r) -> r.count () >= 100_000 ? 1 : 0).thenComparing (CombinationRow::id));
 	}
 
 	@BeforeAll
@@ -81,16 +92,31 @@ public class Test_M3CombinationMatrix {
 		long start = System.nanoTime ();
 		String [] outcome = {"-", "-"};
 		Throwable failure = null;
+		ScheduledFuture<?> guard = guard (row, Thread.currentThread (), start);
 		try {
 			execute (row, outcome);
 		} catch (Throwable t) {
 			failure = t;
 			throw t;
 		} finally {
+			guard.cancel (false);
 			cleanUp ();
 			String status = failure == null ? "PASS" : failure instanceof TestAbortedException ? "NOT_RUN" : "FAIL";
 			ResultLog.write (row, RECORD ? "record" : "compare", status, outcome [0], outcome [1], (System.nanoTime () - start) / 1_000_000, failure);
 		}
+	}
+
+	/**
+	 * A row that runs longer than <code>-Dm3.combinations.rowLimit</code> seconds (default 900) cannot be stopped on the UI
+	 * thread: the watchdog records it as TIMEOUT with the row thread's stack and halts the JVM (exit 3); the leg resumes.
+	 */
+	static ScheduledFuture<?> guard (CombinationRow row, Thread runner, long start) {
+		return WATCHDOG.schedule (() -> {
+			AssertionError timeout = new AssertionError ("row exceeded " + ROW_LIMIT + " s; the stack is the row thread's at that moment");
+			timeout.setStackTrace (runner.getStackTrace ());
+			ResultLog.write (row, RECORD ? "record" : "compare", "TIMEOUT", "-", "-", (System.nanoTime () - start) / 1_000_000, timeout);
+			Runtime.getRuntime ().halt (3);
+		}, ROW_LIMIT, TimeUnit.SECONDS);
 	}
 
 	/** Runs the row through the harness, then the leak check; outcome = {theme/language answer, leak delta}. */

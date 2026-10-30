@@ -28,17 +28,22 @@ hidden () { # <budget-seconds> <log> <java arguments...>
   bash C:/m3-superset/tools/hidden_java.sh "$budget" "$log" -Xmx2g -XX:ErrorFile="$(W "$O/results")\\hs_err_%p.log" $NATIVE_OPTS "$@"
 }
 summary () { echo "$(basename "$1" .log): rc=$2 $(sed 's/\x1b\[[0-9;]*m//g' "$1" | grep -E 'tests (successful|failed|aborted|skipped)' | sed -E 's/^\[ *//; s/ +\]$//' | tr -s ' ' | tr '\n' ' ')"; }
-matrix () { # env: MATRIX (default: the checked-in TSV), TAG (result name, default display), MODES
-  local REC=$O/recording/${TAG:-display} RES=$O/results/matrix-${TAG:-display}.tsv record budget
+matrix () { # env: MATRIX (default: the checked-in TSV), TAG (result name, default display), MODES, RESUME (keep earlier rows), ROW_LIMIT
+  local REC=$O/recording/${TAG:-display} RES=$O/results/matrix-${TAG:-display}.tsv record attempt rc log
   local M=${MATRIX:-$WT/tests/org.eclipse.swt.tests/tools/m3-combinations/COMBINATION_MATRIX.tsv}
-  rm -rf "$REC"; rm -f "$RES"; rm -rf "$O/results/stacks"
+  [ -n "$RESUME" ] || { rm -rf "$REC"; rm -f "$RES"; rm -rf "$O/results/stacks"; }
   for mode in ${MODES:-original viewport custom m3 gpu}; do
-    record=false; budget=2400; [ "$mode" = original ] && { record=true; budget=5400; }
-    hidden $budget "$O/results/${TAG:-display}-matrix-$mode.log" -Dswt.widget.mode=$mode -Dswt.viewport.record=$record -Dm3.combinations.env=display \
-      "-Dswt.viewport.recording=$(W "$REC")" "-Dm3.combinations.results=$(W "$RES")" "-Dm3.combinations.matrix=$(W "$M")" \
-      -cp "$CP" org.junit.platform.console.ConsoleLauncher execute --select-class org.eclipse.swt.tests.junit.m3combinations.Test_M3CombinationMatrix \
-      --disable-banner --disable-ansi-colors --details=summary
-    summary "$O/results/${TAG:-display}-matrix-$mode.log" $?
+    record=false; [ "$mode" = original ] && record=true
+    # a row over the row limit halts its JVM with 3 after recording TIMEOUT; the next JVM resumes after it
+    for attempt in 1 2 3 4 5 6 7 8 9 10; do
+      log=$O/results/${TAG:-display}-matrix-$mode-$attempt.log
+      hidden 3600 "$log" -Dswt.widget.mode=$mode -Dswt.viewport.record=$record -Dm3.combinations.env=display -Dm3.combinations.resume=true \
+        -Dm3.combinations.rowLimit=${ROW_LIMIT:-900} "-Dswt.viewport.recording=$(W "$REC")" "-Dm3.combinations.results=$(W "$RES")" "-Dm3.combinations.matrix=$(W "$M")" \
+        -cp "$CP" org.junit.platform.console.ConsoleLauncher execute --select-class org.eclipse.swt.tests.junit.m3combinations.Test_M3CombinationMatrix \
+        --disable-banner --disable-ansi-colors --details=summary
+      rc=$?; summary "$log" $rc
+      [ $rc -eq 3 ] || break
+    done
   done
 }
 gallery () {

@@ -1,1 +1,3 @@
 finding	failure	location	count	owner	subjects (first 8)	message
+F01	SLOW (> 60 s)	Tree plain dispose 100000 items	2	viewport	matrix r0050 original; matrix r0067 original	took 328 s in mode original (record)
+F02	SLOW (> 60 s)	Tree virtual scroll-middle 100000 items	1	viewport	matrix r0074 original	took 800 s in mode original (record)

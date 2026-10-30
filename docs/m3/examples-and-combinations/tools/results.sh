@@ -46,6 +46,9 @@ fi
       if ($19 ~ /^step [0-9]+ differs/) { split ("create feature theme-language op api dispose", names, " "); s = $19; sub (/^step /, "", s); s = names[substr (s, 1, index (s, " ") - 1) + 1]
         key = "MODE_DIFF\tstep " s " (" (s == "api" ? $6 : s == "op" ? $7 : s) ")" } else key = $17 "\t" $18
       print key, "matrix " $1 " " $2 " " $3, $19 }' "$D/results/COMBINATION_RESULTS.tsv"
+  # rows slower than 60 s in a leg: an observation (performance), classed by widget, kind (virtual or plain) and operation
+  awk -F'\t' -v OFS='\t' 'NR > 1 && $17 > 60000 { kind = $4 ~ /VIRTUAL/ ? "virtual" : "plain"
+      print "SLOW (> 60 s)", $2 " " kind " " $7 " " $8 " items", "matrix " $1 " " $12, "took " int ($17 / 1000) " s in mode " $12 " (" $13 ")" }' "$O/results/matrix-all.tsv"
   [ -f "$O/results/examples-modes.tsv" ] && awk -F'\t' -v OFS='\t' 'NR > 1 && $5 != "PASS" {
       d = $8; ex = d; sub (/:.*/, "", ex); loc = "-"; if (match (d, /\(([A-Za-z0-9_$]+\.java:[0-9]+)\)/)) loc = substr (d, RSTART + 1, RLENGTH - 2)
       print "EXAMPLE_" $5 " " ex, loc, "example " $2 " " $3 " " $4 " " $1, substr (d, 1, 300) }' "$O/results/examples-modes.tsv"

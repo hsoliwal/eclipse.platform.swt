@@ -65,15 +65,15 @@ r0063	Tree	original	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-LOCALE-COLLATION	
 r0064	Tree	custom	NONE	none	M3-EMPTINESS	update-item	1	dark	none	display	PASS	PASS	NOT_RUN no M3Theme on the class path; none	0	-	-	-	-
 r0065	Tree	custom	VIRTUAL	none	M3-COLUMN-FILTER	dispose	0	light	de	display	PASS	PASS	NOT_RUN no M3Theme on the class path; NOT_RUN no M3Language on the class path	0	-	-	-	-
 r0066	Tree	custom	MULTI	none	M3-SCROLL-RESTORE	dispose	1	none	none	display	PASS	PASS	none; none	0	-	-	-	-
-r0067	Tree	custom	CHECK	none	M3-VISIBLE-RANGE	dispose	100000	high-contrast	ar	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
-r0068	Tree	custom	FULL_SELECTION	none	none	scroll-top	0	high-contrast	de	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
-r0069	Tree	custom	BORDER	none	M3-SCROLL-INFO	setItemCount	0	none	de	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
-r0070	Tree	custom	H_SCROLL|V_SCROLL	none	M3-SCROLL-TO-ALIGNED	scroll-middle	0	none	ar	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
-r0071	Tree	custom	NO_SCROLL	none	M3-TEXT-SEGMENTS	setItemCount	1000	dark	de	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
-r0072	Tree	custom	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-TOKEN-CURSOR	sort-filter	1000	light	de	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
-r0073	Tree	m3	NONE	none	M3-TYPE-AHEAD	dispose	0	none	none	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
-r0074	Tree	m3	VIRTUAL	none	M3-TEXT-SEGMENTS	scroll-middle	100000	none	ar	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
-r0075	Tree	m3	MULTI	none	M3-TOKEN-CURSOR	setItemCount	0	high-contrast	ja	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
+r0067	Tree	custom	CHECK	none	M3-VISIBLE-RANGE	dispose	100000	high-contrast	ar	display	PASS	PASS	NOT_RUN no M3Theme on the class path; NOT_RUN no M3Language on the class path	0	-	-	-	-
+r0068	Tree	custom	FULL_SELECTION	none	none	scroll-top	0	high-contrast	de	display	PASS	PASS	NOT_RUN no M3Theme on the class path; NOT_RUN no M3Language on the class path	0	-	-	-	-
+r0069	Tree	custom	BORDER	none	M3-SCROLL-INFO	setItemCount	0	none	de	display	PASS	PASS	none; NOT_RUN no M3Language on the class path	0	-	-	-	-
+r0070	Tree	custom	H_SCROLL|V_SCROLL	none	M3-SCROLL-TO-ALIGNED	scroll-middle	0	none	ar	display	PASS	PASS	none; NOT_RUN no M3Language on the class path	0	-	-	-	-
+r0071	Tree	custom	NO_SCROLL	none	M3-TEXT-SEGMENTS	setItemCount	1000	dark	de	display	PASS	PASS	NOT_RUN no M3Theme on the class path; NOT_RUN no M3Language on the class path	0	-	-	-	-
+r0072	Tree	custom	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-TOKEN-CURSOR	sort-filter	1000	light	de	display	PASS	PASS	NOT_RUN no M3Theme on the class path; NOT_RUN no M3Language on the class path	0	-	-	-	-
+r0073	Tree	m3	NONE	none	M3-TYPE-AHEAD	dispose	0	none	none	display	PASS	PASS	none; none	0	-	-	-	-
+r0074	Tree	m3	VIRTUAL	none	M3-TEXT-SEGMENTS	scroll-middle	100000	none	ar	display	PASS	PASS	none; NOT_RUN no M3Language on the class path	0	-	-	-	-
+r0075	Tree	m3	MULTI	none	M3-TOKEN-CURSOR	setItemCount	0	high-contrast	ja	display	PASS	PASS	NOT_RUN no M3Theme on the class path; NOT_RUN no M3Language on the class path	0	-	-	-	-
 r0076	Tree	m3	CHECK	none	M3-MODE-QUERY	setItemCount	100000	dark	en	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
 r0077	Tree	m3	FULL_SELECTION	none	M3-EMPTINESS	setItemCount	1000	high-contrast	en	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-
 r0078	Tree	m3	BORDER	none	M3-ROW-MATH	setItemCount	1	light	none	display	NOT_RUN	NOT_RUN	-	-	-	-	-	-

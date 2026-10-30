@@ -41,10 +41,22 @@ final class ResultLog {
 			Path path = Paths.get (file);
 			if (!Files.exists (path)) Files.writeString (path, HEADER + "\n", StandardCharsets.UTF_8);
 			Files.writeString (path, line + "\n", StandardCharsets.UTF_8, StandardOpenOption.APPEND);
-			if ("FAIL".equals (status)) stack (path, row.id () + "-" + mode, failure);
+			if ("FAIL".equals (status) || "TIMEOUT".equals (status)) stack (path, row.id () + "-" + mode, failure);
 		} catch (IOException e) {
 			throw new UncheckedIOException (e);
 		}
+	}
+
+	/** Rows that already ran (PASS, FAIL or TIMEOUT) in a JVM mode and role, for a resumed leg. */
+	static Set<String> done (String mode, String role) throws IOException {
+		String file = System.getProperty ("m3.combinations.results");
+		if (file == null || !Files.exists (Paths.get (file))) return Set.of ();
+		Set<String> done = new HashSet<> ();
+		for (String line : Files.readAllLines (Paths.get (file), StandardCharsets.UTF_8)) {
+			String [] c = line.split ("\t", -1);
+			if (c.length > 13 && mode.equals (c [11]) && role.equals (c [12]) && !"NOT_RUN".equals (c [13])) done.add (c [0]);
+		}
+		return done;
 	}
 
 	/** Failure class, location and first message line (tabs flattened, at most 400 characters). */
