@@ -49,14 +49,19 @@ def main(worktree, overlay):
         if edits:
             source = Path(worktree) / rel
             text = source.read_bytes().decode("utf-8")
-            for old, new in edits:
-                if text.count(old) != 1:
-                    raise SystemExit("%s: anchor not unique in %s: %r" % (pid, rel, old[:60]))
-                text = text.replace(old, new)
-            target = Path(overlay) / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(text.encode("utf-8"))
-            print("%s overlay %s" % (pid, rel))
+            # leaf 3 (L3-08): a defect the owner has fixed meanwhile (P01 on master) has no anchor left: no overlay for it,
+            # the others still get theirs; an anchor found more than once is still an error
+            if all(text.count(old) == 0 for old, new in edits):
+                print("%s fixed in the worktree, no overlay: %s" % (pid, rel))
+            else:
+                for old, new in edits:
+                    if text.count(old) != 1:
+                        raise SystemExit("%s: anchor not unique in %s: %r" % (pid, rel, old[:60]))
+                    text = text.replace(old, new)
+                target = Path(overlay) / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(text.encode("utf-8"))
+                print("%s overlay %s" % (pid, rel))
         rows.append("\t".join((pid, platform, rel, str(line), javac, origin, owner, fix, "yes" if edits else "no")))
     out = Path(worktree) / "docs/m3/gc-extension-seam/PRE_EXISTING.tsv"
     out.write_text("\n".join(rows) + "\n", encoding="utf-8", newline="")

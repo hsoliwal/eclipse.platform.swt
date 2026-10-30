@@ -167,3 +167,79 @@ unapplied), gtk 0 by luck (its `Region` had the field and `getLog()` but none of
 A fuzzy re-apply (`git apply -C1`) duplicated the gtk `log` field, `getLog()` and the TextLayout hunk (into
 `getLineCount`); the duplicates were removed. Gate now, real: win32 886/0, gtk 675/0, cocoa 816/0. Found by leaf 2's
 `compile_m3gc.sh`, which counts launcher failures as errors (PRE_EXISTING.tsv P01, P03 on the backend branch).
+
+## Leaf 3: the drawn planes hand listeners a real GC (`m3/gc-planes-wiring-20261030`, on master)
+
+The gap, measured: the drawn planes of the `custom`, `m3` and `gpu` modes (`DrawnPlane`, `TableDrawnPlane`,
+`TreeDrawnPlane`, `ListDrawnPlane`) raised no `MeasureItem`, `EraseItem` or `PaintItem` (`grep -cE` 0 in all four), while the
+native win32 `Table`/`Tree` send them from `NM_CUSTOMDRAW` with a GC on the item DC. Worse than nothing: the behaviour pass
+(`DrawnPlane.behaviour`, the native `WM_PAINT` into the back buffer) did run the native custom draw, so a listener got the
+events with a GC on the back-buffer DC and the drawn pass then painted over whatever it drew. A JFace owner-draw label
+provider or `StyledCellLabelProvider` saw its events and lost its pixels.
+
+### What the leaf does (contract donor: the native `Table`/`Tree` of this repository, REUSE_DIRECT; pattern: I31 trick T9)
+
+- `DrawnCustomDraw` (common `internal.render`, headless): the protocol without the widget. Per cell `MeasureItem` (bounds:
+  the cell's image and text; the listener's bounds read back in pixels), `EraseItem` (bounds and clip: the cell; the
+  outcome is the listener's `event.detail`, or 0 on `doit == false`), `PaintItem` (content bounds, cell clip). One reusable
+  `Event` (every field a listener sees is reset per event), coordinates in points as natively (`DPIUtil`, edge by edge, the
+  widget's autoscaling zoom), the GC clipped before and handed to `released` after each event.
+- `DrawnOwnerDraw` (widgets, package-private, a `Theme.RowPainter`): installed on the plane's `RowRenderer` (`override`) for
+  the frames in which the widget hooks one of the three events, checked on each paint. It paints the row as
+  `paintDefault` does, with the events around each cell: the kept detail bits decide the cell's own background colour
+  (`SWT.BACKGROUND`), the selection (`SWT.SELECTED`), the image and text (`SWT.FOREGROUND`); a cleared `SWT.FOCUSED` drops
+  the focus rectangle. `event.index` is the column index (creation order; `DrawnPlane.cellColumn` per display cell),
+  `event.item` the facade (`DrawnPlane.rowItem`; `TableDrawnPlane.facade` creates one while a listener is hooked, as the
+  native `CDDS_SUBITEMPREPAINT` forces one). The GC's font is the cell's, its colours the native widget's for the cell's
+  state (the theme's selection colours when the theme draws its own selection), through one `Color` object each.
+  `MeasureItem` bounds are applied as the widget applies them (`DrawnPlane.measured`: `Table.setScrollWidth`/`setItemHeight`,
+  `Tree.setScrollWidth`/`setItemHeight`).
+- `event.gc`: the frame's GC through the new seam `BufferCanvas.gc (Control, BackBuffer)` (default null; `RowCanvas`
+  untouched, no Skija type named outside the M3 tree). `GcRowCanvas` answers its own frame GC (made on first use, before
+  any `clip`, disposed at `end`); after each event the plane gives it the frame's clip back (its other state, font and
+  colours, is set before each event; a transform or alpha a listener leaves stays with the frame, where the native widget
+  made a new GC per event: documented deviation). `M3RowCanvas` answers `new GCExtension (new M3ExternalGC (new
+  M3PlaneCanvasExtension (control, buffer, this::surface), SWT.NONE))`: one extension per canvas, one GC per surface
+  (`surface ()` is new, re-read per call because `target` replaces the surface when the buffer grows), made inside a frame
+  so `M3ExternalGC.initialSaveCount` is the frame's; the plane disposes it after each event (the renderer's canvas goes back
+  to the frame's state) and reuses it, which needed the leaf-2 correction L3-01 (`dispose` also resets `isClipSet`,
+  `currentClipRegion`, `currentClipBounds`, `currentTransform`; the stale flag would have popped the frame's own clip).
+- One source of events: while a listener is hooked, `DrawnPlane.behaviour` sets `Table/Tree.ignoreCustomDraw` around the
+  native `WM_PAINT`/`WM_PRINTCLIENT` call (previous value restored), so the native custom draw sends nothing and the drawn
+  pass sends each event once with a GC whose drawing reaches the screen.
+- Rule 28 (the render thread makes no SWT GC): a frame whose widget hooks a custom-draw event takes the UI-thread path even
+  with `-Dswt.drawn.renderThread=true` (checked on each paint; the render thread's canonical frame and slots serve again
+  once the listener is gone). Owner-drawn rows are never retained (rule 24: a listener may draw from state no key holds).
+- `ListDrawnPlane`: unchanged; a `List` has no items to hand out (`rowItem` stays null, so the default painting runs).
+
+### Method and gates (2026-10-30; base master `ef6af883b04`, PRs #267/#268 merged through #269)
+
+- Seam edits by Read + Edit on the owner files; the leaf-2 correction by `tools/m3gc_wiring_deltas.py` (byte preserving,
+  idempotent; it also appends the L3 rows to `RECIPE_MEMORY.tsv`). Donors in `FOSS_REUSE_DECISION.tsv`
+  (`m3-gc-planes-wiring:*`, two rows: the native contract REUSE_DIRECT, I31 `TreeItemRenderer.java:287-347` PATTERN_ONLY).
+- `compile_m3gc.sh C:/m3-superset/swt-gcseam H:/m3-scratch/gc-wiring/main`: **920 sources, 0 errors** with `M3_OVERLAY`
+  (P02 only; `m3gc_baseline_overlay.py` now skips P01, which master fixed: L3-08), the 2 P02 errors without it (the same
+  as the base: 918/2 at `ef6af883b04`). `compile_platform.sh C:/m3-superset/swt-gcseam win32|gtk|cocoa` (Windows paths):
+  **win32 888 / 0, gtk 678 / 0, cocoa 817 / 0** (base 886, 675, 816: `DrawnCustomDraw` is common, `DrawnOwnerDraw` win32).
+- Natives for the headless gate (L3-07, `tools/m3gc_natives.sh`): every leaf-2 draw test initializes `Device`
+  (`new Color (null, ...)` -> `Resource (Device)` -> `Device.getDevice ()` -> `Device.<clinit>` loads `Display` -> `OS` ->
+  `Library`), which loads `swt-osversion`/`swt-win32` of the worktree's `Library` revision. Leaf 2 passed 59/59 at revision
+  `4975r15` because `~/.swt/lib/win32/x86_64` holds that set; master is `4975r19` and no r19 dll was built on this machine,
+  so on master the same 59 tests failed with `Could not load SWT library` before their first draw (the coordinator's run:
+  66 found, 29 passed, 37 failed; not a leaf-3 regression, the leaf's 7 tests passed). `m3gc_natives.sh` stages the newest
+  set (r15, r14 for awt/wgl) under the r19 names in `H:/m3-scratch/gc-wiring/natives`, never into `~/.swt`, and
+  `test_m3gc.sh` hands it to the JVM as `-Dswt.library.path` (`M3_NATIVES`).
+- `test_m3gc.sh` (headless, no `Display`; `AllM3GcTests` now includes `Test_org_eclipse_swt_m3gc_DrawnCustomDraw`, 7 tests over
+  a `GCExtension` on the M3 doubles: nothing hooked / no GC sends nothing; Measure then Erase then Paint per cell with the
+  native bounds and detail; cleared detail bits and `doit` are the outcome and the reused event is reset; the clip is the
+  cell in points, scaled back to the surface, set before the listener and released after; `MeasureItem` bounds read back
+  in pixels; the extension is reusable after `dispose`): tests compile 28 sources / 0 errors; **66 tests found, 66 passed,
+  0 failed** (the 59 of leaf 2 and the 7 new ones; suite order, `M3_NATIVES` staged).
+- Display probe (`tools/OwnerDrawProbe.java` through `tools/probe_owner_draw.sh <mode>`: hidden desktop via `ui_lock.sh` +
+  `hidden_java.sh`, the staged natives, `-Dswt.widget.mode=<mode>`): a two-column `Table` of 5 rows with the three
+  listeners; `PaintItem` fills its cell red through `event.gc`; after 1.5 s of events, `table.print (gc)` into an `Image` and
+  a pixel read inside the second cell of row 1. **PASS in `m3`**: `measure=22 erase=22 paint=22 printPaint=10` (one event
+  of each kind per cell per paint; the print is one paint of 10 cells), `gcExtension=true` (every `event.gc` was a
+  `GCExtension`), `order=true` (Measure, Erase, Paint for every cell), `pixel=ff0000`. **PASS in `custom`**: the same
+  counts and order, `gcExtension=false` (the plane's own GC, as designed), `pixel=ff0000`. `gpu`: NOT_RUN (no GL context
+  on the hidden desktop was attempted; the `gpu` backend is the same `M3RowCanvas` with a GPU surface).

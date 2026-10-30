@@ -52,8 +52,21 @@ abstract class DrawnPlane {
 	private final StringBuilder overlayText = new StringBuilder (96);
 	private final Runnable themeChanged;
 	final RowPaint row = new RowPaint ();
+	/**
+	 * The item of the row being filled, the facade the widget's own custom draw would hand to a listener, or null (none,
+	 * or a widget without items): set by {@link #drawRows} before {@link #paintRow}; read by the owner-draw protocol.
+	 */
+	Widget rowItem;
+	/** Per cell of {@link #row}, in display order: the column index (creation order) the owner-draw events report. */
+	int [] cellColumn = new int [1];
+	/*
+	 * GC seam, leaf 3: the owner-draw protocol of the widget's MeasureItem, EraseItem and PaintItem listeners, installed
+	 * on the renderer for the frames the widget hooks one of them (checked on each paint); the native custom draw of the
+	 * behaviour pass sends none then (ignoreNativeCustomDraw), so a listener sees each event once, from the plane.
+	 */
+	final DrawnOwnerDraw ownerDraw;
 	final RECT damage = new RECT (), client = new RECT ();
-	private final BackBuffer buffer = new BackBuffer ();
+	final BackBuffer buffer = new BackBuffer ();
 	private final PAINTSTRUCT ps = new PAINTSTRUCT ();
 	/* the update region of the paint in progress, restored for the native paint when none of it is visible */
 	private final long update = OS.CreateRectRgn (0, 0, 0, 0);
@@ -106,6 +119,7 @@ abstract class DrawnPlane {
 			data.device = control.display;
 			return control.createNewGC (hdc, data);
 		});
+		this.ownerDraw = new DrawnOwnerDraw (this);
 		if (RENDER_THREAD) {
 			/* the render thread's canvas: made there, reading only the zoom the UI thread writes; it draws image pixels, never an SWT GC */
 			java.util.function.IntSupplier zoom = () -> renderZoom;
@@ -229,7 +243,13 @@ abstract class DrawnPlane {
 
 	/* behaviour pass into the back buffer, drawn pass over it, present: the damage is visible */
 	private void draw (long hwnd, int msg, long target, long lParam) {
-		if (renderTarget != null && msg == OS.WM_PAINT) {
+		/*
+		 * The owner-draw events hand the listener a GC, which the render thread never makes (rule 28): while the widget hooks
+		 * one of them, every frame takes the UI-thread path below (the render thread's canonical frame and slots stay as
+		 * they are and serve again once the listener is gone). Checked on each paint.
+		 */
+		boolean owner = ownerDraw.hooked ();
+		if (renderTarget != null && msg == OS.WM_PAINT && !owner) {
 			drawOnRenderThread (hwnd, msg, target, lParam);
 			return;
 		}
@@ -246,15 +266,20 @@ abstract class DrawnPlane {
 		row.zoom = control.nativeZoom;
 		/* a theme's own row or cell painter may read state outside the row: its rows are always drawn */
 		Theme theme = renderer.theme ();
-		/* with a render thread this path serves captures (WM_PRINTCLIENT) only: its slots are not kept up, so it draws every row */
-		boolean retain = renderTarget == null && !OVERLAY && theme.rowPainter == null && theme.cellPainter == null;
+		/*
+		 * With a render thread this path serves captures (WM_PRINTCLIENT) and owner-drawn frames only: its slots are not kept
+		 * up, so it draws every row; a listener's drawing is never kept either (it may draw anything, from state no key holds)
+		 */
+		boolean retain = renderTarget == null && !OVERLAY && !owner && theme.rowPainter == null && theme.cellPainter == null;
 		canvas.target (buffer);
 		canvas.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
+		if (owner) ownerDraw.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		retainedRows.begin (canvas, renderer, buffer, damage.left, damage.top, damage.right, damage.bottom, client.right, rowsTop, retain);
 		try {
 			drawRows (hwnd);
 			if (OVERLAY) overlay ();
 		} finally {
+			if (owner) ownerDraw.end ();
 			canvas.end ();
 		}
 		retainedRows.end ();
@@ -293,21 +318,53 @@ abstract class DrawnPlane {
 		if (!control.isDisposed ()) afterBehaviour (msg);
 	}
 
-	/* the native control paints the damage into the back buffer: its side effects happen as natively */
+	/*
+	 * The native control paints the damage into the back buffer: its side effects happen as natively, except the owner-draw
+	 * events while the widget hooks one: the drawn pass raises those itself, with a GC a listener's drawing survives on
+	 * (DrawnOwnerDraw), so the native custom draw of this pass is told to send none (the GC it would make is on the pixels
+	 * the drawn pass paints over).
+	 */
 	private void behaviour (long hwnd, int msg, long lParam) {
 		long dc = buffer.dc;
 		int saved = OS.SaveDC (dc);
 		OS.IntersectClipRect (dc, damage.left, damage.top, damage.right, damage.bottom);
-		if (msg == OS.WM_PRINTCLIENT) {
-			OS.CallWindowProc (nativeProc, hwnd, OS.WM_PRINTCLIENT, dc, lParam);
-		} else {
-			OS.CallWindowProc (nativeProc, hwnd, OS.WM_PAINT, dc, 0);
+		boolean owner = ownerDraw.hooked (), previous = owner && ignoreNativeCustomDraw (true);
+		try {
+			if (msg == OS.WM_PRINTCLIENT) {
+				OS.CallWindowProc (nativeProc, hwnd, OS.WM_PRINTCLIENT, dc, lParam);
+			} else {
+				OS.CallWindowProc (nativeProc, hwnd, OS.WM_PAINT, dc, 0);
+			}
+		} finally {
+			if (owner && !control.isDisposed ()) ignoreNativeCustomDraw (previous);
+			OS.RestoreDC (dc, saved);
 		}
-		OS.RestoreDC (dc, saved);
 	}
 
 	/** Runs after the behaviour pass, where the widget's own paint path runs after its native paint. */
 	void afterBehaviour (int msg) {
+	}
+
+	/**
+	 * Tells the widget's native custom draw to send no owner-draw events (<code>Table.ignoreCustomDraw</code>) for the
+	 * behaviour pass of a frame the plane raises them in; answers the previous setting, which the plane restores. The
+	 * default (a widget without owner draw) does nothing.
+	 */
+	boolean ignoreNativeCustomDraw (boolean ignore) {
+		return false;
+	}
+
+	/**
+	 * Applies the bounds a <code>MeasureItem</code> listener answered (pixels: the left and width of the cell's content,
+	 * the height), as the widget's own <code>sendMeasureItemEvent</code> does: a wider content widens the scroll range of a
+	 * column-less widget, a taller one sets the item height. The default does nothing.
+	 */
+	void measured (int x, int width, int height) {
+	}
+
+	/** Makes room for <code>count</code> entries of {@link #cellColumn}. */
+	final void cellColumns (int count) {
+		if (cellColumn.length < count) cellColumn = new int [Math.max (count, cellColumn.length * 2)];
 	}
 
 	/** Narrows the damage to the rows area (for example below a header, setting {@link #rowsTop}); answers false when nothing is left. */

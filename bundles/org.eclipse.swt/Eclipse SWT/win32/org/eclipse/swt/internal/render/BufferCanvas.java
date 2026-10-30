@@ -14,10 +14,27 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.render;
 
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.widgets.*;
+
 /** A win32 backend that draws into a plane's {@link BackBuffer}. */
 public interface BufferCanvas extends RowCanvas {
 	/** Sets the back buffer the next frame draws into. */
 	void target (BackBuffer buffer);
+
+	/**
+	 * The GC of the frame being drawn, for a listener of the widget's owner-draw events ({@link DrawnCustomDraw}): it
+	 * draws on the frame's pixels, is made on first use inside a frame (after {@link #begin}, before any {@link #clip})
+	 * and is the backend's until {@link #end}. The <code>custom</code> backend answers its own GC on the back buffer's
+	 * device context; the M3 backends answer a <code>GCExtension</code> over the M3 renderer on the plane's surface.
+	 * Null (the default): the backend has no GC, as on the render thread (rule 28), and the plane sends no events.
+	 *
+	 * @param control the plane's widget: the drawable, device, colours, font and native zoom of the GC
+	 * @param buffer the plane's back buffer (the frame's pixels)
+	 */
+	default GC gc (Control control, BackBuffer buffer) {
+		return null;
+	}
 
 	/**
 	 * Narrows the frame's clip to a rectangle until {@link #unclip} (rule 24: a row that only widened draws the strip
