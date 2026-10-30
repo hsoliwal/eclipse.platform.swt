@@ -1,0 +1,16 @@
+factor_a	values_a	factor_b	values_b	reason
+widget	!Table,Tree	style	VIRTUAL	SWT.VIRTUAL is a Table and Tree style
+widget	!Table,Tree	style	CHECK	SWT.CHECK is a Table and Tree style
+widget	!Table,Tree	style	VIRTUAL|MULTI|CHECK|FULL_SELECTION	the combined virtual/check style is Table and Tree only
+widget	!Table,Tree,List,StyledText,CTabFolder	style	MULTI	SWT.MULTI applies to Table, Tree, List, StyledText and CTabFolder
+widget	!Table,Tree,StyledText	style	FULL_SELECTION	SWT.FULL_SELECTION applies to Table, Tree and StyledText
+widget	!Table,Tree,List,StyledText,Canvas	style	H_SCROLL|V_SCROLL	scroll bar styles apply to scrollable item widgets, StyledText and Canvas
+widget	!Table,Tree,Canvas	style	NO_SCROLL	SWT.NO_SCROLL applies to Table, Tree and Canvas (Composite family)
+widget	Model	style	!NONE	the model layer has no style bits
+widget	Model	feature	!none	the model layer has no widget to switch
+widget	Model	op	scroll-top,scroll-middle,scroll-bottom	the model layer has no scroll position
+widget	Model	api	M3-MODE-QUERY	M3Mode.of needs a widget
+widget	Combo,CCombo	op	scroll-top,scroll-middle,scroll-bottom	Combo and CCombo have no top index
+widget	Canvas	op	select-range	Canvas has no selection
+widget	CTabFolder	count	100000	CTabFolder lays out every tab on each add (quadratic); 10^5 tabs is not a supported size
+widget	Model	theme	!none	the model layer has no widget to theme
