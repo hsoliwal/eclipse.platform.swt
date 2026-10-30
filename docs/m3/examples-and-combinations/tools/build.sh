@@ -8,7 +8,7 @@
 WT=${1:-C:/m3-superset/swt-examples}; O=${M3_OUT:-H:/m3-scratch/swt-examples}
 JDK=${M3_JDK:-C:/Program Files/Java/jdk-21}
 JUNIT=C:/Users/hsoliwal/.m2/repository/org/junit/platform/junit-platform-console-standalone/1.11.4/junit-platform-console-standalone-1.11.4.jar
-SWT=$O/platform/win32
+SWT=${M3_SWT:-$O/platform/win32}
 [ -d "$SWT/org" ] || { echo "no SWT classes: run compile_platform.sh $WT win32 first"; exit 3; }
 "$JDK/bin/java" -Xmx512m "$WT/examples/org.eclipse.swt.snippets/tools/M3GalleryIndexGen.java" --check "$WT" | tail -4 || exit 1
 "$JDK/bin/java" -Xmx512m "$WT/tests/org.eclipse.swt.tests/tools/M3CoveringArray.java" --check "$WT" | tail -4 || exit 1

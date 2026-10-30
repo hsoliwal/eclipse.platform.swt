@@ -60,12 +60,22 @@ public final class M3CoveringArray {
 	}
 
 	public static void main (String [] args) throws IOException {
+		int status = run (args);
+		if (status != 0) System.exit (status);
+	}
+
+	/** Runs the generator: <code>[--check] [root]</code>; answers 1 when --check finds an output that would change. */
+	public static int run (String [] args) throws IOException {
 		boolean check = args.length > 0 && "--check".equals (args [0]);
-		Path root = Paths.get (args.length > (check ? 1 : 0) ? args [check ? 1 : 0] : ".");
-		M3CoveringArray generator = new M3CoveringArray (root).load ().generate ();
+		M3CoveringArray generator = new M3CoveringArray (root (args, check)).load ().generate ();
 		System.out.println (generator.summary ());
-		boolean changed = generator.write (check);
-		if (check && changed) System.exit (1);
+		return generator.write (check) && check ? 1 : 0;
+	}
+
+	/** The repository root argument (after --check), else the working directory. */
+	public static Path root (String [] args, boolean check) {
+		int at = check ? 1 : 0;
+		return Paths.get (args.length > at ? args [at] : ".");
 	}
 
 	/** Loads the factors, derived values and constraints. */
@@ -249,7 +259,7 @@ public final class M3CoveringArray {
 	/** Removes the pairs a row covers with factor k. */
 	void cover (int [] row, int k, Set<Long> uncovered) {
 		for (int j = 0; j < row.length; j++) {
-			if (j != k && row [j] != FREE && row [k] != FREE) uncovered.remove (key (j, row [j], k, row [k]));
+			if (j != k && row [j] != FREE) uncovered.remove (key (j, row [j], k, row [k]));
 		}
 	}
 
@@ -271,7 +281,7 @@ public final class M3CoveringArray {
 
 	/** True when a row can take value vj of factor j and vk of factor k. */
 	boolean room (int [] row, int j, int vj, int k, int vk) {
-		if (row [j] != FREE && row [j] != vj || row [k] != FREE && row [k] != vk) return false;
+		if (!agrees (row [j], vj) || !agrees (row [k], vk)) return false;
 		int [] trial = row.clone ();
 		trial [j] = FREE;
 		trial [k] = FREE;
@@ -280,6 +290,11 @@ public final class M3CoveringArray {
 		if (!fits (trial, k, vk)) return false;
 		trial [k] = vk;
 		return completable (trial);
+	}
+
+	/** True when a cell is free or already holds the value. */
+	static boolean agrees (int cell, int value) {
+		return cell == FREE || cell == value;
 	}
 
 	/** A row with only the two cells of a pair. */

@@ -78,11 +78,22 @@ public final class M3GalleryIndexGen {
 	}
 
 	public static void main (String [] args) throws IOException {
+		int status = run (args);
+		if (status != 0) System.exit (status);
+	}
+
+	/** Runs the generator: <code>[--check] [root]</code>; answers 1 when --check finds an output that would change. */
+	public static int run (String [] args) throws IOException {
 		boolean check = args.length > 0 && "--check".equals (args [0]);
-		Path root = Paths.get (args.length > (check ? 1 : 0) ? args [check ? 1 : 0] : ".");
-		M3GalleryIndexGen generator = new M3GalleryIndexGen (root).scan ();
+		M3GalleryIndexGen generator = new M3GalleryIndexGen (root (args, check)).scan ();
 		System.out.println (generator.summary ());
-		if (generator.write (check) && check) System.exit (1);
+		return generator.write (check) && check ? 1 : 0;
+	}
+
+	/** The repository root argument (after --check), else the working directory. */
+	public static Path root (String [] args, boolean check) {
+		int at = check ? 1 : 0;
+		return Paths.get (args.length > at ? args [at] : ".");
 	}
 
 	/** Reads the API map, the widget modes and every example. */

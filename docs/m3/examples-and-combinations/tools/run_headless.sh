@@ -9,7 +9,7 @@ WT=${1:-C:/m3-superset/swt-examples}; O=${M3_OUT:-H:/m3-scratch/swt-examples}
 JDK=${M3_JDK:-C:/Program Files/Java/jdk-21}
 JUNIT=C:/Users/hsoliwal/.m2/repository/org/junit/platform/junit-platform-console-standalone/1.11.4/junit-platform-console-standalone-1.11.4.jar
 AGENT=C:/Users/hsoliwal/.m2/repository/org/jacoco/org.jacoco.agent/0.8.15/org.jacoco.agent-0.8.15-runtime.jar
-CP="$O/tests;$O/snippets;$O/platform/win32;$JUNIT"
+CP="$O/tests;$O/snippets;${M3_SWT:-$O/platform/win32};$JUNIT"
 INCLUDES='org.eclipse.swt.snippets.m3.gallery.*:org.eclipse.swt.snippets.m3.tools.*:org.eclipse.swt.tests.m3.tools.*'
 mkdir -p "$O/results" "$O/coverage"
 junit () { # <log> <jvm options and console arguments...>

@@ -13,10 +13,14 @@ cp -r "$O/snippets/org" "$C/classes/" && rm -rf "$C/classes/org/eclipse/swt/snip
 find "$C/classes/org/eclipse/swt/snippets" -mindepth 1 -maxdepth 1 ! -name m3 -exec rm -rf {} +
 find "$C/classes/org/eclipse/swt/snippets/m3" -maxdepth 1 -name '*.class' -delete
 mkdir -p "$C/classes/org/eclipse/swt/tests/m3" && cp -r "$O/tests/org/eclipse/swt/tests/m3/tools" "$C/classes/org/eclipse/swt/tests/m3/"
+# the generators sit in tools/ without package directories: the report reads them from a package-shaped copy
+rm -rf "$C/src"; mkdir -p "$C/src/org/eclipse/swt/snippets/m3/tools" "$C/src/org/eclipse/swt/tests/m3/tools"
+cp "$WT/examples/org.eclipse.swt.snippets/tools/M3GalleryIndexGen.java" "$C/src/org/eclipse/swt/snippets/m3/tools/"
+cp "$WT/tests/org.eclipse.swt.tests/tools/M3CoveringArray.java" "$C/src/org/eclipse/swt/tests/m3/tools/"
 mapfile -t EXECS < <(ls "$C"/*.exec)
 "$JDK/bin/java" -jar "$CLI" merge "${EXECS[@]}" --destfile "$C/merged.exec" > /dev/null
 "$JDK/bin/java" -jar "$CLI" report "$C/merged.exec" --classfiles "$C/classes" \
-  --sourcefiles "$WT/examples/org.eclipse.swt.snippets/src" --sourcefiles "$WT/examples/org.eclipse.swt.snippets/tools" --sourcefiles "$WT/tests/org.eclipse.swt.tests/tools" \
+  --sourcefiles "$WT/examples/org.eclipse.swt.snippets/src" --sourcefiles "$C/src" \
   --csv "$C/coverage.csv" --html "$C/html" > /dev/null
 # GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,...
 awk -F, 'NR > 1 { cls = $3; sub (/\..*/, "", cls); top = $2 "." cls; lm[top] += $8; lc[top] += $9; bm[top] += $6; bc[top] += $7 }
