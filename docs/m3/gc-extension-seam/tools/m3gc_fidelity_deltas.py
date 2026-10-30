@@ -256,6 +256,16 @@ DELTAS = [
      "mismatch 1 at (3, 19)",
      "LINE_ENDS (M3-GC-LINE-ENDS v1), leaf 7 finding L7-32: Skia's aliased scan rounds the start edge at x1 + 0.5 up, so the "
      "first pixel was lost; GDI covers x1 .. x2 - 1; the adopted drawLine tests (diagonals) keep their pinned offsets", False, 0),
+    ("L6-30", GC + "M3ExternalGC.java", "LINE_ENDS v1 (L6-29): axis-aligned lines offset across only, covering x1 .. x2 - 1; its "
+     "test asserted the end pixel undrawn",
+     "drawAxisLine: from the low end, offset across only, and a line of at most one pixel extends one pixel past its high end "
+     "(covers both ends); wider lines end at x2; CompositeParity.testOnePixelAxisLinesCoverBothEnds (horizontal and an upward "
+     "vertical line) (python replace)",
+     "composite probe m3 after L6-29: ViewForm flat mismatch still 1, now at (370, 19): stock a0a0a0, M3 f0f0f0 (PIL diff of "
+     "print_ViewForm_stock.png and buffer_ViewForm_m3.png)",
+     "correction of my own fix and test: stock drawLineInPixels draws MoveToEx/LineTo and then SetPixel(x2, y2) when the pen is "
+     "at most one pixel, so both ends are covered; leaf 7 read the separator as drawLine(3, 19, 371, 19), it is x2 = 370; the "
+     "donor covered 4..370, v1 3..369", False, 0),
 ]
 
 

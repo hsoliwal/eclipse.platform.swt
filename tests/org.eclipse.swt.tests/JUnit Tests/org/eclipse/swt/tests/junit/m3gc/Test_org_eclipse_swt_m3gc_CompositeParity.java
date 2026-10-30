@@ -138,12 +138,17 @@ public class Test_org_eclipse_swt_m3gc_CompositeParity {
 	}
 
 	@Test
-	public void testHorizontalLineCoversStartToEndMinusOne() {
+	public void testOnePixelAxisLinesCoverBothEnds() {
 		assumeTrue(DPIUtil.getDeviceZoom() == 100, "pixel positions are those of 100 %");
 		gc.drawLine(3, 19, 30, 19);
+		gc.drawLine(40, 10, 40, 4);
 		assertEquals(0x000000, pixel(3, 19), "the start pixel (stock: x1)");
-		assertEquals(0x000000, pixel(29, 19), "the pixel before the end");
-		assertEquals(0xFFFFFF, pixel(30, 19), "the end pixel is not drawn");
+		assertEquals(0x000000, pixel(30, 19), "the end pixel (stock: LineTo then SetPixel at x2 for a one-pixel pen)");
+		assertEquals(0xFFFFFF, pixel(31, 19));
 		assertEquals(0xFFFFFF, pixel(2, 19));
+		assertEquals(0x000000, pixel(40, 4), "a vertical line drawn upwards covers both ends too");
+		assertEquals(0x000000, pixel(40, 10));
+		assertEquals(0xFFFFFF, pixel(40, 11));
+		assertEquals(0xFFFFFF, pixel(40, 3));
 	}
 }

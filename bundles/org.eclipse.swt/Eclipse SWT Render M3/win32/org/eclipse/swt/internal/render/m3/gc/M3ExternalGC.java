@@ -263,14 +263,31 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public void drawLine(int x1, int y1, int x2, int y2) {
+		if (y1 == y2 && x1 != x2 || x1 == x2 && y1 != y2) {
+			drawAxisLine(Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
+			return;
+		}
 		final float scaledOffsetValue = RectangleConverter.getScaledOffsetValue(getScaler(), lineWidth);
-		// leaf 6 (LINE_ENDS, pattern M3-GC-LINE-ENDS v1, leaf 7 finding L7-32): an axis-aligned line is offset across its direction
-		// only, so a one-pixel line covers x1 .. x2 - 1 like the stock line (ViewForm's separator); the donor offset both axes and
-		// the start pixel was lost. Diagonals keep the donor's offset (the adopted drawLine tests pin it)
-		final float ox = y1 == y2 && x1 != x2 ? 0 : scaledOffsetValue, oy = x1 == x2 && y1 != y2 ? 0 : scaledOffsetValue;
 		final var scaler = this.dpiScalerUtil;
-		paintManager.performDraw(paint -> surface.getCanvas().drawLine(scaler.autoScaleUp(x1) + ox, scaler.autoScaleUp(y1) + oy,
-				scaler.autoScaleUp(x2) + ox, scaler.autoScaleUp(y2) + oy, paint));
+		paintManager.performDraw(paint -> surface.getCanvas().drawLine(scaler.autoScaleUp(x1) + scaledOffsetValue,
+				scaler.autoScaleUp(y1) + scaledOffsetValue, scaler.autoScaleUp(x2) + scaledOffsetValue,
+				scaler.autoScaleUp(y2) + scaledOffsetValue, paint));
+	}
+
+	/*
+	 * leaf 6 (LINE_ENDS, pattern M3-GC-LINE-ENDS v1, leaf 7 finding L7-32): an axis-aligned line, offset across its direction only,
+	 * from the low end; a line of at most one pixel also covers its end pixel, as the stock GDI line (LineTo, then SetPixel at
+	 * x2, y2). The donor offset both axes by the half pixel: Skia's aliased scan then lost the start pixel (ViewForm's separator
+	 * at 3,19). Diagonals keep the donor's geometry (the adopted drawLine tests pin it)
+	 */
+	private void drawAxisLine(int left, int top, int right, int bottom) {
+		final var scaler = this.dpiScalerUtil;
+		final float offset = RectangleConverter.getScaledOffsetValue(scaler, lineWidth);
+		final float end = scaler.autoScaleUp(lineWidth * 1f) <= 1 ? 1 : 0;
+		final boolean horizontal = top == bottom;
+		final float x0 = scaler.autoScaleUp(left) + (horizontal ? 0 : offset), y0 = scaler.autoScaleUp(top) + (horizontal ? offset : 0);
+		final float x1 = horizontal ? scaler.autoScaleUp(right) + end : x0, y1 = horizontal ? y0 : scaler.autoScaleUp(bottom) + end;
+		paintManager.performDraw(paint -> surface.getCanvas().drawLine(x0, y0, x1, y1, paint));
 	}
 
 	@Override
