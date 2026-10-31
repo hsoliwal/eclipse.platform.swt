@@ -12,7 +12,8 @@ MODE=${1:-m3}; WT=${2:-C:/m3-superset/swt-gcseam}; MAIN=${3:-H:/m3-scratch/gc-le
 W=${M3_PROBE_OUT:-H:/m3-scratch/gc-leaf5}; P=$W/probe; mkdir -p "$W/probes"
 JDK=${M3_JDK:-C:/Program Files/Java/jdk-21}
 LIB=${M3_SKIJA_LIB:-C:/m3-superset/i31/binaries/org.eclipse.swt.win32.win32.x86_64/lib}
-CP="$MAIN/classes;$LIB/skija-shared-0.116.3.jar;$LIB/skija-windows-x64-0.116.3.jar;$LIB/types-0.1.1.jar"
+. "$(dirname "$0")/m3_skija_pin.sh"; m3_skija_pin "$WT" "$LIB" || exit 2   # SKIJA_PIN v1 (census L12): skija.version of the fragment pom
+CP="$MAIN/classes;$SKIJA_CP"
 # natives of the worktree's Library revision (m3gc_natives.sh: the newest built set under that revision's names)
 NAT=${M3_NATIVES:-H:/m3-scratch/gc-wiring/natives}
 [ -f "$NAT"/swt-win32-*.dll ] 2>/dev/null || bash "$WT/docs/m3/gc-extension-seam/tools/m3gc_natives.sh" "$WT" "$NAT"
