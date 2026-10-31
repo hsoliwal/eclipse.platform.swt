@@ -1935,6 +1935,33 @@ org.eclipse.swt.internal.canvasext.IExternalCanvasHandler m3Handler;
 boolean m3Stock;
 
 /*
+ * M3 (BACKGROUND_PARITY v1, census L16): the background the stock WM_PAINT draws on its paint device context
+ * (drawBackground (hDC, rect): background image, theme part, inherited colour), drawn on an M3 frame's device context.
+ */
+void fillM3Background (long hdc, int x, int y, int width, int height) {
+	RECT rect = new RECT ();
+	OS.SetRect (rect, x, y, x + width, y + height);
+	drawBackground (hdc, rect);
+}
+
+/* MODE_TRUTH v1 (census L10): the route of an M3 handler (gpu or m3), or null for none */
+static WidgetMode handlerRoute (org.eclipse.swt.internal.canvasext.IExternalCanvasHandler handler) {
+	return handler == null ? null : handler.isGpu () ? WidgetMode.GPU : WidgetMode.M3;
+}
+
+/* MODE_TRUTH v1: a composite painted through its M3 handler answers the handler's route */
+@Override
+WidgetMode m3Route () {
+	return m3Handler != null ? handlerRoute (m3Handler) : super.m3Route ();
+}
+
+/* BACKEND_REPORT v1: the M3 handler's name */
+@Override
+String m3Backend () {
+	return m3Handler != null ? m3Handler.backend () : super.m3Backend ();
+}
+
+/*
  * M3 (GC seam, leaf 7; patterns COMPOSITE_PAINT_HOOK v1, CONTAINER_OPT_OUT v1, CHILD_CLIP v1): in the m3/gpu modes a composite
  * that paints itself (a Paint listener or filter: the test of the stock path) paints its client area through the M3 handler the
  * factory makes once (ExternalCanvasHandler.createCompositeHandler: not a Canvas, whose constructor hook decides; not an
@@ -1949,7 +1976,7 @@ LRESULT paintThroughM3 (long wParam, long lParam) {
 		m3Stock = m3Handler == null;
 		if (m3Stock) return null;
 	}
-	Object result = m3Handler.paint (event -> sendEvent (SWT.Paint, event), wParam, lParam);
+	Object result = m3Handler.paint (event -> sendEvent (SWT.Paint, event), this::fillM3Background, wParam, lParam);
 	return result instanceof LRESULT r ? r : LRESULT.ZERO;
 }
 

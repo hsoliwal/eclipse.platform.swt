@@ -122,7 +122,7 @@ public class M3CanvasFactory implements IExternalCanvasFactory {
 
 	@Override
 	public boolean accepts(Canvas canvas, int style) {
-		if (m3FailedWithErrors) {
+		if (m3FailedWithErrors || !M3Library.loaded()) {
 			return false;
 		}
 		Class<?> type = type(canvas);
@@ -141,7 +141,7 @@ public class M3CanvasFactory implements IExternalCanvasFactory {
 
 	@Override
 	public boolean acceptsComposite(Composite composite, int style) {
-		if (m3FailedWithErrors) {
+		if (m3FailedWithErrors || !M3Library.loaded()) {
 			return false;
 		}
 		Class<?> type = compositeType(composite);
@@ -165,7 +165,9 @@ public class M3CanvasFactory implements IExternalCanvasFactory {
 		}
 		try {
 			WidgetMode backend = decision.apply(type);
-			return backend == null ? null : (backend == WidgetMode.GPU ? gpu : raster).apply(widget);
+			IExternalCanvasHandler handler = backend == null ? null : (backend == WidgetMode.GPU ? gpu : raster).apply(widget);
+			if (handler != null) M3BackendReport.first(type.getSimpleName(), handler.isGpu() ? WidgetMode.GPU : WidgetMode.M3, handler.backend());
+			return handler;
 		} catch (final Throwable t) {
 			// M3 initialization failed; log and disable M3 for all future calls
 			Logger.logException(t);

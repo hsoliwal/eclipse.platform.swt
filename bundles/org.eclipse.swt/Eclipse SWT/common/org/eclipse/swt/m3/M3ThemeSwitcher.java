@@ -114,7 +114,8 @@ public class M3ThemeSwitcher extends Composite {
 		String active = M3Themes.current (getDisplay ()).map (M3Theme::name).orElse (STOCK);
 		combo.select (Math.max (0, entries.indexOf (active)));
 		preview.redraw ();
-		requestLayout ();
+		/* SWITCHER_SIZE v1 (real-app fidelity): the drop-down's own layout request flushes its cached size, so it grows to a longer entry */
+		combo.requestLayout ();
 	}
 
 	static String label (String entry) {

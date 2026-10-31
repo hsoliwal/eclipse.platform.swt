@@ -655,6 +655,19 @@ protected void checkSubclass () {
  *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
  * </ul>
  */
+/*
+ * MODE_TRUTH v1 (census L10, real-app fidelity leaf): the mode a drawn route of this widget realizes (a drawn plane, an M3
+ * canvas handler), or null when the widget's gate decides; M3Mode.of answers it first.
+ */
+org.eclipse.swt.internal.WidgetMode m3Route () {
+	return null;
+}
+
+/* BACKEND_REPORT v1: the renderer that draws this widget, for reports (M3Mode.backend), or null when the platform draws it */
+String m3Backend () {
+	return null;
+}
+
 protected void checkWidget () {
 	Display display = this.display;
     if (display == null) {
