@@ -90,3 +90,14 @@ Open: the TreeViewport stock-event parity above; runs on GTK and Cocoa.
 listener removed every item, and the constructor then pinned the disposed item. The `TableItem` constructors of win32,
 GTK and Cocoa now run `pinVirtualFacade` only for an item that is not disposed (recipe step in
 `tools/m3_emptiness_seams.sh`). With the guard the test passes in both modes.
+
+## Update (2026-10-31): TreeViewport stock-event parity
+
+TreeEmptinessOracle (official 3.135.0 jar, hidden desktop) measured the stock rule: `createItem` sends
+`SWT.EmptinessChanged` detail 0 when a created item gets item id 0 (any depth, any count); rows materialized by
+`getItem` or by painting take ids without an event; `removeAll` keeps `lastID` and resets the id table to four slots;
+`destroyItem` resets it when the last row goes. PR #300 makes `TreeViewport` follow it (`insert` sends on id 0,
+`becameEmpty` resets the id table, `adopt` grows it as stock). With PR #300 `Test_M3EmptinessDifferential` has 0
+mismatches in viewport and original mode, plain and virtual (run `diff-emptiness-ids`: official recorded 2/2, viewport
+2/2, original 2/2), and `Test_org_eclipse_swt_widgets_Tree_EmptinessChanged` passes 3/3 on the official jar and in both
+modes. Open: GTK and Cocoa not run (no host); drawn modes see the drawn-modes run.
