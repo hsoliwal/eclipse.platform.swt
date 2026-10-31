@@ -27,6 +27,11 @@ class M3CanvasAdapter implements IM3Canvas {
 	}
 
 	@Override
+	public Matrix33 getLocalToDevice() {
+		return delegate.getLocalToDeviceAsMatrix33();
+	}
+
+	@Override
 	public void restoreToCount(int saveCount) {
 		delegate.restoreToCount(saveCount);
 	}

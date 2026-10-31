@@ -224,4 +224,17 @@ public class Test_M3DiffApply {
 		list.dispose ();
 		assertThrows (SWTException.class, () -> M3DiffApply.apply (list, two, two, Test_M3DiffApply::text));
 	}
+
+	@Test
+	public void test_tableInsertOnlyDiffRemovesNothing () {
+		Table table = new Table (shell, SWT.MULTI);
+		long [] before = {1, 2, 3};
+		for (long id : before) new TableItem (table, SWT.NONE).setText (text (id));
+		TableItem kept = table.getItem (1);
+		long [] after = {0, 1, 2, 5, 3};
+		int [] counts = M3DiffApply.apply (table, before, after, (item, id) -> item.setText (text (id)));
+		assertArrayEquals (new int [] {3, 0, 2}, counts);
+		assertSame (kept, table.getItem (2));
+		for (int i = 0; i < after.length; i++) assertEquals (text (after [i]), table.getItem (i).getText ());
+	}
 }

@@ -100,10 +100,9 @@ public void redraw (int x, int y, int width, int height, boolean all) {
 
 	if(externalCanvasHandler != null) {
 		externalCanvasHandler.redrawTriggered( x,  y,  width,  height,  all);
-		super.redraw();
 	}
-	else
-		super.redraw( x,  y,  width,  height,  all);
+	// M3 (GC seam, leaf 5, was L4-09): the damage rectangle only; the M3 handler paints and presents exactly the invalidated region
+	super.redraw( x,  y,  width,  height,  all);
 }
 
 @Override
@@ -150,6 +149,12 @@ LRESULT WM_PAINT (long wParam, long lParam) {
  * @since 3.2
  */
 public void drawBackground (GC gc, int x, int y, int width, int height) {
+	/* M3 (GC seam, leaf 6; ARG_CONTRACT, census GF01): a GCExtension fills through the GC in points (Composite.drawBackgroundThroughGC) */
+	if (gc instanceof GCExtension && !gc.isDisposed ()) {
+		checkWidget ();
+		drawBackgroundThroughGC (gc, new Rectangle (x, y, width, height), new Point (0, 0));
+		return;
+	}
 	int zoom = getAutoscalingZoom();
 	Rectangle rectangle = Win32DPIUtils.pointToPixel(new Rectangle(x, y, width, height), zoom);
 	drawBackgroundInPixels(gc, rectangle.x, rectangle.y, rectangle.width, rectangle.height, 0, 0);

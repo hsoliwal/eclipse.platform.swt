@@ -3076,6 +3076,18 @@ public long internal_new_GC (GCData data) {
 	return hDC;
 }
 
+/*
+ * M3 (GC seam, leaf 4): registers the M3 canvas factory (loaded by name, as RowBackends loads the planes' backend) with
+ * ExternalCanvasHandler when a startup property asks for m3 or gpu. Leaf 5: any such property, global or per widget
+ * (swt.widget.mode.StyledText=m3 alone reaches StyledText); the factory then decides per canvas class
+ * (M3CanvasFactory.accepts). With no mode set nothing is registered and every canvas paints as it always did.
+ */
+void registerM3Canvas () {
+	if (WidgetMode.anyRequested (WidgetMode.M3, WidgetMode.GPU)) {
+		org.eclipse.swt.internal.canvasext.ExternalCanvasHandler.registerFactory (org.eclipse.swt.internal.render.RowBackends.M3_CANVAS_FACTORY);
+	}
+}
+
 /**
  * Initializes any internal resources needed by the
  * device.
@@ -3098,6 +3110,9 @@ protected void init () {
 	}
 	super.init ();
 	DPIUtil.setDeviceZoom (getDeviceZoom ());
+
+	/* M3 (GC seam, leaf 4): the M3 backend of SWT.M3 canvases, only when the Canvas startup mode is m3 or gpu (default off) */
+	registerM3Canvas ();
 
 	/* Set the application user model ID, if APP_NAME is non Default */
 	char [] appName = null;

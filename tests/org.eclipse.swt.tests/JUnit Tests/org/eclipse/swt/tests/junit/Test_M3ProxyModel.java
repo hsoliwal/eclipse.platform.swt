@@ -172,4 +172,24 @@ public class Test_M3ProxyModel {
 			shell.dispose ();
 		}
 	}
+
+	@Test
+	public void test_staleSetDataBeyondTheViewIsIgnored () {
+		Shell shell = new Shell (Display.getDefault ());
+		try {
+			Table table = new Table (shell, SWT.VIRTUAL);
+			int [] filled = new int [1];
+			M3ProxyModel model = new M3ProxyModel (5).addFilter (s -> s % 2 == 0).refresh ();
+			model.bind (table, (item, source) -> filled [0]++);
+			/* a SetData request for a row the view no longer has (the view shrank under a queued request) */
+			Event event = new Event ();
+			event.item = table.getItem (0);
+			int before = filled [0];
+			event.index = model.size () + 2;
+			table.notifyListeners (SWT.SetData, event);
+			assertEquals (before, filled [0]);
+		} finally {
+			shell.dispose ();
+		}
+	}
 }
