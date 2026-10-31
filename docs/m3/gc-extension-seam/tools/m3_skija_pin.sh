@@ -11,6 +11,15 @@
 # Run directly: bash m3_skija_pin.sh [worktree] [lib-dir]   prints the pin and exits 1 when a jar is missing.
 m3_skija_pin() {
 	local pom="$1/bundles/org.eclipse.swt.m3/pom.xml" lib=$2 v t
+	# M3_GRAPHICS_PIN v1 (2026-10-31): sources on the M3jdk owner jdk.m3.graphics (CONSUMER_RENAME) compile against its
+	# classes; M3_GRAPHICS_CP names them (a jar or classes dir of src/jdk.m3.graphics, or empty when the JDK is M3jdk and
+	# provides the module), and no Skija jar is required
+	if [ -n "${M3_GRAPHICS_CP+x}" ]; then
+		SKIJA_VERSION=jdk.m3.graphics; TYPES_VERSION=jdk.m3.graphics; SKIJA_CP=$M3_GRAPHICS_CP
+		echo "graphics: jdk.m3.graphics cp: ${M3_GRAPHICS_CP:-<from the JDK>}"
+		[ -z "$M3_GRAPHICS_CP" ] || [ -e "${M3_GRAPHICS_CP%%;*}" ] && return 0
+		echo "M3_GRAPHICS_PIN: $M3_GRAPHICS_CP not found"; return 1
+	fi
 	v=${M3_SKIJA_VERSION:-$([ -f "$pom" ] && tr -d '\r' < "$pom" | sed -n 's#.*<skija.version>\([^<]*\)</skija.version>.*#\1#p' | head -1)}
 	v=${v:-0.116.3}
 	t=$(unzip -p "$lib/skija-shared-$v.jar" META-INF/maven/io.github.humbleui/skija-shared/pom.xml 2>/dev/null | tr -d '\r\n ' \

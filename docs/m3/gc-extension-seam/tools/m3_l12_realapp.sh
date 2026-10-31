@@ -47,8 +47,8 @@ for MODE in $MODES; do
   awk -F'\t' -v id="skija=$SKIJA_VERSION $MODE" 'NR>1 && $3>=0 {n++; c[$5]++; h+=($6>0); d+=($8!="")}
     END {printf "%s: rows=%d PASS=%d EXCEPTION=%d BLANK=%d HANG=%d tabs_with_M3CanvasHandler=%d tabs_with_drawn_plane=%d\n", id, n, c["PASS"], c["EXCEPTION"], c["BLANK"], c["HANG"], h, d}' "$f"
   dll=$(find "$B/tmp/$MODE" -name skija.dll -path '*skija_*' 2>/dev/null | head -1)
-  printf '  classes loaded: skija=%s types=%s render.m3=%s gpu.m3=%s; skija.dll extracted: %s; %s\n' \
-    "$(grep -c 'class,load.* io\.github\.humbleui\.skija\.' "$l")" "$(grep -c 'class,load.* io\.github\.humbleui\.types\.' "$l")" \
+  printf '  classes loaded: skija=%s m3graphics=%s types=%s render.m3=%s gpu.m3=%s; skija.dll extracted: %s; %s\n' \
+    "$(grep -c 'class,load.* io\.github\.humbleui\.skija\.' "$l")" "$(grep -c 'class,load.* jdk\.m3\.graphics\.' "$l")" "$(grep -c 'class,load.* io\.github\.humbleui\.types\.' "$l")" \
     "$(grep -c 'class,load.* org\.eclipse\.swt\.internal\.render\.m3\.' "$l")" "$(grep -c 'class,load.* org\.eclipse\.swt\.internal\.gpu\.m3\.' "$l")" \
     "${dll:+$(basename "$(dirname "$dll")") sha256 $(sha256sum "$dll" | cut -c1-16)}" "$(grep -oE '^exit=[0-9-]+' "$l")"
 done

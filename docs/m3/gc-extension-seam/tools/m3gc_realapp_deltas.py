@@ -8,6 +8,11 @@ anchor stops the run before any file is written. Semantic edits are made by hand
 Usage: python -I m3gc_realapp_deltas.py <worktree> <ATOM> [--check]
 """
 import sys
+import os
+if __name__ == "__main__":  # M3_GRAPHICS_GUARD v1: NOT_APPLICABLE on jdk.m3.graphics trees
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from m3_graphics_guard import exit_if_m3_graphics
+    exit_if_m3_graphics(sys.argv)
 from pathlib import Path
 
 W = "bundles/org.eclipse.swt/Eclipse SWT/"

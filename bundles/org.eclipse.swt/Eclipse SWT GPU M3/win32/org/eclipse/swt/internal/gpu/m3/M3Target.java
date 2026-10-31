@@ -17,7 +17,6 @@ package org.eclipse.swt.internal.gpu.m3;
 import org.eclipse.swt.internal.gpu.*;
 
 import jdk.m3.graphics.*;
-import jdk.m3.graphics.*;
 
 /**
  * Per-widget GPU target in the remote-framebuffer model: a content render
