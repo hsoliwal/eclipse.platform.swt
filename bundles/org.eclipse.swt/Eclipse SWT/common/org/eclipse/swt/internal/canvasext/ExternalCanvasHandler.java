@@ -176,4 +176,26 @@ public class ExternalCanvasHandler {
 			return null;
 		}
 	}
+
+	/**
+	 * M3 (GC seam, leaf 7; pattern COMPOSITE_PAINT_HOOK v1): the handler of a composite that paints itself, asked once by the
+	 * win32 <code>Composite</code> at its first <code>WM_PAINT</code> with a Paint listener or filter (the subclass constructor
+	 * has run, so the listener that makes it draw is known), or null for the stock path: the seam disabled or failed, a
+	 * <code>Canvas</code> (its constructor hook decided), no factory, or a factory that does not accept the composite
+	 * ({@link IExternalCanvasFactory#acceptsComposite}). A factory that throws disables the seam, as for canvases.
+	 */
+	public static IExternalCanvasHandler createCompositeHandler(Composite composite) {
+		if (FAILED_WITH_ERRORS || isDisabled() || composite instanceof Canvas)
+			return null;
+		loadFactory();
+		if (externalFactory == null || !externalFactory.acceptsComposite(composite, composite.getStyle()))
+			return null;
+		try {
+			return externalFactory.createCompositeExtension(composite);
+		} catch (RuntimeException | LinkageError t) {
+			FAILED_WITH_ERRORS = true;
+			org.eclipse.swt.internal.SwtLog.getLog("org.eclipse.swt.internal.canvasext").info(() -> "composite handler failed, external canvas off: " + t);
+			return null;
+		}
+	}
 }

@@ -1648,6 +1648,10 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 		return super.WM_PAINT (wParam, lParam);
 	}
 
+	/* M3 (GC seam, leaf 7): a composite that paints itself, through the M3 renderer in the m3/gpu modes (paintThroughM3) */
+	LRESULT m3 = paintThroughM3 (wParam, lParam);
+	if (m3 != null) return m3;
+
 	/* Set the clipping bits */
 	int oldBits = OS.GetWindowLong (handle, OS.GWL_STYLE);
 	int newBits = oldBits | OS.WS_CLIPSIBLINGS | OS.WS_CLIPCHILDREN;
@@ -1862,6 +1866,29 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 		}
 	}
 	return LRESULT.ZERO;
+}
+
+/* M3 (GC seam, leaf 7; COMPOSITE_PAINT_HOOK v1): the M3 handler of this composite, made at its first painted WM_PAINT; m3Stock once declined */
+org.eclipse.swt.internal.canvasext.IExternalCanvasHandler m3Handler;
+boolean m3Stock;
+
+/*
+ * M3 (GC seam, leaf 7; patterns COMPOSITE_PAINT_HOOK v1, CONTAINER_OPT_OUT v1, CHILD_CLIP v1): in the m3/gpu modes a composite
+ * that paints itself (a Paint listener or filter: the test of the stock path) paints its client area through the M3 handler the
+ * factory makes once (ExternalCanvasHandler.createCompositeHandler: not a Canvas, whose constructor hook decides; not an
+ * embedded, OLE, Browser, transparent or mirrored composite). A pure container (nothing hooks Paint), a retained-plane or
+ * viewport-plane composite and a declined one take the stock path. Child windows stay native: the handler paints between
+ * BeginPaint and EndPaint with WS_CLIPCHILDREN, as the stock path does, so its present never covers them. Null: the stock path.
+ */
+LRESULT paintThroughM3 (long wParam, long lParam) {
+	if (m3Stock || !(hooks (SWT.Paint) || filters (SWT.Paint)) || (retainedBits & GPU_RETAINED) != 0 || plane != null) return null;
+	if (m3Handler == null) {
+		m3Handler = org.eclipse.swt.internal.canvasext.ExternalCanvasHandler.createCompositeHandler (this);
+		m3Stock = m3Handler == null;
+		if (m3Stock) return null;
+	}
+	Object result = m3Handler.paint (event -> sendEvent (SWT.Paint, event), wParam, lParam);
+	return result instanceof LRESULT r ? r : LRESULT.ZERO;
 }
 
 @Override
