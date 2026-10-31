@@ -121,16 +121,20 @@ materializes native children one by one with a native sibling walk per item (`Tr
   mode/widget-mode/feature command lines, child JVM exit, toolbar buttons and children ending with the gallery, switcher
   slot, in-process runner pass/fail/snapshot, generator and model tests).
 - Every entry in every mode (`M3ExampleRunner --batch`, one JVM per mode, a blocked entry is recorded with the example
-  thread's stack and the batch resumes): 560 runs, **513 PASS, 30 TIMEOUT, 17 FAIL**; per mode viewport 110/1/1,
-  original 98/13/1, custom 101/6/5, m3 102/5/5, gpu 102/5/5 (PASS/TIMEOUT/FAIL). **93 of 112 entries pass in all five
+  thread's stack and the batch resumes; an entry has 45 s to open a shell and 45 s to end after its shells close): 560
+  runs, **508 PASS, 35 TIMEOUT, 17 FAIL**; per mode viewport 106/5/1, original 97/14/1, custom 101/6/5, m3 102/5/5,
+  gpu 102/5/5 (PASS/TIMEOUT/FAIL). **93 of 112 entries pass in all five
   modes**; `results/EXAMPLE_MODES.tsv` records, per entry, the modes it passes, its implemented modes and the reason of the
   first non-pass. Why a mode cannot run an entry:
   - original: native List/Combo of 10^6 items (`List.setAllItems`, `List.java:1875`; `Combo.callWindowProc`) and native
     Tree of 10^5..10^7 items (`Tree.createTreeItem`) take more than 90 s: stock behaviour, the reason the viewport exists;
   - custom/m3/gpu: `NullPointerException` in `RetainedRows.paint` (`RetainedRows.java:116`, renderer null outside a
     frame) for 4 entries whose table is relaid out (`M3ModeSwitcherExample Table`, `M3FeatureSwitchExample`,
-    `M3PrefetchReleaseExample`, `M3TextSegmentsExample`); `List.computeSize` measures every one of 10^6 items
-    (`VirtualListWidth.measurePending` -> `List.measureStoreText`, `List.java:2474..2495`) for 4 million-item entries;
+    `M3PrefetchReleaseExample`, `M3TextSegmentsExample`);
+  - viewport, custom, m3, gpu: a List of 10^6 items takes 36-92 s to open because `List.computeSize` measures every
+    item (`ListViewport.computeSize` -> `VirtualListModel.getWidestWidth` -> `VirtualListWidth.measurePending` ->
+    `List.measureStoreText`, `List.java:2474..2495`, one DC per item): `M3ModeExample`, `M3ResidencyExample`,
+    `M3TypeAheadExample`, `M3VisibilityObserverExample` (an O(n) UI-thread pass, against brief rule 5);
   - all modes: `M3DeltaStreamExample` streams deltas in `main` and crashes when its window closes early
     (`M3Model.size`, `M3Model.java:214`, from `M3DeltaStreamExample.java:144`); `M3HiddenTabDeltasExample` does not
     return after its shells close (`Display.sleep` in its idle pump).
@@ -173,3 +177,40 @@ compared, PASS; 0 leaks. No failure is introduced by a theme or a language.
 On the merged trees the generators grow on their own: theme-language adds `M3ThemeLanguageExample` (113 entries) and makes
 M3-LANG-ID and M3-THEME-HOOKS shipped rows (24) with two more shipped feature switches, so the covering array becomes 290
 rows; leaf 6 changes the Canvas activation, so the index derives Canvas's implemented modes as `original`.
+
+### Coverage (JaCoCo 0.8.15, `results/COVERAGE.tsv`)
+
+Legs: headless tools (26 tests), gallery display tests (22), the runner's single entry point, every gallery entry in
+viewport mode; merged with `tools/coverage.sh`.
+
+| Code | Lines | Branches |
+|---|---|---|
+| generators: `M3CoveringArray` | 217/217 (100 %) | 189/191 (99.0 %) |
+| generators: `M3GalleryIndexGen` | 144/144 (100 %) | 113/114 (99.1 %) |
+| gallery: `M3GalleryModel`, `M3GalleryIndex` | 43/43 (100 %) | 36/36 (100 %) |
+| gallery: `M3ExampleGallery` | 146/150 (97.3 %) | 46/54 (85.2 %) |
+| gallery: `M3ExampleRunner` | 106/123 (86.2 %) | 45/56 (80.4 %) |
+| new examples (8 classes) | 624/655 (95.3 %) | 183/207 (88.4 %) |
+| all | 1280/1332 (96.1 %) | 612/658 (93.0 %) |
+
+Not covered, with the reason: lines that end in `System.exit` (JaCoCo marks a line only when code after the call runs:
+the generators' `--check` exit, the runner's single-run and batch exits and its blocked-example exit 3, which did run
+in the examples legs); `M3CoveringArray.room`'s second `fits` (defensive: horizontal growth leaves a cell free only when
+the row can take no value); interrupt handlers and the snapshot-failure path of the runner; the gallery's mounted-switcher
+branch (needs the classes of PR #286 on the class path), the IOException paths of a child that cannot start and a log
+line arriving after the window closed; the examples' interactive callbacks (mode relaunch buttons, feature check boxes,
+sash drag, link click), which no batch run clicks. The 99 % target is met by the generators and the gallery model, not
+yet by the window and the runner.
+
+## NOT_RUN
+
+| What | Why |
+|---|---|
+| matrix row `r0076` in m3 | its reference (original) timed out at the 900 s row limit |
+| theme/language step on this base (130 rows) | `M3Themes`/`M3Language` are not on this branch's class path; run against the local merge with PR #286 instead (105 rows) |
+| theme/language rows of 10^5 items on the merge (27) | the step does not depend on the count; those rows take minutes in original |
+| new matrix rows of the merged trees (M3-LANG-ID, M3-THEME-HOOKS, the two new switches: 290-row array) | the merged tree regenerates them; `ApiCalls` has no call for the two new API rows yet (they would answer NO_CALL) |
+| pixel step for the whole matrix | off by default (`-Dm3.combinations.pixels`); run for the 36 leaf-6 rows only |
+| official-jar reference | the rows call M3 API that the official jar does not have; the reference is `original` |
+| gtk and cocoa | win32 only (drawn planes, M3 renderer and natives are win32 here) |
+| input-desktop snapshots | UI runs only on the hidden desktop (`ui_lock.sh`); the double-buffered print observation is unchecked on the input desktop |
