@@ -1052,6 +1052,11 @@ void createItem (TreeColumn column, int index) {
  * and {@link TreeItem#setItemCount}
  */
 void createItem (TreeItem item, TreeItem parentItem, int index) {
+	createTreeItem (item, parentItem, index);
+	M3Emptiness.changed (this);
+}
+
+void createTreeItem (TreeItem item, TreeItem parentItem, int index) {
 	int count = getItemCount (parentItem);
     if (index == -1) {
         index = count;
@@ -1332,6 +1337,11 @@ void destroyItem (TreeColumn column) {
 }
 
 void destroyItem (TreeItem item) {
+	destroyTreeItem (item);
+	M3Emptiness.changed (this);
+}
+
+void destroyTreeItem (TreeItem item) {
 	TreeItem parentItem = item.parentItem;
 	int count = getItemCount (parentItem);
 	int index = indexOfChild (parentItem, item);
@@ -3064,6 +3074,11 @@ void releaseWidget () {
  * </ul>
  */
 public void removeAll () {
+	removeAllItems ();
+	M3Emptiness.changed (this);
+}
+
+void removeAllItems () {
 	checkWidget ();
 	for (int i=0; i<materializedItemCount (null); i++) {
 		TreeItem item = materializedItem (null, i);
@@ -3668,6 +3683,15 @@ public void setHeaderVisible (boolean show) {
  * @since 3.2
  */
 public void setItemCount (int count) {
+	M3Emptiness.hold (this);
+	try {
+		setRootItemCount (count);
+	} finally {
+		M3Emptiness.release (this);
+	}
+}
+
+void setRootItemCount (int count) {
 	checkWidget ();
 	checkItems ();
 	count = Math.max (0, count);

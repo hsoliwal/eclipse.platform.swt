@@ -107,6 +107,11 @@ public List (Composite parent, int style) {
  * @see #add(String,int)
  */
 public void add (String string) {
+	addItem (string);
+	M3Emptiness.changed (this);
+}
+
+void addItem (String string) {
 	checkWidget();
     if (string == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -148,6 +153,11 @@ public void add (String string) {
  * @see #add(String)
  */
 public void add (String string, int index) {
+	insertItem (string, index);
+	M3Emptiness.changed (this);
+}
+
+void insertItem (String string, int index) {
 	checkWidget();
     if (string == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -1316,6 +1326,11 @@ void releaseWidget () {
  * </ul>
  */
 public void remove (int index) {
+	removeIndex (index);
+	M3Emptiness.changed (this);
+}
+
+void removeIndex (int index) {
 	checkWidget();
 	if (!(0 <= index && index < GTK.gtk_tree_model_iter_n_children (modelHandle, 0)))  {
 		error (SWT.ERROR_INVALID_RANGE);
@@ -1346,6 +1361,11 @@ public void remove (int index) {
  * </ul>
  */
 public void remove (int start, int end) {
+	removeSpan (start, end);
+	M3Emptiness.changed (this);
+}
+
+void removeSpan (int start, int end) {
 	checkWidget();
     if (start > end) {
         return;
@@ -1409,6 +1429,11 @@ public void remove (String string) {
  * </ul>
  */
 public void remove (int [] indices) {
+	removeIndices (indices);
+	M3Emptiness.changed (this);
+}
+
+void removeIndices (int [] indices) {
 	checkWidget();
     if (indices == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -1449,6 +1474,11 @@ public void remove (int [] indices) {
  * </ul>
  */
 public void removeAll () {
+	removeAllItems ();
+	M3Emptiness.changed (this);
+}
+
+void removeAllItems () {
 	checkWidget();
 	long selection = GTK.gtk_tree_view_get_selection (handle);
 	OS.g_signal_handlers_block_matched (selection, OS.G_SIGNAL_MATCH_DATA, 0, 0, 0, 0, CHANGED);
@@ -1707,6 +1737,15 @@ int setBounds (int x, int y, int width, int height, boolean move, boolean resize
  * </ul>
  */
 public void setItem (int index, String string) {
+	M3Emptiness.hold (this);
+	try {
+		setItemText (index, string);
+	} finally {
+		M3Emptiness.release (this);
+	}
+}
+
+void setItemText (int index, String string) {
 	checkWidget();
     if (string == null) {
         error(SWT.ERROR_NULL_ARGUMENT);
@@ -1740,6 +1779,15 @@ public void setItem (int index, String string) {
  * @since 3.137
  */
 public void setItemCount (int count) {
+	M3Emptiness.hold (this);
+	try {
+		setCount (count);
+	} finally {
+		M3Emptiness.release (this);
+	}
+}
+
+void setCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
 	int itemCount = getItemCount ();
@@ -1770,6 +1818,11 @@ public void setItemCount (int count) {
  * </ul>
  */
 public void setItems (String... items) {
+	setAllItems (items);
+	M3Emptiness.changed (this);
+}
+
+void setAllItems (String... items) {
 	checkWidget();
     if (items == null) {
         error(SWT.ERROR_NULL_ARGUMENT);

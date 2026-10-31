@@ -326,6 +326,89 @@ public class Test_M3Emptiness {
 		assertThrows (SWTException.class, () -> M3Emptiness.removeListener (tree, recorder));
 	}
 
+	@Test
+	public void test_listenerAddedWithoutTheApiHearsNothing () {
+		Table table = new Table (shell, SWT.NONE);
+		Tree tree = new Tree (shell, SWT.NONE);
+		org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List (shell, SWT.NONE);
+		/* no latch: the widgets never announce, held or not */
+		table.addListener (M3Emptiness.EVENT, recorder);
+		tree.addListener (M3Emptiness.EVENT, recorder);
+		list.addListener (M3Emptiness.EVENT, recorder);
+		new TableItem (table, SWT.NONE);
+		new TreeItem (tree, SWT.NONE).dispose ();
+		list.add ("a");
+		list.setItem (0, "b");
+		expect ();
+	}
+
+	@Test
+	public void test_callsFromAnotherThreadLeaveNoHold () throws InterruptedException {
+		org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List (shell, SWT.NONE);
+		list.add ("a");
+		M3Emptiness.addListener (list, recorder);
+		Throwable [] thrown = new Throwable [1];
+		Thread other = new Thread (() -> {
+			try {
+				list.setItem (0, "b");
+			} catch (SWTException e) {
+				thrown [0] = e;
+			}
+		});
+		other.start ();
+		other.join ();
+		assertEquals (SWT.ERROR_THREAD_INVALID_ACCESS, ((SWTException) thrown [0]).code);
+		list.removeAll ();
+		expect (EMPTY, 0);
+	}
+
+	@Test
+	public void test_listenerThatEmptiesTheWidgetAgainIsAnsweredAfterTheDispatch () {
+		Table table = new Table (shell, SWT.NONE);
+		/* a listener that undoes every fill: the net state after BECAME_NON_EMPTY is empty again */
+		M3Emptiness.addListener (table, event -> {
+			if (event.detail == FILLED) table.removeAll ();
+		});
+		M3Emptiness.addListener (table, recorder);
+		new TableItem (table, SWT.NONE);
+		assertEquals (0, table.getItemCount ());
+		expect (FILLED, 1, EMPTY, 0);
+	}
+
+	@Test
+	public void test_listenerThatDisposesTheWidgetEndsTheDispatch () {
+		Table table = new Table (shell, SWT.NONE);
+		new TableItem (table, SWT.NONE);
+		M3Emptiness.addListener (table, recorder);
+		M3Emptiness.addListener (table, event -> {
+			new TableItem (table, SWT.NONE);
+			table.dispose ();
+		});
+		table.removeAll ();
+		assertTrue (table.isDisposed ());
+		expect (EMPTY, 0);
+	}
+
+	@Test
+	public void test_listenerThatRegistersAgainEndsTheDispatch () {
+		Table table = new Table (shell, SWT.NONE);
+		new TableItem (table, SWT.NONE);
+		Listener [] self = new Listener [1];
+		self [0] = event -> {
+			new TableItem (table, SWT.NONE);
+			/* the last listener goes, so a new registration starts a new latch */
+			M3Emptiness.removeListener (table, self [0]);
+			M3Emptiness.addListener (table, recorder);
+		};
+		M3Emptiness.addListener (table, self [0]);
+		table.removeAll ();
+		assertEquals (1, table.getItemCount ());
+		/* whether a listener added during a dispatch hears that dispatch is the event table's business */
+		events.clear ();
+		table.removeAll ();
+		expect (EMPTY, 0);
+	}
+
 	/* ------------------------------------------------------------------ oracle */
 
 	@Test
