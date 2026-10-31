@@ -127,6 +127,18 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 
 }
 
+/* MODE_TRUTH v1 (census L10): a canvas drawn by its M3 handler answers the handler's route (m3, or gpu with a GL context) */
+@Override
+WidgetMode m3Route () {
+	return externalCanvasHandler != null ? handlerRoute (externalCanvasHandler) : super.m3Route ();
+}
+
+/* BACKEND_REPORT v1: the M3 handler's name */
+@Override
+String m3Backend () {
+	return externalCanvasHandler != null ? externalCanvasHandler.backend () : super.m3Backend ();
+}
+
 /**
  * Fills the interior of the rectangle specified by the arguments,
  * with the receiver's background.

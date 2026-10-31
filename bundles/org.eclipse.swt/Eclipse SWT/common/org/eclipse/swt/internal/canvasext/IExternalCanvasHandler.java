@@ -27,4 +27,14 @@ public interface IExternalCanvasHandler {
 
 	void scroll(int destX, int destY, int x, int y, int width, int height, boolean all);
 
+	/** M3 (MODE_TRUTH v1, census L10): whether frames are drawn on the graphics hardware (M3Mode answers gpu, else m3). */
+	default boolean isGpu() {
+		return false;
+	}
+
+	/** M3 (BACKEND_REPORT v1): the handler's name for reports (M3Mode.backend), for example M3CanvasHandler(raster). */
+	default String backend() {
+		return getClass().getSimpleName();
+	}
+
 }

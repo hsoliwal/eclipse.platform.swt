@@ -120,6 +120,7 @@ abstract class DrawnPlane {
 			return control.createNewGC (hdc, data);
 		}));
 		this.canvas = mirroring;
+		M3BackendReport.first (widget, route (), backend ());
 		this.ownerDraw = new DrawnOwnerDraw (this);
 		if (RENDER_THREAD) {
 			/* the render thread's canvas: made there, reading only the zoom the UI thread writes; it draws image pixels, never an SWT GC */
@@ -416,6 +417,16 @@ abstract class DrawnPlane {
 			return;
 		}
 		retainedRows.paint (row);
+	}
+
+	/** MODE_TRUTH v1 (census L10): the mode the plane's backend realizes (gpu without a GL context draws m3, m3 without the library custom). */
+	final WidgetMode route () {
+		return canvas.route ();
+	}
+
+	/** BACKEND_REPORT v1: the plane and its backend, for example <code>Table drawn plane, M3RowCanvas(raster)</code>. */
+	final String backend () {
+		return widget + " drawn plane, " + canvas.backend ();
 	}
 
 	/** Paints the empty area below the rows with the frame's defaults (or adds it to the snapshot). */

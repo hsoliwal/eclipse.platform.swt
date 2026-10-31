@@ -112,10 +112,18 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		return new M3CanvasHandler (canvas, M3Gpu.acquire ());
 	}
 
-	/** Whether frames are drawn on the graphics hardware. */
+	/** Whether frames are drawn on the graphics hardware (MODE_TRUTH v1: the canvas answers gpu, else m3). */
+	@Override
 	public boolean isGpu () {
 		return gpu != null;
 	}
+
+	/** BACKEND_REPORT v1: <code>M3CanvasHandler(gpu)</code> or <code>M3CanvasHandler(raster)</code>. */
+	@Override
+	public String backend () {
+		return "M3CanvasHandler(" + (gpu != null ? "gpu" : "raster") + ")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	}
+
 
 	/** The library surface over the back buffer (replaced when the buffer grows), or null before the first frame. */
 	public Surface surface () {

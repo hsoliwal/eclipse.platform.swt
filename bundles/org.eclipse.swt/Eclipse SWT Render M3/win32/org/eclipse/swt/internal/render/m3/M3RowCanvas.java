@@ -19,6 +19,7 @@ import java.util.function.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.WidgetMode;
 import org.eclipse.swt.internal.render.*;
 import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
 import org.eclipse.swt.internal.render.m3.gc.M3PlaneCanvasExtension;
@@ -171,10 +172,28 @@ public final class M3RowCanvas implements BufferCanvas {
 		this (hwnd, itemThemeClass, zoom, null);
 	}
 
+	/* M3_LOAD_LATCH v1: without the native library the backend is refused at creation (RowBackends then takes the GC backend) */
+	private static M3Gpu requireLibrary (M3Gpu gpu) {
+		if (!M3Library.loaded ()) throw new UnsatisfiedLinkError ("the M3 renderer's native library is not loaded"); //$NON-NLS-1$
+		return gpu;
+	}
+
+	/** MODE_TRUTH v1 (census L10): this backend realizes the gpu mode on a GL context, the m3 mode otherwise. */
+	@Override
+	public WidgetMode route () {
+		return gpu != null ? WidgetMode.GPU : WidgetMode.M3;
+	}
+
+	/** BACKEND_REPORT v1: <code>M3RowCanvas(gpu)</code> or <code>M3RowCanvas(raster)</code>. */
+	@Override
+	public String backend () {
+		return "M3RowCanvas(" + (gpu != null ? "gpu" : "raster") + ")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	}
+
 	private M3RowCanvas (long hwnd, char [] itemThemeClass, IntSupplier zoom, M3Gpu gpu) {
+		this.gpu = requireLibrary (gpu);
 		this.zoom = zoom;
 		this.parts = new ThemeParts (hwnd, itemThemeClass, zoom);
-		this.gpu = gpu;
 	}
 
 	/**
@@ -182,7 +201,7 @@ public final class M3RowCanvas implements BufferCanvas {
 	 * no GL context can be made.
 	 */
 	public static M3RowCanvas gpu (long hwnd, char [] itemThemeClass, IntSupplier zoom) {
-		M3Gpu gpu = M3Gpu.acquire ();
+		M3Gpu gpu = M3Library.loaded () ? M3Gpu.acquire () : null;
 		return gpu == null ? null : new M3RowCanvas (hwnd, itemThemeClass, zoom, gpu);
 	}
 
