@@ -405,3 +405,54 @@ Given sufficient resources, a follow-up project could convert the demonstrator i
 ## Fork development guide
 
 For a source map, current build prerequisites, command cheat sheet and a worked event-loop tour, see the [SWT development guide](docs/DEVELOPMENT_GUIDE.md).
+
+## Donor notes: dancer1325/eclipse.platform.swt
+
+Condensed notes from donor commit 95b4bef5978 ("doc(): clear notes"), carried verbatim with headings demoted; the sections above stay the canonical text.
+
+* Eclipse SWT
+  * == cross-platform GUI library -- for -- JVM based desktop applications
+    * -> includes platform-specific ".jar"
+  * _Example:_ [Eclipse](https://www.eclipse.org)
+  * 👀ALMOST ENTIRELY developed -- by -- volunteers 👀
+
+### Getting Started
+
+* steps
+  * download it [here](https://download.eclipse.org/eclipse/downloads/index.html)
+  * add the ".jar" | YOUR classpath
+
+* _Example:_
+  * TODO: How to create a NEW Eclipse project?
+
+### Contributing to SWT
+
+* follow [Eclipse Platform's CONTRIBUTING](https://github.com/eclipse-platform/.github/blob/main/CONTRIBUTING.md)
+* steps
+  * create a Eclipse Development Environment -- [link](https://www.eclipse.org/setups/installer/?url=https://raw.githubusercontent.com/eclipse-platform/eclipse.platform.swt/master/bundles/org.eclipse.swt.tools/Oomph/PlatformSWTConfiguration.setup&show=true) --
+    * [.setup used](bundles/org.eclipse.swt.tools/Oomph/PlatformSWTConfiguration.setup)
+
+#### Developer Resources
+
+* see [Eclipse FAQ](https://github.com/eclipse-platform/eclipse.platform/blob/master/docs/FAQ/The_Official_Eclipse_FAQs.md#standard-widget-toolkit-swt)
+
+#### Contact
+
+* [project's "dev" list](https://accounts.eclipse.org/mailing-list/platform-dev)
+
+#### CURRENT Bugs
+
+* see [Bugzilla](https://bugs.eclipse.org/bugs/buglist.cgi?product=Platform&component=SWT)
+
+### Prototype | 1! Cross-Platform SWT Implementation
+
+* see [here](https://github.com/swt-initiative31)
+* Reasons: 🧠
+  * reduce maintenance efforts,
+  * enable better look and feel
+  * improve configurability 🧠
+* technologies suggested
+  * Skia with Visual Class Library (VCL),
+  * [Skia + custom-rendered widgets](https://github.com/swt-initiative31/prototype-skija),
+  * [GTK](https://github.com/swt-initiative31/prototype-gtk),
+  * Swing
