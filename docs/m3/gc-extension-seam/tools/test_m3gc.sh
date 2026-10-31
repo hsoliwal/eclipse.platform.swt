@@ -42,4 +42,9 @@ fi
 "$JDK/bin/java" -Xmx1024m -Djava.awt.headless=true $SWTLIB -jar "$JUNIT" execute --class-path "$OUT/classes;$CP" $SELECT \
   --details=tree --disable-banner --disable-ansi-colors > "$OUT/junit.log" 2>&1
 grep -E '^\[ +[0-9]+ (containers|tests) ' "$OUT/junit.log"
-grep -E 'tests (found|successful|failed|skipped|aborted)' "$OUT/junit.log"
+# GATE_POSITIVE_COUNT v1 (census L8, LF-02): the gate fails unless tests were found and none failed or aborted (before, the
+# script ended on a grep and exited 0 with failed tests or with no tests at all)
+count() { local v; v=$(grep -oE "[0-9]+ tests $1" "$OUT/junit.log" | head -1 | grep -oE '^[0-9]+'); echo "${v:-0}"; }
+found=$(count found); passed=$(count successful); failed=$(count failed); aborted=$(count aborted)
+echo "m3gc tests: sources=$(wc -l < "$OUT/src") found=$found successful=$passed failed=$failed aborted=$aborted"
+[ "$(wc -l < "$OUT/src")" -gt 0 ] && [ "$found" -gt 0 ] && [ "$failed" -eq 0 ] && [ "$aborted" -eq 0 ]
