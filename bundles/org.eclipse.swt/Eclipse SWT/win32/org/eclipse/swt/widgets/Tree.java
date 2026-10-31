@@ -321,9 +321,19 @@ int nativeChildCount (long hParent) {
 	long hItem = nativeFirstChild (hParent);
 	while (hItem != 0) {
 		count++;
+		siblingSteps++;
 		hItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_NEXT, hItem);
 	}
 	return count;
+}
+
+/* proof counter of CACHED_CHILD_COUNT: native sibling steps of the child counts (nativeChildCount, getItemCount (long)) */
+long siblingSteps;
+
+/* CACHED_CHILD_COUNT v1: stock 3.135.0 answers child counts from the sibling cache, O(1) after one walk */
+int cachedChildCount (long hParent) {
+	long hFirstItem = nativeFirstChild (hParent);
+	return hFirstItem == 0 ? 0 : getItemCount (hFirstItem);
 }
 
 int nativeChildIndex (long hParent, long hTarget) {
@@ -372,7 +382,7 @@ void bindVirtualTopology (TreeItem item, boolean inserted) {
 
 int virtualChildCount (long hParent) {
     if (virtualTopology == null) {
-        return nativeChildCount(hParent);
+        return cachedChildCount (hParent);
     }
 	int parentId = virtualParentId (hParent);
     if (virtualTopology.childCountKnown(parentId)) {
@@ -509,7 +519,7 @@ void ensureVirtualNativeChildren (long hParent, int requiredExclusive) {
 			? virtualTopology.childCount (parentId)
 			: nativeChildCount (hParent);
 	int target = Math.min (logicalCount, Math.max (0, requiredExclusive));
-	int resident = nativeChildCount (hParent);
+	int resident = cachedChildCount (hParent);
     if (target <= resident) {
         return;
     }
@@ -552,7 +562,7 @@ void restoreVirtualChildren (TreeItem item) {
         return;
     }
 	int logicalCount = virtualTopology.childCount (id);
-	int resident = nativeChildCount (item.handle);
+	int resident = cachedChildCount (item.handle);
 	int target = Math.min (logicalCount, Math.max (resident, VIRTUAL_FRONTIER_CHUNK));
 	ensureVirtualNativeChildren (item.handle, target);
 }
@@ -586,7 +596,7 @@ void requestVirtualFrontier (TreeItem item) {
 	if (!virtualTopology.childCountKnown (parentId)) return;
 	int logicalCount = virtualTopology.childCount (parentId);
 	long hParent = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_PARENT, item.handle);
-	int resident = nativeChildCount (hParent == 0 ? OS.TVI_ROOT : hParent);
+	int resident = cachedChildCount (hParent == 0 ? OS.TVI_ROOT : hParent);
 	if (resident >= logicalCount) return;
 	if (virtualTopology.childIndex (itemId) < Math.max (0, resident - VIRTUAL_FRONTIER_TRIGGER)) return;
 	int key = parentId + 1;
@@ -605,7 +615,7 @@ void requestVirtualFrontier (TreeItem item) {
 		} else {
 			currentParent = OS.TVI_ROOT;
 		}
-		int current = nativeChildCount (currentParent);
+		int current = cachedChildCount (currentParent);
 		ensureVirtualNativeChildren (
 				currentParent,
 				Math.min (virtualTopology.childCount (parentId),
@@ -4756,7 +4766,7 @@ public int getItemCount () {
 	if (virtualTopology != null && virtualTopology.childCountKnown (VirtualTreeTopology.ROOT)) {
 		return virtualTopology.childCount (VirtualTreeTopology.ROOT);
 	}
-	int count = nativeChildCount (OS.TVI_ROOT);
+	int count = virtualTopology == null ? cachedChildCount (OS.TVI_ROOT) : nativeChildCount (OS.TVI_ROOT);
     if (virtualTopology != null) {
         virtualTopology.setChildCount(VirtualTreeTopology.ROOT, count);
     }
@@ -4776,6 +4786,7 @@ int getItemCount (long hItem) {
 	while (hFirstItem != 0) {
 		hFirstItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_NEXT, hFirstItem);
 		count++;
+		siblingSteps++;
 	}
     if (hItem == cachedFirstItem) {
         cachedItemCount = count;
