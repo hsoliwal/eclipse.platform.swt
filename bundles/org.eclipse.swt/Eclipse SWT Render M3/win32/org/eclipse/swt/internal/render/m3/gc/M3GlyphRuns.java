@@ -20,12 +20,12 @@ import java.util.stream.IntStream;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.internal.canvasext.M3RunSink;
 
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.PaintMode;
-import io.github.humbleui.skija.TextBlob;
-import io.github.humbleui.skija.TextBlobBuilder;
-import io.github.humbleui.types.Point;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3Paint;
+import jdk.m3.graphics.M3PaintMode;
+import jdk.m3.graphics.M3TextBlob;
+import jdk.m3.graphics.M3TextBlobBuilder;
+import jdk.m3.graphics.M3Point;
+import jdk.m3.graphics.M3Rect;
 
 //FLLDCIM: L13 GLYPH_RUN_DRAW v1 — positioned TextBlob per Uniscribe run; pattern GM/M3PlaneBackend.glyphRun + Replay GLYPH_RUN
 /**
@@ -101,15 +101,15 @@ public final class M3GlyphRuns implements M3RunSink {
 
 	@Override
 	public void fillRect(int x, int y, int width, int height, int argb) {
-		try (Paint paint = new Paint().setColor(argb).setMode(PaintMode.FILL)) {
-			gc.getM3Surface().getCanvas().drawRect(Rect.makeXYWH(x, y, width, height), paint);
+		try (M3Paint paint = new M3Paint().setColor(argb).setMode(M3PaintMode.FILL)) {
+			gc.getM3Surface().getCanvas().drawRect(M3Rect.makeXYWH(x, y, width, height), paint);
 		}
 	}
 
 	@Override
 	public void clipPush(int x, int y, int width, int height) {
 		gc.getM3Surface().getCanvas().save();
-		gc.getM3Surface().getCanvas().clipRect(Rect.makeXYWH(x, y, width, height));
+		gc.getM3Surface().getCanvas().clipRect(M3Rect.makeXYWH(x, y, width, height));
 	}
 
 	@Override
@@ -121,13 +121,13 @@ public final class M3GlyphRuns implements M3RunSink {
 	public boolean glyphRun(Font font, long fontHandle, char[] glyphs, int[] advances, int[] offsets, int count, int x,
 			int baselineY, int argb, boolean characters) {
 		RUNS.incrementAndGet();
-		final io.github.humbleui.skija.Font m3Font = M3FontTable.font(fontHandle, gc.getTextAntialias());
+		final jdk.m3.graphics.M3Font m3Font = M3FontTable.font(fontHandle, gc.getTextAntialias());
 		if (m3Font == null) {
 			return false;
 		}
-		try (TextBlob blob = characters ? charBlob(m3Font, new String(glyphs, 0, count), pen(advances, count))
+		try (M3TextBlob blob = characters ? charBlob(m3Font, new String(glyphs, 0, count), pen(advances, count))
 				: blob(m3Font, glyphs, advances, offsets, count);
-				Paint paint = new Paint().setColor(argb).setAntiAlias(true)) {
+				M3Paint paint = new M3Paint().setColor(argb).setAntiAlias(true)) {
 			if (blob != null) {
 				gc.getM3Surface().getCanvas().drawTextBlob(blob, x, baselineY, paint);
 				BLOBS.incrementAndGet();
@@ -137,16 +137,16 @@ public final class M3GlyphRuns implements M3RunSink {
 	}
 
 	/* positioned blob: pen positions from the shaper's advances; offsets as (du, -dv) when present */
-	static TextBlob blob(io.github.humbleui.skija.Font font, char[] glyphs, int[] advances, int[] offsets, int count) {
+	static M3TextBlob blob(jdk.m3.graphics.M3Font font, char[] glyphs, int[] advances, int[] offsets, int count) {
 		final short[] ids = new short[count];
 		final float[] pen = pen(advances, count);
 		IntStream.range(0, count).forEach(i -> ids[i] = (short) glyphs[i]);
 		if (offsets == null) {
-			return TextBlob.makeFromPosH(ids, pen, 0, font);
+			return M3TextBlob.makeFromPosH(ids, pen, 0, font);
 		}
-		final Point[] at = IntStream.range(0, count).mapToObj(i -> new Point(pen[i] + offsets[2 * i], -offsets[2 * i + 1]))
-				.toArray(Point[]::new);
-		return TextBlob.makeFromPos(ids, at, font);
+		final M3Point[] at = IntStream.range(0, count).mapToObj(i -> new M3Point(pen[i] + offsets[2 * i], -offsets[2 * i + 1]))
+				.toArray(M3Point[]::new);
+		return M3TextBlob.makeFromPos(ids, at, font);
 	}
 
 	/* pen x of each glyph from the shaper's advances */
@@ -157,21 +157,21 @@ public final class M3GlyphRuns implements M3RunSink {
 	}
 
 	/* RUN_COVERAGE v1: a character run (fNoGlyphIndex): one glyph per code point of the run font, at its first unit's pen */
-	static TextBlob charBlob(io.github.humbleui.skija.Font font, String text, float[] pen) {
+	static M3TextBlob charBlob(jdk.m3.graphics.M3Font font, String text, float[] pen) {
 		final int[] starts = IntStream.range(0, text.length())
 				.filter(i -> i == 0 || !Character.isLowSurrogate(text.charAt(i)) || !Character.isHighSurrogate(text.charAt(i - 1)))
 				.toArray();
 		final int[] codePoints = IntStream.of(starts).map(text::codePointAt).toArray();
 		final short[] ids = font.getUTF32Glyphs(codePoints);
-		try (TextBlobBuilder builder = new TextBlobBuilder()) {
+		try (M3TextBlobBuilder builder = new M3TextBlobBuilder()) {
 			IntStream.range(0, starts.length).forEach(i -> append(builder, font, ids[i], codePoints[i], pen[starts[i]]));
 			return builder.build();
 		}
 	}
 
 	/* one glyph; a code point the run font lacks (glyph 0) comes from Skia's fallback face (M3FontTable.fallback) */
-	static void append(TextBlobBuilder builder, io.github.humbleui.skija.Font font, short id, int codePoint, float x) {
-		final io.github.humbleui.skija.Font face = id != 0 ? font : M3FontTable.fallback(font, codePoint);
+	static void append(M3TextBlobBuilder builder, jdk.m3.graphics.M3Font font, short id, int codePoint, float x) {
+		final jdk.m3.graphics.M3Font face = id != 0 ? font : M3FontTable.fallback(font, codePoint);
 		final short glyph = id != 0 ? id : face.getUTF32Glyphs(new int[] { codePoint })[0];
 		builder.appendRunPosH(face, new short[] { glyph }, new float[] { x }, 0);
 	}

@@ -17,12 +17,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.internal.canvasext.FontProperties;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.skija.FontEdging;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.PaintMode;
-import io.github.humbleui.skija.PaintStrokeCap;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3BlendMode;
+import jdk.m3.graphics.M3FontEdging;
+import jdk.m3.graphics.M3Paint;
+import jdk.m3.graphics.M3PaintMode;
+import jdk.m3.graphics.M3PaintStrokeCap;
+import jdk.m3.graphics.M3Rect;
 
 public class M3TextDrawing {
 	// only for debug purpose use text drawing without cache.
@@ -62,12 +62,12 @@ public class M3TextDrawing {
 
 		paintManager.performDraw(fgp -> {
 			fgp.setAntiAlias(antiAlias);
-			fgp.setMode(PaintMode.FILL);
+			fgp.setMode(M3PaintMode.FILL);
 			f.setSubpixel(antiAlias);
-			f.setEdging(antiAlias ? FontEdging.SUBPIXEL_ANTI_ALIAS : FontEdging.ALIAS);
+			f.setEdging(antiAlias ? M3FontEdging.SUBPIXEL_ANTI_ALIAS : M3FontEdging.ALIAS);
 
 			fgp.setStrokeWidth(1);
-			fgp.setStrokeCap(PaintStrokeCap.BUTT);
+			fgp.setStrokeCap(M3PaintStrokeCap.BUTT);
 			fgp.setPathEffect(null);
 			for (final var text : splits) {
 
@@ -103,7 +103,7 @@ public class M3TextDrawing {
 							(int) Math.ceil(heightI + leading));
 
 					paintManager.performDrawFilled(paint -> {
-						surface.getCanvas().drawRect(new Rect(r.x, r.y, r.x + size.x, r.y + size.y), paint);
+						surface.getCanvas().drawRect(new M3Rect(r.x, r.y, r.x + size.x, r.y + size.y), paint);
 					});
 
 				}
@@ -158,14 +158,14 @@ public class M3TextDrawing {
 			paintManager.performDraw(fgp -> {
 
 				fgp.setAntiAlias(antiAlias);
-				fgp.setMode(PaintMode.FILL);
+				fgp.setMode(M3PaintMode.FILL);
 				f.setSubpixel(antiAlias);
-				f.setEdging(antiAlias ? FontEdging.SUBPIXEL_ANTI_ALIAS : FontEdging.ALIAS);
+				f.setEdging(antiAlias ? M3FontEdging.SUBPIXEL_ANTI_ALIAS : M3FontEdging.ALIAS);
 
 				fgp.setStrokeWidth(1);
-				fgp.setStrokeCap(PaintStrokeCap.BUTT);
+				fgp.setStrokeCap(M3PaintStrokeCap.BUTT);
 				fgp.setPathEffect(null);
-				fgp.setBlendMode(BlendMode.SRC_IN);
+				fgp.setBlendMode(M3BlendMode.SRC_IN);
 
 				final var rect = f.measureText(text, fgp);
 				final var metric = f.getMetrics();
@@ -220,18 +220,18 @@ public class M3TextDrawing {
 						final double endOfRectangle = Math.abs(asc) * 0.12;
 						// always clear the support surface, then fill a specific rectangle area with
 						// the background color, the rest stays transparent.
-						try (Paint p = new Paint()) {
+						try (M3Paint p = new M3Paint()) {
 							p.setColor(
 									M3ColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha()));
-							p.setMode(PaintMode.FILL);
+							p.setMode(M3PaintMode.FILL);
 							supportSurface.getCanvas().drawRect(
-									new Rect(0, 0, (int) Math.ceil(rect.getWidth() + endOfRectangle), size.y), p);
+									new M3Rect(0, 0, (int) Math.ceil(rect.getWidth() + endOfRectangle), size.y), p);
 						}
 
 					} else {
 						// very important at text on transparent background. Blend over the source,
 						// otherwise the text won't be visible.
-						fgp.setBlendMode(BlendMode.SRC_OVER);
+						fgp.setBlendMode(M3BlendMode.SRC_OVER);
 					}
 
 					supportSurface.getCanvas().drawString(text, 0, ascI, f, fgp);

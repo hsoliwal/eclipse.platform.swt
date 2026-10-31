@@ -199,7 +199,7 @@ public class Test_org_eclipse_swt_internal_render_Win32Backends {
 	static boolean m3Loadable () {
 		try {
 			Class.forName ("org.eclipse.swt.internal.render.m3.M3RowCanvas");
-			Class.forName ("io.github.humbleui.skija.Surface");
+			Class.forName ("jdk.m3.graphics.M3Surface");
 			return true;
 		} catch (ClassNotFoundException | LinkageError e) {
 			return false;

@@ -10,11 +10,11 @@ import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.FontMgr;
-import io.github.humbleui.skija.FontStyle;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3BlendMode;
+import jdk.m3.graphics.M3Font;
+import jdk.m3.graphics.M3FontMgr;
+import jdk.m3.graphics.M3FontStyle;
+import jdk.m3.graphics.M3Rect;
 
 public class Test_org_eclipse_swt_m3gc_drawString {
 	@BeforeAll
@@ -31,9 +31,9 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		resources.setBackground(backgroundColor);
 
 		// Use a default Skia font (should be available everywhere)
-		final FontMgr fm = FontMgr.getDefault();
-		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), FontStyle.NORMAL);
-		resources.m3Font = new Font(fontStyle); // Default constructor uses Skia's default typeface
+		final M3FontMgr fm = M3FontMgr.getDefault();
+		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), M3FontStyle.NORMAL);
+		resources.m3Font = new M3Font(fontStyle); // Default constructor uses Skia's default typeface
 
 		FontData data = new FontData();
 		data.setName("Arial");
@@ -71,7 +71,7 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		assertEquals("drawRect", call1.methodName);
 		assertEquals(2, call1.params.length);
 		// First param: Rect with bounds [0, 0, 34, 15]
-		Rect rect = (Rect) call1.params[0];
+		M3Rect rect = (M3Rect) call1.params[0];
 		assertEquals(0.0f, rect.getLeft(), "drawRect() left should be 0");
 		assertEquals(0.0f, rect.getTop(), "drawRect() top should be 0");
 		assertEquals(34.0f, rect.getRight(), "drawRect() right should be 34");
@@ -87,7 +87,7 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		assertEquals(255, paintCall1.alpha, "drawRect() alpha should be 255");
 		assertEquals(true, paintCall1.antiAlias, "drawRect() antiAlias should be true");
 		assertEquals(false, paintCall1.dither, "drawRect() dither should be false");
-		assertEquals(BlendMode.SRC_OVER, paintCall1.blendMode, "drawRect() blendMode should be SRC_OVER");
+		assertEquals(M3BlendMode.SRC_OVER, paintCall1.blendMode, "drawRect() blendMode should be SRC_OVER");
 
 		// Call 2: drawString() - draw the string "World"
 		MethodCall call2 = calls.get(2);
@@ -119,7 +119,7 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		assertEquals(255, paintCall2.alpha, "drawString() alpha should be 255");
 		assertEquals(true, paintCall2.antiAlias, "drawString() antiAlias should be true");
 		assertEquals(false, paintCall2.dither, "drawString() dither should be false");
-		assertEquals(BlendMode.SRC_IN, paintCall2.blendMode, "drawString() blendMode should be SRC_IN");
+		assertEquals(M3BlendMode.SRC_IN, paintCall2.blendMode, "drawString() blendMode should be SRC_IN");
 
 		// Call 3: drawImage() - draw the cached image snapshot
 		MethodCall call3 = calls.get(3);
@@ -144,9 +144,9 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		resources.setBackground(backgroundColor);
 
 		// Use a default Skia font (should be available everywhere)
-		final FontMgr fm = FontMgr.getDefault();
-		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), FontStyle.NORMAL);
-		resources.m3Font = new Font(fontStyle);
+		final M3FontMgr fm = M3FontMgr.getDefault();
+		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), M3FontStyle.NORMAL);
+		resources.m3Font = new M3Font(fontStyle);
 
 		FontData data = new FontData();
 		data.setName("Arial");
@@ -183,7 +183,7 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		assertEquals("drawRect", call1.methodName);
 		assertEquals(2, call1.params.length);
 		// At 150% zoom: bounds stay same [0, 0, 34, 15] - child canvas is not scaled
-		Rect rect = (Rect) call1.params[0];
+		M3Rect rect = (M3Rect) call1.params[0];
 		assertEquals(0.0f, rect.getLeft(), "drawRect() left should be 0");
 		assertEquals(0.0f, rect.getTop(), "drawRect() top should be 0");
 		assertEquals(34.0f, rect.getRight(), "drawRect() right should be 34");
@@ -210,7 +210,7 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		assertEquals(-1, paintCall2.color, "drawString() text color should be white (-1)");
 		assertEquals(1.0f, paintCall2.strokeWidth, "drawString() stroke width should be 1.0");
 		assertEquals(true, paintCall2.antiAlias, "drawString() antiAlias should be true");
-		assertEquals(BlendMode.SRC_IN, paintCall2.blendMode, "drawString() blendMode should be SRC_IN");
+		assertEquals(M3BlendMode.SRC_IN, paintCall2.blendMode, "drawString() blendMode should be SRC_IN");
 
 		// Call 3: drawImage() - draw the cached image snapshot
 		MethodCall call3 = calls.get(3);
@@ -233,9 +233,9 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		resources.setBackground(backgroundColor);
 
 		// Use a default Skia font (should be available everywhere)
-		final FontMgr fm = FontMgr.getDefault();
-		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), FontStyle.NORMAL);
-		resources.m3Font = new Font(fontStyle);
+		final M3FontMgr fm = M3FontMgr.getDefault();
+		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), M3FontStyle.NORMAL);
+		resources.m3Font = new M3Font(fontStyle);
 
 		FontData data = new FontData();
 		data.setName("Arial");
@@ -272,7 +272,7 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		assertEquals("drawRect", call1.methodName);
 		assertEquals(2, call1.params.length);
 		// At 200% zoom: bounds stay same [0, 0, 34, 15] - child canvas is not scaled
-		Rect rect = (Rect) call1.params[0];
+		M3Rect rect = (M3Rect) call1.params[0];
 		assertEquals(0.0f, rect.getLeft(), "drawRect() left should be 0");
 		assertEquals(0.0f, rect.getTop(), "drawRect() top should be 0");
 		assertEquals(34.0f, rect.getRight(), "drawRect() right should be 34");
@@ -299,7 +299,7 @@ public class Test_org_eclipse_swt_m3gc_drawString {
 		assertEquals(-1, paintCall2.color, "drawString() text color should be white (-1)");
 		assertEquals(1.0f, paintCall2.strokeWidth, "drawString() stroke width should be 1.0");
 		assertEquals(true, paintCall2.antiAlias, "drawString() antiAlias should be true");
-		assertEquals(BlendMode.SRC_IN, paintCall2.blendMode, "drawString() blendMode should be SRC_IN");
+		assertEquals(M3BlendMode.SRC_IN, paintCall2.blendMode, "drawString() blendMode should be SRC_IN");
 
 		// Call 3: drawImage() - draw the cached image snapshot
 		MethodCall call3 = calls.get(3);

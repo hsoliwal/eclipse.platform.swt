@@ -11,7 +11,7 @@ import org.eclipse.swt.internal.render.m3.gc.IM3Resources;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.BlendMode;
+import jdk.m3.graphics.M3BlendMode;
 
 public class Test_org_eclipse_swt_m3gc_drawPath {
 
@@ -57,7 +57,7 @@ public class Test_org_eclipse_swt_m3gc_drawPath {
 		epd.antiAlias = false;
 		epd.dither = false;
 		epd.shader = null;
-		epd.blendMode = BlendMode.SRC_OVER;
+		epd.blendMode = M3BlendMode.SRC_OVER;
 		epd.pathEffect = null;
 		epd.imageFilter = null;
 		epd.colorFilter = null;
@@ -107,7 +107,7 @@ public class Test_org_eclipse_swt_m3gc_drawPath {
 		epd.antiAlias = false;
 		epd.dither = false;
 		epd.shader = null;
-		epd.blendMode = BlendMode.SRC_OVER;
+		epd.blendMode = M3BlendMode.SRC_OVER;
 		epd.pathEffect = null;
 		epd.imageFilter = null;
 		epd.colorFilter = null;
@@ -157,7 +157,7 @@ public class Test_org_eclipse_swt_m3gc_drawPath {
 		epd.antiAlias = false;
 		epd.dither = false;
 		epd.shader = null;
-		epd.blendMode = BlendMode.SRC_OVER;
+		epd.blendMode = M3BlendMode.SRC_OVER;
 		epd.pathEffect = null;
 		epd.imageFilter = null;
 		epd.colorFilter = null;

@@ -22,7 +22,7 @@ import org.eclipse.swt.internal.gpu.*;
 import org.eclipse.swt.internal.opengl.win32.*;
 import org.eclipse.swt.internal.win32.*;
 
-import io.github.humbleui.skija.*;
+import jdk.m3.graphics.*;
 
 /**
  * Skija (Skia GL) backend for retained planes on win32.
@@ -47,20 +47,20 @@ public final class M3PlaneBackend implements PlaneBackend {
 	static final int PAINTS = 512, BLOBS = Integer.getInteger ("swt.gpu.blobs", 4096);
 
 	long hostHwnd, hostDC, hglrc;
-	DirectContext context;
-	FontMgr fontMgr;
-	final Font [] fonts = new Font [FontTable.CAPACITY];
+	M3DirectContext context;
+	M3FontMgr fontMgr;
+	final M3Font [] fonts = new M3Font [FontTable.CAPACITY];
 	final RetainedSlots paintSlots = new RetainedSlots (PAINTS);
-	final Paint [] paints = new Paint [PAINTS];
+	final M3Paint [] paints = new M3Paint [PAINTS];
 	final RetainedSlots blobSlots = new RetainedSlots (BLOBS);
-	final TextBlob [] blobs = new TextBlob [BLOBS];
+	final M3TextBlob [] blobs = new M3TextBlob [BLOBS];
 	final String [] blobText = new String [BLOBS];
 	final int [] blobStart = new int [BLOBS], blobLength = new int [BLOBS], blobFont = new int [BLOBS];
 	/* Reused absolute affine matrix for packed OpStream replay; UI-thread confined. */
 	final float [] matrix33 = new float [] {1, 0, 0, 0, 1, 0, 0, 0, 1};
-	Paint srcPaint;
+	M3Paint srcPaint;
 	/* ClearType-like LCD text needs the surface pixel geometry; tiles and frames are opaque. */
-	SurfaceProps lcdProps;
+	M3SurfaceProps lcdProps;
 	long liveTileBytes;
 	/* Evictors are created once; native objects close when their slot is reused. */
 	final RetainedSlots.Evictor paintEvictor = (slot, key) -> {
@@ -93,10 +93,10 @@ public final class M3PlaneBackend implements PlaneBackend {
 		if (format == 0 || !WGL.SetPixelFormat (hostDC, format, pfd)) return false;
 		hglrc = WGL.wglCreateContext (hostDC);
 		if (hglrc == 0 || !WGL.wglMakeCurrent (hostDC, hglrc)) return false;
-		context = DirectContext.makeGL ();
-		fontMgr = FontMgr.getDefault ();
-		srcPaint = new Paint ().setBlendMode (BlendMode.SRC);
-		lcdProps = new SurfaceProps (false, PixelGeometry.RGB_H);
+		context = M3DirectContext.makeGL ();
+		fontMgr = M3FontMgr.getDefault ();
+		srcPaint = new M3Paint ().setBlendMode (M3BlendMode.SRC);
+		lcdProps = new M3SurfaceProps (false, M3PixelGeometry.RGB_H);
 		return context != null;
 	}
 
@@ -115,19 +115,19 @@ public final class M3PlaneBackend implements PlaneBackend {
 
 	/** Creates the Skija font of id {@code id} from its {@link FontTable} value; called on first replay. */
 	void defineFont (int id, String face, int heightPx, int weight, int italic) {
-		FontStyle style = new FontStyle (weight, 5, italic != 0 ? FontSlant.ITALIC : FontSlant.UPRIGHT);
-		Typeface typeface = fontMgr.matchFamilyStyle (face, style);
-		Font font = new Font (typeface, heightPx);
-		font.setEdging (FontEdging.SUBPIXEL_ANTI_ALIAS);
-		font.setHinting (FontHinting.NORMAL);
+		M3FontStyle style = new M3FontStyle (weight, 5, italic != 0 ? M3FontSlant.ITALIC : M3FontSlant.UPRIGHT);
+		M3Typeface typeface = fontMgr.matchFamilyStyle (face, style);
+		M3Font font = new M3Font (typeface, heightPx);
+		font.setEdging (M3FontEdging.SUBPIXEL_ANTI_ALIAS);
+		font.setHinting (M3FontHinting.NORMAL);
 		font.setSubpixel (false);
 		font.setBaselineSnapped (true);
 		fonts [id] = font;
 		GpuCounters.inc (GpuCounters.NATIVE_CREATES);
 	}
 
-	Font font (int id) {
-		Font font = fonts [id];
+	M3Font font (int id) {
+		M3Font font = fonts [id];
 		if (font == null) {
 			FontTable table = FontTable.INSTANCE;
 			defineFont (id, table.face [id], table.heightPx [id], table.weight [id], table.italic [id]);
@@ -141,15 +141,15 @@ public final class M3PlaneBackend implements PlaneBackend {
 		int slot = paintSlots.acquire (PaintKeys.key (mask, argb), paintEvictor);
 		if (slot < 0) return 0;
 		if (paintSlots.isNew ()) {
-			Paint paint = new Paint ().setColor (argb).setAntiAlias (false);
+			M3Paint paint = new M3Paint ().setColor (argb).setAntiAlias (false);
 			int kind = PaintKeys.kind (mask);
 			if (kind == PaintKeys.KIND_STROKE) {
 				float width = PaintKeys.lineWidth (mask);
-				paint.setMode (PaintMode.STROKE).setStrokeWidth (width <= 1f ? 0f : width);
+				paint.setMode (M3PaintMode.STROKE).setStrokeWidth (width <= 1f ? 0f : width);
 				int cap = PaintKeys.lineCap (mask);
-				paint.setStrokeCap (cap == 2 ? PaintStrokeCap.ROUND : cap == 3 ? PaintStrokeCap.SQUARE : PaintStrokeCap.BUTT);
+				paint.setStrokeCap (cap == 2 ? M3PaintStrokeCap.ROUND : cap == 3 ? M3PaintStrokeCap.SQUARE : M3PaintStrokeCap.BUTT);
 				int join = PaintKeys.lineJoin (mask);
-				paint.setStrokeJoin (join == 2 ? PaintStrokeJoin.ROUND : join == 3 ? PaintStrokeJoin.BEVEL : PaintStrokeJoin.MITER);
+				paint.setStrokeJoin (join == 2 ? M3PaintStrokeJoin.ROUND : join == 3 ? M3PaintStrokeJoin.BEVEL : M3PaintStrokeJoin.MITER);
 			} else if (kind == PaintKeys.KIND_TEXT) {
 				paint.setAntiAlias (true);
 			}
@@ -195,11 +195,11 @@ public final class M3PlaneBackend implements PlaneBackend {
 		slot = blobSlots.acquire (key, blobEvictor);
 		GpuCounters.inc (GpuCounters.BLOB_MISS);
 		if (slot < 0) return 0;
-		Font font = font (fontId);
+		M3Font font = font (fontId);
 		/* Skija's string API needs a spelling only on a cold miss. */
 		String slice = start == 0 && length == text.length () ? text : text.substring (start, start + length);
 		short [] glyphs = font.getStringGlyphs (slice);
-		TextBlob blob = glyphs.length == 0 ? null : TextBlob.makeFromPosH (glyphs, gdiPositions (slice, fontId, glyphs.length), 0, font);
+		M3TextBlob blob = glyphs.length == 0 ? null : M3TextBlob.makeFromPosH (glyphs, gdiPositions (slice, fontId, glyphs.length), 0, font);
 		blobs [slot] = blob;
 		blobText [slot] = text;
 		blobStart [slot] = start;
@@ -211,7 +211,7 @@ public final class M3PlaneBackend implements PlaneBackend {
 
 	/* Shaped glyph runs (TextLayout): keyed by a hash of font id, glyph ids and advances; hits are verified. */
 	final RetainedSlots runSlots = new RetainedSlots (BLOBS);
-	final TextBlob [] runBlobs = new TextBlob [BLOBS];
+	final M3TextBlob [] runBlobs = new M3TextBlob [BLOBS];
 	final int [][] runKeys = new int [BLOBS][];
 	final RetainedSlots.Evictor runEvictor = (slot, key) -> {
 		if (runBlobs [slot] != null) runBlobs [slot].close ();
@@ -248,7 +248,7 @@ public final class M3PlaneBackend implements PlaneBackend {
 			x += a [o + 5 + count + i];
 		}
 		System.arraycopy (a, o + 5, key, 2, 2 * count);
-		runBlobs [slot] = TextBlob.makeFromPosH (glyphs, xpos, 0, font (fontId));
+		runBlobs [slot] = M3TextBlob.makeFromPosH (glyphs, xpos, 0, font (fontId));
 		runKeys [slot] = key;
 		GpuCounters.inc (GpuCounters.NATIVE_CREATES);
 		return runBlobs [slot] != null ? runBlobs [slot]._ptr : 0;
@@ -282,7 +282,7 @@ public final class M3PlaneBackend implements PlaneBackend {
 		for (int s = blobSlots.first (); s >= 0; s = blobSlots.next (s)) if (blobs [s] != null) blobs [s].close ();
 		for (int s = runSlots.first (); s >= 0; s = runSlots.next (s)) if (runBlobs [s] != null) runBlobs [s].close ();
 		for (int s = paintSlots.first (); s >= 0; s = paintSlots.next (s)) paints [s].close ();
-		for (Font font : fonts) if (font != null) font.close ();
+		for (M3Font font : fonts) if (font != null) font.close ();
 		if (srcPaint != null) srcPaint.close ();
 		if (context != null) {
 			context.abandon ();

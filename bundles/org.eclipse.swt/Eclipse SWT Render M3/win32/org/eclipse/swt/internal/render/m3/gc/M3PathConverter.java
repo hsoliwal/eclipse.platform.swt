@@ -17,18 +17,18 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Path;
 import org.eclipse.swt.graphics.PathData;
 
-import io.github.humbleui.skija.PathFillMode;
+import jdk.m3.graphics.M3PathFillMode;
 
 public class M3PathConverter {
 
-	public static io.github.humbleui.skija.Path convertSWTPathToM3Path(Path swtPath, DpiScalerUtil sc) {
+	public static jdk.m3.graphics.M3Path convertSWTPathToM3Path(Path swtPath, DpiScalerUtil sc) {
 
 		if (swtPath == null || swtPath.isDisposed()) {
 			return null;
 		}
 		final PathData data = swtPath.getPathData();
 
-		try (final io.github.humbleui.skija.PathBuilder m3PathBuilder = new io.github.humbleui.skija.PathBuilder()) {
+		try (final jdk.m3.graphics.M3PathBuilder m3PathBuilder = new jdk.m3.graphics.M3PathBuilder()) {
 
 			final float[] pts = data.points;
 			final byte[] types = data.types;
@@ -62,9 +62,9 @@ public class M3PathConverter {
 
 	}
 
-	public static io.github.humbleui.skija.Path createPath(int[] pointArray,int fillRule , DpiScalerUtil sc) {
+	public static jdk.m3.graphics.M3Path createPath(int[] pointArray,int fillRule , DpiScalerUtil sc) {
 		// Create Skija path for the polygon
-		try (io.github.humbleui.skija.PathBuilder pathBuilder = new io.github.humbleui.skija.PathBuilder()) { // Move
+		try (jdk.m3.graphics.M3PathBuilder pathBuilder = new jdk.m3.graphics.M3PathBuilder()) { // Move
 			// to
 			// first
 			// point
@@ -75,7 +75,7 @@ public class M3PathConverter {
 			}
 			// Close the path to form a polygon
 			pathBuilder.closePath();
-			pathBuilder.setFillMode(fillRule == SWT.FILL_EVEN_ODD ? PathFillMode.EVEN_ODD : PathFillMode.WINDING);
+			pathBuilder.setFillMode(fillRule == SWT.FILL_EVEN_ODD ? M3PathFillMode.EVEN_ODD : M3PathFillMode.WINDING);
 			// Fill the polygon
 			return pathBuilder.build();
 		}

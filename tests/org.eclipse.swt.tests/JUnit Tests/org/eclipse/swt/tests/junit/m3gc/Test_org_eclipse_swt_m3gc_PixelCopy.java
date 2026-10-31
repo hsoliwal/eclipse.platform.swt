@@ -31,10 +31,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.Surface;
-import io.github.humbleui.types.IRect;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3Paint;
+import jdk.m3.graphics.M3Surface;
+import jdk.m3.graphics.M3IRect;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * Headless, on a real Skija raster surface: copyArea of the M3 GC (GC seam, leaf 6; atom PIXEL_COPY, pattern M3-GC-PIXEL-COPY
@@ -44,7 +44,7 @@ import io.github.humbleui.types.Rect;
  */
 public class Test_org_eclipse_swt_m3gc_PixelCopy {
 	static final int WHITE = 0xFFFFFFFF, RED = 0xFFFF0000;
-	Surface real;
+	M3Surface real;
 	M3ExternalGC gc;
 
 	@BeforeAll
@@ -54,7 +54,7 @@ public class Test_org_eclipse_swt_m3gc_PixelCopy {
 
 	@BeforeEach
 	void setUp() {
-		real = Surface.makeRasterN32Premul(100, 100);
+		real = M3Surface.makeRasterN32Premul(100, 100);
 		real.getCanvas().clear(WHITE);
 		M3GcFixture f = new M3GcFixture(100);
 		f.ext.surface = new M3SurfaceAdapter(real);
@@ -67,7 +67,7 @@ public class Test_org_eclipse_swt_m3gc_PixelCopy {
 	}
 
 	int pixel(int x, int y) {
-		try (var bitmap = new io.github.humbleui.skija.Bitmap()) {
+		try (var bitmap = new jdk.m3.graphics.M3Bitmap()) {
 			bitmap.allocN32Pixels(1, 1);
 			real.readPixels(bitmap, x, y);
 			return bitmap.getColor(0, 0);
@@ -76,7 +76,7 @@ public class Test_org_eclipse_swt_m3gc_PixelCopy {
 
 	@Test
 	public void testSnapshotOutsideTheSurfaceIsNull() {
-		assertNull(new M3SurfaceAdapter(real).makeImageSnapshot(new IRect(200, 200, 210, 210)), "no wrapper around a null image");
+		assertNull(new M3SurfaceAdapter(real).makeImageSnapshot(new M3IRect(200, 200, 210, 210)), "no wrapper around a null image");
 	}
 
 	@Test
@@ -87,8 +87,8 @@ public class Test_org_eclipse_swt_m3gc_PixelCopy {
 
 	@Test
 	public void testSourceCutByTheEdgeKeepsItsOffset() {
-		try (Paint red = new Paint().setColor(RED)) {
-			real.getCanvas().drawRect(Rect.makeXYWH(0, 0, 2, 10), red);
+		try (M3Paint red = new M3Paint().setColor(RED)) {
+			real.getCanvas().drawRect(M3Rect.makeXYWH(0, 0, 2, 10), red);
 		}
 		gc.copyArea(-5, 0, 20, 10, 50, 50);
 		assertEquals(RED, pixel(55, 52), "source x 0 lands at destination x 50 + 5");

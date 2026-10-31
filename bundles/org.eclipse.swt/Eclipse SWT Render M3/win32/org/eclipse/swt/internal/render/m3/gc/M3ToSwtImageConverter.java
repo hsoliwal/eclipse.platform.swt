@@ -17,9 +17,9 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.RGB;
 
-import io.github.humbleui.skija.Bitmap;
-import io.github.humbleui.skija.ColorAlphaType;
-import io.github.humbleui.skija.ColorType;
+import jdk.m3.graphics.M3Bitmap;
+import jdk.m3.graphics.M3ColorAlphaType;
+import jdk.m3.graphics.M3ColorType;
 
 public class M3ToSwtImageConverter {
 
@@ -30,11 +30,11 @@ public class M3ToSwtImageConverter {
 
 	}
 
-	public static ImageData convertM3ImageToImageData(io.github.humbleui.skija.Image image) {
-		try (final Bitmap bm = Bitmap.makeFromImage(image)) {
+	public static ImageData convertM3ImageToImageData(jdk.m3.graphics.M3Image image) {
+		try (final M3Bitmap bm = M3Bitmap.makeFromImage(image)) {
 			final var colType = bm.getColorType();
 			// M3 (GC seam, leaf 6; PIXEL_COPY, census GF21): premultiplied pixels (a surface snapshot) are unpremultiplied
-			final boolean premultiplied = bm.getAlphaType() == ColorAlphaType.PREMUL;
+			final boolean premultiplied = bm.getAlphaType() == M3ColorAlphaType.PREMUL;
 			final byte[] alphas = new byte[bm.getHeight() * bm.getWidth()];
 			final var source = bm.readPixels();
 			final byte[] convertedData = new byte[bm.getHeight() * bm.getWidth() * 3];
@@ -81,7 +81,7 @@ public class M3ToSwtImageConverter {
 		return (byte) Math.round(alphaF * 255);
 	}
 
-	public static int[] getPixelOrder(ColorType colorType) {
+	public static int[] getPixelOrder(M3ColorType colorType) {
 		return switch (colorType) {
 		case ALPHA_8 -> new int[] { 0 };
 		case RGB_565 -> new int[] { 0, 1, 2 };
@@ -106,7 +106,7 @@ public class M3ToSwtImageConverter {
 		};
 	}
 
-	public static PaletteData getPaletteData(ColorType colorType) {
+	public static PaletteData getPaletteData(M3ColorType colorType) {
 		return switch (colorType) {
 		case ALPHA_8 -> new PaletteData(new RGB[] { new RGB(255, 255, 255), new RGB(0, 0, 0) });
 		case RGB_565 -> new PaletteData(0xF800, 0x07E0, 0x001F);
@@ -120,7 +120,7 @@ public class M3ToSwtImageConverter {
 		};
 	}
 
-	public static int getImageDepth(ColorType colorType) {
+	public static int getImageDepth(M3ColorType colorType) {
 		return switch (colorType) {
 		case ALPHA_8 -> 8;
 		case RGB_565 -> 16;

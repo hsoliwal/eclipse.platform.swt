@@ -42,22 +42,22 @@ import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.internal.canvasext.IExternalGC;
 
-import io.github.humbleui.skija.ClipMode;
-import io.github.humbleui.skija.ColorAlphaType;
-import io.github.humbleui.skija.ColorType;
-import io.github.humbleui.skija.EncoderPNG;
-import io.github.humbleui.skija.FilterTileMode;
-import io.github.humbleui.skija.GradientStyle;
-import io.github.humbleui.skija.ImageInfo;
-import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.PaintMode;
-import io.github.humbleui.skija.PathEffect;
-import io.github.humbleui.skija.PathFillMode;
-import io.github.humbleui.skija.SamplingMode;
-import io.github.humbleui.skija.Shader;
-import io.github.humbleui.types.IRect;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3ClipMode;
+import jdk.m3.graphics.M3ColorAlphaType;
+import jdk.m3.graphics.M3ColorType;
+import jdk.m3.graphics.M3EncoderPNG;
+import jdk.m3.graphics.M3FilterTileMode;
+import jdk.m3.graphics.M3GradientStyle;
+import jdk.m3.graphics.M3ImageInfo;
+import jdk.m3.graphics.M3Matrix33;
+import jdk.m3.graphics.M3Paint;
+import jdk.m3.graphics.M3PaintMode;
+import jdk.m3.graphics.M3PathEffect;
+import jdk.m3.graphics.M3PathFillMode;
+import jdk.m3.graphics.M3SamplingMode;
+import jdk.m3.graphics.M3Shader;
+import jdk.m3.graphics.M3IRect;
+import jdk.m3.graphics.M3Rect;
 
 public class M3ExternalGC implements IExternalGC {
 
@@ -89,7 +89,7 @@ public class M3ExternalGC implements IExternalGC {
 	private final Drawable drawable;
 	private final Device device;
 
-	private SamplingMode interpolationMode = SamplingMode.DEFAULT;
+	private M3SamplingMode interpolationMode = M3SamplingMode.DEFAULT;
 	private int interpolation = SWT.DEFAULT;
 
 	private final IM3CanvasExtension m3Extension;
@@ -229,7 +229,7 @@ public class M3ExternalGC implements IExternalGC {
 		paintManager.performDraw(paint -> {
 			paint.setAlpha(alpha);
 			paint.setAntiAlias(true);
-			final Rect dest = RectangleConverter.createScaledRectangle(getScaler(), destX, destY, destWidth, destHeight);
+			final M3Rect dest = RectangleConverter.createScaledRectangle(getScaler(), destX, destY, destWidth, destHeight);
 			// RTL_FRAME v1: an image keeps its orientation in a mirrored frame (stock preserves bitmap orientation)
 			M3Mirror.unmirrored(canvas, isMirrored(), dest.getLeft(), dest.getWidth(), () -> canvas.drawImageRect(
 					SwtToM3ImageConverter.convertSWTImageToM3Image(image, getScaler().autoScaleUp(100 * fac),
@@ -252,8 +252,8 @@ public class M3ExternalGC implements IExternalGC {
 	 * @param str
 	 * @param image
 	 */
-	static void writeFile(String str, io.github.humbleui.skija.Image image) {
-		final byte[] imageBytes = EncoderPNG.encode(image).getBytes();
+	static void writeFile(String str, jdk.m3.graphics.M3Image image) {
+		final byte[] imageBytes = M3EncoderPNG.encode(image).getBytes();
 
 		final File f = new File(str);
 		if (f.exists()) {
@@ -323,7 +323,7 @@ public class M3ExternalGC implements IExternalGC {
 		executeTextDraw(text, flags, x, y);
 	}
 
-	private io.github.humbleui.skija.Font getM3Font() {
+	private jdk.m3.graphics.M3Font getM3Font() {
 		return this.resources.getM3Font();
 	}
 
@@ -356,7 +356,7 @@ public class M3ExternalGC implements IExternalGC {
 		paintManager.performDraw(paint -> {
 			final var scaledLineWidth = getScaler().autoScaleUp(lineWidth * 1F);
 
-			try (var pe = PathEffect.makeDash(new float[] { 1.5f * scaledLineWidth, 1.5f * scaledLineWidth }, 0.0f)) {
+			try (var pe = M3PathEffect.makeDash(new float[] { 1.5f * scaledLineWidth, 1.5f * scaledLineWidth }, 0.0f)) {
 				paint.setPathEffect(pe);
 				surface.getCanvas().drawRect(
 						RectangleConverter.createScaledRectangleWithOffset(getScaler(), 0, x, y, width, height), paint);
@@ -375,7 +375,7 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void drawPath(Path path) {
 		paintManager.performDraw(paint -> {
-			try (io.github.humbleui.skija.Path m3Path = M3PathConverter.convertSWTPathToM3Path(path,
+			try (jdk.m3.graphics.M3Path m3Path = M3PathConverter.convertSWTPathToM3Path(path,
 					getScaler())) {
 				if (m3Path == null) {
 					return;
@@ -397,7 +397,7 @@ public class M3ExternalGC implements IExternalGC {
 		paintManager.performFillForeground(paint -> {
 			// points have always one pixel no matter the zoom...
 			final var rec = RectangleConverter.scaleUpRectangle(getScaler(), new Rectangle(x, y, 1, 1));
-			final var r = new Rect(rec.x, rec.y, rec.x + 1, rec.y + 1);
+			final var r = new M3Rect(rec.x, rec.y, rec.x + 1, rec.y + 1);
 			surface.getCanvas().drawRect(r, paint);
 		});
 	}
@@ -429,7 +429,7 @@ public class M3ExternalGC implements IExternalGC {
 
 		paintManager.performDraw(paint -> {
 			// Create Skija path for the polygon
-			try (io.github.humbleui.skija.PathBuilder pathBuilder = new io.github.humbleui.skija.PathBuilder()) {
+			try (jdk.m3.graphics.M3PathBuilder pathBuilder = new jdk.m3.graphics.M3PathBuilder()) {
 				// Move to first point
 				pathBuilder.moveTo(getScaler().autoScaleUp(pointArray[0]), getScaler().autoScaleUp(pointArray[1]));
 				// Add lines to subsequent points
@@ -549,7 +549,7 @@ public class M3ExternalGC implements IExternalGC {
 		final int x2 = vertical ? x : x + width;
 		final int y2 = vertical ? y + height : y;
 
-		final Rect rect = RectangleConverter.createScaledRectangle(getScaler(), x, y, width, height);
+		final M3Rect rect = RectangleConverter.createScaledRectangle(getScaler(), x, y, width, height);
 		int fromColor = M3ColorConverter.convertSWTColorToM3Color(getForeground());
 		int toColor = M3ColorConverter.convertSWTColorToM3Color(getBackground());
 		if (fromColor == toColor) {
@@ -572,7 +572,7 @@ public class M3ExternalGC implements IExternalGC {
 	}
 
 	/* leaf 6: GDI GradientFill's rows in pixels: row i of n = from + (to - from) * i / n per 16-bit channel, aliased, opaque */
-	private void gradientRows(Rect rect, boolean vertical, int from, int to) {
+	private void gradientRows(M3Rect rect, boolean vertical, int from, int to) {
 		final int left = Math.round(rect.getLeft()), top = Math.round(rect.getTop());
 		final int right = Math.round(rect.getRight()), bottom = Math.round(rect.getBottom());
 		final int n = vertical ? bottom - top : right - left;
@@ -581,8 +581,8 @@ public class M3ExternalGC implements IExternalGC {
 			paint.setAntiAlias(false);
 			IntStream.range(0, n).forEach(i -> {
 				paint.setColor(gradientColor(from, to, i, n));
-				surface.getCanvas().drawRect(vertical ? Rect.makeLTRB(left, top + i, right, top + i + 1)
-						: Rect.makeLTRB(left + i, top, left + i + 1, bottom), paint);
+				surface.getCanvas().drawRect(vertical ? M3Rect.makeLTRB(left, top + i, right, top + i + 1)
+						: M3Rect.makeLTRB(left + i, top, left + i + 1, bottom), paint);
 			});
 		});
 	}
@@ -595,25 +595,25 @@ public class M3ExternalGC implements IExternalGC {
 		}).reduce(0, (p, q) -> p | q);
 	}
 
-	private void performDrawGradientFilled(Consumer<Paint> operations, int x, int y, int x2, int y2, int fromColor,
+	private void performDrawGradientFilled(Consumer<M3Paint> operations, int x, int y, int x2, int y2, int fromColor,
 			int toColor) {
 		paintManager.performDraw(paint -> {
 
-			try (Shader gradient = convertGradientRectangleToM3Shader(x, y, x2 - x, y2 - y, false, fromColor,
+			try (M3Shader gradient = convertGradientRectangleToM3Shader(x, y, x2 - x, y2 - y, false, fromColor,
 					toColor)) {
 				paint.setShader(gradient);
 				paint.setAntiAlias(true);
-				paint.setMode(PaintMode.FILL);
+				paint.setMode(M3PaintMode.FILL);
 				operations.accept(paint);
 			}
 		});
 	}
 
-	private static Shader convertGradientRectangleToM3Shader(int x, int y, int width, int height, boolean vertical,
+	private static M3Shader convertGradientRectangleToM3Shader(int x, int y, int width, int height, boolean vertical,
 			int fromColor, int toColor) {
 
-		final var gs = new GradientStyle(FilterTileMode.REPEAT, true, null);
-		final Shader s = Shader.makeLinearGradient(x, y, x + width, y + height, new int[] { fromColor, toColor }, null,
+		final var gs = new M3GradientStyle(M3FilterTileMode.REPEAT, true, null);
+		final M3Shader s = M3Shader.makeLinearGradient(x, y, x + width, y + height, new int[] { fromColor, toColor }, null,
 				gs);
 
 		return s;
@@ -628,13 +628,13 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void fillPath(Path path) {
 		paintManager.performDrawFilled(paint -> {
-			try (io.github.humbleui.skija.Path m3Path = M3PathConverter.convertSWTPathToM3Path(path,
+			try (jdk.m3.graphics.M3Path m3Path = M3PathConverter.convertSWTPathToM3Path(path,
 					getScaler())) {
 				if (m3Path == null) {
 					return;
 				}
 				m3Path
-				.setFillMode(this.fillRule == SWT.FILL_EVEN_ODD ? PathFillMode.EVEN_ODD : PathFillMode.WINDING);
+				.setFillMode(this.fillRule == SWT.FILL_EVEN_ODD ? M3PathFillMode.EVEN_ODD : M3PathFillMode.WINDING);
 				paint.setAntiAlias(this.antialias == SWT.ON);
 				surface.getCanvas().drawPath(m3Path, paint);
 			}
@@ -762,7 +762,7 @@ public class M3ExternalGC implements IExternalGC {
 		antialias = SWT.DEFAULT;
 		textAntiAlias = SWT.DEFAULT;
 		interpolation = SWT.DEFAULT;
-		interpolationMode = SamplingMode.DEFAULT;
+		interpolationMode = M3SamplingMode.DEFAULT;
 	}
 
 	@Override
@@ -801,16 +801,16 @@ public class M3ExternalGC implements IExternalGC {
 	}
 
 	/* the frame of this GC (the paint's damage) in device pixels; the surface when the extension has none */
-	private Rect frame() {
+	private M3Rect frame() {
 		final Rectangle area = m3Extension.getClientArea();
 		if (area == null) {
-			return new Rect(0, 0, surface.getWidth(), surface.getHeight());
+			return new M3Rect(0, 0, surface.getWidth(), surface.getHeight());
 		}
-		return Rect.makeXYWH(area.x, area.y, area.width, area.height);
+		return M3Rect.makeXYWH(area.x, area.y, area.width, area.height);
 	}
 
 	/* local pixels to the enclosing rectangle in points */
-	private Rectangle toPoints(Rect r) {
+	private Rectangle toPoints(M3Rect r) {
 		final var sc = getScaler();
 		final int left = (int) Math.floor(sc.autoScaleDown(r.getLeft()) + 1e-3f);
 		final int top = (int) Math.floor(sc.autoScaleDown(r.getTop()) + 1e-3f);
@@ -845,8 +845,8 @@ public class M3ExternalGC implements IExternalGC {
 		// part outside the surface is left as it was. The donor gave 24-bit data 32-bit masks, kept premultiplied colour,
 		// drew a 100 % image in points (twice the size at 200 %) and blended it over the old content
 		final Rectangle size = image.getBounds();
-		final IRect area = RectangleConverter.createScaledRectangle(getScaler(), x, y, size.width, size.height).toIRect();
-		final IRect visible = area.intersect(new IRect(0, 0, surface.getWidth(), surface.getHeight()));
+		final M3IRect area = RectangleConverter.createScaledRectangle(getScaler(), x, y, size.width, size.height).toIRect();
+		final M3IRect visible = area.intersect(new M3IRect(0, 0, surface.getWidth(), surface.getHeight()));
 		if (visible == null) {
 			return;
 		}
@@ -878,8 +878,8 @@ public class M3ExternalGC implements IExternalGC {
 	public void copyArea(int srcX, int srcY, int width, int height, int destX, int destY) {
 		// leaf 6 (PIXEL_COPY, GF20): the source cut to the surface as BitBlt cuts it, the destination moved by the cut; a source
 		// outside the surface copies nothing (the donor threw on the null snapshot and misplaced a source cut at the edge)
-		final IRect source = RectangleConverter.createScaledRectangle(getScaler(), srcX, srcY, width, height).toIRect();
-		final IRect visible = source.intersect(new IRect(0, 0, surface.getWidth(), surface.getHeight()));
+		final M3IRect source = RectangleConverter.createScaledRectangle(getScaler(), srcX, srcY, width, height).toIRect();
+		final M3IRect visible = source.intersect(new M3IRect(0, 0, surface.getWidth(), surface.getHeight()));
 		if (visible == null) {
 			return;
 		}
@@ -938,8 +938,8 @@ public class M3ExternalGC implements IExternalGC {
 			region.add(getClipping());
 			return;
 		}
-		final Rect frame = frame();
-		IntStream.range(0, rects.length / 4).mapToObj(i -> Rect.makeLTRB(rects[4 * i], rects[4 * i + 1], rects[4 * i + 2],
+		final M3Rect frame = frame();
+		IntStream.range(0, rects.length / 4).mapToObj(i -> M3Rect.makeLTRB(rects[4 * i], rects[4 * i + 1], rects[4 * i + 2],
 				rects[4 * i + 3]).intersect(frame)).filter(r -> r != null).forEach(r -> region.add(toPoints(r)));
 	}
 
@@ -1054,14 +1054,14 @@ public class M3ExternalGC implements IExternalGC {
 		if (path != null && path.isDisposed()) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
-		try (final io.github.humbleui.skija.Path m3Path = path == null ? null
+		try (final jdk.m3.graphics.M3Path m3Path = path == null ? null
 				: M3PathConverter.convertSWTPathToM3Path(path, getScaler())) {
 			if (m3Path == null) {
 				layer.setClip(null, null, null);
 				return;
 			}
-			m3Path.setFillMode(fillRule == SWT.FILL_EVEN_ODD ? PathFillMode.EVEN_ODD : PathFillMode.WINDING);
-			layer.setClip(canvas -> canvas.clipPath(m3Path, ClipMode.INTERSECT, true), m3Path.computeTightBounds(), null);
+			m3Path.setFillMode(fillRule == SWT.FILL_EVEN_ODD ? M3PathFillMode.EVEN_ODD : M3PathFillMode.WINDING);
+			layer.setClip(canvas -> canvas.clipPath(m3Path, M3ClipMode.INTERSECT, true), m3Path.computeTightBounds(), null);
 		}
 	}
 
@@ -1072,7 +1072,7 @@ public class M3ExternalGC implements IExternalGC {
 			layer.setClip(null, null, null);
 			return;
 		}
-		final Rect local = RectangleConverter.createScaledRectangle(getScaler(), rect);
+		final M3Rect local = RectangleConverter.createScaledRectangle(getScaler(), rect);
 		layer.setClip(canvas -> canvas.clipRect(local), local, null);
 	}
 
@@ -1121,9 +1121,9 @@ public class M3ExternalGC implements IExternalGC {
 		// leaf 6 (HINT_STATE, GF06): DEFAULT samples nearest like the untouched GC (stock without GDI+: StretchBlt COLORONCOLOR);
 		// the donor mapped DEFAULT to Mitchell, a second default (departure from I31 SkiaGC.setInterpolation)
 		switch (interpolation) {
-		case SWT.NONE, SWT.DEFAULT -> this.interpolationMode = SamplingMode.DEFAULT; // Nearest neighbor
-		case SWT.LOW -> this.interpolationMode = SamplingMode.LINEAR;
-		case SWT.HIGH -> this.interpolationMode = SamplingMode.CATMULL_ROM;
+		case SWT.NONE, SWT.DEFAULT -> this.interpolationMode = M3SamplingMode.DEFAULT; // Nearest neighbor
+		case SWT.LOW -> this.interpolationMode = M3SamplingMode.LINEAR;
+		case SWT.HIGH -> this.interpolationMode = M3SamplingMode.CATMULL_ROM;
 		default -> SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
 		advanced |= interpolation != SWT.DEFAULT;
@@ -1378,7 +1378,7 @@ public class M3ExternalGC implements IExternalGC {
 
 	/* L13: whether the GC draws on CPU memory (a raster surface): one pixel read, false at once for a GPU surface */
 	boolean isRasterSurface() {
-		try (var bitmap = new io.github.humbleui.skija.Bitmap()) {
+		try (var bitmap = new jdk.m3.graphics.M3Bitmap()) {
 			bitmap.allocN32Pixels(1, 1);
 			return surface.readRasterPixels(bitmap, 0, 0);
 		}
@@ -1386,15 +1386,15 @@ public class M3ExternalGC implements IExternalGC {
 
 	/* L13 TEXT_FALLBACK_SAFE v1: a premultiplied BGRA raster composited once with the GC alpha (not squared) */
 	void drawLayoutRaster(byte[] bgra, int width, int height, Rectangle destInPoints) {
-		final ImageInfo info = new ImageInfo(width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
-		try (var raster = io.github.humbleui.skija.Image.makeRaster(info, bgra, width * 4L)) {
+		final M3ImageInfo info = new M3ImageInfo(width, height, M3ColorType.BGRA_8888, M3ColorAlphaType.PREMUL);
+		try (var raster = jdk.m3.graphics.M3Image.makeRaster(info, bgra, width * 4L)) {
 			final IM3Canvas canvas = surface.getCanvas();
-			final Rect dest = RectangleConverter.createScaledRectangle(getScaler(), destInPoints.x, destInPoints.y,
+			final M3Rect dest = RectangleConverter.createScaledRectangle(getScaler(), destInPoints.x, destInPoints.y,
 					destInPoints.width, destInPoints.height);
 			paintManager.performDraw(paint -> {
 				paint.setAlpha(alpha);
 				M3Mirror.unmirrored(canvas, isMirrored(), dest.getLeft(), dest.getWidth(), () -> canvas.drawImageRect(
-						new M3ImageAdapter(raster), Rect.makeWH(width, height), dest, SamplingMode.DEFAULT, paint, false));
+						new M3ImageAdapter(raster), M3Rect.makeWH(width, height), dest, M3SamplingMode.DEFAULT, paint, false));
 			});
 		}
 	}

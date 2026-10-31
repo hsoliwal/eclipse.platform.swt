@@ -36,10 +36,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.ImageInfo;
-import io.github.humbleui.skija.PixelGeometry;
-import io.github.humbleui.skija.Surface;
-import io.github.humbleui.skija.SurfaceProps;
+import jdk.m3.graphics.M3ImageInfo;
+import jdk.m3.graphics.M3PixelGeometry;
+import jdk.m3.graphics.M3Surface;
+import jdk.m3.graphics.M3SurfaceProps;
 
 /**
  * Headless, real Skija raster surface, oracle the stock win32 GC (text leaf L14). SURROGATE_SAFE: a lone surrogate and
@@ -48,7 +48,7 @@ import io.github.humbleui.skija.SurfaceProps;
  */
 public class Test_org_eclipse_swt_m3gc_GcTextSafety {
 	static final int W = 300, H = 40;
-	Surface real;
+	M3Surface real;
 	M3ExternalGC gc;
 	Font font;
 	Image image;
@@ -61,7 +61,7 @@ public class Test_org_eclipse_swt_m3gc_GcTextSafety {
 
 	@BeforeEach
 	void setUp() {
-		real = Surface.makeRaster(ImageInfo.makeN32Premul(W, H), 0, new SurfaceProps(false, PixelGeometry.RGB_H));
+		real = M3Surface.makeRaster(M3ImageInfo.makeN32Premul(W, H), 0, new M3SurfaceProps(false, M3PixelGeometry.RGB_H));
 		real.getCanvas().clear(0xFFFFFFFF);
 		font = new Font(Display.getDefault(), "Segoe UI", 9, SWT.NORMAL);
 		M3GcFixture f = new M3GcFixture(DPIUtil.getDeviceZoom());
@@ -134,7 +134,7 @@ public class Test_org_eclipse_swt_m3gc_GcTextSafety {
 	}
 
 	int m3Pixel(int x, int y) {
-		try (var bitmap = new io.github.humbleui.skija.Bitmap()) {
+		try (var bitmap = new jdk.m3.graphics.M3Bitmap()) {
 			bitmap.allocN32Pixels(1, 1);
 			real.readPixels(bitmap, x, y);
 			return bitmap.getColor(0, 0) & 0xFFFFFF;

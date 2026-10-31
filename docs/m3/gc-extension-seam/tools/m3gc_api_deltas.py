@@ -23,6 +23,11 @@ Usage: python -I m3gc_api_deltas.py <worktree>                       (backward, 
 """
 import re
 import sys
+import os
+if __name__ == "__main__":  # M3_GRAPHICS_GUARD v1: NOT_APPLICABLE on jdk.m3.graphics trees
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from m3_graphics_guard import exit_if_m3_graphics
+    exit_if_m3_graphics(sys.argv)
 from pathlib import Path
 
 GC = "bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/"

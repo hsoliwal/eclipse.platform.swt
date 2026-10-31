@@ -9,8 +9,8 @@ import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
 import org.eclipse.swt.internal.render.m3.gc.IM3Resources;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3BlendMode;
+import jdk.m3.graphics.M3Rect;
 
 public class Test_org_eclipse_swt_m3gc_drawRectangle {
 
@@ -42,14 +42,14 @@ public class Test_org_eclipse_swt_m3gc_drawRectangle {
 		epd.antiAlias = false;
 		epd.dither = false;
 		epd.shader = null;
-		epd.blendMode = BlendMode.SRC_OVER;
+		epd.blendMode = M3BlendMode.SRC_OVER;
 		epd.pathEffect = null;
 		epd.imageFilter = null;
 		epd.colorFilter = null;
 		epd.maskFilter = null;
 
 		var calls = surface.calls;
-		assertEquals(MethodCall.get("surface-canvas", "drawRect", new Rect(10.5f, 20.5f, 40.5f, 60.5f), epd),
+		assertEquals(MethodCall.get("surface-canvas", "drawRect", new M3Rect(10.5f, 20.5f, 40.5f, 60.5f), epd),
 				calls.get(0));
 
 		surface.close();
@@ -90,13 +90,13 @@ public class Test_org_eclipse_swt_m3gc_drawRectangle {
 		epd.antiAlias = false;
 		epd.dither = false;
 		epd.shader = null;
-		epd.blendMode = BlendMode.SRC_OVER;
+		epd.blendMode = M3BlendMode.SRC_OVER;
 		epd.pathEffect = null;
 		epd.imageFilter = null;
 		epd.colorFilter = null;
 		epd.maskFilter = null;
 
-		assertEquals(MethodCall.get("surface-canvas", "drawRect", new Rect(10.5f, 20.5f, 40.5f, 60.5f), epd),
+		assertEquals(MethodCall.get("surface-canvas", "drawRect", new M3Rect(10.5f, 20.5f, 40.5f, 60.5f), epd),
 				calls.get(0));
 
 		surface.close();
@@ -137,7 +137,7 @@ public class Test_org_eclipse_swt_m3gc_drawRectangle {
 		epd.antiAlias = false;
 		epd.dither = false;
 		epd.shader = null;
-		epd.blendMode = BlendMode.SRC_OVER;
+		epd.blendMode = M3BlendMode.SRC_OVER;
 		epd.pathEffect = null;
 		epd.imageFilter = null;
 		epd.colorFilter = null;
@@ -145,7 +145,7 @@ public class Test_org_eclipse_swt_m3gc_drawRectangle {
 
 		// At 150% zoom (1.5x): x=10*1.5=15, y=20*1.5=30, width=30*1.5=45, height=40*1.5=60
 		// Rect coordinates: left=15.0, top=30.0, right=15+45.0=60.0, bottom=30+60.0=90.0
-		assertEquals(MethodCall.get("surface-canvas", "drawRect", new Rect(15.0f, 30.0f, 60.0f, 90.0f), epd),
+		assertEquals(MethodCall.get("surface-canvas", "drawRect", new M3Rect(15.0f, 30.0f, 60.0f, 90.0f), epd),
 				calls.get(0));
 
 		surface.close();
@@ -186,7 +186,7 @@ public class Test_org_eclipse_swt_m3gc_drawRectangle {
 		epd.antiAlias = false;
 		epd.dither = false;
 		epd.shader = null;
-		epd.blendMode = BlendMode.SRC_OVER;
+		epd.blendMode = M3BlendMode.SRC_OVER;
 		epd.pathEffect = null;
 		epd.imageFilter = null;
 		epd.colorFilter = null;
@@ -194,7 +194,7 @@ public class Test_org_eclipse_swt_m3gc_drawRectangle {
 
 		// At 200% zoom (2.0x): x=10*2.0=20, y=20*2.0=40, width=30*2.0=60, height=40*2.0=80
 		// Rect coordinates: left=20.0, top=40.0, right=20+60.0=80.0, bottom=40+80.0=120.0
-		assertEquals(MethodCall.get("surface-canvas", "drawRect", new Rect(20.0f, 40.0f, 80.0f, 120.0f), epd),
+		assertEquals(MethodCall.get("surface-canvas", "drawRect", new M3Rect(20.0f, 40.0f, 80.0f, 120.0f), epd),
 				calls.get(0));
 
 		surface.close();

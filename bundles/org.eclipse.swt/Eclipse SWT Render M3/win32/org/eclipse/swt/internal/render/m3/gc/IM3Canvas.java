@@ -1,14 +1,14 @@
 package org.eclipse.swt.internal.render.m3.gc;
 
-import io.github.humbleui.skija.ClipMode;
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.Path;
-import io.github.humbleui.skija.Region;
-import io.github.humbleui.skija.TextBlob;
-import io.github.humbleui.types.RRect;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3ClipMode;
+import jdk.m3.graphics.M3Font;
+import jdk.m3.graphics.M3Matrix33;
+import jdk.m3.graphics.M3Paint;
+import jdk.m3.graphics.M3Path;
+import jdk.m3.graphics.M3Region;
+import jdk.m3.graphics.M3TextBlob;
+import jdk.m3.graphics.M3RRect;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * Abstraction for Skija's Canvas, for future decoupling.
@@ -16,29 +16,29 @@ import io.github.humbleui.types.Rect;
 public interface IM3Canvas {
 	int getSaveCount();
 	/** The current local-to-device matrix (leaf 6, TRANSFORM_STATE: the GC transform is drawn on the frame's matrix). */
-	default Matrix33 getLocalToDevice() {
-		return Matrix33.IDENTITY;
+	default M3Matrix33 getLocalToDevice() {
+		return M3Matrix33.IDENTITY;
 	}
 	void restoreToCount(int saveCount);
-	void drawLine(float x0, float y0, float x1, float y1, Paint paint);
-	void drawArc(int left, int top, int right, int bottom, int startAngle, int sweepAngle, boolean useCenter, Paint paint);
-	void drawRect(Rect rect, Paint paint);
-	void drawOval(Rect rect, Paint paint);
-	void drawPath(Path path, Paint paint);
-	void drawPolygon(float[] points, Paint paint);
-	void drawRRect(RRect rrect, Paint paint);
+	void drawLine(float x0, float y0, float x1, float y1, M3Paint paint);
+	void drawArc(int left, int top, int right, int bottom, int startAngle, int sweepAngle, boolean useCenter, M3Paint paint);
+	void drawRect(M3Rect rect, M3Paint paint);
+	void drawOval(M3Rect rect, M3Paint paint);
+	void drawPath(M3Path path, M3Paint paint);
+	void drawPolygon(float[] points, M3Paint paint);
+	void drawRRect(M3RRect rrect, M3Paint paint);
 	void drawImage(IM3Image image, int x, int y);
-	void drawImageRect(IM3Image image, Rect src, Rect dst, io.github.humbleui.skija.SamplingMode sampling, Paint paint, boolean strict);
-	void setMatrix(Matrix33 matrix);
+	void drawImageRect(IM3Image image, M3Rect src, M3Rect dst, jdk.m3.graphics.M3SamplingMode sampling, M3Paint paint, boolean strict);
+	void setMatrix(M3Matrix33 matrix);
 	void save();
-	void clipRect(Rect rect);
+	void clipRect(M3Rect rect);
 	void clear(int color);
 	void restore();
-	void clipPath(Path m3Path, ClipMode intersect, boolean b);
-	void drawString(String text, int x, int i, Font f, Paint fgp);
-	void clipRegion(Region m3Region);
+	void clipPath(M3Path m3Path, M3ClipMode intersect, boolean b);
+	void drawString(String text, int x, int i, M3Font f, M3Paint fgp);
+	void clipRegion(M3Region m3Region);
 
 	/** L13 GLYPH_RUN_DRAW v1: one positioned text blob (doubles record or ignore it) */
-	default void drawTextBlob(TextBlob blob, float x, float y, Paint paint) {
+	default void drawTextBlob(M3TextBlob blob, float x, float y, M3Paint paint) {
 	}
 }

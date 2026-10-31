@@ -19,10 +19,10 @@ import java.util.stream.*;
 
 import org.eclipse.swt.*;
 
-import io.github.humbleui.skija.Canvas;
-import io.github.humbleui.skija.Region;
-import io.github.humbleui.types.IRect;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3Canvas;
+import jdk.m3.graphics.M3Region;
+import jdk.m3.graphics.M3IRect;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * The damage of one <code>WM_PAINT</code> of an M3 canvas (GC seam, leaf 5; pattern M3-CANVAS-DAMAGE v1): the update
@@ -121,14 +121,14 @@ public final class M3CanvasDamage {
 	 * Clips a canvas (device coordinates: the frame's identity matrix) to a pass: the whole region when merged (one
 	 * rectangle as a rect clip, several as a region clip), else the pass's rectangle.
 	 */
-	public void clip (Canvas canvas, int pass, int passes) {
+	public void clip (M3Canvas canvas, int pass, int passes) {
 		if (passes > 1 || count == 1) {
 			int i = passes > 1 ? pass : 0;
-			canvas.clipRect (Rect.makeXYWH (x (i), y (i), width (i), height (i)));
+			canvas.clipRect (M3Rect.makeXYWH (x (i), y (i), width (i), height (i)));
 			return;
 		}
-		try (Region region = new Region ()) {
-			region.setRects (IntStream.range (0, count).mapToObj (i -> IRect.makeXYWH (x (i), y (i), width (i), height (i))).toArray (IRect []::new));
+		try (M3Region region = new M3Region ()) {
+			region.setRects (IntStream.range (0, count).mapToObj (i -> M3IRect.makeXYWH (x (i), y (i), width (i), height (i))).toArray (M3IRect []::new));
 			canvas.clipRegion (region);
 		}
 	}

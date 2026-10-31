@@ -17,8 +17,8 @@ package org.eclipse.swt.internal.render.m3.gc;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
-import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3Matrix33;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * The canvas state an {@link M3ExternalGC} owns above the frame it was made in (GC seam, leaf 6; atoms CLIP_STATE and
@@ -35,11 +35,11 @@ import io.github.humbleui.types.Rect;
 final class M3GcLayer {
 	private final IM3Surface surface;
 	private final int baseCount;
-	private Matrix33 base = Matrix33.IDENTITY;
-	private Matrix33 transform = Matrix33.IDENTITY;
+	private M3Matrix33 base = M3Matrix33.IDENTITY;
+	private M3Matrix33 transform = M3Matrix33.IDENTITY;
 	private boolean open;
 	/* the device bounds of the clip as set (null: no clip); a region clip also keeps its device rectangles */
-	private Rect clipDevice;
+	private M3Rect clipDevice;
 	private int[] regionRects;
 
 	M3GcLayer(IM3Surface surface) {
@@ -47,7 +47,7 @@ final class M3GcLayer {
 		this.baseCount = surface.getCanvas().getSaveCount();
 	}
 
-	Matrix33 transform() {
+	M3Matrix33 transform() {
 		return transform;
 	}
 
@@ -61,11 +61,11 @@ final class M3GcLayer {
 	}
 
 	boolean isTransformed() {
-		return !Matrix33.IDENTITY.equals(transform);
+		return !M3Matrix33.IDENTITY.equals(transform);
 	}
 
 	/** The GC transform (local pixels): the layer's matrix changes, the clip in force stays. */
-	void setTransform(Matrix33 next) {
+	void setTransform(M3Matrix33 next) {
 		transform = next;
 		if (!open && !isTransformed()) return;
 		openLayer();
@@ -79,7 +79,7 @@ final class M3GcLayer {
 	 * @param localBounds the clip's bounds in local pixels (a region: device pixels)
 	 * @param rects a region clip's device rectangles, else null
 	 */
-	void setClip(Consumer<IM3Canvas> apply, Rect localBounds, int[] rects) {
+	void setClip(Consumer<IM3Canvas> apply, M3Rect localBounds, int[] rects) {
 		if (open) canvas().restoreToCount(baseCount);
 		open = false;
 		regionRects = rects;
@@ -98,15 +98,15 @@ final class M3GcLayer {
 		open = false;
 		clipDevice = null;
 		regionRects = null;
-		transform = Matrix33.IDENTITY;
-		base = Matrix33.IDENTITY;
+		transform = M3Matrix33.IDENTITY;
+		base = M3Matrix33.IDENTITY;
 	}
 
 	/** The visible clip in local pixels: the clip's device bounds within the frame (device pixels), seen through the matrix. */
-	Rect localClip(Rect frame) {
-		Rect device = clipDevice == null ? frame : frame.intersect(clipDevice);
-		if (device == null) return new Rect(0, 0, 0, 0);
-		Matrix33 matrix = open ? matrix() : canvas().getLocalToDevice();
+	M3Rect localClip(M3Rect frame) {
+		M3Rect device = clipDevice == null ? frame : frame.intersect(clipDevice);
+		if (device == null) return new M3Rect(0, 0, 0, 0);
+		M3Matrix33 matrix = open ? matrix() : canvas().getLocalToDevice();
 		return map(invert(matrix), device);
 	}
 
@@ -122,27 +122,27 @@ final class M3GcLayer {
 		return surface.getCanvas();
 	}
 
-	private Matrix33 matrix() {
+	private M3Matrix33 matrix() {
 		return base.makeConcat(transform);
 	}
 
 	/* the bounding box of a rectangle mapped by an affine matrix */
-	static Rect map(Matrix33 matrix, Rect r) {
+	static M3Rect map(M3Matrix33 matrix, M3Rect r) {
 		float[] m = matrix.getMat();
 		float[] xs = { r.getLeft(), r.getRight(), r.getLeft(), r.getRight() };
 		float[] ys = { r.getTop(), r.getTop(), r.getBottom(), r.getBottom() };
 		double[] mx = IntStream.range(0, 4).mapToDouble(i -> m[0] * xs[i] + m[1] * ys[i] + m[2]).toArray();
 		double[] my = IntStream.range(0, 4).mapToDouble(i -> m[3] * xs[i] + m[4] * ys[i] + m[5]).toArray();
-		return new Rect((float) min(mx), (float) min(my), (float) max(mx), (float) max(my));
+		return new M3Rect((float) min(mx), (float) min(my), (float) max(mx), (float) max(my));
 	}
 
 	/* the inverse of an affine matrix; a singular matrix maps everything to the origin */
-	static Matrix33 invert(Matrix33 matrix) {
+	static M3Matrix33 invert(M3Matrix33 matrix) {
 		float[] m = matrix.getMat();
 		float det = m[0] * m[4] - m[1] * m[3];
-		if (det == 0) return new Matrix33(0, 0, 0, 0, 0, 0, 0, 0, 1);
+		if (det == 0) return new M3Matrix33(0, 0, 0, 0, 0, 0, 0, 0, 1);
 		float a = m[4] / det, b = -m[1] / det, d = -m[3] / det, e = m[0] / det;
-		return new Matrix33(a, b, -(a * m[2] + b * m[5]), d, e, -(d * m[2] + e * m[5]), 0, 0, 1);
+		return new M3Matrix33(a, b, -(a * m[2] + b * m[5]), d, e, -(d * m[2] + e * m[5]), 0, 0, 1);
 	}
 
 	private static double min(double[] values) {

@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.Display;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.Matrix33;
+import jdk.m3.graphics.M3Matrix33;
 
 /**
  * Headless: the transform state of the M3 GC (GC seam, leaf 6; atom TRANSFORM_STATE, pattern M3-GC-TRANSFORM v1; census GF15,
@@ -55,22 +55,22 @@ public class Test_org_eclipse_swt_m3gc_TransformState {
 
 	@Test
 	public void testSetTransformDoesNotGrowTheStack() {
-		M3GcFixture f = new M3GcFixture(100, Matrix33.IDENTITY);
+		M3GcFixture f = new M3GcFixture(100, M3Matrix33.IDENTITY);
 		Transform t = new Transform(Display.getDefault(), 1, 0, 0, 1, 3, 4);
 		IntStream.range(0, 5).forEach(i -> f.gc.setTransform(t));
 		assertEquals(2, f.state().getSaveCount(), "one GC layer above the frame, not one per setTransform");
 		f.gc.setTransform(null);
-		assertEquals(Matrix33.IDENTITY, f.state().matrix(), "null is the identity");
+		assertEquals(M3Matrix33.IDENTITY, f.state().matrix(), "null is the identity");
 		t.dispose();
 	}
 
 	@Test
 	public void testTransformIsAppliedOnTheFrameMatrix() {
-		Matrix33 frame = Matrix33.makeTranslate(5, 7);
+		M3Matrix33 frame = M3Matrix33.makeTranslate(5, 7);
 		M3GcFixture f = new M3GcFixture(100, frame);
 		Transform t = new Transform(Display.getDefault(), 2, 0, 0, 2, 10, 0);
 		f.gc.setTransform(t);
-		assertEquals(frame.makeConcat(new Matrix33(2, 0, 10, 0, 2, 0, 0, 0, 1)), f.state().matrix(), "frame x GC transform");
+		assertEquals(frame.makeConcat(new M3Matrix33(2, 0, 10, 0, 2, 0, 0, 0, 1)), f.state().matrix(), "frame x GC transform");
 		f.gc.setTransform(null);
 		assertEquals(frame, f.state().matrix(), "the identity GC transform leaves the frame's matrix");
 		t.dispose();

@@ -14,7 +14,7 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.render.m3.gc;
 
-import io.github.humbleui.skija.Matrix33;
+import jdk.m3.graphics.M3Matrix33;
 
 /**
  * RTL_FRAME v1 (real-app fidelity leaf; census GF48): the frame of a right-to-left canvas is mirrored by its canvas matrix
@@ -42,7 +42,7 @@ final class M3Mirror {
 		}
 		canvas.save ();
 		try {
-			canvas.setMatrix (canvas.getLocalToDevice ().makeConcat (new Matrix33 (-1, 0, 2 * left + width, 0, 1, 0, 0, 0, 1)));
+			canvas.setMatrix (canvas.getLocalToDevice ().makeConcat (new M3Matrix33 (-1, 0, 2 * left + width, 0, 1, 0, 0, 0, 1)));
 			draw.run ();
 		} finally {
 			canvas.restore ();

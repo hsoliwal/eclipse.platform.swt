@@ -33,7 +33,7 @@ import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
 import org.eclipse.swt.widgets.Event;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * Headless (no Display): the owner-draw protocol of the drawn planes (GC seam, leaf 3) over a <code>GCExtension</code> on
@@ -179,7 +179,7 @@ public class Test_org_eclipse_swt_m3gc_DrawnCustomDraw {
 		h.protocol.erase(null, 1, SWT.FOREGROUND, 10, 20, 30, 40);
 		Seen erase = h.seen.get(0);
 		assertEquals(List.of(5, 10, 15, 20), List.of(erase.x(), erase.y(), erase.width(), erase.height()), "event bounds are points");
-		assertTrue(h.surface.calls.contains(MethodCall.get("surface-canvas", "clipRect", new Rect(10f, 20f, 40f, 60f))), "the clip is the cell: " + h.surface.calls);
+		assertTrue(h.surface.calls.contains(MethodCall.get("surface-canvas", "clipRect", new M3Rect(10f, 20f, 40f, 60f))), "the clip is the cell: " + h.surface.calls);
 		assertEquals(1, erase.clipRectsSoFar(), "clipped before the listener ran");
 		assertEquals(1, h.restores(), "released after the listener ran");
 		int clipAt = -1, restoreAt = -1;

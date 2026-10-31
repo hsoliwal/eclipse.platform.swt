@@ -29,17 +29,17 @@ import org.eclipse.swt.internal.win32.*;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.skija.ColorAlphaType;
-import io.github.humbleui.skija.ColorType;
-import io.github.humbleui.skija.ImageInfo;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.PixelGeometry;
-import io.github.humbleui.skija.Pixmap;
-import io.github.humbleui.skija.Surface;
-import io.github.humbleui.skija.SurfaceOrigin;
-import io.github.humbleui.skija.SurfaceProps;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3BlendMode;
+import jdk.m3.graphics.M3ColorAlphaType;
+import jdk.m3.graphics.M3ColorType;
+import jdk.m3.graphics.M3ImageInfo;
+import jdk.m3.graphics.M3Paint;
+import jdk.m3.graphics.M3PixelGeometry;
+import jdk.m3.graphics.M3Pixmap;
+import jdk.m3.graphics.M3Surface;
+import jdk.m3.graphics.M3SurfaceOrigin;
+import jdk.m3.graphics.M3SurfaceProps;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * The M3 renderer behind a <code>Canvas</code> created with {@link SWT#M3} (GC seam, leaf 4): the canvas's
@@ -76,17 +76,17 @@ import io.github.humbleui.types.Rect;
 public final class M3CanvasHandler implements IExternalCanvasHandler {
 	/** The data key under which a handled canvas carries its handler (<code>Canvas.getData</code>). */
 	public static final String DATA_KEY = "org.eclipse.swt.internal.render.m3.M3CanvasHandler"; //$NON-NLS-1$
-	private static final SurfaceProps PROPS = new SurfaceProps (false, PixelGeometry.RGB_H);
+	private static final M3SurfaceProps PROPS = new M3SurfaceProps (false, M3PixelGeometry.RGB_H);
 
 	private final Composite control;
 	private final M3Gpu gpu;
 	private final BackBuffer buffer = new BackBuffer ();
 	private final M3PlaneCanvasExtension extension;
-	private Surface surface;
+	private M3Surface surface;
 	private long bits;
 	private int width, height;
-	private Pixmap readback;
-	private ImageInfo readbackInfo;
+	private M3Pixmap readback;
+	private M3ImageInfo readbackInfo;
 	private boolean disposed;
 	/* leaf 5: the damage of the paint in progress, the update region read before BeginPaint, the release deferred while a paint runs */
 	private final M3CanvasDamage damage = new M3CanvasDamage ();
@@ -95,7 +95,7 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	private boolean painting, released;
 	/* BACKGROUND_PARITY v1: the stock background chain of the paint in progress (null: the flat background colour), its opaque paint */
 	private M3BackgroundChain chain;
-	private Paint opaquePaint;
+	private M3Paint opaquePaint;
 	/* RTL_FRAME v1: the client width of the frame in progress and whether its window is mirrored (WS_EX_LAYOUTRTL) */
 	private int clientWidth;
 	private boolean mirrored;
@@ -134,7 +134,7 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	}
 
 	/** The library surface over the back buffer (replaced when the buffer grows), or null before the first frame. */
-	public Surface surface () {
+	public M3Surface surface () {
 		return surface;
 	}
 
@@ -219,14 +219,14 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		return mirrored ? clientWidth - damage.x (i) - damage.width (i) : damage.x (i);
 	}
 
-	private void mirror (io.github.humbleui.skija.Canvas canvas) {
+	private void mirror (jdk.m3.graphics.M3Canvas canvas) {
 		canvas.translate (clientWidth, 0);
 		canvas.scale (-1, 1);
 	}
 
 	/* one Paint event, clipped to its pass (M3CanvasDamage.clip): the background first unless the canvas retains its pixels */
 	private void pass (Consumer<Event> send, int pass, int passes) {
-		io.github.humbleui.skija.Canvas canvas = surface.getCanvas ();
+		jdk.m3.graphics.M3Canvas canvas = surface.getCanvas ();
 		canvas.save ();
 		if (mirrored) mirror (canvas);
 		damage.clip (canvas, pass, passes);
@@ -253,16 +253,16 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 
 	/* the GPU target takes the buffer's pixels of a rectangle (as gpuTarget does for the whole buffer) */
 	private void upload (int x, int y, int w, int h) {
-		ImageInfo info = new ImageInfo (w, h, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
-		try (Pixmap pixels = Pixmap.make (info, bits + ((long) y * width + x) * 4L, width * 4)) {
+		M3ImageInfo info = new M3ImageInfo (w, h, M3ColorType.BGRA_8888, M3ColorAlphaType.PREMUL);
+		try (M3Pixmap pixels = M3Pixmap.make (info, bits + ((long) y * width + x) * 4L, width * 4)) {
 			surface.writePixels (pixels, x, y);
 		}
 	}
 
 	/* GDI leaves alpha 0: opaque black drawn under the pixels (DST_OVER) sets alpha 255 and keeps every colour */
 	private void opaque (int x, int y, int w, int h) {
-		if (opaquePaint == null) opaquePaint = new Paint ().setColor (0xFF000000).setBlendMode (BlendMode.DST_OVER);
-		surface.getCanvas ().drawRect (Rect.makeXYWH (x, y, w, h), opaquePaint);
+		if (opaquePaint == null) opaquePaint = new M3Paint ().setColor (0xFF000000).setBlendMode (M3BlendMode.DST_OVER);
+		surface.getCanvas ().drawRect (M3Rect.makeXYWH (x, y, w, h), opaquePaint);
 	}
 
 	/* SWT.NO_BACKGROUND and SWT.TRANSPARENT draw over the previous frame (the stock path draws no background for them) */
@@ -296,15 +296,15 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		bits = buffer.bits;
 		width = buffer.width;
 		height = buffer.height;
-		ImageInfo info = new ImageInfo (width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
-		surface = gpu == null ? Surface.makeRasterDirect (info, bits, width * 4L, PROPS) : gpuTarget (info);
+		M3ImageInfo info = new M3ImageInfo (width, height, M3ColorType.BGRA_8888, M3ColorAlphaType.PREMUL);
+		surface = gpu == null ? M3Surface.makeRasterDirect (info, bits, width * 4L, PROPS) : gpuTarget (info);
 	}
 
 	/* a render target on the thread's GL context that starts from the buffer's pixels, so retained pixels survive a growth */
-	private Surface gpuTarget (ImageInfo info) {
+	private M3Surface gpuTarget (M3ImageInfo info) {
 		gpu.makeCurrent ();
-		Surface target = Surface.makeRenderTarget (gpu.context, false, info, 0, SurfaceOrigin.TOP_LEFT, PROPS);
-		try (Pixmap pixels = Pixmap.make (info, bits, width * 4)) {
+		M3Surface target = M3Surface.makeRenderTarget (gpu.context, false, info, 0, M3SurfaceOrigin.TOP_LEFT, PROPS);
+		try (M3Pixmap pixels = M3Pixmap.make (info, bits, width * 4)) {
 			target.writePixels (pixels, 0, 0);
 		}
 		return target;
@@ -334,11 +334,11 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	private void readback (int x, int y, int damageWidth, int damageHeight) {
 		gpu.context.flush ();
 		if (readbackInfo == null || readbackInfo.getWidth () != damageWidth || readbackInfo.getHeight () != damageHeight) {
-			readbackInfo = new ImageInfo (damageWidth, damageHeight, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
+			readbackInfo = new M3ImageInfo (damageWidth, damageHeight, M3ColorType.BGRA_8888, M3ColorAlphaType.PREMUL);
 		}
 		long address = bits + ((long) y * width + x) * 4L;
 		if (readback == null) {
-			readback = Pixmap.make (readbackInfo, address, width * 4);
+			readback = M3Pixmap.make (readbackInfo, address, width * 4);
 		} else {
 			readback.reset (readbackInfo, address, width * 4);
 		}

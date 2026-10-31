@@ -43,7 +43,7 @@ public final class M3Fragment {
 	/** A class that every M3 fragment holds: its location names the fragment jar. */
 	static final String MARKER = "org/eclipse/swt/internal/render/m3/M3CanvasHandler.class";
 	/** A Skija class: when the SWT class loader sees it, the class path already provides the library. */
-	static final String SKIJA = "io.github.humbleui.skija.Surface";
+	static final String SKIJA = "jdk.m3.graphics.M3Surface";
 	/** The packages of the fragment; they load child-first so that they link against the nested Skija jars. */
 	static final String [] FRAGMENT_PACKAGES = {"org.eclipse.swt.internal.render.m3.", "org.eclipse.swt.internal.gpu.m3."};
 	private static ClassLoader loader;

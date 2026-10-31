@@ -26,10 +26,10 @@ import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.TextLayout;
 
-import io.github.humbleui.skija.Bitmap;
-import io.github.humbleui.skija.ColorAlphaType;
-import io.github.humbleui.skija.ColorType;
-import io.github.humbleui.skija.ImageInfo;
+import jdk.m3.graphics.M3Bitmap;
+import jdk.m3.graphics.M3ColorAlphaType;
+import jdk.m3.graphics.M3ColorType;
+import jdk.m3.graphics.M3ImageInfo;
 
 //FLLDCIM: L13 TEXT_FALLBACK_SAFE v1 — pattern M3-TEXT-FALLBACK v1; census GF27 SC-R01 SWS-R01 SWS-V02 (skia.md:483 M12)
 /**
@@ -105,8 +105,8 @@ final class M3TextLayoutFallback {
 
 	/* raster surface pixels at (x, y) as 32-bit BGRA ImageData; null when not CPU-readable */
 	static ImageData read(IM3Surface surface, int x, int y, int width, int height) {
-		try (Bitmap bitmap = new Bitmap()) {
-			bitmap.allocPixels(new ImageInfo(width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL));
+		try (M3Bitmap bitmap = new M3Bitmap()) {
+			bitmap.allocPixels(new M3ImageInfo(width, height, M3ColorType.BGRA_8888, M3ColorAlphaType.PREMUL));
 			if (!surface.readRasterPixels(bitmap, x, y)) {
 				return null;
 			}

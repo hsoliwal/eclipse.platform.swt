@@ -26,12 +26,12 @@ import org.eclipse.swt.internal.render.m3.gc.M3PlaneCanvasExtension;
 import org.eclipse.swt.internal.win32.*;
 import org.eclipse.swt.widgets.Control;
 
-import io.github.humbleui.skija.*;
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.FontMetrics;
-import io.github.humbleui.skija.Image;
-import io.github.humbleui.skija.Path;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.*;
+import jdk.m3.graphics.M3Font;
+import jdk.m3.graphics.M3FontMetrics;
+import jdk.m3.graphics.M3Image;
+import jdk.m3.graphics.M3Path;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * The <code>m3</code> backend on win32, the M3 renderer: it draws through the Skija library (Apache-2.0) on the CPU,
@@ -51,23 +51,23 @@ import io.github.humbleui.types.Rect;
  */
 public final class M3RowCanvas implements BufferCanvas {
 	private static final int FONTS = 32, LINES = 2048, PART_IMAGES = 256;
-	private static final int CLIP_INTERSECT = ClipMode.INTERSECT.ordinal ();
+	private static final int CLIP_INTERSECT = M3ClipMode.INTERSECT.ordinal ();
 	private static final String ELLIPSIS_TEXT = "...";
 	/* what Canvas.drawImage and drawImageRect pass: the default sampling, strict source bounds */
-	private static final long SAMPLING = SamplingMode.DEFAULT._pack ();
+	private static final long SAMPLING = M3SamplingMode.DEFAULT._pack ();
 
 	/** A cached font, its metrics measured once, and its shaped lines (by string, an LRU closed on eviction). */
 	static final class FontEntry implements AutoCloseable {
-		final Font font;
+		final M3Font font;
 		/* what the font was made from on the render thread (null: from the platform's handle) */
 		final FontDescriptor descriptor;
 		final float ascent, lineHeight;
 		final Map<String, LineEntry> lines = lru (LINES);
 
-		FontEntry (Font font, FontDescriptor descriptor) {
+		FontEntry (M3Font font, FontDescriptor descriptor) {
 			this.font = font;
 			this.descriptor = descriptor;
-			FontMetrics metrics = font.getMetrics ();
+			M3FontMetrics metrics = font.getMetrics ();
 			ascent = -metrics.getAscent ();
 			lineHeight = metrics.getDescent () - metrics.getAscent ();
 		}
@@ -82,13 +82,13 @@ public final class M3RowCanvas implements BufferCanvas {
 
 	/** A library image with its pointer and size, read once: drawn through the primitive entry point. */
 	static final class Bitmap implements AutoCloseable {
-		final Image image;
+		final M3Image image;
 		final long ptr;
 		final int width, height;
 
-		Bitmap (Image image) {
+		Bitmap (M3Image image) {
 			this.image = image;
-			ptr = io.github.humbleui.skija.impl.Native.getPtr (image);
+			ptr = jdk.m3.graphics.impl.M3Native.getPtr (image);
 			width = image.getWidth ();
 			height = image.getHeight ();
 		}
@@ -101,17 +101,17 @@ public final class M3RowCanvas implements BufferCanvas {
 
 	/** A cached shaped line: its blob pointer and width, read once; and its ellipsis form for the last box width asked. */
 	static final class LineEntry implements AutoCloseable {
-		final TextLine line;
-		final TextBlob blob;
+		final M3TextLine line;
+		final M3TextBlob blob;
 		final long blobPtr;
 		final float width;
 		int fittedWidth = -1;
 		LineEntry fitted;
 
-		LineEntry (TextLine line) {
+		LineEntry (M3TextLine line) {
 			this.line = line;
 			blob = line.getTextBlob ();
-			blobPtr = blob == null ? 0 : io.github.humbleui.skija.impl.Native.getPtr (blob);
+			blobPtr = blob == null ? 0 : jdk.m3.graphics.impl.M3Native.getPtr (blob);
 			width = line.getWidth ();
 		}
 
@@ -125,16 +125,16 @@ public final class M3RowCanvas implements BufferCanvas {
 
 	private final IntSupplier zoom;
 	private final ThemeParts parts;
-	private final Paint paint = new Paint ().setAntiAlias (false);
-	private final Paint textPaint = new Paint ().setAntiAlias (true);
-	private final Paint focusPaint = new Paint ().setMode (PaintMode.STROKE).setStrokeWidth (1).setColor (0xFF000000)
-		.setPathEffect (PathEffect.makeDash (new float [] {1, 1}, 0));
-	private final long paintPtr = io.github.humbleui.skija.impl.Native.getPtr (paint);
-	private final long textPaintPtr = io.github.humbleui.skija.impl.Native.getPtr (textPaint);
-	private final long focusPaintPtr = io.github.humbleui.skija.impl.Native.getPtr (focusPaint);
-	private final SurfaceProps props = new SurfaceProps (false, PixelGeometry.RGB_H);
-	private Surface surface;
-	private Canvas canvas;
+	private final M3Paint paint = new M3Paint ().setAntiAlias (false);
+	private final M3Paint textPaint = new M3Paint ().setAntiAlias (true);
+	private final M3Paint focusPaint = new M3Paint ().setMode (M3PaintMode.STROKE).setStrokeWidth (1).setColor (0xFF000000)
+		.setPathEffect (M3PathEffect.makeDash (new float [] {1, 1}, 0));
+	private final long paintPtr = jdk.m3.graphics.impl.M3Native.getPtr (paint);
+	private final long textPaintPtr = jdk.m3.graphics.impl.M3Native.getPtr (textPaint);
+	private final long focusPaintPtr = jdk.m3.graphics.impl.M3Native.getPtr (focusPaint);
+	private final M3SurfaceProps props = new M3SurfaceProps (false, M3PixelGeometry.RGB_H);
+	private M3Surface surface;
+	private M3Canvas canvas;
 	private long canvasPtr;
 	private long dc, bits;
 	private int width, height;
@@ -147,13 +147,13 @@ public final class M3RowCanvas implements BufferCanvas {
 	/* the fonts of the frame being drawn on the render thread (rule 28); null on the UI thread */
 	private FontTable table;
 	/* the path of polygon, reset per call */
-	private final PathBuilder path = new PathBuilder (); // Skija 0.143: the mutable path is a PathBuilder (L12-09)
+	private final M3PathBuilder path = new M3PathBuilder (); // Skija 0.143: the mutable path is a PathBuilder (L12-09)
 	/* TEXT_TRUNCATION v1: DrawText's ellipsis cut measured by GDI */
 	private final M3GdiEllipsis gdiEllipsis = new M3GdiEllipsis ();
 	/* the gpu mode: the frame is drawn on the graphics hardware and read back into the back buffer */
 	private final M3Gpu gpu;
-	private Pixmap readback;
-	private ImageInfo readbackInfo;
+	private M3Pixmap readback;
+	private M3ImageInfo readbackInfo;
 	private int frameX, frameY, frameWidth, frameHeight;
 	/*
 	 * The GC seam (leaf 3): the plane's side of the seam is made once per canvas (its resources listen to the control); the
@@ -238,15 +238,15 @@ public final class M3RowCanvas implements BufferCanvas {
 		bits = buffer.bits;
 		width = buffer.width;
 		height = buffer.height;
-		ImageInfo info = new ImageInfo (width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
+		M3ImageInfo info = new M3ImageInfo (width, height, M3ColorType.BGRA_8888, M3ColorAlphaType.PREMUL);
 		if (gpu != null) {
 			gpu.makeCurrent ();
-			surface = Surface.makeRenderTarget (gpu.context, false, info, 0, SurfaceOrigin.TOP_LEFT, props);
+			surface = M3Surface.makeRenderTarget (gpu.context, false, info, 0, M3SurfaceOrigin.TOP_LEFT, props);
 		} else {
-			surface = Surface.makeRasterDirect (info, bits, width * 4L, props);
+			surface = M3Surface.makeRasterDirect (info, bits, width * 4L, props);
 		}
 		canvas = surface.getCanvas ();
-		canvasPtr = io.github.humbleui.skija.impl.Native.getPtr (canvas);
+		canvasPtr = jdk.m3.graphics.impl.M3Native.getPtr (canvas);
 	}
 
 	@Override
@@ -258,22 +258,22 @@ public final class M3RowCanvas implements BufferCanvas {
 		frameY = y;
 		frameWidth = width;
 		frameHeight = height;
-		Canvas._nSave (canvasPtr);
-		Canvas._nClipRect (canvasPtr, x, y, x + width, y + height, CLIP_INTERSECT, false);
+		M3Canvas._nSave (canvasPtr);
+		M3Canvas._nClipRect (canvasPtr, x, y, x + width, y + height, CLIP_INTERSECT, false);
 	}
 
 	@Override
 	public void end () {
-		Canvas._nRestore (canvasPtr);
+		M3Canvas._nRestore (canvasPtr);
 		if (gpu == null || frameWidth <= 0 || frameHeight <= 0) return;
 		/* the GPU frame is read back into the damage of the back buffer; the read waits for the GPU work */
 		gpu.context.flush ();
 		if (readbackInfo == null || readbackInfo.getWidth () != frameWidth || readbackInfo.getHeight () != frameHeight) {
-			readbackInfo = new ImageInfo (frameWidth, frameHeight, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
+			readbackInfo = new M3ImageInfo (frameWidth, frameHeight, M3ColorType.BGRA_8888, M3ColorAlphaType.PREMUL);
 		}
 		long address = bits + ((long) frameY * width + frameX) * 4L;
 		if (readback == null) {
-			readback = Pixmap.make (readbackInfo, address, width * 4);
+			readback = M3Pixmap.make (readbackInfo, address, width * 4);
 		} else {
 			readback.reset (readbackInfo, address, width * 4);
 		}
@@ -281,7 +281,7 @@ public final class M3RowCanvas implements BufferCanvas {
 	}
 
 	/** The library surface over the current target's pixels (replaced when the back buffer grows), or null before the first target. */
-	public Surface surface () {
+	public M3Surface surface () {
 		return surface;
 	}
 
@@ -302,20 +302,20 @@ public final class M3RowCanvas implements BufferCanvas {
 
 	@Override
 	public void clip (int x, int y, int width, int height) {
-		Canvas._nSave (canvasPtr);
-		Canvas._nClipRect (canvasPtr, x, y, x + width, y + height, CLIP_INTERSECT, false);
+		M3Canvas._nSave (canvasPtr);
+		M3Canvas._nClipRect (canvasPtr, x, y, x + width, y + height, CLIP_INTERSECT, false);
 	}
 
 	@Override
 	public void unclip () {
-		Canvas._nRestore (canvasPtr);
+		M3Canvas._nRestore (canvasPtr);
 	}
 
 	@Override
 	public void fill (int x, int y, int width, int height, int rgb) {
 		if (width <= 0 || height <= 0) return;
 		paint.setColor (0xFF000000 | rgb);
-		Canvas._nDrawRect (canvasPtr, x, y, x + width, y + height, paintPtr);
+		M3Canvas._nDrawRect (canvasPtr, x, y, x + width, y + height, paintPtr);
 	}
 
 	@Override
@@ -329,10 +329,10 @@ public final class M3RowCanvas implements BufferCanvas {
 		float baseline = y + (height - entry.lineHeight) / 2 + entry.ascent;
 		float left = align == SWT.RIGHT ? x + width - line.width : align == SWT.CENTER ? x + (width - line.width) / 2 : x;
 		textPaint.setColor (0xFF000000 | rgb);
-		Canvas._nSave (canvasPtr);
-		Canvas._nClipRect (canvasPtr, x, y, x + width, y + height, CLIP_INTERSECT, false);
-		Canvas._nDrawTextBlob (canvasPtr, line.blobPtr, Math.round (left), Math.round (baseline), textPaintPtr);
-		Canvas._nRestore (canvasPtr);
+		M3Canvas._nSave (canvasPtr);
+		M3Canvas._nClipRect (canvasPtr, x, y, x + width, y + height, CLIP_INTERSECT, false);
+		M3Canvas._nDrawTextBlob (canvasPtr, line.blobPtr, Math.round (left), Math.round (baseline), textPaintPtr);
+		M3Canvas._nRestore (canvasPtr);
 	}
 
 	/* one library font per native font handle: face, pixel height, weight and italic of its LOGFONT */
@@ -357,15 +357,15 @@ public final class M3RowCanvas implements BufferCanvas {
 			weight = logFont.lfWeight;
 			italic = logFont.lfItalic != 0;
 		}
-		FontStyle style = new FontStyle (weight == 0 ? 400 : weight, FontWidth.NORMAL, italic ? FontSlant.ITALIC : FontSlant.UPRIGHT);
-		Typeface typeface = FontMgr.getDefault ().matchFamilyStyle (face, style);
-		Font font = new Font (typeface, Math.abs (height));
+		M3FontStyle style = new M3FontStyle (weight == 0 ? 400 : weight, M3FontWidth.NORMAL, italic ? M3FontSlant.ITALIC : M3FontSlant.UPRIGHT);
+		M3Typeface typeface = M3FontMgr.getDefault ().matchFamilyStyle (face, style);
+		M3Font font = new M3Font (typeface, Math.abs (height));
 		if (height > 0) {
 			/* a positive height is the cell height: scale the em size so ascent plus descent match it */
-			FontMetrics metrics = font.getMetrics ();
+			M3FontMetrics metrics = font.getMetrics ();
 			font.setSize (height * height / Math.max (1f, metrics.getDescent () - metrics.getAscent ()));
 		}
-		font.setEdging (FontEdging.SUBPIXEL_ANTI_ALIAS).setSubpixel (true).setHinting (FontHinting.NORMAL);
+		font.setEdging (M3FontEdging.SUBPIXEL_ANTI_ALIAS).setSubpixel (true).setHinting (M3FontHinting.NORMAL);
 		FontEntry entry = new FontEntry (font, described);
 		fonts.put (hFont, entry);
 		return entry;
@@ -385,7 +385,7 @@ public final class M3RowCanvas implements BufferCanvas {
 		if (full.fittedWidth != width) {
 			int keep = cut (entry, full, font, text, width);
 			if (full.fitted != null) full.fitted.close ();
-			full.fitted = keep < 0 ? null : new LineEntry (TextLine.make (text.substring (0, keep) + ELLIPSIS_TEXT, entry.font));
+			full.fitted = keep < 0 ? null : new LineEntry (M3TextLine.make (text.substring (0, keep) + ELLIPSIS_TEXT, entry.font));
 			full.fittedWidth = width;
 		}
 		return full.fitted != null ? full.fitted : full;
@@ -411,7 +411,7 @@ public final class M3RowCanvas implements BufferCanvas {
 	private static LineEntry line (FontEntry entry, String text) {
 		LineEntry line = entry.lines.get (text);
 		if (line == null) {
-			line = new LineEntry (TextLine.make (text, entry.font));
+			line = new LineEntry (M3TextLine.make (text, entry.font));
 			entry.lines.put (text, line);
 		}
 		return line;
@@ -419,7 +419,7 @@ public final class M3RowCanvas implements BufferCanvas {
 
 	/* an image at a box: Canvas.drawImageRect (whole image, box, default sampling, no paint, strict) without the rectangles */
 	private void draw (Bitmap bitmap, float x, float y, float width, float height) {
-		Canvas._nDrawImageRect (canvasPtr, bitmap.ptr, 0, 0, bitmap.width, bitmap.height, x, y, x + width, y + height, SAMPLING, 0, true);
+		M3Canvas._nDrawImageRect (canvasPtr, bitmap.ptr, 0, 0, bitmap.width, bitmap.height, x, y, x + width, y + height, SAMPLING, 0, true);
 	}
 
 	@Override
@@ -433,8 +433,8 @@ public final class M3RowCanvas implements BufferCanvas {
 		draw (bitmap, x, y, width, height);
 	}
 
-	private static Image convert (ImageData data) {
-		return Image.makeRasterFromBytes (new ImageInfo (data.width, data.height, ColorType.BGRA_8888, ColorAlphaType.PREMUL), RowImages.bgra (data), data.width * 4L);
+	private static M3Image convert (ImageData data) {
+		return M3Image.makeRasterFromBytes (new M3ImageInfo (data.width, data.height, M3ColorType.BGRA_8888, M3ColorAlphaType.PREMUL), RowImages.bgra (data), data.width * 4L);
 	}
 
 	@Override
@@ -456,7 +456,7 @@ public final class M3RowCanvas implements BufferCanvas {
 		for (int i = 1; i < count; i++) path.lineTo (points [2 * i], points [2 * i + 1]);
 		path.closePath ();
 		paint.setColor (0xFF000000 | rgb);
-		try (Path shape = path.detach ()) { // Skija 0.143: draw the immutable Path the builder detaches (L12-10)
+		try (M3Path shape = path.detach ()) { // Skija 0.143: draw the immutable Path the builder detaches (L12-10)
 			canvas.drawPath (shape, paint);
 		}
 	}
@@ -468,7 +468,7 @@ public final class M3RowCanvas implements BufferCanvas {
 		Bitmap image = partImages.get (key);
 		if (image == null) {
 			byte [] pixels = parts.image (part, state, width, height);
-			image = new Bitmap (Image.makeRasterFromBytes (new ImageInfo (width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL), pixels, width * 4L));
+			image = new Bitmap (M3Image.makeRasterFromBytes (new M3ImageInfo (width, height, M3ColorType.BGRA_8888, M3ColorAlphaType.PREMUL), pixels, width * 4L));
 			partImages.put (key, image);
 		}
 		/* Canvas.drawImage at (x, y): the image at its own size */
@@ -478,7 +478,7 @@ public final class M3RowCanvas implements BufferCanvas {
 	@Override
 	public void focus (int x, int y, int width, int height) {
 		/* Canvas.drawRect of (x + 0.5, y + 0.5, width - 1, height - 1) with the dotted paint */
-		Canvas._nDrawRect (canvasPtr, x + 0.5f, y + 0.5f, x + 0.5f + (width - 1), y + 0.5f + (height - 1), focusPaintPtr);
+		M3Canvas._nDrawRect (canvasPtr, x + 0.5f, y + 0.5f, x + 0.5f + (width - 1), y + 0.5f + (height - 1), focusPaintPtr);
 	}
 
 	@Override

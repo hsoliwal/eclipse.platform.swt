@@ -1,6 +1,6 @@
 package org.eclipse.swt.internal.render.m3.gc;
 
-import io.github.humbleui.types.IRect;
+import jdk.m3.graphics.M3IRect;
 
 /**
  * Interface to abstract Skija's Surface for SWT integration.
@@ -33,7 +33,7 @@ public interface IM3Surface extends AutoCloseable {
 	 */
 	IM3Image makeImageSnapshot();
 
-	IM3Image makeImageSnapshot(IRect rect);
+	IM3Image makeImageSnapshot(M3IRect rect);
 
 	/**
 	 * Creates a new surface with the given width and height.
@@ -42,7 +42,7 @@ public interface IM3Surface extends AutoCloseable {
 	IM3Surface makeSurface(int width, int height);
 
 	/** L13 TEXT_FALLBACK_SAFE v2: copies device pixels at (x, y) into the bitmap when the surface is CPU memory (raster); false otherwise */
-	default boolean readRasterPixels(io.github.humbleui.skija.Bitmap bitmap, int x, int y) {
+	default boolean readRasterPixels(jdk.m3.graphics.M3Bitmap bitmap, int x, int y) {
 		return false;
 	}
 

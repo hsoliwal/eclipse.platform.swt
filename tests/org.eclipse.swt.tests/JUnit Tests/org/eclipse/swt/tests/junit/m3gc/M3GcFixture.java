@@ -25,10 +25,10 @@ import org.eclipse.swt.internal.render.m3.gc.DpiScalerUtil;
 import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
 import org.eclipse.swt.widgets.Display;
 
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.FontMgr;
-import io.github.humbleui.skija.FontStyle;
-import io.github.humbleui.skija.Matrix33;
+import jdk.m3.graphics.M3Font;
+import jdk.m3.graphics.M3FontMgr;
+import jdk.m3.graphics.M3FontStyle;
+import jdk.m3.graphics.M3Matrix33;
 
 /**
  * Leaf 6 fixture: an {@link M3ExternalGC} over the call-logging doubles at a zoom: white on black, a 400 x 300 pixel frame
@@ -46,11 +46,11 @@ final class M3GcFixture {
 	}
 
 	/* frameMatrix != null: the surface's canvas is a StateCanvasDouble whose frame level has that matrix */
-	M3GcFixture(int zoom, Matrix33 frameMatrix) {
+	M3GcFixture(int zoom, M3Matrix33 frameMatrix) {
 		resources = new M3ResourcesDouble(zoom);
 		resources.setForeground(new Color(null, 255, 255, 255));
 		resources.setBackground(new Color(null, 0, 0, 0));
-		resources.m3Font = new Font(FontMgr.getDefault().matchFamilyStyle("Arial", FontStyle.NORMAL), 16);
+		resources.m3Font = new M3Font(M3FontMgr.getDefault().matchFamilyStyle("Arial", M3FontStyle.NORMAL), 16);
 		resources.fontData = new FontData("Arial", 12, SWT.NORMAL);
 		surface = new M3SurfaceDouble(WIDTH, HEIGHT, "surface", null);
 		if (frameMatrix != null) {

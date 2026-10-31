@@ -26,11 +26,11 @@ import org.eclipse.swt.internal.canvasext.IExternalFontMetrics;
  */
 public class M3ExternalFontMetrics implements IExternalFontMetrics {
 
-	private final io.github.humbleui.skija.FontMetrics m;
+	private final jdk.m3.graphics.M3FontMetrics m;
 	private final float size;
 	private final DpiScalerUtil sc;
 
-	M3ExternalFontMetrics(io.github.humbleui.skija.FontMetrics metrics, float size, DpiScalerUtil dpiScaler) {
+	M3ExternalFontMetrics(jdk.m3.graphics.M3FontMetrics metrics, float size, DpiScalerUtil dpiScaler) {
 		this.sc = dpiScaler;
 		this.m = metrics;
 		this.size = size;

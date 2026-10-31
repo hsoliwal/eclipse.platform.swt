@@ -19,12 +19,12 @@ import java.util.function.Consumer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Pattern;
 
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.PaintMode;
-import io.github.humbleui.skija.PaintStrokeCap;
-import io.github.humbleui.skija.PaintStrokeJoin;
-import io.github.humbleui.skija.PathEffect;
-import io.github.humbleui.skija.Shader;
+import jdk.m3.graphics.M3Paint;
+import jdk.m3.graphics.M3PaintMode;
+import jdk.m3.graphics.M3PaintStrokeCap;
+import jdk.m3.graphics.M3PaintStrokeJoin;
+import jdk.m3.graphics.M3PathEffect;
+import jdk.m3.graphics.M3Shader;
 
 public class M3PaintManager {
 
@@ -40,18 +40,18 @@ public class M3PaintManager {
 		this.gc = gc;
 	}
 
-	public void performDraw(Consumer<Paint> operations) {
-		try (final Paint paint = new Paint()) {
+	public void performDraw(Consumer<M3Paint> operations) {
+		try (final M3Paint paint = new M3Paint()) {
 			paint.setAlpha(gc.getAlpha());
 			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha()));
 			paint.setAntiAlias(gc.getAntialias() == SWT.ON);
 			if (gc.getXORMode()) {
-				paint.setBlendMode(io.github.humbleui.skija.BlendMode.DIFFERENCE);
+				paint.setBlendMode(jdk.m3.graphics.M3BlendMode.DIFFERENCE);
 			} else {
-				paint.setBlendMode(io.github.humbleui.skija.BlendMode.SRC_OVER);
+				paint.setBlendMode(jdk.m3.graphics.M3BlendMode.SRC_OVER);
 			}
 			final var scaledLineWidth = gc.getScaler().autoScaleUp(gc.getLineWidth() * 1F);
-			paint.setMode(PaintMode.STROKE);
+			paint.setMode(M3PaintMode.STROKE);
 			paint.setStrokeWidth(scaledLineWidth);
 			paint.setStrokeCap(getM3LineCap(gc.getLineCap()));
 			paint.setStrokeJoin(getM3LineJoin(gc.getLineJoin()));
@@ -78,7 +78,7 @@ public class M3PaintManager {
 		}
 	}
 
-	private PathEffect createPathEffect(float scaledLineWidth, DpiScalerUtil scaler) {
+	private M3PathEffect createPathEffect(float scaledLineWidth, DpiScalerUtil scaler) {
 
 		final var floats = switch (gc.getLineStyle()) {
 		case SWT.LINE_SOLID -> null;
@@ -99,7 +99,7 @@ public class M3PaintManager {
 			// absolute lengths, already in pixels (M3ExternalGC scales them when set), and the array is doubled as the stock GC
 			// doubles it (GC.getPen, GDI+ dash / width); the donor multiplied even arrays by the scaled width and odd arrays by
 			// the zoom a second time. M3 (GC seam, leaf 5): the dash offset of the line attributes is the phase
-			return PathEffect.makeDash(doubled(floats), gc.getDashPhase());
+			return M3PathEffect.makeDash(doubled(floats), gc.getDashPhase());
 		}
 
 		final var scaledFloats = getScaledPathFloats(scaledLineWidth, floats, scaler);
@@ -107,7 +107,7 @@ public class M3PaintManager {
 			return null;
 		}
 
-		return PathEffect.makeDash(scaledFloats, gc.getDashPhase());
+		return M3PathEffect.makeDash(scaledFloats, gc.getDashPhase());
 
 	}
 
@@ -126,18 +126,18 @@ public class M3PaintManager {
 		return result;
 	}
 
-	public void performDrawFilled(Consumer<Paint> operations) {
-		try (final Paint paint = new Paint()) {
-			paint.setMode(PaintMode.FILL);
+	public void performDrawFilled(Consumer<M3Paint> operations) {
+		try (final M3Paint paint = new M3Paint()) {
+			paint.setMode(M3PaintMode.FILL);
 			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha()));
 			paint.setAntiAlias(gc.getAntialias() == SWT.ON);
 			if (gc.getXORMode()) {
-				paint.setBlendMode(io.github.humbleui.skija.BlendMode.DIFFERENCE);
+				paint.setBlendMode(jdk.m3.graphics.M3BlendMode.DIFFERENCE);
 			} else {
-				paint.setBlendMode(io.github.humbleui.skija.BlendMode.SRC_OVER);
+				paint.setBlendMode(jdk.m3.graphics.M3BlendMode.SRC_OVER);
 			}
 			if (gc.getBackgroundPattern() != null && !gc.getBackgroundPattern().isDisposed()) {
-				try (Shader shader = convertSWTPatternToM3Shader(gc.getBackgroundPattern())) {
+				try (M3Shader shader = convertSWTPatternToM3Shader(gc.getBackgroundPattern())) {
 					if (shader != null) {
 						paint.setShader(shader);
 					}
@@ -153,38 +153,38 @@ public class M3PaintManager {
 	 * leaf 6 (ARG_CONTRACT, census GF46): a fill with the foreground brush, as the stock GDI+ getFgBrush: the foreground colour at
 	 * the GC alpha, or the foreground pattern (drawPoint).
 	 */
-	public void performFillForeground(Consumer<Paint> operations) {
-		try (final Paint paint = new Paint()) {
-			paint.setMode(PaintMode.FILL);
+	public void performFillForeground(Consumer<M3Paint> operations) {
+		try (final M3Paint paint = new M3Paint()) {
+			paint.setMode(M3PaintMode.FILL);
 			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha()));
 			paint.setAntiAlias(gc.getAntialias() == SWT.ON);
-			paint.setBlendMode(gc.getXORMode() ? io.github.humbleui.skija.BlendMode.DIFFERENCE : io.github.humbleui.skija.BlendMode.SRC_OVER);
+			paint.setBlendMode(gc.getXORMode() ? jdk.m3.graphics.M3BlendMode.DIFFERENCE : jdk.m3.graphics.M3BlendMode.SRC_OVER);
 			final Pattern pattern = gc.getForegroundPattern();
-			try (Shader shader = pattern != null && !pattern.isDisposed() ? convertSWTPatternToM3Shader(pattern) : null) {
+			try (M3Shader shader = pattern != null && !pattern.isDisposed() ? convertSWTPatternToM3Shader(pattern) : null) {
 				paint.setShader(shader);
 				operations.accept(paint);
 			}
 		}
 	}
 
-	public static PaintStrokeCap getM3LineCap(int lineCap) {
+	public static M3PaintStrokeCap getM3LineCap(int lineCap) {
 		if (lineCap == SWT.CAP_SQUARE) {
-			return PaintStrokeCap.SQUARE;
+			return M3PaintStrokeCap.SQUARE;
 		}
 		if (lineCap == SWT.CAP_ROUND) {
-			return PaintStrokeCap.ROUND;
+			return M3PaintStrokeCap.ROUND;
 		}
-		return PaintStrokeCap.BUTT;
+		return M3PaintStrokeCap.BUTT;
 	}
 
-	public static PaintStrokeJoin getM3LineJoin(int lineJoin) {
+	public static M3PaintStrokeJoin getM3LineJoin(int lineJoin) {
 		if (lineJoin == SWT.JOIN_ROUND) {
-			return PaintStrokeJoin.ROUND;
+			return M3PaintStrokeJoin.ROUND;
 		}
 		if (lineJoin == SWT.JOIN_BEVEL) {
-			return PaintStrokeJoin.BEVEL;
+			return M3PaintStrokeJoin.BEVEL;
 		}
-		return PaintStrokeJoin.MITER;
+		return M3PaintStrokeJoin.MITER;
 	}
 
 	/**
@@ -193,21 +193,21 @@ public class M3PaintManager {
 	 * @param pattern the SWT Pattern to convert
 	 * @return the Skija Shader or null if conversion fails
 	 */
-	public Shader convertSWTPatternToM3Shader(Pattern pattern) {
+	public M3Shader convertSWTPatternToM3Shader(Pattern pattern) {
 		final var props = org.eclipse.swt.graphics.PatternProperties.get(pattern);
 		final var sc = gc.getScaler();
 		if (props.getImage() == null) {
 			final int col1 = M3ColorConverter.convertSWTColorToM3Color(props.getColor1(), props.getAlpha1());
 			final int col2 = M3ColorConverter.convertSWTColorToM3Color(props.getColor2(), props.getAlpha2());
-			final var gs = new io.github.humbleui.skija.GradientStyle(io.github.humbleui.skija.FilterTileMode.REPEAT,
+			final var gs = new jdk.m3.graphics.M3GradientStyle(jdk.m3.graphics.M3FilterTileMode.REPEAT,
 					true, null);
-			return Shader.makeLinearGradient(sc.autoScaleUp(props.getBaseX1()), sc.autoScaleUp(props.getBaseY1()),
+			return M3Shader.makeLinearGradient(sc.autoScaleUp(props.getBaseX1()), sc.autoScaleUp(props.getBaseY1()),
 					sc.autoScaleUp(props.getBaseX2()), sc.autoScaleUp(props.getBaseY2()), new int[] { col1, col2 },
 					null, gs);
 		}
 		try (final var image = SwtToM3ImageConverter.convertSWTImageToM3Image(props.getImage(),
 				gc.getScaler().getNativeZoom(), gc.getM3Resources())) {
-			return image.makeShader(io.github.humbleui.skija.FilterTileMode.REPEAT);
+			return image.makeShader(jdk.m3.graphics.M3FilterTileMode.REPEAT);
 		}
 	}
 }

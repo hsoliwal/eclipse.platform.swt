@@ -15,6 +15,11 @@ Usage: python -I m3gc_adopt.py <manifest.tsv> <donor-root> <worktree> <log.tsv>
 import re
 import subprocess
 import sys
+import os
+if __name__ == "__main__":  # M3_GRAPHICS_GUARD v1: NOT_APPLICABLE on jdk.m3.graphics trees
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from m3_graphics_guard import exit_if_m3_graphics
+    exit_if_m3_graphics(sys.argv)
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent

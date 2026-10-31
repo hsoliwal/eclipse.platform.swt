@@ -26,9 +26,9 @@ import org.eclipse.swt.graphics.LineAttributes;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.Bitmap;
-import io.github.humbleui.skija.Canvas;
-import io.github.humbleui.skija.Paint;
+import jdk.m3.graphics.M3Bitmap;
+import jdk.m3.graphics.M3Canvas;
+import jdk.m3.graphics.M3Paint;
 
 /**
  * Headless: the stroke scale of the M3 GC (GC seam, leaf 6; atom STROKE_SCALE, pattern M3-GC-STROKE v2; census GF14, GF11).
@@ -94,14 +94,14 @@ public class Test_org_eclipse_swt_m3gc_StrokeScale {
 	/* the on/off pixels of the middle row of a horizontal dashed line through the GC, rasterized by Skija on a real bitmap */
 	static boolean[] row(int zoom, int width, int[] dash) {
 		int pixels = POINTS * zoom / 100, y = 20 * zoom / 100;
-		try (Bitmap bitmap = new Bitmap()) {
+		try (M3Bitmap bitmap = new M3Bitmap()) {
 			bitmap.allocN32Pixels(pixels, 2 * y);
-			try (Canvas real = new Canvas(bitmap)) {
+			try (M3Canvas real = new M3Canvas(bitmap)) {
 				real.clear(0xFF000000);
 				M3GcFixture f = new M3GcFixture(zoom);
 				f.surface.canvas = new M3CanvasDouble(pixels, 2 * y, "real", f.surface.calls) {
 					@Override
-					public void drawLine(float x0, float y0, float x1, float y1, Paint paint) {
+					public void drawLine(float x0, float y0, float x1, float y1, M3Paint paint) {
 						real.drawLine(x0, y0, x1, y1, paint);
 					}
 				};

@@ -2,13 +2,13 @@ package org.eclipse.swt.internal.render.m3.gc;
 
 import org.eclipse.swt.graphics.Rectangle;
 
-import io.github.humbleui.types.RRect;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3RRect;
+import jdk.m3.graphics.M3Rect;
 
 public class RectangleConverter {
 
 
-	public static Rect createScaledRectangle(DpiScalerUtil sc,Rectangle r) {
+	public static M3Rect createScaledRectangle(DpiScalerUtil sc,Rectangle r) {
 		return createScaledRectangle( sc,r.x, r.y, r.width, r.height);
 	}
 
@@ -17,9 +17,9 @@ public class RectangleConverter {
 				sc.autoScaleUp(rectangle.height));
 	}
 
-	public static Rect createScaledRectangle( DpiScalerUtil sc,  int x, int y, int width, int height) {
+	public static M3Rect createScaledRectangle( DpiScalerUtil sc,  int x, int y, int width, int height) {
 		final var r = scaleUpRectangle(sc,new Rectangle(x, y, width, height));
-		return new Rect(r.x, r.y, r.width + r.x, r.height + r.y);
+		return new M3Rect(r.x, r.y, r.width + r.x, r.height + r.y);
 	}
 
 	public static float getScaledOffsetValue(DpiScalerUtil sc, int lineWidth) {
@@ -35,40 +35,40 @@ public class RectangleConverter {
 		return 0f;
 	}
 
-	public static Rect offsetRectangle(DpiScalerUtil sc, int lineWidth, Rect rect) {
+	public static M3Rect offsetRectangle(DpiScalerUtil sc, int lineWidth, M3Rect rect) {
 
 
 		final float scaledOffsetValue = getScaledOffsetValue(sc, lineWidth);
 		final float widthHightAutoScaleOffset = sc.autoScaleUp(1) - 1.0f;
 		if (scaledOffsetValue > 0f) {
-			return new Rect(rect.getLeft() + 0.5f, rect.getTop() + 0.5f,
+			return new M3Rect(rect.getLeft() + 0.5f, rect.getTop() + 0.5f,
 					rect.getRight() + 0.5f + widthHightAutoScaleOffset,
 					rect.getBottom() + 0.5f + widthHightAutoScaleOffset);
 		}
 		return rect;
 	}
 
-	public static RRect offsetRectangle(DpiScalerUtil sc, int lineWidth,RRect rect) {
+	public static M3RRect offsetRectangle(DpiScalerUtil sc, int lineWidth,M3RRect rect) {
 
 		final float scaledOffsetValue =getScaledOffsetValue(sc, lineWidth);
 		final float widthHightAutoScaleOffset = sc.autoScaleUp(1) - 1.0f;
 		if (scaledOffsetValue != 0f) {
-			return new RRect(rect.getLeft() + scaledOffsetValue, rect.getTop() + scaledOffsetValue,
+			return new M3RRect(rect.getLeft() + scaledOffsetValue, rect.getTop() + scaledOffsetValue,
 					rect.getRight() + scaledOffsetValue + widthHightAutoScaleOffset,
 					rect.getBottom() + scaledOffsetValue + widthHightAutoScaleOffset, rect._radii);
 		}
 		return rect;
 	}
 
-	public static Rect createScaledRectangleWithOffset(DpiScalerUtil scaler, int lineWidth, int x, int y,
+	public static M3Rect createScaledRectangleWithOffset(DpiScalerUtil scaler, int lineWidth, int x, int y,
 			int width, int height) {
 		final var rect = createScaledRectangle(scaler, x, y, width, height);
 		return offsetRectangle(scaler, lineWidth, rect);
 	}
 
 
-	public static RRect createScaledRoundRectangle(DpiScalerUtil sc,int x, int y, int width, int height, float arcWidth, float arcHeight) {
-		return new RRect(sc.autoScaleUp(x), sc.autoScaleUp(y), sc.autoScaleUp(x + width),
+	public static M3RRect createScaledRoundRectangle(DpiScalerUtil sc,int x, int y, int width, int height, float arcWidth, float arcHeight) {
+		return new M3RRect(sc.autoScaleUp(x), sc.autoScaleUp(y), sc.autoScaleUp(x + width),
 				sc.autoScaleUp(y + height),
 				new float[] { sc.autoScaleUp(arcWidth), sc.autoScaleUp(arcHeight) });
 	}

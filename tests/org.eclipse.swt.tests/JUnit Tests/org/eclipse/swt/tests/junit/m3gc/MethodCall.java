@@ -3,8 +3,8 @@ package org.eclipse.swt.tests.junit.m3gc;
 import java.util.Arrays;
 import java.util.Objects;
 
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.Paint;
+import jdk.m3.graphics.M3Font;
+import jdk.m3.graphics.M3Paint;
 
 public class MethodCall {
 
@@ -17,11 +17,11 @@ public class MethodCall {
 		this.methodName = methodName;
 
 		for (final Object p : params) {
-			if (p instanceof Paint pa) {
+			if (p instanceof M3Paint pa) {
 				params[Arrays.asList(params).indexOf(p)] = PaintData.getData(pa);
 			}
 
-			if (p instanceof Font f) {
+			if (p instanceof M3Font f) {
 				params[Arrays.asList(params).indexOf(p)] = ExtractedFontData.getData(f);
 			}
 

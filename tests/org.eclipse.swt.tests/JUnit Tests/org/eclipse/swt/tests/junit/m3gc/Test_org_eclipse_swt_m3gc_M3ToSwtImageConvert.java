@@ -9,11 +9,11 @@ import org.eclipse.swt.internal.render.m3.gc.M3ToSwtImageConverter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.ColorAlphaType;
-import io.github.humbleui.skija.ColorType;
-import io.github.humbleui.skija.Image;
-import io.github.humbleui.skija.ImageInfo;
-import io.github.humbleui.skija.Surface;
+import jdk.m3.graphics.M3ColorAlphaType;
+import jdk.m3.graphics.M3ColorType;
+import jdk.m3.graphics.M3Image;
+import jdk.m3.graphics.M3ImageInfo;
+import jdk.m3.graphics.M3Surface;
 
 class Test_org_eclipse_swt_m3gc_M3ToSwtImageConvert {
 
@@ -25,9 +25,9 @@ class Test_org_eclipse_swt_m3gc_M3ToSwtImageConvert {
 	@Test
 	public void testConvertSimpleRGBAImage() {
 		// Create a 2x2 Skija image with RGBA_8888
-		try (Surface surface = Surface.makeRaster(new ImageInfo(2, 2, ColorType.RGBA_8888, ColorAlphaType.PREMUL))) {
+		try (M3Surface surface = M3Surface.makeRaster(new M3ImageInfo(2, 2, M3ColorType.RGBA_8888, M3ColorAlphaType.PREMUL))) {
 			surface.getCanvas().clear(0xFF0000FF); // Blue
-			final Image m3Image = surface.makeImageSnapshot();
+			final M3Image m3Image = surface.makeImageSnapshot();
 			final ImageData data = M3ToSwtImageConverter.convertM3ImageToImageData(m3Image);
 			assertNotNull(data);
 			assertEquals(2, data.width);

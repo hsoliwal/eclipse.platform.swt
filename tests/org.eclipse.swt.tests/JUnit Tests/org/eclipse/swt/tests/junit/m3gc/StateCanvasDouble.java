@@ -20,11 +20,11 @@ import java.util.Deque;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import io.github.humbleui.skija.ClipMode;
-import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.skija.Path;
-import io.github.humbleui.skija.Region;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3ClipMode;
+import jdk.m3.graphics.M3Matrix33;
+import jdk.m3.graphics.M3Path;
+import jdk.m3.graphics.M3Region;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * Leaf 6: a call-logging canvas double that also keeps Skia's save stack: per level the matrix and the clips applied in it
@@ -32,30 +32,30 @@ import io.github.humbleui.types.Rect;
  * save pushes a copy, restore pops one, restoreToCount pops down to the count, getLocalToDevice answers the top matrix.
  */
 class StateCanvasDouble extends M3CanvasDouble {
-	record Level(Matrix33 matrix, List<Rect> clips) {
+	record Level(M3Matrix33 matrix, List<M3Rect> clips) {
 	}
 
 	final Deque<Level> stack = new ArrayDeque<>();
 
-	StateCanvasDouble(String name, List<MethodCall> calls, Matrix33 frameMatrix) {
+	StateCanvasDouble(String name, List<MethodCall> calls, M3Matrix33 frameMatrix) {
 		super(0, 0, name, calls);
 		stack.push(new Level(frameMatrix, new ArrayList<>()));
 		saveCount = 1;
 	}
 
 	/* the clips in force: every level's, bottom first */
-	List<Rect> clips() {
-		List<Rect> all = new ArrayList<>();
+	List<M3Rect> clips() {
+		List<M3Rect> all = new ArrayList<>();
 		stack.descendingIterator().forEachRemaining(level -> all.addAll(level.clips()));
 		return all;
 	}
 
-	Matrix33 matrix() {
+	M3Matrix33 matrix() {
 		return stack.peek().matrix();
 	}
 
 	@Override
-	public Matrix33 getLocalToDevice() {
+	public M3Matrix33 getLocalToDevice() {
 		return matrix();
 	}
 
@@ -79,26 +79,26 @@ class StateCanvasDouble extends M3CanvasDouble {
 	}
 
 	@Override
-	public void setMatrix(Matrix33 matrix) {
+	public void setMatrix(M3Matrix33 matrix) {
 		super.setMatrix(matrix);
 		Level top = stack.pop();
 		stack.push(new Level(matrix, top.clips()));
 	}
 
 	@Override
-	public void clipRect(Rect rect) {
+	public void clipRect(M3Rect rect) {
 		super.clipRect(rect);
 		stack.peek().clips().add(rect);
 	}
 
 	@Override
-	public void clipRegion(Region region) {
+	public void clipRegion(M3Region region) {
 		super.clipRegion(region);
 		stack.peek().clips().add(region.getBounds().toRect());
 	}
 
 	@Override
-	public void clipPath(Path path, ClipMode mode, boolean antiAlias) {
+	public void clipPath(M3Path path, M3ClipMode mode, boolean antiAlias) {
 		super.clipPath(path, mode, antiAlias);
 		stack.peek().clips().add(path.computeTightBounds());
 	}
