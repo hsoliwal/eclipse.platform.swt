@@ -28,10 +28,11 @@ import org.eclipse.swt.*;
  * entered. Ranges are delivered, never items.
  * </p>
  * <p>
- * The range is checked when the widget scrolls, resizes, expands or collapses a row (once, at
- * the end of the event), and immediately when a viewport moves its window. In the original
- * mode a <code>setTopIndex</code> that is not followed by any of these is announced at the next
- * one. The win32 widgets drive the viewport checks.
+ * The range is checked when the widget paints, scrolls, resizes, expands or collapses a row (once,
+ * at the end of the event), and immediately when a viewport moves its window. A programmatic
+ * <code>setTopIndex</code> or a structural change is announced by the paint that shows it, in every
+ * mode; a widget that does not paint (hidden) announces nothing until it paints again. The win32
+ * widgets drive the viewport checks.
  * </p>
  *
  * @since 3.138
@@ -216,6 +217,7 @@ public final class M3VisibilityObserver {
 			latch = new Latch (widget);
 			widget.setData (KEY, latch);
 			widget.addListener (SWT.Resize, latch);
+			widget.addListener (SWT.Paint, latch);
 			if (widget instanceof Tree) {
 				widget.addListener (SWT.Expand, latch);
 				widget.addListener (SWT.Collapse, latch);
@@ -236,6 +238,7 @@ public final class M3VisibilityObserver {
 		Latch latch = latch (widget);
 		if (latch == null || widget.hooks (EVENT)) return;
 		widget.removeListener (SWT.Resize, latch);
+		widget.removeListener (SWT.Paint, latch);
 		widget.removeListener (SWT.Expand, latch);
 		widget.removeListener (SWT.Collapse, latch);
 		ScrollBar bar = ((Scrollable) widget).getVerticalBar ();

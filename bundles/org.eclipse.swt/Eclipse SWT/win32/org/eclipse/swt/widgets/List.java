@@ -2172,6 +2172,11 @@ public void setSelection (int start, int end) {
  * </ul>
  */
 public void setTopIndex (int index) {
+	setTopRow (index);
+	M3VisibilityObserver.changed (this);
+}
+
+void setTopRow (int index) {
 	checkWidget ();
 	if (viewport != null) {
 		viewport.setTopIndex (index);
