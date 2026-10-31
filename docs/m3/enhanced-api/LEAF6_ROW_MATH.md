@@ -44,3 +44,18 @@ Rows are `long`, like the projection: a virtual tree's logical cardinality is no
 
 See `ALGORITHM_CATALOGUE.tsv` (rule 21): rank/select over per-parent visible-row prefix sums (the order-statistic
 lanes the viewport keeps), with an iterative preorder walk as the fallback.
+
+## Status (2026-10-30)
+
+| gate | result |
+|---|---|
+| build | master `d5f6048f398`, jar `master-d5f6048` (sha256 `d3e26aff00a3...`); win32 888, GTK 678, Cocoa 817 sources, 0 errors |
+| JUnit, hidden desktop | `Test_M3RowMath` 7/7 (viewport); 6/7 and 1 skipped (original: `test_millionRowVirtualTreeAnswersFromTheLanes` assumes the lanes, which exist only with the viewport) |
+| differential against the official 3.135.0 jar | `Test_M3RowMathDifferential`: seeded scripts (add, expand, collapse, dispose, `setItemCount` on the tree and on rows, `removeAll`, `clearAll`) on a plain and a virtual Tree, 8 seeds x 120 steps each; the official run records a preorder walk over the public API (visible row count, items at four rows, row and subtree size of the first six roots and of each one's first child, extent arithmetic); viewport and original: 0 mismatches (the virtual tree in viewport mode answers from the lanes) |
+| coverage (JaCoCo 0.8.15, viewport and original merged) | lines 38/38; branches 33/38: 4 are `SWT.error` probe artifacts (one-condition checks, each exercised by an `assertThrows` test), 1 is the walk's "item not found" return in `rowOf`, unreachable once every ancestor is expanded (the walk then visits the item): effective 100% of reachable branches |
+
+The differential found one oracle error of its own on the first run (Java integer division answered `rowAtExtent (-1)`
+as row 0 in the walk oracle); M3RowMath was right (-1), and the oracle was corrected.
+
+Open: GTK and Cocoa answer through the walk (no lanes there; their virtual trees have a topology on GTK that a later
+seam can read); not run on GTK or Cocoa.
