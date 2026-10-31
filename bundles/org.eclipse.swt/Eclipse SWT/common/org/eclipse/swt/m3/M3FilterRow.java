@@ -25,7 +25,8 @@ import org.eclipse.swt.widgets.*;
  * (enhanced M3 API).
  * <p>
  * Place the row above the control with any layout. Each field follows its column's position,
- * width and order and the control's horizontal scrolling. Typing in a field sets the column's
+ * width and order, the control's horizontal scrolling and where the row and the control are
+ * (a move of either). Typing in a field sets the column's
  * criterion of the {@link M3ColumnFilter} to "contains, ignoring case" (commas separate
  * alternatives, see {@link M3TextMatch}) after a short delay; an
  * empty field removes it. Call {@link #refresh()} after columns are created or disposed.
@@ -86,10 +87,12 @@ public final class M3FilterRow extends Composite {
 		this.filter = M3Checks.nonNull (filter);
 		pending = new boolean [filter.getColumnCount ()];
 		control.addListener (SWT.Resize, listener);
+		control.addListener (SWT.Move, listener);
 		control.addListener (SWT.Dispose, listener);
 		ScrollBar bar = control.getHorizontalBar ();
 		if (bar != null) bar.addListener (SWT.Selection, listener);
 		addListener (SWT.Resize, listener);
+		addListener (SWT.Move, listener);
 		addListener (SWT.Dispose, listener);
 		refresh ();
 	}
@@ -164,6 +167,7 @@ public final class M3FilterRow extends Composite {
 		getDisplay ().timerExec (-1, apply);
 		if (control.isDisposed ()) return;
 		control.removeListener (SWT.Resize, listener);
+		control.removeListener (SWT.Move, listener);
 		control.removeListener (SWT.Dispose, listener);
 		ScrollBar bar = control.getHorizontalBar ();
 		if (bar != null) bar.removeListener (SWT.Selection, listener);
