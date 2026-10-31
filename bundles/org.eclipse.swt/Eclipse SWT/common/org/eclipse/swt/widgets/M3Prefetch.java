@@ -31,13 +31,14 @@ import org.eclipse.swt.*;
  * <p>
  * The events are the same in every widget mode (the mode-neutral contract): the resident window
  * is the rows in view ({@link M3Residency#residentRange(Table)}), checked when the widget paints,
- * scrolls, resizes, expands or collapses a row (once, at the end of the event) and immediately
- * after a structural change the widget announces (a Table's, or a viewport's window move). A
- * widget that is not visible holds no rows, so it announces nothing until it is shown.
+ * scrolls, resizes, expands or collapses a row, after a structural change the widget announces
+ * (a Table's, or a viewport's window move), once at the end of the event. A widget that is not
+ * visible holds no rows, so it announces nothing until it is shown.
  * </p>
  * <p>
- * Listeners may be called while the widget paints: they should start fetches, not change the
- * widget's items.
+ * Listeners are called at the end of the event that moved the window, never inside a native
+ * paint; the first listener hears the current window when it is added. They should start
+ * fetches, not change the widget's items.
  * </p>
  *
  * @since 3.138
@@ -71,7 +72,7 @@ public final class M3Prefetch {
 			scheduled = true;
 			widget.getDisplay ().asyncExec (() -> {
 				scheduled = false;
-				windowChanged (widget);
+				announce (widget);
 			});
 		}
 	}
@@ -253,18 +254,22 @@ public final class M3Prefetch {
 
 	/* ------------------------------------------------------------------ widget seam */
 
-	/* The resident window of a viewport moved: announces the difference to the last range. */
+	/*
+	 * The resident window may have moved (a structural change, or a viewport seam that may run inside a native
+	 * paint): checks it once at the end of the current event, so listeners never run inside a paint.
+	 */
 	static void windowChanged (Control widget) {
+		Latch latch = widget.isDisposed () ? null : latch (widget);
+		if (latch != null && widget.hooks (EVENT)) latch.handleEvent (null);
+	}
+
+	/* Announces the difference between the resident window and the last announced range, now. */
+	static void announce (Control widget) {
 		if (!widget.hooks (EVENT) || widget.isDisposed ()) return;
 		Latch latch = latch (widget);
 		if (latch == null) return;
-		M3ItemRange resident = resident (widget);
-		int count = rows (widget);
-		int first = 0, last = -1;
-		if (!resident.isEmpty ()) {
-			first = Math.max (0, resident.start () - latch.before);
-			last = (int) Math.min (count - 1L, (long) resident.end () + latch.after);
-		}
+		long window = window (widget, latch);
+		int first = (int) (window >> 32), last = (int) window;
 		int oldFirst = latch.first, oldLast = latch.last;
 		if (first == oldFirst && last == oldLast) return;
 		latch.first = first;
@@ -272,6 +277,15 @@ public final class M3Prefetch {
 		/* rows that left (old minus new), then rows that entered (new minus old) */
 		difference (widget, EVENT, CANCEL, oldFirst, oldLast, first, last);
 		difference (widget, EVENT, PREFETCH, first, last, oldFirst, oldLast);
+	}
+
+	/* the resident window widened by the margins and clamped to the rows, packed as first << 32 | last (0, -1 when empty) */
+	private static long window (Control widget, Latch latch) {
+		M3ItemRange resident = resident (widget);
+		if (resident.isEmpty ()) return 0xFFFFFFFFL;
+		int first = Math.max (0, resident.start () - latch.before);
+		int last = (int) Math.min (rows (widget) - 1L, (long) resident.end () + latch.after);
+		return (long) first << 32 | last & 0xFFFFFFFFL;
 	}
 
 	/* ------------------------------------------------------------------ helpers */
@@ -307,7 +321,7 @@ public final class M3Prefetch {
 		if (first) {
 			latch.first = 0;
 			latch.last = -1;
-			windowChanged (widget);
+			announce (widget);
 		}
 	}
 
