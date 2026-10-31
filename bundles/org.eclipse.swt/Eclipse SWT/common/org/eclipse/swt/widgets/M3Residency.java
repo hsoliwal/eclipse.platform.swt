@@ -92,8 +92,8 @@ public final class M3Residency {
 	/**
 	 * Returns the visible rows (as numbered by {@link M3RowMath}) the tree must hold ready to paint:
 	 * the rows in view, none while the tree is not visible. The answer is the same in every widget
-	 * mode; the top row is found with {@link M3RowMath#rowOf(TreeItem)} (the viewport's lanes, or a
-	 * walk), not by walking to it.
+	 * mode; the viewport's lanes answer it when they exist, otherwise one walk to the last row in
+	 * view.
 	 *
 	 * @param tree the tree
 	 * @return the resident visible rows
@@ -109,13 +109,27 @@ public final class M3Residency {
 	 */
 	public static M3ItemRange residentRange (Tree tree) {
 		check (tree);
+		return window (tree, 0, 0);
+	}
+
+	/*
+	 * The rows in view widened by before and after and clamped to the visible rows: from the viewport's lanes when
+	 * they exist, otherwise one walk to the last row of the window (never a walk over every row).
+	 */
+	static M3ItemRange window (Tree tree, int before, int after) {
 		TreeItem top = tree.isVisible () ? tree.getTopItem () : null;
 		int header = tree.getHeaderVisible () ? tree.getHeaderHeight () : 0;
 		int rows = M3ItemSelection.rows (tree.getClientArea ().height - header, tree.getItemHeight ());
-		long first = top == null || rows == 0 ? -1 : M3RowMath.rowOf (top);
-		if (first < 0) return M3ItemRange.EMPTY;
-		long last = Math.min (M3RowMath.visibleRowCount (tree) - 1, first + rows - 1);
-		return M3ItemRange.of (Math.toIntExact (first), Math.toIntExact (last));
+		if (top == null || rows == 0) return M3ItemRange.EMPTY;
+		long first = tree.m3RowOf (top), count = tree.m3VisibleRowCount (), last;
+		if (first == M3RowMath.UNKNOWN || count == M3RowMath.UNKNOWN) {
+			M3TreeWalk walk = new M3TreeWalk (tree);
+			first = walk.indexOf (top);
+			last = first + walk.advance (rows - 1 + after);
+		} else {
+			last = Math.min (count - 1, first + rows - 1 + after);
+		}
+		return M3ItemRange.of (Math.toIntExact (Math.max (0, first - before)), Math.toIntExact (last));
 	}
 
 	/**

@@ -281,11 +281,15 @@ public final class M3Prefetch {
 
 	/* the resident window widened by the margins and clamped to the rows, packed as first << 32 | last (0, -1 when empty) */
 	private static long window (Control widget, Latch latch) {
+		M3ItemRange window = widget instanceof Tree tree ? M3Residency.window (tree, latch.before, latch.after) : widened (widget, latch);
+		return window.isEmpty () ? 0xFFFFFFFFL : (long) window.start () << 32 | window.end () & 0xFFFFFFFFL;
+	}
+
+	private static M3ItemRange widened (Control widget, Latch latch) {
 		M3ItemRange resident = resident (widget);
-		if (resident.isEmpty ()) return 0xFFFFFFFFL;
-		int first = Math.max (0, resident.start () - latch.before);
-		int last = (int) Math.min (rows (widget) - 1L, (long) resident.end () + latch.after);
-		return (long) first << 32 | last & 0xFFFFFFFFL;
+		if (resident.isEmpty ()) return resident;
+		int count = widget instanceof Table table ? table.getItemCount () : ((List) widget).getItemCount ();
+		return M3ItemRange.of (Math.max (0, resident.start () - latch.before), (int) Math.min (count - 1L, (long) resident.end () + latch.after));
 	}
 
 	/* ------------------------------------------------------------------ helpers */
@@ -365,16 +369,10 @@ public final class M3Prefetch {
 		if (bar != null && !on) bar.removeListener (SWT.Selection, latch);
 	}
 
-	/* the resident window: the rows in view, the same in every mode */
+	/* the resident window of a Table or List: the rows in view, the same in every mode */
 	private static M3ItemRange resident (Control widget) {
 		if (widget instanceof Table table) return M3Residency.residentRange (table);
-		if (widget instanceof Tree tree) return M3Residency.residentRange (tree);
 		return M3Residency.residentRange ((List) widget);
 	}
 
-	private static int rows (Control widget) {
-		if (widget instanceof Table table) return table.getItemCount ();
-		if (widget instanceof Tree tree) return (int) Math.min (Integer.MAX_VALUE, M3RowMath.visibleRowCount (tree));
-		return ((List) widget).getItemCount ();
-	}
 }
