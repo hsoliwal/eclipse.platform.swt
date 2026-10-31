@@ -29,11 +29,11 @@ import org.eclipse.swt.*;
  * {@link #setWindow(Table, int, int)} widens the announced range around the resident window.
  * </p>
  * <p>
- * The events follow the viewport windows: a Table's window comes from painting (the native cache
- * hint, for a Table without <code>SWT.VIRTUAL</code>), so a Table that is not shown announces
- * nothing; without a viewport (the original mode, or a virtual Table)
- * every row is resident from the start and nothing is announced. The win32 widgets send the
- * events.
+ * The events are the same in every widget mode (the mode-neutral contract): the resident window
+ * is the rows in view ({@link M3Residency#residentRange(Table)}), checked when the widget paints,
+ * scrolls, resizes, expands or collapses a row (once, at the end of the event) and immediately
+ * after a structural change the widget announces (a Table's, or a viewport's window move). A
+ * widget that is not visible holds no rows, so it announces nothing until it is shown.
  * </p>
  * <p>
  * Listeners may be called while the widget paints: they should start fetches, not change the
@@ -53,11 +53,31 @@ public final class M3Prefetch {
 
 	private static final String KEY = "org.eclipse.swt.widgets.M3Prefetch"; //$NON-NLS-1$
 
-	/* The latch of a widget: the last announced range [first, last] and the two margins. */
-	private static final class Latch {
+	/* The latch of a widget: the last announced range [first, last], the two margins and the trigger. */
+	private static final class Latch implements Listener {
+		final Control widget;
 		int first, last = -1;
 		int before, after;
+		boolean scheduled, observing;
+
+		Latch (Control widget) {
+			this.widget = widget;
+		}
+
+		/* a trigger: check once at the end of the current event */
+		@Override
+		public void handleEvent (Event event) {
+			if (scheduled || widget.isDisposed ()) return;
+			scheduled = true;
+			widget.getDisplay ().asyncExec (() -> {
+				scheduled = false;
+				windowChanged (widget);
+			});
+		}
 	}
+
+	/* the events after which the rows in view may have changed */
+	private static final int [] TRIGGERS = {SWT.Resize, SWT.Paint, SWT.Expand, SWT.Collapse, SWT.MouseVerticalWheel, SWT.KeyDown};
 
 	private M3Prefetch () {
 	}
@@ -281,8 +301,8 @@ public final class M3Prefetch {
 		widget.checkWidget ();
 		boolean first = !widget.hooks (EVENT);
 		widget.addListener (EVENT, listener);
-		Latch latch = latch (widget);
-		if (latch == null) widget.setData (KEY, latch = new Latch ());
+		Latch latch = latchOf (widget);
+		observe (latch, true);
 		/* the first listener hears the current window as a whole */
 		if (first) {
 			latch.first = 0;
@@ -295,14 +315,15 @@ public final class M3Prefetch {
 		if (widget == null || listener == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		widget.checkWidget ();
 		widget.removeListener (EVENT, listener);
+		Latch latch = latch (widget);
+		if (latch != null && !widget.hooks (EVENT)) observe (latch, false);
 	}
 
 	private static void window (Control widget, int before, int after) {
 		if (widget == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		widget.checkWidget ();
 		if (before < 0 || after < 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
-		Latch latch = latch (widget);
-		if (latch == null) widget.setData (KEY, latch = new Latch ());
+		Latch latch = latchOf (widget);
 		latch.before = before;
 		latch.after = after;
 	}
@@ -311,12 +332,30 @@ public final class M3Prefetch {
 		return widget.getData (KEY) instanceof Latch latch ? latch : null;
 	}
 
-	/* the resident window, or EMPTY without a viewport (every row is resident from the start) */
+	private static Latch latchOf (Control widget) {
+		Latch latch = latch (widget);
+		if (latch == null) widget.setData (KEY, latch = new Latch (widget));
+		return latch;
+	}
+
+	/* hooks or unhooks the triggers of the latch (once) */
+	private static void observe (Latch latch, boolean on) {
+		if (latch.observing == on) return;
+		latch.observing = on;
+		ScrollBar bar = ((Scrollable) latch.widget).getVerticalBar ();
+		for (int type : TRIGGERS) {
+			if (on) latch.widget.addListener (type, latch);
+			else latch.widget.removeListener (type, latch);
+		}
+		if (bar != null && on) bar.addListener (SWT.Selection, latch);
+		if (bar != null && !on) bar.removeListener (SWT.Selection, latch);
+	}
+
+	/* the resident window: the rows in view, the same in every mode */
 	private static M3ItemRange resident (Control widget) {
-		if (widget instanceof Table table) return table.m3ResidentRange () == null ? M3ItemRange.EMPTY : M3Residency.residentRange (table);
-		if (widget instanceof Tree tree) return tree.m3ResidentRange () == null ? M3ItemRange.EMPTY : M3Residency.residentRange (tree);
-		List list = (List) widget;
-		return list.m3ResidentRange () == null ? M3ItemRange.EMPTY : M3Residency.residentRange (list);
+		if (widget instanceof Table table) return M3Residency.residentRange (table);
+		if (widget instanceof Tree tree) return M3Residency.residentRange (tree);
+		return M3Residency.residentRange ((List) widget);
 	}
 
 	private static int rows (Control widget) {

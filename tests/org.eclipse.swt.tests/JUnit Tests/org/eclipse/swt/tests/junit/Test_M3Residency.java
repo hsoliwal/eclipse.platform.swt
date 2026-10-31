@@ -23,8 +23,10 @@ import org.junit.jupiter.api.*;
 /**
  * Contract of M3Residency (enhanced M3 API, leaf 7). The oracle for the window is the visible
  * range (<code>M3ItemSelection.getVisibleRange</code>): once a widget has painted, its resident
- * rows contain it. With <code>-Dswt.widget.mode=viewport</code> the windows are also checked to be
- * bounded; with <code>-Dswt.widget.mode=original</code> every row is resident.
+ * rows equal it, in every mode (the mode-neutral contract of docs/m3/ENHANCED_API.md): the resident
+ * rows are the rows in view, computed from public state, and none while the widget is not visible.
+ * Only the item-object census (FACADES, HELD_FACADES) measures the mode: with
+ * <code>-Dswt.widget.mode=viewport</code> it is also checked to be bounded.
  */
 public class Test_M3Residency {
 	/* native rows in the original mode cost seconds per 10^5: the stock widgets get a tenth */
@@ -49,11 +51,6 @@ public class Test_M3Residency {
 		while (display.readAndDispatch ()) {
 			// paint and deliver the pending notifications
 		}
-	}
-
-	private static void assertCovers (M3ItemRange outer, M3ItemRange inner, String what) {
-		if (inner.isEmpty ()) return;
-		assertTrue (outer.start () <= inner.start () && inner.end () <= outer.end (), what + ": " + outer + " does not cover " + inner);
 	}
 
 	private static boolean viewport (Widget widget) {
@@ -95,21 +92,39 @@ public class Test_M3Residency {
 			table.update ();
 			flush ();
 			M3ItemRange resident = M3Residency.residentRange (table);
-			assertCovers (resident, M3ItemSelection.getVisibleRange (table), "top " + top);
-			if (viewport (table)) {
-				assertTrue (resident.size () < 1000, "bounded window " + resident);
-			} else {
-				assertEquals (TABLE_ROWS, resident.size ());
-			}
+			assertEquals (M3ItemSelection.getVisibleRange (table), resident, "top " + top);
+			assertTrue (resident.size () < 1000, "bounded window " + resident);
 			assertEquals (resident.size (), M3Residency.stats (table) [M3Residency.RESIDENT_ROWS]);
 		}
 	}
 
 	@Test
-	public void test_virtualTableIsStockAndFullyResident () {
-		/* a virtual table keeps the stock owner-data path in every mode: every row is resident */
+	public void test_virtualTableResidentRowsAreTheRowsInView () {
 		Table table = virtualTable ();
-		assertEquals (ROWS, M3Residency.residentRange (table).size ());
+		assertEquals (M3ItemSelection.getVisibleRange (table), M3Residency.residentRange (table));
+		table.setTopIndex (ROWS / 2);
+		table.update ();
+		flush ();
+		assertEquals (M3ItemSelection.getVisibleRange (table), M3Residency.residentRange (table));
+		assertTrue (M3Residency.residentRange (table).contains (ROWS / 2));
+	}
+
+	@Test
+	public void test_aWidgetThatIsNotVisibleHoldsNoRows () {
+		Shell hidden = new Shell (display);
+		hidden.setBounds (20, 20, 320, 420);
+		Table table = new Table (hidden, SWT.MULTI | SWT.BORDER);
+		table.setBounds (5, 5, 300, 380);
+		table.setItemCount (500);
+		List list = new List (hidden, SWT.MULTI | SWT.V_SCROLL);
+		list.setItems ("a", "b");
+		Tree tree = new Tree (hidden, SWT.NONE);
+		new TreeItem (tree, SWT.NONE);
+		assertTrue (M3Residency.residentRange (table).isEmpty ());
+		assertTrue (M3Residency.residentRange (list).isEmpty ());
+		assertTrue (M3Residency.residentRange (tree).isEmpty ());
+		assertEquals (0, M3Residency.stats (table) [M3Residency.RESIDENT_ROWS]);
+		hidden.dispose ();
 	}
 
 	@Test
@@ -153,7 +168,7 @@ public class Test_M3Residency {
 		long [] stats = M3Residency.stats (table);
 		assertEquals (items.length, stats [M3Residency.FACADES]);
 		assertTrue (stats [M3Residency.HELD_FACADES] <= stats [M3Residency.FACADES]);
-		assertCovers (M3Residency.residentRange (table), M3ItemSelection.getVisibleRange (table), "plain");
+		assertEquals (M3ItemSelection.getVisibleRange (table), M3Residency.residentRange (table), "plain");
 	}
 
 	@Test
@@ -184,12 +199,7 @@ public class Test_M3Residency {
 			list.update ();
 			flush ();
 			M3ItemRange resident = M3Residency.residentRange (list);
-			assertCovers (resident, M3ItemSelection.getVisibleRange (list), "top " + top);
-			if (viewport (list)) {
-				assertTrue (resident.size () < 2000, "bounded window " + resident);
-			} else {
-				assertEquals (ROWS, resident.size ());
-			}
+			assertEquals (M3ItemSelection.getVisibleRange (list), resident, "top " + top);
 			long [] stats = M3Residency.stats (list);
 			assertArrayEquals (new long [] {resident.size (), 0, 0}, stats);
 		}
@@ -212,12 +222,7 @@ public class Test_M3Residency {
 			tree.update ();
 			flush ();
 			M3ItemRange resident = M3Residency.residentRange (tree);
-			assertCovers (resident, M3ItemSelection.getVisibleRange (tree), "top " + index);
-			if (viewport (tree)) {
-				assertTrue (resident.size () < 20_000, "bounded window " + resident);
-			} else {
-				assertEquals (M3RowMath.visibleRowCount (tree), resident.size ());
-			}
+			assertEquals (M3ItemSelection.getVisibleRange (tree), resident, "top " + index);
 			long [] stats = M3Residency.stats (tree);
 			assertEquals (resident.size (), stats [M3Residency.RESIDENT_ROWS]);
 			assertTrue (stats [M3Residency.FACADES] >= 1);

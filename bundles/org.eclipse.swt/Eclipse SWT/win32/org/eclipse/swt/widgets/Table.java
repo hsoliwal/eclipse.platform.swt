@@ -5294,14 +5294,14 @@ public void setItemCount (int count) {
 	} finally {
 		M3Emptiness.release (this);
 	}
-	if (viewport != null) M3Prefetch.windowChanged (this);
+	M3Prefetch.windowChanged (this);
 	M3VisibilityObserver.changed (this);
 }
 
-/* M3 seams after a structural change: the emptiness crossing, and the prefetch window clamped to the rows */
+/* M3 seams after a structural change: the emptiness crossing, and the prefetch window (the rows in view, every mode) */
 void m3StructureChanged () {
 	M3Emptiness.changed (this);
-	if (viewport != null) M3Prefetch.windowChanged (this);
+	M3Prefetch.windowChanged (this);
 	M3VisibilityObserver.changed (this);
 }
 

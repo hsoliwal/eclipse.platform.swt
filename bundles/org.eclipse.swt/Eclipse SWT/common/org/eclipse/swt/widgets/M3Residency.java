@@ -18,18 +18,21 @@ import org.eclipse.swt.*;
 
 /**
  * Residency views of <code>Table</code>, <code>List</code> and <code>Tree</code> (enhanced M3
- * API): which rows the widget holds ready to paint and how many item objects exist.
+ * API): which rows the widget must hold ready to paint and how many item objects exist.
  * <p>
- * With a viewport the widgets keep a bounded window of rows and make item objects (facades) on
- * demand: a List keeps its native rows in a window, a Tree keeps a paint window with overscan,
- * and a Table holds its facades strongly in a ring of recent rows and weakly after that. These
- * views make that observable for diagnostics and tests. They never make an item and never move
- * the window. Without a viewport every row is resident.
+ * The resident rows answer identically in every widget mode (the mode-neutral contract): they
+ * are the rows in view, computed from public state (the top row, the item height and the client
+ * area, as <code>M3ItemSelection.getVisibleRange</code>), and none while the widget is not
+ * visible. Every mode holds at least these rows; how many more it keeps (a viewport's window and
+ * overscan, or every row without a viewport) is the mode's own business and is not answered here.
+ * The item-object counts of {@link #stats(Table)} are a census of what the mode made: with a
+ * viewport the widgets make item objects (facades) on demand and hold a Table's facades strongly
+ * in a ring of recent rows only, which these counts make observable for diagnostics and tests.
+ * The views never make an item and never move a window.
  * </p>
  * <p>
- * The win32 widgets answer. On other platforms {@link #residentRange(Table)} is every row, the
- * facade counts are -1 (unknown) and {@link #isMaterialized(Table, int)} answers only for tables
- * without <code>SWT.VIRTUAL</code>.
+ * The win32 widgets answer the facade counts. On other platforms they are -1 (unknown) and
+ * {@link #isMaterialized(Table, int)} answers only for tables without <code>SWT.VIRTUAL</code>.
  * </p>
  *
  * @since 3.138
@@ -47,9 +50,8 @@ public final class M3Residency {
 	}
 
 	/**
-	 * Returns the rows the table holds ready to paint: with the viewport (a table without
-	 * <code>SWT.VIRTUAL</code>; a virtual table keeps the stock owner-data path), the rows of the last
-	 * native cache hint (empty before the first paint); otherwise every row.
+	 * Returns the rows the table must hold ready to paint: the rows in view, none while the table is
+	 * not visible. The answer is the same in every widget mode.
 	 *
 	 * @param table the table
 	 * @return the resident rows
@@ -64,12 +66,12 @@ public final class M3Residency {
 	 */
 	public static M3ItemRange residentRange (Table table) {
 		check (table);
-		return range (table.m3ResidentRange (), table.getItemCount ());
+		return table.isVisible () ? M3ItemSelection.getVisibleRange (table) : M3ItemRange.EMPTY;
 	}
 
 	/**
-	 * Returns the rows the list holds as native rows: with the viewport, its row window;
-	 * otherwise every row.
+	 * Returns the rows the list must hold ready to paint: the rows in view, none while the list is
+	 * not visible. The answer is the same in every widget mode.
 	 *
 	 * @param list the list
 	 * @return the resident rows
@@ -84,12 +86,14 @@ public final class M3Residency {
 	 */
 	public static M3ItemRange residentRange (List list) {
 		check (list);
-		return range (list.m3ResidentRange (), list.getItemCount ());
+		return list.isVisible () ? M3ItemSelection.getVisibleRange (list) : M3ItemRange.EMPTY;
 	}
 
 	/**
-	 * Returns the visible rows (as numbered by {@link M3RowMath}) the tree holds ready to paint:
-	 * with the viewport, its paint window including the overscan; otherwise every visible row.
+	 * Returns the visible rows (as numbered by {@link M3RowMath}) the tree must hold ready to paint:
+	 * the rows in view, none while the tree is not visible. The answer is the same in every widget
+	 * mode; the top row is found with {@link M3RowMath#rowOf(TreeItem)} (the viewport's lanes, or a
+	 * walk), not by walking to it.
 	 *
 	 * @param tree the tree
 	 * @return the resident visible rows
@@ -105,9 +109,13 @@ public final class M3Residency {
 	 */
 	public static M3ItemRange residentRange (Tree tree) {
 		check (tree);
-		long [] window = tree.m3ResidentRange ();
-		if (window == null) return M3ItemRange.of (0, Math.toIntExact (M3RowMath.visibleRowCount (tree) - 1));
-		return window [1] < window [0] ? M3ItemRange.EMPTY : M3ItemRange.of (Math.toIntExact (window [0]), Math.toIntExact (window [1]));
+		TreeItem top = tree.isVisible () ? tree.getTopItem () : null;
+		int header = tree.getHeaderVisible () ? tree.getHeaderHeight () : 0;
+		int rows = M3ItemSelection.rows (tree.getClientArea ().height - header, tree.getItemHeight ());
+		long first = top == null || rows == 0 ? -1 : M3RowMath.rowOf (top);
+		if (first < 0) return M3ItemRange.EMPTY;
+		long last = Math.min (M3RowMath.visibleRowCount (tree) - 1, first + rows - 1);
+		return M3ItemRange.of (Math.toIntExact (first), Math.toIntExact (last));
 	}
 
 	/**
@@ -191,13 +199,6 @@ public final class M3Residency {
 	 */
 	public static long [] stats (Tree tree) {
 		return new long [] {residentRange (tree).size (), tree.m3Facades (false), tree.m3Facades (true)};
-	}
-
-	/* [first, last] from the seam, clamped to the rows; null means every row */
-	private static M3ItemRange range (int [] window, int count) {
-		if (window == null) return M3ItemRange.of (0, count - 1);
-		int first = Math.max (0, window [0]), last = Math.min (window [1], count - 1);
-		return M3ItemRange.of (first, last);
 	}
 
 	private static void check (Widget widget) {

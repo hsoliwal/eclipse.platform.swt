@@ -24,18 +24,20 @@ import org.junit.jupiter.api.*;
 /**
  * Recorded differential of M3Prefetch against the official SWT jar (enhanced M3 API, leaf 9).
  * This SWT listens with a window of 2 rows before and 3 after on the Table and the List and replays the
- * PREFETCH and CANCEL ranges; after every step the announced rows must lie inside the rows and equal the
- * resident range widened by the window (clamped), or be empty without a resident window. The column is
- * "ok" then, as in the official run, which records the public state the listeners must not change.
+ * PREFETCH and CANCEL ranges into the announced rows. The official run records, from public API only, the rows
+ * in view (rows whose bounds meet the client area) widened by the same window and clamped to the rows; this SWT
+ * records the announced rows, so in every mode they must be exactly those rows after every step.
  */
 public class Test_M3PrefetchDifferential {
+	static final int BEFORE = 2, AFTER = 3;
+
 	/* This SWT only. */
 	static final class Fork {
 		final BitSet table = new BitSet (), list = new BitSet ();
 
 		Fork (M3OfficialScene scene) {
-			M3Prefetch.setWindow (scene.table, 2, 3);
-			M3Prefetch.setWindow (scene.list, 2, 3);
+			M3Prefetch.setWindow (scene.table, BEFORE, AFTER);
+			M3Prefetch.setWindow (scene.list, BEFORE, AFTER);
 			M3Prefetch.addListener (scene.table, event -> replay (table, event));
 			M3Prefetch.addListener (scene.list, event -> replay (list, event));
 		}
@@ -45,25 +47,32 @@ public class Test_M3PrefetchDifferential {
 			else rows.clear (event.start, event.end + 1);
 		}
 
-		static String check (String name, BitSet announced, M3ItemRange resident, int count, boolean window) {
-			BitSet expected = new BitSet ();
-			if (window && !resident.isEmpty ()) expected.set (Math.max (0, resident.start () - 2), Math.min (count, resident.end () + 4));
-			return expected.equals (announced) ? "ok" : name + " announced " + announced + " expected " + expected;
-		}
-
-		String verdict (M3OfficialScene scene) {
-			/* the Table viewport serves tables without SWT.VIRTUAL; a virtual table is stock and announces nothing */
-			boolean tableWindow = M3Mode.of (scene.table) == M3Mode.VIEWPORT && (scene.style & SWT.VIRTUAL) == 0;
-			String t = check ("T", table, M3Residency.residentRange (scene.table), scene.table.getItemCount (), tableWindow);
-			String l = check ("L", list, M3Residency.residentRange (scene.list), scene.list.getItemCount (), M3Mode.of (scene.list) == M3Mode.VIEWPORT);
-			return t + " " + l;
+		String announced () {
+			return "T " + ranges (table) + " L " + ranges (list);
 		}
 	}
 
 	static Fork fork;
 
+	/* "first..last" of a contiguous set, "-" when empty, the set otherwise */
+	static String ranges (BitSet rows) {
+		if (rows.isEmpty ()) return "-";
+		int first = rows.nextSetBit (0), last = rows.length () - 1;
+		return rows.cardinality () == last - first + 1 ? first + ".." + last : rows.toString ();
+	}
+
+	/* the rows in view ("first..last" or "-" from public API) widened by the window and clamped to the rows */
+	static String window (String visible, int count) {
+		if ("-".equals (visible)) return "-";
+		String [] bounds = visible.split ("[.][.]");
+		int first = Math.max (0, Integer.parseInt (bounds [0]) - BEFORE);
+		int last = Math.min (count - 1, Integer.parseInt (bounds [1]) + AFTER);
+		return first + ".." + last;
+	}
+
 	static String prefetch (M3OfficialScene scene) {
-		return M3OfficialScene.OFFICIAL ? "ok ok" : fork.verdict (scene);
+		if (!M3OfficialScene.OFFICIAL) return fork.announced ();
+		return "T " + window (scene.visibleTable (), scene.table.getItemCount ()) + " L " + window (scene.visibleList (), scene.list.getItemCount ());
 	}
 
 	static void run (String name, int style) throws IOException {
