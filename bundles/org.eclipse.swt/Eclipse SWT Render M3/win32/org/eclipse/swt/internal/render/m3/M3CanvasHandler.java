@@ -15,8 +15,10 @@
 package org.eclipse.swt.internal.render.m3;
 
 import java.util.function.*;
+import java.util.stream.*;
 
 import org.eclipse.swt.*;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.GCExtension;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.internal.*;
@@ -35,7 +37,6 @@ import io.github.humbleui.skija.Pixmap;
 import io.github.humbleui.skija.Surface;
 import io.github.humbleui.skija.SurfaceOrigin;
 import io.github.humbleui.skija.SurfaceProps;
-import io.github.humbleui.types.Rect;
 
 /**
  * The M3 renderer behind a <code>Canvas</code> created with {@link SWT#M3} (GC seam, leaf 4): the canvas's
@@ -51,6 +52,15 @@ import io.github.humbleui.types.Rect;
  * this repository (background unless <code>SWT.NO_BACKGROUND</code>, then the Paint event whose bounds are the damage
  * in points, one GC per paint). The handler is the canvas's data under {@link #DATA_KEY} and answers
  * {@link #pixel} for probes and tests.
+ * </p>
+ * <p>
+ * Leaf 5: every <code>Canvas</code> subclass of the <code>m3</code> and <code>gpu</code> modes gets this handler
+ * (<code>M3CanvasFactory</code>). Damage (pattern M3-CANVAS-DAMAGE v1, {@link M3CanvasDamage}): the update region is read
+ * before <code>BeginPaint</code>, each Paint event is drawn clipped to its part of it (one per rectangle with
+ * <code>SWT.NO_MERGE_PAINTS</code>), and only its rectangles are presented, so a partial <code>Canvas.redraw</code> repaints
+ * and copies that damage alone. Retention (M3-CANVAS-RETAIN v1): a canvas that draws over its previous frame
+ * (<code>SWT.NO_BACKGROUND</code>, <code>SWT.TRANSPARENT</code>) keeps its pixels when the buffer grows, and a new GPU
+ * target starts from the buffer's pixels.
  * </p>
  */
 public final class M3CanvasHandler implements IExternalCanvasHandler {
@@ -68,6 +78,11 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	private Pixmap readback;
 	private ImageInfo readbackInfo;
 	private boolean disposed;
+	/* leaf 5: the damage of the paint in progress, the update region read before BeginPaint, the release deferred while a paint runs */
+	private final M3CanvasDamage damage = new M3CanvasDamage ();
+	private long regionHandle;
+	private int [] regionData = new int [M3CanvasDamage.HEADER + 4 * 8];
+	private boolean painting, released;
 
 	private M3CanvasHandler (Canvas canvas, M3Gpu gpu) {
 		this.control = canvas;
@@ -110,40 +125,79 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	@Override
 	public Object paint (Consumer<Event> send, long wParam, long lParam) {
 		long hwnd = control.handle;
+		int oldBits = clipBits (hwnd);
+		readRegion (hwnd);
 		PAINTSTRUCT ps = new PAINTSTRUCT ();
 		long hdc = OS.BeginPaint (hwnd, ps);
+		painting = true;
 		try {
-			int damageWidth = ps.right - ps.left, damageHeight = ps.bottom - ps.top;
-			if (!disposed && damageWidth > 0 && damageHeight > 0) frame (send, hdc, ps.left, ps.top, damageWidth, damageHeight);
+			if (!disposed && ps.right > ps.left && ps.bottom > ps.top) frame (send, hdc, ps);
 		} finally {
+			painting = false;
 			OS.EndPaint (hwnd, ps);
+			if (disposed) release (); else if (oldBits != 0) OS.SetWindowLong (hwnd, OS.GWL_STYLE, oldBits);
 		}
 		return LRESULT.ZERO;
 	}
 
-	/* the stock Composite.WM_PAINT in M3: background, the Paint event with the damage as its bounds, present */
-	private void frame (Consumer<Event> send, long hdc, int x, int y, int damageWidth, int damageHeight) {
+	/* the stock Composite.WM_PAINT clips siblings and children while it paints; answers the bits to restore, or 0 */
+	private int clipBits (long hwnd) {
+		int oldBits = OS.GetWindowLong (hwnd, OS.GWL_STYLE), newBits = oldBits | OS.WS_CLIPSIBLINGS | OS.WS_CLIPCHILDREN;
+		if (newBits == oldBits) return 0;
+		OS.SetWindowLong (hwnd, OS.GWL_STYLE, newBits);
+		return oldBits;
+	}
+
+	/* the update region as RGNDATA, read before BeginPaint validates it (ViewportDamageHook.record); no rectangle when there is none */
+	private void readRegion (long hwnd) {
+		if (regionHandle == 0) regionHandle = OS.CreateRectRgn (0, 0, 0, 0);
+		regionData [2] = 0;
+		if (OS.GetUpdateRgn (hwnd, regionHandle, false) <= OS.NULLREGION) return;
+		int bytes = OS.GetRegionData (regionHandle, 0, null);
+		if (bytes <= 0) return;
+		if (regionData.length < (bytes + 3) / 4) regionData = new int [(bytes + 3) / 4];
+		if (OS.GetRegionData (regionHandle, bytes, regionData) == 0) regionData [2] = 0;
+	}
+
+	/* the stock Composite.WM_PAINT in M3: per pass the background and the Paint event, clipped to the damage; then the damage presented */
+	private void frame (Consumer<Event> send, long hdc, PAINTSTRUCT ps) {
+		damage.read (regionData, ps.left, ps.top, ps.right, ps.bottom);
 		prepare (hdc);
+		int passes = damage.passes (control.getStyle ());
+		IntStream.range (0, passes).takeWhile (p -> !disposed).forEach (p -> pass (send, p, passes));
+		if (disposed) return;
+		IntStream.range (0, damage.count ()).forEach (i -> present (hdc, damage.x (i), damage.y (i), damage.width (i), damage.height (i)));
+	}
+
+	/* one Paint event, clipped to its pass (M3CanvasDamage.clip): the background first unless the canvas retains its pixels */
+	private void pass (Consumer<Event> send, int pass, int passes) {
 		io.github.humbleui.skija.Canvas canvas = surface.getCanvas ();
 		canvas.save ();
-		canvas.clipRect (Rect.makeXYWH (x, y, damageWidth, damageHeight));
-		if ((control.getStyle () & SWT.NO_BACKGROUND) == 0) {
-			canvas.clear (M3ColorConverter.convertSWTColorToM3Color (control.getBackground ()));
-		}
+		damage.clip (canvas, pass, passes);
+		if (!retains ()) canvas.clear (M3ColorConverter.convertSWTColorToM3Color (control.getBackground ()));
 		try {
-			event (send, x, y, damageWidth, damageHeight);
+			event (send, damage.bounds (pass, passes), damage.eventCount (pass, passes));
 		} finally {
 			canvas.restore ();
 		}
-		if (gpu != null) readback (x, y, damageWidth, damageHeight);
-		buffer.present (hdc, x, y, damageWidth, damageHeight);
 	}
 
-	/* the back buffer at the client size (size classes, never shrinking), the surface over it, the GL context current */
+	/* SWT.NO_BACKGROUND and SWT.TRANSPARENT draw over the previous frame (the stock path draws no background for them) */
+	private boolean retains () {
+		return (control.getStyle () & (SWT.NO_BACKGROUND | SWT.TRANSPARENT)) != 0;
+	}
+
+	/* one damage rectangle: the GPU frame read back into it, then copied to the window */
+	private void present (long hdc, int x, int y, int presentWidth, int presentHeight) {
+		if (gpu != null) readback (x, y, presentWidth, presentHeight);
+		buffer.present (hdc, x, y, presentWidth, presentHeight);
+	}
+
+	/* the back buffer at the client size (size classes, never shrinking; growFrame keeps the pixels of a retaining canvas), its surface */
 	private void prepare (long hdc) {
 		RECT client = new RECT ();
 		OS.GetClientRect (control.handle, client);
-		buffer.ensureFrame (hdc, client.right, client.bottom);
+		if (retains ()) buffer.growFrame (hdc, client.right, client.bottom); else buffer.ensureFrame (hdc, client.right, client.bottom);
 		target ();
 		if (gpu != null) gpu.makeCurrent ();
 	}
@@ -156,27 +210,35 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		width = buffer.width;
 		height = buffer.height;
 		ImageInfo info = new ImageInfo (width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
-		if (gpu != null) {
-			gpu.makeCurrent ();
-			surface = Surface.makeRenderTarget (gpu.context, false, info, 0, SurfaceOrigin.TOP_LEFT, PROPS);
-		} else {
-			surface = Surface.makeRasterDirect (info, bits, width * 4L, PROPS);
+		surface = gpu == null ? Surface.makeRasterDirect (info, bits, width * 4L, PROPS) : gpuTarget (info);
+	}
+
+	/* a render target on the thread's GL context that starts from the buffer's pixels, so retained pixels survive a growth */
+	private Surface gpuTarget (ImageInfo info) {
+		gpu.makeCurrent ();
+		Surface target = Surface.makeRenderTarget (gpu.context, false, info, 0, SurfaceOrigin.TOP_LEFT, PROPS);
+		try (Pixmap pixels = Pixmap.make (info, bits, width * 4)) {
+			target.writePixels (pixels, 0, 0);
 		}
+		return target;
 	}
 
 	/*
-	 * One GC per paint, as the stock path makes one per WM_PAINT: made inside the frame's save so M3ExternalGC restores
-	 * to it on dispose. The bounds are the damage in points by the zoom the extension's scaler uses (control.nativeZoom).
+	 * One GC per pass, as the stock path makes one per WM_PAINT: made inside the pass's save so M3ExternalGC restores to it
+	 * on dispose. The bounds are the pass in points by the zoom the extension's scaler uses (control.nativeZoom); count is
+	 * the number of NO_MERGE_PAINTS events still to come.
 	 */
-	private void event (Consumer<Event> send, int x, int y, int damageWidth, int damageHeight) {
-		extension.frame (x, y, damageWidth, damageHeight);
+	private void event (Consumer<Event> send, int [] bounds, int count) {
+		extension.frame (bounds [0], bounds [1], bounds [2], bounds [3]);
+		GC gc = new GCExtension (new M3ExternalGC (extension, SWT.NONE));
 		Event event = new Event ();
-		event.gc = new GCExtension (new M3ExternalGC (extension, SWT.NONE));
-		event.setBounds (Win32DPIUtils.pixelToPoint (new Rectangle (x, y, damageWidth, damageHeight), control.nativeZoom));
+		event.gc = gc;
+		event.count = count;
+		event.setBounds (Win32DPIUtils.pixelToPoint (new Rectangle (bounds [0], bounds [1], bounds [2], bounds [3]), control.nativeZoom));
 		try {
 			send.accept (event);
 		} finally {
-			event.gc.dispose ();
+			gc.dispose ();
 			event.gc = null;
 		}
 	}
@@ -225,13 +287,23 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		OS.ScrollWindowEx (control.handle, deltaX, deltaY, rect, null, 0, null, flags);
 	}
 
+	/* a listener may dispose the canvas during its Paint event: the native resources then go when the paint ends */
 	private void dispose () {
 		disposed = true;
+		if (!painting) release ();
+	}
+
+	/* once: the surface, the readback, the GL context reference, the buffer, the region */
+	private void release () {
+		if (released) return;
+		released = true;
 		if (surface != null) surface.close ();
 		surface = null;
 		if (readback != null) readback.close ();
 		readback = null;
 		if (gpu != null) gpu.release ();
 		buffer.release ();
+		if (regionHandle != 0) OS.DeleteObject (regionHandle);
+		regionHandle = 0;
 	}
 }

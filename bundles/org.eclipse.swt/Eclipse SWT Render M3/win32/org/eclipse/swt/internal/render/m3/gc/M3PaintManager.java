@@ -54,6 +54,10 @@ public class M3PaintManager {
 			paint.setStrokeWidth(scaledLineWidth);
 			paint.setStrokeCap(getM3LineCap(gc.getLineCap()));
 			paint.setStrokeJoin(getM3LineJoin(gc.getLineJoin()));
+			// M3 (GC seam, leaf 5): the miter limit of the line attributes, once set (M3ExternalGC.isMiterLimitSet)
+			if (gc.isMiterLimitSet()) {
+				paint.setStrokeMiter(gc.getMiterLimit());
+			}
 
 			try (var pathEffect = createPathEffect(scaledLineWidth, gc.getScaler())) {
 
@@ -96,7 +100,8 @@ public class M3PaintManager {
 				final float[] newFloats = new float[floats.length * 2];
 				System.arraycopy(floats, 0, newFloats, 0, floats.length);
 				System.arraycopy(floats, 0, newFloats, floats.length, floats.length);
-				return PathEffect.makeDash(getScaledPathFloats(scaler.autoScaleUp(1), newFloats, scaler), 0f);
+				// M3 (GC seam, leaf 5): the dash offset of the line attributes is the phase (M3ExternalGC.getDashPhase)
+				return PathEffect.makeDash(getScaledPathFloats(scaler.autoScaleUp(1), newFloats, scaler), gc.getDashPhase());
 			}
 
 		}
@@ -106,7 +111,7 @@ public class M3PaintManager {
 			return null;
 		}
 
-		return PathEffect.makeDash(scaledFloats, 0f);
+		return PathEffect.makeDash(scaledFloats, gc.getDashPhase());
 
 	}
 

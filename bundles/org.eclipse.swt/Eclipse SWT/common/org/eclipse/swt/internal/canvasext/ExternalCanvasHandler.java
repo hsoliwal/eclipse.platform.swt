@@ -116,13 +116,18 @@ public class ExternalCanvasHandler {
 			return false;
 		}
 
-		if (canvas instanceof StyledText || canvas instanceof Decorations)
+		if (canvas instanceof Decorations)
 			return false;
 
 		loadFactory();
 
-		if ((style & SWT.M3) != 0 && externalFactory != null)
+		// M3 (GC seam, leaf 5): the factory decides (IExternalCanvasFactory.accepts); its default is the I31 rule this method
+		// had (SWT.M3, never a StyledText); the M3 factory accepts every Canvas subclass of an m3 or gpu mode
+		if (externalFactory != null && externalFactory.accepts(canvas, style))
 			return true;
+
+		if (canvas instanceof StyledText)
+			return false;
 
 		if (externalFactory == null) {
 			if (!ExternalCanvasWasLogged && isLogActive()) {
