@@ -51,9 +51,10 @@
     defined that is combined with this one. -->
   <profiles>
     <profile>
-      <id>m3-gpu-retained-backend</id>
-      <activation><property><name>m3.gpu.retainedBackend</name><value>true</value></property></activation>
-      <modules><module>bundles/org.eclipse.swt.gpu.m3</module></modules>
+      <!-- M3 fragment of org.eclipse.swt (Render M3 + GPU M3 + nested Skija, leaf 18); replaces m3-gpu-retained-backend -->
+      <id>m3-fragment</id>
+      <activation><property><name>m3.fragment</name></property></activation>
+      <modules><module>bundles/org.eclipse.swt.m3</module></modules>
     </profile>
     <profile>
       <id>build-individual-bundles</id>

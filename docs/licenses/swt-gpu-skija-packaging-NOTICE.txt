@@ -1,23 +1,46 @@
-Optional SWT retained Skija backend packaging (2026-10-13)
+SWT M3 fragment packaging notice (bundle org.eclipse.swt.m3, leaf 18, 2026-10-31)
 
-The existing three SWT Java renderer files retain EPL-2.0 and their original notices.
-This optional fragment embeds unchanged Skija-shared0.143.18, Skija-windows-x640.143.18
-and HumbleUI Types0.2.0 jars in lib/. This supersedes only the packaging description
-in the retained-planes notice that says its runtime libraries are not vendored.
-Runtime selection remains opt-in through the existing swt.gpu=skija property.
+The fragment org.eclipse.swt.m3 of org.eclipse.swt holds the SWT source trees "Eclipse SWT Render M3" and
+"Eclipse SWT GPU M3" (EPL-2.0, or Apache-2.0 OR EPL-2.0, as the header of each file says; code adapted from the
+SWT Initiative 31 donors keeps its EPL-2.0 notices) and embeds these jars unchanged, byte for byte, under lib/:
 
-HumbleUI Skija tag0.143.18, commit44c99d7a92fe68a29b3233f8ca55b0d29d8f6f68,
-and HumbleUI Types tag0.2.0 use Apache License2.0, reproduced in
-swt-gpu-skija-Apache-2.0.txt. Embedded jars are preserved byte-for-byte.
-skija-shared-0.143.18.jar SHA256972bca0f05f44d008c2eaa7b49e7275e23480e650da1394b7b1c319ebe8db4b4
-skija-windows-x64-0.143.18.jar SHA256837f53c07fb50ff09198326e86ff3ccc0a4b070f0c28d99694c3b4e8a39fc01e
-types-0.2.0.jar SHA25638d94d00770c4f261ffb50ee68d5da853c416c8fe7c57842f0e28049fc26cca8
+  lib/skija-shared.jar       io.github.humbleui:skija-shared:0.116.3       SHA-256 2e065693324dc5a8019518a2ef20db07f805281c5961e185d071c86ab8b3b9c1
+  lib/skija-windows-x64.jar  io.github.humbleui:skija-windows-x64:0.116.3  SHA-256 5553be2214cbdc7d1358d966dba90443a31c54411f61c64a0720d3b0247ecc3a
+  lib/types.jar              io.github.humbleui:types:0.1.1                SHA-256 549038f09cc1928f35bc0b583dc9865aff8450c5e8e0146328fe2ba48710ad35
 
-Skia native engine commitda51f0d60e uses BSD-3-Clause. Its exact upstream LICENSE
-is reproduced in swt-gpu-skija-Skia-LICENSE.txt. Other linked native dependency
-notices still require distribution inventory before public binary release.
+The Skija version is set once (skija.version in bundles/org.eclipse.swt.m3/pom.xml); the types version is the one
+that skija-shared 0.116.3 declares in its own POM. The build writes the coordinates and SHA-256 of every embedded jar
+to META-INF/m3/SKIJA.tsv inside the fragment jar; a version change updates this notice with it.
 
-Build metadata adapts SWT Initiative31 prototype-skija146eee2a23faec511de96f2539f7d650ef24300e
-Fragment-Host and embedded-library classpath mechanisms, preserving donor EPL lineage.
-No donor renderer replaces the existing SWT retained viewport/cache/lifecycle owners.
-JetBrains annotations24.1.0 are a compile-only Apache2 dependency and are not embedded.
+Runtime selection is opt-in and off by default; SWT runs without the fragment, and every mode then falls back to the
+stock path:
+  -Dswt.widget.mode=m3|gpu   drawn widgets and M3 canvases through the M3 renderer (CPU raster or OpenGL)
+  -Dswt.gpu=m3               retained GPU planes through the M3 backend (RetainedPlanes accepts gdi, retained, m3)
+
+Licences of the embedded jars
+  HumbleUI Skija 0.116.3 (https://github.com/HumbleUI/Skija) and HumbleUI Types 0.1.1
+  (https://github.com/HumbleUI/Types): Apache License 2.0, reproduced in swt-gpu-skija-Apache-2.0.txt.
+
+Native code inside skija-windows-x64-0.116.3.jar (skija.dll SHA-256
+3ff80f3935fc0ad4abb6abb7a3ffd9ff8a92985964d2a3aad455af3a8360582a, and the ICU data file icudtl.dat). Components
+found in skija.dll by its strings, at the revisions pinned by the DEPS file of Skia branch chrome/m116:
+  Skia (chrome/m116)                       BSD-3-Clause        swt-gpu-skija-Skia-LICENSE.txt
+  ICU 73 (Chromium deps/icu a0718d4f), icudtl.dat
+                                           Unicode License     swt-gpu-skija-ICU-LICENSE.txt (unicode-org/icu release-73-1)
+  HarfBuzz (09a266236147)                  MIT ("Old MIT")     swt-gpu-skija-HarfBuzz-COPYING.txt (at that commit)
+  FreeType (d857bd535b6c)                  FTL                 swt-gpu-skija-FreeType-FTL.txt (docs/FTL.TXT at that commit)
+  zlib 1.2.11 (Chromium c876c8f8)          Zlib                text not yet reproduced here
+  libpng (386707c6)                        libpng-2.0          text not yet reproduced here
+  libjpeg-turbo 2.1.4 (ed683925)           IJG AND BSD-3-Clause AND Zlib   text not yet reproduced here
+  libwebp (fd7b5d48)                       BSD-3-Clause        text not yet reproduced here
+  Expat (441f98d0)                         MIT                 text not yet reproduced here
+  Wuffs (a0041ac0)                         Apache-2.0          swt-gpu-skija-Apache-2.0.txt
+The five texts marked "not yet reproduced" must be added before a public binary release.
+
+Build metadata lineage
+  The Fragment-Host / nested-jar Bundle-ClassPath shape adapts SWT Initiative 31 prototype-skija
+  146eee2a23faec511de96f2539f7d650ef24300e (EPL-2.0), as the earlier bundle org.eclipse.swt.gpu.m3 did.
+  The API-tools filters of the sealed GC and FontMetrics classes (binaries/*/.settings/.api_filters) are taken from
+  swt-initiative31/skija-canvas 2c46f3d030282ecbcafa4a4dae9cf3385eb92c05 (includes 1b959eac89d8) and
+  1213c62685687762bfae18bb5d3187fd6c3d881b (branch test_gc_sealed), EPL-2.0.
+  JetBrains annotations are not embedded.

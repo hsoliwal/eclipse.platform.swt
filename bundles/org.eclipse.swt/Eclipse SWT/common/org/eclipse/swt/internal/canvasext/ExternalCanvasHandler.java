@@ -14,6 +14,7 @@ import java.util.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.custom.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
@@ -63,12 +64,13 @@ public class ExternalCanvasHandler {
 	 * compiled and loaded apart from the fragment (as <code>RowBackends</code> loads the planes' backend by name), so no
 	 * <code>META-INF/services</code> entry of the fragment can name it, and an entry naming an absent class would raise a
 	 * <code>ServiceConfigurationError</code> for every canvas. A class that cannot start leaves the stock path in place.
+	 * Leaf 18: the class loads through the M3 fragment's class path (<code>M3Fragment</code>).
 	 */
 	public static void registerFactory(String className) {
 		if (factoryLoaded)
 			return;
 		try {
-			externalFactory = (IExternalCanvasFactory) Class.forName(className).getConstructor().newInstance();
+			externalFactory = (IExternalCanvasFactory) M3Fragment.forName(className).getConstructor().newInstance();
 			factoryLoaded = true;
 		} catch (ReflectiveOperationException | LinkageError e) {
 			if (isLogActive()) {

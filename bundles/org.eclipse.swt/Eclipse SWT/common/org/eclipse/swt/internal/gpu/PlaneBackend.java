@@ -14,6 +14,8 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.gpu;
 
+import org.eclipse.swt.internal.*;
+
 /**
  * GPU backend seam for retained planes. Implementations live outside the SWT
  * bundle's compiled sources (the M3 implementation needs Skija on the class
@@ -68,7 +70,7 @@ public interface PlaneBackend {
 
 	static PlaneBackend load (String className) {
 		try {
-			Class<?> type = Class.forName (className, true, PlaneBackend.class.getClassLoader ());
+			Class<?> type = M3Fragment.forName (className); // leaf 18: through the M3 fragment's class path
 			return (PlaneBackend) type.getDeclaredConstructor ().newInstance ();
 		} catch (Throwable notAvailable) {
 			GpuCounters.inc (GpuCounters.FALLBACKS);

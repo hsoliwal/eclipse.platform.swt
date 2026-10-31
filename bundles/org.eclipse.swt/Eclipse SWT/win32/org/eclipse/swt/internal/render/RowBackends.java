@@ -63,11 +63,12 @@ public final class RowBackends {
 	/*
 	 * The M3 backends are loaded by name: SWT itself has no dependency on the Skija library jars. The raster backend is
 	 * the constructor; the graphics hardware one (OpenGL) is the static factory <code>gpu</code>, which answers null
-	 * without a GL context.
+	 * without a GL context. Leaf 18: by name through the M3 fragment's class path (M3Fragment), so the built fragment
+	 * jar starts M3 with its nested Skija jars and no extra class path entry.
 	 */
 	private static BufferCanvas m3 (String factory, String widget, long hwnd, char [] itemThemeClass, IntSupplier zoom) {
 		try {
-			Class<?> type = Class.forName (M3_CANVAS);
+			Class<?> type = M3Fragment.forName (M3_CANVAS);
 			if (factory == null) {
 				return (BufferCanvas) type.getConstructor (long.class, char [].class, IntSupplier.class).newInstance (hwnd, itemThemeClass, zoom);
 			}

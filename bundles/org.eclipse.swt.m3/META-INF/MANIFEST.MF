@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.eclipse.swt.m3
+Bundle-Name: Standard Widget Toolkit M3 renderer for Windows 64 (Render M3 + GPU M3, Skija)
+Bundle-Vendor: Synexia contributors
+Bundle-Version: 3.138.0.qualifier
+Fragment-Host: org.eclipse.swt;bundle-version="[3.138.0,4.0.0)"
+Eclipse-PlatformFilter: (& (osgi.ws=win32) (osgi.os=win32) (osgi.arch=x86_64))
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Bundle-ClassPath: .,
+ lib/skija-shared.jar,
+ lib/skija-windows-x64.jar,
+ lib/types.jar
+Automatic-Module-Name: org.eclipse.swt.m3
+Bundle-License: https://www.eclipse.org/legal/epl-2.0/
