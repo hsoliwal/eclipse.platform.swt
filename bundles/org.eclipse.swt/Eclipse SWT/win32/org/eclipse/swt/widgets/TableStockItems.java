@@ -244,8 +244,20 @@ final class TableStockItems {
 			for (int i=keyCount-(right-left); i<keyCount; i++) items [i] = null;
 			keyCount -= (right - left);
 			/* R4_38 line 392, kept: the later keys shift by the removed items, not by the removed rows (UPSTREAM_DEFECTS.tsv) */
-			for (int i=left; i<keyCount; i++) keys[i] -= (right - left);
+			int shift = removedKeyShift (start, index, right - left);
+			for (int i=left; i<keyCount; i++) keys[i] -= shift;
 		}
+	}
+
+	/*
+	 * The shift of the keys after a removed range. Stock shifts them by the removed items, which equals the removed
+	 * rows only when every removed row had an item: unbatched, the ListView paints the rows in view (and so gives them
+	 * items) inside the first LVM_DELETEITEM. While a batch freezes the viewport plane (M3BulkUpdates, beginBatch)
+	 * that paint is deferred, so the keys shift by the removed rows: the answer of a run whose removed rows had items,
+	 * and no ArrayIndexOutOfBoundsException at the next paint (stock has it with redraw off: TableColdRemoveOracle).
+	 */
+	private int removedKeyShift (int start, int end, int removedItems) {
+		return ViewportBatch.viewportDamage (table) != null ? end - start : removedItems;
 	}
 
 	/* R4_38 _setItemCount */
