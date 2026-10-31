@@ -7,6 +7,7 @@ import io.github.humbleui.skija.Paint;
 import io.github.humbleui.skija.Path;
 import io.github.humbleui.skija.Region;
 import io.github.humbleui.skija.SamplingMode;
+import io.github.humbleui.skija.TextBlob;
 import io.github.humbleui.types.RRect;
 import io.github.humbleui.types.Rect;
 
@@ -122,5 +123,10 @@ class M3CanvasAdapter implements IM3Canvas {
 	@Override
 	public void clipRegion(Region m3Region) {
 		delegate.clipRegion(m3Region);
+	}
+
+	@Override
+	public void drawTextBlob(TextBlob blob, float x, float y, Paint paint) {
+		delegate.drawTextBlob(blob, x, y, paint);
 	}
 }

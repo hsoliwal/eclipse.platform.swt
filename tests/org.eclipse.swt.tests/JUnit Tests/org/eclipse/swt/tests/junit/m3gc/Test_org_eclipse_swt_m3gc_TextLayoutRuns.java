@@ -23,11 +23,16 @@ import java.util.stream.IntStream;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.GCExtension;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.graphics.TextStyle;
 import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
+import org.eclipse.swt.internal.render.m3.gc.M3GlyphRuns;
 import org.eclipse.swt.internal.render.m3.gc.M3Resources;
 import org.eclipse.swt.internal.render.m3.gc.M3SurfaceAdapter;
 import org.eclipse.swt.widgets.Display;
@@ -44,7 +49,9 @@ import io.github.humbleui.skija.SurfaceProps;
 /**
  * Headless, on a real Skija raster surface: TextLayout on an M3 GC (text leaf L13). TEXT_FALLBACK_SAFE: no white box over
  * what lies under the layout (the Java editor's dark background), the GC foreground reaches default runs (punctuation),
- * opaque run backgrounds stay opaque, the GC alpha is applied once.
+ * opaque run backgrounds stay opaque, the GC alpha is applied once. GLYPH_RUN_SINK/DRAW, RUN_STYLE, RUN_COVERAGE: through a
+ * GCExtension every run is one Skia text blob (runs recorded == blobs drawn, 0 fallbacks) for LTR, RTL and fallback-font
+ * fixtures, placed in the stock GC's columns; underline, strikeout and selection need no fallback.
  */
 public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 	static final int DARK = 0xFF202020, W = 300, H = 80;
@@ -52,6 +59,7 @@ public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 	M3ExternalGC gc;
 	Font font;
 	TextLayout layout;
+	M3Resources resources;
 
 	@BeforeAll
 	static void checkPlatform() {
@@ -65,7 +73,7 @@ public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 		font = new Font(Display.getDefault(), "Consolas", 10, SWT.NORMAL);
 		M3GcFixture f = new M3GcFixture(DPIUtil.getDeviceZoom());
 		f.ext.surface = new M3SurfaceAdapter(real);
-		M3Resources resources = new M3Resources(null, f.ext);
+		resources = new M3Resources(null, f.ext);
 		resources.setFont(font);
 		resources.setForeground(new Color(0xDD, 0xDD, 0xDD));
 		resources.setBackground(new Color(0x20, 0x20, 0x20));
@@ -137,5 +145,96 @@ public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 		int c = pixel(1, 1) & 0xFF;
 		int expected = (0xFF * 128 + 0x20 * 127) / 255;
 		assertTrue(Math.abs(c - expected) <= 3, "white at alpha 128 over 0x20: " + c + " expected " + expected);
+	}
+
+	/* L13 GLYPH_RUN_SINK/DRAW: layout drawn through a GCExtension (TextLayout dispatches to the M3 run sink) */
+	long[] drawRuns(String text, int x, int y) {
+		layout.setText(text);
+		long runs = M3GlyphRuns.runs(), blobs = M3GlyphRuns.blobs(), fallbacks = M3GlyphRuns.fallbacks();
+		layout.draw(new GCExtension(gc), x, y);
+		return new long[] { M3GlyphRuns.runs() - runs, M3GlyphRuns.blobs() - blobs, M3GlyphRuns.fallbacks() - fallbacks };
+	}
+
+	void assertAllRuns(long[] counts, String what) {
+		assertTrue(counts[0] > 0, what + ": runs recorded " + counts[0]);
+		assertEquals(counts[0], counts[1], what + ": runs recorded == blobs drawn");
+		assertEquals(0, counts[2], what + ": fallbacks");
+	}
+
+	/* ink per column (max channel < 0x80) of the M3 surface over [0, w) x [0, h) */
+	int[] inkColumns(int w, int h) {
+		return IntStream.range(0, w).map(x -> (int) IntStream.range(0, h).map(y -> pixel(x, y))
+				.filter(c -> Math.max(c >> 16 & 0xFF, Math.max(c >> 8 & 0xFF, c & 0xFF)) < 0x80).count()).toArray();
+	}
+
+	/* the same layout drawn by the stock GC on a white image, ink per column */
+	int[] stockInkColumns(int w, int h) {
+		Image image = new Image(Display.getDefault(), w, h);
+		GC stock = new GC(image);
+		stock.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_BLACK));
+		layout.draw(stock, 0, 0);
+		stock.dispose();
+		ImageData data = image.getImageData();
+		image.dispose();
+		return IntStream.range(0, w).map(x -> (int) IntStream.range(0, h).mapToObj(y -> data.palette.getRGB(data.getPixel(x, y)))
+				.filter(rgb -> Math.max(rgb.red, Math.max(rgb.green, rgb.blue)) < 0x80).count()).toArray();
+	}
+
+	static int distance(int[] a, int[] b, boolean mirrored) {
+		return IntStream.range(0, a.length).map(i -> Math.abs(a[i] - b[mirrored ? a.length - 1 - i : i])).sum();
+	}
+
+	/* black text on white for both renderers; the glyphs must land in the stock columns and not mirrored */
+	void assertStockPlacement(String text) {
+		real.getCanvas().clear(0xFFFFFFFF);
+		resources.setForeground(new Color(0, 0, 0));
+		assertAllRuns(drawRuns(text, 0, 0), text);
+		Rectangle b = layout.getBounds();
+		int[] m3 = inkColumns(Math.min(W, b.width), Math.min(H, b.height));
+		int[] stock = stockInkColumns(Math.min(W, b.width), Math.min(H, b.height));
+		int ink = IntStream.of(stock).sum();
+		assertTrue(distance(m3, stock, false) < distance(m3, stock, true), text + ": ink order follows stock, not mirrored");
+		assertTrue(distance(m3, stock, false) <= ink / 2, text + ": column ink distance " + distance(m3, stock, false) + " of " + ink);
+	}
+
+	@Test
+	public void testLtrRunsAreBlobs() {
+		assertAllRuns(drawRuns("public class Hello { int[] a; } // done", 0, 0), "LTR");
+		assertTrue(bright(W, 20) > 20, "LTR glyphs in the light foreground");
+	}
+
+	@Test
+	public void testLtrPlacementMatchesStock() {
+		assertStockPlacement("System.out.println(\"hello m3\");");
+	}
+
+	@Test
+	public void testRtlRunsAreBlobs() {
+		assertStockPlacement("abc שלום עולם def");
+		assertStockPlacement("مرحبا بالعالم");
+	}
+
+	@Test
+	public void testFallbackFontRunsAreBlobs() {
+		assertStockPlacement("ab 漢字かな cd");
+	}
+
+	@Test
+	public void testRunStyleLinesAndSelection() {
+		TextStyle style = new TextStyle(null, new Color(255, 0, 0), null);
+		style.underline = true;
+		style.strikeout = true;
+		layout.setText("under strike");
+		layout.setStyle(style, 0, 4);
+		long blobs = M3GlyphRuns.blobs(), fallbacks = M3GlyphRuns.fallbacks();
+		layout.draw(new GCExtension(gc), 0, 0, 6, 11, new Color(0, 0, 0), new Color(0, 0, 255));
+		assertTrue(M3GlyphRuns.blobs() > blobs, "blobs drawn");
+		assertEquals(fallbacks, M3GlyphRuns.fallbacks(), "underline/strikeout/selection need no fallback");
+		Rectangle sel = layout.getBounds(6, 11);
+		assertEquals(0x0000FF, pixel(sel.x + sel.width - 1, sel.y + 1), "selection background");
+		Rectangle under = layout.getBounds(0, 4);
+		long lines = IntStream.range(under.y, under.y + under.height).filter(y -> IntStream.range(under.x, under.x + under.width)
+				.filter(x -> pixel(x, y) == 0xFF0000).count() >= under.width - 2).count();
+		assertTrue(lines >= 2, "underline and strikeout rows in the run colour: " + lines);
 	}
 }

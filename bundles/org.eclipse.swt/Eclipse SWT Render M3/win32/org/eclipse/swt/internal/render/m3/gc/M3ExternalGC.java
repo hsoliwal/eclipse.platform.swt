@@ -103,6 +103,8 @@ public class M3ExternalGC implements IExternalGC {
 	private final M3PaintManager paintManager;
 	private final GCData data = new GCData();
 	private final DpiScalerUtil dpiScalerUtil;
+	// L13 GLYPH_RUN_DRAW v1: this GC as TextLayout's run sink
+	private final M3GlyphRuns runSink = new M3GlyphRuns(this);
 
 	public M3ExternalGC(IM3CanvasExtension exst, int style) {
 		this.drawable = exst.getDrawable();
@@ -1365,6 +1367,12 @@ public class M3ExternalGC implements IExternalGC {
 		// L13 TEXT_FALLBACK_SAFE v1: transparent premultiplied raster, GC state carried (M3TextLayoutFallback)
 		M3TextLayoutFallback.draw(this, new M3TextLayoutCall(textLayout, xInPoints, yInPoints, selectionStart,
 				selectionEnd, selectionForeground, selectionBackground, flags));
+	}
+
+	/* L13 GLYPH_RUN_DRAW v1: TextLayout records its shaped runs here (M3GlyphRuns); the rest reaches textLayoutDraw */
+	@Override
+	public org.eclipse.swt.internal.canvasext.M3RunSink runSink() {
+		return runSink;
 	}
 
 	/* L13 TEXT_FALLBACK_SAFE v1: a premultiplied BGRA raster composited once with the GC alpha (not squared) */
