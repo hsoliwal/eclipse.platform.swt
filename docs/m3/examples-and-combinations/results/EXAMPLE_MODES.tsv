@@ -1,0 +1,113 @@
+entry	class	args	implemented_modes	viewport	original	custom	m3	gpu	detail_of_first_non_pass
+0	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	paths	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+1	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	patterns	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+2	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	transforms	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+3	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	text	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+4	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	images	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+5	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	alpha	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+6	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	clipping	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+7	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	lines	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+8	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	all	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+9	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	all M3	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+10	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Button	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+11	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Label	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+12	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Text	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+13	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Spinner	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+14	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Scale	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+15	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Slider	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+16	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	ProgressBar	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+17	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	DateTime	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+18	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Link	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+19	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Group	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+20	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Sash	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+21	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Browser	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+22	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	all	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+23	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	CTabFolder	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+24	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	StyledText	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+25	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	CCombo	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+26	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	CLabel	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+27	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	SashForm	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+28	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	ScrolledComposite	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+29	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	ViewForm	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+30	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	CBanner	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+31	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	TableCursor	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+32	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Table	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+33	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Table VIRTUAL	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+34	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Table CHECK MULTI	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+35	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Tree	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+36	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Tree VIRTUAL	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+37	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Tree CHECK	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+38	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	List	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+39	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	List MULTI	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+40	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Combo	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+41	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	TabFolder	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+42	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	ToolBar	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+43	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	CoolBar	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+44	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	ExpandBar	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+45	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Menu	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+46	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	Table	viewport,original,custom,m3,gpu	PASS	PASS	FAIL	FAIL	FAIL	custom: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.internal.render.RowRenderer.paint(org.eclipse.swt.internal.render.RowCanvas, org.eclipse.swt.internal.render.RowPaint)" because "this.renderer" is null | at org.eclipse.swt.internal.render.RetainedRows.paint(RetainedRows.java:116) | at o
+47	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	Tree	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+48	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	List	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+49	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	Combo	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+50	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	StyledText	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+51	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	Canvas	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+52	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	CTabFolder	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+53	org.eclipse.swt.snippets.m3.gallery.features.M3FeatureSwitchExample	-	viewport,original,custom,m3,gpu	PASS	PASS	FAIL	FAIL	FAIL	custom: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.internal.render.RowRenderer.paint(org.eclipse.swt.internal.render.RowCanvas, org.eclipse.swt.internal.render.RowPaint)" because "this.renderer" is null | at org.eclipse.swt.internal.render.RetainedRows.paint(RetainedRows.java:116) | at o
+54	org.eclipse.swt.snippets.m3.M3BulkUpdatesExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+55	org.eclipse.swt.snippets.m3.M3CheckStateExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+56	org.eclipse.swt.snippets.m3.M3CollationExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+57	org.eclipse.swt.snippets.m3.M3DiffApplyExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+58	org.eclipse.swt.snippets.m3.M3EmptinessExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+59	org.eclipse.swt.snippets.m3.M3ItemRangeExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+60	org.eclipse.swt.snippets.m3.M3LazyLoadingExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+61	org.eclipse.swt.snippets.m3.M3ModeExample	-	viewport,original,custom,m3,gpu	TIMEOUT	TIMEOUT	TIMEOUT	TIMEOUT	TIMEOUT	viewport: no shell within 45000 ms
+62	org.eclipse.swt.snippets.m3.M3PrefetchExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+63	org.eclipse.swt.snippets.m3.M3PrefetchReleaseExample	-	viewport,original,custom,m3,gpu	PASS	PASS	FAIL	FAIL	FAIL	custom: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.internal.render.RowRenderer.paint(org.eclipse.swt.internal.render.RowCanvas, org.eclipse.swt.internal.render.RowPaint)" because "this.renderer" is null | at org.eclipse.swt.internal.render.RetainedRows.paint(RetainedRows.java:116) | at o
+64	org.eclipse.swt.snippets.m3.M3ProxyModelExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+65	org.eclipse.swt.snippets.m3.M3ResidencyExample	-	viewport,original,custom,m3,gpu	TIMEOUT	TIMEOUT	TIMEOUT	TIMEOUT	TIMEOUT	viewport: no shell within 45000 ms
+66	org.eclipse.swt.snippets.m3.M3RowExtentsExample	-	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+67	org.eclipse.swt.snippets.m3.M3RowMathExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+68	org.eclipse.swt.snippets.m3.M3ScrollMementoExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+69	org.eclipse.swt.snippets.m3.M3ScrollingExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+70	org.eclipse.swt.snippets.m3.M3StickyGroupHeaderExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+71	org.eclipse.swt.snippets.m3.M3TokenMatchExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+72	org.eclipse.swt.snippets.m3.M3TypeAheadExample	-	viewport,original,custom,m3,gpu	TIMEOUT	TIMEOUT	TIMEOUT	TIMEOUT	TIMEOUT	viewport: no shell within 45000 ms
+73	org.eclipse.swt.snippets.m3.M3VisibilityObserverExample	-	viewport,original,custom,m3,gpu	TIMEOUT	TIMEOUT	TIMEOUT	TIMEOUT	TIMEOUT	viewport: no shell within 45000 ms
+74	org.eclipse.swt.snippets.m3.Snippet_M3ColumnFilterRow	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+75	org.eclipse.swt.snippets.m3.Snippet_M3MultiColumnSort	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+76	org.eclipse.swt.snippets.m3.Snippet_M3TreeFilterKeepsAncestors	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+77	org.eclipse.swt.snippets.m3.M3ComboMillionItemsExample	-	viewport,original	PASS	TIMEOUT	TIMEOUT	PASS	PASS	original: main did not open a shell in 90000 ms; example thread at | at org.eclipse.swt.internal.win32.OS.CallWindowProc(Native Method) | at org.eclipse.swt.widgets.Combo.callWindowProc(Combo.java:520) | at org.eclipse.swt.widgets.Control.windowProc(Control.java:5858) | at org.eclipse.swt.widgets.Combo.window
+78	org.eclipse.swt.snippets.m3.M3ListMillionItemsExample	-	viewport,original,custom,m3,gpu	PASS	TIMEOUT	PASS	PASS	PASS	original: main did not open a shell in 90000 ms; example thread at | at org.eclipse.swt.internal.win32.OS.SendMessage(Native Method) | at org.eclipse.swt.internal.win32.OS.SendMessage(OS.java:2228) | at org.eclipse.swt.widgets.List.setAllItems(List.java:1875) | at org.eclipse.swt.widgets.List.setItems(List.ja
+79	org.eclipse.swt.snippets.m3.M3TableMillionRowsExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+80	org.eclipse.swt.snippets.m3.M3TreeMillionNodesExample	-	viewport,original,custom,m3,gpu	PASS	TIMEOUT	PASS	PASS	PASS	original: main did not open a shell in 90000 ms; example thread at | at org.eclipse.swt.internal.win32.OS.CallWindowProc(Native Method) | at org.eclipse.swt.widgets.Tree.callWindowProc(Tree.java:2735) | at org.eclipse.swt.widgets.Control.windowProc(Control.java:5858) | at org.eclipse.swt.widgets.Tree.windowPr
+81	org.eclipse.swt.snippets.m3.Snippet_M3FilterDebounce1M	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+82	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Table 1000	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+83	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Table 100000	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+84	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Table 1000000	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+85	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Table 10000000	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+86	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Tree 1000	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+87	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Tree 100000	viewport,original,custom,m3,gpu	PASS	TIMEOUT	PASS	PASS	PASS	original: main did not open a shell in 90000 ms; example thread at | at org.eclipse.swt.internal.win32.OS.CallWindowProc(Native Method) | at org.eclipse.swt.widgets.Tree.callWindowProc(Tree.java:2735) | at org.eclipse.swt.widgets.Control.windowProc(Control.java:5858) | at org.eclipse.swt.widgets.Tree.windowPr
+88	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Tree 1000000	viewport,original,custom,m3,gpu	PASS	TIMEOUT	PASS	PASS	PASS	original: main did not open a shell in 90000 ms; example thread at | at org.eclipse.swt.internal.win32.OS.CallWindowProc(Native Method) | at org.eclipse.swt.widgets.Tree.callWindowProc(Tree.java:2735) | at org.eclipse.swt.widgets.Control.windowProc(Control.java:5858) | at org.eclipse.swt.widgets.Tree.windowPr
+89	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Tree 10000000	viewport,original,custom,m3,gpu	PASS	TIMEOUT	PASS	PASS	PASS	original: main did not open a shell in 90000 ms; example thread at | at org.eclipse.swt.internal.win32.OS.CallWindowProc(Native Method) | at org.eclipse.swt.widgets.Tree.callWindowProc(Tree.java:2735) | at org.eclipse.swt.widgets.Control.windowProc(Control.java:5858) | at org.eclipse.swt.widgets.Tree.windowPr
+90	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	List 1000	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+91	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	List 1000000	viewport,original,custom,m3,gpu	PASS	TIMEOUT	PASS	PASS	PASS	original: main did not open a shell in 90000 ms; example thread at | at org.eclipse.swt.internal.win32.OS.SendMessage(Native Method) | at org.eclipse.swt.internal.win32.OS.SendMessage(OS.java:2228) | at org.eclipse.swt.widgets.List.setAllItems(List.java:1875) | at org.eclipse.swt.widgets.List.setItems(List.ja
+92	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Combo 1000	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+93	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Combo 1000000	viewport,original,custom,m3,gpu	PASS	TIMEOUT	PASS	PASS	PASS	original: main did not open a shell in 90000 ms; example thread at | at org.eclipse.swt.internal.win32.OS.CallWindowProc(Native Method) | at org.eclipse.swt.widgets.Combo.callWindowProc(Combo.java:520) | at org.eclipse.swt.widgets.Control.windowProc(Control.java:5858) | at org.eclipse.swt.widgets.Combo.window
+94	org.eclipse.swt.snippets.m3.gallery.renderer.M3RendererCanvasExample	m3	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+95	org.eclipse.swt.snippets.m3.gallery.renderer.M3RendererCanvasExample	gpu	original,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+96	org.eclipse.swt.snippets.M3DrawnModesDemo	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+97	org.eclipse.swt.snippets.M3LabelPoolTableSnippet	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+98	org.eclipse.swt.snippets.M3NonVirtualTreeDemo	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+99	org.eclipse.swt.snippets.M3PathTrieFileTreeSnippet	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+100	org.eclipse.swt.snippets.m3.M3ComboVerifyExample	-	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+101	org.eclipse.swt.snippets.m3.M3DeltaStreamExample	-	viewport,original,custom,m3,gpu	FAIL	FAIL	FAIL	FAIL	FAIL	viewport: org.eclipse.swt.SWTException: Widget is disposed | at org.eclipse.swt.SWT.error(SWT.java:5066) | at org.eclipse.swt.SWT.error(SWT.java:4975) | at org.eclipse.swt.SWT.error(SWT.java:4946) | at org.eclipse.swt.widgets.Widget.error(Widget.java:555) | at org.eclipse.swt.widgets.Widget.checkWidget(Widget
+102	org.eclipse.swt.snippets.m3.M3HiddenTabDeltasExample	-	viewport,original,custom,m3,gpu	TIMEOUT	TIMEOUT	TIMEOUT	TIMEOUT	TIMEOUT	viewport: main did not return 45000 ms after its shells were closed; example thread at | at org.eclipse.swt.internal.win32.OS.WaitMessage(Native Method) | at org.eclipse.swt.widgets.Display.sleep(Display.java:5380) | at org.eclipse.swt.snippets.m3.M3HiddenTabDeltasExample.pump(M3HiddenTabDeltasExample.java:15
+103	org.eclipse.swt.snippets.m3.M3ListFastScrollExample	-	viewport,original,custom,m3,gpu	PASS	TIMEOUT	PASS	PASS	PASS	original: main did not open a shell in 90000 ms; example thread at | at org.eclipse.swt.internal.win32.OS.SendMessage(Native Method) | at org.eclipse.swt.internal.win32.OS.SendMessage(OS.java:2228) | at org.eclipse.swt.widgets.List.setAllItems(List.java:1875) | at org.eclipse.swt.widgets.List.setItems(List.ja
+104	org.eclipse.swt.snippets.m3.M3LookAndFeelSwitchSnippet	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+105	org.eclipse.swt.snippets.m3.M3TableRowMathExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+106	org.eclipse.swt.snippets.m3.M3TableScrollSelectExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+107	org.eclipse.swt.snippets.m3.M3TextSegmentsExample	-	viewport,original,custom,m3,gpu	PASS	PASS	FAIL	FAIL	FAIL	custom: java.lang.NullPointerException: Cannot invoke "org.eclipse.swt.internal.render.RowRenderer.paint(org.eclipse.swt.internal.render.RowCanvas, org.eclipse.swt.internal.render.RowPaint)" because "this.renderer" is null | at org.eclipse.swt.internal.render.RetainedRows.paint(RetainedRows.java:116) | at o
+108	org.eclipse.swt.snippets.m3.M3ThemeImportSnippet	-	viewport,original	PASS	PASS	PASS	PASS	PASS	-
+109	org.eclipse.swt.snippets.m3.M3TreeCaretSelectionExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+110	org.eclipse.swt.snippets.m3.M3TreeCollapseKeysExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-
+111	org.eclipse.swt.snippets.m3.M3TreeCustomDrawExample	-	viewport,original,custom,m3,gpu	PASS	PASS	PASS	PASS	PASS	-

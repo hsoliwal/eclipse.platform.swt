@@ -1,0 +1,10 @@
+factor	critical	values	meaning
+widget	yes	Table,Tree,List,Combo,StyledText,Canvas,CTabFolder,CCombo,Model	the subject; Model = the widget-free M3 model layer (headless, no Display)
+mode	yes	viewport,original,custom,m3,gpu	-Dswt.widget.mode of the JVM that runs the row
+style	yes	NONE,VIRTUAL,MULTI,CHECK,FULL_SELECTION,BORDER,H_SCROLL|V_SCROLL,NO_SCROLL,VIRTUAL|MULTI|CHECK|FULL_SELECTION	style bits of the subject (as applicable: CONSTRAINTS.tsv)
+feature	no	none,@shipped-features	an M3Features switch turned on for the instance (M3Features.set); @shipped-features = docs/m3/feature-switches/SHIPPED.tsv
+api	no	none,@shipped-api	one enhanced API call; @shipped-api = rows of docs/m3/ENHANCED_API_MAP.tsv whose surface class exists in bundles/org.eclipse.swt
+op	no	setItemCount,scroll-top,scroll-middle,scroll-bottom,select-range,sort-filter,update-item,dispose	the operation under test
+count	no	0,1,1000,100000	item count before the operation
+theme	no	none,light,dark,high-contrast	an M3Theme applied to the subject (M3Theme of branch m3/theme-language-20261030; the step is NOT_RUN while the class is absent)
+language	no	none,en,de,ar,ja	an M3Language applied to the subject (ar = right to left; M3Language of branch m3/theme-language-20261030; NOT_RUN while absent)
