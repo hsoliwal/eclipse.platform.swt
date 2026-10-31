@@ -3893,7 +3893,9 @@ boolean sendMouseEvent (NSEvent nsEvent, int type, boolean send) {
 		case SWT.MouseWheel: {
 			event.detail = SWT.SCROLL_LINE;
 			double delta = nsEvent.deltaY();
+			double scrollingDelta = nsEvent.scrollingDeltaY();
 			event.count = delta > 0 ? Math.max (1, (int)delta) : Math.min (-1, (int)delta);
+			event.scrollingDeltaY = scrollingDelta;
 			break;
 		}
 		case SWT.MouseHorizontalWheel: {

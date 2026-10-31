@@ -120,6 +120,12 @@ public class Event {
 	public int count;
 
 	/**
+	 * high resolution delta values from a scrollwheel, useful for input from
+	 * trackpads like Apple's Magic Trackpad.
+	 */
+	public double scrollingDeltaY;
+
+	/**
 	 * the time that the event occurred.
 	 *
 	 * NOTE: This field is an unsigned integer and should
