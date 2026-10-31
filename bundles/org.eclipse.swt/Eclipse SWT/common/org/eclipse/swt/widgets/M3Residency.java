@@ -22,8 +22,8 @@ import org.eclipse.swt.*;
  * <p>
  * The resident rows answer identically in every widget mode (the mode-neutral contract): they
  * are the rows in view, computed from public state (the top row, the item height and the client
- * area, as <code>M3ItemSelection.getVisibleRange</code>), and none while the widget is not
- * visible. Every mode holds at least these rows; how many more it keeps (a viewport's window and
+ * area, as <code>M3ItemSelection.getVisibleRange</code>) widened by the {@link M3Overscan} and
+ * clamped to the rows, and none while the widget is not visible. Every mode holds at least these rows; how many more it keeps (a viewport's window and
  * overscan, or every row without a viewport) is the mode's own business and is not answered here.
  * The item-object counts of {@link #stats(Table)} are a census of what the mode made: with a
  * viewport the widgets make item objects (facades) on demand and hold a Table's facades strongly
@@ -50,7 +50,8 @@ public final class M3Residency {
 	}
 
 	/**
-	 * Returns the rows the table must hold ready to paint: the rows in view, none while the table is
+	 * Returns the rows the table must hold ready to paint: the rows in view widened by the
+	 * {@link M3Overscan}, none while the table is
 	 * not visible. The answer is the same in every widget mode.
 	 *
 	 * @param table the table
@@ -66,11 +67,12 @@ public final class M3Residency {
 	 */
 	public static M3ItemRange residentRange (Table table) {
 		check (table);
-		return table.isVisible () ? M3ItemSelection.getVisibleRange (table) : M3ItemRange.EMPTY;
+		return table.isVisible () ? M3Overscan.widen (table, M3ItemSelection.getVisibleRange (table), table.getItemCount ()) : M3ItemRange.EMPTY;
 	}
 
 	/**
-	 * Returns the rows the list must hold ready to paint: the rows in view, none while the list is
+	 * Returns the rows the list must hold ready to paint: the rows in view widened by the
+	 * {@link M3Overscan}, none while the list is
 	 * not visible. The answer is the same in every widget mode.
 	 *
 	 * @param list the list
@@ -86,12 +88,12 @@ public final class M3Residency {
 	 */
 	public static M3ItemRange residentRange (List list) {
 		check (list);
-		return list.isVisible () ? M3ItemSelection.getVisibleRange (list) : M3ItemRange.EMPTY;
+		return list.isVisible () ? M3Overscan.widen (list, M3ItemSelection.getVisibleRange (list), list.getItemCount ()) : M3ItemRange.EMPTY;
 	}
 
 	/**
 	 * Returns the visible rows (as numbered by {@link M3RowMath}) the tree must hold ready to paint:
-	 * the rows in view, none while the tree is not visible. The answer is the same in every widget
+	 * the rows in view widened by the {@link M3Overscan}, none while the tree is not visible. The answer is the same in every widget
 	 * mode; the top row is found with {@link M3RowMath#rowOf(TreeItem)} (the viewport's lanes, or a
 	 * walk), not by walking to it.
 	 *
@@ -114,8 +116,8 @@ public final class M3Residency {
 		int rows = M3ItemSelection.rows (tree.getClientArea ().height - header, tree.getItemHeight ());
 		long first = top == null || rows == 0 ? -1 : M3RowMath.rowOf (top);
 		if (first < 0) return M3ItemRange.EMPTY;
-		long last = Math.min (M3RowMath.visibleRowCount (tree) - 1, first + rows - 1);
-		return M3ItemRange.of (Math.toIntExact (first), Math.toIntExact (last));
+		long count = M3RowMath.visibleRowCount (tree), last = Math.min (count - 1, first + rows - 1);
+		return M3Overscan.widen (tree, M3ItemRange.of (Math.toIntExact (first), Math.toIntExact (last)), count);
 	}
 
 	/**
