@@ -428,7 +428,8 @@ public static Shell gtk_new (Display display, long handle) {
  * @since 3.3
  */
 public static Shell internal_new (Display display, long handle) {
-	return new Shell (display, null, SWT.NO_TRIM, handle, false);
+	//FLLDCIM: MRL - donor swt-initiative31/prototype-gtk (GTK on Windows): guard is a no-op where OS.IsWin32 is false
+	return new Shell (display, null, SWT.NO_TRIM, OS.IsWin32 ? 0 : handle, false);
 }
 
 static int checkStyle (Shell parent, int style) {
