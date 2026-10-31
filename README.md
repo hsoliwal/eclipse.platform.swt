@@ -405,3 +405,76 @@ Given sufficient resources, a follow-up project could convert the demonstrator i
 ## Fork development guide
 
 For a source map, current build prerequisites, command cheat sheet and a worked event-loop tour, see the [SWT development guide](docs/DEVELOPMENT_GUIDE.md).
+
+# Donor section: claesrosell/prototype-skija
+
+Appended by the additive superset resolution (DOC recipe: keep ours, append the donor section). Source: `README.md` of
+[claesrosell/prototype-skija](https://github.com/claesrosell/prototype-skija) at `f262d18f088f` (2025-02-22), the
+Initiative 31 prototype-skija history before its 2025 rebase, carried in this repository's history as a merge parent.
+The text describes that donor branch, not this tree: here the native widgets stay on the M3 viewport, the Initiative 31
+look is a renderer and look-and-feel option ([ALL_WIDGETS_VIEWPORT_PLAN.md](docs/m3/ALL_WIDGETS_VIEWPORT_PLAN.md),
+[LOOK_AND_FEEL.md](docs/m3/LOOK_AND_FEEL.md)), and the `SkijaGC` operation mapping was adapted for the M3 GPU planes.
+
+## SWT on Custom-Rendered Widgets With Ski(j)a
+
+This repository is a fork of the original [SWT repository](https://github.com/eclipse-platform/eclipse.platform.swt) containing prototyping work on exchanging the adaptation of native, basic widgets with custom-drawn widgets based on the rendering engine Skia and its Java bindings [Skija](https://github.com/HumbleUI/Skija/).
+
+In the following, you find information about the current state of the prototype and how to try it out. Note that the prototype does currently not provide other/better look and feel or customizability compared to the native widgets. It is supposed to demonstrate feasibility to custom draw widgets based on an efficient rendering engine (as an enabler for improved customizability and look and feel) while seamlessly integrating the custom-drawn widgets with the other, still native widgets. For that reason, the custom-drawn widgets are currently implemented to look similar to the existing widgets they replace, but they could be easily replaced with whatever look and feel is desired.
+
+### How to Contribute
+
+See our [contributing information](https://github.com/claesrosell/prototype-skija/blob/f262d18f088f46aa1a909512194c9b60c187f853/CONTRIBUTING.md) to find out how to contribute.
+
+### Getting Started
+
+To test the prototype, an Eclipse IDE has to be set up and the SWT projects from this repository have to be imported into it to start example applications.
+
+Note that the current development does not target all platforms (Windows, MacOS, Linux). Development usually happens on Windows (and partly MacOS), so the experience will be best there. No implementation and testing for Linux has been performed so far.
+
+#### Setup
+
+The prototype is currently based on the Eclipse release 2024-12.
+
+1. Set up a Eclipse IDE for Committers 2024-12, e.g.:
+   - [Eclipse IDE for Committers 2024-12](https://www.eclipse.org/downloads/packages/release/2024-12/r/eclipse-ide-eclipse-committers)
+   - [Eclipse SDK Development Environment](https://github.com/eclipse-platform/eclipse.platform?tab=readme-ov-file#how-to-contribute) using product version "4.34 - 2024-12" in the installer
+2. Clone this repository
+3. Start the downloaded IDE and import the following projects:
+   - The SWT bundle `org.eclipse.swt`
+   - The OS-specific fragment `org.eclipse.swt.$WS.$OS.$ARCH` with the placeholders according to your environment, such as `org.eclipse.swt.win32.win32.x86_64` for the Windows fragment
+   - _Optional:_ For testing purposes `org.eclipse.swt.examples`
+
+The resulting workspace should look something like this:
+![Workspace after setup](readme_images/workspace_after_setup.png)
+
+#### Examples
+
+Starting with this, you can try out the SWT implementation with whatever application you want by also importing the according plug-ins into your workspace. Two reasonable, simple starting points are (1) the SWT `ControlExample`, a demo application containing all basic SWT widgets with configurability for most of their functionality, to see how the widgets look like and behave, and (2) a simple Eclipse application to see how it looks in a complete application.
+
+##### `ControlExample`
+
+The `ControlExample` is part of the example project. It is placed in `org.eclipse.swt.examples.controlexample`. You can run this class as a Java application. The application has tabs for the individual widgets. The tab that opens first is for the `Button`, which is completely custom-drawn. So almost everything you see on that page is custom-drawn via code of the prototype.
+
+At the bottom of the application, a toggle button allows to switch between using the native and the Skija-based renderer ( `GC`) at runtime (see [State](#state)). You can currently distinguish the two rendering engines by looking at the edges of buttons, which are currently not rounded when using the Skija-based GC. The following screenshot shows the rendering of that page based on Skija.
+
+![ControlExample Button Page](readme_images/controls_button_windows_custom_skijagc.png)
+
+##### Eclipse Application
+
+To start a simple Eclipse application, create a `Run Configuration` via the menu `Run`, menu item `Run Configuration` and in the dialog opening up by double-clicking on the `Eclipse Application` type to create a new configuration that you can launch via the `Run` button:
+![Eclipse Application Run Configuration](readme_images/eclipse_run_configuration.png)
+
+The Eclipse application that starts will automatically use the custom-drawn widgets. To see a page with mostly custom-drawn widgets, you can, for example, open the `Create Java Project` wizard:
+![Java Project Creation Wizard](readme_images/java_project_creation_windows_custom_skijagc.png)
+
+### State
+
+Note that this is work-in-progress prototyping work. The implementation is not (supposed to be) production ready.
+Currently, there are (at least partial) custom implementations for the following basic widgets:
+- Button
+- Label
+- Text
+- Combo
+
+For rendering, the custom-drawn widgets only rely on the functionalities of the `GC`, such a drawing text and primitives like lines.
+In addition to using the existing, native `GC`, i.e., the rendering engine of the operating system, the implementation also contains a `SkijaGC`, providing (parts of) the same functionality but using Ski(j)a for rendering instead. To make these interchangeable, the common functionality has been extracted into an `IGraphicsCanvas` interface.
