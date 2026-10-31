@@ -543,3 +543,9 @@ When using SWT with the Eclipse Platform, note that the Win32-specific bundles c
 * `org.eclipse.ui.win32`
 
 They may need to or can be replaced by GTK-specific bundles, but no work has been done on that yet.
+
+## Donor notes: dvt64/oi-eclipse.platform.swt
+
+From donor commits 420209f74c3 ("Port for illumos-based distros") and 982b4c3b8e5, line carried verbatim. The port's files: fragment binaries/org.eclipse.swt.gtk.solaris.x86_64 (outside the default binaries/pom.xml reactor, like gtk.linux.loongarch64, until illumos natives are built), binaries/legal_files/gtk.solaris, and the SunOS case of `Eclipse SWT PI/gtk/library/build.sh` with `make_solaris_x86_64.mak`.
+
+Port for illumos-based distros (tested on OpenIndiana).
