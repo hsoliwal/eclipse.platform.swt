@@ -32,8 +32,8 @@ import org.eclipse.swt.*;
  * <p>
  * The stock <code>SWT.EmptinessChanged</code> event of a Tree keeps its own rules (first item
  * created, last item disposed); {@link #EVENT} is a separate type, so both can be listened to.
- * The answers are the same in every startup mode. The win32 widgets send the event; on other
- * platforms the listener is kept but not yet called.
+ * The answers are the same in every startup mode, and the win32, GTK and Cocoa widgets send the
+ * event from the same structural paths.
  * </p>
  *
  * @since 3.138
