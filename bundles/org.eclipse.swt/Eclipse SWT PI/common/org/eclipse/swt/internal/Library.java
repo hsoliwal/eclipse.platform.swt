@@ -351,9 +351,7 @@ public static void loadLibrary (String name, boolean mapName) {
 	 * ~/.swt/lib/<platform>/<arch>/
 	 */
 	String[] fileNames = new String[candidates];
-	for (int i = 0; i < candidates; i++) {
-		fileNames[i] = mappedNames[i];
-	}
+	System.arraycopy (mappedNames, 0, fileNames, 0, candidates);
 	if (path == null) {
 		path = USER_HOME;
 		File dir = new File (path, SWT_LIB_DIR);

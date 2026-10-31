@@ -19,6 +19,7 @@ package org.eclipse.swt.internal.image;
 
 
 import java.io.*;
+import java.util.Arrays;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
@@ -759,9 +760,7 @@ void decodeMCUAtXAndY(int xmcu, int ymcu, int nComponentsInScan, boolean first, 
 					}
 				} else {
 					// Sequential: Clear and reuse the data unit buffer.
-					for (int i = 0; i < dataUnit.length; i++) {
-						dataUnit[i] = 0;
-					}
+					Arrays.fill(dataUnit, 0);
 				}
 				if (!progressive || scanHeader.isDCProgressiveScan()) {
 					decodeDCCoefficient(dataUnit, scanComponent, first, approxBit);

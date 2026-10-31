@@ -1,0 +1,14 @@
+gate	command	result	evidence
+fixture CLASSIFY	bash tools/prove_array_intrinsics.sh C:/m3-superset/out-swt/array-proof	25 of 25 expect markers match (7 REWRITE: C1 x2, F1 x4, F2 x1; 18 SKIP, one per reason)	classify.tsv
+fixture FIXED_POINT	(same script) second scan --apply over the rewritten copy	rewrites=0	fixed_point.tsv
+fixture DIFFERENTIAL	(same script) javac + java of the fixture before and after the recipe (JDK 21.0.9)	45 trace lines identical, edge inputs included (length 0, null, negative size)	before/trace.txt = after/trace.txt
+fixture DISCRIMINATOR	(same script) the naive replacement of every skipped form	11 of 11 DIFFER (same-array overlap, int->float widening, start > bound, new Object per element, null source of length 0, partial fill before AIOOBE, <=, offset, null destination, boxing identity, index value)	before/trace.txt DISCRIMINATOR lines
+census plan	python -I tools/array_loop_intrinsics.py census <wt> CENSUS_COPY_FILL.tsv <ledger>	29 SWT rows: 8 rewrite (C1 x5, F1 x3), 21 skip	ARRAY_LOOP_LEDGER.tsv
+census apply	(same) --apply --receipt RECEIPT.tsv	REWRITE=8 in 5 files; java.util.Arrays imported in 2	RECEIPT.tsv (sha256 before and after per file)
+census fixed point	(same) --apply again	DONE=8, REWRITE=0, files_written=0	rerun from the repo copy of the census: same counts
+compile main	M3_GRAPHICS_CP=H:/m3-scratch/skija-absorb/jdk.m3.graphics.jar bash docs/m3/gc-extension-seam/tools/compile_m3gc.sh <wt> C:/m3-superset/out-swt/main	sources=967 classes=1463 errors=0; all 5 changed files are in the source set	javac.log
+JPEG DIFFERENTIAL	bash tools/prove_jpeg_loops.sh <wt> C:/m3-superset/out-swt/main/classes HEAD C:/m3-superset/out-swt/array-jpeg	18 generated JPEGs (rgb, gray, progressive; 6 sizes) decode to the same SHA-256 with the old and the new classes, on the JPEGDecoder path and on the JPEGFileFormat 3.2 path	default.old.txt = default.new.txt, 3.2.old.txt = 3.2.new.txt
+JPEG DISCRIMINATOR	(same script) mutant fill 1 instead of 0 at the rewritten JPEGDecoder and JPEGFileFormat sites	output DIFFERS on both paths (12 of 18 lines: the baseline images that use those sites)	default.mutant.txt, 3.2.mutant.txt
+Nebula read-only	python -I tools/array_loop_intrinsics.py census C:/m3-superset/nebula-webwidgets CENSUS_COPY_FILL.tsv NEBULA_CANDIDATES.tsv --repo nebula --root ''	11 rows: 0 rewrite, 2 SKIP_START_NONZERO (RowBitLanes, production), 9 SKIP_VALUE_SIDE_EFFECT (tests); Nebula tree unchanged	NEBULA_CANDIDATES.tsv
+widget runtime	CLabel, CTabFolder setBackground / setSelectionBackground; Library.loadLibrary	NOT_RUN: needs a Display or the natives; covered by C1's static proof and the fixture differential	-
+performance	JMH or per-site timing	NOT_RUN: the routes are HotSpot intrinsics; no per-site measurement here	-
