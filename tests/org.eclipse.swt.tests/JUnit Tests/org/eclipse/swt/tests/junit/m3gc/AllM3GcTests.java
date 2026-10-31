@@ -39,6 +39,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_m3gc_GcStateReset.class, //
 		Test_org_eclipse_swt_m3gc_CompositeCoverage.class, //
 		Test_org_eclipse_swt_m3gc_CompositeParity.class, //
+		Test_org_eclipse_swt_m3gc_TextLayoutRuns.class, //
 
 })
 public class AllM3GcTests {

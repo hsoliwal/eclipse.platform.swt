@@ -43,9 +43,12 @@ import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.internal.canvasext.IExternalGC;
 
 import io.github.humbleui.skija.ClipMode;
+import io.github.humbleui.skija.ColorAlphaType;
+import io.github.humbleui.skija.ColorType;
 import io.github.humbleui.skija.EncoderPNG;
 import io.github.humbleui.skija.FilterTileMode;
 import io.github.humbleui.skija.GradientStyle;
+import io.github.humbleui.skija.ImageInfo;
 import io.github.humbleui.skija.Matrix33;
 import io.github.humbleui.skija.Paint;
 import io.github.humbleui.skija.PaintMode;
@@ -1359,33 +1362,24 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void textLayoutDraw(TextLayout textLayout, GC gc, int xInPoints, int yInPoints, int selectionStart,
 			int selectionEnd, Color selectionForeground, Color selectionBackground, int flags) {
+		// L13 TEXT_FALLBACK_SAFE v1: transparent premultiplied raster, GC state carried (M3TextLayoutFallback)
+		M3TextLayoutFallback.draw(this, new M3TextLayoutCall(textLayout, xInPoints, yInPoints, selectionStart,
+				selectionEnd, selectionForeground, selectionBackground, flags));
+	}
 
-		final var rectangle = textLayout.getBounds();
-
-		if (rectangle.width <= 0 || rectangle.height <= 0) {
-			return;
+	/* L13 TEXT_FALLBACK_SAFE v1: a premultiplied BGRA raster composited once with the GC alpha (not squared) */
+	void drawLayoutRaster(byte[] bgra, int width, int height, Rectangle destInPoints) {
+		final ImageInfo info = new ImageInfo(width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
+		try (var raster = io.github.humbleui.skija.Image.makeRaster(info, bgra, width * 4L)) {
+			final IM3Canvas canvas = surface.getCanvas();
+			final Rect dest = RectangleConverter.createScaledRectangle(getScaler(), destInPoints.x, destInPoints.y,
+					destInPoints.width, destInPoints.height);
+			paintManager.performDraw(paint -> {
+				paint.setAlpha(alpha);
+				M3Mirror.unmirrored(canvas, isMirrored(), dest.getLeft(), dest.getWidth(), () -> canvas.drawImageRect(
+						new M3ImageAdapter(raster), Rect.makeWH(width, height), dest, SamplingMode.DEFAULT, paint, false));
+			});
 		}
-
-		Image i = null;
-		GC nativeGC = null;
-		try {
-			i = new Image(device, rectangle.width, rectangle.height);
-			nativeGC = new GC(i);
-
-			textLayout.draw(nativeGC, 0, 0, selectionStart, selectionEnd, selectionForeground, selectionBackground,
-					flags);
-
-			drawImage(i, rectangle.x, rectangle.y, rectangle.width, rectangle.height, xInPoints, yInPoints,
-					rectangle.width, rectangle.height);
-		} finally {
-			if (nativeGC != null) {
-				nativeGC.dispose();
-			}
-			if (i != null) {
-				i.dispose();
-			}
-		}
-
 	}
 
 	IM3Resources getM3Resources() {
