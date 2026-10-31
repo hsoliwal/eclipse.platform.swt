@@ -70,7 +70,7 @@ final class ResultLog {
 	static String location (Throwable t) {
 		StackTraceElement [] stack = t.getStackTrace ();
 		Optional<StackTraceElement> swt = Arrays.stream (stack).filter (e -> e.getClassName ().startsWith ("org.eclipse.swt.") && !e.getClassName ().startsWith ("org.eclipse.swt.tests.")
-			&& !"org.eclipse.swt.SWT".equals (e.getClassName ())).findFirst ();
+			&& e.getLineNumber () >= 0 && !"org.eclipse.swt.SWT".equals (e.getClassName ())).findFirst ();
 		Optional<StackTraceElement> test = Arrays.stream (stack).filter (e -> e.getClassName ().startsWith ("org.eclipse.swt.tests.")).findFirst ();
 		return swt.or (() -> test).map (e -> e.getFileName () + ":" + e.getLineNumber () + " (" + e.getClassName () + "." + e.getMethodName () + ")").orElse ("-");
 	}

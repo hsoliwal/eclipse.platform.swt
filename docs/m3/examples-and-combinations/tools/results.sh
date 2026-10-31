@@ -26,6 +26,18 @@ awk -F'\t' -v OFS='\t' '
       print row[i], st, rs, (hasR ? r[2] : "-"), (hasR ? r[3] : "-"), cs, f
     }
   }' "$O/results/matrix-all.tsv" "$M" > "$D/results/COMBINATION_RESULTS.tsv"
+# a TIMEOUT's location from its stack file: the first SWT frame with a source line (not native), and the first M3 API
+# frame under it when there is one (the call that drove it)
+for s in "$O/results/stacks/"*.txt; do
+  [ -f "$s" ] || continue
+  row=$(basename "$s" .txt); row=${row%%-*}
+  grep -q "^$row	.*	TIMEOUT	" "$D/results/COMBINATION_RESULTS.tsv" || continue
+  first=$(grep -m1 -E 'at org\.eclipse\.swt\.[a-z.]+[A-Z][A-Za-z0-9$]*\.[A-Za-z0-9$<>]+\([A-Za-z0-9]+\.java:[0-9]+\)' "$s" | grep -v 'swt.tests' | sed -E 's/.*\(([^)]*)\).*/\1/')
+  api=$(grep -m1 -E 'at org\.eclipse\.swt\.(widgets|m3)\.M3' "$s" | sed -E 's/.*at org\.eclipse\.swt\.[a-z]+\.([A-Za-z0-9]+\.[A-Za-z0-9]+)\(([^)]*)\).*/ via \1 (\2)/')
+  printf '%s\t%s%s\n' "$row" "$first" "$api"
+done > "$O/results/timeout-locations.tsv"
+awk -F'\t' -v OFS='\t' 'FNR == NR { loc[$1] = $2; next } FNR > 1 && $12 == "TIMEOUT" && ($1 in loc) { $18 = loc[$1] } { print }' \
+  "$O/results/timeout-locations.tsv" "$D/results/COMBINATION_RESULTS.tsv" > "$D/results/COMBINATION_RESULTS.tsv.tmp" && mv "$D/results/COMBINATION_RESULTS.tsv.tmp" "$D/results/COMBINATION_RESULTS.tsv"
 if [ -f "$O/results/examples-modes.tsv" ]; then
   awk -F'\t' -v OFS='\t' 'FNR == 1 { file++; next } file == 1 { impl[FNR - 2] = $7; title[FNR - 2] = $2 "\t" $3; next }
     { key = $2; cls[key] = $3; args[key] = $4; st[key, $1] = $5; det[key, $1] = $8 }
@@ -57,7 +69,7 @@ fi
   END {
     for (key in n) {
       split (key, p, "\t"); owner = "viewport"
-      if (p[2] ~ /M3Mode|M3ItemSelection|M3Scrolling|M3Residency|M3Prefetch|M3Visibility|M3Emptiness|M3RowMath|M3DiffApply|M3Bulk|M3TypeAhead|M3CheckState|M3Proxy|M3Column|M3Scroll|M3Row/ || p[1] ~ /MODE_DIFF/ && p[2] ~ /\(M3-/) owner = "enhanced API"
+      if (p[2] ~ /M3Mode|M3ItemSelection|M3Scrolling|M3Residency|M3Prefetch|M3Visibility|M3Emptiness|M3RowMath|M3DiffApply|M3Bulk|M3TypeAhead|M3CheckState|M3Proxy|M3Column|M3Scroll|M3Row|M3TreeWalk|M3Model/ || p[1] ~ /MODE_DIFF/ && p[2] ~ /\(M3-/) owner = "enhanced API"
       if (p[2] ~ /render|Drawn|RowBackends|M3Canvas|GC|Path|Pattern|TextLayout|StyledText/) owner = "GC fidelity / render modes"
       printf "%s\t%s\t%d\t%s\t%s\t%s\n", p[1], p[2], n[key], owner, who[key], msg[key]
     }

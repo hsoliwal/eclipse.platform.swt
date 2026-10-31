@@ -49,7 +49,8 @@ public class Test_M3CombinationMatrix {
 	static final String RECORDING = System.getProperty ("swt.viewport.recording");
 	static final boolean RESUME = Boolean.getBoolean ("m3.combinations.resume");
 	static final int ROW_LIMIT = Integer.getInteger ("m3.combinations.rowLimit", 900);
-	static final int STEPS = 6;
+	static final boolean PIXELS = Boolean.getBoolean ("m3.combinations.pixels");
+	static final int STEPS = PIXELS ? 7 : 6;
 	static final ScheduledExecutorService WATCHDOG = Executors.newSingleThreadScheduledExecutor (r -> {
 		Thread thread = new Thread (r, "m3 combination row watchdog");
 		thread.setDaemon (true);
@@ -132,14 +133,25 @@ public class Test_M3CombinationMatrix {
 
 	/** The six steps of a row, in order. */
 	static ViewportDifferential.Ops<Subject> script (CombinationRow row, Subject subject, String [] outcome) {
-		List<ViewportDifferential.Op<Subject>> steps = List.of (s -> create (row, s), s -> feature (row, s), s -> outcome [0] = themeLanguage (row, s), s -> s.operate (row.op (), row.count ()),
-			s -> api (row, s), s -> s.disposed () ? "already disposed" : s.dispose ());
-		String [] names = {"create", "feature", "theme-language", "op", "api", "dispose"};
+		List<ViewportDifferential.Op<Subject>> steps = new ArrayList<> (List.of (s -> create (row, s), s -> feature (row, s), s -> outcome [0] = themeLanguage (row, s),
+			s -> s.operate (row.op (), row.count ()), s -> api (row, s), s -> s.disposed () ? "already disposed" : s.dispose ()));
+		List<String> names = new ArrayList<> (List.of ("create", "feature", "theme-language", "op", "api", "dispose"));
+		if (PIXELS) steps.add (5, Test_M3CombinationMatrix::pixels);
+		if (PIXELS) names.add (5, "pixels");
 		int [] next = {0};
 		return (random, log) -> {
-			log.append (names [next [0]]).append (' ');
+			log.append (names.get (next [0])).append (' ');
 			return steps.get (next [0]++);
 		};
+	}
+
+	/**
+	 * The pixels step (<code>-Dm3.combinations.pixels=true</code>): the subject's pixels as a step answer of the harness,
+	 * compared by hash in the viewport mode and by similarity (<code>-Dswt.viewport.similarity</code>) in the drawn modes.
+	 */
+	static String pixels (Subject s) {
+		Widget w = s.widget ();
+		return w instanceof Control c && !c.isDisposed () ? ViewportDifferential.stepPixels (ViewportDifferential.render (c)) : "pixels none";
 	}
 
 	static String create (CombinationRow row, Subject s) {
