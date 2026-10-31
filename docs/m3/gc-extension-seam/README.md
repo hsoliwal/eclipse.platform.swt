@@ -119,6 +119,10 @@ widget is a `Table`/`Tree`, not a `Canvas`; only `Control` methods are used.
 
 Nothing else differed: the other 24 adopted sources compiled unchanged against 0.116.3.
 
+Forward (leaf 12, prepared): `m3gc_api_deltas.py --forward` moves the trees to 0.143.18 + types 0.2.0 (L12-01..L12-17:
+the D07-D12/D16/D17 inverses, the M3RowCanvas port, RegionOp/addPoly rules, FontMgr/Canvas/Graphics checks, the one
+`skija.version` line) and every gate reads that line (`m3_skija_pin.sh`): [LEAF12_ONE_SKIJA.md](LEAF12_ONE_SKIJA.md).
+
 ### Gates (2026-10-30)
 
 - `compile_m3gc.sh C:/m3-superset/swt-gcseam H:/m3-scratch/gc-backend/main` (the win32 `build.properties` dirs plus

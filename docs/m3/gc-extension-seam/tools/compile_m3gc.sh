@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
 # Compile gate of the GC seam leaf 2: the win32 x86_64 source set of the worktree (build.properties) plus the M3 render
 # and GPU trees ("Eclipse SWT Render M3/win32", "Eclipse SWT GPU M3/win32", loaded by name at run time), against the
-# fork's Skija 0.116.3 binding. Adapted from C:/m3-superset/tools/compile_i31.sh. One JVM, -Xmx1536m, memory gate first.
+# Skija of the M3 fragment pom (SKIJA_PIN, m3_skija_pin.sh; 0.116.3 until leaf 12 moves it). Adapted from
+# C:/m3-superset/tools/compile_i31.sh. One JVM, -Xmx1536m, memory gate first.
 # Usage: compile_m3gc.sh [worktree] [out-dir]      (defaults: C:/m3-superset/swt-gcseam, H:/m3-scratch/gc-backend/main)
 WT=${1:-C:/m3-superset/swt-gcseam}; OUT=${2:-H:/m3-scratch/gc-backend/main}
 JDK=${M3_JDK:-C:/Program Files/Java/jdk-21}
@@ -25,7 +26,8 @@ if [ -n "$M3_OVERLAY" ] && [ -d "$M3_OVERLAY" ]; then
     grep -vF "/$rel\"" "$OUT/src" > "$OUT/src.tmp" && mv "$OUT/src.tmp" "$OUT/src"; echo "\"$f\"" >> "$OUT/src"
   done
 fi
-CP="$LIB/skija-shared-0.116.3.jar;$LIB/skija-windows-x64-0.116.3.jar;$LIB/types-0.1.1.jar"
+. "$(dirname "$0")/m3_skija_pin.sh"; m3_skija_pin "$WT" "$LIB" || exit 2   # SKIJA_PIN v1 (census L12): skija.version of the fragment pom
+CP="$SKIJA_CP"
 "$JDK/bin/javac" -J-Xmx1536m --release 21 -encoding UTF-8 -nowarn -proc:none -Xmaxerrs 300 -cp "$CP" -d "$OUT/classes" @"$OUT/src" > "$OUT/javac.log" 2>&1
 # a launcher failure (`error: file not found`, MSYS /c/ paths in the argfile: pass C:/ paths) counts as an error too
 n=$(grep -cE ': error:|^error: |^Usage: javac' "$OUT/javac.log"); n=${n:-0}

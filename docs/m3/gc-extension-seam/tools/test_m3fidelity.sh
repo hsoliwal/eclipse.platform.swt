@@ -22,7 +22,8 @@ bash "$(dirname "$0")/m3gc_natives.sh" --verify "$WT" "$NAT" > /dev/null || { ec
 rm -rf "$OUT/classes"; mkdir -p "$OUT/classes" "$OUT/tmp" "$OUT/logs"
 { find "$T/m3fidelity" -name '*.java' -type f
   echo "$T/Test_org_eclipse_swt_internal_render_RowRenderer.java"; echo "$T/Test_org_eclipse_swt_internal_render_RowPaintKey.java"; } | sed 's#.*#"&"#' > "$OUT/src"
-CP="$OUT/classes;$MAIN/classes;$LIB/skija-shared-0.116.3.jar;$LIB/skija-windows-x64-0.116.3.jar;$LIB/types-0.1.1.jar;$JUNIT"
+. "$(dirname "$0")/m3_skija_pin.sh"; m3_skija_pin "$WT" "$LIB" || exit 2   # SKIJA_PIN v1 (census L12): skija.version of the fragment pom
+CP="$OUT/classes;$MAIN/classes;$SKIJA_CP;$JUNIT"
 "$JDK/bin/javac" -J-Xmx1024m --release 21 -encoding UTF-8 -nowarn -proc:none -Xmaxerrs 100 -cp "$CP" -d "$OUT/classes" @"$OUT/src" > "$OUT/javac.log" 2>&1
 n=$(grep -cE ': error:|^error: |^Usage: javac' "$OUT/javac.log"); n=${n:-0}
 echo "m3fidelity tests: sources=$(wc -l < "$OUT/src") errors=$n"
