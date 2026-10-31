@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -30,6 +31,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.GCData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageDataProvider;
 import org.eclipse.swt.graphics.LineAttributes;
 import org.eclipse.swt.graphics.Path;
 import org.eclipse.swt.graphics.Pattern;
@@ -42,27 +44,28 @@ import org.eclipse.swt.internal.canvasext.IExternalGC;
 
 import io.github.humbleui.skija.ClipMode;
 import io.github.humbleui.skija.EncoderPNG;
-import io.github.humbleui.skija.FilterMipmap;
-import io.github.humbleui.skija.FilterMode;
 import io.github.humbleui.skija.FilterTileMode;
 import io.github.humbleui.skija.GradientStyle;
 import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.skija.MipmapMode;
 import io.github.humbleui.skija.Paint;
 import io.github.humbleui.skija.PaintMode;
 import io.github.humbleui.skija.PathEffect;
 import io.github.humbleui.skija.PathFillMode;
 import io.github.humbleui.skija.SamplingMode;
 import io.github.humbleui.skija.Shader;
+import io.github.humbleui.types.IRect;
 import io.github.humbleui.types.Rect;
 
 public class M3ExternalGC implements IExternalGC {
 
-	private static boolean logImageNullError = true;
 	private final IM3Surface surface;
 	private int alpha = 255;
-	private int antialias;
+	// M3 (GC seam, leaf 6; HINT_STATE, pattern M3-GC-HINT v1, census GF06): the stock fresh GC answers SWT.DEFAULT (no GDI+ graphics);
+	// the donor started at 0 (= SWT.OFF), text ON and nearest sampling read back as NONE
+	private int antialias = SWT.DEFAULT;
 	private boolean xorModeActive;
+	// leaf 6 (GC_STATE_RESET, GF05): whether advanced graphics were asked for (stock: a GDI+ graphics exists)
+	private boolean advanced;
 	private int lineWidth = 1;
 	private int lineCap = SWT.CAP_FLAT;
 	private int lineStyle = SWT.LINE_SOLID;
@@ -83,21 +86,19 @@ public class M3ExternalGC implements IExternalGC {
 	private final Drawable drawable;
 	private final Device device;
 
-	private Matrix33 currentTransform = Matrix33.IDENTITY;
-
 	private SamplingMode interpolationMode = SamplingMode.DEFAULT;
-
-	private boolean isClipSet;
-	private Rectangle currentClipBounds;
-	private Region currentClipRegion;
+	private int interpolation = SWT.DEFAULT;
 
 	private final IM3CanvasExtension m3Extension;
 	private final IM3Resources resources;
 	private final int style;
-	private int textAntiAlias = SWT.ON;
+	private int textAntiAlias = SWT.DEFAULT;
 
-	private final int initialSaveCount;
+	// M3 (GC seam, leaf 6; CLIP_STATE + TRANSFORM_STATE, census GF02, GF16): the clip and the transform of this GC in one layer
+	// above the frame (M3GcLayer); it records the canvas save count at construction, the count dispose restores
+	private final M3GcLayer layer;
 	private final M3PaintManager paintManager;
+	private final GCData data = new GCData();
 	private final DpiScalerUtil dpiScalerUtil;
 
 	public M3ExternalGC(IM3CanvasExtension exst, int style) {
@@ -107,11 +108,9 @@ public class M3ExternalGC implements IExternalGC {
 		this.m3Extension = exst;
 		this.resources = m3Extension.getResources();
 		this.style = style;
-		// Save the initial canvas state so it can be fully restored on dispose()
-		this.initialSaveCount = this.surface.getCanvas().getSaveCount();
+		this.layer = new M3GcLayer(this.surface);
 		this.paintManager = new M3PaintManager(this);
 		this.dpiScalerUtil = new DpiScalerUtil(this.resources.getScaler());
-		this.currentClipBounds = exst.getClientArea();
 
 	}
 
@@ -119,17 +118,32 @@ public class M3ExternalGC implements IExternalGC {
 	public void dispose() {
 
 		resources.resetBaseColors();
-		// Restore all canvas state changes made during the lifetime of this GC,
-		// including any clipping or transform layers pushed after construction
-		surface.getCanvas().restoreToCount(initialSaveCount);
-		// M3 (GC seam, leaf 3): the GC is reusable after dispose. A drawn plane disposes it after each owner-draw event
-		// and hands the same object to the next one, so the clip and transform bookkeeping goes back to the constructed
-		// state along with the canvas (a stale isClipSet would pop the plane's own frame clip on the next setClipping).
-		isClipSet = false;
-		currentClipRegion = null;
-		currentClipBounds = m3Extension.getClientArea();
-		currentTransform = Matrix33.IDENTITY;
+		// M3 (GC seam, leaves 3 and 6): the GC is reusable after dispose. A drawn plane disposes it after each owner-draw event
+		// and hands the same object to the next one: the canvas goes back to the construction save count and the clip and
+		// transform bookkeeping to none (M3GcLayer.close)
+		layer.close();
+		resetState();
+	}
 
+	/*
+	 * leaf 6 (GC_STATE_RESET, census GF49): every attribute back to the constructed defaults, so a reused GC (drawn planes dispose
+	 * and reuse one per owner-draw event) starts each event as a new stock GC does; the donor reset only the colours, the
+	 * canvas state, the clip and the transform
+	 */
+	private void resetState() {
+		advanced = xorModeActive = miterLimitSet = false;
+		alpha = 255;
+		foregroundPattern = backgroundPattern = null;
+		lineWidth = 1;
+		lineCap = SWT.CAP_FLAT;
+		lineJoin = SWT.JOIN_MITER;
+		lineStyle = SWT.LINE_SOLID;
+		lineDashes = null;
+		dashOffset = 0;
+		miterLimit = 10;
+		fillRule = SWT.FILL_EVEN_ODD;
+		resetHints();
+		resources.resetFont();
 	}
 
 	@Override
@@ -152,22 +166,20 @@ public class M3ExternalGC implements IExternalGC {
 		fillRectangle(rect.x, rect.y, rect.width, rect.height);
 	}
 
-	private static void logImageNull(int[] positionData) {
-		if (logImageNullError) {
-			Logger.logException(new IllegalArgumentException(
-					"Image argument is null. Position and size data: " + java.util.Arrays.toString(positionData))); //$NON-NLS-1$
-			logImageNullError = false;
+	/* leaf 6 (ARG_CONTRACT, GF24): the stock checks after the size checks: null image, disposed image */
+	private static void checkImage(Image image) {
+		if (image == null) {
+			SWT.error(SWT.ERROR_NULL_ARGUMENT);
+		}
+		if (image.isDisposed()) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
 	}
 
 	@Override
 	public void drawImage(Image image, int x, int y) {
 
-		if (image == null) {
-			logImageNull(new int[] { x, y });
-			return;
-		}
-
+		checkImage(image);
 		final var imgBounds = image.getBounds();
 		drawImage(image, 0, 0, imgBounds.width, imgBounds.height, x, y, imgBounds.width, imgBounds.height);
 	}
@@ -175,11 +187,15 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void drawImage(Image image, int destX, int destY, int destWidth, int destHeight) {
 
-		if (image == null) {
-			logImageNull(new int[] { destX, destY, destWidth, destHeight });
+		// leaf 6 (ARG_CONTRACT, pattern M3-GC-CONTRACT v1, census GF24): the stock order: a zero size returns, a negative size is
+		// rejected, then the image is checked (the donor logged a null image once and returned, and divided by a zero size)
+		if (destWidth == 0 || destHeight == 0) {
 			return;
 		}
-
+		if (destWidth < 0 || destHeight < 0) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkImage(image);
 		drawImage(image, 0, 0, image.getBounds().width, image.getBounds().height, destX, destY, destWidth, destHeight);
 
 	}
@@ -188,10 +204,14 @@ public class M3ExternalGC implements IExternalGC {
 	public void drawImage(Image image, int srcX, int srcY, int srcWidth, int srcHeight, int destX, int destY,
 			int destWidth, int destHeight) {
 
-		if (image == null) {
-			logImageNull(new int[] { srcX, srcY, srcWidth, srcHeight, destX, destY, destWidth, destHeight });
+		// leaf 6 (ARG_CONTRACT, GF24): the stock order (W32G/GC.java drawImage): sizes, then signs, then the image
+		if (srcWidth == 0 || srcHeight == 0 || destWidth == 0 || destHeight == 0) {
 			return;
 		}
+		if (srcX < 0 || srcY < 0 || srcWidth < 0 || srcHeight < 0 || destWidth < 0 || destHeight < 0) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		checkImage(image);
 
 		int sizeFactorInImage = Math.round(Math.max((float) destWidth / srcWidth, (float) destHeight / srcHeight));
 
@@ -243,12 +263,31 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public void drawLine(int x1, int y1, int x2, int y2) {
+		if (y1 == y2 && x1 != x2 || x1 == x2 && y1 != y2) {
+			drawAxisLine(Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
+			return;
+		}
 		final float scaledOffsetValue = RectangleConverter.getScaledOffsetValue(getScaler(), lineWidth);
-
 		final var scaler = this.dpiScalerUtil;
 		paintManager.performDraw(paint -> surface.getCanvas().drawLine(scaler.autoScaleUp(x1) + scaledOffsetValue,
 				scaler.autoScaleUp(y1) + scaledOffsetValue, scaler.autoScaleUp(x2) + scaledOffsetValue,
 				scaler.autoScaleUp(y2) + scaledOffsetValue, paint));
+	}
+
+	/*
+	 * leaf 6 (LINE_ENDS, pattern M3-GC-LINE-ENDS v1, leaf 7 finding L7-32): an axis-aligned line, offset across its direction only,
+	 * from the low end; a line of at most one pixel also covers its end pixel, as the stock GDI line (LineTo, then SetPixel at
+	 * x2, y2). The donor offset both axes by the half pixel: Skia's aliased scan then lost the start pixel (ViewForm's separator
+	 * at 3,19). Diagonals keep the donor's geometry (the adopted drawLine tests pin it)
+	 */
+	private void drawAxisLine(int left, int top, int right, int bottom) {
+		final var scaler = this.dpiScalerUtil;
+		final float offset = RectangleConverter.getScaledOffsetValue(scaler, lineWidth);
+		final float end = scaler.autoScaleUp(lineWidth * 1f) <= 1 ? 1 : 0;
+		final boolean horizontal = top == bottom;
+		final float x0 = scaler.autoScaleUp(left) + (horizontal ? 0 : offset), y0 = scaler.autoScaleUp(top) + (horizontal ? offset : 0);
+		final float x1 = horizontal ? scaler.autoScaleUp(right) + end : x0, y1 = horizontal ? y0 : scaler.autoScaleUp(bottom) + end;
+		paintManager.performDraw(paint -> surface.getCanvas().drawLine(x0, y0, x1, y1, paint));
 	}
 
 	@Override
@@ -283,13 +322,16 @@ public class M3ExternalGC implements IExternalGC {
 	}
 
 	private void executeTextDraw(String inputText, int flags, int x, int y) {
-
-		if (this.surface.getWidth() < x || this.surface.getHeight() < y) {
+		if (isCulled(x, y)) {
 			return;
 		}
-
 		final String splits[] = this.resources.getTextSplits(inputText, flags);
 		M3TextDrawing.drawText(this, splits, flags, x, y);
+	}
+
+	/* the donor's early out (GF33, approximated): a start beyond the surface draws nothing */
+	private boolean isCulled(int x, int y) {
+		return this.surface.getWidth() < x || this.surface.getHeight() < y;
 	}
 
 	M3PaintManager getPaintManager() {
@@ -344,10 +386,10 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public void drawPoint(int x, int y) {
-		paintManager.performDrawFilled(paint -> {
+		// leaf 6 (ARG_CONTRACT, GF46): the stock GDI+ point is a 1x1 fill with the foreground brush (colour at the GC alpha, or
+		// the foreground pattern); the donor filled with performDrawFilled, whose background pattern replaced the colour
+		paintManager.performFillForeground(paint -> {
 			// points have always one pixel no matter the zoom...
-			// fill mode is right for it, not stroke, so we use performDrawFilled
-			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(getForeground()));
 			final var rec = RectangleConverter.scaleUpRectangle(getScaler(), new Rectangle(x, y, 1, 1));
 			final var r = new Rect(rec.x, rec.y, rec.x + 1, rec.y + 1);
 			surface.getCanvas().drawRect(r, paint);
@@ -461,7 +503,11 @@ public class M3ExternalGC implements IExternalGC {
 		if (string == null) {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		}
-		drawText(string, x, y, isTransparent);
+		// leaf 6 (TEXT_DRAW_FLAGS, pattern M3-GC-TEXT-FLAGS v1, census GF29): one line as given, as the stock ExtTextOut draws it;
+		// the donor drew through drawText with DRAW_DELIMITER | DRAW_TAB (lines split, tabs expanded)
+		if (!isCulled(x, y)) {
+			M3TextDrawing.drawText(this, new String[] { string }, isTransparent ? SWT.DRAW_TRANSPARENT : SWT.NONE, x, y);
+		}
 	}
 
 	@Override
@@ -473,17 +519,22 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public void fillGradientRectangle(int x, int y, int width, int height, boolean vertical) {
-
+		// leaf 6 (GRADIENT_ROWS, pattern M3-GC-GRADIENT v1, leaf 7 findings L7-31, L7-34): a zero extent draws nothing; a negative
+		// extent moves the origin (stock x += width; the donor clamped it to 0: GF47); without advanced graphics the stock GC
+		// uses GDI GradientFill, whose rows are reproduced exactly (gradientRows), else the Skia gradient stands for GDI+'s brush
+		if (width == 0 || height == 0) {
+			return;
+		}
 		boolean swapColors = false;
 		if (width < 0) {
-			x = Math.max(0, x + width);
+			x = x + width;
 			width = -width;
 			if (!vertical) {
 				swapColors = true;
 			}
 		}
 		if (height < 0) {
-			y = Math.max(0, y + height);
+			y = y + height;
 			height = -height;
 			if (vertical) {
 				swapColors = true;
@@ -505,9 +556,37 @@ public class M3ExternalGC implements IExternalGC {
 			toColor = tempColor;
 		}
 
+		if (!advanced) {
+			gradientRows(rect, vertical, fromColor, toColor);
+			return;
+		}
 		final var s = getScaler();
 		performDrawGradientFilled(paint -> surface.getCanvas().drawRect(rect, paint), s.autoScaleUp(x),
 				s.autoScaleUp(y), s.autoScaleUp(x2), s.autoScaleUp(y2), fromColor, toColor);
+	}
+
+	/* leaf 6: GDI GradientFill's rows in pixels: row i of n = from + (to - from) * i / n per 16-bit channel, aliased, opaque */
+	private void gradientRows(Rect rect, boolean vertical, int from, int to) {
+		final int left = Math.round(rect.getLeft()), top = Math.round(rect.getTop());
+		final int right = Math.round(rect.getRight()), bottom = Math.round(rect.getBottom());
+		final int n = vertical ? bottom - top : right - left;
+		paintManager.performDrawFilled(paint -> {
+			paint.setShader(null);
+			paint.setAntiAlias(false);
+			IntStream.range(0, n).forEach(i -> {
+				paint.setColor(gradientColor(from, to, i, n));
+				surface.getCanvas().drawRect(vertical ? Rect.makeLTRB(left, top + i, right, top + i + 1)
+						: Rect.makeLTRB(left + i, top, left + i + 1, bottom), paint);
+			});
+		});
+	}
+
+	/* leaf 6: one GradientFill row colour: ((a * 257) + (b - a) * 257 * i / n) >> 8 per channel (measured: 0 mismatches) */
+	static int gradientColor(int from, int to, int i, int n) {
+		return 0xFF000000 | IntStream.of(16, 8, 0).map(s -> {
+			final int a = (from >> s) & 0xFF, b = (to >> s) & 0xFF;
+			return (((a * 257) + (b - a) * 257 * i / n) >> 8) << s;
+		}).reduce(0, (p, q) -> p | q);
 	}
 
 	private void performDrawGradientFilled(Consumer<Paint> operations, int x, int y, int x2, int y2, int fromColor,
@@ -611,18 +690,18 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void setTransform(Transform transform) {
 
-		final var sc = getScaler();
-		this.currentTransform = M3TransformConverter.toM3Matrix(transform, sc);
-		surface.getCanvas().setMatrix(this.currentTransform);
-		// Save the canvas state after applying the new transform, so subsequent
-		// operations (e.g. clipping) can be stacked and later restored independently
-		surface.getCanvas().save();
+		// leaf 6 (TRANSFORM_STATE, GF16): the matrix of the GC layer on the frame's matrix; the clip in force stays (the donor saved
+		// a level per call, which setClipping then popped instead of the clip)
+		advanced |= transform != null;
+		layer.setTransform(M3TransformConverter.toM3Matrix(transform, getScaler()));
 
 	}
 
 	@Override
 	public void setAlpha(int alpha) {
 		alpha = alpha & 0xFF;
+		// leaf 6 (GC_STATE_RESET, GF05): as the stock GC, an alpha other than 255 needs advanced graphics
+		advanced |= alpha != 0xFF;
 		this.alpha = alpha;
 	}
 
@@ -652,12 +731,32 @@ public class M3ExternalGC implements IExternalGC {
 		if (antialias != SWT.DEFAULT && antialias != SWT.ON && antialias != SWT.OFF) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
+		advanced |= antialias != SWT.DEFAULT;
 		this.antialias = antialias;
 	}
 
 	@Override
 	public void setAdvanced(boolean enable) {
-		// Nothing to do...
+		// leaf 6 (GC_STATE_RESET, pattern M3-GC-RESET v1, census GF05): stock SetAdvancedOperation: leaving the advanced mode puts
+		// alpha back to 255, drops the patterns, the transform and the clip, and the hints read DEFAULT again (no GDI+ graphics);
+		// the donor did nothing, so StyledText's block selection left alpha 100 for the rest of the paint
+		if (enable) {
+			advanced = true;
+			return;
+		}
+		advanced = false;
+		alpha = 255;
+		foregroundPattern = backgroundPattern = null;
+		layer.close();
+		resetHints();
+	}
+
+	/* leaf 6: antialias, text antialias and interpolation at DEFAULT (the stock GC without GDI+ graphics) */
+	private void resetHints() {
+		antialias = SWT.DEFAULT;
+		textAntiAlias = SWT.DEFAULT;
+		interpolation = SWT.DEFAULT;
+		interpolationMode = SamplingMode.DEFAULT;
 	}
 
 	@Override
@@ -681,29 +780,43 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public LineAttributes getLineAttributes() {
-		final LineAttributes attributes = getLineAttributesInPixels();
-		attributes.width = getScaler().autoScaleDown(attributes.width);
-		if (attributes.dash != null) {
-			attributes.dash = getScaler().autoScaleDown(attributes.dash);
-		}
-		return attributes;
-	}
-
-	LineAttributes getLineAttributesInPixels() {
-		return new LineAttributes(lineWidth, lineCap, lineJoin, lineStyle, lineDashes, dashOffset, miterLimit);
+		// leaf 6 (STROKE_SCALE, pattern M3-GC-STROKE v2, census GF14): every field in points, a fresh object. The line width and the
+		// dash offset are kept in points, the dashes in pixels (the donor divided the point width by the zoom a second time)
+		return new LineAttributes(lineWidth, lineCap, lineJoin, lineStyle, getScaler().autoScaleDown(lineDashes), dashOffset,
+				miterLimit);
 	}
 
 	@Override
 	public Rectangle getClipping() {
-		if (currentClipRegion != null) {
-			return currentClipBounds;
+		// leaf 6 (CLIP_STATE, GF02): the stock clip box in points: the clip (or the frame when none) within the frame, seen
+		// through the transform (GDI+ visible clip bounds). The donor answered the frame in pixels unless a region was set, and
+		// null after setClipping(Region)
+		return toPoints(layer.localClip(frame()));
+	}
+
+	/* the frame of this GC (the paint's damage) in device pixels; the surface when the extension has none */
+	private Rect frame() {
+		final Rectangle area = m3Extension.getClientArea();
+		if (area == null) {
+			return new Rect(0, 0, surface.getWidth(), surface.getHeight());
 		}
-		return m3Extension.getBounds();
+		return Rect.makeXYWH(area.x, area.y, area.width, area.height);
+	}
+
+	/* local pixels to the enclosing rectangle in points */
+	private Rectangle toPoints(Rect r) {
+		final var sc = getScaler();
+		final int left = (int) Math.floor(sc.autoScaleDown(r.getLeft()) + 1e-3f);
+		final int top = (int) Math.floor(sc.autoScaleDown(r.getTop()) + 1e-3f);
+		final int right = (int) Math.ceil(sc.autoScaleDown(r.getRight()) - 1e-3f);
+		final int bottom = (int) Math.ceil(sc.autoScaleDown(r.getBottom()) - 1e-3f);
+		return new Rectangle(left, top, Math.max(0, right - left), Math.max(0, bottom - top));
 	}
 
 	@Override
 	public Point stringExtent(String string) {
-		return textExtent(string);
+		// leaf 6 (TEXT_METRICS, GF28): the string as given (stock GetTextExtentPoint32), not textExtent
+		return getScaler().scaleDown(resources.stringExtent(string));
 	}
 
 	@Override
@@ -718,43 +831,57 @@ public class M3ExternalGC implements IExternalGC {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		}
 
-		final IM3Image m3Image = SwtToM3ImageConverter.convertSWTImageToM3Image(image,
-				getScaler().getNativeZoom(), resources);
-		try (final IM3Image copiedArea = surface.makeImageSnapshot(RectangleConverter
-				.createScaledRectangle(getScaler(), x, y, m3Image.getWidth(), m3Image.getHeight()).toIRect())) {
-
-			if (copiedArea == null) {
-				SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		if (image.isDisposed()) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		// leaf 6 (PIXEL_COPY, pattern M3-GC-PIXEL-COPY v1, census GF21): the image's area of the surface at this GC's zoom, opaque and
+		// unpremultiplied in 24-bit RGB (M3ToSwtImageConverter), replaces the image's pixels at that zoom (BitBlt SRCCOPY); the
+		// part outside the surface is left as it was. The donor gave 24-bit data 32-bit masks, kept premultiplied colour,
+		// drew a 100 % image in points (twice the size at 200 %) and blended it over the old content
+		final Rectangle size = image.getBounds();
+		final IRect area = RectangleConverter.createScaledRectangle(getScaler(), x, y, size.width, size.height).toIRect();
+		final IRect visible = area.intersect(new IRect(0, 0, surface.getWidth(), surface.getHeight()));
+		if (visible == null) {
+			return;
+		}
+		try (final IM3Image copied = surface.makeImageSnapshot(visible)) {
+			if (copied != null) {
+				replacePixels(image, M3ToSwtImageConverter.convertM3ImageToImageData(copied), visible.getLeft() - area.getLeft(),
+						visible.getTop() - area.getTop());
 			}
+		}
+	}
 
-			try (final IM3Surface imageSurface = surface.makeSurface(m3Image.getWidth(), m3Image.getHeight())) {
-				imageSurface.getCanvas().drawImage(copiedArea, 0, 0);
-				try (final IM3Image snapshot = imageSurface.makeImageSnapshot()) {
-					final ImageData imgData = M3ToSwtImageConverter.convertM3ImageToImageData(snapshot);
-					Image i = null;
-					GC gc = null;
-					try {
-						i = new Image(device, imgData);
-						gc = new GC(image);
-						gc.drawImage(i, 0, 0);
-					} finally {
-						if (gc != null) {
-							gc.dispose();
-						}
-						if (i != null) {
-							i.dispose();
-						}
-					}
-				}
-			}
+	/* leaf 6: opaque pixels (at this GC's zoom) drawn 1:1 into the image through a stock GC, at the pixel offset */
+	private void replacePixels(Image image, ImageData pixels, int offsetX, int offsetY) {
+		pixels.alphaData = null;
+		final int zoom = getScaler().getNativeZoom();
+		final Image copy = new Image(device, (ImageDataProvider) z -> z == zoom ? pixels
+				: pixels.scaledTo(Math.max(1, pixels.width * z / zoom), Math.max(1, pixels.height * z / zoom)));
+		final GC imageGC = new GC(image);
+		try {
+			final Point at = getScaler().scaleDown(new Point(offsetX, offsetY));
+			imageGC.drawImage(copy, at.x, at.y);
+		} finally {
+			imageGC.dispose();
+			copy.dispose();
 		}
 	}
 
 	@Override
 	public void copyArea(int srcX, int srcY, int width, int height, int destX, int destY) {
-		try (var copiedArea = surface.makeImageSnapshot(
-				RectangleConverter.createScaledRectangle(getScaler(), srcX, srcY, width, height).toIRect())) {
-			surface.getCanvas().drawImage(copiedArea, getScaler().autoScaleUp(destX), getScaler().autoScaleUp(destY));
+		// leaf 6 (PIXEL_COPY, GF20): the source cut to the surface as BitBlt cuts it, the destination moved by the cut; a source
+		// outside the surface copies nothing (the donor threw on the null snapshot and misplaced a source cut at the edge)
+		final IRect source = RectangleConverter.createScaledRectangle(getScaler(), srcX, srcY, width, height).toIRect();
+		final IRect visible = source.intersect(new IRect(0, 0, surface.getWidth(), surface.getHeight()));
+		if (visible == null) {
+			return;
+		}
+		try (var copiedArea = surface.makeImageSnapshot(visible)) {
+			if (copiedArea != null) {
+				surface.getCanvas().drawImage(copiedArea, getScaler().autoScaleUp(destX) + visible.getLeft() - source.getLeft(),
+						getScaler().autoScaleUp(destY) + visible.getTop() - source.getTop());
+			}
 		}
 	}
 
@@ -779,7 +906,7 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public boolean isClipped() {
-		return isClipSet;
+		return layer.isClipped();
 	}
 
 	@Override
@@ -796,18 +923,18 @@ public class M3ExternalGC implements IExternalGC {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
 
-		if (this.currentClipBounds != null) {
-
-			region.intersect(this.currentClipBounds);
-			region.add(this.currentClipBounds);
+		// leaf 6 (CLIP_STATE, GF03, GF04): the region becomes the clip in points: a region clip's own rectangles within the frame
+		// (untransformed), else the clip box. The donor intersected with the caller's region object (disposed by
+		// CTabFolderRenderer after setClipping: ERROR_INVALID_ARGUMENT) and answered nothing for a path clip
+		region.intersect(0, 0, 0, 0);
+		final int[] rects = layer.regionRects();
+		if (rects == null || layer.isTransformed()) {
+			region.add(getClipping());
 			return;
 		}
-
-		if (this.currentClipRegion != null) {
-			region.intersect(this.currentClipRegion);
-			region.add(this.currentClipRegion);
-			return;
-		}
+		final Rect frame = frame();
+		IntStream.range(0, rects.length / 4).mapToObj(i -> Rect.makeLTRB(rects[4 * i], rects[4 * i + 1], rects[4 * i + 2],
+				rects[4 * i + 3]).intersect(frame)).filter(r -> r != null).forEach(r -> region.add(toPoints(r)));
 	}
 
 	@Override
@@ -832,7 +959,8 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public boolean getAdvanced() {
-		return true;
+		// leaf 6 (GC_STATE_RESET, GF05): stock data.gdipGraphics != 0: false until setAdvanced(true) or a call that needs GDI+
+		return advanced;
 	}
 
 	@Override
@@ -852,23 +980,21 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public GCData getGCData() {
-		return null;
+		// leaf 6 (ARG_CONTRACT, pattern M3-GC-CONTRACT v1, census GF01): stock widget code reads the GC's data (planeDraw in
+		// Composite.drawBackgroundInPixels and RetainedHook, gdipGraphics and nativeZoom in Control/Shell.print, uiState): this
+		// GC's own, with no GDI+ graphics (0) and no retained plane (-1). The donor answered null (I31 SkiaGC.getGCData)
+		data.device = device;
+		data.style = style;
+		data.nativeZoom = getScaler().getNativeZoom();
+		data.alpha = alpha;
+		return data;
 	}
 
 	@Override
 	public int getInterpolation() {
-		if (interpolationMode == SamplingMode.DEFAULT) {
-			return SWT.NONE;
-		}
-		if (interpolationMode == SamplingMode.LINEAR) {
-			return SWT.HIGH;
-		}
-		if (interpolationMode instanceof final FilterMipmap fm) {
-			if (fm.getFilterMode() == FilterMode.LINEAR && fm.getMipmapMode() == MipmapMode.LINEAR) {
-				return SWT.LOW;
-			}
-		}
-		return SWT.DEFAULT;
+		// leaf 6 (HINT_STATE, GF06): the value set, as the stock GC reads its GDI+ mode back (the donor decoded the sampling: LOW
+		// read back HIGH, HIGH read back DEFAULT, the fresh GC NONE)
+		return interpolation;
 	}
 
 	@Override
@@ -903,7 +1029,10 @@ public class M3ExternalGC implements IExternalGC {
 		if (transform == null) {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		}
-		M3TransformConverter.fromM3Matrix(currentTransform, transform, getScaler());
+		if (transform.isDisposed()) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		M3TransformConverter.fromM3Matrix(layer.transform(), transform, getScaler());
 	}
 
 	@Override
@@ -916,85 +1045,52 @@ public class M3ExternalGC implements IExternalGC {
 		if (pattern != null && pattern.isDisposed()) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
+		advanced |= pattern != null;
 		this.backgroundPattern = pattern;
 	}
 
 	@Override
 	public void setClipping(Path path) {
-		final IM3Canvas canvas = surface.getCanvas();
-		if (isClipSet) {
-			canvas.restore(); // pop the previously saved clip layer
-			isClipSet = false;
-		}
-		if (path == null) {
-			return;
-		}
-		if (path.isDisposed()) {
+		// leaf 6 (CLIP_STATE, GF16): replaces the clip in the GC layer at the current transform (M3GcLayer.setClip); a disposed
+		// path is rejected before the clip changes, as the stock GC does
+		if (path != null && path.isDisposed()) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
-		try (final io.github.humbleui.skija.Path m3Path = M3PathConverter.convertSWTPathToM3Path(path,
-				getScaler())) {
+		try (final io.github.humbleui.skija.Path m3Path = path == null ? null
+				: M3PathConverter.convertSWTPathToM3Path(path, getScaler())) {
 			if (m3Path == null) {
+				layer.setClip(null, null, null);
 				return;
 			}
 			m3Path.setFillMode(fillRule == SWT.FILL_EVEN_ODD ? PathFillMode.EVEN_ODD : PathFillMode.WINDING);
-			// Push a new canvas layer so the clip can be undone later with restore()
-			canvas.save();
-			isClipSet = true;
-			canvas.clipPath(m3Path, ClipMode.INTERSECT, true);
+			layer.setClip(canvas -> canvas.clipPath(m3Path, ClipMode.INTERSECT, true), m3Path.computeTightBounds(), null);
 		}
 	}
 
 	@Override
 	public void setClipping(Rectangle rect) {
-
-		// Skija uses a canvas state stack; each save() pushes a new layer,
-		// and restore() pops it, removing the clipping region set in that layer.
-		// Since only one clip is tracked at a time, no explicit restore() is needed
-		// here
-		// because the clip will be cleared when the next setClipping call is made or on
-		// dispose.
-		final IM3Canvas canvas = surface.getCanvas();
-		if (isClipSet) {
-			canvas.restore(); // pop the previously saved clip layer
-			isClipSet = false;
-		}
+		// leaf 6 (CLIP_STATE, GF02, GF16): the rectangle replaces the clip in the GC layer, whatever setTransform did since
 		if (rect == null) {
-			currentClipBounds = null;
+			layer.setClip(null, null, null);
 			return;
 		}
-		currentClipBounds = new Rectangle(rect.x, rect.y, rect.width, rect.height);
-		// Push a new canvas layer so the clip can be undone later with restore()
-		canvas.save();
-		canvas.clipRect(RectangleConverter.createScaledRectangle(getScaler(), rect));
-		isClipSet = true;
-
+		final Rect local = RectangleConverter.createScaledRectangle(getScaler(), rect);
+		layer.setClip(canvas -> canvas.clipRect(local), local, null);
 	}
 
 	@Override
 	public void setClipping(Region region) {
-
-		// Skija uses a canvas state stack; each save() pushes a new layer,
-		// and restore() pops it, removing the clipping region set in that layer.
-		final IM3Canvas canvas = surface.getCanvas();
-		if (isClipSet) {
-			canvas.restore(); // pop the previously saved clip layer
-			isClipSet = false;
-		}
-		currentClipBounds = null;
-		currentClipRegion = region;
-
+		// leaf 6 (CLIP_STATE, GF03, GF18): the region's rectangles at this GC's zoom, copied now from the region's own handle
+		// (M3RegionCalculator), so a later change or dispose of the caller's region does not reach the clip
 		if (region == null) {
+			layer.setClip(null, null, null);
 			return;
 		}
-
-		final M3RegionCalculator calc = new M3RegionCalculator(region, m3Extension);
-		// Push a new canvas layer so the clip can be undone later with restore()
-		canvas.save();
-		try (calc) {
-			canvas.clipRegion(calc.getM3Region());
+		if (region.isDisposed()) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
-		isClipSet = true;
+		final int[] rects = M3RegionCalculator.rectangles(region, getScaler().getNativeZoom());
+		layer.setClip(canvas -> M3RegionCalculator.clip(canvas, rects), M3RegionCalculator.bounds(rects), rects);
 	}
 
 	@Override
@@ -1010,6 +1106,7 @@ public class M3ExternalGC implements IExternalGC {
 		if (pattern != null && pattern.isDisposed()) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
+		advanced |= pattern != null;
 		this.foregroundPattern = pattern;
 	}
 
@@ -1023,13 +1120,16 @@ public class M3ExternalGC implements IExternalGC {
 		// HighQualityBicubic SKCubicResampler.CatmullRom maximum sharp, cubic
 		// interpolation
 
+		// leaf 6 (HINT_STATE, GF06): DEFAULT samples nearest like the untouched GC (stock without GDI+: StretchBlt COLORONCOLOR);
+		// the donor mapped DEFAULT to Mitchell, a second default (departure from I31 SkiaGC.setInterpolation)
 		switch (interpolation) {
-		case SWT.NONE -> this.interpolationMode = SamplingMode.DEFAULT; // Nearest neighbor
+		case SWT.NONE, SWT.DEFAULT -> this.interpolationMode = SamplingMode.DEFAULT; // Nearest neighbor
 		case SWT.LOW -> this.interpolationMode = SamplingMode.LINEAR;
-		case SWT.DEFAULT -> this.interpolationMode = SamplingMode.MITCHELL;
 		case SWT.HIGH -> this.interpolationMode = SamplingMode.CATMULL_ROM;
 		default -> SWT.error(SWT.ERROR_INVALID_ARGUMENT);
 		}
+		advanced |= interpolation != SWT.DEFAULT;
+		this.interpolation = interpolation;
 	}
 
 	@Override
@@ -1038,12 +1138,11 @@ public class M3ExternalGC implements IExternalGC {
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		}
 
-		if(attributes.width <= 0) {
-			attributes.width = 1;
-		}
-
-		final float scaledWidth = getScaler().autoScaleUp(attributes.width);
-		setLineAttributesInPixels(attributes, scaledWidth);
+		// leaf 6 (STROKE_SCALE, GF14): the width stays in points, the unit of lineWidth everywhere (setLineWidth, getLineWidth,
+		// M3PaintManager scales it once); the caller's object is not written (the stock GC copies it). A width <= 0 strokes 1
+		// point as the donor did (GF13, hairline semantics, not in this leaf)
+		final float width = attributes.width <= 0 ? 1 : attributes.width;
+		setLineAttributesInPixels(attributes, width);
 	}
 
 	private void setLineAttributesInPixels(LineAttributes attributes, float scaledWidth) {
@@ -1209,6 +1308,11 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public void setTextAntialias(int antialias) {
+		// leaf 6 (HINT_STATE, GF06): validated as the stock GC does (DEFAULT, OFF, ON)
+		if (antialias != SWT.DEFAULT && antialias != SWT.ON && antialias != SWT.OFF) {
+			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
+		}
+		advanced |= antialias != SWT.DEFAULT;
 		this.textAntiAlias = antialias;
 	}
 
@@ -1237,7 +1341,7 @@ public class M3ExternalGC implements IExternalGC {
 
 		final var font = getM3Font();
 		final var m = font.getMetrics();
-		final var fe = new FontMetricsExtension(new M3ExternalFontMetrics(m, getScaler()));
+		final var fe = new FontMetricsExtension(new M3ExternalFontMetrics(m, font.getSize(), getScaler()));
 		return fe;
 	}
 
