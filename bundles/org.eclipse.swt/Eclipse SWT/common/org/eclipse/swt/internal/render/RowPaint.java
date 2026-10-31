@@ -31,7 +31,9 @@ public final class RowPaint {
 		CHECKED = 1 << 5, GRAYED = 1 << 6, CHECKBOX = 1 << 7, FULL_SELECTION = 1 << 8, FOCUSED = 1 << 9,
 		FOCUS_CUES = 1 << 10, DROP = 1 << 11, GRID_LINES = 1 << 12, SYSTEM_SELECTION = 1 << 13,
 		/* cell text wider than its box ends with "..." (a list view's cells) */
-		ELLIPSIS = 1 << 14;
+		ELLIPSIS = 1 << 14,
+		/* GRID_LINES v1: a themed list view with columns draws the column detail on each cell's last pixel without grid lines too */
+		COLUMN_DETAIL = 1 << 15;
 
 	/** The row (line) rectangle. */
 	public int x, y, width, height;

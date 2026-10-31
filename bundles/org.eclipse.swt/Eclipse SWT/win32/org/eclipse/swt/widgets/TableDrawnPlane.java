@@ -90,7 +90,17 @@ final class TableDrawnPlane extends DrawnPlane {
 				bottom = bounds.bottom;
 			}
 		}
-		if (bottom < damage.bottom) paintEmpty (damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
+		if (bottom < damage.bottom) {
+			if (bottom == damage.top) emptyColumns (hwnd);
+			paintEmpty (damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
+		}
+	}
+
+	/* GRID_LINES v1: with no row painted in this frame, the empty area takes the column geometry and state from the header */
+	private void emptyColumns (long hwnd) {
+		row.state = table.columnCount > 0 ? RowPaint.COLUMN_DETAIL : 0;
+		row.x = client.left;
+		if (table.columnCount > 0) columns (hwnd, -1, null);
 	}
 
 	/*
@@ -196,6 +206,8 @@ final class TableDrawnPlane extends DrawnPlane {
 		if ((OS.SendMessage (hwnd, OS.WM_QUERYUISTATE, 0, 0) & OS.UISF_HIDEFOCUS) == 0) state |= RowPaint.FOCUS_CUES;
 		if ((table.style & SWT.FULL_SELECTION) != 0) state |= RowPaint.FULL_SELECTION;
 		if ((OS.SendMessage (hwnd, OS.LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0) & OS.LVS_EX_GRIDLINES) != 0) state |= RowPaint.GRID_LINES;
+		/* GRID_LINES v1: the themed report view draws its column detail at every column edge, with or without grid lines */
+		if (table.columnCount > 0) state |= RowPaint.COLUMN_DETAIL;
 		if ((table.style & SWT.CHECK) != 0) {
 			state |= RowPaint.CHECKBOX;
 			if (facade != null && facade.checked) state |= RowPaint.CHECKED;

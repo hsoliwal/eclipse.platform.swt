@@ -87,8 +87,29 @@ public class Test_org_eclipse_swt_internal_render_RowFidelity {
 	}
 
 	@Test
-	public void test_rowLayoutCarriesTheImageHeight () {
+	public void test_columnDetailWithoutGridLines () {
+		RowPaint row = row (RowPaint.COLUMN_DETAIL);
+		row.listColumnDetail = 0xEBF4FE;
+		new RowRenderer (Theme.NATIVE).gridLines (RECORDER, row);
+		assertEquals (List.of ("fill 54,346 1x19 ebf4fe", "fill 94,346 1x19 ebf4fe", "fill 139,346 1x19 ebf4fe"), calls);
+	}
+
+	@Test
+	public void test_noColumnDetailWithoutTheStateOrTheThemeColour () {
 		RowPaint row = row (0);
+		row.listColumnDetail = 0xEBF4FE;
+		new RowRenderer (Theme.NATIVE).gridLines (RECORDER, row);
+		row.state = RowPaint.COLUMN_DETAIL;
+		row.listColumnDetail = -1;
+		new RowRenderer (Theme.NATIVE).gridLines (RECORDER, row);
+		row.listColumnDetail = 0xEBF4FE;
+		new RowRenderer (Theme.SWING).gridLines (RECORDER, row);
+		assertEquals (List.of (), calls);
+	}
+
+	@Test
+	public void test_rowLayoutCarriesTheImageHeight () {
+		RowPaint row = row (RowPaint.COLUMN_DETAIL);
 		row.imageHeight = 12;
 		int [] ints = new int [RowPaint.keyLength (row.cells)];
 		String [] texts = new String [3];
@@ -97,6 +118,29 @@ public class Test_org_eclipse_swt_internal_render_RowFidelity {
 		RowPaint back = new RowPaint ();
 		back.read (ints, 0, texts, images, 0);
 		assertEquals (12, back.imageHeight);
+		assertEquals (RowPaint.COLUMN_DETAIL, back.state);
 		assertEquals (139, back.cellX [2] + back.cellWidth [2] - 1);
+	}
+
+	@Test
+	public void test_emptyAreaContinuesTheColumnDetail () {
+		RowPaint row = row (RowPaint.COLUMN_DETAIL);
+		row.listColumnDetail = 0xEBF4FE;
+		row.background = 0xFFFFFF;
+		new RowRenderer (Theme.NATIVE).paintEmpty (RECORDER, row, 0, 400, 200, 50);
+		assertEquals (List.of ("fill 0,400 200x50 ffffff", "fill 54,400 1x50 ebf4fe", "fill 94,400 1x50 ebf4fe", "fill 139,400 1x50 ebf4fe"), calls);
+	}
+
+	/* the System tab's colour column: stock leaves the cell's next-to-last pixel to the row (white), then the detail line */
+	@Test
+	public void test_cellColourEndsTwoPixelsBeforeTheCellEdge () {
+		RowPaint row = row (RowPaint.COLUMN_DETAIL);
+		row.listColumnDetail = 0xEBF4FE;
+		Arrays.fill (row.cellBackground, -1);
+		row.cellBackground [2] = 0;
+		new RowRenderer (Theme.NATIVE).cellBackground (RECORDER, row, 2);
+		row.state = 0;
+		new RowRenderer (Theme.NATIVE).cellBackground (RECORDER, row, 2);
+		assertEquals (List.of ("fill 95,346 43x19 0", "fill 95,346 45x19 0"), calls);
 	}
 }
