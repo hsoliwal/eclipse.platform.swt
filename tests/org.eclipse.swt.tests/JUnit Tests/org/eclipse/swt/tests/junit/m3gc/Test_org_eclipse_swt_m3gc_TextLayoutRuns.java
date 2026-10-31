@@ -85,6 +85,7 @@ public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 
 	@AfterEach
 	void tearDown() {
+		System.clearProperty("swt.m3.text");
 		layout.dispose();
 		real.close();
 		font.dispose();
@@ -147,8 +148,9 @@ public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 		assertTrue(Math.abs(c - expected) <= 3, "white at alpha 128 over 0x20: " + c + " expected " + expected);
 	}
 
-	/* L13 GLYPH_RUN_SINK/DRAW: layout drawn through a GCExtension (TextLayout dispatches to the M3 run sink) */
+	/* L13 GLYPH_RUN_SINK/DRAW: layout drawn through a GCExtension (TextLayout dispatches to the M3 run sink); route forced to runs */
 	long[] drawRuns(String text, int x, int y) {
+		System.setProperty("swt.m3.text", "runs");
 		layout.setText(text);
 		long runs = M3GlyphRuns.runs(), blobs = M3GlyphRuns.blobs(), fallbacks = M3GlyphRuns.fallbacks();
 		layout.draw(new GCExtension(gc), x, y);
@@ -227,6 +229,7 @@ public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 		layout.setText("under strike");
 		layout.setStyle(style, 0, 4);
 		long blobs = M3GlyphRuns.blobs(), fallbacks = M3GlyphRuns.fallbacks();
+		System.setProperty("swt.m3.text", "runs");
 		layout.draw(new GCExtension(gc), 0, 0, 6, 11, new Color(0, 0, 0), new Color(0, 0, 255));
 		assertTrue(M3GlyphRuns.blobs() > blobs, "blobs drawn");
 		assertEquals(fallbacks, M3GlyphRuns.fallbacks(), "underline/strikeout/selection need no fallback");
@@ -236,5 +239,30 @@ public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 		long lines = IntStream.range(under.y, under.y + under.height).filter(y -> IntStream.range(under.x, under.x + under.width)
 				.filter(x -> pixel(x, y) == 0xFF0000).count() >= under.width - 2).count();
 		assertTrue(lines >= 2, "underline and strikeout rows in the run colour: " + lines);
+	}
+
+	/* L13 TEXT_FALLBACK_SAFE v2 (GDI_UNDERLAY), the default route on a raster surface: the stock pixels exactly */
+	@Test
+	public void testRasterRouteIsStockExactly() {
+		layout.setText("System.out.println(\"hello m3\"); { [ ] }");
+		layout.setStyle(new TextStyle(null, new Color(0xCC, 0x78, 0x32), null), 0, 6);
+		long fallbacks = M3GlyphRuns.fallbacks();
+		layout.draw(new GCExtension(gc), 0, 0);
+		assertEquals(fallbacks + 1, M3GlyphRuns.fallbacks(), "auto on a raster surface takes GDI");
+		Rectangle b = layout.getBounds();
+		Image image = new Image(Display.getDefault(), b.width, b.height);
+		GC stock = new GC(image);
+		stock.setBackground(new Color(0x20, 0x20, 0x20));
+		stock.fillRectangle(0, 0, b.width, b.height);
+		stock.setForeground(new Color(0xDD, 0xDD, 0xDD));
+		layout.draw(stock, 0, 0);
+		stock.dispose();
+		ImageData d = image.getImageData();
+		image.dispose();
+		long differ = IntStream.range(0, b.height).flatMap(y -> IntStream.range(0, b.width).filter(x -> {
+			var rgb = d.palette.getRGB(d.getPixel(x, y));
+			return (rgb.red << 16 | rgb.green << 8 | rgb.blue) != pixel(x, y);
+		})).count();
+		assertEquals(0, differ, "pixels differing from the stock GC inside the layout");
 	}
 }

@@ -1362,6 +1362,28 @@ public class M3ExternalGC implements IExternalGC {
 		return runSink;
 	}
 
+	/*
+	 * L13 TEXT_FALLBACK_SAFE v2 (GDI_UNDERLAY): the surface pixels under a rectangle in points as 32-bit ImageData (BGRA),
+	 * when the canvas maps it by a whole-pixel translation at 100 %, it lies inside the surface and the surface is raster
+	 */
+	ImageData readSurface(Rectangle destInPoints) {
+		final float[] m = surface.getCanvas().getLocalToDevice().getMat();
+		final boolean plain = m[0] == 1 && m[1] == 0 && m[3] == 0 && m[4] == 1 && m[2] == Math.round(m[2]) && m[5] == Math.round(m[5]);
+		final int x = destInPoints.x + (int) m[2], y = destInPoints.y + (int) m[5];
+		final boolean inside = x >= 0 && y >= 0 && x + destInPoints.width <= surface.getWidth()
+				&& y + destInPoints.height <= surface.getHeight();
+		return plain && inside && getScaler().getNativeZoom() == 100 && !isMirrored()
+				? M3TextLayoutFallback.read(surface, x, y, destInPoints.width, destInPoints.height) : null;
+	}
+
+	/* L13: whether the GC draws on CPU memory (a raster surface): one pixel read, false at once for a GPU surface */
+	boolean isRasterSurface() {
+		try (var bitmap = new io.github.humbleui.skija.Bitmap()) {
+			bitmap.allocN32Pixels(1, 1);
+			return surface.readRasterPixels(bitmap, 0, 0);
+		}
+	}
+
 	/* L13 TEXT_FALLBACK_SAFE v1: a premultiplied BGRA raster composited once with the GC alpha (not squared) */
 	void drawLayoutRaster(byte[] bgra, int width, int height, Rectangle destInPoints) {
 		final ImageInfo info = new ImageInfo(width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL);

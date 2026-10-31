@@ -41,6 +41,12 @@ public class M3SurfaceAdapter implements IM3Surface {
 	}
 
 	@Override
+	public boolean readRasterPixels(io.github.humbleui.skija.Bitmap bitmap, int x, int y) {
+		// L13 TEXT_FALLBACK_SAFE v2: raster surfaces only (no GPU readback per text layout)
+		return delegate._context == null && delegate.readPixels(bitmap, x, y);
+	}
+
+	@Override
 	public IM3Image makeImageSnapshot(IRect rect) {
 		// M3 (GC seam, leaf 6; PIXEL_COPY, census GF20): Skija answers null for a rectangle outside the surface; so does the adapter
 		// (the donor wrapped the null, so copyArea's null check was dead and drawImage threw)

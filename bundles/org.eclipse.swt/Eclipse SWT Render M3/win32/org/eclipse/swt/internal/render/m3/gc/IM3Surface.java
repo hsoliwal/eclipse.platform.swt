@@ -41,6 +41,11 @@ public interface IM3Surface extends AutoCloseable {
 	 */
 	IM3Surface makeSurface(int width, int height);
 
+	/** L13 TEXT_FALLBACK_SAFE v2: copies device pixels at (x, y) into the bitmap when the surface is CPU memory (raster); false otherwise */
+	default boolean readRasterPixels(io.github.humbleui.skija.Bitmap bitmap, int x, int y) {
+		return false;
+	}
+
 	/**
 	 * Closes/releases the surface and its resources.
 	 */

@@ -37,14 +37,18 @@ import io.github.humbleui.types.Rect;
  * and <code>Replay</code> GLYPH_RUN of the GPU planes.
  * <p>
  * Not taken (the layout goes to {@link M3TextLayoutFallback}, counted): XOR, a mirrored frame, the system property
- * <code>swt.m3.text=gdi</code> (the transparent GDI raster for every layout, used to measure Skia against GDI), and what
+ * <code>swt.m3.text=gdi</code> (GDI for every layout), the default <code>auto</code> on a raster surface (GDI draws over the
+ * surface pixels: the stock ClearType exactly, decision L13-12), and what
  * the recorder rejects (border, error/squiggle underline, justified runs, runs without glyph indices, right-to-left
  * layouts).
  * </p>
  */
 public final class M3GlyphRuns implements M3RunSink {
 
-	static final boolean GDI_ONLY = "gdi".equals(System.getProperty("swt.m3.text"));
+	/* swt.m3.text: auto (default: GDI over the pixels on raster surfaces, glyph runs on GPU surfaces), runs, gdi */
+	static String mode() {
+		return System.getProperty("swt.m3.text", "auto");
+	}
 	private static final AtomicLong RUNS = new AtomicLong();
 	private static final AtomicLong BLOBS = new AtomicLong();
 	private final M3ExternalGC gc;
@@ -90,7 +94,9 @@ public final class M3GlyphRuns implements M3RunSink {
 
 	@Override
 	public boolean accepts() {
-		return !GDI_ONLY && !gc.getXORMode() && !gc.isMirrored();
+		final String mode = mode();
+		final boolean gdi = "gdi".equals(mode) || "auto".equals(mode) && gc.isRasterSurface();
+		return !gdi && !gc.getXORMode() && !gc.isMirrored();
 	}
 
 	@Override
