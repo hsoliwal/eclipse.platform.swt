@@ -12,6 +12,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Hitesh Soliwal (Synexia) - viewport mode
+ *     Tue Ton - suport for FreeBSD
  *******************************************************************************/
 package org.eclipse.swt.internal.gtk;
 
@@ -61,19 +62,22 @@ import org.eclipse.swt.internal.*;
  */
 public class OS extends C {
 	/** OS Constants */
-	public static final boolean IsLinux, IsWin32, BIG_ENDIAN;
+	public static final boolean IsFreeBSD, IsLinux, IsWin32, BIG_ENDIAN;
 	static {
 
 		/* Initialize the OS flags and locale constants */
 		String osName = System.getProperty ("os.name");
-		boolean isLinux = false, isWin32 = false;
+		boolean isFreeBSD = false, isLinux = false, isWin32 = false;
+        if (osName.equals("FreeBSD")) {
+            isFreeBSD = true;
+        }
         if (osName.equals("Linux")) {
             isLinux = true;
         }
         if (osName.startsWith("Windows")) {
             isWin32 = true;
         }
-		IsLinux = isLinux;  IsWin32 = isWin32;
+		IsFreeBSD = isFreeBSD; IsLinux = isLinux;  IsWin32 = isWin32;
 
 		byte[] buffer = new byte[4];
 		long ptr = C.malloc(4);
