@@ -37,6 +37,8 @@ abstract class DrawnPlane {
 	final Control control;
 	private final long nativeProc;
 	final BufferCanvas canvas;
+	/* the backend behind the mirroring of a right-to-left plane (docs/m3/theme-language/README.md); canvas is this */
+	private final MirroredCanvas mirroring;
 	private final String widget;
 	/* the renderer of the theme in effect; replaced when the theme selection changes (Themes) */
 	RowRenderer renderer;
@@ -47,8 +49,6 @@ abstract class DrawnPlane {
 	private int themeGeneration;
 	/* the frame log of the interaction model (IM1): frame times, input-to-pixel latency, snapshot generations */
 	final FrameLog frames = new FrameLog ();
-	/* -Dswt.drawn.overlay=true paints the frame log's numbers over the rows */
-	static final boolean OVERLAY = Boolean.getBoolean ("swt.drawn.overlay");
 	private final StringBuilder overlayText = new StringBuilder (96);
 	private final Runnable themeChanged;
 	final RowPaint row = new RowPaint ();
@@ -114,11 +114,13 @@ abstract class DrawnPlane {
 		this.themeGeneration = Themes.generation ();
 		this.explicit = Themes.explicit (widget);
 		this.renderer = new RowRenderer (explicit != null ? explicit : ui.theme ());
-		this.canvas = RowBackends.create (mode, widget, control.handle, itemThemeClass, control::getAutoscalingZoom, hdc -> {
+		this.mirroring = new MirroredCanvas (RowBackends.create (mode, widget, control.handle, itemThemeClass, control::getAutoscalingZoom, hdc -> {
 			GCData data = new GCData ();
 			data.device = control.display;
 			return control.createNewGC (hdc, data);
-		});
+		}));
+		this.canvas = mirroring;
+		M3BackendReport.first (widget, route (), backend ());
 		this.ownerDraw = new DrawnOwnerDraw (this);
 		if (RENDER_THREAD) {
 			/* the render thread's canvas: made there, reading only the zoom the UI thread writes; it draws image pixels, never an SWT GC */
@@ -149,7 +151,7 @@ abstract class DrawnPlane {
 			});
 		};
 		Themes.addListener (themeChanged);
-		if (OVERLAY) display.timerExec (500, new Runnable () {
+		if (M3Features.isOn (control, M3Features.FRAME_OVERLAY)) display.timerExec (500, new Runnable () {
 			@Override
 			public void run () {
 				if (control.isDisposed ()) return;
@@ -242,7 +244,25 @@ abstract class DrawnPlane {
 	}
 
 	/* behaviour pass into the back buffer, drawn pass over it, present: the damage is visible */
+	/*
+	 * A frame of the drawn plane. A listener the frame calls (SetData of a virtual row, an owner-draw event) may make the
+	 * widget paint again inside it; that paint would end this frame's retained-row pass under it, so it waits for the next
+	 * frame instead (the region stays invalid).
+	 */
 	private void draw (long hwnd, int msg, long target, long lParam) {
+		if (drawing) {
+			OS.InvalidateRect (hwnd, null, false);
+			return;
+		}
+		drawing = true;
+		try {
+			drawFrame (hwnd, msg, target, lParam);
+		} finally {
+			drawing = false;
+		}
+	}
+
+	private void drawFrame (long hwnd, int msg, long target, long lParam) {
 		/*
 		 * The owner-draw events hand the listener a GC, which the render thread never makes (rule 28): while the widget hooks
 		 * one of them, every frame takes the UI-thread path below (the render thread's canonical frame and slots stay as
@@ -270,14 +290,16 @@ abstract class DrawnPlane {
 		 * With a render thread this path serves captures (WM_PRINTCLIENT) and owner-drawn frames only: its slots are not kept
 		 * up, so it draws every row; a listener's drawing is never kept either (it may draw anything, from state no key holds)
 		 */
-		boolean retain = renderTarget == null && !OVERLAY && !owner && theme.rowPainter == null && theme.cellPainter == null;
+		boolean mirrored = (OS.GetLayout (target) & OS.LAYOUT_RTL) != 0;
+		boolean retain = renderTarget == null && !M3Features.isOn (control, M3Features.FRAME_OVERLAY) && !owner && !mirrored && theme.rowPainter == null && theme.cellPainter == null;
+		mirroring.mirror (mirrored ? client.right : 0);
 		canvas.target (buffer);
 		canvas.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		if (owner) ownerDraw.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		retainedRows.begin (canvas, renderer, buffer, damage.left, damage.top, damage.right, damage.bottom, client.right, rowsTop, retain);
 		try {
 			drawRows (hwnd);
-			if (OVERLAY) overlay ();
+			if (M3Features.isOn (control, M3Features.FRAME_OVERLAY)) overlay ();
 		} finally {
 			if (owner) ownerDraw.end ();
 			canvas.end ();
@@ -289,13 +311,28 @@ abstract class DrawnPlane {
 		int iterated = retainedRows.rowsIterated, drawn = retainedRows.rowsDrawn;
 		frames.damage (allRows && iterated > 0 && drawn == iterated, (long) width * height);
 		frames.rows (drawn, retainedRows.kept);
-		buffer.present (target, damage.left, damage.top, width, height);
+		present (target, mirrored, width, height);
 		/* stage 1 paints the live model on the UI thread: one generation per frame until the snapshots of IM2 */
 		frames.frame (begin, System.nanoTime (), frames.frames ());
 	}
 
 	/*
-	 * -Dswt.drawn.overlay=true: the frame time (last, p99) and the input-to-pixel latency p99 in the bottom right corner of
+	 * The damage of a mirrored window (WS_EX_LAYOUTRTL: its paint DC has LAYOUT_RTL) is in logical coordinates, x from the right
+	 * edge, and the frame holds physical pixels (the behaviour pass drew through a mirrored DC, the rows through MirroredCanvas):
+	 * the copy goes through the target DC with its layout set to left-to-right for that call, so it does not mirror the pixels.
+	 */
+	private void present (long target, boolean mirrored, int width, int height) {
+		if (!mirrored) {
+			buffer.present (target, damage.left, damage.top, width, height);
+			return;
+		}
+		OS.SetLayout (target, 0);
+		buffer.present (target, client.right - damage.right, damage.top, width, height);
+		OS.SetLayout (target, OS.LAYOUT_RTL);
+	}
+
+	/*
+	 * -Dswt.widget.feature.frame-overlay=true (M3Features.FRAME_OVERLAY; -Dswt.drawn.overlay=true is its alias): the frame time (last, p99) and the input-to-pixel latency p99 in the bottom right corner of
 	 * the client area (a header covers the top), repainted twice a second. A debugging aid: building its text allocates.
 	 */
 	private void overlay () {
@@ -327,6 +364,11 @@ abstract class DrawnPlane {
 	private void behaviour (long hwnd, int msg, long lParam) {
 		long dc = buffer.dc;
 		int saved = OS.SaveDC (dc);
+		/* a mirrored window paints through a mirrored DC; mirrored around the client width, not the (larger) buffer's */
+		if ((control.style & SWT.RIGHT_TO_LEFT) != 0) {
+			OS.SetLayout (dc, OS.LAYOUT_RTL);
+			OS.SetWindowOrgEx (dc, client.right - buffer.width, 0, null);
+		}
 		OS.IntersectClipRect (dc, damage.left, damage.top, damage.right, damage.bottom);
 		boolean owner = ownerDraw.hooked (), previous = owner && ignoreNativeCustomDraw (true);
 		try {
@@ -338,6 +380,8 @@ abstract class DrawnPlane {
 		} finally {
 			if (owner && !control.isDisposed ()) ignoreNativeCustomDraw (previous);
 			OS.RestoreDC (dc, saved);
+			OS.SetLayout (dc, 0);
+			OS.SetWindowOrgEx (dc, 0, 0, null);
 		}
 	}
 
@@ -380,6 +424,8 @@ abstract class DrawnPlane {
 
 	/* rule 24, delta based view: the rows the frame keeps instead of drawing (RetainedRows, UI-thread placement) */
 	private final RetainedRows retainedRows = new RetainedRows (false);
+	/* a frame is being drawn on the UI thread (see draw) */
+	private boolean drawing;
 
 	/**
 	 * Paints the row the plane filled ({@link #row}), or keeps it when its slot shows it already (rule 24); while a
@@ -391,6 +437,25 @@ abstract class DrawnPlane {
 			return;
 		}
 		retainedRows.paint (row);
+	}
+
+	/* ROW_IMAGE_BOUNDS v1 (real-app fidelity): the image size of a native image list (0 for none) */
+	private final int [] iconWidth = new int [1], iconHeight = new int [1];
+
+	final int imageListHeight (long imageList) {
+		iconHeight [0] = 0;
+		if (imageList != 0) OS.ImageList_GetIconSize (imageList, iconWidth, iconHeight);
+		return iconHeight [0];
+	}
+
+	/** MODE_TRUTH v1 (census L10): the mode the plane's backend realizes (gpu without a GL context draws m3, m3 without the library custom). */
+	final WidgetMode route () {
+		return canvas.route ();
+	}
+
+	/** BACKEND_REPORT v1: the plane and its backend, for example <code>Table drawn plane, M3RowCanvas(raster)</code>. */
+	final String backend () {
+		return widget + " drawn plane, " + canvas.backend ();
 	}
 
 	/** Paints the empty area below the rows with the frame's defaults (or adds it to the snapshot). */

@@ -29,6 +29,9 @@ CP="$LIB/skija-shared-0.116.3.jar;$LIB/skija-windows-x64-0.116.3.jar;$LIB/types-
 "$JDK/bin/javac" -J-Xmx1536m --release 21 -encoding UTF-8 -nowarn -proc:none -Xmaxerrs 300 -cp "$CP" -d "$OUT/classes" @"$OUT/src" > "$OUT/javac.log" 2>&1
 # a launcher failure (`error: file not found`, MSYS /c/ paths in the argfile: pass C:/ paths) counts as an error too
 n=$(grep -cE ': error:|^error: |^Usage: javac' "$OUT/javac.log"); n=${n:-0}
-echo "win32+m3gc: sources=$(wc -l < "$OUT/src") errors=$n"
+# GATE_POSITIVE_COUNT v1 (census L8, LF-02): a green gate needs positive witnesses, sources listed and classes written, not
+# just zero errors (an empty source list or a javac that wrote nothing is a failure)
+srcs=$(wc -l < "$OUT/src"); cls=$(find "$OUT/classes" -name '*.class' -type f | wc -l)
+echo "win32+m3gc: sources=$srcs classes=$cls errors=$n"
 grep ': error:' "$OUT/javac.log" | sed -E 's#.*bundles/org.eclipse.swt/##' | head -"${M3_SHOW:-20}"
-[ "$n" -eq 0 ]
+[ "$n" -eq 0 ] && [ "$srcs" -gt 0 ] && [ "$cls" -gt 0 ]

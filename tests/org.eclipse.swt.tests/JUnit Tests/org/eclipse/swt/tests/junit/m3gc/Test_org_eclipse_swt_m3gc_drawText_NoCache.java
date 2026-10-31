@@ -8,6 +8,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
 import org.eclipse.swt.internal.render.m3.gc.M3TextDrawing;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -21,6 +22,13 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 	@BeforeAll
 	static void checkPlatform() {
 		assumeTrue(SupportedTestPlatforms.isSupported(), "Test skipped: Platform not supported");
+	}
+
+	// M3 (GC seam, leaf 6; PRE_EXISTING P04): the property set by the tests below is cleared, so the classes after this one draw
+	// text through the image cache again (in suite order every later text test ran uncached and hid the cache's defects)
+	@AfterAll
+	static void clearNoCacheProperty() {
+		System.clearProperty(M3TextDrawing.NO_TEXT_CACHE);
 	}
 
 	@Test

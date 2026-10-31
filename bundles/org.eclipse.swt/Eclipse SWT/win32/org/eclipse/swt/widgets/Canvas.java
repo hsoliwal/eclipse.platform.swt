@@ -100,10 +100,9 @@ public void redraw (int x, int y, int width, int height, boolean all) {
 
 	if(externalCanvasHandler != null) {
 		externalCanvasHandler.redrawTriggered( x,  y,  width,  height,  all);
-		super.redraw();
 	}
-	else
-		super.redraw( x,  y,  width,  height,  all);
+	// M3 (GC seam, leaf 5, was L4-09): the damage rectangle only; the M3 handler paints and presents exactly the invalidated region
+	super.redraw( x,  y,  width,  height,  all);
 }
 
 @Override
@@ -113,7 +112,8 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 
 		if ((state & DISPOSE_SENT) != 0) return LRESULT.ZERO;
 
-		var result = externalCanvasHandler.paint(e -> sendEvent(SWT.Paint,e),wParam, lParam);
+		/* M3 (BACKGROUND_PARITY v1, census L16): the handler fills its frame through the stock background chain */
+		var result = externalCanvasHandler.paint(e -> sendEvent(SWT.Paint,e), this::fillM3Background, wParam, lParam);
 		if(result instanceof Integer i)
 			return new LRESULT(i);
 
@@ -126,6 +126,18 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 
 	return super.WM_PAINT(wParam, lParam);
 
+}
+
+/* MODE_TRUTH v1 (census L10): a canvas drawn by its M3 handler answers the handler's route (m3, or gpu with a GL context) */
+@Override
+WidgetMode m3Route () {
+	return externalCanvasHandler != null ? handlerRoute (externalCanvasHandler) : super.m3Route ();
+}
+
+/* BACKEND_REPORT v1: the M3 handler's name */
+@Override
+String m3Backend () {
+	return externalCanvasHandler != null ? externalCanvasHandler.backend () : super.m3Backend ();
 }
 
 /**
@@ -150,6 +162,12 @@ LRESULT WM_PAINT (long wParam, long lParam) {
  * @since 3.2
  */
 public void drawBackground (GC gc, int x, int y, int width, int height) {
+	/* M3 (GC seam, leaf 6; ARG_CONTRACT, census GF01): a GCExtension fills through the GC in points (Composite.drawBackgroundThroughGC) */
+	if (gc instanceof GCExtension && !gc.isDisposed ()) {
+		checkWidget ();
+		drawBackgroundThroughGC (gc, new Rectangle (x, y, width, height), new Point (0, 0));
+		return;
+	}
 	int zoom = getAutoscalingZoom();
 	Rectangle rectangle = Win32DPIUtils.pointToPixel(new Rectangle(x, y, width, height), zoom);
 	drawBackgroundInPixels(gc, rectangle.x, rectangle.y, rectangle.width, rectangle.height, 0, 0);

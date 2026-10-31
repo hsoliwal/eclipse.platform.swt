@@ -51,4 +51,14 @@ public interface BufferCanvas extends RowCanvas {
 	 * are the platform's.
 	 */
 	void fonts (FontTable table);
+
+	/** MODE_TRUTH v1 (census L10): the widget mode this backend realizes; a GC backend draws the custom mode. */
+	default org.eclipse.swt.internal.WidgetMode route () {
+		return org.eclipse.swt.internal.WidgetMode.CUSTOM;
+	}
+
+	/** BACKEND_REPORT v1: the backend's name for reports, for example <code>M3RowCanvas(raster)</code>. */
+	default String backend () {
+		return getClass ().getSimpleName ();
+	}
 }

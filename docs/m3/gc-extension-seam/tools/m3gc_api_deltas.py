@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 GC = "bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/"
+GPU = "bundles/org.eclipse.swt/Eclipse SWT GPU M3/win32/org/eclipse/swt/internal/gpu/m3/"
 TESTS = "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/m3gc/"
 MEMORY = "docs/m3/gc-extension-seam/RECIPE_MEMORY.tsv"
 HEADER = "delta_id\tfile\told\tnew\tjavac_line\treason\n"
@@ -67,6 +68,16 @@ DELTAS = [
     ("D15", GC + "M3RegionCalculator.java", "try (var path = pathBuilder.build()) {",
      "{\n\t\t\t\tvar path = pathBuilder; // Skija 0.116.3: Path is its own builder; the outer try closes it", False,
      "M3RegionCalculator.java:131: error: cannot find symbol  symbol: method build()", "see D07; one close, not two"),
+    # Leaf 4, P02 (PRE_EXISTING.tsv): the GPU M3 tree's Replay.poly was written against 0.143's PathBuilder; the same
+    # delta as D07/D08 (Path is its own builder, one close, drawn directly: no detach())
+    ("D16", GPU + "Replay.java", "\t\ttry (PathBuilder builder = new PathBuilder ()) {", "\t\ttry (Path builder = new Path ()) {", False,
+     "Replay.java:174: error: cannot find symbol  symbol: class PathBuilder (x2)",
+     "P02: Skija 0.116.3 has no PathBuilder; Path.moveTo/lineTo/closePath return the Path itself (D07)"),
+    ("D17", GPU + "Replay.java",
+     "\t\t\ttry (Path path = builder.detach ()) {\n\t\t\t\tCanvas._nDrawPath (canvas, path._ptr, backend.paint (a [o + 2], a [o + 1]));\n\t\t\t}\n",
+     "\t\t\tCanvas._nDrawPath (canvas, builder._ptr, backend.paint (a [o + 2], a [o + 1]));\n", False,
+     "Replay.java:180: error: cannot find symbol  symbol: method detach()",
+     "P02: the Path is drawn directly and closed once by the outer try (D08: one close, not two)"),
 ]
 
 

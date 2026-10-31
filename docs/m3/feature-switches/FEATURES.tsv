@@ -1,0 +1,181 @@
+bit	feature_id	constant	concept	widget_family	current_state	default	native_owner	enhanced_api_id	alias	shipped	switch_key
+0	card	CARD	card	panel	GAP	off	-	-	-	no	swt.widget.feature.card | swt.widget.feature.<Widget>.card
+1	avatar	AVATAR	avatar	list	GAP	off	-	-	-	no	swt.widget.feature.avatar | swt.widget.feature.<Widget>.avatar
+2	icon	ICON	icon	all	GAP	off	-	-	-	no	swt.widget.feature.icon | swt.widget.feature.<Widget>.icon
+3	skeleton	SKELETON	skeleton	all	GAP	off	-	-	-	no	swt.widget.feature.skeleton | swt.widget.feature.<Widget>.skeleton
+4	drawer	DRAWER	drawer	overlay	GAP	off	-	-	-	no	swt.widget.feature.drawer | swt.widget.feature.<Widget>.drawer
+5	autocomplete	AUTOCOMPLETE	autocomplete	input	NATIVE_HAS	on	org.eclipse.nebula.widgets.opal.textassist.TextAssist (Nebula); JFace ContentProposalAdapter (platform.ui)	-	-	no	swt.widget.feature.autocomplete | swt.widget.feature.<Widget>.autocomplete
+6	kbd	KBD	kbd	text	GAP	off	-	-	-	no	swt.widget.feature.kbd | swt.widget.feature.<Widget>.kbd
+7	kanban-board	KANBAN_BOARD	kanban-board	list	GAP	off	-	-	-	no	swt.widget.feature.kanban-board | swt.widget.feature.<Widget>.kanban-board
+8	bottom-sheet	BOTTOM_SHEET	bottom-sheet	overlay	GAP	off	-	-	-	no	swt.widget.feature.bottom-sheet | swt.widget.feature.<Widget>.bottom-sheet
+9	empty-state	EMPTY_STATE	empty-state	all	GAP	off	-	-	-	no	swt.widget.feature.empty-state | swt.widget.feature.<Widget>.empty-state
+10	sticky-rows	STICKY_ROWS	affix	all	ENHANCED_API_ROW	off	-	M3-STICKY-ROWS	-	no	swt.widget.feature.sticky-rows | swt.widget.feature.<Widget>.sticky-rows
+11	pull-to-refresh	PULL_TO_REFRESH	pull-to-refresh	all	GAP	off	-	-	-	no	swt.widget.feature.pull-to-refresh | swt.widget.feature.<Widget>.pull-to-refresh
+12	swipe-actions	SWIPE_ACTIONS	swipe-actions	list	ENHANCED_API_ROW	off	-	M3-ROW-ACTIONS	-	no	swt.widget.feature.swipe-actions | swt.widget.feature.<Widget>.swipe-actions
+13	highlight-mark	HIGHLIGHT_MARK	highlight-mark	text	NATIVE_HAS	on	org.eclipse.swt.custom.StyleRange.background (StyledText)	-	-	no	swt.widget.feature.highlight-mark | swt.widget.feature.<Widget>.highlight-mark
+14	fab	FAB	fab	overlay	GAP	off	-	-	-	no	swt.widget.feature.fab | swt.widget.feature.<Widget>.fab
+15	otp-input	OTP_INPUT	otp-input	input	GAP	off	-	-	-	no	swt.widget.feature.otp-input | swt.widget.feature.<Widget>.otp-input
+16	tag-input	TAG_INPUT	tag-input	input	NATIVE_HAS	on	org.eclipse.nebula.widgets.chips.Chips (Nebula)	-	-	no	swt.widget.feature.tag-input | swt.widget.feature.<Widget>.tag-input
+17	stat-kpi	STAT_KPI	stat-kpi	panel	GAP	off	-	-	-	no	swt.widget.feature.stat-kpi | swt.widget.feature.<Widget>.stat-kpi
+18	video-player	VIDEO_PLAYER	video-player	panel	GAP	off	-	-	-	no	swt.widget.feature.video-player | swt.widget.feature.<Widget>.video-player
+19	cascader	CASCADER	cascader	input	GAP	off	-	-	-	no	swt.widget.feature.cascader | swt.widget.feature.<Widget>.cascader
+20	infinite-scroll	INFINITE_SCROLL	infinite-scroll	all	VIEWPORT_HAS	off	VirtualPageSource / SetData window (viewport, SWT.VIRTUAL)	-	-	no	swt.widget.feature.infinite-scroll | swt.widget.feature.<Widget>.infinite-scroll
+21	hover-card	HOVER_CARD	hover-card	overlay	GAP	off	-	-	-	no	swt.widget.feature.hover-card | swt.widget.feature.<Widget>.hover-card
+22	tour	TOUR	tour	overlay	GAP	off	-	-	-	no	swt.widget.feature.tour | swt.widget.feature.<Widget>.tour
+23	qr-code	QR_CODE	qr-code	panel	GAP	off	-	-	-	no	swt.widget.feature.qr-code | swt.widget.feature.<Widget>.qr-code
+24	markdown-render	MARKDOWN_RENDER	markdown-render	text	GAP	off	-	-	-	no	swt.widget.feature.markdown-render | swt.widget.feature.<Widget>.markdown-render
+25	virtual-list	VIRTUAL_LIST	virtual-list	list	VIEWPORT_HAS	off	List/Table/Tree SWT.VIRTUAL + VirtualListModel/VirtualRowExtents (viewport)	-	-	no	swt.widget.feature.virtual-list | swt.widget.feature.<Widget>.virtual-list
+26	date-range	DATE_RANGE	date-range	input	GAP	off	-	-	-	no	swt.widget.feature.date-range | swt.widget.feature.<Widget>.date-range
+27	sparkline	SPARKLINE	sparkline	table	GAP	off	-	-	-	no	swt.widget.feature.sparkline | swt.widget.feature.<Widget>.sparkline
+28	ribbon	RIBBON	ribbon	panel	GAP	off	M3Ribbon (proposed, Nebula custom-widgets)	-	-	no	swt.widget.feature.ribbon | swt.widget.feature.<Widget>.ribbon
+29	focus-trap	FOCUS_TRAP	focus-trap	all	NATIVE_HAS	on	Control.setTabList / focus traversal (SWT)	-	-	no	swt.widget.feature.focus-trap | swt.widget.feature.<Widget>.focus-trap
+30	backdrop	BACKDROP	backdrop	overlay	GAP	off	-	-	-	no	swt.widget.feature.backdrop | swt.widget.feature.<Widget>.backdrop
+31	code-block	CODE_BLOCK	code-block	text	GAP	off	-	-	-	no	swt.widget.feature.code-block | swt.widget.feature.<Widget>.code-block
+32	captcha-security	CAPTCHA_SECURITY	captcha-security	input	GAP	off	-	-	-	no	swt.widget.feature.captcha-security | swt.widget.feature.<Widget>.captcha-security
+33	search	SEARCH	search	input	NATIVE_HAS	on	Text with SWT.SEARCH (ICON_SEARCH, ICON_CANCEL)	-	-	no	swt.widget.feature.search | swt.widget.feature.<Widget>.search
+34	context-menu	CONTEXT_MENU	context-menu	all	NATIVE_HAS	on	Menu with SWT.POP_UP (Control.setMenu)	-	-	no	swt.widget.feature.context-menu | swt.widget.feature.<Widget>.context-menu
+35	time-picker	TIME_PICKER	time-picker	input	NATIVE_HAS	on	DateTime with SWT.TIME	-	-	no	swt.widget.feature.time-picker | swt.widget.feature.<Widget>.time-picker
+36	button	BUTTON	button	input	NATIVE_HAS	on	org.eclipse.swt.widgets.Button	-	-	no	swt.widget.feature.button | swt.widget.feature.<Widget>.button
+37	select	SELECT	select	input	NATIVE_HAS	on	org.eclipse.swt.widgets.Combo; CCombo	-	-	no	swt.widget.feature.select | swt.widget.feature.<Widget>.select
+38	layout-primitive	LAYOUT_PRIMITIVE	layout-primitive	panel	NATIVE_HAS	on	GridLayout/RowLayout/FillLayout/StackLayout + Composite (SWT)	-	-	no	swt.widget.feature.layout-primitive | swt.widget.feature.<Widget>.layout-primitive
+39	text-input	TEXT_INPUT	text-input	input	NATIVE_HAS	on	org.eclipse.swt.widgets.Text (setMessage prompt)	-	-	no	swt.widget.feature.text-input | swt.widget.feature.<Widget>.text-input
+40	progress	PROGRESS	progress	table	NATIVE_HAS	on	org.eclipse.swt.widgets.ProgressBar; Nebula ProgressCircle	-	-	no	swt.widget.feature.progress | swt.widget.feature.<Widget>.progress
+41	panel	PANEL	panel	panel	NATIVE_HAS	on	org.eclipse.swt.widgets.Group; Nebula PGroup	-	-	no	swt.widget.feature.panel | swt.widget.feature.<Widget>.panel
+42	slider	SLIDER	slider	input	NATIVE_HAS	on	org.eclipse.swt.widgets.Scale; Slider; Nebula RangeSlider	-	-	no	swt.widget.feature.slider | swt.widget.feature.<Widget>.slider
+43	tabs	TABS	tabs	panel	NATIVE_HAS	on	org.eclipse.swt.custom.CTabFolder	-	-	no	swt.widget.feature.tabs | swt.widget.feature.<Widget>.tabs
+44	checkbox	CHECKBOX	checkbox	all	NATIVE_HAS	on	Button SWT.CHECK; Tree/Table SWT.CHECK	-	-	no	swt.widget.feature.checkbox | swt.widget.feature.<Widget>.checkbox
+45	dialog	DIALOG	dialog	overlay	NATIVE_HAS	on	org.eclipse.swt.widgets.Dialog; MessageBox	-	-	no	swt.widget.feature.dialog | swt.widget.feature.<Widget>.dialog
+46	menu	MENU	menu	all	NATIVE_HAS	on	org.eclipse.swt.widgets.Menu	-	-	no	swt.widget.feature.menu | swt.widget.feature.<Widget>.menu
+47	list	LIST	list	list	NATIVE_HAS	on	org.eclipse.swt.widgets.List	-	-	no	swt.widget.feature.list | swt.widget.feature.<Widget>.list
+48	radio	RADIO	radio	input	NATIVE_HAS	on	Button SWT.RADIO; Nebula RadioGroup	-	-	no	swt.widget.feature.radio | swt.widget.feature.<Widget>.radio
+49	popover	POPOVER	popover	overlay	NATIVE_HAS	on	org.eclipse.swt.widgets.ToolTip (SWT.BALLOON); PopupList	-	-	no	swt.widget.feature.popover | swt.widget.feature.<Widget>.popover
+50	tooltip	TOOLTIP	tooltip	all	NATIVE_HAS	on	org.eclipse.swt.widgets.ToolTip; native label tip for truncated rows	-	-	no	swt.widget.feature.tooltip | swt.widget.feature.<Widget>.tooltip
+51	divider	DIVIDER	divider	all	NATIVE_HAS	on	Label SWT.SEPARATOR; Nebula TitledSeparator	-	-	no	swt.widget.feature.divider | swt.widget.feature.<Widget>.divider
+52	accordion	ACCORDION	accordion	panel	NATIVE_HAS	on	org.eclipse.swt.widgets.ExpandBar; Nebula PShelf	-	-	no	swt.widget.feature.accordion | swt.widget.feature.<Widget>.accordion
+53	table	TABLE	table	table	NATIVE_HAS	on	org.eclipse.swt.widgets.Table	-	-	no	swt.widget.feature.table | swt.widget.feature.<Widget>.table
+54	switch	SWITCH	switch	input	NATIVE_HAS	on	Nebula SwitchButton; RoundedSwitch	-	-	no	swt.widget.feature.switch | swt.widget.feature.<Widget>.switch
+55	navigation	NAVIGATION	navigation	panel	GAP	off	-	-	-	no	swt.widget.feature.navigation | swt.widget.feature.<Widget>.navigation
+56	number-input	NUMBER_INPUT	number-input	input	NATIVE_HAS	on	org.eclipse.swt.widgets.Spinner	-	-	no	swt.widget.feature.number-input | swt.widget.feature.<Widget>.number-input
+57	label	LABEL	label	text	NATIVE_HAS	on	org.eclipse.swt.widgets.Label; CLabel	-	-	no	swt.widget.feature.label | swt.widget.feature.<Widget>.label
+58	image	IMAGE	image	all	NATIVE_HAS	on	Item.setImage (org.eclipse.swt.graphics.Image); Nebula picture	-	-	no	swt.widget.feature.image | swt.widget.feature.<Widget>.image
+59	text-area	TEXT_AREA	text-area	text	NATIVE_HAS	on	Text SWT.MULTI; Nebula RichTextEditor	-	-	no	swt.widget.feature.text-area | swt.widget.feature.<Widget>.text-area
+60	toast	TOAST	toast	overlay	NATIVE_HAS	on	Nebula Notifier (opal)	-	-	no	swt.widget.feature.toast | swt.widget.feature.<Widget>.toast
+61	link	LINK	link	text	NATIVE_HAS	on	org.eclipse.swt.widgets.Link	-	-	no	swt.widget.feature.link | swt.widget.feature.<Widget>.link
+62	app-bar	APP_BAR	app-bar	panel	NATIVE_HAS	on	Nebula opal Header	-	-	no	swt.widget.feature.app-bar | swt.widget.feature.<Widget>.app-bar
+63	tree	TREE	tree	tree	NATIVE_HAS	on	org.eclipse.swt.widgets.Tree	-	-	no	swt.widget.feature.tree | swt.widget.feature.<Widget>.tree
+64	badge	BADGE	badge	all	NATIVE_HAS	on	Nebula BadgedLabel	-	-	no	swt.widget.feature.badge | swt.widget.feature.<Widget>.badge
+65	alert-banner	ALERT_BANNER	alert-banner	panel	NATIVE_HAS	on	org.eclipse.swt.custom.CBanner	-	-	no	swt.widget.feature.alert-banner | swt.widget.feature.<Widget>.alert-banner
+66	toggle-button	TOGGLE_BUTTON	toggle-button	input	NATIVE_HAS	on	Button SWT.TOGGLE; Nebula SegmentedBar	-	-	no	swt.widget.feature.toggle-button | swt.widget.feature.<Widget>.toggle-button
+67	scroll	SCROLL	scroll	all	NATIVE_HAS	on	org.eclipse.swt.widgets.ScrollBar; ScrolledComposite	-	-	no	swt.widget.feature.scroll | swt.widget.feature.<Widget>.scroll
+68	chip	CHIP	chip	all	NATIVE_HAS	on	Nebula Chips	-	-	no	swt.widget.feature.chip | swt.widget.feature.<Widget>.chip
+69	toolbar	TOOLBAR	toolbar	panel	NATIVE_HAS	on	org.eclipse.swt.widgets.ToolBar; CoolBar	-	-	no	swt.widget.feature.toolbar | swt.widget.feature.<Widget>.toolbar
+70	breadcrumb	BREADCRUMB	breadcrumb	panel	NATIVE_HAS	on	Nebula opal Breadcrumb	-	-	no	swt.widget.feature.breadcrumb | swt.widget.feature.<Widget>.breadcrumb
+71	date-picker	DATE_PICKER	date-picker	input	NATIVE_HAS	on	org.eclipse.swt.widgets.DateTime; Nebula CDateTime	-	-	no	swt.widget.feature.date-picker | swt.widget.feature.<Widget>.date-picker
+72	pagination	PAGINATION	pagination	all	NATIVE_HAS	on	Nebula pagination	-	-	no	swt.widget.feature.pagination | swt.widget.feature.<Widget>.pagination
+73	grid	GRID	grid	grid	NATIVE_HAS	on	Nebula Grid	-	-	no	swt.widget.feature.grid | swt.widget.feature.<Widget>.grid
+74	heading	HEADING	heading	text	NATIVE_HAS	on	Nebula TitledSeparator; TitleControl (opal)	-	-	no	swt.widget.feature.heading | swt.widget.feature.<Widget>.heading
+75	calendar	CALENDAR	calendar	input	NATIVE_HAS	on	DateTime SWT.CALENDAR; Nebula CalendarCombo	-	-	no	swt.widget.feature.calendar | swt.widget.feature.<Widget>.calendar
+76	item-animation	ITEM_ANIMATION	transition-anim	all	ENHANCED_API_ROW	off	Nebula animation/transitions (standalone effects)	M3-ITEM-ANIMATOR	-	no	swt.widget.feature.item-animation | swt.widget.feature.<Widget>.item-animation
+77	carousel	CAROUSEL	carousel	panel	NATIVE_HAS	on	Nebula Carousel	-	-	no	swt.widget.feature.carousel | swt.widget.feature.<Widget>.carousel
+78	file-upload	FILE_UPLOAD	file-upload	input	NATIVE_HAS	on	org.eclipse.swt.widgets.FileDialog	-	-	no	swt.widget.feature.file-upload | swt.widget.feature.<Widget>.file-upload
+79	chart	CHART	chart	panel	NATIVE_HAS	on	Nebula XYGraph (visualization); GanttChart	-	-	no	swt.widget.feature.chart | swt.widget.feature.<Widget>.chart
+80	toggle-group	TOGGLE_GROUP	toggle-group	input	NATIVE_HAS	on	Nebula RadioGroup	-	-	no	swt.widget.feature.toggle-group | swt.widget.feature.<Widget>.toggle-group
+81	stepper	STEPPER	stepper	panel	NATIVE_HAS	on	Nebula Stepbar	-	-	no	swt.widget.feature.stepper | swt.widget.feature.<Widget>.stepper
+82	splitter	SPLITTER	splitter	panel	NATIVE_HAS	on	org.eclipse.swt.custom.SashForm; Sash	-	-	no	swt.widget.feature.splitter | swt.widget.feature.<Widget>.splitter
+83	color-picker	COLOR_PICKER	color-picker	input	NATIVE_HAS	on	org.eclipse.swt.widgets.ColorDialog	-	-	no	swt.widget.feature.color-picker | swt.widget.feature.<Widget>.color-picker
+84	spinner-loading	SPINNER_LOADING	spinner-loading	all	NATIVE_HAS	on	org.eclipse.swt.custom.BusyIndicator; Nebula ProgressCircle	-	-	no	swt.widget.feature.spinner-loading | swt.widget.feature.<Widget>.spinner-loading
+85	rich-text-editor	RICH_TEXT_EDITOR	rich-text-editor	text	NATIVE_HAS	on	org.eclipse.swt.custom.StyledText; Nebula RichTextEditor	-	-	no	swt.widget.feature.rich-text-editor | swt.widget.feature.<Widget>.rich-text-editor
+86	theme-provider	THEME_PROVIDER	config-provider	all	ENHANCED_API_ROW	off	-Dswt.widget.theme[.<Widget>] startup property (LOOK_AND_FEEL.md); Nebula styleprovider	M3-THEME-HOOKS	-	yes	swt.widget.feature.theme-provider | swt.widget.feature.<Widget>.theme-provider
+87	rating	RATING	rating	table	NATIVE_HAS	on	Nebula StarRating	-	-	no	swt.widget.feature.rating | swt.widget.feature.<Widget>.rating
+88	message-list	MESSAGE_LIST	message-list	list	GAP	off	-	-	-	no	swt.widget.feature.message-list | swt.widget.feature.<Widget>.message-list
+89	timeline	TIMELINE	timeline	list	NATIVE_HAS	on	Nebula timeline	-	-	no	swt.widget.feature.timeline | swt.widget.feature.<Widget>.timeline
+90	led-gauge	LED_GAUGE	led-gauge	table	NATIVE_HAS	on	Nebula led; BaseLED	-	-	no	swt.widget.feature.led-gauge | swt.widget.feature.<Widget>.led-gauge
+91	password	PASSWORD	password	input	NATIVE_HAS	on	Text SWT.PASSWORD; Nebula PasswordRevealer	-	-	no	swt.widget.feature.password | swt.widget.feature.<Widget>.password
+92	web-view	WEB_VIEW	web-view	panel	NATIVE_HAS	on	org.eclipse.swt.browser.Browser	-	-	no	swt.widget.feature.web-view | swt.widget.feature.<Widget>.web-view
+93	command-palette	COMMAND_PALETTE	command-palette	overlay	GAP	off	Eclipse Quick Access (platform.ui), not SWT/Nebula	-	-	no	swt.widget.feature.command-palette | swt.widget.feature.<Widget>.command-palette
+94	tray-status	TRAY_STATUS	tray-status	panel	NATIVE_HAS	on	org.eclipse.swt.widgets.Tray; TaskBar	-	-	no	swt.widget.feature.tray-status | swt.widget.feature.<Widget>.tray-status
+95	reorder-drag	REORDER_DRAG	reorder-drag	all	NATIVE_HAS	on	org.eclipse.swt.dnd DragSource/DropTarget; TreeDragSourceEffect/TableDropTargetEffect	-	-	no	swt.widget.feature.reorder-drag | swt.widget.feature.<Widget>.reorder-drag
+96	split-button	SPLIT_BUTTON	split-button	input	NATIVE_HAS	on	Nebula SplitButton; ToolItem SWT.DROP_DOWN	-	-	no	swt.widget.feature.split-button | swt.widget.feature.<Widget>.split-button
+97	map	MAP	map	panel	NATIVE_HAS	on	Nebula GeoMap	-	-	no	swt.widget.feature.map | swt.widget.feature.<Widget>.map
+98	carousel-tiles	CAROUSEL_TILES	carousel-tiles	panel	NATIVE_HAS	on	Nebula Tiles	-	-	no	swt.widget.feature.carousel-tiles | swt.widget.feature.<Widget>.carousel-tiles
+99	gallery	GALLERY	gallery	grid	NATIVE_HAS	on	Nebula Gallery	-	-	no	swt.widget.feature.gallery | swt.widget.feature.<Widget>.gallery
+100	treemap	TREEMAP	treemap	grid	NATIVE_HAS	on	Nebula TreeMapper	-	-	no	swt.widget.feature.treemap | swt.widget.feature.<Widget>.treemap
+101	gantt	GANTT	gantt	table	NATIVE_HAS	on	Nebula GanttChart	-	-	no	swt.widget.feature.gantt | swt.widget.feature.<Widget>.gantt
+102	quick-filter	QUICK_FILTER	quick filter box (debounced instant search)	all	GAP	off	JFace PatternFilter / FilteredTree (platform.ui), not SWT	-	-	no	swt.widget.feature.quick-filter | swt.widget.feature.<Widget>.quick-filter
+103	faceted-filters	FACETED_FILTERS	faceted filters with live counts	all	GAP	off	-	-	-	no	swt.widget.feature.faceted-filters | swt.widget.feature.<Widget>.faceted-filters
+104	saved-views	SAVED_VIEWS	saved and named filter/sort/column sets	all	GAP	off	-	-	-	no	swt.widget.feature.saved-views | swt.widget.feature.<Widget>.saved-views
+105	optimistic-update	OPTIMISTIC_UPDATE	optimistic update	all	GAP	off	-	-	-	no	swt.widget.feature.optimistic-update | swt.widget.feature.<Widget>.optimistic-update
+106	inline-edit	INLINE_EDIT	inline edit (click-to-edit)	all	NATIVE_HAS	on	org.eclipse.swt.custom.TableEditor; TreeEditor; ControlEditor	-	-	no	swt.widget.feature.inline-edit | swt.widget.feature.<Widget>.inline-edit
+107	dirty-guard	DIRTY_GUARD	dirty guard (unsaved changes)	all	GAP	off	-	-	-	no	swt.widget.feature.dirty-guard | swt.widget.feature.<Widget>.dirty-guard
+108	keyboard-shortcuts-overlay	KEYBOARD_SHORTCUTS_OVERLAY	keyboard shortcuts overlay	overlay	GAP	off	-	-	-	no	swt.widget.feature.keyboard-shortcuts-overlay | swt.widget.feature.<Widget>.keyboard-shortcuts-overlay
+109	roving-focus	ROVING_FOCUS	roving focus	all	GAP	off	-	-	-	no	swt.widget.feature.roving-focus | swt.widget.feature.<Widget>.roving-focus
+110	select-all-matching	SELECT_ALL_MATCHING	select all matching the filter	all	GAP	off	-	-	-	no	swt.widget.feature.select-all-matching | swt.widget.feature.<Widget>.select-all-matching
+111	long-press-menu	LONG_PRESS_MENU	long-press menu (touch)	all	GAP	off	-	-	-	no	swt.widget.feature.long-press-menu | swt.widget.feature.<Widget>.long-press-menu
+112	zoom	ZOOM	pinch zoom / Ctrl+wheel zoom	all	GAP	off	-	-	-	no	swt.widget.feature.zoom | swt.widget.feature.<Widget>.zoom
+113	responsive-density	RESPONSIVE_DENSITY	responsive layout and density	all	GAP	off	-	-	-	no	swt.widget.feature.responsive-density | swt.widget.feature.<Widget>.responsive-density
+114	clipboard-paste	CLIPBOARD_PASTE	clipboard copy/paste of cell ranges	grid	GAP	off	-	-	-	no	swt.widget.feature.clipboard-paste | swt.widget.feature.<Widget>.clipboard-paste
+115	master-detail	MASTER_DETAIL	row details (master-detail)	table	GAP	off	-	-	-	no	swt.widget.feature.master-detail | swt.widget.feature.<Widget>.master-detail
+116	pivot	PIVOT	pivot	grid	GAP	off	-	-	-	no	swt.widget.feature.pivot | swt.widget.feature.<Widget>.pivot
+117	totals-footer	TOTALS_FOOTER	totals / footer row and aggregates	table	GAP	off	-	-	-	no	swt.widget.feature.totals-footer | swt.widget.feature.<Widget>.totals-footer
+118	conditional-formatting	CONDITIONAL_FORMATTING	conditional formatting / heatmap cells	table	GAP	off	-	-	-	no	swt.widget.feature.conditional-formatting | swt.widget.feature.<Widget>.conditional-formatting
+119	change-flash	CHANGE_FLASH	change flash	table	ENHANCED_API_ROW	off	-	M3-CELL-FLASH	-	no	swt.widget.feature.change-flash | swt.widget.feature.<Widget>.change-flash
+120	sticky-scroll	STICKY_SCROLL	sticky scroll (enclosing scopes pinned)	text	GAP	off	Eclipse 4.31 sticky scrolling (platform.ui fork), not SWT	-	-	no	swt.widget.feature.sticky-scroll | swt.widget.feature.<Widget>.sticky-scroll
+121	code-minings	CODE_MININGS	code minings and inline hints	text	GAP	off	JFace Text code minings (platform.ui fork), not SWT	-	-	no	swt.widget.feature.code-minings | swt.widget.feature.<Widget>.code-minings
+122	undo-redo	UNDO_REDO	undo/redo of view edits	all	GAP	off	-	-	-	no	swt.widget.feature.undo-redo | swt.widget.feature.<Widget>.undo-redo
+123	print-export	PRINT_EXPORT	print and export	all	GAP	off	-	-	-	no	swt.widget.feature.print-export | swt.widget.feature.<Widget>.print-export
+124	persisted-state	PERSISTED_STATE	persisted view state	all	GAP	off	-	-	-	no	swt.widget.feature.persisted-state | swt.widget.feature.<Widget>.persisted-state
+125	svg-skins	SVG_SKINS	SVG-skinned controls	all	GAP	off	SWT SVGRasterizer seam (org.eclipse.swt.svg)	-	-	no	swt.widget.feature.svg-skins | swt.widget.feature.<Widget>.svg-skins
+126	diff-viewer	DIFF_VIEWER	diff viewer	text	GAP	off	Eclipse Compare TextMergeViewer (eclipse.platform fork), not SWT	-	-	no	swt.widget.feature.diff-viewer | swt.widget.feature.<Widget>.diff-viewer
+127	text-folding	TEXT_FOLDING	text folding	text	GAP	off	JFace ProjectionViewer (platform.ui fork), not SWT	-	-	no	swt.widget.feature.text-folding | swt.widget.feature.<Widget>.text-folding
+128	popup-find	POPUP_FIND	popup find / replace overlay	text	GAP	off	Eclipse FindReplaceOverlay (platform.ui fork); M3FindBar (proposed)	-	-	no	swt.widget.feature.popup-find | swt.widget.feature.<Widget>.popup-find
+129	validator	VALIDATOR	validator	input	GAP	off	JFace IInputValidator / ControlDecorationSupport (platform.ui), not SWT	-	-	no	swt.widget.feature.validator | swt.widget.feature.<Widget>.validator
+130	formatter	FORMATTER	formatter	input	NATIVE_HAS	on	Nebula FormattedText	-	-	no	swt.widget.feature.formatter | swt.widget.feature.<Widget>.formatter
+131	constrainer	CONSTRAINER	constrainer (input masks)	input	NATIVE_HAS	on	Text VerifyListener (SWT); Nebula FormattedText	-	-	no	swt.widget.feature.constrainer | swt.widget.feature.<Widget>.constrainer
+132	enabler	ENABLER	enabler / disabler	all	GAP	off	-	-	-	no	swt.widget.feature.enabler | swt.widget.feature.<Widget>.enabler
+133	bulk-selection-mover	BULK_SELECTION_MOVER	bulk selection mover	tree	GAP	off	-	-	-	no	swt.widget.feature.bulk-selection-mover | swt.widget.feature.<Widget>.bulk-selection-mover
+134	expand-to-level	EXPAND_TO_LEVEL	expand/collapse all and to level	tree	VIEWPORT_HAS	off	Tree.expandAll/collapseAll/expandToLevel/collapseToLevel (fork additions)	-	-	no	swt.widget.feature.expand-to-level | swt.widget.feature.<Widget>.expand-to-level
+135	rtl-bidi	RTL_BIDI	RTL mirroring and bidi text direction	all	NATIVE_HAS	on	SWT.RIGHT_TO_LEFT; Control.setTextDirection	-	-	no	swt.widget.feature.rtl-bidi | swt.widget.feature.<Widget>.rtl-bidi
+136	range-select	RANGE_SELECT	range select (enhanced API)	all	VIEWPORT_HAS	off	VirtualSelectionModel	M3-RANGE-SELECT	-	no	swt.widget.feature.range-select | swt.widget.feature.<Widget>.range-select
+137	visible-range	VISIBLE_RANGE	visible range (enhanced API)	all	VIEWPORT_HAS	off	VirtualScrollMetrics.visibleRows	M3-VISIBLE-RANGE	-	no	swt.widget.feature.visible-range | swt.widget.feature.<Widget>.visible-range
+138	scroll-info	SCROLL_INFO	scroll info (enhanced API)	all	VIEWPORT_HAS	off	VirtualScrollMetrics	M3-SCROLL-INFO	-	no	swt.widget.feature.scroll-info | swt.widget.feature.<Widget>.scroll-info
+139	scroll-to-aligned	SCROLL_TO_ALIGNED	scroll to aligned (enhanced API)	all	VIEWPORT_HAS	off	-	M3-SCROLL-TO-ALIGNED	-	no	swt.widget.feature.scroll-to-aligned | swt.widget.feature.<Widget>.scroll-to-aligned
+140	text-segments	TEXT_SEGMENTS	text segments (enhanced API)	all	VIEWPORT_HAS	off	-	M3-TEXT-SEGMENTS	-	no	swt.widget.feature.text-segments | swt.widget.feature.<Widget>.text-segments
+141	token-cursor	TOKEN_CURSOR	token cursor (enhanced API)	all	VIEWPORT_HAS	off	M3TokenCursor	M3-TOKEN-CURSOR	-	no	swt.widget.feature.token-cursor | swt.widget.feature.<Widget>.token-cursor
+142	mode-query	MODE_QUERY	mode query (enhanced API)	all	VIEWPORT_HAS	off	WidgetMode.of	M3-MODE-QUERY	-	no	swt.widget.feature.mode-query | swt.widget.feature.<Widget>.mode-query
+143	emptiness	EMPTINESS	emptiness (enhanced API)	all	VIEWPORT_HAS	off	SWT.EmptinessChanged	M3-EMPTINESS	-	no	swt.widget.feature.emptiness | swt.widget.feature.<Widget>.emptiness
+144	row-math	ROW_MATH	row math (enhanced API)	all	VIEWPORT_HAS	off	VirtualTreeSiblingIndex	M3-ROW-MATH	-	no	swt.widget.feature.row-math | swt.widget.feature.<Widget>.row-math
+145	residency	RESIDENCY	residency (enhanced API)	all	VIEWPORT_HAS	off	VirtualTreeResidentPlan	M3-RESIDENCY	-	no	swt.widget.feature.residency | swt.widget.feature.<Widget>.residency
+146	bulk-updates	BULK_UPDATES	bulk updates (enhanced API)	all	VIEWPORT_HAS	off	ViewportBatch	M3-BULK-UPDATES	-	no	swt.widget.feature.bulk-updates | swt.widget.feature.<Widget>.bulk-updates
+147	prefetch	PREFETCH	prefetch (enhanced API)	all	VIEWPORT_HAS	off	TreeViewport	M3-PREFETCH	-	no	swt.widget.feature.prefetch | swt.widget.feature.<Widget>.prefetch
+148	diff-apply	DIFF_APPLY	diff apply (enhanced API)	all	VIEWPORT_HAS	off	-	M3-DIFF-APPLY	-	no	swt.widget.feature.diff-apply | swt.widget.feature.<Widget>.diff-apply
+149	visibility-observer	VISIBILITY_OBSERVER	visibility observer (enhanced API)	all	VIEWPORT_HAS	off	-	M3-VISIBILITY-OBSERVER	-	no	swt.widget.feature.visibility-observer | swt.widget.feature.<Widget>.visibility-observer
+150	proxy-model	PROXY_MODEL	proxy model (enhanced API)	all	VIEWPORT_HAS	off	-	M3-PROXY-MODEL	-	no	swt.widget.feature.proxy-model | swt.widget.feature.<Widget>.proxy-model
+151	column-sort	COLUMN_SORT	column sort (enhanced API)	all	ENHANCED_API_ROW	off	M3ProxyModel	M3-COLUMN-SORT	-	no	swt.widget.feature.column-sort | swt.widget.feature.<Widget>.column-sort
+152	column-filter	COLUMN_FILTER	column filter (enhanced API)	all	ENHANCED_API_ROW	off	M3ProxyModel	M3-COLUMN-FILTER	-	no	swt.widget.feature.column-filter | swt.widget.feature.<Widget>.column-filter
+153	scroll-restore	SCROLL_RESTORE	scroll restore (enhanced API)	all	VIEWPORT_HAS	off	-	M3-SCROLL-RESTORE	-	no	swt.widget.feature.scroll-restore | swt.widget.feature.<Widget>.scroll-restore
+154	estimated-heights	ESTIMATED_HEIGHTS	estimated heights (enhanced API)	all	VIEWPORT_HAS	off	-	M3-ESTIMATED-HEIGHTS	-	no	swt.widget.feature.estimated-heights | swt.widget.feature.<Widget>.estimated-heights
+155	decorations	DECORATIONS	decorations (enhanced API)	text	ENHANCED_API_ROW	off	-	M3-DECORATIONS	-	no	swt.widget.feature.decorations | swt.widget.feature.<Widget>.decorations
+156	locale-collation	LOCALE_COLLATION	locale collation (enhanced API)	all	VIEWPORT_HAS	off	-	M3-LOCALE-COLLATION	-	no	swt.widget.feature.locale-collation | swt.widget.feature.<Widget>.locale-collation
+157	reuse-pool	REUSE_POOL	reuse pool (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-REUSE-POOL	-	no	swt.widget.feature.reuse-pool | swt.widget.feature.<Widget>.reuse-pool
+158	type-ahead	TYPE_AHEAD	type ahead (enhanced API)	all	VIEWPORT_HAS	off	Searchable	M3-TYPE-AHEAD	-	no	swt.widget.feature.type-ahead | swt.widget.feature.<Widget>.type-ahead
+159	check-tristate	CHECK_TRISTATE	check tristate (enhanced API)	all	VIEWPORT_HAS	off	-	M3-CHECK-TRISTATE	-	no	swt.widget.feature.check-tristate | swt.widget.feature.<Widget>.check-tristate
+160	view-zones	VIEW_ZONES	view zones (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-VIEW-ZONES	-	no	swt.widget.feature.view-zones | swt.widget.feature.<Widget>.view-zones
+161	column-pin	COLUMN_PIN	column pin (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-COLUMN-PIN	-	no	swt.widget.feature.column-pin | swt.widget.feature.<Widget>.column-pin
+162	row-grouping	ROW_GROUPING	row grouping (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-ROW-GROUPING	-	no	swt.widget.feature.row-grouping | swt.widget.feature.<Widget>.row-grouping
+163	snap-scroll	SNAP_SCROLL	snap scroll (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-SNAP-SCROLL	-	no	swt.widget.feature.snap-scroll | swt.widget.feature.<Widget>.snap-scroll
+164	overscan	OVERSCAN	overscan (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-OVERSCAN	-	no	swt.widget.feature.overscan | swt.widget.feature.<Widget>.overscan
+165	frame-pacing	FRAME_PACING	frame pacing (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-FRAME-PACING	-	no	swt.widget.feature.frame-pacing | swt.widget.feature.<Widget>.frame-pacing
+166	shaping-measure	SHAPING_MEASURE	shaping measure (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-SHAPING-MEASURE	-	no	swt.widget.feature.shaping-measure | swt.widget.feature.<Widget>.shaping-measure
+167	lazy-content	LAZY_CONTENT	lazy content (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-LAZY-CONTENT	-	no	swt.widget.feature.lazy-content | swt.widget.feature.<Widget>.lazy-content
+168	snapshot	SNAPSHOT	snapshot (enhanced API)	all	ENHANCED_API_ROW	off	ViewportDifferential	M3-SNAPSHOT	-	no	swt.widget.feature.snapshot | swt.widget.feature.<Widget>.snapshot
+169	log	LOG	log (enhanced API)	all	ENHANCED_API_ROW	off	SwtLog	M3-LOG	-	no	swt.widget.feature.log | swt.widget.feature.<Widget>.log
+170	scrollbar-geometry	SCROLLBAR_GEOMETRY	scrollbar geometry (enhanced API)	all	ENHANCED_API_ROW	off	ViewportScrollBarGeometry	M3-SCROLLBAR-GEOMETRY	-	no	swt.widget.feature.scrollbar-geometry | swt.widget.feature.<Widget>.scrollbar-geometry
+171	width-track	WIDTH_TRACK	width track (enhanced API)	all	ENHANCED_API_ROW	off	EditorSizeManager	M3-WIDTH-TRACK	-	no	swt.widget.feature.width-track | swt.widget.feature.<Widget>.width-track
+172	collapsing-header	COLLAPSING_HEADER	collapsing header (enhanced API)	grid	ENHANCED_API_ROW	off	-	M3-COLLAPSING-HEADER	-	no	swt.widget.feature.collapsing-header | swt.widget.feature.<Widget>.collapsing-header
+173	fill-handle	FILL_HANDLE	fill handle (enhanced API)	grid	ENHANCED_API_ROW	off	-	M3-FILL-HANDLE	-	no	swt.widget.feature.fill-handle | swt.widget.feature.<Widget>.fill-handle
+174	nested-scroll	NESTED_SCROLL	nested scroll (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-NESTED-SCROLL	-	no	swt.widget.feature.nested-scroll | swt.widget.feature.<Widget>.nested-scroll
+175	server-tree	SERVER_TREE	server tree (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-SERVER-TREE	-	no	swt.widget.feature.server-tree | swt.widget.feature.<Widget>.server-tree
+176	lang-id	LANG_ID	lang id (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-LANG-ID	-	no	swt.widget.feature.lang-id | swt.widget.feature.<Widget>.lang-id
+177	rollover	ROLLOVER	rollover (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-ROLLOVER	-	no	swt.widget.feature.rollover | swt.widget.feature.<Widget>.rollover
+178	frame-overlay	FRAME_OVERLAY	frame overlay (frame time and input latency numbers over the rows)	all	VIEWPORT_HAS	off	DrawnPlane.overlay (win32 drawn planes: custom, m3, gpu modes)	-	swt.drawn.overlay	yes	swt.widget.feature.frame-overlay | swt.widget.feature.<Widget>.frame-overlay
+179	language-switch	LANGUAGE_SWITCH	runtime language switch (relabel without recreate, RTL flip, locale formats)	all	ENHANCED_API_ROW	off	-	M3-LANG-ID	-	yes	swt.widget.feature.language-switch | swt.widget.feature.<Widget>.language-switch

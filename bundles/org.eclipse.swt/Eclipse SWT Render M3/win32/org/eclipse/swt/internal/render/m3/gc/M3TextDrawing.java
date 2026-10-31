@@ -55,7 +55,7 @@ public class M3TextDrawing {
 		final var scaler = new DpiScalerUtil(resources.getScaler());
 
 		final boolean transparent = isTransparent(flags);
-		final boolean antiAlias = gc.getAntialias() != SWT.OFF || gc.getTextAntialias() != SWT.OFF;
+		final boolean antiAlias = gc.getTextAntialias() != SWT.OFF;
 		final int[] yPos = new int[1];
 		yPos[0] = y;
 		final var f = gc.getM3Resources().getM3Font();
@@ -107,7 +107,9 @@ public class M3TextDrawing {
 					});
 
 				}
-				surface.getCanvas().drawString(text, r.x, r.y + ascI, f, fgp);
+				// RTL_FRAME v1: in a mirrored frame the run is flipped back about its box (M3Mirror)
+				M3Mirror.unmirrored(surface.getCanvas(), gc.isMirrored(), r.x, f.measureTextWidth(text, fgp),
+						() -> surface.getCanvas().drawString(text, r.x, r.y + ascI, f, fgp));
 				yPos[0] += heightI + leading;
 			}
 		});
@@ -115,6 +117,13 @@ public class M3TextDrawing {
 	}
 
 	private static void drawTextBlobWithCache(M3ExternalGC gc, String[] splits, int flags, int xIn, int yIn) {
+		// M3 (GC seam, leaf 6; TEXT_DRAW_FLAGS, leaf 7 finding L7-35): transparent text is drawn on the destination, not cached: on
+		// the transparent support surface the subpixel (LCD) glyph coverage went into an opaque alpha, so a raster back buffer got
+		// solid black glyph blocks (CTabFolder's tab text); on the opaque destination LCD text composites as ClearType does
+		if (isTransparent(flags)) {
+			drawTextBlobNoCache(gc, splits, flags, xIn, yIn);
+			return;
+		}
 
 		final var paintManager = gc.getPaintManager();
 		final var resources = gc.getM3Resources();
@@ -132,7 +141,7 @@ public class M3TextDrawing {
 				? M3ColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha())
 						: M3ColorConverter.convertSWTColorToM3Color(gc.getBackground());
 		final int foregroundColor = M3ColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha());
-		final boolean antiAlias = gc.getAntialias() != SWT.OFF || gc.getTextAntialias() != SWT.OFF;
+		final boolean antiAlias = gc.getTextAntialias() != SWT.OFF;
 
 		final int[] yPos = new int[1];
 		yPos[0] = y;
@@ -141,7 +150,8 @@ public class M3TextDrawing {
 			final var cachedImage = resources.getTextImage(text, props, transparent, backgroundColor, foregroundColor,
 					antiAlias);
 			if (cachedImage != null && !cachedImage.isClosed()) {
-				surface.getCanvas().drawImage(cachedImage, x, yPos[0]);
+				M3Mirror.unmirrored(surface.getCanvas(), gc.isMirrored(), x, cachedImage.getWidth(),
+						() -> surface.getCanvas().drawImage(cachedImage, x, yPos[0]));
 				yPos[0] += Math.ceil(cachedImage.getHeight());
 				continue;
 			}
@@ -228,7 +238,8 @@ public class M3TextDrawing {
 					final var image = supportSurface.makeImageSnapshot();
 					resources.cacheTextImage(text, props, transparent, backgroundColor, foregroundColor, antiAlias,
 							image);
-					surface.getCanvas().drawImage(image, x, yPos[0]);
+					M3Mirror.unmirrored(surface.getCanvas(), gc.isMirrored(), x, image.getWidth(),
+							() -> surface.getCanvas().drawImage(image, x, yPos[0]));
 					yPos[0] += Math.ceil(image.getHeight());
 
 				}

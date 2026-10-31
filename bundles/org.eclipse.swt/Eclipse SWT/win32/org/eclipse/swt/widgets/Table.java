@@ -2143,6 +2143,18 @@ private boolean customHeaderDrawing() {
 	return headerBackground != -1 || headerForeground != -1;
 }
 
+/* MODE_TRUTH v1: a drawn plane answers the mode its backend realizes (a gpu plane without a GL context draws in m3) */
+@Override
+WidgetMode m3Route () {
+	return drawnPlane != null ? drawnPlane.route () : super.m3Route ();
+}
+
+/* BACKEND_REPORT v1: the drawn plane and its backend */
+@Override
+String m3Backend () {
+	return drawnPlane != null ? drawnPlane.backend () : super.m3Backend ();
+}
+
 @Override
 int defaultBackground () {
 	return OS.GetSysColor (OS.COLOR_WINDOW);
@@ -5984,6 +5996,11 @@ void setTableEmpty () {
  * </ul>
  */
 public void setTopIndex (int index) {
+	setTopRow (index);
+	M3VisibilityObserver.changed (this);
+}
+
+void setTopRow (int index) {
 	checkWidget ();
 	int topIndex = (int)OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0);
     if (index == topIndex) {

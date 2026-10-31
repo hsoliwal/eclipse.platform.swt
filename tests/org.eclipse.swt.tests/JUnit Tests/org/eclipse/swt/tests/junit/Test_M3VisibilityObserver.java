@@ -224,4 +224,55 @@ public class Test_M3VisibilityObserver {
 		table.dispose ();
 		assertThrows (SWTException.class, () -> M3VisibilityObserver.addListener (table, nothing));
 	}
+
+	@Test
+	public void test_listWithoutScrollBarAndSecondListener () {
+		List list = new List (shell, SWT.NONE);
+		list.setBounds (5, 5, 200, 300);
+		for (int i = 0; i < 50; i++) list.add ("row " + i);
+		Seen first = new Seen ();
+		int [] heard = new int [1];
+		Listener second = event -> heard [0]++;
+		M3VisibilityObserver.addListener (list, first);
+		/* the second listener shares the latch: it hears changes from now on */
+		M3VisibilityObserver.addListener (list, second);
+		list.setTopIndex (20);
+		list.notifyListeners (SWT.KeyDown, new Event ());
+		flush ();
+		assertSeen (first, M3ItemSelection.getVisibleRange (list), "first");
+		M3VisibilityObserver.removeListener (list, first);
+		M3VisibilityObserver.removeListener (list, second);
+		/* removing a listener that was never added, from a widget without a latch */
+		M3VisibilityObserver.removeListener (list, second);
+		assertNull (list.getData ("org.eclipse.swt.widgets.M3VisibilityObserver"));
+	}
+
+	@Test
+	public void test_coalescedTriggersAndDisposeBeforeTheCheck () {
+		Table table = new Table (shell, SWT.NONE);
+		table.setBounds (5, 5, 200, 300);
+		for (int i = 0; i < 50; i++) new TableItem (table, SWT.NONE).setText ("row " + i);
+		Seen seen = new Seen ();
+		M3VisibilityObserver.addListener (table, seen);
+		int events = seen.events;
+		/* two triggers in one event: one check */
+		table.notifyListeners (SWT.Resize, new Event ());
+		table.notifyListeners (SWT.Resize, new Event ());
+		/* the widget goes before the scheduled check runs */
+		table.dispose ();
+		flush ();
+		assertEquals (events, seen.events);
+	}
+
+	@Test
+	public void test_listenerAddedWithoutTheApiHearsNothing () {
+		Table table = new Table (shell, SWT.NONE);
+		table.setBounds (5, 5, 200, 300);
+		Seen seen = new Seen ();
+		table.addListener (M3VisibilityObserver.EVENT, seen);
+		for (int i = 0; i < 50; i++) new TableItem (table, SWT.NONE).setText ("row " + i);
+		table.setItemCount (10);
+		flush ();
+		assertEquals (0, seen.events);
+	}
 }

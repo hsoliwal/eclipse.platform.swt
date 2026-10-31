@@ -1,0 +1,33 @@
+key	value
+commit	9919ebf97f27aa1ca95992c1488d77e830fa54cd
+dirty_files	0
+javac	javac 21.0.9
+stamp	v20261031-0733-m3l18
+swt.sources	915
+swt.javac_errors	0
+native.WebView2Loader.dll	184574b9c36b044888644fc1f2b19176e0e76ccc3ddd2f0a5f0d618c88661f86 OID_MATCH
+native.swt-awt-win32-4975r19.dll	e0d87eeb9c2300da6628460a274482f476f4804215369877f5b78ede1d9869d8 OID_MATCH
+native.swt-gdip-win32-4975r19.dll	ad0b938c1c3c97d2c3f8a7d7323c98c6b6506dee14279667e2c0c937e71a91dc OID_MATCH
+native.swt-osversion-win32-4975r19.dll	648dda8943d361716ec45e10b2f3c825a4f5360e3f10a5717628ddfe0d3fc729 OID_MATCH
+native.swt-wgl-win32-4975r19.dll	5a6069aab6461a865704317535dea1b06f216c686f6d8d0d738c56c288f8507f OID_MATCH
+native.swt-win32-4975r19.dll	9f758f09eda8872441f927778a86afe2e753d05d939fae1bd42fafaddc26d92f OID_MATCH
+skija.version	0.116.3
+types.version	0.1.1
+m3.sources	36
+m3.javac_errors	0
+swt.jar.sha256	302212b99055f3dcfee197b6561ed472df6eabfadd6858ab87a4858287648c8b
+swt.jar.bytes	3706295
+swt.jar.classes	1403
+swt-m3.jar.sha256	2942b5e44f996e7a63a70b370f16c3f6afd7953a32b34984dc4024c51267d213
+swt-m3.jar.bytes	9721975
+swt-m3.jar.classes	42
+swt-host.jar.sha256	e7f74ec6193752009b9f5c8353e351060ce75f1ced4408c9b8a94b357753ff67
+swt-host.jar.bytes	10985
+swt-host.jar.classes	0
+swt.jar.dlls	6
+swt.jar.glyphs	7
+swt-m3.jar.render_m3	39
+swt-m3.jar.gpu_m3	3
+nested.lib/skija-shared.jar	2e065693324dc5a8019518a2ef20db07f805281c5961e185d071c86ab8b3b9c1 BYTE_IDENTICAL
+nested.lib/skija-windows-x64.jar	5553be2214cbdc7d1358d966dba90443a31c54411f61c64a0720d3b0247ecc3a BYTE_IDENTICAL
+nested.lib/types.jar	549038f09cc1928f35bc0b583dc9865aff8450c5e8e0146328fe2ba48710ad35 BYTE_IDENTICAL

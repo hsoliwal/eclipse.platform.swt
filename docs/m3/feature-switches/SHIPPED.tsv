@@ -1,0 +1,4 @@
+feature_id	owner_file	seam	since
+frame-overlay	bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/DrawnPlane.java	M3Features.isOn (control, M3Features.FRAME_OVERLAY) at the overlay timer, the retain decision and the overlay paint	m3/feature-switches-20261030
+theme-provider	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3Themes.java	M3Themes.follows (control): M3Features.isOn (control, M3Features.THEME_PROVIDER), or no theme-provider key configured for the class chain (M3Themes.apply is the opt-in); read by M3ThemeApplier for every control of an apply and a reset	m3/theme-language-20261030
+language-switch	bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3Language.java	M3Language.follows (widget): M3Features.isOn (widget, M3Features.LANGUAGE_SWITCH), or no language-switch key configured for the class chain (M3Language.setLocale is the opt-in); read by the relabel pass and the RTL flip	m3/theme-language-20261030

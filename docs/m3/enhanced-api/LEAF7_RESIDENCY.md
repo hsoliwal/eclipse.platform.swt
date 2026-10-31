@@ -10,7 +10,7 @@ API, so applications and tests cannot check that a 10^6-row widget really stays 
 
 | member | answer |
 |---|---|
-| `M3ItemRange residentRange(Table / List / Tree)` | rows held ready to paint: the List's native row window, the Tree's paint window (visible-row coordinates, as `M3RowMath`), the rows of the last native cache hint of a Table without `SWT.VIRTUAL` (empty before the first paint; a virtual Table keeps the stock owner-data path); every row without a viewport |
+| `M3ItemRange residentRange(Table / List / Tree)` | rows held ready to paint: the List's native row window, the Tree's paint window (visible-row coordinates, as `M3RowMath`), the rows in view joined with the last native cache hint of a Table without `SWT.VIRTUAL` (empty before the first paint; a virtual Table keeps the stock owner-data path); every row without a viewport |
 | `boolean isMaterialized(Table, int index)` | whether a `TableItem` exists for the row now; never makes one |
 | `long[] stats(Table / List / Tree)` | `[RESIDENT_ROWS, FACADES, HELD_FACADES]`: rows of `residentRange`, item objects alive (strongly or weakly reachable), and the strongly held ones; a List has no item objects (0) |
 
@@ -44,3 +44,14 @@ count to expose. These wait for that adoption. They are recorded as the open par
 ## Algorithm choices
 
 See `ALGORITHM_CATALOGUE.tsv`: an interval view of an existing window plan, plus a linear census of the facade arrays.
+
+## Status (2026-10-30)
+
+| gate | result |
+|---|---|
+| build | master `d5f6048f398`, jar `master-d5f6048` plus the TableViewport change below; win32, GTK and Cocoa source sets 0 errors |
+| JUnit, hidden desktop | `Test_M3Residency` 9/9 viewport, 9/9 original |
+| differential against the official 3.135.0 jar | `Test_M3ResidencyDifferential` (shared `M3OfficialScene`, 8 seeds x 120 steps, plain and virtual): the official run records the rows of the Table and List whose bounds meet the client area; this SWT records the same rows when the resident range covers them, the stats are ordered and `isMaterialized` answers the same twice. First run: viewport plain failed at seed 0 step 1, resident `[10..14]` against visible `0..14` after 28 rows were added: the Table viewport answered the last `LVN_ODCACHEHINT`, which names only the rows a paint exposed. Fixed: `TableViewport.residentRange` joins the rows in view (top row and one page) with the hint; it stays empty before the first paint and without rows (a hidden table announces nothing, `Test_M3Prefetch.test_aHiddenTableAnnouncesNothing`). After the fix: 0 mismatches in viewport and original |
+| coverage (JaCoCo 0.8.15, both modes) | lines 22/22; branches 14/16, the other 2 are `SWT.error` probe artifacts: every reachable branch covered |
+
+Open: the map row's pressure listener and evicted/bytes counters wait for a widget to adopt `ItemResidency` (see "Not in this leaf"); GTK and Cocoa answer every row (stubs), not run.

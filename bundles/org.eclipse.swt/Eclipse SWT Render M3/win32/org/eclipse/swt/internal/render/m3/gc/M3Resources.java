@@ -347,6 +347,13 @@ public class M3Resources implements IM3Resources {
 	}
 
 	@Override
+	public void resetFont() {
+		// M3 (GC seam, leaf 6; GC_STATE_RESET, census GF49): back to the control's font (getFont/getM3Font derive it lazily)
+		swtFont = null;
+		m3Font = null;
+	}
+
+	@Override
 	public void resetBaseColors() {
 		foreground = null;
 		background = null;
@@ -465,10 +472,17 @@ public class M3Resources implements IM3Resources {
 
 	@Override
 	public Point textExtent(String text, int flags) {
+		// M3 (GC seam, leaf 6; TEXT_METRICS, pattern M3-GC-TEXT-METRICS v1, census GF28): the lines the draw draws for these flags
+		// (getTextSplits: DRAW_DELIMITER lines, DRAW_TAB expansion, DRAW_MNEMONIC prefixes), the widest rounded up, one line
+		// height each. The donor ignored the flags, always removed '&' and truncated
+		// v2 (leaf 7 finding L7-35): measured as the stock GC measures (M3GdiText, GDI DrawText), so a layout made with a stock GC
+		// outside paint and the Paint GC's measurement agree (CTabFolder shortened "Tab 2" to "Tab..." with Skia's wider advances)
+		return M3GdiText.textExtent(getFont(), getScaler().getNativeZoom(), text, flags);
+	}
 
-		final float height = getM3Font().getMetrics().getHeight();
-		final float width = getM3Font().measureTextWidth(replaceMnemonics(text));
-		return new Point((int) width, (int) height);
+	@Override
+	public Point stringExtent(String string) {
+		return M3GdiText.stringExtent(getFont(), getScaler().getNativeZoom(), string);
 	}
 
 	@Override
@@ -481,13 +495,9 @@ public class M3Resources implements IM3Resources {
 	}
 
 	public static String replaceMnemonics(String text) {
-		final int mnemonicIndex = text.lastIndexOf('&');
-		if (mnemonicIndex != -1) {
-			text = text.replaceAll("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
-			// TODO Underline the mnemonic key
-			// it seems this also does not work in windows with a simple snippet.
-		}
-		return text;
+		// M3 (GC seam, leaf 6; TEXT_DRAW_FLAGS): DrawText without DT_NOPREFIX: a single '&' marks the mnemonic and is not drawn,
+		// "&&" draws one '&' (the donor removed every '&'). The underline is not drawn (GF30, approximated)
+		return text.replaceAll("&(&?)", "$1"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Override

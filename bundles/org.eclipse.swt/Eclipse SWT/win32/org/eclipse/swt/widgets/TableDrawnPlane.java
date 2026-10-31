@@ -40,6 +40,8 @@ final class TableDrawnPlane extends DrawnPlane {
 	 * column widths at which stock 3.135.0 stops cutting a text with "..." (ListViewPaddingProbe, Windows 11, 100 %).
 	 */
 	static final int FIRST_TEXT_END = 4, TEXT_END = 8;
+	/* GRID_LINES v1: COLUMN_DETAIL for every row of a frame of a Table with columns (the themed report view draws its column detail at every column edge) */
+	private int detail;
 	/* the theme's column detail colour, read once (-2: not read yet) */
 	private int columnDetail = -2;
 
@@ -90,7 +92,20 @@ final class TableDrawnPlane extends DrawnPlane {
 				bottom = bounds.bottom;
 			}
 		}
-		if (bottom < damage.bottom) paintEmpty (damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
+		if (bottom < damage.bottom) emptyArea (hwnd, bottom);
+	}
+
+	/* the empty area below the rows; GRID_LINES v1: with no row painted it takes the columns from the header first */
+	private void emptyArea (long hwnd, int bottom) {
+		if (bottom == damage.top) emptyColumns (hwnd);
+		paintEmpty (damage.left, bottom, damage.right - damage.left, damage.bottom - bottom);
+	}
+
+	/* GRID_LINES v1: with no row painted in this frame, the empty area takes the column geometry and state from the header */
+	private void emptyColumns (long hwnd) {
+		row.state = detail;
+		row.x = client.left;
+		if (table.columnCount > 0) columns (hwnd, -1, null);
 	}
 
 	/*
@@ -155,6 +170,9 @@ final class TableDrawnPlane extends DrawnPlane {
 		if (columnDetail == -2) columnDetail = ThemeParts.listColumnDetail (hwnd);
 		row.listGrid = RowPaint.rgbOf (OS.GetSysColor (OS.COLOR_3DFACE));
 		row.listColumnDetail = columnDetail;
+		/* ROW_IMAGE_BOUNDS v1: the ListView draws every image at its image list's size, centred in the row */
+		row.imageHeight = imageListHeight (OS.SendMessage (hwnd, OS.LVM_GETIMAGELIST, OS.LVSIL_SMALL, 0));
+		detail = table.columnCount > 0 ? RowPaint.COLUMN_DETAIL : 0;
 		long states = OS.SendMessage (hwnd, OS.LVM_GETIMAGELIST, OS.LVSIL_STATE, 0);
 		stateWidth [0] = 0;
 		if (states != 0) OS.ImageList_GetIconSize (states, stateWidth, stateHeight);
@@ -186,7 +204,7 @@ final class TableDrawnPlane extends DrawnPlane {
 	private int state (long hwnd, int index, int focus, TableItem facade) {
 		int bits = (int) OS.SendMessage (hwnd, OS.LVM_GETITEMSTATE, index, OS.LVIS_SELECTED | OS.LVIS_DROPHILITED);
 		/* the ListView ends cell text that does not fit with "..." */
-		int state = RowPaint.ELLIPSIS;
+		int state = RowPaint.ELLIPSIS | detail;
 		if ((bits & OS.LVIS_SELECTED) != 0) state |= RowPaint.SELECTED;
 		if ((bits & OS.LVIS_DROPHILITED) != 0) state |= RowPaint.DROP;
 		if (index == focus) state |= RowPaint.CARET;

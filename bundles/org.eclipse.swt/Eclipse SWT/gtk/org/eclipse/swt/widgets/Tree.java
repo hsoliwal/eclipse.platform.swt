@@ -3316,6 +3316,11 @@ void createItem (TreeColumn column, int index) {
  * and {@link TreeItem#setItemCount}
  */
 void createItem (TreeItem item, long parentIter, int index) {
+	createTreeItem (item, parentIter, index);
+	M3Emptiness.changed (this);
+}
+
+void createTreeItem (TreeItem item, long parentIter, int index) {
 	int topologyParentId = VirtualTreeTopology.ROOT;
 	int logicalIndex = index;
 	if (virtualTopology != null) {
@@ -3686,6 +3691,11 @@ void destroyItem (TreeColumn column) {
 
 
 void destroyItem (TreeItem item) {
+	destroyTreeItem (item);
+	M3Emptiness.changed (this);
+}
+
+void destroyTreeItem (TreeItem item) {
 	if (usesVirtualNativeModel ()) {
 		int topologyId = virtualItemId (item);
 		int parentId = virtualTopology.parentId (topologyId);
@@ -5945,6 +5955,11 @@ void remove (long parentIter, int start, int end) {
  * </ul>
  */
 public void removeAll () {
+	removeAllItems ();
+	M3Emptiness.changed (this);
+}
+
+void removeAllItems () {
 	checkWidget ();
 	checkSetDataInProcessBeforeRemoval();
 
@@ -6647,6 +6662,15 @@ void setItemCount (long parentIter, int count) {
  * @since 3.2
  */
 public void setItemCount (int count) {
+	M3Emptiness.hold (this);
+	try {
+		setRootItemCount (count);
+	} finally {
+		M3Emptiness.release (this);
+	}
+}
+
+void setRootItemCount (int count) {
 	checkWidget ();
 	count = Math.max (0, count);
 	setItemCount (0, count);
@@ -7317,6 +7341,11 @@ public void setSortDirection  (int direction) {
  * @since 2.1
  */
 public void setTopItem (TreeItem item) {
+	setTopTreeItem (item);
+	M3VisibilityObserver.changed (this);
+}
+
+void setTopTreeItem (TreeItem item) {
 	checkWidget ();
 	if (usesBoundedVirtualView ()) {
 		if (item == null) error (SWT.ERROR_NULL_ARGUMENT);

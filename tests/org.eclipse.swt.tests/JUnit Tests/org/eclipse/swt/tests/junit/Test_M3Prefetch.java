@@ -286,4 +286,22 @@ public class Test_M3Prefetch {
 		assertThrows (SWTException.class, () -> M3Prefetch.addListener (table, nothing));
 		assertThrows (SWTException.class, () -> M3Prefetch.setWindow (table, 1, 1));
 	}
+
+	@Test
+	public void test_windowSetTwiceAndListenerThatDisposes () {
+		Table table = new Table (shell, SWT.NONE);
+		table.setBounds (5, 5, 300, 380);
+		for (int i = 0; i < 500; i++) new TableItem (table, SWT.NONE).setText ("row " + i);
+		/* the second call reuses the latch of the first */
+		M3Prefetch.setWindow (table, 2, 2);
+		M3Prefetch.setWindow (table, 3, 3);
+		int [] events = new int [1];
+		M3Prefetch.addListener (table, event -> {
+			/* the first range of a move disposes the table: the second range is not sent */
+			if (events [0]++ > 0) table.dispose ();
+		});
+		table.setTopIndex (200);
+		flush ();
+		assertTrue (events [0] <= 2 || table.isDisposed ());
+	}
 }

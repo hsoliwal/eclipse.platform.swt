@@ -13,6 +13,7 @@
  *******************************************************************************/
 package org.eclipse.swt.internal.render.m3.gc;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 import org.eclipse.swt.SWT;
@@ -43,7 +44,7 @@ public class M3PaintManager {
 		try (final Paint paint = new Paint()) {
 			paint.setAlpha(gc.getAlpha());
 			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha()));
-			paint.setAntiAlias(gc.getAntialias() != SWT.OFF);
+			paint.setAntiAlias(gc.getAntialias() == SWT.ON);
 			if (gc.getXORMode()) {
 				paint.setBlendMode(io.github.humbleui.skija.BlendMode.DIFFERENCE);
 			} else {
@@ -54,6 +55,10 @@ public class M3PaintManager {
 			paint.setStrokeWidth(scaledLineWidth);
 			paint.setStrokeCap(getM3LineCap(gc.getLineCap()));
 			paint.setStrokeJoin(getM3LineJoin(gc.getLineJoin()));
+			// M3 (GC seam, leaf 5): the miter limit of the line attributes, once set (M3ExternalGC.isMiterLimitSet)
+			if (gc.isMiterLimitSet()) {
+				paint.setStrokeMiter(gc.getMiterLimit());
+			}
 
 			try (var pathEffect = createPathEffect(scaledLineWidth, gc.getScaler())) {
 
@@ -90,15 +95,11 @@ public class M3PaintManager {
 		}
 
 		if (gc.getLineStyle() == SWT.LINE_CUSTOM) {
-			if (floats.length % 2 != 0) {
-				// Skia requires even number of elements in the array, so we duplicate the
-				// pattern to make it even.
-				final float[] newFloats = new float[floats.length * 2];
-				System.arraycopy(floats, 0, newFloats, 0, floats.length);
-				System.arraycopy(floats, 0, newFloats, floats.length, floats.length);
-				return PathEffect.makeDash(getScaledPathFloats(scaler.autoScaleUp(1), newFloats, scaler), 0f);
-			}
-
+			// M3 (GC seam, leaf 6; STROKE_SCALE, pattern M3-GC-STROKE v2, census GF11 = PRE_EXISTING P05): custom dashes are
+			// absolute lengths, already in pixels (M3ExternalGC scales them when set), and the array is doubled as the stock GC
+			// doubles it (GC.getPen, GDI+ dash / width); the donor multiplied even arrays by the scaled width and odd arrays by
+			// the zoom a second time. M3 (GC seam, leaf 5): the dash offset of the line attributes is the phase
+			return PathEffect.makeDash(doubled(floats), gc.getDashPhase());
 		}
 
 		final var scaledFloats = getScaledPathFloats(scaledLineWidth, floats, scaler);
@@ -106,8 +107,15 @@ public class M3PaintManager {
 			return null;
 		}
 
-		return PathEffect.makeDash(scaledFloats, 0f);
+		return PathEffect.makeDash(scaledFloats, gc.getDashPhase());
 
+	}
+
+	/* leaf 6: the pattern twice (Skia needs an even count; the stock GC doubles every custom pattern) */
+	private static float[] doubled(float[] dashes) {
+		final float[] twice = Arrays.copyOf(dashes, dashes.length * 2);
+		System.arraycopy(dashes, 0, twice, dashes.length, dashes.length);
+		return twice;
 	}
 
 	private static float[] getScaledPathFloats(float scaledLineWidth, float[] lineDotZero, DpiScalerUtil scaler) {
@@ -122,7 +130,7 @@ public class M3PaintManager {
 		try (final Paint paint = new Paint()) {
 			paint.setMode(PaintMode.FILL);
 			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getBackground(), gc.getAlpha()));
-			paint.setAntiAlias(gc.getAntialias() != SWT.OFF);
+			paint.setAntiAlias(gc.getAntialias() == SWT.ON);
 			if (gc.getXORMode()) {
 				paint.setBlendMode(io.github.humbleui.skija.BlendMode.DIFFERENCE);
 			} else {
@@ -136,6 +144,24 @@ public class M3PaintManager {
 					operations.accept(paint);
 				}
 			} else {
+				operations.accept(paint);
+			}
+		}
+	}
+
+	/**
+	 * leaf 6 (ARG_CONTRACT, census GF46): a fill with the foreground brush, as the stock GDI+ getFgBrush: the foreground colour at
+	 * the GC alpha, or the foreground pattern (drawPoint).
+	 */
+	public void performFillForeground(Consumer<Paint> operations) {
+		try (final Paint paint = new Paint()) {
+			paint.setMode(PaintMode.FILL);
+			paint.setColor(M3ColorConverter.convertSWTColorToM3Color(gc.getForeground(), gc.getAlpha()));
+			paint.setAntiAlias(gc.getAntialias() == SWT.ON);
+			paint.setBlendMode(gc.getXORMode() ? io.github.humbleui.skija.BlendMode.DIFFERENCE : io.github.humbleui.skija.BlendMode.SRC_OVER);
+			final Pattern pattern = gc.getForegroundPattern();
+			try (Shader shader = pattern != null && !pattern.isDisposed() ? convertSWTPatternToM3Shader(pattern) : null) {
+				paint.setShader(shader);
 				operations.accept(paint);
 			}
 		}

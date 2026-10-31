@@ -7,170 +7,69 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
+ * Contributors:
+ *     SAP SE and others - initial API and implementation
+ *     Synexia (Hitesh Soliwal) - region clip from the region's own handle (GC seam, leaf 6), 2026
  *******************************************************************************/
 package org.eclipse.swt.internal.render.m3.gc;
 
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Region;
-import org.eclipse.swt.graphics.RegionLog;
-import org.eclipse.swt.graphics.RegionLog.OpType;
-import org.eclipse.swt.graphics.RegionLog.Operation;
+import org.eclipse.swt.internal.win32.OS;
 
 import io.github.humbleui.types.IRect;
+import io.github.humbleui.types.Rect;
 
-public class M3RegionCalculator implements AutoCloseable {
+/**
+ * An SWT {@link Region} as a clip of the M3 GC (GC seam, leaf 6; atom CLIP_STATE, pattern M3-GC-CLIP v1; census GF03, GF18).
+ * <p>
+ * The region's own handle at the GC's zoom ({@link Region#win32_getHandle}, the path of the stock
+ * <code>GC.setClipping(Region)</code>) is read once with <code>GetRegionData</code> into device rectangles. The copy is taken
+ * when the clip is set, so a later mutation or dispose of the caller's region does not reach the clip; translations,
+ * negative coordinates and regions not built through logged operations (a region filled by <code>GC.getClipping</code>)
+ * come out exactly as the stock region computes them at that zoom. The donor (I31 <code>SkiaRegionCalculator</code>)
+ * replayed the <code>RegionLog</code>: live argument objects, a translate in points applied to pixels, polygons cut at 0,
+ * an empty clip for an unlogged region.
+ * </p>
+ */
+public final class M3RegionCalculator {
+	/** <code>RGNDATAHEADER</code> in ints (dwSize, iType, nCount, nRgnSize, rcBound); the rectangles follow. */
+	static final int HEADER = 8;
 
-	private final static HashMap<OpType, io.github.humbleui.skija.Region.Op> operationMapping = new HashMap<OpType, io.github.humbleui.skija.Region.Op>();
-
-	static {
-		operationMapping.put(OpType.ADD, io.github.humbleui.skija.Region.Op.UNION);
-		operationMapping.put(OpType.SUBTRACT, io.github.humbleui.skija.Region.Op.DIFFERENCE);
-		operationMapping.put(OpType.INTERSECT, io.github.humbleui.skija.Region.Op.INTERSECT);
+	private M3RegionCalculator() {
 	}
 
-	private final org.eclipse.swt.graphics.Region region;
-	private io.github.humbleui.skija.Region calculatedRegion;
-	private final IM3CanvasExtension m3Extension;
-
-	public M3RegionCalculator(org.eclipse.swt.graphics.Region r, IM3CanvasExtension m3Extension) {
-		this.region = r;
-		this.m3Extension = m3Extension;
+	/** The region's rectangles at the zoom: left, top, right, bottom per rectangle, in pixels; empty for an empty region. */
+	public static int[] rectangles(Region region, int zoom) {
+		long handle = Region.win32_getHandle(region, zoom);
+		int bytes = OS.GetRegionData(handle, 0, null);
+		if (bytes <= 0) return new int[0];
+		int[] data = new int[(bytes + 3) / 4];
+		if (OS.GetRegionData(handle, bytes, data) == 0) return new int[0];
+		int count = Math.max(0, Math.min(data[2], (data.length - HEADER) / 4));
+		return Arrays.copyOfRange(data, HEADER, HEADER + 4 * count);
 	}
 
-	io.github.humbleui.skija.Region getM3Region() {
-
-		// just all operations for the region creation will be executed to get the skia
-		// region.
-
-		if (calculatedRegion != null) {
-			return calculatedRegion;
-		}
-
-		final io.github.humbleui.skija.Region reg = new io.github.humbleui.skija.Region();
-		final var log = RegionLog.getLog(region);
-		for (final var o : log.getOperations()) {
-			apply(o, reg);
-		}
-
-		calculatedRegion = reg;
-		return calculatedRegion;
-
+	/** The bounds of the rectangles (pixels); an empty rectangle for none. */
+	public static Rect bounds(int[] rects) {
+		if (rects.length == 0) return new Rect(0, 0, 0, 0);
+		return new Rect(edge(rects, 0, false), edge(rects, 1, false), edge(rects, 2, true), edge(rects, 3, true));
 	}
 
-	@Override
-	public void close() {
-		if (calculatedRegion != null) {
-			calculatedRegion.close();
-			calculatedRegion = null;
-		}
-	}
-
-	private void apply(Operation o, io.github.humbleui.skija.Region reg) {
-		final io.github.humbleui.skija.Region.Op m3Operation = operationMapping.get(o.type());
-		if (m3Operation != null) {
-			executeOperation(m3Operation, o.executionObject(), reg);
-			return;
-		}
-
-		if (OpType.TRANSLATE.equals(o.type())) {
-			if (o.executionObject() instanceof final Point p) {
-				reg.translate(p.x, p.y);
-				return;
-			}
-		}
-
-		throw new IllegalStateException("Unknown type and object: " + o); //$NON-NLS-1$
-
-	}
-
-	private void executeOperation(io.github.humbleui.skija.Region.Op m3Operation, Object ob, io.github.humbleui.skija.Region reg) {
-		if (ob instanceof final int[] polygon) {
-			final var tempReg = createPolygonM3Region(polygon);
-			reg.op(tempReg, m3Operation);
-		} else if (ob instanceof final Rectangle rec) {
-			final var irect = createRectRegion(rec);
-			reg.op(irect, m3Operation);
-		} else if (ob instanceof final Region otherReg) {
-			try (final M3RegionCalculator src = new M3RegionCalculator(otherReg, m3Extension)) {
-				reg.op(src.getM3Region(), m3Operation);
-			}
+	/** Clips the canvas to the rectangles (device space, as Skia's clipRegion; an empty list clips everything away). */
+	static void clip(IM3Canvas canvas, int[] rects) {
+		try (io.github.humbleui.skija.Region region = new io.github.humbleui.skija.Region()) {
+			region.setRects(IntStream.range(0, rects.length / 4)
+					.mapToObj(i -> new IRect(rects[4 * i], rects[4 * i + 1], rects[4 * i + 2], rects[4 * i + 3]))
+					.toArray(IRect[]::new));
+			canvas.clipRegion(region);
 		}
 	}
 
-	/**
-	 * Creates a Skija region from an SWT rectangle by converting it to a polygon.
-	 */
-	private io.github.humbleui.skija.Region createRectRegion(Rectangle rec) {
-		final var rect = new IRect(rec.x, rec.y, rec.x + rec.width, rec.y + rec.height);
-
-		return createPolygonM3Region(new int[] { rect.getLeft(), rect.getTop(), rect.getRight(), rect.getTop(),
-				rect.getRight(), rect.getBottom(), rect.getLeft(), rect.getBottom() });
-
+	private static int edge(int[] rects, int offset, boolean max) {
+		IntStream values = IntStream.range(0, rects.length / 4).map(i -> rects[4 * i + offset]);
+		return max ? values.max().orElse(0) : values.min().orElse(0);
 	}
-
-	private io.github.humbleui.skija.Region createPolygonM3Region(int[] polygon) {
-
-		final io.github.humbleui.skija.Region r = new io.github.humbleui.skija.Region();
-
-		final var scaler = new DpiScalerUtil(m3Extension.getScaler());
-
-		try (final var pathBuilder = new io.github.humbleui.skija.Path()) {
-			pathBuilder.addPoly(scaler.autoScaleUp(toFloat(polygon)), true);
-
-			final Point maxV = getMax(scaler.autoScaleUp(polygon));
-
-			r.setRect(new IRect(0, 0, maxV.x, maxV.y));
-
-			// a path has to be set for a clipping region.
-			// so first we have to create a region big enough for the path and then set the
-			// path.
-			{
-				var path = pathBuilder; // Skija 0.116.3: Path is its own builder; the outer try closes it
-				r.setPath(path, r);
-			}
-
-			return r;
-		}
-	}
-
-	/**
-	 *
-	 * max value on x and on y in one point.
-	 *
-	 * @param polygon
-	 * @return
-	 */
-	private static Point getMax(int[] polygon) {
-
-		final var p = new Point(0, 0);
-
-		for (int i = 0; i < polygon.length; i++) {
-
-			if (i % 2 == 0) {
-				p.x = Math.max(polygon[i], p.x);
-			}
-			if (i % 2 == 1) {
-				p.y = Math.max(polygon[i], p.y);
-			}
-
-		}
-
-		return p;
-	}
-
-	private static float[] toFloat(int[] arr) {
-
-		final float[] r = new float[arr.length];
-
-		for (int i = 0; i < arr.length; i++) {
-			r[i] = arr[i];
-		}
-
-		return r;
-
-	}
-
 }

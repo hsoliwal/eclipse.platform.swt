@@ -19,6 +19,7 @@ import java.util.function.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.WidgetMode;
 import org.eclipse.swt.internal.render.*;
 import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
 import org.eclipse.swt.internal.render.m3.gc.M3PlaneCanvasExtension;
@@ -147,6 +148,8 @@ public final class M3RowCanvas implements BufferCanvas {
 	private FontTable table;
 	/* the path of polygon, reset per call */
 	private final Path path = new Path ();
+	/* TEXT_TRUNCATION v1: DrawText's ellipsis cut measured by GDI */
+	private final M3GdiEllipsis gdiEllipsis = new M3GdiEllipsis ();
 	/* the gpu mode: the frame is drawn on the graphics hardware and read back into the back buffer */
 	private final M3Gpu gpu;
 	private Pixmap readback;
@@ -171,10 +174,28 @@ public final class M3RowCanvas implements BufferCanvas {
 		this (hwnd, itemThemeClass, zoom, null);
 	}
 
+	/* M3_LOAD_LATCH v1: without the native library the backend is refused at creation (RowBackends then takes the GC backend) */
+	private static M3Gpu requireLibrary (M3Gpu gpu) {
+		if (!M3Library.loaded ()) throw new UnsatisfiedLinkError ("the M3 renderer's native library is not loaded"); //$NON-NLS-1$
+		return gpu;
+	}
+
+	/** MODE_TRUTH v1 (census L10): this backend realizes the gpu mode on a GL context, the m3 mode otherwise. */
+	@Override
+	public WidgetMode route () {
+		return gpu != null ? WidgetMode.GPU : WidgetMode.M3;
+	}
+
+	/** BACKEND_REPORT v1: <code>M3RowCanvas(gpu)</code> or <code>M3RowCanvas(raster)</code>. */
+	@Override
+	public String backend () {
+		return "M3RowCanvas(" + (gpu != null ? "gpu" : "raster") + ")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	}
+
 	private M3RowCanvas (long hwnd, char [] itemThemeClass, IntSupplier zoom, M3Gpu gpu) {
+		this.gpu = requireLibrary (gpu);
 		this.zoom = zoom;
 		this.parts = new ThemeParts (hwnd, itemThemeClass, zoom);
-		this.gpu = gpu;
 	}
 
 	/**
@@ -182,7 +203,7 @@ public final class M3RowCanvas implements BufferCanvas {
 	 * no GL context can be made.
 	 */
 	public static M3RowCanvas gpu (long hwnd, char [] itemThemeClass, IntSupplier zoom) {
-		M3Gpu gpu = M3Gpu.acquire ();
+		M3Gpu gpu = M3Library.loaded () ? M3Gpu.acquire () : null;
 		return gpu == null ? null : new M3RowCanvas (hwnd, itemThemeClass, zoom, gpu);
 	}
 
@@ -302,7 +323,7 @@ public final class M3RowCanvas implements BufferCanvas {
 		if (text.isEmpty () || width <= 0) return;
 		FontEntry entry = font (font);
 		LineEntry line = line (entry, text);
-		if ((align & ELLIPSIS) != 0 && line.width > width) line = fitted (entry, line, text, width);
+		if ((align & ELLIPSIS) != 0) line = ellipsis (entry, line, font, text, width);
 		align &= ~ELLIPSIS;
 		if (line.blobPtr == 0) return;
 		float baseline = y + (height - entry.lineHeight) / 2 + entry.ascent;
@@ -357,20 +378,34 @@ public final class M3RowCanvas implements BufferCanvas {
 
 	/*
 	 * The line cut as DrawText's DT_END_ELLIPSIS cuts it: the longest prefix whose width plus the width of "..." fits
-	 * the box, then "..." (only "..." when no character fits). Kept on the full line for the last width asked.
+	 * the box, then "..." (only "..." when no character fits); the whole line when it fits. Kept on the full line for the
+	 * last width asked (fitted null: the line fits).
 	 */
-	private LineEntry fitted (FontEntry entry, LineEntry full, String text, int width) {
-		if (full.fittedWidth == width) return full.fitted;
-		float room = width - line (entry, ELLIPSIS_TEXT).width;
-		int low = 0, high = text.length ();
-		while (low < high) {
-			int middle = (low + high + 1) >>> 1;
-			if (full.line.getCoordAtOffset (middle) <= room) low = middle; else high = middle - 1;
+	private LineEntry ellipsis (FontEntry entry, LineEntry full, long font, String text, int width) {
+		if (full.fittedWidth != width) {
+			int keep = cut (entry, full, font, text, width);
+			if (full.fitted != null) full.fitted.close ();
+			full.fitted = keep < 0 ? null : new LineEntry (TextLine.make (text.substring (0, keep) + ELLIPSIS_TEXT, entry.font));
+			full.fittedWidth = width;
 		}
-		if (full.fitted != null) full.fitted.close ();
-		full.fitted = new LineEntry (TextLine.make (text.substring (0, low) + ELLIPSIS_TEXT, entry.font));
-		full.fittedWidth = width;
-		return full.fitted;
+		return full.fitted != null ? full.fitted : full;
+	}
+
+	/*
+	 * TEXT_TRUNCATION v1 (real-app fidelity): on the UI thread GDI measures the cut on the cell's own font handle, as the
+	 * list view does (M3GdiEllipsis); the render thread, which holds no platform font, cuts with the library's advances.
+	 */
+	private int cut (FontEntry entry, LineEntry full, long font, String text, int width) {
+		if (table == null && font != 0 && font != -1) return gdiEllipsis.cut (font, text, width);
+		if (full.width <= width) return -1;
+		return Math.max (1, libraryCut (full, 0, text.length (), width - line (entry, ELLIPSIS_TEXT).width));
+	}
+
+	/* the longest prefix in [low, high] whose library advance fits the room */
+	private static int libraryCut (LineEntry full, int low, int high, float room) {
+		if (low >= high) return low;
+		int middle = (low + high + 1) >>> 1;
+		return full.line.getCoordAtOffset (middle) <= room ? libraryCut (full, middle, high, room) : libraryCut (full, low, middle - 1, room);
 	}
 
 	private static LineEntry line (FontEntry entry, String text) {
@@ -447,6 +482,7 @@ public final class M3RowCanvas implements BufferCanvas {
 	@Override
 	public void dispose () {
 		parts.close ();
+		gdiEllipsis.dispose ();
 		fonts.clear ();
 		images.values ().forEach (M3RowCanvas::close);
 		images.clear ();

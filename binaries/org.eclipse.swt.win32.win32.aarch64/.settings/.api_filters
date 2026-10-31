@@ -254,6 +254,60 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java" type="org.eclipse.swt.graphics.FontMetrics">
+        <filter id="336658481">
+            <message_arguments>
+                <message_argument value="org.eclipse.swt.graphics.FontMetrics"/>
+                <message_argument value="handle"/>
+            </message_arguments>
+        </filter>
+        <filter id="422080514">
+            <message_arguments>
+                <message_argument value="org.eclipse.swt.graphics.FontMetrics.handle"/>
+                <message_argument value="org.eclipse.swt.internal.win32.TEXTMETRIC"/>
+            </message_arguments>
+        </filter>
+        <filter id="574619653">
+            <message_arguments>
+                <message_argument value="org.eclipse.swt.graphics.FontMetrics.win32_new(TEXTMETRIC, int)"/>
+                <message_argument value="org.eclipse.swt.internal.win32.TEXTMETRIC"/>
+            </message_arguments>
+        </filter>
+        <filter id="574619654">
+            <message_arguments>
+                <message_argument value="org.eclipse.swt.graphics.FontMetrics.handle"/>
+                <message_argument value="org.eclipse.swt.internal.win32.TEXTMETRIC"/>
+            </message_arguments>
+        </filter>
+        <filter comment="wrong class instanciates" id="574619658">
+            <message_arguments>
+                <message_argument value="org.eclipse.swt.graphics.FontMetrics.handle"/>
+                <message_argument value="org.eclipse.swt.graphics.FontMetrics"/>
+            </message_arguments>
+        </filter>
+        <filter comment="SKIA implementation." id="627060751">
+            <message_arguments>
+                <message_argument value="TEXTMETRIC"/>
+                <message_argument value="FontMetrics"/>
+                <message_argument value="handle"/>
+            </message_arguments>
+        </filter>
+        <filter comment="SKIA implementation" id="643846161">
+            <message_arguments>
+                <message_argument value="TEXTMETRIC"/>
+                <message_argument value="FontMetrics"/>
+                <message_argument value="win32_new(TEXTMETRIC, int)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="Eclipse SWT/win32/org/eclipse/swt/graphics/GC.java" type="org.eclipse.swt.graphics.GC">
+        <filter id="336658481">
+            <message_arguments>
+                <message_argument value="org.eclipse.swt.graphics.GC"/>
+                <message_argument value="handle"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="Eclipse SWT/win32/org/eclipse/swt/graphics/GCData.java" type="org.eclipse.swt.graphics.GCData">
         <filter id="627060751">
             <message_arguments>
