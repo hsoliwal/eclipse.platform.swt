@@ -21,8 +21,8 @@ awk -F'\t' -v OFS='\t' '
       hasR = id[i] in rec; hasC = id[i] in cmp
       split (hasR ? rec[id[i]] : "", r, "\t"); split (hasC ? cmp[id[i]] : "", c, "\t")
       rs = hasR ? r[1] : "NOT_RUN"; cs = hasC ? c[1] : "-"
-      st = (rs == "FAIL" || cs == "FAIL") ? "FAIL" : (rs == "NOT_RUN" && cs != "PASS") ? "NOT_RUN" : "PASS"
-      f = cs == "FAIL" ? c[3] "\t" c[4] "\t" c[5] : rs == "FAIL" ? r[4] "\t" r[5] "\t" r[6] : "-\t-\t-"
+      st = (rs == "FAIL" || cs == "FAIL") ? "FAIL" : (rs == "TIMEOUT" || cs == "TIMEOUT") ? "TIMEOUT" : (rs == "NOT_RUN" && cs != "PASS") ? "NOT_RUN" : "PASS"
+      f = cs == "FAIL" || cs == "TIMEOUT" ? c[3] "\t" c[4] "\t" c[5] : rs == "FAIL" || rs == "TIMEOUT" ? r[4] "\t" r[5] "\t" r[6] : "-\t-\t-"
       print row[i], st, rs, (hasR ? r[2] : "-"), (hasR ? r[3] : "-"), cs, f
     }
   }' "$O/results/matrix-all.tsv" "$M" > "$D/results/COMBINATION_RESULTS.tsv"
@@ -42,9 +42,9 @@ fi
 # failure classes: a mode difference is classed by its differing step (create, feature, theme-language, op, api, dispose)
 # and the row's api or op; any other failure by its exception and location
 {
-  awk -F'\t' -v OFS='\t' 'NR > 1 && $12 == "FAIL" {
+  awk -F'\t' -v OFS='\t' 'NR > 1 && ($12 == "FAIL" || $12 == "TIMEOUT") {
       if ($19 ~ /^step [0-9]+ differs/) { split ("create feature theme-language op api dispose", names, " "); s = $19; sub (/^step /, "", s); s = names[substr (s, 1, index (s, " ") - 1) + 1]
-        key = "MODE_DIFF\tstep " s " (" (s == "api" ? $6 : s == "op" ? $7 : s) ")" } else key = $17 "\t" $18
+        key = "MODE_DIFF\tstep " s " (" (s == "api" ? $6 : s == "op" ? $7 : s) ")" } else key = ($12 == "TIMEOUT" ? "TIMEOUT (row limit)" : $17) "\t" $18
       print key, "matrix " $1 " " $2 " " $3, $19 }' "$D/results/COMBINATION_RESULTS.tsv"
   # rows slower than 60 s in a leg: an observation (performance), classed by widget, kind (virtual or plain) and operation
   awk -F'\t' -v OFS='\t' 'NR > 1 && $17 > 60000 { kind = $4 ~ /VIRTUAL/ ? "virtual" : "plain"
