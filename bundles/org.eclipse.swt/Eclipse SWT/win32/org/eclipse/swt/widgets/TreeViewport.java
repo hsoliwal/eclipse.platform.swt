@@ -1327,13 +1327,24 @@ final class TreeViewport {
 		int id = tree.lastID < items.length ? tree.lastID : 0;
 		while (id < items.length && items [id] != null) id++;
 		if (id == items.length) {
-			tree.itemsGrowArray (Math.max (4, items.length * 3 / 2));
+			tree.itemsGrowArray (grownLength (items.length));
 		}
 		tree.lastID = id + 1;
 		tree.items [id] = item;
 		item.virtualId = id;
 		item.handle = 0;
 		if (id < selectedAt.length) selectedAt [id] = 0;
+	}
+
+	/*
+	 * Stock createItem grows the item id table by four slots while the tree draws and is visible, otherwise by half,
+	 * and then shrinks it at the next paint (WM_PAINT). Item ids decide stock SWT.EmptinessChanged (detail 0 when a
+	 * created item gets id 0), so the facades take ids exactly as stock items do (TreeEmptinessOracle, 2026-10-31).
+	 */
+	private int grownLength (int length) {
+		if (tree.getDrawing () && OS.IsWindowVisible (tree.handle)) return length + 4;
+		tree.shrink = true;
+		return Math.max (4, length * 3 / 2);
 	}
 
 	/**
@@ -1392,8 +1403,8 @@ final class TreeViewport {
 		}
 		tree.virtualViewport.refreshLogicalRange ();
 		layout ();
-		/* stock: TVM_GETCOUNT == 1 after createItem, i.e. the first root of an empty tree (EmptyOracle) */
-		if (parentId == VirtualTreeTopology.ROOT && topology.childCount (VirtualTreeTopology.ROOT) == 1) {
+		/* stock createItem: detail 0 when the created item gets id 0, at any depth and whatever the count (TreeEmptinessOracle) */
+		if (item.virtualId == 0) {
 			Event event = new Event ();
 			event.detail = 0;
 			tree.sendEvent (SWT.EmptinessChanged, event);
@@ -2493,6 +2504,8 @@ final class TreeViewport {
 		if (!measuresShownRow () && !tree.linesVisible && !tree.hooks (SWT.EraseItem) && !tree.hooks (SWT.PaintItem)) {
 			tree.customDraw = false;
 		}
+		/* stock resets the id table to four slots and keeps lastID (the next created item may not get id 0) */
+		tree.items = new TreeItem [4];
 		tree.scrollWidth = 0;
 		tree.setScrollWidth ();
 		Event event = new Event ();
