@@ -51,18 +51,22 @@ public class Smoke implements IStartup {
 			if (step == 0) {
 				Files.createDirectories (OUT.resolve (MODE));
 				tsv = new PrintWriter (Files.newBufferedWriter (OUT.resolve ("ide_" + MODE + ".tsv"), StandardCharsets.UTF_8), true);
-				tsv.println ("mode\tstep\tresult\tshell\tcolours\tcontrols\tm3_handlers\tdrawn_planes\tctabfolders\tstyledtexts\terrors_so_far\tactive_part\teditors\tpng");
+				tsv.println ("mode\tstep\tresult\tshell\tcolours\tcontrols\tm3_handlers\tdrawn_planes\tctabfolders\tstyledtexts\terrors_so_far\tactive_part\teditors\tpng\teditor_rect");
 				setup ();
 			} else if (step == 1) {
 				row (display, "workbench_java_editor");
-				page ().showView ("org.eclipse.jdt.ui.PackageExplorer");
+				StyledText st = editorText (PlatformUI.getWorkbench ().getActiveWorkbenchWindow ().getShell ());
+				if (st != null) { int at = st.getText ().indexOf ("System.out.println"); st.setSelection (at, at + 30); }
 			} else if (step == 2) {
+				row (display, "java_editor_selection");
+				page ().showView ("org.eclipse.jdt.ui.PackageExplorer");
+			} else if (step == 3) {
 				row (display, "package_explorer_active");
 				IDE.openEditor (page (), notes, "org.eclipse.ui.DefaultTextEditor", true);
-			} else if (step == 3) {
+			} else if (step == 4) {
 				row (display, "second_editor_tab");
 				page ().activate (page ().findEditor (new org.eclipse.ui.part.FileEditorInput (hello)));
-			} else if (step == 4) {
+			} else if (step == 5) {
 				row (display, "editor_tab_switched_back");
 				tsv.println ("# errors: " + errors.size () + (errors.isEmpty () ? "" : " first: " + errors.get (0).replace ('\n', ' ')));
 				tsv.close ();
@@ -88,7 +92,7 @@ public class Smoke implements IStartup {
 		project.open (null);
 		hello = project.getFile ("Hello.java");
 		notes = project.getFile ("notes.txt");
-		String java = "public class Hello {\n\t/** M3 IDE smoke. */\n\tpublic static void main(String[] args) {\n\t\tSystem.out.println(\"hello m3\");\n\t}\n}\n";
+		String java = "// line comment: braces { } brackets [ ] parentheses ( ) semicolons ;\npublic class Hello {\n\t/** M3 IDE smoke. */\n\tprivate static final int[] VALUES = { 1, 2, 3 };\n\n\tpublic static void main(String[] args) {\n\t\tSystem.out.println(\"hello m3\"); /* block */\n\t\tfor (int i = 0; i < VALUES.length; i++) {\n\t\t\tif (args.length > 0 && VALUES[i] != 0) {\n\t\t\t\tSystem.out.printf(\"%d;%s%n\", VALUES[i], args[0]);\n\t\t\t}\n\t\t}\n\t}\n}\n";
 		if (!hello.exists ()) hello.create (new ByteArrayInputStream (java.getBytes (StandardCharsets.UTF_8)), true, null);
 		if (!notes.exists ()) notes.create (new ByteArrayInputStream ("notes for the second editor tab\n".getBytes (StandardCharsets.UTF_8)), true, null);
 		page ().showView ("org.eclipse.ui.views.ContentOutline");
@@ -127,7 +131,24 @@ public class Smoke implements IStartup {
 		tsv.println (String.join ("\t", MODE, step, result, size.width + "x" + size.height, String.valueOf (colours), String.valueOf (all.size ()),
 			String.valueOf (handlers), String.join (",", new TreeSet<> (drawn)) + " (" + drawn.size () + ")", String.valueOf (tabs), String.valueOf (styled),
 			String.valueOf (errors.size ()), part == null ? "-" : part.getTitle (), String.valueOf (page ().getEditorReferences ().length),
-			png.toString ().replace ('\\', '/')));
+			png.toString ().replace ('\\', '/'), editorRect (shell)));
+	}
+
+	/* the visible StyledText showing Hello.java (the Java editor's text widget) */
+	static StyledText editorText (Shell shell) {
+		List<Control> all = new ArrayList<> ();
+		collect (shell, all);
+		for (Control c : all) if (c instanceof StyledText t && t.isVisible () && t.getText ().contains ("class Hello")) return t;
+		return null;
+	}
+
+	/* x,y,w,h of the Java editor's client area in the printed shell image (the editor area the text leaf diffs) */
+	static String editorRect (Shell shell) {
+		StyledText t = editorText (shell);
+		if (t == null) return "-";
+		Rectangle r = t.getDisplay ().map (t, shell, t.getClientArea ());
+		Rectangle trim = shell.computeTrim (0, 0, 0, 0);
+		return (r.x - trim.x) + "," + (r.y - trim.y) + "," + r.width + "," + r.height;
 	}
 
 	static void collect (Control c, List<Control> out) {

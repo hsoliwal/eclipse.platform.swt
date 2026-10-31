@@ -6,6 +6,7 @@ import io.github.humbleui.skija.Matrix33;
 import io.github.humbleui.skija.Paint;
 import io.github.humbleui.skija.Path;
 import io.github.humbleui.skija.Region;
+import io.github.humbleui.skija.TextBlob;
 import io.github.humbleui.types.RRect;
 import io.github.humbleui.types.Rect;
 
@@ -36,4 +37,8 @@ public interface IM3Canvas {
 	void clipPath(Path m3Path, ClipMode intersect, boolean b);
 	void drawString(String text, int x, int i, Font f, Paint fgp);
 	void clipRegion(Region m3Region);
+
+	/** L13 GLYPH_RUN_DRAW v1: one positioned text blob (doubles record or ignore it) */
+	default void drawTextBlob(TextBlob blob, float x, float y, Paint paint) {
+	}
 }

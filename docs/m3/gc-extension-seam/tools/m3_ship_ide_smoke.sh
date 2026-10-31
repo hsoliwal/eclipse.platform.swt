@@ -6,7 +6,10 @@
 # user.home, osgi.user.area, keyring and p2 data area under H:/m3-scratch/l18/ide/<mode>; -vm jdk-21 javaw on the
 # command line. Nothing under the install or ~/.p2 is written (p2 reconciler not started, p2 data area private).
 # Usage: run_ide.sh <m3|gpu|stock> [timeout-seconds]
-MODE=${1:?mode}; TIMEOUT=${2:-480}; L=H:/m3-scratch/l18; I=C:/Users/hsoliwal/eclipse/jee-2026-09/eclipse
+# Text leaf (IDE_SMOKE v2): M3_IDE_SCRATCH (scratch root, default H:/m3-scratch/l18), M3_UI_AGENT, M3_UI_DESKTOP; the smoke jar
+# is <scratch>/ide/idesmoke.jar (m3text_idesmoke_build.sh) and the install hash <scratch>/ide/install_eclipse_ini.sha;
+# M3_IDE_VMARGS: extra -D arguments (space separated), e.g. -Dswt.m3.text=gdi
+MODE=${1:?mode}; TIMEOUT=${2:-480}; L=${M3_IDE_SCRATCH:-H:/m3-scratch/l18}; I=C:/Users/hsoliwal/eclipse/jee-2026-09/eclipse
 P=C:/Users/hsoliwal/.p2/pool/plugins; D=$L/build/dist; B=$L/ide/$MODE
 g=$(df -k /h | awk 'NR==2{print int($4/1048576)}'); [ "${g:-0}" -ge 1 ] || { echo "DISK_GATE H: ${g}GB < 1"; exit 3; }
 [ "$(sha256sum "$I/eclipse.ini" | cut -c1-64)" = "$(cat $L/ide/install_eclipse_ini.sha)" ] || { echo "install eclipse.ini changed?"; exit 4; }
@@ -34,13 +37,13 @@ case "$MODE" in stock|baseline) PROP="" ;; *) PROP="-Dswt.widget.mode=$MODE" ;; 
     "-Duser.home=$(W $B/home)" "-Dosgi.user.area=$(W $B/user)" "-Djava.io.tmpdir=$(W $B/tmp)" "-Dswt.library.path=$(W $B/swtlib)" \
     -Doomph.setup.skip=true -Doomph.setup.questionnaire.skip=true -Dorg.eclipse.swt.graphics.Resource.reportNonDisposed=true \
     "-Didesmoke.out=$(W $L/ide/out)" "-Xlog:class+load:file=\"$(W $L/ide/logs/classload_$MODE.log)\"" "-XX:ErrorFile=$(W $L/ide/logs/hs_err_$MODE.log)"
-  [ -n "$PROP" ] && echo "$PROP"; } > "$L/ide/eclipse_$MODE.ini"
+  [ -n "$PROP" ] && echo "$PROP"; for a in $M3_IDE_VMARGS; do echo "$a"; done; } > "$L/ide/eclipse_$MODE.ini"
 LOG=$L/ide/logs/launcher_$MODE.log; : > "$LOG"
 ( while :; do sleep 300; echo "HEARTBEAT $(date -Iseconds) ide mode=$MODE"; done ) & HB=$!
 echo "START $(date -Iseconds) ide mode=$MODE version=$V"
 CMD="\"$(W $I/eclipse.exe)\" --launcher.ini \"$(W $L/ide/eclipse_$MODE.ini)\" -vm \"C:\Program Files\Java\jdk-21\bin\javaw.exe\" -configuration \"$(W $B/configuration)\" -data \"$(W $B/ws)\" -eclipse.keyring \"$(W $B/user/keyring)\" -clean"
 echo "CMD $CMD"
-bash C:/m3-superset/tools/ui_lock.sh claude-l18 powershell -NoProfile -ExecutionPolicy Bypass -File "$(W C:/m3-superset/tools/run_hidden_desktop.ps1)" -TimeoutSec "$TIMEOUT" -Log "$(W $LOG)" -CommandLine "$CMD" -Desktop m3-ui-tests-l18
+bash C:/m3-superset/tools/ui_lock.sh ${M3_UI_AGENT:-claude-l18} powershell -NoProfile -ExecutionPolicy Bypass -File "$(W C:/m3-superset/tools/run_hidden_desktop.ps1)" -TimeoutSec "$TIMEOUT" -Log "$(W $LOG)" -CommandLine "$CMD" -Desktop ${M3_UI_DESKTOP:-m3-ui-tests-l18}
 rc=$?; kill $HB 2>/dev/null
 echo "END $(date -Iseconds) ide mode=$MODE exit=$rc"
 cp "$B/ws/.metadata/.log" "$L/ide/logs/workspace_$MODE.log" 2>/dev/null

@@ -18,6 +18,7 @@ import java.util.*;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.internal.*;
+import org.eclipse.swt.internal.canvasext.*;
 import org.eclipse.swt.internal.gpu.*;
 import org.eclipse.swt.internal.gdip.*;
 import org.eclipse.swt.internal.ole.win32.*;
@@ -825,7 +826,12 @@ void drawInPixels (GC gc, int xInPoints, int yInPoints) {
 void drawInPixels (GC gc, int xInPoints, int yInPoints, int selectionStart, int selectionEnd, Color selectionForeground, Color selectionBackground, int flags) {
 
 	if(gc instanceof GCExtension gcext) {
-		gcext.textLayoutDraw(this, gc,  xInPoints,  yInPoints,  selectionStart,  selectionEnd,  selectionForeground,  selectionBackground,  flags);
+		// L13 GLYPH_RUN_SINK v1: shaped runs to the M3 GC's sink; what it cannot take goes to its fallback (counted)
+		M3RunSink sink = gcext.runSink();
+		computeRuns(null);
+		if (sink == null || !recordRuns(sink, xInPoints, yInPoints, selectionStart, selectionEnd, selectionForeground, selectionBackground, flags)) {
+			gcext.textLayoutDraw(this, gc,  xInPoints,  yInPoints,  selectionStart,  selectionEnd,  selectionForeground,  selectionBackground,  flags);
+		}
 		return;
 	}
 
@@ -1068,35 +1074,45 @@ void drawInPixels (GC gc, int xInPoints, int yInPoints, int selectionStart, int 
 }
 
 /**
- * Retained planes: records the layout as GPU ops. Run backgrounds and the
- * selection become rectangles and every run a Uniscribe-shaped glyph run
- * (glyph ids and advances), so Skia rasterizes the glyphs exactly where
- * ScriptTextOut would; partially selected runs are drawn twice, the second time
- * clipped to the selected span, as drawRunText does. Adornments, metrics, rise,
- * justification, RTL and font-fallback runs return false (GDI raster).
+ * Retained planes: records the layout as GPU ops through the op stream's
+ * {@link M3RunSink} (GCPlanes.OpStreamRunSink). Text leaf L13
+ * GLYPH_RUN_SINK v1: the recorder itself is {@link #recordRuns(M3RunSink, int, int, int, int, Color, Color, int)}.
  */
 boolean recordRuns(GC gc, int xInPoints, int yInPoints, int selectionStart, int selectionEnd, Color selectionForeground, Color selectionBackground, int flags) {
 	computeRuns(gc);
-	GCData data = gc.data;
-	if (data.gdipGraphics != 0 || (data.style & SWT.MIRRORED) != 0 || (orientation & SWT.RIGHT_TO_LEFT) != 0) return false;
-	if ((data.retainedMask & (GCPlanes.TRANSFORMED | GCPlanes.XOR)) != 0) return false;
+	return recordRuns(new GCPlanes.OpStreamRunSink(gc, (OpStream) gc.data.planeSink, getZoom(gc)), xInPoints, yInPoints, selectionStart, selectionEnd, selectionForeground, selectionBackground, flags);
+}
+
+//FLLDCIM: L13 GLYPH_RUN_SINK v1 — one recorder, two sinks (op stream for retained planes, M3 GC); RUN_STYLE v1; RUN_COVERAGE v1
+/**
+ * Records the layout to a run sink (text leaf L13, GLYPH_RUN_SINK v1). Run
+ * backgrounds and the selection become rectangles and every run a
+ * Uniscribe-shaped glyph run (glyph ids, advances, offsets), so the sink
+ * rasterizes the glyphs exactly where ScriptTextOut would; partially selected
+ * runs are drawn twice, the second time clipped to the selected span, as
+ * drawRunText does. Before the first op the layout is checked against the
+ * sink's capabilities (RUN_COVERAGE v1); what the sink cannot take returns
+ * false with nothing emitted (the caller rasterizes the whole layout).
+ * Computed runs are expected (computeRuns ran).
+ */
+boolean recordRuns(M3RunSink sink, int xInPoints, int yInPoints, int selectionStart, int selectionEnd, Color selectionForeground, Color selectionBackground, int flags) {
+	if (!sink.accepts() || !runsRecordable(sink)) return false;
 	int length = text.length();
 	if (length == 0 && flags == 0) return true;
+	int alpha = sink.alpha();
 	boolean hasSelection = selectionStart <= selectionEnd && selectionStart != -1 && selectionEnd != -1;
 	int selFg = 0, selBg = 0;
 	if (hasSelection || ((flags & SWT.LAST_LINE_SELECTION) != 0 && (flags & (SWT.FULL_SELECTION | SWT.DELIMITER_SELECTION)) != 0)) {
-		selFg = PaintKeys.argbFromColorref(selectionForeground != null ? selectionForeground.handle : OS.GetSysColor (OS.COLOR_HIGHLIGHTTEXT), data.alpha);
-		selBg = PaintKeys.argbFromColorref(selectionBackground != null ? selectionBackground.handle : OS.GetSysColor (OS.COLOR_HIGHLIGHT), data.alpha);
+		selFg = PaintKeys.argbFromColorref(selectionForeground != null ? selectionForeground.handle : OS.GetSysColor (OS.COLOR_HIGHLIGHTTEXT), alpha);
+		selBg = PaintKeys.argbFromColorref(selectionBackground != null ? selectionBackground.handle : OS.GetSysColor (OS.COLOR_HIGHLIGHT), alpha);
 		if (hasSelection) {
 			selectionStart = translateOffset(Math.min(Math.max(0, selectionStart), length - 1));
 			selectionEnd = translateOffset(Math.min(Math.max(0, selectionEnd), length - 1));
 		}
 	}
 	yInPoints += verticalIndentInPoints;
-	OpStream sink = (OpStream) data.planeSink;
-	int zoom = getZoom(gc);
+	int zoom = sink.zoom();
 	int x = Win32DPIUtils.pointToPixel(getDevice(), xInPoints, zoom);
-	int fillMask = PaintKeys.mask(PaintKeys.KIND_FILL, 0, 0, 0, -1, 0, 0, PaintKeys.BACKEND_M3);
 	RECT rect = RECORD_RECT;
 	for (int line = 0; line < runs.length; line++) {
 		int drawX = x + getLineIndentInPixel(line);
@@ -1121,30 +1137,31 @@ boolean recordRuns(GC gc, int xInPoints, int yInPoints, int selectionStart, int 
 			}
 			if (extents) {
 				int width = (flags & SWT.FULL_SELECTION) != 0 ? 0x6FFFFFF : lineHeightWithSpacing / 3;
-				sink.rect(OpStream.FILL_RECT, drawX + lineWidthInPixels[line], drawY, width, lineHeightWithSpacing, selBg, fillMask);
+				sink.fillRect(drawX + lineWidthInPixels[line], drawY, width, lineHeightWithSpacing, selBg);
 			}
 		}
 		int baselineInPixels = Math.max(0, Win32DPIUtils.pointToPixel(getDevice(), ascent, zoom));
+		int lineUnderlinePos = 0;
 		int runX = drawX;
 		for (StyleItem run : lineRuns) {
 			baselineInPixels = Math.max(baselineInPixels, Win32DPIUtils.pointToPixel(getDevice(), run.ascentInPoints, zoom));
+			lineUnderlinePos = Math.min(lineUnderlinePos, run.underlinePos);
 			if (run.length == 0) continue;
 			TextStyle style = run.style;
-			if (style != null && (style.underline || style.strikeout || style.borderStyle != SWT.NONE || style.metrics != null || style.rise != 0)) return false;
 			if (!run.lineBreak || run.softBreak) {
 				int bottom = extents ? drawYWithLineHeightWithSpacing : drawYWithLineHeight;
 				int end = run.start + run.length - 1;
 				boolean fullSelection = hasSelection && selectionStart <= run.start && selectionEnd >= end;
 				if (fullSelection) {
-					sink.rect(OpStream.FILL_RECT, runX, drawY, run.width, bottom - drawY, selBg, fillMask);
+					sink.fillRect(runX, drawY, run.width, bottom - drawY, selBg);
 				} else {
 					if (style != null && style.background != null) {
-						sink.rect(OpStream.FILL_RECT, runX, drawY, run.width, bottom - drawY, PaintKeys.argbFromColorref(style.background.handle, data.alpha), fillMask);
+						sink.fillRect(runX, drawY, run.width, bottom - drawY, PaintKeys.argbFromColorref(style.background.handle, alpha));
 					}
 					if (hasSelection && !(selectionStart > end || run.start > selectionEnd)) {
 						OS.SetRect(rect, runX, drawY, runX + run.width, bottom);
 						getPartialSelection(run, selectionStart, selectionEnd, rect);
-						sink.rect(OpStream.FILL_RECT, rect.left, drawY, rect.right - rect.left, bottom - drawY, selBg, fillMask);
+						sink.fillRect(rect.left, drawY, rect.right - rect.left, bottom - drawY, selBg);
 					}
 				}
 			}
@@ -1153,25 +1170,23 @@ boolean recordRuns(GC gc, int xInPoints, int yInPoints, int selectionStart, int 
 		runX = drawX;
 		for (StyleItem run : lineRuns) {
 			if (run.length == 0) continue;
-			if (!run.tab && (!run.lineBreak || run.softBreak) && run.glyphCount > 0) {
-				if (run.fallbackFont != 0 || run.analysis.fNoGlyphIndex || run.analysis.fRTL || run.justify != 0) return false;
+			if (!run.tab && (!run.lineBreak || run.softBreak) && run.glyphCount > 0 && !(run.style != null && run.style.metrics != null)) {
 				TextStyle style = run.style;
-				Font runFont = style != null && style.font != null ? style.font : this.font != null ? this.font : SWTFontProvider.getSystemFont(device, getNativeZoom(gc));
-				int fontId = GCPlanes.fontIdOf(gc, runFont);
-				if (fontId < 0) return false;
+				Font runFont = style != null && style.font != null ? style.font : this.font != null ? this.font : SWTFontProvider.getSystemFont(device, nativeZoom);
 				int end = run.start + run.length - 1;
 				boolean fullSelection = hasSelection && selectionStart <= run.start && selectionEnd >= end;
 				boolean partialSelection = hasSelection && !fullSelection && !(selectionStart > end || run.start > selectionEnd);
-				int color = fullSelection ? selFg : PaintKeys.argbFromColorref(style != null && style.foreground != null ? style.foreground.handle : data.foreground, data.alpha);
-				int baselineY = drawY + baselineInPixels;
-				if (!GCPlanes.recordGlyphRun(sink, run.glyphs, run.advances, run.goffsets, run.glyphCount, fontId, runX, baselineY, color)) return false;
+				int color = fullSelection ? selFg : PaintKeys.argbFromColorref(style != null && style.foreground != null ? style.foreground.handle : sink.foregroundPixel(), alpha);
+				int baselineY = drawY + baselineInPixels - riseInPixels(style, zoom);
+				if (!recordGlyphRun(sink, run, runFont, runX, baselineY, color)) return false;
 				if (partialSelection) {
 					OS.SetRect(rect, runX, drawY, runX + run.width, drawY + lineHeight);
 					getPartialSelection(run, selectionStart, selectionEnd, rect);
 					sink.clipPush(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
-					if (!GCPlanes.recordGlyphRun(sink, run.glyphs, run.advances, run.goffsets, run.glyphCount, fontId, runX, baselineY, selFg)) return false;
+					if (!recordGlyphRun(sink, run, runFont, runX, baselineY, selFg)) return false;
 					sink.clipPop();
 				}
+				recordRunLines(sink, run, runX, drawY + baselineInPixels, lineUnderlinePos, fullSelection ? selFg : color, alpha, zoom);
 			}
 			runX += run.width;
 		}
@@ -1179,8 +1194,87 @@ boolean recordRuns(GC gc, int xInPoints, int yInPoints, int selectionStart, int 
 	return true;
 }
 
-/* Recorder scratch; recording runs only in retained passes on the display thread. */
+/* RUN_COVERAGE v1: whether every run of the layout is one the sink can take (checked before the first op) */
+boolean runsRecordable(M3RunSink sink) {
+	int caps = sink.capabilities();
+	if ((orientation & SWT.RIGHT_TO_LEFT) != 0) return false;
+	for (StyleItem[] line : runs) {
+		for (StyleItem run : line) {
+			if (!runRecordable(run, caps)) return false;
+		}
+	}
+	return true;
+}
+
+/* RUN_COVERAGE v1: one run against the sink's capabilities */
+boolean runRecordable(StyleItem run, int caps) {
+	TextStyle style = run.style;
+	if (style != null && (style.borderStyle != SWT.NONE || style.underline && !lineUnderline(style))) return false;
+	if (style != null && (style.underline || style.strikeout || style.rise != 0) && (caps & M3RunSink.CAP_LINES) == 0) return false;
+	if (run.length == 0 || run.tab || run.lineBreak && !run.softBreak || run.glyphCount == 0) return true;
+	if (run.justify != 0) return false;
+	if (run.analysis.fNoGlyphIndex && (caps & M3RunSink.CAP_CHAR_GLYPHS) == 0) return false;
+	if (run.fallbackFont != 0 && (caps & M3RunSink.CAP_FALLBACK_FONT) == 0) return false;
+	if (run.analysis.fRTL && (caps & M3RunSink.CAP_RTL) == 0) return false;
+	return run.goffsets == 0 || (caps & M3RunSink.CAP_OFFSETS) != 0 || !hasGlyphOffsets(run);
+}
+
+/* RUN_STYLE v1: underline styles drawn as rectangles (single, double, link); error and squiggle stay with the raster path */
+static boolean lineUnderline(TextStyle style) {
+	int s = style.underlineStyle;
+	return s == SWT.UNDERLINE_SINGLE || s == SWT.UNDERLINE_DOUBLE || s == SWT.UNDERLINE_LINK;
+}
+
+int riseInPixels(TextStyle style, int zoom) {
+	return style == null || style.rise == 0 ? 0 : Win32DPIUtils.pointToPixel(getDevice(), style.rise, zoom);
+}
+
+/* RUN_STYLE v1: underline (stock rect: baseline - lineUnderlinePos - rise, underline thickness; double adds a second at +2t) and strikeout */
+void recordRunLines(M3RunSink sink, StyleItem run, int runX, int baseline, int lineUnderlinePos, int color, int alpha, int zoom) {
+	TextStyle style = run.style;
+	if (style == null) return;
+	int rise = riseInPixels(style, zoom);
+	if (style.underline) {
+		int c = style.underlineColor != null ? PaintKeys.argbFromColorref(style.underlineColor.handle, alpha) : color;
+		int top = baseline - lineUnderlinePos - rise;
+		sink.fillRect(runX, top, run.width, run.underlineThickness, c);
+		if (style.underlineStyle == SWT.UNDERLINE_DOUBLE) sink.fillRect(runX, top + run.underlineThickness * 2, run.width, run.underlineThickness, c);
+	}
+	if (style.strikeout) {
+		int c = style.strikeoutColor != null ? PaintKeys.argbFromColorref(style.strikeoutColor.handle, alpha) : color;
+		sink.fillRect(runX, baseline - run.strikeoutPos - rise, run.width, run.strikeoutThickness, c);
+	}
+}
+
+/* Recorder scratch; recording runs only on the display thread. */
 static final RECT RECORD_RECT = new RECT();
+private static char [] recordGlyphs = new char [256];
+private static int [] recordAdvances = new int [256];
+private static int [] recordOffsets = new int [512];
+
+/* GLYPH_RUN_SINK v1: glyph ids, advances and offsets of one run copied from native memory, then handed to the sink */
+boolean recordGlyphRun(M3RunSink sink, StyleItem run, Font runFont, int x, int baselineY, int argb) {
+	int count = run.glyphCount;
+	if (recordGlyphs.length < count) {
+		recordGlyphs = new char [Integer.highestOneBit (count) << 1];
+		recordAdvances = new int [recordGlyphs.length];
+		recordOffsets = new int [recordGlyphs.length * 2];
+	}
+	OS.MoveMemory (recordGlyphs, run.glyphs, count * 2);
+	OS.MoveMemory (recordAdvances, run.advances, count * 4);
+	boolean offsets = run.goffsets != 0 && hasGlyphOffsets(run);
+	long hFont = run.fallbackFont != 0 ? run.fallbackFont : SWTFontProvider.getFontHandle(runFont, nativeZoom);
+	return sink.glyphRun(runFont, hFont, recordGlyphs, recordAdvances, offsets ? recordOffsets : null, count, x, baselineY, argb, run.analysis.fNoGlyphIndex);
+}
+
+/* whether the run's GOFFSETs (du, dv per glyph) are not all zero; leaves them in recordOffsets */
+boolean hasGlyphOffsets(StyleItem run) {
+	int count = run.glyphCount;
+	if (recordOffsets.length < count * 2) recordOffsets = new int [Integer.highestOneBit (count * 2) << 1];
+	OS.MoveMemory (recordOffsets, run.goffsets, count * 8);
+	for (int i = 0; i < count * 2; i++) if (recordOffsets [i] != 0) return true;
+	return false;
+}
 
 RECT drawBorder(long hdc, int x, int y, int lineHeight, StyleItem[] line, int index, int color, int selectionColor, RECT clipRect, RECT pRect, int selectionStart, int selectionEnd, Rectangle drawClip) {
 	StyleItem run = line[index];

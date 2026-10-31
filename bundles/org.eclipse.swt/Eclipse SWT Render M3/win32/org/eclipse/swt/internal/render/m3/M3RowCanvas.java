@@ -147,7 +147,7 @@ public final class M3RowCanvas implements BufferCanvas {
 	/* the fonts of the frame being drawn on the render thread (rule 28); null on the UI thread */
 	private FontTable table;
 	/* the path of polygon, reset per call */
-	private final Path path = new Path ();
+	private final PathBuilder path = new PathBuilder (); // Skija 0.143: the mutable path is a PathBuilder (L12-09)
 	/* TEXT_TRUNCATION v1: DrawText's ellipsis cut measured by GDI */
 	private final M3GdiEllipsis gdiEllipsis = new M3GdiEllipsis ();
 	/* the gpu mode: the frame is drawn on the graphics hardware and read back into the back buffer */
@@ -456,7 +456,9 @@ public final class M3RowCanvas implements BufferCanvas {
 		for (int i = 1; i < count; i++) path.lineTo (points [2 * i], points [2 * i + 1]);
 		path.closePath ();
 		paint.setColor (0xFF000000 | rgb);
-		canvas.drawPath (path, paint);
+		try (Path shape = path.detach ()) { // Skija 0.143: draw the immutable Path the builder detaches (L12-10)
+			canvas.drawPath (shape, paint);
+		}
 	}
 
 	@Override

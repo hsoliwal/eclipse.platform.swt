@@ -23,6 +23,7 @@ import org.eclipse.swt.internal.SWTFontProvider;
 import org.eclipse.swt.internal.win32.OS;
 import org.eclipse.swt.internal.win32.RECT;
 import org.eclipse.swt.internal.win32.SIZE;
+import org.eclipse.swt.internal.win32.TEXTMETRIC;
 
 /**
  * Text measured exactly as the stock win32 GC measures it, in pixels (GC seam, leaf 6; atom TEXT_METRICS, pattern
@@ -68,6 +69,66 @@ final class M3GdiText {
 		final SIZE size = new SIZE();
 		OS.GetTextExtentPoint32(hdc, new char[] { ' ' }, 1, size);
 		return new Point(0, size.cy);
+	}
+
+	//FLLDCIM: L14 SURROGATE_SAFE v1 + TAB_STOPS v1 — REUSE_DIRECT of the stock GC.getAdvanceWidth / getCharWidth (GDI)
+	/** stock getAdvanceWidth (GetCharWidth): any UTF-16 unit, a lone surrogate included; Skia never measures it (#109) */
+	static int advanceWidth(Font font, int zoom, char ch) {
+		return measure(font, zoom, hdc -> {
+			final int[] width = new int[1];
+			OS.GetCharWidth(hdc, ch, ch, width);
+			return new Point(width[0], 0);
+		}).x;
+	}
+
+	/** stock getCharWidth: the black-box width (abcB) of a TrueType glyph, else extent minus overhang */
+	static int charWidth(Font font, int zoom, char ch) {
+		return measureColour(font, zoom, hdc -> new Point(blackBox(hdc, ch), 0)).x;
+	}
+
+	/*
+	 * as measure, on a memory DC holding a screen-compatible (colour) bitmap: GetCharABCWidths answers ClearType black boxes
+	 * there, as on a stock GC's image or paint DC ('i' Segoe UI 9 pt: 0,3,0); the bare memory DC's monochrome bitmap gives 1,1,1
+	 */
+	private static Point measureColour(Font font, int zoom, LongFunction<Point> how) {
+		final long screen = OS.GetDC(0);
+		final long bitmap = OS.CreateCompatibleBitmap(screen, 1, 1);
+		OS.ReleaseDC(0, screen);
+		try {
+			return measure(font, zoom, hdc -> withBitmap(hdc, bitmap, how));
+		} finally {
+			OS.DeleteObject(bitmap);
+		}
+	}
+
+	private static Point withBitmap(long hdc, long bitmap, LongFunction<Point> how) {
+		final long previous = OS.SelectObject(hdc, bitmap);
+		try {
+			return how.apply(hdc);
+		} finally {
+			OS.SelectObject(hdc, previous);
+		}
+	}
+
+	private static int blackBox(long hdc, char ch) {
+		final int[] abc = new int[3];
+		if (OS.GetCharABCWidths(hdc, ch, ch, abc)) {
+			return abc[1];
+		}
+		final TEXTMETRIC metric = new TEXTMETRIC();
+		OS.GetTextMetrics(hdc, metric);
+		final SIZE size = new SIZE();
+		OS.GetTextExtentPoint32(hdc, new char[] { ch }, 1, size);
+		return size.cx - metric.tmOverhang;
+	}
+
+	/** DT_EXPANDTABS stops: 8 average character widths (tmAveCharWidth) of the font at the zoom */
+	static int tabStop(Font font, int zoom) {
+		return measure(font, zoom, hdc -> {
+			final TEXTMETRIC metric = new TEXTMETRIC();
+			OS.GetTextMetrics(hdc, metric);
+			return new Point(8 * Math.max(1, metric.tmAveCharWidth), 0);
+		}).x;
 	}
 
 	private static Point textExtentPoint(long hdc, String text) {

@@ -43,9 +43,12 @@ import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.internal.canvasext.IExternalGC;
 
 import io.github.humbleui.skija.ClipMode;
+import io.github.humbleui.skija.ColorAlphaType;
+import io.github.humbleui.skija.ColorType;
 import io.github.humbleui.skija.EncoderPNG;
 import io.github.humbleui.skija.FilterTileMode;
 import io.github.humbleui.skija.GradientStyle;
+import io.github.humbleui.skija.ImageInfo;
 import io.github.humbleui.skija.Matrix33;
 import io.github.humbleui.skija.Paint;
 import io.github.humbleui.skija.PaintMode;
@@ -100,6 +103,8 @@ public class M3ExternalGC implements IExternalGC {
 	private final M3PaintManager paintManager;
 	private final GCData data = new GCData();
 	private final DpiScalerUtil dpiScalerUtil;
+	// L13 GLYPH_RUN_DRAW v1: this GC as TextLayout's run sink
+	private final M3GlyphRuns runSink = new M3GlyphRuns(this);
 
 	public M3ExternalGC(IM3CanvasExtension exst, int style) {
 		this.drawable = exst.getDrawable();
@@ -323,7 +328,7 @@ public class M3ExternalGC implements IExternalGC {
 	}
 
 	private void executeTextDraw(String inputText, int flags, int x, int y) {
-		if (isCulled(x, y)) {
+		if (isCulled(x, y) || M3GdiTextDraw.draw(this, inputText, flags, x, y, false)) {
 			return;
 		}
 		final String splits[] = this.resources.getTextSplits(inputText, flags);
@@ -424,7 +429,7 @@ public class M3ExternalGC implements IExternalGC {
 
 		paintManager.performDraw(paint -> {
 			// Create Skija path for the polygon
-			try (io.github.humbleui.skija.Path pathBuilder = new io.github.humbleui.skija.Path()) {
+			try (io.github.humbleui.skija.PathBuilder pathBuilder = new io.github.humbleui.skija.PathBuilder()) {
 				// Move to first point
 				pathBuilder.moveTo(getScaler().autoScaleUp(pointArray[0]), getScaler().autoScaleUp(pointArray[1]));
 				// Add lines to subsequent points
@@ -435,8 +440,7 @@ public class M3ExternalGC implements IExternalGC {
 				pathBuilder.closePath();
 				// Draw the polygon outline
 
-				{
-					var path = pathBuilder; // Skija 0.116.3: Path is its own builder; the outer try closes it
+				try (var path = pathBuilder.build()) {
 					if (path.isEmpty()) {
 						return;
 					}
@@ -506,7 +510,8 @@ public class M3ExternalGC implements IExternalGC {
 		}
 		// leaf 6 (TEXT_DRAW_FLAGS, pattern M3-GC-TEXT-FLAGS v1, census GF29): one line as given, as the stock ExtTextOut draws it;
 		// the donor drew through drawText with DRAW_DELIMITER | DRAW_TAB (lines split, tabs expanded)
-		if (!isCulled(x, y)) {
+		// L14 ONE_TEXT_SHAPER v1 (raster): the stock ExtTextOut over the surface pixels when the route applies (M3GdiTextDraw)
+		if (!isCulled(x, y) && !M3GdiTextDraw.draw(this, string, isTransparent ? SWT.DRAW_TRANSPARENT : SWT.NONE, x, y, true)) {
 			M3TextDrawing.drawText(this, new String[] { string }, isTransparent ? SWT.DRAW_TRANSPARENT : SWT.NONE, x, y);
 		}
 	}
@@ -940,22 +945,8 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public int getAdvanceWidth(char ch) {
-
-		final var f = getM3Font();
-		final AtomicInteger result = new AtomicInteger();
-		result.set(-1);
-
-		paintManager.performDraw(paint -> {
-			paint.setAntiAlias(false);
-			paint.setMode(PaintMode.FILL);
-
-			final var textWidth = f.measureTextWidth(String.valueOf(ch), paint);
-			result.set((int) Math.ceil(textWidth));
-
-		});
-
-		return result.get();
-
+		// L14 SURROGATE_SAFE v1: stock GetCharWidth; a lone surrogate never reaches Skia's measureText (#109)
+		return M3GdiText.advanceWidth(getFont(), getScaler().getNativeZoom(), ch);
 	}
 
 	@Override
@@ -971,7 +962,8 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public int getCharWidth(char ch) {
-		return getAdvanceWidth(ch);
+		// L14 TAB_STOPS v1: stock black-box width (GetCharABCWidths abcB), not the advance (GF37)
+		return M3GdiText.charWidth(getFont(), getScaler().getNativeZoom(), ch);
 	}
 
 	@Override
@@ -1359,33 +1351,52 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public void textLayoutDraw(TextLayout textLayout, GC gc, int xInPoints, int yInPoints, int selectionStart,
 			int selectionEnd, Color selectionForeground, Color selectionBackground, int flags) {
+		// L13 TEXT_FALLBACK_SAFE v1: transparent premultiplied raster, GC state carried (M3TextLayoutFallback)
+		M3TextLayoutFallback.draw(this, new M3TextLayoutCall(textLayout, xInPoints, yInPoints, selectionStart,
+				selectionEnd, selectionForeground, selectionBackground, flags));
+	}
 
-		final var rectangle = textLayout.getBounds();
+	/* L13 GLYPH_RUN_DRAW v1: TextLayout records its shaped runs here (M3GlyphRuns); the rest reaches textLayoutDraw */
+	@Override
+	public org.eclipse.swt.internal.canvasext.M3RunSink runSink() {
+		return runSink;
+	}
 
-		if (rectangle.width <= 0 || rectangle.height <= 0) {
-			return;
+	/*
+	 * L13 TEXT_FALLBACK_SAFE v2 (GDI_UNDERLAY): the surface pixels under a rectangle in points as 32-bit ImageData (BGRA),
+	 * when the canvas maps it by a whole-pixel translation at 100 %, it lies inside the surface and the surface is raster
+	 */
+	ImageData readSurface(Rectangle destInPoints) {
+		final float[] m = surface.getCanvas().getLocalToDevice().getMat();
+		final boolean plain = m[0] == 1 && m[1] == 0 && m[3] == 0 && m[4] == 1 && m[2] == Math.round(m[2]) && m[5] == Math.round(m[5]);
+		final int x = destInPoints.x + (int) m[2], y = destInPoints.y + (int) m[5];
+		final boolean inside = x >= 0 && y >= 0 && x + destInPoints.width <= surface.getWidth()
+				&& y + destInPoints.height <= surface.getHeight();
+		return plain && inside && getScaler().getNativeZoom() == 100 && !isMirrored()
+				? M3TextLayoutFallback.read(surface, x, y, destInPoints.width, destInPoints.height) : null;
+	}
+
+	/* L13: whether the GC draws on CPU memory (a raster surface): one pixel read, false at once for a GPU surface */
+	boolean isRasterSurface() {
+		try (var bitmap = new io.github.humbleui.skija.Bitmap()) {
+			bitmap.allocN32Pixels(1, 1);
+			return surface.readRasterPixels(bitmap, 0, 0);
 		}
+	}
 
-		Image i = null;
-		GC nativeGC = null;
-		try {
-			i = new Image(device, rectangle.width, rectangle.height);
-			nativeGC = new GC(i);
-
-			textLayout.draw(nativeGC, 0, 0, selectionStart, selectionEnd, selectionForeground, selectionBackground,
-					flags);
-
-			drawImage(i, rectangle.x, rectangle.y, rectangle.width, rectangle.height, xInPoints, yInPoints,
-					rectangle.width, rectangle.height);
-		} finally {
-			if (nativeGC != null) {
-				nativeGC.dispose();
-			}
-			if (i != null) {
-				i.dispose();
-			}
+	/* L13 TEXT_FALLBACK_SAFE v1: a premultiplied BGRA raster composited once with the GC alpha (not squared) */
+	void drawLayoutRaster(byte[] bgra, int width, int height, Rectangle destInPoints) {
+		final ImageInfo info = new ImageInfo(width, height, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
+		try (var raster = io.github.humbleui.skija.Image.makeRaster(info, bgra, width * 4L)) {
+			final IM3Canvas canvas = surface.getCanvas();
+			final Rect dest = RectangleConverter.createScaledRectangle(getScaler(), destInPoints.x, destInPoints.y,
+					destInPoints.width, destInPoints.height);
+			paintManager.performDraw(paint -> {
+				paint.setAlpha(alpha);
+				M3Mirror.unmirrored(canvas, isMirrored(), dest.getLeft(), dest.getWidth(), () -> canvas.drawImageRect(
+						new M3ImageAdapter(raster), Rect.makeWH(width, height), dest, SamplingMode.DEFAULT, paint, false));
+			});
 		}
-
 	}
 
 	IM3Resources getM3Resources() {

@@ -16,6 +16,7 @@ package org.eclipse.swt.graphics;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.internal.*;
+import org.eclipse.swt.internal.canvasext.*;
 import org.eclipse.swt.internal.gpu.*;
 import org.eclipse.swt.internal.win32.*;
 
@@ -267,32 +268,79 @@ final class GCPlanes {
 		return id;
 	}
 
-	/* Scratch for native glyph arrays; UI-thread confined like every GC. */
-	private static char [] glyphScratch = new char [256];
-	private static int [] intScratch = new int [512];
-
+	//FLLDCIM: L13 GLYPH_RUN_SINK v1 — the retained planes' op stream as TextLayout's run sink (capabilities 0: the old recorder's limits)
 	/**
-	 * Records one Uniscribe-shaped run (glyph ids and advances read from native
-	 * memory) for GPU replay. Runs with glyph offsets (combining marks) return
-	 * false and are left to GDI.
+	 * The retained planes' op stream as the TextLayout run sink (text leaf L13,
+	 * GLYPH_RUN_SINK v1). It claims no capability bit, so the recorder leaves to
+	 * GDI exactly what it left before (adornments, rise, fallback fonts, RTL,
+	 * glyph offsets), now checked before the first op instead of mid-layout.
 	 */
-	static boolean recordGlyphRun (OpStream sink, long glyphs, long advances, long goffsets, int count, int fontId, int x, int baselineY, int argb) {
-		if (glyphScratch.length < count) glyphScratch = new char [Integer.highestOneBit (count) << 1];
-		if (intScratch.length < count * 2) intScratch = new int [Integer.highestOneBit (count * 2) << 1];
-		if (goffsets != 0) {
-			OS.MoveMemory (intScratch, goffsets, count * 8);
-			for (int i = 0; i < count * 2; i++) if (intScratch [i] != 0) return false;
+	static final class OpStreamRunSink implements M3RunSink {
+		static final int FILL_MASK = PaintKeys.mask (PaintKeys.KIND_FILL, 0, 0, 0, -1, 0, 0, PaintKeys.BACKEND_M3);
+		final GC gc;
+		final OpStream sink;
+		final int zoom;
+
+		OpStreamRunSink (GC gc, OpStream sink, int zoom) {
+			this.gc = gc;
+			this.sink = sink;
+			this.zoom = zoom;
 		}
-		OS.MoveMemory (glyphScratch, glyphs, count * 2);
-		OS.MoveMemory (intScratch, advances, count * 4);
-		int o = sink.begin (OpStream.GLYPH_RUN, 5 + 2 * count);
-		if (o < 0) return false;
-		int [] ops = sink.ops ();
-		ops [o] = fontId; ops [o + 1] = x; ops [o + 2] = baselineY; ops [o + 3] = argb; ops [o + 4] = count;
-		for (int i = 0; i < count; i++) {
-			ops [o + 5 + i] = glyphScratch [i];
-			ops [o + 5 + count + i] = intScratch [i];
+
+		@Override
+		public int capabilities () {
+			return 0;
 		}
-		return true;
+
+		@Override
+		public int zoom () {
+			return zoom;
+		}
+
+		@Override
+		public int alpha () {
+			return gc.data.alpha;
+		}
+
+		@Override
+		public int foregroundPixel () {
+			return gc.data.foreground;
+		}
+
+		@Override
+		public boolean accepts () {
+			GCData data = gc.data;
+			return data.gdipGraphics == 0 && (data.style & SWT.MIRRORED) == 0 && (data.retainedMask & (TRANSFORMED | XOR)) == 0;
+		}
+
+		@Override
+		public void fillRect (int x, int y, int width, int height, int argb) {
+			sink.rect (OpStream.FILL_RECT, x, y, width, height, argb, FILL_MASK);
+		}
+
+		@Override
+		public void clipPush (int x, int y, int width, int height) {
+			sink.clipPush (x, y, width, height);
+		}
+
+		@Override
+		public void clipPop () {
+			sink.clipPop ();
+		}
+
+		/** One Uniscribe-shaped run (glyph ids and advances) for GPU replay; runs with glyph offsets are left to GDI. */
+		@Override
+		public boolean glyphRun (Font font, long fontHandle, char [] glyphs, int [] advances, int [] offsets, int count, int x, int baselineY, int argb, boolean characters) {
+			int fontId = offsets != null || characters ? -1 : fontIdOf (gc, font);
+			int o = fontId < 0 ? -1 : sink.begin (OpStream.GLYPH_RUN, 5 + 2 * count);
+			if (o < 0) return false;
+			int [] ops = sink.ops ();
+			ops [o] = fontId; ops [o + 1] = x; ops [o + 2] = baselineY; ops [o + 3] = argb; ops [o + 4] = count;
+			for (int i = 0; i < count; i++) {
+				ops [o + 5 + i] = glyphs [i];
+				ops [o + 5 + count + i] = advances [i];
+			}
+			return true;
+		}
 	}
 }

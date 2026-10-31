@@ -21,7 +21,7 @@
   <groupId>org.eclipse.platform</groupId><artifactId>org.eclipse.swt.m3</artifactId><version>3.138.0-SNAPSHOT</version>
   <name>SWT M3 renderer fragment (Render M3 + GPU M3, nested Skija)</name>
   <properties>
-    <skija.version>0.116.3</skija.version>
+    <skija.version>0.143.18</skija.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><maven.compiler.release>21</maven.compiler.release>
     <m3.swtBundle>${project.basedir}/../org.eclipse.swt</m3.swtBundle>
     <m3.swtRoot>${project.basedir}/../..</m3.swtRoot>

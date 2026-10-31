@@ -171,13 +171,15 @@ final class Replay {
 	static void poly (M3PlaneBackend backend, long canvas, int [] a, int o, int op) {
 		int count = a [o];
 		if (count < 2) return;
-		try (Path builder = new Path ()) {
+		try (PathBuilder builder = new PathBuilder ()) {
 			int p = o + 3;
 			float offset = (op & ~OpStream.OPEN) == OpStream.DRAW_POLY ? .5f : 0f;
 			builder.moveTo (a [p] + offset, a [p + 1] + offset);
 			for (int k = 1; k < count; k++) builder.lineTo (a [p + 2 * k] + offset, a [p + 2 * k + 1] + offset);
 			if ((op & OpStream.OPEN) == 0) builder.closePath ();
-			Canvas._nDrawPath (canvas, builder._ptr, backend.paint (a [o + 2], a [o + 1]));
+			try (Path path = builder.detach ()) {
+				Canvas._nDrawPath (canvas, path._ptr, backend.paint (a [o + 2], a [o + 1]));
+			}
 		}
 	}
 }
