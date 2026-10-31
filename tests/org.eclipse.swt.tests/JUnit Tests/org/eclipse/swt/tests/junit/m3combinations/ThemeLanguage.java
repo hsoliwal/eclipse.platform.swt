@@ -16,58 +16,78 @@ package org.eclipse.swt.tests.junit.m3combinations;
 
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.List;
 
 import org.eclipse.swt.widgets.*;
 
 /**
- * The theme and language step of a row. <code>M3Theme</code> and <code>M3Language</code> come from the
- * theme-language branch (m3/theme-language-20261030); until they are on the class path the step answers
- * <code>NOT_RUN</code> and the row records that its theme/language part did not run. When present, the first public
- * static method <code>apply|set|select(Control or Widget, String)</code> of the class is called.
+ * The theme and language step of a row, through the API of the theme-language branch (m3/theme-language-20261030,
+ * PR #286), called by reflection so that this branch builds without it: a theme is
+ * <code>M3Themes.apply (display, M3Themes.find (name))</code>, a language is
+ * <code>M3Language.setLocale (Locale.forLanguageTag (tag))</code>. Both are global (display, JVM), so {@link #restore}
+ * puts them back after every row. Without the classes the step answers <code>NOT_RUN</code> and the rest of the row runs.
  */
 final class ThemeLanguage {
-	static final String [] PACKAGES = {"org.eclipse.swt.m3.", "org.eclipse.swt.widgets.", "org.eclipse.swt.internal.laf.", "org.eclipse.swt.custom."};
-	static final Set<String> METHODS = Set.of ("apply", "set", "select", "setTheme", "setLanguage");
+	static final String THEMES = "org.eclipse.swt.m3.M3Themes", THEME = "org.eclipse.swt.m3.M3Theme", LANGUAGE = "org.eclipse.swt.m3.M3Language";
+	static Locale before;
+	static boolean themed;
 
 	private ThemeLanguage () {
 	}
 
-	/** Applies a value of the theme (class M3Theme) or language (class M3Language) factor; "none" does nothing. */
-	static String apply (String className, String value, Widget widget) {
-		if ("none".equals (value)) return "none";
-		Optional<Class<?>> type = find (className);
-		if (type.isEmpty ()) return "NOT_RUN no " + className + " on the class path";
-		Optional<Method> method = Arrays.stream (type.get ().getMethods ()).filter (m -> applies (m, widget)).findFirst ();
-		if (method.isEmpty ()) return "NOT_RUN no static apply|set|select(Control, String) in " + type.get ().getName ();
+	/** Applies the row's theme and language; answers what was applied (or NOT_RUN without the classes). */
+	static String apply (CombinationRow row, Widget widget) {
+		return theme (row.theme ()) + "; " + language (row.language ());
+	}
+
+	static String theme (String name) {
+		if ("none".equals (name)) return "none";
+		Optional<Class<?>> themes = find (THEMES);
+		if (themes.isEmpty ()) return "NOT_RUN no M3Themes on the class path";
+		Object theme = invoke (themes.get (), "find", new Class<?> [] {String.class}, name);
+		if (theme == null) return "theme " + name + " not registered";
+		invoke (themes.get (), "apply", new Class<?> [] {Display.class, find (THEME).orElseThrow ()}, Display.getCurrent (), theme);
+		themed = true;
+		return "theme " + name + " applied";
+	}
+
+	static String language (String tag) {
+		if ("none".equals (tag)) return "none";
+		Optional<Class<?>> language = find (LANGUAGE);
+		if (language.isEmpty ()) return "NOT_RUN no M3Language on the class path";
+		Locale locale = Locale.forLanguageTag (tag);
+		if (before == null) before = (Locale) invoke (language.get (), "getLocale", new Class<?> [0]);
+		invoke (language.get (), "setLocale", new Class<?> [] {Locale.class}, locale);
+		return "language " + tag + " rtl=" + invoke (language.get (), "isRightToLeft", new Class<?> [] {Locale.class}, locale);
+	}
+
+	/** Puts the display theme and the JVM language back to what they were before the row. */
+	static void restore () {
+		if (themed && Display.getCurrent () != null) invoke (find (THEMES).get (), "reset", new Class<?> [] {Display.class}, Display.getCurrent ());
+		if (before != null) invoke (find (LANGUAGE).get (), "setLocale", new Class<?> [] {Locale.class}, before);
+		themed = false;
+		before = null;
+	}
+
+	static Optional<Class<?>> find (String className) {
 		try {
-			method.get ().invoke (null, widget, value);
-			return "applied " + value;
+			return Optional.of (Class.forName (className));
+		} catch (ClassNotFoundException e) {
+			return Optional.empty ();
+		}
+	}
+
+	static Object invoke (Class<?> type, String name, Class<?> [] parameters, Object... arguments) {
+		try {
+			return type.getMethod (name, parameters).invoke (null, arguments);
 		} catch (InvocationTargetException e) {
-			throw new AssertionError (className + " " + value, e.getCause ());
-		} catch (IllegalAccessException e) {
-			throw new AssertionError (e);
+			throw new AssertionError (type.getSimpleName () + "." + name, e.getCause ());
+		} catch (ReflectiveOperationException e) {
+			throw new AssertionError ("the theme-language API changed: " + type.getName () + "." + name, e);
 		}
 	}
 
-	static Optional<Class<?>> find (String simpleName) {
-		for (String pkg : PACKAGES) {
-			try {
-				return Optional.of (Class.forName (pkg + simpleName));
-			} catch (ClassNotFoundException e) {
-				/* next package */
-			}
-		}
-		return Optional.empty ();
-	}
-
-	static boolean applies (Method m, Widget widget) {
-		Class<?> [] p = m.getParameterTypes ();
-		return Modifier.isStatic (m.getModifiers ()) && METHODS.contains (m.getName ()) && p.length == 2 && widget != null && p [0].isInstance (widget) && p [1] == String.class;
-	}
-
-	/** True when the step did not run (the class or its method is missing). */
+	/** True when the step did not run (the classes are missing). */
 	static boolean notRun (String answer) {
-		return answer.startsWith ("NOT_RUN");
+		return answer.contains ("NOT_RUN");
 	}
 }

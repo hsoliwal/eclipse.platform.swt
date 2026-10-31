@@ -75,4 +75,34 @@ Rows with `env=headless` (widget Model) run without a Display; `env=display` row
 
 ## Results
 
-See `results/` and `FINDINGS.tsv` (filled by the runs below).
+Base `d1cb5ff10d2` + this branch; win32 classes of `compile_platform.sh` (924 sources, 0 errors, M3 render/GPU trees
+included), natives `swt-win32-4975r19`, JDK 21, hidden desktop. Files: `results/COMBINATION_RESULTS.tsv` (one line per
+row: reference leg, own-mode leg, theme/language step, leak, failure, location, message), `results/stacks/` (the stack
+of every failing row), `results/EXAMPLE_MODES.tsv` (every gallery entry in the five modes), `results/COVERAGE.tsv`,
+`FINDINGS.tsv` (one line per recurring failure class, with an owner).
+
+### Combination matrix (2026-10-30/31)
+
+| Measure | Value |
+|---|---|
+| Covering array | 278 rows, 9 factors (widget 9, mode 5, style 9, feature 2, api 23, op 8, count 4, theme 4, language 5); 167 forbidden pairs; every allowed pair covered, every allowed widget x mode x style triple covered (195 seeds), 0 rows with a forbidden pair, 0 implied-forbidden pairs |
+| Headless rows (Model) | 5 recorded + 4 compared: 9 PASS |
+| Display rows | 273 recorded in `original` (271 PASS, 2 TIMEOUT at the 900 s row limit); 233 compared in their own mode (viewport 113, custom 41, m3 39, gpu 40): 224 PASS, 8 FAIL, 1 NOT_RUN (its reference timed out) |
+| Row status | **268 PASS, 8 FAIL, 2 TIMEOUT** |
+| Leaks | 0 (tracked device objects, shells and children back to their count after every row; 3 rows grew on first use only and were clean on the repeat) |
+| Exceptions | 0 unexpected (the documented `SWTException` after dispose is an answer) |
+| Theme/language step | NOT_RUN in 130 rows: `M3Theme` / `M3Language` are not on the class path (branch `m3/theme-language-20261030` has no PR yet); the rest of those rows ran |
+
+Failures, by class (details, stacks and every row in `FINDINGS.tsv` and `results/`):
+
+| Finding | Rows | Cause (file:line) | Owner |
+|---|---|---|---|
+| `M3-MODE-QUERY` answers a mode the widget does not run: Table gpu (`r0045`) and List custom (`r0099`) report `viewport` while their drawn plane runs; StyledText viewport/custom (`r0124`, `r0132`) report `original` while `StyledText.VIEWPORT` is on | 4 | `M3Mode.supported` lists the drawn modes for Tree only (`M3Mode.java:100`), though `TableDrawnPlane.java:32` and `ListDrawnPlane.java:31` implement custom/m3/gpu; `M3Mode.gate` maps custom widgets to their nearest `org.eclipse.swt.widgets` superclass (`M3Mode.java:92`: StyledText -> Canvas, CTabFolder -> Composite) instead of their own gate (`StyledText.java:745`, `CTabFolder.java:143`); Canvas m3/gpu (`Display.java:3085`) is not in the table either | enhanced API (M3-MODE-QUERY) |
+| `M3-PREFETCH` hears prefetch requests in custom/m3 but none in original for the same scroll | 2 (`r0024` Table custom, `r0081` Tree m3) | prefetch events come from the viewport/drawn planes only; the API's mode-neutral contract (ENHANCED_API.md) does not hold in `original` | enhanced API (M3-PREFETCH) |
+| `M3-RESIDENCY` resident range `[0..999]` in original, `[987..999]` in custom (`r0023`, Table 1000 rows scrolled to the end) | 1 | the resident window is a viewport-plane notion; original answers every row; contract to be decided (mode-neutral or documented as mode-dependent) | enhanced API (M3-RESIDENCY) |
+| Virtual Tree, 10^5 roots, `setTopItem (getItem (50000))`: top 49,987 in original, 50,000 in m3 (`r0074`) | 1 | the reference is the outlier: in original the fork's lazily materialized native children (`Tree.ensureVirtualNativeChildren`, `Tree.java:522`) leave the item at the bottom of the page instead of the top; also 800 s for this row in original | viewport (Tree virtual topology, original mode) |
+| TIMEOUT: Tree CHECK, 10^5 plain items, `setItemCount` (`r0076`, original) | 1 | native item creation one by one (`Tree.setItemCount` -> `TreeItem.<init>` -> `Tree.createTreeItem`, `Tree.java:5956` / `3398`) over 900 s | viewport / stock behaviour |
+| TIMEOUT: `M3RowMath.visibleRowCount` on a plain Tree of 10^5 roots in original (`r0200`) | 1 | `M3TreeWalk.childCount` (`M3TreeWalk.java:111`) calls `Tree.getItemCount`, which walks the native siblings (`Tree.nativeChildCount`, `Tree.java:324`): quadratic; the very cost M3-ROW-MATH claims to avoid (swt#882/#904) | enhanced API (M3-ROW-MATH) |
+
+Observations (not failures): plain Tree with 10^5 items in original takes 186-900 s for dispose, setItemCount and
+scrolls (`FINDINGS.tsv`, class `SLOW`); the same rows run in seconds in viewport mode.

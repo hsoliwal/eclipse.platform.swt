@@ -169,7 +169,7 @@ public class Test_M3CombinationMatrix {
 	}
 
 	static String themeLanguage (CombinationRow row, Subject s) {
-		return ThemeLanguage.apply ("M3Theme", row.theme (), s.widget ()) + "; " + ThemeLanguage.apply ("M3Language", row.language (), s.widget ());
+		return ThemeLanguage.apply (row, s.widget ());
 	}
 
 	/** The API call; a contract exception (SWT.error with a documented code) is an answer, everything else fails. */
@@ -219,8 +219,9 @@ public class Test_M3CombinationMatrix {
 		return after.keySet ().stream ().filter (o -> !before.containsKey (o)).map (o -> o.getClass ().getSimpleName ()).sorted ().collect (Collectors.toList ());
 	}
 
-	/** Disposes what a failed row left in the shell. */
+	/** Puts the global theme and language back and disposes what a failed row left in the shell. */
 	static void cleanUp () {
+		ThemeLanguage.restore ();
 		if (shell == null || shell.isDisposed ()) return;
 		for (Control c : shell.getChildren ()) c.dispose ();
 		drain ();

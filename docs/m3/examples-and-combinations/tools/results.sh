@@ -73,7 +73,10 @@ fi
       if (p[2] ~ /render|Drawn|RowBackends|M3Canvas|GC|Path|Pattern|TextLayout|StyledText/) owner = "GC fidelity / render modes"
       printf "%s\t%s\t%d\t%s\t%s\t%s\n", p[1], p[2], n[key], owner, who[key], msg[key]
     }
-  }' | sort -t$'\t' -k3,3nr -k1,2 | awk 'BEGIN { print "finding\tfailure\tlocation\tcount\towner\tsubjects (first 8)\tmessage" } { printf "F%02d\t%s\n", NR, $0 }' > "$D/FINDINGS.tsv"
+  }' | sort -t$'\t' -k3,3nr -k1,2 | awk -F'\t' -v causes="$D/CAUSES.tsv" '
+    BEGIN { while ((getline line < causes) > 0) { split (line, c, "\t"); cause[c[1] "\t" c[2]] = c[3] }
+            print "finding\tfailure\tlocation\tcount\towner\tsubjects (first 8)\tmessage\tcause (analysis, CAUSES.tsv)" }
+    { k = $1 "\t" $2; printf "F%02d\t%s\t%s\n", NR, $0, (k in cause) ? cause[k] : "-" }' > "$D/FINDINGS.tsv"
 awk -F'\t' 'NR > 1 { c[$12]++; if ($14 ~ /NOT_RUN/) tl++ } END { printf "matrix rows: "; for (s in c) printf "%s=%d ", s, c[s]; printf "(theme/language step NOT_RUN in %d rows)\n", tl }' "$D/results/COMBINATION_RESULTS.tsv"
 [ -f "$D/results/EXAMPLE_MODES.tsv" ] && awk -F'\t' 'NR > 1 { for (i = 5; i <= 9; i++) c[$i]++ } END { printf "example runs: "; for (s in c) printf "%s=%d ", s, c[s]; print "" }' "$D/results/EXAMPLE_MODES.tsv"
 echo "findings: $(($(wc -l < "$D/FINDINGS.tsv") - 1))"

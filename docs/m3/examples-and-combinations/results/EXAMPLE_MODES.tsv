@@ -1,0 +1,113 @@
+entry	class	args	implemented_modes	viewport	original	custom	m3	gpu	detail_of_first_non_pass
+0	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	paths	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+1	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	patterns	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+2	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	transforms	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+3	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	text	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+4	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	images	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+5	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	alpha	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+6	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	clipping	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+7	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	lines	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+8	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	all	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+9	org.eclipse.swt.snippets.m3.gallery.widgets.M3CanvasDrawingExample	all M3	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+10	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Button	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+11	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Label	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+12	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Text	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+13	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Spinner	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+14	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Scale	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+15	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Slider	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+16	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	ProgressBar	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+17	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	DateTime	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+18	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Link	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+19	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Group	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+20	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Sash	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+21	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	Browser	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+22	org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample	all	viewport,original	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+23	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	CTabFolder	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+24	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	StyledText	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+25	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	CCombo	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+26	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	CLabel	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+27	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	SashForm	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+28	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	ScrolledComposite	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+29	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	ViewForm	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+30	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	CBanner	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+31	org.eclipse.swt.snippets.m3.gallery.widgets.M3CustomWidgetsExample	TableCursor	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+32	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Table	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+33	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Table VIRTUAL	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+34	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Table CHECK MULTI	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+35	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Tree	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+36	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Tree VIRTUAL	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+37	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Tree CHECK	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+38	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	List	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+39	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	List MULTI	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+40	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Combo	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+41	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	TabFolder	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+42	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	ToolBar	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+43	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	CoolBar	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+44	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	ExpandBar	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+45	org.eclipse.swt.snippets.m3.gallery.widgets.M3ItemWidgetsExample	Menu	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+46	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	Table	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+47	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	Tree	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+48	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	List	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+49	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	Combo	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+50	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	StyledText	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+51	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	Canvas	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+52	org.eclipse.swt.snippets.m3.gallery.modes.M3ModeSwitcherExample	CTabFolder	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+53	org.eclipse.swt.snippets.m3.gallery.features.M3FeatureSwitchExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+54	org.eclipse.swt.snippets.m3.M3BulkUpdatesExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+55	org.eclipse.swt.snippets.m3.M3CheckStateExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+56	org.eclipse.swt.snippets.m3.M3CollationExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+57	org.eclipse.swt.snippets.m3.M3DiffApplyExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+58	org.eclipse.swt.snippets.m3.M3EmptinessExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+59	org.eclipse.swt.snippets.m3.M3ItemRangeExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+60	org.eclipse.swt.snippets.m3.M3LazyLoadingExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+61	org.eclipse.swt.snippets.m3.M3ModeExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+62	org.eclipse.swt.snippets.m3.M3PrefetchExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+63	org.eclipse.swt.snippets.m3.M3PrefetchReleaseExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+64	org.eclipse.swt.snippets.m3.M3ProxyModelExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+65	org.eclipse.swt.snippets.m3.M3ResidencyExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+66	org.eclipse.swt.snippets.m3.M3RowExtentsExample	-	original,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+67	org.eclipse.swt.snippets.m3.M3RowMathExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+68	org.eclipse.swt.snippets.m3.M3ScrollMementoExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+69	org.eclipse.swt.snippets.m3.M3ScrollingExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+70	org.eclipse.swt.snippets.m3.M3StickyGroupHeaderExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+71	org.eclipse.swt.snippets.m3.M3TokenMatchExample	-	viewport,original,custom,m3,gpu	PASS	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	original: 
+72	org.eclipse.swt.snippets.m3.M3TypeAheadExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+73	org.eclipse.swt.snippets.m3.M3VisibilityObserverExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+74	org.eclipse.swt.snippets.m3.Snippet_M3ColumnFilterRow	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+75	org.eclipse.swt.snippets.m3.Snippet_M3MultiColumnSort	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+76	org.eclipse.swt.snippets.m3.Snippet_M3TreeFilterKeepsAncestors	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+77	org.eclipse.swt.snippets.m3.M3ComboMillionItemsExample	-	viewport,original	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+78	org.eclipse.swt.snippets.m3.M3ListMillionItemsExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+79	org.eclipse.swt.snippets.m3.M3TableMillionRowsExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+80	org.eclipse.swt.snippets.m3.M3TreeMillionNodesExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+81	org.eclipse.swt.snippets.m3.Snippet_M3FilterDebounce1M	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+82	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Table 1000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+83	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Table 100000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+84	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Table 1000000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+85	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Table 10000000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+86	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Tree 1000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+87	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Tree 100000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+88	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Tree 1000000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+89	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Tree 10000000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+90	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	List 1000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+91	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	List 1000000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+92	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Combo 1000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+93	org.eclipse.swt.snippets.m3.gallery.scale.M3ScaleExample	Combo 1000000	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+94	org.eclipse.swt.snippets.m3.gallery.renderer.M3RendererCanvasExample	m3	original,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+95	org.eclipse.swt.snippets.m3.gallery.renderer.M3RendererCanvasExample	gpu	original,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+96	org.eclipse.swt.snippets.M3DrawnModesDemo	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+97	org.eclipse.swt.snippets.M3LabelPoolTableSnippet	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+98	org.eclipse.swt.snippets.M3NonVirtualTreeDemo	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+99	org.eclipse.swt.snippets.M3PathTrieFileTreeSnippet	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+100	org.eclipse.swt.snippets.m3.M3ComboVerifyExample	-	viewport,original	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+101	org.eclipse.swt.snippets.m3.M3DeltaStreamExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+102	org.eclipse.swt.snippets.m3.M3HiddenTabDeltasExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+103	org.eclipse.swt.snippets.m3.M3ListFastScrollExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+104	org.eclipse.swt.snippets.m3.M3LookAndFeelSwitchSnippet	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+105	org.eclipse.swt.snippets.m3.M3TableRowMathExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+106	org.eclipse.swt.snippets.m3.M3TableScrollSelectExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+107	org.eclipse.swt.snippets.m3.M3TextSegmentsExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+108	org.eclipse.swt.snippets.m3.M3ThemeImportSnippet	-	viewport,original	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+109	org.eclipse.swt.snippets.m3.M3TreeCaretSelectionExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+110	org.eclipse.swt.snippets.m3.M3TreeCollapseKeysExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
+111	org.eclipse.swt.snippets.m3.M3TreeCustomDrawExample	-	viewport,original,custom,m3,gpu	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	NOT_RUN	viewport: 
