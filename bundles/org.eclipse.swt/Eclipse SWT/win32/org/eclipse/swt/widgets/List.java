@@ -68,6 +68,8 @@ public class List extends Scrollable {
 	VirtualListModel itemStore;
 	int storeBits, setDataIndex = -1, setDataCount;
 	long measureDC;
+	/* GLYPH_ADVANCE_LANE v1: advance widths of ' '..'~' in the font of the current exact-width pass, null outside one */
+	int [] measureAdvances;
 	char [] textBuffer;
 	DRAWITEMSTRUCT drawStruct;
 	RECT drawRect, measureRect, scrollRect;
@@ -123,6 +125,8 @@ public class List extends Scrollable {
 	ListViewport viewport;
 	/* native row operations of the list box so far (the model seam, m3NativeRowOps): LB_ADDSTRING, LB_INSERTSTRING, LB_DELETESTRING, LB_RESETCONTENT */
 	long nativeRowOps;
+	/* proof counters of the width measurement (DEFERRED_WIDTH_MEASURE, GLYPH_ADVANCE_LANE): DrawText calls, rows answered by the advance lane */
+	long measureDrawTexts, measureLaneAnswers;
 
 	/* The drawn plane of the custom, m3 and gpu modes (see ListDrawnPlane); null in the viewport and original modes. */
 	ListDrawnPlane drawnPlane;
@@ -2307,29 +2311,56 @@ boolean storeDeleteRange (int start, int end, boolean descending) {
 }
 
 int storeExactWidth () {
-	if (itemStore.getPendingWidthCount () == 0) {
-		return itemStore.getWidestWidth ();
-	}
+	return exactWidth (itemStore);
+}
+
+/* DEFERRED_WIDTH_MEASURE v1: an exact width query measures the pending rows in one DC with the list font selected */
+int exactWidth (VirtualListModel model) {
+	if (model.getPendingWidthCount () == 0) return model.getWidestWidth ();
 	long hDC = OS.GetDC (handle);
-	long newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0), oldFont = 0;
-	if (newFont != 0) {
-		oldFont = OS.SelectObject (hDC, newFont);
-	}
-	/* a long measurement shows busy (the wait cursor) for its duration */
-	long oldCursor = itemStore.getPendingWidthCount () > STORE_BUSY_ROWS ? OS.SetCursor (Cursor.win32_getHandle (display.getSystemCursor (SWT.CURSOR_WAIT), DPIUtil.getZoomForAutoscaleProperty (getShellZoom ()))) : 0;
+	long newFont = OS.SendMessage (handle, OS.WM_GETFONT, 0, 0), oldFont = newFont != 0 ? OS.SelectObject (hDC, newFont) : 0;
+	long oldCursor = busyCursor (model.getPendingWidthCount ());
 	measureDC = hDC;
+	measureAdvances = advanceLane (hDC);
 	try {
-		return itemStore.getWidestWidth ();
+		return model.getWidestWidth ();
 	} finally {
 		measureDC = 0;
-		if (oldCursor != 0) {
-			OS.SetCursor (oldCursor);
-		}
-		if (newFont != 0) {
-			OS.SelectObject (hDC, oldFont);
-		}
-		OS.ReleaseDC (handle, hDC);
+		measureAdvances = null;
+		endMeasure (hDC, newFont, oldFont, oldCursor);
 	}
+}
+
+/* a long measurement shows busy (the wait cursor) for its duration; answers the cursor to restore, 0 for none */
+long busyCursor (int pending) {
+	if (pending <= STORE_BUSY_ROWS) return 0;
+	return OS.SetCursor (Cursor.win32_getHandle (display.getSystemCursor (SWT.CURSOR_WAIT), DPIUtil.getZoomForAutoscaleProperty (getShellZoom ())));
+}
+
+void endMeasure (long hDC, long newFont, long oldFont, long oldCursor) {
+	if (oldCursor != 0) OS.SetCursor (oldCursor);
+	if (newFont != 0) OS.SelectObject (hDC, oldFont);
+	OS.ReleaseDC (handle, hDC);
+}
+
+/* GLYPH_ADVANCE_LANE v1: the advance widths of ' '..'~' in the font selected into hDC (null when GDI cannot answer) */
+int [] advanceLane (long hDC) {
+	int [] lane = new int ['~' - ' ' + 1];
+	return OS.GetCharWidth (hDC, ' ', '~', lane) ? lane : null;
+}
+
+/*
+ * GLYPH_ADVANCE_LANE v1: DrawText (DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX) lays out printable ASCII by the advance
+ * widths of its characters (no kerning, no fallback font), so the width is their sum; -1 for any other text (DrawText).
+ */
+int advanceWidth (int [] lane, String string) {
+	int width = 0;
+	for (int i = 0, n = string.length (); i < n; i++) {
+		int c = string.charAt (i) - ' ';
+		if (c < 0 || c >= lane.length) return -1;
+		width += lane [c];
+	}
+	return width;
 }
 
 /*
@@ -2486,6 +2517,12 @@ int measureStoreText (String string) {
 	if (nul != -1) {
 		string = string.substring (0, nul);
 	}
+	int [] lane = measureAdvances;
+	int advance = lane != null && measureDC != 0 ? advanceWidth (lane, string) : -1;
+	if (advance >= 0) {
+		measureLaneAnswers++;
+		return advance;
+	}
 	long hDC = measureDC, oldFont = 0, newFont = 0;
 	if (hDC == 0) {
 		hDC = OS.GetDC (handle);
@@ -2502,6 +2539,7 @@ int measureStoreText (String string) {
 	OS.SetRect (rect, 0, 0, 0, 0);
 	int width = 0;
 	if (length != 0) {
+		measureDrawTexts++;
 		OS.DrawText (hDC, textBuffer, length, rect, OS.DT_CALCRECT | OS.DT_SINGLELINE | OS.DT_NOPREFIX);
 		width = rect.right - rect.left;
 	}

@@ -1223,7 +1223,7 @@ final class ListViewport {
 	/* stock remove: the top row index is set again (and clamped); the extent is recomputed when the widest row went */
 	private void finishRemove (int topIndex, int removedWidth) {
 		top = topIndex;
-		if (hScroll && removedWidth + List.INSET >= extent) extent = model.getWidestWidth () + List.INSET;
+		if (hScroll && removedWidth + List.INSET >= extent) extent = list.exactWidth (model) + List.INSET;
 		focusDirty = true;
 		deferBarPaint = true;
 		try {
@@ -1261,7 +1261,7 @@ final class ListViewport {
 		} else {
 			barState = texts.length == 0 ? BAR_NONE : texts.length == 1 ? BAR_DEFAULT : BAR_SET;
 		}
-		if (hScroll) extent = model.getWidestWidth () + List.INSET;
+		if (hScroll) extent = list.exactWidth (model) + List.INSET;
 		selectionDirty = true;
 		layout ();
 		writeExtent ();
@@ -1304,7 +1304,7 @@ final class ListViewport {
 				for (int i = 0; i < added && entry >= 0; i++) insertNative (entry + i, at + i);
 				if (hScroll) for (int i = 0; i < added; i++) extent = Math.max (extent, model.measureItem (at + i) + List.INSET);
 			}
-			if (hScroll && removedWidth + List.INSET >= extent) extent = model.getWidestWidth () + List.INSET;
+			if (hScroll && removedWidth + List.INSET >= extent) extent = list.exactWidth (model) + List.INSET;
 			/* the top row stays the same row; a run that holds it keeps the index, which the layout clamps */
 			if (at + removed <= top) top += added - removed;
 			boolean windowTouched = plan.first () != first || resident > 0 || entry >= 0;
@@ -1326,7 +1326,7 @@ final class ListViewport {
 	/** Stock setScrollWidth (): the widest row plus the inset, measured with the current font. */
 	void recomputeExtent () {
 		if (!hScroll) return;
-		extent = model.getWidestWidth () + List.INSET;
+		extent = list.exactWidth (model) + List.INSET;
 		writeExtent ();
 	}
 
@@ -1640,7 +1640,7 @@ final class ListViewport {
 		Point hintInPixels = Win32DPIUtils.pointToPixelAsSufficientlyLargeSize (hintInPoints, zoom);
 		int width = 0, height = 0;
 		if (hintInPoints.x == SWT.DEFAULT) {
-			width = hScroll ? (int) OS.SendMessage (list.handle, OS.LB_GETHORIZONTALEXTENT, 0, 0) - List.INSET : model.getWidestWidth ();
+			width = hScroll ? (int) OS.SendMessage (list.handle, OS.LB_GETHORIZONTALEXTENT, 0, 0) - List.INSET : list.exactWidth (model);
 		}
 		if (hintInPoints.y == SWT.DEFAULT) {
 			height = model.getItemCount () * (int) OS.SendMessage (list.handle, OS.LB_GETITEMHEIGHT, 0, 0);
