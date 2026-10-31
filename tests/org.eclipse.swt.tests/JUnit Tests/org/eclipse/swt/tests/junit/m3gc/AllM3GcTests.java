@@ -21,6 +21,7 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_m3gc_drawText.class, //
 		Test_org_eclipse_swt_m3gc_drawText_NoCache.class, //
 		Test_org_eclipse_swt_m3gc_DrawnCustomDraw.class, //
+		Test_org_eclipse_swt_m3gc_M3CanvasFactory.class, //
 
 })
 public class AllM3GcTests {
