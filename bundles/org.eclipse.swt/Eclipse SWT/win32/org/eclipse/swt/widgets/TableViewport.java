@@ -720,9 +720,19 @@ final class TableViewport {
 	/* the last LVN_ODCACHEHINT range, [first, last]; empty before the first paint */
 	private int hintFirst, hintLast = -1;
 
-	/** The rows of the last native cache hint, [first, last]; empty before the first paint. */
+	/**
+	 * The rows ready to paint, [first, last]: empty before the first paint (no cache hint yet) and without
+	 * rows; otherwise the rows in view (the top row and one page, the partly shown row included) joined with
+	 * the last native cache hint, which may name only the rows a paint exposed, clamped to the rows.
+	 */
 	int [] residentRange () {
-		return new int [] {hintFirst, hintLast};
+		long hwnd = table.handle;
+		int count = (int) OS.SendMessage (hwnd, OS.LVM_GETITEMCOUNT, 0, 0);
+		if (count == 0 || hintLast < hintFirst) return new int [] {0, -1};
+		int top = (int) OS.SendMessage (hwnd, OS.LVM_GETTOPINDEX, 0, 0);
+		int page = (int) OS.SendMessage (hwnd, OS.LVM_GETCOUNTPERPAGE, 0, 0);
+		int first = Math.min (top, hintFirst), last = Math.min (count - 1, Math.max (top + page, hintLast));
+		return new int [] {Math.min (first, last), last};
 	}
 
 	/** Whether a facade of the row exists now, held strongly or weakly; never makes one. */
