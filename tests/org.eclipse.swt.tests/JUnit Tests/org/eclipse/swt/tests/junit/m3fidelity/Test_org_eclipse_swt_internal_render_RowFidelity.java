@@ -35,7 +35,7 @@ public class Test_org_eclipse_swt_internal_render_RowFidelity {
 		@Override public void begin (int x, int y, int w, int h) { }
 		@Override public void end () { }
 		@Override public void fill (int x, int y, int w, int h, int rgb) { calls.add ("fill " + x + "," + y + " " + w + "x" + h + " " + Integer.toHexString (rgb)); }
-		@Override public void text (String text, long font, int rgb, int x, int y, int w, int h, int align) { }
+		@Override public void text (String text, long font, int rgb, int x, int y, int w, int h, int align) { calls.add ("text " + text + " " + x + "," + y + " " + w + "x" + h); }
 		@Override public void image (Image image, int x, int y, int w, int h) { calls.add ("image " + x + "," + y + " " + w + "x" + h); }
 		@Override public void imageData (ImageData data, int x, int y, int w, int h) { calls.add ("imageData " + x + "," + y + " " + w + "x" + h); }
 		@Override public void polygon (int [] points, int count, int rgb) { }
@@ -142,5 +142,30 @@ public class Test_org_eclipse_swt_internal_render_RowFidelity {
 		row.state = 0;
 		new RowRenderer (Theme.NATIVE).cellBackground (RECORDER, row, 2);
 		assertEquals (List.of ("fill 95,346 43x19 0", "fill 95,346 45x19 0"), calls);
+	}
+
+	/* ROW_OFFSET v1: a tree row's text box ends one pixel above the row (TreeView text cell tmHeight + 1); list rows keep the row */
+	@Test
+	public void test_treeTextBoxEndsOnePixelAboveTheRow () {
+		RowPaint row = row (0);
+		row.text [0] = "Node 1";
+		Arrays.fill (row.cellForeground, -1);
+		Arrays.fill (row.cellFont, -1);
+		new RowRenderer (Theme.NATIVE).paintCell (RECORDER, row, 0);
+		row.textInset = 1;
+		new RowRenderer (Theme.NATIVE).paintCell (RECORDER, row, 0);
+		int x = Theme.NATIVE.textInset;
+		assertEquals (List.of ("text Node 1 " + x + ",346 " + (55 - x) + "x19", "text Node 1 " + x + ",346 " + (55 - x) + "x18"), calls);
+	}
+
+	@Test
+	public void test_rowLayoutCarriesTheTextInset () {
+		RowPaint row = row (0);
+		row.textInset = 1;
+		int [] ints = new int [RowPaint.keyLength (row.cells)];
+		row.write (ints, 0, new String [3], new ImageData [3], 0);
+		RowPaint back = new RowPaint ();
+		back.read (ints, 0, new String [3], new ImageData [3], 0);
+		assertEquals (1, back.textInset);
 	}
 }

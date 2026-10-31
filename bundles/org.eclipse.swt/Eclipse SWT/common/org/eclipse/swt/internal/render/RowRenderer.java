@@ -275,7 +275,7 @@ public final class RowRenderer {
 		int inset = align == SWT.LEFT ? theme.textInset : 0;
 		int width = row.textWidth [cell] - inset;
 		if (width <= 0) return;
-		canvas.text (text, font, color, row.textX [cell] + inset, row.y, width, row.height,
+		canvas.text (text, font, color, row.textX [cell] + inset, row.y, width, row.height - row.textInset,
 			align | (row.is (RowPaint.ELLIPSIS) ? RowCanvas.ELLIPSIS : 0));
 	}
 

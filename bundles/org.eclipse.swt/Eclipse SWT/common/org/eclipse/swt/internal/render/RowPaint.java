@@ -66,6 +66,11 @@ public final class RowPaint {
 	public int listGrid = -1, listColumnDetail = -1;
 	/** ROW_IMAGE_BOUNDS v1: the height of the widget's images (its image list) in pixels; 0: unknown (the row's height). */
 	public int imageHeight;
+	/**
+	 * ROW_OFFSET v1: pixels the text box ends above the row's bottom (the tree view centres its text in the item height
+	 * minus one: a text cell of tmHeight + 1); 0 for the list views.
+	 */
+	public int textInset;
 	/** Cell of the sort column, or -1. */
 	public int sortCell = -1;
 	public int sortBackground = -1;
@@ -131,7 +136,7 @@ public final class RowPaint {
 
 	/** The ints {@link #key} writes for a row of <code>cells</code> cells. */
 	public static int keyLength (int cells) {
-		return 27 + 11 * Math.max (1, cells);
+		return 28 + 11 * Math.max (1, cells);
 	}
 
 	/**
@@ -192,6 +197,7 @@ public final class RowPaint {
 		sortCell = ints [n++];
 		sortBackground = ints [n++];
 		imageHeight = ints [n++];
+		textInset = ints [n++];
 		cells (ints [n++]);
 		for (int i = 0; i < cells; i++) {
 			cellX [i] = ints [n++];
@@ -242,6 +248,7 @@ public final class RowPaint {
 		ints [n++] = sortCell;
 		ints [n++] = sortBackground;
 		ints [n++] = imageHeight;
+		ints [n++] = textInset;
 		ints [n++] = cells;
 		for (int i = 0; i < cells; i++) {
 			ints [n++] = cellX [i];
