@@ -531,4 +531,13 @@ public final class GCExtension extends GC {
 		e.textLayoutDraw(textLayout,gc,xInPoints,yInPoints,selectionStart, selectionEnd, selectionForeground, selectionBackground, flags);
 	}
 
+	/**
+	 * L13 GLYPH_RUN_SINK v1: the run sink of the external GC (null: TextLayout uses {@link #textLayoutDraw}).
+	 *
+	 * @noreference This method is not intended to be referenced by clients.
+	 */
+	public M3RunSink runSink() {
+		return e.runSink();
+	}
+
 }

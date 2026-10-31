@@ -194,4 +194,9 @@ public interface IExternalGC {
 	void textLayoutDraw(TextLayout textLayout, GC gc, int xInPoints, int yInPoints, int selectionStart,
 			int selectionEnd, Color selectionForeground, Color selectionBackground, int flags);
 
+	/** L13 GLYPH_RUN_SINK v1: the sink TextLayout records shaped runs to, or null for textLayoutDraw only */
+	default M3RunSink runSink() {
+		return null;
+	}
+
 }
