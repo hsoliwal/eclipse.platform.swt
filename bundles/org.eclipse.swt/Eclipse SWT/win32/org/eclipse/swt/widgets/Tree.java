@@ -364,7 +364,7 @@ void bindVirtualTopology (TreeItem item, boolean inserted) {
 
 	long hParent = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_PARENT, item.handle);
 	int parentId = virtualParentId (hParent);
-	int childIndex = nativeChildIndex (hParent, item.handle);
+	int childIndex = pageChildIndex (hParent, item.handle);
     if (childIndex < 0) {
         return;
     }
@@ -536,6 +536,29 @@ void ensureVirtualNativeChildren (long hParent, int requiredExclusive) {
 		if (redraw && !isDisposed ()) setRedraw (true);
 	}
 	updateScrollBar ();
+}
+
+/*
+ * TOP_ITEM_SEEK v1 (virtual Tree without the viewport): the rows after the target exist natively for one page at every
+ * level, so TVM_SELECTITEM (TVGN_FIRSTVISIBLE) puts it at the top as stock does with every row native (official 3.135.0:
+ * setTopItem (getItem (k)) answers top k; with the frontier ending at k the TreeView showed k at the bottom).
+ */
+void ensureVirtualPageAfter (TreeItem item) {
+	if (virtualTopology == null || viewport != null) return;
+	int page = Math.max (1, (int) OS.SendMessage (handle, OS.TVM_GETVISIBLECOUNT, 0, 0)) + 1;
+	for (TreeItem row = item; row != null; row = row.getParentItem ()) {
+		int id = virtualItemId (row);
+		if (id < 0 || !virtualTopology.contains (id)) return;
+		TreeItem parentItem = row.getParentItem ();
+		ensureVirtualNativeChildren (parentItem == null ? OS.TVI_ROOT : parentItem.handle, virtualTopology.childIndex (id) + page);
+	}
+}
+
+/* SIBLING_CURSOR v1: a row found by index seeds the sibling cursor, so binding its facade does not walk the siblings again */
+void seedChildCursor (long hParent, long hItem, int index) {
+	pageCursorParent = hParent;
+	pageCursorItem = hItem;
+	pageCursorIndex = index;
 }
 
 void ensureVirtualNativeItem (long hParent, int index) {
@@ -4666,6 +4689,7 @@ public TreeItem getItem (int index) {
     if (hItem == 0) {
         error(SWT.ERROR_INVALID_RANGE);
     }
+	seedChildCursor (0, hItem, index);
 	return exposeVirtualItem (_getItem (hItem));
 }
 
@@ -7080,6 +7104,7 @@ void setTopTreeItem (TreeItem item) {
 		viewport.setTopItem (item);
 		return;
 	}
+	ensureVirtualPageAfter (item);
 	long hItem = item.handle;
 	long hTopItem = OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_FIRSTVISIBLE, 0);
 	if (hItem == hTopItem) {

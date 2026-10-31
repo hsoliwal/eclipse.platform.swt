@@ -934,6 +934,7 @@ public TreeItem getItem (int index) {
     if (hItem == 0) {
         error(SWT.ERROR_INVALID_RANGE);
     }
+	parent.seedChildCursor (handle, hItem, index);
 	return parent.exposeVirtualItem (parent._getItem (hItem));
 }
 
