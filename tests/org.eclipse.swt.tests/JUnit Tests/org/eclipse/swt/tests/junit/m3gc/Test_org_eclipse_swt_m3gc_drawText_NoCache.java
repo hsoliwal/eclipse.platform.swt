@@ -12,11 +12,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.FontMgr;
-import io.github.humbleui.skija.FontStyle;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3BlendMode;
+import jdk.m3.graphics.M3Font;
+import jdk.m3.graphics.M3FontMgr;
+import jdk.m3.graphics.M3FontStyle;
+import jdk.m3.graphics.M3Rect;
 
 public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 	@BeforeAll
@@ -43,9 +43,9 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 		resources.setBackground(backgroundColor);
 
 		// Use a default Skia font (should be available everywhere)
-		final FontMgr fm = FontMgr.getDefault();
-		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), FontStyle.NORMAL);
-		resources.m3Font = new Font(fontStyle); // Default constructor uses Skia's default typeface
+		final M3FontMgr fm = M3FontMgr.getDefault();
+		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), M3FontStyle.NORMAL);
+		resources.m3Font = new M3Font(fontStyle); // Default constructor uses Skia's default typeface
 
 		FontData data = new FontData();
 		data.setName("Arial");
@@ -73,7 +73,7 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 		MethodCall firstCall = calls.get(0);
 		assertEquals("drawRect", firstCall.methodName, "First call should be drawRect");
 
-		Rect rectParam = (Rect) firstCall.params[0];
+		M3Rect rectParam = (M3Rect) firstCall.params[0];
 		assertEquals(10.0f, rectParam.getLeft(), 0.1f, "Rectangle left should be 10.0");
 		assertEquals(20.0f, rectParam.getTop(), 0.1f, "Rectangle top should be 20.0");
 		assertEquals(44.0f, rectParam.getRight(), 0.1f, "Rectangle right should be 44.0");
@@ -90,7 +90,7 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 		assertEquals(255, paintCall1.alpha, "drawRect() alpha should be 255");
 		assertEquals(false, paintCall1.antiAlias, "drawRect() antiAlias should be false");
 		assertEquals(false, paintCall1.dither, "drawRect() dither should be false");
-		assertEquals(BlendMode.SRC_OVER, paintCall1.blendMode, "drawRect() blendMode should be SRC_OVER");
+		assertEquals(M3BlendMode.SRC_OVER, paintCall1.blendMode, "drawRect() blendMode should be SRC_OVER");
 
 		// Verify second call: drawString (the text)
 		MethodCall secondCall = calls.get(1);
@@ -115,7 +115,7 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 		assertEquals(255, paintCall2.alpha, "drawString() alpha should be 255");
 		assertEquals(true, paintCall2.antiAlias, "drawString() antiAlias should be true");
 		assertEquals(false, paintCall2.dither, "drawString() dither should be false");
-		assertEquals(BlendMode.SRC_OVER, paintCall2.blendMode, "drawString() blendMode should be SRC_OVER");
+		assertEquals(M3BlendMode.SRC_OVER, paintCall2.blendMode, "drawString() blendMode should be SRC_OVER");
 
 		surface.close();
 	}
@@ -132,9 +132,9 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 		resources.setBackground(backgroundColor);
 
 		// Use a default Skia font (should be available everywhere)
-		final FontMgr fm = FontMgr.getDefault();
-		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), FontStyle.NORMAL);
-		resources.m3Font = new Font(fontStyle);
+		final M3FontMgr fm = M3FontMgr.getDefault();
+		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), M3FontStyle.NORMAL);
+		resources.m3Font = new M3Font(fontStyle);
 
 		FontData data = new FontData();
 		data.setName("Arial");
@@ -162,7 +162,7 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 		MethodCall firstCall = calls.get(0);
 		assertEquals("drawRect", firstCall.methodName, "First call should be drawRect");
 
-		Rect rectParam = (Rect) firstCall.params[0];
+		M3Rect rectParam = (M3Rect) firstCall.params[0];
 		// At 150% zoom: 10*1.5=15, 20*1.5=30, right and bottom are calculated differently
 		assertEquals(15.0f, rectParam.getLeft(), 0.1f, "Rectangle left should be 15.0");
 		assertEquals(30.0f, rectParam.getTop(), 0.1f, "Rectangle top should be 30.0");
@@ -189,7 +189,7 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 		PaintData paintCall2 = (PaintData) secondCall.params[4];
 		assertEquals(-1, paintCall2.color, "drawString() text color should be white (-1)");
 		assertEquals(1.0f, paintCall2.strokeWidth, "drawString() stroke width should be 1.5 (1.0*1.5)");
-		assertEquals(BlendMode.SRC_OVER, paintCall2.blendMode, "drawString() blendMode should be SRC_OVER");
+		assertEquals(M3BlendMode.SRC_OVER, paintCall2.blendMode, "drawString() blendMode should be SRC_OVER");
 
 		surface.close();
 	}
@@ -206,9 +206,9 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 		resources.setBackground(backgroundColor);
 
 		// Use a default Skia font (should be available everywhere)
-		final FontMgr fm = FontMgr.getDefault();
-		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), FontStyle.NORMAL);
-		resources.m3Font = new Font(fontStyle);
+		final M3FontMgr fm = M3FontMgr.getDefault();
+		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), M3FontStyle.NORMAL);
+		resources.m3Font = new M3Font(fontStyle);
 
 		FontData data = new FontData();
 		data.setName("Arial");
@@ -236,7 +236,7 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 		MethodCall firstCall = calls.get(0);
 		assertEquals("drawRect", firstCall.methodName, "First call should be drawRect");
 
-		Rect rectParam = (Rect) firstCall.params[0];
+		M3Rect rectParam = (M3Rect) firstCall.params[0];
 		// At 200% zoom: 10*2.0=20, 20*2.0=40, right=44*2.0=88, bottom=35*2.0=70
 		assertEquals(20.0f, rectParam.getLeft(), 0.1f, "Rectangle left should be 20.0");
 		assertEquals(40.0f, rectParam.getTop(), 0.1f, "Rectangle top should be 40.0");
@@ -263,7 +263,7 @@ public class Test_org_eclipse_swt_m3gc_drawText_NoCache {
 		PaintData paintCall2 = (PaintData) secondCall.params[4];
 		assertEquals(-1, paintCall2.color, "drawString() text color should be white (-1)");
 		assertEquals(1.0f, paintCall2.strokeWidth, "drawString() stroke width should be 2.0 (1.0*2.0)");
-		assertEquals(BlendMode.SRC_OVER, paintCall2.blendMode, "drawString() blendMode should be SRC_OVER");
+		assertEquals(M3BlendMode.SRC_OVER, paintCall2.blendMode, "drawString() blendMode should be SRC_OVER");
 
 		surface.close();
 	}

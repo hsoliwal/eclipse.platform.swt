@@ -16,7 +16,7 @@ package org.eclipse.swt.internal.gpu.m3;
 
 import org.eclipse.swt.internal.gpu.*;
 
-import io.github.humbleui.skija.*;
+import jdk.m3.graphics.*;
 
 /**
  * Replays a packed {@link OpStream} on a Skia canvas pointer with GDI pixel
@@ -25,7 +25,7 @@ import io.github.humbleui.skija.*;
  * are positioned by their GDI ascent.
  */
 final class Replay {
-	static final int INTERSECT = ClipMode.INTERSECT.ordinal ();
+	static final int INTERSECT = M3ClipMode.INTERSECT.ordinal ();
 	static final int TEXT_MASK = M3Target.TEXT_MASK;
 
 	private Replay () {
@@ -44,15 +44,15 @@ final class Replay {
 			switch (op & ~OpStream.OPEN) {
 				case OpStream.CLIP:
 					if (clipSave >= 0) {
-						Canvas._nRestoreToCount (canvas, clipSave);
+						M3Canvas._nRestoreToCount (canvas, clipSave);
 						if (transformAt >= 0) transform (backend, canvas, a, transformAt);
 					}
-					clipSave = Canvas._nSave (canvas);
-					Canvas._nClipRect (canvas, a [o], a [o + 1], a [o] + a [o + 2], a [o + 1] + a [o + 3], INTERSECT, false);
+					clipSave = M3Canvas._nSave (canvas);
+					M3Canvas._nClipRect (canvas, a [o], a [o + 1], a [o] + a [o + 2], a [o + 1] + a [o + 3], INTERSECT, false);
 					break;
 				case OpStream.CLIP_RESET:
 					if (clipSave >= 0) {
-						Canvas._nRestoreToCount (canvas, clipSave);
+						M3Canvas._nRestoreToCount (canvas, clipSave);
 						if (transformAt >= 0) transform (backend, canvas, a, transformAt);
 					}
 					clipSave = -1;
@@ -71,13 +71,13 @@ final class Replay {
 					drawLine (backend, canvas, a, o);
 					break;
 				case OpStream.DRAW_POINT:
-					Canvas._nDrawRect (canvas, a [o], a [o + 1], a [o] + 1, a [o + 1] + 1, backend.paint (fillMask (a [o + 5]), a [o + 4]));
+					M3Canvas._nDrawRect (canvas, a [o], a [o + 1], a [o] + 1, a [o + 1] + 1, backend.paint (fillMask (a [o + 5]), a [o + 4]));
 					break;
 				case OpStream.FILL_OVAL:
-					Canvas._nDrawOval (canvas, a [o], a [o + 1], a [o] + a [o + 2], a [o + 1] + a [o + 3], backend.paint (a [o + 5], a [o + 4]));
+					M3Canvas._nDrawOval (canvas, a [o], a [o + 1], a [o] + a [o + 2], a [o + 1] + a [o + 3], backend.paint (a [o + 5], a [o + 4]));
 					break;
 				case OpStream.DRAW_OVAL:
-					Canvas._nDrawOval (canvas, a [o] + .5f, a [o + 1] + .5f, a [o] + a [o + 2] + .5f, a [o + 1] + a [o + 3] + .5f, backend.paint (a [o + 5], a [o + 4]));
+					M3Canvas._nDrawOval (canvas, a [o] + .5f, a [o + 1] + .5f, a [o] + a [o + 2] + .5f, a [o + 1] + a [o + 3] + .5f, backend.paint (a [o + 5], a [o + 4]));
 					break;
 				case OpStream.FILL_GRADIENT:
 					gradient (canvas, a, o);
@@ -86,16 +86,16 @@ final class Replay {
 					text (backend, canvas, ops, a, o);
 					break;
 				case OpStream.CLIP_PUSH:
-					Canvas._nSave (canvas);
-					Canvas._nClipRect (canvas, a [o], a [o + 1], a [o] + a [o + 2], a [o + 1] + a [o + 3], INTERSECT, false);
+					M3Canvas._nSave (canvas);
+					M3Canvas._nClipRect (canvas, a [o], a [o + 1], a [o] + a [o + 2], a [o + 1] + a [o + 3], INTERSECT, false);
 					break;
 				case OpStream.CLIP_POP:
-					Canvas._nRestore (canvas);
+					M3Canvas._nRestore (canvas);
 					if (transformAt >= 0) transform (backend, canvas, a, transformAt);
 					break;
 				case OpStream.GLYPH_RUN: {
 					long blob = backend.glyphRun (a, o);
-					if (blob != 0) Canvas._nDrawTextBlob (canvas, blob, a [o + 1], a [o + 2], backend.paint (TEXT_MASK, a [o + 3]));
+					if (blob != 0) M3Canvas._nDrawTextBlob (canvas, blob, a [o + 1], a [o + 2], backend.paint (TEXT_MASK, a [o + 3]));
 					break;
 				}
 				case OpStream.FILL_POLY:
@@ -106,7 +106,7 @@ final class Replay {
 					break;
 			}
 		}
-		if (clipSave >= 0) Canvas._nRestoreToCount (canvas, clipSave);
+		if (clipSave >= 0) M3Canvas._nRestoreToCount (canvas, clipSave);
 	}
 
 	static void transform (M3PlaneBackend backend, long canvas, int [] a, int o) {
@@ -123,27 +123,27 @@ final class Replay {
 		m [5] = Float.intBitsToFloat (a [o + 5]);
 		m [6] = m [7] = 0;
 		m [8] = 1;
-		Canvas._nSetMatrix (canvas, m);
+		M3Canvas._nSetMatrix (canvas, m);
 	}
 
 	static void fillRect (M3PlaneBackend backend, long canvas, int x, int y, int w, int h, int argb, int mask) {
 		if (w < 0) { x += w; w = -w; }
 		if (h < 0) { y += h; h = -h; }
-		Canvas._nDrawRect (canvas, x, y, x + w, y + h, backend.paint (mask, argb));
+		M3Canvas._nDrawRect (canvas, x, y, x + w, y + h, backend.paint (mask, argb));
 	}
 
 	static void drawRect (M3PlaneBackend backend, long canvas, int [] a, int o) {
 		int x = a [o], y = a [o + 1], w = a [o + 2], h = a [o + 3];
 		if (w < 0) { x += w; w = -w; }
 		if (h < 0) { y += h; h = -h; }
-		Canvas._nDrawRect (canvas, x + .5f, y + .5f, x + w + .5f, y + h + .5f, backend.paint (a [o + 5], a [o + 4]));
+		M3Canvas._nDrawRect (canvas, x + .5f, y + .5f, x + w + .5f, y + h + .5f, backend.paint (a [o + 5], a [o + 4]));
 	}
 
 	static void drawLine (M3PlaneBackend backend, long canvas, int [] a, int o) {
 		int mask = a [o + 5], argb = a [o + 4];
-		Canvas._nDrawLine (canvas, a [o] + .5f, a [o + 1] + .5f, a [o + 2] + .5f, a [o + 3] + .5f, backend.paint (mask, argb));
+		M3Canvas._nDrawLine (canvas, a [o] + .5f, a [o + 1] + .5f, a [o + 2] + .5f, a [o + 3] + .5f, backend.paint (mask, argb));
 		if (PaintKeys.lineWidth (mask) <= 1f) {
-			Canvas._nDrawRect (canvas, a [o + 2], a [o + 3], a [o + 2] + 1, a [o + 3] + 1, backend.paint (fillMask (mask), argb));
+			M3Canvas._nDrawRect (canvas, a [o + 2], a [o + 3], a [o + 2] + 1, a [o + 3] + 1, backend.paint (fillMask (mask), argb));
 		}
 	}
 
@@ -151,10 +151,10 @@ final class Replay {
 		String string = (String) ops.ref (a [o]);
 		int fontId = a [o + 3], x = a [o + 4], y = a [o + 5];
 		if ((a [o + 8] & 1) != 0) {
-			Canvas._nDrawRect (canvas, x, y, x + a [o + 9], y + a [o + 10], backend.paint (PaintKeys.KIND_FILL, a [o + 7]));
+			M3Canvas._nDrawRect (canvas, x, y, x + a [o + 9], y + a [o + 10], backend.paint (PaintKeys.KIND_FILL, a [o + 7]));
 		}
 		long blob = backend.blob (string, a [o + 1], a [o + 2], fontId);
-		if (blob != 0) Canvas._nDrawTextBlob (canvas, blob, x, y + a [o + 11], backend.paint (TEXT_MASK, a [o + 6]));
+		if (blob != 0) M3Canvas._nDrawTextBlob (canvas, blob, x, y + a [o + 11], backend.paint (TEXT_MASK, a [o + 6]));
 	}
 
 	static void gradient (long canvas, int [] a, int o) {
@@ -162,23 +162,23 @@ final class Replay {
 		if (w < 0) { x += w; w = -w; }
 		if (h < 0) { y += h; h = -h; }
 		boolean vertical = a [o + 6] != 0;
-		try (Shader shader = Shader.makeLinearGradient (x, y, vertical ? x : x + w, vertical ? y + h : y, new int [] {a [o + 4], a [o + 5]});
-				Paint paint = new Paint ().setShader (shader)) {
-			Canvas._nDrawRect (canvas, x, y, x + w, y + h, paint._ptr);
+		try (M3Shader shader = M3Shader.makeLinearGradient (x, y, vertical ? x : x + w, vertical ? y + h : y, new int [] {a [o + 4], a [o + 5]});
+				M3Paint paint = new M3Paint ().setShader (shader)) {
+			M3Canvas._nDrawRect (canvas, x, y, x + w, y + h, paint._ptr);
 		}
 	}
 
 	static void poly (M3PlaneBackend backend, long canvas, int [] a, int o, int op) {
 		int count = a [o];
 		if (count < 2) return;
-		try (PathBuilder builder = new PathBuilder ()) {
+		try (M3PathBuilder builder = new M3PathBuilder ()) {
 			int p = o + 3;
 			float offset = (op & ~OpStream.OPEN) == OpStream.DRAW_POLY ? .5f : 0f;
 			builder.moveTo (a [p] + offset, a [p + 1] + offset);
 			for (int k = 1; k < count; k++) builder.lineTo (a [p + 2 * k] + offset, a [p + 2 * k + 1] + offset);
 			if ((op & OpStream.OPEN) == 0) builder.closePath ();
-			try (Path path = builder.detach ()) {
-				Canvas._nDrawPath (canvas, path._ptr, backend.paint (a [o + 2], a [o + 1]));
+			try (M3Path path = builder.detach ()) {
+				M3Canvas._nDrawPath (canvas, path._ptr, backend.paint (a [o + 2], a [o + 1]));
 			}
 		}
 	}

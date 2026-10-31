@@ -34,7 +34,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * Headless (an unopened Shell; no window is shown): the stock widget code's contract with a GC, met by the M3 GC (GC seam,
@@ -83,7 +83,7 @@ public class Test_org_eclipse_swt_m3gc_GcContract {
 		canvas.setBackground(new Color(255, 0, 0));
 		gc.setAlpha(100);
 		canvas.drawBackground(gc, 10, 20, 30, 40);
-		assertEquals(new Rect(10, 20, 40, 60), f.calls("drawRect").get(0).params[0], "the area, in pixels at 100 %");
+		assertEquals(new M3Rect(10, 20, 40, 60), f.calls("drawRect").get(0).params[0], "the area, in pixels at 100 %");
 		assertEquals(0xFFFF0000, f.paint("drawRect").color, "the canvas background, opaque (FillRect ignores the GC alpha)");
 		assertEquals(100, gc.getAlpha(), "the GC's alpha restored");
 		assertEquals(Display.getDefault().getSystemColor(SWT.COLOR_BLUE).getRGB(), gc.getBackground().getRGB(), "the GC's background restored");
@@ -101,7 +101,7 @@ public class Test_org_eclipse_swt_m3gc_GcContract {
 		canvas.setBackgroundImage(image);
 		canvas.drawBackground(gc, 0, 0, 20, 10, 3, 0);
 		assertEquals(6, f.calls("drawImageRect").size(), "3 x 2 tiles of 8 x 8 over 20 x 10");
-		assertEquals(-3f, ((Rect) f.calls("drawImageRect").get(0).params[2]).getLeft(), "the tiles move with the offset");
+		assertEquals(-3f, ((M3Rect) f.calls("drawImageRect").get(0).params[2]).getLeft(), "the tiles move with the offset");
 		assertFalse(f.gc.isClipped(), "the clip set for the tiles is taken back");
 		canvas.setBackgroundImage(null);
 		image.dispose();

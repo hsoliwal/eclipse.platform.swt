@@ -2,7 +2,7 @@ package org.eclipse.swt.tests.junit.m3gc;
 
 import java.util.Objects;
 
-import io.github.humbleui.skija.Font;
+import jdk.m3.graphics.M3Font;
 
 public class ExtractedFontData {
 
@@ -15,7 +15,7 @@ public class ExtractedFontData {
 	float scaleX;
 	float skewX;
 
-	public static ExtractedFontData getData(Font f) {
+	public static ExtractedFontData getData(M3Font f) {
 
 		ExtractedFontData d = new ExtractedFontData();
 

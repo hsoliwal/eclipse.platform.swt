@@ -32,8 +32,8 @@ import org.eclipse.swt.widgets.Display;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.Matrix33;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3Matrix33;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * Headless: the clip state of the M3 GC (GC seam, leaf 6; atom CLIP_STATE, pattern M3-GC-CLIP v1; census GF02, GF03, GF16,
@@ -89,13 +89,13 @@ public class Test_org_eclipse_swt_m3gc_ClipState {
 
 	@Test
 	public void testRegionReplayKeepsTranslateAndNegativeAreaAtZoom() {
-		M3GcFixture f = new M3GcFixture(200, Matrix33.IDENTITY);
+		M3GcFixture f = new M3GcFixture(200, M3Matrix33.IDENTITY);
 		Region region = new Region();
 		region.add(-10, -10, 30, 30);
 		region.translate(5, 5);
 		f.gc.setClipping(region);
 		region.dispose();
-		assertEquals(List.of(new Rect(-10, -10, 50, 50)), f.state().clips(), "(-5, -5, 30, 30) points = (-10, -10) to (50, 50) pixels");
+		assertEquals(List.of(new M3Rect(-10, -10, 50, 50)), f.state().clips(), "(-5, -5, 30, 30) points = (-10, -10) to (50, 50) pixels");
 	}
 
 	@Test
@@ -116,29 +116,29 @@ public class Test_org_eclipse_swt_m3gc_ClipState {
 
 	@Test
 	public void testSetClippingReplacesTheClipAfterSetTransform() {
-		M3GcFixture f = new M3GcFixture(100, Matrix33.IDENTITY);
+		M3GcFixture f = new M3GcFixture(100, M3Matrix33.IDENTITY);
 		Transform t = new Transform(Display.getDefault(), 1, 0, 0, 1, 7, 9);
 		f.gc.setClipping(10, 10, 50, 50);
 		f.gc.setTransform(t);
 		f.gc.setClipping(20, 20, 10, 10);
-		assertEquals(List.of(new Rect(20, 20, 30, 30)), f.state().clips(), "only the second clip is in force");
-		assertEquals(Matrix33.makeTranslate(7, 9), f.state().matrix(), "the transform stays");
+		assertEquals(List.of(new M3Rect(20, 20, 30, 30)), f.state().clips(), "only the second clip is in force");
+		assertEquals(M3Matrix33.makeTranslate(7, 9), f.state().matrix(), "the transform stays");
 		f.gc.setClipping((Rectangle) null);
 		assertEquals(List.of(), f.state().clips(), "setClipping(null) after setTransform clears the clip");
-		assertEquals(Matrix33.makeTranslate(7, 9), f.state().matrix());
+		assertEquals(M3Matrix33.makeTranslate(7, 9), f.state().matrix());
 		t.dispose();
 	}
 
 	@Test
 	public void testSetTransformKeepsTheClip() {
-		M3GcFixture f = new M3GcFixture(100, Matrix33.IDENTITY);
+		M3GcFixture f = new M3GcFixture(100, M3Matrix33.IDENTITY);
 		Transform t = new Transform(Display.getDefault(), 1, 0, 0, 1, 7, 9);
 		f.gc.setClipping(10, 10, 50, 50);
 		f.gc.setTransform(t);
-		assertEquals(List.of(new Rect(10, 10, 60, 60)), f.state().clips());
+		assertEquals(List.of(new M3Rect(10, 10, 60, 60)), f.state().clips());
 		f.gc.dispose();
 		assertEquals(List.of(), f.state().clips(), "dispose restores the frame");
-		assertEquals(Matrix33.IDENTITY, f.state().matrix());
+		assertEquals(M3Matrix33.IDENTITY, f.state().matrix());
 		t.dispose();
 	}
 

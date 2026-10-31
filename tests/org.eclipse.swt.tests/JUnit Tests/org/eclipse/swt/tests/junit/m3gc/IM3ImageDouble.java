@@ -26,12 +26,12 @@ public class IM3ImageDouble implements org.eclipse.swt.internal.render.m3.gc.IM3
 	}
 
 	@Override
-	public io.github.humbleui.skija.Shader makeShader(io.github.humbleui.skija.FilterTileMode repeat) {
+	public jdk.m3.graphics.M3Shader makeShader(jdk.m3.graphics.M3FilterTileMode repeat) {
 		return null;
 	}
 
 	@Override
-	public io.github.humbleui.skija.Image getM3Image() {
+	public jdk.m3.graphics.M3Image getM3Image() {
 		return null;
 	}
 

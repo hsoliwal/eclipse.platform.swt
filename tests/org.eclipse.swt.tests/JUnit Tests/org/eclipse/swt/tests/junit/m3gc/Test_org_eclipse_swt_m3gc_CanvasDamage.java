@@ -21,8 +21,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.internal.render.m3.M3CanvasDamage;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.Bitmap;
-import io.github.humbleui.skija.Canvas;
+import jdk.m3.graphics.M3Bitmap;
+import jdk.m3.graphics.M3Canvas;
 
 /**
  * Headless (no Display): the damage atom of the M3 canvas handler (GC seam, leaf 5; pattern M3-CANVAS-DAMAGE v1). The
@@ -120,9 +120,9 @@ public class Test_org_eclipse_swt_m3gc_CanvasDamage {
 	public void testClipTouchesTheRegionOnly() {
 		M3CanvasDamage damage = new M3CanvasDamage();
 		damage.read(region(10, 10, 30, 20, 50, 40, 70, 60), 10, 10, 70, 60);
-		try (Bitmap bitmap = new Bitmap()) {
+		try (M3Bitmap bitmap = new M3Bitmap()) {
 			bitmap.allocN32Pixels(80, 80);
-			try (Canvas canvas = new Canvas(bitmap)) {
+			try (M3Canvas canvas = new M3Canvas(bitmap)) {
 				canvas.clear(BLACK);
 				canvas.save();
 				damage.clip(canvas, 0, 1);

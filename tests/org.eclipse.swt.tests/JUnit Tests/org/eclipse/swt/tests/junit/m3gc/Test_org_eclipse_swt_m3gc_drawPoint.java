@@ -10,8 +10,8 @@ import org.eclipse.swt.internal.render.m3.gc.IM3Resources;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3BlendMode;
+import jdk.m3.graphics.M3Rect;
 
 public class Test_org_eclipse_swt_m3gc_drawPoint {
 
@@ -54,14 +54,14 @@ public class Test_org_eclipse_swt_m3gc_drawPoint {
 		epd.antiAlias = false;
 		epd.dither = false;
 		epd.shader = null;
-		epd.blendMode = BlendMode.SRC_OVER;
+		epd.blendMode = M3BlendMode.SRC_OVER;
 		epd.pathEffect = null;
 		epd.imageFilter = null;
 		epd.colorFilter = null;
 		epd.maskFilter = null;
 
 		// drawPoint creates a drawRect call with 1x1 pixel at the given position
-		assertEquals(MethodCall.get("surface-canvas", "drawRect", new Rect(10.0f, 20.0f, 11.0f, 21.0f), epd),
+		assertEquals(MethodCall.get("surface-canvas", "drawRect", new M3Rect(10.0f, 20.0f, 11.0f, 21.0f), epd),
 				surface.calls.get(0));
 
 		surface.close();
@@ -101,7 +101,7 @@ public class Test_org_eclipse_swt_m3gc_drawPoint {
 		epd.antiAlias = false;
 		epd.dither = false;
 		epd.shader = null;
-		epd.blendMode = BlendMode.SRC_OVER;
+		epd.blendMode = M3BlendMode.SRC_OVER;
 		epd.pathEffect = null;
 		epd.imageFilter = null;
 		epd.colorFilter = null;
@@ -109,7 +109,7 @@ public class Test_org_eclipse_swt_m3gc_drawPoint {
 
 		// At 150% zoom: x=10*1.5=15, y=20*1.5=30, size scales to 1.0 pixel (1x1 stays 1x1 not scaled)
 		// Rect: left=15.0, top=30.0, right=16.0, bottom=31.0
-		assertEquals(MethodCall.get("surface-canvas", "drawRect", new Rect(15.0f, 30.0f, 16.0f, 31.0f), epd),
+		assertEquals(MethodCall.get("surface-canvas", "drawRect", new M3Rect(15.0f, 30.0f, 16.0f, 31.0f), epd),
 				surface.calls.get(0));
 
 		surface.close();
@@ -149,7 +149,7 @@ public class Test_org_eclipse_swt_m3gc_drawPoint {
 		epd.antiAlias = false;
 		epd.dither = false;
 		epd.shader = null;
-		epd.blendMode = BlendMode.SRC_OVER;
+		epd.blendMode = M3BlendMode.SRC_OVER;
 		epd.pathEffect = null;
 		epd.imageFilter = null;
 		epd.colorFilter = null;
@@ -157,7 +157,7 @@ public class Test_org_eclipse_swt_m3gc_drawPoint {
 
 		// At 200% zoom: x=10*2.0=20, y=20*2.0=40, size stays 1x1
 		// Rect: left=20.0, top=40.0, right=21.0, bottom=41.0
-		assertEquals(MethodCall.get("surface-canvas", "drawRect", new Rect(20.0f, 40.0f, 21.0f, 41.0f), epd),
+		assertEquals(MethodCall.get("surface-canvas", "drawRect", new M3Rect(20.0f, 40.0f, 21.0f, 41.0f), epd),
 				surface.calls.get(0));
 
 		surface.close();

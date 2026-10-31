@@ -1,7 +1,7 @@
 package org.eclipse.swt.internal.render.m3.gc;
 
-import io.github.humbleui.skija.FilterTileMode;
-import io.github.humbleui.skija.Shader;
+import jdk.m3.graphics.M3FilterTileMode;
+import jdk.m3.graphics.M3Shader;
 
 public interface IM3Image extends AutoCloseable {
 
@@ -11,9 +11,9 @@ public interface IM3Image extends AutoCloseable {
 
 	int getWidth();
 
-	Shader makeShader(FilterTileMode repeat);
+	M3Shader makeShader(M3FilterTileMode repeat);
 
-	io.github.humbleui.skija.Image getM3Image();
+	jdk.m3.graphics.M3Image getM3Image();
 
 	@Override
 	void close();

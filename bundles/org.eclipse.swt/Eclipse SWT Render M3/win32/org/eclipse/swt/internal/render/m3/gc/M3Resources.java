@@ -26,12 +26,12 @@ import org.eclipse.swt.internal.canvasext.IDpiScaler;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
-import io.github.humbleui.skija.FontEdging;
-import io.github.humbleui.skija.FontHinting;
-import io.github.humbleui.skija.FontMgr;
-import io.github.humbleui.skija.FontSlant;
-import io.github.humbleui.skija.FontStyle;
-import io.github.humbleui.skija.Typeface;
+import jdk.m3.graphics.M3FontEdging;
+import jdk.m3.graphics.M3FontHinting;
+import jdk.m3.graphics.M3FontMgr;
+import jdk.m3.graphics.M3FontSlant;
+import jdk.m3.graphics.M3FontStyle;
+import jdk.m3.graphics.M3Typeface;
 
 public class M3Resources implements IM3Resources {
 	public static boolean USE_TEXT_IMAGE_CACHE = true;
@@ -77,12 +77,12 @@ public class M3Resources implements IM3Resources {
 	private Color foreground;
 	private final Control canvas;
 	private Font swtFont;
-	private io.github.humbleui.skija.Font m3Font;
+	private jdk.m3.graphics.M3Font m3Font;
 
 	// cache access only from UI thread, so no need for concurrent map
 	private final Map<String, String> fontNameMapping = new HashMap<>();
 	private final Set<String> unknownFonts = new HashSet<>();
-	private final Map<FontProperties, io.github.humbleui.skija.Font> fontCache = new HashMap<>();
+	private final Map<FontProperties, jdk.m3.graphics.M3Font> fontCache = new HashMap<>();
 	private final LruImageCache<ImageTextKey> textImageCache = new LruImageCache<>(TEXT_IMAGE_CACHE_MAX);
 	private final Map<SplitsTextCache, String[]> cachedTextSplits = new HashMap<>();
 
@@ -152,7 +152,7 @@ public class M3Resources implements IM3Resources {
 
 	}
 
-	private io.github.humbleui.skija.Font getM3Font(org.eclipse.swt.graphics.Font font) {
+	private jdk.m3.graphics.M3Font getM3Font(org.eclipse.swt.graphics.Font font) {
 		final FontProperties props = FontProperties.getFontProperties(font);
 		var cachedFont = fontCache.get(props);
 		if (cachedFont != null && cachedFont.isClosed()) {
@@ -160,7 +160,7 @@ public class M3Resources implements IM3Resources {
 			cachedFont = null;
 		}
 
-		io.github.humbleui.skija.Font f = null;
+		jdk.m3.graphics.M3Font f = null;
 
 		if (cachedFont == null) {
 			f = createM3Font(props);
@@ -171,22 +171,22 @@ public class M3Resources implements IM3Resources {
 		return fontCache.get(props);
 	}
 
-	private io.github.humbleui.skija.Font createM3Font(FontProperties props) {
+	private jdk.m3.graphics.M3Font createM3Font(FontProperties props) {
 
-		FontSlant slant = FontSlant.UPRIGHT;
+		M3FontSlant slant = M3FontSlant.UPRIGHT;
 		if (props.lfItalic != 0) {
-			slant = FontSlant.ITALIC;
+			slant = M3FontSlant.ITALIC;
 		}
 
-		final FontStyle style = new FontStyle(props.lfWeight, 5, slant);
-		io.github.humbleui.skija.Font m3Font = new io.github.humbleui.skija.Font(extractTypeface(props, style));
+		final M3FontStyle style = new M3FontStyle(props.lfWeight, 5, slant);
+		jdk.m3.graphics.M3Font m3Font = new jdk.m3.graphics.M3Font(extractTypeface(props, style));
 
 		final var rect = m3Font.measureText("T"); //$NON-NLS-1$
 		final var textHeight = rect.getHeight();
 		if (textHeight == 0.0) {
 
 			props.name = Display.getDefault().getSystemFont().getFontData()[0].getName();
-			m3Font = new io.github.humbleui.skija.Font(extractTypeface(props, style));
+			m3Font = new jdk.m3.graphics.M3Font(extractTypeface(props, style));
 		}
 
 		if (props.lfWidth != 0) {
@@ -199,17 +199,17 @@ public class M3Resources implements IM3Resources {
 		fontSize = util.getZoomedFontSize(fontSize);
 
 		m3Font.setSize(fontSize);
-		m3Font.setEdging(FontEdging.SUBPIXEL_ANTI_ALIAS);
+		m3Font.setEdging(M3FontEdging.SUBPIXEL_ANTI_ALIAS);
 		m3Font.setSubpixel(true);
-		m3Font.setHinting(FontHinting.NORMAL);
+		m3Font.setHinting(M3FontHinting.NORMAL);
 		m3Font.setAutoHintingForced(true);
 
 		return m3Font;
 	}
 
-	private Typeface extractTypeface(FontProperties props, FontStyle style) {
+	private M3Typeface extractTypeface(FontProperties props, M3FontStyle style) {
 
-		final FontMgr fm = FontMgr.getDefault();
+		final M3FontMgr fm = M3FontMgr.getDefault();
 		var name = props.name;
 
 		if (name == null || name.isEmpty()) {
@@ -259,7 +259,7 @@ public class M3Resources implements IM3Resources {
 			parts[i] = parts[i].toLowerCase();
 		}
 
-		final FontMgr fm = FontMgr.getDefault();
+		final M3FontMgr fm = M3FontMgr.getDefault();
 		final var count = fm.getFamiliesCount();
 
 		String bestMatch = null;
@@ -295,7 +295,7 @@ public class M3Resources implements IM3Resources {
 	}
 
 	@Override
-	public io.github.humbleui.skija.Font getM3Font() {
+	public jdk.m3.graphics.M3Font getM3Font() {
 		if (m3Font == null) {
 			setFont(null);
 		}

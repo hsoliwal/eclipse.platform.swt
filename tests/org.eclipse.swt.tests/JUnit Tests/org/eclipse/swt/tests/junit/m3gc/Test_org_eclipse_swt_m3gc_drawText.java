@@ -10,11 +10,11 @@ import org.eclipse.swt.internal.render.m3.gc.M3ExternalGC;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.skija.FontMgr;
-import io.github.humbleui.skija.FontStyle;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3BlendMode;
+import jdk.m3.graphics.M3Font;
+import jdk.m3.graphics.M3FontMgr;
+import jdk.m3.graphics.M3FontStyle;
+import jdk.m3.graphics.M3Rect;
 
 public class Test_org_eclipse_swt_m3gc_drawText {
 	@BeforeAll
@@ -31,9 +31,9 @@ public class Test_org_eclipse_swt_m3gc_drawText {
 		resources.setBackground(backgroundColor);
 
 		// Use a default Skia font (should be available everywhere)
-		final FontMgr fm = FontMgr.getDefault();
-		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), FontStyle.NORMAL);
-		resources.m3Font = new Font(fontStyle);
+		final M3FontMgr fm = M3FontMgr.getDefault();
+		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), M3FontStyle.NORMAL);
+		resources.m3Font = new M3Font(fontStyle);
 
 		FontData data = new FontData();
 		data.setName("Arial");
@@ -67,7 +67,7 @@ public class Test_org_eclipse_swt_m3gc_drawText {
 		MethodCall call1 = calls.get(1);
 		assertEquals("SurfaceDouble-child-0-canvas", call1.className);
 		assertEquals("drawRect", call1.methodName);
-		Rect rect = (Rect) call1.params[0];
+		M3Rect rect = (M3Rect) call1.params[0];
 		assertEquals(0.0f, rect.getLeft(), "drawRect() left should be 0");
 		assertEquals(0.0f, rect.getTop(), "drawRect() top should be 0");
 		assertEquals(34.0f, rect.getRight(), "drawRect() right should be 34");
@@ -87,7 +87,7 @@ public class Test_org_eclipse_swt_m3gc_drawText {
 		PaintData paintCall2 = (PaintData) call2.params[4];
 		assertEquals(-1, paintCall2.color, "drawString() text color should be white (-1)");
 		assertEquals(1.0f, paintCall2.strokeWidth, "drawString() stroke width should be 1.0");
-		assertEquals(BlendMode.SRC_IN, paintCall2.blendMode, "drawString() blendMode should be SRC_IN");
+		assertEquals(M3BlendMode.SRC_IN, paintCall2.blendMode, "drawString() blendMode should be SRC_IN");
 
 		// Call 3: drawImage() - draw the cached image snapshot
 		MethodCall call3 = calls.get(3);
@@ -108,9 +108,9 @@ public class Test_org_eclipse_swt_m3gc_drawText {
 		resources.setBackground(backgroundColor);
 
 		// Use a default Skia font (should be available everywhere)
-		final FontMgr fm = FontMgr.getDefault();
-		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), FontStyle.NORMAL);
-		resources.m3Font = new Font(fontStyle);
+		final M3FontMgr fm = M3FontMgr.getDefault();
+		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), M3FontStyle.NORMAL);
+		resources.m3Font = new M3Font(fontStyle);
 
 		FontData data = new FontData();
 		data.setName("Arial");
@@ -171,9 +171,9 @@ public class Test_org_eclipse_swt_m3gc_drawText {
 		resources.setBackground(backgroundColor);
 
 		// Use a default Skia font (should be available everywhere)
-		final FontMgr fm = FontMgr.getDefault();
-		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), FontStyle.NORMAL);
-		resources.m3Font = new Font(fontStyle);
+		final M3FontMgr fm = M3FontMgr.getDefault();
+		var fontStyle = fm.matchFamilyStyle(fm.getFamilyName(0), M3FontStyle.NORMAL);
+		resources.m3Font = new M3Font(fontStyle);
 
 		FontData data = new FontData();
 		data.setName("Arial");

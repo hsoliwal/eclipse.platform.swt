@@ -16,7 +16,7 @@ free=$(powershell -NoProfile -Command "[int]((Get-CimInstance Win32_OperatingSys
 rm -rf "$OUT"; mkdir -p "$OUT/classes"
 find "$SRC" -name '*.java' -type f | sed 's#.*#"&"#' > "$OUT/src"
 . "$(dirname "$0")/m3_skija_pin.sh"; m3_skija_pin "$WT" "$LIB" || exit 2   # SKIJA_PIN v1 (census L12): skija.version of the fragment pom
-CP="$MAIN/classes;$SKIJA_CP;$JUNIT"
+CP="$MAIN/classes;${M3_GRAPHICS_CP:-$SKIJA_CP};$JUNIT"
 "$JDK/bin/javac" -J-Xmx1024m --release 21 -encoding UTF-8 -nowarn -proc:none -Xmaxerrs 300 -cp "$CP" -d "$OUT/classes" @"$OUT/src" > "$OUT/javac.log" 2>&1
 # a launcher failure (`error: file not found`, MSYS /c/ paths in the argfile: pass C:/ paths) counts as an error too
 n=$(grep -cE ': error:|^error: |^Usage: javac' "$OUT/javac.log"); n=${n:-0}

@@ -1,16 +1,16 @@
 package org.eclipse.swt.internal.render.m3.gc;
 
-import io.github.humbleui.skija.FilterTileMode;
-import io.github.humbleui.skija.Image;
-import io.github.humbleui.skija.Shader;
+import jdk.m3.graphics.M3FilterTileMode;
+import jdk.m3.graphics.M3Image;
+import jdk.m3.graphics.M3Shader;
 
 public class M3ImageAdapter implements IM3Image {
 
-	public M3ImageAdapter(Image m3Image) {
+	public M3ImageAdapter(M3Image m3Image) {
 		this.m3Image = m3Image;
 	}
 
-	private final Image m3Image;
+	private final M3Image m3Image;
 
 	@Override
 	public boolean isClosed() {
@@ -33,12 +33,12 @@ public class M3ImageAdapter implements IM3Image {
 	}
 
 	@Override
-	public Image getM3Image() {
+	public M3Image getM3Image() {
 		return m3Image;
 	}
 
 	@Override
-	public Shader makeShader(FilterTileMode repeat) {
+	public M3Shader makeShader(M3FilterTileMode repeat) {
 		return m3Image.makeShader(repeat);
 	}
 

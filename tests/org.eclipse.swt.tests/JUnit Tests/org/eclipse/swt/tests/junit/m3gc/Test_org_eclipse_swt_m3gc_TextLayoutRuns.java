@@ -41,10 +41,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.ImageInfo;
-import io.github.humbleui.skija.PixelGeometry;
-import io.github.humbleui.skija.Surface;
-import io.github.humbleui.skija.SurfaceProps;
+import jdk.m3.graphics.M3ImageInfo;
+import jdk.m3.graphics.M3PixelGeometry;
+import jdk.m3.graphics.M3Surface;
+import jdk.m3.graphics.M3SurfaceProps;
 
 /**
  * Headless, on a real Skija raster surface: TextLayout on an M3 GC (text leaf L13). TEXT_FALLBACK_SAFE: no white box over
@@ -55,7 +55,7 @@ import io.github.humbleui.skija.SurfaceProps;
  */
 public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 	static final int DARK = 0xFF202020, W = 300, H = 80;
-	Surface real;
+	M3Surface real;
 	M3ExternalGC gc;
 	Font font;
 	TextLayout layout;
@@ -68,7 +68,7 @@ public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 
 	@BeforeEach
 	void setUp() {
-		real = Surface.makeRaster(ImageInfo.makeN32Premul(W, H), 0, new SurfaceProps(false, PixelGeometry.RGB_H));
+		real = M3Surface.makeRaster(M3ImageInfo.makeN32Premul(W, H), 0, new M3SurfaceProps(false, M3PixelGeometry.RGB_H));
 		real.getCanvas().clear(DARK);
 		font = new Font(Display.getDefault(), "Consolas", 10, SWT.NORMAL);
 		M3GcFixture f = new M3GcFixture(DPIUtil.getDeviceZoom());
@@ -92,7 +92,7 @@ public class Test_org_eclipse_swt_m3gc_TextLayoutRuns {
 	}
 
 	int pixel(int x, int y) {
-		try (var bitmap = new io.github.humbleui.skija.Bitmap()) {
+		try (var bitmap = new jdk.m3.graphics.M3Bitmap()) {
 			bitmap.allocN32Pixels(1, 1);
 			real.readPixels(bitmap, x, y);
 			return bitmap.getColor(0, 0) & 0xFFFFFF;

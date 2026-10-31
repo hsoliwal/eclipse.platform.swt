@@ -27,7 +27,7 @@ if [ -n "$M3_OVERLAY" ] && [ -d "$M3_OVERLAY" ]; then
   done
 fi
 . "$(dirname "$0")/m3_skija_pin.sh"; m3_skija_pin "$WT" "$LIB" || exit 2   # SKIJA_PIN v1 (census L12): skija.version of the fragment pom
-CP="$SKIJA_CP"
+CP="${M3_GRAPHICS_CP:-$SKIJA_CP}"   # M3_GRAPHICS_CP: jdk.m3.graphics classes (M3jdk module, Skija absorbed) instead of the Skija jars
 "$JDK/bin/javac" -J-Xmx1536m --release 21 -encoding UTF-8 -nowarn -proc:none -Xmaxerrs 300 -cp "$CP" -d "$OUT/classes" @"$OUT/src" > "$OUT/javac.log" 2>&1
 # a launcher failure (`error: file not found`, MSYS /c/ paths in the argfile: pass C:/ paths) counts as an error too
 n=$(grep -cE ': error:|^error: |^Usage: javac' "$OUT/javac.log"); n=${n:-0}

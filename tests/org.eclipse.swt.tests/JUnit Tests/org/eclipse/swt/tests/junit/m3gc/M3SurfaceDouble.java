@@ -7,7 +7,7 @@ import org.eclipse.swt.internal.render.m3.gc.IM3Canvas;
 import org.eclipse.swt.internal.render.m3.gc.IM3Image;
 import org.eclipse.swt.internal.render.m3.gc.IM3Surface;
 
-import io.github.humbleui.types.IRect;
+import jdk.m3.graphics.M3IRect;
 
 public class M3SurfaceDouble implements IM3Surface {
 
@@ -87,7 +87,7 @@ public class M3SurfaceDouble implements IM3Surface {
 	}
 
 	@Override
-	public IM3Image makeImageSnapshot(IRect rect) {
+	public IM3Image makeImageSnapshot(M3IRect rect) {
 
 		var doub = new IM3ImageDouble();
 

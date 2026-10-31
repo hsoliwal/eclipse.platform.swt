@@ -15,7 +15,7 @@ public class M3ResourcesDouble implements IM3Resources {
 	public Color background;
 	public Color foreground;
 	public Font font;
-	public io.github.humbleui.skija.Font m3Font;
+	public jdk.m3.graphics.M3Font m3Font;
 	public Image cachedImage;
 	public IM3Image cachedM3Image;
 	public IM3Image cachedTextImage;
@@ -58,7 +58,7 @@ public class M3ResourcesDouble implements IM3Resources {
 	}
 
 	@Override
-	public io.github.humbleui.skija.Font getM3Font() {
+	public jdk.m3.graphics.M3Font getM3Font() {
 		return m3Font;
 	}
 

@@ -2,13 +2,13 @@ package org.eclipse.swt.tests.junit.m3gc;
 
 import java.util.Objects;
 
-import io.github.humbleui.skija.BlendMode;
-import io.github.humbleui.skija.ColorFilter;
-import io.github.humbleui.skija.ImageFilter;
-import io.github.humbleui.skija.MaskFilter;
-import io.github.humbleui.skija.Paint;
-import io.github.humbleui.skija.PathEffect;
-import io.github.humbleui.skija.Shader;
+import jdk.m3.graphics.M3BlendMode;
+import jdk.m3.graphics.M3ColorFilter;
+import jdk.m3.graphics.M3ImageFilter;
+import jdk.m3.graphics.M3MaskFilter;
+import jdk.m3.graphics.M3Paint;
+import jdk.m3.graphics.M3PathEffect;
+import jdk.m3.graphics.M3Shader;
 
 public class PaintData {
 
@@ -21,14 +21,14 @@ public class PaintData {
 	int alpha;
 	boolean antiAlias;
 	boolean dither;
-	Shader shader;
-	BlendMode blendMode;
-	PathEffect pathEffect;
-	ImageFilter imageFilter;
-	ColorFilter colorFilter;
-	MaskFilter maskFilter;
+	M3Shader shader;
+	M3BlendMode blendMode;
+	M3PathEffect pathEffect;
+	M3ImageFilter imageFilter;
+	M3ColorFilter colorFilter;
+	M3MaskFilter maskFilter;
 
-	public static PaintData getData(Paint p) {
+	public static PaintData getData(M3Paint p) {
 
 		final PaintData data = new PaintData();
 		data.color = p.getColor();

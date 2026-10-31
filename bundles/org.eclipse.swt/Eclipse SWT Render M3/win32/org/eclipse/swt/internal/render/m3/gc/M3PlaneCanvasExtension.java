@@ -19,7 +19,7 @@ import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.render.*;
 import org.eclipse.swt.widgets.*;
 
-import io.github.humbleui.skija.Surface;
+import jdk.m3.graphics.M3Surface;
 
 /**
  * The M3 renderer's side of the GC seam: hands {@link M3ExternalGC} the surface a drawn plane already owns.
@@ -37,7 +37,7 @@ import io.github.humbleui.skija.Surface;
 public final class M3PlaneCanvasExtension implements IM3CanvasExtension {
 	private final Control control;
 	private final BackBuffer buffer;
-	private final Supplier<Surface> surface;
+	private final Supplier<M3Surface> surface;
 	private final M3Resources resources;
 	private final DpiScalerUtil scaler;
 	/* the damage of the frame being drawn, in client pixels; empty between frames */
@@ -49,7 +49,7 @@ public final class M3PlaneCanvasExtension implements IM3CanvasExtension {
 	 * @param surface the plane's surface over that buffer, read per call (<code>M3RowCanvas.target</code> replaces it
 	 *                when the buffer grows)
 	 */
-	public M3PlaneCanvasExtension (Control control, BackBuffer buffer, Supplier<Surface> surface) {
+	public M3PlaneCanvasExtension (Control control, BackBuffer buffer, Supplier<M3Surface> surface) {
 		this.control = control;
 		this.buffer = buffer;
 		this.surface = surface;
@@ -69,7 +69,7 @@ public final class M3PlaneCanvasExtension implements IM3CanvasExtension {
 
 	@Override
 	public IM3Surface getSurface () {
-		Surface current = surface.get ();
+		M3Surface current = surface.get ();
 		return current == null ? null : new M3SurfaceAdapter (current);
 	}
 
@@ -80,8 +80,8 @@ public final class M3PlaneCanvasExtension implements IM3CanvasExtension {
 
 	@Override
 	public IM3Surface createSupportSurface (int width, int height) {
-		Surface current = surface.get ();
-		Surface support = current == null ? null : current.makeSurface (width, height);
+		M3Surface current = surface.get ();
+		M3Surface support = current == null ? null : current.makeSurface (width, height);
 		return support == null ? null : new M3SurfaceAdapter (support);
 	}
 

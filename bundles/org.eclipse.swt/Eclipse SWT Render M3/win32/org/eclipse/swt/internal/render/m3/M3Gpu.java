@@ -18,7 +18,7 @@ package org.eclipse.swt.internal.render.m3;
 import org.eclipse.swt.internal.opengl.win32.*;
 import org.eclipse.swt.internal.win32.*;
 
-import io.github.humbleui.skija.*;
+import jdk.m3.graphics.*;
 
 /**
  * The graphics hardware of the <code>gpu</code> drawn planes on win32, Java only: one OpenGL context per UI thread
@@ -29,7 +29,7 @@ import io.github.humbleui.skija.*;
 final class M3Gpu {
 	private static final ThreadLocal<M3Gpu> SHARED = new ThreadLocal<> ();
 	private long hostHwnd, hostDC, hglrc;
-	DirectContext context;
+	M3DirectContext context;
 	private int references;
 
 	private M3Gpu () {
@@ -68,7 +68,7 @@ final class M3Gpu {
 		if (format == 0 || !WGL.SetPixelFormat (hostDC, format, pfd)) return false;
 		hglrc = WGL.wglCreateContext (hostDC);
 		if (hglrc == 0 || !WGL.wglMakeCurrent (hostDC, hglrc)) return false;
-		context = DirectContext.makeGL ();
+		context = M3DirectContext.makeGL ();
 		return context != null;
 	}
 

@@ -36,10 +36,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.github.humbleui.skija.ImageInfo;
-import io.github.humbleui.skija.PixelGeometry;
-import io.github.humbleui.skija.Surface;
-import io.github.humbleui.skija.SurfaceProps;
+import jdk.m3.graphics.M3ImageInfo;
+import jdk.m3.graphics.M3PixelGeometry;
+import jdk.m3.graphics.M3Surface;
+import jdk.m3.graphics.M3SurfaceProps;
 
 /**
  * Headless, on a real Skija raster surface with the back buffer's LCD pixel geometry: the GC fidelity defects leaf 7's
@@ -50,7 +50,7 @@ import io.github.humbleui.skija.SurfaceProps;
  */
 public class Test_org_eclipse_swt_m3gc_CompositeParity {
 	static final int WHITE = 0xFFFFFFFF;
-	Surface real;
+	M3Surface real;
 	M3GcFixture f;
 	M3ExternalGC gc;
 	Font font;
@@ -62,7 +62,7 @@ public class Test_org_eclipse_swt_m3gc_CompositeParity {
 
 	@BeforeEach
 	void setUp() {
-		real = Surface.makeRaster(ImageInfo.makeN32Premul(200, 60), 0, new SurfaceProps(false, PixelGeometry.RGB_H));
+		real = M3Surface.makeRaster(M3ImageInfo.makeN32Premul(200, 60), 0, new M3SurfaceProps(false, M3PixelGeometry.RGB_H));
 		real.getCanvas().clear(WHITE);
 		font = new Font(Display.getDefault(), "Segoe UI", 9, SWT.NORMAL);
 		f = new M3GcFixture(DPIUtil.getDeviceZoom());
@@ -82,7 +82,7 @@ public class Test_org_eclipse_swt_m3gc_CompositeParity {
 	}
 
 	int pixel(int x, int y) {
-		try (var bitmap = new io.github.humbleui.skija.Bitmap()) {
+		try (var bitmap = new jdk.m3.graphics.M3Bitmap()) {
 			bitmap.allocN32Pixels(1, 1);
 			real.readPixels(bitmap, x, y);
 			return bitmap.getColor(0, 0) & 0xFFFFFF;

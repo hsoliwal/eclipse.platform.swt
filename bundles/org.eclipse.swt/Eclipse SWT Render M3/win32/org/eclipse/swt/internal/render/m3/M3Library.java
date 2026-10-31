@@ -39,7 +39,7 @@ public final class M3Library {
 
 	private static boolean load () {
 		try {
-			io.github.humbleui.skija.impl.Library.staticLoad ();
+			jdk.m3.graphics.impl.M3Library.staticLoad ();
 			return true;
 		} catch (LinkageError e) {
 			LOG.info (() -> "the M3 renderer's native library cannot load (" + e + "): canvases take the stock path, drawn planes the GC backend");

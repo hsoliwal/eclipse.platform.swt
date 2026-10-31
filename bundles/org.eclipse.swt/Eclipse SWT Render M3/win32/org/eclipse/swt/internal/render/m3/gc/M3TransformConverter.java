@@ -16,14 +16,14 @@ package org.eclipse.swt.internal.render.m3.gc;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Transform;
 
-import io.github.humbleui.skija.Matrix33;
+import jdk.m3.graphics.M3Matrix33;
 
 public class M3TransformConverter {
 
-	public static Matrix33 toM3Matrix(Transform transform, DpiScalerUtil sc) {
+	public static M3Matrix33 toM3Matrix(Transform transform, DpiScalerUtil sc) {
 
 		if (transform == null) {
-			return Matrix33.IDENTITY;
+			return M3Matrix33.IDENTITY;
 		}
 		if (transform.isDisposed()) {
 			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
@@ -42,11 +42,11 @@ public class M3TransformConverter {
 				sc.autoScaleUp(elements[5]), // dy -> transY
 				0, 0, 1 // perspective elements
 		};
-		return new Matrix33(m3Mat);
+		return new M3Matrix33(m3Mat);
 
 	}
 
-	public static void fromM3Matrix(Matrix33 m3Matrix, Transform transform, DpiScalerUtil sc) {
+	public static void fromM3Matrix(M3Matrix33 m3Matrix, Transform transform, DpiScalerUtil sc) {
 
 		final float[] m = m3Matrix.getMat();
 		// Skija Matrix33: [scaleX, skewX, transX, skewY, scaleY, transY, persp0,

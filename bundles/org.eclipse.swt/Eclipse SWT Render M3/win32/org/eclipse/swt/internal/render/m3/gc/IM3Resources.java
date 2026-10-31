@@ -6,7 +6,7 @@ public interface IM3Resources {
 	org.eclipse.swt.graphics.Color getForeground();
 	org.eclipse.swt.graphics.Color getBackground();
 	void setFont(org.eclipse.swt.graphics.Font font);
-	io.github.humbleui.skija.Font getM3Font();
+	jdk.m3.graphics.M3Font getM3Font();
 	org.eclipse.swt.internal.canvasext.IDpiScaler getScaler();
 	org.eclipse.swt.graphics.Font getFont();
 	org.eclipse.swt.graphics.FontData getFontData();

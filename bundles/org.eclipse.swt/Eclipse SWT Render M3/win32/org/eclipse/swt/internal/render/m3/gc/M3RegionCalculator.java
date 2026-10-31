@@ -19,8 +19,8 @@ import java.util.stream.IntStream;
 import org.eclipse.swt.graphics.Region;
 import org.eclipse.swt.internal.win32.OS;
 
-import io.github.humbleui.types.IRect;
-import io.github.humbleui.types.Rect;
+import jdk.m3.graphics.M3IRect;
+import jdk.m3.graphics.M3Rect;
 
 /**
  * An SWT {@link Region} as a clip of the M3 GC (GC seam, leaf 6; atom CLIP_STATE, pattern M3-GC-CLIP v1; census GF03, GF18).
@@ -53,17 +53,17 @@ public final class M3RegionCalculator {
 	}
 
 	/** The bounds of the rectangles (pixels); an empty rectangle for none. */
-	public static Rect bounds(int[] rects) {
-		if (rects.length == 0) return new Rect(0, 0, 0, 0);
-		return new Rect(edge(rects, 0, false), edge(rects, 1, false), edge(rects, 2, true), edge(rects, 3, true));
+	public static M3Rect bounds(int[] rects) {
+		if (rects.length == 0) return new M3Rect(0, 0, 0, 0);
+		return new M3Rect(edge(rects, 0, false), edge(rects, 1, false), edge(rects, 2, true), edge(rects, 3, true));
 	}
 
 	/** Clips the canvas to the rectangles (device space, as Skia's clipRegion; an empty list clips everything away). */
 	static void clip(IM3Canvas canvas, int[] rects) {
-		try (io.github.humbleui.skija.Region region = new io.github.humbleui.skija.Region()) {
+		try (jdk.m3.graphics.M3Region region = new jdk.m3.graphics.M3Region()) {
 			region.setRects(IntStream.range(0, rects.length / 4)
-					.mapToObj(i -> new IRect(rects[4 * i], rects[4 * i + 1], rects[4 * i + 2], rects[4 * i + 3]))
-					.toArray(IRect[]::new));
+					.mapToObj(i -> new M3IRect(rects[4 * i], rects[4 * i + 1], rects[4 * i + 2], rects[4 * i + 3]))
+					.toArray(M3IRect[]::new));
 			canvas.clipRegion(region);
 		}
 	}
