@@ -3046,12 +3046,26 @@ void setInitialBounds() {
 			}
 			GTK.gtk_window_set_default_size(shellHandle, width, height + headerNaturalHeight[0]);
 		} else {
-			long display = GDK.gdk_display_get_default();
-			if (display != 0) {
-				long monitor = GDK.gdk_display_get_monitor_at_window(display, paintWindow());
-				GDK.gdk_monitor_get_geometry(monitor, dest);
-				width = (int) (dest.width * SHELL_TO_MONITOR_RATIO);
-				height = (int) (dest.height * SHELL_TO_MONITOR_RATIO);
+			// <CUSTOMISATION - ASHLING>
+			if (GTK.GTK_VERSION >= OS.VERSION(3, 22, 0)) {
+				long display = GDK.gdk_display_get_default();
+				if (display != 0) {
+					long monitor = GDK.gdk_display_get_monitor_at_window(display, paintWindow());
+					GDK.gdk_monitor_get_geometry(monitor, dest);
+					width = (int) (dest.width * SHELL_TO_MONITOR_RATIO);
+					height = (int) (dest.height * SHELL_TO_MONITOR_RATIO);
+				}
+			} else {
+				long screen = GDK.gdk_screen_get_default();
+				if (screen != 0) {
+					if (GDK.gdk_screen_get_n_monitors(screen) > 1) {
+						int monitorNumber = GDK.gdk_screen_get_monitor_at_window(screen, paintWindow());
+						GDK.gdk_screen_get_monitor_geometry(screen, monitorNumber, dest);
+						width = (int) (dest.width * SHELL_TO_MONITOR_RATIO);
+						height = (int) (dest.height * SHELL_TO_MONITOR_RATIO);
+					}
+				}
+				// </CUSTOMISATION>
 			}
 
 			if (width == 0 && height == 0) {
@@ -3860,9 +3874,19 @@ long sizeAllocateProc (long handle, long arg0, long user_data) {
 
 	y[0] += offset;
 	GdkRectangle dest = new GdkRectangle ();
-	long display = GDK.gdk_display_get_default();
-	long monitor = GDK.gdk_display_get_monitor_at_point(display, x[0], y[0]);
-	GDK.gdk_monitor_get_geometry(monitor, dest);
+	// <CUSTOMISATION - ASHLING>
+	if (GTK.GTK_VERSION >= OS.VERSION(3, 22, 0)) {
+		long display = GDK.gdk_display_get_default();
+		long monitor = GDK.gdk_display_get_monitor_at_point(display, x[0], y[0]);
+		GDK.gdk_monitor_get_geometry(monitor, dest);
+	} else {
+		long screen = GDK.gdk_screen_get_default();
+		if (screen != 0) {
+			int monitorNumber = GDK.gdk_screen_get_monitor_at_point(screen, x[0], y[0]);
+			GDK.gdk_screen_get_monitor_geometry(screen, monitorNumber, dest);
+		}
+	}
+	// </CUSTOMISATION>
 	GtkAllocation allocation = new GtkAllocation ();
 	GTK.gtk_widget_get_allocation (handle, allocation);
 	int width = allocation.width;
