@@ -34,6 +34,11 @@ else SELECT="--select-class org.eclipse.swt.tests.junit.m3gc.AllM3GcTests --incl
 # the JVM as swt.library.path; without it the 59 draw tests fail with "Could not load SWT library" before their first draw.
 NATIVES=${M3_NATIVES:-H:/m3-scratch/gc-wiring/natives}
 [ -d "$NATIVES" ] && SWTLIB="-Dswt.library.path=$(cygpath -w "$NATIVES")" || SWTLIB=""
+# NATIVE_STAGE_BY_OID v1 (LF-01): the staged dlls must be the LFS objects the worktree's pointers name (m3gc_natives.sh
+# stages them); a mislabeled set is refused (M3_NATIVES_UNVERIFIED=1 runs anyway and says so)
+if [ -n "$SWTLIB" ] && ! bash "$(dirname "$0")/m3gc_natives.sh" --verify "$WT" "$NATIVES" > "$OUT/natives.verify" 2>&1; then
+  tail -1 "$OUT/natives.verify"; [ -n "$M3_NATIVES_UNVERIFIED" ] || { echo "NATIVES_NOT_GENUINE: run m3gc_natives.sh $WT <dir>"; exit 1; }
+fi
 "$JDK/bin/java" -Xmx1024m -Djava.awt.headless=true $SWTLIB -jar "$JUNIT" execute --class-path "$OUT/classes;$CP" $SELECT \
   --details=tree --disable-banner --disable-ansi-colors > "$OUT/junit.log" 2>&1
 grep -E '^\[ +[0-9]+ (containers|tests) ' "$OUT/junit.log"
