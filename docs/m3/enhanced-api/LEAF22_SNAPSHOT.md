@@ -39,3 +39,5 @@ is disposed before `capture` returns.
 | example | `examples/.../snippets/m3/M3SnapshotExample.java` (`exit` argument for a scripted run) |
 
 Open: the List viewport hidden-bar emulation above; GTK and Cocoa not run.
+
+Update (2026-10-31): the viewport differences were the Tree and List viewports' hidden-bar emulation, fixed by PR #298 (TreeViewport: rows that fit read 0) and PR #299 (ListViewport: the default bar 0..100 only with SWT.H_SCROLL, measured on the official jar). With both, the official-jar differential of this leaf has 0 mismatches in viewport and original mode (plain and virtual).
