@@ -954,6 +954,11 @@ final class TreeViewport {
 			info.nMax = frozenBar.nMax;
 			info.nPage = frozenBar.nPage;
 			info.nPos = frozenBar.nPos;
+		} else if (rows <= page) {
+			/* stock: a tree whose visible rows fit reads 0 for every bar value (TreeBarOracle, official 3.135.0 jar) */
+			info.nMax = 0;
+			info.nPage = 0;
+			info.nPos = 0;
 		} else if (rows <= Integer.MAX_VALUE) {
 			info.nMax = (int) Math.max (0, rows - 1);
 			info.nPage = rows <= page ? info.nMax + 1 : page;
