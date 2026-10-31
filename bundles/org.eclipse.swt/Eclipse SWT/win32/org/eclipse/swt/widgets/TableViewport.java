@@ -753,8 +753,6 @@ final class TableViewport {
 		OS.MoveMemory (range, lParam + NMHDR.sizeof, 8);
 		hintFirst = range [0];
 		hintLast = range [1];
-		M3Prefetch.windowChanged (table);
-		M3VisibilityObserver.changed (table);
 		int to = Math.min (range [1], cells.length () - 1);
 		for (int row = Math.max (0, range [0]); row <= to; row++) {
 			if (table.items [row] == null) {
@@ -762,6 +760,9 @@ final class TableViewport {
 				if (item != null) hold (row, item);
 			}
 		}
+		/* the M3 listeners run last: one of them may dispose the table */
+		M3Prefetch.windowChanged (table);
+		M3VisibilityObserver.changed (table);
 	}
 
 	/** Mediated <code>getItems</code> of a plain Table: every row answers its facade. */
