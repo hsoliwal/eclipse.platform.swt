@@ -38,3 +38,14 @@ the mapping as int lanes.
 ## Algorithm choices
 
 See `ALGORITHM_CATALOGUE.tsv`: a permutation lane plus inverse lane against object lists.
+
+## Status (2026-10-30)
+
+| gate | result |
+|---|---|
+| build | master `d5f6048f398`, jar `master-d5f6048` (sha256 `d3e26aff00a3...`); win32, GTK and Cocoa source sets 0 errors |
+| JUnit, hidden desktop | `Test_M3ProxyModel` 8/8 viewport, 8/8 original (one new test: a stale `SWT.SetData` request beyond the view is ignored) |
+| differential against the official 3.135.0 jar | `Test_M3ProxyModelDifferential` (8 seeds x 120 steps): a virtual Table shows a filtered and sorted view of a source; the official run computes the view with boxed streams and drives the table with `setItemCount`, `clearAll` and its own `SWT.SetData` listener, this SWT binds an M3ProxyModel; view size, top index and the first rows' texts: 0 mismatches in viewport and original |
+| coverage (JaCoCo 0.8.15, both modes) | lines 75/75; branches 57/62, the other 5 are `SWT.error` probe artifacts: every reachable branch covered |
+
+Open: GTK and Cocoa not run.
