@@ -4076,6 +4076,11 @@ void setSort (TreeColumn column, int direction) {
  * @since 2.1
  */
 public void setTopItem (TreeItem item) {
+	setTopTreeItem (item);
+	M3VisibilityObserver.changed (this);
+}
+
+void setTopTreeItem (TreeItem item) {
 	checkWidget();
     if (item == null) {
         error(SWT.ERROR_NULL_ARGUMENT);

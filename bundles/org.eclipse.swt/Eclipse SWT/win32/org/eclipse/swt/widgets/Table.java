@@ -5984,6 +5984,11 @@ void setTableEmpty () {
  * </ul>
  */
 public void setTopIndex (int index) {
+	setTopRow (index);
+	M3VisibilityObserver.changed (this);
+}
+
+void setTopRow (int index) {
 	checkWidget ();
 	int topIndex = (int)OS.SendMessage (handle, OS.LVM_GETTOPINDEX, 0, 0);
     if (index == topIndex) {

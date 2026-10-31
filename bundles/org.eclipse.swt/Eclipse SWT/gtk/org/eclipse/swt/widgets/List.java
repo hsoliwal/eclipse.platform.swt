@@ -2028,6 +2028,11 @@ public void setSelection (String [] items) {
  * </ul>
  */
 public void setTopIndex (int index) {
+	setTopRow (index);
+	M3VisibilityObserver.changed (this);
+}
+
+void setTopRow (int index) {
 	checkWidget();
 	/*
 	 * Feature in GTK: cache the GtkAdjustment value for future use in

@@ -3685,6 +3685,11 @@ void setTableEmpty () {
  * </ul>
  */
 public void setTopIndex (int index) {
+	setTopRow (index);
+	M3VisibilityObserver.changed (this);
+}
+
+void setTopRow (int index) {
 	checkWidget ();
 	NSTableView widget = (NSTableView) view;
 	int row = Math.max(0, Math.min(index, itemCount));
