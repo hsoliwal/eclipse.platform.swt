@@ -260,4 +260,13 @@ public class Test_M3RowMath {
 		assertThrows (SWTException.class, () -> M3RowMath.visibleRowCount (tree));
 		assertThrows (SWTException.class, () -> M3RowMath.itemAt (tree, 0));
 	}
+
+	@Test
+	public void test_walkStopsAtTheEndOfAPlainTree () {
+		Tree tree = new Tree (shell, SWT.NONE);
+		for (int i = 0; i < 4; i++) new TreeItem (tree, SWT.NONE).setText ("r" + i);
+		/* far past the last row: the walk runs out of items before it reaches the row */
+		assertThrows (IllegalArgumentException.class, () -> M3RowMath.itemAt (tree, 9));
+		assertEquals ("r3", M3RowMath.itemAt (tree, 3).getText ());
+	}
 }
