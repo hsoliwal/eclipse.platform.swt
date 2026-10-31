@@ -169,11 +169,18 @@ public final class M3ExampleRunner {
 		if (display == null) {
 			problem.set ("TIMEOUT no shell within " + TIMEOUT + " ms");
 			display = awaitDisplay (ui);
-			if (display == null && !Thread.currentThread ().isInterrupted ()) onBlocked.accept ("main did not open a shell in " + 2 * TIMEOUT + " ms");
+			if (display == null && !Thread.currentThread ().isInterrupted ()) onBlocked.accept ("main did not open a shell in " + 2 * TIMEOUT + " ms" + where (ui));
 			if (display == null) return;
 		}
 		close (display, png, snapshot, problem);
-		if (sleep (TIMEOUT)) onBlocked.accept ("main did not return " + TIMEOUT + " ms after its shells were closed");
+		if (sleep (TIMEOUT)) onBlocked.accept ("main did not return " + TIMEOUT + " ms after its shells were closed" + where (ui));
+	}
+
+	/** Where the example's thread is: its top frames, for the TIMEOUT detail. */
+	static String where (Thread ui) {
+		StringBuilder out = new StringBuilder ("; example thread at");
+		Arrays.stream (ui.getStackTrace ()).limit (12).forEach (frame -> out.append ("\n\tat ").append (frame));
+		return out.toString ();
 	}
 
 	static void join (Thread thread) {
@@ -186,7 +193,7 @@ public final class M3ExampleRunner {
 
 	/** The Display of the example's thread, once it exists and has a shell; null after the timeout or an interrupt. */
 	static Display awaitDisplay (Thread ui) {
-		for (long waited = 0; waited < TIMEOUT; waited += 50) {
+		for (long end = System.nanoTime () + TIMEOUT * 1_000_000L; System.nanoTime () < end; ) {
 			Display display = Display.findDisplay (ui);
 			if (display != null && !display.isDisposed () && hasShell (display)) return display;
 			if (!sleep (50)) return null;
@@ -194,15 +201,21 @@ public final class M3ExampleRunner {
 		return null;
 	}
 
-	/** True when the display has an open shell (asked on its own thread). */
+	/**
+	 * True when the display has an open shell, asked on its own thread without blocking the watcher: an example busy on
+	 * its UI thread does not answer within the poll and counts as having no shell yet (the timeout then applies).
+	 */
 	static boolean hasShell (Display display) {
-		boolean [] open = {false};
+		java.util.concurrent.CompletableFuture<Boolean> open = new java.util.concurrent.CompletableFuture<> ();
 		try {
-			display.syncExec (() -> open [0] = display.getShells ().length > 0);
-		} catch (SWTException e) {
+			display.asyncExec (() -> open.complete (display.getShells ().length > 0));
+			return open.get (1, java.util.concurrent.TimeUnit.SECONDS);
+		} catch (SWTException | java.util.concurrent.TimeoutException | java.util.concurrent.ExecutionException e) {
+			return false;
+		} catch (InterruptedException e) {
+			Thread.currentThread ().interrupt ();
 			return false;
 		}
-		return open [0];
 	}
 
 	/** Sleeps; false when interrupted (the interrupt flag stays set). */

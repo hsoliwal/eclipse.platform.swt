@@ -46,7 +46,7 @@ if [ -f "$O/results/examples-modes.tsv" ]; then
       for (k = 0; k in impl; k++) {
         split (title[k], t, "\t"); d = "-"; line = k "\t" t[1] "\t" t[2] "\t" impl[k]
         split ("viewport original custom m3 gpu", modes, " ")
-        for (m = 1; m <= 5; m++) { s = ((k, modes[m]) in st) ? st[k, modes[m]] : "NOT_RUN"; line = line "\t" s; if (s != "PASS" && d == "-") d = modes[m] ": " substr (det[k, modes[m]], 1, 300) }
+        for (m = 1; m <= 5; m++) { s = ((k, modes[m]) in st) ? st[k, modes[m]] : "NOT_RUN"; line = line "\t" s; if (s != "PASS" && d == "-") { x = ((k, modes[m]) in det) ? det[k, modes[m]] : ""; d = modes[m] (x == "" ? " " s : ": " substr (x, 1, 300)) } }
         print line, d
       }
     }' "$WT/examples/org.eclipse.swt.snippets/tools/GALLERY_INDEX.tsv" "$O/results/examples-modes.tsv" > "$D/results/EXAMPLE_MODES.tsv"
@@ -77,6 +77,8 @@ fi
     BEGIN { while ((getline line < causes) > 0) { split (line, c, "\t"); cause[c[1] "\t" c[2]] = c[3] }
             print "finding\tfailure\tlocation\tcount\towner\tsubjects (first 8)\tmessage\tcause (analysis, CAUSES.tsv)" }
     { k = $1 "\t" $2; printf "F%02d\t%s\t%s\n", NR, $0, (k in cause) ? cause[k] : "-" }' > "$D/FINDINGS.tsv"
+# curated observations from the evidence (snapshots, stacks) that no assertion reports, numbered after the failures
+n=$(($(wc -l < "$D/FINDINGS.tsv") - 1)); tail -n +2 "$D/OBSERVATIONS.tsv" | awk -v n=$n '{ printf "F%02d\t%s\n", n + NR, $0 }' >> "$D/FINDINGS.tsv"
 awk -F'\t' 'NR > 1 { c[$12]++; if ($14 ~ /NOT_RUN/) tl++ } END { printf "matrix rows: "; for (s in c) printf "%s=%d ", s, c[s]; printf "(theme/language step NOT_RUN in %d rows)\n", tl }' "$D/results/COMBINATION_RESULTS.tsv"
 [ -f "$D/results/EXAMPLE_MODES.tsv" ] && awk -F'\t' 'NR > 1 { for (i = 5; i <= 9; i++) c[$i]++ } END { printf "example runs: "; for (s in c) printf "%s=%d ", s, c[s]; print "" }' "$D/results/EXAMPLE_MODES.tsv"
 echo "findings: $(($(wc -l < "$D/FINDINGS.tsv") - 1))"

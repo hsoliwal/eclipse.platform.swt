@@ -52,16 +52,17 @@ gallery () {
     --disable-banner --disable-ansi-colors --details=tree
   summary "$O/results/display-gallery.log" $?
 }
-examples () {
+examples () { # env: MODES, RESUME (keep earlier lines, continue each mode after its last entry)
   local RES=$O/results/examples-modes.tsv size first rc last
   size=$(sed -n 's/.*int SIZE = \([0-9]*\);.*/\1/p' "$WT/examples/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/m3/gallery/M3GalleryIndex.java")
-  rm -f "$RES"
+  [ -n "$RESUME" ] || rm -f "$RES"
   # the single-example entry point of the runner (what the gallery's "Run and close" starts), under JaCoCo
   hidden 300 "$O/examples/single.log" "-javaagent:$(W "$AGENT")=destfile=$(W "$O/coverage/examples-single.exec"),includes=$INCLUDES" -Dm3.runner.delay=400 \
     -cp "$CP" org.eclipse.swt.snippets.m3.gallery.M3ExampleRunner org.eclipse.swt.snippets.m3.gallery.widgets.M3ControlsExample Label
   echo "single run: rc=$? $(cut -f5 "$O/examples/single.log" | tail -1)"
   for mode in ${MODES:-viewport original custom m3 gpu}; do
-    first=0
+    # with RESUME, a mode continues after its last recorded entry
+    first=$([ -f "$RES" ] && awk -F'\t' -v m=$mode '$1==m {l=$2} END {print (l == "" ? 0 : l + 1)}' "$RES" || echo 0)
     while [ "$first" -lt "$size" ]; do
       hidden 3600 "$O/examples/$mode-$first.log" "-javaagent:$(W "$AGENT")=destfile=$(W "$O/coverage/examples-$mode.exec"),includes=$INCLUDES" \
         -Dswt.widget.mode=$mode -Dm3.runner.timeout=45000 -cp "$CP" org.eclipse.swt.snippets.m3.gallery.M3ExampleRunner --batch $mode "$(W "$RES")" "$(W "$O/examples/png")" $first
