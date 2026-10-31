@@ -235,13 +235,23 @@ public final class RowRenderer {
 		return true;
 	}
 
+	/* ROW_IMAGE_BOUNDS v1 (real-app fidelity): the widget's image size (its image list), not the row's height; unknown: the row's */
+	private static int imageHeight (RowPaint row) {
+		return row.imageHeight > 0 && row.imageHeight < row.height ? row.imageHeight : row.height;
+	}
+
+	/* ROW_IMAGE_BOUNDS v1: the image box centred in the row as the native list and tree views draw it (rounded down) */
+	private static int imageY (RowPaint row) {
+		return row.y + (row.height - imageHeight (row)) / 2;
+	}
+
 	/** Paints the default content of a cell: its image, then its text (for cell painters that add to it). */
 	public void paintCell (RowCanvas canvas, RowPaint row, int cell) {
 		if (row.imageData [cell] != null && row.imageWidth [cell] > 0) {
 			/* a row read back from a snapshot: the image's pixels at the frame's zoom */
-			canvas.imageData (row.imageData [cell], row.imageX [cell], row.y, row.imageWidth [cell], row.height);
+			canvas.imageData (row.imageData [cell], row.imageX [cell], imageY (row), row.imageWidth [cell], imageHeight (row));
 		} else if (row.image [cell] != null && row.imageWidth [cell] > 0) {
-			canvas.image (row.image [cell], row.imageX [cell], row.y, row.imageWidth [cell], row.height);
+			canvas.image (row.image [cell], row.imageX [cell], imageY (row), row.imageWidth [cell], imageHeight (row));
 		}
 		String text = row.text [cell];
 		if (text == null || text.isEmpty () || row.textWidth [cell] <= 0) return;

@@ -419,6 +419,15 @@ abstract class DrawnPlane {
 		retainedRows.paint (row);
 	}
 
+	/* ROW_IMAGE_BOUNDS v1 (real-app fidelity): the image size of a native image list (0 for none) */
+	private final int [] iconWidth = new int [1], iconHeight = new int [1];
+
+	final int imageListHeight (long imageList) {
+		iconHeight [0] = 0;
+		if (imageList != 0) OS.ImageList_GetIconSize (imageList, iconWidth, iconHeight);
+		return iconHeight [0];
+	}
+
 	/** MODE_TRUTH v1 (census L10): the mode the plane's backend realizes (gpu without a GL context draws m3, m3 without the library custom). */
 	final WidgetMode route () {
 		return canvas.route ();

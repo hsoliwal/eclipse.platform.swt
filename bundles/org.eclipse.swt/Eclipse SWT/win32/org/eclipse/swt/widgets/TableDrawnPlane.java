@@ -155,6 +155,8 @@ final class TableDrawnPlane extends DrawnPlane {
 		if (columnDetail == -2) columnDetail = ThemeParts.listColumnDetail (hwnd);
 		row.listGrid = RowPaint.rgbOf (OS.GetSysColor (OS.COLOR_3DFACE));
 		row.listColumnDetail = columnDetail;
+		/* ROW_IMAGE_BOUNDS v1: the ListView draws every image at its image list's size, centred in the row */
+		row.imageHeight = imageListHeight (OS.SendMessage (hwnd, OS.LVM_GETIMAGELIST, OS.LVSIL_SMALL, 0));
 		long states = OS.SendMessage (hwnd, OS.LVM_GETIMAGELIST, OS.LVSIL_STATE, 0);
 		stateWidth [0] = 0;
 		if (states != 0) OS.ImageList_GetIconSize (states, stateWidth, stateHeight);

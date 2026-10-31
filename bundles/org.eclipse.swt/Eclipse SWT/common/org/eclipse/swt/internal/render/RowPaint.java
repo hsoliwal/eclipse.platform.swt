@@ -62,6 +62,8 @@ public final class RowPaint {
 	 * line on the row's last pixel over both.
 	 */
 	public int listGrid = -1, listColumnDetail = -1;
+	/** ROW_IMAGE_BOUNDS v1: the height of the widget's images (its image list) in pixels; 0: unknown (the row's height). */
+	public int imageHeight;
 	/** Cell of the sort column, or -1. */
 	public int sortCell = -1;
 	public int sortBackground = -1;
@@ -127,7 +129,7 @@ public final class RowPaint {
 
 	/** The ints {@link #key} writes for a row of <code>cells</code> cells. */
 	public static int keyLength (int cells) {
-		return 26 + 11 * Math.max (1, cells);
+		return 27 + 11 * Math.max (1, cells);
 	}
 
 	/**
@@ -187,6 +189,7 @@ public final class RowPaint {
 		listColumnDetail = ints [n++];
 		sortCell = ints [n++];
 		sortBackground = ints [n++];
+		imageHeight = ints [n++];
 		cells (ints [n++]);
 		for (int i = 0; i < cells; i++) {
 			cellX [i] = ints [n++];
@@ -236,6 +239,7 @@ public final class RowPaint {
 		ints [n++] = listColumnDetail;
 		ints [n++] = sortCell;
 		ints [n++] = sortBackground;
+		ints [n++] = imageHeight;
 		ints [n++] = cells;
 		for (int i = 0; i < cells; i++) {
 			ints [n++] = cellX [i];
