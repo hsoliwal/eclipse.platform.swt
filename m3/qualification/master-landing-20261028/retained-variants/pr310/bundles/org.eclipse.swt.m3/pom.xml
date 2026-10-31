@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+  SPDX-License-Identifier: EPL-2.0; the nested Skija/types jars keep Apache-2.0 (docs/licenses/swt-gpu-skija-*.txt).
+
+  M3 fragment of org.eclipse.swt (leaf 18, M3_FRAGMENT v1, grown from bundles/org.eclipse.swt.gpu.m3): compiles the
+  "Eclipse SWT Render M3" and "Eclipse SWT GPU M3" trees into one fragment jar and nests the Skija jars under lib/
+  (unversioned names, listed one by one on Bundle-ClassPath in META-INF/MANIFEST.MF).
+
+  skija.version is the ONE Skija version of the fragment: the types version follows from skija-shared's own POM
+  (0.116.3 -> types 0.1.1, 0.143.18 -> types 0.2.0), the build scripts read skija.version from this file, and the
+  nested jar names carry no version. Moving to another Skija is this one line.
+
+  Reactor build (default): Maven resolves the Skija jars. Provisioned build (offline, -Dm3.skija.lib=<dir with
+  skija-shared-${skija.version}.jar and skija-windows-x64-${skija.version}.jar> -Dm3.skija.types.jar=<types jar>
+  -Dm3.swt.jar=<SWT win32 jar or classes>): no repository access for the Skija jars.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.eclipse.platform</groupId><artifactId>org.eclipse.swt.m3</artifactId><version>3.138.0-SNAPSHOT</version>
+  <name>SWT M3 renderer fragment (Render M3 + GPU M3, nested Skija)</name>
+  <properties>
+    <skija.version>0.143.18</skija.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><maven.compiler.release>21</maven.compiler.release>
+    <m3.swtBundle>${project.basedir}/../org.eclipse.swt</m3.swtBundle>
+    <m3.swtRoot>${project.basedir}/../..</m3.swtRoot>
+    <m3.buildDirectory>${project.basedir}/target</m3.buildDirectory>
+  </properties>
+  <profiles>
+    <profile><id>m3-reactor-dependencies</id>
+      <activation><property><name>!m3.skija.lib</name></property></activation>
+      <dependencies>
+        <dependency><groupId>org.eclipse.platform</groupId><artifactId>org.eclipse.swt.win32.win32.x86_64</artifactId><version>3.138.0-SNAPSHOT</version><scope>provided</scope></dependency>
+        <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-shared</artifactId><version>${skija.version}</version></dependency>
+        <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-windows-x64</artifactId><version>${skija.version}</version><scope>runtime</scope></dependency>
+      </dependencies>
+    </profile>
+    <profile><id>m3-provisioned</id>
+      <activation><property><name>m3.skija.lib</name></property></activation>
+      <dependencies>
+        <dependency><groupId>org.eclipse.platform</groupId><artifactId>org.eclipse.swt.win32.win32.x86_64</artifactId><version>provisioned</version><scope>system</scope><systemPath>${m3.swt.jar}</systemPath></dependency>
+        <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-shared</artifactId><version>${skija.version}</version><scope>system</scope><systemPath>${m3.skija.lib}/skija-shared-${skija.version}.jar</systemPath></dependency>
+        <dependency><groupId>io.github.humbleui</groupId><artifactId>skija-windows-x64</artifactId><version>${skija.version}</version><scope>system</scope><systemPath>${m3.skija.lib}/skija-windows-x64-${skija.version}.jar</systemPath></dependency>
+        <dependency><groupId>io.github.humbleui</groupId><artifactId>types</artifactId><version>provisioned</version><scope>system</scope><systemPath>${m3.skija.types.jar}</systemPath></dependency>
+      </dependencies>
+    </profile>
+  </profiles>
+  <build>
+    <directory>${m3.buildDirectory}</directory>
+    <resources>
+      <resource><directory>${m3.swtRoot}</directory><targetPath>META-INF</targetPath>
+        <includes><include>LICENSE</include><include>NOTICE</include></includes></resource>
+      <resource><directory>${m3.swtRoot}/docs/licenses</directory><targetPath>META-INF/licenses</targetPath>
+        <includes><include>swt-gpu-retained-planes-NOTICE.txt</include><include>swt-gpu-skija-*.txt</include></includes></resource>
+    </resources>
+    <plugins>
+      <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.1</version>
+        <executions><execution><id>m3-trees</id><phase>generate-sources</phase><goals><goal>add-source</goal></goals>
+          <configuration><sources>
+            <source>${m3.swtBundle}/Eclipse SWT Render M3/win32</source>
+            <source>${m3.swtBundle}/Eclipse SWT GPU M3/win32</source>
+          </sources></configuration>
+        </execution></executions>
+      </plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.1</version>
+        <configuration><release>21</release><proc>none</proc><compilerArgs><arg>-Xlint:none</arg></compilerArgs></configuration>
+      </plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-dependency-plugin</artifactId><version>3.8.1</version>
+        <executions><execution><id>nest-skija</id><phase>prepare-package</phase><goals><goal>copy-dependencies</goal></goals>
+          <configuration><includeArtifactIds>skija-shared,skija-windows-x64,types</includeArtifactIds><stripVersion>true</stripVersion>
+            <outputDirectory>${project.build.outputDirectory}/lib</outputDirectory></configuration>
+        </execution></executions>
+      </plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version>
+        <configuration><archive><manifestFile>${project.basedir}/META-INF/MANIFEST.MF</manifestFile></archive>
+          <includes><include>org/eclipse/swt/internal/render/m3/**</include><include>org/eclipse/swt/internal/gpu/m3/**</include>
+            <include>lib/skija-shared.jar</include><include>lib/skija-windows-x64.jar</include><include>lib/types.jar</include><include>META-INF/**</include></includes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

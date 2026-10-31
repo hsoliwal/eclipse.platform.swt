@@ -1,0 +1,62 @@
+path	git_blob	status	pr	note
+bundles/org.eclipse.swt.m3/pom.xml	6afeea38581d8d874184a26d3f45f1dcffb676e5	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT GPU M3/win32/org/eclipse/swt/internal/gpu/m3/Replay.java	96d5fdb98c8e2c26cf7de369393bb3a681136e7c	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/M3RowCanvas.java	98eaa39d1ca97ef38eeae3e4e243e6baf3692c0c	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/IM3Canvas.java	1aea70adfedfe8b88d4a0b00c44d1fc4ddc8dc2b	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/IM3Surface.java	dfd4b6130cb4a1339a31e03118a4a97a60b2d229	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3CanvasAdapter.java	6635eecd4c45c179871b823d274bc67391570cd8	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3CodePoints.java	d3b3a341a30691f9559bc7d6ef869dbb6219faee	added	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3ExternalGC.java	7245263c8a651dbf71ed6ddd2032eea0bcefc554	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3FontTable.java	61f31c354f3e4edcafd9578902b2a8288c5a5171	added	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3GdiText.java	f8b3813019daba9171b9987641b13e56f9e7f4b0	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3GdiTextDraw.java	091e0632f66eb28d16c6a94253808fe8019f3c95	added	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3GlyphRuns.java	da2c588b1ee6dab57ee10b3e703a1341d0490cc0	added	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3PathConverter.java	335c98fcb62197c5668a54ac8579fd520c92b326	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3Resources.java	1a153338abdccd2bd8d08b27ef2c9e496bac52ef	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3SurfaceAdapter.java	4e13b6c6c9ce542fcba28fd5ac05c7359708b1c4	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3TextLayoutCall.java	7ecf2db87bcd645ff47997b64eccfef57560b6ff	added	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT Render M3/win32/org/eclipse/swt/internal/render/m3/gc/M3TextLayoutFallback.java	dec3519a25885c21dda3113401887f248bab5a3c	added	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/GCExtension.java	4e7ca8ea62afa0d9edc90388cf5146f102cd0692	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/canvasext/IExternalGC.java	1b14985487e10ee486368ab219d66108492b38f1	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/canvasext/M3RunSink.java	d633bc9fae5e6dba51f6874a47c7fcfa6098c602	added	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/graphics/GCPlanes.java	1503eb9ada919b05b5ad437ab0275404220f1a48	modified	310	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/graphics/TextLayout.java	b42ec798e527337d67c6de494cdd8a5d6d4dae9b	modified	310	PR version, not live; the git blob id is its content address
+docs/licenses/swt-gpu-skija-packaging-NOTICE.txt	83a90cff81ea7a8fefbdaf117d96f59883c31128	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/FOSS_REUSE_DECISION.tsv	e823f8d92ee7b998d9ac4fd97ac632399548c153	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/LEAF12_GATES.tsv	229f6f4e123b349b9246e6aefe1c3654578abfac	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/LEAF12_JARS.tsv	2ef75e0fe17c5ecba8051d593f09f71329980cce	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/LEAF12_JAVAC_ERRORS.tsv	3e81a5c2044d3cb3597f3fa21bd95822c6a2c7e8	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/LEAF12_NATIVE_SIG.tsv	1950fc9a62c64a2ffc6a4b822662a0d7402e1019	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/LEAF12_ONE_SKIJA.md	db13b08c5b4f6ed394b711e20c476b2dc161279c	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/LEAF12_REALAPP_COMPARE.tsv	99c572e9985e3186839d5e5b3e1b488e096cb46f	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/LEAF12_REALAPP_COMPARE_APPLIED.tsv	ccb40878581a6d81d1101186ce7a9fcb16d98377	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/LEAF13_IDE_EDITOR_DIFF.tsv	93ee567df9d89f1be0619f4841f33925f35dbebf	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/LEAF13_TEXT.md	e83ac80b7b932fe29e53ad8cf5ffe65386deb441	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/LEAF18_SHIP.md	5f40da910de9294cbc81d9d89de195d46595aba2	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/README.md	57e9d589ce69b8489e9687336a7d8de60d58e55d	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/RECIPE_MEMORY.tsv	fe4ebc8da78cc5ec1f4b2e72254810c2ed13569e	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/M3TextProbe.java	08777a2fd65a8fabd3c7fdc227f270daed0acefb	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/compile_m3gc.sh	2ffc9b079d0ad64789b74a9b956944685cbc9460	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3_l12_realapp.sh	47f084db2cc8cf34360d86c8505ab2329dd3c802	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3_ship_ide_smoke.sh	30cd0c1b12fca7283bc929936a1b24218d944dc9	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3_ship_idesmoke/src/org/eclipse/swt/m3/idesmoke/Smoke.java	899fd9c877d3c14e9fdb4b4fe23c425ea48e0d36	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3_skija_pin.sh	ab86f691d122bf14f77142383e8b327d32a70626	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3gc_api_deltas.py	a6fe7aaa5d5fb02f9ea40f5e7904a225273a5900	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3gc_javac_bllse.py	a9db966d05bd3a70fc867a162388096649dbebf7	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3gc_native_sig_gate.sh	b3136fd3f02b8c64a38cca927f0e8d66748456e8	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3gc_skija_compare.py	0d3e74546f1a7fe9895bff153996a42f6360b1db	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3text_bodies/l13_fallback_body.txt	c3e163c9383c28a9d60265ac855d1272bad76b50	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3text_bodies/l13_opstream_sink.txt	0bb48e31e9b8a732001db6a97f267b6a7b9e5339	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3text_bodies/l13_record_runs.txt	4aacbab216820267e9016d999a43ec25e8c935e5	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3text_bodies/l14_gdi_metrics.txt	f1a89a06b579f568a846aa193b35a94aa91a5595	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3text_deltas.py	1d320a99db7aa12bdd35151db2f31b7ee63d0518	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3text_editor_diff.py	22a4d33067d154a4b23b9172897f0e7b5c97f253	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3text_idesmoke_build.sh	5ebe8a9b60e75ca7c68d20f9fad6b2fa8607f9eb	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/m3text_idesmoke_v2.py	d855e7320024086e09cdbb1289dfcc12c2b9beae	added	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/probe_m3_canvas.sh	72e827e0eec6b746fb9ea6fed16b5d3b1bdbe7d9	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/probe_owner_draw.sh	312c746e37498397df0c5339351fe1a386031d97	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/test_m3fidelity.sh	9d13967d8b7ff1c792811e22fc162d0372ced7e5	modified	310	PR version, not live; the git blob id is its content address
+docs/m3/gc-extension-seam/tools/test_m3gc.sh	ec75731c666f64e783704280601add00b58cf722	modified	310	PR version, not live; the git blob id is its content address
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/m3gc/AllM3GcTests.java	d4b9ad00df324d3f9de63f7b9b4e21f0d6bef53e	modified	310	PR version, not live; the git blob id is its content address
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/m3gc/Test_org_eclipse_swt_m3gc_GcTextSafety.java	86c997c5a26be8239c99f9d674a1834031197b25	added	310	PR version, not live; the git blob id is its content address
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/m3gc/Test_org_eclipse_swt_m3gc_TextLayoutRuns.java	8958c7db4ec9119cdcac0184ec99976f995dbb13	added	310	PR version, not live; the git blob id is its content address
