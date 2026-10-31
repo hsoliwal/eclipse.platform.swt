@@ -102,4 +102,19 @@ public class Test_org_eclipse_swt_widgets_M3ModeTruth {
 			}
 		}
 	}
+
+	/* MODE_TRUTH v1 (combination matrix r0124/r0132): StyledText and CTabFolder answer their own viewport gate, not Canvas/Composite's */
+	@Test
+	public void test_customWidgetsAnswerTheirOwnGate () {
+		Control [] controls = {new org.eclipse.swt.custom.StyledText (shell, SWT.BORDER), new org.eclipse.swt.custom.CTabFolder (shell, SWT.BORDER)};
+		shell.setSize (300, 200);
+		for (Control control : controls) {
+			String mode = M3Mode.name (M3Mode.of (control)), what = control.getClass ().getSimpleName () + " in " + MODE + " answers " + mode;
+			switch (MODE) {
+				case "viewport" -> assertEquals ("viewport", mode, what);
+				case "original" -> assertEquals ("original", mode, what);
+				default -> assertTrue (Set.of ("viewport", "m3", "gpu", "custom").contains (mode), what);
+			}
+		}
+	}
 }
