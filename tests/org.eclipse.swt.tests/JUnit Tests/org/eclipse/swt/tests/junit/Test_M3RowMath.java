@@ -203,6 +203,27 @@ public class Test_M3RowMath {
 		assertEquals (999_999 + 1000, M3RowMath.rowOf (tree.getItem (999_999)));
 	}
 
+	/*
+	 * The walk asks each parent for its child count once: a plain tree's root count walks the native siblings, so a
+	 * count per step made the walk quadratic (combination matrix r0200: 10^5 roots, over 900 s in original mode).
+	 */
+	@Test
+	public void test_walkOverManyPlainRootsIsLinear () {
+		Tree tree = new Tree (shell, SWT.MULTI | SWT.BORDER);
+		tree.setBounds (5, 5, 300, 380);
+		int roots = 20_000;
+		tree.setRedraw (false);
+		for (int i = 0; i < roots; i++) new TreeItem (tree, SWT.NONE).setText ("r" + i);
+		tree.setRedraw (true);
+		TreeItem last = tree.getItem (roots - 1);
+		long start = System.nanoTime ();
+		assertEquals (roots, M3RowMath.visibleRowCount (tree));
+		assertEquals (roots - 1, M3RowMath.rowOf (last));
+		assertSame (last, M3RowMath.itemAt (tree, roots - 1));
+		long millis = (System.nanoTime () - start) / 1_000_000;
+		assertTrue (millis < 3000, "three walks over " + roots + " roots took " + millis + " ms");
+	}
+
 	/* ------------------------------------------------------------------ extents */
 
 	@Test
@@ -259,5 +280,14 @@ public class Test_M3RowMath {
 		tree.dispose ();
 		assertThrows (SWTException.class, () -> M3RowMath.visibleRowCount (tree));
 		assertThrows (SWTException.class, () -> M3RowMath.itemAt (tree, 0));
+	}
+
+	@Test
+	public void test_walkStopsAtTheEndOfAPlainTree () {
+		Tree tree = new Tree (shell, SWT.NONE);
+		for (int i = 0; i < 4; i++) new TreeItem (tree, SWT.NONE).setText ("r" + i);
+		/* far past the last row: the walk runs out of items before it reaches the row */
+		assertThrows (IllegalArgumentException.class, () -> M3RowMath.itemAt (tree, 9));
+		assertEquals ("r3", M3RowMath.itemAt (tree, 3).getText ());
 	}
 }

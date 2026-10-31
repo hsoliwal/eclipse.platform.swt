@@ -160,4 +160,15 @@ public class Test_M3ScrollMemento {
 		assertThrows (SWTException.class, () -> M3ScrollMemento.save (table));
 		assertThrows (SWTException.class, () -> M3ScrollMemento.restore (table, memento));
 	}
+
+	@Test
+	public void test_removalBelowTheAnchorKeepsIt () {
+		Table table = table (100);
+		table.setTopIndex (10);
+		long memento = M3ScrollMemento.save (table);
+		/* rows 20..24 removed: the anchor row 10 is above them and stays */
+		assertEquals (memento, M3ScrollMemento.remap (memento, 20, -5));
+		/* an insertion below the anchor keeps it too */
+		assertEquals (memento, M3ScrollMemento.remap (memento, 30, 4));
+	}
 }

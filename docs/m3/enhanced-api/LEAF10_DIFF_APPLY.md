@@ -38,3 +38,14 @@ it. With stable row identities the widget can keep every row that is still in pl
 
 See `ALGORITHM_CATALOGUE.tsv`: LIS by patience sorting (binary search over tails) against Myers diff and against
 remove-all-and-reload.
+
+## Status (2026-10-30)
+
+| gate | result |
+|---|---|
+| build | master `d5f6048f398`, jar `master-d5f6048` (sha256 `d3e26aff00a3...`); win32, GTK and Cocoa source sets 0 errors |
+| JUnit, hidden desktop | `Test_M3DiffApply` 8/8 viewport, 8/8 original (one new test: a Table diff with insertions only) |
+| differential against the official 3.135.0 jar | `Test_M3DiffApplyDifferential` (shared scene `M3OfficialScene`: a Table, List and Tree under seeded public operations, 8 seeds x 120 steps, plain and virtual): a diff step derives a new id order (drops, insertions, moves); the official run rebuilds with `setItems` / `removeAll` and new items, this SWT applies M3DiffApply; item texts and public state: 0 mismatches in viewport and original |
+| coverage (JaCoCo 0.8.15, viewport and original merged) | lines 95/95; branches 74/80, the other 6 are `SWT.error` probe artifacts (one-condition checks with `assertThrows` tests): every reachable branch covered |
+
+Open: GTK and Cocoa not run (no display host).

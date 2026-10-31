@@ -31,3 +31,14 @@ no row index at all.
 ## Algorithm choices
 
 See `ALGORITHM_CATALOGUE.tsv`: bit packing of the anchor and an index shift under insert/remove.
+
+## Status (2026-10-30)
+
+| gate | result |
+|---|---|
+| build | master `d5f6048f398`, jar `master-d5f6048` (sha256 `d3e26aff00a3...`); win32, GTK and Cocoa source sets 0 errors |
+| JUnit, hidden desktop | `Test_M3ScrollMemento` 8/8 viewport, 8/8 original (one new test: a removal or insertion below the anchor keeps it) |
+| differential against the official 3.135.0 jar | `Test_M3ScrollMementoDifferential` (shared `M3OfficialScene`, 8 seeds x 120 steps, plain and virtual): memento steps save the top row of the Table or List, insert or remove rows above or below it, scroll to the top and restore; the official run computes the anchor by arithmetic and calls `setTopIndex`, this SWT uses `save`, `remap`, `restore`; top index and public state: 0 mismatches in viewport and original |
+| coverage (JaCoCo 0.8.15, both modes) | lines 40/40; branches 32/34, the other 2 are `SWT.error` probe artifacts: every reachable branch covered |
+
+Open: GTK and Cocoa not run.

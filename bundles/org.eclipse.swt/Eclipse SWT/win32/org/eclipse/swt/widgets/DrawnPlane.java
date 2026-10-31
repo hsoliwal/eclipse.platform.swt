@@ -47,8 +47,6 @@ abstract class DrawnPlane {
 	private int themeGeneration;
 	/* the frame log of the interaction model (IM1): frame times, input-to-pixel latency, snapshot generations */
 	final FrameLog frames = new FrameLog ();
-	/* -Dswt.drawn.overlay=true paints the frame log's numbers over the rows */
-	static final boolean OVERLAY = Boolean.getBoolean ("swt.drawn.overlay");
 	private final StringBuilder overlayText = new StringBuilder (96);
 	private final Runnable themeChanged;
 	final RowPaint row = new RowPaint ();
@@ -149,7 +147,7 @@ abstract class DrawnPlane {
 			});
 		};
 		Themes.addListener (themeChanged);
-		if (OVERLAY) display.timerExec (500, new Runnable () {
+		if (M3Features.isOn (control, M3Features.FRAME_OVERLAY)) display.timerExec (500, new Runnable () {
 			@Override
 			public void run () {
 				if (control.isDisposed ()) return;
@@ -242,7 +240,25 @@ abstract class DrawnPlane {
 	}
 
 	/* behaviour pass into the back buffer, drawn pass over it, present: the damage is visible */
+	/*
+	 * A frame of the drawn plane. A listener the frame calls (SetData of a virtual row, an owner-draw event) may make the
+	 * widget paint again inside it; that paint would end this frame's retained-row pass under it, so it waits for the next
+	 * frame instead (the region stays invalid).
+	 */
 	private void draw (long hwnd, int msg, long target, long lParam) {
+		if (drawing) {
+			OS.InvalidateRect (hwnd, null, false);
+			return;
+		}
+		drawing = true;
+		try {
+			drawFrame (hwnd, msg, target, lParam);
+		} finally {
+			drawing = false;
+		}
+	}
+
+	private void drawFrame (long hwnd, int msg, long target, long lParam) {
 		/*
 		 * The owner-draw events hand the listener a GC, which the render thread never makes (rule 28): while the widget hooks
 		 * one of them, every frame takes the UI-thread path below (the render thread's canonical frame and slots stay as
@@ -270,14 +286,14 @@ abstract class DrawnPlane {
 		 * With a render thread this path serves captures (WM_PRINTCLIENT) and owner-drawn frames only: its slots are not kept
 		 * up, so it draws every row; a listener's drawing is never kept either (it may draw anything, from state no key holds)
 		 */
-		boolean retain = renderTarget == null && !OVERLAY && !owner && theme.rowPainter == null && theme.cellPainter == null;
+		boolean retain = renderTarget == null && !M3Features.isOn (control, M3Features.FRAME_OVERLAY) && !owner && theme.rowPainter == null && theme.cellPainter == null;
 		canvas.target (buffer);
 		canvas.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		if (owner) ownerDraw.begin (damage.left, damage.top, damage.right - damage.left, damage.bottom - damage.top);
 		retainedRows.begin (canvas, renderer, buffer, damage.left, damage.top, damage.right, damage.bottom, client.right, rowsTop, retain);
 		try {
 			drawRows (hwnd);
-			if (OVERLAY) overlay ();
+			if (M3Features.isOn (control, M3Features.FRAME_OVERLAY)) overlay ();
 		} finally {
 			if (owner) ownerDraw.end ();
 			canvas.end ();
@@ -295,7 +311,7 @@ abstract class DrawnPlane {
 	}
 
 	/*
-	 * -Dswt.drawn.overlay=true: the frame time (last, p99) and the input-to-pixel latency p99 in the bottom right corner of
+	 * -Dswt.widget.feature.frame-overlay=true (M3Features.FRAME_OVERLAY; -Dswt.drawn.overlay=true is its alias): the frame time (last, p99) and the input-to-pixel latency p99 in the bottom right corner of
 	 * the client area (a header covers the top), repainted twice a second. A debugging aid: building its text allocates.
 	 */
 	private void overlay () {
@@ -380,6 +396,8 @@ abstract class DrawnPlane {
 
 	/* rule 24, delta based view: the rows the frame keeps instead of drawing (RetainedRows, UI-thread placement) */
 	private final RetainedRows retainedRows = new RetainedRows (false);
+	/* a frame is being drawn on the UI thread (see draw) */
+	private boolean drawing;
 
 	/**
 	 * Paints the row the plane filled ({@link #row}), or keeps it when its slot shows it already (rule 24); while a

@@ -1,0 +1,11 @@
+path	git_blob	status	pr	note
+bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/m3/M3TextMeasure.java	8a40d6cdc058f5ee5c6fc4053533245e974144a0	added	293	PR version, not live; the git blob id is its content address
+bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/M3WidthTrack.java	3841dd05d0ba4cb23b23a147fb5e9a4f30fc2992	added	293	PR version, not live; the git blob id is its content address
+docs/m3/ENHANCED_API_MAP.tsv	ab13ac13f8d380509e60391af764d9c30107f867	modified	293	PR version, not live; the git blob id is its content address
+docs/m3/enhanced-api/ALGORITHM_CATALOGUE.tsv	ed3c094f593a444f2a0fa549c8669a438f16f3f0	modified	293	PR version, not live; the git blob id is its content address
+docs/m3/enhanced-api/FOSS_REUSE_DECISION.tsv	1b3de78ba976225e36eff1abef25871ed5b6c8ef	modified	293	PR version, not live; the git blob id is its content address
+docs/m3/enhanced-api/LEAF18_WIDTH_TRACK.md	27d6183f798e12f4ae282eb7b077eadb7888c881	modified	293	PR version, not live; the git blob id is its content address
+examples/org.eclipse.swt.snippets/src/org/eclipse/swt/snippets/m3/M3WidthTrackExample.java	94978366345e32037283566eb7ba5827c4c89d41	added	293	PR version, not live; the git blob id is its content address
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/M3OfficialScene.java	1aacbbb38494ab551d7b64b1ba4a47347a08f26b	added	293	PR version, not live; the git blob id is its content address
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3WidthTrack.java	3b098c4fd02afd569202d16d1c1da2e7a74712c4	added	293	PR version, not live; the git blob id is its content address
+tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3WidthTrackDifferential.java	2d45713b96d2b879b368479d76d582912dce5987	added	293	PR version, not live; the git blob id is its content address

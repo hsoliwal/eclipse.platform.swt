@@ -51,3 +51,23 @@ miss the entry lookup and paint normally. The cost is one leaked control referen
 The fix belongs to the viewport track, which owns `ViewportBatch`: `Control.releaseWidget` should drop the control's
 batch entry and decrement the counters of its frozen planes without flushing. `Test_M3BulkUpdates.test_theEditsMayDisposeTheWidget`
 exercises this path.
+
+## Status (2026-10-30)
+
+| gate | result |
+|---|---|
+| build | master `d5f6048f398`, jar `master-d5f6048` (sha256 `d3e26aff00a3...`); win32, GTK and Cocoa source sets 0 errors |
+| JUnit, hidden desktop | `Test_M3BulkUpdates` 9/9 viewport, 9/9 original |
+| differential against the official 3.135.0 jar | `Test_M3BulkUpdatesDifferential` (shared `M3OfficialScene`, 8 seeds x 120 steps): burst steps run three public operations on one widget, unbatched with the official jar and inside `M3BulkUpdates.run` with this SWT; visible rows, selection counts and public state after each burst. Viewport: 0 mismatches, plain and virtual. Original: plain 0 mismatches; virtual fails in seed 0 with `ArrayIndexOutOfBoundsException: Index 79 out of bounds for length 79` at `TableStockItems.checkGrow (TableStockItems.java:79)` from `Table.CDDS_SUBITEMPREPAINT` (a paint after a batched burst on the virtual Table). The same operations unbatched pass in the original mode (the other leaves' differentials), so the batch (`Control.beginBatch` / `ViewportBatch`) leaves the stock sparse item keys (the R4_38 `_checkGrow` port) with an index beyond the native item count. Open defect |
+| coverage (JaCoCo 0.8.15, both modes) | lines 14/14, branches 6/6 |
+
+Open: the original-mode defect above (owner: the batch planes and `TableStockItems`); GTK and Cocoa not run.
+
+Update (2026-10-31): the original-mode defect is fixed by PR #301. Seed 1 step 3 reduces to `setItemCount (57)`, 26
+created items and `remove (0, 7)` in one burst: the R4_38 store shifts the keys after a removed range by the removed
+items; unbatched, the ListView paints the rows in view inside the first `LVM_DELETEITEM` (the removed rows get items, so
+the shift is right), the batch defers that paint. The official 3.135.0 jar throws the same exception for the same edits
+with redraw off (TableColdRemoveOracle). PR #301 shifts by the removed rows while the viewport plane is frozen. With it
+`Test_M3BulkUpdates` passes 10/10 in both modes (new test: cold rows removed in a burst) and the official-jar
+differential has 0 mismatches in viewport and original mode, plain and virtual (run `diff-bulk-keys`). Open: GTK and
+Cocoa not run.
