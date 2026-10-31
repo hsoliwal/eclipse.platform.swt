@@ -1,0 +1,16 @@
+mode	step	result	shell	colours	controls	m3_handlers	drawn_planes	ctabfolders	styledtexts	errors_so_far	active_part	editors	png
+m3	workbench_java_editor	PAINTED	1024x768	1143	137	27	Tree:M3RowCanvas(raster) (4)	4	1	0	Hello.java	1	H:/m3-scratch/l18/ide/out/m3/workbench_java_editor.png
+m3	package_explorer_active	PAINTED	1024x768	1027	131	24	Tree:M3RowCanvas(raster) (4)	4	1	0	Package Explorer	1	H:/m3-scratch/l18/ide/out/m3/package_explorer_active.png
+m3	second_editor_tab	PAINTED	1024x768	832	148	34	Tree:M3RowCanvas(raster) (4)	4	2	0	notes.txt	2	H:/m3-scratch/l18/ide/out/m3/second_editor_tab.png
+m3	editor_tab_switched_back	PAINTED	1024x768	1158	148	34	Tree:M3RowCanvas(raster) (4)	4	2	0	Hello.java	2	H:/m3-scratch/l18/ide/out/m3/editor_tab_switched_back.png
+# errors: 0
+gpu	workbench_java_editor	PAINTED	1024x768	1141	137	27	Tree:M3RowCanvas(gpu) (4)	4	1	0	Hello.java	1	H:/m3-scratch/l18/ide/out/gpu/workbench_java_editor.png
+gpu	package_explorer_active	PAINTED	1024x768	1027	131	24	Tree:M3RowCanvas(gpu) (4)	4	1	0	Package Explorer	1	H:/m3-scratch/l18/ide/out/gpu/package_explorer_active.png
+gpu	second_editor_tab	PAINTED	1024x768	830	148	34	Tree:M3RowCanvas(gpu) (4)	4	2	0	notes.txt	2	H:/m3-scratch/l18/ide/out/gpu/second_editor_tab.png
+gpu	editor_tab_switched_back	PAINTED	1024x768	1156	148	34	Tree:M3RowCanvas(gpu) (4)	4	2	0	Hello.java	2	H:/m3-scratch/l18/ide/out/gpu/editor_tab_switched_back.png
+# errors: 0
+baseline	workbench_java_editor	PAINTED	1024x768	1277	137	0	 (0)	4	1	0	Hello.java	1	H:/m3-scratch/l18/ide/out/baseline/workbench_java_editor.png
+baseline	package_explorer_active	PAINTED	1024x768	1160	131	0	 (0)	4	1	0	Package Explorer	1	H:/m3-scratch/l18/ide/out/baseline/package_explorer_active.png
+baseline	second_editor_tab	PAINTED	1024x768	871	148	0	 (0)	4	2	0	notes.txt	2	H:/m3-scratch/l18/ide/out/baseline/second_editor_tab.png
+baseline	editor_tab_switched_back	PAINTED	1024x768	1293	148	0	 (0)	4	2	0	Hello.java	2	H:/m3-scratch/l18/ide/out/baseline/editor_tab_switched_back.png
+# errors: 0
