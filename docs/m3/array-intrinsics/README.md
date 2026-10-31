@@ -1,10 +1,15 @@
 <!-- SPDX-License-Identifier: Apache-2.0 OR EPL-2.0 -->
 <!-- Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others -->
-# Array loops to JDK intrinsics (ARRAY_LOOP_INTRINSICS v1)
+# Array loops to System.arraycopy and Arrays.fill (ARRAY_LOOP_INTRINSICS v1)
 
-Some SWT loops copy or fill arrays one element at a time. HotSpot already compiles `System.arraycopy` and
-`Arrays.fill` to vector code. A recipe changes such a loop into one of those calls, but only when it can prove the
-two behave the same. Every other loop stays as it is, and the ledger gives the reason.
+Some SWT loops copy or fill arrays one element at a time. A recipe changes such a loop into `System.arraycopy` or
+`Arrays.fill`, but only when it can prove the two behave the same. Every other loop stays as it is, and the ledger
+gives the reason.
+
+The two calls differ for speed. `System.arraycopy` is a HotSpot intrinsic. `Arrays.fill` is not: on JDK 21 it is a
+plain Java loop, which C2 vectorizes the same way as the loop it replaces. The copy rewrites (C1) can be faster. The
+fill rewrites (F1, F2) are for readability only and make no speed claim (see [Speed](#speed)). The recipe keeps its
+name, but only C1 targets an intrinsic.
 
 The census (ARRAY-LOOP-PATTERN v1, `tools/array_loop_census.py`) found 29 SWT loops shaped like a copy or a fill: 10
 COPY and 19 FILL. **8 are rewritten and 21 are skipped.** The rows are in
@@ -17,7 +22,7 @@ Nothing existing already does this, so no owner is duplicated. The full rows are
 
 | Owner | What it is | Decision |
 |---|---|---|
-| Synexia array census (`array_loop_census.py`) | loop shape, comment and string mask, body text | REUSE_DIRECT (copied byte-identical) |
+| Synexia array census (`array_loop_census.py`) | loop shape, comment and string mask, body text | ADAPT (copied; the FILL route label corrected, `--relabel` mode added) |
 | IntelliJ `ManualArrayCopyInspection` (`188b7ef96f7`) | the IDE's manual-copy conditions | PATTERN_ONLY (needs the IDE's PSI) |
 | PMD `AvoidArrayLoops` | detects copy loops; has no fix | NO_FIT |
 | OpenRewrite rewrite-static-analysis | no copy or fill recipe (code search: 0 hits) | NO_FIT |
@@ -33,9 +38,9 @@ loops.
 
 | Atom | Loop | Replacement | Proven when |
 |---|---|---|---|
-| C1 COPY_FRESH v1 | `D = new T[N]; for (int i = 0; i < N; i++) D[i] = S[i];` | `System.arraycopy(S, 0, D, 0, N);` | `T` is exactly the element type of `S`; `D` is fresh (non-null, a different array, length `N`); `S` is non-null with length >= `N`, because `N` is `S.length` or `S` is a local `new T[N]` with a final `N` that is never reassigned |
-| F1 FILL_FULL v1 | `for (int i = 0; i < D.length; i++) D[i] = V;` | `Arrays.fill(D, V);` | `V` has no side effect and does not read `i`; the element type is primitive (byte, short and char get the cast the assignment applied), or `V` is `null` |
-| F2 FILL_FRESH v1 | `D = new T[N]; for (int i = 0; i < N; i++) D[i] = V;` | `Arrays.fill(D, V);` | as F1; `D` is fresh with length `N` |
+| C1 COPY_FRESH v1 | `D = new T[N]; for (int i = 0; i < N; i++) D[i] = S[i];` | `System.arraycopy(S, 0, D, 0, N);` | `T` is exactly the element type of `S`, taken from the declaration of `S` in scope; `D` is fresh (non-null, a different array, length `N`); `S` is non-null with length >= `N`, because `N` is `S.length` or `S` is a local `new T[N]` with a final `N` that is never reassigned |
+| F1 FILL_FULL v1 | `for (int i = 0; i < D.length; i++) D[i] = V;` | `Arrays.fill(D, V);` | `V` has no side effect and does not read `i`; the element type, taken from the declaration of `D` in scope, is primitive (byte, short and char get the cast the assignment applied), or `V` is `null` |
+| F2 FILL_FRESH v1 | `D = new T[N]; for (int i = 0; i < N; i++) D[i] = V;` | `Arrays.fill(D, V);` | as F1, with the type of `D` from its allocation; `D` is fresh with length `N` |
 
 These conditions follow from how the calls differ from a loop:
 
@@ -45,6 +50,28 @@ These conditions follow from how the calls differ from a loop:
   `NullPointerException` on a null array of length 0.
 - Both calls check the range before storing anything, while a loop stores elements before it fails.
 - `Arrays.fill` evaluates its value once, so per-element objects, reads and boxing are not fills.
+
+## Type proof (TYPE-SCOPE v1)
+
+An element type comes from the declaration that is in scope at the loop, never from some other declaration that
+shares the name. The recipe reads one file and uses its block structure:
+
+- A simple name is a local declared before the loop in an enclosing block, a parameter of the enclosing method, or a
+  field of an enclosing class. The innermost one wins, as in Java.
+- In a qualified chain `q.f`, `q` is resolved the same way. `f` must be a field declared in the body of `q`'s class,
+  and that class must be declared in this file.
+- The `D` of C1 and F2 needs no lookup: the `new T[N]` right before the loop gives its type.
+
+| Reason | When |
+|---|---|
+| SKIP_TYPE_UNPROVEN | the name, or the class of a qualifier, is not declared in this file (it is in another file or a supertype), or a class with a supertype lies between the loop and the declaration, so an inherited member could shadow it |
+| SKIP_TYPE_UNRESOLVED | a declaration in scope does not give its type in the text (a lambda, for, catch, resource or pattern variable, or `var`), or two declarations are at the same depth |
+
+The review case behind this rule: `o.items` and `o.buf` are declared `int[]` in another file, and the scanned file
+has an unrelated `long[] items; short[] buf;`. The earlier file-wide lookup took those. It emitted `System.arraycopy`
+for a widening copy, which throws `ArrayStoreException`, and `Arrays.fill(o.buf, (short)65535)`, which stores -1
+instead of 65535. Both loops now skip as SKIP_TYPE_UNPROVEN, and the fixture keeps both cases
+([fixtures/ArrayLoopHolder.java](fixtures/ArrayLoopHolder.java) is the other file).
 
 ## Result (SWT, base `m3/superset-20261030b` 438161fb05a)
 
@@ -60,12 +87,16 @@ These conditions follow from how the calls differ from a loop:
 | `Library.java:354` | C1 | `System.arraycopy (mappedNames, 0, fileNames, 0, candidates);` (local `new String[candidates]`, `final int candidates = 3`) |
 
 Each file keeps its own call and cast spacing. `JPEGDecoder` and `JPEGFileFormat` gain `import java.util.Arrays;`.
+Every type behind these rewrites is a declaration in scope in the same file: the local `short[] blk`, the parameter
+`d_derived_tbl dtbl` with the field `int[] look_nbits` of the nested class `d_derived_tbl`, the field
+`int[] dataUnit` of `JPEGFileFormat`, the parameters `int[] percents` and `Color[] colors`, and the local
+`String[] mappedNames`.
 
 | Skip reason | Rows | Examples |
 |---|---|---|
 | SKIP_VALUE_SIDE_EFFECT | 6 | `new Rectangle(...)` per element (CTabFolder:561), `createSash()`, `readU2(raf)` (IconExe x3), `new Image` (test) |
 | SKIP_START_NONZERO | 4 | `ImageData:656`, `PngTrnsChunk:129`, `FontData:691`, `ColorDialog:210`: a range fill would throw where the loop does nothing if start > end |
-| SKIP_TYPE_UNRESOLVED | 2 | `GC.setLineDash` (cocoa, gtk): `float[] <- int[]` widening; the file declares `dashes` as both `int[]` and `float[]` |
+| SKIP_TYPE_MISMATCH | 2 | `GC.setLineDash` (cocoa, gtk): `float[] <- int[]` widening; the parameter `int[] dashes` is the declaration in scope |
 | SKIP_BOUND_UNPROVEN | 2 | `PngEncoder:220` (allocation `pixel + 1`, bound `pixel`), `ColorDialog:194` (constant bound over a non-final field) |
 | SKIP_OFFSET | 2 | `PNGFileFormat:433`, `JPEGFileFormat:281` |
 | SKIP_SAME_ARRAY | 1 | `DefaultContent:855` (shifts `lines` down; offset sign and length need data flow) |
@@ -74,27 +105,56 @@ Each file keeps its own call and cast spacing. `JPEGDecoder` and `JPEGFileFormat
 | SKIP_VALUE_FIELD | 1 | `WebSite:774` (`COM.DISPID_UNKNOWN`; class-initialization proof not attempted) |
 | SKIP_BODY_SHAPE | 1 | `PngIhdrChunk:289` (two statements) |
 
+## Speed
+
+| Route | JDK 21.0.9 | Claim |
+|---|---|---|
+| `System.arraycopy` (C1) | `@IntrinsicCandidate` in `java/lang/System.java` | intrinsic; not measured per site |
+| `Arrays.fill` (F1, F2) | no `fill` overload carries `@IntrinsicCandidate` in `java/util/Arrays.java` (only `equals(char[], char[])`, `equals(byte[], byte[])`, `copyOf(U[], int, Class)` and `copyOfRange(U[], int, int, Class)` do); `fill(int[], int)` is a plain loop; `-XX:+PrintFlagsFinal` shows `OptimizeFill = false`, so C2 does not swap in its fill stub | none: C2's SuperWord vectorizes it like the original loop, so F1 and F2 are readability only |
+
 ## Proof
 
 The gates are in [GATES.tsv](GATES.tsv) and the corrections in [RECIPE_MEMORY.tsv](RECIPE_MEMORY.tsv).
 
-- **Fixture** (`tools/prove_array_intrinsics.sh`, [fixtures/ArrayLoopFixtures.java](fixtures/ArrayLoopFixtures.java)):
-  - 25 of 25 expected decisions match: 7 rewrites, and one skip for each reason.
+- **Fixture** (`tools/prove_array_intrinsics.sh`, [fixtures/ArrayLoopFixtures.java](fixtures/ArrayLoopFixtures.java)
+  compiled with [fixtures/ArrayLoopHolder.java](fixtures/ArrayLoopHolder.java)):
+  - 32 of 32 expected decisions match: 11 rewrites, and a skip for each reason. Three skips are SKIP_TYPE_UNPROVEN:
+    the two two-file cases and a field inherited from a supertype.
+  - Three scope cases rewrite with the type of the declaration in scope: a local that hides a static field of a
+    narrower type, a static field after a block whose local of the same name is out of scope, and a varargs
+    parameter. Had the recipe taken the other declaration, the fill would carry a `(short)` cast and the trace would
+    change.
   - A second run rewrites nothing.
-  - The fixture prints the same 45-line trace before and after the recipe, including length 0, null and negative
+  - The fixture prints the same 56-line trace before and after the recipe, including length 0, null and negative
     sizes.
-  - 11 of 11 discriminators differ. Each runs the naive replacement of a skipped form and shows the behaviour change
+  - 14 of 14 discriminators differ. Each runs the naive replacement of a skipped form and shows the behaviour change
     that makes the skip necessary.
+  - The previous tool (`fe9a3c5`) fails 6 of the 32 markers. It rewrites both two-file cases, and it skips four loops
+    whose type the scope decides (SKIP_TYPE_UNRESOLVED).
 - **SWT tree:**
+  - The recipe regenerates the ledger from the 20 census files at the base 438161fb05a: the same 8 rewrites, and the
+    5 rewritten files are byte-identical to the committed ones (RECEIPT.tsv is unchanged).
   - `compile_m3gc.sh`: 967 sources, 1,463 classes, 0 errors. All 5 changed files are in the source set.
   - Census fixed point: a second `--apply` reports DONE=8 and writes no files.
-- **Runtime, headless** (`tools/prove_jpeg_loops.sh`, `tools/JpegLoopProbe.java`):
+- **Runtime, headless** (`tools/prove_jpeg_loops.sh`, `tools/JpegLoopProbe.java`, base 438161fb05a):
   - 18 generated JPEGs (rgb, gray, progressive; 6 sizes) decode to the same SHA-256 with the old and the new classes.
     This holds on the default `JPEGDecoder` path and on the `JPEGFileFormat` 3.2 path.
   - A mutant that fills 1 instead of 0 at the rewritten sites changes the output on both paths. That shows the probe
     reaches those sites.
+  - The script refuses a base whose two decoder sources equal the worktree's (exit 2). A base of `HEAD` after the
+    commit can no longer pass by comparing the new decoder with itself.
 - **NOT_RUN:** widget runtime for CLabel and CTabFolder (needs a Display) and `Library.loadLibrary` (natives); no
-  per-site performance measurement.
+  per-site speed measurement (C1 targets an intrinsic, and F1 makes no speed claim).
+
+## Known gaps of v1
+
+These are not proven yet. Neither affects a current SWT rewrite: all 3 fills store the literal 0, and the only C1
+that relies on a final bound uses Library's local `final int candidates = 3`.
+
+- A value that names a boxed variable, such as an `Integer v` filled into an `int[]`. `Arrays.fill` unboxes `v` once,
+  even for an empty array, so a null `v` throws where the loop does nothing.
+- The final-int check of a bound `N` (C1 with a fresh local source) reads every `int N =` declaration in the file,
+  not the one in scope.
 
 ## Nebula candidates (read-only; Nebula unchanged)
 
@@ -110,7 +170,10 @@ The gates are in [GATES.tsv](GATES.tsv) and the corrections in [RECIPE_MEMORY.ts
 
 ```
 python -I tools/array_loop_census.py <out> swt=<worktree>/bundles nebula=<nebula>          # census (optional)
-python -I tools/array_loop_intrinsics.py census <worktree> CENSUS_COPY_FILL.tsv <ledger> [--apply] [--receipt <tsv>]
+python -I tools/array_loop_census.py --relabel CENSUS_COPY_FILL.tsv                         # route labels only
+python -I tools/array_loop_intrinsics.py census <tree> CENSUS_COPY_FILL.tsv <ledger> [--apply] [--receipt <tsv>]
 bash tools/prove_array_intrinsics.sh <out-dir>
-bash tools/prove_jpeg_loops.sh <worktree> <compile_m3gc classes> <base-rev> <out-dir>
+bash tools/prove_jpeg_loops.sh <worktree> <compile_m3gc classes> 438161fb05a <out-dir>
 ```
+
+`<tree>` is the worktree, or a copy of the census files at the base revision when the ledger is regenerated.

@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
 # Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others
 """array_loop_census.py <out_dir> <label>=<root> ... : ARRAY-LOOP-PATTERN v1 (CPU, read-only, files on disk only).
+array_loop_census.py --relabel <tsv>... : rewrites the jdk_route column of existing census rows from ROUTE.
 Finds counted loops `for (int i = A; i < B; i++)` whose body is one statement (or one if-statement) over arrays,
 in comment- and string-masked Java, and classifies the body:
   COPY     a[i+p] = b[i+q];                     -> System.arraycopy          (HotSpot intrinsic)
-  FILL     a[i] = <expr without i>;             -> Arrays.fill               (HotSpot intrinsic)
+  FILL     a[i] = <expr without i>;             -> Arrays.fill               (library loop, not an intrinsic: on
+                                                   JDK 21 C2 vectorizes it the same way as the loop it replaces)
   COMPARE  if (a[i] != b[i]) return/false/break -> Arrays.mismatch / equals  (HotSpot intrinsic)
   SEARCH   if (a[i] == x) return i / break      -> M3 kernel candidate (no JDK API for primitive indexOf)
   COUNT    if (<cond on a[i]>) c++;             -> M3 kernel candidate
@@ -20,7 +22,7 @@ from collections import Counter
 
 MASK = re.compile(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\\n])*"|\'(?:\\.|[^\'\\\n])*\'', re.S)
 LOOP = re.compile(r"for\s*\(\s*int\s+(\w+)\s*=\s*[^;]+;\s*\1\s*<=?\s*[^;]+;\s*(?:\1\s*\+\+|\+\+\s*\1|\1\s*\+=\s*1)\s*\)\s*")
-ROUTE = {"COPY": "System.arraycopy (intrinsic)", "FILL": "Arrays.fill (intrinsic)",
+ROUTE = {"COPY": "System.arraycopy (intrinsic)", "FILL": "Arrays.fill (library call, vectorized like the loop; not an intrinsic)",
          "COMPARE": "Arrays.mismatch/equals (intrinsic)", "SEARCH": "M3 kernel candidate", "COUNT": "M3 kernel candidate",
          "MINMAX": "M3 kernel candidate", "REDUCE": "M3 kernel candidate", "MAP": "M3 kernel candidate (arithmetic f)",
          "OTHER": "-"}
@@ -110,4 +112,26 @@ def main():
     print(f"loops={len(rows)}")
 
 
-main()
+def relabel(paths):
+    """the jdk_route column of LOOPS.tsv-shaped files, rewritten from ROUTE; every other byte stays as it is"""
+    for p in paths:
+        with open(p, encoding="utf-8", newline="") as f:
+            lines = f.read().split("\n")
+        changed = 0
+        for k in range(1, len(lines)):
+            cols = lines[k].split("\t")
+            if len(cols) >= 6 and cols[3] in ROUTE and cols[4] != ROUTE[cols[3]]:
+                cols[4] = ROUTE[cols[3]]
+                lines[k] = "\t".join(cols)
+                changed += 1
+        if changed:
+            with open(p, "w", encoding="utf-8", newline="") as w:
+                w.write("\n".join(lines))
+        print(f"relabel {os.path.basename(p)}: rows_changed={changed}")
+
+
+if __name__ == "__main__":
+    if sys.argv[1:2] == ["--relabel"]:
+        relabel(sys.argv[2:])
+    else:
+        main()

@@ -5,6 +5,8 @@
 # JPEGFileFormat of <base-rev> are compiled over the gate classes and put first on the class path; JpegLoopProbe
 # decodes the same generated JPEGs with the old and the new classes, on both decoder paths, and the outputs must match.
 # Usage: prove_jpeg_loops.sh <worktree> <gate-classes> <base-rev> <out-dir>
+# <base-rev> is the revision before the rewrite (ARRAY_LOOP_INTRINSICS v1: 438161fb05a, the m3/superset-20261030b
+# base). A base whose two sources equal the worktree's would compare the new decoder with itself: exit 2.
 set -u
 WT=${1:?worktree}; CLASSES=${2:?gate classes}; BASE=${3:?base revision}; OUT=${4:?out-dir}
 JDK=${M3_JDK:-C:/Program Files/Java/jdk-21}
@@ -12,6 +14,13 @@ HERE=$(cd "$(dirname "$0")" && { pwd -W 2>/dev/null || pwd; })
 IMG="bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image"
 rm -rf "$OUT"; mkdir -p "$OUT/old-src" "$OUT/old" "$OUT/probe"
 for f in JPEGDecoder.java JPEGFileFormat.java; do git -C "$WT" show "$BASE:$IMG/$f" > "$OUT/old-src/$f" || exit 2; done
+same=0; total=0
+for f in JPEGDecoder.java JPEGFileFormat.java; do
+  total=$((total + 1)); cmp -s "$OUT/old-src/$f" "$WT/$IMG/$f" && same=$((same + 1))
+done
+if [ "$same" -eq "$total" ]; then
+  echo "BASE $BASE: old sources equal the worktree ($same of $total files); a vacuous differential is refused"; exit 2
+fi
 "$JDK/bin/javac" -nowarn -encoding UTF-8 --release 21 -cp "$CLASSES" -d "$OUT/old" "$OUT/old-src/JPEGDecoder.java" \
   "$OUT/old-src/JPEGFileFormat.java" > "$OUT/old.javac.log" 2>&1 || { echo "JAVAC old: FAIL"; head "$OUT/old.javac.log"; exit 1; }
 "$JDK/bin/javac" -nowarn -encoding UTF-8 -cp "$CLASSES" -d "$OUT/probe" "$HERE/JpegLoopProbe.java" > "$OUT/probe.javac.log" 2>&1 \

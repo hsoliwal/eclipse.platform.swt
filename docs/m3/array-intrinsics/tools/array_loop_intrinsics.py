@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
 # Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others
-"""array_loop_intrinsics.py: ARRAY_LOOP_INTRINSICS v1. Simple array COPY and FILL loops become the HotSpot intrinsics
-System.arraycopy and Arrays.fill, and only where the replacement is provably equivalent. CPU only, deterministic.
+"""array_loop_intrinsics.py: ARRAY_LOOP_INTRINSICS v1. Simple array COPY loops become System.arraycopy (a HotSpot
+intrinsic) and simple FILL loops become Arrays.fill, and only where the replacement is provably equivalent. CPU only,
+deterministic. Arrays.fill is not an intrinsic on JDK 21: it is a plain Java loop that C2 vectorizes the same way as
+the loop it replaces, so the FILL forms are a readability change with no speed claim.
 
 Admitted forms (atoms). Anything else is skipped with a reason:
   C1 COPY_FRESH v1  D = new T[N]; for (int i = 0; i < N; i++) D[i] = S[i];  ->  System.arraycopy(S, 0, D, 0, N);
@@ -14,10 +16,21 @@ Admitted forms (atoms). Anything else is skipped with a reason:
      V has no side effect and does not read i: a literal, a cast literal, a name, or name ? literal : literal.
      T is primitive (V is cast to byte, short or char as the assignment converted it), or V is null (no shared
      object identity, no boxing).
+Type proof (TYPE-SCOPE v1). The element type of S (C1) and of D (F1) comes from the declaration that is in scope at
+the loop, found by block structure: a local declared before the loop in an enclosing block, a parameter of the
+enclosing method, or a field of an enclosing class; the innermost one wins. In a qualified chain q.f, q is resolved the
+same way and f must be a field declared in the body of q's class, which must be declared in this file. The D of C1
+and F2 needs no lookup: the new T[N] right before the loop gives its type. The tool reads one file at a time, so a
+name or class declared anywhere else (another file, a supertype) is SKIP_TYPE_UNPROVEN, and so is a declaration
+beyond a class with a supertype (an inherited member may shadow it). A declaration in scope whose type the text does
+not give (lambda, for, catch, resource or pattern variable, var), or two at the same depth, is SKIP_TYPE_UNRESOLVED.
 Skip reasons: the start is not 0 (Arrays.fill and arraycopy throw where the loop runs zero times), a <= bound,
-offsets, the same array (a forward overlapping loop is not arraycopy), unresolved or different element types, an
-unprovable bound or source, a value with a side effect or the index, object values, comments in the loop, layout.
-The loop shape, the comment/string mask and the census body text are ARRAY-LOOP-PATTERN v1 (array_loop_census.py).
+offsets, the same array (a forward overlapping loop is not arraycopy), unproven, unresolved or different element
+types, an unprovable bound or source, a value with a side effect or the index, object values, comments in the loop,
+layout. The loop shape, the comment/string mask and the census body text are ARRAY-LOOP-PATTERN v1
+(array_loop_census.py).
+Known gaps of v1 (README.md): a value V that names a boxed variable (Integer v into an int[]), and the final-int
+check of a bound N, which is by name in the file, not by scope.
 
 Usage:
   census <worktree> <LOOPS.tsv> <ledger.tsv> [--apply] [--repo swt] [--root bundles] [--receipt <tsv>]
@@ -30,6 +43,7 @@ census line; one ledger row per census row. scan: every counted loop of the file
 import hashlib
 import re
 import sys
+from bisect import bisect_right
 from collections import Counter, namedtuple
 
 MASK = re.compile(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\\n])*"|\'(?:\\.|[^\'\\\n])*\'', re.S)
@@ -39,7 +53,6 @@ TYPE = rf'(?:{NAME}\s*\.\s*)*{NAME}'
 PRIMS = ('byte', 'short', 'char', 'int', 'long', 'float', 'double', 'boolean')
 NARROW = ('byte', 'short', 'char')
 INT_TYPES = ('int', 'short', 'byte', 'char')
-NOT_TYPES = {'new', 'return', 'case', 'else', 'throw', 'instanceof', 'this', 'super'}
 NOT_VALUES = {'new', 'this', 'super', 'class'}
 CALL_KEYWORDS = r'(?:if|for|while|switch|catch|synchronized|return|new|super|this)\b'
 LOOP = re.compile(rf'for\s*\(\s*int\s+(?P<i>{NAME})\s*=\s*(?P<a>[^;]+?)\s*;\s*(?P=i)\s*(?P<op><=?)\s*(?P<b>[^;]+?)\s*;\s*'
@@ -56,6 +69,36 @@ WINDOW = 12
 BODY_WIDTH = 160
 TEXT_WIDTH = 200
 Loop = namedtuple('Loop', 'start end i a op b body_m body_o census_body')
+# TYPE-SCOPE v1: words before a name that make it a use, not a declaration; words before '(' that do not name a method
+TYPE_WINDOW = 400
+USE_WORDS = frozenset(('return', 'new', 'throw', 'case', 'else', 'instanceof', 'do', 'assert', 'yield', 'this', 'super',
+                       'extends', 'implements', 'throws', 'permits', 'import', 'package', 'class', 'interface', 'enum',
+                       'record', 'default', 'break', 'continue', 'when', 'goto', 'const'))
+NOT_METHODS = frozenset(('if', 'for', 'while', 'switch', 'catch', 'synchronized', 'try', 'return', 'throw', 'new', 'super',
+                         'this', 'assert', 'yield', 'case', 'else', 'do'))
+PATTERN_WORDS = frozenset(('instanceof', 'case'))
+DECL_END = frozenset('=;,):[')
+INFERRED = 'var'
+UNPROVEN, UNRESOLVED = 'SKIP_TYPE_UNPROVEN', 'SKIP_TYPE_UNRESOLVED'
+GENERIC = r'<[^;{}()]*>'
+THROWS = rf'(?:throws\s+{TYPE}(?:\s*,\s*{TYPE})*\s*)?'
+TYPE_TAIL = re.compile(rf'(?<![\w$])(?P<t>{TYPE})\s*(?P<gen>{GENERIC})?(?P<dims>(?:\s*\[\s*\])*)\s*$')
+DECL_HEAD = re.compile(rf'\s*(?:(?:@{NAME}(?:\s*\([^()]*\))?|final|static|private|public|protected|transient|volatile)\s+)*'
+                       rf'(?P<t>{TYPE})\s*(?P<gen>{GENERIC})?(?P<dims>(?:\s*\[\s*\])*)\s+{NAME}(?:\s*\[\s*\])*\s*[=,]')
+OWN_DIMS = re.compile(r'(?:\[\s*\]\s*)+')
+NAME_TAIL = re.compile(rf'(?<![\w$.])(?P<n>{NAME})\s*$')
+TYPE_END = re.compile(r'[\w$\]>]$')
+WHEN = re.compile(r'when(?![\w$])')
+ARROW = re.compile(r'\s*->')
+CLASS_HEAD = re.compile(rf'(?<![\w$.])(?:class|interface|enum|record)\s+{NAME}(?P<rest>[^;{{}}]*)$')
+SUPERTYPE = re.compile(r'(?<![\w$])(?:extends|implements)(?![\w$])')
+ANON_TAIL = re.compile(rf'(?<![\w$])new\s+{TYPE}\s*(?:{GENERIC})?\s*$')
+RECORD_TAIL = re.compile(rf'(?<![\w$.])record\s+{NAME}\s*(?:{GENERIC})?\s*$')
+METHOD_TAIL = re.compile(rf'\)\s*{THROWS}$')
+BODY_AFTER = re.compile(rf'\s*{THROWS}(?P<x>\{{|;|default(?![\w$]))')
+Nest = namedtuple('Nest', 'starts ends parent')
+Ctx = namedtuple('Ctx', 'masked braces parens brace_at paren_end memo')
+Decl = namedtuple('Decl', 'kind lo hi scope base dims')
 
 
 def norm(s):
@@ -122,17 +165,241 @@ def innermost(pairs, pos):
     return max(inside) if inside else (-1, 1 << 62)
 
 
-def element_type(masked, chain):
-    """static component type of chain[i]: every declaration of its last name in the file must agree, else None"""
-    n = re.escape(norm(chain).split('.')[-1])
-    pats = (rf'(?<![\w$.])(?P<t>{TYPE})(?P<dims>(?:\s*\[\s*\])+)\s+{n}(?![\w$]|\s*\()',
-            rf'(?<![\w$.])(?P<t>{TYPE})\s+{n}(?P<dims>(?:\s*\[\s*\])+)',
-            rf'(?<![\w$.])(?P<t>{TYPE})(?P<dims>(?:\s*\[\s*\])+)\s+{NAME}(?:\s*\[\s*\])*(?:\s*=\s*[^;{{}}]*?)?\s*,\s*{n}(?![\w$])')
-    found = {(norm(m['t']), m['dims'].count('[')) for p in pats for m in re.finditer(p, masked) if norm(m['t']) not in NOT_TYPES}
-    if len(found) != 1:
+def nest(masked, open_ch, close_ch):
+    """bracket pairs in start order, each with the index of the pair that encloses it (-1 at the top level)"""
+    starts, ends, parent, stack = [], [], [], []
+    for k, c in enumerate(masked):
+        if c == open_ch:
+            parent.append(stack[-1] if stack else -1)
+            stack.append(len(starts))
+            starts.append(k)
+            ends.append(len(masked))
+        elif c == close_ch and stack:
+            ends[stack.pop()] = k
+    return Nest(starts, ends, parent)
+
+
+def enclosing(n, pos):
+    """index of the innermost pair with start < pos < end, or -1"""
+    j = bisect_right(n.starts, pos - 1) - 1
+    while j >= 0 and n.ends[j] <= pos:
+        j = n.parent[j]
+    return j
+
+
+def index(masked):
+    braces, parens = nest(masked, '{', '}'), nest(masked, '(', ')')
+    return Ctx(masked, braces, parens, {s: k for k, s in enumerate(braces.starts)},
+               {e: k for k, e in enumerate(parens.ends)}, {})
+
+
+def block_kind(ctx, b):
+    """('class', has a supertype) | ('method', index of its parameter parens) | ('other', None) for brace pair b"""
+    key = ('kind', b)
+    if key not in ctx.memo:
+        ctx.memo[key] = classify_block(ctx, b)
+    return ctx.memo[key]
+
+
+def classify_block(ctx, b):
+    m, s = ctx.masked, ctx.braces.starts[b]
+    k = max(m.rfind(';', 0, s), m.rfind('{', 0, s), m.rfind('}', 0, s))
+    head = m[k + 1:s]
+    c = CLASS_HEAD.search(head)
+    if c:
+        return 'class', bool(SUPERTYPE.search(c['rest']))
+    t = METHOD_TAIL.search(head)
+    p = ctx.paren_end.get(k + 1 + t.start(), -1) if t else -1
+    if p < 0:
+        return 'other', None
+    before = m[max(0, ctx.parens.starts[p] - TYPE_WINDOW):ctx.parens.starts[p]]
+    if ANON_TAIL.search(before):
+        return 'class', True
+    w = NAME_TAIL.search(before)
+    return ('method', p) if w and w['n'] not in NOT_METHODS else ('other', None)
+
+
+def own_dims(after):
+    d = OWN_DIMS.match(after)
+    return d.group(0).count('[') if d else 0
+
+
+def lambda_params(ctx, g):
+    return ARROW.match(ctx.masked, ctx.parens.ends[g] + 1) is not None
+
+
+def declarations(ctx, n):
+    """every declaration of simple name n in the file, each with the region where it is in scope"""
+    key = ('decl', n)
+    if key not in ctx.memo:
+        ctx.memo[key] = [d for h in re.finditer(rf'(?<![\w$.]){re.escape(n)}(?![\w$])', ctx.masked)
+                         for d in [declaration_at(ctx, h.start(), h.end())] if d]
+    return ctx.memo[key]
+
+
+def declaration_at(ctx, q, e):
+    """the declaration made by the name at [q, e), or None where the name is used; 'unknown' where the text does not
+    give its type or scope (lambda, for, catch, resource, pattern), with its whole enclosing block as region"""
+    m = ctx.masked
+    b = enclosing(ctx.braces, q)
+    lo, hi = (ctx.braces.starts[b], ctx.braces.ends[b]) if b >= 0 else (-1, len(m))
+    unknown = Decl('unknown', lo, hi, b, None, 0)
+    after = m[e:e + TYPE_WINDOW].lstrip()
+    if after.startswith('->') or WHEN.match(after):
+        return unknown
+    if not after or after[0] not in DECL_END or after.startswith('=='):
         return None
-    t, dims = found.pop()
-    return t + '[]' * (dims - 1)
+    before = m[max(0, q - TYPE_WINDOW):q].rstrip()
+    varargs = before.endswith('...')
+    before = before[:-3].rstrip() if varargs else before
+    g = enclosing(ctx.parens, q)
+    in_parens = g >= 0 and ctx.parens.starts[g] > lo
+    if before.endswith(','):
+        return comma_declaration(ctx, q, after, b, g, in_parens, unknown)
+    if before.endswith('->') or not TYPE_END.search(before):
+        return None
+    w, t = NAME_TAIL.search(before), TYPE_TAIL.search(before)
+    if w and w['n'] in USE_WORDS:
+        return None
+    if not t:
+        return unknown
+    pre = before[:t.start()].rstrip()
+    intro = NAME_TAIL.search(pre)
+    if pre.endswith(('@', '.')) or (intro and intro['n'] in PATTERN_WORDS):
+        return unknown
+    base = norm(t['t']) + norm(t['gen'] or '')
+    dims = t['dims'].count('[') + own_dims(after) + varargs
+    return typed_declaration(ctx, q, b, g, in_parens, None if base == INFERRED else base, dims, unknown)
+
+
+def comma_declaration(ctx, q, after, b, g, in_parens, unknown):
+    """a name after a comma: a further declarator of a declaration statement, a lambda or for-init name, or a use"""
+    m = ctx.masked
+    if in_parens:
+        s = ctx.parens.starts[g]
+        w = NAME_TAIL.search(m[max(0, s - TYPE_WINDOW):s])
+        for_init = w is not None and w['n'] == 'for' and ';' not in m[s:q]
+        return unknown if lambda_params(ctx, g) or for_init else None
+    st = max(m.rfind(';', 0, q), m.rfind('{', 0, q), m.rfind('}', 0, q)) + 1
+    h = DECL_HEAD.match(m, st, q)
+    if not h or norm(h['t']) in USE_WORDS:
+        return unknown
+    base = norm(h['t']) + norm(h['gen'] or '')
+    return typed_declaration(ctx, q, b, g, False, base, h['dims'].count('[') + own_dims(after), unknown)
+
+
+def typed_declaration(ctx, q, b, g, in_parens, base, dims, unknown):
+    if in_parens:
+        return parameter(ctx, g, base, dims, unknown)
+    if b >= 0 and block_kind(ctx, b)[0] == 'class':
+        return Decl('field', unknown.lo, unknown.hi, b, base, dims)
+    return Decl('local', q, unknown.hi, b, base, dims)
+
+
+def parameter(ctx, g, base, dims, unknown):
+    """a typed name in parens g: a method or constructor parameter is in scope in the body, an abstract one nowhere"""
+    m, s, e = ctx.masked, ctx.parens.starts[g], ctx.parens.ends[g]
+    before = m[max(0, s - TYPE_WINDOW):s]
+    w = NAME_TAIL.search(before)
+    if lambda_params(ctx, g) or not w or w['n'] in NOT_METHODS or ANON_TAIL.search(before) or RECORD_TAIL.search(before):
+        return unknown
+    x = BODY_AFTER.match(m, e + 1)
+    if x and x['x'] != '{':
+        return None
+    body = ctx.brace_at.get(x.end() - 1, -1) if x else -1
+    if body < 0 or block_kind(ctx, body) != ('method', g):
+        return unknown
+    return Decl('param', ctx.braces.starts[body], ctx.braces.ends[body], body, base, dims)
+
+
+def crosses_supertype(ctx, pos, scope):
+    """a class with a supertype lies between pos and the declaring block scope: an inherited member may shadow"""
+    j = enclosing(ctx.braces, pos)
+    while j != scope:
+        if j < 0 or block_kind(ctx, j) == ('class', True):
+            return True
+        j = ctx.braces.parent[j]
+    return False
+
+
+def resolve_name(ctx, n, pos):
+    """((base, dims), '') of the declaration of simple name n in scope at pos, or (None, skip reason)"""
+    ds = [d for d in declarations(ctx, n) if d.lo < pos < d.hi]
+    if any(d.kind == 'unknown' for d in ds):
+        return None, UNRESOLVED
+    if not ds:
+        return None, UNPROVEN
+    best = min(ds, key=lambda d: d.hi)
+    if sum(d.hi == best.hi for d in ds) > 1:
+        return None, UNRESOLVED
+    if crosses_supertype(ctx, pos, best.scope):
+        return None, UNPROVEN
+    return (best.base, best.dims), ''
+
+
+def enclosing_class(ctx, pos):
+    j = enclosing(ctx.braces, pos)
+    while j >= 0 and block_kind(ctx, j)[0] != 'class':
+        j = ctx.braces.parent[j]
+    return j
+
+
+def class_of(ctx, t, pos):
+    """(body, '') of the class named by declared type t: declared once in this file and visible at pos"""
+    base, dims = t
+    if base is None or dims or base in PRIMS or not re.fullmatch(NAME, base):
+        return -1, UNPROVEN
+    heads = list(re.finditer(rf'(?<![\w$.])(?:class|interface|enum|record)\s+{re.escape(base)}(?![\w$])', ctx.masked))
+    if len(heads) != 1:
+        return -1, UNRESOLVED if heads else UNPROVEN
+    h = heads[0]
+    body = ctx.brace_at.get(ctx.masked.find('{', h.end()), -1)
+    outer = enclosing(ctx.braces, h.start())
+    visible = outer < 0 or (ctx.braces.starts[outer] < pos < ctx.braces.ends[outer]
+                            and (block_kind(ctx, outer)[0] == 'class' or h.start() < pos))
+    if body < 0 or not visible or crosses_supertype(ctx, pos, outer):
+        return -1, UNPROVEN
+    return body, ''
+
+
+def member(ctx, cls, name):
+    """((base, dims), '') of field name declared directly in the class body cls"""
+    ds = [d for d in declarations(ctx, name) if d.scope == cls]
+    fields = [d for d in ds if d.kind == 'field']
+    if len(fields) != len(ds) or len(fields) > 1:
+        return None, UNRESOLVED
+    if not fields:
+        return None, UNPROVEN
+    return (fields[0].base, fields[0].dims), ''
+
+
+def chain_type(ctx, chain, pos):
+    parts = norm(chain).split('.')
+    if parts[0] == 'this':
+        cls = enclosing_class(ctx, pos)
+        t, why = member(ctx, cls, parts[1]) if cls >= 0 and len(parts) > 1 else (None, UNPROVEN)
+        rest = parts[2:]
+    else:
+        t, why = resolve_name(ctx, parts[0], pos)
+        rest = parts[1:]
+    for name in rest:
+        if why:
+            break
+        cls, why = class_of(ctx, t, pos)
+        if not why:
+            t, why = member(ctx, cls, name)
+    return t, why
+
+
+def element_type(ctx, chain, pos):
+    """(static component type of chain[i] at pos, '') from the declaration in scope (TYPE-SCOPE v1), or (None, reason)"""
+    t, why = chain_type(ctx, chain, pos)
+    if why:
+        return None, why
+    base, dims = t
+    if base is None or dims < 1:
+        return None, UNRESOLVED
+    return base + '[]' * (dims - 1), ''
 
 
 def previous_statement(masked, pos):
@@ -213,8 +480,9 @@ def arrays_name(masked):
     return 'Arrays', True
 
 
-def classify(masked, orig, pairs, loop, call_sp, cast_sp, arrays):
+def classify(ctx, orig, pairs, loop, call_sp, cast_sp, arrays):
     """(form, reason, replacement statement); form None means skipped"""
+    masked = ctx.masked
     span_o, span_m = orig[loop.start:loop.end], masked[loop.start:loop.end]
     if any(span_o[k] == '/' and span_m[k] == ' ' for k in range(len(span_o))):
         return None, 'SKIP_COMMENT_IN_LOOP', ''
@@ -231,7 +499,7 @@ def classify(masked, orig, pairs, loop, call_sp, cast_sp, arrays):
         v = re.sub(r'\s+', ' ', v)
     e = ELEMENT.fullmatch(v)
     if e:
-        return classify_copy(masked, pairs, loop, d, di, e['s'], norm(e['si']), call_sp)
+        return classify_copy(ctx, pairs, loop, d, di, e['s'], norm(e['si']), call_sp)
     if di != loop.i:
         return None, 'SKIP_OFFSET', ''
     reason = value_reason(v, loop.i)
@@ -240,14 +508,15 @@ def classify(masked, orig, pairs, loop, call_sp, cast_sp, arrays):
     if loop.a != '0':
         return None, 'SKIP_START_NONZERO', ''
     if loop.b == norm(d) + '.length':
-        form, t = 'F1', element_type(masked, d)
+        t, why = element_type(ctx, d, loop.start)
+        if why:
+            return None, why, ''
+        form = 'F1'
     else:
         alloc = fresh_allocation(masked, loop, d) if SIMPLE_BOUND.fullmatch(loop.b) else None
         if not alloc or alloc[1] != loop.b:
             return None, 'SKIP_BOUND_UNPROVEN', ''
         form, t = 'F2', alloc[0]
-    if t is None:
-        return None, 'SKIP_TYPE_UNRESOLVED', ''
     if t not in PRIMS and v != 'null':
         return None, 'SKIP_VALUE_OBJECT', ''
     vm = VALUE.fullmatch(v)
@@ -256,7 +525,8 @@ def classify(masked, orig, pairs, loop, call_sp, cast_sp, arrays):
     return form, '', f'{arrays}.fill{call_sp}({norm(d)}, {v});'
 
 
-def classify_copy(masked, pairs, loop, d, di, s, si, call_sp):
+def classify_copy(ctx, pairs, loop, d, di, s, si, call_sp):
+    masked = ctx.masked
     if norm(d) == norm(s):
         return None, 'SKIP_SAME_ARRAY', ''
     if di != loop.i or si != loop.i:
@@ -266,9 +536,9 @@ def classify_copy(masked, pairs, loop, d, di, s, si, call_sp):
     alloc = fresh_allocation(masked, loop, d) if SIMPLE_BOUND.fullmatch(loop.b) else None
     if not alloc or alloc[1] != loop.b:
         return None, 'SKIP_DEST_NOT_FRESH', ''
-    ts = element_type(masked, s)
-    if ts is None:
-        return None, 'SKIP_TYPE_UNRESOLVED', ''
+    ts, why = element_type(ctx, s, loop.start)
+    if why:
+        return None, why, ''
     if ts != alloc[0]:
         return None, 'SKIP_TYPE_MISMATCH', ''
     if loop.b != norm(s) + '.length' and not fresh_source(masked, pairs, loop, norm(s), alloc[0], loop.b):
@@ -314,12 +584,12 @@ def rewrite(orig, edits, need_import):
 def plan_file(orig, loops):
     """classify loops of one file; returns per loop (form, reason, replacement, edit) and whether Arrays is imported"""
     masked = mask(orig)
-    pairs = blocks(masked)
+    pairs, ctx = blocks(masked), index(masked)
     call_sp, cast_sp = styles(masked)
     arrays, importable = arrays_name(masked)
     out, need_import = [], False
     for loop in loops:
-        form, reason, stmt = classify(masked, orig, pairs, loop, call_sp, cast_sp, arrays)
+        form, reason, stmt = classify(ctx, orig, pairs, loop, call_sp, cast_sp, arrays)
         edit = None
         if form:
             span = line_span(orig, loop)
