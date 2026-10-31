@@ -3,7 +3,7 @@ org.opentest4j.AssertionFailedError: step 4 differs (reference original, SWT 497
   this run: M3-MODE-QUERY INCONSISTENT M3Mode=viewport implementation=custom | state count=0 top=0 sel=[] text=-
 log:
 seed 0
-create feature theme-language op api 
+create feature theme-language op api
 	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:38)
 	at org.junit.jupiter.api.Assertions.fail(Assertions.java:138)
 	at org.eclipse.swt.tests.junit.ViewportDifferential.compareWithRecording(ViewportDifferential.java:358)

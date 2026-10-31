@@ -87,3 +87,4 @@ n=$(($(wc -l < "$D/FINDINGS.tsv") - 1)); tail -n +2 "$D/OBSERVATIONS.tsv" | awk 
 awk -F'\t' 'NR > 1 { c[$12]++; if ($14 ~ /NOT_RUN/) tl++ } END { printf "matrix rows: "; for (s in c) printf "%s=%d ", s, c[s]; printf "(theme/language step NOT_RUN in %d rows)\n", tl }' "$D/results/COMBINATION_RESULTS.tsv"
 [ -f "$D/results/EXAMPLE_MODES.tsv" ] && awk -F'\t' 'NR > 1 { for (i = 5; i <= 9; i++) c[$i]++ } END { printf "example runs: "; for (s in c) printf "%s=%d ", s, c[s]; print "" }' "$D/results/EXAMPLE_MODES.tsv"
 echo "findings: $(($(wc -l < "$D/FINDINGS.tsv") - 1))"
+for f in "$D/FINDINGS.tsv" "$D/results/"*.tsv; do sed -i "s/ *$//" "$f"; done

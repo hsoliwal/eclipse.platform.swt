@@ -3,7 +3,7 @@ org.opentest4j.AssertionFailedError: step 3 differs (reference original, SWT 497
   this run: scroll-middle count=100000 top=50000 sel=[] text=item 050000 | state count=100000 top=50000 sel=[] text=item 050000
 log:
 seed 0
-create feature theme-language op 
+create feature theme-language op
 	at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:38)
 	at org.junit.jupiter.api.Assertions.fail(Assertions.java:138)
 	at org.eclipse.swt.tests.junit.ViewportDifferential.compareWithRecording(ViewportDifferential.java:358)
