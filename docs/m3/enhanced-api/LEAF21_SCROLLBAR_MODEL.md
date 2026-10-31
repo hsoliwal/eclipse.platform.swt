@@ -33,3 +33,5 @@ belongs to render-modes, and the fixed point is ViewportScrollLayout's own contr
 | coverage (JaCoCo 0.8.15, both modes) | lines 19/19; branches 16/20, the other 4 are `SWT.error` probe artifacts: every reachable branch covered (after the disabled-bar check; 3/3 in both modes again) |
 
 Open: the viewport hidden-bar differences above; GTK and Cocoa not run.
+
+Update (2026-10-31): the viewport differences were the Tree and List viewports' hidden-bar emulation, fixed by PR #298 (TreeViewport: rows that fit read 0) and PR #299 (ListViewport: the default bar 0..100 only with SWT.H_SCROLL, measured on the official jar). With both, the official-jar differential of this leaf has 0 mismatches in viewport and original mode (plain and virtual).
