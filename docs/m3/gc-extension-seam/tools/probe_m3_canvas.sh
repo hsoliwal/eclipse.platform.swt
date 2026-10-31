@@ -4,9 +4,12 @@
 # Display probe of the GC seam leaf 4 (SWT.M3 canvas activation behind swt.widget.mode), on the hidden desktop
 # (C:/m3-superset/tools/ui_lock.sh + hidden_java.sh): compiles M3CanvasProbe.java against the classes of compile_m3gc.sh
 # and runs it with -Dswt.widget.mode=<mode>, or without the property (stock). Prints PROBE PASS|FAIL and the pixels.
-# Usage: probe_m3_canvas.sh <m3|gpu|stock> [worktree] [main-out]  (defaults: C:/m3-superset/swt-gcseam, H:/m3-scratch/gc-leaf4/main)
-MODE=${1:-m3}; WT=${2:-C:/m3-superset/swt-gcseam}; MAIN=${3:-H:/m3-scratch/gc-leaf4/main}
-W=${M3_PROBE_OUT:-H:/m3-scratch/gc-leaf4}; P=$W/probe
+# Leaf 5: five widgets per run (a Canvas without SWT.M3 with dashes, miters and a partial redraw, a StyledText with a
+# selection, a CTabFolder with 3 tabs, a CLabel with an image, the leaf-4 SWT.M3 canvas); PNGs of the print (stock GC)
+# and of the M3 back buffer, and probe_<mode>.tsv, go to $W/probes.
+# Usage: probe_m3_canvas.sh <m3|gpu|stock> [worktree] [main-out]  (defaults: C:/m3-superset/swt-gcseam, H:/m3-scratch/gc-leaf5/main)
+MODE=${1:-m3}; WT=${2:-C:/m3-superset/swt-gcseam}; MAIN=${3:-H:/m3-scratch/gc-leaf5/main}
+W=${M3_PROBE_OUT:-H:/m3-scratch/gc-leaf5}; P=$W/probe; mkdir -p "$W/probes"
 JDK=${M3_JDK:-C:/Program Files/Java/jdk-21}
 LIB=${M3_SKIJA_LIB:-C:/m3-superset/i31/binaries/org.eclipse.swt.win32.win32.x86_64/lib}
 CP="$MAIN/classes;$LIB/skija-shared-0.116.3.jar;$LIB/skija-windows-x64-0.116.3.jar;$LIB/types-0.1.1.jar"
@@ -20,7 +23,7 @@ mkdir -p "$P/classes"
   || { echo "PROBE_COMPILE_FAILED"; cat "$P/javac.log"; exit 3; }
 case "$MODE" in stock) PROP="" ;; *) PROP="-Dswt.widget.mode=$MODE" ;; esac
 LOG=$P/probe_canvas_$MODE.log; : > "$LOG"
-bash C:/m3-superset/tools/ui_lock.sh claude-gcleaf4 bash C:/m3-superset/tools/hidden_java.sh 120 "$LOG" -Xmx1536m \
-  $PROP -Djava.library.path="$(cygpath -w "$NAT")" -Dswt.library.path="$(cygpath -w "$NAT")" -cp "$CP;$P/classes" M3CanvasProbe
+bash C:/m3-superset/tools/ui_lock.sh claude-gcleaf5 bash C:/m3-superset/tools/hidden_java.sh 180 "$LOG" -Xmx1536m \
+  $PROP -Dm3.probe.out="$(cygpath -m "$W/probes")" -Djava.library.path="$(cygpath -w "$NAT")" -Dswt.library.path="$(cygpath -w "$NAT")" -cp "$CP;$P/classes" M3CanvasProbe
 echo "exit=$?" >> "$LOG"
-grep -E 'PROBE|Exception|Error|exit=' "$LOG" | head -12
+grep -E 'PROBE|Exception|Error|exit=' "$LOG" | head -40

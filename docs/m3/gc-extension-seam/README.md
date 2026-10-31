@@ -335,3 +335,112 @@ left, L3-08) and the gates no longer need one.
   and a Tycho fragment build (the registration is programmatic; a bundle shipping a `META-INF/services` entry still goes
   through the ServiceLoader path): not probed.
 - `Canvas.redraw (x, y, w, h, all)` forwarding the rectangle instead of a full repaint (L4-09): a later leaf.
+
+## Leaf 5: every Canvas subclass through the M3 renderer in the `m3`/`gpu` modes (`m3/gc-leaf5-canvas-coverage-20261030`)
+
+Base: leaf 4 `ccf0eaaaef4` (draft PR #271). The gap, measured (`COVERAGE.tsv`, `tools/m3gc_canvas_inventory.sh`, grep + awk over the
+`class X extends Y` edges): in the `m3`/`gpu` modes only a canvas created with `SWT.M3` reached `M3ExternalGC`. No widget passes the bit:
+StyledText was excluded by the adopted I31 rule, CLabel's `checkStyle` drops it (I31 kept it in the mask, `a5af63895d`), the cursors,
+`AnimatedProgress`, `Java2DCanvas` and Nebula's canvases never set it. Before: 0 of 66 inventoried classes reach M3 without the bit.
+
+### Atoms and patterns (versioned)
+
+| Atom | Typed behaviour | Owner | Pattern |
+|------|-----------------|-------|---------|
+| A1 activation | `(WidgetMode of the class chain, Class<? extends Canvas>, int style) -> GPU \| M3 \| null` | `M3CanvasFactory.backend/accepts/mode`, `WidgetMode.of (Class, Class, ...)`, `WidgetMode.anyRequested`, `IExternalCanvasFactory.accepts`, `ExternalCanvasHandler.isActive`, `Display.registerM3Canvas` | M3-CANVAS-ACTIVATION v2 (v1 = leaf 4, mode x bit) |
+| A2 damage | `(RGNDATA ints, rcPaint, style) -> rectangles, bounds, passes, Event.count, clip` | `M3CanvasDamage` (pure), `M3CanvasHandler.paint/frame/pass/present`, `Canvas.redraw (x, y, w, h, all)` | M3-CANVAS-DAMAGE v1 |
+| A3 retention | `style -> ensureFrame \| growFrame`; a new GPU target seeded from the buffer | `M3CanvasHandler.prepare/target/gpuTarget`, deferred `release` | M3-CANVAS-RETAIN v1 |
+| A4 stroke state | `(lineStyle, dashOffset, miterLimit, given?) -> PathEffect phase, strokeMiter` | `M3ExternalGC.getDashPhase/isMiterLimitSet/getMiterLimit`, `M3PaintManager.performDraw/createPathEffect` | M3-GC-STROKE v1 |
+| A5 probe | `(mode, widget) -> handler?, paints, GCExtension paints, exact mismatches vs the stock run, coverage ratio` | `tools/M3CanvasProbe.java`, `tools/probe_m3_canvas.sh` | M3-CANVAS-PROBE v2 (v1 = leaf 4) |
+
+- A1: in `m3`/`gpu` every Canvas subclass gets the handler with or without `SWT.M3`; a class may choose its own mode
+  (`swt.widget.mode.StyledText`, then a superclass's key up to `swt.widget.mode.Canvas`, then `swt.widget.mode`: the drawn planes'
+  selector and property names, no parallel one); `GLCanvas` and `SWT.EMBEDDED` hosts (pixels not drawn by paint listeners) only with the
+  bit; `Decorations` (Shell) never; no property: nothing registered, stock (measured). A foreign factory keeps I31's rule through the
+  default `accepts` (bit, never StyledText). Two leaf-4 assertions (no bit -> null in `m3`/`gpu`) encoded the contract this leaf changes on
+  the user's brief: rewritten in place (L5-24, L5-25), the test count unchanged.
+- A2 (closes L4-09): `Canvas.redraw (x, y, w, h, all)` invalidates the rectangle. The handler reads the update region before `BeginPaint`
+  (the `ViewportDamageHook.record` pattern); a merged paint draws one event over the bounds clipped to the region (Skija `Region` clip),
+  `SWT.NO_MERGE_PAINTS` one event per rectangle with `Event.count`; only the region's rectangles are read back (gpu) and presented;
+  `WS_CLIPSIBLINGS | WS_CLIPCHILDREN` while painting; no background for `NO_BACKGROUND` and `TRANSPARENT` (the stock contract,
+  `Composite.WM_PAINT`). `DOUBLE_BUFFERED` is inherent (the back buffer); `NO_REDRAW_RESIZE` changes only what Windows invalidates.
+- A3: a canvas that draws over its previous frame (`NO_BACKGROUND`, `TRANSPARENT`) keeps its pixels when the buffer grows; a new GPU target
+  starts from the buffer (`Surface.writePixels`, 0.116.3); a listener that disposes the canvas in its Paint event no longer frees the
+  surface under the running pass.
+- A4: the dash offset is the phase of `PathEffect.makeDash (float[], float)` for `LINE_CUSTOM` only (stock `GC.getPen`: GDI+
+  `Pen_SetDashOffset` for a custom pattern); a miter limit given by `setLineAttributes` reaches every stroke (`Paint.setStrokeMiter`) and
+  wins over drawPath's 1000; `getLineAttributes` reports the stock 10 (the donor reported 0). Until a limit is given the paint keeps the
+  donor's Skija miter (4, drawPath 1000), which the adopted draw tests pin: documented deviation from the stock 10. API by `javap` of
+  `skija-shared-0.116.3.jar` (none of `m3gc_api_deltas.py` D1-D17 is involved).
+
+### Method (CPU only, scripts in `tools/`)
+
+- `m3gc_coverage_deltas.py <worktree> [--ledger]`: every owner edit as an exact byte-preserving replacement (an insertion is DONE when the
+  new text is present, a deletion when the old text is gone: L5-36), idempotent (a replay prints DONE for every delta); the RECIPE_MEMORY
+  rows L5-01..L5-50 (deltas, decisions, and every correction of my own script, tests and probe); with `--ledger` the
+  `FOSS_REUSE_DECISION.tsv` rows `m3-gc-canvas-coverage:*` (adapted hashes = git blob shas of the committed owner files).
+- `m3gc_canvas_inventory.sh [worktree] [nebula-root]` writes `COVERAGE.tsv` (GNU grep, not the profile's `rg` function: L5-42).
+
+### Coverage (`COVERAGE.tsv`, 66 classes; m3/gpu mode, no `SWT.M3`)
+
+| Set | Classes | Before (leaf 4) | After (leaf 5) |
+|-----|---------|-----------------|----------------|
+| Fork Canvas family (Canvas + 9 subclasses) | 10 | 0 | 7 (Canvas, StyledText, CLabel, TableCursor, TreeCursor, AnimatedProgress, Java2DCanvas); GLCanvas only with the bit; Decorations, Shell never |
+| Fork custom widgets that extend Composite (CTabFolder, CCombo, CBanner, SashForm, ScrolledComposite, ViewForm) | 6 | 0 | 0 (outside the Canvas hook) |
+| Nebula Canvas subclasses (`C:/m3-superset/nebula`, direct, non-test) | 50 | 0 | 50 by class (not built or probed here) |
+| Total | 66 | 0 | 57 |
+
+### Gates (2026-10-30; one JVM at a time; output under `H:/m3-scratch/gc-leaf5/`)
+
+- `compile_m3gc.sh C:/m3-superset/swt-gcseam H:/m3-scratch/gc-leaf5/main`: **922 sources, 0 errors** (leaf 4: 921; `M3CanvasDamage` is new).
+- `compile_platform.sh` (a copy with `out=` under `H:/m3-scratch/gc-leaf5/platform`; Windows paths; logs empty, classes written):
+  **win32 888 / 0, gtk 678 / 0, cocoa 817 / 0** (leaf 4: the same counts).
+- `test_m3gc.sh ... H:/m3-scratch/gc-leaf5/tests` with `M3_NATIVES=H:/m3-scratch/gc-wiring/natives`: tests compile 32 sources / 0 errors;
+  **91 found, 91 passed, 0 failed** (the 71 of leaf 4 and 20 new: `CanvasCoverage` 8, `CanvasDamage` 6, `StrokeState` 6). Classpath-scan
+  order (`M3_SCAN=1`): 85 / 91, exactly the 6 P04 failures (pre-existing); the new tests are order independent.
+- Display probe (`probe_m3_canvas.sh stock|m3|gpu`, hidden desktop; PNGs of the print and the back buffer and `probe_<mode>.tsv` in
+  `H:/m3-scratch/gc-leaf5/probes/`). The reference of an m3/gpu run is the **stock run's print**: in m3/gpu `Control.print` of a handled
+  canvas paints through the handler too (`printThroughM3=1`, L5-46). Committed state:
+
+  | Widget | stock | m3 | gpu |
+  |--------|-------|----|-----|
+  | Canvas, no bit (fill, dashes, miters, partial redraw) | PASS: handler=false, damage 20,20,30,10, on 90/90, phase 1.000, tips 0/35 | **PASS**: raster, 2/2 GCExtension paints, damage **20,20,30,10**, fill mismatch **0**, on 90/89, phase **1.000**, tips **0/39** | **PASS**: gpu, 2/2, damage 20,20,30,10, fill mismatch 0, on 89/90, phase 1.000, tips 0/38 |
+  | StyledText (3 lines, selection 3..13) | PASS: ink 1409, selection 494 | **FAIL** (GF01): raster, 1/1 GCExtension, the paint throws in `Canvas.drawBackground`: ink 9000, selection 0, blank mismatch 41040 | **FAIL** (GF01): the same on gpu |
+  | CTabFolder (3 tabs) | PASS: handler=false, ink 884 | NOT_COVERED: handler=false, 0 GCExtension (extends Composite) | NOT_COVERED (same) |
+  | CLabel (24x24 image + text) | PASS: image box 3,86,24,24, ink 514 | **PASS**: 1/1, image mismatch **0**, ink 543 vs 514 | **PASS**: 1/1, image mismatch 0, ink 434 vs 514 |
+  | Canvas(SWT.M3) (leaf-4 probe) | PASS: handler=false, ff0000 | **PASS**: 1/1, rect mismatch **0** | **PASS**: 1/1, rect mismatch 0 |
+
+  Thresholds (set before the m3 runs): non-text regions exact (0 mismatches against the stock print); text coverage within 50 % of the
+  stock count; dash phase 1.000 inside the line (an M3 line starts at the half pixel: L5-48); miter tip of limit 1 below that of limit 10.
+
+### Finding GF01 (StyledText under M3; not fixed in this leaf)
+
+`M3ExternalGC.getGCData ()` is null and the public `Canvas/Composite.drawBackground (GC, ...)` reads the GC's `GCData` and HDC, so every
+StyledText paint under M3 throws: `NullPointerException` at `Composite.drawBackgroundInPixels(Composite.java:398)` <-
+`Canvas.drawBackground(Canvas.java:154)` <- `StyledTextRenderer.drawLineBackground(StyledTextRenderer.java:592)` (full stack:
+`H:/m3-scratch/gc-leaf5/probes/GF01_StyledText_stack.txt`); this is why I31 excluded StyledText. On the coordinator's decision GF01 belongs
+to the leaf-6 GC-fidelity agent (`C:/m3-superset/swt-gcfix`, census `GC_FIDELITY.tsv` row GF01). A local patch (fill through the GC:
+L5-44/L5-45, reverted, L5-49) was measured before the revert: StyledText **PASS** in m3 and gpu (blank mismatch 0, ink 1394 vs 1409,
+selection 494 = 494; `H:/m3-scratch/gc-leaf5/probes-gf01-local/`), evidence for leaf 6.
+
+### Deviations (documented)
+
+- One GC per pass: with `NO_MERGE_PAINTS` the stock path hands one GC to all events of a paint, here one per event.
+- Background: the canvas's colour (`clear`), not `drawBackground`'s background image or theme part (leaf 4, unchanged).
+- The miter limit of a GC that never called `setLineAttributes` is the donor's 4 (stock 10), see A4.
+- Not reached by the Canvas hook: CTabFolder, CCombo, CBanner, SashForm, ScrolledComposite, ViewForm (Composite subclasses).
+
+### PRE_EXISTING (proposals; owner files untouched)
+
+- P05 (`M3PaintManager.java:109`, donor): an even-length `LINE_CUSTOM` dash array is multiplied by the line width (stock: lengths).
+- P06 (`M3ExternalGC.java:413`, donor): `drawPolyline` draws Skija `drawPolygon` (unjoined segments), so joins and the miter limit never act
+  on a polyline; the probe measures the miter on a path (L5-47); the adopted polyline tests pin the call.
+
+### NOT_RUN
+
+- StyledText PASS on the committed branch (GF01, leaf 6); caret and IME on M3 canvases; RTL (`SWT.RIGHT_TO_LEFT`) region mirroring.
+- `NO_MERGE_PAINTS` with a complex region, and the deferred release of a canvas disposed inside its Paint event: unit-tested
+  (`CanvasDamage`) or reviewed, not probed on a Display; a background image through the GC (only in the reverted GF01 patch).
+- A Composite hook (CTabFolder and the other Composite custom widgets): next leaf.
+- Nebula widgets: covered by class (the Canvas constructor hook), not built or probed; gtk and cocoa: no handler (compiled only); a Tycho
+  build.

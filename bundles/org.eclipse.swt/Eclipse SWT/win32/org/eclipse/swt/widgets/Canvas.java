@@ -100,10 +100,9 @@ public void redraw (int x, int y, int width, int height, boolean all) {
 
 	if(externalCanvasHandler != null) {
 		externalCanvasHandler.redrawTriggered( x,  y,  width,  height,  all);
-		super.redraw();
 	}
-	else
-		super.redraw( x,  y,  width,  height,  all);
+	// M3 (GC seam, leaf 5, was L4-09): the damage rectangle only; the M3 handler paints and presents exactly the invalidated region
+	super.redraw( x,  y,  width,  height,  all);
 }
 
 @Override
