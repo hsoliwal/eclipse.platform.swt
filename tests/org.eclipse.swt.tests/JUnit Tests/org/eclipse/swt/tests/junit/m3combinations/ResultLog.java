@@ -63,7 +63,7 @@ final class ResultLog {
 	static String [] describe (Throwable t) {
 		Throwable root = t;
 		while (root.getCause () != null && root instanceof AssertionError && root.getCause () != root) root = root.getCause ();
-		String message = String.valueOf (t.getMessage ()).replaceAll ("[\t\r\n]+", " | ");
+		String message = String.valueOf (t.getMessage ()).replaceAll ("[\t\r\n]+", " | ").strip ();
 		return new String [] {root.getClass ().getName (), location (root), message.length () > 400 ? message.substring (0, 400) + "..." : message};
 	}
 
