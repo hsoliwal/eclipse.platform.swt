@@ -405,3 +405,220 @@ Given sufficient resources, a follow-up project could convert the demonstrator i
 ## Fork development guide
 
 For a source map, current build prerequisites, command cheat sheet and a worked event-loop tour, see the [SWT development guide](docs/DEVELOPMENT_GUIDE.md).
+
+## Donor notes: dancer1325/eclipse.platform.swt
+
+Condensed notes from donor commit 95b4bef5978 ("doc(): clear notes"), carried verbatim with headings demoted; the sections above stay the canonical text.
+
+* Eclipse SWT
+  * == cross-platform GUI library -- for -- JVM based desktop applications
+    * -> includes platform-specific ".jar"
+  * _Example:_ [Eclipse](https://www.eclipse.org)
+  * 👀ALMOST ENTIRELY developed -- by -- volunteers 👀
+
+### Getting Started
+
+* steps
+  * download it [here](https://download.eclipse.org/eclipse/downloads/index.html)
+  * add the ".jar" | YOUR classpath
+
+* _Example:_
+  * TODO: How to create a NEW Eclipse project?
+
+### Contributing to SWT
+
+* follow [Eclipse Platform's CONTRIBUTING](https://github.com/eclipse-platform/.github/blob/main/CONTRIBUTING.md)
+* steps
+  * create a Eclipse Development Environment -- [link](https://www.eclipse.org/setups/installer/?url=https://raw.githubusercontent.com/eclipse-platform/eclipse.platform.swt/master/bundles/org.eclipse.swt.tools/Oomph/PlatformSWTConfiguration.setup&show=true) --
+    * [.setup used](bundles/org.eclipse.swt.tools/Oomph/PlatformSWTConfiguration.setup)
+
+#### Developer Resources
+
+* see [Eclipse FAQ](https://github.com/eclipse-platform/eclipse.platform/blob/master/docs/FAQ/The_Official_Eclipse_FAQs.md#standard-widget-toolkit-swt)
+
+#### Contact
+
+* [project's "dev" list](https://accounts.eclipse.org/mailing-list/platform-dev)
+
+#### CURRENT Bugs
+
+* see [Bugzilla](https://bugs.eclipse.org/bugs/buglist.cgi?product=Platform&component=SWT)
+
+### Prototype | 1! Cross-Platform SWT Implementation
+
+* see [here](https://github.com/swt-initiative31)
+* Reasons: 🧠
+  * reduce maintenance efforts,
+  * enable better look and feel
+  * improve configurability 🧠
+* technologies suggested
+  * Skia with Visual Class Library (VCL),
+  * [Skia + custom-rendered widgets](https://github.com/swt-initiative31/prototype-skija),
+  * [GTK](https://github.com/swt-initiative31/prototype-gtk),
+  * Swing
+
+# Using SWT with GTK on Windows (donor: swt-initiative31/prototype-gtk, branch gtk-multi-os)
+
+> Superset note (donor-resolve 2026-10-31): the section below is the donor's README, appended verbatim after its
+> first heading. In this superset the `org.eclipse.swt.gtk.win32.x86_64` fragment is carried as a source project and
+> is not in the Maven reactor (`binaries/pom.xml` and the root `pom.xml` are unchanged); it is selected with the
+> window system `gtk` (`Eclipse-PlatformFilter: (& (osgi.ws=gtk) (osgi.os=win32) (osgi.arch=x86_64))`, launch with
+> `-ws gtk`) instead of claiming `osgi.ws=win32`, and the `org.eclipse.swt.win32.win32.x86_64` fragment keeps its
+> `osgi.os=win32` filter, so the win32 port (viewport default) is never displaced. The TreeItem image tweak is
+> superseded by our TreeItem, which returns images from its per-column cache (`cellImage`, viewport `virtualImages`)
+> instead of reading the model surface back; the splash-shell tweak applies only when `OS.IsWin32`. The fragment's
+> natives are revisions 4965r11/4967r8; a GTK-on-Windows native build at 4975r19 is needed before use.
+
+This branch prototypes the usage of GTK for rendering SWT on Windows. It is based on work done some years ago: https://bugs.eclipse.org/bugs/show_bug.cgi?id=488431
+
+![alt text](gtk-on-windows-example.png)
+
+## Installing GTK on Windows
+
+To provide GTK on Windows, you best follow the official GTK documentation: https://www.gtk.org/docs/installations/windows
+
+The tests I have made based on this branch are using the MSYS2-based setup of GTK, which works fine.
+
+1. Install MSYS2: https://msys2.github.io/
+2. Update MSYS2:
+     ``` 
+     pacman -Syuu
+     ``` 
+3. Install GTK 3/4 via the MSYS shell:
+      ```
+      pacman -S mingw-w64-x86_64-gtk3
+      pacman -S mingw-w64-x86_64-gtk4
+      ```
+4. Add the libraries installed via MSYS to your `PATH`. E.g., when using the default MSYS installation directory `C:\msys64`, the `PATH` entry should be: `C:\msys64\mingw64\bin`
+5. _Optional:_ If you want to or need to compile the SWT binaries, you should istall:
+      ```
+      pacman -S mingw-w64-x86_64-toolchain
+      ```
+  
+## Using GTK on Windows
+For GTK on Windows, there is a new SWT fragment project in the `binaries` folder: `org.eclipse.swt.gtk.win32.x86_64`. Be aware that it is currently integrated via some tweaks, e.g., the misuse of the specified window system to ensure that GTK fragment is used on Windows even though a Win32 window system is present and to _not_ use the original Windows fragment.
+
+Steps to use:
+* Have an ordinary Eclipse SDK workspace with SWT.
+* Checkout this branch and, if necessary, rebase it onto your used SWT state.
+* Import the `org.eclipse.swt.gtk.win32.x86_64` fragment into your Eclipse workspace.
+* In case you do not use the state of SWT as provided in the `gtk-on-windows` branch, you need to generate the binaries (see below).
+* Start some product (for example the `org.eclipse.sdk.ide` product) using SWT and make sure that your launch configuration uses the GTK instead of the Win32 SWT fragment and that the Win32-specific UI fragments are not enabled.
+  * The following should _not_ be enabled:
+    * `org.eclipse.swt.win32.win32.x86_64`
+    * `org.eclipse.compare.win32`
+    * `org.eclipse.e4.ui.swt.win32`
+    * `org.eclipse.ui.win32`
+  * The following should be enabled instead:
+    * `org.eclipse.swt.gtk.win32.x86_64`
+
+![alt text](gtk-on-windows-application.png)
+
+![alt text](gtk-on-windows-plugins.png)
+
+
+### Building the binaries
+* Start a Maven build for the SWT repository by calling `mvn clean compile` in the root folder. This will currently not succeeds but will at least generate some metadata for the binaries generation.
+* Run the following command in the `binares/org.eclipse.swt.gtk.win32.x86_64` folder:
+  ```
+  mvn clean process-resources -Dnative=gtk.win32.x86_64 -Dws=gtk -Dos=win32 -Darch=x86_64 -DskipTests
+  ``` 
+  
+  This should generate the binaries, i.e, in the `build-native-binaries` phase, it should execute the batch script running the C++ compiler and the copy the generated *.dll files to the project folder.
+
+Note that this currently only builds GTK3 binaries and does not allow to use GTK4 yet. However, it's only because the latter has not been tried out and might be easy to achieve.
+
+
+## Limitations and Workarounds
+
+Some limitations of the GTK on Windows usage for SWT have been documented in the original issue: https://bugs.eclipse.org/bugs/show_bug.cgi?id=488431
+
+There are two further tweaks currently applied in this branch:
+* Images used by TreeItems are not accessed properly. They are stored in an image map of the item's Tree, but not retrieved properly. In this branch, a patch is applied that simply stored the proper image surface within each TreeItem.
+* A specific shell constructor is currently not working, making the splash screen creation fail. In this branch, a patch is applied that simply creates a new shell for the splash instead of used a passed handle.
+
+When using SWT with the Eclipse Platform, note that the Win32-specific bundles can currently not be used and have to be removed from launch configurations:
+* `org.eclipse.compare.win32`
+* `org.eclipse.e4.ui.swt.win32`
+* `org.eclipse.ui.win32`
+
+They may need to or can be replaced by GTK-specific bundles, but no work has been done on that yet.
+
+## Donor notes: dvt64/oi-eclipse.platform.swt
+
+From donor commits 420209f74c3 ("Port for illumos-based distros") and 982b4c3b8e5, line carried verbatim. The port's files: fragment binaries/org.eclipse.swt.gtk.solaris.x86_64 (outside the default binaries/pom.xml reactor, like gtk.linux.loongarch64, until illumos natives are built), binaries/legal_files/gtk.solaris, and the SunOS case of `Eclipse SWT PI/gtk/library/build.sh` with `make_solaris_x86_64.mak`.
+
+Port for illumos-based distros (tested on OpenIndiana).
+
+# Donor section: claesrosell/prototype-skija
+
+Appended by the additive superset resolution (DOC recipe: keep ours, append the donor section). Source: `README.md` of
+[claesrosell/prototype-skija](https://github.com/claesrosell/prototype-skija) at `f262d18f088f` (2025-02-22), the
+Initiative 31 prototype-skija history before its 2025 rebase, carried in this repository's history as a merge parent.
+The text describes that donor branch, not this tree: here the native widgets stay on the M3 viewport, the Initiative 31
+look is a renderer and look-and-feel option ([ALL_WIDGETS_VIEWPORT_PLAN.md](docs/m3/ALL_WIDGETS_VIEWPORT_PLAN.md),
+[LOOK_AND_FEEL.md](docs/m3/LOOK_AND_FEEL.md)), and the `SkijaGC` operation mapping was adapted for the M3 GPU planes.
+
+## SWT on Custom-Rendered Widgets With Ski(j)a
+
+This repository is a fork of the original [SWT repository](https://github.com/eclipse-platform/eclipse.platform.swt) containing prototyping work on exchanging the adaptation of native, basic widgets with custom-drawn widgets based on the rendering engine Skia and its Java bindings [Skija](https://github.com/HumbleUI/Skija/).
+
+In the following, you find information about the current state of the prototype and how to try it out. Note that the prototype does currently not provide other/better look and feel or customizability compared to the native widgets. It is supposed to demonstrate feasibility to custom draw widgets based on an efficient rendering engine (as an enabler for improved customizability and look and feel) while seamlessly integrating the custom-drawn widgets with the other, still native widgets. For that reason, the custom-drawn widgets are currently implemented to look similar to the existing widgets they replace, but they could be easily replaced with whatever look and feel is desired.
+
+### How to Contribute
+
+See our [contributing information](https://github.com/claesrosell/prototype-skija/blob/f262d18f088f46aa1a909512194c9b60c187f853/CONTRIBUTING.md) to find out how to contribute.
+
+### Getting Started
+
+To test the prototype, an Eclipse IDE has to be set up and the SWT projects from this repository have to be imported into it to start example applications.
+
+Note that the current development does not target all platforms (Windows, MacOS, Linux). Development usually happens on Windows (and partly MacOS), so the experience will be best there. No implementation and testing for Linux has been performed so far.
+
+#### Setup
+
+The prototype is currently based on the Eclipse release 2024-12.
+
+1. Set up a Eclipse IDE for Committers 2024-12, e.g.:
+   - [Eclipse IDE for Committers 2024-12](https://www.eclipse.org/downloads/packages/release/2024-12/r/eclipse-ide-eclipse-committers)
+   - [Eclipse SDK Development Environment](https://github.com/eclipse-platform/eclipse.platform?tab=readme-ov-file#how-to-contribute) using product version "4.34 - 2024-12" in the installer
+2. Clone this repository
+3. Start the downloaded IDE and import the following projects:
+   - The SWT bundle `org.eclipse.swt`
+   - The OS-specific fragment `org.eclipse.swt.$WS.$OS.$ARCH` with the placeholders according to your environment, such as `org.eclipse.swt.win32.win32.x86_64` for the Windows fragment
+   - _Optional:_ For testing purposes `org.eclipse.swt.examples`
+
+The resulting workspace should look something like this:
+![Workspace after setup](readme_images/workspace_after_setup.png)
+
+#### Examples
+
+Starting with this, you can try out the SWT implementation with whatever application you want by also importing the according plug-ins into your workspace. Two reasonable, simple starting points are (1) the SWT `ControlExample`, a demo application containing all basic SWT widgets with configurability for most of their functionality, to see how the widgets look like and behave, and (2) a simple Eclipse application to see how it looks in a complete application.
+
+##### `ControlExample`
+
+The `ControlExample` is part of the example project. It is placed in `org.eclipse.swt.examples.controlexample`. You can run this class as a Java application. The application has tabs for the individual widgets. The tab that opens first is for the `Button`, which is completely custom-drawn. So almost everything you see on that page is custom-drawn via code of the prototype.
+
+At the bottom of the application, a toggle button allows to switch between using the native and the Skija-based renderer ( `GC`) at runtime (see [State](#state)). You can currently distinguish the two rendering engines by looking at the edges of buttons, which are currently not rounded when using the Skija-based GC. The following screenshot shows the rendering of that page based on Skija.
+
+![ControlExample Button Page](readme_images/controls_button_windows_custom_skijagc.png)
+
+##### Eclipse Application
+
+To start a simple Eclipse application, create a `Run Configuration` via the menu `Run`, menu item `Run Configuration` and in the dialog opening up by double-clicking on the `Eclipse Application` type to create a new configuration that you can launch via the `Run` button:
+![Eclipse Application Run Configuration](readme_images/eclipse_run_configuration.png)
+
+The Eclipse application that starts will automatically use the custom-drawn widgets. To see a page with mostly custom-drawn widgets, you can, for example, open the `Create Java Project` wizard:
+![Java Project Creation Wizard](readme_images/java_project_creation_windows_custom_skijagc.png)
+
+### State
+
+Note that this is work-in-progress prototyping work. The implementation is not (supposed to be) production ready.
+Currently, there are (at least partial) custom implementations for the following basic widgets:
+- Button
+- Label
+- Text
+- Combo
+
+For rendering, the custom-drawn widgets only rely on the functionalities of the `GC`, such a drawing text and primitives like lines.
+In addition to using the existing, native `GC`, i.e., the rendering engine of the operating system, the implementation also contains a `SkijaGC`, providing (parts of) the same functionality but using Ski(j)a for rendering instead. To make these interchangeable, the common functionality has been extracted into an `IGraphicsCanvas` interface.
