@@ -41,3 +41,14 @@ The visible range is `M3ItemSelection.getVisibleRange`: the rows that intersect 
 ## Algorithm choices
 
 The interval difference of leaf 9 is reused, so `ALGORITHM_CATALOGUE.tsv` gets no new row.
+
+## Status (2026-10-30)
+
+| gate | result |
+|---|---|
+| build | master `d5f6048f398`, jar `master-d5f6048` plus this leaf's classes; win32, GTK and Cocoa source sets 0 errors |
+| JUnit, hidden desktop | `Test_M3VisibilityObserver` 9/9 viewport, 9/9 original (three new tests: a list without a scroll bar and a second listener, coalesced triggers with a dispose before the check, a listener added without the API) |
+| differential against the official 3.135.0 jar | `Test_M3VisibilityObserverDifferential` (shared `M3OfficialScene`, 8 seeds x 120 steps, plain and virtual): the official run records the rows of the Table and List whose bounds meet the client area; this SWT records the rows replayed from ENTERED/LEFT after the event loop settles. First run: 3 failures - a programmatic `setTopIndex` on a virtual Table (viewport) and on a List (original), and a List `add` (original), were never announced (the documented "announced at the next scroll" gap). Fixed: the latch also triggers on `SWT.Paint` (a change that shows paints), and `List.setTopIndex`, `Table.setTopIndex` and `Tree.setTopItem` check when they return on win32, GTK and Cocoa (text-lane recipe `tools/m3_observer_seams.sh`, `m3_seam_wrap.awk` KIND=observe; second run unchanged). After the fix: 0 mismatches in viewport and original |
+| coverage (JaCoCo 0.8.15, both modes) | lines 62/62; branches 43/46: 1 `SWT.error` probe artifact and 2 `isDisposed ()` edges behind the latch's own listeners and `hooks (EVENT)` (a disposed widget has neither): every reachable branch covered |
+
+Open: GTK and Cocoa not run.

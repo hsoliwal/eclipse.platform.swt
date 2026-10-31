@@ -6753,6 +6753,11 @@ public void setSelection (TableItem [] items) {
  * </ul>
  */
 public void setTopIndex (int index) {
+	setTopRow (index);
+	M3VisibilityObserver.changed (this);
+}
+
+void setTopRow (int index) {
 	checkWidget();
 	if (usesBoundedVirtualView ()) {
 		if (index >= 0 && index < itemCount) revealVirtualIndex (index, true);
