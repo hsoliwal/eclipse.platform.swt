@@ -310,8 +310,10 @@ public class Test_org_eclipse_swt_m3_M3LanguageDisplay {
 		AtomicReference<Button> button = new AtomicReference<> ();
 		java.util.concurrent.CountDownLatch ready = new java.util.concurrent.CountDownLatch (1);
 		AtomicBoolean stop = new AtomicBoolean ();
+		int [] empty = {-1};
 		Thread thread = new Thread (() -> {
 			Display second = new Display ();
+			empty [0] = M3Language.registered (second) + M3Language.relabel (second);
 			Shell secondShell = new Shell (second);
 			Button b = new Button (secondShell, SWT.PUSH);
 			M3Language.register (b, "ok");
@@ -326,6 +328,7 @@ public class Test_org_eclipse_swt_m3_M3LanguageDisplay {
 		thread.start ();
 		assertTrue (ready.await (30, java.util.concurrent.TimeUnit.SECONDS));
 		assertEquals ("OK", text (other.get (), button.get ()));
+		assertEquals (0, empty [0], "a display without registrations");
 		M3Language.setLocale (Locale.GERMAN);
 		long until = System.currentTimeMillis () + 10_000;
 		while (!"Gut".equals (text (other.get (), button.get ())) && System.currentTimeMillis () < until) Thread.sleep (20);
@@ -350,6 +353,49 @@ public class Test_org_eclipse_swt_m3_M3LanguageDisplay {
 		switcher.dispose ();
 		settle ();
 		assertTrue (switcher.isDisposed ());
+		M3Language.setLocale (Locale.ENGLISH);
+	}
+
+	/** A shell class of its own for the feature switch. */
+	static class FixedShell extends Shell {
+		FixedShell (Display display) {
+			super (display);
+		}
+
+		@Override
+		protected void checkSubclass () {
+		}
+	}
+
+	@Test
+	public void test_shellClassSwitchedOffIsNotFlipped () {
+		System.setProperty ("swt.widget.feature.FixedShell.language-switch", "false");
+		FixedShell fixed = new FixedShell (display);
+		M3Language.setLocale (Locale.forLanguageTag ("ar"));
+		assertEquals (SWT.LEFT_TO_RIGHT, fixed.getOrientation ());
+		assertEquals (SWT.RIGHT_TO_LEFT, shell.getOrientation ());
+		fixed.dispose ();
+		M3Language.setLocale (Locale.ENGLISH);
+	}
+
+	@Test
+	public void test_trayTooltipAndSwitcherSelection () {
+		Tray tray = display.getSystemTray ();
+		if (tray != null) {
+			TrayItem item = new TrayItem (tray, SWT.NONE);
+			M3Language.register (item, M3Language.TOOLTIP, "tip");
+			M3Language.setLocale (Locale.GERMAN);
+			assertEquals ("Hinweis", item.getToolTipText ());
+			item.dispose ();
+		}
+		M3Language.setLocale (Locale.forLanguageTag ("xx"));
+		M3LanguageSwitcher switcher = new M3LanguageSwitcher (shell, SWT.NONE);
+		assertEquals (M3LanguageSwitcher.DEFAULT_COUNT, switcher.getLanguages ().size (), "an active language not in the list is not added");
+		switcher.setLanguages ("en", "de");
+		switcher.getCombo ().select (1);
+		switcher.getCombo ().notifyListeners (SWT.Selection, new Event ());
+		assertEquals (Locale.GERMAN, M3Language.getLocale ());
+		switcher.dispose ();
 		M3Language.setLocale (Locale.ENGLISH);
 	}
 }

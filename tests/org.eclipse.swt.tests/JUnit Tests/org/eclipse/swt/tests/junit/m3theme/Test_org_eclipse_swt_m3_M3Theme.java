@@ -225,4 +225,13 @@ public class Test_org_eclipse_swt_m3_M3Theme {
 		assertMessage ("is not a colour", "name = x\nbg = 123456\n");
 		assertEquals (M3Theme.LIGHT.get (M3ThemeSlot.BG), M3Theme.parse ("name = n\nfont = \n").get (M3ThemeSlot.BG));
 	}
+
+	@Test
+	public void test_metricRangesAtBothEnds () {
+		M3Theme.Builder builder = M3Theme.builder ("r", M3Theme.LIGHT);
+		assertThrows (IllegalArgumentException.class, () -> builder.set (M3ThemeSlot.FONT_HEIGHT, -1));
+		assertThrows (IllegalArgumentException.class, () -> builder.set (M3ThemeSlot.ROW_HEIGHT, 513));
+		assertThrows (IllegalArgumentException.class, () -> builder.set (M3ThemeSlot.RADIUS, -1));
+		assertEquals (512, builder.set (M3ThemeSlot.INDENT, 512).build ().get (M3ThemeSlot.INDENT));
+	}
 }

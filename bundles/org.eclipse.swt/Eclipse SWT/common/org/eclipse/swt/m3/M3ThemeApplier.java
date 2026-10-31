@@ -60,7 +60,7 @@ final class M3ThemeApplier {
 
 	/* every control of every shell; a shell's redraw is suspended while its controls change (one repaint per shell) */
 	private static int shells (Display display, java.util.function.Consumer<Control> action, Set<String> excluded) {
-		return Arrays.stream (display.getShells ()).filter (shell -> !shell.isDisposed ()).mapToInt (shell -> shell (shell, action, excluded)).sum ();
+		return Arrays.stream (display.getShells ()).mapToInt (shell -> shell (shell, action, excluded)).sum ();
 	}
 
 	private static int shell (Shell shell, java.util.function.Consumer<Control> action, Set<String> excluded) {

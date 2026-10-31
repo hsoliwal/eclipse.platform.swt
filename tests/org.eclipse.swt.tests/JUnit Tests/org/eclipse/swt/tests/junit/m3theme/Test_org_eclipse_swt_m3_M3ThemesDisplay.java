@@ -87,6 +87,8 @@ public class Test_org_eclipse_swt_m3_M3ThemesDisplay {
 		button = new Button (shell, SWT.PUSH);
 		field = new Text (shell, SWT.BORDER);
 		new List (shell, SWT.NONE).add ("item");
+		new CCombo (shell, SWT.BORDER).setText ("ccombo");
+		new Spinner (shell, SWT.BORDER);
 		shell.setSize (500, 700);
 		shell.open ();
 		settle ();
@@ -141,7 +143,8 @@ public class Test_org_eclipse_swt_m3_M3ThemesDisplay {
 		assertEquals (rgb (dark.get (M3ThemeSlot.LIST_BACKGROUND)), field.getBackground ().getRGB ());
 		assertEquals (rgb (dark.get (M3ThemeSlot.WIDGET_FOREGROUND)), button.getForeground ().getRGB ());
 		assertEquals (M3Themes.LOOK_AND_FEEL_PREFIX + "dark", M3LookAndFeel.getLookAndFeel ());
-		assertEquals (count (shell), themed, "every control of the shell follows by default");
+		assertEquals (Arrays.stream (display.getShells ()).mapToInt (Test_org_eclipse_swt_m3_M3ThemesDisplay::count).sum (), themed,
+			"every control of every shell follows by default (the CCombo drop-down shell too)");
 	}
 
 	static int count (Control control) {
@@ -376,5 +379,18 @@ public class Test_org_eclipse_swt_m3_M3ThemesDisplay {
 		settle ();
 		assertTrue (switcher.isDisposed ());
 		assertEquals (Optional.of (M3Theme.DARK), M3Themes.current (display));
+	}
+
+	@Test
+	public void test_switcherFollowsSelectionAndLanguage () {
+		M3ThemeSwitcher switcher = new M3ThemeSwitcher (shell, SWT.NONE);
+		switcher.getCombo ().select (3);
+		switcher.getCombo ().notifyListeners (SWT.Selection, new Event ());
+		assertEquals (Optional.of (M3Theme.DARK), M3Themes.current (display));
+		M3Language.setLocale (Locale.GERMAN);
+		settle ();
+		assertEquals (3, switcher.getCombo ().getSelectionIndex ());
+		M3Language.reset ();
+		switcher.dispose ();
 	}
 }

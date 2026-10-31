@@ -143,9 +143,34 @@ the `(Composite, int)` constructor the gallery (`M3ExampleGallery.mountSwitchers
 `custom.`, `m3.`) mounts by reflection, follow switches made elsewhere, and relabel themselves (keys `swt.m3.switcher.theme`,
 `swt.m3.switcher.language`, `swt.m3.theme.<name>`; English fallbacks).
 
-## Gates
+## Gates and runs (2026-10-30/31, Windows 11, JDK 21.0.9, natives 4975r19)
 
-See the "Runs" section below (filled from the logs of this branch).
+| Gate | Command | Result |
+|---|---|---|
+| compile | `compile_platform.sh` copy with `out=H:/m3-scratch/theme-lang/platform/<os>` | **win32 909 / gtk 698 / cocoa 837 sources, 0 errors** (base 899 / 696 / 835 minus this leaf's files: +10 common, +1 per platform, +1 win32) |
+| compile with the M3 trees | `gc-extension-seam/tools/compile_m3gc.sh <wt> H:/m3-scratch/theme-lang/m3gc` | 943 sources, 0 errors |
+| method length | `python -I tools/method_gate.py` over the leaf's sources | 0 methods over 15 lines; every new class under 300 lines |
+| language list | `java -cp <classes> tools/M3LanguagesGen.java ...` twice | same bytes; 1,669 languages, 60 right-to-left |
+| feature registry | `python -I feature-switches/tools/gen_features.py` twice | 180 features, 3 shipped; second run UNCHANGED x3 |
+| JUnit headless | `tools/test_theme_language.sh headless` | **30 found, 30 passed, 0 failed** (M3Theme 12, M3LanguageId 5, M3Languages 5, M3Language 8) |
+| JUnit Display, hidden desktop | `tools/test_theme_language.sh display <mode>` | **27/27 in each of viewport, original, custom, m3, gpu** (m3/gpu with `-Dswt.widget.mode.StyledText=original`, GF01) |
+| damage-only switch | `test_applyIsDamageOnly` (100,000-row virtual Table at row 50,000) | every mode: SetData 0, 3 rows repainted (6 PaintItem, 2 columns) for 5 visible rows, top index kept |
+| native treatment | `test_nativeTreatment` | `M3NativeTheme.available ()` true on this host (Windows dark mode) |
+| coverage | `tools/coverage_theme_language.sh` (JaCoCo 0.8.15, headless + five modes merged) | **lines 683/689 (99.1 %), branches 455/499 (91.2 %)**; [evidence/jacoco-theme-language.csv](evidence/jacoco-theme-language.csv). Of the 44 missed branches 25 are `if (...) SWT.error (...)` guards (JaCoCo cannot see the throwing call complete); the rest: the resource-missing and IOException paths of `M3Languages`, `Display.disableCustomThemeTweaks`, a display disposed while a relabel is queued, the `asyncExec` lambdas of a switcher disposed before they run |
+| probes | `tools/probe_theme_language.sh <mode>` x5 | 50 PNGs in `H:/m3-scratch/theme-lang/probes` (light/dark/high-contrast English, light Arabic, dark Hebrew on the Table; dark English Tree; dark German and light Japanese StyledText; dark Arabic and high-contrast Hindi Canvas), each mode; list with hashes: [evidence/PROBES.tsv](evidence/PROBES.tsv) |
+
+RTL proof: in all five modes `ar` and `he` flip the shell (`orientation=rtl` in every RTL probe); the Table, Tree, CTabFolder,
+switchers and labels are mirrored with readable Arabic and Hebrew, Arabic-Indic digits from the locale's number format, and the
+drawn planes (custom, m3, gpu) mirror their rows with readable glyphs (before `MirroredCanvas` the custom probe showed every row
+glyph-mirrored). Relabel without recreate: `test_relabelWithoutRecreate` (20 labels of 14 widgets, the same Java objects and the
+same native handles after the switch).
+
+Findings for other owners:
+- The M3 canvas (`SWT.M3` GC of a Canvas in the m3 and gpu modes, gc-extension-seam) does not mirror a right-to-left Canvas
+  (`m3-dark-ar-tab3.png`, `gpu-dark-ar-tab3.png`: swatches and text from the left, unpainted area after the flip); the stock GC
+  mirrors it (`viewport-dark-ar-tab3.png`). Not changed here (GC seam leaves 6 and 7 own `M3CanvasHandler`/`M3ExternalGC`).
+- `M3Mode.of (table)` answers `viewport` for a Table drawn by a plane in the custom, m3 and gpu modes (the RTL probes show the
+  Table is drawn there); the example's mode label therefore reads `viewport`.
 
 ## Pre-existing failures (not this leaf)
 

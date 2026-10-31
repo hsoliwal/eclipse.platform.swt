@@ -42,7 +42,7 @@ final class M3LanguageDisplays {
 	}
 
 	static int flip (Display display, int orientation) {
-		return (int) Arrays.stream (display.getShells ()).filter (shell -> !shell.isDisposed () && M3Language.follows (shell))
+		return (int) Arrays.stream (display.getShells ()).filter (M3Language::follows)
 			.filter (shell -> shell.getOrientation () != orientation).filter (shell -> flip (shell, orientation)).count ();
 	}
 

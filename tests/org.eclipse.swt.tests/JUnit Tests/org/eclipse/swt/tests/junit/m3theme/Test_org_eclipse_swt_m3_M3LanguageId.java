@@ -73,4 +73,11 @@ public class Test_org_eclipse_swt_m3_M3LanguageId {
 		assertEquals (UnicodeScript.LATIN, M3LanguageId.script (facts));
 		assertTrue (facts > 0, "the sign bit stays clear");
 	}
+
+	@Test
+	public void test_commonLettersAndNeutralDirection () {
+		int facts = M3LanguageId.detect (String.valueOf ((char) 0x02B9));
+		assertEquals (0, M3LanguageId.letters (facts), "a COMMON letter counts for no script");
+		assertFalse (M3LanguageId.rightToLeft (facts));
+	}
 }
