@@ -2648,10 +2648,12 @@ public class SWT {
 	 */
 	public static final int WEBKIT = 1 << 16;
 
-	 /**
-	 * Experimental This API is experimental and may change or be removed in future releases.
-	 * Style constant specifying that a Canvas should use Skia. Only works for windows and linux.
-	 * for rendering its content (value is 1&lt;&lt;23).
+	/**
+	 * Style constant specifying that a <code>Canvas</code> is drawn through the M3 renderer
+	 * (value is 1&lt;&lt;23): its <code>PaintListener</code>s receive a <code>GCExtension</code>
+	 * over the M3 back buffer of that canvas. Honoured only when the Canvas startup mode
+	 * (<code>swt.widget.mode.Canvas</code>, else <code>swt.widget.mode</code>) is <code>m3</code>
+	 * or <code>gpu</code>; otherwise the canvas paints as it always did.
 	 * <p><b>Used By:</b></p>
 	 * <ul>
 	 * <li><code>Canvas</code></li>
@@ -2659,7 +2661,7 @@ public class SWT {
 	 *
 	 * @noreference This API is experimental and may change or be removed in future releases.
 	 */
-	public static final int SKIA = 1 << 23;
+	public static final int M3 = 1 << 23;
 
 	/**
 	 * Style constant specifying that a Browser should use Edge (WebView2)

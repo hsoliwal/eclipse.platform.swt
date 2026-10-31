@@ -243,3 +243,95 @@ provider or `StyledCellLabelProvider` saw its events and lost its pixels.
   `GCExtension`), `order=true` (Measure, Erase, Paint for every cell), `pixel=ff0000`. **PASS in `custom`**: the same
   counts and order, `gcExtension=false` (the plane's own GC, as designed), `pixel=ff0000`. `gpu`: NOT_RUN (no GL context
   on the hidden desktop was attempted; the `gpu` backend is the same `M3RowCanvas` with a GPU surface).
+
+## Leaf 4: the GPU M3 tree compiles against the bound Skija; `SWT.M3` canvases behind `swt.widget.mode` (`m3/gc-leaf4-gpu-activation-20261030`)
+
+Base: master `d5f6048f398` (PR #270 merged). Three parts, one owner file at a time, each gated before the next.
+
+### (1) P02, a master defect: `Replay.java` used Skija 0.143's `PathBuilder` (commit `a740e10bfe6`)
+
+`Eclipse SWT GPU M3/win32/.../gpu/m3/Replay.poly` built its polygon with `PathBuilder` / `detach ()`; the fork binds 0.116.3,
+where `Path` is its own builder (leaf 2's D07/D08). The same delta, as D16/D17 in `tools/m3gc_api_deltas.py` (byte preserving,
+idempotent, recorded in `RECIPE_MEMORY.tsv`): `try (Path builder = new Path ())`, draw `builder._ptr` directly, one close.
+`compile_m3gc.sh` then reaches **920 sources, 0 errors without any `M3_OVERLAY`**; the whole GPU M3 tree (`Replay`, `M3Target`,
+`M3PlaneBackend`) compiles against 0.116.3 and `rg` finds no other 0.143 name (`PathBuilder`, `RegionOp`, `detach ()`,
+`addPolygon`, `build ()`) in it. `PRE_EXISTING.tsv` gained a `status` column (`m3gc_baseline_overlay.py`): P01 and P03 FIXED on
+master (leaf 1 correction), P02 FIXED `a740e10bfe6`, P04 OPEN; the overlay script writes no overlay for a fixed row (no anchor
+left, L3-08) and the gates no longer need one.
+
+### (2) Activation of the M3 canvas path, default off
+
+- `SWT.SKIA` is `SWT.M3` (same bit `1 << 23`; brief rule 14: nothing of ours is named Skija or Skia). No deprecated alias:
+  the only users were the adopted `ExternalCanvasHandler.isActive` and the `M3CanvasFactory` javadoc, both ours now
+  (L4-01, L4-02 through `tools/m3gc_activation_deltas.py`; FOSS row `m3-gc-canvas-activation:SWT.M3`, ADAPT).
+- `M3CanvasFactory` (leaf 2 answered null) decides mode x style bit: `backend (WidgetMode, style)` is `GPU`, `M3` or null
+  (no `SWT.M3` bit, or a mode that is not drawn through the M3 renderer); `create (canvas, style)` hands the canvas to the
+  raster or gpu maker. The shipped no-arg constructor (ServiceLoader, Display registration) binds the existing selector
+  `WidgetMode.of ("Canvas", M3, GPU)` (`swt.widget.mode.Canvas`, then `swt.widget.mode`, the lookup `RowBackends` uses) and
+  `M3CanvasHandler::raster` / `::gpu`; the three-argument constructor takes a stubbed selector and makers (the headless test).
+- `M3CanvasHandler implements IExternalCanvasHandler` (package `org.eclipse.swt.internal.render.m3`, next to `M3RowCanvas`,
+  because `M3Gpu` is package-private there): the canvas's `WM_PAINT` into a retained `BackBuffer` of the canvas. Per frame:
+  `BeginPaint`, `ensureFrame (client)`, the planes' surface recipe (`Surface.makeRasterDirect` over the DIB in `m3`, an
+  `M3Gpu` render target read back into the damage in `gpu`, exactly `M3RowCanvas.target`/`end`), `save` + `clipRect (damage)`
+  + `clear (canvas background)` unless `SWT.NO_BACKGROUND`, one `new GCExtension (new M3ExternalGC (new M3PlaneCanvasExtension
+  (canvas, buffer, this::surface)))` per paint (as the stock path makes a GC per `WM_PAINT`; `extension.frame (damage)` is its
+  clip), the Paint event with the damage as bounds in points, `dispose`, `restore`, `present` (BitBlt), `EndPaint`,
+  `LRESULT.ZERO`. `scroll` moves the buffer's pixels (BitBlt) and the window's (`ScrollWindowEx`, `SW_INVALIDATE | SW_ERASE`,
+  `SW_SCROLLCHILDREN` for `all`); `redrawTriggered` is a no-op (the buffer retains; `Canvas.redraw` invalidates); Dispose
+  releases surface, readback, gpu and buffer. The handler is the canvas's data under `M3CanvasHandler.DATA_KEY` and answers
+  `pixel (x, y)` for probes. Pattern only: I31 `SkiaGlCanvasExtension.doPaint`/`executePaintEvents` and
+  `GLPaintEventInvoker.paint` (FOSS rows `m3-gc-canvas-activation:*`); contract: this repository's `Composite.WM_PAINT`.
+- Registration: `ExternalCanvasHandler.registerFactory (className)` (the ServiceLoader result keeps precedence when it already
+  ran; a class that cannot start leaves the stock path) and `Display.registerM3Canvas ()` (win32, from `init`), which registers
+  `RowBackends.M3_CANVAS_FACTORY` by name only when `WidgetMode.of ("Canvas", M3, GPU)` is `M3` or `GPU`. Not
+  `META-INF/services`: the fragment's `build.properties` `source..` has no `Eclipse SWT Render M3` folder and `bin.includes = .`
+  is the compiled output, `build-swt.sh` copies classes only, and the M3 tree is compiled and loaded apart from the fragment
+  (as `RowBackends` loads `M3RowCanvas`); an entry naming an absent class would raise `ServiceConfigurationError` and latch
+  `FAILED_WITH_ERRORS` for every canvas (L4-03).
+- Default off, measured: with no property `WidgetMode.of` answers `ORIGINAL` (a `Canvas` has no viewport), nothing is
+  registered, `ExternalCanvasHandler.isActive` stays false and a canvas created with `SWT.M3` paints as it always did (stock
+  probe below). With the property, a canvas without `SWT.M3` is stock too. `custom`, `viewport` and `original` are off.
+- Documented deviations (`RECIPE_MEMORY.tsv`): L4-09 `Canvas.redraw (x, y, w, h, all)` with a handler repaints the whole
+  canvas (adopted I31 hook, untouched); L4-10 event bounds in points by `control.nativeZoom`, the zoom the leaf-2 extension
+  scales the GC by (`getAutoscalingZoom` is package-private; equal unless autoscaling is disabled at a non-100 zoom); L4-12 a
+  `scroll` on an `SWT.M3` canvas has no `checkWidget` (the adopted `Canvas.scroll` delegates before its own; `Widget.checkWidget`
+  is protected). Corrections demanded by javac and the first probe: L4-11 (`@Override` anchor), L4-12, L4-13 (probe loop).
+
+### (3) Gates (2026-10-30; one JVM at a time, memory gate >= 1.5 GB, output under `H:/m3-scratch/gc-leaf4/`)
+
+- `compile_m3gc.sh C:/m3-superset/swt-gcseam H:/m3-scratch/gc-leaf4/main`, no overlay: **921 sources, 0 errors** (P02 commit
+  alone: 920 / 0).
+- `compile_platform.sh` (the shared tool with its `out=` redirected to `H:/m3-scratch/gc-leaf4/platform/` by `sed`, the disk
+  alert of the day: S: and K: at the floor; Windows paths): **win32 888 / 0, gtk 678 / 0, cocoa 817 / 0** (leaf 3: 888, 678,
+  817; the common `SWT.java` and `ExternalCanvasHandler` changes compile on all three).
+- `test_m3gc.sh C:/m3-superset/swt-gcseam H:/m3-scratch/gc-leaf4/main H:/m3-scratch/gc-leaf4/tests` with
+  `M3_NATIVES=H:/m3-scratch/gc-wiring/natives` (staged by `m3gc_natives.sh`): tests compile 29 sources / 0 errors;
+  **71 tests found, 71 passed, 0 failed** (the 66 of leaf 3 and the 5 of `Test_org_eclipse_swt_m3gc_M3CanvasFactory`: `backend`
+  over every `WidgetMode` x {no bit, other bits, `SWT.M3`, `SWT.M3` | others}; `create` answers the raster double in `M3`, the
+  gpu double in `GPU`, null otherwise; the shipped selector is off without the property; `swt.widget.mode.Canvas=m3|gpu|custom`
+  selects `M3|GPU|ORIGINAL`, property restored; `SWT.M3 == 1 << 23`).
+- Display probes (`tools/M3CanvasProbe.java` through `tools/probe_m3_canvas.sh <stock|m3|gpu>`: hidden desktop via `ui_lock.sh`
+  + `hidden_java.sh`, the staged natives): a 320x240 shell with a `Canvas (shell, SWT.M3)` whose `PaintListener` fills
+  `(10, 10, 60, 40)` red; after 1.5 s (a timer wakes the loop, L4-13) the stock reference pixels come from `canvas.print (gc)`
+  into an `Image` (a stock GC in every mode) and the M3 pixels from the handler's back buffer, read inside the rectangle
+  `(20, 20)` and outside it `(120, 120)`.
+
+  | Run | handler | backend | paints | gcExtension | print inside / outside | buffer inside / outside | Result |
+  |-----|---------|---------|--------|-------------|------------------------|-------------------------|--------|
+  | stock (no property) | false | none | 1 | 0 | `ff0000` / `f0f0f0` | - | **PASS** (plain GC, stock path) |
+  | `-Dswt.widget.mode=m3` | true | raster | 1 | 1 | `ff0000` / `f0f0f0` | `ff0000` / `f0f0f0` | **PASS** (every paint a `GCExtension`; back-buffer pixels identical to the stock run) |
+  | `-Dswt.widget.mode=gpu` | true | gpu | 1 | 1 | `ff0000` / `f0f0f0` | `ff0000` / `f0f0f0` | **PASS** (an `M3Gpu` GL context was made on the hidden desktop; the readback carries the pixels) |
+
+  The first stock run timed out after 120 s with an empty log: the leaf-3 loop `while (now < end) ... display.sleep ()` never
+  woke because a bare canvas raises no event after its first paint (the leaf-3 `Table` kept producing them); `display.timerExec`
+  fixed it (L4-13), then stock, m3 and gpu passed in one run each.
+
+### NOT_RUN
+
+- gtk and cocoa: the handler is win32 (the M3 render tree is win32 only); `SWT.M3` there is inert (the common
+  `ExternalCanvasHandler` with nothing registered). Compiled on all three, probed on win32.
+- Caret and IME on an `SWT.M3` canvas (I31 noted carets unsupported in its handler too), `scroll` with children
+  (`SW_SCROLLCHILDREN`), `SWT.NO_REDRAW_RESIZE` growth, a second GL context made current by application code (`makeCurrent`),
+  and a Tycho fragment build (the registration is programmatic; a bundle shipping a `META-INF/services` entry still goes
+  through the ServiceLoader path): not probed.
+- `Canvas.redraw (x, y, w, h, all)` forwarding the rectangle instead of a full repaint (L4-09): a later leaf.

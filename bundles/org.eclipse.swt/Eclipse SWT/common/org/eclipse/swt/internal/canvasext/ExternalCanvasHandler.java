@@ -56,6 +56,26 @@ public class ExternalCanvasHandler {
 		}
 	}
 
+	/**
+	 * M3 (GC seam, leaf 4): a factory registered by class name before the first <code>Canvas</code>, in place of the
+	 * ServiceLoader lookup (which keeps precedence when it already ran). The win32 <code>Display</code> registers the M3
+	 * factory this way when the Canvas startup mode is <code>m3</code> or <code>gpu</code>: the M3 render tree is
+	 * compiled and loaded apart from the fragment (as <code>RowBackends</code> loads the planes' backend by name), so no
+	 * <code>META-INF/services</code> entry of the fragment can name it, and an entry naming an absent class would raise a
+	 * <code>ServiceConfigurationError</code> for every canvas. A class that cannot start leaves the stock path in place.
+	 */
+	public static void registerFactory(String className) {
+		if (factoryLoaded)
+			return;
+		try {
+			externalFactory = (IExternalCanvasFactory) Class.forName(className).getConstructor().newInstance();
+			factoryLoaded = true;
+		} catch (ReflectiveOperationException | LinkageError e) {
+			if (isLogActive()) {
+				System.out.println("External canvas factory " + className + " cannot start: " + e);
+			}
+		}
+	}
 
 	private static boolean isDisabled() {
 		var disable = System.getProperty(DISABLE_EXTERNAL_CANVAS);
@@ -101,7 +121,7 @@ public class ExternalCanvasHandler {
 
 		loadFactory();
 
-		if ((style & SWT.SKIA) != 0 && externalFactory != null)
+		if ((style & SWT.M3) != 0 && externalFactory != null)
 			return true;
 
 		if (externalFactory == null) {
