@@ -5,11 +5,11 @@
  * Text leaf probe (scratch evidence, not product code): a StyledText with a dark background, a LineBackgroundListener,
  * a selection and Arabic, Hebrew and CJK lines, and a CLabel with emoji, CJK, Arabic, '&&' and a tab, in the startup
  * mode (-Dswt.widget.mode=m3|gpu, or stock). After the shell settles each control is captured from the screen
- * (GC(Display).copyArea) into <out>/<mode>/<name>.png; one TSV line per control with the M3 text counters.
+ * (Control.print: a hidden desktop has no screen to copy; print goes through the M3 route) into <out>/<mode>/<name>.png; one TSV line per control with the M3 text counters.
  * Usage: java -Dtextprobe.out=<dir> [-Dswt.widget.mode=m3|gpu] M3TextProbe
  */
 import java.io.*;
-import java.nio.file.*;
+import java.nio.file.Files;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.custom.*;
@@ -19,7 +19,7 @@ import org.eclipse.swt.widgets.*;
 
 public class M3TextProbe {
 	static final String MODE = System.getProperty ("swt.widget.mode", "stock");
-	static final Path OUT = Path.of (System.getProperty ("textprobe.out", "H:/m3-scratch/text/probe"));
+	static final java.nio.file.Path OUT = java.nio.file.Path.of (System.getProperty ("textprobe.out", "H:/m3-scratch/text/probe"));
 
 	public static void main (String [] args) throws Exception {
 		Display display = new Display ();
@@ -51,10 +51,11 @@ public class M3TextProbe {
 	}
 
 	static String capture (Display display, Control control, String name) {
-		Rectangle r = display.map (control, null, control.getClientArea ());
+		Point size = control.getSize ();
+		Rectangle r = new Rectangle (0, 0, size.x, size.y);
 		Image image = new Image (display, r.width, r.height);
-		GC gc = new GC (display);
-		gc.copyArea (image, r.x, r.y);
+		GC gc = new GC (image);
+		control.print (gc);
 		gc.dispose ();
 		ImageLoader loader = new ImageLoader ();
 		loader.data = new ImageData [] {image.getImageData ()};

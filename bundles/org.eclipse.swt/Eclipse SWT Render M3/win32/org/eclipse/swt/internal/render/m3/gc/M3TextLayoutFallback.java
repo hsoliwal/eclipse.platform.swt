@@ -152,7 +152,7 @@ final class M3TextLayoutFallback {
 	}
 
 	/* the M3 GC state the stock TextLayout reads from its GC (default run colour and font, text anti-aliasing) */
-	private static void carry(M3ExternalGC gc, GC stock) {
+	static void carry(M3ExternalGC gc, GC stock) {
 		if (gc.getFont() != null) {
 			stock.setFont(gc.getFont());
 		}

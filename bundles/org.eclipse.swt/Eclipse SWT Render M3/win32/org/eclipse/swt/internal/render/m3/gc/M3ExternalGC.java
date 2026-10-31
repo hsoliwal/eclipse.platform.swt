@@ -328,7 +328,7 @@ public class M3ExternalGC implements IExternalGC {
 	}
 
 	private void executeTextDraw(String inputText, int flags, int x, int y) {
-		if (isCulled(x, y)) {
+		if (isCulled(x, y) || M3GdiTextDraw.draw(this, inputText, flags, x, y, false)) {
 			return;
 		}
 		final String splits[] = this.resources.getTextSplits(inputText, flags);
@@ -511,7 +511,8 @@ public class M3ExternalGC implements IExternalGC {
 		}
 		// leaf 6 (TEXT_DRAW_FLAGS, pattern M3-GC-TEXT-FLAGS v1, census GF29): one line as given, as the stock ExtTextOut draws it;
 		// the donor drew through drawText with DRAW_DELIMITER | DRAW_TAB (lines split, tabs expanded)
-		if (!isCulled(x, y)) {
+		// L14 ONE_TEXT_SHAPER v1 (raster): the stock ExtTextOut over the surface pixels when the route applies (M3GdiTextDraw)
+		if (!isCulled(x, y) && !M3GdiTextDraw.draw(this, string, isTransparent ? SWT.DRAW_TRANSPARENT : SWT.NONE, x, y, true)) {
 			M3TextDrawing.drawText(this, new String[] { string }, isTransparent ? SWT.DRAW_TRANSPARENT : SWT.NONE, x, y);
 		}
 	}

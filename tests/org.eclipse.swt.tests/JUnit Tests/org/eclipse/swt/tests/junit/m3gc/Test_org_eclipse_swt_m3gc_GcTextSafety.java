@@ -151,4 +151,19 @@ public class Test_org_eclipse_swt_m3gc_GcTextSafety {
 		int m3 = m3InkFrom(afterI), ref = stockInkFrom(d, afterI);
 		assertTrue(ref > 0 && Math.abs(m3 - ref) <= 3, "ink after the tab: m3 " + m3 + " stock " + ref);
 	}
+
+	/* L14 ONE_TEXT_SHAPER v1 (raster): CLabel-like text (emoji, CJK, Arabic, mnemonic, tab) is the stock DrawText exactly */
+	@Test
+	public void testRasterDrawTextIsStockExactly() {
+		String text = "emoji " + new String(Character.toChars(0x1F600)) + " CJK 漢字 Arabic مرحبا a&&b	tab";
+		int flags = SWT.DRAW_MNEMONIC | SWT.DRAW_TAB | SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER;
+		gc.drawText(text, 2, 2, flags);
+		stock.drawText(text, 2, 2, flags);
+		ImageData d = image.getImageData();
+		long differ = IntStream.range(0, H).flatMap(y -> IntStream.range(0, W).filter(x -> {
+			var rgb = d.palette.getRGB(d.getPixel(x, y));
+			return (rgb.red << 16 | rgb.green << 8 | rgb.blue) != m3Pixel(x, y);
+		})).count();
+		assertEquals(0, differ, "pixels differing from the stock drawText");
+	}
 }

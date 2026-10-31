@@ -160,7 +160,19 @@ def atom_surrogate_tabs(wt, extra):
     return out
 
 
-ATOMS = {"TEXT_FALLBACK_SAFE": atom_fallback, "GLYPH_RUN_SINK": atom_sink, "GLYPH_RUN_DRAW": atom_draw,
+def atom_shaper_raster(wt, extra):
+    """L14 ONE_TEXT_SHAPER v1 (raster): drawText/drawString try M3GdiTextDraw (stock GDI over the surface pixels) first"""
+    return [replace_once(Path(wt, RM, "M3ExternalGC.java"), [
+        ("\t\tif (!isCulled(x, y)) {\n\t\t\tM3TextDrawing.drawText(this, new String[] { string }, isTransparent ? SWT.DRAW_TRANSPARENT : SWT.NONE, x, y);\n",
+         "\t\t// L14 ONE_TEXT_SHAPER v1 (raster): the stock ExtTextOut over the surface pixels when the route applies (M3GdiTextDraw)\n"
+         "\t\tif (!isCulled(x, y) && !M3GdiTextDraw.draw(this, string, isTransparent ? SWT.DRAW_TRANSPARENT : SWT.NONE, x, y, true)) {\n"
+         "\t\t\tM3TextDrawing.drawText(this, new String[] { string }, isTransparent ? SWT.DRAW_TRANSPARENT : SWT.NONE, x, y);\n"),
+        ("\t\tif (isCulled(x, y)) {\n\t\t\treturn;\n\t\t}\n\t\tfinal String splits[] = this.resources.getTextSplits(inputText, flags);\n",
+         "\t\tif (isCulled(x, y) || M3GdiTextDraw.draw(this, inputText, flags, x, y, false)) {\n\t\t\treturn;\n\t\t}\n"
+         "\t\tfinal String splits[] = this.resources.getTextSplits(inputText, flags);\n")])]
+
+
+ATOMS = {"TEXT_FALLBACK_SAFE": atom_fallback, "ONE_TEXT_SHAPER_RASTER": atom_shaper_raster, "GLYPH_RUN_SINK": atom_sink, "GLYPH_RUN_DRAW": atom_draw,
          "SURROGATE_SAFE+TAB_STOPS": atom_surrogate_tabs}
 
 if __name__ == "__main__":
