@@ -1,0 +1,35 @@
+fragment	resource	filter_id	arguments	donor	source	action
+org.eclipse.swt.cocoa.macosx.aarch64	Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	336658481	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.cocoa.macosx.aarch64	Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	574619654	org.eclipse.swt.graphics.GC.handle|org.eclipse.swt.internal.cocoa.NSGraphicsContext	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.cocoa.macosx.aarch64	Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	574619656	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.cocoa.macosx.aarch64	Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	627060751	NSGraphicsContext|GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.cocoa.macosx.aarch64	Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	1143996420	handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.cocoa.macosx.x86_64	Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	336658481	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.cocoa.macosx.x86_64	Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	574619654	org.eclipse.swt.graphics.GC.handle|org.eclipse.swt.internal.cocoa.NSGraphicsContext	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.cocoa.macosx.x86_64	Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	574619656	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.cocoa.macosx.x86_64	Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	627060751	NSGraphicsContext|GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.gtk.linux.aarch64	Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	336658481	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.gtk.linux.aarch64	Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	574619656	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.gtk.linux.loongarch64	Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	336658481	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	ADAPT:org.eclipse.swt.gtk.linux.x86_64	ADDED
+org.eclipse.swt.gtk.linux.loongarch64	Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	574619656	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	ADAPT:org.eclipse.swt.gtk.linux.x86_64	ADDED
+org.eclipse.swt.gtk.linux.ppc64le	Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	336658481	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.gtk.linux.ppc64le	Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	574619656	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.gtk.linux.riscv64	Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	336658481	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.gtk.linux.x86_64	Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	336658481	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.gtk.linux.x86_64	Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	574619656	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.aarch64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	336658481	org.eclipse.swt.graphics.FontMetrics|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.aarch64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	422080514	org.eclipse.swt.graphics.FontMetrics.handle|org.eclipse.swt.internal.win32.TEXTMETRIC	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.aarch64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	574619653	org.eclipse.swt.graphics.FontMetrics.win32_new(TEXTMETRIC, int)|org.eclipse.swt.internal.win32.TEXTMETRIC	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.aarch64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	574619654	org.eclipse.swt.graphics.FontMetrics.handle|org.eclipse.swt.internal.win32.TEXTMETRIC	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.aarch64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	574619658	org.eclipse.swt.graphics.FontMetrics.handle|org.eclipse.swt.graphics.FontMetrics	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.aarch64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	627060751	TEXTMETRIC|FontMetrics|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.aarch64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	643846161	TEXTMETRIC|FontMetrics|win32_new(TEXTMETRIC, int)	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.aarch64	Eclipse SWT/win32/org/eclipse/swt/graphics/GC.java	336658481	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.x86_64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	336658481	org.eclipse.swt.graphics.FontMetrics|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.x86_64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	574619653	org.eclipse.swt.graphics.FontMetrics.win32_new|org.eclipse.swt.internal.win32.TEXTMETRIC	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.x86_64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	574619654	org.eclipse.swt.graphics.FontMetrics.handle|org.eclipse.swt.internal.win32.TEXTMETRIC	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.x86_64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	574619656	org.eclipse.swt.graphics.FontMetrics|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.x86_64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	627060751	TEXTMETRIC|FontMetrics|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.x86_64	Eclipse SWT/win32/org/eclipse/swt/graphics/FontMetrics.java	643846161	TEXTMETRIC|FontMetrics|win32_new(TEXTMETRIC, int)	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.x86_64	Eclipse SWT/win32/org/eclipse/swt/graphics/GC.java	336658481	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
+org.eclipse.swt.win32.win32.x86_64	Eclipse SWT/win32/org/eclipse/swt/graphics/GC.java	574619656	org.eclipse.swt.graphics.GC|handle	skija-canvas@2c46f3d03028	DONOR	ADDED
