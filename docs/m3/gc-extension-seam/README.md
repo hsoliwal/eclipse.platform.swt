@@ -601,3 +601,16 @@ The defects ControlExample and CustomControlExample found in stock / m3 / gpu, o
 GATE_POSITIVE_COUNT, MODE_TRUTH + BACKEND_REPORT + M3_LOAD_LATCH, BACKGROUND_PARITY, ROW_IMAGE_BOUNDS, GRID_LINES,
 TEXT_TRUNCATION, RTL_FRAME, SWITCHER_SIZE, ROW_OFFSET), with the per-tab real-app diff before and after, gates and
 NOT_RUN: [LEAF_FIDELITY_REALAPP.md](LEAF_FIDELITY_REALAPP.md); recipe rows LF-01..LF-12 in `RECIPE_MEMORY.tsv`.
+
+## jdk.m3.graphics prose (`m3/skija-to-m3graphics-20261031`, the low findings of the #311 review)
+
+CONSUMER_RENAME v1 moved the code onto `jdk.m3.graphics` but masked comments and strings, so prose still named Skija and
+its unprefixed types. M3_GRAPHICS_PROSE v1 fixes that by a reviewed ledger, not by hand:
+[M3_GRAPHICS_PROSE_EDITS.tsv](M3_GRAPHICS_PROSE_EDITS.tsv) (file, old exact text, new text, count, reason; 49 rows in
+17 files) applied by `tools/m3_edit_ledger.py` (EDIT_LEDGER v1: fail-closed, two-phase, a second run reports only DONE).
+The rows cover the Javadoc and comments of the renamed files, the `M3ToSwtImageConverter` exception text (`Unknown
+M3ColorType: `), the `M3PlaneBackend.describe()` label (`jdk.m3.graphics GL `) and the `M3Fragment` probe constant
+(`SKIJA` becomes `M3_GRAPHICS`; package-private, no test reads it). Provenance stays: donor names, versions, licences,
+former class names, and the L14 FLLDCIM anchor of `M3FontTable` (append-only; a new MRL anchor sits under it).
+`tools/m3_graphics_prose_scan.py` is the after-scan (73 rows before, 14 after, each kept on purpose). Gates:
+[M3_GRAPHICS_PROSE_GATES.tsv](M3_GRAPHICS_PROSE_GATES.tsv); recipe rows MGP-01, MGP-02 in `RECIPE_MEMORY.tsv`.

@@ -24,8 +24,8 @@ import jdk.m3.graphics.*;
  * overlay planes) and a pool of tile render targets indexed by tile slot
  * (reused across evictions, never reallocated per frame). Every copy is an
  * integer-offset blit with source blending ({@code SRC}), so tiles meet at exact
- * device-pixel seams and nothing is filtered. Replay uses Skija's primitive
- * native entry points on canvas pointers; only cache misses allocate.
+ * device-pixel seams and nothing is filtered. Replay uses the primitive
+ * native entry points of jdk.m3.graphics on canvas pointers; only cache misses allocate.
  */
 final class M3Target implements PlaneBackend.Target {
 	static final int TILE = TileGrid.SIZE;

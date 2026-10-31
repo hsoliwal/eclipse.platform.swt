@@ -5,7 +5,7 @@ import jdk.m3.graphics.M3Surface;
 import jdk.m3.graphics.M3IRect;
 
 /**
- * Adapter to wrap Skija's Surface as IM3Surface.
+ * Adapter to wrap a jdk.m3.graphics surface (<code>M3Surface</code>) as IM3Surface.
  */
 public class M3SurfaceAdapter implements IM3Surface {
 	private final M3Surface delegate;
@@ -31,7 +31,7 @@ public class M3SurfaceAdapter implements IM3Surface {
 
 	@Override
 	public IM3Canvas getCanvas() {
-		// For now, return the raw Skija Canvas. Later, wrap in IM3Canvas if needed.
+		// Wraps the surface's M3Canvas in the IM3Canvas adapter (M3CanvasAdapter).
 		return new M3CanvasAdapter(delegate.getCanvas());
 	}
 
@@ -48,7 +48,7 @@ public class M3SurfaceAdapter implements IM3Surface {
 
 	@Override
 	public IM3Image makeImageSnapshot(M3IRect rect) {
-		// M3 (GC seam, leaf 6; PIXEL_COPY, census GF20): Skija answers null for a rectangle outside the surface; so does the adapter
+		// M3 (GC seam, leaf 6; PIXEL_COPY, census GF20): M3Surface answers null for a rectangle outside the surface; so does the adapter
 		// (the donor wrapped the null, so copyArea's null check was dead and drawImage threw)
 		final M3Image image = delegate.makeImageSnapshot(rect);
 		return image == null ? null : new M3ImageAdapter(image);

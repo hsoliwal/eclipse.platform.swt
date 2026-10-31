@@ -102,7 +102,7 @@ public class M3ToSwtImageConverter {
 		case A16_UNORM -> new int[] { 0 };
 		case R16G16_UNORM -> new int[] { 0, 1 };
 		case R16G16B16A16_UNORM -> new int[] { 0, 1, 2, 3 };
-		default -> throw new IllegalArgumentException("Unknown Skija ColorType: " + colorType);//$NON-NLS-1$
+		default -> throw new IllegalArgumentException("Unknown M3ColorType: " + colorType);//$NON-NLS-1$
 		};
 	}
 
@@ -116,7 +116,7 @@ public class M3ToSwtImageConverter {
 		case RGBA_F16 -> new PaletteData(new RGB[] { new RGB(255, 0, 0), new RGB(0, 255, 0), new RGB(0, 0, 255) });
 		case RGBA_F32 ->
 		new PaletteData(new RGB[] { new RGB(255, 165, 0), new RGB(0, 255, 255), new RGB(128, 0, 128) });
-		default -> throw new IllegalArgumentException("Unknown Skija ColorType: " + colorType);//$NON-NLS-1$
+		default -> throw new IllegalArgumentException("Unknown M3ColorType: " + colorType);//$NON-NLS-1$
 		};
 	}
 

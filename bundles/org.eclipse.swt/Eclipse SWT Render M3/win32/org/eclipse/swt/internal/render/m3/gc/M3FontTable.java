@@ -32,13 +32,14 @@ import jdk.m3.graphics.M3FontStyle;
 import jdk.m3.graphics.M3Typeface;
 
 //FLLDCIM: L14 FONT_TABLE v1 (GC half) — one LOGFONT-keyed Skija font table; donor pattern GM/M3PlaneBackend.defineFont
+//FLLDCIM: MRL — M3_GRAPHICS_PROSE v1: the table holds jdk.m3.graphics fonts (M3Font, absorbed Skija 0.143.18); the L14 anchor above keeps its words
 /**
- * One LOGFONT-keyed table of Skija fonts for M3 text (text leaf L13 GLYPH_RUN_DRAW, L14 FONT_TABLE v1, GC half). The key is
+ * One LOGFONT-keyed table of jdk.m3.graphics fonts for M3 text (text leaf L13 GLYPH_RUN_DRAW, L14 FONT_TABLE v1, GC half). The key is
  * what GDI resolved for the platform font: face name, pixel height on the device (lfHeight, or the cell height minus the
  * internal leading when lfHeight is positive, as <code>GCPlanes.defineFont</code>), weight, italic, plus the edging the GC's
  * text anti-aliasing asks for. A glyph id from Uniscribe indexes the same font file, so a run shaped by GDI is drawn by
  * Skia with this font's typeface. Bounded (least recently used font closed beyond {@link #CAPACITY}); display thread only.
- * The drawn-row half (M3RowCanvas's TextLine LRU) is a follow-up of the row owner.
+ * The drawn-row half (M3RowCanvas's M3TextLine LRU) is a follow-up of the row owner.
  */
 public final class M3FontTable {
 
@@ -60,7 +61,7 @@ public final class M3FontTable {
 	private M3FontTable() {
 	}
 
-	/** the Skija font of a platform font handle (HFONT) for the GC text anti-aliasing (SWT.DEFAULT, ON, OFF); null if unmatched */
+	/** the jdk.m3.graphics font of a platform font handle (HFONT) for the GC text anti-aliasing (SWT.DEFAULT, ON, OFF); null if unmatched */
 	public static M3Font font(long hFont, int textAntialias) {
 		final LOGFONT logFont = new LOGFONT();
 		OS.GetObject(hFont, LOGFONT.sizeof, logFont);

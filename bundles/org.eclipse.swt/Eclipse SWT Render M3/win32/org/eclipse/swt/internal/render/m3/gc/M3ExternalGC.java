@@ -428,7 +428,7 @@ public class M3ExternalGC implements IExternalGC {
 		}
 
 		paintManager.performDraw(paint -> {
-			// Create Skija path for the polygon
+			// Create the M3Path for the polygon
 			try (jdk.m3.graphics.M3PathBuilder pathBuilder = new jdk.m3.graphics.M3PathBuilder()) {
 				// Move to first point
 				pathBuilder.moveTo(getScaler().autoScaleUp(pointArray[0]), getScaler().autoScaleUp(pointArray[1]));

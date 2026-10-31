@@ -63,7 +63,7 @@ public class M3PathConverter {
 	}
 
 	public static jdk.m3.graphics.M3Path createPath(int[] pointArray,int fillRule , DpiScalerUtil sc) {
-		// Create Skija path for the polygon
+		// Create the M3Path for the polygon
 		try (jdk.m3.graphics.M3PathBuilder pathBuilder = new jdk.m3.graphics.M3PathBuilder()) { // Move
 			// to
 			// first

@@ -188,10 +188,10 @@ public class M3PaintManager {
 	}
 
 	/**
-	 * Converts an SWT Pattern to a Skija Shader.
+	 * Converts an SWT Pattern to an <code>M3Shader</code>.
 	 *
 	 * @param pattern the SWT Pattern to convert
-	 * @return the Skija Shader or null if conversion fails
+	 * @return the <code>M3Shader</code> or null if conversion fails
 	 */
 	public M3Shader convertSWTPatternToM3Shader(Pattern pattern) {
 		final var props = org.eclipse.swt.graphics.PatternProperties.get(pattern);

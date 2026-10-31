@@ -24,17 +24,17 @@ import java.util.zip.*;
 
 /**
  * Loads the classes of the M3 fragment of <code>org.eclipse.swt</code> by name (bundle <code>org.eclipse.swt.m3</code>:
- * the Render M3 and GPU M3 trees, with the Skija jars nested under <code>lib/</code>). Every host site that starts an M3
+ * the Render M3 and GPU M3 trees, with the graphics library jars nested under <code>lib/</code>). Every host site that starts an M3
  * backend goes through here: <code>RowBackends</code>, <code>ExternalCanvasHandler.registerFactory</code> and
  * <code>PlaneBackend.load</code>.
  * <p>
  * Leaf 18 (pattern FRAGMENT_CLASSPATH v1). Under OSGi the fragment joins the class space of the host and its
- * <code>Bundle-ClassPath</code> lists the nested jars, so the SWT class loader already sees M3 and Skija; a plain class
- * path that already holds the Skija jars behaves the same, and both keep the SWT class loader. On a plain class path
+ * <code>Bundle-ClassPath</code> lists the nested jars, so the SWT class loader already sees M3 and jdk.m3.graphics; a plain
+ * class path that already holds jdk.m3.graphics behaves the same, and both keep the SWT class loader. On a plain class path
  * with only the built jars (<code>swt.jar</code> and the fragment jar) no JDK class loader opens nested jars: the
  * fragment's own <code>Bundle-ClassPath</code> is read, each nested jar is extracted once into a directory under
  * <code>java.io.tmpdir</code> named by the entries' CRC-32 and size, and the M3 packages load child-first from the
- * fragment jar, linked against the extracted Skija jars; host packages always come from the SWT class loader. Any
+ * fragment jar, linked against the extracted library jars; host packages always come from the SWT class loader. Any
  * failure keeps the SWT class loader, so the lookup fails as it did before and the caller falls back to stock.
  * </p>
  */
@@ -42,9 +42,9 @@ public final class M3Fragment {
 	private static final SwtLog LOG = SwtLog.getLog ("org.eclipse.swt.internal.M3Fragment");
 	/** A class that every M3 fragment holds: its location names the fragment jar. */
 	static final String MARKER = "org/eclipse/swt/internal/render/m3/M3CanvasHandler.class";
-	/** A Skija class: when the SWT class loader sees it, the class path already provides the library. */
-	static final String SKIJA = "jdk.m3.graphics.M3Surface";
-	/** The packages of the fragment; they load child-first so that they link against the nested Skija jars. */
+	/** A jdk.m3.graphics class: when the SWT class loader sees it, the class path already provides the library. */
+	static final String M3_GRAPHICS = "jdk.m3.graphics.M3Surface";
+	/** The packages of the fragment; they load child-first so that they link against the nested library jars. */
 	static final String [] FRAGMENT_PACKAGES = {"org.eclipse.swt.internal.render.m3.", "org.eclipse.swt.internal.gpu.m3."};
 	private static ClassLoader loader;
 
@@ -81,7 +81,7 @@ public final class M3Fragment {
 
 	static boolean visible (ClassLoader swt) {
 		try {
-			Class.forName (SKIJA, false, swt);
+			Class.forName (M3_GRAPHICS, false, swt);
 			return true;
 		} catch (ClassNotFoundException | LinkageError e) {
 			return false;

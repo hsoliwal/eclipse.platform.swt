@@ -40,7 +40,7 @@ public class M3Resources implements IM3Resources {
 	private static final int TEXT_IMAGE_CACHE_MAX = 512;
 
 	/**
-	 * LRU cache that automatically closes the evicted Skija image when the cache
+	 * LRU cache that automatically closes the evicted jdk.m3.graphics image when the cache
 	 * exceeds its capacity. Must only be accessed from the SWT UI thread.
 	 */
 	private static final class LruImageCache<K> extends LinkedHashMap<K, IM3Image> {
@@ -55,7 +55,7 @@ public class M3Resources implements IM3Resources {
 		@Override
 		protected boolean removeEldestEntry(Map.Entry<K, IM3Image> eldest) {
 			if (size() > maxSize) {
-				// Close the native Skija image before evicting it from the cache.
+				// Close the native M3Image before evicting it from the cache.
 				final IM3Image image = eldest.getValue();
 				// Auto-close will call image.close() at the end of this block, ensuring
 				// resources are released.
