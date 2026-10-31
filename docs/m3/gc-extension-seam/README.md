@@ -444,3 +444,149 @@ selection 494 = 494; `H:/m3-scratch/gc-leaf5/probes-gf01-local/`), evidence for 
 - A Composite hook (CTabFolder and the other Composite custom widgets): next leaf.
 - Nebula widgets: covered by class (the Canvas constructor hook), not built or probed; gtk and cocoa: no handler (compiled only); a Tycho
   build.
+
+## Leaf 7: Composite-based custom widgets through the M3 renderer in the `m3`/`gpu` modes (`m3/gc-leaf7-composite-coverage-20261030`)
+
+Base: leaf 5 `578bdc98997` (draft PR #274). The gap, measured (leaf-5 `COVERAGE.tsv`, probe `CTabFolder handler=false`): the Canvas
+constructor hook never reaches a widget that extends `Composite` directly, so CTabFolder, CBanner, ViewForm, the application's and
+Nebula's self-painting composites kept the stock GDI path in `m3`/`gpu`.
+
+### Atoms and patterns (versioned)
+
+| Atom | Typed behaviour | Owner | Pattern |
+|------|-----------------|-------|---------|
+| COMPOSITE_PAINT_HOOK | `(Composite at its first painted WM_PAINT, WidgetMode of its class chain up to Composite, style) -> M3CanvasHandler \| stock` | win32 `Composite.paintThroughM3` (one call in `WM_PAINT` after the CANVAS/FOREIGN_HANDLE test, its two fields in the same block), `ExternalCanvasHandler.createCompositeHandler`, `IExternalCanvasFactory.acceptsComposite/createCompositeExtension` (defaults false/null), `M3CanvasFactory.mode/compositeBackend/foreignComposite/acceptsComposite/createComposite`, `M3CanvasHandler` typed `Composite` | COMPOSITE_PAINT_HOOK v1 |
+| CHILD_CLIP | `(paint DC, child HWNDs) -> present never covers a child` | `M3CanvasHandler.clipBits` + `BeginPaint` (WS_CLIPSIBLINGS \| WS_CLIPCHILDREN, as the stock `Composite.WM_PAINT`) | CHILD_CLIP v1 |
+| CONTAINER_OPT_OUT | `(hooks(Paint) \|\| filters(Paint), retained plane, viewport plane, declined) -> stock` | `Composite.paintThroughM3` (the stock path's own paint test) | CONTAINER_OPT_OUT v1 |
+| probe | `(mode, composite) -> handler?, paints, GCExtension paints, region mismatches and ink vs the stock run, child clip on the window and the DC, census` | `tools/M3CompositeProbe.java` through `tools/probe_m3_canvas.sh` (`M3_PROBE_CLASS`), `tools/m3gc_composite_inventory.sh` | M3-COMPOSITE-PROBE v1 |
+
+- The decision is lazy because it must be: a subclass constructor (CTabFolder, CBanner, ViewForm, Nebula's) adds its Paint listener
+  after `Composite`'s constructor has run, so the composite asks the factory once, at its first `WM_PAINT` with a Paint listener or filter,
+  and caches a refusal (`m3Stock`). With no `swt.widget.mode` property nothing is registered (leaf 4) and every composite is stock.
+- Selector: `M3CanvasFactory.mode` walks a composite's class chain up to `Composite` (`swt.widget.mode.CTabFolder`, then
+  `swt.widget.mode.Composite`, then `swt.widget.mode`; the keys the viewport selectors `CTabFolder.VIEWPORT` and `ViewportPlane.ENABLED`
+  already read, where m3/gpu falls back to their viewport), a canvas's up to `Canvas` (unchanged). No parallel property.
+- Never through the composite path: a `Canvas` (its constructor hook decides; `Decorations`/`Shell` included), an `SWT.EMBEDDED` host, an
+  OLE site (`OleClientSite` and subclasses: the OLE object draws on the HDC through `IViewObject2`), a `Browser`, `SWT.TRANSPARENT` and
+  `SWT.RIGHT_TO_LEFT` composites (the retained planes' rule of `Composite.createHandle`: the stock paint reads the pixels behind a
+  transparent composite and mirrors a right-to-left one; the back buffer does neither), native controls (`createHandle` clears the
+  CANVAS state: Table, Tree, Group, TabFolder, ToolBar, CoolBar, Combo, Spinner, DateTime, ExpandBar never reach the hook), a composite
+  with a retained plane (`-Dswt.gpu`) or a viewport plane (`ViewportPlane`, offset bases).
+- CHILD_CLIP needs no new code: the handler already paints between `BeginPaint` and `EndPaint` with `WS_CLIPCHILDREN` (leaf 5's
+  `clipBits`), so the present (BitBlt into the paint DC) is clipped by the DC's visible region; the back buffer under a child holds the
+  composite's own pixels, never shown. Measured below on the window and on the DC's system region.
+- Leaf 6 owns `Composite.drawBackground*`, `Control.drawBackground*`, `getGCData`, `M3ExternalGC`, `M3PaintManager`: untouched. The
+  `Composite.java` change is the one call plus one block after `WM_PAINT`; leaf 6's branch (`a91bfb855aa`) changes only `gc/*` files, and
+  this branch with those 8 files as a scratch overlay compiles (923 sources, 0 errors).
+
+### Method (CPU only, scripts in `tools/`)
+
+- `m3gc_composite_deltas.py <worktree> [--ledger]`: every owner edit as an exact byte-preserving replacement through leaf 5's engine
+  (`apply_one`, imported from `m3gc_coverage_deltas.py`, not copied), idempotent (a replay prints DONE for every delta); RECIPE_MEMORY rows
+  L7-01..L7-23 and L7-33 (deltas) and the record-only rows of `m3gc_composite_rows.tsv` (L7-24..L7-32, L7-34..L7-37: decisions,
+  corrections, findings); with `--ledger`
+  the `FOSS_REUSE_DECISION.tsv` rows `m3-gc-composite-coverage:*`.
+- `m3gc_composite_inventory.sh [worktree] [nebula-root] [census_m3.tsv]` writes `COVERAGE.tsv`: leaf 5's script is run and its rows kept,
+  three leaf-7 columns appended (`m3_after_leaf7`, `condition_leaf7`, `proof_leaf7`); every composite that is not a canvas classified as
+  foreign / native control / paints itself / pure container, "paints itself" from the probe's measured census when given (else grep).
+- `probe_m3_canvas.sh` serves both probes (`M3_PROBE_CLASS`, `M3_PROBE_TAG`, `M3_PROBE_SRC` for Nebula sources compiled into the probe's
+  scratch classes, `M3_PROBE_CP`, `M3_PROBE_AGENT`); the defaults run leaf 5's probe unchanged.
+
+### Coverage (`COVERAGE.tsv`, 132 classes; m3/gpu mode, no `SWT.M3`; three leaf-7 columns)
+
+| Set | Classes | Reach M3 before (leaf 5) | After (leaf 7) |
+|-----|---------|--------------------------|----------------|
+| Canvas family + Nebula canvases (leaf 5 rows, unchanged) | 60 | 57 | 57 |
+| Fork composites that are not canvases (transitive) + `Composite` | 24 | 0 | 4 yes (CTabFolder, CBanner, ViewForm; `Composite` per instance with a Paint listener); 6 stock pure containers (CCombo, SashForm, ScrolledComposite, OleFrame, M3FilterEditPanel, M3FilterRow); 10 no, native (Table, Tree, Group, TabFolder, ToolBar, CoolBar, Combo, Spinner, DateTime, ExpandBar); 4 no, foreign (Browser, OleClientSite, OleControlSite, WebSite) |
+| Nebula direct `Composite` subclasses (non-test) | 48 | 0 | 5 yes by class (CollapsibleButtons, CustomButton, ToolbarComposite, GanttControlParent, TableCombo); 43 stock pure containers by class (their painted panels are plain `Composite` instances: the per-instance row) |
+| Total | 132 | 57 | 66 |
+
+The fork's six leaf-5 "outside the Canvas hook" composites: 3 now reach M3 (the three that paint themselves), 3 are pure containers
+(stock by CONTAINER_OPT_OUT, measured). Census (`census_<mode>.tsv`, 18 classes constructed and painted in m3 and gpu): handler on
+exactly the 4 classes whose constructor hooks Paint (CTabFolder, CBanner, ViewForm, CollapsibleButtons), none of the 14 others.
+
+### Gates (2026-10-30; one JVM at a time; output under `H:/m3-scratch/gc-leaf7/`)
+
+- `compile_m3gc.sh C:/m3-superset/swt-gcleaf7 H:/m3-scratch/gc-leaf7/main`: **922 sources, 0 errors**. With leaf 6's `a91bfb855aa` gc files
+  as `M3_OVERLAY` (scratch only): 923 / 0.
+- `compile_platform.sh` (copy with `out=` under `H:/m3-scratch/gc-leaf7/platform`; Windows paths; logs empty, classes written):
+  **win32 888 / 0, gtk 678 / 0, cocoa 817 / 0** (leaf 5: the same counts; the common seam change compiles on all three).
+- `test_m3gc.sh ... H:/m3-scratch/gc-leaf7/tests` (`M3_NATIVES=H:/m3-scratch/gc-wiring/natives`): tests compile 33 sources / 0 errors;
+  **97 found, 97 passed, 0 failed** (leaf 5's 91 and 6 of `Test_org_eclipse_swt_m3gc_CompositeCoverage`: the mode x composite x style
+  matrix, canvases never decided here, foreign/transparent/mirrored stay stock, the selector sees the composite class and the canvas path
+  is unchanged, per-class properties up to `Composite`, a foreign factory's default stays canvas-only).
+- Display probe (`M3CompositeProbe` through `probe_m3_canvas.sh stock|m3|gpu`, hidden desktop; PNGs, `probe_<mode>.tsv`,
+  `census_<mode>.tsv` in `H:/m3-scratch/gc-leaf7/probes/`; reference = the stock run's print). Thresholds set before the m3 runs: flat
+  (non-text) regions exact, ink (dark pixels) within 50 %, fills by dominant colour equal, Nebula mean channel delta <= 4.0.
+
+  | Composite | stock | m3 | gpu |
+  |-----------|-------|----|-----|
+  | CTabFolder (BORDER \| CLOSE, 3 tabs, 2nd selected) | PASS: handler=false, strip ink 165, close ink 17, fills ffffff / f0f0f0 | **FAIL (GF02)**: raster, 2/2 GCExtension paints, body mismatch **0**, then every paint throws in `CTabFolderRenderer.drawUnselected:1384` (strip ink 0 vs 165, 8 exceptions) | **FAIL (GF02)**: gpu, 2/2, body **0** (after L7-33; before it the throwing pass was never read back: body 56304), strip ink 0 |
+  | CTabFolder, leaf 6 `a91bfb855aa` overlaid (scratch) | - | 0 exceptions, body **0**, close 17/17 mismatch **0**, fills equal; FAIL strip ink 425 vs 165 (raster glyphs smeared, L7-35) | 0 exceptions, body **0**, fills equal, close 15/17; FAIL strip ink 264 vs 165 ("Tab 2" shortened to "Tab...", L7-35) |
+  | CBanner (native Label children) | PASS: handler=false | FAIL: 2/2, curve band **16** (anti-aliased curve, max delta 11), flat **85** (gradient tail row, every pixel 1 level off) (L7-31) | FAIL: 2/2, band 719, flat 117 (max delta 15) |
+  | ViewForm (BORDER, Label top left, container content) | PASS | FAIL: 1/1, border ring **0**, flat **1** (separator start pixel 3,19: L7-32) | FAIL: same, border 0, flat 1 |
+  | ChildClip (red Paint fill, native green child) | PASS: window child 00ff00, parent ff0000, DC excludes child | **PASS**: raster, 1/1, flat **0**, window child **00ff00** while the buffer under it is ff0000, DC excludes child | **PASS**: gpu, the same |
+  | Container (no Paint listener, native Button) | PASS: handler=false, 0 paints | **PASS**: handler=false (CONTAINER_OPT_OUT), print equal to stock (mismatch **0**) | **PASS**: the same |
+  | Nebula CollapsibleButtons (built from source) | PASS | FAIL: 1/1 + 4 nested composites handled; own region **0**; ToolbarComposite **0** (ink 29/29); 3 CustomButtons image **0**, gradient 1-2 levels, meanDelta 2.97 / 4.28 / 4.07, dark ink 0 vs 129..205 (L7-34) | FAIL: the same composites handled; image 0; meanDelta 2.38 / 3.39 / 3.11; dark ink 0 vs 53..73 |
+
+  Every hook atom passes on every composite in m3 and gpu: the handler exactly where expected (census and probes), every screen paint a
+  `GCExtension`, the child windows untouched on the window (CHILD_CLIP), the pure container stock (CONTAINER_OPT_OUT). The pixel failures
+  are GC fidelity of `M3ExternalGC`, owned by leaf 6 and not edited here: GF02 (CTabFolder; fixed on leaf 6's branch, measured above),
+  gradient rounding, polyline/line-start pixels, text rendering and metrics (L7-30..L7-35, evidence PNGs in the probe folders).
+- Regression check (leaf 5's `M3CanvasProbe` rerun on this branch, m3, reference leaf 5's stock prints; `H:/m3-scratch/gc-leaf7/canvas/`):
+  Canvas (damage 20,20,30,10, fill 0, phase 1.000, tips 0/39), CLabel (image 0, ink 543 vs 514), Canvas(SWT.M3) (rect 0): exactly leaf 5's
+  numbers; StyledText GF01 unchanged; its CTabFolder row now has the handler (L7-21..L7-23).
+
+### PARTIAL_PRESENT (found by the probe, L7-33)
+
+A Paint listener that throws left `M3CanvasHandler.frame` before `present`: the gpu frame was never read back (CTabFolder's buffer black)
+and in neither mode did the damage reach the window, while the stock path has the listener's partial drawing on the paint DC. The passes
+now run in `try` and the damage is presented in `finally` (unless the widget was disposed); the exception still propagates. Measured: gpu
+CTabFolder body mismatch 56304 -> 0.
+
+### Deviations (documented)
+
+- A transparent (`SWT.TRANSPARENT`) or mirrored (`SWT.RIGHT_TO_LEFT`) composite stays stock, where a canvas with those styles gets the
+  handler (leaf 5); a later leaf can seed a transparent composite's damage from the paint DC (the stock path's BitBlt) and mirror the present.
+- The decision is per instance at the first painted `WM_PAINT` and a refusal is cached: a composite created under a mode with no factory
+  (no property) stays stock for its lifetime, like every canvas.
+- Background: the composite's colour (`clear`), not `drawBackground`'s image or theme part (leaf 4 and 5's deviation, unchanged).
+
+### NOT_RUN
+
+- PASS of CTabFolder, CBanner, ViewForm and the Nebula buttons at the fixed thresholds: blocked on leaf 6 (GF02 on the committed base;
+  gradient, line and text fidelity with leaf 6's head overlaid).
+- `SWT.NO_MERGE_PAINTS`, `SWT.DOUBLE_BUFFERED`, a partial `redraw` and `NO_REDRAW_RESIZE` growth on a composite (the handler's damage code is
+  leaf 5's, unit-tested there); a composite whose Paint listener is added after its first paint; disposing a composite inside its Paint event.
+- RTL and transparent composites through M3 (stock by decision), Shell/Decorations (design note above), carets on composites.
+- Nebula: one widget family built and probed (collapsiblebuttons); the other 4 self-painting classes and the per-instance panels by class
+  only; gtk and cocoa: no handler (compiled only); a Tycho build.
+
+### Shell and Decorations stay native (precisely why; design note for a later leaf)
+
+Where it is decided: `ExternalCanvasHandler.isActive` answers false for every `Decorations` before any factory is asked (adopted I31 rule,
+kept); `M3CanvasFactory.backend` answers null for a `Decorations` class (leaf 5, `CanvasCoverage.testDecorationsNever`); the composite path
+never decides a `Canvas` (`createCompositeHandler` and `compositeBackend`, `CompositeCoverage.testCanvasesAreNeverDecidedHere`), and
+`Decorations extends Canvas`. A Shell with a Paint listener therefore reaches `Composite.paintThroughM3`, is declined once and cached
+(`m3Stock`), and paints through the stock `Composite.WM_PAINT`.
+
+Why, in the win32 code of this branch:
+
+1. A Shell's pixels are mostly not its paint listeners': the frame, caption and menu bar are non-client (DWM and `WM_NCPAINT`), the client
+   area is the native child tree plus `drawBackground` (theme background `THEME_BACKGROUND`, background image, `WM_ERASEBKGND`). The
+   win32 `Shell`, `Decorations` and `Canvas` add no Paint listener of their own (`grep -c SWT.Paint`: 0, 0, 1 = the Canvas
+   hook's `sendEvent`), so a default Shell is a pure container in the CONTAINER_OPT_OUT sense.
+2. A top-level window is already retained: DWM keeps a redirection surface per top-level window, so a second retained back buffer of the
+   whole client area (resized with every window resize, the largest buffer of the application) buys only GC fidelity, at the cost of memory
+   proportional to the screen.
+3. Top-level states the handler does not model: `Shell.setAlpha` switches `WS_EX_LAYERED` with `SetLayeredWindowAttributes`
+   (`Shell.java:1757-1762`), `Control.setRegion` shapes the window (`SetWindowRgn`), `Shell.win32_new` wraps a foreign top-level handle
+   with its own window procedure (`Shell.java:651-658`, `state |= CANVAS` with `windowProc` of the foreign window), `SWT.EMBEDDED` shells
+   host another toolkit, and `OleFrame` borrows the shell's menu bar for in-place OLE.
+
+Design note (a later leaf, not built here): a Shell gets the M3 handler only when (a) it hooks Paint (CONTAINER_OPT_OUT, the same test),
+(b) it is not layered, regioned, foreign or embedded (checked per paint: `WS_EX_LAYERED`, `GetWindowRgn`, `FOREIGN_HANDLE`, `SWT.EMBEDDED`),
+(c) client area only (no `WM_NCPAINT`), (d) the buffer grows in size classes and is
+released while the shell is minimized. The decision would stay in `M3CanvasFactory` (a `Decorations` row in `compositeBackend`'s rule set,
+default off behind its own property `swt.widget.mode.Shell`), the hook in `Canvas.WM_PAINT`'s fallback (`super.WM_PAINT` already reaches
+`paintThroughM3`), so no new seam is needed.
