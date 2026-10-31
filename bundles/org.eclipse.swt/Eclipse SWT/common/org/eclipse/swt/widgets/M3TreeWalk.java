@@ -20,8 +20,10 @@ import java.util.*;
  * Cursor over the visible rows of a <code>Tree</code> in row order: the items whose
  * ancestors are all expanded, roots first, each item followed by its expanded subtree.
  * <p>
- * The state is two lanes indexed by depth (the parent facade and the next child index),
- * so a walk allocates nothing per row; only the depth lanes grow. Children are reached with
+ * The state is three lanes indexed by depth (the parent facade, its child count and the next
+ * child index), so a walk allocates nothing per row; only the depth lanes grow. Each parent is
+ * asked for its child count once, when the walk enters it: a plain tree counts its roots by
+ * walking the native siblings, so a count per step made a walk quadratic. Children are reached with
  * <code>getItem(int)</code> and never copied into arrays. This is the public-API path of the
  * M3 row queries; when the viewport is active the topology lanes can answer the same questions
  * in O(log n) (see M3-ROW-MATH in docs/m3/ENHANCED_API_MAP.tsv).
@@ -30,13 +32,14 @@ import java.util.*;
 final class M3TreeWalk {
 	private final Tree tree;
 	private TreeItem [] parents = new TreeItem [8];
-	private int [] next = new int [8];
+	private int [] next = new int [8], counts = new int [8];
 	/* depth of the frame to continue from; -1 when the walk is over */
 	private int depth = 0;
 
 	/** A walk positioned before the first root of <code>tree</code>. */
 	M3TreeWalk (Tree tree) {
 		this.tree = tree;
+		counts [0] = tree.getItemCount ();
 	}
 
 	/**
@@ -46,6 +49,7 @@ final class M3TreeWalk {
 	M3TreeWalk (TreeItem root) {
 		this.tree = root.getParent ();
 		parents [0] = root;
+		counts [0] = root.getItemCount ();
 	}
 
 	/** Returns the number of rows left in the walk, consuming them. */
@@ -62,7 +66,7 @@ final class M3TreeWalk {
 		while (depth >= 0) {
 			TreeItem parent = parents [depth];
 			int index = next [depth];
-			if (index < childCount (parent)) {
+			if (index < counts [depth]) {
 				next [depth] = index + 1;
 				TreeItem item = child (parent, index);
 				enter (item);
@@ -100,15 +104,13 @@ final class M3TreeWalk {
 		depth++;
 		parents [depth] = item;
 		next [depth] = 0;
+		counts [depth] = item.getItemCount ();
 	}
 
 	private void grow () {
 		parents = Arrays.copyOf (parents, parents.length * 2);
 		next = Arrays.copyOf (next, next.length * 2);
-	}
-
-	private int childCount (TreeItem parent) {
-		return parent == null ? tree.getItemCount () : parent.getItemCount ();
+		counts = Arrays.copyOf (counts, counts.length * 2);
 	}
 
 	private TreeItem child (TreeItem parent, int index) {
