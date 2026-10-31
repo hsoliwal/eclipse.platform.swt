@@ -81,6 +81,10 @@ if [ "${OS}" = "" ]; then
 	OS=`uname -s`
 fi
 case $OS in
+	"Windows_NT")
+		SWT_OS=win32
+		MAKEFILE=make_win32.mak
+		;;
 	*)
 		SWT_OS=`uname -s | tr -s '[:upper:]' '[:lower:]'`
 		MAKEFILE=make_linux.mak
@@ -88,7 +92,7 @@ case $OS in
 esac
 
 # Determine which CPU type we are building for
-if [ "${MODEL}" = "" ]; then
+if [ "${MODEL}" = "" -o "${MODEL}" = "\${arch}" ]; then
 	if uname -i > /dev/null 2>&1; then
 		MODEL=`uname -i`
 		if [ ${MODEL} = 'unknown' ]; then
@@ -111,6 +115,14 @@ case $MODEL in
 esac
 
 case $SWT_OS.$SWT_ARCH in
+	"win32.x86_64")
+		if [ "${CC}" = "" ]; then
+			export CC=gcc
+		fi
+		if [ "${PKG_CONFIG_PATH}" = "" ]; then
+			export PKG_CONFIG_PATH="/usr/lib64/pkgconfig"
+		fi
+		;;
 	"linux.x86_64")
 		if [ "${CC}" = "" ]; then
 			export CC=gcc
