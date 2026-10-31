@@ -10,7 +10,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Hitesh Soliwal (Synexia) - shared style policy
+ *     Hitesh Soliwal (Synexia) - shared style policy, feature switches
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
@@ -70,6 +70,18 @@ public abstract class Widget {
 	Display display;
 	EventTable eventTable;
 	Object data;
+	/**
+	 * The web-UI feature switches of this widget (<code>M3Features</code>): a packed bitset, one bit per feature id, or
+	 * <code>null</code> while every switch is at its class default (the stock widget allocates nothing). Read and written by
+	 * <code>M3Features</code> only.
+	 * <p>
+	 * <b>IMPORTANT:</b> This field is <em>not</em> part of the SWT public API. It is marked public only so that it can be
+	 * shared within the packages provided by SWT. It should never be accessed from application code.
+	 * </p>
+	 *
+	 * @noreference This field is not intended to be referenced by clients.
+	 */
+	public long [] m3Features;
 
 	/* Global state flags
 	 *

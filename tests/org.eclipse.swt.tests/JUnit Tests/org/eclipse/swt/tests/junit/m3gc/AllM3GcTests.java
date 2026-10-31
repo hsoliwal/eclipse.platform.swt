@@ -21,6 +21,11 @@ import org.junit.platform.suite.api.Suite;
 		Test_org_eclipse_swt_m3gc_drawText.class, //
 		Test_org_eclipse_swt_m3gc_drawText_NoCache.class, //
 		Test_org_eclipse_swt_m3gc_DrawnCustomDraw.class, //
+		Test_org_eclipse_swt_m3gc_M3CanvasFactory.class, //
+		Test_org_eclipse_swt_m3gc_CanvasCoverage.class, //
+		Test_org_eclipse_swt_m3gc_CanvasDamage.class, //
+		Test_org_eclipse_swt_m3gc_StrokeState.class, //
+		Test_org_eclipse_swt_m3gc_CompositeCoverage.class, //
 
 })
 public class AllM3GcTests {
