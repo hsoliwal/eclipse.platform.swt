@@ -107,7 +107,9 @@ public class M3TextDrawing {
 					});
 
 				}
-				surface.getCanvas().drawString(text, r.x, r.y + ascI, f, fgp);
+				// RTL_FRAME v1: in a mirrored frame the run is flipped back about its box (M3Mirror)
+				M3Mirror.unmirrored(surface.getCanvas(), gc.isMirrored(), r.x, f.measureTextWidth(text, fgp),
+						() -> surface.getCanvas().drawString(text, r.x, r.y + ascI, f, fgp));
 				yPos[0] += heightI + leading;
 			}
 		});
@@ -148,7 +150,8 @@ public class M3TextDrawing {
 			final var cachedImage = resources.getTextImage(text, props, transparent, backgroundColor, foregroundColor,
 					antiAlias);
 			if (cachedImage != null && !cachedImage.isClosed()) {
-				surface.getCanvas().drawImage(cachedImage, x, yPos[0]);
+				M3Mirror.unmirrored(surface.getCanvas(), gc.isMirrored(), x, cachedImage.getWidth(),
+						() -> surface.getCanvas().drawImage(cachedImage, x, yPos[0]));
 				yPos[0] += Math.ceil(cachedImage.getHeight());
 				continue;
 			}
@@ -235,7 +238,8 @@ public class M3TextDrawing {
 					final var image = supportSurface.makeImageSnapshot();
 					resources.cacheTextImage(text, props, transparent, backgroundColor, foregroundColor, antiAlias,
 							image);
-					surface.getCanvas().drawImage(image, x, yPos[0]);
+					M3Mirror.unmirrored(surface.getCanvas(), gc.isMirrored(), x, image.getWidth(),
+							() -> surface.getCanvas().drawImage(image, x, yPos[0]));
 					yPos[0] += Math.ceil(image.getHeight());
 
 				}

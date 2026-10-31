@@ -96,6 +96,9 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	/* BACKGROUND_PARITY v1: the stock background chain of the paint in progress (null: the flat background colour), its opaque paint */
 	private M3BackgroundChain chain;
 	private Paint opaquePaint;
+	/* RTL_FRAME v1: the client width of the frame in progress and whether its window is mirrored (WS_EX_LAYOUTRTL) */
+	private int clientWidth;
+	private boolean mirrored;
 
 	private M3CanvasHandler (Composite canvas, M3Gpu gpu) {
 		this.control = canvas;
@@ -196,15 +199,36 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 			IntStream.range (0, passes).takeWhile (p -> !disposed).forEach (p -> pass (send, p, passes));
 		} finally {
 			/* leaf 7: a listener that throws still has its partial frame presented (stock: what it drew is on the paint DC); it still throws */
-			if (!disposed) IntStream.range (0, damage.count ()).forEach (i -> present (hdc, damage.x (i), damage.y (i), damage.width (i), damage.height (i)));
+			if (!disposed) presentDamage (hdc);
 		}
 	}
 
+	/* the damage copied to the window; a mirrored paint DC (LAYOUT_RTL) is unmirrored meanwhile: the buffer holds physical pixels */
+	private void presentDamage (long hdc) {
+		int layout = mirrored ? OS.SetLayout (hdc, 0) : 0;
+		IntStream.range (0, damage.count ()).forEach (i -> present (hdc, physicalX (i), damage.y (i), damage.width (i), damage.height (i)));
+		if (mirrored) OS.SetLayout (hdc, layout);
+	}
+
+	/*
+	 * RTL_FRAME v1 (census GF48): a right-to-left canvas (WS_EX_LAYOUTRTL) paints in mirrored logical coordinates, as the stock
+	 * paint DC does; its frame is drawn through the mirror x -> clientWidth - x (text runs and images flipped back, M3Mirror),
+	 * so the damage, given in logical coordinates, sits at clientWidth - x - width in the buffer and on the screen.
+	 */
+	private int physicalX (int i) {
+		return mirrored ? clientWidth - damage.x (i) - damage.width (i) : damage.x (i);
+	}
+
+	private void mirror (io.github.humbleui.skija.Canvas canvas) {
+		canvas.translate (clientWidth, 0);
+		canvas.scale (-1, 1);
+	}
 
 	/* one Paint event, clipped to its pass (M3CanvasDamage.clip): the background first unless the canvas retains its pixels */
 	private void pass (Consumer<Event> send, int pass, int passes) {
 		io.github.humbleui.skija.Canvas canvas = surface.getCanvas ();
 		canvas.save ();
+		if (mirrored) mirror (canvas);
 		damage.clip (canvas, pass, passes);
 		if (!retains () && chain == null) canvas.clear (M3ColorConverter.convertSWTColorToM3Color (control.getBackground ()));
 		try {
@@ -219,7 +243,7 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	 * buffer's memory DC: background image, parent theme part, inherited colour), then handed to the surface opaque.
 	 */
 	private void background (int i) {
-		int x = damage.x (i), y = damage.y (i), w = damage.width (i), h = damage.height (i);
+		int x = physicalX (i), y = damage.y (i), w = damage.width (i), h = damage.height (i);
 		chain.fill (buffer.dc, x, y, w, h);
 		/* a GDI call that answers a value flushes the thread's GDI batch (OS has no GdiFlush): the pixels are in the DIB */
 		OS.GetPixel (buffer.dc, x, y);
@@ -256,7 +280,11 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	private void prepare (long hdc) {
 		RECT client = new RECT ();
 		OS.GetClientRect (control.handle, client);
+		clientWidth = client.right;
+		mirrored = (OS.GetWindowLong (control.handle, OS.GWL_EXSTYLE) & OS.WS_EX_LAYOUTRTL) != 0;
 		if (retains ()) buffer.growFrame (hdc, client.right, client.bottom); else buffer.ensureFrame (hdc, client.right, client.bottom);
+		/* RTL_FRAME v1: a memory DC made compatible with a mirrored paint DC is mirrored around the bitmap's width; the buffer is physical */
+		if (OS.GetLayout (buffer.dc) != 0) OS.SetLayout (buffer.dc, 0);
 		target ();
 		if (gpu != null) gpu.makeCurrent ();
 	}
@@ -288,8 +316,8 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	 * the number of NO_MERGE_PAINTS events still to come.
 	 */
 	private void event (Consumer<Event> send, int [] bounds, int count) {
-		extension.frame (bounds [0], bounds [1], bounds [2], bounds [3]);
-		GC gc = new GCExtension (new M3ExternalGC (extension, SWT.NONE));
+		extension.frame (mirrored ? clientWidth - bounds [0] - bounds [2] : bounds [0], bounds [1], bounds [2], bounds [3]);
+		GC gc = new GCExtension (new M3ExternalGC (extension, mirrored ? SWT.RIGHT_TO_LEFT | SWT.MIRRORED : SWT.NONE));
 		Event event = new Event ();
 		event.gc = gc;
 		event.count = count;
@@ -338,7 +366,9 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		Rectangle source = Win32DPIUtils.pointToPixel (new Rectangle (x, y, scrollWidth, scrollHeight), zoom);
 		int deltaX = DPIUtil.pointToPixel (destX, zoom) - source.x, deltaY = DPIUtil.pointToPixel (destY, zoom) - source.y;
 		if (buffer.dc != 0) {
-			OS.BitBlt (buffer.dc, source.x + deltaX, source.y + deltaY, source.width, source.height, buffer.dc, source.x, source.y, OS.SRCCOPY);
+			/* RTL_FRAME v1: the buffer holds physical pixels; the scroll is given in the mirrored window's logical coordinates */
+			int sx = mirrored ? clientWidth - source.x - source.width : source.x, dx = mirrored ? -deltaX : deltaX;
+			OS.BitBlt (buffer.dc, sx + dx, source.y + deltaY, source.width, source.height, buffer.dc, sx, source.y, OS.SRCCOPY);
 		}
 		RECT rect = new RECT ();
 		OS.SetRect (rect, source.x, source.y, source.x + source.width, source.y + source.height);

@@ -19,6 +19,6 @@ import org.junit.platform.suite.api.Suite;
 
 /** The Display classes of the real-app fidelity leaf, run once per widget mode (tools/test_m3fidelity.sh display MODE). */
 @Suite
-@SelectClasses({ Test_org_eclipse_swt_widgets_M3ModeTruth.class })
+@SelectClasses({ Test_org_eclipse_swt_widgets_M3ModeTruth.class, Test_org_eclipse_swt_widgets_M3CanvasMirroring.class })
 public class AllM3FidelityDisplay {
 }

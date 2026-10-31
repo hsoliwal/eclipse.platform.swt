@@ -224,13 +224,14 @@ public class M3ExternalGC implements IExternalGC {
 		paintManager.performDraw(paint -> {
 			paint.setAlpha(alpha);
 			paint.setAntiAlias(true);
-			canvas.drawImageRect(
+			final Rect dest = RectangleConverter.createScaledRectangle(getScaler(), destX, destY, destWidth, destHeight);
+			// RTL_FRAME v1: an image keeps its orientation in a mirrored frame (stock preserves bitmap orientation)
+			M3Mirror.unmirrored(canvas, isMirrored(), dest.getLeft(), dest.getWidth(), () -> canvas.drawImageRect(
 					SwtToM3ImageConverter.convertSWTImageToM3Image(image, getScaler().autoScaleUp(100 * fac),
 							resources),
 					RectangleConverter.createScaledRectangle(getScaler(), srcX * fac, srcY * fac, srcWidth * fac,
 							srcHeight * fac),
-					RectangleConverter.createScaledRectangle(getScaler(), destX, destY, destWidth, destHeight),
-					this.interpolationMode, paint, false);
+					dest, this.interpolationMode, paint, false));
 
 		});
 
@@ -1012,6 +1013,11 @@ public class M3ExternalGC implements IExternalGC {
 	@Override
 	public int getLineJoin() {
 		return lineJoin;
+	}
+
+	/** RTL_FRAME v1: whether the GC draws a mirrored frame (style SWT.MIRRORED, a right-to-left M3 canvas). */
+	boolean isMirrored() {
+		return (style & SWT.MIRRORED) != 0;
 	}
 
 	@Override
