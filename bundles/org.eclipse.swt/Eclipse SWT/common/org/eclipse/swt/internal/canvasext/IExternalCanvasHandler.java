@@ -21,6 +21,14 @@ public interface IExternalCanvasHandler {
 
 	Object paint(Consumer<Event> consumer, long wParam, long lParam);
 
+	/**
+	 * M3 (BACKGROUND_PARITY v1, census L16): the paint with the widget's stock background chain, which a handler fills its
+	 * frame with instead of a flat colour; the default ignores it.
+	 */
+	default Object paint(Consumer<Event> consumer, M3BackgroundChain background, long wParam, long lParam) {
+		return paint(consumer, wParam, lParam);
+	}
+
 	void redrawTriggered();
 
 	void redrawTriggered(int x, int y, int width, int height, boolean all);

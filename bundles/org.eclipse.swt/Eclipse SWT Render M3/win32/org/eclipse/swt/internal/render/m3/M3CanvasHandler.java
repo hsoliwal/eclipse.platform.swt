@@ -29,14 +29,17 @@ import org.eclipse.swt.internal.win32.*;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 
+import io.github.humbleui.skija.BlendMode;
 import io.github.humbleui.skija.ColorAlphaType;
 import io.github.humbleui.skija.ColorType;
 import io.github.humbleui.skija.ImageInfo;
+import io.github.humbleui.skija.Paint;
 import io.github.humbleui.skija.PixelGeometry;
 import io.github.humbleui.skija.Pixmap;
 import io.github.humbleui.skija.Surface;
 import io.github.humbleui.skija.SurfaceOrigin;
 import io.github.humbleui.skija.SurfaceProps;
+import io.github.humbleui.types.Rect;
 
 /**
  * The M3 renderer behind a <code>Canvas</code> created with {@link SWT#M3} (GC seam, leaf 4): the canvas's
@@ -90,6 +93,9 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	private long regionHandle;
 	private int [] regionData = new int [M3CanvasDamage.HEADER + 4 * 8];
 	private boolean painting, released;
+	/* BACKGROUND_PARITY v1: the stock background chain of the paint in progress (null: the flat background colour), its opaque paint */
+	private M3BackgroundChain chain;
+	private Paint opaquePaint;
 
 	private M3CanvasHandler (Composite canvas, M3Gpu gpu) {
 		this.control = canvas;
@@ -124,7 +130,6 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		return "M3CanvasHandler(" + (gpu != null ? "gpu" : "raster") + ")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 
-
 	/** The library surface over the back buffer (replaced when the buffer grows), or null before the first frame. */
 	public Surface surface () {
 		return surface;
@@ -139,6 +144,13 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 
 	@Override
 	public Object paint (Consumer<Event> send, long wParam, long lParam) {
+		return paint (send, null, wParam, lParam);
+	}
+
+	/** BACKGROUND_PARITY v1 (census L16): the frame's damage is filled through the widget's stock background chain. */
+	@Override
+	public Object paint (Consumer<Event> send, M3BackgroundChain background, long wParam, long lParam) {
+		chain = background;
 		long hwnd = control.handle;
 		int oldBits = clipBits (hwnd);
 		readRegion (hwnd);
@@ -178,6 +190,7 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 	private void frame (Consumer<Event> send, long hdc, PAINTSTRUCT ps) {
 		damage.read (regionData, ps.left, ps.top, ps.right, ps.bottom);
 		prepare (hdc);
+		if (chain != null && !retains ()) IntStream.range (0, damage.count ()).forEach (this::background);
 		int passes = damage.passes (control.getStyle ());
 		try {
 			IntStream.range (0, passes).takeWhile (p -> !disposed).forEach (p -> pass (send, p, passes));
@@ -187,17 +200,45 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		}
 	}
 
+
 	/* one Paint event, clipped to its pass (M3CanvasDamage.clip): the background first unless the canvas retains its pixels */
 	private void pass (Consumer<Event> send, int pass, int passes) {
 		io.github.humbleui.skija.Canvas canvas = surface.getCanvas ();
 		canvas.save ();
 		damage.clip (canvas, pass, passes);
-		if (!retains ()) canvas.clear (M3ColorConverter.convertSWTColorToM3Color (control.getBackground ()));
+		if (!retains () && chain == null) canvas.clear (M3ColorConverter.convertSWTColorToM3Color (control.getBackground ()));
 		try {
 			event (send, damage.bounds (pass, passes), damage.eventCount (pass, passes));
 		} finally {
 			canvas.restore ();
 		}
+	}
+
+	/*
+	 * BACKGROUND_PARITY v1: one damage rectangle filled as the stock WM_PAINT fills its device context (the chain on the
+	 * buffer's memory DC: background image, parent theme part, inherited colour), then handed to the surface opaque.
+	 */
+	private void background (int i) {
+		int x = damage.x (i), y = damage.y (i), w = damage.width (i), h = damage.height (i);
+		chain.fill (buffer.dc, x, y, w, h);
+		/* a GDI call that answers a value flushes the thread's GDI batch (OS has no GdiFlush): the pixels are in the DIB */
+		OS.GetPixel (buffer.dc, x, y);
+		if (gpu != null) upload (x, y, w, h);
+		opaque (x, y, w, h);
+	}
+
+	/* the GPU target takes the buffer's pixels of a rectangle (as gpuTarget does for the whole buffer) */
+	private void upload (int x, int y, int w, int h) {
+		ImageInfo info = new ImageInfo (w, h, ColorType.BGRA_8888, ColorAlphaType.PREMUL);
+		try (Pixmap pixels = Pixmap.make (info, bits + ((long) y * width + x) * 4L, width * 4)) {
+			surface.writePixels (pixels, x, y);
+		}
+	}
+
+	/* GDI leaves alpha 0: opaque black drawn under the pixels (DST_OVER) sets alpha 255 and keeps every colour */
+	private void opaque (int x, int y, int w, int h) {
+		if (opaquePaint == null) opaquePaint = new Paint ().setColor (0xFF000000).setBlendMode (BlendMode.DST_OVER);
+		surface.getCanvas ().drawRect (Rect.makeXYWH (x, y, w, h), opaquePaint);
 	}
 
 	/* SWT.NO_BACKGROUND and SWT.TRANSPARENT draw over the previous frame (the stock path draws no background for them) */
@@ -319,6 +360,8 @@ public final class M3CanvasHandler implements IExternalCanvasHandler {
 		surface = null;
 		if (readback != null) readback.close ();
 		readback = null;
+		if (opaquePaint != null) opaquePaint.close ();
+		opaquePaint = null;
 		if (gpu != null) gpu.release ();
 		buffer.release ();
 		if (regionHandle != 0) OS.DeleteObject (regionHandle);

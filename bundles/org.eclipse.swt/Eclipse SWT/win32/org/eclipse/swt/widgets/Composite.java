@@ -1934,6 +1934,16 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 org.eclipse.swt.internal.canvasext.IExternalCanvasHandler m3Handler;
 boolean m3Stock;
 
+/*
+ * M3 (BACKGROUND_PARITY v1, census L16): the background the stock WM_PAINT draws on its paint device context
+ * (drawBackground (hDC, rect): background image, theme part, inherited colour), drawn on an M3 frame's device context.
+ */
+void fillM3Background (long hdc, int x, int y, int width, int height) {
+	RECT rect = new RECT ();
+	OS.SetRect (rect, x, y, x + width, y + height);
+	drawBackground (hdc, rect);
+}
+
 /* MODE_TRUTH v1 (census L10): the route of an M3 handler (gpu or m3), or null for none */
 static WidgetMode handlerRoute (org.eclipse.swt.internal.canvasext.IExternalCanvasHandler handler) {
 	return handler == null ? null : handler.isGpu () ? WidgetMode.GPU : WidgetMode.M3;
@@ -1966,7 +1976,7 @@ LRESULT paintThroughM3 (long wParam, long lParam) {
 		m3Stock = m3Handler == null;
 		if (m3Stock) return null;
 	}
-	Object result = m3Handler.paint (event -> sendEvent (SWT.Paint, event), wParam, lParam);
+	Object result = m3Handler.paint (event -> sendEvent (SWT.Paint, event), this::fillM3Background, wParam, lParam);
 	return result instanceof LRESULT r ? r : LRESULT.ZERO;
 }
 

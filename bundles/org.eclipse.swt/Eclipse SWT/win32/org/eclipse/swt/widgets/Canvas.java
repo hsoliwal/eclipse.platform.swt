@@ -112,7 +112,8 @@ LRESULT WM_PAINT (long wParam, long lParam) {
 
 		if ((state & DISPOSE_SENT) != 0) return LRESULT.ZERO;
 
-		var result = externalCanvasHandler.paint(e -> sendEvent(SWT.Paint,e),wParam, lParam);
+		/* M3 (BACKGROUND_PARITY v1, census L16): the handler fills its frame through the stock background chain */
+		var result = externalCanvasHandler.paint(e -> sendEvent(SWT.Paint,e), this::fillM3Background, wParam, lParam);
 		if(result instanceof Integer i)
 			return new LRESULT(i);
 
