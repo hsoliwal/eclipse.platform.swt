@@ -200,4 +200,5 @@ public interface M3FeatureIds {
 	int LANG_ID = 176; // lang-id: all, ENHANCED_API_ROW, default off
 	int ROLLOVER = 177; // rollover: all, ENHANCED_API_ROW, default off
 	int FRAME_OVERLAY = 178; // frame-overlay: all, VIEWPORT_HAS, default off
+	int LANGUAGE_SWITCH = 179; // language-switch: all, ENHANCED_API_ROW, default off
 }

@@ -22,7 +22,7 @@ package org.eclipse.swt.internal.render;
 //FLLDCIM: TFG — generated from FEATURE_SWITCH_MATRIX.tsv and SHIPPED.tsv by gen_features.py
 final class M3FeatureTable {
 	/** The number of features: the rows of the ledger. */
-	static final int COUNT = 179;
+	static final int COUNT = 180;
 	/** The columns of a row, tab separated, in bit order. */
 	static final String [] ROWS = {
 		"card\tcard\tpanel\tGAP\toff\t-\t-\t-\tno",
@@ -111,7 +111,7 @@ final class M3FeatureTable {
 		"color-picker\tcolor-picker\tinput\tNATIVE_HAS\ton\torg.eclipse.swt.widgets.ColorDialog\t-\t-\tno",
 		"spinner-loading\tspinner-loading\tall\tNATIVE_HAS\ton\torg.eclipse.swt.custom.BusyIndicator; Nebula ProgressCircle\t-\t-\tno",
 		"rich-text-editor\trich-text-editor\ttext\tNATIVE_HAS\ton\torg.eclipse.swt.custom.StyledText; Nebula RichTextEditor\t-\t-\tno",
-		"theme-provider\tconfig-provider\tall\tENHANCED_API_ROW\toff\t-Dswt.widget.theme[.<Widget>] startup property (LOOK_AND_FEEL.md); Nebula styleprovider\tM3-THEME-HOOKS\t-\tno",
+		"theme-provider\tconfig-provider\tall\tENHANCED_API_ROW\toff\t-Dswt.widget.theme[.<Widget>] startup property (LOOK_AND_FEEL.md); Nebula styleprovider\tM3-THEME-HOOKS\t-\tyes",
 		"rating\trating\ttable\tNATIVE_HAS\ton\tNebula StarRating\t-\t-\tno",
 		"message-list\tmessage-list\tlist\tGAP\toff\t-\t-\t-\tno",
 		"timeline\ttimeline\tlist\tNATIVE_HAS\ton\tNebula timeline\t-\t-\tno",
@@ -204,6 +204,7 @@ final class M3FeatureTable {
 		"lang-id\tlang id (enhanced API)\tall\tENHANCED_API_ROW\toff\t-\tM3-LANG-ID\t-\tno",
 		"rollover\trollover (enhanced API)\tall\tENHANCED_API_ROW\toff\t-\tM3-ROLLOVER\t-\tno",
 		"frame-overlay\tframe overlay (frame time and input latency numbers over the rows)\tall\tVIEWPORT_HAS\toff\tDrawnPlane.overlay (win32 drawn planes: custom, m3, gpu modes)\t-\tswt.drawn.overlay\tyes",
+		"language-switch\truntime language switch (relabel without recreate, RTL flip, locale formats)\tall\tENHANCED_API_ROW\toff\t-\tM3-LANG-ID\t-\tyes",
 	};
 
 	private M3FeatureTable () {

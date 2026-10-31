@@ -85,7 +85,7 @@ bit	feature_id	constant	concept	widget_family	current_state	default	native_owner
 83	color-picker	COLOR_PICKER	color-picker	input	NATIVE_HAS	on	org.eclipse.swt.widgets.ColorDialog	-	-	no	swt.widget.feature.color-picker | swt.widget.feature.<Widget>.color-picker
 84	spinner-loading	SPINNER_LOADING	spinner-loading	all	NATIVE_HAS	on	org.eclipse.swt.custom.BusyIndicator; Nebula ProgressCircle	-	-	no	swt.widget.feature.spinner-loading | swt.widget.feature.<Widget>.spinner-loading
 85	rich-text-editor	RICH_TEXT_EDITOR	rich-text-editor	text	NATIVE_HAS	on	org.eclipse.swt.custom.StyledText; Nebula RichTextEditor	-	-	no	swt.widget.feature.rich-text-editor | swt.widget.feature.<Widget>.rich-text-editor
-86	theme-provider	THEME_PROVIDER	config-provider	all	ENHANCED_API_ROW	off	-Dswt.widget.theme[.<Widget>] startup property (LOOK_AND_FEEL.md); Nebula styleprovider	M3-THEME-HOOKS	-	no	swt.widget.feature.theme-provider | swt.widget.feature.<Widget>.theme-provider
+86	theme-provider	THEME_PROVIDER	config-provider	all	ENHANCED_API_ROW	off	-Dswt.widget.theme[.<Widget>] startup property (LOOK_AND_FEEL.md); Nebula styleprovider	M3-THEME-HOOKS	-	yes	swt.widget.feature.theme-provider | swt.widget.feature.<Widget>.theme-provider
 87	rating	RATING	rating	table	NATIVE_HAS	on	Nebula StarRating	-	-	no	swt.widget.feature.rating | swt.widget.feature.<Widget>.rating
 88	message-list	MESSAGE_LIST	message-list	list	GAP	off	-	-	-	no	swt.widget.feature.message-list | swt.widget.feature.<Widget>.message-list
 89	timeline	TIMELINE	timeline	list	NATIVE_HAS	on	Nebula timeline	-	-	no	swt.widget.feature.timeline | swt.widget.feature.<Widget>.timeline
@@ -178,3 +178,4 @@ bit	feature_id	constant	concept	widget_family	current_state	default	native_owner
 176	lang-id	LANG_ID	lang id (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-LANG-ID	-	no	swt.widget.feature.lang-id | swt.widget.feature.<Widget>.lang-id
 177	rollover	ROLLOVER	rollover (enhanced API)	all	ENHANCED_API_ROW	off	-	M3-ROLLOVER	-	no	swt.widget.feature.rollover | swt.widget.feature.<Widget>.rollover
 178	frame-overlay	FRAME_OVERLAY	frame overlay (frame time and input latency numbers over the rows)	all	VIEWPORT_HAS	off	DrawnPlane.overlay (win32 drawn planes: custom, m3, gpu modes)	-	swt.drawn.overlay	yes	swt.widget.feature.frame-overlay | swt.widget.feature.<Widget>.frame-overlay
+179	language-switch	LANGUAGE_SWITCH	runtime language switch (relabel without recreate, RTL flip, locale formats)	all	ENHANCED_API_ROW	off	-	M3-LANG-ID	-	yes	swt.widget.feature.language-switch | swt.widget.feature.<Widget>.language-switch
