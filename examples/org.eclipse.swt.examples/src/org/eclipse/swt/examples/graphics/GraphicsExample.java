@@ -70,7 +70,7 @@ public class GraphicsExample {
 	Sash hSash, vSash;
 	Canvas canvas;
 	Composite tabControlPanel;
-	ToolItem backItem, dbItem;		// background, double buffer items
+	ToolItem backItem, dbItem, m3Item;	// background, double buffer, M3 renderer items
 	Menu backMenu;					// background menu item
 
 	List<Image> resources;			// stores resources that will be disposed
@@ -213,6 +213,9 @@ void createCanvas(Composite parent) {
     if (dbItem.getSelection()) {
         style |= SWT.DOUBLE_BUFFERED;
     }
+    if (m3Item.getSelection()) {
+        style |= SWT.M3;
+    }
 	canvas = new Canvas(parent, style);
 	canvas.addListener(SWT.Paint, event -> {
 		GC gc = event.gc;
@@ -245,7 +248,9 @@ void createCanvas(Composite parent) {
 }
 
 void recreateCanvas() {
-    if (dbItem.getSelection() == ((canvas.getStyle() & SWT.DOUBLE_BUFFERED) != 0)) {
+    boolean recreate = dbItem.getSelection() != ((canvas.getStyle() & SWT.DOUBLE_BUFFERED) != 0);
+    recreate |= m3Item.getSelection() != ((canvas.getStyle() & SWT.M3) != 0);
+    if (!recreate) {
         return;
     }
 	Object data = canvas.getLayoutData();
@@ -331,6 +336,13 @@ void createToolBar(final Composite parent) {
 	dbItem.setText(getResourceString("DoubleBuffer")); //$NON-NLS-1$
 	dbItem.setImage(loadImage(display, "db.gif")); //$NON-NLS-1$
 	dbItem.addListener(SWT.Selection, event -> setDoubleBuffered(dbItem.getSelection()));
+
+	// M3 renderer tool item (donor vogellacompany/skija-canvas 283893f4152, its SWT.SKIA toggle on SWT.M3, the same style bit)
+	m3Item = new ToolItem(toolBar, SWT.CHECK);
+	m3Item.setText(getResourceString("M3")); //$NON-NLS-1$
+	m3Item.setImage(loadImage(display, "db.gif")); //$NON-NLS-1$
+	m3Item.setSelection(true);
+	m3Item.addListener(SWT.Selection, event -> setM3(m3Item.getSelection()));
 }
 
 /**
@@ -637,6 +649,15 @@ public void redraw() {
  */
 public void setDoubleBuffered(boolean doubleBuffered) {
 	dbItem.setSelection(doubleBuffered);
+	recreateCanvas();
+}
+
+/**
+ * Sets whether the canvas is drawn through the M3 renderer ({@link SWT#M3}) or not.
+ * The style is honoured when the Canvas mode is m3 or gpu.
+ */
+public void setM3(boolean m3) {
+	m3Item.setSelection(m3);
 	recreateCanvas();
 }
 
