@@ -266,6 +266,14 @@ DELTAS = [
      "correction of my own fix and test: stock drawLineInPixels draws MoveToEx/LineTo and then SetPixel(x2, y2) when the pen is "
      "at most one pixel, so both ends are covered; leaf 7 read the separator as drawLine(3, 19, 371, 19), it is x2 = 370; the "
      "donor covered 4..370, v1 3..369", False, 0),
+    ("L6-31", "git push (C:/m3-superset/swt-gcfix, blobless clone)", "GIT_NO_LAZY_FETCH=1 git push --no-thin -u origin "
+     "m3/gc-leaf6-fidelity-20261030 (leaf 7's L7-37 recipe)",
+     "git push --no-thin -u origin m3/gc-leaf6-fidelity-20261030 with the lazy fetch allowed for the push only (reads keep "
+     "GIT_NO_LAZY_FETCH=1)",
+     "fatal: could not fetch d63865c6d01f0a8fcedce08e6167cdc85ea109d2 from promisor remote; send-pack: unexpected disconnect "
+     "(the object is in none of the pushed commits: rev-list --objects 578bdc98997..HEAD)",
+     "correction of my own procedure: --no-thin alone was not enough here; pack-objects read an object of the remote's "
+     "advertised history; the remote ref then moved 578bdc98997 -> 192f41254ab (ls-remote)", False, 0),
 ]
 
 
