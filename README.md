@@ -405,3 +405,9 @@ Given sufficient resources, a follow-up project could convert the demonstrator i
 ## Fork development guide
 
 For a source map, current build prerequisites, command cheat sheet and a worked event-loop tour, see the [SWT development guide](docs/DEVELOPMENT_GUIDE.md).
+
+## Donor notes: dvt64/oi-eclipse.platform.swt
+
+From donor commits 420209f74c3 ("Port for illumos-based distros") and 982b4c3b8e5, line carried verbatim. The port's files: fragment binaries/org.eclipse.swt.gtk.solaris.x86_64 (outside the default binaries/pom.xml reactor, like gtk.linux.loongarch64, until illumos natives are built), binaries/legal_files/gtk.solaris, and the SunOS case of `Eclipse SWT PI/gtk/library/build.sh` with `make_solaris_x86_64.mak`.
+
+Port for illumos-based distros (tested on OpenIndiana).

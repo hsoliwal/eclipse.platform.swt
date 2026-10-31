@@ -70,10 +70,18 @@
 #endif
 #if !GTK_CHECK_VERSION(4,0,0)
 #include <gdk/gdkx.h>
+#ifdef GDK_WINDOWING_WAYLAND
 #include <gdk/gdkwayland.h>
+#endif
 #else
 #include <gdk/x11/gdkx.h>
+#ifdef GDK_WINDOWING_WAYLAND
 #include <gdk/wayland/gdkwayland.h>
+#endif
+#endif
+#ifndef GDK_WINDOWING_WAYLAND
+#define NO_GDK_1IS_1WAYLAND_1DISPLAY
+/* solaris: keep JNI stub in os_custom.c */ /* #define NO_GDK_1WINDOWING_1WAYLAND */
 #endif
 #else
 

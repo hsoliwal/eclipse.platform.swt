@@ -81,6 +81,15 @@ if [ "${OS}" = "" ]; then
 	OS=`uname -s`
 fi
 case $OS in
+	"SunOS")
+		SWT_OS=solaris
+		MAKEFILE=make_solaris_x86_64.mak
+		MAKE_TYPE=gmake
+		if isainfo -k 2>/dev/null | grep -q amd64; then
+			MODEL=x86_64
+			export MODEL
+		fi
+		;;
 	*)
 		SWT_OS=`uname -s | tr -s '[:upper:]' '[:lower:]'`
 		MAKEFILE=make_linux.mak
@@ -142,6 +151,15 @@ case $SWT_OS.$SWT_ARCH in
 		if [ "${PKG_CONFIG_PATH}" = "" ]; then
 			export PKG_CONFIG_PATH="/usr/lib64/pkgconfig/"
 		fi
+		;;
+	"solaris.x86_64")
+		if [ "${CC}" = "" ]; then
+			export CC=gcc
+		fi
+		if [ "${PKG_CONFIG_PATH}" = "" ]; then
+			export PKG_CONFIG_PATH="/usr/lib/amd64/pkgconfig"
+		fi
+		;;
 esac
 
 
