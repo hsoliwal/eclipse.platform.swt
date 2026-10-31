@@ -30,6 +30,6 @@ belongs to render-modes, and the fixed point is ViewportScrollLayout's own contr
 | build | master `d5f6048f398`, jar `master-d5f6048` plus this leaf's class; win32, GTK and Cocoa source sets 0 errors |
 | JUnit, hidden desktop | `Test_M3ScrollBarModel` 3/3 viewport, 3/3 original |
 | differential against the official 3.135.0 jar | `Test_M3ScrollBarModelDifferential` (shared `M3OfficialScene`, 8 seeds x 120 steps, plain and virtual): original mode 0 mismatches. Viewport mode differs in hidden-bar values (VISIBLE 0 in both runs): a virtual Tree whose 13 rows fit reports maximum 12 and thumb 12 where stock reports 0 and 0 (virtual seed 0 step 10), and a List with one item reports maximum 100 where stock reports 0 (plain seed 0 step 4). The lane equals the getters by construction, so these are the viewports' logical bars differing from stock while hidden (owners: the Tree and List viewport scroll geometry); open |
-| coverage (JaCoCo 0.8.15, both modes) | lines 19/19; branches 15/20: 4 `SWT.error` probe artifacts, 1 real (`getEnabled` false), covered by a test added after this run |
+| coverage (JaCoCo 0.8.15, both modes) | lines 19/19; branches 16/20, the other 4 are `SWT.error` probe artifacts: every reachable branch covered (after the disabled-bar check; 3/3 in both modes again) |
 
 Open: the viewport hidden-bar differences above; GTK and Cocoa not run.

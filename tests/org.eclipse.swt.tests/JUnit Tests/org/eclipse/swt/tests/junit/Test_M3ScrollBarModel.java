@@ -103,6 +103,9 @@ public class Test_M3ScrollBarModel {
 		table.setTopIndex (120);
 		assertTrue (M3ScrollBarModel.get (table, SWT.VERTICAL, lane));
 		assertEquals (table.getVerticalBar ().getSelection (), lane [M3ScrollBarModel.SELECTION]);
+		table.getVerticalBar ().setEnabled (false);
+		assertTrue (M3ScrollBarModel.get (table, SWT.VERTICAL, lane));
+		assertEquals (table.getVerticalBar ().getEnabled () ? 1 : 0, lane [M3ScrollBarModel.ENABLED]);
 		Canvas bare = new Canvas (shell, SWT.NONE);
 		int [] untouched = {1, 2, 3, 4, 5, 6, 7, 8};
 		assertFalse (M3ScrollBarModel.get (bare, SWT.HORIZONTAL, untouched));
