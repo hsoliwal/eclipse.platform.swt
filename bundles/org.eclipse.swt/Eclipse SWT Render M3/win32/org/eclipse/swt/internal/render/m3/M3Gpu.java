@@ -11,7 +11,8 @@
  *
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation; the hidden GL host window and the WGL setup
- *         follow this repository's SkijaPlaneBackend.init (Eclipse SWT GPU Skija, EPL-2.0)
+ *         follow this repository's M3PlaneBackend.init (Eclipse SWT GPU M3; before the M3 rename, SkijaPlaneBackend
+ *         in Eclipse SWT GPU Skija, EPL-2.0)
  *******************************************************************************/
 package org.eclipse.swt.internal.render.m3;
 
@@ -23,8 +24,8 @@ import jdk.m3.graphics.*;
 /**
  * The graphics hardware of the <code>gpu</code> drawn planes on win32, Java only: one OpenGL context per UI thread
  * through SWT's own WGL natives, on a hidden, disabled, never-shown popup window (not a child of any widget, no
- * input, no focus), and Skija's <code>DirectContext.makeGL</code> over it (Skija ships its own natives). Every gpu
- * plane of the thread shares it (created by the first plane, freed with the last one).
+ * input, no focus), and <code>M3DirectContext.makeGL</code> of jdk.m3.graphics over it (the library's natives, not
+ * SWT's). Every gpu plane of the thread shares it (created by the first plane, freed with the last one).
  */
 final class M3Gpu {
 	private static final ThreadLocal<M3Gpu> SHARED = new ThreadLocal<> ();

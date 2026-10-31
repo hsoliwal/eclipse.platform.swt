@@ -34,16 +34,16 @@ import jdk.m3.graphics.M3Path;
 import jdk.m3.graphics.M3Rect;
 
 /**
- * The <code>m3</code> backend on win32, the M3 renderer: it draws through the Skija library (Apache-2.0) on the CPU,
- * straight into the pixels of the plane's back buffer (<code>Surface.makeRasterDirect</code> over the DIB section), so
- * a frame allocates no surface and copies nothing; the plane then copies the damage to the window. This package is the
- * one adapter between SWT and the library's binding classes, which keep their package because the library's prebuilt
- * natives bind to it.
+ * The <code>m3</code> backend on win32, the M3 renderer: it draws through jdk.m3.graphics (M3JDK's absorption of the
+ * Skija library, Apache-2.0) on the CPU, straight into the pixels of the plane's back buffer
+ * (<code>M3Surface.makeRasterDirect</code> over the DIB section), so a frame allocates no surface and copies nothing;
+ * the plane then copies the damage to the window. This package is the one adapter between SWT and the library's
+ * binding classes in <code>jdk.m3.graphics</code> (their natives bind to that package).
  * <p>
  * Caches, all bounded LRUs closed on eviction: one library font (with its metrics) per native font handle, shaped
  * text lines per font and string with their blob and width (the skija-canvas text LRU pattern), images per SWT
- * image, theme part images per part, state and size. This class is loaded by name, so SWT runs without the Skija
- * jars when this mode is not used.
+ * image, theme part images per part, state and size. This class is loaded by name, so SWT runs without
+ * jdk.m3.graphics when this mode is not used.
  * </p><p>
  * The paint path is data oriented (rule 18): the per-row operations (fills, text) run on cached pointers through
  * the library's primitive native entry points and allocate nothing; objects are made only when a cache misses.
@@ -53,7 +53,7 @@ public final class M3RowCanvas implements BufferCanvas {
 	private static final int FONTS = 32, LINES = 2048, PART_IMAGES = 256;
 	private static final int CLIP_INTERSECT = M3ClipMode.INTERSECT.ordinal ();
 	private static final String ELLIPSIS_TEXT = "...";
-	/* what Canvas.drawImage and drawImageRect pass: the default sampling, strict source bounds */
+	/* what M3Canvas.drawImage and drawImageRect pass: the default sampling, strict source bounds */
 	private static final long SAMPLING = M3SamplingMode.DEFAULT._pack ();
 
 	/** A cached font, its metrics measured once, and its shaped lines (by string, an LRU closed on eviction). */
@@ -147,7 +147,7 @@ public final class M3RowCanvas implements BufferCanvas {
 	/* the fonts of the frame being drawn on the render thread (rule 28); null on the UI thread */
 	private FontTable table;
 	/* the path of polygon, reset per call */
-	private final M3PathBuilder path = new M3PathBuilder (); // Skija 0.143: the mutable path is a PathBuilder (L12-09)
+	private final M3PathBuilder path = new M3PathBuilder (); // jdk.m3.graphics (the Skija 0.143 API): the mutable path is an M3PathBuilder (L12-09)
 	/* TEXT_TRUNCATION v1: DrawText's ellipsis cut measured by GDI */
 	private final M3GdiEllipsis gdiEllipsis = new M3GdiEllipsis ();
 	/* the gpu mode: the frame is drawn on the graphics hardware and read back into the back buffer */
@@ -224,7 +224,7 @@ public final class M3RowCanvas implements BufferCanvas {
 		try {
 			closeable.close ();
 		} catch (Exception e) {
-			/* Skija's close does not throw */
+			/* the jdk.m3.graphics close does not throw */
 		}
 	}
 
@@ -417,7 +417,7 @@ public final class M3RowCanvas implements BufferCanvas {
 		return line;
 	}
 
-	/* an image at a box: Canvas.drawImageRect (whole image, box, default sampling, no paint, strict) without the rectangles */
+	/* an image at a box: M3Canvas.drawImageRect (whole image, box, default sampling, no paint, strict) without the rectangles */
 	private void draw (Bitmap bitmap, float x, float y, float width, float height) {
 		M3Canvas._nDrawImageRect (canvasPtr, bitmap.ptr, 0, 0, bitmap.width, bitmap.height, x, y, x + width, y + height, SAMPLING, 0, true);
 	}
@@ -456,7 +456,7 @@ public final class M3RowCanvas implements BufferCanvas {
 		for (int i = 1; i < count; i++) path.lineTo (points [2 * i], points [2 * i + 1]);
 		path.closePath ();
 		paint.setColor (0xFF000000 | rgb);
-		try (M3Path shape = path.detach ()) { // Skija 0.143: draw the immutable Path the builder detaches (L12-10)
+		try (M3Path shape = path.detach ()) { // jdk.m3.graphics (the Skija 0.143 API): draw the immutable M3Path the builder detaches (L12-10)
 			canvas.drawPath (shape, paint);
 		}
 	}
@@ -471,13 +471,13 @@ public final class M3RowCanvas implements BufferCanvas {
 			image = new Bitmap (M3Image.makeRasterFromBytes (new M3ImageInfo (width, height, M3ColorType.BGRA_8888, M3ColorAlphaType.PREMUL), pixels, width * 4L));
 			partImages.put (key, image);
 		}
-		/* Canvas.drawImage at (x, y): the image at its own size */
+		/* M3Canvas.drawImage at (x, y): the image at its own size */
 		draw (image, x, y, image.width, image.height);
 	}
 
 	@Override
 	public void focus (int x, int y, int width, int height) {
-		/* Canvas.drawRect of (x + 0.5, y + 0.5, width - 1, height - 1) with the dotted paint */
+		/* M3Canvas.drawRect of (x + 0.5, y + 0.5, width - 1, height - 1) with the dotted paint */
 		M3Canvas._nDrawRect (canvasPtr, x + 0.5f, y + 0.5f, x + 0.5f + (width - 1), y + 0.5f + (height - 1), focusPaintPtr);
 	}
 

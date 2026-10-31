@@ -3,8 +3,8 @@ package org.eclipse.swt.internal.render.m3.gc;
 import jdk.m3.graphics.M3IRect;
 
 /**
- * Interface to abstract Skija's Surface for SWT integration.
- * This allows decoupling from the direct Skija dependency in client code.
+ * Interface to abstract the jdk.m3.graphics surface (<code>M3Surface</code>) for SWT integration.
+ * This allows decoupling from the direct jdk.m3.graphics dependency in client code.
  */
 public interface IM3Surface extends AutoCloseable {
 	/**

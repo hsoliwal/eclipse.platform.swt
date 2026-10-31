@@ -11,7 +11,7 @@ import jdk.m3.graphics.M3RRect;
 import jdk.m3.graphics.M3Rect;
 
 /**
- * Abstraction for Skija's Canvas, for future decoupling.
+ * Abstraction for the jdk.m3.graphics canvas (<code>M3Canvas</code>), for future decoupling.
  */
 public interface IM3Canvas {
 	int getSaveCount();

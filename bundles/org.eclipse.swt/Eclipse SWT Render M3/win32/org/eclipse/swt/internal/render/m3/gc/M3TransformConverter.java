@@ -31,9 +31,9 @@ public class M3TransformConverter {
 		final float[] elements = new float[6];
 		transform.getElements(elements);
 		// SWT Transform: [m11, m12, m21, m22, dx, dy]
-		// Skia Matrix33: [scaleX, skewX, transX, skewY, scaleY, transY, persp0,
+		// M3Matrix33: [scaleX, skewX, transX, skewY, scaleY, transY, persp0,
 		// persp1, persp2]
-		// Correct mapping: SWT [0,1,2,3,4,5] -> Skija [0,2,4,1,3,5,0,0,1]
+		// Correct mapping: SWT [0,1,2,3,4,5] -> M3Matrix33 [0,2,4,1,3,5,0,0,1]
 		final float[] m3Mat = new float[] { elements[0], // m11 -> scaleX
 				elements[2], // m21 -> skewX
 				sc.autoScaleUp(elements[4]), // dx -> transX
@@ -49,10 +49,10 @@ public class M3TransformConverter {
 	public static void fromM3Matrix(M3Matrix33 m3Matrix, Transform transform, DpiScalerUtil sc) {
 
 		final float[] m = m3Matrix.getMat();
-		// Skija Matrix33: [scaleX, skewX, transX, skewY, scaleY, transY, persp0,
+		// M3Matrix33: [scaleX, skewX, transX, skewY, scaleY, transY, persp0,
 		// persp1, persp2]
 		// SWT Transform: [m11, m12, m21, m22, dx, dy]
-		// Correct inverse mapping: Skija [0,1,2,3,4,5] -> SWT [0,3,1,4,2,5]
+		// Correct inverse mapping: M3Matrix33 [0,1,2,3,4,5] -> SWT [0,3,1,4,2,5]
 		// M3 (GC seam, leaf 6; TRANSFORM_STATE, census GF15): only the translation is in pixels (toM3Matrix scaled dx and dy); the
 		// donor scaled the shear m21 and left dx in pixels, so getTransform drifted at zoom != 100
 		transform.setElements(m[0], m[3], m[1], m[4], sc.autoScaleDown(m[2]), sc.autoScaleDown(m[5]));

@@ -12,7 +12,7 @@ import jdk.m3.graphics.M3RRect;
 import jdk.m3.graphics.M3Rect;
 
 /**
- * Adapter to wrap Skija's Canvas as IM3Canvas. (Stub for now, can be extended
+ * Adapter to wrap a jdk.m3.graphics canvas (<code>M3Canvas</code>) as IM3Canvas. (Stub for now, can be extended
  * as needed.)
  */
 class M3CanvasAdapter implements IM3Canvas {

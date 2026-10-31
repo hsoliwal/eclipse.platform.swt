@@ -27,8 +27,8 @@ import jdk.m3.graphics.M3Surface;
  * Pattern (Initiative 31 <code>SkiaGlCanvasExtension</code>, PATTERN_ONLY): that class owns a GL context, a render
  * target and a surface per <code>Canvas</code>, and keeps a snapshot image of the last frame to restore the pixels
  * outside the damage. A drawn plane (<code>DrawnPlane</code>, <code>RenderTarget</code>) already owns its surface
- * (<code>M3RowCanvas.target</code>: <code>Surface.makeRasterDirect</code> over the DIB section of the
- * {@link BackBuffer}, or <code>Surface.makeRenderTarget</code> on <code>M3Gpu</code>) and the back buffer retains the
+ * (<code>M3RowCanvas.target</code>: <code>M3Surface.makeRasterDirect</code> over the DIB section of the
+ * {@link BackBuffer}, or <code>M3Surface.makeRenderTarget</code> on <code>M3Gpu</code>) and the back buffer retains the
  * previous frame, so this class owns nothing: it adapts what the plane has, the plane's frame is the GC's clip, and
  * damage stays with the back buffer (the plane presents what it drew; a redraw request invalidates the control so the
  * plane's own paint presents again). Leaf 3 constructs it per plane and hands

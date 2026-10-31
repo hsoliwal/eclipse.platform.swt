@@ -11,8 +11,9 @@
  *
  * Contributors:
  *     Hitesh Soliwal (Synexia) - initial API and implementation
- *     Hitesh Soliwal - initial API and implementation. Uses HumbleUI Skija 0.143.18
- *         (Apache-2.0) and Skia m143 (BSD-3-Clause) as a runtime library; the WGL setup
+ *     Hitesh Soliwal - initial API and implementation. Uses jdk.m3.graphics
+ *         (M3JDK's absorption of HumbleUI Skija 0.143.18, Apache-2.0) and Skia m143
+ *         (BSD-3-Clause) as a runtime library; the WGL setup
  *         follows the JetBrains Skiko (Apache-2.0) Windows OpenGL renderer pattern, no
  *         Skiko source copied. See docs/licenses/swt-gpu-retained-planes-NOTICE.txt
  *******************************************************************************/
@@ -25,7 +26,7 @@ import org.eclipse.swt.internal.win32.*;
 import jdk.m3.graphics.*;
 
 /**
- * Skija (Skia GL) backend for retained planes on win32.
+ * jdk.m3.graphics (Skia GL) backend for retained planes on win32.
  * <p>
  * One OpenGL context per display lives on a hidden, disabled, never-shown
  * popup window (WS_POPUP | WS_DISABLED, WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW).
@@ -36,10 +37,10 @@ import jdk.m3.graphics.*;
  * </p>
  * <p>
  * Native objects are created only when a replayed op needs them and are cached
- * by int key: Paint by {@link PaintKeys} key, Font by {@link FontTable} id,
- * TextBlob by (slice hash, length, font id) with range equality on hit.
- * Replay calls Skija's primitive native entry points, so steady frames do not
- * allocate Java objects.
+ * by int key: M3Paint by {@link PaintKeys} key, M3Font by {@link FontTable} id,
+ * M3TextBlob by (slice hash, length, font id) with range equality on hit.
+ * Replay calls the primitive native entry points of jdk.m3.graphics, so steady
+ * frames do not allocate Java objects.
  * </p>
  */
 public final class M3PlaneBackend implements PlaneBackend {
@@ -113,7 +114,7 @@ public final class M3PlaneBackend implements PlaneBackend {
 		return new M3Target (this, tileCapacity);
 	}
 
-	/** Creates the Skija font of id {@code id} from its {@link FontTable} value; called on first replay. */
+	/** Creates the M3Font of id {@code id} from its {@link FontTable} value; called on first replay. */
 	void defineFont (int id, String face, int heightPx, int weight, int italic) {
 		M3FontStyle style = new M3FontStyle (weight, 5, italic != 0 ? M3FontSlant.ITALIC : M3FontSlant.UPRIGHT);
 		M3Typeface typeface = fontMgr.matchFamilyStyle (face, style);
@@ -136,7 +137,7 @@ public final class M3PlaneBackend implements PlaneBackend {
 		return font;
 	}
 
-	/** Paint for a packed (mask, ARGB) key; created on first use, evicted least recent first. */
+	/** M3Paint for a packed (mask, ARGB) key; created on first use, evicted least recent first. */
 	long paint (int mask, int argb) {
 		int slot = paintSlots.acquire (PaintKeys.key (mask, argb), paintEvictor);
 		if (slot < 0) return 0;
@@ -196,7 +197,7 @@ public final class M3PlaneBackend implements PlaneBackend {
 		GpuCounters.inc (GpuCounters.BLOB_MISS);
 		if (slot < 0) return 0;
 		M3Font font = font (fontId);
-		/* Skija's string API needs a spelling only on a cold miss. */
+		/* The M3Font string API needs a spelling only on a cold miss. */
 		String slice = start == 0 && length == text.length () ? text : text.substring (start, start + length);
 		short [] glyphs = font.getStringGlyphs (slice);
 		M3TextBlob blob = glyphs.length == 0 ? null : M3TextBlob.makeFromPosH (glyphs, gdiPositions (slice, fontId, glyphs.length), 0, font);
@@ -274,7 +275,7 @@ public final class M3PlaneBackend implements PlaneBackend {
 
 	@Override
 	public String describe () {
-		return "Skija 0.143.18 GL " + context + " paints=" + paintSlots.size () + " blobs=" + blobSlots.size () + " tileBytes=" + liveTileBytes;
+		return "jdk.m3.graphics GL " + context + " paints=" + paintSlots.size () + " blobs=" + blobSlots.size () + " tileBytes=" + liveTileBytes;
 	}
 
 	@Override
