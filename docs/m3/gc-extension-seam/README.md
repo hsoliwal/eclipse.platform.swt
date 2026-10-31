@@ -590,3 +590,10 @@ Design note (a later leaf, not built here): a Shell gets the M3 handler only whe
 released while the shell is minimized. The decision would stay in `M3CanvasFactory` (a `Decorations` row in `compositeBackend`'s rule set,
 default off behind its own property `swt.widget.mode.Shell`), the hook in `Canvas.WM_PAINT`'s fallback (`super.WM_PAINT` already reaches
 `paintThroughM3`), so no new seam is needed.
+
+## Real-app fidelity leaf (`m3/realapp-fidelity-20261031`)
+
+The defects ControlExample and CustomControlExample found in stock / m3 / gpu, one atom per commit (NATIVE_STAGE_BY_OID,
+GATE_POSITIVE_COUNT, MODE_TRUTH + BACKEND_REPORT + M3_LOAD_LATCH, BACKGROUND_PARITY, ROW_IMAGE_BOUNDS, GRID_LINES,
+TEXT_TRUNCATION, RTL_FRAME, SWITCHER_SIZE, ROW_OFFSET), with the per-tab real-app diff before and after, gates and
+NOT_RUN: [LEAF_FIDELITY_REALAPP.md](LEAF_FIDELITY_REALAPP.md); recipe rows LF-01..LF-12 in `RECIPE_MEMORY.tsv`.

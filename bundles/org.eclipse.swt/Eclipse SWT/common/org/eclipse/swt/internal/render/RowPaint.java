@@ -31,7 +31,9 @@ public final class RowPaint {
 		CHECKED = 1 << 5, GRAYED = 1 << 6, CHECKBOX = 1 << 7, FULL_SELECTION = 1 << 8, FOCUSED = 1 << 9,
 		FOCUS_CUES = 1 << 10, DROP = 1 << 11, GRID_LINES = 1 << 12, SYSTEM_SELECTION = 1 << 13,
 		/* cell text wider than its box ends with "..." (a list view's cells) */
-		ELLIPSIS = 1 << 14;
+		ELLIPSIS = 1 << 14,
+		/* GRID_LINES v1: a themed list view with columns draws the column detail on each cell's last pixel without grid lines too */
+		COLUMN_DETAIL = 1 << 15;
 
 	/** The row (line) rectangle. */
 	public int x, y, width, height;
@@ -62,6 +64,13 @@ public final class RowPaint {
 	 * line on the row's last pixel over both.
 	 */
 	public int listGrid = -1, listColumnDetail = -1;
+	/** ROW_IMAGE_BOUNDS v1: the height of the widget's images (its image list) in pixels; 0: unknown (the row's height). */
+	public int imageHeight;
+	/**
+	 * ROW_OFFSET v1: pixels the text box ends above the row's bottom (the tree view centres its text in the item height
+	 * minus one: a text cell of tmHeight + 1); 0 for the list views.
+	 */
+	public int textInset;
 	/** Cell of the sort column, or -1. */
 	public int sortCell = -1;
 	public int sortBackground = -1;
@@ -127,7 +136,7 @@ public final class RowPaint {
 
 	/** The ints {@link #key} writes for a row of <code>cells</code> cells. */
 	public static int keyLength (int cells) {
-		return 26 + 11 * Math.max (1, cells);
+		return 28 + 11 * Math.max (1, cells);
 	}
 
 	/**
@@ -187,6 +196,8 @@ public final class RowPaint {
 		listColumnDetail = ints [n++];
 		sortCell = ints [n++];
 		sortBackground = ints [n++];
+		imageHeight = ints [n++];
+		textInset = ints [n++];
 		cells (ints [n++]);
 		for (int i = 0; i < cells; i++) {
 			cellX [i] = ints [n++];
@@ -236,6 +247,8 @@ public final class RowPaint {
 		ints [n++] = listColumnDetail;
 		ints [n++] = sortCell;
 		ints [n++] = sortBackground;
+		ints [n++] = imageHeight;
+		ints [n++] = textInset;
 		ints [n++] = cells;
 		for (int i = 0; i < cells; i++) {
 			ints [n++] = cellX [i];

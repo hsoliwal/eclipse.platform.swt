@@ -44,10 +44,13 @@ public final class M3Mode {
 	/** Drawn by SWT on the graphics hardware. */
 	public static final int GPU = 4;
 
+	/** The {@link #backend} of a widget the platform draws. */
+	public static final String NATIVE = "native"; //$NON-NLS-1$
+
 	private static final String [] NAMES = {"viewport", "original", "custom", "m3", "gpu"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
 	/* Widget classes with a viewport; Tree also has the three drawn modes. */
-	private static final Set<String> VIEWPORT_WIDGETS = Set.of ("Tree", "Table", "List", "Combo", "CoolBar", "ExpandBar", "Composite"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
+	private static final Set<String> VIEWPORT_WIDGETS = Set.of ("Tree", "Table", "List", "Combo", "CoolBar", "ExpandBar", "Composite", "StyledText", "CTabFolder"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
 
 	private M3Mode () {
 	}
@@ -69,8 +72,33 @@ public final class M3Mode {
 	public static int of (Widget widget) {
 		if (widget == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
 		widget.checkWidget ();
+		/* MODE_TRUTH v1 (census L10): a drawn route answers what it realizes (a Table drawn by a plane is not "viewport") */
+		WidgetMode route = widget.m3Route ();
+		if (route != null) return code (route);
 		String gate = gate (widget);
 		return code (WidgetMode.of (gate, supported (widget, gate)));
+	}
+
+	/**
+	 * Returns the renderer that draws the widget, for reports and logs: for example
+	 * <code>"Table drawn plane, M3RowCanvas(raster)"</code> or <code>"M3CanvasHandler(gpu)"</code>, and
+	 * {@link #NATIVE} when the platform draws it.
+	 *
+	 * @param widget the widget
+	 * @return the backend's description
+	 *
+	 * @exception IllegalArgumentException <ul>
+	 *    <li>ERROR_NULL_ARGUMENT - if the widget is null</li>
+	 * </ul>
+	 * @exception SWTException <ul>
+	 *    <li>ERROR_WIDGET_DISPOSED - if the widget has been disposed</li>
+	 * </ul>
+	 */
+	public static String backend (Widget widget) {
+		if (widget == null) SWT.error (SWT.ERROR_NULL_ARGUMENT);
+		widget.checkWidget ();
+		String backend = widget.m3Backend ();
+		return backend != null ? backend : NATIVE;
 	}
 
 	/**
@@ -88,10 +116,13 @@ public final class M3Mode {
 		return NAMES [mode];
 	}
 
-	/* The SWT widget class whose gate decides: the nearest superclass in org.eclipse.swt.widgets. */
+	/*
+	 * The SWT widget class whose gate decides: the nearest superclass in org.eclipse.swt.widgets, or a custom widget with a
+	 * viewport gate of its own (MODE_TRUTH v1: StyledText and CTabFolder read swt.widget.mode.StyledText/.CTabFolder, not Canvas/Composite).
+	 */
 	private static String gate (Widget widget) {
 		Class<?> type = widget.getClass ();
-		while (!Widget.class.getPackageName ().equals (type.getPackageName ())) type = type.getSuperclass ();
+		while (!Widget.class.getPackageName ().equals (type.getPackageName ()) && !VIEWPORT_WIDGETS.contains (type.getSimpleName ())) type = type.getSuperclass ();
 		return type.getSimpleName ();
 	}
 

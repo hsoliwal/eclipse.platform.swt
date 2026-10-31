@@ -93,6 +93,13 @@ final class TreeDrawnPlane extends DrawnPlane {
 		row.background = RowPaint.rgbOf (tree.getBackgroundPixel ());
 		row.font = OS.SendMessage (hwnd, OS.WM_GETFONT, 0, 0);
 		row.sortBackground = tree.sortColumn != null && tree.sortDirection != SWT.NONE ? RowPaint.rgbOf (tree.getSortColumnPixel ()) : -1;
+		/* ROW_IMAGE_BOUNDS v1: the TreeView draws every image at its image list's size, centred in the row */
+		row.imageHeight = imageListHeight (OS.SendMessage (hwnd, OS.TVM_GETIMAGELIST, OS.TVSIL_NORMAL, 0));
+		/*
+		 * ROW_OFFSET v1: the TreeView centres its text in the item height minus one (stock ink top 4, 5, 6, 7, 8 for items of
+		 * 18, 20, 21, 23, 26 pixels: (height - 17) / 2 + 4 with Segoe UI 9 pt; DT_VCENTER of the whole item is one lower at 18, 20, 26)
+		 */
+		row.textInset = 1;
 	}
 
 	/* the first row at or below the damage's top: the rows have one height, so it is arithmetic from the first visible row */

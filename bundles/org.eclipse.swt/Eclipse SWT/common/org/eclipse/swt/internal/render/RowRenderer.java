@@ -111,6 +111,18 @@ public final class RowRenderer {
 	/** Fills the area of a plane that has no row (below the last row). */
 	public void paintEmpty (RowCanvas canvas, RowPaint frame, int x, int y, int width, int height) {
 		canvas.fill (x, y, width, height, background (frame));
+		/* GRID_LINES v1: the themed report view continues its column detail through the empty area below the rows */
+		columnDetail (canvas, frame, y, height);
+	}
+
+	/* GRID_LINES v1: a themed report view without grid lines: column detail on each cell's last pixel */
+	private boolean detailed (RowPaint row) {
+		return theme.parts && row.is (RowPaint.COLUMN_DETAIL) && !row.is (RowPaint.GRID_LINES) && row.listColumnDetail != -1;
+	}
+
+	/* GRID_LINES v1: there a cell's own colour ends two pixels before its edge (the column detail and one pixel of the row's background) */
+	private int cellFillWidth (RowPaint row, int cell) {
+		return detailed (row) ? Math.max (0, row.cellWidth [cell] - 2) : row.cellWidth [cell];
 	}
 
 	private int background (RowPaint row) {
@@ -135,7 +147,7 @@ public final class RowRenderer {
 	public void cellBackground (RowCanvas canvas, RowPaint row, int cell) {
 		int color = row.cellBackground [cell];
 		if (color == -1 && cell == row.sortCell) color = row.sortBackground;
-		if (color != -1) canvas.fill (row.cellX [cell], row.y, row.cellWidth [cell], row.height, color);
+		if (color != -1) canvas.fill (row.cellX [cell], row.y, cellFillWidth (row, cell), row.height, color);
 	}
 
 	/** Paints the selection (or hover) of a selected, drop-target or hot row over its selection rectangle. */
@@ -235,13 +247,23 @@ public final class RowRenderer {
 		return true;
 	}
 
+	/* ROW_IMAGE_BOUNDS v1 (real-app fidelity): the widget's image size (its image list), not the row's height; unknown: the row's */
+	private static int imageHeight (RowPaint row) {
+		return row.imageHeight > 0 && row.imageHeight < row.height ? row.imageHeight : row.height;
+	}
+
+	/* ROW_IMAGE_BOUNDS v1: the image box centred in the row as the native list and tree views draw it (rounded down) */
+	private static int imageY (RowPaint row) {
+		return row.y + (row.height - imageHeight (row)) / 2;
+	}
+
 	/** Paints the default content of a cell: its image, then its text (for cell painters that add to it). */
 	public void paintCell (RowCanvas canvas, RowPaint row, int cell) {
 		if (row.imageData [cell] != null && row.imageWidth [cell] > 0) {
 			/* a row read back from a snapshot: the image's pixels at the frame's zoom */
-			canvas.imageData (row.imageData [cell], row.imageX [cell], row.y, row.imageWidth [cell], row.height);
+			canvas.imageData (row.imageData [cell], row.imageX [cell], imageY (row), row.imageWidth [cell], imageHeight (row));
 		} else if (row.image [cell] != null && row.imageWidth [cell] > 0) {
-			canvas.image (row.image [cell], row.imageX [cell], row.y, row.imageWidth [cell], row.height);
+			canvas.image (row.image [cell], row.imageX [cell], imageY (row), row.imageWidth [cell], imageHeight (row));
 		}
 		String text = row.text [cell];
 		if (text == null || text.isEmpty () || row.textWidth [cell] <= 0) return;
@@ -253,13 +275,16 @@ public final class RowRenderer {
 		int inset = align == SWT.LEFT ? theme.textInset : 0;
 		int width = row.textWidth [cell] - inset;
 		if (width <= 0) return;
-		canvas.text (text, font, color, row.textX [cell] + inset, row.y, width, row.height,
+		canvas.text (text, font, color, row.textX [cell] + inset, row.y, width, row.height - row.textInset,
 			align | (row.is (RowPaint.ELLIPSIS) ? RowCanvas.ELLIPSIS : 0));
 	}
 
 	/** Paints the grid lines of a row that shows them. */
 	public void gridLines (RowCanvas canvas, RowPaint row) {
-		if (!row.is (RowPaint.GRID_LINES)) return;
+		if (!row.is (RowPaint.GRID_LINES)) {
+			columnDetail (canvas, row, row.y, row.height);
+			return;
+		}
 		if (theme.parts && row.listGrid != -1) {
 			listGridLines (canvas, row);
 			return;
@@ -268,6 +293,16 @@ public final class RowRenderer {
 			canvas.fill (row.cellX [cell] + row.cellWidth [cell] - 1, row.y, 1, row.height, theme.grid);
 		}
 		canvas.fill (row.x, row.y + row.height - 1, row.width, 1, theme.grid);
+	}
+
+	/*
+	 * GRID_LINES v1 (real-app fidelity): a themed list view with columns draws its column detail line on each cell's last
+	 * pixel also without grid lines (stock: ebf4fe at every column edge of the System and Table tabs, Windows 11 light)
+	 */
+	private void columnDetail (RowCanvas canvas, RowPaint row, int y, int height) {
+		if (!detailed (row)) return;
+		java.util.stream.IntStream.range (0, row.cells).forEach (cell ->
+			canvas.fill (row.cellX [cell] + row.cellWidth [cell] - 1, y, 1, height, row.listColumnDetail));
 	}
 
 	/* the native look of a list view's grid: the column detail on each cell's last pixel, the column line one pixel right of the cell, the row line over both */

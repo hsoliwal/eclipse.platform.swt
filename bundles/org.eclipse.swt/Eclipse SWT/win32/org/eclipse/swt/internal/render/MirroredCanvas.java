@@ -54,6 +54,17 @@ public final class MirroredCanvas implements BufferCanvas {
 		return width == 0 ? x : width - x - w;
 	}
 
+	/* MODE_TRUTH, BACKEND_REPORT: the mirroring is transparent to reports; the backend behind it answers */
+	@Override
+	public org.eclipse.swt.internal.WidgetMode route () {
+		return canvas.route ();
+	}
+
+	@Override
+	public String backend () {
+		return canvas.backend ();
+	}
+
 	@Override
 	public void target (BackBuffer buffer) {
 		canvas.target (buffer);
