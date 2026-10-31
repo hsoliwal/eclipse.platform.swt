@@ -20,6 +20,7 @@ import org.junit.platform.suite.api.Suite;
 /** The headless classes of the real-app fidelity leaf, and the render tests its row atoms touch (tools/test_m3fidelity.sh headless). */
 @Suite
 @SelectClasses({ Test_org_eclipse_swt_internal_render_RowFidelity.class, //
+		Test_org_eclipse_swt_internal_render_m3_M3GdiEllipsis.class, //
 		org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_RowRenderer.class, //
 		org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_render_RowPaintKey.class })
 public class AllM3FidelityHeadless {
