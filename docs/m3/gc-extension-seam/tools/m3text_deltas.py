@@ -124,7 +124,44 @@ def atom_draw(wt, extra):
     return out
 
 
-ATOMS = {"TEXT_FALLBACK_SAFE": atom_fallback, "GLYPH_RUN_SINK": atom_sink, "GLYPH_RUN_DRAW": atom_draw}
+def atom_surrogate_tabs(wt, extra):
+    """L14 SURROGATE_SAFE v1 + TAB_STOPS v1: GDI advance/black-box widths, code-point-safe splits, GDI tab expansion"""
+    metrics = Path(extra, "l14_gdi_metrics.txt").read_text(encoding="utf-8")
+    out = [replace_once(Path(wt, RM, "M3GdiText.java"), [
+        ("\tprivate static Point textExtentPoint(long hdc, String text) {\n", metrics),
+        ("import org.eclipse.swt.internal.win32.SIZE;\n", "import org.eclipse.swt.internal.win32.SIZE;\nimport org.eclipse.swt.internal.win32.TEXTMETRIC;\n")])]
+    gc = Path(wt, RM, "M3ExternalGC.java")
+    src = gc.read_text(encoding="utf-8")
+    m = re.search(r"\t@Override\n\tpublic int getAdvanceWidth\(char ch\) \{\n.*?\n\t}\n", src, re.S)
+    if m and "f.measureTextWidth(String.valueOf(ch), paint)" in m.group(0):
+        src = src.replace(m.group(0), "\t@Override\n\tpublic int getAdvanceWidth(char ch) {\n"
+                          "\t\t// L14 SURROGATE_SAFE v1: stock GetCharWidth; a lone surrogate never reaches Skia's measureText (#109)\n"
+                          "\t\treturn M3GdiText.advanceWidth(getFont(), getScaler().getNativeZoom(), ch);\n\t}\n", 1)
+        gc.write_bytes(src.encode("utf-8"))
+    out.append(replace_once(gc, [
+        ("\tpublic int getCharWidth(char ch) {\n\t\treturn getAdvanceWidth(ch);\n\t}\n",
+         "\tpublic int getCharWidth(char ch) {\n\t\t// L14 TAB_STOPS v1: stock black-box width (GetCharABCWidths abcB), not the advance (GF37)\n"
+         "\t\treturn M3GdiText.charWidth(getFont(), getScaler().getNativeZoom(), ch);\n\t}\n")]))
+    out.append(replace_once(Path(wt, RM, "M3Resources.java"), [
+        ("\t\tString workInputText = inputText;\n",
+         "\t\t// L14 SURROGATE_SAFE v1: no lone surrogate reaches Skia (U+FFFD, as GDI shows it)\n"
+         "\t\tString workInputText = M3CodePoints.safe(inputText);\n"),
+        ("\t\t\t\tworkInputText = expandTabs(workInputText, 0);\n",
+         "\t\t\t\t// L14 TAB_STOPS v1: DT_EXPANDTABS stops, segments measured with GDI (no per-character truncation, GF31)\n"
+         "\t\t\t\tworkInputText = M3CodePoints.expandTabs(workInputText, getFont(), getScaler().getNativeZoom());\n")]))
+    res = Path(wt, RM, "M3Resources.java")
+    rsrc = res.read_text(encoding="utf-8")
+    start = rsrc.find("\t/**\n\t * Expands tab characters (\\t) in the text to position-dependent spaces")
+    if start >= 0:
+        end = rsrc.index("\t\treturn result.toString();\n\t}\n", start) + len("\t\treturn result.toString();\n\t}\n")
+        rsrc = rsrc[:start] + rsrc[end:].lstrip("\n")
+        res.write_bytes(rsrc.encode("utf-8"))
+        out.append((res, "removed per-char expandTabs (dead)"))
+    return out
+
+
+ATOMS = {"TEXT_FALLBACK_SAFE": atom_fallback, "GLYPH_RUN_SINK": atom_sink, "GLYPH_RUN_DRAW": atom_draw,
+         "SURROGATE_SAFE+TAB_STOPS": atom_surrogate_tabs}
 
 if __name__ == "__main__":
     wt, atom = sys.argv[1], sys.argv[2]

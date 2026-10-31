@@ -945,22 +945,8 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public int getAdvanceWidth(char ch) {
-
-		final var f = getM3Font();
-		final AtomicInteger result = new AtomicInteger();
-		result.set(-1);
-
-		paintManager.performDraw(paint -> {
-			paint.setAntiAlias(false);
-			paint.setMode(PaintMode.FILL);
-
-			final var textWidth = f.measureTextWidth(String.valueOf(ch), paint);
-			result.set((int) Math.ceil(textWidth));
-
-		});
-
-		return result.get();
-
+		// L14 SURROGATE_SAFE v1: stock GetCharWidth; a lone surrogate never reaches Skia's measureText (#109)
+		return M3GdiText.advanceWidth(getFont(), getScaler().getNativeZoom(), ch);
 	}
 
 	@Override
@@ -976,7 +962,8 @@ public class M3ExternalGC implements IExternalGC {
 
 	@Override
 	public int getCharWidth(char ch) {
-		return getAdvanceWidth(ch);
+		// L14 TAB_STOPS v1: stock black-box width (GetCharABCWidths abcB), not the advance (GF37)
+		return M3GdiText.charWidth(getFont(), getScaler().getNativeZoom(), ch);
 	}
 
 	@Override

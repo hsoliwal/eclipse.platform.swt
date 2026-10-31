@@ -396,11 +396,13 @@ public class M3Resources implements IM3Resources {
 					.get(new SplitsTextCache(inputText, replaceAmpersand, delimiter, tabulatorExpansion));
 		}
 
-		String workInputText = inputText;
+		// L14 SURROGATE_SAFE v1: no lone surrogate reaches Skia (U+FFFD, as GDI shows it)
+		String workInputText = M3CodePoints.safe(inputText);
 
 		if (splits == null) {
 			if (tabulatorExpansion) {
-				workInputText = expandTabs(workInputText, 0);
+				// L14 TAB_STOPS v1: DT_EXPANDTABS stops, segments measured with GDI (no per-character truncation, GF31)
+				workInputText = M3CodePoints.expandTabs(workInputText, getFont(), getScaler().getNativeZoom());
 			} else {
 				workInputText = workInputText.replaceAll("\\t", ""); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -426,48 +428,6 @@ public class M3Resources implements IM3Resources {
 					splits);
 		}
 		return splits;
-	}
-
-	/**
-	 * Expands tab characters (\t) in the text to position-dependent spaces, so that
-	 * the next character aligns to the next tab stop (every 8 average character
-	 * widths by default). The expansion is based on the current x position and the
-	 * average character width of the font.
-	 *
-	 * @param text   The input text containing tab characters
-	 * @param startX The starting x position in pixels (used to calculate tab
-	 *               alignment)
-	 * @return The text with tabs expanded to spaces, aligned to the next tab stop
-	 */
-	private String expandTabs(String text, int startX) {
-		final StringBuilder result = new StringBuilder();
-		int currentX = 0;
-		// Measure space width exactly once — it is constant for the current font.
-		final int spaceWidth = textExtent(" ").x; //$NON-NLS-1$
-		final float avgCharWidthF = getM3Font().getMetrics()._avgCharWidth;
-		int avgCharWidth = (int) avgCharWidthF;
-		if (avgCharWidth <= 0) {
-			avgCharWidth = spaceWidth > 0 ? spaceWidth : 1;
-		}
-		final int tabSpacingPx = 8 * avgCharWidth;
-		for (int i = 0; i < text.length(); i++) {
-			final char ch = text.charAt(i);
-			if (ch == '\t') {
-				final int offsetInTab = tabSpacingPx > 0 ? (currentX - startX) % tabSpacingPx : 0;
-				final int nextTabX = currentX + (tabSpacingPx - offsetInTab);
-				while (currentX < nextTabX) {
-					result.append(' ');
-					// reuse the already-measured spaceWidth instead of calling textExtent again
-					currentX += spaceWidth;
-				}
-			} else {
-				// measureTextWidth avoids creating an intermediate String object per character
-				final int charWidth = (int) getM3Font().measureTextWidth(String.valueOf(ch));
-				result.append(ch);
-				currentX += charWidth;
-			}
-		}
-		return result.toString();
 	}
 
 	@Override
