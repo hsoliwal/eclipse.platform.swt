@@ -429,7 +429,7 @@ public class M3ExternalGC implements IExternalGC {
 
 		paintManager.performDraw(paint -> {
 			// Create Skija path for the polygon
-			try (io.github.humbleui.skija.Path pathBuilder = new io.github.humbleui.skija.Path()) {
+			try (io.github.humbleui.skija.PathBuilder pathBuilder = new io.github.humbleui.skija.PathBuilder()) {
 				// Move to first point
 				pathBuilder.moveTo(getScaler().autoScaleUp(pointArray[0]), getScaler().autoScaleUp(pointArray[1]));
 				// Add lines to subsequent points
@@ -440,8 +440,7 @@ public class M3ExternalGC implements IExternalGC {
 				pathBuilder.closePath();
 				// Draw the polygon outline
 
-				{
-					var path = pathBuilder; // Skija 0.116.3: Path is its own builder; the outer try closes it
+				try (var path = pathBuilder.build()) {
 					if (path.isEmpty()) {
 						return;
 					}

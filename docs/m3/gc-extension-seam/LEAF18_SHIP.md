@@ -97,6 +97,7 @@ Screenshots: `H:/m3-scratch/l18/ide/out/{m3,gpu,baseline}/*.png`.
 ## Findings
 
 - The interim scope keeps Skija 0.116.3; L12 moves `skija.version` to 0.143.18 (types 0.2.0 follows).
+- L12 applied (`m3/one-skija-20261031`): `skija.version` 0.143.18, types 0.2.0; the NOTICE lists the new jar hashes.
 - Native inventory of `skija.dll` (sha256 3ff80f39...) by strings, revisions from Skia chrome/m116 DEPS: Skia,
   ICU 73, HarfBuzz, FreeType, zlib 1.2.11, libpng, libjpeg-turbo 2.1.4, libwebp, Expat, Wuffs. The zlib, libpng,
   libjpeg-turbo, libwebp and Expat licence texts are still to be added (named in the notice).

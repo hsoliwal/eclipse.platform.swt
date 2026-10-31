@@ -28,8 +28,7 @@ public class M3PathConverter {
 		}
 		final PathData data = swtPath.getPathData();
 
-		{
-			final io.github.humbleui.skija.Path m3PathBuilder = new io.github.humbleui.skija.Path(); // Skija 0.116.3: Path is its own builder; the caller owns the returned path
+		try (final io.github.humbleui.skija.PathBuilder m3PathBuilder = new io.github.humbleui.skija.PathBuilder()) {
 
 			final float[] pts = data.points;
 			final byte[] types = data.types;
@@ -57,7 +56,7 @@ public class M3PathConverter {
 				default:
 				}
 			}
-			final var p = m3PathBuilder;
+			final var p = m3PathBuilder.build();
 			return p;
 		}
 
@@ -65,8 +64,7 @@ public class M3PathConverter {
 
 	public static io.github.humbleui.skija.Path createPath(int[] pointArray,int fillRule , DpiScalerUtil sc) {
 		// Create Skija path for the polygon
-		{ // Skija 0.116.3: Path is its own builder; the caller owns the returned path
-			io.github.humbleui.skija.Path pathBuilder = new io.github.humbleui.skija.Path(); // Move
+		try (io.github.humbleui.skija.PathBuilder pathBuilder = new io.github.humbleui.skija.PathBuilder()) { // Move
 			// to
 			// first
 			// point
@@ -79,7 +77,7 @@ public class M3PathConverter {
 			pathBuilder.closePath();
 			pathBuilder.setFillMode(fillRule == SWT.FILL_EVEN_ODD ? PathFillMode.EVEN_ODD : PathFillMode.WINDING);
 			// Fill the polygon
-			return pathBuilder;
+			return pathBuilder.build();
 		}
 	}
 

@@ -180,3 +180,29 @@ All rows: `LEAF12_GATES.tsv` (evidence logs under `H:/m3-scratch/l12/logs`).
 - `compile_platform` gtk/cocoa (no M3 tree, no Skija on their class path).
 - arm64/linux/macos Skija natives (BINARIES_SET beyond win32 x64), NATIVE_CANVAS_ADAPTER, CLEARTYPE_PARAMS, CACHE_LIMITS.
 - Packaging NOTICE native component list for m143 (needs the 0.143.18 dll string census against the m143 DEPS).
+
+## Applied (2026-10-31, branch `m3/one-skija-20261031`, stacked on the text leaf #309)
+
+The package was rerun on the text leaf. The dry run gave the expected rows (L12-01..L12-10 and L12-17 APPLIED, the rest
+NO_SITE / CHECK_OK) with no MISSING_ANCHOR, and the apply reached FIXED_POINT in 2 rounds. The second run applied 0.
+
+| gate | result |
+|---|---|
+| `m3_skija_pin.sh` | skija 0.143.18, types 0.2.0 |
+| `compile_m3gc.sh` | 967 sources, 1463 classes, 0 errors |
+| `m3gc_native_sig_gate.sh` 0.116.3 vs 0.143.18 | 11 natives, all SAME |
+| `test_m3gc.sh` (and `M3_SCAN=1`) | 171 found, 171 successful |
+| `m3_l12_realapp.sh` stock / m3 / gpu | 31/31 PASS in each mode, 0 exceptions, blanks or hangs; the 0.143.18 skija.dll is loaded (sha256 198e0aa4) |
+
+Pin-only pixel change: the text leaf at 0.116.3 against the text leaf at 0.143.18, measured by `m3gc_skija_compare.py`
+(`LEAF12_REALAPP_COMPARE_APPLIED.tsv`, differing pixels against stock summed over 31 tabs):
+
+| mode | 0.116.3 | 0.143.18 | tabs changed |
+|---|---:|---:|---:|
+| stock | 0 | 0 | 0 |
+| m3 | 56,520 | 56,979 | 5 (+459 px) |
+| gpu | 59,435 | 60,954 | 24 (+1,519 px) |
+
+These are Skia m143 anti-aliasing differences, with no structural change. The NOTICE carries the 0.143.18 jar hashes.
+The m143 revisions of HarfBuzz, FreeType, libpng and Expat are still open: the strings of this dll show zlib 1.3.0.1,
+libjpeg-turbo 3.1.0 and ICU data icudt74.
