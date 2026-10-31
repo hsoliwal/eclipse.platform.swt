@@ -39,3 +39,15 @@ and Tree windows and the Table's native cache hint (`LVN_ODCACHEHINT`), i.e. `M3
 ## Algorithm choices
 
 See `ALGORITHM_CATALOGUE.tsv`: interval difference of two closed ranges (at most two pieces each way).
+
+## Status (2026-10-30)
+
+| gate | result |
+|---|---|
+| build | master `d5f6048f398`, jar `master-d5f6048` plus the TableViewport change below; win32, GTK and Cocoa source sets 0 errors |
+| JUnit, hidden desktop | `Test_M3Prefetch` 10/10 viewport, 10/10 original (with and without the resident-range change of leaf 7) |
+| differential against the official 3.135.0 jar | `Test_M3PrefetchDifferential` (shared `M3OfficialScene`, 8 seeds x 120 steps, plain and virtual): this SWT listens with a window of 2 rows before and 3 after and replays PREFETCH/CANCEL; after every step the announced rows equal the resident range widened by the window (or nothing without a viewport window), and the public state equals the official recording: 0 mismatches in viewport and original |
+| defect found and fixed | the new test `test_windowSetTwiceAndListenerThatDisposes` threw `NullPointerException` in `TableViewport.cacheHint`: the hint seam announced before holding the hinted facades, and a listener that disposed the table left `table.items` null for the loop after it. The M3 calls now run last in `cacheHint` |
+| coverage (JaCoCo 0.8.15, both modes) | lines 79/79; branches 59/62: 2 `SWT.error` probe artifacts and `isDisposed ()` behind `hooks (EVENT)` in `windowChanged` (a disposed widget has no event table): every reachable branch covered |
+
+Open: GTK and Cocoa have no window seams (no events there), not run.
