@@ -91,7 +91,7 @@ of every failing row), `results/EXAMPLE_MODES.tsv` (every gallery entry in the f
 | Row status | **268 PASS, 8 FAIL, 2 TIMEOUT** |
 | Leaks | 0 (tracked device objects, shells and children back to their count after every row; 3 rows grew on first use only and were clean on the repeat) |
 | Exceptions | 0 unexpected (the documented `SWTException` after dispose is an answer) |
-| Theme/language step | NOT_RUN in 130 rows: `M3Theme` / `M3Language` are not on the class path (branch `m3/theme-language-20261030` has no PR yet); the rest of those rows ran |
+| Theme/language step | NOT_RUN in 130 rows on this base (the theme and language classes are not on its class path; the rest of those rows ran); run against a local merge with PR #286 below |
 
 Failures, by class (details, stacks and every row in `FINDINGS.tsv` and `results/`):
 
@@ -105,4 +105,71 @@ Failures, by class (details, stacks and every row in `FINDINGS.tsv` and `results
 | TIMEOUT: `M3RowMath.visibleRowCount` on a plain Tree of 10^5 roots in original (`r0200`) | 1 | `M3TreeWalk.childCount` (`M3TreeWalk.java:111`) calls `Tree.getItemCount`, which walks the native siblings (`Tree.nativeChildCount`, `Tree.java:324`): quadratic; the very cost M3-ROW-MATH claims to avoid (swt#882/#904) | enhanced API (M3-ROW-MATH) |
 
 Observations (not failures): plain Tree with 10^5 items in original takes 186-900 s for dispose, setItemCount and
-scrolls (`FINDINGS.tsv`, class `SLOW`); the same rows run in seconds in viewport mode.
+scrolls (`FINDINGS.tsv`, class `SLOW`); the same rows run in seconds in viewport mode. A virtual Tree in original
+materializes native children one by one with a native sibling walk per item (`Tree.createTreeItem` ->
+`bindVirtualTopology` -> `nativeChildIndex`, `Tree.java:3417`/`357`/`334`): quadratic.
+
+### Gallery and examples (2026-10-31)
+
+- Index: **112 entries from 52 example classes** (widgets 46, modes 7, features 1, enhanced-api 23, scale 17, renderer 2,
+  demos 16); every one of the 22 shipped enhanced API rows has an example (`tools/API_EXAMPLES.tsv`, 0 MISSING).
+- New: 8 example classes with 78 entries (widgets: `M3ControlsExample` 13, `M3ItemWidgetsExample` 14,
+  `M3CustomWidgetsExample` 9, `M3CanvasDrawingExample` 10; modes: `M3ModeSwitcherExample` 7; features:
+  `M3FeatureSwitchExample` 1; scale: `M3ScaleExample` 12; renderer: `M3RendererCanvasExample` 2) and the gallery
+  (`M3ExampleGallery`, `M3GalleryModel`, `M3ExampleRunner`, generated `M3GalleryIndex`).
+- Gallery tests (`org.eclipse.swt.tests.junit.m3gallery`, hidden desktop): 22 found, 22 passed (window and tree, description,
+  mode/widget-mode/feature command lines, child JVM exit, toolbar buttons and children ending with the gallery, switcher
+  slot, in-process runner pass/fail/snapshot, generator and model tests).
+- Every entry in every mode (`M3ExampleRunner --batch`, one JVM per mode, a blocked entry is recorded with the example
+  thread's stack and the batch resumes): 560 runs, **513 PASS, 30 TIMEOUT, 17 FAIL**; per mode viewport 110/1/1,
+  original 98/13/1, custom 101/6/5, m3 102/5/5, gpu 102/5/5 (PASS/TIMEOUT/FAIL). **93 of 112 entries pass in all five
+  modes**; `results/EXAMPLE_MODES.tsv` records, per entry, the modes it passes, its implemented modes and the reason of the
+  first non-pass. Why a mode cannot run an entry:
+  - original: native List/Combo of 10^6 items (`List.setAllItems`, `List.java:1875`; `Combo.callWindowProc`) and native
+    Tree of 10^5..10^7 items (`Tree.createTreeItem`) take more than 90 s: stock behaviour, the reason the viewport exists;
+  - custom/m3/gpu: `NullPointerException` in `RetainedRows.paint` (`RetainedRows.java:116`, renderer null outside a
+    frame) for 4 entries whose table is relaid out (`M3ModeSwitcherExample Table`, `M3FeatureSwitchExample`,
+    `M3PrefetchReleaseExample`, `M3TextSegmentsExample`); `List.computeSize` measures every one of 10^6 items
+    (`VirtualListWidth.measurePending` -> `List.measureStoreText`, `List.java:2474..2495`) for 4 million-item entries;
+  - all modes: `M3DeltaStreamExample` streams deltas in `main` and crashes when its window closes early
+    (`M3Model.size`, `M3Model.java:214`, from `M3DeltaStreamExample.java:144`); `M3HiddenTabDeltasExample` does not
+    return after its shells close (`Display.sleep` in its idle pump).
+- Snapshot observation: `Shell.print` draws two or more `DOUBLE_BUFFERED` canvases all at (0,0) in every mode, original
+  included (finding `SNAPSHOT_ORIGIN`), so multi-canvas snapshots cannot show the M3 canvas.
+
+### Leaf 6 (PR #284) before/after: StyledText and Canvas under m3/gpu
+
+Local merge of this branch with `m3/gc-leaf6-fidelity-20261030` (`git merge-tree`, tree `b8d9fb9fe16`, clean; win32 927
+sources, 0 errors); the 18 StyledText/Canvas rows of the matrix in m3/gpu plus the same rows with 1,000 items scrolled to
+the middle (36 rows), recorded in original and compared in m3 and gpu, with the pixels step (`-Dm3.combinations.pixels`).
+Table: `results/LEAF6_BEFORE_AFTER.tsv`.
+
+| Capture | Group | Before (base): equal / mean abs channel difference | After (merge) |
+|---|---|---|---|
+| answers | 36 rows x (original, m3, gpu) | 72 PASS | 72 PASS |
+| WM_PRINT (harness `render`) | StyledText, Canvas, m3 and gpu | 100.00 % / 0.00 | 100.00 % / 0.00 |
+| Control.print (composited) | Canvas text rows, m3 | 93.54 % / 13.90 | 94.12 % / 6.23 |
+| Control.print (composited) | Canvas text rows, gpu | 93.67 % / 8.09 | 93.50 % / 6.48 |
+| Control.print (composited) | StyledText, m3 / gpu | 77.99 % / 4.06, 70.39 % / 6.24 | 77.54 % / 3.55, 71.98 % / 4.80 |
+
+Reading: StyledText is not drawn by the M3 renderer on either tree (`ExternalCanvasHandler.isActive` returns false for
+StyledText, `ExternalCanvasHandler.java:119`), so WM_PRINT shows it identical to original before and after; WM_PRINT
+repaints through the native Paint path and is blind to the M3 surface. The composited captures see the M3 canvas: leaf 6
+halves the mean channel difference of the Canvas text rows in m3 (13.90 -> 6.23) and lowers it in gpu (8.09 -> 6.48).
+Composited captures are not stable between runs on the hidden desktop (StyledText rows flip between 0 % and 100 %), so
+their per-row values are a similarity metric, never a gate.
+
+### Theme and language (PR #286) against a local merge
+
+Local merge with `m3/theme-language-20261030` (tree `1bea339c3af`, clean; win32 943 sources, 0 errors; the platform copy
+now carries `M3Languages.tsv`). The 105 matrix rows whose theme or language is not `none` (rows of 10^5 items left out:
+their theme/language step is independent of the count and they take minutes in original), through
+`M3Themes.apply/reset` and `M3Language.setLocale`, restored after every row. `results/THEME_LANGUAGE_MERGE.tsv`:
+102 display rows recorded in original, all PASS with the theme and language applied (themes: light 24, dark 25,
+high-contrast 15 rows; languages: en 28, de 22, ar (right to left) 17, ja 27 rows); 80 compared in their modes: 76 PASS, 4 FAIL, the same four findings as
+without themes (M3-RESIDENCY `r0023`, M3-MODE-QUERY `r0045`/`r0099`, M3-PREFETCH `r0081`); 3 headless rows recorded + 2
+compared, PASS; 0 leaks. No failure is introduced by a theme or a language.
+
+On the merged trees the generators grow on their own: theme-language adds `M3ThemeLanguageExample` (113 entries) and makes
+M3-LANG-ID and M3-THEME-HOOKS shipped rows (24) with two more shipped feature switches, so the covering array becomes 290
+rows; leaf 6 changes the Canvas activation, so the index derives Canvas's implemented modes as `original`.

@@ -25,7 +25,7 @@ grep ': error:' "$out.log" | sed -E 's#.*bundles/org.eclipse.swt/##' | head -10
 # the non-Java resources of the source roots (properties, SVG glyphs, images) next to the classes
 while IFS= read -r d; do
   [ -d "$WT/$d" ] || continue
-  (cd "$WT/$d" && find . -type f \( -name '*.svg' -o -name '*.properties' -o -name '*.png' -o -name '*.ico' -o -name '*.txt' \) -print |
+  (cd "$WT/$d" && find . -type f \( -name '*.svg' -o -name '*.properties' -o -name '*.png' -o -name '*.ico' -o -name '*.txt' -o -name '*.tsv' -o -name '*.json' -o -name '*.css' \) -print |
     while IFS= read -r f; do mkdir -p "$out/$(dirname "$f")"; cp "$f" "$out/$f"; done)
 done < "$out.dirs"
 [ "$n" -eq 0 ]

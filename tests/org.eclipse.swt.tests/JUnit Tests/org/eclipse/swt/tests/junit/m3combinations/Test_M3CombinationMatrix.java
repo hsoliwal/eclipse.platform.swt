@@ -49,7 +49,9 @@ public class Test_M3CombinationMatrix {
 	static final String RECORDING = System.getProperty ("swt.viewport.recording");
 	static final boolean RESUME = Boolean.getBoolean ("m3.combinations.resume");
 	static final int ROW_LIMIT = Integer.getInteger ("m3.combinations.rowLimit", 900);
-	static final boolean PIXELS = Boolean.getBoolean ("m3.combinations.pixels");
+	/** <code>-Dm3.combinations.pixels</code>: false, true (WM_PRINT through the window procedures) or print (Control.print, the composited surface). */
+	static final String PIXEL_CAPTURE = System.getProperty ("m3.combinations.pixels", "false");
+	static final boolean PIXELS = !"false".equals (PIXEL_CAPTURE);
 	static final int STEPS = PIXELS ? 7 : 6;
 	static final ScheduledExecutorService WATCHDOG = Executors.newSingleThreadScheduledExecutor (r -> {
 		Thread thread = new Thread (r, "m3 combination row watchdog");
@@ -151,7 +153,26 @@ public class Test_M3CombinationMatrix {
 	 */
 	static String pixels (Subject s) {
 		Widget w = s.widget ();
-		return w instanceof Control c && !c.isDisposed () ? ViewportDifferential.stepPixels (ViewportDifferential.render (c)) : "pixels none";
+		if (!(w instanceof Control c) || c.isDisposed ()) return "pixels none";
+		return ViewportDifferential.stepPixels ("print".equals (PIXEL_CAPTURE) ? printed (c) : ViewportDifferential.render (c));
+	}
+
+	/**
+	 * Control.print: the composited surface (PrintWindow on win32), which shows what an external canvas (the M3 renderer)
+	 * drew; WM_PRINT repaints through the native Paint path instead.
+	 */
+	static ImageData printed (Control control) {
+		Point size = control.getSize ();
+		Image image = new Image (control.getDisplay (), Math.max (1, size.x), Math.max (1, size.y));
+		GC gc = new GC (image);
+		try {
+			control.print (gc);
+		} finally {
+			gc.dispose ();
+		}
+		ImageData data = image.getImageData ();
+		image.dispose ();
+		return data;
 	}
 
 	static String create (CombinationRow row, Subject s) {

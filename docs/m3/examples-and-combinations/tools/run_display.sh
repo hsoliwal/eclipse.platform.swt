@@ -18,7 +18,7 @@ LIB=C:/m3-superset/i31/binaries/org.eclipse.swt.win32.win32.x86_64/lib
 JUNIT=C:/Users/hsoliwal/.m2/repository/org/junit/platform/junit-platform-console-standalone/1.11.4/junit-platform-console-standalone-1.11.4.jar
 AGENT=C:/Users/hsoliwal/.m2/repository/org/jacoco/org.jacoco.agent/0.8.15/org.jacoco.agent-0.8.15-runtime.jar
 SKIJA="$LIB/skija-shared-0.116.3.jar;$LIB/skija-windows-x64-0.116.3.jar;$LIB/types-0.1.1.jar"
-CP="$O/tests;$O/snippets;$O/platform/win32;$SKIJA;$JUNIT"
+CP="$O/tests;$O/snippets;${M3_SWT:-$O/platform/win32};$SKIJA;$JUNIT"
 INCLUDES='org.eclipse.swt.snippets.m3.gallery.*:org.eclipse.swt.snippets.m3.tools.*:org.eclipse.swt.tests.m3.tools.*'
 NATIVE_OPTS="-Djava.library.path=$(W "$NAT") -Dswt.library.path=$(W "$NAT")"
 mkdir -p "$O/results" "$O/coverage" "$O/examples"

@@ -67,7 +67,7 @@ public final class M3ExampleRunner {
 		}
 		onBlocked = detail -> {
 			System.out.println ("TIMEOUT " + detail);
-			Runtime.getRuntime ().halt (3);
+			System.exit (3);
 		};
 		Result result = run (args [0], Arrays.copyOfRange (args, 1, args.length), null);
 		System.out.println (result.tsv ("single", 0));
@@ -76,7 +76,7 @@ public final class M3ExampleRunner {
 
 	/**
 	 * Runs every gallery entry from <code>first</code> and answers 0. An example whose main does not return blocks this
-	 * thread: the watcher then appends its TIMEOUT line and halts the JVM with 3 (see {@link #onBlocked}).
+	 * thread: the watcher then appends its TIMEOUT line and ends the JVM with 3 (see {@link #onBlocked}).
 	 */
 	public static int batch (String label, Path results, Path snapshots, int first) throws IOException {
 		Files.createDirectories (snapshots);
@@ -99,14 +99,17 @@ public final class M3ExampleRunner {
 		Files.writeString (file, line + "\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 	}
 
-	/** Records the blocked entry and ends the JVM (exit 3: the script resumes at the next entry). */
+	/**
+	 * Records the blocked entry and ends the JVM with 3 (the script resumes at the next entry); System.exit runs the
+	 * shutdown hooks (for example a coverage agent writing its data), which need no UI thread.
+	 */
 	static void halt (Path results, String line) {
 		try {
 			append (results, line);
 		} catch (IOException e) {
 			e.printStackTrace ();
 		}
-		Runtime.getRuntime ().halt (3);
+		System.exit (3);
 	}
 
 	static String simpleName (String className) {

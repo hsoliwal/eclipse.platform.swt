@@ -62,7 +62,12 @@ fi
   awk -F'\t' -v OFS='\t' 'NR > 1 && $17 > 60000 { kind = $4 ~ /VIRTUAL/ ? "virtual" : "plain"
       print "SLOW (> 60 s)", $2 " " kind " " $7 " " $8 " items", "matrix " $1 " " $12, "took " int ($17 / 1000) " s in mode " $12 " (" $13 ")" }' "$O/results/matrix-all.tsv"
   [ -f "$O/results/examples-modes.tsv" ] && awk -F'\t' -v OFS='\t' 'NR > 1 && $5 != "PASS" {
-      d = $8; ex = d; sub (/:.*/, "", ex); loc = "-"; if (match (d, /\(([A-Za-z0-9_$]+\.java:[0-9]+)\)/)) loc = substr (d, RSTART + 1, RLENGTH - 2)
+      d = $8; ex = d; sub (/[:;].*/, "", ex); loc = "-"; rest = d
+      # the first SWT frame with a source line that is not an error helper (SWT.error, Widget.checkWidget) or OS
+      while (loc == "-" && match (rest, /at org\.eclipse\.swt\.[A-Za-z0-9_.$]+\(([A-Za-z0-9_$]+\.java:[0-9]+)\)/)) {
+        frame = substr (rest, RSTART, RLENGTH); rest = substr (rest, RSTART + RLENGTH)
+        if (frame !~ /\((SWT|OS|Widget)\.java:/ && frame !~ /gallery\.M3ExampleRunner/) { loc = frame; sub (/^at org\.eclipse\.swt\./, "", loc) }
+      }
       print "EXAMPLE_" $5 " " ex, loc, "example " $2 " " $3 " " $4 " " $1, substr (d, 1, 300) }' "$O/results/examples-modes.tsv"
 } | awk -F'\t' -v OFS='\t' '
   { key = $1 "\t" $2; n[key]++; if (n[key] <= 8) who[key] = who[key] (n[key] > 1 ? "; " : "") $3; if (!(key in msg)) msg[key] = $4 }

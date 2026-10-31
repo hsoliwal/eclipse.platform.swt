@@ -1,0 +1,188 @@
+row	widget	mode	style	feature	api	op	count	theme	language	env	jvm_mode	role	status	theme_language	leak	millis	failure	location	message
+r0002	Table	viewport	VIRTUAL	frame-overlay	M3-RANGE-SELECT	scroll-top	1	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0	300	-	-	-
+r0003	Table	viewport	MULTI	none	M3-VISIBLE-RANGE	scroll-middle	1000	dark	de	display	original	record	PASS	theme dark applied; language de rtl=false	0	172	-	-	-
+r0005	Table	viewport	FULL_SELECTION	none	M3-SCROLL-TO-ALIGNED	select-range	1	none	ja	display	original	record	PASS	none; language ja rtl=false	0	20	-	-	-
+r0006	Table	viewport	BORDER	none	M3-TEXT-SEGMENTS	sort-filter	0	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0	30	-	-	-
+r0007	Table	viewport	H_SCROLL|V_SCROLL	none	M3-TOKEN-CURSOR	update-item	0	dark	ar	display	original	record	PASS	theme dark applied; language ar rtl=true	0	33	-	-	-
+r0008	Table	viewport	NO_SCROLL	none	M3-MODE-QUERY	dispose	0	high-contrast	de	display	original	record	PASS	theme high-contrast applied; language de rtl=false	0	72	-	-	-
+r0009	Table	viewport	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-EMPTINESS	scroll-top	0	none	de	display	original	record	PASS	none; language de rtl=false	0	41	-	-	-
+r0011	Table	original	VIRTUAL	none	M3-BULK-UPDATES	setItemCount	1000	high-contrast	ja	display	original	record	PASS	theme high-contrast applied; language ja rtl=false	0	69	-	-	-
+r0012	Table	original	MULTI	frame-overlay	M3-PREFETCH	scroll-bottom	0	light	none	display	original	record	PASS	theme light applied; none	0	28	-	-	-
+r0013	Table	original	CHECK	frame-overlay	M3-DIFF-APPLY	select-range	1000	dark	none	display	original	record	PASS	theme dark applied; none	0	126	-	-	-
+r0014	Table	original	FULL_SELECTION	frame-overlay	M3-VISIBILITY-OBSERVER	sort-filter	1	high-contrast	de	display	original	record	PASS	theme high-contrast applied; language de rtl=false	0	26	-	-	-
+r0015	Table	original	BORDER	frame-overlay	M3-PROXY-MODEL	update-item	1	none	ar	display	original	record	PASS	none; language ar rtl=true	0	51	-	-	-
+r0017	Table	original	NO_SCROLL	frame-overlay	M3-COLUMN-FILTER	setItemCount	1	dark	en	display	original	record	PASS	theme dark applied; language en rtl=false	0	41	-	-	-
+r0019	Table	custom	NONE	none	M3-ESTIMATED-HEIGHTS	scroll-top	1000	light	ar	display	original	record	PASS	theme light applied; language ar rtl=true	0	119	-	-	-
+r0021	Table	custom	MULTI	none	M3-TYPE-AHEAD	setItemCount	1	high-contrast	en	display	original	record	PASS	theme high-contrast applied; language en rtl=false	0	34	-	-	-
+r0023	Table	custom	FULL_SELECTION	none	M3-RESIDENCY	scroll-bottom	1000	dark	en	display	original	record	PASS	theme dark applied; language en rtl=false	0	63	-	-	-
+r0027	Table	custom	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-PROXY-MODEL	dispose	1000	dark	en	display	original	record	PASS	theme dark applied; language en rtl=false	0	29	-	-	-
+r0028	Table	m3	NONE	none	M3-COLUMN-SORT	scroll-bottom	1	dark	de	display	original	record	PASS	theme dark applied; language de rtl=false	0	61	-	-	-
+r0031	Table	m3	CHECK	none	M3-SCROLL-RESTORE	scroll-middle	0	high-contrast	en	display	original	record	PASS	theme high-contrast applied; language en rtl=false	0	39	-	-	-
+r0032	Table	m3	FULL_SELECTION	none	M3-LOCALE-COLLATION	setItemCount	1000	light	ar	display	original	record	PASS	theme light applied; language ar rtl=true	0	163	-	-	-
+r0033	Table	m3	BORDER	none	M3-RANGE-SELECT	dispose	1000	none	ja	display	original	record	PASS	none; language ja rtl=false	0	128	-	-	-
+r0035	Table	m3	NO_SCROLL	none	M3-SCROLL-INFO	scroll-top	0	light	ja	display	original	record	PASS	theme light applied; language ja rtl=false	0	23	-	-	-
+r0037	Table	gpu	NONE	none	M3-RANGE-SELECT	select-range	0	high-contrast	none	display	original	record	PASS	theme high-contrast applied; none	0	31	-	-	-
+r0038	Table	gpu	VIRTUAL	frame-overlay	M3-VISIBLE-RANGE	scroll-bottom	1	none	ja	display	original	record	PASS	none; language ja rtl=false	0	30	-	-	-
+r0039	Table	gpu	MULTI	none	none	sort-filter	1000	dark	ar	display	original	record	PASS	theme dark applied; language ar rtl=true	0	292	-	-	-
+r0040	Table	gpu	CHECK	none	M3-SCROLL-TO-ALIGNED	setItemCount	0	light	de	display	original	record	PASS	theme light applied; language de rtl=false	0	53	-	-	-
+r0043	Table	gpu	H_SCROLL|V_SCROLL	none	M3-TEXT-SEGMENTS	scroll-top	1	high-contrast	en	display	original	record	PASS	theme high-contrast applied; language en rtl=false	0	45	-	-	-
+r0045	Table	gpu	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-MODE-QUERY	scroll-middle	1	none	ar	display	original	record	PASS	none; language ar rtl=true	0	60	-	-	-
+r0046	Tree	viewport	NONE	none	M3-ROW-MATH	sort-filter	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	56	-	-	-
+r0047	Tree	viewport	VIRTUAL	frame-overlay	M3-ESTIMATED-HEIGHTS	update-item	1	dark	de	display	original	record	PASS	theme dark applied; language de rtl=false	0	69	-	-	-
+r0048	Tree	viewport	MULTI	none	M3-CHECK-TRISTATE	select-range	1000	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0	789	-	-	-
+r0049	Tree	viewport	CHECK	none	M3-RESIDENCY	scroll-top	1	high-contrast	none	display	original	record	PASS	theme high-contrast applied; none	0	24	-	-	-
+r0051	Tree	viewport	BORDER	none	M3-DIFF-APPLY	scroll-middle	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	18	-	-	-
+r0052	Tree	viewport	H_SCROLL|V_SCROLL	none	M3-PREFETCH	setItemCount	1	none	ja	display	original	record	PASS	none; language ja rtl=false	0	19	-	-	-
+r0053	Tree	viewport	NO_SCROLL	none	M3-COLUMN-SORT	scroll-bottom	0	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0	14	-	-	-
+r0054	Tree	viewport	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-VISIBILITY-OBSERVER	scroll-bottom	0	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0	22	-	-	-
+r0055	Tree	original	NONE	none	M3-VISIBLE-RANGE	scroll-top	0	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0	29	-	-	-
+r0056	Tree	original	VIRTUAL	none	M3-SCROLL-INFO	sort-filter	1000	dark	en	display	original	record	PASS	theme dark applied; language en rtl=false	0	3404	-	-	-
+r0057	Tree	original	MULTI	none	M3-RANGE-SELECT	update-item	0	light	ja	display	original	record	PASS	theme light applied; language ja rtl=false	0	18	-	-	-
+r0058	Tree	original	CHECK	none	none	update-item	1	none	en	display	original	record	PASS	none; language en rtl=false	0	23	-	-	-
+r0060	Tree	original	BORDER	none	M3-SCROLL-TO-ALIGNED	scroll-bottom	1000	dark	en	display	original	record	PASS	theme dark applied; language en rtl=false	0	14390	-	-	-
+r0061	Tree	original	H_SCROLL|V_SCROLL	none	M3-MODE-QUERY	scroll-bottom	1000	light	none	display	original	record	PASS	theme light applied; none	0	1567	-	-	-
+r0062	Tree	original	NO_SCROLL	none	M3-TOKEN-CURSOR	select-range	1	none	en	display	original	record	PASS	none; language en rtl=false	0	19	-	-	-
+r0063	Tree	original	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-LOCALE-COLLATION	select-range	1	dark	en	display	original	record	PASS	theme dark applied; language en rtl=false	0	75	-	-	-
+r0064	Tree	custom	NONE	none	M3-EMPTINESS	update-item	1	dark	none	display	original	record	PASS	theme dark applied; none	0	45	-	-	-
+r0065	Tree	custom	VIRTUAL	none	M3-COLUMN-FILTER	dispose	0	light	de	display	original	record	PASS	theme light applied; language de rtl=false	0	28	-	-	-
+r0068	Tree	custom	FULL_SELECTION	none	none	scroll-top	0	high-contrast	de	display	original	record	PASS	theme high-contrast applied; language de rtl=false	0	35	-	-	-
+r0069	Tree	custom	BORDER	none	M3-SCROLL-INFO	setItemCount	0	none	de	display	original	record	PASS	none; language de rtl=false	0	24	-	-	-
+r0070	Tree	custom	H_SCROLL|V_SCROLL	none	M3-SCROLL-TO-ALIGNED	scroll-middle	0	none	ar	display	original	record	PASS	none; language ar rtl=true	0	36	-	-	-
+r0071	Tree	custom	NO_SCROLL	none	M3-TEXT-SEGMENTS	setItemCount	1000	dark	de	display	original	record	PASS	theme dark applied; language de rtl=false	0	777	-	-	-
+r0072	Tree	custom	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-TOKEN-CURSOR	sort-filter	1000	light	de	display	original	record	PASS	theme light applied; language de rtl=false	0	557	-	-	-
+r0075	Tree	m3	MULTI	none	M3-TOKEN-CURSOR	setItemCount	0	high-contrast	ja	display	original	record	PASS	theme high-contrast applied; language ja rtl=false	0	29	-	-	-
+r0077	Tree	m3	FULL_SELECTION	none	M3-EMPTINESS	setItemCount	1000	high-contrast	en	display	original	record	PASS	theme high-contrast applied; language en rtl=false	0	6911	-	-	-
+r0078	Tree	m3	BORDER	none	M3-ROW-MATH	setItemCount	1	light	none	display	original	record	PASS	theme light applied; none	0	51	-	-	-
+r0079	Tree	m3	H_SCROLL|V_SCROLL	none	M3-RESIDENCY	select-range	0	light	de	display	original	record	PASS	theme light applied; language de rtl=false	0	52	-	-	-
+r0081	Tree	m3	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-PREFETCH	scroll-top	1000	dark	en	display	original	record	PASS	theme dark applied; language en rtl=false	0	16230	-	-	-
+r0082	Tree	gpu	NONE	none	M3-BULK-UPDATES	update-item	1	dark	en	display	original	record	PASS	theme dark applied; language en rtl=false	0	42	-	-	-
+r0083	Tree	gpu	VIRTUAL	none	M3-ROW-MATH	dispose	1000	dark	en	display	original	record	PASS	theme dark applied; language en rtl=false	0	638	-	-	-
+r0084	Tree	gpu	MULTI	none	M3-RESIDENCY	setItemCount	0	none	ar	display	original	record	PASS	none; language ar rtl=true	0	27	-	-	-
+r0085	Tree	gpu	CHECK	none	M3-PREFETCH	scroll-middle	0	none	ar	display	original	record	PASS	none; language ar rtl=true	0	27	-	-	-
+r0086	Tree	gpu	FULL_SELECTION	none	M3-DIFF-APPLY	scroll-top	1	high-contrast	en	display	original	record	PASS	theme high-contrast applied; language en rtl=false	0	31	-	-	-
+r0088	Tree	gpu	H_SCROLL|V_SCROLL	none	M3-COLUMN-FILTER	scroll-middle	1000	high-contrast	ar	display	original	record	PASS	theme high-contrast applied; language ar rtl=true	0	851	-	-	-
+r0089	Tree	gpu	NO_SCROLL	none	M3-SCROLL-RESTORE	scroll-top	1000	dark	de	display	original	record	PASS	theme dark applied; language de rtl=false	0	6911	-	-	-
+r0090	Tree	gpu	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-COLUMN-SORT	setItemCount	1000	high-contrast	ar	display	original	record	PASS	theme high-contrast applied; language ar rtl=true	0	1165	-	-	-
+r0091	List	viewport	NONE	none	M3-PROXY-MODEL	setItemCount	0	light	none	display	original	record	PASS	theme light applied; none	0	23	-	-	-
+r0092	List	viewport	MULTI	frame-overlay	M3-SCROLL-INFO	select-range	1	none	en	display	original	record	PASS	none; language en rtl=false	0	7	-	-	-
+r0093	List	viewport	BORDER	none	M3-SCROLL-RESTORE	scroll-bottom	1000	dark	ar	display	original	record	PASS	theme dark applied; language ar rtl=true	0	27	-	-	-
+r0095	List	original	NONE	none	M3-SCROLL-TO-ALIGNED	sort-filter	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	6	-	-	-
+r0096	List	original	MULTI	none	M3-EMPTINESS	dispose	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	6	-	-	-
+r0098	List	original	H_SCROLL|V_SCROLL	none	M3-TYPE-AHEAD	update-item	1000	light	de	display	original	record	PASS	theme light applied; language de rtl=false	0	47	-	-	-
+r0099	List	custom	NONE	none	M3-MODE-QUERY	scroll-top	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	9	-	-	-
+r0100	List	custom	MULTI	none	M3-BULK-UPDATES	scroll-top	0	none	de	display	original	record	PASS	none; language de rtl=false	0	7	-	-	-
+r0101	List	custom	BORDER	none	none	scroll-middle	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	6	-	-	-
+r0102	List	custom	H_SCROLL|V_SCROLL	none	M3-RANGE-SELECT	setItemCount	0	none	de	display	original	record	PASS	none; language de rtl=false	0	8	-	-	-
+r0103	List	m3	NONE	none	M3-DIFF-APPLY	scroll-bottom	0	none	ar	display	original	record	PASS	none; language ar rtl=true	0	9	-	-	-
+r0104	List	m3	MULTI	none	M3-VISIBILITY-OBSERVER	scroll-top	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	7	-	-	-
+r0107	List	gpu	NONE	none	M3-TEXT-SEGMENTS	scroll-bottom	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	6	-	-	-
+r0108	List	gpu	MULTI	none	M3-PROXY-MODEL	scroll-middle	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	8	-	-	-
+r0109	List	gpu	BORDER	none	M3-RESIDENCY	sort-filter	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	6	-	-	-
+r0112	Combo	viewport	BORDER	frame-overlay	M3-MODE-QUERY	select-range	1	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0	47	-	-	-
+r0113	Combo	original	NONE	none	M3-LOCALE-COLLATION	sort-filter	1000	dark	ja	display	original	record	PASS	theme dark applied; language ja rtl=false	0	431	-	-	-
+r0115	Combo	custom	NONE	none	M3-TEXT-SEGMENTS	select-range	0	none	ar	display	original	record	PASS	none; language ar rtl=true	0	23	-	-	-
+r0116	Combo	custom	BORDER	none	M3-ESTIMATED-HEIGHTS	select-range	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	11	-	-	-
+r0122	StyledText	viewport	MULTI	frame-overlay	M3-TEXT-SEGMENTS	dispose	1	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0 (first-use 4)	173	-	-	-
+r0123	StyledText	viewport	FULL_SELECTION	none	M3-TOKEN-CURSOR	scroll-middle	1000	dark	de	display	original	record	PASS	theme dark applied; language de rtl=false	0	41	-	-	-
+r0125	StyledText	viewport	H_SCROLL|V_SCROLL	none	none	setItemCount	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	19	-	-	-
+r0147	Canvas	viewport	BORDER	frame-overlay	M3-TOKEN-CURSOR	scroll-bottom	1	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0	11	-	-	-
+r0148	Canvas	viewport	H_SCROLL|V_SCROLL	none	M3-TEXT-SEGMENTS	scroll-top	1000	dark	de	display	original	record	PASS	theme dark applied; language de rtl=false	0	18	-	-	-
+r0150	Canvas	original	NONE	none	M3-MODE-QUERY	sort-filter	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	6	-	-	-
+r0167	CTabFolder	viewport	MULTI	frame-overlay	M3-TEXT-SEGMENTS	scroll-top	1	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0	53	-	-	-
+r0168	CTabFolder	viewport	BORDER	none	M3-TOKEN-CURSOR	scroll-middle	1000	dark	de	display	original	record	PASS	theme dark applied; language de rtl=false	0 (first-use 1)	171	-	-	-
+r0169	CTabFolder	original	NONE	none	M3-MODE-QUERY	scroll-bottom	0	high-contrast	ar	display	original	record	PASS	theme high-contrast applied; language ar rtl=true	0	33	-	-	-
+r0170	CTabFolder	original	MULTI	none	M3-ESTIMATED-HEIGHTS	select-range	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	11	-	-	-
+r0182	CCombo	viewport	BORDER	frame-overlay	M3-TEXT-SEGMENTS	select-range	1	light	en	display	original	record	PASS	theme light applied; language en rtl=false	0	43	-	-	-
+r0183	CCombo	original	NONE	none	M3-TOKEN-CURSOR	sort-filter	1000	dark	de	display	original	record	PASS	theme dark applied; language de rtl=false	0	360	-	-	-
+r0185	CCombo	custom	NONE	none	M3-ESTIMATED-HEIGHTS	dispose	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	10	-	-	-
+r0198	Table	viewport	NONE	none	M3-COLUMN-FILTER	scroll-bottom	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	16	-	-	-
+r0202	Tree	custom	CHECK	none	M3-ROW-MATH	scroll-middle	0	none	ar	display	original	record	PASS	none; language ar rtl=true	0	33	-	-	-
+r0204	Tree	custom	VIRTUAL	none	M3-CHECK-TRISTATE	scroll-top	1	dark	de	display	original	record	PASS	theme dark applied; language de rtl=false	0	29	-	-	-
+r0206	Table	gpu	CHECK	none	M3-TYPE-AHEAD	scroll-middle	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	19	-	-	-
+r0207	Tree	gpu	FULL_SELECTION	none	M3-CHECK-TRISTATE	scroll-bottom	0	none	ja	display	original	record	PASS	none; language ja rtl=false	0	18	-	-	-
+r0234	Table	viewport	FULL_SELECTION	none	M3-RANGE-SELECT	scroll-middle	0	none	ar	display	original	record	PASS	none; language ar rtl=true	0	21	-	-	-
+r0002	Table	viewport	VIRTUAL	frame-overlay	M3-RANGE-SELECT	scroll-top	1	light	en	display	viewport	compare	PASS	theme light applied; language en rtl=false	0	223	-	-	-
+r0003	Table	viewport	MULTI	none	M3-VISIBLE-RANGE	scroll-middle	1000	dark	de	display	viewport	compare	PASS	theme dark applied; language de rtl=false	0	57	-	-	-
+r0005	Table	viewport	FULL_SELECTION	none	M3-SCROLL-TO-ALIGNED	select-range	1	none	ja	display	viewport	compare	PASS	none; language ja rtl=false	0	15	-	-	-
+r0006	Table	viewport	BORDER	none	M3-TEXT-SEGMENTS	sort-filter	0	light	en	display	viewport	compare	PASS	theme light applied; language en rtl=false	0	23	-	-	-
+r0007	Table	viewport	H_SCROLL|V_SCROLL	none	M3-TOKEN-CURSOR	update-item	0	dark	ar	display	viewport	compare	PASS	theme dark applied; language ar rtl=true	0	21	-	-	-
+r0008	Table	viewport	NO_SCROLL	none	M3-MODE-QUERY	dispose	0	high-contrast	de	display	viewport	compare	PASS	theme high-contrast applied; language de rtl=false	0	16	-	-	-
+r0009	Table	viewport	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-EMPTINESS	scroll-top	0	none	de	display	viewport	compare	PASS	none; language de rtl=false	0	14	-	-	-
+r0046	Tree	viewport	NONE	none	M3-ROW-MATH	sort-filter	0	none	ja	display	viewport	compare	PASS	none; language ja rtl=false	0	28	-	-	-
+r0047	Tree	viewport	VIRTUAL	frame-overlay	M3-ESTIMATED-HEIGHTS	update-item	1	dark	de	display	viewport	compare	PASS	theme dark applied; language de rtl=false	0	43	-	-	-
+r0048	Tree	viewport	MULTI	none	M3-CHECK-TRISTATE	select-range	1000	light	en	display	viewport	compare	PASS	theme light applied; language en rtl=false	0	593	-	-	-
+r0049	Tree	viewport	CHECK	none	M3-RESIDENCY	scroll-top	1	high-contrast	none	display	viewport	compare	PASS	theme high-contrast applied; none	0	42	-	-	-
+r0051	Tree	viewport	BORDER	none	M3-DIFF-APPLY	scroll-middle	0	none	ja	display	viewport	compare	PASS	none; language ja rtl=false	0	31	-	-	-
+r0052	Tree	viewport	H_SCROLL|V_SCROLL	none	M3-PREFETCH	setItemCount	1	none	ja	display	viewport	compare	PASS	none; language ja rtl=false	0	28	-	-	-
+r0053	Tree	viewport	NO_SCROLL	none	M3-COLUMN-SORT	scroll-bottom	0	light	en	display	viewport	compare	PASS	theme light applied; language en rtl=false	0	37	-	-	-
+r0054	Tree	viewport	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-VISIBILITY-OBSERVER	scroll-bottom	0	light	en	display	viewport	compare	PASS	theme light applied; language en rtl=false	0	26	-	-	-
+r0091	List	viewport	NONE	none	M3-PROXY-MODEL	setItemCount	0	light	none	display	viewport	compare	PASS	theme light applied; none	0	18	-	-	-
+r0092	List	viewport	MULTI	frame-overlay	M3-SCROLL-INFO	select-range	1	none	en	display	viewport	compare	PASS	none; language en rtl=false	0	10	-	-	-
+r0093	List	viewport	BORDER	none	M3-SCROLL-RESTORE	scroll-bottom	1000	dark	ar	display	viewport	compare	PASS	theme dark applied; language ar rtl=true	0	23	-	-	-
+r0112	Combo	viewport	BORDER	frame-overlay	M3-MODE-QUERY	select-range	1	light	en	display	viewport	compare	PASS	theme light applied; language en rtl=false	0	30	-	-	-
+r0122	StyledText	viewport	MULTI	frame-overlay	M3-TEXT-SEGMENTS	dispose	1	light	en	display	viewport	compare	PASS	theme light applied; language en rtl=false	0 (first-use 4)	73	-	-	-
+r0123	StyledText	viewport	FULL_SELECTION	none	M3-TOKEN-CURSOR	scroll-middle	1000	dark	de	display	viewport	compare	PASS	theme dark applied; language de rtl=false	0	34	-	-	-
+r0125	StyledText	viewport	H_SCROLL|V_SCROLL	none	none	setItemCount	0	none	ja	display	viewport	compare	PASS	none; language ja rtl=false	0	15	-	-	-
+r0147	Canvas	viewport	BORDER	frame-overlay	M3-TOKEN-CURSOR	scroll-bottom	1	light	en	display	viewport	compare	PASS	theme light applied; language en rtl=false	0	9	-	-	-
+r0148	Canvas	viewport	H_SCROLL|V_SCROLL	none	M3-TEXT-SEGMENTS	scroll-top	1000	dark	de	display	viewport	compare	PASS	theme dark applied; language de rtl=false	0	12	-	-	-
+r0167	CTabFolder	viewport	MULTI	frame-overlay	M3-TEXT-SEGMENTS	scroll-top	1	light	en	display	viewport	compare	PASS	theme light applied; language en rtl=false	0	29	-	-	-
+r0168	CTabFolder	viewport	BORDER	none	M3-TOKEN-CURSOR	scroll-middle	1000	dark	de	display	viewport	compare	PASS	theme dark applied; language de rtl=false	0 (first-use 1)	76	-	-	-
+r0182	CCombo	viewport	BORDER	frame-overlay	M3-TEXT-SEGMENTS	select-range	1	light	en	display	viewport	compare	PASS	theme light applied; language en rtl=false	0	28	-	-	-
+r0198	Table	viewport	NONE	none	M3-COLUMN-FILTER	scroll-bottom	0	none	ja	display	viewport	compare	PASS	none; language ja rtl=false	0	22	-	-	-
+r0234	Table	viewport	FULL_SELECTION	none	M3-RANGE-SELECT	scroll-middle	0	none	ar	display	viewport	compare	PASS	none; language ar rtl=true	0	19	-	-	-
+r0019	Table	custom	NONE	none	M3-ESTIMATED-HEIGHTS	scroll-top	1000	light	ar	display	custom	compare	PASS	theme light applied; language ar rtl=true	0	240	-	-	-
+r0021	Table	custom	MULTI	none	M3-TYPE-AHEAD	setItemCount	1	high-contrast	en	display	custom	compare	PASS	theme high-contrast applied; language en rtl=false	0	26	-	-	-
+r0023	Table	custom	FULL_SELECTION	none	M3-RESIDENCY	scroll-bottom	1000	dark	en	display	custom	compare	FAIL	theme dark applied; language en rtl=false	-	56	org.opentest4j.AssertionFailedError	ViewportDifferential.java:358 (org.eclipse.swt.tests.junit.ViewportDifferential.compareWithRecording)	step 4 differs (reference original, SWT 4975 win32) |   recorded: M3-RESIDENCY M3ItemRange [0..999] | state count=1000 top=987 sel=[] text=item 000987 |   this run: M3-RESIDENCY M3ItemRange [987..999] | state count=1000 top=987 sel=[] text=item 000987 | log: | seed 0 | create feature theme-language op api 
+r0027	Table	custom	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-PROXY-MODEL	dispose	1000	dark	en	display	custom	compare	PASS	theme dark applied; language en rtl=false	0	50	-	-	-
+r0064	Tree	custom	NONE	none	M3-EMPTINESS	update-item	1	dark	none	display	custom	compare	PASS	theme dark applied; none	0	54	-	-	-
+r0065	Tree	custom	VIRTUAL	none	M3-COLUMN-FILTER	dispose	0	light	de	display	custom	compare	PASS	theme light applied; language de rtl=false	0	41	-	-	-
+r0068	Tree	custom	FULL_SELECTION	none	none	scroll-top	0	high-contrast	de	display	custom	compare	PASS	theme high-contrast applied; language de rtl=false	0	26	-	-	-
+r0069	Tree	custom	BORDER	none	M3-SCROLL-INFO	setItemCount	0	none	de	display	custom	compare	PASS	none; language de rtl=false	0	20	-	-	-
+r0070	Tree	custom	H_SCROLL|V_SCROLL	none	M3-SCROLL-TO-ALIGNED	scroll-middle	0	none	ar	display	custom	compare	PASS	none; language ar rtl=true	0	21	-	-	-
+r0071	Tree	custom	NO_SCROLL	none	M3-TEXT-SEGMENTS	setItemCount	1000	dark	de	display	custom	compare	PASS	theme dark applied; language de rtl=false	0	469	-	-	-
+r0072	Tree	custom	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-TOKEN-CURSOR	sort-filter	1000	light	de	display	custom	compare	PASS	theme light applied; language de rtl=false	0	58	-	-	-
+r0099	List	custom	NONE	none	M3-MODE-QUERY	scroll-top	0	none	ja	display	custom	compare	FAIL	none; language ja rtl=false	-	14	org.opentest4j.AssertionFailedError	ViewportDifferential.java:358 (org.eclipse.swt.tests.junit.ViewportDifferential.compareWithRecording)	step 4 differs (reference original, SWT 4975 win32) |   recorded: M3-MODE-QUERY consistent | state count=0 top=0 sel=[] text=- |   this run: M3-MODE-QUERY INCONSISTENT M3Mode=viewport implementation=custom | state count=0 top=0 sel=[] text=- | log: | seed 0 | create feature theme-language op api 
+r0100	List	custom	MULTI	none	M3-BULK-UPDATES	scroll-top	0	none	de	display	custom	compare	PASS	none; language de rtl=false	0	5	-	-	-
+r0101	List	custom	BORDER	none	none	scroll-middle	0	none	ja	display	custom	compare	PASS	none; language ja rtl=false	0	3	-	-	-
+r0102	List	custom	H_SCROLL|V_SCROLL	none	M3-RANGE-SELECT	setItemCount	0	none	de	display	custom	compare	PASS	none; language de rtl=false	0	5	-	-	-
+r0115	Combo	custom	NONE	none	M3-TEXT-SEGMENTS	select-range	0	none	ar	display	custom	compare	PASS	none; language ar rtl=true	0	28	-	-	-
+r0116	Combo	custom	BORDER	none	M3-ESTIMATED-HEIGHTS	select-range	0	none	ja	display	custom	compare	PASS	none; language ja rtl=false	0	11	-	-	-
+r0185	CCombo	custom	NONE	none	M3-ESTIMATED-HEIGHTS	dispose	0	none	ja	display	custom	compare	PASS	none; language ja rtl=false	0	31	-	-	-
+r0202	Tree	custom	CHECK	none	M3-ROW-MATH	scroll-middle	0	none	ar	display	custom	compare	PASS	none; language ar rtl=true	0	30	-	-	-
+r0204	Tree	custom	VIRTUAL	none	M3-CHECK-TRISTATE	scroll-top	1	dark	de	display	custom	compare	PASS	theme dark applied; language de rtl=false	0	21	-	-	-
+r0028	Table	m3	NONE	none	M3-COLUMN-SORT	scroll-bottom	1	dark	de	display	m3	compare	PASS	theme dark applied; language de rtl=false	0	348	-	-	-
+r0031	Table	m3	CHECK	none	M3-SCROLL-RESTORE	scroll-middle	0	high-contrast	en	display	m3	compare	PASS	theme high-contrast applied; language en rtl=false	0	32	-	-	-
+r0032	Table	m3	FULL_SELECTION	none	M3-LOCALE-COLLATION	setItemCount	1000	light	ar	display	m3	compare	PASS	theme light applied; language ar rtl=true	0	149	-	-	-
+r0033	Table	m3	BORDER	none	M3-RANGE-SELECT	dispose	1000	none	ja	display	m3	compare	PASS	none; language ja rtl=false	0	37	-	-	-
+r0035	Table	m3	NO_SCROLL	none	M3-SCROLL-INFO	scroll-top	0	light	ja	display	m3	compare	PASS	theme light applied; language ja rtl=false	0	35	-	-	-
+r0075	Tree	m3	MULTI	none	M3-TOKEN-CURSOR	setItemCount	0	high-contrast	ja	display	m3	compare	PASS	theme high-contrast applied; language ja rtl=false	0	75	-	-	-
+r0077	Tree	m3	FULL_SELECTION	none	M3-EMPTINESS	setItemCount	1000	high-contrast	en	display	m3	compare	PASS	theme high-contrast applied; language en rtl=false	0	3852	-	-	-
+r0078	Tree	m3	BORDER	none	M3-ROW-MATH	setItemCount	1	light	none	display	m3	compare	PASS	theme light applied; none	0	35	-	-	-
+r0079	Tree	m3	H_SCROLL|V_SCROLL	none	M3-RESIDENCY	select-range	0	light	de	display	m3	compare	PASS	theme light applied; language de rtl=false	0	37	-	-	-
+r0081	Tree	m3	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-PREFETCH	scroll-top	1000	dark	en	display	m3	compare	FAIL	theme dark applied; language en rtl=false	-	111	org.opentest4j.AssertionFailedError	ViewportDifferential.java:358 (org.eclipse.swt.tests.junit.ViewportDifferential.compareWithRecording)	step 4 differs (reference original, SWT 4975 win32) |   recorded: M3-PREFETCH heard none | state count=1000 top=500 sel=[] text=item 000500 checked=false |   this run: M3-PREFETCH heard some | state count=1000 top=500 sel=[] text=item 000500 checked=false | log: | seed 0 | create feature theme-language op api 
+r0103	List	m3	NONE	none	M3-DIFF-APPLY	scroll-bottom	0	none	ar	display	m3	compare	PASS	none; language ar rtl=true	0	26	-	-	-
+r0104	List	m3	MULTI	none	M3-VISIBILITY-OBSERVER	scroll-top	0	none	ja	display	m3	compare	PASS	none; language ja rtl=false	0	6	-	-	-
+r0037	Table	gpu	NONE	none	M3-RANGE-SELECT	select-range	0	high-contrast	none	display	gpu	compare	PASS	theme high-contrast applied; none	0	487	-	-	-
+r0038	Table	gpu	VIRTUAL	frame-overlay	M3-VISIBLE-RANGE	scroll-bottom	1	none	ja	display	gpu	compare	PASS	none; language ja rtl=false	0	113	-	-	-
+r0039	Table	gpu	MULTI	none	none	sort-filter	1000	dark	ar	display	gpu	compare	PASS	theme dark applied; language ar rtl=true	0	181	-	-	-
+r0040	Table	gpu	CHECK	none	M3-SCROLL-TO-ALIGNED	setItemCount	0	light	de	display	gpu	compare	PASS	theme light applied; language de rtl=false	0	61	-	-	-
+r0043	Table	gpu	H_SCROLL|V_SCROLL	none	M3-TEXT-SEGMENTS	scroll-top	1	high-contrast	en	display	gpu	compare	PASS	theme high-contrast applied; language en rtl=false	0	105	-	-	-
+r0045	Table	gpu	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-MODE-QUERY	scroll-middle	1	none	ar	display	gpu	compare	FAIL	none; language ar rtl=true	-	99	org.opentest4j.AssertionFailedError	ViewportDifferential.java:358 (org.eclipse.swt.tests.junit.ViewportDifferential.compareWithRecording)	step 4 differs (reference original, SWT 4975 win32) |   recorded: M3-MODE-QUERY consistent | state count=1 top=0 sel=[] text=item 000000 checked=false |   this run: M3-MODE-QUERY INCONSISTENT M3Mode=viewport implementation=gpu | state count=1 top=0 sel=[] text=item 000000 checked=false | log: | seed 0 | create feature theme-language op api 
+r0082	Tree	gpu	NONE	none	M3-BULK-UPDATES	update-item	1	dark	en	display	gpu	compare	PASS	theme dark applied; language en rtl=false	0	91	-	-	-
+r0083	Tree	gpu	VIRTUAL	none	M3-ROW-MATH	dispose	1000	dark	en	display	gpu	compare	PASS	theme dark applied; language en rtl=false	0	97	-	-	-
+r0084	Tree	gpu	MULTI	none	M3-RESIDENCY	setItemCount	0	none	ar	display	gpu	compare	PASS	none; language ar rtl=true	0	58	-	-	-
+r0085	Tree	gpu	CHECK	none	M3-PREFETCH	scroll-middle	0	none	ar	display	gpu	compare	PASS	none; language ar rtl=true	0	88	-	-	-
+r0086	Tree	gpu	FULL_SELECTION	none	M3-DIFF-APPLY	scroll-top	1	high-contrast	en	display	gpu	compare	PASS	theme high-contrast applied; language en rtl=false	0	110	-	-	-
+r0088	Tree	gpu	H_SCROLL|V_SCROLL	none	M3-COLUMN-FILTER	scroll-middle	1000	high-contrast	ar	display	gpu	compare	PASS	theme high-contrast applied; language ar rtl=true	0	1120	-	-	-
+r0089	Tree	gpu	NO_SCROLL	none	M3-SCROLL-RESTORE	scroll-top	1000	dark	de	display	gpu	compare	PASS	theme dark applied; language de rtl=false	0	18650	-	-	-
+r0090	Tree	gpu	VIRTUAL|MULTI|CHECK|FULL_SELECTION	none	M3-COLUMN-SORT	setItemCount	1000	high-contrast	ar	display	gpu	compare	PASS	theme high-contrast applied; language ar rtl=true	0	191	-	-	-
+r0107	List	gpu	NONE	none	M3-TEXT-SEGMENTS	scroll-bottom	0	none	ja	display	gpu	compare	PASS	none; language ja rtl=false	0	27	-	-	-
+r0108	List	gpu	MULTI	none	M3-PROXY-MODEL	scroll-middle	0	none	ja	display	gpu	compare	PASS	none; language ja rtl=false	0	27	-	-	-
+r0109	List	gpu	BORDER	none	M3-RESIDENCY	sort-filter	0	none	ja	display	gpu	compare	PASS	none; language ja rtl=false	0	42	-	-	-
+r0206	Table	gpu	CHECK	none	M3-TYPE-AHEAD	scroll-middle	0	none	ja	display	gpu	compare	PASS	none; language ja rtl=false	0	51	-	-	-
+r0207	Tree	gpu	FULL_SELECTION	none	M3-CHECK-TRISTATE	scroll-bottom	0	none	ja	display	gpu	compare	PASS	none; language ja rtl=false	0	65	-	-	-
+r0192	Model	original	NONE	none	M3-TEXT-SEGMENTS	select-range	1	none	en	headless	original	record	PASS	none; language en rtl=false	-	199	-	-	-
+r0193	Model	custom	NONE	none	M3-TOKEN-CURSOR	sort-filter	1000	none	de	headless	original	record	PASS	none; language de rtl=false	-	10	-	-	-
+r0195	Model	gpu	NONE	none	M3-LOCALE-COLLATION	dispose	0	none	ja	headless	original	record	PASS	none; language ja rtl=false	-	13	-	-	-
+r0193	Model	custom	NONE	none	M3-TOKEN-CURSOR	sort-filter	1000	none	de	headless	custom	compare	PASS	none; language de rtl=false	-	188	-	-	-
+r0195	Model	gpu	NONE	none	M3-LOCALE-COLLATION	dispose	0	none	ja	headless	gpu	compare	PASS	none; language ja rtl=false	-	170	-	-	-
