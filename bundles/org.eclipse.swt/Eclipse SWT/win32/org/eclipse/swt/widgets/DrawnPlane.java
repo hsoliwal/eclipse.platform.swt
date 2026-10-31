@@ -242,7 +242,25 @@ abstract class DrawnPlane {
 	}
 
 	/* behaviour pass into the back buffer, drawn pass over it, present: the damage is visible */
+	/*
+	 * A frame of the drawn plane. A listener the frame calls (SetData of a virtual row, an owner-draw event) may make the
+	 * widget paint again inside it; that paint would end this frame's retained-row pass under it, so it waits for the next
+	 * frame instead (the region stays invalid).
+	 */
 	private void draw (long hwnd, int msg, long target, long lParam) {
+		if (drawing) {
+			OS.InvalidateRect (hwnd, null, false);
+			return;
+		}
+		drawing = true;
+		try {
+			drawFrame (hwnd, msg, target, lParam);
+		} finally {
+			drawing = false;
+		}
+	}
+
+	private void drawFrame (long hwnd, int msg, long target, long lParam) {
 		/*
 		 * The owner-draw events hand the listener a GC, which the render thread never makes (rule 28): while the widget hooks
 		 * one of them, every frame takes the UI-thread path below (the render thread's canonical frame and slots stay as
@@ -380,6 +398,8 @@ abstract class DrawnPlane {
 
 	/* rule 24, delta based view: the rows the frame keeps instead of drawing (RetainedRows, UI-thread placement) */
 	private final RetainedRows retainedRows = new RetainedRows (false);
+	/* a frame is being drawn on the UI thread (see draw) */
+	private boolean drawing;
 
 	/**
 	 * Paints the row the plane filled ({@link #row}), or keeps it when its slot shows it already (rule 24); while a
