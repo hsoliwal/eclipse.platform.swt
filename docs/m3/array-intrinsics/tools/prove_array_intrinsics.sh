@@ -6,12 +6,15 @@
 #   2. FIXED_POINT   a second --apply over the rewritten copy rewrites nothing
 #   3. DIFFERENTIAL  the fixture compiled and run before and after the recipe prints the same trace
 #   4. DISCRIMINATOR the naive replacement of every skipped form changes behaviour (each line DIFFERS)
+# The recipe scans ArrayLoopFixtures.java alone; ArrayLoopHolder.java is compiled with it as the other file of the
+# two-file cases, whose types the recipe must not claim to know (SKIP_TYPE_UNPROVEN).
 # Usage: prove_array_intrinsics.sh <out-dir>        (JDK: M3_JDK, default C:/Program Files/Java/jdk-21)
 set -u
 HERE=$(cd "$(dirname "$0")" && { pwd -W 2>/dev/null || pwd; })
 OUT=${1:?usage: prove_array_intrinsics.sh <out-dir>}
 JDK=${M3_JDK:-C:/Program Files/Java/jdk-21}
 FIX="$HERE/../fixtures/ArrayLoopFixtures.java"
+HOLDER="$HERE/../fixtures/ArrayLoopHolder.java"
 TOOL="$HERE/array_loop_intrinsics.py"
 fail=0
 rm -rf "$OUT"; mkdir -p "$OUT/before" "$OUT/after"
@@ -19,12 +22,13 @@ python -I "$TOOL" scan --expect "$FIX" > "$OUT/classify.tsv" || fail=1
 m=$(grep -c "$(printf '\tMISMATCH$')" "$OUT/classify.tsv"); m=${m:-0}
 ok=$(grep -c "$(printf '\tOK$')" "$OUT/classify.tsv"); ok=${ok:-0}
 echo "CLASSIFY: $ok markers OK, $m mismatches"; [ "$ok" -gt 0 ] && [ "$m" -eq 0 ] || fail=1
-cp "$FIX" "$OUT/before/"; cp "$FIX" "$OUT/after/"
+cp "$FIX" "$HOLDER" "$OUT/before/"; cp "$FIX" "$HOLDER" "$OUT/after/"
 python -I "$TOOL" scan --apply "$OUT/after/ArrayLoopFixtures.java" > "$OUT/apply.tsv"; tail -1 "$OUT/apply.tsv"
 python -I "$TOOL" scan --apply "$OUT/after/ArrayLoopFixtures.java" > "$OUT/fixed_point.tsv"
 grep -q ' rewrites=0 ' "$OUT/fixed_point.tsv" && echo "FIXED_POINT: PASS" || { echo "FIXED_POINT: FAIL"; fail=1; }
 for v in before after; do
-  if ! "$JDK/bin/javac" -nowarn -d "$OUT/$v/classes" "$OUT/$v/ArrayLoopFixtures.java" > "$OUT/$v/javac.log" 2>&1; then
+  if ! "$JDK/bin/javac" -nowarn -d "$OUT/$v/classes" "$OUT/$v/ArrayLoopFixtures.java" "$OUT/$v/ArrayLoopHolder.java" \
+      > "$OUT/$v/javac.log" 2>&1; then
     echo "JAVAC $v: FAIL"; head -20 "$OUT/$v/javac.log"; fail=1
   fi
   "$JDK/bin/java" -cp "$OUT/$v/classes" ArrayLoopFixtures > "$OUT/$v/trace.txt" 2>&1 || { echo "RUN $v: FAIL"; fail=1; }

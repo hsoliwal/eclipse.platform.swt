@@ -5,11 +5,13 @@
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
  * ARRAY_LOOP_INTRINSICS v1 fixture: one method per admitted form and one per skip reason, each marked with the
  * decision the recipe must take. prove_array_intrinsics.sh runs this class before and after the recipe and diffs the
  * traces. The DISCRIMINATOR lines run the naive replacement of every skipped form and must all report DIFFERS.
+ * ArrayLoopHolder.java is the second compilation unit of the two-file cases (SKIP_TYPE_UNPROVEN).
  */
 public class ArrayLoopFixtures {
 	static final int THREE = 3;
@@ -162,9 +164,10 @@ public class ArrayLoopFixtures {
 		return target;
 	}
 
-	static long[] copyAmbiguous(long[] buf) {
+	/** buf is declared here as long[] and in bufLength as int[]: the declaration in scope at the loop decides. */
+	static long[] copyScopedName(long[] buf) {
 		long[] copy = new long[buf.length];
-		// expect: SKIP SKIP_TYPE_UNRESOLVED
+		// expect: REWRITE C1
 		for (int i = 0; i < buf.length; i++) {
 			copy[i] = buf[i];
 		}
@@ -173,6 +176,96 @@ public class ArrayLoopFixtures {
 
 	static int bufLength(int[] buf) {
 		return buf.length;
+	}
+
+	/** An implicitly typed lambda parameter: its type is not in the text. */
+	static long[] copyLambda(long[] input) {
+		UnaryOperator<long[]> copier = buf -> {
+			long[] copy = new long[buf.length];
+			// expect: SKIP SKIP_TYPE_UNRESOLVED
+			for (int i = 0; i < buf.length; i++) {
+				copy[i] = buf[i];
+			}
+			return copy;
+		};
+		return copier.apply(input);
+	}
+
+	/** Two-file case: o.items is int[] in ArrayLoopHolder.java; a widening loop into long[] is legal Java. */
+	static long[] widenHolderCopy(ArrayLoopHolder o) {
+		long[] wide = new long[o.items.length];
+		// expect: SKIP SKIP_TYPE_UNPROVEN
+		for (int i = 0; i < o.items.length; i++) {
+			wide[i] = o.items[i];
+		}
+		return wide;
+	}
+
+	/** Two-file case: o.cells is int[] in ArrayLoopHolder.java, so 65535 is stored as it is, not narrowed. */
+	static int[] fillHolder(ArrayLoopHolder o) {
+		// expect: SKIP SKIP_TYPE_UNPROVEN
+		for (int i = 0; i < o.cells.length; i++) {
+			o.cells[i] = 65535;
+		}
+		return o.cells;
+	}
+
+	/** Unrelated declarations with the last names of the chains above: a file-wide name lookup would take them. */
+	static int unrelatedNames() {
+		long[] items = new long[1];
+		short[] cells = new short[1];
+		return items.length + cells.length;
+	}
+
+	static short[] shade = new short[2];
+	static int[] lane = new int[2];
+	static short[] inherited = new short[1];
+
+	/** The local int[] shade hides the static short[] shade, so 65535 gets no narrowing cast. */
+	static int[] fillShadowed() {
+		int[] shade = new int[2];
+		// expect: REWRITE F1
+		for (int i = 0; i < shade.length; i++) {
+			shade[i] = 65535;
+		}
+		return shade;
+	}
+
+	/** The short[] lane of the if block is out of scope at the loop, which fills the static int[] lane. */
+	static int[] fillAfterBlock(boolean first) {
+		if (first) {
+			short[] lane = new short[1];
+			lane[0] = 1;
+		}
+		// expect: REWRITE F1
+		for (int i = 0; i < lane.length; i++) {
+			lane[i] = 65535;
+		}
+		return lane;
+	}
+
+	/** A varargs parameter is an array. */
+	static int[] fillVarargs(int... vals) {
+		// expect: REWRITE F1
+		for (int i = 0; i < vals.length; i++) {
+			vals[i] = 7;
+		}
+		return vals;
+	}
+
+	static class Base {
+		int[] inherited = {1, 2};
+	}
+
+	/** Java takes the inherited int[] inherited of Base, not the outer static short[] inherited. */
+	static final class Derived extends Base {
+		int[] fillInherited() {
+			// expect: SKIP SKIP_TYPE_UNPROVEN
+			for (int i = 0; i < inherited.length; i++) {
+				inherited[i] = 65535;
+			}
+			return inherited;
+		}
 	}
 
 	static int[] fillIndex(int[] seq) {
@@ -292,8 +385,16 @@ public class ArrayLoopFixtures {
 		show("fillField", () -> fillField(new int[2]));
 		show("copyOffset", () -> copyOffset(new int[4], new int[] {8, 9}, 1));
 		show("copyNotFresh", () -> copyNotFresh(new int[2], new int[] {3, 4}));
-		show("copyAmbiguous", () -> copyAmbiguous(new long[] {1, 2}));
+		show("copyScopedName", () -> copyScopedName(new long[] {1, 2}));
 		show("bufLength", () -> bufLength(new int[2]));
+		show("copyLambda", () -> copyLambda(new long[] {3, 4}));
+		show("widenHolderCopy", () -> widenHolderCopy(new ArrayLoopHolder()));
+		show("fillHolder", () -> fillHolder(new ArrayLoopHolder()));
+		show("unrelatedNames", () -> unrelatedNames());
+		show("fillShadowed", () -> fillShadowed());
+		show("fillAfterBlock", () -> fillAfterBlock(true));
+		show("fillVarargs", () -> fillVarargs(1, 2, 3));
+		show("fillInherited", () -> new Derived().fillInherited());
 		show("fillIndex", () -> fillIndex(new int[3]));
 		show("fillShape", () -> fillShape(new int[2], 4));
 		show("fillBoxes", () -> fillBoxes(new Integer[3], BIG));
@@ -380,6 +481,22 @@ public class ArrayLoopFixtures {
 			int[] a = new int[3];
 			Arrays.fill(a, 1);
 			return a;
+		});
+		report("SKIP_TYPE_UNPROVEN", () -> widenHolderCopy(new ArrayLoopHolder()), () -> {
+			ArrayLoopHolder o = new ArrayLoopHolder();
+			long[] wide = new long[o.items.length];
+			System.arraycopy(o.items, 0, wide, 0, o.items.length);
+			return wide;
+		});
+		report("SKIP_TYPE_UNPROVEN", () -> fillHolder(new ArrayLoopHolder()), () -> {
+			ArrayLoopHolder o = new ArrayLoopHolder();
+			Arrays.fill(o.cells, (short) 65535);
+			return o.cells;
+		});
+		report("SKIP_TYPE_UNPROVEN", () -> new Derived().fillInherited(), () -> {
+			Derived d = new Derived();
+			Arrays.fill(d.inherited, (short) 65535);
+			return d.inherited;
 		});
 	}
 }

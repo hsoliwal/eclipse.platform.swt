@@ -1,5 +1,5 @@
 id	file	census_line	line	pattern	form	decision	reason	loop	replacement
-A01	org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	4311	4311	COPY	-	SKIP	SKIP_TYPE_UNRESOLVED	for (int i = 0; i < dashes.length; i++) { data.lineDashes[i] = dashes[i]; }	-
+A01	org.eclipse.swt/Eclipse SWT/cocoa/org/eclipse/swt/graphics/GC.java	4311	4311	COPY	-	SKIP	SKIP_TYPE_MISMATCH	for (int i = 0; i < dashes.length; i++) { data.lineDashes[i] = dashes[i]; }	-
 A02	org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/graphics/ImageData.java	656	656	FILL	-	SKIP	SKIP_START_NONZERO	for (int i = startIndex; i < endIndex; i++) { alphas[i] = (byte)255; }	-
 A03	org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGDecoder.java	3867	3867	FILL	F1	REWRITE	-	for (int j = 0; j < blk.length; j++) { blk[j] = 0; }	Arrays.fill(blk, (short) 0);
 A04	org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/JPEGDecoder.java	6325	6325	FILL	F1	REWRITE	-	for (int j = 0; j < dtbl.look_nbits.length; j++) { dtbl.look_nbits[j] = 0; }	Arrays.fill(dtbl.look_nbits, 0);
@@ -9,7 +9,7 @@ A07	org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngEncoder
 A08	org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PNGFileFormat.java	433	433	COPY	-	SKIP	SKIP_OFFSET	for (int byteOffset = 0; byteOffset < bytesPerPixel; byteOffset++) { data[dataOffset + byteOffset] = currentRow[rowOffset + byteOffset]; }	-
 A09	org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngIhdrChunk.java	289	289	FILL	-	SKIP	SKIP_BODY_SHAPE	for (int i = 0; i <= max; i++) { rgbs[i] = new RGB(gray, gray, gray); gray += delta; }	-
 A10	org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/image/PngTrnsChunk.java	129	129	FILL	-	SKIP	SKIP_START_NONZERO	for (int j = i; j < alphas.length; j++) { alphas[j] = (byte) 255; }	-
-A11	org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	3917	3917	COPY	-	SKIP	SKIP_TYPE_UNRESOLVED	for (int i = 0; i < dashes.length; i++) { data.lineDashes[i] = dashes[i]; }	-
+A11	org.eclipse.swt/Eclipse SWT/gtk/org/eclipse/swt/graphics/GC.java	3917	3917	COPY	-	SKIP	SKIP_TYPE_MISMATCH	for (int i = 0; i < dashes.length; i++) { data.lineDashes[i] = dashes[i]; }	-
 A12	org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/graphics/FontData.java	691	691	FILL	-	SKIP	SKIP_START_NONZERO	for (int i = length; i < lfFaceName.length; i++) { lfFaceName[i] = 0; }	-
 A13	org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/graphics/Image.java	1943	1943	FILL	-	SKIP	SKIP_LE_BOUND	for (int i = newRGBs.length; i <= source.transparentPixel; i++) { rgbs[i] = new RGB(0, 0, 0); }	-
 A14	org.eclipse.swt/Eclipse SWT/win32/org/eclipse/swt/widgets/ColorDialog.java	194	194	FILL	-	SKIP	SKIP_BOUND_UNPROVEN	for (int i=0; i < CUSTOM_COLOR_COUNT; i++) { colors[i] = 0x00FFFFFF; }	-
