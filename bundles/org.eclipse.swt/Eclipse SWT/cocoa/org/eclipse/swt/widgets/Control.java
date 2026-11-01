@@ -349,12 +349,17 @@ boolean accessibilityIsAttributeSettable(long id, long sel, long arg0) {
 @Override
 void accessibilitySetValue_forAttribute(long id, long sel, long arg0, long arg1) {
 	if (handleIsAccessible(id) && accessible != null) {
-		id value = new id(arg0);
 		NSString attribute = new NSString(arg1);
-		accessible.internal_accessibilitySetValue_forAttribute(value, attribute, ACC.CHILDID_SELF);
-	} else {
-		super.accessibilitySetValue_forAttribute(id, sel, arg0, arg1);
+		if (accessible.internal_accessibilityIsAttributeSettable(attribute, ACC.CHILDID_SELF)) {
+			accessible.internal_accessibilitySetValue_forAttribute(new id(arg0), attribute, ACC.CHILDID_SELF);
+			return;
+		}
 	}
+
+	// If we had an accessible and it didn't consume the attribute, let the
+	// superclass handle it, so that an accessibility client can still set
+	// attributes such as AXFocused that only Cocoa implements.
+	super.accessibilitySetValue_forAttribute(id, sel, arg0, arg1);
 }
 
 /**
@@ -3893,7 +3898,9 @@ boolean sendMouseEvent (NSEvent nsEvent, int type, boolean send) {
 		case SWT.MouseWheel: {
 			event.detail = SWT.SCROLL_LINE;
 			double delta = nsEvent.deltaY();
+			double scrollingDelta = nsEvent.scrollingDeltaY();
 			event.count = delta > 0 ? Math.max (1, (int)delta) : Math.min (-1, (int)delta);
+			event.scrollingDeltaY = scrollingDelta;
 			break;
 		}
 		case SWT.MouseHorizontalWheel: {

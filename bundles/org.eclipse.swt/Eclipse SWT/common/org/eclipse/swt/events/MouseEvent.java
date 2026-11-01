@@ -76,6 +76,12 @@ public class MouseEvent extends TypedEvent {
 	 */
 	public int count;
 
+	/**
+	 * high resolution delta values from a scrollwheel, useful for input from
+	 * trackpads like Apple's Magic Trackpad.
+	 */
+	public double scrollingDeltaY;
+
 	static final long serialVersionUID = 3257288037011566898L;
 
 /**
@@ -91,6 +97,7 @@ public MouseEvent(Event e) {
 	this.button = e.button;
 	this.stateMask = e.stateMask;
 	this.count = e.count;
+	this.scrollingDeltaY = e.scrollingDeltaY;
 }
 
 /**
@@ -108,6 +115,7 @@ public String toString() {
 		+ " x=" + x
 		+ " y=" + y
 		+ " count=" + count
+		+ " scrollingDeltaY=" + scrollingDeltaY
 		+ "}";
 }
 }

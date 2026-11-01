@@ -406,7 +406,30 @@ void _setVisible (boolean visible) {
 				}
 			}
 			long eventPtr = 0;
-			if (ableToSetLocation()) {
+			//FLLDCIM: MRL — donor AshlingMicrosystems fe2ea2e1f2a: GTK3 < 3.22 has no gtk_menu_popup_at_*; ported as a leading branch
+			if (GTK.GTK_VERSION < OS.VERSION(3, 22, 0)) {
+				long address = 0;
+				hasLocation = false;
+				long data = 0;
+				/*
+				 * Popup-menu to the status icon should be aligned to Tray rather than to cursor
+				 * position. There is a possibility (unlikely) that TrayItem might have been
+				 * disposed in the listener, for which case the menu should be shown in the
+				 * cursor position.
+				 */
+				TrayItem item = display.currentTrayItem;
+				if (item != null && !item.isDisposed()) {
+					data = item.handle;
+					address = GTK.gtk_status_icon_position_menu_func();
+				}
+				/*
+				* Bug in GTK.  The timestamp passed into gtk_menu_popup is used
+				* to perform an X pointer grab.  It cannot be zero, else the grab
+				* will fail.  The fix is to ensure that the timestamp of the last
+				* event processed is used.
+				*/
+				GTK3.gtk_menu_popup (handle, 0, 0, address, data, 0, display.getLastEventTime ());
+			} else if (ableToSetLocation()) {
 				if (GTK.GTK4) {
 					/*
 					 * gtk_popover_set_pointing_to expects coordinates in the coordinate
