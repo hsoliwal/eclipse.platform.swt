@@ -232,10 +232,6 @@ void checkBorder () {
 	/* Do nothing */
 }
 
-void checkComposited (Composite parent) {
-	/* Do nothing */
-}
-
 @Override
 void checkOpened () {
     if (!opened) {

@@ -54,7 +54,6 @@ public class ToolBar extends Composite {
 	int lastFocusId, lastArrowId, lastHotId, _width, _height, _count = -1, _wHint = -1, _hHint = -1;
 	long currentToolItemToolTip;
 	ToolItem [] items;
-	ToolItem [] tabItemList;
 	boolean ignoreResize, ignoreMouse;
 	private ToolBarImageLists imageLists;
 
@@ -326,15 +325,9 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 @Override
 Widget computeTabGroup () {
 	ToolItem [] items = _getItems ();
-	if (tabItemList == null) {
-		int i = 0;
-        while (i < items.length && items [i].control == null) {
-            i++;
-        }
-        if (i == items.length) {
-            return super.computeTabGroup();
-        }
-	}
+	int i = 0;
+	while (i < items.length && items [i].control == null) i++;
+	if (i == items.length) return super.computeTabGroup ();
 	int index = (int)OS.SendMessage (handle, OS.TB_GETHOTITEM, 0, 0);
     if (index == -1) {
         index = lastHotId;
@@ -352,21 +345,12 @@ Widget computeTabGroup () {
 @Override
 Widget [] computeTabList () {
 	ToolItem [] items = _getItems ();
-	if (tabItemList == null) {
-		int i = 0;
-        while (i < items.length && items [i].control == null) {
-            i++;
-        }
-        if (i == items.length) {
-            return super.computeTabList();
-        }
-	}
+	int i = 0;
+	while (i < items.length && items [i].control == null) i++;
+	if (i == items.length) return super.computeTabList ();
 	Widget result [] = {};
-    if (!isTabGroup() || !isEnabled() || !isVisible()) {
-        return result;
-    }
-	ToolItem [] list = tabList != null ? _getTabItemList () : items;
-	for (ToolItem child : list) {
+	if (!isTabGroup () || !isEnabled () || !isVisible ()) return result;
+	for (ToolItem child : items) {
 		Widget  [] childList = child.computeTabList ();
 		if (childList.length != 0) {
 			Widget [] newResult = new Widget [result.length + childList.length];
@@ -683,30 +667,6 @@ public int getRowCount () {
 		return (int)OS.SendMessage (handle, OS.TB_BUTTONCOUNT, 0, 0);
 	}
 	return (int)OS.SendMessage (handle, OS.TB_GETROWS, 0, 0);
-}
-
-ToolItem [] _getTabItemList () {
-    if (tabItemList == null) {
-        return tabItemList;
-    }
-	int count = 0;
-	for (ToolItem item : tabItemList) {
-        if (!item.isDisposed()) {
-            count++;
-        }
-	}
-    if (count == tabItemList.length) {
-        return tabItemList;
-    }
-	ToolItem [] newList = new ToolItem [count];
-	int index = 0;
-	for (ToolItem item : tabItemList) {
-		if (!item.isDisposed ()) {
-			newList [index++] = item;
-		}
-	}
-	tabItemList = newList;
-	return tabItemList;
 }
 
 /**
@@ -1210,27 +1170,6 @@ void setRowCount (int count) {
 	}
 }
 
-/*public*/ void setTabItemList (ToolItem [] tabList) {
-	checkWidget ();
-	if (tabList != null) {
-		for (ToolItem item : tabList) {
-            if (item == null) {
-                error(SWT.ERROR_INVALID_ARGUMENT);
-            }
-            if (item.isDisposed()) {
-                error(SWT.ERROR_INVALID_ARGUMENT);
-            }
-            if (item.parent != this) {
-                error(SWT.ERROR_INVALID_PARENT);
-            }
-		}
-		ToolItem [] newList = new ToolItem [tabList.length];
-		System.arraycopy (tabList, 0, newList, 0, tabList.length);
-		tabList = newList;
-	}
-	this.tabItemList = tabList;
-}
-
 @Override
 boolean setTabItemFocus () {
 	int index = 0;
@@ -1702,7 +1641,8 @@ int getBackgroundPixel (ToolItem item) {
 	if (item != null && item.background != -1) {
 		return item.background;
 	}
-	return getBackgroundPixel ();
+	Control control = findBackgroundControl ();
+	return (control != null ? control : this).getBackgroundPixel ();
 }
 
 @Override

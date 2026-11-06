@@ -13,7 +13,7 @@
  *     Tue Ton - support for FreeBSD
  *******************************************************************************/
 package org.eclipse.swt.internal;
-
+//FLLDCIM: MRL — donor openaudible 490ee0c7a61 (Library.extract: retry publish, fall back to copy, report failures) ported onto ours
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
@@ -171,7 +171,7 @@ public static int SWT_VERSION (int major, int minor) {
 	return major * 1000 + minor;
 }
 
-//FLLDCIM: MRL — donor openaudible 490ee0c7a61 (Library.extract: retry publish, fall back to copy, report failures) ported onto ours
+
 static void verbose (String text) {
 	if (VERBOSE) System.err.println ("SWT: " + text); //$NON-NLS-1$
 }
