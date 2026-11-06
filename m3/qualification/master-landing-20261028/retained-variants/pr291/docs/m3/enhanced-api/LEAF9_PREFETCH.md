@@ -1,0 +1,53 @@
+# Leaf 9: prefetch ranges (M3Prefetch)
+
+Map row M3-PREFETCH, including the Table agent's `SWT.PaintRange` candidate. A lazy data source wants to know which
+rows the widget is about to show, so it can fetch them in bulk, and which rows it no longer needs, so it can cancel
+fetches. Stock SWT only asks per row (`SWT.SetData`, at paint time). The viewports already know the answer: the List
+and Tree windows and the Table's native cache hint (`LVN_ODCACHEHINT`), i.e. `M3Residency.residentRange` (leaf 7).
+
+## Surface (package `org.eclipse.swt.widgets`, public, `@since 3.138`)
+
+| member | meaning |
+|---|---|
+| `M3Prefetch.EVENT` (`0x4D330002`) | event type; `detail` is `PREFETCH` (0) or `CANCEL` (1); `start` and `end` are the first and last row of one range (inclusive; a Tree uses `M3RowMath` visible rows) |
+| `addListener` / `removeListener(Table / List / Tree, Listener)` | listeners in the widget's event table |
+| `setWindow(Table / List / Tree, int rowsBefore, int rowsAfter)` | widens the announced range around the resident window (default 0, 0) |
+
+## Contract
+
+- When the resident window changes, the listeners receive:
+  - `CANCEL` for the rows that left the widened window, as at most two ranges;
+  - then `PREFETCH` for the rows that entered it, as at most two ranges.
+- Scrolling by k rows announces k rows, not the window. Ranges, never items, are delivered: no facade is made.
+- The first listener hears the whole widened window when it is added; listeners added later hear changes only.
+  `removeAll` cancels everything.
+- The ranges are clamped to the rows.
+- Ranges are row numbers at the time of the event. After an insert or a remove the rows shift, and a source keyed by
+  row number should treat a structural change as a reset (re-fetch the announced window).
+- The events follow the viewport windows. A Table's window (tables without `SWT.VIRTUAL`; a virtual Table is stock) comes from painting, so a Table that is not shown
+  prefetches nothing. In the original mode (no viewport) every row is resident from the start and no event is sent.
+
+## DOOP and seam
+
+- One latch per listened widget, kept as keyed data: the last announced range (two ints) and the two margins.
+- The viewports call package-private `M3Prefetch.windowChanged(widget)` where their window moves:
+  - `TreeViewport.ensureWindow` after a rebuild;
+  - `ListViewport.layout` and `rebuild`;
+  - `TableViewport.cacheHint`.
+- The call is gated by `hooks(EVENT)`.
+
+## Algorithm choices
+
+See `ALGORITHM_CATALOGUE.tsv`: interval difference of two closed ranges (at most two pieces each way).
+
+## Status (2026-10-30)
+
+| gate | result |
+|---|---|
+| build | master `d5f6048f398`, jar `master-d5f6048` plus the TableViewport change below; win32, GTK and Cocoa source sets 0 errors |
+| JUnit, hidden desktop | `Test_M3Prefetch` 10/10 viewport, 10/10 original (with and without the resident-range change of leaf 7) |
+| differential against the official 3.135.0 jar | `Test_M3PrefetchDifferential` (shared `M3OfficialScene`, 8 seeds x 120 steps, plain and virtual): this SWT listens with a window of 2 rows before and 3 after and replays PREFETCH/CANCEL; after every step the announced rows equal the resident range widened by the window (or nothing without a viewport window), and the public state equals the official recording: 0 mismatches in viewport and original |
+| defect found and fixed | the new test `test_windowSetTwiceAndListenerThatDisposes` threw `NullPointerException` in `TableViewport.cacheHint`: the hint seam announced before holding the hinted facades, and a listener that disposed the table left `table.items` null for the loop after it. The M3 calls now run last in `cacheHint` |
+| coverage (JaCoCo 0.8.15, both modes) | lines 79/79; branches 59/62: 2 `SWT.error` probe artifacts and `isDisposed ()` behind `hooks (EVENT)` in `windowChanged` (a disposed widget has no event table): every reachable branch covered |
+
+Open: GTK and Cocoa have no window seams (no events there), not run.

@@ -1,0 +1,97 @@
+mode	tab	result_old	result_new	diff_vs_stock_old	diff_vs_stock_new	pixels_old_vs_new	bbox_old_vs_new(x0,y0,x1,y1)
+stock	ControlExample_00_Button	PASS	PASS	-	-	0	-
+stock	ControlExample_01_Canvas	PASS	PASS	-	-	0	-
+stock	ControlExample_02_Combo	PASS	PASS	-	-	0	-
+stock	ControlExample_03_CoolBar	PASS	PASS	-	-	0	-
+stock	ControlExample_04_DateTime	PASS	PASS	-	-	0	-
+stock	ControlExample_05_Dialog	PASS	PASS	-	-	0	-
+stock	ControlExample_06_ExpandBar	PASS	PASS	-	-	0	-
+stock	ControlExample_07_Group	PASS	PASS	-	-	0	-
+stock	ControlExample_08_Label	PASS	PASS	-	-	0	-
+stock	ControlExample_09_Link	PASS	PASS	-	-	0	-
+stock	ControlExample_10_List	PASS	PASS	-	-	0	-
+stock	ControlExample_11_Menu	PASS	PASS	-	-	0	-
+stock	ControlExample_12_ProgressBar	PASS	PASS	-	-	0	-
+stock	ControlExample_13_Sash	PASS	PASS	-	-	0	-
+stock	ControlExample_14_Scale	PASS	PASS	-	-	0	-
+stock	ControlExample_15_Shell	PASS	PASS	-	-	0	-
+stock	ControlExample_16_Slider	PASS	PASS	-	-	0	-
+stock	ControlExample_17_Spinner	PASS	PASS	-	-	0	-
+stock	ControlExample_18_System	PASS	PASS	-	-	0	-
+stock	ControlExample_19_TabFolder	PASS	PASS	-	-	0	-
+stock	ControlExample_20_Table	PASS	PASS	-	-	0	-
+stock	ControlExample_21_Text	PASS	PASS	-	-	0	-
+stock	ControlExample_22_ToolBar	PASS	PASS	-	-	0	-
+stock	ControlExample_23_ToolTip	PASS	PASS	-	-	0	-
+stock	ControlExample_24_Tree	PASS	PASS	-	-	0	-
+stock	ControlExample_25_Browser	PASS	PASS	-	-	0	-
+stock	CustomControlExample_00_CCombo	PASS	PASS	-	-	0	-
+stock	CustomControlExample_01_CLabel	PASS	PASS	-	-	0	-
+stock	CustomControlExample_02_CTabFolder	PASS	PASS	-	-	0	-
+stock	CustomControlExample_03_SashForm	PASS	PASS	-	-	0	-
+stock	CustomControlExample_04_StyledText	PASS	PASS	-	-	0	-
+stock	TOTAL(31 tabs)	-	-	-	-	0 in 0 tabs	-
+m3	ControlExample_00_Button	PASS	PASS	62	62	0	-
+m3	ControlExample_01_Canvas	PASS	PASS	272	272	0	-
+m3	ControlExample_02_Combo	PASS	PASS	66	66	0	-
+m3	ControlExample_03_CoolBar	PASS	PASS	68	68	0	-
+m3	ControlExample_04_DateTime	PASS	PASS	163	163	0	-
+m3	ControlExample_05_Dialog	PASS	PASS	62	62	0	-
+m3	ControlExample_06_ExpandBar	PASS	PASS	81	81	0	-
+m3	ControlExample_07_Group	PASS	PASS	62	62	0	-
+m3	ControlExample_08_Label	PASS	PASS	62	62	0	-
+m3	ControlExample_09_Link	PASS	PASS	62	62	0	-
+m3	ControlExample_10_List	PASS	PASS	2362	2362	0	-
+m3	ControlExample_11_Menu	PASS	PASS	62	62	0	-
+m3	ControlExample_12_ProgressBar	PASS	PASS	88	88	0	-
+m3	ControlExample_13_Sash	PASS	PASS	5106	5106	0	-
+m3	ControlExample_14_Scale	PASS	PASS	62	62	0	-
+m3	ControlExample_15_Shell	PASS	PASS	62	62	0	-
+m3	ControlExample_16_Slider	PASS	PASS	62	62	0	-
+m3	ControlExample_17_Spinner	PASS	PASS	66	66	0	-
+m3	ControlExample_18_System	PASS	PASS	24838	24838	0	-
+m3	ControlExample_19_TabFolder	PASS	PASS	96	96	0	-
+m3	ControlExample_20_Table	PASS	PASS	7183	7183	0	-
+m3	ControlExample_21_Text	PASS	PASS	62	62	0	-
+m3	ControlExample_22_ToolBar	PASS	PASS	22	22	0	-
+m3	ControlExample_23_ToolTip	PASS	PASS	0	0	0	-
+m3	ControlExample_24_Tree	PASS	PASS	2297	2297	0	-
+m3	ControlExample_25_Browser	PASS	PASS	0	0	0	-
+m3	CustomControlExample_00_CCombo	PASS	PASS	1131	1221	90	3,3,1097,445 of 1184x861
+m3	CustomControlExample_01_CLabel	PASS	PASS	2729	2807	78	63,3,1097,445 of 1184x861
+m3	CustomControlExample_02_CTabFolder	PASS	PASS	4132	4234	102	111,3,1089,617 of 1184x861
+m3	CustomControlExample_03_SashForm	PASS	PASS	4069	4163	94	183,3,1097,306 of 1184x861
+m3	CustomControlExample_04_StyledText	PASS	PASS	1131	1226	95	247,3,1097,414 of 1184x861
+m3	TOTAL(31 tabs)	-	-	-	-	459 in 5 tabs	-
+gpu	ControlExample_00_Button	PASS	PASS	0	62	62	3,3,48,20 of 1184x861
+gpu	ControlExample_01_Canvas	PASS	PASS	343	407	64	51,3,98,20 of 1184x861
+gpu	ControlExample_02_Combo	PASS	PASS	0	66	66	101,3,150,20 of 1184x861
+gpu	ControlExample_03_CoolBar	PASS	PASS	0	68	68	153,3,204,20 of 1184x861
+gpu	ControlExample_04_DateTime	PASS	PASS	85	163	78	207,3,1166,469 of 1184x861
+gpu	ControlExample_05_Dialog	PASS	PASS	0	62	62	270,3,315,20 of 1184x861
+gpu	ControlExample_06_ExpandBar	PASS	PASS	0	81	81	318,3,382,20 of 1184x861
+gpu	ControlExample_07_Group	PASS	PASS	0	62	62	385,3,430,20 of 1184x861
+gpu	ControlExample_08_Label	PASS	PASS	0	62	62	433,3,478,20 of 1184x861
+gpu	ControlExample_09_Link	PASS	PASS	0	62	62	481,3,526,20 of 1184x861
+gpu	ControlExample_10_List	PASS	PASS	2300	2362	62	529,3,574,20 of 1184x861
+gpu	ControlExample_11_Menu	PASS	PASS	0	62	62	577,3,622,20 of 1184x861
+gpu	ControlExample_12_ProgressBar	PASS	PASS	0	88	88	625,3,696,20 of 1184x861
+gpu	ControlExample_13_Sash	PASS	PASS	5028	5106	78	699,3,1117,336 of 1184x861
+gpu	ControlExample_14_Scale	PASS	PASS	0	62	62	747,3,792,20 of 1184x861
+gpu	ControlExample_15_Shell	PASS	PASS	0	62	62	795,3,840,20 of 1184x861
+gpu	ControlExample_16_Slider	PASS	PASS	0	62	62	843,3,888,20 of 1184x861
+gpu	ControlExample_17_Spinner	PASS	PASS	0	66	66	891,3,940,20 of 1184x861
+gpu	ControlExample_18_System	PASS	PASS	24774	24838	64	943,3,990,20 of 1184x861
+gpu	ControlExample_19_TabFolder	PASS	PASS	0	96	96	63,3,1054,87 of 1184x861
+gpu	ControlExample_20_Table	PASS	PASS	7119	7183	64	1057,3,1166,731 of 1184x861
+gpu	ControlExample_21_Text	PASS	PASS	0	62	62	1105,3,1150,20 of 1184x861
+gpu	ControlExample_22_ToolBar	PASS	PASS	0	22	22	1153,3,1166,20 of 1184x861
+gpu	ControlExample_23_ToolTip	PASS	PASS	0	0	0	-
+gpu	ControlExample_24_Tree	PASS	PASS	2295	2297	2	1165,731,1166,731 of 1184x861
+gpu	ControlExample_25_Browser	PASS	PASS	0	0	0	-
+gpu	CustomControlExample_00_CCombo	PASS	PASS	1131	1131	0	-
+gpu	CustomControlExample_01_CLabel	PASS	PASS	3312	3312	0	-
+gpu	CustomControlExample_02_CTabFolder	PASS	PASS	6410	6410	0	-
+gpu	CustomControlExample_03_SashForm	PASS	PASS	4069	4069	0	-
+gpu	CustomControlExample_04_StyledText	PASS	PASS	2569	2569	0	-
+gpu	TOTAL(31 tabs)	-	-	-	-	1519 in 24 tabs	-

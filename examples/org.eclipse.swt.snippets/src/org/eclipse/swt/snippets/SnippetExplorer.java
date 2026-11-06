@@ -71,6 +71,13 @@ public class SnippetExplorer {
 		and after the last Snippet has finished restarts the Snippet Explorer.
 			- A Snippet calling System.exit will stop the Snippet chain and the explorer itself can not restart.""";
 
+	/**
+	 * GTK on Windows (donor swt-initiative31/prototype-gtk b4896559188): the description view text is skipped there so
+	 * the explorer starts; every other platform keeps the usage and description text.
+	 */
+	private static final boolean GTK_ON_WINDOWS = "gtk".equals(SWT.getPlatform())
+			&& System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("windows");
+
 	/** Max length for Snippet description in the main table. */
 	private static final int MAX_DESCRIPTION_LENGTH_IN_TABLE = 80;
 	/**
@@ -483,11 +490,15 @@ public class SnippetExplorer {
 			return;
 		}
 		if (snippet == null) {
-			descriptionView.setText(USAGE_EXPLANATION);
+			if (!GTK_ON_WINDOWS) {
+				descriptionView.setText(USAGE_EXPLANATION);
+			}
 			sourceView.setText("");
 			updatePreviewImage(null, "");
 		} else {
-			descriptionView.setText(snippet.snippetName + "\n\n" + snippet.description);
+			if (!GTK_ON_WINDOWS) {
+				descriptionView.setText(snippet.snippetName + "\n\n" + snippet.description);
+			}
 			if (snippet.source == null) {
 				sourceView.setWordWrap(true);
 				final String msg = "No source available for " + snippet.snippetName + " but you may find it at:\n\n";

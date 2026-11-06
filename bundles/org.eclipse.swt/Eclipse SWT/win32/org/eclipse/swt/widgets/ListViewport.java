@@ -363,11 +363,13 @@ final class ListViewport {
 	 * <code>0 .. count - 1</code>, page = fully visible rows and position = top row on every
 	 * change (Windows caps the page at the range and shows the bar when it can scroll), except
 	 * that <code>LB_RESETCONTENT</code> frees the bar (BAR_NONE: every value reads 0) and the
-	 * first row added afterwards leaves the default bar (BAR_DEFAULT: 0..100, page 0, hidden).
+	 * first row added afterwards leaves the default bar (BAR_DEFAULT: 0..100, page 0, hidden) in a list with
+	 * <code>SWT.H_SCROLL</code>; without it the bar keeps reading 0 (ListBarOracle, 2026-10-31).
 	 */
 	void updateBar () {
 		int count = model.getItemCount ();
-		int max = barState == BAR_SET ? count - 1 : barState == BAR_DEFAULT ? 100 : 0;
+		/* the default bar reads 0..100 only for a list box with WS_HSCROLL (ListBarOracle, official 3.135.0 jar) */
+		int max = barState == BAR_SET ? count - 1 : barState == BAR_DEFAULT && hScroll ? 100 : 0;
 		int pageSize = barState == BAR_SET ? page : 0, pos = barState == BAR_SET ? top : 0;
 		long handle = list.handle;
 		SCROLLINFO info = barInfo;

@@ -99,6 +99,42 @@ public class Test_M3BulkUpdates {
 		assertArrayEquals (plain.getSelectionIndices (), bulk.getSelectionIndices ());
 	}
 
+	/*
+	 * Cold rows of a VIRTUAL table (never materialized) in front of created items, then a removal of cold rows: the
+	 * batch defers the paint that, unbatched, materializes the rows in view before the removal (seed 1 step 3 of
+	 * Test_M3BulkUpdatesDifferential, virtual, original mode). Stock with redraw off (no paint in between) throws
+	 * ArrayIndexOutOfBoundsException at the next paint (TableColdRemoveOracle on the official 3.135.0 jar): the R4_38
+	 * store shifts the later keys by the removed items, not the removed rows. A batched run answers like a run whose
+	 * removed rows were materialized; the cold rows take their data at their new index (SetData "t" + index), where an
+	 * unbatched run kept the data its paint fetched at the old index.
+	 */
+	private static void virtualScript (Table table) {
+		table.setItemCount (57);
+		for (int i = 0; i < 26; i++) new TableItem (table, SWT.NONE).setText ("x" + i);
+		table.remove (0, 7);
+	}
+
+	private Table virtualTable (int x) {
+		Table table = new Table (shell, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
+		table.setBounds (x, 5, 200, 280);
+		table.addListener (SWT.SetData, event -> ((TableItem) event.item).setText ("t" + event.index));
+		return table;
+	}
+
+	@Test
+	public void test_virtualTableRemovingColdRowsEqualsTheUnbatchedEdits () {
+		Table plain = virtualTable (5), bulk = virtualTable (320);
+		flush ();
+		virtualScript (plain);
+		flush ();
+		M3BulkUpdates.run (bulk, () -> virtualScript (bulk));
+		flush ();
+		assertEquals (plain.getItemCount (), bulk.getItemCount ());
+		assertEquals (75, bulk.getItemCount ());
+		for (int i = 0; i < 75; i++) assertEquals (i < 49 ? "t" + i : "x" + (i - 49), bulk.getItem (i).getText (), "row " + i);
+		for (int i = 49; i < 75; i++) assertEquals (plain.getItem (i).getText (), bulk.getItem (i).getText (), "created row " + i);
+	}
+
 	private static void treeScript (Tree tree) {
 		for (int i = 0; i < 200; i++) {
 			TreeItem root = new TreeItem (tree, SWT.NONE);

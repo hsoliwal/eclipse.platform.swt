@@ -1290,6 +1290,18 @@ JNIEXPORT void JNICALL GTK3_NATIVE(gtk_1menu_1popdown)
 }
 #endif
 
+#ifndef NO_gtk_1menu_1popup
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+JNIEXPORT void JNICALL GTK3_NATIVE(gtk_1menu_1popup)
+	(JNIEnv *env, jclass that, jlong arg0, jlong arg1, jlong arg2, jlong arg3, jlong arg4, jint arg5, jint arg6)
+{
+	GTK3_NATIVE_ENTER(env, that, gtk_1menu_1popup_FUNC);
+	gtk_menu_popup((GtkMenu *)arg0, (GtkWidget *)arg1, (GtkWidget *)arg2, (GtkMenuPositionFunc)arg3, (gpointer)arg4, (guint)arg5, (guint32)arg6);
+	GTK3_NATIVE_EXIT(env, that, gtk_1menu_1popup_FUNC);
+}
+G_GNUC_END_IGNORE_DEPRECATIONS
+#endif
+
 #ifndef NO_gtk_1menu_1popup_1at_1pointer
 JNIEXPORT void JNICALL GTK3_NATIVE(gtk_1menu_1popup_1at_1pointer)
 	(JNIEnv *env, jclass that, jlong arg0, jlong arg1)

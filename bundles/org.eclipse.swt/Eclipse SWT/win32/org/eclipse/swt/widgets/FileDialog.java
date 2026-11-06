@@ -45,6 +45,7 @@ public class FileDialog extends Dialog {
 	String [] filterExtensions = new String [0];
 	String [] fileNames = new String [0];
 	String filterPath = "", fileName = "";
+	boolean forceFilter = true;
 	int filterIndex = 0;
 	boolean overwrite = false;
 	static final String DEFAULT_FILTER = "*.*";
@@ -327,7 +328,7 @@ public Optional<String> openDialog () {
 		char[] path = (filterPath.replace('/', '\\') + "\0").toCharArray();
 		if (COM.SHCreateItemFromParsingName(path, 0, COM.IID_IShellItem, ppv) == COM.S_OK) {
 			IShellItem psi = new IShellItem(ppv[0]);
-			if (filterPath.length() > 0) {
+			if (forceFilter && filterPath.length() > 0) {
 				fileDialog.SetFolder(psi);
 			}
 			else {
@@ -524,6 +525,24 @@ public void setFilterNames (String... names) {
  */
 public void setFilterPath (String string) {
 	filterPath = string;
+}
+
+/**
+ * Some platforms save the last used file on their own
+ * and that last saved location takes precedence.
+ * <p>
+ * On Windows a non-empty filter path overrules the last saved
+ * location by default (<code>true</code>); pass <code>false</code>
+ * to let the location saved by Windows take precedence.
+ * </p>
+ *
+ * @param force whether to overrule the last saved path
+ *
+ * @see #setFilterPath
+ */
+public void setFilterForcePath (boolean force) {
+
+	forceFilter = force;
 }
 
 /**

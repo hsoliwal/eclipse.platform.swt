@@ -1,0 +1,25 @@
+gate	skija	result	evidence
+jars: SHA-1 vs Maven Central .sha1	0.143.18 / types 0.2.0	4 / 4 match	LEAF12_JARS.tsv
+SKIJA_PIN on the base pom	-	skija: 0.116.3 types: 0.1.1 lib: C:/m3-superset/i31/binaries/org.eclipse.swt.win32.win32.x86_64/lib	m3_skija_pin.sh
+SKIJA_PIN on the bumped pom (L12-17)	-	skija: 0.143.18 types: 0.2.0 lib: H:/m3-scratch/l12/jars	m3_skija_pin.sh
+compile_m3gc.sh, pristine overlay	0.116.3	win32+m3gc: sources=960 classes=1454 errors=0	H:/m3-scratch/l12/logs/compile_116_pristine.out
+compile_m3gc.sh, pristine overlay	0.143.18	win32+m3gc: sources=960 classes=794 errors=17	LEAF12_JAVAC_ERRORS.tsv (17 records)
+javac -XDshould-stop.ifError=FLOW, pristine overlay	0.143.18	records=17, identical to the default-policy list	complete list, not a first wave
+m3gc_api_deltas.py --forward, run 1	-	FORWARD rounds=2 applied=11 bad=- FIXED_POINT	H:/m3-scratch/l12/logs/forward_run1.out
+m3gc_api_deltas.py --forward, run 2 (fixed point)	-	FORWARD rounds=1 applied=0 bad=- FIXED_POINT	17 rows DONE/NO_SITE/CHECK_OK
+forward replay on a fresh git archive of the base	-	FIXED_POINT; 4 renderer files byte-identical to the overlay	cmp
+compile_m3gc.sh, overlay + L12-01..L12-17	0.143.18	win32+m3gc: sources=960 classes=1454 errors=0	BLLSE records=0
+m3gc_native_sig_gate.sh	0.116.3 -> 0.143.18	used=12 same=12 changed_or_missing=0	LEAF12_NATIVE_SIG.tsv
+test_m3gc.sh suite (AllM3GcTests)	0.116.3	m3gc tests: sources=48 found=156 successful=156 failed=0 aborted=0	natives (4975r19) ok=6 bad=0
+test_m3gc.sh suite (AllM3GcTests)	0.143.18	m3gc tests: sources=48 found=156 successful=156 failed=0 aborted=0	natives (4975r19) ok=6 bad=0
+test_m3gc.sh M3_SCAN=1 (classpath scan)	0.116.3	m3gc tests: sources=48 found=156 successful=156 failed=0 aborted=0	natives (4975r19) ok=6 bad=0
+test_m3gc.sh M3_SCAN=1 (classpath scan)	0.143.18	m3gc tests: sources=48 found=156 successful=156 failed=0 aborted=0	natives (4975r19) ok=6 bad=0
+m3_l12_realapp.sh stock (ControlExample + CustomControlExample)	0.116.3	rows=31 PASS=31 EXCEPTION=0 BLANK=0 HANG=0 tabs_with_M3CanvasHandler=0 tabs_with_drawn_plane=0	classes loaded: skija=0 types=0 render.m3=0 gpu.m3=0; skija.dll extracted: ; exit=0
+m3_l12_realapp.sh m3 (ControlExample + CustomControlExample)	0.116.3	rows=31 PASS=31 EXCEPTION=0 BLANK=0 HANG=0 tabs_with_M3CanvasHandler=4 tabs_with_drawn_plane=26	classes loaded: skija=105 types=5 render.m3=80 gpu.m3=0; skija.dll extracted: skija_0.116.3_x64 sha256 3ff80f3935fc0ad4; exit=0
+m3_l12_realapp.sh gpu (ControlExample + CustomControlExample)	0.116.3	rows=31 PASS=31 EXCEPTION=0 BLANK=0 HANG=0 tabs_with_M3CanvasHandler=4 tabs_with_drawn_plane=26	classes loaded: skija=107 types=5 render.m3=81 gpu.m3=0; skija.dll extracted: skija_0.116.3_x64 sha256 3ff80f3935fc0ad4; exit=0
+m3_l12_realapp.sh stock (ControlExample + CustomControlExample)	0.143.18	rows=31 PASS=31 EXCEPTION=0 BLANK=0 HANG=0 tabs_with_M3CanvasHandler=0 tabs_with_drawn_plane=0	classes loaded: skija=0 types=0 render.m3=0 gpu.m3=0; skija.dll extracted: ; exit=0
+m3_l12_realapp.sh m3 (ControlExample + CustomControlExample)	0.143.18	rows=31 PASS=31 EXCEPTION=0 BLANK=0 HANG=0 tabs_with_M3CanvasHandler=4 tabs_with_drawn_plane=26	classes loaded: skija=117 types=5 render.m3=80 gpu.m3=0; skija.dll extracted: skija_0.143.18_x64 sha256 198e0aa4b24fa677; exit=0
+m3_l12_realapp.sh gpu (ControlExample + CustomControlExample)	0.143.18	rows=31 PASS=31 EXCEPTION=0 BLANK=0 HANG=0 tabs_with_M3CanvasHandler=4 tabs_with_drawn_plane=26	classes loaded: skija=119 types=5 render.m3=81 gpu.m3=0; skija.dll extracted: skija_0.143.18_x64 sha256 198e0aa4b24fa677; exit=0
+m3gc_skija_compare.py stock (0.116.3 vs 0.143.18 captures)	both	tabs=31 tabs_changed=4 pixels_changed=51772	LEAF12_REALAPP_COMPARE.tsv
+m3gc_skija_compare.py m3 (0.116.3 vs 0.143.18 captures)	both	tabs=31 tabs_changed=0 pixels_changed=0	LEAF12_REALAPP_COMPARE.tsv
+m3gc_skija_compare.py gpu (0.116.3 vs 0.143.18 captures)	both	tabs=31 tabs_changed=4 pixels_changed=30148	LEAF12_REALAPP_COMPARE.tsv

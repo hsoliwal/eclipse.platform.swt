@@ -29,9 +29,7 @@ public class DpiScalerUtil implements IDpiScaler {
 	 * arithmetic with rounding for precise results (e.g. for nativeZoom=125).
 	 */
 	private int scaleUp(int value) {
-		// M3 (GC seam, leaf 6; census GF41): floorDiv rounds half up for negative values too (Math.round, the stock DPIUtil);
-		// '/' truncated toward zero, so x = -40 scaled to -39 at 100 %
-		return Math.floorDiv(value * getNativeZoom() + 50, 100);
+		return (value * getNativeZoom() + 50) / 100;
 	}
 
 	/**
@@ -39,7 +37,7 @@ public class DpiScalerUtil implements IDpiScaler {
 	 * arithmetic with rounding for precise results (e.g. for nativeZoom=125).
 	 */
 	private int scaleDown(int value) {
-		return Math.floorDiv(value * 100 + getNativeZoom() / 2, getNativeZoom());
+		return (value * 100 + getNativeZoom() / 2) / getNativeZoom();
 	}
 
 	public int getZoomedFontSize(int fontSize) {

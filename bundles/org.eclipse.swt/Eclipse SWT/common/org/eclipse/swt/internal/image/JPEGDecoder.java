@@ -18,6 +18,7 @@
 package org.eclipse.swt.internal.image;
 
 import java.io.*;
+import java.util.Arrays;
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
@@ -3864,9 +3865,7 @@ static int decompress_onepass (jpeg_decompress_struct cinfo, byte[][][] output_b
 			/* Try to fetch an MCU.	Entropy decoder expects buffer to be zeroed. */
 			for (int i = 0; i < cinfo.blocks_in_MCU; i++) {
 				short[] blk = coef.MCU_buffer[i];
-				for (int j = 0; j < blk.length; j++) {
-					blk[j] = 0;
-				}
+				Arrays.fill(blk, (short) 0);
 			}
 			if (! cinfo.entropy.decode_mcu (cinfo, coef.MCU_buffer)) {
 				/* Suspension forced; update state counters and exit */
@@ -6322,9 +6321,7 @@ static void jpeg_make_d_derived_tbl (jpeg_decompress_struct cinfo, boolean isDC,
 	 * with that code.
 	 */
 
-	for (int j = 0; j < dtbl.look_nbits.length; j++) {
-		dtbl.look_nbits[j] = 0;
-	}
+	Arrays.fill(dtbl.look_nbits, 0);
 
 	p = 0;
 	for (l = 1; l <= HUFF_LOOKAHEAD; l++) {

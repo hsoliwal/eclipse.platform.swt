@@ -2724,13 +2724,9 @@ public void setBackground(Color[] colors, int[] percents, boolean vertical) {
 		setBackground((Color)null);
 	} else {
 		gradientColors = new Color[colors.length];
-		for (int i = 0; i < colors.length; ++i) {
-			gradientColors[i] = colors[i];
-		}
+		System.arraycopy(colors, 0, gradientColors, 0, colors.length);
 		gradientPercents = new int[percents.length];
-		for (int i = 0; i < percents.length; ++i) {
-			gradientPercents[i] = percents[i];
-		}
+		System.arraycopy(percents, 0, gradientPercents, 0, percents.length);
 		gradientVertical = vertical;
 		super.setBackground(gradientColors[gradientColors.length-1]);
 		updateBkImages(true);
@@ -3936,9 +3932,7 @@ public void setSelectionBackground(Color[] colors, int[] percents, boolean verti
 			selectionGradientColors[i] = colors[i];
 		}
 		selectionGradientPercents = new int[percents.length];
-		for (int i = 0; i < percents.length; ++i) {
-			selectionGradientPercents[i] = percents[i];
-		}
+		System.arraycopy(percents, 0, selectionGradientPercents, 0, percents.length);
 		selectionGradientVertical = vertical;
 		setSelectionBackground(selectionGradientColors[selectionGradientColors.length-1]);
 	}

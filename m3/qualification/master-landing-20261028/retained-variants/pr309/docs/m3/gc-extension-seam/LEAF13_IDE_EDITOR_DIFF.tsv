@@ -1,0 +1,9 @@
+label	mode	step	editor_rect	editor_px_differ	editor_px	shell_px_differ
+final	m3	workbench_java_editor	304,105,681,386	4352	262866	8004
+final	m3	java_editor_selection	304,105,681,386	4352	262866	8004
+final	m3	package_explorer_active	304,105,681,386	685	262866	3491
+final	m3	editor_tab_switched_back	304,105,681,386	4352	262866	8004
+final	gpu	workbench_java_editor	304,105,681,386	10824	262866	19630
+final	gpu	java_editor_selection	304,105,681,386	10836	262866	19623
+final	gpu	package_explorer_active	304,105,681,386	7099	262866	15085
+final	gpu	editor_tab_switched_back	304,105,681,386	10836	262866	19623

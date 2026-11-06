@@ -916,6 +916,51 @@ public class GDK extends OS {
 	/* [GTK3 only, if-def'd in os.h] */
 	public static final native long gdk_screen_get_system_visual(long screen);
 
+	// <CUSTOMISATION - ASHLING>
+	/**
+	 * @method flags=dynamic
+	 * @param screen cast=(GdkScreen *)
+	 * @param dest flags=no_in
+	 */
+	public static final native void gdk_screen_get_monitor_geometry(long screen, int monitor_num, GdkRectangle dest);
+	/**
+	 * @method flags=dynamic
+	 * @param screen cast=(GdkScreen *)
+	 * @param dest flags=no_in
+	 */
+	public static final native void gdk_screen_get_monitor_workarea(long screen, int monitor_num, GdkRectangle dest);
+	/**
+	 * @method flags=dynamic
+	 * @param screen cast=(GdkScreen *)
+	 */
+	public static final native int gdk_screen_get_n_monitors(long screen);
+	/**
+	 * @method flags=dynamic
+	 * @param screen cast=(GdkScreen *)
+	 */
+	public static final native int gdk_screen_get_primary_monitor(long screen);
+	/**
+	 * @method flags=dynamic
+	 * @param screen cast=(GdkScreen *)
+	 * @param monitor_num cast=(gint)
+	 */
+	public static final native int gdk_screen_get_monitor_scale_factor(long screen, int monitor_num);
+	/**
+	 * @method flags=dynamic
+	 * @param screen cast=(GdkScreen *)
+	 * @param x cast=(gint)
+	 * @param y cast=(gint)
+	 */
+	public static final native int gdk_screen_get_monitor_at_point(long screen, int x, int y);
+	/**
+	 * @method flags=dynamic
+	 * @param screen cast=(GdkScreen *)
+	 * @param window cast=(GdkWindow *)
+	 */
+	public static final native int gdk_screen_get_monitor_at_window(long screen, long window);
+
+	// </CUSTOMISATION>
+
 	/* GdkScreen [GTK3 only, if-def'd in os.h; 3.22 deprecated, replaced] */
 	/**
 	 * @method flags=dynamic

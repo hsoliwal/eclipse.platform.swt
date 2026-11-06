@@ -313,7 +313,8 @@
                the build machine is resolved for compiling and running the tests.
                The binaries/ module overrides this to build the fragments for all platforms
                (see binaries/pom.xml). -->
-          <environments combine.self="override"/>
+          <environments combine.self="override">
+          </environments>
         </configuration>
       </plugin>
     </plugins>

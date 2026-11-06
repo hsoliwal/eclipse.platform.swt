@@ -1683,7 +1683,7 @@ public class Accessible {
             setVisibleCharacterRangeAttribute(value, childId);
         }
 
-		if (accessibleValueListenersSize() > 0) {
+		if (attribute.isEqualToString(OS.NSAccessibilityValueAttribute) && accessibleValueListenersSize() > 0) {
 			AccessibleValueEvent event = new AccessibleValueEvent(this);
 			NSNumber number = new NSNumber(value);
 			event.value = Double.valueOf(number.doubleValue());

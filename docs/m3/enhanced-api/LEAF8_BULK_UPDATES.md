@@ -62,3 +62,12 @@ exercises this path.
 | coverage (JaCoCo 0.8.15, both modes) | lines 14/14, branches 6/6 |
 
 Open: the original-mode defect above (owner: the batch planes and `TableStockItems`); GTK and Cocoa not run.
+
+Update (2026-10-31): the original-mode defect is fixed by PR #301. Seed 1 step 3 reduces to `setItemCount (57)`, 26
+created items and `remove (0, 7)` in one burst: the R4_38 store shifts the keys after a removed range by the removed
+items; unbatched, the ListView paints the rows in view inside the first `LVM_DELETEITEM` (the removed rows get items, so
+the shift is right), the batch defers that paint. The official 3.135.0 jar throws the same exception for the same edits
+with redraw off (TableColdRemoveOracle). PR #301 shifts by the removed rows while the viewport plane is frozen. With it
+`Test_M3BulkUpdates` passes 10/10 in both modes (new test: cold rows removed in a burst) and the official-jar
+differential has 0 mismatches in viewport and original mode, plain and virtual (run `diff-bulk-keys`). Open: GTK and
+Cocoa not run.

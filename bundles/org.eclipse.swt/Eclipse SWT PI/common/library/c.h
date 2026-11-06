@@ -22,7 +22,9 @@
 
 /* Functions excludes */
 #ifdef _WIN32
+#ifndef GTK
 #define NO_getenv
+#endif /* !GTK: GTK on Windows (prototype-gtk) needs getenv; the win32 build (/W4 /WX) keeps it out */
 #define NO_setenv
 #endif /* _WIN32 */
 

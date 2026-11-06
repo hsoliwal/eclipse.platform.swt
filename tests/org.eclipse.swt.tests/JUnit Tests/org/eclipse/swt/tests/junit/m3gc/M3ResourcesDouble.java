@@ -73,11 +73,6 @@ public class M3ResourcesDouble implements IM3Resources {
 	}
 
 	@Override
-	public void resetFont() {
-		this.font = null;
-	}
-
-	@Override
 	public void resetBaseColors() {
 		// TODO Auto-generated method stub
 

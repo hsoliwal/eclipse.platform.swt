@@ -1,0 +1,346 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Synexia, Hitesh Soliwal (hsoliwal@gmail.com) and others.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License, Version 2.0, or (at your option) the Eclipse
+ * Public License 2.0, which are available at
+ * https://www.apache.org/licenses/LICENSE-2.0 and
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: Apache-2.0 OR EPL-2.0
+ *
+ * Contributors:
+ *     Hitesh Soliwal (Synexia) - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.swt.graphics;
+
+import org.eclipse.swt.*;
+import org.eclipse.swt.internal.*;
+import org.eclipse.swt.internal.canvasext.*;
+import org.eclipse.swt.internal.gpu.*;
+import org.eclipse.swt.internal.win32.*;
+
+/**
+ * Plane gate and GPU op recorder beneath win32 {@link GC}.
+ * <p>
+ * Every drawing method of GC calls one {@code divert*} method once
+ * {@code data.planeDraw != -1} (that is, only inside a retained-plane paint
+ * pass). A diverted call returns {@code true} when the GC must not touch its
+ * HDC: either the current plane is not executed by this pass, or the call was
+ * recorded into the pass's {@link OpStream} for GPU replay. A call the GPU
+ * cannot replay marks the stream failed; the frame driver then repaints that
+ * plane with GDI. State setters (colour, font, clip) still update the HDC so
+ * metric queries made by widget paint code stay exact.
+ * </p>
+ */
+final class GCPlanes {
+	/** retainedMask bits tracked by GC state setters while a sink is active. */
+	static final int TRANSFORMED = 1 << 8, XOR = 1 << 9;
+	static final int TEXT_OPAQUE = 1;
+
+	/* Recorder scratch, reused across GCs: recording runs only in retained passes on the display thread. */
+	private static final SIZE SIZE_SCRATCH = new SIZE ();
+	private static final RECT RECT_SCRATCH = new RECT ();
+	private static final float [] TRANSFORM_SCRATCH = new float [6];
+	private static char [] charScratch = new char [256];
+
+	private GCPlanes () {
+	}
+
+	private static OpStream sink (GC gc) {
+		return (OpStream) gc.data.planeSink;
+	}
+
+	/** True when the current plane is skipped or a sink is recording. */
+	static boolean skipOrRecord (GC gc) {
+		GCData data = gc.data;
+		return (data.plane & data.planeDraw) == 0 || data.planeSink != null;
+	}
+
+	private static boolean unsupportedState (GCData data) {
+		return (data.retainedMask & XOR) != 0 || data.foregroundPattern != null || data.backgroundPattern != null
+			|| (data.lineStyle == SWT.LINE_CUSTOM && data.lineDashes != null);
+	}
+
+	private static int mask (GCData data, int kind) {
+		return PaintKeys.mask (kind, data.lineStyle, data.lineCap, data.lineJoin, -1, 0, data.lineWidth, PaintKeys.BACKEND_M3);
+	}
+
+	/** Shape ops: FILL_RECT/FILL_OVAL use the background, DRAW_* the foreground. */
+	static boolean divert (GC gc, int op, int a, int b, int c, int d) {
+		GCData data = gc.data;
+		if ((data.plane & data.planeDraw) == 0) return true;
+		OpStream sink = sink (gc);
+		if (sink == null) return false;
+		if (unsupportedState (data)) {
+			sink.fail |= OpStream.FAIL_UNSUPPORTED;
+			return true;
+		}
+		boolean fill = op == OpStream.FILL_RECT || op == OpStream.FILL_OVAL;
+		int colorref = fill ? data.background : data.foreground;
+		sink.rect (op, a, b, c, d, PaintKeys.argbFromColorref (colorref, data.alpha), mask (data, fill ? PaintKeys.KIND_FILL : PaintKeys.KIND_STROKE));
+		return true;
+	}
+
+	static boolean divertGradient (GC gc, int x, int y, int w, int h, boolean vertical) {
+		GCData data = gc.data;
+		if ((data.plane & data.planeDraw) == 0) return true;
+		OpStream sink = sink (gc);
+		if (sink == null) return false;
+		if (unsupportedState (data)) {
+			sink.fail |= OpStream.FAIL_UNSUPPORTED;
+			return true;
+		}
+		sink.gradient (x, y, w, h, PaintKeys.argbFromColorref (data.foreground, data.alpha),
+			PaintKeys.argbFromColorref (data.background, data.alpha), vertical ? 1 : 0);
+		return true;
+	}
+
+	static boolean divertPoly (GC gc, int op, int [] points) {
+		GCData data = gc.data;
+		if ((data.plane & data.planeDraw) == 0) return true;
+		OpStream sink = sink (gc);
+		if (sink == null) return false;
+		if (unsupportedState (data)) {
+			sink.fail |= OpStream.FAIL_UNSUPPORTED;
+			return true;
+		}
+		boolean fill = op == OpStream.FILL_POLY;
+		sink.poly (op, points, PaintKeys.argbFromColorref (fill ? data.background : data.foreground, data.alpha),
+			mask (data, fill ? PaintKeys.KIND_FILL : PaintKeys.KIND_STROKE));
+		return true;
+	}
+
+	/** Operations with no GPU replay (images, paths, arcs, focus, copyArea, TextLayout). */
+	static boolean divertUnsupported (GC gc, int reason) {
+		GCData data = gc.data;
+		if ((data.plane & data.planeDraw) == 0) return true;
+		OpStream sink = sink (gc);
+		if (sink == null) return false;
+		sink.fail |= reason;
+		return true;
+	}
+
+	/**
+	 * Records SWT's absolute affine state in the same packed stream as the draw
+	 * operations. Translation is converted to the GC's current device-pixel zoom;
+	 * the linear matrix terms remain unitless.
+	 */
+	static void recordTransform (GC gc, Transform transform) {
+		OpStream sink = sink (gc);
+		if (sink == null) return;
+		if (transform == null) {
+			sink.transformIdentity ();
+			return;
+		}
+		transform.getElements (TRANSFORM_SCRATCH);
+		int zoom = gc.getZoom ();
+		sink.transform (
+			TRANSFORM_SCRATCH [0], TRANSFORM_SCRATCH [1],
+			TRANSFORM_SCRATCH [2], TRANSFORM_SCRATCH [3],
+			Win32DPIUtils.pointToPixel (gc.drawable, TRANSFORM_SCRATCH [4], zoom),
+			Win32DPIUtils.pointToPixel (gc.drawable, TRANSFORM_SCRATCH [5], zoom));
+	}
+
+	/** Records a clip change; non-rectangular or transform-local clips fail closed. */
+	static void recordClip (GC gc, long hRgn) {
+		/*
+		 * Damage clipping is installed on the HDC before recording starts and is
+		 * therefore already device-relative. An application clip changed while a
+		 * transform is active has subtler GDI+ region semantics; leave that case to
+		 * the stock GDI oracle until it has an exact differential proof.
+		 */
+		if ((gc.data.retainedMask & TRANSFORMED) != 0) {
+			sink (gc).fail |= OpStream.FAIL_TRANSFORM;
+			return;
+		}
+		OpStream sink = sink (gc);
+		if (hRgn == 0) {
+			sink.clipReset ();
+			return;
+		}
+		RECT box = RECT_SCRATCH;
+		int kind = OS.GetRgnBox (hRgn, box);
+		if (kind == 2 /* SIMPLEREGION */) {
+			sink.clip (box.left, box.top, box.right - box.left, box.bottom - box.top);
+		} else if (kind == OS.NULLREGION) {
+			sink.clip (0, 0, 0, 0);
+		} else {
+			sink.fail |= OpStream.FAIL_UNSUPPORTED;
+		}
+	}
+
+	/** Text through drawString/drawText; tabs, delimiters and mnemonics are not replayed. */
+	static boolean divertText (GC gc, String string, int x, int y, int flags) {
+		GCData data = gc.data;
+		if ((data.plane & data.planeDraw) == 0) return true;
+		OpStream sink = sink (gc);
+		if (sink == null) return false;
+		if (unsupportedState (data) || (data.style & SWT.MIRRORED) != 0 || !plainText (string, flags)) {
+			sink.fail |= OpStream.FAIL_UNSUPPORTED;
+			return true;
+		}
+		int id = fontId (gc);
+		if (id < 0) {
+			sink.fail |= OpStream.FAIL_UNSUPPORTED;
+			return true;
+		}
+		FontTable fonts = FontTable.INSTANCE;
+		if (!loadAdvances (gc, fonts, id, string)) {
+			sink.fail |= OpStream.FAIL_UNSUPPORTED;
+			return true;
+		}
+		boolean opaque = (flags & SWT.DRAW_TRANSPARENT) == 0;
+		int width = opaque ? textWidth (gc, string) : 0;
+		sink.text (string, 0, string.length (), id, x, y, PaintKeys.argbFromColorref (data.foreground, data.alpha),
+			PaintKeys.argbFromColorref (data.background, data.alpha), opaque ? TEXT_OPAQUE : 0, width,
+			fonts.cellHeight [id], fonts.ascent [id]);
+		return true;
+	}
+
+	/** Characters replayed as one glyph each without shaping: printable Latin, Greek, Cyrillic, Armenian. */
+	static boolean plainText (String string, int flags) {
+		for (int i = 0, n = string.length (); i < n; i++) {
+			char c = string.charAt (i);
+			if (c < ' ' || c >= 0x0590 || (c == '&' && (flags & SWT.DRAW_MNEMONIC) != 0)) return false;
+		}
+		return true;
+	}
+
+	/** Loads GDI advance widths (ABC sums) for the pages {@code string} uses; ExtTextOut places glyphs by these. */
+	static boolean loadAdvances (GC gc, FontTable fonts, int id, String string) {
+		int lastPage = -1;
+		for (int i = 0, n = string.length (); i < n; i++) {
+			int page = string.charAt (i) >>> 8;
+			if (page == lastPage || fonts.hasPage (id, page)) {
+				lastPage = page;
+				continue;
+			}
+			gc.checkGC (GC.FONT);
+			int [] abc = new int [256 * 3], widths = new int [256];
+			if (OS.GetCharABCWidths (gc.handle, page << 8, (page << 8) + 255, abc)) {
+				for (int c = 0; c < 256; c++) widths [c] = abc [c * 3] + abc [c * 3 + 1] + abc [c * 3 + 2];
+			} else if (!OS.GetCharWidth (gc.handle, page << 8, (page << 8) + 255, widths)) {
+				return false;
+			}
+			fonts.setPage (id, page, widths);
+			lastPage = page;
+		}
+		return true;
+	}
+
+	private static int textWidth (GC gc, String string) {
+		int length = string.length ();
+		if (charScratch.length < length) charScratch = new char [Integer.highestOneBit (length) << 1];
+		string.getChars (0, length, charScratch, 0);
+		OS.GetTextExtentPoint32 (gc.handle, charScratch, length, SIZE_SCRATCH);
+		return SIZE_SCRATCH.cx;
+	}
+
+	/** Int id of the GC's font in {@link FontTable}, or -1 when it cannot be replayed. */
+	static int fontId (GC gc) {
+		Font font = gc.data.font;
+		if (font.gpuFontId != 0) return font.gpuFontId - 1;
+		gc.checkGC (GC.FONT);
+		return defineFont (gc, font, SWTFontProvider.getFontHandle (font, gc.data.nativeZoom), false);
+	}
+
+	/** Int id of an arbitrary font (a TextLayout run font) measured on the GC's HDC. */
+	static int fontIdOf (GC gc, Font font) {
+		if (font.gpuFontId != 0) return font.gpuFontId - 1;
+		return defineFont (gc, font, SWTFontProvider.getFontHandle (font, gc.data.nativeZoom), true);
+	}
+
+	private static int defineFont (GC gc, Font font, long hFont, boolean select) {
+		LOGFONT logFont = new LOGFONT ();
+		OS.GetObject (hFont, LOGFONT.sizeof, logFont);
+		if (logFont.lfUnderline != 0 || logFont.lfStrikeOut != 0) return -1;
+		long old = select ? OS.SelectObject (gc.handle, hFont) : 0;
+		TEXTMETRIC metric = new TEXTMETRIC ();
+		OS.GetTextMetrics (gc.handle, metric);
+		if (select) OS.SelectObject (gc.handle, old);
+		char [] face = logFont.lfFaceName;
+		int n = 0;
+		while (n < face.length && face [n] != 0) n++;
+		int pixelHeight = logFont.lfHeight < 0 ? -logFont.lfHeight : metric.tmHeight - metric.tmInternalLeading;
+		int id = FontTable.INSTANCE.define (face, n, logFont.lfHeight, logFont.lfWeight, logFont.lfItalic, pixelHeight, metric.tmAscent, metric.tmHeight);
+		if (id >= 0) font.gpuFontId = id + 1;
+		return id;
+	}
+
+	//FLLDCIM: L13 GLYPH_RUN_SINK v1 — the retained planes' op stream as TextLayout's run sink (capabilities 0: the old recorder's limits)
+	/**
+	 * The retained planes' op stream as the TextLayout run sink (text leaf L13,
+	 * GLYPH_RUN_SINK v1). It claims no capability bit, so the recorder leaves to
+	 * GDI exactly what it left before (adornments, rise, fallback fonts, RTL,
+	 * glyph offsets), now checked before the first op instead of mid-layout.
+	 */
+	static final class OpStreamRunSink implements M3RunSink {
+		static final int FILL_MASK = PaintKeys.mask (PaintKeys.KIND_FILL, 0, 0, 0, -1, 0, 0, PaintKeys.BACKEND_M3);
+		final GC gc;
+		final OpStream sink;
+		final int zoom;
+
+		OpStreamRunSink (GC gc, OpStream sink, int zoom) {
+			this.gc = gc;
+			this.sink = sink;
+			this.zoom = zoom;
+		}
+
+		@Override
+		public int capabilities () {
+			return 0;
+		}
+
+		@Override
+		public int zoom () {
+			return zoom;
+		}
+
+		@Override
+		public int alpha () {
+			return gc.data.alpha;
+		}
+
+		@Override
+		public int foregroundPixel () {
+			return gc.data.foreground;
+		}
+
+		@Override
+		public boolean accepts () {
+			GCData data = gc.data;
+			return data.gdipGraphics == 0 && (data.style & SWT.MIRRORED) == 0 && (data.retainedMask & (TRANSFORMED | XOR)) == 0;
+		}
+
+		@Override
+		public void fillRect (int x, int y, int width, int height, int argb) {
+			sink.rect (OpStream.FILL_RECT, x, y, width, height, argb, FILL_MASK);
+		}
+
+		@Override
+		public void clipPush (int x, int y, int width, int height) {
+			sink.clipPush (x, y, width, height);
+		}
+
+		@Override
+		public void clipPop () {
+			sink.clipPop ();
+		}
+
+		/** One Uniscribe-shaped run (glyph ids and advances) for GPU replay; runs with glyph offsets are left to GDI. */
+		@Override
+		public boolean glyphRun (Font font, long fontHandle, char [] glyphs, int [] advances, int [] offsets, int count, int x, int baselineY, int argb, boolean characters) {
+			int fontId = offsets != null || characters ? -1 : fontIdOf (gc, font);
+			int o = fontId < 0 ? -1 : sink.begin (OpStream.GLYPH_RUN, 5 + 2 * count);
+			if (o < 0) return false;
+			int [] ops = sink.ops ();
+			ops [o] = fontId; ops [o + 1] = x; ops [o + 2] = baselineY; ops [o + 3] = argb; ops [o + 4] = count;
+			for (int i = 0; i < count; i++) {
+				ops [o + 5 + i] = glyphs [i];
+				ops [o + 5 + count + i] = advances [i];
+			}
+			return true;
+		}
+	}
+}
