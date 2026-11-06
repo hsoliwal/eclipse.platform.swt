@@ -2220,14 +2220,6 @@ public void setText (String string) {
 	setText (0, string);
 }
 
-/*public*/ void sort () {
-	checkWidget ();
-    if ((parent.style & SWT.VIRTUAL) != 0) {
-        return;
-    }
-	parent.sort (handle, false);
-}
-
 @Override
 String getNameText () {
 	if ((parent.style & SWT.VIRTUAL) != 0) {

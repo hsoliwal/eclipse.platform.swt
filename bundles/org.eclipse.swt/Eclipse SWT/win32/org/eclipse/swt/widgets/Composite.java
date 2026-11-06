@@ -13,7 +13,7 @@
  *     Hitesh Soliwal (Synexia) - viewport mode, retained drawing planes, visibility gate
  *******************************************************************************/
 package org.eclipse.swt.widgets;
-
+	//FLLDCIM: HPCPOP - visibility gate; hidden composites keep LAYOUT_NEEDED and catch up once
 
 import org.eclipse.swt.*;
 import org.eclipse.swt.graphics.*;
@@ -255,66 +255,6 @@ Point computeSizeInPixels (Point hintInPoints, int zoom, boolean changed) {
 	return new Point (trim.width, trim.height);
 }
 
-/**
- * Copies a rectangular area of the receiver at the specified
- * position using the gc.
- *
- * @param gc the gc where the rectangle is to be filled
- * @param x the x coordinate of the rectangle to be filled
- * @param y the y coordinate of the rectangle to be filled
- * @param width the width of the rectangle to be filled
- * @param height the height of the rectangle to be filled
- *
- * @exception IllegalArgumentException <ul>
- *    <li>ERROR_NULL_ARGUMENT - if the gc is null</li>
- *    <li>ERROR_INVALID_ARGUMENT - if the gc has been disposed</li>
- * </ul>
- * @exception SWTException <ul>
- *    <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
- *    <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that created the receiver</li>
- * </ul>
- */
-/*public*/ void copyArea (GC gc, int x, int y, int width, int height) {
-	checkWidget ();
-    if (gc == null) {
-        error(SWT.ERROR_NULL_ARGUMENT);
-    }
-    if (gc.isDisposed()) {
-        error(SWT.ERROR_INVALID_ARGUMENT);
-    }
-
-	//XP only, no GDI+
-	//#define PW_CLIENTONLY 0x00000001
-	//DCOrg() wrong
-	//topHandle wrong for Tree?
-	long hDC = gc.handle;
-	int nSavedDC = OS.SaveDC (hDC);
-	OS.IntersectClipRect (hDC, 0, 0, width, height);
-
-	//WRONG PARENT
-	POINT lpPoint = new POINT ();
-	long hwndParent = OS.GetParent (handle);
-	OS.MapWindowPoints (handle, hwndParent, lpPoint, 1);
-	RECT rect = new RECT ();
-	OS.GetWindowRect (handle, rect);
-	POINT lpPoint1 = new POINT (), lpPoint2 = new POINT ();
-	x = x + (lpPoint.x - rect.left);
-	y = y + (lpPoint.y - rect.top);
-	OS.SetWindowOrgEx (hDC, x, y, lpPoint1);
-	OS.SetBrushOrgEx (hDC, x, y, lpPoint2);
-	int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
-	if ((bits & OS.WS_VISIBLE) == 0) {
-		OS.DefWindowProc (handle, OS.WM_SETREDRAW, 1, 0);
-	}
-	//NECESSARY?
-	OS.RedrawWindow (handle, null, 0, OS.RDW_UPDATENOW | OS.RDW_ALLCHILDREN);
-	OS.PrintWindow (handle, hDC, 0);//0x00000001);
-	if ((bits & OS.WS_VISIBLE) == 0) {
-		OS.DefWindowProc(handle, OS.WM_SETREDRAW, 0, 0);
-	}
-	OS.RestoreDC (hDC, nSavedDC);
-}
-
 @Override
 void createHandle () {
 	super.createHandle ();
@@ -423,6 +363,25 @@ Menu [] findMenus (Control control) {
 		}
 	}
 	return result;
+}
+
+/** Returns whether the selection is painted with the fill of {@link #getUnfocusedSelectionPixel()}. */
+boolean fillsUnfocusedSelection () {
+	return display.useDarkModeExplorerTheme && !display.getHighContrast () && OS.GetFocus () != handle;
+}
+
+/** Returns the fill of an unfocused selected item, whose DarkMode_Explorer state is nearly invisible. */
+int getUnfocusedSelectionPixel () {
+	Control control = findBackgroundControl ();
+	int background = (control != null ? control : this).getBackgroundPixel ();
+	int brightness = ((background & 0xFF) + ((background >> 8) & 0xFF) + ((background >> 16) & 0xFF)) / 3;
+	int target = brightness < 0x80 ? 0xFF : 0;
+	int pixel = 0;
+	for (int shift = 0; shift <= 16; shift += 8) {
+		int channel = (background >> shift) & 0xFF;
+		pixel |= (channel + (target - channel) * 8 / 100) << shift;
+	}
+	return pixel;
 }
 
 @Override
@@ -1453,7 +1412,7 @@ void updateLayout (boolean resize, boolean all) {
 		parent.state |= LAYOUT_CHILD;
 		return;
 	}
-	//FLLDCIM: HPCPOP - visibility gate; hidden composites keep LAYOUT_NEEDED and catch up once
+
 	if (EffectiveVisibility.ENABLED && EffectiveVisibility.deferLayout (this)) {
 		return;
 	}
@@ -2222,7 +2181,7 @@ void handleDPIChange(Event event, float scalingFactor) {
 		// subtree from being adapted
 		stashZoomChangeFailure(event, ex);
 	}
-	for (Control child : getChildren()) {
+	for (Control child : _getChildren()) {
 		child.sendZoomChangedEvent(event, getShell());
 	}
 }

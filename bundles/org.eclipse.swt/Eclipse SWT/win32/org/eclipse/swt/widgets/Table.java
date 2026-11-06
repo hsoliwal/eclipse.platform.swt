@@ -17,9 +17,6 @@
  *******************************************************************************/
 package org.eclipse.swt.widgets;
 
-
-//import java.util.*;
-
 import org.eclipse.swt.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
@@ -959,6 +956,27 @@ LRESULT CDDS_SUBITEMPOSTPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 	return null;
 }
 
+@Override
+boolean fillsUnfocusedSelection () {
+	return (style & SWT.HIDE_SELECTION) == 0 && super.fillsUnfocusedSelection ();
+}
+
+/** Fills an unfocused selected cell over the selection the native table has painted for the row. */
+private boolean fillNativeUnfocusedSelection (NMLVCUSTOMDRAW nmcd, TableItem item, long hDC) {
+	if (!fillsUnfocusedSelection ()) return false;
+	if (!OS.IsWindowVisible (handle) || !OS.IsWindowEnabled (handle)) return false;
+	if (hotIndex == nmcd.dwItemSpec || (nmcd.uItemState & OS.CDIS_DROPHILITED) != 0) return false;
+	if ((style & SWT.FULL_SELECTION) == 0 && nmcd.iSubItem != OS.SendMessage (hwndHeader, OS.HDM_ORDERTOINDEX, 0, 0)) return false;
+	LVITEM lvItem = new LVITEM ();
+	lvItem.mask = OS.LVIF_STATE;
+	lvItem.stateMask = OS.LVIS_SELECTED;
+	lvItem.iItem = (int)nmcd.dwItemSpec;
+	if (OS.SendMessage (handle, OS.LVM_GETITEM, 0, lvItem) == 0 || (lvItem.state & OS.LVIS_SELECTED) == 0) return false;
+	RECT rect = item.getBounds ((int)nmcd.dwItemSpec, nmcd.iSubItem, true, true, true, true, hDC);
+	fillBackground (hDC, getUnfocusedSelectionPixel (), rect);
+	return true;
+}
+
 LRESULT CDDS_SUBITEMPREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
 	long hDC = nmcd.hdc;
 	if (explorerTheme && !ignoreCustomDraw && hooks (SWT.EraseItem) && (nmcd.left != nmcd.right)) {
@@ -1016,12 +1034,9 @@ LRESULT CDDS_SUBITEMPREPAINT (NMLVCUSTOMDRAW nmcd, long wParam, long lParam) {
         clrText = item.foreground;
     }
 	int clrTextBk = item.cellBackground != null ? item.cellBackground [nmcd.iSubItem] : -1;
-    if (clrTextBk == -1) {
-        clrTextBk = item.background;
-    }
-    if (selectionForeground != -1) {
-        clrText = selectionForeground;
-    }
+	if (clrTextBk == -1) clrTextBk = item.background;
+	if (selectionForeground != -1) clrText = selectionForeground;
+	if (!hooks (SWT.EraseItem) && fillNativeUnfocusedSelection (nmcd, item, hDC)) clrTextBk = getUnfocusedSelectionPixel ();
 	/*
 	* Bug in Windows.  When the table has the extended style
 	* LVS_EX_FULLROWSELECT and LVM_SETBKCOLOR is used with
@@ -4237,13 +4252,14 @@ void sendEraseItemEvent (TableItem item, NMLVCUSTOMDRAW nmcd, long lParam, Event
 				}
 				long hTheme = OS.OpenThemeData (handle, Display.TREEVIEW, getAutoscalingZoom());
 				int iStateId = selected ? OS.LISS_SELECTED : OS.LISS_HOT;
-                if (OS.GetFocus() != handle && selected && !drawHot) {
-                    iStateId = OS.LISS_SELECTEDNOTFOCUS;
-                }
-                if (drawDrophilited) {
-                    iStateId = OS.LISS_SELECTED;
-                }
-				OS.DrawThemeBackground (hTheme, hDC, OS.LVP_LISTITEM, iStateId, rect, pClipRect);
+				if (OS.GetFocus () != handle && selected && !drawHot) iStateId = OS.LISS_SELECTEDNOTFOCUS;
+				if (drawDrophilited) iStateId = OS.LISS_SELECTED;
+				if (iStateId == OS.LISS_SELECTEDNOTFOCUS && fillsUnfocusedSelection ()) {
+					OS.IntersectRect (rect, rect, pClipRect);
+					fillBackground (hDC, getUnfocusedSelectionPixel (), rect);
+				} else {
+					OS.DrawThemeBackground (hTheme, hDC, OS.LVP_LISTITEM, iStateId, rect, pClipRect);
+				}
 				OS.CloseThemeData (hTheme);
 			}
 		} else {
@@ -6256,26 +6272,6 @@ public void showSelection () {
 	}
 }
 
-/*public*/ void sort () {
-	checkWidget ();
-//	if ((style & SWT.VIRTUAL) != 0) return;
-//	int itemCount = OS.SendMessage (handle, OS.LVM_GETITEMCOUNT, 0, 0);
-//	if (itemCount == 0 || itemCount == 1) return;
-//	Comparator comparator = new Comparator () {
-//		int index = sortColumn == null ? 0 : indexOf (sortColumn);
-//		public int compare (Object object1, Object object2) {
-//			TableItem item1 = (TableItem) object1, item2 = (TableItem) object2;
-//			if (sortDirection == SWT.UP || sortDirection == SWT.NONE) {
-//				return item1.getText (index).compareTo (item2.getText (index));
-//			} else {
-//				return item2.getText (index).compareTo (item1.getText (index));
-//			}
-//		}
-//	};
-//	Arrays.sort (items, 0, itemCount, comparator);
-//	redraw ();
-}
-
 @Override
 void subclass () {
 	super.subclass ();
@@ -7628,10 +7624,8 @@ LRESULT wmNotifyChild (NMHDR hdr, long wParam, long lParam) {
 		}
 		case OS.NM_CUSTOMDRAW: {
 			long hwndHeader = OS.SendMessage (handle, OS.LVM_GETHEADER, 0, 0);
-            if (hdr.hwndFrom == hwndHeader) {
-                break;
-            }
-			if (!customDraw && findImageControl () == null) {
+			if (hdr.hwndFrom == hwndHeader) break;
+			if (!customDraw && findImageControl () == null && !fillsUnfocusedSelection ()) {
 				/*
 				* Feature in Windows.  When the table is disabled, it draws
 				* with a gray background but does not gray the text.  The fix
@@ -8143,6 +8137,7 @@ LRESULT wmNotifyToolTip (NMHDR hdr, long wParam, long lParam) {
 }
 
 private boolean positionTooltip(NMHDR hdr, long lParam) {
+	boolean positioned = false;
 	LVHITTESTINFO pinfo = new LVHITTESTINFO ();
 	int pos = OS.GetMessagePos ();
 	POINT pt = new POINT();
@@ -8178,7 +8173,7 @@ private boolean positionTooltip(NMHDR hdr, long lParam) {
 				if (adjustedTooltipBounds != null) {
 					OS.SetWindowPos(hwndToolTip, 0, adjustedTooltipBounds.x, adjustedTooltipBounds.y,
 							adjustedTooltipBounds.width, adjustedTooltipBounds.height, flags);
-					return true;
+					positioned = true;
 				}
 			} else if (isCustomToolTip()) {
 				RECT itemRect = getItemBounds(pinfo, item, hDC);
@@ -8199,7 +8194,7 @@ private boolean positionTooltip(NMHDR hdr, long lParam) {
 					string.getChars (0, string.length (), chars, 0);
 					shell.setToolTipText (lpnmtdi, chars);
 					OS.MoveMemory (lParam, lpnmtdi, NMTTDISPINFO.sizeof);
-					return true;
+					positioned = true;
 				}
 			}
 		}
@@ -8211,7 +8206,7 @@ private boolean positionTooltip(NMHDR hdr, long lParam) {
         }
 		OS.ReleaseDC (handle, hDC);
 	}
-	return false;
+	return positioned;
 }
 
 private RECT getItemBounds(LVHITTESTINFO pinfo, TableItem item, long hDC) {
@@ -8260,9 +8255,11 @@ LRESULT wmNotifyToolTip (NMTTCUSTOMDRAW nmcd, long lParam) {
 				RECT cellRect = item.getBounds (pinfo.iItem, pinfo.iSubItem, true, true, false, false, hDC);
 				if (hooks (SWT.EraseItem)) {
 					Event event = sendEraseItemEvent (item, nmcd, pinfo.iSubItem, cellRect);
-                    if (isDisposed() || item.isDisposed()) {
-                        break;
-                    }
+					if (isDisposed () || item.isDisposed ()) {
+						OS.SelectObject (hDC, oldFont);
+						OS.ReleaseDC (handle, hDC);
+						break;
+					}
 					if (event.doit) {
 						drawForeground = (event.detail & SWT.FOREGROUND) != 0;
 					} else {

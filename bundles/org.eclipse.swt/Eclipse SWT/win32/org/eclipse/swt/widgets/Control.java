@@ -14,13 +14,13 @@
  *     Hitesh Soliwal (Synexia) - viewport mode, retained drawing planes, visibility gate
  *******************************************************************************/
 package org.eclipse.swt.widgets;
-
-
+	//FLLDCIM: HPCPOP - visibility gate; offscreen redraws become one DIRTY_PAINT bit
+	//FLLDCIM: HPCPOP - leaf 3 no-op skip; layouts re-set unchanged bounds on every resize frame
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.stream.*;
-
+	//FLLDCIM: rule 25 - SWT itself reports the part visibility transition of the control and its watched subtree
 import org.eclipse.swt.*;
 import org.eclipse.swt.accessibility.*;
 import org.eclipse.swt.browser.*;
@@ -30,7 +30,7 @@ import org.eclipse.swt.internal.*;
 import org.eclipse.swt.internal.gdip.*;
 import org.eclipse.swt.internal.win32.*;
 import org.eclipse.swt.ole.win32.*;
-
+	//FLLDCIM: rule 25 - the watched subtree moves its counts to the new ancestors; a new parent is a transition
 /**
  * Control is the abstract superclass of all windowed user interface classes.
  * <dl>
@@ -148,7 +148,7 @@ public Control (Composite parent, int style) {
 	this.parent = parent;
 	AutoscalingMode parentAutoscaleMode = parent.autoscalingMode;
 	if (parentAutoscaleMode == AutoscalingMode.DISABLED_INHERITED) {
-		this.autoscalingMode = parent.autoscalingMode;
+		this.autoscalingMode = parentAutoscaleMode;
 	}
 	if (!isAutoscalingDisabled()) {
 		this.nativeZoom = getShellZoom();
@@ -2738,7 +2738,7 @@ void redrawInPixels (RECT rect, boolean all) {
     if (!OS.IsWindowVisible(handle)) {
         return;
     }
-	//FLLDCIM: HPCPOP - visibility gate; offscreen redraws become one DIRTY_PAINT bit
+
 	if (EffectiveVisibility.ENABLED && EffectiveVisibility.deferRedraw (this)) {
 		return;
 	}
@@ -3732,7 +3732,7 @@ void setBoundsInPixels (int x, int y, int width, int height, int flags, boolean 
 		}
 	}
 	long topHandle = topHandle ();
-	//FLLDCIM: HPCPOP - leaf 3 no-op skip; layouts re-set unchanged bounds on every resize frame
+
 	if (EffectiveVisibility.SKIP_NOOP_BOUNDS) {
 		if (defer && parent != null) {
 			forceResize ();
@@ -4070,17 +4070,10 @@ public boolean setFocus () {
 public void setFont (Font font) {
 	checkWidget ();
 	Font newFont = font;
-	if (newFont != null) {
-        if (newFont.isDisposed()) {
-            error(SWT.ERROR_INVALID_ARGUMENT);
-        }
-		newFont = Font.win32_new(newFont, nativeZoom);
-	}
 	long hFont = 0;
 	if (newFont != null) {
-        if (newFont.isDisposed()) {
-            error(SWT.ERROR_INVALID_ARGUMENT);
-        }
+		if (newFont.isDisposed()) error(SWT.ERROR_INVALID_ARGUMENT);
+		newFont = Font.win32_new(newFont, nativeZoom);
 		hFont = Font.win32_getHandle(newFont);
 	}
 	this.font = newFont;
@@ -4717,7 +4710,7 @@ public void setTouchEnabled(boolean enabled) {
 public void setVisible (boolean visible) {
 	checkWidget ();
 	setVisibleInPart (visible);
-	//FLLDCIM: rule 25 - SWT itself reports the part visibility transition of the control and its watched subtree
+
 	PartVisibility.changed (this, PartVisibilityEvent.VISIBILITY);
 }
 
@@ -5623,7 +5616,7 @@ int widgetStyle () {
 public boolean setParent (Composite parent) {
 	checkWidget ();
 	Composite partOldParent = this.parent;
-	//FLLDCIM: rule 25 - the watched subtree moves its counts to the new ancestors; a new parent is a transition
+
 	PartVisibility.detach (this);
 	try {
 		return setParentInPart (parent);
@@ -7087,8 +7080,8 @@ void handleDPIChange(Event event, float scalingFactor) {
 			setBackgroundImage(image);
 		}
 	}
-	if (getRegion() != null) {
-		setRegion(getRegion());
+	if (region != null) {
+		setRegion(region);
 	}
 }
 

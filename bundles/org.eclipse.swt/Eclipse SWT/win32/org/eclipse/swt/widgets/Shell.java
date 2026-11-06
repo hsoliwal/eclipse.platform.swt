@@ -2305,9 +2305,7 @@ void setToolTipTitle (long hwndToolTip, String text, int icon) {
 	} else {
 		if (hwndToolTip == balloonTipHandle) {
 			if (text == balloonTitle || (balloonTitle != null && balloonTitle.equals (text))) {
-                if (icon == toolIcon) {
-                    return;
-                }
+				if (icon == balloonIcon) return;
 			}
 			balloonTitle = text;
 			balloonIcon = icon;
