@@ -1,15 +1,19 @@
-# Read-only release preparation. Does not run native GUI tests or claim code coverage.
+# SPDX-License-Identifier: EPL-2.0
+# Source/readiness and packaging-tool checks; native GUI qualification is separate.
 name: SWT fork release surface
 on:
   pull_request:
-    branches: [master]
+    branches: [master, 'release/**']
     paths:
       - 'tools/release/**'
+      - 'tools/swt-release/**'
       - 'docs/RELEASE_READINESS.md'
+      - 'docs/RELEASE_PACKAGING.md'
       - 'docs/m3/README.md'
       - 'README.md'
       - 'bundles/org.eclipse.swt/META-INF/MANIFEST.MF'
       - '.github/workflows/m3-release-readiness.yml'
+      - '.github/workflows/build-swt-jars.yml'
   push:
     branches: [master, 'release/**']
     paths:
@@ -21,6 +25,36 @@ on:
 permissions:
   contents: read
 jobs:
+  candidate-packager-checks:
+    name: Release preparation candidate packager tests and coverage
+    # Master PRs already run this gate in build-swt-jars.yml.
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && startsWith(github.base_ref, 'release/'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        with:
+          persist-credentials: false
+      - name: Set up Java 21
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0; same pin as candidate build
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: tools/swt-release/pom.xml
+      - name: Verify candidate packaging and coverage floors
+        run: mvn --batch-mode --no-transfer-progress -f tools/swt-release/pom.xml clean verify
+      - name: Preserve packaging-tool test and coverage evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: swt-candidate-packager-${{ github.sha }}-attempt-${{ github.run_attempt }}
+          path: |
+            tools/swt-release/target/surefire-reports/
+            tools/swt-release/target/site/jacoco/
+            tools/swt-release/target/jacoco.exec
+          if-no-files-found: error
+          retention-days: 90
   naming-docs-test-surface:
     runs-on: ubuntu-latest
     timeout-minutes: 10
