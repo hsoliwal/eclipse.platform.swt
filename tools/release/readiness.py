@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -96,6 +97,9 @@ def evaluate(root: Path, junit: dict[str, Path], jacoco: Path | None,
                "scope": "source naming and supplied XML results only; not a native/UI or full release admission",
                "source_issues": issues, "junit": {}, "jacoco": None,
                "pending_backends": [], "surface_ready": False}
+    locations = [str(path.resolve()) for path in junit.values()]
+    if len(set(locations)) != len(locations):
+        issues.append("duplicate backend JUnit report location")
     for backend in sorted(junit):
         if backend not in BACKENDS:
             issues.append("unknown backend: " + backend)
@@ -143,8 +147,11 @@ def main(argv=None) -> int:
     parser.add_argument("--min-branch", type=float, default=0.90)
     parser.add_argument("--json-out", type=Path)
     args = parser.parse_args(argv)
-    if not (0 <= args.min_line <= 1 and 0 <= args.min_branch <= 1):
-        parser.error("coverage minimum must be between zero and one")
+    if not (math.isfinite(args.min_line) and math.isfinite(args.min_branch)
+            and 0 <= args.min_line <= 1 and 0 <= args.min_branch <= 1):
+        parser.error("coverage minimum must be finite and between zero and one")
+    if args.release and (args.min_line < .90 or args.min_branch < .90):
+        parser.error("release minimum cannot be lowered below 90% line and branch")
     label_paths = dict(args.junit)
     if len(label_paths) != len(args.junit):
         parser.error("duplicate backend label")
