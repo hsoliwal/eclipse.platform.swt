@@ -110,6 +110,18 @@ public class Test_M3ItemRange {
 	}
 
 
+
+	@Test
+	public void test_duplicateAtMaximumIntCoalescesOnce () {
+		/* Release-blocking regression: int overflow in +1 must not split duplicates.
+		 * The current implementation needs the canonical source-pinned recipe fix. */
+		int last = Integer.MAX_VALUE;
+		M3ItemRange [] ranges = M3ItemRange.coalesce (new int [] {last, last});
+		assertArrayEquals (new M3ItemRange [] {M3ItemRange.of (last, last)}, ranges);
+		assertEquals (1, M3ItemRange.countOf (ranges));
+	}
+
+
 	@Test
 	public void test_equalsHashCodeToString () {
 		M3ItemRange same = new M3ItemRange (1, 2);
