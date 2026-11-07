@@ -90,6 +90,8 @@ def junit_report(path: Path) -> dict:
         totals["reports"] += 1
         totals["files"].append({"path": str(file.relative_to(path)) if path.is_dir() else file.name,
                                  "sha256": hashlib.sha256(file.read_bytes()).hexdigest()})
+    if totals["tests"] == totals["skipped"]:
+        raise ValueError("zero executed tests (all skipped): " + str(path))
     return totals
 
 def jacoco_report(path: Path) -> dict:

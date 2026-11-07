@@ -93,6 +93,26 @@ class ReadinessTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             gate.junit_report(self.write("TEST-invalid.xml", '<other/>'))
 
+    def test_all_skipped_backend_is_not_executed(self):
+        with self.assertRaisesRegex(ValueError, "all skipped"):
+            gate.junit_report(self.write("TEST-skipped.xml",
+                              '<testsuite tests="3" failures="0" errors="0" skipped="3">'
+                              '<testcase name="one"><skipped/></testcase>'
+                              '<testcase name="two"><skipped/></testcase>'
+                              '<testcase name="three"><skipped/></testcase></testsuite>'))
+
+    def test_all_skipped_backend_blocks_release_surface(self):
+        files = {backend: self.junit("TEST-" + backend + ".xml") for backend in gate.BACKENDS}
+        files["win32"] = self.write("TEST-win32-skipped.xml",
+                                    '<testsuite tests="3" failures="0" errors="0" skipped="3">'
+                              '<testcase name="one"><skipped/></testcase>'
+                              '<testcase name="two"><skipped/></testcase>'
+                              '<testcase name="three"><skipped/></testcase></testsuite>')
+        result = gate.evaluate(self.root, files, self.jacoco(), True, .9, .9)
+        self.assertFalse(result["surface_ready"])
+        self.assertIn("win32", result["pending_backends"])
+        self.assertTrue(any("all skipped" in issue for issue in result["source_issues"]))
+
     def test_jacoco_counts_and_missing_branch(self):
         metrics = gate.jacoco_report(self.jacoco())
         self.assertEqual(.99, metrics["line"]["ratio"])
