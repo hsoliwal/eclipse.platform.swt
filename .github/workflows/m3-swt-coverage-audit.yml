@@ -9,7 +9,7 @@ on:
       - 'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3*.java'
       - '.github/workflows/m3-swt-coverage-audit.yml'
   push:
-    branches: [master, 'release/**']
+    branches: [master, 'release/**', 'm3/release-*']
     paths:
       - 'tools/release/**'
       - 'docs/m3/enhanced-api/coverage/**'
