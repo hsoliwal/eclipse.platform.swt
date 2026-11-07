@@ -29,9 +29,13 @@ jobs:
         run: |
           python3 tools/release/check_release_surface.py --root . --strict \
             --json-out target/release-preflight.json
-      - name: Census default JUnit suite and reject new omissions
+      - name: Census default JUnit suite and enforce full closure for release
+        shell: bash
         run: |
-          python3 tools/release/audit_suite_inventory.py --root . --strict \
+          set -euo pipefail
+          mode=()
+          if [[ "$GITHUB_REF" == refs/heads/release/* ]]; then mode=(--release); fi
+          python3 tools/release/audit_suite_inventory.py --root . --strict "${mode[@]}" \
             --json-out target/swt-default-suite-inventory.json
       - name: Publish static preflight evidence
         if: always()
