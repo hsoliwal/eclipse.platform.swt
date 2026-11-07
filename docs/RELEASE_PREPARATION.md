@@ -54,6 +54,33 @@ The common platform build workflow now runs this XML gate after Maven; both
 static and XML checkers have synthetic refusal tests. Static discovery and
 JUnit execution remain different receipts.
 
+### Default JUnit suite coverage inventory
+
+The additional [suite audit](../tools/release/audit_suite_inventory.py)
+walks `AllTests` and its nested `@SelectClasses` suites, without treating
+commented-out class names as execution. At the **2026-11-07 review baseline**,
+the main JUnit directory has **328 test-like `Test_*.java` or `*Test.java`
+sources**: **158 referenced by the default suite graph** and **170 not
+referenced there**. The full, explicit
+[170-class omission baseline](../tools/release/unreferenced-suite-baseline.txt)
+names the classes instead of burying the gap in a single percentage. It
+includes UI, residency, viewport and differential candidates. Some may have
+focused CI routes; this audit does **not** claim that none of them ever run.
+
+`--strict` rejects newly unreferenced classes, missing suite members or
+deleted baseline sources. `--release` additionally demands **zero** default
+suite omissions; it will currently fail intentionally until the suite or its
+reviewed release selection is closed. The static result must be combined with
+actual JUnit XML and backend-specific execution evidence, not mistaken for
+statement or branch coverage.
+
+```sh
+python3 tools/release/audit_suite_inventory.py --root . --strict \
+  --json-out target/swt-default-suite-inventory.json
+# Expected HOLD for full default-suite closure at this baseline:
+python3 tools/release/audit_suite_inventory.py --root . --release
+```
+
 These tests intentionally cover only the **M3 sparse-state release slice**.
 They do not establish all-widget statement/branch coverage, JNI/native
 memory safety, or correctness of every viewport implementation. A full
