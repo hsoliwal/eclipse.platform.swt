@@ -35,6 +35,15 @@ jobs:
         run: python3 -m unittest discover -s tools/release -p 'test_*.py' -v
       - name: Inspect real source naming and documentation anchors
         run: python3 tools/release/readiness.py --root . --json-out "$RUNNER_TEMP/swt-release-surface.json"
+      - name: Upload source gate output for review
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: swt-release-source-surface-${{ github.sha }}
+          path: ${{ runner.temp }}/swt-release-surface.json
+          if-no-files-found: warn
+          retention-days: 90
       - name: Publish scope clarification
+        if: always()
         run: |
           echo 'Naming/docs source verification only. Platform UI/JNI runs and instrumented coverage remain PENDING without separate current-revision artifacts.' >> "$GITHUB_STEP_SUMMARY"
