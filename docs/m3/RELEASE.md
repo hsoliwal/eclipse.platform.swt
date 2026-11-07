@@ -40,6 +40,37 @@ in the host or inspected GTK fragment's `Export-Package`; release documentation
 must not promise access to that package from independent OSGi bundles until the
 export and API-baseline decision is qualified.
 
+## Current source-pinned test-coverage blockers (7 November 2026)
+
+The focused JaCoCo receipt in
+[enhanced API coverage](enhanced-api/coverage/COVERAGE.md) is historical evidence
+from the exact source baseline `62460082d7caa06b21c49da99abbab53f73b3ffc`.
+A SHA-256 audit of the **release-preparation branch** found **10/10**
+production source inputs unchanged but only **7/9** original JUnit
+test-source inputs unchanged. The changed `Test_M3ItemRange` and
+`Test_M3RowExtents` tests require new compilation/execution/Jacoco evidence.
+Do not attach the old **77/77 passing tests** to the new source tree or
+call the old **90.43% lines / 87.24% branches** current coverage.
+
+The documented per-file 90% branch floor still needs additional covered
+branches in `M3ColumnFilter` (30), `M3ColumnSort` (9),
+`M3ItemRange` (3) and `M3RowExtents` (8), given the original
+denominators. The aggregate 87.24% also fails the release floor.
+The branch contains new boundary JUnit tests, including
+`test_duplicateAtMaximumIntCoalescesOnce`, which is **expected to fail**
+against the current coalescing source due to signed 32-bit adjacency
+overflow. Fix both source comparisons through an executed, source-sealed
+canonical Synexia recipe, then rerun the focused and default suites.
+The read-only [coverage audit](../../tools/release/headless_coverage_audit.py)
+reports test-input drift and source hashes; it never qualifies the product.
+
+The audit, package assembly and test-suite registration PRs must be
+converged before freezing a candidate. GitHub-hosted SWT runs were not
+available for these PR heads at this inspection, so all platform/native,
+Java 21 runtime, Javadoc/JNI, performance and source-bound JaCoCo
+results remain **PENDING/HOLD**. A checkout with a test source change
+requires a fresh receipt even when its production files remain identical.
+
 ## Build and platform qualification
 
 Use Java 21 for the M3JDK21 compatibility baseline. The ordinary SWT matrix keeps
