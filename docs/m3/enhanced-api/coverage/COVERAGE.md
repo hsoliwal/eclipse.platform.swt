@@ -62,12 +62,13 @@ under unchanged denominators, not predicted results of the new tests.
 
 On this release-preparation branch, `Test_M3RowExtents` adds negative range
 endpoint, zero-length edit, reset and reinsert cases, while `Test_M3ItemRange`
-adds safe upper-int positive controls. They have **not** been counted in the
-77/77 execution receipt; refresh the source-pinned JaCoCo report before updating
-any denominator or pass count. Separate review has identified a potential
-`Integer.MAX_VALUE + 1` overflow in `M3ItemRange.coalesce` for duplicate
-maximal indices; resolve it through the authorized recipe and an executable
-failure/recovery regression before release.
+adds safe upper-int positive controls **and an explicit release-blocking
+regression** for duplicate `Integer.MAX_VALUE` indices. The latter is expected
+to fail on the present source because the coalescing adjacency check overflows;
+this is not a recorded test run. These additions have **not** been counted in
+the 77/77 execution receipt. Repair the implementation through the authorized
+source-sealed recipe, then run the failing and passing controls together and
+regenerate the current source-pinned JaCoCo numerator and denominator.
 
 The per-file gap workflow uploads exact source commit/tree and audit JSON,
 but is **not** a substitute for Java21/JNI/platform tests or a current-head
