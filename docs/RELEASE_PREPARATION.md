@@ -106,7 +106,7 @@ is needed for this **narrow exact-source check**.
 ```sh
 # Run with JAVA_HOME pointing to a Java 21 JDK
 bash tools/release/run_headless_java21.sh
-# Outputs: target/m3-swt-headless/{compile.log,run.log,SHA256SUMS}
+# Outputs include COMMIT, TREE, SOURCE_SHA256SUMS, toolchain versions, compile.log, run.log and SHA256SUMS.
 ```
 
 The existing [pull-request checks](../.github/workflows/pr-checks.yml)
