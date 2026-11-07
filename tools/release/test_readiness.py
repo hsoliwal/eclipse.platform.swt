@@ -144,5 +144,80 @@ class ReadinessTest(unittest.TestCase):
         self.assertIn("not a native/UI", result["scope"])
 
 
+    def test_missing_manifest_is_reported(self):
+        manifest = self.root / "bundles/org.eclipse.swt/META-INF/MANIFEST.MF"
+        manifest.unlink()
+        self.assertTrue(any("MANIFEST.MF" in x for x in gate.inspect_source(self.root)))
+
+    def test_junit_missing_names_errors_and_bad_aggregation(self):
+        for name, data, message in (
+            ("TEST-empty-suites.xml", '<testsuites/>', "empty JUnit XML"),
+            ("TEST-no-name.xml", '<testsuite tests="1"><testcase/></testsuite>', "no name"),
+        ):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, message):
+                gate.junit_report(self.write(name, data))
+        parsed = gate.junit_report(self.write("TEST-errors.xml",
+            '<testsuite tests="1" errors="1"><testcase name="bad"><error/></testcase></testsuite>'))
+        self.assertEqual(1, parsed["errors"])
+        aggregate = self.write("TEST-no-root-count.xml",
+            '<testsuites><testsuite tests="2" skipped="1" errors="0" failures="0">'
+            '<testcase name="a"/><testcase name="b"><skipped/></testcase>'
+            '</testsuite></testsuites>')
+        self.assertEqual((2, 1), (gate.junit_report(aggregate)["tests"], gate.junit_report(aggregate)["skipped"]))
+
+    def test_jacoco_invalid_root_and_counts_refused(self):
+        for name, xml, message in (
+            ("root.xml", '<other/>', "not a JaCoCo"),
+            ("negative.xml", '<report><counter type="LINE" covered="-1" missed="1"/>'
+             '<counter type="BRANCH" covered="2" missed="1"/></report>', "invalid/empty JaCoCo"),
+            ("zero.xml", '<report><counter type="LINE" covered="0" missed="0"/>'
+             '<counter type="BRANCH" covered="2" missed="0"/></report>', "invalid/empty JaCoCo"),
+        ):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, message):
+                gate.jacoco_report(self.write(name, xml))
+
+    def test_evaluate_reports_unknown_backend_and_bad_inputs(self):
+        root_issue = gate.evaluate(self.root, {"invalid-backend": self.junit("TEST-unknown.xml")},
+                                   None, False, .90, .90)
+        self.assertTrue(any("unknown backend" in e for e in root_issue["source_issues"]))
+        malformed = self.write("TEST-broken.xml", "<testsuite")
+        result = gate.evaluate(self.root, {"win32": malformed},
+                               self.write("bad-jacoco.xml", "<report"), True, .90, .90)
+        self.assertFalse(result["surface_ready"])
+        self.assertTrue(any("JUnit win32" in x for x in result["source_issues"]))
+        self.assertTrue(any("JaCoCo" in x for x in result["source_issues"]))
+
+    def test_cli_argument_validation_and_json_output(self):
+        import contextlib
+        import io
+        import json
+        for token in ("", "not-a-backend=xyz", "win32="):
+            with self.subTest(token=token), self.assertRaises(Exception):
+                gate.parse_label_path(token)
+        self.assertEqual(("win32", Path("out.xml")), gate.parse_label_path("win32=out.xml"))
+        output = self.root / "summary.json"
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, gate.main(["--root", str(self.root), "--json-out", str(output)]))
+        self.assertFalse(json.loads(output.read_text())["surface_ready"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(1, gate.main(["--root", str(self.root), "--release"]))
+        with contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as err:
+                gate.main(["--root", str(self.root), "--junit", "win32=x", "--junit", "win32=y"])
+        self.assertEqual(2, err.exception.code)
+
+    def test_main_script_entrypoint_is_read_only(self):
+        import contextlib
+        import io
+        import runpy
+        import sys
+        from unittest.mock import patch
+        with patch.object(sys, "argv", [str(PATH), "--root", str(self.root)]):
+            with contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaises(SystemExit) as exit_info:
+                    runpy.run_path(str(PATH), run_name="__main__")
+        self.assertEqual(0, exit_info.exception.code)
+
+
 if __name__ == "__main__":
     unittest.main()
