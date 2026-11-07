@@ -17,6 +17,14 @@ Five startup modes are chosen with `-Dswt.widget.mode=viewport|original|custom|m
 - `original` is stock SWT;
 - `custom`, `m3` and `gpu` are the drawn modes.
 
+## Release status and evidence
+
+[SWT M3 release preparation](RELEASE.md) records the current names, Java 21/25
+matrix, test selection, packaging scope and pending release gates. Widget results
+and coverage percentages below summarize their linked historical campaigns; they
+do not establish qualification of a later combined source commit or every native
+backend. Always record the candidate SHA and the measured class/platform/mode scope.
+
 ## Start here
 
 | Topic | Document |
@@ -79,7 +87,7 @@ Runnable snippets live under `examples/org.eclipse.swt.snippets/src/org/eclipse/
 
 ## Conventions
 
-- **Proof:** a widget change is done when the recorded differential against the official jar shows zero mismatches and JaCoCo line and branch coverage reach 99%.
+- **Proof:** qualify each candidate with its recorded official-jar differential and measured JaCoCo line and branch coverage (target 99%), while retaining explicit misses and platform gates. A focused percentage or explained probe miss is not full-product release acceptance; see [RELEASE.md](RELEASE.md).
 - **Code:**
   - Java only (M3JDK may also change JNI and HotSpot);
   - logging through java.util.logging;
