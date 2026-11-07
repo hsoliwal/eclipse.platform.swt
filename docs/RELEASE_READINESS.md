@@ -197,6 +197,95 @@ hashes, build/test commands and instrumentation scope before using the report
 set as runtime evidence. API/JNI, native/UI, visible-screen and resource gates
 remain separate requirements below.
 
+## CI source identity and evidence scope
+
+The [release-surface workflow](../.github/workflows/m3-release-readiness.yml)
+uses the same source selection in both jobs: the explicit PR head for
+`pull_request`, or the event commit for `push` and `workflow_dispatch`.
+GitHub's default PR checkout and `github.sha` identify the temporary merge
+commit, so neither is substituted for a PR-head evidence identity. See
+[GitHub's event contract](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request).
+Both jobs assert the checked-out `HEAD`, record `SOURCE_COMMIT` and
+`SOURCE_TREE`, and upload those records with their test/report artifacts.
+Artifact names include the selected full source SHA and `run_attempt`, so
+a retry preserves the previous attempt's evidence.
+
+The following describes configured applicability, subject to GitHub accepting
+and scheduling the event. PR and push events must also match a path filter:
+
+| Event | Source checked by this workflow | Jobs in this workflow |
+| --- | --- | --- |
+| PR targeting `release/**` | PR head commit | Source verifier and Java candidate packager |
+| PR targeting `master` | PR head commit | Source verifier; the master packaging gate is in `build-swt-jars.yml` |
+| Push to `release/**` | Pushed commit | Source verifier and Java candidate packager |
+| Push to `master` | Pushed commit | Source verifier; the master packaging gate is in `build-swt-jars.yml` |
+| Manual dispatch | Selected event commit | Source verifier and Java candidate packager |
+
+PR and push filters include both release-tool directories, their guides,
+the source naming/documentation anchors and both packaging/readiness workflow
+files. A release-branch push containing only a packager or packaging-guide
+change therefore reaches the candidate job. Checking an explicit PR head
+does not qualify a later merge result: merge the current base additively and
+repeat qualification on the final release commit. The source records are
+review aids, not authenticated native-backend report receipts.
+
+### Current validation limits (2026-11-07)
+
+A local clean Git merge of candidate head
+`4a7539049ea84d72fb545abdb648bcb4389aa93b` and release base
+`ffae7cacb52a9c1670a557f6eff92c324bf0ca9c` produced tree
+`0decfeef523c5f36013f2f59f211b5755790a232`, matching GitHub's merge tree.
+Before the CI/documentation corrections in this section, that tree passed
+all **39** verifier unit tests and source-anchor inspection, then a fresh
+Java 21 Maven `clean verify` passed all **33** candidate-packager tests with
+**173/176 lines (98.30%)** and **123/132 branches (93.18%)** covered.
+Those counters cover the candidate packaging tool only. Neither its source,
+POM nor test module changed in the CI/documentation corrections. The source
+inspection still reports `surface_ready: false`, `release_admitted: false`
+and all six native backends pending. GTK development packages and Xvfb were
+unavailable in this workspace, so no native/GUI qualification was performed.
+
+Hosted execution remains a separate gate. At 2026-11-07 12:00 UTC,
+[PR #323](https://github.com/hsoliwal/eclipse.platform.swt/pull/323)'s published
+head `4a7539049ea84d72fb545abdb648bcb4389aa93b` and its then-current merge ref
+had zero Actions runs and zero check runs. The repository's workflow list
+did not include `m3-release-readiness.yml`, and its metadata endpoint returned
+404. These observations do not establish why a run was absent. Configuring
+branch/path selection and validating it locally does not prove that GitHub
+registered or executed the workflow. Require actual successful hosted job
+records and artifacts for the final source before clearing this gate.
+
+## Coordination with current release-preparation PRs (2026-11-07)
+
+This PR is the **source/report-intake foundation**, not a release bundle.
+Review and integrate the other candidate work additively instead of
+replacing or double-registering existing tests:
+
+- [#322](https://github.com/hsoliwal/eclipse.platform.swt/pull/322):
+  default-suite omission inventory, Java 21 headless checks, and
+  independently executed widget/heap contracts; its source inventory
+  includes test-like classes outside the default `AllTests` graph.
+- [#323](https://github.com/hsoliwal/eclipse.platform.swt/pull/323):
+  Windows/macOS-only candidate packaging, archive checks and explicit
+  refusal of entirely skipped JUnit backends; this is stacked on #321.
+  Reconcile overlapping `tools/release/readiness.py` updates before merge.
+- [#324](https://github.com/hsoliwal/eclipse.platform.swt/pull/324):
+  the 26 ordinary M3 test classes (216 discovered test methods),
+  Java 21 matrix additions and focused headless evidence. Its pinned
+  `HEADLESS_20261107.json` records **77/77** headless tests,
+  **926/1,024 (90.43%)** covered lines and **745/854 (87.24%)**
+  covered branches, only for ten named source files at baseline
+  `62460082d7caa06b21c49da99abbab53f73b3ffc`.
+
+The **87.24% branch result is below the 90% release minimum**.
+It cannot qualify all changed atoms, the current composite PR head, or
+native GUI backends. Do not promote a source-only proof, a packaging job
+with `-DskipTests=true`, or a historical report to `PASS`.
+After these PRs converge, regenerate a single coverage inventory and
+source-pinned evidence pack from the final source tree and report all
+missed branches, exclusions, skipped tests, JNI/lifecycle and platform
+gates explicitly.
+
 ## Still required before a tag
 
 An upstream-diff review; binary/API Tools comparison; JNI generator diff;
