@@ -59,8 +59,14 @@ jobs:
                   Path(f["source"]).name,
                   f["line"]["additional_needed"],
                   f["branch"]["additional_needed"]))
+          rows.extend(["",
+              "**Recorded test inputs matching current source:** {}/{}".format(
+                  d["test_inputs_matching"], d["test_inputs_recorded"]), ""])
+          for item in d["test_input_drift"]:
+              rows.append("- Changed test input: " + item["path"])
           rows.extend(["", "**RELEASE HOLD:** Historical 10-file headless receipt; "
-                      "current-source/native/JNI/GUI coverage still needs execution."])
+                      "changed test sources and current-source/native/JNI/GUI coverage "
+                      "require new execution."])
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
               out.write("\n".join(rows) + "\n")
           PY
