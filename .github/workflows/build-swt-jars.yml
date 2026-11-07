@@ -1,4 +1,4 @@
-name: Build SWT JARs with Natives
+name: Build SWT Candidate JARs with Natives
 
 on:
   push:
@@ -66,6 +66,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: swt-linux-x86_64
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.gtk.linux.x86_64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
@@ -166,6 +167,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: swt-linux-aarch64
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.gtk.linux.aarch64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
@@ -214,6 +216,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: swt-windows-x86_64
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.win32.win32.x86_64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
@@ -265,6 +268,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: swt-windows-aarch64
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.win32.win32.aarch64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
@@ -302,6 +306,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: swt-macos-x86_64
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.cocoa.macosx.x86_64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
@@ -339,6 +344,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: swt-macos-aarch64
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.cocoa.macosx.aarch64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
@@ -403,10 +409,11 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: swt-macos-universal
+        if-no-files-found: error
         path: universal/*.jar
 
   create-release-bundle:
-    name: Create Release Bundle
+    name: Create Windows and macOS Candidate Bundle
     # Linux is intentionally absent: those jobs are disabled and the Linux JARs
     # are produced locally by build_linux.sh. A skipped `needs:` entry would
     # skip this job too.
@@ -425,14 +432,28 @@ jobs:
 
     - name: Create release structure
       run: |
+        for platform in windows-x86_64 windows-aarch64 macos-x86_64 macos-aarch64 macos-universal; do
+          if ! find "all-platforms/swt-$platform" -type f -name '*.jar' ! -name '*-sources.jar' -print -quit | grep -q .; then
+            echo "Missing binary JAR for $platform" >&2
+            exit 1
+          fi
+        done
         mkdir -p release
         cp -r all-platforms/* release/
+        {
+          printf 'product=SWT M3\n'
+          printf 'source_repository=%s\n' "$GITHUB_REPOSITORY"
+          printf 'source_commit=%s\n' "$GITHUB_SHA"
+          printf 'platforms=windows-x86_64,windows-aarch64,macos-x86_64,macos-aarch64,macos-universal\n'
+          printf 'tests=NOT_RUN: packaging workflow uses -DskipTests=true\n'
+          printf 'release_status=CANDIDATE: separate platform and release qualification required\n'
+        } > release/BUILD.txt
         cd release
-        zip -r ../swt-all-platforms.zip .
+        zip -r ../swt-windows-macos.zip .
 
     - name: Upload combined bundle
       uses: actions/upload-artifact@v4
       with:
-        name: swt-all-platforms-bundle
-        path: swt-all-platforms.zip
+        name: swt-windows-macos-bundle
+        path: swt-windows-macos.zip
         retention-days: 90

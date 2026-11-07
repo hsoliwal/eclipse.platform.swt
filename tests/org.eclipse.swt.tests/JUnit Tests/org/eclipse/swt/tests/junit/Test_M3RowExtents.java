@@ -157,6 +157,35 @@ public class Test_M3RowExtents {
 		assertTrue (extents.toString ().startsWith ("M3RowExtents [100 rows, 1 measured"));
 	}
 
+
+	@Test
+	public void test_negativeEndpointBranchesAndZeroLengthEdits () {
+		/* Separate left-hand and right-hand range failures (short-circuit boundary coverage). */
+		M3RowExtents extents = new M3RowExtents (3, 10);
+		assertThrows (IllegalArgumentException.class, () -> extents.clearFrom (-1));
+		assertThrows (IllegalArgumentException.class, () -> extents.insert (-1, 0));
+		assertThrows (IllegalArgumentException.class, () -> extents.remove (-1, 0));
+		assertThrows (IllegalArgumentException.class, () -> extents.offsetOf (-1));
+		assertThrows (IllegalArgumentException.class, () ->
+			extents.scrollOffsetFor (0, -1, 0, 10));
+		assertThrows (IllegalArgumentException.class, () -> extents.setExtentAnchored (-1, 1, 0, false));
+		assertThrows (IllegalArgumentException.class, () -> extents.setExtentAnchored (0, -1, 0, false));
+		/* The inclusive right endpoint is legal for zero-length edits. */
+		extents.clearFrom (3);
+		extents.insert (3, 0);
+		extents.remove (3, 0);
+		assertEquals (3, extents.rowCount ());
+		assertEquals (30, extents.offsetOf (3));
+		assertEquals (30, extents.totalExtent ());
+		extents.reset (0);
+		assertEquals (-1, extents.rowAt (0));
+		assertTrue (extents.visibleRange (0, 10).isEmpty ());
+		extents.insert (0, 1);
+		assertEquals (10, extents.totalExtent ());
+		assertEquals (0, extents.rowAt (0));
+	}
+
+
 	@Test
 	public void test_argumentsAreChecked () {
 		assertThrows (IllegalArgumentException.class, () -> new M3RowExtents (-1, 10));
