@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: EPL-2.0
 name: SWT M3 release naming and test coverage preflight
 
+# PR preflight is wired through the existing pr-checks.yml workflow.
+# This file keeps dedicated release-branch and explicit dispatch entrypoints.
 on:
-  pull_request:
-    branches: [master]
   push:
     branches: ['release/**']
   workflow_dispatch:
