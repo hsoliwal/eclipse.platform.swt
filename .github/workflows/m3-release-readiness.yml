@@ -1,0 +1,61 @@
+# Read-only release preparation. Does not run native GUI tests or claim code coverage.
+name: SWT fork release surface
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'tools/release/**'
+      - 'docs/RELEASE_READINESS.md'
+      - 'docs/m3/README.md'
+      - 'README.md'
+      - 'bundles/org.eclipse.swt/META-INF/MANIFEST.MF'
+      - '.github/workflows/m3-release-readiness.yml'
+  push:
+    branches: [master, 'release/**']
+    paths:
+      - 'tools/release/**'
+      - 'docs/RELEASE_READINESS.md'
+      - 'bundles/org.eclipse.swt/META-INF/MANIFEST.MF'
+      - '.github/workflows/m3-release-readiness.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  naming-docs-test-surface:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Record exact source revision for report provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > "$RUNNER_TEMP/SOURCE_COMMIT"
+          git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/SOURCE_TREE"
+          echo "Source commit: $(cat "$RUNNER_TEMP/SOURCE_COMMIT")" >> "$GITHUB_STEP_SUMMARY"
+          echo "Source tree: $(cat "$RUNNER_TEMP/SOURCE_TREE")" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Release surface unit tests (synthetic data only)
+        run: python3 -m unittest discover -s tools/release -p 'test_*.py' -v
+      - name: Inspect real source naming and documentation anchors
+        run: python3 tools/release/readiness.py --root . --json-out "$RUNNER_TEMP/swt-release-surface.json"
+      - name: Upload source gate output for review
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: swt-release-source-surface-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/swt-release-surface.json
+            ${{ runner.temp }}/SOURCE_COMMIT
+            ${{ runner.temp }}/SOURCE_TREE
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Publish scope clarification
+        if: always()
+        run: |
+          echo 'Naming/docs source verification only. Platform UI/JNI runs and instrumented coverage remain PENDING without separate current-revision artifacts.' >> "$GITHUB_STEP_SUMMARY"
