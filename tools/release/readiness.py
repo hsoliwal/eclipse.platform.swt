@@ -40,36 +40,57 @@ def inspect_source(root: Path) -> list[str]:
 
 
 def junit_report(path: Path) -> dict:
-    """Aggregate leaf/outer JUnit suites without double-counting nested suites."""
+    """Count executed JUnit testcases, refusing fabricated/inconsistent suite totals.
+
+    Directory inputs must contain TEST-*.xml (Surefire/Tycho naming).
+    The returned file digests allow a separate source-bound evidence manifest
+    to identify the exact XML bytes accepted by this read-only parser.
+    """
     files = sorted(path.rglob("TEST-*.xml")) if path.is_dir() else [path]
-    if path.is_dir() and not files:
-        files = sorted(path.rglob("*.xml"))
     if not files:
-        raise ValueError("no JUnit XML reports: " + str(path))
-    totals = dict(tests=0, failures=0, errors=0, skipped=0, reports=0)
+        raise ValueError("no TEST-*.xml JUnit reports: " + str(path))
+    totals = dict(tests=0, failures=0, errors=0, skipped=0, reports=0, files=[])
     for file in files:
         root = ET.parse(file).getroot()
-        if root.tag == "testsuite":
-            suites = [root]
-        elif root.tag == "testsuites":
-            suites = list(root.findall("testsuite"))
-        else:
+        if root.tag not in ("testsuite", "testsuites"):
             raise ValueError("not a JUnit XML test suite: " + str(file))
-        if not suites:
-            raise ValueError("empty JUnit XML: " + str(file))
-        for suite in suites:
-            for key in ("tests", "failures", "errors", "skipped"):
-                value = int(suite.get(key, "0"))
-                if value < 0:
-                    raise ValueError("negative JUnit count: " + str(file))
-                totals[key] += value
+        if root.tag == "testsuites" and root.find(".//testsuite") is None:
+            raise ValueError("empty JUnit XML suite collection: " + str(file))
+        cases = list(root.iter("testcase"))
+        if not cases:
+            raise ValueError("no executed testcases in: " + str(file))
+        counts = dict(tests=len(cases), failures=0, errors=0, skipped=0)
+        for case in cases:
+            if not case.get("name"):
+                raise ValueError("JUnit testcase has no name: " + str(file))
+            # One testcase can report several XML failure elements; count the
+            # testcase once, with error > failure > skipped precedence.
+            if case.find("error") is not None:
+                counts["errors"] += 1
+            elif case.find("failure") is not None:
+                counts["failures"] += 1
+            elif case.find("skipped") is not None:
+                counts["skipped"] += 1
+        # Validate reported counters at the outermost scope only. Nested suites
+        # can report roll-up counts and must not be counted a second time.
+        summary = root.attrib
+        if root.tag == "testsuites" and not any(k in summary for k in counts):
+            suites = root.findall("testsuite")
+            if suites and all("tests" in suite.attrib for suite in suites):
+                summary = {key: str(sum(int(suite.get(key, "0"))
+                                        for suite in suites))
+                           for key in counts}
+        for key, computed in counts.items():
+            if key in summary:
+                declared = int(summary[key])
+                if declared < 0 or declared != computed:
+                    raise ValueError(f"JUnit {key} counter mismatch: {file} "
+                                     f"declared={declared} observed={computed}")
+            totals[key] += computed
         totals["reports"] += 1
-    if totals["tests"] == 0:
-        raise ValueError("zero executed tests: " + str(path))
-    if totals["tests"] < totals["failures"] + totals["errors"] + totals["skipped"]:
-        raise ValueError("invalid JUnit outcome counts: " + str(path))
+        totals["files"].append({"path": str(file.relative_to(path)) if path.is_dir() else file.name,
+                                 "sha256": hashlib.sha256(file.read_bytes()).hexdigest()})
     return totals
-
 
 def jacoco_report(path: Path) -> dict:
     root = ET.parse(path).getroot()
