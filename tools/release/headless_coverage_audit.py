@@ -45,6 +45,25 @@ def safe_source(root: Path, rel: str) -> Path:
     return target
 
 
+def safe_test_source(root: Path, rel: str) -> Path:
+    """Resolve one recorded JUnit test input without path/symlink escape."""
+    prefix = "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/"
+    if not isinstance(rel, str) or not rel.startswith(prefix) or "\\" in rel:
+        raise ValueError("invalid or out-of-scope recorded test input")
+    path = PurePosixPath(rel)
+    if (path.is_absolute() or ".." in path.parts or "." in path.parts
+            or any(not part for part in rel.split("/")) or not rel.endswith(".java")):
+        raise ValueError("invalid recorded test path: " + rel)
+    node = root.resolve()
+    for part in path.parts:
+        node = node / part
+        if node.is_symlink():
+            raise ValueError("recorded test source symlink refused: " + rel)
+    if not node.is_file() or not node.resolve().is_relative_to(root.resolve()):
+        raise ValueError("recorded test source missing or escaping root: " + rel)
+    return node
+
+
 def counts(raw: dict, name: str) -> tuple[int, int]:
     if not isinstance(raw, dict):
         raise ValueError(name + " counts are missing")
@@ -126,7 +145,27 @@ def evaluate(root: Path, receipt: dict, *, candidate_sha: str | None = None,
             raise ValueError("reported " + kind + " totals disagree with source rows")
     report.sort(key=lambda x: (-x["branch"]["additional_needed"],
                                -x["line"]["additional_needed"], x["source"]))
+    inputs = receipt.get("test_inputs")
+    if not isinstance(inputs, list) or not inputs:
+        raise ValueError("no recorded test source inputs to verify")
+    seen_test_paths = set()
+    test_drift = []
+    for item in inputs:
+        if not isinstance(item, dict):
+            raise ValueError("invalid recorded test input item")
+        rel, claimed = item.get("path"), item.get("sha256")
+        if not isinstance(rel, str) or rel in seen_test_paths:
+            raise ValueError("duplicate or missing recorded test path")
+        seen_test_paths.add(rel)
+        if not isinstance(claimed, str) or not SHA256.fullmatch(claimed):
+            raise ValueError("recorded test input SHA-256 missing")
+        current = hashlib.sha256(safe_test_source(root, rel).read_bytes()).hexdigest()
+        if claimed != current:
+            test_drift.append({"path": rel, "receipt_sha256": claimed,
+                               "current_sha256": current})
     blockers = []
+    if test_drift:
+        blockers.append("recorded test inputs changed: rerun the focused JUnit/JaCoCo campaign")
     if candidate_sha != revision:
         blockers.append("historical receipt: source commit is not the exact candidate")
     if execution.get("native_display_created") is not True:
@@ -142,11 +181,14 @@ def evaluate(root: Path, receipt: dict, *, candidate_sha: str | None = None,
         "schema": "SWT_HEADLESS_COVERAGE_GAP_AUDIT_V1",
         "receipt_source_commit": revision, "candidate_sha": candidate_sha,
         "minimum_ratio": minimum, "measured_files": len(report),
+        "test_inputs_recorded": len(inputs),
+        "test_inputs_matching": len(inputs) - len(test_drift),
+        "test_input_drift": test_drift,
         "observed_headless_tests": execution["tests_started"],
         "scoped_line_ratio": total["line"][0] / sum(total["line"]),
         "scoped_branch_ratio": total["branch"][0] / sum(total["branch"]),
         "files": report, "release_ready": False, "release_blockers": blockers,
-        "scope": "source-verified historical JaCoCo counters only; not an executed product gate",
+        "scope": "historical JaCoCo source and test-input audit only; not an executed product gate",
     }
 
 
