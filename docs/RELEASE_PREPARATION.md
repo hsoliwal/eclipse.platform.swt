@@ -83,9 +83,13 @@ python3 tools/release/audit_suite_inventory.py --root . --release
 
 These tests intentionally cover only the **M3 sparse-state release slice**.
 They do not establish all-widget statement/branch coverage, JNI/native
-memory safety, or correctness of every viewport implementation. A full
-inventory of unregistered tests and a broader per-class coverage ledger are
-still release work, not implied by the two new gates.
+memory safety, or correctness of every viewport implementation. The
+suite inventory now names the unreferenced candidates, and the JUnit XML
+consumer reports total observed testcase counts, observed class counts,
+failed and skipped class names for each platform. **Reconciling the 170
+candidates with focused workflows, adding missing suite registrations,
+and measuring instrumented line/branch coverage remain separate release
+requirements.** No coverage percentage is inferred from filenames.
 
 ## Required platform qualification
 
