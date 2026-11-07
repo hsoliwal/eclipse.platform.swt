@@ -55,9 +55,13 @@ For atomized/new M3 code, aim for at least **90% line and branch coverage**,
 with a **99% objective** for release-critical contract atoms, verified using
 real instrumented reports (e.g. JaCoCo XML) and documented exclusions.
 The 99% figure appearing in older viewport design documents is a **target**,
-not independently verified against the current master. Unmeasured coverage
-must remain `PENDING`. JUnit green + zero pixel-differential errors + matched
-native builds + measured CPU/heap/RSS are independently necessary.
+not independently verified against the current master. The current
+`tools/release/readiness.py` checks **JaCoCo report-wide totals** only;
+report-wide 90% does *not* prove 90% for each changed behavioral atom.
+Per-method/atom coverage and scope completeness need separate source-pinned
+review before product release. Unmeasured coverage must remain `PENDING`.
+JUnit green + zero pixel-differential errors + matched native builds +
+measured CPU/heap/RSS are independently necessary.
 
 ## Read-only release surface verifier
 
