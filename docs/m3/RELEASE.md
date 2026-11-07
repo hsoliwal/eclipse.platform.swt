@@ -140,6 +140,40 @@ probe; it does not increase JaCoCo's measured numerator. Keep historical reports
 with their original scope and identity. Do not pool platform/mode percentages or
 call a focused headless run full SWT coverage.
 
+## Additive PR convergence and source-closure plan (7 November 2026)
+
+The release is a **reviewable union of existing target postimages**, not four
+independent product versions. Preserve every tested behavior and provenance
+record. Exact-head source/JNI/runtime qualification must be repeated after
+the union because Git ancestry or individually green PRs cannot substitute.
+
+| PR | Scope / dependency | Merge and review condition |
+| --- | --- | --- |
+| [#321](https://github.com/hsoliwal/eclipse.platform.swt/pull/321) | Source-only naming/docs/JUnit and JaCoCo intake; branch `release/prep-naming-docs-coverage-20261107` | Review and merge baseline intake first; never claim it ran GUI/JNI tests |
+| [#323](https://github.com/hsoliwal/eclipse.platform.swt/pull/323) | **Stacked on #321**: source/fragment integrity and Windows/macOS candidate packager | Retarget after #321 is merged; compare its remaining diff against master, preserve the new all-skipped refusal and source-bound native packaging. Check packaging overlap with #324 |
+| [#322](https://github.com/hsoliwal/eclipse.platform.swt/pull/322) | Default-suite omission inventory, Java 21 headless and platform preflight | Preserve `AllTests` graph and each pre-existing test class; compare the focused paths with #324's `AllWidgetTests` expansion |
+| [#324](https://github.com/hsoliwal/eclipse.platform.swt/pull/324) | Java 21 CI matrix, 26 ordinary M3 classes in `AllWidgetTests`, source-bound headless coverage and boundary tests | Keep the tested source and historical receipt separate; reconcile `README.md`, `docs/m3/README.md` and `.github/workflows/build-swt-jars.yml` with #321–#323 |
+
+The inspected diff overlap is explicit: `README.md` appears in **all four**
+PRs; #321 and its dependent #323 share the readiness parser/tests and release
+workflow; #321 and #324 share `docs/m3/README.md`; #323 and #324 both
+modify `build-swt-jars.yml`. Resolve conflicts by preserving **both**
+independent release gates where safe, not by choosing a single branch's
+overwrite or dropping a test. Produce a file-by-file before/after/selection
+receipt for every nontrivial conflict.
+
+After convergence, re-run the product in this order: source/version/notice
+inventory → naming and OSGi/JNI source parity → Java 21 and Java 25
+compilation → default and specialized JUnit tests including the
+`MAX_VALUE` coalescing blocker → instrumented JaCoCo line/branch coverage
+bound to final source and **test** hashes → GTK3/GTK4/Wayland/Win32/Cocoa
+native GUI and screenshot/differential suites → per-platform candidate
+artifacts with SHA-256 → final release-admission report.
+
+As of this inspection the SWT repository has not reported exact-head
+hosted CI runs for these release branches. **No merge/tag/publication is
+authorized by this integration plan alone.**
+
 ## Packaging and release evidence
 
 The existing [JAR packaging workflow](../../.github/workflows/build-swt-jars.yml)
