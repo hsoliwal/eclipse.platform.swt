@@ -194,6 +194,8 @@ boolean isCachedState () {
     if ((parent.style & SWT.VIRTUAL) == 0) {
         return cached;
     }
+	/* PLAIN_TREE_VIEWPORT v1: a plain row's facade holds its own data: never asked for (no SetData) */
+	if (parent.plainRows) return true;
 	return parent.virtualFlag (this, VirtualItemState.CACHED);
 }
 

@@ -32,6 +32,11 @@ import org.junit.jupiter.api.*;
  */
 public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 	static final int ROOTS = 300, CHILDREN = 40, SEEDS = 12, STEPS = 150, COLUMNS = 3;
+	/*
+	 * PLAIN_TREE_VIEWPORT (docs/m3/VIEWPORT_PERF_20261031.md): -Dswt.viewport.treePlain=true runs the same scripts on a plain
+	 * Tree (no SWT.VIRTUAL) whose rows are filled up front as SetData fills them; recordings are named plain-*.
+	 */
+	static final boolean PLAIN = Boolean.getBoolean ("swt.viewport.treePlain");
 	Display display;
 	Shell shell;
 	/* presentation variant resources (created and disposed by the test) */
@@ -113,7 +118,7 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 	/* customDraw: MeasureItem, EraseItem and PaintItem listeners (addCustomDraw) */
 	private Tree virtualTree (boolean columns, boolean presentation, boolean customDraw) {
 		if (presentation) createPresentationResources ();
-		Tree tree = new Tree (shell, SWT.MULTI | SWT.BORDER | SWT.VIRTUAL | (columns ? SWT.CHECK | SWT.FULL_SELECTION : 0));
+		Tree tree = new Tree (shell, SWT.MULTI | SWT.BORDER | (PLAIN ? 0 : SWT.VIRTUAL) | (columns ? SWT.CHECK | SWT.FULL_SELECTION : 0));
 		tree.setBounds (5, 5, 300, 380);
 		if (columns) {
 			tree.setHeaderVisible (true);
@@ -124,22 +129,34 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 				column.setWidth (c == 0 ? 160 : 120);
 			}
 		}
-		tree.addListener (SWT.SetData, event -> {
-			TreeItem item = (TreeItem) event.item;
-			TreeItem parent = item.getParentItem ();
-			String name = (parent == null ? "root " : parent.getText () + " / ") + event.index;
-			if (columns) {
-				item.setText (new String [] {name, name + " b", name + " c"});
-				item.setChecked (event.index % 3 == 0);
-			} else {
-				item.setText (name);
-			}
-			if (presentation) present (item, event.index);
-			if (parent == null && hasChildren (event.index)) item.setItemCount (CHILDREN);
-		});
+		tree.addListener (SWT.SetData, event -> data ((TreeItem) event.item, event.index, columns, presentation));
 		if (customDraw) addCustomDraw (tree);
 		tree.setItemCount (ROOTS);
+		if (PLAIN) fillPlain (tree, columns, presentation);
 		return tree;
+	}
+
+	/* what SetData gives a row (the plain variant gives it to every row up front) */
+	static void data (TreeItem item, int index, boolean columns, boolean presentation) {
+		TreeItem parent = item.getParentItem ();
+		String name = (parent == null ? "root " : parent.getText () + " / ") + index;
+		if (columns) {
+			item.setText (new String [] {name, name + " b", name + " c"});
+			item.setChecked (index % 3 == 0);
+		} else {
+			item.setText (name);
+		}
+		if (presentation) present (item, index);
+		if (parent == null && hasChildren (index)) item.setItemCount (CHILDREN);
+	}
+
+	/* PLAIN_TREE_VIEWPORT: the roots and the children of the expandable roots, filled as SetData would fill them */
+	static void fillPlain (Tree tree, boolean columns, boolean presentation) {
+		for (int i = 0; i < tree.getItemCount (); i++) {
+			TreeItem root = tree.getItem (i);
+			data (root, i, columns, presentation);
+			for (int j = 0; j < root.getItemCount (); j++) data (root.getItem (j), j, columns, presentation);
+		}
 	}
 
 	/* 0, 1 or 2 from a row's text, so the drawing of a row follows its data, not its position */
@@ -581,8 +598,8 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 	}
 
 	private ViewportDifferential<Subject> harness (boolean columns, boolean presentation, boolean expansionKeys, boolean customDraw, boolean splice) {
-		ViewportDifferential<Subject> harness = ViewportDifferential.<Subject>of (
-				splice ? "tree-viewport-splice" : customDraw ? "tree-viewport-customdraw" : expansionKeys ? "tree-viewport-keys" : columns ? "tree-viewport-columns" : presentation ? "tree-viewport-presentation" : "tree-viewport", 0x7EE5EEDL,
+		ViewportDifferential<Subject> harness = ViewportDifferential.<Subject>of ((PLAIN ? "plain-" : "") + (
+				splice ? "tree-viewport-splice" : customDraw ? "tree-viewport-customdraw" : expansionKeys ? "tree-viewport-keys" : columns ? "tree-viewport-columns" : presentation ? "tree-viewport-presentation" : "tree-viewport"), 0x7EE5EEDL,
 				splice ? Test_org_eclipse_swt_widgets_Tree_ViewportDifferential::randomSpliceOp
 					: customDraw ? Test_org_eclipse_swt_widgets_Tree_ViewportDifferential::randomCustomDrawOp
 					: expansionKeys ? Test_org_eclipse_swt_widgets_Tree_ViewportDifferential::randomExpansionKeyOp
@@ -599,6 +616,7 @@ public class Test_org_eclipse_swt_widgets_Tree_ViewportDifferential {
 				tree.deselectAll ();
 				tree.setItemCount (0);
 				tree.setItemCount (ROOTS);
+				if (PLAIN) fillPlain (tree, columns, presentation);
 				if (columns) {
 					tree.setColumnOrder (new int [] {0, 1, 2});
 					for (int c = 0; c < COLUMNS; c++) tree.getColumn (c).setWidth (c == 0 ? 160 : 120);

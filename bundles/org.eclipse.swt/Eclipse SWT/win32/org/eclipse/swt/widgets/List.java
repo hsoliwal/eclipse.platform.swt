@@ -2343,8 +2343,13 @@ void endMeasure (long hDC, long newFont, long oldFont, long oldCursor) {
 	OS.ReleaseDC (handle, hDC);
 }
 
-/* GLYPH_ADVANCE_LANE v1: the advance widths of ' '..'~' in the font selected into hDC (null when GDI cannot answer) */
+/*
+ * GLYPH_ADVANCE_LANE v1: the advance widths of ' '..'~' in the font selected into hDC; null when GDI cannot answer or the
+ * font has an overhang (a synthesized bold or italic raster font adds it once per string, not per character)
+ */
 int [] advanceLane (long hDC) {
+	TEXTMETRIC metric = new TEXTMETRIC ();
+	if (!OS.GetTextMetrics (hDC, metric) || metric.tmOverhang != 0) return null;
 	int [] lane = new int ['~' - ' ' + 1];
 	return OS.GetCharWidth (hDC, ' ', '~', lane) ? lane : null;
 }

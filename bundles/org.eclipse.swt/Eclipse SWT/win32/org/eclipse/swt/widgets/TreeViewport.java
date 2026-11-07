@@ -48,6 +48,11 @@ final class TreeViewport {
 	 * Tree (same style, same SetData) in the same display while the viewport is the default.
 	 */
 	static boolean nativeReference;
+	/**
+	 * PLAIN_TREE_VIEWPORT v1: plain Trees (no <code>SWT.VIRTUAL</code>) are mediated as well, native rows only for the
+	 * resident window; <code>-Dswt.widget.viewport.Tree.plain=false</code> keeps their native rows (read at startup).
+	 */
+	static final boolean PLAIN = !"false".equals (System.getProperty ("swt.widget.viewport.Tree.plain"));
 	/** Sentinel parent handle of {@link TreeItem}'s internal constructor: create a facade without a native row. */
 	static final long DETACHED = Long.MIN_VALUE;
 	private static final org.eclipse.swt.internal.SwtLog LOG = org.eclipse.swt.internal.SwtLog.getLog ("org.eclipse.swt.widgets.Tree");
@@ -113,6 +118,11 @@ final class TreeViewport {
 	/* the top row, the visible row count and the size the bar was last updated for: a change updates the native bar (barShapeChanged) */
 	private long layoutTopRow = -1, layoutRowCount = -1;
 	private int layoutOuterWidth = -1, layoutOuterHeight = -1, layoutClientHeight = -1;
+
+	/** Whether a Tree of this style is a plain Tree the viewport mediates (read when the Tree is created). */
+	static boolean mediatesPlain (int style) {
+		return ENABLED && PLAIN && !nativeReference && (style & SWT.VIRTUAL) == 0;
+	}
 
 	TreeViewport (Tree tree) {
 		this.tree = tree;

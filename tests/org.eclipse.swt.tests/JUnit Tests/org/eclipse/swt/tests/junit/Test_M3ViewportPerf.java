@@ -97,12 +97,14 @@ public class Test_M3ViewportPerf {
 		tree.setItemCount (roots);
 		tree.getItem (7).setItemCount (children);
 		long before = counter (tree, "siblingSteps");
-		long elapsed = millis (() -> IntStream.range (0, 1_000).forEach (i -> {
-			assertEquals (roots, tree.getItemCount ());
-			assertEquals (children, tree.getItem (7).getItemCount ());
-		}));
+		TreeItem parent = tree.getItem (7);
+		/* as M3TreeWalk asks: the count of one list per row; alternating lists share stock's one-list cache (3.135.0 too) */
+		long elapsed = millis (() -> {
+			IntStream.range (0, 1_000).forEach (i -> assertEquals (roots, tree.getItemCount ()));
+			IntStream.range (0, 1_000).forEach (i -> assertEquals (children, parent.getItemCount ()));
+		});
 		long steps = counter (tree, "siblingSteps") - before;
-		assertTrue (steps <= 4L * (roots + children), "1000 root and child counts took " + steps + " native sibling steps");
+		assertTrue (steps <= 2L * (roots + children), "1000 root and 1000 child counts took " + steps + " native sibling steps");
 		assertTrue (elapsed < BUDGET_MS, "1000 root and child counts took " + elapsed + " ms");
 	}
 

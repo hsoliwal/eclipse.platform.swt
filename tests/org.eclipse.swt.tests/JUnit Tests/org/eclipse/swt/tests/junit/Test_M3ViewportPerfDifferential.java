@@ -38,13 +38,13 @@ import org.junit.jupiter.api.Test;
  * texts read back.</li>
  * <li>List: <code>computeSize</code> of a list without and with <code>SWT.H_SCROLL</code> (the widest row and the
  * horizontal extent) over random printable ASCII, numbered rows, mnemonics, tabs, umlauts, CJK and Arabic, in eight
- * fonts (DEFERRED_WIDTH_MEASURE, GLYPH_ADVANCE_LANE: the advance lane must answer what DrawText answers).</li>
+ * fonts, one a synthesized bold italic raster font (DEFERRED_WIDTH_MEASURE, GLYPH_ADVANCE_LANE: the advance lane must answer what DrawText answers).</li>
  * </ul>
  * Recording directory: <code>-Dswt.viewport.recording</code>; without it the test is skipped.
  */
 public class Test_M3ViewportPerfDifferential {
 	static final String [][] FONTS = {{"Segoe UI", "9", "1"}, {"Times New Roman", "14", "2"}, {"Courier New", "10", "0"},
-		{"Tahoma", "11", "0"}, {"MS Sans Serif", "8", "0"}, {"Arial", "20", "3"}, {"Consolas", "12", "0"}};
+		{"Tahoma", "11", "0"}, {"MS Sans Serif", "8", "0"}, {"Arial", "20", "3"}, {"Consolas", "12", "0"}, {"MS Sans Serif", "10", "3"}};
 	static final String [] SAMPLES = {"Item 1,234,567", "&File && more", "tab\there", "Zeile äöüß",
 		"日本語の行", "مرحبا row", "WWWWWWWWWW", "iiiiiiiiiiiiiiii", ""};
 

@@ -148,6 +148,12 @@ public class Tree extends Composite {
 
 	/* Viewport mediation of a SWT.VIRTUAL tree (opt-in, see TreeViewport); null otherwise. */
 	TreeViewport viewport;
+	/*
+	 * PLAIN_TREE_VIEWPORT v1: a plain Tree (no SWT.VIRTUAL) mediated by the viewport. The internal style carries SWT.VIRTUAL,
+	 * so its rows live in the topology lanes and the facades of the virtual viewport (native rows only for the resident
+	 * window); the client sees a plain Tree: getStyle without VIRTUAL, never SetData, every facade holds its own data.
+	 */
+	boolean plainRows;
 
 	/* The drawn plane of the custom, m3 and gpu modes (see TreeDrawnPlane); null in the viewport and original modes. */
 	TreeDrawnPlane drawnPlane;
@@ -2836,6 +2842,13 @@ long callWindowProc (long hwnd, int msg, long wParam, long lParam) {
 	return code;
 }
 
+/* PLAIN_TREE_VIEWPORT v1: a mediated plain Tree answers the style it was created with (no SWT.VIRTUAL) */
+@Override
+public int getStyle () {
+	int bits = super.getStyle ();
+	return plainRows ? bits & ~SWT.VIRTUAL : bits;
+}
+
 @Override
 void checkBuffered () {
 	super.checkBuffered ();
@@ -2850,7 +2863,7 @@ void checkBuffered () {
 }
 
 boolean checkData (TreeItem item, boolean redraw) {
-    if ((style & SWT.VIRTUAL) == 0) {
+    if ((style & SWT.VIRTUAL) == 0 || plainRows) {
         return true;
     }
 	if (!item.isCachedState ()) {
@@ -2866,7 +2879,7 @@ boolean checkData (TreeItem item, boolean redraw) {
 }
 
 boolean checkData (TreeItem item, int index, boolean redraw) {
-    if ((style & SWT.VIRTUAL) == 0) {
+    if ((style & SWT.VIRTUAL) == 0 || plainRows) {
         return true;
     }
 	if (!item.isCachedState ()) {
@@ -3712,6 +3725,8 @@ void createParent () {
 void createWidget () {
 	super.createWidget ();
 	items = new TreeItem [4];
+	plainRows = TreeViewport.mediatesPlain (style);
+	if (plainRows) style |= SWT.VIRTUAL;
 	if ((style & SWT.VIRTUAL) != 0) {
 		virtualTopology = new VirtualTreeTopology ();
 		virtualProjection = new VirtualTreeVisibleProjection (virtualTopology);
