@@ -109,12 +109,31 @@ bash tools/release/run_headless_java21.sh
 # Outputs: target/m3-swt-headless/{compile.log,run.log,SHA256SUMS}
 ```
 
-The `headless-java21` job in
+The existing [pull-request checks](../.github/workflows/pr-checks.yml)
+now invoke this test alongside Python naming/suite audits, so it has a
+pre-existing workflow entrypoint on PRs. The dedicated
 [`release-preflight.yml`](../.github/workflows/release-preflight.yml)
-runs it with Temurin 21 and uploads logs and hashes. A green result would
-prove only the compiled subset: **it is not an installed SWT bundle test,
+runs it again on `release/**` and explicit dispatch; for a release branch
+it also executes the suite auditor with `--release`, which **blocks until
+the 170 outstanding default-suite omissions are closed**. Both paths
+upload source-bound test logs and hashes. A green Java 21 run would prove
+only the compiled subset: **it is not an installed SWT bundle test,
 Java 21 execution of every public class, a JNI/OSGi proof or a native UI
 claim**. Those still require the platform matrix and runtime acceptance.
+
+### Instrumented coverage acceptance
+
+The default suite census and Surefire XML identify **which classes/tests
+were selected and executed**, not how many source lines or branches ran.
+Before claiming M3-modified SWT implementation coverage, collect real
+instrumented line **and** branch counts for each changed contract-bearing
+Java atom and a reviewed source/method inventory. Use the M3JDK21 release
+engineering target of at least **90% line and branch coverage per changed
+atom**, with 99% as the critical-path objective, but do not invent a measured
+percentage when instrumentation is absent. Preserve raw JaCoCo or equivalent
+XML, source SHA-256, exclusions and tests linked to each method. JNI/C native
+source, platform event/resource lifecycles and UI screenshots require separate
+target-specific proof. **Instrumented SWT coverage is currently PENDING.**
 
 ## Required platform qualification
 
