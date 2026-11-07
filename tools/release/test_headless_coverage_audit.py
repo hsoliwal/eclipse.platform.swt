@@ -27,6 +27,12 @@ class HeadlessCoverageAuditTest(unittest.TestCase):
         source = self.root / self.source_name
         source.parent.mkdir(parents=True)
         source.write_text("package org.eclipse.swt.m3; final class Synthetic {}\n")
+        self.test_name = (
+            "tests/org.eclipse.swt.tests/JUnit Tests/"
+            "org/eclipse/swt/tests/junit/Test_M3Synthetic.java")
+        test_source = self.root / self.test_name
+        test_source.parent.mkdir(parents=True)
+        test_source.write_text("class Test_M3Synthetic {}\n", encoding="utf-8")
         self.revision = "a" * 40
         self.receipt = {
             "schema_version": 1, "product": "SWT M3",
@@ -37,6 +43,10 @@ class HeadlessCoverageAuditTest(unittest.TestCase):
                           "tests_skipped": 0, "tests_aborted": 0,
                           "native_display_created": False},
             "java_compile": {"native_build": "NOT_RUN"},
+            "test_inputs": [{
+                "path": self.test_name,
+                "sha256": hashlib.sha256(test_source.read_bytes()).hexdigest(),
+            }],
             "source_counters": [{
                 "source": self.source_name,
                 "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
@@ -57,6 +67,9 @@ class HeadlessCoverageAuditTest(unittest.TestCase):
         self.assertFalse(result["release_ready"])
         self.assertTrue(any("per-file" in x for x in result["release_blockers"]))
         self.assertTrue(any("native" in x for x in result["release_blockers"]))
+        self.assertEqual(1, result["test_inputs_recorded"])
+        self.assertEqual(1, result["test_inputs_matching"])
+        self.assertEqual([], result["test_input_drift"])
 
     def test_forged_totals_and_sha_are_refused(self):
         for key, value, reason in (
@@ -83,6 +96,49 @@ class HeadlessCoverageAuditTest(unittest.TestCase):
         receipt["source_counters"].append(copy.deepcopy(receipt["source_counters"][0]))
         with self.assertRaisesRegex(ValueError, "duplicate"):
             audit.evaluate(self.root, receipt)
+
+    def test_recorded_test_mutation_is_reported_as_stale(self):
+        recorded = self.root / self.test_name
+        recorded.write_text("class Test_M3Synthetic { /* changed */ }\n", encoding="utf-8")
+        result = audit.evaluate(self.root, self.receipt, candidate_sha=self.revision)
+        self.assertEqual(1, result["test_inputs_recorded"])
+        self.assertEqual(0, result["test_inputs_matching"])
+        self.assertEqual([self.test_name], [x["path"] for x in result["test_input_drift"]])
+        self.assertNotEqual(result["test_input_drift"][0]["receipt_sha256"],
+                            result["test_input_drift"][0]["current_sha256"])
+        self.assertTrue(any("recorded test inputs changed" in x
+                            for x in result["release_blockers"]))
+        self.assertFalse(result["release_ready"])
+
+    def test_recorded_test_manifest_rejects_missing_or_duplicate_entries(self):
+        receipt = copy.deepcopy(self.receipt)
+        receipt.pop("test_inputs")
+        with self.assertRaisesRegex(ValueError, "no recorded test source"):
+            audit.evaluate(self.root, receipt)
+        receipt = copy.deepcopy(self.receipt)
+        receipt["test_inputs"].append(copy.deepcopy(receipt["test_inputs"][0]))
+        with self.assertRaisesRegex(ValueError, "duplicate or missing"):
+            audit.evaluate(self.root, receipt)
+        receipt = copy.deepcopy(self.receipt)
+        receipt["test_inputs"][0]["sha256"] = "not-a-sha256"
+        with self.assertRaisesRegex(ValueError, "SHA-256 missing"):
+            audit.evaluate(self.root, receipt)
+
+    def test_recorded_test_path_refuses_escape_and_symlink(self):
+        for value in ("/tmp/elsewhere/Test_M3X.java",
+                      "tests/org.eclipse.swt.tests/JUnit Tests/../../Bad.java",
+                      "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/../Bad.java",
+                      "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Bad.txt"):
+            with self.subTest(path=value), self.assertRaises(ValueError):
+                audit.safe_test_source(self.root, value)
+        source = self.root / self.test_name
+        alias = source.parent / "Test_M3Alias.java"
+        try:
+            alias.symlink_to(source)
+        except (OSError, NotImplementedError):
+            return
+        with self.assertRaisesRegex(ValueError, "symlink refused"):
+            audit.safe_test_source(self.root, self.test_name.replace("Test_M3Synthetic", "Test_M3Alias"))
 
     def test_untrusted_paths_and_symlinks_are_refused(self):
         for value in ("/etc/passwd", "../Synthetic.java", "bundles/../../Synthetic.java",
