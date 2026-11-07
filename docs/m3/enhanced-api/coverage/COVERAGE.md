@@ -44,6 +44,25 @@ python3 tools/release/headless_coverage_audit.py --root . \
   --json-out /tmp/swt-headless-coverage-gaps.json
 ```
 
+### Source and test-input hash verification
+
+A read-only SHA-256 comparison against this branch's GitHub source was completed
+on 2026-11-07. All **10/10 measured production source inputs** still match
+the original focused receipt. Of its **9 recorded JUnit test source files**,
+**7 match** and two have changed through this release-preparation branch:
+
+| Recorded JUnit input | Recorded SHA-256 | Current SHA-256 |
+| --- | --- | --- |
+| `Test_M3ItemRange.java` | `80bbef121d897524cad974ea2093b6691ba5c999015e4747ee32bfcf745dc23e` | `a7ec3d89bec8e17085b3f67e49cc6c0f29315ce49903f7fccbf1e3197fc05027` |
+| `Test_M3RowExtents.java` | `035b2a9f11c53b59f5c69d4efccea9e44d77dc6248ae943923df1451d3aec089` | `424438aba6ab642722b6ef765bafd386e0a700a1e78fa016f5b39060f1293dba` |
+
+Those current hashes are a **snapshot of the inspected branch**, not persistent
+expected values: recompute after later commits. The audit tool now checks
+production-file hashes *and* every recorded test input and lists drift in its
+output. Its historical `77/77` success and `90.43%/87.24%` coverage therefore
+**do not apply to the changed test suite**. A fresh instrumented run against the
+final candidate, and a new immutable execution receipt, are mandatory.
+
 The report is **HOLD** regardless of its exit-0 read-only inventory mode.
 `--release` fails closed on its acknowledged blockers. Measured per-source
 branch deficits to meet a minimum 90% are:
