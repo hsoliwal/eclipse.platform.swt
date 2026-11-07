@@ -18,6 +18,10 @@ REQUIRED = ("Test_ItemBitSetDifferential", "Test_ItemBitSetMaximumPosition")
 def audit(reports_root: Path) -> dict:
     reports = sorted(reports_root.glob("TEST-*.xml")) if reports_root.is_dir() else []
     counts = {name: {"passed": 0, "failed": 0, "skipped": 0} for name in REQUIRED}
+    # All testcase observations make CI execution breadth measurable without
+    # confusing class/test counts with instrumented statement/branch coverage.
+    total = {"passed": 0, "failed": 0, "skipped": 0}
+    observed = {}
     errors = []
     for file in reports:
         try:
@@ -28,13 +32,18 @@ def audit(reports_root: Path) -> dict:
         for case in root.iter():
             if case.tag.rsplit("}", 1)[-1] != "testcase":
                 continue
-            name = case.get("classname", "").rsplit(".", 1)[-1]
-            if name not in counts:
-                continue
+            full_name = case.get("classname", "").strip()
+            name = full_name.rsplit(".", 1)[-1]
             kinds = {child.tag.rsplit("}", 1)[-1] for child in case}
             status = ("failed" if kinds & {"failure", "error"} else
                       "skipped" if "skipped" in kinds else "passed")
-            counts[name][status] += 1
+            total[status] += 1
+            if full_name:
+                counters = observed.setdefault(
+                    full_name, {"passed": 0, "failed": 0, "skipped": 0})
+                counters[status] += 1
+            if name in counts:
+                counts[name][status] += 1
     valid = bool(reports) and not errors and all(
         stats["passed"] > 0 and stats["failed"] == 0 and stats["skipped"] == 0
         for stats in counts.values()
@@ -44,6 +53,12 @@ def audit(reports_root: Path) -> dict:
         "scope": "Surefire XML for two mandatory registered JUnit classes",
         "reports_read": len(reports),
         "testcase_counts": counts,
+        "all_junit_testcases": total,
+        "observed_junit_classes": len(observed),
+        "failed_class_names": sorted(name for name, counts in observed.items()
+                                     if counts["failed"] > 0),
+        "skipped_class_names": sorted(name for name, counts in observed.items()
+                                      if counts["skipped"] > 0),
         "parse_errors": errors,
         "passed": valid,
         "disclaimer": "does not establish complete SWT test/line coverage or native UI parity",
