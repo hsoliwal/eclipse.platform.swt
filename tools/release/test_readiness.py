@@ -89,6 +89,23 @@ class ReadinessTest(unittest.TestCase):
         self.assertTrue(any("failed JUnit: win32" in x for x in result["source_issues"]))
         self.assertTrue(any("branch coverage" in x for x in result["source_issues"]))
 
+    def test_duplicate_backend_paths_are_refused(self):
+        path = self.junit("TEST-one.xml")
+        result = gate.evaluate(self.root, {"win32": path, "gtk3-x11": path},
+                               self.jacoco(), True, .9, .9)
+        self.assertFalse(result["surface_ready"])
+        self.assertTrue(any("duplicate backend JUnit" in x
+                            for x in result["source_issues"]))
+
+    def test_release_cannot_disable_coverage_thresholds(self):
+        with self.assertRaises(SystemExit) as caught:
+            gate.main(["--root", str(self.root), "--release",
+                       "--min-line", "0", "--min-branch", "0"])
+        self.assertEqual(2, caught.exception.code)
+        with self.assertRaises(SystemExit) as caught:
+            gate.main(["--root", str(self.root), "--min-line", "nan"])
+        self.assertEqual(2, caught.exception.code)
+
     def test_complete_synthetic_surface_is_not_product_evidence(self):
         files = {backend: self.junit("TEST-" + backend + ".xml") for backend in gate.BACKENDS}
         result = gate.evaluate(self.root, files, self.jacoco(), True, .9, .9)
