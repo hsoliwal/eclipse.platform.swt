@@ -91,6 +91,31 @@ candidates with focused workflows, adding missing suite registrations,
 and measuring instrumented line/branch coverage remain separate release
 requirements.** No coverage percentage is inferred from filenames.
 
+## Native-independent Java 21 acceptance slice
+
+The [headless Java 21 runner](../tools/release/run_headless_java21.sh)
+now compiles three sources with `javac --release 21 -Xlint:all -Werror`:
+the actual product `PackedHeapGrowth.java` and `ItemBitSet.java`, plus
+[`M3SwtHeadlessContract.java`](../tools/release/java/org/eclipse/swt/internal/residency/M3SwtHeadlessContract.java).
+The Java main class uses a seeded independent `java.util.BitSet` oracle
+for sparse/ranged mutations, next-set, cardinality, 65,536-position
+boundaries and `Integer.MAX_VALUE`, plus deterministic growth/pressure
+arithmetic. No Mockito, JUnit, native fragment, UI thread or Maven build
+is needed for this **narrow exact-source check**.
+
+```sh
+# Run with JAVA_HOME pointing to a Java 21 JDK
+bash tools/release/run_headless_java21.sh
+# Outputs: target/m3-swt-headless/{compile.log,run.log,SHA256SUMS}
+```
+
+The `headless-java21` job in
+[`release-preflight.yml`](../.github/workflows/release-preflight.yml)
+runs it with Temurin 21 and uploads logs and hashes. A green result would
+prove only the compiled subset: **it is not an installed SWT bundle test,
+Java 21 execution of every public class, a JNI/OSGi proof or a native UI
+claim**. Those still require the platform matrix and runtime acceptance.
+
 ## Required platform qualification
 
 | Lane | Release acceptance |
