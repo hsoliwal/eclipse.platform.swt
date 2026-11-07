@@ -67,12 +67,12 @@ The report is **HOLD** regardless of its exit-0 read-only inventory mode.
 `--release` fails closed on its acknowledged blockers. Measured per-source
 branch deficits to meet a minimum 90% are:
 
-| Class | Measured branches | Branch ratio | Additional covered branches needed |
-| --- | --- | ---: | ---: |
-| M3ColumnFilter | 182/235 | 77.45% | 30 |
-| M3ColumnSort | 74/92 | 80.43% | 9 |
-| M3ItemRange | 59/68 | 86.76% | 3 |
-| M3RowExtents | 30/42 | 71.43% | 8 |
+| Class | Measured lines | Additional lines for 90% | Measured branches | Additional branches for 90% |
+| --- | ---: | ---: | ---: | ---: |
+| M3ColumnFilter | 251/321 (78.19%) | **38** | 182/235 (77.45%) | **30** |
+| M3ColumnSort | 136/161 (84.47%) | **9** | 74/92 (80.43%) | **9** |
+| M3ItemRange | 51/51 (100%) | 0 | 59/68 (86.76%) | **3** |
+| M3RowExtents | 54/54 (100%) | 0 | 30/42 (71.43%) | **8** |
 
 All other six measured source files already meet the 90% **branch** floor in
 this historical headless run, but `M3ColumnFilter` and `M3ColumnSort` also
