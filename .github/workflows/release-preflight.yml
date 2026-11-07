@@ -43,3 +43,26 @@ jobs:
             target/swt-default-suite-inventory.json
           if-no-files-found: warn
           retention-days: 90
+
+  headless-java21:
+    name: Java 21 exact-source sparse-state contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de5a937a1dc73fbc1a67d7d1aa4bebc1082f3190 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile and run existing sparse-state product source on Java 21
+        run: bash tools/release/run_headless_java21.sh
+      - name: Preserve Java 21 compile/test logs and hashes
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: swt-java21-headless-${{ github.sha }}
+          path: target/m3-swt-headless/
+          if-no-files-found: warn
+          retention-days: 90
