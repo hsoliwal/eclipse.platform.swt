@@ -29,6 +29,50 @@ seven specialized recording/scale differential classes retain explicit separate
 execution. See [the test guide](../../../../tests/org.eclipse.swt.tests/Readme.md)
 and [release requirements](../../RELEASE.md).
 
+## Reproducible gap audit and new regression tests
+
+The source-hash-checked `tools/release/headless_coverage_audit.py` audits the
+actual ten-file numerator/denominator pairs in `HEADLESS_20261107.json`.
+It does not change those historical results or infer native/GUI coverage.
+Run its refusal tests and read-only inventory from the same source tree:
+
+```sh
+python3 -m unittest discover -s tools/release -p test_headless_coverage_audit.py -v
+python3 tools/release/headless_coverage_audit.py --root . \
+  --receipt docs/m3/enhanced-api/coverage/HEADLESS_20261107.json \
+  --candidate-sha "$(git rev-parse HEAD)" \
+  --json-out /tmp/swt-headless-coverage-gaps.json
+```
+
+The report is **HOLD** regardless of its exit-0 read-only inventory mode.
+`--release` fails closed on its acknowledged blockers. Measured per-source
+branch deficits to meet a minimum 90% are:
+
+| Class | Measured branches | Branch ratio | Additional covered branches needed |
+| --- | --- | ---: | ---: |
+| M3ColumnFilter | 182/235 | 77.45% | 30 |
+| M3ColumnSort | 74/92 | 80.43% | 9 |
+| M3ItemRange | 59/68 | 86.76% | 3 |
+| M3RowExtents | 30/42 | 71.43% | 8 |
+
+All other six measured source files already meet the 90% **branch** floor in
+this historical headless run, but `M3ColumnFilter` and `M3ColumnSort` also
+fall below the 90% **line** floor. The numbers above are arithmetic thresholds
+under unchanged denominators, not predicted results of the new tests.
+
+On this release-preparation branch, `Test_M3RowExtents` adds negative range
+endpoint, zero-length edit, reset and reinsert cases, while `Test_M3ItemRange`
+adds safe upper-int positive controls. They have **not** been counted in the
+77/77 execution receipt; refresh the source-pinned JaCoCo report before updating
+any denominator or pass count. Separate review has identified a potential
+`Integer.MAX_VALUE + 1` overflow in `M3ItemRange.coalesce` for duplicate
+maximal indices; resolve it through the authorized recipe and an executable
+failure/recovery regression before release.
+
+The per-file gap workflow uploads exact source commit/tree and audit JSON,
+but is **not** a substitute for Java21/JNI/platform tests or a current-head
+whole-SWT coverage report.
+
 ## Historical campaign: original scope retained
 
 The following record describes its original hidden-desktop campaign and inputs.
