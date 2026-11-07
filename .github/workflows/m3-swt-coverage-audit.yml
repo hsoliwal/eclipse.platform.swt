@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
         with:
-          ref: \${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -68,7 +68,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: swt-m3-headless-gap-audit-\${{ github.sha }}
-          path: \${{ runner.temp }}/swt-coverage-audit/
+          name: swt-m3-headless-gap-audit-${{ github.sha }}
+          path: ${{ runner.temp }}/swt-coverage-audit/
           retention-days: 90
           if-no-files-found: warn
