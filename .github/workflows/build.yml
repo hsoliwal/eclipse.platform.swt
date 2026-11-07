@@ -136,6 +136,15 @@ jobs:
         ${{ (inputs.runtodotests == false && inputs.gtk =='gtk4' && inputs.gdk_backend == 'x11')     && '-DexcludedGroups=gtk4-todo' || '' }}
         ${{ (inputs.runtodotests == false && inputs.gtk =='gtk3' && inputs.gdk_backend == 'wayland') && '-DexcludedGroups=gtk3-wayland-todo' || '' }}
         clean install
+    - name: Require executed M3 sparse-state tests in JUnit XML
+      shell: bash
+      run: |
+        set -euo pipefail
+        if command -v python3 >/dev/null 2>&1; then PYTHON=python3; else PYTHON=python; fi
+        "$PYTHON" tools/release/check_junit_coverage.py \
+          --reports-root tests/org.eclipse.swt.tests/target/surefire-reports \
+          --json-out tests/org.eclipse.swt.tests/target/release-junit-coverage.json \
+          --strict
     - name: Viewport screenshot regression
       if: ${{ inputs.viewport_screenshots && inputs.native == 'gtk.linux.x86_64' }}
       env:
@@ -204,6 +213,7 @@ jobs:
         if-no-files-found: warn
         path: |
           ${{ github.workspace }}/**/target/surefire-reports/*.xml
+          ${{ github.workspace }}/**/target/release-junit-coverage.json
           ${{ github.workspace }}/**/target/screenshots/**/*.png
           ${{ github.workspace }}/**/target/screenshots/**/*.txt
           ${{ github.workspace }}/**/target/screenshots/**/*.json

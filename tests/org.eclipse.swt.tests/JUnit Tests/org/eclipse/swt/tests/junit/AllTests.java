@@ -23,6 +23,9 @@ import org.junit.platform.suite.api.Suite;
  */
 @Suite(failIfNoTests = false)
 @SelectClasses({
+	// Explicit registration: adding a test source is not the same as executing it.
+	Test_ItemBitSetDifferential.class,
+	Test_ItemBitSetMaximumPosition.class,
 	Test_ViewportBounds.class,
 	Test_ViewportBoundsGtk.class,
 	Test_ViewportRowWindow.class,
