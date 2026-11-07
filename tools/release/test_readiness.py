@@ -219,5 +219,11 @@ class ReadinessTest(unittest.TestCase):
         self.assertEqual(0, exit_info.exception.code)
 
 
+    def test_unattributed_aggregate_suite_uses_testcase_counts(self):
+        report = self.write("TEST-aggregate-no-counters.xml",
+                            '<testsuites><testsuite><testcase name="only"/></testsuite></testsuites>')
+        self.assertEqual(1, gate.junit_report(report)["tests"])
+
+
 if __name__ == "__main__":
     unittest.main()
