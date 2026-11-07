@@ -11,7 +11,7 @@ on:
       - 'bundles/org.eclipse.swt/META-INF/MANIFEST.MF'
       - '.github/workflows/m3-release-readiness.yml'
   push:
-    branches: [master]
+    branches: [master, 'release/**']
     paths:
       - 'tools/release/**'
       - 'docs/RELEASE_READINESS.md'
@@ -27,7 +27,16 @@ jobs:
     steps:
       - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+      - name: Record exact source revision for report provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > "$RUNNER_TEMP/SOURCE_COMMIT"
+          git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/SOURCE_TREE"
+          echo "Source commit: $(cat "$RUNNER_TEMP/SOURCE_COMMIT")" >> "$GITHUB_STEP_SUMMARY"
+          echo "Source tree: $(cat "$RUNNER_TEMP/SOURCE_TREE")" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -40,7 +49,10 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: swt-release-source-surface-${{ github.sha }}
-          path: ${{ runner.temp }}/swt-release-surface.json
+          path: |
+            ${{ runner.temp }}/swt-release-surface.json
+            ${{ runner.temp }}/SOURCE_COMMIT
+            ${{ runner.temp }}/SOURCE_TREE
           if-no-files-found: warn
           retention-days: 90
       - name: Publish scope clarification
