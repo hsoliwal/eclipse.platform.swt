@@ -37,8 +37,13 @@ class ReadinessTest(unittest.TestCase):
         return path
 
     def junit(self, name, failure=0):
+        detail = '<failure message="fixture"/>' if failure else ''
         return self.write(name, f'<testsuite tests="3" failures="{failure}" '
-                          'errors="0" skipped="1"><testcase name="one" /></testsuite>')
+                          'errors="0" skipped="1">'
+                          '<testcase name="one" />'
+                          '<testcase name="two"><skipped/></testcase>'
+                          f'<testcase name="three">{detail}</testcase>'
+                          '</testsuite>')
 
     def jacoco(self, line_covered=99, branch_covered=99):
         return self.write("jacoco.xml", '<report name="fixture">'
@@ -56,6 +61,31 @@ class ReadinessTest(unittest.TestCase):
         counts = gate.junit_report(self.junit("TEST-demo.xml"))
         self.assertEqual((3, 1, 0), (counts["tests"], counts["skipped"], counts["failures"]))
         self.assertEqual(1, gate.junit_report(self.junit("TEST-bad.xml", 1))["failures"])
+
+    def test_inconsistent_reported_counts_are_refused(self):
+        fraudulent = self.write("TEST-claimed.xml", '<testsuite tests="99" '
+                                'failures="0"><testcase name="only"/></testsuite>')
+        with self.assertRaisesRegex(ValueError, "counter mismatch"):
+            gate.junit_report(fraudulent)
+        no_cases = self.write("TEST-no-cases.xml", '<testsuite tests="99"/>')
+        with self.assertRaisesRegex(ValueError, "no executed testcases"):
+            gate.junit_report(no_cases)
+
+    def test_nested_aggregate_suite_does_not_double_count(self):
+        path = self.write("TEST-aggregate.xml",
+                          '<testsuites tests="2" failures="0" skipped="1">'
+                          '<testsuite tests="2" failures="0" skipped="1">'
+                          '<testcase name="one"/>'
+                          '<testcase name="two"><skipped/></testcase>'
+                          '</testsuite></testsuites>')
+        report = gate.junit_report(path)
+        self.assertEqual((2, 1), (report["tests"], report["skipped"]))
+        self.assertEqual(64, len(report["files"][0]["sha256"]))
+
+    def test_directory_requires_real_test_report_names(self):
+        self.write("evidence/random.xml", '<testsuite tests="1"><testcase name="one"/></testsuite>')
+        with self.assertRaisesRegex(ValueError, "no TEST-"):
+            gate.junit_report(self.root / "evidence")
 
     def test_invalid_or_empty_junit_fails_closed(self):
         with self.assertRaises(ValueError):
