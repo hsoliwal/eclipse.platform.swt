@@ -96,6 +96,37 @@ produced for the exact release commit; capture the commit, Maven/JDK/OS/arch,
 native hash, report SHA-256, command and workflow run ID in a separately
 reviewed source-bound release evidence manifest before publishing.
 
+## Coordination with current release-preparation PRs (2026-11-07)
+
+This PR is the **source/report-intake foundation**, not a release bundle.
+Review and integrate the other candidate work additively instead of
+replacing or double-registering existing tests:
+
+- [#322](https://github.com/hsoliwal/eclipse.platform.swt/pull/322):
+  default-suite omission inventory, Java 21 headless checks, and
+  independently executed widget/heap contracts; its source inventory
+  includes test-like classes outside the default `AllTests` graph.
+- [#323](https://github.com/hsoliwal/eclipse.platform.swt/pull/323):
+  Windows/macOS-only candidate packaging, archive checks and explicit
+  refusal of entirely skipped JUnit backends; this is stacked on #321.
+  Reconcile overlapping `tools/release/readiness.py` updates before merge.
+- [#324](https://github.com/hsoliwal/eclipse.platform.swt/pull/324):
+  the 26 ordinary M3 test classes (216 discovered test methods),
+  Java 21 matrix additions and focused headless evidence. Its pinned
+  `HEADLESS_20261107.json` records **77/77** headless tests,
+  **926/1,024 (90.43%)** covered lines and **745/854 (87.24%)**
+  covered branches, only for ten named source files at baseline
+  `62460082d7caa06b21c49da99abbab53f73b3ffc`.
+
+The **87.24% branch result is below the 90% release minimum**.
+It cannot qualify all changed atoms, the current composite PR head, or
+native GUI backends. Do not promote a source-only proof, a packaging job
+with `-DskipTests=true`, or a historical report to `PASS`.
+After these PRs converge, regenerate a single coverage inventory and
+source-pinned evidence pack from the final source tree and report all
+missed branches, exclusions, skipped tests, JNI/lifecycle and platform
+gates explicitly.
+
 ## Still required before a tag
 
 An upstream-diff review; binary/API Tools comparison; JNI generator diff;
