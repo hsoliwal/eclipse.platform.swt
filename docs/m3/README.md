@@ -14,8 +14,19 @@ Native work is O(window); model work runs off the UI thread with generation chec
 
 Five startup modes are chosen with `-Dswt.widget.mode=viewport|original|custom|m3|gpu`, plus a per-class override `-Dswt.widget.mode.<Widget>`:
 - `viewport` is the default;
-- `original` is stock SWT;
+- `original` disables this fork's viewport; the separately recorded official SWT artifact is the stock reference;
 - `custom`, `m3` and `gpu` are the drawn modes.
+
+## Release status and evidence
+
+[SWT M3 release preparation](RELEASE.md) records the current names, Java 21/25
+matrix, test selection, packaging scope and pending release gates. Widget results
+and coverage percentages below summarize their linked historical campaigns; they
+do not establish qualification of a later combined source commit or every native
+backend. Always record the candidate SHA and the measured class/platform/mode scope.
+
+[Fork release-readiness gates](../RELEASE_READINESS.md) ·
+[Candidate packaging and naming](../RELEASE_PACKAGING.md)
 
 ## Start here
 
@@ -32,7 +43,7 @@ Five startup modes are chosen with `-Dswt.widget.mode=viewport|original|custom|m
 | Widget | Design | Status (see the plan for numbers) |
 |---|---|---|
 | Tree | [TREE_MEDIATED_VIEWPORT.md](TREE_MEDIATED_VIEWPORT.md), [tree-viewport/](tree-viewport/) | Identical to official SWT 3.135.0 on all differential variants |
-| Table | [TABLE_MEDIATED_VIEWPORT.md](TABLE_MEDIATED_VIEWPORT.md), [table-viewport/](table-viewport/) | Identical to official on 88/88 seeds; 100% line coverage |
+| Table | [TABLE_MEDIATED_VIEWPORT.md](TABLE_MEDIATED_VIEWPORT.md), [table-viewport/](table-viewport/) | Prior track-level differential/coverage figures require a fresh, instrumented, source-pinned rerun; not a current release result |
 | List, Combo | [LIST_MEDIATED_VIEWPORT.md](LIST_MEDIATED_VIEWPORT.md), [list-viewport/](list-viewport/) | Differentials pass; coverage and remaining edge cases in progress |
 | Scrollables, ToolBar, Text, ExpandBar, CTabFolder | [ALL_WIDGETS_VIEWPORT_PLAN.md](ALL_WIDGETS_VIEWPORT_PLAN.md) and the per-widget docs | Per-widget docs |
 | StyledText | [STYLEDTEXT_VIEWPORT_DESIGN.md](STYLEDTEXT_VIEWPORT_DESIGN.md) and related | Per-widget docs |
@@ -79,7 +90,7 @@ Runnable snippets live under `examples/org.eclipse.swt.snippets/src/org/eclipse/
 
 ## Conventions
 
-- **Proof:** a widget change is done when the recorded differential against the official jar shows zero mismatches and JaCoCo line and branch coverage reach 99%.
+- **Proof:** qualify each candidate with its recorded official-jar differential and measured JaCoCo line and branch coverage (target 99%), while retaining explicit misses and platform gates. A focused percentage or explained probe miss is not full-product release acceptance; see [RELEASE.md](RELEASE.md).
 - **Code:**
   - Java only (M3JDK may also change JNI and HotSpot);
   - logging through java.util.logging;

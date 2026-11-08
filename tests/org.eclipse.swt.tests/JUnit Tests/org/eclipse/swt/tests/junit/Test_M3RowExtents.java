@@ -157,6 +157,35 @@ public class Test_M3RowExtents {
 		assertTrue (extents.toString ().startsWith ("M3RowExtents [100 rows, 1 measured"));
 	}
 
+
+	@Test
+	public void test_negativeEndpointBranchesAndZeroLengthEdits () {
+		/* Separate left-hand and right-hand range failures (short-circuit boundary coverage). */
+		M3RowExtents extents = new M3RowExtents (3, 10);
+		assertThrows (IllegalArgumentException.class, () -> extents.clearFrom (-1));
+		assertThrows (IllegalArgumentException.class, () -> extents.insert (-1, 0));
+		assertThrows (IllegalArgumentException.class, () -> extents.remove (-1, 0));
+		assertThrows (IllegalArgumentException.class, () -> extents.offsetOf (-1));
+		assertThrows (IllegalArgumentException.class, () ->
+			extents.scrollOffsetFor (0, -1, 0, 10));
+		assertThrows (IllegalArgumentException.class, () -> extents.setExtentAnchored (-1, 1, 0, false));
+		assertThrows (IllegalArgumentException.class, () -> extents.setExtentAnchored (0, -1, 0, false));
+		/* The inclusive right endpoint is legal for zero-length edits. */
+		extents.clearFrom (3);
+		extents.insert (3, 0);
+		extents.remove (3, 0);
+		assertEquals (3, extents.rowCount ());
+		assertEquals (30, extents.offsetOf (3));
+		assertEquals (30, extents.totalExtent ());
+		extents.reset (0);
+		assertEquals (-1, extents.rowAt (0));
+		assertTrue (extents.visibleRange (0, 10).isEmpty ());
+		extents.insert (0, 1);
+		assertEquals (10, extents.totalExtent ());
+		assertEquals (0, extents.rowAt (0));
+	}
+
+
 	@Test
 	public void test_argumentsAreChecked () {
 		assertThrows (IllegalArgumentException.class, () -> new M3RowExtents (-1, 10));
@@ -180,5 +209,95 @@ public class Test_M3RowExtents {
 		assertThrows (IllegalArgumentException.class, () -> extents.scrollOffsetFor (5, M3RowExtents.ALIGN_AUTO, 0, 10));
 		assertThrows (IllegalArgumentException.class, () -> extents.setExtentAnchored (5, 1, 0, false));
 		assertThrows (IllegalArgumentException.class, () -> extents.setExtentAnchored (0, -1, 0, false));
+	}
+
+	@Test
+	public void test_smartAlignmentKeepsRevealedOffsetsAndCentersOthers () {
+		M3RowExtents extents = new M3RowExtents (10, 10);
+		extents.setExtent (4, 30); // row 4 occupies [40, 70), viewport 20 reveals it at [40, 50].
+		for (long current : new long [] {40, 45, 50}) {
+			assertEquals (current, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_SMART, current, 20));
+		}
+		assertEquals (45, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_SMART, 0, 20));
+		assertEquals (45, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_SMART, 100, 20));
+		assertEquals (0, extents.scrollOffsetFor (0, M3RowExtents.ALIGN_SMART, 100, 50), "center clamps at the start");
+		assertEquals (70, extents.scrollOffsetFor (9, M3RowExtents.ALIGN_SMART, 0, 50), "center clamps at the end");
+		assertEquals (50, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_SMART, 50, 0), "empty viewport retains a revealed offset");
+		extents.setExtent (4, 0);
+		assertEquals (40, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_SMART, 40, 0), "zero-height row at the exact offset");
+		assertEquals (40, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_SMART, 0, 0));
+	}
+
+	@Test
+	public void test_anchoringDistinguishesFirstMeasurementAndExactBoundaries () {
+		M3RowExtents atStart = new M3RowExtents (3, 10);
+		assertEquals (0, atStart.setExtentAnchored (1, 25, 10, true), "first measurement at the offset is not above it");
+		M3RowExtents above = new M3RowExtents (3, 10);
+		assertEquals (15, above.setExtentAnchored (1, 25, 11, true), "first measurement anchors even while scrolling backward");
+		assertEquals (5, above.setExtentAnchored (1, 30, 35, false), "remeasurement anchors at the previous exact end");
+		assertEquals (0, above.setExtentAnchored (1, 20, 39, false), "previous row still crosses the offset");
+		assertEquals (0, above.setExtentAnchored (1, 10, 30, true), "backward scrolling suppresses remeasurement anchoring");
+		assertEquals (-10, above.setExtentAnchored (1, 0, 20, false), "negative changes preserve the same boundary rule");
+		assertEquals (0, above.setExtentAnchored (1, 0, 10, false), "unchanged measurement has no delta");
+		assertEquals (1, above.measuredCount ());
+		assertEquals (0, above.extentOf (1));
+	}
+
+	@Test
+	public void test_sparseMaximumRowCountKeepsLongOffsetsThroughEdits () {
+		int rows = Integer.MAX_VALUE, middle = rows / 2;
+		M3RowExtents extents = new M3RowExtents (rows, 2);
+		assertEquals (0, extents.measuredCount ());
+		assertEquals (2L * rows, extents.totalExtent ());
+		assertEquals (rows - 1, extents.rowAt (Long.MAX_VALUE));
+		extents.setExtent (0, 0);
+		extents.setExtent (middle, 3);
+		extents.setExtent (rows - 1, 5);
+		assertEquals (3, extents.measuredCount ());
+		assertEquals (2L * rows + 2, extents.totalExtent ());
+		assertEquals (2L * middle - 2, extents.offsetOf (middle));
+		assertEquals (2L * (rows - 1) - 1, extents.offsetOf (rows - 1));
+		extents.remove (0, 1); // Removing the zero-height row leaves the total unchanged.
+		assertEquals (rows - 1, extents.rowCount ());
+		assertEquals (2, extents.measuredCount ());
+		assertEquals (3, extents.extentOf (middle - 1));
+		assertEquals (5, extents.extentOf (rows - 2));
+		assertEquals (2L * rows + 2, extents.totalExtent ());
+		extents.insert (0, 1);
+		assertEquals (rows, extents.rowCount ());
+		assertEquals (2, extents.measuredCount ());
+		assertEquals (2L * rows + 4, extents.totalExtent ());
+		assertEquals (3, extents.extentOf (middle));
+		assertEquals (5, extents.extentOf (rows - 1));
+		extents.clearFrom (middle);
+		assertEquals (0, extents.measuredCount ());
+		extents.setEstimate (Integer.MAX_VALUE);
+		assertEquals ((long) rows * rows, extents.totalExtent ());
+		extents.setExtent (rows - 1, 0);
+		assertEquals ((long) (rows - 1) * rows, extents.totalExtent ());
+		extents.reset (rows);
+		assertEquals (0, extents.measuredCount ());
+		assertEquals ((long) rows * rows, extents.totalExtent ());
+		assertTrue (extents.visibleRange (extents.offsetOf (rows - 1), 0).isEmpty ());
+		assertTrue (extents.visibleRange (extents.offsetOf (rows - 1), 1).contains (rows - 1));
+	}
+
+	@Test
+	public void test_autoAlignmentMovesOnlyToNearestRevealBoundary () {
+		M3RowExtents extents = new M3RowExtents (10, 10);
+		extents.setExtent (4, 30); // With viewport 20, the oversized row is revealed at [40, 50].
+		assertEquals (40, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_AUTO, 0, 20), "move only to the nearer lower boundary");
+		assertEquals (50, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_AUTO, Long.MAX_VALUE, 20), "move only to the nearer upper boundary");
+		for (long current : new long [] {40, 45, 50}) {
+			assertEquals (current, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_AUTO, current, 20), "inclusive reveal interval remains unchanged");
+		}
+		/* Row 3 occupies [30, 40); viewport 50 reveals it at [-10, 30], then offsets clamp. */
+		assertEquals (30, extents.scrollOffsetFor (3, M3RowExtents.ALIGN_AUTO, 60, 50));
+		assertEquals (0, extents.scrollOffsetFor (3, M3RowExtents.ALIGN_AUTO, -20, 50));
+		assertEquals (0, extents.scrollOffsetFor (3, M3RowExtents.ALIGN_AUTO, 0, 50));
+		assertEquals (30, extents.scrollOffsetFor (3, M3RowExtents.ALIGN_AUTO, 30, 50));
+		assertEquals (40, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_AUTO, 0, 0));
+		assertEquals (70, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_AUTO, 100, 0));
+		assertEquals (0, extents.scrollOffsetFor (4, M3RowExtents.ALIGN_AUTO, 100, 500), "viewport larger than the content clamps to zero");
 	}
 }

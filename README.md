@@ -8,7 +8,11 @@ resource-lifetime problem; use Platform UI for JFace viewers and workbench parts
 
 [Source map](#swt-source-map) · [Concepts](#swt-key-concepts) ·
 [Quickstart](#swt-quickstart) · [Example](#swt-worked-example) ·
-[Development guide](docs/DEVELOPMENT_GUIDE.md)
+[Development guide](docs/DEVELOPMENT_GUIDE.md) ·
+[Release preparation and coverage](docs/m3/RELEASE.md) ·
+[Fork release-readiness gates](docs/RELEASE_READINESS.md) ·
+[Candidate packaging and naming](docs/RELEASE_PACKAGING.md) ·
+[Release preparation and suite inventory](docs/RELEASE_PREPARATION.md)
 
 ## SWT source map
 
@@ -48,12 +52,15 @@ that every backend, default model or optimization is qualified. The
 [development guide](docs/DEVELOPMENT_GUIDE.md) distinguishes native rendering,
 visible-screen evidence, behavior tests and independent resource measurements.
 Upstream releases and badges below describe their linked upstream projects.
+The [SWT M3 release contract](docs/m3/RELEASE.md) fixes the naming, test-selection
+and platform-evidence requirements for this fork. Its Windows/macOS CI archive
+is a candidate package; Linux and executed test evidence are separate gates.
 
 ## SWT quickstart
 
 For application adoption, follow the original platform-specific JAR and Hello
 World example below. For source development, the inspected
-[matrix](.github/workflows/maven.yml) uses **Java 25** and the
+[matrix](.github/workflows/maven.yml) checks **Java 21 and Java 25** and the
 [build workflow](.github/workflows/build.yml) selects **Maven 3.9.16**.
 Install/configure Git LFS before cloning if using precompiled native binaries,
 or follow the host-native build guide. You also need native dependencies and a
@@ -279,8 +286,9 @@ https://www.eclipse.org/setups/installer/?url=https://raw.githubusercontent.com/
 - [tests/](tests/) contains the common SWT test bundle and native-platform
   test fragments. The [root POM](pom.xml) selects the platform-specific test modules
 
-The current [matrix workflow](.github/workflows/maven.yml) selects JDK 25;
-its [build workflow](.github/workflows/build.yml) selects Maven 3.9.16.
+The current [matrix workflow](.github/workflows/maven.yml) is configured for
+JDK 21 and JDK 25; API/Javadoc checks use selected JDK 25 legs. Its
+[build workflow](.github/workflows/build.yml) selects Maven 3.9.16.
 Use those checked-in values to reproduce that lane. Older platform notes
 include historical JDK versions and last-tested dates; they are not a promise
 that the current reactor builds with those older JDKs.

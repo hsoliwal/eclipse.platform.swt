@@ -1,4 +1,5 @@
-name: Build SWT JARs with Natives
+name: Build SWT Candidate JARs with Natives
+# Produces unqualified Windows/macOS candidates; see docs/RELEASE_PACKAGING.md.
 
 on:
   push:
@@ -7,7 +8,39 @@ on:
     branches: [ master ]
   workflow_dispatch:  # Allows manual triggering
 
+permissions:
+  contents: read
+
 jobs:
+  candidate-packager-checks:
+    name: Candidate packaging tests and coverage
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: Set up Java 21
+      uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+      with:
+        java-version: '21'
+        distribution: temurin
+        cache: maven
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@12eb41b233df95d49b0c11fc1b5bc8312e5d4ce0 # v5.1
+      with:
+        maven-version: 3.9.16
+    - name: Test candidate integrity and report scoped coverage
+      run: mvn --batch-mode -f tools/swt-release/pom.xml clean verify
+    - name: Preserve candidate packager test evidence
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: candidate-packager-test-evidence-attempt-${{ github.run_attempt }}
+        path: |
+          tools/swt-release/target/surefire-reports/
+          tools/swt-release/target/site/jacoco/
+          tools/swt-release/target/jacoco.exec
+        retention-days: 90
+
   # ---------------------------------------------------------------------------
   # The two Linux jobs below are DISABLED (`if: false`).
   #
@@ -18,8 +51,9 @@ jobs:
   # (glibc 2.28) by ../build_linux.sh, and this workflow ships Windows and
   # macOS only.
   #
-  # To re-enable, drop the `if: false` lines and re-add both jobs to
-  # create-release-bundle's `needs:` list.
+  # To re-enable, qualify the older sysroot, drop the `if: false` lines,
+  # re-add both jobs to create-release-bundle's `needs:` list, and extend
+  # SwtCandidateBundle's explicit platform inventory and regression fixtures.
   # ---------------------------------------------------------------------------
   build-linux-x64:
     name: Build Linux x86_64
@@ -62,13 +96,20 @@ jobs:
       run: |
         mvn clean install -Dnative=gtk.linux.x86_64 --batch-mode -V -U -e --threads 1C -DskipTests=true
 
+    - name: Record exact candidate source
+      shell: bash
+      run: git rev-parse HEAD > swt-source-sha.txt
+
     - name: Upload Linux x64 JARs
       uses: actions/upload-artifact@v4
       with:
         name: swt-linux-x86_64
+        overwrite: true # Stable input alias; attempt bundles preserve the packaged bytes.
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.gtk.linux.x86_64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
+          swt-source-sha.txt
 
   build-linux-aarch64:
     name: Build Linux aarch64
@@ -162,13 +203,20 @@ jobs:
         echo "Using ARM64 AWT libraries at: $AWT_LIB_PATH"
         mvn clean install -Dnative=gtk.linux.aarch64 --batch-mode -V -U -e --threads 1C -DskipTests=true
 
+    - name: Record exact candidate source
+      shell: bash
+      run: git rev-parse HEAD > swt-source-sha.txt
+
     - name: Upload Linux aarch64 JARs
       uses: actions/upload-artifact@v4
       with:
         name: swt-linux-aarch64
+        overwrite: true # Stable input alias; attempt bundles preserve the packaged bytes.
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.gtk.linux.aarch64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
+          swt-source-sha.txt
 
   build-windows-x64:
     name: Build Windows x86_64
@@ -210,13 +258,20 @@ jobs:
       shell: pwsh
       run: ./.github/scripts/verify-pe-arch.ps1 -Directory binaries/org.eclipse.swt.win32.win32.x86_64 -Expected AMD64
 
+    - name: Record exact candidate source
+      shell: bash
+      run: git rev-parse HEAD > swt-source-sha.txt
+
     - name: Upload Windows x64 JARs
       uses: actions/upload-artifact@v4
       with:
         name: swt-windows-x86_64
+        overwrite: true # Stable input alias; attempt bundles preserve the packaged bytes.
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.win32.win32.x86_64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
+          swt-source-sha.txt
 
   build-windows-arm64:
     name: Build Windows ARM64
@@ -261,13 +316,20 @@ jobs:
       shell: pwsh
       run: ./.github/scripts/verify-pe-arch.ps1 -Directory binaries/org.eclipse.swt.win32.win32.aarch64 -Expected ARM64
 
+    - name: Record exact candidate source
+      shell: bash
+      run: git rev-parse HEAD > swt-source-sha.txt
+
     - name: Upload Windows ARM64 JARs
       uses: actions/upload-artifact@v4
       with:
         name: swt-windows-aarch64
+        overwrite: true # Stable input alias; attempt bundles preserve the packaged bytes.
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.win32.win32.aarch64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
+          swt-source-sha.txt
 
   build-macos-x64:
     name: Build macOS x86_64 (Intel)
@@ -298,13 +360,20 @@ jobs:
       run: |
         mvn clean install -Dnative=cocoa.macosx.x86_64 --batch-mode -V -U -e --threads 1C -DskipTests=true
 
+    - name: Record exact candidate source
+      shell: bash
+      run: git rev-parse HEAD > swt-source-sha.txt
+
     - name: Upload macOS Intel JARs
       uses: actions/upload-artifact@v4
       with:
         name: swt-macos-x86_64
+        overwrite: true # Stable input alias; attempt bundles preserve the packaged bytes.
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.cocoa.macosx.x86_64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
+          swt-source-sha.txt
 
   build-macos-aarch64:
     name: Build macOS aarch64 (Apple Silicon)
@@ -335,13 +404,20 @@ jobs:
       run: |
         mvn clean install -Dnative=cocoa.macosx.aarch64 --batch-mode -V -U -e --threads 1C -DskipTests=true
 
+    - name: Record exact candidate source
+      shell: bash
+      run: git rev-parse HEAD > swt-source-sha.txt
+
     - name: Upload macOS ARM JARs
       uses: actions/upload-artifact@v4
       with:
         name: swt-macos-aarch64
+        overwrite: true # Stable input alias; attempt bundles preserve the packaged bytes.
+        if-no-files-found: error
         path: |
           binaries/org.eclipse.swt.cocoa.macosx.aarch64/target/*.jar
           bundles/org.eclipse.swt/target/*.jar
+          swt-source-sha.txt
 
   build-macos-universal:
     name: Build macOS Universal Binary
@@ -399,40 +475,67 @@ jobs:
 
         .github/scripts/create-universal-macos-jar.sh "$INTEL_JAR" "$ARM_JAR" "$OUTPUT_JAR"
 
+    - name: Record exact universal candidate source
+      run: git rev-parse HEAD > universal/swt-source-sha.txt
+
     - name: Upload macOS Universal artifacts
       uses: actions/upload-artifact@v4
       with:
         name: swt-macos-universal
-        path: universal/*.jar
+        overwrite: true # Stable input alias; attempt bundles preserve the packaged bytes.
+        if-no-files-found: error
+        path: |
+          universal/*.jar
+          universal/swt-source-sha.txt
 
   create-release-bundle:
-    name: Create Release Bundle
-    # Linux is intentionally absent: those jobs are disabled and the Linux JARs
-    # are produced locally by build_linux.sh. A skipped `needs:` entry would
-    # skip this job too.
-    needs: [build-windows-x64, build-windows-arm64, build-macos-x64, build-macos-aarch64, build-macos-universal]
+    name: Create Windows/macOS Candidate
+    # Linux is intentionally absent. An all-platform release cannot be inferred
+    # from this packaging job; source-matched native/test qualification is separate.
+    needs: [candidate-packager-checks, build-windows-x64, build-windows-arm64, build-macos-x64, build-macos-aarch64, build-macos-universal]
     runs-on: ubuntu-latest
     steps:
-    - name: Download all artifacts
+    - name: Checkout candidate packaging tool
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: Set up Java 21
+      uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+      with:
+        java-version: '21'
+        distribution: temurin
+    - name: Download candidate platform artifacts
       uses: actions/download-artifact@v4
       with:
+        pattern: swt-{windows-x86_64,windows-aarch64,macos-x86_64,macos-aarch64,macos-universal}
         path: all-platforms
-
-    - name: List downloaded artifacts
-      run: |
-        echo "Downloaded artifacts:"
-        find all-platforms -type f
-
-    - name: Create release structure
-      run: |
-        mkdir -p release
-        cp -r all-platforms/* release/
-        cd release
-        zip -r ../swt-all-platforms.zip .
-
-    - name: Upload combined bundle
+    - name: Validate identity and create candidate with checksums
+      env:
+        CANDIDATE_SOURCE_SHA: ${{ github.sha }}
+        CANDIDATE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+      run: >-
+        java tools/swt-release/src/main/java/org/eclipse/swt/tools/release/SwtCandidateBundle.java
+        all-platforms release "$CANDIDATE_SOURCE_SHA" "$CANDIDATE_RUN_URL"
+    - name: Upload Windows/macOS candidate
       uses: actions/upload-artifact@v4
       with:
+        name: swt-windows-macos-candidate-${{ github.sha }}-attempt-${{ github.run_attempt }}
+        path: release/swt-windows-macos-candidate-*.zip*
+        if-no-files-found: error
+        retention-days: 90
+    - name: Upload Windows/macOS aggregate compatibility alias
+      uses: actions/upload-artifact@v4
+      with:
+        name: swt-windows-macos-bundle
+        overwrite: true # PR324 alias of the exact, source-validated candidate bytes.
+        path: release/swt-windows-macos-candidate-*.zip
+        if-no-files-found: error
+        retention-days: 90
+    - name: Upload deprecated aggregate compatibility alias
+      uses: actions/upload-artifact@v4
+      with:
+        # Preserve existing consumers while moving to the explicit candidate name.
+        # The ZIP contains CANDIDATE-STATUS.txt and candidate-manifest.json.
         name: swt-all-platforms-bundle
-        path: swt-all-platforms.zip
+        overwrite: true # Legacy latest-attempt alias; primary candidate artifacts stay distinct.
+        path: release/swt-all-platforms.zip
+        if-no-files-found: error
         retention-days: 90

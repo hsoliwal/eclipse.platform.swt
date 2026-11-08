@@ -1,0 +1,82 @@
+# Source-bound audit only: never treat historical headless coverage as a release pass.
+name: SWT M3 focused coverage gap audit
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'tools/release/**'
+      - 'docs/m3/enhanced-api/coverage/**'
+      - 'docs/m3/RELEASE.md'
+      - 'tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_M3*.java'
+      - '.github/workflows/m3-swt-coverage-audit.yml'
+  push:
+    branches: [master, 'release/**', 'm3/release-*']
+    paths:
+      - 'tools/release/**'
+      - 'docs/m3/enhanced-api/coverage/**'
+      - 'docs/m3/RELEASE.md'
+      - '.github/workflows/m3-swt-coverage-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test refusal behavior with synthetic receipts
+        run: python3 -m unittest discover -s tools/release -p test_headless_coverage_audit.py -v
+      - name: Verify historical receipt and compute remaining per-file gaps
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/swt-coverage-audit"
+          git rev-parse HEAD > "$RUNNER_TEMP/swt-coverage-audit/SOURCE_COMMIT"
+          git rev-parse 'HEAD^{tree}' > "$RUNNER_TEMP/swt-coverage-audit/SOURCE_TREE"
+          python3 tools/release/headless_coverage_audit.py \
+            --root . \
+            --receipt docs/m3/enhanced-api/coverage/HEADLESS_20261107.json \
+            --candidate-sha "$(cat "$RUNNER_TEMP/swt-coverage-audit/SOURCE_COMMIT")" \
+            --json-out "$RUNNER_TEMP/swt-coverage-audit/audit.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          path = Path(os.environ["RUNNER_TEMP"]) / "swt-coverage-audit/audit.json"
+          d = json.loads(path.read_text(encoding="utf-8"))
+          rows = [
+              "## Focused SWT M3 coverage deficits (not whole-SWT)",
+              "",
+              "| Source | Missing lines for 90% | Missing branches for 90% |",
+              "| --- | ---: | ---: |",
+          ]
+          for f in d["files"]:
+              rows.append("| {} | {} | {} |".format(
+                  Path(f["source"]).name,
+                  f["line"]["additional_needed"],
+                  f["branch"]["additional_needed"]))
+          rows.extend(["",
+              "**Recorded test inputs matching current source:** {}/{}".format(
+                  d["test_inputs_matching"], d["test_inputs_recorded"]), ""])
+          for item in d["test_input_drift"]:
+              rows.append("- Changed test input: " + item["path"])
+          rows.extend(["", "**RELEASE HOLD:** Historical 10-file headless receipt; "
+                      "changed test sources and current-source/native/JNI/GUI coverage "
+                      "require new execution."])
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
+              out.write("\n".join(rows) + "\n")
+          PY
+      - name: Keep source-pinned audit evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: swt-m3-headless-gap-audit-${{ github.sha }}
+          path: ${{ runner.temp }}/swt-coverage-audit/
+          retention-days: 90
+          if-no-files-found: warn

@@ -1,0 +1,313 @@
+<!-- SPDX-License-Identifier: EPL-2.0 -->
+# SWT fork release preparation: naming, documentation and coverage
+
+Status: **preparation / no release or binary compatibility claim** (2026-11-07).
+
+## Product naming and public contracts
+
+This repository remains the Eclipse Standard Widget Toolkit (SWT), with
+`org.eclipse.swt` bundle/module identity and the existing `org.eclipse.swt.*`
+Java packages. Its public types remain `Display`, `Shell`, `Control`,
+`Widget`, `Canvas`, `GC`, `Image`, `Table`, `Tree`, `ScrollBar`, etc.
+Internal M3/residency names are implementation details, not replacement public
+Swing facades. Preserve Java, OSGi, PDE/API Tools, JNI/generated C and
+reflection/service contracts. The bundle manifest's `JavaSE-21` minimum is
+**not** the same as CI's current **JDK 25** build toolchain.
+
+Do not change upstream package names, exported APIs, native entry points,
+generated JNI glue, licensing or native binaries in a naming-only PR.
+Treat changes to public signatures or serialized/native symbols as release
+blockers requiring a separate ABI/behavior review.
+
+## Required documentation audit
+
+Source-verify `README.md`, `docs/DEVELOPMENT_GUIDE.md`,
+`bundles/org.eclipse.swt/Readme.md`, backend-specific native instructions,
+`NOTICE`, `LICENSE`, `AGENTS.md`, this document, and source/test links.
+Update version and release claims only from the exact tag/commit and published
+evidence. The upstream project is the Eclipse SWT baseline; M3 viewport/GPU
+work is downstream experimental until separately qualified.
+
+The main [matrix](../.github/workflows/maven.yml), [reusable build](../.github/workflows/build.yml),
+[JNI and Javadoc checks](../.github/workflows/pr-checks.yml) and
+[JUnit publisher](../.github/workflows/junit.yml) are **separate checks**.
+A published JUnit summary is not line or branch instrumentation.
+
+## Coverage matrix and gates
+
+| Runtime | Existing CI lane | Release qualification |
+| --- | --- | --- |
+| GTK3 X11 | Linux GTK3 x11 | JUnit + API/JNI + visible-screen and resource gates |
+| GTK4 X11 | Linux GTK4 x11 | same plus GTK4-specific regressions |
+| GTK4 Wayland | Linux GTK4 wayland | compositor/scale/clip/selection regressions |
+| Windows | Win32 x86_64 | native load, JUnit, API/JNI and UI screenshots |
+| macOS Intel | Cocoa x86_64 | native load, JUnit, display-thread behavior |
+| macOS ARM | Cocoa aarch64 | native load, JUnit, display-thread behavior |
+
+A test case counts as executed only if the **backend's current run** emitted
+a valid, nonempty JUnit XML report. Keep tests, failures, errors and skips
+separate. Source inventory and the number of test files do **not** establish
+method/line/branch coverage. Do not substitute `Control.print` screenshots
+for actual screen-captured pixels or use a virtual Tree's Java facade count
+as the native row-count/resource proof.
+
+For atomized/new M3 code, aim for at least **90% line and branch coverage**,
+with a **99% objective** for release-critical contract atoms, verified using
+real instrumented reports (e.g. JaCoCo XML) and documented exclusions.
+The 99% figure appearing in older viewport design documents is a **target**,
+not independently verified against the current master. The current
+`tools/release/readiness.py` checks **JaCoCo report-wide totals** only;
+report-wide 90% does *not* prove 90% for each changed behavioral atom.
+Per-method/atom coverage and scope completeness need separate source-pinned
+review before product release. Unmeasured coverage must remain `PENDING`.
+JUnit green + zero pixel-differential errors + matched native builds +
+measured CPU/heap/RSS are independently necessary.
+
+## Read-only release surface verifier
+
+The included Python stdlib tool checks current OSGi naming and required
+CI/test/docs anchors. Its default invocation is source-only and **does not
+claim UI tests or code coverage passed**.
+
+```sh
+python3 -m unittest discover -s tools/release -p 'test_*.py' -v
+python3 tools/release/readiness.py --root .
+```
+
+Source-only mode keeps this invocation and succeeds when its source anchors
+are present; it always reports `surface_ready: false` and
+`release_admitted: false`. The Python tests use synthetic fixtures. Their
+coverage measures this verifier, not SWT widgets or native backends. The
+independent Java candidate-packaging suite is described in the
+[packaging guide](RELEASE_PACKAGING.md).
+
+After running *all six* real backend matrix jobs for one immutable source
+commit and one workflow run/attempt, export their complete JUnit XML trees
+and the aggregated JaCoCo XML. Capture the report-binding manifest with those
+reports. Keep reports, the manifest and verifier output **outside the source
+checkout**. The following command is a **template**, not a command that has
+been run here; replace `FULL_LOWERCASE_RELEASE_COMMIT` with the expected
+40-character commit ID from the release workflow:
+
+```sh
+python3 tools/release/readiness.py --root . --release \
+  --source-sha FULL_LOWERCASE_RELEASE_COMMIT \
+  --evidence-manifest /evidence/report-binding.json \
+  --junit gtk3-x11=/evidence/gtk3-x11 \
+  --junit gtk4-x11=/evidence/gtk4-x11 \
+  --junit gtk4-wayland=/evidence/gtk4-wayland \
+  --junit win32=/evidence/win32 \
+  --junit cocoa-x86_64=/evidence/cocoa-x86_64 \
+  --junit cocoa-aarch64=/evidence/cocoa-aarch64 \
+  --jacoco /evidence/jacoco.xml --min-line 0.90 --min-branch 0.90
+```
+
+Release mode requires both new arguments. It checks that `--root` is the Git
+worktree root, `HEAD` equals the expected commit, and Git reports no staged,
+unstaged, deleted or nonignored untracked files. Ignored build outputs remain
+outside this cleanliness check; it does not prove complete build-input
+provenance. Missing/failed backend tests, all-skipped backends, missing JaCoCo
+counters and coverage below 90% still fail independently of manifest binding.
+
+### Source/report binding contract
+
+The manifest is strict JSON with no duplicate or unknown keys. Its top-level
+fields are:
+
+| Field | Required value |
+| --- | --- |
+| `schema` | `SWT_REPORT_BINDING_V1` |
+| `repository` | `hsoliwal/eclipse.platform.swt` |
+| `source_sha` | The same full lowercase commit as `--source-sha` and the checked-out `HEAD` |
+| `run_id` | A positive integer GitHub Actions run ID |
+| `run_attempt` | A positive integer run attempt |
+| `run_url` | Exactly `https://github.com/hsoliwal/eclipse.platform.swt/actions/runs/<run_id>/attempts/<run_attempt>` |
+| `junit` | An object with exactly the six backend keys in the matrix below |
+| `jacoco` | The coverage binding record described below |
+
+Each `junit` record must contain exactly `backend`, `source_sha`, `run_id`,
+`run_attempt`, and `files`. The backend value must equal its object key. Source,
+run and attempt must match the top-level values, including integer types.
+For example, the **template for the `win32` record** is:
+
+```json
+{
+  "backend": "win32",
+  "source_sha": "<full lowercase release commit>",
+  "run_id": 123456789,
+  "run_attempt": 2,
+  "files": [
+    {
+      "path": "TEST-org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_Display.xml",
+      "sha256": "<64 lowercase SHA-256 characters>"
+    }
+  ]
+}
+```
+
+Supply a record for every backend; this example is not a complete manifest:
+
+| Required JUnit key | Backend identity |
+| --- | --- |
+| `gtk3-x11` | GTK3 on X11 |
+| `gtk4-x11` | GTK4 on X11 |
+| `gtk4-wayland` | GTK4 on Wayland |
+| `win32` | Windows Win32 |
+| `cocoa-x86_64` | macOS Intel |
+| `cocoa-aarch64` | macOS ARM |
+
+`files` must exactly inventory the parser's `TEST-*.xml` files beneath the
+corresponding `--junit` directory. Paths are relative, canonical POSIX paths
+using `/`; an explicit XML-file argument uses that file's basename. Each entry
+has exactly `path` and `sha256`. Order does not matter. Missing, additional,
+duplicated, renamed or changed reports fail. Symlinks and reuse of a physical
+report file through another input are refused. Identical report bytes copied
+between backend inputs also fail; each backend must supply its own reports.
+The verifier parses and hashes the same byte snapshot for each XML file.
+
+The `jacoco` record contains exactly `source_sha`, `run_id`, `run_attempt`,
+`backends`, and `files`. Its source/run/attempt must match the top-level values.
+Its `backends` must be this ordered list:
+
+```json
+["gtk3-x11", "gtk4-x11", "gtk4-wayland", "win32", "cocoa-x86_64", "cocoa-aarch64"]
+```
+
+Its `files` contains exactly one `path`/`sha256` entry for the basename and bytes
+of the `--jacoco` XML. A correct report binding cannot waive test failures or
+coverage floors, and report-wide coverage cannot establish per-atom scope.
+
+### What a successful result establishes
+
+`surface_ready: true` means only that naming/source anchors, supplied report
+results, thresholds, clean checkout and **declared content binding** agree.
+`report_binding` records the checked commit, manifest digest and run identity,
+and explicitly reports `producer_authenticity: "not-verified"`. The tool makes
+no GitHub API query or signature verification. A consistent caller-written
+manifest can describe synthetic reports; it does not prove that the reports
+were produced by the named backend, source revision or workflow. Do not
+manufacture a receipt after the fact to turn arbitrary XML into qualification.
+
+The result therefore **always contains `release_admitted: false`**, including
+when the process exits zero. It also names the remaining release gates. A
+publisher must not treat this tool's exit code or `surface_ready` as product
+release authorization. Independently authenticate the producer/run/artifact
+provenance and review the exact commit, Maven/JDK/OS/architecture, native
+hashes, build/test commands and instrumentation scope before using the report
+set as runtime evidence. API/JNI, native/UI, visible-screen and resource gates
+remain separate requirements below.
+
+## CI source identity and evidence scope
+
+The [release-surface workflow](../.github/workflows/m3-release-readiness.yml)
+uses the same source selection in both jobs: the explicit PR head for
+`pull_request`, or the event commit for `push` and `workflow_dispatch`.
+GitHub's default PR checkout and `github.sha` identify the temporary merge
+commit, so neither is substituted for a PR-head evidence identity. See
+[GitHub's event contract](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request).
+Both jobs assert the checked-out `HEAD`, record `SOURCE_COMMIT` and
+`SOURCE_TREE`, and upload those records with their test/report artifacts.
+Artifact names include the selected full source SHA and `run_attempt`, so
+a retry preserves the previous attempt's evidence.
+
+The following describes configured applicability, subject to GitHub accepting
+and scheduling the event. PR and push events must also match a path filter:
+
+| Event | Source checked by this workflow | Jobs in this workflow |
+| --- | --- | --- |
+| PR targeting `release/**` | PR head commit | Source verifier and Java candidate packager |
+| PR targeting `master` | PR head commit | Source verifier; the master packaging gate is in `build-swt-jars.yml` |
+| Push to `release/**` | Pushed commit | Source verifier and Java candidate packager |
+| Push to `master` | Pushed commit | Source verifier; the master packaging gate is in `build-swt-jars.yml` |
+| Manual dispatch | Selected event commit | Source verifier and Java candidate packager |
+
+PR and push filters include both release-tool directories, their guides,
+the source naming/documentation anchors and both packaging/readiness workflow
+files. A release-branch push containing only a packager or packaging-guide
+change therefore reaches the candidate job. Checking an explicit PR head
+does not qualify a later merge result: merge the current base additively and
+repeat qualification on the final release commit. The source records are
+review aids, not authenticated native-backend report receipts.
+
+### Current validation limits (2026-11-07)
+
+A local clean Git merge of candidate head
+`4a7539049ea84d72fb545abdb648bcb4389aa93b` and release base
+`ffae7cacb52a9c1670a557f6eff92c324bf0ca9c` produced tree
+`0decfeef523c5f36013f2f59f211b5755790a232`, matching GitHub's merge tree.
+Before the CI/documentation corrections in this section, that tree passed
+all **39** verifier unit tests and source-anchor inspection, then a fresh
+Java 21 Maven `clean verify` passed all **33** candidate-packager tests with
+**173/176 lines (98.30%)** and **123/132 branches (93.18%)** covered.
+Those counters cover the candidate packaging tool only. Neither its source,
+POM nor test module changed in the CI/documentation corrections. The source
+inspection still reports `surface_ready: false`, `release_admitted: false`
+and all six native backends pending. GTK development packages and Xvfb were
+unavailable in this workspace, so no native/GUI qualification was performed.
+
+Hosted execution remains a separate gate. At 2026-11-07 12:00 UTC,
+[PR #323](https://github.com/hsoliwal/eclipse.platform.swt/pull/323)'s published
+head `4a7539049ea84d72fb545abdb648bcb4389aa93b` and its then-current merge ref
+had zero Actions runs and zero check runs. The repository's workflow list
+did not include `m3-release-readiness.yml`, and its metadata endpoint returned
+404. These observations do not establish why a run was absent. Configuring
+branch/path selection and validating it locally does not prove that GitHub
+registered or executed the workflow. Require actual successful hosted job
+records and artifacts for the final source before clearing this gate.
+
+## Coordination with current release-preparation PRs (2026-11-07)
+
+This PR is the **source/report-intake foundation**, not a release bundle.
+Review and integrate the other candidate work additively instead of
+replacing or double-registering existing tests:
+
+- [#322](https://github.com/hsoliwal/eclipse.platform.swt/pull/322):
+  default-suite omission inventory, Java 21 headless checks, and
+  independently executed widget/heap contracts; its source inventory
+  includes test-like classes outside the default `AllTests` graph.
+- [#323](https://github.com/hsoliwal/eclipse.platform.swt/pull/323):
+  Windows/macOS-only candidate packaging, archive checks and explicit
+  refusal of entirely skipped JUnit backends; this is stacked on #321.
+  Reconcile overlapping `tools/release/readiness.py` updates before merge.
+- [#324](https://github.com/hsoliwal/eclipse.platform.swt/pull/324):
+  the 26 ordinary M3 test classes (219 methods at frozen head
+  `494247dc23f4115abf5a3bb358c5f6eeb8831d21`; a source inventory),
+  Java 21 matrix additions and focused headless evidence. Its pinned
+  `HEADLESS_20261107.json` records **77/77** headless tests,
+  **926/1,024 (90.43%)** covered lines and **745/854 (87.24%)**
+  covered branches, only for ten named source files at baseline
+  `62460082d7caa06b21c49da99abbab53f73b3ffc`.
+
+The **87.24% branch result is below the 90% release minimum**.
+It cannot qualify all changed atoms, the current composite PR head, or
+native GUI backends. Do not promote a source-only proof, a packaging job
+with `-DskipTests=true`, or a historical report to `PASS`.
+After these PRs converge, regenerate a single coverage inventory and
+source-pinned evidence pack from the final source tree and report all
+missed branches, exclusions, skipped tests, JNI/lifecycle and platform
+gates explicitly.
+
+## Proposed RowExtents coverage supplement
+
+The unapplied release supplement preserves all existing tests and adds four
+deterministic `Test_M3RowExtents` methods for SMART and AUTO alignment, exact
+anchoring boundaries and sparse maximum row counts with long offsets. Its reviewed
+inventory is 26 ordinary classes / 223 methods and, with the seven existing
+differential classes and retention class, 34 classes / 240 methods. These are
+proposed source counts; executed JUnit results require their separate reports. The exact-report contract
+requires 240 viewport passes or 239 original-mode passes plus the one existing
+RowMath skip; all 11 recorded-oracle methods remain required in both modes.
+
+Any focused Java17 JUnit and JaCoCo reports must bind the exact leaf source,
+test and classfile hashes; they do not qualify the default suite or native
+backends. An independent model harness is not a JUnit/provider substitute.
+Preserve the original 77-test receipt and its identities; qualify the final
+combined source through Java21/25, provider, instrumentation and native gates.
+
+## Still required before a tag
+
+An upstream-diff review; binary/API Tools comparison; JNI generator diff;
+native rebuild per OS/architecture; six platform UI/JUnit runs;
+visible-screen geometry/repaint/clip tests; resource lifetime/CPU/heap/RSS
+probes; signed/legal provenance; exact release notes, immutable tag and
+SHA-256 evidence. None is inferred from this preparation PR.

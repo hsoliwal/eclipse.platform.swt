@@ -185,8 +185,9 @@ public final class M3ItemRange {
 		if (sorted [0] < 0) SWT.error (SWT.ERROR_INVALID_ARGUMENT);
 		M3ItemRange [] ranges = new M3ItemRange [runs (sorted)];
 		int run = 0, first = sorted [0];
+		/* Widen adjacency bounds so repeated Integer.MAX_VALUE indices stay in one run. */
 		for (int i = 1; i <= sorted.length; i++) {
-			if (i < sorted.length && sorted [i] <= sorted [i - 1] + 1) continue;
+			if (i < sorted.length && sorted [i] <= sorted [i - 1] + 1L) continue;
 			ranges [run++] = new M3ItemRange (first, sorted [i - 1]);
 			if (i < sorted.length) first = sorted [i];
 		}
@@ -207,7 +208,7 @@ public final class M3ItemRange {
 	private static int runs (int [] sorted) {
 		int runs = 1;
 		for (int i = 1; i < sorted.length; i++) {
-			if (sorted [i] > sorted [i - 1] + 1) runs++;
+			if (sorted [i] > sorted [i - 1] + 1L) runs++;
 		}
 		return runs;
 	}
