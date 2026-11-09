@@ -17,6 +17,7 @@ package org.eclipse.swt.custom;
 import org.eclipse.swt.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
@@ -82,6 +83,8 @@ public class TableEditor extends ControlEditor {
 	int column = -1;
 	ControlListener columnListener;
 	Runnable timer;
+	/* lays the editor out once when the table can be seen again; added on the first deferred relayout */
+	Listener catchUp;
 	static final int TIMEOUT = 1500;
 /**
 * Creates a TableEditor for the specified Table.
@@ -159,6 +162,9 @@ Rectangle computeBounds () {
 @Override
 public void dispose () {
 	if (table != null && !table.isDisposed()) {
+		if (catchUp != null) {
+			table.removeListener(VisibilityGate.CATCH_UP, catchUp);
+		}
 		if (this.column > -1 && this.column < table.getColumnCount()){
 			TableColumn tableColumn = table.getColumn(this.column);
 			tableColumn.removeControlListener(columnListener);
@@ -169,6 +175,7 @@ public void dispose () {
 	item = null;
 	column = -1;
 	timer = null;
+	catchUp = null;
 	super.dispose();
 }
 /**
@@ -198,6 +205,14 @@ void resize () {
 	if (table != null) {
 		Display display = table.getDisplay();
 		display.timerExec(-1, timer);
+		if (VisibilityGate.defer (table, VisibilityGate.MEASURE)) {
+			// the table cannot be seen: no relayout timer; one layout on its catch-up //FLLDCIM: MARK — every-widget TableEditor H
+			if (catchUp == null) {
+				catchUp = e -> layout();
+				table.addListener(VisibilityGate.CATCH_UP, catchUp);
+			}
+			return;
+		}
 		display.timerExec(TIMEOUT, timer);
 	}
 }

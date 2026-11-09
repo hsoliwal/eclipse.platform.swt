@@ -17,6 +17,7 @@ package org.eclipse.swt.custom;
 import org.eclipse.swt.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
@@ -81,6 +82,8 @@ public class TreeEditor extends ControlEditor {
 	ControlListener columnListener;
 	TreeListener treeListener;
 	Runnable timer;
+	/* lays the editor out once when the tree can be seen again; added on the first deferred relayout */
+	Listener catchUp;
 	static final int TIMEOUT = 1500;
 
 /**
@@ -194,6 +197,9 @@ Rectangle computeBounds () {
 @Override
 public void dispose () {
 	if (tree != null && !tree.isDisposed()) {
+		if (catchUp != null) {
+			tree.removeListener(VisibilityGate.CATCH_UP, catchUp);
+		}
 		if (this.column > -1 && this.column < tree.getColumnCount()){
 			TreeColumn treeColumn = tree.getColumn(this.column);
 			treeColumn.removeControlListener(columnListener);
@@ -208,6 +214,7 @@ public void dispose () {
 	item = null;
 	column = 0;
 	timer = null;
+	catchUp = null;
 	super.dispose();
 }
 
@@ -242,6 +249,14 @@ void resize () {
 	if (tree != null) {
 		Display display = tree.getDisplay();
 		display.timerExec(-1, timer);
+		if (VisibilityGate.defer (tree, VisibilityGate.MEASURE)) {
+			// the tree cannot be seen: no relayout timer; one layout on its catch-up //FLLDCIM: MARK — every-widget TreeEditor H
+			if (catchUp == null) {
+				catchUp = e -> layout();
+				tree.addListener(VisibilityGate.CATCH_UP, catchUp);
+			}
+			return;
+		}
 		display.timerExec(TIMEOUT, timer);
 	}
 }
