@@ -44,6 +44,8 @@ import org.eclipse.swt.internal.win32.*;
 public class ProgressBar extends Control {
 	static final int DELAY = 100;
 	static final int TIMER_ID = 100;
+	/* the marquee timer was stopped because nobody could see the bar; the visibility catch-up restarts it */
+	boolean marqueeParked;
 	static final long ProgressBarProc;
 	static final TCHAR ProgressBarClass = new TCHAR (OS.PROGRESS_CLASS, true);
 	static {
@@ -152,6 +154,9 @@ void createHandle () {
 	}
 
 	startTimer ();
+	if ((style & SWT.INDETERMINATE) != 0 && EffectiveVisibility.ENABLED) {
+		addListener (VisibilityGate.CATCH_UP, event -> resumeMarquee ()); //FLLDCIM: MARK — every-widget ProgressBar H
+	}
 }
 
 @Override
@@ -246,6 +251,13 @@ void startTimer () {
 		} else {
 			OS.SendMessage (handle, OS.PBM_SETMARQUEE, 1, DELAY);
 		}
+	}
+}
+
+void resumeMarquee () {
+	if (marqueeParked && !isDisposed ()) {
+		marqueeParked = false;
+		startTimer ();
 	}
 }
 
@@ -440,6 +452,17 @@ LRESULT WM_TIMER (long wParam, long lParam) {
     if (result != null) {
         return result;
     }
+	if ((style & SWT.INDETERMINATE) != 0 && EffectiveVisibility.ENABLED
+			&& EffectiveVisibility.deferKinds (this, EffectiveVisibility.DIRTY_PAINT)) {
+		/*
+		* A marquee nobody can see (rule 24): stop its timer instead of
+		* stepping and invalidating every 100 ms; the gate recorded the
+		* paint, and its catch-up restarts the marquee.
+		*/
+		marqueeParked = true; //FLLDCIM: MARK — every-widget ProgressBar H
+		stopTimer ();
+		return LRESULT.ZERO;
+	}
 	if ((style & SWT.INDETERMINATE) != 0) {
 		int bits = OS.GetWindowLong (handle, OS.GWL_STYLE);
 		if ((bits & OS.PBS_MARQUEE) == 0) {
