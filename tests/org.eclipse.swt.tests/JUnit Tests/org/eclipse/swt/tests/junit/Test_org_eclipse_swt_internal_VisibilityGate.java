@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Scrollable;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.jupiter.api.AfterEach;
@@ -262,5 +263,37 @@ public class Test_org_eclipse_swt_internal_VisibilityGate {
 		assertEquals (1, caught [0], "one catch-up event");
 		assertEquals (VisibilityGate.MEASURE | VisibilityGate.DATA, caught [1] & (VisibilityGate.MEASURE | VisibilityGate.DATA));
 		assertFalse (VisibilityGate.defer (composite, VisibilityGate.MEASURE), "visible: work proceeds");
+	}
+
+	@Test
+	public void test_hiddenIndeterminateProgressBarParksItsMarquee () throws Exception {
+		ProgressBar bar = new ProgressBar (shell, SWT.INDETERMINATE);
+		int [] paints = new int [1];
+		bar.addListener (SWT.Paint, e -> paints [0]++);
+		shell.open ();
+		spin (500);
+		assertTrue (paints [0] > 0, "the marquee paints while shown");
+		assertFalse (marqueeParked (bar));
+		bar.setVisible (false);
+		spin (400);
+		assertTrue (marqueeParked (bar), "a marquee nobody can see stops its timer");
+		paints [0] = 0;
+		bar.setVisible (true);
+		spin (600);
+		assertFalse (marqueeParked (bar), "the catch-up restarts the marquee");
+		assertTrue (paints [0] > 1, "the marquee animates again after the show, paints " + paints [0]);
+	}
+
+	void spin (int milliseconds) throws InterruptedException {
+		long end = System.currentTimeMillis () + milliseconds;
+		while (System.currentTimeMillis () < end) {
+			if (!display.readAndDispatch ()) Thread.sleep (5);
+		}
+	}
+
+	static boolean marqueeParked (ProgressBar bar) throws ReflectiveOperationException {
+		java.lang.reflect.Field field = ProgressBar.class.getDeclaredField ("marqueeParked");
+		field.setAccessible (true);
+		return field.getBoolean (bar);
 	}
 }
