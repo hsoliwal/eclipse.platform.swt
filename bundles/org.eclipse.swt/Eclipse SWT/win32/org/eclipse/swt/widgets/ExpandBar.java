@@ -841,6 +841,15 @@ void scrollWindow (int updateY) {
 			ViewportPlane.exposeDeferred (this);
 		}
 	}
+	if (EffectiveVisibility.ENABLED && updateY != 0 && !isDisposed ()) {
+		//FLLDCIM: VISIBILITY - ScrollWindowEx moves child windows with WM_MOVE only (no WM_WINDOWPOSCHANGED, the gate's
+		//FLLDCIM: VISIBILITY - geometry hook): recompute the children's visibility and catch a deferred child up now
+		Control [] moved = children != null ? children : _getChildren ();
+		for (Control child : moved) {
+			if (!child.isDisposed ()) EffectiveVisibility.invalidate (child);
+		}
+		VisibilityCatchUp.shown (this);
+	}
 }
 
 /*
