@@ -515,7 +515,10 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		Method send = os.getMethod ("SendMessage", long.class, int.class, long.class, long.class);
 		int tvmExpand = os.getField ("TVM_EXPAND").getInt (null);
 		long expand = os.getField ("TVE_EXPAND").getInt (null);
-		int threshold = (int) Tree.class.getDeclaredMethod ("pageBatchThreshold").invoke (lazy);
+		//FLLDCIM: TOP - pageBatchThreshold is package-private in Tree; reflective access needs setAccessible
+		Method thresholdMethod = Tree.class.getDeclaredMethod ("pageBatchThreshold");
+		thresholdMethod.setAccessible (true);
+		int threshold = (int) thresholdMethod.invoke (lazy);
 		TreeItem small = lazy.getItem (0);
 		send.invoke (null, (long) field (lazy, "handle"), tvmExpand, expand, (long) field (small, "handle"));
 		drain (source);

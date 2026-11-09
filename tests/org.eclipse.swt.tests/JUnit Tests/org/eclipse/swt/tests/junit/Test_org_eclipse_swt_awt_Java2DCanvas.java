@@ -329,6 +329,9 @@ public class Test_org_eclipse_swt_awt_Java2DCanvas {
 				canvas.setViewTransform (AffineTransform.getTranslateInstance (-frame, -frame * 3));
 				paint (canvas, gc, 0, 0, 80, 60);
 			}
+			//FLLDCIM: TOP - a GC on an Image keeps a replay log (GC.operations, data.reapplicable) that holds copies of the
+			//FLLDCIM: TOP - clips and images drawn into it until the GC is disposed; count what outlives the target GC
+			gc.dispose ();
 			Set<Object> remaining = nativeObjects (); remaining.removeAll (baseline);
 			assertTrue (remaining.isEmpty (), "transient Image/GC/Region/Transform must be disposed: " + remaining);
 		} finally {

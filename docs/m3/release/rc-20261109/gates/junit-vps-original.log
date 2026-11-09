@@ -1,0 +1,88 @@
+stty: /dev/tty: No such device or address
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  └─ Test_org_eclipse_swt_widgets_VirtualPageSource ✔
+│     ├─ test_tableEachRowFetchedOnceAcrossScrollAwayAndBackAndDataReproduced() ✘ data handle applied from the block ==> expected: <35> but was: <null>
+│     ├─ test_tabFolderVirtualCreatesOnlySelectedTab() ✔
+│     ├─ test_treePaintNeverMaterializesRowsWithoutApiCalls() ✔
+│     ├─ test_treeUnknownChildrenFetchedOnExpandWithMaskBitPlaceholder() ✔
+│     ├─ test_loadDebounceFetchesOnlyWhereAJumpStops() ✔
+│     ├─ test_ctabFolderDefaultUnchanged() ✔
+│     ├─ test_constructorAndAttachArgumentChecks() ✔
+│     ├─ test_tabFolderDefaultUnchanged() ✔
+│     ├─ test_treeBulkChildCountIsBatchedWithPreciseDamageOnly() ✔
+│     ├─ test_tableTransientFacadesAreReleasedAndReproduced() ✘ materialized item is not in storage
+│     ├─ test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain() ✘ evicted blocks were swapped out ==> expected: <true> but was: <false>
+│     ├─ test_invalidateRefetchesAndKeepFacadesNeverReleases() ✘ rows re-asked after invalidate ==> expected: <1:0> but was: <0:0>
+│     ├─ test_tablePaintNeverMaterializesItems() ✔
+│     ├─ test_hiddenTableFetchesNothing() ✔
+│     ├─ test_treeExactCountsIdenticalToSynchronousSetData() ✔
+│     ├─ test_tableVisibleFirstAndCancelledOutsideOverscan() ✔
+│     ├─ test_tableResultsIdenticalToSynchronousSetData() ✔
+│     └─ test_ctabFolderVirtualCreatesOnlySelectedTab() ✔
+└─ JUnit Vintage ✔
+
+Failures (4):
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_tableEachRowFetchedOnceAcrossScrollAwayAndBackAndDataReproduced()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_tableEachRowFetchedOnceAcrossScrollAwayAndBackAndDataReproduced', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: data handle applied from the block ==> expected: <35> but was: <null>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertSame.failNotSame(AssertSame.java:50)
+       org.junit.jupiter.api.AssertSame.assertSame(AssertSame.java:35)
+       org.junit.jupiter.api.Assertions.assertSame(Assertions.java:2873)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.test_tableEachRowFetchedOnceAcrossScrollAwayAndBackAndDataReproduced(Test_org_eclipse_swt_widgets_VirtualPageSource.java:341)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_tableTransientFacadesAreReleasedAndReproduced()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_tableTransientFacadesAreReleasedAndReproduced', methodParameterTypes = '']
+    => java.lang.IllegalStateException: materialized item is not in storage
+       org.eclipse.swt.widgets.VirtualItemStorage.flagOfIdentity(VirtualItemStorage.java:277)
+       java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.unpin(Test_org_eclipse_swt_widgets_VirtualPageSource.java:140)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.test_tableTransientFacadesAreReleasedAndReproduced(Test_org_eclipse_swt_widgets_VirtualPageSource.java:264)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: evicted blocks were swapped out ==> expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain(Test_org_eclipse_swt_widgets_VirtualPageSource.java:460)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_invalidateRefetchesAndKeepFacadesNeverReleases()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_invalidateRefetchesAndKeepFacadesNeverReleases', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: rows re-asked after invalidate ==> expected: <1:0> but was: <0:0>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+       org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+       org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1156)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.test_invalidateRefetchesAndKeepFacadesNeverReleases(Test_org_eclipse_swt_widgets_VirtualPageSource.java:376)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+Test run finished after 4583 ms
+[         4 containers found      ]
+[         0 containers skipped    ]
+[         4 containers started    ]
+[         0 containers aborted    ]
+[         4 containers successful ]
+[         0 containers failed     ]
+[        18 tests found           ]
+[         0 tests skipped         ]
+[        18 tests started         ]
+[         0 tests aborted         ]
+[        14 tests successful      ]
+[         4 tests failed          ]
+

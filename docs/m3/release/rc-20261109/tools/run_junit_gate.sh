@@ -3,6 +3,7 @@
 # The fork DLLs are extracted from the jar into a fresh directory passed as -Dswt.library.path, so no stale
 # ~/.swt/lib copy can be loaded. -Xcheck:jni is on (same as the #325 Surefire argLine).
 # GATE_EXTRA_CP (optional): extra classpath after the SWT jar (SVG fragment + JSVG, M3 render tree + Skija).
+# GATE_JVM_ARGS (optional): extra JVM system properties (space separated, no spaces inside values).
 # Usage: run_junit_gate.sh <name> <jar> <test-classes> <evidence-dir> <timeout-s> <junit selectors...>
 set -u
 NAME=$1; JAR=$2; TC=$3; EV=$4; TO=$5; shift 5
@@ -14,7 +15,7 @@ sha256sum "$RUN"/natives/*.dll | sed "s#$RUN/natives/##" > "$EV/junit-$NAME.nati
 LOG=$RUN/run.log
 start=$(date -Iseconds)
 bash C:/m3-superset/tools/ui_lock.sh "rc-20261109-$NAME" bash C:/m3-superset/tools/hidden_java.sh "$TO" "$LOG" \
-  -Xmx1536m -Xcheck:jni -Dswt.library.path="$RUN/natives" -Djava.io.tmpdir=F:/m3-scratch/tmp \
+  -Xmx1536m -Xcheck:jni ${GATE_JVM_ARGS:-} -Dswt.library.path="$RUN/natives" -Djava.io.tmpdir=F:/m3-scratch/tmp \
   -jar "$CS" execute -cp "$TC;$JAR${GATE_EXTRA_CP:+;$GATE_EXTRA_CP}" "$@" --disable-banner --details=tree --reports-dir="$RUN/reports"
 rc=$?
 end=$(date -Iseconds)

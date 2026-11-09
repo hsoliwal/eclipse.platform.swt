@@ -1,0 +1,113 @@
+stty: /dev/tty: No such device or address
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  ├─ Test_org_eclipse_swt_widgets_VirtualPageSource ✔
+│  │  ├─ test_tableEachRowFetchedOnceAcrossScrollAwayAndBackAndDataReproduced() ✔
+│  │  ├─ test_tabFolderVirtualCreatesOnlySelectedTab() ✔
+│  │  ├─ test_treePaintNeverMaterializesRowsWithoutApiCalls() ✘ root rows painted without TreeItems ==> expected: <0> but was: <22>
+│  │  ├─ test_treeUnknownChildrenFetchedOnExpandWithMaskBitPlaceholder() ✘ the loading child is a mask bit, not a TreeItem ==> expected: <22> but was: <29>
+│  │  ├─ test_loadDebounceFetchesOnlyWhereAJumpStops() ✔
+│  │  ├─ test_ctabFolderDefaultUnchanged() ✔
+│  │  ├─ test_constructorAndAttachArgumentChecks() ✔
+│  │  ├─ test_tabFolderDefaultUnchanged() ✔
+│  │  ├─ test_treeBulkChildCountIsBatchedWithPreciseDamageOnly() ✘ only an operation larger than one screen is batched ==> expected: <1> but was: <0>
+│  │  ├─ test_tableTransientFacadesAreReleasedAndReproduced() ✔
+│  │  ├─ test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain() ✘ evicted blocks were swapped out ==> expected: <true> but was: <false>
+│  │  ├─ test_invalidateRefetchesAndKeepFacadesNeverReleases() ✔
+│  │  ├─ test_tablePaintNeverMaterializesItems() ✔
+│  │  ├─ test_hiddenTableFetchesNothing() ✔
+│  │  ├─ test_treeExactCountsIdenticalToSynchronousSetData() ✔
+│  │  ├─ test_tableVisibleFirstAndCancelledOutsideOverscan() ✔
+│  │  ├─ test_tableResultsIdenticalToSynchronousSetData() ✔
+│  │  └─ test_ctabFolderVirtualCreatesOnlySelectedTab() ✔
+│  ├─ Test_org_eclipse_swt_custom_StyledText_PagedContent ✔
+│  │  ├─ test_wrapThenLargeSetTextMeasuresOnlyTheWindow() ✔
+│  │  ├─ test_defaultContentIsPagedAndOptOutIsGap() ✔
+│  │  ├─ test_randomEditsMatchGapContent() ✔
+│  │  ├─ test_largeDocumentViewportMode() ✔
+│  │  └─ test_unmergedCrLfStaysSeparateAfterEdits() ✔
+│  ├─ Test_org_eclipse_swt_awt_Java2DCanvas ✔
+│  │  ├─ test_logicalExtentRejectsNegativeArgumentsWithoutChangingPriorState() ✔
+│  │  ├─ test_presentationRestoresCallerTransformStateAndExactClip() ✔
+│  │  ├─ test_wrongThreadDisposedResizeAndReentrantInvalidationContracts() ✔
+│  │  ├─ test_transformsAreDefensiveFiniteAndCanBeSingular() ✔
+│  │  ├─ test_rendererFailureDoesNotPresentPartialPixelsAndCanRecover() ✔
+│  │  ├─ test_ownedNativeResourcesReturnToBaselineAndObserverDetectsRetention() ✔
+│  │  ├─ test_alphaPresentationClearsPreviousNativePixels() ✔
+│  │  ├─ test_panPartialThenFullExposureMatchesFreshNativeTransfer() ✔
+│  │  ├─ test_screenPanCoverUncoverEqualsFreshFrame() ■ Assumption failed: viewport screenshot lane disabled
+│  │  ├─ test_partialInvalidationReusesPixelsAndExposureDoesNotInvokeRenderer() ✔
+│  │  └─ test_logicalExtentKeepsRasterVisibleSizedAndComposesOrigin() ✔
+│  └─ Test_M3SortFilterWidgets ✔
+│     ├─ test_virtualTreeFollowsTheSortedFilteredTree() ✔
+│     ├─ test_filterPopupEditsTheColumnFilter() ✔
+│     ├─ test_filterRowFollowsColumnsAndFilters() ✔
+│     ├─ test_headerClicksSortWithShiftAndShowPriorities() ✔
+│     └─ test_virtualTableAsksOnlyForResidentRows() ✔
+└─ JUnit Vintage ✔
+
+Failures (4):
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_treePaintNeverMaterializesRowsWithoutApiCalls()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_treePaintNeverMaterializesRowsWithoutApiCalls', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: root rows painted without TreeItems ==> expected: <0> but was: <22>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+       org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:166)
+       org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:664)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.test_treePaintNeverMaterializesRowsWithoutApiCalls(Test_org_eclipse_swt_widgets_VirtualPageSource.java:494)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_treeUnknownChildrenFetchedOnExpandWithMaskBitPlaceholder()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_treeUnknownChildrenFetchedOnExpandWithMaskBitPlaceholder', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: the loading child is a mask bit, not a TreeItem ==> expected: <22> but was: <29>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+       org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:166)
+       org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:664)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.test_treeUnknownChildrenFetchedOnExpandWithMaskBitPlaceholder(Test_org_eclipse_swt_widgets_VirtualPageSource.java:662)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_treeBulkChildCountIsBatchedWithPreciseDamageOnly()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_treeBulkChildCountIsBatchedWithPreciseDamageOnly', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: only an operation larger than one screen is batched ==> expected: <1> but was: <0>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+       org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+       org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.test_treeBulkChildCountIsBatchedWithPreciseDamageOnly(Test_org_eclipse_swt_widgets_VirtualPageSource.java:534)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+  JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain()
+    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain', methodParameterTypes = '']
+    => org.opentest4j.AssertionFailedError: evicted blocks were swapped out ==> expected: <true> but was: <false>
+       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain(Test_org_eclipse_swt_widgets_VirtualPageSource.java:460)
+       java.base/java.lang.reflect.Method.invoke(Method.java:580)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+Test run finished after 18260 ms
+[         7 containers found      ]
+[         0 containers skipped    ]
+[         7 containers started    ]
+[         0 containers aborted    ]
+[         7 containers successful ]
+[         0 containers failed     ]
+[        39 tests found           ]
+[         0 tests skipped         ]
+[        39 tests started         ]
+[         1 tests aborted         ]
+[        34 tests successful      ]
+[         4 tests failed          ]
+
