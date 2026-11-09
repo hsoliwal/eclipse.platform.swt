@@ -339,6 +339,31 @@ public class Test_org_eclipse_swt_internal_VisibilityGate {
 		assertEquals (0, tree.getListeners (VisibilityGate.CATCH_UP).length, "dispose removes the listener");
 	}
 
+	@Test
+	public void test_minimizedVirtualListParksItsSetDataPrefetch () throws Exception {
+		org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List (shell, SWT.VIRTUAL | SWT.V_SCROLL | SWT.BORDER);
+		int [] requests = new int [1];
+		list.addListener (SWT.SetData, e -> {
+			requests [0]++;
+			list.setItem (e.index, "row " + e.index);
+		});
+		list.setItemCount (100_000);
+		shell.open ();
+		spin (400);
+		assertTrue (requests [0] > 0, "shown: rows are requested");
+		shell.setMinimized (true);
+		spin (200);
+		requests [0] = 0;
+		list.setTopIndex (50_000);
+		spin (400);
+		assertEquals (0, requests [0], "minimized: no SetData prefetch");
+		assertEquals (0, timers ("org.eclipse.swt.widgets.List$$"), "minimized: no prefetch timer");
+		shell.setMinimized (false);
+		spin (400);
+		assertTrue (requests [0] > 0, "restored: the rows are requested");
+		assertEquals (50_000, list.getTopIndex ());
+	}
+
 	/* pending timers whose runnable class starts with the prefix (win32 Display.timerList) */
 	int timers (String prefix) throws ReflectiveOperationException {
 		java.lang.reflect.Field field = Display.class.getDeclaredField ("timerList");
