@@ -484,6 +484,15 @@ final class TreeViewport {
 	 * only rows that already have cached data are answered (no application code runs mid-rebuild);
 	 * every other row is declined and answered when it is painted in view.
 	 */
+	/** Whether the native row carries a live facade (its lParam names a TreeItem). */
+	private boolean hasFacade (long hItem) {
+		TVITEM tvItem = new TVITEM ();
+		tvItem.mask = OS.TVIF_HANDLE | OS.TVIF_PARAM;
+		tvItem.hItem = hItem;
+		if (OS.SendMessage (tree.handle, OS.TVM_GETITEM, 0, tvItem) == 0) return false;
+		return facadeOrNull ((int) tvItem.lParam) != null;
+	}
+
 	boolean answersDispInfo (long hItem) {
 		if (hItem != 0 && hItem == probeHandle) return true;
 		int entry = plan.entryOf (hItem);
@@ -499,6 +508,8 @@ final class TreeViewport {
 			TreeItem item = facadeOrNull ((int) tvItem.lParam);
 			return item != null && item.isCachedState ();
 		}
+		//FLLDCIM: RESIDENCY - a page-source row without a facade is answered by Tree.answerPageNode; no TreeItem for paint
+		if (tree.answersPageRowsWithoutFacade () && !hasFacade (hItem)) return true;
 		long key = plan.keyOf (entry);
 		TreeItem item = facade ((int) (key >> 32), (int) key);
 		if (item.isCachedState ()) return true;
@@ -539,7 +550,8 @@ final class TreeViewport {
 			if (!OS.TreeView_GetItemRect (tv, hItem, rect, false) || rect.bottom <= client.top || rect.top >= client.bottom) continue;
 			/* SWT answers TVN_GETDISPINFO only for a row with a facade (lParam), as a plain virtual Tree has for every painted row */
 			long key = plan.keyOf (entry);
-			facade ((int) (key >> 32), (int) key);
+			//FLLDCIM: RESIDENCY - a page-source row stays facade-free: Tree.answerPageNode answers its dispinfo (lParam -1)
+			if (!tree.answersPageRowsWithoutFacade ()) facade ((int) (key >> 32), (int) key);
 			tvItem.hItem = hItem;
 			OS.SendMessage (tv, OS.TVM_SETITEM, 0, tvItem);
 			plan.markMeasured (entry);

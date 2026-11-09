@@ -449,7 +449,9 @@ public class Test_org_eclipse_swt_widgets_VirtualPageSource {
 		source.attach (lazy);
 		shell.open ();
 		drain (source);
-		int [] tops = {0, 5_000, 10_000, 15_000, 20_000, 25_000, 0, 10_000, 20_000};
+		//FLLDCIM: TOP - with overscan 0 one jump loads one 64-row block; seven distinct blocks exceed the 6-block budget
+		//FLLDCIM: TOP - (six fit exactly and nothing was ever evicted), so the scroll-back really restores swapped blocks
+		int [] tops = {0, 5_000, 10_000, 15_000, 20_000, 25_000, 30_000, 0, 10_000, 20_000};
 		for (int top : tops) {
 			lazy.setTopIndex (top);
 			drain (source);

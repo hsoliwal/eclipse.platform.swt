@@ -812,6 +812,11 @@ boolean pagePaintNeedsFacade () {
 	return hooks (SWT.MeasureItem) || hooks (SWT.EraseItem) || hooks (SWT.PaintItem);
 }
 
+/** A page source answers painted rows from its block store (answerPageNode), so painting needs no TreeItem. */
+boolean answersPageRowsWithoutFacade () {
+	return pageSource != null && !pagePaintNeedsFacade ();
+}
+
 int pageChildIndex (long hParent, long hItem) {
 	if (hParent == pageCursorParent) {
 		if (hItem == pageCursorItem) return pageCursorIndex;
@@ -4687,6 +4692,8 @@ TreeItem getItem (NMTVCUSTOMDRAW nmcd) {
 		}
 	}
 	if (ignoreCustomDraw && id == -1) return null;
+	//FLLDCIM: RESIDENCY - a facade-free page-source row is drawn by the TreeView (no per-item font or colour to apply)
+	if (id == -1 && answersPageRowsWithoutFacade ()) return null;
 	return _getItem (nmcd.dwItemSpec, id);
 }
 

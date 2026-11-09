@@ -13,7 +13,7 @@ stty: /dev/tty: No such device or address
 │     ├─ test_tabFolderDefaultUnchanged() ✔
 │     ├─ test_treeBulkChildCountIsBatchedWithPreciseDamageOnly() ✔
 │     ├─ test_tableTransientFacadesAreReleasedAndReproduced() ✘ materialized item is not in storage
-│     ├─ test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain() ✘ evicted blocks were swapped out ==> expected: <true> but was: <false>
+│     ├─ test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain() ✔
 │     ├─ test_invalidateRefetchesAndKeepFacadesNeverReleases() ✘ rows re-asked after invalidate ==> expected: <1:0> but was: <0:0>
 │     ├─ test_tablePaintNeverMaterializesItems() ✔
 │     ├─ test_hiddenTableFetchesNothing() ✔
@@ -23,7 +23,7 @@ stty: /dev/tty: No such device or address
 │     └─ test_ctabFolderVirtualCreatesOnlySelectedTab() ✔
 └─ JUnit Vintage ✔
 
-Failures (4):
+Failures (3):
   JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_tableEachRowFetchedOnceAcrossScrollAwayAndBackAndDataReproduced()
     MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_tableEachRowFetchedOnceAcrossScrollAwayAndBackAndDataReproduced', methodParameterTypes = '']
     => org.opentest4j.AssertionFailedError: data handle applied from the block ==> expected: <35> but was: <null>
@@ -47,18 +47,6 @@ Failures (4):
        java.base/java.lang.reflect.Method.invoke(Method.java:580)
        java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
        java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-  JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain()
-    MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain', methodParameterTypes = '']
-    => org.opentest4j.AssertionFailedError: evicted blocks were swapped out ==> expected: <true> but was: <false>
-       org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
-       org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
-       org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
-       org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
-       org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
-       org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource.test_swapRestoresEvictedBlocksWithoutAskingTheFetcherAgain(Test_org_eclipse_swt_widgets_VirtualPageSource.java:460)
-       java.base/java.lang.reflect.Method.invoke(Method.java:580)
-       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
-       java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
   JUnit Jupiter:Test_org_eclipse_swt_widgets_VirtualPageSource:test_invalidateRefetchesAndKeepFacadesNeverReleases()
     MethodSource [className = 'org.eclipse.swt.tests.junit.Test_org_eclipse_swt_widgets_VirtualPageSource', methodName = 'test_invalidateRefetchesAndKeepFacadesNeverReleases', methodParameterTypes = '']
     => org.opentest4j.AssertionFailedError: rows re-asked after invalidate ==> expected: <1:0> but was: <0:0>
@@ -72,7 +60,7 @@ Failures (4):
        java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
        java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
 
-Test run finished after 4583 ms
+Test run finished after 2626 ms
 [         4 containers found      ]
 [         0 containers skipped    ]
 [         4 containers started    ]
@@ -83,6 +71,6 @@ Test run finished after 4583 ms
 [         0 tests skipped         ]
 [        18 tests started         ]
 [         0 tests aborted         ]
-[        14 tests successful      ]
-[         4 tests failed          ]
+[        15 tests successful      ]
+[         3 tests failed          ]
 
