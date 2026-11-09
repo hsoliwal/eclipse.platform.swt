@@ -1,2 +1,2 @@
 name	start	end	rc	jni_check_diagnostics	selectors
-svg-fragment	2026-11-09T16:29:49+05:30	2026-11-09T16:31:42+05:30	0	0	--select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_SVGRasterizer --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_graphics_GC --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_graphics_Image
+svg-fragment	2026-11-09T17:03:34+05:30	2026-11-09T17:06:37+05:30	0	0	--select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_internal_SVGRasterizer --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_graphics_GC --select-class org.eclipse.swt.tests.junit.Test_org_eclipse_swt_graphics_Image
