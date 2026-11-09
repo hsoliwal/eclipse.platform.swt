@@ -1,0 +1,557 @@
+stty: /dev/tty: No such device or address
+NATIVE_PROVIDER=win32; SWT_VERSION=4975; LIBRARY=4975r19; TEMP=F:/m3-scratch/tmp
+NATIVE_PROVIDER=win32; SWT_VERSION=4975; LIBRARY=4975r19; TEMP=F:/m3-scratch/tmp
+NATIVE_PROVIDER=win32; SWT_VERSION=4975; LIBRARY=4975r19; TEMP=F:/m3-scratch/tmp
+EMPTY_CLIP=Rectangle {0, 0, -1, 64}; STATS=ReplayStats[visitedNodes=0, drawnCommands=0, culledCommands=0, transformSwitches=0]; IMAGE_UNCHANGED=true
+EMPTY_CLIP=Rectangle {2147483647, -2147483648, 64, -1}; STATS=ReplayStats[visitedNodes=0, drawnCommands=0, culledCommands=0, transformSwitches=0]; IMAGE_UNCHANGED=true
+NATIVE_PROVIDER=win32; SWT_VERSION=4975; LIBRARY=4975r19; TEMP=F:/m3-scratch/tmp
+EMPTY_CLIP=Rectangle {0, 0, 0, 64}; STATS=ReplayStats[visitedNodes=0, drawnCommands=0, culledCommands=0, transformSwitches=0]; IMAGE_UNCHANGED=true
+NATIVE_PROVIDER=win32; SWT_VERSION=4975; LIBRARY=4975r19; TEMP=F:/m3-scratch/tmp
+EMPTY_CLIP=Rectangle {0, 0, 64, 0}; STATS=ReplayStats[visitedNodes=0, drawnCommands=0, culledCommands=0, transformSwitches=0]; IMAGE_UNCHANGED=true
+NATIVE_PROVIDER=win32; SWT_VERSION=4975; LIBRARY=4975r19; TEMP=F:/m3-scratch/tmp
+NATIVE_PROVIDER=win32; SWT_VERSION=4975; LIBRARY=4975r19; TEMP=F:/m3-scratch/tmp
+EMPTY_CLIP=Rectangle {0, 0, 0, 64}; STATS=ReplayStats[visitedNodes=0, drawnCommands=0, culledCommands=0, transformSwitches=0]; IMAGE_UNCHANGED=true
+selectAll+count 10M: 3 us; deselect one: 1 us
+Nov 09, 2026 5:34:42 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+INFO: ignoring swt.widget.mode value 'skija' for CoverageWidget
+Nov 09, 2026 5:34:42 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+INFO: ignoring swt.widget.mode value '' for CoverageWidget
+Nov 09, 2026 5:34:42 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+INFO: look and feel 'no-such-look' falls back to native: no look and feel named 'no-such-look'
+Nov 09, 2026 5:34:42 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+INFO: look and feel 'test-renderers-only' falls back to native: no look and feel named 'test-renderers-only'
+Nov 09, 2026 5:34:42 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+INFO: look and feel 'test-bad-colour' falls back to native: test-bad-colour: a = system(NOT_A_COLOR): not an SWT colour constant: NOT_A_COLOR
+Nov 09, 2026 5:34:45 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+INFO: theme test-live not reloaded from F:\m3-scratch\tmp\m3-theme15293520116776541766\live.properties: import: circular reference A.x -> A.x
+Nov 09, 2026 5:34:45 PM org.eclipse.swt.internal.SwtLog lambda$write$0
+INFO: theme test-live not reloaded from F:\m3-scratch\tmp\m3-theme15293520116776541766\live.properties: import: circular reference A.x -> A.x
+AFFINE_ACTUAL_SOURCE_PASS cases=82176 checks=328708 trace=c7489e5edbd5c241
+╷
+├─ JUnit Platform Suite ✔
+├─ JUnit Jupiter ✔
+│  ├─ StyledTextViewportProofTest ✔
+│  │  ├─ test_tenMillionLinesWordWrap() ■ Assumption failed: opt-in proof lane
+│  │  └─ test_tenMillionLinesFixedHeight() ■ Assumption failed: opt-in proof lane
+│  ├─ Test_DefaultContentDelimiterRegression ✔
+│  │  ├─ deleteBeforeAdjacentLoneDelimiters() ✔
+│  │  ├─ insertBeforeDelimitersAtEnd() ✔
+│  │  ├─ multilineInsertBeforeDelimiters() ✔
+│  │  ├─ insertBeforeDelimitersWithTrailingText() ✔
+│  │  ├─ insertBetweenDelimiters() ✔
+│  │  ├─ replacementRetainsDelimiterLineIdentity() ✔
+│  │  ├─ deletionEventCountsBothExistingLines() ✔
+│  │  └─ deleteCarriageReturnAtExistingBoundary() ✔
+│  ├─ Test_ItemResidency ✔
+│  │  ├─ residencyPinsBlockEvictionAndShift() ✔
+│  │  ├─ fileSwapStoreRecyclesBlocksAndNeverRevivesStaleIds() ✔
+│  │  ├─ paintPathNeverMaterializes() ✔
+│  │  ├─ editorStateSurvivesScroll() ✔
+│  │  ├─ telemetryFailureZeroesOptionalResidency() ✔
+│  │  ├─ lanesSurviveDestroyExactly() ✔
+│  │  ├─ callerOwnedNeverDiscardedWithoutSpill() ✔
+│  │  ├─ dataHandleIsNeverDestroyed() ✔
+│  │  ├─ roundTripReproducesEveryState() ✔
+│  │  ├─ tiersFollowViewportAndPressure() ✔
+│  │  ├─ recyclableHandlesOnlyAtBehaviourOnlySites() ✔
+│  │  ├─ pinnedIdentitySurvivesEvictionAndShift() ✔
+│  │  ├─ insertRemoveShiftLanesAndPayloadLikeAReferenceModel() ✔
+│  │  ├─ setDataIsNegotiatedVisibleOverscanPrefetchAndCancelled() ✔
+│  │  ├─ roundTripReproducesEveryStateThroughSwap() ✔
+│  │  └─ siteKeyIsFnv1a32OfOwnerNameDescAndBci() ✔
+│  ├─ Test_ItemResidencyCountAdmission ✔
+│  │  ├─ rejectsMaximumCountBeforeWraparound() ✔
+│  │  ├─ rejectedInsertPreservesPendingRequestsDirtyDataSelectionAndPinnedIdentity() ✔
+│  │  └─ lastRepresentableAppendStillSucceeds() ✔
+│  ├─ Test_ItemResidencyLanes ✔
+│  │  ├─ patternLanesMatchAReferenceModel() ✔
+│  │  ├─ bitSetMatchesJavaBitSetUnderRandomOperations() ✔
+│  │  ├─ growthUsesExactLengthUnderLowHeadroom() ✔
+│  │  ├─ treeShapeMatchesNaiveTreeOnOneMillionNodes() ✔
+│  │  └─ patternsAreRulesWithExceptionPrecedenceAndExactCounts() ✔
+│  ├─ Test_ItemResidencyPrint ✔
+│  │  └─ printPixelHashIdenticalAfterRoundTrip() ■ Assumption failed: capture of 'before' cut off by the desktop after 5 attempts
+│  ├─ Test_ViewportDamageScaledEndpoints ✔
+│  │  └─ endpointAdditionWidensBeforeZoomConversion() ✔
+│  ├─ Test_ViewportDifferentialHarness ✔
+│  │  ├─ sameSeedsGiveTheSameScript() ✔
+│  │  ├─ theReferenceOfThisSwtIsItsRequestedMode() ✔
+│  │  ├─ differingPixelsAreSavedAsPng() ✔
+│  │  ├─ recordingThenComparing() ✔
+│  │  ├─ aRelatedProbeIsComparedWithItsRelation() ✔
+│  │  ├─ lParamPacksTwoSignedWords() ✔
+│  │  ├─ regionsWithinAcceptsFewerOrSmallerPaints() ✔
+│  │  ├─ aDivergingStepFailsWithTheLog() ✔
+│  │  ├─ equalSubjectsPass() ✔
+│  │  └─ comparingWithoutARecordingSkips() ✔
+│  ├─ Test_ViewportPaintGraphEmptyClip ✔
+│  │  ├─ nonemptyControlStillPaintsRealPixels() ✔
+│  │  ├─ templateAndLayerEmptyReplaySkipCommands() ✔
+│  │  ├─ negativeAndOverflowOriginEmptyClipsRemainEmpty() ✔
+│  │  ├─ emptyReplaySkipsLargeRetainedGraphWithoutChangingState() ✔
+│  │  ├─ emptyAffineClipDoesNotVisitOrDraw() ✔
+│  │  ├─ emptyReplayPreservesArgumentAndDisposedGcFailures() ✔
+│  │  └─ emptyTextClipDoesNotVisitOrDraw() ✔
+│  ├─ Test_ViewportPlaneGeometry ✔
+│  │  ├─ theBandCoversTheVisiblePartAndKeepsItsBase() ✔
+│  │  ├─ theNativeRangeIsTheMeasuredOne() ✔
+│  │  ├─ childrenOfAPlaneAreRelativeToItsBase() ✔
+│  │  ├─ anInvisiblePlaneIsClampedOutOfSight() ✔
+│  │  ├─ aControlInsideTheBandHasNoBase() ✔
+│  │  └─ rebasesAreRare() ✔
+│  ├─ Test_ViewportRewriteContracts ✔
+│  │  ├─ rejectedTopologyRebindPreservesCoordinatesAndAggregates() ✔
+│  │  ├─ virtualTableTextDirectionPreservesSparseItemsAndExplicitPinning() ✔
+│  │  ├─ sharedViewportRowWindowRetainsRequestedCapacityAcrossClippingAndEmptyModels() ✔
+│  │  ├─ viewportScrollbarVisibilityConvergesAcrossAxes() ✔
+│  │  ├─ sharedViewportRuntimeSolvesPixelsAndTracksLayerDirtiness() ✔
+│  │  ├─ sharedViewportSelectionKeepsSparseAndComplementStateAcrossShifts() ✔
+│  │  ├─ projectionMatchesPreorderAfterCountAndExpansionChanges() ✔
+│  │  ├─ deepProjectionUsesIterationAndRetainsHiddenState() ✔
+│  │  ├─ sharedViewportRowWindowRejectsOverflowAtomically() ✔
+│  │  ├─ sparseProjectionKeepsTenMillionColdCoordinates() ✔
+│  │  ├─ sharedViewportRowWindowOwnsFlatAndTreeVisibleOverscanMath() ✔
+│  │  └─ virtualColumnsPackAndMeasureListenerKeepExposedIdentity() ✔
+│  ├─ Test_ViewportScrollBarGeometry ✔
+│  │  ├─ matchesNativeSamples() ✔
+│  │  ├─ draggingInvertsTheThumbStart() ✔
+│  │  ├─ hitTestFindsEveryPart() ✔
+│  │  ├─ edgesOfTheArithmetic() ✔
+│  │  ├─ noThumbInATrackShorterThanTheMinimum() ✔
+│  │  └─ mulDivRoundsHalfAwayFromZero() ✔
+│  ├─ Test_ViewportSelectionShifts ✔
+│  │  ├─ test_deletedGapMergesAndInsertSplits() ✔
+│  │  ├─ test_insertRemoveAgainstDenseOracle() ✔
+│  │  └─ test_overflowLeavesStateAndStorageIsReleased() ✔
+│  ├─ Test_VirtualCellLanes ✔
+│  │  ├─ lanesExistOnlyForValuesThatAreNotTheDefault() ✔
+│  │  ├─ seededScriptsAnswerLikeAMapOfCells() ✔
+│  │  └─ boundsAnswerDefaultsAndWritesAreRefused() ✔
+│  ├─ Test_VirtualListModel ✔
+│  │  ├─ randomOperationsAgreeWithNaiveOracle() ✔
+│  │  ├─ replacingTheMaximumWithEqualWidthKeepsTheIndexFresh() ✔
+│  │  ├─ widestIndexRebuildsOnlyWhenTheLastMaximumLeavesAndNeverRemeasures() ✔
+│  │  ├─ largeListKeepsItemsSelectionAndWidthConsistent() ✔
+│  │  ├─ topIndexStaysInsideTheScrollableRange() ✔
+│  │  └─ invalidArgumentsAreRejectedWithoutChangingState() ✔
+│  ├─ Test_VirtualListWidth ✔
+│  │  ├─ seededScriptsAnswerLikeAPlainList() ✔
+│  │  ├─ removingTheWidestMarksTheIndexStale() ✔
+│  │  ├─ aUniformLaneMeasuresOneSlotWithoutMaterializing() ✔
+│  │  └─ invalidArgumentsAreRefused() ✔
+│  ├─ Test_VirtualRowExtents ✔
+│  │  ├─ measurementReplacesTheEstimateAndAnchoringFollowsTheDonorRules() ✔
+│  │  ├─ largeListStaysConsistentWithBinarySearchOnPrefixSums() 30329 ms ✔
+│  │  ├─ alignmentChoosesTheSmallestMoveForAuto() ✔
+│  │  ├─ randomOperationsAgreeWithLinearScanOracle() ✔
+│  │  ├─ oversizedRowsAndSmartAlignmentFollowTheDonorRules() ✔
+│  │  └─ invalidArgumentsAreRejectedWithoutChangingState() ✔
+│  ├─ Test_VirtualRowWindowBounds ✔
+│  │  ├─ representableEndpointAndZeroLengthOperationsStayUnchanged() ✔
+│  │  ├─ insideWindowOverflowCannotWrapTheCommittedEndpoint() ✔
+│  │  ├─ disjointInsertsRemainNoOpsAndExistingRangeValidationStaysInForce() ✔
+│  │  ├─ beforeWindowOverflowCannotWrapTheCommittedEndpoint() ✔
+│  │  └─ overflowingNonresidentRemovalCannotDeleteResidentRows() ✔
+│  ├─ Test_VirtualRowWindowPlan ✔
+│  │  ├─ logicalInsertsAndRemovesKeepTheWindowAligned() ✔
+│  │  ├─ plansOfImpossibleWindowsAreRejected() ✔
+│  │  ├─ movesTouchOnlyTheRowsThatEnterOrLeave() ✔
+│  │  └─ randomMovesKeepTheWindowExact() ✔
+│  ├─ Test_VirtualSelectionModel_Hybrid ✔
+│  │  ├─ scatteredSelectionUsesTheBitmapAndClearLeavesIt() ✔
+│  │  ├─ randomSequencesAgreeWithTheRangeModel() ✔
+│  │  └─ selectAllOverTenMillionRowsIsConstant() ✔
+│  ├─ Test_VirtualTreeCoverage ✔
+│  │  ├─ defensiveTopologyChecksHoldOutsideTheirCallers() ✔
+│  │  ├─ aCorruptedSiblingChainIsDetected() ✔
+│  │  ├─ bindRejectsInvalidIdsParentsAndCycles() ✔
+│  │  ├─ subtreeRemovalRenumbersTheSurvivingParents() ✔
+│  │  ├─ commitsValidateTheirHandles() ✔
+│  │  ├─ wholesaleStateWritesTrackExpansionAndPresentation() ✔
+│  │  ├─ aResidencyBufferPlansAndCommitsConveniently() ✔
+│  │  ├─ expandedUnknownCountsContributeNoRows() ✔
+│  │  ├─ projectionGuardsItsArguments() ✔
+│  │  ├─ planValidatesItsWindowArrays() ✔
+│  │  ├─ projectionOverflowGuardsHoldOutsideTheirCallers() ✔
+│  │  ├─ insertsIntoUnknownCountsLeaveThemUnknown() ✔
+│  │  ├─ coordinatesBeyondTheirParentCountStayInvisible() ✔
+│  │  ├─ siblingShiftsRewriteOnlyMatchingKeys() ✔
+│  │  ├─ coordinateRemovalValidatesItsRange() ✔
+│  │  ├─ rebindingMovesAnExpandedSubtreeWithItsVisibleRows() ✔
+│  │  ├─ viewportBudgetGuardsHoldOutsideTheirCallers() ✔
+│  │  └─ unknownCountsAndAbsentParentsAnswerTheirContracts() ✔
+│  ├─ Test_VirtualTreeResidency ✔
+│  │  ├─ expanderHintsGiveCollapsedParentsOneNonPaintChild() ✔
+│  │  ├─ entryAndOffsetBoundsAreEnforced() ✔
+│  │  ├─ entriesAreFoundByIdCoordinateAndPhysicalPlace() ✔
+│  │  ├─ theNativeSnapshotCarriesTheFourLanes() ✔
+│  │  ├─ physicalPathsRoundTrip() ✔
+│  │  ├─ inconsistentDirectAppendsAreRejected() ✔
+│  │  ├─ facadesBindToColdRowsButNeverToHints() ✔
+│  │  ├─ aReusedBufferForgetsThePreviousWindow() ✔
+│  │  └─ theWindowIsTheAncestorClosurePlusThePaintRowsInPreorder() ✔
+│  ├─ Test_VirtualTreeResidentPlan ✔
+│  │  ├─ replacingNativeParentRecreatesItsCoordinateStableDescendants() ✔
+│  │  ├─ ancestorPathSurvivesWhileItsChildWindowSlides() ✔
+│  │  ├─ seededWindowMovesOverARandomForestMatchTheNextWindowExactly() ✔
+│  │  ├─ firstWindowInsertsEveryRowAndRetiresNothing() ✔
+│  │  ├─ scrollingKeepsOverlapAndRetiresOnlyTheLeavingRows() ✔
+│  │  ├─ removingAResidentRowKeepsTheOthers() ✔
+│  │  ├─ removingAResidentParentRemovesItsSubtreeFromThePlan() ✔
+│  │  ├─ replacingOnlyIntermediateParentKeepsGrandparentButRecreatesDescendants() ✔
+│  │  ├─ insertBeforeResidentRowsReusesEveryRowItKeeps() ✔
+│  │  └─ retiringAParentDeletesOnlyTheParent() ✔
+│  ├─ Test_VirtualTreeViewport ✔
+│  │  ├─ overscanPolicyKeepsAHeapReserve() ✔
+│  │  ├─ emptyModelsAndEmptyBodiesHaveNoVisibleRows() ✔
+│  │  ├─ materializedTopRowsFollowTheProjection() ✔
+│  │  ├─ rowsPastTheIntegerRangeUseAScaledBar() ✔
+│  │  ├─ ensureVisibleScrollsTheRowJustIntoView() ✔
+│  │  ├─ logicalRangeChangesClampTheTopRow() ✔
+│  │  ├─ paintWindowIsTheVisibleRowsAndTheOverscan() ✔
+│  │  ├─ constructionRejectsAMissingProjectionAndNegativeOverscan() ✔
+│  │  ├─ scrollBarProjectsTheLogicalRows() ✔
+│  │  ├─ invalidGeometryIsRejectedBeforeAnyChange() ✔
+│  │  ├─ topRowMovesOnlyWhenItChanges() ✔
+│  │  └─ geometryChangesCountAsGenerations() ✔
+│  ├─ Test_org_eclipse_swt_custom_CCombo_Virtual ✔
+│  │  ├─ test_setDataLjava_lang_StringLjava_lang_Object() ✔
+│  │  ├─ test_isDisposed() ✔
+│  │  ├─ test_addListenerILorg_eclipse_swt_widgets_Listener() ✔
+│  │  ├─ test_removeListenerILorg_eclipse_swt_widgets_Listener() ✔
+│  │  ├─ test_notifyListenersILorg_eclipse_swt_widgets_Event() ✔
+│  │  ├─ test_toString() ✔
+│  │  ├─ test_getDisplay() ✔
+│  │  ├─ test_setDataLjava_lang_Object() ✔
+│  │  ├─ test_addDisposeListenerLorg_eclipse_swt_events_DisposeListener() ✔
+│  │  ├─ test_setCaptureZ() ✔
+│  │  ├─ test_isEnabled() ✔
+│  │  ├─ test_NoExceptionsThrownInFillLayout() ✔
+│  │  ├─ test_setForegroundDisposedColorLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_addFocusListenerLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_addMouseTrackListenerMouseHoverAdapterLorg_eclipse_swt_events_MouseTrackLis... ✔
+│  │  ├─ test_getBorderWidth() ✔
+│  │  ├─ test_setBoundsIIII() ✔
+│  │  ├─ test_addFocusListenerFocusGainedAdapterLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_setTextDirection() ✔
+│  │  ├─ test_addControlListenerLorg_eclipse_swt_events_ControlListener() ✔
+│  │  ├─ test_setRedrawZ() ✔
+│  │  ├─ test_pack() ✔
+│  │  ├─ test_moveAboveLorg_eclipse_swt_widgets_Control() ✔
+│  │  ├─ test_addControlListenerControlMovedAdapterLorg_eclipse_swt_events_ControlListene... ✔
+│  │  ├─ test_addControlListenerControlResizedAdapterLorg_eclipse_swt_events_ControlListe... ✔
+│  │  ├─ test_toControlII() ✔
+│  │  ├─ test_setMenuLorg_eclipse_swt_widgets_Menu() ✔
+│  │  ├─ test_setLocationLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_computeSizeII() ✔
+│  │  ├─ test_toControlLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_update() ✔
+│  │  ├─ test_toDisplayII() ✔
+│  │  ├─ test_setBackgroundAlphaLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_getLocation() ✔
+│  │  ├─ test_isVisible() ✔
+│  │  ├─ test_setBoundsLorg_eclipse_swt_graphics_Rectangle() ✔
+│  │  ├─ test_addKeyListenerKeyReleasedAdapterLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_requestLayoutL() ✔
+│  │  ├─ test_ExceptionsThrownInDisposeListenerDontPreventDisposal() ✔
+│  │  ├─ test_toDisplayLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_addTraverseListenerLorg_eclipse_swt_events_TraverseListener() ✔
+│  │  ├─ test_addMouseListenerLorg_eclipse_swt_events_MouseListener() ✔
+│  │  ├─ test_addPaintListenerLorg_eclipse_swt_events_PaintListener() ✔
+│  │  ├─ test_setSizeII() ✔
+│  │  ├─ test_setCursorLorg_eclipse_swt_graphics_Cursor() ✔
+│  │  ├─ test_getShell() ✔
+│  │  ├─ test_getParent() ✔
+│  │  ├─ test_addKeyListenerKeyPressedAdapterLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_moveBelowLorg_eclipse_swt_widgets_Control() ✔
+│  │  ├─ test_setLocationII() ✔
+│  │  ├─ test_getMonitor() ✔
+│  │  ├─ test_setParentLorg_eclipse_swt_widgets_Composite() ✔
+│  │  ├─ test_setBackgroundDisposedColorLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_addMouseTrackListenerLorg_eclipse_swt_events_MouseTrackListener() ✔
+│  │  ├─ test_setSizeLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_traverseI() ✔
+│  │  ├─ test_addMouseTrackListenerMouseEnterAdapterLorg_eclipse_swt_events_MouseTrackLis... ✔
+│  │  ├─ test_setLayoutDataLjava_lang_Object() ✔
+│  │  ├─ test_addKeyListenerLorg_eclipse_swt_events_KeyListener() ✔
+│  │  ├─ test_addFocusListenerFocusLostAdapterLorg_eclipse_swt_events_FocusListener() ✔
+│  │  ├─ test_setBackgroundSameColorAgain() ✔
+│  │  ├─ test_setForegroundAlphaLorg_eclipse_swt_graphics_Color() ■ Assumption failed: Alpha support for foreground colors does not exist on Win32
+│  │  ├─ test_addHelpListenerLorg_eclipse_swt_events_HelpListener() ✔
+│  │  ├─ test_addMouseTrackListenerMouseExitAdapterLorg_eclipse_swt_events_MouseTrackList... ✔
+│  │  ├─ test_getAccessible() ✔
+│  │  ├─ test_isReparentable() ✔
+│  │  ├─ test_packZ() ✔
+│  │  ├─ test_addMouseMoveListenerLorg_eclipse_swt_events_MouseMoveListener() ✔
+│  │  ├─ test_computeTrimIIII() ✔
+│  │  ├─ test_getVerticalBar() ✔
+│  │  ├─ test_getClientArea() ✔
+│  │  ├─ test_getHorizontalBar() ✔
+│  │  ├─ test_setFocus_withVisibleAndInvisibleChild() ✔
+│  │  ├─ test_setTabList$Lorg_eclipse_swt_widgets_Control() ✔
+│  │  ├─ test_setFocus_withInvisibleChild() ✔
+│  │  ├─ test_setVisibility_and_sizing() ✔
+│  │  ├─ test_bug2162_transparentStyle() ✔
+│  │  ├─ test_getTextLimit() ✔
+│  │  ├─ test_setAlignment() ✔
+│  │  ├─ test_getSelectionIndex() ✔
+│  │  ├─ test_removeII() ✔
+│  │  ├─ test_setTextLjava_lang_String() ✔
+│  │  ├─ test_getText() ✔
+│  │  ├─ test_setEditableZ() ✔
+│  │  ├─ test_copy() ✔
+│  │  ├─ test_cut() ✔
+│  │  ├─ test_setItemILjava_lang_String() ✔
+│  │  ├─ test_setForegroundLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_redrawIIIIZ() ✔
+│  │  ├─ test_clearSelection() ✔
+│  │  ├─ test_removeSelectionListenerLorg_eclipse_swt_events_SelectionListener() ✔
+│  │  ├─ test_addSelectionListenerLorg_eclipse_swt_events_SelectionListener() ✔
+│  │  ├─ test_addLjava_lang_StringI() ✔
+│  │  ├─ test_indexOfLjava_lang_StringI() ✔
+│  │  ├─ test_setToolTipTextLjava_lang_String() ✔
+│  │  ├─ test_setVisibleZ() ✔
+│  │  ├─ test_setEnabledZ() ✔
+│  │  ├─ test_getEditable() ✔
+│  │  ├─ test_getChildren() ✔
+│  │  ├─ test_redraw() ✔
+│  │  ├─ test_consistency_DragDetect() ✔
+│  │  ├─ test_setFontLorg_eclipse_swt_graphics_Font() ✔
+│  │  ├─ test_setSelectionLorg_eclipse_swt_graphics_Point() ✔
+│  │  ├─ test_addLjava_lang_String() ✔
+│  │  ├─ test_setFocus() ✔
+│  │  ├─ test_getTextHeight() ✔
+│  │  ├─ test_removeLjava_lang_String() ✔
+│  │  ├─ test_getItemHeight() ✔
+│  │  ├─ test_consistency_MouseSelection() ✔
+│  │  ├─ test_addModifyListenerLorg_eclipse_swt_events_ModifyListener() ✔
+│  │  ├─ test_selectI() ✔
+│  │  ├─ test_getItemI() ✔
+│  │  ├─ test_getItems() ✔
+│  │  ├─ test_getStyle() ✔
+│  │  ├─ test_consistency_MenuDetect() ✔
+│  │  ├─ test_setFocus_toChild_beforeOpen() ✔
+│  │  ├─ test_deselectAll() ✔
+│  │  ├─ test_consistency_KeySelection() ✔
+│  │  ├─ test_setTextLimitI() ✔
+│  │  ├─ test_getItemCount() ✔
+│  │  ├─ test_setFocus_toChild_afterOpen() ✔
+│  │  ├─ test_setBackgroundLorg_eclipse_swt_graphics_Color() ✔
+│  │  ├─ test_removeModifyListenerLorg_eclipse_swt_events_ModifyListener() ✔
+│  │  ├─ test_indexOfLjava_lang_String() ✔
+│  │  ├─ test_removeAll() ✔
+│  │  ├─ test_consistency_EnterSelection() ✔
+│  │  ├─ test_getSelection() ✔
+│  │  ├─ test_deselectI() ✔
+│  │  ├─ test_computeSizeIIZ() ✔
+│  │  ├─ test_setItems$Ljava_lang_String() ✔
+│  │  ├─ test_ConstructorLorg_eclipse_swt_widgets_CompositeI() ✔
+│  │  ├─ test_paste() ✔
+│  │  └─ test_isFocusControl() ✔
+│  ├─ Test_org_eclipse_swt_custom_CTabFolder_OptimizationBench ✔
+│  │  └─ measure() ■ Assumption failed: -Dswt.allwidgets.bench=true is not set
+│  ├─ Test_org_eclipse_swt_custom_CTabFolder_ScaleOracle ✔
+│  │  └─ measure() ■ Assumption failed: -Dswt.ctabfolder.oracle=true is not set
+│  ├─ Test_org_eclipse_swt_custom_CTabFolder_ViewportDifferential ✔
+│  │  └─ recordedAgainstReference() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  ├─ Test_org_eclipse_swt_custom_ScrolledComposite_OptimizationBench ✔
+│  │  └─ measure() ■ Assumption failed: -Dswt.allwidgets.bench=true is not set
+│  ├─ Test_org_eclipse_swt_custom_StyledText_LineStore ✔
+│  │  ├─ test_randomOperationsMatchPerLineModel(long) ✔
+│  │  │  ├─ seed=1 ✔
+│  │  │  ├─ seed=2 ✔
+│  │  │  ├─ seed=3 ✔
+│  │  │  └─ seed=4 ✔
+│  │  ├─ test_uniformAndStripedWritesStayPatterns() ✔
+│  │  └─ test_patternBoundMaterializesWithoutChangingValues() ✔
+│  ├─ Test_org_eclipse_swt_custom_StyledText_ViewportDifferential ✔
+│  │  └─ recordedAgainstReference() ■ Assumption failed: -Dswt.viewport.recording=<dir> is not set
+│  ├─ Test_org_eclipse_swt_internal_SwtLog ✔
+│  │  ├─ anInterruptedPublisherStops() ✔
+│  │  ├─ aFullQueueDropsRecordsAndReportsTheCount() ✔
+│  │  ├─ aFailingHandlerNeverStopsThePublisher() ✔
+│  │  ├─ levelsMapToFinestFineAndInfo() ✔
+│  │  └─ disabledLevelsNeverComputeTheMessage() ✔
+│  ├─ Test_org_eclipse_swt_internal_ViewportReporter ✔
+│  │  ├─ theUntypedEventCarriesTheSameFields() ✔
+│  │  ├─ nothingIsTrackedWithoutAListener() ✔
+│  │  ├─ modelDeltasInsideAndOutsideTheWindow() ✔
+│  │  ├─ scrollResizeAndExpand() ✔
+│  │  ├─ nothingWhileHiddenAndVisibilityOnTheFirstEventAfterShow() ✔
+│  │  └─ oneEventPerTurnCoalescesTheCausesAndTheRanges() ✔
+│  ├─ Test_org_eclipse_swt_internal_VisibilityGate ✔
+│  │  ├─ test_hiddenLayoutIsDeferredButGeometryIsComputedOnDemand() ✔
+│  │  ├─ test_hiddenIndeterminateProgressBarParksItsMarquee() ✔
+│  │  ├─ test_hiddenCTabFolderMeasuresNoTabsUntilShown() ✔
+│  │  ├─ test_controlScrolledOutOfScrolledCompositeIsOffscreen() ✔
+│  │  ├─ test_deferredConsumerWorkCatchesUpOnceWhenShown() ✔
+│  │  ├─ test_scrollbarTrackPaintedAfterCatchUp() ✔
+│  │  ├─ test_occlusionTrackerParksWhileNoShellIsVisible() ✔
+│  │  ├─ test_openRunsDeferredLayoutOnce() ✔
+│  │  ├─ test_hiddenTableAndTreeEditorsArmNoRelayoutTimer() ✔
+│  │  ├─ test_isOffscreenFollowsShellVisibilityAndMinimize() ✔
+│  │  └─ test_minimizedVirtualListParksItsSetDataPrefetch() ✔
+│  ├─ Test_org_eclipse_swt_internal_VisibilityGate_box ✔
+│  │  ├─ test_debounceCoalescesABurstAndCapsTheDelay() ✔
+│  │  ├─ test_boxEdgesAgreeWithWindowClientTrimAndBorder() ✔
+│  │  ├─ test_protectedRingsSurroundTheViewportExactly() ✔
+│  │  ├─ test_scrollOwnershipAssertion() ✔
+│  │  └─ test_contentPixelsAreExactDevicePixels() ✔
+│  ├─ Test_org_eclipse_swt_internal_WidgetMode ✔
+│  │  ├─ invalidValuesFallBackToTheViewport() ✔
+│  │  ├─ everyModeIsSelectedByTheGlobalProperty() ✔
+│  │  ├─ valuesAreTrimmedAndCaseInsensitive() ✔
+│  │  ├─ unsupportedModesFallBackToTheViewportOrTheOriginal() ✔
+│  │  ├─ theChosenModeIsLoggedAtDebugLevel() ✔
+│  │  ├─ everyModeIsSelectedByTheWidgetProperty() ✔
+│  │  └─ withoutPropertiesTheViewportIsRequested() ✔
+│  ├─ Test_org_eclipse_swt_internal_WidgetModeAllWidgets ✔
+│  │  ├─ invalidValuesFallBackToTheViewport() ✔
+│  │  ├─ noDebugRecordAtTheDefaultLevel() ✔
+│  │  ├─ everyModeIsSelectedByTheGlobalProperty() ✔
+│  │  ├─ valuesAreTrimmedAndCaseInsensitive() ✔
+│  │  ├─ theOriginalIsImpliedBesideTheViewportAndABlankValueFallsBack() ✔
+│  │  ├─ unsupportedModesFallBackToTheViewportOrTheOriginal() ✔
+│  │  ├─ theChosenModeIsLoggedAtDebugLevel() ✔
+│  │  ├─ everyModeIsSelectedByTheWidgetProperty() ✔
+│  │  ├─ theModesInOrderAndNoSkija() ✔
+│  │  └─ withoutPropertiesTheViewportIsRequested() ✔
+│  ├─ Test_org_eclipse_swt_internal_gpu_RetainedPlanes ✔
+│  │  ├─ test_tileGridScrollRastersOnlyExposedBand() ✔
+│  │  ├─ test_opStreamPacksAbsoluteAffineWithoutReferences() ✔
+│  │  ├─ test_slotsBackwardShiftDeleteKeepsProbeChains() ✔
+│  │  ├─ test_paintKeysRoundTripMasks() ✔
+│  │  ├─ test_focusStaysOnTheOwningWidgetWithNoChildWindow() ✔
+│  │  ├─ test_tileCacheCoversOnlyRasterizedParts() ✔
+│  │  ├─ test_win32GcRecordsAffineAndFailsClosedForTransformLocalClip() ✔
+│  │  ├─ test_rectsDifferenceAndSubtract() ✔
+│  │  ├─ test_rectListMergesTransitively() ✔
+│  │  ├─ test_steadyStateLookupsDoNotAllocate() ✔
+│  │  ├─ test_hiddenSurfaceRastersNothing() ✔
+│  │  ├─ test_facadeWithoutRetainedModeKeepsStockBehaviour() ✔
+│  │  ├─ test_slotsReadjustEvictsUnderPressure() ✔
+│  │  ├─ test_tileGridDirtyBitsIterateWithTrailingZeros() ✔
+│  │  └─ test_slotsAdmitHitEvictLeastRecentUnpinned() ✔
+│  ├─ Test_org_eclipse_swt_internal_laf_LookAndFeel ✔
+│  │  ├─ selection() ✔
+│  │  ├─ integersBooleansInsets() ✔
+│  │  ├─ registration() ✔
+│  │  ├─ errors() ✔
+│  │  ├─ nativeItselfNeverFallsBack() ✔
+│  │  ├─ functions() ✔
+│  │  ├─ builtInTablesDefineEveryKey() ✔
+│  │  ├─ drawnModeReadsTheProperties() ✔
+│  │  ├─ displayResolution() ✔
+│  │  ├─ colours() ✔
+│  │  └─ referencesVariablesAndInheritance() ✔
+│  ├─ Test_org_eclipse_swt_internal_laf_M3LookAndFeel ✔
+│  │  ├─ updateComponentTreeUIInstallsEveryDelegateAgain() ✔
+│  │  ├─ selectionAndListeners() ✔
+│  │  ├─ aPinnedWidgetClassKeepsItsLookAndFeel() ✔
+│  │  ├─ resourcesAreSharedAndDisposedByASwitch() ✔
+│  │  ├─ delegatesLeaveWithTheirWidgets() ✔
+│  │  ├─ overridesRepaintOnlyTheirReaders() ✔
+│  │  ├─ aSwitchTouchesOnlyTheWidgetsThatReadAChangedKey() ✔
+│  │  ├─ defaultsResolvedWithoutADisplayAreNotCached() ✔
+│  │  └─ theFactoryOfTheNewLookAndFeelCreatesTheDelegate() ✔
+│  ├─ Test_org_eclipse_swt_internal_laf_M3Palette ✔
+│  │  ├─ metricsScaleWithTheZoom() ✔
+│  │  ├─ lightAndDarkAreBuiltIn() ✔
+│  │  ├─ theAccentUpdatesOnlyItsReaders() ✔
+│  │  ├─ contrastPicksReadableText() ✔
+│  │  ├─ highContrastFromThePlatform() ✔
+│  │  └─ aRampGoesFromTintToShade() ✔
+│  ├─ Test_org_eclipse_swt_internal_laf_M3SystemTheme ✔
+│  │  ├─ thePreferenceAndTheHighContrastOverride() ✔
+│  │  └─ aFollowerSwitchesWhenThePreferenceChanges() ✔
+│  ├─ Test_org_eclipse_swt_internal_laf_M3SystemTheme_OptimizationBench ✔
+│  │  └─ measure() ■ Assumption failed: -Dswt.allwidgets.bench=true is not set
+│  ├─ Test_org_eclipse_swt_internal_laf_M3ThemeCompleter ✔
+│  │  ├─ adversarialProposalsAreFixed() ✔
+│  │  ├─ seededProposalsAreCompletedReadably() ✔
+│  │  ├─ theTwinHasTheOtherBrightness() ✔
+│  │  ├─ theSameInputGivesTheSameThemeAndHash() ✔
+│  │  ├─ oklchRoundTripsAndFitsTheGamut() ✔
+│  │  ├─ contrastIsSolvedInOklch() ✔
+│  │  ├─ theSchemaIsClosed() ✔
+│  │  ├─ unreadableAndTranslucentColoursAreRepaired() ✔
+│  │  ├─ aFullProposalIsReadAndCanonical() ✔
+│  │  └─ theThreeFilesReadBack() ✔
+│  ├─ Test_org_eclipse_swt_internal_laf_M3ThemeImport ✔
+│  │  ├─ theJsonReader() ✔
+│  │  ├─ theFunctionsCheckTheirArguments() ✔
+│  │  ├─ aWatchedFileReloadsIntoTheWidgets() ✔
+│  │  ├─ aFlatLafThemeImportsWithItsFunctions() ✔
+│  │  ├─ aLightThemeAndEmptyParts() ✔
+│  │  ├─ anIntelliJThemeBecomesATable() ✔
+│  │  └─ anImportIsInstalledAsALookAndFeel() ✔
+│  ├─ Test_org_eclipse_swt_internal_laf_M3UIDefaults ✔
+│  │  ├─ disposedWidgetsLeaveTheLane() ✔
+│  │  ├─ overridesLiveInOneSparseLane() ✔
+│  │  ├─ keysAreInternedOnceWithAKindAndAParent() ✔
+│  │  ├─ theDeveloperLayerAnswersFirstAndOutlivesTheTheme() ✔
+│  │  ├─ theDiffNamesTheKeysAThemeChanges() ✔
+│  │  ├─ theLaneGrowsAndKeepsEveryOwnerApart() ✔
+│  │  ├─ lanesAnswerTheKeyThenItsParentThenTheFallback() ✔
+│  │  └─ theRegistryGrows() ✔
+│  ├─ Test_org_eclipse_swt_internal_laf_M3UIDerivation ✔
+│  │  ├─ aKeyBaseRecomputesOnlyItsDependents() ✔
+│  │  ├─ integersBooleansAndInsetsAreBasesToo() ✔
+│  │  ├─ aVariableRecomputesEveryValueDerivedFromIt() ✔
+│  │  └─ everyLookAndFeelOfTheLayerFollows() ✔
+│  ├─ Test_org_eclipse_swt_internal_m3_collections_M3LabelLanes ✔
+│  │  ├─ evictedLabelsLeaveTheExtentCache() ✔
+│  │  ├─ seededDifferentialPoolOnVersusPoolOff() ✔
+│  │  ├─ refreshIsADeltaNotARebuild() ✔
+│  │  ├─ refusesInvalidArguments() ✔
+│  │  ├─ repeatedLabelsShareIdsAndMeasurements() ✔
+│  │  └─ immediateLanesKeepShortLabelsOutOfThePool() ✔
+│  ├─ Test_org_eclipse_swt_internal_m3_collections_M3LabelPool ✔
+│  │  ├─ releasedLabelsStayCachedUntilTheBoundEvictsTheOldest() ✔
+│  │  ├─ unlinkingFromTheMiddleHeadAndTailOfTheReleasedList() ✔
+│  │  ├─ invalidUseIsRefused() ✔
+│  │  ├─ zeroBoundEvictsOnRelease() ✔
+│  │  ├─ clearForgetsLabelsButKeepsCounters() ✔
+│  │  ├─ utf16AndLatin1TextAnswerWithoutFacades() ✔
+│  │  ├─ repeatedTextSharesOneIdAndCountsReferences() ✔
+│  │  ├─ arenaCompactsWhenGarbageOutweighsLiveText() ✔
+│  │  ├─ facadesAreDroppedOnTrimAndCountedInRetainedBytes() ✔
+│  │  ├─ equalHashCodesWithDifferentTextGetDifferentIds() ✔
+│  │  ├─ manyLabelsRehashAndStayFindable() ✔
+│  │  ├─ canonicalIdsReplaceTextComparison() ✔
+│  │  ├─ arenaGrowsInsteadOfCompactingWhileLiveTextDominates() ✔
+│  │  ├─ seededDifferentialAgainstAnLruModel() ✔
+│  │  ├─ emptyStringIsPermanentIdZero() ✔
+│  │  ├─ facadeCacheIsBoundedAndDirectMapped() ✔
+│  │  └─ compareOrdersLikeString() ✔
+│  ├─ Test_org_eclipse_swt_internal_m3_collections_M3ShortLabel ✔
+│  │  ├─ refusesTextThatNeedsAPoolEntry() ✔
+│  │  ├─ equalTextIsEqualValueAndBack() ✔
+│  │  └─ packsLikeTheJdkImmediateOwner() ✔
+│  └─ Test_org_eclipse_swt_internal_m3_collections_M3TextExtentCache ✔
+│     ├─ seededDifferentialKeepsOnlyCorrectExtents() ✔
+│     ├─ immediateLabelsAreKeysToo() ✔
+│     ├─ measuresEachLabelAndFontOnce() ✔
+│     ├─ invalidationByLabelFontAndAll() ✔
+│     ├─ widestMeasuresDistinctLabelsOnly() ✔
+│     ├─ packsWidthAndHeight() ✔
+│     ├─ refusesInvalidArguments() ✔
+│     └─ clockGivesRecentlyInsertedEntriesASecondChance() ✔
+└─ JUnit Vintage ✔
+   └─ Test_ViewportAffineBounds ✔
+      └─ testFourCornerNumericContract ✔
+
+Test run finished after 55668 ms
+[        56 containers found      ]
+[         0 containers skipped    ]
+[        56 containers started    ]
+[         0 containers aborted    ]
+[        56 containers successful ]
+[         0 containers failed     ]
+[       456 tests found           ]
+[         0 tests skipped         ]
+[       456 tests started         ]
+[        10 tests aborted         ]
+[       446 tests successful      ]
+[         0 tests failed          ]
+
