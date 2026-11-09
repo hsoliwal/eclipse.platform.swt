@@ -817,6 +817,16 @@ boolean answersPageRowsWithoutFacade () {
 	return pageSource != null && !pagePaintNeedsFacade ();
 }
 
+/*
+ * The logical child index of a native row. In viewport mode the native rows are a window (the first native child of
+ * the root can be logical row 16), so the index comes from the window plan, never from the native sibling order.
+ */
+//FLLDCIM: VIEWPORT - page rows are numbered logically; native sibling order is the window's, not the model's
+int pageLogicalIndex (long hParent, long hItem) {
+	if (viewport != null) return viewport.logicalChildIndex (hItem);
+	return pageChildIndex (hParent, hItem);
+}
+
 int pageChildIndex (long hParent, long hItem) {
 	if (hParent == pageCursorParent) {
 		if (hItem == pageCursorItem) return pageCursorIndex;
@@ -858,7 +868,7 @@ boolean answerPageNode (NMTVDISPINFO lptvdi, long lParam) {
 		if (parentId < 0 || parentId >= items.length || items [parentId] == null) return false;
 		parent = items [parentId];
 	}
-	int index = pageChildIndex (hParent, hItem);
+	int index = pageLogicalIndex (hParent, hItem);
 	if (index < 0) return false;
 	int column = hwndHeader != 0 ? getFirstColumnIndex () : 0;
 	pageSource.paintRequest = true;
@@ -994,7 +1004,7 @@ void invalidatePageRows (TreeItem parent, int start, int end) {
 		if (!OS.TreeView_GetItemRect (handle, hItem, rect, false)) break;
 		if (rect.top >= client.bottom) break;
 		if (OS.SendMessage (handle, OS.TVM_GETNEXTITEM, OS.TVGN_PARENT, hItem) == hParent) {
-			int index = pageChildIndex (hParent, hItem);
+			int index = pageLogicalIndex (hParent, hItem);
 			if (index >= start && index <= end) {
 				OS.InvalidateRect (handle, rect, true);
 				pageRowsInvalidated++;

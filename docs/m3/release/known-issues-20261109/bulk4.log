@@ -1,0 +1,4 @@
+PROBE small.handle=2651661184336 expand=1
+PROBE after small: pageBatches=0 small.expanded=true count=5
+PROBE large.handle=2651663683536 getItemOk=1 cChildren=1 lParam=1 text='n39' cached=0 requested=4 fetched=4 resident=4
+PROBE TVM_EXPAND returned 1 expanded=true itemCount=44 pageBatches=1

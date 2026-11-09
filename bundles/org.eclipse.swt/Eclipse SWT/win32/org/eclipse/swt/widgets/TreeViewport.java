@@ -2327,6 +2327,12 @@ final class TreeViewport {
 	 * TVN_ITEMEXPANDED (and SWT's fall-through from TVN_ITEMEXPANDING for a row without native children) would copy
 	 * the native row's state into the lane; the lane is the authority (stock seed 1 step 102, key RIGHT on an anchor row).
 	 */
+	/** The logical child index of a resident native row (its plan key), or -1 when the row is not in the window. */
+	int logicalChildIndex (long hItem) {
+		int entry = plan.entryOf (hItem);
+		return entry < 0 ? -1 : (int) plan.keyOf (entry);
+	}
+
 	boolean logicalExpanded (TreeItem item) {
 		int id = idOf (item);
 		return id >= 0 && tree.virtualTopology.flag (id, VirtualItemState.EXPANDED);
