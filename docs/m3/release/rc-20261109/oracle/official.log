@@ -1,0 +1,6 @@
+ORACLE swt 4974 win32
+ORACLE caretAfterShrink afterDispose selectionCount=1 selection=root 6 focus=root 6
+ORACLE caretAfterShrink afterShrink selectionCount=1 focus=root 2
+ORACLE caretAfterShrink empty focus=null
+ORACLE zeroHeightCaret focus=root 20 nativeCaret=true selection=root 20
+ORACLE hiddenTableTop before=43 afterRemove=43 afterSetTopIndex39=43 afterShow=39 count=58
