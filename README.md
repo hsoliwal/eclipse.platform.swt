@@ -10,6 +10,8 @@ resource-lifetime problem; use Platform UI for JFace viewers and workbench parts
 [Quickstart](#swt-quickstart) · [Example](#swt-worked-example) ·
 [Development guide](docs/DEVELOPMENT_GUIDE.md) ·
 [Release preparation and coverage](docs/m3/RELEASE.md)
+[Development guide](docs/DEVELOPMENT_GUIDE.md) · [Release preparation](docs/RELEASE_PREPARATION.md)
+[Development guide](docs/DEVELOPMENT_GUIDE.md) · [Fork release-readiness gates](docs/RELEASE_READINESS.md)
 
 ## SWT source map
 

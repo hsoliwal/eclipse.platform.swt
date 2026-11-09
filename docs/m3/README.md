@@ -40,7 +40,7 @@ backend. Always record the candidate SHA and the measured class/platform/mode sc
 | Widget | Design | Status (see the plan for numbers) |
 |---|---|---|
 | Tree | [TREE_MEDIATED_VIEWPORT.md](TREE_MEDIATED_VIEWPORT.md), [tree-viewport/](tree-viewport/) | Identical to official SWT 3.135.0 on all differential variants |
-| Table | [TABLE_MEDIATED_VIEWPORT.md](TABLE_MEDIATED_VIEWPORT.md), [table-viewport/](table-viewport/) | Identical to official on 88/88 seeds; 100% line coverage |
+| Table | [TABLE_MEDIATED_VIEWPORT.md](TABLE_MEDIATED_VIEWPORT.md), [table-viewport/](table-viewport/) | Prior track-level differential/coverage figures require a fresh, instrumented, source-pinned rerun; not a current release result |
 | List, Combo | [LIST_MEDIATED_VIEWPORT.md](LIST_MEDIATED_VIEWPORT.md), [list-viewport/](list-viewport/) | Differentials pass; coverage and remaining edge cases in progress |
 | Scrollables, ToolBar, Text, ExpandBar, CTabFolder | [ALL_WIDGETS_VIEWPORT_PLAN.md](ALL_WIDGETS_VIEWPORT_PLAN.md) and the per-widget docs | Per-widget docs |
 | StyledText | [STYLEDTEXT_VIEWPORT_DESIGN.md](STYLEDTEXT_VIEWPORT_DESIGN.md) and related | Per-widget docs |
