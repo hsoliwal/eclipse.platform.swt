@@ -1046,6 +1046,8 @@ final class TreeViewport {
 	 * custom draw recording, stock seed 0 step 81, showSelection after a taller row, thumb 14 -> 12 with the top kept).
 	 */
 	private void itemHeightKey () {
+		//FLLDCIM: VISIBILITY - a parked window sends nothing natively; the layout of the catch-up reads the item height then
+		if (parked) return;
 		if (layoutItemHeight != 0 && Math.max (1, tree.getItemHeightInPixels ()) != layoutItemHeight) layout ();
 	}
 
