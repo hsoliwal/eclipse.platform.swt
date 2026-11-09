@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: EPL-2.0
+name: SWT M3 release naming and test coverage preflight
+
+# PR preflight is wired through the existing pr-checks.yml workflow.
+# This file keeps dedicated release-branch and explicit dispatch entrypoints.
+on:
+  push:
+    branches: ['release/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  naming-and-test-discovery:
+    name: SWT API naming and test registration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Self-test all static and XML evidence checks
+        run: python3 -m unittest discover -s tools/release -p 'test_*.py' -v
+      - name: Reject naming or test-suite registration drift
+        run: |
+          python3 tools/release/check_release_surface.py --root . --strict \
+            --json-out target/release-preflight.json
+      - name: Census default JUnit suite and enforce full closure for release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mode=()
+          if [[ "$GITHUB_REF" == refs/heads/release/* ]]; then mode=(--release); fi
+          python3 tools/release/audit_suite_inventory.py --root . --strict "${mode[@]}" \
+            --json-out target/swt-default-suite-inventory.json
+      - name: Publish static preflight evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: swt-release-preflight-${{ github.sha }}
+          path: |
+            target/release-preflight.json
+            target/swt-default-suite-inventory.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  headless-java21:
+    name: Java 21 exact-source sparse-state contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de5a937a1dc73fbc1a67d7d1aa4bebc1082f3190 # v5.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile and run existing sparse-state product source on Java 21
+        run: bash tools/release/run_headless_java21.sh
+      - name: Preserve Java 21 compile/test logs and hashes
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: swt-java21-headless-${{ github.sha }}
+          path: target/m3-swt-headless/
+          if-no-files-found: warn
+          retention-days: 90
