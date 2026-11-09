@@ -241,8 +241,15 @@ final class EffectiveVisibility {
 		}
 	}
 
-	/** WM_WINDOWPOSCHANGED on the receiver, before dispatch (DefWindowProc sends WM_SIZE/WM_MOVE from it). */
-	static void windowPosChanged (Control c, long lParam) {
+	/**
+	 * WM_WINDOWPOSCHANGED on the receiver, before dispatch (DefWindowProc sends WM_SIZE/WM_MOVE from it).
+	 *
+	 * @return true when the geometry changed and the receiver itself holds deferred work: the caller catches its
+	 *         subtree up once the message is handled ({@link VisibilityCatchUp#shown}), so a control that was held
+	 *         at a zero size or off screen (a collapsed pane growing back) repaints in the same pass as the rest of
+	 *         the layout instead of once more after the posted sweep
+	 */
+	static boolean windowPosChanged (Control c, long lParam) {
 		WINDOWPOS pos = c.display.visPos;
 		OS.MoveMemory (pos, lParam, WINDOWPOS.sizeof);
 		int flags = pos.flags;
@@ -253,7 +260,9 @@ final class EffectiveVisibility {
 		if (geometry) {
 			invalidate (c);
 			VisibilityCatchUp.requestSweep (c.display);
+			return (c.state & DIRTY_ALL) != 0;
 		}
+		return false;
 	}
 
 	/** WM_SHOWWINDOW (before the change) and WM_SETREDRAW (after the change). */
