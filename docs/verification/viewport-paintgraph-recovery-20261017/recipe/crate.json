@@ -1,0 +1,65 @@
+{
+  "schema": "SYNEXIA_VIEWPORT_RECIPE_PACKET_V1",
+  "canonical_repository": "hsoliwal/com.synexia",
+  "canonical_engine_revision": "892e3f6c51d78bc0948e8a8cf736055b4c70eafa",
+  "recipe_name": "com.synexia.swt.PaintGraphRecovery20261017",
+  "crate": "m3-swt-paintgraph-recovery-20261017",
+  "target_repository": "hsoliwal/eclipse.platform.swt",
+  "target_revision": "ca77c0272fb6c1ea12594ac00baca8fb9b50ce3d",
+  "targets": [
+    {
+      "path": ".m3/swt-paintgraph-atomic-growth-20261015/RECEIVER.md",
+      "kind": "text",
+      "preimage_sha256": "ABSENT",
+      "postimage_sha256": "2a905a03aa0fd0256378766730c1d73193f7a4099ce976b09739bbac2ffa3c2c",
+      "preimage_git_blob": "ABSENT",
+      "postimage_git_blob": "1390cee8ec495d66598d37f71e013d04bd87fc84",
+      "resource": "target-000.text.txt"
+    },
+    {
+      "path": ".m3/swt-paintgraph-recovery-20261017/RECEIVER.md",
+      "kind": "text",
+      "preimage_sha256": "ABSENT",
+      "postimage_sha256": "3a6881a07f8e27b8f2d30404786bee026eb8d775edcc1dc35cfca881411f693d",
+      "preimage_git_blob": "ABSENT",
+      "postimage_git_blob": "77bbcc086f54b21aab1391282edc29065131072b",
+      "resource": "target-001.text.txt"
+    },
+    {
+      "path": "bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/widgets/ViewportPaintGraph.java",
+      "kind": "java",
+      "preimage_sha256": "fd00903d07343044836963f54cf34e98cf24b794d38cc8242fcddfdf72527d7c",
+      "postimage_sha256": "2a7a8ce1564bc78f9fda1d49aee3c5fa5352a7f77c11521e8f498d57fec4e837",
+      "preimage_git_blob": "cf774d12e68c96ccd46cb4f63f66543474a14440",
+      "postimage_git_blob": "254a324952adf97e50bd49ee5646547524e3c68b",
+      "resource": "target-002.java.txt"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/AllWidgetTests.java",
+      "kind": "java",
+      "preimage_sha256": "a50d54c3ec4d2174361b392f4011870ff1522a1ac794c8287d2d8d1475604af4",
+      "postimage_sha256": "486e76aa4145f86b342841c9eded7feb2a878b099b60d67db1a0b7a06fbef597",
+      "preimage_git_blob": "068a691c479daffabb189b796deb7dbfe8f3663a",
+      "postimage_git_blob": "9979b2fbe45481f1c96db5a399dc3516108726b0",
+      "resource": "target-003.java.txt"
+    },
+    {
+      "path": "tests/org.eclipse.swt.tests/JUnit Tests/org/eclipse/swt/tests/junit/Test_org_eclipse_swt_widgets_ViewportPaintGraphAtomicGrowth.java",
+      "kind": "java",
+      "preimage_sha256": "ABSENT",
+      "postimage_sha256": "d0c4b0062ba2413bf6c59670474b9922ce16109440796a31bc1de2badc410069",
+      "preimage_git_blob": "ABSENT",
+      "postimage_git_blob": "dd1d9765a822929e61a6c5a2b5f3b85e2f79c148",
+      "resource": "target-004.java.txt"
+    }
+  ],
+  "runtime_gate_status": "SEPARATE_TARGET_EVIDENCE_REQUIRED",
+  "reused_sdk_harness": {
+    "path": "synexia-openrewrite-recipes/recipe-crates/m3-deep-filter-list-20261017/src/test/java/com/synexia/rewrite/M3TaskRecipeTest.java",
+    "git_blob": "3ff7e6f49fd75a34d0991ced8d069b956da0ee49"
+  },
+  "reused_receiver": {
+    "path": "synexia-openrewrite-recipes/recipe-crates/m3-deep-filter-list-20261017/receive.py",
+    "git_blob": "7b441c78df78c5c0dcc2f8a3526d588981880037"
+  }
+}
