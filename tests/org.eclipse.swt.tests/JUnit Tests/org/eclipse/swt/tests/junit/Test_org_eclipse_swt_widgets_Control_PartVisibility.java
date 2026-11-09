@@ -62,7 +62,7 @@ public class Test_org_eclipse_swt_widgets_Control_PartVisibility {
 			inner.setLayout (new FillLayout ());
 			current = inner;
 		}
-		Canvas leaf = new Canvas (current, SWT.NONE);
+		Canvas leaf = named (new Canvas (current, SWT.NONE), name);
 		listen (leaf, name);
 		return leaf;
 	}
@@ -118,7 +118,7 @@ public class Test_org_eclipse_swt_widgets_Control_PartVisibility {
 		expect (() -> page.setVisible (false));
 		expect (() -> page.setVisible (true), "leaf visible " + V + " page");
 		expect (() -> page.setVisible (true));
-		expect (() -> leaf.setVisible (false), "leaf hidden " + V + " -");
+		expect (() -> leaf.setVisible (false), "leaf hidden " + V + " leaf");
 		expect (() -> page.setVisible (false));
 		expect (() -> leaf.setVisible (true));
 		expect (() -> page.setVisible (true), "leaf visible " + V + " page");
@@ -214,7 +214,8 @@ public class Test_org_eclipse_swt_widgets_Control_PartVisibility {
 		assertTrue (leaf.isPartVisible ());
 		expect (() -> page.setSize (0, 200), "leaf hidden " + Z + " page");
 		expect (() -> page.setSize (0, 100));
-		expect (() -> page.setSize (200, 200), "leaf visible " + Z + " page");
+		// growing back the leaf turns visible on its own resize, the last of the layout cascade (origin: the leaf)
+		expect (() -> page.setSize (200, 200), "leaf visible " + Z + " leaf");
 		expect (() -> page.setSize (210, 200));
 	}
 
@@ -316,6 +317,8 @@ public class Test_org_eclipse_swt_widgets_Control_PartVisibility {
 		leaf.addListener (SWT.PartHidden, e -> events.add (line.apply ("hidden", e)));
 		leaf.addListener (SWT.PartVisible, e -> events.add (line.apply ("visible", e)));
 		open ();
+		ViewportDifferential.drain (display);
+		events.clear (); // the leaf turned visible when the shell opened
 		page.setVisible (false);
 		page.setVisible (true);
 		assertEquals (java.util.List.of ("hidden " + V + " page", "visible " + V + " page"), events);

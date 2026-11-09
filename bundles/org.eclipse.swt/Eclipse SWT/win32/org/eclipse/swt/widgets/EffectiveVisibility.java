@@ -241,19 +241,29 @@ final class EffectiveVisibility {
 		}
 	}
 
-	/** WM_WINDOWPOSCHANGED on the receiver, before dispatch (DefWindowProc sends WM_SIZE/WM_MOVE from it). */
-	static void windowPosChanged (Control c, long lParam) {
+	/**
+	 * WM_WINDOWPOSCHANGED on the receiver, before dispatch (DefWindowProc sends WM_SIZE/WM_MOVE from it).
+	 *
+	 * @return true when the geometry changed and the receiver itself holds deferred work: the caller catches its
+	 *         subtree up once the message is handled ({@link VisibilityCatchUp#shown}), so a control that was held
+	 *         at a zero size or off screen (a collapsed pane growing back) repaints in the same pass as the rest of
+	 *         the layout instead of once more after the posted sweep
+	 */
+	static boolean windowPosChanged (Control c, long lParam) {
 		WINDOWPOS pos = c.display.visPos;
 		OS.MoveMemory (pos, lParam, WINDOWPOS.sizeof);
 		int flags = pos.flags;
 		boolean geometry = (flags & (OS.SWP_NOMOVE | OS.SWP_NOSIZE)) != (OS.SWP_NOMOVE | OS.SWP_NOSIZE) || (flags & GEOMETRY_FLAGS) != 0;
 		if (c instanceof Shell shell && (geometry || (flags & OS.SWP_NOZORDER) == 0)) {
 			clearOccluded (shell);
+			wakeOcclusionTracker (shell.display);
 		}
 		if (geometry) {
 			invalidate (c);
 			VisibilityCatchUp.requestSweep (c.display);
+			return (c.state & DIRTY_ALL) != 0;
 		}
+		return false;
 	}
 
 	/** WM_SHOWWINDOW (before the change) and WM_SETREDRAW (after the change). */
@@ -262,6 +272,17 @@ final class EffectiveVisibility {
 		invalidate (c);
 		if (visible) {
 			VisibilityCatchUp.requestSweep (c.display);
+			if (c instanceof Shell) {
+				wakeOcclusionTracker (c.display);
+			}
+		}
+	}
+
+	/** A shell was shown, moved, sized or restacked: a tracker parked while no shell was visible runs again. */
+	static void wakeOcclusionTracker (Display d) {
+		OcclusionTracker tracker = d.occlusionTracker;
+		if (tracker != null) {
+			tracker.wake ();
 		}
 	}
 

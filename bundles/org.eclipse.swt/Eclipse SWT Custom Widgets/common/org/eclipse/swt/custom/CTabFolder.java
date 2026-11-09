@@ -260,6 +260,8 @@ public class CTabFolder extends Composite {
 	final static int REDRAW_TABS = 1 << 2;
 	final static int UPDATE_TAB_HEIGHT = 1 << 3;
 	Runnable updateRun;
+	/* runs the folded update once when a folder that could not be seen is shown; added on the first deferral */
+	Listener updateCatchUp;
 
 	// when disposing CTabFolder, don't try to layout the items or
 	// change the selection as each child is destroyed.
@@ -4556,6 +4558,14 @@ void updateFolder (int flags) {
         if (isDisposed()) {
             return;
         }
+		if (VisibilityGate.defer (this, VisibilityGate.MEASURE)) {
+			// nobody can see the folder: no tab measured; the flags stay and the catch-up runs them once //FLLDCIM: MARK — every-widget CTabFolder H
+			if (updateCatchUp == null) {
+				updateCatchUp = event -> runUpdate ();
+				addListener (VisibilityGate.CATCH_UP, updateCatchUp);
+			}
+			return;
+		}
 		runUpdate();
 	};
 	getDisplay().asyncExec(updateRun);

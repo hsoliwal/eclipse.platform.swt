@@ -17,6 +17,7 @@ package org.eclipse.swt.custom;
 import org.eclipse.swt.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.*;
 import org.eclipse.swt.widgets.*;
 
 /**
@@ -49,6 +50,9 @@ public class AnimatedProgress extends Canvas {
 	int orientation = SWT.HORIZONTAL;
 	@Deprecated
 	boolean showBorder = false;
+	/* the one animation runnable (timerExec reschedules it, never doubles it) and whether it waits for a catch-up */
+	private Runnable timer;
+	private boolean parked;
 
 /**
  * Constructs a new instance of this class given its parent
@@ -90,6 +94,7 @@ public AnimatedProgress(Composite parent, int style) {
 	addControlListener(ControlListener.controlResizedAdapter(e -> redraw()));
 	addPaintListener(this::paint);
 	addDisposeListener(e -> stop());
+	addListener(VisibilityGate.CATCH_UP, e -> resume()); //FLLDCIM: MARK — every-widget AnimatedProgress H
 }
 private static int checkStyle (int style) {
 	return StylePolicy.NONE.applyAsInt(style);
@@ -214,19 +219,35 @@ public synchronized void start() {
 
 	active = true;
 	showStripes = true;
-
-	final Display display = getDisplay();
-	final Runnable [] timer = new Runnable [1];
-	timer [0] = () -> {
-        if (!active) {
-            return;
-        }
-		GC gc = new GC(AnimatedProgress.this);
-		paintStripes(gc);
-		gc.dispose();
-		display.timerExec (SLEEP, timer [0]);
-	};
-	display.timerExec (SLEEP, timer [0]);
+	parked = false;
+	if (timer == null) {
+		timer = this::tick;
+	}
+	getDisplay().timerExec (SLEEP, timer);
+}
+/*
+ * One animation frame. A control that cannot be seen (hidden, an ancestor hidden, minimized, zero size, scrolled
+ * out, its shell covered) draws nothing and arms no timer: the animation parks until the visibility gate's
+ * catch-up, then runs again (rule 24: no idle or animation work while hidden).
+ */
+private void tick() {
+	if (!active || isDisposed()) {
+		return;
+	}
+	if (VisibilityGate.defer (this, VisibilityGate.PAINT)) {
+		parked = true; //FLLDCIM: MARK — every-widget AnimatedProgress H
+		return;
+	}
+	GC gc = new GC(this);
+	paintStripes(gc);
+	gc.dispose();
+	getDisplay().timerExec (SLEEP, timer);
+}
+private void resume() {
+	if (parked && active && !isDisposed()) {
+		parked = false;
+		getDisplay().timerExec (SLEEP, timer);
+	}
 }
 /**
 * Stop the animation.   Freeze the presentation at its current appearance.
