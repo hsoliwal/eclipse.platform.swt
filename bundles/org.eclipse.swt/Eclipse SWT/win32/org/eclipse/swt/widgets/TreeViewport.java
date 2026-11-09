@@ -164,21 +164,41 @@ final class TreeViewport {
 		parked = true;
 		parks++;
 		committedGeneration = -1;
-		if (plan.size () == 0) return;
-		LOG.debug (() -> "Tree hidden: viewport parked, " + plan.size () + " native rows released");
-		captureResidentState ();
-		plan.plan (0, NO_INTS, NO_INTS, NO_INTS);
-		boolean oldShrink = tree.ignoreShrink, oldSelect = tree.ignoreSelect, oldDeselect = tree.ignoreDeselect;
-		tree.ignoreShrink = tree.ignoreSelect = tree.ignoreDeselect = true;
-		rebuilding = true;
+		parkedAnchorKey = NO_ROW - 1;
+		if (plan.size () == 0 && !anchored ()) return;
+		LOG.debug (() -> "Tree hidden: viewport parked, " + plan.size () + " native rows released but the focus anchor");
+		parkedAnchor ();
+	}
+
+	/*
+	 * While parked only the focus anchor stays native (and its ancestors), as the official TreeView keeps its caret
+	 * row when it cannot be seen (zero height: TVGN_CARET stays on the selected row, oracle/official.log of the
+	 * 2026-11-09 release candidate). The anchor row moves when the caret moves while parked; nothing else is native.
+	 */
+	//FLLDCIM: RESIDENCY - parked window = focus anchor only; observable caret as official SWT
+	private boolean anchorOnly;
+	private long parkedAnchorKey = NO_ROW - 1;
+
+	/*
+	 * Only a parked Tree that can still take the keyboard keeps its anchor: zero size or clipped out, its window and
+	 * its ancestors shown (IsWindowVisible). A hidden chain (setVisible (false), a hidden parent, a minimized shell)
+	 * gets no keys, so it keeps no native row and the parked window stays free of TreeView messages.
+	 */
+	private boolean anchored () {
+		return focusId >= 0 && tree.virtualTopology.contains (focusId) && tree.virtualProjection.visibleIndexOf (focusId) >= 0
+			&& OS.IsWindowVisible (tree.handle) && !OS.IsIconic (tree.getShell ().handle);
+	}
+
+	private void parkedAnchor () {
+		/* the anchor moves when the caret moves to another row (identity), not when deltas renumber its row */
+		long key = anchored () ? focusId : NO_ROW;
+		if (key == parkedAnchorKey) return;
+		parkedAnchorKey = key;
+		anchorOnly = true;
 		try {
-			retirePlanned (tree.handle);
-			plan.commit (0, NO_INTS, NO_INTS, NO_INTS, new long [0]);
+			rebuild ();
 		} finally {
-			rebuilding = false;
-			tree.ignoreShrink = oldShrink;
-			tree.ignoreSelect = oldSelect;
-			tree.ignoreDeselect = oldDeselect;
+			anchorOnly = false;
 		}
 	}
 
@@ -214,6 +234,7 @@ final class TreeViewport {
 			if (barShapeChanged ()) clearStaleBar ();
 			if (hidden) {
 				if (!parked) park ();
+				else parkedAnchor ();
 				parkedLayouts++;
 			} else {
 				if (parked) {
@@ -593,7 +614,7 @@ final class TreeViewport {
 	 */
 	private NativeWindow nativeWindow () {
 		VirtualTreeTopology topology = tree.virtualTopology;
-		int n = residency.size ();
+		int n = anchorOnly ? 0 : residency.size ();
 		ArrayList<int []> paths = new ArrayList<> (n + 8);
 		ArrayList<int []> entries = new ArrayList<> (n + 8); /* {parentId, childIndex, id} */
 		HashMap<Long, Integer> byKey = new HashMap<> ();
@@ -607,7 +628,7 @@ final class TreeViewport {
 			entries.add (new int [] {residency.parentId (entry), residency.childIndex (entry), id});
 			byKey.put (VirtualTreeResidentPlan.key (residency.parentId (entry), residency.childIndex (entry)), entry);
 		}
-		if (focusId >= 0 && topology.contains (focusId) && tree.virtualProjection.visibleIndexOf (focusId) >= 0) {
+		if ((anchorOnly ? anchored () : focusId >= 0 && topology.contains (focusId) && tree.virtualProjection.visibleIndexOf (focusId) >= 0)) {
 			ArrayDeque<Integer> chain = new ArrayDeque<> ();
 			for (int id = focusId; id != VirtualTreeTopology.ROOT; id = topology.parentId (id)) chain.push (id);
 			int [] path = new int [0];
