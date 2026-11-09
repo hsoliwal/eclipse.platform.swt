@@ -1,0 +1,3 @@
+3be327460db7e1a6ce2606c26fb95cde1397fa1b399a3b0206b22700f066a47b *bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/PackedHeapGrowth.java
+e211a30cceef2728fc286787747edb76c8d3270552d15e84183097b09d2c09ab *bundles/org.eclipse.swt/Eclipse SWT/common/org/eclipse/swt/internal/residency/ItemBitSet.java
+938a31e5904ae12c0de1b9755c945b2119c7e8a6d02a2833cdcf0644be1d9cb0 *tools/release/java/org/eclipse/swt/internal/residency/M3SwtHeadlessContract.java

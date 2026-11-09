@@ -1,0 +1,21 @@
+{
+  "checks": {
+    "Test_ItemBitSetDifferential_registered": true,
+    "Test_ItemBitSetDifferential_source_has_test": true,
+    "Test_ItemBitSetMaximumPosition_registered": true,
+    "Test_ItemBitSetMaximumPosition_source_has_test": true,
+    "java_module_name_unchanged": true,
+    "main_junit_suite_configured": true,
+    "osgi_symbolic_name_unchanged": true,
+    "platform_matrix_declared": true,
+    "swt_api_minimum_java21_preserved": true
+  },
+  "disclaimer": "not a binary, native, JUnit execution or UI screenshot receipt",
+  "passed": true,
+  "required_test_classes": [
+    "Test_ItemBitSetDifferential",
+    "Test_ItemBitSetMaximumPosition"
+  ],
+  "schema": "SWT_RELEASE_SURFACE_PREFLIGHT_V1",
+  "scope": "static API naming and two mandatory sparse-state JUnit class registrations"
+}

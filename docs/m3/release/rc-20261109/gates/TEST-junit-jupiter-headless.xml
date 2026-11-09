@@ -1,0 +1,1230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="JUnit Jupiter" tests="190" skipped="3" failures="0" errors="0" time="12.741" hostname="SoliwalLaptop" timestamp="2026-11-09T16:04:57">
+<properties>
+<property name="file.encoding" value="UTF-8"/>
+<property name="file.separator" value="\"/>
+<property name="java.class.path" value="C:/Users/hsoliwal/.m2/repository/org/junit/platform/junit-platform-console-standalone/1.11.4/junit-platform-console-standalone-1.11.4.jar"/>
+<property name="java.class.version" value="65.0"/>
+<property name="java.home" value="C:\Program Files\Java\jdk-21"/>
+<property name="java.io.tmpdir" value="F:/m3-scratch/tmp"/>
+<property name="java.library.path" value="C:\Program Files\Java\jdk-21\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\Users\hsoliwal\bin;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\local\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\hsoliwal\bin;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\bin\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4\bin;C:\Program Files\Microsoft\jdk-17.0.19.10-hotspot\bin;C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin;C:\Program Files\Common Files\Oracle\Java\javapath;C:\Program Files\OpenSSH-Win64;C:\Program Files\Python312\Scripts;C:\Program Files\Python312;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\WINDOWS\System32\OpenSSH;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\rsync\bin;C:\Program Files\GitHub CLI;C:\Program Files\kubectl;C:\Program Files\kubelet;C:\Cognix\kubernetes\bin;C:\Program Files\Docker\Docker\resources\bi;C:\spark\spark-3.5.7-bin-hadoop3\bin;C:\scala\scala3-3.7.0-x86_64-pc-win32\bin;C:\hadoop\bin;C:\Program Files\Java\jdk-21\bin;C:\Program Files\TortoiseSVN\bin;C:\Program Files\PuTTY;C:\ProgramData\chocolatey\bin;C:\Program Files\Git\cmd;C:\Program Files\Amazon\AWSCLIV2;C:\Program Files (x86)\cloudflared;C:\Program Files\dotnet;C:\ProgramData\mingw64\mingw64\bin;C:\Program Files\nodejs;C:\Program Files\CMake\bin;C:\Program Files\LLVM\bin;C:\Program Files (x86)\LLVM\bin;C:\Program Files\Go\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.9.14\bin;C:\Program Files\Memurai;C:\Program Files (x86)\Yarn\bin;C:\Program Files\Java\jdk1.8.0_211\bin;C:\Android\android-sdk\tools;C:\Android\android-sdk\platform-tools;C:\Android\android-sdk\tools\bin;C:\Program Files\Docker\Docker\resources\bin;C:\toolchain\home\.local\bin;C:\Users\hsoliwal\AppData\Local\Microsoft\WindowsApps;C:\Users\hsoliwal\AppData\Roaming\npm;C:\Users\hsoliwal\AppData\Local\Programs\Ollama;C:\Users\hsoliwal\go\bin;C:\Users\hsoliwal\AppData\Local\Yarn\bin;C:\ProgramData\chocolatey\lib\deno;C:\Users\hsoliwal\.bun\bin;C:\vcpkg;C:\tools\flutter\bin;C:\ProgramData\chocolatey\lib\gcloudsdk\tools\google-cloud-sdk\bin;C:\PostgreSQL\pgsql\bin;C:\tools\miniconda3;C:\tools\miniconda3\Scripts;C:\tools\miniconda3\Library\bin;C:\toolchain\home\.dotnet\tools;C:\Users\hsoliwal\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\hsoliwal\AppData\Local\Microsoft\WinGet\Links;C:\Users\hsoliwal\AppData\Local\Pandoc;C:\Program Files\Git\usr\bin\vendor_perl;C:\Program Files\Git\usr\bin\core_perl;."/>
+<property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+<property name="java.runtime.version" value="21.0.9+7-LTS-338"/>
+<property name="java.specification.name" value="Java Platform API Specification"/>
+<property name="java.specification.vendor" value="Oracle Corporation"/>
+<property name="java.specification.version" value="21"/>
+<property name="java.vendor" value="Oracle Corporation"/>
+<property name="java.vendor.url" value="https://java.oracle.com/"/>
+<property name="java.vendor.url.bug" value="https://bugreport.java.com/bugreport/"/>
+<property name="java.version" value="21.0.9"/>
+<property name="java.version.date" value="2025-10-21"/>
+<property name="java.vm.compressedOopsMode" value="32-bit"/>
+<property name="java.vm.info" value="mixed mode, sharing"/>
+<property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
+<property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+<property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+<property name="java.vm.specification.version" value="21"/>
+<property name="java.vm.vendor" value="Oracle Corporation"/>
+<property name="java.vm.version" value="21.0.9+7-LTS-338"/>
+<property name="jdk.debug" value="release"/>
+<property name="junit.docs.version" value="1.11.4"/>
+<property name="line.separator" value="&#13;&#10;"/>
+<property name="native.encoding" value="Cp1252"/>
+<property name="os.arch" value="amd64"/>
+<property name="os.name" value="Windows 11"/>
+<property name="os.version" value="10.0"/>
+<property name="path.separator" value=";"/>
+<property name="stderr.encoding" value="Cp1252"/>
+<property name="stdout.encoding" value="Cp1252"/>
+<property name="sun.arch.data.model" value="64"/>
+<property name="sun.boot.library.path" value="C:\Program Files\Java\jdk-21\bin"/>
+<property name="sun.cpu.endian" value="little"/>
+<property name="sun.cpu.isalist" value="amd64"/>
+<property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+<property name="sun.java.command" value="C:/Users/hsoliwal/.m2/repository/org/junit/platform/junit-platform-console-standalone/1.11.4/junit-platform-console-standalone-1.11.4.jar execute -cp F:/m3-scratch/rc-20261109/build/tests/classes;F:/m3-scratch/rc-20261109/dist/org.eclipse.swt.win32.win32.x86_64-m3-superset-20261109.jar --select-class org.eclipse.swt.tests.junit.Test_M3Collation --select-class org.eclipse.swt.tests.junit.Test_M3ColumnFilter --select-class org.eclipse.swt.tests.junit.Test_M3ColumnSort --select-class org.eclipse.swt.tests.junit.Test_M3ItemRange --select-class org.eclipse.swt.tests.junit.Test_M3Patch --select-class org.eclipse.swt.tests.junit.Test_M3RowExtents --select-class org.eclipse.swt.tests.junit.Test_M3TextMatch --select-class org.eclipse.swt.tests.junit.Test_M3TextSegments --select-class org.eclipse.swt.tests.junit.Test_M3TokenMatch --select-class org.eclipse.swt.tests.junit.Test_ItemBitSetDifferential --select-class org.eclipse.swt.tests.junit.Test_ItemBitSetMaximumPosition --select-class org.eclipse.swt.tests.junit.Test_ViewportBounds --select-class org.eclipse.swt.tests.junit.Test_ViewportRowWindow --select-class org.eclipse.swt.tests.junit.Test_ViewportDamage --select-class org.eclipse.swt.tests.junit.Test_ViewportDamageSubset --select-class org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping --select-class org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration --select-class org.eclipse.swt.tests.junit.Test_VirtualTreeTopology --select-class org.eclipse.swt.tests.junit.Test_VirtualTreeWindow --select-class org.eclipse.swt.tests.junit.Test_VirtualTreeOrderStatistic --select-class org.eclipse.swt.tests.junit.Test_VirtualBitLanes --select-class org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel --disable-banner --details=tree --reports-dir=F:/m3-scratch/rc-20261109/runs/headless/reports"/>
+<property name="sun.java.launcher" value="SUN_STANDARD"/>
+<property name="sun.jnu.encoding" value="Cp1252"/>
+<property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+<property name="sun.os.patch.level" value=""/>
+<property name="swt.library.path" value="F:/m3-scratch/rc-20261109/runs/headless/natives"/>
+<property name="user.country" value="IN"/>
+<property name="user.dir" value="F:\m3-scratch\rc-20261109"/>
+<property name="user.home" value="C:\Users\hsoliwal"/>
+<property name="user.language" value="en"/>
+<property name="user.name" value="hsoliwal"/>
+<property name="user.script" value=""/>
+<property name="user.timezone" value="Asia/Calcutta"/>
+<property name="user.variant" value=""/>
+</properties>
+<testcase name="test_argumentsAreChecked()" classname="org.eclipse.swt.tests.junit.Test_M3Patch" time="0.02">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3Patch]/[method:test_argumentsAreChecked()]
+display-name: test_argumentsAreChecked()
+]]></system-out>
+</testcase>
+<testcase name="test_incrementalEditsEqualAReference()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.547">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_incrementalEditsEqualAReference()]
+display-name: test_incrementalEditsEqualAReference()
+]]></system-out>
+</testcase>
+<testcase name="copiesKeepTheirProtectedDiagnosticsWithoutBecomingPaint()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping]/[method:copiesKeepTheirProtectedDiagnosticsWithoutBecomingPaint()]
+display-name: copiesKeepTheirProtectedDiagnosticsWithoutBecomingPaint()
+]]></system-out>
+</testcase>
+<testcase name="test_sourceEditsStayEqualToAFullSort()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.23">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_sourceEditsStayEqualToAFullSort()]
+display-name: test_sourceEditsStayEqualToAFullSort()
+]]></system-out>
+</testcase>
+<testcase name="invalidMutationsDoNotChangeSelection()" classname="org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration]/[method:invalidMutationsDoNotChangeSelection()]
+display-name: invalidMutationsDoNotChangeSelection()
+]]></system-out>
+</testcase>
+<testcase name="emptyModelRefillRetainsRequestedVisibleCapacity()" classname="org.eclipse.swt.tests.junit.Test_ViewportRowWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportRowWindow]/[method:emptyModelRefillRetainsRequestedVisibleCapacity()]
+display-name: emptyModelRefillRetainsRequestedVisibleCapacity()
+]]></system-out>
+</testcase>
+<testcase name="everySmallSelectionInBothRepresentations()" classname="org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration" time="0.012">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration]/[method:everySmallSelectionInBothRepresentations()]
+display-name: everySmallSelectionInBothRepresentations()
+]]></system-out>
+</testcase>
+<testcase name="test_equalsHashCodeToString()" classname="org.eclipse.swt.tests.junit.Test_M3ItemRange" time="0.007">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ItemRange]/[method:test_equalsHashCodeToString()]
+display-name: test_equalsHashCodeToString()
+]]></system-out>
+</testcase>
+<testcase name="test_treeInsertMakesALaterAncestorEnter()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_treeInsertMakesALaterAncestorEnter()]
+display-name: test_treeInsertMakesALaterAncestorEnter()
+]]></system-out>
+</testcase>
+<testcase name="test_valueChangesWithoutStatusChangeSkipTheFullPass()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_valueChangesWithoutStatusChangeSkipTheFullPass()]
+display-name: test_valueChangesWithoutStatusChangeSkipTheFullPass()
+]]></system-out>
+</testcase>
+<testcase name="collapseAndReopenRestoreAnchorAndOrdinaryOverscan()" classname="org.eclipse.swt.tests.junit.Test_ViewportRowWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportRowWindow]/[method:collapseAndReopenRestoreAnchorAndOrdinaryOverscan()]
+display-name: collapseAndReopenRestoreAnchorAndOrdinaryOverscan()
+]]></system-out>
+</testcase>
+<testcase name="test_localeDifferencesAreVisible()" classname="org.eclipse.swt.tests.junit.Test_M3Collation" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3Collation]/[method:test_localeDifferencesAreVisible()]
+display-name: test_localeDifferencesAreVisible()
+]]></system-out>
+</testcase>
+<testcase name="test_typingRefinementsEqualAFreshEvaluation()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.097">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_typingRefinementsEqualAFreshEvaluation()]
+display-name: test_typingRefinementsEqualAFreshEvaluation()
+]]></system-out>
+</testcase>
+<testcase name="test_lineBreaksAndSentencesMatchTheJdkIterator()" classname="org.eclipse.swt.tests.junit.Test_M3TextSegments" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextSegments]/[method:test_lineBreaksAndSentencesMatchTheJdkIterator()]
+display-name: test_lineBreaksAndSentencesMatchTheJdkIterator()
+]]></system-out>
+</testcase>
+<testcase name="test_tokensOfOtherKindsAndErrors()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0.004">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_tokensOfOtherKindsAndErrors()]
+display-name: test_tokensOfOtherKindsAndErrors()
+]]></system-out>
+</testcase>
+<testcase name="nativeOverscanPressureOraclePreservesVisibleAndCapacity()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeWindow]/[method:nativeOverscanPressureOraclePreservesVisibleAndCapacity()]
+display-name: nativeOverscanPressureOraclePreservesVisibleAndCapacity()
+]]></system-out>
+</testcase>
+<testcase name="smallRebasedOracleCoversLimitsAndContainerBoundaries()" classname="org.eclipse.swt.tests.junit.Test_ItemBitSetMaximumPosition" time="0.042">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ItemBitSetMaximumPosition]/[method:smallRebasedOracleCoversLimitsAndContainerBoundaries()]
+display-name: smallRebasedOracleCoversLimitsAndContainerBoundaries()
+]]></system-out>
+</testcase>
+<testcase name="collapsedLargeRegionsMatchIndependentAreaOracle()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:collapsedLargeRegionsMatchIndependentAreaOracle()]
+display-name: collapsedLargeRegionsMatchIndependentAreaOracle()
+]]></system-out>
+</testcase>
+<testcase name="oversizedGeometryIsRejectedBeforeMutatingTreeWindow()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeWindow]/[method:oversizedGeometryIsRejectedBeforeMutatingTreeWindow()]
+display-name: oversizedGeometryIsRejectedBeforeMutatingTreeWindow()
+]]></system-out>
+</testcase>
+<testcase name="test_containsStartsWithExact()" classname="org.eclipse.swt.tests.junit.Test_M3TextMatch" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextMatch]/[method:test_containsStartsWithExact()]
+display-name: test_containsStartsWithExact()
+]]></system-out>
+</testcase>
+<testcase name="test_smartAlignmentKeepsRevealedOffsetsAndCentersOthers()" classname="org.eclipse.swt.tests.junit.Test_M3RowExtents" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3RowExtents]/[method:test_smartAlignmentKeepsRevealedOffsetsAndCentersOthers()]
+display-name: test_smartAlignmentKeepsRevealedOffsetsAndCentersOthers()
+]]></system-out>
+</testcase>
+<testcase name="test_treeValueUpdatesAreDeltasThatReplay()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.11">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_treeValueUpdatesAreDeltasThatReplay()]
+display-name: test_treeValueUpdatesAreDeltasThatReplay()
+]]></system-out>
+</testcase>
+<testcase name="test_wildcardAgainstRegexTranslation()" classname="org.eclipse.swt.tests.junit.Test_M3TextMatch" time="0.011">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextMatch]/[method:test_wildcardAgainstRegexTranslation()]
+display-name: test_wildcardAgainstRegexTranslation()
+]]></system-out>
+</testcase>
+<testcase name="shiftingLastChunkDoesNotLoseSetRows()" classname="org.eclipse.swt.tests.junit.Test_ItemBitSetMaximumPosition" time="0.021">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ItemBitSetMaximumPosition]/[method:shiftingLastChunkDoesNotLoseSetRows()]
+display-name: shiftingLastChunkDoesNotLoseSetRows()
+]]></system-out>
+</testcase>
+<testcase name="deepPruneRetainsParentAndRefreshesVisibleWeights()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeTopology" time="0.038">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeTopology]/[method:deepPruneRetainsParentAndRefreshesVisibleWeights()]
+display-name: deepPruneRetainsParentAndRefreshesVisibleWeights()
+]]></system-out>
+</testcase>
+<testcase name="adjacentExclusionsAndEmptyRangesKeepEndpoints()" classname="org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration]/[method:adjacentExclusionsAndEmptyRangesKeepEndpoints()]
+display-name: adjacentExclusionsAndEmptyRangesKeepEndpoints()
+]]></system-out>
+</testcase>
+<testcase name="test_vocabularyFoldsCaseWhenAsked()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_vocabularyFoldsCaseWhenAsked()]
+display-name: test_vocabularyFoldsCaseWhenAsked()
+]]></system-out>
+</testcase>
+<testcase name="testFullRunToBitmapAndBack()" classname="org.eclipse.swt.tests.junit.Test_ItemBitSetDifferential" time="0.039">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ItemBitSetDifferential]/[method:testFullRunToBitmapAndBack()]
+display-name: testFullRunToBitmapAndBack()
+]]></system-out>
+</testcase>
+<testcase name="zeroHeightAndPriorEmptyWindowCorrectionRemainEffective()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0.008">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:zeroHeightAndPriorEmptyWindowCorrectionRemainEffective()]
+display-name: zeroHeightAndPriorEmptyWindowCorrectionRemainEffective()
+]]></system-out>
+</testcase>
+<testcase name="testSeededMutationDifferential()" classname="org.eclipse.swt.tests.junit.Test_ItemBitSetDifferential" time="0.011">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ItemBitSetDifferential]/[method:testSeededMutationDifferential()]
+display-name: testSeededMutationDifferential()
+]]></system-out>
+</testcase>
+<testcase name="resizingClipsOldProtectedGeometryForRepaintAccounting()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping]/[method:resizingClipsOldProtectedGeometryForRepaintAccounting()]
+display-name: resizingClipsOldProtectedGeometryForRepaintAccounting()
+]]></system-out>
+</testcase>
+<testcase name="deepReleaseShiftsOnlySurvivingSiblingCoordinates()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeTopology" time="1.261">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeTopology]/[method:deepReleaseShiftsOnlySurvivingSiblingCoordinates()]
+display-name: deepReleaseShiftsOnlySurvivingSiblingCoordinates()
+]]></system-out>
+</testcase>
+<testcase name="test_ofNormalizesEmpty()" classname="org.eclipse.swt.tests.junit.Test_M3ItemRange" time="0.007">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ItemRange]/[method:test_ofNormalizesEmpty()]
+display-name: test_ofNormalizesEmpty()
+]]></system-out>
+</testcase>
+<testcase name="test_duplicateAtMaximumIntCoalescesOnce()" classname="org.eclipse.swt.tests.junit.Test_M3ItemRange" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ItemRange]/[method:test_duplicateAtMaximumIntCoalescesOnce()]
+display-name: test_duplicateAtMaximumIntCoalescesOnce()
+]]></system-out>
+</testcase>
+<testcase name="bitmapRunEndClampsBeforeAddingLastChunkBase()" classname="org.eclipse.swt.tests.junit.Test_ItemBitSetMaximumPosition" time="0.117">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ItemBitSetMaximumPosition]/[method:bitmapRunEndClampsBeforeAddingLastChunkBase()]
+display-name: bitmapRunEndClampsBeforeAddingLastChunkBase()
+]]></system-out>
+</testcase>
+<testcase name="test_rejectedSortKeysPreserveTheViewAndCopyInputs()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.003">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_rejectedSortKeysPreserveTheViewAndCopyInputs()]
+display-name: test_rejectedSortKeysPreserveTheViewAndCopyInputs()
+]]></system-out>
+</testcase>
+<testcase name="test_negativeEndpointBranchesAndZeroLengthEdits()" classname="org.eclipse.swt.tests.junit.Test_M3RowExtents" time="0.005">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3RowExtents]/[method:test_negativeEndpointBranchesAndZeroLengthEdits()]
+display-name: test_negativeEndpointBranchesAndZeroLengthEdits()
+]]></system-out>
+</testcase>
+<testcase name="defaultViewportDoesNotPaintBeforeLayout()" classname="org.eclipse.swt.tests.junit.Test_ViewportRowWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportRowWindow]/[method:defaultViewportDoesNotPaintBeforeLayout()]
+display-name: defaultViewportDoesNotPaintBeforeLayout()
+]]></system-out>
+</testcase>
+<testcase name="hundredThousandMaterializedSiblingsMatchTheLinearWalk()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeOrderStatistic" time="3.609">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeOrderStatistic]/[method:hundredThousandMaterializedSiblingsMatchTheLinearWalk()]
+display-name: hundredThousandMaterializedSiblingsMatchTheLinearWalk()
+]]></system-out>
+</testcase>
+<testcase name="subsetMatchesEveryPairOfSmallPixelMasks()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0.017">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:subsetMatchesEveryPairOfSmallPixelMasks()]
+display-name: subsetMatchesEveryPairOfSmallPixelMasks()
+]]></system-out>
+</testcase>
+<testcase name="test_collationAndComparatorKeysOnTheRadixPath()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_collationAndComparatorKeysOnTheRadixPath()]
+display-name: test_collationAndComparatorKeysOnTheRadixPath()
+]]></system-out>
+</testcase>
+<testcase name="zeroWidthWithPositiveHeightAdmitsNoRows()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:zeroWidthWithPositiveHeightAdmitsNoRows()]
+display-name: zeroWidthWithPositiveHeightAdmitsNoRows()
+]]></system-out>
+</testcase>
+<testcase name="alternatingHolesProduceSortedFreshOutput()" classname="org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration]/[method:alternatingHolesProduceSortedFreshOutput()]
+display-name: alternatingHolesProduceSortedFreshOutput()
+]]></system-out>
+</testcase>
+<testcase name="test_scrollOffsets()" classname="org.eclipse.swt.tests.junit.Test_M3RowExtents" time="0.032">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3RowExtents]/[method:test_scrollOffsets()]
+display-name: test_scrollOffsets()
+]]></system-out>
+</testcase>
+<testcase name="endFrameChecksDamageAgainstTheExpectedArea()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:endFrameChecksDamageAgainstTheExpectedArea()]
+display-name: endFrameChecksDamageAgainstTheExpectedArea()
+]]></system-out>
+</testcase>
+<testcase name="test_signAgreesWithTheCollator()" classname="org.eclipse.swt.tests.junit.Test_M3Collation" time="0.041">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3Collation]/[method:test_signAgreesWithTheCollator()]
+display-name: test_signAgreesWithTheCollator()
+]]></system-out>
+</testcase>
+<testcase name="test_argumentChecks()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.019">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_argumentChecks()]
+display-name: test_argumentChecks()
+]]></system-out>
+</testcase>
+<testcase name="test_textKeysWithCollatorAndRowComparator()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_textKeysWithCollatorAndRowComparator()]
+display-name: test_textKeysWithCollatorAndRowComparator()
+]]></system-out>
+</testcase>
+<testcase name="test_wordsMatchTheJdkIteratorAndFlagWords()" classname="org.eclipse.swt.tests.junit.Test_M3TextSegments" time="0.004">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextSegments]/[method:test_wordsMatchTheJdkIteratorAndFlagWords()]
+display-name: test_wordsMatchTheJdkIteratorAndFlagWords()
+]]></system-out>
+</testcase>
+<testcase name="test_vocabularyArgumentsAreChecked()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0.003">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_vocabularyArgumentsAreChecked()]
+display-name: test_vocabularyArgumentsAreChecked()
+]]></system-out>
+</testcase>
+<testcase name="test_builderRunsAndUpdates()" classname="org.eclipse.swt.tests.junit.Test_M3Patch" time="0.011">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3Patch]/[method:test_builderRunsAndUpdates()]
+display-name: test_builderRunsAndUpdates()
+]]></system-out>
+</testcase>
+<testcase name="test_visibleRangeIsExact()" classname="org.eclipse.swt.tests.junit.Test_M3RowExtents" time="0.022">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3RowExtents]/[method:test_visibleRangeIsExact()]
+display-name: test_visibleRangeIsExact()
+]]></system-out>
+</testcase>
+<testcase name="test_regexMatchesTheWholeText()" classname="org.eclipse.swt.tests.junit.Test_M3TextMatch" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextMatch]/[method:test_regexMatchesTheWholeText()]
+display-name: test_regexMatchesTheWholeText()
+]]></system-out>
+</testcase>
+<testcase name="test_tokensOfWordSegmentsMatchLikeTheWords()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_tokensOfWordSegmentsMatchLikeTheWords()]
+display-name: test_tokensOfWordSegmentsMatchLikeTheWords()
+]]></system-out>
+</testcase>
+<testcase name="test_keyValueEdgeCases()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_keyValueEdgeCases()]
+display-name: test_keyValueEdgeCases()
+]]></system-out>
+</testcase>
+<testcase name="testCrossContainerBoundariesAndClears()" classname="org.eclipse.swt.tests.junit.Test_ItemBitSetDifferential" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ItemBitSetDifferential]/[method:testCrossContainerBoundariesAndClears()]
+display-name: testCrossContainerBoundariesAndClears()
+]]></system-out>
+</testcase>
+<testcase name="invalidGeometryRetainsExistingExceptionContract()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0.023">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:invalidGeometryRetainsExistingExceptionContract()]
+display-name: invalidGeometryRetainsExistingExceptionContract()
+]]></system-out>
+</testcase>
+<testcase name="protectedAreaInPointsRoundsLikeDamage()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:protectedAreaInPointsRoundsLikeDamage()]
+display-name: protectedAreaInPointsRoundsLikeDamage()
+]]></system-out>
+</testcase>
+<testcase name="deepWindowUnwindsWithoutRecursiveStackOrSiblingExpansion()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeWindow" time="0.041">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeWindow]/[method:deepWindowUnwindsWithoutRecursiveStackOrSiblingExpansion()]
+display-name: deepWindowUnwindsWithoutRecursiveStackOrSiblingExpansion()
+]]></system-out>
+</testcase>
+<testcase name="test_windowRangesAndChangeDescriptions()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.26">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_windowRangesAndChangeDescriptions()]
+display-name: test_windowRangesAndChangeDescriptions()
+]]></system-out>
+</testcase>
+<testcase name="flatPlannerRetainsBoundedNonemptyWindow()" classname="org.eclipse.swt.tests.junit.Test_ViewportRowWindow" time="0.505">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportRowWindow]/[method:flatPlannerRetainsBoundedNonemptyWindow()]
+display-name: flatPlannerRetainsBoundedNonemptyWindow()
+]]></system-out>
+</testcase>
+<testcase name="seededIntegerAndLongExtremaMatchIndependentOracle()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0.003">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:seededIntegerAndLongExtremaMatchIndependentOracle()]
+display-name: seededIntegerAndLongExtremaMatchIndependentOracle()
+]]></system-out>
+</testcase>
+<testcase name="largeThresholdsMatchBigIntegerOracle()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping]/[method:largeThresholdsMatchBigIntegerOracle()]
+display-name: largeThresholdsMatchBigIntegerOracle()
+]]></system-out>
+</testcase>
+<testcase name="largeDomainSubsetsMatchIndependentJava2D()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0.061">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:largeDomainSubsetsMatchIndependentJava2D()]
+display-name: largeDomainSubsetsMatchIndependentJava2D()
+]]></system-out>
+</testcase>
+<testcase name="blitScrollPaintsOnlyTheExposedStrip()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:blitScrollPaintsOnlyTheExposedStrip()]
+display-name: blitScrollPaintsOnlyTheExposedStrip()
+]]></system-out>
+</testcase>
+<testcase name="recorderCapsStoredFramesButKeepsTotals()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0.009">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:recorderCapsStoredFramesButKeepsTotals()]
+display-name: recorderCapsStoredFramesButKeepsTotals()
+]]></system-out>
+</testcase>
+<testcase name="coalescedRegionsCompareAgainstDistinctRegions()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:coalescedRegionsCompareAgainstDistinctRegions()]
+display-name: coalescedRegionsCompareAgainstDistinctRegions()
+]]></system-out>
+</testcase>
+<testcase name="publicCoverageQueryValidationRemainsUnchanged()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:publicCoverageQueryValidationRemainsUnchanged()]
+display-name: publicCoverageQueryValidationRemainsUnchanged()
+]]></system-out>
+</testcase>
+<testcase name="windowsAreFreshAfterExpansionRebindAndPruning()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeWindow]/[method:windowsAreFreshAfterExpansionRebindAndPruning()]
+display-name: windowsAreFreshAfterExpansionRebindAndPruning()
+]]></system-out>
+</testcase>
+<testcase name="test_treeFilterEditsKeepTheSiblingIndex()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.1">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_treeFilterEditsKeepTheSiblingIndex()]
+display-name: test_treeFilterEditsKeepTheSiblingIndex()
+]]></system-out>
+</testcase>
+<testcase name="test_randomEditsAgreeWithNaivePrefixSums()" classname="org.eclipse.swt.tests.junit.Test_M3RowExtents" time="0.004">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3RowExtents]/[method:test_randomEditsAgreeWithNaivePrefixSums()]
+display-name: test_randomEditsAgreeWithNaivePrefixSums()
+]]></system-out>
+</testcase>
+<testcase name="scrollbarConsumingAllWidthAdmitsNoRows()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:scrollbarConsumingAllWidthAdmitsNoRows()]
+display-name: scrollbarConsumingAllWidthAdmitsNoRows()
+]]></system-out>
+</testcase>
+<testcase name="thresholdRoundsUpToTheNextWholePixel()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping]/[method:thresholdRoundsUpToTheNextWholePixel()]
+display-name: thresholdRoundsUpToTheNextWholePixel()
+]]></system-out>
+</testcase>
+<testcase name="navigationAndModelEditsStayEmptyWhileCollapsed()" classname="org.eclipse.swt.tests.junit.Test_ViewportRowWindow" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportRowWindow]/[method:navigationAndModelEditsStayEmptyWhileCollapsed()]
+display-name: navigationAndModelEditsStayEmptyWhileCollapsed()
+]]></system-out>
+</testcase>
+<testcase name="rejectedCopiesPreserveDamageAndAccounting()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:rejectedCopiesPreserveDamageAndAccounting()]
+display-name: rejectedCopiesPreserveDamageAndAccounting()
+]]></system-out>
+</testcase>
+<testcase name="copyDamagesOnlyTheDestination()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:copyDamagesOnlyTheDestination()]
+display-name: copyDamagesOnlyTheDestination()
+]]></system-out>
+</testcase>
+<testcase name="test_untouchedLaneAllocatesNothing()" classname="org.eclipse.swt.tests.junit.Test_VirtualBitLanes" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualBitLanes]/[method:test_untouchedLaneAllocatesNothing()]
+display-name: test_untouchedLaneAllocatesNothing()
+]]></system-out>
+</testcase>
+<testcase name="test_graphemesKeepCombiningMarksTogether()" classname="org.eclipse.swt.tests.junit.Test_M3TextSegments" time="0.01">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextSegments]/[method:test_graphemesKeepCombiningMarksTogether()]
+display-name: test_graphemesKeepCombiningMarksTogether()
+]]></system-out>
+</testcase>
+<testcase name="flatPlannerUsesEmptySharedWindowForZeroHeightGeometry()" classname="org.eclipse.swt.tests.junit.Test_ViewportRowWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportRowWindow]/[method:flatPlannerUsesEmptySharedWindowForZeroHeightGeometry()]
+display-name: flatPlannerUsesEmptySharedWindowForZeroHeightGeometry()
+]]></system-out>
+</testcase>
+<testcase name="test_emptyText()" classname="org.eclipse.swt.tests.junit.Test_M3TextSegments" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextSegments]/[method:test_emptyText()]
+display-name: test_emptyText()
+]]></system-out>
+</testcase>
+<testcase name="coalescedHorizontalRegionsRemainSubsetsOfThemselves()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:coalescedHorizontalRegionsRemainSubsetsOfThemselves()]
+display-name: coalescedHorizontalRegionsRemainSubsetsOfThemselves()
+]]></system-out>
+</testcase>
+<testcase name="test_localeIsPassedToTheIterator()" classname="org.eclipse.swt.tests.junit.Test_M3TextSegments" time="0.014">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextSegments]/[method:test_localeIsPassedToTheIterator()]
+display-name: test_localeIsPassedToTheIterator()
+]]></system-out>
+</testcase>
+<testcase name="test_valueLists()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.005">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_valueLists()]
+display-name: test_valueLists()
+]]></system-out>
+</testcase>
+<testcase name="nonemptyWindowsMatchIndependentClippedIntervalOracle()" classname="org.eclipse.swt.tests.junit.Test_ViewportRowWindow" time="0.028">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportRowWindow]/[method:nonemptyWindowsMatchIndependentClippedIntervalOracle()]
+display-name: nonemptyWindowsMatchIndependentClippedIntervalOracle()
+]]></system-out>
+</testcase>
+<testcase name="test_coalesceLeavesTheArgumentUntouched()" classname="org.eclipse.swt.tests.junit.Test_M3ItemRange" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ItemRange]/[method:test_coalesceLeavesTheArgumentUntouched()]
+display-name: test_coalesceLeavesTheArgumentUntouched()
+]]></system-out>
+</testcase>
+<testcase name="touchingPointRectanglesNeverLeaveAGapOrCountAPixelTwice()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:touchingPointRectanglesNeverLeaveAGapOrCountAPixelTwice()]
+display-name: touchingPointRectanglesNeverLeaveAGapOrCountAPixelTwice()
+]]></system-out>
+</testcase>
+<testcase name="nativeTreeGeometryAutomaticallyAdmitsBoundedOverscan()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeWindow]/[method:nativeTreeGeometryAutomaticallyAdmitsBoundedOverscan()]
+display-name: nativeTreeGeometryAutomaticallyAdmitsBoundedOverscan()
+]]></system-out>
+</testcase>
+<testcase name="test_changeEventsAndDamage()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.004">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_changeEventsAndDamage()]
+display-name: test_changeEventsAndDamage()
+]]></system-out>
+</testcase>
+<testcase name="test_treeKeepsAncestorsOfMatches()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_treeKeepsAncestorsOfMatches()]
+display-name: test_treeKeepsAncestorsOfMatches()
+]]></system-out>
+</testcase>
+<testcase name="seededSiblingInsertRemovePreservesBranchesAndNativeColumns()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeTopology" time="0.621">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeTopology]/[method:seededSiblingInsertRemovePreservesBranchesAndNativeColumns()]
+display-name: seededSiblingInsertRemovePreservesBranchesAndNativeColumns()
+]]></system-out>
+</testcase>
+<testcase name="test_viewChainsListenersAndForeignInputs()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.509">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_viewChainsListenersAndForeignInputs()]
+display-name: test_viewChainsListenersAndForeignInputs()
+]]></system-out>
+</testcase>
+<testcase name="deepForgetPreservesLogicalCoordinateAndOtherBranch()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeTopology" time="0.033">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeTopology]/[method:deepForgetPreservesLogicalCoordinateAndOtherBranch()]
+display-name: deepForgetPreservesLogicalCoordinateAndOtherBranch()
+]]></system-out>
+</testcase>
+<testcase name="test_windowClipsDamage()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.007">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_windowClipsDamage()]
+display-name: test_windowClipsDamage()
+]]></system-out>
+</testcase>
+<testcase name="subsetQueriesPreserveGeometryAndCopyMetrics()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0.006">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:subsetQueriesPreserveGeometryAndCopyMetrics()]
+display-name: subsetQueriesPreserveGeometryAndCopyMetrics()
+]]></system-out>
+</testcase>
+<testcase name="test_checkAll10MillionRowsIsWordWise()" classname="org.eclipse.swt.tests.junit.Test_VirtualBitLanes" time="0.006">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualBitLanes]/[method:test_checkAll10MillionRowsIsWordWise()]
+display-name: test_checkAll10MillionRowsIsWordWise()
+]]></system-out>
+</testcase>
+<testcase name="test_stableTiesKeepSourceOrderInBothDirections()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_stableTiesKeepSourceOrderInBothDirections()]
+display-name: test_stableTiesKeepSourceOrderInBothDirections()
+]]></system-out>
+</testcase>
+<testcase name="test_segmentAtMapsOffsetsToSegments()" classname="org.eclipse.swt.tests.junit.Test_M3TextSegments" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextSegments]/[method:test_segmentAtMapsOffsetsToSegments()]
+display-name: test_segmentAtMapsOffsetsToSegments()
+]]></system-out>
+</testcase>
+<testcase name="test_singleKeysBothDirectionsSmallAndLarge()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.033">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_singleKeysBothDirectionsSmallAndLarge()]
+display-name: test_singleKeysBothDirectionsSmallAndLarge()
+]]></system-out>
+</testcase>
+<testcase name="test_unknownMatchesNothing()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_unknownMatchesNothing()]
+display-name: test_unknownMatchesNothing()
+]]></system-out>
+</testcase>
+<testcase name="protectedOverscanCannotHideAFullVisibleRepaint()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping]/[method:protectedOverscanCannotHideAFullVisibleRepaint()]
+display-name: protectedOverscanCannotHideAFullVisibleRepaint()
+]]></system-out>
+</testcase>
+<testcase name="emptyHugeViewportIsNeverAFullRepaint()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping]/[method:emptyHugeViewportIsNeverAFullRepaint()]
+display-name: emptyHugeViewportIsNeverAFullRepaint()
+]]></system-out>
+</testcase>
+<testcase name="regionMatchesPixelOracleOnRandomRectangles()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0.044">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:regionMatchesPixelOracleOnRandomRectangles()]
+display-name: regionMatchesPixelOracleOnRandomRectangles()
+]]></system-out>
+</testcase>
+<testcase name="frozenSparseForestPermutationsMatchIndependentPreorder()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeWindow" time="0.032">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeWindow]/[method:frozenSparseForestPermutationsMatchIndependentPreorder()]
+display-name: frozenSparseForestPermutationsMatchIndependentPreorder()
+]]></system-out>
+</testcase>
+<testcase name="solvedEmptyBodyFeedsAnEmptyRowWindow()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:solvedEmptyBodyFeedsAnEmptyRowWindow()]
+display-name: solvedEmptyBodyFeedsAnEmptyRowWindow()
+]]></system-out>
+</testcase>
+<testcase name="overflowCollapsesToTheBoundingBox()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:overflowCollapsesToTheBoundingBox()]
+display-name: overflowCollapsesToTheBoundingBox()
+]]></system-out>
+</testcase>
+<testcase name="test_wildcardMatchesTheWholeText()" classname="org.eclipse.swt.tests.junit.Test_M3TextMatch" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextMatch]/[method:test_wildcardMatchesTheWholeText()]
+display-name: test_wildcardMatchesTheWholeText()
+]]></system-out>
+</testcase>
+<testcase name="test_boundariesAreACopyAndLanesAreBounded()" classname="org.eclipse.swt.tests.junit.Test_M3TextSegments" time="0.01">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextSegments]/[method:test_boundariesAreACopyAndLanesAreBounded()]
+display-name: test_boundariesAreACopyAndLanesAreBounded()
+]]></system-out>
+</testcase>
+<testcase name="siblingOverflowRetainsIdOrderedPartialUpdates()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeTopology" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeTopology]/[method:siblingOverflowRetainsIdOrderedPartialUpdates()]
+display-name: siblingOverflowRetainsIdOrderedPartialUpdates()
+]]></system-out>
+</testcase>
+<testcase name="randomScriptsAtRandomDepthsMatchTheLinearWalk()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeOrderStatistic" time="0.887">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeOrderStatistic]/[method:randomScriptsAtRandomDepthsMatchTheLinearWalk()]
+display-name: randomScriptsAtRandomDepthsMatchTheLinearWalk()
+]]></system-out>
+</testcase>
+<testcase name="test_upperIntBoundaryAndNonAdjacentRuns()" classname="org.eclipse.swt.tests.junit.Test_M3ItemRange" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ItemRange]/[method:test_upperIntBoundaryAndNonAdjacentRuns()]
+display-name: test_upperIntBoundaryAndNonAdjacentRuns()
+]]></system-out>
+</testcase>
+<testcase name="test_hybridSelectionDifferentialAcrossRepresentationSwitches()" classname="org.eclipse.swt.tests.junit.Test_VirtualBitLanes" time="0.108">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualBitLanes]/[method:test_hybridSelectionDifferentialAcrossRepresentationSwitches()]
+display-name: test_hybridSelectionDifferentialAcrossRepresentationSwitches()
+]]></system-out>
+</testcase>
+<testcase name="test_treeModeSortsSiblings()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.01">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_treeModeSortsSiblings()]
+display-name: test_treeModeSortsSiblings()
+]]></system-out>
+</testcase>
+<testcase name="test_collatorEqualTextsShareARank()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.014">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_collatorEqualTextsShareARank()]
+display-name: test_collatorEqualTextsShareARank()
+]]></system-out>
+</testcase>
+<testcase name="test_multiColumnCriterionAndLogic()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_multiColumnCriterionAndLogic()]
+display-name: test_multiColumnCriterionAndLogic()
+]]></system-out>
+</testcase>
+<testcase name="regionRejectsOutOfRangeAndBadIndex()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:regionRejectsOutOfRangeAndBadIndex()]
+display-name: regionRejectsOutOfRangeAndBadIndex()
+]]></system-out>
+</testcase>
+<testcase name="clippedProtectedCoverageMatchesIndependentPixelSets()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping" time="0.025">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageRecorderClipping]/[method:clippedProtectedCoverageMatchesIndependentPixelSets()]
+display-name: clippedProtectedCoverageMatchesIndependentPixelSets()
+]]></system-out>
+</testcase>
+<testcase name="test_identityWithoutKeys()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.003">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_identityWithoutKeys()]
+display-name: test_identityWithoutKeys()
+]]></system-out>
+</testcase>
+<testcase name="queriesAndRejectedUpdatesPreserveWindowState()" classname="org.eclipse.swt.tests.junit.Test_ViewportRowWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportRowWindow]/[method:queriesAndRejectedUpdatesPreserveWindowState()]
+display-name: queriesAndRejectedUpdatesPreserveWindowState()
+]]></system-out>
+</testcase>
+<testcase name="test_largeKeyValuesTakeTheRadixPath()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.01">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_largeKeyValuesTakeTheRadixPath()]
+display-name: test_largeKeyValuesTakeTheRadixPath()
+]]></system-out>
+</testcase>
+<testcase name="commonLayoutAdapterPropagatesEmptyWidth()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0.027">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:commonLayoutAdapterPropagatesEmptyWidth()]
+display-name: commonLayoutAdapterPropagatesEmptyWidth()
+]]></system-out>
+</testcase>
+<testcase name="deepFlagQueryStopsAtSubtreeBoundary()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeTopology" time="0.027">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeTopology]/[method:deepFlagQueryStopsAtSubtreeBoundary()]
+display-name: deepFlagQueryStopsAtSubtreeBoundary()
+]]></system-out>
+</testcase>
+<testcase name="test_cellTextDefaultKey()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.005">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_cellTextDefaultKey()]
+display-name: test_cellTextDefaultKey()
+]]></system-out>
+</testcase>
+<testcase name="emptyViewportSuppressesOverscanAtStartMiddleAndTail()" classname="org.eclipse.swt.tests.junit.Test_ViewportRowWindow" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportRowWindow]/[method:emptyViewportSuppressesOverscanAtStartMiddleAndTail()]
+display-name: emptyViewportSuppressesOverscanAtStartMiddleAndTail()
+]]></system-out>
+</testcase>
+<testcase name="linearCoordinateOracleRejectsHiddenAncestry()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeOrderStatistic" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeOrderStatistic]/[method:linearCoordinateOracleRejectsHiddenAncestry()]
+display-name: linearCoordinateOracleRejectsHiddenAncestry()
+]]></system-out>
+</testcase>
+<testcase name="collapseMutationAndReopenRetainLogicalAnchor()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:collapseMutationAndReopenRetainLogicalAnchor()]
+display-name: collapseMutationAndReopenRetainLogicalAnchor()
+]]></system-out>
+</testcase>
+<testcase name="test_tokensAndNegation()" classname="org.eclipse.swt.tests.junit.Test_M3TextMatch" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextMatch]/[method:test_tokensAndNegation()]
+display-name: test_tokensAndNegation()
+]]></system-out>
+</testcase>
+<testcase name="test_selection10MillionRowsTimingsAndCutover()" classname="org.eclipse.swt.tests.junit.Test_VirtualBitLanes" time="0.521">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualBitLanes]/[method:test_selection10MillionRowsTimingsAndCutover()]
+display-name: test_selection10MillionRowsTimingsAndCutover()
+]]></system-out>
+</testcase>
+<testcase name="test_anchoringKeepsTheContentInView()" classname="org.eclipse.swt.tests.junit.Test_M3RowExtents" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3RowExtents]/[method:test_anchoringKeepsTheContentInView()]
+display-name: test_anchoringKeepsTheContentInView()
+]]></system-out>
+</testcase>
+<testcase name="emptyUnknownAndInvalidWindowContractsSurvive()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeWindow]/[method:emptyUnknownAndInvalidWindowContractsSurvive()]
+display-name: emptyUnknownAndInvalidWindowContractsSurvive()
+]]></system-out>
+</testcase>
+<testcase name="test_presenceMaskUsesTheCursorFactsRule()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_presenceMaskUsesTheCursorFactsRule()]
+display-name: test_presenceMaskUsesTheCursorFactsRule()
+]]></system-out>
+</testcase>
+<testcase name="test_singleMoveDamage()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.012">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_singleMoveDamage()]
+display-name: test_singleMoveDamage()
+]]></system-out>
+</testcase>
+<testcase name="test_invalidUpdatedParentFailsAndResetRecovers()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_invalidUpdatedParentFailsAndResetRecovers()]
+display-name: test_invalidUpdatedParentFailsAndResetRecovers()
+]]></system-out>
+</testcase>
+<testcase name="test_toggleCycleAndAccumulate()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_toggleCycleAndAccumulate()]
+display-name: test_toggleCycleAndAccumulate()
+]]></system-out>
+</testcase>
+<testcase name="test_anchoringDistinguishesFirstMeasurementAndExactBoundaries()" classname="org.eclipse.swt.tests.junit.Test_M3RowExtents" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3RowExtents]/[method:test_anchoringDistinguishesFirstMeasurementAndExactBoundaries()]
+display-name: test_anchoringDistinguishesFirstMeasurementAndExactBoundaries()
+]]></system-out>
+</testcase>
+<testcase name="test_argumentsAreChecked()" classname="org.eclipse.swt.tests.junit.Test_M3Collation" time="0.018">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3Collation]/[method:test_argumentsAreChecked()]
+display-name: test_argumentsAreChecked()
+]]></system-out>
+</testcase>
+<testcase name="test_argumentsAreChecked()" classname="org.eclipse.swt.tests.junit.Test_M3RowExtents" time="0.015">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3RowExtents]/[method:test_argumentsAreChecked()]
+display-name: test_argumentsAreChecked()
+]]></system-out>
+</testcase>
+<testcase name="test_multiKeyOrder()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.049">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_multiKeyOrder()]
+display-name: test_multiKeyOrder()
+]]></system-out>
+</testcase>
+<testcase name="maximumLogicalCountUsesConstantNativeModelStateAndResetInvalidatesIter()" classname="org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel" time="0.006">
+<skipped><![CDATA[org.opentest4j.TestAbortedException: Assumption failed: assumption is not true
+	at org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:316)
+	at org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:115)
+	at org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:66)
+	at org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel.requireGtk3(Test_VirtualNativeTableModel.java:34)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+]]></skipped>
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel]/[method:maximumLogicalCountUsesConstantNativeModelStateAndResetInvalidatesIter()]
+display-name: maximumLogicalCountUsesConstantNativeModelStateAndResetInvalidatesIter()
+]]></system-out>
+</testcase>
+<testcase name="rfbFullUpdateIsAFullRepaintAndDesktopSizeResizesTheViewport()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0.009">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:rfbFullUpdateIsAFullRepaintAndDesktopSizeResizesTheViewport()]
+display-name: rfbFullUpdateIsAFullRepaintAndDesktopSizeResizesTheViewport()
+]]></system-out>
+</testcase>
+<testcase name="logicalGrowthCannotInvalidatePaintBudgetAfterLayout()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeWindow]/[method:logicalGrowthCannotInvalidatePaintBudgetAfterLayout()]
+display-name: logicalGrowthCannotInvalidatePaintBudgetAfterLayout()
+]]></system-out>
+</testcase>
+<testcase name="protectedAreaHitsAreCountedApartFromFullRepaints()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:protectedAreaHitsAreCountedApartFromFullRepaints()]
+display-name: protectedAreaHitsAreCountedApartFromFullRepaints()
+]]></system-out>
+</testcase>
+<testcase name="test_blockCacheReservesEvictsLeastRecentAndProtectsCurrentFrame()" classname="org.eclipse.swt.tests.junit.Test_VirtualBitLanes" time="0.041">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualBitLanes]/[method:test_blockCacheReservesEvictsLeastRecentAndProtectsCurrentFrame()]
+display-name: test_blockCacheReservesEvictsLeastRecentAndProtectsCurrentFrame()
+]]></system-out>
+</testcase>
+<testcase name="exhaustiveSmallLayoutsMatchIndependentFixedPointFields()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0.206">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:exhaustiveSmallLayoutsMatchIndependentFixedPointFields()]
+display-name: exhaustiveSmallLayoutsMatchIndependentFixedPointFields()
+]]></system-out>
+</testcase>
+<testcase name="test_argumentChecks()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.004">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_argumentChecks()]
+display-name: test_argumentChecks()
+]]></system-out>
+</testcase>
+<testcase name="test_ancestorCycleFallbackKeepsOnlyReachableRows()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_ancestorCycleFallbackKeepsOnlyReachableRows()]
+display-name: test_ancestorCycleFallbackKeepsOnlyReachableRows()
+]]></system-out>
+</testcase>
+<testcase name="test_checkAndErrors()" classname="org.eclipse.swt.tests.junit.Test_M3TextMatch" time="0.004">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextMatch]/[method:test_checkAndErrors()]
+display-name: test_checkAndErrors()
+]]></system-out>
+</testcase>
+<testcase name="test_treeValueUpdatesKeepTheSiblingIndex()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.114">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_treeValueUpdatesKeepTheSiblingIndex()]
+display-name: test_treeValueUpdatesKeepTheSiblingIndex()
+]]></system-out>
+</testcase>
+<testcase name="test_indexOfFindsTheFirstOccurrence()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_indexOfFindsTheFirstOccurrence()]
+display-name: test_indexOfFindsTheFirstOccurrence()
+]]></system-out>
+</testcase>
+<testcase name="shiftGenerationAndUnknownParentFailureAreStable()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeTopology" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeTopology]/[method:shiftGenerationAndUnknownParentFailureAreStable()]
+display-name: shiftGenerationAndUnknownParentFailureAreStable()
+]]></system-out>
+</testcase>
+<testcase name="test_sourceEditsAreDeltasThatReplay()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="1.141">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_sourceEditsAreDeltasThatReplay()]
+display-name: test_sourceEditsAreDeltasThatReplay()
+]]></system-out>
+</testcase>
+<testcase name="recorderTracksPaintedVersusMovedAndFullRepaints()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:recorderTracksPaintedVersusMovedAndFullRepaints()]
+display-name: recorderTracksPaintedVersusMovedAndFullRepaints()
+]]></system-out>
+</testcase>
+<testcase name="test_textCriteriaPerColumn()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.018">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_textCriteriaPerColumn()]
+display-name: test_textCriteriaPerColumn()
+]]></system-out>
+</testcase>
+<testcase name="test_coalesceBuildsNormalForm()" classname="org.eclipse.swt.tests.junit.Test_M3ItemRange" time="0.003">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ItemRange]/[method:test_coalesceBuildsNormalForm()]
+display-name: test_coalesceBuildsNormalForm()
+]]></system-out>
+</testcase>
+<testcase name="test_synchronousGenerationAndCriterionCopies()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_synchronousGenerationAndCriterionCopies()]
+display-name: test_synchronousGenerationAndCriterionCopies()
+]]></system-out>
+</testcase>
+<testcase name="maximumCoordinateReleaseRetainsExistingBoundaryBehavior()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeTopology" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeTopology]/[method:maximumCoordinateReleaseRetainsExistingBoundaryBehavior()]
+display-name: maximumCoordinateReleaseRetainsExistingBoundaryBehavior()
+]]></system-out>
+</testcase>
+<testcase name="test_sortedOrderIsStableAndAscending()" classname="org.eclipse.swt.tests.junit.Test_M3Collation" time="0.024">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3Collation]/[method:test_sortedOrderIsStableAndAscending()]
+display-name: test_sortedOrderIsStableAndAscending()
+]]></system-out>
+</testcase>
+<testcase name="rfbFeedRejectsMalformedMessages()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0.006">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:rfbFeedRejectsMalformedMessages()]
+display-name: rfbFeedRejectsMalformedMessages()
+]]></system-out>
+</testcase>
+<testcase name="test_valueAndEmptiness()" classname="org.eclipse.swt.tests.junit.Test_M3ItemRange" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ItemRange]/[method:test_valueAndEmptiness()]
+display-name: test_valueAndEmptiness()
+]]></system-out>
+</testcase>
+<testcase name="collapsedLongExtremaRemainEmptyWithoutOverflow()" classname="org.eclipse.swt.tests.junit.Test_ViewportRowWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportRowWindow]/[method:collapsedLongExtremaRemainEmptyWithoutOverflow()]
+display-name: collapsedLongExtremaRemainEmptyWithoutOverflow()
+]]></system-out>
+</testcase>
+<testcase name="test_vocabularyAssignsDenseStableIds()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_vocabularyAssignsDenseStableIds()]
+display-name: test_vocabularyAssignsDenseStableIds()
+]]></system-out>
+</testcase>
+<testcase name="framesAreRingsWithoutGapsOrOverlapsAndNestWithTheBoxModel()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0.01">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:framesAreRingsWithoutGapsOrOverlapsAndNestWithTheBoxModel()]
+display-name: framesAreRingsWithoutGapsOrOverlapsAndNestWithTheBoxModel()
+]]></system-out>
+</testcase>
+<testcase name="logicalCellAllocationRejectsForeignModelAndClearsOutput()" classname="org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel" time="0">
+<skipped><![CDATA[org.opentest4j.TestAbortedException: Assumption failed: assumption is not true
+	at org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:316)
+	at org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:115)
+	at org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:66)
+	at org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel.requireGtk3(Test_VirtualNativeTableModel.java:34)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+]]></skipped>
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel]/[method:logicalCellAllocationRejectsForeignModelAndClearsOutput()]
+display-name: logicalCellAllocationRejectsForeignModelAndClearsOutput()
+]]></system-out>
+</testcase>
+<testcase name="test_argumentsAreChecked()" classname="org.eclipse.swt.tests.junit.Test_M3TextSegments" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TextSegments]/[method:test_argumentsAreChecked()]
+display-name: test_argumentsAreChecked()
+]]></system-out>
+</testcase>
+<testcase name="maximumLogicalCountWithTinyComplementOutput()" classname="org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration" time="0.019">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration]/[method:maximumLogicalCountWithTinyComplementOutput()]
+display-name: maximumLogicalCountWithTinyComplementOutput()
+]]></system-out>
+</testcase>
+<testcase name="test_duplicateKeysStayStableAcrossFilterAndSourceEdits()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnSort" time="0.008">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnSort]/[method:test_duplicateKeysStayStableAcrossFilterAndSourceEdits()]
+display-name: test_duplicateKeysStayStableAcrossFilterAndSourceEdits()
+]]></system-out>
+</testcase>
+<testcase name="test_containsAndIntersection()" classname="org.eclipse.swt.tests.junit.Test_M3ItemRange" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ItemRange]/[method:test_containsAndIntersection()]
+display-name: test_containsAndIntersection()
+]]></system-out>
+</testcase>
+<testcase name="pointRectangleContainsTheExactScaledRectangleWithinOnePixelPerEdge()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:pointRectangleContainsTheExactScaledRectangleWithinOnePixelPerEdge()]
+display-name: pointRectangleContainsTheExactScaledRectangleWithinOnePixelPerEdge()
+]]></system-out>
+</testcase>
+<testcase name="emptyAndNullBehaviorRemainsCompatible()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0.001">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:emptyAndNullBehaviorRemainsCompatible()]
+display-name: emptyAndNullBehaviorRemainsCompatible()
+]]></system-out>
+</testcase>
+<testcase name="hugeNativeScrollSelectionUsesActualLongRowOwner()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeWindow]/[method:hugeNativeScrollSelectionUsesActualLongRowOwner()]
+display-name: hugeNativeScrollSelectionUsesActualLongRowOwner()
+]]></system-out>
+</testcase>
+<testcase name="pointRoundingIsFloorForStartAndCeilForEndAtEveryZoom()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:pointRoundingIsFloorForStartAndCeilForEndAtEveryZoom()]
+display-name: pointRoundingIsFloorForStartAndCeilForEndAtEveryZoom()
+]]></system-out>
+</testcase>
+<testcase name="test_sparseMaximumRowCountKeepsLongOffsetsThroughEdits()" classname="org.eclipse.swt.tests.junit.Test_M3RowExtents" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3RowExtents]/[method:test_sparseMaximumRowCountKeepsLongOffsetsThroughEdits()]
+display-name: test_sparseMaximumRowCountKeepsLongOffsetsThroughEdits()
+]]></system-out>
+</testcase>
+<testcase name="test_vocabularyIsBoundedAndAgreesWithAMapOracle()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0.007">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_vocabularyIsBoundedAndAgreesWithAMapOracle()]
+display-name: test_vocabularyIsBoundedAndAgreesWithAMapOracle()
+]]></system-out>
+</testcase>
+<testcase name="test_vocabularyResolvesHashCollisions()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_vocabularyResolvesHashCollisions()]
+display-name: test_vocabularyResolvesHashCollisions()
+]]></system-out>
+</testcase>
+<testcase name="exhaustiveSmallLayoutsEnforceTwoDimensionalVisibility()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0.153">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:exhaustiveSmallLayoutsEnforceTwoDimensionalVisibility()]
+display-name: exhaustiveSmallLayoutsEnforceTwoDimensionalVisibility()
+]]></system-out>
+</testcase>
+<testcase name="seededMutationSequencesMatchIndependentList()" classname="org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration" time="0.03">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportSelectionEnumeration]/[method:seededMutationSequencesMatchIndependentList()]
+display-name: seededMutationSequencesMatchIndependentList()
+]]></system-out>
+</testcase>
+<testcase name="test_indexOfAgreesWithANaiveSearch()" classname="org.eclipse.swt.tests.junit.Test_M3TokenMatch" time="0.021">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3TokenMatch]/[method:test_indexOfAgreesWithANaiveSearch()]
+display-name: test_indexOfAgreesWithANaiveSearch()
+]]></system-out>
+</testcase>
+<testcase name="boundedRemovalPermutationsMatchIndependentModelAndNativeSnapshot()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeTopology" time="0.053">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeTopology]/[method:boundedRemovalPermutationsMatchIndependentModelAndNativeSnapshot()]
+display-name: boundedRemovalPermutationsMatchIndependentModelAndNativeSnapshot()
+]]></system-out>
+</testcase>
+<testcase name="maximumSupportedUnionKeepsExactLongAreaAndContainment()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:maximumSupportedUnionKeepsExactLongAreaAndContainment()]
+display-name: maximumSupportedUnionKeepsExactLongAreaAndContainment()
+]]></system-out>
+</testcase>
+<testcase name="sameGenerationDoesNotMakeIterBelongToAnotherModel()" classname="org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel" time="0.006">
+<skipped><![CDATA[org.opentest4j.TestAbortedException: Assumption failed: assumption is not true
+	at org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:316)
+	at org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:115)
+	at org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:66)
+	at org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel.requireGtk3(Test_VirtualNativeTableModel.java:34)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+]]></skipped>
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel]/[method:sameGenerationDoesNotMakeIterBelongToAnotherModel()]
+display-name: sameGenerationDoesNotMakeIterBelongToAnotherModel()
+]]></system-out>
+</testcase>
+<testcase name="test_diffIsMinimalAndReplays()" classname="org.eclipse.swt.tests.junit.Test_M3Patch" time="0.139">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3Patch]/[method:test_diffIsMinimalAndReplays()]
+display-name: test_diffIsMinimalAndReplays()
+]]></system-out>
+</testcase>
+<testcase name="test_randomDifferentialAgainstBooleanRows()" classname="org.eclipse.swt.tests.junit.Test_VirtualBitLanes" time="0.032">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualBitLanes]/[method:test_randomDifferentialAgainstBooleanRows()]
+display-name: test_randomDifferentialAgainstBooleanRows()
+]]></system-out>
+</testcase>
+<testcase name="largeNonemptyOverscanRetainsExplicitIntOverflowContract()" classname="org.eclipse.swt.tests.junit.Test_ViewportBounds" time="0.009">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportBounds]/[method:largeNonemptyOverscanRetainsExplicitIntOverflowContract()]
+display-name: largeNonemptyOverscanRetainsExplicitIntOverflowContract()
+]]></system-out>
+</testcase>
+<testcase name="adjacentRectanglesMergeAndRepeatsAddNothing()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamage" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamage]/[method:adjacentRectanglesMergeAndRepeatsAddNothing()]
+display-name: adjacentRectanglesMergeAndRepeatsAddNothing()
+]]></system-out>
+</testcase>
+<testcase name="subsetRejectsHolesWhenBoundsAreEqual()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:subsetRejectsHolesWhenBoundsAreEqual()]
+display-name: subsetRejectsHolesWhenBoundsAreEqual()
+]]></system-out>
+</testcase>
+<testcase name="coalescedVerticalRegionsRemainSubsetsOfThemselves()" classname="org.eclipse.swt.tests.junit.Test_ViewportDamageSubset" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ViewportDamageSubset]/[method:coalescedVerticalRegionsRemainSubsetsOfThemselves()]
+display-name: coalescedVerticalRegionsRemainSubsetsOfThemselves()
+]]></system-out>
+</testcase>
+<testcase name="coldGapsAndLongOffsetsNeverMaterializeLogicalSiblings()" classname="org.eclipse.swt.tests.junit.Test_VirtualTreeWindow" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_VirtualTreeWindow]/[method:coldGapsAndLongOffsetsNeverMaterializeLogicalSiblings()]
+display-name: coldGapsAndLongOffsetsNeverMaterializeLogicalSiblings()
+]]></system-out>
+</testcase>
+<testcase name="test_keysAreCompactLanes()" classname="org.eclipse.swt.tests.junit.Test_M3Collation" time="0.034">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3Collation]/[method:test_keysAreCompactLanes()]
+display-name: test_keysAreCompactLanes()
+]]></system-out>
+</testcase>
+<testcase name="test_autoAlignmentMovesOnlyToNearestRevealBoundary()" classname="org.eclipse.swt.tests.junit.Test_M3RowExtents" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3RowExtents]/[method:test_autoAlignmentMovesOnlyToNearestRevealBoundary()]
+display-name: test_autoAlignmentMovesOnlyToNearestRevealBoundary()
+]]></system-out>
+</testcase>
+<testcase name="test_treeChainWithSortedSiblings()" classname="org.eclipse.swt.tests.junit.Test_M3ColumnFilter" time="0.002">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_M3ColumnFilter]/[method:test_treeChainWithSortedSiblings()]
+display-name: test_treeChainWithSortedSiblings()
+]]></system-out>
+</testcase>
+<testcase name="runEndClampsBeforeAddingLastChunkBase()" classname="org.eclipse.swt.tests.junit.Test_ItemBitSetMaximumPosition" time="0">
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]/[class:org.eclipse.swt.tests.junit.Test_ItemBitSetMaximumPosition]/[method:runEndClampsBeforeAddingLastChunkBase()]
+display-name: runEndClampsBeforeAddingLastChunkBase()
+]]></system-out>
+</testcase>
+<system-out><![CDATA[
+unique-id: [engine:junit-jupiter]
+display-name: JUnit Jupiter
+]]></system-out>
+</testsuite>

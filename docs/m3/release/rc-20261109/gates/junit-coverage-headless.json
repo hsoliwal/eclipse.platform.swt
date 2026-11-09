@@ -1,0 +1,30 @@
+{
+  "all_junit_testcases": {
+    "failed": 0,
+    "passed": 187,
+    "skipped": 3
+  },
+  "disclaimer": "does not establish complete SWT test/line coverage or native UI parity",
+  "failed_class_names": [],
+  "observed_junit_classes": 22,
+  "parse_errors": [],
+  "passed": true,
+  "reports_read": 1,
+  "schema": "SWT_M3_JUNIT_EXECUTION_V1",
+  "scope": "Surefire XML for two mandatory registered JUnit classes",
+  "skipped_class_names": [
+    "org.eclipse.swt.tests.junit.Test_VirtualNativeTableModel"
+  ],
+  "testcase_counts": {
+    "Test_ItemBitSetDifferential": {
+      "failed": 0,
+      "passed": 3,
+      "skipped": 0
+    },
+    "Test_ItemBitSetMaximumPosition": {
+      "failed": 0,
+      "passed": 4,
+      "skipped": 0
+    }
+  }
+}
