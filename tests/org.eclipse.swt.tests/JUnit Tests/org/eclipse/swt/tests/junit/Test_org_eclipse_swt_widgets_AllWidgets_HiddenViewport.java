@@ -189,6 +189,53 @@ public class Test_org_eclipse_swt_widgets_AllWidgets_HiddenViewport {
 		gate ("zero-size", probe, () -> probe.canvas.setBounds (0, 0, 380, 200));
 	}
 
+	@Test
+	public void animatedProgressParksItsTimerWhileHidden () throws Exception {
+		Composite holder = new Composite (shell, SWT.NONE);
+		holder.setLayout (new FillLayout ());
+		@SuppressWarnings ("deprecation")
+		AnimatedProgress progress = new AnimatedProgress (holder, SWT.BORDER);
+		shell.open ();
+		ViewportDifferential.drain (display);
+		progress.start ();
+		spin (300);
+		assertEquals (1, animationTimers (), "the animation runs while shown");
+		holder.setVisible (false);
+		spin (300);
+		assertEquals (0, animationTimers (), "no animation timer while hidden");
+		holder.setVisible (true);
+		spin (300);
+		assertEquals (1, animationTimers (), "one animation again after the show");
+		progress.stop ();
+		progress.start ();
+		spin (300);
+		assertEquals (1, animationTimers (), "stop then start runs one animation, not two");
+		progress.stop ();
+		spin (200);
+		assertEquals (0, animationTimers ());
+	}
+
+	void spin (int milliseconds) throws InterruptedException {
+		long end = System.currentTimeMillis () + milliseconds;
+		while (System.currentTimeMillis () < end) {
+			if (!display.readAndDispatch ()) Thread.sleep (5);
+		}
+	}
+
+	/* the pending AnimatedProgress timers in the display's timer list (win32 Display.timerList) */
+	int animationTimers () throws ReflectiveOperationException {
+		java.lang.reflect.Field field = Display.class.getDeclaredField ("timerList");
+		field.setAccessible (true);
+		Runnable [] timers = (Runnable []) field.get (display);
+		int count = 0;
+		if (timers != null) {
+			for (Runnable timer : timers) {
+				if (timer != null && timer.getClass ().getName ().startsWith (AnimatedProgress.class.getName ())) count++;
+			}
+		}
+		return count;
+	}
+
 	static boolean inView (Control control, Composite viewport) {
 		Rectangle bounds = control.getBounds (), area = viewport.getClientArea ();
 		return bounds.y >= 0 && bounds.y + 20 <= area.height;
