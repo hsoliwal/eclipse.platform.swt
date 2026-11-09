@@ -74,6 +74,8 @@ public class List extends Scrollable {
 	SCROLLINFO scrollInfo;
 	static final int STORE_EMPTY_EXTENT_INSET = 1 << 0, STORE_IN_SET_DATA = 1 << 1, STORE_ADDED_UCC = 1 << 2;
 	static final int STORE_PREFETCH_PENDING = 1 << 3, STORE_SCROLLED_UP = 1 << 4;
+	/* the prefetch found the list unseen (visibility gate) and waits for its catch-up; requests meanwhile fold */
+	static final int STORE_PREFETCH_PARKED = 1 << 7;
 	/*
 	 * Content freeze: while set, WM_DRAWITEM paints nothing and requests no
 	 * SetData, but the list box and its scroll bar keep running (no
@@ -92,6 +94,8 @@ public class List extends Scrollable {
 	 */
 	static final int STORE_SETDATA_BATCH = 32, STORE_PREFETCH_DELAY = 40, STORE_PREFETCH_PAGES = 1;
 	Runnable storePrefetch;
+	/* requests the prefetch once when a parked list can be seen again; added on the first park */
+	Listener storeCatchUp;
 	int storeLastTop;
 	/* text-direction changes re-add rows natively up to this count, like the plain list */
 	static final int STORE_READD_LIMIT = 4096;
@@ -2684,6 +2688,9 @@ void storeRequestPrefetch () {
 	if (itemStore == null || !hooks (SWT.SetData) || display == null || display.isDisposed ()) {
 		return;
 	}
+	if ((storeBits & STORE_PREFETCH_PARKED) != 0) {
+		return; // parked while unseen: the catch-up requests once
+	}
 	if (storePrefetch == null) {
 		storePrefetch = this::storePrefetchStep;
 	}
@@ -2698,6 +2705,22 @@ void storePrefetchStep () {
 	storeBits &= ~STORE_PREFETCH_PENDING;
 	if (isDisposed () || itemStore == null || !hooks (SWT.SetData)
 			|| !OS.IsWindowVisible (handle) || (storeBits & STORE_IN_SET_DATA) != 0) return;
+	if (EffectiveVisibility.ENABLED && EffectiveVisibility.deferKinds (this, EffectiveVisibility.DIRTY_DATA)) {
+		/*
+		* Rule 24: no SetData for rows nobody can see (a minimized or covered
+		* shell, zero size, scrolled out), and no 40 ms re-arming while the
+		* content is frozen. The gate recorded DATA; its catch-up requests once.
+		*/
+		storeBits |= STORE_PREFETCH_PARKED; //FLLDCIM: MARK — every-widget List H
+		if (storeCatchUp == null) {
+			storeCatchUp = event -> {
+				storeBits &= ~STORE_PREFETCH_PARKED;
+				storeRequestPrefetch ();
+			};
+			addListener (VisibilityGate.CATCH_UP, storeCatchUp);
+		}
+		return;
+	}
 	if ((storeBits & (STORE_CONTENT_FROZEN | STORE_THUMB_FROZEN)) != 0) {
 		storeRequestPrefetch ();
 		return;
