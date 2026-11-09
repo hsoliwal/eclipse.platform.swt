@@ -20,6 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabFolderRenderer;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.TableEditor;
@@ -386,6 +389,41 @@ public class Test_org_eclipse_swt_internal_VisibilityGate {
 		shell.setMinimized (false);
 		spin (300);
 		assertFalse (parked.getBoolean (tracker), "a restored shell wakes the tracker");
+	}
+
+	@Test
+	public void test_hiddenCTabFolderMeasuresNoTabsUntilShown () throws Exception {
+		Composite page = new Composite (shell, SWT.NONE);
+		page.setLayout (new FillLayout ());
+		CTabFolder folder = new CTabFolder (page, SWT.BORDER);
+		int [] sizes = new int [1];
+		folder.setRenderer (new CTabFolderRenderer (folder) {
+			@Override
+			protected Point computeSize (int part, int state, GC gc, int wHint, int hHint) {
+				sizes [0]++;
+				return super.computeSize (part, state, gc, wHint, hHint);
+			}
+		});
+		CTabItem [] items = new CTabItem [20];
+		for (int i = 0; i < items.length; i++) {
+			items [i] = new CTabItem (folder, SWT.NONE);
+			items [i].setText ("tab " + i);
+		}
+		shell.open ();
+		spin (300);
+		page.setVisible (false);
+		spin (100);
+		sizes [0] = 0;
+		for (int i = 0; i < 200; i++) {
+			items [i % items.length].setText ("renamed tab " + i);
+		}
+		spin (300);
+		assertEquals (0, sizes [0], "hidden: no tab measured");
+		page.setVisible (true);
+		spin (300);
+		assertTrue (sizes [0] > 0, "shown: the folded update measures the tabs");
+		assertEquals ("renamed tab 199", items [19].getText ());
+		assertTrue (items [0].getBounds ().width > 0);
 	}
 
 	/* pending timers whose runnable class starts with the prefix (win32 Display.timerList) */
